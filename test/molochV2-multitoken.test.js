@@ -97,7 +97,7 @@ function addressArray(length) {
   return array
 }
 
-contract('Moloch', ([creator, summoner, applicant1, applicant2, processor, delegateKey, nonMemberAccount, ...otherAccounts]) => {
+contract('MolochV2 multitoken', ([creator, summoner, applicant1, applicant2, processor, delegateKey, nonMemberAccount, ...otherAccounts]) => {
   let moloch, tokenAlpha, tokenBeta, tokenGamma, tokenDelta, tokenEpsilon, tokenCount
   let proposal1, proposal2, proposal3, depositToken
 

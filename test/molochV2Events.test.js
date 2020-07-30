@@ -93,16 +93,30 @@ async function blockTime () {
   return block.timestamp
 }
 
+async function advancedCall(callType, params) {
+  return await new Promise((resolve, reject) => {
+    web3.currentProvider.send({
+      jsonrpc: '2.0',
+      method: callType,
+      params,
+      id: new Date().getTime()
+    }, (err, result) => {
+      if (err) { return reject(err) }
+      return resolve(result)
+    })
+  });
+}
+
 async function snapshot () {
-  return ethereum.send('evm_snapshot', [])
+  return advancedCall('evm_snapshot', []);
 }
 
-async function restore (snapshotId) {
-  return ethereum.send('evm_revert', [snapshotId])
+function restore (snapshotId) {
+  return advancedCall('evm_revert', [snapshotId])
 }
 
-async function forceMine () {
-  return ethereum.send('evm_mine', [])
+function forceMine () {
+  return advancedCall('evm_mine', [])
 }
 
 const deploymentConfig = {
@@ -124,7 +138,7 @@ async function moveForwardPeriods (periods) {
   return true
 }
 
-contract('Moloch', ([creator, summoner, applicant1, applicant2, processor, delegateKey, nonMemberAccount, ...otherAccounts]) => {
+contract('MolochV2 Events', ([creator, summoner, applicant1, applicant2, processor, delegateKey, nonMemberAccount, ...otherAccounts]) => {
   let moloch, tokenAlpha, submitter
   let proposal1, proposal2, depositToken
 
