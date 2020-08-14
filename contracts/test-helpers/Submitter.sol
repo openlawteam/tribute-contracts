@@ -1,6 +1,7 @@
 // helper for testing moloch.submitProposal return value
 
-pragma solidity ^0.5.16;
+pragma solidity ^0.7.0;
+// SPDX-License-Identifier: MIT
 
 import "../Moloch.sol";
 
@@ -10,7 +11,7 @@ contract Submitter {
 
   Moloch public moloch; // moloch contract reference
 
-  constructor(address molochAddress) public {
+  constructor(address molochAddress) {
     moloch = Moloch(molochAddress);
   }
 

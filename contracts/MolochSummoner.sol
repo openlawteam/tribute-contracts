@@ -1,5 +1,5 @@
-pragma solidity 0.5.16;
-
+pragma solidity ^0.7.0;
+// SPDX-License-Identifier: MIT
 import "./Moloch.sol";
 
 contract MolochSummoner {

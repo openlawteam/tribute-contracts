@@ -1,4 +1,5 @@
-pragma solidity ^0.5.16;
+pragma solidity ^0.7.0;
+// SPDX-License-Identifier: MIT
 
 /**
  * @dev Contract module that helps prevent reentrant calls to a function.
@@ -15,10 +16,10 @@ pragma solidity ^0.5.16;
  * _Since v2.5.0:_ this module is now much more gas efficient, given net gas
  * metering changes introduced in the Istanbul hardfork.
  */
-contract ReentrancyGuard {
+abstract contract ReentrancyGuard {
     bool private _notEntered;
 
-    constructor () internal {
+    constructor () {
         // Storing an initial non-zero value makes deployment a bit more
         // expensive, but in exchange the refund on every call to nonReentrant
         // will be lower in amount. Since refunds are capped to a percetange of
