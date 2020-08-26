@@ -1,17 +1,17 @@
 {
-  "name": "openlaw-moloch",
+  "name": "moloch",
   "version": "1.0.0",
-  "dependencies": {},
   "description": "",
   "main": "truffle-config.js",
   "directories": {
     "test": "test"
   },
-  "devDependencies": {
-    "truffle": "^5.1.41"
+  "dependencies": {
+    "web3-utils": "^1.2.11"
   },
+  "devDependencies": {},
   "scripts": {
-    "test": "truffle test"
+    "test": "mocha"
   },
   "repository": {
     "type": "git",
