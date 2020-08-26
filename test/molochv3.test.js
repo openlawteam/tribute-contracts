@@ -5,7 +5,7 @@ const Bank = artifacts.require('./v3/BankContract')
 const Proposal = artifacts.require('./v3/ProposalContract') // used to test submit proposal return values
 const Voting = artifacts.require('./v3/VotingContract') // used to test submit proposal return values
 
-async function setupMoloch() {
+async function setupMolochSmartContracts() {
     const registry = await ModuleRegistry.new();
     const bank = await Bank.new();
     const proposal = await Proposal.new();
@@ -15,6 +15,8 @@ async function setupMoloch() {
 }
 
 contract('MolochV3', async function (accounts) {
-    const {registry, bank, proposal} = await setupMoloch();
     
+    describe('it should be possible to create a dao and register at least one module to it', async function () {
+        const {registry, bank, proposal} = await setupMolochSmartContracts();
+    });
 });
