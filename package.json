@@ -1,0 +1,26 @@
+{
+  "name": "openlaw-moloch",
+  "version": "1.0.0",
+  "dependencies": {},
+  "description": "",
+  "main": "truffle-config.js",
+  "directories": {
+    "test": "test"
+  },
+  "devDependencies": {
+    "truffle": "^5.1.41"
+  },
+  "scripts": {
+    "test": "truffle test"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/openlawteam/moloch.git"
+  },
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/openlawteam/moloch/issues"
+  },
+  "homepage": "https://github.com/openlawteam/moloch#readme"
+}
