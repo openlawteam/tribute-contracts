@@ -25,7 +25,8 @@ contract MemberContracr is IMemberContract {
 
     function isActiveMember(ModuleRegistry dao, address member) override external returns (bool) {
         uint256 memberFlags = members[member].flags;
-        return memberFlags.exists() && !memberFlags.jailed() && members[member].nbShares > 0;
+        //FIXME
+        return true; //erFlags.exists() && !memberFlags.jailed() && members[member].nbShares > 0;
     }
 
     function memberAddress(ModuleRegistry dao, address memberOrDelegateKey) override  external returns (address) {

@@ -20,11 +20,15 @@ contract ModuleRegistry is Ownable {
     }
 
     function updateRegistry(bytes32 moduleId, address moduleAddress) onlyWhitelist external {
+        require(moduleId != bytes32(0), "moduleId must not be empty");
+        require(moduleAddress != address(0x0), "moduleAddress must not be empty");
         registry[moduleId] = moduleAddress;
         inverseRegistry[moduleAddress] = moduleId;
     }
 
     function removeRegistry(bytes32 moduleId) onlyWhitelist external {
+        require(moduleId != bytes32(0), "moduleId must not be empty");
+        require(registry[moduleId] != address(0x0), "moduleId not registered");
         delete inverseRegistry[registry[moduleId]];
         delete registry[moduleId];
     }
