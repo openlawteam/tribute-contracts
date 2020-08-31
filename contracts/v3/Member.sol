@@ -14,6 +14,7 @@ interface IMemberContract {
 }
 
 contract MemberContracr is IMemberContract {
+    using FlagHelper for uint256;
 
     struct Member {
         uint256 flags;
@@ -21,11 +22,11 @@ contract MemberContracr is IMemberContract {
         uint256 nbShares;
     }
 
-    mapping(address => Member) members;
+    mapping(address => mapping(address => Member)) members;
 
-    function isActiveMember(ModuleRegistry dao, address member) override external returns (bool) {
-        uint256 memberFlags = members[member].flags;
-        return memberFlags.exists() && !memberFlags.jailed() && members[member].nbShares > 0;
+    function isActiveMember(ModuleRegistry dao, address member) override external view returns (bool) {
+        uint256 memberFlags = members[address(dao)][member].flags;
+        return memberFlags.exists() && !memberFlags.isJailed() && members[address(dao)][member].nbShares > 0;
     }
 
     function memberAddress(ModuleRegistry dao, address memberOrDelegateKey) override  external returns (address) {
