@@ -96,10 +96,15 @@ contract('MolochV3', async accounts => {
     return {daoFactory, onboarding, voting, proposal, dao};
   }
 
-  it("should be possible to join a DAO", async () => {
+  it("should not be possible to join a DAO if the proposal applicant is not active", async () => {
     const myAccount = accounts[0];
     const {onboarding, voting, proposal, dao} = await prepareSmartContracts();
     await onboarding.sendTransaction({from:myAccount,value:sharePrice.mul(web3.utils.toBN(3)).add(remaining), gasPrice: web3.utils.toBN("0")});
-    await proposal.sponsorProposal(dao.address , 0);
+    
+    try {
+      proposal.sponsorProposal(dao.address , 0);
+    } catch(err) {
+      assert.equal(err.reason, "proposal applicant must be active");
+    }
   })
 });
