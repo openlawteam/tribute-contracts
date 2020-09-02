@@ -13,7 +13,7 @@ interface IMemberContract {
     function updateMember(ModuleRegistry dao, address applicant, uint256 sharesRequested, uint256 tributeOffered, address tributeToken) external;
 }
 
-contract MemberContracr is IMemberContract {
+contract MemberContract is IMemberContract {
     using FlagHelper for uint256;
 
     struct Member {

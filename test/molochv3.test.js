@@ -1,22 +1,105 @@
-const BN = web3.utils.BN
+const Web3 = require('web3-utils');
+const FlagHelperLib = artifacts.require('./v3/FlagHelper');
+const DaoFactory = artifacts.require('./v3/DaoFactory');
+const ModuleRegistry = artifacts.require('./v3/ModuleRegistry');
+const MemberContract = artifacts.require('./v3/MemberContract');
+const BankContract = artifacts.require('./v3/BankContract');
+const VotingContract = artifacts.require('./v3/VotingContract');
+const ProposalContract = artifacts.require('./v3/ProposalContract');
+const OnboardingContract = artifacts.require('./v3/OnboardingContract');
 
-const ModuleRegistry = artifacts.require('./v3/ModuleRegistry')
-const Bank = artifacts.require('./v3/BankContract')
-const Proposal = artifacts.require('./v3/ProposalContract') // used to test submit proposal return values
-const Voting = artifacts.require('./v3/VotingContract') // used to test submit proposal return values
+contract('MolochV3', async accounts => {
 
-async function setupMolochSmartContracts() {
-    const registry = await ModuleRegistry.new();
-    const bank = await Bank.new();
-    const proposal = await Proposal.new();
+  it("should not be possible to create a dao with an invalid module id", async () => {
+    let moduleId = Web3.fromUtf8("");
+    let moduleAddress = "0x627306090abaB3A6e1400e9345bC60c78a8BEf57";
+    let contract = await ModuleRegistry.new();
+    try {
+      await contract.updateRegistry(moduleId, moduleAddress);
+    } catch (err) {
+      assert.equal(err.reason, "moduleId must not be empty");
+    }
+  });
 
-    return {registry, bank, proposal};
+  it("should not be possible to remove a module from dao if the module was not registered", async () => {
+    let moduleId = Web3.fromUtf8("1");
+    let contract = await ModuleRegistry.new();
+    try {
+      await contract.removeRegistry(moduleId);
+    } catch (err) {
+      assert.equal(err.reason, "moduleId not registered");
+    }
+  });
 
-}
+  it("should not be possible to create a dao with an invalid module address", async () => {
+    let moduleId = Web3.fromUtf8("1");
+    let moduleAddress = "";
+    let contract = await ModuleRegistry.new();
+    try {
+      await contract.updateRegistry(moduleId, moduleAddress);
+    } catch (err) {
+      assert.equal(err.reason, "invalid address");
+    }
+  });
 
-contract('MolochV3', async function (accounts) {
-    
-    describe('it should be possible to create a dao and register at least one module to it', async function () {
-        const {registry, bank, proposal} = await setupMolochSmartContracts();
-    });
+  it("should not be possible to create a dao with an empty module address", async () => {
+    let moduleId = Web3.fromUtf8("1");
+    let moduleAddress = "0x0";
+    let contract = await ModuleRegistry.new();
+    try {
+      await contract.updateRegistry(moduleId, moduleAddress);
+    } catch (err) {
+      assert.equal(err.reason, "invalid address");
+    }
+  });
+
+  it("should be possible to create a dao and register at least one module to it", async () => {
+    let moduleId = Web3.fromUtf8("1");
+    let moduleAddress = "0x627306090abaB3A6e1400e9345bC60c78a8BEf57";
+    let contract = await ModuleRegistry.new();
+    await contract.updateRegistry(moduleId, moduleAddress);
+    let address = await contract.getAddress(moduleId);
+    assert.equal(address, moduleAddress);
+  });
+
+  it("should be possible to remove a module from the dao", async () => {
+    let moduleId = Web3.fromUtf8("2");
+    let moduleAddress = "0x627306090abaB3A6e1400e9345bC60c78a8BEf57";
+    let contract = await ModuleRegistry.new();
+    await contract.updateRegistry(moduleId, moduleAddress);
+    let address = await contract.getAddress(moduleId);
+    assert.equal(address, moduleAddress);
+    await contract.removeRegistry(moduleId);
+    address = await contract.getAddress(moduleId);
+    assert.equal(address, "0x0000000000000000000000000000000000000000");
+  });
+
+  const numberOfShares = web3.utils.toBN('1000000000000000');
+  const sharePrice = web3.utils.toBN(web3.utils.toWei("120", 'finney'));
+  const remaining = sharePrice.sub(web3.utils.toBN('50000000000000'))
+
+  async function prepareSmartContracts() {
+    let lib = await FlagHelperLib.new();
+    let bank = await BankContract.new();
+    await MemberContract.link("FlagHelper", lib.address);
+    await ProposalContract.link("FlagHelper", lib.address);
+    let member = await MemberContract.new();
+    let proposal = await ProposalContract.new();
+    let voting = await VotingContract.new();
+    let daoFactory = await DaoFactory.new(bank.address, member.address, proposal.address, voting.address);
+    await daoFactory.newDao();
+    let pastEvents = await daoFactory.getPastEvents();
+    let daoAddress = pastEvents[0].returnValues.dao;
+    let onboarding = await OnboardingContract.new(daoAddress, numberOfShares, sharePrice);
+    let dao = await ModuleRegistry.at(daoAddress);
+    console.log(dao);
+    return {daoFactory, onboarding, voting, proposal, dao};
+  }
+
+  it("should be possible to join a DAO", async () => {
+    const myAccount = accounts[0];
+    const {onboarding, voting, proposal, dao} = await prepareSmartContracts();
+    await onboarding.sendTransaction({from:myAccount,value:sharePrice.mul(web3.utils.toBN(3)).add(remaining), gasPrice: web3.utils.toBN("0")});
+    await proposal.sponsorProposal(dao.address , 0);
+  })
 });

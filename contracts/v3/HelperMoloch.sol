@@ -40,4 +40,7 @@ library FlagHelper {
     function isJailed(uint256 flags) public pure returns (bool) {
         return getFlag(flags, 5);
     }
+    function isPass(uint256 flags) public pure returns (bool) {
+        return getFlag(flags, 6);
+    }
 }
