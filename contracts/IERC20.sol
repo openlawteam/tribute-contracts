@@ -1,4 +1,5 @@
-pragma solidity ^0.5.16;
+pragma solidity ^0.7.0;
+// SPDX-License-Identifier: MIT
 
 interface IERC20 {
     function transfer(address to, uint256 value) external returns (bool);

@@ -1,8 +1,10 @@
-pragma solidity 0.5.16;
+pragma solidity ^0.7.0;
 
 import "./SafeMath.sol";
 import "./IERC20.sol";
 import "./ReentrancyGuard.sol";
+
+// SPDX-License-Identifier: MIT
 
 contract Moloch is ReentrancyGuard {
     using SafeMath for uint256;
@@ -131,7 +133,7 @@ contract Moloch is ReentrancyGuard {
         uint256 _proposalDeposit,
         uint256 _dilutionBound,
         uint256 _processingReward
-    ) public {
+    ) {
         require(_summoner != address(0), "summoner cannot be 0");
         require(_periodDuration > 0, "_periodDuration cannot be 0");
         require(_votingPeriodLength > 0, "_votingPeriodLength cannot be 0");
@@ -145,7 +147,7 @@ contract Moloch is ReentrancyGuard {
         
         depositToken = _approvedTokens[0];
         // NOTE: move event up here, avoid stack too deep if too many approved tokens
-        emit SummonComplete(_summoner, _approvedTokens, now, _periodDuration, _votingPeriodLength, _gracePeriodLength, _proposalDeposit, _dilutionBound, _processingReward);
+        emit SummonComplete(_summoner, _approvedTokens, block.timestamp, _periodDuration, _votingPeriodLength, _gracePeriodLength, _proposalDeposit, _dilutionBound, _processingReward);
 
 
         for (uint256 i = 0; i < _approvedTokens.length; i++) {
@@ -162,7 +164,7 @@ contract Moloch is ReentrancyGuard {
         dilutionBound = _dilutionBound;
         processingReward = _processingReward;
 
-        summoningTime = now;
+        summoningTime = block.timestamp;
 
         members[_summoner] = Member(_summoner, 1, 0, true, 0, 0);
         memberAddressByDelegateKey[_summoner] = _summoner;
@@ -240,25 +242,24 @@ contract Moloch is ReentrancyGuard {
         string memory details,
         bool[6] memory flags
     ) internal {
-        Proposal memory proposal = Proposal({
-            applicant : applicant,
-            proposer : msg.sender,
-            sponsor : address(0),
-            sharesRequested : sharesRequested,
-            lootRequested : lootRequested,
-            tributeOffered : tributeOffered,
-            tributeToken : tributeToken,
-            paymentRequested : paymentRequested,
-            paymentToken : paymentToken,
-            startingPeriod : 0,
-            yesVotes : 0,
-            noVotes : 0,
-            flags : flags,
-            details : details,
-            maxTotalSharesAndLootAtYesVote : 0
-        });
+        Proposal storage proposal = proposals[proposalCount];
 
-        proposals[proposalCount] = proposal;
+        proposal.applicant = applicant;
+        proposal.proposer = msg.sender;
+        proposal.sponsor = address(0);
+        proposal.sharesRequested = sharesRequested;
+        proposal.lootRequested = lootRequested;
+        proposal.tributeOffered = tributeOffered;
+        proposal.tributeToken = tributeToken;
+        proposal.paymentRequested = paymentRequested;
+        proposal.paymentToken = paymentToken;
+        proposal.startingPeriod = 0;
+        proposal.yesVotes = 0;
+        proposal.noVotes = 0;
+        proposal.flags = flags;
+        proposal.details = details;
+        proposal.maxTotalSharesAndLootAtYesVote = 0;
+
         address memberAddress = memberAddressByDelegateKey[msg.sender];
         // NOTE: argument order matters, avoid stack too deep
         emit SubmitProposal(applicant, sharesRequested, lootRequested, tributeOffered, tributeToken, paymentRequested, paymentToken, details, flags, proposalCount, msg.sender, memberAddress);
@@ -492,7 +493,7 @@ contract Moloch is ReentrancyGuard {
     }
 
     function _didPass(uint256 proposalIndex) internal view returns (bool didPass) {
-        Proposal memory proposal = proposals[proposalQueue[proposalIndex]];
+        Proposal storage proposal = proposals[proposalQueue[proposalIndex]];
 
         didPass = proposal.yesVotes > proposal.noVotes;
 
@@ -513,7 +514,7 @@ contract Moloch is ReentrancyGuard {
 
     function _validateProposalForProcessing(uint256 proposalIndex) internal view {
         require(proposalIndex < proposalQueue.length, "proposal does not exist");
-        Proposal memory proposal = proposals[proposalQueue[proposalIndex]];
+        Proposal storage proposal = proposals[proposalQueue[proposalIndex]];
 
         require(getCurrentPeriod() >= proposal.startingPeriod.add(votingPeriodLength).add(gracePeriodLength), "proposal is not ready to be processed");
         require(proposal.flags[1] == false, "proposal has already been processed");
@@ -654,7 +655,7 @@ contract Moloch is ReentrancyGuard {
     }
 
     function getCurrentPeriod() public view returns (uint256) {
-        return now.sub(summoningTime).div(periodDuration);
+        return block.timestamp.sub(summoningTime).div(periodDuration);
     }
 
     function getProposalQueueLength() public view returns (uint256) {
