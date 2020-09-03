@@ -53,10 +53,15 @@ contract OnboardingContract {
         proposal.sharesRequested = sharesRequested;
     }
 
+    function sponsorProposal(uint256 proposalId) external {
+        IProposalContract proposalContract = IProposalContract(dao.getAddress(PROPOSAL_MODULE));
+        proposalContract.sponsorProposal(dao, proposalId, msg.sender);
+    }
+
     function processProposal(uint256 proposalId) external {
         IMemberContract memberContract = IMemberContract(dao.getAddress(MEMBER_MODULE));
         require(memberContract.isActiveMember(dao, msg.sender), "only members can sponsor a membership proposal");
-        IProposalContract proposalContract = IProposalContract(dao.getAddress(PROPOSAL_MODULE));
-        require(proposalContract.didPass(dao, proposalId), "proposal need to pass to be processed");
+        IVotingContract votingContract = IVotingContract(dao.getAddress(VOTING_MODULE));
+        require(votingContract.voteResult(dao, proposalId) == 2, "proposal need to pass to be processed");
     }
 }

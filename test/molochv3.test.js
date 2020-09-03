@@ -8,6 +8,32 @@ const VotingContract = artifacts.require('./v3/VotingContract');
 const ProposalContract = artifacts.require('./v3/ProposalContract');
 const OnboardingContract = artifacts.require('./v3/OnboardingContract');
 
+
+async function advanceTime(time) {
+  await new Promise((resolve, reject) => {
+    web3.currentProvider.send({
+      jsonrpc: '2.0',
+      method: 'evm_increaseTime',
+      params: [time],
+      id: new Date().getTime()
+    }, (err, result) => {
+      if (err) { return reject(err) }
+      return resolve(result)
+    })
+  });
+
+  await new Promise((resolve, reject) => {
+      web3.currentProvider.send({
+          jsonrpc: '2.0',
+          method: 'evm_mine',
+          id: new Date().getTime()
+      }, (err, result) => {
+        if (err) { return reject(err) }
+        return resolve(result)
+      })
+    });
+}
+
 contract('MolochV3', async accounts => {
 
   it("should not be possible to create a dao with an invalid module id", async () => {
@@ -87,24 +113,30 @@ contract('MolochV3', async accounts => {
     let proposal = await ProposalContract.new();
     let voting = await VotingContract.new();
     let daoFactory = await DaoFactory.new(bank.address, member.address, proposal.address, voting.address);
-    await daoFactory.newDao();
+    await daoFactory.newDao(numberOfShares, sharePrice, 1000);
     let pastEvents = await daoFactory.getPastEvents();
     let daoAddress = pastEvents[0].returnValues.dao;
-    let onboarding = await OnboardingContract.new(daoAddress, numberOfShares, sharePrice);
     let dao = await ModuleRegistry.at(daoAddress);
-    console.log(dao);
-    return {daoFactory, onboarding, voting, proposal, dao};
+    return {daoFactory, voting, proposal, dao};
   }
 
   it("should not be possible to join a DAO if the proposal applicant is not active", async () => {
     const myAccount = accounts[0];
-    const {onboarding, voting, proposal, dao} = await prepareSmartContracts();
-    await onboarding.sendTransaction({from:myAccount,value:sharePrice.mul(web3.utils.toBN(3)).add(remaining), gasPrice: web3.utils.toBN("0")});
-    
+    const otherAccount = accounts[1];
+    const {voting, proposal, dao} = await prepareSmartContracts();
+    const onboardingAddress = await dao.getAddress(web3.utils.sha3('onboarding'));
+    const onboarding = await OnboardingContract.at(onboardingAddress);
+    await onboarding.sendTransaction({from:otherAccount,value:sharePrice.mul(web3.utils.toBN(3)).add(remaining), gasPrice: web3.utils.toBN("0")});
+    await onboarding.sponsorProposal(0);
+
+    await voting.submitVote(dao.address, 0, 1);
     try {
-      proposal.sponsorProposal(dao.address , 0);
+      await await onboarding.processProposal(0);
     } catch(err) {
-      assert.equal(err.reason, "proposal applicant must be active");
+      assert.equal(err.reason, "proposal need to pass to be processed");
     }
+    
+    await advanceTime(10000);
+    await onboarding.processProposal(0);
   })
 });

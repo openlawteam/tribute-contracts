@@ -10,7 +10,7 @@ import './HelperMoloch.sol';
 interface IMemberContract {
     function isActiveMember(ModuleRegistry dao, address member) external returns (bool);    
     function memberAddress(ModuleRegistry dao, address memberOrDelegateKey) external returns (address);
-    function updateMember(ModuleRegistry dao, address applicant, uint256 sharesRequested, uint256 tributeOffered, address tributeToken) external;
+    function updateMember(ModuleRegistry dao, address applicant, uint256 shares) external;
 }
 
 contract MemberContract is IMemberContract {
@@ -23,17 +23,20 @@ contract MemberContract is IMemberContract {
     }
 
     mapping(address => mapping(address => Member)) members;
+    mapping(address => mapping(address => address)) memberAddresses;
 
     function isActiveMember(ModuleRegistry dao, address member) override external view returns (bool) {
         uint256 memberFlags = members[address(dao)][member].flags;
         return memberFlags.exists() && !memberFlags.isJailed() && members[address(dao)][member].nbShares > 0;
     }
 
-    function memberAddress(ModuleRegistry dao, address memberOrDelegateKey) override  external returns (address) {
-
+    function memberAddress(ModuleRegistry dao, address memberOrDelegateKey) override  external view returns (address) {
+        return memberAddresses[address(dao)][memberOrDelegateKey];
     }
 
-    function updateMember(ModuleRegistry dao, address applicant, uint256 sharesRequested, uint256 tributeOffered, address tributeToken) override  external {
-
+    function updateMember(ModuleRegistry dao, address applicant, uint256 shares) override  external {
+        Member storage member = members[address(dao)][applicant];
+        member.flags = 1;
+        member.nbShares = shares;
     }
 }

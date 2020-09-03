@@ -14,19 +14,23 @@ contract ModuleRegistry is Ownable {
         inverseRegistry[msg.sender] = ownerId;
     }
 
-    modifier onlyWhitelist {
+    modifier onlyModule {
         require(inverseRegistry[msg.sender] != bytes32(0), "this function can only be called by a whitelisted module");
         _;
     }
 
-    function updateRegistry(bytes32 moduleId, address moduleAddress) onlyWhitelist external {
+    function isModule(address module) public view returns (bool) {
+        return inverseRegistry[module] != bytes32(0);
+    }
+
+    function updateRegistry(bytes32 moduleId, address moduleAddress) onlyModule external {
         require(moduleId != bytes32(0), "moduleId must not be empty");
         require(moduleAddress != address(0x0), "moduleAddress must not be empty");
         registry[moduleId] = moduleAddress;
         inverseRegistry[moduleAddress] = moduleId;
     }
 
-    function removeRegistry(bytes32 moduleId) onlyWhitelist external {
+    function removeRegistry(bytes32 moduleId) onlyModule external {
         require(moduleId != bytes32(0), "moduleId must not be empty");
         require(registry[moduleId] != address(0x0), "moduleId not registered");
         delete inverseRegistry[registry[moduleId]];
