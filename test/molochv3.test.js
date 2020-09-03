@@ -117,13 +117,14 @@ contract('MolochV3', async accounts => {
     let pastEvents = await daoFactory.getPastEvents();
     let daoAddress = pastEvents[0].returnValues.dao;
     let dao = await ModuleRegistry.at(daoAddress);
-    return {daoFactory, voting, proposal, dao};
+    return {daoFactory, voting, proposal, dao, member};
   }
 
   it("should not be possible to join a DAO if the proposal applicant is not active", async () => {
     const myAccount = accounts[0];
     const otherAccount = accounts[1];
-    const {voting, proposal, dao} = await prepareSmartContracts();
+    const nonMemberAccount = accounts[2];
+    const {voting, member, dao} = await prepareSmartContracts();
     const onboardingAddress = await dao.getAddress(web3.utils.sha3('onboarding'));
     const onboarding = await OnboardingContract.at(onboardingAddress);
     await onboarding.sendTransaction({from:otherAccount,value:sharePrice.mul(web3.utils.toBN(3)).add(remaining), gasPrice: web3.utils.toBN("0")});
@@ -138,5 +139,12 @@ contract('MolochV3', async accounts => {
     
     await advanceTime(10000);
     await onboarding.processProposal(0);
+    
+    const myAccountShares = await member.nbShares(dao.address, myAccount);
+    const otherAccountShares = await member.nbShares(dao.address, otherAccount);
+    const nonMemberAccountShares = await member.nbShares(dao.address, nonMemberAccount);
+    assert.equal(myAccountShares.toString(), "1");
+    assert.equal(otherAccountShares.toString(), "57480000000000000000");
+    assert.equal(nonMemberAccountShares.toString(), "0");
   })
 });

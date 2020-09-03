@@ -11,6 +11,7 @@ interface IMemberContract {
     function isActiveMember(ModuleRegistry dao, address member) external returns (bool);    
     function memberAddress(ModuleRegistry dao, address memberOrDelegateKey) external returns (address);
     function updateMember(ModuleRegistry dao, address applicant, uint256 shares) external;
+    function nbShares(ModuleRegistry dao, address member) external view returns (uint256);
 }
 
 contract MemberContract is IMemberContract {
@@ -24,6 +25,10 @@ contract MemberContract is IMemberContract {
 
     mapping(address => mapping(address => Member)) members;
     mapping(address => mapping(address => address)) memberAddresses;
+
+    function nbShares(ModuleRegistry dao, address member) override external view returns (uint256) {
+        return members[address(dao)][member].nbShares;
+    }
 
     function isActiveMember(ModuleRegistry dao, address member) override external view returns (bool) {
         uint256 memberFlags = members[address(dao)][member].flags;

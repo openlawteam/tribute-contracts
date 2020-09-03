@@ -14,6 +14,7 @@ contract OnboardingContract {
         uint256 amount;
         uint256 sharesRequested;
         bool processed;
+        address applicant;
     }
 
     ModuleRegistry dao;
@@ -47,10 +48,12 @@ contract OnboardingContract {
 
     function _submitMembershipProposal(address newMember, uint256 sharesRequested, uint256 amount) internal {
         IProposalContract proposalContract = IProposalContract(dao.getAddress(PROPOSAL_MODULE));
-        uint256 proposalId = proposalContract.createProposal(dao, newMember);
+        uint256 proposalId = proposalContract.createProposal(dao);
         ProposalDetails storage proposal = proposals[proposalId];
         proposal.amount = amount;
         proposal.sharesRequested = sharesRequested;
+        proposal.applicant = newMember;
+        
     }
 
     function sponsorProposal(uint256 proposalId) external {
@@ -63,5 +66,7 @@ contract OnboardingContract {
         require(memberContract.isActiveMember(dao, msg.sender), "only members can sponsor a membership proposal");
         IVotingContract votingContract = IVotingContract(dao.getAddress(VOTING_MODULE));
         require(votingContract.voteResult(dao, proposalId) == 2, "proposal need to pass to be processed");
+        ProposalDetails storage proposal = proposals[proposalId];
+        memberContract.updateMember(dao, proposal.applicant, proposal.sharesRequested);
     }
 }
