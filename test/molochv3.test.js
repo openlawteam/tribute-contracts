@@ -120,7 +120,7 @@ contract('MolochV3', async accounts => {
     return {daoFactory, voting, proposal, dao, member};
   }
 
-  it("should not be possible to join a DAO if the proposal applicant is not active", async () => {
+  it("should be possible to join a DAO", async () => {
     const myAccount = accounts[0];
     const otherAccount = accounts[1];
     const nonMemberAccount = accounts[2];
