@@ -37,4 +37,10 @@ library FlagHelper {
     function isCancelled(uint256 flags) public pure returns (bool) {
         return getFlag(flags, 4);
     }
+    function isJailed(uint256 flags) public pure returns (bool) {
+        return getFlag(flags, 5);
+    }
+    function isPass(uint256 flags) public pure returns (bool) {
+        return getFlag(flags, 6);
+    }
 }

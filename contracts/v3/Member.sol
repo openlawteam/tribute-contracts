@@ -10,10 +10,12 @@ import './HelperMoloch.sol';
 interface IMemberContract {
     function isActiveMember(ModuleRegistry dao, address member) external returns (bool);    
     function memberAddress(ModuleRegistry dao, address memberOrDelegateKey) external returns (address);
-    function updateMember(ModuleRegistry dao, address applicant, uint256 sharesRequested, uint256 tributeOffered, address tributeToken) external;
+    function updateMember(ModuleRegistry dao, address applicant, uint256 shares) external;
+    function nbShares(ModuleRegistry dao, address member) external view returns (uint256);
 }
 
-contract MemberContracr is IMemberContract {
+contract MemberContract is IMemberContract {
+    using FlagHelper for uint256;
 
     struct Member {
         uint256 flags;
@@ -21,19 +23,25 @@ contract MemberContracr is IMemberContract {
         uint256 nbShares;
     }
 
-    mapping(address => Member) members;
+    mapping(address => mapping(address => Member)) members;
+    mapping(address => mapping(address => address)) memberAddresses;
 
-    function isActiveMember(ModuleRegistry dao, address member) override external returns (bool) {
-        uint256 memberFlags = members[member].flags;
-        //FIXME
-        return true; //erFlags.exists() && !memberFlags.jailed() && members[member].nbShares > 0;
+    function nbShares(ModuleRegistry dao, address member) override external view returns (uint256) {
+        return members[address(dao)][member].nbShares;
     }
 
-    function memberAddress(ModuleRegistry dao, address memberOrDelegateKey) override  external returns (address) {
-
+    function isActiveMember(ModuleRegistry dao, address member) override external view returns (bool) {
+        uint256 memberFlags = members[address(dao)][member].flags;
+        return memberFlags.exists() && !memberFlags.isJailed() && members[address(dao)][member].nbShares > 0;
     }
 
-    function updateMember(ModuleRegistry dao, address applicant, uint256 sharesRequested, uint256 tributeOffered, address tributeToken) override  external {
+    function memberAddress(ModuleRegistry dao, address memberOrDelegateKey) override  external view returns (address) {
+        return memberAddresses[address(dao)][memberOrDelegateKey];
+    }
 
+    function updateMember(ModuleRegistry dao, address applicant, uint256 shares) override  external {
+        Member storage member = members[address(dao)][applicant];
+        member.flags = 1;
+        member.nbShares = shares;
     }
 }
