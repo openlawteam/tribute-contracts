@@ -137,7 +137,7 @@ contract('MolochV3', async accounts => {
 
     await voting.submitVote(dao.address, 0, 1, {from: myAccount, gasPrice: web3.utils.toBN("0")});
     try {
-      await await onboarding.processProposal(0, {from: myAccount, gasPrice: web3.utils.toBN("0")});
+      await onboarding.processProposal(0, {from: myAccount, gasPrice: web3.utils.toBN("0")});
     } catch(err) {
       assert.equal(err.reason, "proposal need to pass to be processed");
     }

@@ -9,6 +9,7 @@ interface IBankContract {
     function addToGuild(ModuleRegistry dao, address tokenAddress, uint256 amount) external;
     function addToEscrow(ModuleRegistry dao, address tokenAddress, uint256 amount) external;
     function balanceOf(ModuleRegistry dao, address tokenAddress, address account) external returns (uint256);
+    function isReservedAddress(address applicant) external returns (bool);
 }
 
 contract BankContract is IBankContract {
@@ -37,6 +38,10 @@ contract BankContract is IBankContract {
     
     function balanceOf(ModuleRegistry dao, address user, address token) override external view returns (uint256) {
         return tokenBalances[address(dao)][user][token];
+    }
+
+    function isReservedAddress(address applicant) override external returns (bool) {
+        return applicant != GUILD && applicant != ESCROW && applicant != TOTAL;
     }
 
     /**
