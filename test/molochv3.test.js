@@ -7,7 +7,7 @@ const BankContract = artifacts.require('./v3/BankContract');
 const VotingContract = artifacts.require('./v3/VotingContract');
 const ProposalContract = artifacts.require('./v3/ProposalContract');
 const OnboardingContract = artifacts.require('./v3/OnboardingContract');
-
+const FinancingContract = artifacts.require('./v3/FinancingContract');
 
 async function advanceTime(time) {
   await new Promise((resolve, reject) => {
@@ -115,16 +115,19 @@ contract('MolochV3', async accounts => {
     let member = await MemberContract.new();
     let proposal = await ProposalContract.new();
     let voting = await VotingContract.new();
-    return {voting, proposal, member, bank};
+    let financing = await FinancingContract.new();
+    return { voting, proposal, member, bank, financing};
   }
 
   it("should be possible to join a DAO", async () => {
     const myAccount = accounts[1];
     const otherAccount = accounts[2];
     const nonMemberAccount = accounts[3];
-    const {voting, member, bank, proposal} = await prepareSmartContracts();
+    const {voting, member, bank, proposal, financing} = await prepareSmartContracts();
 
-    let daoFactory = await DaoFactory.new(bank.address, member.address, proposal.address, voting.address, {from: myAccount, gasPrice: web3.utils.toBN("0")});
+    let daoFactory = await DaoFactory.new(bank.address, member.address, proposal.address, voting.address, 
+      { from: myAccount, gasPrice: web3.utils.toBN("0") }, financing.address);
+
     await daoFactory.newDao(sharePrice, numberOfShares, 1000, {from: myAccount, gasPrice: web3.utils.toBN("0")});
     let pastEvents = await daoFactory.getPastEvents();
     let daoAddress = pastEvents[0].returnValues.dao;
@@ -154,5 +157,45 @@ contract('MolochV3', async accounts => {
 
     const guildBalance = await bank.balanceOf(dao.address, GUILD, "0x0000000000000000000000000000000000000000");
     assert.equal(guildBalance.toString(), sharePrice.mul(web3.utils.toBN("3")).toString());
+  })
+
+  it("should be possible to any individual to request financing", async () => {
+    const myAccount = accounts[1];
+    const otherAccount = accounts[2];
+    const nonMemberAccount = accounts[3];
+    const { voting, member, bank, proposal, financing } = await prepareSmartContracts();
+
+    let daoFactory = await DaoFactory.new(bank.address, member.address, proposal.address, voting.address, 
+      { from: myAccount, gasPrice: web3.utils.toBN("0") }, financing.address);
+
+    await daoFactory.newDao(sharePrice, numberOfShares, 1000, { from: myAccount, gasPrice: web3.utils.toBN("0") });
+    let pastEvents = await daoFactory.getPastEvents();
+    let daoAddress = pastEvents[0].returnValues.dao;
+    let dao = await ModuleRegistry.at(daoAddress);
+
+    const financingAddress = await dao.getAddress(web3.utils.sha3('financing'));
+    const financingContract = await FinancingContract.at(financingAddress);
+    await financingContract.createFinancingRequest(daoAddress,  );
+    await onboarding.sponsorProposal(0, { from: myAccount, gasPrice: web3.utils.toBN("0") });
+
+    await voting.submitVote(dao.address, 0, 1, { from: myAccount, gasPrice: web3.utils.toBN("0") });
+    try {
+      await onboarding.processProposal(0, { from: myAccount, gasPrice: web3.utils.toBN("0") });
+    } catch (err) {
+      assert.equal(err.reason, "proposal need to pass to be processed");
+    }
+
+    await advanceTime(10000);
+    await onboarding.processProposal(0, { from: myAccount, gasPrice: web3.utils.toBN("0") });
+
+    const myAccountShares = await member.nbShares(dao.address, myAccount);
+    const otherAccountShares = await member.nbShares(dao.address, otherAccount);
+    const nonMemberAccountShares = await member.nbShares(dao.address, nonMemberAccount);
+    assert.equal(myAccountShares.toString(), "1");
+    assert.equal(otherAccountShares.toString(), numberOfShares.mul(web3.utils.toBN("3")));
+    assert.equal(nonMemberAccountShares.toString(), "0");
+
+    const escrowBalance = await bank.balanceOf(dao.address, ESCROW, "0x0000000000000000000000000000000000000000");
+    assert.equal(escrowBalance.toString(), sharePrice.mul(web3.utils.toBN("3")).toString());
   })
 });

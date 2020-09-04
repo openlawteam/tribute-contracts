@@ -17,12 +17,14 @@ contract DaoFactory {
     bytes32 constant PROPOSAL_MODULE = keccak256("proposal");
     bytes32 constant VOTING_MODULE = keccak256("voting");
     bytes32 constant ONBOARDING_MODULE = keccak256("onboarding");
+    bytes32 constant FINANCING_MODULE = keccak256("financing");
 
-    constructor (address bankAddress, address memberAddress, address proposalAddress, address votingAddress) {
+    constructor (address bankAddress, address memberAddress, address proposalAddress, address votingAddress, address financingAddress) {
         addresses[BANK_MODULE] = bankAddress;
         addresses[MEMBER_MODULE] = memberAddress;
         addresses[PROPOSAL_MODULE] = proposalAddress;
         addresses[VOTING_MODULE] = votingAddress;
+        addresses[FINANCING_MODULE] = financingAddress;
     }
 
     function newDao(uint256 chunkSize, uint256 nbShares, uint256 votingPeriod) external returns (address) {
@@ -33,6 +35,7 @@ contract DaoFactory {
         dao.updateRegistry(PROPOSAL_MODULE, addresses[PROPOSAL_MODULE]);
         dao.updateRegistry(VOTING_MODULE, addresses[VOTING_MODULE]);
         dao.updateRegistry(ONBOARDING_MODULE, address(onboarding));
+        dao.updateRegistry(FINANCING_MODULE, addresses[FINANCING_MODULE]);
 
         IVotingContract votingContract = IVotingContract(addresses[VOTING_MODULE]);
 

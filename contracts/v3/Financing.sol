@@ -7,6 +7,7 @@ import './Proposal.sol';
 import './Voting.sol';
 import './Bank.sol';
 import '../SafeMath.sol';
+import '../ReentrancyGuard.sol';
 
 interface IFinancingContract {
     function createFinancingRequest(address daoAddress, address applicant, uint256 amount, bytes32 details) external returns (uint256);    
@@ -26,8 +27,9 @@ contract FinancingContract is IFinancingContract {
     mapping(uint256 => ProposalDetails) public proposals;
 
     bytes32 constant BANK_MODULE = keccak256("bank");
-    bytes32 constant PROPOSAL_MODULE = keccak256("proposal");
     bytes32 constant VOTING_MODULE = keccak256("voting");
+    bytes32 constant MEMBER_MODULE = keccak256("member");
+    bytes32 constant PROPOSAL_MODULE = keccak256("proposal");
 
     ModuleRegistry dao;
 
@@ -63,14 +65,18 @@ contract FinancingContract is IFinancingContract {
     }
 
     function processProposal(uint256 proposalId) override external {
-        require(proposalId != 0, "invalid proposal identifier");
-        ProposalDetails memory proposal = proposals[proposalId];
+        IMemberContract memberContract = IMemberContract(dao.getAddress(MEMBER_MODULE));
+        require(memberContract.isActiveMember(dao, msg.sender), "only members can process a financial proposal");
 
-        //TODO is it required to be a member to ask for financing?
         IVotingContract votingContract = IVotingContract(dao.getAddress(VOTING_MODULE));
         require(votingContract.voteResult(dao, proposalId) == 2, "proposal need to pass to be processed");
 
-        // memberContract.updateMember(dao, proposal.applicant, proposal.sharesRequested);
-        //TODO update banking contract and set processed=true?
+        ProposalDetails memory proposal = proposals[proposalId];
+
+        IBankContract bankContract = IBankContract(dao.getAddress(BANK_MODULE));
+        // address 0 represents native ETH
+        bankContract.addToEscrow(dao, address(0), proposal.amount);
+        proposals[proposalId].processed = true;
+        payable(address(bankContract)).transfer(proposal.amount); 
     }
 }

@@ -40,7 +40,7 @@ contract BankContract is IBankContract {
         return tokenBalances[address(dao)][user][token];
     }
 
-    function isReservedAddress(address applicant) override external returns (bool) {
+    function isReservedAddress(address applicant) override pure external returns (bool) {
         return applicant != GUILD && applicant != ESCROW && applicant != TOTAL;
     }
 
