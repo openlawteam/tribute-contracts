@@ -5,6 +5,7 @@ pragma solidity ^0.7.0;
 import './ModuleRegistry.sol';
 import './Proposal.sol';
 import './Voting.sol';
+import './Bank.sol';
 import '../SafeMath.sol';
 
 contract OnboardingContract {
@@ -68,5 +69,9 @@ contract OnboardingContract {
         require(votingContract.voteResult(dao, proposalId) == 2, "proposal need to pass to be processed");
         ProposalDetails storage proposal = proposals[proposalId];
         memberContract.updateMember(dao, proposal.applicant, proposal.sharesRequested);
+        IBankContract bankContract = IBankContract(dao.getAddress(BANK_MODULE));
+        // address 0 represents native ETH
+        bankContract.addToGuild(dao, address(0), proposal.amount);
+        payable(address(bankContract)).transfer(proposal.amount); 
     }
 }
