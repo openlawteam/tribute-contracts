@@ -10,6 +10,7 @@ interface IBankContract {
     function addToEscrow(ModuleRegistry dao, address tokenAddress, uint256 amount) external;
     function balanceOf(ModuleRegistry dao, address tokenAddress, address account) external returns (uint256);
     function isReservedAddress(address applicant) external returns (bool);
+    function transferFromGuild(ModuleRegistry dao, address payable applicant, address tokenAddress, uint256 amount) external;
 }
 
 contract BankContract is IBankContract {
@@ -21,6 +22,7 @@ contract BankContract is IBankContract {
     }
 
     event TokensCollected(address indexed moloch, address indexed token, uint256 amountToCollect);
+    event Transfer(address indexed toAddress, address token, uint256 amount);
 
     address public constant GUILD = address(0xdead);
     address public constant ESCROW = address(0xbeef);
@@ -40,7 +42,15 @@ contract BankContract is IBankContract {
         return tokenBalances[address(dao)][user][token];
     }
 
-    function isReservedAddress(address applicant) override pure external returns (bool) {
+    function transferFromGuild(ModuleRegistry dao, address payable applicant, address token, uint256 amount) override external onlyModule(dao) {
+        require(tokenBalances[address(dao)][GUILD][token] >= amount, "insufficient balance");
+        unsafeSubtractFromBalance(address(dao), GUILD, token, amount);
+        applicant.transfer(amount);
+        //TODO transfer or make it available to withdraw by applicant?
+        emit Transfer(applicant, token, amount);
+    }
+
+        function isReservedAddress(address applicant) override pure external returns (bool) {
         return applicant != GUILD && applicant != ESCROW && applicant != TOTAL;
     }
 
