@@ -2,12 +2,13 @@ pragma solidity ^0.7.0;
 
 // SPDX-License-Identifier: MIT
 
-import './ModuleRegistry.sol';
-import './Proposal.sol';
-import './Voting.sol';
-import './Bank.sol';
-import '../SafeMath.sol';
-import '../ReentrancyGuard.sol';
+import '../ModuleRegistry.sol';
+import '../Proposal.sol';
+import '../Voting.sol';
+import '../Bank.sol';
+import './AdapterGuard.sol';
+import '../../ReentrancyGuard.sol';
+import '../../SafeMath.sol';
 
 interface IFinancingContract {
     function createFinancingRequest(address daoAddress, address applicant, address token, uint256 amount, bytes32 details) external returns (uint256);
@@ -15,14 +16,8 @@ interface IFinancingContract {
     function processProposal(uint256 proposalId) external;
 }
 
-contract FinancingContract is IFinancingContract, ReentrancyGuard  {
+contract FinancingContract is IFinancingContract, ReentrancyGuard, AdapterGuard  {
     using SafeMath for uint256;
-
-    modifier onlyMembers(ModuleRegistry dao) {
-        IMemberContract memberContract = IMemberContract(dao.getAddress(MEMBER_MODULE));
-        require(memberContract.isActiveMember(dao, msg.sender), "only members can call this function");
-        _;
-    }
 
     struct ProposalDetails {
         address applicant;
@@ -36,7 +31,6 @@ contract FinancingContract is IFinancingContract, ReentrancyGuard  {
 
     bytes32 constant BANK_MODULE = keccak256("bank");
     bytes32 constant VOTING_MODULE = keccak256("voting");
-    bytes32 constant MEMBER_MODULE = keccak256("member");
     bytes32 constant PROPOSAL_MODULE = keccak256("proposal");
 
     ModuleRegistry dao;
@@ -57,7 +51,7 @@ contract FinancingContract is IFinancingContract, ReentrancyGuard  {
         require(applicant != address(0x0), "applicant address can not be empty");
         require(daoAddress != address(0x0), "dao address can not be empty");
         require(amount > 0, "invalid requested amount");
-        //TODO check if TOKEN is supported/allowed?
+        //TODO (fforbeck): check if the TOKEN is supported/allowed
 
         ModuleRegistry selectedDAO = ModuleRegistry(daoAddress);
         IBankContract bankContract = IBankContract(selectedDAO.getAddress(BANK_MODULE));
@@ -89,7 +83,6 @@ contract FinancingContract is IFinancingContract, ReentrancyGuard  {
 
         IBankContract bankContract = IBankContract(dao.getAddress(BANK_MODULE));
         proposals[proposalId].processed = true;
-        //TODO: transfer directly from the Guild Bank to applicant account or make the funds available for withdraw?
-        bankContract.transferFromGuild(dao, payable(proposal.applicant), proposal.token, proposal.amount);
+        bankContract.transferFromGuild(dao, proposal.applicant, proposal.token, proposal.amount);
     }
 }

@@ -6,7 +6,7 @@ import './ModuleRegistry.sol';
 import './Proposal.sol';
 import './Voting.sol';
 import './Onboarding.sol';
-import './Financing.sol';
+import './adapters/Financing.sol';
 
 contract DaoFactory {
 
