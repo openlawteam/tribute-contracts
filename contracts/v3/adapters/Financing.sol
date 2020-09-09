@@ -7,7 +7,6 @@ import '../Proposal.sol';
 import '../Voting.sol';
 import '../Bank.sol';
 import './AdapterGuard.sol';
-import '../../ReentrancyGuard.sol';
 import '../../SafeMath.sol';
 
 interface IFinancingContract {
@@ -16,7 +15,7 @@ interface IFinancingContract {
     function processProposal(uint256 proposalId) external;
 }
 
-contract FinancingContract is IFinancingContract, ReentrancyGuard, AdapterGuard  {
+contract FinancingContract is IFinancingContract, AdapterGuard  {
     using SafeMath for uint256;
 
     struct ProposalDetails {
@@ -51,7 +50,8 @@ contract FinancingContract is IFinancingContract, ReentrancyGuard, AdapterGuard 
         require(applicant != address(0x0), "applicant address can not be empty");
         require(daoAddress != address(0x0), "dao address can not be empty");
         require(amount > 0, "invalid requested amount");
-        //TODO (fforbeck): check if the TOKEN is supported/allowed
+        require(token == address(0x0), "only raw eth token is supported");
+        //TODO (fforbeck): check if other types of tokens are supported/allowed
 
         ModuleRegistry selectedDAO = ModuleRegistry(daoAddress);
         IBankContract bankContract = IBankContract(selectedDAO.getAddress(BANK_MODULE));
@@ -74,7 +74,7 @@ contract FinancingContract is IFinancingContract, ReentrancyGuard, AdapterGuard 
         proposalContract.sponsorProposal(dao, proposalId, msg.sender);
     }
 
-    function processProposal(uint256 proposalId) override external nonReentrant onlyMembers(dao) {
+    function processProposal(uint256 proposalId) override external onlyMembers(dao) {
         ProposalDetails memory proposal = proposals[proposalId];
         require(!proposal.processed, "proposal already processed");
 

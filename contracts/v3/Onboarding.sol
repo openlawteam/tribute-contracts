@@ -7,9 +7,8 @@ import './Proposal.sol';
 import './Voting.sol';
 import './Bank.sol';
 import '../SafeMath.sol';
-import '../ReentrancyGuard.sol';
 
-contract OnboardingContract is ReentrancyGuard {
+contract OnboardingContract {
     using SafeMath for uint256;
 
     struct ProposalDetails {
@@ -62,7 +61,7 @@ contract OnboardingContract is ReentrancyGuard {
         proposalContract.sponsorProposal(dao, proposalId, msg.sender);
     }
 
-    function processProposal(uint256 proposalId) external nonReentrant {
+    function processProposal(uint256 proposalId) external {
         IMemberContract memberContract = IMemberContract(dao.getAddress(MEMBER_MODULE));
         require(memberContract.isActiveMember(dao, msg.sender), "only members can sponsor a membership proposal");
         IVotingContract votingContract = IVotingContract(dao.getAddress(VOTING_MODULE));
