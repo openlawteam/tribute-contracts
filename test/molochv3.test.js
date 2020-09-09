@@ -472,7 +472,7 @@ contract('MolochV3', async accounts => {
     const onboardingAddress = await dao.getAddress(web3.utils.sha3('onboarding'));
     const onboarding = await OnboardingContract.at(onboardingAddress);
     await onboarding.sendTransaction({from:otherAccount,value:sharePrice.mul(web3.utils.toBN(3)).add(remaining), gasPrice: web3.utils.toBN("0")});
-    const {snapshotTree, weights} = await prepareSnapshot(dao, member, accounts);
+    const {snapshotTree} = await prepareSnapshot(dao, member, accounts);
     await onboarding.sponsorProposal(0, snapshotTree.getRoot(), {from: myAccount, gasPrice: web3.utils.toBN("0")});
     await voting.submitVoteResult(dao.address, 0, 1, 0, snapshotTree.getRoot(), {from: myAccount, gasPrice: web3.utils.toBN("0")});
     await advanceTime(10000);
