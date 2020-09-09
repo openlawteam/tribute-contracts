@@ -24,6 +24,7 @@ contract OffchainVotingContract is IVotingContract {
         uint256 nbYes;
         uint256 nbNo;
         uint256 startingTime;
+        bool isChallenged;
     }
     
     mapping(address => mapping(uint256 => Voting)) votes;
@@ -47,7 +48,9 @@ contract OffchainVotingContract is IVotingContract {
         if(vote.startingTime == 0) {
             return 0;
         }
-
+        if(vote.isChallenged) {
+            return 5;
+        }
         if(block.timestamp < vote.startingTime + votingConfigs[address(dao)].votingPeriod) {
             return 4;
         }
@@ -82,14 +85,21 @@ contract OffchainVotingContract is IVotingContract {
         vote.snapshotRoot = root;
     }
 
-    function prepareData(address voter, uint256 weight, bytes memory voteSignature, uint256 nbYes, uint256 nbNo, bytes32 previousHash, bytes32 nextHash) public pure returns (bytes memory) {
-        return abi.encode(voter, weight, voteSignature, nbYes, nbNo, previousHash, nextHash);
+    function challengeNodeNotInOrder(ModuleRegistry dao, uint256 proposalId, address voter, uint256 weight, uint256 nbYes, uint256 nbNo, bytes calldata voteSignature, bytes memory proof, uint256 index) view external {
+        Voting memory vote = votes[address(dao)][proposalId];
+        bytes32 hash = keccak256(abi.encode(voter, weight, voteSignature, nbYes, nbNo));
+        require(checkProofOrdered(proof, vote.resultRoot, hash, index), "proof check mismatch!");
+        if(vote.nbYes != nbYes) {
+            vote.nbYes = nbYes;
+        }
+        if(vote.nbNo != nbNo) {
+            vote.nbNo = nbNo;
+        }
     }
 
-    function fixResult(ModuleRegistry dao, uint256 proposalId, address voter, uint256 weight, uint256 nbYes, uint256 nbNo, bytes calldata voteSignature, bytes32 previousHash, bytes memory proof, uint256 index) view external {
+    function fixResult(ModuleRegistry dao, uint256 proposalId, address voter, uint256 weight, uint256 nbYes, uint256 nbNo, bytes calldata voteSignature, bytes memory proof, uint256 index) view external {
         Voting memory vote = votes[address(dao)][proposalId];
-        bytes memory data = prepareData(voter, weight, voteSignature, nbYes, nbNo, previousHash, bytes32(0));
-        bytes32 hash = keccak256(data);
+        bytes32 hash = keccak256(abi.encode(voter, weight, voteSignature, nbYes, nbNo));
         require(checkProofOrdered(proof, vote.resultRoot, hash, index), "proof check mismatch!");
         if(vote.nbYes != nbYes) {
             vote.nbYes = nbYes;

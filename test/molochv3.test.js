@@ -377,17 +377,10 @@ contract('MolochV3', async accounts => {
     return {snapshotTree: new MerkleTree(elements, true), weights};
   }
 
-  function buildVoteLeafHash(leaf) {
-    return sha3(web3.eth.abi.encodeParameters(
-      ['address', 'uint256', 'uint256', 'uint256', 'uint256'], 
-      [leaf.address, leaf.weight.toString(), leaf.vote.toString(), leaf.nbYes.toString(), leaf.nbNo.toString()])
-    );
-  }
-
   function buildVoteLeafHashForMerkleTreeData(leaf) {
     return web3.eth.abi.encodeParameters(
-      ['address', 'uint256', 'bytes', 'uint256', 'uint256', 'bytes32', 'bytes32'], 
-      [leaf.address, leaf.weight.toString(), leaf.vote.toString(), leaf.nbYes.toString(), leaf.nbNo.toString(), leaf.previousHash, leaf.nextHash]);
+      ['address', 'uint256', 'bytes', 'uint256', 'uint256'], 
+      [leaf.address, leaf.weight.toString(), leaf.vote.toString(), leaf.nbYes.toString(), leaf.nbNo.toString()]);
   }
 
   function buildVoteLeafHashForMerkleTree(leaf) {
@@ -401,9 +394,7 @@ contract('MolochV3', async accounts => {
         address: vote.address,
         weight: weights[vote.address],
         vote: vote.signature,
-        voteResult: vote.voteResult,
-        previousHash: '0x0',
-        nextHash: '0x0'
+        voteResult: vote.voteResult
       }
     });
 
@@ -413,21 +404,15 @@ contract('MolochV3', async accounts => {
       
       if(idx > 0) {
         const previousLeaf = leaves[idx - 1];
-        leaf.previousHash = buildVoteLeafHash(previousLeaf);
         leaf.nbYes = leaf.nbYes + previousLeaf.nbYes;
         leaf.nbNo = leaf.nbNo + previousLeaf.nbNo;
       }
       
     });
 
-    leaves.forEach((leaf, idx) => {
+    leaves.forEach((leaf) => {
       leaf.nbYes = leaf.voteResult === 1 ? 1 : 0;
       leaf.nbNo = leaf.voteResult !== 1 ? 1 : 0;
-      
-      if(idx < leaves.length - 1) {
-        const nextLeaf = leaves[idx + 1];
-        leaf.nextHash = buildVoteLeafHash(nextLeaf);
-      }
     });
 
     const voteResultTree = new MerkleTree(leaves.map(vote => buildVoteLeafHashForMerkleTree(vote), true));
@@ -518,7 +503,7 @@ contract('MolochV3', async accounts => {
     const lastVoteElement = voteResultTree.elements[elementIndex];
     const lastVote = votes[elementIndex];
     const proof = voteResultTree.getProofOrdered(lastVoteElement, elementIndex + 1);
-    await voting.fixResult(dao.address, 0, lastVote.address, lastVote.weight, lastVote.nbYes, lastVote.nbNo, lastVote.vote, lastVote.previousHash, proof , votes.length - 1);
+    await voting.fixResult(dao.address, 0, lastVote.address, lastVote.weight, lastVote.nbYes, lastVote.nbNo, lastVote.vote, proof , votes.length - 1);
     await advanceTime(10000);
     await onboarding.processProposal(0, {from: myAccount, gasPrice: web3.utils.toBN("0")});
   });
