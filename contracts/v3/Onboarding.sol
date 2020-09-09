@@ -57,9 +57,9 @@ contract OnboardingContract {
         
     }
 
-    function sponsorProposal(uint256 proposalId) external {
+    function sponsorProposal(uint256 proposalId, bytes calldata data) external {
         IProposalContract proposalContract = IProposalContract(dao.getAddress(PROPOSAL_MODULE));
-        proposalContract.sponsorProposal(dao, proposalId, msg.sender);
+        proposalContract.sponsorProposal(dao, proposalId, msg.sender, data);
     }
 
     function processProposal(uint256 proposalId) external {

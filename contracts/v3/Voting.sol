@@ -8,10 +8,9 @@ import './Member.sol';
 import './HelperMoloch.sol';
 
 interface IVotingContract {
-    function startNewVotingForProposal(ModuleRegistry dao, uint256 proposalId) external returns (uint256);
+    function startNewVotingForProposal(ModuleRegistry dao, uint256 proposalId, bytes calldata data) external returns (uint256);
     function voteResult(ModuleRegistry dao, uint256 proposalId) external returns (uint256 state);
     function registerDao(address dao, uint256 votingPeriod) external;
-    function submitVote(ModuleRegistry dao, uint256 proposalId, uint256 vote) external;
 }
 
 contract VotingContract is IVotingContract {
@@ -65,14 +64,14 @@ contract VotingContract is IVotingContract {
             return 1;
         }
     }
-
-    function startNewVotingForProposal(ModuleRegistry dao, uint256 proposalId) override external returns (uint256){
+    //voting  data is not used for pure onchain voting
+    function startNewVotingForProposal(ModuleRegistry dao, uint256 proposalId, bytes calldata) override external returns (uint256){
         // compute startingPeriod for proposal
         Voting storage vote = votes[address(dao)][proposalId];
         vote.startingTime = block.timestamp;
     }
 
-    function submitVote(ModuleRegistry dao, uint256 proposalId, uint256 voteValue) override external {
+    function submitVote(ModuleRegistry dao, uint256 proposalId, uint256 voteValue) external {
         IMemberContract memberContract = IMemberContract(dao.getAddress(MEMBER_MODULE));
         require(memberContract.isActiveMember(dao, msg.sender), "only active members can vote");
         require(voteValue < 3, "only blank (0), yes (1) and no (2) are possible values");

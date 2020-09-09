@@ -7,7 +7,7 @@ import './Voting.sol';
 
 interface IProposalContract {
     function createProposal(ModuleRegistry dao) external returns(uint256 proposalId);
-    function sponsorProposal(ModuleRegistry dao, uint256 proposalId, address sponsoringMember) external;
+    function sponsorProposal(ModuleRegistry dao, uint256 proposalId, address sponsoringMember, bytes calldata votingData) external;
 }
 
 contract ProposalContract is IProposalContract {
@@ -37,7 +37,7 @@ contract ProposalContract is IProposalContract {
         return counter - 1;
     }
 
-    function sponsorProposal(ModuleRegistry dao, uint256 proposalId, address sponsoringMember) override external onlyModule(dao) {
+    function sponsorProposal(ModuleRegistry dao, uint256 proposalId, address sponsoringMember, bytes calldata votingData) override external onlyModule(dao) {
         IMemberContract memberContract = IMemberContract(dao.getAddress(memberModuleId));
         Proposal memory proposal = proposals[address(dao)][proposalId];
         require(proposal.flags.exists(), "proposal does not exist for this dao");
@@ -45,7 +45,7 @@ contract ProposalContract is IProposalContract {
         require(!proposal.flags.isCancelled(), "the proposal has been cancelled");
         require(memberContract.isActiveMember(dao, sponsoringMember), "only active members can sponsor someone joining");
         IVotingContract votingContract = IVotingContract(dao.getAddress(votingModuleId));
-        uint256 votingId = votingContract.startNewVotingForProposal(dao, proposalId);
+        uint256 votingId = votingContract.startNewVotingForProposal(dao, proposalId, votingData);
         
         emit SponsorProposal(proposalId, votingId, block.timestamp);
     }
