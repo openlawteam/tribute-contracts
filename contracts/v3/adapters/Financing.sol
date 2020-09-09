@@ -47,8 +47,6 @@ contract FinancingContract is IFinancingContract, AdapterGuard  {
 
     function createFinancingRequest(address daoAddress, address applicant, address token, uint256 amount, bytes32 details) override external returns (uint256) {
         require(daoAddress != address(0x0), "dao address can not be empty");
-        require(applicant != address(0x0), "applicant address can not be empty");
-        require(daoAddress != address(0x0), "dao address can not be empty");
         require(amount > 0, "invalid requested amount");
         require(token == address(0x0), "only raw eth token is supported");
         //TODO (fforbeck): check if other types of tokens are supported/allowed

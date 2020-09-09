@@ -50,7 +50,7 @@ contract BankContract is IBankContract {
     }
 
     function isReservedAddress(address applicant) override pure external returns (bool) {
-        return applicant != GUILD && applicant != ESCROW && applicant != TOTAL;
+        return applicant != address(0x0) && applicant != GUILD && applicant != ESCROW && applicant != TOTAL;
     }
 
     /**
