@@ -42,7 +42,7 @@ contract OnboardingContract {
 
         _submitMembershipProposal(msg.sender, sharesRequested, amount);
 
-        if(msg.value > amount) {
+        if (msg.value > amount) {
             msg.sender.transfer(msg.value - amount);
         }
     }
@@ -54,7 +54,6 @@ contract OnboardingContract {
         proposal.amount = amount;
         proposal.sharesRequested = sharesRequested;
         proposal.applicant = newMember;
-        
     }
 
     function sponsorProposal(uint256 proposalId, bytes calldata data) external {
