@@ -95,7 +95,7 @@ contract OffchainVotingContract is IVotingContract {
             vote.nbYes = nbYes;
         }
         if(vote.nbNo != nbNo) {
-            vote.nbNo != nbNo;
+            vote.nbNo = nbNo;
         }
     }
 
