@@ -85,18 +85,6 @@ contract OffchainVotingContract is IVotingContract {
         vote.snapshotRoot = root;
     }
 
-    function challengeNodeNotInOrder(ModuleRegistry dao, uint256 proposalId, address voter, uint256 weight, uint256 nbYes, uint256 nbNo, bytes calldata voteSignature, bytes memory proof, uint256 index) view external {
-        Voting memory vote = votes[address(dao)][proposalId];
-        bytes32 hash = keccak256(abi.encode(voter, weight, voteSignature, nbYes, nbNo));
-        require(checkProofOrdered(proof, vote.resultRoot, hash, index), "proof check mismatch!");
-        if(vote.nbYes != nbYes) {
-            vote.nbYes = nbYes;
-        }
-        if(vote.nbNo != nbNo) {
-            vote.nbNo = nbNo;
-        }
-    }
-
     function fixResult(ModuleRegistry dao, uint256 proposalId, address voter, uint256 weight, uint256 nbYes, uint256 nbNo, bytes calldata voteSignature, bytes memory proof, uint256 index) view external {
         Voting memory vote = votes[address(dao)][proposalId];
         bytes32 hash = keccak256(abi.encode(voter, weight, voteSignature, nbYes, nbNo));
