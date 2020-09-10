@@ -2,11 +2,11 @@ pragma solidity ^0.7.0;
 
 // SPDX-License-Identifier: MIT
 
-import './ModuleRegistry.sol';
-import './Proposal.sol';
-import './Voting.sol';
-import './Bank.sol';
-import '../SafeMath.sol';
+import '../core/Registry.sol';
+import '../core/Proposal.sol';
+import '../core/Voting.sol';
+import '../core/Bank.sol';
+import '../utils/SafeMath.sol';
 
 contract OnboardingContract {
     using SafeMath for uint256;
@@ -18,7 +18,7 @@ contract OnboardingContract {
         address applicant;
     }
 
-    ModuleRegistry dao;
+    Registry dao;
     uint256 public CHUNK_SIZE;
     uint256 public SHARES_PER_CHUNK;
     mapping(uint256 => ProposalDetails) public proposals;
@@ -29,7 +29,7 @@ contract OnboardingContract {
     bytes32 constant VOTING_MODULE = keccak256("voting");
 
     constructor (address _dao, uint256 _CHUNK_SIZE, uint256 _SHARES_PER_CHUNK) {
-        dao = ModuleRegistry(_dao);
+        dao = Registry(_dao);
         CHUNK_SIZE = _CHUNK_SIZE;
         SHARES_PER_CHUNK = _SHARES_PER_CHUNK;
     }

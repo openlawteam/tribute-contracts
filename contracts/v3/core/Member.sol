@@ -2,16 +2,16 @@ pragma solidity ^0.7.0;
 
 // SPDX-License-Identifier: MIT
 
-import './ModuleRegistry.sol';
+import './Registry.sol';
 import './Proposal.sol';
 import './Voting.sol';
-import './HelperMoloch.sol';
+import '../helpers/FlagHelper.sol';
 
 interface IMemberContract {
-    function isActiveMember(ModuleRegistry dao, address member) external returns (bool);    
-    function memberAddress(ModuleRegistry dao, address memberOrDelegateKey) external returns (address);
-    function updateMember(ModuleRegistry dao, address applicant, uint256 shares) external;
-    function nbShares(ModuleRegistry dao, address member) external view returns (uint256);
+    function isActiveMember(Registry dao, address member) external returns (bool);    
+    function memberAddress(Registry dao, address memberOrDelegateKey) external returns (address);
+    function updateMember(Registry dao, address applicant, uint256 shares) external;
+    function nbShares(Registry dao, address member) external view returns (uint256);
 }
 
 contract MemberContract is IMemberContract {
@@ -28,20 +28,20 @@ contract MemberContract is IMemberContract {
     mapping(address => mapping(address => Member)) members;
     mapping(address => mapping(address => address)) memberAddresses;
 
-    function nbShares(ModuleRegistry dao, address member) override external view returns (uint256) {
+    function nbShares(Registry dao, address member) override external view returns (uint256) {
         return members[address(dao)][member].nbShares;
     }
 
-    function isActiveMember(ModuleRegistry dao, address member) override external view returns (bool) {
+    function isActiveMember(Registry dao, address member) override external view returns (bool) {
         uint256 memberFlags = members[address(dao)][member].flags;
         return memberFlags.exists() && !memberFlags.isJailed() && members[address(dao)][member].nbShares > 0;
     }
 
-    function memberAddress(ModuleRegistry dao, address memberOrDelegateKey) override  external view returns (address) {
+    function memberAddress(Registry dao, address memberOrDelegateKey) override  external view returns (address) {
         return memberAddresses[address(dao)][memberOrDelegateKey];
     }
 
-    function updateMember(ModuleRegistry dao, address applicant, uint256 shares) override  external {
+    function updateMember(Registry dao, address applicant, uint256 shares) override  external {
         Member storage member = members[address(dao)][applicant];
         member.flags = 1;
         member.nbShares = shares;

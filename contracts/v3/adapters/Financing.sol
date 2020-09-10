@@ -2,12 +2,12 @@ pragma solidity ^0.7.0;
 
 // SPDX-License-Identifier: MIT
 
-import '../ModuleRegistry.sol';
-import '../Proposal.sol';
-import '../Voting.sol';
-import '../Bank.sol';
-import './AdapterGuard.sol';
-import '../../SafeMath.sol';
+import '../core/Registry.sol';
+import '../core/Proposal.sol';
+import '../core/Voting.sol';
+import '../core/Bank.sol';
+import '../guards/AdapterGuard.sol';
+import '../utils/SafeMath.sol';
 
 interface IFinancingContract {
     function createFinancingRequest(address daoAddress, address applicant, address token, uint256 amount, bytes32 details) external returns (uint256);
@@ -32,10 +32,10 @@ contract FinancingContract is IFinancingContract, AdapterGuard  {
     bytes32 constant VOTING_MODULE = keccak256("voting");
     bytes32 constant PROPOSAL_MODULE = keccak256("proposal");
 
-    ModuleRegistry dao;
+    Registry dao;
 
     constructor (address _dao) {
-        dao = ModuleRegistry(_dao);
+        dao = Registry(_dao);
     }
 
     /* 
@@ -51,7 +51,7 @@ contract FinancingContract is IFinancingContract, AdapterGuard  {
         require(token == address(0x0), "only raw eth token is supported");
         //TODO (fforbeck): check if other types of tokens are supported/allowed
 
-        ModuleRegistry selectedDAO = ModuleRegistry(daoAddress);
+        Registry selectedDAO = Registry(daoAddress);
         IBankContract bankContract = IBankContract(selectedDAO.getAddress(BANK_MODULE));
         require(bankContract.isReservedAddress(applicant), "applicant address cannot be reserved");
         

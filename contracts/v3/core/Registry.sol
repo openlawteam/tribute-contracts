@@ -1,10 +1,10 @@
 pragma solidity ^0.7.0;
 
-import '../Ownable.sol';
+import '../utils/Ownable.sol';
 
 // SPDX-License-Identifier: MIT
 
-contract ModuleRegistry is Ownable {
+contract Registry is Ownable {
     mapping(bytes32 => address) registry;
     mapping(address => bytes32) inverseRegistry;
 

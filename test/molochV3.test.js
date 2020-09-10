@@ -1,14 +1,14 @@
 const Web3 = require('web3-utils');
-const FlagHelperLib = artifacts.require('./v3/FlagHelper');
-const DaoFactory = artifacts.require('./v3/DaoFactory');
-const ModuleRegistry = artifacts.require('./v3/ModuleRegistry');
-const MemberContract = artifacts.require('./v3/MemberContract');
-const BankContract = artifacts.require('./v3/BankContract');
-const VotingContract = artifacts.require('./v3/VotingContract');
-const ProposalContract = artifacts.require('./v3/ProposalContract');
-const OffchainVotingContract = artifacts.require('./v3/OffchainVotingContract');
-const OnboardingContract = artifacts.require('./v3/OnboardingContract');
-const FinancingContract = artifacts.require('./v3/FinancingContract');
+const FlagHelperLib = artifacts.require('./v3/helpers/FlagHelper');
+const DaoFactory = artifacts.require('./v3/core/DaoFactory');
+const ModuleRegistry = artifacts.require('./v3/core/Registry');
+const MemberContract = artifacts.require('./v3/core/MemberContract');
+const BankContract = artifacts.require('./v3/core/BankContract');
+const VotingContract = artifacts.require('./v3/core/VotingContract');
+const ProposalContract = artifacts.require('./v3/core/ProposalContract');
+const OffchainVotingContract = artifacts.require('./v3/core/OffchainVotingContract');
+const OnboardingContract = artifacts.require('./v3/adapters/OnboardingContract');
+const FinancingContract = artifacts.require('./v3/adapters/FinancingContract');
 
 // https://github.com/raiden-network/raiden/blob/master/raiden/mtree.py
 // Create a merkle root from a list of elements

@@ -14,8 +14,8 @@ const {
 } = require('./test-utils')
 
 const Moloch = artifacts.require('./Moloch')
-const Token = artifacts.require('./ERC20')
-const Submitter = artifacts.require('./Submitter') // used to test submit proposal return values
+const Token = artifacts.require('./v3/utils/ERC20')
+const Submitter = artifacts.require('./test/Submitter') // used to test submit proposal return values
 
 const revertMessages = {
   molochConstructorSummonerCannotBe0: 'summoner cannot be 0',

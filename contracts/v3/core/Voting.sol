@@ -2,14 +2,14 @@ pragma solidity ^0.7.0;
 
 // SPDX-License-Identifier: MIT
 
-import './ModuleRegistry.sol';
+import './Registry.sol';
 import './Proposal.sol';
 import './Member.sol';
-import './HelperMoloch.sol';
+import '../helpers/FlagHelper.sol';
 
 interface IVotingContract {
-    function startNewVotingForProposal(ModuleRegistry dao, uint256 proposalId, bytes calldata data) external returns (uint256);
-    function voteResult(ModuleRegistry dao, uint256 proposalId) external returns (uint256 state);
+    function startNewVotingForProposal(Registry dao, uint256 proposalId, bytes calldata data) external returns (uint256);
+    function voteResult(Registry dao, uint256 proposalId) external returns (uint256 state);
     function registerDao(address dao, uint256 votingPeriod) external;
 }
 
@@ -46,7 +46,7 @@ contract VotingContract is IVotingContract {
     3: not pass
     4: in progress
      */
-    function voteResult(ModuleRegistry dao, uint256 proposalId) override external view returns (uint256 state) {
+    function voteResult(Registry dao, uint256 proposalId) override external view returns (uint256 state) {
         Voting storage vote = votes[address(dao)][proposalId];
         if(vote.startingTime == 0) {
             return 0;
@@ -65,13 +65,13 @@ contract VotingContract is IVotingContract {
         }
     }
     //voting  data is not used for pure onchain voting
-    function startNewVotingForProposal(ModuleRegistry dao, uint256 proposalId, bytes calldata) override external returns (uint256){
+    function startNewVotingForProposal(Registry dao, uint256 proposalId, bytes calldata) override external returns (uint256){
         // compute startingPeriod for proposal
         Voting storage vote = votes[address(dao)][proposalId];
         vote.startingTime = block.timestamp;
     }
 
-    function submitVote(ModuleRegistry dao, uint256 proposalId, uint256 voteValue) external {
+    function submitVote(Registry dao, uint256 proposalId, uint256 voteValue) external {
         IMemberContract memberContract = IMemberContract(dao.getAddress(MEMBER_MODULE));
         require(memberContract.isActiveMember(dao, msg.sender), "only active members can vote");
         require(voteValue < 3, "only blank (0), yes (1) and no (2) are possible values");

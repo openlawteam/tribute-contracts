@@ -10,7 +10,7 @@ const {
 } = require('./test-utils')
 
 const Moloch = artifacts.require('./Moloch')
-const Token = artifacts.require('./ERC20')
+const Token = artifacts.require('./v3/utils/ERC20')
 
 const revertMessages = {
   onlyDelegate: 'not a delegate',

@@ -1,22 +1,22 @@
 pragma solidity ^0.7.0;
 // SPDX-License-Identifier: MIT
 
-import '../SafeMath.sol';
-import '../IERC20.sol';
-import './ModuleRegistry.sol';
+import '../utils/SafeMath.sol';
+import '../utils/IERC20.sol';
+import './Registry.sol';
 
 interface IBankContract {
-    function addToGuild(ModuleRegistry dao, address tokenAddress, uint256 amount) external;
-    function addToEscrow(ModuleRegistry dao, address tokenAddress, uint256 amount) external;
-    function balanceOf(ModuleRegistry dao, address tokenAddress, address account) external returns (uint256);
-    function transferFromGuild(ModuleRegistry dao, address applicant, address tokenAddress, uint256 amount) external;
+    function addToGuild(Registry dao, address tokenAddress, uint256 amount) external;
+    function addToEscrow(Registry dao, address tokenAddress, uint256 amount) external;
+    function balanceOf(Registry dao, address tokenAddress, address account) external returns (uint256);
+    function transferFromGuild(Registry dao, address applicant, address tokenAddress, uint256 amount) external;
     function isReservedAddress(address applicant) external returns (bool);
 }
 
 contract BankContract is IBankContract {
     using SafeMath for uint256;
 
-    modifier onlyModule(ModuleRegistry dao) {
+    modifier onlyModule(Registry dao) {
         require(dao.isModule(msg.sender), "only registered modules can call this function");
         _;
     }
@@ -30,22 +30,22 @@ contract BankContract is IBankContract {
 
     mapping (address => mapping(address => mapping(address => uint256))) public tokenBalances; // tokenBalances[molochAddress][userAddress][tokenAddress]
 
-    function addToEscrow(ModuleRegistry dao, address tokenAddress, uint256 amount) override external onlyModule(dao) {
+    function addToEscrow(Registry dao, address tokenAddress, uint256 amount) override external onlyModule(dao) {
         unsafeAddToBalance(address(dao), ESCROW, tokenAddress, amount);
     }
 
-    function addToGuild(ModuleRegistry dao, address tokenAddress, uint256 amount) override external onlyModule(dao) {
+    function addToGuild(Registry dao, address tokenAddress, uint256 amount) override external onlyModule(dao) {
         unsafeAddToBalance(address(dao), GUILD, tokenAddress, amount);
     }
     
-    function transferFromGuild(ModuleRegistry dao, address applicant, address token, uint256 amount) override external onlyModule(dao) {
+    function transferFromGuild(Registry dao, address applicant, address token, uint256 amount) override external onlyModule(dao) {
         require(tokenBalances[address(dao)][GUILD][token] >= amount, "insufficient balance");
         unsafeSubtractFromBalance(address(dao), GUILD, token, amount);
         unsafeAddToBalance(address(dao), applicant, token, amount);
         emit Transfer(GUILD, applicant, token, amount);
     }
 
-    function balanceOf(ModuleRegistry dao, address user, address token) override external view returns (uint256) {
+    function balanceOf(Registry dao, address user, address token) override external view returns (uint256) {
         return tokenBalances[address(dao)][user][token];
     }
 
