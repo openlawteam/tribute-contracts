@@ -28,6 +28,7 @@ contract DaoFactory {
         addresses[VOTING_MODULE] = votingAddress;
     }
 
+    //TODO - do we want to restrict the access to onlyOwner for this function?
     function newDao(uint256 chunkSize, uint256 nbShares, uint256 votingPeriod) external returns (address) {
         Registry dao = new Registry();
         //Registering Core Modules
