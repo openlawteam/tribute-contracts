@@ -40,6 +40,9 @@ contract FinancingContract is IFinancing, AdapterGuard  {
         revert();
     }
 
+    /**
+     * This is a function with a public access, we may need to restrict the access to membersOnly to prevent proposal spamming.
+     */
     function createFinancingRequest(address daoAddress, address applicant, address token, uint256 amount, bytes32 details) override external returns (uint256) {
         require(daoAddress != address(0x0), "dao address can not be empty");
         require(amount > 0, "invalid requested amount");

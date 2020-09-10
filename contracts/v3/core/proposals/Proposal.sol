@@ -25,7 +25,7 @@ contract ProposalContract is IProposal, ModuleGuard {
     mapping(address => uint256) public proposalCount;
     mapping(address => mapping(uint256 => Proposal)) public proposals;
 
-    function createProposal(Registry dao) override external returns(uint256) {
+    function createProposal(Registry dao) override external onlyModule(dao) returns(uint256) {
         uint256 counter = proposalCount[address(dao)];
         proposals[address(dao)][counter++] = Proposal(1);
         proposalCount[address(dao)] = counter;
