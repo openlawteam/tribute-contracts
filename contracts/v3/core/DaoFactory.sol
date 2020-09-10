@@ -2,11 +2,11 @@ pragma solidity ^0.7.0;
 
 // SPDX-License-Identifier: MIT
 
-import './ModuleRegistry.sol';
+import './Registry.sol';
 import './Proposal.sol';
 import './Voting.sol';
-import './Onboarding.sol';
-import './adapters/Financing.sol';
+import '../adapters/Onboarding.sol';
+import '../adapters/Financing.sol';
 
 contract DaoFactory {
 
@@ -28,11 +28,14 @@ contract DaoFactory {
     }
 
     function newDao(uint256 chunkSize, uint256 nbShares, uint256 votingPeriod) external returns (address) {
-        ModuleRegistry dao = new ModuleRegistry();
+        Registry dao = new Registry();
+        //Registering Core Modules
         dao.updateRegistry(BANK_MODULE, addresses[BANK_MODULE]);
         dao.updateRegistry(MEMBER_MODULE, addresses[MEMBER_MODULE]);
         dao.updateRegistry(PROPOSAL_MODULE, addresses[PROPOSAL_MODULE]);
         dao.updateRegistry(VOTING_MODULE, addresses[VOTING_MODULE]);
+
+        //Registring Adapters
         dao.updateRegistry(ONBOARDING_MODULE, address(new OnboardingContract(address(dao), chunkSize, nbShares)));
         dao.updateRegistry(FINANCING_MODULE, address(new FinancingContract(address(dao))));
 

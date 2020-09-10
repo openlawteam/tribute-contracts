@@ -2,18 +2,18 @@ pragma solidity ^0.7.0;
 
 // SPDX-License-Identifier: MIT
 
-import './ModuleRegistry.sol';
+import './Registry.sol';
 import './Voting.sol';
 
 interface IProposalContract {
-    function createProposal(ModuleRegistry dao) external returns(uint256 proposalId);
-    function sponsorProposal(ModuleRegistry dao, uint256 proposalId, address sponsoringMember, bytes calldata votingData) external;
+    function createProposal(Registry dao) external returns(uint256 proposalId);
+    function sponsorProposal(Registry dao, uint256 proposalId, address sponsoringMember, bytes calldata votingData) external;
 }
 
 contract ProposalContract is IProposalContract {
     using FlagHelper for uint256;
 
-    modifier onlyModule(ModuleRegistry dao) {
+    modifier onlyModule(Registry dao) {
         require(dao.isModule(msg.sender), "only registered modules can call this function");
         _;
     }
@@ -31,7 +31,7 @@ contract ProposalContract is IProposalContract {
     mapping(address => uint256) public proposalCount;
     mapping(address => mapping(uint256 => Proposal)) public proposals;
 
-    function createProposal(ModuleRegistry dao) override external returns(uint256) {
+    function createProposal(Registry dao) override external returns(uint256) {
         uint256 counter = proposalCount[address(dao)];
         proposals[address(dao)][counter++] = Proposal(1);
         proposalCount[address(dao)] = counter;
@@ -42,7 +42,7 @@ contract ProposalContract is IProposalContract {
         return proposalId;
     }
 
-    function sponsorProposal(ModuleRegistry dao, uint256 proposalId, address sponsoringMember, bytes calldata votingData) override external onlyModule(dao) {
+    function sponsorProposal(Registry dao, uint256 proposalId, address sponsoringMember, bytes calldata votingData) override external onlyModule(dao) {
         Proposal memory proposal = proposals[address(dao)][proposalId];
         require(proposal.flags.exists(), "proposal does not exist for this dao");
         require(!proposal.flags.isSponsored(), "the proposal has already been sponsored");

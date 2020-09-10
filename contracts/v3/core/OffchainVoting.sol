@@ -3,10 +3,10 @@ pragma experimental ABIEncoderV2;
 
 // SPDX-License-Identifier: MIT
 
-import './ModuleRegistry.sol';
+import './Registry.sol';
 import './Proposal.sol';
 import './Member.sol';
-import './HelperMoloch.sol';
+import '../helpers/FlagHelper.sol';
 
 contract OffchainVotingContract is IVotingContract {
 
@@ -54,7 +54,7 @@ contract OffchainVotingContract is IVotingContract {
     3: not pass
     4: in progress
      */
-    function voteResult(ModuleRegistry dao, uint256 proposalId) override external view returns (uint256 state) {
+    function voteResult(Registry dao, uint256 proposalId) override external view returns (uint256 state) {
         Voting storage vote = votes[address(dao)][proposalId];
         if(vote.startingTime == 0) {
             return 0;
@@ -82,14 +82,14 @@ contract OffchainVotingContract is IVotingContract {
         return 1;
     }
     
-    function submitVoteResult(ModuleRegistry dao, uint256 proposalId, uint256 nbYes, uint256 nbNo, bytes32 resultRoot) external {
+    function submitVoteResult(Registry dao, uint256 proposalId, uint256 nbYes, uint256 nbNo, bytes32 resultRoot) external {
         Voting storage vote = votes[address(dao)][proposalId];
         vote.nbNo = nbNo;
         vote.nbYes = nbYes;
         vote.resultRoot = resultRoot;
     }
 
-    function startNewVotingForProposal(ModuleRegistry dao, uint256 proposalId, bytes memory data) override external returns (uint256) {
+    function startNewVotingForProposal(Registry dao, uint256 proposalId, bytes memory data) override external returns (uint256) {
         require(data.length == 64, "vote data should represent a merkle tree root (bytes32) and number of voters (uint256)");
     
         Voting storage vote = votes[address(dao)][proposalId];
@@ -109,7 +109,7 @@ contract OffchainVotingContract is IVotingContract {
         vote.nbVoters = nbVoters;
     }
 
-    function challengeWrongOrder(ModuleRegistry dao, uint256 proposalId, uint256 index, VoteResultNode memory nodePrevious, VoteResultNode memory nodeCurrent) view external {
+    function challengeWrongOrder(Registry dao, uint256 proposalId, uint256 index, VoteResultNode memory nodePrevious, VoteResultNode memory nodeCurrent) view external {
         require(index > 0, "check between current and previous, index cannot be 0");
         Voting memory vote = votes[address(dao)][proposalId];
         bytes32 hashCurrent = keccak256(abi.encode(nodeCurrent.voter, nodeCurrent.weight, nodeCurrent.sig, nodeCurrent.nbYes, nodeCurrent.nbNo));
@@ -201,7 +201,7 @@ contract OffchainVotingContract is IVotingContract {
         return signer;
     }
 
-    function fixResult(ModuleRegistry dao, uint256 proposalId, address voter, uint256 weight, uint256 nbYes, uint256 nbNo, bytes calldata voteSignature, bytes memory proof) view external {
+    function fixResult(Registry dao, uint256 proposalId, address voter, uint256 weight, uint256 nbYes, uint256 nbNo, bytes calldata voteSignature, bytes memory proof) view external {
         Voting memory vote = votes[address(dao)][proposalId];
         bytes32 hash = keccak256(abi.encode(voter, weight, voteSignature, nbYes, nbNo));
         require(checkProofOrdered(proof, vote.resultRoot, hash, vote.nbVoters), "proof check mismatch!");
