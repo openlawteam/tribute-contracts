@@ -4,9 +4,9 @@ pragma solidity ^0.7.0;
 
 import './interfaces/IOnboarding.sol';
 import '../core/Registry.sol';
-import '../core/Proposal.sol';
-import '../core/Voting.sol';
-import '../core/Bank.sol';
+import '../core/interfaces/IVoting.sol';
+import '../core/interfaces/IProposal.sol';
+import '../core/interfaces/IBank.sol';
 import '../utils/SafeMath.sol';
 import '../guards/AdapterGuard.sol';
 
@@ -49,7 +49,7 @@ contract OnboardingContract is IOnboarding, AdapterGuard {
     }
 
     function _submitMembershipProposal(address newMember, uint256 sharesRequested, uint256 amount) internal {
-        IProposalContract proposalContract = IProposalContract(dao.getAddress(PROPOSAL_MODULE));
+        IProposal proposalContract = IProposal(dao.getAddress(PROPOSAL_MODULE));
         uint256 proposalId = proposalContract.createProposal(dao);
         ProposalDetails storage proposal = proposals[proposalId];
         proposal.amount = amount;
@@ -58,18 +58,18 @@ contract OnboardingContract is IOnboarding, AdapterGuard {
     }
 
     function sponsorProposal(uint256 proposalId, bytes calldata data) override external onlyMembers(dao) {
-        IProposalContract proposalContract = IProposalContract(dao.getAddress(PROPOSAL_MODULE));
+        IProposal proposalContract = IProposal(dao.getAddress(PROPOSAL_MODULE));
         proposalContract.sponsorProposal(dao, proposalId, msg.sender, data);
     }
 
     function processProposal(uint256 proposalId) override external onlyMembers(dao) {
-        IMemberContract memberContract = IMemberContract(dao.getAddress(MEMBER_MODULE));
+        IMember memberContract = IMember(dao.getAddress(MEMBER_MODULE));
         require(memberContract.isActiveMember(dao, msg.sender), "only members can sponsor a membership proposal");
-        IVotingContract votingContract = IVotingContract(dao.getAddress(VOTING_MODULE));
+        IVoting votingContract = IVoting(dao.getAddress(VOTING_MODULE));
         require(votingContract.voteResult(dao, proposalId) == 2, "proposal need to pass to be processed");
         ProposalDetails storage proposal = proposals[proposalId];
         memberContract.updateMember(dao, proposal.applicant, proposal.sharesRequested);
-        IBankContract bankContract = IBankContract(dao.getAddress(BANK_MODULE));
+        IBank bankContract = IBank(dao.getAddress(BANK_MODULE));
         // address 0 represents native ETH
         bankContract.addToGuild(dao, address(0), proposal.amount);
         payable(address(bankContract)).transfer(proposal.amount); 

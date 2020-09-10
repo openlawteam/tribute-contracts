@@ -3,8 +3,9 @@ pragma solidity ^0.7.0;
 // SPDX-License-Identifier: MIT
 
 import './Registry.sol';
-import './Proposal.sol';
-import './Voting.sol';
+import '../core/interfaces/IVoting.sol';
+import '../core/interfaces/IProposal.sol';
+import '../core/interfaces/IMember.sol';
 import '../adapters/Onboarding.sol';
 import '../adapters/Financing.sol';
 
@@ -39,10 +40,10 @@ contract DaoFactory {
         dao.updateRegistry(ONBOARDING_MODULE, address(new OnboardingContract(address(dao), chunkSize, nbShares)));
         dao.updateRegistry(FINANCING_MODULE, address(new FinancingContract(address(dao))));
 
-        IVotingContract votingContract = IVotingContract(addresses[VOTING_MODULE]);
+        IVoting votingContract = IVoting(addresses[VOTING_MODULE]);
         votingContract.registerDao(address(dao), votingPeriod);
 
-        IMemberContract memberContract = IMemberContract(addresses[MEMBER_MODULE]);
+        IMember memberContract = IMember(addresses[MEMBER_MODULE]);
         memberContract.updateMember(dao, msg.sender, 1);
 
         emit NewDao(msg.sender, address(dao));
