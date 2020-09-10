@@ -59,17 +59,27 @@ contract OffchainVotingContract is IVotingContract {
         if(vote.startingTime == 0) {
             return 0;
         }
+
+        if(vote.nbYes * 2 > vote.nbVoters) {
+            return 2;
+        }
+
+        if(vote.nbNo * 2 > vote.nbVoters) {
+            return 2;
+        }
+
         if(block.timestamp < vote.startingTime + votingConfigs[address(dao)].votingPeriod) {
             return 4;
         }
 
         if(vote.nbYes > vote.nbNo) {
             return 2;
-        } else if (vote.nbYes < vote.nbNo) {
+        } 
+        if (vote.nbYes < vote.nbNo) {
             return 3;
-        } else {
-            return 1;
-        }
+        } 
+
+        return 1;
     }
     
     function submitVoteResult(ModuleRegistry dao, uint256 proposalId, uint256 nbYes, uint256 nbNo, bytes32 resultRoot) external {
@@ -108,7 +118,7 @@ contract OffchainVotingContract is IVotingContract {
         require(checkProofOrdered(nodePrevious.proof, vote.resultRoot, hashPrevious, index - 1), "proof check for previous mismatch!");
 
         bytes32 proposalHash = keccak256(abi.encode(vote.snapshotRoot, address(dao), proposalId));
-        if(hasVotedYes(nodePrevious.voter, proposalHash, nodePrevious.sig)) {
+        if(hasVotedYes(nodeCurrent.voter, proposalHash, nodeCurrent.sig)) {
             if(nodePrevious.nbYes + 1 != nodeCurrent.nbYes) {
                 //reset vote
             } else if (nodePrevious.nbNo != nodeCurrent.nbNo) {
