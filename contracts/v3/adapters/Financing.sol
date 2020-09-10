@@ -2,6 +2,7 @@ pragma solidity ^0.7.0;
 
 // SPDX-License-Identifier: MIT
 
+import './interfaces/IFinancing.sol';
 import '../core/Registry.sol';
 import '../core/Proposal.sol';
 import '../core/Voting.sol';
@@ -9,13 +10,7 @@ import '../core/Bank.sol';
 import '../guards/AdapterGuard.sol';
 import '../utils/SafeMath.sol';
 
-interface IFinancingContract {
-    function createFinancingRequest(address daoAddress, address applicant, address token, uint256 amount, bytes32 details) external returns (uint256);
-    function sponsorProposal(uint256 proposalId, bytes calldata data) external;    
-    function processProposal(uint256 proposalId) external;
-}
-
-contract FinancingContract is IFinancingContract, AdapterGuard  {
+contract FinancingContract is IFinancing, AdapterGuard  {
     using SafeMath for uint256;
 
     struct ProposalDetails {
