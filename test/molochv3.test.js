@@ -28,7 +28,6 @@ const FinancingContract = artifacts.require('./v3/FinancingContract');
 // root is a length 1 array
 
 const sha3 = web3.utils.sha3;
-const ep = web3.eth.abi.encodeParameters;
 
 // Expects elements to be Buffers of length 32
 // Empty string elements will be removed prior to the buffer check
@@ -345,11 +344,14 @@ contract('MolochV3', async accounts => {
     return {voting, proposal, member, bank};
   }
 
-  async function addVote(votes, proposalRoot, account, memberWeight, voteYes) {
+  async function addVote(votes, snapshotRoot, daoAddress, proposalId, account, memberWeight, voteYes) {
+    const proposalHash = sha3(web3.eth.abi.encodeParameters(
+      ['bytes32', 'address', 'uint256'], 
+      [snapshotRoot, daoAddress, proposalId]));
     const vote = {
       address : account.toString(),
       weight: memberWeight,
-      signature : await generateVote(account, proposalRoot, voteYes),
+      signature : await generateVote(account, proposalHash, voteYes),
       voteResult : voteYes ? '1' : '2'
     };
     votes.push(vote);
@@ -544,7 +546,7 @@ contract('MolochV3', async accounts => {
     const onboarding = await OnboardingContract.at(onboardingAddress);
     await onboarding.sendTransaction({from:otherAccount,value:sharePrice.mul(web3.utils.toBN(3)).add(remaining), gasPrice: web3.utils.toBN("0")});
     const {snapshotTree} = await prepareSnapshot(dao, member, accounts);
-    await onboarding.sponsorProposal(0, snapshotTree.getRoot(), {from: myAccount, gasPrice: web3.utils.toBN("0")});
+    await onboarding.sponsorProposal(0, web3.eth.abi.encodeParameters(['bytes32', 'uint256'], [snapshotTree.getRoot(), 1]), {from: myAccount, gasPrice: web3.utils.toBN("0")});
     await voting.submitVoteResult(dao.address, 0, 1, 0, snapshotTree.getRoot(), {from: myAccount, gasPrice: web3.utils.toBN("0")});
     await advanceTime(10000);
     await onboarding.processProposal(0, {from: myAccount, gasPrice: web3.utils.toBN("0")});
@@ -565,16 +567,16 @@ contract('MolochV3', async accounts => {
     const onboarding = await OnboardingContract.at(onboardingAddress);
     await onboarding.sendTransaction({from:otherAccount,value:sharePrice.mul(web3.utils.toBN(3)).add(remaining), gasPrice: web3.utils.toBN("0")});
     const {snapshotTree, weights} = await prepareSnapshot(dao, member, accounts);
-    await onboarding.sponsorProposal(0, snapshotTree.getRoot(), {from: myAccount, gasPrice: web3.utils.toBN("0")});
-
-    const voteElements = await addVote([], snapshotTree.getRoot(), myAccount, 1, true);
+    await onboarding.sponsorProposal(0, web3.eth.abi.encodeParameters(['bytes32', 'uint256'], [snapshotTree.getRoot(), 1]), {from: myAccount, gasPrice: web3.utils.toBN("0")});
+    const proposalId = 0;
+    const voteElements = await addVote([], snapshotTree.getRoot(), dao.address, proposalId, myAccount, 1, true);
     const {voteResultTree, votes} = prepareVoteResult(voteElements, weights);
-    await voting.submitVoteResult(dao.address, 0, 10, 0, voteResultTree.getRoot(), {from: myAccount, gasPrice: web3.utils.toBN("0")});
+    await voting.submitVoteResult(dao.address, proposalId, 10, 0, voteResultTree.getRoot(), {from: myAccount, gasPrice: web3.utils.toBN("0")});
     const elementIndex = votes.length - 1;
     const lastVoteElement = voteResultTree.elements[elementIndex];
     const lastVote = votes[elementIndex];
     const proof = voteResultTree.getProofOrdered(lastVoteElement, elementIndex + 1);
-    await voting.fixResult(dao.address, 0, lastVote.address, lastVote.weight, lastVote.nbYes, lastVote.nbNo, lastVote.vote, proof , votes.length - 1);
+    await voting.fixResult(dao.address, 0, lastVote.address, lastVote.weight, lastVote.nbYes, lastVote.nbNo, lastVote.vote, proof);
     await advanceTime(10000);
     await onboarding.processProposal(0, {from: myAccount, gasPrice: web3.utils.toBN("0")});
   });
