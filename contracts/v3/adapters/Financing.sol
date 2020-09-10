@@ -48,7 +48,7 @@ contract FinancingContract is IFinancing, AdapterGuard  {
 
         Registry selectedDAO = Registry(daoAddress);
         IBank bankContract = IBank(selectedDAO.getAddress(BANK_MODULE));
-        require(bankContract.isReservedAddress(applicant), "applicant address cannot be reserved");
+        require(bankContract.isReservedAddress(selectedDAO, applicant), "applicant address cannot be reserved");
         
         IProposal proposalContract = IProposal(selectedDAO.getAddress(PROPOSAL_MODULE));
         uint256 proposalId = proposalContract.createProposal(selectedDAO);

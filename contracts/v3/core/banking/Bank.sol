@@ -35,12 +35,13 @@ contract BankContract is IBank, ModuleGuard {
         emit Transfer(GUILD, applicant, token, amount);
     }
 
-    function balanceOf(Registry dao, address user, address token) override external view returns (uint256) {
-        return tokenBalances[address(dao)][user][token];
+    function isReservedAddress(Registry dao, address applicant) override view external onlyModule(dao) returns (bool) {
+        return applicant != address(0x0) && applicant != GUILD && applicant != ESCROW && applicant != TOTAL;
     }
 
-    function isReservedAddress(address applicant) override pure external returns (bool) {
-        return applicant != address(0x0) && applicant != GUILD && applicant != ESCROW && applicant != TOTAL;
+    //TODO - create an Accounting adapter that access this function
+    function balanceOf(Registry dao, address user, address token) override external view returns (uint256) {
+        return tokenBalances[address(dao)][user][token];
     }
 
     /**
