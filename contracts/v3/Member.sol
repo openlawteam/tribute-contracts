@@ -17,6 +17,8 @@ interface IMemberContract {
 contract MemberContract is IMemberContract {
     using FlagHelper for uint256;
 
+    event UpdateMember(address dao, address member, uint256 shares);
+
     struct Member {
         uint256 flags;
         address delegateKey;
@@ -43,5 +45,7 @@ contract MemberContract is IMemberContract {
         Member storage member = members[address(dao)][applicant];
         member.flags = 1;
         member.nbShares = shares;
+
+        emit UpdateMember(address(dao), applicant, shares);
     }
 }

@@ -11,7 +11,7 @@ import '../../SafeMath.sol';
 
 interface IFinancingContract {
     function createFinancingRequest(address daoAddress, address applicant, address token, uint256 amount, bytes32 details) external returns (uint256);
-    function sponsorProposal(uint256 proposalId) external;    
+    function sponsorProposal(uint256 proposalId, bytes calldata data) external;    
     function processProposal(uint256 proposalId) external;
 }
 
@@ -67,9 +67,9 @@ contract FinancingContract is IFinancingContract, AdapterGuard  {
         return proposalId;
     }
 
-    function sponsorProposal(uint256 proposalId) override external onlyMembers(dao) {
+    function sponsorProposal(uint256 proposalId, bytes calldata data) override external onlyMembers(dao) {
         IProposalContract proposalContract = IProposalContract(dao.getAddress(PROPOSAL_MODULE));
-        proposalContract.sponsorProposal(dao, proposalId, msg.sender);
+        proposalContract.sponsorProposal(dao, proposalId, msg.sender, data);
     }
 
     function processProposal(uint256 proposalId) override external onlyMembers(dao) {
