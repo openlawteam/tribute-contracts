@@ -4,14 +4,13 @@ pragma experimental ABIEncoderV2;
 // SPDX-License-Identifier: MIT
 
 import '../Registry.sol';
+import '../Module.sol';
 import '../interfaces/IProposal.sol';
 import '../interfaces/IMember.sol';
 import '../interfaces/IVoting.sol';
 import '../../helpers/FlagHelper.sol';
 
-contract OffchainVotingContract is IVoting {
-
-    bytes32 constant MEMBER_MODULE = keccak256("member");
+contract OffchainVotingContract is IVoting, Module {
 
     using FlagHelper for uint256;
 

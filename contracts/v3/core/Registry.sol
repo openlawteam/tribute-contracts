@@ -1,8 +1,8 @@
 pragma solidity ^0.7.0;
 
-import '../utils/Ownable.sol';
-
 // SPDX-License-Identifier: MIT
+
+import '../utils/Ownable.sol';
 
 contract Registry is Ownable {
     mapping(bytes32 => address) registry;
@@ -23,14 +23,14 @@ contract Registry is Ownable {
         return inverseRegistry[module] != bytes32(0);
     }
 
-    function updateRegistry(bytes32 moduleId, address moduleAddress) onlyModule external {
+    function addModule(bytes32 moduleId, address moduleAddress) onlyModule external {
         require(moduleId != bytes32(0), "moduleId must not be empty");
         require(moduleAddress != address(0x0), "moduleAddress must not be empty");
         registry[moduleId] = moduleAddress;
         inverseRegistry[moduleAddress] = moduleId;
     }
 
-    function removeRegistry(bytes32 moduleId) onlyModule external {
+    function removeModule(bytes32 moduleId) onlyModule external {
         require(moduleId != bytes32(0), "moduleId must not be empty");
         require(registry[moduleId] != address(0x0), "moduleId not registered");
         delete inverseRegistry[registry[moduleId]];

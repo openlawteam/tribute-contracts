@@ -2,6 +2,7 @@ pragma solidity ^0.7.0;
 
 // SPDX-License-Identifier: MIT
 
+import './Module.sol';
 import './Registry.sol';
 import '../core/interfaces/IVoting.sol';
 import '../core/interfaces/IProposal.sol';
@@ -10,17 +11,11 @@ import '../adapters/Onboarding.sol';
 import '../adapters/Financing.sol';
 import '../core/banking/Bank.sol';
 
-contract DaoFactory {
+contract DaoFactory is Module {
 
     event NewDao(address summoner, address dao);
 
     mapping(bytes32 => address) addresses;
-    bytes32 constant BANK_MODULE = keccak256("bank");
-    bytes32 constant MEMBER_MODULE = keccak256("member");
-    bytes32 constant PROPOSAL_MODULE = keccak256("proposal");
-    bytes32 constant VOTING_MODULE = keccak256("voting");
-    bytes32 constant ONBOARDING_MODULE = keccak256("onboarding");
-    bytes32 constant FINANCING_MODULE = keccak256("financing");
 
     constructor (address memberAddress, address proposalAddress, address votingAddress) {
         addresses[MEMBER_MODULE] = memberAddress;
@@ -33,14 +28,14 @@ contract DaoFactory {
         Registry dao = new Registry();
         BankContract bank = new BankContract(dao);
         //Registering Core Modules
-        dao.updateRegistry(BANK_MODULE, address(bank));
-        dao.updateRegistry(MEMBER_MODULE, addresses[MEMBER_MODULE]);
-        dao.updateRegistry(PROPOSAL_MODULE, addresses[PROPOSAL_MODULE]);
-        dao.updateRegistry(VOTING_MODULE, addresses[VOTING_MODULE]);
+        dao.addModule(BANK_MODULE, address(bank));
+        dao.addModule(MEMBER_MODULE, addresses[MEMBER_MODULE]);
+        dao.addModule(PROPOSAL_MODULE, addresses[PROPOSAL_MODULE]);
+        dao.addModule(VOTING_MODULE, addresses[VOTING_MODULE]);
 
         //Registring Adapters
-        dao.updateRegistry(ONBOARDING_MODULE, address(new OnboardingContract(address(dao), chunkSize, nbShares)));
-        dao.updateRegistry(FINANCING_MODULE, address(new FinancingContract(address(dao))));
+        dao.addModule(ONBOARDING_MODULE, address(new OnboardingContract(address(dao), chunkSize, nbShares)));
+        dao.addModule(FINANCING_MODULE, address(new FinancingContract(address(dao))));
 
         IVoting votingContract = IVoting(addresses[VOTING_MODULE]);
         votingContract.registerDao(address(dao), votingPeriod);

@@ -3,17 +3,16 @@ pragma solidity ^0.7.0;
 // SPDX-License-Identifier: MIT
 
 import '../Registry.sol';
+import '../Module.sol';
 import '../interfaces/IMember.sol';
 import '../interfaces/IProposal.sol';
 import '../interfaces/IVoting.sol';
 import '../../helpers/FlagHelper.sol';
 import '../../guards/ModuleGuard.sol';
 
-contract ProposalContract is IProposal, ModuleGuard {
+contract ProposalContract is IProposal, Module, ModuleGuard {
+    
     using FlagHelper for uint256;
-
-    bytes32 constant memberModuleId = keccak256("member");
-    bytes32 constant votingModuleId = keccak256("voting");
 
     event SponsorProposal(uint256 proposalId, uint256 proposalIndex, uint256 startingTime);
     event NewProposal(uint256 proposalId, uint256 proposalIndex);
@@ -42,10 +41,10 @@ contract ProposalContract is IProposal, ModuleGuard {
         require(!proposal.flags.isSponsored(), "the proposal has already been sponsored");
         require(!proposal.flags.isCancelled(), "the proposal has been cancelled");
 
-        IMember memberContract = IMember(dao.getAddress(memberModuleId));
+        IMember memberContract = IMember(dao.getAddress(MEMBER_MODULE));
         require(memberContract.isActiveMember(dao, sponsoringMember), "only active members can sponsor someone joining");
 
-        IVoting votingContract = IVoting(dao.getAddress(votingModuleId));
+        IVoting votingContract = IVoting(dao.getAddress(VOTING_MODULE));
         uint256 votingId = votingContract.startNewVotingForProposal(dao, proposalId, votingData);
         
         emit SponsorProposal(proposalId, votingId, block.timestamp);

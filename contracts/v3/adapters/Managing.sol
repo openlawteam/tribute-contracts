@@ -2,7 +2,7 @@ pragma solidity ^0.7.0;
 
 // SPDX-License-Identifier: MIT
 
-import './interfaces/IFinancing.sol';
+import './interfaces/IManaging.sol';
 import '../core/Module.sol';
 import '../core/Registry.sol';
 import '../core/interfaces/IVoting.sol';
@@ -11,14 +11,14 @@ import '../core/interfaces/IBank.sol';
 import '../guards/AdapterGuard.sol';
 import '../utils/SafeMath.sol';
 
-contract FinancingContract is IFinancing, Module, AdapterGuard  {
+contract ManagingContract is IManaging, Module, AdapterGuard  {
+    
     using SafeMath for uint256;
 
     struct ProposalDetails {
         address applicant;
-        uint256 amount;
-        address token;
-        bytes32 details;
+        bytes32 moduleId;
+        address moduleAddress;
         bool processed;
     }
 
@@ -37,23 +37,22 @@ contract FinancingContract is IFinancing, Module, AdapterGuard  {
         revert();
     }
 
-    function createFinancingRequest(address applicant, address token, uint256 amount, bytes32 details) override external returns (uint256) {
-        require(amount > 0, "invalid requested amount");
-        require(token == address(0x0), "only raw eth token is supported");
-        //TODO (fforbeck): check if other types of tokens are supported/allowed
+    function createModuleChangeRequest(address applicant, bytes32 moduleId, address moduleAddress) override external returns (uint256) {
+        require(moduleAddress != address(0x0), "invalid module address");
+        require(isReplaceable(moduleId), "module not replaceable");
 
         IBank bankContract = IBank(dao.getAddress(BANK_MODULE));
         require(bankContract.isReservedAddress(applicant), "applicant address cannot be reserved");
+        require(bankContract.isReservedAddress(moduleAddress), "module address cannot be reserved");
         
         IProposal proposalContract = IProposal(dao.getAddress(PROPOSAL_MODULE));
         uint256 proposalId = proposalContract.createProposal(dao);
 
         ProposalDetails storage proposal = proposals[proposalId];
         proposal.applicant = applicant;
-        proposal.amount = amount;
-        proposal.details = details;
+        proposal.moduleId = moduleId;
+        proposal.moduleAddress = moduleAddress;
         proposal.processed = false;
-        proposal.token = token;
         return proposalId;
     }
 
@@ -69,8 +68,8 @@ contract FinancingContract is IFinancing, Module, AdapterGuard  {
         IVoting votingContract = IVoting(dao.getAddress(VOTING_MODULE));
         require(votingContract.voteResult(dao, proposalId) == 2, "proposal need to pass to be processed");
 
-        IBank bankContract = IBank(dao.getAddress(BANK_MODULE));
+        dao.removeModule(proposal.moduleId);
+        dao.addModule(proposal.moduleId, proposal.moduleAddress);
         proposals[proposalId].processed = true;
-        bankContract.transferFromGuild(proposal.applicant, proposal.token, proposal.amount);
     }
 }
