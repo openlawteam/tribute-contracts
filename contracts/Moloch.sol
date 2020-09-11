@@ -1,8 +1,8 @@
 pragma solidity ^0.7.0;
 
-import "./SafeMath.sol";
-import "./IERC20.sol";
-import "./ReentrancyGuard.sol";
+import "./v3/utils/SafeMath.sol";
+import "./v3/utils/IERC20.sol";
+import "./v3/guards/ReentrancyGuard.sol";
 
 // SPDX-License-Identifier: MIT
 

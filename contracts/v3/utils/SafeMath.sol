@@ -8,7 +8,7 @@ library SafeMath {
         }
 
         uint256 c = a * b;
-        require(c / a == b);
+        require(c / a == b, "uint overflow detected while multiplying");
 
         return c;
     }
@@ -30,7 +30,7 @@ library SafeMath {
 
     function add(uint256 a, uint256 b) internal pure returns (uint256) {
         uint256 c = a + b;
-        require(c >= a, "number overflow while adding two uint256");
+        require(c >= a, "uint overflow while addition");
 
         return c;
     }

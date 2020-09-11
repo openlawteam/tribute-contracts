@@ -1,8 +1,8 @@
 pragma solidity ^0.7.0;
 // SPDX-License-Identifier: MIT
 
-import "./IERC20.sol";
-import "./SafeMath.sol";
+import './IERC20.sol';
+import './SafeMath.sol';
 
 /**
  * @title Standard ERC20 token
