@@ -44,6 +44,8 @@ contract ManagingContract is IManaging, Module, AdapterGuard {
         IBank bankContract = IBank(dao.getAddress(BANK_MODULE));
         require(bankContract.isReservedAddress(applicant), "applicant address cannot be reserved");
         require(bankContract.isReservedAddress(moduleAddress), "module address cannot be reserved");
+
+        //FIXME: is there a way to check if the new module implements the module interface properly?
         
         IProposal proposalContract = IProposal(dao.getAddress(PROPOSAL_MODULE));
         uint256 proposalId = proposalContract.createProposal(dao);
