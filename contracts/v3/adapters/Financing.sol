@@ -2,20 +2,15 @@ pragma solidity ^0.7.0;
 
 // SPDX-License-Identifier: MIT
 
+import './interfaces/IFinancing.sol';
 import '../core/Registry.sol';
-import '../core/Proposal.sol';
-import '../core/Voting.sol';
-import '../core/Bank.sol';
+import '../core/interfaces/IVoting.sol';
+import '../core/interfaces/IProposal.sol';
+import '../core/interfaces/IBank.sol';
 import '../guards/AdapterGuard.sol';
 import '../utils/SafeMath.sol';
 
-interface IFinancingContract {
-    function createFinancingRequest(address daoAddress, address applicant, address token, uint256 amount, bytes32 details) external returns (uint256);
-    function sponsorProposal(uint256 proposalId, bytes calldata data) external;    
-    function processProposal(uint256 proposalId) external;
-}
-
-contract FinancingContract is IFinancingContract, AdapterGuard  {
+contract FinancingContract is IFinancing, AdapterGuard  {
     using SafeMath for uint256;
 
     struct ProposalDetails {
@@ -45,6 +40,9 @@ contract FinancingContract is IFinancingContract, AdapterGuard  {
         revert();
     }
 
+    /**
+     * This is a function with a public access, we may need to restrict the access to membersOnly to prevent proposal spamming.
+     */
     function createFinancingRequest(address daoAddress, address applicant, address token, uint256 amount, bytes32 details) override external returns (uint256) {
         require(daoAddress != address(0x0), "dao address can not be empty");
         require(amount > 0, "invalid requested amount");
@@ -52,10 +50,10 @@ contract FinancingContract is IFinancingContract, AdapterGuard  {
         //TODO (fforbeck): check if other types of tokens are supported/allowed
 
         Registry selectedDAO = Registry(daoAddress);
-        IBankContract bankContract = IBankContract(selectedDAO.getAddress(BANK_MODULE));
-        require(bankContract.isReservedAddress(applicant), "applicant address cannot be reserved");
+        IBank bankContract = IBank(selectedDAO.getAddress(BANK_MODULE));
+        require(bankContract.isReservedAddress(selectedDAO, applicant), "applicant address cannot be reserved");
         
-        IProposalContract proposalContract = IProposalContract(selectedDAO.getAddress(PROPOSAL_MODULE));
+        IProposal proposalContract = IProposal(selectedDAO.getAddress(PROPOSAL_MODULE));
         uint256 proposalId = proposalContract.createProposal(selectedDAO);
 
         ProposalDetails storage proposal = proposals[proposalId];
@@ -68,7 +66,7 @@ contract FinancingContract is IFinancingContract, AdapterGuard  {
     }
 
     function sponsorProposal(uint256 proposalId, bytes calldata data) override external onlyMembers(dao) {
-        IProposalContract proposalContract = IProposalContract(dao.getAddress(PROPOSAL_MODULE));
+        IProposal proposalContract = IProposal(dao.getAddress(PROPOSAL_MODULE));
         proposalContract.sponsorProposal(dao, proposalId, msg.sender, data);
     }
 
@@ -76,10 +74,10 @@ contract FinancingContract is IFinancingContract, AdapterGuard  {
         ProposalDetails memory proposal = proposals[proposalId];
         require(!proposal.processed, "proposal already processed");
 
-        IVotingContract votingContract = IVotingContract(dao.getAddress(VOTING_MODULE));
+        IVoting votingContract = IVoting(dao.getAddress(VOTING_MODULE));
         require(votingContract.voteResult(dao, proposalId) == 2, "proposal need to pass to be processed");
 
-        IBankContract bankContract = IBankContract(dao.getAddress(BANK_MODULE));
+        IBank bankContract = IBank(dao.getAddress(BANK_MODULE));
         proposals[proposalId].processed = true;
         bankContract.transferFromGuild(dao, proposal.applicant, proposal.token, proposal.amount);
     }

@@ -15,7 +15,7 @@ contract Registry is Ownable {
     }
 
     modifier onlyModule {
-        require(inverseRegistry[msg.sender] != bytes32(0), "this function can only be called by a whitelisted module");
+        require(inverseRegistry[msg.sender] != bytes32(0), "only a registered module is allowed to call this function");
         _;
     }
 
@@ -37,6 +37,7 @@ contract Registry is Ownable {
         delete registry[moduleId];
     }
 
+    //TODO - do we need an Adapter for that?
     function getAddress(bytes32 moduleId) view external returns(address) {
         return registry[moduleId];
     }

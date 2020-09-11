@@ -1,25 +1,15 @@
 pragma solidity ^0.7.0;
+
 // SPDX-License-Identifier: MIT
 
-import '../utils/SafeMath.sol';
-import '../utils/IERC20.sol';
-import './Registry.sol';
+import '../Registry.sol';
+import '../interfaces/IBank.sol';
+import '../../utils/SafeMath.sol';
+import '../../utils/IERC20.sol';
+import '../../guards/ModuleGuard.sol';
 
-interface IBankContract {
-    function addToGuild(Registry dao, address tokenAddress, uint256 amount) external;
-    function addToEscrow(Registry dao, address tokenAddress, uint256 amount) external;
-    function balanceOf(Registry dao, address tokenAddress, address account) external returns (uint256);
-    function transferFromGuild(Registry dao, address applicant, address tokenAddress, uint256 amount) external;
-    function isReservedAddress(address applicant) external returns (bool);
-}
-
-contract BankContract is IBankContract {
+contract BankContract is IBank, ModuleGuard {
     using SafeMath for uint256;
-
-    modifier onlyModule(Registry dao) {
-        require(dao.isModule(msg.sender), "only registered modules can call this function");
-        _;
-    }
 
     event TokensCollected(address indexed moloch, address indexed token, uint256 amountToCollect);
     event Transfer(address indexed fromAddress, address indexed toAddress, address token, uint256 amount);
@@ -45,12 +35,13 @@ contract BankContract is IBankContract {
         emit Transfer(GUILD, applicant, token, amount);
     }
 
-    function balanceOf(Registry dao, address user, address token) override external view returns (uint256) {
-        return tokenBalances[address(dao)][user][token];
+    function isReservedAddress(Registry dao, address applicant) override view external onlyModule(dao) returns (bool) {
+        return applicant != address(0x0) && applicant != GUILD && applicant != ESCROW && applicant != TOTAL;
     }
 
-    function isReservedAddress(address applicant) override pure external returns (bool) {
-        return applicant != address(0x0) && applicant != GUILD && applicant != ESCROW && applicant != TOTAL;
+    //TODO - create an Accounting adapter that access this function
+    function balanceOf(Registry dao, address user, address token) override external view returns (uint256) {
+        return tokenBalances[address(dao)][user][token];
     }
 
     /**

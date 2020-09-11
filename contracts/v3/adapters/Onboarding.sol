@@ -2,13 +2,15 @@ pragma solidity ^0.7.0;
 
 // SPDX-License-Identifier: MIT
 
+import './interfaces/IOnboarding.sol';
 import '../core/Registry.sol';
-import '../core/Proposal.sol';
-import '../core/Voting.sol';
-import '../core/Bank.sol';
+import '../core/interfaces/IVoting.sol';
+import '../core/interfaces/IProposal.sol';
+import '../core/interfaces/IBank.sol';
 import '../utils/SafeMath.sol';
+import '../guards/AdapterGuard.sol';
 
-contract OnboardingContract {
+contract OnboardingContract is IOnboarding, AdapterGuard {
     using SafeMath for uint256;
 
     struct ProposalDetails {
@@ -24,7 +26,6 @@ contract OnboardingContract {
     mapping(uint256 => ProposalDetails) public proposals;
 
     bytes32 constant BANK_MODULE = keccak256("bank");
-    bytes32 constant MEMBER_MODULE = keccak256("member");
     bytes32 constant PROPOSAL_MODULE = keccak256("proposal");
     bytes32 constant VOTING_MODULE = keccak256("voting");
 
@@ -34,7 +35,7 @@ contract OnboardingContract {
         SHARES_PER_CHUNK = _SHARES_PER_CHUNK;
     }
 
-    receive() external payable {
+    receive() override external payable {
         uint256 numberOfChunks = msg.value.div(CHUNK_SIZE);
         require(numberOfChunks > 0, "amount of ETH sent was not sufficient");
         uint256 amount = numberOfChunks.mul(CHUNK_SIZE);
@@ -48,7 +49,7 @@ contract OnboardingContract {
     }
 
     function _submitMembershipProposal(address newMember, uint256 sharesRequested, uint256 amount) internal {
-        IProposalContract proposalContract = IProposalContract(dao.getAddress(PROPOSAL_MODULE));
+        IProposal proposalContract = IProposal(dao.getAddress(PROPOSAL_MODULE));
         uint256 proposalId = proposalContract.createProposal(dao);
         ProposalDetails storage proposal = proposals[proposalId];
         proposal.amount = amount;
@@ -56,19 +57,19 @@ contract OnboardingContract {
         proposal.applicant = newMember;
     }
 
-    function sponsorProposal(uint256 proposalId, bytes calldata data) external {
-        IProposalContract proposalContract = IProposalContract(dao.getAddress(PROPOSAL_MODULE));
+    function sponsorProposal(uint256 proposalId, bytes calldata data) override external onlyMembers(dao) {
+        IProposal proposalContract = IProposal(dao.getAddress(PROPOSAL_MODULE));
         proposalContract.sponsorProposal(dao, proposalId, msg.sender, data);
     }
 
-    function processProposal(uint256 proposalId) external {
-        IMemberContract memberContract = IMemberContract(dao.getAddress(MEMBER_MODULE));
+    function processProposal(uint256 proposalId) override external onlyMembers(dao) {
+        IMember memberContract = IMember(dao.getAddress(MEMBER_MODULE));
         require(memberContract.isActiveMember(dao, msg.sender), "only members can sponsor a membership proposal");
-        IVotingContract votingContract = IVotingContract(dao.getAddress(VOTING_MODULE));
+        IVoting votingContract = IVoting(dao.getAddress(VOTING_MODULE));
         require(votingContract.voteResult(dao, proposalId) == 2, "proposal need to pass to be processed");
         ProposalDetails storage proposal = proposals[proposalId];
         memberContract.updateMember(dao, proposal.applicant, proposal.sharesRequested);
-        IBankContract bankContract = IBankContract(dao.getAddress(BANK_MODULE));
+        IBank bankContract = IBank(dao.getAddress(BANK_MODULE));
         // address 0 represents native ETH
         bankContract.addToGuild(dao, address(0), proposal.amount);
         payable(address(bankContract)).transfer(proposal.amount); 

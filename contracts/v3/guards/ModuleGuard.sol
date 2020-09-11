@@ -1,16 +1,14 @@
 pragma solidity ^0.7.0;
+
 // SPDX-License-Identifier: MIT
 
 import '../core/Registry.sol';
-import '../core/Member.sol';
 
 /**
  * @dev Contract module that helps restrict the module access to Core Modules only.
  *
  */
 abstract contract ModuleGuard {
-
-    bytes32 constant MEMBER_MODULE = keccak256("member");
 
     /**
      * @dev Only Core Module of the DAO are allowed to execute the function call.

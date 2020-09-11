@@ -2,21 +2,15 @@ pragma solidity ^0.7.0;
 
 // SPDX-License-Identifier: MIT
 
-import './Registry.sol';
-import './Voting.sol';
+import '../Registry.sol';
+import '../interfaces/IMember.sol';
+import '../interfaces/IProposal.sol';
+import '../interfaces/IVoting.sol';
+import '../../helpers/FlagHelper.sol';
+import '../../guards/ModuleGuard.sol';
 
-interface IProposalContract {
-    function createProposal(Registry dao) external returns(uint256 proposalId);
-    function sponsorProposal(Registry dao, uint256 proposalId, address sponsoringMember, bytes calldata votingData) external;
-}
-
-contract ProposalContract is IProposalContract {
+contract ProposalContract is IProposal, ModuleGuard {
     using FlagHelper for uint256;
-
-    modifier onlyModule(Registry dao) {
-        require(dao.isModule(msg.sender), "only registered modules can call this function");
-        _;
-    }
 
     bytes32 constant memberModuleId = keccak256("member");
     bytes32 constant votingModuleId = keccak256("voting");
@@ -31,7 +25,7 @@ contract ProposalContract is IProposalContract {
     mapping(address => uint256) public proposalCount;
     mapping(address => mapping(uint256 => Proposal)) public proposals;
 
-    function createProposal(Registry dao) override external returns(uint256) {
+    function createProposal(Registry dao) override external onlyModule(dao) returns(uint256) {
         uint256 counter = proposalCount[address(dao)];
         proposals[address(dao)][counter++] = Proposal(1);
         proposalCount[address(dao)] = counter;
@@ -48,10 +42,10 @@ contract ProposalContract is IProposalContract {
         require(!proposal.flags.isSponsored(), "the proposal has already been sponsored");
         require(!proposal.flags.isCancelled(), "the proposal has been cancelled");
 
-        IMemberContract memberContract = IMemberContract(dao.getAddress(memberModuleId));
+        IMember memberContract = IMember(dao.getAddress(memberModuleId));
         require(memberContract.isActiveMember(dao, sponsoringMember), "only active members can sponsor someone joining");
 
-        IVotingContract votingContract = IVotingContract(dao.getAddress(votingModuleId));
+        IVoting votingContract = IVoting(dao.getAddress(votingModuleId));
         uint256 votingId = votingContract.startNewVotingForProposal(dao, proposalId, votingData);
         
         emit SponsorProposal(proposalId, votingId, block.timestamp);

@@ -2,18 +2,12 @@ pragma solidity ^0.7.0;
 
 // SPDX-License-Identifier: MIT
 
-import './Registry.sol';
-import './Proposal.sol';
-import './Member.sol';
-import '../helpers/FlagHelper.sol';
+import '../Registry.sol';
+import '../interfaces/IMember.sol';
+import '../interfaces/IVoting.sol';
+import '../../helpers/FlagHelper.sol';
 
-interface IVotingContract {
-    function startNewVotingForProposal(Registry dao, uint256 proposalId, bytes calldata data) external returns (uint256);
-    function voteResult(Registry dao, uint256 proposalId) external returns (uint256 state);
-    function registerDao(address dao, uint256 votingPeriod) external;
-}
-
-contract VotingContract is IVotingContract {
+contract VotingContract is IVoting {
 
     bytes32 constant MEMBER_MODULE = keccak256("member");
 
@@ -72,7 +66,7 @@ contract VotingContract is IVotingContract {
     }
 
     function submitVote(Registry dao, uint256 proposalId, uint256 voteValue) external {
-        IMemberContract memberContract = IMemberContract(dao.getAddress(MEMBER_MODULE));
+        IMember memberContract = IMember(dao.getAddress(MEMBER_MODULE));
         require(memberContract.isActiveMember(dao, msg.sender), "only active members can vote");
         require(voteValue < 3, "only blank (0), yes (1) and no (2) are possible values");
 
