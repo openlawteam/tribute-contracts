@@ -11,7 +11,7 @@ import '../core/interfaces/IBank.sol';
 import '../guards/AdapterGuard.sol';
 import '../utils/SafeMath.sol';
 
-contract ManagingContract is IManaging, Module, AdapterGuard  {
+contract ManagingContract is IManaging, Module, AdapterGuard {
     
     using SafeMath for uint256;
 
@@ -38,8 +38,8 @@ contract ManagingContract is IManaging, Module, AdapterGuard  {
     }
 
     function createModuleChangeRequest(address applicant, bytes32 moduleId, address moduleAddress) override external returns (uint256) {
-        require(moduleAddress != address(0x0), "invalid module address");
         require(isReplaceable(moduleId), "module not replaceable");
+        require(moduleAddress != address(0x0), "invalid module address");
 
         IBank bankContract = IBank(dao.getAddress(BANK_MODULE));
         require(bankContract.isReservedAddress(applicant), "applicant address cannot be reserved");

@@ -1,7 +1,7 @@
 const Web3 = require('web3-utils');
 const ModuleRegistry = artifacts.require('./v3/core/Registry');
 
-contract('Registry', async accounts => {
+contract('Registry', async () => {
 
   it("should not be possible to create a dao with an invalid module id", async () => {
     let moduleId = Web3.fromUtf8("");
@@ -10,7 +10,7 @@ contract('Registry', async accounts => {
     try {
       await contract.addModule(moduleId, moduleAddress);
     } catch (err) {
-      assert.equal(err.reason, "moduleId must not be empty");
+      assert.equal(err.reason, "module id must not be empty");
     }
   });
 
@@ -20,7 +20,7 @@ contract('Registry', async accounts => {
     try {
       await contract.removeModule(moduleId);
     } catch (err) {
-      assert.equal(err.reason, "moduleId not registered");
+      assert.equal(err.reason, "module id not registered");
     }
   });
 
@@ -37,12 +37,12 @@ contract('Registry', async accounts => {
 
   it("should not be possible to create a dao with an empty module address", async () => {
     let moduleId = Web3.fromUtf8("1");
-    let moduleAddress = "0x0";
+    let moduleAddress = "0x0000000000000000000000000000000000000000";
     let contract = await ModuleRegistry.new();
     try {
       await contract.addModule(moduleId, moduleAddress);
     } catch (err) {
-      assert.equal(err.reason, "invalid address");
+      assert.equal(err.reason, "module address must not be empty");
     }
   });
 

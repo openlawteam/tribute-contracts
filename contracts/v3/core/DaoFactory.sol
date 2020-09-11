@@ -7,9 +7,10 @@ import './Registry.sol';
 import '../core/interfaces/IVoting.sol';
 import '../core/interfaces/IProposal.sol';
 import '../core/interfaces/IMember.sol';
+import '../core/banking/Bank.sol';
 import '../adapters/Onboarding.sol';
 import '../adapters/Financing.sol';
-import '../core/banking/Bank.sol';
+import '../adapters/Managing.sol';
 
 contract DaoFactory is Module {
 
@@ -26,25 +27,26 @@ contract DaoFactory is Module {
     //TODO - do we want to restrict the access to onlyOwner for this function?
     function newDao(uint256 chunkSize, uint256 nbShares, uint256 votingPeriod) external returns (address) {
         Registry dao = new Registry();
-        BankContract bank = new BankContract(dao);
+        address daoAddress = address(dao);
         //Registering Core Modules
-        dao.addModule(BANK_MODULE, address(bank));
+        dao.addModule(BANK_MODULE, address(new BankContract(dao)));
         dao.addModule(MEMBER_MODULE, addresses[MEMBER_MODULE]);
         dao.addModule(PROPOSAL_MODULE, addresses[PROPOSAL_MODULE]);
         dao.addModule(VOTING_MODULE, addresses[VOTING_MODULE]);
 
         //Registring Adapters
-        dao.addModule(ONBOARDING_MODULE, address(new OnboardingContract(address(dao), chunkSize, nbShares)));
-        dao.addModule(FINANCING_MODULE, address(new FinancingContract(address(dao))));
+        dao.addModule(ONBOARDING_MODULE, address(new OnboardingContract(daoAddress, chunkSize, nbShares)));
+        dao.addModule(FINANCING_MODULE, address(new FinancingContract(daoAddress)));
+        dao.addModule(MANAGING_MODULE, address(new ManagingContract(daoAddress)));
 
         IVoting votingContract = IVoting(addresses[VOTING_MODULE]);
-        votingContract.registerDao(address(dao), votingPeriod);
+        votingContract.registerDao(daoAddress, votingPeriod);
 
         IMember memberContract = IMember(addresses[MEMBER_MODULE]);
         memberContract.updateMember(dao, msg.sender, 1);
 
-        emit NewDao(msg.sender, address(dao));
+        emit NewDao(msg.sender, daoAddress);
 
-        return address(dao);
+        return daoAddress;
     }
 }
