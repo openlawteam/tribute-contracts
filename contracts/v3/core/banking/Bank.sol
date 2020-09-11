@@ -10,7 +10,7 @@ import '../../guards/ModuleGuard.sol';
 
 contract BankContract is IBank, ModuleGuard {
     using SafeMath for uint256;
-
+    
     event TokensCollected(address indexed moloch, address indexed token, uint256 amountToCollect);
     event Transfer(address indexed fromAddress, address indexed toAddress, address token, uint256 amount);
 
@@ -18,29 +18,35 @@ contract BankContract is IBank, ModuleGuard {
     address public constant ESCROW = address(0xbeef);
     address public constant TOTAL = address(0xbabe);
 
+    Registry dao;
+
     mapping (address => mapping(address => mapping(address => uint256))) public tokenBalances; // tokenBalances[molochAddress][userAddress][tokenAddress]
 
-    function addToEscrow(Registry dao, address tokenAddress, uint256 amount) override external onlyModule(dao) {
+    constructor (Registry _dao) {
+        dao = _dao;
+    }
+
+    function addToEscrow(address tokenAddress, uint256 amount) override external onlyModule(dao) {
         unsafeAddToBalance(address(dao), ESCROW, tokenAddress, amount);
     }
 
-    function addToGuild(Registry dao, address tokenAddress, uint256 amount) override external onlyModule(dao) {
+    function addToGuild(address tokenAddress, uint256 amount) override external onlyModule(dao) {
         unsafeAddToBalance(address(dao), GUILD, tokenAddress, amount);
     }
     
-    function transferFromGuild(Registry dao, address applicant, address token, uint256 amount) override external onlyModule(dao) {
+    function transferFromGuild(address applicant, address token, uint256 amount) override external onlyModule(dao) {
         require(tokenBalances[address(dao)][GUILD][token] >= amount, "insufficient balance");
         unsafeSubtractFromBalance(address(dao), GUILD, token, amount);
         unsafeAddToBalance(address(dao), applicant, token, amount);
         emit Transfer(GUILD, applicant, token, amount);
     }
 
-    function isReservedAddress(Registry dao, address applicant) override view external onlyModule(dao) returns (bool) {
+    function isReservedAddress(address applicant) override view external onlyModule(dao) returns (bool) {
         return applicant != address(0x0) && applicant != GUILD && applicant != ESCROW && applicant != TOTAL;
     }
 
     //TODO - create an Accounting adapter that access this function
-    function balanceOf(Registry dao, address user, address token) override external view returns (uint256) {
+    function balanceOf(address user, address token) override external view returns (uint256) {
         return tokenBalances[address(dao)][user][token];
     }
 

@@ -8,6 +8,7 @@ import '../core/interfaces/IProposal.sol';
 import '../core/interfaces/IMember.sol';
 import '../adapters/Onboarding.sol';
 import '../adapters/Financing.sol';
+import '../core/banking/Bank.sol';
 
 contract DaoFactory {
 
@@ -21,8 +22,7 @@ contract DaoFactory {
     bytes32 constant ONBOARDING_MODULE = keccak256("onboarding");
     bytes32 constant FINANCING_MODULE = keccak256("financing");
 
-    constructor (address bankAddress, address memberAddress, address proposalAddress, address votingAddress) {
-        addresses[BANK_MODULE] = bankAddress;
+    constructor (address memberAddress, address proposalAddress, address votingAddress) {
         addresses[MEMBER_MODULE] = memberAddress;
         addresses[PROPOSAL_MODULE] = proposalAddress;
         addresses[VOTING_MODULE] = votingAddress;
@@ -31,8 +31,9 @@ contract DaoFactory {
     //TODO - do we want to restrict the access to onlyOwner for this function?
     function newDao(uint256 chunkSize, uint256 nbShares, uint256 votingPeriod) external returns (address) {
         Registry dao = new Registry();
+        BankContract bank = new BankContract(dao);
         //Registering Core Modules
-        dao.updateRegistry(BANK_MODULE, addresses[BANK_MODULE]);
+        dao.updateRegistry(BANK_MODULE, address(bank));
         dao.updateRegistry(MEMBER_MODULE, addresses[MEMBER_MODULE]);
         dao.updateRegistry(PROPOSAL_MODULE, addresses[PROPOSAL_MODULE]);
         dao.updateRegistry(VOTING_MODULE, addresses[VOTING_MODULE]);
