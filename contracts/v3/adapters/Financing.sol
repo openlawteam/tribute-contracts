@@ -51,7 +51,7 @@ contract FinancingContract is IFinancing, AdapterGuard  {
 
         Registry selectedDAO = Registry(daoAddress);
         IBank bankContract = IBank(selectedDAO.getAddress(BANK_MODULE));
-        require(bankContract.isReservedAddress(selectedDAO, applicant), "applicant address cannot be reserved");
+        require(bankContract.isReservedAddress(applicant), "applicant address cannot be reserved");
         
         IProposal proposalContract = IProposal(selectedDAO.getAddress(PROPOSAL_MODULE));
         uint256 proposalId = proposalContract.createProposal(selectedDAO);
@@ -79,6 +79,6 @@ contract FinancingContract is IFinancing, AdapterGuard  {
 
         IBank bankContract = IBank(dao.getAddress(BANK_MODULE));
         proposals[proposalId].processed = true;
-        bankContract.transferFromGuild(dao, proposal.applicant, proposal.token, proposal.amount);
+        bankContract.transferFromGuild(proposal.applicant, proposal.token, proposal.amount);
     }
 }

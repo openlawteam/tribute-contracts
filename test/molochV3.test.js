@@ -324,24 +324,22 @@ contract('MolochV3', async accounts => {
 
   async function prepareSmartContracts() {
     let lib = await FlagHelperLib.new();
-    let bank = await BankContract.new();
     await MemberContract.link("FlagHelper", lib.address);
     await ProposalContract.link("FlagHelper", lib.address);
     let member = await MemberContract.new();
     let proposal = await ProposalContract.new();
     let voting = await VotingContract.new();
-    return { voting, proposal, member, bank};
+    return { voting, proposal, member};
   }
 
   async function prepareSmartContracts2() {
     let lib = await FlagHelperLib.new();
-    let bank = await BankContract.new();
     await MemberContract.link("FlagHelper", lib.address);
     await ProposalContract.link("FlagHelper", lib.address);
     let member = await MemberContract.new();
     let proposal = await ProposalContract.new();
     let voting = await OffchainVotingContract.new();
-    return {voting, proposal, member, bank};
+    return {voting, proposal, member};
   }
 
   async function addVote(votes, snapshotRoot, daoAddress, proposalId, account, memberWeight, voteYes) {
@@ -426,17 +424,18 @@ contract('MolochV3', async accounts => {
     const myAccount = accounts[1];
     const otherAccount = accounts[2];
     const nonMemberAccount = accounts[3];
-    const {voting, member, bank, proposal} = await prepareSmartContracts();
+    const {voting, member, proposal} = await prepareSmartContracts();
 
-    let daoFactory = await DaoFactory.new(bank.address, member.address, proposal.address, voting.address, 
+    let daoFactory = await DaoFactory.new(member.address, proposal.address, voting.address, 
       { from: myAccount, gasPrice: Web3.toBN("0") });
 
     await daoFactory.newDao(sharePrice, numberOfShares, 1000, {from: myAccount, gasPrice: Web3.toBN("0")});
     let pastEvents = await daoFactory.getPastEvents();
     let daoAddress = pastEvents[0].returnValues.dao;
     let dao = await ModuleRegistry.at(daoAddress);
-
-    const onboardingAddress = await dao.getAddress(Web3.sha3('onboarding'));
+    const bankAddress = await dao.getAddress(sha3("bank"));
+    const bank = await BankContract.at(bankAddress);
+    const onboardingAddress = await dao.getAddress(sha3('onboarding'));
     const onboarding = await OnboardingContract.at(onboardingAddress);
 
     await onboarding.sendTransaction({from:otherAccount,value:sharePrice.mul(web3.utils.toBN(3)).add(remaining), gasPrice: web3.utils.toBN("0")});
@@ -459,7 +458,7 @@ contract('MolochV3', async accounts => {
     assert.equal(otherAccountShares.toString(), numberOfShares.mul(Web3.toBN("3")));
     assert.equal(nonMemberAccountShares.toString(), "0");
 
-    const guildBalance = await bank.balanceOf(dao.address, GUILD, "0x0000000000000000000000000000000000000000");
+    const guildBalance = await bank.balanceOf(GUILD, "0x0000000000000000000000000000000000000000");
     assert.equal(guildBalance.toString(), sharePrice.mul(Web3.toBN("3")).toString());
   })
 
@@ -468,15 +467,18 @@ contract('MolochV3', async accounts => {
     const applicant = accounts[2];
     const newMember = accounts[3];
     const token = "0x0000000000000000000000000000000000000000"; //0x0 indicates it is Native ETH
-    const { voting, member, bank, proposal } = await prepareSmartContracts();
+    const { voting, member, proposal } = await prepareSmartContracts();
 
-    let daoFactory = await DaoFactory.new(bank.address, member.address, proposal.address, voting.address, 
+    let daoFactory = await DaoFactory.new(member.address, proposal.address, voting.address, 
       { from: myAccount, gasPrice: Web3.toBN("0") });
 
     await daoFactory.newDao(sharePrice, numberOfShares, 1000, { from: myAccount, gasPrice: Web3.toBN("0") });
     let pastEvents = await daoFactory.getPastEvents();
     let daoAddress = pastEvents[0].returnValues.dao;
     let dao = await ModuleRegistry.at(daoAddress);
+
+    const bankAddress = await dao.getAddress(sha3("bank"));
+    const bank = await BankContract.at(bankAddress);
 
     //Add funds to the Guild Bank after sposoring a member to join the Guild
     const onboardingAddress = await dao.getAddress(Web3.sha3('onboarding'));
@@ -493,7 +495,7 @@ contract('MolochV3', async accounts => {
     await onboarding.processProposal(proposalId, { from: myAccount, gasPrice: Web3.toBN("0") });
 
     //Check Guild Bank Balance
-    let guildBalance = await bank.balanceOf(dao.address, GUILD, token);
+    let guildBalance = await bank.balanceOf(GUILD, token);
     let expectedGuildBalance = Web3.toBN("1200000000000000000");
     assert.equal(Web3.toBN(guildBalance).toString(), expectedGuildBalance.toString());
 
@@ -515,7 +517,7 @@ contract('MolochV3', async accounts => {
     await voting.submitVote(dao.address, proposalId, 1, { from: myAccount, gasPrice: Web3.toBN("0") });
 
     //Check applicant balance before Financing proposal is processed
-    let applicantBalance = await bank.balanceOf(dao.address, applicant, token);
+    let applicantBalance = await bank.balanceOf(applicant, token);
     assert.equal(Web3.toBN(applicantBalance).toString(), "0".toString());
     
     //Process Financing proposal after voting
@@ -523,20 +525,20 @@ contract('MolochV3', async accounts => {
     await financingContract.processProposal(proposalId, { from: myAccount, gasPrice: Web3.toBN("0") });
 
     //Check Guild Bank balance to make sure the transfer has happened
-    guildBalance = await bank.balanceOf(dao.address, GUILD, token);
+    guildBalance = await bank.balanceOf(GUILD, token);
     assert.equal(Web3.toBN(guildBalance).toString(), expectedGuildBalance.sub(requestedAmount).toString());
 
     //Check the applicant token balance to make sure the funds are available in the bank for the applicant account
-    applicantBalance = await bank.balanceOf(dao.address, applicant, token);
+    applicantBalance = await bank.balanceOf(applicant, token);
     assert.equal(Web3.toBN(applicantBalance).toString(), requestedAmount.toString());
   })
 
   it("should be possible to vote offchain", async () => {
     const myAccount = accounts[1];
     const otherAccount = accounts[2];
-    const {voting, member, bank, proposal} = await prepareSmartContracts2();
+    const {voting, member, proposal} = await prepareSmartContracts2();
 
-    let daoFactory = await DaoFactory.new(bank.address, member.address, proposal.address, voting.address, {from: myAccount, gasPrice: web3.utils.toBN("0")});
+    let daoFactory = await DaoFactory.new(member.address, proposal.address, voting.address, {from: myAccount, gasPrice: web3.utils.toBN("0")});
     await daoFactory.newDao(sharePrice, numberOfShares, 1000, {from: myAccount, gasPrice: web3.utils.toBN("0")});
     let pastEvents = await daoFactory.getPastEvents();
     let daoAddress = pastEvents[0].returnValues.dao;
@@ -555,9 +557,9 @@ contract('MolochV3', async accounts => {
   it("should be possible to invalidate vote if the total is wrong", async () => {
     const myAccount = accounts[1];
     const otherAccount = accounts[2];
-    const {voting, member, bank, proposal} = await prepareSmartContracts2();
+    const {voting, member, proposal} = await prepareSmartContracts2();
 
-    let daoFactory = await DaoFactory.new(bank.address, member.address, proposal.address, voting.address, {from: myAccount, gasPrice: web3.utils.toBN("0")});
+    let daoFactory = await DaoFactory.new(member.address, proposal.address, voting.address, {from: myAccount, gasPrice: web3.utils.toBN("0")});
     await daoFactory.newDao(sharePrice, numberOfShares, 1000, {from: myAccount, gasPrice: web3.utils.toBN("0")});
     let pastEvents = await daoFactory.getPastEvents();
     let daoAddress = pastEvents[0].returnValues.dao;

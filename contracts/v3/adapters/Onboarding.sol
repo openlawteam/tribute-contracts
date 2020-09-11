@@ -71,7 +71,7 @@ contract OnboardingContract is IOnboarding, AdapterGuard {
         memberContract.updateMember(dao, proposal.applicant, proposal.sharesRequested);
         IBank bankContract = IBank(dao.getAddress(BANK_MODULE));
         // address 0 represents native ETH
-        bankContract.addToGuild(dao, address(0), proposal.amount);
+        bankContract.addToGuild(address(0), proposal.amount);
         payable(address(bankContract)).transfer(proposal.amount); 
     }
 }
