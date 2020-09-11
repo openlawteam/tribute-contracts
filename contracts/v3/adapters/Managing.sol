@@ -38,7 +38,6 @@ contract ManagingContract is IManaging, Module, AdapterGuard {
     }
 
     function createModuleChangeRequest(address applicant, bytes32 moduleId, address moduleAddress) override external returns (uint256) {
-        require(isReplaceable(moduleId), "module not replaceable");
         require(moduleAddress != address(0x0), "invalid module address");
 
         IBank bankContract = IBank(dao.getAddress(BANK_MODULE));

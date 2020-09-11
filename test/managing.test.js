@@ -62,27 +62,6 @@ contract('MolochV3 - Managing Adapter', async accounts => {
     return dao;
   }
 
-  it("should not be possible to change the DAO Managing module", async () => {
-    const myAccount = accounts[1];
-    const applicant = accounts[2];
-    const { voting, member, proposal } = await prepareSmartContracts();
-
-    //Create the new DAO
-    let dao = await createDao(member, proposal, voting, myAccount);
-
-    //Submit a new Bank module proposal
-    let managingAddress = await dao.getAddress(Web3.sha3('managing'));
-    let managing = await ManagingContract.at(managingAddress);
-    let newModuleId = Web3.sha3('managing');
-    let newModuleAddress = accounts[3];
-
-    try {
-      await managing.createModuleChangeRequest(applicant, newModuleId, newModuleAddress);
-    } catch (err) {
-      assert.equal(err.reason, "module not replaceable");
-    }
-  })
-
   it("should not be possible to propose a new module with 0x0 module address", async () => {
     const myAccount = accounts[1];
     const applicant = accounts[2];
