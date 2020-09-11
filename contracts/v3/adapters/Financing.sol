@@ -40,21 +40,16 @@ contract FinancingContract is IFinancing, AdapterGuard  {
         revert();
     }
 
-    /**
-     * This is a function with a public access, we may need to restrict the access to membersOnly to prevent proposal spamming.
-     */
-    function createFinancingRequest(address daoAddress, address applicant, address token, uint256 amount, bytes32 details) override external returns (uint256) {
-        require(daoAddress != address(0x0), "dao address can not be empty");
+    function createFinancingRequest(address applicant, address token, uint256 amount, bytes32 details) override external returns (uint256) {
         require(amount > 0, "invalid requested amount");
         require(token == address(0x0), "only raw eth token is supported");
         //TODO (fforbeck): check if other types of tokens are supported/allowed
 
-        Registry selectedDAO = Registry(daoAddress);
-        IBank bankContract = IBank(selectedDAO.getAddress(BANK_MODULE));
+        IBank bankContract = IBank(dao.getAddress(BANK_MODULE));
         require(bankContract.isReservedAddress(applicant), "applicant address cannot be reserved");
         
-        IProposal proposalContract = IProposal(selectedDAO.getAddress(PROPOSAL_MODULE));
-        uint256 proposalId = proposalContract.createProposal(selectedDAO);
+        IProposal proposalContract = IProposal(dao.getAddress(PROPOSAL_MODULE));
+        uint256 proposalId = proposalContract.createProposal(dao);
 
         ProposalDetails storage proposal = proposals[proposalId];
         proposal.applicant = applicant;

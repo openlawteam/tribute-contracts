@@ -39,7 +39,7 @@ async function advanceTime(time) {
     });
 }
 
-contract('MolochV3', async accounts => {
+contract('MolochV3 - Onboarding', async accounts => {
 
   const numberOfShares = Web3.toBN('1000000000000000');
   const sharePrice = Web3.toBN(Web3.toWei("120", 'finney'));
