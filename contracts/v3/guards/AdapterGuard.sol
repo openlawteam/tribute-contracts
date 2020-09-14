@@ -4,14 +4,13 @@ pragma solidity ^0.7.0;
 
 import '../core/Registry.sol';
 import '../core/interfaces/IMember.sol';
+import '../core/Module.sol';
 
 /**
  * @dev Contract module that helps restrict the adapter access to DAO Members only.
  *
  */
-abstract contract AdapterGuard {
-
-    bytes32 constant MEMBER_MODULE = keccak256("member");
+abstract contract AdapterGuard is Module {
 
     /**
      * @dev Only members of the Guild are allowed to execute the function call.
