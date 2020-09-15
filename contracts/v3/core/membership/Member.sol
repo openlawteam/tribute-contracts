@@ -21,11 +21,6 @@ contract MemberContract is IMember, ModuleGuard {
     mapping(address => mapping(address => Member)) members;
     mapping(address => mapping(address => address)) memberAddresses;
 
-    //TODO - create an Adapter to call this function and add the 'onlyModule' guard
-    function nbShares(Registry dao, address member) override external view returns (uint256) {
-        return members[address(dao)][member].nbShares;
-    }
-
     function isActiveMember(Registry dao, address member) override external view onlyModule(dao) returns (bool) {
         uint256 memberFlags = members[address(dao)][member].flags;
         return memberFlags.exists() && !memberFlags.isJailed() && members[address(dao)][member].nbShares > 0;
@@ -41,5 +36,12 @@ contract MemberContract is IMember, ModuleGuard {
         member.nbShares = shares;
 
         emit UpdateMember(address(dao), applicant, shares);
+    }
+
+    /**
+     * Public read-only functions 
+     */
+    function nbShares(Registry dao, address member) override external view returns (uint256) {
+        return members[address(dao)][member].nbShares;
     }
 }

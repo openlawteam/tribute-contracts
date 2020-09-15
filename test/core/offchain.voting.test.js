@@ -1,4 +1,4 @@
-const {prepareSnapshot, addVote, prepareVoteResult} = require('../utils/offchain_voting.js');
+const {prepareSnapshot, addVote, prepareVoteResult} = require('../../utils/offchain_voting.js');
 
 const Web3 = require('web3-utils');
 const sha3 = web3.utils.sha3;
@@ -47,7 +47,7 @@ async function prepareSmartContracts() {
   return {voting, proposal, member};
 }
 
-contract('MolochV3 - Offchain Voting', async accounts => {
+contract('MolochV3 - Offchain Voting Module', async accounts => {
 
   const numberOfShares = Web3.toBN('1000000000000000');
   const sharePrice = Web3.toBN(Web3.toWei("120", 'finney'));
