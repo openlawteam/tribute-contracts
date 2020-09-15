@@ -9,4 +9,5 @@ interface IMember {
     function memberAddress(Registry dao, address memberOrDelegateKey) external returns (address);
     function updateMember(Registry dao, address applicant, uint256 shares) external;
     function nbShares(Registry dao, address member) external view returns (uint256);
+    function hasEnoughShares(Registry dao, address memberAddr, uint256 sharesToBurn) external view returns(bool);
 }

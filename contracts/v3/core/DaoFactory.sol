@@ -25,17 +25,17 @@ contract DaoFactory is Module {
     }
 
     //TODO - do we want to restrict the access to onlyOwner for this function?
-    function newDao(uint256 chunkSize, uint256 nbShares, uint256 votingPeriod) external returns (address) {
+    function newDao(uint256 chunkSize, uint256 nbShares, uint256 votingPeriod, address[] memory _approvedTokens) external returns (address) {
         Registry dao = new Registry();
         address daoAddress = address(dao);
         //Registering Core Modules
-        dao.addModule(BANK_MODULE, address(new BankContract(dao)));
+        dao.addModule(BANK_MODULE, address(new BankContract(dao, chunkSize, nbShares, _approvedTokens)));
         dao.addModule(MEMBER_MODULE, addresses[MEMBER_MODULE]);
         dao.addModule(PROPOSAL_MODULE, addresses[PROPOSAL_MODULE]);
         dao.addModule(VOTING_MODULE, addresses[VOTING_MODULE]);
 
         //Registring Adapters
-        dao.addModule(ONBOARDING_MODULE, address(new OnboardingContract(daoAddress, chunkSize, nbShares)));
+        dao.addModule(ONBOARDING_MODULE, address(new OnboardingContract(daoAddress)));
         dao.addModule(FINANCING_MODULE, address(new FinancingContract(daoAddress)));
         dao.addModule(MANAGING_MODULE, address(new ManagingContract(daoAddress)));
 

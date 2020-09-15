@@ -3,11 +3,14 @@ pragma solidity ^0.7.0;
 // SPDX-License-Identifier: MIT
 
 import '../Registry.sol';
+import '../Module.sol';
 import '../interfaces/IMember.sol';
+import '../interfaces/IBank.sol';
 import '../../helpers/FlagHelper.sol';
 import '../../guards/ModuleGuard.sol';
+import '../../guards/ReentrancyGuard.sol';
 
-contract MemberContract is IMember, ModuleGuard {
+contract MemberContract is IMember, Module, ModuleGuard, ReentrancyGuard {
     using FlagHelper for uint256;
 
     event UpdateMember(address dao, address member, uint256 shares);
@@ -30,12 +33,16 @@ contract MemberContract is IMember, ModuleGuard {
         return memberAddresses[address(dao)][memberOrDelegateKey];
     }
 
-    function updateMember(Registry dao, address applicant, uint256 shares) override external onlyModule(dao) {
-        Member storage member = members[address(dao)][applicant];
+    function updateMember(Registry dao, address memberAddr, uint256 shares) override external onlyModule(dao) {
+        Member storage member = members[address(dao)][memberAddr];
         member.flags = 1;
         member.nbShares = shares;
 
-        emit UpdateMember(address(dao), applicant, shares);
+        emit UpdateMember(address(dao), memberAddr, shares);
+    }
+
+    function hasEnoughShares(Registry dao, address memberAddr, uint256 sharesToBurn) override external view onlyModule(dao) returns (bool) {
+        return members[address(dao)][memberAddr].nbShares >= sharesToBurn;
     }
 
     /**
