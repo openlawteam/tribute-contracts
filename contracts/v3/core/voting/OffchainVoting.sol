@@ -83,17 +83,16 @@ contract OffchainVotingContract is IVoting, Module {
     }
     
     function submitVoteResult(Registry dao, uint256 proposalId, uint256 nbYes, uint256 nbNo, bytes32 resultRoot) external {
-        Voting storage vote = votes[address(dao)][proposalId];
-        vote.nbNo = nbNo;
-        vote.nbYes = nbYes;
-        vote.resultRoot = resultRoot;
+        //TODO: check vote status
+        //TODO: if vote result already exists, check that the new one should be able to override
+        votes[address(dao)][proposalId].nbNo = nbNo;
+        votes[address(dao)][proposalId].nbYes = nbYes;
+        votes[address(dao)][proposalId].resultRoot = resultRoot;
     }
 
     function startNewVotingForProposal(Registry dao, uint256 proposalId, bytes memory data) override external returns (uint256) {
         require(data.length == 64, "vote data should represent a merkle tree root (bytes32) and number of voters (uint256)");
-    
-        Voting storage vote = votes[address(dao)][proposalId];
-        vote.startingTime = block.timestamp;
+
         bytes32 root;
         uint256 nbVoters;
 
@@ -104,20 +103,25 @@ contract OffchainVotingContract is IVoting, Module {
         assembly {
             nbVoters := mload(add(data, 64))
         }
-
-        vote.snapshotRoot = root;
-        vote.nbVoters = nbVoters;
+        require(root != bytes32(0), "snapshot root cannot be 0");
+        require(nbVoters > 0, "nb voters being 0 means no one can vote");
+        votes[address(dao)][proposalId].startingTime = block.timestamp;
+        votes[address(dao)][proposalId].snapshotRoot = root;
+        votes[address(dao)][proposalId].nbVoters = nbVoters;
     }
 
     function challengeWrongOrder(Registry dao, uint256 proposalId, uint256 index, VoteResultNode memory nodePrevious, VoteResultNode memory nodeCurrent) view external {
         require(index > 0, "check between current and previous, index cannot be 0");
-        Voting memory vote = votes[address(dao)][proposalId];
+        Voting storage vote = votes[address(dao)][proposalId];
+        bytes32 resultRoot = vote.resultRoot;
+        bytes32 snapshotRoot = vote.snapshotRoot;
+        require(resultRoot != bytes32(0), "no result available yet!");
         bytes32 hashCurrent = keccak256(abi.encode(nodeCurrent.voter, nodeCurrent.weight, nodeCurrent.sig, nodeCurrent.nbYes, nodeCurrent.nbNo));
         bytes32 hashPrevious = keccak256(abi.encode(nodePrevious.voter, nodePrevious.weight, nodePrevious.sig, nodePrevious.nbYes, nodePrevious.nbNo));
-        require(checkProofOrdered(nodeCurrent.proof, vote.resultRoot, hashCurrent, index), "proof check for current mismatch!");
-        require(checkProofOrdered(nodePrevious.proof, vote.resultRoot, hashPrevious, index - 1), "proof check for previous mismatch!");
+        require(checkProofOrdered(nodeCurrent.proof, resultRoot, hashCurrent, index), "proof check for current invalid! ");
+        require(checkProofOrdered(nodePrevious.proof, resultRoot, hashPrevious, index - 1), "proof check for previous invalid!");
 
-        bytes32 proposalHash = keccak256(abi.encode(vote.snapshotRoot, address(dao), proposalId));
+        bytes32 proposalHash = keccak256(abi.encode(snapshotRoot, address(dao), proposalId));
         if(hasVotedYes(nodeCurrent.voter, proposalHash, nodeCurrent.sig)) {
             if(nodePrevious.nbYes + 1 != nodeCurrent.nbYes) {
                 //reset vote
