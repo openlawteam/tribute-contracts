@@ -45,13 +45,15 @@ contract BankContract is IBank, ModuleGuard {
         return applicant != address(0x0) && applicant != GUILD && applicant != ESCROW && applicant != TOTAL;
     }
 
-    //TODO - create an Accounting adapter that access this function
+    /**
+     * Public read-only functions 
+     */
     function balanceOf(address user, address token) override external view returns (uint256) {
         return tokenBalances[address(dao)][user][token];
     }
 
     /**
-    Internal bookkeeping
+     * Internal bookkeeping
      */
     function unsafeAddToBalance(address moloch, address user, address token, uint256 amount) internal {
         tokenBalances[moloch][user][token] += amount;

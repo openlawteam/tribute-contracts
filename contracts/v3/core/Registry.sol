@@ -22,13 +22,14 @@ contract Registry is Ownable {
     function addModule(bytes32 moduleId, address moduleAddress) onlyModule external {
         require(moduleId != bytes32(0), "module id must not be empty");
         require(moduleAddress != address(0x0), "module address must not be empty");
+        require(registry[moduleId] == address(0x0), "module id already in use");
         registry[moduleId] = moduleAddress;
         inverseRegistry[moduleAddress] = moduleId;
     }
 
     function removeModule(bytes32 moduleId) onlyModule external {
         require(moduleId != bytes32(0), "module id must not be empty");
-        require(registry[moduleId] != address(0x0), "module id not registered");
+        require(registry[moduleId] != address(0x0), "module not registered");
         delete inverseRegistry[registry[moduleId]];
         delete registry[moduleId];
     }

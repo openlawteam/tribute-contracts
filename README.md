@@ -20,7 +20,7 @@ The architecture is composed by 3 main types of components:
 - The core module named Registry keeps track of all registered core modules, so they can be verified during the call executions
 - Only Adapters or other Core Modules are allowed to call a Core Module function
 - Core modules do not communicate with External World directly, they need to go through an Adapter
-- Each core module is a Smart Contract with the `onlyAdapter` and/or `onlyModule` modifiers applied to its functions, it shall not expose its functions in a public way (`external` or `public` modifier should not be added to core module functions)
+- Each core module is a Smart Contract with the `onlyAdapter` and/or `onlyModule` modifiers applied to its functions, it shall not expose its functions in a public way (`external` or `public` modifier should not be added to core module functions, except for the read-only functions)
 
 **Adapters**
 - Public/External accessible functions called from External World

@@ -35,7 +35,7 @@ contract OffchainVotingContract is IVoting, Module {
         uint256 nbYes;
         uint256 weight;
         bytes sig;
-        bytes proof;
+        bytes32[] proof;
     }
     
     mapping(address => mapping(uint256 => Voting)) votes;
@@ -118,8 +118,8 @@ contract OffchainVotingContract is IVoting, Module {
         require(resultRoot != bytes32(0), "no result available yet!");
         bytes32 hashCurrent = keccak256(abi.encode(nodeCurrent.voter, nodeCurrent.weight, nodeCurrent.sig, nodeCurrent.nbYes, nodeCurrent.nbNo));
         bytes32 hashPrevious = keccak256(abi.encode(nodePrevious.voter, nodePrevious.weight, nodePrevious.sig, nodePrevious.nbYes, nodePrevious.nbNo));
-        require(checkProofOrdered(nodeCurrent.proof, resultRoot, hashCurrent, index), "proof check for current invalid! ");
-        require(checkProofOrdered(nodePrevious.proof, resultRoot, hashPrevious, index - 1), "proof check for previous invalid!");
+        require(verify(resultRoot, hashCurrent, nodeCurrent.proof), "proof check for current invalid! ");
+        require(verify(resultRoot, hashPrevious, nodePrevious.proof), "proof check for previous invalid!");
 
         bytes32 proposalHash = keccak256(abi.encode(snapshotRoot, address(dao), proposalId));
         if(hasVotedYes(nodeCurrent.voter, proposalHash, nodeCurrent.sig)) {
@@ -138,12 +138,12 @@ contract OffchainVotingContract is IVoting, Module {
     }
 
     function hasVotedYes(address voter, bytes32 proposalHash, bytes memory sig) internal pure returns(bool) {
-        if(recover(keccak256(abi.encode(proposalHash, 1)), sig) == voter) {
+        if(ecrecovery(keccak256(abi.encode(proposalHash, 1)), sig) == voter) {
             return true;
-        } else if (recover(keccak256(abi.encode(proposalHash, 2)), sig) == voter) {
+        } else if (ecrecovery(keccak256(abi.encode(proposalHash, 2)), sig) == voter) {
             return false;
         } else {
-            revert("invalid signature");
+            revert("invalid signature or signed for neither yes nor no");
         }
     }
 
@@ -161,54 +161,36 @@ contract OffchainVotingContract is IVoting, Module {
      * this is by receiving a hash of the original message (which may otherwise
      * be too long), and then calling {toEthSignedMessageHash} on it.
      */
-    function recover(bytes32 hash, bytes memory signature) internal pure returns (address) {
-        // Check the signature length
-        if (signature.length != 65) {
-            revert("ECDSA: invalid signature length");
-        }
+    function ecrecovery(bytes32 hash, bytes memory sig) public pure returns (address) {
+    bytes32 r;
+    bytes32 s;
+    uint8 v;
 
-        // Divide the signature in r, s and v variables
-        bytes32 r;
-        bytes32 s;
-        uint8 v;
+    require(sig.length == 65, 'invalid signature length'); 
 
-        // ecrecover takes the signature parameters, and the only way to get them
-        // currently is to use assembly.
-        // solhint-disable-next-line no-inline-assembly
-        assembly {
-            r := mload(add(signature, 0x20))
-            s := mload(add(signature, 0x40))
-            v := byte(0, mload(add(signature, 0x60)))
-        }
-
-        // EIP-2 still allows signature malleability for ecrecover(). Remove this possibility and make the signature
-        // unique. Appendix F in the Ethereum Yellow paper (https://ethereum.github.io/yellowpaper/paper.pdf), defines
-        // the valid range for s in (281): 0 < s < secp256k1n ÷ 2 + 1, and for v in (282): v ∈ {27, 28}. Most
-        // signatures from current libraries generate a unique signature with an s-value in the lower half order.
-        //
-        // If your library generates malleable signatures, such as s-values in the upper range, calculate a new s-value
-        // with 0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFEBAAEDCE6AF48A03BBFD25E8CD0364141 - s1 and flip v from 27 to 28 or
-        // vice versa. If your library also generates signatures with 0/1 for v instead 27/28, add 27 to v to accept
-        // these malleable signatures as well.
-        if (uint256(s) > 0x7FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF5D576E7357A4501DDFE92F46681B20A0) {
-            revert("ECDSA: invalid signature 's' value");
-        }
-
-        if (v != 27 && v != 28) {
-            revert("ECDSA: invalid signature 'v' value");
-        }
-
-        // If the signature is valid (and not malleable), return the signer address
-        address signer = ecrecover(hash, v, r, s);
-        require(signer != address(0), "ECDSA: invalid signature");
-
-        return signer;
+    assembly {
+      r := mload(add(sig, 32))
+      s := mload(add(sig, 64))
+      v := and(mload(add(sig, 65)), 255)
     }
 
-    function fixResult(Registry dao, uint256 proposalId, address voter, uint256 weight, uint256 nbYes, uint256 nbNo, bytes calldata voteSignature, bytes memory proof) view external {
+    if (v < 27) {
+      v += 27;
+    }
+
+    require (v == 27 || v == 28, 'invalid v value'); 
+
+    return ecrecover(hash, v, r, s);
+  }
+
+  function ecverify(bytes32 hash, bytes memory sig, address signer) public pure returns (bool) {
+    return signer == ecrecovery(hash, sig);
+  }
+
+    function fixResult(Registry dao, uint256 proposalId, address voter, uint256 weight, uint256 nbYes, uint256 nbNo, bytes calldata voteSignature, bytes32[] memory proof) view external {
         Voting memory vote = votes[address(dao)][proposalId];
         bytes32 hash = keccak256(abi.encode(voter, weight, voteSignature, nbYes, nbNo));
-        require(checkProofOrdered(proof, vote.resultRoot, hash, vote.nbVoters), "proof check mismatch!");
+        require(verify(vote.resultRoot, hash, proof), "proof check mismatch!");
         if(vote.nbYes != nbYes) {
             vote.nbYes = nbYes;
         }
@@ -217,38 +199,30 @@ contract OffchainVotingContract is IVoting, Module {
         }
     }
 
-    function checkProofOrdered(bytes memory proof, bytes32 root, bytes32 hash, uint256 index) pure internal returns (bool) {
-        // use the index to determine the node ordering
-        // index ranges 1 to n
+    function verify(
+    bytes32 root,
+    bytes32 leaf,
+    bytes32[] memory proof
+  )
+    public
+    pure
+    returns (bool)
+  {
+    bytes32 computedHash = leaf;
 
-        bytes32 el;
-        bytes32 h = hash;
-        uint256 remaining;
+    for (uint256 i = 0; i < proof.length; i++) {
+      bytes32 proofElement = proof[i];
 
-        for (uint256 j = 32; j <= proof.length; j += 32) {
-        assembly {
-            el := mload(add(proof, j))
-        }
-
-        // calculate remaining elements in proof
-        remaining = (proof.length - j + 32) / 32;
-
-        // we don't assume that the tree is padded to a power of 2
-        // if the index is odd then the proof will start with a hash at a higher
-        // layer, so we have to adjust the index to be the index at that layer
-        while (remaining > 0 && index % 2 == 1 && index > 2 ** remaining) {
-            index = uint(index) / 2 + 1;
-        }
-
-        if (index % 2 == 0) {
-            h = keccak256(abi.encodePacked(el, h));
-            index = index / 2;
-        } else {
-            h = keccak256(abi.encodePacked(h, el));
-            index = uint(index) / 2 + 1;
-        }
-        }
-
-        return h == root;
+      if (computedHash < proofElement) {
+        // Hash(current computed hash + current element of the proof)
+        computedHash = keccak256(abi.encodePacked(computedHash, proofElement));
+      } else {
+        // Hash(current element of the proof + current computed hash)
+        computedHash = keccak256(abi.encodePacked(proofElement, computedHash));
+      }
     }
+
+    // Check if the computed hash (root) is equal to the provided root
+    return computedHash == root;
+  }
 }

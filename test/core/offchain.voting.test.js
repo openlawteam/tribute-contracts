@@ -1,4 +1,4 @@
-const {prepareSnapshot, addVote, prepareVoteResult, buildVoteLeafHashForMerkleTree} = require('../utils/offchain_voting.js');
+const {prepareSnapshot, addVote, prepareVoteResult, buildVoteLeafHashForMerkleTree} = require('../../utils/offchain_voting.js');
 
 const Web3 = require('web3-utils');
 const FlagHelperLib = artifacts.require('./v3/helpers/FlagHelper');
@@ -8,8 +8,6 @@ const MemberContract = artifacts.require('./v3/core/MemberContract');
 const ProposalContract = artifacts.require('./v3/core/ProposalContract');
 const OffchainVotingContract = artifacts.require('./v3/core/OffchainVotingContract');
 const OnboardingContract = artifacts.require('./v3/adapters/OnboardingContract');
-
-
 
 async function advanceTime(time) {
   await new Promise((resolve, reject) => {
@@ -46,7 +44,7 @@ async function prepareSmartContracts() {
   return {voting, proposal, member};
 }
 
-contract('MolochV3 - Offchain Voting', async accounts => {
+contract('MolochV3 - Offchain Voting Module', async accounts => {
 
   const numberOfShares = Web3.toBN('1000000000000000');
   const sharePrice = Web3.toBN(Web3.toWei("120", 'finney'));
@@ -70,8 +68,8 @@ contract('MolochV3 - Offchain Voting', async accounts => {
     const onboarding = await OnboardingContract.at(onboardingAddress);
     await onboarding.sendTransaction({from:otherAccount,value:sharePrice.mul(web3.utils.toBN(3)).add(remaining), gasPrice: web3.utils.toBN("0")});
     const {snapshotTree} = await prepareSnapshot(dao, member, accounts);
-    await onboarding.sponsorProposal(0, web3.eth.abi.encodeParameters(['bytes32', 'uint256'], [snapshotTree.getMerkleRoot(), 1]), {from: myAccount, gasPrice: web3.utils.toBN("0")});
-    await voting.submitVoteResult(dao.address, 0, 1, 0, snapshotTree.getMerkleRoot(), {from: myAccount, gasPrice: web3.utils.toBN("0")});
+    await onboarding.sponsorProposal(0, web3.eth.abi.encodeParameters(['bytes32', 'uint256'], [snapshotTree.getHexRoot(), 1]), {from: myAccount, gasPrice: web3.utils.toBN("0")});
+    await voting.submitVoteResult(dao.address, 0, 1, 0, snapshotTree.getHexRoot(), {from: myAccount, gasPrice: web3.utils.toBN("0")});
     await advanceTime(10000);
     await onboarding.processProposal(0, {from: myAccount, gasPrice: web3.utils.toBN("0")});
   });
@@ -91,15 +89,16 @@ contract('MolochV3 - Offchain Voting', async accounts => {
     const onboarding = await OnboardingContract.at(onboardingAddress);
     await onboarding.sendTransaction({from:otherAccount,value:sharePrice.mul(web3.utils.toBN(3)).add(remaining), gasPrice: web3.utils.toBN("0")});
     const {snapshotTree, weights} = await prepareSnapshot(dao, member, accounts);
-    await onboarding.sponsorProposal(0, web3.eth.abi.encodeParameters(['bytes32', 'uint256'], [snapshotTree.getMerkleRoot(), 1]), {from: myAccount, gasPrice: web3.utils.toBN("0")});
+    await onboarding.sponsorProposal(0, web3.eth.abi.encodeParameters(['bytes32', 'uint256'], [snapshotTree.getHexRoot(), 1]), {from: myAccount, gasPrice: web3.utils.toBN("0")});
     const proposalId = 0;
-    const voteElements = await addVote([], snapshotTree.getMerkleRoot(), dao.address, proposalId, myAccount, 1, true);
+    const voteElements = await addVote([], snapshotTree.getHexRoot(), dao.address, proposalId, myAccount, 1, true);
     const {voteResultTree, votes} = prepareVoteResult(voteElements, weights);
-    await voting.submitVoteResult(dao.address, proposalId, 10, 0, voteResultTree.getMerkleRoot(), {from: myAccount, gasPrice: web3.utils.toBN("0")});
+    await voting.submitVoteResult(dao.address, proposalId, 10, 0, voteResultTree.getHexRoot(), {from: myAccount, gasPrice: web3.utils.toBN("0")});
     const elementIndex = votes.length - 1;
     const lastVote = votes[elementIndex];
-    const proof = voteResultTree.getProof(buildVoteLeafHashForMerkleTree(lastVote));
-    await voting.fixResult(dao.address, 0, lastVote.address, lastVote.weight, lastVote.nbYes, lastVote.nbNo, lastVote.vote, proof);
+    
+    const proof = voteResultTree.getHexProof(buildVoteLeafHashForMerkleTree(lastVote));
+    await voting.fixResult(dao.address, 0, lastVote.address, lastVote.weight, lastVote.nbYes, lastVote.nbNo, lastVote.vote, []);
     await advanceTime(10000);
     await onboarding.processProposal(0, {from: myAccount, gasPrice: web3.utils.toBN("0")});
   });
@@ -121,15 +120,15 @@ contract('MolochV3 - Offchain Voting', async accounts => {
     await onboarding.sendTransaction({from:otherAccount,value:sharePrice.mul(web3.utils.toBN(3)).add(remaining), gasPrice: web3.utils.toBN("0")});
     await onboarding.sendTransaction({from:otherAccount2,value:sharePrice.mul(web3.utils.toBN(3)).add(remaining), gasPrice: web3.utils.toBN("0")});
     const {snapshotTree} = await prepareSnapshot(dao, member, accounts);
-    await onboarding.sponsorProposal(0, web3.eth.abi.encodeParameters(['bytes32', 'uint256'], [snapshotTree.getMerkleRoot(), 1]), {from: myAccount, gasPrice: web3.utils.toBN("0")});
-    await onboarding.sponsorProposal(1, web3.eth.abi.encodeParameters(['bytes32', 'uint256'], [snapshotTree.getMerkleRoot(), 1]), {from: myAccount, gasPrice: web3.utils.toBN("0")});
+    await onboarding.sponsorProposal(0, web3.eth.abi.encodeParameters(['bytes32', 'uint256'], [snapshotTree.getHexRoot(), 1]), {from: myAccount, gasPrice: web3.utils.toBN("0")});
+    await onboarding.sponsorProposal(1, web3.eth.abi.encodeParameters(['bytes32', 'uint256'], [snapshotTree.getHexRoot(), 1]), {from: myAccount, gasPrice: web3.utils.toBN("0")});
 
-    const voteElements = await addVote([], snapshotTree.getMerkleRoot(), dao.address, 0, myAccount, 1, true);
-    const voteElements2 = await addVote([], snapshotTree.getMerkleRoot(), dao.address, 1, myAccount, 1, true);
+    const voteElements = await addVote([], snapshotTree.getHexRoot(), dao.address, 0, myAccount, 1, true);
+    const voteElements2 = await addVote([], snapshotTree.getHexRoot(), dao.address, 1, myAccount, 1, true);
     const r1 = prepareVoteResult(voteElements);
     const r2 = prepareVoteResult(voteElements2);
-    await voting.submitVoteResult(dao.address, 0, 1, 0, r1.voteResultTree.getMerkleRoot(), {from: myAccount, gasPrice: web3.utils.toBN("0")});
-    await voting.submitVoteResult(dao.address, 1, 1, 0, r2.voteResultTree.getMerkleRoot(), {from: myAccount, gasPrice: web3.utils.toBN("0")});
+    await voting.submitVoteResult(dao.address, 0, 1, 0, r1.voteResultTree.getHexRoot(), {from: myAccount, gasPrice: web3.utils.toBN("0")});
+    await voting.submitVoteResult(dao.address, 1, 1, 0, r2.voteResultTree.getHexRoot(), {from: myAccount, gasPrice: web3.utils.toBN("0")});
     await advanceTime(10000);
     await onboarding.processProposal(0, {from: myAccount, gasPrice: web3.utils.toBN("0")});
     await onboarding.processProposal(1, {from: myAccount, gasPrice: web3.utils.toBN("0")});
@@ -141,31 +140,32 @@ contract('MolochV3 - Offchain Voting', async accounts => {
     const sr = await prepareSnapshot(dao, member, accounts);
     const proposalId = 2;
 
-    await onboarding.sponsorProposal(proposalId, web3.eth.abi.encodeParameters(['bytes32', 'uint256'], [sr.snapshotTree.getMerkleRoot(), 3]), {from: myAccount, gasPrice: web3.utils.toBN("0")});
-    
-    let ve = await addVote([], snapshotTree.getMerkleRoot(), dao.address, 0, myAccount, 1, true);
-    ve = await addVote(ve, snapshotTree.getMerkleRoot(), dao.address, 0, otherAccount, 1, true);
-    ve = await addVote(ve, snapshotTree.getMerkleRoot(), dao.address, 0, otherAccount2, 1, false);
+    await onboarding.sponsorProposal(proposalId, web3.eth.abi.encodeParameters(['bytes32', 'uint256'], [sr.snapshotTree.getHexRoot(), 3]), {from: myAccount, gasPrice: web3.utils.toBN("0")});
+
+    let ve = await addVote([], snapshotTree.getHexRoot(), dao.address, 0, myAccount, 1, true);
+    ve = await addVote(ve, snapshotTree.getHexRoot(), dao.address, 0, otherAccount, 1, true);
+    ve = await addVote(ve, snapshotTree.getHexRoot(), dao.address, 0, otherAccount2, 1, false);
     const r3 = prepareVoteResult([ve[2], ve[0] ,ve[1] ]);
     const voteResultTree2 = r3.voteResultTree;
-    await voting.submitVoteResult(dao.address, proposalId, 2, 1, voteResultTree2.getMerkleRoot(), {from: myAccount, gasPrice: web3.utils.toBN("0")});
-    const t1 = r3.voteResultTree;
+    const votes2 = r3.votes;
+    await voting.submitVoteResult(dao.address, proposalId, 2, 1, voteResultTree2.getHexRoot(), {from: myAccount, gasPrice: web3.utils.toBN("0")});
 
     const nodePrevious = {
-      voter: r3.votes[0].address,      
-      nbNo: r3.votes[0].nbNo,
-      nbYes: r3.votes[0].nbYes,
-      weight: r3.votes[0].weight,
-      sig: r3.votes[0].vote,
-      proof: t1.getProof(buildVoteLeafHashForMerkleTree(r3.votes[0]))
+      voter: votes2[0].address,      
+      nbNo: votes2[0].nbNo,
+      nbYes: votes2[0].nbYes,
+      weight: votes2[0].weight,
+      sig: votes2[0].vote,
+      proof: voteResultTree2.getHexProof(buildVoteLeafHashForMerkleTree(votes2[0]))
     };
+
     const nodeCurrent = {
-      voter: r3.votes[1].address,      
-      nbNo: r3.votes[1].nbNo,
-      nbYes: r3.votes[1].nbYes,
-      weight: r3.votes[1].weight,
-      sig: r3.votes[1].vote,
-      proof: r3.voteResultTree.getProof(buildVoteLeafHashForMerkleTree(r3.votes[1]))
+      voter: votes2[1].address,      
+      nbNo: votes2[1].nbNo,
+      nbYes: votes2[1].nbYes,
+      weight: votes2[1].weight,
+      sig: votes2[1].vote,
+      proof: voteResultTree2.getHexProof(buildVoteLeafHashForMerkleTree(votes2[1]))
     };
 
     await voting.challengeWrongOrder(dao.address, proposalId, 1, nodePrevious, nodeCurrent);
