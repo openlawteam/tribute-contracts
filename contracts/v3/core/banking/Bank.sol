@@ -19,7 +19,7 @@ contract BankContract is IBank, Module, ModuleGuard {
     address public constant GUILD = address(0xdead);
     address public constant ESCROW = address(0xbeef);
     address public constant TOTAL = address(0xbabe);
-    uint256 public constant MAX_TOKEN_WHITELIST_COUNT = 100;
+    uint256 public constant MAX_APPROVED_TOKENS = 100;
 
     Registry dao;
     address[] public approvedTokens;
@@ -30,15 +30,17 @@ contract BankContract is IBank, Module, ModuleGuard {
 
     constructor(Registry _dao, uint256 _chunkSize, uint256 _nbShares, address[] memory _approvedTokens) {
         dao = _dao;
-        require(_chunkSize > 0, "chunk size must be greater than zero");
+        require(_chunkSize > 0, "invalid _chunkSize");
         chunkSize = _chunkSize;
         
-        require(_nbShares > 0, "number of shares per chunk must be greater than zero");
+        require(_nbShares > 0, "invalid _nbShares");
         sharesPerChunk = _nbShares;
         
-        require(_approvedTokens.length > 0, "need at least one approved token");
-        require(_approvedTokens.length <= MAX_TOKEN_WHITELIST_COUNT, "too many tokens");
-        approvedTokens = _approvedTokens;
+        require(_approvedTokens.length > 0 && _approvedTokens.length <= MAX_APPROVED_TOKENS, "invalid _approvedTokens");
+        for (uint256 i = 0; i < _approvedTokens.length; i++) {
+            require(_approvedTokens[i] != address(0x0), "_approvedToken cannot be 0");
+            approvedTokens.push(_approvedTokens[i]);
+        }
     }
 
     receive() external payable {

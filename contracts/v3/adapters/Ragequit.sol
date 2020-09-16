@@ -2,19 +2,14 @@ pragma solidity ^0.7.0;
 
 // SPDX-License-Identifier: MIT
 
-import './interfaces/IFinancing.sol';
 import '../core/Module.sol';
 import '../core/Registry.sol';
-import '../core/interfaces/IVoting.sol';
-import '../core/interfaces/IProposal.sol';
 import '../core/interfaces/IBank.sol';
 import '../core/interfaces/IMember.sol';
 import '../guards/AdapterGuard.sol';
 import '../guards/ReentrancyGuard.sol';
-import '../utils/SafeMath.sol';
 
 contract RagequitContract is Module, AdapterGuard, ReentrancyGuard {
-    using SafeMath for uint256;
 
     event Ragequit(address indexed member, uint256 burnedShares);
 

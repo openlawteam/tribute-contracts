@@ -11,6 +11,7 @@ import '../core/banking/Bank.sol';
 import '../adapters/Onboarding.sol';
 import '../adapters/Financing.sol';
 import '../adapters/Managing.sol';
+import '../adapters/Ragequit.sol';
 
 contract DaoFactory is Module {
 
@@ -18,13 +19,17 @@ contract DaoFactory is Module {
 
     mapping(bytes32 => address) addresses;
 
-    constructor (address memberAddress, address proposalAddress, address votingAddress) {
+    constructor (address memberAddress, address proposalAddress, address votingAddress, address ragequitAddress) {
         addresses[MEMBER_MODULE] = memberAddress;
         addresses[PROPOSAL_MODULE] = proposalAddress;
         addresses[VOTING_MODULE] = votingAddress;
+        addresses[RAGEQUIT_MODULE] = ragequitAddress;
     }
 
-    //TODO - do we want to restrict the access to onlyOwner for this function?
+    /*
+     * @dev: A new DAO is instantiated with only the Core Modules enabled, to reduce the call cost. 
+     *       Another call must be made to enable the default Adapters, see @registerDefaultAdapters.
+     */
     function newDao(uint256 chunkSize, uint256 nbShares, uint256 votingPeriod, address[] memory _approvedTokens) external returns (address) {
         Registry dao = new Registry();
         address daoAddress = address(dao);
@@ -38,6 +43,7 @@ contract DaoFactory is Module {
         dao.addModule(ONBOARDING_MODULE, address(new OnboardingContract(daoAddress)));
         dao.addModule(FINANCING_MODULE, address(new FinancingContract(daoAddress)));
         dao.addModule(MANAGING_MODULE, address(new ManagingContract(daoAddress)));
+        dao.addModule(RAGEQUIT_MODULE, addresses[RAGEQUIT_MODULE]);
 
         IVoting votingContract = IVoting(addresses[VOTING_MODULE]);
         votingContract.registerDao(daoAddress, votingPeriod);
@@ -49,4 +55,5 @@ contract DaoFactory is Module {
 
         return daoAddress;
     }
+
 }
