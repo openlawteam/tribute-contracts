@@ -10,8 +10,7 @@ const VotingContract = artifacts.require('./v3/core/VotingContract');
 const ProposalContract = artifacts.require('./v3/core/ProposalContract');
 const OnboardingContract = artifacts.require('./v3/adapters/OnboardingContract');
 const FinancingContract = artifacts.require('./v3/adapters/FinancingContract');
-
-
+const RagequitContract = artifacts.require('./v3/adapters/RagequitContract');
 
 async function advanceTime(time) {
   await new Promise((resolve, reject) => {
@@ -54,7 +53,8 @@ contract('MolochV3 - Financing Adapter', async accounts => {
     let member = await MemberContract.new();
     let proposal = await ProposalContract.new();
     let voting = await VotingContract.new();
-    return { voting, proposal, member};
+    let ragequit = await RagequitContract.new();
+    return { voting, proposal, member, ragequit };
   }
 
   it("should be possible to any individual to request financing", async () => {
@@ -63,12 +63,12 @@ contract('MolochV3 - Financing Adapter', async accounts => {
     const newMember = accounts[3];
     const token = "0x0000000000000000000000000000000000000000"; //0x0 indicates it is Native ETH
     const allowedTokens = [token];
-    const { voting, member, proposal } = await prepareSmartContracts();
+    const { voting, member, proposal, ragequit } = await prepareSmartContracts();
 
-    let daoFactory = await DaoFactory.new(member.address, proposal.address, voting.address, 
+    let daoFactory = await DaoFactory.new(member.address, proposal.address, voting.address, ragequit.address,
       { from: myAccount, gasPrice: Web3.toBN("0") });
 
-    await daoFactory.newDao(sharePrice, numberOfShares, 1000, allowedTokens, { from: myAccount, gasPrice: Web3.toBN("0") });
+    await daoFactory.newDao(sharePrice, numberOfShares, 1000, { from: myAccount, gasPrice: Web3.toBN("0") });
     let pastEvents = await daoFactory.getPastEvents();
     let daoAddress = pastEvents[0].returnValues.dao;
     let dao = await ModuleRegistry.at(daoAddress);

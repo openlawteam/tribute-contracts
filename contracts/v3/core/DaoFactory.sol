@@ -30,11 +30,11 @@ contract DaoFactory is Module {
      * @dev: A new DAO is instantiated with only the Core Modules enabled, to reduce the call cost. 
      *       Another call must be made to enable the default Adapters, see @registerDefaultAdapters.
      */
-    function newDao(uint256 chunkSize, uint256 nbShares, uint256 votingPeriod, address[] memory _approvedTokens) external returns (address) {
+    function newDao(uint256 chunkSize, uint256 nbShares, uint256 votingPeriod) external returns (address) {
         Registry dao = new Registry();
         address daoAddress = address(dao);
         //Registering Core Modules
-        dao.addModule(BANK_MODULE, address(new BankContract(dao, chunkSize, nbShares, _approvedTokens)));
+        dao.addModule(BANK_MODULE, address(new BankContract(dao, chunkSize, nbShares)));
         dao.addModule(MEMBER_MODULE, addresses[MEMBER_MODULE]);
         dao.addModule(PROPOSAL_MODULE, addresses[PROPOSAL_MODULE]);
         dao.addModule(VOTING_MODULE, addresses[VOTING_MODULE]);

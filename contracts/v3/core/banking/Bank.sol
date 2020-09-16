@@ -19,40 +19,46 @@ contract BankContract is IBank, Module, ModuleGuard {
     address public constant GUILD = address(0xdead);
     address public constant ESCROW = address(0xbeef);
     address public constant TOTAL = address(0xbabe);
-    uint256 public constant MAX_APPROVED_TOKENS = 100;
+    uint256 public constant MAX_TOKENS = 100;
 
     Registry dao;
-    address[] public approvedTokens;
+    address[] public tokens;
+    mapping(address => bool) public availableTokens;
     uint256 public chunkSize;
     uint256 public sharesPerChunk;
 
     mapping (address => mapping(address => mapping(address => uint256))) public tokenBalances; // tokenBalances[molochAddress][userAddress][tokenAddress]
 
-    constructor(Registry _dao, uint256 _chunkSize, uint256 _nbShares, address[] memory _approvedTokens) {
+    constructor(Registry _dao, uint256 _chunkSize, uint256 _nbShares) {
         dao = _dao;
         require(_chunkSize > 0, "invalid _chunkSize");
         chunkSize = _chunkSize;
-        
         require(_nbShares > 0, "invalid _nbShares");
         sharesPerChunk = _nbShares;
-        
-        require(_approvedTokens.length > 0 && _approvedTokens.length <= MAX_APPROVED_TOKENS, "invalid _approvedTokens");
-        for (uint256 i = 0; i < _approvedTokens.length; i++) {
-            require(_approvedTokens[i] != address(0x0), "_approvedToken cannot be 0");
-            approvedTokens.push(_approvedTokens[i]);
-        }
     }
 
     receive() external payable {
 
     }
 
-    function addToEscrow(address tokenAddress, uint256 amount) override external onlyModule(dao) {
-        unsafeAddToBalance(address(dao), ESCROW, tokenAddress, amount);
+    function addToEscrow(address token, uint256 amount) override external onlyModule(dao) {
+        require(token != GUILD && token != ESCROW && token != TOTAL, "invalid token");
+        unsafeAddToBalance(address(dao), ESCROW, token, amount);
+        if (!availableTokens[token]) {
+            require(tokens.length < MAX_TOKENS, "max limit reached");
+            availableTokens[token] = true;
+            tokens.push(token);
+        }
     }
 
-    function addToGuild(address tokenAddress, uint256 amount) override external onlyModule(dao) {
-        unsafeAddToBalance(address(dao), GUILD, tokenAddress, amount);
+    function addToGuild(address token, uint256 amount) override external onlyModule(dao) {
+        require(token != GUILD && token != ESCROW && token != TOTAL, "invalid token");
+        unsafeAddToBalance(address(dao), GUILD, token, amount);
+        if (!availableTokens[token]) {
+            require(tokens.length < MAX_TOKENS, "max limit reached");
+            availableTokens[token] = true;
+            tokens.push(token);
+        }
     }
     
     function transferFromGuild(address applicant, address token, uint256 amount) override external onlyModule(dao) {
@@ -65,8 +71,8 @@ contract BankContract is IBank, Module, ModuleGuard {
     function burnShares(address memberAddr, uint256 sharesToBurn) override external onlyModule(dao) {
         IMember memberContract = IMember(dao.getAddress(MEMBER_MODULE));
         uint256 totalShares = memberContract.getTotalShares();
-        for (uint256 i = 0; i < approvedTokens.length; i++) {
-            address token = approvedTokens[i];
+        for (uint256 i = 0; i < tokens.length; i++) {
+            address token = tokens[i];
             uint256 amountToRagequit = fairShare(tokenBalances[address(dao)][GUILD][token], sharesToBurn, totalShares);
             if (amountToRagequit > 0) { // gas optimization to allow a higher maximum token limit
                 // deliberately not using safemath here to keep overflows from preventing the function execution (which would break ragekicks)
@@ -80,7 +86,7 @@ contract BankContract is IBank, Module, ModuleGuard {
         }
     }
 
-    function isReservedAddress(address applicant) override view external onlyModule(dao) returns (bool) {
+    function isNotReservedAddress(address applicant) override view external onlyModule(dao) returns (bool) {
         return applicant != address(0x0) && applicant != GUILD && applicant != ESCROW && applicant != TOTAL;
     }
 

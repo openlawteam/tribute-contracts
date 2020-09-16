@@ -11,8 +11,6 @@ const ProposalContract = artifacts.require('./v3/core/ProposalContract');
 const OnboardingContract = artifacts.require('./v3/adapters/OnboardingContract');
 const RagequitContract = artifacts.require('./v3/adapters/RagequitContract');
 
-
-
 async function advanceTime(time) {
   await new Promise((resolve, reject) => {
     web3.currentProvider.send({
@@ -54,20 +52,70 @@ contract('MolochV3 - Ragequit Adapter', async accounts => {
     let member = await MemberContract.new();
     let proposal = await ProposalContract.new();
     let voting = await VotingContract.new();
-    return { voting, proposal, member};
+    let ragequit = await RagequitContract.new();
+    return { voting, proposal, member, ragequit};
   }
+
+  it("should not be possible for a non DAO member to ragequit", async () => {
+    const myAccount = accounts[1];
+    const newMember = accounts[2];
+    const token = "0x0000000000000000000000000000000000000000"; //0x0 indicates it is Native ETH
+    const { voting, member, proposal, ragequit } = await prepareSmartContracts();
+
+    let daoFactory = await DaoFactory.new(member.address, proposal.address, voting.address, ragequit.address,
+      { from: myAccount, gasPrice: Web3.toBN("0") });
+
+    await daoFactory.newDao(sharePrice, numberOfShares, 1000, { from: myAccount, gasPrice: Web3.toBN("0") });
+    let pastEvents = await daoFactory.getPastEvents();
+    let daoAddress = pastEvents[0].returnValues.dao;
+    let dao = await ModuleRegistry.at(daoAddress);
+
+    const bankAddress = await dao.getAddress(sha3("bank"));
+    const bank = await BankContract.at(bankAddress);
+
+    //Add funds to the Guild Bank after sposoring a member to join the Guild
+    const onboardingAddress = await dao.getAddress(Web3.sha3('onboarding'));
+    const onboarding = await OnboardingContract.at(onboardingAddress);
+    await onboarding.sendTransaction({ from: newMember, value: sharePrice.mul(Web3.toBN(10)).add(remaining), gasPrice: Web3.toBN("0") });
+    //Get the new proposal id
+    pastEvents = await proposal.getPastEvents();
+    let { proposalId } = pastEvents[0].returnValues;
+
+    //Sponsor the new proposal, vote and process it 
+    await onboarding.sponsorProposal(proposalId, [], { from: myAccount, gasPrice: Web3.toBN("0") });
+    await voting.submitVote(dao.address, proposalId, 1, { from: myAccount, gasPrice: Web3.toBN("0") });
+    await advanceTime(10000);
+    await onboarding.processProposal(proposalId, { from: myAccount, gasPrice: Web3.toBN("0") });
+
+    //Check Guild Bank Balance
+    let guildBalance = await bank.balanceOf(GUILD, token);
+    let expectedGuildBalance = Web3.toBN("1200000000000000000");
+    assert.equal(Web3.toBN(guildBalance).toString(), expectedGuildBalance.toString());
+
+    //Check Member Shares
+    let shares = await member.nbShares(dao.address, newMember);
+    assert.equal(shares.toString(), "10000000000000000");
+
+    //Ragequit
+    let ragequitAddress = await dao.getAddress(Web3.sha3('ragequit'));
+    let ragequitContract = await RagequitContract.at(ragequitAddress);
+    try {
+      await ragequitContract.ragequit(dao.address, Web3.toBN(shares), { from: accounts[4], gasPrice: Web3.toBN("0") });
+    } catch (error){
+      assert.equal(error.reason, "only DAO members are allowed to call this function");
+    }
+  })
 
   it("should be possible to a member to ragequit", async () => {
     const myAccount = accounts[1];
     const newMember = accounts[2];
     const token = "0x0000000000000000000000000000000000000000"; //0x0 indicates it is Native ETH
-    const allowedTokens = [token];
-    const { voting, member, proposal } = await prepareSmartContracts();
+    const { voting, member, proposal, ragequit } = await prepareSmartContracts();
 
-    let daoFactory = await DaoFactory.new(member.address, proposal.address, voting.address, 
+    let daoFactory = await DaoFactory.new(member.address, proposal.address, voting.address, ragequit.address,
       { from: myAccount, gasPrice: Web3.toBN("0") });
 
-    await daoFactory.newDao(sharePrice, numberOfShares, 1000, allowedTokens, { from: myAccount, gasPrice: Web3.toBN("0") });
+    await daoFactory.newDao(sharePrice, numberOfShares, 1000, { from: myAccount, gasPrice: Web3.toBN("0") });
     let pastEvents = await daoFactory.getPastEvents();
     let daoAddress = pastEvents[0].returnValues.dao;
     let dao = await ModuleRegistry.at(daoAddress);
@@ -99,18 +147,21 @@ contract('MolochV3 - Ragequit Adapter', async accounts => {
     assert.equal(shares.toString(), "10000000000000000");
 
     //Ragequit
-    let requestedAmount = Web3.toBN(50000);
     let ragequitAddress = await dao.getAddress(Web3.sha3('ragequit'));
     let ragequitContract = await RagequitContract.at(ragequitAddress);
-    await ragequitContract.ragequit(Web3.toBN(shares));
+    await ragequitContract.ragequit(dao.address, Web3.toBN(shares), { from: newMember, gasPrice: Web3.toBN("0") });
 
     //Check Member Shares
-    shares = await member.nbShares(dao, newMember);
+    shares = await member.nbShares(dao.address, newMember);
     assert.equal(shares.toString(), "0");
-    
-    //Get the new proposalId from event log
+
+    //Check Ragequit Event
     // pastEvents = await proposal.getPastEvents();
     // proposalId = pastEvents[0].returnValues.proposalId;
     // assert.equal(proposalId, 1);
+
+    //Check Member Balance for each avaiable token
+    //TODO
+    
   })
 });

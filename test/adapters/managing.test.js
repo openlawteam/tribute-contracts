@@ -7,6 +7,7 @@ const MemberContract = artifacts.require('./v3/core/MemberContract');
 const VotingContract = artifacts.require('./v3/core/VotingContract');
 const ProposalContract = artifacts.require('./v3/core/ProposalContract');
 const ManagingContract = artifacts.require('./v3/adapters/ManagingContract');
+const RagequitContract = artifacts.require('./v3/adapters/RagequitContract');
 
 async function advanceTime(time) {
   await new Promise((resolve, reject) => {
@@ -51,13 +52,14 @@ contract('MolochV3 - Managing Adapter', async accounts => {
     let member = await MemberContract.new();
     let proposal = await ProposalContract.new();
     let voting = await VotingContract.new();
-    return { voting, proposal, member};
+    let ragequit = await RagequitContract.new();
+    return { voting, proposal, member, ragequit };
   }
 
-  async function createDao(member, proposal, voting, senderAccount) {
-    let daoFactory = await DaoFactory.new(member.address, proposal.address, voting.address,
+  async function createDao(member, proposal, voting, ragequit, senderAccount) {
+    let daoFactory = await DaoFactory.new(member.address, proposal.address, voting.address, ragequit.address,
       { from: senderAccount, gasPrice: Web3.toBN("0") });
-    await daoFactory.newDao(sharePrice, numberOfShares, 1000, allowedTokens, { from: senderAccount, gasPrice: Web3.toBN("0") });
+    await daoFactory.newDao(sharePrice, numberOfShares, 1000, { from: senderAccount, gasPrice: Web3.toBN("0") });
     let pastEvents = await daoFactory.getPastEvents();
     let daoAddress = pastEvents[0].returnValues.dao;
     let dao = await ModuleRegistry.at(daoAddress);
@@ -67,10 +69,10 @@ contract('MolochV3 - Managing Adapter', async accounts => {
   it("should not be possible to propose a new module with 0x0 module address", async () => {
     const myAccount = accounts[1];
     const applicant = accounts[2];
-    const { voting, member, proposal } = await prepareSmartContracts();
+    const { voting, member, proposal, ragequit } = await prepareSmartContracts();
 
     //Create the new DAO
-    let dao = await createDao(member, proposal, voting, myAccount);
+    let dao = await createDao(member, proposal, voting, ragequit, myAccount);
 
     //Submit a new Bank module proposal
     let managingAddress = await dao.getAddress(Web3.sha3('managing'));
@@ -87,11 +89,10 @@ contract('MolochV3 - Managing Adapter', async accounts => {
 
   it("should not be possible to propose a new module when the applicant has a reserved address", async () => {
     const myAccount = accounts[1];
-    const applicant = accounts[2];
-    const { voting, member, proposal } = await prepareSmartContracts();
+    const { voting, member, proposal, ragequit } = await prepareSmartContracts();
 
     //Create the new DAO
-    let dao = await createDao(member, proposal, voting, myAccount);
+    let dao = await createDao(member, proposal, voting, ragequit, myAccount);
 
     //Submit a new Bank module proposal
     let managingAddress = await dao.getAddress(Web3.sha3('managing'));
@@ -118,10 +119,10 @@ contract('MolochV3 - Managing Adapter', async accounts => {
   it("should not be possible to propose a new module when the module has a reserved address", async () => {
     const myAccount = accounts[1];
     const applicant = accounts[2];
-    const { voting, member, proposal } = await prepareSmartContracts();
+    const { voting, member, proposal, ragequit } = await prepareSmartContracts();
 
     //Create the new DAO
-    let dao = await createDao(member, proposal, voting, myAccount);
+    let dao = await createDao(member, proposal, voting, ragequit, myAccount);
 
     //Submit a new Bank module proposal
     let managingAddress = await dao.getAddress(Web3.sha3('managing'));
@@ -148,10 +149,10 @@ contract('MolochV3 - Managing Adapter', async accounts => {
   it("should not be possible to propose a new module with an empty module address", async () => {
     const myAccount = accounts[1];
     const applicant = accounts[2];
-    const { voting, member, proposal } = await prepareSmartContracts();
+    const { voting, member, proposal, ragequit } = await prepareSmartContracts();
 
     //Create the new DAO
-    let dao = await createDao(member, proposal, voting, myAccount);
+    let dao = await createDao(member, proposal, voting, ragequit, myAccount);
 
     //Submit a new Bank module proposal
     let managingAddress = await dao.getAddress(Web3.sha3('managing'));
@@ -168,10 +169,10 @@ contract('MolochV3 - Managing Adapter', async accounts => {
   it("should be possible to any individual to propose a new DAO Banking module", async () => {
     const myAccount = accounts[1];
     const applicant = accounts[2];
-    const { voting, member, proposal } = await prepareSmartContracts();
+    const { voting, member, proposal, ragequit } = await prepareSmartContracts();
 
     //Create the new DAO
-    let dao = await createDao(member, proposal, voting, myAccount);
+    let dao = await createDao(member, proposal, voting, ragequit, myAccount);
 
     //Submit a new Bank module proposal
     let managingAddress = await dao.getAddress(Web3.sha3('managing'));

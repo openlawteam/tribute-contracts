@@ -13,10 +13,7 @@ contract RagequitContract is Module, AdapterGuard, ReentrancyGuard {
 
     event Ragequit(address indexed member, uint256 burnedShares);
 
-    Registry dao;
-
-    constructor (address _dao) {
-        dao = Registry(_dao);
+    constructor () {
     }
 
     /* 
@@ -26,7 +23,7 @@ contract RagequitContract is Module, AdapterGuard, ReentrancyGuard {
         revert();
     }
 
-    function ragequit(uint256 sharesToBurn) public nonReentrant onlyMembers(dao) {
+    function ragequit(Registry dao, uint256 sharesToBurn) public nonReentrant onlyMembers(dao) {
         IMember memberContract = IMember(dao.getAddress(MEMBER_MODULE));
 
         // FIXME: we still don't track the index to block the ragequit if member voted YES on a non-processed proposal 

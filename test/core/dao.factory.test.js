@@ -5,13 +5,13 @@ const Registry = artifacts.require('./v3/core/Registry');
 const MemberContract = artifacts.require('./v3/core/MemberContract');
 const VotingContract = artifacts.require('./v3/core/VotingContract');
 const ProposalContract = artifacts.require('./v3/core/ProposalContract');
+const RagequitContract = artifacts.require('./v3/adapters/RagequitContract');
 
 contract('Registry', async (accounts) => {
 
   const numberOfShares = Web3.toBN('1000000000000000');
   const sharePrice = Web3.toBN(Web3.toWei("120", 'finney'));
   const zeroedAddr = "0x0000000000000000000000000000000000000000";
-  const allowedTokens = [zeroedAddr];
 
   prepareSmartContracts = async () => {
     let lib = await FlagHelperLib.new();
@@ -20,10 +20,11 @@ contract('Registry', async (accounts) => {
     let member = await MemberContract.new();
     let proposal = await ProposalContract.new();
     let voting = await VotingContract.new();
-    return { voting, proposal, member };
+    let ragequit = await RagequitContract.new();
+    return { voting, proposal, member, ragequit };
   }
 
-  assertRegiteredModule = async (dao, moduleId) => {
+  assertRegisteredModule = async (dao, moduleId) => {
     let moduleAddr = await dao.getAddress(Web3.sha3(moduleId));
     assert.notEqual(moduleAddr, zeroedAddr);
     assert(Web3.isAddress(moduleAddr), "invalid address for module " + moduleId);
@@ -31,14 +32,14 @@ contract('Registry', async (accounts) => {
 
   it("should be possible to create a DAO with all adapters and core modules", async () => {
     const myAccount = accounts[0];
-    const { voting, member, proposal } = await prepareSmartContracts();
+    const { voting, member, proposal, ragequit } = await prepareSmartContracts();
 
     //New factory
-    let daoFactory = await DaoFactory.new(member.address, proposal.address, voting.address,
+    let daoFactory = await DaoFactory.new(member.address, proposal.address, voting.address, ragequit.address,
       { from: myAccount, gasPrice: Web3.toBN("0") });
 
     //Create the DAO and get the DAO Address
-    await daoFactory.newDao(sharePrice, numberOfShares, 1000, allowedTokens, { from: myAccount, gasPrice: Web3.toBN("0") });
+    await daoFactory.newDao(sharePrice, numberOfShares, 1000, { from: myAccount, gasPrice: Web3.toBN("0") });
     let pastEvents = await daoFactory.getPastEvents();
     let daoAddress = pastEvents[0].returnValues.dao;
     
@@ -46,15 +47,16 @@ contract('Registry', async (accounts) => {
     let dao = await Registry.at(daoAddress);
 
     //Check if all Adapters are registered
-    await assertRegiteredModule(dao, 'onboarding');
-    await assertRegiteredModule(dao, 'financing');
-    await assertRegiteredModule(dao, 'managing');
+    await assertRegisteredModule(dao, 'onboarding');
+    await assertRegisteredModule(dao, 'financing');
+    await assertRegisteredModule(dao, 'managing');
+    await assertRegisteredModule(dao, 'ragequit');
 
     //Check if all core modules are registered
-    await assertRegiteredModule(dao, 'bank');
-    await assertRegiteredModule(dao, 'member');
-    await assertRegiteredModule(dao, 'proposal');
-    await assertRegiteredModule(dao, 'voting');
+    await assertRegisteredModule(dao, 'bank');
+    await assertRegisteredModule(dao, 'member');
+    await assertRegisteredModule(dao, 'proposal');
+    await assertRegisteredModule(dao, 'voting');
   });
 
 });

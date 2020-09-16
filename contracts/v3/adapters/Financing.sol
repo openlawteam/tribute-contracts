@@ -43,7 +43,7 @@ contract FinancingContract is IFinancing, Module, AdapterGuard  {
         //TODO (fforbeck): check if other types of tokens are supported/allowed
 
         IBank bankContract = IBank(dao.getAddress(BANK_MODULE));
-        require(bankContract.isReservedAddress(applicant), "applicant address cannot be reserved");
+        require(bankContract.isNotReservedAddress(applicant), "applicant address cannot be reserved");
         
         IProposal proposalContract = IProposal(dao.getAddress(PROPOSAL_MODULE));
         uint256 proposalId = proposalContract.createProposal(dao);
