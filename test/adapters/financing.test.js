@@ -62,12 +62,13 @@ contract('MolochV3 - Financing Adapter', async accounts => {
     const applicant = accounts[2];
     const newMember = accounts[3];
     const token = "0x0000000000000000000000000000000000000000"; //0x0 indicates it is Native ETH
+    const allowedTokens = [token];
     const { voting, member, proposal } = await prepareSmartContracts();
 
     let daoFactory = await DaoFactory.new(member.address, proposal.address, voting.address, 
       { from: myAccount, gasPrice: Web3.toBN("0") });
 
-    await daoFactory.newDao(sharePrice, numberOfShares, 1000, { from: myAccount, gasPrice: Web3.toBN("0") });
+    await daoFactory.newDao(sharePrice, numberOfShares, 1000, allowedTokens, { from: myAccount, gasPrice: Web3.toBN("0") });
     let pastEvents = await daoFactory.getPastEvents();
     let daoAddress = pastEvents[0].returnValues.dao;
     let dao = await ModuleRegistry.at(daoAddress);

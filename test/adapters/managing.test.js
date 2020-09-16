@@ -41,6 +41,8 @@ contract('MolochV3 - Managing Adapter', async accounts => {
 
   const numberOfShares = Web3.toBN('1000000000000000');
   const sharePrice = Web3.toBN(Web3.toWei("120", 'finney'));
+  const token = "0x0000000000000000000000000000000000000000";
+  const allowedTokens = [token];
 
   async function prepareSmartContracts() {
     let lib = await FlagHelperLib.new();
@@ -55,7 +57,7 @@ contract('MolochV3 - Managing Adapter', async accounts => {
   async function createDao(member, proposal, voting, senderAccount) {
     let daoFactory = await DaoFactory.new(member.address, proposal.address, voting.address,
       { from: senderAccount, gasPrice: Web3.toBN("0") });
-    await daoFactory.newDao(sharePrice, numberOfShares, 1000, { from: senderAccount, gasPrice: Web3.toBN("0") });
+    await daoFactory.newDao(sharePrice, numberOfShares, 1000, allowedTokens, { from: senderAccount, gasPrice: Web3.toBN("0") });
     let pastEvents = await daoFactory.getPastEvents();
     let daoAddress = pastEvents[0].returnValues.dao;
     let dao = await ModuleRegistry.at(daoAddress);
@@ -76,7 +78,7 @@ contract('MolochV3 - Managing Adapter', async accounts => {
     let newModuleId = Web3.sha3('bank');
 
     try {
-      await managing.createModuleChangeRequest(applicant, newModuleId, "0x0000000000000000000000000000000000000000");
+      await managing.createModuleChangeRequest(applicant, newModuleId, token);
     } catch (err) {
       assert.equal(err.reason, "invalid module address");
     }

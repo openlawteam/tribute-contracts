@@ -55,6 +55,8 @@ contract('MolochV3 - Offchain Voting Module', async accounts => {
   const GUILD = "0x000000000000000000000000000000000000dead";
   const ESCROW = "0x000000000000000000000000000000000000beef";
   const TOTAL = "0x000000000000000000000000000000000000babe";
+  const zeroedAddr = "0x0000000000000000000000000000000000000000";
+  const allowedTokens = [zeroedAddr];
 
   it("should be possible to vote offchain", async () => {
     const myAccount = accounts[1];
@@ -62,7 +64,7 @@ contract('MolochV3 - Offchain Voting Module', async accounts => {
     const {voting, member, proposal} = await prepareSmartContracts();
 
     let daoFactory = await DaoFactory.new(member.address, proposal.address, voting.address, {from: myAccount, gasPrice: web3.utils.toBN("0")});
-    await daoFactory.newDao(sharePrice, numberOfShares, 1000, {from: myAccount, gasPrice: web3.utils.toBN("0")});
+    await daoFactory.newDao(sharePrice, numberOfShares, 1000, allowedTokens, {from: myAccount, gasPrice: web3.utils.toBN("0")});
     let pastEvents = await daoFactory.getPastEvents();
     let daoAddress = pastEvents[0].returnValues.dao;
     let dao = await ModuleRegistry.at(daoAddress);
@@ -83,7 +85,7 @@ contract('MolochV3 - Offchain Voting Module', async accounts => {
     const {voting, member, proposal} = await prepareSmartContracts();
 
     let daoFactory = await DaoFactory.new(member.address, proposal.address, voting.address, {from: myAccount, gasPrice: web3.utils.toBN("0")});
-    await daoFactory.newDao(sharePrice, numberOfShares, 1000, {from: myAccount, gasPrice: web3.utils.toBN("0")});
+    await daoFactory.newDao(sharePrice, numberOfShares, 1000, allowedTokens, {from: myAccount, gasPrice: web3.utils.toBN("0")});
     let pastEvents = await daoFactory.getPastEvents();
     let daoAddress = pastEvents[0].returnValues.dao;
     let dao = await ModuleRegistry.at(daoAddress);

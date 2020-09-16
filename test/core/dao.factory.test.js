@@ -11,6 +11,7 @@ contract('Registry', async (accounts) => {
   const numberOfShares = Web3.toBN('1000000000000000');
   const sharePrice = Web3.toBN(Web3.toWei("120", 'finney'));
   const zeroedAddr = "0x0000000000000000000000000000000000000000";
+  const allowedTokens = [zeroedAddr];
 
   prepareSmartContracts = async () => {
     let lib = await FlagHelperLib.new();
@@ -37,7 +38,7 @@ contract('Registry', async (accounts) => {
       { from: myAccount, gasPrice: Web3.toBN("0") });
 
     //Create the DAO and get the DAO Address
-    await daoFactory.newDao(sharePrice, numberOfShares, 1000, { from: myAccount, gasPrice: Web3.toBN("0") });
+    await daoFactory.newDao(sharePrice, numberOfShares, 1000, allowedTokens, { from: myAccount, gasPrice: Web3.toBN("0") });
     let pastEvents = await daoFactory.getPastEvents();
     let daoAddress = pastEvents[0].returnValues.dao;
     

@@ -16,7 +16,7 @@ import '../utils/SafeMath.sol';
 contract RagequitContract is Module, AdapterGuard, ReentrancyGuard {
     using SafeMath for uint256;
 
-    event Ragequit(address indexed memberAddress, uint256 sharesToBurn);
+    event Ragequit(address indexed member, uint256 burnedShares);
 
     Registry dao;
 
@@ -37,7 +37,6 @@ contract RagequitContract is Module, AdapterGuard, ReentrancyGuard {
         // FIXME: we still don't track the index to block the ragequit if member voted YES on a non-processed proposal 
         // require(canRagequit(member.highestIndexYesVote), "cannot ragequit until highest index proposal member voted YES on is processed");
         require(memberContract.hasEnoughShares(dao, msg.sender, sharesToBurn), "insufficient shares");
-
         IBank bank = IBank(dao.getAddress(BANK_MODULE));
         bank.burnShares(msg.sender, sharesToBurn);
 

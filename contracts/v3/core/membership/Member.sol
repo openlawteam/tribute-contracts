@@ -21,6 +21,8 @@ contract MemberContract is IMember, Module, ModuleGuard, ReentrancyGuard {
         uint256 nbShares;
     }
 
+    uint256 public totalShares = 1; // Maximum number of shares 2**256 - 1
+
     mapping(address => mapping(address => Member)) members;
     mapping(address => mapping(address => address)) memberAddresses;
 
@@ -37,6 +39,8 @@ contract MemberContract is IMember, Module, ModuleGuard, ReentrancyGuard {
         Member storage member = members[address(dao)][memberAddr];
         member.flags = 1;
         member.nbShares = shares;
+        
+        totalShares += shares;
 
         emit UpdateMember(address(dao), memberAddr, shares);
     }
@@ -50,5 +54,9 @@ contract MemberContract is IMember, Module, ModuleGuard, ReentrancyGuard {
      */
     function nbShares(Registry dao, address member) override external view returns (uint256) {
         return members[address(dao)][member].nbShares;
+    }
+
+    function getTotalShares() override external view returns(uint256) {
+        return totalShares;
     }
 }

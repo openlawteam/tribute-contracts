@@ -3,12 +3,14 @@ pragma solidity ^0.7.0;
 // SPDX-License-Identifier: MIT
 
 import '../Registry.sol';
+import '../Module.sol';
 import '../interfaces/IBank.sol';
+import '../interfaces/IMember.sol';
 import '../../utils/SafeMath.sol';
 import '../../utils/IERC20.sol';
 import '../../guards/ModuleGuard.sol';
 
-contract BankContract is IBank, ModuleGuard {
+contract BankContract is IBank, Module, ModuleGuard {
     using SafeMath for uint256;
     
     event TokensCollected(address indexed moloch, address indexed token, uint256 amountToCollect);
@@ -31,7 +33,7 @@ contract BankContract is IBank, ModuleGuard {
         require(_chunkSize > 0, "chunk size must be greater than zero");
         chunkSize = _chunkSize;
         
-        require(sharesPerChunk > 0, "number of shares per chunk must be greater than zero");
+        require(_nbShares > 0, "number of shares per chunk must be greater than zero");
         sharesPerChunk = _nbShares;
         
         require(_approvedTokens.length > 0, "need at least one approved token");
@@ -59,20 +61,18 @@ contract BankContract is IBank, ModuleGuard {
     }
 
     function burnShares(address memberAddr, uint256 sharesToBurn) override external onlyModule(dao) {
-        uint256 totalShares = 1; //FIXME: get it
-        //FIXME: caching?
+        IMember memberContract = IMember(dao.getAddress(MEMBER_MODULE));
+        uint256 totalShares = memberContract.getTotalShares();
         for (uint256 i = 0; i < approvedTokens.length; i++) {
             address token = approvedTokens[i];
             uint256 amountToRagequit = fairShare(tokenBalances[address(dao)][GUILD][token], sharesToBurn, totalShares);
             if (amountToRagequit > 0) { // gas optimization to allow a higher maximum token limit
                 // deliberately not using safemath here to keep overflows from preventing the function execution (which would break ragekicks)
                 // if a token overflows, it is because the supply was artificially inflated to oblivion, so we probably don't care about it anyways
-                // tokenBalances[GUILD][approvedTokens[i]] -= amountToRagequit;
                 require(tokenBalances[address(dao)][GUILD][token] >= amountToRagequit, "insufficient balance");
-                unsafeSubtractFromBalance(address(dao), GUILD, token, amountToRagequit);
-                // tokenBalances[memberAddress][approvedTokens[i]] += amountToRagequit;
-                unsafeAddToBalance(address(dao), memberAddr, token, amountToRagequit);
-                //TODO: do we want to emit?
+                tokenBalances[address(dao)][GUILD][token] -= amountToRagequit;
+                tokenBalances[address(dao)][memberAddr][token] += amountToRagequit;
+                //TODO: do we want to emit an event for each token transfer?
                 // emit Transfer(GUILD, applicant, token, amount);
             }
         }

@@ -48,6 +48,9 @@ contract('MolochV3 - Onboarding Adapter', async accounts => {
   const ESCROW = "0x000000000000000000000000000000000000beef";
   const TOTAL = "0x000000000000000000000000000000000000babe";
 
+  const token = "0x0000000000000000000000000000000000000000";
+  const allowedTokens = [token];
+
   async function prepareSmartContracts() {
     let lib = await FlagHelperLib.new();
     await MemberContract.link("FlagHelper", lib.address);
@@ -67,7 +70,7 @@ contract('MolochV3 - Onboarding Adapter', async accounts => {
     let daoFactory = await DaoFactory.new(member.address, proposal.address, voting.address, 
       { from: myAccount, gasPrice: Web3.toBN("0") });
 
-    await daoFactory.newDao(sharePrice, numberOfShares, 1000, {from: myAccount, gasPrice: Web3.toBN("0")});
+    await daoFactory.newDao(sharePrice, numberOfShares, 1000, allowedTokens, {from: myAccount, gasPrice: Web3.toBN("0")});
     let pastEvents = await daoFactory.getPastEvents();
     let daoAddress = pastEvents[0].returnValues.dao;
     let dao = await ModuleRegistry.at(daoAddress);
