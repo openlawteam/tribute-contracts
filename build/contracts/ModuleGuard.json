@@ -1,0 +1,574 @@
+{
+  "contractName": "ModuleGuard",
+  "abi": [],
+  "metadata": "{\"compiler\":{\"version\":\"0.7.0+commit.9e61f92b\"},\"language\":\"Solidity\",\"output\":{\"abi\":[],\"devdoc\":{\"details\":\"Contract module that helps restrict the module access to Core Modules only.\",\"kind\":\"dev\",\"methods\":{},\"version\":1},\"userdoc\":{\"kind\":\"user\",\"methods\":{},\"version\":1}},\"settings\":{\"compilationTarget\":{\"/Users/davidroon/projects/moloch/contracts/v3/guards/ModuleGuard.sol\":\"ModuleGuard\"},\"evmVersion\":\"istanbul\",\"libraries\":{},\"metadata\":{\"bytecodeHash\":\"ipfs\"},\"optimizer\":{\"enabled\":true,\"runs\":10000},\"remappings\":[]},\"sources\":{\"/Users/davidroon/projects/moloch/contracts/v3/adapters/interfaces/IOnboarding.sol\":{\"keccak256\":\"0x40e720b2831848f02c641b5aab696f9057fa816ac8313acd8b14263d34601ba9\",\"license\":\"MIT\",\"urls\":[\"bzz-raw://8a3abeebe6fb0f090a8ac34bdd0a21cc0067894cb3b61e722aa257b5f4c6e19c\",\"dweb:/ipfs/QmcmZLMLXdu34wEmahKipy8CJLujj6zVQ7jvWGFizzU8Xf\"]},\"/Users/davidroon/projects/moloch/contracts/v3/core/Module.sol\":{\"keccak256\":\"0x7965346c96d58c49add404ad1ab2b09e432fb47fb03bce1738b0fe939941dd3c\",\"license\":\"MIT\",\"urls\":[\"bzz-raw://4e4c3a6e5df032f97d07155137d41294f4a82793f4334193490b3112a8a4b198\",\"dweb:/ipfs/QmUKVrc6JtvjVQ9ZJHhabj5VnCBA6aWjfFt31xeBJZmKhv\"]},\"/Users/davidroon/projects/moloch/contracts/v3/core/Registry.sol\":{\"keccak256\":\"0xeb7dd61a9067b3d4c6dd6e781bf872177539ee3705d52aefd2840c72222374e7\",\"license\":\"MIT\",\"urls\":[\"bzz-raw://35f7f0afd56935e5c5ed0eb074ffc92743a89c230614c959ae28b46470d68847\",\"dweb:/ipfs/QmfTTc9qkNM491AzpCnmhRsntfpC1H8LGApqL9yiH11iZf\"]},\"/Users/davidroon/projects/moloch/contracts/v3/guards/ModuleGuard.sol\":{\"keccak256\":\"0xf89df8cabe0e5f327792c88e4fe1529f188f6aff59632b37270c956d7329d327\",\"license\":\"MIT\",\"urls\":[\"bzz-raw://4c0bb92e3322da4767698dc229975630ec47f5219c8fe55d2299d686445b4bdd\",\"dweb:/ipfs/QmQ5Dz7QXs8FkztLwRXPfZgEeWAHjkaji2XyzMgP2PcDQ8\"]},\"/Users/davidroon/projects/moloch/contracts/v3/utils/Ownable.sol\":{\"keccak256\":\"0x85cf0ca8d08983abb21106b7c1ec8f03f7c279b8b62e671feb0f325291caa0d6\",\"license\":\"MIT\",\"urls\":[\"bzz-raw://7fbc3e26f69b112242d7505323b9717f1058887bbd971964d0fa87d3ce3f82ad\",\"dweb:/ipfs/QmW7iEhd2oucds9W24dtiEpsBxz73fquQfviZ2osSLLDkc\"]}},\"version\":1}",
+  "bytecode": "0x",
+  "deployedBytecode": "0x",
+  "immutableReferences": {},
+  "sourceMap": "",
+  "deployedSourceMap": "",
+  "source": "pragma solidity ^0.7.0;\n\n// SPDX-License-Identifier: MIT\n\nimport '../core/Registry.sol';\n\n/**\n * @dev Contract module that helps restrict the module access to Core Modules only.\n *\n */\nabstract contract ModuleGuard {\n\n    /**\n     * @dev Only Core Module of the DAO are allowed to execute the function call.\n     */\n    modifier onlyModule(Registry dao) {\n        require(dao.isModule(msg.sender), \"only core modules are allowed to call this function\");\n        _;\n    }\n}",
+  "sourcePath": "/Users/davidroon/projects/moloch/contracts/v3/guards/ModuleGuard.sol",
+  "ast": {
+    "absolutePath": "/Users/davidroon/projects/moloch/contracts/v3/guards/ModuleGuard.sol",
+    "exportedSymbols": {
+      "ModuleGuard": [
+        6999
+      ]
+    },
+    "id": 7000,
+    "license": "MIT",
+    "nodeType": "SourceUnit",
+    "nodes": [
+      {
+        "id": 6980,
+        "literals": [
+          "solidity",
+          "^",
+          "0.7",
+          ".0"
+        ],
+        "nodeType": "PragmaDirective",
+        "src": "0:23:24"
+      },
+      {
+        "absolutePath": "/Users/davidroon/projects/moloch/contracts/v3/core/Registry.sol",
+        "file": "../core/Registry.sol",
+        "id": 6981,
+        "nodeType": "ImportDirective",
+        "scope": 7000,
+        "sourceUnit": 4694,
+        "src": "58:30:24",
+        "symbolAliases": [],
+        "unitAlias": ""
+      },
+      {
+        "abstract": true,
+        "baseContracts": [],
+        "contractDependencies": [],
+        "contractKind": "contract",
+        "documentation": {
+          "id": 6982,
+          "nodeType": "StructuredDocumentation",
+          "src": "90:94:24",
+          "text": " @dev Contract module that helps restrict the module access to Core Modules only."
+        },
+        "fullyImplemented": true,
+        "id": 6999,
+        "linearizedBaseContracts": [
+          6999
+        ],
+        "name": "ModuleGuard",
+        "nodeType": "ContractDefinition",
+        "nodes": [
+          {
+            "body": {
+              "id": 6997,
+              "nodeType": "Block",
+              "src": "354:116:24",
+              "statements": [
+                {
+                  "expression": {
+                    "argumentTypes": null,
+                    "arguments": [
+                      {
+                        "argumentTypes": null,
+                        "arguments": [
+                          {
+                            "argumentTypes": null,
+                            "expression": {
+                              "argumentTypes": null,
+                              "id": 6990,
+                              "name": "msg",
+                              "nodeType": "Identifier",
+                              "overloadedDeclarations": [],
+                              "referencedDeclaration": -15,
+                              "src": "385:3:24",
+                              "typeDescriptions": {
+                                "typeIdentifier": "t_magic_message",
+                                "typeString": "msg"
+                              }
+                            },
+                            "id": 6991,
+                            "isConstant": false,
+                            "isLValue": false,
+                            "isPure": false,
+                            "lValueRequested": false,
+                            "memberName": "sender",
+                            "nodeType": "MemberAccess",
+                            "referencedDeclaration": null,
+                            "src": "385:10:24",
+                            "typeDescriptions": {
+                              "typeIdentifier": "t_address_payable",
+                              "typeString": "address payable"
+                            }
+                          }
+                        ],
+                        "expression": {
+                          "argumentTypes": [
+                            {
+                              "typeIdentifier": "t_address_payable",
+                              "typeString": "address payable"
+                            }
+                          ],
+                          "expression": {
+                            "argumentTypes": null,
+                            "id": 6988,
+                            "name": "dao",
+                            "nodeType": "Identifier",
+                            "overloadedDeclarations": [],
+                            "referencedDeclaration": 6985,
+                            "src": "372:3:24",
+                            "typeDescriptions": {
+                              "typeIdentifier": "t_contract$_Registry_$4693",
+                              "typeString": "contract Registry"
+                            }
+                          },
+                          "id": 6989,
+                          "isConstant": false,
+                          "isLValue": false,
+                          "isPure": false,
+                          "lValueRequested": false,
+                          "memberName": "isModule",
+                          "nodeType": "MemberAccess",
+                          "referencedDeclaration": 4662,
+                          "src": "372:12:24",
+                          "typeDescriptions": {
+                            "typeIdentifier": "t_function_external_view$_t_address_$returns$_t_bool_$",
+                            "typeString": "function (address) view external returns (bool)"
+                          }
+                        },
+                        "id": 6992,
+                        "isConstant": false,
+                        "isLValue": false,
+                        "isPure": false,
+                        "kind": "functionCall",
+                        "lValueRequested": false,
+                        "names": [],
+                        "nodeType": "FunctionCall",
+                        "src": "372:24:24",
+                        "tryCall": false,
+                        "typeDescriptions": {
+                          "typeIdentifier": "t_bool",
+                          "typeString": "bool"
+                        }
+                      },
+                      {
+                        "argumentTypes": null,
+                        "hexValue": "6f6e6c7920636f7265206d6f64756c65732061726520616c6c6f77656420746f2063616c6c20746869732066756e6374696f6e",
+                        "id": 6993,
+                        "isConstant": false,
+                        "isLValue": false,
+                        "isPure": true,
+                        "kind": "string",
+                        "lValueRequested": false,
+                        "nodeType": "Literal",
+                        "src": "398:53:24",
+                        "subdenomination": null,
+                        "typeDescriptions": {
+                          "typeIdentifier": "t_stringliteral_22c64bd82d858f68703d75b4d2cc94b17ee5ec04fa28ad86718a2ed9cfbf927c",
+                          "typeString": "literal_string \"only core modules are allowed to call this function\""
+                        },
+                        "value": "only core modules are allowed to call this function"
+                      }
+                    ],
+                    "expression": {
+                      "argumentTypes": [
+                        {
+                          "typeIdentifier": "t_bool",
+                          "typeString": "bool"
+                        },
+                        {
+                          "typeIdentifier": "t_stringliteral_22c64bd82d858f68703d75b4d2cc94b17ee5ec04fa28ad86718a2ed9cfbf927c",
+                          "typeString": "literal_string \"only core modules are allowed to call this function\""
+                        }
+                      ],
+                      "id": 6987,
+                      "name": "require",
+                      "nodeType": "Identifier",
+                      "overloadedDeclarations": [
+                        -18,
+                        -18
+                      ],
+                      "referencedDeclaration": -18,
+                      "src": "364:7:24",
+                      "typeDescriptions": {
+                        "typeIdentifier": "t_function_require_pure$_t_bool_$_t_string_memory_ptr_$returns$__$",
+                        "typeString": "function (bool,string memory) pure"
+                      }
+                    },
+                    "id": 6994,
+                    "isConstant": false,
+                    "isLValue": false,
+                    "isPure": false,
+                    "kind": "functionCall",
+                    "lValueRequested": false,
+                    "names": [],
+                    "nodeType": "FunctionCall",
+                    "src": "364:88:24",
+                    "tryCall": false,
+                    "typeDescriptions": {
+                      "typeIdentifier": "t_tuple$__$",
+                      "typeString": "tuple()"
+                    }
+                  },
+                  "id": 6995,
+                  "nodeType": "ExpressionStatement",
+                  "src": "364:88:24"
+                },
+                {
+                  "id": 6996,
+                  "nodeType": "PlaceholderStatement",
+                  "src": "462:1:24"
+                }
+              ]
+            },
+            "documentation": {
+              "id": 6983,
+              "nodeType": "StructuredDocumentation",
+              "src": "222:93:24",
+              "text": " @dev Only Core Module of the DAO are allowed to execute the function call."
+            },
+            "id": 6998,
+            "name": "onlyModule",
+            "nodeType": "ModifierDefinition",
+            "overrides": null,
+            "parameters": {
+              "id": 6986,
+              "nodeType": "ParameterList",
+              "parameters": [
+                {
+                  "constant": false,
+                  "id": 6985,
+                  "mutability": "mutable",
+                  "name": "dao",
+                  "nodeType": "VariableDeclaration",
+                  "overrides": null,
+                  "scope": 6998,
+                  "src": "340:12:24",
+                  "stateVariable": false,
+                  "storageLocation": "default",
+                  "typeDescriptions": {
+                    "typeIdentifier": "t_contract$_Registry_$4693",
+                    "typeString": "contract Registry"
+                  },
+                  "typeName": {
+                    "contractScope": null,
+                    "id": 6984,
+                    "name": "Registry",
+                    "nodeType": "UserDefinedTypeName",
+                    "referencedDeclaration": 4693,
+                    "src": "340:8:24",
+                    "typeDescriptions": {
+                      "typeIdentifier": "t_contract$_Registry_$4693",
+                      "typeString": "contract Registry"
+                    }
+                  },
+                  "value": null,
+                  "visibility": "internal"
+                }
+              ],
+              "src": "339:14:24"
+            },
+            "src": "320:150:24",
+            "virtual": false,
+            "visibility": "internal"
+          }
+        ],
+        "scope": 7000,
+        "src": "185:287:24"
+      }
+    ],
+    "src": "0:472:24"
+  },
+  "legacyAST": {
+    "absolutePath": "/Users/davidroon/projects/moloch/contracts/v3/guards/ModuleGuard.sol",
+    "exportedSymbols": {
+      "ModuleGuard": [
+        6999
+      ]
+    },
+    "id": 7000,
+    "license": "MIT",
+    "nodeType": "SourceUnit",
+    "nodes": [
+      {
+        "id": 6980,
+        "literals": [
+          "solidity",
+          "^",
+          "0.7",
+          ".0"
+        ],
+        "nodeType": "PragmaDirective",
+        "src": "0:23:24"
+      },
+      {
+        "absolutePath": "/Users/davidroon/projects/moloch/contracts/v3/core/Registry.sol",
+        "file": "../core/Registry.sol",
+        "id": 6981,
+        "nodeType": "ImportDirective",
+        "scope": 7000,
+        "sourceUnit": 4694,
+        "src": "58:30:24",
+        "symbolAliases": [],
+        "unitAlias": ""
+      },
+      {
+        "abstract": true,
+        "baseContracts": [],
+        "contractDependencies": [],
+        "contractKind": "contract",
+        "documentation": {
+          "id": 6982,
+          "nodeType": "StructuredDocumentation",
+          "src": "90:94:24",
+          "text": " @dev Contract module that helps restrict the module access to Core Modules only."
+        },
+        "fullyImplemented": true,
+        "id": 6999,
+        "linearizedBaseContracts": [
+          6999
+        ],
+        "name": "ModuleGuard",
+        "nodeType": "ContractDefinition",
+        "nodes": [
+          {
+            "body": {
+              "id": 6997,
+              "nodeType": "Block",
+              "src": "354:116:24",
+              "statements": [
+                {
+                  "expression": {
+                    "argumentTypes": null,
+                    "arguments": [
+                      {
+                        "argumentTypes": null,
+                        "arguments": [
+                          {
+                            "argumentTypes": null,
+                            "expression": {
+                              "argumentTypes": null,
+                              "id": 6990,
+                              "name": "msg",
+                              "nodeType": "Identifier",
+                              "overloadedDeclarations": [],
+                              "referencedDeclaration": -15,
+                              "src": "385:3:24",
+                              "typeDescriptions": {
+                                "typeIdentifier": "t_magic_message",
+                                "typeString": "msg"
+                              }
+                            },
+                            "id": 6991,
+                            "isConstant": false,
+                            "isLValue": false,
+                            "isPure": false,
+                            "lValueRequested": false,
+                            "memberName": "sender",
+                            "nodeType": "MemberAccess",
+                            "referencedDeclaration": null,
+                            "src": "385:10:24",
+                            "typeDescriptions": {
+                              "typeIdentifier": "t_address_payable",
+                              "typeString": "address payable"
+                            }
+                          }
+                        ],
+                        "expression": {
+                          "argumentTypes": [
+                            {
+                              "typeIdentifier": "t_address_payable",
+                              "typeString": "address payable"
+                            }
+                          ],
+                          "expression": {
+                            "argumentTypes": null,
+                            "id": 6988,
+                            "name": "dao",
+                            "nodeType": "Identifier",
+                            "overloadedDeclarations": [],
+                            "referencedDeclaration": 6985,
+                            "src": "372:3:24",
+                            "typeDescriptions": {
+                              "typeIdentifier": "t_contract$_Registry_$4693",
+                              "typeString": "contract Registry"
+                            }
+                          },
+                          "id": 6989,
+                          "isConstant": false,
+                          "isLValue": false,
+                          "isPure": false,
+                          "lValueRequested": false,
+                          "memberName": "isModule",
+                          "nodeType": "MemberAccess",
+                          "referencedDeclaration": 4662,
+                          "src": "372:12:24",
+                          "typeDescriptions": {
+                            "typeIdentifier": "t_function_external_view$_t_address_$returns$_t_bool_$",
+                            "typeString": "function (address) view external returns (bool)"
+                          }
+                        },
+                        "id": 6992,
+                        "isConstant": false,
+                        "isLValue": false,
+                        "isPure": false,
+                        "kind": "functionCall",
+                        "lValueRequested": false,
+                        "names": [],
+                        "nodeType": "FunctionCall",
+                        "src": "372:24:24",
+                        "tryCall": false,
+                        "typeDescriptions": {
+                          "typeIdentifier": "t_bool",
+                          "typeString": "bool"
+                        }
+                      },
+                      {
+                        "argumentTypes": null,
+                        "hexValue": "6f6e6c7920636f7265206d6f64756c65732061726520616c6c6f77656420746f2063616c6c20746869732066756e6374696f6e",
+                        "id": 6993,
+                        "isConstant": false,
+                        "isLValue": false,
+                        "isPure": true,
+                        "kind": "string",
+                        "lValueRequested": false,
+                        "nodeType": "Literal",
+                        "src": "398:53:24",
+                        "subdenomination": null,
+                        "typeDescriptions": {
+                          "typeIdentifier": "t_stringliteral_22c64bd82d858f68703d75b4d2cc94b17ee5ec04fa28ad86718a2ed9cfbf927c",
+                          "typeString": "literal_string \"only core modules are allowed to call this function\""
+                        },
+                        "value": "only core modules are allowed to call this function"
+                      }
+                    ],
+                    "expression": {
+                      "argumentTypes": [
+                        {
+                          "typeIdentifier": "t_bool",
+                          "typeString": "bool"
+                        },
+                        {
+                          "typeIdentifier": "t_stringliteral_22c64bd82d858f68703d75b4d2cc94b17ee5ec04fa28ad86718a2ed9cfbf927c",
+                          "typeString": "literal_string \"only core modules are allowed to call this function\""
+                        }
+                      ],
+                      "id": 6987,
+                      "name": "require",
+                      "nodeType": "Identifier",
+                      "overloadedDeclarations": [
+                        -18,
+                        -18
+                      ],
+                      "referencedDeclaration": -18,
+                      "src": "364:7:24",
+                      "typeDescriptions": {
+                        "typeIdentifier": "t_function_require_pure$_t_bool_$_t_string_memory_ptr_$returns$__$",
+                        "typeString": "function (bool,string memory) pure"
+                      }
+                    },
+                    "id": 6994,
+                    "isConstant": false,
+                    "isLValue": false,
+                    "isPure": false,
+                    "kind": "functionCall",
+                    "lValueRequested": false,
+                    "names": [],
+                    "nodeType": "FunctionCall",
+                    "src": "364:88:24",
+                    "tryCall": false,
+                    "typeDescriptions": {
+                      "typeIdentifier": "t_tuple$__$",
+                      "typeString": "tuple()"
+                    }
+                  },
+                  "id": 6995,
+                  "nodeType": "ExpressionStatement",
+                  "src": "364:88:24"
+                },
+                {
+                  "id": 6996,
+                  "nodeType": "PlaceholderStatement",
+                  "src": "462:1:24"
+                }
+              ]
+            },
+            "documentation": {
+              "id": 6983,
+              "nodeType": "StructuredDocumentation",
+              "src": "222:93:24",
+              "text": " @dev Only Core Module of the DAO are allowed to execute the function call."
+            },
+            "id": 6998,
+            "name": "onlyModule",
+            "nodeType": "ModifierDefinition",
+            "overrides": null,
+            "parameters": {
+              "id": 6986,
+              "nodeType": "ParameterList",
+              "parameters": [
+                {
+                  "constant": false,
+                  "id": 6985,
+                  "mutability": "mutable",
+                  "name": "dao",
+                  "nodeType": "VariableDeclaration",
+                  "overrides": null,
+                  "scope": 6998,
+                  "src": "340:12:24",
+                  "stateVariable": false,
+                  "storageLocation": "default",
+                  "typeDescriptions": {
+                    "typeIdentifier": "t_contract$_Registry_$4693",
+                    "typeString": "contract Registry"
+                  },
+                  "typeName": {
+                    "contractScope": null,
+                    "id": 6984,
+                    "name": "Registry",
+                    "nodeType": "UserDefinedTypeName",
+                    "referencedDeclaration": 4693,
+                    "src": "340:8:24",
+                    "typeDescriptions": {
+                      "typeIdentifier": "t_contract$_Registry_$4693",
+                      "typeString": "contract Registry"
+                    }
+                  },
+                  "value": null,
+                  "visibility": "internal"
+                }
+              ],
+              "src": "339:14:24"
+            },
+            "src": "320:150:24",
+            "virtual": false,
+            "visibility": "internal"
+          }
+        ],
+        "scope": 7000,
+        "src": "185:287:24"
+      }
+    ],
+    "src": "0:472:24"
+  },
+  "compiler": {
+    "name": "solc",
+    "version": "0.7.0+commit.9e61f92b.Emscripten.clang"
+  },
+  "networks": {},
+  "schemaVersion": "3.2.3",
+  "updatedAt": "2020-09-17T11:52:26.513Z",
+  "devdoc": {
+    "details": "Contract module that helps restrict the module access to Core Modules only.",
+    "kind": "dev",
+    "methods": {},
+    "version": 1
+  },
+  "userdoc": {
+    "kind": "user",
+    "methods": {},
+    "version": 1
+  }
+}

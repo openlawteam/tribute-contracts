@@ -1,0 +1,1427 @@
+{
+  "contractName": "Module",
+  "abi": [],
+  "metadata": "{\"compiler\":{\"version\":\"0.7.0+commit.9e61f92b\"},\"language\":\"Solidity\",\"output\":{\"abi\":[],\"devdoc\":{\"kind\":\"dev\",\"methods\":{},\"version\":1},\"userdoc\":{\"kind\":\"user\",\"methods\":{},\"version\":1}},\"settings\":{\"compilationTarget\":{\"/Users/davidroon/projects/moloch/contracts/v3/core/Module.sol\":\"Module\"},\"evmVersion\":\"istanbul\",\"libraries\":{},\"metadata\":{\"bytecodeHash\":\"ipfs\"},\"optimizer\":{\"enabled\":true,\"runs\":10000},\"remappings\":[]},\"sources\":{\"/Users/davidroon/projects/moloch/contracts/v3/core/Module.sol\":{\"keccak256\":\"0x7965346c96d58c49add404ad1ab2b09e432fb47fb03bce1738b0fe939941dd3c\",\"license\":\"MIT\",\"urls\":[\"bzz-raw://4e4c3a6e5df032f97d07155137d41294f4a82793f4334193490b3112a8a4b198\",\"dweb:/ipfs/QmUKVrc6JtvjVQ9ZJHhabj5VnCBA6aWjfFt31xeBJZmKhv\"]}},\"version\":1}",
+  "bytecode": "0x",
+  "deployedBytecode": "0x",
+  "immutableReferences": {},
+  "sourceMap": "",
+  "deployedSourceMap": "",
+  "source": "pragma solidity ^0.7.0;\n\n// SPDX-License-Identifier: MIT\n\nabstract contract Module {\n\n    // Core Modules\n    bytes32 constant BANK_MODULE = keccak256(\"bank\");\n    bytes32 constant MEMBER_MODULE = keccak256(\"member\");\n    bytes32 constant PROPOSAL_MODULE = keccak256(\"proposal\");\n    bytes32 constant VOTING_MODULE = keccak256(\"voting\");\n\n    // Adapters\n    bytes32 constant ONBOARDING_MODULE = keccak256(\"onboarding\");\n    bytes32 constant FINANCING_MODULE = keccak256(\"financing\");\n    bytes32 constant MANAGING_MODULE = keccak256(\"managing\");\n    bytes32 constant RAGEQUIT_MODULE = keccak256(\"ragequit\");\n    \n}",
+  "sourcePath": "/Users/davidroon/projects/moloch/contracts/v3/core/Module.sol",
+  "ast": {
+    "absolutePath": "/Users/davidroon/projects/moloch/contracts/v3/core/Module.sol",
+    "exportedSymbols": {
+      "Module": [
+        4491
+      ]
+    },
+    "id": 4492,
+    "license": "MIT",
+    "nodeType": "SourceUnit",
+    "nodes": [
+      {
+        "id": 4450,
+        "literals": [
+          "solidity",
+          "^",
+          "0.7",
+          ".0"
+        ],
+        "nodeType": "PragmaDirective",
+        "src": "0:23:12"
+      },
+      {
+        "abstract": true,
+        "baseContracts": [],
+        "contractDependencies": [],
+        "contractKind": "contract",
+        "documentation": null,
+        "fullyImplemented": true,
+        "id": 4491,
+        "linearizedBaseContracts": [
+          4491
+        ],
+        "name": "Module",
+        "nodeType": "ContractDefinition",
+        "nodes": [
+          {
+            "constant": true,
+            "id": 4455,
+            "mutability": "constant",
+            "name": "BANK_MODULE",
+            "nodeType": "VariableDeclaration",
+            "overrides": null,
+            "scope": 4491,
+            "src": "110:48:12",
+            "stateVariable": true,
+            "storageLocation": "default",
+            "typeDescriptions": {
+              "typeIdentifier": "t_bytes32",
+              "typeString": "bytes32"
+            },
+            "typeName": {
+              "id": 4451,
+              "name": "bytes32",
+              "nodeType": "ElementaryTypeName",
+              "src": "110:7:12",
+              "typeDescriptions": {
+                "typeIdentifier": "t_bytes32",
+                "typeString": "bytes32"
+              }
+            },
+            "value": {
+              "argumentTypes": null,
+              "arguments": [
+                {
+                  "argumentTypes": null,
+                  "hexValue": "62616e6b",
+                  "id": 4453,
+                  "isConstant": false,
+                  "isLValue": false,
+                  "isPure": true,
+                  "kind": "string",
+                  "lValueRequested": false,
+                  "nodeType": "Literal",
+                  "src": "151:6:12",
+                  "subdenomination": null,
+                  "typeDescriptions": {
+                    "typeIdentifier": "t_stringliteral_ea0ca03c7adbe41dc655fec28a9209dc8e6e042f3d991a67765ba285b9cf73a0",
+                    "typeString": "literal_string \"bank\""
+                  },
+                  "value": "bank"
+                }
+              ],
+              "expression": {
+                "argumentTypes": [
+                  {
+                    "typeIdentifier": "t_stringliteral_ea0ca03c7adbe41dc655fec28a9209dc8e6e042f3d991a67765ba285b9cf73a0",
+                    "typeString": "literal_string \"bank\""
+                  }
+                ],
+                "id": 4452,
+                "name": "keccak256",
+                "nodeType": "Identifier",
+                "overloadedDeclarations": [],
+                "referencedDeclaration": -8,
+                "src": "141:9:12",
+                "typeDescriptions": {
+                  "typeIdentifier": "t_function_keccak256_pure$_t_bytes_memory_ptr_$returns$_t_bytes32_$",
+                  "typeString": "function (bytes memory) pure returns (bytes32)"
+                }
+              },
+              "id": 4454,
+              "isConstant": false,
+              "isLValue": false,
+              "isPure": true,
+              "kind": "functionCall",
+              "lValueRequested": false,
+              "names": [],
+              "nodeType": "FunctionCall",
+              "src": "141:17:12",
+              "tryCall": false,
+              "typeDescriptions": {
+                "typeIdentifier": "t_bytes32",
+                "typeString": "bytes32"
+              }
+            },
+            "visibility": "internal"
+          },
+          {
+            "constant": true,
+            "id": 4460,
+            "mutability": "constant",
+            "name": "MEMBER_MODULE",
+            "nodeType": "VariableDeclaration",
+            "overrides": null,
+            "scope": 4491,
+            "src": "164:52:12",
+            "stateVariable": true,
+            "storageLocation": "default",
+            "typeDescriptions": {
+              "typeIdentifier": "t_bytes32",
+              "typeString": "bytes32"
+            },
+            "typeName": {
+              "id": 4456,
+              "name": "bytes32",
+              "nodeType": "ElementaryTypeName",
+              "src": "164:7:12",
+              "typeDescriptions": {
+                "typeIdentifier": "t_bytes32",
+                "typeString": "bytes32"
+              }
+            },
+            "value": {
+              "argumentTypes": null,
+              "arguments": [
+                {
+                  "argumentTypes": null,
+                  "hexValue": "6d656d626572",
+                  "id": 4458,
+                  "isConstant": false,
+                  "isLValue": false,
+                  "isPure": true,
+                  "kind": "string",
+                  "lValueRequested": false,
+                  "nodeType": "Literal",
+                  "src": "207:8:12",
+                  "subdenomination": null,
+                  "typeDescriptions": {
+                    "typeIdentifier": "t_stringliteral_14ceb1149cdab84b395151a21d3de6707dd76fff3e7bc4e018925a9986b7f72f",
+                    "typeString": "literal_string \"member\""
+                  },
+                  "value": "member"
+                }
+              ],
+              "expression": {
+                "argumentTypes": [
+                  {
+                    "typeIdentifier": "t_stringliteral_14ceb1149cdab84b395151a21d3de6707dd76fff3e7bc4e018925a9986b7f72f",
+                    "typeString": "literal_string \"member\""
+                  }
+                ],
+                "id": 4457,
+                "name": "keccak256",
+                "nodeType": "Identifier",
+                "overloadedDeclarations": [],
+                "referencedDeclaration": -8,
+                "src": "197:9:12",
+                "typeDescriptions": {
+                  "typeIdentifier": "t_function_keccak256_pure$_t_bytes_memory_ptr_$returns$_t_bytes32_$",
+                  "typeString": "function (bytes memory) pure returns (bytes32)"
+                }
+              },
+              "id": 4459,
+              "isConstant": false,
+              "isLValue": false,
+              "isPure": true,
+              "kind": "functionCall",
+              "lValueRequested": false,
+              "names": [],
+              "nodeType": "FunctionCall",
+              "src": "197:19:12",
+              "tryCall": false,
+              "typeDescriptions": {
+                "typeIdentifier": "t_bytes32",
+                "typeString": "bytes32"
+              }
+            },
+            "visibility": "internal"
+          },
+          {
+            "constant": true,
+            "id": 4465,
+            "mutability": "constant",
+            "name": "PROPOSAL_MODULE",
+            "nodeType": "VariableDeclaration",
+            "overrides": null,
+            "scope": 4491,
+            "src": "222:56:12",
+            "stateVariable": true,
+            "storageLocation": "default",
+            "typeDescriptions": {
+              "typeIdentifier": "t_bytes32",
+              "typeString": "bytes32"
+            },
+            "typeName": {
+              "id": 4461,
+              "name": "bytes32",
+              "nodeType": "ElementaryTypeName",
+              "src": "222:7:12",
+              "typeDescriptions": {
+                "typeIdentifier": "t_bytes32",
+                "typeString": "bytes32"
+              }
+            },
+            "value": {
+              "argumentTypes": null,
+              "arguments": [
+                {
+                  "argumentTypes": null,
+                  "hexValue": "70726f706f73616c",
+                  "id": 4463,
+                  "isConstant": false,
+                  "isLValue": false,
+                  "isPure": true,
+                  "kind": "string",
+                  "lValueRequested": false,
+                  "nodeType": "Literal",
+                  "src": "267:10:12",
+                  "subdenomination": null,
+                  "typeDescriptions": {
+                    "typeIdentifier": "t_stringliteral_b6d2dc83590271a7c0a5ab5fbf6a2dad418bbfd533c253e3d69a6772712809c7",
+                    "typeString": "literal_string \"proposal\""
+                  },
+                  "value": "proposal"
+                }
+              ],
+              "expression": {
+                "argumentTypes": [
+                  {
+                    "typeIdentifier": "t_stringliteral_b6d2dc83590271a7c0a5ab5fbf6a2dad418bbfd533c253e3d69a6772712809c7",
+                    "typeString": "literal_string \"proposal\""
+                  }
+                ],
+                "id": 4462,
+                "name": "keccak256",
+                "nodeType": "Identifier",
+                "overloadedDeclarations": [],
+                "referencedDeclaration": -8,
+                "src": "257:9:12",
+                "typeDescriptions": {
+                  "typeIdentifier": "t_function_keccak256_pure$_t_bytes_memory_ptr_$returns$_t_bytes32_$",
+                  "typeString": "function (bytes memory) pure returns (bytes32)"
+                }
+              },
+              "id": 4464,
+              "isConstant": false,
+              "isLValue": false,
+              "isPure": true,
+              "kind": "functionCall",
+              "lValueRequested": false,
+              "names": [],
+              "nodeType": "FunctionCall",
+              "src": "257:21:12",
+              "tryCall": false,
+              "typeDescriptions": {
+                "typeIdentifier": "t_bytes32",
+                "typeString": "bytes32"
+              }
+            },
+            "visibility": "internal"
+          },
+          {
+            "constant": true,
+            "id": 4470,
+            "mutability": "constant",
+            "name": "VOTING_MODULE",
+            "nodeType": "VariableDeclaration",
+            "overrides": null,
+            "scope": 4491,
+            "src": "284:52:12",
+            "stateVariable": true,
+            "storageLocation": "default",
+            "typeDescriptions": {
+              "typeIdentifier": "t_bytes32",
+              "typeString": "bytes32"
+            },
+            "typeName": {
+              "id": 4466,
+              "name": "bytes32",
+              "nodeType": "ElementaryTypeName",
+              "src": "284:7:12",
+              "typeDescriptions": {
+                "typeIdentifier": "t_bytes32",
+                "typeString": "bytes32"
+              }
+            },
+            "value": {
+              "argumentTypes": null,
+              "arguments": [
+                {
+                  "argumentTypes": null,
+                  "hexValue": "766f74696e67",
+                  "id": 4468,
+                  "isConstant": false,
+                  "isLValue": false,
+                  "isPure": true,
+                  "kind": "string",
+                  "lValueRequested": false,
+                  "nodeType": "Literal",
+                  "src": "327:8:12",
+                  "subdenomination": null,
+                  "typeDescriptions": {
+                    "typeIdentifier": "t_stringliteral_0e49311626a26ba5be58a3b13d239908e80ce0dffdd5c50bf1d9c82ff35d1ab3",
+                    "typeString": "literal_string \"voting\""
+                  },
+                  "value": "voting"
+                }
+              ],
+              "expression": {
+                "argumentTypes": [
+                  {
+                    "typeIdentifier": "t_stringliteral_0e49311626a26ba5be58a3b13d239908e80ce0dffdd5c50bf1d9c82ff35d1ab3",
+                    "typeString": "literal_string \"voting\""
+                  }
+                ],
+                "id": 4467,
+                "name": "keccak256",
+                "nodeType": "Identifier",
+                "overloadedDeclarations": [],
+                "referencedDeclaration": -8,
+                "src": "317:9:12",
+                "typeDescriptions": {
+                  "typeIdentifier": "t_function_keccak256_pure$_t_bytes_memory_ptr_$returns$_t_bytes32_$",
+                  "typeString": "function (bytes memory) pure returns (bytes32)"
+                }
+              },
+              "id": 4469,
+              "isConstant": false,
+              "isLValue": false,
+              "isPure": true,
+              "kind": "functionCall",
+              "lValueRequested": false,
+              "names": [],
+              "nodeType": "FunctionCall",
+              "src": "317:19:12",
+              "tryCall": false,
+              "typeDescriptions": {
+                "typeIdentifier": "t_bytes32",
+                "typeString": "bytes32"
+              }
+            },
+            "visibility": "internal"
+          },
+          {
+            "constant": true,
+            "id": 4475,
+            "mutability": "constant",
+            "name": "ONBOARDING_MODULE",
+            "nodeType": "VariableDeclaration",
+            "overrides": null,
+            "scope": 4491,
+            "src": "359:60:12",
+            "stateVariable": true,
+            "storageLocation": "default",
+            "typeDescriptions": {
+              "typeIdentifier": "t_bytes32",
+              "typeString": "bytes32"
+            },
+            "typeName": {
+              "id": 4471,
+              "name": "bytes32",
+              "nodeType": "ElementaryTypeName",
+              "src": "359:7:12",
+              "typeDescriptions": {
+                "typeIdentifier": "t_bytes32",
+                "typeString": "bytes32"
+              }
+            },
+            "value": {
+              "argumentTypes": null,
+              "arguments": [
+                {
+                  "argumentTypes": null,
+                  "hexValue": "6f6e626f617264696e67",
+                  "id": 4473,
+                  "isConstant": false,
+                  "isLValue": false,
+                  "isPure": true,
+                  "kind": "string",
+                  "lValueRequested": false,
+                  "nodeType": "Literal",
+                  "src": "406:12:12",
+                  "subdenomination": null,
+                  "typeDescriptions": {
+                    "typeIdentifier": "t_stringliteral_68c24fc24acf5b51ccf67c01fea706e9e0e110825d4f88d07623f64f32f55d89",
+                    "typeString": "literal_string \"onboarding\""
+                  },
+                  "value": "onboarding"
+                }
+              ],
+              "expression": {
+                "argumentTypes": [
+                  {
+                    "typeIdentifier": "t_stringliteral_68c24fc24acf5b51ccf67c01fea706e9e0e110825d4f88d07623f64f32f55d89",
+                    "typeString": "literal_string \"onboarding\""
+                  }
+                ],
+                "id": 4472,
+                "name": "keccak256",
+                "nodeType": "Identifier",
+                "overloadedDeclarations": [],
+                "referencedDeclaration": -8,
+                "src": "396:9:12",
+                "typeDescriptions": {
+                  "typeIdentifier": "t_function_keccak256_pure$_t_bytes_memory_ptr_$returns$_t_bytes32_$",
+                  "typeString": "function (bytes memory) pure returns (bytes32)"
+                }
+              },
+              "id": 4474,
+              "isConstant": false,
+              "isLValue": false,
+              "isPure": true,
+              "kind": "functionCall",
+              "lValueRequested": false,
+              "names": [],
+              "nodeType": "FunctionCall",
+              "src": "396:23:12",
+              "tryCall": false,
+              "typeDescriptions": {
+                "typeIdentifier": "t_bytes32",
+                "typeString": "bytes32"
+              }
+            },
+            "visibility": "internal"
+          },
+          {
+            "constant": true,
+            "id": 4480,
+            "mutability": "constant",
+            "name": "FINANCING_MODULE",
+            "nodeType": "VariableDeclaration",
+            "overrides": null,
+            "scope": 4491,
+            "src": "425:58:12",
+            "stateVariable": true,
+            "storageLocation": "default",
+            "typeDescriptions": {
+              "typeIdentifier": "t_bytes32",
+              "typeString": "bytes32"
+            },
+            "typeName": {
+              "id": 4476,
+              "name": "bytes32",
+              "nodeType": "ElementaryTypeName",
+              "src": "425:7:12",
+              "typeDescriptions": {
+                "typeIdentifier": "t_bytes32",
+                "typeString": "bytes32"
+              }
+            },
+            "value": {
+              "argumentTypes": null,
+              "arguments": [
+                {
+                  "argumentTypes": null,
+                  "hexValue": "66696e616e63696e67",
+                  "id": 4478,
+                  "isConstant": false,
+                  "isLValue": false,
+                  "isPure": true,
+                  "kind": "string",
+                  "lValueRequested": false,
+                  "nodeType": "Literal",
+                  "src": "471:11:12",
+                  "subdenomination": null,
+                  "typeDescriptions": {
+                    "typeIdentifier": "t_stringliteral_903b70ab7c13e94d5db58ae5205461e75e7c006ddff7cb26a3d9c1b246a62a5f",
+                    "typeString": "literal_string \"financing\""
+                  },
+                  "value": "financing"
+                }
+              ],
+              "expression": {
+                "argumentTypes": [
+                  {
+                    "typeIdentifier": "t_stringliteral_903b70ab7c13e94d5db58ae5205461e75e7c006ddff7cb26a3d9c1b246a62a5f",
+                    "typeString": "literal_string \"financing\""
+                  }
+                ],
+                "id": 4477,
+                "name": "keccak256",
+                "nodeType": "Identifier",
+                "overloadedDeclarations": [],
+                "referencedDeclaration": -8,
+                "src": "461:9:12",
+                "typeDescriptions": {
+                  "typeIdentifier": "t_function_keccak256_pure$_t_bytes_memory_ptr_$returns$_t_bytes32_$",
+                  "typeString": "function (bytes memory) pure returns (bytes32)"
+                }
+              },
+              "id": 4479,
+              "isConstant": false,
+              "isLValue": false,
+              "isPure": true,
+              "kind": "functionCall",
+              "lValueRequested": false,
+              "names": [],
+              "nodeType": "FunctionCall",
+              "src": "461:22:12",
+              "tryCall": false,
+              "typeDescriptions": {
+                "typeIdentifier": "t_bytes32",
+                "typeString": "bytes32"
+              }
+            },
+            "visibility": "internal"
+          },
+          {
+            "constant": true,
+            "id": 4485,
+            "mutability": "constant",
+            "name": "MANAGING_MODULE",
+            "nodeType": "VariableDeclaration",
+            "overrides": null,
+            "scope": 4491,
+            "src": "489:56:12",
+            "stateVariable": true,
+            "storageLocation": "default",
+            "typeDescriptions": {
+              "typeIdentifier": "t_bytes32",
+              "typeString": "bytes32"
+            },
+            "typeName": {
+              "id": 4481,
+              "name": "bytes32",
+              "nodeType": "ElementaryTypeName",
+              "src": "489:7:12",
+              "typeDescriptions": {
+                "typeIdentifier": "t_bytes32",
+                "typeString": "bytes32"
+              }
+            },
+            "value": {
+              "argumentTypes": null,
+              "arguments": [
+                {
+                  "argumentTypes": null,
+                  "hexValue": "6d616e6167696e67",
+                  "id": 4483,
+                  "isConstant": false,
+                  "isLValue": false,
+                  "isPure": true,
+                  "kind": "string",
+                  "lValueRequested": false,
+                  "nodeType": "Literal",
+                  "src": "534:10:12",
+                  "subdenomination": null,
+                  "typeDescriptions": {
+                    "typeIdentifier": "t_stringliteral_b5d1b10526b91c1951e75295138b32c80917c8ba0b96f19926ef2008a82b6511",
+                    "typeString": "literal_string \"managing\""
+                  },
+                  "value": "managing"
+                }
+              ],
+              "expression": {
+                "argumentTypes": [
+                  {
+                    "typeIdentifier": "t_stringliteral_b5d1b10526b91c1951e75295138b32c80917c8ba0b96f19926ef2008a82b6511",
+                    "typeString": "literal_string \"managing\""
+                  }
+                ],
+                "id": 4482,
+                "name": "keccak256",
+                "nodeType": "Identifier",
+                "overloadedDeclarations": [],
+                "referencedDeclaration": -8,
+                "src": "524:9:12",
+                "typeDescriptions": {
+                  "typeIdentifier": "t_function_keccak256_pure$_t_bytes_memory_ptr_$returns$_t_bytes32_$",
+                  "typeString": "function (bytes memory) pure returns (bytes32)"
+                }
+              },
+              "id": 4484,
+              "isConstant": false,
+              "isLValue": false,
+              "isPure": true,
+              "kind": "functionCall",
+              "lValueRequested": false,
+              "names": [],
+              "nodeType": "FunctionCall",
+              "src": "524:21:12",
+              "tryCall": false,
+              "typeDescriptions": {
+                "typeIdentifier": "t_bytes32",
+                "typeString": "bytes32"
+              }
+            },
+            "visibility": "internal"
+          },
+          {
+            "constant": true,
+            "id": 4490,
+            "mutability": "constant",
+            "name": "RAGEQUIT_MODULE",
+            "nodeType": "VariableDeclaration",
+            "overrides": null,
+            "scope": 4491,
+            "src": "551:56:12",
+            "stateVariable": true,
+            "storageLocation": "default",
+            "typeDescriptions": {
+              "typeIdentifier": "t_bytes32",
+              "typeString": "bytes32"
+            },
+            "typeName": {
+              "id": 4486,
+              "name": "bytes32",
+              "nodeType": "ElementaryTypeName",
+              "src": "551:7:12",
+              "typeDescriptions": {
+                "typeIdentifier": "t_bytes32",
+                "typeString": "bytes32"
+              }
+            },
+            "value": {
+              "argumentTypes": null,
+              "arguments": [
+                {
+                  "argumentTypes": null,
+                  "hexValue": "7261676571756974",
+                  "id": 4488,
+                  "isConstant": false,
+                  "isLValue": false,
+                  "isPure": true,
+                  "kind": "string",
+                  "lValueRequested": false,
+                  "nodeType": "Literal",
+                  "src": "596:10:12",
+                  "subdenomination": null,
+                  "typeDescriptions": {
+                    "typeIdentifier": "t_stringliteral_54527537e04b80d3b3bd9dfa43834f03d4b745f8411ca72260a3c7e02ea7fa3f",
+                    "typeString": "literal_string \"ragequit\""
+                  },
+                  "value": "ragequit"
+                }
+              ],
+              "expression": {
+                "argumentTypes": [
+                  {
+                    "typeIdentifier": "t_stringliteral_54527537e04b80d3b3bd9dfa43834f03d4b745f8411ca72260a3c7e02ea7fa3f",
+                    "typeString": "literal_string \"ragequit\""
+                  }
+                ],
+                "id": 4487,
+                "name": "keccak256",
+                "nodeType": "Identifier",
+                "overloadedDeclarations": [],
+                "referencedDeclaration": -8,
+                "src": "586:9:12",
+                "typeDescriptions": {
+                  "typeIdentifier": "t_function_keccak256_pure$_t_bytes_memory_ptr_$returns$_t_bytes32_$",
+                  "typeString": "function (bytes memory) pure returns (bytes32)"
+                }
+              },
+              "id": 4489,
+              "isConstant": false,
+              "isLValue": false,
+              "isPure": true,
+              "kind": "functionCall",
+              "lValueRequested": false,
+              "names": [],
+              "nodeType": "FunctionCall",
+              "src": "586:21:12",
+              "tryCall": false,
+              "typeDescriptions": {
+                "typeIdentifier": "t_bytes32",
+                "typeString": "bytes32"
+              }
+            },
+            "visibility": "internal"
+          }
+        ],
+        "scope": 4492,
+        "src": "58:557:12"
+      }
+    ],
+    "src": "0:615:12"
+  },
+  "legacyAST": {
+    "absolutePath": "/Users/davidroon/projects/moloch/contracts/v3/core/Module.sol",
+    "exportedSymbols": {
+      "Module": [
+        4491
+      ]
+    },
+    "id": 4492,
+    "license": "MIT",
+    "nodeType": "SourceUnit",
+    "nodes": [
+      {
+        "id": 4450,
+        "literals": [
+          "solidity",
+          "^",
+          "0.7",
+          ".0"
+        ],
+        "nodeType": "PragmaDirective",
+        "src": "0:23:12"
+      },
+      {
+        "abstract": true,
+        "baseContracts": [],
+        "contractDependencies": [],
+        "contractKind": "contract",
+        "documentation": null,
+        "fullyImplemented": true,
+        "id": 4491,
+        "linearizedBaseContracts": [
+          4491
+        ],
+        "name": "Module",
+        "nodeType": "ContractDefinition",
+        "nodes": [
+          {
+            "constant": true,
+            "id": 4455,
+            "mutability": "constant",
+            "name": "BANK_MODULE",
+            "nodeType": "VariableDeclaration",
+            "overrides": null,
+            "scope": 4491,
+            "src": "110:48:12",
+            "stateVariable": true,
+            "storageLocation": "default",
+            "typeDescriptions": {
+              "typeIdentifier": "t_bytes32",
+              "typeString": "bytes32"
+            },
+            "typeName": {
+              "id": 4451,
+              "name": "bytes32",
+              "nodeType": "ElementaryTypeName",
+              "src": "110:7:12",
+              "typeDescriptions": {
+                "typeIdentifier": "t_bytes32",
+                "typeString": "bytes32"
+              }
+            },
+            "value": {
+              "argumentTypes": null,
+              "arguments": [
+                {
+                  "argumentTypes": null,
+                  "hexValue": "62616e6b",
+                  "id": 4453,
+                  "isConstant": false,
+                  "isLValue": false,
+                  "isPure": true,
+                  "kind": "string",
+                  "lValueRequested": false,
+                  "nodeType": "Literal",
+                  "src": "151:6:12",
+                  "subdenomination": null,
+                  "typeDescriptions": {
+                    "typeIdentifier": "t_stringliteral_ea0ca03c7adbe41dc655fec28a9209dc8e6e042f3d991a67765ba285b9cf73a0",
+                    "typeString": "literal_string \"bank\""
+                  },
+                  "value": "bank"
+                }
+              ],
+              "expression": {
+                "argumentTypes": [
+                  {
+                    "typeIdentifier": "t_stringliteral_ea0ca03c7adbe41dc655fec28a9209dc8e6e042f3d991a67765ba285b9cf73a0",
+                    "typeString": "literal_string \"bank\""
+                  }
+                ],
+                "id": 4452,
+                "name": "keccak256",
+                "nodeType": "Identifier",
+                "overloadedDeclarations": [],
+                "referencedDeclaration": -8,
+                "src": "141:9:12",
+                "typeDescriptions": {
+                  "typeIdentifier": "t_function_keccak256_pure$_t_bytes_memory_ptr_$returns$_t_bytes32_$",
+                  "typeString": "function (bytes memory) pure returns (bytes32)"
+                }
+              },
+              "id": 4454,
+              "isConstant": false,
+              "isLValue": false,
+              "isPure": true,
+              "kind": "functionCall",
+              "lValueRequested": false,
+              "names": [],
+              "nodeType": "FunctionCall",
+              "src": "141:17:12",
+              "tryCall": false,
+              "typeDescriptions": {
+                "typeIdentifier": "t_bytes32",
+                "typeString": "bytes32"
+              }
+            },
+            "visibility": "internal"
+          },
+          {
+            "constant": true,
+            "id": 4460,
+            "mutability": "constant",
+            "name": "MEMBER_MODULE",
+            "nodeType": "VariableDeclaration",
+            "overrides": null,
+            "scope": 4491,
+            "src": "164:52:12",
+            "stateVariable": true,
+            "storageLocation": "default",
+            "typeDescriptions": {
+              "typeIdentifier": "t_bytes32",
+              "typeString": "bytes32"
+            },
+            "typeName": {
+              "id": 4456,
+              "name": "bytes32",
+              "nodeType": "ElementaryTypeName",
+              "src": "164:7:12",
+              "typeDescriptions": {
+                "typeIdentifier": "t_bytes32",
+                "typeString": "bytes32"
+              }
+            },
+            "value": {
+              "argumentTypes": null,
+              "arguments": [
+                {
+                  "argumentTypes": null,
+                  "hexValue": "6d656d626572",
+                  "id": 4458,
+                  "isConstant": false,
+                  "isLValue": false,
+                  "isPure": true,
+                  "kind": "string",
+                  "lValueRequested": false,
+                  "nodeType": "Literal",
+                  "src": "207:8:12",
+                  "subdenomination": null,
+                  "typeDescriptions": {
+                    "typeIdentifier": "t_stringliteral_14ceb1149cdab84b395151a21d3de6707dd76fff3e7bc4e018925a9986b7f72f",
+                    "typeString": "literal_string \"member\""
+                  },
+                  "value": "member"
+                }
+              ],
+              "expression": {
+                "argumentTypes": [
+                  {
+                    "typeIdentifier": "t_stringliteral_14ceb1149cdab84b395151a21d3de6707dd76fff3e7bc4e018925a9986b7f72f",
+                    "typeString": "literal_string \"member\""
+                  }
+                ],
+                "id": 4457,
+                "name": "keccak256",
+                "nodeType": "Identifier",
+                "overloadedDeclarations": [],
+                "referencedDeclaration": -8,
+                "src": "197:9:12",
+                "typeDescriptions": {
+                  "typeIdentifier": "t_function_keccak256_pure$_t_bytes_memory_ptr_$returns$_t_bytes32_$",
+                  "typeString": "function (bytes memory) pure returns (bytes32)"
+                }
+              },
+              "id": 4459,
+              "isConstant": false,
+              "isLValue": false,
+              "isPure": true,
+              "kind": "functionCall",
+              "lValueRequested": false,
+              "names": [],
+              "nodeType": "FunctionCall",
+              "src": "197:19:12",
+              "tryCall": false,
+              "typeDescriptions": {
+                "typeIdentifier": "t_bytes32",
+                "typeString": "bytes32"
+              }
+            },
+            "visibility": "internal"
+          },
+          {
+            "constant": true,
+            "id": 4465,
+            "mutability": "constant",
+            "name": "PROPOSAL_MODULE",
+            "nodeType": "VariableDeclaration",
+            "overrides": null,
+            "scope": 4491,
+            "src": "222:56:12",
+            "stateVariable": true,
+            "storageLocation": "default",
+            "typeDescriptions": {
+              "typeIdentifier": "t_bytes32",
+              "typeString": "bytes32"
+            },
+            "typeName": {
+              "id": 4461,
+              "name": "bytes32",
+              "nodeType": "ElementaryTypeName",
+              "src": "222:7:12",
+              "typeDescriptions": {
+                "typeIdentifier": "t_bytes32",
+                "typeString": "bytes32"
+              }
+            },
+            "value": {
+              "argumentTypes": null,
+              "arguments": [
+                {
+                  "argumentTypes": null,
+                  "hexValue": "70726f706f73616c",
+                  "id": 4463,
+                  "isConstant": false,
+                  "isLValue": false,
+                  "isPure": true,
+                  "kind": "string",
+                  "lValueRequested": false,
+                  "nodeType": "Literal",
+                  "src": "267:10:12",
+                  "subdenomination": null,
+                  "typeDescriptions": {
+                    "typeIdentifier": "t_stringliteral_b6d2dc83590271a7c0a5ab5fbf6a2dad418bbfd533c253e3d69a6772712809c7",
+                    "typeString": "literal_string \"proposal\""
+                  },
+                  "value": "proposal"
+                }
+              ],
+              "expression": {
+                "argumentTypes": [
+                  {
+                    "typeIdentifier": "t_stringliteral_b6d2dc83590271a7c0a5ab5fbf6a2dad418bbfd533c253e3d69a6772712809c7",
+                    "typeString": "literal_string \"proposal\""
+                  }
+                ],
+                "id": 4462,
+                "name": "keccak256",
+                "nodeType": "Identifier",
+                "overloadedDeclarations": [],
+                "referencedDeclaration": -8,
+                "src": "257:9:12",
+                "typeDescriptions": {
+                  "typeIdentifier": "t_function_keccak256_pure$_t_bytes_memory_ptr_$returns$_t_bytes32_$",
+                  "typeString": "function (bytes memory) pure returns (bytes32)"
+                }
+              },
+              "id": 4464,
+              "isConstant": false,
+              "isLValue": false,
+              "isPure": true,
+              "kind": "functionCall",
+              "lValueRequested": false,
+              "names": [],
+              "nodeType": "FunctionCall",
+              "src": "257:21:12",
+              "tryCall": false,
+              "typeDescriptions": {
+                "typeIdentifier": "t_bytes32",
+                "typeString": "bytes32"
+              }
+            },
+            "visibility": "internal"
+          },
+          {
+            "constant": true,
+            "id": 4470,
+            "mutability": "constant",
+            "name": "VOTING_MODULE",
+            "nodeType": "VariableDeclaration",
+            "overrides": null,
+            "scope": 4491,
+            "src": "284:52:12",
+            "stateVariable": true,
+            "storageLocation": "default",
+            "typeDescriptions": {
+              "typeIdentifier": "t_bytes32",
+              "typeString": "bytes32"
+            },
+            "typeName": {
+              "id": 4466,
+              "name": "bytes32",
+              "nodeType": "ElementaryTypeName",
+              "src": "284:7:12",
+              "typeDescriptions": {
+                "typeIdentifier": "t_bytes32",
+                "typeString": "bytes32"
+              }
+            },
+            "value": {
+              "argumentTypes": null,
+              "arguments": [
+                {
+                  "argumentTypes": null,
+                  "hexValue": "766f74696e67",
+                  "id": 4468,
+                  "isConstant": false,
+                  "isLValue": false,
+                  "isPure": true,
+                  "kind": "string",
+                  "lValueRequested": false,
+                  "nodeType": "Literal",
+                  "src": "327:8:12",
+                  "subdenomination": null,
+                  "typeDescriptions": {
+                    "typeIdentifier": "t_stringliteral_0e49311626a26ba5be58a3b13d239908e80ce0dffdd5c50bf1d9c82ff35d1ab3",
+                    "typeString": "literal_string \"voting\""
+                  },
+                  "value": "voting"
+                }
+              ],
+              "expression": {
+                "argumentTypes": [
+                  {
+                    "typeIdentifier": "t_stringliteral_0e49311626a26ba5be58a3b13d239908e80ce0dffdd5c50bf1d9c82ff35d1ab3",
+                    "typeString": "literal_string \"voting\""
+                  }
+                ],
+                "id": 4467,
+                "name": "keccak256",
+                "nodeType": "Identifier",
+                "overloadedDeclarations": [],
+                "referencedDeclaration": -8,
+                "src": "317:9:12",
+                "typeDescriptions": {
+                  "typeIdentifier": "t_function_keccak256_pure$_t_bytes_memory_ptr_$returns$_t_bytes32_$",
+                  "typeString": "function (bytes memory) pure returns (bytes32)"
+                }
+              },
+              "id": 4469,
+              "isConstant": false,
+              "isLValue": false,
+              "isPure": true,
+              "kind": "functionCall",
+              "lValueRequested": false,
+              "names": [],
+              "nodeType": "FunctionCall",
+              "src": "317:19:12",
+              "tryCall": false,
+              "typeDescriptions": {
+                "typeIdentifier": "t_bytes32",
+                "typeString": "bytes32"
+              }
+            },
+            "visibility": "internal"
+          },
+          {
+            "constant": true,
+            "id": 4475,
+            "mutability": "constant",
+            "name": "ONBOARDING_MODULE",
+            "nodeType": "VariableDeclaration",
+            "overrides": null,
+            "scope": 4491,
+            "src": "359:60:12",
+            "stateVariable": true,
+            "storageLocation": "default",
+            "typeDescriptions": {
+              "typeIdentifier": "t_bytes32",
+              "typeString": "bytes32"
+            },
+            "typeName": {
+              "id": 4471,
+              "name": "bytes32",
+              "nodeType": "ElementaryTypeName",
+              "src": "359:7:12",
+              "typeDescriptions": {
+                "typeIdentifier": "t_bytes32",
+                "typeString": "bytes32"
+              }
+            },
+            "value": {
+              "argumentTypes": null,
+              "arguments": [
+                {
+                  "argumentTypes": null,
+                  "hexValue": "6f6e626f617264696e67",
+                  "id": 4473,
+                  "isConstant": false,
+                  "isLValue": false,
+                  "isPure": true,
+                  "kind": "string",
+                  "lValueRequested": false,
+                  "nodeType": "Literal",
+                  "src": "406:12:12",
+                  "subdenomination": null,
+                  "typeDescriptions": {
+                    "typeIdentifier": "t_stringliteral_68c24fc24acf5b51ccf67c01fea706e9e0e110825d4f88d07623f64f32f55d89",
+                    "typeString": "literal_string \"onboarding\""
+                  },
+                  "value": "onboarding"
+                }
+              ],
+              "expression": {
+                "argumentTypes": [
+                  {
+                    "typeIdentifier": "t_stringliteral_68c24fc24acf5b51ccf67c01fea706e9e0e110825d4f88d07623f64f32f55d89",
+                    "typeString": "literal_string \"onboarding\""
+                  }
+                ],
+                "id": 4472,
+                "name": "keccak256",
+                "nodeType": "Identifier",
+                "overloadedDeclarations": [],
+                "referencedDeclaration": -8,
+                "src": "396:9:12",
+                "typeDescriptions": {
+                  "typeIdentifier": "t_function_keccak256_pure$_t_bytes_memory_ptr_$returns$_t_bytes32_$",
+                  "typeString": "function (bytes memory) pure returns (bytes32)"
+                }
+              },
+              "id": 4474,
+              "isConstant": false,
+              "isLValue": false,
+              "isPure": true,
+              "kind": "functionCall",
+              "lValueRequested": false,
+              "names": [],
+              "nodeType": "FunctionCall",
+              "src": "396:23:12",
+              "tryCall": false,
+              "typeDescriptions": {
+                "typeIdentifier": "t_bytes32",
+                "typeString": "bytes32"
+              }
+            },
+            "visibility": "internal"
+          },
+          {
+            "constant": true,
+            "id": 4480,
+            "mutability": "constant",
+            "name": "FINANCING_MODULE",
+            "nodeType": "VariableDeclaration",
+            "overrides": null,
+            "scope": 4491,
+            "src": "425:58:12",
+            "stateVariable": true,
+            "storageLocation": "default",
+            "typeDescriptions": {
+              "typeIdentifier": "t_bytes32",
+              "typeString": "bytes32"
+            },
+            "typeName": {
+              "id": 4476,
+              "name": "bytes32",
+              "nodeType": "ElementaryTypeName",
+              "src": "425:7:12",
+              "typeDescriptions": {
+                "typeIdentifier": "t_bytes32",
+                "typeString": "bytes32"
+              }
+            },
+            "value": {
+              "argumentTypes": null,
+              "arguments": [
+                {
+                  "argumentTypes": null,
+                  "hexValue": "66696e616e63696e67",
+                  "id": 4478,
+                  "isConstant": false,
+                  "isLValue": false,
+                  "isPure": true,
+                  "kind": "string",
+                  "lValueRequested": false,
+                  "nodeType": "Literal",
+                  "src": "471:11:12",
+                  "subdenomination": null,
+                  "typeDescriptions": {
+                    "typeIdentifier": "t_stringliteral_903b70ab7c13e94d5db58ae5205461e75e7c006ddff7cb26a3d9c1b246a62a5f",
+                    "typeString": "literal_string \"financing\""
+                  },
+                  "value": "financing"
+                }
+              ],
+              "expression": {
+                "argumentTypes": [
+                  {
+                    "typeIdentifier": "t_stringliteral_903b70ab7c13e94d5db58ae5205461e75e7c006ddff7cb26a3d9c1b246a62a5f",
+                    "typeString": "literal_string \"financing\""
+                  }
+                ],
+                "id": 4477,
+                "name": "keccak256",
+                "nodeType": "Identifier",
+                "overloadedDeclarations": [],
+                "referencedDeclaration": -8,
+                "src": "461:9:12",
+                "typeDescriptions": {
+                  "typeIdentifier": "t_function_keccak256_pure$_t_bytes_memory_ptr_$returns$_t_bytes32_$",
+                  "typeString": "function (bytes memory) pure returns (bytes32)"
+                }
+              },
+              "id": 4479,
+              "isConstant": false,
+              "isLValue": false,
+              "isPure": true,
+              "kind": "functionCall",
+              "lValueRequested": false,
+              "names": [],
+              "nodeType": "FunctionCall",
+              "src": "461:22:12",
+              "tryCall": false,
+              "typeDescriptions": {
+                "typeIdentifier": "t_bytes32",
+                "typeString": "bytes32"
+              }
+            },
+            "visibility": "internal"
+          },
+          {
+            "constant": true,
+            "id": 4485,
+            "mutability": "constant",
+            "name": "MANAGING_MODULE",
+            "nodeType": "VariableDeclaration",
+            "overrides": null,
+            "scope": 4491,
+            "src": "489:56:12",
+            "stateVariable": true,
+            "storageLocation": "default",
+            "typeDescriptions": {
+              "typeIdentifier": "t_bytes32",
+              "typeString": "bytes32"
+            },
+            "typeName": {
+              "id": 4481,
+              "name": "bytes32",
+              "nodeType": "ElementaryTypeName",
+              "src": "489:7:12",
+              "typeDescriptions": {
+                "typeIdentifier": "t_bytes32",
+                "typeString": "bytes32"
+              }
+            },
+            "value": {
+              "argumentTypes": null,
+              "arguments": [
+                {
+                  "argumentTypes": null,
+                  "hexValue": "6d616e6167696e67",
+                  "id": 4483,
+                  "isConstant": false,
+                  "isLValue": false,
+                  "isPure": true,
+                  "kind": "string",
+                  "lValueRequested": false,
+                  "nodeType": "Literal",
+                  "src": "534:10:12",
+                  "subdenomination": null,
+                  "typeDescriptions": {
+                    "typeIdentifier": "t_stringliteral_b5d1b10526b91c1951e75295138b32c80917c8ba0b96f19926ef2008a82b6511",
+                    "typeString": "literal_string \"managing\""
+                  },
+                  "value": "managing"
+                }
+              ],
+              "expression": {
+                "argumentTypes": [
+                  {
+                    "typeIdentifier": "t_stringliteral_b5d1b10526b91c1951e75295138b32c80917c8ba0b96f19926ef2008a82b6511",
+                    "typeString": "literal_string \"managing\""
+                  }
+                ],
+                "id": 4482,
+                "name": "keccak256",
+                "nodeType": "Identifier",
+                "overloadedDeclarations": [],
+                "referencedDeclaration": -8,
+                "src": "524:9:12",
+                "typeDescriptions": {
+                  "typeIdentifier": "t_function_keccak256_pure$_t_bytes_memory_ptr_$returns$_t_bytes32_$",
+                  "typeString": "function (bytes memory) pure returns (bytes32)"
+                }
+              },
+              "id": 4484,
+              "isConstant": false,
+              "isLValue": false,
+              "isPure": true,
+              "kind": "functionCall",
+              "lValueRequested": false,
+              "names": [],
+              "nodeType": "FunctionCall",
+              "src": "524:21:12",
+              "tryCall": false,
+              "typeDescriptions": {
+                "typeIdentifier": "t_bytes32",
+                "typeString": "bytes32"
+              }
+            },
+            "visibility": "internal"
+          },
+          {
+            "constant": true,
+            "id": 4490,
+            "mutability": "constant",
+            "name": "RAGEQUIT_MODULE",
+            "nodeType": "VariableDeclaration",
+            "overrides": null,
+            "scope": 4491,
+            "src": "551:56:12",
+            "stateVariable": true,
+            "storageLocation": "default",
+            "typeDescriptions": {
+              "typeIdentifier": "t_bytes32",
+              "typeString": "bytes32"
+            },
+            "typeName": {
+              "id": 4486,
+              "name": "bytes32",
+              "nodeType": "ElementaryTypeName",
+              "src": "551:7:12",
+              "typeDescriptions": {
+                "typeIdentifier": "t_bytes32",
+                "typeString": "bytes32"
+              }
+            },
+            "value": {
+              "argumentTypes": null,
+              "arguments": [
+                {
+                  "argumentTypes": null,
+                  "hexValue": "7261676571756974",
+                  "id": 4488,
+                  "isConstant": false,
+                  "isLValue": false,
+                  "isPure": true,
+                  "kind": "string",
+                  "lValueRequested": false,
+                  "nodeType": "Literal",
+                  "src": "596:10:12",
+                  "subdenomination": null,
+                  "typeDescriptions": {
+                    "typeIdentifier": "t_stringliteral_54527537e04b80d3b3bd9dfa43834f03d4b745f8411ca72260a3c7e02ea7fa3f",
+                    "typeString": "literal_string \"ragequit\""
+                  },
+                  "value": "ragequit"
+                }
+              ],
+              "expression": {
+                "argumentTypes": [
+                  {
+                    "typeIdentifier": "t_stringliteral_54527537e04b80d3b3bd9dfa43834f03d4b745f8411ca72260a3c7e02ea7fa3f",
+                    "typeString": "literal_string \"ragequit\""
+                  }
+                ],
+                "id": 4487,
+                "name": "keccak256",
+                "nodeType": "Identifier",
+                "overloadedDeclarations": [],
+                "referencedDeclaration": -8,
+                "src": "586:9:12",
+                "typeDescriptions": {
+                  "typeIdentifier": "t_function_keccak256_pure$_t_bytes_memory_ptr_$returns$_t_bytes32_$",
+                  "typeString": "function (bytes memory) pure returns (bytes32)"
+                }
+              },
+              "id": 4489,
+              "isConstant": false,
+              "isLValue": false,
+              "isPure": true,
+              "kind": "functionCall",
+              "lValueRequested": false,
+              "names": [],
+              "nodeType": "FunctionCall",
+              "src": "586:21:12",
+              "tryCall": false,
+              "typeDescriptions": {
+                "typeIdentifier": "t_bytes32",
+                "typeString": "bytes32"
+              }
+            },
+            "visibility": "internal"
+          }
+        ],
+        "scope": 4492,
+        "src": "58:557:12"
+      }
+    ],
+    "src": "0:615:12"
+  },
+  "compiler": {
+    "name": "solc",
+    "version": "0.7.0+commit.9e61f92b.Emscripten.clang"
+  },
+  "networks": {},
+  "schemaVersion": "3.2.3",
+  "updatedAt": "2020-09-17T11:52:26.486Z",
+  "devdoc": {
+    "kind": "dev",
+    "methods": {},
+    "version": 1
+  },
+  "userdoc": {
+    "kind": "user",
+    "methods": {},
+    "version": 1
+  }
+}

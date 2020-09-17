@@ -23,7 +23,7 @@ contract RagequitContract is Module, AdapterGuard, ReentrancyGuard {
         revert();
     }
 
-    function ragequit(Registry dao, uint256 sharesToBurn) public nonReentrant onlyMembers(dao) {
+    function ragequit(Registry dao, uint256 sharesToBurn) public nonReentrant onlyMember(dao) {
         IMember memberContract = IMember(dao.getAddress(MEMBER_MODULE));
 
         // FIXME: we still don't track the index to block the ragequit if member voted YES on a non-processed proposal 

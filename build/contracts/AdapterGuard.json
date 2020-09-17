@@ -1,0 +1,982 @@
+{
+  "contractName": "AdapterGuard",
+  "abi": [],
+  "metadata": "{\"compiler\":{\"version\":\"0.7.0+commit.9e61f92b\"},\"language\":\"Solidity\",\"output\":{\"abi\":[],\"devdoc\":{\"details\":\"Contract module that helps restrict the adapter access to DAO Members only.\",\"kind\":\"dev\",\"methods\":{},\"version\":1},\"userdoc\":{\"kind\":\"user\",\"methods\":{},\"version\":1}},\"settings\":{\"compilationTarget\":{\"/Users/davidroon/projects/moloch/contracts/v3/guards/AdapterGuard.sol\":\"AdapterGuard\"},\"evmVersion\":\"istanbul\",\"libraries\":{},\"metadata\":{\"bytecodeHash\":\"ipfs\"},\"optimizer\":{\"enabled\":true,\"runs\":10000},\"remappings\":[]},\"sources\":{\"/Users/davidroon/projects/moloch/contracts/v3/adapters/interfaces/IOnboarding.sol\":{\"keccak256\":\"0x40e720b2831848f02c641b5aab696f9057fa816ac8313acd8b14263d34601ba9\",\"license\":\"MIT\",\"urls\":[\"bzz-raw://8a3abeebe6fb0f090a8ac34bdd0a21cc0067894cb3b61e722aa257b5f4c6e19c\",\"dweb:/ipfs/QmcmZLMLXdu34wEmahKipy8CJLujj6zVQ7jvWGFizzU8Xf\"]},\"/Users/davidroon/projects/moloch/contracts/v3/core/Module.sol\":{\"keccak256\":\"0x7965346c96d58c49add404ad1ab2b09e432fb47fb03bce1738b0fe939941dd3c\",\"license\":\"MIT\",\"urls\":[\"bzz-raw://4e4c3a6e5df032f97d07155137d41294f4a82793f4334193490b3112a8a4b198\",\"dweb:/ipfs/QmUKVrc6JtvjVQ9ZJHhabj5VnCBA6aWjfFt31xeBJZmKhv\"]},\"/Users/davidroon/projects/moloch/contracts/v3/core/Registry.sol\":{\"keccak256\":\"0xeb7dd61a9067b3d4c6dd6e781bf872177539ee3705d52aefd2840c72222374e7\",\"license\":\"MIT\",\"urls\":[\"bzz-raw://35f7f0afd56935e5c5ed0eb074ffc92743a89c230614c959ae28b46470d68847\",\"dweb:/ipfs/QmfTTc9qkNM491AzpCnmhRsntfpC1H8LGApqL9yiH11iZf\"]},\"/Users/davidroon/projects/moloch/contracts/v3/core/interfaces/IMember.sol\":{\"keccak256\":\"0xd55a751f1c8a9543aeab7275a71882580298370323eb4d34d681860a939267dd\",\"license\":\"MIT\",\"urls\":[\"bzz-raw://98365276635283b8791e8dee4eefb8d96c4bdbe4f4db21fb140dbc58d8921572\",\"dweb:/ipfs/QmYmzj5hwVoLda9NzTgaLhq1v1MbNV7e7VzicByfJv6PFe\"]},\"/Users/davidroon/projects/moloch/contracts/v3/guards/AdapterGuard.sol\":{\"keccak256\":\"0xb8461c23bbced8687a9ea59985075d645ae2be141144dc49fb49b1e0a883c234\",\"license\":\"MIT\",\"urls\":[\"bzz-raw://17691a3ae4940e8106ae5216e0d05b5dd4d8edb85c209c22d3f98a82cf814bad\",\"dweb:/ipfs/QmaEFepvNVdi5eYudMAUMCcyPFrdydnmztyxmVVHMn6qas\"]},\"/Users/davidroon/projects/moloch/contracts/v3/utils/Ownable.sol\":{\"keccak256\":\"0x85cf0ca8d08983abb21106b7c1ec8f03f7c279b8b62e671feb0f325291caa0d6\",\"license\":\"MIT\",\"urls\":[\"bzz-raw://7fbc3e26f69b112242d7505323b9717f1058887bbd971964d0fa87d3ce3f82ad\",\"dweb:/ipfs/QmW7iEhd2oucds9W24dtiEpsBxz73fquQfviZ2osSLLDkc\"]}},\"version\":1}",
+  "bytecode": "0x",
+  "deployedBytecode": "0x",
+  "immutableReferences": {},
+  "sourceMap": "",
+  "deployedSourceMap": "",
+  "source": "pragma solidity ^0.7.0;\n\n// SPDX-License-Identifier: MIT\n\nimport '../core/Registry.sol';\nimport '../core/interfaces/IMember.sol';\nimport '../core/Module.sol';\n\n/**\n * @dev Contract module that helps restrict the adapter access to DAO Members only.\n *\n */\nabstract contract AdapterGuard is Module {\n\n    /**\n     * @dev Only members of the Guild are allowed to execute the function call.\n     */\n    modifier onlyMember(Registry dao) {\n        IMember memberContract = IMember(dao.getAddress(MEMBER_MODULE));\n        require(memberContract.isActiveMember(dao, msg.sender), \"only DAO members are allowed to call this function\");\n        _;\n    }\n}\n",
+  "sourcePath": "/Users/davidroon/projects/moloch/contracts/v3/guards/AdapterGuard.sol",
+  "ast": {
+    "absolutePath": "/Users/davidroon/projects/moloch/contracts/v3/guards/AdapterGuard.sol",
+    "exportedSymbols": {
+      "AdapterGuard": [
+        6978
+      ]
+    },
+    "id": 6979,
+    "license": "MIT",
+    "nodeType": "SourceUnit",
+    "nodes": [
+      {
+        "id": 6945,
+        "literals": [
+          "solidity",
+          "^",
+          "0.7",
+          ".0"
+        ],
+        "nodeType": "PragmaDirective",
+        "src": "0:23:23"
+      },
+      {
+        "absolutePath": "/Users/davidroon/projects/moloch/contracts/v3/core/Registry.sol",
+        "file": "../core/Registry.sol",
+        "id": 6946,
+        "nodeType": "ImportDirective",
+        "scope": 6979,
+        "sourceUnit": 4694,
+        "src": "58:30:23",
+        "symbolAliases": [],
+        "unitAlias": ""
+      },
+      {
+        "absolutePath": "/Users/davidroon/projects/moloch/contracts/v3/core/interfaces/IMember.sol",
+        "file": "../core/interfaces/IMember.sol",
+        "id": 6947,
+        "nodeType": "ImportDirective",
+        "scope": 6979,
+        "sourceUnit": 5438,
+        "src": "89:40:23",
+        "symbolAliases": [],
+        "unitAlias": ""
+      },
+      {
+        "absolutePath": "/Users/davidroon/projects/moloch/contracts/v3/core/Module.sol",
+        "file": "../core/Module.sol",
+        "id": 6948,
+        "nodeType": "ImportDirective",
+        "scope": 6979,
+        "sourceUnit": 4492,
+        "src": "130:28:23",
+        "symbolAliases": [],
+        "unitAlias": ""
+      },
+      {
+        "abstract": true,
+        "baseContracts": [
+          {
+            "arguments": null,
+            "baseName": {
+              "contractScope": null,
+              "id": 6950,
+              "name": "Module",
+              "nodeType": "UserDefinedTypeName",
+              "referencedDeclaration": 4491,
+              "src": "289:6:23",
+              "typeDescriptions": {
+                "typeIdentifier": "t_contract$_Module_$4491",
+                "typeString": "contract Module"
+              }
+            },
+            "id": 6951,
+            "nodeType": "InheritanceSpecifier",
+            "src": "289:6:23"
+          }
+        ],
+        "contractDependencies": [
+          4491
+        ],
+        "contractKind": "contract",
+        "documentation": {
+          "id": 6949,
+          "nodeType": "StructuredDocumentation",
+          "src": "160:94:23",
+          "text": " @dev Contract module that helps restrict the adapter access to DAO Members only."
+        },
+        "fullyImplemented": true,
+        "id": 6978,
+        "linearizedBaseContracts": [
+          6978,
+          4491
+        ],
+        "name": "AdapterGuard",
+        "nodeType": "ContractDefinition",
+        "nodes": [
+          {
+            "body": {
+              "id": 6976,
+              "nodeType": "Block",
+              "src": "433:210:23",
+              "statements": [
+                {
+                  "assignments": [
+                    6957
+                  ],
+                  "declarations": [
+                    {
+                      "constant": false,
+                      "id": 6957,
+                      "mutability": "mutable",
+                      "name": "memberContract",
+                      "nodeType": "VariableDeclaration",
+                      "overrides": null,
+                      "scope": 6976,
+                      "src": "443:22:23",
+                      "stateVariable": false,
+                      "storageLocation": "default",
+                      "typeDescriptions": {
+                        "typeIdentifier": "t_contract$_IMember_$5437",
+                        "typeString": "contract IMember"
+                      },
+                      "typeName": {
+                        "contractScope": null,
+                        "id": 6956,
+                        "name": "IMember",
+                        "nodeType": "UserDefinedTypeName",
+                        "referencedDeclaration": 5437,
+                        "src": "443:7:23",
+                        "typeDescriptions": {
+                          "typeIdentifier": "t_contract$_IMember_$5437",
+                          "typeString": "contract IMember"
+                        }
+                      },
+                      "value": null,
+                      "visibility": "internal"
+                    }
+                  ],
+                  "id": 6964,
+                  "initialValue": {
+                    "argumentTypes": null,
+                    "arguments": [
+                      {
+                        "argumentTypes": null,
+                        "arguments": [
+                          {
+                            "argumentTypes": null,
+                            "id": 6961,
+                            "name": "MEMBER_MODULE",
+                            "nodeType": "Identifier",
+                            "overloadedDeclarations": [],
+                            "referencedDeclaration": 4460,
+                            "src": "491:13:23",
+                            "typeDescriptions": {
+                              "typeIdentifier": "t_bytes32",
+                              "typeString": "bytes32"
+                            }
+                          }
+                        ],
+                        "expression": {
+                          "argumentTypes": [
+                            {
+                              "typeIdentifier": "t_bytes32",
+                              "typeString": "bytes32"
+                            }
+                          ],
+                          "expression": {
+                            "argumentTypes": null,
+                            "id": 6959,
+                            "name": "dao",
+                            "nodeType": "Identifier",
+                            "overloadedDeclarations": [],
+                            "referencedDeclaration": 6954,
+                            "src": "476:3:23",
+                            "typeDescriptions": {
+                              "typeIdentifier": "t_contract$_Registry_$4693",
+                              "typeString": "contract Registry"
+                            }
+                          },
+                          "id": 6960,
+                          "isConstant": false,
+                          "isLValue": false,
+                          "isPure": false,
+                          "lValueRequested": false,
+                          "memberName": "getAddress",
+                          "nodeType": "MemberAccess",
+                          "referencedDeclaration": 4674,
+                          "src": "476:14:23",
+                          "typeDescriptions": {
+                            "typeIdentifier": "t_function_external_view$_t_bytes32_$returns$_t_address_$",
+                            "typeString": "function (bytes32) view external returns (address)"
+                          }
+                        },
+                        "id": 6962,
+                        "isConstant": false,
+                        "isLValue": false,
+                        "isPure": false,
+                        "kind": "functionCall",
+                        "lValueRequested": false,
+                        "names": [],
+                        "nodeType": "FunctionCall",
+                        "src": "476:29:23",
+                        "tryCall": false,
+                        "typeDescriptions": {
+                          "typeIdentifier": "t_address",
+                          "typeString": "address"
+                        }
+                      }
+                    ],
+                    "expression": {
+                      "argumentTypes": [
+                        {
+                          "typeIdentifier": "t_address",
+                          "typeString": "address"
+                        }
+                      ],
+                      "id": 6958,
+                      "name": "IMember",
+                      "nodeType": "Identifier",
+                      "overloadedDeclarations": [],
+                      "referencedDeclaration": 5437,
+                      "src": "468:7:23",
+                      "typeDescriptions": {
+                        "typeIdentifier": "t_type$_t_contract$_IMember_$5437_$",
+                        "typeString": "type(contract IMember)"
+                      }
+                    },
+                    "id": 6963,
+                    "isConstant": false,
+                    "isLValue": false,
+                    "isPure": false,
+                    "kind": "typeConversion",
+                    "lValueRequested": false,
+                    "names": [],
+                    "nodeType": "FunctionCall",
+                    "src": "468:38:23",
+                    "tryCall": false,
+                    "typeDescriptions": {
+                      "typeIdentifier": "t_contract$_IMember_$5437",
+                      "typeString": "contract IMember"
+                    }
+                  },
+                  "nodeType": "VariableDeclarationStatement",
+                  "src": "443:63:23"
+                },
+                {
+                  "expression": {
+                    "argumentTypes": null,
+                    "arguments": [
+                      {
+                        "argumentTypes": null,
+                        "arguments": [
+                          {
+                            "argumentTypes": null,
+                            "id": 6968,
+                            "name": "dao",
+                            "nodeType": "Identifier",
+                            "overloadedDeclarations": [],
+                            "referencedDeclaration": 6954,
+                            "src": "554:3:23",
+                            "typeDescriptions": {
+                              "typeIdentifier": "t_contract$_Registry_$4693",
+                              "typeString": "contract Registry"
+                            }
+                          },
+                          {
+                            "argumentTypes": null,
+                            "expression": {
+                              "argumentTypes": null,
+                              "id": 6969,
+                              "name": "msg",
+                              "nodeType": "Identifier",
+                              "overloadedDeclarations": [],
+                              "referencedDeclaration": -15,
+                              "src": "559:3:23",
+                              "typeDescriptions": {
+                                "typeIdentifier": "t_magic_message",
+                                "typeString": "msg"
+                              }
+                            },
+                            "id": 6970,
+                            "isConstant": false,
+                            "isLValue": false,
+                            "isPure": false,
+                            "lValueRequested": false,
+                            "memberName": "sender",
+                            "nodeType": "MemberAccess",
+                            "referencedDeclaration": null,
+                            "src": "559:10:23",
+                            "typeDescriptions": {
+                              "typeIdentifier": "t_address_payable",
+                              "typeString": "address payable"
+                            }
+                          }
+                        ],
+                        "expression": {
+                          "argumentTypes": [
+                            {
+                              "typeIdentifier": "t_contract$_Registry_$4693",
+                              "typeString": "contract Registry"
+                            },
+                            {
+                              "typeIdentifier": "t_address_payable",
+                              "typeString": "address payable"
+                            }
+                          ],
+                          "expression": {
+                            "argumentTypes": null,
+                            "id": 6966,
+                            "name": "memberContract",
+                            "nodeType": "Identifier",
+                            "overloadedDeclarations": [],
+                            "referencedDeclaration": 6957,
+                            "src": "524:14:23",
+                            "typeDescriptions": {
+                              "typeIdentifier": "t_contract$_IMember_$5437",
+                              "typeString": "contract IMember"
+                            }
+                          },
+                          "id": 6967,
+                          "isConstant": false,
+                          "isLValue": false,
+                          "isPure": false,
+                          "lValueRequested": false,
+                          "memberName": "isActiveMember",
+                          "nodeType": "MemberAccess",
+                          "referencedDeclaration": 5393,
+                          "src": "524:29:23",
+                          "typeDescriptions": {
+                            "typeIdentifier": "t_function_external_nonpayable$_t_contract$_Registry_$4693_$_t_address_$returns$_t_bool_$",
+                            "typeString": "function (contract Registry,address) external returns (bool)"
+                          }
+                        },
+                        "id": 6971,
+                        "isConstant": false,
+                        "isLValue": false,
+                        "isPure": false,
+                        "kind": "functionCall",
+                        "lValueRequested": false,
+                        "names": [],
+                        "nodeType": "FunctionCall",
+                        "src": "524:46:23",
+                        "tryCall": false,
+                        "typeDescriptions": {
+                          "typeIdentifier": "t_bool",
+                          "typeString": "bool"
+                        }
+                      },
+                      {
+                        "argumentTypes": null,
+                        "hexValue": "6f6e6c792044414f206d656d626572732061726520616c6c6f77656420746f2063616c6c20746869732066756e6374696f6e",
+                        "id": 6972,
+                        "isConstant": false,
+                        "isLValue": false,
+                        "isPure": true,
+                        "kind": "string",
+                        "lValueRequested": false,
+                        "nodeType": "Literal",
+                        "src": "572:52:23",
+                        "subdenomination": null,
+                        "typeDescriptions": {
+                          "typeIdentifier": "t_stringliteral_9537b574cfe4f2fff81b48e91fdb4cf184a3a944e233e8c24ec9eb8692c349bf",
+                          "typeString": "literal_string \"only DAO members are allowed to call this function\""
+                        },
+                        "value": "only DAO members are allowed to call this function"
+                      }
+                    ],
+                    "expression": {
+                      "argumentTypes": [
+                        {
+                          "typeIdentifier": "t_bool",
+                          "typeString": "bool"
+                        },
+                        {
+                          "typeIdentifier": "t_stringliteral_9537b574cfe4f2fff81b48e91fdb4cf184a3a944e233e8c24ec9eb8692c349bf",
+                          "typeString": "literal_string \"only DAO members are allowed to call this function\""
+                        }
+                      ],
+                      "id": 6965,
+                      "name": "require",
+                      "nodeType": "Identifier",
+                      "overloadedDeclarations": [
+                        -18,
+                        -18
+                      ],
+                      "referencedDeclaration": -18,
+                      "src": "516:7:23",
+                      "typeDescriptions": {
+                        "typeIdentifier": "t_function_require_pure$_t_bool_$_t_string_memory_ptr_$returns$__$",
+                        "typeString": "function (bool,string memory) pure"
+                      }
+                    },
+                    "id": 6973,
+                    "isConstant": false,
+                    "isLValue": false,
+                    "isPure": false,
+                    "kind": "functionCall",
+                    "lValueRequested": false,
+                    "names": [],
+                    "nodeType": "FunctionCall",
+                    "src": "516:109:23",
+                    "tryCall": false,
+                    "typeDescriptions": {
+                      "typeIdentifier": "t_tuple$__$",
+                      "typeString": "tuple()"
+                    }
+                  },
+                  "id": 6974,
+                  "nodeType": "ExpressionStatement",
+                  "src": "516:109:23"
+                },
+                {
+                  "id": 6975,
+                  "nodeType": "PlaceholderStatement",
+                  "src": "635:1:23"
+                }
+              ]
+            },
+            "documentation": {
+              "id": 6952,
+              "nodeType": "StructuredDocumentation",
+              "src": "303:91:23",
+              "text": " @dev Only members of the Guild are allowed to execute the function call."
+            },
+            "id": 6977,
+            "name": "onlyMember",
+            "nodeType": "ModifierDefinition",
+            "overrides": null,
+            "parameters": {
+              "id": 6955,
+              "nodeType": "ParameterList",
+              "parameters": [
+                {
+                  "constant": false,
+                  "id": 6954,
+                  "mutability": "mutable",
+                  "name": "dao",
+                  "nodeType": "VariableDeclaration",
+                  "overrides": null,
+                  "scope": 6977,
+                  "src": "419:12:23",
+                  "stateVariable": false,
+                  "storageLocation": "default",
+                  "typeDescriptions": {
+                    "typeIdentifier": "t_contract$_Registry_$4693",
+                    "typeString": "contract Registry"
+                  },
+                  "typeName": {
+                    "contractScope": null,
+                    "id": 6953,
+                    "name": "Registry",
+                    "nodeType": "UserDefinedTypeName",
+                    "referencedDeclaration": 4693,
+                    "src": "419:8:23",
+                    "typeDescriptions": {
+                      "typeIdentifier": "t_contract$_Registry_$4693",
+                      "typeString": "contract Registry"
+                    }
+                  },
+                  "value": null,
+                  "visibility": "internal"
+                }
+              ],
+              "src": "418:14:23"
+            },
+            "src": "399:244:23",
+            "virtual": false,
+            "visibility": "internal"
+          }
+        ],
+        "scope": 6979,
+        "src": "255:390:23"
+      }
+    ],
+    "src": "0:646:23"
+  },
+  "legacyAST": {
+    "absolutePath": "/Users/davidroon/projects/moloch/contracts/v3/guards/AdapterGuard.sol",
+    "exportedSymbols": {
+      "AdapterGuard": [
+        6978
+      ]
+    },
+    "id": 6979,
+    "license": "MIT",
+    "nodeType": "SourceUnit",
+    "nodes": [
+      {
+        "id": 6945,
+        "literals": [
+          "solidity",
+          "^",
+          "0.7",
+          ".0"
+        ],
+        "nodeType": "PragmaDirective",
+        "src": "0:23:23"
+      },
+      {
+        "absolutePath": "/Users/davidroon/projects/moloch/contracts/v3/core/Registry.sol",
+        "file": "../core/Registry.sol",
+        "id": 6946,
+        "nodeType": "ImportDirective",
+        "scope": 6979,
+        "sourceUnit": 4694,
+        "src": "58:30:23",
+        "symbolAliases": [],
+        "unitAlias": ""
+      },
+      {
+        "absolutePath": "/Users/davidroon/projects/moloch/contracts/v3/core/interfaces/IMember.sol",
+        "file": "../core/interfaces/IMember.sol",
+        "id": 6947,
+        "nodeType": "ImportDirective",
+        "scope": 6979,
+        "sourceUnit": 5438,
+        "src": "89:40:23",
+        "symbolAliases": [],
+        "unitAlias": ""
+      },
+      {
+        "absolutePath": "/Users/davidroon/projects/moloch/contracts/v3/core/Module.sol",
+        "file": "../core/Module.sol",
+        "id": 6948,
+        "nodeType": "ImportDirective",
+        "scope": 6979,
+        "sourceUnit": 4492,
+        "src": "130:28:23",
+        "symbolAliases": [],
+        "unitAlias": ""
+      },
+      {
+        "abstract": true,
+        "baseContracts": [
+          {
+            "arguments": null,
+            "baseName": {
+              "contractScope": null,
+              "id": 6950,
+              "name": "Module",
+              "nodeType": "UserDefinedTypeName",
+              "referencedDeclaration": 4491,
+              "src": "289:6:23",
+              "typeDescriptions": {
+                "typeIdentifier": "t_contract$_Module_$4491",
+                "typeString": "contract Module"
+              }
+            },
+            "id": 6951,
+            "nodeType": "InheritanceSpecifier",
+            "src": "289:6:23"
+          }
+        ],
+        "contractDependencies": [
+          4491
+        ],
+        "contractKind": "contract",
+        "documentation": {
+          "id": 6949,
+          "nodeType": "StructuredDocumentation",
+          "src": "160:94:23",
+          "text": " @dev Contract module that helps restrict the adapter access to DAO Members only."
+        },
+        "fullyImplemented": true,
+        "id": 6978,
+        "linearizedBaseContracts": [
+          6978,
+          4491
+        ],
+        "name": "AdapterGuard",
+        "nodeType": "ContractDefinition",
+        "nodes": [
+          {
+            "body": {
+              "id": 6976,
+              "nodeType": "Block",
+              "src": "433:210:23",
+              "statements": [
+                {
+                  "assignments": [
+                    6957
+                  ],
+                  "declarations": [
+                    {
+                      "constant": false,
+                      "id": 6957,
+                      "mutability": "mutable",
+                      "name": "memberContract",
+                      "nodeType": "VariableDeclaration",
+                      "overrides": null,
+                      "scope": 6976,
+                      "src": "443:22:23",
+                      "stateVariable": false,
+                      "storageLocation": "default",
+                      "typeDescriptions": {
+                        "typeIdentifier": "t_contract$_IMember_$5437",
+                        "typeString": "contract IMember"
+                      },
+                      "typeName": {
+                        "contractScope": null,
+                        "id": 6956,
+                        "name": "IMember",
+                        "nodeType": "UserDefinedTypeName",
+                        "referencedDeclaration": 5437,
+                        "src": "443:7:23",
+                        "typeDescriptions": {
+                          "typeIdentifier": "t_contract$_IMember_$5437",
+                          "typeString": "contract IMember"
+                        }
+                      },
+                      "value": null,
+                      "visibility": "internal"
+                    }
+                  ],
+                  "id": 6964,
+                  "initialValue": {
+                    "argumentTypes": null,
+                    "arguments": [
+                      {
+                        "argumentTypes": null,
+                        "arguments": [
+                          {
+                            "argumentTypes": null,
+                            "id": 6961,
+                            "name": "MEMBER_MODULE",
+                            "nodeType": "Identifier",
+                            "overloadedDeclarations": [],
+                            "referencedDeclaration": 4460,
+                            "src": "491:13:23",
+                            "typeDescriptions": {
+                              "typeIdentifier": "t_bytes32",
+                              "typeString": "bytes32"
+                            }
+                          }
+                        ],
+                        "expression": {
+                          "argumentTypes": [
+                            {
+                              "typeIdentifier": "t_bytes32",
+                              "typeString": "bytes32"
+                            }
+                          ],
+                          "expression": {
+                            "argumentTypes": null,
+                            "id": 6959,
+                            "name": "dao",
+                            "nodeType": "Identifier",
+                            "overloadedDeclarations": [],
+                            "referencedDeclaration": 6954,
+                            "src": "476:3:23",
+                            "typeDescriptions": {
+                              "typeIdentifier": "t_contract$_Registry_$4693",
+                              "typeString": "contract Registry"
+                            }
+                          },
+                          "id": 6960,
+                          "isConstant": false,
+                          "isLValue": false,
+                          "isPure": false,
+                          "lValueRequested": false,
+                          "memberName": "getAddress",
+                          "nodeType": "MemberAccess",
+                          "referencedDeclaration": 4674,
+                          "src": "476:14:23",
+                          "typeDescriptions": {
+                            "typeIdentifier": "t_function_external_view$_t_bytes32_$returns$_t_address_$",
+                            "typeString": "function (bytes32) view external returns (address)"
+                          }
+                        },
+                        "id": 6962,
+                        "isConstant": false,
+                        "isLValue": false,
+                        "isPure": false,
+                        "kind": "functionCall",
+                        "lValueRequested": false,
+                        "names": [],
+                        "nodeType": "FunctionCall",
+                        "src": "476:29:23",
+                        "tryCall": false,
+                        "typeDescriptions": {
+                          "typeIdentifier": "t_address",
+                          "typeString": "address"
+                        }
+                      }
+                    ],
+                    "expression": {
+                      "argumentTypes": [
+                        {
+                          "typeIdentifier": "t_address",
+                          "typeString": "address"
+                        }
+                      ],
+                      "id": 6958,
+                      "name": "IMember",
+                      "nodeType": "Identifier",
+                      "overloadedDeclarations": [],
+                      "referencedDeclaration": 5437,
+                      "src": "468:7:23",
+                      "typeDescriptions": {
+                        "typeIdentifier": "t_type$_t_contract$_IMember_$5437_$",
+                        "typeString": "type(contract IMember)"
+                      }
+                    },
+                    "id": 6963,
+                    "isConstant": false,
+                    "isLValue": false,
+                    "isPure": false,
+                    "kind": "typeConversion",
+                    "lValueRequested": false,
+                    "names": [],
+                    "nodeType": "FunctionCall",
+                    "src": "468:38:23",
+                    "tryCall": false,
+                    "typeDescriptions": {
+                      "typeIdentifier": "t_contract$_IMember_$5437",
+                      "typeString": "contract IMember"
+                    }
+                  },
+                  "nodeType": "VariableDeclarationStatement",
+                  "src": "443:63:23"
+                },
+                {
+                  "expression": {
+                    "argumentTypes": null,
+                    "arguments": [
+                      {
+                        "argumentTypes": null,
+                        "arguments": [
+                          {
+                            "argumentTypes": null,
+                            "id": 6968,
+                            "name": "dao",
+                            "nodeType": "Identifier",
+                            "overloadedDeclarations": [],
+                            "referencedDeclaration": 6954,
+                            "src": "554:3:23",
+                            "typeDescriptions": {
+                              "typeIdentifier": "t_contract$_Registry_$4693",
+                              "typeString": "contract Registry"
+                            }
+                          },
+                          {
+                            "argumentTypes": null,
+                            "expression": {
+                              "argumentTypes": null,
+                              "id": 6969,
+                              "name": "msg",
+                              "nodeType": "Identifier",
+                              "overloadedDeclarations": [],
+                              "referencedDeclaration": -15,
+                              "src": "559:3:23",
+                              "typeDescriptions": {
+                                "typeIdentifier": "t_magic_message",
+                                "typeString": "msg"
+                              }
+                            },
+                            "id": 6970,
+                            "isConstant": false,
+                            "isLValue": false,
+                            "isPure": false,
+                            "lValueRequested": false,
+                            "memberName": "sender",
+                            "nodeType": "MemberAccess",
+                            "referencedDeclaration": null,
+                            "src": "559:10:23",
+                            "typeDescriptions": {
+                              "typeIdentifier": "t_address_payable",
+                              "typeString": "address payable"
+                            }
+                          }
+                        ],
+                        "expression": {
+                          "argumentTypes": [
+                            {
+                              "typeIdentifier": "t_contract$_Registry_$4693",
+                              "typeString": "contract Registry"
+                            },
+                            {
+                              "typeIdentifier": "t_address_payable",
+                              "typeString": "address payable"
+                            }
+                          ],
+                          "expression": {
+                            "argumentTypes": null,
+                            "id": 6966,
+                            "name": "memberContract",
+                            "nodeType": "Identifier",
+                            "overloadedDeclarations": [],
+                            "referencedDeclaration": 6957,
+                            "src": "524:14:23",
+                            "typeDescriptions": {
+                              "typeIdentifier": "t_contract$_IMember_$5437",
+                              "typeString": "contract IMember"
+                            }
+                          },
+                          "id": 6967,
+                          "isConstant": false,
+                          "isLValue": false,
+                          "isPure": false,
+                          "lValueRequested": false,
+                          "memberName": "isActiveMember",
+                          "nodeType": "MemberAccess",
+                          "referencedDeclaration": 5393,
+                          "src": "524:29:23",
+                          "typeDescriptions": {
+                            "typeIdentifier": "t_function_external_nonpayable$_t_contract$_Registry_$4693_$_t_address_$returns$_t_bool_$",
+                            "typeString": "function (contract Registry,address) external returns (bool)"
+                          }
+                        },
+                        "id": 6971,
+                        "isConstant": false,
+                        "isLValue": false,
+                        "isPure": false,
+                        "kind": "functionCall",
+                        "lValueRequested": false,
+                        "names": [],
+                        "nodeType": "FunctionCall",
+                        "src": "524:46:23",
+                        "tryCall": false,
+                        "typeDescriptions": {
+                          "typeIdentifier": "t_bool",
+                          "typeString": "bool"
+                        }
+                      },
+                      {
+                        "argumentTypes": null,
+                        "hexValue": "6f6e6c792044414f206d656d626572732061726520616c6c6f77656420746f2063616c6c20746869732066756e6374696f6e",
+                        "id": 6972,
+                        "isConstant": false,
+                        "isLValue": false,
+                        "isPure": true,
+                        "kind": "string",
+                        "lValueRequested": false,
+                        "nodeType": "Literal",
+                        "src": "572:52:23",
+                        "subdenomination": null,
+                        "typeDescriptions": {
+                          "typeIdentifier": "t_stringliteral_9537b574cfe4f2fff81b48e91fdb4cf184a3a944e233e8c24ec9eb8692c349bf",
+                          "typeString": "literal_string \"only DAO members are allowed to call this function\""
+                        },
+                        "value": "only DAO members are allowed to call this function"
+                      }
+                    ],
+                    "expression": {
+                      "argumentTypes": [
+                        {
+                          "typeIdentifier": "t_bool",
+                          "typeString": "bool"
+                        },
+                        {
+                          "typeIdentifier": "t_stringliteral_9537b574cfe4f2fff81b48e91fdb4cf184a3a944e233e8c24ec9eb8692c349bf",
+                          "typeString": "literal_string \"only DAO members are allowed to call this function\""
+                        }
+                      ],
+                      "id": 6965,
+                      "name": "require",
+                      "nodeType": "Identifier",
+                      "overloadedDeclarations": [
+                        -18,
+                        -18
+                      ],
+                      "referencedDeclaration": -18,
+                      "src": "516:7:23",
+                      "typeDescriptions": {
+                        "typeIdentifier": "t_function_require_pure$_t_bool_$_t_string_memory_ptr_$returns$__$",
+                        "typeString": "function (bool,string memory) pure"
+                      }
+                    },
+                    "id": 6973,
+                    "isConstant": false,
+                    "isLValue": false,
+                    "isPure": false,
+                    "kind": "functionCall",
+                    "lValueRequested": false,
+                    "names": [],
+                    "nodeType": "FunctionCall",
+                    "src": "516:109:23",
+                    "tryCall": false,
+                    "typeDescriptions": {
+                      "typeIdentifier": "t_tuple$__$",
+                      "typeString": "tuple()"
+                    }
+                  },
+                  "id": 6974,
+                  "nodeType": "ExpressionStatement",
+                  "src": "516:109:23"
+                },
+                {
+                  "id": 6975,
+                  "nodeType": "PlaceholderStatement",
+                  "src": "635:1:23"
+                }
+              ]
+            },
+            "documentation": {
+              "id": 6952,
+              "nodeType": "StructuredDocumentation",
+              "src": "303:91:23",
+              "text": " @dev Only members of the Guild are allowed to execute the function call."
+            },
+            "id": 6977,
+            "name": "onlyMember",
+            "nodeType": "ModifierDefinition",
+            "overrides": null,
+            "parameters": {
+              "id": 6955,
+              "nodeType": "ParameterList",
+              "parameters": [
+                {
+                  "constant": false,
+                  "id": 6954,
+                  "mutability": "mutable",
+                  "name": "dao",
+                  "nodeType": "VariableDeclaration",
+                  "overrides": null,
+                  "scope": 6977,
+                  "src": "419:12:23",
+                  "stateVariable": false,
+                  "storageLocation": "default",
+                  "typeDescriptions": {
+                    "typeIdentifier": "t_contract$_Registry_$4693",
+                    "typeString": "contract Registry"
+                  },
+                  "typeName": {
+                    "contractScope": null,
+                    "id": 6953,
+                    "name": "Registry",
+                    "nodeType": "UserDefinedTypeName",
+                    "referencedDeclaration": 4693,
+                    "src": "419:8:23",
+                    "typeDescriptions": {
+                      "typeIdentifier": "t_contract$_Registry_$4693",
+                      "typeString": "contract Registry"
+                    }
+                  },
+                  "value": null,
+                  "visibility": "internal"
+                }
+              ],
+              "src": "418:14:23"
+            },
+            "src": "399:244:23",
+            "virtual": false,
+            "visibility": "internal"
+          }
+        ],
+        "scope": 6979,
+        "src": "255:390:23"
+      }
+    ],
+    "src": "0:646:23"
+  },
+  "compiler": {
+    "name": "solc",
+    "version": "0.7.0+commit.9e61f92b.Emscripten.clang"
+  },
+  "networks": {},
+  "schemaVersion": "3.2.3",
+  "updatedAt": "2020-09-17T11:52:26.512Z",
+  "devdoc": {
+    "details": "Contract module that helps restrict the adapter access to DAO Members only.",
+    "kind": "dev",
+    "methods": {},
+    "version": 1
+  },
+  "userdoc": {
+    "kind": "user",
+    "methods": {},
+    "version": 1
+  }
+}

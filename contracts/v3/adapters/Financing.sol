@@ -51,12 +51,12 @@ contract FinancingContract is IFinancing, Module, AdapterGuard  {
         return proposalId;
     }
 
-    function sponsorProposal(Registry dao, uint256 proposalId, bytes calldata data) override external onlyMembers(dao) {
+    function sponsorProposal(Registry dao, uint256 proposalId, bytes calldata data) override external onlyMember(dao) {
         IProposal proposalContract = IProposal(dao.getAddress(PROPOSAL_MODULE));
         proposalContract.sponsorProposal(dao, proposalId, msg.sender, data);
     }
 
-    function processProposal(Registry dao, uint256 proposalId) override external onlyMembers(dao) {
+    function processProposal(Registry dao, uint256 proposalId) override external onlyMember(dao) {
         ProposalDetails memory proposal = proposals[address(dao)][proposalId];
         require(!proposal.processed, "proposal already processed");
 

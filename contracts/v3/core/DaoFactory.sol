@@ -19,13 +19,14 @@ contract DaoFactory is Module {
 
     mapping(bytes32 => address) addresses;
 
-    constructor (address memberAddress, address proposalAddress, address votingAddress, address ragequitAddress, address managingAddress, address financingAddress) {
+    constructor (address memberAddress, address proposalAddress, address votingAddress, address ragequitAddress, address managingAddress, address financingAddress, address onboardingAddress) {
         addresses[MEMBER_MODULE] = memberAddress;
         addresses[PROPOSAL_MODULE] = proposalAddress;
         addresses[VOTING_MODULE] = votingAddress;
         addresses[RAGEQUIT_MODULE] = ragequitAddress;
         addresses[MANAGING_MODULE] = managingAddress;
         addresses[FINANCING_MODULE] = financingAddress;
+        addresses[ONBOARDING_MODULE] = onboardingAddress;
     }
 
     /*
@@ -42,7 +43,7 @@ contract DaoFactory is Module {
         dao.addModule(VOTING_MODULE, addresses[VOTING_MODULE]);
 
         //Registring Adapters
-        dao.addModule(ONBOARDING_MODULE, address(new OnboardingContract(daoAddress, chunkSize, nbShares)));
+        dao.addModule(ONBOARDING_MODULE, addresses[ONBOARDING_MODULE]);
         dao.addModule(FINANCING_MODULE, addresses[FINANCING_MODULE]);
         dao.addModule(MANAGING_MODULE, addresses[MANAGING_MODULE]);
         dao.addModule(RAGEQUIT_MODULE, addresses[RAGEQUIT_MODULE]);
@@ -52,6 +53,9 @@ contract DaoFactory is Module {
 
         IMember memberContract = IMember(addresses[MEMBER_MODULE]);
         memberContract.updateMember(dao, msg.sender, 1);
+
+        OnboardingContract onboardingContract = OnboardingContract(addresses[ONBOARDING_MODULE]);
+        onboardingContract.configureOnboarding(dao, chunkSize, nbShares);
 
         emit NewDao(msg.sender, daoAddress);
 
