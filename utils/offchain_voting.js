@@ -15,8 +15,8 @@ async function addVote(votes, snapshotRoot, daoAddress, proposalId, account, mem
   return votes;
 }
 
-async function generateVote(account, proposalRoot, voteYes) {
-  const voteHash = sha3(web3.eth.abi.encodeParameters( ['bytes32', 'uint256'], [proposalRoot.toString('hex'), voteYes ? "1" : "2"]));
+async function generateVote(account, proposalHash, voteYes) {
+  const voteHash = sha3(web3.eth.abi.encodeParameters( ['bytes32', 'uint256'], [proposalHash.toString('hex'), voteYes ? "1" : "2"]));
   return await web3.eth.sign(voteHash.toString('hex'), account);
 }
 
