@@ -1,4 +1,4 @@
-const {advanceTime, createDao, sharePrice, remaining, GUILD, BankContract, OnboardingContract, ProposalContract, VotingContract, MemberContract, ETH_TOKEN} = require('../../utils/DaoFactory.js');
+const {advanceTime, createDao, sharePrice, remaining, GUILD, BankContract, OnboardingContract, ProposalContract, VotingContract, MemberContract, RagequitContract, ETH_TOKEN} = require('../../utils/DaoFactory.js');
 const toBN = web3.utils.toBN;
 const sha3 = web3.utils.sha3;
 
@@ -35,7 +35,7 @@ contract('MolochV3 - Ragequit Adapter', async accounts => {
     await onboarding.sponsorProposal(dao.address, proposalId, [], { from: myAccount, gasPrice: toBN("0") });
     await voting.submitVote(dao.address, proposalId, 1, { from: myAccount, gasPrice: toBN("0") });
     await advanceTime(10000);
-    await onboarding.processProposal(dao.address, roposalId, { from: myAccount, gasPrice: toBN("0") });
+    await onboarding.processProposal(dao.address, proposalId, { from: myAccount, gasPrice: toBN("0") });
 
     //Check Guild Bank Balance
     let guildBalance = await bank.balanceOf(GUILD, ETH_TOKEN);

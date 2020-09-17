@@ -46,7 +46,7 @@ contract OnboardingContract is IOnboarding, Module, AdapterGuard, ModuleGuard {
         uint256 amount = numberOfChunks.mul(config.chunkSize);
         uint256 sharesRequested = numberOfChunks.mul(config.sharesPerChunk);
         
-        _submitMembershipProposal(dao, msg.sender, sharesRequested, amount);
+        _submitMembershipProposal(dao, applicant, sharesRequested, amount);
         
         if (msg.value > amount) {
             applicant.transfer(msg.value - amount);
@@ -54,7 +54,8 @@ contract OnboardingContract is IOnboarding, Module, AdapterGuard, ModuleGuard {
         
     }
 
-    function _submitMembershipProposal(Registry dao, address newMember, uint256 sharesRequested, uint256 amount) internal {
+    function _submitMembershipProposal(Registry dao, address payable 
+    newMember, uint256 sharesRequested, uint256 amount) internal {
         IProposal proposalContract = IProposal(dao.getAddress(PROPOSAL_MODULE));
         uint256 proposalId = proposalContract.createProposal(dao);
         ProposalDetails storage proposal = proposals[address(dao)][proposalId];
