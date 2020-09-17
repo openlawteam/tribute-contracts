@@ -50,12 +50,8 @@ contract('MolochV3 - Ragequit Adapter', async accounts => {
     let ragequitAddress = await dao.getAddress(sha3('ragequit'));
     let ragequitContract = await RagequitContract.at(ragequitAddress);
     try {
-<<<<<<< HEAD:test/adapters/ragequit.js
-      await ragequitContract.ragequit(dao.address, toBN(shares), { from: accounts[4], gasPrice: toBN("0") });
-=======
       let nonMember = accounts[4];
-      await ragequitContract.ragequit(dao.address, Web3.toBN(shares), { from: nonMember, gasPrice: Web3.toBN("0") });
->>>>>>> @{-1}:test/adapters/ragequit.test.js
+      await ragequitContract.ragequit(dao.address, toBN(shares), { from: nonMember, gasPrice: toBN("0") });
     } catch (error){
       assert.equal(error.reason, "only DAO members are allowed to call this function");
     }
