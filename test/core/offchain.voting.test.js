@@ -9,7 +9,8 @@ const ProposalContract = artifacts.require('./v3/core/ProposalContract');
 const OffchainVotingContract = artifacts.require('./v3/core/OffchainVotingContract');
 const OnboardingContract = artifacts.require('./v3/adapters/OnboardingContract');
 const RagequitContract = artifacts.require('./v3/adapters/RagequitContract');
-
+const ManagingContract = artifacts.require('./v3/adapter/ManagingContract');
+const FinancingContract = artifacts.require('./v3/adapter/FinancingContract');
 
 async function advanceTime(time) {
   await new Promise((resolve, reject) => {
@@ -44,7 +45,9 @@ async function prepareSmartContracts() {
   let proposal = await ProposalContract.new();
   let voting = await OffchainVotingContract.new();
   let ragequit = await RagequitContract.new();
-  return { voting, proposal, member, ragequit};
+  let managing = await ManagingContract.new();
+  let financing = await FinancingContract.new();
+  return { voting, proposal, member, ragequit, managing, financing};
 }
 
 contract('MolochV3 - Offchain Voting Module', async accounts => {
@@ -60,9 +63,9 @@ contract('MolochV3 - Offchain Voting Module', async accounts => {
   it("should be possible to vote offchain", async () => {
     const myAccount = accounts[1];
     const otherAccount = accounts[2];
-    const {voting, member, proposal, ragequit} = await prepareSmartContracts();
+    const {voting, member, proposal, ragequit, managing, financing} = await prepareSmartContracts();
 
-    let daoFactory = await DaoFactory.new(member.address, proposal.address, voting.address, ragequit.address,
+    let daoFactory = await DaoFactory.new(member.address, proposal.address, voting.address, ragequit.address, managing.address, financing.address,
       {from: myAccount, gasPrice: web3.utils.toBN("0")});
     await daoFactory.newDao(sharePrice, numberOfShares, 1000, {from: myAccount, gasPrice: web3.utils.toBN("0")});
     let pastEvents = await daoFactory.getPastEvents();
@@ -82,9 +85,9 @@ contract('MolochV3 - Offchain Voting Module', async accounts => {
   it("should be possible to invalidate vote if the total is wrong", async () => {
     const myAccount = accounts[1];
     const otherAccount = accounts[2];
-    const {voting, member, proposal, ragequit} = await prepareSmartContracts();
+    const {voting, member, proposal, ragequit, managing, financing} = await prepareSmartContracts();
 
-    let daoFactory = await DaoFactory.new(member.address, proposal.address, voting.address, ragequit.address,
+    let daoFactory = await DaoFactory.new(member.address, proposal.address, voting.address, ragequit.address, managing.address, financing.address,
       {from: myAccount, gasPrice: web3.utils.toBN("0")});
     await daoFactory.newDao(sharePrice, numberOfShares, 1000, {from: myAccount, gasPrice: web3.utils.toBN("0")});
     let pastEvents = await daoFactory.getPastEvents();

@@ -10,6 +10,8 @@ const VotingContract = artifacts.require('./v3/core/VotingContract');
 const ProposalContract = artifacts.require('./v3/core/ProposalContract');
 const OnboardingContract = artifacts.require('./v3/adapters/OnboardingContract');
 const RagequitContract = artifacts.require('./v3/adapters/RagequitContract');
+const ManagingContract = artifacts.require('./v3/adapter/ManagingContract');
+const FinancingContract = artifacts.require('./v3/adapter/FinancingContract');
 
 async function advanceTime(time) {
   await new Promise((resolve, reject) => {
@@ -53,16 +55,18 @@ contract('MolochV3 - Ragequit Adapter', async accounts => {
     let proposal = await ProposalContract.new();
     let voting = await VotingContract.new();
     let ragequit = await RagequitContract.new();
-    return { voting, proposal, member, ragequit};
+    let managing = await ManagingContract.new();
+    let financing = await FinancingContract.new();
+    return { voting, proposal, member, ragequit, managing, financing};
   }
 
   it("should not be possible for a non DAO member to ragequit", async () => {
     const myAccount = accounts[1];
     const newMember = accounts[2];
     const token = "0x0000000000000000000000000000000000000000"; //0x0 indicates it is Native ETH
-    const { voting, member, proposal, ragequit } = await prepareSmartContracts();
+    const { voting, member, proposal, ragequit, managing, financing } = await prepareSmartContracts();
 
-    let daoFactory = await DaoFactory.new(member.address, proposal.address, voting.address, ragequit.address,
+    let daoFactory = await DaoFactory.new(member.address, proposal.address, voting.address, ragequit.address, managing.address, financing.address,
       { from: myAccount, gasPrice: Web3.toBN("0") });
 
     await daoFactory.newDao(sharePrice, numberOfShares, 1000, { from: myAccount, gasPrice: Web3.toBN("0") });
@@ -110,12 +114,15 @@ contract('MolochV3 - Ragequit Adapter', async accounts => {
     const myAccount = accounts[1];
     const newMember = accounts[2];
     const token = "0x0000000000000000000000000000000000000000"; //0x0 indicates it is Native ETH
-    const { voting, member, proposal, ragequit } = await prepareSmartContracts();
+    const { voting, member, proposal, ragequit, managing, financing} = await prepareSmartContracts();
 
-    let daoFactory = await DaoFactory.new(member.address, proposal.address, voting.address, ragequit.address,
+    let daoFactory = await DaoFactory.new(member.address, proposal.address, voting.address, ragequit.address, managing.address, financing.address,
       { from: myAccount, gasPrice: Web3.toBN("0") });
 
-    await daoFactory.newDao(sharePrice, numberOfShares, 1000, { from: myAccount, gasPrice: Web3.toBN("0") });
+    const txResult = await daoFactory.newDao(sharePrice, numberOfShares, 1000, { from: myAccount, gasPrice: Web3.toBN("0") });
+    console.log('********');
+    console.log(txResult.receipt.gasUsed);
+    console.log('********');
     let pastEvents = await daoFactory.getPastEvents();
     let daoAddress = pastEvents[0].returnValues.dao;
     let dao = await ModuleRegistry.at(daoAddress);

@@ -22,22 +22,21 @@ contract OnboardingContract is IOnboarding, Module, AdapterGuard {
     }
 
     Registry dao;
+    uint256 public CHUNK_SIZE;
+    uint256 public SHARES_PER_CHUNK;
     mapping(uint256 => ProposalDetails) public proposals;
 
-    constructor (address _dao) {
+    constructor (address _dao, uint256 _CHUNK_SIZE, uint256 _SHARES_PER_CHUNK) {
         dao = Registry(_dao);
+        CHUNK_SIZE = _CHUNK_SIZE;
+        SHARES_PER_CHUNK = _SHARES_PER_CHUNK;
     }
 
     receive() override external payable {
-        IBank bank = IBank(dao.getAddress(BANK_MODULE));
-        uint256 chunkSize = bank.getChunkSize();
-        uint256 sharesPerChunk = bank.getSharesPerChunk();
-        
-        uint256 numberOfChunks = msg.value.div(chunkSize);
+        uint256 numberOfChunks = msg.value.div(CHUNK_SIZE);
         require(numberOfChunks > 0, "amount of ETH sent was not sufficient");
-        
-        uint256 amount = numberOfChunks.mul(chunkSize);
-        uint256 sharesRequested = numberOfChunks.mul(sharesPerChunk);
+        uint256 amount = numberOfChunks.mul(CHUNK_SIZE);
+        uint256 sharesRequested = numberOfChunks.mul(SHARES_PER_CHUNK);
 
         _submitMembershipProposal(msg.sender, sharesRequested, amount);
 

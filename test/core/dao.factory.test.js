@@ -6,6 +6,8 @@ const MemberContract = artifacts.require('./v3/core/MemberContract');
 const VotingContract = artifacts.require('./v3/core/VotingContract');
 const ProposalContract = artifacts.require('./v3/core/ProposalContract');
 const RagequitContract = artifacts.require('./v3/adapters/RagequitContract');
+const ManagingContract = artifacts.require('./v3/adapter/ManagingContract');
+const FinancingContract = artifacts.require('./v3/adapter/FinancingContract');
 
 contract('Registry', async (accounts) => {
 
@@ -21,7 +23,9 @@ contract('Registry', async (accounts) => {
     let proposal = await ProposalContract.new();
     let voting = await VotingContract.new();
     let ragequit = await RagequitContract.new();
-    return { voting, proposal, member, ragequit };
+    let managing = await ManagingContract.new();
+    let financing = await FinancingContract.new();
+    return { voting, proposal, member, ragequit, managing, financing };
   }
 
   assertRegisteredModule = async (dao, moduleId) => {
@@ -32,10 +36,10 @@ contract('Registry', async (accounts) => {
 
   it("should be possible to create a DAO with all adapters and core modules", async () => {
     const myAccount = accounts[0];
-    const { voting, member, proposal, ragequit } = await prepareSmartContracts();
+    const { voting, member, proposal, ragequit, managing, financing } = await prepareSmartContracts();
 
     //New factory
-    let daoFactory = await DaoFactory.new(member.address, proposal.address, voting.address, ragequit.address,
+    let daoFactory = await DaoFactory.new(member.address, proposal.address, voting.address, ragequit.address, managing.address, financing.address,
       { from: myAccount, gasPrice: Web3.toBN("0") });
 
     //Create the DAO and get the DAO Address

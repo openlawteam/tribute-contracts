@@ -9,7 +9,8 @@ const BankContract = artifacts.require('./v3/core/BankContract');
 const VotingContract = artifacts.require('./v3/core/VotingContract');
 const ProposalContract = artifacts.require('./v3/core/ProposalContract');
 const OnboardingContract = artifacts.require('./v3/adapters/OnboardingContract');
-const FinancingContract = artifacts.require('./v3/adapters/FinancingContract');
+const ManagingContract = artifacts.require('./v3/adapter/ManagingContract');
+const FinancingContract = artifacts.require('./v3/adapter/FinancingContract');
 const RagequitContract = artifacts.require('./v3/adapters/RagequitContract');
 
 async function advanceTime(time) {
@@ -54,18 +55,19 @@ contract('MolochV3 - Financing Adapter', async accounts => {
     let proposal = await ProposalContract.new();
     let voting = await VotingContract.new();
     let ragequit = await RagequitContract.new();
-    return { voting, proposal, member, ragequit };
+    let managing = await ManagingContract.new();
+    let financing = await FinancingContract.new();
+    return { voting, proposal, member, ragequit, managing, financing };
   }
 
   it("should be possible to any individual to request financing", async () => {
     const myAccount = accounts[1];
     const applicant = accounts[2];
     const newMember = accounts[3];
-    const token = "0x0000000000000000000000000000000000000000"; //0x0 indicates it is Native ETH
-    const allowedTokens = [token];
-    const { voting, member, proposal, ragequit } = await prepareSmartContracts();
+    const token = "0x0000000000000000000000000000000000000000";
+    const { voting, member, proposal, ragequit, managing, financing } = await prepareSmartContracts();
 
-    let daoFactory = await DaoFactory.new(member.address, proposal.address, voting.address, ragequit.address,
+    let daoFactory = await DaoFactory.new(member.address, proposal.address, voting.address, ragequit.address, managing.address, financing.address,
       { from: myAccount, gasPrice: Web3.toBN("0") });
 
     await daoFactory.newDao(sharePrice, numberOfShares, 1000, { from: myAccount, gasPrice: Web3.toBN("0") });
@@ -99,7 +101,7 @@ contract('MolochV3 - Financing Adapter', async accounts => {
     let requestedAmount = Web3.toBN(50000);
     let financingAddress = await dao.getAddress(Web3.sha3('financing'));
     let financingContract = await FinancingContract.at(financingAddress);
-    await financingContract.createFinancingRequest(applicant, token, requestedAmount, Web3.fromUtf8(""));
+    await financingContract.createFinancingRequest(dao.address, applicant, token, requestedAmount, Web3.fromUtf8(""));
     
     //Get the new proposalId from event log
     pastEvents = await proposal.getPastEvents();
@@ -107,7 +109,7 @@ contract('MolochV3 - Financing Adapter', async accounts => {
     assert.equal(proposalId, 1);
 
     //Member sponsors the Financing proposal
-    await financingContract.sponsorProposal(proposalId, [], { from: myAccount, gasPrice: Web3.toBN("0") });
+    await financingContract.sponsorProposal(dao.address, proposalId, [], { from: myAccount, gasPrice: Web3.toBN("0") });
 
     //Member votes on the Financing proposal
     await voting.submitVote(dao.address, proposalId, 1, { from: myAccount, gasPrice: Web3.toBN("0") });
@@ -118,7 +120,7 @@ contract('MolochV3 - Financing Adapter', async accounts => {
     
     //Process Financing proposal after voting
     await advanceTime(10000);
-    await financingContract.processProposal(proposalId, { from: myAccount, gasPrice: Web3.toBN("0") });
+    await financingContract.processProposal(dao.address, proposalId, { from: myAccount, gasPrice: Web3.toBN("0") });
 
     //Check Guild Bank balance to make sure the transfer has happened
     guildBalance = await bank.balanceOf(GUILD, token);

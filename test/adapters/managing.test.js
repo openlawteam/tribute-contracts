@@ -6,7 +6,8 @@ const ModuleRegistry = artifacts.require('./v3/core/Registry');
 const MemberContract = artifacts.require('./v3/core/MemberContract');
 const VotingContract = artifacts.require('./v3/core/VotingContract');
 const ProposalContract = artifacts.require('./v3/core/ProposalContract');
-const ManagingContract = artifacts.require('./v3/adapters/ManagingContract');
+const ManagingContract = artifacts.require('./v3/adapter/ManagingContract');
+const FinancingContract = artifacts.require('./v3/adapter/FinancingContract');
 const RagequitContract = artifacts.require('./v3/adapters/RagequitContract');
 
 async function advanceTime(time) {
@@ -53,11 +54,13 @@ contract('MolochV3 - Managing Adapter', async accounts => {
     let proposal = await ProposalContract.new();
     let voting = await VotingContract.new();
     let ragequit = await RagequitContract.new();
-    return { voting, proposal, member, ragequit };
+    let managing = await ManagingContract.new();
+    let financing = await FinancingContract.new();
+    return { voting, proposal, member, ragequit, managing, financing };
   }
 
-  async function createDao(member, proposal, voting, ragequit, senderAccount) {
-    let daoFactory = await DaoFactory.new(member.address, proposal.address, voting.address, ragequit.address,
+  async function createDao(member, proposal, voting, ragequit, managing, financing, senderAccount) {
+    let daoFactory = await DaoFactory.new(member.address, proposal.address, voting.address, ragequit.address, managing.address, financing.address,
       { from: senderAccount, gasPrice: Web3.toBN("0") });
     await daoFactory.newDao(sharePrice, numberOfShares, 1000, { from: senderAccount, gasPrice: Web3.toBN("0") });
     let pastEvents = await daoFactory.getPastEvents();
@@ -69,18 +72,16 @@ contract('MolochV3 - Managing Adapter', async accounts => {
   it("should not be possible to propose a new module with 0x0 module address", async () => {
     const myAccount = accounts[1];
     const applicant = accounts[2];
-    const { voting, member, proposal, ragequit } = await prepareSmartContracts();
+    const { voting, member, proposal, ragequit, managing, financing } = await prepareSmartContracts();
 
     //Create the new DAO
-    let dao = await createDao(member, proposal, voting, ragequit, myAccount);
+    let dao = await createDao(member, proposal, voting, ragequit, managing, financing, myAccount);
 
     //Submit a new Bank module proposal
-    let managingAddress = await dao.getAddress(Web3.sha3('managing'));
-    let managing = await ManagingContract.at(managingAddress);
     let newModuleId = Web3.sha3('bank');
 
     try {
-      await managing.createModuleChangeRequest(applicant, newModuleId, token);
+      await managing.createModuleChangeRequest(dao.address, applicant, newModuleId, token);
     } catch (err) {
       assert.equal(err.reason, "invalid module address");
     }
@@ -89,28 +90,26 @@ contract('MolochV3 - Managing Adapter', async accounts => {
 
   it("should not be possible to propose a new module when the applicant has a reserved address", async () => {
     const myAccount = accounts[1];
-    const { voting, member, proposal, ragequit } = await prepareSmartContracts();
+    const { voting, member, proposal, ragequit, managing, financing } = await prepareSmartContracts();
 
     //Create the new DAO
-    let dao = await createDao(member, proposal, voting, ragequit, myAccount);
+    let dao = await createDao(member, proposal, voting, ragequit, managing, financing, myAccount);
 
     //Submit a new Bank module proposal
-    let managingAddress = await dao.getAddress(Web3.sha3('managing'));
-    let managing = await ManagingContract.at(managingAddress);
     let newModuleId = Web3.sha3('bank');
 
     try {
-      await managing.createModuleChangeRequest(GUILD, newModuleId, accounts[3]);
+      await managing.createModuleChangeRequest(dao.address, GUILD, newModuleId, accounts[3]);
     } catch (err) {
       assert.equal(err.reason, "applicant address cannot be reserved");
     }
     try {
-      await managing.createModuleChangeRequest(ESCROW, newModuleId, accounts[3]);
+      await managing.createModuleChangeRequest(dao.address, ESCROW, newModuleId, accounts[3]);
     } catch (err) {
       assert.equal(err.reason, "applicant address cannot be reserved");
     }
     try {
-      await managing.createModuleChangeRequest(TOTAL, newModuleId, accounts[3]);
+      await managing.createModuleChangeRequest(dao.address, TOTAL, newModuleId, accounts[3]);
     } catch (err) {
       assert.equal(err.reason, "applicant address cannot be reserved");
     }
@@ -119,28 +118,26 @@ contract('MolochV3 - Managing Adapter', async accounts => {
   it("should not be possible to propose a new module when the module has a reserved address", async () => {
     const myAccount = accounts[1];
     const applicant = accounts[2];
-    const { voting, member, proposal, ragequit } = await prepareSmartContracts();
+    const { voting, member, proposal, ragequit, managing, financing } = await prepareSmartContracts();
 
     //Create the new DAO
-    let dao = await createDao(member, proposal, voting, ragequit, myAccount);
+    let dao = await createDao(member, proposal, voting, ragequit, managing, financing, myAccount);
 
     //Submit a new Bank module proposal
-    let managingAddress = await dao.getAddress(Web3.sha3('managing'));
-    let managing = await ManagingContract.at(managingAddress);
     let newModuleId = Web3.sha3('bank');
 
     try {
-      await managing.createModuleChangeRequest(applicant, newModuleId, GUILD);
+      await managing.createModuleChangeRequest(dao.address, applicant, newModuleId, GUILD);
     } catch (err) {
       assert.equal(err.reason, "module address cannot be reserved");
     }
     try {
-      await managing.createModuleChangeRequest(applicant, newModuleId, ESCROW);
+      await managing.createModuleChangeRequest(dao.address, applicant, newModuleId, ESCROW);
     } catch (err) {
       assert.equal(err.reason, "module address cannot be reserved");
     }
     try {
-      await managing.createModuleChangeRequest(applicant, newModuleId, TOTAL);
+      await managing.createModuleChangeRequest(dao.address, applicant, newModuleId, TOTAL);
     } catch (err) {
       assert.equal(err.reason, "module address cannot be reserved");
     }
@@ -149,18 +146,16 @@ contract('MolochV3 - Managing Adapter', async accounts => {
   it("should not be possible to propose a new module with an empty module address", async () => {
     const myAccount = accounts[1];
     const applicant = accounts[2];
-    const { voting, member, proposal, ragequit } = await prepareSmartContracts();
+    const { voting, member, proposal, ragequit, managing, financing } = await prepareSmartContracts();
 
     //Create the new DAO
-    let dao = await createDao(member, proposal, voting, ragequit, myAccount);
+    let dao = await createDao(member, proposal, voting, ragequit, managing, financing, myAccount);
 
     //Submit a new Bank module proposal
-    let managingAddress = await dao.getAddress(Web3.sha3('managing'));
-    let managing = await ManagingContract.at(managingAddress);
     let newModuleId = Web3.sha3('managing');
 
     try {
-      await managing.createModuleChangeRequest(applicant, newModuleId, "");
+      await managing.createModuleChangeRequest(dao.address, applicant, newModuleId, "");
     } catch (err) {
       assert.equal(err.reason, "invalid address");
     }
@@ -169,27 +164,25 @@ contract('MolochV3 - Managing Adapter', async accounts => {
   it("should be possible to any individual to propose a new DAO Banking module", async () => {
     const myAccount = accounts[1];
     const applicant = accounts[2];
-    const { voting, member, proposal, ragequit } = await prepareSmartContracts();
+    const { voting, member, proposal, ragequit, managing, financing } = await prepareSmartContracts();
 
     //Create the new DAO
-    let dao = await createDao(member, proposal, voting, ragequit, myAccount);
+    let dao = await createDao(member, proposal, voting, ragequit, managing, financing, myAccount);
 
     //Submit a new Bank module proposal
-    let managingAddress = await dao.getAddress(Web3.sha3('managing'));
-    let managing = await ManagingContract.at(managingAddress);
     let newModuleId = Web3.sha3('bank');
     let newModuleAddress = accounts[3]; //TODO deploy some Banking test contract
-    await managing.createModuleChangeRequest(applicant, newModuleId, newModuleAddress);
+    await managing.createModuleChangeRequest(dao.address, applicant, newModuleId, newModuleAddress);
 
     //Get the new proposal id
     pastEvents = await proposal.getPastEvents();
     let { proposalId } = pastEvents[0].returnValues;
     
     //Sponsor the new proposal, vote and process it 
-    await managing.sponsorProposal(proposalId, [], { from: myAccount, gasPrice: Web3.toBN("0") });
+    await managing.sponsorProposal(dao.address, proposalId, [], { from: myAccount, gasPrice: Web3.toBN("0") });
     await voting.submitVote(dao.address, proposalId, 1, { from: myAccount, gasPrice: Web3.toBN("0") });
     await advanceTime(10000);
-    await managing.processProposal(proposalId, { from: myAccount, gasPrice: Web3.toBN("0") });
+    await managing.processProposal(dao.address, proposalId, { from: myAccount, gasPrice: Web3.toBN("0") });
 
     //Check if the Bank Module was added to the Registry
     let newBankAddress = await dao.getAddress(Web3.sha3('bank'));
