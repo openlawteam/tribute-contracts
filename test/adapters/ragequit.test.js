@@ -38,7 +38,7 @@ contract('MolochV3 - Ragequit Adapter', async accounts => {
     await onboarding.processProposal(dao.address, proposalId, { from: myAccount, gasPrice: toBN("0") });
 
     //Check Guild Bank Balance
-    let guildBalance = await bank.balanceOf(GUILD, ETH_TOKEN);
+    let guildBalance = await bank.balanceOf(dao.address, GUILD, ETH_TOKEN);
     let expectedGuildBalance = toBN("1200000000000000000");
     assert.equal(toBN(guildBalance).toString(), expectedGuildBalance.toString());
 
@@ -92,7 +92,7 @@ contract('MolochV3 - Ragequit Adapter', async accounts => {
 
     //Check Guild Bank Balance
 
-    let guildBalance = await bank.balanceOf(GUILD, ETH_TOKEN);
+    let guildBalance = await bank.balanceOf(dao.address, GUILD, ETH_TOKEN);
     let expectedGuildBalance = toBN("1200000000000000000");
     assert.equal(guildBalance.toString(), expectedGuildBalance.toString());
 

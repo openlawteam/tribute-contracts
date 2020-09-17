@@ -45,7 +45,9 @@ contract Registry is Ownable, Module{
     }
 
     receive() external payable {
-        IOnboarding onboarding = IOnboarding(registry[ONBOARDING_MODULE]);
-        onboarding.processOnboarding{value: msg.value}(this, msg.sender);
+        if(!isModule(msg.sender)) {
+            IOnboarding onboarding = IOnboarding(registry[ONBOARDING_MODULE]);
+            onboarding.processOnboarding{value: msg.value}(this, msg.sender);
+        }
     }
 }

@@ -44,7 +44,7 @@ contract('MolochV3 - Onboarding Adapter', async accounts => {
     assert.equal(otherAccountShares.toString(), numberOfShares.mul(toBN("3")).toString());
     assert.equal(nonMemberAccountShares.toString(), "0");
 
-    const guildBalance = await bank.balanceOf(GUILD, "0x0000000000000000000000000000000000000000");
+    const guildBalance = await bank.balanceOf(dao.address, GUILD, "0x0000000000000000000000000000000000000000");
     assert.equal(guildBalance.toString(), sharePrice.mul(toBN("3")).toString());
   })
 });

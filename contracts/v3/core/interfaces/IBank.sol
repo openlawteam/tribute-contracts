@@ -5,12 +5,10 @@ pragma solidity ^0.7.0;
 import '../Registry.sol';
 
 interface IBank {
-    function addToGuild(address tokenAddress, uint256 amount) external;
-    function addToEscrow(address tokenAddress, uint256 amount) external;
-    function balanceOf(address tokenAddress, address account) external returns (uint256);
+    function addToGuild(Registry dao, address tokenAddress, uint256 amount) external;
+    function addToEscrow(Registry dao, address tokenAddress, uint256 amount) external;
+    function balanceOf(Registry dao, address tokenAddress, address account) external returns (uint256);
     function isNotReservedAddress(address applicant) external returns (bool);
-    function transferFromGuild(address applicant, address tokenAddress, uint256 amount) external;
-    function getChunkSize() external returns (uint256);
-    function getSharesPerChunk() external returns (uint256);
-    function burnShares(address member, uint256 sharesToBurn) external;
+    function transferFromGuild(Registry dao, address applicant, address tokenAddress, uint256 amount) external;
+    function burnShares(Registry dao, address member, uint256 sharesToBurn) external;
 }
