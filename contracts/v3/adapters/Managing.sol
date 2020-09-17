@@ -24,12 +24,6 @@ contract ManagingContract is IManaging, Module, AdapterGuard {
 
     mapping(uint256 => ProposalDetails) public proposals;
 
-    Registry dao;
-
-    constructor (address _dao) {
-        dao = Registry(_dao);
-    }
-
     /* 
      * default fallback function to prevent from sending ether to the contract
      */
@@ -37,12 +31,12 @@ contract ManagingContract is IManaging, Module, AdapterGuard {
         revert();
     }
 
-    function createModuleChangeRequest(address applicant, bytes32 moduleId, address moduleAddress) override external returns (uint256) {
+    function createModuleChangeRequest(Registry dao, address applicant, bytes32 moduleId, address moduleAddress) override external returns (uint256) {
         require(moduleAddress != address(0x0), "invalid module address");
 
         IBank bankContract = IBank(dao.getAddress(BANK_MODULE));
-        require(bankContract.isReservedAddress(applicant), "applicant address cannot be reserved");
-        require(bankContract.isReservedAddress(moduleAddress), "module address cannot be reserved");
+        require(bankContract.isNotReservedAddress(applicant), "applicant address cannot be reserved");
+        require(bankContract.isNotReservedAddress(moduleAddress), "module address cannot be reserved");
 
         //FIXME: is there a way to check if the new module implements the module interface properly?
         
@@ -57,12 +51,12 @@ contract ManagingContract is IManaging, Module, AdapterGuard {
         return proposalId;
     }
 
-    function sponsorProposal(uint256 proposalId, bytes calldata data) override external onlyMembers(dao) {
+    function sponsorProposal(Registry dao, uint256 proposalId, bytes calldata data) override external onlyMember(dao) {
         IProposal proposalContract = IProposal(dao.getAddress(PROPOSAL_MODULE));
         proposalContract.sponsorProposal(dao, proposalId, msg.sender, data);
     }
 
-    function processProposal(uint256 proposalId) override external onlyMembers(dao) {
+    function processProposal(Registry dao, uint256 proposalId) override external onlyMember(dao) {
         ProposalDetails memory proposal = proposals[proposalId];
         require(!proposal.processed, "proposal already processed");
 
