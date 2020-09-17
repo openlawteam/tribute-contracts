@@ -10,5 +10,5 @@ interface IBank {
     function balanceOf(Registry dao, address tokenAddress, address account) external returns (uint256);
     function isNotReservedAddress(address applicant) external returns (bool);
     function transferFromGuild(Registry dao, address applicant, address tokenAddress, uint256 amount) external;
-    function burnShares(Registry dao, address member, uint256 sharesToBurn) external;
+    function ragequit(Registry dao, address member, uint256 sharesToBurn) external;
 }

@@ -6,12 +6,14 @@ import '../Registry.sol';
 import '../Module.sol';
 import '../interfaces/IMember.sol';
 import '../interfaces/IBank.sol';
+import '../../utils/SafeMath.sol';
 import '../../helpers/FlagHelper.sol';
 import '../../guards/ModuleGuard.sol';
 import '../../guards/ReentrancyGuard.sol';
 
 contract MemberContract is IMember, Module, ModuleGuard, ReentrancyGuard {
     using FlagHelper for uint256;
+    using SafeMath for uint256;
 
     event UpdateMember(address dao, address member, uint256 shares);
 
@@ -40,13 +42,19 @@ contract MemberContract is IMember, Module, ModuleGuard, ReentrancyGuard {
         member.flags = 1;
         member.nbShares = shares;
         
-        totalShares += shares;
+        totalShares = totalShares.add(shares);
 
         emit UpdateMember(address(dao), memberAddr, shares);
     }
 
-    function hasEnoughShares(Registry dao, address memberAddr, uint256 sharesToBurn) override external view onlyModule(dao) returns (bool) {
-        return members[address(dao)][memberAddr].nbShares >= sharesToBurn;
+    function burnShares(Registry dao, address memberAddr, uint256 sharesToBurn) override external onlyModule(dao) {
+        require(_enoughSharesToBurn(dao, memberAddr, sharesToBurn), "insufficient shares");
+        
+        Member storage member = members[address(dao)][memberAddr];
+        member.nbShares = member.nbShares.sub(sharesToBurn);
+        totalShares = totalShares.sub(sharesToBurn);
+
+        emit UpdateMember(address(dao), memberAddr, member.nbShares);
     }
 
     /**
@@ -59,4 +67,13 @@ contract MemberContract is IMember, Module, ModuleGuard, ReentrancyGuard {
     function getTotalShares() override external view returns(uint256) {
         return totalShares;
     }
+
+    /**
+     * Internal Utility Functions
+     */
+
+    function _enoughSharesToBurn(Registry dao, address memberAddr, uint256 sharesToBurn) internal view returns (bool) {
+        return sharesToBurn > 0 && members[address(dao)][memberAddr].nbShares >= sharesToBurn;
+    }
+
 }

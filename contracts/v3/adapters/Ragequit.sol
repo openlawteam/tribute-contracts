@@ -24,13 +24,11 @@ contract RagequitContract is Module, AdapterGuard, ReentrancyGuard {
     }
 
     function ragequit(Registry dao, uint256 sharesToBurn) public nonReentrant onlyMember(dao) {
-        IMember memberContract = IMember(dao.getAddress(MEMBER_MODULE));
-
         // FIXME: we still don't track the index to block the ragequit if member voted YES on a non-processed proposal 
         // require(canRagequit(member.highestIndexYesVote), "cannot ragequit until highest index proposal member voted YES on is processed");
-        require(memberContract.hasEnoughShares(dao, msg.sender, sharesToBurn), "insufficient shares");
+        
         IBank bank = IBank(dao.getAddress(BANK_MODULE));
-        bank.burnShares(dao, msg.sender, sharesToBurn);
+        bank.ragequit(dao, msg.sender, sharesToBurn);
 
         emit Ragequit(msg.sender, sharesToBurn);
     }

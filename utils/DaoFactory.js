@@ -42,9 +42,7 @@ async function createDao(overridenModules, senderAccount) {
     let daoFactory = await DaoFactory.new(member.address, proposal.address, voting.address, ragequit.address, managing.address, financing.address, onboarding.address, bank.address, 
       { from: senderAccount, gasPrice: web3.utils.toBN("0") });
     const txInfo = await daoFactory.newDao(sharePrice, numberOfShares, 1000, { from: senderAccount, gasPrice: web3.utils.toBN("0") });
-    console.log('************');
-    console.log(txInfo.receipt.gasUsed);
-    console.log('************');
+    // console.log("\t Gas Used: " + txInfo.receipt.gasUsed);
     let pastEvents = await daoFactory.getPastEvents();
     let daoAddress = pastEvents[0].returnValues.dao;
     let dao = await Registry.at(daoAddress);

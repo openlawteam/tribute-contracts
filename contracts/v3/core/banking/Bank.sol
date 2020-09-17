@@ -56,16 +56,20 @@ contract BankContract is IBank, Module, ModuleGuard {
         emit Transfer(GUILD, applicant, token, amount);
     }
 
-    function burnShares(Registry dao, address memberAddr, uint256 sharesToBurn) override external onlyModule(dao) {
+    function ragequit(Registry dao, address memberAddr, uint256 sharesToBurn) override external onlyModule(dao) {
+        //Get the total shares before burning member shares
         IMember memberContract = IMember(dao.getAddress(MEMBER_MODULE));
         uint256 totalShares = memberContract.getTotalShares();
+        //Burn shares if member has enough shares
+        memberContract.burnShares(dao, memberAddr, sharesToBurn);
+        //Update internal Guild and Member balances
         for (uint256 i = 0; i < states[address(dao)].tokens.length; i++) {
             address token = states[address(dao)].tokens[i];
             uint256 amountToRagequit = fairShare(states[address(dao)].tokenBalances[GUILD][token], sharesToBurn, totalShares);
             if (amountToRagequit > 0) { // gas optimization to allow a higher maximum token limit
-                // deliberately not using safemath here to keep overflows from preventing the function execution (which would break ragekicks)
-                // if a token overflows, it is because the supply was artificially inflated to oblivion, so we probably don't care about it anyways
-                require(states[address(dao)].tokenBalances[GUILD][token] >= amountToRagequit, "insufficient balance");
+                // deliberately not using safemath here to keep overflows from preventing the function execution 
+                // (which would break ragekicks) if a token overflows, 
+                // it is because the supply was artificially inflated to oblivion, so we probably don't care about it anyways
                 states[address(dao)].tokenBalances[GUILD][token] -= amountToRagequit;
                 states[address(dao)].tokenBalances[memberAddr][token] += amountToRagequit;
                 //TODO: do we want to emit an event for each token transfer?
