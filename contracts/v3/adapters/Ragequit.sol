@@ -30,7 +30,7 @@ contract RagequitContract is Module, AdapterGuard, ReentrancyGuard {
         // require(canRagequit(member.highestIndexYesVote), "cannot ragequit until highest index proposal member voted YES on is processed");
         require(memberContract.hasEnoughShares(dao, msg.sender, sharesToBurn), "insufficient shares");
         IBank bank = IBank(dao.getAddress(BANK_MODULE));
-        bank.burnShares(msg.sender, sharesToBurn);
+        bank.burnShares(dao, msg.sender, sharesToBurn);
 
         emit Ragequit(msg.sender, sharesToBurn);
     }

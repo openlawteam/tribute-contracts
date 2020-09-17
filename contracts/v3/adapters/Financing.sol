@@ -65,6 +65,6 @@ contract FinancingContract is IFinancing, Module, AdapterGuard  {
 
         IBank bankContract = IBank(dao.getAddress(BANK_MODULE));
         proposals[address(dao)][proposalId].processed = true;
-        bankContract.transferFromGuild(proposal.applicant, proposal.token, proposal.amount);
+        bankContract.transferFromGuild(dao, proposal.applicant, proposal.token, proposal.amount);
     }
 }

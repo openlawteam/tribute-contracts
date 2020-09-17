@@ -19,7 +19,7 @@ contract DaoFactory is Module {
 
     mapping(bytes32 => address) addresses;
 
-    constructor (address memberAddress, address proposalAddress, address votingAddress, address ragequitAddress, address managingAddress, address financingAddress, address onboardingAddress) {
+    constructor (address memberAddress, address proposalAddress, address votingAddress, address ragequitAddress, address managingAddress, address financingAddress, address onboardingAddress, address bankAddress) {
         addresses[MEMBER_MODULE] = memberAddress;
         addresses[PROPOSAL_MODULE] = proposalAddress;
         addresses[VOTING_MODULE] = votingAddress;
@@ -27,6 +27,7 @@ contract DaoFactory is Module {
         addresses[MANAGING_MODULE] = managingAddress;
         addresses[FINANCING_MODULE] = financingAddress;
         addresses[ONBOARDING_MODULE] = onboardingAddress;
+        addresses[BANK_MODULE] = bankAddress;
     }
 
     /*
@@ -37,7 +38,7 @@ contract DaoFactory is Module {
         Registry dao = new Registry();
         address daoAddress = address(dao);
         //Registering Core Modules
-        dao.addModule(BANK_MODULE, address(new BankContract(dao, chunkSize, nbShares)));
+        dao.addModule(BANK_MODULE, addresses[BANK_MODULE]);
         dao.addModule(MEMBER_MODULE, addresses[MEMBER_MODULE]);
         dao.addModule(PROPOSAL_MODULE, addresses[PROPOSAL_MODULE]);
         dao.addModule(VOTING_MODULE, addresses[VOTING_MODULE]);

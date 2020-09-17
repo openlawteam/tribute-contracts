@@ -30,17 +30,21 @@ async function prepareSmartContracts() {
     let managing = await ManagingContract.new();
     let financing = await FinancingContract.new();
     let onboarding = await OnboardingContract.new();
+    let bank = await BankContract.new();
 
-    return { voting, proposal, member, ragequit, managing, financing, onboarding};
+    return { voting, proposal, member, ragequit, managing, financing, onboarding, bank};
   }
 
 async function createDao(overridenModules, senderAccount) {
     let modules = await prepareSmartContracts();
     modules = Object.assign(modules, overridenModules);
-    const {member, proposal, voting, ragequit, managing, financing, onboarding} = modules;
-    let daoFactory = await DaoFactory.new(member.address, proposal.address, voting.address, ragequit.address, managing.address, financing.address, onboarding.address,
+    const {member, proposal, voting, ragequit, managing, financing, onboarding, bank} = modules;
+    let daoFactory = await DaoFactory.new(member.address, proposal.address, voting.address, ragequit.address, managing.address, financing.address, onboarding.address, bank.address, 
       { from: senderAccount, gasPrice: web3.utils.toBN("0") });
-    await daoFactory.newDao(sharePrice, numberOfShares, 1000, { from: senderAccount, gasPrice: web3.utils.toBN("0") });
+    const txInfo = await daoFactory.newDao(sharePrice, numberOfShares, 1000, { from: senderAccount, gasPrice: web3.utils.toBN("0") });
+    console.log('************');
+    console.log(txInfo.receipt.gasUsed);
+    console.log('************');
     let pastEvents = await daoFactory.getPastEvents();
     let daoAddress = pastEvents[0].returnValues.dao;
     let dao = await Registry.at(daoAddress);
