@@ -22,13 +22,7 @@ contract FinancingContract is IFinancing, Module, AdapterGuard  {
         bool processed;
     }
 
-    mapping(uint256 => ProposalDetails) public proposals;
-
-    Registry dao;
-
-    constructor (address _dao) {
-        dao = Registry(_dao);
-    }
+    mapping(address => mapping(uint256 => ProposalDetails)) public proposals;
 
     /* 
      * default fallback function to prevent from sending ether to the contract
@@ -37,7 +31,7 @@ contract FinancingContract is IFinancing, Module, AdapterGuard  {
         revert();
     }
 
-    function createFinancingRequest(address applicant, address token, uint256 amount, bytes32 details) override external returns (uint256) {
+    function createFinancingRequest(Registry dao, address applicant, address token, uint256 amount, bytes32 details) override external returns (uint256) {
         require(amount > 0, "invalid requested amount");
         require(token == address(0x0), "only raw eth token is supported");
         //TODO (fforbeck): check if other types of tokens are supported/allowed
@@ -48,7 +42,7 @@ contract FinancingContract is IFinancing, Module, AdapterGuard  {
         IProposal proposalContract = IProposal(dao.getAddress(PROPOSAL_MODULE));
         uint256 proposalId = proposalContract.createProposal(dao);
 
-        ProposalDetails storage proposal = proposals[proposalId];
+        ProposalDetails storage proposal = proposals[address(dao)][proposalId];
         proposal.applicant = applicant;
         proposal.amount = amount;
         proposal.details = details;
@@ -57,20 +51,20 @@ contract FinancingContract is IFinancing, Module, AdapterGuard  {
         return proposalId;
     }
 
-    function sponsorProposal(uint256 proposalId, bytes calldata data) override external onlyMembers(dao) {
+    function sponsorProposal(Registry dao, uint256 proposalId, bytes calldata data) override external onlyMember(dao) {
         IProposal proposalContract = IProposal(dao.getAddress(PROPOSAL_MODULE));
         proposalContract.sponsorProposal(dao, proposalId, msg.sender, data);
     }
 
-    function processProposal(uint256 proposalId) override external onlyMembers(dao) {
-        ProposalDetails memory proposal = proposals[proposalId];
+    function processProposal(Registry dao, uint256 proposalId) override external onlyMember(dao) {
+        ProposalDetails memory proposal = proposals[address(dao)][proposalId];
         require(!proposal.processed, "proposal already processed");
 
         IVoting votingContract = IVoting(dao.getAddress(VOTING_MODULE));
         require(votingContract.voteResult(dao, proposalId) == 2, "proposal need to pass to be processed");
 
         IBank bankContract = IBank(dao.getAddress(BANK_MODULE));
-        proposals[proposalId].processed = true;
+        proposals[address(dao)][proposalId].processed = true;
         bankContract.transferFromGuild(proposal.applicant, proposal.token, proposal.amount);
     }
 }
