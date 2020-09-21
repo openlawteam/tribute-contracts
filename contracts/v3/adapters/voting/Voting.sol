@@ -2,9 +2,9 @@ pragma solidity ^0.7.0;
 
 // SPDX-License-Identifier: MIT
 
-import '../Registry.sol';
-import '../Module.sol';
-import '../interfaces/IMember.sol';
+import '../../core/Registry.sol';
+import '../../core/Module.sol';
+import '../../core/interfaces/IMember.sol';
 import '../interfaces/IVoting.sol';
 import '../../helpers/FlagHelper.sol';
 

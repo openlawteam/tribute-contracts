@@ -2,7 +2,7 @@ pragma solidity ^0.7.0;
 
 // SPDX-License-Identifier: MIT
 
-import '../Registry.sol';
+import '../../core/Registry.sol';
 
 interface IVoting {
     function startNewVotingForProposal(Registry dao, uint256 proposalId, bytes calldata data) external returns (uint256);

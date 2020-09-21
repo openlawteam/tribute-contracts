@@ -3,7 +3,7 @@ const {prepareSnapshot, addVote, prepareVoteResult, buildVoteLeafHashForMerkleTr
 const toBN = web3.utils.toBN;
 const sha3 = web3.utils.sha3;
 
-const OffchainVotingContract = artifacts.require('./v3/core/OffchainVotingContract');
+const OffchainVotingContract = artifacts.require('./v3/adapters/OffchainVotingContract');
 
 contract('MolochV3 - Offchain Voting Module', async accounts => {
 
@@ -79,7 +79,7 @@ contract('MolochV3 - Offchain Voting Module', async accounts => {
     await dao.sendTransaction({from:otherAccount,value:sharePrice.mul(web3.utils.toBN(3)).add(remaining), gasPrice: web3.utils.toBN("0")});
     await dao.sendTransaction({from:otherAccount2,value:sharePrice.mul(web3.utils.toBN(3)).add(remaining), gasPrice: web3.utils.toBN("0")});
     const {snapshotTree} = await prepareSnapshot(dao, member, accounts);
-    await onboarding.sponsorProposal(dao.address, 0, web3.eth.abi.encodeParameters(['bytes32', 'uint256'], [snapshotTree.getHexRoot(), 1]), {from: myAccount, gasPrice: web3.utils.toBN("0")});
+    await reportingTransaction('sponsor proposal', onboarding.sponsorProposal(dao.address, 0, web3.eth.abi.encodeParameters(['bytes32', 'uint256'], [snapshotTree.getHexRoot(), 1]), {from: myAccount, gasPrice: web3.utils.toBN("0")}));
     await onboarding.sponsorProposal(dao.address, 1, web3.eth.abi.encodeParameters(['bytes32', 'uint256'], [snapshotTree.getHexRoot(), 1]), {from: myAccount, gasPrice: web3.utils.toBN("0")});
 
     const voteElements = await addVote([], snapshotTree.getHexRoot(), dao.address, 0, myAccount, 1, true);
@@ -89,7 +89,7 @@ contract('MolochV3 - Offchain Voting Module', async accounts => {
     await voting.submitVoteResult(dao.address, 0, 1, 0, r1.voteResultTree.getHexRoot(), {from: myAccount, gasPrice: web3.utils.toBN("0")});
     await voting.submitVoteResult(dao.address, 1, 1, 0, r2.voteResultTree.getHexRoot(), {from: myAccount, gasPrice: web3.utils.toBN("0")});
     await advanceTime(10000);
-    await onboarding.processProposal(dao.address, 0, {from: myAccount, gasPrice: web3.utils.toBN("0")});
+    await reportingTransaction('process proposal', onboarding.processProposal(dao.address, 0, {from: myAccount, gasPrice: web3.utils.toBN("0")}));
     await onboarding.processProposal(dao.address, 1, {from: myAccount, gasPrice: web3.utils.toBN("0")});
 
     const someone = accounts[4];

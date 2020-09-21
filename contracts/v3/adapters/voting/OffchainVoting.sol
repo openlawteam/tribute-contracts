@@ -3,10 +3,10 @@ pragma experimental ABIEncoderV2;
 
 // SPDX-License-Identifier: MIT
 
-import '../Registry.sol';
-import '../Module.sol';
-import '../interfaces/IProposal.sol';
-import '../interfaces/IMember.sol';
+import '../../core/Registry.sol';
+import '../../core/Module.sol';
+import '../../core/interfaces/IProposal.sol';
+import '../../core/interfaces/IMember.sol';
 import '../interfaces/IVoting.sol';
 import '../../helpers/FlagHelper.sol';
 
@@ -110,7 +110,7 @@ contract OffchainVotingContract is IVoting, Module {
         votes[address(dao)][proposalId].nbVoters = nbVoters;
     }
 
-    function challengeWrongOrder(Registry dao, uint256 proposalId, uint256 index, VoteResultNode memory nodePrevious, VoteResultNode memory nodeCurrent) view external {
+    function challengeWrongOrder(Registry dao, uint256 proposalId, uint256 index, VoteResultNode memory nodePrevious, VoteResultNode memory nodeCurrent) external {
         require(index > 0, "check between current and previous, index cannot be 0");
         Voting storage vote = votes[address(dao)][proposalId];
         bytes32 resultRoot = vote.resultRoot;
@@ -124,15 +124,15 @@ contract OffchainVotingContract is IVoting, Module {
         bytes32 proposalHash = keccak256(abi.encode(snapshotRoot, address(dao), proposalId));
         if(hasVotedYes(nodeCurrent.voter, proposalHash, nodeCurrent.sig)) {
             if(nodePrevious.nbYes + 1 != nodeCurrent.nbYes) {
-                //reset vote
+                votes[address(dao)][proposalId].isChallenged = true;
             } else if (nodePrevious.nbNo != nodeCurrent.nbNo) {
-                //reset vote
+                votes[address(dao)][proposalId].isChallenged = true;
             }
         } else {
             if(nodePrevious.nbYes != nodeCurrent.nbYes) {
-                //reset vote
+                votes[address(dao)][proposalId].isChallenged = true;
             } else if (nodePrevious.nbNo + 1 != nodeCurrent.nbNo) {
-                //reset vote
+                votes[address(dao)][proposalId].isChallenged = true;
             }
         }
     }

@@ -6,7 +6,7 @@ import '../Registry.sol';
 import '../Module.sol';
 import '../interfaces/IMember.sol';
 import '../interfaces/IProposal.sol';
-import '../interfaces/IVoting.sol';
+import '../../adapters/interfaces/IVoting.sol';
 import '../../helpers/FlagHelper.sol';
 import '../../guards/ModuleGuard.sol';
 
