@@ -137,10 +137,20 @@ contract OffchainVotingContract is IVoting, Module {
         }
     }
 
+    function getSignedHash(bytes32 snapshotRoot, address dao, uint256 proposalId) external pure returns (bytes32) {
+        bytes32 proposalHash = keccak256(abi.encode(snapshotRoot, dao, proposalId));
+        return keccak256(abi.encode(proposalHash, 1));
+    }
+
+    function getSignedAddress(bytes32 snapshotRoot, address dao, uint256 proposalId, bytes calldata sig) external pure returns (address) {
+        bytes32 proposalHash = keccak256(abi.encode(snapshotRoot, dao, proposalId));
+        return recover(keccak256(abi.encodePacked("\x19Ethereum Signed Message:\n32", keccak256(abi.encode(proposalHash, 1)))), sig);
+    }
+
     function hasVotedYes(address voter, bytes32 proposalHash, bytes memory sig) internal pure returns(bool) {
-        if(ecrecovery(keccak256(abi.encode(proposalHash, 1)), sig) == voter) {
+        if(recover(keccak256(abi.encodePacked("\x19Ethereum Signed Message:\n32", keccak256(abi.encode(proposalHash, 1)))), sig) == voter) {
             return true;
-        } else if (ecrecovery(keccak256(abi.encode(proposalHash, 2)), sig) == voter) {
+        } else if (recover(keccak256(abi.encodePacked("\x19Ethereum Signed Message:\n32", keccak256(abi.encode(proposalHash, 2)))), sig) == voter) {
             return false;
         } else {
             revert("invalid signature or signed for neither yes nor no");
@@ -148,43 +158,38 @@ contract OffchainVotingContract is IVoting, Module {
     }
 
     /**
-     * @dev Returns the address that signed a hashed message (`hash`) with
-     * `signature`. This address can then be used for verification purposes.
-     *
-     * The `ecrecover` EVM opcode allows for malleable (non-unique) signatures:
-     * this function rejects them by requiring the `s` value to be in the lower
-     * half order, and the `v` value to be either 27 or 28.
-     *
-     * IMPORTANT: `hash` _must_ be the result of a hash operation for the
-     * verification to be secure: it is possible to craft signatures that
-     * recover to arbitrary addresses for non-hashed data. A safe way to ensure
-     * this is by receiving a hash of the original message (which may otherwise
-     * be too long), and then calling {toEthSignedMessageHash} on it.
-     */
-    function ecrecovery(bytes32 hash, bytes memory sig) public pure returns (address) {
+   * @dev Recover signer address from a message by using his signature
+   * @param hash bytes32 message, the hash is the signed message. What is recovered is the signer address.
+   * @param sig bytes signature, the signature is generated using web3.eth.sign()
+   */
+  function recover(bytes32 hash, bytes memory sig) public pure returns (address) {
     bytes32 r;
     bytes32 s;
     uint8 v;
 
-    require(sig.length == 65, 'invalid signature length'); 
+    //Check the signature length
+    if (sig.length != 65) {
+      return (address(0));
+    }
 
+    // Divide the signature in r, s and v variables
     assembly {
       r := mload(add(sig, 32))
       s := mload(add(sig, 64))
-      v := and(mload(add(sig, 65)), 255)
+      v := byte(0, mload(add(sig, 96)))
     }
 
+    // Version of signature should be 27 or 28, but 0 and 1 are also possible versions
     if (v < 27) {
       v += 27;
     }
 
-    require (v == 27 || v == 28, 'invalid v value'); 
-
-    return ecrecover(hash, v, r, s);
-  }
-
-  function ecverify(bytes32 hash, bytes memory sig, address signer) public pure returns (bool) {
-    return signer == ecrecovery(hash, sig);
+    // If the version is correct return the signer address
+    if (v != 27 && v != 28) {
+      return (address(0));
+    } else {
+      return ecrecover(hash, v, r, s);
+    }
   }
 
     function fixResult(Registry dao, uint256 proposalId, address voter, uint256 weight, uint256 nbYes, uint256 nbNo, bytes calldata voteSignature, bytes32[] memory proof) view external {

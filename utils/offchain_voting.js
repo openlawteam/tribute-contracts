@@ -4,7 +4,7 @@ const sha3 = web3.utils.sha3;
 async function addVote(votes, snapshotRoot, daoAddress, proposalId, account, memberWeight, voteYes) {
   const proposalHash = sha3(web3.eth.abi.encodeParameters(
     ['bytes32', 'address', 'uint256'], 
-    [snapshotRoot.toString(), daoAddress, proposalId]));
+    [snapshotRoot.toString(), daoAddress, proposalId]));    
   const vote = {
     address : account.toString(),
     weight: memberWeight,
@@ -16,8 +16,8 @@ async function addVote(votes, snapshotRoot, daoAddress, proposalId, account, mem
 }
 
 async function generateVote(account, proposalHash, voteYes) {
-  const voteHash = sha3(web3.eth.abi.encodeParameters( ['bytes32', 'uint256'], [proposalHash.toString('hex'), voteYes ? "1" : "2"]));
-  return await web3.eth.sign(voteHash.toString('hex'), account);
+  const voteHash = sha3(web3.eth.abi.encodeParameters( ['bytes32', 'uint256'], [proposalHash, voteYes ? "1" : "2"]));
+  return await web3.eth.sign(voteHash, account);
 }
 
 async function prepareSnapshot(dao, member, accounts) {
@@ -32,16 +32,10 @@ async function prepareSnapshot(dao, member, accounts) {
   .sort((a, b) => a.account > b.account)
   .map(({account, nbShares}) => sha3(web3.eth.abi.encodeParameters(['address', 'uint256'], [account, nbShares.toString()])));
   const weights = cleanShares.reduce((o, elem) => Object.assign(o, {[elem.account]: elem.nbShares}), {});
-  if(!Number.isInteger(getBaseLog(2, elements.length))) {
-
-  }
+  
   const tree = new MerkleTree(elements);
 
   return {snapshotTree: tree, weights};
-}
-
-function getBaseLog(x, y) {
-  return Math.log(y) / Math.log(x);
 }
 
 function buildVoteLeafHashForMerkleTreeData(leaf) {

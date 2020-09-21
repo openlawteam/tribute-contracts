@@ -35,27 +35,23 @@ contract OnboardingContract is IOnboarding, Module, AdapterGuard, ModuleGuard {
         configs[address(dao)].sharesPerChunk = sharesPerChunk;
     }
 
-    function processOnboarding(Registry dao, address payable applicant) override external payable {
+    function processOnboarding(Registry dao, address applicant, uint256 value) override external returns (uint256) {
         OnboardingConfig memory config = configs[address(dao)];
         
         require(config.sharesPerChunk > 0, "shares per chunk should not be 0");
         require(config.chunkSize > 0, "shares per chunk should not be 0");
         
-        uint256 numberOfChunks = msg.value.div(config.chunkSize);
+        uint256 numberOfChunks = value.div(config.chunkSize);
         require(numberOfChunks > 0, "amount of ETH sent was not sufficient");
         uint256 amount = numberOfChunks.mul(config.chunkSize);
         uint256 sharesRequested = numberOfChunks.mul(config.sharesPerChunk);
         
         _submitMembershipProposal(dao, applicant, sharesRequested, amount);
         
-        if (msg.value > amount) {
-            applicant.transfer(msg.value - amount);
-        }
-        
+        return amount;    
     }
 
-    function _submitMembershipProposal(Registry dao, address payable 
-    newMember, uint256 sharesRequested, uint256 amount) internal {
+    function _submitMembershipProposal(Registry dao, address newMember, uint256 sharesRequested, uint256 amount) internal {
         IProposal proposalContract = IProposal(dao.getAddress(PROPOSAL_MODULE));
         uint256 proposalId = proposalContract.createProposal(dao);
         ProposalDetails storage proposal = proposals[address(dao)][proposalId];
@@ -76,9 +72,9 @@ contract OnboardingContract is IOnboarding, Module, AdapterGuard, ModuleGuard {
         require(votingContract.voteResult(dao, proposalId) == 2, "proposal need to pass to be processed");
         ProposalDetails storage proposal = proposals[address(dao)][proposalId];
         memberContract.updateMember(dao, proposal.applicant, proposal.sharesRequested);
+        
         IBank bankContract = IBank(dao.getAddress(BANK_MODULE));
         // address 0 represents native ETH
         bankContract.addToGuild(dao, address(0), proposal.amount);
-        payable(address(dao)).transfer(proposal.amount); 
     }
 }

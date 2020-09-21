@@ -1,4 +1,4 @@
-const {advanceTime, createDao, OnboardingContract, sharePrice, remaining, MemberContract} = require('../../utils/DaoFactory.js');
+const {advanceTime, createDao, OnboardingContract, sharePrice, remaining, MemberContract, reportingTransaction} = require('../../utils/DaoFactory.js');
 const {prepareSnapshot, addVote, prepareVoteResult, buildVoteLeafHashForMerkleTree} = require('../../utils/offchain_voting.js');
 const toBN = web3.utils.toBN;
 const sha3 = web3.utils.sha3;
@@ -94,16 +94,17 @@ contract('MolochV3 - Offchain Voting Module', async accounts => {
 
     const someone = accounts[4];
 
-    await dao.sendTransaction({from:someone,value:sharePrice.mul(web3.utils.toBN(3)).add(remaining), gasPrice: web3.utils.toBN("0")});
+    await reportingTransaction('onboarding call', dao.sendTransaction({from:someone,value:sharePrice.mul(web3.utils.toBN(3)).add(remaining), gasPrice: web3.utils.toBN("0")}));
 
     const sr = await prepareSnapshot(dao, member, accounts);
     const proposalId = 2;
 
     await onboarding.sponsorProposal(dao.address, proposalId, web3.eth.abi.encodeParameters(['bytes32', 'uint256'], [sr.snapshotTree.getHexRoot(), 3]), {from: myAccount, gasPrice: web3.utils.toBN("0")});
 
-    let ve = await addVote([], snapshotTree.getHexRoot(), dao.address, 0, myAccount, 1, true);
-    ve = await addVote(ve, snapshotTree.getHexRoot(), dao.address, 0, otherAccount, 1, true);
-    ve = await addVote(ve, snapshotTree.getHexRoot(), dao.address, 0, otherAccount2, 1, false);
+    let ve = await addVote([], sr.snapshotTree.getHexRoot(), dao.address, proposalId, myAccount, 1, true);
+    ve = await addVote(ve, sr.snapshotTree.getHexRoot(), dao.address, proposalId, otherAccount, 1, true);
+    ve = await addVote(ve, sr.snapshotTree.getHexRoot(), dao.address, proposalId, otherAccount2, 1, false);
+
     const r3 = prepareVoteResult([ve[2], ve[0] ,ve[1] ]);
     const voteResultTree2 = r3.voteResultTree;
     const votes2 = r3.votes;
