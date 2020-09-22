@@ -8,9 +8,11 @@ import '../../core/Module.sol';
 import '../../core/interfaces/IProposal.sol';
 import '../../core/interfaces/IMember.sol';
 import '../interfaces/IVoting.sol';
+import '../../guards/AdapterGuard.sol';
+import '../../guards/ModuleGuard.sol';
 import '../../helpers/FlagHelper.sol';
 
-contract OffchainVotingContract is IVoting, Module {
+contract OffchainVotingContract is IVoting, Module, AdapterGuard, ModuleGuard {
 
     using FlagHelper for uint256;
 
@@ -41,9 +43,37 @@ contract OffchainVotingContract is IVoting, Module {
     mapping(address => mapping(uint256 => Voting)) votes;
     mapping(address => VotingConfig) votingConfigs;
 
-    function registerDao(address dao, uint256 votingPeriod) override external {
-        votingConfigs[dao].flags = 1; // mark as exists
-        votingConfigs[dao].votingPeriod = votingPeriod;
+    function registerDao(Registry dao, uint256 votingPeriod) override external onlyModule(dao) {
+        votingConfigs[address(dao)].flags = 1; // mark as exists
+        votingConfigs[address(dao)].votingPeriod = votingPeriod;
+    }
+
+    function submitVoteResult(Registry dao, uint256 proposalId, uint256 nbYes, uint256 nbNo, bytes32 resultRoot) external onlyMember(dao) {
+        //TODO: check vote status
+        //TODO: if vote result already exists, check that the new one should be able to override
+        votes[address(dao)][proposalId].nbNo = nbNo;
+        votes[address(dao)][proposalId].nbYes = nbYes;
+        votes[address(dao)][proposalId].resultRoot = resultRoot;
+    }
+
+    function startNewVotingForProposal(Registry dao, uint256 proposalId, bytes memory data) override external onlyModule(dao) returns (uint256) {
+        require(data.length == 64, "vote data should represent a merkle tree root (bytes32) and number of voters (uint256)");
+
+        bytes32 root;
+        uint256 nbVoters;
+
+        assembly {
+            root := mload(add(data, 32))
+        }
+
+        assembly {
+            nbVoters := mload(add(data, 64))
+        }
+        require(root != bytes32(0), "snapshot root cannot be 0");
+        require(nbVoters > 0, "nb voters being 0 means no one can vote");
+        votes[address(dao)][proposalId].startingTime = block.timestamp;
+        votes[address(dao)][proposalId].snapshotRoot = root;
+        votes[address(dao)][proposalId].nbVoters = nbVoters;
     }
 
     /**
@@ -80,34 +110,6 @@ contract OffchainVotingContract is IVoting, Module {
         } 
 
         return 1;
-    }
-    
-    function submitVoteResult(Registry dao, uint256 proposalId, uint256 nbYes, uint256 nbNo, bytes32 resultRoot) external {
-        //TODO: check vote status
-        //TODO: if vote result already exists, check that the new one should be able to override
-        votes[address(dao)][proposalId].nbNo = nbNo;
-        votes[address(dao)][proposalId].nbYes = nbYes;
-        votes[address(dao)][proposalId].resultRoot = resultRoot;
-    }
-
-    function startNewVotingForProposal(Registry dao, uint256 proposalId, bytes memory data) override external returns (uint256) {
-        require(data.length == 64, "vote data should represent a merkle tree root (bytes32) and number of voters (uint256)");
-
-        bytes32 root;
-        uint256 nbVoters;
-
-        assembly {
-            root := mload(add(data, 32))
-        }
-
-        assembly {
-            nbVoters := mload(add(data, 64))
-        }
-        require(root != bytes32(0), "snapshot root cannot be 0");
-        require(nbVoters > 0, "nb voters being 0 means no one can vote");
-        votes[address(dao)][proposalId].startingTime = block.timestamp;
-        votes[address(dao)][proposalId].snapshotRoot = root;
-        votes[address(dao)][proposalId].nbVoters = nbVoters;
     }
 
     function challengeWrongOrder(Registry dao, uint256 proposalId, uint256 index, VoteResultNode memory nodePrevious, VoteResultNode memory nodeCurrent) external {
@@ -157,74 +159,64 @@ contract OffchainVotingContract is IVoting, Module {
         }
     }
 
-    /**
-   * @dev Recover signer address from a message by using his signature
-   * @param hash bytes32 message, the hash is the signed message. What is recovered is the signer address.
-   * @param sig bytes signature, the signature is generated using web3.eth.sign()
-   */
-  function recover(bytes32 hash, bytes memory sig) public pure returns (address) {
-    bytes32 r;
-    bytes32 s;
-    uint8 v;
+        /**
+    * @dev Recover signer address from a message by using his signature
+    * @param hash bytes32 message, the hash is the signed message. What is recovered is the signer address.
+    * @param sig bytes signature, the signature is generated using web3.eth.sign()
+    */
+    function recover(bytes32 hash, bytes memory sig) public pure returns (address) {
+        bytes32 r;
+        bytes32 s;
+        uint8 v;
 
-    //Check the signature length
-    if (sig.length != 65) {
-      return (address(0));
-    }
+        //Check the signature length
+        if (sig.length != 65) {
+            return (address(0));
+        }
 
-    // Divide the signature in r, s and v variables
-    assembly {
-      r := mload(add(sig, 32))
-      s := mload(add(sig, 64))
-      v := byte(0, mload(add(sig, 96)))
-    }
+        // Divide the signature in r, s and v variables
+        assembly {
+            r := mload(add(sig, 32))
+            s := mload(add(sig, 64))
+            v := byte(0, mload(add(sig, 96)))
+        }
 
-    // Version of signature should be 27 or 28, but 0 and 1 are also possible versions
-    if (v < 27) {
-      v += 27;
-    }
+        // Version of signature should be 27 or 28, but 0 and 1 are also possible versions
+        if (v < 27) {
+            v += 27;
+        }
 
-    // If the version is correct return the signer address
-    if (v != 27 && v != 28) {
-      return (address(0));
-    } else {
-      return ecrecover(hash, v, r, s);
+        // If the version is correct return the signer address
+        if (v != 27 && v != 28) {
+            return (address(0));
+        }
+        return ecrecover(hash, v, r, s);
     }
-  }
 
     function fixResult(Registry dao, uint256 proposalId, address voter, uint256 weight, uint256 nbYes, uint256 nbNo, bytes calldata voteSignature, bytes32[] memory proof) view external {
         Voting memory vote = votes[address(dao)][proposalId];
         bytes32 hash = keccak256(abi.encode(voter, weight, voteSignature, nbYes, nbNo));
         require(verify(vote.resultRoot, hash, proof), "proof check mismatch!");
-        if(vote.nbYes != nbYes) {
+        if (vote.nbYes != nbYes) {
             vote.nbYes = nbYes;
         }
-        if(vote.nbNo != nbNo) {
+        if (vote.nbNo != nbNo) {
             vote.nbNo = nbNo;
         }
     }
 
-    function verify(
-    bytes32 root,
-    bytes32 leaf,
-    bytes32[] memory proof
-  )
-    public
-    pure
-    returns (bool)
-  {
+    function verify(bytes32 root, bytes32 leaf, bytes32[] memory proof) public pure returns (bool) {
     bytes32 computedHash = leaf;
 
     for (uint256 i = 0; i < proof.length; i++) {
-      bytes32 proofElement = proof[i];
-
-      if (computedHash < proofElement) {
-        // Hash(current computed hash + current element of the proof)
-        computedHash = keccak256(abi.encodePacked(computedHash, proofElement));
-      } else {
-        // Hash(current element of the proof + current computed hash)
-        computedHash = keccak256(abi.encodePacked(proofElement, computedHash));
-      }
+        bytes32 proofElement = proof[i];
+        if (computedHash < proofElement) {
+            // Hash(current computed hash + current element of the proof)
+            computedHash = keccak256(abi.encodePacked(computedHash, proofElement));
+        } else {
+            // Hash(current element of the proof + current computed hash)
+            computedHash = keccak256(abi.encodePacked(proofElement, computedHash));
+        }
     }
 
     // Check if the computed hash (root) is equal to the provided root

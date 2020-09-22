@@ -50,7 +50,7 @@ contract DaoFactory is Module {
         dao.addModule(RAGEQUIT_MODULE, addresses[RAGEQUIT_MODULE]);
 
         IVoting votingContract = IVoting(addresses[VOTING_MODULE]);
-        votingContract.registerDao(daoAddress, votingPeriod);
+        votingContract.registerDao(dao, votingPeriod);
 
         IMember memberContract = IMember(addresses[MEMBER_MODULE]);
         memberContract.updateMember(dao, msg.sender, 1);
