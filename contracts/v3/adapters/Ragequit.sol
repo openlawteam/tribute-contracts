@@ -18,7 +18,7 @@ contract RagequitContract is Module, AdapterGuard, ReentrancyGuard {
      * default fallback function to prevent from sending ether to the contract
      */
     receive() external payable {
-        revert();
+        revert("fallback revert");
     }
 
     function ragequit(Registry dao, uint256 sharesToBurn)

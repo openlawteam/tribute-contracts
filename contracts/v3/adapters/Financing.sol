@@ -28,7 +28,7 @@ contract FinancingContract is IFinancing, Module, AdapterGuard {
      * default fallback function to prevent from sending ether to the contract
      */
     receive() external payable {
-        revert();
+        revert("fallback revert");
     }
 
     function createFinancingRequest(
@@ -45,7 +45,7 @@ contract FinancingContract is IFinancing, Module, AdapterGuard {
         IBank bankContract = IBank(dao.getAddress(BANK_MODULE));
         require(
             bankContract.isNotReservedAddress(applicant),
-            "applicant address cannot be reserved"
+            "applicant using reserved address"
         );
 
         IProposal proposalContract = IProposal(dao.getAddress(PROPOSAL_MODULE));
@@ -80,7 +80,7 @@ contract FinancingContract is IFinancing, Module, AdapterGuard {
         IVoting votingContract = IVoting(dao.getAddress(VOTING_MODULE));
         require(
             votingContract.voteResult(dao, proposalId) == 2,
-            "proposal need to pass to be processed"
+            "proposal did not pass yet"
         );
 
         IBank bankContract = IBank(dao.getAddress(BANK_MODULE));

@@ -50,7 +50,7 @@ contract OnboardingContract is IOnboarding, Module, AdapterGuard, ModuleGuard {
         require(config.chunkSize > 0, "shares per chunk should not be 0");
 
         uint256 numberOfChunks = value.div(config.chunkSize);
-        require(numberOfChunks > 0, "amount of ETH sent was not sufficient");
+        require(numberOfChunks > 0, "not sufficient ETH");
         uint256 amount = numberOfChunks.mul(config.chunkSize);
         uint256 sharesRequested = numberOfChunks.mul(config.sharesPerChunk);
 
@@ -94,12 +94,12 @@ contract OnboardingContract is IOnboarding, Module, AdapterGuard, ModuleGuard {
         IMember memberContract = IMember(dao.getAddress(MEMBER_MODULE));
         require(
             memberContract.isActiveMember(dao, msg.sender),
-            "only members can sponsor a membership proposal"
+            "only members can sponsor"
         );
         IVoting votingContract = IVoting(dao.getAddress(VOTING_MODULE));
         require(
             votingContract.voteResult(dao, proposalId) == 2,
-            "proposal need to pass to be processed"
+            "proposal need to pass"
         );
         ProposalDetails storage proposal = proposals[address(dao)][proposalId];
         memberContract.updateMember(

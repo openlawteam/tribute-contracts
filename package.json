@@ -22,8 +22,8 @@
   "scripts": {
     "test": "truffle test",
     "coverage": "truffle run coverage",
-    "prettier": "prettier --write contracts/v3/**/*.sol",
-    "lint": "prettier --list-different contracts/v3/**/*.sol"
+    "prettier": "prettier --write contracts/v3/**/*",
+    "lint": "prettier --list-different contracts/v3/**/*"
   },
   "repository": {
     "type": "git",

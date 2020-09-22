@@ -18,7 +18,7 @@ abstract contract AdapterGuard is Module {
         IMember memberContract = IMember(dao.getAddress(MEMBER_MODULE));
         require(
             memberContract.isActiveMember(dao, msg.sender),
-            "only DAO members are allowed to call this function"
+            "restricted to DAO members"
         );
         _;
     }
