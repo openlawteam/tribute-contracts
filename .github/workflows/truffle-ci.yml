@@ -1,0 +1,29 @@
+name: Truffle CI
+
+on:
+  push:
+    branches:
+    # long-lived branches
+    - master
+
+  pull_request:
+    branches:
+      - "*"
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        platform: [ubuntu-latest]
+        node-version: [12.x]
+        env: [GETH=true, PACKAGES=true, INTEGRATION=true]
+
+    steps:
+    - uses: actions/checkout@v1
+    - name: Use Node.js ${{ matrix.node-version }}
+      uses: actions/setup-node@v1
+      with:
+        node-version: ${{ matrix.node-version }}
+    - run: npm install
+    - run: npm run test
