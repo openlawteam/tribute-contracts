@@ -52,11 +52,12 @@ contract MemberContract is IMember, Module, ModuleGuard, ReentrancyGuard {
 
     function updateMember(Registry dao, address memberAddr, uint256 shares) override external onlyModule(dao) {
         Member storage member = members[address(dao)][memberAddr];
-        member.flags = 1;
-        member.nbShares = shares;
         if(member.delegateKey == address(0x0)) {
+            member.flags = 1;
             member.delegateKey = memberAddr;
         }
+
+        member.nbShares = shares;
         
         totalShares = totalShares.add(shares);
         
@@ -75,6 +76,7 @@ contract MemberContract is IMember, Module, ModuleGuard, ReentrancyGuard {
         }
 
         Member storage member = members[address(dao)][memberAddr];
+        require(member.flags.exists(), "member does not exist");
         memberAddressesByDelegatedKey[address(dao)][member.delegateKey] = address(0x0);
         memberAddressesByDelegatedKey[address(dao)][newDelegateKey] = memberAddr;
         member.delegateKey = newDelegateKey;
@@ -108,7 +110,7 @@ contract MemberContract is IMember, Module, ModuleGuard, ReentrancyGuard {
      * @param account The address to get votes balance
      * @return The number of current votes for `account`
      */
-    function getCurrentVotes(address account) external view returns (uint256) {
+    function getCurrentVotes(address account) override external view returns (uint256) {
         uint32 nCheckpoints = numCheckpoints[account];
         return nCheckpoints > 0 ? checkpoints[account][nCheckpoints - 1].votes : 0;
     }
@@ -120,7 +122,7 @@ contract MemberContract is IMember, Module, ModuleGuard, ReentrancyGuard {
      * @param blockNumber The block number to get the vote balance at
      * @return The number of votes the account had as of the given block
      */
-    function getPriorVotes(address account, uint blockNumber) public view returns (uint256) {
+    function getPriorVotes(address account, uint blockNumber) override external view returns (uint256) {
         require(blockNumber < block.number, "Uni::getPriorVotes: not yet determined");
 
         uint32 nCheckpoints = numCheckpoints[account];

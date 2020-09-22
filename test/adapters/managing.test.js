@@ -147,7 +147,7 @@ contract('MolochV3 - Managing Adapter', async accounts => {
       await voting.submitVote(dao.address, proposalId, 1, { from: myAccount, gasPrice: toBN("0") });
       assert.err("should not pass");
     } catch (err) {
-      assert.equal(err.reason, "invalidqw qwd address");
+      assert.equal(err.reason, "only active members can vote");
     }
     await advanceTime(10000);
     await managing.processProposal(dao.address, proposalId, { from: delegateKey, gasPrice: toBN("0") });

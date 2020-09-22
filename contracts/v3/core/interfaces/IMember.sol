@@ -11,5 +11,7 @@ interface IMember {
     function updateDelegateKey(Registry dao, address member, address delegatedKey) external;
     function burnShares(Registry dao, address memberAddr, uint256 shares) external;
     function nbShares(Registry dao, address member) external view returns (uint256);
+    function getCurrentVotes(address account) external view returns (uint256);
+    function getPriorVotes(address account, uint blockNumber) external view returns (uint256);
     function getTotalShares() external view returns(uint256);
 }
