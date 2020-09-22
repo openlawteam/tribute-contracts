@@ -12,9 +12,13 @@
     "truffle": "^5.1.44",
     "web3-utils": "^1.2.11"
   },
-  "devDependencies": {},
+  "devDependencies": {
+    "eth-gas-reporter": "^0.2.17",
+    "solidity-coverage": "^0.7.10"
+  },
   "scripts": {
-    "test": "mocha"
+    "test": "mocha",
+    "coverage": "truffle run coverage"
   },
   "repository": {
     "type": "git",

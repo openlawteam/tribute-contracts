@@ -105,3 +105,10 @@ dist
 
 # Build/Contracts
 build/
+
+# Test Coverage Reports
+coverage
+coverage.json
+coverageEnv
+.coverage_artifacts
+.coverage_contracts
