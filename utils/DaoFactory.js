@@ -11,7 +11,7 @@ const FlagHelperLib = artifacts.require('./v3/helpers/FlagHelper');
 const DaoFactory = artifacts.require('./v3/core/DaoFactory');
 const Registry = artifacts.require('./v3/core/Registry');
 const MemberContract = artifacts.require('./v3/core/MemberContract');
-const VotingContract = artifacts.require('./v3/core/VotingContract');
+const VotingContract = artifacts.require('./v3/adapters/VotingContract');
 const ProposalContract = artifacts.require('./v3/core/ProposalContract');
 const ManagingContract = artifacts.require('./v3/adapter/ManagingContract');
 const FinancingContract = artifacts.require('./v3/adapter/FinancingContract');
@@ -41,8 +41,7 @@ async function createDao(overridenModules, senderAccount) {
     const {member, proposal, voting, ragequit, managing, financing, onboarding, bank} = modules;
     let daoFactory = await DaoFactory.new(member.address, proposal.address, voting.address, ragequit.address, managing.address, financing.address, onboarding.address, bank.address, 
       { from: senderAccount, gasPrice: web3.utils.toBN("0") });
-    const txInfo = await daoFactory.newDao(sharePrice, numberOfShares, 1000, { from: senderAccount, gasPrice: web3.utils.toBN("0") });
-    // console.log("\t Gas Used: " + txInfo.receipt.gasUsed);
+    await reportingTransaction('DAO creation', daoFactory.newDao(sharePrice, numberOfShares, 1000, { from: senderAccount, gasPrice: web3.utils.toBN("0") }));
     let pastEvents = await daoFactory.getPastEvents();
     let daoAddress = pastEvents[0].returnValues.dao;
     let dao = await Registry.at(daoAddress);
@@ -74,11 +73,19 @@ async function advanceTime(time) {
     });
 }
 
+async function reportingTransaction(details, promiseTransaction) {
+    const tx = await promiseTransaction;
+    console.log('**************');
+    console.log(details);
+    console.log('gas used', tx.receipt.gasUsed);
+    console.log('**************');
+}
 
 module.exports = {
     prepareSmartContracts,
     advanceTime,
     createDao,
+    reportingTransaction,
     GUILD,
     ESCROW,
     TOTAL,

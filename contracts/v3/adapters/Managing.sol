@@ -5,7 +5,7 @@ pragma solidity ^0.7.0;
 import './interfaces/IManaging.sol';
 import '../core/Module.sol';
 import '../core/Registry.sol';
-import '../core/interfaces/IVoting.sol';
+import '../adapters/interfaces/IVoting.sol';
 import '../core/interfaces/IProposal.sol';
 import '../core/interfaces/IBank.sol';
 import '../guards/AdapterGuard.sol';

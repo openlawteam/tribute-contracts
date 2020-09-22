@@ -1,4 +1,4 @@
-const {advanceTime, createDao, GUILD, sharePrice, remaining, numberOfShares, BankContract, OnboardingContract, VotingContract, MemberContract} = require('../../utils/DaoFactory.js');
+const {advanceTime, createDao, reportingTransaction, GUILD, sharePrice, remaining, numberOfShares, BankContract, OnboardingContract, VotingContract, MemberContract} = require('../../utils/DaoFactory.js');
 const toBN = web3.utils.toBN;
 const sha3 = web3.utils.sha3;
 
@@ -26,7 +26,7 @@ contract('MolochV3 - Onboarding Adapter', async accounts => {
     await dao.sendTransaction({from:otherAccount,value:sharePrice.mul(toBN(3)).add(remaining), gasPrice: toBN("0")});
     await onboarding.sponsorProposal(dao.address, 0, [], {from: myAccount, gasPrice: toBN("0")});
 
-    await voting.submitVote(dao.address, 0, 1, {from: myAccount, gasPrice: toBN("0")});
+    await reportingTransaction('submit vote', voting.submitVote(dao.address, 0, 1, {from: myAccount, gasPrice: toBN("0")}));
     
     try {
       await onboarding.processProposal(dao.address, 0, {from: myAccount, gasPrice: toBN("0")});

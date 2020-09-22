@@ -7,6 +7,8 @@
     "test": "test"
   },
   "dependencies": {
+    "ethereumjs-util": "^7.0.5",
+    "keccak256": "^1.0.0",
     "truffle": "^5.1.44",
     "web3-utils": "^1.2.11"
   },
