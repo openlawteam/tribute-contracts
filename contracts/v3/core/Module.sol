@@ -3,7 +3,6 @@ pragma solidity ^0.7.0;
 // SPDX-License-Identifier: MIT
 
 abstract contract Module {
-
     // Core Modules
     bytes32 constant BANK_MODULE = keccak256("bank");
     bytes32 constant MEMBER_MODULE = keccak256("member");
@@ -15,5 +14,4 @@ abstract contract Module {
     bytes32 constant FINANCING_MODULE = keccak256("financing");
     bytes32 constant MANAGING_MODULE = keccak256("managing");
     bytes32 constant RAGEQUIT_MODULE = keccak256("ragequit");
-    
 }

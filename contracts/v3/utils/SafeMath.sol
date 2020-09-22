@@ -1,4 +1,5 @@
 pragma solidity ^0.7.0;
+
 // SPDX-License-Identifier: MIT
 
 library SafeMath {
@@ -14,7 +15,6 @@ library SafeMath {
     }
 
     function div(uint256 a, uint256 b) internal pure returns (uint256) {
-
         require(b > 0);
         uint256 c = a / b;
 

@@ -13,12 +13,17 @@
   },
   "devDependencies": {
     "eth-gas-reporter": "^0.2.17",
+    "prettier": "^2.1.2",
+    "prettier-plugin-solidity": "^1.0.0-alpha.57",
+    "solhint": "^3.2.0",
     "solidity-coverage": "^0.7.10",
     "truffle": "^5.1.45"
   },
   "scripts": {
     "test": "truffle test",
-    "coverage": "truffle run coverage"
+    "coverage": "truffle run coverage",
+    "prettier": "prettier --write contracts/v3/**/*.sol",
+    "lint": "prettier --list-different contracts/v3/**/*.sol"
   },
   "repository": {
     "type": "git",
