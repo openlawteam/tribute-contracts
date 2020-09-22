@@ -9,12 +9,12 @@
   "dependencies": {
     "ethereumjs-util": "^7.0.5",
     "keccak256": "^1.0.0",
-    "truffle": "^5.1.44",
     "web3-utils": "^1.2.11"
   },
   "devDependencies": {
     "eth-gas-reporter": "^0.2.17",
-    "solidity-coverage": "^0.7.10"
+    "solidity-coverage": "^0.7.10",
+    "truffle": "^5.1.45"
   },
   "scripts": {
     "test": "truffle test",
