@@ -78,7 +78,7 @@ module.exports = {
   mocha: {
     // timeout: 100000
     reporter: "eth-gas-reporter",
-    reporterOptions: { excludeContracts: ["Migrations", "Moloch", "MolochSummoner"] },
+    reporterOptions: { excludeContracts: ["Migrations", "Moloch", "MolochSummoner", "Submitter"] },
   },
 
   // Configure your compilers
