@@ -53,7 +53,7 @@ contract('MolochV3 - Ragequit Adapter', async accounts => {
       let nonMember = accounts[4];
       await ragequitContract.ragequit(dao.address, toBN(shares), { from: nonMember, gasPrice: toBN("0") });
     } catch (error){
-      assert.equal(error.reason, "only DAO members are allowed to call this function");
+      assert.equal(error.reason, "restricted to DAO members");
     }
   })
 

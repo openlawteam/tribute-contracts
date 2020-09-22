@@ -38,19 +38,19 @@ contract('MolochV3 - Managing Adapter', async accounts => {
       await managing.createModuleChangeRequest(dao.address, newModuleId, GUILD, { from: myAccount, gasPrice: toBN("0") });
       assert.err("should not pass");
     } catch (err) {
-      assert.equal(err.reason, "module address cannot be reserved");
+      assert.equal(err.reason, "module is using reserved address");
     }
     try {
       await managing.createModuleChangeRequest(dao.address, newModuleId, ESCROW, { from: myAccount, gasPrice: toBN("0") });
       assert.err("should not pass");
     } catch (err) {
-      assert.equal(err.reason, "module address cannot be reserved");
+      assert.equal(err.reason, "module is using reserved address");
     }
     try {
       await managing.createModuleChangeRequest(dao.address, newModuleId, TOTAL, { from: myAccount, gasPrice: toBN("0") });
       assert.err("should not pass");
     } catch (err) {
-      assert.equal(err.reason, "module address cannot be reserved");
+      assert.equal(err.reason, "module is using reserved address");
     }
   })
 
@@ -147,7 +147,7 @@ contract('MolochV3 - Managing Adapter', async accounts => {
       await voting.submitVote(dao.address, proposalId, 1, { from: myAccount, gasPrice: toBN("0") });
       assert.err("should not pass");
     } catch (err) {
-      assert.equal(err.reason, "only DAO members are allowed to call this function");
+      assert.equal(err.reason, "restricted to DAO members");
     }
     await advanceTime(10000);
     await managing.processProposal(dao.address, proposalId, { from: delegateKey, gasPrice: toBN("0") });
