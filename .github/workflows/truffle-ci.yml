@@ -5,7 +5,6 @@ on:
     branches:
     # long-lived branches
     - master
-
   pull_request:
     branches:
       - "*"
@@ -13,17 +12,11 @@ on:
 jobs:
   build:
     runs-on: ubuntu-latest
-    strategy:
-      matrix:
-        platform: [ubuntu-latest]
-        node-version: [12.x]
-        env: [GETH=true, PACKAGES=true, INTEGRATION=true]
-
     steps:
     - uses: actions/checkout@v1
-    - name: Use Node.js ${{ matrix.node-version }}
+    - name: Use Node.js 12.X
       uses: actions/setup-node@v1
       with:
-        node-version: ${{ matrix.node-version }}
+        node-version: '12'
     - run: npm install
-    - run: npm run test
+    - run: npm test
