@@ -31,11 +31,10 @@ contract ManagingContract is IManaging, Module, AdapterGuard {
         revert();
     }
 
-    function createModuleChangeRequest(Registry dao, address applicant, bytes32 moduleId, address moduleAddress) override external returns (uint256) {
+    function createModuleChangeRequest(Registry dao, bytes32 moduleId, address moduleAddress) override external onlyMember(dao) returns (uint256) {
         require(moduleAddress != address(0x0), "invalid module address");
 
         IBank bankContract = IBank(dao.getAddress(BANK_MODULE));
-        require(bankContract.isNotReservedAddress(applicant), "applicant address cannot be reserved");
         require(bankContract.isNotReservedAddress(moduleAddress), "module address cannot be reserved");
 
         //FIXME: is there a way to check if the new module implements the module interface properly?
@@ -44,7 +43,7 @@ contract ManagingContract is IManaging, Module, AdapterGuard {
         uint256 proposalId = proposalContract.createProposal(dao);
 
         ProposalDetails storage proposal = proposals[proposalId];
-        proposal.applicant = applicant;
+        proposal.applicant = msg.sender;
         proposal.moduleId = moduleId;
         proposal.moduleAddress = moduleAddress;
         proposal.processed = false;

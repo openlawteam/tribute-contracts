@@ -51,6 +51,11 @@ contract OnboardingContract is IOnboarding, Module, AdapterGuard, ModuleGuard {
         return amount;    
     }
 
+    function updateDelegateKey(Registry dao, address delegateKey) external {
+        IMember memberContract = IMember(dao.getAddress(MEMBER_MODULE));
+        memberContract.updateDelegateKey(dao, msg.sender, delegateKey);
+    }
+
     function _submitMembershipProposal(Registry dao, address newMember, uint256 sharesRequested, uint256 amount) internal {
         IProposal proposalContract = IProposal(dao.getAddress(PROPOSAL_MODULE));
         uint256 proposalId = proposalContract.createProposal(dao);
