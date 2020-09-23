@@ -40,7 +40,16 @@ The main idea is to limit access to the contracts according to each layer. Exter
 ### Usage
 
 #### Run Tests
-This project uses truffle, to run the tests, simply run `truffle test`
+This project uses truffle, to run the tests, simply run:
+> npm run test
+
+#### Code Coverage
+To check the code coverage report, simply run:
+> npm run coverage
+
+#### Code Format
+To fix the Solidity code with the linter hints, simply run:
+> npm run lint:fix
 
 ## Contribute
 

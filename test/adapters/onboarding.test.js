@@ -31,7 +31,7 @@ contract('MolochV3 - Onboarding Adapter', async accounts => {
     try {
       await onboarding.processProposal(dao.address, 0, {from: myAccount, gasPrice: toBN("0")});
     } catch(err) {
-      assert.equal(err.reason, "proposal need to pass to be processed");
+      assert.equal(err.reason, "proposal need to pass");
     }
     
     await advanceTime(10000);

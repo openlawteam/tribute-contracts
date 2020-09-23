@@ -1,0 +1,5 @@
+node_modules/
+contracts/test
+contracts/Migrations.sol
+contracts/Moloch.sol
+contracts/MolochSummoner.sol

@@ -1,4 +1,5 @@
 pragma solidity ^0.7.0;
+
 // SPDX-License-Identifier: MIT
 
 /**
@@ -19,7 +20,7 @@ pragma solidity ^0.7.0;
 abstract contract ReentrancyGuard {
     bool private _notEntered;
 
-    constructor () {
+    constructor() {
         // Storing an initial non-zero value makes deployment a bit more
         // expensive, but in exchange the refund on every call to nonReentrant
         // will be lower in amount. Since refunds are capped to a percetange of
