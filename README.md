@@ -48,8 +48,8 @@ To check the code coverage report, simply run:
 > npm run coverage
 
 #### Code Format
-Solidity Linter:
-> npm run lint
+To fix the Solidity code with the linter hints, simply run:
+> npm run lint:fix
 
 ## Contribute
 

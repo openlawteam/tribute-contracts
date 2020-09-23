@@ -17,12 +17,12 @@
     "prettier-plugin-solidity": "^1.0.0-alpha.57",
     "solhint": "^3.2.0",
     "solidity-coverage": "^0.7.10",
-    "truffle": "^5.1.45"
+    "truffle": "^5.1.44"
   },
   "scripts": {
     "test": "truffle test",
-    "coverage": "truffle run coverage",
-    "prettier": "prettier --write contracts/v3/**/*",
+    "coverage": "truffle run coverage --network coverage",
+    "lint:fix": "prettier --write contracts/v3/**/*",
     "lint": "prettier --list-different contracts/v3/**/*"
   },
   "repository": {
