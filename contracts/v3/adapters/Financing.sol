@@ -6,7 +6,6 @@ import "./interfaces/IFinancing.sol";
 import "../core/Module.sol";
 import "../core/Registry.sol";
 import "../adapters/interfaces/IVoting.sol";
-import "../core/interfaces/IBank.sol";
 import "../guards/AdapterGuard.sol"; 
 import "../utils/SafeMath.sol";
 
@@ -80,10 +79,8 @@ contract FinancingContract is IFinancing, Module, AdapterGuard {
             "proposal did not pass yet"
         );
 
-        IBank bankContract = IBank(dao.getAddress(BANK_MODULE));
         proposals[address(dao)][proposalId].processed = true;
-        bankContract.transferFromGuild(
-            dao,
+        dao.transferFromGuild(
             proposal.applicant,
             proposal.token,
             proposal.amount

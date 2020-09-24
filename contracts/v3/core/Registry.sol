@@ -50,6 +50,10 @@ contract Registry is Ownable, Module {
     event UpdateMember(address member, uint256 shares);
     event UpdateDelegateKey(address indexed memberAddress, address newDelegateKey);
 
+    /// @dev - Events for Bank
+    event TokensCollected(address indexed moloch, address indexed token, uint256 amountToCollect);
+    event Transfer(address indexed fromAddress, address indexed toAddress, address token, uint256 amount);
+
     /*
      * STRUCTURES
      */
@@ -71,12 +75,23 @@ contract Registry is Ownable, Module {
         uint256 votes;
     }
 
+    struct BankingState {
+        address[] tokens;
+        mapping(address => bool) availableTokens;
+        mapping(address => mapping(address => uint256)) tokenBalances;
+    }
+
+
+
+    
+
     /*
      * PRIVATE VARIABLES
      */
     mapping(address => mapping(address => Member)) private members; // the map to track all members of the DAO
     mapping(address => mapping(address => address)) private memberAddresses; // the member address map
     mapping(address => mapping(address => address)) private memberAddressesByDelegatedKey; // ???
+    mapping(address => BankingState) private states;
 
     /*
      * PUBLIC VARIABLES
@@ -95,6 +110,14 @@ contract Registry is Ownable, Module {
     mapping(address => mapping(uint32 => Checkpoint)) public checkpoints;
     /// @notice The number of checkpoints for each account
     mapping(address => uint32) public numCheckpoints;
+    /// @notice The reserved address for Guild bank account
+    address public constant GUILD = address(0xdead);
+    /// @notice The reserved address for Escrow bank account
+    address public constant ESCROW = address(0xbeef);
+    /// @notice The reserved address for Total funds bank account
+    address public constant TOTAL = address(0xbabe);
+    /// @notice The maximum number of tokens supported by the bank
+    uint256 public constant MAX_TOKENS = 100;
 
     constructor() {
         bytes32 ownerId = keccak256("owner");
@@ -355,6 +378,170 @@ contract Registry is Ownable, Module {
 
     function getTotalShares() external view returns (uint256) {
         return totalShares;
+    }
+
+    /*
+     * BANK
+     */
+    
+    function addToEscrow(
+        address token,
+        uint256 amount
+    ) external onlyAdapter {
+        require(
+            token != GUILD && token != ESCROW && token != TOTAL,
+            "invalid token"
+        );
+        unsafeAddToBalance(address(this), ESCROW, token, amount);
+        if (!states[address(this)].availableTokens[token]) {
+            require(
+                states[address(this)].tokens.length < MAX_TOKENS,
+                "max limit reached"
+            );
+            states[address(this)].availableTokens[token] = true;
+            states[address(this)].tokens.push(token);
+        }
+    }
+
+    function addToGuild(
+        address token,
+        uint256 amount
+    ) external onlyAdapter {
+        require(
+            token != GUILD && token != ESCROW && token != TOTAL,
+            "invalid token"
+        );
+        unsafeAddToBalance(address(this), GUILD, token, amount);
+        if (!states[address(this)].availableTokens[token]) {
+            require(
+                states[address(this)].tokens.length < MAX_TOKENS,
+                "max limit reached"
+            );
+            states[address(this)].availableTokens[token] = true;
+            states[address(this)].tokens.push(token);
+        }
+    }
+
+    function transferFromGuild(
+        address applicant,
+        address token,
+        uint256 amount
+    ) external onlyAdapter {
+        require(
+            states[address(this)].tokenBalances[GUILD][token] >= amount,
+            "insufficient balance"
+        );
+        unsafeSubtractFromBalance(address(this), GUILD, token, amount);
+        unsafeAddToBalance(address(this), applicant, token, amount);
+        emit Transfer(GUILD, applicant, token, amount);
+    }
+
+    function ragequit(
+        address memberAddr,
+        uint256 sharesToBurn
+    ) external onlyAdapter {
+        //Get the total shares before burning member shares
+        uint256 totalShares = getTotalShares();
+        //Burn shares if member has enough shares
+        burnShares(memberAddr, sharesToBurn);
+        //Update internal Guild and Member balances
+        for (uint256 i = 0; i < states[address(dao)].tokens.length; i++) {
+            address token = states[address(dao)].tokens[i];
+            uint256 amountToRagequit = fairShare(
+                states[address(dao)].tokenBalances[GUILD][token],
+                sharesToBurn,
+                totalShares
+            );
+            if (amountToRagequit > 0) {
+                // gas optimization to allow a higher maximum token limit
+                // deliberately not using safemath here to keep overflows from preventing the function execution
+                // (which would break ragekicks) if a token overflows,
+                // it is because the supply was artificially inflated to oblivion, so we probably don"t care about it anyways
+                states[address(dao)]
+                    .tokenBalances[GUILD][token] -= amountToRagequit;
+                states[address(dao)]
+                    .tokenBalances[memberAddr][token] += amountToRagequit;
+                //TODO: do we want to emit an event for each token transfer?
+                // emit Transfer(GUILD, applicant, token, amount);
+            }
+        }
+    }
+
+    function isNotReservedAddress(address applicant)
+        external
+        pure
+        returns (bool)
+    {
+        return
+            applicant != address(0x0) &&
+            applicant != GUILD &&
+            applicant != ESCROW &&
+            applicant != TOTAL;
+    }
+
+    /**
+     * Public read-only functions
+     */
+    function balanceOf(
+        Registry dao,
+        address user,
+        address token
+    ) external override view returns (uint256) {
+        return states[address(dao)].tokenBalances[user][token];
+    }
+
+    /**
+     * Internal bookkeeping
+     */
+    function unsafeAddToBalance(
+        address dao,
+        address user,
+        address token,
+        uint256 amount
+    ) internal {
+        states[dao].tokenBalances[user][token] += amount;
+        states[dao].tokenBalances[TOTAL][token] += amount;
+    }
+
+    function unsafeSubtractFromBalance(
+        address dao,
+        address user,
+        address token,
+        uint256 amount
+    ) internal {
+        states[dao].tokenBalances[user][token] -= amount;
+        states[dao].tokenBalances[TOTAL][token] -= amount;
+    }
+
+    function unsafeInternalTransfer(
+        address dao,
+        address from,
+        address to,
+        address token,
+        uint256 amount
+    ) internal {
+        unsafeSubtractFromBalance(dao, from, token, amount);
+        unsafeAddToBalance(dao, to, token, amount);
+    }
+
+    /**
+     * Internal utility
+     */
+    function fairShare(
+        uint256 balance,
+        uint256 shares,
+        uint256 _totalShares
+    ) internal pure returns (uint256) {
+        require(_totalShares != 0, "total shares should not be 0");
+        if (balance == 0) {
+            return 0;
+        }
+        uint256 prod = balance * shares;
+        if (prod / balance == shares) {
+            // no overflow in multiplication above?
+            return prod / _totalShares;
+        }
+        return (balance / _totalShares) * shares;
     }
 
     /**

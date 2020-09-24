@@ -6,7 +6,6 @@ import "./interfaces/IManaging.sol";
 import "../core/Module.sol";
 import "../core/Registry.sol";
 import "../adapters/interfaces/IVoting.sol";
-import "../core/interfaces/IBank.sol";
 import "../guards/AdapterGuard.sol";
 import "../utils/SafeMath.sol";
 

@@ -4,7 +4,6 @@ pragma solidity ^0.7.0;
 
 import "../core/Module.sol";
 import "../core/Registry.sol";
-import "../core/interfaces/IBank.sol";
 import "../guards/AdapterGuard.sol";
 import "../guards/ReentrancyGuard.sol";
 
@@ -26,8 +25,7 @@ contract RagequitContract is Module, AdapterGuard, ReentrancyGuard {
         // FIXME: we still don't track the index to block the ragequit if member voted YES on a non-processed proposal
         // require(canRagequit(member.highestIndexYesVote), "cannot ragequit until highest index proposal member voted YES on is processed");
 
-        IBank bank = IBank(dao.getAddress(BANK_MODULE));
-        bank.ragequit(dao, msg.sender, sharesToBurn);
+        dao.ragequit(msg.sender, sharesToBurn); //TODO: move the ragequit logic to this adapter?
 
         emit Ragequit(msg.sender, sharesToBurn);
     }

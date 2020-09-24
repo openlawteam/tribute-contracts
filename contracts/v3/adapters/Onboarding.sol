@@ -6,7 +6,6 @@ import "./interfaces/IOnboarding.sol";
 import "../core/Module.sol";
 import "../core/Registry.sol";
 import "../adapters/interfaces/IVoting.sol";
-import "../core/interfaces/IBank.sol";
 import "../utils/SafeMath.sol";
 import "../guards/AdapterGuard.sol";
 import "../guards/ModuleGuard.sol";
@@ -111,9 +110,8 @@ contract OnboardingContract is IOnboarding, Module, AdapterGuard, ModuleGuard {
             proposal.sharesRequested
         );
 
-        IBank bankContract = IBank(dao.getAddress(BANK_MODULE));
         // address 0 represents native ETH
-        bankContract.addToGuild(dao, address(0), proposal.amount);
+        dao.addToGuild(dao, address(0), proposal.amount);
         dao.processProposal(proposalId);
     }
 }
