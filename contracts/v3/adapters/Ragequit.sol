@@ -12,8 +12,6 @@ import "../guards/ReentrancyGuard.sol";
 contract RagequitContract is Module, AdapterGuard, ReentrancyGuard {
     event Ragequit(address indexed member, uint256 burnedShares);
 
-    constructor() {}
-
     /*
      * default fallback function to prevent from sending ether to the contract
      */

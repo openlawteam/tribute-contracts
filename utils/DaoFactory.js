@@ -79,7 +79,7 @@ async function reportingTransaction(details, promiseTransaction) {
     const tx = await promiseTransaction;
     console.log('**************');
     console.log(details);
-    console.log('gas used', tx.receipt.gasUsed);
+    console.log('gas used', tx && tx.receipt && tx.receipt.gasUsed);
     console.log('**************');
 }
 

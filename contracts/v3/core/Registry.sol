@@ -168,7 +168,7 @@ contract Registry is Ownable, Module {
             votingData
         );
 
-        proposals[proposalId].flags = proposal.flags.setFlag(3, true); //sponsored
+        proposals[proposalId].flags = proposal.flags.setFlag(1, true); //sponsored
 
         emit SponsoredProposal(proposalId, votingId, block.timestamp, proposals[proposalCount].flags);
     }

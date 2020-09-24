@@ -64,8 +64,7 @@ contract FinancingContract is IFinancing, Module, AdapterGuard {
         uint256 proposalId,
         bytes calldata data
     ) external override onlyMember(dao) {
-        IProposal proposalContract = IProposal(dao.getAddress(PROPOSAL_MODULE));
-        proposalContract.sponsorProposal(dao, proposalId, msg.sender, data);
+        dao.sponsorProposal(proposalId, msg.sender, data);
     }
 
     function processProposal(Registry dao, uint256 proposalId)
