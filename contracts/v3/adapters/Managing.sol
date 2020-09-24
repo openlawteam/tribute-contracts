@@ -6,7 +6,6 @@ import "./interfaces/IManaging.sol";
 import "../core/Module.sol";
 import "../core/Registry.sol";
 import "../adapters/interfaces/IVoting.sol";
-import "../core/interfaces/IProposal.sol";
 import "../core/interfaces/IBank.sol";
 import "../guards/AdapterGuard.sol";
 import "../utils/SafeMath.sol";
@@ -45,8 +44,7 @@ contract ManagingContract is IManaging, Module, AdapterGuard {
 
         //FIXME: is there a way to check if the new module implements the module interface properly?
 
-        IProposal proposalContract = IProposal(dao.getAddress(PROPOSAL_MODULE));
-        uint256 proposalId = proposalContract.createProposal(dao);
+        uint256 proposalId = dao.submitProposal(msg.sender);
 
         ProposalDetails storage proposal = proposals[proposalId];
         proposal.applicant = msg.sender;
@@ -61,8 +59,7 @@ contract ManagingContract is IManaging, Module, AdapterGuard {
         uint256 proposalId,
         bytes calldata data
     ) external override onlyMember(dao) {
-        IProposal proposalContract = IProposal(dao.getAddress(PROPOSAL_MODULE));
-        proposalContract.sponsorProposal(dao, proposalId, msg.sender, data);
+        dao.sponsorProposal(proposalId, msg.sender, data);
     }
 
     function processProposal(Registry dao, uint256 proposalId)
@@ -82,5 +79,6 @@ contract ManagingContract is IManaging, Module, AdapterGuard {
         dao.removeModule(proposal.moduleId);
         dao.addModule(proposal.moduleId, proposal.moduleAddress);
         proposals[proposalId].processed = true;
+        dao.processProposal(proposalId);
     }
 }

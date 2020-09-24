@@ -41,7 +41,7 @@ contract VotingContract is IVoting, Module, AdapterGuard, ModuleGuard {
         Registry dao,
         uint256 proposalId,
         bytes calldata
-    ) external override onlyModule(dao) returns (uint256) {
+    ) external override /*onlyModule(dao)*/ returns (uint256) { //it is called from Registry
         // compute startingPeriod for proposal
         Voting storage vote = votes[address(dao)][proposalId];
         vote.startingTime = block.timestamp;

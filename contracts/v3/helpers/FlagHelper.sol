@@ -31,7 +31,7 @@ library FlagHelper {
         }
     }
 
-    //[sponsored, processed, didPass, cancelled]
+    //[exists, sponsored, processed, didPass, cancelled]
     function exists(uint256 flags) public pure returns (bool) {
         return getFlag(flags, 0);
     }

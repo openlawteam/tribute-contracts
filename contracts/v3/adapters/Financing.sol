@@ -8,7 +8,7 @@ import "../core/Registry.sol";
 import "../adapters/interfaces/IVoting.sol";
 import "../core/interfaces/IProposal.sol";
 import "../core/interfaces/IBank.sol";
-import "../guards/AdapterGuard.sol";
+import "../guards/AdapterGuard.sol"; 
 import "../utils/SafeMath.sol";
 
 contract FinancingContract is IFinancing, Module, AdapterGuard {
@@ -47,9 +47,8 @@ contract FinancingContract is IFinancing, Module, AdapterGuard {
             bankContract.isNotReservedAddress(applicant),
             "applicant using reserved address"
         );
-
-        IProposal proposalContract = IProposal(dao.getAddress(PROPOSAL_MODULE));
-        uint256 proposalId = proposalContract.createProposal(dao);
+        
+        uint256 proposalId = dao.submitProposal(msg.sender);
 
         ProposalDetails storage proposal = proposals[address(dao)][proposalId];
         proposal.applicant = applicant;
@@ -91,5 +90,6 @@ contract FinancingContract is IFinancing, Module, AdapterGuard {
             proposal.token,
             proposal.amount
         );
+        dao.processProposal(proposalId);
     }
 }

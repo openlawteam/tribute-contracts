@@ -1,4 +1,4 @@
-const {advanceTime, createDao, sharePrice, remaining, GUILD, BankContract, OnboardingContract, ProposalContract, VotingContract, MemberContract, RagequitContract, ETH_TOKEN} = require('../../utils/DaoFactory.js');
+const {advanceTime, createDao, sharePrice, remaining, GUILD, BankContract, OnboardingContract, VotingContract, MemberContract, RagequitContract, ETH_TOKEN} = require('../../utils/DaoFactory.js');
 const toBN = web3.utils.toBN;
 const sha3 = web3.utils.sha3;
 
@@ -16,9 +16,6 @@ contract('MolochV3 - Ragequit Adapter', async accounts => {
     //Add funds to the Guild Bank after sposoring a member to join the Guild
     const onboardingAddress = await dao.getAddress(sha3('onboarding'));
     const onboarding = await OnboardingContract.at(onboardingAddress);
-
-    const proposalAddress = await dao.getAddress(sha3("proposal"));
-    const proposal = await ProposalContract.at(proposalAddress);
 
     const votingAddress = await dao.getAddress(sha3("voting"));
     const voting = await VotingContract.at(votingAddress);
@@ -65,9 +62,6 @@ contract('MolochV3 - Ragequit Adapter', async accounts => {
 
     const bankAddress = await dao.getAddress(sha3("bank"));
     const bank = await BankContract.at(bankAddress);
-
-    const proposalAddress = await dao.getAddress(sha3("proposal"));
-    const proposal = await ProposalContract.at(proposalAddress);
 
     //Add funds to the Guild Bank after sposoring a member to join the Guild
     const onboardingAddress = await dao.getAddress(sha3('onboarding'));
@@ -126,9 +120,6 @@ contract('MolochV3 - Ragequit Adapter', async accounts => {
     const bankAddress = await dao.getAddress(sha3("bank"));
     const bank = await BankContract.at(bankAddress);
 
-    const proposalAddress = await dao.getAddress(sha3("proposal"));
-    const proposal = await ProposalContract.at(proposalAddress);
-
     //Add funds to the Guild Bank after sposoring a member to join the Guild
     const onboardingAddress = await dao.getAddress(sha3('onboarding'));
     const onboarding = await OnboardingContract.at(onboardingAddress);
@@ -141,7 +132,7 @@ contract('MolochV3 - Ragequit Adapter', async accounts => {
 
     await dao.sendTransaction({ from: newMember, value: sharePrice.mul(toBN(100)), gasPrice: toBN("0") });
     //Get the new proposal id
-    let pastEvents = await proposal.getPastEvents();
+    let pastEvents = await dao.getPastEvents();
     let { proposalId }  = pastEvents[0].returnValues;
 
     //Sponsor the new proposal, vote and process it 

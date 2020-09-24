@@ -4,11 +4,32 @@ pragma solidity ^0.7.0;
 
 import "../utils/Ownable.sol";
 import "../adapters/interfaces/IOnboarding.sol";
+import "../helpers/FlagHelper.sol";
 import "./Module.sol";
+import "./interfaces/IMember.sol";
+import "../adapters/interfaces/IVoting.sol";
+import "../guards/ModuleGuard.sol";
 
 contract Registry is Ownable, Module {
+    
+    using FlagHelper for uint256;
+
     mapping(bytes32 => address) registry;
     mapping(address => bytes32) inverseRegistry;
+
+    event SubmittedProposal(uint256 proposalId, uint256 proposalIndex, address applicant, uint256 flags);
+    event SponsoredProposal(uint256 proposalId, uint256 proposalIndex, uint256 startingTime, uint256 flags);
+    event ProcessedProposal(uint256 proposalId, uint256 processingTime, uint256 flags);
+
+    struct Proposal {
+        address applicant; // the address of the sender that submitted the proposal
+        bytes32 adapterId; // the adapter id that called the functions to change the DAO state
+        address adapterAddress; // te adapter address that called the functions to change the DAO state
+        uint256 flags; // using bit function to read the flag. That means that we have up to 256 slots for flags
+    }
+
+    uint256 public proposalCount;
+    mapping(uint256 => Proposal)public proposals;
 
     constructor() {
         bytes32 ownerId = keccak256("owner");
@@ -20,6 +41,14 @@ contract Registry is Ownable, Module {
         require(
             inverseRegistry[msg.sender] != bytes32(0),
             "only a registered module is allowed to call this function"
+        );
+        _;
+    }
+
+    modifier onlyAdapter {
+        require(
+            inverseRegistry[msg.sender] != bytes32(0),
+            "function access restricted to adapter only"
         );
         _;
     }
@@ -53,6 +82,10 @@ contract Registry is Ownable, Module {
         return registry[moduleId];
     }
 
+    function _getAdapter(bytes32 adapterId) internal view returns (address) {
+        return registry[adapterId];
+    }
+
     function execute(
         address _actionTo,
         uint256 _actionValue,
@@ -82,6 +115,90 @@ contract Registry is Ownable, Module {
             }
         }
     }
+
+    /// @dev - Proposal: submit proposals to the DAO registry
+    function submitProposal(address applicant)
+        external
+        onlyAdapter
+        returns (uint256)
+    {
+        Proposal memory p = Proposal(applicant, inverseRegistry[msg.sender], msg.sender, 1);
+        proposals[proposalCount++] = p;
+        uint256 proposalId = proposalCount - 1;
+
+        emit SubmittedProposal(proposalId, proposalCount, applicant, p.flags);
+
+        return proposalId;
+    }
+
+    /// @dev - Proposal: sponsor proposals that were submitted to the DAO registry
+    function sponsorProposal(
+        uint256 proposalId,
+        address sponsoringMember,
+        bytes calldata votingData
+    ) external onlyAdapter {
+        Proposal memory proposal = proposals[proposalId];
+        require(
+            proposal.flags.exists(),
+            "proposal does not exist"
+        );
+        require(
+            !proposal.flags.isSponsored(),
+            "proposal must not be sponsored"
+        );
+        require(
+            !proposal.flags.isCancelled(),
+            "proposal must not be cancelled"
+        );
+        require(
+            !proposal.flags.isProcessed(),
+            "proposal must not be processed"
+        );
+
+        IMember memberContract = IMember(_getAdapter(MEMBER_MODULE));
+        require(
+            memberContract.isActiveMember(Registry(this), sponsoringMember),
+            "only active members can sponsor proposals"
+        );
+
+        IVoting votingContract = IVoting(_getAdapter(VOTING_MODULE));
+        uint256 votingId = votingContract.startNewVotingForProposal(
+            Registry(this),
+            proposalId,
+            votingData
+        );
+
+        proposals[proposalId].flags = proposal.flags.setFlag(3, true); //sponsored
+
+        emit SponsoredProposal(proposalId, votingId, block.timestamp, proposals[proposalCount].flags);
+    }
+
+    /// @dev - Proposal: mark a proposal as processed in the DAO registry
+    function processProposal(
+        uint256 proposalId
+    ) external onlyAdapter {
+        Proposal storage proposal = proposals[proposalId];
+        require(
+            proposal.flags.exists(),
+            "proposal does not exist for this dao"
+        );
+        require(
+            proposal.flags.isSponsored(),
+            "proposal not sponsored"
+        );
+        require(
+            !proposal.flags.isProcessed(),
+            "proposal already processed"
+        );
+
+        proposal.flags = proposal.flags.setFlag(4, true); //processed
+
+        emit ProcessedProposal(proposalId, block.timestamp, proposals[proposalCount].flags);
+    }
+
+    /*
+     * Internal Utility Functions
+     */
 
     /// @dev Get the revert message from a call
     /// @notice This is needed in order to get the human-readable revert message from a call

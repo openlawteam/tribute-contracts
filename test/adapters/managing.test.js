@@ -1,5 +1,5 @@
 
-const {advanceTime, createDao, GUILD, ESCROW, TOTAL, ETH_TOKEN, ManagingContract, ProposalContract, VotingContract, OnboardingContract, MemberContract} = require('../../utils/DaoFactory.js');
+const {advanceTime, createDao, GUILD, ESCROW, TOTAL, ETH_TOKEN, ManagingContract, VotingContract, OnboardingContract, MemberContract} = require('../../utils/DaoFactory.js');
 const toBN = web3.utils.toBN;
 const sha3 = web3.utils.sha3;
 
@@ -80,9 +80,6 @@ contract('MolochV3 - Managing Adapter', async accounts => {
     let managingContract = await dao.getAddress(sha3('managing'));
     let managing = await ManagingContract.at(managingContract);
 
-    let proposalContract = await dao.getAddress(sha3('proposal'));
-    let proposal = await ProposalContract.at(proposalContract);
-
     let votingContract = await dao.getAddress(sha3('voting'));
     let voting = await VotingContract.at(votingContract);
     //Submit a new Bank module proposal
@@ -91,7 +88,7 @@ contract('MolochV3 - Managing Adapter', async accounts => {
     await managing.createModuleChangeRequest(dao.address, newModuleId, newModuleAddress, { from: myAccount, gasPrice: toBN("0") });
 
     //Get the new proposal id
-    pastEvents = await proposal.getPastEvents();
+    pastEvents = await dao.getPastEvents();
     let { proposalId } = pastEvents[0].returnValues;
     
     //Sponsor the new proposal, vote and process it 
@@ -114,9 +111,6 @@ contract('MolochV3 - Managing Adapter', async accounts => {
     let managingContract = await dao.getAddress(sha3('managing'));
     let managing = await ManagingContract.at(managingContract);
 
-    let proposalContract = await dao.getAddress(sha3('proposal'));
-    let proposal = await ProposalContract.at(proposalContract);
-
     let votingContract = await dao.getAddress(sha3('voting'));
     let voting = await VotingContract.at(votingContract);
     //Submit a new Bank module proposal
@@ -125,7 +119,7 @@ contract('MolochV3 - Managing Adapter', async accounts => {
     await managing.createModuleChangeRequest(dao.address, newModuleId, newModuleAddress, { from: myAccount, gasPrice: toBN("0") });
 
     //Get the new proposal id
-    pastEvents = await proposal.getPastEvents();
+    pastEvents = await dao.getPastEvents();
     let { proposalId } = pastEvents[0].returnValues;
     
     //set new delegate key

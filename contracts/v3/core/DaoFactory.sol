@@ -20,7 +20,6 @@ contract DaoFactory is Module {
 
     constructor(
         address memberAddress,
-        address proposalAddress,
         address votingAddress,
         address ragequitAddress,
         address managingAddress,
@@ -29,7 +28,6 @@ contract DaoFactory is Module {
         address bankAddress
     ) {
         addresses[MEMBER_MODULE] = memberAddress;
-        addresses[PROPOSAL_MODULE] = proposalAddress;
         addresses[VOTING_MODULE] = votingAddress;
         addresses[RAGEQUIT_MODULE] = ragequitAddress;
         addresses[MANAGING_MODULE] = managingAddress;
@@ -52,7 +50,6 @@ contract DaoFactory is Module {
         //Registering Core Modules
         dao.addModule(BANK_MODULE, addresses[BANK_MODULE]);
         dao.addModule(MEMBER_MODULE, addresses[MEMBER_MODULE]);
-        dao.addModule(PROPOSAL_MODULE, addresses[PROPOSAL_MODULE]);
         dao.addModule(VOTING_MODULE, addresses[VOTING_MODULE]);
 
         //Registring Adapters

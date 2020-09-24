@@ -1,7 +1,7 @@
 
 const sha3 = web3.utils.sha3;
 const toBN = web3.utils.toBN;
-const {advanceTime, createDao, GUILD, sharePrice, BankContract, OnboardingContract, ProposalContract, VotingContract, FinancingContract, ETH_TOKEN} = require('../../utils/DaoFactory.js');
+const {advanceTime, createDao, GUILD, sharePrice, BankContract, OnboardingContract, VotingContract, FinancingContract, ETH_TOKEN} = require('../../utils/DaoFactory.js');
 const remaining = sharePrice.sub(toBN('50000000000000'));
 
 contract('MolochV3 - Financing Adapter', async accounts => {
@@ -15,9 +15,6 @@ contract('MolochV3 - Financing Adapter', async accounts => {
     const bankAddress = await dao.getAddress(sha3("bank"));
     const bank = await BankContract.at(bankAddress);
 
-    const proposalAddress = await dao.getAddress(sha3("proposal"));
-    const proposal = await ProposalContract.at(proposalAddress);
-
     const votingAddress = await dao.getAddress(sha3("voting"));
     const voting = await VotingContract.at(votingAddress);
 
@@ -29,8 +26,9 @@ contract('MolochV3 - Financing Adapter', async accounts => {
     const onboarding = await OnboardingContract.at(onboardingAddress);
     await dao.sendTransaction({ from: newMember, value: sharePrice.mul(toBN(10)).add(remaining), gasPrice: toBN("0") });
     //Get the new proposal id
-    pastEvents = await proposal.getPastEvents();
+    pastEvents = await dao.getPastEvents();
     let { proposalId }  = pastEvents[0].returnValues;
+    assert.equal(proposalId, "0", "invalid proposal id");
 
     //Sponsor the new proposal, vote and process it 
     await onboarding.sponsorProposal(dao.address, proposalId, [], { from: myAccount, gasPrice: toBN("0") });
@@ -48,7 +46,7 @@ contract('MolochV3 - Financing Adapter', async accounts => {
     await financing.createFinancingRequest(dao.address, applicant, ETH_TOKEN, requestedAmount, web3.utils.fromUtf8(""));
     
     //Get the new proposalId from event log
-    pastEvents = await proposal.getPastEvents();
+    pastEvents = await dao.getPastEvents();
     proposalId = pastEvents[0].returnValues.proposalId;
     assert.equal(proposalId, 1);
 

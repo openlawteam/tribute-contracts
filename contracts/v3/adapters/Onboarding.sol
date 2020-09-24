@@ -6,7 +6,6 @@ import "./interfaces/IOnboarding.sol";
 import "../core/Module.sol";
 import "../core/Registry.sol";
 import "../adapters/interfaces/IVoting.sol";
-import "../core/interfaces/IProposal.sol";
 import "../core/interfaces/IBank.sol";
 import "../utils/SafeMath.sol";
 import "../guards/AdapterGuard.sol";
@@ -16,6 +15,7 @@ contract OnboardingContract is IOnboarding, Module, AdapterGuard, ModuleGuard {
     using SafeMath for uint256;
 
     struct ProposalDetails {
+        uint id;
         uint256 amount;
         uint256 sharesRequested;
         bool processed;
@@ -70,12 +70,9 @@ contract OnboardingContract is IOnboarding, Module, AdapterGuard, ModuleGuard {
         uint256 sharesRequested,
         uint256 amount
     ) internal {
-        IProposal proposalContract = IProposal(dao.getAddress(PROPOSAL_MODULE));
-        uint256 proposalId = proposalContract.createProposal(dao);
-        ProposalDetails storage proposal = proposals[address(dao)][proposalId];
-        proposal.amount = amount;
-        proposal.sharesRequested = sharesRequested;
-        proposal.applicant = newMember;
+        uint256 proposalId = dao.submitProposal(msg.sender);
+        ProposalDetails memory p = ProposalDetails(proposalId, amount, sharesRequested, false, newMember);
+        proposals[address(dao)][proposalId] = p;
     }
 
     function sponsorProposal(
@@ -83,25 +80,31 @@ contract OnboardingContract is IOnboarding, Module, AdapterGuard, ModuleGuard {
         uint256 proposalId,
         bytes calldata data
     ) external override onlyMember(dao) {
-        IProposal proposalContract = IProposal(dao.getAddress(PROPOSAL_MODULE));
-        proposalContract.sponsorProposal(dao, proposalId, msg.sender, data);
+        require(
+            proposals[address(dao)][proposalId].id == proposalId, 
+            "proposal does not exist"
+        );
+        dao.sponsorProposal(proposalId, msg.sender, data);
     }
 
     function processProposal(Registry dao, uint256 proposalId)
         external
         override
+        onlyMember(dao)
     {
-        IMember memberContract = IMember(dao.getAddress(MEMBER_MODULE));
         require(
-            memberContract.isActiveMember(dao, msg.sender),
-            "only members can sponsor"
+            proposals[address(dao)][proposalId].id == proposalId, 
+            "proposal does not exist"
         );
+        
         IVoting votingContract = IVoting(dao.getAddress(VOTING_MODULE));
         require(
             votingContract.voteResult(dao, proposalId) == 2,
             "proposal need to pass"
         );
         ProposalDetails storage proposal = proposals[address(dao)][proposalId];
+
+        IMember memberContract = IMember(dao.getAddress(MEMBER_MODULE));
         memberContract.updateMember(
             dao,
             proposal.applicant,
@@ -111,5 +114,6 @@ contract OnboardingContract is IOnboarding, Module, AdapterGuard, ModuleGuard {
         IBank bankContract = IBank(dao.getAddress(BANK_MODULE));
         // address 0 represents native ETH
         bankContract.addToGuild(dao, address(0), proposal.amount);
+        dao.processProposal(proposalId);
     }
 }
