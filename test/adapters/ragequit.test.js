@@ -25,7 +25,7 @@ contract('MolochV3 - Ragequit Adapter', async accounts => {
 
     await dao.sendTransaction({ from: newMember, value: sharePrice.mul(toBN(10)).add(remaining), gasPrice: toBN("0") });
     //Get the new proposal id
-    pastEvents = await proposal.getPastEvents();
+    pastEvents = await dao.getPastEvents();
     let { proposalId } = pastEvents[0].returnValues;
 
     //Sponsor the new proposal, vote and process it 
@@ -75,7 +75,7 @@ contract('MolochV3 - Ragequit Adapter', async accounts => {
 
     await dao.sendTransaction({ from: newMember, value: sharePrice.mul(toBN(10)).add(remaining), gasPrice: toBN("0") });
     //Get the new proposal id
-    pastEvents = await proposal.getPastEvents();
+    pastEvents = await dao.getPastEvents();
     let { proposalId } = pastEvents[0].returnValues;
 
     //Sponsor the new proposal, vote and process it 

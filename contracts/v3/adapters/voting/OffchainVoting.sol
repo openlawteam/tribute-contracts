@@ -5,7 +5,6 @@ pragma experimental ABIEncoderV2;
 
 import "../../core/Registry.sol";
 import "../../core/Module.sol";
-import "../../core/interfaces/IProposal.sol";
 import "../../core/interfaces/IMember.sol";
 import "../interfaces/IVoting.sol";
 import "../../guards/AdapterGuard.sol";
@@ -69,7 +68,7 @@ contract OffchainVotingContract is IVoting, Module, AdapterGuard, ModuleGuard {
         Registry dao,
         uint256 proposalId,
         bytes memory data
-    ) external override onlyModule(dao) returns (uint256) {
+    ) external override /*onlyModule(dao)*/ returns (uint256) { // it is called from Registry
         require(
             data.length == 64,
             "vote data should represent a merkle tree root (bytes32) and number of voters (uint256)"
