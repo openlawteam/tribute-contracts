@@ -1,7 +1,12 @@
 const Web3 = require('web3-utils');
 const Registry = artifacts.require('./v3/core/Registry');
+const FlagHelperLib = artifacts.require('./v3/helpers/FlagHelper');
+Registry.link
 
 contract('Registry', async () => {
+  
+  let lib = await FlagHelperLib.new();
+  await Registry.link("FlagHelper", lib.address);
 
   it("should not be possible to add a module with invalid id", async () => {
     let moduleId = Web3.fromUtf8("");
