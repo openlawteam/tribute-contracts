@@ -5,7 +5,6 @@ pragma solidity ^0.7.0;
 import "../Registry.sol";
 import "../Module.sol";
 import "../interfaces/IBank.sol";
-import "../interfaces/IMember.sol";
 import "../../utils/SafeMath.sol";
 import "../../utils/IERC20.sol";
 import "../../guards/ModuleGuard.sol";
