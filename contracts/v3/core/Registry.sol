@@ -168,7 +168,7 @@ contract Registry is Ownable, Module {
             votingData
         );
 
-        proposals[proposalId].flags = proposal.flags.setFlag(1, true); //sponsored
+        proposals[proposalId].flags = proposal.flags.setSponsored(true);
 
         emit SponsoredProposal(proposalId, votingId, block.timestamp, proposals[proposalCount].flags);
     }
@@ -177,7 +177,7 @@ contract Registry is Ownable, Module {
     function processProposal(
         uint256 proposalId
     ) external onlyAdapter {
-        Proposal storage proposal = proposals[proposalId];
+        Proposal memory proposal = proposals[proposalId];
         require(
             proposal.flags.exists(),
             "proposal does not exist for this dao"
@@ -191,7 +191,7 @@ contract Registry is Ownable, Module {
             "proposal already processed"
         );
 
-        proposal.flags = proposal.flags.setFlag(4, true); //processed
+        proposals[proposalId].flags = proposal.flags.setProcessed(true);
 
         emit ProcessedProposal(proposalId, block.timestamp, proposals[proposalCount].flags);
     }
