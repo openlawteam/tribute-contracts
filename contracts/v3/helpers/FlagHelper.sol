@@ -40,7 +40,11 @@ library FlagHelper {
         return getFlag(flags, 1);
     }
 
-    function setSponsored(uint256 flags, bool value) public pure returns (uint256) {
+    function setSponsored(uint256 flags, bool value)
+        public
+        pure
+        returns (uint256)
+    {
         return setFlag(flags, 1, value);
     }
 
@@ -48,7 +52,11 @@ library FlagHelper {
         return getFlag(flags, 2);
     }
 
-    function setProcessed(uint256 flags, bool value) public pure returns (uint256) {
+    function setProcessed(uint256 flags, bool value)
+        public
+        pure
+        returns (uint256)
+    {
         return setFlag(flags, 2, value);
     }
 

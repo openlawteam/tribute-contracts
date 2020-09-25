@@ -39,8 +39,9 @@ contract VotingContract is IVoting, Module, AdapterGuard, ModuleGuard {
     function startNewVotingForProposal(
         Registry dao,
         uint256 proposalId,
-        bytes calldata
-    ) external override /*onlyModule(dao)*/ returns (uint256) { //it is called from Registry
+        bytes calldata /*onlyModule(dao)*/
+    ) external override returns (uint256) {
+        //it is called from Registry
         // compute startingPeriod for proposal
         Voting storage vote = votes[address(dao)][proposalId];
         vote.startingTime = block.timestamp;
@@ -51,10 +52,7 @@ contract VotingContract is IVoting, Module, AdapterGuard, ModuleGuard {
         uint256 proposalId,
         uint256 voteValue
     ) external onlyMember(dao) {
-        require(
-            dao.isActiveMember(msg.sender),
-            "only active members can vote"
-        );
+        require(dao.isActiveMember(msg.sender), "only active members can vote");
         require(
             voteValue < 3,
             "only blank (0), yes (1) and no (2) are possible values"

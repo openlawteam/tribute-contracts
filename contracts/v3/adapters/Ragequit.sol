@@ -19,8 +19,8 @@ contract RagequitContract is IRagequit, Module, AdapterGuard, ReentrancyGuard {
     }
 
     function ragequit(Registry dao, uint256 sharesToBurn)
-        override
         external
+        override
         nonReentrant
         onlyMember(dao)
     {

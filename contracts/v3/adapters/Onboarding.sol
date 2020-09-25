@@ -14,7 +14,7 @@ contract OnboardingContract is IOnboarding, Module, AdapterGuard, ModuleGuard {
     using SafeMath for uint256;
 
     struct ProposalDetails {
-        uint id;
+        uint256 id;
         uint256 amount;
         uint256 sharesRequested;
         bool processed;
@@ -69,7 +69,13 @@ contract OnboardingContract is IOnboarding, Module, AdapterGuard, ModuleGuard {
         uint256 amount
     ) internal {
         uint256 proposalId = dao.submitProposal(msg.sender);
-        ProposalDetails memory p = ProposalDetails(proposalId, amount, sharesRequested, false, newMember);
+        ProposalDetails memory p = ProposalDetails(
+            proposalId,
+            amount,
+            sharesRequested,
+            false,
+            newMember
+        );
         proposals[address(dao)][proposalId] = p;
     }
 
@@ -79,7 +85,7 @@ contract OnboardingContract is IOnboarding, Module, AdapterGuard, ModuleGuard {
         bytes calldata data
     ) external override onlyMember(dao) {
         require(
-            proposals[address(dao)][proposalId].id == proposalId, 
+            proposals[address(dao)][proposalId].id == proposalId,
             "proposal does not exist"
         );
         dao.sponsorProposal(proposalId, msg.sender, data);
@@ -91,10 +97,10 @@ contract OnboardingContract is IOnboarding, Module, AdapterGuard, ModuleGuard {
         onlyMember(dao)
     {
         require(
-            proposals[address(dao)][proposalId].id == proposalId, 
+            proposals[address(dao)][proposalId].id == proposalId,
             "proposal does not exist"
         );
-        
+
         IVoting votingContract = IVoting(dao.getAddress(VOTING_MODULE));
         require(
             votingContract.voteResult(dao, proposalId) == 2,
@@ -102,10 +108,7 @@ contract OnboardingContract is IOnboarding, Module, AdapterGuard, ModuleGuard {
         );
         ProposalDetails storage proposal = proposals[address(dao)][proposalId];
 
-        dao.updateMember(
-            proposal.applicant,
-            proposal.sharesRequested
-        );
+        dao.updateMember(proposal.applicant, proposal.sharesRequested);
 
         // address 0 represents native ETH
         dao.addToGuild(address(0), proposal.amount);

@@ -11,7 +11,6 @@ import "../adapters/interfaces/IVoting.sol";
 import "../guards/ModuleGuard.sol";
 
 contract Registry is Ownable, Module {
-    
     /*
      * LIBRARIES
      */
@@ -22,18 +21,12 @@ contract Registry is Ownable, Module {
      * MODIFIERS
      */
     modifier onlyModule {
-        require(
-            inverseRegistry[msg.sender] != bytes32(0),
-            "onlyModule"
-        );
+        require(inverseRegistry[msg.sender] != bytes32(0), "onlyModule");
         _;
     }
 
     modifier onlyAdapter {
-        require(
-            inverseRegistry[msg.sender] != bytes32(0),
-            "onlyAdapter"
-        );
+        require(inverseRegistry[msg.sender] != bytes32(0), "onlyAdapter");
         _;
     }
 
@@ -41,35 +34,64 @@ contract Registry is Ownable, Module {
      * EVENTS
      */
     /// @dev - Events for Proposals
-    event SubmittedProposal(uint256 proposalId, uint256 proposalIndex, address applicant, uint256 flags);
-    event SponsoredProposal(uint256 proposalId, uint256 proposalIndex, uint256 startingTime, uint256 flags);
-    event ProcessedProposal(uint256 proposalId, uint256 processingTime, uint256 flags);
+    event SubmittedProposal(
+        uint256 proposalId,
+        uint256 proposalIndex,
+        address applicant,
+        uint256 flags
+    );
+    event SponsoredProposal(
+        uint256 proposalId,
+        uint256 proposalIndex,
+        uint256 startingTime,
+        uint256 flags
+    );
+    event ProcessedProposal(
+        uint256 proposalId,
+        uint256 processingTime,
+        uint256 flags
+    );
 
     /// @dev - Events for Members
     event UpdateMember(address member, uint256 shares);
-    event UpdateDelegateKey(address indexed memberAddress, address newDelegateKey);
+    event UpdateDelegateKey(
+        address indexed memberAddress,
+        address newDelegateKey
+    );
 
     /// @dev - Events for Bank
-    event TokensCollected(address indexed moloch, address indexed token, uint256 amountToCollect);
-    event Transfer(address indexed fromAddress, address indexed toAddress, address token, uint256 amount);
+    event TokensCollected(
+        address indexed moloch,
+        address indexed token,
+        uint256 amountToCollect
+    );
+    event Transfer(
+        address indexed fromAddress,
+        address indexed toAddress,
+        address token,
+        uint256 amount
+    );
 
     /*
      * STRUCTURES
      */
-    struct Proposal { // the structure to track all the proposals in the DAO
+    struct Proposal {
+        // the structure to track all the proposals in the DAO
         address applicant; // the address of the sender that submitted the proposal
         bytes32 adapterId; // the adapter id that called the functions to change the DAO state
         address adapterAddress; // the adapter address that called the functions to change the DAO state
         uint256 flags; // flags to track the state of the proposal: exist, sponsored, processed, canceled, etc.
     }
 
-    struct Member { // the structure to track all the members in the DAO
+    struct Member {
+        // the structure to track all the members in the DAO
         uint256 flags; // flags to track the state of the member: exist, jailed, etc
         address delegateKey; // ?
         uint256 nbShares; // number of shares of the DAO member
     }
 
-    struct Checkpoint { // A checkpoint for marking number of votes from a given block
+    struct Checkpoint {
+        // A checkpoint for marking number of votes from a given block
         uint256 fromBlock;
         uint256 votes;
     }
@@ -79,7 +101,6 @@ contract Registry is Ownable, Module {
         mapping(address => bool) availableTokens;
         mapping(address => mapping(address => uint256)) tokenBalances;
     }
-
 
     /*
      * PRIVATE VARIABLES
@@ -101,7 +122,7 @@ contract Registry is Ownable, Module {
     /// @notice The map that keeps track of all adapters registered in the DAO
     mapping(bytes32 => address) public registry;
     /// @notice The inverse map to get the adapter id based on its address
-    mapping(address => bytes32) public inverseRegistry; 
+    mapping(address => bytes32) public inverseRegistry;
     /// @notice A record of votes checkpoints for each account, by index
     mapping(address => mapping(uint32 => Checkpoint)) public checkpoints;
     /// @notice The number of checkpoints for each account
@@ -196,7 +217,12 @@ contract Registry is Ownable, Module {
         onlyAdapter
         returns (uint256)
     {
-        Proposal memory p = Proposal(applicant, inverseRegistry[msg.sender], msg.sender, 1);
+        Proposal memory p = Proposal(
+            applicant,
+            inverseRegistry[msg.sender],
+            msg.sender,
+            1
+        );
         proposals[proposalCount++] = p;
         uint256 proposalId = proposalCount - 1;
 
@@ -212,10 +238,7 @@ contract Registry is Ownable, Module {
         bytes calldata votingData
     ) external onlyAdapter {
         Proposal memory proposal = proposals[proposalId];
-        require(
-            proposal.flags.exists(),
-            "proposal does not exist"
-        );
+        require(proposal.flags.exists(), "proposal does not exist");
         require(
             !proposal.flags.isSponsored(),
             "proposal must not be sponsored"
@@ -243,40 +266,37 @@ contract Registry is Ownable, Module {
 
         proposals[proposalId].flags = proposal.flags.setSponsored(true);
 
-        emit SponsoredProposal(proposalId, votingId, block.timestamp, proposals[proposalCount].flags);
+        emit SponsoredProposal(
+            proposalId,
+            votingId,
+            block.timestamp,
+            proposals[proposalCount].flags
+        );
     }
 
     /// @dev - Proposal: mark a proposal as processed in the DAO registry
-    function processProposal(
-        uint256 proposalId
-    ) external onlyAdapter {
+    function processProposal(uint256 proposalId) external onlyAdapter {
         Proposal memory proposal = proposals[proposalId];
         require(
             proposal.flags.exists(),
             "proposal does not exist for this dao"
         );
-        require(
-            proposal.flags.isSponsored(),
-            "proposal not sponsored"
-        );
-        require(
-            !proposal.flags.isProcessed(),
-            "proposal already processed"
-        );
+        require(proposal.flags.isSponsored(), "proposal not sponsored");
+        require(!proposal.flags.isProcessed(), "proposal already processed");
 
         proposals[proposalId].flags = proposal.flags.setProcessed(true);
 
-        emit ProcessedProposal(proposalId, block.timestamp, proposals[proposalCount].flags);
+        emit ProcessedProposal(
+            proposalId,
+            block.timestamp,
+            proposals[proposalCount].flags
+        );
     }
 
     /*
      * MEMBERS
      */
-    function isActiveMember(address addr)
-        public
-        view
-        returns (bool)
-    {
+    function isActiveMember(address addr) public view returns (bool) {
         address memberAddr = memberAddressesByDelegatedKey[addr];
         uint256 memberFlags = members[memberAddr].flags;
         return
@@ -293,10 +313,10 @@ contract Registry is Ownable, Module {
         return memberAddresses[memberOrDelegateKey];
     }
 
-    function updateMember(
-        address memberAddr,
-        uint256 shares
-    ) external onlyModule {
+    function updateMember(address memberAddr, uint256 shares)
+        external
+        onlyModule
+    {
         Member storage member = members[memberAddr];
         if (member.delegateKey == address(0x0)) {
             member.flags = 1;
@@ -307,16 +327,15 @@ contract Registry is Ownable, Module {
 
         totalShares = totalShares.add(shares);
 
-        memberAddressesByDelegatedKey[member
-            .delegateKey] = memberAddr;
+        memberAddressesByDelegatedKey[member.delegateKey] = memberAddr;
 
         emit UpdateMember(memberAddr, shares);
     }
 
-    function updateDelegateKey(
-        address memberAddr,
-        address newDelegateKey
-    ) external onlyAdapter {
+    function updateDelegateKey(address memberAddr, address newDelegateKey)
+        external
+        onlyAdapter
+    {
         require(newDelegateKey != address(0), "newDelegateKey cannot be 0");
 
         // skip checks if member is setting the delegate key to their member address
@@ -326,81 +345,64 @@ contract Registry is Ownable, Module {
                 "cannot overwrite existing members"
             );
             require(
-                memberAddresses[memberAddressesByDelegatedKey[newDelegateKey]] == address(0x0),
+                memberAddresses[memberAddressesByDelegatedKey[newDelegateKey]] ==
+                    address(0x0),
                 "cannot overwrite existing delegate keys"
             );
         }
 
         Member storage member = members[memberAddr];
         require(member.flags.exists(), "member does not exist");
-        memberAddressesByDelegatedKey[member
-            .delegateKey] = address(0x0);
+        memberAddressesByDelegatedKey[member.delegateKey] = address(0x0);
         memberAddressesByDelegatedKey[newDelegateKey] = memberAddr;
         member.delegateKey = newDelegateKey;
 
         emit UpdateDelegateKey(memberAddr, newDelegateKey);
     }
 
-    function _burnShares(
-        address memberAddr,
-        uint256 sharesToBurn
-    ) internal {
+    function _burnShares(address memberAddr, uint256 sharesToBurn) internal {
         require(
             _enoughSharesToBurn(memberAddr, sharesToBurn),
             "insufficient shares"
         );
 
-        members[memberAddr].nbShares = members[memberAddr].nbShares.sub(sharesToBurn);
+        members[memberAddr].nbShares = members[memberAddr].nbShares.sub(
+            sharesToBurn
+        );
         totalShares = totalShares.sub(sharesToBurn);
 
         emit UpdateMember(memberAddr, members[memberAddr].nbShares);
     }
 
-    function nbShares(address member)
-        external
-        view
-        returns (uint256)
-    {
+    function nbShares(address member) external view returns (uint256) {
         return members[member].nbShares;
     }
 
     /*
      * BANK
      */
-    
-    function addToEscrow(
-        address token,
-        uint256 amount
-    ) external onlyAdapter {
+
+    function addToEscrow(address token, uint256 amount) external onlyAdapter {
         require(
             token != GUILD && token != ESCROW && token != TOTAL,
             "invalid token"
         );
         unsafeAddToBalance(ESCROW, token, amount);
         if (!bank.availableTokens[token]) {
-            require(
-                bank.tokens.length < MAX_TOKENS,
-                "max limit reached"
-            );
+            require(bank.tokens.length < MAX_TOKENS, "max limit reached");
             bank.availableTokens[token] = true;
             bank.tokens.push(token);
         }
     }
 
-    function addToGuild(
-        address token,
-        uint256 amount
-    ) external onlyAdapter {
+    function addToGuild(address token, uint256 amount) external onlyAdapter {
         require(
             token != GUILD && token != ESCROW && token != TOTAL,
             "invalid token"
         );
         unsafeAddToBalance(GUILD, token, amount);
         if (!bank.availableTokens[token]) {
-            require(
-                bank.tokens.length < MAX_TOKENS,
-                "max limit reached"
-            );
+            require(bank.tokens.length < MAX_TOKENS, "max limit reached");
             bank.availableTokens[token] = true;
             bank.tokens.push(token);
         }
@@ -420,14 +422,11 @@ contract Registry is Ownable, Module {
         emit Transfer(GUILD, applicant, token, amount);
     }
 
-    function ragequit(
-        address memberAddr,
-        uint256 sharesToBurn
-    ) external onlyAdapter {
-        require(
-            isActiveMember(memberAddr),
-            "only active members can ragequit"
-        );
+    function ragequit(address memberAddr, uint256 sharesToBurn)
+        external
+        onlyAdapter
+    {
+        require(isActiveMember(memberAddr), "only active members can ragequit");
 
         uint256 initialTotalShares = totalShares;
 
@@ -473,10 +472,11 @@ contract Registry is Ownable, Module {
     /**
      * Public read-only functions
      */
-    function balanceOf(
-        address user,
-        address token
-    ) external view returns (uint256) {
+    function balanceOf(address user, address token)
+        external
+        view
+        returns (uint256)
+    {
         return bank.tokenBalances[user][token];
     }
 
@@ -536,11 +536,7 @@ contract Registry is Ownable, Module {
      * @param account The address to get votes balance
      * @return The number of current votes for `account`
      */
-    function getCurrentVotes(address account)
-        external
-        view
-        returns (uint256)
-    {
+    function getCurrentVotes(address account) external view returns (uint256) {
         uint32 nCheckpoints = numCheckpoints[account];
         return
             nCheckpoints > 0 ? checkpoints[account][nCheckpoints - 1].votes : 0;
@@ -643,13 +639,12 @@ contract Registry is Ownable, Module {
      * Internal Utility Functions
      */
 
-    function _enoughSharesToBurn(
-        address memberAddr,
-        uint256 sharesToBurn
-    ) internal view returns (bool) {
-        return
-            sharesToBurn > 0 &&
-            members[memberAddr].nbShares >= sharesToBurn;
+    function _enoughSharesToBurn(address memberAddr, uint256 sharesToBurn)
+        internal
+        view
+        returns (bool)
+    {
+        return sharesToBurn > 0 && members[memberAddr].nbShares >= sharesToBurn;
     }
 
     /*

@@ -6,7 +6,7 @@ import "./interfaces/IFinancing.sol";
 import "../core/Module.sol";
 import "../core/Registry.sol";
 import "../adapters/interfaces/IVoting.sol";
-import "../guards/AdapterGuard.sol"; 
+import "../guards/AdapterGuard.sol";
 import "../utils/SafeMath.sol";
 
 contract FinancingContract is IFinancing, Module, AdapterGuard {
@@ -43,7 +43,7 @@ contract FinancingContract is IFinancing, Module, AdapterGuard {
             dao.isNotReservedAddress(applicant),
             "applicant using reserved address"
         );
-        
+
         uint256 proposalId = dao.submitProposal(msg.sender);
 
         ProposalDetails storage proposal = proposals[address(dao)][proposalId];

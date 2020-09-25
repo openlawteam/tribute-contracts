@@ -66,8 +66,9 @@ contract OffchainVotingContract is IVoting, Module, AdapterGuard, ModuleGuard {
     function startNewVotingForProposal(
         Registry dao,
         uint256 proposalId,
-        bytes memory data
-    ) external override /*onlyModule(dao)*/ returns (uint256) { // it is called from Registry
+        bytes memory data /*onlyModule(dao)*/
+    ) external override returns (uint256) {
+        // it is called from Registry
         require(
             data.length == 64,
             "vote data should represent a merkle tree root (bytes32) and number of voters (uint256)"
