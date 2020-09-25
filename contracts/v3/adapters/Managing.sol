@@ -35,9 +35,8 @@ contract ManagingContract is IManaging, Module, AdapterGuard {
     ) external override onlyMember(dao) returns (uint256) {
         require(moduleAddress != address(0x0), "invalid module address");
 
-        IBank bankContract = IBank(dao.getAddress(BANK_MODULE));
         require(
-            bankContract.isNotReservedAddress(moduleAddress),
+            dao.isNotReservedAddress(moduleAddress),
             "module is using reserved address"
         );
 

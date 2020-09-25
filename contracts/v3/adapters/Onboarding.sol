@@ -59,8 +59,7 @@ contract OnboardingContract is IOnboarding, Module, AdapterGuard, ModuleGuard {
     }
 
     function updateDelegateKey(Registry dao, address delegateKey) external {
-        IMember memberContract = IMember(dao.getAddress(MEMBER_MODULE));
-        memberContract.updateDelegateKey(dao, msg.sender, delegateKey);
+        dao.updateDelegateKey(msg.sender, delegateKey);
     }
 
     function _submitMembershipProposal(
@@ -103,15 +102,13 @@ contract OnboardingContract is IOnboarding, Module, AdapterGuard, ModuleGuard {
         );
         ProposalDetails storage proposal = proposals[address(dao)][proposalId];
 
-        IMember memberContract = IMember(dao.getAddress(MEMBER_MODULE));
-        memberContract.updateMember(
-            dao,
+        dao.updateMember(
             proposal.applicant,
             proposal.sharesRequested
         );
 
         // address 0 represents native ETH
-        dao.addToGuild(dao, address(0), proposal.amount);
+        dao.addToGuild(address(0), proposal.amount);
         dao.processProposal(proposalId);
     }
 }

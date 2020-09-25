@@ -4,7 +4,6 @@ pragma solidity ^0.7.0;
 
 import "../../core/Registry.sol";
 import "../../core/Module.sol";
-import "../../core/interfaces/IMember.sol";
 import "../../helpers/FlagHelper.sol";
 import "../../guards/AdapterGuard.sol";
 import "../../guards/ModuleGuard.sol";
@@ -52,9 +51,8 @@ contract VotingContract is IVoting, Module, AdapterGuard, ModuleGuard {
         uint256 proposalId,
         uint256 voteValue
     ) external onlyMember(dao) {
-        IMember memberContract = IMember(dao.getAddress(MEMBER_MODULE));
         require(
-            memberContract.isActiveMember(dao, msg.sender),
+            dao.isActiveMember(msg.sender),
             "only active members can vote"
         );
         require(

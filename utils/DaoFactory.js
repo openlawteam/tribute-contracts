@@ -10,26 +10,22 @@ const remaining = sharePrice.sub(web3.utils.toBN('50000000000000'));
 const FlagHelperLib = artifacts.require('./v3/helpers/FlagHelper');
 const DaoFactory = artifacts.require('./v3/core/DaoFactory');
 const Registry = artifacts.require('./v3/core/Registry');
-const MemberContract = artifacts.require('./v3/core/MemberContract');
 const VotingContract = artifacts.require('./v3/adapters/VotingContract');
 const ManagingContract = artifacts.require('./v3/adapter/ManagingContract');
 const FinancingContract = artifacts.require('./v3/adapter/FinancingContract');
 const RagequitContract = artifacts.require('./v3/adapters/RagequitContract');
 const OnboardingContract = artifacts.require('./v3/adapters/OnboardingContract');
-const BankContract = artifacts.require('./v3/core/banking/BankContract');
 
 async function prepareSmartContracts() {
     let lib = await FlagHelperLib.new();
-    await MemberContract.link("FlagHelper", lib.address);
-    let member = await MemberContract.new();
+    await Registry.link("FlagHelper", lib.address);
     let voting = await VotingContract.new();
     let ragequit = await RagequitContract.new();
     let managing = await ManagingContract.new();
     let financing = await FinancingContract.new();
     let onboarding = await OnboardingContract.new();
-    let bank = await BankContract.new();
 
-    return { voting, member, ragequit, managing, financing, onboarding, bank};
+    return { voting, ragequit, managing, financing, onboarding};
   }
 
 async function createDao(overridenModules, senderAccount) {
@@ -40,7 +36,7 @@ async function createDao(overridenModules, senderAccount) {
     await DaoFactory.link("FlagHelper", lib.address);
 
     const {member, voting, ragequit, managing, financing, onboarding, bank} = modules;
-    let daoFactory = await DaoFactory.new(member.address, voting.address, ragequit.address, managing.address, financing.address, onboarding.address, bank.address, 
+    let daoFactory = await DaoFactory.new(voting.address, ragequit.address, managing.address, financing.address, onboarding.address, 
       { from: senderAccount, gasPrice: web3.utils.toBN("0") });
     
       await reportingTransaction('DAO creation', daoFactory.newDao(sharePrice, numberOfShares, 1000, { from: senderAccount, gasPrice: web3.utils.toBN("0") }));
@@ -97,11 +93,9 @@ module.exports = {
     ETH_TOKEN,
     DaoFactory,
     Registry,
-    MemberContract,
     VotingContract,
     ManagingContract,
     FinancingContract,
     RagequitContract,
-    OnboardingContract,
-    BankContract
+    OnboardingContract
 };

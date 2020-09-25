@@ -39,10 +39,8 @@ contract FinancingContract is IFinancing, Module, AdapterGuard {
         require(amount > 0, "invalid requested amount");
         require(token == address(0x0), "only raw eth token is supported");
         //TODO (fforbeck): check if other types of tokens are supported/allowed
-
-        IBank bankContract = IBank(dao.getAddress(BANK_MODULE));
         require(
-            bankContract.isNotReservedAddress(applicant),
+            dao.isNotReservedAddress(applicant),
             "applicant using reserved address"
         );
         

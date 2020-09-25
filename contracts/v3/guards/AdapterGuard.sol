@@ -3,7 +3,6 @@ pragma solidity ^0.7.0;
 // SPDX-License-Identifier: MIT
 
 import "../core/Registry.sol";
-import "../core/interfaces/IMember.sol";
 import "../core/Module.sol";
 
 /**
@@ -15,9 +14,8 @@ abstract contract AdapterGuard is Module {
      * @dev Only members of the Guild are allowed to execute the function call.
      */
     modifier onlyMember(Registry dao) {
-        IMember memberContract = IMember(dao.getAddress(MEMBER_MODULE));
         require(
-            memberContract.isActiveMember(dao, msg.sender),
+            dao.isActiveMember(msg.sender),
             "restricted to DAO members"
         );
         _;

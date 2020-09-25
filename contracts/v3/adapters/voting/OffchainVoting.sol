@@ -5,7 +5,6 @@ pragma experimental ABIEncoderV2;
 
 import "../../core/Registry.sol";
 import "../../core/Module.sol";
-import "../../core/interfaces/IMember.sol";
 import "../interfaces/IVoting.sol";
 import "../../guards/AdapterGuard.sol";
 import "../../guards/ModuleGuard.sol";

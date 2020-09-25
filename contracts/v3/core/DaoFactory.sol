@@ -51,7 +51,7 @@ contract DaoFactory is Module {
         IVoting votingContract = IVoting(addresses[VOTING_MODULE]);
         votingContract.registerDao(dao, votingPeriod);
 
-        dao.updateMember(dao, msg.sender, 1);
+        dao.updateMember(msg.sender, 1);
 
         OnboardingContract onboardingContract = OnboardingContract(
             addresses[ONBOARDING_MODULE]
