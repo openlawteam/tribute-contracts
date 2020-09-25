@@ -21,7 +21,7 @@ contract OffchainVotingContract is IVoting, Module, AdapterGuard, ModuleGuard {
         uint256 votingCount;
     }
     struct Voting {
-        bytes32 snapshotRoot;
+        uint256 blockNumber;
         bytes32 resultRoot;
         uint256 nbVoters;
         uint256 nbYes;
@@ -36,6 +36,7 @@ contract OffchainVotingContract is IVoting, Module, AdapterGuard, ModuleGuard {
         uint256 nbYes;
         uint256 weight;
         bytes sig;
+        uint256 index;
         bytes32[] proof;
     }
 
@@ -71,25 +72,18 @@ contract OffchainVotingContract is IVoting, Module, AdapterGuard, ModuleGuard {
         bytes memory data
     ) external override onlyModule(dao) returns (uint256) {
         require(
-            data.length == 64,
-            "vote data should represent a merkle tree root (bytes32) and number of voters (uint256)"
+            data.length == 32,
+            "vote data should represent the block number for snapshot"
         );
 
-        bytes32 root;
-        uint256 nbVoters;
+        uint256 blockNumber;
 
         assembly {
-            root := mload(add(data, 32))
+            blockNumber := mload(add(data, 32))
         }
-
-        assembly {
-            nbVoters := mload(add(data, 64))
-        }
-        require(root != bytes32(0), "snapshot root cannot be 0");
-        require(nbVoters > 0, "nb voters being 0 means no one can vote");
+        
         votes[address(dao)][proposalId].startingTime = block.timestamp;
-        votes[address(dao)][proposalId].snapshotRoot = root;
-        votes[address(dao)][proposalId].nbVoters = nbVoters;
+        votes[address(dao)][proposalId].blockNumber = blockNumber;
     }
 
     /**
@@ -136,64 +130,112 @@ contract OffchainVotingContract is IVoting, Module, AdapterGuard, ModuleGuard {
         return 1;
     }
 
-    function challengeWrongOrder(
+    function challengeWrongSignature(
         Registry dao,
         uint256 proposalId,
-        uint256 index,
-        VoteResultNode memory nodePrevious,
         VoteResultNode memory nodeCurrent
     ) external {
-        require(
-            index > 0,
-            "check between current and previous, index cannot be 0"
-        );
         Voting storage vote = votes[address(dao)][proposalId];
         bytes32 resultRoot = vote.resultRoot;
-        bytes32 snapshotRoot = vote.snapshotRoot;
+        uint256 blockNumber = vote.blockNumber;
         require(resultRoot != bytes32(0), "no result available yet!");
-        bytes32 hashCurrent = keccak256(
-            abi.encode(
-                nodeCurrent.voter,
-                nodeCurrent.weight,
-                nodeCurrent.sig,
-                nodeCurrent.nbYes,
-                nodeCurrent.nbNo
-            )
-        );
-        bytes32 hashPrevious = keccak256(
-            abi.encode(
-                nodePrevious.voter,
-                nodePrevious.weight,
-                nodePrevious.sig,
-                nodePrevious.nbYes,
-                nodePrevious.nbNo
-            )
-        );
+        bytes32 hashCurrent = nodeHash(nodeCurrent);
         require(
             verify(resultRoot, hashCurrent, nodeCurrent.proof),
-            "proof check for current invalid! "
-        );
-        require(
-            verify(resultRoot, hashPrevious, nodePrevious.proof),
-            "proof check for previous invalid!"
+            "proof check for current invalid for current node"
         );
 
         bytes32 proposalHash = keccak256(
-            abi.encode(snapshotRoot, address(dao), proposalId)
+            abi.encode(blockNumber, address(dao), proposalId)
         );
+        //return 1 if yes, 2 if no and 0 if the vote is incorrect
+        if(hasVoted(nodeCurrent.voter, proposalHash, nodeCurrent.sig) == 0) {
+            challengeResult(dao, proposalId);
+        }
+    }
+
+    function challengeDuplicate(
+        Registry dao,
+        uint256 proposalId,
+        VoteResultNode memory node1,
+        VoteResultNode memory node2
+    ) external {
+        Voting storage vote = votes[address(dao)][proposalId];
+        bytes32 resultRoot = vote.resultRoot;
+        require(resultRoot != bytes32(0), "no result available yet!");
+        bytes32 hashCurrent = nodeHash(node1);
+        bytes32 hashPrevious = nodeHash(node2);
+        require(
+            verify(resultRoot, hashCurrent, node1.proof),
+            "proof check for current invalid for current node"
+        );
+        require(
+            verify(resultRoot, hashPrevious, node2.proof),
+            "proof check for previous invalid for previous node"
+        );
+        
+        if(node1.voter == node2.voter) {
+            challengeResult(dao, proposalId);
+        }
+    }
+
+    function challengeWrongStep(
+        Registry dao,
+        uint256 proposalId,
+        VoteResultNode memory nodePrevious,
+        VoteResultNode memory nodeCurrent
+    ) external {
+        Voting storage vote = votes[address(dao)][proposalId];
+        bytes32 resultRoot = vote.resultRoot;
+        uint256 blockNumber = vote.blockNumber;
+        require(resultRoot != bytes32(0), "no result available yet!");
+        bytes32 hashCurrent = nodeHash(nodeCurrent);
+        bytes32 hashPrevious = nodeHash(nodePrevious);
+        require(
+            verify(resultRoot, hashCurrent, nodeCurrent.proof),
+            "proof check for current invalid for current node"
+        );
+        require(
+            verify(resultRoot, hashPrevious, nodePrevious.proof),
+            "proof check for previous invalid for previous node"
+        );
+
+        bytes32 proposalHash = keccak256(
+            abi.encode(blockNumber, address(dao), proposalId)
+        );
+        if(nodeCurrent.index != nodePrevious.index + 1) {
+            challengeResult(dao, proposalId);
+        }
+
+        if(nodeCurrent.voter > nodePrevious.voter) {
+            challengeResult(dao, proposalId);
+        }
+        
+        checkStep(dao, nodeCurrent, nodePrevious, proposalHash, proposalId);
+    }
+
+    function nodeHash(VoteResultNode memory node) internal pure returns (bytes32) {
+        return keccak256(abi.encode(node.voter, node.weight, node.sig, node.nbYes , node.nbNo, node.index));
+    }
+
+    function checkStep(Registry dao, VoteResultNode memory nodeCurrent, VoteResultNode memory nodePrevious, bytes32 proposalHash, uint256 proposalId) internal {
         if (hasVotedYes(nodeCurrent.voter, proposalHash, nodeCurrent.sig)) {
             if (nodePrevious.nbYes + 1 != nodeCurrent.nbYes) {
-                votes[address(dao)][proposalId].isChallenged = true;
+                challengeResult(dao, proposalId);
             } else if (nodePrevious.nbNo != nodeCurrent.nbNo) {
-                votes[address(dao)][proposalId].isChallenged = true;
+                challengeResult(dao, proposalId);
             }
         } else {
             if (nodePrevious.nbYes != nodeCurrent.nbYes) {
-                votes[address(dao)][proposalId].isChallenged = true;
+                challengeResult(dao, proposalId);
             } else if (nodePrevious.nbNo + 1 != nodeCurrent.nbNo) {
-                votes[address(dao)][proposalId].isChallenged = true;
+                challengeResult(dao, proposalId);
             }
         }
+    }
+
+    function challengeResult(Registry dao, uint256 proposalId) internal {
+        votes[address(dao)][proposalId].isChallenged = true;
     }
 
     function getSignedHash(
@@ -262,6 +304,40 @@ contract OffchainVotingContract is IVoting, Module, AdapterGuard, ModuleGuard {
         }
     }
 
+    function hasVoted(
+        address voter,
+        bytes32 proposalHash,
+        bytes memory sig
+    ) internal pure returns (uint256) {
+        if (
+            recover(
+                keccak256(
+                    abi.encodePacked(
+                        "\x19Ethereum Signed Message:\n32",
+                        keccak256(abi.encode(proposalHash, 1))
+                    )
+                ),
+                sig
+            ) == voter
+        ) {
+            return 1;
+        } else if (
+            recover(
+                keccak256(
+                    abi.encodePacked(
+                        "\x19Ethereum Signed Message:\n32",
+                        keccak256(abi.encode(proposalHash, 2))
+                    )
+                ),
+                sig
+            ) == voter
+        ) {
+            return 2;
+        } else {
+            return 0;
+        }
+    }
+
     /**
      * @dev Recover signer address from a message by using his signature
      * @param hash bytes32 message, the hash is the signed message. What is recovered is the signer address.
@@ -298,29 +374,6 @@ contract OffchainVotingContract is IVoting, Module, AdapterGuard, ModuleGuard {
             return (address(0));
         }
         return ecrecover(hash, v, r, s);
-    }
-
-    function fixResult(
-        Registry dao,
-        uint256 proposalId,
-        address voter,
-        uint256 weight,
-        uint256 nbYes,
-        uint256 nbNo,
-        bytes calldata voteSignature,
-        bytes32[] memory proof
-    ) external view {
-        Voting memory vote = votes[address(dao)][proposalId];
-        bytes32 hash = keccak256(
-            abi.encode(voter, weight, voteSignature, nbYes, nbNo)
-        );
-        require(verify(vote.resultRoot, hash, proof), "proof check mismatch!");
-        if (vote.nbYes != nbYes) {
-            vote.nbYes = nbYes;
-        }
-        if (vote.nbNo != nbNo) {
-            vote.nbNo = nbNo;
-        }
     }
 
     function verify(
