@@ -35,7 +35,7 @@ async function createDao(overridenModules, senderAccount) {
     let lib = await FlagHelperLib.new();
     await DaoFactory.link("FlagHelper", lib.address);
 
-    const {member, voting, ragequit, managing, financing, onboarding, bank} = modules;
+    const {voting, ragequit, managing, financing, onboarding} = modules;
     let daoFactory = await DaoFactory.new(voting.address, ragequit.address, managing.address, financing.address, onboarding.address, 
       { from: senderAccount, gasPrice: web3.utils.toBN("0") });
     

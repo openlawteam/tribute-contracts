@@ -74,15 +74,12 @@ contract Registry is Ownable, Module {
         uint256 votes;
     }
 
-    struct BankingState {
+    struct Bank {
         address[] tokens;
         mapping(address => bool) availableTokens;
         mapping(address => mapping(address => uint256)) tokenBalances;
     }
 
-
-
-    
 
     /*
      * PRIVATE VARIABLES
@@ -90,7 +87,7 @@ contract Registry is Ownable, Module {
     mapping(address => Member) private members; // the map to track all members of the DAO
     mapping(address => address) private memberAddresses; // the member address map
     mapping(address => address) private memberAddressesByDelegatedKey; // ???
-    BankingState private bankingState;
+    Bank private bank; // the state of the DAO Bank
 
     /*
      * PUBLIC VARIABLES
@@ -344,20 +341,19 @@ contract Registry is Ownable, Module {
         emit UpdateDelegateKey(memberAddr, newDelegateKey);
     }
 
-    function burnShares(
+    function _burnShares(
         address memberAddr,
         uint256 sharesToBurn
-    ) public onlyAdapter {
+    ) internal {
         require(
             _enoughSharesToBurn(memberAddr, sharesToBurn),
             "insufficient shares"
         );
 
-        Member storage member = members[memberAddr];
-        member.nbShares = member.nbShares.sub(sharesToBurn);
+        members[memberAddr].nbShares = members[memberAddr].nbShares.sub(sharesToBurn);
         totalShares = totalShares.sub(sharesToBurn);
 
-        emit UpdateMember(memberAddr, member.nbShares);
+        emit UpdateMember(memberAddr, members[memberAddr].nbShares);
     }
 
     function nbShares(address member)
@@ -366,10 +362,6 @@ contract Registry is Ownable, Module {
         returns (uint256)
     {
         return members[member].nbShares;
-    }
-
-    function getTotalShares() external view returns (uint256) {
-        return totalShares;
     }
 
     /*
@@ -385,13 +377,13 @@ contract Registry is Ownable, Module {
             "invalid token"
         );
         unsafeAddToBalance(ESCROW, token, amount);
-        if (!bankingState.availableTokens[token]) {
+        if (!bank.availableTokens[token]) {
             require(
-                bankingState.tokens.length < MAX_TOKENS,
+                bank.tokens.length < MAX_TOKENS,
                 "max limit reached"
             );
-            bankingState.availableTokens[token] = true;
-            bankingState.tokens.push(token);
+            bank.availableTokens[token] = true;
+            bank.tokens.push(token);
         }
     }
 
@@ -404,13 +396,13 @@ contract Registry is Ownable, Module {
             "invalid token"
         );
         unsafeAddToBalance(GUILD, token, amount);
-        if (!bankingState.availableTokens[token]) {
+        if (!bank.availableTokens[token]) {
             require(
-                bankingState.tokens.length < MAX_TOKENS,
+                bank.tokens.length < MAX_TOKENS,
                 "max limit reached"
             );
-            bankingState.availableTokens[token] = true;
-            bankingState.tokens.push(token);
+            bank.availableTokens[token] = true;
+            bank.tokens.push(token);
         }
     }
 
@@ -420,7 +412,7 @@ contract Registry is Ownable, Module {
         uint256 amount
     ) external onlyAdapter {
         require(
-            bankingState.tokenBalances[GUILD][token] >= amount,
+            bank.tokenBalances[GUILD][token] >= amount,
             "insufficient balance"
         );
         unsafeSubtractFromBalance(GUILD, token, amount);
@@ -432,24 +424,34 @@ contract Registry is Ownable, Module {
         address memberAddr,
         uint256 sharesToBurn
     ) external onlyAdapter {
+        require(
+            isActiveMember(memberAddr),
+            "only active members can ragequit"
+        );
+
+        uint256 initialTotalShares = totalShares;
+
+        //TODO check if the member is in jail?
+
         //Get the total shares before burning member shares
         //Burn shares if member has enough shares
-        burnShares(memberAddr, sharesToBurn);
+        _burnShares(memberAddr, sharesToBurn);
+
         //Update internal Guild and Member balances
-        for (uint256 i = 0; i < bankingState.tokens.length; i++) {
-            address token = bankingState.tokens[i];
+        for (uint256 i = 0; i < bank.tokens.length; i++) {
+            address token = bank.tokens[i];
             uint256 amountToRagequit = fairShare(
-                bankingState.tokenBalances[GUILD][token],
+                bank.tokenBalances[GUILD][token],
                 sharesToBurn,
-                totalShares
+                initialTotalShares
             );
             if (amountToRagequit > 0) {
                 // gas optimization to allow a higher maximum token limit
                 // deliberately not using safemath here to keep overflows from preventing the function execution
                 // (which would break ragekicks) if a token overflows,
                 // it is because the supply was artificially inflated to oblivion, so we probably don"t care about it anyways
-                bankingState.tokenBalances[GUILD][token] -= amountToRagequit;
-                bankingState.tokenBalances[memberAddr][token] += amountToRagequit;
+                bank.tokenBalances[GUILD][token] -= amountToRagequit;
+                bank.tokenBalances[memberAddr][token] += amountToRagequit;
                 //TODO: do we want to emit an event for each token transfer?
                 // emit Transfer(GUILD, applicant, token, amount);
             }
@@ -475,7 +477,7 @@ contract Registry is Ownable, Module {
         address user,
         address token
     ) external view returns (uint256) {
-        return bankingState.tokenBalances[user][token];
+        return bank.tokenBalances[user][token];
     }
 
     /**
@@ -486,8 +488,8 @@ contract Registry is Ownable, Module {
         address token,
         uint256 amount
     ) internal {
-        bankingState.tokenBalances[user][token] += amount;
-        bankingState.tokenBalances[TOTAL][token] += amount;
+        bank.tokenBalances[user][token] += amount;
+        bank.tokenBalances[TOTAL][token] += amount;
     }
 
     function unsafeSubtractFromBalance(
@@ -495,8 +497,8 @@ contract Registry is Ownable, Module {
         address token,
         uint256 amount
     ) internal {
-        bankingState.tokenBalances[user][token] -= amount;
-        bankingState.tokenBalances[TOTAL][token] -= amount;
+        bank.tokenBalances[user][token] -= amount;
+        bank.tokenBalances[TOTAL][token] -= amount;
     }
 
     function unsafeInternalTransfer(

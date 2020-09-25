@@ -1,5 +1,5 @@
 
-const {advanceTime, createDao, GUILD, ESCROW, TOTAL, ETH_TOKEN, ManagingContract, VotingContract, OnboardingContract, MemberContract} = require('../../utils/DaoFactory.js');
+const {advanceTime, createDao, GUILD, ESCROW, TOTAL, ETH_TOKEN, ManagingContract, VotingContract, OnboardingContract} = require('../../utils/DaoFactory.js');
 const toBN = web3.utils.toBN;
 const sha3 = web3.utils.sha3;
 
@@ -72,7 +72,7 @@ contract('MolochV3 - Managing Adapter', async accounts => {
     }
   })
 
-  it("should be possible to any individual to propose a new DAO Banking module", async () => {
+  it("should be possible to any individual to propose a new DAO module", async () => {
     const myAccount = accounts[1];
 
     //Create the new DAO
@@ -82,8 +82,9 @@ contract('MolochV3 - Managing Adapter', async accounts => {
 
     let votingContract = await dao.getAddress(sha3('voting'));
     let voting = await VotingContract.at(votingContract);
+
     //Submit a new Bank module proposal
-    let newModuleId = sha3('bank');
+    let newModuleId = sha3('onboarding');
     let newModuleAddress = accounts[3]; //TODO deploy some Banking test contract
     await managing.createModuleChangeRequest(dao.address, newModuleId, newModuleAddress, { from: myAccount, gasPrice: toBN("0") });
 
@@ -98,11 +99,11 @@ contract('MolochV3 - Managing Adapter', async accounts => {
     await managing.processProposal(dao.address, proposalId, { from: myAccount, gasPrice: toBN("0") });
 
     //Check if the Bank Module was added to the Registry
-    let newBankAddress = await dao.getAddress(sha3('bank'));
+    let newBankAddress = await dao.getAddress(sha3('onboarding'));
     assert.equal(newBankAddress.toString(), newModuleAddress.toString());
   })
 
-  it("should be possible to propose a new DAO Banking module with a delegate key", async () => {
+  it("should be possible to propose a new DAO module with a delegate key", async () => {
     const myAccount = accounts[1];
     const delegateKey = accounts[3];
 
@@ -114,7 +115,7 @@ contract('MolochV3 - Managing Adapter', async accounts => {
     let votingContract = await dao.getAddress(sha3('voting'));
     let voting = await VotingContract.at(votingContract);
     //Submit a new Bank module proposal
-    let newModuleId = sha3('bank');
+    let newModuleId = sha3('onboarding');
     let newModuleAddress = accounts[4]; //TODO deploy some Banking test contract
     await managing.createModuleChangeRequest(dao.address, newModuleId, newModuleAddress, { from: myAccount, gasPrice: toBN("0") });
 
@@ -127,11 +128,8 @@ contract('MolochV3 - Managing Adapter', async accounts => {
     const onboarding = await OnboardingContract.at(onboardingAddr);
     await onboarding.updateDelegateKey(dao.address, delegateKey, { from: myAccount, gasPrice: toBN("0") });
 
-    const memberAddr = await dao.getAddress(sha3('member'));
-    const member = await MemberContract.at(memberAddr);
-
-    const isActiveDelegate = await member.isActiveMember(dao.address, delegateKey);
-    const isActiveMyAccount = await member.isActiveMember(dao.address, myAccount);
+    const isActiveDelegate = await dao.isActiveMember(delegateKey);
+    const isActiveMyAccount = await dao.isActiveMember(myAccount);
     console.log('#######', isActiveDelegate, isActiveMyAccount);
 
     //Sponsor the new proposal, vote and process it 
@@ -147,7 +145,7 @@ contract('MolochV3 - Managing Adapter', async accounts => {
     await managing.processProposal(dao.address, proposalId, { from: delegateKey, gasPrice: toBN("0") });
 
     //Check if the Bank Module was added to the Registry
-    let newBankAddress = await dao.getAddress(sha3('bank'));
+    let newBankAddress = await dao.getAddress(sha3('onboarding'));
     assert.equal(newBankAddress.toString(), newModuleAddress.toString());
   })
 });

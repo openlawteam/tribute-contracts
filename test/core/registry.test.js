@@ -108,4 +108,27 @@ contract('Registry', async () => {
       assert.equal(error.reason, "module id must not be empty");
     }
   });
+
+  it("should be possible to update delegate key", async () => {
+    const myAccount = accounts[1];
+    const delegateKey = accounts[2];
+    let dao = await createDao({}, myAccount);
+
+    const onboardingAddr = await dao.getAddress(sha3('onboarding'));
+    const onboarding = await OnboardingContract.at(onboardingAddr);
+
+    const myAccountActive1 = await dao.isActiveMember(myAccount);
+    const delegateKeyActive1 = await dao.isActiveMember(delegateKey);
+
+    assert.true(myAccountActive1);
+    assert.false(delegateKeyActive1);
+
+    await onboarding.updateDelegateKey(dao.address, delegateKey, { from: myAccount, gasPrice: toBN("0") });
+
+    const myAccountActive2 = await dao.isActiveMember(myAccount);
+    const delegateKeyActive2 = await dao.isActiveMember(delegateKey);
+
+    assert.false(myAccountActive2);
+    assert.true(delegateKeyActive2);
+  });
 });

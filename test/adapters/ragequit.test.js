@@ -34,7 +34,7 @@ contract('MolochV3 - Ragequit Adapter', async accounts => {
     assert.equal(toBN(guildBalance).toString(), expectedGuildBalance.toString());
 
     //Check Member Shares
-    let shares = await member.nbShares(dao.address, newMember);
+    let shares = await dao.nbShares(newMember);
     assert.equal(shares.toString(), "10000000000000000");
 
     //Ragequit
@@ -77,7 +77,7 @@ contract('MolochV3 - Ragequit Adapter', async accounts => {
     assert.equal(guildBalance.toString(), "1200000000000000000".toString());
 
     //Check Member Shares
-    let shares = await member.nbShares(dao.address, newMember);
+    let shares = await dao.nbShares(newMember);
     assert.equal(shares.toString(), "10000000000000000");
 
     //Ragequit
@@ -117,7 +117,7 @@ contract('MolochV3 - Ragequit Adapter', async accounts => {
     let pastEvents = await dao.getPastEvents();
     let { proposalId }  = pastEvents[0].returnValues;
 
-    //Sponsor the new proposal, vote and process it 
+    //Sponsor the new proposal to admit the new member, vote and process it 
     await onboarding.sponsorProposal(dao.address, proposalId, [], { from: myAccount, gasPrice: toBN("0") });
     await voting.submitVote(dao.address, proposalId, 1, { from: myAccount, gasPrice: toBN("0") });
     await advanceTime(10000);
@@ -127,22 +127,22 @@ contract('MolochV3 - Ragequit Adapter', async accounts => {
     let guildBalance = await dao.balanceOf(GUILD, ETH_TOKEN);
     assert.equal(guildBalance.toString(), "12000000000000000000".toString());
 
-    //Check Member Shares
+    //Check New Member Shares
     let shares = await dao.nbShares(newMember);
     assert.equal(shares.toString(), "100000000000000000");
 
-    //Ragequit - burn all member shares
+    //Ragequit - Burn all the new member shares
     let ragequitAddress = await dao.getAddress(sha3('ragequit'));
     let ragequitContract = await RagequitContract.at(ragequitAddress);
     await ragequitContract.ragequit(dao.address, toBN(shares), { from: newMember, gasPrice: toBN("0") });
 
-    //Check Guild Bank Balance
-    guildBalance = await dao.balanceOf(GUILD, ETH_TOKEN);
-    assert.equal(guildBalance.toString(), "240"); //must be close to 0
-
-    //Check Member Shares
+    //Check New Member Shares
     let newShares = await dao.nbShares(newMember);
     assert.equal(newShares.toString(), "0");
+
+    //Check Guild Bank Balance
+    let newGuildBalance = await dao.balanceOf(GUILD, ETH_TOKEN);
+    assert.equal(toBN(newGuildBalance).toString(), "240"); //must be close to 0
 
     //Check Ragequit Event
     pastEvents = await ragequitContract.getPastEvents();
@@ -151,11 +151,20 @@ contract('MolochV3 - Ragequit Adapter', async accounts => {
     assert.equal(burnedShares.toString(), shares.toString());
   })
 
-  it("should be possible to a member to ragequit even if the member voted YES on a proposal", async () => {
-    //TODO
+  it("should be possible to a member to ragequit if the member voted YES on a proposal that is not processed", async () => {
+    //TODO: this test is currently passing, we don't support the v2 feature which prevents a member to ragequit if voted YES on a not processed proposal
   })
 
-  it("should be possible to a member to ragequit even if the member voted NO on a proposal", async () => {
-    //TODO
+  it("should be possible to a member to ragequit if the member voted NO on a proposal that is not processed", async () => {
+    //TODO: it must pass
   })
+
+  it("should be possible to a member to ragequit if the member voted YES on a proposal that is processed", async () => {
+    //TODO: it must pass
+  })
+
+  it("should be possible to a member to ragequit if the member voted NO on a proposal that is processed", async () => {
+    //TODO: it must pass
+  })
+  
 });

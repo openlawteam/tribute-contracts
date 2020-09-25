@@ -1,7 +1,7 @@
 
 const sha3 = web3.utils.sha3;
 const toBN = web3.utils.toBN;
-const {advanceTime, createDao, GUILD, sharePrice, BankContract, OnboardingContract, VotingContract, FinancingContract, ETH_TOKEN} = require('../../utils/DaoFactory.js');
+const {advanceTime, createDao, GUILD, sharePrice, OnboardingContract, VotingContract, FinancingContract, ETH_TOKEN} = require('../../utils/DaoFactory.js');
 const remaining = sharePrice.sub(toBN('50000000000000'));
 
 contract('MolochV3 - Financing Adapter', async accounts => {
@@ -12,8 +12,6 @@ contract('MolochV3 - Financing Adapter', async accounts => {
     const newMember = accounts[3];
 
     let dao = await createDao({}, myAccount);
-    const bankAddress = await dao.getAddress(sha3("bank"));
-    const bank = await BankContract.at(bankAddress);
 
     const votingAddress = await dao.getAddress(sha3("voting"));
     const voting = await VotingContract.at(votingAddress);
@@ -37,7 +35,7 @@ contract('MolochV3 - Financing Adapter', async accounts => {
     await onboarding.processProposal(dao.address, proposalId, { from: myAccount, gasPrice: toBN("0") });
 
     //Check Guild Bank Balance
-    let guildBalance = await bank.balanceOf(dao.address, GUILD, ETH_TOKEN);
+    let guildBalance = await dao.balanceOf(GUILD, ETH_TOKEN);
     let expectedGuildBalance = toBN("1200000000000000000");
     assert.equal(toBN(guildBalance).toString(), expectedGuildBalance.toString());
 
@@ -57,7 +55,7 @@ contract('MolochV3 - Financing Adapter', async accounts => {
     await voting.submitVote(dao.address, proposalId, 1, { from: myAccount, gasPrice: toBN("0") });
 
     //Check applicant balance before Financing proposal is processed
-    let applicantBalance = await bank.balanceOf(dao.address, applicant, ETH_TOKEN);
+    let applicantBalance = await dao.balanceOf(applicant, ETH_TOKEN);
     assert.equal(toBN(applicantBalance).toString(), "0".toString());
     
     //Process Financing proposal after voting
@@ -65,11 +63,11 @@ contract('MolochV3 - Financing Adapter', async accounts => {
     await financing.processProposal(dao.address, proposalId, { from: myAccount, gasPrice: toBN("0") });
 
     //Check Guild Bank balance to make sure the transfer has happened
-    guildBalance = await bank.balanceOf(dao.address, GUILD, ETH_TOKEN);
+    guildBalance = await dao.balanceOf(GUILD, ETH_TOKEN);
     assert.equal(toBN(guildBalance).toString(), expectedGuildBalance.sub(requestedAmount).toString());
 
     //Check the applicant token balance to make sure the funds are available in the bank for the applicant account
-    applicantBalance = await bank.balanceOf(dao.address, applicant, ETH_TOKEN);
+    applicantBalance = await dao.balanceOf(applicant, ETH_TOKEN);
     assert.equal(toBN(applicantBalance).toString(), requestedAmount.toString());
   })
 });
