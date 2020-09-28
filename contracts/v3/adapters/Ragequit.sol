@@ -3,7 +3,7 @@ pragma solidity ^0.7.0;
 // SPDX-License-Identifier: MIT
 
 import "../core/DaoConstants.sol";
-import "../core/Registry.sol";
+import "../core/DaoRegistry.sol";
 import "../guards/MemberGuard.sol";
 import "../guards/ReentrancyGuard.sol";
 import "./interfaces/IRagequit.sol";
@@ -23,7 +23,7 @@ contract RagequitContract is
         revert("fallback revert");
     }
 
-    function ragequit(Registry dao, uint256 sharesToBurn)
+    function ragequit(DaoRegistry dao, uint256 sharesToBurn)
         external
         override
         nonReentrant

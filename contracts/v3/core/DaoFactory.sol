@@ -3,7 +3,7 @@ pragma solidity ^0.7.0;
 // SPDX-License-Identifier: MIT
 
 import "./DaoConstants.sol";
-import "./Registry.sol";
+import "./DaoRegistry.sol";
 import "../adapters/interfaces/IVoting.sol";
 import "../adapters/Onboarding.sol";
 import "../adapters/Financing.sol";
@@ -38,7 +38,7 @@ contract DaoFactory is DaoConstants {
         uint256 nbShares,
         uint256 votingPeriod
     ) external returns (address) {
-        Registry dao = new Registry();
+        DaoRegistry dao = new DaoRegistry();
         address daoAddress = address(dao);
 
         //Registring Adapters

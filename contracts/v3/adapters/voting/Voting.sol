@@ -2,7 +2,7 @@ pragma solidity ^0.7.0;
 
 // SPDX-License-Identifier: MIT
 
-import "../../core/Registry.sol";
+import "../../core/DaoRegistry.sol";
 import "../../core/DaoConstants.sol";
 import "../../helpers/FlagHelper.sol";
 import "../../guards/MemberGuard.sol";
@@ -26,7 +26,7 @@ contract VotingContract is IVoting, DaoConstants, MemberGuard, AdapterGuard {
     mapping(address => mapping(uint256 => Voting)) private votes;
     mapping(address => VotingConfig) private votingConfigs;
 
-    function registerDao(Registry dao, uint256 votingPeriod)
+    function registerDao(DaoRegistry dao, uint256 votingPeriod)
         external
         override
         onlyAdapter(dao)
@@ -37,7 +37,7 @@ contract VotingContract is IVoting, DaoConstants, MemberGuard, AdapterGuard {
 
     //voting  data is not used for pure onchain voting
     function startNewVotingForProposal(
-        Registry dao,
+        DaoRegistry dao,
         uint256 proposalId,
         bytes calldata /*onlyAdapter(dao)*/
     ) external override returns (uint256) {
@@ -48,7 +48,7 @@ contract VotingContract is IVoting, DaoConstants, MemberGuard, AdapterGuard {
     }
 
     function submitVote(
-        Registry dao,
+        DaoRegistry dao,
         uint256 proposalId,
         uint256 voteValue
     ) external onlyMember(dao) {
@@ -85,7 +85,7 @@ contract VotingContract is IVoting, DaoConstants, MemberGuard, AdapterGuard {
     3: not pass
     4: in progress
      */
-    function voteResult(Registry dao, uint256 proposalId)
+    function voteResult(DaoRegistry dao, uint256 proposalId)
         external
         override
         view

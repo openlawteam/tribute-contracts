@@ -4,7 +4,7 @@ pragma solidity ^0.7.0;
 
 import "./interfaces/IFinancing.sol";
 import "../core/DaoConstants.sol";
-import "../core/Registry.sol";
+import "../core/DaoRegistry.sol";
 import "../adapters/interfaces/IVoting.sol";
 import "../guards/MemberGuard.sol";
 import "../utils/SafeMath.sol";
@@ -30,7 +30,7 @@ contract FinancingContract is IFinancing, DaoConstants, MemberGuard {
     }
 
     function createFinancingRequest(
-        Registry dao,
+        DaoRegistry dao,
         address applicant,
         address token,
         uint256 amount,
@@ -56,14 +56,14 @@ contract FinancingContract is IFinancing, DaoConstants, MemberGuard {
     }
 
     function sponsorProposal(
-        Registry dao,
+        DaoRegistry dao,
         uint256 proposalId,
         bytes calldata data
     ) external override onlyMember(dao) {
         dao.sponsorProposal(proposalId, msg.sender, data);
     }
 
-    function processProposal(Registry dao, uint256 proposalId)
+    function processProposal(DaoRegistry dao, uint256 proposalId)
         external
         override
         onlyMember(dao)

@@ -3,7 +3,7 @@ pragma experimental ABIEncoderV2;
 
 // SPDX-License-Identifier: MIT
 
-import "../../core/Registry.sol";
+import "../../core/DaoRegistry.sol";
 import "../../core/DaoConstants.sol";
 import "../interfaces/IVoting.sol";
 import "../../guards/MemberGuard.sol";
@@ -45,7 +45,7 @@ contract OffchainVotingContract is
     mapping(address => mapping(uint256 => Voting)) private votes;
     mapping(address => VotingConfig) private votingConfigs;
 
-    function registerDao(Registry dao, uint256 votingPeriod)
+    function registerDao(DaoRegistry dao, uint256 votingPeriod)
         external
         override
         onlyAdapter(dao)
@@ -55,7 +55,7 @@ contract OffchainVotingContract is
     }
 
     function submitVoteResult(
-        Registry dao,
+        DaoRegistry dao,
         uint256 proposalId,
         uint256 nbYes,
         uint256 nbNo,
@@ -69,7 +69,7 @@ contract OffchainVotingContract is
     }
 
     function startNewVotingForProposal(
-        Registry dao,
+        DaoRegistry dao,
         uint256 proposalId,
         bytes memory data /*onlyAdapter(dao)*/
     ) external override returns (uint256) {
@@ -104,7 +104,7 @@ contract OffchainVotingContract is
     3: not pass
     4: in progress
      */
-    function voteResult(Registry dao, uint256 proposalId)
+    function voteResult(DaoRegistry dao, uint256 proposalId)
         external
         override
         view
@@ -141,7 +141,7 @@ contract OffchainVotingContract is
     }
 
     function challengeWrongOrder(
-        Registry dao,
+        DaoRegistry dao,
         uint256 proposalId,
         uint256 index,
         VoteResultNode memory nodePrevious,
@@ -305,7 +305,7 @@ contract OffchainVotingContract is
     }
 
     function fixResult(
-        Registry dao,
+        DaoRegistry dao,
         uint256 proposalId,
         address voter,
         uint256 weight,

@@ -4,7 +4,7 @@ pragma solidity ^0.7.0;
 
 import "./interfaces/IManaging.sol";
 import "../core/DaoConstants.sol";
-import "../core/Registry.sol";
+import "../core/DaoRegistry.sol";
 import "../adapters/interfaces/IVoting.sol";
 import "../guards/MemberGuard.sol";
 import "../utils/SafeMath.sol";
@@ -29,7 +29,7 @@ contract ManagingContract is IManaging, DaoConstants, MemberGuard {
     }
 
     function createModuleChangeRequest(
-        Registry dao,
+        DaoRegistry dao,
         bytes32 moduleId,
         address moduleAddress
     ) external override onlyMember(dao) returns (uint256) {
@@ -53,14 +53,14 @@ contract ManagingContract is IManaging, DaoConstants, MemberGuard {
     }
 
     function sponsorProposal(
-        Registry dao,
+        DaoRegistry dao,
         uint256 proposalId,
         bytes calldata data
     ) external override onlyMember(dao) {
         dao.sponsorProposal(proposalId, msg.sender, data);
     }
 
-    function processProposal(Registry dao, uint256 proposalId)
+    function processProposal(DaoRegistry dao, uint256 proposalId)
         external
         override
         onlyMember(dao)

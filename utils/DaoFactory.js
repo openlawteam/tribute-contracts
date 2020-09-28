@@ -9,7 +9,7 @@ const remaining = sharePrice.sub(web3.utils.toBN('50000000000000'));
 
 const FlagHelperLib = artifacts.require('./v3/helpers/FlagHelper');
 const DaoFactory = artifacts.require('./v3/core/DaoFactory');
-const Registry = artifacts.require('./v3/core/Registry');
+const DaoRegistry = artifacts.require("./v3/core/DaoRegistry");
 const VotingContract = artifacts.require('./v3/adapters/VotingContract');
 const ManagingContract = artifacts.require('./v3/adapter/ManagingContract');
 const FinancingContract = artifacts.require('./v3/adapter/FinancingContract');
@@ -18,7 +18,7 @@ const OnboardingContract = artifacts.require('./v3/adapters/OnboardingContract')
 
 async function prepareSmartContracts() {
     let lib = await FlagHelperLib.new();
-    await Registry.link("FlagHelper", lib.address);
+    await DaoRegistry.link("FlagHelper", lib.address);
     let voting = await VotingContract.new();
     let ragequit = await RagequitContract.new();
     let managing = await ManagingContract.new();
@@ -42,7 +42,7 @@ async function createDao(overridenModules, senderAccount) {
       await reportingTransaction('DAO creation', daoFactory.newDao(sharePrice, numberOfShares, 1000, { from: senderAccount, gasPrice: web3.utils.toBN("0") }));
     let pastEvents = await daoFactory.getPastEvents();
     let daoAddress = pastEvents[0].returnValues.dao;
-    let dao = await Registry.at(daoAddress);
+    let dao = await DaoRegistry.at(daoAddress);
     return dao;
 }
 
@@ -80,22 +80,22 @@ async function reportingTransaction(details, promiseTransaction) {
 }
 
 module.exports = {
-    prepareSmartContracts,
-    advanceTime,
-    createDao,
-    reportingTransaction,
-    GUILD,
-    ESCROW,
-    TOTAL,
-    numberOfShares,
-    sharePrice,
-    remaining,
-    ETH_TOKEN,
-    DaoFactory,
-    Registry,
-    VotingContract,
-    ManagingContract,
-    FinancingContract,
-    RagequitContract,
-    OnboardingContract
+  prepareSmartContracts,
+  advanceTime,
+  createDao,
+  reportingTransaction,
+  GUILD,
+  ESCROW,
+  TOTAL,
+  numberOfShares,
+  sharePrice,
+  remaining,
+  ETH_TOKEN,
+  DaoFactory,
+  DaoRegistry,
+  VotingContract,
+  ManagingContract,
+  FinancingContract,
+  RagequitContract,
+  OnboardingContract,
 };

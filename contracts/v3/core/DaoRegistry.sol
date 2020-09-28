@@ -10,7 +10,7 @@ import "./DaoConstants.sol";
 import "../adapters/interfaces/IVoting.sol";
 import "../guards/AdapterGuard.sol";
 
-contract Registry is Ownable, DaoConstants {
+contract DaoRegistry is Ownable, DaoConstants {
     /*
      * LIBRARIES
      */
@@ -260,7 +260,7 @@ contract Registry is Ownable, DaoConstants {
 
         IVoting votingContract = IVoting(registry[VOTING]);
         uint256 votingId = votingContract.startNewVotingForProposal(
-            Registry(this),
+            DaoRegistry(this),
             proposalId,
             votingData
         );

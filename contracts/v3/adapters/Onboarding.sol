@@ -4,7 +4,7 @@ pragma solidity ^0.7.0;
 
 import "./interfaces/IOnboarding.sol";
 import "../core/DaoConstants.sol";
-import "../core/Registry.sol";
+import "../core/DaoRegistry.sol";
 import "../adapters/interfaces/IVoting.sol";
 import "../utils/SafeMath.sol";
 import "../guards/MemberGuard.sol";
@@ -35,7 +35,7 @@ contract OnboardingContract is
     mapping(address => mapping(uint256 => ProposalDetails)) public proposals;
 
     function configureOnboarding(
-        Registry dao,
+        DaoRegistry dao,
         uint256 chunkSize,
         uint256 sharesPerChunk
     ) external onlyAdapter(dao) {
@@ -44,7 +44,7 @@ contract OnboardingContract is
     }
 
     function processOnboarding(
-        Registry dao,
+        DaoRegistry dao,
         address applicant,
         uint256 value
     ) external override returns (uint256) {
@@ -63,12 +63,12 @@ contract OnboardingContract is
         return amount;
     }
 
-    function updateDelegateKey(Registry dao, address delegateKey) external {
+    function updateDelegateKey(DaoRegistry dao, address delegateKey) external {
         dao.updateDelegateKey(msg.sender, delegateKey);
     }
 
     function _submitMembershipProposal(
-        Registry dao,
+        DaoRegistry dao,
         address newMember,
         uint256 sharesRequested,
         uint256 amount
@@ -85,7 +85,7 @@ contract OnboardingContract is
     }
 
     function sponsorProposal(
-        Registry dao,
+        DaoRegistry dao,
         uint256 proposalId,
         bytes calldata data
     ) external override onlyMember(dao) {
@@ -96,7 +96,7 @@ contract OnboardingContract is
         dao.sponsorProposal(proposalId, msg.sender, data);
     }
 
-    function processProposal(Registry dao, uint256 proposalId)
+    function processProposal(DaoRegistry dao, uint256 proposalId)
         external
         override
         onlyMember(dao)

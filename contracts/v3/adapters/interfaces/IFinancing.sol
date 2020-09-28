@@ -1,11 +1,11 @@
 pragma solidity ^0.7.0;
-import "../../core/Registry.sol";
+import "../../core/DaoRegistry.sol";
 
 // SPDX-License-Identifier: MIT
 
 interface IFinancing {
     function createFinancingRequest(
-        Registry dao,
+        DaoRegistry dao,
         address applicant,
         address token,
         uint256 amount,
@@ -13,10 +13,10 @@ interface IFinancing {
     ) external returns (uint256);
 
     function sponsorProposal(
-        Registry dao,
+        DaoRegistry dao,
         uint256 proposalId,
         bytes calldata data
     ) external;
 
-    function processProposal(Registry dao, uint256 proposalId) external;
+    function processProposal(DaoRegistry dao, uint256 proposalId) external;
 }
