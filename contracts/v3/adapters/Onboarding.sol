@@ -3,14 +3,14 @@ pragma solidity ^0.7.0;
 // SPDX-License-Identifier: MIT
 
 import "./interfaces/IOnboarding.sol";
-import "../core/Module.sol";
+import "../core/DaoConstants.sol";
 import "../core/Registry.sol";
 import "../adapters/interfaces/IVoting.sol";
 import "../utils/SafeMath.sol";
+import "../guards/MemberGuard.sol";
 import "../guards/AdapterGuard.sol";
-import "../guards/ModuleGuard.sol";
 
-contract OnboardingContract is IOnboarding, Module, AdapterGuard, ModuleGuard {
+contract OnboardingContract is IOnboarding, DaoConstants, MemberGuard, AdapterGuard {
     using SafeMath for uint256;
 
     struct ProposalDetails {
@@ -33,7 +33,7 @@ contract OnboardingContract is IOnboarding, Module, AdapterGuard, ModuleGuard {
         Registry dao,
         uint256 chunkSize,
         uint256 sharesPerChunk
-    ) external onlyModule(dao) {
+    ) external onlyAdapter(dao) {
         configs[address(dao)].chunkSize = chunkSize;
         configs[address(dao)].sharesPerChunk = sharesPerChunk;
     }
@@ -101,7 +101,7 @@ contract OnboardingContract is IOnboarding, Module, AdapterGuard, ModuleGuard {
             "proposal does not exist"
         );
 
-        IVoting votingContract = IVoting(dao.getAddress(VOTING_MODULE));
+        IVoting votingContract = IVoting(dao.getAdapterAddress(VOTING));
         require(
             votingContract.voteResult(dao, proposalId) == 2,
             "proposal need to pass"

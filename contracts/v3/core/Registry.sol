@@ -6,11 +6,11 @@ import "../utils/Ownable.sol";
 import "../adapters/interfaces/IOnboarding.sol";
 import "../helpers/FlagHelper.sol";
 import "../utils/SafeMath.sol";
-import "./Module.sol";
+import "./DaoConstants.sol";
 import "../adapters/interfaces/IVoting.sol";
-import "../guards/ModuleGuard.sol";
+import "../guards/AdapterGuard.sol";
 
-contract Registry is Ownable, Module {
+contract Registry is Ownable, DaoConstants {
     /*
      * LIBRARIES
      */
@@ -20,11 +20,6 @@ contract Registry is Ownable, Module {
     /*
      * MODIFIERS
      */
-    modifier onlyModule {
-        require(inverseRegistry[msg.sender] != bytes32(0), "onlyModule");
-        _;
-    }
-
     modifier onlyAdapter {
         require(inverseRegistry[msg.sender] != bytes32(0), "onlyAdapter");
         _;
@@ -146,8 +141,8 @@ contract Registry is Ownable, Module {
      * PUBLIC NON RESTRICTED FUNCTIONS
      */
     receive() external payable {
-        if (!isModule(msg.sender)) {
-            IOnboarding onboarding = IOnboarding(registry[ONBOARDING_MODULE]);
+        if (!isAdapter(msg.sender)) {
+            IOnboarding onboarding = IOnboarding(registry[ONBOARDING]);
             uint256 amount = onboarding.processOnboarding(
                 this,
                 msg.sender,
@@ -159,36 +154,32 @@ contract Registry is Ownable, Module {
         }
     }
 
-    function addModule(bytes32 moduleId, address moduleAddress)
+    function addAdapter(bytes32 adapterId, address adapterAddress)
         external
-        onlyModule
+        onlyAdapter //TODO we may need to set different access type based on each adapter
     {
-        require(moduleId != bytes32(0), "module id must not be empty");
+        require(adapterId != bytes32(0), "adapterId must not be empty");
         require(
-            moduleAddress != address(0x0),
-            "module address must not be empty"
+            adapterAddress != address(0x0),
+            "adapterAddress must not be empty"
         );
-        require(registry[moduleId] == address(0x0), "module id already in use");
-        registry[moduleId] = moduleAddress;
-        inverseRegistry[moduleAddress] = moduleId;
+        require(registry[adapterId] == address(0x0), "adapterId already in use");
+        registry[adapterId] = adapterAddress;
+        inverseRegistry[adapterAddress] = adapterId;
     }
 
-    function removeModule(bytes32 moduleId) external onlyModule {
-        require(moduleId != bytes32(0), "module id must not be empty");
-        require(registry[moduleId] != address(0x0), "module not registered");
-        delete inverseRegistry[registry[moduleId]];
-        delete registry[moduleId];
+    function removeAdapter(bytes32 adapterId) external onlyAdapter {
+        require(adapterId != bytes32(0), "adapterId must not be empty");
+        require(registry[adapterId] != address(0x0), "adapterId not registered");
+        delete inverseRegistry[registry[adapterId]];
+        delete registry[adapterId];
     }
 
-    function isModule(address module) public view returns (bool) {
-        return inverseRegistry[module] != bytes32(0);
+    function isAdapter(address adapterAddress) public view returns (bool) {
+        return inverseRegistry[adapterAddress] != bytes32(0);
     }
 
-    function getAddress(bytes32 moduleId) external view returns (address) {
-        return registry[moduleId];
-    }
-
-    function _getAdapter(bytes32 adapterId) internal view returns (address) {
+    function getAdapterAddress(bytes32 adapterId) external view returns (address) {
         return registry[adapterId];
     }
 
@@ -196,7 +187,7 @@ contract Registry is Ownable, Module {
         address _actionTo,
         uint256 _actionValue,
         bytes calldata _actionData
-    ) external onlyModule returns (bytes memory) {
+    ) external onlyAdapter returns (bytes memory) {
         (bool success, bytes memory retData) = _actionTo.call{
             value: _actionValue
         }(_actionData);
@@ -257,7 +248,7 @@ contract Registry is Ownable, Module {
             "only active members can sponsor proposals"
         );
 
-        IVoting votingContract = IVoting(_getAdapter(VOTING_MODULE));
+        IVoting votingContract = IVoting(registry[VOTING]);
         uint256 votingId = votingContract.startNewVotingForProposal(
             Registry(this),
             proposalId,
@@ -315,7 +306,7 @@ contract Registry is Ownable, Module {
 
     function updateMember(address memberAddr, uint256 shares)
         external
-        onlyModule
+        onlyAdapter
     {
         Member storage member = members[memberAddr];
         if (member.delegateKey == address(0x0)) {

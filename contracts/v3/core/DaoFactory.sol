@@ -2,7 +2,7 @@ pragma solidity ^0.7.0;
 
 // SPDX-License-Identifier: MIT
 
-import "./Module.sol";
+import "./DaoConstants.sol";
 import "./Registry.sol";
 import "../adapters/interfaces/IVoting.sol";
 import "../adapters/Onboarding.sol";
@@ -10,7 +10,7 @@ import "../adapters/Financing.sol";
 import "../adapters/Managing.sol";
 import "../adapters/Ragequit.sol";
 
-contract DaoFactory is Module {
+contract DaoFactory is DaoConstants {
     event NewDao(address summoner, address dao);
 
     mapping(bytes32 => address) addresses;
@@ -22,11 +22,11 @@ contract DaoFactory is Module {
         address financingAddress,
         address onboardingAddress
     ) {
-        addresses[VOTING_MODULE] = votingAddress;
-        addresses[RAGEQUIT_MODULE] = ragequitAddress;
-        addresses[MANAGING_MODULE] = managingAddress;
-        addresses[FINANCING_MODULE] = financingAddress;
-        addresses[ONBOARDING_MODULE] = onboardingAddress;
+        addresses[VOTING] = votingAddress;
+        addresses[RAGEQUIT] = ragequitAddress;
+        addresses[MANAGING] = managingAddress;
+        addresses[FINANCING] = financingAddress;
+        addresses[ONBOARDING] = onboardingAddress;
     }
 
     /*
@@ -42,19 +42,19 @@ contract DaoFactory is Module {
         address daoAddress = address(dao);
 
         //Registring Adapters
-        dao.addModule(VOTING_MODULE, addresses[VOTING_MODULE]);
-        dao.addModule(ONBOARDING_MODULE, addresses[ONBOARDING_MODULE]);
-        dao.addModule(FINANCING_MODULE, addresses[FINANCING_MODULE]);
-        dao.addModule(MANAGING_MODULE, addresses[MANAGING_MODULE]);
-        dao.addModule(RAGEQUIT_MODULE, addresses[RAGEQUIT_MODULE]);
+        dao.addAdapter(VOTING, addresses[VOTING]);
+        dao.addAdapter(ONBOARDING, addresses[ONBOARDING]);
+        dao.addAdapter(FINANCING, addresses[FINANCING]);
+        dao.addAdapter(MANAGING, addresses[MANAGING]);
+        dao.addAdapter(RAGEQUIT, addresses[RAGEQUIT]);
 
-        IVoting votingContract = IVoting(addresses[VOTING_MODULE]);
+        IVoting votingContract = IVoting(addresses[VOTING]);
         votingContract.registerDao(dao, votingPeriod);
 
         dao.updateMember(msg.sender, 1);
 
         OnboardingContract onboardingContract = OnboardingContract(
-            addresses[ONBOARDING_MODULE]
+            addresses[ONBOARDING]
         );
         onboardingContract.configureOnboarding(dao, chunkSize, nbShares);
 

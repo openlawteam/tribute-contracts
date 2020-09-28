@@ -4,13 +4,13 @@ pragma experimental ABIEncoderV2;
 // SPDX-License-Identifier: MIT
 
 import "../../core/Registry.sol";
-import "../../core/Module.sol";
+import "../../core/DaoConstants.sol";
 import "../interfaces/IVoting.sol";
+import "../../guards/MemberGuard.sol";
 import "../../guards/AdapterGuard.sol";
-import "../../guards/ModuleGuard.sol";
 import "../../helpers/FlagHelper.sol";
 
-contract OffchainVotingContract is IVoting, Module, AdapterGuard, ModuleGuard {
+contract OffchainVotingContract is IVoting, DaoConstants, MemberGuard, AdapterGuard {
     using FlagHelper for uint256;
 
     struct VotingConfig {
@@ -43,7 +43,7 @@ contract OffchainVotingContract is IVoting, Module, AdapterGuard, ModuleGuard {
     function registerDao(Registry dao, uint256 votingPeriod)
         external
         override
-        onlyModule(dao)
+        onlyAdapter(dao)
     {
         votingConfigs[address(dao)].flags = 1; // mark as exists
         votingConfigs[address(dao)].votingPeriod = votingPeriod;
@@ -66,7 +66,7 @@ contract OffchainVotingContract is IVoting, Module, AdapterGuard, ModuleGuard {
     function startNewVotingForProposal(
         Registry dao,
         uint256 proposalId,
-        bytes memory data /*onlyModule(dao)*/
+        bytes memory data /*onlyAdapter(dao)*/
     ) external override returns (uint256) {
         // it is called from Registry
         require(

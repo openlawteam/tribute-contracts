@@ -3,13 +3,13 @@ pragma solidity ^0.7.0;
 // SPDX-License-Identifier: MIT
 
 import "./interfaces/IFinancing.sol";
-import "../core/Module.sol";
+import "../core/DaoConstants.sol";
 import "../core/Registry.sol";
 import "../adapters/interfaces/IVoting.sol";
-import "../guards/AdapterGuard.sol";
+import "../guards/MemberGuard.sol";
 import "../utils/SafeMath.sol";
 
-contract FinancingContract is IFinancing, Module, AdapterGuard {
+contract FinancingContract is IFinancing, DaoConstants, MemberGuard {
     using SafeMath for uint256;
 
     struct ProposalDetails {
@@ -71,7 +71,7 @@ contract FinancingContract is IFinancing, Module, AdapterGuard {
         ProposalDetails memory proposal = proposals[address(dao)][proposalId];
         require(!proposal.processed, "proposal already processed");
 
-        IVoting votingContract = IVoting(dao.getAddress(VOTING_MODULE));
+        IVoting votingContract = IVoting(dao.getAdapterAddress(VOTING));
         require(
             votingContract.voteResult(dao, proposalId) == 2,
             "proposal did not pass yet"

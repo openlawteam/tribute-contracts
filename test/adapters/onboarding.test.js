@@ -11,10 +11,10 @@ contract('MolochV3 - Onboarding Adapter', async accounts => {
     
     let dao = await createDao({}, myAccount);
     
-    const onboardingAddress = await dao.getAddress(sha3('onboarding'));
+    const onboardingAddress = await dao.getAdapterAddress(sha3('onboarding'));
     const onboarding = await OnboardingContract.at(onboardingAddress);
 
-    const votingAddress = await dao.getAddress(sha3('voting'));
+    const votingAddress = await dao.getAdapterAddress(sha3('voting'));
     const voting = await VotingContract.at(votingAddress);
 
     await dao.sendTransaction({from:otherAccount,value:sharePrice.mul(toBN(3)).add(remaining), gasPrice: toBN("0")});

@@ -35,7 +35,7 @@ contract('MolochV3 - Ragequit Adapter', async accounts => {
   }
 
   ragequit = async (dao, shares, member) => {
-    let ragequitAddress = await dao.getAddress(sha3("ragequit"));
+    let ragequitAddress = await dao.getAdapterAddress(sha3("ragequit"));
     let ragequitContract = await RagequitContract.at(ragequitAddress);
     await ragequitContract.ragequit(dao.address, toBN(shares), {
       from: member,
@@ -55,10 +55,10 @@ contract('MolochV3 - Ragequit Adapter', async accounts => {
     let dao = await createDao({}, myAccount);
 
     //Add funds to the Guild Bank after sposoring a member to join the Guild
-    const onboardingAddress = await dao.getAddress(sha3('onboarding'));
+    const onboardingAddress = await dao.getAdapterAddress(sha3('onboarding'));
     const onboarding = await OnboardingContract.at(onboardingAddress);
 
-    const votingAddress = await dao.getAddress(sha3("voting"));
+    const votingAddress = await dao.getAdapterAddress(sha3("voting"));
     const voting = await VotingContract.at(votingAddress);
 
     let proposalId = await submitNewMemberProposal(dao, newMember, sharePrice);
@@ -80,7 +80,7 @@ contract('MolochV3 - Ragequit Adapter', async accounts => {
       let nonMember = accounts[4];
       await ragequit(dao, toBN(shares), nonMember);
     } catch (error){
-      assert.equal(error.reason, "restricted to DAO members");
+      assert.equal(error.reason, "onlyMember");
     }
   })
 
@@ -91,10 +91,10 @@ contract('MolochV3 - Ragequit Adapter', async accounts => {
     let dao = await createDao({}, myAccount);
 
     //Add funds to the Guild Bank after sposoring a member to join the Guild
-    const onboardingAddress = await dao.getAddress(sha3('onboarding'));
+    const onboardingAddress = await dao.getAdapterAddress(sha3('onboarding'));
     const onboarding = await OnboardingContract.at(onboardingAddress);
 
-    const votingAddress = await dao.getAddress(sha3("voting"));
+    const votingAddress = await dao.getAdapterAddress(sha3("voting"));
     const voting = await VotingContract.at(votingAddress);
 
     let proposalId = await submitNewMemberProposal(dao, newMember, sharePrice);
@@ -135,10 +135,10 @@ contract('MolochV3 - Ragequit Adapter', async accounts => {
     let dao = await createDao({}, myAccount);
 
     //Add funds to the Guild Bank after sposoring a member to join the Guild
-    const onboardingAddress = await dao.getAddress(sha3('onboarding'));
+    const onboardingAddress = await dao.getAdapterAddress(sha3('onboarding'));
     const onboarding = await OnboardingContract.at(onboardingAddress);
 
-    const votingAddress = await dao.getAddress(sha3("voting"));
+    const votingAddress = await dao.getAdapterAddress(sha3("voting"));
     const voting = await VotingContract.at(votingAddress);
 
     let proposalId = await submitNewMemberProposal(dao, newMember, sharePrice);
@@ -177,13 +177,13 @@ it("should be possible to a member to ragequit if the member voted YES on a prop
     let dao = await createDao({}, myAccount);
 
     //Add funds to the Guild Bank after sposoring a member to join the Guild
-    const onboardingAddress = await dao.getAddress(sha3('onboarding'));
+    const onboardingAddress = await dao.getAdapterAddress(sha3('onboarding'));
     const onboarding = await OnboardingContract.at(onboardingAddress);
 
-    const financingAddress = await dao.getAddress(sha3("financing"));
+    const financingAddress = await dao.getAdapterAddress(sha3("financing"));
     const financing = await FinancingContract.at(financingAddress);
 
-    const votingAddress = await dao.getAddress(sha3("voting"));
+    const votingAddress = await dao.getAdapterAddress(sha3("voting"));
     const voting = await VotingContract.at(votingAddress);
 
     let proposalId = await submitNewMemberProposal(dao, newMember, sharePrice);
@@ -238,13 +238,13 @@ it("should be possible to a member to ragequit if the member voted YES on a prop
     let dao = await createDao({}, myAccount);
 
     //Add funds to the Guild Bank after sposoring a member to join the Guild
-    const onboardingAddress = await dao.getAddress(sha3("onboarding"));
+    const onboardingAddress = await dao.getAdapterAddress(sha3("onboarding"));
     const onboarding = await OnboardingContract.at(onboardingAddress);
 
-    const financingAddress = await dao.getAddress(sha3("financing"));
+    const financingAddress = await dao.getAdapterAddress(sha3("financing"));
     const financing = await FinancingContract.at(financingAddress);
 
-    const votingAddress = await dao.getAddress(sha3("voting"));
+    const votingAddress = await dao.getAdapterAddress(sha3("voting"));
     const voting = await VotingContract.at(votingAddress);
 
     let proposalId = await submitNewMemberProposal(dao, newMember, sharePrice);

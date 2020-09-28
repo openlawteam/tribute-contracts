@@ -3,13 +3,13 @@ pragma solidity ^0.7.0;
 // SPDX-License-Identifier: MIT
 
 import "./interfaces/IManaging.sol";
-import "../core/Module.sol";
+import "../core/DaoConstants.sol";
 import "../core/Registry.sol";
 import "../adapters/interfaces/IVoting.sol";
-import "../guards/AdapterGuard.sol";
+import "../guards/MemberGuard.sol";
 import "../utils/SafeMath.sol";
 
-contract ManagingContract is IManaging, Module, AdapterGuard {
+contract ManagingContract is IManaging, DaoConstants, MemberGuard {
     using SafeMath for uint256;
 
     struct ProposalDetails {
@@ -68,14 +68,14 @@ contract ManagingContract is IManaging, Module, AdapterGuard {
         ProposalDetails memory proposal = proposals[proposalId];
         require(!proposal.processed, "proposal already processed");
 
-        IVoting votingContract = IVoting(dao.getAddress(VOTING_MODULE));
+        IVoting votingContract = IVoting(dao.getAdapterAddress(VOTING));
         require(
             votingContract.voteResult(dao, proposalId) == 2,
             "proposal did not pass yet"
         );
 
-        dao.removeModule(proposal.moduleId);
-        dao.addModule(proposal.moduleId, proposal.moduleAddress);
+        dao.removeAdapter(proposal.moduleId);
+        dao.addAdapter(proposal.moduleId, proposal.moduleAddress);
         proposals[proposalId].processed = true;
         dao.processProposal(proposalId);
     }

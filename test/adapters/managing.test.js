@@ -13,7 +13,7 @@ contract('MolochV3 - Managing Adapter', async accounts => {
 
     //Submit a new Bank module proposal
     let newModuleId = sha3('bank');
-    let managingContract = await dao.getAddress(sha3('managing'));
+    let managingContract = await dao.getAdapterAddress(sha3('managing'));
     let managing = await ManagingContract.at(managingContract);
     try {
       await managing.createModuleChangeRequest(dao.address, newModuleId, ETH_TOKEN, { from: myAccount, gasPrice: toBN("0") });
@@ -32,7 +32,7 @@ contract('MolochV3 - Managing Adapter', async accounts => {
 
     //Submit a new Bank module proposal
     let newModuleId = sha3('bank');
-    let managingContract = await dao.getAddress(sha3('managing'));
+    let managingContract = await dao.getAdapterAddress(sha3('managing'));
     let managing = await ManagingContract.at(managingContract);
     try {
       await managing.createModuleChangeRequest(dao.address, newModuleId, GUILD, { from: myAccount, gasPrice: toBN("0") });
@@ -62,7 +62,7 @@ contract('MolochV3 - Managing Adapter', async accounts => {
 
     //Submit a new Bank module proposal
     let newModuleId = sha3('managing');
-    let managingContract = await dao.getAddress(sha3('managing'));
+    let managingContract = await dao.getAdapterAddress(sha3('managing'));
     let managing = await ManagingContract.at(managingContract);
     try {
       await managing.createModuleChangeRequest(dao.address, newModuleId, "", { from: myAccount, gasPrice: toBN("0") });
@@ -77,10 +77,10 @@ contract('MolochV3 - Managing Adapter', async accounts => {
 
     //Create the new DAO
     let dao = await createDao({}, myAccount);
-    let managingContract = await dao.getAddress(sha3('managing'));
+    let managingContract = await dao.getAdapterAddress(sha3('managing'));
     let managing = await ManagingContract.at(managingContract);
 
-    let votingContract = await dao.getAddress(sha3('voting'));
+    let votingContract = await dao.getAdapterAddress(sha3('voting'));
     let voting = await VotingContract.at(votingContract);
 
     //Submit a new Bank module proposal
@@ -99,7 +99,7 @@ contract('MolochV3 - Managing Adapter', async accounts => {
     await managing.processProposal(dao.address, proposalId, { from: myAccount, gasPrice: toBN("0") });
 
     //Check if the Bank Module was added to the Registry
-    let newBankAddress = await dao.getAddress(sha3('onboarding'));
+    let newBankAddress = await dao.getAdapterAddress(sha3('onboarding'));
     assert.equal(newBankAddress.toString(), newModuleAddress.toString());
   })
 
@@ -109,10 +109,10 @@ contract('MolochV3 - Managing Adapter', async accounts => {
 
     //Create the new DAO
     let dao = await createDao({}, myAccount);
-    let managingContract = await dao.getAddress(sha3('managing'));
+    let managingContract = await dao.getAdapterAddress(sha3('managing'));
     let managing = await ManagingContract.at(managingContract);
 
-    let votingContract = await dao.getAddress(sha3('voting'));
+    let votingContract = await dao.getAdapterAddress(sha3('voting'));
     let voting = await VotingContract.at(votingContract);
     //Submit a new Bank module proposal
     let newModuleId = sha3('onboarding');
@@ -124,7 +124,7 @@ contract('MolochV3 - Managing Adapter', async accounts => {
     let { proposalId } = pastEvents[0].returnValues;
     
     //set new delegate key
-    const onboardingAddr = await dao.getAddress(sha3('onboarding'));
+    const onboardingAddr = await dao.getAdapterAddress(sha3('onboarding'));
     const onboarding = await OnboardingContract.at(onboardingAddr);
     await onboarding.updateDelegateKey(dao.address, delegateKey, { from: myAccount, gasPrice: toBN("0") });
 
@@ -139,13 +139,13 @@ contract('MolochV3 - Managing Adapter', async accounts => {
       await voting.submitVote(dao.address, proposalId, 1, { from: myAccount, gasPrice: toBN("0") });
       assert.err("should not pass");
     } catch (err) {
-      assert.equal(err.reason, "restricted to DAO members");
+      assert.equal(err.reason, "onlyMember");
     }
     await advanceTime(10000);
     await managing.processProposal(dao.address, proposalId, { from: delegateKey, gasPrice: toBN("0") });
 
     //Check if the Bank Module was added to the Registry
-    let newBankAddress = await dao.getAddress(sha3('onboarding'));
+    let newBankAddress = await dao.getAdapterAddress(sha3('onboarding'));
     assert.equal(newBankAddress.toString(), newModuleAddress.toString());
   })
 });

@@ -13,7 +13,7 @@ contract('Registry', async () => {
     let moduleAddress = "0x627306090abaB3A6e1400e9345bC60c78a8BEf57";
     let registry = await Registry.new();
     try {
-      await registry.addModule(moduleId, moduleAddress);
+      await registry.addAdapter(moduleId, moduleAddress);
     } catch (error) {
       assert.equal(error.reason, "module id must not be empty");
     }
@@ -23,7 +23,7 @@ contract('Registry', async () => {
     let moduleId = Web3.fromUtf8("1");
     let registry = await Registry.new();
     try {
-      await registry.removeModule(moduleId);
+      await registry.removeAdapter(moduleId);
     } catch (error) {
       assert.equal(error.reason, "module not registered");
     }
@@ -34,7 +34,7 @@ contract('Registry', async () => {
     let moduleAddress = "";
     let registry = await Registry.new();
     try {
-      await registry.addModule(moduleId, moduleAddress);
+      await registry.addAdapter(moduleId, moduleAddress);
     } catch (error) {
       assert.equal(error.reason, "invalid address");
     }
@@ -45,7 +45,7 @@ contract('Registry', async () => {
     let moduleAddress = "0x0000000000000000000000000000000000000000";
     let registry = await Registry.new();
     try {
-      await registry.addModule(moduleId, moduleAddress);
+      await registry.addAdapter(moduleId, moduleAddress);
     } catch (error) {
       assert.equal(error.reason, "module address must not be empty");
     }
@@ -56,11 +56,11 @@ contract('Registry', async () => {
     let moduleAddress = "0x627306090abaB3A6e1400e9345bC60c78a8BEf57";
     let registry = await Registry.new();
     //Add a module with id 1
-    await registry.addModule(moduleId, moduleAddress);
+    await registry.addAdapter(moduleId, moduleAddress);
 
     try {
       //Try to add another module using the same id 1
-      await registry.addModule(moduleId, "0xd7bCe30D77DE56E3D21AEfe7ad144b3134438F5B");
+      await registry.addAdapter(moduleId, "0xd7bCe30D77DE56E3D21AEfe7ad144b3134438F5B");
     } catch (error) {
       assert.equal(error.reason, "module id already in use");
     }
@@ -70,8 +70,8 @@ contract('Registry', async () => {
     let moduleId = Web3.fromUtf8("1");
     let moduleAddress = "0x627306090abaB3A6e1400e9345bC60c78a8BEf57";
     let registry = await Registry.new();
-    await registry.addModule(moduleId, moduleAddress);
-    let address = await registry.getAddress(moduleId);
+    await registry.addAdapter(moduleId, moduleAddress);
+    let address = await registry.getAdapterAddress(moduleId);
     assert.equal(address, moduleAddress);
   });
 
@@ -79,11 +79,11 @@ contract('Registry', async () => {
     let moduleId = Web3.fromUtf8("2");
     let moduleAddress = "0x627306090abaB3A6e1400e9345bC60c78a8BEf57";
     let registry = await Registry.new();
-    await registry.addModule(moduleId, moduleAddress);
-    let address = await registry.getAddress(moduleId);
+    await registry.addAdapter(moduleId, moduleAddress);
+    let address = await registry.getAdapterAddress(moduleId);
     assert.equal(address, moduleAddress);
-    await registry.removeModule(moduleId);
-    address = await registry.getAddress(moduleId);
+    await registry.removeAdapter(moduleId);
+    address = await registry.getAdapterAddress(moduleId);
     assert.equal(address, "0x0000000000000000000000000000000000000000");
   });
 
@@ -92,7 +92,7 @@ contract('Registry', async () => {
     let registry = await Registry.new();
 
     try {
-      await registry.removeModule(moduleId);
+      await registry.removeAdapter(moduleId);
     } catch (error) {
       assert.equal(error.reason, "module not registered");
     }
@@ -103,7 +103,7 @@ contract('Registry', async () => {
     let registry = await Registry.new();
 
     try {
-      await registry.removeModule(moduleId);
+      await registry.removeAdapter(moduleId);
     } catch (error) {
       assert.equal(error.reason, "module id must not be empty");
     }
@@ -114,7 +114,7 @@ contract('Registry', async () => {
     const delegateKey = accounts[2];
     let dao = await createDao({}, myAccount);
 
-    const onboardingAddr = await dao.getAddress(sha3('onboarding'));
+    const onboardingAddr = await dao.getAdapterAddress(sha3('onboarding'));
     const onboarding = await OnboardingContract.at(onboardingAddr);
 
     const myAccountActive1 = await dao.isActiveMember(myAccount);

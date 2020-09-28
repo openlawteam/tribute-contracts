@@ -3,18 +3,17 @@ pragma solidity ^0.7.0;
 // SPDX-License-Identifier: MIT
 
 import "../core/Registry.sol";
-import "../core/Module.sol";
 
 /**
- * @dev Contract module that helps restrict the adapter access to DAO Members only.
+ * @dev Contract module that helps restrict the module access to Core Modules only.
  *
  */
-abstract contract AdapterGuard is Module {
+abstract contract AdapterGuard {
     /**
-     * @dev Only members of the Guild are allowed to execute the function call.
+     * @dev Only Core Module of the DAO are allowed to execute the function call.
      */
-    modifier onlyMember(Registry dao) {
-        require(dao.isActiveMember(msg.sender), "restricted to DAO members");
+    modifier onlyAdapter(Registry dao) {
+        require(dao.isAdapter(msg.sender), "onlyAdapter");
         _;
     }
 }

@@ -13,7 +13,7 @@ contract('MolochV3 - Offchain Voting Module', async accounts => {
     const voting = await OffchainVotingContract.new();
     let dao = await createDao({voting}, myAccount);
 
-    const onboardingAddress = await dao.getAddress(sha3('onboarding'));
+    const onboardingAddress = await dao.getAdapterAddress(sha3('onboarding'));
     const onboarding = await OnboardingContract.at(onboardingAddress);
 
     await dao.sendTransaction({from:otherAccount,value:sharePrice.mul(toBN("3")).add(remaining), gasPrice: toBN("0")});
@@ -33,7 +33,7 @@ contract('MolochV3 - Offchain Voting Module', async accounts => {
     const voting = await OffchainVotingContract.new();
     let dao = await createDao({voting}, myAccount);
 
-    const onboardingAddress = await dao.getAddress(sha3('onboarding'));
+    const onboardingAddress = await dao.getAdapterAddress(sha3('onboarding'));
     const onboarding = await OnboardingContract.at(onboardingAddress);
 
     await dao.sendTransaction({from:otherAccount,value:sharePrice.mul(toBN(3)).add(remaining), gasPrice: toBN("0")});
@@ -64,7 +64,7 @@ contract('MolochV3 - Offchain Voting Module', async accounts => {
     const voting = await OffchainVotingContract.new();
     let dao = await createDao({voting}, myAccount);
 
-    const onboardingAddress = await dao.getAddress(web3.utils.sha3('onboarding'));
+    const onboardingAddress = await dao.getAdapterAddress(web3.utils.sha3('onboarding'));
     const onboarding = await OnboardingContract.at(onboardingAddress);
 
     await dao.sendTransaction({from:otherAccount,value:sharePrice.mul(web3.utils.toBN(3)).add(remaining), gasPrice: web3.utils.toBN("0")});

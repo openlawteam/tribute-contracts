@@ -2,13 +2,13 @@ pragma solidity ^0.7.0;
 
 // SPDX-License-Identifier: MIT
 
-import "../core/Module.sol";
+import "../core/DaoConstants.sol";
 import "../core/Registry.sol";
-import "../guards/AdapterGuard.sol";
+import "../guards/MemberGuard.sol";
 import "../guards/ReentrancyGuard.sol";
 import "./interfaces/IRagequit.sol";
 
-contract RagequitContract is IRagequit, Module, AdapterGuard, ReentrancyGuard {
+contract RagequitContract is IRagequit, DaoConstants, MemberGuard, ReentrancyGuard {
     event Ragequit(address indexed member, uint256 burnedShares);
 
     /*

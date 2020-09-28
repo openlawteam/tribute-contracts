@@ -3,13 +3,13 @@ pragma solidity ^0.7.0;
 // SPDX-License-Identifier: MIT
 
 import "../../core/Registry.sol";
-import "../../core/Module.sol";
+import "../../core/DaoConstants.sol";
 import "../../helpers/FlagHelper.sol";
+import "../../guards/MemberGuard.sol";
 import "../../guards/AdapterGuard.sol";
-import "../../guards/ModuleGuard.sol";
 import "../interfaces/IVoting.sol";
 
-contract VotingContract is IVoting, Module, AdapterGuard, ModuleGuard {
+contract VotingContract is IVoting, DaoConstants, MemberGuard, AdapterGuard {
     using FlagHelper for uint256;
 
     struct VotingConfig {
@@ -29,7 +29,7 @@ contract VotingContract is IVoting, Module, AdapterGuard, ModuleGuard {
     function registerDao(Registry dao, uint256 votingPeriod)
         external
         override
-        onlyModule(dao)
+        onlyAdapter(dao)
     {
         votingConfigs[address(dao)].flags = 1; // mark as exists
         votingConfigs[address(dao)].votingPeriod = votingPeriod;
@@ -39,7 +39,7 @@ contract VotingContract is IVoting, Module, AdapterGuard, ModuleGuard {
     function startNewVotingForProposal(
         Registry dao,
         uint256 proposalId,
-        bytes calldata /*onlyModule(dao)*/
+        bytes calldata /*onlyAdapter(dao)*/
     ) external override returns (uint256) {
         //it is called from Registry
         // compute startingPeriod for proposal

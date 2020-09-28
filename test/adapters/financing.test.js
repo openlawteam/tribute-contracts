@@ -13,22 +13,23 @@ contract('MolochV3 - Financing Adapter', async accounts => {
 
     let dao = await createDao({}, myAccount);
 
-    const votingAddress = await dao.getAddress(sha3("voting"));
+    const votingAddress = await dao.getAdapterAddress(sha3("voting"));
     const voting = await VotingContract.at(votingAddress);
 
-    const financingAddress = await dao.getAddress(sha3("financing"));
+    const financingAddress = await dao.getAdapterAddress(sha3("financing"));
     const financing = await FinancingContract.at(financingAddress);
 
     //Add funds to the Guild Bank after sposoring a member to join the Guild
-    const onboardingAddress = await dao.getAddress(sha3('onboarding'));
+    const onboardingAddress = await dao.getAdapterAddress(sha3('onboarding'));
     const onboarding = await OnboardingContract.at(onboardingAddress);
     await dao.sendTransaction({ from: newMember, value: sharePrice.mul(toBN(10)).add(remaining), gasPrice: toBN("0") });
+
     //Get the new proposal id
     pastEvents = await dao.getPastEvents();
     let { proposalId }  = pastEvents[0].returnValues;
     assert.equal(proposalId, "0", "invalid proposal id");
 
-    //Sponsor the new proposal, vote and process it 
+    //Sponsor the new proposal, vote and process it
     await onboarding.sponsorProposal(dao.address, proposalId, [], { from: myAccount, gasPrice: toBN("0") });
     await voting.submitVote(dao.address, proposalId, 1, { from: myAccount, gasPrice: toBN("0") });
     await advanceTime(10000);
