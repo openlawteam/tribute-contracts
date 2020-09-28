@@ -10,7 +10,12 @@ import "../../guards/MemberGuard.sol";
 import "../../guards/AdapterGuard.sol";
 import "../../helpers/FlagHelper.sol";
 
-contract OffchainVotingContract is IVoting, DaoConstants, MemberGuard, AdapterGuard {
+contract OffchainVotingContract is
+    IVoting,
+    DaoConstants,
+    MemberGuard,
+    AdapterGuard
+{
     using FlagHelper for uint256;
 
     struct VotingConfig {

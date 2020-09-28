@@ -8,7 +8,12 @@ import "../guards/MemberGuard.sol";
 import "../guards/ReentrancyGuard.sol";
 import "./interfaces/IRagequit.sol";
 
-contract RagequitContract is IRagequit, DaoConstants, MemberGuard, ReentrancyGuard {
+contract RagequitContract is
+    IRagequit,
+    DaoConstants,
+    MemberGuard,
+    ReentrancyGuard
+{
     event Ragequit(address indexed member, uint256 burnedShares);
 
     /*

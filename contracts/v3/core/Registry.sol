@@ -163,14 +163,20 @@ contract Registry is Ownable, DaoConstants {
             adapterAddress != address(0x0),
             "adapterAddress must not be empty"
         );
-        require(registry[adapterId] == address(0x0), "adapterId already in use");
+        require(
+            registry[adapterId] == address(0x0),
+            "adapterId already in use"
+        );
         registry[adapterId] = adapterAddress;
         inverseRegistry[adapterAddress] = adapterId;
     }
 
     function removeAdapter(bytes32 adapterId) external onlyAdapter {
         require(adapterId != bytes32(0), "adapterId must not be empty");
-        require(registry[adapterId] != address(0x0), "adapterId not registered");
+        require(
+            registry[adapterId] != address(0x0),
+            "adapterId not registered"
+        );
         delete inverseRegistry[registry[adapterId]];
         delete registry[adapterId];
     }
@@ -179,7 +185,11 @@ contract Registry is Ownable, DaoConstants {
         return inverseRegistry[adapterAddress] != bytes32(0);
     }
 
-    function getAdapterAddress(bytes32 adapterId) external view returns (address) {
+    function getAdapterAddress(bytes32 adapterId)
+        external
+        view
+        returns (address)
+    {
         return registry[adapterId];
     }
 

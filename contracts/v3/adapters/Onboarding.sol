@@ -10,7 +10,12 @@ import "../utils/SafeMath.sol";
 import "../guards/MemberGuard.sol";
 import "../guards/AdapterGuard.sol";
 
-contract OnboardingContract is IOnboarding, DaoConstants, MemberGuard, AdapterGuard {
+contract OnboardingContract is
+    IOnboarding,
+    DaoConstants,
+    MemberGuard,
+    AdapterGuard
+{
     using SafeMath for uint256;
 
     struct ProposalDetails {
