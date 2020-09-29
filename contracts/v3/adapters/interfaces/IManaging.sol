@@ -1,20 +1,21 @@
 pragma solidity ^0.7.0;
-import "../../core/Registry.sol";
+
+import "../../core/DaoRegistry.sol";
 
 // SPDX-License-Identifier: MIT
 
 interface IManaging {
     function createModuleChangeRequest(
-        Registry dao,
+        DaoRegistry dao,
         bytes32 moduleId,
         address moduleAddress
     ) external returns (uint256);
 
     function sponsorProposal(
-        Registry dao,
+        DaoRegistry dao,
         uint256 proposalId,
         bytes calldata data
     ) external;
 
-    function processProposal(Registry dao, uint256 proposalId) external;
+    function processProposal(DaoRegistry dao, uint256 proposalId) external;
 }

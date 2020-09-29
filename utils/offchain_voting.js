@@ -20,6 +20,7 @@ async function generateVote(account, proposalHash, voteYes) {
   return await web3.eth.sign(voteHash, account);
 }
 
+
 function buildVoteLeafDataForMerkleTree(leaf) {
   const weightStr = leaf.weight.toString();
   const voteStr = leaf.vote.toString();

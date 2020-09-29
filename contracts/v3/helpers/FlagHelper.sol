@@ -31,7 +31,7 @@ library FlagHelper {
         }
     }
 
-    //[sponsored, processed, didPass, cancelled]
+    //[exists, sponsored, processed, didPass, cancelled]
     function exists(uint256 flags) public pure returns (bool) {
         return getFlag(flags, 0);
     }
@@ -40,8 +40,24 @@ library FlagHelper {
         return getFlag(flags, 1);
     }
 
+    function setSponsored(uint256 flags, bool value)
+        public
+        pure
+        returns (uint256)
+    {
+        return setFlag(flags, 1, value);
+    }
+
     function isProcessed(uint256 flags) public pure returns (bool) {
         return getFlag(flags, 2);
+    }
+
+    function setProcessed(uint256 flags, bool value)
+        public
+        pure
+        returns (uint256)
+    {
+        return setFlag(flags, 2, value);
     }
 
     function hasPassed(uint256 flags) public pure returns (bool) {

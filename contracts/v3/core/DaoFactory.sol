@@ -2,40 +2,31 @@ pragma solidity ^0.7.0;
 
 // SPDX-License-Identifier: MIT
 
-import "./Module.sol";
-import "./Registry.sol";
+import "./DaoConstants.sol";
+import "./DaoRegistry.sol";
 import "../adapters/interfaces/IVoting.sol";
-import "../core/interfaces/IProposal.sol";
-import "../core/interfaces/IMember.sol";
-import "../core/banking/Bank.sol";
 import "../adapters/Onboarding.sol";
 import "../adapters/Financing.sol";
 import "../adapters/Managing.sol";
 import "../adapters/Ragequit.sol";
 
-contract DaoFactory is Module {
+contract DaoFactory is DaoConstants {
     event NewDao(address summoner, address dao);
 
     mapping(bytes32 => address) addresses;
 
     constructor(
-        address memberAddress,
-        address proposalAddress,
         address votingAddress,
         address ragequitAddress,
         address managingAddress,
         address financingAddress,
-        address onboardingAddress,
-        address bankAddress
+        address onboardingAddress
     ) {
-        addresses[MEMBER_MODULE] = memberAddress;
-        addresses[PROPOSAL_MODULE] = proposalAddress;
-        addresses[VOTING_MODULE] = votingAddress;
-        addresses[RAGEQUIT_MODULE] = ragequitAddress;
-        addresses[MANAGING_MODULE] = managingAddress;
-        addresses[FINANCING_MODULE] = financingAddress;
-        addresses[ONBOARDING_MODULE] = onboardingAddress;
-        addresses[BANK_MODULE] = bankAddress;
+        addresses[VOTING] = votingAddress;
+        addresses[RAGEQUIT] = ragequitAddress;
+        addresses[MANAGING] = managingAddress;
+        addresses[FINANCING] = financingAddress;
+        addresses[ONBOARDING] = onboardingAddress;
     }
 
     /*
@@ -47,28 +38,23 @@ contract DaoFactory is Module {
         uint256 nbShares,
         uint256 votingPeriod
     ) external returns (address) {
-        Registry dao = new Registry();
+        DaoRegistry dao = new DaoRegistry();
         address daoAddress = address(dao);
-        //Registering Core Modules
-        dao.addModule(BANK_MODULE, addresses[BANK_MODULE]);
-        dao.addModule(MEMBER_MODULE, addresses[MEMBER_MODULE]);
-        dao.addModule(PROPOSAL_MODULE, addresses[PROPOSAL_MODULE]);
-        dao.addModule(VOTING_MODULE, addresses[VOTING_MODULE]);
 
         //Registring Adapters
-        dao.addModule(ONBOARDING_MODULE, addresses[ONBOARDING_MODULE]);
-        dao.addModule(FINANCING_MODULE, addresses[FINANCING_MODULE]);
-        dao.addModule(MANAGING_MODULE, addresses[MANAGING_MODULE]);
-        dao.addModule(RAGEQUIT_MODULE, addresses[RAGEQUIT_MODULE]);
+        dao.addAdapter(VOTING, addresses[VOTING]);
+        dao.addAdapter(ONBOARDING, addresses[ONBOARDING]);
+        dao.addAdapter(FINANCING, addresses[FINANCING]);
+        dao.addAdapter(MANAGING, addresses[MANAGING]);
+        dao.addAdapter(RAGEQUIT, addresses[RAGEQUIT]);
 
-        IVoting votingContract = IVoting(addresses[VOTING_MODULE]);
+        IVoting votingContract = IVoting(addresses[VOTING]);
         votingContract.registerDao(dao, votingPeriod);
 
-        IMember memberContract = IMember(addresses[MEMBER_MODULE]);
-        memberContract.updateMember(dao, msg.sender, 1);
+        dao.updateMember(msg.sender, 1);
 
         OnboardingContract onboardingContract = OnboardingContract(
-            addresses[ONBOARDING_MODULE]
+            addresses[ONBOARDING]
         );
         onboardingContract.configureOnboarding(dao, chunkSize, nbShares);
 
