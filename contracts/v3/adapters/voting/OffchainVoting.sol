@@ -85,7 +85,7 @@ contract OffchainVotingContract is
         assembly {
             blockNumber := mload(add(data, 32))
         }
-        
+
         votes[address(dao)][proposalId].startingTime = block.timestamp;
         votes[address(dao)][proposalId].blockNumber = blockNumber;
     }
@@ -153,7 +153,33 @@ contract OffchainVotingContract is
             abi.encode(blockNumber, address(dao), proposalId)
         );
         //return 1 if yes, 2 if no and 0 if the vote is incorrect
-        if(hasVoted(nodeCurrent.voter, proposalHash, nodeCurrent.sig) == 0) {
+        if (hasVoted(nodeCurrent.voter, proposalHash, nodeCurrent.sig) == 0) {
+            challengeResult(dao, proposalId);
+        }
+    }
+
+    function challengeWrongWeight(
+        DaoRegistry dao,
+        uint256 proposalId,
+        VoteResultNode memory nodeCurrent
+    ) external {
+        Voting storage vote = votes[address(dao)][proposalId];
+        bytes32 resultRoot = vote.resultRoot;
+        uint256 blockNumber = vote.blockNumber;
+        require(resultRoot != bytes32(0), "no result available yet!");
+        bytes32 hashCurrent = nodeHash(nodeCurrent);
+        require(
+            verify(resultRoot, hashCurrent, nodeCurrent.proof),
+            "proof check for current invalid for current node"
+        );
+
+        uint256 correctWeight = dao.getPriorVotes(
+            nodeCurrent.voter,
+            blockNumber
+        );
+
+        //Incorrect weight
+        if (correctWeight != nodeCurrent.weight) {
             challengeResult(dao, proposalId);
         }
     }
@@ -177,8 +203,8 @@ contract OffchainVotingContract is
             verify(resultRoot, hashPrevious, node2.proof),
             "proof check for previous invalid for previous node"
         );
-        
-        if(node1.voter == node2.voter) {
+
+        if (node1.voter == node2.voter) {
             challengeResult(dao, proposalId);
         }
     }
@@ -207,22 +233,45 @@ contract OffchainVotingContract is
         bytes32 proposalHash = keccak256(
             abi.encode(blockNumber, address(dao), proposalId)
         );
-        if(nodeCurrent.index != nodePrevious.index + 1) {
+
+        require(
+            nodeCurrent.index == nodePrevious.index + 1,
+            "those nodes are not consecutive"
+        );
+
+        //voters not in order
+        if (nodeCurrent.voter > nodePrevious.voter) {
             challengeResult(dao, proposalId);
         }
 
-        if(nodeCurrent.voter > nodePrevious.voter) {
-            challengeResult(dao, proposalId);
-        }
-        
         checkStep(dao, nodeCurrent, nodePrevious, proposalHash, proposalId);
     }
 
-    function nodeHash(VoteResultNode memory node) internal pure returns (bytes32) {
-        return keccak256(abi.encode(node.voter, node.weight, node.sig, node.nbYes , node.nbNo, node.index));
+    function nodeHash(VoteResultNode memory node)
+        internal
+        pure
+        returns (bytes32)
+    {
+        return
+            keccak256(
+                abi.encode(
+                    node.voter,
+                    node.weight,
+                    node.sig,
+                    node.nbYes,
+                    node.nbNo,
+                    node.index
+                )
+            );
     }
 
-    function checkStep(DaoRegistry dao, VoteResultNode memory nodeCurrent, VoteResultNode memory nodePrevious, bytes32 proposalHash, uint256 proposalId) internal {
+    function checkStep(
+        DaoRegistry dao,
+        VoteResultNode memory nodeCurrent,
+        VoteResultNode memory nodePrevious,
+        bytes32 proposalHash,
+        uint256 proposalId
+    ) internal {
         if (hasVotedYes(nodeCurrent.voter, proposalHash, nodeCurrent.sig)) {
             if (nodePrevious.nbYes + 1 != nodeCurrent.nbYes) {
                 challengeResult(dao, proposalId);
