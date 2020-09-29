@@ -37,7 +37,7 @@ contract('MolochV3 - Ragequit Adapter', async accounts => {
   ragequit = async (dao, shares, member) => {
     let ragequitAddress = await dao.getAdapterAddress(sha3("ragequit"));
     let ragequitContract = await RagequitContract.at(ragequitAddress);
-    await ragequitContract.ragequit(dao.address, toBN(shares), {
+    await ragequitContract.ragequit(dao.address, toBN(shares), toBN("0"), {
       from: member,
       gasPrice: toBN("0"),
     });
@@ -118,14 +118,6 @@ contract('MolochV3 - Ragequit Adapter', async accounts => {
     } catch (error){
       assert.equal(error.reason, "insufficient shares");
     }
-
-    try {
-      //Trying to Ragequit 0 shares to burn
-      await ragequit(dao, toBN("0"), newMember);
-    } catch (error) {
-      assert.equal(error.reason, "insufficient shares");
-    }
-
   })
 
   it("should be possible to a member to ragequit when the member has not voted on any proposals yet", async () => {
