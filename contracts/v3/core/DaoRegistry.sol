@@ -83,6 +83,7 @@ contract DaoRegistry is Ownable, DaoConstants {
         uint256 flags; // flags to track the state of the member: exist, jailed, etc
         address delegateKey; // ?
         uint256 nbShares; // number of shares of the DAO member
+        uint256 nbLoot; // number of non-voting shares of the DAO member
     }
 
     struct Checkpoint {
@@ -109,7 +110,9 @@ contract DaoRegistry is Ownable, DaoConstants {
      * PUBLIC VARIABLES
      */
     /// @notice The total shares in the DAO, which has its maximum number at 2**256 - 1
-    uint256 public totalShares = 1;
+    uint256 public totalShares = 0;
+    /// @notice The total non-voting shares in the DAO, which has its maximum number at 2**256 - 1
+    uint256 public totalLoot = 0; // total loot across all members
     /// @notice The number of proposals submitted to the DAO
     uint256 public proposalCount;
     /// @notice The map that keeps track of all proposasls submitted to the DAO
@@ -135,6 +138,7 @@ contract DaoRegistry is Ownable, DaoConstants {
         bytes32 ownerId = keccak256("owner");
         registry[ownerId] = msg.sender;
         inverseRegistry[msg.sender] = ownerId;
+        totalShares = 1;
     }
 
     /*
@@ -361,20 +365,6 @@ contract DaoRegistry is Ownable, DaoConstants {
         emit UpdateDelegateKey(memberAddr, newDelegateKey);
     }
 
-    function _burnShares(address memberAddr, uint256 sharesToBurn) internal {
-        require(
-            _enoughSharesToBurn(memberAddr, sharesToBurn),
-            "insufficient shares"
-        );
-
-        members[memberAddr].nbShares = members[memberAddr].nbShares.sub(
-            sharesToBurn
-        );
-        totalShares = totalShares.sub(sharesToBurn);
-
-        emit UpdateMember(memberAddr, members[memberAddr].nbShares);
-    }
-
     function nbShares(address member) external view returns (uint256) {
         return members[member].nbShares;
     }
@@ -423,27 +413,33 @@ contract DaoRegistry is Ownable, DaoConstants {
         emit Transfer(GUILD, applicant, token, amount);
     }
 
-    function ragequit(address memberAddr, uint256 sharesToBurn)
+    function burnShares(address memberAddr, uint256 sharesToBurn, uint256 lootToBurn)
         external
         onlyAdapter
     {
-        require(isActiveMember(memberAddr), "only active members can ragequit");
+        //Burn if member has enough shares and loot
+        Member storage member = members[memberAddr];
+        require(member.nbShares >= sharesToBurn, "insufficient shares");
+        require(member.nbLoot >= lootToBurn,"insufficient loot");
 
-        uint256 initialTotalShares = totalShares;
+        //TODO: require(canRagequit(member.highestIndexYesVote), "cannot ragequit until highest index proposal member voted YES on is processed");
+        
+        uint256 initialTotalSharesAndLoot = totalShares.add(totalLoot);
 
-        //TODO check if the member is in jail?
-
-        //Get the total shares before burning member shares
-        //Burn shares if member has enough shares
-        _burnShares(memberAddr, sharesToBurn);
+        // burn shares and loot
+        uint256 sharesAndLootToBurn = sharesToBurn.add(lootToBurn);
+        member.nbShares = member.nbShares.sub(sharesToBurn);
+        member.nbLoot = member.nbLoot.sub(lootToBurn);
+        totalShares = totalShares.sub(sharesToBurn);
+        totalLoot = totalLoot.sub(lootToBurn);
 
         //Update internal Guild and Member balances
         for (uint256 i = 0; i < bank.tokens.length; i++) {
             address token = bank.tokens[i];
             uint256 amountToRagequit = fairShare(
                 bank.tokenBalances[GUILD][token],
-                sharesToBurn,
-                initialTotalShares
+                sharesAndLootToBurn,
+                initialTotalSharesAndLoot
             );
             if (amountToRagequit > 0) {
                 // gas optimization to allow a higher maximum token limit
@@ -639,14 +635,6 @@ contract DaoRegistry is Ownable, DaoConstants {
     /**
      * Internal Utility Functions
      */
-
-    function _enoughSharesToBurn(address memberAddr, uint256 sharesToBurn)
-        internal
-        view
-        returns (bool)
-    {
-        return sharesToBurn > 0 && members[memberAddr].nbShares >= sharesToBurn;
-    }
 
     /*
      * Internal Utility Functions
