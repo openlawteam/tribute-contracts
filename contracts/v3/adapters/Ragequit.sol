@@ -14,7 +14,11 @@ contract RagequitContract is
     MemberGuard,
     ReentrancyGuard
 {
-    event Ragequit(address indexed member, uint256 burnedShares, uint256 lootToBurn);
+    event Ragequit(
+        address indexed member,
+        uint256 burnedShares,
+        uint256 lootToBurn
+    );
 
     /*
      * default fallback function to prevent from sending ether to the contract
@@ -23,12 +27,11 @@ contract RagequitContract is
         revert("fallback revert");
     }
 
-    function ragequit(DaoRegistry dao, uint256 sharesToBurn, uint256 lootToBurn)
-        external
-        override
-        nonReentrant
-        onlyMember(dao)
-    {
+    function ragequit(
+        DaoRegistry dao,
+        uint256 sharesToBurn,
+        uint256 lootToBurn
+    ) external override nonReentrant onlyMember(dao) {
         // FIXME: we still don't track the index to block the ragequit if member voted YES on a non-processed proposal
         // require(canRagequit(member.highestIndexYesVote), "cannot ragequit until highest index proposal member voted YES on is processed");
 

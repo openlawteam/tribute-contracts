@@ -413,17 +413,18 @@ contract DaoRegistry is Ownable, DaoConstants {
         emit Transfer(GUILD, applicant, token, amount);
     }
 
-    function burnShares(address memberAddr, uint256 sharesToBurn, uint256 lootToBurn)
-        external
-        onlyAdapter
-    {
+    function burnShares(
+        address memberAddr,
+        uint256 sharesToBurn,
+        uint256 lootToBurn
+    ) external onlyAdapter {
         //Burn if member has enough shares and loot
         Member storage member = members[memberAddr];
         require(member.nbShares >= sharesToBurn, "insufficient shares");
-        require(member.nbLoot >= lootToBurn,"insufficient loot");
+        require(member.nbLoot >= lootToBurn, "insufficient loot");
 
         //TODO: require(canRagequit(member.highestIndexYesVote), "cannot ragequit until highest index proposal member voted YES on is processed");
-        
+
         uint256 initialTotalSharesAndLoot = totalShares.add(totalLoot);
 
         // burn shares and loot
