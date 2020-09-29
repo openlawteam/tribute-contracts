@@ -13,14 +13,11 @@ contract('MolochV3 - Offchain Voting Module', async accounts => {
     const voting = await OffchainVotingContract.new();
     let dao = await createDao({voting}, myAccount);
 
-    const onboardingAddress = await dao.getAddress(sha3('onboarding'));
+    const onboardingAddress = await dao.getAdapterAddress(sha3('onboarding'));
     const onboarding = await OnboardingContract.at(onboardingAddress);
 
-    const memberAddress = await dao.getAddress(sha3('member'));
-    const member = await MemberContract.at(memberAddress);
-
     await dao.sendTransaction({from:otherAccount,value:sharePrice.mul(toBN("3")).add(remaining), gasPrice: toBN("0")});
-    const {snapshotTree} = await prepareSnapshot(dao, member, accounts);
+    const {snapshotTree} = await prepareSnapshot(dao, accounts);
 
     await onboarding.sponsorProposal(dao.address, 0, web3.eth.abi.encodeParameters(['bytes32', 'uint256'], [snapshotTree.getHexRoot(), 1]), {from: myAccount, gasPrice: toBN("0")});
     await voting.submitVoteResult(dao.address, 0, 1, 0, snapshotTree.getHexRoot(), {from: myAccount, gasPrice: toBN("0")});
@@ -36,14 +33,11 @@ contract('MolochV3 - Offchain Voting Module', async accounts => {
     const voting = await OffchainVotingContract.new();
     let dao = await createDao({voting}, myAccount);
 
-    const onboardingAddress = await dao.getAddress(sha3('onboarding'));
+    const onboardingAddress = await dao.getAdapterAddress(sha3('onboarding'));
     const onboarding = await OnboardingContract.at(onboardingAddress);
 
-    const memberAddress = await dao.getAddress(sha3('member'));
-    const member = await MemberContract.at(memberAddress);
-
     await dao.sendTransaction({from:otherAccount,value:sharePrice.mul(toBN(3)).add(remaining), gasPrice: toBN("0")});
-    const {snapshotTree, weights} = await prepareSnapshot(dao, member, accounts);
+    const {snapshotTree, weights} = await prepareSnapshot(dao, accounts);
 
     await onboarding.sponsorProposal(dao.address, 0, web3.eth.abi.encodeParameters(['bytes32', 'uint256'], [snapshotTree.getHexRoot(), 1]), {from: myAccount, gasPrice: toBN("0")});
 
@@ -70,15 +64,12 @@ contract('MolochV3 - Offchain Voting Module', async accounts => {
     const voting = await OffchainVotingContract.new();
     let dao = await createDao({voting}, myAccount);
 
-    const onboardingAddress = await dao.getAddress(web3.utils.sha3('onboarding'));
+    const onboardingAddress = await dao.getAdapterAddress(web3.utils.sha3('onboarding'));
     const onboarding = await OnboardingContract.at(onboardingAddress);
-
-    const memberAddress = await dao.getAddress(sha3('member'));
-    const member = await MemberContract.at(memberAddress);
 
     await dao.sendTransaction({from:otherAccount,value:sharePrice.mul(web3.utils.toBN(3)).add(remaining), gasPrice: web3.utils.toBN("0")});
     await dao.sendTransaction({from:otherAccount2,value:sharePrice.mul(web3.utils.toBN(3)).add(remaining), gasPrice: web3.utils.toBN("0")});
-    const {snapshotTree} = await prepareSnapshot(dao, member, accounts);
+    const {snapshotTree} = await prepareSnapshot(dao, accounts);
     await reportingTransaction('sponsor proposal', onboarding.sponsorProposal(dao.address, 0, web3.eth.abi.encodeParameters(['bytes32', 'uint256'], [snapshotTree.getHexRoot(), 1]), {from: myAccount, gasPrice: web3.utils.toBN("0")}));
     await onboarding.sponsorProposal(dao.address, 1, web3.eth.abi.encodeParameters(['bytes32', 'uint256'], [snapshotTree.getHexRoot(), 1]), {from: myAccount, gasPrice: web3.utils.toBN("0")});
 
@@ -96,7 +87,7 @@ contract('MolochV3 - Offchain Voting Module', async accounts => {
 
     await reportingTransaction('onboarding call', dao.sendTransaction({from:someone,value:sharePrice.mul(web3.utils.toBN(3)).add(remaining), gasPrice: web3.utils.toBN("0")}));
 
-    const sr = await prepareSnapshot(dao, member, accounts);
+    const sr = await prepareSnapshot(dao, accounts);
     const proposalId = 2;
 
     await onboarding.sponsorProposal(dao.address, proposalId, web3.eth.abi.encodeParameters(['bytes32', 'uint256'], [sr.snapshotTree.getHexRoot(), 3]), {from: myAccount, gasPrice: web3.utils.toBN("0")});

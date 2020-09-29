@@ -3,15 +3,13 @@ pragma solidity ^0.7.0;
 // SPDX-License-Identifier: MIT
 
 import "./interfaces/IManaging.sol";
-import "../core/Module.sol";
-import "../core/Registry.sol";
+import "../core/DaoConstants.sol";
+import "../core/DaoRegistry.sol";
 import "../adapters/interfaces/IVoting.sol";
-import "../core/interfaces/IProposal.sol";
-import "../core/interfaces/IBank.sol";
-import "../guards/AdapterGuard.sol";
+import "../guards/MemberGuard.sol";
 import "../utils/SafeMath.sol";
 
-contract ManagingContract is IManaging, Module, AdapterGuard {
+contract ManagingContract is IManaging, DaoConstants, MemberGuard {
     using SafeMath for uint256;
 
     struct ProposalDetails {
@@ -31,22 +29,20 @@ contract ManagingContract is IManaging, Module, AdapterGuard {
     }
 
     function createModuleChangeRequest(
-        Registry dao,
+        DaoRegistry dao,
         bytes32 moduleId,
         address moduleAddress
     ) external override onlyMember(dao) returns (uint256) {
         require(moduleAddress != address(0x0), "invalid module address");
 
-        IBank bankContract = IBank(dao.getAddress(BANK_MODULE));
         require(
-            bankContract.isNotReservedAddress(moduleAddress),
+            dao.isNotReservedAddress(moduleAddress),
             "module is using reserved address"
         );
 
         //FIXME: is there a way to check if the new module implements the module interface properly?
 
-        IProposal proposalContract = IProposal(dao.getAddress(PROPOSAL_MODULE));
-        uint256 proposalId = proposalContract.createProposal(dao);
+        uint256 proposalId = dao.submitProposal(msg.sender);
 
         ProposalDetails storage proposal = proposals[proposalId];
         proposal.applicant = msg.sender;
@@ -57,15 +53,14 @@ contract ManagingContract is IManaging, Module, AdapterGuard {
     }
 
     function sponsorProposal(
-        Registry dao,
+        DaoRegistry dao,
         uint256 proposalId,
         bytes calldata data
     ) external override onlyMember(dao) {
-        IProposal proposalContract = IProposal(dao.getAddress(PROPOSAL_MODULE));
-        proposalContract.sponsorProposal(dao, proposalId, msg.sender, data);
+        dao.sponsorProposal(proposalId, msg.sender, data);
     }
 
-    function processProposal(Registry dao, uint256 proposalId)
+    function processProposal(DaoRegistry dao, uint256 proposalId)
         external
         override
         onlyMember(dao)
@@ -73,14 +68,15 @@ contract ManagingContract is IManaging, Module, AdapterGuard {
         ProposalDetails memory proposal = proposals[proposalId];
         require(!proposal.processed, "proposal already processed");
 
-        IVoting votingContract = IVoting(dao.getAddress(VOTING_MODULE));
+        IVoting votingContract = IVoting(dao.getAdapterAddress(VOTING));
         require(
             votingContract.voteResult(dao, proposalId) == 2,
             "proposal did not pass yet"
         );
 
-        dao.removeModule(proposal.moduleId);
-        dao.addModule(proposal.moduleId, proposal.moduleAddress);
+        dao.removeAdapter(proposal.moduleId);
+        dao.addAdapter(proposal.moduleId, proposal.moduleAddress);
         proposals[proposalId].processed = true;
+        dao.processProposal(proposalId);
     }
 }

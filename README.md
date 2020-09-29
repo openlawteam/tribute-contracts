@@ -14,27 +14,26 @@ Inspired by the hexagonal architecture pattern we believe that we can have addit
 
 The architecture is composed by 3 main types of components:
 
-**Core Modules**
-- Core modules keep track of the state changes of the DAO
-- Each Core Module is defined via Interface, implemented, and registered into the DAO registry module when the DAO is created
-- The core module named Registry keeps track of all registered core modules, so they can be verified during the call executions
-- Only Adapters or other Core Modules are allowed to call a Core Module function
-- Core modules do not communicate with External World directly, they need to go through an Adapter
-- Each core module is a Smart Contract with the `onlyAdapter` and/or `onlyModule` modifiers applied to its functions, it shall not expose its functions in a public way (`external` or `public` modifier should not be added to core module functions, except for the read-only functions)
+**Core Module**
+- The Core module (Registry) keeps track of the state changes of the DAO.
+- The Registry tracks all the registered Adapters, Members, Proposals, and Bank Accounts of the DAO.
+- Only Adapters are allowed to call functions from the Registry Module.
+- The Registry does not communicate with External World directly, it needs to go through an Adapter to pull or push information.
+- The Registry uses the `onlyAdapter` modifier to functions that change the state of the Registry/DAO, in the future we may want to grant different access types based on the Adapter type. It may expose some **read-only** public functions (`external` or `public`) to facilitate queries.
 
 **Adapters**
-- Public/External accessible functions called from External World
-- Adapters do not keep track of the state of the DAO, they might use storage but the ideal is that any DAO relevant state change is propagated to the Core Modules 
-- Adapters just execute Smart Contract logic that changes the state of the DAO by calling the Core Modules, they also can compose complex calls that interact with External World to pull/push additional data 
-- Each Adapter is a very specialized Smart Contract designed to do one thing very well
-- Adapters can have public access or access limited to members of the DAO (onlyMembers modifier)
+- Public/External accessible functions called from External World.
+- Adapters do not keep track of the state of the DAO, they might use storage but the ideal is that any DAO relevant state change is propagated to the Registry Core Module.
+- Adapters just execute Smart Contract logic that changes the state of the DAO by calling the Registry Core Module, they also can compose complex calls that interact with External World to pull/push additional information.
+- Each Adapter is a very specialized Smart Contract designed to do one thing very well.
+- Adapters can have public access or access limited to members of the DAO (`onlyMember` modifier).
 
 **External World**
-- RPC clients responsible for calling the Adapters public/external functions to interact with the DAO Core Modules
+- RPC clients responsible for calling the Adapters public/external functions to interact with the DAO Core Module.
 
-![moloch_v3_architecture](https://user-images.githubusercontent.com/708579/92758048-b8be9b80-f364-11ea-9c42-ac8b75cf26c4.png)
+![moloch_v3_architecture](https://user-images.githubusercontent.com/708579/94478554-cddf5b00-01a9-11eb-9e80-cc3c55dea492.png)
 
-The main idea is to limit access to the contracts according to each layer. External World (e.g: RPC clients) can access core modules only via Adapters, never directly. Every adapter will contain all the necessary logic and data to provide to the Core modules during the calls, and Core Modules will keep track of the state changes in the DAO. An initial draft of this idea was implemented in the `Financing` Adapter which allows an individual to submit a request for financing/grant. The information always flows from External World to the Core Modules, never the other way around. If a Core Module needs external info, that should be provided via an Output Adapter instead of calling External World directly.
+The main idea is to limit access to the contracts according to each layer. External World (e.g: RPC clients) can access the core module only and via Adapter, never directly. Every adapter will contain all the necessary logic and data to provide to the Core module during the calls, and Core Module will keep track of the state changes in the DAO. An initial draft of this idea was implemented in the `Financing` Adapter which allows an individual to submit a request for financing/grant. The information always flows from the External World to the Core Module, never the other way around. If a Core Module needs external info, that should be provided via an Adapter instead of calling External World directly.
 
 
 ### Usage

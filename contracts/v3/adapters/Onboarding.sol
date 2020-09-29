@@ -3,19 +3,23 @@ pragma solidity ^0.7.0;
 // SPDX-License-Identifier: MIT
 
 import "./interfaces/IOnboarding.sol";
-import "../core/Module.sol";
-import "../core/Registry.sol";
+import "../core/DaoConstants.sol";
+import "../core/DaoRegistry.sol";
 import "../adapters/interfaces/IVoting.sol";
-import "../core/interfaces/IProposal.sol";
-import "../core/interfaces/IBank.sol";
 import "../utils/SafeMath.sol";
+import "../guards/MemberGuard.sol";
 import "../guards/AdapterGuard.sol";
-import "../guards/ModuleGuard.sol";
 
-contract OnboardingContract is IOnboarding, Module, AdapterGuard, ModuleGuard {
+contract OnboardingContract is
+    IOnboarding,
+    DaoConstants,
+    MemberGuard,
+    AdapterGuard
+{
     using SafeMath for uint256;
 
     struct ProposalDetails {
+        uint256 id;
         uint256 amount;
         uint256 sharesRequested;
         bool processed;
@@ -31,16 +35,16 @@ contract OnboardingContract is IOnboarding, Module, AdapterGuard, ModuleGuard {
     mapping(address => mapping(uint256 => ProposalDetails)) public proposals;
 
     function configureOnboarding(
-        Registry dao,
+        DaoRegistry dao,
         uint256 chunkSize,
         uint256 sharesPerChunk
-    ) external onlyModule(dao) {
+    ) external onlyAdapter(dao) {
         configs[address(dao)].chunkSize = chunkSize;
         configs[address(dao)].sharesPerChunk = sharesPerChunk;
     }
 
     function processOnboarding(
-        Registry dao,
+        DaoRegistry dao,
         address applicant,
         uint256 value
     ) external override returns (uint256) {
@@ -59,57 +63,60 @@ contract OnboardingContract is IOnboarding, Module, AdapterGuard, ModuleGuard {
         return amount;
     }
 
-    function updateDelegateKey(Registry dao, address delegateKey) external {
-        IMember memberContract = IMember(dao.getAddress(MEMBER_MODULE));
-        memberContract.updateDelegateKey(dao, msg.sender, delegateKey);
+    function updateDelegateKey(DaoRegistry dao, address delegateKey) external {
+        dao.updateDelegateKey(msg.sender, delegateKey);
     }
 
     function _submitMembershipProposal(
-        Registry dao,
+        DaoRegistry dao,
         address newMember,
         uint256 sharesRequested,
         uint256 amount
     ) internal {
-        IProposal proposalContract = IProposal(dao.getAddress(PROPOSAL_MODULE));
-        uint256 proposalId = proposalContract.createProposal(dao);
-        ProposalDetails storage proposal = proposals[address(dao)][proposalId];
-        proposal.amount = amount;
-        proposal.sharesRequested = sharesRequested;
-        proposal.applicant = newMember;
+        uint256 proposalId = dao.submitProposal(msg.sender);
+        ProposalDetails memory p = ProposalDetails(
+            proposalId,
+            amount,
+            sharesRequested,
+            false,
+            newMember
+        );
+        proposals[address(dao)][proposalId] = p;
     }
 
     function sponsorProposal(
-        Registry dao,
+        DaoRegistry dao,
         uint256 proposalId,
         bytes calldata data
     ) external override onlyMember(dao) {
-        IProposal proposalContract = IProposal(dao.getAddress(PROPOSAL_MODULE));
-        proposalContract.sponsorProposal(dao, proposalId, msg.sender, data);
+        require(
+            proposals[address(dao)][proposalId].id == proposalId,
+            "proposal does not exist"
+        );
+        dao.sponsorProposal(proposalId, msg.sender, data);
     }
 
-    function processProposal(Registry dao, uint256 proposalId)
+    function processProposal(DaoRegistry dao, uint256 proposalId)
         external
         override
+        onlyMember(dao)
     {
-        IMember memberContract = IMember(dao.getAddress(MEMBER_MODULE));
         require(
-            memberContract.isActiveMember(dao, msg.sender),
-            "only members can sponsor"
+            proposals[address(dao)][proposalId].id == proposalId,
+            "proposal does not exist"
         );
-        IVoting votingContract = IVoting(dao.getAddress(VOTING_MODULE));
+
+        IVoting votingContract = IVoting(dao.getAdapterAddress(VOTING));
         require(
             votingContract.voteResult(dao, proposalId) == 2,
             "proposal need to pass"
         );
         ProposalDetails storage proposal = proposals[address(dao)][proposalId];
-        memberContract.updateMember(
-            dao,
-            proposal.applicant,
-            proposal.sharesRequested
-        );
 
-        IBank bankContract = IBank(dao.getAddress(BANK_MODULE));
+        dao.updateMember(proposal.applicant, proposal.sharesRequested);
+
         // address 0 represents native ETH
-        bankContract.addToGuild(dao, address(0), proposal.amount);
+        dao.addToGuild(address(0), proposal.amount);
+        dao.processProposal(proposalId);
     }
 }

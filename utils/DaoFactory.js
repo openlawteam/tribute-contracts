@@ -9,42 +9,40 @@ const remaining = sharePrice.sub(web3.utils.toBN('50000000000000'));
 
 const FlagHelperLib = artifacts.require('./v3/helpers/FlagHelper');
 const DaoFactory = artifacts.require('./v3/core/DaoFactory');
-const Registry = artifacts.require('./v3/core/Registry');
-const MemberContract = artifacts.require('./v3/core/MemberContract');
+const DaoRegistry = artifacts.require("./v3/core/DaoRegistry");
 const VotingContract = artifacts.require('./v3/adapters/VotingContract');
-const ProposalContract = artifacts.require('./v3/core/ProposalContract');
 const ManagingContract = artifacts.require('./v3/adapter/ManagingContract');
 const FinancingContract = artifacts.require('./v3/adapter/FinancingContract');
 const RagequitContract = artifacts.require('./v3/adapters/RagequitContract');
 const OnboardingContract = artifacts.require('./v3/adapters/OnboardingContract');
-const BankContract = artifacts.require('./v3/core/banking/BankContract');
 
 async function prepareSmartContracts() {
     let lib = await FlagHelperLib.new();
-    await MemberContract.link("FlagHelper", lib.address);
-    await ProposalContract.link("FlagHelper", lib.address);
-    let member = await MemberContract.new();
-    let proposal = await ProposalContract.new();
+    await DaoRegistry.link("FlagHelper", lib.address);
     let voting = await VotingContract.new();
     let ragequit = await RagequitContract.new();
     let managing = await ManagingContract.new();
     let financing = await FinancingContract.new();
     let onboarding = await OnboardingContract.new();
-    let bank = await BankContract.new();
 
-    return { voting, proposal, member, ragequit, managing, financing, onboarding, bank};
+    return { voting, ragequit, managing, financing, onboarding};
   }
 
 async function createDao(overridenModules, senderAccount) {
     let modules = await prepareSmartContracts();
     modules = Object.assign(modules, overridenModules);
-    const {member, proposal, voting, ragequit, managing, financing, onboarding, bank} = modules;
-    let daoFactory = await DaoFactory.new(member.address, proposal.address, voting.address, ragequit.address, managing.address, financing.address, onboarding.address, bank.address, 
+    
+    let lib = await FlagHelperLib.new();
+    await DaoFactory.link("FlagHelper", lib.address);
+
+    const {voting, ragequit, managing, financing, onboarding} = modules;
+    let daoFactory = await DaoFactory.new(voting.address, ragequit.address, managing.address, financing.address, onboarding.address, 
       { from: senderAccount, gasPrice: web3.utils.toBN("0") });
-    await reportingTransaction('DAO creation', daoFactory.newDao(sharePrice, numberOfShares, 1000, { from: senderAccount, gasPrice: web3.utils.toBN("0") }));
+    
+      await reportingTransaction('DAO creation', daoFactory.newDao(sharePrice, numberOfShares, 1000, { from: senderAccount, gasPrice: web3.utils.toBN("0") }));
     let pastEvents = await daoFactory.getPastEvents();
     let daoAddress = pastEvents[0].returnValues.dao;
-    let dao = await Registry.at(daoAddress);
+    let dao = await DaoRegistry.at(daoAddress);
     return dao;
 }
 
@@ -77,30 +75,27 @@ async function reportingTransaction(details, promiseTransaction) {
     const tx = await promiseTransaction;
     console.log('**************');
     console.log(details);
-    console.log('gas used', tx.receipt.gasUsed);
+    console.log('gas used', tx && tx.receipt && tx.receipt.gasUsed);
     console.log('**************');
 }
 
 module.exports = {
-    prepareSmartContracts,
-    advanceTime,
-    createDao,
-    reportingTransaction,
-    GUILD,
-    ESCROW,
-    TOTAL,
-    numberOfShares,
-    sharePrice,
-    remaining,
-    ETH_TOKEN,
-    DaoFactory,
-    Registry,
-    MemberContract,
-    VotingContract,
-    ProposalContract,
-    ManagingContract,
-    FinancingContract,
-    RagequitContract,
-    OnboardingContract,
-    BankContract
+  prepareSmartContracts,
+  advanceTime,
+  createDao,
+  reportingTransaction,
+  GUILD,
+  ESCROW,
+  TOTAL,
+  numberOfShares,
+  sharePrice,
+  remaining,
+  ETH_TOKEN,
+  DaoFactory,
+  DaoRegistry,
+  VotingContract,
+  ManagingContract,
+  FinancingContract,
+  RagequitContract,
+  OnboardingContract,
 };

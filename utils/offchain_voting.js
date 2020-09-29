@@ -20,9 +20,9 @@ async function generateVote(account, proposalHash, voteYes) {
   return await web3.eth.sign(voteHash, account);
 }
 
-async function prepareSnapshot(dao, member, accounts) {
+async function prepareSnapshot(dao, accounts) {
   const shares = await Promise.all(accounts.map(async (account) => {
-    const nbShares = await member.nbShares(dao.address, account);
+    const nbShares = await dao.nbShares(account);
     return {account, nbShares};
   }));
 

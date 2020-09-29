@@ -2,17 +2,19 @@ pragma solidity ^0.7.0;
 
 // SPDX-License-Identifier: MIT
 
-import "../core/Module.sol";
-import "../core/Registry.sol";
-import "../core/interfaces/IBank.sol";
-import "../core/interfaces/IMember.sol";
-import "../guards/AdapterGuard.sol";
+import "../core/DaoConstants.sol";
+import "../core/DaoRegistry.sol";
+import "../guards/MemberGuard.sol";
 import "../guards/ReentrancyGuard.sol";
+import "./interfaces/IRagequit.sol";
 
-contract RagequitContract is Module, AdapterGuard, ReentrancyGuard {
+contract RagequitContract is
+    IRagequit,
+    DaoConstants,
+    MemberGuard,
+    ReentrancyGuard
+{
     event Ragequit(address indexed member, uint256 burnedShares);
-
-    constructor() {}
 
     /*
      * default fallback function to prevent from sending ether to the contract
@@ -21,16 +23,16 @@ contract RagequitContract is Module, AdapterGuard, ReentrancyGuard {
         revert("fallback revert");
     }
 
-    function ragequit(Registry dao, uint256 sharesToBurn)
-        public
+    function ragequit(DaoRegistry dao, uint256 sharesToBurn)
+        external
+        override
         nonReentrant
         onlyMember(dao)
     {
         // FIXME: we still don't track the index to block the ragequit if member voted YES on a non-processed proposal
         // require(canRagequit(member.highestIndexYesVote), "cannot ragequit until highest index proposal member voted YES on is processed");
 
-        IBank bank = IBank(dao.getAddress(BANK_MODULE));
-        bank.ragequit(dao, msg.sender, sharesToBurn);
+        dao.ragequit(msg.sender, sharesToBurn); //TODO: move the ragequit logic to this adapter?
 
         emit Ragequit(msg.sender, sharesToBurn);
     }

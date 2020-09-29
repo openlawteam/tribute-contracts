@@ -3,16 +3,19 @@ pragma experimental ABIEncoderV2;
 
 // SPDX-License-Identifier: MIT
 
-import "../../core/Registry.sol";
-import "../../core/Module.sol";
-import "../../core/interfaces/IProposal.sol";
-import "../../core/interfaces/IMember.sol";
+import "../../core/DaoRegistry.sol";
+import "../../core/DaoConstants.sol";
 import "../interfaces/IVoting.sol";
+import "../../guards/MemberGuard.sol";
 import "../../guards/AdapterGuard.sol";
-import "../../guards/ModuleGuard.sol";
 import "../../helpers/FlagHelper.sol";
 
-contract OffchainVotingContract is IVoting, Module, AdapterGuard, ModuleGuard {
+contract OffchainVotingContract is
+    IVoting,
+    DaoConstants,
+    MemberGuard,
+    AdapterGuard
+{
     using FlagHelper for uint256;
 
     struct VotingConfig {
@@ -42,17 +45,17 @@ contract OffchainVotingContract is IVoting, Module, AdapterGuard, ModuleGuard {
     mapping(address => mapping(uint256 => Voting)) private votes;
     mapping(address => VotingConfig) private votingConfigs;
 
-    function registerDao(Registry dao, uint256 votingPeriod)
+    function registerDao(DaoRegistry dao, uint256 votingPeriod)
         external
         override
-        onlyModule(dao)
+        onlyAdapter(dao)
     {
         votingConfigs[address(dao)].flags = 1; // mark as exists
         votingConfigs[address(dao)].votingPeriod = votingPeriod;
     }
 
     function submitVoteResult(
-        Registry dao,
+        DaoRegistry dao,
         uint256 proposalId,
         uint256 nbYes,
         uint256 nbNo,
@@ -66,10 +69,11 @@ contract OffchainVotingContract is IVoting, Module, AdapterGuard, ModuleGuard {
     }
 
     function startNewVotingForProposal(
-        Registry dao,
+        DaoRegistry dao,
         uint256 proposalId,
-        bytes memory data
-    ) external override onlyModule(dao) returns (uint256) {
+        bytes memory data /*onlyAdapter(dao)*/
+    ) external override returns (uint256) {
+        // it is called from Registry
         require(
             data.length == 64,
             "vote data should represent a merkle tree root (bytes32) and number of voters (uint256)"
@@ -100,7 +104,7 @@ contract OffchainVotingContract is IVoting, Module, AdapterGuard, ModuleGuard {
     3: not pass
     4: in progress
      */
-    function voteResult(Registry dao, uint256 proposalId)
+    function voteResult(DaoRegistry dao, uint256 proposalId)
         external
         override
         view
@@ -137,7 +141,7 @@ contract OffchainVotingContract is IVoting, Module, AdapterGuard, ModuleGuard {
     }
 
     function challengeWrongOrder(
-        Registry dao,
+        DaoRegistry dao,
         uint256 proposalId,
         uint256 index,
         VoteResultNode memory nodePrevious,
@@ -301,7 +305,7 @@ contract OffchainVotingContract is IVoting, Module, AdapterGuard, ModuleGuard {
     }
 
     function fixResult(
-        Registry dao,
+        DaoRegistry dao,
         uint256 proposalId,
         address voter,
         uint256 weight,
