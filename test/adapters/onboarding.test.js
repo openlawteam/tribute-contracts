@@ -1,4 +1,4 @@
-const {advanceTime, createDao, reportingTransaction, GUILD, sharePrice, remaining, numberOfShares, BankContract, OnboardingContract, VotingContract, MemberContract} = require('../../utils/DaoFactory.js');
+const {advanceTime, createDao, reportingTransaction, GUILD, sharePrice, remaining, numberOfShares, OnboardingContract, VotingContract} = require('../../utils/DaoFactory.js');
 const toBN = web3.utils.toBN;
 const sha3 = web3.utils.sha3;
 

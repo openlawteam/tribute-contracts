@@ -19,18 +19,22 @@ contract OffchainVotingContract is
     using FlagHelper for uint256;
 
     struct VotingConfig {
-        uint256 flags;
         uint256 votingPeriod;
-        uint256 votingCount;
+        uint256 gracePeriod;
+        uint256 stakingAmount;
     }
     struct Voting {
         uint256 blockNumber;
+        address reporter;
         bytes32 resultRoot;
         uint256 nbVoters;
         uint256 nbYes;
         uint256 nbNo;
         uint256 startingTime;
+        uint256 gracePeriodStartingTime;
         bool isChallenged;
+        mapping(address => bool) fallbackVotes;
+        uint256 fallbackVotesCount;
     }
 
     struct VoteResultNode {
@@ -43,16 +47,16 @@ contract OffchainVotingContract is
         bytes32[] proof;
     }
 
-    mapping(address => mapping(uint256 => Voting)) private votes;
-    mapping(address => VotingConfig) private votingConfigs;
+    mapping(address => mapping(uint256 => Voting)) public votes;
+    mapping(address => VotingConfig) public votingConfigs;
 
-    function registerDao(DaoRegistry dao, uint256 votingPeriod)
+    function registerDao(DaoRegistry dao, uint256 votingPeriod, uint256 gracePeriod)
         external
         override
         onlyAdapter(dao)
     {
-        votingConfigs[address(dao)].flags = 1; // mark as exists
         votingConfigs[address(dao)].votingPeriod = votingPeriod;
+        votingConfigs[address(dao)].gracePeriod = gracePeriod;
     }
 
     function submitVoteResult(
@@ -61,12 +65,68 @@ contract OffchainVotingContract is
         uint256 nbYes,
         uint256 nbNo,
         bytes32 resultRoot
-    ) external onlyMember(dao) {
-        //TODO: check vote status
-        //TODO: if vote result already exists, check that the new one should be able to override
-        votes[address(dao)][proposalId].nbNo = nbNo;
-        votes[address(dao)][proposalId].nbYes = nbYes;
-        votes[address(dao)][proposalId].resultRoot = resultRoot;
+    ) external {
+        Voting storage vote = votes[address(dao)][proposalId];
+        require(vote.blockNumber > 0, "the vote has not started yet");
+        /**
+        What needs to be checked before submitting a vote result
+        - if the grace period has ended, do nothing
+        - if it's the first result, is this a right time to submit it?
+             * is the diff between nbYes and nbNo +50% of the votes ?
+             * is this after the voting period ?
+        - if we already have a result that has been challenged
+            * same as if there were no result yet
+
+        - if we already have a result that has not been challenged
+            * is the new one heavier than the previous one ?
+         */
+        if(vote.resultRoot == bytes32(0) || vote.isChallenged) {
+            require(_readyToSubmitResult(dao, vote, nbYes, nbNo), "the voting period need to end or the difference between yes and no need to be more than 50% of the votes");
+            _submitVoteResult(dao, vote, nbYes, nbNo, resultRoot);
+        } else {
+            require(nbYes + nbNo > vote.nbYes + vote.nbNo, "to override a result, the sum of yes and no has to be greater than the current one");
+            _submitVoteResult(dao, vote, nbYes, nbNo, resultRoot);
+        }
+    }
+
+    //TODO: generale challenge to go through each node to see which vote has been missing
+
+    function _readyToSubmitResult(DaoRegistry dao, Voting storage vote, uint256 nbYes, uint256 nbNo) internal view returns (bool) {
+        uint256 diff;
+        if(vote.nbYes > nbNo) {
+            diff = nbYes - nbNo;
+        } else {
+            diff = nbNo - nbYes;
+        }
+        if(diff * 2 > dao.totalShares()) {
+            return true;
+        }
+
+        uint256 votingPeriod = votingConfigs[address(dao)].votingPeriod;
+
+        return vote.startingTime + votingPeriod > block.timestamp;
+    }
+
+    function _submitVoteResult(DaoRegistry dao, 
+        Voting storage vote, 
+        uint256 nbYes,
+        uint256 nbNo,
+        bytes32 resultRoot) internal {
+        _lockFunds(dao, msg.sender);
+        vote.nbNo = nbNo;
+        vote.nbYes = nbYes;
+        vote.resultRoot = resultRoot;
+        vote.reporter = msg.sender;
+        vote.isChallenged = false;
+        vote.gracePeriodStartingTime = block.timestamp;
+    }
+
+    function _lockFunds(DaoRegistry dao, address member) internal {
+        dao.lockLoot(member, votingConfigs[address(dao)].stakingAmount);
+    }
+
+    function _releaseFunds(DaoRegistry dao, address member) internal {
+        dao.releaseLoot(member, votingConfigs[address(dao)].stakingAmount);
     }
 
     function startNewVotingForProposal(
@@ -74,6 +134,7 @@ contract OffchainVotingContract is
         uint256 proposalId,
         bytes memory data /*onlyAdapter(dao)*/
     ) external override returns (uint256) {
+        require(msg.sender == address(dao), "only the DaoRegistry can call this method");
         // it is called from Registry
         require(
             data.length == 32,
@@ -85,6 +146,9 @@ contract OffchainVotingContract is
         assembly {
             blockNumber := mload(add(data, 32))
         }
+
+        require(blockNumber < block.number, "snapshot block number should not be in the future");
+        require(blockNumber > 0, "block number cannot be 0");
 
         votes[address(dao)][proposalId].startingTime = block.timestamp;
         votes[address(dao)][proposalId].blockNumber = blockNumber;
@@ -109,17 +173,20 @@ contract OffchainVotingContract is
             return 0;
         }
 
-        if (vote.nbYes * 2 > vote.nbVoters) {
-            return 2;
-        }
-
-        if (vote.nbNo * 2 > vote.nbVoters) {
-            return 2;
+        if (vote.isChallenged) {
+            return 4;
         }
 
         if (
             block.timestamp <
             vote.startingTime + votingConfigs[address(dao)].votingPeriod
+        ) {
+            return 4;
+        }
+
+        if (
+            block.timestamp <
+            vote.gracePeriodStartingTime + votingConfigs[address(dao)].gracePeriod
         ) {
             return 4;
         }
@@ -143,7 +210,7 @@ contract OffchainVotingContract is
         bytes32 resultRoot = vote.resultRoot;
         uint256 blockNumber = vote.blockNumber;
         require(resultRoot != bytes32(0), "no result available yet!");
-        bytes32 hashCurrent = nodeHash(nodeCurrent);
+        bytes32 hashCurrent = _nodeHash(nodeCurrent);
         require(
             verify(resultRoot, hashCurrent, nodeCurrent.proof),
             "proof check for current invalid for current node"
@@ -153,8 +220,8 @@ contract OffchainVotingContract is
             abi.encode(blockNumber, address(dao), proposalId)
         );
         //return 1 if yes, 2 if no and 0 if the vote is incorrect
-        if (hasVoted(nodeCurrent.voter, proposalHash, nodeCurrent.sig) == 0) {
-            challengeResult(dao, proposalId);
+        if (_hasVoted(nodeCurrent.voter, proposalHash, nodeCurrent.sig) == 0) {
+            _challengeResult(dao, proposalId);
         }
     }
 
@@ -167,7 +234,7 @@ contract OffchainVotingContract is
         bytes32 resultRoot = vote.resultRoot;
         uint256 blockNumber = vote.blockNumber;
         require(resultRoot != bytes32(0), "no result available yet!");
-        bytes32 hashCurrent = nodeHash(nodeCurrent);
+        bytes32 hashCurrent = _nodeHash(nodeCurrent);
         require(
             verify(resultRoot, hashCurrent, nodeCurrent.proof),
             "proof check for current invalid for current node"
@@ -180,7 +247,7 @@ contract OffchainVotingContract is
 
         //Incorrect weight
         if (correctWeight != nodeCurrent.weight) {
-            challengeResult(dao, proposalId);
+            _challengeResult(dao, proposalId);
         }
     }
 
@@ -193,8 +260,8 @@ contract OffchainVotingContract is
         Voting storage vote = votes[address(dao)][proposalId];
         bytes32 resultRoot = vote.resultRoot;
         require(resultRoot != bytes32(0), "no result available yet!");
-        bytes32 hashCurrent = nodeHash(node1);
-        bytes32 hashPrevious = nodeHash(node2);
+        bytes32 hashCurrent = _nodeHash(node1);
+        bytes32 hashPrevious = _nodeHash(node2);
         require(
             verify(resultRoot, hashCurrent, node1.proof),
             "proof check for current invalid for current node"
@@ -205,7 +272,7 @@ contract OffchainVotingContract is
         );
 
         if (node1.voter == node2.voter) {
-            challengeResult(dao, proposalId);
+            _challengeResult(dao, proposalId);
         }
     }
 
@@ -219,8 +286,8 @@ contract OffchainVotingContract is
         bytes32 resultRoot = vote.resultRoot;
         uint256 blockNumber = vote.blockNumber;
         require(resultRoot != bytes32(0), "no result available yet!");
-        bytes32 hashCurrent = nodeHash(nodeCurrent);
-        bytes32 hashPrevious = nodeHash(nodePrevious);
+        bytes32 hashCurrent = _nodeHash(nodeCurrent);
+        bytes32 hashPrevious = _nodeHash(nodePrevious);
         require(
             verify(resultRoot, hashCurrent, nodeCurrent.proof),
             "proof check for current invalid for current node"
@@ -241,13 +308,13 @@ contract OffchainVotingContract is
 
         //voters not in order
         if (nodeCurrent.voter > nodePrevious.voter) {
-            challengeResult(dao, proposalId);
+            _challengeResult(dao, proposalId);
         }
 
-        checkStep(dao, nodeCurrent, nodePrevious, proposalHash, proposalId);
+        _checkStep(dao, nodeCurrent, nodePrevious, proposalHash, proposalId);
     }
 
-    function nodeHash(VoteResultNode memory node)
+    function _nodeHash(VoteResultNode memory node)
         internal
         pure
         returns (bytes32)
@@ -265,29 +332,30 @@ contract OffchainVotingContract is
             );
     }
 
-    function checkStep(
+    function _checkStep(
         DaoRegistry dao,
         VoteResultNode memory nodeCurrent,
         VoteResultNode memory nodePrevious,
         bytes32 proposalHash,
         uint256 proposalId
     ) internal {
-        if (hasVotedYes(nodeCurrent.voter, proposalHash, nodeCurrent.sig)) {
+        if (_hasVotedYes(nodeCurrent.voter, proposalHash, nodeCurrent.sig)) {
             if (nodePrevious.nbYes + 1 != nodeCurrent.nbYes) {
-                challengeResult(dao, proposalId);
+                _challengeResult(dao, proposalId);
             } else if (nodePrevious.nbNo != nodeCurrent.nbNo) {
-                challengeResult(dao, proposalId);
+                _challengeResult(dao, proposalId);
             }
         } else {
             if (nodePrevious.nbYes != nodeCurrent.nbYes) {
-                challengeResult(dao, proposalId);
+                _challengeResult(dao, proposalId);
             } else if (nodePrevious.nbNo + 1 != nodeCurrent.nbNo) {
-                challengeResult(dao, proposalId);
+                _challengeResult(dao, proposalId);
             }
         }
     }
 
-    function challengeResult(DaoRegistry dao, uint256 proposalId) internal {
+    function _challengeResult(DaoRegistry dao, uint256 proposalId) internal {
+        dao.burnLockedLoot(votes[address(dao)][proposalId].reporter, votingConfigs[address(dao)].stakingAmount);
         votes[address(dao)][proposalId].isChallenged = true;
     }
 
@@ -323,7 +391,7 @@ contract OffchainVotingContract is
             );
     }
 
-    function hasVotedYes(
+    function _hasVotedYes(
         address voter,
         bytes32 proposalHash,
         bytes memory sig
@@ -357,7 +425,7 @@ contract OffchainVotingContract is
         }
     }
 
-    function hasVoted(
+    function _hasVoted(
         address voter,
         bytes32 proposalHash,
         bytes memory sig

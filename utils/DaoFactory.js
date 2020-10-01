@@ -39,7 +39,7 @@ async function createDao(overridenModules, senderAccount) {
     let daoFactory = await DaoFactory.new(voting.address, ragequit.address, managing.address, financing.address, onboarding.address, 
       { from: senderAccount, gasPrice: web3.utils.toBN("0") });
     
-      await reportingTransaction('DAO creation', daoFactory.newDao(sharePrice, numberOfShares, 1000, { from: senderAccount, gasPrice: web3.utils.toBN("0") }));
+      await reportingTransaction('DAO creation', daoFactory.newDao(sharePrice, numberOfShares, 1000, 1, { from: senderAccount, gasPrice: web3.utils.toBN("0") }));
     let pastEvents = await daoFactory.getPastEvents();
     let daoAddress = pastEvents[0].returnValues.dao;
     let dao = await DaoRegistry.at(daoAddress);
