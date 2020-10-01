@@ -2,10 +2,13 @@ const GUILD = "0x000000000000000000000000000000000000dead";
 const ESCROW = "0x000000000000000000000000000000000000beef";
 const TOTAL = "0x000000000000000000000000000000000000babe";
 const ETH_TOKEN = "0x0000000000000000000000000000000000000000";
+const DAI_TOKEN = "0x95b58a6bff3d14b7db2f5cb5f0ad413dc2940658";
 
 const numberOfShares = web3.utils.toBN('1000000000000000');
 const sharePrice = web3.utils.toBN(web3.utils.toWei("120", 'finney'));
 const remaining = sharePrice.sub(web3.utils.toBN('50000000000000'));
+
+const OLTokenContract = artifacts.require("./test/OLToken");
 
 const FlagHelperLib = artifacts.require('./v3/helpers/FlagHelper');
 const DaoFactory = artifacts.require('./v3/core/DaoFactory');
@@ -39,7 +42,7 @@ async function prepareSmartContracts() {
     };
   }
 
-async function createDao(overridenModules, senderAccount) {
+async function createDao(overridenModules, senderAccount, unitPrice=sharePrice, nbShares=numberOfShares, chunkSize=1000, gracePeriod=1) {
     let modules = await prepareSmartContracts();
     modules = Object.assign(modules, overridenModules);
     
@@ -55,7 +58,13 @@ async function createDao(overridenModules, senderAccount) {
       nonVotingOnboarding.address,
       { from: senderAccount, gasPrice: web3.utils.toBN("0") });
     
-      await reportingTransaction('DAO creation', daoFactory.newDao(sharePrice, numberOfShares, 1000, 1, { from: senderAccount, gasPrice: web3.utils.toBN("0") }));
+      await reportingTransaction(
+        "DAO creation",
+        daoFactory.newDao(unitPrice, nbShares, chunkSize, gracePeriod, {
+          from: senderAccount,
+          gasPrice: web3.utils.toBN("0"),
+        })
+      );
     let pastEvents = await daoFactory.getPastEvents();
     let daoAddress = pastEvents[0].returnValues.dao;
     let dao = await DaoRegistry.at(daoAddress);
@@ -103,10 +112,12 @@ module.exports = {
   GUILD,
   ESCROW,
   TOTAL,
+  DAI_TOKEN,
   numberOfShares,
   sharePrice,
   remaining,
   ETH_TOKEN,
+  OLTokenContract,
   DaoFactory,
   DaoRegistry,
   VotingContract,
