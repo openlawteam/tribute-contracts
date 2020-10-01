@@ -6,6 +6,7 @@ abstract contract DaoConstants {
     // Adapters
     bytes32 public constant VOTING = keccak256("voting");
     bytes32 public constant ONBOARDING = keccak256("onboarding");
+    bytes32 public constant NONVOTING_MEMBERSHIP = keccak256("nonvoting-membership");
     bytes32 public constant FINANCING = keccak256("financing");
     bytes32 public constant MANAGING = keccak256("managing");
     bytes32 public constant RAGEQUIT = keccak256("ragequit");

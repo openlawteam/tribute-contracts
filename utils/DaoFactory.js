@@ -15,6 +15,9 @@ const ManagingContract = artifacts.require('./v3/adapter/ManagingContract');
 const FinancingContract = artifacts.require('./v3/adapter/FinancingContract');
 const RagequitContract = artifacts.require('./v3/adapters/RagequitContract');
 const OnboardingContract = artifacts.require('./v3/adapters/OnboardingContract');
+const NonVotingMembershipContract = artifacts.require(
+  "./v3/adapters/NonVotingMembership"
+);
 
 async function prepareSmartContracts() {
     let lib = await FlagHelperLib.new();
@@ -24,8 +27,16 @@ async function prepareSmartContracts() {
     let managing = await ManagingContract.new();
     let financing = await FinancingContract.new();
     let onboarding = await OnboardingContract.new();
+    let nonVotingMembership = await NonVotingMembership.new();
 
-    return { voting, ragequit, managing, financing, onboarding};
+    return {
+      voting,
+      ragequit,
+      managing,
+      financing,
+      onboarding,
+      nonVotingMembership,
+    };
   }
 
 async function createDao(overridenModules, senderAccount) {
@@ -35,8 +46,13 @@ async function createDao(overridenModules, senderAccount) {
     let lib = await FlagHelperLib.new();
     await DaoFactory.link("FlagHelper", lib.address);
 
-    const {voting, ragequit, managing, financing, onboarding} = modules;
-    let daoFactory = await DaoFactory.new(voting.address, ragequit.address, managing.address, financing.address, onboarding.address, 
+    const {voting, ragequit, managing, financing, onboarding, nonVotingMembership} = modules;
+    let daoFactory = await DaoFactory.new(voting.address, 
+      ragequit.address, 
+      managing.address, 
+      financing.address, 
+      onboarding.address,
+      nonVotingMembership.address,
       { from: senderAccount, gasPrice: web3.utils.toBN("0") });
     
       await reportingTransaction('DAO creation', daoFactory.newDao(sharePrice, numberOfShares, 1000, 1, { from: senderAccount, gasPrice: web3.utils.toBN("0") }));
@@ -98,4 +114,5 @@ module.exports = {
   FinancingContract,
   RagequitContract,
   OnboardingContract,
+  NonVotingMembershipContract,
 };

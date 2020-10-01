@@ -49,7 +49,8 @@ contract DaoRegistry is Ownable, DaoConstants {
     );
 
     /// @dev - Events for Members
-    event UpdateMember(address member, uint256 shares);
+    event UpdateMemberShares(address member, uint256 shares);
+    event UpdateMemberLoot(address member, uint256 loot);
     event UpdateDelegateKey(
         address indexed memberAddress,
         address newDelegateKey
@@ -156,6 +157,7 @@ contract DaoRegistry is Ownable, DaoConstants {
             );
             if (msg.value > amount) {
                 msg.sender.transfer(msg.value - amount);
+                //TODO: ??? unsafeAddToBalance(ESCROW, tributeToken, tributeOffered);
             }
         }
     }
@@ -357,7 +359,7 @@ contract DaoRegistry is Ownable, DaoConstants {
         return memberAddresses[memberOrDelegateKey];
     }
 
-    function updateMember(address memberAddr, uint256 shares)
+    function updateMemberShares(address memberAddr, uint256 shares)
         external
         onlyAdapter
     {
@@ -373,7 +375,26 @@ contract DaoRegistry is Ownable, DaoConstants {
 
         memberAddressesByDelegatedKey[member.delegateKey] = memberAddr;
 
-        emit UpdateMember(memberAddr, shares);
+        emit UpdateMemberShares(memberAddr, shares);
+    }
+
+    function updateMemberLoot(address memberAddr, uint256 loot)
+        external
+        onlyAdapter
+    {
+        Member storage member = members[memberAddr];
+        if (member.delegateKey == address(0x0)) {
+            member.flags = 1;
+            member.delegateKey = memberAddr;
+        }
+
+        member.nbLoot = loot;
+
+        totalLoot = totalLoot.add(loot);
+
+        memberAddressesByDelegatedKey[member.delegateKey] = memberAddr;
+
+        emit UpdateMemberLoot(memberAddr, loot);
     }
 
     function updateDelegateKey(address memberAddr, address newDelegateKey)

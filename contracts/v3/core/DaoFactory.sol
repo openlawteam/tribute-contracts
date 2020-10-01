@@ -4,11 +4,7 @@ pragma solidity ^0.7.0;
 
 import "./DaoConstants.sol";
 import "./DaoRegistry.sol";
-import "../adapters/interfaces/IVoting.sol";
 import "../adapters/Onboarding.sol";
-import "../adapters/Financing.sol";
-import "../adapters/Managing.sol";
-import "../adapters/Ragequit.sol";
 
 contract DaoFactory is DaoConstants {
     event NewDao(address summoner, address dao);
@@ -20,13 +16,15 @@ contract DaoFactory is DaoConstants {
         address ragequitAddress,
         address managingAddress,
         address financingAddress,
-        address onboardingAddress
+        address onboardingAddress,
+        address nonVotingMembershipAddress
     ) {
         addresses[VOTING] = votingAddress;
         addresses[RAGEQUIT] = ragequitAddress;
         addresses[MANAGING] = managingAddress;
         addresses[FINANCING] = financingAddress;
         addresses[ONBOARDING] = onboardingAddress;
+        addresses[NONVOTING_MEMBERSHIP] = nonVotingMembershipAddress;
     }
 
     /*
@@ -48,11 +46,12 @@ contract DaoFactory is DaoConstants {
         dao.addAdapter(FINANCING, addresses[FINANCING]);
         dao.addAdapter(MANAGING, addresses[MANAGING]);
         dao.addAdapter(RAGEQUIT, addresses[RAGEQUIT]);
+        dao.addAdapter(NONVOTING_MEMBERSHIP, addresses[NONVOTING_MEMBERSHIP]);
 
         IVoting votingContract = IVoting(addresses[VOTING]);
         votingContract.registerDao(dao, votingPeriod, gracePeriod);
 
-        dao.updateMember(msg.sender, 1);
+        dao.updateMemberShares(msg.sender, 1);
 
         OnboardingContract onboardingContract = OnboardingContract(
             addresses[ONBOARDING]
