@@ -59,10 +59,14 @@ contract DaoFactory is DaoConstants {
         );
         onboardingContract.configureOnboarding(dao, chunkSize, nbShares);
 
-        NonVotingOnboardingContract nonVotingOnboardingContract = NonVotingOnboardingContract(
-            addresses[NONVOTING_ONBOARDING]
+
+            NonVotingOnboardingContract nonVotingOnboardingContract
+         = NonVotingOnboardingContract(addresses[NONVOTING_ONBOARDING]);
+        nonVotingOnboardingContract.configureOnboarding(
+            dao,
+            chunkSize,
+            nbShares
         );
-        nonVotingOnboardingContract.configureOnboarding(dao, chunkSize, nbShares);
 
         emit NewDao(msg.sender, daoAddress);
 

@@ -164,16 +164,19 @@ contract DaoRegistry is Ownable, DaoConstants {
 
     function onboard(
         IERC20 token,
-        uint256 amount,
+        uint256 tokenAmount,
         address onboardingModule
     ) external payable {
         require(isAdapter(onboardingModule));
+
+        // ETH onboarding
         if (address(token) == address(0x0)) {
-            require(msg.value > amount, "not enough ETH sent!");
-            // ETH onboarding
+            require(msg.value > 0, "not enough ETH sent!");
+            // If the applicant sends ETH to onboard, use the msg.value as default token amount
+            tokenAmount = msg.value;
         } else {
             require(
-                token.transferFrom(msg.sender, address(this), amount),
+                token.transferFrom(msg.sender, address(this), tokenAmount),
                 "ERC-20 token transfer failed"
             );
         }
@@ -183,16 +186,16 @@ contract DaoRegistry is Ownable, DaoConstants {
         uint256 amountUsed = onboarding.processOnboarding(
             this,
             msg.sender,
-            amount
+            tokenAmount
         );
 
-        if (amountUsed < amount) {
+        if (amountUsed < tokenAmount) {
             if (address(token) == address(0x0)) {
-                msg.sender.transfer(amount - amountUsed);
+                msg.sender.transfer(tokenAmount - amountUsed);
                 // ETH onboarding
             } else {
                 require(
-                    token.transfer(msg.sender, amount - amountUsed),
+                    token.transfer(msg.sender, tokenAmount - amountUsed),
                     "ERC-20 token return failed"
                 );
             }
@@ -501,6 +504,7 @@ contract DaoRegistry is Ownable, DaoConstants {
         // lock loot
         member.nbLoot = member.nbLoot.sub(lootToLock);
         member.lockedLoot = member.lockedLoot.add(lootToLock);
+        totalLoot = totalLoot.sub(lootToLock);
     }
 
     function releaseLoot(address memberAddr, uint256 lootToRelease)
@@ -515,6 +519,7 @@ contract DaoRegistry is Ownable, DaoConstants {
         // release loot
         member.lockedLoot = member.lockedLoot.sub(lootToRelease);
         member.nbLoot = member.nbLoot.add(lootToRelease);
+        totalLoot = totalLoot.add(lootToRelease);
     }
 
     function burnShares(
