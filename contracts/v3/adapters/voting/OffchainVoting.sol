@@ -50,11 +50,11 @@ contract OffchainVotingContract is
     mapping(address => mapping(uint256 => Voting)) public votes;
     mapping(address => VotingConfig) public votingConfigs;
 
-    function registerDao(DaoRegistry dao, uint256 votingPeriod, uint256 gracePeriod)
-        external
-        override
-        onlyAdapter(dao)
-    {
+    function registerDao(
+        DaoRegistry dao,
+        uint256 votingPeriod,
+        uint256 gracePeriod
+    ) external override onlyAdapter(dao) {
         votingConfigs[address(dao)].votingPeriod = votingPeriod;
         votingConfigs[address(dao)].gracePeriod = gracePeriod;
     }
@@ -80,25 +80,36 @@ contract OffchainVotingContract is
         - if we already have a result that has not been challenged
             * is the new one heavier than the previous one ?
          */
-        if(vote.resultRoot == bytes32(0) || vote.isChallenged) {
-            require(_readyToSubmitResult(dao, vote, nbYes, nbNo), "the voting period need to end or the difference between yes and no need to be more than 50% of the votes");
+        if (vote.resultRoot == bytes32(0) || vote.isChallenged) {
+            require(
+                _readyToSubmitResult(dao, vote, nbYes, nbNo),
+                "the voting period need to end or the difference between yes and no need to be more than 50% of the votes"
+            );
             _submitVoteResult(dao, vote, nbYes, nbNo, resultRoot);
         } else {
-            require(nbYes + nbNo > vote.nbYes + vote.nbNo, "to override a result, the sum of yes and no has to be greater than the current one");
+            require(
+                nbYes + nbNo > vote.nbYes + vote.nbNo,
+                "to override a result, the sum of yes and no has to be greater than the current one"
+            );
             _submitVoteResult(dao, vote, nbYes, nbNo, resultRoot);
         }
     }
 
     //TODO: generale challenge to go through each node to see which vote has been missing
 
-    function _readyToSubmitResult(DaoRegistry dao, Voting storage vote, uint256 nbYes, uint256 nbNo) internal view returns (bool) {
+    function _readyToSubmitResult(
+        DaoRegistry dao,
+        Voting storage vote,
+        uint256 nbYes,
+        uint256 nbNo
+    ) internal view returns (bool) {
         uint256 diff;
-        if(vote.nbYes > nbNo) {
+        if (vote.nbYes > nbNo) {
             diff = nbYes - nbNo;
         } else {
             diff = nbNo - nbYes;
         }
-        if(diff * 2 > dao.totalShares()) {
+        if (diff * 2 > dao.totalShares()) {
             return true;
         }
 
@@ -107,11 +118,13 @@ contract OffchainVotingContract is
         return vote.startingTime + votingPeriod > block.timestamp;
     }
 
-    function _submitVoteResult(DaoRegistry dao, 
-        Voting storage vote, 
+    function _submitVoteResult(
+        DaoRegistry dao,
+        Voting storage vote,
         uint256 nbYes,
         uint256 nbNo,
-        bytes32 resultRoot) internal {
+        bytes32 resultRoot
+    ) internal {
         _lockFunds(dao, msg.sender);
         vote.nbNo = nbNo;
         vote.nbYes = nbYes;
@@ -134,7 +147,10 @@ contract OffchainVotingContract is
         uint256 proposalId,
         bytes memory data /*onlyAdapter(dao)*/
     ) external override returns (uint256) {
-        require(msg.sender == address(dao), "only the DaoRegistry can call this method");
+        require(
+            msg.sender == address(dao),
+            "only the DaoRegistry can call this method"
+        );
         // it is called from Registry
         require(
             data.length == 32,
@@ -147,7 +163,10 @@ contract OffchainVotingContract is
             blockNumber := mload(add(data, 32))
         }
 
-        require(blockNumber < block.number, "snapshot block number should not be in the future");
+        require(
+            blockNumber < block.number,
+            "snapshot block number should not be in the future"
+        );
         require(blockNumber > 0, "block number cannot be 0");
 
         votes[address(dao)][proposalId].startingTime = block.timestamp;
@@ -186,7 +205,8 @@ contract OffchainVotingContract is
 
         if (
             block.timestamp <
-            vote.gracePeriodStartingTime + votingConfigs[address(dao)].gracePeriod
+            vote.gracePeriodStartingTime +
+                votingConfigs[address(dao)].gracePeriod
         ) {
             return 4;
         }
@@ -355,7 +375,10 @@ contract OffchainVotingContract is
     }
 
     function _challengeResult(DaoRegistry dao, uint256 proposalId) internal {
-        dao.burnLockedLoot(votes[address(dao)][proposalId].reporter, votingConfigs[address(dao)].stakingAmount);
+        dao.burnLockedLoot(
+            votes[address(dao)][proposalId].reporter,
+            votingConfigs[address(dao)].stakingAmount
+        );
         votes[address(dao)][proposalId].isChallenged = true;
     }
 

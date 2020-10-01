@@ -160,25 +160,39 @@ contract DaoRegistry is Ownable, DaoConstants {
         }
     }
 
-    function onboard(IERC20 token, uint256 amount, address onboardingModule) external payable {
+    function onboard(
+        IERC20 token,
+        uint256 amount,
+        address onboardingModule
+    ) external payable {
         require(isAdapter(onboardingModule));
-        if(address(token) == address(0x0)) {
+        if (address(token) == address(0x0)) {
             require(msg.value > amount, "not enough ETH sent!");
             // ETH onboarding
         } else {
-            require(token.transferFrom(msg.sender, address(this), amount) , "ERC-20 token transfer failed");
+            require(
+                token.transferFrom(msg.sender, address(this), amount),
+                "ERC-20 token transfer failed"
+            );
         }
 
         IOnboarding onboarding = IOnboarding(onboardingModule);
 
-        uint256 amountUsed = onboarding.processOnboarding(this, msg.sender, amount);
+        uint256 amountUsed = onboarding.processOnboarding(
+            this,
+            msg.sender,
+            amount
+        );
 
-        if(amountUsed < amount) {
-            if(address(token) == address(0x0)) {
+        if (amountUsed < amount) {
+            if (address(token) == address(0x0)) {
                 msg.sender.transfer(amount - amountUsed);
                 // ETH onboarding
             } else {
-                require(token.transfer(msg.sender, amount - amountUsed) , "ERC-20 token return failed");
+                require(
+                    token.transfer(msg.sender, amount - amountUsed),
+                    "ERC-20 token return failed"
+                );
             }
         }
     }
@@ -442,7 +456,10 @@ contract DaoRegistry is Ownable, DaoConstants {
         emit Transfer(GUILD, applicant, token, amount);
     }
 
-    function burnLockedLoot(address memberAddr, uint256 lootToBurn) external onlyAdapter {
+    function burnLockedLoot(address memberAddr, uint256 lootToBurn)
+        external
+        onlyAdapter
+    {
         //lock if member has enough loot
         Member storage member = members[memberAddr];
         require(member.lockedLoot >= lootToBurn, "insufficient loot");
@@ -451,7 +468,10 @@ contract DaoRegistry is Ownable, DaoConstants {
         member.lockedLoot = member.lockedLoot.sub(lootToBurn);
     }
 
-    function lockLoot(address memberAddr, uint256 lootToLock) external onlyAdapter {
+    function lockLoot(address memberAddr, uint256 lootToLock)
+        external
+        onlyAdapter
+    {
         //lock if member has enough loot
         require(isActiveMember(memberAddr), "must be an active member");
         Member storage member = members[memberAddr];
@@ -462,7 +482,10 @@ contract DaoRegistry is Ownable, DaoConstants {
         member.lockedLoot = member.lockedLoot.add(lootToLock);
     }
 
-    function releaseLoot(address memberAddr, uint256 lootToRelease) external onlyAdapter {
+    function releaseLoot(address memberAddr, uint256 lootToRelease)
+        external
+        onlyAdapter
+    {
         //release if member has enough locked loot
         require(isActiveMember(memberAddr), "must be an active member");
         Member storage member = members[memberAddr];
