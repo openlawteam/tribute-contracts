@@ -1,10 +1,10 @@
 const { MerkleTree } = require('./merkleTree.js');
 const sha3 = web3.utils.sha3;
 
-async function addVote(votes, snapshotRoot, daoAddress, proposalId, account, memberWeight, voteYes) {
+async function addVote(votes, blockNumber, daoAddress, proposalId, account, memberWeight, voteYes) {
   const proposalHash = sha3(web3.eth.abi.encodeParameters(
-    ['bytes32', 'address', 'uint256'], 
-    [snapshotRoot.toString(), daoAddress, proposalId]));    
+    ['uint256', 'address', 'uint256'], 
+    [blockNumber.toString(), daoAddress, proposalId]));    
   const vote = {
     address : account.toString(),
     weight: memberWeight,
@@ -20,36 +20,20 @@ async function generateVote(account, proposalHash, voteYes) {
   return await web3.eth.sign(voteHash, account);
 }
 
-async function prepareSnapshot(dao, accounts) {
-  const shares = await Promise.all(accounts.map(async (account) => {
-    const nbShares = await dao.nbShares(account);
-    return {account, nbShares};
-  }));
 
-  const cleanShares =  shares.filter(({nbShares}) => nbShares.toString() !== '0');
-
-  const elements = cleanShares
-  .sort((a, b) => a.account > b.account)
-  .map(({account, nbShares}) => sha3(web3.eth.abi.encodeParameters(['address', 'uint256'], [account, nbShares.toString()])));
-  const weights = cleanShares.reduce((o, elem) => Object.assign(o, {[elem.account]: elem.nbShares}), {});
-  
-  const tree = new MerkleTree(elements);
-
-  return {snapshotTree: tree, weights};
-}
-
-function buildVoteLeafHashForMerkleTreeData(leaf) {
+function buildVoteLeafDataForMerkleTree(leaf) {
   const weightStr = leaf.weight.toString();
   const voteStr = leaf.vote.toString();
   const nbYesStr = leaf.nbYes.toString();
   const nbNoStr = leaf.nbNo.toString();
+  const indexStr = leaf.index.toString();
   return web3.eth.abi.encodeParameters(
-    ['address', 'uint256', 'bytes', 'uint256', 'uint256'], 
-    [leaf.address, weightStr, voteStr, nbYesStr , nbNoStr]);
+    ['address', 'uint256', 'bytes', 'uint256', 'uint256', 'uint256'], 
+    [leaf.address, weightStr, voteStr, nbYesStr , nbNoStr, indexStr]);
 }
 
 function buildVoteLeafHashForMerkleTree(leaf) {
-  return sha3(buildVoteLeafHashForMerkleTreeData(leaf));
+  return sha3(buildVoteLeafDataForMerkleTree(leaf));
 }
 
 function prepareVoteResult(votes) {
@@ -66,13 +50,13 @@ function prepareVoteResult(votes) {
   leaves.forEach((leaf, idx) => {
     leaf.nbYes = leaf.voteResult === 1 ? 1 : 0;
     leaf.nbNo = leaf.voteResult !== 1 ? 1 : 0;
-    
     if(idx > 0) {
       const previousLeaf = leaves[idx - 1];
       leaf.nbYes = leaf.nbYes + previousLeaf.nbYes;
       leaf.nbNo = leaf.nbNo + previousLeaf.nbNo;
-    }
+    } 
     
+    leaf.index = idx;
   });
 
   const tree = new MerkleTree(leaves.map(vote => buildVoteLeafHashForMerkleTree(vote)));
@@ -80,7 +64,6 @@ function prepareVoteResult(votes) {
 }
 
 Object.assign(exports, {
-    prepareSnapshot,
     addVote,
     prepareVoteResult,
     buildVoteLeafHashForMerkleTree

@@ -128,10 +128,6 @@ contract('MolochV3 - Managing Adapter', async accounts => {
     const onboarding = await OnboardingContract.at(onboardingAddr);
     await onboarding.updateDelegateKey(dao.address, delegateKey, { from: myAccount, gasPrice: toBN("0") });
 
-    const isActiveDelegate = await dao.isActiveMember(delegateKey);
-    const isActiveMyAccount = await dao.isActiveMember(myAccount);
-    console.log('#######', isActiveDelegate, isActiveMyAccount);
-
     //Sponsor the new proposal, vote and process it 
     await managing.sponsorProposal(dao.address, proposalId, [], { from: delegateKey, gasPrice: toBN("0") });
     await voting.submitVote(dao.address, proposalId, 1, { from: delegateKey, gasPrice: toBN("0") });

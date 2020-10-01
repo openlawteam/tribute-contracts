@@ -13,9 +13,8 @@ contract VotingContract is IVoting, DaoConstants, MemberGuard, AdapterGuard {
     using FlagHelper for uint256;
 
     struct VotingConfig {
-        uint256 flags;
         uint256 votingPeriod;
-        uint256 votingCount;
+        uint256 gracePeriod;
     }
     struct Voting {
         uint256 nbYes;
@@ -26,13 +25,13 @@ contract VotingContract is IVoting, DaoConstants, MemberGuard, AdapterGuard {
     mapping(address => mapping(uint256 => Voting)) private votes;
     mapping(address => VotingConfig) private votingConfigs;
 
-    function registerDao(DaoRegistry dao, uint256 votingPeriod)
-        external
-        override
-        onlyAdapter(dao)
-    {
-        votingConfigs[address(dao)].flags = 1; // mark as exists
+    function registerDao(
+        DaoRegistry dao,
+        uint256 votingPeriod,
+        uint256 gracePeriod
+    ) external override onlyAdapter(dao) {
         votingConfigs[address(dao)].votingPeriod = votingPeriod;
+        votingConfigs[address(dao)].gracePeriod = gracePeriod;
     }
 
     //voting  data is not used for pure onchain voting

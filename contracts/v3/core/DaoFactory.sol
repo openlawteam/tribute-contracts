@@ -36,7 +36,8 @@ contract DaoFactory is DaoConstants {
     function newDao(
         uint256 chunkSize,
         uint256 nbShares,
-        uint256 votingPeriod
+        uint256 votingPeriod,
+        uint256 gracePeriod
     ) external returns (address) {
         DaoRegistry dao = new DaoRegistry();
         address daoAddress = address(dao);
@@ -49,7 +50,7 @@ contract DaoFactory is DaoConstants {
         dao.addAdapter(RAGEQUIT, addresses[RAGEQUIT]);
 
         IVoting votingContract = IVoting(addresses[VOTING]);
-        votingContract.registerDao(dao, votingPeriod);
+        votingContract.registerDao(dao, votingPeriod, gracePeriod);
 
         dao.updateMember(msg.sender, 1);
 

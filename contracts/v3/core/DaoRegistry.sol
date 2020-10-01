@@ -9,6 +9,7 @@ import "../utils/SafeMath.sol";
 import "./DaoConstants.sol";
 import "../adapters/interfaces/IVoting.sol";
 import "../guards/AdapterGuard.sol";
+import "../utils/IERC20.sol";
 
 contract DaoRegistry is Ownable, DaoConstants {
     /*
@@ -84,6 +85,7 @@ contract DaoRegistry is Ownable, DaoConstants {
         address delegateKey; // ?
         uint256 nbShares; // number of shares of the DAO member
         uint256 nbLoot; // number of non-voting shares of the DAO member
+        uint256 lockedLoot;
     }
 
     struct Checkpoint {
@@ -154,6 +156,43 @@ contract DaoRegistry is Ownable, DaoConstants {
             );
             if (msg.value > amount) {
                 msg.sender.transfer(msg.value - amount);
+            }
+        }
+    }
+
+    function onboard(
+        IERC20 token,
+        uint256 amount,
+        address onboardingModule
+    ) external payable {
+        require(isAdapter(onboardingModule));
+        if (address(token) == address(0x0)) {
+            require(msg.value > amount, "not enough ETH sent!");
+            // ETH onboarding
+        } else {
+            require(
+                token.transferFrom(msg.sender, address(this), amount),
+                "ERC-20 token transfer failed"
+            );
+        }
+
+        IOnboarding onboarding = IOnboarding(onboardingModule);
+
+        uint256 amountUsed = onboarding.processOnboarding(
+            this,
+            msg.sender,
+            amount
+        );
+
+        if (amountUsed < amount) {
+            if (address(token) == address(0x0)) {
+                msg.sender.transfer(amount - amountUsed);
+                // ETH onboarding
+            } else {
+                require(
+                    token.transfer(msg.sender, amount - amountUsed),
+                    "ERC-20 token return failed"
+                );
             }
         }
     }
@@ -366,7 +405,11 @@ contract DaoRegistry is Ownable, DaoConstants {
     }
 
     function nbShares(address member) external view returns (uint256) {
-        return members[member].nbShares;
+        return members[memberAddressesByDelegatedKey[member]].nbShares;
+    }
+
+    function nbLoot(address member) external view returns (uint256) {
+        return members[memberAddressesByDelegatedKey[member]].nbLoot;
     }
 
     /*
@@ -411,6 +454,46 @@ contract DaoRegistry is Ownable, DaoConstants {
         unsafeSubtractFromBalance(GUILD, token, amount);
         unsafeAddToBalance(applicant, token, amount);
         emit Transfer(GUILD, applicant, token, amount);
+    }
+
+    function burnLockedLoot(address memberAddr, uint256 lootToBurn)
+        external
+        onlyAdapter
+    {
+        //lock if member has enough loot
+        Member storage member = members[memberAddr];
+        require(member.lockedLoot >= lootToBurn, "insufficient loot");
+
+        // burn locked loot
+        member.lockedLoot = member.lockedLoot.sub(lootToBurn);
+    }
+
+    function lockLoot(address memberAddr, uint256 lootToLock)
+        external
+        onlyAdapter
+    {
+        //lock if member has enough loot
+        require(isActiveMember(memberAddr), "must be an active member");
+        Member storage member = members[memberAddr];
+        require(member.nbLoot >= lootToLock, "insufficient loot");
+
+        // lock loot
+        member.nbLoot = member.nbLoot.sub(lootToLock);
+        member.lockedLoot = member.lockedLoot.add(lootToLock);
+    }
+
+    function releaseLoot(address memberAddr, uint256 lootToRelease)
+        external
+        onlyAdapter
+    {
+        //release if member has enough locked loot
+        require(isActiveMember(memberAddr), "must be an active member");
+        Member storage member = members[memberAddr];
+        require(member.lockedLoot >= lootToRelease, "insufficient loot locked");
+
+        // release loot
+        member.lockedLoot = member.lockedLoot.sub(lootToRelease);
+        member.nbLoot = member.nbLoot.add(lootToRelease);
     }
 
     function burnShares(
