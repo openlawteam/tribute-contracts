@@ -80,22 +80,23 @@ contract('MolochV3 - Non Voting Onboarding Adapter', async accounts => {
     const myAccount = accounts[1];
     const advisorAccount = accounts[2];
 
-    let lootSharePrice = 1;
-    let nbOfLootShares = 100;
-    let chunkSize = 10;
+    let lootSharePrice = 10;
+    let nbOfLootShares = 100000000;
+    let chunkSize = 5;
     let dao = await createDao({}, myAccount, lootSharePrice, nbOfLootShares, chunkSize);
 
     // Issue OpenLaw ERC20 Basic Token for tests
-    let tokenSupply = 100000000;
+    let tokenSupply = 1000000;
     let oltContract = await OLTokenContract.new(tokenSupply);
 
-    // Transfer 100 tokens to the Advisor account
-    await oltContract.transfer(advisorAccount, 10);
+    // Transfer 1000 OLTs to the Advisor account
+    await oltContract.approve(advisorAccount, 100);
+    await oltContract.transfer(advisorAccount, 100);
     let advisorTokenBalance = await oltContract.balanceOf.call(
       advisorAccount
     );
     assert.equal(
-      10,
+      100,
       advisorTokenBalance,
       "Advisor account must be initialized with 100 OLT Tokens"
     );
@@ -110,10 +111,17 @@ contract('MolochV3 - Non Voting Onboarding Adapter', async accounts => {
     const votingAddress = await dao.getAdapterAddress(sha3("voting"));
     const voting = await VotingContract.at(votingAddress);
 
-    // Total of DAI to be sent to the DAO in order to get the Loot shares
-    let tokenAmount = "1";
+    // Total of OLT to be sent to the DAO in order to get the Loot shares
+    let tokenAmount = 10;
 
-    // Request to join the DAO as an Advisor (non-voting power), Send a tx with OLT token, amount and the nonVotingOnboarding adapter
+    // Pre-approve spender (DAO) to transfer applicant tokens
+    await oltContract.approve(dao.address, tokenAmount, {
+      from: advisorAccount,
+      gasPrice: toBN(0),
+    });
+
+    // Send a request to join the DAO as an Advisor (non-voting power), 
+    // the tx passes the OLT ERC20 token, the amount and the nonVotingOnboarding adapter that handles the proposal
     await dao.onboard(
       oltContract.address,
       tokenAmount,
@@ -149,13 +157,13 @@ contract('MolochV3 - Non Voting Onboarding Adapter', async accounts => {
 
     // Check the number of Loot (non-voting shares) issued to the new Avisor
     const advisorAccountLoot = await dao.nbLoot(advisorAccount);
-    assert.equal(advisorAccountLoot.toString(), "3000000000000000");
+    assert.equal(advisorAccountLoot.toString(), "100000000");
 
     // Guild balance must not change when Loot shares are issued
     const guildBalance = await dao.balanceOf(
       GUILD,
       "0x0000000000000000000000000000000000000000"
     );
-    assert.equal(guildBalance.toString(), "360000000000000000");
+    assert.equal(guildBalance.toString(), "10");
   });
 });

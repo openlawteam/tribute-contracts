@@ -136,6 +136,8 @@ contract DaoRegistry is Ownable, DaoConstants {
     address public constant TOTAL = address(0xbabe);
     /// @notice The maximum number of tokens supported by the bank
     uint256 public constant MAX_TOKENS = 100;
+    /// @notice The maximum number of shares that can be minted
+    uint256 public constant MAX_NUMBER_OF_SHARES_AND_LOOT = type(uint256).max;
 
     constructor() {
         bytes32 ownerId = keccak256("owner");
@@ -150,7 +152,7 @@ contract DaoRegistry is Ownable, DaoConstants {
     receive() external payable {
         if (!isAdapter(msg.sender)) {
             IOnboarding onboarding = IOnboarding(registry[ONBOARDING]);
-            uint256 amount = onboarding.processOnboarding(
+            uint256 amount = onboarding.submitMembershipProposal(
                 this,
                 msg.sender,
                 msg.value
@@ -169,34 +171,38 @@ contract DaoRegistry is Ownable, DaoConstants {
     ) external payable {
         require(isAdapter(onboardingModule));
 
-        // ETH onboarding
         if (address(token) == address(0x0)) {
-            require(msg.value > 0, "not enough ETH sent!");
+            // ETH onboarding
+            require(msg.value > 0, "not enough ETH");
             // If the applicant sends ETH to onboard, use the msg.value as default token amount
             tokenAmount = msg.value;
         } else {
+            // ERC20 onboarding
+            require(
+                token.allowance(msg.sender, address(this)) == tokenAmount,
+                "ERC20 transfer not allowed"
+            );
             require(
                 token.transferFrom(msg.sender, address(this), tokenAmount),
-                "ERC-20 token transfer failed"
+                "ERC20 failed transferFrom"
             );
         }
 
         IOnboarding onboarding = IOnboarding(onboardingModule);
-
-        uint256 amountUsed = onboarding.processOnboarding(
+        uint256 amountUsed = onboarding.submitMembershipProposal(
             this,
             msg.sender,
             tokenAmount
         );
 
         if (amountUsed < tokenAmount) {
+            uint256 amount = tokenAmount - amountUsed;
             if (address(token) == address(0x0)) {
-                msg.sender.transfer(tokenAmount - amountUsed);
-                // ETH onboarding
+                msg.sender.transfer(amount);
             } else {
                 require(
-                    token.transfer(msg.sender, tokenAmount - amountUsed),
-                    "ERC-20 token return failed"
+                    token.transfer(msg.sender, amount),
+                    "ERC20 failed transfer"
                 );
             }
         }

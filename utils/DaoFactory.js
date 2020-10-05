@@ -8,7 +8,7 @@ const numberOfShares = web3.utils.toBN('1000000000000000');
 const sharePrice = web3.utils.toBN(web3.utils.toWei("120", 'finney'));
 const remaining = sharePrice.sub(web3.utils.toBN('50000000000000'));
 
-const OLTokenContract = artifacts.require("./test/OLToken");
+const OLTokenContract = artifacts.require("./test/OLT");
 
 const FlagHelperLib = artifacts.require('./v3/helpers/FlagHelper');
 const DaoFactory = artifacts.require('./v3/core/DaoFactory');

@@ -19,15 +19,62 @@ import "./SafeMath.sol";
 contract ERC20 is IERC20 {
     using SafeMath for uint256;
 
-    mapping(address => uint256) private _balances;
+    mapping (address => uint256) private _balances;
 
-    mapping(address => mapping(address => uint256)) private _allowed;
+    mapping (address => mapping (address => uint256)) private _allowances;
 
     uint256 private _totalSupply;
 
-    constructor(uint256 totalSupply) {
+    string private _name;
+    string private _symbol;
+    uint8 private _decimals;
+
+    /**
+     * @dev Sets the values for {name} and {symbol}, initializes {decimals} with
+     * a default value of 18.
+     *
+     * To select a different value for {decimals}, use {_setupDecimals}.
+     *
+     * All three of these values are immutable: they can only be set once during
+     * construction.
+     */
+    constructor (string memory name, string memory symbol, uint256 totalSupply) {
+        _name = name;
+        _symbol = symbol;
+        _decimals = 18;
         _totalSupply = totalSupply;
-        _balances[msg.sender] = totalSupply;
+    }
+
+    /**
+     * @dev Returns the name of the token.
+     */
+    function name() public view returns (string memory) {
+        return _name;
+    }
+
+    /**
+     * @dev Returns the symbol of the token, usually a shorter version of the
+     * name.
+     */
+    function symbol() public view returns (string memory) {
+        return _symbol;
+    }
+
+    /**
+     * @dev Returns the number of decimals used to get its user representation.
+     * For example, if `decimals` equals `2`, a balance of `505` tokens should
+     * be displayed to a user as `5,05` (`505 / 10 ** 2`).
+     *
+     * Tokens usually opt for a value of 18, imitating the relationship between
+     * Ether and Wei. This is the value {ERC20} uses, unless {_setupDecimals} is
+     * called.
+     *
+     * NOTE: This information is only used for _display_ purposes: it in
+     * no way affects any of the arithmetic of the contract, including
+     * {IERC20-balanceOf} and {IERC20-transfer}.
+     */
+    function decimals() public view returns (uint8) {
+        return _decimals;
     }
 
     /**
@@ -58,7 +105,7 @@ contract ERC20 is IERC20 {
         view
         returns (uint256)
     {
-        return _allowed[owner][spender];
+        return _allowances[owner][spender];
     }
 
     /**
@@ -107,7 +154,7 @@ contract ERC20 is IERC20 {
         uint256 value
     ) public override returns (bool) {
         _transfer(from, to, value);
-        _approve(from, msg.sender, _allowed[from][msg.sender].sub(value));
+        _approve(from, msg.sender, _allowances[from][msg.sender].sub(value));
         return true;
     }
 
@@ -128,7 +175,7 @@ contract ERC20 is IERC20 {
         _approve(
             msg.sender,
             spender,
-            _allowed[msg.sender][spender].add(addedValue)
+            _allowances[msg.sender][spender].add(addedValue)
         );
         return true;
     }
@@ -150,7 +197,7 @@ contract ERC20 is IERC20 {
         _approve(
             msg.sender,
             spender,
-            _allowed[msg.sender][spender].sub(subtractedValue)
+            _allowances[msg.sender][spender].sub(subtractedValue)
         );
         return true;
     }
@@ -216,7 +263,7 @@ contract ERC20 is IERC20 {
         require(spender != address(0), "sender address should not be zero");
         require(owner != address(0), "owner address should not be zero");
 
-        _allowed[owner][spender] = value;
+        _allowances[owner][spender] = value;
         emit Approval(owner, spender, value);
     }
 
@@ -230,6 +277,6 @@ contract ERC20 is IERC20 {
      */
     function _burnFrom(address account, uint256 value) internal {
         _burn(account, value);
-        _approve(account, msg.sender, _allowed[account][msg.sender].sub(value));
+        _approve(account, msg.sender, _allowances[account][msg.sender].sub(value));
     }
 }
