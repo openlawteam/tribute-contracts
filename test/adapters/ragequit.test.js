@@ -1,4 +1,16 @@
-const {advanceTime, createDao, sharePrice, GUILD, OnboardingContract, VotingContract, RagequitContract, FinancingContract, ETH_TOKEN} = require('../../utils/DaoFactory.js');
+const {
+  advanceTime,
+  createDao,
+  sharePrice,
+  GUILD,
+  ETH_TOKEN,
+  OLTokenContract, 
+  OnboardingContract,
+  NonVotingOnboardingContract,
+  VotingContract,
+  RagequitContract,
+  FinancingContract
+} = require("../../utils/DaoFactory.js");
 const toBN = web3.utils.toBN;
 const sha3 = web3.utils.sha3;
 
@@ -20,24 +32,24 @@ contract('MolochV3 - Ragequit Adapter', async accounts => {
     onboarding,
     dao,
     proposalId,
-    myAccount,
+    member,
     voting
   ) => {
     await onboarding.sponsorProposal(dao.address, proposalId, [], {
-      from: myAccount,
+      from: member,
       gasPrice: toBN("0"),
     });
     await voting.submitVote(dao.address, proposalId, 1, {
-      from: myAccount,
+      from: member,
       gasPrice: toBN("0"),
     });
     await advanceTime(10000);
   }
 
-  ragequit = async (dao, shares, member) => {
+  ragequit = async (dao, shares, loot, member) => {
     let ragequitAddress = await dao.getAdapterAddress(sha3("ragequit"));
     let ragequitContract = await RagequitContract.at(ragequitAddress);
-    await ragequitContract.ragequit(dao.address, toBN(shares), toBN("0"), {
+    await ragequitContract.ragequit(dao.address, toBN(shares), toBN(loot), {
       from: member,
       gasPrice: toBN("0"),
     });
@@ -78,7 +90,7 @@ contract('MolochV3 - Ragequit Adapter', async accounts => {
     //Ragequit
     try {
       let nonMember = accounts[4];
-      await ragequit(dao, toBN(shares), nonMember);
+      await ragequit(dao, shares, 0, nonMember);
     } catch (error){
       assert.equal(error.reason, "onlyMember");
     }
@@ -114,7 +126,7 @@ contract('MolochV3 - Ragequit Adapter', async accounts => {
     //Ragequit
     try {
       //Trying to Ragequit with shares + 1 to burn
-      await ragequit(dao, toBN("100000000000000001"), newMember);
+      await ragequit(dao, 100000000000000001, 0, newMember);
     } catch (error){
       assert.equal(error.reason, "insufficient shares");
     }
@@ -148,7 +160,7 @@ contract('MolochV3 - Ragequit Adapter', async accounts => {
     assert.equal(shares.toString(), "100000000000000000");
 
     //Ragequit - Burn all the new member shares
-    let ragequitContract = await ragequit(dao, toBN(shares), newMember);
+    let ragequitContract = await ragequit(dao, shares, 0, newMember);
 
     //Check Guild Bank Balance
     let newGuildBalance = await dao.balanceOf(GUILD, ETH_TOKEN);
@@ -209,7 +221,7 @@ it("should be possible to a member to ragequit if the member voted YES on a prop
     await voting.submitVote(dao.address, proposalId, vote, { from: newMember, gasPrice: toBN("0") });
 
     //Ragequit - New member ragequits after YES vote
-    let ragequitContract = await ragequit(dao, shares, newMember);
+    let ragequitContract = await ragequit(dao, shares, 0, newMember);
 
     //Check Guild Bank Balance
     let newGuildBalance = await dao.balanceOf(GUILD, ETH_TOKEN);
@@ -285,7 +297,7 @@ it("should be possible to a member to ragequit if the member voted YES on a prop
     });
 
     //Ragequit - New member ragequits after YES vote
-    let ragequitContract = await ragequit(dao, shares, newMember);
+    let ragequitContract = await ragequit(dao, shares, 0, newMember);
 
     //Check Guild Bank Balance
     let newGuildBalance = await dao.balanceOf(GUILD, ETH_TOKEN);
@@ -337,6 +349,10 @@ it("should be possible to a member to ragequit if the member voted YES on a prop
     const votingAddress = await dao.getAdapterAddress(sha3("voting"));
     const voting = await VotingContract.at(votingAddress);
 
+    // Guild balance must be 0 if no Loot shares are issued
+    let guildBalance = await dao.balanceOf(GUILD, ETH_TOKEN);
+    assert.equal(guildBalance.toString(), "0");
+
     // Total of OLT to be sent to the DAO in order to get the Loot shares
     let tokenAmount = 10;
 
@@ -385,25 +401,31 @@ it("should be possible to a member to ragequit if the member voted YES on a prop
     const advisorAccountLoot = await dao.nbLoot(advisorAccount);
     assert.equal(advisorAccountLoot.toString(), "100000000");
 
-    // Guild balance must not change when Loot shares are issued
-    const guildBalance = await dao.balanceOf(
-      GUILD,
-      "0x0000000000000000000000000000000000000000"
-    );
+    // Guild balance must change when Loot shares are issued
+    guildBalance = await dao.balanceOf(GUILD, ETH_TOKEN);
     assert.equal(guildBalance.toString(), "10");
 
     //Ragequit - Advisor ragequits
-    let ragequitContract = await ragequit(dao, advisorAccountLoot, advisorAccount);
+    let ragequitContract = await ragequit(
+      dao,
+      0,
+      advisorAccountLoot,
+      advisorAccount
+    );
 
     //Check Guild Bank Balance
-    let newGuildBalance = await dao.balanceOf(GUILD, ETH_TOKEN);
-    assert.equal(toBN(newGuildBalance).toString(), "240"); //must be close to 0
+    let newGuildBalance = await dao.balanceOf(GUILD, oltContract.address);
+    assert.equal(toBN(newGuildBalance).toString(), "0"); //must be close to
 
     //Check Ragequit Event
     pastEvents = await ragequitContract.getPastEvents();
     let { member, burnedLoot } = pastEvents[0].returnValues;
     assert.equal(member.toString(), advisorAccount.toString());
-    assert.equal(burnedLoot.toString(), advisorAccountLoot.toString());
+    assert.equal(burnedLoot.toString(), advisorAccountLoot);
+
+    // Guild balance must change when Loot shares are burned
+    guildBalance = await dao.balanceOf(GUILD, ETH_TOKEN);
+    assert.equal(guildBalance.toString(), "1");
   });
 
 });

@@ -354,7 +354,8 @@ contract DaoRegistry is Ownable, DaoConstants {
         return
             memberFlags.exists() &&
             !memberFlags.isJailed() &&
-            members[memberAddr].nbShares > 0;
+            (members[memberAddr].nbShares > 0 ||
+                members[memberAddr].nbLoot > 0);
     }
 
     function memberAddress(address memberOrDelegateKey)
@@ -369,9 +370,14 @@ contract DaoRegistry is Ownable, DaoConstants {
         external
         onlyAdapter
     {
+        require(
+            totalShares.add(totalLoot).add(shares) < type(uint256).max,
+            "too many shares requested"
+        );
+
         Member storage member = members[memberAddr];
         if (member.delegateKey == address(0x0)) {
-            member.flags = 1;
+            member.flags = member.flags.setExists(true);
             member.delegateKey = memberAddr;
         }
 
@@ -388,9 +394,14 @@ contract DaoRegistry is Ownable, DaoConstants {
         external
         onlyAdapter
     {
+        require(
+            totalShares.add(totalLoot).add(loot) < type(uint256).max,
+            "too many loot requested"
+        );
+
         Member storage member = members[memberAddr];
         if (member.delegateKey == address(0x0)) {
-            member.flags = 1;
+            member.flags = member.flags.setExists(true);
             member.delegateKey = memberAddr;
         }
 
