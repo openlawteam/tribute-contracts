@@ -19,9 +19,9 @@ import "./SafeMath.sol";
 contract ERC20 is IERC20 {
     using SafeMath for uint256;
 
-    mapping (address => uint256) private _balances;
+    mapping(address => uint256) private _balances;
 
-    mapping (address => mapping (address => uint256)) private _allowances;
+    mapping(address => mapping(address => uint256)) private _allowances;
 
     uint256 private _totalSupply;
 
@@ -38,7 +38,11 @@ contract ERC20 is IERC20 {
      * All three of these values are immutable: they can only be set once during
      * construction.
      */
-    constructor (string memory name, string memory symbol, uint256 totalSupply) {
+    constructor(
+        string memory name,
+        string memory symbol,
+        uint256 totalSupply
+    ) {
         _name = name;
         _symbol = symbol;
         _decimals = 18;
@@ -277,6 +281,10 @@ contract ERC20 is IERC20 {
      */
     function _burnFrom(address account, uint256 value) internal {
         _burn(account, value);
-        _approve(account, msg.sender, _allowances[account][msg.sender].sub(value));
+        _approve(
+            account,
+            msg.sender,
+            _allowances[account][msg.sender].sub(value)
+        );
     }
 }

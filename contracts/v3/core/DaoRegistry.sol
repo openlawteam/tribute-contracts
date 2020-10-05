@@ -493,7 +493,7 @@ contract DaoRegistry is Ownable, DaoConstants {
 
         // burn locked loot
         member.lockedLoot = member.lockedLoot.sub(lootToBurn);
-        totalLoot = totalLoot.sub(lootToBurn); 
+        totalLoot = totalLoot.sub(lootToBurn);
     }
 
     function lockLoot(address memberAddr, uint256 lootToLock)

@@ -55,7 +55,7 @@ contract OnboardingContract is
 
         uint256 numberOfChunks = value.div(config.chunkSize);
         require(numberOfChunks > 0, "not sufficient ETH");
-        
+
         uint256 amount = numberOfChunks.mul(config.chunkSize);
         uint256 sharesRequested = numberOfChunks.mul(config.sharesPerChunk);
 

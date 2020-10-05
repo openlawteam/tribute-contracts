@@ -5,7 +5,6 @@ import "../../core/DaoRegistry.sol";
 // SPDX-License-Identifier: MIT
 
 interface IOnboarding {
-
     function submitMembershipProposal(
         DaoRegistry dao,
         address applicant,
@@ -18,9 +17,5 @@ interface IOnboarding {
         bytes calldata data
     ) external;
 
-    function processProposal(
-        DaoRegistry dao, 
-        uint256 proposalId
-    ) external;
-
+    function processProposal(DaoRegistry dao, uint256 proposalId) external;
 }
