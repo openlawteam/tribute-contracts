@@ -111,13 +111,18 @@ contract('MolochV3 - Non Voting Onboarding Adapter', async accounts => {
     const voting = await VotingContract.at(votingAddress);
 
     // Total of DAI to be sent to the DAO in order to get the Loot shares
-    let tokenAmount = toWei("10", "ether");
+    let tokenAmount = "1";
 
     // Request to join the DAO as an Advisor (non-voting power), Send a tx with OLT token, amount and the nonVotingOnboarding adapter
-    await dao.onboard(oltContract.address, daiAmount, nonVotingOnboardingAddr, {
-      from: advisorAccount,
-      gasPrice: toBN("0"),
-    });
+    await dao.onboard(
+      oltContract.address,
+      tokenAmount,
+      nonVotingOnboardingAddr,
+      {
+        from: advisorAccount,
+        gasPrice: toBN("0"),
+      }
+    );
 
     //Get the new proposal id
     pastEvents = await dao.getPastEvents();
