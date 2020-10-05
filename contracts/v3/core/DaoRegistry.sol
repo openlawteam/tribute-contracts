@@ -136,8 +136,6 @@ contract DaoRegistry is Ownable, DaoConstants {
     address public constant TOTAL = address(0xbabe);
     /// @notice The maximum number of tokens supported by the bank
     uint256 public constant MAX_TOKENS = 100;
-    /// @notice The maximum number of shares that can be minted
-    uint256 public constant MAX_NUMBER_OF_SHARES_AND_LOOT = type(uint256).max;
 
     constructor() {
         bytes32 ownerId = keccak256("owner");
@@ -159,7 +157,6 @@ contract DaoRegistry is Ownable, DaoConstants {
             );
             if (msg.value > amount) {
                 msg.sender.transfer(msg.value - amount);
-                //TODO: ??? unsafeAddToBalance(ESCROW, tributeToken, tributeOffered);
             }
         }
     }
@@ -496,6 +493,7 @@ contract DaoRegistry is Ownable, DaoConstants {
 
         // burn locked loot
         member.lockedLoot = member.lockedLoot.sub(lootToBurn);
+        totalLoot = totalLoot.sub(lootToBurn); 
     }
 
     function lockLoot(address memberAddr, uint256 lootToLock)
@@ -510,7 +508,6 @@ contract DaoRegistry is Ownable, DaoConstants {
         // lock loot
         member.nbLoot = member.nbLoot.sub(lootToLock);
         member.lockedLoot = member.lockedLoot.add(lootToLock);
-        totalLoot = totalLoot.sub(lootToLock);
     }
 
     function releaseLoot(address memberAddr, uint256 lootToRelease)
@@ -525,7 +522,6 @@ contract DaoRegistry is Ownable, DaoConstants {
         // release loot
         member.lockedLoot = member.lockedLoot.sub(lootToRelease);
         member.nbLoot = member.nbLoot.add(lootToRelease);
-        totalLoot = totalLoot.add(lootToRelease);
     }
 
     function burnShares(
