@@ -5,12 +5,6 @@ pragma solidity ^0.7.0;
 import "../../core/DaoRegistry.sol";
 
 interface IVoting {
-    function registerDao(
-        DaoRegistry dao,
-        uint256 votingPeriod,
-        uint256 gracePeriod
-    ) external;
-
     function startNewVotingForProposal(
         DaoRegistry dao,
         uint256 proposalId,

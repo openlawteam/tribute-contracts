@@ -22,14 +22,14 @@ contract VotingContract is IVoting, DaoConstants, MemberGuard, AdapterGuard {
         uint256 startingTime;
     }
 
-    mapping(address => mapping(uint256 => Voting)) private votes;
-    mapping(address => VotingConfig) private votingConfigs;
+    mapping(address => mapping(uint256 => Voting)) public votes;
+    mapping(address => VotingConfig) public votingConfigs;
 
     function registerDao(
         DaoRegistry dao,
         uint256 votingPeriod,
         uint256 gracePeriod
-    ) external override onlyAdapter(dao) {
+    ) external onlyAdapter(dao) {
         votingConfigs[address(dao)].votingPeriod = votingPeriod;
         votingConfigs[address(dao)].gracePeriod = gracePeriod;
     }

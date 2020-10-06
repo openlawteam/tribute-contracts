@@ -22,6 +22,7 @@ contract OffchainVotingContract is
         uint256 votingPeriod;
         uint256 gracePeriod;
         uint256 stakingAmount;
+        uint256 fallbackThreshold;
     }
     struct Voting {
         uint256 blockNumber;
@@ -53,10 +54,12 @@ contract OffchainVotingContract is
     function registerDao(
         DaoRegistry dao,
         uint256 votingPeriod,
-        uint256 gracePeriod
-    ) external override onlyAdapter(dao) {
+        uint256 gracePeriod,
+        uint256 fallbackThreshold
+    ) external onlyAdapter(dao) {
         votingConfigs[address(dao)].votingPeriod = votingPeriod;
         votingConfigs[address(dao)].gracePeriod = gracePeriod;
+        votingConfigs[address(dao)].fallbackThreshold = fallbackThreshold;
     }
 
     function submitVoteResult(
@@ -332,6 +335,16 @@ contract OffchainVotingContract is
         }
 
         _checkStep(dao, nodeCurrent, nodePrevious, proposalHash, proposalId);
+    }
+
+    function requestFallback(DaoRegistry dao, uint256 proposalId) external onlyMember(dao) {
+        require(votes[address(dao)][proposalId].fallbackVotes[msg.sender] == false, "the member has already voted for this vote to fallback");
+        votes[address(dao)][proposalId].fallbackVotes[msg.sender] = true;
+        votes[address(dao)][proposalId].fallbackVotesCount += 1;
+
+        if(votes[address(dao)][proposalId].fallbackVotesCount > votingConfigs[address(dao)].fallbackThreshold) {
+
+        }
     }
 
     function _nodeHash(VoteResultNode memory node)
