@@ -13,7 +13,7 @@ abstract contract DaoGuard {
      * @dev Only DAO registry is allowed to execute the function call.
      */
     modifier onlyDao(DaoRegistry dao) {
-        require(address(dao) == msg.sender, "onlyDAO");
+        require(dao.isDao(msg.sender), "onlyDao");
         _;
     }
 }

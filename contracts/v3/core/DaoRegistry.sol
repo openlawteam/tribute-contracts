@@ -238,6 +238,10 @@ contract DaoRegistry is Ownable, DaoConstants {
         return inverseRegistry[adapterAddress] != bytes32(0);
     }
 
+    function isDao(address daoAddress) public view returns (bool) {
+        return daoAddress == address(this);
+    }
+
     function getAdapterAddress(bytes32 adapterId)
         external
         view
