@@ -153,7 +153,8 @@ contract DaoRegistry is Ownable, DaoConstants {
             uint256 amount = onboarding.submitMembershipProposal(
                 this,
                 msg.sender,
-                msg.value
+                msg.value,
+                address(0x0) //RAW ETH
             );
             if (msg.value > amount) {
                 msg.sender.transfer(msg.value - amount);
@@ -164,9 +165,9 @@ contract DaoRegistry is Ownable, DaoConstants {
     function onboard(
         IERC20 token,
         uint256 tokenAmount,
-        address onboardingModule
+        address onboardingAdapter
     ) external payable {
-        require(isAdapter(onboardingModule));
+        require(isAdapter(onboardingAdapter), "invalid adapter");
 
         if (address(token) == address(0x0)) {
             // ETH onboarding
@@ -185,11 +186,12 @@ contract DaoRegistry is Ownable, DaoConstants {
             );
         }
 
-        IOnboarding onboarding = IOnboarding(onboardingModule);
+        IOnboarding onboarding = IOnboarding(onboardingAdapter);
         uint256 amountUsed = onboarding.submitMembershipProposal(
             this,
             msg.sender,
-            tokenAmount
+            tokenAmount,
+            address(token)
         );
 
         if (amountUsed < tokenAmount) {

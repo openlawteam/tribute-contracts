@@ -5,12 +5,12 @@ pragma solidity ^0.7.0;
 import "../core/DaoRegistry.sol";
 
 /**
- * @dev Contract module that helps restrict the module access to Core Modules only.
+ * @dev Contract guard that helps restrict the adapter access to the DaoRegistry.
  *
  */
 abstract contract AdapterGuard {
     /**
-     * @dev Only Core Module of the DAO are allowed to execute the function call.
+     * @dev Only registered adapters are allowed to execute the function call.
      */
     modifier onlyAdapter(DaoRegistry dao) {
         require(dao.isAdapter(msg.sender), "onlyAdapter");

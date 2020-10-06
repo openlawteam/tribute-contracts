@@ -9,12 +9,14 @@ import "../adapters/interfaces/IVoting.sol";
 import "../utils/SafeMath.sol";
 import "../guards/MemberGuard.sol";
 import "../guards/AdapterGuard.sol";
+import "../guards/DaoGuard.sol";
 
 contract NonVotingOnboardingContract is
     IOnboarding,
     DaoConstants,
     MemberGuard,
-    AdapterGuard
+    AdapterGuard,
+    DaoGuard
 {
     using SafeMath for uint256;
 
@@ -22,6 +24,7 @@ contract NonVotingOnboardingContract is
         uint256 id;
         uint256 amount;
         uint256 lootRequested;
+        address token;
         bool processed;
         address applicant;
     }
@@ -46,8 +49,9 @@ contract NonVotingOnboardingContract is
     function submitMembershipProposal(
         DaoRegistry dao,
         address applicant,
-        uint256 value
-    ) external override returns (uint256) {
+        uint256 value,
+        address token
+    ) external override onlyDao(dao) returns (uint256) {
         OnboardingConfig memory config = configs[address(dao)];
 
         require(config.lootPerChunk > 0, "lootPerChunk should not be 0");
@@ -59,12 +63,15 @@ contract NonVotingOnboardingContract is
         uint256 amount = numberOfChunks.mul(config.chunkSize);
         uint256 lootRequested = numberOfChunks.mul(config.lootPerChunk);
 
-        _submitMembershipProposal(dao, applicant, lootRequested, amount);
+        _submitMembershipProposal(dao, applicant, lootRequested, amount, token);
 
         return amount;
     }
 
-    function updateDelegateKey(DaoRegistry dao, address delegateKey) external {
+    function updateDelegateKey(DaoRegistry dao, address delegateKey)
+        external
+        onlyDao(dao)
+    {
         dao.updateDelegateKey(msg.sender, delegateKey);
     }
 
@@ -72,13 +79,15 @@ contract NonVotingOnboardingContract is
         DaoRegistry dao,
         address newMember,
         uint256 lootRequested,
-        uint256 amount
+        uint256 amount,
+        address token
     ) internal {
         uint256 proposalId = dao.submitProposal(msg.sender);
         ProposalDetails memory p = ProposalDetails(
             proposalId,
             amount,
             lootRequested,
+            token,
             false,
             newMember
         );
