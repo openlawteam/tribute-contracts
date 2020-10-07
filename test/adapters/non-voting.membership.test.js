@@ -13,13 +13,13 @@ const toBN = web3.utils.toBN;
 const sha3 = web3.utils.sha3;
 const toWei = web3.utils.toWei;
 
-contract('MolochV3 - Non Voting Onboarding Adapter', async accounts => {
+contract('LAO LAND DAO - Non Voting Onboarding Adapter', async accounts => {
 
   it("should be possible to join a DAO as a member without any voting power by requesting Loot while staking raw ETH", async () => {
     const myAccount = accounts[1];
     const advisorAccount = accounts[2];
 
-    let dao = await createDao({}, myAccount);
+    let dao = await createDao(myAccount);
 
     const nonVotingOnboardingAddr = await dao.getAdapterAddress(
       sha3("nonvoting-onboarding")
@@ -83,7 +83,7 @@ contract('MolochV3 - Non Voting Onboarding Adapter', async accounts => {
     let lootSharePrice = 10;
     let nbOfLootShares = 100000000;
     let chunkSize = 5;
-    let dao = await createDao({}, myAccount, lootSharePrice, nbOfLootShares, chunkSize);
+    let dao = await createDao(myAccount, lootSharePrice, nbOfLootShares, chunkSize);
 
     // Issue OpenLaw ERC20 Basic Token for tests
     let tokenSupply = 1000000;

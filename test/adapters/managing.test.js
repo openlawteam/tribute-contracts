@@ -3,13 +3,13 @@ const {advanceTime, createDao, GUILD, ESCROW, TOTAL, ETH_TOKEN, ManagingContract
 const toBN = web3.utils.toBN;
 const sha3 = web3.utils.sha3;
 
-contract('MolochV3 - Managing Adapter', async accounts => {
+contract('LAO LAND DAO - Managing Adapter', async accounts => {
   
   it("should not be possible to propose a new module with 0x0 module address", async () => {
     const myAccount = accounts[1];
 
     //Create the new DAO
-    let dao = await createDao({}, myAccount);
+    let dao = await createDao(myAccount);
 
     //Submit a new Bank module proposal
     let newModuleId = sha3('bank');
@@ -28,7 +28,7 @@ contract('MolochV3 - Managing Adapter', async accounts => {
     const myAccount = accounts[1];
     
     //Create the new DAO
-    let dao = await createDao({}, myAccount);
+    let dao = await createDao(myAccount);
 
     //Submit a new Bank module proposal
     let newModuleId = sha3('bank');
@@ -58,7 +58,7 @@ contract('MolochV3 - Managing Adapter', async accounts => {
     const myAccount = accounts[1];
 
     //Create the new DAO
-    let dao = await createDao({}, myAccount);
+    let dao = await createDao(myAccount);
 
     //Submit a new Bank module proposal
     let newModuleId = sha3('managing');
@@ -76,7 +76,7 @@ contract('MolochV3 - Managing Adapter', async accounts => {
     const myAccount = accounts[1];
 
     //Create the new DAO
-    let dao = await createDao({}, myAccount);
+    let dao = await createDao(myAccount);
     let managingContract = await dao.getAdapterAddress(sha3('managing'));
     let managing = await ManagingContract.at(managingContract);
 
@@ -108,7 +108,7 @@ contract('MolochV3 - Managing Adapter', async accounts => {
     const delegateKey = accounts[3];
 
     //Create the new DAO
-    let dao = await createDao({}, myAccount);
+    let dao = await createDao(myAccount);
     let managingContract = await dao.getAdapterAddress(sha3('managing'));
     let managing = await ManagingContract.at(managingContract);
 

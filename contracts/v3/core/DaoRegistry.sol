@@ -136,10 +136,14 @@ contract DaoRegistry is DaoConstants, AdapterGuard {
     uint256 public constant MAX_TOKENS = 100;
 
     constructor() {
-        bytes32 ownerId = keccak256("owner");
-        registry[ownerId] = msg.sender;
-        inverseRegistry[msg.sender] = ownerId;
+        address memberAddr = msg.sender;
+        Member storage member = members[memberAddr];
+        member.flags = member.flags.setExists(true);
+        member.delegateKey = memberAddr;
+        member.nbShares = 1;
         totalShares = 1;
+
+        memberAddressesByDelegatedKey[memberAddr] = memberAddr;
     }
 
     /*
@@ -375,7 +379,7 @@ contract DaoRegistry is DaoConstants, AdapterGuard {
     }
 
     function updateMemberShares(address memberAddr, uint256 shares)
-        external
+        public
         onlyAdapter(this)
     {
         require(

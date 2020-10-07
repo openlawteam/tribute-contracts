@@ -19,7 +19,7 @@ contract DaoFactory is DaoConstants {
      * @dev: A new DAO is instantiated with only the Core Modules enabled, to reduce the call cost.
      *       Another call must be made to enable the default Adapters, see @registerDefaultAdapters.
      */
-    function setAdapters(
+    function addAdapters(
         DaoRegistry dao,
         Adapter[] calldata adapters) external {
             //Registring Adapters
@@ -28,16 +28,12 @@ contract DaoFactory is DaoConstants {
         for (uint256 i = 0; i < adapters.length; i++) {
             dao.addAdapter(adapters[i].id, adapters[i].addr);
         }
-        /*
-        IVoting votingContract = IVoting(addresses[VOTING]);
-        votingContract.registerDao(dao, votingPeriod, gracePeriod);
+    }
 
-        dao.updateMemberShares(msg.sender, 1);
+    function updateAdapter(DaoRegistry dao, Adapter calldata adapter) external {
+        require(dao.state() == DaoRegistry.DaoState.CREATION, "this DAO has already been setup");
 
-        OnboardingContract onboardingContract = OnboardingContract(
-            addresses[ONBOARDING]
-        );
-        onboardingContract.configureOnboarding(dao, chunkSize, nbShares);
-        */
+        dao.removeAdapter(adapter.id);
+        dao.addAdapter(adapter.id, adapter.addr);
     }
 }

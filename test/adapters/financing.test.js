@@ -4,14 +4,14 @@ const toBN = web3.utils.toBN;
 const {advanceTime, createDao, GUILD, sharePrice, OnboardingContract, VotingContract, FinancingContract, ETH_TOKEN} = require('../../utils/DaoFactory.js');
 const remaining = sharePrice.sub(toBN('50000000000000'));
 
-contract('MolochV3 - Financing Adapter', async accounts => {
+contract('LAO LAND DAO - Financing Adapter', async accounts => {
   
   it("should be possible to any individual to request financing", async () => {
     const myAccount = accounts[1];
     const applicant = accounts[2];
     const newMember = accounts[3];
 
-    let dao = await createDao({}, myAccount);
+    let dao = await createDao(myAccount);
 
     const votingAddress = await dao.getAdapterAddress(sha3("voting"));
     const voting = await VotingContract.at(votingAddress);

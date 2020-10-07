@@ -1,3 +1,5 @@
+const { sha3 } = require("web3-utils");
+
 const GUILD = "0x000000000000000000000000000000000000dead";
 const ESCROW = "0x000000000000000000000000000000000000beef";
 const TOTAL = "0x000000000000000000000000000000000000babe";
@@ -23,14 +25,13 @@ const NonVotingOnboardingContract = artifacts.require(
 );
 
 async function prepareSmartContracts() {
-    let lib = await FlagHelperLib.new();
-    await DaoRegistry.link("FlagHelper", lib.address);
     let voting = await VotingContract.new();
     let ragequit = await RagequitContract.new();
     let managing = await ManagingContract.new();
     let financing = await FinancingContract.new();
     let onboarding = await OnboardingContract.new();
     let nonVotingOnboarding = await NonVotingOnboardingContract.new();
+    let daoFactory = await DaoFactory.new();
 
     return {
       voting,
@@ -39,36 +40,45 @@ async function prepareSmartContracts() {
       financing,
       onboarding,
       nonVotingOnboarding,
+      daoFactory
     };
   }
 
-async function createDao(overridenModules, senderAccount, unitPrice=sharePrice, nbShares=numberOfShares, chunkSize=1000, gracePeriod=1) {
-    let modules = await prepareSmartContracts();
-    modules = Object.assign(modules, overridenModules);
-    
-    let lib = await FlagHelperLib.new();
-    await DaoFactory.link("FlagHelper", lib.address);
+async function addDefaultAdapters(dao, unitPrice=sharePrice, nbShares=numberOfShares, votingPeriod=10, gracePeriod=1) {
+    const {voting, ragequit, managing, financing, onboarding, nonVotingOnboarding, daoFactory} = await prepareSmartContracts();
 
-    const {voting, ragequit, managing, financing, onboarding, nonVotingOnboarding} = modules;
-    let daoFactory = await DaoFactory.new(voting.address, 
-      ragequit.address, 
-      managing.address, 
-      financing.address, 
-      onboarding.address,
-      nonVotingOnboarding.address,
-      { from: senderAccount, gasPrice: web3.utils.toBN("0") });
-    
-      await reportingTransaction(
-        "DAO creation",
-        daoFactory.newDao(unitPrice, nbShares, chunkSize, gracePeriod, {
-          from: senderAccount,
-          gasPrice: web3.utils.toBN("0"),
-        })
-      );
-    let pastEvents = await daoFactory.getPastEvents();
-    let daoAddress = pastEvents[0].returnValues.dao;
-    let dao = await DaoRegistry.at(daoAddress);
+    await daoFactory.addAdapters(
+      dao.address,
+      [
+        entry("voting", voting), 
+        entry("ragequit", ragequit),
+        entry("managing", managing),
+        entry("financing", financing),
+        entry("onboarding", onboarding),
+        entry("nonvoting-onboarding", nonVotingOnboarding)
+    ])
+
+    await onboarding.configureDao(dao.address, unitPrice, nbShares);
+    await nonVotingOnboarding.configureDao(dao.address, unitPrice, nbShares);
+    await voting.configureDao(dao.address, votingPeriod, gracePeriod);
+
     return dao;
+}
+
+async function createDao(senderAccount, unitPrice=sharePrice, nbShares=numberOfShares, votingPeriod=10, gracePeriod=1) {
+    let lib = await FlagHelperLib.new();
+    await DaoRegistry.link("FlagHelper", lib.address);
+    let dao = await DaoRegistry.new({ from: senderAccount, gasPrice: web3.utils.toBN("0") });
+    await addDefaultAdapters(dao, unitPrice, nbShares, votingPeriod, gracePeriod);
+    await dao.finalizeDao();
+    return dao;
+}
+
+function entry(name, contract) {
+  return {
+    id: sha3(name),
+    addr: contract.address
+  }
 }
 
 async function advanceTime(time) {
@@ -109,6 +119,8 @@ module.exports = {
   advanceTime,
   createDao,
   reportingTransaction,
+  addDefaultAdapters,
+  entry,
   GUILD,
   ESCROW,
   TOTAL,
@@ -120,6 +132,7 @@ module.exports = {
   OLTokenContract,
   DaoFactory,
   DaoRegistry,
+  FlagHelperLib,
   VotingContract,
   ManagingContract,
   FinancingContract,

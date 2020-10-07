@@ -112,7 +112,7 @@ contract('Registry', async () => {
   it("should be possible to update delegate key", async () => {
     const myAccount = accounts[1];
     const delegateKey = accounts[2];
-    let dao = await createDao({}, myAccount);
+    let dao = await createDao(myAccount);
 
     const onboardingAddr = await dao.getAdapterAddress(sha3('onboarding'));
     const onboarding = await OnboardingContract.at(onboardingAddr);

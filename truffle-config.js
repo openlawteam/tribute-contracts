@@ -88,7 +88,7 @@ module.exports = {
     reporterOptions: {
       currency: 'USD',
     },
-    reporterOptions: { excludeContracts: ["Migrations", "Moloch", "MolochSummoner", "Submitter"] },
+    reporterOptions: { excludeContracts: ["Migrations"] },
   },
 
   // Configure your compilers

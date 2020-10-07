@@ -14,7 +14,7 @@ const {
 const toBN = web3.utils.toBN;
 const sha3 = web3.utils.sha3;
 
-contract('MolochV3 - Ragequit Adapter', async accounts => {
+contract('LAO LAND DAO - Ragequit Adapter', async accounts => {
 
   submitNewMemberProposal = async (dao, newMember, sharePrice) => {
     await dao.sendTransaction({
@@ -64,7 +64,7 @@ contract('MolochV3 - Ragequit Adapter', async accounts => {
     const myAccount = accounts[1];
     const newMember = accounts[2];
   
-    let dao = await createDao({}, myAccount);
+    let dao = await createDao(myAccount);
 
     //Add funds to the Guild Bank after sposoring a member to join the Guild
     const onboardingAddress = await dao.getAdapterAddress(sha3('onboarding'));
@@ -100,7 +100,7 @@ contract('MolochV3 - Ragequit Adapter', async accounts => {
     const myAccount = accounts[1];
     const newMember = accounts[2];
 
-    let dao = await createDao({}, myAccount);
+    let dao = await createDao(myAccount);
 
     //Add funds to the Guild Bank after sposoring a member to join the Guild
     const onboardingAddress = await dao.getAdapterAddress(sha3('onboarding'));
@@ -136,7 +136,7 @@ contract('MolochV3 - Ragequit Adapter', async accounts => {
     const myAccount = accounts[1];
     const newMember = accounts[2];
     
-    let dao = await createDao({}, myAccount);
+    let dao = await createDao(myAccount);
 
     //Add funds to the Guild Bank after sposoring a member to join the Guild
     const onboardingAddress = await dao.getAdapterAddress(sha3('onboarding'));
@@ -178,7 +178,7 @@ it("should be possible to a member to ragequit if the member voted YES on a prop
     const newMember = accounts[2];
     const applicant = accounts[3];
 
-    let dao = await createDao({}, myAccount);
+    let dao = await createDao(myAccount);
 
     //Add funds to the Guild Bank after sposoring a member to join the Guild
     const onboardingAddress = await dao.getAdapterAddress(sha3('onboarding'));
@@ -239,7 +239,7 @@ it("should be possible to a member to ragequit if the member voted YES on a prop
     const newMember = accounts[2];
     const applicant = accounts[3];
 
-    let dao = await createDao({}, myAccount);
+    let dao = await createDao(myAccount);
 
     //Add funds to the Guild Bank after sposoring a member to join the Guild
     const onboardingAddress = await dao.getAdapterAddress(sha3("onboarding"));

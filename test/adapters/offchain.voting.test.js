@@ -1,17 +1,33 @@
-const {advanceTime, createDao, OnboardingContract, sharePrice, remaining, reportingTransaction} = require('../../utils/DaoFactory.js');
-const {prepareSnapshot, addVote, prepareVoteResult, buildVoteLeafHashForMerkleTree} = require('../../utils/offchain_voting.js');
+const {advanceTime, OnboardingContract, DaoRegistry, DaoFactory, FlagHelperLib, sharePrice, remaining, numberOfShares, reportingTransaction, entry, addDefaultAdapters} = require('../../utils/DaoFactory.js');
+const {addVote, prepareVoteResult, buildVoteLeafHashForMerkleTree} = require('../../utils/offchain_voting.js');
 const toBN = web3.utils.toBN;
 const sha3 = web3.utils.sha3;
 
 const OffchainVotingContract = artifacts.require('./v3/adapters/OffchainVotingContract');
 
-contract('MolochV3 - Offchain Voting Module', async accounts => {
+async function createOffchainVotingDao(senderAccount, unitPrice=sharePrice, nbShares=numberOfShares, votingPeriod=10, gracePeriod=1) {
+  let lib = await FlagHelperLib.new();
+  const daoFactory = await DaoFactory.new();
+  await DaoRegistry.link("FlagHelper", lib.address);
+  let dao = await DaoRegistry.new({ from: senderAccount, gasPrice: web3.utils.toBN("0") });
+  await addDefaultAdapters(dao, unitPrice, nbShares, votingPeriod, gracePeriod);
+  const votingAddress = await dao.getAdapterAddress(sha3("voting"));
+  const offchainVoting = await OffchainVotingContract.new(votingAddress);
+  await daoFactory.updateAdapter(
+    dao.address,
+    entry("voting", offchainVoting))
+
+  await offchainVoting.configureDao(dao.address, votingPeriod, gracePeriod, 10);
+  await dao.finalizeDao();
+  return {dao, voting: offchainVoting};
+}
+
+contract('LAO LAND DAO - Offchain Voting Module', async accounts => {
 
   it("should be possible to vote offchain", async () => {
     const myAccount = accounts[1];
     const otherAccount = accounts[2];
-    const voting = await OffchainVotingContract.new();
-    let dao = await createDao({voting}, myAccount);
+    let {dao, voting} = await createOffchainVotingDao(myAccount);
 
     const onboardingAddress = await dao.getAdapterAddress(sha3('onboarding'));
     const onboarding = await OnboardingContract.at(onboardingAddress);
@@ -31,8 +47,7 @@ contract('MolochV3 - Offchain Voting Module', async accounts => {
     const otherAccount = accounts[2];
     const otherAccount2 = accounts[3];
 
-    const voting = await OffchainVotingContract.new();
-    let dao = await createDao({voting}, myAccount);
+    let {dao, voting} = await createOffchainVotingDao(myAccount);
 
     const onboardingAddress = await dao.getAdapterAddress(web3.utils.sha3('onboarding'));
     const onboarding = await OnboardingContract.at(onboardingAddress);
