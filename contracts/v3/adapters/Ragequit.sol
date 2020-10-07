@@ -17,7 +17,7 @@ contract RagequitContract is
     event Ragequit(
         address indexed member,
         uint256 burnedShares,
-        uint256 lootToBurn
+        uint256 burnedLoot
     );
 
     /*

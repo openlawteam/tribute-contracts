@@ -11,7 +11,7 @@ import "../guards/MemberGuard.sol";
 import "../guards/AdapterGuard.sol";
 import "../guards/DaoGuard.sol";
 
-contract OnboardingContract is
+contract NonVotingOnboardingContract is
     IOnboarding,
     DaoConstants,
     MemberGuard,
@@ -23,7 +23,7 @@ contract OnboardingContract is
     struct ProposalDetails {
         uint256 id;
         uint256 amount;
-        uint256 sharesRequested;
+        uint256 lootRequested;
         address token;
         bool processed;
         address applicant;
@@ -31,7 +31,7 @@ contract OnboardingContract is
 
     struct OnboardingConfig {
         uint256 chunkSize;
-        uint256 sharesPerChunk;
+        uint256 lootPerChunk;
     }
 
     mapping(address => OnboardingConfig) public configs;
@@ -40,10 +40,10 @@ contract OnboardingContract is
     function configureOnboarding(
         DaoRegistry dao,
         uint256 chunkSize,
-        uint256 sharesPerChunk
+        uint256 lootPerChunk
     ) external onlyAdapter(dao) {
         configs[address(dao)].chunkSize = chunkSize;
-        configs[address(dao)].sharesPerChunk = sharesPerChunk;
+        configs[address(dao)].lootPerChunk = lootPerChunk;
     }
 
     function submitMembershipProposal(
@@ -54,34 +54,31 @@ contract OnboardingContract is
     ) external override onlyDao(dao) returns (uint256) {
         OnboardingConfig memory config = configs[address(dao)];
 
-        require(config.sharesPerChunk > 0, "sharesPerChunk should not be 0");
+        require(config.lootPerChunk > 0, "lootPerChunk should not be 0");
         require(config.chunkSize > 0, "chunkSize should not be 0");
 
         uint256 numberOfChunks = value.div(config.chunkSize);
         require(numberOfChunks > 0, "not sufficient ETH");
 
         uint256 amount = numberOfChunks.mul(config.chunkSize);
-        uint256 sharesRequested = numberOfChunks.mul(config.sharesPerChunk);
+        uint256 lootRequested = numberOfChunks.mul(config.lootPerChunk);
 
-        _submitMembershipProposal(
-            dao,
-            applicant,
-            sharesRequested,
-            amount,
-            token
-        );
+        _submitMembershipProposal(dao, applicant, lootRequested, amount, token);
 
         return amount;
     }
 
-    function updateDelegateKey(DaoRegistry dao, address delegateKey) external {
+    function updateDelegateKey(DaoRegistry dao, address delegateKey)
+        external
+        onlyDao(dao)
+    {
         dao.updateDelegateKey(msg.sender, delegateKey);
     }
 
     function _submitMembershipProposal(
         DaoRegistry dao,
         address newMember,
-        uint256 sharesRequested,
+        uint256 lootRequested,
         uint256 amount,
         address token
     ) internal {
@@ -89,7 +86,7 @@ contract OnboardingContract is
         ProposalDetails memory p = ProposalDetails(
             proposalId,
             amount,
-            sharesRequested,
+            lootRequested,
             token,
             false,
             newMember
@@ -126,7 +123,7 @@ contract OnboardingContract is
         );
         ProposalDetails storage proposal = proposals[address(dao)][proposalId];
 
-        dao.updateMemberShares(proposal.applicant, proposal.sharesRequested);
+        dao.updateMemberLoot(proposal.applicant, proposal.lootRequested);
 
         // address 0 represents native ETH
         dao.addToGuild(address(0), proposal.amount);
