@@ -85,6 +85,9 @@ module.exports = {
   mocha: {
     // timeout: 100000
     reporter: "eth-gas-reporter",
+    reporterOptions: {
+      currency: 'USD',
+    },
     reporterOptions: { excludeContracts: ["Migrations", "Moloch", "MolochSummoner", "Submitter"] },
   },
 

@@ -6,6 +6,13 @@
     "no-empty-blocks": "off",
     "compiler-version": ["error", "^0.7.0"],
     "private-vars-leading-underscore": "error",
-    "reason-string": "off"
+    "reason-string": "on",
+    "no-unused-vars": "warn",
+    "payable-fallback": "error",
+    "reentrancy": "error",
+    "code-complexity": [
+      "warn",
+      7
+    ]
   }
 }

@@ -5,7 +5,7 @@ pragma solidity ^0.7.0;
 import "../core/DaoRegistry.sol";
 
 /**
- * @dev Contract module that helps restrict the adapter access to DAO Members only.
+ * @dev Contract guard that helps restrict the adapter access to DAO Members only.
  *
  */
 abstract contract MemberGuard {

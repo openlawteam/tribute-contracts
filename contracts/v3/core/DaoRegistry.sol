@@ -49,7 +49,8 @@ contract DaoRegistry is Ownable, DaoConstants {
     );
 
     /// @dev - Events for Members
-    event UpdateMember(address member, uint256 shares);
+    event UpdateMemberShares(address member, uint256 shares);
+    event UpdateMemberLoot(address member, uint256 loot);
     event UpdateDelegateKey(
         address indexed memberAddress,
         address newDelegateKey
@@ -149,10 +150,11 @@ contract DaoRegistry is Ownable, DaoConstants {
     receive() external payable {
         if (!isAdapter(msg.sender)) {
             IOnboarding onboarding = IOnboarding(registry[ONBOARDING]);
-            uint256 amount = onboarding.processOnboarding(
+            uint256 amount = onboarding.submitMembershipProposal(
                 this,
                 msg.sender,
-                msg.value
+                msg.value,
+                address(0x0) //RAW ETH
             );
             if (msg.value > amount) {
                 msg.sender.transfer(msg.value - amount);
@@ -162,36 +164,44 @@ contract DaoRegistry is Ownable, DaoConstants {
 
     function onboard(
         IERC20 token,
-        uint256 amount,
-        address onboardingModule
+        uint256 tokenAmount,
+        address onboardingAdapter
     ) external payable {
-        require(isAdapter(onboardingModule));
+        require(isAdapter(onboardingAdapter), "invalid adapter");
+
         if (address(token) == address(0x0)) {
-            require(msg.value > amount, "not enough ETH sent!");
             // ETH onboarding
+            require(msg.value > 0, "not enough ETH");
+            // If the applicant sends ETH to onboard, use the msg.value as default token amount
+            tokenAmount = msg.value;
         } else {
+            // ERC20 onboarding
             require(
-                token.transferFrom(msg.sender, address(this), amount),
-                "ERC-20 token transfer failed"
+                token.allowance(msg.sender, address(this)) == tokenAmount,
+                "ERC20 transfer not allowed"
+            );
+            require(
+                token.transferFrom(msg.sender, address(this), tokenAmount),
+                "ERC20 failed transferFrom"
             );
         }
 
-        IOnboarding onboarding = IOnboarding(onboardingModule);
-
-        uint256 amountUsed = onboarding.processOnboarding(
+        IOnboarding onboarding = IOnboarding(onboardingAdapter);
+        uint256 amountUsed = onboarding.submitMembershipProposal(
             this,
             msg.sender,
-            amount
+            tokenAmount,
+            address(token)
         );
 
-        if (amountUsed < amount) {
+        if (amountUsed < tokenAmount) {
+            uint256 amount = tokenAmount - amountUsed;
             if (address(token) == address(0x0)) {
-                msg.sender.transfer(amount - amountUsed);
-                // ETH onboarding
+                msg.sender.transfer(amount);
             } else {
                 require(
-                    token.transfer(msg.sender, amount - amountUsed),
-                    "ERC-20 token return failed"
+                    token.transfer(msg.sender, amount),
+                    "ERC20 failed transfer"
                 );
             }
         }
@@ -226,6 +236,10 @@ contract DaoRegistry is Ownable, DaoConstants {
 
     function isAdapter(address adapterAddress) public view returns (bool) {
         return inverseRegistry[adapterAddress] != bytes32(0);
+    }
+
+    function isDao(address daoAddress) public view returns (bool) {
+        return daoAddress == address(this);
     }
 
     function getAdapterAddress(bytes32 adapterId)
@@ -346,7 +360,8 @@ contract DaoRegistry is Ownable, DaoConstants {
         return
             memberFlags.exists() &&
             !memberFlags.isJailed() &&
-            members[memberAddr].nbShares > 0;
+            (members[memberAddr].nbShares > 0 ||
+                members[memberAddr].nbLoot > 0);
     }
 
     function memberAddress(address memberOrDelegateKey)
@@ -357,13 +372,18 @@ contract DaoRegistry is Ownable, DaoConstants {
         return memberAddresses[memberOrDelegateKey];
     }
 
-    function updateMember(address memberAddr, uint256 shares)
+    function updateMemberShares(address memberAddr, uint256 shares)
         external
         onlyAdapter
     {
+        require(
+            totalShares.add(totalLoot).add(shares) < type(uint256).max,
+            "too many shares requested"
+        );
+
         Member storage member = members[memberAddr];
         if (member.delegateKey == address(0x0)) {
-            member.flags = 1;
+            member.flags = member.flags.setExists(true);
             member.delegateKey = memberAddr;
         }
 
@@ -373,7 +393,31 @@ contract DaoRegistry is Ownable, DaoConstants {
 
         memberAddressesByDelegatedKey[member.delegateKey] = memberAddr;
 
-        emit UpdateMember(memberAddr, shares);
+        emit UpdateMemberShares(memberAddr, shares);
+    }
+
+    function updateMemberLoot(address memberAddr, uint256 loot)
+        external
+        onlyAdapter
+    {
+        require(
+            totalShares.add(totalLoot).add(loot) < type(uint256).max,
+            "too many loot requested"
+        );
+
+        Member storage member = members[memberAddr];
+        if (member.delegateKey == address(0x0)) {
+            member.flags = member.flags.setExists(true);
+            member.delegateKey = memberAddr;
+        }
+
+        member.nbLoot = loot;
+
+        totalLoot = totalLoot.add(loot);
+
+        memberAddressesByDelegatedKey[member.delegateKey] = memberAddr;
+
+        emit UpdateMemberLoot(memberAddr, loot);
     }
 
     function updateDelegateKey(address memberAddr, address newDelegateKey)
@@ -466,6 +510,7 @@ contract DaoRegistry is Ownable, DaoConstants {
 
         // burn locked loot
         member.lockedLoot = member.lockedLoot.sub(lootToBurn);
+        totalLoot = totalLoot.sub(lootToBurn);
     }
 
     function lockLoot(address memberAddr, uint256 lootToLock)
