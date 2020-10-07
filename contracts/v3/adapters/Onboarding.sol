@@ -37,7 +37,7 @@ contract OnboardingContract is
     mapping(address => OnboardingConfig) public configs;
     mapping(address => mapping(uint256 => ProposalDetails)) public proposals;
 
-    function configureOnboarding(
+    function configureDao(
         DaoRegistry dao,
         uint256 chunkSize,
         uint256 sharesPerChunk

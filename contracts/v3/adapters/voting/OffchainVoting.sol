@@ -9,6 +9,7 @@ import "../interfaces/IVoting.sol";
 import "../../guards/MemberGuard.sol";
 import "../../guards/AdapterGuard.sol";
 import "../../helpers/FlagHelper.sol";
+import "./Voting.sol";
 
 contract OffchainVotingContract is
     IVoting,
@@ -18,12 +19,15 @@ contract OffchainVotingContract is
 {
     using FlagHelper for uint256;
 
+    VotingContract private _fallbackVoting;
+
     struct VotingConfig {
         uint256 votingPeriod;
         uint256 gracePeriod;
         uint256 stakingAmount;
         uint256 fallbackThreshold;
     }
+
     struct Voting {
         uint256 blockNumber;
         address reporter;
@@ -51,7 +55,11 @@ contract OffchainVotingContract is
     mapping(address => mapping(uint256 => Voting)) public votes;
     mapping(address => VotingConfig) public votingConfigs;
 
-    function registerDao(
+    constructor (VotingContract _c) {
+        _fallbackVoting = _c;
+    }
+
+    function configureDao(
         DaoRegistry dao,
         uint256 votingPeriod,
         uint256 gracePeriod,
@@ -341,10 +349,6 @@ contract OffchainVotingContract is
         require(votes[address(dao)][proposalId].fallbackVotes[msg.sender] == false, "the member has already voted for this vote to fallback");
         votes[address(dao)][proposalId].fallbackVotes[msg.sender] = true;
         votes[address(dao)][proposalId].fallbackVotesCount += 1;
-
-        if(votes[address(dao)][proposalId].fallbackVotesCount > votingConfigs[address(dao)].fallbackThreshold) {
-
-        }
     }
 
     function _nodeHash(VoteResultNode memory node)

@@ -1,4 +1,5 @@
 pragma solidity ^0.7.0;
+pragma experimental ABIEncoderV2;
 
 // SPDX-License-Identifier: MIT
 
@@ -8,47 +9,26 @@ import "../adapters/Onboarding.sol";
 import "../adapters/NonVotingOnboarding.sol";
 
 contract DaoFactory is DaoConstants {
-    event NewDao(address summoner, address dao);
 
-    mapping(bytes32 => address) addresses;
-
-    constructor(
-        address votingAddress,
-        address ragequitAddress,
-        address managingAddress,
-        address financingAddress,
-        address onboardingAddress,
-        address nonVotingOnboardingAddress
-    ) {
-        addresses[VOTING] = votingAddress;
-        addresses[RAGEQUIT] = ragequitAddress;
-        addresses[MANAGING] = managingAddress;
-        addresses[FINANCING] = financingAddress;
-        addresses[ONBOARDING] = onboardingAddress;
-        addresses[NONVOTING_ONBOARDING] = nonVotingOnboardingAddress;
+    struct Adapter {
+        bytes32 id;
+        address addr;
     }
 
     /*
      * @dev: A new DAO is instantiated with only the Core Modules enabled, to reduce the call cost.
      *       Another call must be made to enable the default Adapters, see @registerDefaultAdapters.
      */
-    function newDao(
-        uint256 chunkSize,
-        uint256 nbShares,
-        uint256 votingPeriod,
-        uint256 gracePeriod
-    ) external returns (address) {
-        DaoRegistry dao = new DaoRegistry();
-        address daoAddress = address(dao);
-
-        //Registring Adapters
-        dao.addAdapter(VOTING, addresses[VOTING]);
-        dao.addAdapter(ONBOARDING, addresses[ONBOARDING]);
-        dao.addAdapter(FINANCING, addresses[FINANCING]);
-        dao.addAdapter(MANAGING, addresses[MANAGING]);
-        dao.addAdapter(RAGEQUIT, addresses[RAGEQUIT]);
-        dao.addAdapter(NONVOTING_ONBOARDING, addresses[NONVOTING_ONBOARDING]);
-
+    function setAdapters(
+        DaoRegistry dao,
+        Adapter[] calldata adapters) external {
+            //Registring Adapters
+        require(dao.state() == DaoRegistry.DaoState.CREATION, "this DAO has already been setup");
+        
+        for (uint256 i = 0; i < adapters.length; i++) {
+            dao.addAdapter(adapters[i].id, adapters[i].addr);
+        }
+        /*
         IVoting votingContract = IVoting(addresses[VOTING]);
         votingContract.registerDao(dao, votingPeriod, gracePeriod);
 
@@ -58,18 +38,6 @@ contract DaoFactory is DaoConstants {
             addresses[ONBOARDING]
         );
         onboardingContract.configureOnboarding(dao, chunkSize, nbShares);
-
-
-            NonVotingOnboardingContract nonVotingOnboardingContract
-         = NonVotingOnboardingContract(addresses[NONVOTING_ONBOARDING]);
-        nonVotingOnboardingContract.configureOnboarding(
-            dao,
-            chunkSize,
-            nbShares
-        );
-
-        emit NewDao(msg.sender, daoAddress);
-
-        return daoAddress;
+        */
     }
 }

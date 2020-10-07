@@ -2,7 +2,6 @@ pragma solidity ^0.7.0;
 
 // SPDX-License-Identifier: MIT
 
-import "../utils/Ownable.sol";
 import "../adapters/interfaces/IOnboarding.sol";
 import "../helpers/FlagHelper.sol";
 import "../utils/SafeMath.sol";
@@ -11,24 +10,21 @@ import "../adapters/interfaces/IVoting.sol";
 import "../guards/AdapterGuard.sol";
 import "../utils/IERC20.sol";
 
-contract DaoRegistry is Ownable, DaoConstants {
+contract DaoRegistry is DaoConstants, AdapterGuard {
     /*
      * LIBRARIES
      */
     using FlagHelper for uint256;
     using SafeMath for uint256;
 
-    /*
-     * MODIFIERS
-     */
-    modifier onlyAdapter {
-        require(inverseRegistry[msg.sender] != bytes32(0), "onlyAdapter");
-        _;
+    enum DaoState {
+        CREATION,
+        READY
     }
 
     /*
      * EVENTS
-     */
+     */ 
     /// @dev - Events for Proposals
     event SubmittedProposal(
         uint256 proposalId,
@@ -109,6 +105,8 @@ contract DaoRegistry is Ownable, DaoConstants {
     mapping(address => address) private memberAddressesByDelegatedKey; // ???
     Bank private bank; // the state of the DAO Bank
 
+    DaoState public state = DaoState.CREATION;
+
     /*
      * PUBLIC VARIABLES
      */
@@ -162,6 +160,10 @@ contract DaoRegistry is Ownable, DaoConstants {
         }
     }
 
+    function finalizeDao() external {
+        state = DaoState.READY;
+    }
+
     function onboard(
         IERC20 token,
         uint256 tokenAmount,
@@ -209,7 +211,7 @@ contract DaoRegistry is Ownable, DaoConstants {
 
     function addAdapter(bytes32 adapterId, address adapterAddress)
         external
-        onlyAdapter //TODO we may need to set different access type based on each adapter
+        onlyAdapter(this)
     {
         require(adapterId != bytes32(0), "adapterId must not be empty");
         require(
@@ -224,7 +226,7 @@ contract DaoRegistry is Ownable, DaoConstants {
         inverseRegistry[adapterAddress] = adapterId;
     }
 
-    function removeAdapter(bytes32 adapterId) external onlyAdapter {
+    function removeAdapter(bytes32 adapterId) external onlyAdapter(this) {
         require(adapterId != bytes32(0), "adapterId must not be empty");
         require(
             registry[adapterId] != address(0x0),
@@ -254,7 +256,7 @@ contract DaoRegistry is Ownable, DaoConstants {
         address _actionTo,
         uint256 _actionValue,
         bytes calldata _actionData
-    ) external onlyAdapter returns (bytes memory) {
+    ) external onlyAdapter(this) returns (bytes memory) {
         (bool success, bytes memory retData) = _actionTo.call{
             value: _actionValue
         }(_actionData);
@@ -272,7 +274,7 @@ contract DaoRegistry is Ownable, DaoConstants {
     /// @dev - Proposal: submit proposals to the DAO registry
     function submitProposal(address applicant)
         external
-        onlyAdapter
+        onlyAdapter(this)
         returns (uint256)
     {
         Proposal memory p = Proposal(
@@ -294,7 +296,7 @@ contract DaoRegistry is Ownable, DaoConstants {
         uint256 proposalId,
         address sponsoringMember,
         bytes calldata votingData
-    ) external onlyAdapter {
+    ) external onlyAdapter(this) {
         Proposal memory proposal = proposals[proposalId];
         require(proposal.flags.exists(), "proposal does not exist");
         require(
@@ -333,7 +335,7 @@ contract DaoRegistry is Ownable, DaoConstants {
     }
 
     /// @dev - Proposal: mark a proposal as processed in the DAO registry
-    function processProposal(uint256 proposalId) external onlyAdapter {
+    function processProposal(uint256 proposalId) external onlyAdapter(this) {
         Proposal memory proposal = proposals[proposalId];
         require(
             proposal.flags.exists(),
@@ -374,7 +376,7 @@ contract DaoRegistry is Ownable, DaoConstants {
 
     function updateMemberShares(address memberAddr, uint256 shares)
         external
-        onlyAdapter
+        onlyAdapter(this)
     {
         require(
             totalShares.add(totalLoot).add(shares) < type(uint256).max,
@@ -398,7 +400,7 @@ contract DaoRegistry is Ownable, DaoConstants {
 
     function updateMemberLoot(address memberAddr, uint256 loot)
         external
-        onlyAdapter
+        onlyAdapter(this)
     {
         require(
             totalShares.add(totalLoot).add(loot) < type(uint256).max,
@@ -422,7 +424,7 @@ contract DaoRegistry is Ownable, DaoConstants {
 
     function updateDelegateKey(address memberAddr, address newDelegateKey)
         external
-        onlyAdapter
+        onlyAdapter(this)
     {
         require(newDelegateKey != address(0), "newDelegateKey cannot be 0");
 
@@ -460,7 +462,7 @@ contract DaoRegistry is Ownable, DaoConstants {
      * BANK
      */
 
-    function addToEscrow(address token, uint256 amount) external onlyAdapter {
+    function addToEscrow(address token, uint256 amount) external onlyAdapter(this) {
         require(
             token != GUILD && token != ESCROW && token != TOTAL,
             "invalid token"
@@ -473,7 +475,7 @@ contract DaoRegistry is Ownable, DaoConstants {
         }
     }
 
-    function addToGuild(address token, uint256 amount) external onlyAdapter {
+    function addToGuild(address token, uint256 amount) external onlyAdapter(this) {
         require(
             token != GUILD && token != ESCROW && token != TOTAL,
             "invalid token"
@@ -490,7 +492,7 @@ contract DaoRegistry is Ownable, DaoConstants {
         address applicant,
         address token,
         uint256 amount
-    ) external onlyAdapter {
+    ) external onlyAdapter(this) {
         require(
             bank.tokenBalances[GUILD][token] >= amount,
             "insufficient balance"
@@ -502,7 +504,7 @@ contract DaoRegistry is Ownable, DaoConstants {
 
     function burnLockedLoot(address memberAddr, uint256 lootToBurn)
         external
-        onlyAdapter
+        onlyAdapter(this)
     {
         //lock if member has enough loot
         Member storage member = members[memberAddr];
@@ -515,7 +517,7 @@ contract DaoRegistry is Ownable, DaoConstants {
 
     function lockLoot(address memberAddr, uint256 lootToLock)
         external
-        onlyAdapter
+        onlyAdapter(this)
     {
         //lock if member has enough loot
         require(isActiveMember(memberAddr), "must be an active member");
@@ -529,7 +531,7 @@ contract DaoRegistry is Ownable, DaoConstants {
 
     function releaseLoot(address memberAddr, uint256 lootToRelease)
         external
-        onlyAdapter
+        onlyAdapter(this)
     {
         //release if member has enough locked loot
         require(isActiveMember(memberAddr), "must be an active member");
@@ -545,7 +547,7 @@ contract DaoRegistry is Ownable, DaoConstants {
         address memberAddr,
         uint256 sharesToBurn,
         uint256 lootToBurn
-    ) external onlyAdapter {
+    ) external onlyAdapter(this) {
         //Burn if member has enough shares and loot
         Member storage member = members[memberAddr];
         require(member.nbShares >= sharesToBurn, "insufficient shares");

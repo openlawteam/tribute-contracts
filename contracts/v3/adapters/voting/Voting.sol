@@ -25,7 +25,7 @@ contract VotingContract is IVoting, DaoConstants, MemberGuard, AdapterGuard {
     mapping(address => mapping(uint256 => Voting)) public votes;
     mapping(address => VotingConfig) public votingConfigs;
 
-    function registerDao(
+    function configureDao(
         DaoRegistry dao,
         uint256 votingPeriod,
         uint256 gracePeriod
