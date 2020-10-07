@@ -318,7 +318,6 @@ it("should be possible to a member to ragequit if the member voted YES on a prop
     let nbOfLootShares = 100000000;
     let chunkSize = 5;
     let dao = await createDao(
-      {},
       myAccount,
       lootSharePrice,
       nbOfLootShares,
