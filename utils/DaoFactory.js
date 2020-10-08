@@ -12,14 +12,14 @@ const remaining = sharePrice.sub(web3.utils.toBN('50000000000000'));
 
 const OLTokenContract = artifacts.require("./test/OLT");
 
-const FlagHelperLib = artifacts.require('./v3/helpers/FlagHelper');
-const DaoFactory = artifacts.require('./v3/core/DaoFactory');
-const DaoRegistry = artifacts.require("./v3/core/DaoRegistry");
-const VotingContract = artifacts.require('./v3/adapters/VotingContract');
-const ManagingContract = artifacts.require('./v3/adapter/ManagingContract');
-const FinancingContract = artifacts.require('./v3/adapter/FinancingContract');
-const RagequitContract = artifacts.require('./v3/adapters/RagequitContract');
-const OnboardingContract = artifacts.require('./v3/adapters/OnboardingContract');
+const FlagHelperLib = artifacts.require('./helpers/FlagHelper128');
+const DaoFactory = artifacts.require('./core/DaoFactory');
+const DaoRegistry = artifacts.require("./core/DaoRegistry");
+const VotingContract = artifacts.require('./adapters/VotingContract');
+const ManagingContract = artifacts.require('./adapter/ManagingContract');
+const FinancingContract = artifacts.require('./adapter/FinancingContract');
+const RagequitContract = artifacts.require('./adapters/RagequitContract');
+const OnboardingContract = artifacts.require('./adapters/OnboardingContract');
 const NonVotingOnboardingContract = artifacts.require(
   "./v3/adapters/NonVotingOnboardingContract"
 );
@@ -67,8 +67,10 @@ async function addDefaultAdapters(dao, unitPrice=sharePrice, nbShares=numberOfSh
 
 async function createDao(senderAccount, unitPrice=sharePrice, nbShares=numberOfShares, votingPeriod=10, gracePeriod=1) {
     let lib = await FlagHelperLib.new();
-    await DaoRegistry.link("FlagHelper", lib.address);
+    await DaoRegistry.link("FlagHelper128", lib.address);
     let dao = await DaoRegistry.new({ from: senderAccount, gasPrice: web3.utils.toBN("0") });
+    let receipt = await web3.eth.getTransactionReceipt(dao.transactionHash);
+    console.log('gas used for dao:', receipt.gasUsed);
     await addDefaultAdapters(dao, unitPrice, nbShares, votingPeriod, gracePeriod);
     await dao.finalizeDao();
     return dao;
@@ -106,19 +108,10 @@ async function advanceTime(time) {
     });
 }
 
-async function reportingTransaction(details, promiseTransaction) {
-    const tx = await promiseTransaction;
-    console.log('**************');
-    console.log(details);
-    console.log('gas used', tx && tx.receipt && tx.receipt.gasUsed);
-    console.log('**************');
-}
-
 module.exports = {
   prepareSmartContracts,
   advanceTime,
   createDao,
-  reportingTransaction,
   addDefaultAdapters,
   entry,
   GUILD,

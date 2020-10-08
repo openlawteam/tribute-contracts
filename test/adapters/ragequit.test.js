@@ -164,7 +164,7 @@ contract('LAO LAND DAO - Ragequit Adapter', async accounts => {
 
     //Check Guild Bank Balance
     let newGuildBalance = await dao.balanceOf(GUILD, ETH_TOKEN);
-    assert.equal(toBN(newGuildBalance).toString(), "240"); //must be close to 0
+    assert.equal(toBN(newGuildBalance).toString(), "120"); //must be close to 0
 
     //Check Ragequit Event
     pastEvents = await ragequitContract.getPastEvents();
@@ -225,7 +225,7 @@ it("should be possible to a member to ragequit if the member voted YES on a prop
 
     //Check Guild Bank Balance
     let newGuildBalance = await dao.balanceOf(GUILD, ETH_TOKEN);
-    assert.equal(toBN(newGuildBalance).toString(), "240"); //must be close to 0
+    assert.equal(toBN(newGuildBalance).toString(), "120"); //must be close to 0
 
     //Check Ragequit Event
     pastEvents = await ragequitContract.getPastEvents();
@@ -301,7 +301,7 @@ it("should be possible to a member to ragequit if the member voted YES on a prop
 
     //Check Guild Bank Balance
     let newGuildBalance = await dao.balanceOf(GUILD, ETH_TOKEN);
-    assert.equal(toBN(newGuildBalance).toString(), "240"); //must be close to 0
+    assert.equal(toBN(newGuildBalance).toString(), "120"); //must be close to 0
 
     //Check Ragequit Event
     pastEvents = await ragequitContract.getPastEvents();

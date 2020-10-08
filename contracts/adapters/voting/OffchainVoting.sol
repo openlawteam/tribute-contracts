@@ -8,7 +8,6 @@ import "../../core/DaoConstants.sol";
 import "../interfaces/IVoting.sol";
 import "../../guards/MemberGuard.sol";
 import "../../guards/AdapterGuard.sol";
-import "../../helpers/FlagHelper.sol";
 import "./Voting.sol";
 
 contract OffchainVotingContract is
@@ -17,7 +16,6 @@ contract OffchainVotingContract is
     MemberGuard,
     AdapterGuard
 {
-    using FlagHelper for uint256;
 
     VotingContract private _fallbackVoting;
 
@@ -120,7 +118,7 @@ contract OffchainVotingContract is
         } else {
             diff = nbNo - nbYes;
         }
-        if (diff * 2 > dao.totalShares()) {
+        if (diff * 2 > dao.getPriorVotes(dao.TOTAL(), vote.blockNumber)) {
             return true;
         }
 
@@ -157,7 +155,7 @@ contract OffchainVotingContract is
         DaoRegistry dao,
         uint256 proposalId,
         bytes memory data /*onlyAdapter(dao)*/
-    ) external override returns (uint256) {
+    ) external override {
         require(
             msg.sender == address(dao),
             "only the DaoRegistry can call this method"

@@ -9,7 +9,7 @@ interface IVoting {
         DaoRegistry dao,
         uint256 proposalId,
         bytes calldata data
-    ) external returns (uint256);
+    ) external;
 
     function voteResult(DaoRegistry dao, uint256 proposalId)
         external

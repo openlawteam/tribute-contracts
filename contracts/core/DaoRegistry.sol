@@ -3,7 +3,7 @@ pragma solidity ^0.7.0;
 // SPDX-License-Identifier: MIT
 
 import "../adapters/interfaces/IOnboarding.sol";
-import "../helpers/FlagHelper.sol";
+import "../helpers/FlagHelper128.sol";
 import "../utils/SafeMath.sol";
 import "./DaoConstants.sol";
 import "../adapters/interfaces/IVoting.sol";
@@ -14,7 +14,7 @@ contract DaoRegistry is DaoConstants, AdapterGuard {
     /*
      * LIBRARIES
      */
-    using FlagHelper for uint256;
+    using FlagHelper128 for uint128;
     using SafeMath for uint256;
 
     enum DaoState {
@@ -27,21 +27,19 @@ contract DaoRegistry is DaoConstants, AdapterGuard {
      */ 
     /// @dev - Events for Proposals
     event SubmittedProposal(
-        uint256 proposalId,
-        uint256 proposalIndex,
-        address applicant,
-        uint256 flags
+        uint64 proposalId,
+        uint128 flags,
+        address applicant
     );
     event SponsoredProposal(
-        uint256 proposalId,
-        uint256 proposalIndex,
-        uint256 startingTime,
-        uint256 flags
+        uint64 proposalId,
+        uint128 flags,
+        uint64 startingTime
     );
     event ProcessedProposal(
-        uint256 proposalId,
-        uint256 processingTime,
-        uint256 flags
+        uint64 proposalId,
+        uint64 processingTime,
+        uint128 flags
     );
 
     /// @dev - Events for Members
@@ -73,22 +71,19 @@ contract DaoRegistry is DaoConstants, AdapterGuard {
         address applicant; // the address of the sender that submitted the proposal
         bytes32 adapterId; // the adapter id that called the functions to change the DAO state
         address adapterAddress; // the adapter address that called the functions to change the DAO state
-        uint256 flags; // flags to track the state of the proposal: exist, sponsored, processed, canceled, etc.
+        uint128 flags; // flags to track the state of the proposal: exist, sponsored, processed, canceled, etc.
     }
 
     struct Member {
         // the structure to track all the members in the DAO
-        uint256 flags; // flags to track the state of the member: exist, jailed, etc
+        uint128 flags; // flags to track the state of the member: exist, jailed, etc
         address delegateKey; // ?
-        uint256 nbShares; // number of shares of the DAO member
-        uint256 nbLoot; // number of non-voting shares of the DAO member
-        uint256 lockedLoot;
     }
 
     struct Checkpoint {
         // A checkpoint for marking number of votes from a given block
-        uint256 fromBlock;
-        uint256 votes;
+        uint96 fromBlock;
+        uint160 votes;
     }
 
     struct Bank {
@@ -98,26 +93,19 @@ contract DaoRegistry is DaoConstants, AdapterGuard {
     }
 
     /*
-     * PRIVATE VARIABLES
+     * PUBLIC VARIABLES
      */
-    mapping(address => Member) private members; // the map to track all members of the DAO
-    mapping(address => address) private memberAddresses; // the member address map
-    mapping(address => address) private memberAddressesByDelegatedKey; // ???
-    Bank private bank; // the state of the DAO Bank
+    mapping(address => Member) public members; // the map to track all members of the DAO
+    mapping(address => address) public memberAddresses; // the member address map
+    mapping(address => address) public memberAddressesByDelegatedKey; // ???
+    Bank private _bank; // the state of the DAO Bank
 
     DaoState public state = DaoState.CREATION;
 
-    /*
-     * PUBLIC VARIABLES
-     */
-    /// @notice The total shares in the DAO, which has its maximum number at 2**256 - 1
-    uint256 public totalShares = 0;
-    /// @notice The total non-voting shares in the DAO, which has its maximum number at 2**256 - 1
-    uint256 public totalLoot = 0; // total loot across all members
     /// @notice The number of proposals submitted to the DAO
-    uint256 public proposalCount;
+    uint64 public proposalCount;
     /// @notice The map that keeps track of all proposasls submitted to the DAO
-    mapping(uint256 => Proposal) public proposals;
+    mapping(uint64 => Proposal) public proposals;
     /// @notice The map that keeps track of all adapters registered in the DAO
     mapping(bytes32 => address) public registry;
     /// @notice The inverse map to get the adapter id based on its address
@@ -126,12 +114,7 @@ contract DaoRegistry is DaoConstants, AdapterGuard {
     mapping(address => mapping(uint32 => Checkpoint)) public checkpoints;
     /// @notice The number of checkpoints for each account
     mapping(address => uint32) public numCheckpoints;
-    /// @notice The reserved address for Guild bank account
-    address public constant GUILD = address(0xdead);
-    /// @notice The reserved address for Escrow bank account
-    address public constant ESCROW = address(0xbeef);
-    /// @notice The reserved address for Total funds bank account
-    address public constant TOTAL = address(0xbabe);
+
     /// @notice The maximum number of tokens supported by the bank
     uint256 public constant MAX_TOKENS = 100;
 
@@ -140,10 +123,8 @@ contract DaoRegistry is DaoConstants, AdapterGuard {
         Member storage member = members[memberAddr];
         member.flags = member.flags.setExists(true);
         member.delegateKey = memberAddr;
-        member.nbShares = 1;
-        totalShares = 1;
-
         memberAddressesByDelegatedKey[memberAddr] = memberAddr;
+        _unsafeAddToBalance(memberAddr, SHARES, 1);
     }
 
     /*
@@ -279,28 +260,29 @@ contract DaoRegistry is DaoConstants, AdapterGuard {
     function submitProposal(address applicant)
         external
         onlyAdapter(this)
-        returns (uint256)
+        returns (uint64)
     {
-        Proposal memory p = Proposal(
+        proposals[proposalCount++] = Proposal(
             applicant,
             inverseRegistry[msg.sender],
             msg.sender,
             1
         );
-        proposals[proposalCount++] = p;
-        uint256 proposalId = proposalCount - 1;
+        uint64 proposalId = proposalCount - 1;
 
-        emit SubmittedProposal(proposalId, proposalCount, applicant, p.flags);
+        emit SubmittedProposal(proposalId, 1, applicant);
 
         return proposalId;
     }
 
     /// @dev - Proposal: sponsor proposals that were submitted to the DAO registry
     function sponsorProposal(
-        uint256 proposalId,
+        uint256 _proposalId,
         address sponsoringMember,
         bytes calldata votingData
     ) external onlyAdapter(this) {
+        require (_proposalId < type(uint64).max, "proposal Id should only be uint64");
+        uint64 proposalId = uint64(_proposalId);
         Proposal memory proposal = proposals[proposalId];
         require(proposal.flags.exists(), "proposal does not exist");
         require(
@@ -322,7 +304,7 @@ contract DaoRegistry is DaoConstants, AdapterGuard {
         );
 
         IVoting votingContract = IVoting(registry[VOTING]);
-        uint256 votingId = votingContract.startNewVotingForProposal(
+        votingContract.startNewVotingForProposal(
             DaoRegistry(this),
             proposalId,
             votingData
@@ -332,14 +314,16 @@ contract DaoRegistry is DaoConstants, AdapterGuard {
 
         emit SponsoredProposal(
             proposalId,
-            votingId,
-            block.timestamp,
-            proposals[proposalCount].flags
+            proposals[proposalCount].flags,
+            uint64(block.timestamp)
         );
     }
 
     /// @dev - Proposal: mark a proposal as processed in the DAO registry
-    function processProposal(uint256 proposalId) external onlyAdapter(this) {
+    function processProposal(uint256 _proposalId) external onlyAdapter(this) {
+        require (_proposalId < type(uint64).max, "proposal Id should only be uint64");
+        uint64 proposalId = uint64(_proposalId);
+
         Proposal memory proposal = proposals[proposalId];
         require(
             proposal.flags.exists(),
@@ -352,7 +336,7 @@ contract DaoRegistry is DaoConstants, AdapterGuard {
 
         emit ProcessedProposal(
             proposalId,
-            block.timestamp,
+            uint64(block.timestamp),
             proposals[proposalCount].flags
         );
     }
@@ -362,12 +346,14 @@ contract DaoRegistry is DaoConstants, AdapterGuard {
      */
     function isActiveMember(address addr) public view returns (bool) {
         address memberAddr = memberAddressesByDelegatedKey[addr];
-        uint256 memberFlags = members[memberAddr].flags;
+        uint128 memberFlags = members[memberAddr].flags;
         return
             memberFlags.exists() &&
             !memberFlags.isJailed() &&
-            (members[memberAddr].nbShares > 0 ||
-                members[memberAddr].nbLoot > 0);
+            (   balanceOf(memberAddr, SHARES) > 0   ||
+                balanceOf(memberAddr, LOOT) > 0    ||
+                balanceOf(memberAddr, LOCKED_LOOT) > 0
+            );
     }
 
     function memberAddress(address memberOrDelegateKey)
@@ -378,50 +364,37 @@ contract DaoRegistry is DaoConstants, AdapterGuard {
         return memberAddresses[memberOrDelegateKey];
     }
 
-    function updateMemberShares(address memberAddr, uint256 shares)
+    function mintSharesToMember(address memberAddr, uint256 shares)
         public
         onlyAdapter(this)
     {
-        require(
-            totalShares.add(totalLoot).add(shares) < type(uint256).max,
-            "too many shares requested"
-        );
+        balanceOf(TOTAL, LOOT).add(balanceOf(TOTAL, SHARES)).add(shares); // this throws if it overflows
 
         Member storage member = members[memberAddr];
         if (member.delegateKey == address(0x0)) {
             member.flags = member.flags.setExists(true);
             member.delegateKey = memberAddr;
+            memberAddressesByDelegatedKey[member.delegateKey] = memberAddr;
         }
-
-        member.nbShares = shares;
-
-        totalShares = totalShares.add(shares);
-
-        memberAddressesByDelegatedKey[member.delegateKey] = memberAddr;
-
+        _unsafeAddToBalance(memberAddr, SHARES, shares);
+        
         emit UpdateMemberShares(memberAddr, shares);
     }
 
-    function updateMemberLoot(address memberAddr, uint256 loot)
+    function mintLootToMember(address memberAddr, uint256 loot)
         external
         onlyAdapter(this)
     {
-        require(
-            totalShares.add(totalLoot).add(loot) < type(uint256).max,
-            "too many loot requested"
-        );
+        balanceOf(TOTAL, LOOT).add(balanceOf(TOTAL, SHARES)).add(loot); // this throws if it overflows
 
         Member storage member = members[memberAddr];
         if (member.delegateKey == address(0x0)) {
             member.flags = member.flags.setExists(true);
             member.delegateKey = memberAddr;
+            memberAddressesByDelegatedKey[member.delegateKey] = memberAddr;
         }
 
-        member.nbLoot = loot;
-
-        totalLoot = totalLoot.add(loot);
-
-        memberAddressesByDelegatedKey[member.delegateKey] = memberAddr;
+        _unsafeAddToBalance(memberAddr, LOOT, loot);    
 
         emit UpdateMemberLoot(memberAddr, loot);
     }
@@ -455,11 +428,11 @@ contract DaoRegistry is DaoConstants, AdapterGuard {
     }
 
     function nbShares(address member) external view returns (uint256) {
-        return members[memberAddressesByDelegatedKey[member]].nbShares;
+        return balanceOf(memberAddressesByDelegatedKey[member], SHARES);
     }
 
     function nbLoot(address member) external view returns (uint256) {
-        return members[memberAddressesByDelegatedKey[member]].nbLoot;
+        return balanceOf(memberAddressesByDelegatedKey[member], LOOT);
     }
 
     /*
@@ -468,28 +441,28 @@ contract DaoRegistry is DaoConstants, AdapterGuard {
 
     function addToEscrow(address token, uint256 amount) external onlyAdapter(this) {
         require(
-            token != GUILD && token != ESCROW && token != TOTAL,
+            isNotReservedAddress(token),
             "invalid token"
         );
-        unsafeAddToBalance(ESCROW, token, amount);
-        if (!bank.availableTokens[token]) {
-            require(bank.tokens.length < MAX_TOKENS, "max limit reached");
-            bank.availableTokens[token] = true;
-            bank.tokens.push(token);
-        }
+        _unsafeAddToBalance(ESCROW, token, amount);
+        _registerPotentialNewToken(token);
     }
 
+    function _registerPotentialNewToken(address token) internal {
+        if(isNotReservedAddress(token) && !_bank.availableTokens[token]) {
+            require(_bank.tokens.length < MAX_TOKENS, "max limit reached");
+            _bank.availableTokens[token] = true;
+            _bank.tokens.push(token);
+        }
+    
+    }
     function addToGuild(address token, uint256 amount) external onlyAdapter(this) {
         require(
-            token != GUILD && token != ESCROW && token != TOTAL,
+            isNotReservedAddress(token),
             "invalid token"
         );
-        unsafeAddToBalance(GUILD, token, amount);
-        if (!bank.availableTokens[token]) {
-            require(bank.tokens.length < MAX_TOKENS, "max limit reached");
-            bank.availableTokens[token] = true;
-            bank.tokens.push(token);
-        }
+        _unsafeAddToBalance(GUILD, token, amount);
+        _registerPotentialNewToken(token);
     }
 
     function transferFromGuild(
@@ -498,11 +471,11 @@ contract DaoRegistry is DaoConstants, AdapterGuard {
         uint256 amount
     ) external onlyAdapter(this) {
         require(
-            bank.tokenBalances[GUILD][token] >= amount,
+            _bank.tokenBalances[GUILD][token] >= amount,
             "insufficient balance"
         );
-        unsafeSubtractFromBalance(GUILD, token, amount);
-        unsafeAddToBalance(applicant, token, amount);
+        _unsafeSubtractFromBalance(GUILD, token, amount);
+        _unsafeAddToBalance(applicant, token, amount);
         emit Transfer(GUILD, applicant, token, amount);
     }
 
@@ -511,12 +484,10 @@ contract DaoRegistry is DaoConstants, AdapterGuard {
         onlyAdapter(this)
     {
         //lock if member has enough loot
-        Member storage member = members[memberAddr];
-        require(member.lockedLoot >= lootToBurn, "insufficient loot");
+        require(balanceOf(memberAddr, LOCKED_LOOT) >= lootToBurn, "insufficient loot");
 
         // burn locked loot
-        member.lockedLoot = member.lockedLoot.sub(lootToBurn);
-        totalLoot = totalLoot.sub(lootToBurn);
+        _unsafeSubtractFromBalance(memberAddr, LOCKED_LOOT, lootToBurn);
     }
 
     function lockLoot(address memberAddr, uint256 lootToLock)
@@ -525,12 +496,11 @@ contract DaoRegistry is DaoConstants, AdapterGuard {
     {
         //lock if member has enough loot
         require(isActiveMember(memberAddr), "must be an active member");
-        Member storage member = members[memberAddr];
-        require(member.nbLoot >= lootToLock, "insufficient loot");
+        require(balanceOf(memberAddr, LOOT) >= lootToLock, "insufficient loot");
 
         // lock loot
-        member.nbLoot = member.nbLoot.sub(lootToLock);
-        member.lockedLoot = member.lockedLoot.add(lootToLock);
+        _unsafeAddToBalance(memberAddr, LOCKED_LOOT, lootToLock);
+        _unsafeSubtractFromBalance(memberAddr, LOOT, lootToLock);
     }
 
     function releaseLoot(address memberAddr, uint256 lootToRelease)
@@ -539,12 +509,11 @@ contract DaoRegistry is DaoConstants, AdapterGuard {
     {
         //release if member has enough locked loot
         require(isActiveMember(memberAddr), "must be an active member");
-        Member storage member = members[memberAddr];
-        require(member.lockedLoot >= lootToRelease, "insufficient loot locked");
+        require(balanceOf(memberAddr, LOCKED_LOOT) >= lootToRelease, "insufficient loot locked");
 
         // release loot
-        member.lockedLoot = member.lockedLoot.sub(lootToRelease);
-        member.nbLoot = member.nbLoot.add(lootToRelease);
+        _unsafeAddToBalance(memberAddr, LOOT, lootToRelease);
+        _unsafeSubtractFromBalance(memberAddr, LOCKED_LOOT, lootToRelease);
     }
 
     function burnShares(
@@ -553,26 +522,23 @@ contract DaoRegistry is DaoConstants, AdapterGuard {
         uint256 lootToBurn
     ) external onlyAdapter(this) {
         //Burn if member has enough shares and loot
-        Member storage member = members[memberAddr];
-        require(member.nbShares >= sharesToBurn, "insufficient shares");
-        require(member.nbLoot >= lootToBurn, "insufficient loot");
+        require(balanceOf(memberAddr, SHARES) >= sharesToBurn, "insufficient shares");
+        require(balanceOf(memberAddr, LOOT) >= lootToBurn, "insufficient loot");
 
         //TODO: require(canRagequit(member.highestIndexYesVote), "cannot ragequit until highest index proposal member voted YES on is processed");
 
-        uint256 initialTotalSharesAndLoot = totalShares.add(totalLoot);
+        uint256 initialTotalSharesAndLoot = balanceOf(TOTAL, SHARES).add(balanceOf(TOTAL, LOOT)).add(balanceOf(TOTAL, LOCKED_LOOT));
 
         // burn shares and loot
         uint256 sharesAndLootToBurn = sharesToBurn.add(lootToBurn);
-        member.nbShares = member.nbShares.sub(sharesToBurn);
-        member.nbLoot = member.nbLoot.sub(lootToBurn);
-        totalShares = totalShares.sub(sharesToBurn);
-        totalLoot = totalLoot.sub(lootToBurn);
+        _unsafeSubtractFromBalance(memberAddr, SHARES, sharesToBurn);
+        _unsafeSubtractFromBalance(memberAddr, LOOT, lootToBurn);
 
         //Update internal Guild and Member balances
-        for (uint256 i = 0; i < bank.tokens.length; i++) {
-            address token = bank.tokens[i];
-            uint256 amountToRagequit = fairShare(
-                bank.tokenBalances[GUILD][token],
+        for (uint256 i = 0; i < _bank.tokens.length; i++) {
+            address token = _bank.tokens[i];
+            uint256 amountToRagequit = _fairShare(
+                balanceOf(GUILD, token),
                 sharesAndLootToBurn,
                 initialTotalSharesAndLoot
             );
@@ -581,72 +547,86 @@ contract DaoRegistry is DaoConstants, AdapterGuard {
                 // deliberately not using safemath here to keep overflows from preventing the function execution
                 // (which would break ragekicks) if a token overflows,
                 // it is because the supply was artificially inflated to oblivion, so we probably don"t care about it anyways
-                bank.tokenBalances[GUILD][token] -= amountToRagequit;
-                bank.tokenBalances[memberAddr][token] += amountToRagequit;
+                _unsafeInternalTransfer(GUILD, memberAddr, token, amountToRagequit);
                 //TODO: do we want to emit an event for each token transfer?
                 // emit Transfer(GUILD, applicant, token, amount);
             }
         }
     }
 
-    function isNotReservedAddress(address applicant)
-        external
-        pure
-        returns (bool)
-    {
-        return
-            applicant != address(0x0) &&
-            applicant != GUILD &&
-            applicant != ESCROW &&
-            applicant != TOTAL;
-    }
-
     /**
      * Public read-only functions
      */
     function balanceOf(address user, address token)
-        external
+        public
         view
         returns (uint256)
     {
-        return bank.tokenBalances[user][token];
+        return _bank.tokenBalances[user][token];
+    }
+
+    function isNotReservedAddress(address applicant)
+        public
+        pure
+        returns (bool)
+    {
+        return
+            applicant != GUILD &&
+            applicant != ESCROW &&
+            applicant != LOOT &&
+            applicant != SHARES &&
+            applicant != LOCKED_LOOT &&
+            applicant != TOTAL;
     }
 
     /**
      * Internal bookkeeping
      */
-    function unsafeAddToBalance(
+    function _unsafeAddToBalance(
         address user,
         address token,
         uint256 amount
     ) internal {
-        bank.tokenBalances[user][token] += amount;
-        bank.tokenBalances[TOTAL][token] += amount;
+        _bank.tokenBalances[user][token] += amount;
+        _bank.tokenBalances[TOTAL][token] += amount;
+        if(token == SHARES) {
+            _moveDelegates(
+                address(0),
+                user,
+                _bank.tokenBalances[user][token]
+            );
+
+            _moveDelegates(
+                address(0),
+                TOTAL,
+                _bank.tokenBalances[TOTAL][token]
+            );
+        }
     }
 
-    function unsafeSubtractFromBalance(
+    function _unsafeSubtractFromBalance(
         address user,
         address token,
         uint256 amount
     ) internal {
-        bank.tokenBalances[user][token] -= amount;
-        bank.tokenBalances[TOTAL][token] -= amount;
+        _bank.tokenBalances[user][token] -= amount;
+        _bank.tokenBalances[TOTAL][token] -= amount;
     }
 
-    function unsafeInternalTransfer(
+    function _unsafeInternalTransfer(
         address from,
         address to,
         address token,
         uint256 amount
     ) internal {
-        unsafeSubtractFromBalance(from, token, amount);
-        unsafeAddToBalance(to, token, amount);
+        _unsafeSubtractFromBalance(from, token, amount);
+        _unsafeAddToBalance(to, token, amount);
     }
 
     /**
      * Internal utility
      */
-    function fairShare(
+    function _fairShare(
         uint256 balance,
         uint256 shares,
         uint256 _totalShares
@@ -751,8 +731,11 @@ contract DaoRegistry is DaoConstants, AdapterGuard {
     function _writeCheckpoint(
         address delegatee,
         uint32 nCheckpoints,
-        uint256 newVotes
+        uint256 _newVotes
     ) internal {
+        require(_newVotes < type(uint160).max, "too big of a vote");
+        uint160 newVotes = uint160(_newVotes);
+        
         if (
             nCheckpoints > 0 &&
             checkpoints[delegatee][nCheckpoints - 1].fromBlock == block.number
@@ -760,7 +743,7 @@ contract DaoRegistry is DaoConstants, AdapterGuard {
             checkpoints[delegatee][nCheckpoints - 1].votes = newVotes;
         } else {
             checkpoints[delegatee][nCheckpoints] = Checkpoint(
-                block.number,
+                uint96(block.number),
                 newVotes
             );
             numCheckpoints[delegatee] = nCheckpoints + 1;
@@ -786,11 +769,11 @@ contract DaoRegistry is DaoConstants, AdapterGuard {
     {
         // If the _res length is less than 68, then the transaction failed silently (without a revert message)
         if (_res.length < 68) return "Transaction reverted silently";
-        bytes memory revertData = slice(_res, 4, _res.length - 4); // Remove the selector which is the first 4 bytes
+        bytes memory revertData = _slice(_res, 4, _res.length - 4); // Remove the selector which is the first 4 bytes
         return abi.decode(revertData, (string)); // All that remains is the revert string
     }
 
-    function slice(
+    function _slice(
         bytes memory _bytes,
         uint256 _start,
         uint256 _length
