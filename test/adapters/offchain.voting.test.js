@@ -92,8 +92,6 @@ contract('LAOLAND - Offchain Voting Module', async accounts => {
     const votes2 = r3.votes;
     const result3 = toStepNode(votes2[2], voteResultTree2);
 
-    console.log(result3);
-
     await voting.submitVoteResult(dao.address, proposalId, voteResultTree2.getHexRoot(), result3, {from: myAccount, gasPrice: web3.utils.toBN("0")});
 
     const nodePrevious = toStepNode(votes2[0], voteResultTree2);
