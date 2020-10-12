@@ -47,7 +47,7 @@ contract DaoRegistry is DaoConstants, AdapterGuard {
 
     /// @dev - Events for Bank
     event TokensCollected(
-        address indexed moloch,
+        address indexed dao,
         address indexed token,
         uint256 amountToCollect
     );

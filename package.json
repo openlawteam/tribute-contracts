@@ -27,12 +27,12 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/openlawteam/moloch.git"
+    "url": "git+https://github.com/openlawteam/laoland.git"
   },
   "author": "",
   "license": "ISC",
   "bugs": {
-    "url": "https://github.com/openlawteam/moloch/issues"
+    "url": "https://github.com/openlawteam/laoland/issues"
   },
-  "homepage": "https://github.com/openlawteam/moloch#readme"
+  "homepage": "https://github.com/openlawteam/laoland#readme"
 }

@@ -8,15 +8,13 @@ This is why we would like to introduce a more modular approach to Moloch archite
 - Adaptable, we will be able to adapt each part of the DAO to the needs of the ones using it without the need to audit the entire code bade every time
 - Upgradable, it should be easier to upgrade parts once the need evolves. The best example we have in mind is voting, maybe the way of voting evolve with time and it is good to be able to upgrade that economic, we can imagine some modules being used by multiple DAOs without the need to be redeployed
 
-This is the first draft of v3 architecture which opens rooms for discussion and design decisions.
-
 Inspired by the hexagonal architecture pattern we believe that we can have additional layers of security and break the main contract into smaller contracts. With that, we create loosely coupled modules/contracts, easier to audit, and can be easily connected to the DAO.
 
 The architecture is composed by 3 main types of components:
 
 **Core Module**
 - The Core module (Registry) keeps track of the state changes of the DAO.
-- The Registry tracks all the registered Adapters, Members, Proposals, and Bank Accounts of the DAO.
+- The Registry tracks all the registered Adapters, Proposals, and Bank Accounts of the DAO.
 - Only Adapters are allowed to call functions from the Registry Module.
 - The Registry does not communicate with External World directly, it needs to go through an Adapter to pull or push information.
 - The Registry uses the `onlyAdapter` modifier to functions that change the state of the Registry/DAO, in the future we may want to grant different access types based on the Adapter type. It may expose some **read-only** public functions (`external` or `public`) to facilitate queries.
@@ -31,7 +29,7 @@ The architecture is composed by 3 main types of components:
 **External World**
 - RPC clients responsible for calling the Adapters public/external functions to interact with the DAO Core Module.
 
-![moloch_v3_architecture](https://user-images.githubusercontent.com/708579/94478554-cddf5b00-01a9-11eb-9e80-cc3c55dea492.png)
+![laoland_architecture](https://user-images.githubusercontent.com/708579/94478554-cddf5b00-01a9-11eb-9e80-cc3c55dea492.png)
 
 The main idea is to limit access to the contracts according to each layer. External World (e.g: RPC clients) can access the core module only and via Adapter, never directly. Every adapter will contain all the necessary logic and data to provide to the Core module during the calls, and Core Module will keep track of the state changes in the DAO. An initial draft of this idea was implemented in the `Financing` Adapter which allows an individual to submit a request for financing/grant. The information always flows from the External World to the Core Module, never the other way around. If a Core Module needs external info, that should be provided via an Adapter instead of calling External World directly.
 
@@ -52,8 +50,8 @@ To fix the Solidity code with the linter hints, simply run:
 
 ## Contribute
 
-Moloch exists thanks to its contributors. There are many ways you can participate and help build high quality software. Check out the [contribution guide](CONTRIBUTING.md)!
+Laoland exists thanks to its contributors. There are many ways you can participate and help build high quality software. Check out the [contribution guide](CONTRIBUTING.md)!
 
 ## License
 
-Moloch is released under the [MIT License](LICENSE).
+Laoland is released under the [MIT License](LICENSE).
