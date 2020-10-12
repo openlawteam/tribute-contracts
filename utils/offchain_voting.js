@@ -12,13 +12,16 @@ function toStepNode(step, merkleTree) {
   };
 }
 
-async function addVote(votes, blockNumber, daoAddress, proposalId, account, memberWeight, voteYes) {
+async function addVote(votes, blockNumber, dao, proposalId, account, voteYes) {
   const proposalHash = sha3(web3.eth.abi.encodeParameters(
     ['uint256', 'address', 'uint256'], 
-    [blockNumber.toString(), daoAddress, proposalId]));    
+    [blockNumber.toString(), dao.address, proposalId]));    
+  
+  const memberWeight = await dao.nbShares(account);
+
   const vote = {
     address : account.toString(),
-    weight: memberWeight,
+    weight: memberWeight.toString(),
     signature : await generateVote(account, proposalHash, voteYes),
     voteResult : voteYes ? 1 : 2
   };

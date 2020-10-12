@@ -36,7 +36,7 @@ contract('LAOLAND - Offchain Voting Module', async accounts => {
     const blockNumber = await web3.eth.getBlockNumber();
     await onboarding.sponsorProposal(dao.address, 0, web3.eth.abi.encodeParameter('uint256', blockNumber), {from: myAccount, gasPrice: toBN("0")});
     
-    const voteElements = await addVote([], blockNumber, dao.address, 0, myAccount, 1, true);
+    const voteElements = await addVote([], blockNumber, dao, 0, myAccount, true);
     const {voteResultTree, votes} = prepareVoteResult(voteElements);
     const result = toStepNode(votes[0], voteResultTree);
     
@@ -62,8 +62,8 @@ contract('LAOLAND - Offchain Voting Module', async accounts => {
     await onboarding.sponsorProposal(dao.address, 0, web3.eth.abi.encodeParameter('uint256', blockNumber), {from: myAccount, gasPrice: web3.utils.toBN("0")});
     await onboarding.sponsorProposal(dao.address, 1, web3.eth.abi.encodeParameter('uint256', blockNumber), {from: myAccount, gasPrice: web3.utils.toBN("0")});
 
-    const voteElements = await addVote([], blockNumber, dao.address, 0, myAccount, 1, true);
-    const voteElements2 = await addVote([], blockNumber, dao.address, 1, myAccount, 1, true);
+    const voteElements = await addVote([], blockNumber, dao, 0, myAccount, true);
+    const voteElements2 = await addVote([], blockNumber, dao, 1, myAccount, true);
     const r1 = prepareVoteResult(voteElements);
     const r2 = prepareVoteResult(voteElements2);
 
@@ -83,9 +83,9 @@ contract('LAOLAND - Offchain Voting Module', async accounts => {
     const proposalId = 2;
     await onboarding.sponsorProposal(dao.address, proposalId, web3.eth.abi.encodeParameter('uint256', blockNumber), {from: myAccount, gasPrice: web3.utils.toBN("0")});
     
-    let ve = await addVote([], blockNumber, dao.address, proposalId, myAccount, 1, true);
-    ve = await addVote(ve, blockNumber, dao.address, proposalId, otherAccount, 1, true);
-    ve = await addVote(ve, blockNumber, dao.address, proposalId, otherAccount2, 1, false);
+    let ve = await addVote([], blockNumber, dao, proposalId, myAccount, true);
+    ve = await addVote(ve, blockNumber, dao, proposalId, otherAccount, true);
+    ve = await addVote(ve, blockNumber, dao, proposalId, otherAccount2, false);
 
     const r3 = prepareVoteResult([ve[2], ve[0] ,ve[1] ]);
     const voteResultTree2 = r3.voteResultTree;
