@@ -16,7 +16,6 @@ contract OffchainVotingContract is
     MemberGuard,
     AdapterGuard
 {
-
     VotingContract private _fallbackVoting;
 
     struct VotingConfig {
@@ -53,7 +52,7 @@ contract OffchainVotingContract is
     mapping(address => mapping(uint256 => Voting)) public votes;
     mapping(address => VotingConfig) public votingConfigs;
 
-    constructor (VotingContract _c) {
+    constructor(VotingContract _c) {
         _fallbackVoting = _c;
     }
 
@@ -88,8 +87,6 @@ contract OffchainVotingContract is
         - if we already have a result that has not been challenged
             * is the new one heavier than the previous one ?
          */
-
-        
 
         if (vote.resultRoot == bytes32(0) || vote.isChallenged) {
             require(
@@ -139,20 +136,23 @@ contract OffchainVotingContract is
         bytes32 hashCurrent = _nodeHash(result);
         uint256 blockNumber = vote.blockNumber;
         address voter = result.voter;
-        require(verify(resultRoot, hashCurrent, result.proof), "result node & result merkle root / proof mismatch");
+        require(
+            verify(resultRoot, hashCurrent, result.proof),
+            "result node & result merkle root / proof mismatch"
+        );
 
         bytes32 proposalHash = keccak256(
             abi.encode(blockNumber, address(dao), proposalId)
         );
-        require(_hasVoted(voter, proposalHash, result.sig) != 0, "wrong vote signature!");
-
-        uint256 correctWeight = dao.getPriorVotes(
-            voter,
-            blockNumber
+        require(
+            _hasVoted(voter, proposalHash, result.sig) != 0,
+            "wrong vote signature!"
         );
 
+        uint256 correctWeight = dao.getPriorVotes(voter, blockNumber);
+
         //Incorrect weight
-        require(correctWeight == result.weight, "wrong weight!"); 
+        require(correctWeight == result.weight, "wrong weight!");
 
         _lockFunds(dao, msg.sender);
         vote.nbNo = result.nbNo;
@@ -167,7 +167,10 @@ contract OffchainVotingContract is
         uint256 lootToLock = votingConfigs[address(dao)].stakingAmount;
         //lock if member has enough loot
         require(dao.isActiveMember(memberAddr), "must be an active member");
-        require(dao.balanceOf(memberAddr, LOOT) >= lootToLock, "insufficient loot");
+        require(
+            dao.balanceOf(memberAddr, LOOT) >= lootToLock,
+            "insufficient loot"
+        );
 
         // lock loot
         dao.addToBalance(memberAddr, LOCKED_LOOT, lootToLock);
@@ -178,7 +181,10 @@ contract OffchainVotingContract is
         uint256 lootToRelease = votingConfigs[address(dao)].stakingAmount;
         //release if member has enough locked loot
         require(dao.isActiveMember(memberAddr), "must be an active member");
-        require(dao.balanceOf(memberAddr, LOCKED_LOOT) >= lootToRelease, "insufficient loot locked");
+        require(
+            dao.balanceOf(memberAddr, LOCKED_LOOT) >= lootToRelease,
+            "insufficient loot locked"
+        );
 
         // release loot
         dao.addToBalance(memberAddr, LOOT, lootToRelease);
@@ -189,7 +195,7 @@ contract OffchainVotingContract is
         DaoRegistry dao,
         uint256 proposalId,
         bytes memory data /*onlyAdapter(dao)*/
-    ) external onlyAdapter(dao) override {
+    ) external override onlyAdapter(dao) {
         // it is called from Registry
         require(
             data.length == 32,
@@ -373,8 +379,14 @@ contract OffchainVotingContract is
         _checkStep(dao, nodeCurrent, nodePrevious, proposalHash, proposalId);
     }
 
-    function requestFallback(DaoRegistry dao, uint256 proposalId) external onlyMember(dao) {
-        require(votes[address(dao)][proposalId].fallbackVotes[msg.sender] == false, "the member has already voted for this vote to fallback");
+    function requestFallback(DaoRegistry dao, uint256 proposalId)
+        external
+        onlyMember(dao)
+    {
+        require(
+            votes[address(dao)][proposalId].fallbackVotes[msg.sender] == false,
+            "the member has already voted for this vote to fallback"
+        );
         votes[address(dao)][proposalId].fallbackVotes[msg.sender] = true;
         votes[address(dao)][proposalId].fallbackVotesCount += 1;
     }
@@ -421,7 +433,11 @@ contract OffchainVotingContract is
 
     function _challengeResult(DaoRegistry dao, uint256 proposalId) internal {
         // burn locked loot
-        dao.subtractFromBalance(votes[address(dao)][proposalId].reporter, LOCKED_LOOT, votingConfigs[address(dao)].stakingAmount);
+        dao.subtractFromBalance(
+            votes[address(dao)][proposalId].reporter,
+            LOCKED_LOOT,
+            votingConfigs[address(dao)].stakingAmount
+        );
         votes[address(dao)][proposalId].isChallenged = true;
     }
 

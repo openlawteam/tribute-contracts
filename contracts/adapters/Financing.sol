@@ -61,11 +61,7 @@ contract FinancingContract is IFinancing, DaoConstants, MemberGuard {
         bytes calldata data
     ) external override onlyMember(dao) {
         IVoting votingContract = IVoting(dao.getAdapterAddress(VOTING));
-        votingContract.startNewVotingForProposal(
-            dao,
-            proposalId,
-            data
-        );
+        votingContract.startNewVotingForProposal(dao, proposalId, data);
         dao.sponsorProposal(proposalId, msg.sender);
     }
 
@@ -84,7 +80,7 @@ contract FinancingContract is IFinancing, DaoConstants, MemberGuard {
         );
 
         proposals[address(dao)][proposalId].processed = true;
-        
+
         dao.subtractFromBalance(GUILD, proposal.token, proposal.amount);
         dao.addToBalance(proposal.applicant, proposal.token, proposal.amount);
         dao.processProposal(proposalId);

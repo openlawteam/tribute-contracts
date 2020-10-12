@@ -8,11 +8,7 @@ import "../guards/MemberGuard.sol";
 import "./interfaces/IRagequit.sol";
 import "../utils/SafeMath.sol";
 
-contract RagequitContract is
-    IRagequit,
-    DaoConstants,
-    MemberGuard
-{
+contract RagequitContract is IRagequit, DaoConstants, MemberGuard {
     using SafeMath for uint256;
 
     event Ragequit(
@@ -48,12 +44,21 @@ contract RagequitContract is
         uint256 lootToBurn
     ) internal {
         //Burn if member has enough shares and loot
-        require(dao.balanceOf(memberAddr, SHARES) >= sharesToBurn, "insufficient shares");
-        require(dao.balanceOf(memberAddr, LOOT) >= lootToBurn, "insufficient loot");
+        require(
+            dao.balanceOf(memberAddr, SHARES) >= sharesToBurn,
+            "insufficient shares"
+        );
+        require(
+            dao.balanceOf(memberAddr, LOOT) >= lootToBurn,
+            "insufficient loot"
+        );
 
         //TODO: require(canRagequit(member.highestIndexYesVote), "cannot ragequit until highest index proposal member voted YES on is processed");
 
-        uint256 initialTotalSharesAndLoot = dao.balanceOf(TOTAL, SHARES).add(dao.balanceOf(TOTAL, LOOT)).add(dao.balanceOf(TOTAL, LOCKED_LOOT));
+        uint256 initialTotalSharesAndLoot = dao
+            .balanceOf(TOTAL, SHARES)
+            .add(dao.balanceOf(TOTAL, LOOT))
+            .add(dao.balanceOf(TOTAL, LOCKED_LOOT));
 
         // burn shares and loot
         uint256 sharesAndLootToBurn = sharesToBurn.add(lootToBurn);
@@ -74,7 +79,12 @@ contract RagequitContract is
                 // deliberately not using safemath here to keep overflows from preventing the function execution
                 // (which would break ragekicks) if a token overflows,
                 // it is because the supply was artificially inflated to oblivion, so we probably don"t care about it anyways
-                dao.internalTransfer(GUILD, memberAddr, token, amountToRagequit);
+                dao.internalTransfer(
+                    GUILD,
+                    memberAddr,
+                    token,
+                    amountToRagequit
+                );
                 //TODO: do we want to emit an event for each token transfer?
                 // emit Transfer(GUILD, applicant, token, amount);
             }

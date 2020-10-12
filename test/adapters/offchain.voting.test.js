@@ -3,7 +3,7 @@ const {addVote, prepareVoteResult, toStepNode} = require('../../utils/offchain_v
 const toBN = web3.utils.toBN;
 const sha3 = web3.utils.sha3;
 
-const OffchainVotingContract = artifacts.require('./v3/adapters/OffchainVotingContract');
+const OffchainVotingContract = artifacts.require('./adapters/OffchainVotingContract');
 
 async function createOffchainVotingDao(senderAccount, unitPrice=sharePrice, nbShares=numberOfShares, votingPeriod=10, gracePeriod=1) {
   let lib = await FlagHelperLib.new();

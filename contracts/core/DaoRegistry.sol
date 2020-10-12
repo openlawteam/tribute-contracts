@@ -15,14 +15,11 @@ contract DaoRegistry is DaoConstants, AdapterGuard {
     using FlagHelper128 for uint128;
     using SafeMath for uint256;
 
-    enum DaoState {
-        CREATION,
-        READY
-    }
+    enum DaoState {CREATION, READY}
 
     /*
      * EVENTS
-     */ 
+     */
     /// @dev - Events for Proposals
     event SubmittedProposal(
         uint64 proposalId,
@@ -123,18 +120,11 @@ contract DaoRegistry is DaoConstants, AdapterGuard {
         memberAddressesByDelegatedKey[memberAddr] = memberAddr;
         _bank.tokenBalances[memberAddr][SHARES] = 1;
         _bank.tokenBalances[TOTAL][SHARES] = 1;
-        _moveDelegates(
-            address(0),
-            memberAddr,
-            1
-        );
+        _moveDelegates(address(0), memberAddr, 1);
 
-        _moveDelegates(
-            address(0),
-            TOTAL,
-            1
-        );
+        _moveDelegates(address(0), TOTAL, 1);
     }
+
     /**
     /*
      * PUBLIC NON RESTRICTED FUNCTIONS
@@ -212,11 +202,7 @@ contract DaoRegistry is DaoConstants, AdapterGuard {
         onlyAdapter(this)
         returns (uint64)
     {
-        proposals[proposalCount++] = Proposal(
-            applicant,
-            msg.sender,
-            1
-        );
+        proposals[proposalCount++] = Proposal(applicant, msg.sender, 1);
         uint64 proposalId = proposalCount - 1;
 
         emit SubmittedProposal(proposalId, 1, applicant);
@@ -225,16 +211,22 @@ contract DaoRegistry is DaoConstants, AdapterGuard {
     }
 
     /// @dev - Proposal: sponsor proposals that were submitted to the DAO registry
-    function sponsorProposal(
-        uint256 _proposalId,
-        address sponsoringMember
-    ) external onlyAdapter(this) {
-        require (_proposalId < type(uint64).max, "proposal Id should only be uint64");
+    function sponsorProposal(uint256 _proposalId, address sponsoringMember)
+        external
+        onlyAdapter(this)
+    {
+        require(
+            _proposalId < type(uint64).max,
+            "proposal Id should only be uint64"
+        );
         uint64 proposalId = uint64(_proposalId);
         Proposal storage proposal = proposals[proposalId];
         uint128 flags = proposal.flags;
-        
-        require(proposal.adapterAddress == msg.sender, "only the adapter that submitted the proposal can process it");
+
+        require(
+            proposal.adapterAddress == msg.sender,
+            "only the adapter that submitted the proposal can process it"
+        );
         require(flags.exists(), "proposal does not exist");
         require(!flags.isSponsored(), "proposal must not be sponsored");
         require(!flags.isCancelled(), "proposal must not be cancelled");
@@ -247,37 +239,32 @@ contract DaoRegistry is DaoConstants, AdapterGuard {
         flags = flags.setSponsored(true);
         proposals[proposalId].flags = flags;
 
-        emit SponsoredProposal(
-            proposalId,
-            flags,
-            uint64(block.timestamp)
-        );
+        emit SponsoredProposal(proposalId, flags, uint64(block.timestamp));
     }
 
     /// @dev - Proposal: mark a proposal as processed in the DAO registry
     function processProposal(uint256 _proposalId) external onlyAdapter(this) {
-        require (_proposalId < type(uint64).max, "proposal Id should only be uint64");
+        require(
+            _proposalId < type(uint64).max,
+            "proposal Id should only be uint64"
+        );
         uint64 proposalId = uint64(_proposalId);
 
         Proposal storage proposal = proposals[proposalId];
 
-        require(proposal.adapterAddress == msg.sender, "only the adapter that submitted the proposal can process it");
+        require(
+            proposal.adapterAddress == msg.sender,
+            "only the adapter that submitted the proposal can process it"
+        );
 
         uint128 flags = proposal.flags;
-        require(
-            flags.exists(),
-            "proposal does not exist for this dao"
-        );
+        require(flags.exists(), "proposal does not exist for this dao");
         require(flags.isSponsored(), "proposal not sponsored");
         require(!flags.isProcessed(), "proposal already processed");
         flags = flags.setProcessed(true);
         proposals[proposalId].flags = flags;
 
-        emit ProcessedProposal(
-            proposalId,
-            uint64(block.timestamp),
-            flags
-        );
+        emit ProcessedProposal(proposalId, uint64(block.timestamp), flags);
     }
 
     /*
@@ -289,10 +276,9 @@ contract DaoRegistry is DaoConstants, AdapterGuard {
         return
             memberFlags.exists() &&
             !memberFlags.isJailed() &&
-            (   balanceOf(memberAddr, SHARES) > 0   ||
-                balanceOf(memberAddr, LOOT) > 0    ||
-                balanceOf(memberAddr, LOCKED_LOOT) > 0
-            );
+            (balanceOf(memberAddr, SHARES) > 0 ||
+                balanceOf(memberAddr, LOOT) > 0 ||
+                balanceOf(memberAddr, LOCKED_LOOT) > 0);
     }
 
     function memberAddress(address delegateKey)
@@ -342,9 +328,9 @@ contract DaoRegistry is DaoConstants, AdapterGuard {
     /*
      * BANK
      */
-     
+
     function _registerPotentialNewToken(address token) internal {
-        if(isNotReservedAddress(token) && !_bank.availableTokens[token]) {
+        if (isNotReservedAddress(token) && !_bank.availableTokens[token]) {
             require(_bank.tokens.length < MAX_TOKENS, "max limit reached");
             _bank.availableTokens[token] = true;
             _bank.tokens.push(token);
@@ -380,9 +366,9 @@ contract DaoRegistry is DaoConstants, AdapterGuard {
      * Internal bookkeeping
      */
 
-     function tokens() external view returns (address[] memory) {
-         return _bank.tokens;
-     }
+    function tokens() external view returns (address[] memory) {
+        return _bank.tokens;
+    }
 
     function addToBalance(
         address user,
@@ -391,12 +377,8 @@ contract DaoRegistry is DaoConstants, AdapterGuard {
     ) public onlyAdapter(this) {
         _bank.tokenBalances[user][token] += amount;
         _bank.tokenBalances[TOTAL][token] += amount;
-        if(token == SHARES) {
-            _moveDelegates(
-                address(0),
-                user,
-                _bank.tokenBalances[user][token]
-            );
+        if (token == SHARES) {
+            _moveDelegates(address(0), user, _bank.tokenBalances[user][token]);
 
             _moveDelegates(
                 address(0),
@@ -544,6 +526,7 @@ contract DaoRegistry is DaoConstants, AdapterGuard {
             numCheckpoints[delegatee] = nCheckpoints + 1;
         }
     }
+
     /*
      * Internal Utility Functions
      */

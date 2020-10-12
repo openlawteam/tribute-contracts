@@ -58,12 +58,8 @@ contract ManagingContract is IManaging, DaoConstants, MemberGuard {
         bytes calldata data
     ) external override onlyMember(dao) {
         IVoting votingContract = IVoting(dao.getAdapterAddress(VOTING));
-        votingContract.startNewVotingForProposal(
-            dao,
-            proposalId,
-            data
-        );
-        
+        votingContract.startNewVotingForProposal(dao, proposalId, data);
+
         dao.sponsorProposal(proposalId, msg.sender);
     }
 

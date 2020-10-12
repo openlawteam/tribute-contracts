@@ -5,10 +5,7 @@ import "../../core/DaoRegistry.sol";
 // SPDX-License-Identifier: MIT
 
 interface IOnboarding {
-    function onboard(
-        DaoRegistry dao,
-        uint256 tokenAmount
-    ) external payable;
+    function onboard(DaoRegistry dao, uint256 tokenAmount) external payable;
 
     function sponsorProposal(
         DaoRegistry dao,

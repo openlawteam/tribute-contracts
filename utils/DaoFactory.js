@@ -21,7 +21,7 @@ const FinancingContract = artifacts.require('./adapter/FinancingContract');
 const RagequitContract = artifacts.require('./adapters/RagequitContract');
 const OnboardingContract = artifacts.require('./adapters/OnboardingContract');
 const NonVotingOnboardingContract = artifacts.require(
-  "./v3/adapters/NonVotingOnboardingContract"
+  "./adapters/NonVotingOnboardingContract"
 );
 
 async function prepareSmartContracts() {

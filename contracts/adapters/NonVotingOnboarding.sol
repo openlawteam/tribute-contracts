@@ -49,10 +49,11 @@ contract NonVotingOnboardingContract is
         configs[address(dao)].tokenAddr = tokenAddr;
     }
 
-    function onboard(
-        DaoRegistry dao,
-        uint256 tokenAmount
-    ) external payable override{
+    function onboard(DaoRegistry dao, uint256 tokenAmount)
+        external
+        override
+        payable
+    {
         address tokenAddr = configs[address(dao)].tokenAddr;
         if (tokenAddr == ETH_TOKEN) {
             // ETH onboarding
@@ -110,7 +111,13 @@ contract NonVotingOnboardingContract is
         uint256 amount = numberOfChunks.mul(config.chunkSize);
         uint256 lootRequested = numberOfChunks.mul(config.lootPerChunk);
 
-        _submitMembershipProposalInternal(dao, applicant, lootRequested, amount, token);
+        _submitMembershipProposalInternal(
+            dao,
+            applicant,
+            lootRequested,
+            amount,
+            token
+        );
 
         return amount;
     }
@@ -152,11 +159,7 @@ contract NonVotingOnboardingContract is
         );
 
         IVoting votingContract = IVoting(dao.getAdapterAddress(VOTING));
-        votingContract.startNewVotingForProposal(
-            dao,
-            proposalId,
-            data
-        );
+        votingContract.startNewVotingForProposal(dao, proposalId, data);
 
         dao.sponsorProposal(proposalId, msg.sender);
     }
@@ -185,10 +188,12 @@ contract NonVotingOnboardingContract is
         dao.processProposal(proposalId);
     }
 
-    function _mintLootToMember(DaoRegistry dao, address memberAddr, uint256 loot)
-        internal
-    {
+    function _mintLootToMember(
+        DaoRegistry dao,
+        address memberAddr,
+        uint256 loot
+    ) internal {
         dao.balanceOf(TOTAL, LOOT).add(dao.balanceOf(TOTAL, SHARES)).add(loot); // this throws if it overflows
-        dao.addToBalance(memberAddr, LOOT, loot);    
+        dao.addToBalance(memberAddr, LOOT, loot);
     }
 }

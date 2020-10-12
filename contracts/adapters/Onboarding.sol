@@ -77,10 +77,11 @@ contract OnboardingContract is
         return amount;
     }
 
-    function onboard(
-        DaoRegistry dao,
-        uint256 tokenAmount
-    ) external payable override{
+    function onboard(DaoRegistry dao, uint256 tokenAmount)
+        external
+        override
+        payable
+    {
         address tokenAddr = configs[address(dao)].tokenAddr;
         if (tokenAddr == ETH_TOKEN) {
             // ETH onboarding
@@ -155,11 +156,7 @@ contract OnboardingContract is
         );
 
         IVoting votingContract = IVoting(dao.getAdapterAddress(VOTING));
-        votingContract.startNewVotingForProposal(
-            dao,
-            proposalId,
-            data
-        );
+        votingContract.startNewVotingForProposal(dao, proposalId, data);
 
         dao.sponsorProposal(proposalId, msg.sender);
     }
@@ -187,8 +184,14 @@ contract OnboardingContract is
         dao.processProposal(proposalId);
     }
 
-    function _mintSharesToMember(DaoRegistry dao, address memberAddr, uint256 shares) internal {
-        dao.balanceOf(TOTAL, LOOT).add(dao.balanceOf(TOTAL, SHARES)).add(shares); // this throws if it overflows
+    function _mintSharesToMember(
+        DaoRegistry dao,
+        address memberAddr,
+        uint256 shares
+    ) internal {
+        dao.balanceOf(TOTAL, LOOT).add(dao.balanceOf(TOTAL, SHARES)).add(
+            shares
+        ); // this throws if it overflows
         dao.addToBalance(memberAddr, SHARES, shares);
     }
 }
