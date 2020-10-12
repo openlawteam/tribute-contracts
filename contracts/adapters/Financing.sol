@@ -60,7 +60,13 @@ contract FinancingContract is IFinancing, DaoConstants, MemberGuard {
         uint256 proposalId,
         bytes calldata data
     ) external override onlyMember(dao) {
-        dao.sponsorProposal(proposalId, msg.sender, data);
+        IVoting votingContract = IVoting(dao.getAdapterAddress(VOTING));
+        votingContract.startNewVotingForProposal(
+            dao,
+            proposalId,
+            data
+        );
+        dao.sponsorProposal(proposalId, msg.sender);
     }
 
     function processProposal(DaoRegistry dao, uint256 proposalId)

@@ -5,7 +5,6 @@ pragma solidity ^0.7.0;
 import "../helpers/FlagHelper128.sol";
 import "../utils/SafeMath.sol";
 import "./DaoConstants.sol";
-import "../adapters/interfaces/IVoting.sol";
 import "../guards/AdapterGuard.sol";
 import "../utils/IERC20.sol";
 
@@ -228,8 +227,7 @@ contract DaoRegistry is DaoConstants, AdapterGuard {
     /// @dev - Proposal: sponsor proposals that were submitted to the DAO registry
     function sponsorProposal(
         uint256 _proposalId,
-        address sponsoringMember,
-        bytes calldata votingData
+        address sponsoringMember
     ) external onlyAdapter(this) {
         require (_proposalId < type(uint64).max, "proposal Id should only be uint64");
         uint64 proposalId = uint64(_proposalId);
@@ -246,13 +244,6 @@ contract DaoRegistry is DaoConstants, AdapterGuard {
             "only active members can sponsor proposals"
         );
 
-        // TODO: we should see if we could reverse this logic. I.e. the voting adapter calls the proposal here instead of the other way around
-        IVoting votingContract = IVoting(registry[VOTING]);
-        votingContract.startNewVotingForProposal(
-            DaoRegistry(this),
-            proposalId,
-            votingData
-        );
         flags = flags.setSponsored(true);
         proposals[proposalId].flags = flags;
 

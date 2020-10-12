@@ -169,11 +169,7 @@ contract OffchainVotingContract is
         DaoRegistry dao,
         uint256 proposalId,
         bytes memory data /*onlyAdapter(dao)*/
-    ) external override {
-        require(
-            msg.sender == address(dao),
-            "only the DaoRegistry can call this method"
-        );
+    ) external onlyAdapter(dao) override {
         // it is called from Registry
         require(
             data.length == 32,
