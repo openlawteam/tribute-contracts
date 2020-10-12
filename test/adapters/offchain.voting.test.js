@@ -33,7 +33,7 @@ contract('LAOLAND - Offchain Voting Module', async accounts => {
     const onboarding = await OnboardingContract.at(onboardingAddress);
 
     await onboarding.onboard(dao.address, sharePrice.mul(web3.utils.toBN(3)).add(remaining), {from:otherAccount,value:sharePrice.mul(toBN("3")).add(remaining), gasPrice: toBN("0")});
-    const blockNumber = await web3.eth.getBlockNumber();
+    let blockNumber = await web3.eth.getBlockNumber();
     await onboarding.sponsorProposal(dao.address, 0, web3.eth.abi.encodeParameter('uint256', blockNumber), {from: myAccount, gasPrice: toBN("0")});
     
     const voteElements = await addVote([], blockNumber, dao, 0, myAccount, true);
