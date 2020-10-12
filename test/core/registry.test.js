@@ -1,12 +1,12 @@
 const Web3 = require('web3-utils');
 const DaoRegistry = artifacts.require("./core/DaoRegistry");
-const FlagHelperLib = artifacts.require('./helpers/FlagHelper');
+const FlagHelperLib = artifacts.require('./helpers/FlagHelper128');
 DaoRegistry.link;
 
 contract('Registry', async () => {
   
   let lib = await FlagHelperLib.new();
-  await DaoRegistry.link("FlagHelper", lib.address);
+  await DaoRegistry.link("FlagHelper128", lib.address);
 
   it("should not be possible to add a module with invalid id", async () => {
     let moduleId = Web3.fromUtf8("");
