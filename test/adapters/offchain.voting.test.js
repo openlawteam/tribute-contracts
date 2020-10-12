@@ -57,7 +57,7 @@ contract('LAOLAND - Offchain Voting Module', async accounts => {
 
     await onboarding.onboard(dao.address, sharePrice.mul(web3.utils.toBN(3)).add(remaining), {from:otherAccount,value:sharePrice.mul(web3.utils.toBN(3)).add(remaining), gasPrice: web3.utils.toBN("0")});
     await onboarding.onboard(dao.address, sharePrice.mul(web3.utils.toBN(3)).add(remaining), {from:otherAccount2,value:sharePrice.mul(web3.utils.toBN(3)).add(remaining), gasPrice: web3.utils.toBN("0")});
-    const blockNumber = await web3.eth.getBlockNumber();
+    let blockNumber = await web3.eth.getBlockNumber();
     
     await onboarding.sponsorProposal(dao.address, 0, web3.eth.abi.encodeParameter('uint256', blockNumber), {from: myAccount, gasPrice: web3.utils.toBN("0")});
     await onboarding.sponsorProposal(dao.address, 1, web3.eth.abi.encodeParameter('uint256', blockNumber), {from: myAccount, gasPrice: web3.utils.toBN("0")});
@@ -81,16 +81,18 @@ contract('LAOLAND - Offchain Voting Module', async accounts => {
     await onboarding.onboard(dao.address, sharePrice.mul(web3.utils.toBN(3)).add(remaining), {from:someone,value:sharePrice.mul(web3.utils.toBN(3)).add(remaining), gasPrice: web3.utils.toBN("0")});
 
     const proposalId = 2;
-    await onboarding.sponsorProposal(dao.address, proposalId, web3.eth.abi.encodeParameter('uint256', blockNumber), {from: myAccount, gasPrice: web3.utils.toBN("0")});
     blockNumber = await web3.eth.getBlockNumber();
+    await onboarding.sponsorProposal(dao.address, proposalId, web3.eth.abi.encodeParameter('uint256', blockNumber), {from: myAccount, gasPrice: web3.utils.toBN("0")});
     let ve = await addVote([], blockNumber, dao, proposalId, myAccount, true);
     ve = await addVote(ve, blockNumber, dao, proposalId, otherAccount, true);
     ve = await addVote(ve, blockNumber, dao, proposalId, otherAccount2, false);
 
-    const r3 = prepareVoteResult([ve[2], ve[0] ,ve[1] ]);
+    const r3 = prepareVoteResult(ve);
     const voteResultTree2 = r3.voteResultTree;
     const votes2 = r3.votes;
     const result3 = toStepNode(votes2[2], voteResultTree2);
+
+    console.log(result3);
 
     await voting.submitVoteResult(dao.address, proposalId, voteResultTree2.getHexRoot(), result3, {from: myAccount, gasPrice: web3.utils.toBN("0")});
 
