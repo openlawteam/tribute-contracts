@@ -1,6 +1,6 @@
 const Web3 = require('web3-utils');
-const DaoRegistry = artifacts.require("./v3/core/DaoRegistry");
-const FlagHelperLib = artifacts.require('./v3/helpers/FlagHelper');
+const DaoRegistry = artifacts.require("./core/DaoRegistry");
+const FlagHelperLib = artifacts.require('./helpers/FlagHelper');
 DaoRegistry.link;
 
 contract('Registry', async () => {
