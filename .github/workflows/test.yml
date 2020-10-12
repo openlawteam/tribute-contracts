@@ -14,9 +14,9 @@ jobs:
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v1
-    - name: Use Node.js 10.X
+    - name: Use Node.js 12.X
       uses: actions/setup-node@v1
       with:
-        node-version: '10'
+        node-version: '12'
     - run: npm install
     - run: npm test
