@@ -14,10 +14,10 @@ const {
 const toBN = web3.utils.toBN;
 const sha3 = web3.utils.sha3;
 
-contract('LAO LAND DAO - Ragequit Adapter', async accounts => {
+contract('LAOLAND - Ragequit Adapter', async accounts => {
 
-  submitNewMemberProposal = async (dao, newMember, sharePrice) => {
-    await dao.sendTransaction({
+  submitNewMemberProposal = async (onboarding, dao, newMember, sharePrice) => {
+    await onboarding.onboard(dao.address, sharePrice.mul(toBN(100)), {
       from: newMember,
       value: sharePrice.mul(toBN(100)),
       gasPrice: toBN("0"),
@@ -73,7 +73,7 @@ contract('LAO LAND DAO - Ragequit Adapter', async accounts => {
     const votingAddress = await dao.getAdapterAddress(sha3("voting"));
     const voting = await VotingContract.at(votingAddress);
 
-    let proposalId = await submitNewMemberProposal(dao, newMember, sharePrice);
+    let proposalId = await submitNewMemberProposal(onboarding, dao, newMember, sharePrice);
 
     //Sponsor the new proposal, vote and process it 
     await sponsorNewMember(onboarding, dao, proposalId, myAccount, voting);
@@ -109,7 +109,7 @@ contract('LAO LAND DAO - Ragequit Adapter', async accounts => {
     const votingAddress = await dao.getAdapterAddress(sha3("voting"));
     const voting = await VotingContract.at(votingAddress);
 
-    let proposalId = await submitNewMemberProposal(dao, newMember, sharePrice);
+    let proposalId = await submitNewMemberProposal(onboarding, dao, newMember, sharePrice);
 
     //Sponsor the new proposal, vote and process it 
     await sponsorNewMember(onboarding, dao, proposalId, myAccount, voting);
@@ -145,7 +145,7 @@ contract('LAO LAND DAO - Ragequit Adapter', async accounts => {
     const votingAddress = await dao.getAdapterAddress(sha3("voting"));
     const voting = await VotingContract.at(votingAddress);
 
-    let proposalId = await submitNewMemberProposal(dao, newMember, sharePrice);
+    let proposalId = await submitNewMemberProposal(onboarding, dao, newMember, sharePrice);
 
     //Sponsor the new proposal to admit the new member, vote and process it 
     await sponsorNewMember(onboarding, dao, proposalId, myAccount, voting);
@@ -190,7 +190,7 @@ it("should be possible to a member to ragequit if the member voted YES on a prop
     const votingAddress = await dao.getAdapterAddress(sha3("voting"));
     const voting = await VotingContract.at(votingAddress);
 
-    let proposalId = await submitNewMemberProposal(dao, newMember, sharePrice);
+    let proposalId = await submitNewMemberProposal(onboarding, dao, newMember, sharePrice);
 
     //Sponsor the new proposal to admit the new member, vote and process it 
     await sponsorNewMember(onboarding, dao, proposalId, myAccount, voting);
@@ -251,7 +251,7 @@ it("should be possible to a member to ragequit if the member voted YES on a prop
     const votingAddress = await dao.getAdapterAddress(sha3("voting"));
     const voting = await VotingContract.at(votingAddress);
 
-    let proposalId = await submitNewMemberProposal(dao, newMember, sharePrice);
+    let proposalId = await submitNewMemberProposal(onboarding, dao, newMember, sharePrice);
 
     //Sponsor the new proposal to admit the new member, vote and process it
     await sponsorNewMember(onboarding, dao, proposalId, myAccount, voting);
@@ -315,18 +315,21 @@ it("should be possible to a member to ragequit if the member voted YES on a prop
     const advisorAccount = accounts[2];
 
     let lootSharePrice = 10;
-    let nbOfLootShares = 100000000;
     let chunkSize = 5;
-    let dao = await createDao(
-      myAccount,
-      lootSharePrice,
-      nbOfLootShares,
-      chunkSize
-    );
 
     // Issue OpenLaw ERC20 Basic Token for tests
     let tokenSupply = 1000000;
     let oltContract = await OLTokenContract.new(tokenSupply);
+
+    let dao = await createDao(
+      myAccount,
+      lootSharePrice,
+      chunkSize,
+      10,
+      1,
+      oltContract.address
+    );
+
 
     // Transfer 1000 OLTs to the Advisor account
     await oltContract.approve(advisorAccount, 100);
@@ -356,17 +359,16 @@ it("should be possible to a member to ragequit if the member voted YES on a prop
     let tokenAmount = 10;
 
     // Pre-approve spender (DAO) to transfer applicant tokens
-    await oltContract.approve(dao.address, tokenAmount, {
+    await oltContract.approve(nonVotingOnboardingAddr, tokenAmount, {
       from: advisorAccount,
       gasPrice: toBN(0),
     });
 
     // Send a request to join the DAO as an Advisor (non-voting power),
     // the tx passes the OLT ERC20 token, the amount and the nonVotingOnboarding adapter that handles the proposal
-    await dao.onboard(
-      oltContract.address,
+    await nonVotingMemberContract.onboard(
+      dao.address,
       tokenAmount,
-      nonVotingOnboardingAddr,
       {
         from: advisorAccount,
         gasPrice: toBN("0"),
@@ -398,7 +400,7 @@ it("should be possible to a member to ragequit if the member voted YES on a prop
 
     // Check the number of Loot (non-voting shares) issued to the new Avisor
     const advisorAccountLoot = await dao.nbLoot(advisorAccount);
-    assert.equal(advisorAccountLoot.toString(), "100000000");
+    assert.equal(advisorAccountLoot.toString(), "5");
 
     // Guild balance must change when Loot shares are issued
     guildBalance = await dao.balanceOf(GUILD, ETH_TOKEN);
@@ -424,7 +426,7 @@ it("should be possible to a member to ragequit if the member voted YES on a prop
 
     // Guild balance must change when Loot shares are burned
     guildBalance = await dao.balanceOf(GUILD, ETH_TOKEN);
-    assert.equal(guildBalance.toString(), "1");
+    assert.equal(guildBalance.toString(), "2");
   });
 
 });

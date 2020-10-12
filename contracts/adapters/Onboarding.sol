@@ -32,6 +32,7 @@ contract OnboardingContract is
     struct OnboardingConfig {
         uint256 chunkSize;
         uint256 sharesPerChunk;
+        address tokenAddr;
     }
 
     mapping(address => OnboardingConfig) public configs;
@@ -40,30 +41,32 @@ contract OnboardingContract is
     function configureDao(
         DaoRegistry dao,
         uint256 chunkSize,
-        uint256 sharesPerChunk
+        uint256 sharesPerChunk,
+        address tokenAddr
     ) external onlyAdapter(dao) {
         configs[address(dao)].chunkSize = chunkSize;
         configs[address(dao)].sharesPerChunk = sharesPerChunk;
+        configs[address(dao)].tokenAddr = tokenAddr;
     }
 
-    function submitMembershipProposal(
+    function _submitMembershipProposal(
         DaoRegistry dao,
         address applicant,
         uint256 value,
         address token
-    ) external override onlyDao(dao) returns (uint256) {
+    ) internal returns (uint256) {
         OnboardingConfig memory config = configs[address(dao)];
 
         require(config.sharesPerChunk > 0, "sharesPerChunk should not be 0");
         require(config.chunkSize > 0, "chunkSize should not be 0");
 
         uint256 numberOfChunks = value.div(config.chunkSize);
-        require(numberOfChunks > 0, "not sufficient ETH");
+        require(numberOfChunks > 0, "not sufficient funds");
 
         uint256 amount = numberOfChunks.mul(config.chunkSize);
         uint256 sharesRequested = numberOfChunks.mul(config.sharesPerChunk);
 
-        _submitMembershipProposal(
+        _submitMembershipProposalInternal(
             dao,
             applicant,
             sharesRequested,
@@ -74,11 +77,55 @@ contract OnboardingContract is
         return amount;
     }
 
+    function onboard(
+        DaoRegistry dao,
+        uint256 tokenAmount
+    ) external payable override{
+        address tokenAddr = configs[address(dao)].tokenAddr;
+        if (tokenAddr == ETH_TOKEN) {
+            // ETH onboarding
+            require(msg.value > 0, "not enough ETH");
+            // If the applicant sends ETH to onboard, use the msg.value as default token amount
+            tokenAmount = msg.value;
+        } else {
+            IERC20 token = IERC20(tokenAddr);
+            // ERC20 onboarding
+            require(
+                token.allowance(msg.sender, address(this)) >= tokenAmount,
+                "ERC20 transfer not allowed"
+            );
+            require(
+                token.transferFrom(msg.sender, address(this), tokenAmount),
+                "ERC20 failed transferFrom"
+            );
+        }
+
+        uint256 amountUsed = _submitMembershipProposal(
+            dao,
+            msg.sender,
+            tokenAmount,
+            tokenAddr
+        );
+
+        if (amountUsed < tokenAmount) {
+            uint256 amount = tokenAmount - amountUsed;
+            if (tokenAddr == ETH_TOKEN) {
+                msg.sender.transfer(amount);
+            } else {
+                IERC20 token = IERC20(tokenAddr);
+                require(
+                    token.transfer(msg.sender, amount),
+                    "ERC20 failed transfer"
+                );
+            }
+        }
+    }
+
     function updateDelegateKey(DaoRegistry dao, address delegateKey) external {
         dao.updateDelegateKey(msg.sender, delegateKey);
     }
 
-    function _submitMembershipProposal(
+    function _submitMembershipProposalInternal(
         DaoRegistry dao,
         address newMember,
         uint256 sharesRequested,
@@ -126,10 +173,14 @@ contract OnboardingContract is
         );
         ProposalDetails storage proposal = proposals[address(dao)][proposalId];
 
-        dao.mintSharesToMember(proposal.applicant, proposal.sharesRequested);
+        _mintSharesToMember(dao, proposal.applicant, proposal.sharesRequested);
 
-        // address 0 represents native ETH
-        dao.addToGuild(ETH_TOKEN, proposal.amount);
+        dao.addToBalance(GUILD, ETH_TOKEN, proposal.amount);
         dao.processProposal(proposalId);
+    }
+
+    function _mintSharesToMember(DaoRegistry dao, address memberAddr, uint256 shares) internal {
+        dao.balanceOf(TOTAL, LOOT).add(dao.balanceOf(TOTAL, SHARES)).add(shares); // this throws if it overflows
+        dao.addToBalance(memberAddr, SHARES, shares);
     }
 }

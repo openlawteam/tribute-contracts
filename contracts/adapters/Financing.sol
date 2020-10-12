@@ -78,11 +78,9 @@ contract FinancingContract is IFinancing, DaoConstants, MemberGuard {
         );
 
         proposals[address(dao)][proposalId].processed = true;
-        dao.transferFromGuild(
-            proposal.applicant,
-            proposal.token,
-            proposal.amount
-        );
+        
+        dao.subtractFromBalance(GUILD, proposal.token, proposal.amount);
+        dao.addToBalance(proposal.applicant, proposal.token, proposal.amount);
         dao.processProposal(proposalId);
     }
 }

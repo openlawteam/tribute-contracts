@@ -44,7 +44,7 @@ async function prepareSmartContracts() {
     };
   }
 
-async function addDefaultAdapters(dao, unitPrice=sharePrice, nbShares=numberOfShares, votingPeriod=10, gracePeriod=1) {
+async function addDefaultAdapters(dao, unitPrice=sharePrice, nbShares=numberOfShares, votingPeriod=10, gracePeriod=1, tokenAddr = ETH_TOKEN) {
     const {voting, ragequit, managing, financing, onboarding, nonVotingOnboarding, daoFactory} = await prepareSmartContracts();
 
     await daoFactory.addAdapters(
@@ -57,21 +57,20 @@ async function addDefaultAdapters(dao, unitPrice=sharePrice, nbShares=numberOfSh
         entry("onboarding", onboarding),
         entry("nonvoting-onboarding", nonVotingOnboarding)
     ])
-
-    await onboarding.configureDao(dao.address, unitPrice, nbShares);
-    await nonVotingOnboarding.configureDao(dao.address, unitPrice, nbShares);
+    await onboarding.configureDao(dao.address, unitPrice, nbShares, tokenAddr);
+    await nonVotingOnboarding.configureDao(dao.address, unitPrice, nbShares, tokenAddr);
     await voting.configureDao(dao.address, votingPeriod, gracePeriod);
 
     return dao;
 }
 
-async function createDao(senderAccount, unitPrice=sharePrice, nbShares=numberOfShares, votingPeriod=10, gracePeriod=1) {
+async function createDao(senderAccount, unitPrice=sharePrice, nbShares=numberOfShares, votingPeriod=10, gracePeriod=1, tokenAddr = ETH_TOKEN) {
     let lib = await FlagHelperLib.new();
     await DaoRegistry.link("FlagHelper128", lib.address);
     let dao = await DaoRegistry.new({ from: senderAccount, gasPrice: web3.utils.toBN("0") });
     let receipt = await web3.eth.getTransactionReceipt(dao.transactionHash);
-    console.log('gas used for dao:', receipt.gasUsed);
-    await addDefaultAdapters(dao, unitPrice, nbShares, votingPeriod, gracePeriod);
+    console.log('gas used for dao:', receipt && receipt.gasUsed);
+    await addDefaultAdapters(dao, unitPrice, nbShares, votingPeriod, gracePeriod, tokenAddr);
     await dao.finalizeDao();
     return dao;
 }

@@ -2,7 +2,6 @@ pragma solidity ^0.7.0;
 
 // SPDX-License-Identifier: MIT
 
-import "../adapters/interfaces/IOnboarding.sol";
 import "../helpers/FlagHelper128.sol";
 import "../utils/SafeMath.sol";
 import "./DaoConstants.sol";
@@ -69,7 +68,6 @@ contract DaoRegistry is DaoConstants, AdapterGuard {
     struct Proposal {
         // the structure to track all the proposals in the DAO
         address applicant; // the address of the sender that submitted the proposal
-        bytes32 adapterId; // the adapter id that called the functions to change the DAO state
         address adapterAddress; // the adapter address that called the functions to change the DAO state
         uint128 flags; // flags to track the state of the proposal: exist, sponsored, processed, canceled, etc.
     }
@@ -124,74 +122,27 @@ contract DaoRegistry is DaoConstants, AdapterGuard {
         member.flags = member.flags.setExists(true);
         member.delegateKey = memberAddr;
         memberAddressesByDelegatedKey[memberAddr] = memberAddr;
-        _unsafeAddToBalance(memberAddr, SHARES, 1);
-    }
+        _bank.tokenBalances[memberAddr][SHARES] = 1;
+        _bank.tokenBalances[TOTAL][SHARES] = 1;
+        _moveDelegates(
+            address(0),
+            memberAddr,
+            1
+        );
 
+        _moveDelegates(
+            address(0),
+            TOTAL,
+            1
+        );
+    }
+    /**
     /*
      * PUBLIC NON RESTRICTED FUNCTIONS
      */
-    receive() external payable {
-        if (!isAdapter(msg.sender)) {
-            IOnboarding onboarding = IOnboarding(registry[ONBOARDING]);
-            uint256 amount = onboarding.submitMembershipProposal(
-                this,
-                msg.sender,
-                msg.value,
-                address(0x0) //RAW ETH
-            );
-            if (msg.value > amount) {
-                msg.sender.transfer(msg.value - amount);
-            }
-        }
-    }
 
     function finalizeDao() external {
         state = DaoState.READY;
-    }
-
-    function onboard(
-        IERC20 token,
-        uint256 tokenAmount,
-        address onboardingAdapter
-    ) external payable {
-        require(isAdapter(onboardingAdapter), "invalid adapter");
-
-        if (address(token) == address(0x0)) {
-            // ETH onboarding
-            require(msg.value > 0, "not enough ETH");
-            // If the applicant sends ETH to onboard, use the msg.value as default token amount
-            tokenAmount = msg.value;
-        } else {
-            // ERC20 onboarding
-            require(
-                token.allowance(msg.sender, address(this)) == tokenAmount,
-                "ERC20 transfer not allowed"
-            );
-            require(
-                token.transferFrom(msg.sender, address(this), tokenAmount),
-                "ERC20 failed transferFrom"
-            );
-        }
-
-        IOnboarding onboarding = IOnboarding(onboardingAdapter);
-        uint256 amountUsed = onboarding.submitMembershipProposal(
-            this,
-            msg.sender,
-            tokenAmount,
-            address(token)
-        );
-
-        if (amountUsed < tokenAmount) {
-            uint256 amount = tokenAmount - amountUsed;
-            if (address(token) == address(0x0)) {
-                msg.sender.transfer(amount);
-            } else {
-                require(
-                    token.transfer(msg.sender, amount),
-                    "ERC20 failed transfer"
-                );
-            }
-        }
     }
 
     function addAdapter(bytes32 adapterId, address adapterAddress)
@@ -264,7 +215,6 @@ contract DaoRegistry is DaoConstants, AdapterGuard {
     {
         proposals[proposalCount++] = Proposal(
             applicant,
-            inverseRegistry[msg.sender],
             msg.sender,
             1
         );
@@ -283,38 +233,32 @@ contract DaoRegistry is DaoConstants, AdapterGuard {
     ) external onlyAdapter(this) {
         require (_proposalId < type(uint64).max, "proposal Id should only be uint64");
         uint64 proposalId = uint64(_proposalId);
-        Proposal memory proposal = proposals[proposalId];
-        require(proposal.flags.exists(), "proposal does not exist");
-        require(
-            !proposal.flags.isSponsored(),
-            "proposal must not be sponsored"
-        );
-        require(
-            !proposal.flags.isCancelled(),
-            "proposal must not be cancelled"
-        );
-        require(
-            !proposal.flags.isProcessed(),
-            "proposal must not be processed"
-        );
-
+        Proposal storage proposal = proposals[proposalId];
+        uint128 flags = proposal.flags;
+        
+        require(proposal.adapterAddress == msg.sender, "only the adapter that submitted the proposal can process it");
+        require(flags.exists(), "proposal does not exist");
+        require(!flags.isSponsored(), "proposal must not be sponsored");
+        require(!flags.isCancelled(), "proposal must not be cancelled");
+        require(!flags.isProcessed(), "proposal must not be processed");
         require(
             isActiveMember(sponsoringMember),
             "only active members can sponsor proposals"
         );
 
+        // TODO: we should see if we could reverse this logic. I.e. the voting adapter calls the proposal here instead of the other way around
         IVoting votingContract = IVoting(registry[VOTING]);
         votingContract.startNewVotingForProposal(
             DaoRegistry(this),
             proposalId,
             votingData
         );
-
-        proposals[proposalId].flags = proposal.flags.setSponsored(true);
+        flags = flags.setSponsored(true);
+        proposals[proposalId].flags = flags;
 
         emit SponsoredProposal(
             proposalId,
-            proposals[proposalCount].flags,
+            flags,
             uint64(block.timestamp)
         );
     }
@@ -324,20 +268,24 @@ contract DaoRegistry is DaoConstants, AdapterGuard {
         require (_proposalId < type(uint64).max, "proposal Id should only be uint64");
         uint64 proposalId = uint64(_proposalId);
 
-        Proposal memory proposal = proposals[proposalId];
+        Proposal storage proposal = proposals[proposalId];
+
+        require(proposal.adapterAddress == msg.sender, "only the adapter that submitted the proposal can process it");
+
+        uint128 flags = proposal.flags;
         require(
-            proposal.flags.exists(),
+            flags.exists(),
             "proposal does not exist for this dao"
         );
-        require(proposal.flags.isSponsored(), "proposal not sponsored");
-        require(!proposal.flags.isProcessed(), "proposal already processed");
-
-        proposals[proposalId].flags = proposal.flags.setProcessed(true);
+        require(flags.isSponsored(), "proposal not sponsored");
+        require(!flags.isProcessed(), "proposal already processed");
+        flags = flags.setProcessed(true);
+        proposals[proposalId].flags = flags;
 
         emit ProcessedProposal(
             proposalId,
             uint64(block.timestamp),
-            proposals[proposalCount].flags
+            flags
         );
     }
 
@@ -356,47 +304,12 @@ contract DaoRegistry is DaoConstants, AdapterGuard {
             );
     }
 
-    function memberAddress(address memberOrDelegateKey)
+    function memberAddress(address delegateKey)
         external
         view
         returns (address)
     {
-        return memberAddresses[memberOrDelegateKey];
-    }
-
-    function mintSharesToMember(address memberAddr, uint256 shares)
-        public
-        onlyAdapter(this)
-    {
-        balanceOf(TOTAL, LOOT).add(balanceOf(TOTAL, SHARES)).add(shares); // this throws if it overflows
-
-        Member storage member = members[memberAddr];
-        if (member.delegateKey == address(0x0)) {
-            member.flags = member.flags.setExists(true);
-            member.delegateKey = memberAddr;
-            memberAddressesByDelegatedKey[member.delegateKey] = memberAddr;
-        }
-        _unsafeAddToBalance(memberAddr, SHARES, shares);
-        
-        emit UpdateMemberShares(memberAddr, shares);
-    }
-
-    function mintLootToMember(address memberAddr, uint256 loot)
-        external
-        onlyAdapter(this)
-    {
-        balanceOf(TOTAL, LOOT).add(balanceOf(TOTAL, SHARES)).add(loot); // this throws if it overflows
-
-        Member storage member = members[memberAddr];
-        if (member.delegateKey == address(0x0)) {
-            member.flags = member.flags.setExists(true);
-            member.delegateKey = memberAddr;
-            memberAddressesByDelegatedKey[member.delegateKey] = memberAddr;
-        }
-
-        _unsafeAddToBalance(memberAddr, LOOT, loot);    
-
-        emit UpdateMemberLoot(memberAddr, loot);
+        return memberAddresses[delegateKey];
     }
 
     function updateDelegateKey(address memberAddr, address newDelegateKey)
@@ -438,119 +351,12 @@ contract DaoRegistry is DaoConstants, AdapterGuard {
     /*
      * BANK
      */
-
-    function addToEscrow(address token, uint256 amount) external onlyAdapter(this) {
-        require(
-            isNotReservedAddress(token),
-            "invalid token"
-        );
-        _unsafeAddToBalance(ESCROW, token, amount);
-        _registerPotentialNewToken(token);
-    }
-
+     
     function _registerPotentialNewToken(address token) internal {
         if(isNotReservedAddress(token) && !_bank.availableTokens[token]) {
             require(_bank.tokens.length < MAX_TOKENS, "max limit reached");
             _bank.availableTokens[token] = true;
             _bank.tokens.push(token);
-        }
-    
-    }
-    function addToGuild(address token, uint256 amount) external onlyAdapter(this) {
-        require(
-            isNotReservedAddress(token),
-            "invalid token"
-        );
-        _unsafeAddToBalance(GUILD, token, amount);
-        _registerPotentialNewToken(token);
-    }
-
-    function transferFromGuild(
-        address applicant,
-        address token,
-        uint256 amount
-    ) external onlyAdapter(this) {
-        require(
-            _bank.tokenBalances[GUILD][token] >= amount,
-            "insufficient balance"
-        );
-        _unsafeSubtractFromBalance(GUILD, token, amount);
-        _unsafeAddToBalance(applicant, token, amount);
-        emit Transfer(GUILD, applicant, token, amount);
-    }
-
-    function burnLockedLoot(address memberAddr, uint256 lootToBurn)
-        external
-        onlyAdapter(this)
-    {
-        //lock if member has enough loot
-        require(balanceOf(memberAddr, LOCKED_LOOT) >= lootToBurn, "insufficient loot");
-
-        // burn locked loot
-        _unsafeSubtractFromBalance(memberAddr, LOCKED_LOOT, lootToBurn);
-    }
-
-    function lockLoot(address memberAddr, uint256 lootToLock)
-        external
-        onlyAdapter(this)
-    {
-        //lock if member has enough loot
-        require(isActiveMember(memberAddr), "must be an active member");
-        require(balanceOf(memberAddr, LOOT) >= lootToLock, "insufficient loot");
-
-        // lock loot
-        _unsafeAddToBalance(memberAddr, LOCKED_LOOT, lootToLock);
-        _unsafeSubtractFromBalance(memberAddr, LOOT, lootToLock);
-    }
-
-    function releaseLoot(address memberAddr, uint256 lootToRelease)
-        external
-        onlyAdapter(this)
-    {
-        //release if member has enough locked loot
-        require(isActiveMember(memberAddr), "must be an active member");
-        require(balanceOf(memberAddr, LOCKED_LOOT) >= lootToRelease, "insufficient loot locked");
-
-        // release loot
-        _unsafeAddToBalance(memberAddr, LOOT, lootToRelease);
-        _unsafeSubtractFromBalance(memberAddr, LOCKED_LOOT, lootToRelease);
-    }
-
-    function burnShares(
-        address memberAddr,
-        uint256 sharesToBurn,
-        uint256 lootToBurn
-    ) external onlyAdapter(this) {
-        //Burn if member has enough shares and loot
-        require(balanceOf(memberAddr, SHARES) >= sharesToBurn, "insufficient shares");
-        require(balanceOf(memberAddr, LOOT) >= lootToBurn, "insufficient loot");
-
-        //TODO: require(canRagequit(member.highestIndexYesVote), "cannot ragequit until highest index proposal member voted YES on is processed");
-
-        uint256 initialTotalSharesAndLoot = balanceOf(TOTAL, SHARES).add(balanceOf(TOTAL, LOOT)).add(balanceOf(TOTAL, LOCKED_LOOT));
-
-        // burn shares and loot
-        uint256 sharesAndLootToBurn = sharesToBurn.add(lootToBurn);
-        _unsafeSubtractFromBalance(memberAddr, SHARES, sharesToBurn);
-        _unsafeSubtractFromBalance(memberAddr, LOOT, lootToBurn);
-
-        //Update internal Guild and Member balances
-        for (uint256 i = 0; i < _bank.tokens.length; i++) {
-            address token = _bank.tokens[i];
-            uint256 amountToRagequit = _fairShare(
-                balanceOf(GUILD, token),
-                sharesAndLootToBurn,
-                initialTotalSharesAndLoot
-            );
-            if (amountToRagequit > 0) {
-                // gas optimization to allow a higher maximum token limit
-                // deliberately not using safemath here to keep overflows from preventing the function execution
-                // (which would break ragekicks) if a token overflows,
-                // it is because the supply was artificially inflated to oblivion, so we probably don"t care about it anyways
-                _unsafeInternalTransfer(GUILD, memberAddr, token, amountToRagequit);
-                //TODO: do we want to emit an event for each token transfer?
-                // emit Transfer(GUILD, applicant, token, amount);
-            }
         }
     }
 
@@ -582,11 +388,16 @@ contract DaoRegistry is DaoConstants, AdapterGuard {
     /**
      * Internal bookkeeping
      */
-    function _unsafeAddToBalance(
+
+     function tokens() external view returns (address[] memory) {
+         return _bank.tokens;
+     }
+
+    function addToBalance(
         address user,
         address token,
         uint256 amount
-    ) internal {
+    ) public onlyAdapter(this) {
         _bank.tokenBalances[user][token] += amount;
         _bank.tokenBalances[TOTAL][token] += amount;
         if(token == SHARES) {
@@ -602,46 +413,39 @@ contract DaoRegistry is DaoConstants, AdapterGuard {
                 _bank.tokenBalances[TOTAL][token]
             );
         }
+
+        _registerPotentialNewToken(token);
+
+        Member storage member = members[user];
+        if (member.delegateKey == address(0x0)) {
+            member.flags = member.flags.setExists(true);
+            member.delegateKey = user;
+            memberAddressesByDelegatedKey[member.delegateKey] = user;
+        }
     }
 
-    function _unsafeSubtractFromBalance(
+    function subtractFromBalance(
         address user,
         address token,
         uint256 amount
-    ) internal {
+    ) public onlyAdapter(this) {
         _bank.tokenBalances[user][token] -= amount;
         _bank.tokenBalances[TOTAL][token] -= amount;
     }
 
-    function _unsafeInternalTransfer(
+    function internalTransfer(
         address from,
         address to,
         address token,
         uint256 amount
-    ) internal {
-        _unsafeSubtractFromBalance(from, token, amount);
-        _unsafeAddToBalance(to, token, amount);
+    ) public onlyAdapter(this) {
+        subtractFromBalance(from, token, amount);
+        addToBalance(to, token, amount);
     }
 
     /**
      * Internal utility
      */
-    function _fairShare(
-        uint256 balance,
-        uint256 shares,
-        uint256 _totalShares
-    ) internal pure returns (uint256) {
-        require(_totalShares != 0, "total shares should not be 0");
-        if (balance == 0) {
-            return 0;
-        }
-        uint256 prod = balance * shares;
-        if (prod / balance == shares) {
-            // no overflow in multiplication above?
-            return prod / _totalShares;
-        }
-        return (balance / _totalShares) * shares;
-    }
 
     /**
      * @notice Gets the current votes balance for `account`
@@ -735,7 +539,7 @@ contract DaoRegistry is DaoConstants, AdapterGuard {
     ) internal {
         require(_newVotes < type(uint160).max, "too big of a vote");
         uint160 newVotes = uint160(_newVotes);
-        
+
         if (
             nCheckpoints > 0 &&
             checkpoints[delegatee][nCheckpoints - 1].fromBlock == block.number
@@ -749,11 +553,6 @@ contract DaoRegistry is DaoConstants, AdapterGuard {
             numCheckpoints[delegatee] = nCheckpoints + 1;
         }
     }
-
-    /**
-     * Internal Utility Functions
-     */
-
     /*
      * Internal Utility Functions
      */

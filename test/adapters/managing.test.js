@@ -3,7 +3,7 @@ const {advanceTime, createDao, GUILD, ESCROW, TOTAL, ETH_TOKEN, ManagingContract
 const toBN = web3.utils.toBN;
 const sha3 = web3.utils.sha3;
 
-contract('LAO LAND DAO - Managing Adapter', async accounts => {
+contract('LAOLAND - Managing Adapter', async accounts => {
   
   it("should not be possible to propose a new module with 0x0 module address", async () => {
     const myAccount = accounts[1];

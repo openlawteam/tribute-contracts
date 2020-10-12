@@ -143,12 +143,26 @@ contract OffchainVotingContract is
         vote.gracePeriodStartingTime = block.timestamp;
     }
 
-    function _lockFunds(DaoRegistry dao, address member) internal {
-        dao.lockLoot(member, votingConfigs[address(dao)].stakingAmount);
+    function _lockFunds(DaoRegistry dao, address memberAddr) internal {
+        uint256 lootToLock = votingConfigs[address(dao)].stakingAmount;
+        //lock if member has enough loot
+        require(dao.isActiveMember(memberAddr), "must be an active member");
+        require(dao.balanceOf(memberAddr, LOOT) >= lootToLock, "insufficient loot");
+
+        // lock loot
+        dao.addToBalance(memberAddr, LOCKED_LOOT, lootToLock);
+        dao.subtractFromBalance(memberAddr, LOOT, lootToLock);
     }
 
-    function _releaseFunds(DaoRegistry dao, address member) internal {
-        dao.releaseLoot(member, votingConfigs[address(dao)].stakingAmount);
+    function _releaseFunds(DaoRegistry dao, address memberAddr) internal {
+        uint256 lootToRelease = votingConfigs[address(dao)].stakingAmount;
+        //release if member has enough locked loot
+        require(dao.isActiveMember(memberAddr), "must be an active member");
+        require(dao.balanceOf(memberAddr, LOCKED_LOOT) >= lootToRelease, "insufficient loot locked");
+
+        // release loot
+        dao.addToBalance(memberAddr, LOOT, lootToRelease);
+        dao.subtractFromBalance(memberAddr, LOCKED_LOOT, lootToRelease);
     }
 
     function startNewVotingForProposal(
@@ -390,10 +404,8 @@ contract OffchainVotingContract is
     }
 
     function _challengeResult(DaoRegistry dao, uint256 proposalId) internal {
-        dao.burnLockedLoot(
-            votes[address(dao)][proposalId].reporter,
-            votingConfigs[address(dao)].stakingAmount
-        );
+        // burn locked loot
+        dao.subtractFromBalance(votes[address(dao)][proposalId].reporter, LOCKED_LOOT, votingConfigs[address(dao)].stakingAmount);
         votes[address(dao)][proposalId].isChallenged = true;
     }
 
