@@ -1,5 +1,5 @@
 const {advanceTime, OnboardingContract, DaoRegistry, DaoFactory, FlagHelperLib, sharePrice, remaining, numberOfShares, entry, addDefaultAdapters} = require('../../utils/DaoFactory.js');
-const {addVote, prepareVoteResult, buildVoteLeafHashForMerkleTree} = require('../../utils/offchain_voting.js');
+const {addVote, prepareVoteResult, toStepNode} = require('../../utils/offchain_voting.js');
 const toBN = web3.utils.toBN;
 const sha3 = web3.utils.sha3;
 
@@ -35,9 +35,12 @@ contract('LAOLAND - Offchain Voting Module', async accounts => {
     await onboarding.onboard(dao.address, sharePrice.mul(web3.utils.toBN(3)).add(remaining), {from:otherAccount,value:sharePrice.mul(toBN("3")).add(remaining), gasPrice: toBN("0")});
     const blockNumber = await web3.eth.getBlockNumber();
     await onboarding.sponsorProposal(dao.address, 0, web3.eth.abi.encodeParameter('uint256', blockNumber), {from: myAccount, gasPrice: toBN("0")});
-    //passing a dummy value here with dao.address because we're not testing that here
-    await voting.submitVoteResult(dao.address, 0, 1, 0, dao.address, {from: myAccount, gasPrice: toBN("0")});
-
+    
+    const voteElements = await addVote([], blockNumber, dao.address, 0, myAccount, 1, true);
+    const {voteResultTree, votes} = prepareVoteResult(voteElements);
+    const result = toStepNode(votes[0], voteResultTree);
+    
+    await voting.submitVoteResult(dao.address, 0, voteResultTree.getHexRoot(), result, {from: myAccount, gasPrice: toBN("0")});
     await advanceTime(10000);
     await onboarding.processProposal(dao.address, 0, {from: myAccount, gasPrice: toBN("0")});
   });
@@ -63,8 +66,12 @@ contract('LAOLAND - Offchain Voting Module', async accounts => {
     const voteElements2 = await addVote([], blockNumber, dao.address, 1, myAccount, 1, true);
     const r1 = prepareVoteResult(voteElements);
     const r2 = prepareVoteResult(voteElements2);
-    await voting.submitVoteResult(dao.address, 0, 1, 0, r1.voteResultTree.getHexRoot(), {from: myAccount, gasPrice: web3.utils.toBN("0")});
-    await voting.submitVoteResult(dao.address, 1, 1, 0, r2.voteResultTree.getHexRoot(), {from: myAccount, gasPrice: web3.utils.toBN("0")});
+
+    const result1 = toStepNode(r1.votes[0], r1.voteResultTree);
+    const result2 = toStepNode(r2.votes[0], r2.voteResultTree);
+
+    await voting.submitVoteResult(dao.address, 0, r1.voteResultTree.getHexRoot(), result1, {from: myAccount, gasPrice: web3.utils.toBN("0")});
+    await voting.submitVoteResult(dao.address, 1, r2.voteResultTree.getHexRoot(), result2, {from: myAccount, gasPrice: web3.utils.toBN("0")});
     await advanceTime(10000);
     await onboarding.processProposal(dao.address, 0, {from: myAccount, gasPrice: web3.utils.toBN("0")});
     await onboarding.processProposal(dao.address, 1, {from: myAccount, gasPrice: web3.utils.toBN("0")});
@@ -83,27 +90,11 @@ contract('LAOLAND - Offchain Voting Module', async accounts => {
     const r3 = prepareVoteResult([ve[2], ve[0] ,ve[1] ]);
     const voteResultTree2 = r3.voteResultTree;
     const votes2 = r3.votes;
-    await voting.submitVoteResult(dao.address, proposalId, 2, 1, voteResultTree2.getHexRoot(), {from: myAccount, gasPrice: web3.utils.toBN("0")});
+    const result3 = toStepNode(votes2[2], voteResultTree2);
+    await voting.submitVoteResult(dao.address, proposalId, voteResultTree2.getHexRoot(), result3, {from: myAccount, gasPrice: web3.utils.toBN("0")});
 
-    const nodePrevious = {
-      voter: votes2[0].address,      
-      nbNo: votes2[0].nbNo,
-      nbYes: votes2[0].nbYes,
-      weight: votes2[0].weight,
-      index: votes2[0].index,
-      sig: votes2[0].vote,
-      proof: voteResultTree2.getHexProof(buildVoteLeafHashForMerkleTree(votes2[0]))
-    };
-
-    const nodeCurrent = {
-      voter: votes2[1].address,      
-      nbNo: votes2[1].nbNo,
-      nbYes: votes2[1].nbYes,
-      weight: votes2[1].weight,
-      index: votes2[1].index,
-      sig: votes2[1].vote,
-      proof: voteResultTree2.getHexProof(buildVoteLeafHashForMerkleTree(votes2[1]))
-    };
+    const nodePrevious = toStepNode(votes2[0], voteResultTree2);
+    const nodeCurrent = toStepNode(votes2[1], voteResultTree2);
 
     await voting.challengeWrongStep(dao.address, proposalId, nodePrevious, nodeCurrent);
   });

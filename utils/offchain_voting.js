@@ -1,6 +1,17 @@
 const { MerkleTree } = require('./merkleTree.js');
 const sha3 = web3.utils.sha3;
 
+function toStepNode(step, merkleTree) {
+  return {voter: step.address,      
+    nbNo: step.nbNo,
+    nbYes: step.nbYes,
+    weight: step.weight,
+    index: step.index,
+    sig: step.vote,
+    proof: merkleTree.getHexProof(buildVoteLeafHashForMerkleTree(step))
+  };
+}
+
 async function addVote(votes, blockNumber, daoAddress, proposalId, account, memberWeight, voteYes) {
   const proposalHash = sha3(web3.eth.abi.encodeParameters(
     ['uint256', 'address', 'uint256'], 
@@ -66,5 +77,6 @@ function prepareVoteResult(votes) {
 Object.assign(exports, {
     addVote,
     prepareVoteResult,
+    toStepNode,
     buildVoteLeafHashForMerkleTree
   })

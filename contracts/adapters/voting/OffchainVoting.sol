@@ -71,9 +71,8 @@ contract OffchainVotingContract is
     function submitVoteResult(
         DaoRegistry dao,
         uint256 proposalId,
-        uint256 nbYes,
-        uint256 nbNo,
-        bytes32 resultRoot
+        bytes32 resultRoot,
+        VoteResultNode memory result
     ) external {
         Voting storage vote = votes[address(dao)][proposalId];
         require(vote.blockNumber > 0, "the vote has not started yet");
@@ -89,18 +88,21 @@ contract OffchainVotingContract is
         - if we already have a result that has not been challenged
             * is the new one heavier than the previous one ?
          */
+
+        
+
         if (vote.resultRoot == bytes32(0) || vote.isChallenged) {
             require(
-                _readyToSubmitResult(dao, vote, nbYes, nbNo),
+                _readyToSubmitResult(dao, vote, result.nbYes, result.nbNo),
                 "the voting period need to end or the difference between yes and no need to be more than 50% of the votes"
             );
-            _submitVoteResult(dao, vote, nbYes, nbNo, resultRoot);
+            _submitVoteResult(dao, vote, proposalId, result, resultRoot);
         } else {
             require(
-                nbYes + nbNo > vote.nbYes + vote.nbNo,
+                result.nbYes + result.nbNo > vote.nbYes + vote.nbNo,
                 "to override a result, the sum of yes and no has to be greater than the current one"
             );
-            _submitVoteResult(dao, vote, nbYes, nbNo, resultRoot);
+            _submitVoteResult(dao, vote, proposalId, result, resultRoot);
         }
     }
 
@@ -130,13 +132,31 @@ contract OffchainVotingContract is
     function _submitVoteResult(
         DaoRegistry dao,
         Voting storage vote,
-        uint256 nbYes,
-        uint256 nbNo,
+        uint256 proposalId,
+        VoteResultNode memory result,
         bytes32 resultRoot
     ) internal {
+        bytes32 hashCurrent = _nodeHash(result);
+        uint256 blockNumber = vote.blockNumber;
+        address voter = result.voter;
+        require(verify(resultRoot, hashCurrent, result.proof), "result node & result merkle root / proof mismatch");
+
+        bytes32 proposalHash = keccak256(
+            abi.encode(blockNumber, address(dao), proposalId)
+        );
+        require(_hasVoted(voter, proposalHash, result.sig) != 0, "wrong vote signature!");
+
+        uint256 correctWeight = dao.getPriorVotes(
+            voter,
+            blockNumber
+        );
+
+        //Incorrect weight
+        require(correctWeight == result.weight, "wrong weight!"); 
+
         _lockFunds(dao, msg.sender);
-        vote.nbNo = nbNo;
-        vote.nbYes = nbYes;
+        vote.nbNo = result.nbNo;
+        vote.nbYes = result.nbYes;
         vote.resultRoot = resultRoot;
         vote.reporter = msg.sender;
         vote.isChallenged = false;
