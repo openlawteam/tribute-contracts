@@ -1,5 +1,5 @@
 {
-  "name": "moloch",
+  "name": "laoland",
   "version": "1.0.0",
   "description": "",
   "main": "truffle-config.js",
@@ -9,6 +9,7 @@
   "dependencies": {
     "ethereumjs-util": "^7.0.5",
     "keccak256": "^1.0.0",
+    "truffle": "^5.1.47",
     "web3-utils": "^1.2.11"
   },
   "devDependencies": {
@@ -16,14 +17,13 @@
     "prettier": "^2.1.2",
     "prettier-plugin-solidity": "^1.0.0-alpha.57",
     "solhint": "^3.2.0",
-    "solidity-coverage": "^0.7.10",
-    "truffle": "^5.1.44"
+    "solidity-coverage": "^0.7.10"
   },
   "scripts": {
     "test": "truffle test",
     "coverage": "truffle run coverage --network coverage",
-    "lint:fix": "prettier --write contracts/v3/**/*",
-    "lint": "prettier --list-different contracts/v3/**/*"
+    "lint:fix": "prettier --write contracts/**/*",
+    "lint": "prettier --list-different contracts/**/*"
   },
   "repository": {
     "type": "git",

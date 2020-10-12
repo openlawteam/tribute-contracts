@@ -8,7 +8,7 @@ import "../../core/DaoConstants.sol";
 import "../interfaces/IVoting.sol";
 import "../../guards/MemberGuard.sol";
 import "../../guards/AdapterGuard.sol";
-import "../../helpers/FlagHelper.sol";
+import "./Voting.sol";
 
 contract OffchainVotingContract is
     IVoting,
@@ -16,13 +16,15 @@ contract OffchainVotingContract is
     MemberGuard,
     AdapterGuard
 {
-    using FlagHelper for uint256;
+    VotingContract private _fallbackVoting;
 
     struct VotingConfig {
         uint256 votingPeriod;
         uint256 gracePeriod;
         uint256 stakingAmount;
+        uint256 fallbackThreshold;
     }
+
     struct Voting {
         uint256 blockNumber;
         address reporter;
@@ -50,21 +52,26 @@ contract OffchainVotingContract is
     mapping(address => mapping(uint256 => Voting)) public votes;
     mapping(address => VotingConfig) public votingConfigs;
 
-    function registerDao(
+    constructor(VotingContract _c) {
+        _fallbackVoting = _c;
+    }
+
+    function configureDao(
         DaoRegistry dao,
         uint256 votingPeriod,
-        uint256 gracePeriod
-    ) external override onlyAdapter(dao) {
+        uint256 gracePeriod,
+        uint256 fallbackThreshold
+    ) external onlyAdapter(dao) {
         votingConfigs[address(dao)].votingPeriod = votingPeriod;
         votingConfigs[address(dao)].gracePeriod = gracePeriod;
+        votingConfigs[address(dao)].fallbackThreshold = fallbackThreshold;
     }
 
     function submitVoteResult(
         DaoRegistry dao,
         uint256 proposalId,
-        uint256 nbYes,
-        uint256 nbNo,
-        bytes32 resultRoot
+        bytes32 resultRoot,
+        VoteResultNode memory result
     ) external {
         Voting storage vote = votes[address(dao)][proposalId];
         require(vote.blockNumber > 0, "the vote has not started yet");
@@ -80,18 +87,19 @@ contract OffchainVotingContract is
         - if we already have a result that has not been challenged
             * is the new one heavier than the previous one ?
          */
+
         if (vote.resultRoot == bytes32(0) || vote.isChallenged) {
             require(
-                _readyToSubmitResult(dao, vote, nbYes, nbNo),
+                _readyToSubmitResult(dao, vote, result.nbYes, result.nbNo),
                 "the voting period need to end or the difference between yes and no need to be more than 50% of the votes"
             );
-            _submitVoteResult(dao, vote, nbYes, nbNo, resultRoot);
+            _submitVoteResult(dao, vote, proposalId, result, resultRoot);
         } else {
             require(
-                nbYes + nbNo > vote.nbYes + vote.nbNo,
+                result.nbYes + result.nbNo > vote.nbYes + vote.nbNo,
                 "to override a result, the sum of yes and no has to be greater than the current one"
             );
-            _submitVoteResult(dao, vote, nbYes, nbNo, resultRoot);
+            _submitVoteResult(dao, vote, proposalId, result, resultRoot);
         }
     }
 
@@ -109,7 +117,7 @@ contract OffchainVotingContract is
         } else {
             diff = nbNo - nbYes;
         }
-        if (diff * 2 > dao.totalShares()) {
+        if (diff * 2 > dao.getPriorVotes(dao.TOTAL(), vote.blockNumber)) {
             return true;
         }
 
@@ -121,36 +129,73 @@ contract OffchainVotingContract is
     function _submitVoteResult(
         DaoRegistry dao,
         Voting storage vote,
-        uint256 nbYes,
-        uint256 nbNo,
+        uint256 proposalId,
+        VoteResultNode memory result,
         bytes32 resultRoot
     ) internal {
+        bytes32 hashCurrent = _nodeHash(result);
+        uint256 blockNumber = vote.blockNumber;
+        address voter = result.voter;
+        require(
+            verify(resultRoot, hashCurrent, result.proof),
+            "result node & result merkle root / proof mismatch"
+        );
+
+        bytes32 proposalHash = keccak256(
+            abi.encode(blockNumber, address(dao), proposalId)
+        );
+        require(
+            _hasVoted(voter, proposalHash, result.sig) != 0,
+            "wrong vote signature!"
+        );
+
+        uint256 correctWeight = dao.getPriorVotes(voter, blockNumber);
+
+        //Incorrect weight
+        require(correctWeight == result.weight, "wrong weight!");
+
         _lockFunds(dao, msg.sender);
-        vote.nbNo = nbNo;
-        vote.nbYes = nbYes;
+        vote.nbNo = result.nbNo;
+        vote.nbYes = result.nbYes;
         vote.resultRoot = resultRoot;
         vote.reporter = msg.sender;
         vote.isChallenged = false;
         vote.gracePeriodStartingTime = block.timestamp;
     }
 
-    function _lockFunds(DaoRegistry dao, address member) internal {
-        dao.lockLoot(member, votingConfigs[address(dao)].stakingAmount);
+    function _lockFunds(DaoRegistry dao, address memberAddr) internal {
+        uint256 lootToLock = votingConfigs[address(dao)].stakingAmount;
+        //lock if member has enough loot
+        require(dao.isActiveMember(memberAddr), "must be an active member");
+        require(
+            dao.balanceOf(memberAddr, LOOT) >= lootToLock,
+            "insufficient loot"
+        );
+
+        // lock loot
+        dao.addToBalance(memberAddr, LOCKED_LOOT, lootToLock);
+        dao.subtractFromBalance(memberAddr, LOOT, lootToLock);
     }
 
-    function _releaseFunds(DaoRegistry dao, address member) internal {
-        dao.releaseLoot(member, votingConfigs[address(dao)].stakingAmount);
+    function _releaseFunds(DaoRegistry dao, address memberAddr) internal {
+        uint256 lootToRelease = votingConfigs[address(dao)].stakingAmount;
+        //release if member has enough locked loot
+        require(dao.isActiveMember(memberAddr), "must be an active member");
+        require(
+            dao.balanceOf(memberAddr, LOCKED_LOOT) >= lootToRelease,
+            "insufficient loot locked"
+        );
+
+        // release loot
+        dao.addToBalance(memberAddr, LOOT, lootToRelease);
+        dao.subtractFromBalance(memberAddr, LOCKED_LOOT, lootToRelease);
     }
 
     function startNewVotingForProposal(
         DaoRegistry dao,
         uint256 proposalId,
         bytes memory data /*onlyAdapter(dao)*/
-    ) external override returns (uint256) {
-        require(
-            msg.sender == address(dao),
-            "only the DaoRegistry can call this method"
-        );
+    ) external override onlyAdapter(dao) {
         // it is called from Registry
         require(
             data.length == 32,
@@ -334,6 +379,18 @@ contract OffchainVotingContract is
         _checkStep(dao, nodeCurrent, nodePrevious, proposalHash, proposalId);
     }
 
+    function requestFallback(DaoRegistry dao, uint256 proposalId)
+        external
+        onlyMember(dao)
+    {
+        require(
+            votes[address(dao)][proposalId].fallbackVotes[msg.sender] == false,
+            "the member has already voted for this vote to fallback"
+        );
+        votes[address(dao)][proposalId].fallbackVotes[msg.sender] = true;
+        votes[address(dao)][proposalId].fallbackVotesCount += 1;
+    }
+
     function _nodeHash(VoteResultNode memory node)
         internal
         pure
@@ -375,8 +432,10 @@ contract OffchainVotingContract is
     }
 
     function _challengeResult(DaoRegistry dao, uint256 proposalId) internal {
-        dao.burnLockedLoot(
+        // burn locked loot
+        dao.subtractFromBalance(
             votes[address(dao)][proposalId].reporter,
+            LOCKED_LOOT,
             votingConfigs[address(dao)].stakingAmount
         );
         votes[address(dao)][proposalId].isChallenged = true;

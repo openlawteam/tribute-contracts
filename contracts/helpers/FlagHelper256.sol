@@ -2,7 +2,7 @@ pragma solidity ^0.7.0;
 
 // SPDX-License-Identifier: MIT
 
-library FlagHelper {
+library FlagHelper256 {
     //helper
     function getFlag(uint256 flags, uint256 pos) public pure returns (bool) {
         require(

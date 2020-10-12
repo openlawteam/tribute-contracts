@@ -4,14 +4,11 @@ pragma solidity ^0.7.0;
 
 import "../../core/DaoRegistry.sol";
 import "../../core/DaoConstants.sol";
-import "../../helpers/FlagHelper.sol";
 import "../../guards/MemberGuard.sol";
 import "../../guards/AdapterGuard.sol";
 import "../interfaces/IVoting.sol";
 
 contract VotingContract is IVoting, DaoConstants, MemberGuard, AdapterGuard {
-    using FlagHelper for uint256;
-
     struct VotingConfig {
         uint256 votingPeriod;
         uint256 gracePeriod;
@@ -22,14 +19,14 @@ contract VotingContract is IVoting, DaoConstants, MemberGuard, AdapterGuard {
         uint256 startingTime;
     }
 
-    mapping(address => mapping(uint256 => Voting)) private votes;
-    mapping(address => VotingConfig) private votingConfigs;
+    mapping(address => mapping(uint256 => Voting)) public votes;
+    mapping(address => VotingConfig) public votingConfigs;
 
-    function registerDao(
+    function configureDao(
         DaoRegistry dao,
         uint256 votingPeriod,
         uint256 gracePeriod
-    ) external override onlyAdapter(dao) {
+    ) external onlyAdapter(dao) {
         votingConfigs[address(dao)].votingPeriod = votingPeriod;
         votingConfigs[address(dao)].gracePeriod = gracePeriod;
     }
@@ -39,7 +36,7 @@ contract VotingContract is IVoting, DaoConstants, MemberGuard, AdapterGuard {
         DaoRegistry dao,
         uint256 proposalId,
         bytes calldata /*onlyAdapter(dao)*/
-    ) external override returns (uint256) {
+    ) external override {
         //it is called from Registry
         // compute startingPeriod for proposal
         Voting storage vote = votes[address(dao)][proposalId];

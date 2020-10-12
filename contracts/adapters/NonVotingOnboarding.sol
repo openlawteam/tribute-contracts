@@ -32,38 +32,92 @@ contract NonVotingOnboardingContract is
     struct OnboardingConfig {
         uint256 chunkSize;
         uint256 lootPerChunk;
+        address tokenAddr;
     }
 
     mapping(address => OnboardingConfig) public configs;
     mapping(address => mapping(uint256 => ProposalDetails)) public proposals;
 
-    function configureOnboarding(
+    function configureDao(
         DaoRegistry dao,
         uint256 chunkSize,
-        uint256 lootPerChunk
+        uint256 lootPerChunk,
+        address tokenAddr
     ) external onlyAdapter(dao) {
         configs[address(dao)].chunkSize = chunkSize;
         configs[address(dao)].lootPerChunk = lootPerChunk;
+        configs[address(dao)].tokenAddr = tokenAddr;
     }
 
-    function submitMembershipProposal(
+    function onboard(DaoRegistry dao, uint256 tokenAmount)
+        external
+        override
+        payable
+    {
+        address tokenAddr = configs[address(dao)].tokenAddr;
+        if (tokenAddr == ETH_TOKEN) {
+            // ETH onboarding
+            require(msg.value > 0, "not enough ETH");
+            // If the applicant sends ETH to onboard, use the msg.value as default token amount
+            tokenAmount = msg.value;
+        } else {
+            IERC20 token = IERC20(tokenAddr);
+            // ERC20 onboarding
+            require(
+                token.allowance(msg.sender, address(this)) >= tokenAmount,
+                "ERC20 transfer not allowed"
+            );
+            require(
+                token.transferFrom(msg.sender, address(this), tokenAmount),
+                "ERC20 failed transferFrom"
+            );
+        }
+
+        uint256 amountUsed = _submitMembershipProposal(
+            dao,
+            msg.sender,
+            tokenAmount,
+            tokenAddr
+        );
+
+        if (amountUsed < tokenAmount) {
+            uint256 amount = tokenAmount - amountUsed;
+            if (tokenAddr == ETH_TOKEN) {
+                msg.sender.transfer(amount);
+            } else {
+                IERC20 token = IERC20(tokenAddr);
+                require(
+                    token.transfer(msg.sender, amount),
+                    "ERC20 failed transfer"
+                );
+            }
+        }
+    }
+
+    function _submitMembershipProposal(
         DaoRegistry dao,
         address applicant,
         uint256 value,
         address token
-    ) external override onlyDao(dao) returns (uint256) {
+    ) internal returns (uint256) {
         OnboardingConfig memory config = configs[address(dao)];
 
         require(config.lootPerChunk > 0, "lootPerChunk should not be 0");
         require(config.chunkSize > 0, "chunkSize should not be 0");
 
         uint256 numberOfChunks = value.div(config.chunkSize);
-        require(numberOfChunks > 0, "not sufficient ETH");
+        require(numberOfChunks > 0, "not sufficient funds");
 
         uint256 amount = numberOfChunks.mul(config.chunkSize);
         uint256 lootRequested = numberOfChunks.mul(config.lootPerChunk);
 
-        _submitMembershipProposal(dao, applicant, lootRequested, amount, token);
+        _submitMembershipProposalInternal(
+            dao,
+            applicant,
+            lootRequested,
+            amount,
+            token
+        );
 
         return amount;
     }
@@ -75,7 +129,7 @@ contract NonVotingOnboardingContract is
         dao.updateDelegateKey(msg.sender, delegateKey);
     }
 
-    function _submitMembershipProposal(
+    function _submitMembershipProposalInternal(
         DaoRegistry dao,
         address newMember,
         uint256 lootRequested,
@@ -103,7 +157,11 @@ contract NonVotingOnboardingContract is
             proposals[address(dao)][proposalId].id == proposalId,
             "proposal does not exist"
         );
-        dao.sponsorProposal(proposalId, msg.sender, data);
+
+        IVoting votingContract = IVoting(dao.getAdapterAddress(VOTING));
+        votingContract.startNewVotingForProposal(dao, proposalId, data);
+
+        dao.sponsorProposal(proposalId, msg.sender);
     }
 
     function processProposal(DaoRegistry dao, uint256 proposalId)
@@ -123,10 +181,19 @@ contract NonVotingOnboardingContract is
         );
         ProposalDetails storage proposal = proposals[address(dao)][proposalId];
 
-        dao.updateMemberLoot(proposal.applicant, proposal.lootRequested);
+        _mintLootToMember(dao, proposal.applicant, proposal.lootRequested);
 
         // address 0 represents native ETH
-        dao.addToGuild(address(0), proposal.amount);
+        dao.addToBalance(GUILD, ETH_TOKEN, proposal.amount);
         dao.processProposal(proposalId);
+    }
+
+    function _mintLootToMember(
+        DaoRegistry dao,
+        address memberAddr,
+        uint256 loot
+    ) internal {
+        dao.balanceOf(TOTAL, LOOT).add(dao.balanceOf(TOTAL, SHARES)).add(loot); // this throws if it overflows
+        dao.addToBalance(memberAddr, LOOT, loot);
     }
 }

@@ -4,14 +4,14 @@ const toBN = web3.utils.toBN;
 const {advanceTime, createDao, GUILD, sharePrice, OnboardingContract, VotingContract, FinancingContract, ETH_TOKEN} = require('../../utils/DaoFactory.js');
 const remaining = sharePrice.sub(toBN('50000000000000'));
 
-contract('MolochV3 - Financing Adapter', async accounts => {
+contract('LAOLAND - Financing Adapter', async accounts => {
   
   it("should be possible to any individual to request financing", async () => {
     const myAccount = accounts[1];
     const applicant = accounts[2];
     const newMember = accounts[3];
 
-    let dao = await createDao({}, myAccount);
+    let dao = await createDao(myAccount);
 
     const votingAddress = await dao.getAdapterAddress(sha3("voting"));
     const voting = await VotingContract.at(votingAddress);
@@ -22,7 +22,7 @@ contract('MolochV3 - Financing Adapter', async accounts => {
     //Add funds to the Guild Bank after sposoring a member to join the Guild
     const onboardingAddress = await dao.getAdapterAddress(sha3('onboarding'));
     const onboarding = await OnboardingContract.at(onboardingAddress);
-    await dao.sendTransaction({ from: newMember, value: sharePrice.mul(toBN(10)).add(remaining), gasPrice: toBN("0") });
+    await onboarding.onboard(dao.address, sharePrice.mul(toBN(10)).add(remaining), { from: newMember, value: sharePrice.mul(toBN(10)).add(remaining), gasPrice: toBN("0") });
 
     //Get the new proposal id
     pastEvents = await dao.getPastEvents();

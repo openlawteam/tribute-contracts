@@ -1,15 +1,15 @@
-const {advanceTime, createDao, reportingTransaction, GUILD, sharePrice, remaining, numberOfShares, OnboardingContract, VotingContract} = require('../../utils/DaoFactory.js');
+const {advanceTime, createDao, GUILD, sharePrice, remaining, numberOfShares, OnboardingContract, VotingContract} = require('../../utils/DaoFactory.js');
 const toBN = web3.utils.toBN;
 const sha3 = web3.utils.sha3;
 
-contract('MolochV3 - Onboarding Adapter', async accounts => {
+contract('LAOLAND - Onboarding Adapter', async accounts => {
 
   it("should be possible to join a DAO", async () => {
     const myAccount = accounts[1];
     const otherAccount = accounts[2];
     const nonMemberAccount = accounts[3];
     
-    let dao = await createDao({}, myAccount);
+    let dao = await createDao(myAccount);
     
     const onboardingAddress = await dao.getAdapterAddress(sha3('onboarding'));
     const onboarding = await OnboardingContract.at(onboardingAddress);
@@ -17,10 +17,10 @@ contract('MolochV3 - Onboarding Adapter', async accounts => {
     const votingAddress = await dao.getAdapterAddress(sha3('voting'));
     const voting = await VotingContract.at(votingAddress);
 
-    await dao.sendTransaction({from:otherAccount,value:sharePrice.mul(toBN(3)).add(remaining), gasPrice: toBN("0")});
+    await onboarding.onboard(dao.address, 0, {from:otherAccount,value:sharePrice.mul(toBN(3)).add(remaining), gasPrice: toBN("0")});
     await onboarding.sponsorProposal(dao.address, 0, [], {from: myAccount, gasPrice: toBN("0")});
 
-    await reportingTransaction('submit vote', voting.submitVote(dao.address, 0, 1, {from: myAccount, gasPrice: toBN("0")}));
+    voting.submitVote(dao.address, 0, 1, {from: myAccount, gasPrice: toBN("0")});
     
     try {
       await onboarding.processProposal(dao.address, 0, {from: myAccount, gasPrice: toBN("0")});

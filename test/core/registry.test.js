@@ -1,12 +1,12 @@
 const Web3 = require('web3-utils');
-const DaoRegistry = artifacts.require("./v3/core/DaoRegistry");
-const FlagHelperLib = artifacts.require('./v3/helpers/FlagHelper');
+const DaoRegistry = artifacts.require("./core/DaoRegistry");
+const FlagHelperLib = artifacts.require('./helpers/FlagHelper128');
 DaoRegistry.link;
 
 contract('Registry', async () => {
   
   let lib = await FlagHelperLib.new();
-  await DaoRegistry.link("FlagHelper", lib.address);
+  await DaoRegistry.link("FlagHelper128", lib.address);
 
   it("should not be possible to add a module with invalid id", async () => {
     let moduleId = Web3.fromUtf8("");
@@ -112,7 +112,7 @@ contract('Registry', async () => {
   it("should be possible to update delegate key", async () => {
     const myAccount = accounts[1];
     const delegateKey = accounts[2];
-    let dao = await createDao({}, myAccount);
+    let dao = await createDao(myAccount);
 
     const onboardingAddr = await dao.getAdapterAddress(sha3('onboarding'));
     const onboarding = await OnboardingContract.at(onboardingAddr);
