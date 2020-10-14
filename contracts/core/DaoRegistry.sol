@@ -153,6 +153,10 @@ contract DaoRegistry is DaoConstants, AdapterGuard {
      * PUBLIC NON RESTRICTED FUNCTIONS
      */
 
+     receive() external payable {
+        revert("you cannot send money back directly");
+    }
+
     function finalizeDao() external {
         state = DaoState.READY;
     }
