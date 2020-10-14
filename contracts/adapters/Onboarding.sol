@@ -136,7 +136,11 @@ contract OnboardingContract is
         if (amountUsed < tokenAmount) {
             uint256 amount = tokenAmount - amountUsed;
             if (tokenAddr == ETH_TOKEN) {
-                msg.sender.transfer(amount);
+                (bool success, ) = msg.sender.call{value: amount}("");
+                require(
+                    success, 
+                    "ETH failed transfer"
+                );
             } else {
                 IERC20 token = IERC20(tokenAddr);
                 require(
