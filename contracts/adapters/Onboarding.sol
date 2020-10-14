@@ -104,11 +104,11 @@ contract OnboardingContract is
         return amount;
     }
 
-    function onboard(DaoRegistry dao, address tokenToMint, uint256 tokenAmount)
-        external
-        override
-        payable
-    {
+    function onboard(
+        DaoRegistry dao,
+        address tokenToMint,
+        uint256 tokenAmount
+    ) external override payable {
         address tokenAddr = configs[address(dao)][tokenToMint].tokenAddr;
         if (tokenAddr == ETH_TOKEN) {
             // ETH onboarding
@@ -207,10 +207,15 @@ contract OnboardingContract is
             votingContract.voteResult(dao, proposalId) == 2,
             "proposal need to pass"
         );
-        
+
         ProposalDetails storage proposal = proposals[address(dao)][proposalId];
 
-        _mintTokensToMember(dao, proposal.tokenToMint, proposal.applicant, proposal.sharesRequested);
+        _mintTokensToMember(
+            dao,
+            proposal.tokenToMint,
+            proposal.applicant,
+            proposal.sharesRequested
+        );
 
         dao.addToBalance(GUILD, ETH_TOKEN, proposal.amount);
         dao.processProposal(proposalId);
@@ -222,7 +227,10 @@ contract OnboardingContract is
         address memberAddr,
         uint256 tokenAmount
     ) internal {
-        require(dao.isInternalToken(tokenToMint), "it can only mint internal tokens");
+        require(
+            dao.isInternalToken(tokenToMint),
+            "it can only mint internal tokens"
+        );
         dao.addToBalance(memberAddr, tokenToMint, tokenAmount);
     }
 }
