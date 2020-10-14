@@ -25,7 +25,9 @@ const { sha3 } = require("web3-utils");
 
 const GUILD = "0x000000000000000000000000000000000000dead";
 const ESCROW = "0x000000000000000000000000000000000000beef";
-const TOTAL = "0x000000000000000000000000000000000000babe";
+const TOTAL =  "0x000000000000000000000000000000000000babe";
+const SHARES = "0x00000000000000000000000000000000000FF1CE";
+const LOOT =   "0x00000000000000000000000000000000B105F00D";
 const ETH_TOKEN = "0x0000000000000000000000000000000000000000";
 const DAI_TOKEN = "0x95b58a6bff3d14b7db2f5cb5f0ad413dc2940658";
 
@@ -43,9 +45,6 @@ const ManagingContract = artifacts.require('./adapter/ManagingContract');
 const FinancingContract = artifacts.require('./adapter/FinancingContract');
 const RagequitContract = artifacts.require('./adapters/RagequitContract');
 const OnboardingContract = artifacts.require('./adapters/OnboardingContract');
-const NonVotingOnboardingContract = artifacts.require(
-  "./adapters/NonVotingOnboardingContract"
-);
 
 async function prepareSmartContracts() {
     let voting = await VotingContract.new();
@@ -53,7 +52,6 @@ async function prepareSmartContracts() {
     let managing = await ManagingContract.new();
     let financing = await FinancingContract.new();
     let onboarding = await OnboardingContract.new();
-    let nonVotingOnboarding = await NonVotingOnboardingContract.new();
     let daoFactory = await DaoFactory.new();
 
     return {
@@ -62,13 +60,12 @@ async function prepareSmartContracts() {
       managing,
       financing,
       onboarding,
-      nonVotingOnboarding,
       daoFactory
     };
   }
 
 async function addDefaultAdapters(dao, unitPrice=sharePrice, nbShares=numberOfShares, votingPeriod=10, gracePeriod=1, tokenAddr = ETH_TOKEN) {
-    const {voting, ragequit, managing, financing, onboarding, nonVotingOnboarding, daoFactory} = await prepareSmartContracts();
+    const {voting, ragequit, managing, financing, onboarding, daoFactory} = await prepareSmartContracts();
 
     await daoFactory.addAdapters(
       dao.address,
@@ -77,11 +74,11 @@ async function addDefaultAdapters(dao, unitPrice=sharePrice, nbShares=numberOfSh
         entry("ragequit", ragequit),
         entry("managing", managing),
         entry("financing", financing),
-        entry("onboarding", onboarding),
-        entry("nonvoting-onboarding", nonVotingOnboarding)
+        entry("onboarding", onboarding)
     ])
-    await onboarding.configureDao(dao.address, unitPrice, nbShares, tokenAddr);
-    await nonVotingOnboarding.configureDao(dao.address, unitPrice, nbShares, tokenAddr);
+    //TODO: configure for loot and shares
+    await onboarding.configureDao(dao.address, SHARES, unitPrice, nbShares, tokenAddr);
+    await onboarding.configureDao(dao.address, LOOT, unitPrice, nbShares, tokenAddr);
     await voting.configureDao(dao.address, votingPeriod, gracePeriod);
 
     return dao;
@@ -140,6 +137,8 @@ module.exports = {
   ESCROW,
   TOTAL,
   DAI_TOKEN,
+  SHARES,
+  LOOT,
   numberOfShares,
   sharePrice,
   remaining,
@@ -152,6 +151,5 @@ module.exports = {
   ManagingContract,
   FinancingContract,
   RagequitContract,
-  OnboardingContract,
-  NonVotingOnboardingContract,
+  OnboardingContract
 };

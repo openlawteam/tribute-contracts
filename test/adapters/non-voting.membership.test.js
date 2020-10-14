@@ -25,10 +25,11 @@ const {
   advanceTime,
   createDao,
   GUILD,
+  LOOT,
   sharePrice,
   remaining,
   OLTokenContract,
-  NonVotingOnboardingContract,
+  OnboardingContract,
   VotingContract,
 } = require("../../utils/DaoFactory.js");
 const toBN = web3.utils.toBN;
@@ -42,12 +43,10 @@ contract('LAOLAND - Non Voting Onboarding Adapter', async accounts => {
 
     let dao = await createDao(myAccount);
 
-    const nonVotingOnboardingAddr = await dao.getAdapterAddress(
-      sha3("nonvoting-onboarding")
+    const onboardingAddress = await dao.getAdapterAddress(
+      sha3("onboarding")
     );
-    const nonVotingOnboarding = await NonVotingOnboardingContract.at(
-      nonVotingOnboardingAddr
-    );
+    const onboarding = await OnboardingContract.at(onboardingAddress);
 
     const votingAddress = await dao.getAdapterAddress(sha3("voting"));
     const voting = await VotingContract.at(votingAddress);
@@ -56,7 +55,7 @@ contract('LAOLAND - Non Voting Onboarding Adapter', async accounts => {
     let ethAmount = sharePrice.mul(toBN(3)).add(remaining);
 
     // Request to join the DAO as an Advisor (non-voting power), Send a tx with RAW ETH only and specify the nonVotingOnboarding
-    await nonVotingOnboarding.onboard(dao.address, 0, {
+    await onboarding.onboard(dao.address, LOOT, 0, {
       from: advisorAccount,
       value: ethAmount,
       gasPrice: toBN("0"),
@@ -67,7 +66,7 @@ contract('LAOLAND - Non Voting Onboarding Adapter', async accounts => {
     let { proposalId } = pastEvents[0].returnValues;
 
     // Sponsor the new proposal to allow the Advisor to join the DAO
-    await nonVotingOnboarding.sponsorProposal(dao.address, proposalId, [], {
+    await onboarding.sponsorProposal(dao.address, proposalId, [], {
       from: myAccount,
       gasPrice: toBN("0"),
     });
@@ -80,7 +79,7 @@ contract('LAOLAND - Non Voting Onboarding Adapter', async accounts => {
 
     // Process the new proposal
     await advanceTime(10000);
-    await nonVotingOnboarding.processProposal(dao.address, proposalId, {
+    await onboarding.processProposal(dao.address, proposalId, {
       from: myAccount,
       gasPrice: toBN("0"),
     });
@@ -110,12 +109,10 @@ contract('LAOLAND - Non Voting Onboarding Adapter', async accounts => {
     
     let dao = await createDao(myAccount, lootSharePrice, nbOfLootShares, 10, 1, oltContract.address);
 
-    const nonVotingOnboardingAddr = await dao.getAdapterAddress(
-      sha3("nonvoting-onboarding")
+    const onboardingAddress = await dao.getAdapterAddress(
+      sha3("onboarding")
     );
-    const nonVotingMemberContract = await NonVotingOnboardingContract.at(
-      nonVotingOnboardingAddr
-    );
+    const onboarding = await OnboardingContract.at(onboardingAddress);
 
     // Transfer 1000 OLTs to the Advisor account
     await oltContract.approve(advisorAccount, 100);
@@ -144,8 +141,9 @@ contract('LAOLAND - Non Voting Onboarding Adapter', async accounts => {
     // Send a request to join the DAO as an Advisor (non-voting power), 
     // the tx passes the OLT ERC20 token, the amount and the nonVotingOnboarding adapter that handles the proposal
     try {
-      await nonVotingMemberContract.onboard(
+      await onboarding.onboard(
         dao.address,
+        LOOT,
         tokenAmount,
         {
           from: advisorAccount,
@@ -157,10 +155,11 @@ contract('LAOLAND - Non Voting Onboarding Adapter', async accounts => {
       assert.equal(err.message, "Returned error: VM Exception while processing transaction: revert ERC20 transfer not allowed -- Reason given: ERC20 transfer not allowed.");
     }
 
-    await oltContract.approve(nonVotingMemberContract.address, 100, {from: advisorAccount});
+    await oltContract.approve(onboarding.address, 100, {from: advisorAccount});
 
-    await nonVotingMemberContract.onboard(
+    await onboarding.onboard(
       dao.address,
+      LOOT,
       tokenAmount,
       {
         from: advisorAccount,
@@ -169,7 +168,7 @@ contract('LAOLAND - Non Voting Onboarding Adapter', async accounts => {
     );
 
     // Sponsor the new proposal to allow the Advisor to join the DAO
-    await nonVotingMemberContract.sponsorProposal(dao.address, 0, [], {
+    await onboarding.sponsorProposal(dao.address, 0, [], {
       from: myAccount,
       gasPrice: toBN("0"),
     });
@@ -182,7 +181,7 @@ contract('LAOLAND - Non Voting Onboarding Adapter', async accounts => {
 
     // Process the new proposal
     await advanceTime(10000);
-    await nonVotingMemberContract.processProposal(dao.address, 0, {
+    await onboarding.processProposal(dao.address, 0, {
       from: myAccount,
       gasPrice: toBN("0"),
     });

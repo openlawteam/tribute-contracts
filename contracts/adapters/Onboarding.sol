@@ -46,6 +46,7 @@ contract OnboardingContract is
 
     struct ProposalDetails {
         uint256 id;
+        address tokenToMint;
         uint256 amount;
         uint256 sharesRequested;
         address token;
@@ -59,30 +60,31 @@ contract OnboardingContract is
         address tokenAddr;
     }
 
-    mapping(address => OnboardingConfig) public configs;
+    mapping(address => mapping(address => OnboardingConfig)) public configs;
     mapping(address => mapping(uint256 => ProposalDetails)) public proposals;
 
     function configureDao(
         DaoRegistry dao,
+        address tokenAddrToMint,
         uint256 chunkSize,
         uint256 sharesPerChunk,
         address tokenAddr
     ) external onlyAdapter(dao) {
-        configs[address(dao)].chunkSize = chunkSize;
-        configs[address(dao)].sharesPerChunk = sharesPerChunk;
-        configs[address(dao)].tokenAddr = tokenAddr;
+        require(chunkSize > 0, "chunkSize must be higher than 0");
+        configs[address(dao)][tokenAddrToMint].chunkSize = chunkSize;
+        configs[address(dao)][tokenAddrToMint].sharesPerChunk = sharesPerChunk;
+        configs[address(dao)][tokenAddrToMint].tokenAddr = tokenAddr;
     }
 
     function _submitMembershipProposal(
         DaoRegistry dao,
+        address tokenToMint,
         address applicant,
         uint256 value,
         address token
     ) internal returns (uint256) {
-        OnboardingConfig memory config = configs[address(dao)];
-
-        require(config.sharesPerChunk > 0, "sharesPerChunk should not be 0");
-        require(config.chunkSize > 0, "chunkSize should not be 0");
+        OnboardingConfig storage config = configs[address(dao)][tokenToMint];
+        require(config.chunkSize > 0, "config missing");
 
         uint256 numberOfChunks = value.div(config.chunkSize);
         require(numberOfChunks > 0, "not sufficient funds");
@@ -92,6 +94,7 @@ contract OnboardingContract is
 
         _submitMembershipProposalInternal(
             dao,
+            tokenToMint,
             applicant,
             sharesRequested,
             amount,
@@ -101,12 +104,12 @@ contract OnboardingContract is
         return amount;
     }
 
-    function onboard(DaoRegistry dao, uint256 tokenAmount)
+    function onboard(DaoRegistry dao, address tokenToMint, uint256 tokenAmount)
         external
         override
         payable
     {
-        address tokenAddr = configs[address(dao)].tokenAddr;
+        address tokenAddr = configs[address(dao)][tokenToMint].tokenAddr;
         if (tokenAddr == ETH_TOKEN) {
             // ETH onboarding
             require(msg.value > 0, "not enough ETH");
@@ -127,6 +130,7 @@ contract OnboardingContract is
 
         uint256 amountUsed = _submitMembershipProposal(
             dao,
+            tokenToMint,
             msg.sender,
             tokenAmount,
             tokenAddr
@@ -152,6 +156,7 @@ contract OnboardingContract is
 
     function _submitMembershipProposalInternal(
         DaoRegistry dao,
+        address tokenToMint,
         address newMember,
         uint256 sharesRequested,
         uint256 amount,
@@ -160,6 +165,7 @@ contract OnboardingContract is
         uint256 proposalId = dao.submitProposal(msg.sender);
         ProposalDetails memory p = ProposalDetails(
             proposalId,
+            tokenToMint,
             amount,
             sharesRequested,
             token,
@@ -196,26 +202,27 @@ contract OnboardingContract is
         );
 
         IVoting votingContract = IVoting(dao.getAdapterAddress(VOTING));
+        //TODO: we might need to process even if the vote has failed but just differently
         require(
             votingContract.voteResult(dao, proposalId) == 2,
             "proposal need to pass"
         );
+        
         ProposalDetails storage proposal = proposals[address(dao)][proposalId];
 
-        _mintSharesToMember(dao, proposal.applicant, proposal.sharesRequested);
+        _mintTokensToMember(dao, proposal.tokenToMint, proposal.applicant, proposal.sharesRequested);
 
         dao.addToBalance(GUILD, ETH_TOKEN, proposal.amount);
         dao.processProposal(proposalId);
     }
 
-    function _mintSharesToMember(
+    function _mintTokensToMember(
         DaoRegistry dao,
+        address tokenToMint,
         address memberAddr,
-        uint256 shares
+        uint256 tokenAmount
     ) internal {
-        dao.balanceOf(TOTAL, LOOT).add(dao.balanceOf(TOTAL, SHARES)).add(
-            shares
-        ); // this throws if it overflows
-        dao.addToBalance(memberAddr, SHARES, shares);
+        require(dao.isInternalToken(tokenToMint), "it can only mint internal tokens");
+        dao.addToBalance(memberAddr, tokenToMint, tokenAmount);
     }
 }

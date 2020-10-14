@@ -29,7 +29,7 @@ SOFTWARE.
  */
 
 interface IOnboarding {
-    function onboard(DaoRegistry dao, uint256 tokenAmount) external payable;
+    function onboard(DaoRegistry dao, address tokenToMint, uint256 tokenAmount) external payable;
 
     function sponsorProposal(
         DaoRegistry dao,

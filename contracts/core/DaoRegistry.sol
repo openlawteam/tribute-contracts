@@ -291,6 +291,10 @@ contract DaoRegistry is DaoConstants, AdapterGuard {
         emit ProcessedProposal(proposalId, uint64(block.timestamp), flags);
     }
 
+    function isInternalToken(address tokenToMint) external pure returns (bool){
+        return tokenToMint == SHARES || tokenToMint == LOOT;
+    }
+
     /*
      * MEMBERS
      */

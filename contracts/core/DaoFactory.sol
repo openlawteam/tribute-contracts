@@ -6,7 +6,6 @@ pragma experimental ABIEncoderV2;
 import "./DaoConstants.sol";
 import "./DaoRegistry.sol";
 import "../adapters/Onboarding.sol";
-import "../adapters/NonVotingOnboarding.sol";
 
 /**
 MIT License
