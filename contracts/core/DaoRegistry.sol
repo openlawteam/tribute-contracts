@@ -153,7 +153,7 @@ contract DaoRegistry is DaoConstants, AdapterGuard {
      * PUBLIC NON RESTRICTED FUNCTIONS
      */
 
-     receive() external payable {
+    receive() external payable {
         revert("you cannot send money back directly");
     }
 
