@@ -59,8 +59,8 @@ contract VotingContract is IVoting, DaoConstants, MemberGuard, AdapterGuard {
     function startNewVotingForProposal(
         DaoRegistry dao,
         uint256 proposalId,
-        bytes calldata /*onlyAdapter(dao)*/
-    ) external override {
+        bytes calldata
+    ) external override onlyAdapter(dao) {
         //it is called from Registry
         // compute startingPeriod for proposal
         Voting storage vote = votes[address(dao)][proposalId];
