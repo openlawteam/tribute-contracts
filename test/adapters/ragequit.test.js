@@ -27,9 +27,10 @@ const {
   sharePrice,
   GUILD,
   ETH_TOKEN,
+  SHARES,
+  LOOT,
   OLTokenContract, 
   OnboardingContract,
-  NonVotingOnboardingContract,
   VotingContract,
   RagequitContract,
   FinancingContract
@@ -40,7 +41,7 @@ const sha3 = web3.utils.sha3;
 contract('LAOLAND - Ragequit Adapter', async accounts => {
 
   submitNewMemberProposal = async (onboarding, dao, newMember, sharePrice) => {
-    await onboarding.onboard(dao.address, sharePrice.mul(toBN(100)), {
+    await onboarding.onboard(dao.address, SHARES, sharePrice.mul(toBN(100)), {
       from: newMember,
       value: sharePrice.mul(toBN(100)),
       gasPrice: toBN("0"),
@@ -364,12 +365,8 @@ it("should be possible to a member to ragequit if the member voted YES on a prop
       "Advisor account must be initialized with 100 OLT Tokens"
     );
 
-    const nonVotingOnboardingAddr = await dao.getAdapterAddress(
-      sha3("nonvoting-onboarding")
-    );
-    const nonVotingMemberContract = await NonVotingOnboardingContract.at(
-      nonVotingOnboardingAddr
-    );
+    const onboardingAddress = await dao.getAdapterAddress(sha3("onboarding"));
+    const onboarding = await OnboardingContract.at(onboardingAddress);
 
     const votingAddress = await dao.getAdapterAddress(sha3("voting"));
     const voting = await VotingContract.at(votingAddress);
@@ -382,15 +379,16 @@ it("should be possible to a member to ragequit if the member voted YES on a prop
     let tokenAmount = 10;
 
     // Pre-approve spender (DAO) to transfer applicant tokens
-    await oltContract.approve(nonVotingOnboardingAddr, tokenAmount, {
+    await oltContract.approve(onboardingAddress, tokenAmount, {
       from: advisorAccount,
       gasPrice: toBN(0),
     });
 
     // Send a request to join the DAO as an Advisor (non-voting power),
     // the tx passes the OLT ERC20 token, the amount and the nonVotingOnboarding adapter that handles the proposal
-    await nonVotingMemberContract.onboard(
+    await onboarding.onboard(
       dao.address,
+      LOOT,
       tokenAmount,
       {
         from: advisorAccount,
@@ -403,7 +401,7 @@ it("should be possible to a member to ragequit if the member voted YES on a prop
     let { proposalId } = pastEvents[0].returnValues;
 
     // Sponsor the new proposal to allow the Advisor to join the DAO
-    await nonVotingMemberContract.sponsorProposal(dao.address, proposalId, [], {
+    await onboarding.sponsorProposal(dao.address, proposalId, [], {
       from: myAccount,
       gasPrice: toBN("0"),
     });
@@ -416,7 +414,7 @@ it("should be possible to a member to ragequit if the member voted YES on a prop
 
     // Process the new proposal
     await advanceTime(10000);
-    await nonVotingMemberContract.processProposal(dao.address, proposalId, {
+    await onboarding.processProposal(dao.address, proposalId, {
       from: myAccount,
       gasPrice: toBN("0"),
     });

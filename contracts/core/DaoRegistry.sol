@@ -145,7 +145,6 @@ contract DaoRegistry is DaoConstants, AdapterGuard {
         _bank.tokenBalances[memberAddr][SHARES] = 1;
         _bank.tokenBalances[TOTAL][SHARES] = 1;
         _moveDelegates(address(0), memberAddr, 1);
-
         _moveDelegates(address(0), TOTAL, 1);
     }
 
@@ -153,6 +152,10 @@ contract DaoRegistry is DaoConstants, AdapterGuard {
     /*
      * PUBLIC NON RESTRICTED FUNCTIONS
      */
+
+    receive() external payable {
+        revert("you cannot send money back directly");
+    }
 
     function finalizeDao() external {
         state = DaoState.READY;
@@ -289,6 +292,10 @@ contract DaoRegistry is DaoConstants, AdapterGuard {
         proposals[proposalId].flags = flags;
 
         emit ProcessedProposal(proposalId, uint64(block.timestamp), flags);
+    }
+
+    function isInternalToken(address tokenToMint) external pure returns (bool) {
+        return tokenToMint == SHARES || tokenToMint == LOOT;
     }
 
     /*
