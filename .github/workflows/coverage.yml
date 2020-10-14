@@ -17,4 +17,4 @@ jobs:
         node-version: '12'
     - run: npm install
     - run: npm run coverage
-    - run: bash <(curl -s https://codecov.io/bash) -t ${{ CODECOV_TOKEN }}
+    - run: bash <(curl -s https://codecov.io/bash) -t ${{ secrets.CODECOV_TOKEN }}
