@@ -120,10 +120,6 @@ contract OnboardingContract is
             IERC20 token = IERC20(tokenAddr);
             // ERC20 onboarding
             require(
-                token.allowance(msg.sender, address(this)) >= tokenAmount,
-                "ERC20 transfer not allowed"
-            );
-            require(
                 token.transferFrom(msg.sender, address(this), tokenAmount),
                 "ERC20 failed transferFrom"
             );
