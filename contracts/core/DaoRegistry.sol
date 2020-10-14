@@ -145,7 +145,6 @@ contract DaoRegistry is DaoConstants, AdapterGuard {
         _bank.tokenBalances[memberAddr][SHARES] = 1;
         _bank.tokenBalances[TOTAL][SHARES] = 1;
         _moveDelegates(address(0), memberAddr, 1);
-
         _moveDelegates(address(0), TOTAL, 1);
     }
 

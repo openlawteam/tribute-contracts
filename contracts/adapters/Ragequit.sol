@@ -53,11 +53,7 @@ contract RagequitContract is IRagequit, DaoConstants, MemberGuard {
         uint256 sharesToBurn,
         uint256 lootToBurn
     ) external override onlyMember(dao) {
-        // FIXME: we still don't track the index to block the ragequit if member voted YES on a non-processed proposal
-        // require(canRagequit(member.highestIndexYesVote), "cannot ragequit until highest index proposal member voted YES on is processed");
-
         _burnShares(dao, msg.sender, sharesToBurn, lootToBurn);
-
         emit Ragequit(msg.sender, sharesToBurn, lootToBurn);
     }
 
@@ -76,8 +72,6 @@ contract RagequitContract is IRagequit, DaoConstants, MemberGuard {
             dao.balanceOf(memberAddr, LOOT) >= lootToBurn,
             "insufficient loot"
         );
-
-        //TODO: require(canRagequit(member.highestIndexYesVote), "cannot ragequit until highest index proposal member voted YES on is processed");
 
         uint256 initialTotalSharesAndLoot = dao
             .balanceOf(TOTAL, SHARES)
@@ -109,8 +103,6 @@ contract RagequitContract is IRagequit, DaoConstants, MemberGuard {
                     token,
                     amountToRagequit
                 );
-                //TODO: do we want to emit an event for each token transfer?
-                // emit Transfer(GUILD, applicant, token, amount);
             }
         }
     }
@@ -131,10 +123,4 @@ contract RagequitContract is IRagequit, DaoConstants, MemberGuard {
         }
         return (balance / _totalShares) * shares;
     }
-
-    // can only ragequit if the latest proposal you voted YES on has been processed
-    // function canRagequit(uint256 highestIndexYesVote) public view returns (bool) {
-    //     require(highestIndexYesVote < proposalQueue.length, "proposal does not exist");
-    //     return proposals[proposalQueue[highestIndexYesVote]].flags[1];
-    // }
 }

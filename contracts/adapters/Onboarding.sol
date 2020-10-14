@@ -71,6 +71,7 @@ contract OnboardingContract is
         address tokenAddr
     ) external onlyAdapter(dao) {
         require(chunkSize > 0, "chunkSize must be higher than 0");
+        require(sharesPerChunk > 0, "chunkSize must be higher than 0");
         configs[address(dao)][tokenAddrToMint].chunkSize = chunkSize;
         configs[address(dao)][tokenAddrToMint].sharesPerChunk = sharesPerChunk;
         configs[address(dao)][tokenAddrToMint].tokenAddr = tokenAddr;
