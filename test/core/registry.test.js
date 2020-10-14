@@ -21,39 +21,42 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
  */
-const Web3 = require('web3-utils');
 const DaoRegistry = artifacts.require("./core/DaoRegistry");
 const FlagHelperLib = artifacts.require('./helpers/FlagHelper128');
-DaoRegistry.link;
+const fromUtf8 = web3.utils.fromUtf8;
+const sha3 = web3.utils.sha3;
+const toBN = web3.utils.toBN;
 
-contract('Registry', async () => {
-  
-  let lib = await FlagHelperLib.new();
-  await DaoRegistry.link("FlagHelper128", lib.address);
+const {createDao, OnboardingContract} = require('../../utils/DaoFactory.js');
+
+contract('Registry', async (accounts) => {
 
   it("should not be possible to add a module with invalid id", async () => {
-    let moduleId = Web3.fromUtf8("");
+    let lib = await FlagHelperLib.new();
+    await DaoRegistry.link("FlagHelper128", lib.address);
+    console.log('testing first case ....');
+    let moduleId = fromUtf8("");
     let moduleAddress = "0x627306090abaB3A6e1400e9345bC60c78a8BEf57";
     let registry = await DaoRegistry.new();
     try {
       await registry.addAdapter(moduleId, moduleAddress);
     } catch (error) {
-      assert.equal(error.reason, "module id must not be empty");
+      assert.equal(error.reason, "adapterId must not be empty");
     }
   });
 
   it("should not be possible to remove a module when it not registered", async () => {
-    let moduleId = Web3.fromUtf8("1");
+    let moduleId = fromUtf8("1");
     let registry = await DaoRegistry.new();
     try {
       await registry.removeAdapter(moduleId);
     } catch (error) {
-      assert.equal(error.reason, "module not registered");
+      assert.equal(error.reason, "adapterId not registered");
     }
   });
 
   it("should not be possible to add a module with invalid address", async () => {
-    let moduleId = Web3.fromUtf8("1");
+    let moduleId = fromUtf8("1");
     let moduleAddress = "";
     let registry = await DaoRegistry.new();
     try {
@@ -64,18 +67,18 @@ contract('Registry', async () => {
   });
 
   it("should not be possible to add a module with empty address", async () => {
-    let moduleId = Web3.fromUtf8("1");
+    let moduleId = fromUtf8("1");
     let moduleAddress = "0x0000000000000000000000000000000000000000";
     let registry = await DaoRegistry.new();
     try {
       await registry.addAdapter(moduleId, moduleAddress);
     } catch (error) {
-      assert.equal(error.reason, "module address must not be empty");
+      assert.equal(error.reason, "adapterAddress must not be empty");
     }
   });
 
   it("should not be possible to add a module when the id is already in use", async () => {
-    let moduleId = Web3.fromUtf8("1");
+    let moduleId = fromUtf8("1");
     let moduleAddress = "0x627306090abaB3A6e1400e9345bC60c78a8BEf57";
     let registry = await DaoRegistry.new();
     //Add a module with id 1
@@ -85,12 +88,12 @@ contract('Registry', async () => {
       //Try to add another module using the same id 1
       await registry.addAdapter(moduleId, "0xd7bCe30D77DE56E3D21AEfe7ad144b3134438F5B");
     } catch (error) {
-      assert.equal(error.reason, "module id already in use");
+      assert.equal(error.reason, "adapterId already in use");
     }
   });
 
   it("should be possible to add a module with a valid id and address", async () => {
-    let moduleId = Web3.fromUtf8("1");
+    let moduleId = fromUtf8("1");
     let moduleAddress = "0x627306090abaB3A6e1400e9345bC60c78a8BEf57";
     let registry = await DaoRegistry.new();
     await registry.addAdapter(moduleId, moduleAddress);
@@ -99,7 +102,7 @@ contract('Registry', async () => {
   });
 
   it("should be possible to remove a module", async () => {
-    let moduleId = Web3.fromUtf8("2");
+    let moduleId = fromUtf8("2");
     let moduleAddress = "0x627306090abaB3A6e1400e9345bC60c78a8BEf57";
     let registry = await DaoRegistry.new();
     await registry.addAdapter(moduleId, moduleAddress);
@@ -111,24 +114,24 @@ contract('Registry', async () => {
   });
 
   it("should not be possible to remove a module that is not registered", async () => {
-    let moduleId = Web3.fromUtf8("1");
+    let moduleId = fromUtf8("1");
     let registry = await DaoRegistry.new();
 
     try {
       await registry.removeAdapter(moduleId);
     } catch (error) {
-      assert.equal(error.reason, "module not registered");
+      assert.equal(error.reason, "adapterId not registered");
     }
   });
 
   it("should not be possible to remove a module with an empty id", async () => {
-    let moduleId = Web3.fromUtf8("");
+    let moduleId = fromUtf8("");
     let registry = await DaoRegistry.new();
 
     try {
       await registry.removeAdapter(moduleId);
     } catch (error) {
-      assert.equal(error.reason, "module id must not be empty");
+      assert.equal(error.reason, "adapterId must not be empty");
     }
   });
 
@@ -143,15 +146,15 @@ contract('Registry', async () => {
     const myAccountActive1 = await dao.isActiveMember(myAccount);
     const delegateKeyActive1 = await dao.isActiveMember(delegateKey);
 
-    assert.true(myAccountActive1);
-    assert.false(delegateKeyActive1);
+    assert.equal(true, myAccountActive1);
+    assert.equal(false, delegateKeyActive1);
 
     await onboarding.updateDelegateKey(dao.address, delegateKey, { from: myAccount, gasPrice: toBN("0") });
 
     const myAccountActive2 = await dao.isActiveMember(myAccount);
     const delegateKeyActive2 = await dao.isActiveMember(delegateKey);
 
-    assert.false(myAccountActive2);
-    assert.true(delegateKeyActive2);
+    assert.equal(false, myAccountActive2);
+    assert.equal(true, delegateKeyActive2);
   });
 });
