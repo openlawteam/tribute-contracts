@@ -150,7 +150,7 @@ contract DaoRegistry is DaoConstants, AdapterGuard {
 
         _bank.availableInternalTokens[SHARES] = true;
         _bank.internalTokens.push(SHARES);
-        
+
         _bank.tokenBalances[SHARES][memberAddr] = 1;
         _bank.tokenBalances[SHARES][TOTAL] = 1;
         _createNewAmountCheckpoint(memberAddr, SHARES);
@@ -370,17 +370,23 @@ contract DaoRegistry is DaoConstants, AdapterGuard {
      * BANK
      */
 
-    function registerPotentialNewToken(address token) external onlyAdapter(this) {
+    function registerPotentialNewToken(address token)
+        external
+        onlyAdapter(this)
+    {
         require(isNotReservedAddress(token), "reservedToken");
         require(!_bank.availableInternalTokens[token], "internalToken");
-        
+
         if (!_bank.availableTokens[token]) {
             _bank.availableTokens[token] = true;
             _bank.tokens.push(token);
         }
     }
 
-    function registerPotentialNewInternalToken(address token) external onlyAdapter(this)  {
+    function registerPotentialNewInternalToken(address token)
+        external
+        onlyAdapter(this)
+    {
         require(isNotReservedAddress(token), "reservedToken");
         require(!_bank.availableTokens[token], "internalToken");
         if (!_bank.availableInternalTokens[token]) {
@@ -405,10 +411,7 @@ contract DaoRegistry is DaoConstants, AdapterGuard {
         pure
         returns (bool)
     {
-        return
-            applicant != GUILD &&
-            
-            applicant != TOTAL;
+        return applicant != GUILD && applicant != TOTAL;
     }
 
     /**
@@ -424,7 +427,11 @@ contract DaoRegistry is DaoConstants, AdapterGuard {
         address token,
         uint256 amount
     ) public onlyAdapter(this) {
-        require(_bank.availableTokens[token] || _bank.availableInternalTokens[token], "unknown token address");
+        require(
+            _bank.availableTokens[token] ||
+                _bank.availableInternalTokens[token],
+            "unknown token address"
+        );
         _bank.tokenBalances[token][user] += amount;
         _bank.tokenBalances[token][TOTAL] += amount;
         _createNewAmountCheckpoint(user, token);
@@ -466,10 +473,16 @@ contract DaoRegistry is DaoConstants, AdapterGuard {
      * @param account The address to get votes balance
      * @return The number of current votes for `account`
      */
-    function getCurrentAmount(address account, address tokenAddr) external view returns (uint256) {
+    function getCurrentAmount(address account, address tokenAddr)
+        external
+        view
+        returns (uint256)
+    {
         uint32 nCheckpoints = _bank.numCheckpoints[tokenAddr][account];
         return
-            nCheckpoints > 0 ? _bank.checkpoints[tokenAddr][account][nCheckpoints - 1].amount : 0;
+            nCheckpoints > 0
+                ? _bank.checkpoints[tokenAddr][account][nCheckpoints - 1].amount
+                : 0;
     }
 
     /**
@@ -479,11 +492,11 @@ contract DaoRegistry is DaoConstants, AdapterGuard {
      * @param blockNumber The block number to get the vote balance at
      * @return The number of votes the account had as of the given block
      */
-    function getPriorAmount(address account, address tokenAddr, uint256 blockNumber)
-        external
-        view
-        returns (uint256)
-    {
+    function getPriorAmount(
+        address account,
+        address tokenAddr,
+        uint256 blockNumber
+    ) external view returns (uint256) {
         require(
             blockNumber < block.number,
             "Uni::getPriorAmount: not yet determined"
@@ -495,8 +508,12 @@ contract DaoRegistry is DaoConstants, AdapterGuard {
         }
 
         // First check most recent balance
-        if (_bank.checkpoints[tokenAddr][account][nCheckpoints - 1].fromBlock <= blockNumber) {
-            return _bank.checkpoints[tokenAddr][account][nCheckpoints - 1].amount;
+        if (
+            _bank.checkpoints[tokenAddr][account][nCheckpoints - 1].fromBlock <=
+            blockNumber
+        ) {
+            return
+                _bank.checkpoints[tokenAddr][account][nCheckpoints - 1].amount;
         }
 
         // Next check implicit zero balance
@@ -508,7 +525,8 @@ contract DaoRegistry is DaoConstants, AdapterGuard {
         uint32 upper = nCheckpoints - 1;
         while (upper > lower) {
             uint32 center = upper - (upper - lower) / 2; // ceil, avoiding overflow
-            Checkpoint memory cp = _bank.checkpoints[tokenAddr][account][center];
+            Checkpoint memory cp = _bank
+                .checkpoints[tokenAddr][account][center];
             if (cp.fromBlock == blockNumber) {
                 return cp.amount;
             } else if (cp.fromBlock < blockNumber) {
@@ -543,7 +561,9 @@ contract DaoRegistry is DaoConstants, AdapterGuard {
         }
 
         // First check most recent balance
-        if (checkpoints[memberAddr][nCheckpoints - 1].fromBlock <= blockNumber) {
+        if (
+            checkpoints[memberAddr][nCheckpoints - 1].fromBlock <= blockNumber
+        ) {
             return checkpoints[memberAddr][nCheckpoints - 1].delegateKey;
         }
 
@@ -568,10 +588,9 @@ contract DaoRegistry is DaoConstants, AdapterGuard {
         return checkpoints[memberAddr][lower].delegateKey;
     }
 
-    function _createNewAmountCheckpoint(
-        address member,
-        address tokenAddr
-    ) internal {
+    function _createNewAmountCheckpoint(address member, address tokenAddr)
+        internal
+    {
         uint256 amount = _bank.tokenBalances[tokenAddr][member];
         uint32 srcRepNum = _bank.numCheckpoints[tokenAddr][member];
         _writeAmountCheckpoint(member, tokenAddr, srcRepNum, amount);
@@ -615,9 +634,11 @@ contract DaoRegistry is DaoConstants, AdapterGuard {
 
         if (
             nCheckpoints > 0 &&
-            _bank.checkpoints[tokenAddr][member][nCheckpoints - 1].fromBlock == block.number
+            _bank.checkpoints[tokenAddr][member][nCheckpoints - 1].fromBlock ==
+            block.number
         ) {
-            _bank.checkpoints[tokenAddr][member][nCheckpoints - 1].amount = newAmount;
+            _bank.checkpoints[tokenAddr][member][nCheckpoints - 1]
+                .amount = newAmount;
         } else {
             _bank.checkpoints[tokenAddr][member][nCheckpoints] = Checkpoint(
                 uint96(block.number),

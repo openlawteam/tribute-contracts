@@ -161,8 +161,11 @@ contract OffchainVotingContract is
     ) internal {
         bytes32 hashCurrent = _nodeHash(result);
         uint256 blockNumber = vote.blockNumber;
-        
-        address voter = dao.getPriorDelegateKey(result.member, vote.blockNumber);
+
+        address voter = dao.getPriorDelegateKey(
+            result.member,
+            vote.blockNumber
+        );
         require(
             verify(resultRoot, hashCurrent, result.proof),
             "result node & result merkle root / proof mismatch"
@@ -176,7 +179,11 @@ contract OffchainVotingContract is
             "wrong vote signature!"
         );
 
-        uint256 correctWeight = dao.getPriorAmount(result.member, SHARES, blockNumber);
+        uint256 correctWeight = dao.getPriorAmount(
+            result.member,
+            SHARES,
+            blockNumber
+        );
 
         //Incorrect weight
         require(correctWeight == result.weight, "wrong weight!");
@@ -312,7 +319,10 @@ contract OffchainVotingContract is
             abi.encode(blockNumber, address(dao), proposalId)
         );
         //return 1 if yes, 2 if no and 0 if the vote is incorrect
-        address voter = dao.getPriorDelegateKey(nodeCurrent.member, vote.blockNumber);
+        address voter = dao.getPriorDelegateKey(
+            nodeCurrent.member,
+            vote.blockNumber
+        );
         if (_hasVoted(voter, proposalHash, nodeCurrent.sig) == 0) {
             _challengeResult(dao, proposalId);
         }
@@ -446,7 +456,10 @@ contract OffchainVotingContract is
         uint256 proposalId
     ) internal {
         Voting storage vote = votes[address(dao)][proposalId];
-        address voter = dao.getPriorDelegateKey(nodeCurrent.member, vote.blockNumber);
+        address voter = dao.getPriorDelegateKey(
+            nodeCurrent.member,
+            vote.blockNumber
+        );
         if (_hasVotedYes(voter, proposalHash, nodeCurrent.sig)) {
             if (nodePrevious.nbYes + 1 != nodeCurrent.nbYes) {
                 _challengeResult(dao, proposalId);

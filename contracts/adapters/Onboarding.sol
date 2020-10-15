@@ -233,7 +233,7 @@ contract OnboardingContract is
             dao.isInternalToken(tokenToMint),
             "it can only mint internal tokens"
         );
-        
+
         dao.addToBalance(memberAddr, tokenToMint, tokenAmount);
     }
 }
