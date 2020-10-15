@@ -89,6 +89,8 @@ contract OffchainVotingContract is
         votingConfigs[address(dao)].votingPeriod = votingPeriod;
         votingConfigs[address(dao)].gracePeriod = gracePeriod;
         votingConfigs[address(dao)].fallbackThreshold = fallbackThreshold;
+
+        dao.registerPotentialNewInternalToken(LOCKED_LOOT);
     }
 
     function submitVoteResult(
@@ -141,7 +143,7 @@ contract OffchainVotingContract is
         } else {
             diff = nbNo - nbYes;
         }
-        if (diff * 2 > dao.getPriorVotes(dao.TOTAL(), vote.blockNumber)) {
+        if (diff * 2 > dao.getPriorAmount(TOTAL, SHARES, vote.blockNumber)) {
             return true;
         }
 
@@ -173,7 +175,7 @@ contract OffchainVotingContract is
             "wrong vote signature!"
         );
 
-        uint256 correctWeight = dao.getPriorVotes(voter, blockNumber);
+        uint256 correctWeight = dao.getPriorAmount(voter, SHARES, blockNumber);
 
         //Incorrect weight
         require(correctWeight == result.weight, "wrong weight!");
@@ -329,8 +331,9 @@ contract OffchainVotingContract is
             "proof check for current invalid for current node"
         );
 
-        uint256 correctWeight = dao.getPriorVotes(
+        uint256 correctWeight = dao.getPriorAmount(
             nodeCurrent.voter,
+            SHARES,
             blockNumber
         );
 

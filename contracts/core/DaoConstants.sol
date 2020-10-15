@@ -39,8 +39,6 @@ abstract contract DaoConstants {
 
     /// @notice The reserved address for Guild bank account
     address public constant GUILD = address(0xdead);
-    /// @notice The reserved address for Escrow bank account
-    address public constant ESCROW = address(0xbeef);
     /// @notice The reserved address for Total funds bank account
     address public constant TOTAL = address(0xbabe);
     address public constant SHARES = address(0xFF1CE);
