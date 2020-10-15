@@ -127,8 +127,8 @@ contract DaoRegistry is DaoConstants, AdapterGuard {
     mapping(address => address) public memberAddressesByDelegatedKey; // delegate key -> member address mapping
     Bank private _bank; // the state of the DAO Bank
 
-    mapping(address => mapping(address => DelegateCheckpoint)) checkpoints;
-    mapping(address => mapping(address => uint32)) numCheckpoints;
+    mapping(address => mapping(uint32 => DelegateCheckpoint)) checkpoints;
+    mapping(address => uint32) numCheckpoints;
 
     DaoState public state = DaoState.CREATION;
 
@@ -354,6 +354,7 @@ contract DaoRegistry is DaoConstants, AdapterGuard {
         memberAddressesByDelegatedKey[newDelegateKey] = memberAddr;
         member.delegateKey = newDelegateKey;
 
+        _createNewDelegateCheckpoint(memberAddr, newDelegateKey);
         emit UpdateDelegateKey(memberAddr, newDelegateKey);
     }
 
@@ -519,16 +520,91 @@ contract DaoRegistry is DaoConstants, AdapterGuard {
         return _bank.checkpoints[tokenAddr][account][lower].amount;
     }
 
+    /**
+     * @notice Determine the prior number of votes for an account as of a block number
+     * @dev Block number must be a finalized block or else this function will revert to prevent misinformation.
+     * @param memberAddr The address of the account to check
+     * @param blockNumber The block number to get the vote balance at
+     * @return The number of votes the account had as of the given block
+     */
+    function getPriorDelegateKey(address memberAddr, uint256 blockNumber)
+        external
+        view
+        returns (address)
+    {
+        require(
+            blockNumber < block.number,
+            "Uni::getPriorDelegateKey: not yet determined"
+        );
+
+        uint32 nCheckpoints = numCheckpoints[memberAddr];
+        if (nCheckpoints == 0) {
+            return memberAddr;
+        }
+
+        // First check most recent balance
+        if (checkpoints[memberAddr][nCheckpoints - 1].fromBlock <= blockNumber) {
+            return checkpoints[memberAddr][nCheckpoints - 1].delegateKey;
+        }
+
+        // Next check implicit zero balance
+        if (checkpoints[memberAddr][0].fromBlock > blockNumber) {
+            return memberAddr;
+        }
+
+        uint32 lower = 0;
+        uint32 upper = nCheckpoints - 1;
+        while (upper > lower) {
+            uint32 center = upper - (upper - lower) / 2; // ceil, avoiding overflow
+            DelegateCheckpoint memory cp = checkpoints[memberAddr][center];
+            if (cp.fromBlock == blockNumber) {
+                return cp.delegateKey;
+            } else if (cp.fromBlock < blockNumber) {
+                lower = center;
+            } else {
+                upper = center - 1;
+            }
+        }
+        return checkpoints[memberAddr][lower].delegateKey;
+    }
+
     function _createNewAmountCheckpoint(
         address member,
         address tokenAddr
     ) internal {
         uint256 amount = _bank.tokenBalances[tokenAddr][member];
         uint32 srcRepNum = _bank.numCheckpoints[tokenAddr][member];
-        _writeCheckpoint(member, tokenAddr, srcRepNum, amount);
+        _writeAmountCheckpoint(member, tokenAddr, srcRepNum, amount);
     }
 
-    function _writeCheckpoint(
+    function _createNewDelegateCheckpoint(
+        address member,
+        address newDelegateKey
+    ) internal {
+        uint32 srcRepNum = numCheckpoints[member];
+        _writeDelegateCheckpoint(member, srcRepNum, newDelegateKey);
+    }
+
+    function _writeDelegateCheckpoint(
+        address member,
+        uint32 nCheckpoints,
+        address newDelegateKey
+    ) internal {
+        if (
+            nCheckpoints > 0 &&
+            checkpoints[member][nCheckpoints - 1].fromBlock == block.number
+        ) {
+            checkpoints[member][nCheckpoints - 1].delegateKey = newDelegateKey;
+        } else {
+            checkpoints[member][nCheckpoints] = DelegateCheckpoint(
+                uint96(block.number),
+                newDelegateKey
+            );
+            numCheckpoints[member] = nCheckpoints + 1;
+        }
+    }
+
+    function _writeAmountCheckpoint(
         address member,
         address tokenAddr,
         uint32 nCheckpoints,

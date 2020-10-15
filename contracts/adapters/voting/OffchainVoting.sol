@@ -64,7 +64,7 @@ contract OffchainVotingContract is
     }
 
     struct VoteResultNode {
-        address voter;
+        address member;
         uint256 nbNo;
         uint256 nbYes;
         uint256 weight;
@@ -161,7 +161,8 @@ contract OffchainVotingContract is
     ) internal {
         bytes32 hashCurrent = _nodeHash(result);
         uint256 blockNumber = vote.blockNumber;
-        address voter = result.voter;
+        
+        address voter = dao.getPriorDelegateKey(result.member, vote.blockNumber);
         require(
             verify(resultRoot, hashCurrent, result.proof),
             "result node & result merkle root / proof mismatch"
@@ -175,7 +176,7 @@ contract OffchainVotingContract is
             "wrong vote signature!"
         );
 
-        uint256 correctWeight = dao.getPriorAmount(voter, SHARES, blockNumber);
+        uint256 correctWeight = dao.getPriorAmount(result.member, SHARES, blockNumber);
 
         //Incorrect weight
         require(correctWeight == result.weight, "wrong weight!");
@@ -311,7 +312,8 @@ contract OffchainVotingContract is
             abi.encode(blockNumber, address(dao), proposalId)
         );
         //return 1 if yes, 2 if no and 0 if the vote is incorrect
-        if (_hasVoted(nodeCurrent.voter, proposalHash, nodeCurrent.sig) == 0) {
+        address voter = dao.getPriorDelegateKey(nodeCurrent.member, vote.blockNumber);
+        if (_hasVoted(voter, proposalHash, nodeCurrent.sig) == 0) {
             _challengeResult(dao, proposalId);
         }
     }
@@ -332,7 +334,7 @@ contract OffchainVotingContract is
         );
 
         uint256 correctWeight = dao.getPriorAmount(
-            nodeCurrent.voter,
+            nodeCurrent.member,
             SHARES,
             blockNumber
         );
@@ -363,7 +365,7 @@ contract OffchainVotingContract is
             "proof check for previous invalid for previous node"
         );
 
-        if (node1.voter == node2.voter) {
+        if (node1.member == node2.member) {
             _challengeResult(dao, proposalId);
         }
     }
@@ -399,7 +401,7 @@ contract OffchainVotingContract is
         );
 
         //voters not in order
-        if (nodeCurrent.voter > nodePrevious.voter) {
+        if (nodeCurrent.member > nodePrevious.member) {
             _challengeResult(dao, proposalId);
         }
 
@@ -426,7 +428,7 @@ contract OffchainVotingContract is
         return
             keccak256(
                 abi.encode(
-                    node.voter,
+                    node.member,
                     node.weight,
                     node.sig,
                     node.nbYes,
@@ -443,7 +445,9 @@ contract OffchainVotingContract is
         bytes32 proposalHash,
         uint256 proposalId
     ) internal {
-        if (_hasVotedYes(nodeCurrent.voter, proposalHash, nodeCurrent.sig)) {
+        Voting storage vote = votes[address(dao)][proposalId];
+        address voter = dao.getPriorDelegateKey(nodeCurrent.member, vote.blockNumber);
+        if (_hasVotedYes(voter, proposalHash, nodeCurrent.sig)) {
             if (nodePrevious.nbYes + 1 != nodeCurrent.nbYes) {
                 _challengeResult(dao, proposalId);
             } else if (nodePrevious.nbNo != nodeCurrent.nbNo) {
