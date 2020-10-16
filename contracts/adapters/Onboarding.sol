@@ -51,7 +51,7 @@ contract OnboardingContract is
         uint256 sharesRequested;
         address token;
         bool processed;
-        address applicant;
+        address payable applicant;
     }
 
     struct OnboardingConfig {
@@ -80,7 +80,7 @@ contract OnboardingContract is
     function _submitMembershipProposal(
         DaoRegistry dao,
         address tokenToMint,
-        address applicant,
+        address payable applicant,
         uint256 value,
         address token
     ) internal returns (uint256) {
@@ -158,7 +158,7 @@ contract OnboardingContract is
     function _submitMembershipProposalInternal(
         DaoRegistry dao,
         address tokenToMint,
-        address newMember,
+        address payable newMember,
         uint256 sharesRequested,
         uint256 amount,
         address token
@@ -194,6 +194,7 @@ contract OnboardingContract is
 
 		function cancelProposal(DaoRegistry dao, uint256 proposalId)
 		    external
+				override
 				onlyMember(dao)
 	  {
 			  require(
@@ -214,10 +215,7 @@ contract OnboardingContract is
         ProposalDetails storage proposal = proposals[address(dao)][proposalId];
 
 				if (proposal.token == ETH_TOKEN) {
-						require (
-								proposal.applicant.transfer(proposal.amount),
-								"failed to refund tribute ETH"
-						);
+						proposal.applicant.transfer(proposal.amount);
         } else {
             IERC20 token = IERC20(proposal.token);
 						require(
