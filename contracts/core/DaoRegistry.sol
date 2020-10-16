@@ -60,6 +60,11 @@ contract DaoRegistry is DaoConstants, AdapterGuard {
         uint64 processingTime,
         uint128 flags
     );
+    event CancelledProposal(
+        uint64 proposalId,
+        uint64 processingTime,
+        uint128 flags
+    );
 
     /// @dev - Events for Members
     event UpdateMemberShares(address member, uint256 shares);
@@ -236,6 +241,34 @@ contract DaoRegistry is DaoConstants, AdapterGuard {
 
         return proposalId;
     }
+
+		/// @dev - Proposal: cancel a proposal that has been submitted to the registry
+    function cancelProposal(uint256 _proposalId) 
+		    external
+				onlyAdapter(this)
+		{
+        require(
+            _proposalId < type(uint64).max,
+            "proposal Id should only be uint64"
+        );
+        uint64 proposalId = uint64(_proposalId);
+        Proposal storage proposal = proposals[proposalId];
+
+        require(
+            proposal.adapterAddress == msg.sender,
+            "only the adapter that submitted the proposal can cancel it"
+        );
+
+        uint128 flags = proposal.flags;
+        require(flags.exists(), "proposal does not exist for this dao");
+        require(!flags.isCancelled(), "proposal already cancelled");
+        require(!flags.isSponsored(), "proposal already sponsored, cannot cancel");
+        flags = flags.setCancelled(true);
+        proposals[proposalId].flags = flags;
+
+        emit CancelledProposal(proposalId, uint64(block.timestamp), flags);
+    }
+
 
     /// @dev - Proposal: sponsor proposals that were submitted to the DAO registry
     function sponsorProposal(uint256 _proposalId, address sponsoringMember)

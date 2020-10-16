@@ -88,7 +88,7 @@ contract OnboardingContract is
         require(config.chunkSize > 0, "config missing");
 
         uint256 numberOfChunks = value.div(config.chunkSize);
-        require(numberOfChunks > 0, "not sufficient funds");
+        require(numberOfChunks > 0, "not sufficient funds"); /* explain why this should not be < instead? */
 
         uint256 amount = numberOfChunks.mul(config.chunkSize);
         uint256 sharesRequested = numberOfChunks.mul(config.sharesPerChunk);
@@ -192,11 +192,49 @@ contract OnboardingContract is
         dao.sponsorProposal(proposalId, msg.sender);
     }
 
+		function cancelProposal(DaoRegistry dao, uint256 proposalId)
+		    external
+				onlyMember(dao)
+	  {
+			  require(
+            proposals[address(dao)][proposalId].id == proposalId,
+            "proposal does not exist"
+        );
+
+        IVoting votingContract = IVoting(dao.getAdapterAddress(VOTING));
+				uint256 votingStatus = votingContract.voteResult(dao, proposalId);
+				
+				require(
+					  votingStatus != 0,
+						"proposal cannot be canceled after voting starts"
+				);
+
+        dao.cancelProposal(proposalId);
+
+        ProposalDetails storage proposal = proposals[address(dao)][proposalId];
+
+				if (proposal.token == ETH_TOKEN) {
+						require (
+								proposal.applicant.transfer(proposal.amount),
+								"failed to refund tribute ETH"
+						);
+        } else {
+            IERC20 token = IERC20(proposal.token);
+						require(
+                token.transferFrom(address(this), msg.sender, proposal.amount),
+                "ERC20 failed transferFrom"
+            );
+        }
+		}
+
+
     function processProposal(DaoRegistry dao, uint256 proposalId)
         external
         override
         onlyMember(dao)
     {
+
+			  
         require(
             proposals[address(dao)][proposalId].id == proposalId,
             "proposal does not exist"
