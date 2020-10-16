@@ -206,7 +206,7 @@ contract OnboardingContract is
 				uint256 votingStatus = votingContract.voteResult(dao, proposalId);
 				
 				require(
-					  votingStatus != 0,
+					  votingStatus == 0,
 						"proposal cannot be canceled after voting starts"
 				);
 
@@ -231,18 +231,21 @@ contract OnboardingContract is
         override
         onlyMember(dao)
     {
-
-			  
         require(
             proposals[address(dao)][proposalId].id == proposalId,
             "proposal does not exist"
         );
 
+				require(
+					  ! dao.isProposalCancelled(proposalId),
+						"proposal has been cancelled"
+				);
+			  
         IVoting votingContract = IVoting(dao.getAdapterAddress(VOTING));
         //TODO: we might need to process even if the vote has failed but just differently
         require(
             votingContract.voteResult(dao, proposalId) == 2,
-            "proposal need to pass"
+            "proposal needs to pass"
         );
 
         ProposalDetails storage proposal = proposals[address(dao)][proposalId];

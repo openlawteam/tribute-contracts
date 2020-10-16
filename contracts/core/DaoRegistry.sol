@@ -242,6 +242,17 @@ contract DaoRegistry is DaoConstants, AdapterGuard {
         return proposalId;
     }
 
+		function isProposalCancelled(uint256 _proposalId)
+		    external view returns (bool)
+		{
+        require(
+            _proposalId < type(uint64).max,
+            "proposal Id should only be uint64"
+        );
+        uint64 proposalId = uint64(_proposalId);
+        proposals[proposalId].flags.isCancelled();
+		}
+
 		/// @dev - Proposal: cancel a proposal that has been submitted to the registry
     function cancelProposal(uint256 _proposalId) 
 		    external
@@ -320,6 +331,7 @@ contract DaoRegistry is DaoConstants, AdapterGuard {
         uint128 flags = proposal.flags;
         require(flags.exists(), "proposal does not exist for this dao");
         require(flags.isSponsored(), "proposal not sponsored");
+        require(!flags.isCancelled(), "proposal is cancelled");
         require(!flags.isProcessed(), "proposal already processed");
         flags = flags.setProcessed(true);
         proposals[proposalId].flags = flags;
