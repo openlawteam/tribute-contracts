@@ -34,12 +34,17 @@ SOFTWARE.
 
 contract RagequitContract is IRagequit, DaoConstants, MemberGuard {
     using SafeMath for uint256;
+    enum RagequitStatus {NOT_STARTED, IN_PROGRESS, DONE}
 
-    event Ragequit(
-        address indexed member,
-        uint256 burnedShares,
-        uint256 burnedLoot
-    );
+    struct Ragequit {
+        uint256 blockNumber;
+        RagequitStatus status;
+        uint256 initialTotalSharesAndLoot;
+        uint256 sharesAndLootBurnt;
+        uint256 currentIndex;
+    }
+
+    mapping(address => Ragequit) public ragequits;
 
     /*
      * default fallback function to prevent from sending ether to the contract
@@ -48,21 +53,14 @@ contract RagequitContract is IRagequit, DaoConstants, MemberGuard {
         revert("fallback revert");
     }
 
-    function ragequit(
+    function startRagequit(
         DaoRegistry dao,
         uint256 sharesToBurn,
         uint256 lootToBurn
     ) external override onlyMember(dao) {
-        _burnShares(dao, msg.sender, sharesToBurn, lootToBurn);
-        emit Ragequit(msg.sender, sharesToBurn, lootToBurn);
-    }
-
-    function _burnShares(
-        DaoRegistry dao,
-        address memberAddr,
-        uint256 sharesToBurn,
-        uint256 lootToBurn
-    ) internal {
+        address memberAddr = msg.sender;
+        
+        require(ragequits[memberAddr].status != RagequitStatus.IN_PROGRESS, "rage quit already in progress");
         //Burn if member has enough shares and loot
         require(
             dao.balanceOf(memberAddr, SHARES) >= sharesToBurn,
@@ -73,19 +71,56 @@ contract RagequitContract is IRagequit, DaoConstants, MemberGuard {
             "insufficient loot"
         );
 
-        uint256 initialTotalSharesAndLoot = dao
+        _prepareRagequit(dao, memberAddr, sharesToBurn, lootToBurn);
+    }
+
+    function _prepareRagequit(
+        DaoRegistry dao, 
+        address memberAddr,
+        uint256 sharesToBurn,
+        uint256 lootToBurn) internal {
+
+        // burn shares and loot
+
+        Ragequit storage ragequit = ragequits[memberAddr];
+
+        ragequit.status = RagequitStatus.IN_PROGRESS;
+        ragequit.blockNumber;
+        //TODO: make this the sum of all the internal tokens
+        ragequit.initialTotalSharesAndLoot = dao
             .balanceOf(TOTAL, SHARES)
             .add(dao.balanceOf(TOTAL, LOOT))
             .add(dao.balanceOf(TOTAL, LOCKED_LOOT));
 
-        // burn shares and loot
-        uint256 sharesAndLootToBurn = sharesToBurn.add(lootToBurn);
+        ragequit.sharesAndLootBurnt = sharesToBurn.add(lootToBurn);
+        ragequit.currentIndex = 0;
+
         dao.subtractFromBalance(memberAddr, SHARES, sharesToBurn);
         dao.subtractFromBalance(memberAddr, LOOT, lootToBurn);
+        
+        dao.jailMember(memberAddr);
+    }
+
+    function burnShares(
+        DaoRegistry dao,
+        address memberAddr,
+        uint256 toIndex
+    ) external override {
+        // burn shares and loot
+        Ragequit storage ragequit = ragequits[memberAddr];
+        require(ragequit.status == RagequitStatus.IN_PROGRESS, "ragequit not in progress");
+        uint256 currentIndex = ragequit.currentIndex;
+        require(currentIndex <= toIndex, "toIndex too low");
+        uint256 sharesAndLootToBurn = ragequit.sharesAndLootBurnt;
+        uint256 initialTotalSharesAndLoot = ragequit.initialTotalSharesAndLoot;
 
         //Update internal Guild and Member balances
         address[] memory tokens = dao.tokens();
-        for (uint256 i = 0; i < tokens.length; i++) {
+        uint256 maxIndex = toIndex;
+        if(maxIndex > tokens.length) {
+            maxIndex = tokens.length;
+        }
+        for (uint256 i = currentIndex ; i < maxIndex; i++) {
             address token = tokens[i];
             uint256 amountToRagequit = _fairShare(
                 dao.balanceOf(GUILD, token),
@@ -104,6 +139,12 @@ contract RagequitContract is IRagequit, DaoConstants, MemberGuard {
                     amountToRagequit
                 );
             }
+        }
+
+        ragequit.currentIndex = maxIndex;
+        if(maxIndex == tokens.length) {
+            ragequit.status = RagequitStatus.DONE;
+            dao.unjailMember(memberAddr);
         }
     }
 

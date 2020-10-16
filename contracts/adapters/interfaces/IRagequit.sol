@@ -29,7 +29,13 @@ SOFTWARE.
  */
 
 interface IRagequit {
-    function ragequit(
+    function burnShares(
+        DaoRegistry dao,
+        address memberAddr,
+        uint256 toIndex
+    ) external;
+
+    function startRagequit(
         DaoRegistry dao,
         uint256 sharesToBurn,
         uint256 lootToBurn

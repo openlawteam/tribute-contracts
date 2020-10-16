@@ -73,8 +73,12 @@ contract('LAOLAND - Ragequit Adapter', async accounts => {
   ragequit = async (dao, shares, loot, member) => {
     let ragequitAddress = await dao.getAdapterAddress(sha3("ragequit"));
     let ragequitContract = await RagequitContract.at(ragequitAddress);
-    await ragequitContract.ragequit(dao.address, toBN(shares), toBN(loot), {
+    await ragequitContract.startRagequit(dao.address, toBN(shares), toBN(loot), {
       from: member,
+      gasPrice: toBN("0"),
+    });
+
+    await ragequitContract.burnShares(dao.address, member, 2, {
       gasPrice: toBN("0"),
     });
 
@@ -189,12 +193,6 @@ contract('LAOLAND - Ragequit Adapter', async accounts => {
     //Check Guild Bank Balance
     let newGuildBalance = await dao.balanceOf(GUILD, ETH_TOKEN);
     assert.equal(toBN(newGuildBalance).toString(), "120"); //must be close to 0
-
-    //Check Ragequit Event
-    pastEvents = await ragequitContract.getPastEvents();
-    let {member, burnedShares} = pastEvents[0].returnValues;
-    assert.equal(member.toString(), newMember.toString());
-    assert.equal(burnedShares.toString(), shares.toString());
   })
 
 it("should be possible to a member to ragequit if the member voted YES on a proposal that is not processed", async () => {
@@ -250,12 +248,6 @@ it("should be possible to a member to ragequit if the member voted YES on a prop
     //Check Guild Bank Balance
     let newGuildBalance = await dao.balanceOf(GUILD, ETH_TOKEN);
     assert.equal(toBN(newGuildBalance).toString(), "120"); //must be close to 0
-
-    //Check Ragequit Event
-    pastEvents = await ragequitContract.getPastEvents();
-    let { member, burnedShares } = pastEvents[0].returnValues;
-    assert.equal(member.toString(), newMember.toString());
-    assert.equal(burnedShares.toString(), shares.toString());  
   })
 
   it("should be possible to a member to ragequit if the member voted NO on a proposal that is not processed", async () => {
@@ -326,12 +318,6 @@ it("should be possible to a member to ragequit if the member voted YES on a prop
     //Check Guild Bank Balance
     let newGuildBalance = await dao.balanceOf(GUILD, ETH_TOKEN);
     assert.equal(toBN(newGuildBalance).toString(), "120"); //must be close to 0
-
-    //Check Ragequit Event
-    pastEvents = await ragequitContract.getPastEvents();
-    let { member, burnedShares } = pastEvents[0].returnValues;
-    assert.equal(member.toString(), newMember.toString());
-    assert.equal(burnedShares.toString(), shares.toString());  
   })
 
   it("should be possible to an Advisor ragequit at any point in time", async () => {
@@ -438,12 +424,6 @@ it("should be possible to a member to ragequit if the member voted YES on a prop
     //Check Guild Bank Balance
     let newGuildBalance = await dao.balanceOf(GUILD, oltContract.address);
     assert.equal(toBN(newGuildBalance).toString(), "0"); //must be close to
-
-    //Check Ragequit Event
-    pastEvents = await ragequitContract.getPastEvents();
-    let { member, burnedLoot } = pastEvents[0].returnValues;
-    assert.equal(member.toString(), advisorAccount.toString());
-    assert.equal(burnedLoot.toString(), advisorAccountLoot);
 
     // Guild balance must change when Loot shares are burned
     guildBalance = await dao.balanceOf(GUILD, ETH_TOKEN);

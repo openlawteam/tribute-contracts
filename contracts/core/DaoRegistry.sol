@@ -213,6 +213,24 @@ contract DaoRegistry is DaoConstants, AdapterGuard {
         return registry[adapterId];
     }
 
+    function jailMember(address memberAddr) external onlyAdapter(this) {
+        Member storage member = members[memberAddr];
+        uint128 flags = member.flags;
+        require(flags.exists(), "member does not exist");
+        if(!flags.isJailed()) {
+            member.flags = flags.setJailed(true);
+        }
+    }
+
+    function unjailMember(address memberAddr) external onlyAdapter(this) {
+        Member storage member = members[memberAddr];
+        uint128 flags = member.flags;
+        require(flags.exists(), "member does not exist");
+        if(flags.isJailed()) {
+            member.flags = flags.setJailed(false);
+        }
+    }
+
     function execute(
         address _actionTo,
         uint256 _actionValue,
