@@ -73,7 +73,10 @@ contract VotingContract is IVoting, DaoConstants, MemberGuard, AdapterGuard {
         uint256 voteValue
     ) external onlyMember(dao) {
         require(dao.isActiveMember(msg.sender), "only active members can vote");
-				require(!dao.isProposalCancelled(proposalId), "the proposal has been cancelled");
+        require(
+            !dao.isProposalCancelled(proposalId),
+            "the proposal has been cancelled"
+        );
         require(
             voteValue < 3,
             "only blank (0), yes (1) and no (2) are possible values"

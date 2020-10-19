@@ -192,39 +192,38 @@ contract OnboardingContract is
         dao.sponsorProposal(proposalId, msg.sender);
     }
 
-		function cancelProposal(DaoRegistry dao, uint256 proposalId)
-		    external
-				override
-				onlyMember(dao)
-	  {
-			  require(
+    function cancelProposal(DaoRegistry dao, uint256 proposalId)
+        external
+        override
+        onlyMember(dao)
+    {
+        require(
             proposals[address(dao)][proposalId].id == proposalId,
             "proposal does not exist"
         );
 
         IVoting votingContract = IVoting(dao.getAdapterAddress(VOTING));
-				uint256 votingStatus = votingContract.voteResult(dao, proposalId);
-				
-				require(
-					  votingStatus == 0,
-						"proposal cannot be canceled after voting starts"
-				);
+        uint256 votingStatus = votingContract.voteResult(dao, proposalId);
+
+        require(
+            votingStatus == 0,
+            "proposal cannot be canceled after voting starts"
+        );
 
         dao.cancelProposal(proposalId);
 
         ProposalDetails storage proposal = proposals[address(dao)][proposalId];
 
-				if (proposal.token == ETH_TOKEN) {
-						proposal.applicant.transfer(proposal.amount);
+        if (proposal.token == ETH_TOKEN) {
+            proposal.applicant.transfer(proposal.amount);
         } else {
             IERC20 token = IERC20(proposal.token);
-						require(
+            require(
                 token.transferFrom(address(this), msg.sender, proposal.amount),
                 "ERC20 failed transferFrom"
             );
         }
-		}
-
+    }
 
     function processProposal(DaoRegistry dao, uint256 proposalId)
         external
@@ -236,11 +235,11 @@ contract OnboardingContract is
             "proposal does not exist"
         );
 
-				require(
-					  ! dao.isProposalCancelled(proposalId),
-						"proposal has been cancelled"
-				);
-			  
+        require(
+            !dao.isProposalCancelled(proposalId),
+            "proposal has been cancelled"
+        );
+
         IVoting votingContract = IVoting(dao.getAdapterAddress(VOTING));
         //TODO: we might need to process even if the vote has failed but just differently
         require(
