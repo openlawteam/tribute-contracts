@@ -59,8 +59,11 @@ contract RagequitContract is IRagequit, DaoConstants, MemberGuard {
         uint256 lootToBurn
     ) external override onlyMember(dao) {
         address memberAddr = msg.sender;
-        
-        require(ragequits[memberAddr].status != RagequitStatus.IN_PROGRESS, "rage quit already in progress");
+
+        require(
+            ragequits[memberAddr].status != RagequitStatus.IN_PROGRESS,
+            "rage quit already in progress"
+        );
         //Burn if member has enough shares and loot
         require(
             dao.balanceOf(memberAddr, SHARES) >= sharesToBurn,
@@ -75,11 +78,11 @@ contract RagequitContract is IRagequit, DaoConstants, MemberGuard {
     }
 
     function _prepareRagequit(
-        DaoRegistry dao, 
+        DaoRegistry dao,
         address memberAddr,
         uint256 sharesToBurn,
-        uint256 lootToBurn) internal {
-
+        uint256 lootToBurn
+    ) internal {
         // burn shares and loot
 
         Ragequit storage ragequit = ragequits[memberAddr];
@@ -97,7 +100,7 @@ contract RagequitContract is IRagequit, DaoConstants, MemberGuard {
 
         dao.subtractFromBalance(memberAddr, SHARES, sharesToBurn);
         dao.subtractFromBalance(memberAddr, LOOT, lootToBurn);
-        
+
         dao.jailMember(memberAddr);
     }
 
@@ -108,7 +111,10 @@ contract RagequitContract is IRagequit, DaoConstants, MemberGuard {
     ) external override {
         // burn shares and loot
         Ragequit storage ragequit = ragequits[memberAddr];
-        require(ragequit.status == RagequitStatus.IN_PROGRESS, "ragequit not in progress");
+        require(
+            ragequit.status == RagequitStatus.IN_PROGRESS,
+            "ragequit not in progress"
+        );
         uint256 currentIndex = ragequit.currentIndex;
         require(currentIndex <= toIndex, "toIndex too low");
         uint256 sharesAndLootToBurn = ragequit.sharesAndLootBurnt;
@@ -117,10 +123,10 @@ contract RagequitContract is IRagequit, DaoConstants, MemberGuard {
         //Update internal Guild and Member balances
         address[] memory tokens = dao.tokens();
         uint256 maxIndex = toIndex;
-        if(maxIndex > tokens.length) {
+        if (maxIndex > tokens.length) {
             maxIndex = tokens.length;
         }
-        for (uint256 i = currentIndex ; i < maxIndex; i++) {
+        for (uint256 i = currentIndex; i < maxIndex; i++) {
             address token = tokens[i];
             uint256 amountToRagequit = _fairShare(
                 dao.balanceOf(GUILD, token),
@@ -142,7 +148,7 @@ contract RagequitContract is IRagequit, DaoConstants, MemberGuard {
         }
 
         ragequit.currentIndex = maxIndex;
-        if(maxIndex == tokens.length) {
+        if (maxIndex == tokens.length) {
             ragequit.status = RagequitStatus.DONE;
             dao.unjailMember(memberAddr);
         }

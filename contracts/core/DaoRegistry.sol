@@ -217,7 +217,7 @@ contract DaoRegistry is DaoConstants, AdapterGuard {
         Member storage member = members[memberAddr];
         uint128 flags = member.flags;
         require(flags.exists(), "member does not exist");
-        if(!flags.isJailed()) {
+        if (!flags.isJailed()) {
             member.flags = flags.setJailed(true);
         }
     }
@@ -226,7 +226,7 @@ contract DaoRegistry is DaoConstants, AdapterGuard {
         Member storage member = members[memberAddr];
         uint128 flags = member.flags;
         require(flags.exists(), "member does not exist");
-        if(flags.isJailed()) {
+        if (flags.isJailed()) {
             member.flags = flags.setJailed(false);
         }
     }
