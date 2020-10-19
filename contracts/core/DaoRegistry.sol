@@ -219,6 +219,7 @@ contract DaoRegistry is DaoConstants, AdapterGuard {
         require(flags.exists(), "member does not exist");
         if (!flags.isJailed()) {
             member.flags = flags.setJailed(true);
+            _createNewDelegateCheckpoint(memberAddr, address(1)); // we do this to avoid the member to vote at that point in time. We use 1 instead of 0 to avoid existence check with this
         }
     }
 
@@ -228,6 +229,10 @@ contract DaoRegistry is DaoConstants, AdapterGuard {
         require(flags.exists(), "member does not exist");
         if (flags.isJailed()) {
             member.flags = flags.setJailed(false);
+            _createNewDelegateCheckpoint(
+                memberAddr,
+                members[memberAddr].delegateKey
+            ); // we do this to re-allow votes
         }
     }
 
