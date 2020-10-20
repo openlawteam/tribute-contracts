@@ -51,7 +51,7 @@ contract OnboardingContract is
         uint256 sharesRequested;
         address token;
         address payable applicant;
-				address payable proposer;
+        address payable proposer;
     }
 
     struct OnboardingConfig {
@@ -101,7 +101,7 @@ contract OnboardingContract is
             dao,
             tokenToMint,
             applicant,
-						proposer,
+            proposer,
             sharesRequested,
             amount,
             token
@@ -112,7 +112,7 @@ contract OnboardingContract is
 
     function onboard(
         DaoRegistry dao,
-				address payable applicant,
+        address payable applicant,
         address tokenToMint,
         uint256 tokenAmount
     ) external override payable {
@@ -138,7 +138,7 @@ contract OnboardingContract is
         uint256 amountUsed = _submitMembershipProposal(
             dao,
             tokenToMint,
-						applicant,
+            applicant,
             msg.sender,
             tokenAmount,
             tokenAddr
@@ -166,7 +166,7 @@ contract OnboardingContract is
         DaoRegistry dao,
         address tokenToMint,
         address payable newMember,
-				address payable proposer,
+        address payable proposer,
         uint256 sharesRequested,
         uint256 amount,
         address token
@@ -179,7 +179,7 @@ contract OnboardingContract is
             sharesRequested,
             token,
             newMember,
-						proposer
+            proposer
         );
         proposals[address(dao)][proposalId] = p;
     }
@@ -221,7 +221,7 @@ contract OnboardingContract is
         dao.cancelProposal(proposalId);
 
         ProposalDetails storage proposal = proposals[address(dao)][proposalId];
-				address tokenAddr = proposal.token;
+        address tokenAddr = proposal.token;
 
         if (tokenAddr == ETH_TOKEN) {
             proposal.proposer.transfer(proposal.amount);
