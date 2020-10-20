@@ -31,6 +31,7 @@ SOFTWARE.
 interface IOnboarding {
     function onboard(
         DaoRegistry dao,
+				address payable applicant,
         address tokenToMint,
         uint256 tokenAmount
     ) external payable;

@@ -50,8 +50,8 @@ contract OnboardingContract is
         uint256 amount;
         uint256 sharesRequested;
         address token;
-        bool processed;
         address payable applicant;
+				address payable proposer;
     }
 
     struct OnboardingConfig {
@@ -84,6 +84,7 @@ contract OnboardingContract is
         DaoRegistry dao,
         address tokenToMint,
         address payable applicant,
+        address payable proposer,
         uint256 value,
         address token
     ) internal returns (uint256) {
@@ -100,6 +101,7 @@ contract OnboardingContract is
             dao,
             tokenToMint,
             applicant,
+						proposer,
             sharesRequested,
             amount,
             token
@@ -110,6 +112,7 @@ contract OnboardingContract is
 
     function onboard(
         DaoRegistry dao,
+				address payable applicant,
         address tokenToMint,
         uint256 tokenAmount
     ) external override payable {
@@ -135,6 +138,7 @@ contract OnboardingContract is
         uint256 amountUsed = _submitMembershipProposal(
             dao,
             tokenToMint,
+						applicant,
             msg.sender,
             tokenAmount,
             tokenAddr
@@ -162,6 +166,7 @@ contract OnboardingContract is
         DaoRegistry dao,
         address tokenToMint,
         address payable newMember,
+				address payable proposer,
         uint256 sharesRequested,
         uint256 amount,
         address token
@@ -173,7 +178,8 @@ contract OnboardingContract is
             amount,
             sharesRequested,
             token,
-            newMember
+            newMember,
+						proposer
         );
         proposals[address(dao)][proposalId] = p;
     }
@@ -215,13 +221,14 @@ contract OnboardingContract is
         dao.cancelProposal(proposalId);
 
         ProposalDetails storage proposal = proposals[address(dao)][proposalId];
+				address tokenAddr = proposal.token;
 
-        if (proposal.token == ETH_TOKEN) {
-            proposal.applicant.transfer(proposal.amount);
+        if (tokenAddr == ETH_TOKEN) {
+            proposal.proposer.transfer(proposal.amount);
         } else {
-            IERC20 token = IERC20(proposal.token);
+            IERC20 token = IERC20(tokenAddr);
             require(
-                token.transferFrom(address(this), msg.sender, proposal.amount),
+                token.transferFrom(address(this), proposal.proposer, proposal.amount),
                 "ERC20 failed transferFrom"
             );
         }

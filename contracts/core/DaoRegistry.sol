@@ -323,7 +323,7 @@ contract DaoRegistry is DaoConstants, AdapterGuard {
             "proposal Id should only be uint64"
         );
         uint64 proposalId = uint64(_proposalId);
-        proposals[proposalId].flags.isCancelled();
+        proposals[proposalId].flags.getFlag(FlagHelper128.Flag.CANCELLED);
     }
 
     /// @dev - Proposal: cancel a proposal that has been submitted to the registry
@@ -421,9 +421,9 @@ contract DaoRegistry is DaoConstants, AdapterGuard {
             "proposal does not exist for this dao"
         );
         require(
-					  !flags.getFlag(FlagHelper128.Flag.CANCELLED,
-						"proposal is cancelled"
-				);
+            !flags.getFlag(FlagHelper128.Flag.CANCELLED),
+            "proposal is cancelled"
+        );
         require(
             flags.getFlag(FlagHelper128.Flag.SPONSORED),
             "proposal not sponsored"
