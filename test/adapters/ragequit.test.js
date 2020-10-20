@@ -525,7 +525,7 @@ it("should be possible to a member to ragequit if the member voted YES on a prop
       });
       throw new Error("should fail");
     } catch( err ) {
-      assert.equal(err.message, "Returned error: VM Exception while processing transaction: revert onlyMember -- Reason given: onlyMember.");
+      assert.equal(err.message.indexOf('onlyMember') > -1, true);
     }
     
     await ragequitContract.burnShares(dao.address, memberAccount, 2, {

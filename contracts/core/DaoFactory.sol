@@ -35,6 +35,7 @@ contract DaoFactory is DaoConstants {
     struct Adapter {
         bytes32 id;
         address addr;
+        uint256 flags;
     }
 
     /*
@@ -51,7 +52,7 @@ contract DaoFactory is DaoConstants {
         );
 
         for (uint256 i = 0; i < adapters.length; i++) {
-            dao.addAdapter(adapters[i].id, adapters[i].addr);
+            dao.addAdapter(adapters[i].id, adapters[i].addr, adapters[i].flags);
         }
     }
 
@@ -62,6 +63,6 @@ contract DaoFactory is DaoConstants {
         );
 
         dao.removeAdapter(adapter.id);
-        dao.addAdapter(adapter.id, adapter.addr);
+        dao.addAdapter(adapter.id, adapter.addr, adapter.flags);
     }
 }
