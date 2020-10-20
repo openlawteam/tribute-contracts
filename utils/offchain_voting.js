@@ -25,7 +25,7 @@ const { MerkleTree } = require('./merkleTree.js');
 const sha3 = web3.utils.sha3;
 
 function toStepNode(step, merkleTree) {
-  return {voter: step.address,      
+  return {member: step.address,      
     nbNo: step.nbNo,
     nbYes: step.nbYes,
     weight: step.weight,

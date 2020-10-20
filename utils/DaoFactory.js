@@ -24,7 +24,6 @@ SOFTWARE.
 const { sha3 } = require("web3-utils");
 
 const GUILD = "0x000000000000000000000000000000000000dead";
-const ESCROW = "0x000000000000000000000000000000000000beef";
 const TOTAL =  "0x000000000000000000000000000000000000babe";
 const SHARES = "0x00000000000000000000000000000000000FF1CE";
 const LOOT =   "0x00000000000000000000000000000000B105F00D";
@@ -67,14 +66,20 @@ async function prepareSmartContracts() {
 async function addDefaultAdapters(dao, unitPrice=sharePrice, nbShares=numberOfShares, votingPeriod=10, gracePeriod=1, tokenAddr = ETH_TOKEN) {
     const {voting, ragequit, managing, financing, onboarding, daoFactory} = await prepareSmartContracts();
 
+    /**
+     * EXISTS, SPONSORED, PROCESSED, PASSED, CANCELLED, JAILED,
+        ADD_ADAPTER,REMOVE_ADAPTER,JAIL_MEMBER, UNJAIL_MEMBER, EXECUTE, SUBMIT_PROPOSAL, SPONSOR_PROPOSAL, PROCESS_PROPOSAL, 
+        UPDATE_DELEGATE_KEY, REGISTER_NEW_TOKEN, REGISTER_NEW_INTERNAL_TOKEN, ADD_TO_BALANCE,SUB_FROM_BALANCE, INTERNAL_TRANSFER
+     */
+
     await daoFactory.addAdapters(
       dao.address,
       [
-        entry("voting", voting), 
-        entry("ragequit", ragequit),
-        entry("managing", managing),
-        entry("financing", financing),
-        entry("onboarding", onboarding)
+        entry("voting", voting, {}), 
+        entry("ragequit", ragequit, {SUB_FROM_BALANCE: true, JAIL_MEMBER: true, UNJAIL_MEMBER: true, SUB_FROM_BALANCE: true, INTERNAL_TRANSFER: true}),
+        entry("managing", managing, {SUBMIT_PROPOSAL: true, PROCESS_PROPOSAL: true, SPONSOR_PROPOSAL: true, REMOVE_ADAPTER: true, ADD_ADAPTER: true}),
+        entry("financing", financing, {SUBMIT_PROPOSAL:true, SPONSOR_PROPOSAL: true, PROCESS_PROPOSAL: true, ADD_TO_BALANCE:true , SUB_FROM_BALANCE:true}),
+        entry("onboarding", onboarding, {SUBMIT_PROPOSAL:true, SPONSOR_PROPOSAL: true, PROCESS_PROPOSAL: true, ADD_TO_BALANCE:true, UPDATE_DELEGATE_KEY: true})
     ])
     //TODO: configure for loot and shares
     await onboarding.configureDao(dao.address, SHARES, unitPrice, nbShares, tokenAddr);
@@ -95,10 +100,17 @@ async function createDao(senderAccount, unitPrice=sharePrice, nbShares=numberOfS
     return dao;
 }
 
-function entry(name, contract) {
+function entry(name, contract, flags) {
+  const values = [flags.EXISTS, flags.SPONSORED, flags.PROCESSED, flags.PASSED, flags.CANCELLED, flags.JAILED,
+  flags.ADD_ADAPTER,flags.REMOVE_ADAPTER,flags.JAIL_MEMBER, flags.UNJAIL_MEMBER, flags.EXECUTE, flags.SUBMIT_PROPOSAL, flags.SPONSOR_PROPOSAL, flags.PROCESS_PROPOSAL, 
+  flags.UPDATE_DELEGATE_KEY, flags.REGISTER_NEW_TOKEN, flags.REGISTER_NEW_INTERNAL_TOKEN, flags.ADD_TO_BALANCE,flags.SUB_FROM_BALANCE, flags.INTERNAL_TRANSFER]
+
+  const acl = values.map((v, idx) => v ? 2 ** idx : 0).reduce((a, b) => a +  b);
+
   return {
     id: sha3(name),
-    addr: contract.address
+    addr: contract.address,
+    flags: acl
   }
 }
 
@@ -134,7 +146,6 @@ module.exports = {
   addDefaultAdapters,
   entry,
   GUILD,
-  ESCROW,
   TOTAL,
   DAI_TOKEN,
   SHARES,

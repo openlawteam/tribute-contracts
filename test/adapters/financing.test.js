@@ -56,11 +56,10 @@ contract('LAOLAND - Financing Adapter', async accounts => {
     await voting.submitVote(dao.address, proposalId, 1, { from: myAccount, gasPrice: toBN("0") });
     await advanceTime(10000);
     await onboarding.processProposal(dao.address, proposalId, { from: myAccount, gasPrice: toBN("0") });
-
     //Check Guild Bank Balance
     let guildBalance = await dao.balanceOf(GUILD, ETH_TOKEN);
     let expectedGuildBalance = toBN("1200000000000000000");
-    assert.equal(toBN(guildBalance).toString(), expectedGuildBalance.toString());
+    assert.equal(guildBalance.toString(), expectedGuildBalance.toString());
 
     //Create Financing Request
     let requestedAmount = toBN(50000);

@@ -34,12 +34,11 @@ contract('Registry', async (accounts) => {
   it("should not be possible to add a module with invalid id", async () => {
     let lib = await FlagHelperLib.new();
     await DaoRegistry.link("FlagHelper128", lib.address);
-    console.log('testing first case ....');
     let moduleId = fromUtf8("");
     let moduleAddress = "0x627306090abaB3A6e1400e9345bC60c78a8BEf57";
     let registry = await DaoRegistry.new();
     try {
-      await registry.addAdapter(moduleId, moduleAddress);
+      await registry.addAdapter(moduleId, moduleAddress, 0);
     } catch (error) {
       assert.equal(error.reason, "adapterId must not be empty");
     }
@@ -60,7 +59,7 @@ contract('Registry', async (accounts) => {
     let moduleAddress = "";
     let registry = await DaoRegistry.new();
     try {
-      await registry.addAdapter(moduleId, moduleAddress);
+      await registry.addAdapter(moduleId, moduleAddress, 0);
     } catch (error) {
       assert.equal(error.reason, "invalid address");
     }
@@ -71,7 +70,7 @@ contract('Registry', async (accounts) => {
     let moduleAddress = "0x0000000000000000000000000000000000000000";
     let registry = await DaoRegistry.new();
     try {
-      await registry.addAdapter(moduleId, moduleAddress);
+      await registry.addAdapter(moduleId, moduleAddress, 0);
     } catch (error) {
       assert.equal(error.reason, "adapterAddress must not be empty");
     }
@@ -82,11 +81,11 @@ contract('Registry', async (accounts) => {
     let moduleAddress = "0x627306090abaB3A6e1400e9345bC60c78a8BEf57";
     let registry = await DaoRegistry.new();
     //Add a module with id 1
-    await registry.addAdapter(moduleId, moduleAddress);
+    await registry.addAdapter(moduleId, moduleAddress, 0);
 
     try {
       //Try to add another module using the same id 1
-      await registry.addAdapter(moduleId, "0xd7bCe30D77DE56E3D21AEfe7ad144b3134438F5B");
+      await registry.addAdapter(moduleId, "0xd7bCe30D77DE56E3D21AEfe7ad144b3134438F5B", 0);
     } catch (error) {
       assert.equal(error.reason, "adapterId already in use");
     }
@@ -96,7 +95,7 @@ contract('Registry', async (accounts) => {
     let moduleId = fromUtf8("1");
     let moduleAddress = "0x627306090abaB3A6e1400e9345bC60c78a8BEf57";
     let registry = await DaoRegistry.new();
-    await registry.addAdapter(moduleId, moduleAddress);
+    await registry.addAdapter(moduleId, moduleAddress, 0);
     let address = await registry.getAdapterAddress(moduleId);
     assert.equal(address, moduleAddress);
   });
@@ -105,7 +104,7 @@ contract('Registry', async (accounts) => {
     let moduleId = fromUtf8("2");
     let moduleAddress = "0x627306090abaB3A6e1400e9345bC60c78a8BEf57";
     let registry = await DaoRegistry.new();
-    await registry.addAdapter(moduleId, moduleAddress);
+    await registry.addAdapter(moduleId, moduleAddress, 0);
     let address = await registry.getAdapterAddress(moduleId);
     assert.equal(address, moduleAddress);
     await registry.removeAdapter(moduleId);
