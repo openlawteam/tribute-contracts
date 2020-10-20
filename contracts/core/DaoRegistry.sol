@@ -341,13 +341,19 @@ contract DaoRegistry is DaoConstants, AdapterGuard {
         );
 
         uint128 flags = proposal.flags;
-        require(flags.exists(), "proposal does not exist for this dao");
-        require(!flags.isCancelled(), "proposal already cancelled");
         require(
-            !flags.isSponsored(),
+            flags.getFlag(FlagHelper128.Flag.EXISTS),
+            "proposal does not exist"
+        );
+        require(
+            !flags.getFlag(FlagHelper128.Flag.CANCELLED),
+            "proposal is cancelled"
+        );
+        require(
+            !flags.getFlag(FlagHelper128.Flag.SPONSORED),
             "proposal already sponsored, cannot cancel"
         );
-        flags = flags.setCancelled(true);
+        flags = flags.setFlag(FlagHelper128.Flag.CANCELLED, true);
         proposals[proposalId].flags = flags;
 
         emit CancelledProposal(proposalId, uint64(block.timestamp), flags);
