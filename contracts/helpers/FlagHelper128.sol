@@ -46,7 +46,8 @@ library FlagHelper128 {
         REGISTER_NEW_INTERNAL_TOKEN,
         ADD_TO_BALANCE,
         SUB_FROM_BALANCE,
-        INTERNAL_TRANSFER
+        INTERNAL_TRANSFER,
+				WITHDRAWN
     }
 
     //helper

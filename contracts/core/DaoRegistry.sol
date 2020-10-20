@@ -65,6 +65,11 @@ contract DaoRegistry is DaoConstants, AdapterGuard {
         uint64 processingTime,
         uint128 flags
     );
+    event WithdrawnProposal(
+        uint64 proposalId,
+        uint64 processingTime,
+        uint128 flags
+    );
 
     /// @dev - Events for Members
     event UpdateMemberShares(address member, uint256 shares);
@@ -347,7 +352,7 @@ contract DaoRegistry is DaoConstants, AdapterGuard {
         );
         require(
             !flags.getFlag(FlagHelper128.Flag.CANCELLED),
-            "proposal is cancelled"
+            "proposal is already cancelled"
         );
         require(
             !flags.getFlag(FlagHelper128.Flag.SPONSORED),
@@ -357,6 +362,39 @@ contract DaoRegistry is DaoConstants, AdapterGuard {
         proposals[proposalId].flags = flags;
 
         emit CancelledProposal(proposalId, uint64(block.timestamp), flags);
+    }
+
+    /// @dev - Proposal: cancel a proposal that has been submitted to the registry
+    function withdrawProposal(uint256 _proposalId) external onlyAdapter(this) {
+        require(
+            _proposalId < type(uint64).max,
+            "proposal Id should only be uint64"
+        );
+        uint64 proposalId = uint64(_proposalId);
+        Proposal storage proposal = proposals[proposalId];
+
+        require(
+            proposal.adapterAddress == msg.sender,
+            "only the adapter that submitted the proposal can withdraw it"
+        );
+
+        uint128 flags = proposal.flags;
+        require(
+            flags.getFlag(FlagHelper128.Flag.EXISTS),
+            "proposal does not exist"
+        );
+        require(
+            !flags.getFlag(FlagHelper128.Flag.CANCELLED),
+            "proposal is cancelled"
+        );
+        require(
+            !flags.getFlag(FlagHelper128.Flag.WITHDRAWN),
+            "proposal is already withdrawn"
+        );
+        flags = flags.setFlag(FlagHelper128.Flag.WITHDRAWN, true);
+        proposals[proposalId].flags = flags;
+
+        emit WithdrawnProposal(proposalId, uint64(block.timestamp), flags);
     }
 
     /// @dev - Proposal: sponsor proposals that were submitted to the DAO registry
