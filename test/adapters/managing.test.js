@@ -38,7 +38,7 @@ contract('LAOLAND - Managing Adapter', async accounts => {
     let managingContract = await dao.getAdapterAddress(sha3('managing'));
     let managing = await ManagingContract.at(managingContract);
     try {
-      await managing.createModuleChangeRequest(dao.address, newModuleId, ETH_TOKEN, { from: myAccount, gasPrice: toBN("0") });
+      await managing.createModuleChangeRequest(dao.address, newModuleId, ETH_TOKEN, 0, { from: myAccount, gasPrice: toBN("0") });
       assert.err("should not pass");
     } catch (err) {
       assert.equal(err.reason, "invalid module address");
@@ -57,14 +57,14 @@ contract('LAOLAND - Managing Adapter', async accounts => {
     let managingContract = await dao.getAdapterAddress(sha3('managing'));
     let managing = await ManagingContract.at(managingContract);
     try {
-      await managing.createModuleChangeRequest(dao.address, newModuleId, GUILD, { from: myAccount, gasPrice: toBN("0") });
+      await managing.createModuleChangeRequest(dao.address, newModuleId, GUILD, 0, { from: myAccount, gasPrice: toBN("0") });
       assert.err("should not pass");
     } catch (err) {
       assert.equal(err.reason, "module is using reserved address");
     }
     
     try {
-      await managing.createModuleChangeRequest(dao.address, newModuleId, TOTAL, { from: myAccount, gasPrice: toBN("0") });
+      await managing.createModuleChangeRequest(dao.address, newModuleId, TOTAL, 0, { from: myAccount, gasPrice: toBN("0") });
       assert.err("should not pass");
     } catch (err) {
       assert.equal(err.reason, "module is using reserved address");
@@ -103,7 +103,7 @@ contract('LAOLAND - Managing Adapter', async accounts => {
     //Submit a new Bank module proposal
     let newModuleId = sha3('onboarding');
     let newModuleAddress = accounts[3]; //TODO deploy some Banking test contract
-    await managing.createModuleChangeRequest(dao.address, newModuleId, newModuleAddress, { from: myAccount, gasPrice: toBN("0") });
+    await managing.createModuleChangeRequest(dao.address, newModuleId, newModuleAddress, 0, { from: myAccount, gasPrice: toBN("0") });
 
     //Get the new proposal id
     pastEvents = await dao.getPastEvents();
@@ -134,7 +134,7 @@ contract('LAOLAND - Managing Adapter', async accounts => {
     //Submit a new Bank module proposal
     let newModuleId = sha3('onboarding');
     let newModuleAddress = accounts[4]; //TODO deploy some Banking test contract
-    await managing.createModuleChangeRequest(dao.address, newModuleId, newModuleAddress, { from: myAccount, gasPrice: toBN("0") });
+    await managing.createModuleChangeRequest(dao.address, newModuleId, newModuleAddress, 0, { from: myAccount, gasPrice: toBN("0") });
 
     //Get the new proposal id
     pastEvents = await dao.getPastEvents();

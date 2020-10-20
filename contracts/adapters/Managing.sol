@@ -40,6 +40,7 @@ contract ManagingContract is IManaging, DaoConstants, MemberGuard {
         address applicant;
         bytes32 moduleId;
         address moduleAddress;
+        uint128 flags;
         bool processed;
     }
 
@@ -55,9 +56,12 @@ contract ManagingContract is IManaging, DaoConstants, MemberGuard {
     function createModuleChangeRequest(
         DaoRegistry dao,
         bytes32 moduleId,
-        address moduleAddress
+        address moduleAddress,
+        uint256 _flags
     ) external override onlyMember(dao) returns (uint256) {
         require(moduleAddress != address(0x0), "invalid module address");
+        require(_flags < type(uint128).max, "flags parameter overflow");
+        uint128 flags = uint128(_flags);
 
         require(
             dao.isNotReservedAddress(moduleAddress),
@@ -73,6 +77,7 @@ contract ManagingContract is IManaging, DaoConstants, MemberGuard {
         proposal.moduleId = moduleId;
         proposal.moduleAddress = moduleAddress;
         proposal.processed = false;
+        proposal.flags = flags;
         return proposalId;
     }
 
@@ -102,7 +107,11 @@ contract ManagingContract is IManaging, DaoConstants, MemberGuard {
         );
 
         dao.removeAdapter(proposal.moduleId);
-        dao.addAdapter(proposal.moduleId, proposal.moduleAddress);
+        dao.addAdapter(
+            proposal.moduleId,
+            proposal.moduleAddress,
+            proposal.flags
+        );
         proposals[proposalId].processed = true;
         dao.processProposal(proposalId);
     }

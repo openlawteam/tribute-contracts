@@ -38,7 +38,7 @@ async function createOffchainVotingDao(senderAccount, unitPrice=sharePrice, nbSh
   const offchainVoting = await OffchainVotingContract.new(votingAddress);
   await daoFactory.updateAdapter(
     dao.address,
-    entry("voting", offchainVoting))
+    entry("voting", offchainVoting, {ADD_TO_BALANCE: true, SUB_FROM_BALANCE: true, INTERNAL_TRANSFER: true}))
 
   await offchainVoting.configureDao(dao.address, votingPeriod, gracePeriod, 10);
   await dao.finalizeDao();
