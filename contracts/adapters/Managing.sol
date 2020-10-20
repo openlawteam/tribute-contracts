@@ -107,7 +107,11 @@ contract ManagingContract is IManaging, DaoConstants, MemberGuard {
         );
 
         dao.removeAdapter(proposal.moduleId);
-        dao.addAdapter(proposal.moduleId, proposal.moduleAddress, proposal.flags);
+        dao.addAdapter(
+            proposal.moduleId,
+            proposal.moduleAddress,
+            proposal.flags
+        );
         proposals[proposalId].processed = true;
         dao.processProposal(proposalId);
     }

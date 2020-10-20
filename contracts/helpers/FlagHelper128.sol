@@ -27,9 +27,26 @@ SOFTWARE.
  */
 library FlagHelper128 {
     enum Flag {
-        EXISTS, SPONSORED, PROCESSED, PASSED, CANCELLED, JAILED,
-        ADD_ADAPTER,REMOVE_ADAPTER,JAIL_MEMBER, UNJAIL_MEMBER, EXECUTE, SUBMIT_PROPOSAL, SPONSOR_PROPOSAL, PROCESS_PROPOSAL, 
-        UPDATE_DELEGATE_KEY, REGISTER_NEW_TOKEN, REGISTER_NEW_INTERNAL_TOKEN, ADD_TO_BALANCE,SUB_FROM_BALANCE, INTERNAL_TRANSFER
+        EXISTS,
+        SPONSORED,
+        PROCESSED,
+        PASSED,
+        CANCELLED,
+        JAILED,
+        ADD_ADAPTER,
+        REMOVE_ADAPTER,
+        JAIL_MEMBER,
+        UNJAIL_MEMBER,
+        EXECUTE,
+        SUBMIT_PROPOSAL,
+        SPONSOR_PROPOSAL,
+        PROCESS_PROPOSAL,
+        UPDATE_DELEGATE_KEY,
+        REGISTER_NEW_TOKEN,
+        REGISTER_NEW_INTERNAL_TOKEN,
+        ADD_TO_BALANCE,
+        SUB_FROM_BALANCE,
+        INTERNAL_TRANSFER
     }
 
     //helper
@@ -48,7 +65,7 @@ library FlagHelper128 {
         bool value
     ) public pure returns (uint128) {
         uint8 pos = uint8(flag);
-        
+
         if (getFlag(flags, flag) != value) {
             if (value) {
                 return flags + uint128((2**pos));
