@@ -1,5 +1,5 @@
 
-[![codecov](https://codecov.io/gh/openlawteam/laoland/branch/master/graph/badge.svg?token=XZRL9RUYZE)](undefined)
+[![codecov](https://codecov.io/gh/openlawteam/laoland/branch/master/graph/badge.svg?token=XZRL9RUYZE)](https://codecov.io/gh/openlawteam/laoland/)
 
 ## Overview
 
