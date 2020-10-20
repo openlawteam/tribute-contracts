@@ -21,7 +21,7 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
  */
-const {advanceTime, createDao, GUILD, ESCROW, TOTAL, ETH_TOKEN, ManagingContract, VotingContract, OnboardingContract} = require('../../utils/DaoFactory.js');
+const {advanceTime, createDao, GUILD, TOTAL, ETH_TOKEN, ManagingContract, VotingContract, OnboardingContract} = require('../../utils/DaoFactory.js');
 const toBN = web3.utils.toBN;
 const sha3 = web3.utils.sha3;
 
@@ -62,12 +62,7 @@ contract('LAOLAND - Managing Adapter', async accounts => {
     } catch (err) {
       assert.equal(err.reason, "module is using reserved address");
     }
-    try {
-      await managing.createModuleChangeRequest(dao.address, newModuleId, ESCROW, { from: myAccount, gasPrice: toBN("0") });
-      assert.err("should not pass");
-    } catch (err) {
-      assert.equal(err.reason, "module is using reserved address");
-    }
+    
     try {
       await managing.createModuleChangeRequest(dao.address, newModuleId, TOTAL, { from: myAccount, gasPrice: toBN("0") });
       assert.err("should not pass");

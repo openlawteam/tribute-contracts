@@ -101,22 +101,34 @@ contract DaoRegistry is DaoConstants, AdapterGuard {
     struct Checkpoint {
         // A checkpoint for marking number of votes from a given block
         uint96 fromBlock;
-        uint160 votes;
+        uint160 amount;
+    }
+
+    struct DelegateCheckpoint {
+        // A checkpoint for marking number of votes from a given block
+        uint96 fromBlock;
+        address delegateKey;
     }
 
     struct Bank {
         address[] tokens;
+        address[] internalTokens;
         mapping(address => bool) availableTokens;
+        mapping(address => bool) availableInternalTokens;
         mapping(address => mapping(address => uint256)) tokenBalances;
+        mapping(address => mapping(address => mapping(uint32 => Checkpoint))) checkpoints;
+        mapping(address => mapping(address => uint32)) numCheckpoints;
     }
 
     /*
      * PUBLIC VARIABLES
      */
     mapping(address => Member) public members; // the map to track all members of the DAO
-    mapping(address => address) public memberAddresses; // the member address map
-    mapping(address => address) public memberAddressesByDelegatedKey; // ???
+    mapping(address => address) public memberAddressesByDelegatedKey; // delegate key -> member address mapping
     Bank private _bank; // the state of the DAO Bank
+
+    mapping(address => mapping(uint32 => DelegateCheckpoint)) checkpoints;
+    mapping(address => uint32) numCheckpoints;
 
     DaoState public state = DaoState.CREATION;
 
@@ -128,13 +140,6 @@ contract DaoRegistry is DaoConstants, AdapterGuard {
     mapping(bytes32 => address) public registry;
     /// @notice The inverse map to get the adapter id based on its address
     mapping(address => bytes32) public inverseRegistry;
-    /// @notice A record of votes checkpoints for each account, by index
-    mapping(address => mapping(uint32 => Checkpoint)) public checkpoints;
-    /// @notice The number of checkpoints for each account
-    mapping(address => uint32) public numCheckpoints;
-
-    /// @notice The maximum number of tokens supported by the bank
-    uint256 public constant MAX_TOKENS = 100;
 
     constructor() {
         address memberAddr = msg.sender;
@@ -142,10 +147,14 @@ contract DaoRegistry is DaoConstants, AdapterGuard {
         member.flags = member.flags.setExists(true);
         member.delegateKey = memberAddr;
         memberAddressesByDelegatedKey[memberAddr] = memberAddr;
-        _bank.tokenBalances[memberAddr][SHARES] = 1;
-        _bank.tokenBalances[TOTAL][SHARES] = 1;
-        _moveDelegates(address(0), memberAddr, 1);
-        _moveDelegates(address(0), TOTAL, 1);
+
+        _bank.availableInternalTokens[SHARES] = true;
+        _bank.internalTokens.push(SHARES);
+
+        _bank.tokenBalances[SHARES][memberAddr] = 1;
+        _bank.tokenBalances[SHARES][TOTAL] = 1;
+        _createNewAmountCheckpoint(memberAddr, SHARES);
+        _createNewAmountCheckpoint(TOTAL, SHARES);
     }
 
     /**
@@ -202,6 +211,29 @@ contract DaoRegistry is DaoConstants, AdapterGuard {
         returns (address)
     {
         return registry[adapterId];
+    }
+
+    function jailMember(address memberAddr) external onlyAdapter(this) {
+        Member storage member = members[memberAddr];
+        uint128 flags = member.flags;
+        require(flags.exists(), "member does not exist");
+        if (!flags.isJailed()) {
+            member.flags = flags.setJailed(true);
+            _createNewDelegateCheckpoint(memberAddr, address(1)); // we do this to avoid the member to vote at that point in time. We use 1 instead of 0 to avoid existence check with this
+        }
+    }
+
+    function unjailMember(address memberAddr) external onlyAdapter(this) {
+        Member storage member = members[memberAddr];
+        uint128 flags = member.flags;
+        require(flags.exists(), "member does not exist");
+        if (flags.isJailed()) {
+            member.flags = flags.setJailed(false);
+            _createNewDelegateCheckpoint(
+                memberAddr,
+                members[memberAddr].delegateKey
+            ); // we do this to re-allow votes
+        }
     }
 
     function execute(
@@ -294,8 +326,8 @@ contract DaoRegistry is DaoConstants, AdapterGuard {
         emit ProcessedProposal(proposalId, uint64(block.timestamp), flags);
     }
 
-    function isInternalToken(address tokenToMint) external pure returns (bool) {
-        return tokenToMint == SHARES || tokenToMint == LOOT;
+    function isInternalToken(address tokenToMint) external view returns (bool) {
+        return _bank.availableInternalTokens[tokenToMint];
     }
 
     /*
@@ -317,7 +349,7 @@ contract DaoRegistry is DaoConstants, AdapterGuard {
         view
         returns (address)
     {
-        return memberAddresses[delegateKey];
+        return memberAddressesByDelegatedKey[delegateKey];
     }
 
     function updateDelegateKey(address memberAddr, address newDelegateKey)
@@ -329,11 +361,11 @@ contract DaoRegistry is DaoConstants, AdapterGuard {
         // skip checks if member is setting the delegate key to their member address
         if (newDelegateKey != memberAddr) {
             require(
-                memberAddresses[newDelegateKey] == address(0x0),
+                memberAddressesByDelegatedKey[newDelegateKey] == address(0x0),
                 "cannot overwrite existing members"
             );
             require(
-                memberAddresses[memberAddressesByDelegatedKey[newDelegateKey]] ==
+                memberAddressesByDelegatedKey[memberAddressesByDelegatedKey[newDelegateKey]] ==
                     address(0x0),
                 "cannot overwrite existing delegate keys"
             );
@@ -345,6 +377,7 @@ contract DaoRegistry is DaoConstants, AdapterGuard {
         memberAddressesByDelegatedKey[newDelegateKey] = memberAddr;
         member.delegateKey = newDelegateKey;
 
+        _createNewDelegateCheckpoint(memberAddr, newDelegateKey);
         emit UpdateDelegateKey(memberAddr, newDelegateKey);
     }
 
@@ -360,11 +393,28 @@ contract DaoRegistry is DaoConstants, AdapterGuard {
      * BANK
      */
 
-    function _registerPotentialNewToken(address token) internal {
-        if (isNotReservedAddress(token) && !_bank.availableTokens[token]) {
-            require(_bank.tokens.length < MAX_TOKENS, "max limit reached");
+    function registerPotentialNewToken(address token)
+        external
+        onlyAdapter(this)
+    {
+        require(isNotReservedAddress(token), "reservedToken");
+        require(!_bank.availableInternalTokens[token], "internalToken");
+
+        if (!_bank.availableTokens[token]) {
             _bank.availableTokens[token] = true;
             _bank.tokens.push(token);
+        }
+    }
+
+    function registerPotentialNewInternalToken(address token)
+        external
+        onlyAdapter(this)
+    {
+        require(isNotReservedAddress(token), "reservedToken");
+        require(!_bank.availableTokens[token], "internalToken");
+        if (!_bank.availableInternalTokens[token]) {
+            _bank.availableInternalTokens[token] = true;
+            _bank.internalTokens.push(token);
         }
     }
 
@@ -376,7 +426,7 @@ contract DaoRegistry is DaoConstants, AdapterGuard {
         view
         returns (uint256)
     {
-        return _bank.tokenBalances[user][token];
+        return _bank.tokenBalances[token][user];
     }
 
     function isNotReservedAddress(address applicant)
@@ -384,13 +434,7 @@ contract DaoRegistry is DaoConstants, AdapterGuard {
         pure
         returns (bool)
     {
-        return
-            applicant != GUILD &&
-            applicant != ESCROW &&
-            applicant != LOOT &&
-            applicant != SHARES &&
-            applicant != LOCKED_LOOT &&
-            applicant != TOTAL;
+        return applicant != GUILD && applicant != TOTAL;
     }
 
     /**
@@ -406,19 +450,15 @@ contract DaoRegistry is DaoConstants, AdapterGuard {
         address token,
         uint256 amount
     ) public onlyAdapter(this) {
-        _bank.tokenBalances[user][token] += amount;
-        _bank.tokenBalances[TOTAL][token] += amount;
-        if (token == SHARES) {
-            _moveDelegates(address(0), user, _bank.tokenBalances[user][token]);
-
-            _moveDelegates(
-                address(0),
-                TOTAL,
-                _bank.tokenBalances[TOTAL][token]
-            );
-        }
-
-        _registerPotentialNewToken(token);
+        require(
+            _bank.availableTokens[token] ||
+                _bank.availableInternalTokens[token],
+            "unknown token address"
+        );
+        _bank.tokenBalances[token][user] += amount;
+        _bank.tokenBalances[token][TOTAL] += amount;
+        _createNewAmountCheckpoint(user, token);
+        _createNewAmountCheckpoint(TOTAL, token);
 
         Member storage member = members[user];
         if (member.delegateKey == address(0x0)) {
@@ -433,8 +473,8 @@ contract DaoRegistry is DaoConstants, AdapterGuard {
         address token,
         uint256 amount
     ) public onlyAdapter(this) {
-        _bank.tokenBalances[user][token] -= amount;
-        _bank.tokenBalances[TOTAL][token] -= amount;
+        _bank.tokenBalances[token][user] -= amount;
+        _bank.tokenBalances[token][TOTAL] -= amount;
     }
 
     function internalTransfer(
@@ -456,10 +496,16 @@ contract DaoRegistry is DaoConstants, AdapterGuard {
      * @param account The address to get votes balance
      * @return The number of current votes for `account`
      */
-    function getCurrentVotes(address account) external view returns (uint256) {
-        uint32 nCheckpoints = numCheckpoints[account];
+    function getCurrentAmount(address account, address tokenAddr)
+        external
+        view
+        returns (uint256)
+    {
+        uint32 nCheckpoints = _bank.numCheckpoints[tokenAddr][account];
         return
-            nCheckpoints > 0 ? checkpoints[account][nCheckpoints - 1].votes : 0;
+            nCheckpoints > 0
+                ? _bank.checkpoints[tokenAddr][account][nCheckpoints - 1].amount
+                : 0;
     }
 
     /**
@@ -469,28 +515,32 @@ contract DaoRegistry is DaoConstants, AdapterGuard {
      * @param blockNumber The block number to get the vote balance at
      * @return The number of votes the account had as of the given block
      */
-    function getPriorVotes(address account, uint256 blockNumber)
-        external
-        view
-        returns (uint256)
-    {
+    function getPriorAmount(
+        address account,
+        address tokenAddr,
+        uint256 blockNumber
+    ) external view returns (uint256) {
         require(
             blockNumber < block.number,
-            "Uni::getPriorVotes: not yet determined"
+            "Uni::getPriorAmount: not yet determined"
         );
 
-        uint32 nCheckpoints = numCheckpoints[account];
+        uint32 nCheckpoints = _bank.numCheckpoints[tokenAddr][account];
         if (nCheckpoints == 0) {
             return 0;
         }
 
         // First check most recent balance
-        if (checkpoints[account][nCheckpoints - 1].fromBlock <= blockNumber) {
-            return checkpoints[account][nCheckpoints - 1].votes;
+        if (
+            _bank.checkpoints[tokenAddr][account][nCheckpoints - 1].fromBlock <=
+            blockNumber
+        ) {
+            return
+                _bank.checkpoints[tokenAddr][account][nCheckpoints - 1].amount;
         }
 
         // Next check implicit zero balance
-        if (checkpoints[account][0].fromBlock > blockNumber) {
+        if (_bank.checkpoints[tokenAddr][account][0].fromBlock > blockNumber) {
             return 0;
         }
 
@@ -498,63 +548,126 @@ contract DaoRegistry is DaoConstants, AdapterGuard {
         uint32 upper = nCheckpoints - 1;
         while (upper > lower) {
             uint32 center = upper - (upper - lower) / 2; // ceil, avoiding overflow
-            Checkpoint memory cp = checkpoints[account][center];
+            Checkpoint memory cp = _bank
+                .checkpoints[tokenAddr][account][center];
             if (cp.fromBlock == blockNumber) {
-                return cp.votes;
+                return cp.amount;
             } else if (cp.fromBlock < blockNumber) {
                 lower = center;
             } else {
                 upper = center - 1;
             }
         }
-        return checkpoints[account][lower].votes;
+        return _bank.checkpoints[tokenAddr][account][lower].amount;
     }
 
-    function _moveDelegates(
-        address srcRep,
-        address dstRep,
-        uint256 amount
-    ) internal {
-        if (srcRep != dstRep && amount > 0) {
-            if (srcRep != address(0)) {
-                uint32 srcRepNum = numCheckpoints[srcRep];
-                uint256 srcRepOld = srcRepNum > 0
-                    ? checkpoints[srcRep][srcRepNum - 1].votes
-                    : 0;
-                uint256 srcRepNew = srcRepOld.sub(amount);
-                _writeCheckpoint(srcRep, srcRepNum, srcRepNew);
-            }
+    /**
+     * @notice Determine the prior number of votes for an account as of a block number
+     * @dev Block number must be a finalized block or else this function will revert to prevent misinformation.
+     * @param memberAddr The address of the account to check
+     * @param blockNumber The block number to get the vote balance at
+     * @return The number of votes the account had as of the given block
+     */
+    function getPriorDelegateKey(address memberAddr, uint256 blockNumber)
+        external
+        view
+        returns (address)
+    {
+        require(
+            blockNumber < block.number,
+            "Uni::getPriorDelegateKey: not yet determined"
+        );
 
-            if (dstRep != address(0)) {
-                uint32 dstRepNum = numCheckpoints[dstRep];
-                uint256 dstRepOld = dstRepNum > 0
-                    ? checkpoints[dstRep][dstRepNum - 1].votes
-                    : 0;
-                uint256 dstRepNew = dstRepOld.add(amount);
-                _writeCheckpoint(dstRep, dstRepNum, dstRepNew);
+        uint32 nCheckpoints = numCheckpoints[memberAddr];
+        if (nCheckpoints == 0) {
+            return memberAddr;
+        }
+
+        // First check most recent balance
+        if (
+            checkpoints[memberAddr][nCheckpoints - 1].fromBlock <= blockNumber
+        ) {
+            return checkpoints[memberAddr][nCheckpoints - 1].delegateKey;
+        }
+
+        // Next check implicit zero balance
+        if (checkpoints[memberAddr][0].fromBlock > blockNumber) {
+            return memberAddr;
+        }
+
+        uint32 lower = 0;
+        uint32 upper = nCheckpoints - 1;
+        while (upper > lower) {
+            uint32 center = upper - (upper - lower) / 2; // ceil, avoiding overflow
+            DelegateCheckpoint memory cp = checkpoints[memberAddr][center];
+            if (cp.fromBlock == blockNumber) {
+                return cp.delegateKey;
+            } else if (cp.fromBlock < blockNumber) {
+                lower = center;
+            } else {
+                upper = center - 1;
             }
+        }
+        return checkpoints[memberAddr][lower].delegateKey;
+    }
+
+    function _createNewAmountCheckpoint(address member, address tokenAddr)
+        internal
+    {
+        uint256 amount = _bank.tokenBalances[tokenAddr][member];
+        uint32 srcRepNum = _bank.numCheckpoints[tokenAddr][member];
+        _writeAmountCheckpoint(member, tokenAddr, srcRepNum, amount);
+    }
+
+    function _createNewDelegateCheckpoint(
+        address member,
+        address newDelegateKey
+    ) internal {
+        uint32 srcRepNum = numCheckpoints[member];
+        _writeDelegateCheckpoint(member, srcRepNum, newDelegateKey);
+    }
+
+    function _writeDelegateCheckpoint(
+        address member,
+        uint32 nCheckpoints,
+        address newDelegateKey
+    ) internal {
+        if (
+            nCheckpoints > 0 &&
+            checkpoints[member][nCheckpoints - 1].fromBlock == block.number
+        ) {
+            checkpoints[member][nCheckpoints - 1].delegateKey = newDelegateKey;
+        } else {
+            checkpoints[member][nCheckpoints] = DelegateCheckpoint(
+                uint96(block.number),
+                newDelegateKey
+            );
+            numCheckpoints[member] = nCheckpoints + 1;
         }
     }
 
-    function _writeCheckpoint(
-        address delegatee,
+    function _writeAmountCheckpoint(
+        address member,
+        address tokenAddr,
         uint32 nCheckpoints,
-        uint256 _newVotes
+        uint256 _newAmount
     ) internal {
-        require(_newVotes < type(uint160).max, "too big of a vote");
-        uint160 newVotes = uint160(_newVotes);
+        require(_newAmount < type(uint160).max, "too big of a vote");
+        uint160 newAmount = uint160(_newAmount);
 
         if (
             nCheckpoints > 0 &&
-            checkpoints[delegatee][nCheckpoints - 1].fromBlock == block.number
+            _bank.checkpoints[tokenAddr][member][nCheckpoints - 1].fromBlock ==
+            block.number
         ) {
-            checkpoints[delegatee][nCheckpoints - 1].votes = newVotes;
+            _bank.checkpoints[tokenAddr][member][nCheckpoints - 1]
+                .amount = newAmount;
         } else {
-            checkpoints[delegatee][nCheckpoints] = Checkpoint(
+            _bank.checkpoints[tokenAddr][member][nCheckpoints] = Checkpoint(
                 uint96(block.number),
-                newVotes
+                newAmount
             );
-            numCheckpoints[delegatee] = nCheckpoints + 1;
+            _bank.numCheckpoints[tokenAddr][member] = nCheckpoints + 1;
         }
     }
 

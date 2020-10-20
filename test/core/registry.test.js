@@ -34,7 +34,6 @@ contract('Registry', async (accounts) => {
   it("should not be possible to add a module with invalid id", async () => {
     let lib = await FlagHelperLib.new();
     await DaoRegistry.link("FlagHelper128", lib.address);
-    console.log('testing first case ....');
     let moduleId = fromUtf8("");
     let moduleAddress = "0x627306090abaB3A6e1400e9345bC60c78a8BEf57";
     let registry = await DaoRegistry.new();

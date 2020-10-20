@@ -50,7 +50,6 @@ contract OnboardingContract is
         uint256 amount;
         uint256 sharesRequested;
         address token;
-        bool processed;
         address applicant;
     }
 
@@ -75,6 +74,9 @@ contract OnboardingContract is
         configs[address(dao)][tokenAddrToMint].chunkSize = chunkSize;
         configs[address(dao)][tokenAddrToMint].sharesPerChunk = sharesPerChunk;
         configs[address(dao)][tokenAddrToMint].tokenAddr = tokenAddr;
+
+        dao.registerPotentialNewInternalToken(tokenAddrToMint);
+        dao.registerPotentialNewToken(ETH_TOKEN);
     }
 
     function _submitMembershipProposal(
@@ -170,7 +172,6 @@ contract OnboardingContract is
             amount,
             sharesRequested,
             token,
-            false,
             newMember
         );
         proposals[address(dao)][proposalId] = p;
@@ -232,6 +233,7 @@ contract OnboardingContract is
             dao.isInternalToken(tokenToMint),
             "it can only mint internal tokens"
         );
+
         dao.addToBalance(memberAddr, tokenToMint, tokenAmount);
     }
 }
