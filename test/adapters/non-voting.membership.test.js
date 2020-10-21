@@ -55,8 +55,8 @@ contract('LAOLAND - Non Voting Onboarding Adapter', async accounts => {
     let ethAmount = sharePrice.mul(toBN(3)).add(remaining);
 
     // Request to join the DAO as an Advisor (non-voting power), Send a tx with RAW ETH only and specify the nonVotingOnboarding
-    await onboarding.onboard(dao.address, LOOT, 0, {
-      from: advisorAccount,
+    await onboarding.onboard(dao.address, advisorAccount, LOOT, 0, {
+      from: myAccount,
       value: ethAmount,
       gasPrice: toBN("0"),
     });
@@ -143,10 +143,11 @@ contract('LAOLAND - Non Voting Onboarding Adapter', async accounts => {
     try {
       await onboarding.onboard(
         dao.address,
+				advisorAccount,
         LOOT,
         tokenAmount,
         {
-          from: advisorAccount,
+          from: myAccount,
           gasPrice: toBN("0"),
         }
       );
@@ -159,10 +160,11 @@ contract('LAOLAND - Non Voting Onboarding Adapter', async accounts => {
 
     await onboarding.onboard(
       dao.address,
+			advisorAccount,
       LOOT,
       tokenAmount,
       {
-        from: advisorAccount,
+        from: myAccount,
         gasPrice: toBN("0"),
       }
     );

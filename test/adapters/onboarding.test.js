@@ -40,7 +40,7 @@ contract('LAOLAND - Onboarding Adapter', async accounts => {
     const votingAddress = await dao.getAdapterAddress(sha3('voting'));
     const voting = await VotingContract.at(votingAddress);
 
-    await onboarding.onboard(dao.address, SHARES, 0, {from:otherAccount,value:sharePrice.mul(toBN(3)).add(remaining), gasPrice: toBN("0")});
+    await onboarding.onboard(dao.address, otherAccount, SHARES, 0, {from:myAccount,value:sharePrice.mul(toBN(3)).add(remaining), gasPrice: toBN("0")});
     await onboarding.sponsorProposal(dao.address, 0, [], {from: myAccount, gasPrice: toBN("0")});
 
     voting.submitVote(dao.address, 0, 1, {from: myAccount, gasPrice: toBN("0")});
@@ -77,7 +77,7 @@ contract('LAOLAND - Onboarding Adapter', async accounts => {
     const votingAddress = await dao.getAdapterAddress(sha3('voting'));
     const voting = await VotingContract.at(votingAddress);
 
-    await onboarding.onboard(dao.address, SHARES, 0, {from:otherAccount,value:sharePrice.mul(toBN(3)).add(remaining), gasPrice: toBN("0")});
+    await onboarding.onboard(dao.address, otherAccount, SHARES, 0, {from:myAccount,value:sharePrice.mul(toBN(3)).add(remaining), gasPrice: toBN("0")});
 
 		await onboarding.cancelProposal(dao.address, 0, {from: myAccount, gasPrice: toBN("0")});
 
