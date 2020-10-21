@@ -329,7 +329,7 @@ contract DaoRegistry is DaoConstants, AdapterGuard {
     /// @dev - Proposal: cancel a proposal that has been submitted to the registry
     function cancelProposal(uint256 _proposalId)
         external
-        hasAccess(this, FlagHelper128.Flag.CANCELLED)
+        hasAccess(this, FlagHelper128.Flag.CANCEL_PROPOSAL)
     {
         require(
             _proposalId < type(uint64).max,
