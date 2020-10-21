@@ -80,8 +80,8 @@ contract('LAOLAND - Onboarding Adapter', async accounts => {
     await onboarding.onboard(dao.address, otherAccount, SHARES, 0, {from:myAccount,value:sharePrice.mul(toBN(3)).add(remaining), gasPrice: toBN("0")});
 
 		await onboarding.cancelProposal(dao.address, 0, {from: myAccount, gasPrice: toBN("0")});
-
-		assert.equal(dao.isProposalCancelled(0), true);
+    const isCancelled = await dao.isProposalCancelled(toBN(0));
+		assert.equal(isCancelled, true);
 
 		try {
 			voting.submitVote(dao.address, 0, 1, {from: myAccount, gasPrice: toBN("0")});

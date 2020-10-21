@@ -26,6 +26,7 @@ const {
   createDao,
   GUILD,
   LOOT,
+  SHARES,
   sharePrice,
   remaining,
   OLTokenContract,
@@ -133,10 +134,7 @@ contract('LAOLAND - Non Voting Onboarding Adapter', async accounts => {
     let tokenAmount = 10;
 
     // Pre-approve spender (DAO) to transfer applicant tokens
-    await oltContract.approve(dao.address, tokenAmount, {
-      from: advisorAccount,
-      gasPrice: toBN(0),
-    });
+    await oltContract.approve(dao.address, tokenAmount, {from: advisorAccount});
 
     // Send a request to join the DAO as an Advisor (non-voting power), 
     // the tx passes the OLT ERC20 token, the amount and the nonVotingOnboarding adapter that handles the proposal
@@ -147,16 +145,16 @@ contract('LAOLAND - Non Voting Onboarding Adapter', async accounts => {
         LOOT,
         tokenAmount,
         {
-          from: myAccount,
+          from: advisorAccount,
           gasPrice: toBN("0"),
         }
       );
       assert.equal(true, false, "should have failed!");
     } catch (err) {
-      assert.equal(err.message, "Returned error: VM Exception while processing transaction: revert ERC20 transfer not allowed -- Reason given: ERC20 transfer not allowed.");
+      assert.equal(err.message.indexOf("ERC20 transfer not allowed") > 0, true);
     }
 
-    await oltContract.approve(onboarding.address, 100, {from: advisorAccount});
+    await oltContract.approve(onboarding.address, tokenAmount, {from: advisorAccount});
 
     await onboarding.onboard(
       dao.address,
@@ -164,7 +162,7 @@ contract('LAOLAND - Non Voting Onboarding Adapter', async accounts => {
       LOOT,
       tokenAmount,
       {
-        from: myAccount,
+        from: advisorAccount,
         gasPrice: toBN("0"),
       }
     );
