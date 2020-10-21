@@ -346,7 +346,7 @@ it("should be possible to a member to ragequit if the member voted YES on a prop
     // Transfer 1000 OLTs to the Advisor account
     await oltContract.approve(advisorAccount, 100);
     await oltContract.transfer(advisorAccount, 100);
-    let advisorTokenBalance = await oltContract.balanceOf.call(advisorAccount);
+    let advisorTokenBalance = await oltContract.balanceOf(advisorAccount);
     assert.equal(
       100,
       advisorTokenBalance,
@@ -380,7 +380,7 @@ it("should be possible to a member to ragequit if the member voted YES on a prop
       LOOT,
       tokenAmount,
       {
-        from: myAccount,
+        from: advisorAccount,
         gasPrice: toBN("0"),
       }
     );
