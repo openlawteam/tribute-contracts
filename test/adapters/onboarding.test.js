@@ -83,16 +83,10 @@ contract('LAOLAND - Onboarding Adapter', async accounts => {
     const isCancelled = await dao.isProposalCancelled(toBN("0"));
 		assert.equal(isCancelled, true);
 
-		try {
-			voting.submitVote(dao.address, 0, 1, {from: myAccount, gasPrice: toBN("0")});
-		} catch(err) {
-      assert.equal(err.reason, "proposal needs to pass");
-		}
-
     try {
       await onboarding.processProposal(dao.address, 0, {from: myAccount, gasPrice: toBN("0")});
     } catch(err) {
-      assert.equal(err.reason, "proposal needs to pass");
+      assert.equal(err.reason, "proposal has been cancelled");
     }
     
     const myAccountShares = await dao.nbShares(myAccount);
