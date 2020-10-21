@@ -323,7 +323,8 @@ contract DaoRegistry is DaoConstants, AdapterGuard {
             "proposal Id should only be uint64"
         );
         uint64 proposalId = uint64(_proposalId);
-        return proposals[proposalId].flags.getFlag(FlagHelper128.Flag.CANCELLED);
+        return
+            proposals[proposalId].flags.getFlag(FlagHelper128.Flag.CANCELLED);
     }
 
     /// @dev - Proposal: cancel a proposal that has been submitted to the registry

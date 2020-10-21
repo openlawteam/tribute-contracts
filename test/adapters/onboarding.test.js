@@ -97,4 +97,37 @@ contract('LAOLAND - Onboarding Adapter', async accounts => {
     const guildBalance = await dao.balanceOf(GUILD, "0x0000000000000000000000000000000000000000");
     assert.equal(guildBalance.toString(), sharePrice.mul(toBN("0")).toString());
   })
+
+  it("should be possible to withdraw a proposal", async () => {
+    const myAccount = accounts[1];
+    const otherAccount = accounts[2];
+    
+    let dao = await createDao(myAccount);
+    
+    const onboardingAddress = await dao.getAdapterAddress(sha3('onboarding'));
+    const onboarding = await OnboardingContract.at(onboardingAddress);
+
+    const votingAddress = await dao.getAdapterAddress(sha3('voting'));
+    const voting = await VotingContract.at(votingAddress);
+
+    await onboarding.onboard(dao.address, otherAccount, SHARES, 0, {from:myAccount,value:sharePrice.mul(toBN(3)).add(remaining), gasPrice: toBN("0")});
+
+		await onboarding.cancelProposal(dao.address, 0, {from: myAccount, gasPrice: toBN("0")});
+    const isCancelled = await dao.isProposalCancelled(toBN("0"));
+		assert.equal(isCancelled, true);
+
+    try {
+      await onboarding.processProposal(dao.address, 0, {from: myAccount, gasPrice: toBN("0")});
+    } catch(err) {
+      assert.equal(err.reason, "proposal has been cancelled");
+    }
+    
+    const myAccountShares = await dao.nbShares(myAccount);
+    const otherAccountShares = await dao.nbShares(otherAccount);
+    assert.equal(myAccountShares.toString(), "1");
+    assert.equal(otherAccountShares.toString(), numberOfShares.mul(toBN("0")).toString());
+
+    const guildBalance = await dao.balanceOf(GUILD, "0x0000000000000000000000000000000000000000");
+    assert.equal(guildBalance.toString(), sharePrice.mul(toBN("0")).toString());
+  })
 });
