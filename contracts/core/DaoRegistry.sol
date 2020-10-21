@@ -328,11 +328,15 @@ contract DaoRegistry is DaoConstants, AdapterGuard {
             "proposal Id should only be uint64"
         );
         uint64 proposalId = uint64(_proposalId);
-        proposals[proposalId].flags.getFlag(FlagHelper128.Flag.CANCELLED);
+        return
+            proposals[proposalId].flags.getFlag(FlagHelper128.Flag.CANCELLED);
     }
 
     /// @dev - Proposal: cancel a proposal that has been submitted to the registry
-    function cancelProposal(uint256 _proposalId) external onlyAdapter(this) {
+    function cancelProposal(uint256 _proposalId)
+        external
+        hasAccess(this, FlagHelper128.Flag.CANCEL_PROPOSAL)
+    {
         require(
             _proposalId < type(uint64).max,
             "proposal Id should only be uint64"

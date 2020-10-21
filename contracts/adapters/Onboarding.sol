@@ -92,7 +92,7 @@ contract OnboardingContract is
         require(config.chunkSize > 0, "config missing");
 
         uint256 numberOfChunks = value.div(config.chunkSize);
-        require(numberOfChunks > 0, "not sufficient funds"); /* explain why this should not be < instead? */
+        require(numberOfChunks > 0, "not sufficient funds");
 
         uint256 amount = numberOfChunks.mul(config.chunkSize);
         uint256 sharesRequested = numberOfChunks.mul(config.sharesPerChunk);
@@ -228,7 +228,11 @@ contract OnboardingContract is
         } else {
             IERC20 token = IERC20(tokenAddr);
             require(
-                token.transferFrom(address(this), proposal.proposer, proposal.amount),
+                token.transferFrom(
+                    address(this),
+                    proposal.proposer,
+                    proposal.amount
+                ),
                 "ERC20 failed transferFrom"
             );
         }
