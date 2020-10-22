@@ -41,8 +41,10 @@ const sha3 = web3.utils.sha3;
 contract('LAOLAND - Ragequit Adapter', async accounts => {
 
   submitNewMemberProposal = async (onboarding, dao, newMember, sharePrice) => {
-    await onboarding.onboard(dao.address, SHARES, sharePrice.mul(toBN(100)), {
-      from: newMember,
+    const myAccount = accounts[1];
+		
+    await onboarding.onboard(dao.address, newMember, SHARES, sharePrice.mul(toBN(100)), {
+      from: myAccount,
       value: sharePrice.mul(toBN(100)),
       gasPrice: toBN("0"),
     });
@@ -344,7 +346,7 @@ it("should be possible to a member to ragequit if the member voted YES on a prop
     // Transfer 1000 OLTs to the Advisor account
     await oltContract.approve(advisorAccount, 100);
     await oltContract.transfer(advisorAccount, 100);
-    let advisorTokenBalance = await oltContract.balanceOf.call(advisorAccount);
+    let advisorTokenBalance = await oltContract.balanceOf(advisorAccount);
     assert.equal(
       100,
       advisorTokenBalance,
@@ -374,6 +376,7 @@ it("should be possible to a member to ragequit if the member voted YES on a prop
     // the tx passes the OLT ERC20 token, the amount and the nonVotingOnboarding adapter that handles the proposal
     await onboarding.onboard(
       dao.address,
+			advisorAccount,
       LOOT,
       tokenAmount,
       {
@@ -465,10 +468,11 @@ it("should be possible to a member to ragequit if the member voted YES on a prop
     // the tx passes the OLT ERC20 token, the amount and the nonVotingOnboarding adapter that handles the proposal
     await onboarding.onboard(
       dao.address,
+			memberAccount,
       SHARES,
       tokenAmount,
       {
-        from: memberAccount,
+        from: myAccount,
         value: tokenAmount,
         gasPrice: toBN("0"),
       }
@@ -506,10 +510,11 @@ it("should be possible to a member to ragequit if the member voted YES on a prop
 
     await onboarding.onboard(
       dao.address,
+			otherAccount,
       SHARES,
       tokenAmount,
       {
-        from: otherAccount,
+        from: myAccount,
         value: tokenAmount,
         gasPrice: toBN("0"),
       }

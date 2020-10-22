@@ -44,7 +44,7 @@ contract('LAOLAND - Financing Adapter', async accounts => {
     //Add funds to the Guild Bank after sposoring a member to join the Guild
     const onboardingAddress = await dao.getAdapterAddress(sha3('onboarding'));
     const onboarding = await OnboardingContract.at(onboardingAddress);
-    await onboarding.onboard(dao.address, SHARES, sharePrice.mul(toBN(10)).add(remaining), { from: newMember, value: sharePrice.mul(toBN(10)).add(remaining), gasPrice: toBN("0") });
+    await onboarding.onboard(dao.address, newMember, SHARES, sharePrice.mul(toBN(10)).add(remaining), { from: myAccount, value: sharePrice.mul(toBN(10)).add(remaining), gasPrice: toBN("0") });
 
     //Get the new proposal id
     pastEvents = await dao.getPastEvents();

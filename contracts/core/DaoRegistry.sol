@@ -60,6 +60,11 @@ contract DaoRegistry is DaoConstants, AdapterGuard {
         uint64 processingTime,
         uint128 flags
     );
+    event CancelledProposal(
+        uint64 proposalId,
+        uint64 processingTime,
+        uint128 flags
+    );
 
     /// @dev - Events for Members
     event UpdateMemberShares(address member, uint256 shares);
@@ -308,6 +313,56 @@ contract DaoRegistry is DaoConstants, AdapterGuard {
         return proposalId;
     }
 
+    function isProposalCancelled(uint256 _proposalId)
+        external
+        view
+        returns (bool)
+    {
+        require(
+            _proposalId < type(uint64).max,
+            "proposal Id should only be uint64"
+        );
+        uint64 proposalId = uint64(_proposalId);
+        return
+            proposals[proposalId].flags.getFlag(FlagHelper128.Flag.CANCELLED);
+    }
+
+    /// @dev - Proposal: cancel a proposal that has been submitted to the registry
+    function cancelProposal(uint256 _proposalId)
+        external
+        hasAccess(this, FlagHelper128.Flag.CANCEL_PROPOSAL)
+    {
+        require(
+            _proposalId < type(uint64).max,
+            "proposal Id should only be uint64"
+        );
+        uint64 proposalId = uint64(_proposalId);
+        Proposal storage proposal = proposals[proposalId];
+
+        require(
+            proposal.adapterAddress == msg.sender,
+            "only the adapter that submitted the proposal can cancel it"
+        );
+
+        uint128 flags = proposal.flags;
+        require(
+            flags.getFlag(FlagHelper128.Flag.EXISTS),
+            "proposal does not exist"
+        );
+        require(
+            !flags.getFlag(FlagHelper128.Flag.CANCELLED),
+            "proposal is cancelled"
+        );
+        require(
+            !flags.getFlag(FlagHelper128.Flag.SPONSORED),
+            "proposal already sponsored, cannot cancel"
+        );
+        flags = flags.setFlag(FlagHelper128.Flag.CANCELLED, true);
+        proposals[proposalId].flags = flags;
+
+        emit CancelledProposal(proposalId, uint64(block.timestamp), flags);
+    }
+
     /// @dev - Proposal: sponsor proposals that were submitted to the DAO registry
     function sponsorProposal(uint256 _proposalId, address sponsoringMember)
         external
@@ -374,6 +429,10 @@ contract DaoRegistry is DaoConstants, AdapterGuard {
         require(
             flags.getFlag(FlagHelper128.Flag.EXISTS),
             "proposal does not exist for this dao"
+        );
+        require(
+            !flags.getFlag(FlagHelper128.Flag.CANCELLED),
+            "proposal is cancelled"
         );
         require(
             flags.getFlag(FlagHelper128.Flag.SPONSORED),

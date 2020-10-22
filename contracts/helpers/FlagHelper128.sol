@@ -38,6 +38,7 @@ library FlagHelper128 {
         JAIL_MEMBER,
         UNJAIL_MEMBER,
         EXECUTE,
+        CANCEL_PROPOSAL,
         SUBMIT_PROPOSAL,
         SPONSOR_PROPOSAL,
         PROCESS_PROPOSAL,
