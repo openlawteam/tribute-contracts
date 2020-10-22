@@ -98,8 +98,14 @@ contract ManagingContract is IManaging, DaoConstants, MemberGuard {
         require(_proposalId < type(uint64).max, "proposalId too big");
         uint64 proposalId = uint64(_proposalId);
         ProposalDetails memory proposal = proposals[_proposalId];
-        require(!dao.getProposalFlag(proposalId, FlagHelper128.Flag.PROCESSED), "proposal already processed");
-        require(dao.getProposalFlag(proposalId, FlagHelper128.Flag.SPONSORED), "proposal not sponsored yet");
+        require(
+            !dao.getProposalFlag(proposalId, FlagHelper128.Flag.PROCESSED),
+            "proposal already processed"
+        );
+        require(
+            dao.getProposalFlag(proposalId, FlagHelper128.Flag.SPONSORED),
+            "proposal not sponsored yet"
+        );
 
         IVoting votingContract = IVoting(dao.getAdapterAddress(VOTING));
         require(

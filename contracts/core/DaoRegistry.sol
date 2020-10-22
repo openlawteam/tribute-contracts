@@ -309,15 +309,18 @@ contract DaoRegistry is DaoConstants, AdapterGuard {
         external
         hasAccess(this, FlagHelper128.Flag.CANCEL_PROPOSAL)
     {
-        Proposal storage proposal = _setProposalFlag(_proposalId, FlagHelper128.Flag.CANCELLED);
+        Proposal storage proposal = _setProposalFlag(
+            _proposalId,
+            FlagHelper128.Flag.CANCELLED
+        );
 
         uint128 flags = proposal.flags;
-        
+
         require(
             !flags.getFlag(FlagHelper128.Flag.SPONSORED),
             "proposal already sponsored, cannot cancel"
         );
-        
+
         emit CancelledProposal(_proposalId, uint64(block.timestamp), flags);
     }
 
@@ -326,9 +329,11 @@ contract DaoRegistry is DaoConstants, AdapterGuard {
         external
         hasAccess(this, FlagHelper128.Flag.SPONSOR_PROPOSAL)
     {
+        Proposal storage proposal = _setProposalFlag(
+            _proposalId,
+            FlagHelper128.Flag.SPONSORED
+        );
 
-        Proposal storage proposal = _setProposalFlag(_proposalId, FlagHelper128.Flag.SPONSORED);
-        
         uint128 flags = proposal.flags;
 
         require(
@@ -344,9 +349,12 @@ contract DaoRegistry is DaoConstants, AdapterGuard {
         external
         hasAccess(this, FlagHelper128.Flag.PROCESS_PROPOSAL)
     {
-        Proposal storage proposal = _setProposalFlag(_proposalId, FlagHelper128.Flag.PROCESSED);
+        Proposal storage proposal = _setProposalFlag(
+            _proposalId,
+            FlagHelper128.Flag.PROCESSED
+        );
         uint128 flags = proposal.flags;
-        
+
         require(
             proposal.flags.getFlag(FlagHelper128.Flag.SPONSORED),
             "proposal not sponsored"
@@ -357,7 +365,9 @@ contract DaoRegistry is DaoConstants, AdapterGuard {
 
     /// @dev - Proposal: mark a proposal as processed in the DAO registry
     function _setProposalFlag(uint256 _proposalId, FlagHelper128.Flag flag)
-        internal returns (Proposal storage) {
+        internal
+        returns (Proposal storage)
+    {
         require(
             _proposalId < type(uint64).max,
             "proposal Id should only be uint64"
@@ -408,7 +418,11 @@ contract DaoRegistry is DaoConstants, AdapterGuard {
                 balanceOf(memberAddr, LOCKED_LOOT) > 0);
     }
 
-    function getProposalFlag(uint64 proposalId, FlagHelper128.Flag flag) external view returns (bool) {
+    function getProposalFlag(uint64 proposalId, FlagHelper128.Flag flag)
+        external
+        view
+        returns (bool)
+    {
         return proposals[proposalId].flags.getFlag(flag);
     }
 

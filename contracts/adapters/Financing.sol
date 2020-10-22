@@ -97,8 +97,14 @@ contract FinancingContract is IFinancing, DaoConstants, MemberGuard {
         uint64 proposalId = uint64(_proposalId);
         ProposalDetails memory details = proposals[address(dao)][proposalId];
 
-        require(!dao.getProposalFlag(proposalId, FlagHelper128.Flag.PROCESSED), "proposal already processed");
-        require(!dao.getProposalFlag(proposalId, FlagHelper128.Flag.CANCELLED), "proposal cancelled");
+        require(
+            !dao.getProposalFlag(proposalId, FlagHelper128.Flag.PROCESSED),
+            "proposal already processed"
+        );
+        require(
+            !dao.getProposalFlag(proposalId, FlagHelper128.Flag.CANCELLED),
+            "proposal cancelled"
+        );
 
         IVoting votingContract = IVoting(dao.getAdapterAddress(VOTING));
         require(
