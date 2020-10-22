@@ -238,6 +238,40 @@ contract OnboardingContract is
         }
     }
 
+    function wihdrawFailedProposal(DaoRegistry dao, uint256 proposalId)
+        external
+        override
+        onlyMember(dao)
+    {
+        require(
+            proposals[address(dao)][proposalId].id == proposalId,
+            "proposal does not exist"
+        );
+
+        IVoting votingContract = IVoting(dao.getAdapterAddress(VOTING));
+        uint256 votingStatus = votingContract.voteResult(dao, proposalId);
+
+        require(
+            votingStatus == 3,
+            "proposal cannot be withdrawn unless vote fails"
+        );
+
+        dao.withdrawProposal(proposalId);
+
+        ProposalDetails storage proposal = proposals[address(dao)][proposalId];
+        address tokenAddr = proposal.token;
+
+        if (tokenAddr == ETH_TOKEN) {
+            proposal.proposer.transfer(proposal.amount);
+        } else {
+            IERC20 token = IERC20(tokenAddr);
+            require(
+                token.transferFrom(address(this), proposal.proposer, proposal.amount),
+                "ERC20 failed transferFrom"
+            );
+        }
+    }
+
     function processProposal(DaoRegistry dao, uint256 proposalId)
         external
         override
