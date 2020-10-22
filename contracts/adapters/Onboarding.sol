@@ -250,7 +250,7 @@ contract OnboardingContract is
             "proposal does not exist"
         );
         require(
-            !dao.getProposalFlag(proposalId, FlagHelper128.Flag.CANCELLED),
+            !dao.getProposalFlag(proposalId, FlagHelper.Flag.CANCELLED),
             "proposal has been cancelled"
         );
 

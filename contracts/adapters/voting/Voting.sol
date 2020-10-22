@@ -76,7 +76,7 @@ contract VotingContract is IVoting, DaoConstants, MemberGuard, AdapterGuard {
         uint64 proposalId = uint64(_proposalId);
         require(dao.isActiveMember(msg.sender), "only active members can vote");
         require(
-            !dao.getProposalFlag(proposalId, FlagHelper128.Flag.CANCELLED),
+            !dao.getProposalFlag(proposalId, FlagHelper.Flag.CANCELLED),
             "the proposal has been cancelled"
         );
         require(

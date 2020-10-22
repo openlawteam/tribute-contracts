@@ -99,11 +99,11 @@ contract ManagingContract is IManaging, DaoConstants, MemberGuard {
         uint64 proposalId = uint64(_proposalId);
         ProposalDetails memory proposal = proposals[_proposalId];
         require(
-            !dao.getProposalFlag(proposalId, FlagHelper128.Flag.PROCESSED),
+            !dao.getProposalFlag(proposalId, FlagHelper.Flag.PROCESSED),
             "proposal already processed"
         );
         require(
-            dao.getProposalFlag(proposalId, FlagHelper128.Flag.SPONSORED),
+            dao.getProposalFlag(proposalId, FlagHelper.Flag.SPONSORED),
             "proposal not sponsored yet"
         );
 

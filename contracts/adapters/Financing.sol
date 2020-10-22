@@ -8,7 +8,7 @@ import "../core/DaoRegistry.sol";
 import "../adapters/interfaces/IVoting.sol";
 import "../guards/MemberGuard.sol";
 import "../utils/SafeMath.sol";
-import "../helpers/FlagHelper128.sol";
+import "../helpers/FlagHelper.sol";
 
 /**
 MIT License
@@ -98,11 +98,11 @@ contract FinancingContract is IFinancing, DaoConstants, MemberGuard {
         ProposalDetails memory details = proposals[address(dao)][proposalId];
 
         require(
-            !dao.getProposalFlag(proposalId, FlagHelper128.Flag.PROCESSED),
+            !dao.getProposalFlag(proposalId, FlagHelper.Flag.PROCESSED),
             "proposal already processed"
         );
         require(
-            !dao.getProposalFlag(proposalId, FlagHelper128.Flag.CANCELLED),
+            !dao.getProposalFlag(proposalId, FlagHelper.Flag.CANCELLED),
             "proposal cancelled"
         );
 

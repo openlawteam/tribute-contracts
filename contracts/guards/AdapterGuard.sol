@@ -3,7 +3,7 @@ pragma solidity ^0.7.0;
 // SPDX-License-Identifier: MIT
 
 import "../core/DaoRegistry.sol";
-import "../helpers/FlagHelper128.sol";
+import "../helpers/FlagHelper.sol";
 
 /**
 MIT License
@@ -41,7 +41,7 @@ abstract contract AdapterGuard {
         _;
     }
 
-    modifier hasAccess(DaoRegistry dao, FlagHelper128.Flag flag) {
+    modifier hasAccess(DaoRegistry dao, FlagHelper.Flag flag) {
         require(
             dao.state() == DaoRegistry.DaoState.CREATION ||
                 dao.hasAdapterAccess(msg.sender, flag),
