@@ -34,7 +34,7 @@ abstract contract DaoGuard {
     modifier onlyDao(DaoRegistry dao) {
         require(
             dao.state() == DaoRegistry.DaoState.CREATION ||
-                dao.isDao(msg.sender),
+                address(dao) == msg.sender,
             "onlyDao"
         );
         _;

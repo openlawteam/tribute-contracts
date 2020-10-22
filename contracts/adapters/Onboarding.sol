@@ -238,18 +238,19 @@ contract OnboardingContract is
         }
     }
 
-    function processProposal(DaoRegistry dao, uint256 proposalId)
+    function processProposal(DaoRegistry dao, uint256 _proposalId)
         external
         override
         onlyMember(dao)
     {
+        require(_proposalId < type(uint64).max, "proposalId too big");
+        uint64 proposalId = uint64(_proposalId);
         require(
             proposals[address(dao)][proposalId].id == proposalId,
             "proposal does not exist"
         );
-
         require(
-            !dao.isProposalCancelled(proposalId),
+            !dao.getProposalFlag(proposalId, FlagHelper128.Flag.CANCELLED),
             "proposal has been cancelled"
         );
 

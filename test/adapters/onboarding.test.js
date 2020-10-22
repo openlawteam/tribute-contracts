@@ -78,7 +78,7 @@ contract('LAOLAND - Onboarding Adapter', async accounts => {
     await onboarding.onboard(dao.address, otherAccount, SHARES, 0, {from:myAccount,value:sharePrice.mul(toBN(3)).add(remaining), gasPrice: toBN("0")});
 
 		await onboarding.cancelProposal(dao.address, 0, {from: myAccount, gasPrice: toBN("0")});
-    const isCancelled = await dao.isProposalCancelled(toBN("0"));
+    const isCancelled = await dao.getProposalFlag(toBN("0"), toBN("4")); // 4 is cancelled flag index
 		assert.equal(isCancelled, true);
 
     try {
@@ -111,7 +111,7 @@ contract('LAOLAND - Onboarding Adapter', async accounts => {
     await onboarding.onboard(dao.address, otherAccount, SHARES, 0, {from:myAccount,value:sharePrice.mul(toBN(3)).add(remaining), gasPrice: toBN("0")});
 
 		await onboarding.cancelProposal(dao.address, 0, {from: myAccount, gasPrice: toBN("0")});
-    const isCancelled = await dao.isProposalCancelled(toBN("0"));
+    const isCancelled = await dao.getProposalFlag(toBN("0"), toBN("4")); // 4 is cancelled flag index
 		assert.equal(isCancelled, true);
 
     try {

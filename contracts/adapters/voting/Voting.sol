@@ -69,12 +69,14 @@ contract VotingContract is IVoting, DaoConstants, MemberGuard, AdapterGuard {
 
     function submitVote(
         DaoRegistry dao,
-        uint256 proposalId,
+        uint256 _proposalId,
         uint256 voteValue
     ) external onlyMember(dao) {
+        require(_proposalId < type(uint64).max, "proposalId too big");
+        uint64 proposalId = uint64(_proposalId);
         require(dao.isActiveMember(msg.sender), "only active members can vote");
         require(
-            !dao.isProposalCancelled(proposalId),
+            !dao.getProposalFlag(proposalId, FlagHelper128.Flag.CANCELLED),
             "the proposal has been cancelled"
         );
         require(
