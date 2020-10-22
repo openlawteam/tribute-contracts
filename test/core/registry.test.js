@@ -23,11 +23,8 @@ SOFTWARE.
  */
 const DaoRegistry = artifacts.require("./core/DaoRegistry");
 const FlagHelperLib = artifacts.require('./helpers/FlagHelper128');
-const fromUtf8 = web3.utils.fromUtf8;
-const sha3 = web3.utils.sha3;
-const toBN = web3.utils.toBN;
 
-const {createDao, OnboardingContract} = require('../../utils/DaoFactory.js');
+const {sha3, toBN, fromUtf8, createDao, OnboardingContract} = require('../../utils/DaoFactory.js');
 
 contract('Registry', async (accounts) => {
 

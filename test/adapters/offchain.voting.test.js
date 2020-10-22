@@ -21,10 +21,8 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
  */
-const {advanceTime, SHARES, OnboardingContract, DaoRegistry, DaoFactory, FlagHelperLib, sharePrice, remaining, numberOfShares, entry, addDefaultAdapters} = require('../../utils/DaoFactory.js');
+const {sha3, toBN, advanceTime, SHARES, OnboardingContract, DaoRegistry, DaoFactory, FlagHelperLib, sharePrice, remaining, numberOfShares, entry, addDefaultAdapters} = require('../../utils/DaoFactory.js');
 const {addVote, prepareVoteResult, toStepNode} = require('../../utils/offchain_voting.js');
-const toBN = web3.utils.toBN;
-const sha3 = web3.utils.sha3;
 
 const OffchainVotingContract = artifacts.require('./adapters/OffchainVotingContract');
 
@@ -32,7 +30,7 @@ async function createOffchainVotingDao(senderAccount, unitPrice=sharePrice, nbSh
   let lib = await FlagHelperLib.new();
   const daoFactory = await DaoFactory.new();
   await DaoRegistry.link("FlagHelper128", lib.address);
-  let dao = await DaoRegistry.new({ from: senderAccount, gasPrice: web3.utils.toBN("0") });
+  let dao = await DaoRegistry.new({ from: senderAccount, gasPrice: toBN("0") });
   await addDefaultAdapters(dao, unitPrice, nbShares, votingPeriod, gracePeriod);
   const votingAddress = await dao.getAdapterAddress(sha3("voting"));
   const offchainVoting = await OffchainVotingContract.new(votingAddress);
@@ -55,7 +53,7 @@ contract('LAOLAND - Offchain Voting Module', async accounts => {
     const onboardingAddress = await dao.getAdapterAddress(sha3('onboarding'));
     const onboarding = await OnboardingContract.at(onboardingAddress);
 
-    await onboarding.onboard(dao.address, otherAccount, SHARES, sharePrice.mul(web3.utils.toBN(3)).add(remaining), {from:myAccount,value:sharePrice.mul(toBN("3")).add(remaining), gasPrice: toBN("0")});
+    await onboarding.onboard(dao.address, otherAccount, SHARES, sharePrice.mul(toBN(3)).add(remaining), {from:myAccount,value:sharePrice.mul(toBN("3")).add(remaining), gasPrice: toBN("0")});
     let blockNumber = await web3.eth.getBlockNumber();
     await onboarding.sponsorProposal(dao.address, 0, web3.eth.abi.encodeParameter('uint256', blockNumber), {from: myAccount, gasPrice: toBN("0")});
     
@@ -75,15 +73,15 @@ contract('LAOLAND - Offchain Voting Module', async accounts => {
 
     let {dao, voting} = await createOffchainVotingDao(myAccount);
 
-    const onboardingAddress = await dao.getAdapterAddress(web3.utils.sha3('onboarding'));
+    const onboardingAddress = await dao.getAdapterAddress(sha3('onboarding'));
     const onboarding = await OnboardingContract.at(onboardingAddress);
 
-    await onboarding.onboard(dao.address, otherAccount, SHARES, sharePrice.mul(web3.utils.toBN(3)).add(remaining), {from:myAccount,value:sharePrice.mul(web3.utils.toBN(3)).add(remaining), gasPrice: web3.utils.toBN("0")});
-    await onboarding.onboard(dao.address, otherAccount2, SHARES, sharePrice.mul(web3.utils.toBN(3)).add(remaining), {from:myAccount,value:sharePrice.mul(web3.utils.toBN(3)).add(remaining), gasPrice: web3.utils.toBN("0")});
+    await onboarding.onboard(dao.address, otherAccount, SHARES, sharePrice.mul(toBN(3)).add(remaining), {from:myAccount,value:sharePrice.mul(toBN(3)).add(remaining), gasPrice: toBN("0")});
+    await onboarding.onboard(dao.address, otherAccount2, SHARES, sharePrice.mul(toBN(3)).add(remaining), {from:myAccount,value:sharePrice.mul(toBN(3)).add(remaining), gasPrice: toBN("0")});
     let blockNumber = await web3.eth.getBlockNumber();
     
-    await onboarding.sponsorProposal(dao.address, 0, web3.eth.abi.encodeParameter('uint256', blockNumber), {from: myAccount, gasPrice: web3.utils.toBN("0")});
-    await onboarding.sponsorProposal(dao.address, 1, web3.eth.abi.encodeParameter('uint256', blockNumber), {from: myAccount, gasPrice: web3.utils.toBN("0")});
+    await onboarding.sponsorProposal(dao.address, 0, web3.eth.abi.encodeParameter('uint256', blockNumber), {from: myAccount, gasPrice: toBN("0")});
+    await onboarding.sponsorProposal(dao.address, 1, web3.eth.abi.encodeParameter('uint256', blockNumber), {from: myAccount, gasPrice: toBN("0")});
 
     const voteElements = await addVote([], blockNumber, dao, 0, myAccount, true);
     const voteElements2 = await addVote([], blockNumber, dao, 1, myAccount, true);
@@ -93,19 +91,19 @@ contract('LAOLAND - Offchain Voting Module', async accounts => {
     const result1 = toStepNode(r1.votes[0], r1.voteResultTree);
     const result2 = toStepNode(r2.votes[0], r2.voteResultTree);
 
-    await voting.submitVoteResult(dao.address, 0, r1.voteResultTree.getHexRoot(), result1, {from: myAccount, gasPrice: web3.utils.toBN("0")});
-    await voting.submitVoteResult(dao.address, 1, r2.voteResultTree.getHexRoot(), result2, {from: myAccount, gasPrice: web3.utils.toBN("0")});
+    await voting.submitVoteResult(dao.address, 0, r1.voteResultTree.getHexRoot(), result1, {from: myAccount, gasPrice: toBN("0")});
+    await voting.submitVoteResult(dao.address, 1, r2.voteResultTree.getHexRoot(), result2, {from: myAccount, gasPrice: toBN("0")});
     await advanceTime(10000);
-    await onboarding.processProposal(dao.address, 0, {from: myAccount, gasPrice: web3.utils.toBN("0")});
-    await onboarding.processProposal(dao.address, 1, {from: myAccount, gasPrice: web3.utils.toBN("0")});
+    await onboarding.processProposal(dao.address, 0, {from: myAccount, gasPrice: toBN("0")});
+    await onboarding.processProposal(dao.address, 1, {from: myAccount, gasPrice: toBN("0")});
 
     const someone = accounts[4];
 
-    await onboarding.onboard(dao.address, someone, SHARES, sharePrice.mul(web3.utils.toBN(3)).add(remaining), {from:myAccount,value:sharePrice.mul(web3.utils.toBN(3)).add(remaining), gasPrice: web3.utils.toBN("0")});
+    await onboarding.onboard(dao.address, someone, SHARES, sharePrice.mul(toBN(3)).add(remaining), {from:myAccount,value:sharePrice.mul(toBN(3)).add(remaining), gasPrice: toBN("0")});
 
     const proposalId = 2;
     blockNumber = await web3.eth.getBlockNumber();
-    await onboarding.sponsorProposal(dao.address, proposalId, web3.eth.abi.encodeParameter('uint256', blockNumber), {from: myAccount, gasPrice: web3.utils.toBN("0")});
+    await onboarding.sponsorProposal(dao.address, proposalId, web3.eth.abi.encodeParameter('uint256', blockNumber), {from: myAccount, gasPrice: toBN("0")});
     let ve = await addVote([], blockNumber, dao, proposalId, myAccount, true);
     ve = await addVote(ve, blockNumber, dao, proposalId, otherAccount, true);
     ve = await addVote(ve, blockNumber, dao, proposalId, otherAccount2, false);
@@ -115,7 +113,7 @@ contract('LAOLAND - Offchain Voting Module', async accounts => {
     const votes2 = r3.votes;
     const result3 = toStepNode(votes2[2], voteResultTree2);
 
-    await voting.submitVoteResult(dao.address, proposalId, voteResultTree2.getHexRoot(), result3, {from: myAccount, gasPrice: web3.utils.toBN("0")});
+    await voting.submitVoteResult(dao.address, proposalId, voteResultTree2.getHexRoot(), result3, {from: myAccount, gasPrice: toBN("0")});
 
     const nodePrevious = toStepNode(votes2[0], voteResultTree2);
     const nodeCurrent = toStepNode(votes2[1], voteResultTree2);

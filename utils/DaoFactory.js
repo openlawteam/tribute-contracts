@@ -21,7 +21,10 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
  */
-const { sha3 } = require("web3-utils");
+const sha3 = web3.utils.sha3;
+const toBN = web3.utils.toBN;
+const toWei = web3.utils.toWei;
+const fromUtf8 = web3.utils.fromUtf8;
 
 const GUILD = "0x000000000000000000000000000000000000dead";
 const TOTAL =  "0x000000000000000000000000000000000000babe";
@@ -30,9 +33,9 @@ const LOOT =   "0x00000000000000000000000000000000B105F00D";
 const ETH_TOKEN = "0x0000000000000000000000000000000000000000";
 const DAI_TOKEN = "0x95b58a6bff3d14b7db2f5cb5f0ad413dc2940658";
 
-const numberOfShares = web3.utils.toBN('1000000000000000');
-const sharePrice = web3.utils.toBN(web3.utils.toWei("120", 'finney'));
-const remaining = sharePrice.sub(web3.utils.toBN('50000000000000'));
+const numberOfShares = toBN('1000000000000000');
+const sharePrice = toBN(toWei("120", 'finney'));
+const remaining = sharePrice.sub(toBN('50000000000000'));
 
 const OLTokenContract = artifacts.require("./test/OLT");
 
@@ -92,7 +95,7 @@ async function addDefaultAdapters(dao, unitPrice=sharePrice, nbShares=numberOfSh
 async function createDao(senderAccount, unitPrice=sharePrice, nbShares=numberOfShares, votingPeriod=10, gracePeriod=1, tokenAddr = ETH_TOKEN) {
     let lib = await FlagHelperLib.new();
     await DaoRegistry.link("FlagHelper128", lib.address);
-    let dao = await DaoRegistry.new({ from: senderAccount, gasPrice: web3.utils.toBN("0") });
+    let dao = await DaoRegistry.new({ from: senderAccount, gasPrice: toBN("0") });
     let receipt = await web3.eth.getTransactionReceipt(dao.transactionHash);
     console.log('gas used for dao:', receipt && receipt.gasUsed);
     await addDefaultAdapters(dao, unitPrice, nbShares, votingPeriod, gracePeriod, tokenAddr);
@@ -139,12 +142,22 @@ async function advanceTime(time) {
     });
 }
 
+async function getContract(dao, id, contractFactory) {
+  const address = await dao.getAdapterAddress(sha3(id));
+  return await contractFactory.at(address);
+}
+
 module.exports = {
   prepareSmartContracts,
   advanceTime,
   createDao,
   addDefaultAdapters,
+  getContract,
   entry,
+  sha3,
+  toBN,
+  toWei,
+  fromUtf8,
   GUILD,
   TOTAL,
   DAI_TOKEN,

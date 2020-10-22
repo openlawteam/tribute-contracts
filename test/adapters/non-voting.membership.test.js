@@ -22,19 +22,18 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
  */
 const {
+  sha3,
+  toBN,
   advanceTime,
   createDao,
   GUILD,
   LOOT,
-  SHARES,
   sharePrice,
   remaining,
   OLTokenContract,
   OnboardingContract,
   VotingContract,
 } = require("../../utils/DaoFactory.js");
-const toBN = web3.utils.toBN;
-const sha3 = web3.utils.sha3;
 
 contract('LAOLAND - Non Voting Onboarding Adapter', async accounts => {
 

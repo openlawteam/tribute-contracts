@@ -21,9 +21,7 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
  */
-const {advanceTime, createDao, GUILD, SHARES, sharePrice, remaining, numberOfShares, OnboardingContract, VotingContract} = require('../../utils/DaoFactory.js');
-const toBN = web3.utils.toBN;
-const sha3 = web3.utils.sha3;
+const {sha3, toBN, advanceTime, createDao, GUILD, SHARES, sharePrice, remaining, numberOfShares, OnboardingContract, VotingContract} = require('../../utils/DaoFactory.js');
 
 contract('LAOLAND - Onboarding Adapter', async accounts => {
 
