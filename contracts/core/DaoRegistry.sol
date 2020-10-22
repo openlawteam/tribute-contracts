@@ -238,10 +238,7 @@ contract DaoRegistry is DaoConstants, AdapterGuard {
     {
         Member storage member = members[memberAddr];
         uint128 flags = member.flags;
-        require(
-            flags.getFlag(FlagHelper.Flag.EXISTS),
-            "member does not exist"
-        );
+        require(flags.getFlag(FlagHelper.Flag.EXISTS), "member does not exist");
         if (!flags.getFlag(FlagHelper.Flag.JAILED)) {
             member.flags = flags.setFlag(FlagHelper.Flag.JAILED, true);
             _createNewDelegateCheckpoint(memberAddr, address(1)); // we do this to avoid the member to vote at that point in time. We use 1 instead of 0 to avoid existence check with this
@@ -254,10 +251,7 @@ contract DaoRegistry is DaoConstants, AdapterGuard {
     {
         Member storage member = members[memberAddr];
         uint128 flags = member.flags;
-        require(
-            flags.getFlag(FlagHelper.Flag.EXISTS),
-            "member does not exist"
-        );
+        require(flags.getFlag(FlagHelper.Flag.EXISTS), "member does not exist");
         if (flags.getFlag(FlagHelper.Flag.JAILED)) {
             member.flags = flags.setFlag(FlagHelper.Flag.JAILED, false);
             _createNewDelegateCheckpoint(
@@ -271,11 +265,7 @@ contract DaoRegistry is DaoConstants, AdapterGuard {
         address _actionTo,
         uint256 _actionValue,
         bytes calldata _actionData
-    )
-        external
-        hasAccess(this, FlagHelper.Flag.EXECUTE)
-        returns (bytes memory)
-    {
+    ) external hasAccess(this, FlagHelper.Flag.EXECUTE) returns (bytes memory) {
         (bool success, bytes memory retData) = _actionTo.call{
             value: _actionValue
         }(_actionData);
@@ -555,10 +545,7 @@ contract DaoRegistry is DaoConstants, AdapterGuard {
 
         Member storage member = members[user];
         if (member.delegateKey == address(0x0)) {
-            member.flags = member.flags.setFlag(
-                FlagHelper.Flag.EXISTS,
-                true
-            );
+            member.flags = member.flags.setFlag(FlagHelper.Flag.EXISTS, true);
             member.delegateKey = user;
             memberAddressesByDelegatedKey[member.delegateKey] = user;
         }
