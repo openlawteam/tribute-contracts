@@ -416,14 +416,6 @@ contract DaoRegistry is DaoConstants, AdapterGuard {
         return proposals[proposalId].flags.getFlag(flag);
     }
 
-    function memberAddress(address delegateKey)
-        external
-        view
-        returns (address)
-    {
-        return memberAddressesByDelegatedKey[delegateKey];
-    }
-
     function updateDelegateKey(address memberAddr, address newDelegateKey)
         external
         hasAccess(this, FlagHelper.Flag.UPDATE_DELEGATE_KEY)
@@ -576,27 +568,6 @@ contract DaoRegistry is DaoConstants, AdapterGuard {
     ) public hasAccess(this, FlagHelper.Flag.INTERNAL_TRANSFER) {
         _subtractFromBalanceInternal(from, token, amount);
         _addToBalanceInternal(to, token, amount);
-    }
-
-    /**
-     * Internal utility
-     */
-
-    /**
-     * @notice Gets the current votes balance for `account`
-     * @param account The address to get votes balance
-     * @return The number of current votes for `account`
-     */
-    function getCurrentAmount(address account, address tokenAddr)
-        external
-        view
-        returns (uint256)
-    {
-        uint32 nCheckpoints = _bank.numCheckpoints[tokenAddr][account];
-        return
-            nCheckpoints > 0
-                ? _bank.checkpoints[tokenAddr][account][nCheckpoints - 1].amount
-                : 0;
     }
 
     /**

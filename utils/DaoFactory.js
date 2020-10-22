@@ -78,13 +78,13 @@ async function addDefaultAdapters(dao, unitPrice=sharePrice, nbShares=numberOfSh
     await daoFactory.addAdapters(
       dao.address,
       [
-        entry("voting", voting, {}), 
-        entry("ragequit", ragequit, {SUB_FROM_BALANCE: true, JAIL_MEMBER: true, UNJAIL_MEMBER: true, SUB_FROM_BALANCE: true, INTERNAL_TRANSFER: true}),
+        entry("voting", voting, {}),
+        entry("ragequit", ragequit, {SUB_FROM_BALANCE: true, JAIL_MEMBER: true, UNJAIL_MEMBER: true, INTERNAL_TRANSFER: true}),
         entry("managing", managing, {SUBMIT_PROPOSAL: true, PROCESS_PROPOSAL: true, SPONSOR_PROPOSAL: true, REMOVE_ADAPTER: true, ADD_ADAPTER: true}),
         entry("financing", financing, {SUBMIT_PROPOSAL:true, SPONSOR_PROPOSAL: true, PROCESS_PROPOSAL: true, ADD_TO_BALANCE:true , SUB_FROM_BALANCE:true}),
         entry("onboarding", onboarding, {CANCEL_PROPOSAL:true, SUBMIT_PROPOSAL:true, SPONSOR_PROPOSAL: true, PROCESS_PROPOSAL: true, ADD_TO_BALANCE:true, UPDATE_DELEGATE_KEY: true})
     ])
-    //TODO: configure for loot and shares
+    
     await onboarding.configureDao(dao.address, SHARES, unitPrice, nbShares, tokenAddr);
     await onboarding.configureDao(dao.address, LOOT, unitPrice, nbShares, tokenAddr);
     await voting.configureDao(dao.address, votingPeriod, gracePeriod);
