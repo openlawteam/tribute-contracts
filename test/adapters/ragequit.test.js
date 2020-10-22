@@ -22,6 +22,9 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
  */
 const {
+  sha3,
+  toBN,
+  fromUtf8,
   advanceTime,
   createDao,
   sharePrice,
@@ -35,8 +38,6 @@ const {
   RagequitContract,
   FinancingContract
 } = require("../../utils/DaoFactory.js");
-const toBN = web3.utils.toBN;
-const sha3 = web3.utils.sha3;
 
 contract('LAOLAND - Ragequit Adapter', async accounts => {
 
@@ -230,7 +231,7 @@ it("should be possible to a member to ragequit if the member voted YES on a prop
 
     //Create Financing Request
     let requestedAmount = toBN(50000);
-    await financing.createFinancingRequest(dao.address, applicant, ETH_TOKEN, requestedAmount, web3.utils.fromUtf8(""));
+    await financing.createFinancingRequest(dao.address, applicant, ETH_TOKEN, requestedAmount, fromUtf8(""));
 
     //Get the new proposalId from event log
     pastEvents = await dao.getPastEvents();
@@ -293,7 +294,7 @@ it("should be possible to a member to ragequit if the member voted YES on a prop
       applicant,
       ETH_TOKEN,
       requestedAmount,
-      web3.utils.fromUtf8("")
+      fromUtf8("")
     );
 
     //Get the new proposalId from event log
