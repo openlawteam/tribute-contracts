@@ -238,7 +238,7 @@ contract OnboardingContract is
         }
     }
 
-    function wihdrawFailedProposal(DaoRegistry dao, uint256 proposalId)
+    function withdrawFailedProposal(DaoRegistry dao, uint256 proposalId)
         external
         override
         onlyMember(dao)
