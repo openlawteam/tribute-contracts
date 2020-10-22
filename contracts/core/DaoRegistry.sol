@@ -476,6 +476,10 @@ contract DaoRegistry is DaoConstants, AdapterGuard {
             "proposal is cancelled"
         );
         require(
+            !flags.getFlag(FlagHelper128.Flag.WITHDRAWN),
+            "proposal is withdrawn"
+        );
+        require(
             flags.getFlag(FlagHelper128.Flag.SPONSORED),
             "proposal not sponsored"
         );
