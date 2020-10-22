@@ -369,7 +369,10 @@ contract DaoRegistry is DaoConstants, AdapterGuard {
     }
 
     /// @dev - Proposal: cancel a proposal that has been submitted to the registry
-    function withdrawProposal(uint256 _proposalId) external onlyAdapter(this) {
+    function withdrawProposal(uint256 _proposalId)
+        external
+        hasAccess(this, FlagHelper128.Flag.WITHDRAW_PROPOSAL)
+    {
         require(
             _proposalId < type(uint64).max,
             "proposal Id should only be uint64"
