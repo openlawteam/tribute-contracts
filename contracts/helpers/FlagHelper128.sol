@@ -48,7 +48,7 @@ library FlagHelper128 {
         ADD_TO_BALANCE,
         SUB_FROM_BALANCE,
         INTERNAL_TRANSFER,
-				WITHDRAWN
+        WITHDRAWN
     }
 
     //helper

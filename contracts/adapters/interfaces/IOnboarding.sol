@@ -44,7 +44,8 @@ interface IOnboarding {
 
     function cancelProposal(DaoRegistry dao, uint256 proposalId) external;
 
-    function wihdrawFailedProposal(DaoRegistry dao, uint256 proposalId) external;
+    function wihdrawFailedProposal(DaoRegistry dao, uint256 proposalId)
+        external;
 
     function processProposal(DaoRegistry dao, uint256 proposalId) external;
 }

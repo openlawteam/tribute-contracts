@@ -266,7 +266,11 @@ contract OnboardingContract is
         } else {
             IERC20 token = IERC20(tokenAddr);
             require(
-                token.transferFrom(address(this), proposal.proposer, proposal.amount),
+                token.transferFrom(
+                    address(this),
+                    proposal.proposer,
+                    proposal.amount
+                ),
                 "ERC20 failed transferFrom"
             );
         }
