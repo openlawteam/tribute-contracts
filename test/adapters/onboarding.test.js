@@ -34,7 +34,7 @@ contract('LAOLAND - Onboarding Adapter', async accounts => {
     let dao = await createDao(myAccount);
     
     const onboarding = await getContract(dao, 'onboarding', OnboardingContract);
-    const onboarding = await getContract(dao, 'voting', VotingContract);
+    const voting = await getContract(dao, 'voting', VotingContract);
 
     await onboarding.onboard(dao.address, otherAccount, SHARES, 0, {from:myAccount,value:sharePrice.mul(toBN(3)).add(remaining), gasPrice: toBN("0")});
     await onboarding.sponsorProposal(dao.address, 0, [], {from: myAccount, gasPrice: toBN("0")});
