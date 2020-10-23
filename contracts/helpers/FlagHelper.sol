@@ -61,9 +61,9 @@ library FlagHelper {
 
         if (getFlag(flags, flag) != value) {
             if (value) {
-                return flags + 2 ** uint8(flag);
+                return flags + 2**uint8(flag);
             } else {
-                return flags - 2 ** uint8(flag);
+                return flags - 2**uint8(flag);
             }
         }
     }
