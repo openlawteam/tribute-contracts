@@ -9,7 +9,6 @@ import "../adapters/interfaces/IVoting.sol";
 import "../utils/SafeMath.sol";
 import "../guards/MemberGuard.sol";
 import "../guards/AdapterGuard.sol";
-import "../guards/DaoGuard.sol";
 
 /**
 MIT License
@@ -39,8 +38,7 @@ contract OnboardingContract is
     IOnboarding,
     DaoConstants,
     MemberGuard,
-    AdapterGuard,
-    DaoGuard
+    AdapterGuard
 {
     using SafeMath for uint256;
 
