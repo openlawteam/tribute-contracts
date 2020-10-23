@@ -409,7 +409,7 @@ contract DaoRegistry is DaoConstants, AdapterGuard {
             flags.getFlag(FlagHelper128.Flag.EXISTS),
             "proposal does not exist for this dao"
         );
-        
+
         require(
             !flags.getFlag(FlagHelper128.Flag.PROCESSED),
             "proposal already processed"

@@ -252,9 +252,9 @@ contract OnboardingContract is
 
         IVoting votingContract = IVoting(dao.getAdapterAddress(VOTING));
         uint256 voteResult = votingContract.voteResult(dao, proposalId);
-        
+
         ProposalDetails storage proposal = proposals[address(dao)][proposalId];
-        if(voteResult == 2) {
+        if (voteResult == 2) {
             _mintTokensToMember(
                 dao,
                 proposal.tokenToMint,
