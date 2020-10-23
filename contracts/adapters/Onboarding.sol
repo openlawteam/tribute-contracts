@@ -9,7 +9,6 @@ import "../adapters/interfaces/IVoting.sol";
 import "../utils/SafeMath.sol";
 import "../guards/MemberGuard.sol";
 import "../guards/AdapterGuard.sol";
-import "../guards/DaoGuard.sol";
 
 /**
 MIT License
@@ -39,8 +38,7 @@ contract OnboardingContract is
     IOnboarding,
     DaoConstants,
     MemberGuard,
-    AdapterGuard,
-    DaoGuard
+    AdapterGuard
 {
     using SafeMath for uint256;
 
@@ -200,18 +198,21 @@ contract OnboardingContract is
         dao.sponsorProposal(proposalId, msg.sender);
     }
 
-    function cancelProposal(DaoRegistry dao, uint256 proposalId)
+    function cancelProposal(DaoRegistry dao, uint256 _proposalId)
         external
         override
         onlyMember(dao)
     {
+        require(_proposalId < type(uint64).max, "proposalId too big");
+        uint64 proposalId = uint64(_proposalId);
+
         require(
             proposals[address(dao)][proposalId].id == proposalId,
             "proposal does not exist"
         );
 
         require(
-            !dao.isProposalSponsored(proposalId),
+            !dao.getProposalFlag(proposalId, FlagHelper.Flag.SPONSORED),
             "proposal already sponsored"
         );
 
@@ -235,19 +236,20 @@ contract OnboardingContract is
         }
     }
 
-    function processProposal(DaoRegistry dao, uint256 proposalId)
+    function processProposal(DaoRegistry dao, uint256 _proposalId)
         external
         override
         onlyMember(dao)
     {
+        require(_proposalId < type(uint64).max, "proposalId too big");
+        uint64 proposalId = uint64(_proposalId);
         require(
             proposals[address(dao)][proposalId].id == proposalId,
             "proposal does not exist"
         );
-
         require(
-            !dao.isProposalProcessed(proposalId),
-            "proposal has been already processed"
+            !dao.getProposalFlag(proposalId, FlagHelper.Flag.PROCESSED),
+            "proposal already processed"
         );
 
         IVoting votingContract = IVoting(dao.getAdapterAddress(VOTING));

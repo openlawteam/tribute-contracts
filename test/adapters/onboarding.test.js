@@ -21,7 +21,8 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
  */
-const {sha3, toBN, advanceTime, createDao, GUILD, SHARES, sharePrice, remaining, numberOfShares, OnboardingContract, VotingContract} = require('../../utils/DaoFactory.js');
+const {toBN, advanceTime, createDao, getContract, GUILD, SHARES, sharePrice, remaining, numberOfShares, OnboardingContract, VotingContract, ETH_TOKEN} = require('../../utils/DaoFactory.js');
+const {checkBalance} = require('../../utils/TestUtils.js');
 
 contract('LAOLAND - Onboarding Adapter', async accounts => {
 
@@ -32,11 +33,8 @@ contract('LAOLAND - Onboarding Adapter', async accounts => {
     
     let dao = await createDao(myAccount);
     
-    const onboardingAddress = await dao.getAdapterAddress(sha3('onboarding'));
-    const onboarding = await OnboardingContract.at(onboardingAddress);
-
-    const votingAddress = await dao.getAdapterAddress(sha3('voting'));
-    const voting = await VotingContract.at(votingAddress);
+    const onboarding = await getContract(dao, 'onboarding', OnboardingContract);
+    const voting = await getContract(dao, 'voting', VotingContract);
 
     await onboarding.onboard(dao.address, otherAccount, SHARES, 0, {from:myAccount,value:sharePrice.mul(toBN(3)).add(remaining), gasPrice: toBN("0")});
     await onboarding.sponsorProposal(dao.address, 0, [], {from: myAccount, gasPrice: toBN("0")});
@@ -58,33 +56,26 @@ contract('LAOLAND - Onboarding Adapter', async accounts => {
     assert.equal(myAccountShares.toString(), "1");
     assert.equal(otherAccountShares.toString(), numberOfShares.mul(toBN("3")).toString());
     assert.equal(nonMemberAccountShares.toString(), "0");
-
-    const guildBalance = await dao.balanceOf(GUILD, "0x0000000000000000000000000000000000000000");
-    assert.equal(guildBalance.toString(), sharePrice.mul(toBN("3")).toString());
+    await checkBalance(dao, GUILD, ETH_TOKEN, sharePrice.mul(toBN("3")));
   })
 
   it("should be possible to cancel a proposal", async () => {
     const myAccount = accounts[1];
     const otherAccount = accounts[2];
+    const dao = await createDao(myAccount);
     
-    let dao = await createDao(myAccount);
-    
-    const onboardingAddress = await dao.getAdapterAddress(sha3('onboarding'));
-    const onboarding = await OnboardingContract.at(onboardingAddress);
-
-    const votingAddress = await dao.getAdapterAddress(sha3('voting'));
-    const voting = await VotingContract.at(votingAddress);
+    const onboarding = await getContract(dao, 'onboarding', OnboardingContract);
 
     await onboarding.onboard(dao.address, otherAccount, SHARES, 0, {from:myAccount,value:sharePrice.mul(toBN(3)).add(remaining), gasPrice: toBN("0")});
 
 		await onboarding.cancelProposal(dao.address, 0, {from: myAccount, gasPrice: toBN("0")});
-    const isProcessed = await dao.isProposalProcessed(toBN("0"));
+    const isProcessed = await dao.getProposalFlag(toBN("0"), toBN("2")); // 2 is processed flag index
 		assert.equal(isProcessed, true);
 
     try {
       await onboarding.processProposal(dao.address, 0, {from: myAccount, gasPrice: toBN("0")});
     } catch(err) {
-      assert.equal(err.reason, "proposal has been already processed");
+      assert.equal(err.reason, "proposal already processed");
     }
     
     const myAccountShares = await dao.nbShares(myAccount);
@@ -96,25 +87,23 @@ contract('LAOLAND - Onboarding Adapter', async accounts => {
     assert.equal(guildBalance.toString(), sharePrice.mul(toBN("0")).toString());
   })
 
-  it("should be possible to withdraw a proposal", async () => {
+  it("should be possible to cancel an onboarding proposal", async () => {
     const myAccount = accounts[1];
-    const otherAccount = accounts[2];
-    
+    const otherAccount = accounts[2];  
     let dao = await createDao(myAccount);
+  
+    const onboarding = await getContract(dao, 'onboarding', OnboardingContract);
     
-    const onboardingAddress = await dao.getAdapterAddress(sha3('onboarding'));
-    const onboarding = await OnboardingContract.at(onboardingAddress);
-
     await onboarding.onboard(dao.address, otherAccount, SHARES, 0, {from:myAccount,value:sharePrice.mul(toBN(3)).add(remaining), gasPrice: toBN("0")});
-
 		await onboarding.cancelProposal(dao.address, 0, {from: myAccount, gasPrice: toBN("0")});
-    const isProcessed = await dao.isProposalProcessed(toBN("0"));
+
+    const isProcessed = await dao.getProposalFlag(toBN("0"), toBN("2")); // 2 is processed flag index
 		assert.equal(isProcessed, true);
 
     try {
-      await onboarding.processProposal(dao.address, 0, {from: myAccount, gasPrice: toBN("0")});
+      await onboarding.sponsorProposal(dao.address, 0, [], {from: myAccount, gasPrice: toBN("0")});
     } catch(err) {
-      assert.equal(err.reason, "proposal has been already processed");
+      assert.equal(err.reason, "proposal already processed");
     }
     
     const myAccountShares = await dao.nbShares(myAccount);

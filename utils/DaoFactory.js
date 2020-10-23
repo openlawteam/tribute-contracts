@@ -39,7 +39,7 @@ const remaining = sharePrice.sub(toBN('50000000000000'));
 
 const OLTokenContract = artifacts.require("./test/OLT");
 
-const FlagHelperLib = artifacts.require('./helpers/FlagHelper128');
+const FlagHelperLib = artifacts.require('./helpers/FlagHelper');
 const DaoFactory = artifacts.require('./core/DaoFactory');
 const DaoRegistry = artifacts.require("./core/DaoRegistry");
 const VotingContract = artifacts.require('./adapters/VotingContract');
@@ -78,13 +78,13 @@ async function addDefaultAdapters(dao, unitPrice=sharePrice, nbShares=numberOfSh
     await daoFactory.addAdapters(
       dao.address,
       [
-        entry("voting", voting, {}), 
-        entry("ragequit", ragequit, {SUB_FROM_BALANCE: true, JAIL_MEMBER: true, UNJAIL_MEMBER: true, SUB_FROM_BALANCE: true, INTERNAL_TRANSFER: true}),
+        entry("voting", voting, {}),
+        entry("ragequit", ragequit, {SUB_FROM_BALANCE: true, JAIL_MEMBER: true, UNJAIL_MEMBER: true, INTERNAL_TRANSFER: true}),
         entry("managing", managing, {SUBMIT_PROPOSAL: true, PROCESS_PROPOSAL: true, SPONSOR_PROPOSAL: true, REMOVE_ADAPTER: true, ADD_ADAPTER: true}),
         entry("financing", financing, {SUBMIT_PROPOSAL:true, SPONSOR_PROPOSAL: true, PROCESS_PROPOSAL: true, ADD_TO_BALANCE:true , SUB_FROM_BALANCE:true}),
         entry("onboarding", onboarding, {SUBMIT_PROPOSAL:true, SPONSOR_PROPOSAL: true, PROCESS_PROPOSAL: true, ADD_TO_BALANCE:true, UPDATE_DELEGATE_KEY: true})
     ])
-    //TODO: configure for loot and shares
+    
     await onboarding.configureDao(dao.address, SHARES, unitPrice, nbShares, tokenAddr);
     await onboarding.configureDao(dao.address, LOOT, unitPrice, nbShares, tokenAddr);
     await voting.configureDao(dao.address, votingPeriod, gracePeriod);
@@ -94,7 +94,7 @@ async function addDefaultAdapters(dao, unitPrice=sharePrice, nbShares=numberOfSh
 
 async function createDao(senderAccount, unitPrice=sharePrice, nbShares=numberOfShares, votingPeriod=10, gracePeriod=1, tokenAddr = ETH_TOKEN) {
     let lib = await FlagHelperLib.new();
-    await DaoRegistry.link("FlagHelper128", lib.address);
+    await DaoRegistry.link("FlagHelper", lib.address);
     let dao = await DaoRegistry.new({ from: senderAccount, gasPrice: toBN("0") });
     let receipt = await web3.eth.getTransactionReceipt(dao.transactionHash);
     console.log('gas used for dao:', receipt && receipt.gasUsed);

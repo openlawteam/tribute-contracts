@@ -29,7 +29,7 @@ const OffchainVotingContract = artifacts.require('./adapters/OffchainVotingContr
 async function createOffchainVotingDao(senderAccount, unitPrice=sharePrice, nbShares=numberOfShares, votingPeriod=10, gracePeriod=1) {
   let lib = await FlagHelperLib.new();
   const daoFactory = await DaoFactory.new();
-  await DaoRegistry.link("FlagHelper128", lib.address);
+  await DaoRegistry.link("FlagHelper", lib.address);
   let dao = await DaoRegistry.new({ from: senderAccount, gasPrice: toBN("0") });
   await addDefaultAdapters(dao, unitPrice, nbShares, votingPeriod, gracePeriod);
   const votingAddress = await dao.getAdapterAddress(sha3("voting"));

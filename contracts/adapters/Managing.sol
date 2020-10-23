@@ -41,7 +41,6 @@ contract ManagingContract is IManaging, DaoConstants, MemberGuard {
         bytes32 moduleId;
         address moduleAddress;
         uint128 flags;
-        bool processed;
     }
 
     mapping(uint256 => ProposalDetails) public proposals;
@@ -76,33 +75,41 @@ contract ManagingContract is IManaging, DaoConstants, MemberGuard {
         proposal.applicant = msg.sender;
         proposal.moduleId = moduleId;
         proposal.moduleAddress = moduleAddress;
-        proposal.processed = false;
         proposal.flags = flags;
         return proposalId;
     }
 
     function sponsorProposal(
         DaoRegistry dao,
-        uint256 proposalId,
+        uint256 _proposalId,
         bytes calldata data
     ) external override onlyMember(dao) {
         IVoting votingContract = IVoting(dao.getAdapterAddress(VOTING));
-        votingContract.startNewVotingForProposal(dao, proposalId, data);
+        votingContract.startNewVotingForProposal(dao, _proposalId, data);
 
-        dao.sponsorProposal(proposalId, msg.sender);
+        dao.sponsorProposal(_proposalId, msg.sender);
     }
 
-    function processProposal(DaoRegistry dao, uint256 proposalId)
+    function processProposal(DaoRegistry dao, uint256 _proposalId)
         external
         override
         onlyMember(dao)
     {
-        ProposalDetails memory proposal = proposals[proposalId];
-        require(!proposal.processed, "proposal already processed");
+        require(_proposalId < type(uint64).max, "proposalId too big");
+        uint64 proposalId = uint64(_proposalId);
+        ProposalDetails memory proposal = proposals[_proposalId];
+        require(
+            !dao.getProposalFlag(proposalId, FlagHelper.Flag.PROCESSED),
+            "proposal already processed"
+        );
+        require(
+            dao.getProposalFlag(proposalId, FlagHelper.Flag.SPONSORED),
+            "proposal not sponsored yet"
+        );
 
         IVoting votingContract = IVoting(dao.getAdapterAddress(VOTING));
         require(
-            votingContract.voteResult(dao, proposalId) == 2,
+            votingContract.voteResult(dao, _proposalId) == 2,
             "proposal did not pass yet"
         );
 
@@ -112,7 +119,6 @@ contract ManagingContract is IManaging, DaoConstants, MemberGuard {
             proposal.moduleAddress,
             proposal.flags
         );
-        proposals[proposalId].processed = true;
-        dao.processProposal(proposalId);
+        dao.processProposal(_proposalId);
     }
 }

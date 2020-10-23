@@ -2,7 +2,7 @@ pragma solidity ^0.7.0;
 
 // SPDX-License-Identifier: MIT
 
-import "../helpers/FlagHelper128.sol";
+import "../helpers/FlagHelper.sol";
 import "../utils/SafeMath.sol";
 import "./DaoConstants.sol";
 import "../guards/AdapterGuard.sol";
@@ -36,7 +36,7 @@ contract DaoRegistry is DaoConstants, AdapterGuard {
     /*
      * LIBRARIES
      */
-    using FlagHelper128 for uint128;
+    using FlagHelper for uint256;
     using SafeMath for uint256;
 
     enum DaoState {CREATION, READY}
@@ -47,33 +47,21 @@ contract DaoRegistry is DaoConstants, AdapterGuard {
     /// @dev - Events for Proposals
     event SubmittedProposal(
         uint64 proposalId,
-        uint128 flags,
+        uint256 flags,
         address applicant
     );
     event SponsoredProposal(
-        uint64 proposalId,
-        uint128 flags,
+        uint256 proposalId,
+        uint256 flags,
         uint64 startingTime
     );
     event ProcessedProposal(
-        uint64 proposalId,
+        uint256 proposalId,
         uint64 processingTime,
-        uint128 flags
-    );
-    event CancelledProposal(
-        uint64 proposalId,
-        uint64 processingTime,
-        uint128 flags
-    );
-    event WithdrawnProposal(
-        uint64 proposalId,
-        uint64 processingTime,
-        uint128 flags
+        uint256 flags
     );
 
     /// @dev - Events for Members
-    event UpdateMemberShares(address member, uint256 shares);
-    event UpdateMemberLoot(address member, uint256 loot);
     event UpdateDelegateKey(
         address indexed memberAddress,
         address newDelegateKey
@@ -99,12 +87,12 @@ contract DaoRegistry is DaoConstants, AdapterGuard {
         // the structure to track all the proposals in the DAO
         address applicant; // the address of the sender that submitted the proposal
         address adapterAddress; // the adapter address that called the functions to change the DAO state
-        uint128 flags; // flags to track the state of the proposal: exist, sponsored, processed, canceled, etc.
+        uint256 flags; // flags to track the state of the proposal: exist, sponsored, processed, canceled, etc.
     }
 
     struct Member {
         // the structure to track all the members in the DAO
-        uint128 flags; // flags to track the state of the member: exist, jailed, etc
+        uint256 flags; // flags to track the state of the member: exist, jailed, etc
         address delegateKey; // ?
     }
 
@@ -132,7 +120,7 @@ contract DaoRegistry is DaoConstants, AdapterGuard {
 
     struct AdapterDetails {
         bytes32 id;
-        uint128 flags;
+        uint256 flags;
     }
 
     /*
@@ -159,7 +147,7 @@ contract DaoRegistry is DaoConstants, AdapterGuard {
     constructor() {
         address memberAddr = msg.sender;
         Member storage member = members[memberAddr];
-        member.flags = member.flags.setFlag(FlagHelper128.Flag.EXISTS, true);
+        member.flags = member.flags.setFlag(FlagHelper.Flag.EXISTS, true);
         member.delegateKey = memberAddr;
         memberAddressesByDelegatedKey[memberAddr] = memberAddr;
 
@@ -172,11 +160,6 @@ contract DaoRegistry is DaoConstants, AdapterGuard {
         _createNewAmountCheckpoint(TOTAL, SHARES);
     }
 
-    /**
-    /*
-     * PUBLIC NON RESTRICTED FUNCTIONS
-     */
-
     receive() external payable {
         revert("you cannot send money back directly");
     }
@@ -188,11 +171,8 @@ contract DaoRegistry is DaoConstants, AdapterGuard {
     function addAdapter(
         bytes32 adapterId,
         address adapterAddress,
-        uint256 _flags
-    ) external hasAccess(this, FlagHelper128.Flag.ADD_ADAPTER) {
-        require(_flags < type(uint128).max, "flags params overflow");
-        uint128 flags = uint128(_flags);
-
+        uint256 flags
+    ) external hasAccess(this, FlagHelper.Flag.ADD_ADAPTER) {
         require(adapterId != bytes32(0), "adapterId must not be empty");
         require(
             adapterAddress != address(0x0),
@@ -209,7 +189,7 @@ contract DaoRegistry is DaoConstants, AdapterGuard {
 
     function removeAdapter(bytes32 adapterId)
         external
-        hasAccess(this, FlagHelper128.Flag.REMOVE_ADAPTER)
+        hasAccess(this, FlagHelper.Flag.REMOVE_ADAPTER)
     {
         require(adapterId != bytes32(0), "adapterId must not be empty");
         require(
@@ -224,7 +204,7 @@ contract DaoRegistry is DaoConstants, AdapterGuard {
         return inverseRegistry[adapterAddress].id != bytes32(0);
     }
 
-    function hasAdapterAccess(address adapterAddress, FlagHelper128.Flag flag)
+    function hasAdapterAccess(address adapterAddress, FlagHelper.Flag flag)
         public
         view
         returns (bool)
@@ -232,10 +212,6 @@ contract DaoRegistry is DaoConstants, AdapterGuard {
         return
             inverseRegistry[adapterAddress].id != bytes32(0) &&
             inverseRegistry[adapterAddress].flags.getFlag(flag);
-    }
-
-    function isDao(address daoAddress) public view returns (bool) {
-        return daoAddress == address(this);
     }
 
     function getAdapterAddress(bytes32 adapterId)
@@ -248,32 +224,26 @@ contract DaoRegistry is DaoConstants, AdapterGuard {
 
     function jailMember(address memberAddr)
         external
-        hasAccess(this, FlagHelper128.Flag.JAIL_MEMBER)
+        hasAccess(this, FlagHelper.Flag.JAIL_MEMBER)
     {
         Member storage member = members[memberAddr];
-        uint128 flags = member.flags;
-        require(
-            flags.getFlag(FlagHelper128.Flag.EXISTS),
-            "member does not exist"
-        );
-        if (!flags.getFlag(FlagHelper128.Flag.JAILED)) {
-            member.flags = flags.setFlag(FlagHelper128.Flag.JAILED, true);
+        uint256 flags = member.flags;
+        require(flags.getFlag(FlagHelper.Flag.EXISTS), "member does not exist");
+        if (!flags.getFlag(FlagHelper.Flag.JAILED)) {
+            member.flags = flags.setFlag(FlagHelper.Flag.JAILED, true);
             _createNewDelegateCheckpoint(memberAddr, address(1)); // we do this to avoid the member to vote at that point in time. We use 1 instead of 0 to avoid existence check with this
         }
     }
 
     function unjailMember(address memberAddr)
         external
-        hasAccess(this, FlagHelper128.Flag.UNJAIL_MEMBER)
+        hasAccess(this, FlagHelper.Flag.UNJAIL_MEMBER)
     {
         Member storage member = members[memberAddr];
-        uint128 flags = member.flags;
-        require(
-            flags.getFlag(FlagHelper128.Flag.EXISTS),
-            "member does not exist"
-        );
-        if (flags.getFlag(FlagHelper128.Flag.JAILED)) {
-            member.flags = flags.setFlag(FlagHelper128.Flag.JAILED, false);
+        uint256 flags = member.flags;
+        require(flags.getFlag(FlagHelper.Flag.EXISTS), "member does not exist");
+        if (flags.getFlag(FlagHelper.Flag.JAILED)) {
+            member.flags = flags.setFlag(FlagHelper.Flag.JAILED, false);
             _createNewDelegateCheckpoint(
                 memberAddr,
                 members[memberAddr].delegateKey
@@ -285,11 +255,7 @@ contract DaoRegistry is DaoConstants, AdapterGuard {
         address _actionTo,
         uint256 _actionValue,
         bytes calldata _actionData
-    )
-        external
-        hasAccess(this, FlagHelper128.Flag.EXECUTE)
-        returns (bytes memory)
-    {
+    ) external hasAccess(this, FlagHelper.Flag.EXECUTE) returns (bytes memory) {
         (bool success, bytes memory retData) = _actionTo.call{
             value: _actionValue
         }(_actionData);
@@ -307,7 +273,7 @@ contract DaoRegistry is DaoConstants, AdapterGuard {
     /// @dev - Proposal: submit proposals to the DAO registry
     function submitProposal(address applicant)
         external
-        hasAccess(this, FlagHelper128.Flag.SUBMIT_PROPOSAL)
+        hasAccess(this, FlagHelper.Flag.SUBMIT_PROPOSAL)
         returns (uint64)
     {
         proposals[proposalCount++] = Proposal(applicant, msg.sender, 1);
@@ -318,61 +284,28 @@ contract DaoRegistry is DaoConstants, AdapterGuard {
         return proposalId;
     }
 
-    function isProposalProcessed(uint256 _proposalId)
-        external
-        view
-        returns (bool)
-    {
-        require(
-            _proposalId < type(uint64).max,
-            "proposal Id should only be uint64"
-        );
-        uint64 proposalId = uint64(_proposalId);
-        return
-            proposals[proposalId].flags.getFlag(FlagHelper128.Flag.PROCESSED);
-    }
-
-    function isProposalSponsored(uint256 _proposalId)
-        external
-        view
-        returns (bool)
-    {
-        require(
-            _proposalId < type(uint64).max,
-            "proposal Id should only be uint64"
-        );
-        uint64 proposalId = uint64(_proposalId);
-        return
-            proposals[proposalId].flags.getFlag(FlagHelper128.Flag.SPONSORED);
-    }
-
     /// @dev - Proposal: sponsor proposals that were submitted to the DAO registry
     function sponsorProposal(uint256 _proposalId, address sponsoringMember)
         external
-        hasAccess(this, FlagHelper128.Flag.SPONSOR_PROPOSAL)
+        hasAccess(this, FlagHelper.Flag.SPONSOR_PROPOSAL)
     {
-        require(
-            _proposalId < type(uint64).max,
-            "proposal Id should only be uint64"
+        Proposal storage proposal = _setProposalFlag(
+            _proposalId,
+            FlagHelper.Flag.SPONSORED
         );
-        uint64 proposalId = uint64(_proposalId);
-        Proposal storage proposal = proposals[proposalId];
-        uint128 flags = proposal.flags;
+
+        uint256 flags = proposal.flags;
 
         require(
             proposal.adapterAddress == msg.sender,
             "only the adapter that submitted the proposal can process it"
         );
         require(
-            flags.getFlag(FlagHelper128.Flag.EXISTS),
+            flags.getFlag(FlagHelper.Flag.EXISTS),
             "proposal does not exist"
         );
         require(
-            !flags.getFlag(FlagHelper128.Flag.SPONSORED),
-            "proposal must not be sponsored"
-        );
-        require(
-            !flags.getFlag(FlagHelper128.Flag.PROCESSED),
+            !flags.getFlag(FlagHelper.Flag.PROCESSED),
             "proposal must not be processed"
         );
         require(
@@ -380,16 +313,27 @@ contract DaoRegistry is DaoConstants, AdapterGuard {
             "only active members can sponsor proposals"
         );
 
-        flags = flags.setFlag(FlagHelper128.Flag.SPONSORED, true);
-        proposals[proposalId].flags = flags;
-
-        emit SponsoredProposal(proposalId, flags, uint64(block.timestamp));
+        emit SponsoredProposal(_proposalId, flags, uint64(block.timestamp));
     }
 
     /// @dev - Proposal: mark a proposal as processed in the DAO registry
     function processProposal(uint256 _proposalId)
         external
-        hasAccess(this, FlagHelper128.Flag.PROCESS_PROPOSAL)
+        hasAccess(this, FlagHelper.Flag.PROCESS_PROPOSAL)
+    {
+        Proposal storage proposal = _setProposalFlag(
+            _proposalId,
+            FlagHelper.Flag.PROCESSED
+        );
+        uint256 flags = proposal.flags;
+
+        emit ProcessedProposal(_proposalId, uint64(block.timestamp), flags);
+    }
+
+    /// @dev - Proposal: mark a proposal as processed in the DAO registry
+    function _setProposalFlag(uint256 _proposalId, FlagHelper.Flag flag)
+        internal
+        returns (Proposal storage)
     {
         require(
             _proposalId < type(uint64).max,
@@ -401,23 +345,23 @@ contract DaoRegistry is DaoConstants, AdapterGuard {
 
         require(
             proposal.adapterAddress == msg.sender,
-            "only the adapter that submitted the proposal can process it"
+            "only the adapter that submitted the proposal can cancel it"
         );
 
-        uint128 flags = proposal.flags;
+        uint256 flags = proposal.flags;
         require(
-            flags.getFlag(FlagHelper128.Flag.EXISTS),
+            flags.getFlag(FlagHelper.Flag.EXISTS),
             "proposal does not exist for this dao"
         );
 
         require(
-            !flags.getFlag(FlagHelper128.Flag.PROCESSED),
+            !flags.getFlag(FlagHelper.Flag.PROCESSED),
             "proposal already processed"
         );
-        flags = flags.setFlag(FlagHelper128.Flag.PROCESSED, true);
+        flags = flags.setFlag(flag, true);
         proposals[proposalId].flags = flags;
 
-        emit ProcessedProposal(proposalId, uint64(block.timestamp), flags);
+        return proposals[proposalId];
     }
 
     function isInternalToken(address tokenToMint) external view returns (bool) {
@@ -429,26 +373,26 @@ contract DaoRegistry is DaoConstants, AdapterGuard {
      */
     function isActiveMember(address addr) public view returns (bool) {
         address memberAddr = memberAddressesByDelegatedKey[addr];
-        uint128 memberFlags = members[memberAddr].flags;
+        uint256 memberFlags = members[memberAddr].flags;
         return
-            memberFlags.getFlag(FlagHelper128.Flag.EXISTS) &&
-            !memberFlags.getFlag(FlagHelper128.Flag.JAILED) &&
+            memberFlags.getFlag(FlagHelper.Flag.EXISTS) &&
+            !memberFlags.getFlag(FlagHelper.Flag.JAILED) &&
             (balanceOf(memberAddr, SHARES) > 0 ||
                 balanceOf(memberAddr, LOOT) > 0 ||
                 balanceOf(memberAddr, LOCKED_LOOT) > 0);
     }
 
-    function memberAddress(address delegateKey)
+    function getProposalFlag(uint64 proposalId, FlagHelper.Flag flag)
         external
         view
-        returns (address)
+        returns (bool)
     {
-        return memberAddressesByDelegatedKey[delegateKey];
+        return proposals[proposalId].flags.getFlag(flag);
     }
 
     function updateDelegateKey(address memberAddr, address newDelegateKey)
         external
-        hasAccess(this, FlagHelper128.Flag.UPDATE_DELEGATE_KEY)
+        hasAccess(this, FlagHelper.Flag.UPDATE_DELEGATE_KEY)
     {
         require(newDelegateKey != address(0), "newDelegateKey cannot be 0");
 
@@ -467,7 +411,7 @@ contract DaoRegistry is DaoConstants, AdapterGuard {
 
         Member storage member = members[memberAddr];
         require(
-            member.flags.getFlag(FlagHelper128.Flag.EXISTS),
+            member.flags.getFlag(FlagHelper.Flag.EXISTS),
             "member does not exist"
         );
         memberAddressesByDelegatedKey[member.delegateKey] = address(0x0);
@@ -492,7 +436,7 @@ contract DaoRegistry is DaoConstants, AdapterGuard {
 
     function registerPotentialNewToken(address token)
         external
-        hasAccess(this, FlagHelper128.Flag.REGISTER_NEW_TOKEN)
+        hasAccess(this, FlagHelper.Flag.REGISTER_NEW_TOKEN)
     {
         require(isNotReservedAddress(token), "reservedToken");
         require(!_bank.availableInternalTokens[token], "internalToken");
@@ -505,7 +449,7 @@ contract DaoRegistry is DaoConstants, AdapterGuard {
 
     function registerPotentialNewInternalToken(address token)
         external
-        hasAccess(this, FlagHelper128.Flag.REGISTER_NEW_INTERNAL_TOKEN)
+        hasAccess(this, FlagHelper.Flag.REGISTER_NEW_INTERNAL_TOKEN)
     {
         require(isNotReservedAddress(token), "reservedToken");
         require(!_bank.availableTokens[token], "internalToken");
@@ -546,7 +490,7 @@ contract DaoRegistry is DaoConstants, AdapterGuard {
         address user,
         address token,
         uint256 amount
-    ) public hasAccess(this, FlagHelper128.Flag.ADD_TO_BALANCE) {
+    ) public hasAccess(this, FlagHelper.Flag.ADD_TO_BALANCE) {
         _addToBalanceInternal(user, token, amount);
     }
 
@@ -567,10 +511,7 @@ contract DaoRegistry is DaoConstants, AdapterGuard {
 
         Member storage member = members[user];
         if (member.delegateKey == address(0x0)) {
-            member.flags = member.flags.setFlag(
-                FlagHelper128.Flag.EXISTS,
-                true
-            );
+            member.flags = member.flags.setFlag(FlagHelper.Flag.EXISTS, true);
             member.delegateKey = user;
             memberAddressesByDelegatedKey[member.delegateKey] = user;
         }
@@ -580,7 +521,7 @@ contract DaoRegistry is DaoConstants, AdapterGuard {
         address user,
         address token,
         uint256 amount
-    ) public hasAccess(this, FlagHelper128.Flag.SUB_FROM_BALANCE) {
+    ) public hasAccess(this, FlagHelper.Flag.SUB_FROM_BALANCE) {
         _subtractFromBalanceInternal(user, token, amount);
     }
 
@@ -598,30 +539,9 @@ contract DaoRegistry is DaoConstants, AdapterGuard {
         address to,
         address token,
         uint256 amount
-    ) public hasAccess(this, FlagHelper128.Flag.INTERNAL_TRANSFER) {
+    ) public hasAccess(this, FlagHelper.Flag.INTERNAL_TRANSFER) {
         _subtractFromBalanceInternal(from, token, amount);
         _addToBalanceInternal(to, token, amount);
-    }
-
-    /**
-     * Internal utility
-     */
-
-    /**
-     * @notice Gets the current votes balance for `account`
-     * @param account The address to get votes balance
-     * @return The number of current votes for `account`
-     */
-    function getCurrentAmount(address account, address tokenAddr)
-        external
-        view
-        returns (uint256)
-    {
-        uint32 nCheckpoints = _bank.numCheckpoints[tokenAddr][account];
-        return
-            nCheckpoints > 0
-                ? _bank.checkpoints[tokenAddr][account][nCheckpoints - 1].amount
-                : 0;
     }
 
     /**

@@ -8,6 +8,7 @@ import "../core/DaoRegistry.sol";
 import "../adapters/interfaces/IVoting.sol";
 import "../guards/MemberGuard.sol";
 import "../utils/SafeMath.sol";
+import "../helpers/FlagHelper.sol";
 
 /**
 MIT License
@@ -41,7 +42,6 @@ contract FinancingContract is IFinancing, DaoConstants, MemberGuard {
         uint256 amount;
         address token;
         bytes32 details;
-        bool processed;
     }
 
     mapping(address => mapping(uint256 => ProposalDetails)) public proposals;
@@ -74,7 +74,6 @@ contract FinancingContract is IFinancing, DaoConstants, MemberGuard {
         proposal.applicant = applicant;
         proposal.amount = amount;
         proposal.details = details;
-        proposal.processed = false;
         proposal.token = token;
         return proposalId;
     }
@@ -89,13 +88,23 @@ contract FinancingContract is IFinancing, DaoConstants, MemberGuard {
         dao.sponsorProposal(proposalId, msg.sender);
     }
 
-    function processProposal(DaoRegistry dao, uint256 proposalId)
+    function processProposal(DaoRegistry dao, uint256 _proposalId)
         external
         override
         onlyMember(dao)
     {
-        ProposalDetails memory proposal = proposals[address(dao)][proposalId];
-        require(!proposal.processed, "proposal already processed");
+        require(_proposalId < type(uint64).max, "proposalId too big");
+        uint64 proposalId = uint64(_proposalId);
+        ProposalDetails memory details = proposals[address(dao)][proposalId];
+
+        require(
+            !dao.getProposalFlag(proposalId, FlagHelper.Flag.PROCESSED),
+            "proposal already processed"
+        );
+        require(
+            dao.getProposalFlag(proposalId, FlagHelper.Flag.SPONSORED),
+            "proposal not sponsored yet"
+        );
 
         IVoting votingContract = IVoting(dao.getAdapterAddress(VOTING));
         require(
@@ -103,10 +112,8 @@ contract FinancingContract is IFinancing, DaoConstants, MemberGuard {
             "proposal needs to pass"
         );
 
-        proposals[address(dao)][proposalId].processed = true;
-
-        dao.subtractFromBalance(GUILD, proposal.token, proposal.amount);
-        dao.addToBalance(proposal.applicant, proposal.token, proposal.amount);
+        dao.subtractFromBalance(GUILD, details.token, details.amount);
+        dao.addToBalance(details.applicant, details.token, details.amount);
         dao.processProposal(proposalId);
     }
 }
