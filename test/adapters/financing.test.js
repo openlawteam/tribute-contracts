@@ -52,7 +52,7 @@ contract('LAOLAND - Financing Adapter', async accounts => {
     try {
       await onboarding.processProposal(dao.address, proposalId, { from: myAccount, gasPrice: toBN("0") });
     } catch (err) {
-      assert.equal(err.reason, "proposal needs to pass");
+      assert.equal(err.reason, "proposal has not been voted on yet");
     }
 
     await advanceTime(10000);

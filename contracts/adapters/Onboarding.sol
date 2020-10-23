@@ -200,25 +200,25 @@ contract OnboardingContract is
         dao.sponsorProposal(proposalId, msg.sender);
     }
 
-    function cancelProposal(DaoRegistry dao, uint256 proposalId)
+    function cancelProposal(DaoRegistry dao, uint256 _proposalId)
         external
         override
         onlyMember(dao)
     {
+        require(_proposalId < type(uint64).max, "proposalId too big");
+        uint64 proposalId = uint64(_proposalId);
+
         require(
             proposals[address(dao)][proposalId].id == proposalId,
             "proposal does not exist"
         );
 
-        IVoting votingContract = IVoting(dao.getAdapterAddress(VOTING));
-        uint256 votingStatus = votingContract.voteResult(dao, proposalId);
-
         require(
-            votingStatus == 0,
-            "proposal cannot be canceled after voting starts"
+            !dao.getProposalFlag(proposalId, FlagHelper.Flag.SPONSORED),
+            "proposal already sponsored"
         );
 
-        dao.cancelProposal(proposalId);
+        dao.processProposal(proposalId);
 
         ProposalDetails storage proposal = proposals[address(dao)][proposalId];
         address tokenAddr = proposal.token;
@@ -250,27 +250,43 @@ contract OnboardingContract is
             "proposal does not exist"
         );
         require(
-            !dao.getProposalFlag(proposalId, FlagHelper.Flag.CANCELLED),
-            "proposal has been cancelled"
+            !dao.getProposalFlag(proposalId, FlagHelper.Flag.PROCESSED),
+            "proposal has been already processed"
         );
 
         IVoting votingContract = IVoting(dao.getAdapterAddress(VOTING));
-        //TODO: we might need to process even if the vote has failed but just differently
-        require(
-            votingContract.voteResult(dao, proposalId) == 2,
-            "proposal needs to pass"
-        );
+        uint256 voteResult = votingContract.voteResult(dao, proposalId);
 
         ProposalDetails storage proposal = proposals[address(dao)][proposalId];
+        if (voteResult == 2) {
+            _mintTokensToMember(
+                dao,
+                proposal.tokenToMint,
+                proposal.applicant,
+                proposal.sharesRequested
+            );
 
-        _mintTokensToMember(
-            dao,
-            proposal.tokenToMint,
-            proposal.applicant,
-            proposal.sharesRequested
-        );
+            dao.addToBalance(GUILD, ETH_TOKEN, proposal.amount);
+        } else if (voteResult == 3) {
+            address tokenAddr = proposal.token;
 
-        dao.addToBalance(GUILD, ETH_TOKEN, proposal.amount);
+            if (tokenAddr == ETH_TOKEN) {
+                proposal.proposer.transfer(proposal.amount);
+            } else {
+                IERC20 token = IERC20(tokenAddr);
+                require(
+                    token.transferFrom(
+                        address(this),
+                        proposal.proposer,
+                        proposal.amount
+                    ),
+                    "ERC20 failed transferFrom"
+                );
+            }
+        } else {
+            revert("proposal has not been voted on yet");
+        }
+
         dao.processProposal(proposalId);
     }
 

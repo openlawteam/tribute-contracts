@@ -102,8 +102,8 @@ contract FinancingContract is IFinancing, DaoConstants, MemberGuard {
             "proposal already processed"
         );
         require(
-            !dao.getProposalFlag(proposalId, FlagHelper.Flag.CANCELLED),
-            "proposal cancelled"
+            dao.getProposalFlag(proposalId, FlagHelper.Flag.SPONSORED),
+            "proposal not sponsored yet"
         );
 
         IVoting votingContract = IVoting(dao.getAdapterAddress(VOTING));
