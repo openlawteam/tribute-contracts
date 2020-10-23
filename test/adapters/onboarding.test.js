@@ -46,7 +46,7 @@ contract('LAOLAND - Onboarding Adapter', async accounts => {
     try {
       await onboarding.processProposal(dao.address, 0, {from: myAccount, gasPrice: toBN("0")});
     } catch(err) {
-      assert.equal(err.reason, "proposal needs to pass");
+      assert.equal(err.reason, "proposal has not been voted on yet");
     }
     
     await advanceTime(10000);
@@ -78,13 +78,13 @@ contract('LAOLAND - Onboarding Adapter', async accounts => {
     await onboarding.onboard(dao.address, otherAccount, SHARES, 0, {from:myAccount,value:sharePrice.mul(toBN(3)).add(remaining), gasPrice: toBN("0")});
 
 		await onboarding.cancelProposal(dao.address, 0, {from: myAccount, gasPrice: toBN("0")});
-    const isCancelled = await dao.isProposalCancelled(toBN("0"));
-		assert.equal(isCancelled, true);
+    const isProcessed = await dao.isProposalProcessed(toBN("0"));
+		assert.equal(isProcessed, true);
 
     try {
       await onboarding.processProposal(dao.address, 0, {from: myAccount, gasPrice: toBN("0")});
     } catch(err) {
-      assert.equal(err.reason, "proposal has been cancelled");
+      assert.equal(err.reason, "proposal has been already processed");
     }
     
     const myAccountShares = await dao.nbShares(myAccount);
@@ -105,19 +105,16 @@ contract('LAOLAND - Onboarding Adapter', async accounts => {
     const onboardingAddress = await dao.getAdapterAddress(sha3('onboarding'));
     const onboarding = await OnboardingContract.at(onboardingAddress);
 
-    const votingAddress = await dao.getAdapterAddress(sha3('voting'));
-    const voting = await VotingContract.at(votingAddress);
-
     await onboarding.onboard(dao.address, otherAccount, SHARES, 0, {from:myAccount,value:sharePrice.mul(toBN(3)).add(remaining), gasPrice: toBN("0")});
 
 		await onboarding.cancelProposal(dao.address, 0, {from: myAccount, gasPrice: toBN("0")});
-    const isCancelled = await dao.isProposalCancelled(toBN("0"));
-		assert.equal(isCancelled, true);
+    const isProcessed = await dao.isProposalProcessed(toBN("0"));
+		assert.equal(isProcessed, true);
 
     try {
       await onboarding.processProposal(dao.address, 0, {from: myAccount, gasPrice: toBN("0")});
     } catch(err) {
-      assert.equal(err.reason, "proposal has been cancelled");
+      assert.equal(err.reason, "proposal has been already processed");
     }
     
     const myAccountShares = await dao.nbShares(myAccount);
