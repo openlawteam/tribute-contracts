@@ -251,7 +251,7 @@ contract OnboardingContract is
         );
         require(
             !dao.getProposalFlag(proposalId, FlagHelper.Flag.PROCESSED),
-            "proposal has been already processed"
+            "proposal already processed"
         );
 
         IVoting votingContract = IVoting(dao.getAdapterAddress(VOTING));
