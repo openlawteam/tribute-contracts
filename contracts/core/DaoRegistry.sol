@@ -318,7 +318,7 @@ contract DaoRegistry is DaoConstants, AdapterGuard {
         return proposalId;
     }
 
-    function isProposalCancelled(uint256 _proposalId)
+    function isProposalProcessed(uint256 _proposalId)
         external
         view
         returns (bool)
@@ -329,79 +329,21 @@ contract DaoRegistry is DaoConstants, AdapterGuard {
         );
         uint64 proposalId = uint64(_proposalId);
         return
-            proposals[proposalId].flags.getFlag(FlagHelper128.Flag.CANCELLED);
+            proposals[proposalId].flags.getFlag(FlagHelper128.Flag.PROCESSED);
     }
 
-    /// @dev - Proposal: cancel a proposal that has been submitted to the registry
-    function cancelProposal(uint256 _proposalId)
+    function isProposalSponsored(uint256 _proposalId)
         external
-        hasAccess(this, FlagHelper128.Flag.CANCEL_PROPOSAL)
+        view
+        returns (bool)
     {
         require(
             _proposalId < type(uint64).max,
             "proposal Id should only be uint64"
         );
         uint64 proposalId = uint64(_proposalId);
-        Proposal storage proposal = proposals[proposalId];
-
-        require(
-            proposal.adapterAddress == msg.sender,
-            "only the adapter that submitted the proposal can cancel it"
-        );
-
-        uint128 flags = proposal.flags;
-        require(
-            flags.getFlag(FlagHelper128.Flag.EXISTS),
-            "proposal does not exist"
-        );
-        require(
-            !flags.getFlag(FlagHelper128.Flag.CANCELLED),
-            "proposal is cancelled"
-        );
-        require(
-            !flags.getFlag(FlagHelper128.Flag.SPONSORED),
-            "proposal already sponsored, cannot cancel"
-        );
-        flags = flags.setFlag(FlagHelper128.Flag.CANCELLED, true);
-        proposals[proposalId].flags = flags;
-
-        emit CancelledProposal(proposalId, uint64(block.timestamp), flags);
-    }
-
-    /// @dev - Proposal: cancel a proposal that has been submitted to the registry
-    function withdrawProposal(uint256 _proposalId)
-        external
-        hasAccess(this, FlagHelper128.Flag.WITHDRAW_PROPOSAL)
-    {
-        require(
-            _proposalId < type(uint64).max,
-            "proposal Id should only be uint64"
-        );
-        uint64 proposalId = uint64(_proposalId);
-        Proposal storage proposal = proposals[proposalId];
-
-        require(
-            proposal.adapterAddress == msg.sender,
-            "only the adapter that submitted the proposal can withdraw it"
-        );
-
-        uint128 flags = proposal.flags;
-        require(
-            flags.getFlag(FlagHelper128.Flag.EXISTS),
-            "proposal does not exist"
-        );
-        require(
-            !flags.getFlag(FlagHelper128.Flag.CANCELLED),
-            "proposal is cancelled"
-        );
-        require(
-            !flags.getFlag(FlagHelper128.Flag.WITHDRAWN),
-            "proposal is already withdrawn"
-        );
-        flags = flags.setFlag(FlagHelper128.Flag.WITHDRAWN, true);
-        proposals[proposalId].flags = flags;
-
-        emit WithdrawnProposal(proposalId, uint64(block.timestamp), flags);
+        return
+            proposals[proposalId].flags.getFlag(FlagHelper128.Flag.SPONSORED);
     }
 
     /// @dev - Proposal: sponsor proposals that were submitted to the DAO registry
@@ -428,10 +370,6 @@ contract DaoRegistry is DaoConstants, AdapterGuard {
         require(
             !flags.getFlag(FlagHelper128.Flag.SPONSORED),
             "proposal must not be sponsored"
-        );
-        require(
-            !flags.getFlag(FlagHelper128.Flag.CANCELLED),
-            "proposal must not be cancelled"
         );
         require(
             !flags.getFlag(FlagHelper128.Flag.PROCESSED),
@@ -471,18 +409,7 @@ contract DaoRegistry is DaoConstants, AdapterGuard {
             flags.getFlag(FlagHelper128.Flag.EXISTS),
             "proposal does not exist for this dao"
         );
-        require(
-            !flags.getFlag(FlagHelper128.Flag.CANCELLED),
-            "proposal is cancelled"
-        );
-        require(
-            !flags.getFlag(FlagHelper128.Flag.WITHDRAWN),
-            "proposal is withdrawn"
-        );
-        require(
-            flags.getFlag(FlagHelper128.Flag.SPONSORED),
-            "proposal not sponsored"
-        );
+        
         require(
             !flags.getFlag(FlagHelper128.Flag.PROCESSED),
             "proposal already processed"

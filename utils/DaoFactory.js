@@ -70,7 +70,7 @@ async function addDefaultAdapters(dao, unitPrice=sharePrice, nbShares=numberOfSh
     const {voting, ragequit, managing, financing, onboarding, daoFactory} = await prepareSmartContracts();
 
     /**
-     * EXISTS, SPONSORED, PROCESSED, PASSED, CANCELLED, JAILED,
+     * EXISTS, SPONSORED, PROCESSED, JAILED,
         ADD_ADAPTER,REMOVE_ADAPTER,JAIL_MEMBER, UNJAIL_MEMBER, EXECUTE, SUBMIT_PROPOSAL, SPONSOR_PROPOSAL, PROCESS_PROPOSAL, 
         UPDATE_DELEGATE_KEY, REGISTER_NEW_TOKEN, REGISTER_NEW_INTERNAL_TOKEN, ADD_TO_BALANCE,SUB_FROM_BALANCE, INTERNAL_TRANSFER
      */
@@ -82,7 +82,7 @@ async function addDefaultAdapters(dao, unitPrice=sharePrice, nbShares=numberOfSh
         entry("ragequit", ragequit, {SUB_FROM_BALANCE: true, JAIL_MEMBER: true, UNJAIL_MEMBER: true, SUB_FROM_BALANCE: true, INTERNAL_TRANSFER: true}),
         entry("managing", managing, {SUBMIT_PROPOSAL: true, PROCESS_PROPOSAL: true, SPONSOR_PROPOSAL: true, REMOVE_ADAPTER: true, ADD_ADAPTER: true}),
         entry("financing", financing, {SUBMIT_PROPOSAL:true, SPONSOR_PROPOSAL: true, PROCESS_PROPOSAL: true, ADD_TO_BALANCE:true , SUB_FROM_BALANCE:true}),
-        entry("onboarding", onboarding, {CANCEL_PROPOSAL:true, SUBMIT_PROPOSAL:true, SPONSOR_PROPOSAL: true, PROCESS_PROPOSAL: true, ADD_TO_BALANCE:true, UPDATE_DELEGATE_KEY: true, WITHDRAW_PROPOSAL: true})
+        entry("onboarding", onboarding, {SUBMIT_PROPOSAL:true, SPONSOR_PROPOSAL: true, PROCESS_PROPOSAL: true, ADD_TO_BALANCE:true, UPDATE_DELEGATE_KEY: true})
     ])
     //TODO: configure for loot and shares
     await onboarding.configureDao(dao.address, SHARES, unitPrice, nbShares, tokenAddr);
@@ -104,8 +104,8 @@ async function createDao(senderAccount, unitPrice=sharePrice, nbShares=numberOfS
 }
 
 function entry(name, contract, flags) {
-  const values = [flags.EXISTS, flags.SPONSORED, flags.PROCESSED, flags.PASSED, flags.CANCELLED, flags.JAILED,
-  flags.ADD_ADAPTER,flags.REMOVE_ADAPTER,flags.JAIL_MEMBER, flags.UNJAIL_MEMBER, flags.EXECUTE, flags.CANCEL_PROPOSAL, flags.SUBMIT_PROPOSAL, flags.SPONSOR_PROPOSAL, flags.PROCESS_PROPOSAL, 
+  const values = [flags.EXISTS, flags.SPONSORED, flags.PROCESSED, flags.JAILED,
+  flags.ADD_ADAPTER,flags.REMOVE_ADAPTER,flags.JAIL_MEMBER, flags.UNJAIL_MEMBER, flags.EXECUTE, flags.SUBMIT_PROPOSAL, flags.SPONSOR_PROPOSAL, flags.PROCESS_PROPOSAL, 
   flags.UPDATE_DELEGATE_KEY, flags.REGISTER_NEW_TOKEN, flags.REGISTER_NEW_INTERNAL_TOKEN, flags.ADD_TO_BALANCE,flags.SUB_FROM_BALANCE, flags.INTERNAL_TRANSFER, flags.WITHDRAW_PROPOSAL, flags.WITHDRAWN]
 
   const acl = values.map((v, idx) => v ? 2 ** idx : 0).reduce((a, b) => a +  b);

@@ -30,15 +30,12 @@ library FlagHelper128 {
         EXISTS,
         SPONSORED,
         PROCESSED,
-        PASSED,
-        CANCELLED,
         JAILED,
         ADD_ADAPTER,
         REMOVE_ADAPTER,
         JAIL_MEMBER,
         UNJAIL_MEMBER,
         EXECUTE,
-        CANCEL_PROPOSAL,
         SUBMIT_PROPOSAL,
         SPONSOR_PROPOSAL,
         PROCESS_PROPOSAL,
@@ -47,9 +44,7 @@ library FlagHelper128 {
         REGISTER_NEW_INTERNAL_TOKEN,
         ADD_TO_BALANCE,
         SUB_FROM_BALANCE,
-        INTERNAL_TRANSFER,
-        WITHDRAW_PROPOSAL,
-        WITHDRAWN
+        INTERNAL_TRANSFER
     }
 
     //helper
