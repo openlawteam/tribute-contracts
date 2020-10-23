@@ -48,27 +48,22 @@ library FlagHelper {
     }
 
     //helper
-    function getFlag(uint128 flags, Flag flag) public pure returns (bool) {
-        uint8 pos = uint8(flag);
-        require(
-            pos < 128,
-            "position overflow. Position should be between 0 and 255"
-        );
-        return (flags >> pos) % 2 == 1;
+    function getFlag(uint256 flags, Flag flag) public pure returns (bool) {
+        return (flags >> uint8(flag)) % 2 == 1;
     }
 
     function setFlag(
-        uint128 flags,
+        uint256 flags,
         Flag flag,
         bool value
-    ) public pure returns (uint128) {
+    ) public pure returns (uint256) {
         uint8 pos = uint8(flag);
 
         if (getFlag(flags, flag) != value) {
             if (value) {
-                return flags + uint128((2**pos));
+                return flags + 2 ** uint8(flag);
             } else {
-                return flags - uint128((2**pos));
+                return flags - 2 ** uint8(flag);
             }
         }
     }

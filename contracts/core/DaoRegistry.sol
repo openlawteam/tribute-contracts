@@ -36,7 +36,7 @@ contract DaoRegistry is DaoConstants, AdapterGuard {
     /*
      * LIBRARIES
      */
-    using FlagHelper for uint128;
+    using FlagHelper for uint256;
     using SafeMath for uint256;
 
     enum DaoState {CREATION, READY}
@@ -47,33 +47,21 @@ contract DaoRegistry is DaoConstants, AdapterGuard {
     /// @dev - Events for Proposals
     event SubmittedProposal(
         uint64 proposalId,
-        uint128 flags,
+        uint256 flags,
         address applicant
     );
     event SponsoredProposal(
         uint256 proposalId,
-        uint128 flags,
+        uint256 flags,
         uint64 startingTime
     );
     event ProcessedProposal(
         uint256 proposalId,
         uint64 processingTime,
-        uint128 flags
-    );
-    event CancelledProposal(
-        uint256 proposalId,
-        uint64 processingTime,
-        uint128 flags
-    );
-    event WithdrawnProposal(
-        uint64 proposalId,
-        uint64 processingTime,
-        uint128 flags
+        uint256 flags
     );
 
     /// @dev - Events for Members
-    event UpdateMemberShares(address member, uint256 shares);
-    event UpdateMemberLoot(address member, uint256 loot);
     event UpdateDelegateKey(
         address indexed memberAddress,
         address newDelegateKey
@@ -99,12 +87,12 @@ contract DaoRegistry is DaoConstants, AdapterGuard {
         // the structure to track all the proposals in the DAO
         address applicant; // the address of the sender that submitted the proposal
         address adapterAddress; // the adapter address that called the functions to change the DAO state
-        uint128 flags; // flags to track the state of the proposal: exist, sponsored, processed, canceled, etc.
+        uint256 flags; // flags to track the state of the proposal: exist, sponsored, processed, canceled, etc.
     }
 
     struct Member {
         // the structure to track all the members in the DAO
-        uint128 flags; // flags to track the state of the member: exist, jailed, etc
+        uint256 flags; // flags to track the state of the member: exist, jailed, etc
         address delegateKey; // ?
     }
 
@@ -132,7 +120,7 @@ contract DaoRegistry is DaoConstants, AdapterGuard {
 
     struct AdapterDetails {
         bytes32 id;
-        uint128 flags;
+        uint256 flags;
     }
 
     /*
@@ -183,11 +171,8 @@ contract DaoRegistry is DaoConstants, AdapterGuard {
     function addAdapter(
         bytes32 adapterId,
         address adapterAddress,
-        uint256 _flags
+        uint256 flags
     ) external hasAccess(this, FlagHelper.Flag.ADD_ADAPTER) {
-        require(_flags < type(uint128).max, "flags params overflow");
-        uint128 flags = uint128(_flags);
-
         require(adapterId != bytes32(0), "adapterId must not be empty");
         require(
             adapterAddress != address(0x0),
@@ -242,7 +227,7 @@ contract DaoRegistry is DaoConstants, AdapterGuard {
         hasAccess(this, FlagHelper.Flag.JAIL_MEMBER)
     {
         Member storage member = members[memberAddr];
-        uint128 flags = member.flags;
+        uint256 flags = member.flags;
         require(flags.getFlag(FlagHelper.Flag.EXISTS), "member does not exist");
         if (!flags.getFlag(FlagHelper.Flag.JAILED)) {
             member.flags = flags.setFlag(FlagHelper.Flag.JAILED, true);
@@ -255,7 +240,7 @@ contract DaoRegistry is DaoConstants, AdapterGuard {
         hasAccess(this, FlagHelper.Flag.UNJAIL_MEMBER)
     {
         Member storage member = members[memberAddr];
-        uint128 flags = member.flags;
+        uint256 flags = member.flags;
         require(flags.getFlag(FlagHelper.Flag.EXISTS), "member does not exist");
         if (flags.getFlag(FlagHelper.Flag.JAILED)) {
             member.flags = flags.setFlag(FlagHelper.Flag.JAILED, false);
@@ -309,7 +294,7 @@ contract DaoRegistry is DaoConstants, AdapterGuard {
             FlagHelper.Flag.SPONSORED
         );
 
-        uint128 flags = proposal.flags;
+        uint256 flags = proposal.flags;
 
         require(
             proposal.adapterAddress == msg.sender,
@@ -340,7 +325,7 @@ contract DaoRegistry is DaoConstants, AdapterGuard {
             _proposalId,
             FlagHelper.Flag.PROCESSED
         );
-        uint128 flags = proposal.flags;
+        uint256 flags = proposal.flags;
 
         emit ProcessedProposal(_proposalId, uint64(block.timestamp), flags);
     }
@@ -363,7 +348,7 @@ contract DaoRegistry is DaoConstants, AdapterGuard {
             "only the adapter that submitted the proposal can cancel it"
         );
 
-        uint128 flags = proposal.flags;
+        uint256 flags = proposal.flags;
         require(
             flags.getFlag(FlagHelper.Flag.EXISTS),
             "proposal does not exist for this dao"
@@ -388,7 +373,7 @@ contract DaoRegistry is DaoConstants, AdapterGuard {
      */
     function isActiveMember(address addr) public view returns (bool) {
         address memberAddr = memberAddressesByDelegatedKey[addr];
-        uint128 memberFlags = members[memberAddr].flags;
+        uint256 memberFlags = members[memberAddr].flags;
         return
             memberFlags.getFlag(FlagHelper.Flag.EXISTS) &&
             !memberFlags.getFlag(FlagHelper.Flag.JAILED) &&
