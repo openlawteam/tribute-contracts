@@ -138,7 +138,6 @@ contract('LAOLAND - Onboarding Adapter', async accounts => {
 
 		const bigint = toBN("0x111111111111111111111111111111111111")
 
-
     try {
       await onboarding.processProposal(dao.address, bigint, {from: myAccount, gasPrice: toBN("0")});
     } catch(err) {
