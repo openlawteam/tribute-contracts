@@ -59,7 +59,7 @@ contract('LAOLAND - Onboarding Adapter', async accounts => {
     await checkBalance(dao, GUILD, ETH_TOKEN, sharePrice.mul(toBN("3")));
   })
 
-  it("should be possible to cancel a proposal", async () => {
+  it("should be possible to cancel an onboarding proposal", async () => {
     const myAccount = accounts[1];
     const otherAccount = accounts[2];
     const dao = await createDao(myAccount);
@@ -71,6 +71,12 @@ contract('LAOLAND - Onboarding Adapter', async accounts => {
 		await onboarding.cancelProposal(dao.address, 0, {from: myAccount, gasPrice: toBN("0")});
     const isProcessed = await dao.getProposalFlag(toBN("0"), toBN("2")); // 2 is processed flag index
 		assert.equal(isProcessed, true);
+
+    try {
+      await onboarding.sponsorProposal(dao.address, 0, [], {from: myAccount, gasPrice: toBN("0")});
+    } catch(err) {
+      assert.equal(err.reason, "proposal already processed");
+    }
 
     try {
       await onboarding.processProposal(dao.address, 0, {from: myAccount, gasPrice: toBN("0")});
@@ -87,24 +93,26 @@ contract('LAOLAND - Onboarding Adapter', async accounts => {
     assert.equal(guildBalance.toString(), sharePrice.mul(toBN("0")).toString());
   })
 
-  it("should be possible to cancel an onboarding proposal", async () => {
+  it("should be possible to withdraw an onboarding proposal", async () => {
     const myAccount = accounts[1];
     const otherAccount = accounts[2];  
     let dao = await createDao(myAccount);
   
     const onboarding = await getContract(dao, 'onboarding', OnboardingContract);
+    const voting = await getContract(dao, 'voting', VotingContract);
     
     await onboarding.onboard(dao.address, otherAccount, SHARES, 0, {from:myAccount,value:sharePrice.mul(toBN(3)).add(remaining), gasPrice: toBN("0")});
-		await onboarding.cancelProposal(dao.address, 0, {from: myAccount, gasPrice: toBN("0")});
+    await onboarding.sponsorProposal(dao.address, 0, [], {from: myAccount, gasPrice: toBN("0")});
+
+    await voting.submitVote(dao.address, 0, 2, {from: myAccount, gasPrice: toBN("0")});
+    await advanceTime(10000);
+		const vote = await voting.voteResult(dao.address, 0);
+		assert.equal(vote.toString(), "3"); // vote should be "not passed"
+    
+    await onboarding.processProposal(dao.address, 0, {from: myAccount, gasPrice: toBN("0")});
 
     const isProcessed = await dao.getProposalFlag(toBN("0"), toBN("2")); // 2 is processed flag index
 		assert.equal(isProcessed, true);
-
-    try {
-      await onboarding.sponsorProposal(dao.address, 0, [], {from: myAccount, gasPrice: toBN("0")});
-    } catch(err) {
-      assert.equal(err.reason, "proposal already processed");
-    }
     
     const myAccountShares = await dao.nbShares(myAccount);
     const otherAccountShares = await dao.nbShares(otherAccount);

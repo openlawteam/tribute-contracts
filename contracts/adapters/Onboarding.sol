@@ -219,21 +219,7 @@ contract OnboardingContract is
         dao.processProposal(proposalId);
 
         ProposalDetails storage proposal = proposals[address(dao)][proposalId];
-        address tokenAddr = proposal.token;
-
-        if (tokenAddr == ETH_TOKEN) {
-            proposal.proposer.transfer(proposal.amount);
-        } else {
-            IERC20 token = IERC20(tokenAddr);
-            require(
-                token.transferFrom(
-                    address(this),
-                    proposal.proposer,
-                    proposal.amount
-                ),
-                "ERC20 failed transferFrom"
-            );
-        }
+				_refundTribute(proposal.token, proposal.proposer, proposal.amount);
     }
 
     function processProposal(DaoRegistry dao, uint256 _proposalId)
@@ -266,27 +252,30 @@ contract OnboardingContract is
 
             dao.addToBalance(GUILD, ETH_TOKEN, proposal.amount);
         } else if (voteResult == 3) {
-            address tokenAddr = proposal.token;
-
-            if (tokenAddr == ETH_TOKEN) {
-                proposal.proposer.transfer(proposal.amount);
-            } else {
-                IERC20 token = IERC20(tokenAddr);
-                require(
-                    token.transferFrom(
-                        address(this),
-                        proposal.proposer,
-                        proposal.amount
-                    ),
-                    "ERC20 failed transferFrom"
-                );
-            }
+						_refundTribute(proposal.token, proposal.proposer, proposal.amount);
         } else {
             revert("proposal has not been voted on yet");
         }
 
         dao.processProposal(proposalId);
     }
+
+		function _refundTribute(address tokenAddr, address payable proposer, uint256 amount) internal
+		{
+				if (tokenAddr == ETH_TOKEN) {
+						proposer.transfer(amount);
+				} else {
+						IERC20 token = IERC20(tokenAddr);
+						require(
+								token.transferFrom(
+										address(this),
+										proposer,
+										amount
+								),
+								"ERC20 failed transferFrom"
+						);
+				}
+ 		}
 
     function _mintTokensToMember(
         DaoRegistry dao,
