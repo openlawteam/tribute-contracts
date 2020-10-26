@@ -122,4 +122,33 @@ contract('LAOLAND - Onboarding Adapter', async accounts => {
     const guildBalance = await dao.balanceOf(GUILD, "0x0000000000000000000000000000000000000000");
     assert.equal(guildBalance.toString(), sharePrice.mul(toBN("0")).toString());
   })
+
+  it("should validate inputs", async () => {
+    const myAccount = accounts[1];
+    const otherAccount = accounts[2];  
+    let dao = await createDao(myAccount);
+  
+    const onboarding = await getContract(dao, 'onboarding', OnboardingContract);
+    
+    try {
+      await onboarding.sponsorProposal(dao.address, 1, [], {from: myAccount, gasPrice: toBN("0")});
+    } catch(err) {
+      assert.equal(err.reason, "proposal does not exist");
+    }
+
+		const bigint = toBN("0x111111111111111111111111111111111111")
+
+
+    try {
+      await onboarding.processProposal(dao.address, bigint, {from: myAccount, gasPrice: toBN("0")});
+    } catch(err) {
+      assert.equal(err.reason, "proposalId too big");
+    }
+
+    try {
+		  await onboarding.cancelProposal(dao.address, bigint, {from: myAccount, gasPrice: toBN("0")});
+    } catch(err) {
+      assert.equal(err.reason, "proposalId too big");
+    }
+  })
 });
