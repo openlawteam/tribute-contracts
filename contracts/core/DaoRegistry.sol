@@ -68,20 +68,14 @@ contract DaoRegistry is DaoConstants, AdapterGuard {
     event AdapterRemoved(bytes32 adapterId);
 
     /// @dev - Events for Members
-    event UpdateDelegateKey(
-        address memberAddress,
-        address newDelegateKey
-    );
+    event UpdateDelegateKey(address memberAddress, address newDelegateKey);
 
     /// @dev - Events for Bank
     event MemberJailed(address memberAddr);
 
     event MemberUnjailed(address memberAddr);
 
-    event NewBalance(
-        address member, 
-        address tokenAddr, 
-        uint256 amount);
+    event NewBalance(address member, address tokenAddr, uint256 amount);
 
     /*
      * STRUCTURES
