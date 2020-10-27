@@ -59,10 +59,12 @@ library FlagHelper {
     ) public pure returns (uint256) {
         if (getFlag(flags, flag) != value) {
             if (value) {
-                return flags + 2**uint8(flag);
+                return flags + 2**uint256(flag);
             } else {
-                return flags - 2**uint8(flag);
+                return flags - 2**uint256(flag);
             }
+        } else {
+            return flags;
         }
     }
 }

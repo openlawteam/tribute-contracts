@@ -69,7 +69,7 @@ contract DaoRegistry is DaoConstants, AdapterGuard {
 
     /// @dev - Events for Members
     event UpdateDelegateKey(
-        address indexed memberAddress,
+        address memberAddress,
         address newDelegateKey
     );
 

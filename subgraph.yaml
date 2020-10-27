@@ -29,15 +29,16 @@ dataSources:
           handler: handleProcessedProposal
         - event: SubmittedProposal(uint64,uint256,address)
           handler: handleSubmittedProposal
-        - event: AdapterAdded(bytes32 adapterId,address adapterAddress, uint256 flags)
+        - event: AdapterAdded(bytes32,address,uint256)
           handler: handleAdapterAdded
-        - event: AdapterRemoved(bytes32 adapterId)
+        - event: AdapterRemoved(bytes32)
           handler: handleAdapterRemoved
-        - event: UpdateDelegateKey(address indexed memberAddress,address newDelegateKey)
+        - event: UpdateDelegateKey(address,address)
           handler: handleUpdateDelegateKey
-        - event: MemberJailed(address memberAddr)
+        - event: MemberJailed(address)
           handler: handleMemberJailed
-        - event: MemberUnjailed(address memberAddr)
+        - event: MemberUnjailed(address)
           handler: handleMemberUnjailed
-        - event: NewBalance(address member, address tokenAddr, uint256 amount)
+        - event: NewBalance(address,address,uint256)
           handler: handleNewBalance
+      file: ./src/mapping.ts

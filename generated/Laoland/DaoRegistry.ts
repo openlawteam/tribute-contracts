@@ -10,6 +10,112 @@ import {
   BigInt
 } from "@graphprotocol/graph-ts";
 
+export class AdapterAdded extends ethereum.Event {
+  get params(): AdapterAdded__Params {
+    return new AdapterAdded__Params(this);
+  }
+}
+
+export class AdapterAdded__Params {
+  _event: AdapterAdded;
+
+  constructor(event: AdapterAdded) {
+    this._event = event;
+  }
+
+  get adapterId(): Bytes {
+    return this._event.parameters[0].value.toBytes();
+  }
+
+  get adapterAddress(): Address {
+    return this._event.parameters[1].value.toAddress();
+  }
+
+  get flags(): BigInt {
+    return this._event.parameters[2].value.toBigInt();
+  }
+}
+
+export class AdapterRemoved extends ethereum.Event {
+  get params(): AdapterRemoved__Params {
+    return new AdapterRemoved__Params(this);
+  }
+}
+
+export class AdapterRemoved__Params {
+  _event: AdapterRemoved;
+
+  constructor(event: AdapterRemoved) {
+    this._event = event;
+  }
+
+  get adapterId(): Bytes {
+    return this._event.parameters[0].value.toBytes();
+  }
+}
+
+export class MemberJailed extends ethereum.Event {
+  get params(): MemberJailed__Params {
+    return new MemberJailed__Params(this);
+  }
+}
+
+export class MemberJailed__Params {
+  _event: MemberJailed;
+
+  constructor(event: MemberJailed) {
+    this._event = event;
+  }
+
+  get memberAddr(): Address {
+    return this._event.parameters[0].value.toAddress();
+  }
+}
+
+export class MemberUnjailed extends ethereum.Event {
+  get params(): MemberUnjailed__Params {
+    return new MemberUnjailed__Params(this);
+  }
+}
+
+export class MemberUnjailed__Params {
+  _event: MemberUnjailed;
+
+  constructor(event: MemberUnjailed) {
+    this._event = event;
+  }
+
+  get memberAddr(): Address {
+    return this._event.parameters[0].value.toAddress();
+  }
+}
+
+export class NewBalance extends ethereum.Event {
+  get params(): NewBalance__Params {
+    return new NewBalance__Params(this);
+  }
+}
+
+export class NewBalance__Params {
+  _event: NewBalance;
+
+  constructor(event: NewBalance) {
+    this._event = event;
+  }
+
+  get member(): Address {
+    return this._event.parameters[0].value.toAddress();
+  }
+
+  get tokenAddr(): Address {
+    return this._event.parameters[1].value.toAddress();
+  }
+
+  get amount(): BigInt {
+    return this._event.parameters[2].value.toBigInt();
+  }
+}
+
 export class ProcessedProposal extends ethereum.Event {
   get params(): ProcessedProposal__Params {
     return new ProcessedProposal__Params(this);
@@ -88,62 +194,6 @@ export class SubmittedProposal__Params {
   }
 }
 
-export class TokensCollected extends ethereum.Event {
-  get params(): TokensCollected__Params {
-    return new TokensCollected__Params(this);
-  }
-}
-
-export class TokensCollected__Params {
-  _event: TokensCollected;
-
-  constructor(event: TokensCollected) {
-    this._event = event;
-  }
-
-  get dao(): Address {
-    return this._event.parameters[0].value.toAddress();
-  }
-
-  get token(): Address {
-    return this._event.parameters[1].value.toAddress();
-  }
-
-  get amountToCollect(): BigInt {
-    return this._event.parameters[2].value.toBigInt();
-  }
-}
-
-export class Transfer extends ethereum.Event {
-  get params(): Transfer__Params {
-    return new Transfer__Params(this);
-  }
-}
-
-export class Transfer__Params {
-  _event: Transfer;
-
-  constructor(event: Transfer) {
-    this._event = event;
-  }
-
-  get fromAddress(): Address {
-    return this._event.parameters[0].value.toAddress();
-  }
-
-  get toAddress(): Address {
-    return this._event.parameters[1].value.toAddress();
-  }
-
-  get token(): Address {
-    return this._event.parameters[2].value.toAddress();
-  }
-
-  get amount(): BigInt {
-    return this._event.parameters[3].value.toBigInt();
-  }
-}
-
 export class UpdateDelegateKey extends ethereum.Event {
   get params(): UpdateDelegateKey__Params {
     return new UpdateDelegateKey__Params(this);
@@ -179,23 +229,6 @@ export class DaoRegistry__inverseRegistryResult {
     let map = new TypedMap<string, ethereum.Value>();
     map.set("value0", ethereum.Value.fromFixedBytes(this.value0));
     map.set("value1", ethereum.Value.fromUnsignedBigInt(this.value1));
-    return map;
-  }
-}
-
-export class DaoRegistry__membersResult {
-  value0: BigInt;
-  value1: Address;
-
-  constructor(value0: BigInt, value1: Address) {
-    this.value0 = value0;
-    this.value1 = value1;
-  }
-
-  toMap(): TypedMap<string, ethereum.Value> {
-    let map = new TypedMap<string, ethereum.Value>();
-    map.set("value0", ethereum.Value.fromUnsignedBigInt(this.value0));
-    map.set("value1", ethereum.Value.fromAddress(this.value1));
     return map;
   }
 }
@@ -471,32 +504,23 @@ export class DaoRegistry extends ethereum.SmartContract {
     return ethereum.CallResult.fromValue(value[0].toAddress());
   }
 
-  members(param0: Address): DaoRegistry__membersResult {
-    let result = super.call("members", "members(address):(uint256,address)", [
+  members(param0: Address): BigInt {
+    let result = super.call("members", "members(address):(uint256)", [
       ethereum.Value.fromAddress(param0)
     ]);
 
-    return new DaoRegistry__membersResult(
-      result[0].toBigInt(),
-      result[1].toAddress()
-    );
+    return result[0].toBigInt();
   }
 
-  try_members(
-    param0: Address
-  ): ethereum.CallResult<DaoRegistry__membersResult> {
-    let result = super.tryCall(
-      "members",
-      "members(address):(uint256,address)",
-      [ethereum.Value.fromAddress(param0)]
-    );
+  try_members(param0: Address): ethereum.CallResult<BigInt> {
+    let result = super.tryCall("members", "members(address):(uint256)", [
+      ethereum.Value.fromAddress(param0)
+    ]);
     if (result.reverted) {
       return new ethereum.CallResult();
     }
     let value = result.value;
-    return ethereum.CallResult.fromValue(
-      new DaoRegistry__membersResult(value[0].toBigInt(), value[1].toAddress())
-    );
+    return ethereum.CallResult.fromValue(value[0].toBigInt());
   }
 
   proposalCount(): BigInt {
@@ -831,29 +855,6 @@ export class DaoRegistry extends ethereum.SmartContract {
     return ethereum.CallResult.fromValue(value[0].toBigInt());
   }
 
-  balanceOf(user: Address, token: Address): BigInt {
-    let result = super.call(
-      "balanceOf",
-      "balanceOf(address,address):(uint256)",
-      [ethereum.Value.fromAddress(user), ethereum.Value.fromAddress(token)]
-    );
-
-    return result[0].toBigInt();
-  }
-
-  try_balanceOf(user: Address, token: Address): ethereum.CallResult<BigInt> {
-    let result = super.tryCall(
-      "balanceOf",
-      "balanceOf(address,address):(uint256)",
-      [ethereum.Value.fromAddress(user), ethereum.Value.fromAddress(token)]
-    );
-    if (result.reverted) {
-      return new ethereum.CallResult();
-    }
-    let value = result.value;
-    return ethereum.CallResult.fromValue(value[0].toBigInt());
-  }
-
   isNotReservedAddress(applicant: Address): boolean {
     let result = super.call(
       "isNotReservedAddress",
@@ -890,6 +891,38 @@ export class DaoRegistry extends ethereum.SmartContract {
     }
     let value = result.value;
     return ethereum.CallResult.fromValue(value[0].toAddressArray());
+  }
+
+  balanceOf(account: Address, tokenAddr: Address): BigInt {
+    let result = super.call(
+      "balanceOf",
+      "balanceOf(address,address):(uint256)",
+      [
+        ethereum.Value.fromAddress(account),
+        ethereum.Value.fromAddress(tokenAddr)
+      ]
+    );
+
+    return result[0].toBigInt();
+  }
+
+  try_balanceOf(
+    account: Address,
+    tokenAddr: Address
+  ): ethereum.CallResult<BigInt> {
+    let result = super.tryCall(
+      "balanceOf",
+      "balanceOf(address,address):(uint256)",
+      [
+        ethereum.Value.fromAddress(account),
+        ethereum.Value.fromAddress(tokenAddr)
+      ]
+    );
+    if (result.reverted) {
+      return new ethereum.CallResult();
+    }
+    let value = result.value;
+    return ethereum.CallResult.fromValue(value[0].toBigInt());
   }
 
   getPriorAmount(
@@ -929,6 +962,54 @@ export class DaoRegistry extends ethereum.SmartContract {
     }
     let value = result.value;
     return ethereum.CallResult.fromValue(value[0].toBigInt());
+  }
+
+  getCurrentDelegateKey(memberAddr: Address): Address {
+    let result = super.call(
+      "getCurrentDelegateKey",
+      "getCurrentDelegateKey(address):(address)",
+      [ethereum.Value.fromAddress(memberAddr)]
+    );
+
+    return result[0].toAddress();
+  }
+
+  try_getCurrentDelegateKey(memberAddr: Address): ethereum.CallResult<Address> {
+    let result = super.tryCall(
+      "getCurrentDelegateKey",
+      "getCurrentDelegateKey(address):(address)",
+      [ethereum.Value.fromAddress(memberAddr)]
+    );
+    if (result.reverted) {
+      return new ethereum.CallResult();
+    }
+    let value = result.value;
+    return ethereum.CallResult.fromValue(value[0].toAddress());
+  }
+
+  getPreviousDelegateKey(memberAddr: Address): Address {
+    let result = super.call(
+      "getPreviousDelegateKey",
+      "getPreviousDelegateKey(address):(address)",
+      [ethereum.Value.fromAddress(memberAddr)]
+    );
+
+    return result[0].toAddress();
+  }
+
+  try_getPreviousDelegateKey(
+    memberAddr: Address
+  ): ethereum.CallResult<Address> {
+    let result = super.tryCall(
+      "getPreviousDelegateKey",
+      "getPreviousDelegateKey(address):(address)",
+      [ethereum.Value.fromAddress(memberAddr)]
+    );
+    if (result.reverted) {
+      return new ethereum.CallResult();
+    }
+    let value = result.value;
+    return ethereum.CallResult.fromValue(value[0].toAddress());
   }
 
   getPriorDelegateKey(memberAddr: Address, blockNumber: BigInt): Address {
