@@ -57,11 +57,6 @@ contract GuildKickContract is IGuildKick, DaoConstants, MemberGuard {
         address memberToKick,
         bytes calldata data
     ) external override onlyMember(dao) returns (uint256) {
-        require(
-            kicks[memberToKick].proposalId > 0,
-            "guild kick already in progress"
-        );
-
         // A kick proposal is created and needs to be voted
         uint64 proposalId = dao.submitProposal(msg.sender);
 
@@ -78,20 +73,28 @@ contract GuildKickContract is IGuildKick, DaoConstants, MemberGuard {
         return proposalId;
     }
 
-    function guildKick(
+    function kick(
         DaoRegistry dao,
         address memberToKick,
         uint64 proposalId
     ) external override onlyMember(dao) {
+        GuildKick storage guildKick = kicks[memberToKick];
+        // If status is empty or DONE we expect it to fail
+        require(
+            guildKick.status == GuildKickStatus.IN_PROGRESS,
+            "guild kick already completed"
+        );
+
+        // Only active members should be able to call the kick
         require(
             dao.isActiveMember(memberToKick),
             "memberToKick is not active"
         );
 
-        GuildKick storage kick = kicks[memberToKick];
+        // If the proposal id does not match the storage one, we expect it to fail
         require(
-            kick.status == GuildKickStatus.IN_PROGRESS,
-            "guildkick not in progress"
+            guildKick.proposalId == proposalId,
+            "wrong kick proposal"
         );
 
         IVoting votingContract = IVoting(dao.getAdapterAddress(VOTING));
@@ -108,7 +111,7 @@ contract GuildKickContract is IGuildKick, DaoConstants, MemberGuard {
         dao.subtractFromBalance(memberToKick, SHARES, sharesToLock);
         dao.addToBalance(memberToKick, LOOT, sharesToLock);
         dao.jailMember(memberToKick);
-        kick.status = GuildKickStatus.DONE;
+        guildKick.status = GuildKickStatus.DONE;
 
         dao.processProposal(proposalId);
     }
