@@ -550,5 +550,8 @@ it("should be possible to a member to ragequit if the member voted YES on a prop
       gasPrice: toBN("0"),
     });
 
+    const delegateKey = await dao.getCurrentDelegateKey(memberAccount);
+
+    assert.equal(memberAccount, delegateKey);
   });
 });

@@ -57,8 +57,6 @@ library FlagHelper {
         Flag flag,
         bool value
     ) public pure returns (uint256) {
-        uint8 pos = uint8(flag);
-
         if (getFlag(flags, flag) != value) {
             if (value) {
                 return flags + 2**uint8(flag);
