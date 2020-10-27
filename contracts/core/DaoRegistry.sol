@@ -74,21 +74,14 @@ contract DaoRegistry is DaoConstants, AdapterGuard {
     );
 
     /// @dev - Events for Bank
-    event TokensCollected(
-        address indexed dao,
-        address indexed token,
-        uint256 amountToCollect
-    );
-    event Transfer(
-        address indexed fromAddress,
-        address indexed toAddress,
-        address token,
-        uint256 amount
-    );
-
     event MemberJailed(address memberAddr);
 
     event MemberUnjailed(address memberAddr);
+
+    event NewBalance(
+        address member, 
+        address tokenAddr, 
+        uint256 amount);
 
     /*
      * STRUCTURES
@@ -494,14 +487,6 @@ contract DaoRegistry is DaoConstants, AdapterGuard {
         address token,
         uint256 amount
     ) public hasAccess(this, FlagHelper.Flag.ADD_TO_BALANCE) {
-        _addToBalanceInternal(user, token, amount);
-    }
-
-    function _addToBalanceInternal(
-        address user,
-        address token,
-        uint256 amount
-    ) internal {
         require(
             _bank.availableTokens[token] ||
                 _bank.availableInternalTokens[token],
@@ -525,14 +510,6 @@ contract DaoRegistry is DaoConstants, AdapterGuard {
         address token,
         uint256 amount
     ) public hasAccess(this, FlagHelper.Flag.SUB_FROM_BALANCE) {
-        _subtractFromBalanceInternal(user, token, amount);
-    }
-
-    function _subtractFromBalanceInternal(
-        address user,
-        address token,
-        uint256 amount
-    ) internal {
         uint256 newAmount = balanceOf(user, token) - amount;
         uint256 newTotalAmount = balanceOf(TOTAL, token) - amount;
 
@@ -699,6 +676,7 @@ contract DaoRegistry is DaoConstants, AdapterGuard {
     ) internal {
         uint32 srcRepNum = _bank.numCheckpoints[tokenAddr][member];
         _writeAmountCheckpoint(member, tokenAddr, srcRepNum, amount);
+        emit NewBalance(member, tokenAddr, amount);
     }
 
     function _createNewDelegateCheckpoint(
