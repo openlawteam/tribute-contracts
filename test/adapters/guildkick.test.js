@@ -38,7 +38,7 @@ const {
 } = require("../../utils/DaoFactory.js");
 
 contract("LAOLAND - GuildKick Adapter", async (accounts) => {
-  submitNewMemberProposal = async (
+  const submitNewMemberProposal = async (
     member,
     onboarding,
     dao,
@@ -63,7 +63,13 @@ contract("LAOLAND - GuildKick Adapter", async (accounts) => {
     return proposalId;
   };
 
-  sponsorNewMember = async (onboarding, dao, proposalId, sponsor, voting) => {
+  const sponsorNewMember = async (
+    onboarding,
+    dao,
+    proposalId,
+    sponsor,
+    voting
+  ) => {
     await onboarding.sponsorProposal(dao.address, proposalId, [], {
       from: sponsor,
       gasPrice: toBN("0"),
@@ -75,7 +81,7 @@ contract("LAOLAND - GuildKick Adapter", async (accounts) => {
     await advanceTime(10000);
   };
 
-  onboardingNewMember = async (
+  const onboardingNewMember = async (
     dao,
     onboarding,
     voting,
@@ -101,7 +107,7 @@ contract("LAOLAND - GuildKick Adapter", async (accounts) => {
     });
   };
 
-  guildKick = async (dao, guildkickContract, memberToKick, sender) => {
+  const guildKick = async (dao, guildkickContract, memberToKick, sender) => {
     await guildkickContract.submitKickProposal(
       dao.address,
       memberToKick,
