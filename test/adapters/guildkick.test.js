@@ -21,7 +21,6 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
  */
-const { toUtf8 } = require("ethereumjs-util");
 const {
   sha3,
   toBN,
@@ -51,10 +50,10 @@ contract("LAOLAND - GuildKick Adapter", async (accounts) => {
       dao.address,
       newMember,
       token,
-      sharePrice.mul(toBN(100)),
+      sharePrice.mul(toBN(10)),
       {
         from: member,
-        value: sharePrice.mul(toBN(100)),
+        value: sharePrice.mul(toBN(10)),
         gasPrice: toBN("0"),
       }
     );
@@ -76,13 +75,15 @@ contract("LAOLAND - GuildKick Adapter", async (accounts) => {
     await advanceTime(10000);
   };
 
-  onboardingNewMember = async (dao, newMember, sponsor, sharePrice, token) => {
-    const onboardingAddress = await dao.getAdapterAddress(sha3("onboarding"));
-    const onboarding = await OnboardingContract.at(onboardingAddress);
-
-    const votingAddress = await dao.getAdapterAddress(sha3("voting"));
-    const voting = await VotingContract.at(votingAddress);
-
+  onboardingNewMember = async (
+    dao,
+    onboarding,
+    voting,
+    newMember,
+    sponsor,
+    sharePrice,
+    token
+  ) => {
     let newProposalId = await submitNewMemberProposal(
       sponsor,
       onboarding,
@@ -98,12 +99,9 @@ contract("LAOLAND - GuildKick Adapter", async (accounts) => {
       from: sponsor,
       gasPrice: toBN("0"),
     });
-    return voting;
   };
 
-  guildKick = async (dao, memberToKick, sender) => {
-    let guildkickAddress = await dao.getAdapterAddress(sha3("guildkick"));
-    let guildkickContract = await GuildKickContract.at(guildkickAddress);
+  guildKick = async (dao, guildkickContract, memberToKick, sender) => {
     await guildkickContract.submitKickProposal(
       dao.address,
       memberToKick,
@@ -118,17 +116,24 @@ contract("LAOLAND - GuildKick Adapter", async (accounts) => {
     let pastEvents = await dao.getPastEvents();
     let { proposalId } = pastEvents[0].returnValues;
 
-    return { guildkickContract, kickProposalId: proposalId };
+    return { kickProposalId: proposalId };
   };
 
   it("should be possible to kick a DAO member", async () => {
-    const member = accounts[1];
+    const member = accounts[5];
     const newMember = accounts[2];
 
     let dao = await createDao(member);
-
-    let voting = await onboardingNewMember(
+    const onboardingAddress = await dao.getAdapterAddress(sha3("onboarding"));
+    const onboarding = await OnboardingContract.at(onboardingAddress);
+    const votingAddress = await dao.getAdapterAddress(sha3("voting"));
+    const voting = await VotingContract.at(votingAddress);
+    const guildkickAddress = await dao.getAdapterAddress(sha3("guildkick"));
+    const guildkickContract = await GuildKickContract.at(guildkickAddress);
+    await onboardingNewMember(
       dao,
+      onboarding,
+      voting,
       newMember,
       member,
       sharePrice,
@@ -137,18 +142,19 @@ contract("LAOLAND - GuildKick Adapter", async (accounts) => {
 
     //Check Guild Bank Balance
     let guildBalance = await dao.balanceOf(GUILD, ETH_TOKEN);
-    assert.equal(toBN(guildBalance).toString(), "12000000000000000000");
+    assert.equal(toBN(guildBalance).toString(), "1200000000000000000");
 
     //Check Member Shares & Loot
     let shares = await dao.nbShares(newMember);
-    assert.equal(shares.toString(), "100000000000000000");
+    assert.equal(shares.toString(), "10000000000000000");
     let loot = await dao.nbLoot(newMember);
     assert.equal(loot.toString(), "0");
 
     //SubGuildKick
     let memberToKick = newMember;
-    let { guildkickContract, kickProposalId } = await guildKick(
+    let { kickProposalId } = await guildKick(
       dao,
+      guildkickContract,
       memberToKick,
       member
     );
@@ -177,7 +183,7 @@ contract("LAOLAND - GuildKick Adapter", async (accounts) => {
     shares = await dao.nbShares(newMember);
     assert.equal(shares.toString(), "0");
     loot = await dao.nbLoot(newMember);
-    assert.equal(loot.toString(), "100000000000000000");
+    assert.equal(loot.toString(), "10000000000000000");
 
     // Member must be inactive after the kick has happened
     activeMember = await dao.isActiveMember(memberToKick, {
@@ -188,15 +194,17 @@ contract("LAOLAND - GuildKick Adapter", async (accounts) => {
   });
 
   it("should not be possible for a non-member to submit a guild kick proposal", async () => {
-    const member = accounts[1];
+    const member = accounts[4];
     const nonMember = accounts[2];
 
     let dao = await createDao(member);
+    const guildkickAddress = await dao.getAdapterAddress(sha3("guildkick"));
+    const guildkickContract = await GuildKickContract.at(guildkickAddress);
 
     // Non member attemps to submit a guild kick proposal
     try {
       let memberToKick = member;
-      await guildKick(dao, memberToKick, nonMember);
+      await guildKick(dao, guildkickContract, memberToKick, nonMember);
       assert.fail(
         "should not be possible a non-member to submit a guild kick proposal"
       );
@@ -206,13 +214,20 @@ contract("LAOLAND - GuildKick Adapter", async (accounts) => {
   });
 
   it("should not be possible for a non-active member to submit a guild kick proposal", async () => {
-    const member = accounts[1];
+    const member = accounts[6];
     const newMember = accounts[2];
 
     let dao = await createDao(member);
-
-    let voting = await onboardingNewMember(
+    const onboardingAddress = await dao.getAdapterAddress(sha3("onboarding"));
+    const onboarding = await OnboardingContract.at(onboardingAddress);
+    const votingAddress = await dao.getAdapterAddress(sha3("voting"));
+    const voting = await VotingContract.at(votingAddress);
+    const guildkickAddress = await dao.getAdapterAddress(sha3("guildkick"));
+    const guildkickContract = await GuildKickContract.at(guildkickAddress);
+    await onboardingNewMember(
       dao,
+      onboarding,
+      voting,
       newMember,
       member,
       sharePrice,
@@ -221,8 +236,9 @@ contract("LAOLAND - GuildKick Adapter", async (accounts) => {
 
     // Start a new kick poposal
     let memberToKick = newMember;
-    let { guildkickContract, kickProposalId } = await guildKick(
+    let { kickProposalId } = await guildKick(
       dao,
+      guildkickContract,
       memberToKick,
       member
     );
@@ -257,13 +273,21 @@ contract("LAOLAND - GuildKick Adapter", async (accounts) => {
   });
 
   it("should not be possible for a non-member to process a kick proposal", async () => {
-    const member = accounts[1];
+    const member = accounts[7];
     const newMemberA = accounts[2];
 
     let dao = await createDao(member);
+    const onboardingAddress = await dao.getAdapterAddress(sha3("onboarding"));
+    const onboarding = await OnboardingContract.at(onboardingAddress);
+    const votingAddress = await dao.getAdapterAddress(sha3("voting"));
+    const voting = await VotingContract.at(votingAddress);
+    const guildkickAddress = await dao.getAdapterAddress(sha3("guildkick"));
+    const guildkickContract = await GuildKickContract.at(guildkickAddress);
 
-    let voting = await onboardingNewMember(
+    await onboardingNewMember(
       dao,
+      onboarding,
+      voting,
       newMemberA,
       member,
       sharePrice,
@@ -272,8 +296,9 @@ contract("LAOLAND - GuildKick Adapter", async (accounts) => {
 
     // Start a new kick poposal
     let memberToKick = newMemberA;
-    let { guildkickContract, kickProposalId } = await guildKick(
+    let { kickProposalId } = await guildKick(
       dao,
+      guildkickContract,
       memberToKick,
       member
     );
@@ -302,12 +327,21 @@ contract("LAOLAND - GuildKick Adapter", async (accounts) => {
   });
 
   it("should not be possible for a non-active member to process a kick proposal", async () => {
-    const member = accounts[1];
+    const member = accounts[8];
     const newMember = accounts[2];
 
     let dao = await createDao(member);
-    let voting = await onboardingNewMember(
+    const onboardingAddress = await dao.getAdapterAddress(sha3("onboarding"));
+    const onboarding = await OnboardingContract.at(onboardingAddress);
+    const votingAddress = await dao.getAdapterAddress(sha3("voting"));
+    const voting = await VotingContract.at(votingAddress);
+    const guildkickAddress = await dao.getAdapterAddress(sha3("guildkick"));
+    const guildkickContract = await GuildKickContract.at(guildkickAddress);
+
+    await onboardingNewMember(
       dao,
+      onboarding,
+      voting,
       newMember,
       member,
       sharePrice,
@@ -316,8 +350,9 @@ contract("LAOLAND - GuildKick Adapter", async (accounts) => {
 
     // Start a new kick poposal
     let memberToKick = newMember;
-    let { guildkickContract, kickProposalId } = await guildKick(
+    let { kickProposalId } = await guildKick(
       dao,
+      guildkickContract,
       memberToKick,
       member
     );
@@ -351,12 +386,21 @@ contract("LAOLAND - GuildKick Adapter", async (accounts) => {
   });
 
   it("should not be possible to process a kick proposal that was already processed", async () => {
-    const member = accounts[1];
+    const member = accounts[9];
     const newMember = accounts[2];
 
     let dao = await createDao(member);
-    let voting = await onboardingNewMember(
+    const onboardingAddress = await dao.getAdapterAddress(sha3("onboarding"));
+    const onboarding = await OnboardingContract.at(onboardingAddress);
+    const votingAddress = await dao.getAdapterAddress(sha3("voting"));
+    const voting = await VotingContract.at(votingAddress);
+    const guildkickAddress = await dao.getAdapterAddress(sha3("guildkick"));
+    const guildkickContract = await GuildKickContract.at(guildkickAddress);
+
+    await onboardingNewMember(
       dao,
+      onboarding,
+      voting,
       newMember,
       member,
       sharePrice,
@@ -365,8 +409,9 @@ contract("LAOLAND - GuildKick Adapter", async (accounts) => {
 
     // Start a new kick poposal
     let memberToKick = newMember;
-    let { guildkickContract, kickProposalId } = await guildKick(
+    let { kickProposalId } = await guildKick(
       dao,
+      guildkickContract,
       memberToKick,
       member
     );
@@ -399,12 +444,21 @@ contract("LAOLAND - GuildKick Adapter", async (accounts) => {
   });
 
   it("should not be possible to process a kick proposal that does not exist", async () => {
-    const member = accounts[1];
+    const member = accounts[3];
     const newMember = accounts[2];
 
     let dao = await createDao(member);
-    let voting = await onboardingNewMember(
+    const onboardingAddress = await dao.getAdapterAddress(sha3("onboarding"));
+    const onboarding = await OnboardingContract.at(onboardingAddress);
+    const votingAddress = await dao.getAdapterAddress(sha3("voting"));
+    const voting = await VotingContract.at(votingAddress);
+    const guildkickAddress = await dao.getAdapterAddress(sha3("guildkick"));
+    const guildkickContract = await GuildKickContract.at(guildkickAddress);
+
+    await onboardingNewMember(
       dao,
+      onboarding,
+      voting,
       newMember,
       member,
       sharePrice,
@@ -413,8 +467,9 @@ contract("LAOLAND - GuildKick Adapter", async (accounts) => {
 
     // Start a new kick poposal
     let memberToKick = newMember;
-    let { guildkickContract, kickProposalId } = await guildKick(
+    let { kickProposalId } = await guildKick(
       dao,
+      guildkickContract,
       memberToKick,
       member
     );
@@ -447,12 +502,21 @@ contract("LAOLAND - GuildKick Adapter", async (accounts) => {
   });
 
   it("should not be possible to process a kick proposal for a non active member", async () => {
-    const member = accounts[1];
+    const member = accounts[3];
     const newMember = accounts[2];
 
     let dao = await createDao(member);
-    let voting = await onboardingNewMember(
+    const onboardingAddress = await dao.getAdapterAddress(sha3("onboarding"));
+    const onboarding = await OnboardingContract.at(onboardingAddress);
+    const votingAddress = await dao.getAdapterAddress(sha3("voting"));
+    const voting = await VotingContract.at(votingAddress);
+    const guildkickAddress = await dao.getAdapterAddress(sha3("guildkick"));
+    const guildkickContract = await GuildKickContract.at(guildkickAddress);
+
+    await onboardingNewMember(
       dao,
+      onboarding,
+      voting,
       newMember,
       member,
       sharePrice,
@@ -461,8 +525,9 @@ contract("LAOLAND - GuildKick Adapter", async (accounts) => {
 
     // Start a new kick poposal
     let memberToKick = newMember;
-    let { guildkickContract, kickProposalId } = await guildKick(
+    let { kickProposalId } = await guildKick(
       dao,
+      guildkickContract,
       memberToKick,
       member
     );
@@ -482,7 +547,7 @@ contract("LAOLAND - GuildKick Adapter", async (accounts) => {
 
     // The remaining members accidentaly submit another kick proposal for an inactive member
     // A member that was already kicked out
-    let res = await guildKick(dao, memberToKick, member);
+    let res = await guildKick(dao, guildkickContract, memberToKick, member);
     kickProposalId = res.kickProposalId;
     try {
       await guildkickContract.kick(dao.address, memberToKick, kickProposalId, {
@@ -498,12 +563,21 @@ contract("LAOLAND - GuildKick Adapter", async (accounts) => {
   });
 
   it("should not be possible to process a kick proposal if the voting did not pass", async () => {
-    const member = accounts[1];
+    const member = accounts[7];
     const newMember = accounts[2];
 
     let dao = await createDao(member);
-    let voting = await onboardingNewMember(
+    const onboardingAddress = await dao.getAdapterAddress(sha3("onboarding"));
+    const onboarding = await OnboardingContract.at(onboardingAddress);
+    const votingAddress = await dao.getAdapterAddress(sha3("voting"));
+    const voting = await VotingContract.at(votingAddress);
+    const guildkickAddress = await dao.getAdapterAddress(sha3("guildkick"));
+    const guildkickContract = await GuildKickContract.at(guildkickAddress);
+
+    await onboardingNewMember(
       dao,
+      onboarding,
+      voting,
       newMember,
       member,
       sharePrice,
@@ -512,8 +586,9 @@ contract("LAOLAND - GuildKick Adapter", async (accounts) => {
 
     // Start a new kick poposal
     let memberToKick = newMember;
-    let { guildkickContract, kickProposalId } = await guildKick(
+    let { kickProposalId } = await guildKick(
       dao,
+      guildkickContract,
       memberToKick,
       member
     );
@@ -540,13 +615,22 @@ contract("LAOLAND - GuildKick Adapter", async (accounts) => {
   });
 
   it("should not be possible to process a kick proposal if the member to kick does not have any shares", async () => {
-    const member = accounts[2];
+    const member = accounts[8];
     const advisor = accounts[3];
 
     let dao = await createDao(member);
+    const onboardingAddress = await dao.getAdapterAddress(sha3("onboarding"));
+    const onboarding = await OnboardingContract.at(onboardingAddress);
+    const votingAddress = await dao.getAdapterAddress(sha3("voting"));
+    const voting = await VotingContract.at(votingAddress);
+    const guildkickAddress = await dao.getAdapterAddress(sha3("guildkick"));
+    const guildkickContract = await GuildKickContract.at(guildkickAddress);
+
     // New member joins as an Advisor (only receives LOOT)
-    let voting = await onboardingNewMember(
+    await onboardingNewMember(
       dao,
+      onboarding,
+      voting,
       advisor,
       member,
       sharePrice,
@@ -555,8 +639,9 @@ contract("LAOLAND - GuildKick Adapter", async (accounts) => {
 
     // Start a new kick poposal to kick out the advisor
     let memberToKick = advisor;
-    let { guildkickContract, kickProposalId } = await guildKick(
+    let { kickProposalId } = await guildKick(
       dao,
+      guildkickContract,
       memberToKick,
       member
     );
