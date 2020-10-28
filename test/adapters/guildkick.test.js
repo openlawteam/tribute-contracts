@@ -169,4 +169,22 @@ contract("LAOLAND - GuildKick Adapter", async (accounts) => {
     });
     assert.equal(activeMember.toString(), "false");
   });
+
+  it("should not be possible for a non-member to submit a guild kick proposal", async () => {});
+
+  it("should not be possible for a non-active member to submit a guild kick proposal", async () => {});
+
+  it("should not be possible for a non-member to process a kick proposal", async () => {});
+
+  it("should not be possible for a non-active member to process a kick proposal", async () => {});
+
+  it("should not be possible to process a kick proposal that is not in progress", async () => {});
+
+  it("should not be possible to process a kick proposal for a kicked member that is not active", async () => {});
+
+  it("should not be possible to process a kick proposal using the wrong proposal id", async () => {});
+
+  it("should not be possible to process a kick proposal if the voting did not pass", async () => {});
+
+  it("should not be possible to process a kick proposal if the member to kick does not have any shares", async () => {});
 });
