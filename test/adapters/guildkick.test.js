@@ -672,4 +672,99 @@ contract("LAOLAND - GuildKick Adapter", async (accounts) => {
       assert.equal(e.reason, "insufficient shares");
     }
   });
+
+  it("should not be possible for a kicked member to sponsor an onboarding proposal", async () => {
+    const member = accounts[5];
+    const newMember = accounts[2];
+
+    let dao = await createDao(member);
+    const onboardingAddress = await dao.getAdapterAddress(sha3("onboarding"));
+    const onboarding = await OnboardingContract.at(onboardingAddress);
+    const votingAddress = await dao.getAdapterAddress(sha3("voting"));
+    const voting = await VotingContract.at(votingAddress);
+    const guildkickAddress = await dao.getAdapterAddress(sha3("guildkick"));
+    const guildkickContract = await GuildKickContract.at(guildkickAddress);
+    await onboardingNewMember(
+      dao,
+      onboarding,
+      voting,
+      newMember,
+      member,
+      sharePrice,
+      SHARES
+    );
+
+    //Check Guild Bank Balance
+    let guildBalance = await dao.balanceOf(GUILD, ETH_TOKEN);
+    assert.equal(toBN(guildBalance).toString(), "1200000000000000000");
+
+    //Check Member Shares & Loot
+    let shares = await dao.nbShares(newMember);
+    assert.equal(shares.toString(), "10000000000000000");
+    let loot = await dao.nbLoot(newMember);
+    assert.equal(loot.toString(), "0");
+
+    //SubGuildKick
+    let memberToKick = newMember;
+    let { kickProposalId } = await guildKick(
+      dao,
+      guildkickContract,
+      memberToKick,
+      member
+    );
+    assert.equal(kickProposalId.toString(), "1");
+
+    //Vote YES on kick proposal
+    await voting.submitVote(dao.address, kickProposalId, 1, {
+      from: member,
+      gasPrice: toBN("0"),
+    });
+    await advanceTime(10000);
+
+    // Member must be active before the kick happens
+    let activeMember = await dao.isActiveMember(memberToKick, {
+      from: member,
+      gasPrice: toBN("0"),
+    });
+    assert.equal(activeMember.toString(), "true");
+
+    await guildkickContract.kick(dao.address, memberToKick, kickProposalId, {
+      from: member,
+      gasPrice: toBN("0"),
+    });
+
+    // Check Member Shares & Loot, the Shares must be converted to Loot to remove the voting power of the member
+    shares = await dao.nbShares(newMember);
+    assert.equal(shares.toString(), "0");
+    loot = await dao.nbLoot(newMember);
+    assert.equal(loot.toString(), "10000000000000000");
+
+    let kickedMember = memberToKick;
+
+    // Member must be inactive after the kick has happened
+    activeMember = await dao.isActiveMember(kickedMember, {
+      from: member,
+      gasPrice: toBN("0"),
+    });
+    assert.equal(activeMember.toString(), "false");
+
+    try {
+      // kicked member attemps to sponsor a new member
+      let newMemberB = accounts[3];
+      await onboardingNewMember(
+        dao,
+        onboarding,
+        voting,
+        newMemberB,
+        kickedMember,
+        sharePrice,
+        SHARES
+      );
+      assert.fail(
+        "should not be possible for a kicked member to sponsor a new member"
+      );
+    } catch (e) {
+      assert.equal(e.reason, "onlyMember");
+    }
+  });
 });
