@@ -144,6 +144,13 @@ contract("LAOLAND - GuildKick Adapter", async (accounts) => {
     });
     await advanceTime(10000);
 
+    // Member must be active before the kick happens
+    let activeMember = await dao.isActiveMember(memberToKick, {
+      from: myAccount,
+      gasPrice: toBN("0"),
+    });
+    assert.equal(activeMember.toString(), "true");
+
     await guildkickContract.kick(dao.address, memberToKick, kickProposalId, {
       from: myAccount,
       gasPrice: toBN("0"),
@@ -155,8 +162,11 @@ contract("LAOLAND - GuildKick Adapter", async (accounts) => {
     loot = await dao.nbLoot(newMember);
     assert.equal(loot.toString(), "100000000000000000");
 
-    // TODO Check if the member is in jail
-
-    // TODO try to access other functions
+    // Member must be inactive after the kick has happened
+    activeMember = await dao.isActiveMember(memberToKick, {
+      from: myAccount,
+      gasPrice: toBN("0"),
+    });
+    assert.equal(activeMember.toString(), "false");
   });
 });
