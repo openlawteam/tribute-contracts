@@ -30,7 +30,6 @@ type Member @entity {
 type Proposal @entity {
   id: ID!
   proposalId: BigInt!
-  timestamp: String!
   createdAt: String!
   sponsoredAt: String!
   processedAt: String!
