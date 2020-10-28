@@ -86,16 +86,10 @@ contract GuildKickContract is IGuildKick, DaoConstants, MemberGuard {
         );
 
         // Only active members can be kicked out, which means the member is in jail already
-        require(
-            dao.isActiveMember(memberToKick),
-            "memberToKick is not active"
-        );
+        require(dao.isActiveMember(memberToKick), "memberToKick is not active");
 
         // If the proposal id does not match the storage one, we expect it to fail
-        require(
-            guildKick.proposalId == proposalId,
-            "invalid kick proposal"
-        );
+        require(guildKick.proposalId == proposalId, "invalid kick proposal");
 
         IVoting votingContract = IVoting(dao.getAdapterAddress(VOTING));
         require(
@@ -115,5 +109,4 @@ contract GuildKickContract is IGuildKick, DaoConstants, MemberGuard {
 
         dao.processProposal(proposalId);
     }
-    
 }
