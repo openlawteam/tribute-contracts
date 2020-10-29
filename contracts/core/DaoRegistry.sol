@@ -419,14 +419,6 @@ contract DaoRegistry is DaoConstants, AdapterGuard {
         emit UpdateDelegateKey(memberAddr, newDelegateKey);
     }
 
-    function nbShares(address member) external view returns (uint256) {
-        return balanceOf(memberAddressesByDelegatedKey[member], SHARES);
-    }
-
-    function nbLoot(address member) external view returns (uint256) {
-        return balanceOf(memberAddressesByDelegatedKey[member], LOOT);
-    }
-
     /*
      * BANK
      */
@@ -472,8 +464,12 @@ contract DaoRegistry is DaoConstants, AdapterGuard {
      * Internal bookkeeping
      */
 
-    function tokens() external view returns (address[] memory) {
-        return _bank.tokens;
+    function getToken(uint256 index) external view returns (address) {
+        return _bank.tokens[index];
+    }
+
+    function nbTokens() external view returns (uint256) {
+        return _bank.tokens.length;
     }
 
     function addToBalance(

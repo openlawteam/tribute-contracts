@@ -87,7 +87,7 @@ contract('LAOLAND - Non Voting Onboarding Adapter', async accounts => {
     });
 
     // Check the number of Loot (non-voting shares) issued to the new Avisor
-    const advisorAccountLoot = await dao.nbLoot(advisorAccount);
+    const advisorAccountLoot = await dao.balanceOf(advisorAccount, LOOT);
     assert.equal(advisorAccountLoot.toString(), "3000000000000000");
 
     // Guild balance must not change when Loot shares are issued
@@ -188,7 +188,7 @@ contract('LAOLAND - Non Voting Onboarding Adapter', async accounts => {
     });
 
     // Check the number of Loot (non-voting shares) issued to the new Avisor
-    const advisorAccountLoot = await dao.nbLoot(advisorAccount);
+    const advisorAccountLoot = await dao.balanceOf(advisorAccount, LOOT);
     assert.equal(advisorAccountLoot.toString(), "100000000");
 
     // Guild balance must not change when Loot shares are issued

@@ -25,6 +25,7 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
  */
 const { MerkleTree } = require('./merkleTree.js');
+const {SHARES} = require('./DaoFactory.js');
 const sha3 = web3.utils.sha3;
 
 function toStepNode(step, merkleTree) {
@@ -43,7 +44,7 @@ async function addVote(votes, blockNumber, dao, proposalId, account, voteYes) {
     ['uint256', 'address', 'uint256'], 
     [blockNumber.toString(), dao.address, proposalId]));    
   
-  const memberWeight = await dao.nbShares(account);
+  const memberWeight = await dao.balanceOf(account, SHARES);
 
   const vote = {
     address : account.toString(),

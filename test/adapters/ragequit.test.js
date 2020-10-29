@@ -90,7 +90,7 @@ contract('LAOLAND - Ragequit Adapter', async accounts => {
     });
 
     //Check New Member Shares
-    let newShares = await dao.nbShares(member);
+    let newShares = await dao.balanceOf(member, SHARES);
     assert.equal(newShares.toString(), "0");
     return ragequitContract;
   }
@@ -119,7 +119,7 @@ contract('LAOLAND - Ragequit Adapter', async accounts => {
     assert.equal(toBN(guildBalance).toString(), "12000000000000000000");
 
     //Check Member Shares
-    let shares = await dao.nbShares(newMember);
+    let shares = await dao.balanceOf(newMember, SHARES);
     assert.equal(shares.toString(), "100000000000000000");
 
     //Ragequit
@@ -155,7 +155,7 @@ contract('LAOLAND - Ragequit Adapter', async accounts => {
     assert.equal(guildBalance.toString(), "12000000000000000000".toString());
 
     //Check Member Shares
-    let shares = await dao.nbShares(newMember);
+    let shares = await dao.balanceOf(newMember, SHARES);
     assert.equal(shares.toString(), "100000000000000000");
 
     //Ragequit
@@ -191,7 +191,7 @@ contract('LAOLAND - Ragequit Adapter', async accounts => {
     assert.equal(guildBalance.toString(), "12000000000000000000".toString());
 
     //Check New Member Shares
-    let shares = await dao.nbShares(newMember);
+    let shares = await dao.balanceOf(newMember, SHARES);
     assert.equal(shares.toString(), "100000000000000000");
 
     //Ragequit - Burn all the new member shares
@@ -230,7 +230,7 @@ it("should be possible to a member to ragequit if the member voted YES on a prop
     assert.equal(guildBalance.toString(), "12000000000000000000".toString());
 
     //Check New Member Shares
-    let shares = await dao.nbShares(newMember);
+    let shares = await dao.balanceOf(newMember, SHARES);
     assert.equal(shares.toString(), "100000000000000000");
 
     //Create Financing Request
@@ -287,7 +287,7 @@ it("should be possible to a member to ragequit if the member voted YES on a prop
     assert.equal(guildBalance.toString(), "12000000000000000000".toString());
 
     //Check New Member Shares
-    let shares = await dao.nbShares(newMember);
+    let shares = await dao.balanceOf(newMember, SHARES);
     assert.equal(shares.toString(), "100000000000000000");
 
     //Create Financing Request
@@ -410,7 +410,7 @@ it("should be possible to a member to ragequit if the member voted YES on a prop
     });
 
     // Check the number of Loot (non-voting shares) issued to the new Avisor
-    const advisorAccountLoot = await dao.nbLoot(advisorAccount);
+    const advisorAccountLoot = await dao.balanceOf(advisorAccount, LOOT);
     assert.equal(advisorAccountLoot.toString(), "5");
 
     // Guild balance must change when Loot shares are issued
@@ -503,7 +503,7 @@ it("should be possible to a member to ragequit if the member voted YES on a prop
     let ragequitAddress = await dao.getAdapterAddress(sha3("ragequit"));
     let ragequitContract = await RagequitContract.at(ragequitAddress);
 
-    const shares = await dao.nbShares(memberAccount);
+    const shares = await dao.balanceOf(memberAccount, SHARES);
     await ragequitContract.startRagequit(dao.address, toBN(Math.floor(shares / 2)), toBN(0), {
       from: memberAccount,
       gasPrice: toBN("0"),
