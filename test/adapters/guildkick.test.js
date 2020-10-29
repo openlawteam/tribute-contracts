@@ -193,7 +193,7 @@ contract("LAOLAND - GuildKick Adapter", async (accounts) => {
     });
     assert.equal(activeMember.toString(), "true");
 
-    await guildkickContract.kick(dao.address, kickProposalId, {
+    await guildkickContract.guildKick(dao.address, kickProposalId, {
       from: member,
       gasPrice: toBN("0"),
     });
@@ -274,7 +274,7 @@ contract("LAOLAND - GuildKick Adapter", async (accounts) => {
     await advanceTime(10000);
 
     // The member gets kicked out of the DAO
-    await guildkickContract.kick(dao.address, kickProposalId, {
+    await guildkickContract.guildKick(dao.address, kickProposalId, {
       from: member,
       gasPrice: toBN("0"),
     });
@@ -282,7 +282,7 @@ contract("LAOLAND - GuildKick Adapter", async (accounts) => {
     try {
       // The kicked member which is now inactive attemps to submit a kick proposal
       // to kick the member that started the previous guild kick
-      await guildkickContract.kick(dao.address, kickProposalId, {
+      await guildkickContract.guildKick(dao.address, kickProposalId, {
         from: memberToKick,
         gasPrice: toBN("0"),
       });
@@ -337,7 +337,7 @@ contract("LAOLAND - GuildKick Adapter", async (accounts) => {
 
     try {
       // A non-member of the DAO attemps to process a kick proposal
-      await guildkickContract.kick(dao.address, kickProposalId, {
+      await guildkickContract.guildKick(dao.address, kickProposalId, {
         from: nonMember,
         gasPrice: toBN("0"),
       });
@@ -389,7 +389,7 @@ contract("LAOLAND - GuildKick Adapter", async (accounts) => {
     await advanceTime(10000);
 
     // The member gets kicked out of the DAO
-    await guildkickContract.kick(dao.address, kickProposalId, {
+    await guildkickContract.guildKick(dao.address, kickProposalId, {
       from: member,
       gasPrice: toBN("0"),
     });
@@ -397,7 +397,7 @@ contract("LAOLAND - GuildKick Adapter", async (accounts) => {
     try {
       // The kicked member which is now inactive attemps to submit a kick proposal
       // to kick the member that started the previous guild kick
-      await guildkickContract.kick(dao.address, kickProposalId, {
+      await guildkickContract.guildKick(dao.address, kickProposalId, {
         from: memberToKick,
         gasPrice: toBN("0"),
       });
@@ -449,14 +449,14 @@ contract("LAOLAND - GuildKick Adapter", async (accounts) => {
     await advanceTime(10000);
 
     // The member gets kicked out of the DAO
-    await guildkickContract.kick(dao.address, kickProposalId, {
+    await guildkickContract.guildKick(dao.address, kickProposalId, {
       from: member,
       gasPrice: toBN("0"),
     });
 
     try {
       // The member attempts to process the same proposal again
-      await guildkickContract.kick(dao.address, kickProposalId, {
+      await guildkickContract.guildKick(dao.address, kickProposalId, {
         from: member,
         gasPrice: toBN("0"),
       });
@@ -510,7 +510,7 @@ contract("LAOLAND - GuildKick Adapter", async (accounts) => {
     try {
       // The member attempts to process the same proposal again
       let invalidKickProposalId = 89;
-      await guildkickContract.kick(dao.address, invalidKickProposalId, {
+      await guildkickContract.guildKick(dao.address, invalidKickProposalId, {
         from: member,
         gasPrice: toBN("0"),
       });
@@ -562,7 +562,7 @@ contract("LAOLAND - GuildKick Adapter", async (accounts) => {
     await advanceTime(10000);
 
     // The member gets kicked out and become inactive
-    await guildkickContract.kick(dao.address, kickProposalId, {
+    await guildkickContract.guildKick(dao.address, kickProposalId, {
       from: member,
       gasPrice: toBN("0"),
     });
@@ -577,7 +577,7 @@ contract("LAOLAND - GuildKick Adapter", async (accounts) => {
     );
     kickProposalId = res.kickProposalId;
     try {
-      await guildkickContract.kick(dao.address, kickProposalId, {
+      await guildkickContract.guildKick(dao.address, kickProposalId, {
         from: member,
         gasPrice: toBN("0"),
       });
@@ -630,7 +630,7 @@ contract("LAOLAND - GuildKick Adapter", async (accounts) => {
 
     try {
       // The member attemps to process the kick proposal that did not pass
-      await guildkickContract.kick(dao.address, kickProposalId, {
+      await guildkickContract.guildKick(dao.address, kickProposalId, {
         from: member,
         gasPrice: toBN("0"),
       });
@@ -684,7 +684,7 @@ contract("LAOLAND - GuildKick Adapter", async (accounts) => {
 
     try {
       // The member attemps to process the kick proposal, but the Advisor does not have any SHARES, only LOOT
-      await guildkickContract.kick(dao.address, kickProposalId, {
+      await guildkickContract.guildKick(dao.address, kickProposalId, {
         from: member,
         gasPrice: toBN("0"),
       });
@@ -734,7 +734,7 @@ contract("LAOLAND - GuildKick Adapter", async (accounts) => {
     });
     await advanceTime(10000);
 
-    await guildkickContract.kick(dao.address, kickProposalId, {
+    await guildkickContract.guildKick(dao.address, kickProposalId, {
       from: member,
       gasPrice: toBN("0"),
     });
@@ -814,7 +814,7 @@ contract("LAOLAND - GuildKick Adapter", async (accounts) => {
     await advanceTime(10000);
 
     // Process guild kick proposal
-    await guildkickContract.kick(dao.address, kickProposalId, {
+    await guildkickContract.guildKick(dao.address, kickProposalId, {
       from: member,
       gasPrice: toBN("0"),
     });
@@ -895,7 +895,7 @@ contract("LAOLAND - GuildKick Adapter", async (accounts) => {
     });
     await advanceTime(10000);
 
-    await guildkickContract.kick(dao.address, kickProposalId, {
+    await guildkickContract.guildKick(dao.address, kickProposalId, {
       from: member,
       gasPrice: toBN("0"),
     });
@@ -975,7 +975,7 @@ contract("LAOLAND - GuildKick Adapter", async (accounts) => {
     });
     await advanceTime(10000);
 
-    await guildkickContract.kick(dao.address, kickProposalId, {
+    await guildkickContract.guildKick(dao.address, kickProposalId, {
       from: member,
       gasPrice: toBN("0"),
     });
@@ -1048,7 +1048,7 @@ contract("LAOLAND - GuildKick Adapter", async (accounts) => {
     });
     await advanceTime(10000);
 
-    await guildkickContract.kick(dao.address, kickProposalId, {
+    await guildkickContract.guildKick(dao.address, kickProposalId, {
       from: member,
       gasPrice: toBN("0"),
     });

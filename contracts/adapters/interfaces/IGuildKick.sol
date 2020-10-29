@@ -35,5 +35,7 @@ interface IGuildKick {
         bytes calldata data
     ) external returns (uint256);
 
-    function kick(DaoRegistry dao, uint64 proposalId) external;
+    function guildKick(DaoRegistry dao, uint64 proposalId) external;
+
+    function rageKick(DaoRegistry dao, uint64 proposalId, uint256 toIndex) external;
 }
