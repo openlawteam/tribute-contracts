@@ -1,3 +1,6 @@
+// Whole-script strict mode syntax
+'use strict';
+
 /**
 MIT License
 
@@ -104,7 +107,7 @@ contract('LAOLAND - Managing Adapter', async accounts => {
     await managing.createModuleChangeRequest(dao.address, newModuleId, newModuleAddress, 0, { from: myAccount, gasPrice: toBN("0") });
 
     //Get the new proposal id
-    pastEvents = await dao.getPastEvents();
+    let pastEvents = await dao.getPastEvents();
     let { proposalId } = pastEvents[0].returnValues;
     
     //Sponsor the new proposal, vote and process it 
@@ -135,7 +138,7 @@ contract('LAOLAND - Managing Adapter', async accounts => {
     await managing.createModuleChangeRequest(dao.address, newModuleId, newModuleAddress, 0, { from: myAccount, gasPrice: toBN("0") });
 
     //Get the new proposal id
-    pastEvents = await dao.getPastEvents();
+    const pastEvents = await dao.getPastEvents();
     let { proposalId } = pastEvents[0].returnValues;
     
     //set new delegate key

@@ -6,10 +6,8 @@ export function handleSubmittedProposal(event: SubmittedProposal): void {
   let proposal = Proposal.load(id);
   if(proposal == null) {
       proposal = new Proposal(id);
+      proposal.createdAt = event.block.timestamp.toString();
   }
-
-  
-  proposal.timestamp = event.block.timestamp.toString();
 }
 
 export function handleProcessedProposal(event: ProcessedProposal): void {

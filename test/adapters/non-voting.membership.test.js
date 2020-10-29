@@ -1,3 +1,6 @@
+// Whole-script strict mode syntax
+'use strict';
+
 /**
 MIT License
 
@@ -62,7 +65,7 @@ contract('LAOLAND - Non Voting Onboarding Adapter', async accounts => {
     });
 
     //Get the new proposal id
-    pastEvents = await dao.getPastEvents();
+    const pastEvents = await dao.getPastEvents();
     let { proposalId } = pastEvents[0].returnValues;
 
     // Sponsor the new proposal to allow the Advisor to join the DAO

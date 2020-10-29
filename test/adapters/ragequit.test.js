@@ -1,3 +1,6 @@
+// Whole-script strict mode syntax
+'use strict';
+
 /**
 MIT License
 
@@ -41,7 +44,7 @@ const {
 
 contract('LAOLAND - Ragequit Adapter', async accounts => {
 
-  submitNewMemberProposal = async (onboarding, dao, newMember, sharePrice) => {
+  const submitNewMemberProposal = async (onboarding, dao, newMember, sharePrice) => {
     const myAccount = accounts[1];
 		
     await onboarding.onboard(dao.address, newMember, SHARES, sharePrice.mul(toBN(100)), {
@@ -55,7 +58,7 @@ contract('LAOLAND - Ragequit Adapter', async accounts => {
     return proposalId;
   };
 
-  sponsorNewMember = async (
+  const sponsorNewMember = async (
     onboarding,
     dao,
     proposalId,
@@ -73,7 +76,7 @@ contract('LAOLAND - Ragequit Adapter', async accounts => {
     await advanceTime(10000);
   }
 
-  ragequit = async (dao, shares, loot, member) => {
+  const ragequit = async (dao, shares, loot, member) => {
     let ragequitAddress = await dao.getAdapterAddress(sha3("ragequit"));
     let ragequitContract = await RagequitContract.at(ragequitAddress);
     await ragequitContract.startRagequit(dao.address, toBN(shares), toBN(loot), {
@@ -234,7 +237,7 @@ it("should be possible to a member to ragequit if the member voted YES on a prop
     await financing.createFinancingRequest(dao.address, applicant, ETH_TOKEN, requestedAmount, fromUtf8(""));
 
     //Get the new proposalId from event log
-    pastEvents = await dao.getPastEvents();
+    let pastEvents = await dao.getPastEvents();
     proposalId = pastEvents[0].returnValues.proposalId;
     assert.equal(proposalId, 1);
 
@@ -298,7 +301,7 @@ it("should be possible to a member to ragequit if the member voted YES on a prop
     );
 
     //Get the new proposalId from event log
-    pastEvents = await dao.getPastEvents();
+    let pastEvents = await dao.getPastEvents();
     proposalId = pastEvents[0].returnValues.proposalId;
     assert.equal(proposalId, 1);
 
@@ -387,7 +390,7 @@ it("should be possible to a member to ragequit if the member voted YES on a prop
     );
 
     //Get the new proposal id
-    pastEvents = await dao.getPastEvents();
+    let pastEvents = await dao.getPastEvents();
     let { proposalId } = pastEvents[0].returnValues;
 
     // Sponsor the new proposal to allow the Advisor to join the DAO
