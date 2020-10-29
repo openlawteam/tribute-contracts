@@ -38,12 +38,13 @@ contract GuildKickContract is IGuildKick, DaoConstants, MemberGuard {
     enum GuildKickStatus {IN_PROGRESS, DONE}
 
     struct GuildKick {
-        uint64 proposalId;
+        address memberToKick;
         GuildKickStatus status;
         bytes data;
+        bool exists;
     }
 
-    mapping(address => GuildKick) public kicks;
+    mapping(uint64 => GuildKick) public kicks;
 
     /*
      * default fallback function to prevent from sending ether to the contract
@@ -60,10 +61,14 @@ contract GuildKickContract is IGuildKick, DaoConstants, MemberGuard {
         // A kick proposal is created and needs to be voted
         uint64 proposalId = dao.submitProposal(msg.sender);
 
-        GuildKick storage guildKick = kicks[memberToKick];
-        guildKick.proposalId = proposalId;
-        guildKick.status = GuildKickStatus.IN_PROGRESS;
-        guildKick.data = data;
+        GuildKick memory guildKick = GuildKick(
+            memberToKick,
+            GuildKickStatus.IN_PROGRESS,
+            data,
+            true
+        );
+
+        kicks[proposalId] = guildKick;
 
         // start the voting process for the guild kick proposal
         IVoting votingContract = IVoting(dao.getAdapterAddress(VOTING));
@@ -73,23 +78,21 @@ contract GuildKickContract is IGuildKick, DaoConstants, MemberGuard {
         return proposalId;
     }
 
-    function kick(
-        DaoRegistry dao,
-        address memberToKick,
-        uint64 proposalId
-    ) external override onlyMember(dao) {
-        GuildKick storage guildKick = kicks[memberToKick];
+    function kick(DaoRegistry dao, uint64 proposalId)
+        external
+        override
+        onlyMember(dao)
+    {
+        GuildKick storage guildKick = kicks[proposalId];
         // If status is empty or DONE we expect it to fail
         require(
-            guildKick.status == GuildKickStatus.IN_PROGRESS,
+            guildKick.exists && guildKick.status == GuildKickStatus.IN_PROGRESS,
             "guild kick already completed or does not exist"
         );
 
         // Only active members can be kicked out, which means the member is in jail already
+        address memberToKick = guildKick.memberToKick;
         require(dao.isActiveMember(memberToKick), "memberToKick is not active");
-
-        // If the proposal id does not match the storage one, we expect it to fail
-        require(guildKick.proposalId == proposalId, "invalid kick proposal");
 
         IVoting votingContract = IVoting(dao.getAdapterAddress(VOTING));
         require(
