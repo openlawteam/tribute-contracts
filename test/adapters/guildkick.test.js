@@ -21,12 +21,17 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
  */
+
+// Whole-script strict mode syntax
+"use strict";
+
 const {
   sha3,
   toBN,
   fromUtf8,
   advanceTime,
   createDao,
+  getContract,
   sharePrice,
   GUILD,
   ETH_TOKEN,
@@ -34,7 +39,9 @@ const {
   OnboardingContract,
   VotingContract,
   GuildKickContract,
+  FinancingContract,
   LOOT,
+  ManagingContract,
 } = require("../../utils/DaoFactory.js");
 
 contract("LAOLAND - GuildKick Adapter", async (accounts) => {
@@ -130,12 +137,13 @@ contract("LAOLAND - GuildKick Adapter", async (accounts) => {
     const newMember = accounts[2];
 
     let dao = await createDao(member);
-    const onboardingAddress = await dao.getAdapterAddress(sha3("onboarding"));
-    const onboarding = await OnboardingContract.at(onboardingAddress);
-    const votingAddress = await dao.getAdapterAddress(sha3("voting"));
-    const voting = await VotingContract.at(votingAddress);
-    const guildkickAddress = await dao.getAdapterAddress(sha3("guildkick"));
-    const guildkickContract = await GuildKickContract.at(guildkickAddress);
+    const onboarding = await getContract(dao, "onboarding", OnboardingContract);
+    const voting = await getContract(dao, "voting", VotingContract);
+    const guildkickContract = await getContract(
+      dao,
+      "guildkick",
+      GuildKickContract
+    );
     await onboardingNewMember(
       dao,
       onboarding,
@@ -204,8 +212,11 @@ contract("LAOLAND - GuildKick Adapter", async (accounts) => {
     const nonMember = accounts[2];
 
     let dao = await createDao(member);
-    const guildkickAddress = await dao.getAdapterAddress(sha3("guildkick"));
-    const guildkickContract = await GuildKickContract.at(guildkickAddress);
+    const guildkickContract = await getContract(
+      dao,
+      "guildkick",
+      GuildKickContract
+    );
 
     // Non member attemps to submit a guild kick proposal
     try {
@@ -224,12 +235,13 @@ contract("LAOLAND - GuildKick Adapter", async (accounts) => {
     const newMember = accounts[2];
 
     let dao = await createDao(member);
-    const onboardingAddress = await dao.getAdapterAddress(sha3("onboarding"));
-    const onboarding = await OnboardingContract.at(onboardingAddress);
-    const votingAddress = await dao.getAdapterAddress(sha3("voting"));
-    const voting = await VotingContract.at(votingAddress);
-    const guildkickAddress = await dao.getAdapterAddress(sha3("guildkick"));
-    const guildkickContract = await GuildKickContract.at(guildkickAddress);
+    const onboarding = await getContract(dao, "onboarding", OnboardingContract);
+    const voting = await getContract(dao, "voting", VotingContract);
+    const guildkickContract = await getContract(
+      dao,
+      "guildkick",
+      GuildKickContract
+    );
     await onboardingNewMember(
       dao,
       onboarding,
@@ -283,12 +295,13 @@ contract("LAOLAND - GuildKick Adapter", async (accounts) => {
     const newMemberA = accounts[2];
 
     let dao = await createDao(member);
-    const onboardingAddress = await dao.getAdapterAddress(sha3("onboarding"));
-    const onboarding = await OnboardingContract.at(onboardingAddress);
-    const votingAddress = await dao.getAdapterAddress(sha3("voting"));
-    const voting = await VotingContract.at(votingAddress);
-    const guildkickAddress = await dao.getAdapterAddress(sha3("guildkick"));
-    const guildkickContract = await GuildKickContract.at(guildkickAddress);
+    const onboarding = await getContract(dao, "onboarding", OnboardingContract);
+    const voting = await getContract(dao, "voting", VotingContract);
+    const guildkickContract = await getContract(
+      dao,
+      "guildkick",
+      GuildKickContract
+    );
 
     await onboardingNewMember(
       dao,
@@ -337,12 +350,13 @@ contract("LAOLAND - GuildKick Adapter", async (accounts) => {
     const newMember = accounts[2];
 
     let dao = await createDao(member);
-    const onboardingAddress = await dao.getAdapterAddress(sha3("onboarding"));
-    const onboarding = await OnboardingContract.at(onboardingAddress);
-    const votingAddress = await dao.getAdapterAddress(sha3("voting"));
-    const voting = await VotingContract.at(votingAddress);
-    const guildkickAddress = await dao.getAdapterAddress(sha3("guildkick"));
-    const guildkickContract = await GuildKickContract.at(guildkickAddress);
+    const onboarding = await getContract(dao, "onboarding", OnboardingContract);
+    const voting = await getContract(dao, "voting", VotingContract);
+    const guildkickContract = await getContract(
+      dao,
+      "guildkick",
+      GuildKickContract
+    );
 
     await onboardingNewMember(
       dao,
@@ -396,12 +410,13 @@ contract("LAOLAND - GuildKick Adapter", async (accounts) => {
     const newMember = accounts[2];
 
     let dao = await createDao(member);
-    const onboardingAddress = await dao.getAdapterAddress(sha3("onboarding"));
-    const onboarding = await OnboardingContract.at(onboardingAddress);
-    const votingAddress = await dao.getAdapterAddress(sha3("voting"));
-    const voting = await VotingContract.at(votingAddress);
-    const guildkickAddress = await dao.getAdapterAddress(sha3("guildkick"));
-    const guildkickContract = await GuildKickContract.at(guildkickAddress);
+    const onboarding = await getContract(dao, "onboarding", OnboardingContract);
+    const voting = await getContract(dao, "voting", VotingContract);
+    const guildkickContract = await getContract(
+      dao,
+      "guildkick",
+      GuildKickContract
+    );
 
     await onboardingNewMember(
       dao,
@@ -454,12 +469,13 @@ contract("LAOLAND - GuildKick Adapter", async (accounts) => {
     const newMember = accounts[2];
 
     let dao = await createDao(member);
-    const onboardingAddress = await dao.getAdapterAddress(sha3("onboarding"));
-    const onboarding = await OnboardingContract.at(onboardingAddress);
-    const votingAddress = await dao.getAdapterAddress(sha3("voting"));
-    const voting = await VotingContract.at(votingAddress);
-    const guildkickAddress = await dao.getAdapterAddress(sha3("guildkick"));
-    const guildkickContract = await GuildKickContract.at(guildkickAddress);
+    const onboarding = await getContract(dao, "onboarding", OnboardingContract);
+    const voting = await getContract(dao, "voting", VotingContract);
+    const guildkickContract = await getContract(
+      dao,
+      "guildkick",
+      GuildKickContract
+    );
 
     await onboardingNewMember(
       dao,
@@ -512,12 +528,13 @@ contract("LAOLAND - GuildKick Adapter", async (accounts) => {
     const newMember = accounts[2];
 
     let dao = await createDao(member);
-    const onboardingAddress = await dao.getAdapterAddress(sha3("onboarding"));
-    const onboarding = await OnboardingContract.at(onboardingAddress);
-    const votingAddress = await dao.getAdapterAddress(sha3("voting"));
-    const voting = await VotingContract.at(votingAddress);
-    const guildkickAddress = await dao.getAdapterAddress(sha3("guildkick"));
-    const guildkickContract = await GuildKickContract.at(guildkickAddress);
+    const onboarding = await getContract(dao, "onboarding", OnboardingContract);
+    const voting = await getContract(dao, "voting", VotingContract);
+    const guildkickContract = await getContract(
+      dao,
+      "guildkick",
+      GuildKickContract
+    );
 
     await onboardingNewMember(
       dao,
@@ -573,12 +590,13 @@ contract("LAOLAND - GuildKick Adapter", async (accounts) => {
     const newMember = accounts[2];
 
     let dao = await createDao(member);
-    const onboardingAddress = await dao.getAdapterAddress(sha3("onboarding"));
-    const onboarding = await OnboardingContract.at(onboardingAddress);
-    const votingAddress = await dao.getAdapterAddress(sha3("voting"));
-    const voting = await VotingContract.at(votingAddress);
-    const guildkickAddress = await dao.getAdapterAddress(sha3("guildkick"));
-    const guildkickContract = await GuildKickContract.at(guildkickAddress);
+    const onboarding = await getContract(dao, "onboarding", OnboardingContract);
+    const voting = await getContract(dao, "voting", VotingContract);
+    const guildkickContract = await getContract(
+      dao,
+      "guildkick",
+      GuildKickContract
+    );
 
     await onboardingNewMember(
       dao,
@@ -625,12 +643,13 @@ contract("LAOLAND - GuildKick Adapter", async (accounts) => {
     const advisor = accounts[3];
 
     let dao = await createDao(member);
-    const onboardingAddress = await dao.getAdapterAddress(sha3("onboarding"));
-    const onboarding = await OnboardingContract.at(onboardingAddress);
-    const votingAddress = await dao.getAdapterAddress(sha3("voting"));
-    const voting = await VotingContract.at(votingAddress);
-    const guildkickAddress = await dao.getAdapterAddress(sha3("guildkick"));
-    const guildkickContract = await GuildKickContract.at(guildkickAddress);
+    const onboarding = await getContract(dao, "onboarding", OnboardingContract);
+    const voting = await getContract(dao, "voting", VotingContract);
+    const guildkickContract = await getContract(
+      dao,
+      "guildkick",
+      GuildKickContract
+    );
 
     // New member joins as an Advisor (only receives LOOT)
     await onboardingNewMember(
@@ -678,12 +697,13 @@ contract("LAOLAND - GuildKick Adapter", async (accounts) => {
     const newMember = accounts[2];
 
     let dao = await createDao(member);
-    const onboardingAddress = await dao.getAdapterAddress(sha3("onboarding"));
-    const onboarding = await OnboardingContract.at(onboardingAddress);
-    const votingAddress = await dao.getAdapterAddress(sha3("voting"));
-    const voting = await VotingContract.at(votingAddress);
-    const guildkickAddress = await dao.getAdapterAddress(sha3("guildkick"));
-    const guildkickContract = await GuildKickContract.at(guildkickAddress);
+    const onboarding = await getContract(dao, "onboarding", OnboardingContract);
+    const voting = await getContract(dao, "voting", VotingContract);
+    const guildkickContract = await getContract(
+      dao,
+      "guildkick",
+      GuildKickContract
+    );
     await onboardingNewMember(
       dao,
       onboarding,
@@ -694,15 +714,166 @@ contract("LAOLAND - GuildKick Adapter", async (accounts) => {
       SHARES
     );
 
-    //Check Guild Bank Balance
-    let guildBalance = await dao.balanceOf(GUILD, ETH_TOKEN);
-    assert.equal(toBN(guildBalance).toString(), "1200000000000000000");
+    //SubGuildKick
+    let memberToKick = newMember;
+    let { kickProposalId } = await guildKick(
+      dao,
+      guildkickContract,
+      memberToKick,
+      member
+    );
 
-    //Check Member Shares & Loot
-    let shares = await dao.nbShares(newMember);
-    assert.equal(shares.toString(), "10000000000000000");
-    let loot = await dao.nbLoot(newMember);
-    assert.equal(loot.toString(), "0");
+    //Vote YES on kick proposal
+    await voting.submitVote(dao.address, kickProposalId, 1, {
+      from: member,
+      gasPrice: toBN("0"),
+    });
+    await advanceTime(10000);
+
+    await guildkickContract.kick(dao.address, memberToKick, kickProposalId, {
+      from: member,
+      gasPrice: toBN("0"),
+    });
+
+    // Member must be inactive after the kick has happened
+    let kickedMember = memberToKick;
+    let activeMember = await dao.isActiveMember(kickedMember, {
+      from: member,
+      gasPrice: toBN("0"),
+    });
+    assert.equal(activeMember.toString(), "false");
+
+    // Submit proposal to onboard new member
+    let newMemberB = accounts[3];
+    let onboardProposalId = await submitNewMemberProposal(
+      member,
+      onboarding,
+      dao,
+      newMemberB,
+      sharePrice,
+      SHARES
+    );
+
+    try {
+      // kicked member attemps to sponsor a new member
+      await sponsorNewMember(
+        onboarding,
+        dao,
+        onboardProposalId,
+        kickedMember,
+        voting
+      );
+      assert.fail(
+        "should not be possible for a kicked member to sponsor a new member"
+      );
+    } catch (e) {
+      assert.equal(e.reason, "onlyMember");
+    }
+  });
+
+  it("should not be possible for a kicked member to vote on in an onboarding proposal", async () => {
+    const member = accounts[5];
+    const newMember = accounts[2];
+
+    let dao = await createDao(member);
+    const onboarding = await getContract(dao, "onboarding", OnboardingContract);
+    const voting = await getContract(dao, "voting", VotingContract);
+    const guildkickContract = await getContract(
+      dao,
+      "guildkick",
+      GuildKickContract
+    );
+    await onboardingNewMember(
+      dao,
+      onboarding,
+      voting,
+      newMember,
+      member,
+      sharePrice,
+      SHARES
+    );
+
+    // Submit guild kick proposal
+    let memberToKick = newMember;
+    let { kickProposalId } = await guildKick(
+      dao,
+      guildkickContract,
+      memberToKick,
+      member
+    );
+
+    // Vote YES on a kick proposal
+    await voting.submitVote(dao.address, kickProposalId, 1, {
+      from: member,
+      gasPrice: toBN("0"),
+    });
+    await advanceTime(10000);
+
+    // Process guild kick proposal
+    await guildkickContract.kick(dao.address, memberToKick, kickProposalId, {
+      from: member,
+      gasPrice: toBN("0"),
+    });
+
+    // Member must be inactive after the kick has happened
+    let kickedMember = memberToKick;
+    let activeMember = await dao.isActiveMember(kickedMember, {
+      from: member,
+      gasPrice: toBN("0"),
+    });
+    assert.equal(activeMember.toString(), "false");
+
+    // Submit proposal to onboard new member
+    let newMemberB = accounts[3];
+    let onboardProposalId = await submitNewMemberProposal(
+      member,
+      onboarding,
+      dao,
+      newMemberB,
+      sharePrice,
+      SHARES
+    );
+
+    //Sponsor the new proposal to start the voting process
+    await onboarding.sponsorProposal(dao.address, onboardProposalId, [], {
+      from: member,
+      gasPrice: toBN("0"),
+    });
+
+    try {
+      // kicked member attemps to vote
+      await voting.submitVote(dao.address, onboardProposalId, 1, {
+        from: kickedMember,
+        gasPrice: toBN("0"),
+      });
+      assert.fail("should not be possible for a kicked member to vote");
+    } catch (e) {
+      assert.equal(e.reason, "onlyMember");
+    }
+  });
+
+  it("should not be possible for a kicked member to sponsor a financing proposal", async () => {
+    const member = accounts[5];
+    const newMember = accounts[2];
+
+    let dao = await createDao(member);
+    const onboarding = await getContract(dao, "onboarding", OnboardingContract);
+    const voting = await getContract(dao, "voting", VotingContract);
+    const guildkickContract = await getContract(
+      dao,
+      "guildkick",
+      GuildKickContract
+    );
+    const financing = await getContract(dao, "financing", FinancingContract);
+    await onboardingNewMember(
+      dao,
+      onboarding,
+      voting,
+      newMember,
+      member,
+      sharePrice,
+      SHARES
+    );
 
     //SubGuildKick
     let memberToKick = newMember;
@@ -712,7 +883,6 @@ contract("LAOLAND - GuildKick Adapter", async (accounts) => {
       memberToKick,
       member
     );
-    assert.equal(kickProposalId.toString(), "1");
 
     //Vote YES on kick proposal
     await voting.submitVote(dao.address, kickProposalId, 1, {
@@ -721,47 +891,195 @@ contract("LAOLAND - GuildKick Adapter", async (accounts) => {
     });
     await advanceTime(10000);
 
-    // Member must be active before the kick happens
-    let activeMember = await dao.isActiveMember(memberToKick, {
+    await guildkickContract.kick(dao.address, memberToKick, kickProposalId, {
       from: member,
       gasPrice: toBN("0"),
     });
-    assert.equal(activeMember.toString(), "true");
+
+    // Member must be inactive after the kick has happened
+    let kickedMember = memberToKick;
+    let activeMember = await dao.isActiveMember(kickedMember, {
+      from: member,
+      gasPrice: toBN("0"),
+    });
+    assert.equal(activeMember.toString(), "false");
+
+    // Create Financing Request, the kicked member is the applicant and it is fine for now
+    let requestedAmount = toBN(50000);
+    await financing.createFinancingRequest(
+      dao.address,
+      kickedMember,
+      ETH_TOKEN,
+      requestedAmount,
+      fromUtf8(""),
+      { gasPrice: toBN("0") }
+    );
+
+    let pastEvents = await dao.getPastEvents();
+    let { proposalId } = pastEvents[0].returnValues;
+
+    try {
+      // kicked member attemps to sponsor the financing proposal to get grant
+      await financing.sponsorProposal(dao.address, proposalId, [], {
+        from: kickedMember,
+        gasPrice: toBN("0"),
+      });
+      assert.fail(
+        "should not be possible for a kicked member to sponsor a financing proposal"
+      );
+    } catch (e) {
+      assert.equal(e.reason, "onlyMember");
+    }
+  });
+
+  it("should not be possible for a kicked member to sponsor a financing proposal", async () => {
+    const member = accounts[5];
+    const newMember = accounts[2];
+
+    let dao = await createDao(member);
+    const onboarding = await getContract(dao, "onboarding", OnboardingContract);
+    const voting = await getContract(dao, "voting", VotingContract);
+    const guildkickContract = await getContract(
+      dao,
+      "guildkick",
+      GuildKickContract
+    );
+    const managing = await getContract(dao, "managing", ManagingContract);
+    await onboardingNewMember(
+      dao,
+      onboarding,
+      voting,
+      newMember,
+      member,
+      sharePrice,
+      SHARES
+    );
+
+    //SubGuildKick
+    let memberToKick = newMember;
+    let { kickProposalId } = await guildKick(
+      dao,
+      guildkickContract,
+      memberToKick,
+      member
+    );
+
+    //Vote YES on kick proposal
+    await voting.submitVote(dao.address, kickProposalId, 1, {
+      from: member,
+      gasPrice: toBN("0"),
+    });
+    await advanceTime(10000);
 
     await guildkickContract.kick(dao.address, memberToKick, kickProposalId, {
       from: member,
       gasPrice: toBN("0"),
     });
 
-    // Check Member Shares & Loot, the Shares must be converted to Loot to remove the voting power of the member
-    shares = await dao.nbShares(newMember);
-    assert.equal(shares.toString(), "0");
-    loot = await dao.nbLoot(newMember);
-    assert.equal(loot.toString(), "10000000000000000");
-
-    let kickedMember = memberToKick;
-
     // Member must be inactive after the kick has happened
-    activeMember = await dao.isActiveMember(kickedMember, {
+    let kickedMember = memberToKick;
+    let activeMember = await dao.isActiveMember(kickedMember, {
       from: member,
       gasPrice: toBN("0"),
     });
     assert.equal(activeMember.toString(), "false");
 
+    //Submit a new Bank module proposal
+    let newModuleId = sha3("onboarding");
+    let newModuleAddress = accounts[8];
+
     try {
-      // kicked member attemps to sponsor a new member
-      let newMemberB = accounts[3];
-      await onboardingNewMember(
-        dao,
-        onboarding,
-        voting,
-        newMemberB,
-        kickedMember,
-        sharePrice,
-        SHARES
+      // kicked member attemps to submit a managing proposal
+      await managing.createModuleChangeRequest(
+        dao.address,
+        newModuleId,
+        newModuleAddress,
+        0,
+        { from: kickedMember, gasPrice: toBN("0") }
       );
       assert.fail(
-        "should not be possible for a kicked member to sponsor a new member"
+        "should not be possible for a kicked member to submit a managing proposal"
+      );
+    } catch (e) {
+      assert.equal(e.reason, "onlyMember");
+    }
+  });
+
+  it("should not be possible for a kicked member to sponsor a managing proposal", async () => {
+    const member = accounts[5];
+    const newMember = accounts[2];
+
+    let dao = await createDao(member);
+    const onboarding = await getContract(dao, "onboarding", OnboardingContract);
+    const voting = await getContract(dao, "voting", VotingContract);
+    const guildkickContract = await getContract(
+      dao,
+      "guildkick",
+      GuildKickContract
+    );
+    const managing = await getContract(dao, "managing", ManagingContract);
+    await onboardingNewMember(
+      dao,
+      onboarding,
+      voting,
+      newMember,
+      member,
+      sharePrice,
+      SHARES
+    );
+
+    //SubGuildKick
+    let memberToKick = newMember;
+    let { kickProposalId } = await guildKick(
+      dao,
+      guildkickContract,
+      memberToKick,
+      member
+    );
+
+    //Vote YES on kick proposal
+    await voting.submitVote(dao.address, kickProposalId, 1, {
+      from: member,
+      gasPrice: toBN("0"),
+    });
+    await advanceTime(10000);
+
+    await guildkickContract.kick(dao.address, memberToKick, kickProposalId, {
+      from: member,
+      gasPrice: toBN("0"),
+    });
+
+    // Member must be inactive after the kick has happened
+    let kickedMember = memberToKick;
+    let activeMember = await dao.isActiveMember(kickedMember, {
+      from: member,
+      gasPrice: toBN("0"),
+    });
+    assert.equal(activeMember.toString(), "false");
+
+    //Submit a new Bank module proposal
+    let newModuleId = sha3("onboarding");
+    let newModuleAddress = accounts[3]; //TODO deploy some Banking test contract
+    await managing.createModuleChangeRequest(
+      dao.address,
+      newModuleId,
+      newModuleAddress,
+      0,
+      { from: member, gasPrice: toBN("0") }
+    );
+
+    //Get the new proposal id
+    let pastEvents = await dao.getPastEvents();
+    let { proposalId } = pastEvents[0].returnValues;
+
+    try {
+      // kicked member attemps to sponsor a managing proposal
+      await managing.sponsorProposal(dao.address, proposalId, [], {
+        from: kickedMember,
+        gasPrice: toBN("0"),
+      });
+      assert.fail(
+        "should not be possible for a kicked member to sponsor a managing proposal"
       );
     } catch (e) {
       assert.equal(e.reason, "onlyMember");
