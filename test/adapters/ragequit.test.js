@@ -41,6 +41,7 @@ const {
   RagequitContract,
   FinancingContract
 } = require("../../utils/DaoFactory.js");
+const { checkLastEvent } = require("../../utils/TestUtils.js");
 
 contract('LAOLAND - Ragequit Adapter', async accounts => {
 
@@ -237,9 +238,8 @@ it("should be possible to a member to ragequit if the member voted YES on a prop
     await financing.createFinancingRequest(dao.address, applicant, ETH_TOKEN, requestedAmount, fromUtf8(""));
 
     //Get the new proposalId from event log
-    let pastEvents = await dao.getPastEvents();
-    proposalId = pastEvents[0].returnValues.proposalId;
-    assert.equal(proposalId, 1);
+    proposalId = 1;
+    await checkLastEvent(dao, {proposalId})
 
     //Old Member sponsors the Financing proposal
     await financing.sponsorProposal(dao.address, proposalId, [], { from: myAccount, gasPrice: toBN("0") });
@@ -301,9 +301,8 @@ it("should be possible to a member to ragequit if the member voted YES on a prop
     );
 
     //Get the new proposalId from event log
-    let pastEvents = await dao.getPastEvents();
-    proposalId = pastEvents[0].returnValues.proposalId;
-    assert.equal(proposalId, 1);
+    proposalId = 1;
+    checkLastEvent(dao, {proposalId})
 
     //Old Member sponsors the Financing proposal
     await financing.sponsorProposal(dao.address, proposalId, [], {
@@ -389,9 +388,7 @@ it("should be possible to a member to ragequit if the member voted YES on a prop
       }
     );
 
-    //Get the new proposal id
-    let pastEvents = await dao.getPastEvents();
-    let { proposalId } = pastEvents[0].returnValues;
+    let proposalId = 0;
 
     // Sponsor the new proposal to allow the Advisor to join the DAO
     await onboarding.sponsorProposal(dao.address, proposalId, [], {

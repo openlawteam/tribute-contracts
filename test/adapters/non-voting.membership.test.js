@@ -65,8 +65,7 @@ contract('LAOLAND - Non Voting Onboarding Adapter', async accounts => {
     });
 
     //Get the new proposal id
-    const pastEvents = await dao.getPastEvents();
-    let { proposalId } = pastEvents[0].returnValues;
+    let proposalId = 0;
 
     // Sponsor the new proposal to allow the Advisor to join the DAO
     await onboarding.sponsorProposal(dao.address, proposalId, [], {
