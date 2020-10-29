@@ -47,17 +47,14 @@ contract DaoRegistry is DaoConstants, AdapterGuard {
     /// @dev - Events for Proposals
     event SubmittedProposal(
         uint64 proposalId,
-        uint256 flags,
-        address applicant
+        uint256 flags
     );
     event SponsoredProposal(
         uint256 proposalId,
-        uint256 flags,
-        uint64 startingTime
+        uint256 flags
     );
     event ProcessedProposal(
         uint256 proposalId,
-        uint64 processingTime,
         uint256 flags
     );
     event AdapterAdded(
@@ -82,7 +79,6 @@ contract DaoRegistry is DaoConstants, AdapterGuard {
      */
     struct Proposal {
         // the structure to track all the proposals in the DAO
-        address applicant; // the address of the sender that submitted the proposal
         address adapterAddress; // the adapter address that called the functions to change the DAO state
         uint256 flags; // flags to track the state of the proposal: exist, sponsored, processed, canceled, etc.
     }
@@ -115,7 +111,7 @@ contract DaoRegistry is DaoConstants, AdapterGuard {
 
     struct AdapterDetails {
         bytes32 id;
-        uint256 flags;
+        uint256 acl;
     }
 
     /*
@@ -163,7 +159,7 @@ contract DaoRegistry is DaoConstants, AdapterGuard {
     function addAdapter(
         bytes32 adapterId,
         address adapterAddress,
-        uint256 flags
+        uint256 acl
     ) external hasAccess(this, FlagHelper.Flag.ADD_ADAPTER) {
         require(adapterId != bytes32(0), "adapterId must not be empty");
         require(
@@ -176,8 +172,8 @@ contract DaoRegistry is DaoConstants, AdapterGuard {
         );
         registry[adapterId] = adapterAddress;
         inverseRegistry[adapterAddress].id = adapterId;
-        inverseRegistry[adapterAddress].flags = flags;
-        emit AdapterAdded(adapterId, adapterAddress, flags);
+        inverseRegistry[adapterAddress].acl = acl;
+        emit AdapterAdded(adapterId, adapterAddress, acl);
     }
 
     function removeAdapter(bytes32 adapterId)
@@ -205,7 +201,7 @@ contract DaoRegistry is DaoConstants, AdapterGuard {
     {
         return
             inverseRegistry[adapterAddress].id != bytes32(0) &&
-            inverseRegistry[adapterAddress].flags.getFlag(flag);
+            inverseRegistry[adapterAddress].acl.getFlag(flag);
     }
 
     function getAdapterAddress(bytes32 adapterId)
@@ -267,15 +263,15 @@ contract DaoRegistry is DaoConstants, AdapterGuard {
      * PROPOSALS
      */
     /// @dev - Proposal: submit proposals to the DAO registry
-    function submitProposal(address applicant)
+    function submitProposal()
         external
         hasAccess(this, FlagHelper.Flag.SUBMIT_PROPOSAL)
         returns (uint64)
     {
-        proposals[proposalCount++] = Proposal(applicant, msg.sender, 1);
+        proposals[proposalCount++] = Proposal(msg.sender, 1);
         uint64 proposalId = proposalCount - 1;
 
-        emit SubmittedProposal(proposalId, 1, applicant);
+        emit SubmittedProposal(proposalId, 1);
 
         return proposalId;
     }
@@ -309,7 +305,7 @@ contract DaoRegistry is DaoConstants, AdapterGuard {
             "only active members can sponsor proposals"
         );
 
-        emit SponsoredProposal(_proposalId, flags, uint64(block.timestamp));
+        emit SponsoredProposal(_proposalId, flags);
     }
 
     /// @dev - Proposal: mark a proposal as processed in the DAO registry
@@ -323,7 +319,7 @@ contract DaoRegistry is DaoConstants, AdapterGuard {
         );
         uint256 flags = proposal.flags;
 
-        emit ProcessedProposal(_proposalId, uint64(block.timestamp), flags);
+        emit ProcessedProposal(_proposalId, flags);
     }
 
     /// @dev - Proposal: mark a proposal as processed in the DAO registry

@@ -344,15 +344,6 @@ export class Proposal extends Entity {
     this.set("proposalId", Value.fromBigInt(value));
   }
 
-  get timestamp(): string {
-    let value = this.get("timestamp");
-    return value.toString();
-  }
-
-  set timestamp(value: string) {
-    this.set("timestamp", Value.fromString(value));
-  }
-
   get createdAt(): string {
     let value = this.get("createdAt");
     return value.toString();
