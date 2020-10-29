@@ -30,119 +30,224 @@ const toWei = web3.utils.toWei;
 const fromUtf8 = web3.utils.fromUtf8;
 
 const GUILD = "0x000000000000000000000000000000000000dead";
-const TOTAL =  "0x000000000000000000000000000000000000babe";
+const TOTAL = "0x000000000000000000000000000000000000babe";
 const SHARES = "0x00000000000000000000000000000000000FF1CE";
-const LOOT =   "0x00000000000000000000000000000000B105F00D";
+const LOOT = "0x00000000000000000000000000000000B105F00D";
 const ETH_TOKEN = "0x0000000000000000000000000000000000000000";
 const DAI_TOKEN = "0x95b58a6bff3d14b7db2f5cb5f0ad413dc2940658";
 
-const numberOfShares = toBN('1000000000000000');
-const sharePrice = toBN(toWei("120", 'finney'));
-const remaining = sharePrice.sub(toBN('50000000000000'));
+const numberOfShares = toBN("1000000000000000");
+const sharePrice = toBN(toWei("120", "finney"));
+const remaining = sharePrice.sub(toBN("50000000000000"));
 
 const OLTokenContract = artifacts.require("./test/OLT");
 
-const FlagHelperLib = artifacts.require('./helpers/FlagHelper');
-const DaoFactory = artifacts.require('./core/DaoFactory');
+const FlagHelperLib = artifacts.require("./helpers/FlagHelper");
+const DaoFactory = artifacts.require("./core/DaoFactory");
 const DaoRegistry = artifacts.require("./core/DaoRegistry");
-const VotingContract = artifacts.require('./adapters/VotingContract');
-const ManagingContract = artifacts.require('./adapter/ManagingContract');
-const FinancingContract = artifacts.require('./adapter/FinancingContract');
-const RagequitContract = artifacts.require('./adapters/RagequitContract');
-const OnboardingContract = artifacts.require('./adapters/OnboardingContract');
+const VotingContract = artifacts.require("./adapters/VotingContract");
+const ManagingContract = artifacts.require("./adapter/ManagingContract");
+const FinancingContract = artifacts.require("./adapter/FinancingContract");
+const RagequitContract = artifacts.require("./adapters/RagequitContract");
+const GuildKickContract = artifacts.require("./adapters/GuildKickContract");
+const OnboardingContract = artifacts.require("./adapters/OnboardingContract");
 
 async function prepareSmartContracts() {
-    let voting = await VotingContract.new();
-    let ragequit = await RagequitContract.new();
-    let managing = await ManagingContract.new();
-    let financing = await FinancingContract.new();
-    let onboarding = await OnboardingContract.new();
-    let daoFactory = await DaoFactory.new();
+  let voting = await VotingContract.new();
+  let ragequit = await RagequitContract.new();
+  let managing = await ManagingContract.new();
+  let financing = await FinancingContract.new();
+  let onboarding = await OnboardingContract.new();
+  let guildkick = await GuildKickContract.new();
+  let daoFactory = await DaoFactory.new();
 
-    return {
-      voting,
-      ragequit,
-      managing,
-      financing,
-      onboarding,
-      daoFactory
-    };
-  }
+  return {
+    voting,
+    ragequit,
+    guildkick,
+    managing,
+    financing,
+    onboarding,
+    daoFactory,
+  };
+}
 
-async function addDefaultAdapters(dao, unitPrice=sharePrice, nbShares=numberOfShares, votingPeriod=10, gracePeriod=1, tokenAddr = ETH_TOKEN) {
-    const {voting, ragequit, managing, financing, onboarding, daoFactory} = await prepareSmartContracts();
+async function addDefaultAdapters(
+  dao,
+  unitPrice = sharePrice,
+  nbShares = numberOfShares,
+  votingPeriod = 10,
+  gracePeriod = 1,
+  tokenAddr = ETH_TOKEN
+) {
+  const {
+    voting,
+    ragequit,
+    guildkick,
+    managing,
+    financing,
+    onboarding,
+    daoFactory,
+  } = await prepareSmartContracts();
 
-    /**
+  /**
      * EXISTS, SPONSORED, PROCESSED, JAILED,
         ADD_ADAPTER,REMOVE_ADAPTER,JAIL_MEMBER, UNJAIL_MEMBER, EXECUTE, SUBMIT_PROPOSAL, SPONSOR_PROPOSAL, PROCESS_PROPOSAL, 
         UPDATE_DELEGATE_KEY, REGISTER_NEW_TOKEN, REGISTER_NEW_INTERNAL_TOKEN, ADD_TO_BALANCE,SUB_FROM_BALANCE, INTERNAL_TRANSFER
      */
 
-    await daoFactory.addAdapters(
-      dao.address,
-      [
-        entry("voting", voting, {}),
-        entry("ragequit", ragequit, {SUB_FROM_BALANCE: true, JAIL_MEMBER: true, UNJAIL_MEMBER: true, INTERNAL_TRANSFER: true}),
-        entry("managing", managing, {SUBMIT_PROPOSAL: true, PROCESS_PROPOSAL: true, SPONSOR_PROPOSAL: true, REMOVE_ADAPTER: true, ADD_ADAPTER: true}),
-        entry("financing", financing, {SUBMIT_PROPOSAL:true, SPONSOR_PROPOSAL: true, PROCESS_PROPOSAL: true, ADD_TO_BALANCE:true , SUB_FROM_BALANCE:true}),
-        entry("onboarding", onboarding, {SUBMIT_PROPOSAL:true, SPONSOR_PROPOSAL: true, PROCESS_PROPOSAL: true, ADD_TO_BALANCE:true, UPDATE_DELEGATE_KEY: true})
-    ])
-    
-    await onboarding.configureDao(dao.address, SHARES, unitPrice, nbShares, tokenAddr);
-    await onboarding.configureDao(dao.address, LOOT, unitPrice, nbShares, tokenAddr);
-    await voting.configureDao(dao.address, votingPeriod, gracePeriod);
+  await daoFactory.addAdapters(dao.address, [
+    entry("voting", voting, {}),
+    entry("ragequit", ragequit, {
+      SUB_FROM_BALANCE: true,
+      JAIL_MEMBER: true,
+      UNJAIL_MEMBER: true,
+      INTERNAL_TRANSFER: true,
+    }),
+    entry("guildkick", guildkick, {
+      SUBMIT_PROPOSAL: true,
+      PROCESS_PROPOSAL: true,
+      SPONSOR_PROPOSAL: true,
+      SUB_FROM_BALANCE: true,
+      ADD_TO_BALANCE: true,
+      JAIL_MEMBER: true,
+      INTERNAL_TRANSFER: true,
+    }),
+    entry("managing", managing, {
+      SUBMIT_PROPOSAL: true,
+      PROCESS_PROPOSAL: true,
+      SPONSOR_PROPOSAL: true,
+      REMOVE_ADAPTER: true,
+      ADD_ADAPTER: true,
+    }),
+    entry("financing", financing, {
+      SUBMIT_PROPOSAL: true,
+      SPONSOR_PROPOSAL: true,
+      PROCESS_PROPOSAL: true,
+      ADD_TO_BALANCE: true,
+      SUB_FROM_BALANCE: true,
+    }),
+    entry("onboarding", onboarding, {
+      SUBMIT_PROPOSAL: true,
+      SPONSOR_PROPOSAL: true,
+      PROCESS_PROPOSAL: true,
+      ADD_TO_BALANCE: true,
+      UPDATE_DELEGATE_KEY: true,
+    }),
+  ]);
 
-    return dao;
+  await onboarding.configureDao(
+    dao.address,
+    SHARES,
+    unitPrice,
+    nbShares,
+    tokenAddr
+  );
+  await onboarding.configureDao(
+    dao.address,
+    LOOT,
+    unitPrice,
+    nbShares,
+    tokenAddr
+  );
+  await voting.configureDao(dao.address, votingPeriod, gracePeriod);
+
+  return dao;
 }
 
-async function createDao(senderAccount, unitPrice=sharePrice, nbShares=numberOfShares, votingPeriod=10, gracePeriod=1, tokenAddr = ETH_TOKEN) {
-    let lib = await FlagHelperLib.new();
-    await DaoRegistry.link("FlagHelper", lib.address);
-    let dao = await DaoRegistry.new({ from: senderAccount, gasPrice: toBN("0") });
-    let receipt = await web3.eth.getTransactionReceipt(dao.transactionHash);
-    console.log('gas used for dao:', receipt && receipt.gasUsed);
-    await addDefaultAdapters(dao, unitPrice, nbShares, votingPeriod, gracePeriod, tokenAddr);
-    await dao.finalizeDao();
-    return dao;
+async function createDao(
+  senderAccount,
+  unitPrice = sharePrice,
+  nbShares = numberOfShares,
+  votingPeriod = 10,
+  gracePeriod = 1,
+  tokenAddr = ETH_TOKEN
+) {
+  let lib = await FlagHelperLib.new();
+  await DaoRegistry.link("FlagHelper", lib.address);
+  let dao = await DaoRegistry.new({ from: senderAccount, gasPrice: toBN("0") });
+  let receipt = await web3.eth.getTransactionReceipt(dao.transactionHash);
+  console.log("gas used for dao:", receipt && receipt.gasUsed);
+  await addDefaultAdapters(
+    dao,
+    unitPrice,
+    nbShares,
+    votingPeriod,
+    gracePeriod,
+    tokenAddr
+  );
+  await dao.finalizeDao();
+  return dao;
 }
 
 function entry(name, contract, flags) {
-  const values = [flags.EXISTS, flags.SPONSORED, flags.PROCESSED, flags.JAILED,
-  flags.ADD_ADAPTER,flags.REMOVE_ADAPTER,flags.JAIL_MEMBER, flags.UNJAIL_MEMBER, flags.EXECUTE, flags.SUBMIT_PROPOSAL, flags.SPONSOR_PROPOSAL, flags.PROCESS_PROPOSAL, 
-  flags.UPDATE_DELEGATE_KEY, flags.REGISTER_NEW_TOKEN, flags.REGISTER_NEW_INTERNAL_TOKEN, flags.ADD_TO_BALANCE,flags.SUB_FROM_BALANCE, flags.INTERNAL_TRANSFER, flags.WITHDRAW_PROPOSAL, flags.WITHDRAWN]
+  const values = [
+    flags.EXISTS,
+    flags.SPONSORED,
+    flags.PROCESSED,
+    flags.JAILED,
+    flags.ADD_ADAPTER,
+    flags.REMOVE_ADAPTER,
+    flags.JAIL_MEMBER,
+    flags.UNJAIL_MEMBER,
+    flags.EXECUTE,
+    flags.SUBMIT_PROPOSAL,
+    flags.SPONSOR_PROPOSAL,
+    flags.PROCESS_PROPOSAL,
+    flags.UPDATE_DELEGATE_KEY,
+    flags.REGISTER_NEW_TOKEN,
+    flags.REGISTER_NEW_INTERNAL_TOKEN,
+    flags.ADD_TO_BALANCE,
+    flags.SUB_FROM_BALANCE,
+    flags.INTERNAL_TRANSFER,
+    flags.WITHDRAW_PROPOSAL,
+    flags.WITHDRAWN,
+  ];
 
-  const acl = values.map((v, idx) => v ? 2 ** idx : 0).reduce((a, b) => a +  b);
+  const acl = values
+    .map((v, idx) => (v ? 2 ** idx : 0))
+    .reduce((a, b) => a + b);
 
   return {
     id: sha3(name),
     addr: contract.address,
-    flags: acl
-  }
+    flags: acl,
+  };
 }
 
 async function advanceTime(time) {
-    await new Promise((resolve, reject) => {
-        web3.currentProvider.send({
-        jsonrpc: '2.0',
-        method: 'evm_increaseTime',
+  await new Promise((resolve, reject) => {
+    web3.currentProvider.send(
+      {
+        jsonrpc: "2.0",
+        method: "evm_increaseTime",
         params: [time],
-        id: new Date().getTime()
-        }, (err, result) => {
-        if (err) { return reject(err) }
-        return resolve(result)
-        })
-    });
+        id: new Date().getTime(),
+      },
+      (err, result) => {
+        if (err) {
+          return reject(err);
+        }
+        return resolve(result);
+      }
+    );
+  });
 
-    await new Promise((resolve, reject) => {
-        web3.currentProvider.send({
-            jsonrpc: '2.0',
-            method: 'evm_mine',
-            id: new Date().getTime()
-        }, (err, result) => {
-            if (err) { return reject(err) }
-            return resolve(result)
-        })
-    });
+  await new Promise((resolve, reject) => {
+    web3.currentProvider.send(
+      {
+        jsonrpc: "2.0",
+        method: "evm_mine",
+        id: new Date().getTime(),
+      },
+      (err, result) => {
+        if (err) {
+          return reject(err);
+        }
+        return resolve(result);
+      }
+    );
+  });
 }
 
 async function getContract(dao, id, contractFactory) {
@@ -178,5 +283,6 @@ module.exports = {
   ManagingContract,
   FinancingContract,
   RagequitContract,
-  OnboardingContract
+  GuildKickContract,
+  OnboardingContract,
 };
