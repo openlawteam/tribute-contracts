@@ -8,6 +8,7 @@ import "../guards/MemberGuard.sol";
 import "./interfaces/IGuildKick.sol";
 import "../utils/SafeMath.sol";
 import "../adapters/interfaces/IVoting.sol";
+import "../helpers/FairShareHelper.sol";
 
 /**
 MIT License
@@ -147,7 +148,7 @@ contract GuildKickContract is IGuildKick, DaoConstants, MemberGuard {
         uint256 initialTotalShares = kick.initialTotalShares;
         for (uint256 i = currentIndex; i < maxIndex; i++) {
             address token = dao.getToken(i);
-            uint256 amountToRagequit = _fairShare(
+            uint256 amountToRagequit = FairShareHelper.calc(
                 dao.balanceOf(GUILD, token),
                 kick.shares,
                 initialTotalShares
@@ -172,20 +173,4 @@ contract GuildKickContract is IGuildKick, DaoConstants, MemberGuard {
         }
     }
 
-    function _fairShare(
-        uint256 balance,
-        uint256 shares,
-        uint256 _totalShares
-    ) internal pure returns (uint256) {
-        require(_totalShares != 0, "total shares should not be 0");
-        if (balance == 0) {
-            return 0;
-        }
-        uint256 prod = balance * shares;
-        if (prod / balance == shares) {
-            // no overflow in multiplication above?
-            return prod / _totalShares;
-        }
-        return (balance / _totalShares) * shares;
-    }
 }

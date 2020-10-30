@@ -7,6 +7,7 @@ import "../core/DaoRegistry.sol";
 import "../guards/MemberGuard.sol";
 import "./interfaces/IRagequit.sol";
 import "../utils/SafeMath.sol";
+import "../helpers/FairShareHelper.sol";
 
 /**
 MIT License
@@ -129,7 +130,7 @@ contract RagequitContract is IRagequit, DaoConstants, MemberGuard {
         uint256 blockNumber = ragequit.blockNumber;
         for (uint256 i = currentIndex; i < maxIndex; i++) {
             address token = dao.getToken(i);
-            uint256 amountToRagequit = _fairShare(
+            uint256 amountToRagequit = FairShareHelper.calc(
                 dao.getPriorAmount(GUILD, token, blockNumber),
                 sharesAndLootToBurn,
                 initialTotalSharesAndLoot
@@ -155,20 +156,4 @@ contract RagequitContract is IRagequit, DaoConstants, MemberGuard {
         }
     }
 
-    function _fairShare(
-        uint256 balance,
-        uint256 shares,
-        uint256 _totalShares
-    ) internal pure returns (uint256) {
-        require(_totalShares != 0, "total shares should not be 0");
-        if (balance == 0) {
-            return 0;
-        }
-        uint256 prod = balance * shares;
-        if (prod / balance == shares) {
-            // no overflow in multiplication above?
-            return prod / _totalShares;
-        }
-        return (balance / _totalShares) * shares;
-    }
 }
