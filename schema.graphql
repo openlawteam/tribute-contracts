@@ -25,7 +25,8 @@ type Member @entity {
 
 type Adapter @entity {
   id: ID!
-  acl: 
+  adapterAddress: Bytes!
+  acl: BigInt!
 }
 
 type Proposal @entity {
@@ -34,3 +35,4 @@ type Proposal @entity {
   adapterAddress: Bytes!
   flags: BigInt! 
 }
+

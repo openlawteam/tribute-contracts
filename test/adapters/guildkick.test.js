@@ -164,7 +164,7 @@ contract("LAOLAND - GuildKick Adapter", async (accounts) => {
     assert.equal(toBN(guildBalance).toString(), "1200000000000000000");
 
     //Check Member Shares & Loot
-    let shares = await dao.nbShares(newMember);
+    let shares = await dao.balanceOf(newMember, SHARES);
     assert.equal(shares.toString(), "10000000000000000");
     let loot = await dao.nbLoot(newMember);
     assert.equal(loot.toString(), "0");

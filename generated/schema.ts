@@ -226,30 +226,13 @@ export class Member extends Entity {
     this.set("delegateKey", Value.fromBytes(value));
   }
 
-  get exists(): boolean {
-    let value = this.get("exists");
-    return value.toBoolean();
+  get flags(): BigInt {
+    let value = this.get("flags");
+    return value.toBigInt();
   }
 
-  set exists(value: boolean) {
-    this.set("exists", Value.fromBoolean(value));
-  }
-
-  get submissions(): Array<string> | null {
-    let value = this.get("submissions");
-    if (value === null) {
-      return null;
-    } else {
-      return value.toStringArray();
-    }
-  }
-
-  set submissions(value: Array<string> | null) {
-    if (value === null) {
-      this.unset("submissions");
-    } else {
-      this.set("submissions", Value.fromStringArray(value as Array<string>));
-    }
+  set flags(value: BigInt) {
+    this.set("flags", Value.fromBigInt(value));
   }
 
   get tokenBalances(): Array<string> | null {
@@ -268,40 +251,54 @@ export class Member extends Entity {
       this.set("tokenBalances", Value.fromStringArray(value as Array<string>));
     }
   }
+}
 
-  get proposedToKick(): boolean {
-    let value = this.get("proposedToKick");
-    return value.toBoolean();
+export class Adapter extends Entity {
+  constructor(id: string) {
+    super();
+    this.set("id", Value.fromString(id));
   }
 
-  set proposedToKick(value: boolean) {
-    this.set("proposedToKick", Value.fromBoolean(value));
+  save(): void {
+    let id = this.get("id");
+    assert(id !== null, "Cannot save Adapter entity without an ID");
+    assert(
+      id.kind == ValueKind.STRING,
+      "Cannot save Adapter entity with non-string ID. " +
+        'Considering using .toHex() to convert the "id" to a string.'
+    );
+    store.set("Adapter", id.toString(), this);
   }
 
-  get kicked(): boolean {
-    let value = this.get("kicked");
-    return value.toBoolean();
+  static load(id: string): Adapter | null {
+    return store.get("Adapter", id) as Adapter | null;
   }
 
-  set kicked(value: boolean) {
-    this.set("kicked", Value.fromBoolean(value));
+  get id(): string {
+    let value = this.get("id");
+    return value.toString();
   }
 
-  get jailed(): string | null {
-    let value = this.get("jailed");
-    if (value === null) {
-      return null;
-    } else {
-      return value.toString();
-    }
+  set id(value: string) {
+    this.set("id", Value.fromString(value));
   }
 
-  set jailed(value: string | null) {
-    if (value === null) {
-      this.unset("jailed");
-    } else {
-      this.set("jailed", Value.fromString(value as string));
-    }
+  get adapterAddress(): Bytes {
+    let value = this.get("adapterAddress");
+    return value.toBytes();
+  }
+
+  set adapterAddress(value: Bytes) {
+    this.set("adapterAddress", Value.fromBytes(value));
+  }
+
+  get acl(): BigInt {
+    let value = this.get("acl");
+    return value.toBigInt();
+  }
+
+  set acl(value: BigInt) {
+    this.set("acl", Value.fromBigInt(value));
   }
 }
 
@@ -342,87 +339,6 @@ export class Proposal extends Entity {
 
   set proposalId(value: BigInt) {
     this.set("proposalId", Value.fromBigInt(value));
-  }
-
-  get createdAt(): string {
-    let value = this.get("createdAt");
-    return value.toString();
-  }
-
-  set createdAt(value: string) {
-    this.set("createdAt", Value.fromString(value));
-  }
-
-  get sponsoredAt(): string {
-    let value = this.get("sponsoredAt");
-    return value.toString();
-  }
-
-  set sponsoredAt(value: string) {
-    this.set("sponsoredAt", Value.fromString(value));
-  }
-
-  get processedAt(): string {
-    let value = this.get("processedAt");
-    return value.toString();
-  }
-
-  set processedAt(value: string) {
-    this.set("processedAt", Value.fromString(value));
-  }
-
-  get member(): string {
-    let value = this.get("member");
-    return value.toString();
-  }
-
-  set member(value: string) {
-    this.set("member", Value.fromString(value));
-  }
-
-  get memberAddress(): Bytes {
-    let value = this.get("memberAddress");
-    return value.toBytes();
-  }
-
-  set memberAddress(value: Bytes) {
-    this.set("memberAddress", Value.fromBytes(value));
-  }
-
-  get delegateKey(): Bytes {
-    let value = this.get("delegateKey");
-    return value.toBytes();
-  }
-
-  set delegateKey(value: Bytes) {
-    this.set("delegateKey", Value.fromBytes(value));
-  }
-
-  get applicant(): Bytes {
-    let value = this.get("applicant");
-    return value.toBytes();
-  }
-
-  set applicant(value: Bytes) {
-    this.set("applicant", Value.fromBytes(value));
-  }
-
-  get proposer(): Bytes {
-    let value = this.get("proposer");
-    return value.toBytes();
-  }
-
-  set proposer(value: Bytes) {
-    this.set("proposer", Value.fromBytes(value));
-  }
-
-  get sponsor(): Bytes {
-    let value = this.get("sponsor");
-    return value.toBytes();
-  }
-
-  set sponsor(value: Bytes) {
-    this.set("sponsor", Value.fromBytes(value));
   }
 
   get adapterAddress(): Bytes {
