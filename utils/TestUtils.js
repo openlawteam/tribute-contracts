@@ -1,5 +1,8 @@
+// Whole-script strict mode syntax
+'use strict';
+
 async function checkLastEvent(dao, testObject) {
-    const pastEvents = await dao.getPastEvents();
+    let pastEvents = await dao.getPastEvents();
     let returnValues  = pastEvents[0].returnValues;
     
     Object.keys(testObject).forEach(key => {

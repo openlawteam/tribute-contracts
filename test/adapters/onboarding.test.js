@@ -1,3 +1,6 @@
+// Whole-script strict mode syntax
+'use strict';
+
 /**
 MIT License
 
@@ -50,9 +53,9 @@ contract('LAOLAND - Onboarding Adapter', async accounts => {
     await advanceTime(10000);
     await onboarding.processProposal(dao.address, 0, {from: myAccount, gasPrice: toBN("0")});
     
-    const myAccountShares = await dao.nbShares(myAccount);
-    const otherAccountShares = await dao.nbShares(otherAccount);
-    const nonMemberAccountShares = await dao.nbShares(nonMemberAccount);
+    const myAccountShares = await dao.balanceOf(myAccount, SHARES);
+    const otherAccountShares = await dao.balanceOf(otherAccount, SHARES);
+    const nonMemberAccountShares = await dao.balanceOf(nonMemberAccount, SHARES);
     assert.equal(myAccountShares.toString(), "1");
     assert.equal(otherAccountShares.toString(), numberOfShares.mul(toBN("3")).toString());
     assert.equal(nonMemberAccountShares.toString(), "0");
@@ -84,8 +87,8 @@ contract('LAOLAND - Onboarding Adapter', async accounts => {
       assert.equal(err.reason, "proposal already processed");
     }
     
-    const myAccountShares = await dao.nbShares(myAccount);
-    const otherAccountShares = await dao.nbShares(otherAccount);
+    const myAccountShares = await dao.balanceOf(myAccount, SHARES);
+    const otherAccountShares = await dao.balanceOf(otherAccount, SHARES);
     assert.equal(myAccountShares.toString(), "1");
     assert.equal(otherAccountShares.toString(), numberOfShares.mul(toBN("0")).toString());
 
@@ -114,8 +117,8 @@ contract('LAOLAND - Onboarding Adapter', async accounts => {
     const isProcessed = await dao.getProposalFlag(toBN("0"), toBN("2")); // 2 is processed flag index
 		assert.equal(isProcessed, true);
     
-    const myAccountShares = await dao.nbShares(myAccount);
-    const otherAccountShares = await dao.nbShares(otherAccount);
+    const myAccountShares = await dao.balanceOf(myAccount, SHARES);
+    const otherAccountShares = await dao.balanceOf(otherAccount, SHARES);
     assert.equal(myAccountShares.toString(), "1");
     assert.equal(otherAccountShares.toString(), numberOfShares.mul(toBN("0")).toString());
 

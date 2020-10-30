@@ -68,7 +68,7 @@ contract FinancingContract is IFinancing, DaoConstants, MemberGuard {
             "applicant using reserved address"
         );
 
-        uint256 proposalId = dao.submitProposal(msg.sender);
+        uint256 proposalId = dao.submitProposal();
 
         ProposalDetails storage proposal = proposals[address(dao)][proposalId];
         proposal.applicant = applicant;

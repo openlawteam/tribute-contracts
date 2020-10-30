@@ -1,3 +1,6 @@
+// Whole-script strict mode syntax
+'use strict';
+
 /**
 MIT License
 
@@ -38,10 +41,11 @@ const {
   RagequitContract,
   FinancingContract
 } = require("../../utils/DaoFactory.js");
+const { checkLastEvent } = require("../../utils/TestUtils.js");
 
 contract('LAOLAND - Ragequit Adapter', async accounts => {
 
-  submitNewMemberProposal = async (onboarding, dao, newMember, sharePrice) => {
+  const submitNewMemberProposal = async (onboarding, dao, newMember, sharePrice) => {
     const myAccount = accounts[1];
 		
     await onboarding.onboard(dao.address, newMember, SHARES, sharePrice.mul(toBN(100)), {
@@ -55,7 +59,7 @@ contract('LAOLAND - Ragequit Adapter', async accounts => {
     return proposalId;
   };
 
-  sponsorNewMember = async (
+  const sponsorNewMember = async (
     onboarding,
     dao,
     proposalId,
@@ -73,7 +77,7 @@ contract('LAOLAND - Ragequit Adapter', async accounts => {
     await advanceTime(10000);
   }
 
-  ragequit = async (dao, shares, loot, member) => {
+  const ragequit = async (dao, shares, loot, member) => {
     let ragequitAddress = await dao.getAdapterAddress(sha3("ragequit"));
     let ragequitContract = await RagequitContract.at(ragequitAddress);
     await ragequitContract.startRagequit(dao.address, toBN(shares), toBN(loot), {
@@ -86,7 +90,7 @@ contract('LAOLAND - Ragequit Adapter', async accounts => {
     });
 
     //Check New Member Shares
-    let newShares = await dao.nbShares(member);
+    let newShares = await dao.balanceOf(member, SHARES);
     assert.equal(newShares.toString(), "0");
     return ragequitContract;
   }
@@ -115,7 +119,7 @@ contract('LAOLAND - Ragequit Adapter', async accounts => {
     assert.equal(toBN(guildBalance).toString(), "12000000000000000000");
 
     //Check Member Shares
-    let shares = await dao.nbShares(newMember);
+    let shares = await dao.balanceOf(newMember, SHARES);
     assert.equal(shares.toString(), "100000000000000000");
 
     //Ragequit
@@ -151,7 +155,7 @@ contract('LAOLAND - Ragequit Adapter', async accounts => {
     assert.equal(guildBalance.toString(), "12000000000000000000".toString());
 
     //Check Member Shares
-    let shares = await dao.nbShares(newMember);
+    let shares = await dao.balanceOf(newMember, SHARES);
     assert.equal(shares.toString(), "100000000000000000");
 
     //Ragequit
@@ -187,7 +191,7 @@ contract('LAOLAND - Ragequit Adapter', async accounts => {
     assert.equal(guildBalance.toString(), "12000000000000000000".toString());
 
     //Check New Member Shares
-    let shares = await dao.nbShares(newMember);
+    let shares = await dao.balanceOf(newMember, SHARES);
     assert.equal(shares.toString(), "100000000000000000");
 
     //Ragequit - Burn all the new member shares
@@ -226,7 +230,7 @@ it("should be possible to a member to ragequit if the member voted YES on a prop
     assert.equal(guildBalance.toString(), "12000000000000000000".toString());
 
     //Check New Member Shares
-    let shares = await dao.nbShares(newMember);
+    let shares = await dao.balanceOf(newMember, SHARES);
     assert.equal(shares.toString(), "100000000000000000");
 
     //Create Financing Request
@@ -234,9 +238,8 @@ it("should be possible to a member to ragequit if the member voted YES on a prop
     await financing.createFinancingRequest(dao.address, applicant, ETH_TOKEN, requestedAmount, fromUtf8(""));
 
     //Get the new proposalId from event log
-    pastEvents = await dao.getPastEvents();
-    proposalId = pastEvents[0].returnValues.proposalId;
-    assert.equal(proposalId, 1);
+    proposalId = 1;
+    await checkLastEvent(dao, {proposalId})
 
     //Old Member sponsors the Financing proposal
     await financing.sponsorProposal(dao.address, proposalId, [], { from: myAccount, gasPrice: toBN("0") });
@@ -284,7 +287,7 @@ it("should be possible to a member to ragequit if the member voted YES on a prop
     assert.equal(guildBalance.toString(), "12000000000000000000".toString());
 
     //Check New Member Shares
-    let shares = await dao.nbShares(newMember);
+    let shares = await dao.balanceOf(newMember, SHARES);
     assert.equal(shares.toString(), "100000000000000000");
 
     //Create Financing Request
@@ -298,9 +301,8 @@ it("should be possible to a member to ragequit if the member voted YES on a prop
     );
 
     //Get the new proposalId from event log
-    pastEvents = await dao.getPastEvents();
-    proposalId = pastEvents[0].returnValues.proposalId;
-    assert.equal(proposalId, 1);
+    proposalId = 1;
+    checkLastEvent(dao, {proposalId})
 
     //Old Member sponsors the Financing proposal
     await financing.sponsorProposal(dao.address, proposalId, [], {
@@ -386,9 +388,7 @@ it("should be possible to a member to ragequit if the member voted YES on a prop
       }
     );
 
-    //Get the new proposal id
-    pastEvents = await dao.getPastEvents();
-    let { proposalId } = pastEvents[0].returnValues;
+    let proposalId = 0;
 
     // Sponsor the new proposal to allow the Advisor to join the DAO
     await onboarding.sponsorProposal(dao.address, proposalId, [], {
@@ -410,7 +410,7 @@ it("should be possible to a member to ragequit if the member voted YES on a prop
     });
 
     // Check the number of Loot (non-voting shares) issued to the new Avisor
-    const advisorAccountLoot = await dao.nbLoot(advisorAccount);
+    const advisorAccountLoot = await dao.balanceOf(advisorAccount, LOOT);
     assert.equal(advisorAccountLoot.toString(), "5");
 
     // Guild balance must change when Loot shares are issued
@@ -503,7 +503,7 @@ it("should be possible to a member to ragequit if the member voted YES on a prop
     let ragequitAddress = await dao.getAdapterAddress(sha3("ragequit"));
     let ragequitContract = await RagequitContract.at(ragequitAddress);
 
-    const shares = await dao.nbShares(memberAccount);
+    const shares = await dao.balanceOf(memberAccount, SHARES);
     await ragequitContract.startRagequit(dao.address, toBN(Math.floor(shares / 2)), toBN(0), {
       from: memberAccount,
       gasPrice: toBN("0"),
@@ -550,5 +550,8 @@ it("should be possible to a member to ragequit if the member voted YES on a prop
       gasPrice: toBN("0"),
     });
 
+    const delegateKey = await dao.getCurrentDelegateKey(memberAccount);
+
+    assert.equal(memberAccount, delegateKey);
   });
 });

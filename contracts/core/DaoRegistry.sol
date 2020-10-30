@@ -45,47 +45,31 @@ contract DaoRegistry is DaoConstants, AdapterGuard {
      * EVENTS
      */
     /// @dev - Events for Proposals
-    event SubmittedProposal(
-        uint64 proposalId,
-        uint256 flags,
-        address applicant
-    );
-    event SponsoredProposal(
-        uint256 proposalId,
-        uint256 flags,
-        uint64 startingTime
-    );
-    event ProcessedProposal(
-        uint256 proposalId,
-        uint64 processingTime,
+    event SubmittedProposal(uint64 proposalId, uint256 flags);
+    event SponsoredProposal(uint256 proposalId, uint256 flags);
+    event ProcessedProposal(uint256 proposalId, uint256 flags);
+    event AdapterAdded(
+        bytes32 adapterId,
+        address adapterAddress,
         uint256 flags
     );
+    event AdapterRemoved(bytes32 adapterId);
 
     /// @dev - Events for Members
-    event UpdateDelegateKey(
-        address indexed memberAddress,
-        address newDelegateKey
-    );
+    event UpdateDelegateKey(address memberAddress, address newDelegateKey);
 
     /// @dev - Events for Bank
-    event TokensCollected(
-        address indexed dao,
-        address indexed token,
-        uint256 amountToCollect
-    );
-    event Transfer(
-        address indexed fromAddress,
-        address indexed toAddress,
-        address token,
-        uint256 amount
-    );
+    event MemberJailed(address memberAddr);
+
+    event MemberUnjailed(address memberAddr);
+
+    event NewBalance(address member, address tokenAddr, uint256 amount);
 
     /*
      * STRUCTURES
      */
     struct Proposal {
         // the structure to track all the proposals in the DAO
-        address applicant; // the address of the sender that submitted the proposal
         address adapterAddress; // the adapter address that called the functions to change the DAO state
         uint256 flags; // flags to track the state of the proposal: exist, sponsored, processed, canceled, etc.
     }
@@ -93,7 +77,6 @@ contract DaoRegistry is DaoConstants, AdapterGuard {
     struct Member {
         // the structure to track all the members in the DAO
         uint256 flags; // flags to track the state of the member: exist, jailed, etc
-        address delegateKey; // ?
     }
 
     struct Checkpoint {
@@ -113,14 +96,13 @@ contract DaoRegistry is DaoConstants, AdapterGuard {
         address[] internalTokens;
         mapping(address => bool) availableTokens;
         mapping(address => bool) availableInternalTokens;
-        mapping(address => mapping(address => uint256)) tokenBalances;
         mapping(address => mapping(address => mapping(uint32 => Checkpoint))) checkpoints;
         mapping(address => mapping(address => uint32)) numCheckpoints;
     }
 
     struct AdapterDetails {
         bytes32 id;
-        uint256 flags;
+        uint256 acl;
     }
 
     /*
@@ -148,16 +130,13 @@ contract DaoRegistry is DaoConstants, AdapterGuard {
         address memberAddr = msg.sender;
         Member storage member = members[memberAddr];
         member.flags = member.flags.setFlag(FlagHelper.Flag.EXISTS, true);
-        member.delegateKey = memberAddr;
         memberAddressesByDelegatedKey[memberAddr] = memberAddr;
 
         _bank.availableInternalTokens[SHARES] = true;
         _bank.internalTokens.push(SHARES);
 
-        _bank.tokenBalances[SHARES][memberAddr] = 1;
-        _bank.tokenBalances[SHARES][TOTAL] = 1;
-        _createNewAmountCheckpoint(memberAddr, SHARES);
-        _createNewAmountCheckpoint(TOTAL, SHARES);
+        _createNewAmountCheckpoint(memberAddr, SHARES, 1);
+        _createNewAmountCheckpoint(TOTAL, SHARES, 1);
     }
 
     receive() external payable {
@@ -171,7 +150,7 @@ contract DaoRegistry is DaoConstants, AdapterGuard {
     function addAdapter(
         bytes32 adapterId,
         address adapterAddress,
-        uint256 flags
+        uint256 acl
     ) external hasAccess(this, FlagHelper.Flag.ADD_ADAPTER) {
         require(adapterId != bytes32(0), "adapterId must not be empty");
         require(
@@ -184,7 +163,8 @@ contract DaoRegistry is DaoConstants, AdapterGuard {
         );
         registry[adapterId] = adapterAddress;
         inverseRegistry[adapterAddress].id = adapterId;
-        inverseRegistry[adapterAddress].flags = flags;
+        inverseRegistry[adapterAddress].acl = acl;
+        emit AdapterAdded(adapterId, adapterAddress, acl);
     }
 
     function removeAdapter(bytes32 adapterId)
@@ -198,6 +178,7 @@ contract DaoRegistry is DaoConstants, AdapterGuard {
         );
         delete inverseRegistry[registry[adapterId]];
         delete registry[adapterId];
+        emit AdapterRemoved(adapterId);
     }
 
     function isAdapter(address adapterAddress) public view returns (bool) {
@@ -211,7 +192,7 @@ contract DaoRegistry is DaoConstants, AdapterGuard {
     {
         return
             inverseRegistry[adapterAddress].id != bytes32(0) &&
-            inverseRegistry[adapterAddress].flags.getFlag(flag);
+            inverseRegistry[adapterAddress].acl.getFlag(flag);
     }
 
     function getAdapterAddress(bytes32 adapterId)
@@ -232,6 +213,7 @@ contract DaoRegistry is DaoConstants, AdapterGuard {
         if (!flags.getFlag(FlagHelper.Flag.JAILED)) {
             member.flags = flags.setFlag(FlagHelper.Flag.JAILED, true);
             _createNewDelegateCheckpoint(memberAddr, address(1)); // we do this to avoid the member to vote at that point in time. We use 1 instead of 0 to avoid existence check with this
+            emit MemberJailed(memberAddr);
         }
     }
 
@@ -246,8 +228,9 @@ contract DaoRegistry is DaoConstants, AdapterGuard {
             member.flags = flags.setFlag(FlagHelper.Flag.JAILED, false);
             _createNewDelegateCheckpoint(
                 memberAddr,
-                members[memberAddr].delegateKey
+                getPreviousDelegateKey(memberAddr)
             ); // we do this to re-allow votes
+            emit MemberUnjailed(memberAddr);
         }
     }
 
@@ -271,15 +254,15 @@ contract DaoRegistry is DaoConstants, AdapterGuard {
      * PROPOSALS
      */
     /// @dev - Proposal: submit proposals to the DAO registry
-    function submitProposal(address applicant)
+    function submitProposal()
         external
         hasAccess(this, FlagHelper.Flag.SUBMIT_PROPOSAL)
         returns (uint64)
     {
-        proposals[proposalCount++] = Proposal(applicant, msg.sender, 1);
+        proposals[proposalCount++] = Proposal(msg.sender, 1);
         uint64 proposalId = proposalCount - 1;
 
-        emit SubmittedProposal(proposalId, 1, applicant);
+        emit SubmittedProposal(proposalId, 1);
 
         return proposalId;
     }
@@ -313,7 +296,7 @@ contract DaoRegistry is DaoConstants, AdapterGuard {
             "only active members can sponsor proposals"
         );
 
-        emit SponsoredProposal(_proposalId, flags, uint64(block.timestamp));
+        emit SponsoredProposal(_proposalId, flags);
     }
 
     /// @dev - Proposal: mark a proposal as processed in the DAO registry
@@ -327,7 +310,7 @@ contract DaoRegistry is DaoConstants, AdapterGuard {
         );
         uint256 flags = proposal.flags;
 
-        emit ProcessedProposal(_proposalId, uint64(block.timestamp), flags);
+        emit ProcessedProposal(_proposalId, flags);
     }
 
     /// @dev - Proposal: mark a proposal as processed in the DAO registry
@@ -414,20 +397,13 @@ contract DaoRegistry is DaoConstants, AdapterGuard {
             member.flags.getFlag(FlagHelper.Flag.EXISTS),
             "member does not exist"
         );
-        memberAddressesByDelegatedKey[member.delegateKey] = address(0x0);
+        memberAddressesByDelegatedKey[getCurrentDelegateKey(
+            memberAddr
+        )] = address(0x0);
         memberAddressesByDelegatedKey[newDelegateKey] = memberAddr;
-        member.delegateKey = newDelegateKey;
 
         _createNewDelegateCheckpoint(memberAddr, newDelegateKey);
         emit UpdateDelegateKey(memberAddr, newDelegateKey);
-    }
-
-    function nbShares(address member) external view returns (uint256) {
-        return balanceOf(memberAddressesByDelegatedKey[member], SHARES);
-    }
-
-    function nbLoot(address member) external view returns (uint256) {
-        return balanceOf(memberAddressesByDelegatedKey[member], LOOT);
     }
 
     /*
@@ -462,13 +438,6 @@ contract DaoRegistry is DaoConstants, AdapterGuard {
     /**
      * Public read-only functions
      */
-    function balanceOf(address user, address token)
-        public
-        view
-        returns (uint256)
-    {
-        return _bank.tokenBalances[token][user];
-    }
 
     function isNotReservedAddress(address applicant)
         public
@@ -482,8 +451,12 @@ contract DaoRegistry is DaoConstants, AdapterGuard {
      * Internal bookkeeping
      */
 
-    function tokens() external view returns (address[] memory) {
-        return _bank.tokens;
+    function getToken(uint256 index) external view returns (address) {
+        return _bank.tokens[index];
+    }
+
+    function nbTokens() external view returns (uint256) {
+        return _bank.tokens.length;
     }
 
     function addToBalance(
@@ -491,29 +464,21 @@ contract DaoRegistry is DaoConstants, AdapterGuard {
         address token,
         uint256 amount
     ) public hasAccess(this, FlagHelper.Flag.ADD_TO_BALANCE) {
-        _addToBalanceInternal(user, token, amount);
-    }
-
-    function _addToBalanceInternal(
-        address user,
-        address token,
-        uint256 amount
-    ) internal {
         require(
             _bank.availableTokens[token] ||
                 _bank.availableInternalTokens[token],
             "unknown token address"
         );
-        _bank.tokenBalances[token][user] += amount;
-        _bank.tokenBalances[token][TOTAL] += amount;
-        _createNewAmountCheckpoint(user, token);
-        _createNewAmountCheckpoint(TOTAL, token);
+        uint256 newAmount = balanceOf(user, token) + amount;
+        uint256 newTotalAmount = balanceOf(TOTAL, token) + amount;
+
+        _createNewAmountCheckpoint(user, token, newAmount);
+        _createNewAmountCheckpoint(TOTAL, token, newTotalAmount);
 
         Member storage member = members[user];
-        if (member.delegateKey == address(0x0)) {
+        if (!member.flags.getFlag(FlagHelper.Flag.EXISTS)) {
             member.flags = member.flags.setFlag(FlagHelper.Flag.EXISTS, true);
-            member.delegateKey = user;
-            memberAddressesByDelegatedKey[member.delegateKey] = user;
+            memberAddressesByDelegatedKey[user] = user;
         }
     }
 
@@ -522,16 +487,11 @@ contract DaoRegistry is DaoConstants, AdapterGuard {
         address token,
         uint256 amount
     ) public hasAccess(this, FlagHelper.Flag.SUB_FROM_BALANCE) {
-        _subtractFromBalanceInternal(user, token, amount);
-    }
+        uint256 newAmount = balanceOf(user, token) - amount;
+        uint256 newTotalAmount = balanceOf(TOTAL, token) - amount;
 
-    function _subtractFromBalanceInternal(
-        address user,
-        address token,
-        uint256 amount
-    ) internal {
-        _bank.tokenBalances[token][user] -= amount;
-        _bank.tokenBalances[token][TOTAL] -= amount;
+        _createNewAmountCheckpoint(user, token, newAmount);
+        _createNewAmountCheckpoint(TOTAL, token, newTotalAmount);
     }
 
     function internalTransfer(
@@ -540,8 +500,23 @@ contract DaoRegistry is DaoConstants, AdapterGuard {
         address token,
         uint256 amount
     ) public hasAccess(this, FlagHelper.Flag.INTERNAL_TRANSFER) {
-        _subtractFromBalanceInternal(from, token, amount);
-        _addToBalanceInternal(to, token, amount);
+        uint256 newAmount = balanceOf(from, token).sub(amount);
+        uint256 newAmount2 = balanceOf(to, token).add(amount);
+
+        _createNewAmountCheckpoint(from, token, newAmount);
+        _createNewAmountCheckpoint(to, token, newAmount2);
+    }
+
+    function balanceOf(address account, address tokenAddr)
+        public
+        view
+        returns (uint256)
+    {
+        uint32 nCheckpoints = _bank.numCheckpoints[tokenAddr][account];
+        return
+            nCheckpoints > 0
+                ? _bank.checkpoints[tokenAddr][account][nCheckpoints - 1].amount
+                : 0;
     }
 
     /**
@@ -597,6 +572,30 @@ contract DaoRegistry is DaoConstants, AdapterGuard {
         return _bank.checkpoints[tokenAddr][account][lower].amount;
     }
 
+    function getCurrentDelegateKey(address memberAddr)
+        public
+        view
+        returns (address)
+    {
+        uint32 nCheckpoints = numCheckpoints[memberAddr];
+        return
+            nCheckpoints > 0
+                ? checkpoints[memberAddr][nCheckpoints - 1].delegateKey
+                : memberAddr;
+    }
+
+    function getPreviousDelegateKey(address memberAddr)
+        public
+        view
+        returns (address)
+    {
+        uint32 nCheckpoints = numCheckpoints[memberAddr];
+        return
+            nCheckpoints > 1
+                ? checkpoints[memberAddr][nCheckpoints - 2].delegateKey
+                : memberAddr;
+    }
+
     /**
      * @notice Determine the prior number of votes for an account as of a block number
      * @dev Block number must be a finalized block or else this function will revert to prevent misinformation.
@@ -647,12 +646,14 @@ contract DaoRegistry is DaoConstants, AdapterGuard {
         return checkpoints[memberAddr][lower].delegateKey;
     }
 
-    function _createNewAmountCheckpoint(address member, address tokenAddr)
-        internal
-    {
-        uint256 amount = _bank.tokenBalances[tokenAddr][member];
+    function _createNewAmountCheckpoint(
+        address member,
+        address tokenAddr,
+        uint256 amount
+    ) internal {
         uint32 srcRepNum = _bank.numCheckpoints[tokenAddr][member];
         _writeAmountCheckpoint(member, tokenAddr, srcRepNum, amount);
+        emit NewBalance(member, tokenAddr, amount);
     }
 
     function _createNewDelegateCheckpoint(

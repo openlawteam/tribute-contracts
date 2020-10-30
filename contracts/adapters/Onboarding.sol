@@ -169,8 +169,8 @@ contract OnboardingContract is
         uint256 amount,
         address token
     ) internal {
-        uint256 proposalId = dao.submitProposal(msg.sender);
-        ProposalDetails memory p = ProposalDetails(
+        uint256 proposalId = dao.submitProposal();
+        proposals[address(dao)][proposalId] = ProposalDetails(
             proposalId,
             tokenToMint,
             amount,
@@ -179,7 +179,6 @@ contract OnboardingContract is
             newMember,
             proposer
         );
-        proposals[address(dao)][proposalId] = p;
     }
 
     function sponsorProposal(

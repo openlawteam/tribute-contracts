@@ -69,7 +69,7 @@ contract ManagingContract is IManaging, DaoConstants, MemberGuard {
 
         //is there a way to check if the new module implements the module interface properly?
 
-        uint256 proposalId = dao.submitProposal(msg.sender);
+        uint256 proposalId = dao.submitProposal();
 
         ProposalDetails storage proposal = proposals[proposalId];
         proposal.applicant = msg.sender;

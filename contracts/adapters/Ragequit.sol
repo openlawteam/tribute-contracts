@@ -121,13 +121,13 @@ contract RagequitContract is IRagequit, DaoConstants, MemberGuard {
         uint256 initialTotalSharesAndLoot = ragequit.initialTotalSharesAndLoot;
 
         //Update internal Guild and Member balances
-        address[] memory tokens = dao.tokens();
+        uint256 tokenLength = dao.nbTokens();
         uint256 maxIndex = toIndex;
-        if (maxIndex > tokens.length) {
-            maxIndex = tokens.length;
+        if (maxIndex > tokenLength) {
+            maxIndex = tokenLength;
         }
         for (uint256 i = currentIndex; i < maxIndex; i++) {
-            address token = tokens[i];
+            address token = dao.getToken(i);
             uint256 amountToRagequit = _fairShare(
                 dao.balanceOf(GUILD, token),
                 sharesAndLootToBurn,
@@ -148,7 +148,7 @@ contract RagequitContract is IRagequit, DaoConstants, MemberGuard {
         }
 
         ragequit.currentIndex = maxIndex;
-        if (maxIndex == tokens.length) {
+        if (maxIndex == tokenLength) {
             ragequit.status = RagequitStatus.DONE;
             dao.unjailMember(memberAddr);
         }

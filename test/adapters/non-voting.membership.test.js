@@ -1,3 +1,6 @@
+// Whole-script strict mode syntax
+'use strict';
+
 /**
 MIT License
 
@@ -62,8 +65,7 @@ contract('LAOLAND - Non Voting Onboarding Adapter', async accounts => {
     });
 
     //Get the new proposal id
-    pastEvents = await dao.getPastEvents();
-    let { proposalId } = pastEvents[0].returnValues;
+    let proposalId = 0;
 
     // Sponsor the new proposal to allow the Advisor to join the DAO
     await onboarding.sponsorProposal(dao.address, proposalId, [], {
@@ -85,7 +87,7 @@ contract('LAOLAND - Non Voting Onboarding Adapter', async accounts => {
     });
 
     // Check the number of Loot (non-voting shares) issued to the new Avisor
-    const advisorAccountLoot = await dao.nbLoot(advisorAccount);
+    const advisorAccountLoot = await dao.balanceOf(advisorAccount, LOOT);
     assert.equal(advisorAccountLoot.toString(), "3000000000000000");
 
     // Guild balance must not change when Loot shares are issued
@@ -186,7 +188,7 @@ contract('LAOLAND - Non Voting Onboarding Adapter', async accounts => {
     });
 
     // Check the number of Loot (non-voting shares) issued to the new Avisor
-    const advisorAccountLoot = await dao.nbLoot(advisorAccount);
+    const advisorAccountLoot = await dao.balanceOf(advisorAccount, LOOT);
     assert.equal(advisorAccountLoot.toString(), "100000000");
 
     // Guild balance must not change when Loot shares are issued
