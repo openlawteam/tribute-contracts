@@ -38,13 +38,13 @@ SOFTWARE.*/
 
 contract adminFee is DaoRegistry, Ownable {
     using SafeMath for uint256;
-     //DaoRegistry public dao;
-    constructor(address _laoFundAddress)  {
+
+    //DaoRegistry public dao;
+    constructor(address _laoFundAddress) {
         //dao = DaoRegistry(_dao);
         require(_laoFundAddress != address(0), "laoFundAddress cannot be 0");
         laoFundAddress = _laoFundAddress; // LAO add on for adminFee
         lastPaymentTime = block.timestamp; // LAO add on for adminFee
-
     }
 
     //EVENTS - Remove Event
@@ -65,7 +65,6 @@ contract adminFee is DaoRegistry, Ownable {
     }
 
     function withdrawAdminFee(DaoRegistry dao) public {
-
         require(
             block.timestamp >= lastPaymentTime.add(paymentPeriod),
             "90 days have not passed since last withdrawal"
@@ -75,15 +74,15 @@ contract adminFee is DaoRegistry, Ownable {
         uint256 denominator = adminFeeDenominator;
         address recipient = laoFundAddress;
 
-        //use MAX_TOKENS OR availableTokens?  
+        //use MAX_TOKENS OR availableTokens?
         for (uint256 i = 0; i < MAX_TOKENS; i++) {
-            address [] memory token = dao.tokens();
+            address[] memory token = dao.tokens();
             //??
-            uint256  amount = dao.balanceOf(GUILD, token[i])/denominator;
+            uint256 amount = dao.balanceOf(GUILD, token[i]) / denominator;
             if (amount > 0) {
                 //otherwise skip for efficiency
-                dao.addToBalance(GUILD,token[i],amount);
-                dao.subtractFromBalance(recipient,token[i],amount);
+                dao.addToBalance(GUILD, token[i], amount);
+                dao.subtractFromBalance(recipient, token[i], amount);
             }
         }
     }
