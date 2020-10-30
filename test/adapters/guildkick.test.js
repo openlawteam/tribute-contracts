@@ -1089,4 +1089,79 @@ contract("LAOLAND - GuildKick Adapter", async (accounts) => {
       assert.equal(e.reason, "onlyMember");
     }
   });
+
+  it("should be possible to kick a DAO member and call the ragekick to return the funds to the kicked member", async () => {
+    const member = accounts[5];
+    const newMember = accounts[2];
+
+    let dao = await createDao(member);
+    const onboarding = await getContract(dao, "onboarding", OnboardingContract);
+    const voting = await getContract(dao, "voting", VotingContract);
+    const guildkickContract = await getContract(
+      dao,
+      "guildkick",
+      GuildKickContract
+    );
+    await onboardingNewMember(
+      dao,
+      onboarding,
+      voting,
+      newMember,
+      member,
+      sharePrice,
+      SHARES
+    );
+
+    // Submit GuildKick
+    let memberToKick = newMember;
+    let { kickProposalId } = await guildKickProposal(
+      dao,
+      guildkickContract,
+      memberToKick,
+      member
+    );
+
+    //Vote YES on kick proposal
+    await voting.submitVote(dao.address, kickProposalId, 1, {
+      from: member,
+      gasPrice: toBN("0"),
+    });
+    await advanceTime(10000);
+
+    // Process guild kick to remove the voting power of the kicked member
+    await guildkickContract.guildKick(dao.address, kickProposalId, {
+      from: member,
+      gasPrice: toBN("0"),
+    });
+
+    // Member must be inactive after the kick has happened
+    let activeMember = await dao.isActiveMember(memberToKick, {
+      from: member,
+      gasPrice: toBN("0"),
+    });
+    assert.equal(activeMember.toString(), "false");
+
+    // Check Members Bank Balance in LOOT before the ragekick is triggered by a DAO member
+    let memberEthToken = await dao.balanceOf(memberToKick, ETH_TOKEN);
+    assert.equal(memberEthToken.toString(), "0");
+    let memberLoot = await dao.balanceOf(memberToKick, LOOT);
+    assert.equal(memberLoot.toString(), "10000000000000000");
+
+    // Process guild kick to remove the voting power of the kicked member
+    let toIndex = 10;
+    await guildkickContract.rageKick(dao.address, kickProposalId, toIndex, {
+      from: member,
+      gasPrice: toBN("0"),
+    });
+
+    // The kicked member should not have LOOT & SHARES anymore
+    memberLoot = await dao.balanceOf(memberToKick, LOOT);
+    assert.equal(memberLoot.toString(), "0");
+    let memberShares = await dao.balanceOf(memberToKick, SHARES);
+    assert.equal(memberShares.toString(), "0");
+
+    // The kicked member must receive the funds in ETH_TOKEN after the ragekick was triggered by a DAO member
+    memberEthToken = await dao.balanceOf(memberToKick, ETH_TOKEN);
+    assert.equal(memberEthToken.toString(), "1199999999999999880");
+  });
 });

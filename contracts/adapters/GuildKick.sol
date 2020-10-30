@@ -41,7 +41,7 @@ contract GuildKickContract is IGuildKick, DaoConstants, MemberGuard {
     struct GuildKick {
         address memberToKick;
         GuildKickStatus status;
-        uint256 shares;
+        uint256 sharesToBurn;
         uint256 initialTotalShares;
         bytes data;
         bool exists;
@@ -134,23 +134,25 @@ contract GuildKickContract is IGuildKick, DaoConstants, MemberGuard {
             "guild kick not completed or does not exist"
         );
 
+        // Check if the given index was already processed
         uint256 currentIndex = kick.currentIndex;
         require(currentIndex <= toIndex, "toIndex too low");
 
-        //Update internal Guild and Member balances
+        // Set the max index supported
         uint256 tokenLength = dao.nbTokens();
         uint256 maxIndex = toIndex;
         if (maxIndex > tokenLength) {
             maxIndex = tokenLength;
         }
 
+        //Update internal Guild and Member balances
         address kickedMember = kick.memberToKick;
         uint256 initialTotalShares = kick.initialTotalShares;
         for (uint256 i = currentIndex; i < maxIndex; i++) {
             address token = dao.getToken(i);
             uint256 amountToRagequit = FairShareHelper.calc(
                 dao.balanceOf(GUILD, token),
-                kick.shares,
+                kick.sharesToBurn,
                 initialTotalShares
             );
             if (amountToRagequit > 0) {
@@ -169,6 +171,7 @@ contract GuildKickContract is IGuildKick, DaoConstants, MemberGuard {
 
         kick.currentIndex = maxIndex;
         if (maxIndex == tokenLength) {
+            dao.subtractFromBalance(kickedMember, LOOT, kick.sharesToBurn); //should we subtract at each iteration or only here at end?
             dao.unjailMember(kickedMember);
         }
     }
