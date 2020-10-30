@@ -155,5 +155,4 @@ contract RagequitContract is IRagequit, DaoConstants, MemberGuard {
             dao.unjailMember(memberAddr);
         }
     }
-
 }

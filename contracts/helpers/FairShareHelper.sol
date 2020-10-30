@@ -26,7 +26,6 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
  */
 library FairShareHelper {
-    
     /**
      * @notice calculates the fair share amount based the total shares and current balance.
      */

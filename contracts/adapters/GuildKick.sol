@@ -122,11 +122,11 @@ contract GuildKickContract is IGuildKick, DaoConstants, MemberGuard {
         dao.processProposal(proposalId);
     }
 
-    function rageKick(DaoRegistry dao, uint64 proposalId, uint256 toIndex) 
-        external
-        override
-        onlyMember(dao) 
-    {
+    function rageKick(
+        DaoRegistry dao,
+        uint64 proposalId,
+        uint256 toIndex
+    ) external override onlyMember(dao) {
         GuildKick storage kick = kicks[proposalId];
         // If does not exist or is not DONE we expect it to fail
         require(
@@ -175,5 +175,4 @@ contract GuildKickContract is IGuildKick, DaoConstants, MemberGuard {
             dao.unjailMember(kickedMember);
         }
     }
-
 }
