@@ -45,18 +45,9 @@ contract DaoRegistry is DaoConstants, AdapterGuard {
      * EVENTS
      */
     /// @dev - Events for Proposals
-    event SubmittedProposal(
-        uint64 proposalId,
-        uint256 flags
-    );
-    event SponsoredProposal(
-        uint256 proposalId,
-        uint256 flags
-    );
-    event ProcessedProposal(
-        uint256 proposalId,
-        uint256 flags
-    );
+    event SubmittedProposal(uint64 proposalId, uint256 flags);
+    event SponsoredProposal(uint256 proposalId, uint256 flags);
+    event ProcessedProposal(uint256 proposalId, uint256 flags);
     event AdapterAdded(
         bytes32 adapterId,
         address adapterAddress,

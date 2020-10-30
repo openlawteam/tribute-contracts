@@ -166,7 +166,7 @@ contract("LAOLAND - GuildKick Adapter", async (accounts) => {
     //Check Member Shares & Loot
     let shares = await dao.balanceOf(newMember, SHARES);
     assert.equal(shares.toString(), "10000000000000000");
-    let loot = await dao.nbLoot(newMember);
+    let loot = await dao.balanceOf(newMember, LOOT);
     assert.equal(loot.toString(), "0");
 
     //SubGuildKick
@@ -199,9 +199,9 @@ contract("LAOLAND - GuildKick Adapter", async (accounts) => {
     });
 
     // Check Member Shares & Loot, the Shares must be converted to Loot to remove the voting power of the member
-    shares = await dao.nbShares(newMember);
+    shares = await dao.balanceOf(newMember, SHARES);
     assert.equal(shares.toString(), "0");
-    loot = await dao.nbLoot(newMember);
+    loot = await dao.balanceOf(newMember, LOOT);
     assert.equal(loot.toString(), "10000000000000000");
 
     // Member must be inactive after the kick has happened
