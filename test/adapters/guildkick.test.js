@@ -1090,7 +1090,7 @@ contract("LAOLAND - GuildKick Adapter", async (accounts) => {
     }
   });
 
-  it("should be possible to kick a DAO member and call the ragekick to return the funds to the kicked member", async () => {
+  it("should be possible to process a ragekick to return the funds to the kicked member", async () => {
     const member = accounts[5];
     const newMember = accounts[2];
 
@@ -1163,5 +1163,152 @@ contract("LAOLAND - GuildKick Adapter", async (accounts) => {
     // The kicked member must receive the funds in ETH_TOKEN after the ragekick was triggered by a DAO member
     memberEthToken = await dao.balanceOf(memberToKick, ETH_TOKEN);
     assert.equal(memberEthToken.toString(), "1199999999999999880");
+  });
+
+  it("should not be possible to process a ragekick if the caller is not a DAO member", async () => {
+    const member = accounts[5];
+    const nonMember = accounts[2];
+
+    let dao = await createDao(member);
+    const guildkickContract = await getContract(
+      dao,
+      "guildkick",
+      GuildKickContract
+    );
+    try {
+      let toIndex = 1;
+      let kickProposalId = 1;
+      await guildkickContract.rageKick(dao.address, kickProposalId, toIndex, {
+        from: nonMember,
+        gasPrice: toBN("0"),
+      });
+      assert.fail(
+        "should not be possible for a non member to call the ragekick process"
+      );
+    } catch (e) {
+      assert.equal(e.reason, "onlyMember");
+    }
+  });
+
+  it("should not be possible to process a ragekick if the proposal does not exist", async () => {
+    const member = accounts[5];
+
+    let dao = await createDao(member);
+    const guildkickContract = await getContract(
+      dao,
+      "guildkick",
+      GuildKickContract
+    );
+    try {
+      let toIndex = 1;
+      let kickProposalId = 1;
+      await guildkickContract.rageKick(dao.address, kickProposalId, toIndex, {
+        from: member,
+        gasPrice: toBN("0"),
+      });
+      assert.fail(
+        "should not be possible to process a ragekick request if the proposal does not exist"
+      );
+    } catch (e) {
+      assert.equal(e.reason, "guild kick not completed or does not exist");
+    }
+  });
+
+  it("should not be possible to process a ragekick if the proposal status is not DONE", async () => {
+    const member = accounts[5];
+    const newMember = accounts[2];
+
+    let dao = await createDao(member);
+    const onboarding = await getContract(dao, "onboarding", OnboardingContract);
+    const voting = await getContract(dao, "voting", VotingContract);
+    const guildkickContract = await getContract(
+      dao,
+      "guildkick",
+      GuildKickContract
+    );
+    await onboardingNewMember(
+      dao,
+      onboarding,
+      voting,
+      newMember,
+      member,
+      sharePrice,
+      SHARES
+    );
+
+    // Submit GuildKick
+    let memberToKick = newMember;
+    let { kickProposalId } = await guildKickProposal(
+      dao,
+      guildkickContract,
+      memberToKick,
+      member
+    );
+
+    try {
+      // Member attemps to process the ragekick, but the proposal is not completed
+      let toIndex = 1;
+      await guildkickContract.rageKick(dao.address, kickProposalId, toIndex, {
+        from: member,
+        gasPrice: toBN("0"),
+      });
+      assert.fail(
+        "should not be possible to process a ragekick if the proposal status is not DONE"
+      );
+    } catch (e) {
+      assert.equal(e.reason, "guild kick not completed or does not exist");
+    }
+  });
+
+  it("should not be possible to process a ragekick if the batch index is smaller than the current processing index", async () => {
+    const member = accounts[5];
+    const newMember = accounts[2];
+
+    let dao = await createDao(member);
+    const onboarding = await getContract(dao, "onboarding", OnboardingContract);
+    const voting = await getContract(dao, "voting", VotingContract);
+    const guildkickContract = await getContract(
+      dao,
+      "guildkick",
+      GuildKickContract
+    );
+    await onboardingNewMember(
+      dao,
+      onboarding,
+      voting,
+      newMember,
+      member,
+      sharePrice,
+      SHARES
+    );
+
+    // Submit GuildKick
+    let memberToKick = newMember;
+    let { kickProposalId } = await guildKickProposal(
+      dao,
+      guildkickContract,
+      memberToKick,
+      member
+    );
+
+    //Vote YES on kick proposal
+    await voting.submitVote(dao.address, kickProposalId, 1, {
+      from: member,
+      gasPrice: toBN("0"),
+    });
+    await advanceTime(10000);
+
+    // Process guild kick to remove the voting power of the kicked member
+    await guildkickContract.guildKick(dao.address, kickProposalId, {
+      from: member,
+      gasPrice: toBN("0"),
+    });
+
+    // Process guild kick to remove the voting power of the kicked member
+    let toIndex = 1;
+    await guildkickContract.rageKick(dao.address, kickProposalId, toIndex, {
+      from: member,
+      gasPrice: toBN("0"),
+    });
   });
 });
