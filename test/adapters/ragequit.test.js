@@ -113,7 +113,7 @@ contract('LAOLAND - Ragequit Adapter', async accounts => {
     //Sponsor the new proposal, vote and process it 
     await sponsorNewMember(onboarding, dao, proposalId, myAccount, voting);
     await onboarding.processProposal(dao.address, proposalId, { from: myAccount, gasPrice: toBN("0") });
-
+  
     //Check Guild Bank Balance
     let guildBalance = await dao.balanceOf(GUILD, ETH_TOKEN);
     assert.equal(toBN(guildBalance).toString(), "12000000000000000000");

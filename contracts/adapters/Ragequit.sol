@@ -88,7 +88,7 @@ contract RagequitContract is IRagequit, DaoConstants, MemberGuard {
         Ragequit storage ragequit = ragequits[memberAddr];
 
         ragequit.status = RagequitStatus.IN_PROGRESS;
-        ragequit.blockNumber;
+        ragequit.blockNumber = block.number;
         //TODO: make this the sum of all the internal tokens
         ragequit.initialTotalSharesAndLoot = dao
             .balanceOf(TOTAL, SHARES)
@@ -126,10 +126,11 @@ contract RagequitContract is IRagequit, DaoConstants, MemberGuard {
         if (maxIndex > tokenLength) {
             maxIndex = tokenLength;
         }
+        uint256 blockNumber = ragequit.blockNumber;
         for (uint256 i = currentIndex; i < maxIndex; i++) {
             address token = dao.getToken(i);
             uint256 amountToRagequit = _fairShare(
-                dao.balanceOf(GUILD, token),
+                dao.getPriorAmount(GUILD, token, blockNumber),
                 sharesAndLootToBurn,
                 initialTotalSharesAndLoot
             );
