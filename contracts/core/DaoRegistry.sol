@@ -459,6 +459,14 @@ contract DaoRegistry is DaoConstants, AdapterGuard {
         return _bank.tokens.length;
     }
 
+    function getInternalToken(uint256 index) external view returns (address) {
+        return _bank.internalTokens[index];
+    }
+
+    function nbInternalTokens() external view returns (uint256) {
+        return _bank.internalTokens.length;
+    }
+
     function addToBalance(
         address user,
         address token,
