@@ -46,6 +46,7 @@ const FlagHelperLib = artifacts.require("./helpers/FlagHelper");
 const DaoFactory = artifacts.require("./core/DaoFactory");
 const DaoRegistry = artifacts.require("./core/DaoRegistry");
 const VotingContract = artifacts.require("./adapters/VotingContract");
+const ConfigurationContract = artifacts.require("./adapter/ConfigurationContract");
 const ManagingContract = artifacts.require("./adapter/ManagingContract");
 const FinancingContract = artifacts.require("./adapter/FinancingContract");
 const RagequitContract = artifacts.require("./adapters/RagequitContract");
@@ -54,6 +55,7 @@ const OnboardingContract = artifacts.require("./adapters/OnboardingContract");
 
 async function prepareSmartContracts() {
   let voting = await VotingContract.new();
+  let configuration = await ConfigurationContract.new();
   let ragequit = await RagequitContract.new();
   let managing = await ManagingContract.new();
   let financing = await FinancingContract.new();
@@ -63,6 +65,7 @@ async function prepareSmartContracts() {
 
   return {
     voting,
+		configuration,
     ragequit,
     guildkick,
     managing,
@@ -82,6 +85,7 @@ async function addDefaultAdapters(
 ) {
   const {
     voting,
+		configuration,
     ragequit,
     guildkick,
     managing,
@@ -98,7 +102,13 @@ async function addDefaultAdapters(
 
   await daoFactory.addAdapters(dao.address, [
     entry("voting", voting, {}),
-    entry("ragequit", ragequit, {
+    entry("configuration", guildkick, {
+      SUBMIT_PROPOSAL: true,
+      PROCESS_PROPOSAL: true,
+      SPONSOR_PROPOSAL: true,
+      SET_CONFIGURATION: true,
+    }),
+     entry("ragequit", ragequit, {
       SUB_FROM_BALANCE: true,
       JAIL_MEMBER: true,
       UNJAIL_MEMBER: true,
@@ -202,6 +212,7 @@ function entry(name, contract, flags) {
     flags.INTERNAL_TRANSFER,
     flags.WITHDRAW_PROPOSAL,
     flags.WITHDRAWN,
+		flags.SET_CONFIGURATION
   ];
 
   const acl = values

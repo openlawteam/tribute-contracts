@@ -125,6 +125,8 @@ contract DaoRegistry is DaoConstants, AdapterGuard {
     mapping(bytes32 => address) public registry;
     /// @notice The inverse map to get the adapter id based on its address
     mapping(address => AdapterDetails) public inverseRegistry;
+    /// @notice The map that keeps track of configuration parameters for the DAO and adapters
+    mapping(bytes32 => uint256) public configuration;
 
     constructor() {
         address memberAddr = msg.sender;
@@ -146,6 +148,17 @@ contract DaoRegistry is DaoConstants, AdapterGuard {
     function finalizeDao() external {
         state = DaoState.READY;
     }
+
+		function setConfiguration(
+			  bytes32 key,
+				uint256 value
+		) external hasAccess(this, FlagHelper.Flag.SET_CONFIGURATION) {
+			configuration[key] = value;
+		}
+
+		function getConfiguration(bytes32 key) external view returns(uint256) {
+			return configuration[key];
+		}
 
     function addAdapter(
         bytes32 adapterId,
