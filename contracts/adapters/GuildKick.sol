@@ -36,7 +36,7 @@ SOFTWARE.
 
 contract GuildKickContract is IGuildKick, DaoConstants, MemberGuard {
     using SafeMath for uint256;
-    enum GuildKickStatus {IN_PROGRESS, DONE}
+    enum GuildKickStatus {NOT_STARTED, IN_PROGRESS, DONE}
 
     struct GuildKick {
         address memberToKick;
@@ -44,7 +44,6 @@ contract GuildKickContract is IGuildKick, DaoConstants, MemberGuard {
         uint256 sharesToBurn;
         uint256 initialTotalShares;
         bytes data;
-        bool exists;
         uint256 currentIndex;
         uint256 blockNumber;
     }
@@ -72,7 +71,6 @@ contract GuildKickContract is IGuildKick, DaoConstants, MemberGuard {
             dao.balanceOf(memberToKick, SHARES),
             dao.balanceOf(TOTAL, SHARES),
             data,
-            true,
             0,
             block.number
         );
@@ -94,8 +92,7 @@ contract GuildKickContract is IGuildKick, DaoConstants, MemberGuard {
     {
         GuildKick storage kick = kicks[proposalId];
         // If it does not exist or is not in progress we expect it to fail
-        require(
-            kick.exists && kick.status == GuildKickStatus.IN_PROGRESS,
+        require(kick.status == GuildKickStatus.IN_PROGRESS,
             "guild kick already completed or does not exist"
         );
 
@@ -129,8 +126,7 @@ contract GuildKickContract is IGuildKick, DaoConstants, MemberGuard {
     ) external override onlyMember(dao) {
         GuildKick storage kick = kicks[proposalId];
         // If does not exist or is not DONE we expect it to fail
-        require(
-            kick.exists && kick.status == GuildKickStatus.DONE,
+        require(kick.status == GuildKickStatus.DONE,
             "guild kick not completed or does not exist"
         );
 
