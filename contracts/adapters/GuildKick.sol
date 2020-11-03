@@ -92,7 +92,8 @@ contract GuildKickContract is IGuildKick, DaoConstants, MemberGuard {
     {
         GuildKick storage kick = kicks[proposalId];
         // If it does not exist or is not in progress we expect it to fail
-        require(kick.status == GuildKickStatus.IN_PROGRESS,
+        require(
+            kick.status == GuildKickStatus.IN_PROGRESS,
             "guild kick already completed or does not exist"
         );
 
@@ -126,7 +127,8 @@ contract GuildKickContract is IGuildKick, DaoConstants, MemberGuard {
     ) external override onlyMember(dao) {
         GuildKick storage kick = kicks[proposalId];
         // If does not exist or is not DONE we expect it to fail
-        require(kick.status == GuildKickStatus.DONE,
+        require(
+            kick.status == GuildKickStatus.DONE,
             "guild kick not completed or does not exist"
         );
 
