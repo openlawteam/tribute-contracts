@@ -8,6 +8,7 @@ import "../guards/MemberGuard.sol";
 import "./interfaces/IGuildKick.sol";
 import "../utils/SafeMath.sol";
 import "../adapters/interfaces/IVoting.sol";
+import "../helpers/FairShareHelper.sol";
 
 /**
 MIT License
@@ -35,13 +36,16 @@ SOFTWARE.
 
 contract GuildKickContract is IGuildKick, DaoConstants, MemberGuard {
     using SafeMath for uint256;
-    enum GuildKickStatus {IN_PROGRESS, DONE}
+    enum GuildKickStatus {NOT_STARTED, IN_PROGRESS, DONE}
 
     struct GuildKick {
         address memberToKick;
         GuildKickStatus status;
+        uint256 sharesToBurn;
+        uint256 initialTotalShares;
         bytes data;
-        bool exists;
+        uint256 currentIndex;
+        uint256 blockNumber;
     }
 
     mapping(uint64 => GuildKick) public kicks;
@@ -64,8 +68,11 @@ contract GuildKickContract is IGuildKick, DaoConstants, MemberGuard {
         GuildKick memory guildKick = GuildKick(
             memberToKick,
             GuildKickStatus.IN_PROGRESS,
+            dao.balanceOf(memberToKick, SHARES),
+            dao.balanceOf(TOTAL, SHARES),
             data,
-            true
+            0,
+            block.number
         );
 
         kicks[proposalId] = guildKick;
@@ -78,20 +85,20 @@ contract GuildKickContract is IGuildKick, DaoConstants, MemberGuard {
         return proposalId;
     }
 
-    function kick(DaoRegistry dao, uint64 proposalId)
+    function guildKick(DaoRegistry dao, uint64 proposalId)
         external
         override
         onlyMember(dao)
     {
-        GuildKick storage guildKick = kicks[proposalId];
-        // If status is empty or DONE we expect it to fail
+        GuildKick storage kick = kicks[proposalId];
+        // If it does not exist or is not in progress we expect it to fail
         require(
-            guildKick.exists && guildKick.status == GuildKickStatus.IN_PROGRESS,
+            kick.status == GuildKickStatus.IN_PROGRESS,
             "guild kick already completed or does not exist"
         );
 
         // Only active members can be kicked out, which means the member is in jail already
-        address memberToKick = guildKick.memberToKick;
+        address memberToKick = kick.memberToKick;
         require(dao.isActiveMember(memberToKick), "memberToKick is not active");
 
         IVoting votingContract = IVoting(dao.getAdapterAddress(VOTING));
@@ -108,8 +115,62 @@ contract GuildKickContract is IGuildKick, DaoConstants, MemberGuard {
         dao.subtractFromBalance(memberToKick, SHARES, sharesToLock);
         dao.addToBalance(memberToKick, LOOT, sharesToLock);
         dao.jailMember(memberToKick);
-        guildKick.status = GuildKickStatus.DONE;
+        kick.status = GuildKickStatus.DONE;
 
         dao.processProposal(proposalId);
+    }
+
+    function rageKick(
+        DaoRegistry dao,
+        uint64 proposalId,
+        uint256 toIndex
+    ) external override onlyMember(dao) {
+        GuildKick storage kick = kicks[proposalId];
+        // If does not exist or is not DONE we expect it to fail
+        require(
+            kick.status == GuildKickStatus.DONE,
+            "guild kick not completed or does not exist"
+        );
+
+        // Check if the given index was already processed
+        uint256 currentIndex = kick.currentIndex;
+        require(currentIndex <= toIndex, "toIndex too low");
+
+        // Set the max index supported
+        uint256 tokenLength = dao.nbTokens();
+        uint256 maxIndex = toIndex;
+        if (maxIndex > tokenLength) {
+            maxIndex = tokenLength;
+        }
+
+        //Update internal Guild and Member balances
+        address kickedMember = kick.memberToKick;
+        uint256 initialTotalShares = kick.initialTotalShares;
+        for (uint256 i = currentIndex; i < maxIndex; i++) {
+            address token = dao.getToken(i);
+            uint256 amountToRagequit = FairShareHelper.calc(
+                dao.balanceOf(GUILD, token),
+                kick.sharesToBurn,
+                initialTotalShares
+            );
+            if (amountToRagequit > 0) {
+                // gas optimization to allow a higher maximum token limit
+                // deliberately not using safemath here to keep overflows from preventing the function execution
+                // (which would break ragekicks) if a token overflows,
+                // it is because the supply was artificially inflated to oblivion, so we probably don"t care about it anyways
+                dao.internalTransfer(
+                    GUILD,
+                    kickedMember,
+                    token,
+                    amountToRagequit
+                );
+            }
+        }
+
+        kick.currentIndex = maxIndex;
+        if (maxIndex == tokenLength) {
+            dao.subtractFromBalance(kickedMember, LOOT, kick.sharesToBurn); //should we subtract at each iteration or only here at end?
+            dao.unjailMember(kickedMember);
+        }
     }
 }

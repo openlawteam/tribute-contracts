@@ -2,8 +2,6 @@ pragma solidity ^0.7.0;
 
 // SPDX-License-Identifier: MIT
 
-import "../../core/DaoRegistry.sol";
-
 /**
 MIT License
 
@@ -27,19 +25,24 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
  */
-
-interface IGuildKick {
-    function submitKickProposal(
-        DaoRegistry dao,
-        address memberToKick,
-        bytes calldata data
-    ) external returns (uint256);
-
-    function guildKick(DaoRegistry dao, uint64 proposalId) external;
-
-    function rageKick(
-        DaoRegistry dao,
-        uint64 proposalId,
-        uint256 toIndex
-    ) external;
+library FairShareHelper {
+    /**
+     * @notice calculates the fair share amount based the total shares and current balance.
+     */
+    function calc(
+        uint256 balance,
+        uint256 shares,
+        uint256 _totalShares
+    ) internal pure returns (uint256) {
+        require(_totalShares != 0, "total shares should not be 0");
+        if (balance == 0) {
+            return 0;
+        }
+        uint256 prod = balance * shares;
+        if (prod / balance == shares) {
+            // no overflow in multiplication above?
+            return prod / _totalShares;
+        }
+        return (balance / _totalShares) * shares;
+    }
 }

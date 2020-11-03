@@ -1,5 +1,5 @@
- // Whole-script strict mode syntax
-'use strict';
+// Whole-script strict mode syntax
+"use strict";
 
 /**
 MIT License
@@ -24,12 +24,24 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
  */
-const {toBN, fromUtf8, getContract, advanceTime, createDao, GUILD, SHARES, sharePrice, OnboardingContract, VotingContract, FinancingContract, ETH_TOKEN} = require('../../utils/DaoFactory.js');
-const {checkLastEvent, checkBalance} = require('../../utils/TestUtils.js');
-const remaining = sharePrice.sub(toBN('50000000000000'));
+const {
+  toBN,
+  fromUtf8,
+  getContract,
+  advanceTime,
+  createDao,
+  GUILD,
+  SHARES,
+  sharePrice,
+  OnboardingContract,
+  VotingContract,
+  FinancingContract,
+  ETH_TOKEN,
+} = require("../../utils/DaoFactory.js");
+const {checkLastEvent, checkBalance} = require("../../utils/TestUtils.js");
+const remaining = sharePrice.sub(toBN("50000000000000"));
 
-contract('LAOLAND - Financing Adapter', async accounts => {
-  
+contract("LAOLAND - Financing Adapter", async (accounts) => {
   const myAccount = accounts[1];
   const applicant = accounts[2];
   const newMember = accounts[3];
@@ -37,101 +49,176 @@ contract('LAOLAND - Financing Adapter', async accounts => {
 
   it("should be possible to any individual to request financing", async () => {
     let dao = await createDao(myAccount);
-    const voting = await getContract(dao, "voting",VotingContract);
+    const voting = await getContract(dao, "voting", VotingContract);
     const financing = await getContract(dao, "financing", FinancingContract);
     const onboarding = await getContract(dao, "onboarding", OnboardingContract);
 
     //Add funds to the Guild Bank after sposoring a member to join the Guild
-    await onboarding.onboard(dao.address, newMember, SHARES, sharePrice.mul(toBN(10)).add(remaining), { from: myAccount, value: sharePrice.mul(toBN(10)).add(remaining), gasPrice: toBN("0") });
+    await onboarding.onboard(
+      dao.address,
+      newMember,
+      SHARES,
+      sharePrice.mul(toBN(10)).add(remaining),
+      {
+        from: myAccount,
+        value: sharePrice.mul(toBN(10)).add(remaining),
+        gasPrice: toBN("0"),
+      }
+    );
 
     //Get the new proposal id
     let proposalId = "0";
     await checkLastEvent(dao, {proposalId});
-    
+
     //Sponsor the new proposal, vote and process it
-    await onboarding.sponsorProposal(dao.address, proposalId, [], { from: myAccount, gasPrice: toBN("0") });
-    await voting.submitVote(dao.address, proposalId, 1, { from: myAccount, gasPrice: toBN("0") });
+    await onboarding.sponsorProposal(dao.address, proposalId, [], {
+      from: myAccount,
+      gasPrice: toBN("0"),
+    });
+    await voting.submitVote(dao.address, proposalId, 1, {
+      from: myAccount,
+      gasPrice: toBN("0"),
+    });
     //should not be able to process before the voting period has ended
     try {
-      await onboarding.processProposal(dao.address, proposalId, { from: myAccount, gasPrice: toBN("0") });
+      await onboarding.processProposal(dao.address, proposalId, {
+        from: myAccount,
+        gasPrice: toBN("0"),
+      });
     } catch (err) {
       assert.equal(err.reason, "proposal has not been voted on yet");
     }
 
     await advanceTime(10000);
-    await onboarding.processProposal(dao.address, proposalId, { from: myAccount, gasPrice: toBN("0") });
+    await onboarding.processProposal(dao.address, proposalId, {
+      from: myAccount,
+      gasPrice: toBN("0"),
+    });
     //Check Guild Bank Balance
     checkBalance(dao, GUILD, ETH_TOKEN, expectedGuildBalance);
-    
+
     //Create Financing Request
     let requestedAmount = toBN(50000);
-    await financing.createFinancingRequest(dao.address, applicant, ETH_TOKEN, requestedAmount, fromUtf8(""), {gasPrice: toBN("0") });
-    
+    await financing.createFinancingRequest(
+      dao.address,
+      applicant,
+      ETH_TOKEN,
+      requestedAmount,
+      fromUtf8(""),
+      {gasPrice: toBN("0")}
+    );
+
     //Get the new proposalId from event log
     proposalId = "1";
-    await checkLastEvent(dao, {proposalId})
+    await checkLastEvent(dao, {proposalId});
 
     //Member sponsors the Financing proposal
-    await financing.sponsorProposal(dao.address, proposalId, [], { from: myAccount, gasPrice: toBN("0") });
+    await financing.sponsorProposal(dao.address, proposalId, [], {
+      from: myAccount,
+      gasPrice: toBN("0"),
+    });
 
     //Member votes on the Financing proposal
-    await voting.submitVote(dao.address, proposalId, 1, { from: myAccount, gasPrice: toBN("0") });
+    await voting.submitVote(dao.address, proposalId, 1, {
+      from: myAccount,
+      gasPrice: toBN("0"),
+    });
 
     //Check applicant balance before Financing proposal is processed
     checkBalance(dao, applicant, ETH_TOKEN, "0");
-    
+
     //Process Financing proposal after voting
     await advanceTime(10000);
-    await financing.processProposal(dao.address, proposalId, { from: myAccount, gasPrice: toBN("0") });
+    await financing.processProposal(dao.address, proposalId, {
+      from: myAccount,
+      gasPrice: toBN("0"),
+    });
 
     //Check Guild Bank balance to make sure the transfer has happened
-    checkBalance(dao, GUILD, ETH_TOKEN, expectedGuildBalance.sub(requestedAmount));
+    checkBalance(
+      dao,
+      GUILD,
+      ETH_TOKEN,
+      expectedGuildBalance.sub(requestedAmount)
+    );
     //Check the applicant token balance to make sure the funds are available in the bank for the applicant account
     checkBalance(dao, applicant, ETH_TOKEN, requestedAmount);
-  })
+  });
 
   it("should not be possible to get the money if the proposal fails", async () => {
     let dao = await createDao(myAccount);
-    const voting = await getContract(dao, "voting",VotingContract);
+    const voting = await getContract(dao, "voting", VotingContract);
     const financing = await getContract(dao, "financing", FinancingContract);
     const onboarding = await getContract(dao, "onboarding", OnboardingContract);
 
     //Add funds to the Guild Bank after sposoring a member to join the Guild
-    await onboarding.onboard(dao.address, newMember, SHARES, sharePrice.mul(toBN(10)).add(remaining), { from: myAccount, value: sharePrice.mul(toBN(10)).add(remaining), gasPrice: toBN("0") });
+    await onboarding.onboard(
+      dao.address,
+      newMember,
+      SHARES,
+      sharePrice.mul(toBN(10)).add(remaining),
+      {
+        from: myAccount,
+        value: sharePrice.mul(toBN(10)).add(remaining),
+        gasPrice: toBN("0"),
+      }
+    );
 
     //Get the new proposal id
     let proposalId = "0";
     await checkLastEvent(dao, {proposalId});
-    
+
     //Sponsor the new proposal, vote and process it
-    await onboarding.sponsorProposal(dao.address, proposalId, [], { from: myAccount, gasPrice: toBN("0") });
-    await voting.submitVote(dao.address, proposalId, 1, { from: myAccount, gasPrice: toBN("0") });
+    await onboarding.sponsorProposal(dao.address, proposalId, [], {
+      from: myAccount,
+      gasPrice: toBN("0"),
+    });
+    await voting.submitVote(dao.address, proposalId, 1, {
+      from: myAccount,
+      gasPrice: toBN("0"),
+    });
     await advanceTime(10000);
-    
-    await onboarding.processProposal(dao.address, proposalId, { from: myAccount, gasPrice: toBN("0") });
-      
-    
+
+    await onboarding.processProposal(dao.address, proposalId, {
+      from: myAccount,
+      gasPrice: toBN("0"),
+    });
+
     //Create Financing Request
     let requestedAmount = toBN(50000);
-    await financing.createFinancingRequest(dao.address, applicant, ETH_TOKEN, requestedAmount, fromUtf8(""));
-    
+    await financing.createFinancingRequest(
+      dao.address,
+      applicant,
+      ETH_TOKEN,
+      requestedAmount,
+      fromUtf8("")
+    );
+
     //Get the new proposalId from event log
     proposalId = "1";
-    await checkLastEvent(dao, {proposalId})
+    await checkLastEvent(dao, {proposalId});
 
     //Member sponsors the Financing proposal
-    await financing.sponsorProposal(dao.address, proposalId, [], { from: myAccount, gasPrice: toBN("0") });
+    await financing.sponsorProposal(dao.address, proposalId, [], {
+      from: myAccount,
+      gasPrice: toBN("0"),
+    });
 
     //Member votes on the Financing proposal
-    await voting.submitVote(dao.address, proposalId, 2, { from: myAccount, gasPrice: toBN("0") });
-    
+    await voting.submitVote(dao.address, proposalId, 2, {
+      from: myAccount,
+      gasPrice: toBN("0"),
+    });
+
     //Process Financing proposal after voting
     await advanceTime(10000);
     try {
-      await financing.processProposal(dao.address, proposalId, { from: myAccount, gasPrice: toBN("0") }); 
+      await financing.processProposal(dao.address, proposalId, {
+        from: myAccount,
+        gasPrice: toBN("0"),
+      });
     } catch (err) {
       assert.equal(err.reason, "proposal needs to pass");
     }
-  })
-
+  });
 });

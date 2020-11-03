@@ -1,5 +1,5 @@
 // Whole-script strict mode syntax
-'use strict';
+"use strict";
 
 /**
 MIT License
@@ -106,11 +106,12 @@ async function addDefaultAdapters(
     }),
     entry("guildkick", guildkick, {
       SUBMIT_PROPOSAL: true,
-      PROCESS_PROPOSAL: true,
       SPONSOR_PROPOSAL: true,
+      PROCESS_PROPOSAL: true,
       SUB_FROM_BALANCE: true,
       ADD_TO_BALANCE: true,
       JAIL_MEMBER: true,
+      UNJAIL_MEMBER: true,
       INTERNAL_TRANSFER: true,
     }),
     entry("managing", managing, {
@@ -161,7 +162,8 @@ async function createDao(
   nbShares = numberOfShares,
   votingPeriod = 10,
   gracePeriod = 1,
-  tokenAddr = ETH_TOKEN
+  tokenAddr = ETH_TOKEN,
+  
 ) {
   let lib = await FlagHelperLib.new();
   await DaoRegistry.link("FlagHelper", lib.address);
