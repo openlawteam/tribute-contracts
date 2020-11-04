@@ -42,6 +42,10 @@ contract OnboardingContract is
 {
     using SafeMath for uint256;
 
+		bytes32 constant ChunkSize = keccak256("chunkSize");
+		bytes32 constant SharesPerChunk = keccak256("sharesPerChunk");
+		bytes32 constant TokenAddr = keccak256("tokenAddr");
+
     struct ProposalDetails {
         uint256 id;
         address tokenToMint;
@@ -58,8 +62,11 @@ contract OnboardingContract is
         address tokenAddr;
     }
 
-    mapping(address => mapping(address => OnboardingConfig)) public configs;
     mapping(address => mapping(uint256 => ProposalDetails)) public proposals;
+
+		function configKey(address tokenAddrToMint, bytes32 key) internal returns(bytes32) {
+			return keccak256(abi.encode(tokenAddrToMint, key));
+		}
 
     function configureDao(
         DaoRegistry dao,
@@ -70,9 +77,10 @@ contract OnboardingContract is
     ) external onlyAdapter(dao) {
         require(chunkSize > 0, "chunkSize must be higher than 0");
         require(sharesPerChunk > 0, "sharesPerChunk must be higher than 0");
-        configs[address(dao)][tokenAddrToMint].chunkSize = chunkSize;
-        configs[address(dao)][tokenAddrToMint].sharesPerChunk = sharesPerChunk;
-        configs[address(dao)][tokenAddrToMint].tokenAddr = tokenAddr;
+
+				dao.setConfiguration(configKey(tokenAddrToMint, ChunkSize), chunkSize);
+				dao.setConfiguration(configKey(tokenAddrToMint, SharesPerChunk), sharesPerChunk);
+				dao.setConfiguration(configKey(tokenAddrToMint, TokenAddr), uint256(tokenAddr));
 
         dao.registerPotentialNewInternalToken(tokenAddrToMint);
         dao.registerPotentialNewToken(ETH_TOKEN);
@@ -86,14 +94,14 @@ contract OnboardingContract is
         uint256 value,
         address token
     ) internal returns (uint256) {
-        OnboardingConfig storage config = configs[address(dao)][tokenToMint];
-        require(config.chunkSize > 0, "config missing");
+				uint256 chunkSize = dao.getConfiguration(configKey(tokenToMint, ChunkSize));
+        require(chunkSize > 0, "config missing");
 
-        uint256 numberOfChunks = value.div(config.chunkSize);
+        uint256 numberOfChunks = value.div(chunkSize);
         require(numberOfChunks > 0, "not sufficient funds");
 
-        uint256 amount = numberOfChunks.mul(config.chunkSize);
-        uint256 sharesRequested = numberOfChunks.mul(config.sharesPerChunk);
+        uint256 amount = numberOfChunks.mul(chunkSize);
+				uint256 sharesRequested = numberOfChunks.mul(dao.getConfiguration(configKey(tokenToMint, SharesPerChunk)));
 
         _submitMembershipProposalInternal(
             dao,
@@ -114,7 +122,7 @@ contract OnboardingContract is
         address tokenToMint,
         uint256 tokenAmount
     ) external override payable {
-        address tokenAddr = configs[address(dao)][tokenToMint].tokenAddr;
+				address tokenAddr = address(dao.getConfiguration(configKey(tokenToMint, TokenAddr)));
         if (tokenAddr == ETH_TOKEN) {
             // ETH onboarding
             require(msg.value > 0, "not enough ETH");

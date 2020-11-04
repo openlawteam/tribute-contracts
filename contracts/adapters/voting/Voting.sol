@@ -33,26 +33,24 @@ SOFTWARE.
  */
 
 contract VotingContract is IVoting, DaoConstants, MemberGuard, AdapterGuard {
-    struct VotingConfig {
-        uint256 votingPeriod;
-        uint256 gracePeriod;
-    }
     struct Voting {
         uint256 nbYes;
         uint256 nbNo;
         uint256 startingTime;
     }
 
+		bytes32 constant VotingPeriod = keccak256("votingPeriod");
+		bytes32 constant GracePeriod = keccak256("gracePeriod");
+
     mapping(address => mapping(uint256 => Voting)) public votes;
-    mapping(address => VotingConfig) public votingConfigs;
 
     function configureDao(
         DaoRegistry dao,
         uint256 votingPeriod,
         uint256 gracePeriod
     ) external onlyAdapter(dao) {
-        votingConfigs[address(dao)].votingPeriod = votingPeriod;
-        votingConfigs[address(dao)].gracePeriod = gracePeriod;
+				dao.setConfiguration(VotingPeriod, votingPeriod);
+				dao.setConfiguration(GracePeriod, gracePeriod);
     }
 
     //voting  data is not used for pure onchain voting
@@ -98,7 +96,7 @@ contract VotingContract is IVoting, DaoConstants, MemberGuard, AdapterGuard {
         );
         require(
             block.timestamp <
-                vote.startingTime + votingConfigs[address(dao)].votingPeriod,
+                vote.startingTime + dao.getConfiguration(VotingPeriod),
             "vote has already ended"
         );
         if (voteValue == 1) {
@@ -130,7 +128,7 @@ contract VotingContract is IVoting, DaoConstants, MemberGuard, AdapterGuard {
 
         if (
             block.timestamp <
-            vote.startingTime + votingConfigs[address(dao)].votingPeriod
+            vote.startingTime + dao.getConfiguration(VotingPeriod)
         ) {
             return 4;
         }
