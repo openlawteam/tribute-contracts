@@ -40,7 +40,7 @@ contract ConfigurationContract is IConfiguration, DaoConstants, MemberGuard {
     struct Configuration {
         ConfigurationStatus status;
         bytes32[] keys;
-				uint256[] values;
+        uint256[] values;
         bool exists;
     }
 
@@ -56,23 +56,23 @@ contract ConfigurationContract is IConfiguration, DaoConstants, MemberGuard {
     function submitConfigurationProposal(
         DaoRegistry dao,
         bytes32[] calldata keys,
-				uint256[] calldata values,
+        uint256[] calldata values,
         bytes calldata data
     ) external override onlyMember(dao) returns (uint256) {
         uint64 proposalId = dao.submitProposal();
 
-				require(
-					keys.length == values.length,
-					"configuration must have the same number of keys and values"
-				);
+        require(
+            keys.length == values.length,
+            "configuration must have the same number of keys and values"
+        );
 
-				Configuration memory configuration = Configuration(
-						ConfigurationStatus.IN_PROGRESS,
-						keys,
-						values,
-						true
-				);
-				
+        Configuration memory configuration = Configuration(
+            ConfigurationStatus.IN_PROGRESS,
+            keys,
+            values,
+            true
+        );
+
         configurations[proposalId] = configuration;
 
         IVoting votingContract = IVoting(dao.getAdapterAddress(VOTING));
@@ -80,7 +80,7 @@ contract ConfigurationContract is IConfiguration, DaoConstants, MemberGuard {
         dao.sponsorProposal(proposalId, msg.sender);
 
         return proposalId;
-		}
+    }
 
     function configure(DaoRegistry dao, uint64 proposalId)
         external
@@ -91,7 +91,8 @@ contract ConfigurationContract is IConfiguration, DaoConstants, MemberGuard {
 
         // If status is empty or DONE we expect it to fail
         require(
-            configuration.exists && configuration.status == ConfigurationStatus.IN_PROGRESS,
+            configuration.exists &&
+                configuration.status == ConfigurationStatus.IN_PROGRESS,
             "reconfiguration already completed or does not exist"
         );
 
@@ -101,11 +102,11 @@ contract ConfigurationContract is IConfiguration, DaoConstants, MemberGuard {
             "proposal did not pass yet"
         );
 
-				bytes32[] memory keys = configuration.keys;
-				uint256[] memory values = configuration.values;
-				for (uint i = 0; i < keys.length; i++) {
-					dao.setConfiguration(keys[i], values[i]);
-        }				
+        bytes32[] memory keys = configuration.keys;
+        uint256[] memory values = configuration.values;
+        for (uint256 i = 0; i < keys.length; i++) {
+            dao.setConfiguration(keys[i], values[i]);
+        }
 
         configuration.status = ConfigurationStatus.DONE;
 

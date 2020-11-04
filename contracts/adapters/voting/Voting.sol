@@ -39,8 +39,8 @@ contract VotingContract is IVoting, DaoConstants, MemberGuard, AdapterGuard {
         uint256 startingTime;
     }
 
-		bytes32 constant VotingPeriod = keccak256("votingPeriod");
-		bytes32 constant GracePeriod = keccak256("gracePeriod");
+    bytes32 constant VotingPeriod = keccak256("votingPeriod");
+    bytes32 constant GracePeriod = keccak256("gracePeriod");
 
     mapping(address => mapping(uint256 => Voting)) public votes;
 
@@ -49,8 +49,8 @@ contract VotingContract is IVoting, DaoConstants, MemberGuard, AdapterGuard {
         uint256 votingPeriod,
         uint256 gracePeriod
     ) external onlyAdapter(dao) {
-				dao.setConfiguration(VotingPeriod, votingPeriod);
-				dao.setConfiguration(GracePeriod, gracePeriod);
+        dao.setConfiguration(VotingPeriod, votingPeriod);
+        dao.setConfiguration(GracePeriod, gracePeriod);
     }
 
     //voting  data is not used for pure onchain voting

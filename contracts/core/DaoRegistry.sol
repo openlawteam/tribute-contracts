@@ -149,16 +149,16 @@ contract DaoRegistry is DaoConstants, AdapterGuard {
         state = DaoState.READY;
     }
 
-		function setConfiguration(
-			  bytes32 key,
-				uint256 value
-		) external hasAccess(this, FlagHelper.Flag.SET_CONFIGURATION) {
-			configuration[key] = value;
-		}
+    function setConfiguration(bytes32 key, uint256 value)
+        external
+        hasAccess(this, FlagHelper.Flag.SET_CONFIGURATION)
+    {
+        configuration[key] = value;
+    }
 
-		function getConfiguration(bytes32 key) external view returns(uint256) {
-			return configuration[key];
-		}
+    function getConfiguration(bytes32 key) external view returns (uint256) {
+        return configuration[key];
+    }
 
     function addAdapter(
         bytes32 adapterId,

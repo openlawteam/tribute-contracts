@@ -66,10 +66,10 @@ contract OffchainVotingContract is
         bytes32[] proof;
     }
 
-		bytes32 constant VotingPeriod = keccak256("votingPeriod");
-		bytes32 constant GracePeriod = keccak256("gracePeriod");
-		bytes32 constant StakingAmount = keccak256("stakingAmount");
-		bytes32 constant FallbackThreshold = keccak256("fallbackThreshold");
+    bytes32 constant VotingPeriod = keccak256("votingPeriod");
+    bytes32 constant GracePeriod = keccak256("gracePeriod");
+    bytes32 constant StakingAmount = keccak256("stakingAmount");
+    bytes32 constant FallbackThreshold = keccak256("fallbackThreshold");
 
     mapping(address => mapping(uint256 => Voting)) public votes;
 
@@ -83,9 +83,9 @@ contract OffchainVotingContract is
         uint256 gracePeriod,
         uint256 fallbackThreshold
     ) external onlyAdapter(dao) {
-			  dao.setConfiguration(VotingPeriod, votingPeriod);
-			  dao.setConfiguration(GracePeriod, gracePeriod);
-			  dao.setConfiguration(FallbackThreshold, fallbackThreshold);
+        dao.setConfiguration(VotingPeriod, votingPeriod);
+        dao.setConfiguration(GracePeriod, gracePeriod);
+        dao.setConfiguration(FallbackThreshold, fallbackThreshold);
 
         dao.registerPotentialNewInternalToken(LOCKED_LOOT);
     }
@@ -281,8 +281,7 @@ contract OffchainVotingContract is
 
         if (
             block.timestamp <
-            vote.gracePeriodStartingTime +
-                dao.getConfiguration(GracePeriod)
+            vote.gracePeriodStartingTime + dao.getConfiguration(GracePeriod)
         ) {
             return 4;
         }

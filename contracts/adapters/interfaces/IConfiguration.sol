@@ -31,8 +31,8 @@ SOFTWARE.
 interface IConfiguration {
     function submitConfigurationProposal(
         DaoRegistry dao,
-				bytes32[] calldata keys,
-				uint256[] calldata values,
+        bytes32[] calldata keys,
+        uint256[] calldata values,
         bytes calldata data
     ) external returns (uint256);
 
