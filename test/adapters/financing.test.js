@@ -38,7 +38,7 @@ const {
   FinancingContract,
   ETH_TOKEN,
 } = require("../../utils/DaoFactory.js");
-const {checkLastEvent, checkBalance} = require("../../utils/TestUtils.js");
+const { checkLastEvent, checkBalance } = require("../../utils/TestUtils.js");
 const remaining = sharePrice.sub(toBN("50000000000000"));
 
 contract("LAOLAND - Financing Adapter", async (accounts) => {
@@ -68,7 +68,7 @@ contract("LAOLAND - Financing Adapter", async (accounts) => {
 
     //Get the new proposal id
     let proposalId = "0";
-    await checkLastEvent(dao, {proposalId});
+    await checkLastEvent(dao, { proposalId });
 
     //Sponsor the new proposal, vote and process it
     await onboarding.sponsorProposal(dao.address, proposalId, [], {
@@ -105,12 +105,12 @@ contract("LAOLAND - Financing Adapter", async (accounts) => {
       ETH_TOKEN,
       requestedAmount,
       fromUtf8(""),
-      {gasPrice: toBN("0")}
+      { gasPrice: toBN("0") }
     );
 
     //Get the new proposalId from event log
     proposalId = "1";
-    await checkLastEvent(dao, {proposalId});
+    await checkLastEvent(dao, { proposalId });
 
     //Member sponsors the Financing proposal
     await financing.sponsorProposal(dao.address, proposalId, [], {
@@ -166,7 +166,7 @@ contract("LAOLAND - Financing Adapter", async (accounts) => {
 
     //Get the new proposal id
     let proposalId = "0";
-    await checkLastEvent(dao, {proposalId});
+    await checkLastEvent(dao, { proposalId });
 
     //Sponsor the new proposal, vote and process it
     await onboarding.sponsorProposal(dao.address, proposalId, [], {
@@ -196,7 +196,7 @@ contract("LAOLAND - Financing Adapter", async (accounts) => {
 
     //Get the new proposalId from event log
     proposalId = "1";
-    await checkLastEvent(dao, {proposalId});
+    await checkLastEvent(dao, { proposalId });
 
     //Member sponsors the Financing proposal
     await financing.sponsorProposal(dao.address, proposalId, [], {
@@ -219,6 +219,121 @@ contract("LAOLAND - Financing Adapter", async (accounts) => {
       });
     } catch (err) {
       assert.equal(err.reason, "proposal needs to pass");
+    }
+  });
+
+  it("should not be possible to submit a proposal with a token that is not allowed", async () => {
+    let dao = await createDao(myAccount);
+    const voting = await getContract(dao, "voting", VotingContract);
+    const financing = await getContract(dao, "financing", FinancingContract);
+    const onboarding = await getContract(dao, "onboarding", OnboardingContract);
+
+    //Add funds to the Guild Bank after sposoring a member to join the Guild
+    await onboarding.onboard(
+      dao.address,
+      newMember,
+      SHARES,
+      sharePrice.mul(toBN(10)).add(remaining),
+      {
+        from: myAccount,
+        value: sharePrice.mul(toBN(10)).add(remaining),
+        gasPrice: toBN("0"),
+      }
+    );
+
+    //Get the new proposal id
+    let proposalId = "0";
+    await checkLastEvent(dao, { proposalId });
+
+    //Sponsor the new proposal, vote and process it
+    await onboarding.sponsorProposal(dao.address, proposalId, [], {
+      from: myAccount,
+      gasPrice: toBN("0"),
+    });
+    await voting.submitVote(dao.address, proposalId, 1, {
+      from: myAccount,
+      gasPrice: toBN("0"),
+    });
+    await advanceTime(10000);
+
+    await onboarding.processProposal(dao.address, proposalId, {
+      from: myAccount,
+      gasPrice: toBN("0"),
+    });
+
+    try {
+      const invalidToken = "0x6941a80e1a034f57ed3b1d642fc58ddcb91e2596";
+      //Create Financing Request with a token that is not allowed
+      let requestedAmount = toBN(50000);
+      await financing.createFinancingRequest(
+        dao.address,
+        applicant,
+        invalidToken,
+        requestedAmount,
+        fromUtf8("")
+      );
+      assert.fail(
+        "should not be possible to submit a proposal with a token that is not allowed"
+      );
+    } catch (err) {
+      assert.equal(err.reason, "token not allowed");
+    }
+  });
+
+  it("should not be possible to submit a proposal to request funding with an amount equals to zero", async () => {
+    let dao = await createDao(myAccount);
+    const voting = await getContract(dao, "voting", VotingContract);
+    const financing = await getContract(dao, "financing", FinancingContract);
+    const onboarding = await getContract(dao, "onboarding", OnboardingContract);
+
+    //Add funds to the Guild Bank after sposoring a member to join the Guild
+    await onboarding.onboard(
+      dao.address,
+      newMember,
+      SHARES,
+      sharePrice.mul(toBN(10)).add(remaining),
+      {
+        from: myAccount,
+        value: sharePrice.mul(toBN(10)).add(remaining),
+        gasPrice: toBN("0"),
+      }
+    );
+
+    //Get the new proposal id
+    let proposalId = "0";
+    await checkLastEvent(dao, { proposalId });
+
+    //Sponsor the new proposal, vote and process it
+    await onboarding.sponsorProposal(dao.address, proposalId, [], {
+      from: myAccount,
+      gasPrice: toBN("0"),
+    });
+    await voting.submitVote(dao.address, proposalId, 1, {
+      from: myAccount,
+      gasPrice: toBN("0"),
+    });
+    await advanceTime(10000);
+
+    await onboarding.processProposal(dao.address, proposalId, {
+      from: myAccount,
+      gasPrice: toBN("0"),
+    });
+
+    try {
+      // Create Financing Request with amount = 0
+      let requestedAmount = toBN(0);
+      await financing.createFinancingRequest(
+        dao.address,
+        applicant,
+        ETH_TOKEN,
+        requestedAmount,
+        fromUtf8("")
+      );
+      assert.fail(
+        "should not be possible to submit a proposal with an amount == 0"
+      );
+    } catch (err) {
+      assert.equal(err.reason, "invalid requested amount");
     }
   });
 });
