@@ -351,6 +351,10 @@ contract DaoRegistry is DaoConstants, AdapterGuard {
         return _bank.availableInternalTokens[tokenToMint];
     }
 
+    function isTokenAllowed(address token) external view returns (bool) {
+        return _bank.availableTokens[token];
+    }
+
     /*
      * MEMBERS
      */

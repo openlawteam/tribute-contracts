@@ -61,8 +61,7 @@ contract FinancingContract is IFinancing, DaoConstants, MemberGuard {
         bytes32 details
     ) external override returns (uint256) {
         require(amount > 0, "invalid requested amount");
-        require(token == address(0x0), "only raw eth token is supported");
-        //TODO (fforbeck): check if other types of tokens are supported/allowed
+        require(dao.isTokenAllowed(token), "token not allowed");
         require(
             dao.isNotReservedAddress(applicant),
             "applicant using reserved address"
