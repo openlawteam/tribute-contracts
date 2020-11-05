@@ -36,5 +36,8 @@ interface IConfiguration {
         bytes calldata data
     ) external returns (uint256);
 
+
+    function sponsorProposal(DaoRegistry dao, uint256 _proposalId, bytes calldata data) external;
+
     function processProposal(DaoRegistry dao, uint64 proposalId) external;
 }

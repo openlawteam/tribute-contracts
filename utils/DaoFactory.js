@@ -102,7 +102,7 @@ async function addDefaultAdapters(
 
   await daoFactory.addAdapters(dao.address, [
     entry("voting", voting, {}),
-    entry("configuration", guildkick, {
+    entry("configuration", configuration, {
       SUBMIT_PROPOSAL: true,
       PROCESS_PROPOSAL: true,
       SPONSOR_PROPOSAL: true,
@@ -298,4 +298,5 @@ module.exports = {
   RagequitContract,
   GuildKickContract,
   OnboardingContract,
+	ConfigurationContract
 };
