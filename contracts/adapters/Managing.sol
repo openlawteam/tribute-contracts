@@ -40,6 +40,8 @@ contract ManagingContract is IManaging, DaoConstants, MemberGuard {
         address applicant;
         bytes32 moduleId;
         address moduleAddress;
+				bytes32[] keys;
+				uint256[] values;
         uint128 flags;
     }
 
@@ -56,8 +58,11 @@ contract ManagingContract is IManaging, DaoConstants, MemberGuard {
         DaoRegistry dao,
         bytes32 moduleId,
         address moduleAddress,
+				bytes32[] calldata keys,
+        uint256[] calldata values,
         uint256 _flags
     ) external override onlyMember(dao) returns (uint256) {
+				require(keys.length == values.length, "must be an equal number of config keys and values");
         require(moduleAddress != address(0x0), "invalid module address");
         require(_flags < type(uint128).max, "flags parameter overflow");
         uint128 flags = uint128(_flags);
@@ -75,6 +80,8 @@ contract ManagingContract is IManaging, DaoConstants, MemberGuard {
         proposal.applicant = msg.sender;
         proposal.moduleId = moduleId;
         proposal.moduleAddress = moduleAddress;
+        proposal.keys = keys;
+        proposal.values = values;
         proposal.flags = flags;
         return proposalId;
     }
@@ -98,6 +105,12 @@ contract ManagingContract is IManaging, DaoConstants, MemberGuard {
         require(_proposalId < type(uint64).max, "proposalId too big");
         uint64 proposalId = uint64(_proposalId);
         ProposalDetails memory proposal = proposals[_proposalId];
+				bytes32[] memory keys = proposal.keys;
+				uint256[] memory values = proposal.values;
+				require(
+					  keys.length == values.length,
+						"must be an equal number of config keys and values"
+				);
         require(
             !dao.getProposalFlag(proposalId, FlagHelper.Flag.PROCESSED),
             "proposal already processed"
@@ -114,6 +127,11 @@ contract ManagingContract is IManaging, DaoConstants, MemberGuard {
         );
 
         dao.removeAdapter(proposal.moduleId);
+
+        for (uint256 i = 0; i < keys.length; i++) {
+            dao.setConfiguration(keys[i], values[i]);
+        }
+
         dao.addAdapter(
             proposal.moduleId,
             proposal.moduleAddress,
