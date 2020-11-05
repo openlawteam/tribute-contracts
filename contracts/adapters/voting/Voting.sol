@@ -39,8 +39,8 @@ contract VotingContract is IVoting, DaoConstants, MemberGuard, AdapterGuard {
         uint256 startingTime;
     }
 
-    bytes32 constant VotingPeriod = keccak256("votingPeriod");
-    bytes32 constant GracePeriod = keccak256("gracePeriod");
+    bytes32 constant VotingPeriod = keccak256("voting.votingPeriod");
+    bytes32 constant GracePeriod = keccak256("voting.gracePeriod");
 
     mapping(address => mapping(uint256 => Voting)) public votes;
 

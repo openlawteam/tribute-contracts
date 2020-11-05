@@ -35,13 +35,12 @@ SOFTWARE.
 
 contract ConfigurationContract is IConfiguration, DaoConstants, MemberGuard {
     using SafeMath for uint256;
-    enum ConfigurationStatus {IN_PROGRESS, DONE}
+    enum ConfigurationStatus {NOT_CREATED, IN_PROGRESS, DONE}
 
     struct Configuration {
         ConfigurationStatus status;
         bytes32[] keys;
         uint256[] values;
-        bool exists;
     }
 
     mapping(uint64 => Configuration) public configurations;
@@ -69,8 +68,7 @@ contract ConfigurationContract is IConfiguration, DaoConstants, MemberGuard {
         Configuration memory configuration = Configuration(
             ConfigurationStatus.IN_PROGRESS,
             keys,
-            values,
-            true
+            values
         );
 
         configurations[proposalId] = configuration;
@@ -82,7 +80,7 @@ contract ConfigurationContract is IConfiguration, DaoConstants, MemberGuard {
         return proposalId;
     }
 
-    function configure(DaoRegistry dao, uint64 proposalId)
+    function processProposal(DaoRegistry dao, uint64 proposalId)
         external
         override
         onlyMember(dao)
@@ -91,8 +89,7 @@ contract ConfigurationContract is IConfiguration, DaoConstants, MemberGuard {
 
         // If status is empty or DONE we expect it to fail
         require(
-            configuration.exists &&
-                configuration.status == ConfigurationStatus.IN_PROGRESS,
+            configuration.status == ConfigurationStatus.IN_PROGRESS,
             "reconfiguration already completed or does not exist"
         );
 

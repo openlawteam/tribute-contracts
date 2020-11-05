@@ -42,9 +42,9 @@ contract OnboardingContract is
 {
     using SafeMath for uint256;
 
-    bytes32 constant ChunkSize = keccak256("chunkSize");
-    bytes32 constant SharesPerChunk = keccak256("sharesPerChunk");
-    bytes32 constant TokenAddr = keccak256("tokenAddr");
+    bytes32 constant ChunkSize = keccak256("onboarding.chunkSize");
+    bytes32 constant SharesPerChunk = keccak256("onboarding.sharesPerChunk");
+    bytes32 constant TokenAddr = keccak256("onboarding.tokenAddr");
 
     struct ProposalDetails {
         uint256 id;
