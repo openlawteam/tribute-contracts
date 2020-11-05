@@ -24,8 +24,8 @@
   "scripts": {
     "test": "truffle test",
     "coverage": "truffle run coverage --network coverage",
-    "lint:fix": "prettier --write contracts/**/*",
-    "lint": "prettier --list-different contracts/**/*",
+    "lint:fix": "prettier --write contracts/**/* test/**/*.test.js",
+    "lint": "prettier --list-different contracts/**/*.sol test/**/*.test.js",
     "create": "graph create openlawteam/laoland-graph --node https://api.thegraph.com/deploy/",
     "create-local": "graph create openlawteam/laoland-graph --node http://127.0.0.1:8020",
     "codegen": "graph codegen",
