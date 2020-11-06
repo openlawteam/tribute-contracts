@@ -212,8 +212,6 @@ function entry(name, contract, flags) {
     flags.ADD_TO_BALANCE,
     flags.SUB_FROM_BALANCE,
     flags.INTERNAL_TRANSFER,
-    flags.WITHDRAW_PROPOSAL,
-    flags.WITHDRAWN,
 		flags.SET_CONFIGURATION
   ];
 
