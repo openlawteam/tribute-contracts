@@ -27,7 +27,7 @@ SOFTWARE.
 const {
   sha3,
   toBN,
-	fromUtf8,
+  fromUtf8,
   advanceTime,
   createDao,
   GUILD,
@@ -36,7 +36,7 @@ const {
   ManagingContract,
   VotingContract,
   OnboardingContract,
-	ConfigurationContract
+  ConfigurationContract,
 } = require("../../utils/DaoFactory.js");
 
 contract("LAOLAND - Configuration Adapter", async (accounts) => {
@@ -45,21 +45,23 @@ contract("LAOLAND - Configuration Adapter", async (accounts) => {
 
     //Create the new DAO
     let dao = await createDao(myAccount);
-		let key = sha3("key")
+    let key = sha3("key");
 
     //Submit a new configuration proposal
-    let configurationContract = await dao.getAdapterAddress(sha3("configuration"));
+    let configurationContract = await dao.getAdapterAddress(
+      sha3("configuration")
+    );
     let configuration = await ConfigurationContract.at(configurationContract);
-		await configuration.submitConfigurationProposal(
-			dao.address,
-			[key],
-			[toBN("10")],
+    await configuration.submitConfigurationProposal(
+      dao.address,
+      [key],
+      [toBN("10")],
       fromUtf8(""),
-			{from: myAccount, gasPrice: toBN("0")}
-		);
+      {from: myAccount, gasPrice: toBN("0")}
+    );
 
-		let value = await dao.getConfiguration(key);
-		assert.equal(value.toString, toBN("0").toString);
+    let value = await dao.getConfiguration(key);
+    assert.equal(value.toString, toBN("0").toString);
 
     //Sponsor the new proposal, vote and process it
     await configuration.sponsorProposal(dao.address, 0, [], {
@@ -70,8 +72,8 @@ contract("LAOLAND - Configuration Adapter", async (accounts) => {
     let votingContract = await dao.getAdapterAddress(sha3("voting"));
     let voting = await VotingContract.at(votingContract);
 
-		value = await dao.getConfiguration(key);
-		assert.equal(value.toString, toBN("0").toString);
+    value = await dao.getConfiguration(key);
+    assert.equal(value.toString, toBN("0").toString);
     await voting.submitVote(dao.address, 0, 1, {
       from: myAccount,
       gasPrice: toBN("0"),
@@ -83,7 +85,7 @@ contract("LAOLAND - Configuration Adapter", async (accounts) => {
       gasPrice: toBN("0"),
     });
 
-		value = await dao.getConfiguration(key);
-		assert.equal(value.toString, toBN("10").toString);
+    value = await dao.getConfiguration(key);
+    assert.equal(value.toString, toBN("10").toString);
   });
 });

@@ -998,8 +998,8 @@ contract("LAOLAND - GuildKick Adapter", async (accounts) => {
         dao.address,
         newModuleId,
         newModuleAddress,
-				[],
-				[],
+        [],
+        [],
         0,
         {from: kickedMember, gasPrice: toBN("0")}
       );
@@ -1070,8 +1070,8 @@ contract("LAOLAND - GuildKick Adapter", async (accounts) => {
       dao.address,
       newModuleId,
       newModuleAddress,
-			[],
-			[],
+      [],
+      [],
       0,
       {from: member, gasPrice: toBN("0")}
     );

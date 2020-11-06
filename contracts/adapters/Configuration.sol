@@ -80,7 +80,6 @@ contract ConfigurationContract is IConfiguration, DaoConstants, MemberGuard {
         return proposalId;
     }
 
-
     function sponsorProposal(
         DaoRegistry dao,
         uint256 _proposalId,
@@ -91,7 +90,7 @@ contract ConfigurationContract is IConfiguration, DaoConstants, MemberGuard {
 
         dao.sponsorProposal(_proposalId, msg.sender);
     }
-		
+
     function processProposal(DaoRegistry dao, uint64 proposalId)
         external
         override

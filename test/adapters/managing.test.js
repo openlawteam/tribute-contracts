@@ -53,8 +53,8 @@ contract("LAOLAND - Managing Adapter", async (accounts) => {
         dao.address,
         newModuleId,
         ETH_TOKEN,
-				[],
-				[],
+        [],
+        [],
         0,
         {from: myAccount, gasPrice: toBN("0")}
       );
@@ -79,8 +79,8 @@ contract("LAOLAND - Managing Adapter", async (accounts) => {
         dao.address,
         newModuleId,
         GUILD,
-				[],
-				[],
+        [],
+        [],
         0,
         {from: myAccount, gasPrice: toBN("0")}
       );
@@ -94,8 +94,8 @@ contract("LAOLAND - Managing Adapter", async (accounts) => {
         dao.address,
         newModuleId,
         TOTAL,
-				[],
-				[],
+        [],
+        [],
         0,
         {from: myAccount, gasPrice: toBN("0")}
       );
@@ -116,10 +116,17 @@ contract("LAOLAND - Managing Adapter", async (accounts) => {
     let managingContract = await dao.getAdapterAddress(sha3("managing"));
     let managing = await ManagingContract.at(managingContract);
     try {
-      await managing.createModuleChangeRequest(dao.address, newModuleId, [], [], "", {
-        from: myAccount,
-        gasPrice: toBN("0"),
-      });
+      await managing.createModuleChangeRequest(
+        dao.address,
+        newModuleId,
+        [],
+        [],
+        "",
+        {
+          from: myAccount,
+          gasPrice: toBN("0"),
+        }
+      );
       assert.err("should not pass");
     } catch (err) {
       assert.equal(err.reason, "invalid address");
@@ -144,8 +151,8 @@ contract("LAOLAND - Managing Adapter", async (accounts) => {
       dao.address,
       newModuleId,
       newModuleAddress,
-			[],
-			[],
+      [],
+      [],
       0,
       {from: myAccount, gasPrice: toBN("0")}
     );
@@ -191,8 +198,8 @@ contract("LAOLAND - Managing Adapter", async (accounts) => {
       dao.address,
       newModuleId,
       newModuleAddress,
-			[],
-			[],
+      [],
+      [],
       0,
       {from: myAccount, gasPrice: toBN("0")}
     );
