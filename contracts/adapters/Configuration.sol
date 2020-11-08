@@ -2,12 +2,12 @@ pragma solidity ^0.7.0;
 
 // SPDX-License-Identifier: MIT
 
-import "./interfaces/IManaging.sol";
 import "../core/DaoConstants.sol";
 import "../core/DaoRegistry.sol";
-import "../adapters/interfaces/IVoting.sol";
 import "../guards/MemberGuard.sol";
+import "./interfaces/IConfiguration.sol";
 import "../utils/SafeMath.sol";
+import "../adapters/interfaces/IVoting.sol";
 
 /**
 MIT License
@@ -33,19 +33,17 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
  */
 
-contract ManagingContract is IManaging, DaoConstants, MemberGuard {
+contract ConfigurationContract is IConfiguration, DaoConstants, MemberGuard {
     using SafeMath for uint256;
+    enum ConfigurationStatus {NOT_CREATED, IN_PROGRESS, DONE}
 
-    struct ProposalDetails {
-        address applicant;
-        bytes32 moduleId;
-        address moduleAddress;
+    struct Configuration {
+        ConfigurationStatus status;
         bytes32[] keys;
         uint256[] values;
-        uint128 flags;
     }
 
-    mapping(uint256 => ProposalDetails) public proposals;
+    mapping(uint64 => Configuration) public configurations;
 
     /*
      * default fallback function to prevent from sending ether to the contract
@@ -54,38 +52,31 @@ contract ManagingContract is IManaging, DaoConstants, MemberGuard {
         revert("fallback revert");
     }
 
-    function createModuleChangeRequest(
+    function submitConfigurationProposal(
         DaoRegistry dao,
-        bytes32 moduleId,
-        address moduleAddress,
         bytes32[] calldata keys,
         uint256[] calldata values,
-        uint256 _flags
+        bytes calldata data
     ) external override onlyMember(dao) returns (uint256) {
+        uint64 proposalId = dao.submitProposal();
+
         require(
             keys.length == values.length,
-            "must be an equal number of config keys and values"
-        );
-        require(moduleAddress != address(0x0), "invalid module address");
-        require(_flags < type(uint128).max, "flags parameter overflow");
-        uint128 flags = uint128(_flags);
-
-        require(
-            dao.isNotReservedAddress(moduleAddress),
-            "module is using reserved address"
+            "configuration must have the same number of keys and values"
         );
 
-        //is there a way to check if the new module implements the module interface properly?
+        Configuration memory configuration = Configuration(
+            ConfigurationStatus.IN_PROGRESS,
+            keys,
+            values
+        );
 
-        uint256 proposalId = dao.submitProposal();
+        configurations[proposalId] = configuration;
 
-        ProposalDetails storage proposal = proposals[proposalId];
-        proposal.applicant = msg.sender;
-        proposal.moduleId = moduleId;
-        proposal.moduleAddress = moduleAddress;
-        proposal.keys = keys;
-        proposal.values = values;
-        proposal.flags = flags;
+        IVoting votingContract = IVoting(dao.getAdapterAddress(VOTING));
+        votingContract.startNewVotingForProposal(dao, proposalId, data);
+        dao.sponsorProposal(proposalId, msg.sender);
+
         return proposalId;
     }
 
@@ -100,42 +91,33 @@ contract ManagingContract is IManaging, DaoConstants, MemberGuard {
         dao.sponsorProposal(_proposalId, msg.sender);
     }
 
-    function processProposal(DaoRegistry dao, uint256 _proposalId)
+    function processProposal(DaoRegistry dao, uint64 proposalId)
         external
         override
         onlyMember(dao)
     {
-        require(_proposalId < type(uint64).max, "proposalId too big");
-        uint64 proposalId = uint64(_proposalId);
-        ProposalDetails memory proposal = proposals[_proposalId];
+        Configuration storage configuration = configurations[proposalId];
+
+        // If status is empty or DONE we expect it to fail
         require(
-            !dao.getProposalFlag(proposalId, FlagHelper.Flag.PROCESSED),
-            "proposal already processed"
-        );
-        require(
-            dao.getProposalFlag(proposalId, FlagHelper.Flag.SPONSORED),
-            "proposal not sponsored yet"
+            configuration.status == ConfigurationStatus.IN_PROGRESS,
+            "reconfiguration already completed or does not exist"
         );
 
         IVoting votingContract = IVoting(dao.getAdapterAddress(VOTING));
         require(
-            votingContract.voteResult(dao, _proposalId) == 2,
+            votingContract.voteResult(dao, proposalId) == 2,
             "proposal did not pass yet"
         );
 
-        dao.removeAdapter(proposal.moduleId);
-
-        bytes32[] memory keys = proposal.keys;
-        uint256[] memory values = proposal.values;
+        bytes32[] memory keys = configuration.keys;
+        uint256[] memory values = configuration.values;
         for (uint256 i = 0; i < keys.length; i++) {
             dao.setConfiguration(keys[i], values[i]);
         }
 
-        dao.addAdapter(
-            proposal.moduleId,
-            proposal.moduleAddress,
-            proposal.flags
-        );
-        dao.processProposal(_proposalId);
+        configuration.status = ConfigurationStatus.DONE;
+
+        dao.processProposal(proposalId);
     }
 }

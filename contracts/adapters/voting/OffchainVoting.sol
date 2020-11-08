@@ -42,13 +42,6 @@ contract OffchainVotingContract is
 {
     VotingContract private _fallbackVoting;
 
-    struct VotingConfig {
-        uint256 votingPeriod;
-        uint256 gracePeriod;
-        uint256 stakingAmount;
-        uint256 fallbackThreshold;
-    }
-
     struct Voting {
         uint256 blockNumber;
         address reporter;
@@ -73,8 +66,14 @@ contract OffchainVotingContract is
         bytes32[] proof;
     }
 
+    bytes32 constant VotingPeriod = keccak256("offchainvoting.votingPeriod");
+    bytes32 constant GracePeriod = keccak256("offchainvoting.gracePeriod");
+    bytes32 constant StakingAmount = keccak256("offchainvoting.stakingAmount");
+    bytes32 constant FallbackThreshold = keccak256(
+        "offchainvoting.fallbackThreshold"
+    );
+
     mapping(address => mapping(uint256 => Voting)) public votes;
-    mapping(address => VotingConfig) public votingConfigs;
 
     constructor(VotingContract _c) {
         _fallbackVoting = _c;
@@ -86,9 +85,9 @@ contract OffchainVotingContract is
         uint256 gracePeriod,
         uint256 fallbackThreshold
     ) external onlyAdapter(dao) {
-        votingConfigs[address(dao)].votingPeriod = votingPeriod;
-        votingConfigs[address(dao)].gracePeriod = gracePeriod;
-        votingConfigs[address(dao)].fallbackThreshold = fallbackThreshold;
+        dao.setConfiguration(VotingPeriod, votingPeriod);
+        dao.setConfiguration(GracePeriod, gracePeriod);
+        dao.setConfiguration(FallbackThreshold, fallbackThreshold);
 
         dao.registerPotentialNewInternalToken(LOCKED_LOOT);
     }
@@ -147,7 +146,7 @@ contract OffchainVotingContract is
             return true;
         }
 
-        uint256 votingPeriod = votingConfigs[address(dao)].votingPeriod;
+        uint256 votingPeriod = dao.getConfiguration(VotingPeriod);
 
         return vote.startingTime + votingPeriod > block.timestamp;
     }
@@ -198,7 +197,7 @@ contract OffchainVotingContract is
     }
 
     function _lockFunds(DaoRegistry dao, address memberAddr) internal {
-        uint256 lootToLock = votingConfigs[address(dao)].stakingAmount;
+        uint256 lootToLock = dao.getConfiguration(StakingAmount);
         //lock if member has enough loot
         require(dao.isActiveMember(memberAddr), "must be an active member");
         require(
@@ -212,7 +211,7 @@ contract OffchainVotingContract is
     }
 
     function _releaseFunds(DaoRegistry dao, address memberAddr) internal {
-        uint256 lootToRelease = votingConfigs[address(dao)].stakingAmount;
+        uint256 lootToRelease = dao.getConfiguration(StakingAmount);
         //release if member has enough locked loot
         require(dao.isActiveMember(memberAddr), "must be an active member");
         require(
@@ -277,15 +276,14 @@ contract OffchainVotingContract is
 
         if (
             block.timestamp <
-            vote.startingTime + votingConfigs[address(dao)].votingPeriod
+            vote.startingTime + dao.getConfiguration(VotingPeriod)
         ) {
             return 4;
         }
 
         if (
             block.timestamp <
-            vote.gracePeriodStartingTime +
-                votingConfigs[address(dao)].gracePeriod
+            vote.gracePeriodStartingTime + dao.getConfiguration(GracePeriod)
         ) {
             return 4;
         }
@@ -480,7 +478,7 @@ contract OffchainVotingContract is
         dao.subtractFromBalance(
             votes[address(dao)][proposalId].reporter,
             LOCKED_LOOT,
-            votingConfigs[address(dao)].stakingAmount
+            dao.getConfiguration(StakingAmount)
         );
         votes[address(dao)][proposalId].isChallenged = true;
     }
