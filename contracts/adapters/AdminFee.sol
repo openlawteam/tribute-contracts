@@ -1,7 +1,7 @@
 pragma solidity ^0.7.0;
 
 // SPDX-License-Identifier: MIT
-
+import "./interfaces/IAdminFee.sol";
 import "../core/DaoConstants.sol";
 import "../core/DaoRegistry.sol";
 import "../utils/SafeMath.sol";
@@ -30,7 +30,7 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.*/
 
-contract AdminFee is AdapterGuard, DaoRegistry {
+contract AdminFee is IAdminFee, AdapterGuard, DaoRegistry {
     using SafeMath for uint256;
 
     /*
@@ -40,23 +40,23 @@ contract AdminFee is AdapterGuard, DaoRegistry {
 
     */
     uint256 constant paymentPeriod = 90 days;
-    uint256 public lastPaymentTime; //this will set as 'now' in construtor
+    uint256 public lastPaymentTime; //this will set as 'now'/'block.timestamp' in construtor
     address public laoFundAddress; //This field MUST be set in constructor
     uint256 public adminFeeDenominator = 200; //default denominator
 
-    function configureDao(
+    function configureAdmin(
         DaoRegistry dao,
         address _laoFundAddress,
         uint256 _adminFeeDenominator //200 = 0.5% (1/200)
     ) external onlyAdapter(dao) {
         require(_laoFundAddress != address(0), "laoFundAddress cannot be 0");
-        // require(uint256 _adminFeeDenominator >= 200);
+        // require(uint256 _adminFeeDenominator >= 200); - keep this?
         laoFundAddress = _laoFundAddress;
         adminFeeDenominator = _adminFeeDenominator;
         lastPaymentTime = block.timestamp; //now
     }
 
-    function withdrawAdminFee(DaoRegistry dao) public {
+    function withdrawAdminFee(DaoRegistry dao) public override{
         require(
             block.timestamp >= lastPaymentTime.add(paymentPeriod),
             "90 days have not passed since last withdrawal"
@@ -70,7 +70,7 @@ contract AdminFee is AdapterGuard, DaoRegistry {
 
         for (uint256 i = 0; i < tokenLength; i++) {
             address token = dao.getToken(i);
-            //??
+            
             uint256 amount = dao.balanceOf(GUILD, token) / denominator;
             if (amount > 0) {
                 //otherwise skip for efficiency
