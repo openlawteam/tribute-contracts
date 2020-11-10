@@ -1,6 +1,6 @@
 /**
  * @title Address
- * @dev Collection of functions related to the address type.
+ * @dev Library related to the address type.
  * Forked from Paul Berg:
  * https://raw.githubusercontent.com/PaulRBerg/contracts/main/contracts/utils/Address.sol
  */
