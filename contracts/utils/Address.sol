@@ -1,3 +1,7 @@
+pragma solidity ^0.7.0;
+
+// SPDX-License-Identifier: MIT
+
 /**
  * @title Address
  * @dev Library related to the address type.
