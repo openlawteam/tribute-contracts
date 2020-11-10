@@ -1,9 +1,3 @@
-pragma solidity ^0.7.0;
-// SPDX-License-Identifier: MIT
-
-import "./IERC20.sol";
-import "./SafeMath.sol";
-
 /**
  * @title Standard ERC20 token
  *
@@ -22,6 +16,11 @@ contract ERC20 is IERC20 {
     mapping(address => uint256) private _balances;
 
     mapping(address => mapping(address => uint256)) private _allowances;
+    
+    mapping(address => uint256) public nonces;
+    
+    bytes32 public immutable PERMIT_TYPEHASH = keccak256("Permit(address owner,address spender,uint256 value,uint256 nonce,uint256 deadline)");
+    bytes32 public immutable DOMAIN_SEPARATOR;
 
     uint256 private _totalSupply;
 
@@ -47,6 +46,21 @@ contract ERC20 is IERC20 {
         _symbol = symbol;
         _decimals = 18;
         _totalSupply = totalSupply;
+        
+        uint256 chainId;
+        assembly {
+            chainId := chainid()
+        }
+
+        DOMAIN_SEPARATOR = keccak256(
+            abi.encode(
+                keccak256("EIP712Domain(string name,string version,uint256 chainId,address verifyingContract)"),
+                keccak256(bytes(name)),
+                keccak256(bytes("1")),
+                chainId,
+                address(this)
+            )
+        );
     }
 
     /**
@@ -122,7 +136,7 @@ contract ERC20 is IERC20 {
      * @param to The addresses to transfer to.
      * @param value The amounts to be transferred.
      */
-    function transferBatch(address[] memory to, uint256[] memory value) public override {
+    function transferBatch(address[] memory to, uint256[] memory value) public {
         require(to.length == value.length, "to length should match value length");
         for (uint256 i = 0; i < to.length; i++) {
             _transfer(msg.sender, to[i], value[i]);
@@ -141,6 +155,55 @@ contract ERC20 is IERC20 {
     function approve(address spender, uint256 value) public override returns (bool) {
         _approve(msg.sender, spender, value);
         return true;
+    }
+    
+    /**
+     * @dev Sets `amount` as allowance of `spender` account over `owner` account's tokens, given `owner` account's signed approval.
+     * Emits {Approval} event.
+     * Requirements:
+     *   - `deadline` must be timestamp in future.
+     *   - `v`, `r` and `s` must be valid `secp256k1` signature from `owner` account over EIP712-formatted function arguments.
+     *   - the signature must use `owner` account's current nonce (see {nonces}).
+     *   - the signer cannot be zero address and must be `owner` account.
+     * For more information on signature format, see https://eips.ethereum.org/EIPS/eip-2612#specification[relevant EIP section].
+     */
+    function permit(
+        address owner, 
+        address spender, 
+        uint256 amount, 
+        uint256 deadline, 
+        uint8 v, 
+        bytes32 r, 
+        bytes32 s
+    ) public {
+        require(deadline >= block.timestamp, "expired deadline");
+
+        bytes32 hashStruct = keccak256(
+            abi.encode(
+                PERMIT_TYPEHASH,
+                owner,
+                spender,
+                amount,
+                nonces[owner]++,
+                deadline
+            )
+        );
+
+        bytes32 hash = keccak256(
+            abi.encodePacked(
+                '\x19\x01',
+                DOMAIN_SEPARATOR,
+                hashStruct
+            )
+        );
+
+        address signer = ecrecover(hash, v, r, s);
+        require(
+            signer != address(0) && signer == owner,
+            "invalid signature"
+        );
+
+        _approve(owner, spender, amount);
     }
 
     /**
