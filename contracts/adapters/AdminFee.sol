@@ -7,12 +7,8 @@ import "../core/DaoConstants.sol";
 import "../core/DaoRegistry.sol";
 import "../utils/SafeMath.sol";
 import "../guards/DaoGuard.sol";
-//Ownable + Context for Admin Fee functions
-import "../guards/AdminGuard.sol";
-
-/**
-MIT License
-**/
+import "../guards/AdapterGuard.sol";
+import "../utils/SafeMath.sol";
 
 /*MIT License
 
@@ -36,32 +32,28 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.*/
 
-contract adminFee is DaoRegistry, Ownable {
+contract adminFee is AdapterGuard, DaoRegistry {
     using SafeMath for uint256;
 
-    //DaoRegistry public dao;
-    constructor(address _laoFundAddress) {
-        //dao = DaoRegistry(_dao);
-        require(_laoFundAddress != address(0), "laoFundAddress cannot be 0");
-        laoFundAddress = _laoFundAddress; // LAO add on for adminFee
-        lastPaymentTime = block.timestamp; // LAO add on for adminFee
-    }
+    /*
+    Default Values:
 
-    //EVENTS - Remove Event
-    //event WithdrawAdminFee(address indexed laoFundAddress, address token [], uint256 amount );
+    if adminFeeDenominator = 200, then 0.5% of total tokens allowed to be withdrawn every paymentPeriod. 
 
+    */
     uint256 constant paymentPeriod = 90 days;
     uint256 public lastPaymentTime; //this will set as 'now' in construtor = summoningTime;
     address public laoFundAddress; //This field MUST be set in constructor or set to default to summoner here.
     uint256 public adminFeeDenominator = 200; //initial denominator
 
-    function setAdminFee(uint256 _adminFeeDenominator, address _laoFundAddress)
-        public
-        onlyOwner
-    {
-        require(_adminFeeDenominator >= 200); //max denominator
-        adminFeeDenominator = _adminFeeDenominator;
-        laoFundAddress = _laoFundAddress;
+    function configureDao(
+        DaoRegistry dao,
+        address _laoFundAddress,
+        uint256 _adminFeeDenominator
+    ) external onlyAdapter(dao) {
+        require(_laoFundAddress != address(0), "laoFundAddress cannot be 0");
+        // require(uint256 _adminFeeDenominator >= 200);
+        lastPaymentTime = block.timestamp; //now
     }
 
     function withdrawAdminFee(DaoRegistry dao) public {
