@@ -45,6 +45,7 @@ contract OnboardingContract is
     bytes32 constant ChunkSize = keccak256("onboarding.chunkSize");
     bytes32 constant SharesPerChunk = keccak256("onboarding.sharesPerChunk");
     bytes32 constant TokenAddr = keccak256("onboarding.tokenAddr");
+    bytes32 constant MaximumChunks = keccak256("onboarding.maximumChunks");
 
     struct ProposalDetails {
         uint256 id;
@@ -63,9 +64,11 @@ contract OnboardingContract is
     }
 
     mapping(address => mapping(uint256 => ProposalDetails)) public proposals;
+    mapping(address => uint256) public shares;
 
     function configKey(address tokenAddrToMint, bytes32 key)
         internal
+				pure
         returns (bytes32)
     {
         return keccak256(abi.encode(tokenAddrToMint, key));
@@ -76,11 +79,14 @@ contract OnboardingContract is
         address tokenAddrToMint,
         uint256 chunkSize,
         uint256 sharesPerChunk,
+				uint256 maximumChunks,
         address tokenAddr
     ) external onlyAdapter(dao) {
+        require(maximumChunks > 0, "maximumChunks must be higher than 0");
         require(chunkSize > 0, "chunkSize must be higher than 0");
         require(sharesPerChunk > 0, "sharesPerChunk must be higher than 0");
 
+        dao.setConfiguration(configKey(tokenAddrToMint, MaximumChunks), maximumChunks);
         dao.setConfiguration(configKey(tokenAddrToMint, ChunkSize), chunkSize);
         dao.setConfiguration(
             configKey(tokenAddrToMint, SharesPerChunk),
@@ -111,10 +117,15 @@ contract OnboardingContract is
         uint256 numberOfChunks = value.div(chunkSize);
         require(numberOfChunks > 0, "not sufficient funds");
 
+				uint256 sharesPerChunk = dao.getConfiguration(configKey(tokenToMint, SharesPerChunk));
         uint256 amount = numberOfChunks.mul(chunkSize);
-        uint256 sharesRequested = numberOfChunks.mul(
-            dao.getConfiguration(configKey(tokenToMint, SharesPerChunk))
-        );
+        uint256 sharesRequested = numberOfChunks.mul(sharesPerChunk);
+				
+				uint256 totalShares = shares[applicant] + sharesRequested;
+				require(
+					totalShares.div(sharesPerChunk) < dao.getConfiguration(configKey(tokenToMint, MaximumChunks)),
+					"total shares for this member must be lower than the maxmimum"
+				);
 
         _submitMembershipProposalInternal(
             dao,
@@ -273,6 +284,9 @@ contract OnboardingContract is
             );
 
             dao.addToBalance(GUILD, ETH_TOKEN, proposal.amount);
+
+						uint256 totalShares = shares[proposal.applicant] + proposal.sharesRequested;
+						shares[proposal.applicant] = totalShares;
         } else if (voteResult == 3) {
             _refundTribute(proposal.token, proposal.proposer, proposal.amount);
         } else {
