@@ -246,14 +246,17 @@ contract("LAOLAND - Onboarding Adapter", async (accounts) => {
     const voting = await getContract(dao, "voting", VotingContract);
 
     try {
-			await onboarding.onboard(dao.address, otherAccount, SHARES, 0, {
-				from: myAccount,
-				value: sharePrice.mul(toBN(11)).add(remaining),
-				gasPrice: toBN("0"),
-			});
+      await onboarding.onboard(dao.address, otherAccount, SHARES, 0, {
+        from: myAccount,
+        value: sharePrice.mul(toBN(11)).add(remaining),
+        gasPrice: toBN("0"),
+      });
       assert.err("should not allow more than maxumum shared to be requested");
     } catch (err) {
-      assert.equal(err.reason, "total shares for this member must be lower than the maxmimum");
+      assert.equal(
+        err.reason,
+        "total shares for this member must be lower than the maxmimum"
+      );
     }
   });
 
