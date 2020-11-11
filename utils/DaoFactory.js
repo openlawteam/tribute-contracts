@@ -39,7 +39,7 @@ const DAI_TOKEN = "0x95b58a6bff3d14b7db2f5cb5f0ad413dc2940658";
 const numberOfShares = toBN("1000000000000000");
 const sharePrice = toBN(toWei("120", "finney"));
 const remaining = sharePrice.sub(toBN("50000000000000"));
-const maximumChunks = toBN("10");
+const maximumChunks = toBN("11");
 
 const OLTokenContract = artifacts.require("./test/OLT");
 

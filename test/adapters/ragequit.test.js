@@ -59,7 +59,7 @@ contract("LAOLAND - Ragequit Adapter", async (accounts) => {
       sharePrice.mul(toBN(100)),
       {
         from: myAccount,
-        value: sharePrice.mul(toBN(100)),
+        value: sharePrice.mul(toBN(10)),
         gasPrice: toBN("0"),
       }
     );
@@ -139,11 +139,11 @@ contract("LAOLAND - Ragequit Adapter", async (accounts) => {
 
     //Check Guild Bank Balance
     let guildBalance = await dao.balanceOf(GUILD, ETH_TOKEN);
-    assert.equal(toBN(guildBalance).toString(), "12000000000000000000");
+    assert.equal(toBN(guildBalance).toString(), "1200000000000000000");
 
     //Check Member Shares
     let shares = await dao.balanceOf(newMember, SHARES);
-    assert.equal(shares.toString(), "100000000000000000");
+    assert.equal(shares.toString(), "10000000000000000");
 
     //Ragequit
     try {
@@ -183,11 +183,11 @@ contract("LAOLAND - Ragequit Adapter", async (accounts) => {
 
     //Check Guild Bank Balance
     let guildBalance = await dao.balanceOf(GUILD, ETH_TOKEN);
-    assert.equal(guildBalance.toString(), "12000000000000000000".toString());
+    assert.equal(guildBalance.toString(), "1200000000000000000".toString());
 
     //Check Member Shares
     let shares = await dao.balanceOf(newMember, SHARES);
-    assert.equal(shares.toString(), "100000000000000000");
+    assert.equal(shares.toString(), "10000000000000000");
 
     //Ragequit
     try {
@@ -227,11 +227,11 @@ contract("LAOLAND - Ragequit Adapter", async (accounts) => {
 
     //Check Guild Bank Balance
     let guildBalance = await dao.balanceOf(GUILD, ETH_TOKEN);
-    assert.equal(guildBalance.toString(), "12000000000000000000".toString());
+    assert.equal(guildBalance.toString(), "1200000000000000000".toString());
 
     //Check New Member Shares
     let shares = await dao.balanceOf(newMember, SHARES);
-    assert.equal(shares.toString(), "100000000000000000");
+    assert.equal(shares.toString(), "10000000000000000");
 
     //Ragequit - Burn all the new member shares
     let ragequitContract = await ragequit(dao, shares, 0, newMember);
@@ -274,11 +274,11 @@ contract("LAOLAND - Ragequit Adapter", async (accounts) => {
 
     //Check Guild Bank Balance
     let guildBalance = await dao.balanceOf(GUILD, ETH_TOKEN);
-    assert.equal(guildBalance.toString(), "12000000000000000000".toString());
+    assert.equal(guildBalance.toString(), "1200000000000000000".toString());
 
     //Check New Member Shares
     let shares = await dao.balanceOf(newMember, SHARES);
-    assert.equal(shares.toString(), "100000000000000000");
+    assert.equal(shares.toString(), "10000000000000000");
 
     //Create Financing Request
     let requestedAmount = toBN(50000);
@@ -348,11 +348,11 @@ contract("LAOLAND - Ragequit Adapter", async (accounts) => {
 
     //Check Guild Bank Balance
     let guildBalance = await dao.balanceOf(GUILD, ETH_TOKEN);
-    assert.equal(guildBalance.toString(), "12000000000000000000".toString());
+    assert.equal(guildBalance.toString(), "1200000000000000000".toString());
 
     //Check New Member Shares
     let shares = await dao.balanceOf(newMember, SHARES);
-    assert.equal(shares.toString(), "100000000000000000");
+    assert.equal(shares.toString(), "10000000000000000");
 
     //Create Financing Request
     let requestedAmount = toBN(50000);
