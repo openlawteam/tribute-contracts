@@ -2,9 +2,9 @@ pragma solidity ^0.7.0;
 
 // SPDX-License-Identifier: MIT
 
+import "./DaoConstants.sol";
 import "../helpers/FlagHelper.sol";
 import "../utils/SafeMath.sol";
-import "./DaoConstants.sol";
 import "../guards/AdapterGuard.sol";
 import "../utils/IERC20.sol";
 
@@ -129,6 +129,10 @@ contract DaoRegistry is DaoConstants, AdapterGuard {
     mapping(bytes32 => uint256) public configuration;
 
     constructor() {
+       init(msg.sender);
+    }
+    //FIXME
+    function init(address creator) external {
         address memberAddr = msg.sender;
         Member storage member = members[memberAddr];
         member.flags = member.flags.setFlag(FlagHelper.Flag.EXISTS, true);

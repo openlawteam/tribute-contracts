@@ -5,6 +5,7 @@ pragma experimental ABIEncoderV2;
 
 import "./DaoConstants.sol";
 import "./DaoRegistry.sol";
+import "./CloneFactory.sol";
 import "../adapters/Onboarding.sol";
 
 /**
@@ -31,11 +32,20 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
  */
 
-contract DaoFactory is DaoConstants {
+contract DaoFactory is CloneFactory, DaoConstants {
     struct Adapter {
         bytes32 id;
         address addr;
         uint256 flags;
+    }
+
+    event LAOCreated(address laoAddress);
+
+    //TODO ACL?
+    function newDao(address _libraryAddress) external {
+        address clone = _createClone(_libraryAddress);
+        DaoRegistry(clone).init(msg.sender);
+        emit LAOCreated(clone);
     }
 
     /*
@@ -65,4 +75,5 @@ contract DaoFactory is DaoConstants {
         dao.removeAdapter(adapter.id);
         dao.addAdapter(adapter.id, adapter.addr, adapter.flags);
     }
+
 }
