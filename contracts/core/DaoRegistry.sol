@@ -33,6 +33,8 @@ SOFTWARE.
  */
 
 contract DaoRegistry is DaoConstants, AdapterGuard {
+    bool private initialized; // internally tracks deployment under eip-1167 proxy pattern
+    
     /*
      * LIBRARIES
      */
@@ -131,9 +133,11 @@ contract DaoRegistry is DaoConstants, AdapterGuard {
     constructor() {
        init(msg.sender);
     }
-    //FIXME
+
     function init(address creator) external {
-        address memberAddr = msg.sender;
+        require(!initialized, "dao already initialized");
+        
+        address memberAddr = creator;
         Member storage member = members[memberAddr];
         member.flags = member.flags.setFlag(FlagHelper.Flag.EXISTS, true);
         memberAddressesByDelegatedKey[memberAddr] = memberAddr;
@@ -143,6 +147,8 @@ contract DaoRegistry is DaoConstants, AdapterGuard {
 
         _createNewAmountCheckpoint(memberAddr, SHARES, 1);
         _createNewAmountCheckpoint(TOTAL, SHARES, 1);
+        
+        initialized = true;
     }
 
     receive() external payable {
