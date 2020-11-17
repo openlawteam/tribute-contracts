@@ -43,6 +43,7 @@ const {
   addVote,
   prepareVoteResult,
   toStepNode,
+  prepareVoteProposalData
 } = require("../../utils/offchain_voting.js");
 
 const OffchainVotingContract = artifacts.require(
@@ -97,11 +98,14 @@ contract("LAOLAND - Offchain Voting Module", async (accounts) => {
         gasPrice: toBN("0"),
       }
     );
+
     let blockNumber = await web3.eth.getBlockNumber();
     await onboarding.sponsorProposal(
       dao.address,
       0,
-      web3.eth.abi.encodeParameter("uint256", blockNumber),
+      prepareVoteProposalData({
+        blockNumber,
+      }),
       {from: myAccount, gasPrice: toBN("0")}
     );
 

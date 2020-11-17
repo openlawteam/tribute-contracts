@@ -40,10 +40,33 @@ contract OffchainVotingContract is
     MemberGuard,
     AdapterGuard
 {
+    string private constant EIP712_DOMAIN = "EIP712Domain(string name,string version,uint256 chainId,address verifyingContract)";
+    string private constant PROPOSAL_MESSAGE_TYPE = "Message(bytes32 versionHash,uint256 timestamp,bytes32 spaceHash,MessagePayload payload)";
+    string private constant PROPOSAL_PAYLOAD_TYPE = "MessagePayload(bytes32 nameHash,bytes32 bodyHash,string[] choices,uint256 start,uint256 end,string snapshot, bytes32 metadataHash)";
+
+    bytes32 private constant EIP712_DOMAIN_TYPEHASH = keccak256(abi.encodePacked(EIP712_DOMAIN));
+    bytes32 private constant PROPOSAL_MESSAGE_TYPEHASH = keccak256(abi.encodePacked(PROPOSAL_MESSAGE_TYPE));
+    bytes32 private constant PROPOSAL_PAYLOAD_TYPEHASH = keccak256(abi.encodePacked(PROPOSAL_PAYLOAD_TYPE));
+
+    function DOMAIN_SEPARATOR(DaoRegistry dao) internal pure returns (bytes32){
+        uint256 chainId;
+        assembly {
+            chainId := chainid()
+        }
+        return keccak256(abi.encode(
+            EIP712_DOMAIN_TYPEHASH,
+            keccak256("Snapshot Message"),  // string name
+            keccak256("1"),  // string version
+            chainId,  // uint256 chainId
+            address(dao)  // address verifyingContract
+        ));
+    }
+
     VotingContract private _fallbackVoting;
 
     struct Voting {
         uint256 blockNumber;
+        bytes32 proposalHash;
         address reporter;
         bytes32 resultRoot;
         uint256 nbVoters;
@@ -66,6 +89,24 @@ contract OffchainVotingContract is
         bytes32[] proof;
     }
 
+    struct ProposalMessage {
+        bytes32 versionHash;
+        uint256 timestamp;
+        bytes32 spaceHash;
+        ProposalPayload payload;
+        bytes sig;
+    } 
+
+    struct ProposalPayload {
+        bytes32 nameHash;
+        bytes32 bodyHash;
+        string[] choices;
+        uint256 start;
+        uint256 end;
+        string snapshot;
+        bytes32 metadataHash;
+    }
+
     bytes32 constant VotingPeriod = keccak256("offchainvoting.votingPeriod");
     bytes32 constant GracePeriod = keccak256("offchainvoting.gracePeriod");
     bytes32 constant StakingAmount = keccak256("offchainvoting.stakingAmount");
@@ -77,6 +118,43 @@ contract OffchainVotingContract is
 
     constructor(VotingContract _c) {
         _fallbackVoting = _c;
+    }
+
+    function hashProposalMessage(DaoRegistry dao, ProposalMessage memory message) private pure returns (bytes32) {
+        return keccak256(abi.encodePacked(
+                "\x19\x01",
+                DOMAIN_SEPARATOR(dao),
+                keccak256(abi.encode(
+                    PROPOSAL_MESSAGE_TYPEHASH,
+                    message.versionHash,
+                    message.timestamp,
+                    message.spaceHash,
+                    hashProposalPayload(message.payload)
+                ))
+            ));
+    }
+    /**
+    struct ProposalPayload {
+        bytes32 nameHash;
+        bytes32 bodyHash;
+        string[] choices;
+        uint256 start;
+        uint256 end;
+        string snapshot;
+        string metadata;
+    }
+     */
+    function hashProposalPayload(ProposalPayload memory payload) private pure returns (bytes32) {
+        return keccak256(abi.encode(
+            PROPOSAL_PAYLOAD_TYPEHASH,
+            payload.nameHash,
+            payload.bodyHash,
+            payload.choices,
+            payload.start,
+            payload.end,
+            keccak256(bytes(payload.snapshot)),
+            payload.metadataHash
+        ));
     }
 
     function configureDao(
@@ -224,31 +302,53 @@ contract OffchainVotingContract is
         dao.subtractFromBalance(memberAddr, LOCKED_LOOT, lootToRelease);
     }
 
+    function _stringToUint(string memory s) internal pure returns (bool success,uint result) {
+        bytes memory b = bytes(s);
+        result = 0;
+        success = false;
+        for (uint i = 0; i < b.length; i++) { 
+            if (uint8(b[i]) >= 48 && uint8(b[i]) <= 57) {
+                result = result * 10 + (uint8(b[i]) - 48); 
+                success = true;
+            } else {
+                result = 0;
+                success = false;
+                break;
+        }
+        } 
+        return (success,result);
+    }
+
     function startNewVotingForProposal(
         DaoRegistry dao,
         uint256 proposalId,
         bytes memory data /*onlyAdapter(dao)*/
-    ) external override onlyAdapter(dao) {
+    ) public override onlyAdapter(dao) {
         // it is called from Registry
         require(
             data.length == 32,
             "vote data should represent the block number for snapshot"
         );
 
-        uint256 blockNumber;
+        ProposalMessage memory proposal = abi.decode(data, (ProposalMessage));
 
-        assembly {
-            blockNumber := mload(add(data, 32))
-        }
+        (bool success, uint256 blockNumber) = _stringToUint(proposal.payload.snapshot);
 
+        require(success, "snapshot conversion error");
+
+        bytes32 proposalHash = hashProposalMessage(dao, proposal);
+        address addr = recover(proposalHash, proposal.sig);
+        require(dao.isActiveMember(addr), "noActiveMember");
         require(
             blockNumber < block.number,
             "snapshot block number should not be in the future"
         );
         require(blockNumber > 0, "block number cannot be 0");
 
+        startNewVotingForProposal(dao, proposalId, data);
         votes[address(dao)][proposalId].startingTime = block.timestamp;
         votes[address(dao)][proposalId].blockNumber = blockNumber;
+        votes[address(dao)][proposalId].proposalHash = proposalHash;
     }
 
     /**

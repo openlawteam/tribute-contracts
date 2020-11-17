@@ -27,6 +27,170 @@ SOFTWARE.
 const { MerkleTree } = require('./merkleTree.js');
 const {SHARES} = require('./DaoFactory.js');
 const sha3 = web3.utils.sha3;
+const sigUtil = require('eth-sig-util');
+
+function getMessageERC712Hash(message, verifyingContract, chainId) {
+  const m = prepareMessage(message, verifyingContract, chainId);
+  const {DomainType, MessageType} = getDomainType(m, verifyingContract, chainId);
+  const msgParams = {
+    domain: DomainType,
+    message: m,
+    primaryType: 'Message',
+    types: MessageType
+  };
+  return '0x' + sigUtil.TypedDataUtils.sign(msgParams).toString('hex');
+}
+
+function getDomainType(message, verifyingContract, chainId) {
+  switch(message.type) {
+    case "vote":
+      return getVoteDomainType(verifyingContract, chainId);
+    case "proposal":
+      return getProposalDomainType(verifyingContract, chainId);
+    default:
+      throw new Error("unknown type " + message.type);
+  }
+ }
+
+function getVoteDomainType(verifyingContract, chainId) {
+  const DomainType = {
+    name: 'Snapshot Message',
+    version: '1',
+    chainId,
+    verifyingContract
+  };
+
+  // The named list of all type definitions
+  const MessageType = {
+      Message: [
+        { name: 'versionHash', type: 'bytes32' },
+        { name: 'timestamp', type: 'uint256' },
+        { name: 'spaceHash', type: 'bytes32' },
+        { name: 'payload', type: 'MessagePayload' }
+      ],
+      MessagePayload: [
+        { name: 'choice', type: 'uint256' },
+        { name: 'proposalHash', type: 'bytes32' },
+        { name: 'metadataHash', type: 'bytes32' }
+      ]
+  };
+
+  return { DomainType, MessageType}
+}
+
+function getProposalDomainType(verifyingContract, chainId) {
+  const DomainType = {
+    name: 'Snapshot Message',
+    version: '1',
+    chainId,
+    verifyingContract
+  };
+
+  const MessageType = {
+      Message: [
+        { name: 'versionHash', type: 'bytes32' },
+        { name: 'timestamp', type: 'uint256' },
+        { name: 'spaceHash', type: 'bytes32' },
+        { name: 'payload', type: 'MessagePayload' }
+      ],
+      MessagePayload: [
+        { name: 'nameHash', type: 'bytes32' },
+        { name: 'bodyHash', type: 'bytes32' },
+        { name: 'choices', type: 'string[]' },
+        { name: 'start', type: 'uint256' },
+        { name: 'end', type: 'uint256' },
+        { name: 'snapshot', type: 'uint256' },
+        { name: 'metadataHash', type: 'bytes32' }
+      ]
+  };
+
+  return { DomainType, MessageType}
+}
+
+async function signMessage(signer, message, verifyingContract, chainId) {
+  return signer(message, verifyingContract, chainId);
+}
+
+function validateMessage(message, address, verifyingContract, chainId, signature ) {
+  const {DomainType, MessageType} = getDomainType(message, verifyingContract, chainId); 
+  
+  const msgParams = {
+    domain: DomainType,
+    message,
+    primaryType: 'Message',
+    types: MessageType
+  };
+  
+  const recoverAddress = sigUtil.recoverTypedSignature_v4({ data: msgParams, sig: signature })
+  return address.toLowerCase() === recoverAddress.toLowerCase();
+}
+
+function Web3Signer(web3) {
+  return function(message, verifyingContract, chainId) {
+    const m = prepareMessage(message, verifyingContract, chainId);
+    const {DomainType, MessageType} = getDomainType(m, verifyingContract, chainId);
+    const signer = web3.getSigner();
+    
+    return signer._signTypedData(DomainType, MessageType, m);
+  }
+}
+
+function SigUtilSigner(privateKeyStr) {
+  return function(message, verifyingContract, chainId) {
+    const m = prepareMessage(message, verifyingContract, chainId);
+    const privateKey = Buffer.from(privateKeyStr, 'hex');
+    const {DomainType, MessageType} = getDomainType(m, verifyingContract, chainId);
+    const msgParams = {
+      domain: DomainType,
+      message: m,
+      primaryType: 'Message',
+      types: MessageType
+    };
+    return sigUtil.signTypedData_v4(privateKey, {data: msgParams});
+  }
+}
+
+function prepareMessage(message, verifyingContract, chainId) {
+  switch(message.type) {
+    case "vote":
+      return prepareVoteMessage(message, verifyingContract, chainId);
+    case "proposal":
+      return prepareProposalMessage(message);
+    default:
+      throw new Error("unknown type " + message.type);
+  }
+}
+
+function prepareVoteMessage(message, verifyingContract, chainId) {
+  return Object.assign(message, {
+    versionHash: sha3(message.version),
+    spaceHash: sha3(message.space),
+    payload: prepareVotePayload(message.payload, verifyingContract, chainId)
+  });
+}
+
+function prepareVotePayload(payload, verifyingContract, chainId) {
+  return Object.assign(payload, {
+      metadataHash: sha3(JSON.stringify(payload.metadata)),
+      proposalHash: getMessageERC712Hash(payload.proposal, verifyingContract, chainId)
+  });
+}
+
+function prepareProposalMessage(message) {
+  return Object.assign(message, {
+    versionHash: sha3(message.version),
+    spaceHash: sha3(message.space),
+    payload: prepareProposalPayload(message.payload)
+  });
+}
+
+function prepareProposalPayload(payload) {
+  return Object.assign(payload, {
+      nameHash: sha3(payload.name),
+      bodyHash: sha3(payload.body),
+      metadataHash: sha3(JSON.stringify(payload.metadata))
+  });
+}
 
 function toStepNode(step, merkleTree) {
   return {member: step.address,      
@@ -104,9 +268,54 @@ function prepareVoteResult(votes) {
   return {voteResultTree: tree, votes: leaves};
 }
 
+function prepareVoteProposalData(data) {
+  return web3.eth.abi.encodeParameters([{
+    "ProposalMessage": {
+      "versionHash": 'bytes32',
+      "timestamp": 'uint256',
+      "spaceHash": 'bytes32',
+      "payload": {
+        "nameHash": 'bytes32',
+        "bodyHash": 'bytes32',
+        "choices": "string[]",
+        "start": 'uint256',
+        "end": 'uint256',
+        "snapshot": "string",
+        "metadataHash": "bytes32"
+      },
+      "sig": "bytes" 
+    }
+  }], [{
+    "versionHash": sha3(data.version),
+    "timestamp": data.timestamp,
+    "spaceHash": sha3(data.space),
+    "sig" : data.sig,
+    "payload": prepareVoteProposalPayload(data.payload)
+  }]);
+}
+
+function prepareVoteProposalPayload(payload) {
+  return {
+    "nameHash": sha3(payload.name),
+    "bodyHash": sha3(payload.body),
+    "choices": payload.choices,
+    "start": payload.start,
+    "end": payload.end,
+    "snapshot": payload.snapshot,
+    "metadataHash": sha3(JSON.stringify(payload.metadata))
+  };
+}
+
 Object.assign(exports, {
     addVote,
     prepareVoteResult,
     toStepNode,
-    buildVoteLeafHashForMerkleTree
+    buildVoteLeafHashForMerkleTree,
+    validateMessage,
+    getDomainType,
+    signMessage,
+    Web3Signer,
+    SigUtilSigner,
+    getMessageERC712Hash,
+    prepareVoteProposalData
   })
