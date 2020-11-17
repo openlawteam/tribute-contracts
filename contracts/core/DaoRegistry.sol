@@ -130,11 +130,11 @@ contract DaoRegistry is DaoConstants, AdapterGuard {
     /// @notice The map that keeps track of configuration parameters for the DAO and adapters
     mapping(bytes32 => uint256) public configuration;
 
-    constructor() {
-       init(msg.sender);
-    }
+    /// @notice Clonable contract must have an empty constructor
+    // constructor() {
+    // }
 
-    function init(address creator) external {
+    function initialize(address creator) external {
         require(!initialized, "dao already initialized");
         
         address memberAddr = creator;

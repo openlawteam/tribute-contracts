@@ -41,11 +41,11 @@ contract DaoFactory is CloneFactory, DaoConstants {
 
     event LAOCreated(address laoAddress);
 
-    //TODO ACL?
+    //TODO: ACL?
     function newDao(address _libraryAddress) external {
-        address clone = _createClone(_libraryAddress);
-        DaoRegistry(clone).init(msg.sender);
-        emit LAOCreated(clone);
+        DaoRegistry dao = DaoRegistry(_createClone(_libraryAddress));
+        dao.initialize(msg.sender);
+        emit LAOCreated(address(dao));
     }
 
     /*

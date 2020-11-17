@@ -27,7 +27,7 @@ SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
 contract CloneFactory {
 
-  function _createClone(address target) internal returns (address result) {
+  function _createClone(address target) internal returns (address payable result) {
     bytes20 targetBytes = bytes20(target);
     assembly {
       let clone := mload(0x40)
