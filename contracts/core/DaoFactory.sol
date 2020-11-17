@@ -39,13 +39,14 @@ contract DaoFactory is CloneFactory, DaoConstants {
         uint256 flags;
     }
 
-    event LAOCreated(address laoAddress);
+    event DAOCreated(address _address);
 
     //TODO: ACL?
-    function newDao(address _libraryAddress) external {
+    function newDao(address _libraryAddress) external returns (address newDaoAddress) {
         DaoRegistry dao = DaoRegistry(_createClone(_libraryAddress));
         dao.initialize(msg.sender);
-        emit LAOCreated(address(dao));
+        emit DAOCreated(address(dao));
+        return address(dao);
     }
 
     /*
