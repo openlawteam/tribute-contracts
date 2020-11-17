@@ -171,7 +171,7 @@ async function addDefaultAdapters(
   return dao;
 }
 
-var identityDAO = null;
+var identityDao = null;
 
 async function createDao(
   senderAccount,
@@ -181,30 +181,25 @@ async function createDao(
   gracePeriod = 1,
   tokenAddr = ETH_TOKEN
 ) {
-  if (identityDAO == null) {
+  if (identityDao == null) {
     let lib = await FlagHelperLib.new();
     await DaoRegistry.link("FlagHelper", lib.address);
-    identityDAO = await DaoRegistry.new({
+
+    identityDao = await DaoRegistry.new({
       from: senderAccount,
       gasPrice: toBN("0"),
     });
     let receipt = await web3.eth.getTransactionReceipt(
-      identityDAO.transactionHash
+      identityDao.transactionHash
     );
-    console.log("gas used for dao:", receipt && receipt.gasUsed);
+    console.log(
+      "gas used to deploy the identity dao:",
+      receipt && receipt.gasUsed
+    );
+    // Call the initialize to ensure we add the first member of the DAO to initialize it
   }
 
-  let daoFactory = await DaoFactory.new();
-  await daoFactory.newDao(identityDAO.address, {
-    from: senderAccount,
-    gasPrice: toBN("0"),
-  });
-
-  let pastEvents = await daoFactory.getPastEvents();
-  let { _address } = pastEvents[0].returnValues;
-  console.log(`New dao cloned: ${_address}`);
-
-  let dao = await DaoRegistry.at(_address);
+  let dao = await cloneDao(identityDao.address, senderAccount);
 
   await addDefaultAdapters(
     dao,
@@ -215,6 +210,25 @@ async function createDao(
     tokenAddr
   );
   await dao.finalizeDao();
+  return dao;
+}
+
+async function cloneDao(identityAddress, senderAccount) {
+  let daoFactory = await DaoFactory.new();
+  // newDao: uses clone factory to clone the contract deployed at the identityAddress
+  await daoFactory.newDao(identityAddress, {
+    from: senderAccount,
+    gasPrice: toBN("0"),
+  });
+  // checking the gas usaged to clone a contract
+  let pastEvents = await daoFactory.getPastEvents();
+  let { _address } = pastEvents[0].returnValues;
+
+  let dao = await DaoRegistry.at(_address);
+  let receipt = await web3.eth.getTransactionReceipt(
+    pastEvents[0].transactionHash
+  );
+  console.log("gas used for cloned dao:", receipt && receipt.gasUsed);
   return dao;
 }
 

@@ -33,7 +33,7 @@ SOFTWARE.
  */
 
 contract DaoRegistry is DaoConstants, AdapterGuard {
-    bool private _initialized; // internally tracks deployment under eip-1167 proxy pattern
+    bool public initialized = false; // internally tracks deployment under eip-1167 proxy pattern
     
     /*
      * LIBRARIES
@@ -117,7 +117,7 @@ contract DaoRegistry is DaoConstants, AdapterGuard {
     mapping(address => mapping(uint32 => DelegateCheckpoint)) checkpoints;
     mapping(address => uint32) numCheckpoints;
 
-    DaoState public state = DaoState.CREATION;
+    DaoState public state;
 
     /// @notice The number of proposals submitted to the DAO
     uint64 public proposalCount;
@@ -134,9 +134,11 @@ contract DaoRegistry is DaoConstants, AdapterGuard {
     // constructor() {
     // }
 
+    //TODO: we may need to add some ACL to ensure only the factory is allowed to clone it, otherwise
+    //any will able to deploy it, and the first one to call this function is added to the DAO as a member.
     function initialize(address creator) external {
-        require(!_initialized, "dao already initialized");
-        
+        require(!initialized, "dao already initialized");
+
         address memberAddr = creator;
         Member storage member = members[memberAddr];
         member.flags = member.flags.setFlag(FlagHelper.Flag.EXISTS, true);
@@ -148,7 +150,7 @@ contract DaoRegistry is DaoConstants, AdapterGuard {
         _createNewAmountCheckpoint(memberAddr, SHARES, 1);
         _createNewAmountCheckpoint(TOTAL, SHARES, 1);
         
-        _initialized = true;
+        initialized = true;
     }
 
     receive() external payable {
