@@ -32,7 +32,10 @@ interface IManaging {
     function createModuleChangeRequest(
         DaoRegistry dao,
         bytes32 moduleId,
-        address moduleAddress
+        address moduleAddress,
+        bytes32[] calldata keys,
+        uint256[] calldata values,
+        uint256 flags
     ) external returns (uint256);
 
     function sponsorProposal(

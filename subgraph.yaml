@@ -1,0 +1,44 @@
+specVersion: 0.0.2
+description: Laoland
+repository: https://github.com/openlawteam/laoland
+schema:
+  file: ./schema.graphql
+dataSources:
+  - kind: ethereum/contract
+    name: Laoland
+    network: mainnet
+    source:
+      address: '0x2E645469f354BB4F5c8a05B3b30A929361cf77eC'
+      abi: DaoRegistry
+    mapping:
+      kind: ethereum/events
+      apiVersion: 0.0.4
+      language: wasm/assemblyscript
+      entities:
+        - Proposal
+        - Member
+        - TokenBalance
+        - Token
+      abis:
+        - name: DaoRegistry
+          file: ./build/contracts/DaoRegistry.json
+      eventHandlers:
+        - event: SponsoredProposal(uint256,uint256,uint64)
+          handler: handleSponsoredProposal
+        - event: ProcessedProposal(uint256,uint64,uint256)
+          handler: handleProcessedProposal
+        - event: SubmittedProposal(uint64,uint256,address)
+          handler: handleSubmittedProposal
+        - event: AdapterAdded(bytes32,address,uint256)
+          handler: handleAdapterAdded
+        - event: AdapterRemoved(bytes32)
+          handler: handleAdapterRemoved
+        - event: UpdateDelegateKey(address,address)
+          handler: handleUpdateDelegateKey
+        - event: MemberJailed(address)
+          handler: handleMemberJailed
+        - event: MemberUnjailed(address)
+          handler: handleMemberUnjailed
+        - event: NewBalance(address,address,uint256)
+          handler: handleNewBalance
+      file: ./src/mapping.ts

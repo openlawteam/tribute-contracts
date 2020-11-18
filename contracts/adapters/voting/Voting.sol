@@ -33,26 +33,24 @@ SOFTWARE.
  */
 
 contract VotingContract is IVoting, DaoConstants, MemberGuard, AdapterGuard {
-    struct VotingConfig {
-        uint256 votingPeriod;
-        uint256 gracePeriod;
-    }
     struct Voting {
         uint256 nbYes;
         uint256 nbNo;
         uint256 startingTime;
     }
 
+    bytes32 constant VotingPeriod = keccak256("voting.votingPeriod");
+    bytes32 constant GracePeriod = keccak256("voting.gracePeriod");
+
     mapping(address => mapping(uint256 => Voting)) public votes;
-    mapping(address => VotingConfig) public votingConfigs;
 
     function configureDao(
         DaoRegistry dao,
         uint256 votingPeriod,
         uint256 gracePeriod
     ) external onlyAdapter(dao) {
-        votingConfigs[address(dao)].votingPeriod = votingPeriod;
-        votingConfigs[address(dao)].gracePeriod = gracePeriod;
+        dao.setConfiguration(VotingPeriod, votingPeriod);
+        dao.setConfiguration(GracePeriod, gracePeriod);
     }
 
     //voting  data is not used for pure onchain voting
@@ -69,10 +67,22 @@ contract VotingContract is IVoting, DaoConstants, MemberGuard, AdapterGuard {
 
     function submitVote(
         DaoRegistry dao,
-        uint256 proposalId,
+        uint256 _proposalId,
         uint256 voteValue
     ) external onlyMember(dao) {
+        require(_proposalId < type(uint64).max, "proposalId too big");
+        uint64 proposalId = uint64(_proposalId);
         require(dao.isActiveMember(msg.sender), "only active members can vote");
+        require(
+            dao.getProposalFlag(proposalId, FlagHelper.Flag.SPONSORED),
+            "the proposal has not been sponsored yet"
+        );
+
+        require(
+            !dao.getProposalFlag(proposalId, FlagHelper.Flag.PROCESSED),
+            "the proposal has already been processed"
+        );
+
         require(
             voteValue < 3,
             "only blank (0), yes (1) and no (2) are possible values"
@@ -82,11 +92,11 @@ contract VotingContract is IVoting, DaoConstants, MemberGuard, AdapterGuard {
 
         require(
             vote.startingTime > 0,
-            "this proposalId has not vote going on at the moment"
+            "this proposalId has no vote going on at the moment"
         );
         require(
             block.timestamp <
-                vote.startingTime + votingConfigs[address(dao)].votingPeriod,
+                vote.startingTime + dao.getConfiguration(VotingPeriod),
             "vote has already ended"
         );
         if (voteValue == 1) {
@@ -118,7 +128,7 @@ contract VotingContract is IVoting, DaoConstants, MemberGuard, AdapterGuard {
 
         if (
             block.timestamp <
-            vote.startingTime + votingConfigs[address(dao)].votingPeriod
+            vote.startingTime + dao.getConfiguration(VotingPeriod)
         ) {
             return 4;
         }

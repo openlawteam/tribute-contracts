@@ -2,9 +2,9 @@ pragma solidity ^0.7.0;
 
 // SPDX-License-Identifier: MIT
 
-import "../helpers/FlagHelper128.sol";
-import "../utils/SafeMath.sol";
 import "./DaoConstants.sol";
+import "../helpers/FlagHelper.sol";
+import "../utils/SafeMath.sol";
 import "../guards/AdapterGuard.sol";
 import "../utils/IERC20.sol";
 
@@ -33,10 +33,12 @@ SOFTWARE.
  */
 
 contract DaoRegistry is DaoConstants, AdapterGuard {
+    bool public initialized = false; // internally tracks deployment under eip-1167 proxy pattern
+
     /*
      * LIBRARIES
      */
-    using FlagHelper128 for uint128;
+    using FlagHelper for uint256;
     using SafeMath for uint256;
 
     enum DaoState {CREATION, READY}
@@ -45,80 +47,77 @@ contract DaoRegistry is DaoConstants, AdapterGuard {
      * EVENTS
      */
     /// @dev - Events for Proposals
-    event SubmittedProposal(
-        uint64 proposalId,
-        uint128 flags,
-        address applicant
+    event SubmittedProposal(uint64 proposalId, uint256 flags);
+    event SponsoredProposal(uint256 proposalId, uint256 flags);
+    event ProcessedProposal(uint256 proposalId, uint256 flags);
+    event AdapterAdded(
+        bytes32 adapterId,
+        address adapterAddress,
+        uint256 flags
     );
-    event SponsoredProposal(
-        uint64 proposalId,
-        uint128 flags,
-        uint64 startingTime
-    );
-    event ProcessedProposal(
-        uint64 proposalId,
-        uint64 processingTime,
-        uint128 flags
-    );
+    event AdapterRemoved(bytes32 adapterId);
 
     /// @dev - Events for Members
-    event UpdateMemberShares(address member, uint256 shares);
-    event UpdateMemberLoot(address member, uint256 loot);
-    event UpdateDelegateKey(
-        address indexed memberAddress,
-        address newDelegateKey
-    );
+    event UpdateDelegateKey(address memberAddress, address newDelegateKey);
 
     /// @dev - Events for Bank
-    event TokensCollected(
-        address indexed dao,
-        address indexed token,
-        uint256 amountToCollect
-    );
-    event Transfer(
-        address indexed fromAddress,
-        address indexed toAddress,
-        address token,
-        uint256 amount
-    );
+    event MemberJailed(address memberAddr);
+
+    event MemberUnjailed(address memberAddr);
+
+    event NewBalance(address member, address tokenAddr, uint256 amount);
 
     /*
      * STRUCTURES
      */
     struct Proposal {
         // the structure to track all the proposals in the DAO
-        address applicant; // the address of the sender that submitted the proposal
         address adapterAddress; // the adapter address that called the functions to change the DAO state
-        uint128 flags; // flags to track the state of the proposal: exist, sponsored, processed, canceled, etc.
+        uint256 flags; // flags to track the state of the proposal: exist, sponsored, processed, canceled, etc.
     }
 
     struct Member {
         // the structure to track all the members in the DAO
-        uint128 flags; // flags to track the state of the member: exist, jailed, etc
-        address delegateKey; // ?
+        uint256 flags; // flags to track the state of the member: exist, jailed, etc
     }
 
     struct Checkpoint {
         // A checkpoint for marking number of votes from a given block
         uint96 fromBlock;
-        uint160 votes;
+        uint160 amount;
+    }
+
+    struct DelegateCheckpoint {
+        // A checkpoint for marking number of votes from a given block
+        uint96 fromBlock;
+        address delegateKey;
     }
 
     struct Bank {
         address[] tokens;
+        address[] internalTokens;
         mapping(address => bool) availableTokens;
-        mapping(address => mapping(address => uint256)) tokenBalances;
+        mapping(address => bool) availableInternalTokens;
+        mapping(address => mapping(address => mapping(uint32 => Checkpoint))) checkpoints;
+        mapping(address => mapping(address => uint32)) numCheckpoints;
+    }
+
+    struct AdapterDetails {
+        bytes32 id;
+        uint256 acl;
     }
 
     /*
      * PUBLIC VARIABLES
      */
     mapping(address => Member) public members; // the map to track all members of the DAO
-    mapping(address => address) public memberAddresses; // the member address map
-    mapping(address => address) public memberAddressesByDelegatedKey; // ???
+    mapping(address => address) public memberAddressesByDelegatedKey; // delegate key -> member address mapping
     Bank private _bank; // the state of the DAO Bank
 
-    DaoState public state = DaoState.CREATION;
+    mapping(address => mapping(uint32 => DelegateCheckpoint)) checkpoints;
+    mapping(address => uint32) numCheckpoints;
+
+    DaoState public state;
 
     /// @notice The number of proposals submitted to the DAO
     uint64 public proposalCount;
@@ -127,31 +126,32 @@ contract DaoRegistry is DaoConstants, AdapterGuard {
     /// @notice The map that keeps track of all adapters registered in the DAO
     mapping(bytes32 => address) public registry;
     /// @notice The inverse map to get the adapter id based on its address
-    mapping(address => bytes32) public inverseRegistry;
-    /// @notice A record of votes checkpoints for each account, by index
-    mapping(address => mapping(uint32 => Checkpoint)) public checkpoints;
-    /// @notice The number of checkpoints for each account
-    mapping(address => uint32) public numCheckpoints;
+    mapping(address => AdapterDetails) public inverseRegistry;
+    /// @notice The map that keeps track of configuration parameters for the DAO and adapters
+    mapping(bytes32 => uint256) public configuration;
 
-    /// @notice The maximum number of tokens supported by the bank
-    uint256 public constant MAX_TOKENS = 100;
+    /// @notice Clonable contract must have an empty constructor
+    // constructor() {
+    // }
 
-    constructor() {
-        address memberAddr = msg.sender;
+    //TODO: we may need to add some ACL to ensure only the factory is allowed to clone it, otherwise
+    //any will able to deploy it, and the first one to call this function is added to the DAO as a member.
+    function initialize(address creator) external {
+        require(!initialized, "dao already initialized");
+
+        address memberAddr = creator;
         Member storage member = members[memberAddr];
-        member.flags = member.flags.setExists(true);
-        member.delegateKey = memberAddr;
+        member.flags = member.flags.setFlag(FlagHelper.Flag.EXISTS, true);
         memberAddressesByDelegatedKey[memberAddr] = memberAddr;
-        _bank.tokenBalances[memberAddr][SHARES] = 1;
-        _bank.tokenBalances[TOTAL][SHARES] = 1;
-        _moveDelegates(address(0), memberAddr, 1);
-        _moveDelegates(address(0), TOTAL, 1);
-    }
 
-    /**
-    /*
-     * PUBLIC NON RESTRICTED FUNCTIONS
-     */
+        _bank.availableInternalTokens[SHARES] = true;
+        _bank.internalTokens.push(SHARES);
+
+        _createNewAmountCheckpoint(memberAddr, SHARES, 1);
+        _createNewAmountCheckpoint(TOTAL, SHARES, 1);
+
+        initialized = true;
+    }
 
     receive() external payable {
         revert("you cannot send money back directly");
@@ -161,10 +161,22 @@ contract DaoRegistry is DaoConstants, AdapterGuard {
         state = DaoState.READY;
     }
 
-    function addAdapter(bytes32 adapterId, address adapterAddress)
+    function setConfiguration(bytes32 key, uint256 value)
         external
-        onlyAdapter(this)
+        hasAccess(this, FlagHelper.Flag.SET_CONFIGURATION)
     {
+        configuration[key] = value;
+    }
+
+    function getConfiguration(bytes32 key) external view returns (uint256) {
+        return configuration[key];
+    }
+
+    function addAdapter(
+        bytes32 adapterId,
+        address adapterAddress,
+        uint256 acl
+    ) external hasAccess(this, FlagHelper.Flag.ADD_ADAPTER) {
         require(adapterId != bytes32(0), "adapterId must not be empty");
         require(
             adapterAddress != address(0x0),
@@ -175,10 +187,15 @@ contract DaoRegistry is DaoConstants, AdapterGuard {
             "adapterId already in use"
         );
         registry[adapterId] = adapterAddress;
-        inverseRegistry[adapterAddress] = adapterId;
+        inverseRegistry[adapterAddress].id = adapterId;
+        inverseRegistry[adapterAddress].acl = acl;
+        emit AdapterAdded(adapterId, adapterAddress, acl);
     }
 
-    function removeAdapter(bytes32 adapterId) external onlyAdapter(this) {
+    function removeAdapter(bytes32 adapterId)
+        external
+        hasAccess(this, FlagHelper.Flag.REMOVE_ADAPTER)
+    {
         require(adapterId != bytes32(0), "adapterId must not be empty");
         require(
             registry[adapterId] != address(0x0),
@@ -186,14 +203,21 @@ contract DaoRegistry is DaoConstants, AdapterGuard {
         );
         delete inverseRegistry[registry[adapterId]];
         delete registry[adapterId];
+        emit AdapterRemoved(adapterId);
     }
 
     function isAdapter(address adapterAddress) public view returns (bool) {
-        return inverseRegistry[adapterAddress] != bytes32(0);
+        return inverseRegistry[adapterAddress].id != bytes32(0);
     }
 
-    function isDao(address daoAddress) public view returns (bool) {
-        return daoAddress == address(this);
+    function hasAdapterAccess(address adapterAddress, FlagHelper.Flag flag)
+        public
+        view
+        returns (bool)
+    {
+        return
+            inverseRegistry[adapterAddress].id != bytes32(0) &&
+            inverseRegistry[adapterAddress].acl.getFlag(flag);
     }
 
     function getAdapterAddress(bytes32 adapterId)
@@ -204,11 +228,42 @@ contract DaoRegistry is DaoConstants, AdapterGuard {
         return registry[adapterId];
     }
 
+    function jailMember(address memberAddr)
+        external
+        hasAccess(this, FlagHelper.Flag.JAIL_MEMBER)
+    {
+        Member storage member = members[memberAddr];
+        uint256 flags = member.flags;
+        require(flags.getFlag(FlagHelper.Flag.EXISTS), "member does not exist");
+        if (!flags.getFlag(FlagHelper.Flag.JAILED)) {
+            member.flags = flags.setFlag(FlagHelper.Flag.JAILED, true);
+            _createNewDelegateCheckpoint(memberAddr, address(1)); // we do this to avoid the member to vote at that point in time. We use 1 instead of 0 to avoid existence check with this
+            emit MemberJailed(memberAddr);
+        }
+    }
+
+    function unjailMember(address memberAddr)
+        external
+        hasAccess(this, FlagHelper.Flag.UNJAIL_MEMBER)
+    {
+        Member storage member = members[memberAddr];
+        uint256 flags = member.flags;
+        require(flags.getFlag(FlagHelper.Flag.EXISTS), "member does not exist");
+        if (flags.getFlag(FlagHelper.Flag.JAILED)) {
+            member.flags = flags.setFlag(FlagHelper.Flag.JAILED, false);
+            _createNewDelegateCheckpoint(
+                memberAddr,
+                getPreviousDelegateKey(memberAddr)
+            ); // we do this to re-allow votes
+            emit MemberUnjailed(memberAddr);
+        }
+    }
+
     function execute(
         address _actionTo,
         uint256 _actionValue,
         bytes calldata _actionData
-    ) external onlyAdapter(this) returns (bytes memory) {
+    ) external hasAccess(this, FlagHelper.Flag.EXECUTE) returns (bytes memory) {
         (bool success, bytes memory retData) = _actionTo.call{
             value: _actionValue
         }(_actionData);
@@ -224,15 +279,15 @@ contract DaoRegistry is DaoConstants, AdapterGuard {
      * PROPOSALS
      */
     /// @dev - Proposal: submit proposals to the DAO registry
-    function submitProposal(address applicant)
+    function submitProposal()
         external
-        onlyAdapter(this)
+        hasAccess(this, FlagHelper.Flag.SUBMIT_PROPOSAL)
         returns (uint64)
     {
-        proposals[proposalCount++] = Proposal(applicant, msg.sender, 1);
+        proposals[proposalCount++] = Proposal(msg.sender, 1);
         uint64 proposalId = proposalCount - 1;
 
-        emit SubmittedProposal(proposalId, 1, applicant);
+        emit SubmittedProposal(proposalId, 1);
 
         return proposalId;
     }
@@ -240,62 +295,89 @@ contract DaoRegistry is DaoConstants, AdapterGuard {
     /// @dev - Proposal: sponsor proposals that were submitted to the DAO registry
     function sponsorProposal(uint256 _proposalId, address sponsoringMember)
         external
-        onlyAdapter(this)
+        hasAccess(this, FlagHelper.Flag.SPONSOR_PROPOSAL)
+    {
+        Proposal storage proposal = _setProposalFlag(
+            _proposalId,
+            FlagHelper.Flag.SPONSORED
+        );
+
+        uint256 flags = proposal.flags;
+
+        require(
+            proposal.adapterAddress == msg.sender,
+            "only the adapter that submitted the proposal can process it"
+        );
+        require(
+            flags.getFlag(FlagHelper.Flag.EXISTS),
+            "proposal does not exist"
+        );
+        require(
+            !flags.getFlag(FlagHelper.Flag.PROCESSED),
+            "proposal must not be processed"
+        );
+        require(
+            isActiveMember(sponsoringMember),
+            "only active members can sponsor proposals"
+        );
+
+        emit SponsoredProposal(_proposalId, flags);
+    }
+
+    /// @dev - Proposal: mark a proposal as processed in the DAO registry
+    function processProposal(uint256 _proposalId)
+        external
+        hasAccess(this, FlagHelper.Flag.PROCESS_PROPOSAL)
+    {
+        Proposal storage proposal = _setProposalFlag(
+            _proposalId,
+            FlagHelper.Flag.PROCESSED
+        );
+        uint256 flags = proposal.flags;
+
+        emit ProcessedProposal(_proposalId, flags);
+    }
+
+    /// @dev - Proposal: mark a proposal as processed in the DAO registry
+    function _setProposalFlag(uint256 _proposalId, FlagHelper.Flag flag)
+        internal
+        returns (Proposal storage)
     {
         require(
             _proposalId < type(uint64).max,
             "proposal Id should only be uint64"
         );
         uint64 proposalId = uint64(_proposalId);
-        Proposal storage proposal = proposals[proposalId];
-        uint128 flags = proposal.flags;
-
-        require(
-            proposal.adapterAddress == msg.sender,
-            "only the adapter that submitted the proposal can process it"
-        );
-        require(flags.exists(), "proposal does not exist");
-        require(!flags.isSponsored(), "proposal must not be sponsored");
-        require(!flags.isCancelled(), "proposal must not be cancelled");
-        require(!flags.isProcessed(), "proposal must not be processed");
-        require(
-            isActiveMember(sponsoringMember),
-            "only active members can sponsor proposals"
-        );
-
-        flags = flags.setSponsored(true);
-        proposals[proposalId].flags = flags;
-
-        emit SponsoredProposal(proposalId, flags, uint64(block.timestamp));
-    }
-
-    /// @dev - Proposal: mark a proposal as processed in the DAO registry
-    function processProposal(uint256 _proposalId) external onlyAdapter(this) {
-        require(
-            _proposalId < type(uint64).max,
-            "proposal Id should only be uint64"
-        );
-        uint64 proposalId = uint64(_proposalId);
 
         Proposal storage proposal = proposals[proposalId];
 
         require(
             proposal.adapterAddress == msg.sender,
-            "only the adapter that submitted the proposal can process it"
+            "only the adapter that submitted the proposal can cancel it"
         );
 
-        uint128 flags = proposal.flags;
-        require(flags.exists(), "proposal does not exist for this dao");
-        require(flags.isSponsored(), "proposal not sponsored");
-        require(!flags.isProcessed(), "proposal already processed");
-        flags = flags.setProcessed(true);
+        uint256 flags = proposal.flags;
+        require(
+            flags.getFlag(FlagHelper.Flag.EXISTS),
+            "proposal does not exist for this dao"
+        );
+
+        require(
+            !flags.getFlag(FlagHelper.Flag.PROCESSED),
+            "proposal already processed"
+        );
+        flags = flags.setFlag(flag, true);
         proposals[proposalId].flags = flags;
 
-        emit ProcessedProposal(proposalId, uint64(block.timestamp), flags);
+        return proposals[proposalId];
     }
 
-    function isInternalToken(address tokenToMint) external pure returns (bool) {
-        return tokenToMint == SHARES || tokenToMint == LOOT;
+    function isInternalToken(address tokenToMint) external view returns (bool) {
+        return _bank.availableInternalTokens[tokenToMint];
+    }
+
+    function isTokenAllowed(address token) external view returns (bool) {
+        return _bank.availableTokens[token];
     }
 
     /*
@@ -303,128 +385,137 @@ contract DaoRegistry is DaoConstants, AdapterGuard {
      */
     function isActiveMember(address addr) public view returns (bool) {
         address memberAddr = memberAddressesByDelegatedKey[addr];
-        uint128 memberFlags = members[memberAddr].flags;
+        uint256 memberFlags = members[memberAddr].flags;
         return
-            memberFlags.exists() &&
-            !memberFlags.isJailed() &&
+            memberFlags.getFlag(FlagHelper.Flag.EXISTS) &&
+            !memberFlags.getFlag(FlagHelper.Flag.JAILED) &&
             (balanceOf(memberAddr, SHARES) > 0 ||
                 balanceOf(memberAddr, LOOT) > 0 ||
                 balanceOf(memberAddr, LOCKED_LOOT) > 0);
     }
 
-    function memberAddress(address delegateKey)
+    function getProposalFlag(uint64 proposalId, FlagHelper.Flag flag)
         external
         view
-        returns (address)
+        returns (bool)
     {
-        return memberAddresses[delegateKey];
+        return proposals[proposalId].flags.getFlag(flag);
     }
 
     function updateDelegateKey(address memberAddr, address newDelegateKey)
         external
-        onlyAdapter(this)
+        hasAccess(this, FlagHelper.Flag.UPDATE_DELEGATE_KEY)
     {
         require(newDelegateKey != address(0), "newDelegateKey cannot be 0");
 
         // skip checks if member is setting the delegate key to their member address
         if (newDelegateKey != memberAddr) {
             require(
-                memberAddresses[newDelegateKey] == address(0x0),
+                memberAddressesByDelegatedKey[newDelegateKey] == address(0x0),
                 "cannot overwrite existing members"
             );
             require(
-                memberAddresses[memberAddressesByDelegatedKey[newDelegateKey]] ==
+                memberAddressesByDelegatedKey[memberAddressesByDelegatedKey[newDelegateKey]] ==
                     address(0x0),
                 "cannot overwrite existing delegate keys"
             );
         }
 
         Member storage member = members[memberAddr];
-        require(member.flags.exists(), "member does not exist");
-        memberAddressesByDelegatedKey[member.delegateKey] = address(0x0);
+        require(
+            member.flags.getFlag(FlagHelper.Flag.EXISTS),
+            "member does not exist"
+        );
+        memberAddressesByDelegatedKey[getCurrentDelegateKey(
+            memberAddr
+        )] = address(0x0);
         memberAddressesByDelegatedKey[newDelegateKey] = memberAddr;
-        member.delegateKey = newDelegateKey;
 
+        _createNewDelegateCheckpoint(memberAddr, newDelegateKey);
         emit UpdateDelegateKey(memberAddr, newDelegateKey);
-    }
-
-    function nbShares(address member) external view returns (uint256) {
-        return balanceOf(memberAddressesByDelegatedKey[member], SHARES);
-    }
-
-    function nbLoot(address member) external view returns (uint256) {
-        return balanceOf(memberAddressesByDelegatedKey[member], LOOT);
     }
 
     /*
      * BANK
      */
 
-    function _registerPotentialNewToken(address token) internal {
-        if (isNotReservedAddress(token) && !_bank.availableTokens[token]) {
-            require(_bank.tokens.length < MAX_TOKENS, "max limit reached");
+    function registerPotentialNewToken(address token)
+        external
+        hasAccess(this, FlagHelper.Flag.REGISTER_NEW_TOKEN)
+    {
+        require(isNotReservedAddress(token), "reservedToken");
+        require(!_bank.availableInternalTokens[token], "internalToken");
+
+        if (!_bank.availableTokens[token]) {
             _bank.availableTokens[token] = true;
             _bank.tokens.push(token);
+        }
+    }
+
+    function registerPotentialNewInternalToken(address token)
+        external
+        hasAccess(this, FlagHelper.Flag.REGISTER_NEW_INTERNAL_TOKEN)
+    {
+        require(isNotReservedAddress(token), "reservedToken");
+        require(!_bank.availableTokens[token], "internalToken");
+        if (!_bank.availableInternalTokens[token]) {
+            _bank.availableInternalTokens[token] = true;
+            _bank.internalTokens.push(token);
         }
     }
 
     /**
      * Public read-only functions
      */
-    function balanceOf(address user, address token)
-        public
-        view
-        returns (uint256)
-    {
-        return _bank.tokenBalances[user][token];
-    }
 
     function isNotReservedAddress(address applicant)
         public
         pure
         returns (bool)
     {
-        return
-            applicant != GUILD &&
-            applicant != ESCROW &&
-            applicant != LOOT &&
-            applicant != SHARES &&
-            applicant != LOCKED_LOOT &&
-            applicant != TOTAL;
+        return applicant != GUILD && applicant != TOTAL;
     }
 
     /**
      * Internal bookkeeping
      */
 
-    function tokens() external view returns (address[] memory) {
-        return _bank.tokens;
+    function getToken(uint256 index) external view returns (address) {
+        return _bank.tokens[index];
+    }
+
+    function nbTokens() external view returns (uint256) {
+        return _bank.tokens.length;
+    }
+
+    function getInternalToken(uint256 index) external view returns (address) {
+        return _bank.internalTokens[index];
+    }
+
+    function nbInternalTokens() external view returns (uint256) {
+        return _bank.internalTokens.length;
     }
 
     function addToBalance(
         address user,
         address token,
         uint256 amount
-    ) public onlyAdapter(this) {
-        _bank.tokenBalances[user][token] += amount;
-        _bank.tokenBalances[TOTAL][token] += amount;
-        if (token == SHARES) {
-            _moveDelegates(address(0), user, _bank.tokenBalances[user][token]);
+    ) public hasAccess(this, FlagHelper.Flag.ADD_TO_BALANCE) {
+        require(
+            _bank.availableTokens[token] ||
+                _bank.availableInternalTokens[token],
+            "unknown token address"
+        );
+        uint256 newAmount = balanceOf(user, token) + amount;
+        uint256 newTotalAmount = balanceOf(TOTAL, token) + amount;
 
-            _moveDelegates(
-                address(0),
-                TOTAL,
-                _bank.tokenBalances[TOTAL][token]
-            );
-        }
-
-        _registerPotentialNewToken(token);
+        _createNewAmountCheckpoint(user, token, newAmount);
+        _createNewAmountCheckpoint(TOTAL, token, newTotalAmount);
 
         Member storage member = members[user];
-        if (member.delegateKey == address(0x0)) {
-            member.flags = member.flags.setExists(true);
-            member.delegateKey = user;
-            memberAddressesByDelegatedKey[member.delegateKey] = user;
+        if (!member.flags.getFlag(FlagHelper.Flag.EXISTS)) {
+            member.flags = member.flags.setFlag(FlagHelper.Flag.EXISTS, true);
+            memberAddressesByDelegatedKey[user] = user;
         }
     }
 
@@ -432,9 +523,12 @@ contract DaoRegistry is DaoConstants, AdapterGuard {
         address user,
         address token,
         uint256 amount
-    ) public onlyAdapter(this) {
-        _bank.tokenBalances[user][token] -= amount;
-        _bank.tokenBalances[TOTAL][token] -= amount;
+    ) public hasAccess(this, FlagHelper.Flag.SUB_FROM_BALANCE) {
+        uint256 newAmount = balanceOf(user, token) - amount;
+        uint256 newTotalAmount = balanceOf(TOTAL, token) - amount;
+
+        _createNewAmountCheckpoint(user, token, newAmount);
+        _createNewAmountCheckpoint(TOTAL, token, newTotalAmount);
     }
 
     function internalTransfer(
@@ -442,24 +536,24 @@ contract DaoRegistry is DaoConstants, AdapterGuard {
         address to,
         address token,
         uint256 amount
-    ) public onlyAdapter(this) {
-        subtractFromBalance(from, token, amount);
-        addToBalance(to, token, amount);
+    ) public hasAccess(this, FlagHelper.Flag.INTERNAL_TRANSFER) {
+        uint256 newAmount = balanceOf(from, token).sub(amount);
+        uint256 newAmount2 = balanceOf(to, token).add(amount);
+
+        _createNewAmountCheckpoint(from, token, newAmount);
+        _createNewAmountCheckpoint(to, token, newAmount2);
     }
 
-    /**
-     * Internal utility
-     */
-
-    /**
-     * @notice Gets the current votes balance for `account`
-     * @param account The address to get votes balance
-     * @return The number of current votes for `account`
-     */
-    function getCurrentVotes(address account) external view returns (uint256) {
-        uint32 nCheckpoints = numCheckpoints[account];
+    function balanceOf(address account, address tokenAddr)
+        public
+        view
+        returns (uint256)
+    {
+        uint32 nCheckpoints = _bank.numCheckpoints[tokenAddr][account];
         return
-            nCheckpoints > 0 ? checkpoints[account][nCheckpoints - 1].votes : 0;
+            nCheckpoints > 0
+                ? _bank.checkpoints[tokenAddr][account][nCheckpoints - 1].amount
+                : 0;
     }
 
     /**
@@ -469,28 +563,32 @@ contract DaoRegistry is DaoConstants, AdapterGuard {
      * @param blockNumber The block number to get the vote balance at
      * @return The number of votes the account had as of the given block
      */
-    function getPriorVotes(address account, uint256 blockNumber)
-        external
-        view
-        returns (uint256)
-    {
+    function getPriorAmount(
+        address account,
+        address tokenAddr,
+        uint256 blockNumber
+    ) external view returns (uint256) {
         require(
             blockNumber < block.number,
-            "Uni::getPriorVotes: not yet determined"
+            "Uni::getPriorAmount: not yet determined"
         );
 
-        uint32 nCheckpoints = numCheckpoints[account];
+        uint32 nCheckpoints = _bank.numCheckpoints[tokenAddr][account];
         if (nCheckpoints == 0) {
             return 0;
         }
 
         // First check most recent balance
-        if (checkpoints[account][nCheckpoints - 1].fromBlock <= blockNumber) {
-            return checkpoints[account][nCheckpoints - 1].votes;
+        if (
+            _bank.checkpoints[tokenAddr][account][nCheckpoints - 1].fromBlock <=
+            blockNumber
+        ) {
+            return
+                _bank.checkpoints[tokenAddr][account][nCheckpoints - 1].amount;
         }
 
         // Next check implicit zero balance
-        if (checkpoints[account][0].fromBlock > blockNumber) {
+        if (_bank.checkpoints[tokenAddr][account][0].fromBlock > blockNumber) {
             return 0;
         }
 
@@ -498,63 +596,152 @@ contract DaoRegistry is DaoConstants, AdapterGuard {
         uint32 upper = nCheckpoints - 1;
         while (upper > lower) {
             uint32 center = upper - (upper - lower) / 2; // ceil, avoiding overflow
-            Checkpoint memory cp = checkpoints[account][center];
+            Checkpoint memory cp = _bank
+                .checkpoints[tokenAddr][account][center];
             if (cp.fromBlock == blockNumber) {
-                return cp.votes;
+                return cp.amount;
             } else if (cp.fromBlock < blockNumber) {
                 lower = center;
             } else {
                 upper = center - 1;
             }
         }
-        return checkpoints[account][lower].votes;
+        return _bank.checkpoints[tokenAddr][account][lower].amount;
     }
 
-    function _moveDelegates(
-        address srcRep,
-        address dstRep,
+    function getCurrentDelegateKey(address memberAddr)
+        public
+        view
+        returns (address)
+    {
+        uint32 nCheckpoints = numCheckpoints[memberAddr];
+        return
+            nCheckpoints > 0
+                ? checkpoints[memberAddr][nCheckpoints - 1].delegateKey
+                : memberAddr;
+    }
+
+    function getPreviousDelegateKey(address memberAddr)
+        public
+        view
+        returns (address)
+    {
+        uint32 nCheckpoints = numCheckpoints[memberAddr];
+        return
+            nCheckpoints > 1
+                ? checkpoints[memberAddr][nCheckpoints - 2].delegateKey
+                : memberAddr;
+    }
+
+    /**
+     * @notice Determine the prior number of votes for an account as of a block number
+     * @dev Block number must be a finalized block or else this function will revert to prevent misinformation.
+     * @param memberAddr The address of the account to check
+     * @param blockNumber The block number to get the vote balance at
+     * @return The number of votes the account had as of the given block
+     */
+    function getPriorDelegateKey(address memberAddr, uint256 blockNumber)
+        external
+        view
+        returns (address)
+    {
+        require(
+            blockNumber < block.number,
+            "Uni::getPriorDelegateKey: not yet determined"
+        );
+
+        uint32 nCheckpoints = numCheckpoints[memberAddr];
+        if (nCheckpoints == 0) {
+            return memberAddr;
+        }
+
+        // First check most recent balance
+        if (
+            checkpoints[memberAddr][nCheckpoints - 1].fromBlock <= blockNumber
+        ) {
+            return checkpoints[memberAddr][nCheckpoints - 1].delegateKey;
+        }
+
+        // Next check implicit zero balance
+        if (checkpoints[memberAddr][0].fromBlock > blockNumber) {
+            return memberAddr;
+        }
+
+        uint32 lower = 0;
+        uint32 upper = nCheckpoints - 1;
+        while (upper > lower) {
+            uint32 center = upper - (upper - lower) / 2; // ceil, avoiding overflow
+            DelegateCheckpoint memory cp = checkpoints[memberAddr][center];
+            if (cp.fromBlock == blockNumber) {
+                return cp.delegateKey;
+            } else if (cp.fromBlock < blockNumber) {
+                lower = center;
+            } else {
+                upper = center - 1;
+            }
+        }
+        return checkpoints[memberAddr][lower].delegateKey;
+    }
+
+    function _createNewAmountCheckpoint(
+        address member,
+        address tokenAddr,
         uint256 amount
     ) internal {
-        if (srcRep != dstRep && amount > 0) {
-            if (srcRep != address(0)) {
-                uint32 srcRepNum = numCheckpoints[srcRep];
-                uint256 srcRepOld = srcRepNum > 0
-                    ? checkpoints[srcRep][srcRepNum - 1].votes
-                    : 0;
-                uint256 srcRepNew = srcRepOld.sub(amount);
-                _writeCheckpoint(srcRep, srcRepNum, srcRepNew);
-            }
+        uint32 srcRepNum = _bank.numCheckpoints[tokenAddr][member];
+        _writeAmountCheckpoint(member, tokenAddr, srcRepNum, amount);
+        emit NewBalance(member, tokenAddr, amount);
+    }
 
-            if (dstRep != address(0)) {
-                uint32 dstRepNum = numCheckpoints[dstRep];
-                uint256 dstRepOld = dstRepNum > 0
-                    ? checkpoints[dstRep][dstRepNum - 1].votes
-                    : 0;
-                uint256 dstRepNew = dstRepOld.add(amount);
-                _writeCheckpoint(dstRep, dstRepNum, dstRepNew);
-            }
+    function _createNewDelegateCheckpoint(
+        address member,
+        address newDelegateKey
+    ) internal {
+        uint32 srcRepNum = numCheckpoints[member];
+        _writeDelegateCheckpoint(member, srcRepNum, newDelegateKey);
+    }
+
+    function _writeDelegateCheckpoint(
+        address member,
+        uint32 nCheckpoints,
+        address newDelegateKey
+    ) internal {
+        if (
+            nCheckpoints > 0 &&
+            checkpoints[member][nCheckpoints - 1].fromBlock == block.number
+        ) {
+            checkpoints[member][nCheckpoints - 1].delegateKey = newDelegateKey;
+        } else {
+            checkpoints[member][nCheckpoints] = DelegateCheckpoint(
+                uint96(block.number),
+                newDelegateKey
+            );
+            numCheckpoints[member] = nCheckpoints + 1;
         }
     }
 
-    function _writeCheckpoint(
-        address delegatee,
+    function _writeAmountCheckpoint(
+        address member,
+        address tokenAddr,
         uint32 nCheckpoints,
-        uint256 _newVotes
+        uint256 _newAmount
     ) internal {
-        require(_newVotes < type(uint160).max, "too big of a vote");
-        uint160 newVotes = uint160(_newVotes);
+        require(_newAmount < type(uint160).max, "too big of a vote");
+        uint160 newAmount = uint160(_newAmount);
 
         if (
             nCheckpoints > 0 &&
-            checkpoints[delegatee][nCheckpoints - 1].fromBlock == block.number
+            _bank.checkpoints[tokenAddr][member][nCheckpoints - 1].fromBlock ==
+            block.number
         ) {
-            checkpoints[delegatee][nCheckpoints - 1].votes = newVotes;
+            _bank.checkpoints[tokenAddr][member][nCheckpoints - 1]
+                .amount = newAmount;
         } else {
-            checkpoints[delegatee][nCheckpoints] = Checkpoint(
+            _bank.checkpoints[tokenAddr][member][nCheckpoints] = Checkpoint(
                 uint96(block.number),
-                newVotes
+                newAmount
             );
-            numCheckpoints[delegatee] = nCheckpoints + 1;
+            _bank.numCheckpoints[tokenAddr][member] = nCheckpoints + 1;
         }
     }
 

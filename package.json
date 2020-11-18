@@ -13,6 +13,8 @@
     "web3-utils": "^1.2.11"
   },
   "devDependencies": {
+    "@graphprotocol/graph-cli": "^0.18.0",
+    "@graphprotocol/graph-ts": "^0.18.1",
     "eth-gas-reporter": "^0.2.17",
     "prettier": "^2.1.2",
     "prettier-plugin-solidity": "^1.0.0-alpha.57",
@@ -22,8 +24,14 @@
   "scripts": {
     "test": "truffle test",
     "coverage": "truffle run coverage --network coverage",
-    "lint:fix": "prettier --write contracts/**/*",
-    "lint": "prettier --list-different contracts/**/*"
+    "lint:fix": "prettier --write contracts/**/* test/**/*.test.js",
+    "lint": "prettier --list-different contracts/**/*.sol test/**/*.test.js",
+    "create": "graph create openlawteam/laoland-graph --node https://api.thegraph.com/deploy/",
+    "create-local": "graph create openlawteam/laoland-graph --node http://127.0.0.1:8020",
+    "codegen": "graph codegen",
+    "build": "graph build",
+    "deploy": "graph deploy openlawteam/laoland-graph --ipfs https://api.thegraph.com/ipfs/ --node https://api.thegraph.com/deploy/",
+    "deploy-local": "graph deploy openlawteam/laoland-graph --ipfs http://localhost:5001 --node http://127.0.0.1:8020"
   },
   "repository": {
     "type": "git",

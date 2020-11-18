@@ -2,9 +2,6 @@ pragma solidity ^0.7.0;
 
 // SPDX-License-Identifier: MIT
 
-import "../core/DaoRegistry.sol";
-import "../helpers/FlagHelper.sol";
-
 /**
 MIT License
 
@@ -28,25 +25,24 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
  */
-abstract contract AdapterGuard {
+library FairShareHelper {
     /**
-     * @dev Only registered adapters are allowed to execute the function call.
+     * @notice calculates the fair share amount based the total shares and current balance.
      */
-    modifier onlyAdapter(DaoRegistry dao) {
-        require(
-            dao.state() == DaoRegistry.DaoState.CREATION ||
-                dao.isAdapter(msg.sender),
-            "onlyAdapter"
-        );
-        _;
-    }
-
-    modifier hasAccess(DaoRegistry dao, FlagHelper.Flag flag) {
-        require(
-            dao.state() == DaoRegistry.DaoState.CREATION ||
-                dao.hasAdapterAccess(msg.sender, flag),
-            "hasAccess"
-        );
-        _;
+    function calc(
+        uint256 balance,
+        uint256 shares,
+        uint256 _totalShares
+    ) internal pure returns (uint256) {
+        require(_totalShares != 0, "total shares should not be 0");
+        if (balance == 0) {
+            return 0;
+        }
+        uint256 prod = balance * shares;
+        if (prod / balance == shares) {
+            // no overflow in multiplication above?
+            return prod / _totalShares;
+        }
+        return (balance / _totalShares) * shares;
     }
 }

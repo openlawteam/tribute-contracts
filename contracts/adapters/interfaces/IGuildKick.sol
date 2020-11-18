@@ -2,8 +2,7 @@ pragma solidity ^0.7.0;
 
 // SPDX-License-Identifier: MIT
 
-import "../core/DaoRegistry.sol";
-import "../helpers/FlagHelper.sol";
+import "../../core/DaoRegistry.sol";
 
 /**
 MIT License
@@ -28,25 +27,19 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
  */
-abstract contract AdapterGuard {
-    /**
-     * @dev Only registered adapters are allowed to execute the function call.
-     */
-    modifier onlyAdapter(DaoRegistry dao) {
-        require(
-            dao.state() == DaoRegistry.DaoState.CREATION ||
-                dao.isAdapter(msg.sender),
-            "onlyAdapter"
-        );
-        _;
-    }
 
-    modifier hasAccess(DaoRegistry dao, FlagHelper.Flag flag) {
-        require(
-            dao.state() == DaoRegistry.DaoState.CREATION ||
-                dao.hasAdapterAccess(msg.sender, flag),
-            "hasAccess"
-        );
-        _;
-    }
+interface IGuildKick {
+    function submitKickProposal(
+        DaoRegistry dao,
+        address memberToKick,
+        bytes calldata data
+    ) external returns (uint256);
+
+    function guildKick(DaoRegistry dao, uint64 proposalId) external;
+
+    function rageKick(
+        DaoRegistry dao,
+        uint64 proposalId,
+        uint256 toIndex
+    ) external;
 }

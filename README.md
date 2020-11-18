@@ -1,3 +1,6 @@
+
+[![codecov](https://codecov.io/gh/openlawteam/laoland/branch/master/graph/badge.svg?token=XZRL9RUYZE)](https://codecov.io/gh/openlawteam/laoland/)
+
 ## Overview
 
 At the LAO, we realized that even though Moloch is very useful and powerful, it has a lot of features that we don't necessarily need. Also, there are a few features that are missing and are hard to change.
@@ -43,6 +46,11 @@ This project uses truffle, to run the tests, simply run:
 #### Code Coverage
 To check the code coverage report, simply run:
 > npm run coverage
+
+|Coverage Graph per Contract|
+|----------------------|
+|[![graph](https://codecov.io/gh/openlawteam/laoland/branch/master/graphs/tree.svg)](undefined)|
+
 
 #### Code Format
 To fix the Solidity code with the linter hints, simply run:

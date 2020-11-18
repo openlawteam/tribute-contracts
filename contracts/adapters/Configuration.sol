@@ -2,13 +2,12 @@ pragma solidity ^0.7.0;
 
 // SPDX-License-Identifier: MIT
 
-import "./interfaces/IFinancing.sol";
 import "../core/DaoConstants.sol";
 import "../core/DaoRegistry.sol";
-import "../adapters/interfaces/IVoting.sol";
 import "../guards/MemberGuard.sol";
+import "./interfaces/IConfiguration.sol";
 import "../utils/SafeMath.sol";
-import "../helpers/FlagHelper.sol";
+import "../adapters/interfaces/IVoting.sol";
 
 /**
 MIT License
@@ -34,17 +33,17 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
  */
 
-contract FinancingContract is IFinancing, DaoConstants, MemberGuard {
+contract ConfigurationContract is IConfiguration, DaoConstants, MemberGuard {
     using SafeMath for uint256;
+    enum ConfigurationStatus {NOT_CREATED, IN_PROGRESS, DONE}
 
-    struct ProposalDetails {
-        address applicant;
-        uint256 amount;
-        address token;
-        bytes32 details;
+    struct Configuration {
+        ConfigurationStatus status;
+        bytes32[] keys;
+        uint256[] values;
     }
 
-    mapping(address => mapping(uint256 => ProposalDetails)) public proposals;
+    mapping(uint64 => Configuration) public configurations;
 
     /*
      * default fallback function to prevent from sending ether to the contract
@@ -53,66 +52,72 @@ contract FinancingContract is IFinancing, DaoConstants, MemberGuard {
         revert("fallback revert");
     }
 
-    function createFinancingRequest(
+    function submitConfigurationProposal(
         DaoRegistry dao,
-        address applicant,
-        address token,
-        uint256 amount,
-        bytes32 details
-    ) external override returns (uint256) {
-        require(amount > 0, "invalid requested amount");
-        require(dao.isTokenAllowed(token), "token not allowed");
+        bytes32[] calldata keys,
+        uint256[] calldata values,
+        bytes calldata data
+    ) external override onlyMember(dao) returns (uint256) {
+        uint64 proposalId = dao.submitProposal();
+
         require(
-            dao.isNotReservedAddress(applicant),
-            "applicant using reserved address"
+            keys.length == values.length,
+            "configuration must have the same number of keys and values"
         );
 
-        uint256 proposalId = dao.submitProposal();
+        Configuration memory configuration = Configuration(
+            ConfigurationStatus.IN_PROGRESS,
+            keys,
+            values
+        );
 
-        ProposalDetails storage proposal = proposals[address(dao)][proposalId];
-        proposal.applicant = applicant;
-        proposal.amount = amount;
-        proposal.details = details;
-        proposal.token = token;
+        configurations[proposalId] = configuration;
+
+        IVoting votingContract = IVoting(dao.getAdapterAddress(VOTING));
+        votingContract.startNewVotingForProposal(dao, proposalId, data);
+        dao.sponsorProposal(proposalId, msg.sender);
+
         return proposalId;
     }
 
     function sponsorProposal(
         DaoRegistry dao,
-        uint256 proposalId,
+        uint256 _proposalId,
         bytes calldata data
     ) external override onlyMember(dao) {
         IVoting votingContract = IVoting(dao.getAdapterAddress(VOTING));
-        votingContract.startNewVotingForProposal(dao, proposalId, data);
-        dao.sponsorProposal(proposalId, msg.sender);
+        votingContract.startNewVotingForProposal(dao, _proposalId, data);
+
+        dao.sponsorProposal(_proposalId, msg.sender);
     }
 
-    function processProposal(DaoRegistry dao, uint256 _proposalId)
+    function processProposal(DaoRegistry dao, uint64 proposalId)
         external
         override
         onlyMember(dao)
     {
-        require(_proposalId < type(uint64).max, "proposalId too big");
-        uint64 proposalId = uint64(_proposalId);
-        ProposalDetails memory details = proposals[address(dao)][proposalId];
+        Configuration storage configuration = configurations[proposalId];
 
+        // If status is empty or DONE we expect it to fail
         require(
-            !dao.getProposalFlag(proposalId, FlagHelper.Flag.PROCESSED),
-            "proposal already processed"
-        );
-        require(
-            dao.getProposalFlag(proposalId, FlagHelper.Flag.SPONSORED),
-            "proposal not sponsored yet"
+            configuration.status == ConfigurationStatus.IN_PROGRESS,
+            "reconfiguration already completed or does not exist"
         );
 
         IVoting votingContract = IVoting(dao.getAdapterAddress(VOTING));
         require(
             votingContract.voteResult(dao, proposalId) == 2,
-            "proposal needs to pass"
+            "proposal did not pass yet"
         );
 
-        dao.subtractFromBalance(GUILD, details.token, details.amount);
-        dao.addToBalance(details.applicant, details.token, details.amount);
+        bytes32[] memory keys = configuration.keys;
+        uint256[] memory values = configuration.values;
+        for (uint256 i = 0; i < keys.length; i++) {
+            dao.setConfiguration(keys[i], values[i]);
+        }
+
+        configuration.status = ConfigurationStatus.DONE;
+
         dao.processProposal(proposalId);
     }
 }
