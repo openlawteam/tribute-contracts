@@ -57,7 +57,6 @@ contract DaoFactory is CloneFactory, DaoConstants {
     function addAdapters(DaoRegistry dao, Adapter[] calldata adapters)
         external
     {
-        emit Debug("add adapters");
         //Registring Adapters
         require(
             dao.state() == DaoRegistry.DaoState.CREATION,

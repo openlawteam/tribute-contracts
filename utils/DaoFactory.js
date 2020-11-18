@@ -103,6 +103,7 @@ async function addDefaultAdapters(
         UPDATE_DELEGATE_KEY, REGISTER_NEW_TOKEN, REGISTER_NEW_INTERNAL_TOKEN, ADD_TO_BALANCE,SUB_FROM_BALANCE, INTERNAL_TRANSFER
      */
 
+
   await daoFactory.addAdapters(dao.address, [
     entry("voting", voting, {}),
     entry("configuration", configuration, {
@@ -181,25 +182,23 @@ async function createDao(
   gracePeriod = 1,
   tokenAddr = ETH_TOKEN
 ) {
-  if (identityDao == null) {
-    let lib = await FlagHelperLib.new();
-    await DaoRegistry.link("FlagHelper", lib.address);
+  let lib = await FlagHelperLib.new();
+  await DaoRegistry.link("FlagHelper", lib.address);
 
-    identityDao = await DaoRegistry.new({
-      from: senderAccount,
-      gasPrice: toBN("0"),
-    });
-    let receipt = await web3.eth.getTransactionReceipt(
-      identityDao.transactionHash
-    );
-    console.log(
-      "gas used to deploy the identity dao:",
-      receipt && receipt.gasUsed
-    );
-    // Call the initialize to ensure we add the first member of the DAO to initialize it
-  }
+  identityDao = await DaoRegistry.new({
+    from: senderAccount,
+    gasPrice: toBN("0"),
+  });
+  let receipt = await web3.eth.getTransactionReceipt(
+    identityDao.transactionHash
+  );
+  console.log(
+    "gas used to deploy the identity dao:",
+    receipt && receipt.gasUsed
+  );
+  // Call the initialize to ensure we add the first member of the DAO to initialize it
 
-  let dao = await cloneDao(identityDao.address, senderAccount);
+  const dao = await cloneDao(identityDao.address, senderAccount);
 
   await addDefaultAdapters(
     dao,
