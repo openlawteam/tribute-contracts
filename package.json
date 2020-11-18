@@ -23,6 +23,7 @@
   },
   "scripts": {
     "test": "truffle test",
+    "test:debug": "truffle test --stacktrace",
     "coverage": "truffle run coverage --network coverage",
     "lint:fix": "prettier --write contracts/**/* test/**/*.test.js",
     "lint": "prettier --list-different contracts/**/*.sol test/**/*.test.js",

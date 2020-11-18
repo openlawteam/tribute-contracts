@@ -39,21 +39,27 @@ contract DaoFactory is CloneFactory, DaoConstants {
         uint256 flags;
     }
 
-    event DAOCreated(address _address);
-    event Debug(string msg);
+    mapping(address => bytes32) public daos;
+    address public identityAddress;
 
-    //TODO: ACL? onlyOwner?
-    function newDao(address _libraryAddress) external {
-        DaoRegistry dao = DaoRegistry(_createClone(_libraryAddress));
+    event DAOCreated(address _address, string _name);
+
+    constructor(address _identityAddress) {
+        identityAddress = _identityAddress;
+    }
+
+    function createDao(string memory daoName) external {
+        DaoRegistry dao = DaoRegistry(_createClone(identityAddress));
+        address daoAddr = address(dao);
         dao.initialize(msg.sender);
-        emit DAOCreated(address(dao));
+        daos[daoAddr] = keccak256(abi.encode(daoName));
+        emit DAOCreated(daoAddr, daoName);
     }
 
     /*
      * @dev: A new DAO is instantiated with only the Core Modules enabled, to reduce the call cost.
      *       Another call must be made to enable the default Adapters, see @registerDefaultAdapters.
      */
-    //TODO: ACL? onlyOwner?
     function addAdapters(DaoRegistry dao, Adapter[] calldata adapters)
         external
     {
@@ -68,7 +74,6 @@ contract DaoFactory is CloneFactory, DaoConstants {
         }
     }
 
-    //TODO: ACL? onlyOwner?
     function updateAdapter(DaoRegistry dao, Adapter calldata adapter) external {
         require(
             dao.state() == DaoRegistry.DaoState.CREATION,
