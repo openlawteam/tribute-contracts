@@ -34,7 +34,7 @@ SOFTWARE.
 
 contract DaoRegistry is DaoConstants, AdapterGuard {
     bool public initialized = false; // internally tracks deployment under eip-1167 proxy pattern
-    
+
     /*
      * LIBRARIES
      */
@@ -149,7 +149,7 @@ contract DaoRegistry is DaoConstants, AdapterGuard {
 
         _createNewAmountCheckpoint(memberAddr, SHARES, 1);
         _createNewAmountCheckpoint(TOTAL, SHARES, 1);
-        
+
         initialized = true;
     }
 

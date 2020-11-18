@@ -42,7 +42,7 @@ contract DaoFactory is CloneFactory, DaoConstants {
     event DAOCreated(address _address);
     event Debug(string msg);
 
-     //TODO: ACL? onlyOwner?
+    //TODO: ACL? onlyOwner?
     function newDao(address _libraryAddress) external {
         DaoRegistry dao = DaoRegistry(_createClone(_libraryAddress));
         dao.initialize(msg.sender);
@@ -68,7 +68,7 @@ contract DaoFactory is CloneFactory, DaoConstants {
         }
     }
 
-     //TODO: ACL? onlyOwner?
+    //TODO: ACL? onlyOwner?
     function updateAdapter(DaoRegistry dao, Adapter calldata adapter) external {
         require(
             dao.state() == DaoRegistry.DaoState.CREATION,
@@ -78,5 +78,4 @@ contract DaoFactory is CloneFactory, DaoConstants {
         dao.removeAdapter(adapter.id);
         dao.addAdapter(adapter.id, adapter.addr, adapter.flags);
     }
-
 }
