@@ -47,7 +47,9 @@ const FlagHelperLib = artifacts.require("./helpers/FlagHelper");
 const DaoFactory = artifacts.require("./core/DaoFactory");
 const DaoRegistry = artifacts.require("./core/DaoRegistry");
 const VotingContract = artifacts.require("./adapters/VotingContract");
-const ConfigurationContract = artifacts.require("./adapter/ConfigurationContract");
+const ConfigurationContract = artifacts.require(
+  "./adapter/ConfigurationContract"
+);
 const ManagingContract = artifacts.require("./adapter/ManagingContract");
 const FinancingContract = artifacts.require("./adapter/FinancingContract");
 const RagequitContract = artifacts.require("./adapters/RagequitContract");
@@ -66,7 +68,7 @@ async function prepareSmartContracts() {
 
   return {
     voting,
-		configuration,
+    configuration,
     ragequit,
     guildkick,
     managing,
@@ -86,7 +88,7 @@ async function addDefaultAdapters(
 ) {
   const {
     voting,
-		configuration,
+    configuration,
     ragequit,
     guildkick,
     managing,
@@ -101,6 +103,7 @@ async function addDefaultAdapters(
         UPDATE_DELEGATE_KEY, REGISTER_NEW_TOKEN, REGISTER_NEW_INTERNAL_TOKEN, ADD_TO_BALANCE,SUB_FROM_BALANCE, INTERNAL_TRANSFER
      */
 
+
   await daoFactory.addAdapters(dao.address, [
     entry("voting", voting, {}),
     entry("configuration", configuration, {
@@ -109,7 +112,7 @@ async function addDefaultAdapters(
       SPONSOR_PROPOSAL: true,
       SET_CONFIGURATION: true,
     }),
-     entry("ragequit", ragequit, {
+    entry("ragequit", ragequit, {
       SUB_FROM_BALANCE: true,
       JAIL_MEMBER: true,
       UNJAIL_MEMBER: true,
@@ -153,7 +156,7 @@ async function addDefaultAdapters(
     SHARES,
     unitPrice,
     nbShares,
-		maximumChunks,
+    maximumChunks,
     tokenAddr
   );
   await onboarding.configureDao(
@@ -161,7 +164,7 @@ async function addDefaultAdapters(
     LOOT,
     unitPrice,
     nbShares,
-		maximumChunks,
+    maximumChunks,
     tokenAddr
   );
   await voting.configureDao(dao.address, votingPeriod, gracePeriod);
@@ -169,20 +172,34 @@ async function addDefaultAdapters(
   return dao;
 }
 
+var identityDao = null;
+
 async function createDao(
   senderAccount,
   unitPrice = sharePrice,
   nbShares = numberOfShares,
   votingPeriod = 10,
   gracePeriod = 1,
-  tokenAddr = ETH_TOKEN,
-  
+  tokenAddr = ETH_TOKEN
 ) {
   let lib = await FlagHelperLib.new();
   await DaoRegistry.link("FlagHelper", lib.address);
-  let dao = await DaoRegistry.new({ from: senderAccount, gasPrice: toBN("0") });
-  let receipt = await web3.eth.getTransactionReceipt(dao.transactionHash);
-  console.log("gas used for dao:", receipt && receipt.gasUsed);
+
+  identityDao = await DaoRegistry.new({
+    from: senderAccount,
+    gasPrice: toBN("0"),
+  });
+  let receipt = await web3.eth.getTransactionReceipt(
+    identityDao.transactionHash
+  );
+  console.log(
+    "gas used to deploy the identity dao:",
+    receipt && receipt.gasUsed
+  );
+  // Call the initialize to ensure we add the first member of the DAO to initialize it
+
+  const dao = await cloneDao(identityDao.address, senderAccount);
+
   await addDefaultAdapters(
     dao,
     unitPrice,
@@ -192,6 +209,25 @@ async function createDao(
     tokenAddr
   );
   await dao.finalizeDao();
+  return dao;
+}
+
+async function cloneDao(identityAddress, senderAccount) {
+  let daoFactory = await DaoFactory.new();
+  // newDao: uses clone factory to clone the contract deployed at the identityAddress
+  await daoFactory.newDao(identityAddress, {
+    from: senderAccount,
+    gasPrice: toBN("0"),
+  });
+  // checking the gas usaged to clone a contract
+  let pastEvents = await daoFactory.getPastEvents();
+  let { _address } = pastEvents[0].returnValues;
+
+  let dao = await DaoRegistry.at(_address);
+  let receipt = await web3.eth.getTransactionReceipt(
+    pastEvents[0].transactionHash
+  );
+  console.log("gas used for cloned dao:", receipt && receipt.gasUsed);
   return dao;
 }
 
@@ -215,7 +251,7 @@ function entry(name, contract, flags) {
     flags.ADD_TO_BALANCE,
     flags.SUB_FROM_BALANCE,
     flags.INTERNAL_TRANSFER,
-		flags.SET_CONFIGURATION
+    flags.SET_CONFIGURATION,
   ];
 
   const acl = values
@@ -299,5 +335,5 @@ module.exports = {
   RagequitContract,
   GuildKickContract,
   OnboardingContract,
-	ConfigurationContract
+  ConfigurationContract,
 };

@@ -60,6 +60,10 @@ async function createOffchainVotingDao(
   const daoFactory = await DaoFactory.new();
   await DaoRegistry.link("FlagHelper", lib.address);
   let dao = await DaoRegistry.new({from: senderAccount, gasPrice: toBN("0")});
+  await dao.initialize(senderAccount, {
+    from: senderAccount,
+    gasPrice: toBN("0"),
+  });
   await addDefaultAdapters(dao, unitPrice, nbShares, votingPeriod, gracePeriod);
   const votingAddress = await dao.getAdapterAddress(sha3("voting"));
   const offchainVoting = await OffchainVotingContract.new(votingAddress);

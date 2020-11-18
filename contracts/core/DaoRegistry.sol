@@ -2,9 +2,9 @@ pragma solidity ^0.7.0;
 
 // SPDX-License-Identifier: MIT
 
+import "./DaoConstants.sol";
 import "../helpers/FlagHelper.sol";
 import "../utils/SafeMath.sol";
-import "./DaoConstants.sol";
 import "../guards/AdapterGuard.sol";
 import "../utils/IERC20.sol";
 
@@ -33,6 +33,8 @@ SOFTWARE.
  */
 
 contract DaoRegistry is DaoConstants, AdapterGuard {
+    bool public initialized = false; // internally tracks deployment under eip-1167 proxy pattern
+
     /*
      * LIBRARIES
      */
@@ -115,7 +117,7 @@ contract DaoRegistry is DaoConstants, AdapterGuard {
     mapping(address => mapping(uint32 => DelegateCheckpoint)) checkpoints;
     mapping(address => uint32) numCheckpoints;
 
-    DaoState public state = DaoState.CREATION;
+    DaoState public state;
 
     /// @notice The number of proposals submitted to the DAO
     uint64 public proposalCount;
@@ -128,8 +130,16 @@ contract DaoRegistry is DaoConstants, AdapterGuard {
     /// @notice The map that keeps track of configuration parameters for the DAO and adapters
     mapping(bytes32 => uint256) public configuration;
 
-    constructor() {
-        address memberAddr = msg.sender;
+    /// @notice Clonable contract must have an empty constructor
+    // constructor() {
+    // }
+
+    //TODO: we may need to add some ACL to ensure only the factory is allowed to clone it, otherwise
+    //any will able to deploy it, and the first one to call this function is added to the DAO as a member.
+    function initialize(address creator) external {
+        require(!initialized, "dao already initialized");
+
+        address memberAddr = creator;
         Member storage member = members[memberAddr];
         member.flags = member.flags.setFlag(FlagHelper.Flag.EXISTS, true);
         memberAddressesByDelegatedKey[memberAddr] = memberAddr;
@@ -139,6 +149,8 @@ contract DaoRegistry is DaoConstants, AdapterGuard {
 
         _createNewAmountCheckpoint(memberAddr, SHARES, 1);
         _createNewAmountCheckpoint(TOTAL, SHARES, 1);
+
+        initialized = true;
     }
 
     receive() external payable {
