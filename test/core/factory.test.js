@@ -28,7 +28,7 @@ const DaoFactory = artifacts.require("./core/DaoFactory");
 const DaoRegistry = artifacts.require("./core/DaoRegistry");
 const FlagHelperLib = artifacts.require("./helpers/FlagHelper");
 
-const { toBN, addDefaultAdapters } = require("../../utils/DaoFactory.js");
+const {toBN, addDefaultAdapters} = require("../../utils/DaoFactory.js");
 
 contract("DaoFactory", async (accounts) => {
   const owner = accounts[1];
@@ -53,14 +53,14 @@ contract("DaoFactory", async (accounts) => {
     });
 
     let pastEvents = await daoFactory.getPastEvents();
-    let { _address, _name } = pastEvents[0].returnValues;
-    return { daoFactory, daoAddress: _address, daoName: _name };
+    let {_address, _name} = pastEvents[0].returnValues;
+    return {daoFactory, daoAddress: _address, daoName: _name};
   };
 
   it("should be possible create an identity dao and clone it", async () => {
     let identityDao = await createIdentityDAO(owner);
 
-    let { daoName } = await cloneDao(
+    let {daoName} = await cloneDao(
       anotherOwner,
       identityDao.address,
       "cloned-dao"
@@ -72,7 +72,7 @@ contract("DaoFactory", async (accounts) => {
   it("should be possible to get a DAO address by its name if it was created by the factory", async () => {
     let identityDao = await createIdentityDAO(owner);
 
-    let { daoFactory, daoName, daoAddress } = await cloneDao(
+    let {daoFactory, daoName, daoAddress} = await cloneDao(
       anotherOwner,
       identityDao.address,
       "new-dao"
@@ -90,7 +90,7 @@ contract("DaoFactory", async (accounts) => {
   it("should not be possible to get a DAO address of it was not created by the factory", async () => {
     let identityDao = await createIdentityDAO(owner);
 
-    let { daoFactory } = await cloneDao(
+    let {daoFactory} = await cloneDao(
       anotherOwner,
       identityDao.address,
       "new-dao"
