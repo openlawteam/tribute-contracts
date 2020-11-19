@@ -211,7 +211,7 @@ async function createDao(
 async function cloneDao(identityAddress, senderAccount) {
   // newDao: uses clone factory to clone the contract deployed at the identityAddress
   let daoFactory = await DaoFactory.new(identityAddress);
-  await daoFactory.createDao("test-dao", {
+  await daoFactory.createDao("test-dao", [], [], false, {
     from: senderAccount,
     gasPrice: toBN("0"),
   });
