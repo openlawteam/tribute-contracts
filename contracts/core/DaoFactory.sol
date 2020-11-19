@@ -50,7 +50,12 @@ contract DaoFactory is CloneFactory, DaoConstants {
         identityAddress = _identityAddress;
     }
 
-    function createDao(string memory daoName, bytes32[] calldata keys, uint256[] calldata values, bool finalizeDao) external {
+    function createDao(
+        string memory daoName,
+        bytes32[] calldata keys,
+        uint256[] calldata values,
+        bool finalizeDao
+    ) external {
         DaoRegistry dao = DaoRegistry(_createClone(identityAddress));
         address daoAddr = address(dao);
         dao.initialize(msg.sender);
@@ -58,20 +63,29 @@ contract DaoFactory is CloneFactory, DaoConstants {
         bytes32 hashedName = keccak256(abi.encode(daoName));
         addresses[hashedName] = daoAddr;
         daos[daoAddr] = hashedName;
-        
+
         _configure(dao, keys, values, finalizeDao);
 
         emit DAOCreated(daoAddr, daoName);
     }
 
-    function configureDao(address daoAddr, bytes32[] calldata keys, uint256[] calldata values, bool finalizeDao) external {
+    function configureDao(
+        address daoAddr,
+        bytes32[] calldata keys,
+        uint256[] calldata values,
+        bool finalizeDao
+    ) external {
         require(daos[daoAddr] != bytes32(0), "dao not found");
 
         DaoRegistry dao = DaoRegistry(payable(daoAddr));
         _configure(dao, keys, values, finalizeDao);
     }
 
-    function getDaoAddress(string memory daoName) public view returns (address) {
+    function getDaoAddress(string memory daoName)
+        public
+        view
+        returns (address)
+    {
         return addresses[keccak256(abi.encode(daoName))];
     }
 
@@ -103,7 +117,12 @@ contract DaoFactory is CloneFactory, DaoConstants {
         dao.addAdapter(adapter.id, adapter.addr, adapter.flags);
     }
 
-    function _configure(DaoRegistry dao, bytes32[] calldata keys, uint256[] calldata values, bool finalizeDao) internal {
+    function _configure(
+        DaoRegistry dao,
+        bytes32[] calldata keys,
+        uint256[] calldata values,
+        bool finalizeDao
+    ) internal {
         require(keys.length == values.length, "invalid keys and values");
         for (uint256 i = 0; i < keys.length; i++) {
             dao.setConfiguration(keys[i], values[i]);
