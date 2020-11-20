@@ -165,4 +165,52 @@ contract("DaoFactory", async (accounts) => {
     let value2 = await newDao.getConfiguration(key2);
     assert.equal("456", value2.toString());
   });
+
+  it("should not be possible to provide a different number of keys and values", async () => {
+    let identityDao = await createIdentityDAO(owner);
+
+    let {daoFactory, daoAddress, daoName} = await cloneDao(
+      anotherOwner,
+      identityDao.address,
+      "dao-config"
+    );
+
+    assert.equal("dao-config", daoName);
+
+    try {
+      await daoFactory.configureDao(
+        daoAddress,
+        [sha3("key1")], //keys length == 1
+        [], //values length == 0
+        false,
+        {
+          from: anotherOwner,
+          gasPrice: toBN("0"),
+        }
+      );
+      assert.fail(
+        "should not be possible to provide a different number of keys and values"
+      );
+    } catch (err) {
+      assert.equal("invalid keys and values", err.reason);
+    }
+
+    try {
+      await daoFactory.configureDao(
+        daoAddress,
+        [], //keys length == 0
+        [toBN("123")], //values length == 1
+        false,
+        {
+          from: anotherOwner,
+          gasPrice: toBN("0"),
+        }
+      );
+      assert.fail(
+        "should not be possible to provide a different number of keys and values"
+      );
+    } catch (err) {
+      assert.equal("invalid keys and values", err.reason);
+    }
+  });
 });
