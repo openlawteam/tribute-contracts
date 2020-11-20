@@ -97,37 +97,47 @@ contract("LAOLAND - Admin Fee Adapter", async (accounts) => {
      accounts[2],
       200,
       {
-        from: member,
+        from: myAccount,
         gasPrice: toBN("0"),
       }
     );
     //withdraw admin fee 
-    await adminFeeContract.withdrawAdminFee(dao.address)=>{
+    await adminFeeContract.withdrawAdminFee(dao.address,
+    {
+      from:myAccount,
       gasPrice: toBN("0"),
-    });
+    }
+    
 
     //Check Guild balance
     //Check Admin Balance 
     //Check New Member Shares
-    let newShares = await dao.balanceOf(member, SHARES);
-    assert.equal(newShares.toString(), "0");
-    return ragequitContract;
+
+    // let newShares = await dao.balanceOf(member, SHARES);
+    // assert.equal(newShares.toString(), "0");
+    // return ragequitContract;
   };
 
-it("should not be possible to withdraw adminfee before the paymentPeriod has passed" async() => {
   
-});
 
-it("the amount of tokens subtracted from the GUILD, should be the total GUILD balnce minus the GUILD balance divided by the adminFeeDenominator/denominator" async() => {
-  
-});
+  it("any Eth address should be able to call withdraw Admin fee" async() => {
+    
+  });
 
-it(" laoFundAddress (recipient) should receive the amount of tokens in the GUILD divided by the denominator" async() => {
-  
-});
+  it("should not be possible to withdraw adminfee before the paymentPeriod has passed" async() => {
+    
+  });
 
-it("after the admin fee has been withdrawn, the next withdrawal should not occur until a paymentPeriod has passed since the lastPaymentTime" async() => {
-  
-});
+  it("the amount of tokens subtracted from the GUILD, should be the total GUILD balnce minus the GUILD balance divided by the adminFeeDenominator/denominator" async() => {
+    
+  });
 
-});
+  it(" laoFundAddress (recipient) should receive the amount of tokens in the GUILD divided by the denominator" async() => {
+    
+  });
+
+  it("after the admin fee has been withdrawn, the next withdrawal should not occur until a paymentPeriod has passed since the lastPaymentTime" async() => {
+    
+  });
+
+});//end of contract 
