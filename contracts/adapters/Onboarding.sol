@@ -48,7 +48,7 @@ contract OnboardingContract is
     bytes32 constant MaximumChunks = keccak256("onboarding.maximumChunks");
 
     struct ProposalDetails {
-        uint256 id;
+        uint64 id;
         address tokenToMint;
         uint256 amount;
         uint256 sharesRequested;
@@ -209,7 +209,7 @@ contract OnboardingContract is
         uint256 amount,
         address token
     ) internal {
-        uint256 proposalId = dao.submitProposal();
+        uint64 proposalId = dao.submitProposal();
         proposals[address(dao)][proposalId] = ProposalDetails(
             proposalId,
             tokenToMint,
@@ -223,7 +223,7 @@ contract OnboardingContract is
 
     function sponsorProposal(
         DaoRegistry dao,
-        uint256 proposalId,
+        uint64 proposalId,
         bytes calldata data
     ) external override onlyMember(dao) {
         require(
@@ -237,14 +237,11 @@ contract OnboardingContract is
         dao.sponsorProposal(proposalId, msg.sender);
     }
 
-    function cancelProposal(DaoRegistry dao, uint256 _proposalId)
+    function cancelProposal(DaoRegistry dao, uint64 proposalId)
         external
         override
         onlyMember(dao)
     {
-        require(_proposalId < type(uint64).max, "proposalId too big");
-        uint64 proposalId = uint64(_proposalId);
-
         require(
             proposals[address(dao)][proposalId].id == proposalId,
             "proposal does not exist"
@@ -261,13 +258,11 @@ contract OnboardingContract is
         _refundTribute(proposal.token, proposal.proposer, proposal.amount);
     }
 
-    function processProposal(DaoRegistry dao, uint256 _proposalId)
+    function processProposal(DaoRegistry dao, uint64 proposalId)
         external
         override
         onlyMember(dao)
     {
-        require(_proposalId < type(uint64).max, "proposalId too big");
-        uint64 proposalId = uint64(_proposalId);
         require(
             proposals[address(dao)][proposalId].id == proposalId,
             "proposal does not exist"

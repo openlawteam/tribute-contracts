@@ -42,7 +42,7 @@ contract VotingContract is IVoting, DaoConstants, MemberGuard, AdapterGuard {
     bytes32 constant VotingPeriod = keccak256("voting.votingPeriod");
     bytes32 constant GracePeriod = keccak256("voting.gracePeriod");
 
-    mapping(address => mapping(uint256 => Voting)) public votes;
+    mapping(address => mapping(uint64 => Voting)) public votes;
 
     function configureDao(
         DaoRegistry dao,
@@ -56,7 +56,7 @@ contract VotingContract is IVoting, DaoConstants, MemberGuard, AdapterGuard {
     //voting  data is not used for pure onchain voting
     function startNewVotingForProposal(
         DaoRegistry dao,
-        uint256 proposalId,
+        uint64 proposalId,
         bytes calldata
     ) external override onlyAdapter(dao) {
         //it is called from Registry
@@ -67,11 +67,9 @@ contract VotingContract is IVoting, DaoConstants, MemberGuard, AdapterGuard {
 
     function submitVote(
         DaoRegistry dao,
-        uint256 _proposalId,
+        uint64 proposalId,
         uint256 voteValue
     ) external onlyMember(dao) {
-        require(_proposalId < type(uint64).max, "proposalId too big");
-        uint64 proposalId = uint64(_proposalId);
         require(dao.isActiveMember(msg.sender), "only active members can vote");
         require(
             dao.getProposalFlag(proposalId, FlagHelper.Flag.SPONSORED),
@@ -115,7 +113,7 @@ contract VotingContract is IVoting, DaoConstants, MemberGuard, AdapterGuard {
     3: not pass
     4: in progress
      */
-    function voteResult(DaoRegistry dao, uint256 proposalId)
+    function voteResult(DaoRegistry dao, uint64 proposalId)
         external
         override
         view

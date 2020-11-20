@@ -59,7 +59,7 @@ contract FinancingContract is IFinancing, DaoConstants, MemberGuard {
         address token,
         uint256 amount,
         bytes32 details
-    ) external override returns (uint256) {
+    ) external override returns (uint64) {
         require(amount > 0, "invalid requested amount");
         require(dao.isTokenAllowed(token), "token not allowed");
         require(
@@ -67,7 +67,7 @@ contract FinancingContract is IFinancing, DaoConstants, MemberGuard {
             "applicant using reserved address"
         );
 
-        uint256 proposalId = dao.submitProposal();
+        uint64 proposalId = dao.submitProposal();
 
         ProposalDetails storage proposal = proposals[address(dao)][proposalId];
         proposal.applicant = applicant;
@@ -79,7 +79,7 @@ contract FinancingContract is IFinancing, DaoConstants, MemberGuard {
 
     function sponsorProposal(
         DaoRegistry dao,
-        uint256 proposalId,
+        uint64 proposalId,
         bytes calldata data
     ) external override onlyMember(dao) {
         IVoting votingContract = IVoting(dao.getAdapterAddress(VOTING));
@@ -87,13 +87,11 @@ contract FinancingContract is IFinancing, DaoConstants, MemberGuard {
         dao.sponsorProposal(proposalId, msg.sender);
     }
 
-    function processProposal(DaoRegistry dao, uint256 _proposalId)
+    function processProposal(DaoRegistry dao, uint64 proposalId)
         external
         override
         onlyMember(dao)
     {
-        require(_proposalId < type(uint64).max, "proposalId too big");
-        uint64 proposalId = uint64(_proposalId);
         ProposalDetails memory details = proposals[address(dao)][proposalId];
 
         require(

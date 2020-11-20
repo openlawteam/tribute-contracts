@@ -61,7 +61,7 @@ contract ManagingContract is IManaging, DaoConstants, MemberGuard {
         bytes32[] calldata keys,
         uint256[] calldata values,
         uint256 _flags
-    ) external override onlyMember(dao) returns (uint256) {
+    ) external override onlyMember(dao) returns (uint64) {
         require(
             keys.length == values.length,
             "must be an equal number of config keys and values"
@@ -77,7 +77,7 @@ contract ManagingContract is IManaging, DaoConstants, MemberGuard {
 
         //is there a way to check if the new module implements the module interface properly?
 
-        uint256 proposalId = dao.submitProposal();
+        uint64 proposalId = dao.submitProposal();
 
         ProposalDetails storage proposal = proposals[proposalId];
         proposal.applicant = msg.sender;
@@ -91,23 +91,21 @@ contract ManagingContract is IManaging, DaoConstants, MemberGuard {
 
     function sponsorProposal(
         DaoRegistry dao,
-        uint256 _proposalId,
+        uint64 proposalId,
         bytes calldata data
     ) external override onlyMember(dao) {
         IVoting votingContract = IVoting(dao.getAdapterAddress(VOTING));
-        votingContract.startNewVotingForProposal(dao, _proposalId, data);
+        votingContract.startNewVotingForProposal(dao, proposalId, data);
 
-        dao.sponsorProposal(_proposalId, msg.sender);
+        dao.sponsorProposal(proposalId, msg.sender);
     }
 
-    function processProposal(DaoRegistry dao, uint256 _proposalId)
+    function processProposal(DaoRegistry dao, uint64 proposalId)
         external
         override
         onlyMember(dao)
     {
-        require(_proposalId < type(uint64).max, "proposalId too big");
-        uint64 proposalId = uint64(_proposalId);
-        ProposalDetails memory proposal = proposals[_proposalId];
+        ProposalDetails memory proposal = proposals[proposalId];
         require(
             !dao.getProposalFlag(proposalId, FlagHelper.Flag.PROCESSED),
             "proposal already processed"
@@ -119,7 +117,7 @@ contract ManagingContract is IManaging, DaoConstants, MemberGuard {
 
         IVoting votingContract = IVoting(dao.getAdapterAddress(VOTING));
         require(
-            votingContract.voteResult(dao, _proposalId) == 2,
+            votingContract.voteResult(dao, proposalId) == 2,
             "proposal did not pass yet"
         );
 
@@ -136,6 +134,6 @@ contract ManagingContract is IManaging, DaoConstants, MemberGuard {
             proposal.moduleAddress,
             proposal.flags
         );
-        dao.processProposal(_proposalId);
+        dao.processProposal(proposalId);
     }
 }

@@ -34,13 +34,13 @@ interface IFinancing {
         address token,
         uint256 amount,
         bytes32 details
-    ) external returns (uint256);
+    ) external returns (uint64);
 
     function sponsorProposal(
         DaoRegistry dao,
-        uint256 proposalId,
+        uint64 proposalId,
         bytes calldata data
     ) external;
 
-    function processProposal(DaoRegistry dao, uint256 proposalId) external;
+    function processProposal(DaoRegistry dao, uint64 proposalId) external;
 }

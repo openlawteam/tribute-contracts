@@ -36,13 +36,13 @@ interface IManaging {
         bytes32[] calldata keys,
         uint256[] calldata values,
         uint256 flags
-    ) external returns (uint256);
+    ) external returns (uint64);
 
     function sponsorProposal(
         DaoRegistry dao,
-        uint256 proposalId,
+        uint64 proposalId,
         bytes calldata data
     ) external;
 
-    function processProposal(DaoRegistry dao, uint256 proposalId) external;
+    function processProposal(DaoRegistry dao, uint64 proposalId) external;
 }
