@@ -39,21 +39,60 @@ contract DaoFactory is CloneFactory, DaoConstants {
         uint256 flags;
     }
 
-    event DAOCreated(address _address);
-    event Debug(string msg);
+    mapping(address => bytes32) public daos;
+    mapping(bytes32 => address) public addresses;
 
-    //TODO: ACL? onlyOwner?
-    function newDao(address _libraryAddress) external {
-        DaoRegistry dao = DaoRegistry(_createClone(_libraryAddress));
+    address public identityAddress;
+
+    event DAOCreated(address _address, string _name);
+
+    constructor(address _identityAddress) {
+        identityAddress = _identityAddress;
+    }
+
+    function createDao(
+        string calldata daoName,
+        bytes32[] calldata keys,
+        uint256[] calldata values,
+        bool finalizeDao
+    ) external {
+        DaoRegistry dao = DaoRegistry(_createClone(identityAddress));
+        address daoAddr = address(dao);
         dao.initialize(msg.sender);
-        emit DAOCreated(address(dao));
+
+        bytes32 hashedName = keccak256(abi.encode(daoName));
+        addresses[hashedName] = daoAddr;
+        daos[daoAddr] = hashedName;
+
+        _configure(dao, keys, values, finalizeDao);
+
+        emit DAOCreated(daoAddr, daoName);
+    }
+
+    function configureDao(
+        address daoAddr,
+        bytes32[] calldata keys,
+        uint256[] calldata values,
+        bool finalizeDao
+    ) external {
+        require(daos[daoAddr] != bytes32(0), "dao not found");
+
+        DaoRegistry dao = DaoRegistry(payable(daoAddr));
+        _configure(dao, keys, values, finalizeDao);
+    }
+
+    function getDaoAddress(string calldata daoName)
+        public
+        view
+        returns (address)
+    {
+        return addresses[keccak256(abi.encode(daoName))];
     }
 
     /*
      * @dev: A new DAO is instantiated with only the Core Modules enabled, to reduce the call cost.
      *       Another call must be made to enable the default Adapters, see @registerDefaultAdapters.
      */
-    //TODO: ACL? onlyOwner?
     function addAdapters(DaoRegistry dao, Adapter[] calldata adapters)
         external
     {
@@ -68,7 +107,6 @@ contract DaoFactory is CloneFactory, DaoConstants {
         }
     }
 
-    //TODO: ACL? onlyOwner?
     function updateAdapter(DaoRegistry dao, Adapter calldata adapter) external {
         require(
             dao.state() == DaoRegistry.DaoState.CREATION,
@@ -77,5 +115,20 @@ contract DaoFactory is CloneFactory, DaoConstants {
 
         dao.removeAdapter(adapter.id);
         dao.addAdapter(adapter.id, adapter.addr, adapter.flags);
+    }
+
+    function _configure(
+        DaoRegistry dao,
+        bytes32[] calldata keys,
+        uint256[] calldata values,
+        bool finalizeDao
+    ) internal {
+        require(keys.length == values.length, "invalid keys and values");
+        for (uint256 i = 0; i < keys.length; i++) {
+            dao.setConfiguration(keys[i], values[i]);
+        }
+        if (finalizeDao) {
+            dao.finalizeDao();
+        }
     }
 }

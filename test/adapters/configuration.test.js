@@ -30,12 +30,7 @@ const {
   fromUtf8,
   advanceTime,
   createDao,
-  GUILD,
-  TOTAL,
-  ETH_TOKEN,
-  ManagingContract,
   VotingContract,
-  OnboardingContract,
   ConfigurationContract,
 } = require("../../utils/DaoFactory.js");
 
@@ -61,7 +56,7 @@ contract("LAOLAND - Configuration Adapter", async (accounts) => {
     );
 
     let value = await dao.getConfiguration(key);
-    assert.equal(value.toString, toBN("0").toString);
+    assert.equal("0", value.toString());
 
     //Sponsor the new proposal, vote and process it
     await configuration.sponsorProposal(dao.address, 0, [], {
@@ -86,7 +81,7 @@ contract("LAOLAND - Configuration Adapter", async (accounts) => {
     });
 
     value = await dao.getConfiguration(key);
-    assert.equal(value.toString, toBN("10").toString);
+    assert.equal("10", value.toString());
   });
 
   it("should be possible to set multiple configuration parameters", async () => {
@@ -112,8 +107,8 @@ contract("LAOLAND - Configuration Adapter", async (accounts) => {
 
     let value1 = await dao.getConfiguration(key1);
     let value2 = await dao.getConfiguration(key2);
-    assert.equal(value1.toString, toBN("0").toString);
-    assert.equal(value2.toString, toBN("0").toString);
+    assert.equal("0", value1.toString());
+    assert.equal("0", value2.toString());
 
     //Sponsor the new proposal, vote and process it
     await configuration.sponsorProposal(dao.address, 0, [], {
@@ -126,8 +121,8 @@ contract("LAOLAND - Configuration Adapter", async (accounts) => {
 
     value1 = await dao.getConfiguration(key1);
     value2 = await dao.getConfiguration(key2);
-    assert.equal(value1.toString, toBN("0").toString);
-    assert.equal(value2.toString, toBN("0").toString);
+    assert.equal("0", value1.toString());
+    assert.equal("0", value2.toString());
 
     await voting.submitVote(dao.address, 0, 1, {
       from: myAccount,
@@ -142,8 +137,8 @@ contract("LAOLAND - Configuration Adapter", async (accounts) => {
 
     value1 = await dao.getConfiguration(key1);
     value2 = await dao.getConfiguration(key2);
-    assert.equal(value1.toString, toBN("10").toString);
-    assert.equal(value2.toString, toBN("15").toString);
+    assert.equal("10", value1.toString());
+    assert.equal("15", value2.toString());
   });
 
   it("should not be possible to provide a different number of keys and values", async () => {

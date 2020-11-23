@@ -64,7 +64,6 @@ async function prepareSmartContracts() {
   let financing = await FinancingContract.new();
   let onboarding = await OnboardingContract.new();
   let guildkick = await GuildKickContract.new();
-  let daoFactory = await DaoFactory.new();
 
   return {
     voting,
@@ -74,7 +73,6 @@ async function prepareSmartContracts() {
     managing,
     financing,
     onboarding,
-    daoFactory,
   };
 }
 
@@ -86,6 +84,7 @@ async function addDefaultAdapters(
   gracePeriod = 1,
   tokenAddr = ETH_TOKEN
 ) {
+  let daoFactory = await DaoFactory.new(dao.address);
   const {
     voting,
     configuration,
@@ -94,7 +93,6 @@ async function addDefaultAdapters(
     managing,
     financing,
     onboarding,
-    daoFactory,
   } = await prepareSmartContracts();
 
   /**
@@ -102,7 +100,6 @@ async function addDefaultAdapters(
         ADD_ADAPTER,REMOVE_ADAPTER,JAIL_MEMBER, UNJAIL_MEMBER, EXECUTE, SUBMIT_PROPOSAL, SPONSOR_PROPOSAL, PROCESS_PROPOSAL, 
         UPDATE_DELEGATE_KEY, REGISTER_NEW_TOKEN, REGISTER_NEW_INTERNAL_TOKEN, ADD_TO_BALANCE,SUB_FROM_BALANCE, INTERNAL_TRANSFER
      */
-
 
   await daoFactory.addAdapters(dao.address, [
     entry("voting", voting, {}),
@@ -196,7 +193,6 @@ async function createDao(
     "gas used to deploy the identity dao:",
     receipt && receipt.gasUsed
   );
-  // Call the initialize to ensure we add the first member of the DAO to initialize it
 
   const dao = await cloneDao(identityDao.address, senderAccount);
 
@@ -213,21 +209,24 @@ async function createDao(
 }
 
 async function cloneDao(identityAddress, senderAccount) {
-  let daoFactory = await DaoFactory.new();
   // newDao: uses clone factory to clone the contract deployed at the identityAddress
-  await daoFactory.newDao(identityAddress, {
+  let daoFactory = await DaoFactory.new(identityAddress);
+  await daoFactory.createDao("test-dao", [], [], false, {
     from: senderAccount,
     gasPrice: toBN("0"),
   });
   // checking the gas usaged to clone a contract
   let pastEvents = await daoFactory.getPastEvents();
-  let { _address } = pastEvents[0].returnValues;
+  let { _address, _name } = pastEvents[0].returnValues;
 
   let dao = await DaoRegistry.at(_address);
   let receipt = await web3.eth.getTransactionReceipt(
     pastEvents[0].transactionHash
   );
-  console.log("gas used for cloned dao:", receipt && receipt.gasUsed);
+  console.log(
+    `gas used for cloned dao [${_name}]: `,
+    receipt && receipt.gasUsed
+  );
   return dao;
 }
 
