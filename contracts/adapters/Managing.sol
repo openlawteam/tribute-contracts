@@ -8,6 +8,7 @@ import "../core/DaoRegistry.sol";
 import "../adapters/interfaces/IVoting.sol";
 import "../guards/MemberGuard.sol";
 import "../utils/SafeMath.sol";
+import "../utils/SafeCast.sol";
 
 /**
 MIT License
@@ -35,6 +36,7 @@ SOFTWARE.
 
 contract ManagingContract is IManaging, DaoConstants, MemberGuard {
     using SafeMath for uint256;
+    using SafeCast for uint256;
 
     struct ProposalDetails {
         address applicant;
@@ -91,20 +93,22 @@ contract ManagingContract is IManaging, DaoConstants, MemberGuard {
 
     function sponsorProposal(
         DaoRegistry dao,
-        uint64 proposalId,
+        uint256 _proposalId,
         bytes calldata data
     ) external override onlyMember(dao) {
+        uint64 proposalId = SafeCast.toUint64(_proposalId);
         IVoting votingContract = IVoting(dao.getAdapterAddress(VOTING));
         votingContract.startNewVotingForProposal(dao, proposalId, data);
 
         dao.sponsorProposal(proposalId, msg.sender);
     }
 
-    function processProposal(DaoRegistry dao, uint64 proposalId)
+    function processProposal(DaoRegistry dao, uint256 _proposalId)
         external
         override
         onlyMember(dao)
     {
+        uint64 proposalId = SafeCast.toUint64(_proposalId);
         ProposalDetails memory proposal = proposals[proposalId];
         require(
             !dao.getProposalFlag(proposalId, FlagHelper.Flag.PROCESSED),

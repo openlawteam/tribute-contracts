@@ -38,9 +38,9 @@ interface IFinancing {
 
     function sponsorProposal(
         DaoRegistry dao,
-        uint64 proposalId,
+        uint256 proposalId,
         bytes calldata data
     ) external;
 
-    function processProposal(DaoRegistry dao, uint64 proposalId) external;
+    function processProposal(DaoRegistry dao, uint256 proposalId) external;
 }

@@ -31,11 +31,11 @@ SOFTWARE.
 interface IVoting {
     function startNewVotingForProposal(
         DaoRegistry dao,
-        uint64 proposalId,
+        uint256 proposalId,
         bytes calldata data
     ) external;
 
-    function voteResult(DaoRegistry dao, uint64 proposalId)
+    function voteResult(DaoRegistry dao, uint256 proposalId)
         external
         returns (uint256 state);
 }

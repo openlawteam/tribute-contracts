@@ -6,9 +6,10 @@ import "./interfaces/IOnboarding.sol";
 import "../core/DaoConstants.sol";
 import "../core/DaoRegistry.sol";
 import "../adapters/interfaces/IVoting.sol";
-import "../utils/SafeMath.sol";
 import "../guards/MemberGuard.sol";
 import "../guards/AdapterGuard.sol";
+import "../utils/SafeMath.sol";
+import "../utils/SafeCast.sol";
 
 /**
 MIT License
@@ -41,6 +42,7 @@ contract OnboardingContract is
     AdapterGuard
 {
     using SafeMath for uint256;
+    using SafeCast for uint256;
 
     bytes32 constant ChunkSize = keccak256("onboarding.chunkSize");
     bytes32 constant SharesPerChunk = keccak256("onboarding.sharesPerChunk");
@@ -223,9 +225,10 @@ contract OnboardingContract is
 
     function sponsorProposal(
         DaoRegistry dao,
-        uint64 proposalId,
+        uint256 _proposalId,
         bytes calldata data
     ) external override onlyMember(dao) {
+        uint64 proposalId = SafeCast.toUint64(_proposalId);
         require(
             proposals[address(dao)][proposalId].id == proposalId,
             "proposal does not exist"
@@ -237,11 +240,12 @@ contract OnboardingContract is
         dao.sponsorProposal(proposalId, msg.sender);
     }
 
-    function cancelProposal(DaoRegistry dao, uint64 proposalId)
+    function cancelProposal(DaoRegistry dao, uint256 _proposalId)
         external
         override
         onlyMember(dao)
     {
+        uint64 proposalId = SafeCast.toUint64(_proposalId);
         require(
             proposals[address(dao)][proposalId].id == proposalId,
             "proposal does not exist"
@@ -258,11 +262,12 @@ contract OnboardingContract is
         _refundTribute(proposal.token, proposal.proposer, proposal.amount);
     }
 
-    function processProposal(DaoRegistry dao, uint64 proposalId)
+    function processProposal(DaoRegistry dao, uint256 _proposalId)
         external
         override
         onlyMember(dao)
     {
+        uint64 proposalId = SafeCast.toUint64(_proposalId);
         require(
             proposals[address(dao)][proposalId].id == proposalId,
             "proposal does not exist"

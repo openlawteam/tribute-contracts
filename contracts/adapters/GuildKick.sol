@@ -6,9 +6,10 @@ import "../core/DaoConstants.sol";
 import "../core/DaoRegistry.sol";
 import "../guards/MemberGuard.sol";
 import "./interfaces/IGuildKick.sol";
-import "../utils/SafeMath.sol";
 import "../adapters/interfaces/IVoting.sol";
 import "../helpers/FairShareHelper.sol";
+import "../utils/SafeMath.sol";
+import "../utils/SafeCast.sol";
 
 /**
 MIT License
@@ -36,6 +37,8 @@ SOFTWARE.
 
 contract GuildKickContract is IGuildKick, DaoConstants, MemberGuard {
     using SafeMath for uint256;
+    using SafeCast for uint256;
+
     enum GuildKickStatus {NOT_STARTED, IN_PROGRESS, DONE}
 
     struct GuildKick {
@@ -84,11 +87,12 @@ contract GuildKickContract is IGuildKick, DaoConstants, MemberGuard {
         return proposalId;
     }
 
-    function guildKick(DaoRegistry dao, uint64 proposalId)
+    function guildKick(DaoRegistry dao, uint256 _proposalId)
         external
         override
         onlyMember(dao)
     {
+        uint64 proposalId = SafeCast.toUint64(_proposalId);
         GuildKick storage kick = kicks[proposalId];
         // If it does not exist or is not in progress we expect it to fail
         require(
@@ -121,9 +125,10 @@ contract GuildKickContract is IGuildKick, DaoConstants, MemberGuard {
 
     function rageKick(
         DaoRegistry dao,
-        uint64 proposalId,
+        uint256 _proposalId,
         uint256 toIndex
     ) external override onlyMember(dao) {
+        uint64 proposalId = SafeCast.toUint64(_proposalId);
         GuildKick storage kick = kicks[proposalId];
         // If does not exist or is not DONE we expect it to fail
         require(

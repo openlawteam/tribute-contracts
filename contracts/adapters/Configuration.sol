@@ -6,8 +6,9 @@ import "../core/DaoConstants.sol";
 import "../core/DaoRegistry.sol";
 import "../guards/MemberGuard.sol";
 import "./interfaces/IConfiguration.sol";
-import "../utils/SafeMath.sol";
 import "../adapters/interfaces/IVoting.sol";
+import "../utils/SafeMath.sol";
+import "../utils/SafeCast.sol";
 
 /**
 MIT License
@@ -35,6 +36,8 @@ SOFTWARE.
 
 contract ConfigurationContract is IConfiguration, DaoConstants, MemberGuard {
     using SafeMath for uint256;
+    using SafeCast for uint256;
+
     enum ConfigurationStatus {NOT_CREATED, IN_PROGRESS, DONE}
 
     struct Configuration {
@@ -81,20 +84,22 @@ contract ConfigurationContract is IConfiguration, DaoConstants, MemberGuard {
 
     function sponsorProposal(
         DaoRegistry dao,
-        uint64 proposalId,
+        uint256 _proposalId,
         bytes calldata data
     ) external override onlyMember(dao) {
+        uint64 proposalId = SafeCast.toUint64(_proposalId);
         IVoting votingContract = IVoting(dao.getAdapterAddress(VOTING));
         votingContract.startNewVotingForProposal(dao, proposalId, data);
 
         dao.sponsorProposal(proposalId, msg.sender);
     }
 
-    function processProposal(DaoRegistry dao, uint64 proposalId)
+    function processProposal(DaoRegistry dao, uint256 _proposalId)
         external
         override
         onlyMember(dao)
     {
+        uint64 proposalId = SafeCast.toUint64(_proposalId);
         Configuration storage configuration = configurations[proposalId];
 
         // If status is empty or DONE we expect it to fail

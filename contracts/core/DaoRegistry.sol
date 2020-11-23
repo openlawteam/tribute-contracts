@@ -4,9 +4,9 @@ pragma solidity ^0.7.0;
 
 import "./DaoConstants.sol";
 import "../helpers/FlagHelper.sol";
-import "../utils/SafeMath.sol";
 import "../guards/AdapterGuard.sol";
 import "../utils/IERC20.sol";
+import "../utils/SafeMath.sol";
 
 /**
 MIT License
