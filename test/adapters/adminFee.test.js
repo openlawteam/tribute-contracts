@@ -1,6 +1,3 @@
-// Whole-script strict mode syntax
-"use strict";
-
 /**
 MIT License
 
@@ -24,6 +21,10 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
  */
+
+// Whole-script strict mode syntax
+"use strict";
+
 const {
   sha3,
   toBN,
@@ -90,54 +91,40 @@ contract("LAOLAND - Admin Fee Adapter", async (accounts) => {
   const adminfee = async (dao, _laoFundAddress, _adminFeeDenominator) => {
     let adminFeeAddress = await dao.getAdapterAddress(sha3("ragequit"));
     let adminFeeContract = await AdminFee.at(adminFeeAddress);
-   
-   //configure admin K 
-    await adminFeeContract.configureAdmin(
-      dao.address,
-     accounts[2],
-      200,
-      {
-        from: myAccount,
-        gasPrice: toBN("0"),
-      }
-    );
-    //withdraw admin fee 
-    await adminFeeContract.withdrawAdminFee(dao.address,
-    {
-      from:myAccount,
+
+    //configure admin K
+    await adminFeeContract.configureAdmin(dao.address, accounts[2], 200, {
+      from: myAccount,
       gasPrice: toBN("0"),
-    }
-    
+    });
 
-    //Check Guild balance
-    //Check Admin Balance 
-    //Check New Member Shares
+    //withdraw admin fee
+    await adminFeeContract.withdrawAdminFee(dao.address, {
+      from: myAccount,
+      gasPrice: toBN("0"),
+    });
+  }; //end of const adminfee
 
-    // let newShares = await dao.balanceOf(member, SHARES);
-    // assert.equal(newShares.toString(), "0");
-    // return ragequitContract;
-  };
+  /*
+    check who can set admin fee denominator
+    anyone can call withdraw
+    check that payment period has passed before next withdraw can be called
+    Check Guild balance
+    Check Admin Balance 
+*/
 
-  
+  // it("any Eth address should be able to call withdraw Admin fee" async() => {
+  // });
 
-  it("any Eth address should be able to call withdraw Admin fee" async() => {
-    
-  });
+  // it("should not be possible to withdraw adminfee before the paymentPeriod has passed" async() => {
+  // });
 
-  it("should not be possible to withdraw adminfee before the paymentPeriod has passed" async() => {
-    
-  });
+  // it("the amount of tokens subtracted from the GUILD, should be the total GUILD balnce minus the GUILD balance divided by the adminFeeDenominator/denominator" async() => {
+  // });
 
-  it("the amount of tokens subtracted from the GUILD, should be the total GUILD balnce minus the GUILD balance divided by the adminFeeDenominator/denominator" async() => {
-    
-  });
+  // it(" laoFundAddress (recipient) should receive the amount of tokens in the GUILD divided by the denominator" async() => {
+  // });
 
-  it(" laoFundAddress (recipient) should receive the amount of tokens in the GUILD divided by the denominator" async() => {
-    
-  });
-
-  it("after the admin fee has been withdrawn, the next withdrawal should not occur until a paymentPeriod has passed since the lastPaymentTime" async() => {
-    
-  });
-
-});//end of contract 
+  // it("after the admin fee has been withdrawn, the next withdrawal should not occur until a paymentPeriod has passed since the lastPaymentTime" async() => {
+  // });
+}); //end of contract

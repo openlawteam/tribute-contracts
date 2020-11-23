@@ -56,7 +56,7 @@ contract AdminFee is IAdminFee, AdapterGuard, DaoRegistry {
         lastPaymentTime = block.timestamp; //now
     }
 
-    function withdrawAdminFee(DaoRegistry dao) public override{
+    function withdrawAdminFee(DaoRegistry dao) public override {
         require(
             block.timestamp >= lastPaymentTime.add(paymentPeriod),
             "90 days have not passed since last withdrawal"
@@ -70,7 +70,7 @@ contract AdminFee is IAdminFee, AdapterGuard, DaoRegistry {
 
         for (uint256 i = 0; i < tokenLength; i++) {
             address token = dao.getToken(i);
-            
+
             uint256 amount = dao.balanceOf(GUILD, token) / denominator;
             if (amount > 0) {
                 //otherwise skip for efficiency
