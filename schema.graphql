@@ -1,0 +1,38 @@
+type Token @entity {
+  id: ID!
+  tokenAddress: Bytes!
+  "TODO: pull in from etherscan"
+  ticker: String
+  logo: String
+  details: String
+}
+
+type TokenBalance @entity {
+  id: ID!
+  token: Token!
+  tokenBalance: BigInt!
+  member: Member
+}
+
+type Member @entity {
+  id: ID!
+  memberAddress: Bytes!
+  createdAt: String!
+  delegateKey: Bytes!
+  flags: BigInt!
+  tokenBalances: [TokenBalance!] @derivedFrom(field: "member")
+}
+
+type Adapter @entity {
+  id: ID!
+  adapterAddress: Bytes!
+  acl: BigInt!
+}
+
+type Proposal @entity {
+  id: ID!
+  proposalId: BigInt!
+  adapterAddress: Bytes!
+  flags: BigInt! 
+}
+

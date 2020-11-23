@@ -40,7 +40,9 @@ contract ManagingContract is IManaging, DaoConstants, MemberGuard {
         address applicant;
         bytes32 moduleId;
         address moduleAddress;
-        bool processed;
+        bytes32[] keys;
+        uint256[] values;
+        uint128 flags;
     }
 
     mapping(uint256 => ProposalDetails) public proposals;
@@ -55,9 +57,18 @@ contract ManagingContract is IManaging, DaoConstants, MemberGuard {
     function createModuleChangeRequest(
         DaoRegistry dao,
         bytes32 moduleId,
-        address moduleAddress
+        address moduleAddress,
+        bytes32[] calldata keys,
+        uint256[] calldata values,
+        uint256 _flags
     ) external override onlyMember(dao) returns (uint256) {
+        require(
+            keys.length == values.length,
+            "must be an equal number of config keys and values"
+        );
         require(moduleAddress != address(0x0), "invalid module address");
+        require(_flags < type(uint128).max, "flags parameter overflow");
+        uint128 flags = uint128(_flags);
 
         require(
             dao.isNotReservedAddress(moduleAddress),
@@ -66,44 +77,65 @@ contract ManagingContract is IManaging, DaoConstants, MemberGuard {
 
         //is there a way to check if the new module implements the module interface properly?
 
-        uint256 proposalId = dao.submitProposal(msg.sender);
+        uint256 proposalId = dao.submitProposal();
 
         ProposalDetails storage proposal = proposals[proposalId];
         proposal.applicant = msg.sender;
         proposal.moduleId = moduleId;
         proposal.moduleAddress = moduleAddress;
-        proposal.processed = false;
+        proposal.keys = keys;
+        proposal.values = values;
+        proposal.flags = flags;
         return proposalId;
     }
 
     function sponsorProposal(
         DaoRegistry dao,
-        uint256 proposalId,
+        uint256 _proposalId,
         bytes calldata data
     ) external override onlyMember(dao) {
         IVoting votingContract = IVoting(dao.getAdapterAddress(VOTING));
-        votingContract.startNewVotingForProposal(dao, proposalId, data);
+        votingContract.startNewVotingForProposal(dao, _proposalId, data);
 
-        dao.sponsorProposal(proposalId, msg.sender);
+        dao.sponsorProposal(_proposalId, msg.sender);
     }
 
-    function processProposal(DaoRegistry dao, uint256 proposalId)
+    function processProposal(DaoRegistry dao, uint256 _proposalId)
         external
         override
         onlyMember(dao)
     {
-        ProposalDetails memory proposal = proposals[proposalId];
-        require(!proposal.processed, "proposal already processed");
+        require(_proposalId < type(uint64).max, "proposalId too big");
+        uint64 proposalId = uint64(_proposalId);
+        ProposalDetails memory proposal = proposals[_proposalId];
+        require(
+            !dao.getProposalFlag(proposalId, FlagHelper.Flag.PROCESSED),
+            "proposal already processed"
+        );
+        require(
+            dao.getProposalFlag(proposalId, FlagHelper.Flag.SPONSORED),
+            "proposal not sponsored yet"
+        );
 
         IVoting votingContract = IVoting(dao.getAdapterAddress(VOTING));
         require(
-            votingContract.voteResult(dao, proposalId) == 2,
+            votingContract.voteResult(dao, _proposalId) == 2,
             "proposal did not pass yet"
         );
 
         dao.removeAdapter(proposal.moduleId);
-        dao.addAdapter(proposal.moduleId, proposal.moduleAddress);
-        proposals[proposalId].processed = true;
-        dao.processProposal(proposalId);
+
+        bytes32[] memory keys = proposal.keys;
+        uint256[] memory values = proposal.values;
+        for (uint256 i = 0; i < keys.length; i++) {
+            dao.setConfiguration(keys[i], values[i]);
+        }
+
+        dao.addAdapter(
+            proposal.moduleId,
+            proposal.moduleAddress,
+            proposal.flags
+        );
+        dao.processProposal(_proposalId);
     }
 }

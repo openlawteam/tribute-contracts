@@ -5,6 +5,7 @@ pragma experimental ABIEncoderV2;
 
 import "./DaoConstants.sol";
 import "./DaoRegistry.sol";
+import "./CloneFactory.sol";
 import "../adapters/Onboarding.sol";
 
 /**
@@ -31,16 +32,28 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
  */
 
-contract DaoFactory is DaoConstants {
+contract DaoFactory is CloneFactory, DaoConstants {
     struct Adapter {
         bytes32 id;
         address addr;
+        uint256 flags;
+    }
+
+    event DAOCreated(address _address);
+    event Debug(string msg);
+
+    //TODO: ACL? onlyOwner?
+    function newDao(address _libraryAddress) external {
+        DaoRegistry dao = DaoRegistry(_createClone(_libraryAddress));
+        dao.initialize(msg.sender);
+        emit DAOCreated(address(dao));
     }
 
     /*
      * @dev: A new DAO is instantiated with only the Core Modules enabled, to reduce the call cost.
      *       Another call must be made to enable the default Adapters, see @registerDefaultAdapters.
      */
+    //TODO: ACL? onlyOwner?
     function addAdapters(DaoRegistry dao, Adapter[] calldata adapters)
         external
     {
@@ -51,10 +64,11 @@ contract DaoFactory is DaoConstants {
         );
 
         for (uint256 i = 0; i < adapters.length; i++) {
-            dao.addAdapter(adapters[i].id, adapters[i].addr);
+            dao.addAdapter(adapters[i].id, adapters[i].addr, adapters[i].flags);
         }
     }
 
+    //TODO: ACL? onlyOwner?
     function updateAdapter(DaoRegistry dao, Adapter calldata adapter) external {
         require(
             dao.state() == DaoRegistry.DaoState.CREATION,
@@ -62,6 +76,6 @@ contract DaoFactory is DaoConstants {
         );
 
         dao.removeAdapter(adapter.id);
-        dao.addAdapter(adapter.id, adapter.addr);
+        dao.addAdapter(adapter.id, adapter.addr, adapter.flags);
     }
 }

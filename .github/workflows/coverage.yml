@@ -1,0 +1,21 @@
+name: Codecov
+
+on:
+  push:
+    branches:
+    - master
+  pull_request:
+    branches:
+      - "*"
+jobs:
+  coverage:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v1
+    - name: Use Node.js 12.X
+      uses: actions/setup-node@v1
+      with:
+        node-version: '12'
+    - run: npm install
+    - run: npm run coverage
+    - run: bash <(curl -s https://codecov.io/bash) -t ${{ secrets.CODECOV_TOKEN }}

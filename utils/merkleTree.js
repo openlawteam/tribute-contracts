@@ -1,3 +1,6 @@
+// Whole-script strict mode syntax
+'use strict';
+
 // Shamelessly adapted from OpenZeppelin-contracts test utils
 
 const { keccak256, keccakFromString, bufferToHex } = require("ethereumjs-util");

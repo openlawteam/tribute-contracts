@@ -42,13 +42,6 @@ contract OffchainVotingContract is
 {
     VotingContract private _fallbackVoting;
 
-    struct VotingConfig {
-        uint256 votingPeriod;
-        uint256 gracePeriod;
-        uint256 stakingAmount;
-        uint256 fallbackThreshold;
-    }
-
     struct Voting {
         uint256 blockNumber;
         address reporter;
@@ -64,7 +57,7 @@ contract OffchainVotingContract is
     }
 
     struct VoteResultNode {
-        address voter;
+        address member;
         uint256 nbNo;
         uint256 nbYes;
         uint256 weight;
@@ -73,8 +66,14 @@ contract OffchainVotingContract is
         bytes32[] proof;
     }
 
+    bytes32 constant VotingPeriod = keccak256("offchainvoting.votingPeriod");
+    bytes32 constant GracePeriod = keccak256("offchainvoting.gracePeriod");
+    bytes32 constant StakingAmount = keccak256("offchainvoting.stakingAmount");
+    bytes32 constant FallbackThreshold = keccak256(
+        "offchainvoting.fallbackThreshold"
+    );
+
     mapping(address => mapping(uint256 => Voting)) public votes;
-    mapping(address => VotingConfig) public votingConfigs;
 
     constructor(VotingContract _c) {
         _fallbackVoting = _c;
@@ -86,9 +85,11 @@ contract OffchainVotingContract is
         uint256 gracePeriod,
         uint256 fallbackThreshold
     ) external onlyAdapter(dao) {
-        votingConfigs[address(dao)].votingPeriod = votingPeriod;
-        votingConfigs[address(dao)].gracePeriod = gracePeriod;
-        votingConfigs[address(dao)].fallbackThreshold = fallbackThreshold;
+        dao.setConfiguration(VotingPeriod, votingPeriod);
+        dao.setConfiguration(GracePeriod, gracePeriod);
+        dao.setConfiguration(FallbackThreshold, fallbackThreshold);
+
+        dao.registerPotentialNewInternalToken(LOCKED_LOOT);
     }
 
     function submitVoteResult(
@@ -141,11 +142,11 @@ contract OffchainVotingContract is
         } else {
             diff = nbNo - nbYes;
         }
-        if (diff * 2 > dao.getPriorVotes(dao.TOTAL(), vote.blockNumber)) {
+        if (diff * 2 > dao.getPriorAmount(TOTAL, SHARES, vote.blockNumber)) {
             return true;
         }
 
-        uint256 votingPeriod = votingConfigs[address(dao)].votingPeriod;
+        uint256 votingPeriod = dao.getConfiguration(VotingPeriod);
 
         return vote.startingTime + votingPeriod > block.timestamp;
     }
@@ -159,7 +160,11 @@ contract OffchainVotingContract is
     ) internal {
         bytes32 hashCurrent = _nodeHash(result);
         uint256 blockNumber = vote.blockNumber;
-        address voter = result.voter;
+
+        address voter = dao.getPriorDelegateKey(
+            result.member,
+            vote.blockNumber
+        );
         require(
             verify(resultRoot, hashCurrent, result.proof),
             "result node & result merkle root / proof mismatch"
@@ -173,7 +178,11 @@ contract OffchainVotingContract is
             "wrong vote signature!"
         );
 
-        uint256 correctWeight = dao.getPriorVotes(voter, blockNumber);
+        uint256 correctWeight = dao.getPriorAmount(
+            result.member,
+            SHARES,
+            blockNumber
+        );
 
         //Incorrect weight
         require(correctWeight == result.weight, "wrong weight!");
@@ -188,7 +197,7 @@ contract OffchainVotingContract is
     }
 
     function _lockFunds(DaoRegistry dao, address memberAddr) internal {
-        uint256 lootToLock = votingConfigs[address(dao)].stakingAmount;
+        uint256 lootToLock = dao.getConfiguration(StakingAmount);
         //lock if member has enough loot
         require(dao.isActiveMember(memberAddr), "must be an active member");
         require(
@@ -202,7 +211,7 @@ contract OffchainVotingContract is
     }
 
     function _releaseFunds(DaoRegistry dao, address memberAddr) internal {
-        uint256 lootToRelease = votingConfigs[address(dao)].stakingAmount;
+        uint256 lootToRelease = dao.getConfiguration(StakingAmount);
         //release if member has enough locked loot
         require(dao.isActiveMember(memberAddr), "must be an active member");
         require(
@@ -267,15 +276,14 @@ contract OffchainVotingContract is
 
         if (
             block.timestamp <
-            vote.startingTime + votingConfigs[address(dao)].votingPeriod
+            vote.startingTime + dao.getConfiguration(VotingPeriod)
         ) {
             return 4;
         }
 
         if (
             block.timestamp <
-            vote.gracePeriodStartingTime +
-                votingConfigs[address(dao)].gracePeriod
+            vote.gracePeriodStartingTime + dao.getConfiguration(GracePeriod)
         ) {
             return 4;
         }
@@ -309,7 +317,11 @@ contract OffchainVotingContract is
             abi.encode(blockNumber, address(dao), proposalId)
         );
         //return 1 if yes, 2 if no and 0 if the vote is incorrect
-        if (_hasVoted(nodeCurrent.voter, proposalHash, nodeCurrent.sig) == 0) {
+        address voter = dao.getPriorDelegateKey(
+            nodeCurrent.member,
+            vote.blockNumber
+        );
+        if (_hasVoted(voter, proposalHash, nodeCurrent.sig) == 0) {
             _challengeResult(dao, proposalId);
         }
     }
@@ -329,8 +341,9 @@ contract OffchainVotingContract is
             "proof check for current invalid for current node"
         );
 
-        uint256 correctWeight = dao.getPriorVotes(
-            nodeCurrent.voter,
+        uint256 correctWeight = dao.getPriorAmount(
+            nodeCurrent.member,
+            SHARES,
             blockNumber
         );
 
@@ -360,7 +373,7 @@ contract OffchainVotingContract is
             "proof check for previous invalid for previous node"
         );
 
-        if (node1.voter == node2.voter) {
+        if (node1.member == node2.member) {
             _challengeResult(dao, proposalId);
         }
     }
@@ -396,7 +409,7 @@ contract OffchainVotingContract is
         );
 
         //voters not in order
-        if (nodeCurrent.voter > nodePrevious.voter) {
+        if (nodeCurrent.member > nodePrevious.member) {
             _challengeResult(dao, proposalId);
         }
 
@@ -423,7 +436,7 @@ contract OffchainVotingContract is
         return
             keccak256(
                 abi.encode(
-                    node.voter,
+                    node.member,
                     node.weight,
                     node.sig,
                     node.nbYes,
@@ -440,7 +453,12 @@ contract OffchainVotingContract is
         bytes32 proposalHash,
         uint256 proposalId
     ) internal {
-        if (_hasVotedYes(nodeCurrent.voter, proposalHash, nodeCurrent.sig)) {
+        Voting storage vote = votes[address(dao)][proposalId];
+        address voter = dao.getPriorDelegateKey(
+            nodeCurrent.member,
+            vote.blockNumber
+        );
+        if (_hasVotedYes(voter, proposalHash, nodeCurrent.sig)) {
             if (nodePrevious.nbYes + 1 != nodeCurrent.nbYes) {
                 _challengeResult(dao, proposalId);
             } else if (nodePrevious.nbNo != nodeCurrent.nbNo) {
@@ -460,7 +478,7 @@ contract OffchainVotingContract is
         dao.subtractFromBalance(
             votes[address(dao)][proposalId].reporter,
             LOCKED_LOOT,
-            votingConfigs[address(dao)].stakingAmount
+            dao.getConfiguration(StakingAmount)
         );
         votes[address(dao)][proposalId].isChallenged = true;
     }

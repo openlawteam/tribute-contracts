@@ -2,8 +2,7 @@ pragma solidity ^0.7.0;
 
 // SPDX-License-Identifier: MIT
 
-import "../core/DaoRegistry.sol";
-import "../helpers/FlagHelper.sol";
+import "../../core/DaoRegistry.sol";
 
 /**
 MIT License
@@ -28,25 +27,20 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
  */
-abstract contract AdapterGuard {
-    /**
-     * @dev Only registered adapters are allowed to execute the function call.
-     */
-    modifier onlyAdapter(DaoRegistry dao) {
-        require(
-            dao.state() == DaoRegistry.DaoState.CREATION ||
-                dao.isAdapter(msg.sender),
-            "onlyAdapter"
-        );
-        _;
-    }
 
-    modifier hasAccess(DaoRegistry dao, FlagHelper.Flag flag) {
-        require(
-            dao.state() == DaoRegistry.DaoState.CREATION ||
-                dao.hasAdapterAccess(msg.sender, flag),
-            "hasAccess"
-        );
-        _;
-    }
+interface IConfiguration {
+    function submitConfigurationProposal(
+        DaoRegistry dao,
+        bytes32[] calldata keys,
+        uint256[] calldata values,
+        bytes calldata data
+    ) external returns (uint256);
+
+    function sponsorProposal(
+        DaoRegistry dao,
+        uint256 _proposalId,
+        bytes calldata data
+    ) external;
+
+    function processProposal(DaoRegistry dao, uint64 proposalId) external;
 }

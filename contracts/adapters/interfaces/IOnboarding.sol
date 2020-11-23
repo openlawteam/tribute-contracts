@@ -31,6 +31,7 @@ SOFTWARE.
 interface IOnboarding {
     function onboard(
         DaoRegistry dao,
+        address payable applicant,
         address tokenToMint,
         uint256 tokenAmount
     ) external payable;
@@ -40,6 +41,8 @@ interface IOnboarding {
         uint256 proposalId,
         bytes calldata data
     ) external;
+
+    function cancelProposal(DaoRegistry dao, uint256 proposalId) external;
 
     function processProposal(DaoRegistry dao, uint256 proposalId) external;
 }
