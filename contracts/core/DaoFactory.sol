@@ -51,7 +51,7 @@ contract DaoFactory is CloneFactory, DaoConstants {
     }
 
     function createDao(
-        string memory daoName,
+        string calldata daoName,
         bytes32[] calldata keys,
         uint256[] calldata values,
         bool finalizeDao
@@ -81,7 +81,7 @@ contract DaoFactory is CloneFactory, DaoConstants {
         _configure(dao, keys, values, finalizeDao);
     }
 
-    function getDaoAddress(string memory daoName)
+    function getDaoAddress(string calldata daoName)
         public
         view
         returns (address)
