@@ -6,9 +6,10 @@ import "./interfaces/IOnboarding.sol";
 import "../core/DaoConstants.sol";
 import "../core/DaoRegistry.sol";
 import "../adapters/interfaces/IVoting.sol";
-import "../utils/SafeMath.sol";
 import "../guards/MemberGuard.sol";
 import "../guards/AdapterGuard.sol";
+import "../utils/SafeMath.sol";
+import "../utils/SafeCast.sol";
 
 /**
 MIT License
@@ -41,6 +42,7 @@ contract OnboardingContract is
     AdapterGuard
 {
     using SafeMath for uint256;
+    using SafeCast for uint256;
 
     bytes32 constant ChunkSize = keccak256("onboarding.chunkSize");
     bytes32 constant SharesPerChunk = keccak256("onboarding.sharesPerChunk");
@@ -48,7 +50,7 @@ contract OnboardingContract is
     bytes32 constant MaximumChunks = keccak256("onboarding.maximumChunks");
 
     struct ProposalDetails {
-        uint256 id;
+        uint64 id;
         address tokenToMint;
         uint256 amount;
         uint256 sharesRequested;
@@ -209,7 +211,7 @@ contract OnboardingContract is
         uint256 amount,
         address token
     ) internal {
-        uint256 proposalId = dao.submitProposal();
+        uint64 proposalId = dao.submitProposal();
         proposals[address(dao)][proposalId] = ProposalDetails(
             proposalId,
             tokenToMint,
@@ -223,9 +225,10 @@ contract OnboardingContract is
 
     function sponsorProposal(
         DaoRegistry dao,
-        uint256 proposalId,
+        uint256 _proposalId,
         bytes calldata data
     ) external override onlyMember(dao) {
+        uint64 proposalId = SafeCast.toUint64(_proposalId);
         require(
             proposals[address(dao)][proposalId].id == proposalId,
             "proposal does not exist"
@@ -242,9 +245,7 @@ contract OnboardingContract is
         override
         onlyMember(dao)
     {
-        require(_proposalId < type(uint64).max, "proposalId too big");
-        uint64 proposalId = uint64(_proposalId);
-
+        uint64 proposalId = SafeCast.toUint64(_proposalId);
         require(
             proposals[address(dao)][proposalId].id == proposalId,
             "proposal does not exist"
@@ -266,8 +267,7 @@ contract OnboardingContract is
         override
         onlyMember(dao)
     {
-        require(_proposalId < type(uint64).max, "proposalId too big");
-        uint64 proposalId = uint64(_proposalId);
+        uint64 proposalId = SafeCast.toUint64(_proposalId);
         require(
             proposals[address(dao)][proposalId].id == proposalId,
             "proposal does not exist"

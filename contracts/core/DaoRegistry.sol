@@ -4,9 +4,9 @@ pragma solidity ^0.7.0;
 
 import "./DaoConstants.sol";
 import "../helpers/FlagHelper.sol";
-import "../utils/SafeMath.sol";
 import "../guards/AdapterGuard.sol";
 import "../utils/IERC20.sol";
+import "../utils/SafeMath.sol";
 
 /**
 MIT License
@@ -48,8 +48,8 @@ contract DaoRegistry is DaoConstants, AdapterGuard {
      */
     /// @dev - Events for Proposals
     event SubmittedProposal(uint64 proposalId, uint256 flags);
-    event SponsoredProposal(uint256 proposalId, uint256 flags);
-    event ProcessedProposal(uint256 proposalId, uint256 flags);
+    event SponsoredProposal(uint64 proposalId, uint256 flags);
+    event ProcessedProposal(uint64 proposalId, uint256 flags);
     event AdapterAdded(
         bytes32 adapterId,
         address adapterAddress,
@@ -293,12 +293,12 @@ contract DaoRegistry is DaoConstants, AdapterGuard {
     }
 
     /// @dev - Proposal: sponsor proposals that were submitted to the DAO registry
-    function sponsorProposal(uint256 _proposalId, address sponsoringMember)
+    function sponsorProposal(uint64 proposalId, address sponsoringMember)
         external
         hasAccess(this, FlagHelper.Flag.SPONSOR_PROPOSAL)
     {
         Proposal storage proposal = _setProposalFlag(
-            _proposalId,
+            proposalId,
             FlagHelper.Flag.SPONSORED
         );
 
@@ -321,34 +321,28 @@ contract DaoRegistry is DaoConstants, AdapterGuard {
             "only active members can sponsor proposals"
         );
 
-        emit SponsoredProposal(_proposalId, flags);
+        emit SponsoredProposal(proposalId, flags);
     }
 
     /// @dev - Proposal: mark a proposal as processed in the DAO registry
-    function processProposal(uint256 _proposalId)
+    function processProposal(uint64 proposalId)
         external
         hasAccess(this, FlagHelper.Flag.PROCESS_PROPOSAL)
     {
         Proposal storage proposal = _setProposalFlag(
-            _proposalId,
+            proposalId,
             FlagHelper.Flag.PROCESSED
         );
         uint256 flags = proposal.flags;
 
-        emit ProcessedProposal(_proposalId, flags);
+        emit ProcessedProposal(proposalId, flags);
     }
 
     /// @dev - Proposal: mark a proposal as processed in the DAO registry
-    function _setProposalFlag(uint256 _proposalId, FlagHelper.Flag flag)
+    function _setProposalFlag(uint64 proposalId, FlagHelper.Flag flag)
         internal
         returns (Proposal storage)
     {
-        require(
-            _proposalId < type(uint64).max,
-            "proposal Id should only be uint64"
-        );
-        uint64 proposalId = uint64(_proposalId);
-
         Proposal storage proposal = proposals[proposalId];
 
         require(
