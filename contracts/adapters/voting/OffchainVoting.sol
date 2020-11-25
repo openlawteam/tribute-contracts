@@ -90,7 +90,6 @@ contract OffchainVotingContract is
     }
 
     struct ProposalMessage {
-        bytes32 versionHash;
         uint256 timestamp;
         bytes32 spaceHash;
         ProposalPayload payload;
@@ -98,13 +97,10 @@ contract OffchainVotingContract is
     } 
 
     struct ProposalPayload {
-        bytes32 nameHash;
-        bytes32 bodyHash;
         string[] choices;
         uint256 start;
         uint256 end;
         string snapshot;
-        bytes32 metadataHash;
     }
 
     bytes32 constant VotingPeriod = keccak256("offchainvoting.votingPeriod");
@@ -126,7 +122,6 @@ contract OffchainVotingContract is
                 DOMAIN_SEPARATOR(dao),
                 keccak256(abi.encode(
                     PROPOSAL_MESSAGE_TYPEHASH,
-                    message.versionHash,
                     message.timestamp,
                     message.spaceHash,
                     hashProposalPayload(message.payload)
@@ -147,13 +142,10 @@ contract OffchainVotingContract is
     function hashProposalPayload(ProposalPayload memory payload) private pure returns (bytes32) {
         return keccak256(abi.encode(
             PROPOSAL_PAYLOAD_TYPEHASH,
-            payload.nameHash,
-            payload.bodyHash,
             payload.choices,
             payload.start,
             payload.end,
-            keccak256(bytes(payload.snapshot)),
-            payload.metadataHash
+            keccak256(bytes(payload.snapshot))
         ));
     }
 

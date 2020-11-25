@@ -63,15 +63,13 @@ function getVoteDomainType(verifyingContract, chainId) {
   // The named list of all type definitions
   const MessageType = {
       Message: [
-        { name: 'versionHash', type: 'bytes32' },
         { name: 'timestamp', type: 'uint256' },
         { name: 'spaceHash', type: 'bytes32' },
         { name: 'payload', type: 'MessagePayload' }
       ],
       MessagePayload: [
         { name: 'choice', type: 'uint256' },
-        { name: 'proposalHash', type: 'bytes32' },
-        { name: 'metadataHash', type: 'bytes32' }
+        { name: 'proposalHash', type: 'bytes32' }
       ]
   };
 
@@ -88,19 +86,15 @@ function getProposalDomainType(verifyingContract, chainId) {
 
   const MessageType = {
       Message: [
-        { name: 'versionHash', type: 'bytes32' },
         { name: 'timestamp', type: 'uint256' },
         { name: 'spaceHash', type: 'bytes32' },
         { name: 'payload', type: 'MessagePayload' }
       ],
-      MessagePayload: [
-        { name: 'nameHash', type: 'bytes32' },
-        { name: 'bodyHash', type: 'bytes32' },
+      MessagePayload: [        
         { name: 'choices', type: 'string[]' },
         { name: 'start', type: 'uint256' },
         { name: 'end', type: 'uint256' },
-        { name: 'snapshot', type: 'uint256' },
-        { name: 'metadataHash', type: 'bytes32' }
+        { name: 'snapshot', type: 'uint256' }
       ]
   };
 
@@ -271,38 +265,29 @@ function prepareVoteResult(votes) {
 function prepareVoteProposalData(data) {
   return web3.eth.abi.encodeParameters([{
     "ProposalMessage": {
-      "versionHash": 'bytes32',
-      "timestamp": 'uint256',
       "spaceHash": 'bytes32',
       "payload": {
-        "nameHash": 'bytes32',
-        "bodyHash": 'bytes32',
         "choices": "string[]",
         "start": 'uint256',
         "end": 'uint256',
         "snapshot": "string",
-        "metadataHash": "bytes32"
       },
-      "sig": "bytes" 
+      "sig": "bytes"
     }
   }], [{
-    "versionHash": sha3(data.version),
     "timestamp": data.timestamp,
     "spaceHash": sha3(data.space),
-    "sig" : data.sig,
+    "sig" : data.sig || 0,
     "payload": prepareVoteProposalPayload(data.payload)
   }]);
 }
 
 function prepareVoteProposalPayload(payload) {
   return {
-    "nameHash": sha3(payload.name),
-    "bodyHash": sha3(payload.body),
     "choices": payload.choices,
     "start": payload.start,
     "end": payload.end,
-    "snapshot": payload.snapshot,
-    "metadataHash": sha3(JSON.stringify(payload.metadata))
+    "snapshot": payload.snapshot
   };
 }
 

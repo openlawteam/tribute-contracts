@@ -99,7 +99,8 @@ contract("LAOLAND - Offchain Voting Module", async (accounts) => {
       }
     );
 
-    let blockNumber = await web3.eth.getBlockNumber();
+    const proposal = {}
+    
     await onboarding.sponsorProposal(
       dao.address,
       0,
