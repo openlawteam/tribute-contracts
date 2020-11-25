@@ -25,47 +25,24 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
  */
-library FlagHelper {
-    enum Flag {
-        EXISTS,
-        SPONSORED,
-        PROCESSED,
-        JAILED,
-        ADD_ADAPTER,
-        REMOVE_ADAPTER,
-        JAIL_MEMBER,
-        UNJAIL_MEMBER,
-        EXECUTE,
-        SUBMIT_PROPOSAL,
-        SPONSOR_PROPOSAL,
-        PROCESS_PROPOSAL,
-        UPDATE_DELEGATE_KEY,
-        REGISTER_NEW_TOKEN,
-        REGISTER_NEW_INTERNAL_TOKEN,
-        ADD_TO_BALANCE,
-        SUB_FROM_BALANCE,
-        INTERNAL_TRANSFER,
-        SET_CONFIGURATION
-    }
-
-    //helper
-    function getFlag(uint256 flags, Flag flag) public pure returns (bool) {
-        return (flags >> uint8(flag)) % 2 == 1;
-    }
-
-    function setFlag(
-        uint256 flags,
-        Flag flag,
-        bool value
-    ) public pure returns (uint256) {
-        if (getFlag(flags, flag) != value) {
-            if (value) {
-                return flags + 2**uint256(flag);
-            } else {
-                return flags - 2**uint256(flag);
-            }
-        } else {
-            return flags;
+library FairShareHelper {
+    /**
+     * @notice calculates the fair share amount based the total shares and current balance.
+     */
+    function calc(
+        uint256 balance,
+        uint256 shares,
+        uint256 _totalShares
+    ) internal pure returns (uint256) {
+        require(_totalShares != 0, "total shares should not be 0");
+        if (balance == 0) {
+            return 0;
         }
+        uint256 prod = balance * shares;
+        if (prod / balance == shares) {
+            // no overflow in multiplication above?
+            return prod / _totalShares;
+        }
+        return (balance / _totalShares) * shares;
     }
 }

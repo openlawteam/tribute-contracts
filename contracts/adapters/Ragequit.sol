@@ -6,6 +6,7 @@ import "../core/DaoConstants.sol";
 import "../core/DaoRegistry.sol";
 import "../guards/MemberGuard.sol";
 import "./interfaces/IRagequit.sol";
+import "../helpers/FairShareHelper.sol";
 import "../utils/SafeMath.sol";
 
 /**
@@ -34,6 +35,7 @@ SOFTWARE.
 
 contract RagequitContract is IRagequit, DaoConstants, MemberGuard {
     using SafeMath for uint256;
+
     enum RagequitStatus {NOT_STARTED, IN_PROGRESS, DONE}
 
     struct Ragequit {
@@ -88,7 +90,7 @@ contract RagequitContract is IRagequit, DaoConstants, MemberGuard {
         Ragequit storage ragequit = ragequits[memberAddr];
 
         ragequit.status = RagequitStatus.IN_PROGRESS;
-        ragequit.blockNumber;
+        ragequit.blockNumber = block.number;
         //TODO: make this the sum of all the internal tokens
         ragequit.initialTotalSharesAndLoot = dao
             .balanceOf(TOTAL, SHARES)
@@ -121,15 +123,16 @@ contract RagequitContract is IRagequit, DaoConstants, MemberGuard {
         uint256 initialTotalSharesAndLoot = ragequit.initialTotalSharesAndLoot;
 
         //Update internal Guild and Member balances
-        address[] memory tokens = dao.tokens();
+        uint256 tokenLength = dao.nbTokens();
         uint256 maxIndex = toIndex;
-        if (maxIndex > tokens.length) {
-            maxIndex = tokens.length;
+        if (maxIndex > tokenLength) {
+            maxIndex = tokenLength;
         }
+        uint256 blockNumber = ragequit.blockNumber;
         for (uint256 i = currentIndex; i < maxIndex; i++) {
-            address token = tokens[i];
-            uint256 amountToRagequit = _fairShare(
-                dao.balanceOf(GUILD, token),
+            address token = dao.getToken(i);
+            uint256 amountToRagequit = FairShareHelper.calc(
+                dao.getPriorAmount(GUILD, token, blockNumber),
                 sharesAndLootToBurn,
                 initialTotalSharesAndLoot
             );
@@ -148,26 +151,9 @@ contract RagequitContract is IRagequit, DaoConstants, MemberGuard {
         }
 
         ragequit.currentIndex = maxIndex;
-        if (maxIndex == tokens.length) {
+        if (maxIndex == tokenLength) {
             ragequit.status = RagequitStatus.DONE;
             dao.unjailMember(memberAddr);
         }
-    }
-
-    function _fairShare(
-        uint256 balance,
-        uint256 shares,
-        uint256 _totalShares
-    ) internal pure returns (uint256) {
-        require(_totalShares != 0, "total shares should not be 0");
-        if (balance == 0) {
-            return 0;
-        }
-        uint256 prod = balance * shares;
-        if (prod / balance == shares) {
-            // no overflow in multiplication above?
-            return prod / _totalShares;
-        }
-        return (balance / _totalShares) * shares;
     }
 }

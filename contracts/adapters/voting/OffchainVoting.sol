@@ -5,9 +5,11 @@ pragma experimental ABIEncoderV2;
 
 import "../../core/DaoRegistry.sol";
 import "../../core/DaoConstants.sol";
-import "../interfaces/IVoting.sol";
 import "../../guards/MemberGuard.sol";
 import "../../guards/AdapterGuard.sol";
+import "../../utils/SafeMath.sol";
+import "../../utils/SafeCast.sol";
+import "../interfaces/IVoting.sol";
 import "./Voting.sol";
 
 /**
@@ -40,14 +42,8 @@ contract OffchainVotingContract is
     MemberGuard,
     AdapterGuard
 {
+    using SafeCast for uint256;
     VotingContract private _fallbackVoting;
-
-    struct VotingConfig {
-        uint256 votingPeriod;
-        uint256 gracePeriod;
-        uint256 stakingAmount;
-        uint256 fallbackThreshold;
-    }
 
     struct Voting {
         uint256 blockNumber;
@@ -73,8 +69,14 @@ contract OffchainVotingContract is
         bytes32[] proof;
     }
 
-    mapping(address => mapping(uint256 => Voting)) public votes;
-    mapping(address => VotingConfig) public votingConfigs;
+    bytes32 constant VotingPeriod = keccak256("offchainvoting.votingPeriod");
+    bytes32 constant GracePeriod = keccak256("offchainvoting.gracePeriod");
+    bytes32 constant StakingAmount = keccak256("offchainvoting.stakingAmount");
+    bytes32 constant FallbackThreshold = keccak256(
+        "offchainvoting.fallbackThreshold"
+    );
+
+    mapping(address => mapping(uint64 => Voting)) public votes;
 
     constructor(VotingContract _c) {
         _fallbackVoting = _c;
@@ -86,19 +88,20 @@ contract OffchainVotingContract is
         uint256 gracePeriod,
         uint256 fallbackThreshold
     ) external onlyAdapter(dao) {
-        votingConfigs[address(dao)].votingPeriod = votingPeriod;
-        votingConfigs[address(dao)].gracePeriod = gracePeriod;
-        votingConfigs[address(dao)].fallbackThreshold = fallbackThreshold;
+        dao.setConfiguration(VotingPeriod, votingPeriod);
+        dao.setConfiguration(GracePeriod, gracePeriod);
+        dao.setConfiguration(FallbackThreshold, fallbackThreshold);
 
         dao.registerPotentialNewInternalToken(LOCKED_LOOT);
     }
 
     function submitVoteResult(
         DaoRegistry dao,
-        uint256 proposalId,
+        uint256 _proposalId,
         bytes32 resultRoot,
         VoteResultNode memory result
     ) external {
+        uint64 proposalId = SafeCast.toUint64(_proposalId);
         Voting storage vote = votes[address(dao)][proposalId];
         require(vote.blockNumber > 0, "the vote has not started yet");
         /**
@@ -147,7 +150,7 @@ contract OffchainVotingContract is
             return true;
         }
 
-        uint256 votingPeriod = votingConfigs[address(dao)].votingPeriod;
+        uint256 votingPeriod = dao.getConfiguration(VotingPeriod);
 
         return vote.startingTime + votingPeriod > block.timestamp;
     }
@@ -155,7 +158,7 @@ contract OffchainVotingContract is
     function _submitVoteResult(
         DaoRegistry dao,
         Voting storage vote,
-        uint256 proposalId,
+        uint64 proposalId,
         VoteResultNode memory result,
         bytes32 resultRoot
     ) internal {
@@ -198,7 +201,7 @@ contract OffchainVotingContract is
     }
 
     function _lockFunds(DaoRegistry dao, address memberAddr) internal {
-        uint256 lootToLock = votingConfigs[address(dao)].stakingAmount;
+        uint256 lootToLock = dao.getConfiguration(StakingAmount);
         //lock if member has enough loot
         require(dao.isActiveMember(memberAddr), "must be an active member");
         require(
@@ -212,7 +215,7 @@ contract OffchainVotingContract is
     }
 
     function _releaseFunds(DaoRegistry dao, address memberAddr) internal {
-        uint256 lootToRelease = votingConfigs[address(dao)].stakingAmount;
+        uint256 lootToRelease = dao.getConfiguration(StakingAmount);
         //release if member has enough locked loot
         require(dao.isActiveMember(memberAddr), "must be an active member");
         require(
@@ -227,9 +230,10 @@ contract OffchainVotingContract is
 
     function startNewVotingForProposal(
         DaoRegistry dao,
-        uint256 proposalId,
+        uint256 _proposalId,
         bytes memory data /*onlyAdapter(dao)*/
     ) external override onlyAdapter(dao) {
+        uint64 proposalId = SafeCast.toUint64(_proposalId);
         // it is called from Registry
         require(
             data.length == 32,
@@ -260,12 +264,13 @@ contract OffchainVotingContract is
     3: not pass
     4: in progress
      */
-    function voteResult(DaoRegistry dao, uint256 proposalId)
+    function voteResult(DaoRegistry dao, uint256 _proposalId)
         external
         override
         view
         returns (uint256 state)
     {
+        uint64 proposalId = uint64(_proposalId);
         Voting storage vote = votes[address(dao)][proposalId];
         if (vote.startingTime == 0) {
             return 0;
@@ -277,15 +282,14 @@ contract OffchainVotingContract is
 
         if (
             block.timestamp <
-            vote.startingTime + votingConfigs[address(dao)].votingPeriod
+            vote.startingTime + dao.getConfiguration(VotingPeriod)
         ) {
             return 4;
         }
 
         if (
             block.timestamp <
-            vote.gracePeriodStartingTime +
-                votingConfigs[address(dao)].gracePeriod
+            vote.gracePeriodStartingTime + dao.getConfiguration(GracePeriod)
         ) {
             return 4;
         }
@@ -302,9 +306,10 @@ contract OffchainVotingContract is
 
     function challengeWrongSignature(
         DaoRegistry dao,
-        uint256 proposalId,
+        uint256 _proposalId,
         VoteResultNode memory nodeCurrent
     ) external {
+        uint64 proposalId = SafeCast.toUint64(_proposalId);
         Voting storage vote = votes[address(dao)][proposalId];
         bytes32 resultRoot = vote.resultRoot;
         uint256 blockNumber = vote.blockNumber;
@@ -330,9 +335,10 @@ contract OffchainVotingContract is
 
     function challengeWrongWeight(
         DaoRegistry dao,
-        uint256 proposalId,
+        uint256 _proposalId,
         VoteResultNode memory nodeCurrent
     ) external {
+        uint64 proposalId = SafeCast.toUint64(_proposalId);
         Voting storage vote = votes[address(dao)][proposalId];
         bytes32 resultRoot = vote.resultRoot;
         uint256 blockNumber = vote.blockNumber;
@@ -357,10 +363,11 @@ contract OffchainVotingContract is
 
     function challengeDuplicate(
         DaoRegistry dao,
-        uint256 proposalId,
+        uint256 _proposalId,
         VoteResultNode memory node1,
         VoteResultNode memory node2
     ) external {
+        uint64 proposalId = SafeCast.toUint64(_proposalId);
         Voting storage vote = votes[address(dao)][proposalId];
         bytes32 resultRoot = vote.resultRoot;
         require(resultRoot != bytes32(0), "no result available yet!");
@@ -382,10 +389,11 @@ contract OffchainVotingContract is
 
     function challengeWrongStep(
         DaoRegistry dao,
-        uint256 proposalId,
+        uint256 _proposalId,
         VoteResultNode memory nodePrevious,
         VoteResultNode memory nodeCurrent
     ) external {
+        uint64 proposalId = SafeCast.toUint64(_proposalId);
         Voting storage vote = votes[address(dao)][proposalId];
         bytes32 resultRoot = vote.resultRoot;
         uint256 blockNumber = vote.blockNumber;
@@ -418,10 +426,11 @@ contract OffchainVotingContract is
         _checkStep(dao, nodeCurrent, nodePrevious, proposalHash, proposalId);
     }
 
-    function requestFallback(DaoRegistry dao, uint256 proposalId)
+    function requestFallback(DaoRegistry dao, uint256 _proposalId)
         external
         onlyMember(dao)
     {
+        uint64 proposalId = SafeCast.toUint64(_proposalId);
         require(
             votes[address(dao)][proposalId].fallbackVotes[msg.sender] == false,
             "the member has already voted for this vote to fallback"
@@ -453,8 +462,9 @@ contract OffchainVotingContract is
         VoteResultNode memory nodeCurrent,
         VoteResultNode memory nodePrevious,
         bytes32 proposalHash,
-        uint256 proposalId
+        uint256 _proposalId
     ) internal {
+        uint64 proposalId = SafeCast.toUint64(_proposalId);
         Voting storage vote = votes[address(dao)][proposalId];
         address voter = dao.getPriorDelegateKey(
             nodeCurrent.member,
@@ -475,12 +485,12 @@ contract OffchainVotingContract is
         }
     }
 
-    function _challengeResult(DaoRegistry dao, uint256 proposalId) internal {
+    function _challengeResult(DaoRegistry dao, uint64 proposalId) internal {
         // burn locked loot
         dao.subtractFromBalance(
             votes[address(dao)][proposalId].reporter,
             LOCKED_LOOT,
-            votingConfigs[address(dao)].stakingAmount
+            dao.getConfiguration(StakingAmount)
         );
         votes[address(dao)][proposalId].isChallenged = true;
     }
@@ -488,8 +498,9 @@ contract OffchainVotingContract is
     function getSignedHash(
         bytes32 snapshotRoot,
         address dao,
-        uint256 proposalId
+        uint256 _proposalId
     ) external pure returns (bytes32) {
+        uint64 proposalId = SafeCast.toUint64(_proposalId);
         bytes32 proposalHash = keccak256(
             abi.encode(snapshotRoot, dao, proposalId)
         );
@@ -499,9 +510,10 @@ contract OffchainVotingContract is
     function getSignedAddress(
         bytes32 snapshotRoot,
         address dao,
-        uint256 proposalId,
+        uint256 _proposalId,
         bytes calldata sig
     ) external pure returns (address) {
+        uint64 proposalId = SafeCast.toUint64(_proposalId);
         bytes32 proposalHash = keccak256(
             abi.encode(snapshotRoot, dao, proposalId)
         );

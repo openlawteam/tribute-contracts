@@ -1,3 +1,6 @@
+// Whole-script strict mode syntax
+"use strict";
+
 /**
 MIT License
 
@@ -35,17 +38,14 @@ const {
   VotingContract,
 } = require("../../utils/DaoFactory.js");
 
-contract('LAOLAND - Non Voting Onboarding Adapter', async accounts => {
-
+contract("LAOLAND - Non Voting Onboarding Adapter", async (accounts) => {
   it("should be possible to join a DAO as a member without any voting power by requesting Loot while staking raw ETH", async () => {
     const myAccount = accounts[1];
     const advisorAccount = accounts[2];
 
     let dao = await createDao(myAccount);
 
-    const onboardingAddress = await dao.getAdapterAddress(
-      sha3("onboarding")
-    );
+    const onboardingAddress = await dao.getAdapterAddress(sha3("onboarding"));
     const onboarding = await OnboardingContract.at(onboardingAddress);
 
     const votingAddress = await dao.getAdapterAddress(sha3("voting"));
@@ -62,8 +62,7 @@ contract('LAOLAND - Non Voting Onboarding Adapter', async accounts => {
     });
 
     //Get the new proposal id
-    pastEvents = await dao.getPastEvents();
-    let { proposalId } = pastEvents[0].returnValues;
+    let proposalId = 0;
 
     // Sponsor the new proposal to allow the Advisor to join the DAO
     await onboarding.sponsorProposal(dao.address, proposalId, [], {
@@ -75,7 +74,7 @@ contract('LAOLAND - Non Voting Onboarding Adapter', async accounts => {
     await voting.submitVote(dao.address, proposalId, 1, {
       from: myAccount,
       gasPrice: toBN("0"),
-    })
+    });
 
     // Process the new proposal
     await advanceTime(10000);
@@ -85,7 +84,7 @@ contract('LAOLAND - Non Voting Onboarding Adapter', async accounts => {
     });
 
     // Check the number of Loot (non-voting shares) issued to the new Avisor
-    const advisorAccountLoot = await dao.nbLoot(advisorAccount);
+    const advisorAccountLoot = await dao.balanceOf(advisorAccount, LOOT);
     assert.equal(advisorAccountLoot.toString(), "3000000000000000");
 
     // Guild balance must not change when Loot shares are issued
@@ -94,7 +93,7 @@ contract('LAOLAND - Non Voting Onboarding Adapter', async accounts => {
       "0x0000000000000000000000000000000000000000"
     );
     assert.equal(guildBalance.toString(), "360000000000000000");
-  })
+  });
 
   it("should be possible to join a DAO as a member without any voting power by requesting Loot while staking ERC20 token", async () => {
     const myAccount = accounts[1];
@@ -106,20 +105,23 @@ contract('LAOLAND - Non Voting Onboarding Adapter', async accounts => {
 
     let lootSharePrice = 10;
     let nbOfLootShares = 100000000;
-    
-    let dao = await createDao(myAccount, lootSharePrice, nbOfLootShares, 10, 1, oltContract.address);
 
-    const onboardingAddress = await dao.getAdapterAddress(
-      sha3("onboarding")
+    let dao = await createDao(
+      myAccount,
+      lootSharePrice,
+      nbOfLootShares,
+      10,
+      1,
+      oltContract.address
     );
+
+    const onboardingAddress = await dao.getAdapterAddress(sha3("onboarding"));
     const onboarding = await OnboardingContract.at(onboardingAddress);
 
     // Transfer 1000 OLTs to the Advisor account
     await oltContract.approve(advisorAccount, 100);
     await oltContract.transfer(advisorAccount, 100);
-    let advisorTokenBalance = await oltContract.balanceOf.call(
-      advisorAccount
-    );
+    let advisorTokenBalance = await oltContract.balanceOf.call(advisorAccount);
     assert.equal(
       "100",
       advisorTokenBalance.toString(),
@@ -135,36 +137,26 @@ contract('LAOLAND - Non Voting Onboarding Adapter', async accounts => {
     // Pre-approve spender (DAO) to transfer applicant tokens
     await oltContract.approve(dao.address, tokenAmount, {from: advisorAccount});
 
-    // Send a request to join the DAO as an Advisor (non-voting power), 
+    // Send a request to join the DAO as an Advisor (non-voting power),
     // the tx passes the OLT ERC20 token, the amount and the nonVotingOnboarding adapter that handles the proposal
     try {
-      await onboarding.onboard(
-        dao.address,
-				advisorAccount,
-        LOOT,
-        tokenAmount,
-        {
-          from: advisorAccount,
-          gasPrice: toBN("0"),
-        }
-      );
+      await onboarding.onboard(dao.address, advisorAccount, LOOT, tokenAmount, {
+        from: advisorAccount,
+        gasPrice: toBN("0"),
+      });
       assert.equal(true, false, "should have failed!");
     } catch (err) {
       assert.equal(err.message.indexOf("ERC20 transfer not allowed") > 0, true);
     }
 
-    await oltContract.approve(onboarding.address, tokenAmount, {from: advisorAccount});
+    await oltContract.approve(onboarding.address, tokenAmount, {
+      from: advisorAccount,
+    });
 
-    await onboarding.onboard(
-      dao.address,
-			advisorAccount,
-      LOOT,
-      tokenAmount,
-      {
-        from: advisorAccount,
-        gasPrice: toBN("0"),
-      }
-    );
+    await onboarding.onboard(dao.address, advisorAccount, LOOT, tokenAmount, {
+      from: advisorAccount,
+      gasPrice: toBN("0"),
+    });
 
     // Sponsor the new proposal to allow the Advisor to join the DAO
     await onboarding.sponsorProposal(dao.address, 0, [], {
@@ -186,7 +178,7 @@ contract('LAOLAND - Non Voting Onboarding Adapter', async accounts => {
     });
 
     // Check the number of Loot (non-voting shares) issued to the new Avisor
-    const advisorAccountLoot = await dao.nbLoot(advisorAccount);
+    const advisorAccountLoot = await dao.balanceOf(advisorAccount, LOOT);
     assert.equal(advisorAccountLoot.toString(), "100000000");
 
     // Guild balance must not change when Loot shares are issued
