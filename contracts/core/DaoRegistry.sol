@@ -2,11 +2,11 @@ pragma solidity ^0.7.0;
 
 // SPDX-License-Identifier: MIT
 
-import "../helpers/FlagHelper.sol";
-import "../utils/SafeMath.sol";
 import "./DaoConstants.sol";
+import "../helpers/FlagHelper.sol";
 import "../guards/AdapterGuard.sol";
 import "../utils/IERC20.sol";
+import "../utils/SafeMath.sol";
 
 /**
 MIT License
@@ -33,6 +33,8 @@ SOFTWARE.
  */
 
 contract DaoRegistry is DaoConstants, AdapterGuard {
+    bool public initialized = false; // internally tracks deployment under eip-1167 proxy pattern
+
     /*
      * LIBRARIES
      */
@@ -46,8 +48,8 @@ contract DaoRegistry is DaoConstants, AdapterGuard {
      */
     /// @dev - Events for Proposals
     event SubmittedProposal(uint64 proposalId, uint256 flags);
-    event SponsoredProposal(uint256 proposalId, uint256 flags);
-    event ProcessedProposal(uint256 proposalId, uint256 flags);
+    event SponsoredProposal(uint64 proposalId, uint256 flags);
+    event ProcessedProposal(uint64 proposalId, uint256 flags);
     event AdapterAdded(
         bytes32 adapterId,
         address adapterAddress,
@@ -115,7 +117,7 @@ contract DaoRegistry is DaoConstants, AdapterGuard {
     mapping(address => mapping(uint32 => DelegateCheckpoint)) checkpoints;
     mapping(address => uint32) numCheckpoints;
 
-    DaoState public state = DaoState.CREATION;
+    DaoState public state;
 
     /// @notice The number of proposals submitted to the DAO
     uint64 public proposalCount;
@@ -128,8 +130,16 @@ contract DaoRegistry is DaoConstants, AdapterGuard {
     /// @notice The map that keeps track of configuration parameters for the DAO and adapters
     mapping(bytes32 => uint256) public configuration;
 
-    constructor() {
-        address memberAddr = msg.sender;
+    /// @notice Clonable contract must have an empty constructor
+    // constructor() {
+    // }
+
+    //TODO: we may need to add some ACL to ensure only the factory is allowed to clone it, otherwise
+    //any will able to deploy it, and the first one to call this function is added to the DAO as a member.
+    function initialize(address creator) external {
+        require(!initialized, "dao already initialized");
+
+        address memberAddr = creator;
         Member storage member = members[memberAddr];
         member.flags = member.flags.setFlag(FlagHelper.Flag.EXISTS, true);
         memberAddressesByDelegatedKey[memberAddr] = memberAddr;
@@ -139,6 +149,8 @@ contract DaoRegistry is DaoConstants, AdapterGuard {
 
         _createNewAmountCheckpoint(memberAddr, SHARES, 1);
         _createNewAmountCheckpoint(TOTAL, SHARES, 1);
+
+        initialized = true;
     }
 
     receive() external payable {
@@ -281,12 +293,12 @@ contract DaoRegistry is DaoConstants, AdapterGuard {
     }
 
     /// @dev - Proposal: sponsor proposals that were submitted to the DAO registry
-    function sponsorProposal(uint256 _proposalId, address sponsoringMember)
+    function sponsorProposal(uint64 proposalId, address sponsoringMember)
         external
         hasAccess(this, FlagHelper.Flag.SPONSOR_PROPOSAL)
     {
         Proposal storage proposal = _setProposalFlag(
-            _proposalId,
+            proposalId,
             FlagHelper.Flag.SPONSORED
         );
 
@@ -309,34 +321,28 @@ contract DaoRegistry is DaoConstants, AdapterGuard {
             "only active members can sponsor proposals"
         );
 
-        emit SponsoredProposal(_proposalId, flags);
+        emit SponsoredProposal(proposalId, flags);
     }
 
     /// @dev - Proposal: mark a proposal as processed in the DAO registry
-    function processProposal(uint256 _proposalId)
+    function processProposal(uint64 proposalId)
         external
         hasAccess(this, FlagHelper.Flag.PROCESS_PROPOSAL)
     {
         Proposal storage proposal = _setProposalFlag(
-            _proposalId,
+            proposalId,
             FlagHelper.Flag.PROCESSED
         );
         uint256 flags = proposal.flags;
 
-        emit ProcessedProposal(_proposalId, flags);
+        emit ProcessedProposal(proposalId, flags);
     }
 
     /// @dev - Proposal: mark a proposal as processed in the DAO registry
-    function _setProposalFlag(uint256 _proposalId, FlagHelper.Flag flag)
+    function _setProposalFlag(uint64 proposalId, FlagHelper.Flag flag)
         internal
         returns (Proposal storage)
     {
-        require(
-            _proposalId < type(uint64).max,
-            "proposal Id should only be uint64"
-        );
-        uint64 proposalId = uint64(_proposalId);
-
         Proposal storage proposal = proposals[proposalId];
 
         require(

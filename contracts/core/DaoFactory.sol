@@ -5,6 +5,7 @@ pragma experimental ABIEncoderV2;
 
 import "./DaoConstants.sol";
 import "./DaoRegistry.sol";
+import "./CloneFactory.sol";
 import "../adapters/Onboarding.sol";
 
 /**
@@ -31,11 +32,61 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
  */
 
-contract DaoFactory is DaoConstants {
+contract DaoFactory is CloneFactory, DaoConstants {
     struct Adapter {
         bytes32 id;
         address addr;
         uint256 flags;
+    }
+
+    mapping(address => bytes32) public daos;
+    mapping(bytes32 => address) public addresses;
+
+    address public identityAddress;
+
+    event DAOCreated(address _address, string _name);
+
+    constructor(address _identityAddress) {
+        identityAddress = _identityAddress;
+    }
+
+    function createDao(
+        string calldata daoName,
+        bytes32[] calldata keys,
+        uint256[] calldata values,
+        bool finalizeDao
+    ) external {
+        DaoRegistry dao = DaoRegistry(_createClone(identityAddress));
+        address daoAddr = address(dao);
+        dao.initialize(msg.sender);
+
+        bytes32 hashedName = keccak256(abi.encode(daoName));
+        addresses[hashedName] = daoAddr;
+        daos[daoAddr] = hashedName;
+
+        _configure(dao, keys, values, finalizeDao);
+
+        emit DAOCreated(daoAddr, daoName);
+    }
+
+    function configureDao(
+        address daoAddr,
+        bytes32[] calldata keys,
+        uint256[] calldata values,
+        bool finalizeDao
+    ) external {
+        require(daos[daoAddr] != bytes32(0), "dao not found");
+
+        DaoRegistry dao = DaoRegistry(payable(daoAddr));
+        _configure(dao, keys, values, finalizeDao);
+    }
+
+    function getDaoAddress(string calldata daoName)
+        public
+        view
+        returns (address)
+    {
+        return addresses[keccak256(abi.encode(daoName))];
     }
 
     /*
@@ -64,5 +115,20 @@ contract DaoFactory is DaoConstants {
 
         dao.removeAdapter(adapter.id);
         dao.addAdapter(adapter.id, adapter.addr, adapter.flags);
+    }
+
+    function _configure(
+        DaoRegistry dao,
+        bytes32[] calldata keys,
+        uint256[] calldata values,
+        bool finalizeDao
+    ) internal {
+        require(keys.length == values.length, "invalid keys and values");
+        for (uint256 i = 0; i < keys.length; i++) {
+            dao.setConfiguration(keys[i], values[i]);
+        }
+        if (finalizeDao) {
+            dao.finalizeDao();
+        }
     }
 }

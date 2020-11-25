@@ -16,7 +16,7 @@
   "devDependencies": {
     "@graphprotocol/graph-cli": "^0.18.0",
     "@graphprotocol/graph-ts": "^0.18.1",
-    "eth-gas-reporter": "^0.2.17",
+    "eth-gas-reporter": "^0.2.19",
     "prettier": "^2.1.2",
     "prettier-plugin-solidity": "^1.0.0-alpha.57",
     "solhint": "^3.2.0",
@@ -24,6 +24,7 @@
   },
   "scripts": {
     "test": "truffle test",
+    "test:debug": "truffle test --stacktrace",
     "coverage": "truffle run coverage --network coverage",
     "lint:fix": "prettier --write contracts/**/* test/**/*.test.js",
     "lint": "prettier --list-different contracts/**/*.sol test/**/*.test.js",

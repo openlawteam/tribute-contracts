@@ -34,7 +34,7 @@ interface IFinancing {
         address token,
         uint256 amount,
         bytes32 details
-    ) external returns (uint256);
+    ) external returns (uint64);
 
     function sponsorProposal(
         DaoRegistry dao,
