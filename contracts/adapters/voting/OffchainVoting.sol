@@ -44,19 +44,17 @@ contract OffchainVotingContract is
 {
     using SafeCast for uint256;
 
-    string private constant EIP712_DOMAIN = "EIP712Domain(string name,string version,uint256 chainId,address verifyingContract)";
-    string private constant PROPOSAL_MESSAGE_TYPE = "Message(bytes32 versionHash,uint256 timestamp,bytes32 spaceHash,MessagePayload payload)";
-    string private constant PROPOSAL_PAYLOAD_TYPE = "MessagePayload(bytes32 nameHash,bytes32 bodyHash,string[] choices,uint256 start,uint256 end,string snapshot, bytes32 metadataHash)";
+    string public constant EIP712_DOMAIN = "EIP712Domain(string name,string version,uint256 chainId,address verifyingContract)";
+    string public constant PROPOSAL_MESSAGE_TYPE = "Message(uint256 timestamp,bytes32 spaceHash,MessagePayload payload)MessagePayload(bytes32 nameHash,bytes32 bodyHash,uint256 start,uint256 end,string snapshot)";
+    string public constant PROPOSAL_PAYLOAD_TYPE = "MessagePayload(bytes32 nameHash,bytes32 bodyHash,uint256 start,uint256 end,string snapshot)";
 
-    bytes32 private constant EIP712_DOMAIN_TYPEHASH = keccak256(abi.encodePacked(EIP712_DOMAIN));
-    bytes32 private constant PROPOSAL_MESSAGE_TYPEHASH = keccak256(abi.encodePacked(PROPOSAL_MESSAGE_TYPE));
-    bytes32 private constant PROPOSAL_PAYLOAD_TYPEHASH = keccak256(abi.encodePacked(PROPOSAL_PAYLOAD_TYPE));
+    bytes32 public constant EIP712_DOMAIN_TYPEHASH = keccak256(abi.encodePacked(EIP712_DOMAIN));
+    bytes32 public constant PROPOSAL_MESSAGE_TYPEHASH = keccak256(abi.encodePacked(PROPOSAL_MESSAGE_TYPE));
+    bytes32 public constant PROPOSAL_PAYLOAD_TYPEHASH = keccak256(abi.encodePacked(PROPOSAL_PAYLOAD_TYPE));
+    uint256 chainId;
 
-    function DOMAIN_SEPARATOR(DaoRegistry dao) internal pure returns (bytes32){
-        uint256 chainId;
-        assembly {
-            chainId := chainid()
-        }
+    function DOMAIN_SEPARATOR(DaoRegistry dao) public view returns (bytes32){
+        
         return keccak256(abi.encode(
             EIP712_DOMAIN_TYPEHASH,
             keccak256("Snapshot Message"),  // string name
@@ -101,7 +99,8 @@ contract OffchainVotingContract is
     } 
 
     struct ProposalPayload {
-        string[] choices;
+        bytes32 nameHash;
+        bytes32 bodyHash;
         uint256 start;
         uint256 end;
         string snapshot;
@@ -116,40 +115,36 @@ contract OffchainVotingContract is
 
     mapping(address => mapping(uint64 => Voting)) public votes;
 
-    constructor(VotingContract _c) {
+    constructor(VotingContract _c, uint256 _chainId) {
         _fallbackVoting = _c;
+        chainId = _chainId;
     }
 
-    function hashProposalMessage(DaoRegistry dao, ProposalMessage memory message) private pure returns (bytes32) {
+    function hashMessage(DaoRegistry dao, ProposalMessage memory message) public view returns (bytes32) {
         return keccak256(abi.encodePacked(
-                "\x19\x01",
-                DOMAIN_SEPARATOR(dao),
-                keccak256(abi.encode(
+            "\x19\x01",
+            DOMAIN_SEPARATOR(dao),
+            hashProposalMessage(message)
+        ));
+    }
+
+    function hashProposalMessage(ProposalMessage memory message) public pure returns (bytes32) {
+        return keccak256(abi.encode(
                     PROPOSAL_MESSAGE_TYPEHASH,
                     message.timestamp,
                     message.spaceHash,
                     hashProposalPayload(message.payload)
-                ))
-            ));
-    }
-    /**
-    struct ProposalPayload {
-        bytes32 nameHash;
-        bytes32 bodyHash;
-        string[] choices;
-        uint256 start;
-        uint256 end;
-        string snapshot;
-        string metadata;
-    }
-     */
-    function hashProposalPayload(ProposalPayload memory payload) private pure returns (bytes32) {
+                ));
+    } 
+    
+    function hashProposalPayload(ProposalPayload memory payload) public pure returns (bytes32) {
         return keccak256(abi.encode(
             PROPOSAL_PAYLOAD_TYPEHASH,
-            payload.choices,
+            payload.nameHash,
+            payload.bodyHash,
             payload.start,
             payload.end,
-            keccak256(bytes(payload.snapshot))
+            keccak256(abi.encodePacked(payload.snapshot))
         ));
     }
 
@@ -316,25 +311,23 @@ contract OffchainVotingContract is
         return (success,result);
     }
 
+    function recoverFromProposalDataHash(DaoRegistry dao, bytes memory data) public view returns (address) {
+        ProposalMessage memory proposal = abi.decode(data, (ProposalMessage));
+        return recover(hashMessage(dao, proposal), proposal.sig);
+    }
+
     function startNewVotingForProposal(
         DaoRegistry dao,
         uint256 _proposalId,
-        bytes memory data /*onlyAdapter(dao)*/
+        bytes memory data
     ) public override onlyAdapter(dao) {
         uint64 proposalId = SafeCast.toUint64(_proposalId);
         // it is called from Registry
-        require(
-            data.length == 32,
-            "vote data should represent the block number for snapshot"
-        );
-
         ProposalMessage memory proposal = abi.decode(data, (ProposalMessage));
-
         (bool success, uint256 blockNumber) = _stringToUint(proposal.payload.snapshot);
-
         require(success, "snapshot conversion error");
 
-        bytes32 proposalHash = hashProposalMessage(dao, proposal);
+        bytes32 proposalHash = hashMessage(dao, proposal);
         address addr = recover(proposalHash, proposal.sig);
         require(dao.isActiveMember(addr), "noActiveMember");
         require(

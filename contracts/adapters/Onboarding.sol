@@ -59,10 +59,13 @@ contract OnboardingContract is
         address payable proposer;
     }
 
-    struct OnboardingConfig {
+    struct OnboardingDetails {
         uint256 chunkSize;
+        uint256 numberOfChunks;
         uint256 sharesPerChunk;
-        address tokenAddr;
+        uint256 amount;
+        uint256 sharesRequested;
+        uint256 totalShares;
     }
 
     mapping(address => mapping(uint256 => ProposalDetails)) public proposals;
@@ -113,39 +116,65 @@ contract OnboardingContract is
         address payable proposer,
         uint256 value,
         address token
-    ) internal returns (uint256) {
-        uint256 chunkSize = dao.getConfiguration(
+    ) internal returns (uint256, uint64) {
+        OnboardingDetails memory details;
+        details.chunkSize = dao.getConfiguration(
             configKey(tokenToMint, ChunkSize)
         );
-        require(chunkSize > 0, "config missing");
+        require(details.chunkSize > 0, "config missing");
 
-        uint256 numberOfChunks = value.div(chunkSize);
-        require(numberOfChunks > 0, "not sufficient funds");
+        details.numberOfChunks = value.div(details.chunkSize);
+        require(details.numberOfChunks > 0, "not sufficient funds");
 
-        uint256 sharesPerChunk = dao.getConfiguration(
+        details.sharesPerChunk = dao.getConfiguration(
             configKey(tokenToMint, SharesPerChunk)
         );
-        uint256 amount = numberOfChunks.mul(chunkSize);
-        uint256 sharesRequested = numberOfChunks.mul(sharesPerChunk);
+        details.amount = details.numberOfChunks.mul(details.chunkSize);
+        details.sharesRequested = details.numberOfChunks.mul(details.sharesPerChunk);
+        details.totalShares = shares[applicant] + details.sharesRequested;
 
-        uint256 totalShares = shares[applicant] + sharesRequested;
         require(
-            totalShares.div(sharesPerChunk) <
+            details.totalShares.div(details.sharesPerChunk) <
                 dao.getConfiguration(configKey(tokenToMint, MaximumChunks)),
             "total shares for this member must be lower than the maxmimum"
         );
 
-        _submitMembershipProposalInternal(
+        uint64 proposalId = _submitMembershipProposalInternal(
             dao,
             tokenToMint,
             applicant,
             proposer,
-            sharesRequested,
-            amount,
+            details.sharesRequested,
+            details.amount,
             token
         );
 
-        return amount;
+        return (details.amount, proposalId);
+    }
+
+    function onboardAndSponsor(
+        DaoRegistry dao,
+        address payable applicant,
+        address tokenToMint,
+        uint256 tokenAmount,
+        bytes calldata data
+    ) external payable {
+
+        uint64 proposalId = onboard(dao, applicant, tokenToMint, tokenAmount);
+        require(
+            proposals[address(dao)][proposalId].id == proposalId,
+            "proposal does not exist"
+        );
+
+        IVoting votingContract = IVoting(dao.getAdapterAddress(VOTING));
+        try votingContract.startNewVotingForProposal(dao, proposalId, data) {
+        } catch Error(string memory reason) {            
+            revert(reason);
+        } catch (bytes memory /*lowLevelData*/) {
+            revert("system error from voting");
+        }
+
+        dao.sponsorProposal(proposalId, msg.sender);
     }
 
     function onboard(
@@ -153,7 +182,7 @@ contract OnboardingContract is
         address payable applicant,
         address tokenToMint,
         uint256 tokenAmount
-    ) external override payable {
+    ) public override payable returns (uint64) {
         address tokenAddr = address(
             dao.getConfiguration(configKey(tokenToMint, TokenAddr))
         );
@@ -175,7 +204,7 @@ contract OnboardingContract is
             );
         }
 
-        uint256 amountUsed = _submitMembershipProposal(
+        (uint256 amountUsed, uint64 proposalId) = _submitMembershipProposal(
             dao,
             tokenToMint,
             applicant,
@@ -196,6 +225,8 @@ contract OnboardingContract is
                 );
             }
         }
+
+        return proposalId;
     }
 
     function updateDelegateKey(DaoRegistry dao, address delegateKey) external {
@@ -210,7 +241,7 @@ contract OnboardingContract is
         uint256 sharesRequested,
         uint256 amount,
         address token
-    ) internal {
+    ) internal returns (uint64){
         uint64 proposalId = dao.submitProposal();
         proposals[address(dao)][proposalId] = ProposalDetails(
             proposalId,
@@ -221,6 +252,8 @@ contract OnboardingContract is
             newMember,
             proposer
         );
+
+        return proposalId;
     }
 
     function sponsorProposal(

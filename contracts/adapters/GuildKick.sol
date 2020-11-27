@@ -65,7 +65,9 @@ contract GuildKickContract is IGuildKick, DaoConstants, MemberGuard {
         address memberToKick,
         bytes calldata data
     ) external override onlyMember(dao) returns (uint64) {
-        GuildKick memory guildKick = GuildKick(
+        // A kick proposal is created and needs to be voted
+        uint64 proposalId = dao.submitProposal();
+        kicks[proposalId] = GuildKick(
             memberToKick,
             GuildKickStatus.IN_PROGRESS,
             dao.balanceOf(memberToKick, SHARES),
@@ -74,10 +76,6 @@ contract GuildKickContract is IGuildKick, DaoConstants, MemberGuard {
             0,
             block.number
         );
-
-        // A kick proposal is created and needs to be voted
-        uint64 proposalId = dao.submitProposal();
-        kicks[proposalId] = guildKick;
 
         // start the voting process for the guild kick proposal
         IVoting votingContract = IVoting(dao.getAdapterAddress(VOTING));

@@ -29,12 +29,12 @@ const {SHARES} = require('./DaoFactory.js');
 const sha3 = web3.utils.sha3;
 const sigUtil = require('eth-sig-util');
 
-function getMessageERC712Hash(message, verifyingContract, chainId) {
-  const m = prepareMessage(message, verifyingContract, chainId);
+function getMessageERC712Hash(m, verifyingContract, chainId) {
+  const message = prepareMessage(m, verifyingContract, chainId);
   const {DomainType, MessageType} = getDomainType(m, verifyingContract, chainId);
   const msgParams = {
     domain: DomainType,
-    message: m,
+    message,
     primaryType: 'Message',
     types: MessageType
   };
@@ -52,13 +52,17 @@ function getDomainType(message, verifyingContract, chainId) {
   }
  }
 
-function getVoteDomainType(verifyingContract, chainId) {
-  const DomainType = {
+ function getMessageDomainType(chainId, verifyingContract) {
+  return {
     name: 'Snapshot Message',
     version: '1',
     chainId,
     verifyingContract
-  };
+  }
+ }
+
+function getVoteDomainType(verifyingContract, chainId) {
+  const DomainType = getMessageDomainType(chainId, verifyingContract);
 
   // The named list of all type definitions
   const MessageType = {
@@ -70,6 +74,12 @@ function getVoteDomainType(verifyingContract, chainId) {
       MessagePayload: [
         { name: 'choice', type: 'uint256' },
         { name: 'proposalHash', type: 'bytes32' }
+      ],
+      EIP712Domain: [
+        { name: 'name', type: 'string' },
+        { name: 'version', type: 'string' },
+        { name: 'chainId', type: 'uint256' },
+        { name: 'verifyingContract', type: 'address' },
       ]
   };
 
@@ -77,12 +87,7 @@ function getVoteDomainType(verifyingContract, chainId) {
 }
 
 function getProposalDomainType(verifyingContract, chainId) {
-  const DomainType = {
-    name: 'Snapshot Message',
-    version: '1',
-    chainId,
-    verifyingContract
-  };
+  const DomainType = getMessageDomainType(chainId, verifyingContract);
 
   const MessageType = {
       Message: [
@@ -91,10 +96,17 @@ function getProposalDomainType(verifyingContract, chainId) {
         { name: 'payload', type: 'MessagePayload' }
       ],
       MessagePayload: [        
-        { name: 'choices', type: 'string[]' },
+        { name: 'nameHash', type: 'bytes32' },
+        { name: 'bodyHash', type: 'bytes32' },
         { name: 'start', type: 'uint256' },
         { name: 'end', type: 'uint256' },
-        { name: 'snapshot', type: 'uint256' }
+        { name: 'snapshot', type: 'string' }
+      ],
+      EIP712Domain: [
+        { name: 'name', type: 'string' },
+        { name: 'version', type: 'string' },
+        { name: 'chainId', type: 'uint256' },
+        { name: 'verifyingContract', type: 'address' },
       ]
   };
 
@@ -117,6 +129,36 @@ function validateMessage(message, address, verifyingContract, chainId, signature
   
   const recoverAddress = sigUtil.recoverTypedSignature_v4({ data: msgParams, sig: signature })
   return address.toLowerCase() === recoverAddress.toLowerCase();
+}
+
+function Web3JsSigner(web3, account) {
+  return async function(message, verifyingContract, chainId) {
+    const m = prepareMessage(message, verifyingContract, chainId);
+    const {DomainType, MessageType} = getDomainType(m, verifyingContract, chainId);
+    const msgParams = JSON.stringify({
+      domain: DomainType,
+      message: m,
+      primaryType: 'Message',
+      types: MessageType
+    });
+
+    const signature = await new Promise((resolve, reject) => {
+      web3.currentProvider.send({
+        method: 'eth_signTypedData',
+        params: [msgParams, account],
+        from: account,
+      }, function (err, result) {
+        if (err) {
+          return reject(err);
+        }
+        return resolve(result);    
+      })
+    });
+    
+    console.log(signature);
+
+    return signature;
+  }  
 }
 
 function Web3Signer(web3) {
@@ -157,7 +199,6 @@ function prepareMessage(message, verifyingContract, chainId) {
 
 function prepareVoteMessage(message, verifyingContract, chainId) {
   return Object.assign(message, {
-    versionHash: sha3(message.version),
     spaceHash: sha3(message.space),
     payload: prepareVotePayload(message.payload, verifyingContract, chainId)
   });
@@ -165,14 +206,13 @@ function prepareVoteMessage(message, verifyingContract, chainId) {
 
 function prepareVotePayload(payload, verifyingContract, chainId) {
   return Object.assign(payload, {
-      metadataHash: sha3(JSON.stringify(payload.metadata)),
       proposalHash: getMessageERC712Hash(payload.proposal, verifyingContract, chainId)
   });
 }
 
 function prepareProposalMessage(message) {
   return Object.assign(message, {
-    versionHash: sha3(message.version),
+    timestamp: message.timestamp,
     spaceHash: sha3(message.space),
     payload: prepareProposalPayload(message.payload)
   });
@@ -182,7 +222,9 @@ function prepareProposalPayload(payload) {
   return Object.assign(payload, {
       nameHash: sha3(payload.name),
       bodyHash: sha3(payload.body),
-      metadataHash: sha3(JSON.stringify(payload.metadata))
+      snapshot: payload.snapshot,
+      start: payload.start,
+      end: payload.end
   });
 }
 
@@ -263,28 +305,31 @@ function prepareVoteResult(votes) {
 }
 
 function prepareVoteProposalData(data) {
-  return web3.eth.abi.encodeParameters([{
+  return web3.eth.abi.encodeParameter({
     "ProposalMessage": {
+      "timestamp": 'uint256',
       "spaceHash": 'bytes32',
       "payload": {
-        "choices": "string[]",
+        "nameHash": 'bytes32',
+        "bodyHash": 'bytes32',
         "start": 'uint256',
         "end": 'uint256',
         "snapshot": "string",
       },
       "sig": "bytes"
     }
-  }], [{
+  }, {
     "timestamp": data.timestamp,
     "spaceHash": sha3(data.space),
-    "sig" : data.sig || 0,
-    "payload": prepareVoteProposalPayload(data.payload)
-  }]);
+    "payload": prepareVoteProposalPayload(data.payload),
+    "sig" : data.sig || '0x',
+  });
 }
 
 function prepareVoteProposalPayload(payload) {
   return {
-    "choices": payload.choices,
+    "nameHash": sha3(payload.name),
+    "bodyHash": sha3(payload.body),
     "start": payload.start,
     "end": payload.end,
     "snapshot": payload.snapshot
@@ -301,6 +346,11 @@ Object.assign(exports, {
     signMessage,
     Web3Signer,
     SigUtilSigner,
+    Web3JsSigner,
+    prepareProposalPayload,
+    prepareVoteProposalData,
+    prepareProposalMessage,
     getMessageERC712Hash,
-    prepareVoteProposalData
+    getProposalDomainType,
+    TypedDataUtils: sigUtil.TypedDataUtils
   })
