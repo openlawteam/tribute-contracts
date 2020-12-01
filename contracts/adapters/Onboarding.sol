@@ -174,7 +174,9 @@ contract OnboardingContract is
             revert("system error from voting");
         }
 
-        dao.sponsorProposal(proposalId, msg.sender);
+        address submittedBy = votingContract.getSenderAddress(dao, address(this), data, msg.sender);
+
+        dao.sponsorProposal(proposalId, submittedBy);
     }
 
     function onboard(

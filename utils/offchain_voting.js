@@ -29,43 +29,44 @@ const {SHARES} = require('./DaoFactory.js');
 const sha3 = web3.utils.sha3;
 const sigUtil = require('eth-sig-util');
 
-function getMessageERC712Hash(m, verifyingContract, chainId) {
+function getMessageERC712Hash(m, verifyingContract, actionId, chainId) {
   const message = prepareMessage(m, verifyingContract, chainId);
-  const {DomainType, MessageType} = getDomainType(m, verifyingContract, chainId);
+  const {domain, types} = getDomainType(m, verifyingContract, actionId, chainId);
   const msgParams = {
-    domain: DomainType,
+    domain,
     message,
     primaryType: 'Message',
-    types: MessageType
+    types
   };
   return '0x' + sigUtil.TypedDataUtils.sign(msgParams).toString('hex');
 }
 
-function getDomainType(message, verifyingContract, chainId) {
+function getDomainType(message, verifyingContract, actionId, chainId) {
   switch(message.type) {
     case "vote":
-      return getVoteDomainType(verifyingContract, chainId);
+      return getVoteDomainType(verifyingContract, actionId, chainId);
     case "proposal":
-      return getProposalDomainType(verifyingContract, chainId);
+      return getProposalDomainType(verifyingContract, actionId, chainId);
     default:
       throw new Error("unknown type " + message.type);
   }
  }
 
- function getMessageDomainType(chainId, verifyingContract) {
+ function getMessageDomainType(chainId, verifyingContract, actionId) {
   return {
     name: 'Snapshot Message',
-    version: '1',
+    version: '4',
     chainId,
-    verifyingContract
+    verifyingContract,
+    actionId
   }
  }
 
-function getVoteDomainType(verifyingContract, chainId) {
-  const DomainType = getMessageDomainType(chainId, verifyingContract);
+function getVoteDomainType(verifyingContract, actionId, chainId) {
+  const Domain = getMessageDomainType(chainId, verifyingContract, actionId);
 
   // The named list of all type definitions
-  const MessageType = {
+  const Types = {
       Message: [
         { name: 'timestamp', type: 'uint256' },
         { name: 'spaceHash', type: 'bytes32' },
@@ -80,16 +81,17 @@ function getVoteDomainType(verifyingContract, chainId) {
         { name: 'version', type: 'string' },
         { name: 'chainId', type: 'uint256' },
         { name: 'verifyingContract', type: 'address' },
+        { name: 'actionId', type: 'address' },
       ]
   };
 
-  return { DomainType, MessageType}
+  return { Domain, Types}
 }
 
-function getProposalDomainType(verifyingContract, chainId) {
-  const DomainType = getMessageDomainType(chainId, verifyingContract);
+function getProposalDomainType(verifyingContract, actionId, chainId) {
+  const domain = getMessageDomainType(chainId, verifyingContract, actionId);
 
-  const MessageType = {
+  const types = {
       Message: [
         { name: 'timestamp', type: 'uint256' },
         { name: 'spaceHash', type: 'bytes32' },
@@ -107,24 +109,25 @@ function getProposalDomainType(verifyingContract, chainId) {
         { name: 'version', type: 'string' },
         { name: 'chainId', type: 'uint256' },
         { name: 'verifyingContract', type: 'address' },
+        { name: 'actionId', type: 'address' },
       ]
   };
 
-  return { DomainType, MessageType}
+  return { domain, types}
 }
 
 async function signMessage(signer, message, verifyingContract, chainId) {
   return signer(message, verifyingContract, chainId);
 }
 
-function validateMessage(message, address, verifyingContract, chainId, signature ) {
-  const {DomainType, MessageType} = getDomainType(message, verifyingContract, chainId); 
+function validateMessage(message, address, verifyingContract, actionId, chainId, signature ) {
+  const {domain, types} = getDomainType(message, verifyingContract, actionId, chainId); 
   
   const msgParams = {
-    domain: DomainType,
+    domain,
     message,
     primaryType: 'Message',
-    types: MessageType
+    types
   };
   
   const recoverAddress = sigUtil.recoverTypedSignature_v4({ data: msgParams, sig: signature })
@@ -132,16 +135,15 @@ function validateMessage(message, address, verifyingContract, chainId, signature
 }
 
 function Web3JsSigner(web3, account) {
-  return async function(message, verifyingContract, chainId) {
-    const m = prepareMessage(message, verifyingContract, chainId);
-    const {DomainType, MessageType} = getDomainType(m, verifyingContract, chainId);
+  return async function(message, verifyingContract, actionId, chainId) {
+    const m = prepareMessage(message, verifyingContract, actionId, chainId);
+    const {domain, types} = getDomainType(m, verifyingContract, actionId, chainId);
     const msgParams = JSON.stringify({
-      domain: DomainType,
+      domain,
       message: m,
       primaryType: 'Message',
-      types: MessageType
+      types
     });
-
     const signature = await new Promise((resolve, reject) => {
       web3.currentProvider.send({
         method: 'eth_signTypedData',
@@ -155,41 +157,38 @@ function Web3JsSigner(web3, account) {
       })
     });
     
-    console.log(signature);
-
     return signature;
   }  
 }
 
-function Web3Signer(web3) {
-  return function(message, verifyingContract, chainId) {
-    const m = prepareMessage(message, verifyingContract, chainId);
-    const {DomainType, MessageType} = getDomainType(m, verifyingContract, chainId);
-    const signer = web3.getSigner();
-    
-    return signer._signTypedData(DomainType, MessageType, m);
+function Web3Signer(ethers, account) {
+  return function(message, verifyingContract, actionId, chainId) {
+    const m = prepareMessage(message, verifyingContract, actionId, chainId);
+    const {domain, types} = getDomainType(m, verifyingContract, actionId, chainId);
+    const signer = ethers.getSigner(account);
+    return signer._signTypedData(domain, types, m);
   }
 }
 
 function SigUtilSigner(privateKeyStr) {
-  return function(message, verifyingContract, chainId) {
-    const m = prepareMessage(message, verifyingContract, chainId);
+  return function(message, verifyingContract, actionId, chainId) {
+    const m = prepareMessage(message, verifyingContract, actionId, chainId);
     const privateKey = Buffer.from(privateKeyStr, 'hex');
-    const {DomainType, MessageType} = getDomainType(m, verifyingContract, chainId);
+    const {domain, types} = getDomainType(m, verifyingContract, actionId, chainId);
     const msgParams = {
-      domain: DomainType,
+      domain,
       message: m,
       primaryType: 'Message',
-      types: MessageType
+      types
     };
     return sigUtil.signTypedData_v4(privateKey, {data: msgParams});
   }
 }
 
-function prepareMessage(message, verifyingContract, chainId) {
+function prepareMessage(message, verifyingContract, actionId, chainId) {
   switch(message.type) {
     case "vote":
-      return prepareVoteMessage(message, verifyingContract, chainId);
+      return prepareVoteMessage(message, verifyingContract, actionId, chainId);
     case "proposal":
       return prepareProposalMessage(message);
     default:
@@ -197,7 +196,7 @@ function prepareMessage(message, verifyingContract, chainId) {
   }
 }
 
-function prepareVoteMessage(message, verifyingContract, chainId) {
+function prepareVoteMessage(message, verifyingContract, actionId, chainId) {
   return Object.assign(message, {
     spaceHash: sha3(message.space),
     payload: prepareVotePayload(message.payload, verifyingContract, chainId)
@@ -239,11 +238,7 @@ function toStepNode(step, merkleTree) {
   };
 }
 
-async function addVote(votes, blockNumber, dao, proposalId, account, voteYes) {
-  const proposalHash = sha3(web3.eth.abi.encodeParameters(
-    ['uint256', 'address', 'uint256'], 
-    [blockNumber.toString(), dao.address, proposalId]));    
-  
+async function addVote(votes, proposalHash, dao, account, voteYes) {
   const memberWeight = await dao.balanceOf(account, SHARES);
 
   const vote = {

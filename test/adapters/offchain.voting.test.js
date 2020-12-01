@@ -50,7 +50,9 @@ const {
   prepareProposalPayload,
   prepareVoteProposalData,
   prepareProposalMessage,
-  Web3JsSigner
+  Web3JsSigner,
+  SigUtilSigner,
+  Web3Signer
 } = require("../../utils/offchain_voting.js");
 
 const OffchainVotingContract = artifacts.require(
@@ -71,7 +73,7 @@ async function createOffchainVotingDao(
     from: senderAccount,
     gasPrice: toBN("0"),
   });
-  const daoFactory = await DaoFactory.new(dao.address);
+  const daoFactory = await DaoFactory.new(dao.address, {from: senderAccount, gasPrice: toBN("0")});
 
   await addDefaultAdapters(dao, unitPrice, nbShares, votingPeriod, gracePeriod);
   const votingAddress = await dao.getAdapterAddress(sha3("voting"));
@@ -82,11 +84,11 @@ async function createOffchainVotingDao(
       ADD_TO_BALANCE: true,
       SUB_FROM_BALANCE: true,
       INTERNAL_TRANSFER: true,
-    })
+    }), {from: senderAccount, gasPrice: toBN("0")}
   );
 
-  await offchainVoting.configureDao(dao.address, votingPeriod, gracePeriod, 10);
-  await dao.finalizeDao();
+  await offchainVoting.configureDao(dao.address, votingPeriod, gracePeriod, 10, {from: senderAccount, gasPrice: toBN("0")});
+  await dao.finalizeDao({from: senderAccount, gasPrice: toBN("0")});
   return {dao, voting: offchainVoting};
 }
 
@@ -110,33 +112,33 @@ contract("LAOLAND - Offchain Voting Module", async (accounts) => {
       timestamp: Math.floor(new Date().getTime() / 1000),
       space: "laoland",
       payload : proposalPayload,
-      sig: '0x0'
+      sig: '0x00'
     };
     const chainId = 1;
-    const {MessageType, DomainType} = getDomainType(proposalData, dao.address, chainId);
+    const {types, domain} = getDomainType(proposalData, dao.address, myAccount, chainId);
 
     const solProposalMsg = await voting.PROPOSAL_MESSAGE_TYPE();
-    const jsProposalMsg = TypedDataUtils.encodeType('Message', MessageType);
+    const jsProposalMsg = TypedDataUtils.encodeType('Message', types);
     assert.equal(jsProposalMsg, solProposalMsg);
 
     //Checking payload
-    const hashStructPayload = '0x' + TypedDataUtils.hashStruct('MessagePayload', prepareProposalPayload(proposalPayload), MessageType, true).toString('hex');
+    const hashStructPayload = '0x' + TypedDataUtils.hashStruct('MessagePayload', prepareProposalPayload(proposalPayload), types, true).toString('hex');
     const solidityHashPayload = await voting.hashProposalPayload(proposalPayload);
 
     assert.equal(hashStructPayload, solidityHashPayload);
     //Checking entire payload
-    const hashStruct = '0x' + TypedDataUtils.hashStruct("Message", prepareProposalMessage(proposalData), MessageType).toString('hex');
+    const hashStruct = '0x' + TypedDataUtils.hashStruct("Message", prepareProposalMessage(proposalData), types).toString('hex');
     const solidityHash = await voting.hashProposalMessage(proposalData);
     assert.equal(hashStruct, solidityHash);
     
     //Checking domain separator
-    const domainHash = await voting.DOMAIN_SEPARATOR(dao.address);
-    const jsDomainHash = '0x' + TypedDataUtils.hashStruct('EIP712Domain', DomainType, MessageType, true).toString('hex');
+    const domainHash = await voting.DOMAIN_SEPARATOR(dao.address, myAccount);
+    const jsDomainHash = '0x' + TypedDataUtils.hashStruct('EIP712Domain', domain, types, true).toString('hex');
     assert.equal(jsDomainHash, domainHash);
 
     //Checking the actual ERC-712 hash
-    const proposalHash = await voting.hashMessage(dao.address, proposalData);
-    assert.equal(proposalHash, getMessageERC712Hash(proposalData, dao.address, chainId).toString('hex'));
+    const proposalHash = await voting.hashMessage(dao.address, myAccount, proposalData);
+    assert.equal(proposalHash, getMessageERC712Hash(proposalData, dao.address, myAccount, chainId));
   });
 
   it("should be possible to propose a new voting by signing the proposal hash", async () => {
@@ -148,11 +150,10 @@ contract("LAOLAND - Offchain Voting Module", async (accounts) => {
     const onboarding = await OnboardingContract.at(onboardingAddress);
     let blockNumber = await web3.eth.getBlockNumber();
     const proposalPayload = {
-      type: 'proposal',
       name: 'some proposal',
       body: 'this is my proposal',
       start: Math.floor(new Date().getTime() / 1000),
-      end: Math.floor(new Date().getTime() / 1000) + 10000 ,
+      end: Math.floor(new Date().getTime() / 1000) + 10000,
       snapshot: blockNumber.toString()
     };
 
@@ -162,13 +163,15 @@ contract("LAOLAND - Offchain Voting Module", async (accounts) => {
       space: "laoland",
       payload : proposalPayload
     };
+    
     const chainId = 1;
-    const signer = Web3JsSigner(web3, myAccount);
-    proposalData.sig =  await signer(proposalData, dao.address, chainId);
+    //signer for myAccount (its private key)
+    const signer = SigUtilSigner("6c6eda7e56a1d132f09eb4e63e4d846b0a00f8e2c5465635172380ad1a67b77e");
+    //const signer = Web3JsSigner(web3, myAccount);
+    proposalData.sig =  await signer(proposalData, dao.address, onboarding.address, chainId);
+    
     const data = prepareVoteProposalData(proposalData);
-    const addr = await voting.recoverFromProposalDataHash(dao.address, data);
-    console.log(addr);
-    console.log(myAccount);
+    
     await onboarding.onboardAndSponsor(dao.address,
       otherAccount,
       SHARES,
@@ -180,6 +183,17 @@ contract("LAOLAND - Offchain Voting Module", async (accounts) => {
         gasPrice: toBN("0"),
       })
     //TODO: actually do the voting
+    const proposalHash = getMessageERC712Hash(proposalData, dao.address, myAccount, chainId).toString('hex');
+
+    const voteElements = await addVote(
+      [],
+      proposalHash,
+      dao,
+      myAccount,
+      true
+    );
+
+
   });
   /*
   it("should be possible to vote offchain", async () => {

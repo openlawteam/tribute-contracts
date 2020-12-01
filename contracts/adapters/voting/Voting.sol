@@ -70,6 +70,10 @@ contract VotingContract is IVoting, DaoConstants, MemberGuard, AdapterGuard {
         vote.startingTime = block.timestamp;
     }
 
+    function getSenderAddress(DaoRegistry, address, bytes memory, address sender) override external  pure returns (address) {
+        return sender;
+    }
+
     function submitVote(
         DaoRegistry dao,
         uint256 _proposalId,
