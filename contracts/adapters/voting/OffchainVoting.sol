@@ -45,8 +45,8 @@ contract OffchainVotingContract is
     using SafeCast for uint256;
 
     string public constant EIP712_DOMAIN = "EIP712Domain(string name,string version,uint256 chainId,address verifyingContract,address actionId)";
-    string public constant PROPOSAL_MESSAGE_TYPE = "Message(uint256 timestamp,bytes32 spaceHash,MessagePayload payload)MessagePayload(bytes32 nameHash,bytes32 bodyHash,uint256 start,uint256 end,string snapshot)";
-    string public constant PROPOSAL_PAYLOAD_TYPE = "MessagePayload(bytes32 nameHash,bytes32 bodyHash,uint256 start,uint256 end,string snapshot)";
+    string public constant PROPOSAL_MESSAGE_TYPE = "Message(uint256 timestamp,bytes32 spaceHash,MessagePayload payload)MessagePayload(bytes32 nameHash,bytes32 bodyHash,string[] choices,uint256 start,uint256 end,string snapshot)";
+    string public constant PROPOSAL_PAYLOAD_TYPE = "MessagePayload(bytes32 nameHash,bytes32 bodyHash,string[] choices,uint256 start,uint256 end,string snapshot)";
 
     bytes32 public constant EIP712_DOMAIN_TYPEHASH = keccak256(abi.encodePacked(EIP712_DOMAIN));
     bytes32 public constant PROPOSAL_MESSAGE_TYPEHASH = keccak256(abi.encodePacked(PROPOSAL_MESSAGE_TYPE));
@@ -68,7 +68,7 @@ contract OffchainVotingContract is
     VotingContract private _fallbackVoting;
 
     struct Voting {
-        uint256 blockNumber;
+        uint256 snapshot;
         bytes32 proposalHash;
         address reporter;
         bytes32 resultRoot;
@@ -86,7 +86,6 @@ contract OffchainVotingContract is
         address member;
         uint256 nbNo;
         uint256 nbYes;
-        uint256 weight;
         bytes sig;
         uint256 index;
         bytes32[] proof;
@@ -102,6 +101,7 @@ contract OffchainVotingContract is
     struct ProposalPayload {
         bytes32 nameHash;
         bytes32 bodyHash;
+        string[] choices;
         uint256 start;
         uint256 end;
         string snapshot;
@@ -143,10 +143,35 @@ contract OffchainVotingContract is
             PROPOSAL_PAYLOAD_TYPEHASH,
             payload.nameHash,
             payload.bodyHash,
+            keccak256(abi.encodePacked(toHashArray(payload.choices))),
             payload.start,
             payload.end,
             keccak256(abi.encodePacked(payload.snapshot))
         ));
+    }
+
+    function _nodeHash(DaoRegistry dao, address actionId, VoteResultNode memory node)
+        internal
+        pure
+        returns (bytes32)
+    {
+        return
+            keccak256(
+                abi.encode(
+                    node.member,
+                    node.sig,
+                    node.nbYes,
+                    node.nbNo,
+                    node.index
+                )
+            );
+    }
+
+    function toHashArray(string[] memory arr) internal pure returns (bytes32[] memory result){
+        result = new bytes32[](arr.length);
+        for(uint i = 0; i < arr.length; i ++) {
+            result[i] = keccak256(abi.encodePacked(arr[i]));
+        }
     }
 
     function configureDao(
@@ -170,7 +195,7 @@ contract OffchainVotingContract is
     ) external {
         uint64 proposalId = SafeCast.toUint64(_proposalId);
         Voting storage vote = votes[address(dao)][proposalId];
-        require(vote.blockNumber > 0, "the vote has not started yet");
+        require(vote.snapshot > 0, "the vote has not started yet");
         /**
         What needs to be checked before submitting a vote result
         - if the grace period has ended, do nothing
@@ -213,7 +238,7 @@ contract OffchainVotingContract is
         } else {
             diff = nbNo - nbYes;
         }
-        if (diff * 2 > dao.getPriorAmount(TOTAL, SHARES, vote.blockNumber)) {
+        if (diff * 2 > dao.getPriorAmount(TOTAL, SHARES, vote.snapshot)) {
             return true;
         }
 
@@ -229,12 +254,13 @@ contract OffchainVotingContract is
         VoteResultNode memory result,
         bytes32 resultRoot
     ) internal {
-        bytes32 hashCurrent = _nodeHash(result);
-        uint256 blockNumber = vote.blockNumber;
+        (address adapterAddress ,) = dao.proposals(proposalId);
+        bytes32 hashCurrent = _nodeHash(dao, adapterAddress, result);
+        uint256 blockNumber = vote.snapshot;
 
         address voter = dao.getPriorDelegateKey(
             result.member,
-            vote.blockNumber
+            blockNumber
         );
         require(
             verify(resultRoot, hashCurrent, result.proof),
@@ -254,9 +280,6 @@ contract OffchainVotingContract is
             SHARES,
             blockNumber
         );
-
-        //Incorrect weight
-        require(correctWeight == result.weight, "wrong weight!");
 
         _lockFunds(dao, msg.sender);
         vote.nbNo = result.nbNo;
@@ -339,7 +362,7 @@ contract OffchainVotingContract is
         require(blockNumber > 0, "block number cannot be 0");        
         
         votes[address(dao)][proposalId].startingTime = block.timestamp;
-        votes[address(dao)][proposalId].blockNumber = blockNumber;
+        votes[address(dao)][proposalId].snapshot = blockNumber;
         votes[address(dao)][proposalId].proposalHash = proposalHash;
     }
 
@@ -399,7 +422,7 @@ contract OffchainVotingContract is
         uint64 proposalId = SafeCast.toUint64(_proposalId);
         Voting storage vote = votes[address(dao)][proposalId];
         bytes32 resultRoot = vote.resultRoot;
-        uint256 blockNumber = vote.blockNumber;
+        uint256 blockNumber = vote.snapshot;
         require(resultRoot != bytes32(0), "no result available yet!");
         bytes32 hashCurrent = _nodeHash(nodeCurrent);
         require(
@@ -413,37 +436,9 @@ contract OffchainVotingContract is
         //return 1 if yes, 2 if no and 0 if the vote is incorrect
         address voter = dao.getPriorDelegateKey(
             nodeCurrent.member,
-            vote.blockNumber
-        );
-        if (_hasVoted(voter, proposalHash, nodeCurrent.sig) == 0) {
-            _challengeResult(dao, proposalId);
-        }
-    }
-
-    function challengeWrongWeight(
-        DaoRegistry dao,
-        uint256 _proposalId,
-        VoteResultNode memory nodeCurrent
-    ) external {
-        uint64 proposalId = SafeCast.toUint64(_proposalId);
-        Voting storage vote = votes[address(dao)][proposalId];
-        bytes32 resultRoot = vote.resultRoot;
-        uint256 blockNumber = vote.blockNumber;
-        require(resultRoot != bytes32(0), "no result available yet!");
-        bytes32 hashCurrent = _nodeHash(nodeCurrent);
-        require(
-            verify(resultRoot, hashCurrent, nodeCurrent.proof),
-            "proof check for current invalid for current node"
-        );
-
-        uint256 correctWeight = dao.getPriorAmount(
-            nodeCurrent.member,
-            SHARES,
             blockNumber
         );
-
-        //Incorrect weight
-        if (correctWeight != nodeCurrent.weight) {
+        if (_hasVoted(voter, proposalHash, nodeCurrent.sig) == 0) {
             _challengeResult(dao, proposalId);
         }
     }
@@ -483,7 +478,7 @@ contract OffchainVotingContract is
         uint64 proposalId = SafeCast.toUint64(_proposalId);
         Voting storage vote = votes[address(dao)][proposalId];
         bytes32 resultRoot = vote.resultRoot;
-        uint256 blockNumber = vote.blockNumber;
+        uint256 blockNumber = vote.snapshot;
         require(resultRoot != bytes32(0), "no result available yet!");
         bytes32 hashCurrent = _nodeHash(nodeCurrent);
         bytes32 hashPrevious = _nodeHash(nodePrevious);
@@ -526,24 +521,6 @@ contract OffchainVotingContract is
         votes[address(dao)][proposalId].fallbackVotesCount += 1;
     }
 
-    function _nodeHash(VoteResultNode memory node)
-        internal
-        pure
-        returns (bytes32)
-    {
-        return
-            keccak256(
-                abi.encode(
-                    node.member,
-                    node.weight,
-                    node.sig,
-                    node.nbYes,
-                    node.nbNo,
-                    node.index
-                )
-            );
-    }
-
     function _checkStep(
         DaoRegistry dao,
         VoteResultNode memory nodeCurrent,
@@ -555,7 +532,7 @@ contract OffchainVotingContract is
         Voting storage vote = votes[address(dao)][proposalId];
         address voter = dao.getPriorDelegateKey(
             nodeCurrent.member,
-            vote.blockNumber
+            vote.snapshot
         );
         if (_hasVotedYes(voter, proposalHash, nodeCurrent.sig)) {
             if (nodePrevious.nbYes + 1 != nodeCurrent.nbYes) {
