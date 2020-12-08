@@ -49,7 +49,7 @@ contract OffchainVotingContract is
     string public constant PROPOSAL_PAYLOAD_TYPE = "MessagePayload(bytes32 nameHash,bytes32 bodyHash,string[] choices,uint256 start,uint256 end,string snapshot)";
     string public constant VOTE_MESSAGE_TYPE = "Message(uint256 timestamp,MessagePayload payload)MessagePayload(uint256 choice,bytes32 proposalHash)";
     string public constant VOTE_PAYLOAD_TYPE = "MessagePayload(uint256 choice,bytes32 proposalHash)";
-    string public constant VOTE_RESULT_NODE_TYPE = "";
+    string public constant VOTE_RESULT_NODE_TYPE = "Message(address account,uint256 timestamp,uint256 nbYes,uint256 nbNo,uint256 index,uint256 choice,bytes32 proposalHash)";
     
     bytes32 public constant EIP712_DOMAIN_TYPEHASH = keccak256(abi.encodePacked(EIP712_DOMAIN));
     bytes32 public constant PROPOSAL_MESSAGE_TYPEHASH = keccak256(abi.encodePacked(PROPOSAL_MESSAGE_TYPE));
@@ -89,11 +89,14 @@ contract OffchainVotingContract is
     }
 
     struct VoteResultNode {
-        address member;
+        address account;
+        uint256 timestamp;
         uint256 nbNo;
         uint256 nbYes;
         bytes sig;
         uint256 index;
+        uint256 choice;
+        bytes32 proposalHash;
         bytes32[] proof;
     }
 
@@ -166,7 +169,15 @@ contract OffchainVotingContract is
         ));
     }
 
-    function hashVote(VoteMessage memory message) public pure returns (bytes32) {
+    function hashVote(DaoRegistry dao, address actionId, VoteMessage memory message) public view returns (bytes32) {
+        keccak256(abi.encodePacked(
+            "\x19\x01",
+            DOMAIN_SEPARATOR(dao, actionId),
+            hashVoteInternal(message)
+        ));
+    }
+
+    function hashVoteInternal(VoteMessage memory message) public pure returns (bytes32) {
         return keccak256(abi.encode(
                     VOTE_MESSAGE_TYPEHASH,
                     message.timestamp,
@@ -184,7 +195,14 @@ contract OffchainVotingContract is
 
     function hashVotingResultNode(VoteResultNode memory node) public pure returns (bytes32) {
         return keccak256(abi.encode(
-                    VOTE_RESULT_NODE_TYPEHASH
+                    VOTE_RESULT_NODE_TYPEHASH,
+                    node.account,
+                    node.timestamp,
+                    node.nbYes,
+                    node.nbNo,
+                    node.index,
+                    node.choice,
+                    node.proposalHash
                 ));
     }
 
@@ -292,19 +310,16 @@ contract OffchainVotingContract is
         uint256 blockNumber = vote.snapshot;
 
         address voter = dao.getPriorDelegateKey(
-            result.member,
+            result.account,
             blockNumber
         );
         require(
             verify(resultRoot, hashCurrent, result.proof),
             "result node & result merkle root / proof mismatch"
         );
-
-        bytes32 proposalHash = keccak256(
-            abi.encode(blockNumber, address(dao), proposalId)
-        );
+        (address actionId,) = dao.proposals(proposalId);
         require(
-            _hasVoted(voter, proposalHash, result.sig) != 0,
+            _hasVoted(dao, actionId, voter, result.timestamp, result.proposalHash, result.sig) != 0,
             "wrong vote signature!"
         );
 
@@ -458,15 +473,15 @@ contract OffchainVotingContract is
             "proof check for current invalid for current node"
         );
 
-        bytes32 proposalHash = keccak256(
-            abi.encode(blockNumber, address(dao), proposalId)
-        );
         //return 1 if yes, 2 if no and 0 if the vote is incorrect
         address voter = dao.getPriorDelegateKey(
-            nodeCurrent.member,
+            nodeCurrent.account,
             blockNumber
         );
-        if (_hasVoted(voter, proposalHash, nodeCurrent.sig) == 0) {
+
+        (address actionId,) = dao.proposals(proposalId);
+
+        if (_hasVoted(dao, actionId, voter, nodeCurrent.timestamp, nodeCurrent.proposalHash, nodeCurrent.sig) == 0) {
             _challengeResult(dao, proposalId);
         }
     }
@@ -493,7 +508,7 @@ contract OffchainVotingContract is
             "proof check for previous invalid for previous node"
         );
 
-        if (node1.member == node2.member) {
+        if (node1.account == node2.account) {
             _challengeResult(dao, proposalId);
         }
     }
@@ -521,21 +536,18 @@ contract OffchainVotingContract is
             "proof check for previous invalid for previous node"
         );
 
-        bytes32 proposalHash = keccak256(
-            abi.encode(blockNumber, address(dao), proposalId)
-        );
-
         require(
             nodeCurrent.index == nodePrevious.index + 1,
             "those nodes are not consecutive"
         );
 
         //voters not in order
-        if (nodeCurrent.member > nodePrevious.member) {
+        if (nodeCurrent.account > nodePrevious.account) {
             _challengeResult(dao, proposalId);
         }
+        (address actionId,) = dao.proposals(proposalId);
 
-        _checkStep(dao, nodeCurrent, nodePrevious, proposalHash, proposalId);
+        _checkStep(dao, actionId, nodeCurrent, nodePrevious, proposalId);
     }
 
     function requestFallback(DaoRegistry dao, uint256 _proposalId)
@@ -553,18 +565,18 @@ contract OffchainVotingContract is
 
     function _checkStep(
         DaoRegistry dao,
+        address actionId,
         VoteResultNode memory nodeCurrent,
         VoteResultNode memory nodePrevious,
-        bytes32 proposalHash,
         uint256 _proposalId
     ) internal {
         uint64 proposalId = SafeCast.toUint64(_proposalId);
         Voting storage vote = votes[address(dao)][proposalId];
         address voter = dao.getPriorDelegateKey(
-            nodeCurrent.member,
+            nodeCurrent.account,
             vote.snapshot
         );
-        if (_hasVotedYes(voter, proposalHash, nodeCurrent.sig)) {
+        if (_hasVotedYes(dao, actionId, voter, nodeCurrent.timestamp, nodeCurrent.proposalHash, nodeCurrent.sig)) {
             if (nodePrevious.nbYes + 1 != nodeCurrent.nbYes) {
                 _challengeResult(dao, proposalId);
             } else if (nodePrevious.nbNo != nodeCurrent.nbNo) {
@@ -622,34 +634,37 @@ contract OffchainVotingContract is
                 sig
             );
     }
-
     function _hasVotedYes(
+        DaoRegistry dao,
+        address actionId,
         address voter,
+        uint256 timestamp,
         bytes32 proposalHash,
         bytes memory sig
-    ) internal pure returns (bool) {
+    ) internal view returns (bool) {
+     
+        bytes32 voteHashYes =  hashVote(dao, actionId, VoteMessage(
+                timestamp,
+                VotePayload(
+                    1,
+                    proposalHash
+                )
+        ));
+
+        bytes32 voteHashNo =  hashVote(dao, actionId, VoteMessage(
+                timestamp,
+                VotePayload(
+                    2,
+                    proposalHash
+                )
+        ));
+     
         if (
-            recover(
-                keccak256(
-                    abi.encodePacked(
-                        "\x19Ethereum Signed Message:\n32",
-                        keccak256(abi.encode(proposalHash, 1))
-                    )
-                ),
-                sig
-            ) == voter
+            recover(voteHashYes, sig) == voter
         ) {
             return true;
         } else if (
-            recover(
-                keccak256(
-                    abi.encodePacked(
-                        "\x19Ethereum Signed Message:\n32",
-                        keccak256(abi.encode(proposalHash, 2))
-                    )
-                ),
-                sig
-            ) == voter
+            recover(voteHashNo, sig) == voter
         ) {
             return false;
         } else {
@@ -658,32 +673,36 @@ contract OffchainVotingContract is
     }
 
     function _hasVoted(
+        DaoRegistry dao,
+        address actionId,
         address voter,
+        uint256 timestamp,
         bytes32 proposalHash,
         bytes memory sig
-    ) internal pure returns (uint256) {
+    ) internal view returns (uint256) {
+
+        bytes32 voteHashYes =  hashVote(dao, actionId, VoteMessage(
+                timestamp,
+                VotePayload(
+                    1,
+                    proposalHash
+                )
+        ));
+
+        bytes32 voteHashNo =  hashVote(dao, actionId, VoteMessage(
+                timestamp,
+                VotePayload(
+                    2,
+                    proposalHash
+                )
+        ));
+
         if (
-            recover(
-                keccak256(
-                    abi.encodePacked(
-                        "\x19Ethereum Signed Message:\n32",
-                        keccak256(abi.encode(proposalHash, 1))
-                    )
-                ),
-                sig
-            ) == voter
+            recover(voteHashYes, sig) == voter
         ) {
             return 1;
         } else if (
-            recover(
-                keccak256(
-                    abi.encodePacked(
-                        "\x19Ethereum Signed Message:\n32",
-                        keccak256(abi.encode(proposalHash, 2))
-                    )
-                ),
-                sig
-            ) == voter
+            recover(voteHashNo, sig) == voter
         ) {
             return 2;
         } else {

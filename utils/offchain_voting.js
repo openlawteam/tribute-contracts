@@ -216,6 +216,7 @@ function prepareMessage(message) {
 
 function prepareVoteMessage(message) {
   return Object.assign(message, {
+    timestamp: message.timestamp,
     payload: prepareVotePayload(message.payload)
   });
 }

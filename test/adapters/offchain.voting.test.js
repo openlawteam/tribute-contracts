@@ -161,7 +161,7 @@ contract("LAOLAND - Offchain Voting Module", async (accounts) => {
 
     //Checking entire payload
     const hashStruct = '0x' + TypedDataUtils.hashStruct("Message", voteEntry, types).toString('hex');
-    const solidityHash = await voting.hashVote(voteEntry);
+    const solidityHash = await voting.hashVoteInternal(voteEntry);
     assert.equal(hashStruct, solidityHash);
   });
 
@@ -221,15 +221,15 @@ contract("LAOLAND - Offchain Voting Module", async (accounts) => {
     voteEntry.sig = signer(voteEntry, dao.address, onboarding.address, chainId);
     const {voteResultTree, votes} = await prepareVoteResult([voteEntry], dao, onboarding.address, chainId, proposalPayload.snapshot);
     const result = toStepNode(votes[0], dao.address, onboarding.address, chainId, voteResultTree);
-    
+
     const {types} = getVoteStepDomainDefinition(dao.address, myAccount, chainId);
     //Checking vote result hash
-    console.log(result);
-    const jsVoteResult = TypedDataUtils.encodeType('Message', types); 
-    console.log(jsVoteResult);
+    const solVoteResultType = await voting.VOTE_RESULT_NODE_TYPE();
+    const jsVoteResultType = TypedDataUtils.encodeType("Message", types);
+    assert.equal(solVoteResultType, jsVoteResultType);
 
     const hashStruct = '0x' + TypedDataUtils.hashStruct("Message", result, types).toString('hex');
-    const solidityHash = await voting.hashNode(result);
+    const solidityHash = await voting.hashVotingResultNode(result);
     assert.equal(hashStruct, solidityHash);
 
     await voting.submitVoteResult(
