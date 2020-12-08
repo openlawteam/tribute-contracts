@@ -69,7 +69,6 @@ function getVoteDomainDefinition(verifyingContract, actionId, chainId) {
   const types = {
       Message: [
         { name: 'timestamp', type: 'uint256' },
-        { name: 'spaceHash', type: 'bytes32' },
         { name: 'payload', type: 'MessagePayload' }
       ],
       MessagePayload: [
@@ -88,14 +87,11 @@ function getVoteStepDomainDefinition(verifyingContract, actionId, chainId) {
   // The named list of all type definitions
   const types = {
       Message: [
+        { name: 'account', type: 'address' },
         { name: 'timestamp', type: 'uint256' },
-        { name: 'spaceHash', type: 'bytes32' },
-        { name: 'payload', type: 'MessagePayload' },
         { name: 'nbYes', type: 'uint256' },
         { name: 'nbNo', type: 'uint256' },
-        { name: 'index', type: 'uint256' }
-      ],
-      MessagePayload: [
+        { name: 'index', type: 'uint256' },
         { name: 'choice', type: 'uint256' },
         { name: 'proposalHash', type: 'bytes32' }
       ],
@@ -220,7 +216,6 @@ function prepareMessage(message) {
 
 function prepareVoteMessage(message) {
   return Object.assign(message, {
-    spaceHash: sha3(message.space),
     payload: prepareVotePayload(message.payload)
   });
 }
@@ -267,25 +262,27 @@ function prepareProposalPayload(payload) {
 
 function toStepNode(step, verifyingContract, actionId, chainId, merkleTree) {
   return {
-    member: step.account,      
+    account: step.account,      
     nbNo: step.nbNo,
     nbYes: step.nbYes,
     index: step.index,
+    choice: step.choice,
     sig: step.sig,
+    timestamp: step.timestamp,
+    proposalHash: step.proposalHash,
     proof: merkleTree.getHexProof(buildVoteLeafHashForMerkleTree(step, verifyingContract, actionId, chainId))
   };
 }
 
-async function createVote(proposalHash, space, account, voteYes) {
+async function createVote(proposalHash, account, voteYes) {
   const payload = {
     choice: voteYes ? 1 : 2,
+    account,
     proposalHash
   };
   const vote = {
     type: 'vote',
     timestamp: Math.floor(new Date().getTime() / 1000),
-    space,
-    account,
     payload
   };
   
@@ -306,13 +303,16 @@ function buildVoteLeafHashForMerkleTree(leaf, verifyingContract, actionId, chain
 async function prepareVoteResult(votes, dao, actionId, chainId, snapshot) {
   const sortedVotes = votes.sort((a,b) => a.account > b.account);
   const leaves = await Promise.all(sortedVotes.map(async (vote) => {
-    const weight = await dao.getPriorAmount(vote.account, SHARES, snapshot);
+    const weight = await dao.getPriorAmount(vote.payload.account, SHARES, snapshot);
     return Object.assign(vote, {weight});
   }));
 
   leaves.forEach((leaf, idx) => {
     leaf.nbYes = leaf.voteResult === 1 ? 1 : 0;
     leaf.nbNo = leaf.voteResult !== 1 ? 1 : 0;
+    leaf.account = leaf.payload.account;
+    leaf.choice = leaf.payload.choice;
+    leaf.proposalHash = leaf.payload.proposalHash;
     if(idx > 0) {
       const previousLeaf = leaves[idx - 1];
       leaf.nbYes = leaf.nbYes + previousLeaf.nbYes;
@@ -376,5 +376,7 @@ Object.assign(exports, {
     prepareProposalMessage,
     getMessageERC712Hash,
     getProposalDomainDefinition,
+    getVoteDomainDefinition,
+    getVoteStepDomainDefinition,
     TypedDataUtils: sigUtil.TypedDataUtils
   })

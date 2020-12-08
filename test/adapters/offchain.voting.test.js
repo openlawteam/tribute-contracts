@@ -49,6 +49,7 @@ const {
   prepareProposalMessage,
   prepareVoteResult,
   toStepNode,
+  getVoteStepDomainDefinition,
   SigUtilSigner
 } = require("../../utils/offchain_voting.js");
 
@@ -90,7 +91,7 @@ async function createOffchainVotingDao(
 }
 
 contract("LAOLAND - Offchain Voting Module", async (accounts) => {
-  it("should hash consistently proposal between javascript and solidity", async () => {
+  it("should type & hash be consistent for proposals between javascript and solidity", async () => {
     const myAccount = accounts[1];
     let {dao, voting} = await createOffchainVotingDao(myAccount);
     
@@ -113,8 +114,8 @@ contract("LAOLAND - Offchain Voting Module", async (accounts) => {
       sig: '0x00'
     };
     const chainId = 1;
-    const {types, domain} = getDomainDefinition(proposalData, dao.address, myAccount, chainId);
-
+    let {types, domain} = getDomainDefinition(proposalData, dao.address, myAccount, chainId);
+    //Checking proposal type
     const solProposalMsg = await voting.PROPOSAL_MESSAGE_TYPE();
     const jsProposalMsg = TypedDataUtils.encodeType('Message', types);
     assert.equal(jsProposalMsg, solProposalMsg);
@@ -141,7 +142,27 @@ contract("LAOLAND - Offchain Voting Module", async (accounts) => {
 
     //Checking the actual ERC-712 hash
     const proposalHash = await voting.hashMessage(dao.address, myAccount, proposalData);
-    assert.equal(proposalHash, getMessageERC712Hash(proposalData, dao.address, myAccount, chainId));
+    assert.equal(proposalHash, getMessageERC712Hash(proposalData, dao.address, myAccount, chainId));    
+  });
+
+  it("should type & hash be consistent for votes between javascript and solidity", async () => {
+    const myAccount = accounts[1];
+    let {dao, voting} = await createOffchainVotingDao(myAccount);
+    const chainId = 1;
+
+    const proposalHash = sha3("test");
+    const voteEntry = await createVote(proposalHash, myAccount, true);
+
+    let {types} = getDomainDefinition(voteEntry, dao.address, myAccount, chainId);
+    //Checking proposal type
+    const solProposalMsg = await voting.VOTE_MESSAGE_TYPE();
+    const jsProposalMsg = TypedDataUtils.encodeType('Message', types);
+    assert.equal(jsProposalMsg, solProposalMsg);
+
+    //Checking entire payload
+    const hashStruct = '0x' + TypedDataUtils.hashStruct("Message", voteEntry, types).toString('hex');
+    const solidityHash = await voting.hashVote(voteEntry);
+    assert.equal(hashStruct, solidityHash);
   });
 
   it("should be possible to propose a new voting by signing the proposal hash", async () => {
@@ -193,15 +214,24 @@ contract("LAOLAND - Offchain Voting Module", async (accounts) => {
 
     const voteEntry = await createVote(
       proposalHash,
-      space,
       myAccount,
       true
     );
-
+    
     voteEntry.sig = signer(voteEntry, dao.address, onboarding.address, chainId);
     const {voteResultTree, votes} = await prepareVoteResult([voteEntry], dao, onboarding.address, chainId, proposalPayload.snapshot);
     const result = toStepNode(votes[0], dao.address, onboarding.address, chainId, voteResultTree);
     
+    const {types} = getVoteStepDomainDefinition(dao.address, myAccount, chainId);
+    //Checking vote result hash
+    console.log(result);
+    const jsVoteResult = TypedDataUtils.encodeType('Message', types); 
+    console.log(jsVoteResult);
+
+    const hashStruct = '0x' + TypedDataUtils.hashStruct("Message", result, types).toString('hex');
+    const solidityHash = await voting.hashNode(result);
+    assert.equal(hashStruct, solidityHash);
+
     await voting.submitVoteResult(
       dao.address,
       0,

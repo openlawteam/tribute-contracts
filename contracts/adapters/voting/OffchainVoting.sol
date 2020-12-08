@@ -47,10 +47,16 @@ contract OffchainVotingContract is
     string public constant EIP712_DOMAIN = "EIP712Domain(string name,string version,uint256 chainId,address verifyingContract,address actionId)";
     string public constant PROPOSAL_MESSAGE_TYPE = "Message(uint256 timestamp,bytes32 spaceHash,MessagePayload payload)MessagePayload(bytes32 nameHash,bytes32 bodyHash,string[] choices,uint256 start,uint256 end,string snapshot)";
     string public constant PROPOSAL_PAYLOAD_TYPE = "MessagePayload(bytes32 nameHash,bytes32 bodyHash,string[] choices,uint256 start,uint256 end,string snapshot)";
-
+    string public constant VOTE_MESSAGE_TYPE = "Message(uint256 timestamp,MessagePayload payload)MessagePayload(uint256 choice,bytes32 proposalHash)";
+    string public constant VOTE_PAYLOAD_TYPE = "MessagePayload(uint256 choice,bytes32 proposalHash)";
+    string public constant VOTE_RESULT_NODE_TYPE = "";
+    
     bytes32 public constant EIP712_DOMAIN_TYPEHASH = keccak256(abi.encodePacked(EIP712_DOMAIN));
     bytes32 public constant PROPOSAL_MESSAGE_TYPEHASH = keccak256(abi.encodePacked(PROPOSAL_MESSAGE_TYPE));
     bytes32 public constant PROPOSAL_PAYLOAD_TYPEHASH = keccak256(abi.encodePacked(PROPOSAL_PAYLOAD_TYPE));
+    bytes32 public constant VOTE_MESSAGE_TYPEHASH = keccak256(abi.encodePacked(VOTE_MESSAGE_TYPE));
+    bytes32 public constant VOTE_PAYLOAD_TYPEHASH = keccak256(abi.encodePacked(VOTE_PAYLOAD_TYPE));
+    bytes32 public constant VOTE_RESULT_NODE_TYPEHASH = keccak256(abi.encodePacked(VOTE_RESULT_NODE_TYPE));
     uint256 chainId;
 
     function DOMAIN_SEPARATOR(DaoRegistry dao, address actionId) public view returns (bytes32){
@@ -107,6 +113,16 @@ contract OffchainVotingContract is
         string snapshot;
     }
 
+    struct VoteMessage {
+        uint256 timestamp;
+        VotePayload payload;
+    }
+
+    struct VotePayload {
+        uint256 choice;
+        bytes32 proposalHash;
+    }
+
     bytes32 constant VotingPeriod = keccak256("offchainvoting.votingPeriod");
     bytes32 constant GracePeriod = keccak256("offchainvoting.gracePeriod");
     bytes32 constant StakingAmount = keccak256("offchainvoting.stakingAmount");
@@ -150,21 +166,38 @@ contract OffchainVotingContract is
         ));
     }
 
-    function _nodeHash(DaoRegistry dao, address actionId, VoteResultNode memory node)
-        internal
-        pure
+    function hashVote(VoteMessage memory message) public pure returns (bytes32) {
+        return keccak256(abi.encode(
+                    VOTE_MESSAGE_TYPEHASH,
+                    message.timestamp,
+                    hashVotePayload(message.payload)
+                ));
+    }
+
+    function hashVotePayload(VotePayload memory payload) public pure returns (bytes32) {
+        return keccak256(abi.encode(
+                    VOTE_PAYLOAD_TYPEHASH,
+                    payload.choice,
+                    payload.proposalHash
+                ));
+    }
+
+    function hashVotingResultNode(VoteResultNode memory node) public pure returns (bytes32) {
+        return keccak256(abi.encode(
+                    VOTE_RESULT_NODE_TYPEHASH
+                ));
+    }
+
+    function nodeHash(DaoRegistry dao, address actionId, VoteResultNode memory node)
+        public
+        view
         returns (bytes32)
     {
-        return
-            keccak256(
-                abi.encode(
-                    node.member,
-                    node.sig,
-                    node.nbYes,
-                    node.nbNo,
-                    node.index
-                )
-            );
+        return keccak256(abi.encodePacked(
+            "\x19\x01",
+            DOMAIN_SEPARATOR(dao, actionId),
+            hashVotingResultNode(node)
+        ));
     }
 
     function toHashArray(string[] memory arr) internal pure returns (bytes32[] memory result){
@@ -255,7 +288,7 @@ contract OffchainVotingContract is
         bytes32 resultRoot
     ) internal {
         (address adapterAddress ,) = dao.proposals(proposalId);
-        bytes32 hashCurrent = _nodeHash(dao, adapterAddress, result);
+        bytes32 hashCurrent = nodeHash(dao, adapterAddress, result);
         uint256 blockNumber = vote.snapshot;
 
         address voter = dao.getPriorDelegateKey(
@@ -273,12 +306,6 @@ contract OffchainVotingContract is
         require(
             _hasVoted(voter, proposalHash, result.sig) != 0,
             "wrong vote signature!"
-        );
-
-        uint256 correctWeight = dao.getPriorAmount(
-            result.member,
-            SHARES,
-            blockNumber
         );
 
         _lockFunds(dao, msg.sender);
@@ -423,8 +450,9 @@ contract OffchainVotingContract is
         Voting storage vote = votes[address(dao)][proposalId];
         bytes32 resultRoot = vote.resultRoot;
         uint256 blockNumber = vote.snapshot;
+        (address adapterAddress ,) = dao.proposals(proposalId);
         require(resultRoot != bytes32(0), "no result available yet!");
-        bytes32 hashCurrent = _nodeHash(nodeCurrent);
+        bytes32 hashCurrent = nodeHash(dao, adapterAddress, nodeCurrent);
         require(
             verify(resultRoot, hashCurrent, nodeCurrent.proof),
             "proof check for current invalid for current node"
@@ -452,9 +480,10 @@ contract OffchainVotingContract is
         uint64 proposalId = SafeCast.toUint64(_proposalId);
         Voting storage vote = votes[address(dao)][proposalId];
         bytes32 resultRoot = vote.resultRoot;
+        (address adapterAddress ,) = dao.proposals(proposalId);
         require(resultRoot != bytes32(0), "no result available yet!");
-        bytes32 hashCurrent = _nodeHash(node1);
-        bytes32 hashPrevious = _nodeHash(node2);
+        bytes32 hashCurrent = nodeHash(dao, adapterAddress, node1);
+        bytes32 hashPrevious = nodeHash(dao, adapterAddress, node2);
         require(
             verify(resultRoot, hashCurrent, node1.proof),
             "proof check for current invalid for current node"
@@ -479,9 +508,10 @@ contract OffchainVotingContract is
         Voting storage vote = votes[address(dao)][proposalId];
         bytes32 resultRoot = vote.resultRoot;
         uint256 blockNumber = vote.snapshot;
+        (address adapterAddress ,) = dao.proposals(proposalId);
         require(resultRoot != bytes32(0), "no result available yet!");
-        bytes32 hashCurrent = _nodeHash(nodeCurrent);
-        bytes32 hashPrevious = _nodeHash(nodePrevious);
+        bytes32 hashCurrent = nodeHash(dao, adapterAddress, nodeCurrent);
+        bytes32 hashPrevious = nodeHash(dao, adapterAddress, nodePrevious);
         require(
             verify(resultRoot, hashCurrent, nodeCurrent.proof),
             "proof check for current invalid for current node"
