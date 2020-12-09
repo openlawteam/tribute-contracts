@@ -50,6 +50,7 @@ const {
   prepareVoteResult,
   toStepNode,
   getVoteStepDomainDefinition,
+  validateMessage,
   SigUtilSigner
 } = require("../../utils/offchain_voting.js");
 
@@ -194,23 +195,20 @@ contract("LAOLAND - Offchain Voting Module", async (accounts) => {
     const chainId = 1;
     //signer for myAccount (its private key)
     const signer = SigUtilSigner("6c6eda7e56a1d132f09eb4e63e4d846b0a00f8e2c5465635172380ad1a67b77e");
-    //const signer = Web3JsSigner(web3, myAccount);
     proposalData.sig =  await signer(proposalData, dao.address, onboarding.address, chainId);
-    
-    const data = prepareVoteProposalData(proposalData);
     
     await onboarding.onboardAndSponsor(dao.address,
       otherAccount,
       SHARES,
       sharePrice.mul(toBN(3)).add(remaining),
-      data,
+      prepareVoteProposalData(proposalData),
       {
         from: otherAccount,
         value: sharePrice.mul(toBN("3")).add(remaining),
         gasPrice: toBN("0"),
       })
-    //TODO: actually do the voting
-    const proposalHash = getMessageERC712Hash(proposalData, dao.address, myAccount, chainId).toString('hex');
+    
+    const proposalHash = getMessageERC712Hash(proposalData, dao.address, onboarding.address, chainId).toString('hex');
 
     const voteEntry = await createVote(
       proposalHash,
@@ -219,6 +217,8 @@ contract("LAOLAND - Offchain Voting Module", async (accounts) => {
     );
     
     voteEntry.sig = signer(voteEntry, dao.address, onboarding.address, chainId);
+    assert.equal(true, validateMessage(voteEntry, myAccount, dao.address, onboarding.address, chainId, voteEntry.sig ));
+
     const {voteResultTree, votes} = await prepareVoteResult([voteEntry], dao, onboarding.address, chainId, proposalPayload.snapshot);
     const result = toStepNode(votes[0], dao.address, onboarding.address, chainId, voteResultTree);
 
@@ -231,6 +231,10 @@ contract("LAOLAND - Offchain Voting Module", async (accounts) => {
     const hashStruct = '0x' + TypedDataUtils.hashStruct("Message", result, types).toString('hex');
     const solidityHash = await voting.hashVotingResultNode(result);
     assert.equal(hashStruct, solidityHash);
+
+    const solAddress = await dao.getPriorDelegateKey(myAccount, blockNumber);
+    assert.equal(solAddress, myAccount);
+
 
     await voting.submitVoteResult(
       dao.address,

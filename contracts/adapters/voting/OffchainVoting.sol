@@ -170,7 +170,7 @@ contract OffchainVotingContract is
     }
 
     function hashVote(DaoRegistry dao, address actionId, VoteMessage memory message) public view returns (bytes32) {
-        keccak256(abi.encodePacked(
+        return keccak256(abi.encodePacked(
             "\x19\x01",
             DOMAIN_SEPARATOR(dao, actionId),
             hashVoteInternal(message)
@@ -238,16 +238,7 @@ contract OffchainVotingContract is
         dao.registerPotentialNewInternalToken(LOCKED_LOOT);
     }
 
-    function submitVoteResult(
-        DaoRegistry dao,
-        uint256 _proposalId,
-        bytes32 resultRoot,
-        VoteResultNode memory result
-    ) external {
-        uint64 proposalId = SafeCast.toUint64(_proposalId);
-        Voting storage vote = votes[address(dao)][proposalId];
-        require(vote.snapshot > 0, "the vote has not started yet");
-        /**
+    /** 
         What needs to be checked before submitting a vote result
         - if the grace period has ended, do nothing
         - if it's the first result, is this a right time to submit it?
@@ -258,8 +249,18 @@ contract OffchainVotingContract is
 
         - if we already have a result that has not been challenged
             * is the new one heavier than the previous one ?
-         */
+         **/
 
+    function submitVoteResult(
+        DaoRegistry dao,
+        uint256 _proposalId,
+        bytes32 resultRoot,
+        VoteResultNode memory result
+    ) external {
+        uint64 proposalId = SafeCast.toUint64(_proposalId);
+        Voting storage vote = votes[address(dao)][proposalId];
+        require(vote.snapshot > 0, "the vote has not started yet");
+        
         if (vote.resultRoot == bytes32(0) || vote.isChallenged) {
             require(
                 _readyToSubmitResult(dao, vote, result.nbYes, result.nbNo),
@@ -267,6 +268,7 @@ contract OffchainVotingContract is
             );
             _submitVoteResult(dao, vote, proposalId, result, resultRoot);
         } else {
+            //TODO: we shouldnt' check nbYes + nbNo but rather the index (the number of voters)
             require(
                 result.nbYes + result.nbNo > vote.nbYes + vote.nbNo,
                 "to override a result, the sum of yes and no has to be greater than the current one"
