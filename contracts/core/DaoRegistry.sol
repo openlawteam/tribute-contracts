@@ -96,9 +96,12 @@ contract DaoRegistry is DaoConstants, AdapterGuard {
     struct Bank {
         address[] tokens;
         address[] internalTokens;
+        // tokenAddress => availability
         mapping(address => bool) availableTokens;
         mapping(address => bool) availableInternalTokens;
+        // tokenAddress => memberAddress => checkpointNum => Checkpoint
         mapping(address => mapping(address => mapping(uint32 => Checkpoint))) checkpoints;
+        // tokenAddress => memberAddress => numCheckpoints
         mapping(address => mapping(address => uint32)) numCheckpoints;
     }
 
@@ -111,10 +114,14 @@ contract DaoRegistry is DaoConstants, AdapterGuard {
      * PUBLIC VARIABLES
      */
     mapping(address => Member) public members; // the map to track all members of the DAO
-    mapping(address => address) public memberAddressesByDelegatedKey; // delegate key -> member address mapping
+
+    // delegate key => member address mapping
+    mapping(address => address) public memberAddressesByDelegatedKey;
     Bank private _bank; // the state of the DAO Bank
 
+    // memberAddress => checkpointNum => DelegateCheckpoint
     mapping(address => mapping(uint32 => DelegateCheckpoint)) checkpoints;
+    // memberAddress => numDelegateCheckpoints
     mapping(address => uint32) numCheckpoints;
 
     DaoState public state;
@@ -136,6 +143,12 @@ contract DaoRegistry is DaoConstants, AdapterGuard {
 
     //TODO: we may need to add some ACL to ensure only the factory is allowed to clone it, otherwise
     //any will able to deploy it, and the first one to call this function is added to the DAO as a member.
+    /**
+     * @notice Initialises the DAO
+     * @dev Involves initialising available tokens, checkpoints, and membership of creator
+     * @dev Can only be called once
+     * @param creator The DAO's creator, who will be the first member
+     */
     function initialize(address creator) external {
         require(!initialized, "dao already initialized");
 
@@ -157,10 +170,19 @@ contract DaoRegistry is DaoConstants, AdapterGuard {
         revert("you cannot send money back directly");
     }
 
+    /**
+     * @dev Sets the state of the dao to READY
+     */
     function finalizeDao() external {
         state = DaoState.READY;
     }
 
+    /**
+     * @notice Sets a configuration value
+     * @dev Changes the value of a key in the configuration mapping
+     * @param key The configuration key for which the value will be set
+     * @param value The value to set the key
+     */
     function setConfiguration(bytes32 key, uint256 value)
         external
         hasAccess(this, FlagHelper.Flag.SET_CONFIGURATION)
@@ -168,10 +190,20 @@ contract DaoRegistry is DaoConstants, AdapterGuard {
         configuration[key] = value;
     }
 
+    /**
+     * @return The configuration value of a particular key
+     * @param key The key to look up in the configuration mapping
+     */
     function getConfiguration(bytes32 key) external view returns (uint256) {
         return configuration[key];
     }
 
+    /**
+     * @notice Adds a new adapter to the registry
+     * @param adapterId The unique identifier of the new adapter
+     * @param adapterAddress The address of the adapter
+     * @param acl The access control list of the adapter
+     */
     function addAdapter(
         bytes32 adapterId,
         address adapterAddress,
@@ -192,6 +224,10 @@ contract DaoRegistry is DaoConstants, AdapterGuard {
         emit AdapterAdded(adapterId, adapterAddress, acl);
     }
 
+    /**
+     * @notice Removes an adapter from the registry
+     * @param adapterId The unique identifier of the adapter
+     */
     function removeAdapter(bytes32 adapterId)
         external
         hasAccess(this, FlagHelper.Flag.REMOVE_ADAPTER)
@@ -206,10 +242,21 @@ contract DaoRegistry is DaoConstants, AdapterGuard {
         emit AdapterRemoved(adapterId);
     }
 
+    /**
+     * @notice Looks up if there is an adapter of a given address
+     * @return Whether or not the address is an adapter
+     * @param adapterAddress The address to look up
+     */
     function isAdapter(address adapterAddress) public view returns (bool) {
         return inverseRegistry[adapterAddress].id != bytes32(0);
     }
 
+    /**
+     * @notice Checks if an adapter has a given ACL flag
+     * @return Whether or not the given adapter has the given flag set
+     * @param adapterAddress The address to look up
+     * @param flag The ACL flag to check against the given address
+     */
     function hasAdapterAccess(address adapterAddress, FlagHelper.Flag flag)
         public
         view
@@ -220,6 +267,10 @@ contract DaoRegistry is DaoConstants, AdapterGuard {
             inverseRegistry[adapterAddress].acl.getFlag(flag);
     }
 
+    /**
+     * @return The address of a given adapter ID
+     * @param adapterId The ID to look up
+     */
     function getAdapterAddress(bytes32 adapterId)
         external
         view
@@ -228,6 +279,11 @@ contract DaoRegistry is DaoConstants, AdapterGuard {
         return registry[adapterId];
     }
 
+    /**
+     * @notice Jails a member
+     * @dev Sets all relevant flags and delegations to ensure a user can not participate
+     * @param memberAddr The member to jail
+     */
     function jailMember(address memberAddr)
         external
         hasAccess(this, FlagHelper.Flag.JAIL_MEMBER)
@@ -237,11 +293,18 @@ contract DaoRegistry is DaoConstants, AdapterGuard {
         require(flags.getFlag(FlagHelper.Flag.EXISTS), "member does not exist");
         if (!flags.getFlag(FlagHelper.Flag.JAILED)) {
             member.flags = flags.setFlag(FlagHelper.Flag.JAILED, true);
-            _createNewDelegateCheckpoint(memberAddr, address(1)); // we do this to avoid the member to vote at that point in time. We use 1 instead of 0 to avoid existence check with this
+
+            // Stop the member from voting at that point in time
+            _createNewDelegateCheckpoint(memberAddr, address(1)); // 1 instead of 0 to avoid existence check
             emit MemberJailed(memberAddr);
         }
     }
 
+    /**
+     * @notice Unjails a member
+     * @dev Resets all relevant flags to allow participation
+     * @param memberAddr The member to unjail
+     */
     function unjailMember(address memberAddr)
         external
         hasAccess(this, FlagHelper.Flag.UNJAIL_MEMBER)
@@ -259,6 +322,14 @@ contract DaoRegistry is DaoConstants, AdapterGuard {
         }
     }
 
+    /**
+     * @notice Executes an arbitrary function call
+     * @dev Calls a function and reverts if unsuccessful
+     * @return The return data of the function call
+     * @param _actionTo The address at which the function will be called
+     * @param _actionValue The value to pass in to function call
+     * @param _actionData The data to give the function call
+     */
     function execute(
         address _actionTo,
         uint256 _actionValue,
@@ -277,7 +348,10 @@ contract DaoRegistry is DaoConstants, AdapterGuard {
     /**
      * PROPOSALS
      */
-    /// @dev - Proposal: submit proposals to the DAO registry
+    /**
+     * @notice Submit proposals to the DAO registry
+     * @return The proposal ID of the newly-created proposal
+     */
     function submitProposal()
         external
         hasAccess(this, FlagHelper.Flag.SUBMIT_PROPOSAL)
@@ -291,7 +365,12 @@ contract DaoRegistry is DaoConstants, AdapterGuard {
         return proposalId;
     }
 
-    /// @dev - Proposal: sponsor proposals that were submitted to the DAO registry
+    /**
+     * @notice Sponsor proposals that were submitted to the DAO registry
+     * @dev adds SPONSORED to the proposal flag
+     * @param proposalId The ID of the proposal to sponsor
+     * @param sponsoringMember The member who is sponsoring the proposal
+     */
     function sponsorProposal(uint64 proposalId, address sponsoringMember)
         external
         hasAccess(this, FlagHelper.Flag.SPONSOR_PROPOSAL)
@@ -321,7 +400,10 @@ contract DaoRegistry is DaoConstants, AdapterGuard {
         emit SponsoredProposal(proposalId, flags);
     }
 
-    /// @dev - Proposal: mark a proposal as processed in the DAO registry
+    /**
+     * @notice Mark a proposal as processed in the DAO registry
+     * @param proposalId The ID of the proposal that is being processed
+     */
     function processProposal(uint64 proposalId)
         external
         hasAccess(this, FlagHelper.Flag.PROCESS_PROPOSAL)
@@ -333,7 +415,12 @@ contract DaoRegistry is DaoConstants, AdapterGuard {
         emit ProcessedProposal(proposalId, flags);
     }
 
-    /// @dev - Proposal: mark a proposal as processed in the DAO registry
+    /**
+     * @notice Sets a flag of a proposal
+     * @dev Reverts if the proposal is already processed
+     * @param proposalId The ID of the proposal to be changed
+     * @param flag The flag that will be set on the proposal
+     */
     function _setProposalFlag(uint64 proposalId, FlagHelper.Flag flag)
         internal
         returns (Proposal storage)
@@ -342,7 +429,7 @@ contract DaoRegistry is DaoConstants, AdapterGuard {
 
         require(
             proposal.adapterAddress == msg.sender,
-            "only the adapter that submitted the proposal can cancel it"
+            "only the adapter that submitted the proposal can set its flag"
         );
 
         uint256 flags = proposal.flags;
@@ -361,16 +448,31 @@ contract DaoRegistry is DaoConstants, AdapterGuard {
         return proposals[proposalId];
     }
 
-    function isInternalToken(address tokenToMint) external view returns (bool) {
-        return _bank.availableInternalTokens[tokenToMint];
+    /**
+     * @return Whether or not the given token is an available internal token in the bank
+     * @param token The address of the token to look up
+     */
+    function isInternalToken(address token) external view returns (bool) {
+        return _bank.availableInternalTokens[token];
     }
 
+    /**
+     * @return Whether or not the given token is an available token in the bank
+     * @param token The address of the token to look up
+     */
     function isTokenAllowed(address token) external view returns (bool) {
         return _bank.availableTokens[token];
     }
 
     /*
      * MEMBERS
+     */
+
+    /**
+     * @return Whether or not a given address is an active member of the DAO
+     * @dev Requires the user to not be jailed and have a positive balance in either
+     *      SHARES, LOOT or LOCKED_LOOT
+     * @param addr The address to look up
      */
     function isActiveMember(address addr) public view returns (bool) {
         address memberAddr = memberAddressesByDelegatedKey[addr];
@@ -383,6 +485,11 @@ contract DaoRegistry is DaoConstants, AdapterGuard {
                 balanceOf(memberAddr, LOCKED_LOOT) > 0);
     }
 
+    /**
+     * @return Whether or not a flag is set for a given proposal
+     * @param proposalId The proposal to check against flag
+     * @param flag The flag to check in the proposal
+     */
     function getProposalFlag(uint64 proposalId, FlagHelper.Flag flag)
         external
         view
@@ -391,6 +498,11 @@ contract DaoRegistry is DaoConstants, AdapterGuard {
         return proposals[proposalId].flags.getFlag(flag);
     }
 
+    /**
+     * @notice Updates the delegate key of a member
+     * @param memberAddr The member doing the delegation
+     * @param newDelegateKey The member who is being delegated to
+     */
     function updateDelegateKey(address memberAddr, address newDelegateKey)
         external
         hasAccess(this, FlagHelper.Flag.UPDATE_DELEGATE_KEY)
@@ -400,14 +512,9 @@ contract DaoRegistry is DaoConstants, AdapterGuard {
         // skip checks if member is setting the delegate key to their member address
         if (newDelegateKey != memberAddr) {
             require(
+                // newDelegate must not be delegated to
                 memberAddressesByDelegatedKey[newDelegateKey] == address(0x0),
                 "cannot overwrite existing members"
-            );
-            require(
-                memberAddressesByDelegatedKey[
-                    memberAddressesByDelegatedKey[newDelegateKey]
-                ] == address(0x0),
-                "cannot overwrite existing delegate keys"
             );
         }
 
@@ -416,9 +523,12 @@ contract DaoRegistry is DaoConstants, AdapterGuard {
             member.flags.getFlag(FlagHelper.Flag.EXISTS),
             "member does not exist"
         );
-        memberAddressesByDelegatedKey[
-            getCurrentDelegateKey(memberAddr)
-        ] = address(0x0);
+
+        // Reset the delegation of the previous delegate
+        memberAddressesByDelegatedKey[getCurrentDelegateKey(
+            memberAddr
+        )] = address(0x0);
+
         memberAddressesByDelegatedKey[newDelegateKey] = memberAddr;
 
         _createNewDelegateCheckpoint(memberAddr, newDelegateKey);
@@ -429,6 +539,11 @@ contract DaoRegistry is DaoConstants, AdapterGuard {
      * BANK
      */
 
+    /**
+     * @notice Registers a potential new token in the bank
+     * @dev Can not be a reserved token or an available internal token
+     * @param token The address of the token
+     */
     function registerPotentialNewToken(address token)
         external
         hasAccess(this, FlagHelper.Flag.REGISTER_NEW_TOKEN)
@@ -442,6 +557,11 @@ contract DaoRegistry is DaoConstants, AdapterGuard {
         }
     }
 
+    /**
+     * @notice Registers a potential new internal token in the bank
+     * @dev Can not be a reserved token or an available token
+     * @param token The address of the token
+     */
     function registerPotentialNewInternalToken(address token)
         external
         hasAccess(this, FlagHelper.Flag.REGISTER_NEW_INTERNAL_TOKEN)
@@ -458,6 +578,11 @@ contract DaoRegistry is DaoConstants, AdapterGuard {
      * Public read-only functions
      */
 
+    /**
+     * @return Whether or not a given address is reserved
+     * @dev Returns false if applicant address is one of the constants GUILD or TOTAL
+     * @param applicant The address to check
+     */
     function isNotReservedAddress(address applicant)
         public
         pure
@@ -470,22 +595,42 @@ contract DaoRegistry is DaoConstants, AdapterGuard {
      * Internal bookkeeping
      */
 
+    /**
+     * @return The token from the bank of a given index
+     * @param index The index to look up in the bank's tokens
+     */
     function getToken(uint256 index) external view returns (address) {
         return _bank.tokens[index];
     }
 
+    /**
+     * @return The amount of token addresses in the bank
+     */
     function nbTokens() external view returns (uint256) {
         return _bank.tokens.length;
     }
 
+    /**
+     * @return The internal token at a given index
+     * @param index The index to look up in the bank's array of internal tokens
+     */
     function getInternalToken(uint256 index) external view returns (address) {
         return _bank.internalTokens[index];
     }
 
+    /**
+     * @return The amount of internal token addresses in the bank
+     */
     function nbInternalTokens() external view returns (uint256) {
         return _bank.internalTokens.length;
     }
 
+    /**
+     * @notice Adds to a user's balance of a given token
+     * @param user The user whose balance will be updated
+     * @param token The token to update
+     * @param amount The new balance
+     */
     function addToBalance(
         address user,
         address token,
@@ -509,6 +654,12 @@ contract DaoRegistry is DaoConstants, AdapterGuard {
         }
     }
 
+    /**
+     * @notice Remove from a user's balance of a given token
+     * @param user The user whose balance will be updated
+     * @param token The token to update
+     * @param amount The new balance
+     */
     function subtractFromBalance(
         address user,
         address token,
@@ -521,6 +672,12 @@ contract DaoRegistry is DaoConstants, AdapterGuard {
         _createNewAmountCheckpoint(TOTAL, token, newTotalAmount);
     }
 
+    /**
+     * @notice Make an internal token transfer
+     * @param from The user who is sending tokens
+     * @param to The user who is receiving tokens
+     * @param amount The new amount to transfer
+     */
     function internalTransfer(
         address from,
         address to,
@@ -534,6 +691,12 @@ contract DaoRegistry is DaoConstants, AdapterGuard {
         _createNewAmountCheckpoint(to, token, newAmount2);
     }
 
+    /**
+     * @notice Returns an account's balance of a given token
+     * @param account The address to look up
+     * @param tokenAddr The token where the user's balance of which will be returned
+     * @return The amount in account's tokenAddr balance
+     */
     function balanceOf(address account, address tokenAddr)
         public
         view
@@ -599,6 +762,10 @@ contract DaoRegistry is DaoConstants, AdapterGuard {
         return _bank.checkpoints[tokenAddr][account][lower].amount;
     }
 
+    /**
+     * @param memberAddr The member whose delegate will be returned
+     * @return the delegate key at the current time for a member
+     */
     function getCurrentDelegateKey(address memberAddr)
         public
         view
@@ -611,6 +778,10 @@ contract DaoRegistry is DaoConstants, AdapterGuard {
                 : memberAddr;
     }
 
+    /**
+     * @param memberAddr The member address to look up
+     * @return The delegate key address for memberAddr at the second last checkpoint number
+     */
     function getPreviousDelegateKey(address memberAddr)
         public
         view
@@ -673,6 +844,12 @@ contract DaoRegistry is DaoConstants, AdapterGuard {
         return checkpoints[memberAddr][lower].delegateKey;
     }
 
+    /**
+     * @notice Creates a new amount checkpoint for a token of a certain member
+     * @param member The member whose checkpoints will be added to
+     * @param tokenAddr The token of which the balance will be changed
+     * @param amount The amount to be written into the new checkpoint
+     */
     function _createNewAmountCheckpoint(
         address member,
         address tokenAddr,
@@ -683,6 +860,11 @@ contract DaoRegistry is DaoConstants, AdapterGuard {
         emit NewBalance(member, tokenAddr, amount);
     }
 
+    /**
+     * @notice Creates a new delegate checkpoint of a certain member
+     * @param member The member whose delegate checkpoints will be added to
+     * @param newDelegateKey The delegate key that will be written into the new checkpoint
+     */
     function _createNewDelegateCheckpoint(
         address member,
         address newDelegateKey
@@ -691,6 +873,13 @@ contract DaoRegistry is DaoConstants, AdapterGuard {
         _writeDelegateCheckpoint(member, srcRepNum, newDelegateKey);
     }
 
+    /**
+     * @notice Writes to a delegate checkpoint of a certain checkpoint number
+     * @dev Creates a new checkpoint if there is not yet one of the given number
+     * @param member The member whose delegate checkpoints will overwritten
+     * @param nCheckpoints The number of the checkpoint to overwrite
+     * @param newDelegateKey The delegate key that will be written into the checkpoint
+     */
     function _writeDelegateCheckpoint(
         address member,
         uint32 nCheckpoints,
@@ -710,6 +899,14 @@ contract DaoRegistry is DaoConstants, AdapterGuard {
         }
     }
 
+    /**
+     * @notice Writes to an amount checkpoint of a certain checkpoint number
+     * @dev Creates a new checkpoint if there is not yet one of the given number
+     * @param member The member whose delegate checkpoints will overwritten
+     * @param tokenAddr The token that will have its balance for the user udpated
+     * @param nCheckpoints The number of the checkpoint to overwrite
+     * @param _newAmount The amount to write into the specified checkpoint
+     */
     function _writeAmountCheckpoint(
         address member,
         address tokenAddr,
@@ -739,10 +936,12 @@ contract DaoRegistry is DaoConstants, AdapterGuard {
      * Internal Utility Functions
      */
 
-    /// @dev Get the revert message from a call
-    /// @notice This is needed in order to get the human-readable revert message from a call
-    /// @param _res Response of the call
-    /// @return Revert message string
+    /**
+     * @dev Get the revert message from a call
+     * @notice This is needed in order to get the human-readable revert message from a call
+     * @param _res Response of the call
+     * @return Revert message string
+     */
     function _getRevertMsg(bytes memory _res)
         internal
         pure
@@ -754,6 +953,13 @@ contract DaoRegistry is DaoConstants, AdapterGuard {
         return abi.decode(revertData, (string)); // All that remains is the revert string
     }
 
+    /**
+     * @notice Slices a bytes type
+     * @param _bytes The bytes that will be sliced
+     * @param _start The start index to begin slicing from
+     * @param _length The number of bytes to include in the slice, starting from _start
+     * @return A new bytes object, that is the same as _bytes, from indices _start to (_start + length)
+     */
     function _slice(
         bytes memory _bytes,
         uint256 _start,
