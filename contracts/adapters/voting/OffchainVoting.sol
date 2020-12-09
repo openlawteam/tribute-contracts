@@ -81,6 +81,7 @@ contract OffchainVotingContract is
         uint256 nbVoters;
         uint256 nbYes;
         uint256 nbNo;
+        uint256 index;
         uint256 startingTime;
         uint256 gracePeriodStartingTime;
         bool isChallenged;
@@ -270,7 +271,7 @@ contract OffchainVotingContract is
         } else {
             //TODO: we shouldnt' check nbYes + nbNo but rather the index (the number of voters)
             require(
-                result.nbYes + result.nbNo > vote.nbYes + vote.nbNo,
+                result.index > vote.index,
                 "to override a result, the sum of yes and no has to be greater than the current one"
             );
             _submitVoteResult(dao, vote, proposalId, result, resultRoot);
@@ -328,6 +329,7 @@ contract OffchainVotingContract is
         _lockFunds(dao, msg.sender);
         vote.nbNo = result.nbNo;
         vote.nbYes = result.nbYes;
+        vote.index = result.index;
         vote.resultRoot = resultRoot;
         vote.reporter = msg.sender;
         vote.isChallenged = false;
@@ -524,7 +526,7 @@ contract OffchainVotingContract is
         uint64 proposalId = SafeCast.toUint64(_proposalId);
         Voting storage vote = votes[address(dao)][proposalId];
         bytes32 resultRoot = vote.resultRoot;
-        uint256 blockNumber = vote.snapshot;
+
         (address adapterAddress ,) = dao.proposals(proposalId);
         require(resultRoot != bytes32(0), "no result available yet!");
         bytes32 hashCurrent = nodeHash(dao, adapterAddress, nodeCurrent);
@@ -578,8 +580,14 @@ contract OffchainVotingContract is
             nodeCurrent.account,
             vote.snapshot
         );
+        uint256 weight = dao.getPriorAmount(
+            nodeCurrent.account,
+            SHARES,
+            vote.snapshot
+        );
+
         if (_hasVotedYes(dao, actionId, voter, nodeCurrent.timestamp, nodeCurrent.proposalHash, nodeCurrent.sig)) {
-            if (nodePrevious.nbYes + 1 != nodeCurrent.nbYes) {
+            if (nodePrevious.nbYes + weight != nodeCurrent.nbYes) {
                 _challengeResult(dao, proposalId);
             } else if (nodePrevious.nbNo != nodeCurrent.nbNo) {
                 _challengeResult(dao, proposalId);
@@ -587,7 +595,7 @@ contract OffchainVotingContract is
         } else {
             if (nodePrevious.nbYes != nodeCurrent.nbYes) {
                 _challengeResult(dao, proposalId);
-            } else if (nodePrevious.nbNo + 1 != nodeCurrent.nbNo) {
+            } else if (nodePrevious.nbNo + weight != nodeCurrent.nbNo) {
                 _challengeResult(dao, proposalId);
             }
         }
