@@ -84,7 +84,7 @@ contract ERC20 is IERC20 {
     /**
      * @dev Total number of tokens in existence
      */
-    function totalSupply() public override view returns (uint256) {
+    function totalSupply() public view override returns (uint256) {
         return _totalSupply;
     }
 
@@ -93,7 +93,7 @@ contract ERC20 is IERC20 {
      * @param owner The address to query the balance of.
      * @return An uint256 representing the amount owned by the passed address.
      */
-    function balanceOf(address owner) public override view returns (uint256) {
+    function balanceOf(address owner) public view override returns (uint256) {
         return _balances[owner];
     }
 
@@ -105,8 +105,8 @@ contract ERC20 is IERC20 {
      */
     function allowance(address owner, address spender)
         public
-        override
         view
+        override
         returns (uint256)
     {
         return _allowances[owner][spender];

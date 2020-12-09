@@ -70,7 +70,12 @@ contract VotingContract is IVoting, DaoConstants, MemberGuard, AdapterGuard {
         vote.startingTime = block.timestamp;
     }
 
-    function getSenderAddress(DaoRegistry, address, bytes memory, address sender) override external  pure returns (address) {
+    function getSenderAddress(
+        DaoRegistry,
+        address,
+        bytes memory,
+        address sender
+    ) external pure override returns (address) {
         return sender;
     }
 
@@ -125,8 +130,8 @@ contract VotingContract is IVoting, DaoConstants, MemberGuard, AdapterGuard {
      */
     function voteResult(DaoRegistry dao, uint256 _proposalId)
         external
-        override
         view
+        override
         returns (uint256 state)
     {
         uint64 proposalId = SafeCast.toUint64(_proposalId);
