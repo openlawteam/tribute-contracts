@@ -96,14 +96,11 @@ contract DaoRegistry is DaoConstants, AdapterGuard {
     struct Bank {
         address[] tokens;
         address[] internalTokens;
-
         // tokenAddress => availability
         mapping(address => bool) availableTokens;
         mapping(address => bool) availableInternalTokens;
-
         // tokenAddress => memberAddress => checkpointNum => Checkpoint
         mapping(address => mapping(address => mapping(uint32 => Checkpoint))) checkpoints;
-
         // tokenAddress => memberAddress => numCheckpoints
         mapping(address => mapping(address => uint32)) numCheckpoints;
     }
