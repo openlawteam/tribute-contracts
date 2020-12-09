@@ -525,9 +525,9 @@ contract DaoRegistry is DaoConstants, AdapterGuard {
         );
 
         // Reset the delegation of the previous delegate
-        memberAddressesByDelegatedKey[getCurrentDelegateKey(
-            memberAddr
-        )] = address(0x0);
+        memberAddressesByDelegatedKey[
+            getCurrentDelegateKey(memberAddr)
+        ] = address(0x0);
 
         memberAddressesByDelegatedKey[newDelegateKey] = memberAddr;
 
