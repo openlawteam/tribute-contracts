@@ -461,7 +461,7 @@ contract DaoRegistry is DaoConstants, AdapterGuard {
      * @param token The address of the token to look up
      */
     function isInternalToken(address token) external view returns (bool) {
-        return _bank.availableInternalTokens[tokenToMint];
+        return _bank.availableInternalTokens[token];
     }
 
     /**
