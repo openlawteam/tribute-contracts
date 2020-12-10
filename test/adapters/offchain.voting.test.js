@@ -52,6 +52,7 @@ const {
   getVoteStepDomainDefinition,
   validateMessage,
   SigUtilSigner,
+  Web3JsSigner,
 } = require("../../utils/offchain_voting.js");
 
 const OffchainVotingContract = artifacts.require(
@@ -243,7 +244,7 @@ contract("LAOLAND - Offchain Voting Module", async (accounts) => {
     const chainId = 1;
     //signer for myAccount (its private key)
     const signer = SigUtilSigner(
-      "6c6eda7e56a1d132f09eb4e63e4d846b0a00f8e2c5465635172380ad1a67b77e"
+      "fd14456f9defa6621ecab5af3fb9aca8999078df9f6f92fb037b73216df79909"
     );
     proposalData.sig = await signer(
       proposalData,
@@ -251,6 +252,13 @@ contract("LAOLAND - Offchain Voting Module", async (accounts) => {
       onboarding.address,
       chainId
     );
+
+    const proposalHash = getMessageERC712Hash(
+      proposalData,
+      dao.address,
+      onboarding.address,
+      chainId
+    ).toString("hex");
 
     await onboarding.onboardAndSponsor(
       dao.address,
@@ -264,13 +272,6 @@ contract("LAOLAND - Offchain Voting Module", async (accounts) => {
         gasPrice: toBN("0"),
       }
     );
-
-    const proposalHash = getMessageERC712Hash(
-      proposalData,
-      dao.address,
-      onboarding.address,
-      chainId
-    ).toString("hex");
 
     const voteEntry = await createVote(proposalHash, myAccount, true);
 
@@ -341,64 +342,123 @@ contract("LAOLAND - Offchain Voting Module", async (accounts) => {
     const otherAccount2 = accounts[3];
 
     let { dao, voting } = await createOffchainVotingDao(myAccount);
-
     const onboardingAddress = await dao.getAdapterAddress(sha3("onboarding"));
     const onboarding = await OnboardingContract.at(onboardingAddress);
+    let blockNumber = await web3.eth.getBlockNumber();
+    const proposalPayload = {
+      name: "some proposal",
+      body: "this is my proposal",
+      choices: ["yes", "no"],
+      start: Math.floor(new Date().getTime() / 1000),
+      end: Math.floor(new Date().getTime() / 1000) + 10000,
+      snapshot: blockNumber.toString(),
+    };
 
-    await onboarding.onboard(
+    const space = "laoland";
+
+    const proposalData = {
+      type: "proposal",
+      timestamp: Math.floor(new Date().getTime() / 1000),
+      space,
+      payload: proposalPayload,
+    };
+
+    const chainId = 1;
+    //signer for myAccount (its private key)
+    const signer = SigUtilSigner(
+      "fd14456f9defa6621ecab5af3fb9aca8999078df9f6f92fb037b73216df79909"
+    );
+    proposalData.sig = await signer(
+      proposalData,
+      dao.address,
+      onboarding.address,
+      chainId
+    );
+
+    const proposalHash = getMessageERC712Hash(
+      proposalData,
+      dao.address,
+      onboarding.address,
+      chainId
+    ).toString("hex");
+
+    await onboarding.onboardAndSponsor(
       dao.address,
       otherAccount,
       SHARES,
       sharePrice.mul(toBN(3)).add(remaining),
+      prepareVoteProposalData(proposalData),
       {
-        value: sharePrice.mul(toBN(3)).add(remaining),
+        from: otherAccount,
+        value: sharePrice.mul(toBN("3")).add(remaining),
         gasPrice: toBN("0"),
       }
     );
-    await onboarding.onboard(
-      dao.address,
-      otherAccount2,
-      SHARES,
-      sharePrice.mul(toBN(3)).add(remaining),
-      {
-        from: myAccount,
-        value: sharePrice.mul(toBN(3)).add(remaining),
-        gasPrice: toBN("0"),
-      }
-    );
-    let blockNumber = await web3.eth.getBlockNumber();
 
-    await onboarding.sponsorProposal(
-      dao.address,
-      0,
-      web3.eth.abi.encodeParameter("uint256", blockNumber),
-      { from: myAccount, gasPrice: toBN("0") }
-    );
-    await onboarding.sponsorProposal(
-      dao.address,
-      1,
-      web3.eth.abi.encodeParameter("uint256", blockNumber),
-      { from: myAccount, gasPrice: toBN("0") }
+    const voteEntry = await createVote(proposalHash, myAccount, true);
+
+    voteEntry.sig = signer(voteEntry, dao.address, onboarding.address, chainId);
+    assert.equal(
+      true,
+      validateMessage(
+        voteEntry,
+        myAccount,
+        dao.address,
+        onboarding.address,
+        chainId,
+        voteEntry.sig
+      )
     );
 
-    const voteElements = await addVote(
-      [],
-      blockNumber,
+    const { voteResultTree, votes } = await prepareVoteResult(
+      [voteEntry],
       dao,
+      onboarding.address,
+      chainId,
+      proposalPayload.snapshot
+    );
+    const result = toStepNode(
+      votes[0],
+      dao.address,
+      onboarding.address,
+      chainId,
+      voteResultTree
+    );
+
+    const { types } = getVoteStepDomainDefinition(
+      dao.address,
+      myAccount,
+      chainId
+    );
+    //Checking vote result hash
+    const solVoteResultType = await voting.VOTE_RESULT_NODE_TYPE();
+    const jsVoteResultType = TypedDataUtils.encodeType("Message", types);
+    assert.equal(solVoteResultType, jsVoteResultType);
+
+    const hashStruct =
+      "0x" +
+      TypedDataUtils.hashStruct("Message", result, types).toString("hex");
+    const solidityHash = await voting.hashVotingResultNode(result);
+    assert.equal(hashStruct, solidityHash);
+
+    const solAddress = await dao.getPriorDelegateKey(myAccount, blockNumber);
+    assert.equal(solAddress, myAccount);
+
+    await voting.submitVoteResult(
+      dao.address,
       0,
-      myAccount,
-      true
+      voteResultTree.getHexRoot(),
+      result,
+      { from: myAccount, gasPrice: toBN("0") }
     );
-    const voteElements2 = await addVote(
-      [],
-      blockNumber,
-      dao,
-      1,
-      myAccount,
-      true
-    );
-    const r1 = prepareVoteResult(voteElements);
-    const r2 = prepareVoteResult(voteElements2);
+    await advanceTime(10000);
+    await onboarding.processProposal(dao.address, 0, {
+      from: myAccount,
+      gasPrice: toBN("0"),
+    });
+
+    const r1 = prepareVoteResult(votes);
+    const r2 = prepareVoteResult(votes2);
 
     const result1 = toStepNode(r1.votes[0], r1.voteResultTree);
     const result2 = toStepNode(r2.votes[0], r2.voteResultTree);

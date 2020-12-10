@@ -155,7 +155,7 @@ function validateMessage(message, address, verifyingContract, actionId, chainId,
 function Web3JsSigner(web3, account) {
   return async function(m, verifyingContract, actionId, chainId) {
     const message = prepareMessage(m);
-    const {domain, types} = getDomainDefinition(messsage, verifyingContract, actionId, chainId);
+    const {domain, types} = getDomainDefinition(message, verifyingContract, actionId, chainId);
     const msgParams = JSON.stringify({
       domain,
       message,
