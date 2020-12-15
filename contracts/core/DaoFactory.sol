@@ -53,7 +53,7 @@ contract DaoFactory is CloneFactory, DaoConstants {
     }
 
     /**
-     * @notice Create, initialize and configure a new DaoRegistry 
+     * @notice Create, initialize and configure a new DaoRegistry
      * @param daoName The name of the dao which, after being hashed, is used to access the address
      * @param keys DAO's configuration keys
      * @param values DAO's configuration values
