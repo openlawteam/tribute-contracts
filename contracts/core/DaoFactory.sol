@@ -39,7 +39,9 @@ contract DaoFactory is CloneFactory, DaoConstants {
         uint256 flags;
     }
 
+    // daoAddr => hashedName
     mapping(address => bytes32) public daos;
+    // hashedName => daoAddr
     mapping(bytes32 => address) public addresses;
 
     address public identityAddress;
@@ -50,6 +52,13 @@ contract DaoFactory is CloneFactory, DaoConstants {
         identityAddress = _identityAddress;
     }
 
+    /**
+     * @notice Create, initialize and configure a new DaoRegistry 
+     * @param daoName The name of the dao which, after being hashed, is used to access the address
+     * @param keys DAO's configuration keys
+     * @param values DAO's configuration values
+     * @param finalizeDao If true, call DaoRegistry.finalizeDao()
+     */
     function createDao(
         string calldata daoName,
         bytes32[] calldata keys,
@@ -69,6 +78,13 @@ contract DaoFactory is CloneFactory, DaoConstants {
         emit DAOCreated(daoAddr, daoName);
     }
 
+    /**
+     * @notice Sets a DAO's configuration key-value pairs and finalizes it if requested
+     * @param daoAddr Address of the DAO being configured
+     * @param keys Configuration keys for the DAO
+     * @param values Configuration values for the DAO
+     * @param finalizeDao If true, call DaoRegistry.finalizeDao()
+     */
     function configureDao(
         address daoAddr,
         bytes32[] calldata keys,
@@ -81,6 +97,10 @@ contract DaoFactory is CloneFactory, DaoConstants {
         _configure(dao, keys, values, finalizeDao);
     }
 
+    /**
+     * @return The address of a DAO, given its name
+     * @param daoName Name of the DAO to be searched
+     */
     function getDaoAddress(string calldata daoName)
         public
         view
@@ -89,9 +109,11 @@ contract DaoFactory is CloneFactory, DaoConstants {
         return addresses[keccak256(abi.encode(daoName))];
     }
 
-    /*
+    /**
      * @dev: A new DAO is instantiated with only the Core Modules enabled, to reduce the call cost.
      *       Another call must be made to enable the default Adapters, see @registerDefaultAdapters.
+     * @param dao DaoRegistry to have adapters added to
+     * @param adapters Adapter structs to be added to the dao
      */
     function addAdapters(DaoRegistry dao, Adapter[] calldata adapters)
         external
@@ -107,6 +129,11 @@ contract DaoFactory is CloneFactory, DaoConstants {
         }
     }
 
+    /**
+     * @dev Removes an adapter with a given ID from a DAO, and add a new one of the same ID
+     * @param dao DAO to be updated
+     * @param adapter Adapter that will be replacing the currently-existing adapter of the same ID
+     */
     function updateAdapter(DaoRegistry dao, Adapter calldata adapter) external {
         require(
             dao.state() == DaoRegistry.DaoState.CREATION,
@@ -117,6 +144,13 @@ contract DaoFactory is CloneFactory, DaoConstants {
         dao.addAdapter(adapter.id, adapter.addr, adapter.flags);
     }
 
+    /**
+     * @notice Sets the configuration key-value pairs for a DaoRegistry
+     * @param dao To configure
+     * @param keys Configuration keys
+     * @param values Configuration values
+     * @param finalizeDao Whether or not to call DaoRegistry.finalizeDao after configuration
+     */
     function _configure(
         DaoRegistry dao,
         bytes32[] calldata keys,
