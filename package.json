@@ -24,8 +24,7 @@
     "solidity-coverage": "^0.7.10"
   },
   "scripts": {
-    "ganache": "ganache-cli -m \"ticket neglect what denial sad drive case vault sing cushion enough logic\" --networkId 1337 --chainId 1337 -q",
-    "test": "npm run ganache & truffle test",
+    "test": "truffle test",
     "test:debug": "truffle test --stacktrace",
     "coverage": "truffle run coverage --network coverage",
     "lint:fix": "prettier --write contracts/**/* test/**/*.test.js",

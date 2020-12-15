@@ -51,13 +51,18 @@ const {
   toStepNode,
   getVoteStepDomainDefinition,
   validateMessage,
-  SigUtilSigner,
-  Web3JsSigner,
+  SigUtilSigner
 } = require("../../utils/offchain_voting.js");
 
 const OffchainVotingContract = artifacts.require(
   "./adapters/OffchainVotingContract"
 );
+
+const members = [
+  {address:'0x7D8cad0bbD68deb352C33e80fccd4D8e88b4aBb8', privKey: 'c150429d49e8799f119434acd3f816f299a5c7e3891455ee12269cb47a5f987c'},
+  {address:'0x9A60E6865b717f4DA53e0F3d53A30Ac3Dd2C743e', privKey: '14ecc272f178289e8b119769b4a86ff9ec54457a39a611b20d1c92102aa9bf1b'},
+  {address:'0xc08964fd0cEBCAC1BF73D1457b10fFFD9Ed25d55', privKey: '7aa9805ef135bf9b4d67b68ceccdaee8cc937c0784d92b51cf49e6911fc5f787'}
+];
 
 async function createOffchainVotingDao(
   senderAccount,
@@ -66,6 +71,13 @@ async function createOffchainVotingDao(
   votingPeriod = 10,
   gracePeriod = 1
 ) {
+
+  await Promise.all(members.map(({address}) => { return web3.eth.sendTransaction({
+    from: senderAccount,
+    to: address,
+    value: '1000000000000000000'
+  })}));
+
   let lib = await FlagHelperLib.new();
   await DaoRegistry.link("FlagHelper", lib.address);
   let dao = await DaoRegistry.new({ from: senderAccount, gasPrice: toBN("0") });
@@ -99,6 +111,7 @@ async function createOffchainVotingDao(
     { from: senderAccount, gasPrice: toBN("0") }
   );
   await dao.finalizeDao({ from: senderAccount, gasPrice: toBN("0") });
+  
   return { dao, voting: offchainVoting };
 }
 
@@ -217,7 +230,6 @@ contract("LAOLAND - Offchain Voting Module", async (accounts) => {
 
   it("should be possible to propose a new voting by signing the proposal hash", async () => {
     const myAccount = accounts[1];
-    const otherAccount = accounts[2];
     let { dao, voting } = await createOffchainVotingDao(myAccount);
 
     const onboardingAddress = await dao.getAdapterAddress(sha3("onboarding"));
@@ -243,9 +255,7 @@ contract("LAOLAND - Offchain Voting Module", async (accounts) => {
 
     const chainId = 1;
     //signer for myAccount (its private key)
-    const signer = SigUtilSigner(
-      "fd14456f9defa6621ecab5af3fb9aca8999078df9f6f92fb037b73216df79909"
-    );
+    const signer = SigUtilSigner(members[1].privKey);
     proposalData.sig = await signer(
       proposalData,
       dao.address,
@@ -262,12 +272,11 @@ contract("LAOLAND - Offchain Voting Module", async (accounts) => {
 
     await onboarding.onboardAndSponsor(
       dao.address,
-      otherAccount,
+      members[0].address,
       SHARES,
       sharePrice.mul(toBN(3)).add(remaining),
       prepareVoteProposalData(proposalData),
       {
-        from: otherAccount,
         value: sharePrice.mul(toBN("3")).add(remaining),
         gasPrice: toBN("0"),
       }
