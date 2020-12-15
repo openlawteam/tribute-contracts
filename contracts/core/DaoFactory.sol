@@ -110,8 +110,8 @@ contract DaoFactory is CloneFactory, DaoConstants {
     }
 
     /**
-     * @dev: A new DAO is instantiated with only the Core Modules enabled, to reduce the call cost.
-     *       Another call must be made to enable the default Adapters, see @registerDefaultAdapters.
+     * @dev A new DAO is instantiated with only the Core Modules enabled, to reduce the call cost.
+     *       Another call must be made to enable the default Adapters, see registerDefaultAdapters.
      * @param dao DaoRegistry to have adapters added to
      * @param adapters Adapter structs to be added to the dao
      */
