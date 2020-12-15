@@ -47,6 +47,9 @@ const useStyles = makeStyles((theme) => ({
   signButton: {
     padding: theme.spacing(1),
   },
+  signature: {
+    maxWidth: 500,
+  },
 }));
 
 const providerOptions = {
@@ -119,19 +122,7 @@ const ProposalForm = ({ provider, web3, addr, chainId, verifyingContract }) => {
     setMessage({ ...message, private: !message.private });
   };
 
-  const parseSignature = (signature) => {
-    var r = signature.substring(0, 64);
-    var s = signature.substring(64, 128);
-    var v = signature.substring(128, 130);
-
-    return {
-      r: "0x" + r,
-      s: "0x" + s,
-      v: parseInt(v, 16),
-    };
-  };
-
-  const handleSign = () => {
+  const handleSubmit = () => {
     if (!web3) return;
 
     const preparedMessage = prepareMessage(
@@ -157,7 +148,7 @@ const ProposalForm = ({ provider, web3, addr, chainId, verifyingContract }) => {
 
     provider.sendAsync(
       {
-        method: "eth_signTypedData_v3",
+        method: "eth_signTypedData_v4",
         params: [signer, data],
         from: signer,
       },
@@ -166,8 +157,7 @@ const ProposalForm = ({ provider, web3, addr, chainId, verifyingContract }) => {
           console.error(err);
           return alert(result.error.message);
         }
-
-        setSignature(parseSignature(result.result.substring(2)));
+        setSignature(result.result);
       }
     );
   };
@@ -242,22 +232,31 @@ const ProposalForm = ({ provider, web3, addr, chainId, verifyingContract }) => {
         </FormGroup>
       </FormControl>
 
-      <Button
-        id="signBtn"
-        onClick={handleSign}
-        color="primary"
-        variant="contained"
-        className={classes.signButton}
-      >
-        Sign
-      </Button>
-      {signature && (
-        <>
-          <Typography id="signatureLabel" paragraph>
-            Signature: {signature}
-          </Typography>
-        </>
-      )}
+      <FormControl className={classes.formControl}>
+        <Button
+          id="submitBtn"
+          onClick={handleSubmit}
+          color="primary"
+          variant="contained"
+          className={classes.submitButton}
+        >
+          Submit Proposal
+        </Button>
+      </FormControl>
+
+      <FormControl className={classes.formControl}>
+        {signature && (
+          <TextField
+            id="signatureLabel"
+            multiline={10}
+            variant="outlined"
+            label="Signature"
+            value={signature}
+            color="primary"
+            disabled
+          ></TextField>
+        )}
+      </FormControl>
     </div>
   );
 };
