@@ -63,27 +63,20 @@ const App = () => {
 
   return (
     <Container className={classes.app}>
-      {addr ? (
-        <Paper elevation={3} className={classes.header}>
+      <Paper elevation={3} className={classes.header}>
+        {addr ? (
           <Typography id="addrLabel" variant="h6" color="primary">
             Connected Account: {addr}
           </Typography>
-        </Paper>
-      ) : (
-        <Paper elevation={3} className={classes.header}>
+        ) : (
           <Typography id="addrLabel" variant="h6" color="secondary">
             Please connect to your MetaMask account and select an account
           </Typography>
-        </Paper>
-      )}
-      {addr && (
-        <ProposalForm
-          addr={addr}
-          web3={web3}
-          provider={provider}
-          className={classes.content}
-        />
-      )}
+        )}
+      </Paper>
+      <div className={classes.content}>
+        {addr && <ProposalForm addr={addr} web3={web3} provider={provider} />}
+      </div>
     </Container>
   );
 };
