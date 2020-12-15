@@ -62,32 +62,15 @@ contract VotingContract is IVoting, DaoConstants, MemberGuard, AdapterGuard {
     function startNewVotingForProposal(
         DaoRegistry dao,
         uint256 _proposalId,
-        bytes memory data
+        bytes calldata
     ) external override onlyAdapter(dao) {
         //it is called from Registry
         // compute startingPeriod for proposal
         uint64 proposalId = SafeCast.toUint64(_proposalId);
 
-        require(
-            data.length == 32,
-            "vote data should represent the block number for snapshot"
-        );
-
-        uint256 blockNumber;
-
-        assembly {
-            blockNumber := mload(add(data, 32))
-        }
-
-        require(
-            blockNumber < block.number,
-            "snapshot block number should not be in the future"
-        );
-        require(blockNumber > 0, "block number cannot be 0");
-
         Voting storage vote = votes[address(dao)][proposalId];
         vote.startingTime = block.timestamp;
-        vote.blockNumber = blockNumber;
+        vote.blockNumber = block.number;
     }
 
     function submitVote(
