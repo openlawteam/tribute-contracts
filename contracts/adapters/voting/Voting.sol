@@ -42,6 +42,7 @@ contract VotingContract is IVoting, DaoConstants, MemberGuard, AdapterGuard {
         uint256 nbNo;
         uint256 startingTime;
         uint256 blockNumber;
+        mapping (address => uint256) votes;
     }
 
     bytes32 constant VotingPeriod = keccak256("voting.votingPeriod");
@@ -106,11 +107,21 @@ contract VotingContract is IVoting, DaoConstants, MemberGuard, AdapterGuard {
                 vote.startingTime + dao.getConfiguration(VotingPeriod),
             "vote has already ended"
         );
+
+        address memberAddr = dao.getAddressIfDelegated(msg.sender);
+
+        require(
+            vote.votes[memberAddr] == 0,
+            "member has already voted"
+        );
+
         uint256 correctWeight = dao.getPriorAmount(
-            msg.sender,
+            memberAddr,
             SHARES,
             vote.blockNumber
         );
+
+        vote.votes[memberAddr] = voteValue;
 
         if (voteValue == 1) {
             vote.nbYes = vote.nbYes + correctWeight;
