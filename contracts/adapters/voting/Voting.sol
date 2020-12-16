@@ -43,6 +43,15 @@ contract VotingContract is IVoting, DaoConstants, MemberGuard, AdapterGuard {
         uint256 startingTime;
     }
 
+    /* possible states for a vote to exist in */
+    enum VoteState {
+        NotStarted,
+        Tied,
+        Passed,
+        NotPassed,
+        InProgress
+    }
+
     bytes32 constant VotingPeriod = keccak256("voting.votingPeriod");
     bytes32 constant GracePeriod = keccak256("voting.gracePeriod");
 
@@ -111,14 +120,7 @@ contract VotingContract is IVoting, DaoConstants, MemberGuard, AdapterGuard {
     }
 
     //Public Functions
-    /**
-    possible results here:
-    0: has not started
-    1: tie
-    2: pass
-    3: not pass
-    4: in progress
-     */
+    
     function voteResult(DaoRegistry dao, uint256 _proposalId)
         external
         override
@@ -128,22 +130,22 @@ contract VotingContract is IVoting, DaoConstants, MemberGuard, AdapterGuard {
         uint64 proposalId = SafeCast.toUint64(_proposalId);
         Voting storage vote = votes[address(dao)][proposalId];
         if (vote.startingTime == 0) {
-            return 0;
+            return uint(VoteState.NotStarted);
         }
 
         if (
             block.timestamp <
             vote.startingTime + dao.getConfiguration(VotingPeriod)
         ) {
-            return 4;
+            return uint(VoteState.InProgress);
         }
 
         if (vote.nbYes > vote.nbNo) {
-            return 2;
+            return uint(VoteState.Passed);
         } else if (vote.nbYes < vote.nbNo) {
-            return 3;
+            return uint(VoteState.NotPassed);
         } else {
-            return 1;
+            return uint(VoteState.Tied);
         }
     }
 }
