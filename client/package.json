@@ -22,7 +22,8 @@
     "build": "react-scripts build",
     "test": "react-scripts test",
     "eject": "react-scripts eject",
-    "ganache-cli": "ganache-cli -s=test -g=0 --secure -u 0 -u 1"
+    "ganache": "ganache-cli -s=test -g=0 --secure -u 0 -u 1",
+    "snaphub": "docker-compose up --remove-orphans -V"
   },
   "eslintConfig": {
     "extends": [
