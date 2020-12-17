@@ -774,6 +774,19 @@ contract DaoRegistry is DaoConstants, AdapterGuard {
     }
 
     /**
+     * @param checkAddr The address to check for a delegate
+     * @return the delegated address or the checked address if it is not a delegate
+     */
+    function getAddressIfDelegated(address checkAddr)
+        public
+        view
+        returns (address)
+    {
+        address delegatedKey = memberAddressesByDelegatedKey[checkAddr];
+        return delegatedKey == address(0x0) ? checkAddr : delegatedKey;
+    }
+
+    /**
      * @param memberAddr The member whose delegate will be returned
      * @return the delegate key at the current time for a member
      */
