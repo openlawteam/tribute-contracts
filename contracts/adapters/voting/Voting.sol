@@ -52,6 +52,13 @@ contract VotingContract is IVoting, DaoConstants, MemberGuard, AdapterGuard {
         InProgress
     }
 
+    /* possible responses to a vote */
+    enum VoteResponse {
+        Blank,
+        Yes,
+        No
+    }
+
     bytes32 constant VotingPeriod = keccak256("voting.votingPeriod");
     bytes32 constant GracePeriod = keccak256("voting.gracePeriod");
 
@@ -85,6 +92,14 @@ contract VotingContract is IVoting, DaoConstants, MemberGuard, AdapterGuard {
         uint256 voteValue
     ) external onlyMember(dao) {
         uint64 proposalId = SafeCast.toUint64(_proposalId);
+        VoteResponse voteResponse = VoteResponse.Blank;
+
+        if(voteValue == uint(VoteResponse.Yes)) {
+            voteResponse = VoteResponse.Yes;
+        } else if(voteValue == uint(VoteResponse.No)) {
+            voteResponse = VoteResponse.No;
+        }
+
         require(dao.isActiveMember(msg.sender), "only active members can vote");
         require(
             dao.getProposalFlag(proposalId, FlagHelper.Flag.SPONSORED),
@@ -112,9 +127,11 @@ contract VotingContract is IVoting, DaoConstants, MemberGuard, AdapterGuard {
                 vote.startingTime + dao.getConfiguration(VotingPeriod),
             "vote has already ended"
         );
-        if (voteValue == 1) {
+
+        /* adjust ballots */
+        if (voteResponse == VoteResponse.Yes) {
             vote.nbYes = vote.nbYes + 1;
-        } else if (voteValue == 2) {
+        } else if (voteResponse == VoteResponse.No) {
             vote.nbNo = vote.nbNo + 1;
         }
     }
