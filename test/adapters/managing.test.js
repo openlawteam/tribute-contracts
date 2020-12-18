@@ -119,9 +119,9 @@ contract("LAOLAND - Managing Adapter", async (accounts) => {
       await managing.createModuleChangeRequest(
         dao.address,
         newModuleId,
-        [],
-        [],
         "",
+        [],
+        [],
         {
           from: myAccount,
           gasPrice: toBN("0"),
@@ -129,7 +129,7 @@ contract("LAOLAND - Managing Adapter", async (accounts) => {
       );
       assert.err("should not pass");
     } catch (err) {
-      assert.equal(err.reason, "invalid address");
+      assert.equal(err.reason.indexOf("invalid address"), 0);
     }
   });
 
