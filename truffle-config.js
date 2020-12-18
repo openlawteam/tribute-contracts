@@ -35,7 +35,7 @@ module.exports = {
    * $ truffle test --network <network-name>
    */
 
-  networks: {
+  networks: {  
     // Useful for testing. The `development` name is special - truffle uses it by default
     // if it's defined here and no other network is specified at the command line.
     // You should run a client (like ganache-cli, geth or parity) in a separate terminal

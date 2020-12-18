@@ -39,14 +39,14 @@ contract ERC20 is IERC20 {
      * construction.
      */
     constructor(
-        string memory name,
-        string memory symbol,
-        uint256 totalSupply
+        string memory nameParam,
+        string memory symbolParam,
+        uint256 totalSupplyParam
     ) {
-        _name = name;
-        _symbol = symbol;
+        _name = nameParam;
+        _symbol = symbolParam;
         _decimals = 18;
-        _totalSupply = totalSupply;
+        _totalSupply = totalSupplyParam;
     }
 
     /**
@@ -84,7 +84,7 @@ contract ERC20 is IERC20 {
     /**
      * @dev Total number of tokens in existence
      */
-    function totalSupply() public override view returns (uint256) {
+    function totalSupply() public view override returns (uint256) {
         return _totalSupply;
     }
 
@@ -93,7 +93,7 @@ contract ERC20 is IERC20 {
      * @param owner The address to query the balance of.
      * @return An uint256 representing the amount owned by the passed address.
      */
-    function balanceOf(address owner) public override view returns (uint256) {
+    function balanceOf(address owner) public view override returns (uint256) {
         return _balances[owner];
     }
 
@@ -105,8 +105,8 @@ contract ERC20 is IERC20 {
      */
     function allowance(address owner, address spender)
         public
-        override
         view
+        override
         returns (uint256)
     {
         return _allowances[owner][spender];

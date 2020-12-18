@@ -135,7 +135,9 @@ contract("LAOLAND - Non Voting Onboarding Adapter", async (accounts) => {
     let tokenAmount = 10;
 
     // Pre-approve spender (DAO) to transfer applicant tokens
-    await oltContract.approve(dao.address, tokenAmount, {from: advisorAccount});
+    await oltContract.approve(dao.address, tokenAmount, {
+      from: advisorAccount,
+    });
 
     // Send a request to join the DAO as an Advisor (non-voting power),
     // the tx passes the OLT ERC20 token, the amount and the nonVotingOnboarding adapter that handles the proposal
