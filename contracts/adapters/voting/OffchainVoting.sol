@@ -57,8 +57,7 @@ contract OffchainVotingContract is
     string public constant VOTE_RESULT_NODE_TYPE =
         "Message(address account,uint256 timestamp,uint256 nbYes,uint256 nbNo,uint256 index,uint256 choice,bytes32 proposalHash)";
 
-    string public constant VOTE_RESULT_ROOT_TYPE =
-        "Message(bytes32 root)";
+    string public constant VOTE_RESULT_ROOT_TYPE = "Message(bytes32 root)";
 
     bytes32 public constant EIP712_DOMAIN_TYPEHASH =
         keccak256(abi.encodePacked(EIP712_DOMAIN));
@@ -189,12 +188,7 @@ contract OffchainVotingContract is
                 abi.encodePacked(
                     "\x19\x01",
                     DOMAIN_SEPARATOR(dao, actionId),
-                    keccak256(
-                        abi.encode(
-                            VOTE_RESULT_ROOT_TYPEHASH,
-                            resultRoot
-                        )
-                    )
+                    keccak256(abi.encode(VOTE_RESULT_ROOT_TYPEHASH, resultRoot))
                 )
             );
     }
@@ -410,7 +404,11 @@ contract OffchainVotingContract is
         (address adapterAddress, ) = dao.proposals(proposalId);
         bytes32 hashCurrent = nodeHash(dao, adapterAddress, result);
         uint256 blockNumber = vote.snapshot;
-        address reporter = recover(hashResultRoot(dao, adapterAddress, resultRoot), result.rootSig);
+        address reporter =
+            recover(
+                hashResultRoot(dao, adapterAddress, resultRoot),
+                result.rootSig
+            );
         address voter = dao.getPriorDelegateKey(result.account, blockNumber);
         require(
             verify(resultRoot, hashCurrent, result.proof),
