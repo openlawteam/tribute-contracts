@@ -80,16 +80,6 @@ async function createOffchainVotingDao(
   votingPeriod = 10,
   gracePeriod = 1
 ) {
-  await Promise.all(
-    members.map(({ address }) => {
-      return web3.eth.sendTransaction({
-        from: senderAccount,
-        to: address,
-        value: "1000000000000000000",
-      });
-    })
-  );
-
   let lib = await FlagHelperLib.new();
   await DaoRegistry.link("FlagHelper", lib.address);
   let dao = await DaoRegistry.new({ from: senderAccount, gasPrice: toBN("0") });
