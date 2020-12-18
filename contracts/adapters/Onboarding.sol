@@ -311,7 +311,6 @@ contract OnboardingContract is
     function processProposal(DaoRegistry dao, uint256 _proposalId)
         external
         override
-        onlyMember(dao)
     {
         uint64 proposalId = SafeCast.toUint64(_proposalId);
         require(

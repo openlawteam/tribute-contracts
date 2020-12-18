@@ -57,6 +57,9 @@ contract OffchainVotingContract is
     string public constant VOTE_RESULT_NODE_TYPE =
         "Message(address account,uint256 timestamp,uint256 nbYes,uint256 nbNo,uint256 index,uint256 choice,bytes32 proposalHash)";
 
+    string public constant VOTE_RESULT_ROOT_TYPE =
+        "Message(bytes32 root)";
+
     bytes32 public constant EIP712_DOMAIN_TYPEHASH =
         keccak256(abi.encodePacked(EIP712_DOMAIN));
     bytes32 public constant PROPOSAL_MESSAGE_TYPEHASH =
@@ -69,6 +72,8 @@ contract OffchainVotingContract is
         keccak256(abi.encodePacked(VOTE_PAYLOAD_TYPE));
     bytes32 public constant VOTE_RESULT_NODE_TYPEHASH =
         keccak256(abi.encodePacked(VOTE_RESULT_NODE_TYPE));
+    bytes32 public constant VOTE_RESULT_ROOT_TYPEHASH =
+        keccak256(abi.encodePacked(VOTE_RESULT_ROOT_TYPE));
     uint256 chainId;
 
     function DOMAIN_SEPARATOR(DaoRegistry dao, address actionId)
@@ -113,6 +118,7 @@ contract OffchainVotingContract is
         uint256 nbNo;
         uint256 nbYes;
         bytes sig;
+        bytes rootSig;
         uint256 index;
         uint256 choice;
         bytes32 proposalHash;
@@ -169,6 +175,26 @@ contract OffchainVotingContract is
                     "\x19\x01",
                     DOMAIN_SEPARATOR(dao, actionId),
                     hashProposalMessage(message)
+                )
+            );
+    }
+
+    function hashResultRoot(
+        DaoRegistry dao,
+        address actionId,
+        bytes32 resultRoot
+    ) public view returns (bytes32) {
+        return
+            keccak256(
+                abi.encodePacked(
+                    "\x19\x01",
+                    DOMAIN_SEPARATOR(dao, actionId),
+                    keccak256(
+                        abi.encode(
+                            VOTE_RESULT_ROOT_TYPEHASH,
+                            resultRoot
+                        )
+                    )
                 )
             );
     }
@@ -384,7 +410,7 @@ contract OffchainVotingContract is
         (address adapterAddress, ) = dao.proposals(proposalId);
         bytes32 hashCurrent = nodeHash(dao, adapterAddress, result);
         uint256 blockNumber = vote.snapshot;
-
+        address reporter = recover(hashResultRoot(dao, adapterAddress, resultRoot), result.rootSig);
         address voter = dao.getPriorDelegateKey(result.account, blockNumber);
         require(
             verify(resultRoot, hashCurrent, result.proof),
@@ -403,12 +429,12 @@ contract OffchainVotingContract is
             "wrong vote signature!"
         );
 
-        _lockFunds(dao, msg.sender);
+        _lockFunds(dao, reporter);
         vote.nbNo = result.nbNo;
         vote.nbYes = result.nbYes;
         vote.index = result.index;
         vote.resultRoot = resultRoot;
-        vote.reporter = msg.sender;
+        vote.reporter = reporter;
         vote.isChallenged = false;
         vote.gracePeriodStartingTime = block.timestamp;
     }

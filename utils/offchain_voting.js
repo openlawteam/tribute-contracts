@@ -47,8 +47,10 @@ function getDomainDefinition(message, verifyingContract, actionId, chainId) {
       return getVoteDomainDefinition(verifyingContract, actionId, chainId);
     case "proposal":
       return getProposalDomainDefinition(verifyingContract, actionId, chainId);
+    case "result":
+      return getVoteResultRootDomainDefinition(verifyingContract, actionId, chainId);
     default:
-      throw new Error("unknown type " + message.type);
+      throw new Error("unknown type '" + message.type + "'");
   }
  }
 
@@ -117,6 +119,19 @@ function getProposalDomainDefinition(verifyingContract, actionId, chainId) {
         { name: 'start', type: 'uint256' },
         { name: 'end', type: 'uint256' },
         { name: 'snapshot', type: 'string' }
+      ],
+      EIP712Domain: getDomainType()
+  };
+
+  return { domain, types}
+}
+
+function getVoteResultRootDomainDefinition(verifyingContract, actionId, chainId) {
+  const domain = getMessageDomainType(chainId, verifyingContract, actionId);
+
+  const types = {
+      Message: [
+        { name: 'root', type: 'bytes32' },
       ],
       EIP712Domain: getDomainType()
   };
@@ -209,6 +224,8 @@ function prepareMessage(message) {
       return prepareVoteMessage(message);
     case "proposal":
       return prepareProposalMessage(message);
+    case "result":
+        return message;
     default:
       throw new Error("unknown type " + message.type);
   }
@@ -379,5 +396,6 @@ Object.assign(exports, {
     getProposalDomainDefinition,
     getVoteDomainDefinition,
     getVoteStepDomainDefinition,
+    getVoteResultRootDomainDefinition,
     TypedDataUtils: sigUtil.TypedDataUtils
   })

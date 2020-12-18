@@ -81,7 +81,7 @@ async function createOffchainVotingDao(
   let lib = await FlagHelperLib.new();
   await DaoRegistry.link("FlagHelper", lib.address);
   let dao = await DaoRegistry.new({ from: senderAccount, gasPrice: toBN("0") });
-  await dao.initialize(senderAccount, {
+  await dao.initialize(members[0].address, {
     from: senderAccount,
     gasPrice: toBN("0"),
   });
@@ -255,7 +255,7 @@ contract("LAOLAND - Offchain Voting Module", async (accounts) => {
 
     const chainId = 1;
     //signer for myAccount (its private key)
-    const signer = SigUtilSigner(members[1].privKey);
+    const signer = SigUtilSigner(members[0].privKey);
     proposalData.sig = await signer(
       proposalData,
       dao.address,
@@ -272,7 +272,7 @@ contract("LAOLAND - Offchain Voting Module", async (accounts) => {
 
     await onboarding.onboardAndSponsor(
       dao.address,
-      members[0].address,
+      members[1].address,
       SHARES,
       sharePrice.mul(toBN(3)).add(remaining),
       prepareVoteProposalData(proposalData),
@@ -282,14 +282,14 @@ contract("LAOLAND - Offchain Voting Module", async (accounts) => {
       }
     );
 
-    const voteEntry = await createVote(proposalHash, myAccount, true);
+    const voteEntry = await createVote(proposalHash, members[0].address, true);
 
     voteEntry.sig = signer(voteEntry, dao.address, onboarding.address, chainId);
     assert.equal(
       true,
       validateMessage(
         voteEntry,
-        myAccount,
+        members[0].address,
         dao.address,
         onboarding.address,
         chainId,
@@ -312,6 +312,8 @@ contract("LAOLAND - Offchain Voting Module", async (accounts) => {
       voteResultTree
     );
 
+    result.rootSig = signer({root: voteResultTree.getHexRoot(), type:'result'}, dao.address, onboarding.address, chainId);
+
     const { types } = getVoteStepDomainDefinition(
       dao.address,
       myAccount,
@@ -328,8 +330,8 @@ contract("LAOLAND - Offchain Voting Module", async (accounts) => {
     const solidityHash = await voting.hashVotingResultNode(result);
     assert.equal(hashStruct, solidityHash);
 
-    const solAddress = await dao.getPriorDelegateKey(myAccount, blockNumber);
-    assert.equal(solAddress, myAccount);
+    const solAddress = await dao.getPriorDelegateKey(members[0].address, blockNumber);
+    assert.equal(solAddress, members[0].address);
 
     await voting.submitVoteResult(
       dao.address,
