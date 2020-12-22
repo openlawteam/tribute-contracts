@@ -11,8 +11,6 @@ import {
   FormControlLabel,
   Switch,
 } from "@material-ui/core";
-import { getDomainType, prepareMessage } from "../utils/erc712";
-import Web3 from "web3";
 
 const useStyles = makeStyles((theme) => ({
   formControl: {
@@ -32,45 +30,16 @@ const useStyles = makeStyles((theme) => ({
   },
 }));
 
-const buildSnapshotHubMessage = (message) => {
-  const addHours = (ts, hours) => {
-    let date = new Date(ts * 1e3);
-    date.setHours(date.getHours() + hours);
-    return (date.getTime() / 1e3).toFixed();
-  };
-  const currentDate = new Date();
-  const timestamp = (currentDate.getTime() / 1e3).toFixed();
-  return {
-    msg: {
-      payload: {
-        name: message.title,
-        body: message.desc,
-        choices: ["Yes", "No"],
-        start: timestamp,
-        end: addHours(timestamp, message.votingTime),
-        snapshot: 1, //FIXME: how to we get that?
-        metadata: {
-          uuid: message.addr,
-          private: message.private ? 1 : 0,
-          type: message.category,
-          subType: message.category,
-        },
-      },
-      timestamp: timestamp,
-      token: "0x8f56682a50becb1df2fb8136954f2062871bc7fc", //FIXME: what is this token?
-      space: "test-space", //needs to be registered in snapshot-hub api
-      type: message.type,
-      version: "0.2.0", //needs to match snapshot-hub api version
-      chainId: message.chainId,
-      verifyingContract: message.verifyingContract,
-    },
-  };
-};
-
-const ProposalForm = ({ provider, web3, addr, chainId, verifyingContract }) => {
+const ProposalForm = ({
+  loading,
+  addr,
+  chainId,
+  verifyingContract,
+  onNewProposal,
+  signature,
+}) => {
   const classes = useStyles();
-  const [signature, setSignature] = useState("");
-  const [message, setMessage] = useState({
+  const [proposal, setProposal] = useState({
     addr: addr,
     chainId: chainId,
     verifyingContract: verifyingContract,
@@ -83,51 +52,26 @@ const ProposalForm = ({ provider, web3, addr, chainId, verifyingContract }) => {
   });
 
   const handleChange = (event) => {
-    setMessage({ ...message, [event.target.name]: event.target.value });
+    setProposal({ ...proposal, [event.target.name]: event.target.value });
   };
 
   const handleToggle = () => {
-    setMessage({ ...message, private: !message.private });
+    setProposal({ ...proposal, private: !proposal.private });
   };
 
-  const handleSubmit = () => {
-    if (!web3) return;
-
-    const preparedMessage = prepareMessage(
-      buildSnapshotHubMessage(message, addr).msg
-    );
-
-    const signer = Web3.utils.toChecksumAddress(addr);
-
-    const chainId = parseInt(web3.version.network, 10);
-
-    const { DomainType, MessageType } = getDomainType(
-      preparedMessage,
-      verifyingContract,
-      chainId
-    );
-
-    const data = JSON.stringify({
-      types: MessageType,
-      domain: DomainType,
-      primaryType: "Message",
-      message: preparedMessage,
+  const handleNewProposal = () => {
+    onNewProposal({ ...proposal });
+    setProposal({
+      addr: addr,
+      chainId: chainId,
+      verifyingContract: verifyingContract,
+      title: "",
+      desc: "",
+      category: "",
+      votingTime: 1,
+      private: false,
+      type: "proposal",
     });
-
-    provider.sendAsync(
-      {
-        method: "eth_signTypedData_v4",
-        params: [signer, data],
-        from: signer,
-      },
-      (err, result) => {
-        if (err || result.error) {
-          console.error(err);
-          return alert(result.error.message);
-        }
-        setSignature(result.result);
-      }
-    );
   };
 
   return (
@@ -138,7 +82,7 @@ const ProposalForm = ({ provider, web3, addr, chainId, verifyingContract }) => {
           labelId="categLabel"
           id="proposalCategorySelect"
           name="category"
-          value={message.category}
+          value={proposal.category}
           onChange={handleChange}
         >
           <MenuItem value={"general"}>General</MenuItem>
@@ -151,7 +95,7 @@ const ProposalForm = ({ provider, web3, addr, chainId, verifyingContract }) => {
           id="proposalTitleInput"
           name="title"
           label="Proposal Title"
-          value={message.title}
+          value={proposal.title}
           onChange={handleChange}
           variant="outlined"
         ></TextField>
@@ -164,7 +108,7 @@ const ProposalForm = ({ provider, web3, addr, chainId, verifyingContract }) => {
           rows={10}
           name="desc"
           label="Proposal Description"
-          value={message.desc}
+          value={proposal.desc}
           onChange={handleChange}
           variant="outlined"
         ></TextField>
@@ -175,7 +119,7 @@ const ProposalForm = ({ provider, web3, addr, chainId, verifyingContract }) => {
           id="proposalVotingInput"
           name="votingTime"
           label="Voting Grace Period (hours)"
-          value={message.votingTime}
+          value={proposal.votingTime}
           onChange={handleChange}
           variant="outlined"
         ></TextField>
@@ -186,8 +130,8 @@ const ProposalForm = ({ provider, web3, addr, chainId, verifyingContract }) => {
           <FormControlLabel
             control={
               <Switch
-                checked={message.private}
-                value={message.private}
+                checked={proposal.private}
+                value={proposal.private}
                 id="privateProposalSwitch"
                 name="private"
                 color="primary"
@@ -203,10 +147,11 @@ const ProposalForm = ({ provider, web3, addr, chainId, verifyingContract }) => {
       <FormControl className={classes.formControl}>
         <Button
           id="submitBtn"
-          onClick={handleSubmit}
+          onClick={handleNewProposal}
           color="primary"
           variant="contained"
           className={classes.submitButton}
+          disabled={loading}
         >
           Submit Proposal
         </Button>

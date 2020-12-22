@@ -7,6 +7,7 @@
     "@testing-library/jest-dom": "^5.11.4",
     "@testing-library/react": "^11.1.0",
     "@testing-library/user-event": "^12.1.10",
+    "axios": "^0.21.0",
     "eth-sig-util": "^3.0.0",
     "ethereumjs-util": "^7.0.7",
     "ethers": "^5.0.24",
@@ -18,7 +19,7 @@
     "web3-react": "^5.0.5"
   },
   "scripts": {
-    "start": "react-scripts start",
+    "start": "REACT_APP_SNAPSHOT_HUB_API_URL=http://localhost:8081 react-scripts start",
     "build": "react-scripts build",
     "test": "react-scripts test",
     "eject": "react-scripts eject",
