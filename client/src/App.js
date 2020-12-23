@@ -17,12 +17,12 @@ import ProposalForm from "./components/ProposalForm";
 import { getApiStatus } from "./services/snapshot-hub";
 import ProposalCard from "./components/ProposalCard";
 
-import { getDomainType, prepareMessage } from "./utils/erc712";
+import { getDomainDefinition, prepareMessage } from "./utils/erc712v2";
 import {
   buildSnapshotHubProposalMessage,
   buildSnapshotHubVoteMessage,
 } from "./utils/snapshot-hub";
-import { submitProposal } from "./services/snapshot-hub";
+import { submit } from "./services/snapshot-hub";
 
 const useStyles = makeStyles((theme) => ({
   app: {
@@ -76,7 +76,7 @@ const Header = ({ apiStatus, addr, onConnect }) => {
         ) : (
           <>
             <Typography id="addrLabel" variant="h6" color="secondary">
-              Please connect to your MetaMask account and select an account
+              Please connect to your MetaMask and select an account
             </Typography>
             <Button color="primary" onClick={onConnect}>
               Connect
@@ -137,17 +137,18 @@ const App = () => {
 
     const signer = Web3.utils.toChecksumAddress(addr);
 
-    const chainId = parseInt(web3.version.network, 10);
+    const chainId = await web3.eth.net.getId();
 
-    const { DomainType, MessageType } = getDomainType(
+    const { domain, types } = getDomainDefinition(
       preparedMessage,
       verifyingContract,
+      proposal.actionId,
       chainId
     );
 
     const data = JSON.stringify({
-      types: MessageType,
-      domain: DomainType,
+      types: types,
+      domain: domain,
       primaryType: "Message",
       message: preparedMessage,
     });
@@ -166,7 +167,7 @@ const App = () => {
         const newSignature = result.result;
         setSignature(newSignature);
         setLoading(true);
-        submitProposal(addr, preparedMessage, newSignature)
+        submit(addr, preparedMessage, newSignature)
           .then((resp) => {
             const ipfsHash = resp.data.ipfsHash;
             proposal["ipfsHash"] = ipfsHash;
@@ -176,17 +177,21 @@ const App = () => {
             setSignature("");
           })
           .catch((e) => {
-            console.error(e);
             setLoading(false);
+            if (e.response && e.response.data) {
+              alert(
+                e.response.data.error + ": " + e.response.data.error_description
+              );
+            }
           });
       }
     );
   };
 
-  const handleVoteSubmit = (vote, proposal) => {
+  const handleVoteSubmit = async (vote, proposal) => {
     if (!web3) return;
 
-    const chainId = parseInt(web3.version.network, 10);
+    const chainId = await web3.eth.net.getId();
 
     const preparedMessage = prepareMessage(
       buildSnapshotHubVoteMessage(vote, proposal, addr).msg
@@ -194,15 +199,16 @@ const App = () => {
 
     const signer = Web3.utils.toChecksumAddress(addr);
 
-    const { DomainType, MessageType } = getDomainType(
+    const { domain, types } = getDomainDefinition(
       preparedMessage,
       verifyingContract,
+      proposal.actionId,
       chainId
     );
 
     const data = JSON.stringify({
-      types: MessageType,
-      domain: DomainType,
+      types: types,
+      domain: domain,
       primaryType: "Message",
       message: preparedMessage,
     });
@@ -222,7 +228,7 @@ const App = () => {
         const newSignature = result.result;
         setSignature(newSignature);
         setLoading(true);
-        submitProposal(addr, preparedMessage, newSignature)
+        submit(addr, preparedMessage, newSignature)
           .then((resp) => {
             const v = {
               ...preparedMessage,
@@ -238,20 +244,16 @@ const App = () => {
                   return { ...p, votes: p.votes ? [...p.votes, v] : [v] };
                 })
             );
-            // if (votes[proposal.ipfsHash]) {
-            //   setVotes({
-            //     [proposal.ipfsHash]: [...votes[proposal.ipfsHash], v],
-            //   });
-            // } else {
-            //   setVotes({ [proposal.ipfsHash]: [v] });
-            // }
             setLoading(false);
             setSignature("");
           })
           .catch((e) => {
-            console.error(e);
-            alert(e);
             setLoading(false);
+            if (e.response && e.response.data) {
+              alert(
+                e.response.data.error + ": " + e.response.data.error_description
+              );
+            }
           });
       }
     );

@@ -24,7 +24,6 @@ const useStyles = makeStyles({
 
 const ProposalCard = ({ proposal, onNewVote }) => {
   const classes = useStyles();
-  console.log(proposal);
   return (
     <Card className={classes.root} variant="outlined">
       <CardContent className={classes.content}>

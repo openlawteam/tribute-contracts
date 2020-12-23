@@ -46,6 +46,7 @@ const ProposalForm = ({
     title: "",
     desc: "",
     category: "",
+    actionId: "0x4539Bac77398aF6d582842F174464b29cf3887ce",
     votingTime: 1,
     private: false,
     type: "proposal",
@@ -68,6 +69,7 @@ const ProposalForm = ({
       title: "",
       desc: "",
       category: "",
+      actionId: "0x4539Bac77398aF6d582842F174464b29cf3887ce",
       votingTime: 1,
       private: false,
       type: "proposal",
@@ -122,6 +124,18 @@ const ProposalForm = ({
           value={proposal.votingTime}
           onChange={handleChange}
           variant="outlined"
+        ></TextField>
+      </FormControl>
+
+      <FormControl className={classes.formControl}>
+        <TextField
+          id="proposalActionId"
+          name="actionId"
+          label="Action Id (Project Proposal)"
+          value={proposal.actionId}
+          onChange={handleChange}
+          variant="outlined"
+          disabled
         ></TextField>
       </FormControl>
 

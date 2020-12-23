@@ -1,6 +1,6 @@
 import axios from "axios";
 
-export const submitProposal = (addr, message, signature) => {
+export const submit = (addr, message, signature) => {
   const data = {
     address: addr,
     msg: JSON.stringify(message),
