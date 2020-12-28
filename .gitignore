@@ -1,3 +1,7 @@
+# LaoLand Contracts
+contracts/
+build/
+
 # Logs
 logs
 *.log
