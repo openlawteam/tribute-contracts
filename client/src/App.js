@@ -14,8 +14,10 @@ import Web3Modal from "web3modal";
 
 import WalletConnectProvider from "@walletconnect/web3-provider";
 import ProposalForm from "./components/ProposalForm";
-import { getApiStatus } from "./services/snapshot-hub";
 import ProposalCard from "./components/ProposalCard";
+import DeployedContractsDialog from "./components/DeployedContractsDialog";
+
+import { getApiStatus } from "./services/snapshot-hub";
 
 import { getDomainDefinition, prepareMessage } from "./utils/erc712v2";
 import {
@@ -23,6 +25,9 @@ import {
   buildSnapshotHubVoteMessage,
 } from "./utils/snapshot-hub";
 import { submit } from "./services/snapshot-hub";
+
+console.log(process.env.REACT_APP_SNAPSHOT_HUB_API_URL);
+console.log(process.env.REACT_APP_DEPLOYED_CONTRACTS);
 
 const useStyles = makeStyles((theme) => ({
   app: {
@@ -38,6 +43,7 @@ const useStyles = makeStyles((theme) => ({
   },
   header: {
     padding: theme.spacing(2),
+    textAlign: "center",
   },
   content: {
     display: "inline-grid",
@@ -57,7 +63,7 @@ const web3Modal = new Web3Modal({
   providerOptions, // required
 });
 
-const Header = ({ apiStatus, addr, onConnect }) => {
+const Header = ({ apiStatus, addr, onConnect, showContracts }) => {
   const classes = useStyles();
 
   return (
@@ -72,6 +78,9 @@ const Header = ({ apiStatus, addr, onConnect }) => {
               Snapshot Hub API:{" "}
               {apiStatus ? JSON.stringify(apiStatus) : "api is down"}
             </Typography>
+            <Button color="primary" variant="outlined" onClick={showContracts}>
+              Deployed Contracts
+            </Button>
           </div>
         ) : (
           <>
@@ -93,11 +102,12 @@ const App = () => {
   const [provider, setProvider] = useState();
   const [web3, setWeb3] = useState(null);
   const [addr, setAddr] = useState("");
-  const [apiStatus, setApiStatus] = useState(false);
+  const [apiStatus, setApiStatus] = useState();
   const [chainId, setChainId] = useState(4);
   const [signature, setSignature] = useState("");
   const [loading, setLoading] = useState(false);
   const [proposals, setProposals] = useState([]);
+  const [showContracts, setShowContracts] = useState(false);
   const [votes, setVotes] = useState({});
   const [verifyingContract, setVerifyingContract] = useState(
     "0xcFc2206eAbFDc5f3d9e7fA54f855A8C15D196c05" //TODO load it from the deployed test contract
@@ -112,10 +122,16 @@ const App = () => {
     setAddr(accounts[0]);
   };
 
+  const checkApiStatus = async () => {
+    const resp = await getApiStatus();
+    const data = resp.data;
+    console.log(data);
+    setApiStatus(data);
+  };
+
   useEffect(() => {
-    getApiStatus()
-      .then((resp) => setApiStatus(resp.data))
-      .catch((e) => console.error(e));
+    checkApiStatus();
+    setInterval(checkApiStatus, 30000);
   }, []);
 
   if (provider) {
@@ -269,30 +285,37 @@ const App = () => {
             onConnect={connect}
             apiStatus={apiStatus}
             loading={loading}
+            showContracts={() => setShowContracts(true)}
           />
         </Grid>
         <Grid item xs={3}>
           {addr && (
-            <ProposalForm
-              loading={loading}
-              provider={provider}
-              chainId={chainId}
-              verifyingContract={verifyingContract}
-              onNewProposal={handleProposalSubmit}
-              signature={signature}
-            />
+            <>
+              <ProposalForm
+                loading={loading}
+                provider={provider}
+                chainId={chainId}
+                verifyingContract={verifyingContract}
+                onNewProposal={handleProposalSubmit}
+                signature={signature}
+              />
+              <Grid container direction="row">
+                {proposals.map((p) => (
+                  <Grid item xs={3} key={Math.random()}>
+                    <ProposalCard proposal={p} onNewVote={handleVoteSubmit} />
+                  </Grid>
+                ))}
+              </Grid>
+            </>
           )}
         </Grid>
-        <Grid item xs={9}>
-          <Grid container direction="row" spacing={1}>
-            {proposals.map((p) => (
-              <Grid item xs={3} key={Math.random()}>
-                <ProposalCard proposal={p} onNewVote={handleVoteSubmit} />
-              </Grid>
-            ))}
-          </Grid>
-        </Grid>
       </Grid>
+      {showContracts && (
+        <DeployedContractsDialog
+          isOpen={showContracts}
+          onClose={() => setShowContracts(false)}
+        />
+      )}
     </Container>
   );
 };

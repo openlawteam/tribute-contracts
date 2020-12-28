@@ -4,6 +4,7 @@
   "private": true,
   "dependencies": {
     "@material-ui/core": "^4.11.2",
+    "@material-ui/icons": "^4.11.2",
     "@testing-library/jest-dom": "^5.11.4",
     "@testing-library/react": "^11.1.0",
     "@testing-library/user-event": "^12.1.10",
@@ -22,13 +23,13 @@
     "web3-utils": "^1.3.1"
   },
   "scripts": {
-    "start": "REACT_APP_SNAPSHOT_HUB_API_URL=http://localhost:8081 react-scripts start",
+    "start": "REACT_APP_SNAPSHOT_HUB_API_URL=http://localhost:8081 REACT_APP_DEPLOYED_CONTRACTS=\"$(cat migrations/deployed-contracts.json)\" react-scripts start",
     "build": "react-scripts build",
     "test": "react-scripts test",
     "eject": "react-scripts eject",
-    "ganache": "node_modules/.bin/ganache-cli -s=test -g=0 --secure -u 0 -u 1 -p 8545 --networkId 123",
+    "ganache": "node_modules/.bin/ganache-cli -s=test -g=0 --secure -u 0 -u 1 -p 8545 --networkId 1337",
     "snaphub": "docker-compose up --remove-orphans -V",
-    "migrate": "cp -R ../contracts ./ && node_modules/.bin/truffle migrate --network local"
+    "migrate": "cp -R ../contracts ./ && node_modules/.bin/truffle migrate --network local --reset"
   },
   "eslintConfig": {
     "extends": [

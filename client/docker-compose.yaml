@@ -1,14 +1,14 @@
 version: "3.7"
 services:
   laoland-snapshot-hub:
-    image: openlaw/snapshot-hub:erc712-4
+    image: openlaw/snapshot-hub:erc712-5
     container_name: laoland-snapshot-hub
     env_file:
       - .env.local
     environment:
       PORT: 8081
       DEV: "true"
-      ALLOWED_DOMAINS: "http://localhost:8081"
+      ALLOWED_DOMAINS: "http://localhost:8080"
       JAWSDB_URL: postgres://admin:admin@laoland-snapshot-postgres:5432/snapshot-db
       TARGET_SNAPSHOT_HUB_API: https://snapshot-hub.dev.thelao.io/ # https://testnet.snapshot.page
     depends_on:

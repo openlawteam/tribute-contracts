@@ -52,6 +52,8 @@ const ProposalForm = ({
     type: "proposal",
   });
 
+  const contracts = JSON.parse(process.env.REACT_APP_DEPLOYED_CONTRACTS) || {};
+
   const handleChange = (event) => {
     setProposal({ ...proposal, [event.target.name]: event.target.value });
   };
