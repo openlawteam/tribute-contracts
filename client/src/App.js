@@ -26,9 +26,6 @@ import {
 } from "./utils/snapshot-hub";
 import { submit } from "./services/snapshot-hub";
 
-console.log(process.env.REACT_APP_SNAPSHOT_HUB_API_URL);
-console.log(process.env.REACT_APP_DEPLOYED_CONTRACTS);
-
 const useStyles = makeStyles((theme) => ({
   app: {
     flex: 1,
@@ -131,7 +128,7 @@ const App = () => {
 
   useEffect(() => {
     checkApiStatus();
-    setInterval(checkApiStatus, 30000);
+    setInterval(checkApiStatus, 50000);
   }, []);
 
   if (provider) {
