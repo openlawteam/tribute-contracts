@@ -103,7 +103,7 @@ const App = () => {
   const [web3, setWeb3] = useState(null);
   const [addr, setAddr] = useState("");
   const [apiStatus, setApiStatus] = useState();
-  const [chainId, setChainId] = useState(4);
+  const [chainId, setChainId] = useState();
   const [signature, setSignature] = useState("");
   const [loading, setLoading] = useState(false);
   const [proposals, setProposals] = useState([]);
@@ -147,19 +147,19 @@ const App = () => {
   const handleProposalSubmit = async (proposal) => {
     if (!web3) return;
 
+    const cid = await web3.eth.net.getId();
+
     const preparedMessage = prepareMessage(
-      buildSnapshotHubProposalMessage(proposal, addr).msg
+      buildSnapshotHubProposalMessage(proposal, cid).msg
     );
 
     const signer = Web3.utils.toChecksumAddress(addr);
-
-    const chainId = await web3.eth.net.getId();
 
     const { domain, types } = getDomainDefinition(
       preparedMessage,
       verifyingContract,
       proposal.actionId,
-      chainId
+      cid
     );
 
     const data = JSON.stringify({
@@ -207,10 +207,10 @@ const App = () => {
   const handleVoteSubmit = async (vote, proposal) => {
     if (!web3) return;
 
-    const chainId = await web3.eth.net.getId();
+    const cid = await web3.eth.net.getId();
 
     const preparedMessage = prepareMessage(
-      buildSnapshotHubVoteMessage(vote, proposal, addr).msg
+      buildSnapshotHubVoteMessage(vote, proposal, addr, cid).msg
     );
 
     const signer = Web3.utils.toChecksumAddress(addr);
@@ -219,7 +219,7 @@ const App = () => {
       preparedMessage,
       verifyingContract,
       proposal.actionId,
-      chainId
+      cid
     );
 
     const data = JSON.stringify({

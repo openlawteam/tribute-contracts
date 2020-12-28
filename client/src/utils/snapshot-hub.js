@@ -1,4 +1,4 @@
-export const buildSnapshotHubProposalMessage = (message) => {
+export const buildSnapshotHubProposalMessage = (message, chainId) => {
   const addHours = (ts, hours) => {
     let date = new Date(ts * 1e3);
     date.setHours(date.getHours() + hours);
@@ -28,13 +28,13 @@ export const buildSnapshotHubProposalMessage = (message) => {
       type: message.type,
       actionId: message.actionId,
       version: "0.2.0", //needs to match snapshot-hub api version
-      chainId: message.chainId,
+      chainId: chainId,
       verifyingContract: message.verifyingContract,
     },
   };
 };
 
-export const buildSnapshotHubVoteMessage = (vote, proposal, addr) => {
+export const buildSnapshotHubVoteMessage = (vote, proposal, addr, chainId) => {
   const currentDate = new Date();
   const timestamp = (currentDate.getTime() / 1e3).toFixed();
   return {
@@ -53,7 +53,7 @@ export const buildSnapshotHubVoteMessage = (vote, proposal, addr) => {
       type: "vote",
       version: "0.2.0",
       actionId: proposal.actionId,
-      chainId: proposal.chainId,
+      chainId: chainId,
       verifyingContract: proposal.verifyingContract,
     },
   };
