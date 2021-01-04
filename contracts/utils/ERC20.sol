@@ -155,7 +155,7 @@ contract ERC20 is IERC20 {
         uint256 value
     ) public override returns (bool) {
         _transfer(from, to, value);
-        _approve(from, msg.sender, _allowances[from][msg.sender].sub(value));
+        _approve(from, msg.sender, _allowances[from][msg.sender] - value);
         return true;
     }
 
@@ -176,7 +176,7 @@ contract ERC20 is IERC20 {
         _approve(
             msg.sender,
             spender,
-            _allowances[msg.sender][spender].add(addedValue)
+            _allowances[msg.sender][spender] + addedValue
         );
         return true;
     }
@@ -198,7 +198,7 @@ contract ERC20 is IERC20 {
         _approve(
             msg.sender,
             spender,
-            _allowances[msg.sender][spender].sub(subtractedValue)
+            _allowances[msg.sender][spender] - subtractedValue
         );
         return true;
     }
@@ -216,8 +216,8 @@ contract ERC20 is IERC20 {
     ) internal {
         require(to != address(0), "to address should not be zero");
 
-        _balances[from] = _balances[from].sub(value);
-        _balances[to] = _balances[to].add(value);
+        _balances[from] = _balances[from] - value;
+        _balances[to] = _balances[to] + value;
         emit Transfer(from, to, value);
     }
 
@@ -231,8 +231,8 @@ contract ERC20 is IERC20 {
     function _mint(address account, uint256 value) internal {
         require(account != address(0), "to address should not be zero");
 
-        _totalSupply = _totalSupply.add(value);
-        _balances[account] = _balances[account].add(value);
+        _totalSupply = _totalSupply + value;
+        _balances[account] = _balances[account] + value;
         emit Transfer(address(0), account, value);
     }
 
@@ -245,8 +245,8 @@ contract ERC20 is IERC20 {
     function _burn(address account, uint256 value) internal {
         require(account != address(0), "account address should not be zero");
 
-        _totalSupply = _totalSupply.sub(value);
-        _balances[account] = _balances[account].sub(value);
+        _totalSupply = _totalSupply - value;
+        _balances[account] = _balances[account] - value;
         emit Transfer(account, address(0), value);
     }
 
@@ -281,7 +281,7 @@ contract ERC20 is IERC20 {
         _approve(
             account,
             msg.sender,
-            _allowances[account][msg.sender].sub(value)
+            _allowances[account][msg.sender] - value
         );
     }
 }
