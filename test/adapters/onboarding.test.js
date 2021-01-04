@@ -38,7 +38,7 @@ const {
   VotingContract,
   ETH_TOKEN,
 } = require("../../utils/DaoFactory.js");
-const { checkBalance } = require("../../utils/TestUtils.js");
+const {checkBalance} = require("../../utils/TestUtils.js");
 
 contract("LAOLAND - Onboarding Adapter", async (accounts) => {
   it("should be possible to join a DAO", async () => {

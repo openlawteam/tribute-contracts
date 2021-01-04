@@ -66,7 +66,7 @@ contract("LAOLAND - GuildKick Adapter", async (accounts) => {
     );
     //Get the new proposal id
     let pastEvents = await dao.getPastEvents();
-    let { proposalId } = pastEvents[0].returnValues;
+    let {proposalId} = pastEvents[0].returnValues;
     return proposalId;
   };
 
@@ -132,9 +132,9 @@ contract("LAOLAND - GuildKick Adapter", async (accounts) => {
 
     //Get the new proposal id
     let pastEvents = await dao.getPastEvents();
-    let { proposalId } = pastEvents[0].returnValues;
+    let {proposalId} = pastEvents[0].returnValues;
 
-    return { kickProposalId: proposalId };
+    return {kickProposalId: proposalId};
   };
 
   it("should be possible to kick a DAO member", async () => {
@@ -171,7 +171,7 @@ contract("LAOLAND - GuildKick Adapter", async (accounts) => {
 
     //SubGuildKick
     let memberToKick = newMember;
-    let { kickProposalId } = await guildKickProposal(
+    let {kickProposalId} = await guildKickProposal(
       dao,
       guildkickContract,
       memberToKick,
@@ -259,7 +259,7 @@ contract("LAOLAND - GuildKick Adapter", async (accounts) => {
 
     // Start a new kick poposal
     let memberToKick = newMember;
-    let { kickProposalId } = await guildKickProposal(
+    let {kickProposalId} = await guildKickProposal(
       dao,
       guildkickContract,
       memberToKick,
@@ -319,7 +319,7 @@ contract("LAOLAND - GuildKick Adapter", async (accounts) => {
 
     // Start a new kick poposal
     let memberToKick = newMemberA;
-    let { kickProposalId } = await guildKickProposal(
+    let {kickProposalId} = await guildKickProposal(
       dao,
       guildkickContract,
       memberToKick,
@@ -374,7 +374,7 @@ contract("LAOLAND - GuildKick Adapter", async (accounts) => {
 
     // Start a new kick poposal
     let memberToKick = newMember;
-    let { kickProposalId } = await guildKickProposal(
+    let {kickProposalId} = await guildKickProposal(
       dao,
       guildkickContract,
       memberToKick,
@@ -434,7 +434,7 @@ contract("LAOLAND - GuildKick Adapter", async (accounts) => {
 
     // Start a new kick poposal
     let memberToKick = newMember;
-    let { kickProposalId } = await guildKickProposal(
+    let {kickProposalId} = await guildKickProposal(
       dao,
       guildkickContract,
       memberToKick,
@@ -493,7 +493,7 @@ contract("LAOLAND - GuildKick Adapter", async (accounts) => {
 
     // Start a new kick poposal
     let memberToKick = newMember;
-    let { kickProposalId } = await guildKickProposal(
+    let {kickProposalId} = await guildKickProposal(
       dao,
       guildkickContract,
       memberToKick,
@@ -547,7 +547,7 @@ contract("LAOLAND - GuildKick Adapter", async (accounts) => {
 
     // Start a new kick poposal
     let memberToKick = newMember;
-    let { kickProposalId } = await guildKickProposal(
+    let {kickProposalId} = await guildKickProposal(
       dao,
       guildkickContract,
       memberToKick,
@@ -614,7 +614,7 @@ contract("LAOLAND - GuildKick Adapter", async (accounts) => {
 
     // Start a new kick poposal
     let memberToKick = newMember;
-    let { kickProposalId } = await guildKickProposal(
+    let {kickProposalId} = await guildKickProposal(
       dao,
       guildkickContract,
       memberToKick,
@@ -668,7 +668,7 @@ contract("LAOLAND - GuildKick Adapter", async (accounts) => {
 
     // Start a new kick poposal to kick out the advisor
     let memberToKick = advisor;
-    let { kickProposalId } = await guildKickProposal(
+    let {kickProposalId} = await guildKickProposal(
       dao,
       guildkickContract,
       memberToKick,
@@ -720,7 +720,7 @@ contract("LAOLAND - GuildKick Adapter", async (accounts) => {
 
     //SubGuildKick
     let memberToKick = newMember;
-    let { kickProposalId } = await guildKickProposal(
+    let {kickProposalId} = await guildKickProposal(
       dao,
       guildkickContract,
       memberToKick,
@@ -799,7 +799,7 @@ contract("LAOLAND - GuildKick Adapter", async (accounts) => {
 
     // Submit guild kick proposal
     let memberToKick = newMember;
-    let { kickProposalId } = await guildKickProposal(
+    let {kickProposalId} = await guildKickProposal(
       dao,
       guildkickContract,
       memberToKick,
@@ -881,7 +881,7 @@ contract("LAOLAND - GuildKick Adapter", async (accounts) => {
 
     //SubGuildKick
     let memberToKick = newMember;
-    let { kickProposalId } = await guildKickProposal(
+    let {kickProposalId} = await guildKickProposal(
       dao,
       guildkickContract,
       memberToKick,
@@ -916,11 +916,11 @@ contract("LAOLAND - GuildKick Adapter", async (accounts) => {
       ETH_TOKEN,
       requestedAmount,
       fromUtf8(""),
-      { gasPrice: toBN("0") }
+      {gasPrice: toBN("0")}
     );
 
     let pastEvents = await dao.getPastEvents();
-    let { proposalId } = pastEvents[0].returnValues;
+    let {proposalId} = pastEvents[0].returnValues;
 
     try {
       // kicked member attemps to sponsor the financing proposal to get grant
@@ -961,7 +961,7 @@ contract("LAOLAND - GuildKick Adapter", async (accounts) => {
 
     //SubGuildKick
     let memberToKick = newMember;
-    let { kickProposalId } = await guildKickProposal(
+    let {kickProposalId} = await guildKickProposal(
       dao,
       guildkickContract,
       memberToKick,
@@ -1001,7 +1001,7 @@ contract("LAOLAND - GuildKick Adapter", async (accounts) => {
         [],
         [],
         0,
-        { from: kickedMember, gasPrice: toBN("0") }
+        {from: kickedMember, gasPrice: toBN("0")}
       );
       assert.fail(
         "should not be possible for a kicked member to submit a managing proposal"
@@ -1036,7 +1036,7 @@ contract("LAOLAND - GuildKick Adapter", async (accounts) => {
 
     //SubGuildKick
     let memberToKick = newMember;
-    let { kickProposalId } = await guildKickProposal(
+    let {kickProposalId} = await guildKickProposal(
       dao,
       guildkickContract,
       memberToKick,
@@ -1073,12 +1073,12 @@ contract("LAOLAND - GuildKick Adapter", async (accounts) => {
       [],
       [],
       0,
-      { from: member, gasPrice: toBN("0") }
+      {from: member, gasPrice: toBN("0")}
     );
 
     //Get the new proposal id
     let pastEvents = await dao.getPastEvents();
-    let { proposalId } = pastEvents[0].returnValues;
+    let {proposalId} = pastEvents[0].returnValues;
 
     try {
       // kicked member attemps to sponsor a managing proposal
@@ -1118,7 +1118,7 @@ contract("LAOLAND - GuildKick Adapter", async (accounts) => {
 
     // Submit GuildKick
     let memberToKick = newMember;
-    let { kickProposalId } = await guildKickProposal(
+    let {kickProposalId} = await guildKickProposal(
       dao,
       guildkickContract,
       memberToKick,
@@ -1242,7 +1242,7 @@ contract("LAOLAND - GuildKick Adapter", async (accounts) => {
 
     // Submit GuildKick
     let memberToKick = newMember;
-    let { kickProposalId } = await guildKickProposal(
+    let {kickProposalId} = await guildKickProposal(
       dao,
       guildkickContract,
       memberToKick,
@@ -1288,7 +1288,7 @@ contract("LAOLAND - GuildKick Adapter", async (accounts) => {
 
     // Submit GuildKick
     let memberToKick = newMember;
-    let { kickProposalId } = await guildKickProposal(
+    let {kickProposalId} = await guildKickProposal(
       dao,
       guildkickContract,
       memberToKick,

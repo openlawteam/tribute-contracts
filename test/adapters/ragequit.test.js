@@ -41,7 +41,7 @@ const {
   RagequitContract,
   FinancingContract,
 } = require("../../utils/DaoFactory.js");
-const { checkLastEvent } = require("../../utils/TestUtils.js");
+const {checkLastEvent} = require("../../utils/TestUtils.js");
 
 contract("LAOLAND - Ragequit Adapter", async (accounts) => {
   const submitNewMemberProposal = async (
@@ -65,7 +65,7 @@ contract("LAOLAND - Ragequit Adapter", async (accounts) => {
     );
     //Get the new proposal id
     let pastEvents = await dao.getPastEvents();
-    let { proposalId } = pastEvents[0].returnValues;
+    let {proposalId} = pastEvents[0].returnValues;
     return proposalId;
   };
 
@@ -292,7 +292,7 @@ contract("LAOLAND - Ragequit Adapter", async (accounts) => {
 
     //Get the new proposalId from event log
     proposalId = 1;
-    await checkLastEvent(dao, { proposalId });
+    await checkLastEvent(dao, {proposalId});
 
     //Old Member sponsors the Financing proposal
     await financing.sponsorProposal(dao.address, proposalId, [], {
@@ -366,7 +366,7 @@ contract("LAOLAND - Ragequit Adapter", async (accounts) => {
 
     //Get the new proposalId from event log
     proposalId = 1;
-    checkLastEvent(dao, { proposalId });
+    checkLastEvent(dao, {proposalId});
 
     //Old Member sponsors the Financing proposal
     await financing.sponsorProposal(dao.address, proposalId, [], {

@@ -214,7 +214,11 @@ contract DaoRegistry is DaoConstants, AdapterGuard {
      * @return The configuration value of a particular key
      * @param key The key to look up in the configuration mapping
      */
-    function getAddressConfiguration(bytes32 key) external view returns (address) {
+    function getAddressConfiguration(bytes32 key)
+        external
+        view
+        returns (address)
+    {
         return addressConfiguration[key];
     }
 
@@ -355,8 +359,9 @@ contract DaoRegistry is DaoConstants, AdapterGuard {
         uint256 _actionValue,
         bytes calldata _actionData
     ) external hasAccess(this, FlagHelper.Flag.EXECUTE) returns (bytes memory) {
-        (bool success, bytes memory retData) =
-            _actionTo.call{value: _actionValue}(_actionData);
+        (bool success, bytes memory retData) = _actionTo.call{
+            value: _actionValue
+        }(_actionData);
 
         if (!success) {
             string memory m = _getRevertMsg(retData);
@@ -395,8 +400,10 @@ contract DaoRegistry is DaoConstants, AdapterGuard {
         external
         hasAccess(this, FlagHelper.Flag.SPONSOR_PROPOSAL)
     {
-        Proposal storage proposal =
-            _setProposalFlag(proposalId, FlagHelper.Flag.SPONSORED);
+        Proposal storage proposal = _setProposalFlag(
+            proposalId,
+            FlagHelper.Flag.SPONSORED
+        );
 
         uint256 flags = proposal.flags;
 
@@ -428,8 +435,10 @@ contract DaoRegistry is DaoConstants, AdapterGuard {
         external
         hasAccess(this, FlagHelper.Flag.PROCESS_PROPOSAL)
     {
-        Proposal storage proposal =
-            _setProposalFlag(proposalId, FlagHelper.Flag.PROCESSED);
+        Proposal storage proposal = _setProposalFlag(
+            proposalId,
+            FlagHelper.Flag.PROCESSED
+        );
         uint256 flags = proposal.flags;
 
         emit ProcessedProposal(proposalId, flags);
@@ -545,9 +554,9 @@ contract DaoRegistry is DaoConstants, AdapterGuard {
         );
 
         // Reset the delegation of the previous delegate
-        memberAddressesByDelegatedKey[
-            getCurrentDelegateKey(memberAddr)
-        ] = address(0x0);
+        memberAddressesByDelegatedKey[getCurrentDelegateKey(
+            memberAddr
+        )] = address(0x0);
 
         memberAddressesByDelegatedKey[newDelegateKey] = memberAddr;
 
@@ -769,8 +778,8 @@ contract DaoRegistry is DaoConstants, AdapterGuard {
         uint32 upper = nCheckpoints - 1;
         while (upper > lower) {
             uint32 center = upper - (upper - lower) / 2; // ceil, avoiding overflow
-            Checkpoint memory cp =
-                _bank.checkpoints[tokenAddr][account][center];
+            Checkpoint memory cp = _bank
+                .checkpoints[tokenAddr][account][center];
             if (cp.fromBlock == blockNumber) {
                 return cp.amount;
             } else if (cp.fromBlock < blockNumber) {

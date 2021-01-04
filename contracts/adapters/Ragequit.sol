@@ -89,10 +89,10 @@ contract RagequitContract is IRagequit, DaoConstants, MemberGuard {
         ragequit.status = RagequitStatus.IN_PROGRESS;
         ragequit.blockNumber = block.number;
         //TODO: make this the sum of all the internal tokens
-        ragequit.initialTotalSharesAndLoot = dao
-            .balanceOf(TOTAL, SHARES)
-             + dao.balanceOf(TOTAL, LOOT)
-             + dao.balanceOf(TOTAL, LOCKED_LOOT);
+        ragequit.initialTotalSharesAndLoot =
+            dao.balanceOf(TOTAL, SHARES) +
+            dao.balanceOf(TOTAL, LOOT) +
+            dao.balanceOf(TOTAL, LOCKED_LOOT);
 
         ragequit.sharesAndLootBurnt = sharesToBurn + lootToBurn;
         ragequit.currentIndex = 0;
@@ -128,12 +128,11 @@ contract RagequitContract is IRagequit, DaoConstants, MemberGuard {
         uint256 blockNumber = ragequit.blockNumber;
         for (uint256 i = currentIndex; i < maxIndex; i++) {
             address token = dao.getToken(i);
-            uint256 amountToRagequit =
-                FairShareHelper.calc(
-                    dao.getPriorAmount(GUILD, token, blockNumber),
-                    sharesAndLootToBurn,
-                    initialTotalSharesAndLoot
-                );
+            uint256 amountToRagequit = FairShareHelper.calc(
+                dao.getPriorAmount(GUILD, token, blockNumber),
+                sharesAndLootToBurn,
+                initialTotalSharesAndLoot
+            );
             if (amountToRagequit > 0) {
                 // gas optimization to allow a higher maximum token limit
                 // deliberately not using safemath here to keep overflows from preventing the function execution

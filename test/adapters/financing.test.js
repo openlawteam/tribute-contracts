@@ -38,7 +38,7 @@ const {
   FinancingContract,
   ETH_TOKEN,
 } = require("../../utils/DaoFactory.js");
-const { checkLastEvent, checkBalance } = require("../../utils/TestUtils.js");
+const {checkLastEvent, checkBalance} = require("../../utils/TestUtils.js");
 const remaining = sharePrice.sub(toBN("50000000000000"));
 
 contract("LAOLAND - Financing Adapter", async (accounts) => {
@@ -68,7 +68,7 @@ contract("LAOLAND - Financing Adapter", async (accounts) => {
 
     //Get the new proposal id
     let proposalId = "0";
-    await checkLastEvent(dao, { proposalId });
+    await checkLastEvent(dao, {proposalId});
 
     //Sponsor the new proposal, vote and process it
     await onboarding.sponsorProposal(dao.address, proposalId, [], {
@@ -105,12 +105,12 @@ contract("LAOLAND - Financing Adapter", async (accounts) => {
       ETH_TOKEN,
       requestedAmount,
       fromUtf8(""),
-      { gasPrice: toBN("0") }
+      {gasPrice: toBN("0")}
     );
 
     //Get the new proposalId from event log
     proposalId = "1";
-    await checkLastEvent(dao, { proposalId });
+    await checkLastEvent(dao, {proposalId});
 
     //Member sponsors the Financing proposal
     await financing.sponsorProposal(dao.address, proposalId, [], {
@@ -166,7 +166,7 @@ contract("LAOLAND - Financing Adapter", async (accounts) => {
 
     //Get the new proposal id
     let proposalId = "0";
-    await checkLastEvent(dao, { proposalId });
+    await checkLastEvent(dao, {proposalId});
 
     //Sponsor the new proposal, vote and process it
     await onboarding.sponsorProposal(dao.address, proposalId, [], {
@@ -196,7 +196,7 @@ contract("LAOLAND - Financing Adapter", async (accounts) => {
 
     //Get the new proposalId from event log
     proposalId = "1";
-    await checkLastEvent(dao, { proposalId });
+    await checkLastEvent(dao, {proposalId});
 
     //Member sponsors the Financing proposal
     await financing.sponsorProposal(dao.address, proposalId, [], {
@@ -243,7 +243,7 @@ contract("LAOLAND - Financing Adapter", async (accounts) => {
 
     //Get the new proposal id
     let proposalId = "0";
-    await checkLastEvent(dao, { proposalId });
+    await checkLastEvent(dao, {proposalId});
 
     //Sponsor the new proposal, vote and process it
     await onboarding.sponsorProposal(dao.address, proposalId, [], {
@@ -301,7 +301,7 @@ contract("LAOLAND - Financing Adapter", async (accounts) => {
 
     //Get the new proposal id
     let proposalId = "0";
-    await checkLastEvent(dao, { proposalId });
+    await checkLastEvent(dao, {proposalId});
 
     //Sponsor the new proposal, vote and process it
     await onboarding.sponsorProposal(dao.address, proposalId, [], {
