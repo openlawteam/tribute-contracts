@@ -36,14 +36,14 @@ contract ERC20 is IERC20 {
      * construction.
      */
     constructor(
-        string memory name,
-        string memory symbol,
-        uint256 totalSupply
+        string memory tokenName,
+        string memory tokenSymbol,
+        uint256 tokenTotalSupply
     ) {
-        _name = name;
-        _symbol = symbol;
+        _name = tokenName;
+        _symbol = tokenSymbol;
         _decimals = 18;
-        _totalSupply = totalSupply;
+        _totalSupply = tokenTotalSupply;
     }
 
     /**

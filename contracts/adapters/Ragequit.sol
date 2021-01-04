@@ -91,10 +91,10 @@ contract RagequitContract is IRagequit, DaoConstants, MemberGuard {
         //TODO: make this the sum of all the internal tokens
         ragequit.initialTotalSharesAndLoot = dao
             .balanceOf(TOTAL, SHARES)
-            .add(dao.balanceOf(TOTAL, LOOT))
-            .add(dao.balanceOf(TOTAL, LOCKED_LOOT));
+             + dao.balanceOf(TOTAL, LOOT)
+             + dao.balanceOf(TOTAL, LOCKED_LOOT);
 
-        ragequit.sharesAndLootBurnt = sharesToBurn.add(lootToBurn);
+        ragequit.sharesAndLootBurnt = sharesToBurn + lootToBurn;
         ragequit.currentIndex = 0;
 
         dao.subtractFromBalance(memberAddr, SHARES, sharesToBurn);

@@ -97,7 +97,7 @@ contract OnboardingContract is
         );
         dao.setConfiguration(
             configKey(tokenAddrToMint, TokenAddr),
-            uint256(tokenAddr)
+            uint256(address(tokenAddr))
         );
 
         dao.registerPotentialNewInternalToken(tokenAddrToMint);
