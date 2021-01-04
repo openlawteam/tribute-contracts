@@ -1,4 +1,4 @@
-pragma solidity ^0.7.0;
+pragma solidity ^0.8.0;
 
 // SPDX-License-Identifier: MIT
 
@@ -6,7 +6,6 @@ import "./DaoConstants.sol";
 import "../helpers/FlagHelper.sol";
 import "../guards/AdapterGuard.sol";
 import "../utils/IERC20.sol";
-import "../utils/SafeMath.sol";
 
 /**
 MIT License
@@ -39,7 +38,6 @@ contract DaoRegistry is DaoConstants, AdapterGuard {
      * LIBRARIES
      */
     using FlagHelper for uint256;
-    using SafeMath for uint256;
 
     enum DaoState {CREATION, READY}
 
@@ -695,8 +693,8 @@ contract DaoRegistry is DaoConstants, AdapterGuard {
         address token,
         uint256 amount
     ) public hasAccess(this, FlagHelper.Flag.INTERNAL_TRANSFER) {
-        uint256 newAmount = balanceOf(from, token).sub(amount);
-        uint256 newAmount2 = balanceOf(to, token).add(amount);
+        uint256 newAmount = balanceOf(from, token) - amount;
+        uint256 newAmount2 = balanceOf(to, token) - amount;
 
         _createNewAmountCheckpoint(from, token, newAmount);
         _createNewAmountCheckpoint(to, token, newAmount2);

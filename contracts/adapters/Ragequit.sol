@@ -1,4 +1,4 @@
-pragma solidity ^0.7.0;
+pragma solidity ^0.8.0;
 
 // SPDX-License-Identifier: MIT
 
@@ -7,7 +7,6 @@ import "../core/DaoRegistry.sol";
 import "../guards/MemberGuard.sol";
 import "./interfaces/IRagequit.sol";
 import "../helpers/FairShareHelper.sol";
-import "../utils/SafeMath.sol";
 
 /**
 MIT License
@@ -34,8 +33,6 @@ SOFTWARE.
  */
 
 contract RagequitContract is IRagequit, DaoConstants, MemberGuard {
-    using SafeMath for uint256;
-
     enum RagequitStatus {NOT_STARTED, IN_PROGRESS, DONE}
 
     struct Ragequit {

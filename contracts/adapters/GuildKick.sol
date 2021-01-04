@@ -1,4 +1,4 @@
-pragma solidity ^0.7.0;
+pragma solidity ^0.8.0;
 
 // SPDX-License-Identifier: MIT
 
@@ -8,7 +8,6 @@ import "../guards/MemberGuard.sol";
 import "./interfaces/IGuildKick.sol";
 import "../adapters/interfaces/IVoting.sol";
 import "../helpers/FairShareHelper.sol";
-import "../utils/SafeMath.sol";
 import "../utils/SafeCast.sol";
 
 /**
@@ -36,7 +35,6 @@ SOFTWARE.
  */
 
 contract GuildKickContract is IGuildKick, DaoConstants, MemberGuard {
-    using SafeMath for uint256;
     using SafeCast for uint256;
 
     enum GuildKickStatus {NOT_STARTED, IN_PROGRESS, DONE}

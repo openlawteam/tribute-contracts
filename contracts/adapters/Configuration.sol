@@ -1,4 +1,4 @@
-pragma solidity ^0.7.0;
+pragma solidity ^0.8.0;
 
 // SPDX-License-Identifier: MIT
 
@@ -7,7 +7,6 @@ import "../core/DaoRegistry.sol";
 import "../guards/MemberGuard.sol";
 import "./interfaces/IConfiguration.sol";
 import "../adapters/interfaces/IVoting.sol";
-import "../utils/SafeMath.sol";
 import "../utils/SafeCast.sol";
 
 /**
@@ -35,7 +34,6 @@ SOFTWARE.
  */
 
 contract ConfigurationContract is IConfiguration, DaoConstants, MemberGuard {
-    using SafeMath for uint256;
     using SafeCast for uint256;
 
     enum ConfigurationStatus {NOT_CREATED, IN_PROGRESS, DONE}

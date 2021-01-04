@@ -1,8 +1,7 @@
-pragma solidity ^0.7.0;
+pragma solidity ^0.8.0;
 // SPDX-License-Identifier: MIT
 
 import "./IERC20.sol";
-import "./SafeMath.sol";
 
 /**
  * @title Standard ERC20 token
@@ -17,8 +16,6 @@ import "./SafeMath.sol";
  * compliant implementations may not do it.
  */
 contract ERC20 is IERC20 {
-    using SafeMath for uint256;
-
     mapping(address => uint256) private _balances;
 
     mapping(address => mapping(address => uint256)) private _allowances;

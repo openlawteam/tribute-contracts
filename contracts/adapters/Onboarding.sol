@@ -1,4 +1,4 @@
-pragma solidity ^0.7.0;
+pragma solidity ^0.8.0;
 
 // SPDX-License-Identifier: MIT
 
@@ -8,7 +8,6 @@ import "../core/DaoRegistry.sol";
 import "../adapters/interfaces/IVoting.sol";
 import "../guards/MemberGuard.sol";
 import "../guards/AdapterGuard.sol";
-import "../utils/SafeMath.sol";
 import "../utils/SafeCast.sol";
 
 /**
@@ -41,7 +40,6 @@ contract OnboardingContract is
     MemberGuard,
     AdapterGuard
 {
-    using SafeMath for uint256;
     using SafeCast for uint256;
 
     bytes32 constant ChunkSize = keccak256("onboarding.chunkSize");
@@ -119,18 +117,18 @@ contract OnboardingContract is
         );
         require(chunkSize > 0, "config missing");
 
-        uint256 numberOfChunks = value.div(chunkSize);
+        uint256 numberOfChunks = value / chunkSize;
         require(numberOfChunks > 0, "not sufficient funds");
 
         uint256 sharesPerChunk = dao.getConfiguration(
             configKey(tokenToMint, SharesPerChunk)
         );
-        uint256 amount = numberOfChunks.mul(chunkSize);
-        uint256 sharesRequested = numberOfChunks.mul(sharesPerChunk);
+        uint256 amount = numberOfChunks * chunkSize;
+        uint256 sharesRequested = numberOfChunks * sharesPerChunk;
 
         uint256 totalShares = shares[applicant] + sharesRequested;
         require(
-            totalShares.div(sharesPerChunk) <
+            totalShares / sharesPerChunk <
                 dao.getConfiguration(configKey(tokenToMint, MaximumChunks)),
             "total shares for this member must be lower than the maxmimum"
         );
@@ -179,7 +177,7 @@ contract OnboardingContract is
             dao,
             tokenToMint,
             applicant,
-            msg.sender,
+            payable(msg.sender),
             tokenAmount,
             tokenAddr
         );
@@ -187,7 +185,7 @@ contract OnboardingContract is
         if (amountUsed < tokenAmount) {
             uint256 amount = tokenAmount - amountUsed;
             if (tokenAddr == ETH_TOKEN) {
-                msg.sender.transfer(amount);
+                payable(msg.sender).transfer(amount);
             } else {
                 IERC20 token = IERC20(tokenAddr);
                 require(
