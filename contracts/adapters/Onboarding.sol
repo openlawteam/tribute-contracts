@@ -98,9 +98,9 @@ contract OnboardingContract is
             configKey(tokenAddrToMint, SharesPerChunk),
             sharesPerChunk
         );
-        dao.setConfiguration(
+        dao.setAddressConfiguration(
             configKey(tokenAddrToMint, TokenAddr),
-            uint256(address(tokenAddr))
+            tokenAddr
         );
 
         dao.registerPotentialNewInternalToken(tokenAddrToMint);
@@ -193,7 +193,7 @@ contract OnboardingContract is
         uint256 tokenAmount
     ) public payable override returns (uint64) {
         address tokenAddr =
-            address(dao.getConfiguration(configKey(tokenToMint, TokenAddr)));
+            address(dao.getAddressConfiguration(configKey(tokenToMint, TokenAddr)));
         if (tokenAddr == ETH_TOKEN) {
             // ETH onboarding
             require(msg.value > 0, "not enough ETH");

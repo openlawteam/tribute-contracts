@@ -133,7 +133,8 @@ contract DaoRegistry is DaoConstants, AdapterGuard {
     /// @notice The inverse map to get the adapter id based on its address
     mapping(address => AdapterDetails) public inverseRegistry;
     /// @notice The map that keeps track of configuration parameters for the DAO and adapters
-    mapping(bytes32 => uint256) public configuration;
+    mapping(bytes32 => uint256) public mainConfiguration;
+    mapping(bytes32 => address) public addressConfiguration;
 
     /// @notice Clonable contract must have an empty constructor
     // constructor() {
@@ -185,7 +186,20 @@ contract DaoRegistry is DaoConstants, AdapterGuard {
         external
         hasAccess(this, FlagHelper.Flag.SET_CONFIGURATION)
     {
-        configuration[key] = value;
+        mainConfiguration[key] = value;
+    }
+
+    /**
+     * @notice Sets an configuration value
+     * @dev Changes the value of a key in the configuration mapping
+     * @param key The configuration key for which the value will be set
+     * @param value The value to set the key
+     */
+    function setAddressConfiguration(bytes32 key, address value)
+        external
+        hasAccess(this, FlagHelper.Flag.SET_CONFIGURATION)
+    {
+        addressConfiguration[key] = value;
     }
 
     /**
@@ -193,7 +207,15 @@ contract DaoRegistry is DaoConstants, AdapterGuard {
      * @param key The key to look up in the configuration mapping
      */
     function getConfiguration(bytes32 key) external view returns (uint256) {
-        return configuration[key];
+        return mainConfiguration[key];
+    }
+
+    /**
+     * @return The configuration value of a particular key
+     * @param key The key to look up in the configuration mapping
+     */
+    function getAddressConfiguration(bytes32 key) external view returns (address) {
+        return addressConfiguration[key];
     }
 
     /**
