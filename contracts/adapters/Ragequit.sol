@@ -128,11 +128,12 @@ contract RagequitContract is IRagequit, DaoConstants, MemberGuard {
         uint256 blockNumber = ragequit.blockNumber;
         for (uint256 i = currentIndex; i < maxIndex; i++) {
             address token = dao.getToken(i);
-            uint256 amountToRagequit = FairShareHelper.calc(
-                dao.getPriorAmount(GUILD, token, blockNumber),
-                sharesAndLootToBurn,
-                initialTotalSharesAndLoot
-            );
+            uint256 amountToRagequit =
+                FairShareHelper.calc(
+                    dao.getPriorAmount(GUILD, token, blockNumber),
+                    sharesAndLootToBurn,
+                    initialTotalSharesAndLoot
+                );
             if (amountToRagequit > 0) {
                 // gas optimization to allow a higher maximum token limit
                 // deliberately not using safemath here to keep overflows from preventing the function execution

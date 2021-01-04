@@ -63,7 +63,9 @@ contract GuildKickContract is IGuildKick, DaoConstants, MemberGuard {
         address memberToKick,
         bytes calldata data
     ) external override onlyMember(dao) returns (uint64) {
-        GuildKick memory guildKickData = GuildKick(
+        // A kick proposal is created and needs to be voted
+        uint64 proposalId = dao.submitProposal();
+        kicks[proposalId] = GuildKick(
             memberToKick,
             GuildKickStatus.IN_PROGRESS,
             dao.balanceOf(memberToKick, SHARES),
@@ -72,10 +74,6 @@ contract GuildKickContract is IGuildKick, DaoConstants, MemberGuard {
             0,
             block.number
         );
-
-        // A kick proposal is created and needs to be voted
-        uint64 proposalId = dao.submitProposal();
-        kicks[proposalId] = guildKickData;
 
         // start the voting process for the guild kick proposal
         IVoting votingContract = IVoting(dao.getAdapterAddress(VOTING));
@@ -150,11 +148,12 @@ contract GuildKickContract is IGuildKick, DaoConstants, MemberGuard {
         uint256 initialTotalShares = kick.initialTotalShares;
         for (uint256 i = currentIndex; i < maxIndex; i++) {
             address token = dao.getToken(i);
-            uint256 amountToRagequit = FairShareHelper.calc(
-                dao.balanceOf(GUILD, token),
-                kick.sharesToBurn,
-                initialTotalShares
-            );
+            uint256 amountToRagequit =
+                FairShareHelper.calc(
+                    dao.balanceOf(GUILD, token),
+                    kick.sharesToBurn,
+                    initialTotalShares
+                );
             if (amountToRagequit > 0) {
                 // gas optimization to allow a higher maximum token limit
                 // deliberately not using safemath here to keep overflows from preventing the function execution

@@ -64,11 +64,8 @@ contract ConfigurationContract is IConfiguration, DaoConstants, MemberGuard {
             "configuration must have the same number of keys and values"
         );
 
-        Configuration memory configuration = Configuration(
-            ConfigurationStatus.IN_PROGRESS,
-            keys,
-            values
-        );
+        Configuration memory configuration =
+            Configuration(ConfigurationStatus.IN_PROGRESS, keys, values);
 
         uint64 proposalId = dao.submitProposal();
         configurations[proposalId] = configuration;

@@ -66,7 +66,7 @@ contract("Registry", async (accounts) => {
     try {
       await registry.addAdapter(moduleId, moduleAddress, 0);
     } catch (error) {
-      assert.equal(error.reason, "invalid address");
+      assert.equal(error.reason.indexOf("invalid address"), 0);
     }
   });
 

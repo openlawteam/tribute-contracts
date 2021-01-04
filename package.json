@@ -7,10 +7,12 @@
     "test": "test"
   },
   "dependencies": {
+    "eth-sig-util": "^3.0.0",
     "ethereumjs-util": "^7.0.5",
+    "ganache-cli": "^6.12.1",
     "keccak256": "^1.0.0",
-    "truffle": "^5.1.47",
-    "web3-utils": "^1.2.11"
+    "truffle": "^5.1.57",
+    "web3-utils": "^1.3.0"
   },
   "devDependencies": {
     "@graphprotocol/graph-cli": "^0.18.0",

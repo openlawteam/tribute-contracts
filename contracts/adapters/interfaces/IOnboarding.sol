@@ -34,7 +34,7 @@ interface IOnboarding {
         address payable applicant,
         address tokenToMint,
         uint256 tokenAmount
-    ) external payable;
+    ) external payable returns (uint64);
 
     function sponsorProposal(
         DaoRegistry dao,

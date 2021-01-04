@@ -56,7 +56,7 @@ contract("LAOLAND - Managing Adapter", async (accounts) => {
         [],
         [],
         0,
-        {from: myAccount, gasPrice: toBN("0")}
+        { from: myAccount, gasPrice: toBN("0") }
       );
       assert.err("should not pass");
     } catch (err) {
@@ -82,7 +82,7 @@ contract("LAOLAND - Managing Adapter", async (accounts) => {
         [],
         [],
         0,
-        {from: myAccount, gasPrice: toBN("0")}
+        { from: myAccount, gasPrice: toBN("0") }
       );
       assert.err("should not pass");
     } catch (err) {
@@ -97,7 +97,7 @@ contract("LAOLAND - Managing Adapter", async (accounts) => {
         [],
         [],
         0,
-        {from: myAccount, gasPrice: toBN("0")}
+        { from: myAccount, gasPrice: toBN("0") }
       );
       assert.err("should not pass");
     } catch (err) {
@@ -119,9 +119,9 @@ contract("LAOLAND - Managing Adapter", async (accounts) => {
       await managing.createModuleChangeRequest(
         dao.address,
         newModuleId,
-        [],
-        [],
         "",
+        [],
+        [],
         {
           from: myAccount,
           gasPrice: toBN("0"),
@@ -129,7 +129,7 @@ contract("LAOLAND - Managing Adapter", async (accounts) => {
       );
       assert.err("should not pass");
     } catch (err) {
-      assert.equal(err.reason, "invalid address");
+      assert.equal(err.reason.indexOf("invalid address"), 0);
     }
   });
 
@@ -154,7 +154,7 @@ contract("LAOLAND - Managing Adapter", async (accounts) => {
       [],
       [],
       0,
-      {from: myAccount, gasPrice: toBN("0")}
+      { from: myAccount, gasPrice: toBN("0") }
     );
 
     //Get the new proposal id
@@ -201,7 +201,7 @@ contract("LAOLAND - Managing Adapter", async (accounts) => {
       [],
       [],
       0,
-      {from: myAccount, gasPrice: toBN("0")}
+      { from: myAccount, gasPrice: toBN("0") }
     );
 
     let proposalId = 0;
