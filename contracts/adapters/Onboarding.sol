@@ -122,7 +122,7 @@ contract OnboardingContract is
         require(details.chunkSize > 0, "config missing");
 
         details.numberOfChunks = value / details.chunkSize;
-        require(numberOfChunks > 0, "not sufficient funds");
+        require(details.numberOfChunks > 0, "not sufficient funds");
 
         details.sharesPerChunk = dao.getConfiguration(
             configKey(tokenToMint, SharesPerChunk)
