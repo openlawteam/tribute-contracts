@@ -24,10 +24,14 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
  */
-const sha3 = web3.utils.sha3;
-const toBN = web3.utils.toBN;
-const toWei = web3.utils.toWei;
-const fromUtf8 = web3.utils.fromUtf8;
+
+const Web3Utils = require('web3-utils');
+
+const sha3 = Web3Utils.sha3;
+const toBN = Web3Utils.toBN;
+const toWei = Web3Utils.toWei;
+const fromUtf8 = Web3Utils.fromUtf8;
+
 
 const GUILD = "0x000000000000000000000000000000000000dead";
 const TOTAL = "0x000000000000000000000000000000000000babe";
@@ -169,7 +173,33 @@ async function addDefaultAdapters(
   return dao;
 }
 
-var identityDao = null;
+async function deployDao(
+  deployer,
+  unitPrice = sharePrice,
+  nbShares = numberOfShares,
+  votingPeriod = 10,
+  gracePeriod = 1,
+  tokenAddr = ETH_TOKEN
+) {
+  await deployer.deploy(FlagHelperLib);
+  
+  await deployer.link(FlagHelperLib, DaoRegistry);
+
+  await deployer.deploy(DaoRegistry);
+  
+  const dao = await cloneDaoDeployer(deployer);
+
+  await addDefaultAdapters(
+    dao,
+    unitPrice,
+    nbShares,
+    votingPeriod,
+    gracePeriod,
+    tokenAddr
+  );
+  await dao.finalizeDao();
+  return dao;
+}
 
 async function createDao(
   senderAccount,
@@ -228,6 +258,19 @@ async function cloneDao(identityAddress, senderAccount) {
     receipt && receipt.gasUsed
   );
   return dao;
+}
+
+async function cloneDaoDeployer(deployer) {
+  // newDao: uses clone factory to clone the contract deployed at the identityAddress
+  const dao = await DaoRegistry.deployed();
+  await deployer.deploy(DaoFactory, dao.address);
+  let daoFactory = await DaoFactory.deployed();
+  await daoFactory.createDao("test-dao", [], [], false);
+  // checking the gas usaged to clone a contract
+  let pastEvents = await daoFactory.getPastEvents();
+  let { _address } = pastEvents[0].returnValues;
+
+  return await DaoRegistry.at(_address);
 }
 
 function entry(name, contract, flags) {
@@ -308,6 +351,7 @@ module.exports = {
   prepareSmartContracts,
   advanceTime,
   createDao,
+  deployDao,
   addDefaultAdapters,
   getContract,
   entry,
