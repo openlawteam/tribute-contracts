@@ -212,7 +212,7 @@ async function createDao(
   let lib = await FlagHelperLib.new();
   await DaoRegistry.link("FlagHelper", lib.address);
 
-  identityDao = await DaoRegistry.new({
+  const identityDao = await DaoRegistry.new({
     from: senderAccount,
     gasPrice: toBN("0"),
   });
