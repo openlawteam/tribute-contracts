@@ -78,7 +78,7 @@ contract VotingContract is IVoting, DaoConstants, MemberGuard, AdapterGuard {
         address,
         bytes memory,
         address sender
-    ) external override pure returns (address) {
+    ) external pure override returns (address) {
         return sender;
     }
 
@@ -120,11 +120,8 @@ contract VotingContract is IVoting, DaoConstants, MemberGuard, AdapterGuard {
 
         require(vote.votes[memberAddr] == 0, "member has already voted");
 
-        uint256 correctWeight = dao.getPriorAmount(
-            memberAddr,
-            SHARES,
-            vote.blockNumber
-        );
+        uint256 correctWeight =
+            dao.getPriorAmount(memberAddr, SHARES, vote.blockNumber);
 
         vote.votes[memberAddr] = voteValue;
 
@@ -146,8 +143,8 @@ contract VotingContract is IVoting, DaoConstants, MemberGuard, AdapterGuard {
      */
     function voteResult(DaoRegistry dao, uint256 _proposalId)
         external
-        override
         view
+        override
         returns (uint256 state)
     {
         uint64 proposalId = SafeCast.toUint64(_proposalId);

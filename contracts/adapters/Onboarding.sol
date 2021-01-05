@@ -139,15 +139,16 @@ contract OnboardingContract is
             "total shares for this member must be lower than the maxmimum"
         );
 
-        uint64 proposalId = _submitMembershipProposalInternal(
-            dao,
-            tokenToMint,
-            applicant,
-            proposer,
-            details.sharesRequested,
-            details.amount,
-            token
-        );
+        uint64 proposalId =
+            _submitMembershipProposalInternal(
+                dao,
+                tokenToMint,
+                applicant,
+                proposer,
+                details.sharesRequested,
+                details.amount,
+                token
+            );
 
         return (details.amount, proposalId);
     }
@@ -168,7 +169,7 @@ contract OnboardingContract is
         IVoting votingContract = IVoting(dao.getAdapterAddress(VOTING));
         try
             votingContract.startNewVotingForProposal(dao, proposalId, data)
-         {} catch Error(string memory reason) {
+        {} catch Error(string memory reason) {
             revert(reason);
         } catch (
             bytes memory /*lowLevelData*/
@@ -176,12 +177,13 @@ contract OnboardingContract is
             revert("system error from voting");
         }
 
-        address submittedBy = votingContract.getSenderAddress(
-            dao,
-            address(this),
-            data,
-            msg.sender
-        );
+        address submittedBy =
+            votingContract.getSenderAddress(
+                dao,
+                address(this),
+                data,
+                msg.sender
+            );
 
         dao.sponsorProposal(proposalId, submittedBy);
     }
@@ -191,10 +193,11 @@ contract OnboardingContract is
         address payable applicant,
         address tokenToMint,
         uint256 tokenAmount
-    ) public override payable returns (uint64) {
-        address tokenAddr = address(
-            dao.getAddressConfiguration(configKey(tokenToMint, TokenAddr))
-        );
+    ) public payable override returns (uint64) {
+        address tokenAddr =
+            address(
+                dao.getAddressConfiguration(configKey(tokenToMint, TokenAddr))
+            );
         if (tokenAddr == ETH_TOKEN) {
             // ETH onboarding
             require(msg.value > 0, "not enough ETH");
@@ -213,14 +216,15 @@ contract OnboardingContract is
             );
         }
 
-        (uint256 amountUsed, uint64 proposalId) = _submitMembershipProposal(
-            dao,
-            tokenToMint,
-            applicant,
-            payable(msg.sender),
-            tokenAmount,
-            tokenAddr
-        );
+        (uint256 amountUsed, uint64 proposalId) =
+            _submitMembershipProposal(
+                dao,
+                tokenToMint,
+                applicant,
+                payable(msg.sender),
+                tokenAmount,
+                tokenAddr
+            );
 
         if (amountUsed < tokenAmount) {
             uint256 amount = tokenAmount - amountUsed;
@@ -332,8 +336,8 @@ contract OnboardingContract is
 
             dao.addToBalance(GUILD, ETH_TOKEN, proposal.amount);
 
-            uint256 totalShares = shares[proposal.applicant] +
-                proposal.sharesRequested;
+            uint256 totalShares =
+                shares[proposal.applicant] + proposal.sharesRequested;
             shares[proposal.applicant] = totalShares;
         } else if (voteResult == 3) {
             _refundTribute(proposal.token, proposal.proposer, proposal.amount);
