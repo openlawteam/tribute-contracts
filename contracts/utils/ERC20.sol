@@ -22,6 +22,11 @@ contract ERC20 is IERC20 {
     mapping(address => uint256) private _balances;
 
     mapping(address => mapping(address => uint256)) private _allowances;
+    
+    mapping(address => uint256) private _nonces;
+    
+    bytes32 public immutable PERMIT_TYPEHASH = keccak256("Permit(address owner,address spender,uint256 value,uint256 nonce,uint256 deadline)");
+    bytes32 public immutable DOMAIN_SEPARATOR;
 
     uint256 private _totalSupply;
 
@@ -47,6 +52,21 @@ contract ERC20 is IERC20 {
         _symbol = symbolParam;
         _decimals = 18;
         _totalSupply = totalSupplyParam;
+        
+        uint256 chainId;
+        assembly {
+            chainId := chainid()
+        }
+
+        DOMAIN_SEPARATOR = keccak256(
+            abi.encode(
+                keccak256("EIP712Domain(string name,string version,uint256 chainId,address verifyingContract)"),
+                keccak256(bytes(name)),
+                keccak256(bytes("1")),
+                chainId,
+                address(this)
+            )
+        );
     }
 
     /**
@@ -111,6 +131,14 @@ contract ERC20 is IERC20 {
     {
         return _allowances[owner][spender];
     }
+    
+    /**
+     * @dev Function to check signatures for a particular owner.
+     * @param owner addess The address for which signatures are registered.
+     */
+    function nonces(address owner) public override view returns (uint256) {
+        return _nonces;
+    }
 
     /**
      * @dev Transfer token for a specified address
@@ -142,6 +170,55 @@ contract ERC20 is IERC20 {
     {
         _approve(msg.sender, spender, value);
         return true;
+    }
+    
+    /**
+     * @dev Sets `amount` as allowance of `spender` account over `owner` account's tokens, given `owner` account's signed approval.
+     * Emits {Approval} event.
+     * Requirements:
+     *   - `deadline` must be timestamp in future.
+     *   - `v`, `r` and `s` must be valid `secp256k1` signature from `owner` account over EIP712-formatted function arguments.
+     *   - the signature must use `owner` account's current nonce (see {nonces}).
+     *   - the signer cannot be zero address and must be `owner` account.
+     * For more information on signature format, see https://eips.ethereum.org/EIPS/eip-2612#specification[relevant EIP section].
+     */
+    function permit(
+        address owner, 
+        address spender, 
+        uint256 amount, 
+        uint256 deadline, 
+        uint8 v, 
+        bytes32 r, 
+        bytes32 s
+    ) public {
+        require(deadline >= block.timestamp, "expired deadline");
+
+        bytes32 hashStruct = keccak256(
+            abi.encode(
+                PERMIT_TYPEHASH,
+                owner,
+                spender,
+                amount,
+                nonces[owner]++,
+                deadline
+            )
+        );
+
+        bytes32 hash = keccak256(
+            abi.encodePacked(
+                '\x19\x01',
+                DOMAIN_SEPARATOR,
+                hashStruct
+            )
+        );
+
+        address signer = ecrecover(hash, v, r, s);
+        require(
+            signer != address(0) && signer == owner,
+            "invalid signature"
+        );
+
+        _approve(owner, spender, amount);
     }
 
     /**
