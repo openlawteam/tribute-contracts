@@ -56,7 +56,7 @@ contract("LAOLAND - Managing Adapter", async (accounts) => {
         [],
         [],
         0,
-        {from: myAccount, gasPrice: toBN("0")}
+        { from: myAccount, gasPrice: toBN("0") }
       );
       assert.err("should not pass");
     } catch (err) {
@@ -82,7 +82,7 @@ contract("LAOLAND - Managing Adapter", async (accounts) => {
         [],
         [],
         0,
-        {from: myAccount, gasPrice: toBN("0")}
+        { from: myAccount, gasPrice: toBN("0") }
       );
       assert.err("should not pass");
     } catch (err) {
@@ -97,7 +97,7 @@ contract("LAOLAND - Managing Adapter", async (accounts) => {
         [],
         [],
         0,
-        {from: myAccount, gasPrice: toBN("0")}
+        { from: myAccount, gasPrice: toBN("0") }
       );
       assert.err("should not pass");
     } catch (err) {
@@ -154,7 +154,7 @@ contract("LAOLAND - Managing Adapter", async (accounts) => {
       [],
       [],
       0,
-      {from: myAccount, gasPrice: toBN("0")}
+      { from: myAccount, gasPrice: toBN("0") }
     );
 
     //Get the new proposal id
@@ -201,7 +201,7 @@ contract("LAOLAND - Managing Adapter", async (accounts) => {
       [],
       [],
       0,
-      {from: myAccount, gasPrice: toBN("0")}
+      { from: myAccount, gasPrice: toBN("0") }
     );
 
     let proposalId = 0;

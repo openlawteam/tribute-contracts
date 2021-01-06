@@ -82,7 +82,7 @@ async function createOffchainVotingDao(
 ) {
   let lib = await FlagHelperLib.new();
   await DaoRegistry.link("FlagHelper", lib.address);
-  let dao = await DaoRegistry.new({from: senderAccount, gasPrice: toBN("0")});
+  let dao = await DaoRegistry.new({ from: senderAccount, gasPrice: toBN("0") });
   await dao.initialize(members[0].address, {
     from: senderAccount,
     gasPrice: toBN("0"),
@@ -102,7 +102,7 @@ async function createOffchainVotingDao(
       SUB_FROM_BALANCE: true,
       INTERNAL_TRANSFER: true,
     }),
-    {from: senderAccount, gasPrice: toBN("0")}
+    { from: senderAccount, gasPrice: toBN("0") }
   );
 
   await offchainVoting.configureDao(
@@ -110,17 +110,17 @@ async function createOffchainVotingDao(
     votingPeriod,
     gracePeriod,
     10,
-    {from: senderAccount, gasPrice: toBN("0")}
+    { from: senderAccount, gasPrice: toBN("0") }
   );
-  await dao.finalizeDao({from: senderAccount, gasPrice: toBN("0")});
+  await dao.finalizeDao({ from: senderAccount, gasPrice: toBN("0") });
 
-  return {dao, voting: offchainVoting};
+  return { dao, voting: offchainVoting };
 }
 
 contract("LAOLAND - Offchain Voting Module", async (accounts) => {
   it("should type & hash be consistent for proposals between javascript and solidity", async () => {
     const myAccount = accounts[1];
-    let {dao, voting} = await createOffchainVotingDao(myAccount);
+    let { dao, voting } = await createOffchainVotingDao(myAccount);
 
     let blockNumber = await web3.eth.getBlockNumber();
     const proposalPayload = {
@@ -141,7 +141,7 @@ contract("LAOLAND - Offchain Voting Module", async (accounts) => {
       sig: "0x00",
     };
     const chainId = 1;
-    let {types, domain} = getDomainDefinition(
+    let { types, domain } = getDomainDefinition(
       proposalData,
       dao.address,
       myAccount,
@@ -205,13 +205,13 @@ contract("LAOLAND - Offchain Voting Module", async (accounts) => {
 
   it("should type & hash be consistent for votes between javascript and solidity", async () => {
     const myAccount = accounts[1];
-    let {dao, voting} = await createOffchainVotingDao(myAccount);
+    let { dao, voting } = await createOffchainVotingDao(myAccount);
     const chainId = 1;
 
     const proposalHash = sha3("test");
     const voteEntry = await createVote(proposalHash, myAccount, true);
 
-    let {types} = getDomainDefinition(
+    let { types } = getDomainDefinition(
       voteEntry,
       dao.address,
       myAccount,
@@ -232,7 +232,7 @@ contract("LAOLAND - Offchain Voting Module", async (accounts) => {
 
   it("should be possible to propose a new voting by signing the proposal hash", async () => {
     const myAccount = accounts[1];
-    let {dao, voting} = await createOffchainVotingDao(myAccount);
+    let { dao, voting } = await createOffchainVotingDao(myAccount);
 
     const onboardingAddress = await dao.getAdapterAddress(sha3("onboarding"));
     const onboarding = await OnboardingContract.at(onboardingAddress);
@@ -299,7 +299,7 @@ contract("LAOLAND - Offchain Voting Module", async (accounts) => {
       )
     );
 
-    const {voteResultTree, votes} = await prepareVoteResult(
+    const { voteResultTree, votes } = await prepareVoteResult(
       [voteEntry],
       dao,
       onboarding.address,
@@ -315,13 +315,13 @@ contract("LAOLAND - Offchain Voting Module", async (accounts) => {
     );
 
     result.rootSig = signer(
-      {root: voteResultTree.getHexRoot(), type: "result"},
+      { root: voteResultTree.getHexRoot(), type: "result" },
       dao.address,
       onboarding.address,
       chainId
     );
 
-    const {types} = getVoteStepDomainDefinition(
+    const { types } = getVoteStepDomainDefinition(
       dao.address,
       myAccount,
       chainId
@@ -348,7 +348,7 @@ contract("LAOLAND - Offchain Voting Module", async (accounts) => {
       0,
       voteResultTree.getHexRoot(),
       result,
-      {from: myAccount, gasPrice: toBN("0")}
+      { from: myAccount, gasPrice: toBN("0") }
     );
     await advanceTime(10000);
     await onboarding.processProposal(dao.address, 0, {
