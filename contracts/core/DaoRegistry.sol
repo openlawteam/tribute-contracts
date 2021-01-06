@@ -1,4 +1,4 @@
-pragma solidity ^0.7.0;
+pragma solidity ^0.8.0;
 
 // SPDX-License-Identifier: MIT
 
@@ -6,7 +6,6 @@ import "./DaoConstants.sol";
 import "../helpers/FlagHelper.sol";
 import "../guards/AdapterGuard.sol";
 import "../utils/IERC20.sol";
-import "../utils/SafeMath.sol";
 
 /**
 MIT License
@@ -39,7 +38,6 @@ contract DaoRegistry is DaoConstants, AdapterGuard {
      * LIBRARIES
      */
     using FlagHelper for uint256;
-    using SafeMath for uint256;
 
     enum DaoState {CREATION, READY}
 
@@ -135,7 +133,8 @@ contract DaoRegistry is DaoConstants, AdapterGuard {
     /// @notice The inverse map to get the adapter id based on its address
     mapping(address => AdapterDetails) public inverseRegistry;
     /// @notice The map that keeps track of configuration parameters for the DAO and adapters
-    mapping(bytes32 => uint256) public configuration;
+    mapping(bytes32 => uint256) public mainConfiguration;
+    mapping(bytes32 => address) public addressConfiguration;
 
     /// @notice Clonable contract must have an empty constructor
     // constructor() {
@@ -187,7 +186,20 @@ contract DaoRegistry is DaoConstants, AdapterGuard {
         external
         hasAccess(this, FlagHelper.Flag.SET_CONFIGURATION)
     {
-        configuration[key] = value;
+        mainConfiguration[key] = value;
+    }
+
+    /**
+     * @notice Sets an configuration value
+     * @dev Changes the value of a key in the configuration mapping
+     * @param key The configuration key for which the value will be set
+     * @param value The value to set the key
+     */
+    function setAddressConfiguration(bytes32 key, address value)
+        external
+        hasAccess(this, FlagHelper.Flag.SET_CONFIGURATION)
+    {
+        addressConfiguration[key] = value;
     }
 
     /**
@@ -195,7 +207,19 @@ contract DaoRegistry is DaoConstants, AdapterGuard {
      * @param key The key to look up in the configuration mapping
      */
     function getConfiguration(bytes32 key) external view returns (uint256) {
-        return configuration[key];
+        return mainConfiguration[key];
+    }
+
+    /**
+     * @return The configuration value of a particular key
+     * @param key The key to look up in the configuration mapping
+     */
+    function getAddressConfiguration(bytes32 key)
+        external
+        view
+        returns (address)
+    {
+        return addressConfiguration[key];
     }
 
     /**
@@ -684,8 +708,8 @@ contract DaoRegistry is DaoConstants, AdapterGuard {
         address token,
         uint256 amount
     ) public hasAccess(this, FlagHelper.Flag.INTERNAL_TRANSFER) {
-        uint256 newAmount = balanceOf(from, token).sub(amount);
-        uint256 newAmount2 = balanceOf(to, token).add(amount);
+        uint256 newAmount = balanceOf(from, token) - amount;
+        uint256 newAmount2 = balanceOf(to, token) + amount;
 
         _createNewAmountCheckpoint(from, token, newAmount);
         _createNewAmountCheckpoint(to, token, newAmount2);

@@ -1,4 +1,4 @@
-pragma solidity ^0.7.0;
+pragma solidity ^0.8.0;
 
 // SPDX-License-Identifier: MIT
 
@@ -6,7 +6,6 @@ import "../../core/DaoRegistry.sol";
 import "../../core/DaoConstants.sol";
 import "../../guards/MemberGuard.sol";
 import "../../guards/AdapterGuard.sol";
-import "../../utils/SafeMath.sol";
 import "../../utils/SafeCast.sol";
 import "../interfaces/IVoting.sol";
 
