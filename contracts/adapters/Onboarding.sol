@@ -130,7 +130,9 @@ contract OnboardingContract is
             configKey(tokenToMint, SharesPerChunk)
         );
         details.amount = details.numberOfChunks.mul(details.chunkSize);
-        details.sharesRequested = details.numberOfChunks.mul(details.sharesPerChunk);
+        details.sharesRequested = details.numberOfChunks.mul(
+            details.sharesPerChunk
+        );
         details.totalShares = shares[applicant] + details.sharesRequested;
 
         require(
@@ -139,15 +141,16 @@ contract OnboardingContract is
             "total shares for this member must be lower than the maxmimum"
         );
 
-        uint64 proposalId = _submitMembershipProposalInternal(
-            dao,
-            tokenToMint,
-            applicant,
-            proposer,
-            details.sharesRequested,
-            details.amount,
-            token
-        );
+        uint64 proposalId =
+            _submitMembershipProposalInternal(
+                dao,
+                tokenToMint,
+                applicant,
+                proposer,
+                details.sharesRequested,
+                details.amount,
+                token
+            );
 
         return (details.amount, proposalId);
     }
@@ -159,7 +162,6 @@ contract OnboardingContract is
         uint256 tokenAmount,
         bytes calldata data
     ) external payable {
-
         uint64 proposalId = onboard(dao, applicant, tokenToMint, tokenAmount);
         require(
             proposals[address(dao)][proposalId].id == proposalId,
@@ -167,14 +169,23 @@ contract OnboardingContract is
         );
 
         IVoting votingContract = IVoting(dao.getAdapterAddress(VOTING));
-        try votingContract.startNewVotingForProposal(dao, proposalId, data) {
-        } catch Error(string memory reason) {            
+        try
+            votingContract.startNewVotingForProposal(dao, proposalId, data)
+        {} catch Error(string memory reason) {
             revert(reason);
-        } catch (bytes memory /*lowLevelData*/) {
+        } catch (
+            bytes memory /*lowLevelData*/
+        ) {
             revert("system error from voting");
         }
 
-        address submittedBy = votingContract.getSenderAddress(dao, address(this), data, msg.sender);
+        address submittedBy =
+            votingContract.getSenderAddress(
+                dao,
+                address(this),
+                data,
+                msg.sender
+            );
 
         dao.sponsorProposal(proposalId, submittedBy);
     }
@@ -184,10 +195,9 @@ contract OnboardingContract is
         address payable applicant,
         address tokenToMint,
         uint256 tokenAmount
-    ) public override payable returns (uint64) {
-        address tokenAddr = address(
-            dao.getConfiguration(configKey(tokenToMint, TokenAddr))
-        );
+    ) public payable override returns (uint64) {
+        address tokenAddr =
+            address(dao.getConfiguration(configKey(tokenToMint, TokenAddr)));
         if (tokenAddr == ETH_TOKEN) {
             // ETH onboarding
             require(msg.value > 0, "not enough ETH");
@@ -206,14 +216,15 @@ contract OnboardingContract is
             );
         }
 
-        (uint256 amountUsed, uint64 proposalId) = _submitMembershipProposal(
-            dao,
-            tokenToMint,
-            applicant,
-            msg.sender,
-            tokenAmount,
-            tokenAddr
-        );
+        (uint256 amountUsed, uint64 proposalId) =
+            _submitMembershipProposal(
+                dao,
+                tokenToMint,
+                applicant,
+                msg.sender,
+                tokenAmount,
+                tokenAddr
+            );
 
         if (amountUsed < tokenAmount) {
             uint256 amount = tokenAmount - amountUsed;
@@ -243,7 +254,7 @@ contract OnboardingContract is
         uint256 sharesRequested,
         uint256 amount,
         address token
-    ) internal returns (uint64){
+    ) internal returns (uint64) {
         uint64 proposalId = dao.submitProposal();
         proposals[address(dao)][proposalId] = ProposalDetails(
             proposalId,
@@ -300,7 +311,6 @@ contract OnboardingContract is
     function processProposal(DaoRegistry dao, uint256 _proposalId)
         external
         override
-        onlyMember(dao)
     {
         uint64 proposalId = SafeCast.toUint64(_proposalId);
         require(
@@ -326,8 +336,8 @@ contract OnboardingContract is
 
             dao.addToBalance(GUILD, ETH_TOKEN, proposal.amount);
 
-            uint256 totalShares = shares[proposal.applicant] +
-                proposal.sharesRequested;
+            uint256 totalShares =
+                shares[proposal.applicant] + proposal.sharesRequested;
             shares[proposal.applicant] = totalShares;
         } else if (voteResult == 3) {
             _refundTribute(proposal.token, proposal.proposer, proposal.amount);

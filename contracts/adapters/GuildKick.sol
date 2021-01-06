@@ -150,11 +150,12 @@ contract GuildKickContract is IGuildKick, DaoConstants, MemberGuard {
         uint256 initialTotalShares = kick.initialTotalShares;
         for (uint256 i = currentIndex; i < maxIndex; i++) {
             address token = dao.getToken(i);
-            uint256 amountToRagequit = FairShareHelper.calc(
-                dao.balanceOf(GUILD, token),
-                kick.sharesToBurn,
-                initialTotalShares
-            );
+            uint256 amountToRagequit =
+                FairShareHelper.calc(
+                    dao.balanceOf(GUILD, token),
+                    kick.sharesToBurn,
+                    initialTotalShares
+                );
             if (amountToRagequit > 0) {
                 // gas optimization to allow a higher maximum token limit
                 // deliberately not using safemath here to keep overflows from preventing the function execution

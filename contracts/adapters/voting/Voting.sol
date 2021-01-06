@@ -41,6 +41,8 @@ contract VotingContract is IVoting, DaoConstants, MemberGuard, AdapterGuard {
         uint256 nbYes;
         uint256 nbNo;
         uint256 startingTime;
+        uint256 blockNumber;
+        mapping(address => uint256) votes;
     }
 
     bytes32 constant VotingPeriod = keccak256("voting.votingPeriod");
@@ -66,8 +68,19 @@ contract VotingContract is IVoting, DaoConstants, MemberGuard, AdapterGuard {
         //it is called from Registry
         // compute startingPeriod for proposal
         uint64 proposalId = SafeCast.toUint64(_proposalId);
+
         Voting storage vote = votes[address(dao)][proposalId];
         vote.startingTime = block.timestamp;
+        vote.blockNumber = block.number;
+    }
+
+    function getSenderAddress(
+        DaoRegistry,
+        address,
+        bytes memory,
+        address sender
+    ) external pure override returns (address) {
+        return sender;
     }
 
     function getSenderAddress(DaoRegistry, address, bytes memory, address sender) override external  pure returns (address) {
@@ -107,10 +120,20 @@ contract VotingContract is IVoting, DaoConstants, MemberGuard, AdapterGuard {
                 vote.startingTime + dao.getConfiguration(VotingPeriod),
             "vote has already ended"
         );
+
+        address memberAddr = dao.getAddressIfDelegated(msg.sender);
+
+        require(vote.votes[memberAddr] == 0, "member has already voted");
+
+        uint256 correctWeight =
+            dao.getPriorAmount(memberAddr, SHARES, vote.blockNumber);
+
+        vote.votes[memberAddr] = voteValue;
+
         if (voteValue == 1) {
-            vote.nbYes = vote.nbYes + 1;
+            vote.nbYes = vote.nbYes + correctWeight;
         } else if (voteValue == 2) {
-            vote.nbNo = vote.nbNo + 1;
+            vote.nbNo = vote.nbNo + correctWeight;
         }
     }
 
@@ -125,8 +148,8 @@ contract VotingContract is IVoting, DaoConstants, MemberGuard, AdapterGuard {
      */
     function voteResult(DaoRegistry dao, uint256 _proposalId)
         external
-        override
         view
+        override
         returns (uint256 state)
     {
         uint64 proposalId = SafeCast.toUint64(_proposalId);

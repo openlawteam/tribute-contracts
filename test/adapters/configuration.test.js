@@ -52,7 +52,7 @@ contract("LAOLAND - Configuration Adapter", async (accounts) => {
       [key],
       [toBN("10")],
       fromUtf8(""),
-      {from: myAccount, gasPrice: toBN("0")}
+      { from: myAccount, gasPrice: toBN("0") }
     );
 
     let value = await dao.getConfiguration(key);
@@ -68,7 +68,7 @@ contract("LAOLAND - Configuration Adapter", async (accounts) => {
     let voting = await VotingContract.at(votingContract);
 
     value = await dao.getConfiguration(key);
-    assert.equal(value.toString, toBN("0").toString);
+    assert.equal(value.toString(), toBN("0").toString());
     await voting.submitVote(dao.address, 0, 1, {
       from: myAccount,
       gasPrice: toBN("0"),
@@ -102,7 +102,7 @@ contract("LAOLAND - Configuration Adapter", async (accounts) => {
       [key1, key2],
       [toBN("10"), toBN("15")],
       fromUtf8(""),
-      {from: myAccount, gasPrice: toBN("0")}
+      { from: myAccount, gasPrice: toBN("0") }
     );
 
     let value1 = await dao.getConfiguration(key1);
@@ -159,7 +159,7 @@ contract("LAOLAND - Configuration Adapter", async (accounts) => {
         [key],
         [],
         fromUtf8(""),
-        {from: myAccount, gasPrice: toBN("0")}
+        { from: myAccount, gasPrice: toBN("0") }
       );
     } catch (err) {
       assert.equal(

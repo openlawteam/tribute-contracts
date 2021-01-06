@@ -35,7 +35,12 @@ interface IVoting {
         bytes calldata data
     ) external;
 
-    function getSenderAddress(DaoRegistry dao, address actionId, bytes memory data, address sender) external returns (address);
+    function getSenderAddress(
+        DaoRegistry dao,
+        address actionId,
+        bytes memory data,
+        address sender
+    ) external returns (address);
 
     function voteResult(DaoRegistry dao, uint256 proposalId)
         external
