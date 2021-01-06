@@ -68,7 +68,7 @@ contract("LAOLAND - Configuration Adapter", async (accounts) => {
     let voting = await VotingContract.at(votingContract);
 
     value = await dao.getConfiguration(key);
-    assert.equal(value.toString, toBN("0").toString);
+    assert.equal(value.toString(), toBN("0").toString());
     await voting.submitVote(dao.address, 0, 1, {
       from: myAccount,
       gasPrice: toBN("0"),
