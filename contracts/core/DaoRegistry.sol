@@ -713,11 +713,11 @@ contract DaoRegistry is DaoConstants, AdapterGuard {
         address token,
         uint256 amount
     ) public hasAccess(this, FlagHelper.Flag.INTERNAL_TRANSFER) {
-        uint256 newAmount = balanceOf(from, token) - amount;
-        uint256 newAmount2 = balanceOf(to, token) - amount;
+      uint256 newAmount = balanceOf(from, token) - amount;
+      uint256 newAmount2 = balanceOf(to, token) + amount;
 
-        _createNewAmountCheckpoint(from, token, newAmount);
-        _createNewAmountCheckpoint(to, token, newAmount2);
+      _createNewAmountCheckpoint(from, token, newAmount);
+      _createNewAmountCheckpoint(to, token, newAmount2);
     }
 
     /**

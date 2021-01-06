@@ -136,7 +136,7 @@ contract OnboardingContract is
         require(
             details.totalShares / details.sharesPerChunk <
                 dao.getConfiguration(configKey(tokenToMint, MaximumChunks)),
-            "total shares for this member must be lower than the maxmimum"
+            "total shares for this member must be lower than the maximum"
         );
 
         uint64 proposalId = _submitMembershipProposalInternal(
