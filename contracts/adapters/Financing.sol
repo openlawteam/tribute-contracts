@@ -1,4 +1,4 @@
-pragma solidity ^0.7.0;
+pragma solidity ^0.8.0;
 
 // SPDX-License-Identifier: MIT
 
@@ -8,7 +8,6 @@ import "../core/DaoRegistry.sol";
 import "../adapters/interfaces/IVoting.sol";
 import "../guards/MemberGuard.sol";
 import "../helpers/FlagHelper.sol";
-import "../utils/SafeMath.sol";
 import "../utils/SafeCast.sol";
 
 /**
@@ -36,7 +35,6 @@ SOFTWARE.
  */
 
 contract FinancingContract is IFinancing, DaoConstants, MemberGuard {
-    using SafeMath for uint256;
     using SafeCast for uint256;
 
     struct ProposalDetails {

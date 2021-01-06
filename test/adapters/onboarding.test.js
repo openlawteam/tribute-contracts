@@ -234,7 +234,7 @@ contract("LAOLAND - Onboarding Adapter", async (accounts) => {
     } catch (err) {
       assert.equal(
         err.reason,
-        "total shares for this member must be lower than the maxmimum"
+        "total shares for this member must be lower than the maximum"
       );
     }
   });
