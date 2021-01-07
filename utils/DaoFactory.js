@@ -86,7 +86,8 @@ async function addDefaultAdapters(
   nbShares = numberOfShares,
   votingPeriod = 10,
   gracePeriod = 1,
-  tokenAddr = ETH_TOKEN
+  tokenAddr = ETH_TOKEN,
+  maxChunks = maximumChunks
 ) {
   let daoFactory = await DaoFactory.new(dao.address);
   const {
@@ -157,7 +158,7 @@ async function addDefaultAdapters(
     SHARES,
     unitPrice,
     nbShares,
-    maximumChunks,
+    maxChunks,
     tokenAddr
   );
   await onboarding.configureDao(
@@ -165,7 +166,7 @@ async function addDefaultAdapters(
     LOOT,
     unitPrice,
     nbShares,
-    maximumChunks,
+    maxChunks,
     tokenAddr
   );
   await voting.configureDao(dao.address, votingPeriod, gracePeriod);
@@ -175,12 +176,15 @@ async function addDefaultAdapters(
 
 async function deployDao(
   deployer,
-  unitPrice = sharePrice,
-  nbShares = numberOfShares,
-  votingPeriod = 10,
-  gracePeriod = 1,
-  tokenAddr = ETH_TOKEN
+  options
 ) {
+  const unitPrice = options.unitPrice || sharePrice;
+  const nbShares = options.nbShares || numberOfShares;
+  const votingPeriod = options.votingPeriod || 10;
+  const gracePeriod = options.gracePeriod || 1;
+  const tokenAddr = options.tokenAddr || ETH_TOKEN;
+  const maxChunks = options.maximumChunks || maximumChunks;
+
   await deployer.deploy(FlagHelperLib);
   
   await deployer.link(FlagHelperLib, DaoRegistry);
@@ -195,7 +199,8 @@ async function deployDao(
     nbShares,
     votingPeriod,
     gracePeriod,
-    tokenAddr
+    tokenAddr,
+    maxChunks
   );
   await dao.finalizeDao();
   return dao;
