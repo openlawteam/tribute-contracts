@@ -29,8 +29,8 @@
     "build": "react-scripts build",
     "test": "react-scripts test",
     "eject": "react-scripts eject",
+    "snapshot": "docker-compose up --remove-orphans -V",
     "ganache": "node_modules/.bin/ganache-cli -s=test -g=0 --secure -u 0 -u 1 -p 8545 --networkId 1337",
-    "snaphub": "docker-compose up --remove-orphans -V",
     "migrate": "cp -R ../contracts ./ && node_modules/.bin/truffle migrate --network local --reset"
   },
   "eslintConfig": {

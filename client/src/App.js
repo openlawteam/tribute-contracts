@@ -105,7 +105,6 @@ const App = () => {
   const [loading, setLoading] = useState(false);
   const [proposals, setProposals] = useState([]);
   const [showContracts, setShowContracts] = useState(false);
-  const [votes, setVotes] = useState({});
   const [verifyingContract, setVerifyingContract] = useState(
     "0xcFc2206eAbFDc5f3d9e7fA54f855A8C15D196c05" //TODO load it from the deployed test contract
   );
@@ -251,11 +250,11 @@ const App = () => {
               sig: newSignature,
             };
             setProposals(
-              proposals
-                .filter((p) => p.ipfsHash === proposal.ipfsHash)
-                .map((p) => {
+              proposals.map((p) => {
+                if (p.ipfsHash === proposal.ipfsHash)
                   return { ...p, votes: p.votes ? [...p.votes, v] : [v] };
-                })
+                else return p;
+              })
             );
             setLoading(false);
             setSignature("");
@@ -287,24 +286,24 @@ const App = () => {
         </Grid>
         <Grid item xs={3}>
           {addr && (
-            <>
-              <ProposalForm
-                loading={loading}
-                provider={provider}
-                chainId={chainId}
-                verifyingContract={verifyingContract}
-                onNewProposal={handleProposalSubmit}
-                signature={signature}
-              />
-              <Grid container direction="row">
-                {proposals.map((p) => (
-                  <Grid item xs={3} key={Math.random()}>
-                    <ProposalCard proposal={p} onNewVote={handleVoteSubmit} />
-                  </Grid>
-                ))}
-              </Grid>
-            </>
+            <ProposalForm
+              loading={loading}
+              provider={provider}
+              chainId={chainId}
+              verifyingContract={verifyingContract}
+              onNewProposal={handleProposalSubmit}
+              signature={signature}
+            />
           )}
+        </Grid>
+        <Grid item xs={9}>
+          <Grid container direction="row">
+            {proposals.map((p) => (
+              <Grid item xs={3} key={Math.random()}>
+                <ProposalCard proposal={p} onNewVote={handleVoteSubmit} />
+              </Grid>
+            ))}
+          </Grid>
         </Grid>
       </Grid>
       {showContracts && (
