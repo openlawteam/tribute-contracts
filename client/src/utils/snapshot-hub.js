@@ -23,8 +23,8 @@ export const buildSnapshotHubProposalMessage = (message, chainId) => {
         },
       },
       timestamp: timestamp,
-      token: "0x8f56682a50becb1df2fb8136954f2062871bc7fc", //FIXME: what is this token?
-      space: "test-space", //needs to be registered in snapshot-hub api
+      token: "0x8f56682a50becb1df2fb8136954f2062871bc7fc", //this token represents the space token registered in snapshot-hub
+      space: "thelao", //needs to be registered in snapshot-hub api
       type: message.type,
       actionId: message.actionId,
       version: "0.2.0", //needs to match snapshot-hub api version
@@ -48,8 +48,8 @@ export const buildSnapshotHubVoteMessage = (vote, proposal, addr, chainId) => {
         },
       },
       timestamp: timestamp,
-      token: "0x8f56682a50becb1df2fb8136954f2062871bc7fc",
-      space: "test-space",
+      token: "0x8f56682a50becb1df2fb8136954f2062871bc7fc", //this token represents the space token registered in snapshot-hub
+      space: "thelao",
       type: "vote",
       version: "0.2.0",
       actionId: proposal.actionId,

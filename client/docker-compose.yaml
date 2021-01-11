@@ -1,7 +1,7 @@
 version: "3.7"
 services:
   laoland-snapshot-hub:
-    image: openlaw/snapshot-hub:erc712-5
+    image: openlaw/snapshot-hub:erc-712
     container_name: laoland-snapshot-hub
     env_file:
       - .env.local
@@ -25,6 +25,22 @@ services:
       POSTGRESQL_DATABASE: snapshot-db
     ports:
       - 5432:5432
+
+  laoland-snapshot-pgadmin:
+    image: dpage/pgadmin4
+    container_name: laoland-snapshot-pgadmin
+    environment:
+      PGADMIN_CONFIG_SERVER_MODE: "False"
+      PGADMIN_CONFIG_UPGRADE_CHECK_ENABLED: "False"
+      PGADMIN_CONFIG_MASTER_PASSWORD_REQUIRED: "False"
+      PGADMIN_CONFIG_CONSOLE_LOG_LEVEL: "40"
+      PGADMIN_CONFIG_FILE_LOG_LEVEL: "40"
+      PGADMIN_DEFAULT_EMAIL: "admin@admin.com"
+      PGADMIN_DEFAULT_PASSWORD: "admin"
+    ports:
+      - 5050:80
+    depends_on:
+      - laoland-snapshot-postgres
 
 networks:
     default:
