@@ -334,11 +334,24 @@ contract OnboardingContract is
                 proposal.sharesRequested
             );
 
-            dao.addToBalance{value: proposal.amount}(
-                GUILD,
-                ETH_TOKEN,
-                proposal.amount
-            );
+            address token = proposal.token;
+            if(token == ETH_TOKEN) {
+                dao.addToBalance{value: proposal.amount}(
+                    GUILD,
+                    token,
+                    proposal.amount
+                );
+            } else {
+                dao.addToBalance(
+                    GUILD,
+                    token,
+                    proposal.amount
+                );
+
+                IERC20 erc20 = IERC20(token);
+                erc20.transfer(address(dao), proposal.amount);
+            }
+            
 
             uint256 totalShares =
                 shares[proposal.applicant] + proposal.sharesRequested;
