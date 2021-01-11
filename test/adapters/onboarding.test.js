@@ -280,16 +280,10 @@ contract("LAOLAND - Onboarding Adapter", async (accounts) => {
     const myAccountShares = await dao.balanceOf(myAccount, SHARES);
     const otherAccountShares = await dao.balanceOf(otherAccount, SHARES);
     assert.equal(myAccountShares.toString(), "1");
-    assert.equal(
-      otherAccountShares.toString(),
-      numberOfShares.mul(toBN("0")).toString()
-    );
+    assert.equal(otherAccountShares.toString(), "0");
 
-    const guildBalance = await dao.balanceOf(
-      GUILD,
-      "0x0000000000000000000000000000000000000000"
-    );
-    assert.equal(guildBalance.toString(), sharePrice.mul(toBN("0")).toString());
+    const guildBalance = await dao.balanceOf(GUILD, ETH_TOKEN);
+    assert.equal(guildBalance.toString(), "0");
   });
 
   it("should be possible to withdraw an onboarding proposal", async () => {
@@ -329,16 +323,17 @@ contract("LAOLAND - Onboarding Adapter", async (accounts) => {
     const myAccountShares = await dao.balanceOf(myAccount, SHARES);
     const otherAccountShares = await dao.balanceOf(otherAccount, SHARES);
     assert.equal(myAccountShares.toString(), "1");
-    assert.equal(
-      otherAccountShares.toString(),
-      numberOfShares.mul(toBN("0")).toString()
-    );
+    assert.equal(otherAccountShares.toString(), "0");
 
-    const guildBalance = await dao.balanceOf(
-      GUILD,
-      "0x0000000000000000000000000000000000000000"
-    );
-    assert.equal(guildBalance.toString(), sharePrice.mul(toBN("0")).toString());
+    const guildBalance = await dao.balanceOf(GUILD, ETH_TOKEN);
+    assert.equal(guildBalance.toString(), "0");
+
+    const otherAccountBalance = await dao.balanceOf(otherAccount, ETH_TOKEN);
+
+    assert.equal(otherAccountBalance.toString(), "0");
+
+    let onboardingBalance = await web3.eth.getBalance(onboarding.address);
+    assert.equal(onboardingBalance.toString(), "0");
   });
 
   it("should validate inputs", async () => {

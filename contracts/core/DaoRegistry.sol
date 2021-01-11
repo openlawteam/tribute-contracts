@@ -65,6 +65,8 @@ contract DaoRegistry is DaoConstants, AdapterGuard {
 
     event NewBalance(address member, address tokenAddr, uint256 amount);
 
+    event Withdraw(address account, address tokenAddr, uint256 amount);
+
     /*
      * STRUCTURES
      */
@@ -369,6 +371,27 @@ contract DaoRegistry is DaoConstants, AdapterGuard {
         return retData;
     }
 
+    function withdraw(
+        address payable account,
+        address tokenAddr,
+        uint256 amount
+    ) external hasAccess(this, FlagHelper.Flag.WITHDRAW) {
+        require(
+            balanceOf(account, tokenAddr) >= amount,
+            "dao::withdraw::not enough funds"
+        );
+        subtractFromBalance(account, tokenAddr, amount);
+        if (tokenAddr == ETH_TOKEN) {
+            (bool success, ) = account.call{value: amount}("");
+            require(success, "withdraw failed");
+        } else {
+            IERC20 erc20 = IERC20(tokenAddr);
+            erc20.transfer(account, amount);
+        }
+
+        emit Withdraw(account, tokenAddr, amount);
+    }
+
     /**
      * PROPOSALS
      */
@@ -659,7 +682,7 @@ contract DaoRegistry is DaoConstants, AdapterGuard {
         address user,
         address token,
         uint256 amount
-    ) public hasAccess(this, FlagHelper.Flag.ADD_TO_BALANCE) {
+    ) public payable hasAccess(this, FlagHelper.Flag.ADD_TO_BALANCE) {
         require(
             _bank.availableTokens[token] ||
                 _bank.availableInternalTokens[token],

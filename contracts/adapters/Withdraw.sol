@@ -2,6 +2,13 @@ pragma solidity ^0.8.0;
 
 // SPDX-License-Identifier: MIT
 
+import "../core/DaoConstants.sol";
+import "../core/DaoRegistry.sol";
+import "../guards/MemberGuard.sol";
+import "./interfaces/IConfiguration.sol";
+import "../adapters/interfaces/IVoting.sol";
+import "../utils/SafeCast.sol";
+
 /**
 MIT License
 
@@ -25,48 +32,30 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
  */
-library FlagHelper {
-    enum Flag {
-        EXISTS,
-        SPONSORED,
-        PROCESSED,
-        JAILED,
-        ADD_ADAPTER,
-        REMOVE_ADAPTER,
-        JAIL_MEMBER,
-        UNJAIL_MEMBER,
-        EXECUTE,
-        SUBMIT_PROPOSAL,
-        SPONSOR_PROPOSAL,
-        PROCESS_PROPOSAL,
-        UPDATE_DELEGATE_KEY,
-        REGISTER_NEW_TOKEN,
-        REGISTER_NEW_INTERNAL_TOKEN,
-        ADD_TO_BALANCE,
-        SUB_FROM_BALANCE,
-        INTERNAL_TRANSFER,
-        SET_CONFIGURATION,
-        WITHDRAW
+
+contract WithdrawContract is DaoConstants, MemberGuard {
+    using SafeCast for uint256;
+
+    enum ConfigurationStatus {NOT_CREATED, IN_PROGRESS, DONE}
+
+    /*
+     * default fallback function to prevent from sending ether to the contract
+     */
+    receive() external payable {
+        revert("fallback revert");
     }
 
-    //helper
-    function getFlag(uint256 flags, Flag flag) public pure returns (bool) {
-        return (flags >> uint8(flag)) % 2 == 1;
-    }
-
-    function setFlag(
-        uint256 flags,
-        Flag flag,
-        bool value
-    ) public pure returns (uint256) {
-        if (getFlag(flags, flag) != value) {
-            if (value) {
-                return flags + 2**uint256(flag);
-            } else {
-                return flags - 2**uint256(flag);
-            }
-        } else {
-            return flags;
-        }
+    function withdraw(
+        DaoRegistry dao,
+        address payable account,
+        address token
+    ) external {
+        require(
+            dao.isNotReservedAddress(account),
+            "withdraw::reserved address"
+        );
+        uint256 balance = dao.balanceOf(account, token);
+        require(balance > 0, "nothing to withdraw");
+        dao.withdraw(account, token, balance);
     }
 }

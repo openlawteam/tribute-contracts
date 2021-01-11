@@ -334,7 +334,11 @@ contract OnboardingContract is
                 proposal.sharesRequested
             );
 
-            dao.addToBalance(GUILD, ETH_TOKEN, proposal.amount);
+            dao.addToBalance{value: proposal.amount}(
+                GUILD,
+                ETH_TOKEN,
+                proposal.amount
+            );
 
             uint256 totalShares =
                 shares[proposal.applicant] + proposal.sharesRequested;
