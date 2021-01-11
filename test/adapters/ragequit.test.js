@@ -471,7 +471,7 @@ contract("LAOLAND - Ragequit Adapter", async (accounts) => {
     assert.equal(advisorAccountLoot.toString(), "5");
 
     // Guild balance must change when Loot shares are issued
-    guildBalance = await dao.balanceOf(GUILD, ETH_TOKEN);
+    guildBalance = await dao.balanceOf(GUILD, oltContract.address);
     assert.equal(guildBalance.toString(), "10");
 
     //Ragequit - Advisor ragequits
@@ -479,11 +479,7 @@ contract("LAOLAND - Ragequit Adapter", async (accounts) => {
 
     //Check Guild Bank Balance
     let newGuildBalance = await dao.balanceOf(GUILD, oltContract.address);
-    assert.equal(toBN(newGuildBalance).toString(), "0"); //must be close to
-
-    // Guild balance must change when Loot shares are burned
-    guildBalance = await dao.balanceOf(GUILD, ETH_TOKEN);
-    assert.equal(guildBalance.toString(), "2");
+    assert.equal(toBN(newGuildBalance).toString(), "2"); //must be close to
   });
 
   it("should not be possible to vote if you are jailed", async () => {

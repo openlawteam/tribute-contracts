@@ -51,9 +51,8 @@ const FlagHelperLib = artifacts.require("./helpers/FlagHelper");
 const DaoFactory = artifacts.require("./core/DaoFactory");
 const DaoRegistry = artifacts.require("./core/DaoRegistry");
 const VotingContract = artifacts.require("./adapters/VotingContract");
-const ConfigurationContract = artifacts.require(
-  "./adapter/ConfigurationContract"
-);
+const WithdrawContract = artifacts.require("./adapters/WithdrawContract")
+const ConfigurationContract = artifacts.require("./adapter/ConfigurationContract");
 const ManagingContract = artifacts.require("./adapter/ManagingContract");
 const FinancingContract = artifacts.require("./adapter/FinancingContract");
 const RagequitContract = artifacts.require("./adapters/RagequitContract");
@@ -68,6 +67,7 @@ async function prepareSmartContracts() {
   let financing = await FinancingContract.new();
   let onboarding = await OnboardingContract.new();
   let guildkick = await GuildKickContract.new();
+  let withdraw = await WithdrawContract.new();
 
   return {
     voting,
@@ -77,6 +77,7 @@ async function prepareSmartContracts() {
     managing,
     financing,
     onboarding,
+    withdraw
   };
 }
 
@@ -98,6 +99,7 @@ async function addDefaultAdapters(
     managing,
     financing,
     onboarding,
+    withdraw
   } = await prepareSmartContracts();
 
   /**
@@ -150,6 +152,11 @@ async function addDefaultAdapters(
       PROCESS_PROPOSAL: true,
       ADD_TO_BALANCE: true,
       UPDATE_DELEGATE_KEY: true,
+    }),
+
+    entry("withdraw", withdraw, {
+      WITHDRAW: true,
+      SUB_FROM_BALANCE: true
     }),
   ]);
 
@@ -299,6 +306,7 @@ function entry(name, contract, flags) {
     flags.SUB_FROM_BALANCE,
     flags.INTERNAL_TRANSFER,
     flags.SET_CONFIGURATION,
+    flags.WITHDRAW
   ];
 
   const acl = values
@@ -383,5 +391,7 @@ module.exports = {
   RagequitContract,
   GuildKickContract,
   OnboardingContract,
+  WithdrawContract,
   ConfigurationContract,
+  OnboardingContract,
 };

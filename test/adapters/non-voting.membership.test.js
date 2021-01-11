@@ -36,6 +36,7 @@ const {
   OLTokenContract,
   OnboardingContract,
   VotingContract,
+  ETH_TOKEN,
 } = require("../../utils/DaoFactory.js");
 
 contract("LAOLAND - Non Voting Onboarding Adapter", async (accounts) => {
@@ -184,10 +185,7 @@ contract("LAOLAND - Non Voting Onboarding Adapter", async (accounts) => {
     assert.equal(advisorAccountLoot.toString(), "100000000");
 
     // Guild balance must not change when Loot shares are issued
-    const guildBalance = await dao.balanceOf(
-      GUILD,
-      "0x0000000000000000000000000000000000000000"
-    );
+    const guildBalance = await dao.balanceOf(GUILD, oltContract.address);
     assert.equal(guildBalance.toString(), "10");
   });
 });

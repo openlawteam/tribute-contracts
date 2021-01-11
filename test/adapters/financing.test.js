@@ -36,6 +36,7 @@ const {
   OnboardingContract,
   VotingContract,
   FinancingContract,
+  WithdrawContract,
   ETH_TOKEN,
 } = require("../../utils/DaoFactory.js");
 const { checkLastEvent, checkBalance } = require("../../utils/TestUtils.js");
@@ -52,6 +53,7 @@ contract("LAOLAND - Financing Adapter", async (accounts) => {
     const voting = await getContract(dao, "voting", VotingContract);
     const financing = await getContract(dao, "financing", FinancingContract);
     const onboarding = await getContract(dao, "onboarding", OnboardingContract);
+    const withdraw = await getContract(dao, "withdraw", WithdrawContract);
 
     //Add funds to the Guild Bank after sposoring a member to join the Guild
     await onboarding.onboard(
@@ -143,6 +145,18 @@ contract("LAOLAND - Financing Adapter", async (accounts) => {
     );
     //Check the applicant token balance to make sure the funds are available in the bank for the applicant account
     checkBalance(dao, applicant, ETH_TOKEN, requestedAmount);
+
+    const ethBalance = await web3.eth.getBalance(applicant);
+    await withdraw.withdraw(dao.address, applicant, ETH_TOKEN, {
+      from: myAccount,
+      gasPrice: toBN("0"),
+    });
+    checkBalance(dao, applicant, ETH_TOKEN, 0);
+    const ethBalance2 = await web3.eth.getBalance(applicant);
+    assert.equal(
+      toBN(ethBalance).add(requestedAmount).toString(),
+      ethBalance2.toString()
+    );
   });
 
   it("should not be possible to get the money if the proposal fails", async () => {
