@@ -104,7 +104,7 @@ contract OnboardingContract is
         );
 
         dao.registerPotentialNewInternalToken(tokenAddrToMint);
-        dao.registerPotentialNewToken(ETH_TOKEN);
+        dao.registerPotentialNewToken(tokenAddr);
     }
 
     function _submitMembershipProposal(
