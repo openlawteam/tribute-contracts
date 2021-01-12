@@ -26,23 +26,6 @@ import encodeParameter from "web3-utils";
 import sigUtil from "eth-sig-util";
 import MerkleTree from "./merkleTree";
 
-const getMessageERC712Hash = (m, verifyingContract, actionId, chainId) => {
-  const message = prepareMessage(m);
-  const { domain, types } = getDomainDefinition(
-    m,
-    verifyingContract,
-    actionId,
-    chainId
-  );
-  const msgParams = {
-    domain,
-    message,
-    primaryType: "Message",
-    types,
-  };
-  return "0x" + sigUtil.TypedDataUtils.sign(msgParams).toString("hex");
-};
-
 export const getDomainDefinition = (
   message,
   verifyingContract,
@@ -50,6 +33,8 @@ export const getDomainDefinition = (
   chainId
 ) => {
   switch (message.type) {
+    case "draft":
+      return getDraftDomainDefinition(verifyingContract, actionId, chainId);
     case "vote":
       return getVoteDomainDefinition(verifyingContract, actionId, chainId);
     case "proposal":
@@ -78,7 +63,7 @@ const getVoteDomainDefinition = (verifyingContract, actionId, chainId) => {
       { name: "timestamp", type: "uint256" },
       { name: "token", type: "string" },
       { name: "type", type: "string" },
-      { name: "spaceHash", type: "bytes32" },
+      { name: "space", type: "string" },
       { name: "payload", type: "MessagePayload" },
     ],
     MessagePayload: [
@@ -117,16 +102,36 @@ const getProposalDomainDefinition = (verifyingContract, actionId, chainId) => {
   const types = {
     Message: [
       { name: "timestamp", type: "uint256" },
-      { name: "spaceHash", type: "bytes32" },
+      { name: "space", type: "string" },
       { name: "payload", type: "MessagePayload" },
     ],
     MessagePayload: [
-      { name: "nameHash", type: "bytes32" },
-      { name: "bodyHash", type: "bytes32" },
+      { name: "name", type: "string" },
+      { name: "body", type: "string" },
       { name: "choices", type: "string[]" },
       { name: "start", type: "uint256" },
       { name: "end", type: "uint256" },
       { name: "snapshot", type: "string" },
+    ],
+    EIP712Domain: getDomainType(),
+  };
+
+  return { domain, types };
+};
+
+const getDraftDomainDefinition = (verifyingContract, actionId, chainId) => {
+  const domain = getMessageDomainType(chainId, verifyingContract, actionId);
+
+  const types = {
+    Message: [
+      { name: "timestamp", type: "uint256" },
+      { name: "space", type: "string" },
+      { name: "payload", type: "MessagePayload" },
+    ],
+    MessagePayload: [
+      { name: "name", type: "string" },
+      { name: "body", type: "string" },
+      { name: "choices", type: "string[]" },
     ],
     EIP712Domain: getDomainType(),
   };
@@ -146,6 +151,8 @@ export const getDomainType = () => {
 
 export const prepareMessage = (message) => {
   switch (message.type) {
+    case "draft":
+      return prepareDraftMessage(message);
     case "vote":
       return prepareVoteMessage(message);
     case "proposal":
@@ -159,7 +166,7 @@ const prepareVoteMessage = (message) => {
   return Object.assign(message, {
     timestamp: message.timestamp,
     payload: prepareVotePayload(message.payload),
-    spaceHash: sha3(message.space),
+    space: sha3(message.space),
   });
 };
 
@@ -173,18 +180,33 @@ const prepareVotePayload = (payload) => {
 const prepareProposalMessage = (message) => {
   return Object.assign(message, {
     timestamp: message.timestamp,
-    spaceHash: sha3(message.space),
+    space: sha3(message.space),
     payload: prepareProposalPayload(message.payload),
   });
 };
 
 const prepareProposalPayload = (payload) => {
   return Object.assign(payload, {
-    nameHash: sha3(payload.name),
-    bodyHash: sha3(payload.body),
+    name: sha3(payload.name),
+    body: sha3(payload.body),
     snapshot: payload.snapshot,
     start: payload.start,
     end: payload.end,
+  });
+};
+
+const prepareDraftMessage = (message) => {
+  return Object.assign(message, {
+    timestamp: message.timestamp,
+    space: sha3(message.space),
+    payload: prepareDraftPayload(message.payload),
+  });
+};
+
+const prepareDraftPayload = (payload) => {
+  return Object.assign(payload, {
+    name: sha3(payload.name),
+    body: sha3(payload.body),
   });
 };
 
@@ -287,10 +309,10 @@ const prepareVoteProposalData = (data) => {
     {
       ProposalMessage: {
         timestamp: "uint256",
-        spaceHash: "bytes32",
+        space: "string",
         payload: {
-          nameHash: "bytes32",
-          bodyHash: "bytes32",
+          name: "string",
+          body: "string",
           choices: "string[]",
           start: "uint256",
           end: "uint256",
@@ -310,8 +332,8 @@ const prepareVoteProposalData = (data) => {
 
 const prepareVoteProposalPayload = (payload) => {
   return {
-    nameHash: sha3(payload.name),
-    bodyHash: sha3(payload.body),
+    name: sha3(payload.name),
+    body: sha3(payload.body),
     choices: payload.choices,
     start: payload.start,
     end: payload.end,
