@@ -6,15 +6,13 @@ export const buildSnapshotHubProposalMessage = (message, chainId) => {
   };
   const currentDate = new Date();
   const timestamp = (currentDate.getTime() / 1e3).toFixed();
-  return {
+  console.log(message);
+  const newMessage = {
     msg: {
       payload: {
         name: message.title,
         body: message.desc,
         choices: ["Yes", "No"],
-        start: timestamp,
-        end: addHours(timestamp, message.votingTime),
-        snapshot: 1, //FIXME: how to we get that?
         metadata: {
           uuid: message.addr,
           private: message.private ? 1 : 0,
@@ -32,6 +30,18 @@ export const buildSnapshotHubProposalMessage = (message, chainId) => {
       verifyingContract: message.verifyingContract,
     },
   };
+
+  if (message.type === "proposal") {
+    //Only Proposals need the start,end and snapshot attributes
+    newMessage.msg.payload = {
+      ...newMessage.msg.payload,
+      start: timestamp,
+      end: addHours(timestamp, message.votingTime),
+      snapshot: 1, //FIXME: how to we get that?
+    };
+  }
+
+  return newMessage;
 };
 
 export const buildSnapshotHubVoteMessage = (vote, proposal, addr, chainId) => {

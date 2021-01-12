@@ -49,17 +49,29 @@ const ProposalForm = ({
     actionId: "0x4539Bac77398aF6d582842F174464b29cf3887ce",
     votingTime: 1,
     private: false,
+    draft: false,
     type: "proposal",
   });
 
   const contracts = JSON.parse(process.env.REACT_APP_DEPLOYED_CONTRACTS) || {};
 
-  const handleChange = (event) => {
-    setProposal({ ...proposal, [event.target.name]: event.target.value });
+  const handleChange = (e) => {
+    e.preventDefault();
+    setProposal({ ...proposal, [e.target.name]: e.target.value });
   };
 
-  const handleToggle = () => {
+  const handlePrivateToggle = (e) => {
+    e.preventDefault();
     setProposal({ ...proposal, private: !proposal.private });
+  };
+
+  const handleDraftToggle = (e) => {
+    e.preventDefault();
+    setProposal({
+      ...proposal,
+      draft: !proposal.draft,
+      type: !proposal.draft ? "draft" : "proposal",
+    });
   };
 
   const handleNewProposal = () => {
@@ -74,7 +86,7 @@ const ProposalForm = ({
       actionId: "0x4539Bac77398aF6d582842F174464b29cf3887ce",
       votingTime: 1,
       private: false,
-      type: "proposal",
+      type: proposal.draft ? "draft" : "proposal",
     });
   };
 
@@ -151,11 +163,30 @@ const ProposalForm = ({
                 id="privateProposalSwitch"
                 name="private"
                 color="primary"
-                onChange={handleToggle}
+                onChange={handlePrivateToggle}
               />
             }
             label="Only The LAO members can view this proposal"
-            labelPlacement="start"
+            labelPlacement="end"
+          />
+        </FormGroup>
+      </FormControl>
+
+      <FormControl className={classes.formControl}>
+        <FormGroup aria-label="position" row>
+          <FormControlLabel
+            control={
+              <Switch
+                checked={proposal.draft}
+                value={proposal.draft}
+                id="draftProposalSwitch"
+                name="draft"
+                color="primary"
+                onChange={handleDraftToggle}
+              />
+            }
+            label="Create as DRAFT proposal"
+            labelPlacement="end"
           />
         </FormGroup>
       </FormControl>
@@ -169,7 +200,7 @@ const ProposalForm = ({
           className={classes.submitButton}
           disabled={loading}
         >
-          Submit Proposal
+          Submit
         </Button>
       </FormControl>
 

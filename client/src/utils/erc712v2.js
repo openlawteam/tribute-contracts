@@ -166,7 +166,7 @@ const prepareVoteMessage = (message) => {
   return Object.assign(message, {
     timestamp: message.timestamp,
     payload: prepareVotePayload(message.payload),
-    space: sha3(message.space),
+    spaceHash: sha3(message.space),
   });
 };
 
@@ -180,15 +180,15 @@ const prepareVotePayload = (payload) => {
 const prepareProposalMessage = (message) => {
   return Object.assign(message, {
     timestamp: message.timestamp,
-    space: sha3(message.space),
+    spaceHash: sha3(message.space),
     payload: prepareProposalPayload(message.payload),
   });
 };
 
 const prepareProposalPayload = (payload) => {
   return Object.assign(payload, {
-    name: sha3(payload.name),
-    body: sha3(payload.body),
+    nameHash: sha3(payload.name),
+    bodyHash: sha3(payload.body),
     snapshot: payload.snapshot,
     start: payload.start,
     end: payload.end,
@@ -198,15 +198,15 @@ const prepareProposalPayload = (payload) => {
 const prepareDraftMessage = (message) => {
   return Object.assign(message, {
     timestamp: message.timestamp,
-    space: sha3(message.space),
+    spaceHash: sha3(message.space),
     payload: prepareDraftPayload(message.payload),
   });
 };
 
 const prepareDraftPayload = (payload) => {
   return Object.assign(payload, {
-    name: sha3(payload.name),
-    body: sha3(payload.body),
+    nameHash: sha3(payload.name),
+    bodyHash: sha3(payload.body),
   });
 };
 
@@ -332,8 +332,8 @@ const prepareVoteProposalData = (data) => {
 
 const prepareVoteProposalPayload = (payload) => {
   return {
-    name: sha3(payload.name),
-    body: sha3(payload.body),
+    nameHash: sha3(payload.name),
+    bodyHash: sha3(payload.body),
     choices: payload.choices,
     start: payload.start,
     end: payload.end,
