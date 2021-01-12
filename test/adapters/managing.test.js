@@ -51,6 +51,7 @@ contract("LAOLAND - Managing Adapter", async (accounts) => {
     try {
       await managing.createModuleChangeRequest(
         dao.address,
+        "0x0",
         newModuleId,
         ETH_TOKEN,
         [],
@@ -77,6 +78,7 @@ contract("LAOLAND - Managing Adapter", async (accounts) => {
     try {
       await managing.createModuleChangeRequest(
         dao.address,
+        "0x0",
         newModuleId,
         GUILD,
         [],
@@ -92,6 +94,7 @@ contract("LAOLAND - Managing Adapter", async (accounts) => {
     try {
       await managing.createModuleChangeRequest(
         dao.address,
+        "0x0",
         newModuleId,
         TOTAL,
         [],
@@ -118,6 +121,7 @@ contract("LAOLAND - Managing Adapter", async (accounts) => {
     try {
       await managing.createModuleChangeRequest(
         dao.address,
+        "0x45",
         newModuleId,
         "",
         [],
@@ -146,9 +150,11 @@ contract("LAOLAND - Managing Adapter", async (accounts) => {
 
     //Submit a new Bank module proposal
     let newModuleId = sha3("onboarding");
+    let proposalId = "0x0";
     let newModuleAddress = accounts[3]; //TODO deploy some Banking test contract
     await managing.createModuleChangeRequest(
       dao.address,
+      proposalId,
       newModuleId,
       newModuleAddress,
       [],
@@ -156,9 +162,6 @@ contract("LAOLAND - Managing Adapter", async (accounts) => {
       0,
       { from: myAccount, gasPrice: toBN("0") }
     );
-
-    //Get the new proposal id
-    let proposalId = 0;
 
     //Sponsor the new proposal, vote and process it
     await managing.sponsorProposal(dao.address, proposalId, [], {
@@ -191,11 +194,15 @@ contract("LAOLAND - Managing Adapter", async (accounts) => {
 
     let votingContract = await dao.getAdapterAddress(sha3("voting"));
     let voting = await VotingContract.at(votingContract);
+
+    let proposalId = "0x0";
+
     //Submit a new Bank module proposal
     let newModuleId = sha3("onboarding");
     let newModuleAddress = accounts[4]; //TODO deploy some Banking test contract
     await managing.createModuleChangeRequest(
       dao.address,
+      proposalId,
       newModuleId,
       newModuleAddress,
       [],
@@ -203,8 +210,6 @@ contract("LAOLAND - Managing Adapter", async (accounts) => {
       0,
       { from: myAccount, gasPrice: toBN("0") }
     );
-
-    let proposalId = 0;
 
     //set new delegate key
     const onboardingAddr = await dao.getAdapterAddress(sha3("onboarding"));

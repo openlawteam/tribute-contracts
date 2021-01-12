@@ -7,7 +7,6 @@ import "../core/DaoConstants.sol";
 import "../core/DaoRegistry.sol";
 import "../adapters/interfaces/IVoting.sol";
 import "../guards/MemberGuard.sol";
-import "../utils/SafeCast.sol";
 
 /**
 MIT License
@@ -34,8 +33,6 @@ SOFTWARE.
  */
 
 contract ManagingContract is IManaging, DaoConstants, MemberGuard {
-    using SafeCast for uint256;
-
     struct ProposalDetails {
         address applicant;
         bytes32 moduleId;
@@ -45,7 +42,7 @@ contract ManagingContract is IManaging, DaoConstants, MemberGuard {
         uint128 flags;
     }
 
-    mapping(uint256 => ProposalDetails) public proposals;
+    mapping(bytes32 => ProposalDetails) public proposals;
 
     /*
      * default fallback function to prevent from sending ether to the contract
@@ -56,12 +53,13 @@ contract ManagingContract is IManaging, DaoConstants, MemberGuard {
 
     function createModuleChangeRequest(
         DaoRegistry dao,
+        bytes32 proposalId,
         bytes32 moduleId,
         address moduleAddress,
         bytes32[] calldata keys,
         uint256[] calldata values,
         uint256 _flags
-    ) external override onlyMember(dao) returns (uint64) {
+    ) external override onlyMember(dao) {
         require(
             keys.length == values.length,
             "must be an equal number of config keys and values"
@@ -77,7 +75,7 @@ contract ManagingContract is IManaging, DaoConstants, MemberGuard {
 
         //is there a way to check if the new module implements the module interface properly?
 
-        uint64 proposalId = dao.submitProposal();
+        dao.submitProposal(proposalId);
 
         ProposalDetails storage proposal = proposals[proposalId];
         proposal.applicant = msg.sender;
@@ -86,27 +84,24 @@ contract ManagingContract is IManaging, DaoConstants, MemberGuard {
         proposal.keys = keys;
         proposal.values = values;
         proposal.flags = flags;
-        return proposalId;
     }
 
     function sponsorProposal(
         DaoRegistry dao,
-        uint256 _proposalId,
+        bytes32 proposalId,
         bytes calldata data
     ) external override onlyMember(dao) {
-        uint64 proposalId = SafeCast.toUint64(_proposalId);
         IVoting votingContract = IVoting(dao.getAdapterAddress(VOTING));
         votingContract.startNewVotingForProposal(dao, proposalId, data);
 
         dao.sponsorProposal(proposalId, msg.sender);
     }
 
-    function processProposal(DaoRegistry dao, uint256 _proposalId)
+    function processProposal(DaoRegistry dao, bytes32 proposalId)
         external
         override
         onlyMember(dao)
     {
-        uint64 proposalId = SafeCast.toUint64(_proposalId);
         ProposalDetails memory proposal = proposals[proposalId];
         require(
             !dao.getProposalFlag(proposalId, FlagHelper.Flag.PROCESSED),
