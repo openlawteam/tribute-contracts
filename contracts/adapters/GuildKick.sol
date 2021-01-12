@@ -8,7 +8,6 @@ import "../guards/MemberGuard.sol";
 import "./interfaces/IGuildKick.sol";
 import "../adapters/interfaces/IVoting.sol";
 import "../helpers/FairShareHelper.sol";
-import "../utils/SafeCast.sol";
 
 /**
 MIT License
@@ -35,8 +34,6 @@ SOFTWARE.
  */
 
 contract GuildKickContract is IGuildKick, DaoConstants, MemberGuard {
-    using SafeCast for uint256;
-
     enum GuildKickStatus {NOT_STARTED, IN_PROGRESS, DONE}
 
     struct GuildKick {
@@ -49,7 +46,7 @@ contract GuildKickContract is IGuildKick, DaoConstants, MemberGuard {
         uint256 blockNumber;
     }
 
-    mapping(uint64 => GuildKick) public kicks;
+    mapping(bytes32 => GuildKick) public kicks;
 
     /*
      * default fallback function to prevent from sending ether to the contract
@@ -60,11 +57,12 @@ contract GuildKickContract is IGuildKick, DaoConstants, MemberGuard {
 
     function submitKickProposal(
         DaoRegistry dao,
+        bytes32 proposalId,
         address memberToKick,
         bytes calldata data
-    ) external override onlyMember(dao) returns (uint64) {
+    ) external override onlyMember(dao) {
         // A kick proposal is created and needs to be voted
-        uint64 proposalId = dao.submitProposal();
+        dao.submitProposal(proposalId);
         kicks[proposalId] = GuildKick(
             memberToKick,
             GuildKickStatus.IN_PROGRESS,
@@ -79,16 +77,13 @@ contract GuildKickContract is IGuildKick, DaoConstants, MemberGuard {
         IVoting votingContract = IVoting(dao.getAdapterAddress(VOTING));
         votingContract.startNewVotingForProposal(dao, proposalId, data);
         dao.sponsorProposal(proposalId, msg.sender);
-
-        return proposalId;
     }
 
-    function guildKick(DaoRegistry dao, uint256 _proposalId)
+    function guildKick(DaoRegistry dao, bytes32 proposalId)
         external
         override
         onlyMember(dao)
     {
-        uint64 proposalId = SafeCast.toUint64(_proposalId);
         GuildKick storage kick = kicks[proposalId];
         // If it does not exist or is not in progress we expect it to fail
         require(
@@ -121,10 +116,9 @@ contract GuildKickContract is IGuildKick, DaoConstants, MemberGuard {
 
     function rageKick(
         DaoRegistry dao,
-        uint256 _proposalId,
+        bytes32 proposalId,
         uint256 toIndex
     ) external override onlyMember(dao) {
-        uint64 proposalId = SafeCast.toUint64(_proposalId);
         GuildKick storage kick = kicks[proposalId];
         // If does not exist or is not DONE we expect it to fail
         require(

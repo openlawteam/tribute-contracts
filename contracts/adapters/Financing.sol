@@ -8,7 +8,6 @@ import "../core/DaoRegistry.sol";
 import "../adapters/interfaces/IVoting.sol";
 import "../guards/MemberGuard.sol";
 import "../helpers/FlagHelper.sol";
-import "../utils/SafeCast.sol";
 
 /**
 MIT License
@@ -35,8 +34,6 @@ SOFTWARE.
  */
 
 contract FinancingContract is IFinancing, DaoConstants, MemberGuard {
-    using SafeCast for uint256;
-
     struct ProposalDetails {
         address applicant;
         uint256 amount;
@@ -44,7 +41,7 @@ contract FinancingContract is IFinancing, DaoConstants, MemberGuard {
         bytes32 details;
     }
 
-    mapping(address => mapping(uint256 => ProposalDetails)) public proposals;
+    mapping(address => mapping(bytes32 => ProposalDetails)) public proposals;
 
     /*
      * default fallback function to prevent from sending ether to the contract
@@ -55,11 +52,12 @@ contract FinancingContract is IFinancing, DaoConstants, MemberGuard {
 
     function createFinancingRequest(
         DaoRegistry dao,
+        bytes32 proposalId,
         address applicant,
         address token,
         uint256 amount,
         bytes32 details
-    ) external override returns (uint64) {
+    ) external override {
         require(amount > 0, "invalid requested amount");
         require(dao.isTokenAllowed(token), "token not allowed");
         require(
@@ -67,33 +65,30 @@ contract FinancingContract is IFinancing, DaoConstants, MemberGuard {
             "applicant using reserved address"
         );
 
-        uint64 proposalId = dao.submitProposal();
+        dao.submitProposal(proposalId);
 
         ProposalDetails storage proposal = proposals[address(dao)][proposalId];
         proposal.applicant = applicant;
         proposal.amount = amount;
         proposal.details = details;
         proposal.token = token;
-        return proposalId;
     }
 
     function sponsorProposal(
         DaoRegistry dao,
-        uint256 _proposalId,
+        bytes32 proposalId,
         bytes calldata data
     ) external override onlyMember(dao) {
-        uint64 proposalId = SafeCast.toUint64(_proposalId);
         IVoting votingContract = IVoting(dao.getAdapterAddress(VOTING));
         votingContract.startNewVotingForProposal(dao, proposalId, data);
         dao.sponsorProposal(proposalId, msg.sender);
     }
 
-    function processProposal(DaoRegistry dao, uint256 _proposalId)
+    function processProposal(DaoRegistry dao, bytes32 proposalId)
         external
         override
         onlyMember(dao)
     {
-        uint64 proposalId = SafeCast.toUint64(_proposalId);
         ProposalDetails memory details = proposals[address(dao)][proposalId];
 
         require(

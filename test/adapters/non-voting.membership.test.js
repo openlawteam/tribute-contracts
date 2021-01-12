@@ -54,16 +54,13 @@ contract("LAOLAND - Non Voting Onboarding Adapter", async (accounts) => {
 
     // Total of ETH to be sent to the DAO in order to get the Loot shares
     let ethAmount = sharePrice.mul(toBN(3)).add(remaining);
-
+    let proposalId = "0x0";
     // Request to join the DAO as an Advisor (non-voting power), Send a tx with RAW ETH only and specify the nonVotingOnboarding
-    await onboarding.onboard(dao.address, advisorAccount, LOOT, 0, {
+    await onboarding.onboard(dao.address, proposalId, advisorAccount, LOOT, 0, {
       from: myAccount,
       value: ethAmount,
       gasPrice: toBN("0"),
     });
-
-    //Get the new proposal id
-    let proposalId = 0;
 
     // Sponsor the new proposal to allow the Advisor to join the DAO
     await onboarding.sponsorProposal(dao.address, proposalId, [], {
@@ -143,10 +140,17 @@ contract("LAOLAND - Non Voting Onboarding Adapter", async (accounts) => {
     // Send a request to join the DAO as an Advisor (non-voting power),
     // the tx passes the OLT ERC20 token, the amount and the nonVotingOnboarding adapter that handles the proposal
     try {
-      await onboarding.onboard(dao.address, advisorAccount, LOOT, tokenAmount, {
-        from: advisorAccount,
-        gasPrice: toBN("0"),
-      });
+      await onboarding.onboard(
+        dao.address,
+        "0x0",
+        advisorAccount,
+        LOOT,
+        tokenAmount,
+        {
+          from: advisorAccount,
+          gasPrice: toBN("0"),
+        }
+      );
       assert.equal(true, false, "should have failed!");
     } catch (err) {
       assert.equal(err.message.indexOf("ERC20 transfer not allowed") > 0, true);
@@ -156,26 +160,33 @@ contract("LAOLAND - Non Voting Onboarding Adapter", async (accounts) => {
       from: advisorAccount,
     });
 
-    await onboarding.onboard(dao.address, advisorAccount, LOOT, tokenAmount, {
-      from: advisorAccount,
-      gasPrice: toBN("0"),
-    });
+    await onboarding.onboard(
+      dao.address,
+      "0x0",
+      advisorAccount,
+      LOOT,
+      tokenAmount,
+      {
+        from: advisorAccount,
+        gasPrice: toBN("0"),
+      }
+    );
 
     // Sponsor the new proposal to allow the Advisor to join the DAO
-    await onboarding.sponsorProposal(dao.address, 0, [], {
+    await onboarding.sponsorProposal(dao.address, "0x0", [], {
       from: myAccount,
       gasPrice: toBN("0"),
     });
 
     // Vote on the new proposal to accept the new Advisor
-    await voting.submitVote(dao.address, 0, 1, {
+    await voting.submitVote(dao.address, "0x0", 1, {
       from: myAccount,
       gasPrice: toBN("0"),
     });
 
     // Process the new proposal
     await advanceTime(10000);
-    await onboarding.processProposal(dao.address, 0, {
+    await onboarding.processProposal(dao.address, "0x0", {
       from: myAccount,
       gasPrice: toBN("0"),
     });

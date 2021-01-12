@@ -31,7 +31,7 @@ SOFTWARE.
 interface IVoting {
     function startNewVotingForProposal(
         DaoRegistry dao,
-        uint256 proposalId,
+        bytes32 proposalId,
         bytes calldata data
     ) external;
 
@@ -42,7 +42,7 @@ interface IVoting {
         address sender
     ) external returns (address);
 
-    function voteResult(DaoRegistry dao, uint256 proposalId)
+    function voteResult(DaoRegistry dao, bytes32 proposalId)
         external
         returns (uint256 state);
 }
