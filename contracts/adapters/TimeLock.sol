@@ -41,42 +41,47 @@ contract TimeLockContract is DaoConstants, MemberGuard {
     struct TimeLock {  
         address account;
         address token;
-        uint256 balance;
+        uint256 amount;
         uint256 termination;
     }
 
-    /*
-     * default fallback function to prevent from sending ether to the contract
+    /**
+     * @dev default fallback function to receive ether sent to the contract
      */
-    receive() external payable {
-        revert("fallback revert");
-    }
+    receive() external payable {}
     
-    /*
+    /**
      * @dev function to allow dao account to timelock their balance
+     * @param dao Dao address to withdraw balance 
+     * @param account Account address with dao balance to withdraw
+     * @param token Token or ETH to withdraw from dao
+     * @param amount Amount of token or ETH
+     * @param termination Unix epoch time for lock termination
      */
-    function withdrawToTimelock(
+    function withdrawToTimeLock(
         DaoRegistry dao,
-        address payable account, 
-        address token
+        address account, 
+        address token,
+        uint256 amount,
+        uint256 termination
     ) external returns (uint256) {
         require(
-            dao.isNotReservedAddress(account),
+            dao.isNotReservedAddress(msg.sender),
             "withdraw::reserved address"
         );
-        uint256 balance = dao.balanceOf(account, token);
-        require(balance > 0, "nothing to withdraw");
-        dao.withdraw(address(this), token, balance);
+        require(dao.balanceOf(account, token) > 0, "nothing to withdraw");
+        dao.withdraw(address(this), token, amount);
         
         uint256 registration = timeLockCount++;
         
-        timeLockRegistrations[registration] = TimeLock(account, token, balance, termination);
+        timeLockRegistrations[registration] = TimeLock(account, token, amount, termination);
         
         return registration;
     }
     
     /*
-     * @dev function to allow dao account to withdraw their timelock balance 
+     * @dev function to allow dao account to withdraw their timelock balance
+     * @param registration Number assigned to lock registration
      */
     function withdrawFromTimelock(uint256 registration) external {
         TimeLock storage lock = timeLockRegistrations[registration];
@@ -85,6 +90,6 @@ contract TimeLockContract is DaoConstants, MemberGuard {
         require(block.timestamp >= lock.termination, "not yet terminated");
         
         IERC20 erc20 = IERC20(lock.token);
-        erc20.transfer(msg.sender, lock.balance);
+        erc20.transfer(msg.sender, lock.amount);
     }
 }
