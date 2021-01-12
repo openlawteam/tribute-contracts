@@ -1,8 +1,12 @@
 pragma solidity ^0.8.0;
 
-import "../../core/DaoRegistry.sol";
-
 // SPDX-License-Identifier: MIT
+
+import "../core/DaoConstants.sol";
+import "../core/DaoRegistry.sol";
+import "../guards/MemberGuard.sol";
+import "./interfaces/IConfiguration.sol";
+import "../adapters/interfaces/IVoting.sol";
 
 /**
 MIT License
@@ -28,22 +32,27 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
  */
 
-interface IManaging {
-    function createModuleChangeRequest(
-        DaoRegistry dao,
-        bytes32 proposalId,
-        bytes32 moduleId,
-        address moduleAddress,
-        bytes32[] calldata keys,
-        uint256[] calldata values,
-        uint256 flags
-    ) external;
+contract WithdrawContract is DaoConstants, MemberGuard {
+    enum ConfigurationStatus {NOT_CREATED, IN_PROGRESS, DONE}
 
-    function sponsorProposal(
-        DaoRegistry dao,
-        bytes32 proposalId,
-        bytes calldata data
-    ) external;
+    /*
+     * default fallback function to prevent from sending ether to the contract
+     */
+    receive() external payable {
+        revert("fallback revert");
+    }
 
-    function processProposal(DaoRegistry dao, bytes32 proposalId) external;
+    function withdraw(
+        DaoRegistry dao,
+        address payable account,
+        address token
+    ) external {
+        require(
+            dao.isNotReservedAddress(account),
+            "withdraw::reserved address"
+        );
+        uint256 balance = dao.balanceOf(account, token);
+        require(balance > 0, "nothing to withdraw");
+        dao.withdraw(account, token, balance);
+    }
 }

@@ -30,17 +30,18 @@ SOFTWARE.
 interface IFinancing {
     function createFinancingRequest(
         DaoRegistry dao,
+        bytes32 proposalId,
         address applicant,
         address token,
         uint256 amount,
         bytes32 details
-    ) external returns (uint64);
+    ) external;
 
     function sponsorProposal(
         DaoRegistry dao,
-        uint256 proposalId,
-        bytes calldata data
+        bytes32 proposalId,
+        bytes memory data
     ) external;
 
-    function processProposal(DaoRegistry dao, uint256 proposalId) external;
+    function processProposal(DaoRegistry dao, bytes32 proposalId) external;
 }

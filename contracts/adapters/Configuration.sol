@@ -7,7 +7,6 @@ import "../core/DaoRegistry.sol";
 import "../guards/MemberGuard.sol";
 import "./interfaces/IConfiguration.sol";
 import "../adapters/interfaces/IVoting.sol";
-import "../utils/SafeCast.sol";
 
 /**
 MIT License
@@ -34,8 +33,6 @@ SOFTWARE.
  */
 
 contract ConfigurationContract is IConfiguration, DaoConstants, MemberGuard {
-    using SafeCast for uint256;
-
     enum ConfigurationStatus {NOT_CREATED, IN_PROGRESS, DONE}
 
     struct Configuration {
@@ -44,7 +41,7 @@ contract ConfigurationContract is IConfiguration, DaoConstants, MemberGuard {
         uint256[] values;
     }
 
-    mapping(uint64 => Configuration) public configurations;
+    mapping(bytes32 => Configuration) public configurations;
 
     /*
      * default fallback function to prevent from sending ether to the contract
@@ -55,46 +52,41 @@ contract ConfigurationContract is IConfiguration, DaoConstants, MemberGuard {
 
     function submitConfigurationProposal(
         DaoRegistry dao,
+        bytes32 proposalId,
         bytes32[] calldata keys,
         uint256[] calldata values,
-        bytes calldata data
-    ) external override onlyMember(dao) returns (uint64) {
+        bytes memory data
+    ) external override onlyMember(dao) {
         require(
             keys.length == values.length,
             "configuration must have the same number of keys and values"
         );
 
+        dao.submitProposal(proposalId);
         Configuration memory configuration =
             Configuration(ConfigurationStatus.IN_PROGRESS, keys, values);
-
-        uint64 proposalId = dao.submitProposal();
         configurations[proposalId] = configuration;
 
         IVoting votingContract = IVoting(dao.getAdapterAddress(VOTING));
         votingContract.startNewVotingForProposal(dao, proposalId, data);
         dao.sponsorProposal(proposalId, msg.sender);
-
-        return proposalId;
     }
 
     function sponsorProposal(
         DaoRegistry dao,
-        uint256 _proposalId,
-        bytes calldata data
+        bytes32 proposalId,
+        bytes memory data
     ) external override onlyMember(dao) {
-        uint64 proposalId = SafeCast.toUint64(_proposalId);
         IVoting votingContract = IVoting(dao.getAdapterAddress(VOTING));
         votingContract.startNewVotingForProposal(dao, proposalId, data);
-
         dao.sponsorProposal(proposalId, msg.sender);
     }
 
-    function processProposal(DaoRegistry dao, uint256 _proposalId)
+    function processProposal(DaoRegistry dao, bytes32 proposalId)
         external
         override
         onlyMember(dao)
     {
-        uint64 proposalId = SafeCast.toUint64(_proposalId);
         Configuration storage configuration = configurations[proposalId];
 
         // If status is empty or DONE we expect it to fail

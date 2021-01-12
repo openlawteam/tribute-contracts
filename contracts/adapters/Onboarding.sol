@@ -8,7 +8,6 @@ import "../core/DaoRegistry.sol";
 import "../adapters/interfaces/IVoting.sol";
 import "../guards/MemberGuard.sol";
 import "../guards/AdapterGuard.sol";
-import "../utils/SafeCast.sol";
 
 /**
 MIT License
@@ -40,15 +39,13 @@ contract OnboardingContract is
     MemberGuard,
     AdapterGuard
 {
-    using SafeCast for uint256;
-
     bytes32 constant ChunkSize = keccak256("onboarding.chunkSize");
     bytes32 constant SharesPerChunk = keccak256("onboarding.sharesPerChunk");
     bytes32 constant TokenAddr = keccak256("onboarding.tokenAddr");
     bytes32 constant MaximumChunks = keccak256("onboarding.maximumChunks");
 
     struct ProposalDetails {
-        uint64 id;
+        bytes32 id;
         address tokenToMint;
         uint256 amount;
         uint256 sharesRequested;
@@ -66,7 +63,7 @@ contract OnboardingContract is
         uint256 totalShares;
     }
 
-    mapping(address => mapping(uint256 => ProposalDetails)) public proposals;
+    mapping(address => mapping(bytes32 => ProposalDetails)) public proposals;
     mapping(address => uint256) public shares;
 
     function configKey(address tokenAddrToMint, bytes32 key)
@@ -104,17 +101,18 @@ contract OnboardingContract is
         );
 
         dao.registerPotentialNewInternalToken(tokenAddrToMint);
-        dao.registerPotentialNewToken(ETH_TOKEN);
+        dao.registerPotentialNewToken(tokenAddr);
     }
 
     function _submitMembershipProposal(
         DaoRegistry dao,
+        bytes32 proposalId,
         address tokenToMint,
         address payable applicant,
         address payable proposer,
         uint256 value,
         address token
-    ) internal returns (uint256, uint64) {
+    ) internal returns (uint256) {
         OnboardingDetails memory details;
         details.chunkSize = dao.getConfiguration(
             configKey(tokenToMint, ChunkSize)
@@ -139,28 +137,29 @@ contract OnboardingContract is
             "total shares for this member must be lower than the maximum"
         );
 
-        uint64 proposalId =
-            _submitMembershipProposalInternal(
-                dao,
-                tokenToMint,
-                applicant,
-                proposer,
-                details.sharesRequested,
-                details.amount,
-                token
-            );
+        _submitMembershipProposalInternal(
+            dao,
+            proposalId,
+            tokenToMint,
+            applicant,
+            proposer,
+            details.sharesRequested,
+            details.amount,
+            token
+        );
 
-        return (details.amount, proposalId);
+        return details.amount;
     }
 
     function onboardAndSponsor(
         DaoRegistry dao,
+        bytes32 proposalId,
         address payable applicant,
         address tokenToMint,
         uint256 tokenAmount,
         bytes calldata data
     ) external payable {
-        uint64 proposalId = onboard(dao, applicant, tokenToMint, tokenAmount);
+        onboard(dao, proposalId, applicant, tokenToMint, tokenAmount);
         require(
             proposals[address(dao)][proposalId].id == proposalId,
             "proposal does not exist"
@@ -190,10 +189,11 @@ contract OnboardingContract is
 
     function onboard(
         DaoRegistry dao,
+        bytes32 proposalId,
         address payable applicant,
         address tokenToMint,
         uint256 tokenAmount
-    ) public payable override returns (uint64) {
+    ) public payable override {
         address tokenAddr =
             address(
                 dao.getAddressConfiguration(configKey(tokenToMint, TokenAddr))
@@ -216,9 +216,10 @@ contract OnboardingContract is
             );
         }
 
-        (uint256 amountUsed, uint64 proposalId) =
+        uint256 amountUsed =
             _submitMembershipProposal(
                 dao,
+                proposalId,
                 tokenToMint,
                 applicant,
                 payable(msg.sender),
@@ -238,8 +239,6 @@ contract OnboardingContract is
                 );
             }
         }
-
-        return proposalId;
     }
 
     function updateDelegateKey(DaoRegistry dao, address delegateKey) external {
@@ -248,14 +247,15 @@ contract OnboardingContract is
 
     function _submitMembershipProposalInternal(
         DaoRegistry dao,
+        bytes32 proposalId,
         address tokenToMint,
         address payable newMember,
         address payable proposer,
         uint256 sharesRequested,
         uint256 amount,
         address token
-    ) internal returns (uint64) {
-        uint64 proposalId = dao.submitProposal();
+    ) internal {
+        dao.submitProposal(proposalId);
         proposals[address(dao)][proposalId] = ProposalDetails(
             proposalId,
             tokenToMint,
@@ -265,16 +265,13 @@ contract OnboardingContract is
             newMember,
             proposer
         );
-
-        return proposalId;
     }
 
     function sponsorProposal(
         DaoRegistry dao,
-        uint256 _proposalId,
+        bytes32 proposalId,
         bytes calldata data
     ) external override onlyMember(dao) {
-        uint64 proposalId = SafeCast.toUint64(_proposalId);
         require(
             proposals[address(dao)][proposalId].id == proposalId,
             "proposal does not exist"
@@ -286,12 +283,11 @@ contract OnboardingContract is
         dao.sponsorProposal(proposalId, msg.sender);
     }
 
-    function cancelProposal(DaoRegistry dao, uint256 _proposalId)
+    function cancelProposal(DaoRegistry dao, bytes32 proposalId)
         external
         override
         onlyMember(dao)
     {
-        uint64 proposalId = SafeCast.toUint64(_proposalId);
         require(
             proposals[address(dao)][proposalId].id == proposalId,
             "proposal does not exist"
@@ -308,11 +304,10 @@ contract OnboardingContract is
         _refundTribute(proposal.token, proposal.proposer, proposal.amount);
     }
 
-    function processProposal(DaoRegistry dao, uint256 _proposalId)
+    function processProposal(DaoRegistry dao, bytes32 proposalId)
         external
         override
     {
-        uint64 proposalId = SafeCast.toUint64(_proposalId);
         require(
             proposals[address(dao)][proposalId].id == proposalId,
             "proposal does not exist"
@@ -334,7 +329,19 @@ contract OnboardingContract is
                 proposal.sharesRequested
             );
 
-            dao.addToBalance(GUILD, ETH_TOKEN, proposal.amount);
+            address token = proposal.token;
+            if (token == ETH_TOKEN) {
+                dao.addToBalance{value: proposal.amount}(
+                    GUILD,
+                    token,
+                    proposal.amount
+                );
+            } else {
+                dao.addToBalance(GUILD, token, proposal.amount);
+
+                IERC20 erc20 = IERC20(token);
+                erc20.transfer(address(dao), proposal.amount);
+            }
 
             uint256 totalShares =
                 shares[proposal.applicant] + proposal.sharesRequested;

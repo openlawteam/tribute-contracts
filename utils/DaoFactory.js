@@ -51,9 +51,8 @@ const FlagHelperLib = artifacts.require("./helpers/FlagHelper");
 const DaoFactory = artifacts.require("./core/DaoFactory");
 const DaoRegistry = artifacts.require("./core/DaoRegistry");
 const VotingContract = artifacts.require("./adapters/VotingContract");
-const ConfigurationContract = artifacts.require(
-  "./adapter/ConfigurationContract"
-);
+const WithdrawContract = artifacts.require("./adapters/WithdrawContract")
+const ConfigurationContract = artifacts.require("./adapter/ConfigurationContract");
 const ManagingContract = artifacts.require("./adapter/ManagingContract");
 const FinancingContract = artifacts.require("./adapter/FinancingContract");
 const RagequitContract = artifacts.require("./adapters/RagequitContract");
@@ -68,6 +67,7 @@ async function prepareSmartContracts() {
   let financing = await FinancingContract.new();
   let onboarding = await OnboardingContract.new();
   let guildkick = await GuildKickContract.new();
+  let withdraw = await WithdrawContract.new();
 
   return {
     voting,
@@ -77,6 +77,7 @@ async function prepareSmartContracts() {
     managing,
     financing,
     onboarding,
+    withdraw
   };
 }
 
@@ -86,7 +87,8 @@ async function addDefaultAdapters(
   nbShares = numberOfShares,
   votingPeriod = 10,
   gracePeriod = 1,
-  tokenAddr = ETH_TOKEN
+  tokenAddr = ETH_TOKEN,
+  maxChunks = maximumChunks
 ) {
   let daoFactory = await DaoFactory.new(dao.address);
   const {
@@ -97,6 +99,7 @@ async function addDefaultAdapters(
     managing,
     financing,
     onboarding,
+    withdraw
   } = await prepareSmartContracts();
 
   /**
@@ -150,6 +153,11 @@ async function addDefaultAdapters(
       ADD_TO_BALANCE: true,
       UPDATE_DELEGATE_KEY: true,
     }),
+
+    entry("withdraw", withdraw, {
+      WITHDRAW: true,
+      SUB_FROM_BALANCE: true
+    }),
   ]);
 
   await onboarding.configureDao(
@@ -157,7 +165,7 @@ async function addDefaultAdapters(
     SHARES,
     unitPrice,
     nbShares,
-    maximumChunks,
+    maxChunks,
     tokenAddr
   );
   await onboarding.configureDao(
@@ -165,7 +173,7 @@ async function addDefaultAdapters(
     LOOT,
     unitPrice,
     nbShares,
-    maximumChunks,
+    maxChunks,
     tokenAddr
   );
   await voting.configureDao(dao.address, votingPeriod, gracePeriod);
@@ -175,12 +183,15 @@ async function addDefaultAdapters(
 
 async function deployDao(
   deployer,
-  unitPrice = sharePrice,
-  nbShares = numberOfShares,
-  votingPeriod = 10,
-  gracePeriod = 1,
-  tokenAddr = ETH_TOKEN
+  options
 ) {
+  const unitPrice = options.unitPrice || sharePrice;
+  const nbShares = options.nbShares || numberOfShares;
+  const votingPeriod = options.votingPeriod || 10;
+  const gracePeriod = options.gracePeriod || 1;
+  const tokenAddr = options.tokenAddr || ETH_TOKEN;
+  const maxChunks = options.maximumChunks || maximumChunks;
+
   await deployer.deploy(FlagHelperLib);
   
   await deployer.link(FlagHelperLib, DaoRegistry);
@@ -195,7 +206,8 @@ async function deployDao(
     nbShares,
     votingPeriod,
     gracePeriod,
-    tokenAddr
+    tokenAddr,
+    maxChunks
   );
   await dao.finalizeDao();
   return dao;
@@ -294,6 +306,7 @@ function entry(name, contract, flags) {
     flags.SUB_FROM_BALANCE,
     flags.INTERNAL_TRANSFER,
     flags.SET_CONFIGURATION,
+    flags.WITHDRAW
   ];
 
   const acl = values
@@ -378,5 +391,7 @@ module.exports = {
   RagequitContract,
   GuildKickContract,
   OnboardingContract,
+  WithdrawContract,
   ConfigurationContract,
+  OnboardingContract,
 };

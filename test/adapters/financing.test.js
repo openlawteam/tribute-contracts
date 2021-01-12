@@ -36,9 +36,10 @@ const {
   OnboardingContract,
   VotingContract,
   FinancingContract,
+  WithdrawContract,
   ETH_TOKEN,
 } = require("../../utils/DaoFactory.js");
-const { checkLastEvent, checkBalance } = require("../../utils/TestUtils.js");
+const { checkBalance } = require("../../utils/TestUtils.js");
 const remaining = sharePrice.sub(toBN("50000000000000"));
 
 contract("LAOLAND - Financing Adapter", async (accounts) => {
@@ -52,10 +53,14 @@ contract("LAOLAND - Financing Adapter", async (accounts) => {
     const voting = await getContract(dao, "voting", VotingContract);
     const financing = await getContract(dao, "financing", FinancingContract);
     const onboarding = await getContract(dao, "onboarding", OnboardingContract);
+    const withdraw = await getContract(dao, "withdraw", WithdrawContract);
+
+    let proposalId = "0x0";
 
     //Add funds to the Guild Bank after sposoring a member to join the Guild
     await onboarding.onboard(
       dao.address,
+      proposalId,
       newMember,
       SHARES,
       sharePrice.mul(toBN(10)).add(remaining),
@@ -65,10 +70,6 @@ contract("LAOLAND - Financing Adapter", async (accounts) => {
         gasPrice: toBN("0"),
       }
     );
-
-    //Get the new proposal id
-    let proposalId = "0";
-    await checkLastEvent(dao, { proposalId });
 
     //Sponsor the new proposal, vote and process it
     await onboarding.sponsorProposal(dao.address, proposalId, [], {
@@ -99,18 +100,16 @@ contract("LAOLAND - Financing Adapter", async (accounts) => {
 
     //Create Financing Request
     let requestedAmount = toBN(50000);
+    proposalId = "0x1";
     await financing.createFinancingRequest(
       dao.address,
+      proposalId,
       applicant,
       ETH_TOKEN,
       requestedAmount,
       fromUtf8(""),
       { gasPrice: toBN("0") }
     );
-
-    //Get the new proposalId from event log
-    proposalId = "1";
-    await checkLastEvent(dao, { proposalId });
 
     //Member sponsors the Financing proposal
     await financing.sponsorProposal(dao.address, proposalId, [], {
@@ -143,6 +142,18 @@ contract("LAOLAND - Financing Adapter", async (accounts) => {
     );
     //Check the applicant token balance to make sure the funds are available in the bank for the applicant account
     checkBalance(dao, applicant, ETH_TOKEN, requestedAmount);
+
+    const ethBalance = await web3.eth.getBalance(applicant);
+    await withdraw.withdraw(dao.address, applicant, ETH_TOKEN, {
+      from: myAccount,
+      gasPrice: toBN("0"),
+    });
+    checkBalance(dao, applicant, ETH_TOKEN, 0);
+    const ethBalance2 = await web3.eth.getBalance(applicant);
+    assert.equal(
+      toBN(ethBalance).add(requestedAmount).toString(),
+      ethBalance2.toString()
+    );
   });
 
   it("should not be possible to get the money if the proposal fails", async () => {
@@ -152,8 +163,10 @@ contract("LAOLAND - Financing Adapter", async (accounts) => {
     const onboarding = await getContract(dao, "onboarding", OnboardingContract);
 
     //Add funds to the Guild Bank after sposoring a member to join the Guild
+    let proposalId = "0x0";
     await onboarding.onboard(
       dao.address,
+      proposalId,
       newMember,
       SHARES,
       sharePrice.mul(toBN(10)).add(remaining),
@@ -163,10 +176,6 @@ contract("LAOLAND - Financing Adapter", async (accounts) => {
         gasPrice: toBN("0"),
       }
     );
-
-    //Get the new proposal id
-    let proposalId = "0";
-    await checkLastEvent(dao, { proposalId });
 
     //Sponsor the new proposal, vote and process it
     await onboarding.sponsorProposal(dao.address, proposalId, [], {
@@ -186,17 +195,15 @@ contract("LAOLAND - Financing Adapter", async (accounts) => {
 
     //Create Financing Request
     let requestedAmount = toBN(50000);
+    proposalId = "0x1";
     await financing.createFinancingRequest(
       dao.address,
+      proposalId,
       applicant,
       ETH_TOKEN,
       requestedAmount,
       fromUtf8("")
     );
-
-    //Get the new proposalId from event log
-    proposalId = "1";
-    await checkLastEvent(dao, { proposalId });
 
     //Member sponsors the Financing proposal
     await financing.sponsorProposal(dao.address, proposalId, [], {
@@ -227,10 +234,11 @@ contract("LAOLAND - Financing Adapter", async (accounts) => {
     const voting = await getContract(dao, "voting", VotingContract);
     const financing = await getContract(dao, "financing", FinancingContract);
     const onboarding = await getContract(dao, "onboarding", OnboardingContract);
-
+    let proposalId = "0x0";
     //Add funds to the Guild Bank after sposoring a member to join the Guild
     await onboarding.onboard(
       dao.address,
+      proposalId,
       newMember,
       SHARES,
       sharePrice.mul(toBN(10)).add(remaining),
@@ -240,10 +248,6 @@ contract("LAOLAND - Financing Adapter", async (accounts) => {
         gasPrice: toBN("0"),
       }
     );
-
-    //Get the new proposal id
-    let proposalId = "0";
-    await checkLastEvent(dao, { proposalId });
 
     //Sponsor the new proposal, vote and process it
     await onboarding.sponsorProposal(dao.address, proposalId, [], {
@@ -262,11 +266,13 @@ contract("LAOLAND - Financing Adapter", async (accounts) => {
     });
 
     try {
+      proposalId = "0x1";
       const invalidToken = "0x6941a80e1a034f57ed3b1d642fc58ddcb91e2596";
       //Create Financing Request with a token that is not allowed
       let requestedAmount = toBN(50000);
       await financing.createFinancingRequest(
         dao.address,
+        proposalId,
         applicant,
         invalidToken,
         requestedAmount,
@@ -285,10 +291,11 @@ contract("LAOLAND - Financing Adapter", async (accounts) => {
     const voting = await getContract(dao, "voting", VotingContract);
     const financing = await getContract(dao, "financing", FinancingContract);
     const onboarding = await getContract(dao, "onboarding", OnboardingContract);
-
+    let proposalId = "0x0";
     //Add funds to the Guild Bank after sposoring a member to join the Guild
     await onboarding.onboard(
       dao.address,
+      proposalId,
       newMember,
       SHARES,
       sharePrice.mul(toBN(10)).add(remaining),
@@ -298,10 +305,6 @@ contract("LAOLAND - Financing Adapter", async (accounts) => {
         gasPrice: toBN("0"),
       }
     );
-
-    //Get the new proposal id
-    let proposalId = "0";
-    await checkLastEvent(dao, { proposalId });
 
     //Sponsor the new proposal, vote and process it
     await onboarding.sponsorProposal(dao.address, proposalId, [], {
@@ -320,10 +323,12 @@ contract("LAOLAND - Financing Adapter", async (accounts) => {
     });
 
     try {
+      proposalId = "0x1";
       // Create Financing Request with amount = 0
       let requestedAmount = toBN(0);
       await financing.createFinancingRequest(
         dao.address,
+        proposalId,
         applicant,
         ETH_TOKEN,
         requestedAmount,

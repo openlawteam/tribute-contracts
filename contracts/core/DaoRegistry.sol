@@ -45,9 +45,9 @@ contract DaoRegistry is DaoConstants, AdapterGuard {
      * EVENTS
      */
     /// @dev - Events for Proposals
-    event SubmittedProposal(uint64 proposalId, uint256 flags);
-    event SponsoredProposal(uint64 proposalId, uint256 flags);
-    event ProcessedProposal(uint64 proposalId, uint256 flags);
+    event SubmittedProposal(bytes32 proposalId, uint256 flags);
+    event SponsoredProposal(bytes32 proposalId, uint256 flags);
+    event ProcessedProposal(bytes32 proposalId, uint256 flags);
     event AdapterAdded(
         bytes32 adapterId,
         address adapterAddress,
@@ -64,6 +64,8 @@ contract DaoRegistry is DaoConstants, AdapterGuard {
     event MemberUnjailed(address memberAddr);
 
     event NewBalance(address member, address tokenAddr, uint256 amount);
+
+    event Withdraw(address account, address tokenAddr, uint256 amount);
 
     /*
      * STRUCTURES
@@ -124,10 +126,8 @@ contract DaoRegistry is DaoConstants, AdapterGuard {
 
     DaoState public state;
 
-    /// @notice The number of proposals submitted to the DAO
-    uint64 public proposalCount;
     /// @notice The map that keeps track of all proposasls submitted to the DAO
-    mapping(uint64 => Proposal) public proposals;
+    mapping(bytes32 => Proposal) public proposals;
     /// @notice The map that keeps track of all adapters registered in the DAO
     mapping(bytes32 => address) public registry;
     /// @notice The inverse map to get the adapter id based on its address
@@ -369,24 +369,39 @@ contract DaoRegistry is DaoConstants, AdapterGuard {
         return retData;
     }
 
+    function withdraw(
+        address payable account,
+        address tokenAddr,
+        uint256 amount
+    ) external hasAccess(this, FlagHelper.Flag.WITHDRAW) {
+        require(
+            balanceOf(account, tokenAddr) >= amount,
+            "dao::withdraw::not enough funds"
+        );
+        subtractFromBalance(account, tokenAddr, amount);
+        if (tokenAddr == ETH_TOKEN) {
+            (bool success, ) = account.call{value: amount}("");
+            require(success, "withdraw failed");
+        } else {
+            IERC20 erc20 = IERC20(tokenAddr);
+            erc20.transfer(account, amount);
+        }
+
+        emit Withdraw(account, tokenAddr, amount);
+    }
+
     /**
      * PROPOSALS
      */
     /**
      * @notice Submit proposals to the DAO registry
-     * @return The proposal ID of the newly-created proposal
      */
-    function submitProposal()
+    function submitProposal(bytes32 proposalId)
         external
         hasAccess(this, FlagHelper.Flag.SUBMIT_PROPOSAL)
-        returns (uint64)
     {
-        proposals[proposalCount++] = Proposal(msg.sender, 1);
-        uint64 proposalId = proposalCount - 1;
-
+        proposals[proposalId] = Proposal(msg.sender, 1);
         emit SubmittedProposal(proposalId, 1);
-
-        return proposalId;
     }
 
     /**
@@ -395,7 +410,7 @@ contract DaoRegistry is DaoConstants, AdapterGuard {
      * @param proposalId The ID of the proposal to sponsor
      * @param sponsoringMember The member who is sponsoring the proposal
      */
-    function sponsorProposal(uint64 proposalId, address sponsoringMember)
+    function sponsorProposal(bytes32 proposalId, address sponsoringMember)
         external
         hasAccess(this, FlagHelper.Flag.SPONSOR_PROPOSAL)
     {
@@ -428,7 +443,7 @@ contract DaoRegistry is DaoConstants, AdapterGuard {
      * @notice Mark a proposal as processed in the DAO registry
      * @param proposalId The ID of the proposal that is being processed
      */
-    function processProposal(uint64 proposalId)
+    function processProposal(bytes32 proposalId)
         external
         hasAccess(this, FlagHelper.Flag.PROCESS_PROPOSAL)
     {
@@ -445,7 +460,7 @@ contract DaoRegistry is DaoConstants, AdapterGuard {
      * @param proposalId The ID of the proposal to be changed
      * @param flag The flag that will be set on the proposal
      */
-    function _setProposalFlag(uint64 proposalId, FlagHelper.Flag flag)
+    function _setProposalFlag(bytes32 proposalId, FlagHelper.Flag flag)
         internal
         returns (Proposal storage)
     {
@@ -514,7 +529,7 @@ contract DaoRegistry is DaoConstants, AdapterGuard {
      * @param proposalId The proposal to check against flag
      * @param flag The flag to check in the proposal
      */
-    function getProposalFlag(uint64 proposalId, FlagHelper.Flag flag)
+    function getProposalFlag(bytes32 proposalId, FlagHelper.Flag flag)
         external
         view
         returns (bool)
@@ -659,7 +674,7 @@ contract DaoRegistry is DaoConstants, AdapterGuard {
         address user,
         address token,
         uint256 amount
-    ) public hasAccess(this, FlagHelper.Flag.ADD_TO_BALANCE) {
+    ) public payable hasAccess(this, FlagHelper.Flag.ADD_TO_BALANCE) {
         require(
             _bank.availableTokens[token] ||
                 _bank.availableInternalTokens[token],

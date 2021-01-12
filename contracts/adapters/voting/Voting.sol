@@ -6,7 +6,6 @@ import "../../core/DaoRegistry.sol";
 import "../../core/DaoConstants.sol";
 import "../../guards/MemberGuard.sol";
 import "../../guards/AdapterGuard.sol";
-import "../../utils/SafeCast.sol";
 import "../interfaces/IVoting.sol";
 
 /**
@@ -34,8 +33,6 @@ SOFTWARE.
  */
 
 contract VotingContract is IVoting, DaoConstants, MemberGuard, AdapterGuard {
-    using SafeCast for uint256;
-
     struct Voting {
         uint256 nbYes;
         uint256 nbNo;
@@ -47,7 +44,7 @@ contract VotingContract is IVoting, DaoConstants, MemberGuard, AdapterGuard {
     bytes32 constant VotingPeriod = keccak256("voting.votingPeriod");
     bytes32 constant GracePeriod = keccak256("voting.gracePeriod");
 
-    mapping(address => mapping(uint64 => Voting)) public votes;
+    mapping(address => mapping(bytes32 => Voting)) public votes;
 
     function configureDao(
         DaoRegistry dao,
@@ -61,12 +58,11 @@ contract VotingContract is IVoting, DaoConstants, MemberGuard, AdapterGuard {
     //voting  data is not used for pure onchain voting
     function startNewVotingForProposal(
         DaoRegistry dao,
-        uint256 _proposalId,
+        bytes32 proposalId,
         bytes calldata
     ) external override onlyAdapter(dao) {
         //it is called from Registry
         // compute startingPeriod for proposal
-        uint64 proposalId = SafeCast.toUint64(_proposalId);
 
         Voting storage vote = votes[address(dao)][proposalId];
         vote.startingTime = block.timestamp;
@@ -88,10 +84,9 @@ contract VotingContract is IVoting, DaoConstants, MemberGuard, AdapterGuard {
 
     function submitVote(
         DaoRegistry dao,
-        uint256 _proposalId,
+        bytes32 proposalId,
         uint256 voteValue
     ) external onlyMember(dao) {
-        uint64 proposalId = SafeCast.toUint64(_proposalId);
         require(dao.isActiveMember(msg.sender), "only active members can vote");
         require(
             dao.getProposalFlag(proposalId, FlagHelper.Flag.SPONSORED),
@@ -145,13 +140,12 @@ contract VotingContract is IVoting, DaoConstants, MemberGuard, AdapterGuard {
     3: not pass
     4: in progress
      */
-    function voteResult(DaoRegistry dao, uint256 _proposalId)
+    function voteResult(DaoRegistry dao, bytes32 proposalId)
         external
         view
         override
         returns (uint256 state)
     {
-        uint64 proposalId = SafeCast.toUint64(_proposalId);
         Voting storage vote = votes[address(dao)][proposalId];
         if (vote.startingTime == 0) {
             return 0;

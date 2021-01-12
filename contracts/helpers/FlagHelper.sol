@@ -45,7 +45,8 @@ library FlagHelper {
         ADD_TO_BALANCE,
         SUB_FROM_BALANCE,
         INTERNAL_TRANSFER,
-        SET_CONFIGURATION
+        SET_CONFIGURATION,
+        WITHDRAW
     }
 
     //helper

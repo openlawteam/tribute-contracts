@@ -31,15 +31,16 @@ SOFTWARE.
 interface IGuildKick {
     function submitKickProposal(
         DaoRegistry dao,
+        bytes32 proposalId,
         address memberToKick,
         bytes calldata data
-    ) external returns (uint64);
+    ) external;
 
-    function guildKick(DaoRegistry dao, uint256 proposalId) external;
+    function guildKick(DaoRegistry dao, bytes32 proposalId) external;
 
     function rageKick(
         DaoRegistry dao,
-        uint256 proposalId,
+        bytes32 proposalId,
         uint256 toIndex
     ) external;
 }
