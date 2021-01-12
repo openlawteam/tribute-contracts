@@ -432,10 +432,17 @@ contract("LAOLAND - Ragequit Adapter", async (accounts) => {
     let proposalId = "0x0";
     // Send a request to join the DAO as an Advisor (non-voting power),
     // the tx passes the OLT ERC20 token, the amount and the nonVotingOnboarding adapter that handles the proposal
-    await onboarding.onboard(dao.address, proposalId, advisorAccount, LOOT, tokenAmount, {
-      from: advisorAccount,
-      gasPrice: toBN("0"),
-    });
+    await onboarding.onboard(
+      dao.address,
+      proposalId,
+      advisorAccount,
+      LOOT,
+      tokenAmount,
+      {
+        from: advisorAccount,
+        gasPrice: toBN("0"),
+      }
+    );
 
     // Sponsor the new proposal to allow the Advisor to join the DAO
     await onboarding.sponsorProposal(dao.address, proposalId, [], {
@@ -498,11 +505,18 @@ contract("LAOLAND - Ragequit Adapter", async (accounts) => {
     let proposalId = "0x0";
     // Send a request to join the DAO as an Advisor (non-voting power),
     // the tx passes the OLT ERC20 token, the amount and the nonVotingOnboarding adapter that handles the proposal
-    await onboarding.onboard(dao.address, proposalId, memberAccount, SHARES, tokenAmount, {
-      from: myAccount,
-      value: tokenAmount,
-      gasPrice: toBN("0"),
-    });
+    await onboarding.onboard(
+      dao.address,
+      proposalId,
+      memberAccount,
+      SHARES,
+      tokenAmount,
+      {
+        from: myAccount,
+        value: tokenAmount,
+        gasPrice: toBN("0"),
+      }
+    );
 
     // Sponsor the new proposal to allow the Advisor to join the DAO
     await onboarding.sponsorProposal(dao.address, proposalId, [], {
@@ -539,11 +553,18 @@ contract("LAOLAND - Ragequit Adapter", async (accounts) => {
 
     proposalId = "0x1";
 
-    await onboarding.onboard(dao.address, proposalId, otherAccount, SHARES, tokenAmount, {
-      from: myAccount,
-      value: tokenAmount,
-      gasPrice: toBN("0"),
-    });
+    await onboarding.onboard(
+      dao.address,
+      proposalId,
+      otherAccount,
+      SHARES,
+      tokenAmount,
+      {
+        from: myAccount,
+        value: tokenAmount,
+        gasPrice: toBN("0"),
+      }
+    );
 
     // Sponsor the new proposal to allow the Advisor to join the DAO
     try {

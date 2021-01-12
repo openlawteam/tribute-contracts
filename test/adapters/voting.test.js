@@ -36,7 +36,6 @@ const {
 } = require("../../utils/DaoFactory.js");
 
 contract("LAOLAND - Voting Adapter", async (accounts) => {
-
   it("should be possible to vote", async () => {
     const account1 = accounts[1];
     const account2 = accounts[2];
@@ -153,4 +152,3 @@ contract("LAOLAND - Voting Adapter", async (accounts) => {
     });
   });
 });
-
