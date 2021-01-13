@@ -39,10 +39,13 @@ const {
   entry,
   addDefaultAdapters,
 } = require("../../utils/DaoFactory.js");
+
+const sigUtil = require("eth-sig-util");
+const TypedDataUtils = sigUtil.TypedDataUtils;
+
 const {
   createVote,
   getDomainDefinition,
-  TypedDataUtils,
   getMessageERC712Hash,
   prepareProposalPayload,
   prepareVoteProposalData,
@@ -50,9 +53,9 @@ const {
   prepareVoteResult,
   toStepNode,
   getVoteStepDomainDefinition,
-  validateMessage,
+  verifySignature,
   SigUtilSigner,
-} = require("../../utils/offchain_voting.js");
+} = require("@fforbeck/snapshot-js-erc712");
 
 const OffchainVotingContract = artifacts.require(
   "./adapters/OffchainVotingContract"
@@ -290,7 +293,7 @@ contract("LAOLAND - Offchain Voting Module", async (accounts) => {
     voteEntry.sig = signer(voteEntry, dao.address, onboarding.address, chainId);
     assert.equal(
       true,
-      validateMessage(
+      verifySignature(
         voteEntry,
         members[0].address,
         dao.address,
