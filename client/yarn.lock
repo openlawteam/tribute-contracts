@@ -1735,6 +1735,16 @@
     "@ethersproject/properties" "^5.0.3"
     "@ethersproject/strings" "^5.0.4"
 
+"@fforbeck/snapshot-js-erc712@^1.0.6":
+  version "1.0.6"
+  resolved "https://registry.yarnpkg.com/@fforbeck/snapshot-js-erc712/-/snapshot-js-erc712-1.0.6.tgz#cb5ccfee71853324261b36e8001f7992284a6288"
+  integrity sha512-lTm3tjy+rlOCFJZry2EHnszV1j+eaIZUs8HPj/aTzkgYTXproPdjwuY9BFnC5FQMy68MxnZp8Udm+4AXYRGNVQ==
+  dependencies:
+    axios "^0.21.1"
+    eth-sig-util "^3.0.0"
+    ethereumjs-util "^7.0.7"
+    web3-utils "^1.3.1"
+
 "@hapi/address@2.x.x":
   version "2.1.4"
   resolved "https://registry.yarnpkg.com/@hapi/address/-/address-2.1.4.tgz#5d67ed43f3fd41a69d4b9ff7b56e7c0d1d0a81e5"
@@ -3479,6 +3489,13 @@ axios@^0.21.0:
   version "0.21.0"
   resolved "https://registry.yarnpkg.com/axios/-/axios-0.21.0.tgz#26df088803a2350dff2c27f96fef99fe49442aca"
   integrity sha512-fmkJBknJKoZwem3/IKSSLpkdNXZeBu5Q7GA/aRsr2btgrptmSCxi2oFjZHqGdK9DoTil9PIHlPIZw2EcRJXRvw==
+  dependencies:
+    follow-redirects "^1.10.0"
+
+axios@^0.21.1:
+  version "0.21.1"
+  resolved "https://registry.yarnpkg.com/axios/-/axios-0.21.1.tgz#22563481962f4d6bde9a76d516ef0e5d3c09b2b8"
+  integrity sha512-dKQiRHxGD9PPRIUNIWvZhPTPpl1rf/OxTYKsqKUDjBwYylTvV7SjSHJb9ratfyzM6wCdLCOYLzs73qpg5c4iGA==
   dependencies:
     follow-redirects "^1.10.0"
 

@@ -17,18 +17,20 @@ import ProposalForm from "./components/ProposalForm";
 import ProposalCard from "./components/ProposalCard";
 import DeployedContractsDialog from "./components/DeployedContractsDialog";
 
-import { getApiStatus } from "./services/snapshot-hub";
-
 import {
   getDomainDefinition,
-  getMessageERC712Hash,
+  getDraftERC712Hash,
   prepareMessage,
-} from "./utils/erc712v2";
+  signMessage,
+} from "@fforbeck/snapshot-js-erc712";
+
 import {
-  buildSnapshotHubProposalMessage,
-  buildSnapshotHubVoteMessage,
-} from "./utils/snapshot-hub";
-import { submit } from "./services/snapshot-hub";
+  buildDraftMessage,
+  buildProposalMessage,
+  buildVoteMessage,
+  getApiStatus,
+  submitMessage,
+} from "@fforbeck/snapshot-js-erc712/utils/snapshotHub";
 
 const useStyles = makeStyles((theme) => ({
   app: {
@@ -57,6 +59,7 @@ const providerOptions = {
     package: WalletConnectProvider, // required
   },
 };
+const snapshotHubURL = process.env.REACT_APP_SNAPSHOT_HUB_API_URL || "";
 
 const web3Modal = new Web3Modal({
   network: "rinkeby", // optional
@@ -123,7 +126,7 @@ const App = () => {
   };
 
   const checkApiStatus = async () => {
-    const resp = await getApiStatus();
+    const resp = await getApiStatus(snapshotHubURL);
     const data = resp.data;
     console.log(data);
     setApiStatus(data);
@@ -149,18 +152,16 @@ const App = () => {
 
     const cid = await web3.eth.net.getId();
     console.log("getMessageERC712Hash");
+    const newMessage =
+      proposal.type === "draft"
+        ? buildDraftMessage(proposal, cid).msg
+        : buildProposalMessage(proposal, cid).msg;
+
     console.log(
-      getMessageERC712Hash(
-        buildSnapshotHubProposalMessage(proposal, cid).msg,
-        verifyingContract,
-        proposal.actionId,
-        cid
-      )
+      getDraftERC712Hash(newMessage, verifyingContract, proposal.actionId, cid)
     );
 
-    const preparedMessage = prepareMessage(
-      buildSnapshotHubProposalMessage(proposal, cid).msg
-    );
+    const preparedMessage = prepareMessage(newMessage);
 
     const signer = Web3.utils.toChecksumAddress(addr);
 
@@ -178,39 +179,32 @@ const App = () => {
       message: preparedMessage,
     });
 
-    provider.sendAsync(
-      {
-        method: "eth_signTypedData_v4",
-        params: [signer, data],
-        from: signer,
-      },
-      (err, result) => {
-        if (err || result.error) {
-          console.error(err);
-          return alert(result.error.message);
-        }
-        const newSignature = result.result;
-        setSignature(newSignature);
-        setLoading(true);
-        submit(addr, preparedMessage, newSignature)
-          .then((resp) => {
-            const ipfsHash = resp.data.ipfsHash;
-            proposal["ipfsHash"] = ipfsHash;
-            proposal["sig"] = newSignature;
-            setProposals([...proposals, proposal]);
-            setLoading(false);
-            setSignature("");
-          })
-          .catch((e) => {
-            setLoading(false);
-            if (e.response && e.response.data) {
-              alert(
-                e.response.data.error + ": " + e.response.data.error_description
-              );
-            }
-          });
+    signMessage(provider, signer, data, (err, result) => {
+      if (err || result.error) {
+        console.error(err);
+        return alert(result.error.message);
       }
-    );
+      const newSignature = result.result;
+      setSignature(newSignature);
+      setLoading(true);
+      submitMessage(snapshotHubURL, addr, preparedMessage, newSignature)
+        .then((resp) => {
+          const ipfsHash = resp.data.ipfsHash;
+          proposal["ipfsHash"] = ipfsHash;
+          proposal["sig"] = newSignature;
+          setProposals([...proposals, proposal]);
+          setLoading(false);
+          setSignature("");
+        })
+        .catch((e) => {
+          setLoading(false);
+          if (e.response && e.response.data) {
+            alert(
+              e.response.data.error + ": " + e.response.data.error_description
+            );
+          }
+        });
+    });
   };
 
   const handleVoteSubmit = async (vote, proposal) => {
@@ -219,7 +213,7 @@ const App = () => {
     const cid = await web3.eth.net.getId();
 
     const preparedMessage = prepareMessage(
-      buildSnapshotHubVoteMessage(vote, proposal, addr, cid).msg
+      buildVoteMessage(vote, proposal, addr, cid).msg
     );
 
     const signer = Web3.utils.toChecksumAddress(addr);
@@ -238,50 +232,43 @@ const App = () => {
       message: preparedMessage,
     });
 
-    provider.sendAsync(
-      {
-        method: "eth_signTypedData_v4",
-        params: [signer, data],
-        from: signer,
-      },
-      (err, result) => {
-        if (err || result.error) {
-          console.error(err);
-          alert(err);
-          return alert(result.error.message);
-        }
-        const newSignature = result.result;
-        setSignature(newSignature);
-        setLoading(true);
-        submit(addr, preparedMessage, newSignature)
-          .then((resp) => {
-            const v = {
-              ...preparedMessage,
-              ipfsHash: resp.data.ipfsHash,
-              proposalId: proposal.ipfsHash,
-              proposalTitle: proposal.title,
-              sig: newSignature,
-            };
-            setProposals(
-              proposals.map((p) => {
-                if (p.ipfsHash === proposal.ipfsHash)
-                  return { ...p, votes: p.votes ? [...p.votes, v] : [v] };
-                else return p;
-              })
-            );
-            setLoading(false);
-            setSignature("");
-          })
-          .catch((e) => {
-            setLoading(false);
-            if (e.response && e.response.data) {
-              alert(
-                e.response.data.error + ": " + e.response.data.error_description
-              );
-            }
-          });
+    signMessage(provider, signer, data, (err, result) => {
+      if (err || result.error) {
+        console.error(err);
+        alert(err);
+        return alert(result.error.message);
       }
-    );
+      const newSignature = result.result;
+      setSignature(newSignature);
+      setLoading(true);
+      submitMessage(snapshotHubURL, addr, preparedMessage, newSignature)
+        .then((resp) => {
+          const v = {
+            ...preparedMessage,
+            ipfsHash: resp.data.ipfsHash,
+            proposalId: proposal.ipfsHash,
+            proposalTitle: proposal.title,
+            sig: newSignature,
+          };
+          setProposals(
+            proposals.map((p) => {
+              if (p.ipfsHash === proposal.ipfsHash)
+                return { ...p, votes: p.votes ? [...p.votes, v] : [v] };
+              else return p;
+            })
+          );
+          setLoading(false);
+          setSignature("");
+        })
+        .catch((e) => {
+          setLoading(false);
+          if (e.response && e.response.data) {
+            alert(
+              e.response.data.error + ": " + e.response.data.error_description
+            );
+          }
+        });
+    });
   };
 
   return (
