@@ -19,7 +19,11 @@ import DeployedContractsDialog from "./components/DeployedContractsDialog";
 
 import { getApiStatus } from "./services/snapshot-hub";
 
-import { getDomainDefinition, prepareMessage } from "./utils/erc712v2";
+import {
+  getDomainDefinition,
+  getMessageERC712Hash,
+  prepareMessage,
+} from "./utils/erc712v2";
 import {
   buildSnapshotHubProposalMessage,
   buildSnapshotHubVoteMessage,
@@ -144,6 +148,15 @@ const App = () => {
     if (!web3) return;
 
     const cid = await web3.eth.net.getId();
+    console.log("getMessageERC712Hash");
+    console.log(
+      getMessageERC712Hash(
+        buildSnapshotHubProposalMessage(proposal, cid).msg,
+        verifyingContract,
+        proposal.actionId,
+        cid
+      )
+    );
 
     const preparedMessage = prepareMessage(
       buildSnapshotHubProposalMessage(proposal, cid).msg

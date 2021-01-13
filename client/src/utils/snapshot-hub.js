@@ -6,7 +6,6 @@ export const buildSnapshotHubProposalMessage = (message, chainId) => {
   };
   const currentDate = new Date();
   const timestamp = (currentDate.getTime() / 1e3).toFixed();
-  console.log(message);
   const newMessage = {
     msg: {
       payload: {

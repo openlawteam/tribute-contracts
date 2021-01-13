@@ -21,10 +21,33 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
  */
-import { sha3 } from "web3-utils";
 import encodeParameter from "web3-utils";
-import sigUtil from "eth-sig-util";
+import { TypedDataUtils } from "eth-sig-util";
 import MerkleTree from "./merkleTree";
+
+export const getMessageERC712Hash = (
+  message,
+  verifyingContract,
+  actionId,
+  chainId
+) => {
+  console.log(`Message: ${JSON.stringify(message)}`);
+  const m = prepareMessage(message);
+  const { domain, types } = getDomainDefinition(
+    message,
+    verifyingContract,
+    actionId,
+    chainId
+  );
+  const msgParams = {
+    domain: domain,
+    message: m,
+    primaryType: "Message",
+    types: types,
+  };
+  console.log(`Params: ${JSON.stringify(msgParams)}`);
+  return "0x" + TypedDataUtils.sign(msgParams).toString("hex");
+};
 
 export const getDomainDefinition = (
   message,
@@ -166,7 +189,6 @@ const prepareVoteMessage = (message) => {
   return Object.assign(message, {
     timestamp: message.timestamp,
     payload: prepareVotePayload(message.payload),
-    spaceHash: sha3(message.space),
   });
 };
 
@@ -180,15 +202,12 @@ const prepareVotePayload = (payload) => {
 const prepareProposalMessage = (message) => {
   return Object.assign(message, {
     timestamp: message.timestamp,
-    spaceHash: sha3(message.space),
     payload: prepareProposalPayload(message.payload),
   });
 };
 
 const prepareProposalPayload = (payload) => {
   return Object.assign(payload, {
-    nameHash: sha3(payload.name),
-    bodyHash: sha3(payload.body),
     snapshot: payload.snapshot,
     start: payload.start,
     end: payload.end,
@@ -198,15 +217,7 @@ const prepareProposalPayload = (payload) => {
 const prepareDraftMessage = (message) => {
   return Object.assign(message, {
     timestamp: message.timestamp,
-    spaceHash: sha3(message.space),
-    payload: prepareDraftPayload(message.payload),
-  });
-};
-
-const prepareDraftPayload = (payload) => {
-  return Object.assign(payload, {
-    nameHash: sha3(payload.name),
-    bodyHash: sha3(payload.body),
+    payload: message.payload,
   });
 };
 
@@ -258,7 +269,7 @@ const buildVoteLeafHashForMerkleTree = (
     primaryType: "Message",
     types,
   };
-  return "0x" + sigUtil.TypedDataUtils.sign(msgParams).toString("hex");
+  return "0x" + TypedDataUtils.sign(msgParams).toString("hex");
 };
 
 const prepareVoteResult = async (
@@ -323,7 +334,6 @@ const prepareVoteProposalData = (data) => {
     },
     {
       timestamp: data.timestamp,
-      spaceHash: sha3(data.space),
       payload: prepareVoteProposalPayload(data.payload),
       sig: data.sig || "0x",
     }
@@ -332,8 +342,6 @@ const prepareVoteProposalData = (data) => {
 
 const prepareVoteProposalPayload = (payload) => {
   return {
-    nameHash: sha3(payload.name),
-    bodyHash: sha3(payload.body),
     choices: payload.choices,
     start: payload.start,
     end: payload.end,
