@@ -40,7 +40,7 @@ contract TimeLockContract is DaoConstants, MemberGuard {
     
     struct TimeLock {  
         address account;
-        address token;
+        address tokenAddr;
         uint256 amount;
         uint256 termination;
     }
@@ -54,27 +54,35 @@ contract TimeLockContract is DaoConstants, MemberGuard {
      * @dev function to allow dao account to timelock their balance
      * @param dao Dao address to withdraw balance 
      * @param account Account address with dao balance to withdraw
-     * @param token Token or ETH to withdraw from dao
+     * @param tokenAddr Token or ETH to withdraw from dao
      * @param amount Amount of token or ETH
      * @param termination Unix epoch time for lock termination
      */
     function withdrawToTimeLock(
         DaoRegistry dao,
-        address account, 
-        address token,
+        address payable account, 
+        address tokenAddr,
         uint256 amount,
         uint256 termination
     ) external returns (uint256) {
         require(
-            dao.isNotReservedAddress(msg.sender),
+            dao.isNotReservedAddress(account),
             "withdraw::reserved address"
         );
-        require(dao.balanceOf(account, token) > 0, "nothing to withdraw");
-        dao.withdraw(address(this), token, amount);
+        require(dao.balanceOf(account, tokenAddr) > 0, "nothing to withdraw");
+        dao.withdraw(account, tokenAddr, amount);
+        
+        if (tokenAddr == ETH_TOKEN) {
+            (bool success, ) = address(this).call{value: amount}("");
+            require(success, "withdraw failed");
+        } else {
+            IERC20 erc20 = IERC20(tokenAddr);
+            erc20.transferFrom(account, address(this) amount);
+        }
         
         uint256 registration = timeLockCount++;
         
-        timeLockRegistrations[registration] = TimeLock(account, token, amount, termination);
+        timeLockRegistrations[registration] = TimeLock(account, tokenAddr, amount, termination);
         
         return registration;
     }
@@ -89,7 +97,12 @@ contract TimeLockContract is DaoConstants, MemberGuard {
         require(msg.sender == lock.account, "not registered account");
         require(block.timestamp >= lock.termination, "not yet terminated");
         
-        IERC20 erc20 = IERC20(lock.token);
-        erc20.transfer(msg.sender, lock.amount);
+        if (tokenAddr == ETH_TOKEN) {
+            (bool success, ) = account.call{value: amount}("");
+            require(success, "withdraw failed");
+        } else {
+            IERC20 erc20 = IERC20(tokenAddr);
+            erc20.transfer(account, amount);
+        }
     }
 }
