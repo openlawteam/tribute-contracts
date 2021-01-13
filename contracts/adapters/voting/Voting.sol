@@ -78,10 +78,6 @@ contract VotingContract is IVoting, DaoConstants, MemberGuard, AdapterGuard {
         return sender;
     }
 
-    function getSenderAddress(DaoRegistry, address, bytes memory, address sender) override external  pure returns (address) {
-        return sender;
-    }
-
     function submitVote(
         DaoRegistry dao,
         bytes32 proposalId,

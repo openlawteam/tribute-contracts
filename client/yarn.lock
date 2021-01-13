@@ -7078,15 +7078,7 @@ ethereumjs-abi@0.6.5:
     bn.js "^4.10.0"
     ethereumjs-util "^4.3.0"
 
-ethereumjs-abi@0.6.8:
-  version "0.6.8"
-  resolved "https://registry.yarnpkg.com/ethereumjs-abi/-/ethereumjs-abi-0.6.8.tgz#71bc152db099f70e62f108b7cdfca1b362c6fcae"
-  integrity sha512-Tx0r/iXI6r+lRsdvkFDlut0N08jWMnKRZ6Gkq+Nmw75lZe4e6o3EkSnkaBP5NF6+m5PTGAr9JP43N3LyeoglsA==
-  dependencies:
-    bn.js "^4.11.8"
-    ethereumjs-util "^6.0.0"
-
-"ethereumjs-abi@git+https://github.com/ethereumjs/ethereumjs-abi.git":
+ethereumjs-abi@0.6.8, "ethereumjs-abi@git+https://github.com/ethereumjs/ethereumjs-abi.git":
   version "0.6.8"
   resolved "git+https://github.com/ethereumjs/ethereumjs-abi.git#1ce6a1d64235fabe2aaf827fd606def55693508f"
   dependencies:
@@ -15122,10 +15114,10 @@ trim-right@^1.0.1:
   resolved "https://registry.yarnpkg.com/trim-right/-/trim-right-1.0.1.tgz#cb2e1203067e0c8de1f614094b9fe45704ea6003"
   integrity sha1-yy4SAwZ+DI3h9hQJS5/kVwTqYAM=
 
-truffle@^5.1.59:
-  version "5.1.59"
-  resolved "https://registry.yarnpkg.com/truffle/-/truffle-5.1.59.tgz#08e05cf4c8248c4577ffe545712dc43e0ccfe20b"
-  integrity sha512-AGhJFPZ9ldxXfLkTLtSTV5uMMlNIut5+XleU6Hp+cy7MAlArRUUKayZO0wK5KtpkIZZ2j2PLZmDVO0rrY3BOog==
+truffle@^5.1.61:
+  version "5.1.61"
+  resolved "https://registry.yarnpkg.com/truffle/-/truffle-5.1.61.tgz#d040528e008b69bf90ef414c18474a2a222b96f7"
+  integrity sha512-RweRttrSz28u1YZDF6sIbdC5jVsfDh9jv9LN1saHPzYnul3RNuwmxQ6Iuoi9FB2lkfjZTEE+6SdSSV8ybT8UoA==
   dependencies:
     app-module-path "^2.2.0"
     mocha "8.1.2"
