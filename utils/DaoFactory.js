@@ -57,6 +57,7 @@ const FinancingContract = artifacts.require("./adapter/FinancingContract");
 const RagequitContract = artifacts.require("./adapters/RagequitContract");
 const GuildKickContract = artifacts.require("./adapters/GuildKickContract");
 const OnboardingContract = artifacts.require("./adapters/OnboardingContract");
+const OffchainVotingContract = artifacts.require("./adapters/OffchainVotingContract");
 
 async function prepareSmartContracts(deployer) {
   let voting;
@@ -214,7 +215,7 @@ async function addDefaultAdapters(
   );
   await voting.configureDao(dao.address, votingPeriod, gracePeriod);
 
-  return dao;
+  return {dao, daoFactory};
 }
 
 async function deployDao(
@@ -236,7 +237,7 @@ async function deployDao(
   
   const dao = await cloneDaoDeployer(deployer);
 
-  await addDefaultAdapters(
+  let {daoFactory} = await addDefaultAdapters(
     dao,
     unitPrice,
     nbShares,
@@ -246,7 +247,23 @@ async function deployDao(
     maxChunks,
     deployer
   );
-  await dao.finalizeDao();
+
+  const votingAddress = await dao.getAdapterAddress(sha3("voting"));
+  const offchainVoting = await deployer.deploy(OffchainVotingContract, votingAddress, 1);
+  await daoFactory.updateAdapter(
+    dao.address,
+    entry("voting", offchainVoting, {
+      ADD_TO_BALANCE: true,
+      SUB_FROM_BALANCE: true,
+      INTERNAL_TRANSFER: true,
+    }));
+
+  await offchainVoting.configureDao(
+    dao.address,
+    votingPeriod,
+    gracePeriod,
+    10);
+  
   return dao;
 }
 

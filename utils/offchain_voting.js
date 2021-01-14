@@ -29,6 +29,11 @@ const {SHARES} = require('./DaoFactory.js');
 const sha3 = web3.utils.sha3;
 const sigUtil = require('eth-sig-util');
 
+function getDraftIdFromProposal(proposal, verifyingContract, actionId, chainId) {
+  const draft = Object.assign(proposal, {type:'draft'});
+  return getMessageERC712Hash(draft,verifyingContract, actionId, chainId);
+}
+
 function getMessageERC712Hash(m, verifyingContract, actionId, chainId) {
   const message = prepareMessage(m);
   const {domain, types} = getDomainDefinition(m, verifyingContract, actionId, chainId);
@@ -47,6 +52,8 @@ function getDomainDefinition(message, verifyingContract, actionId, chainId) {
       return getVoteDomainDefinition(verifyingContract, actionId, chainId);
     case "proposal":
       return getProposalDomainDefinition(verifyingContract, actionId, chainId);
+    case "draft":
+      return getDraftDomainDefinition(verifyingContract, actionId, chainId);
     case "result":
       return getVoteResultRootDomainDefinition(verifyingContract, actionId, chainId);
     default:
@@ -126,6 +133,26 @@ function getProposalDomainDefinition(verifyingContract, actionId, chainId) {
   return { domain, types}
 }
 
+function getDraftDomainDefinition(verifyingContract, actionId, chainId) {
+  const domain = getMessageDomainType(chainId, verifyingContract, actionId);
+
+  const types = {
+      Message: [
+        { name: 'timestamp', type: 'uint256' },
+        { name: 'spaceHash', type: 'bytes32' },
+        { name: 'payload', type: 'MessagePayload' }
+      ],
+      MessagePayload: [        
+        { name: 'nameHash', type: 'bytes32' },
+        { name: 'bodyHash', type: 'bytes32' },
+        { name: 'choices', type: 'string[]' }
+      ],
+      EIP712Domain: getDomainType()
+  };
+
+  return { domain, types}
+}
+
 function getVoteResultRootDomainDefinition(verifyingContract, actionId, chainId) {
   const domain = getMessageDomainType(chainId, verifyingContract, actionId);
 
@@ -179,7 +206,7 @@ function Web3JsSigner(web3, account) {
     });
     const signature = await new Promise((resolve, reject) => {
       web3.currentProvider.send({
-        method: 'eth_signTypedData',
+        method: 'eth_signTypedData_v4',
         params: [msgParams, account],
         from: account,
       }, function (err, result) {

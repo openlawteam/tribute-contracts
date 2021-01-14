@@ -17,8 +17,12 @@ module.exports = async function(deployer, network) {
       unitPrice: toBN(toWei("100", "finney")),
       nbShares: toBN("100000"),
       tokenAddr: ETH_TOKEN,
-      maximumChunks: toBN("100000")
+      maximumChunks: toBN("100000"),
+      votingPeriod: 60, //in seconds
+      gracePeriod: 60 // in seconds
     });
+
+    await dao.finalizeDao();
 
     console.log('************************');
     console.log('new DAO address:');
