@@ -1735,10 +1735,10 @@
     "@ethersproject/properties" "^5.0.3"
     "@ethersproject/strings" "^5.0.4"
 
-"@fforbeck/snapshot-js-erc712@^1.0.6":
-  version "1.0.6"
-  resolved "https://registry.yarnpkg.com/@fforbeck/snapshot-js-erc712/-/snapshot-js-erc712-1.0.6.tgz#cb5ccfee71853324261b36e8001f7992284a6288"
-  integrity sha512-lTm3tjy+rlOCFJZry2EHnszV1j+eaIZUs8HPj/aTzkgYTXproPdjwuY9BFnC5FQMy68MxnZp8Udm+4AXYRGNVQ==
+"@fforbeck/snapshot-js-erc712@^1.0.11":
+  version "1.0.11"
+  resolved "https://registry.yarnpkg.com/@fforbeck/snapshot-js-erc712/-/snapshot-js-erc712-1.0.11.tgz#c466ddcbbb01bf55d04a9ac9c50e9223ba161912"
+  integrity sha512-efozmnb7QfztdMaX8AGpwkEsF84yB7kHlClPljStStRQDxGuYsEhBT8HUtg597YmwDviGrybM8VIA/8SA3Gxjw==
   dependencies:
     axios "^0.21.1"
     eth-sig-util "^3.0.0"
@@ -3418,6 +3418,11 @@ async-limiter@~1.0.0:
   resolved "https://registry.yarnpkg.com/async-limiter/-/async-limiter-1.0.1.tgz#dd379e94f0db8310b08291f9d64c3209766617fd"
   integrity sha512-csOlWGAcRFJaI6m+F2WKdnMKr4HhdhFVBk0H/QbJFMCr+uO2kwohwXQPxw/9OCxp05r5ghVBFSyioixx3gfkNQ==
 
+async@*:
+  version "3.2.0"
+  resolved "https://registry.yarnpkg.com/async/-/async-3.2.0.tgz#b3a2685c5ebb641d3de02d161002c60fc9f85720"
+  integrity sha512-TR2mEZFVOj2pLStYxLht7TyfuRzaydfpxr3k9RpHIzMgw7A64dzsdqCxH1WJyQdoe8T10nDXd9wnEigmiuHIZw==
+
 async@2.6.2:
   version "2.6.2"
   resolved "https://registry.yarnpkg.com/async/-/async-2.6.2.tgz#18330ea7e6e313887f5d2f2a904bac6fe4dd5381"
@@ -5006,6 +5011,15 @@ ci-info@^2.0.0:
   resolved "https://registry.yarnpkg.com/ci-info/-/ci-info-2.0.0.tgz#67a9e964be31a51e15e5010d58e6f12834002f46"
   integrity sha512-5tK7EtrZ0N+OLFMthtqOj4fI2Jeb88C4CAZPu25LDVUgXJ0A3Js4PMGqrn0JU1W0Mh1/Z8wZzYPxqUrXeBboCQ==
 
+ci@^1.0.0:
+  version "1.0.0"
+  resolved "https://registry.yarnpkg.com/ci/-/ci-1.0.0.tgz#4bcc5bf12d820600f12b1cbbb1d8cd3b3f0f68cc"
+  integrity sha1-S8xb8S2CBgDxKxy7sdjNOz8PaMw=
+  dependencies:
+    events "*"
+    gitwin "*"
+    msbuild "*"
+
 cids@^0.7.1:
   version "0.7.5"
   resolved "https://registry.yarnpkg.com/cids/-/cids-0.7.5.tgz#60a08138a99bfb69b6be4ceb63bfef7a396b28b2"
@@ -5185,6 +5199,11 @@ colorette@^1.2.1:
   version "1.2.1"
   resolved "https://registry.yarnpkg.com/colorette/-/colorette-1.2.1.tgz#4d0b921325c14faf92633086a536db6e89564b1b"
   integrity sha512-puCDz0CzydiSYOrnXpz/PKd69zRrribezjtE9yd4zvytoRc8+RY/KJPvtPFKZS3E3wP6neGyMe0vOTlHO5L3Pw==
+
+colors@*:
+  version "1.4.0"
+  resolved "https://registry.yarnpkg.com/colors/-/colors-1.4.0.tgz#c50491479d4c1bdaed2c9ced32cf7c7dc2360f78"
+  integrity sha512-a+UqTh4kgZg/SlGvfbzDHpgRu7AAQOmmqRHJnxhRZICKFUT91brVhNNt58CMWU9PsBbv3PDCZUHbVxuDiH2mtA==
 
 combined-stream@^1.0.6, combined-stream@~1.0.6:
   version "1.0.8"
@@ -7363,7 +7382,7 @@ eventemitter3@4.0.7, eventemitter3@^4.0.0:
   resolved "https://registry.yarnpkg.com/eventemitter3/-/eventemitter3-4.0.7.tgz#2de9b68f6528d5644ef5c59526a1b4a07306169f"
   integrity sha512-8guHBZCwKnFhYdHr2ysuRWErTwhoN2X8XELRlrRwpmfeY2jjuUN4taQMsULKUVo1K4DvZl+0pgfyoysHxvmvEw==
 
-events@^3.0.0:
+events@*, events@^3.0.0:
   version "3.2.0"
   resolved "https://registry.yarnpkg.com/events/-/events-3.2.0.tgz#93b87c18f8efcd4202a461aec4dfc0556b639379"
   integrity sha512-/46HWwbfCX2xTawVfkKLGxMifJYQBWMwY1mjywRtb4c9x8l5NP3KoJtnIOiL1hfdRkIuYhETxQlo62IF8tcnlg==
@@ -8073,6 +8092,14 @@ github-from-package@0.0.0:
   version "0.0.0"
   resolved "https://registry.yarnpkg.com/github-from-package/-/github-from-package-0.0.0.tgz#97fb5d96bfde8973313f20e8288ef9a167fa64ce"
   integrity sha1-l/tdlr/eiXMxPyDoKI75oWf6ZM4=
+
+gitwin@*:
+  version "0.2.0"
+  resolved "https://registry.yarnpkg.com/gitwin/-/gitwin-0.2.0.tgz#8b80602484cd596f7f0b97b987651d96e8b1c6e3"
+  integrity sha1-i4BgJITNWW9/C5e5h2UdluixxuM=
+  dependencies:
+    colors "*"
+    events "*"
 
 glob-parent@^3.1.0:
   version "3.1.0"
@@ -10949,6 +10976,15 @@ ms@2.1.2, ms@^2.1.1:
   version "2.1.2"
   resolved "https://registry.yarnpkg.com/ms/-/ms-2.1.2.tgz#d09d1f357b443f493382a8eb3ccd183872ae6009"
   integrity sha512-sGkPx+VjMtmA6MX27oA4FBFELFCZZ4S4XqeGOXCv68tT+jb3vk/RyaKWP0PTKyWtmLSM0b+adUTEvbs1PEaH2w==
+
+msbuild@*:
+  version "1.1.3"
+  resolved "https://registry.yarnpkg.com/msbuild/-/msbuild-1.1.3.tgz#08fa7338db41495112b43ab65bf92672a4f5b72d"
+  integrity sha512-oRQkgexmys69ox0gTRc4KdecFtzMBRNMwMyaJhwQggCnYQRjdecI1tyEdiI3KiDOBwtFVFcjpUCbYtiLQGsIHQ==
+  dependencies:
+    async "*"
+    colors "*"
+    events "*"
 
 multibase@^0.7.0:
   version "0.7.0"

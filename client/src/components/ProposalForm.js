@@ -43,8 +43,8 @@ const ProposalForm = ({
     addr: addr,
     chainId: chainId,
     verifyingContract: verifyingContract,
-    title: "",
-    desc: "",
+    name: "",
+    body: "",
     category: "",
     actionId: "0x4539Bac77398aF6d582842F174464b29cf3887ce",
     votingTime: 1,
@@ -82,8 +82,8 @@ const ProposalForm = ({
       addr: addr,
       chainId: chainId,
       verifyingContract: verifyingContract,
-      title: "",
-      desc: "",
+      name: "",
+      body: "",
       category: "",
       actionId: "0x4539Bac77398aF6d582842F174464b29cf3887ce",
       votingTime: 1,
@@ -113,9 +113,9 @@ const ProposalForm = ({
       <FormControl className={classes.formControl}>
         <TextField
           id="proposalTitleInput"
-          name="title"
-          label="Proposal Title"
-          value={proposal.title}
+          name="name"
+          label="Proposal Name"
+          value={proposal.name}
           onChange={handleChange}
           variant="outlined"
         ></TextField>
@@ -126,9 +126,9 @@ const ProposalForm = ({
           id="proposalDescInput"
           multiline
           rows={10}
-          name="desc"
+          name="body"
           label="Proposal Description"
-          value={proposal.desc}
+          value={proposal.body}
           onChange={handleChange}
           variant="outlined"
         ></TextField>

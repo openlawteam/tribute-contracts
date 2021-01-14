@@ -29,14 +29,14 @@ const ProposalCard = ({ proposal, onNewVote }) => {
       <CardContent className={classes.content}>
         <Tooltip title={"Signature: " + proposal.sig}>
           <Typography color="primary" variant="h6">
-            {proposal.title}
+            {proposal.name}
           </Typography>
         </Tooltip>
 
         <Typography variant="body2" component="p">
-          {proposal.desc.length < 77
-            ? proposal.desc
-            : proposal.desc.substring(0, 77) + "..."}
+          {proposal.body.length < 77
+            ? proposal.body
+            : proposal.body.substring(0, 77) + "..."}
         </Typography>
       </CardContent>
       <CardActions>

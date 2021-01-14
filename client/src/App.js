@@ -22,15 +22,12 @@ import {
   getDraftERC712Hash,
   prepareMessage,
   signMessage,
-} from "@fforbeck/snapshot-js-erc712";
-
-import {
   buildDraftMessage,
   buildProposalMessage,
   buildVoteMessage,
   getApiStatus,
   submitMessage,
-} from "@fforbeck/snapshot-js-erc712/utils/snapshotHub";
+} from "@fforbeck/snapshot-js-erc712";
 
 const useStyles = makeStyles((theme) => ({
   app: {
@@ -151,11 +148,21 @@ const App = () => {
     if (!web3) return;
 
     const cid = await web3.eth.net.getId();
-    console.log("getMessageERC712Hash");
-    const newMessage =
-      proposal.type === "draft"
-        ? buildDraftMessage(proposal, cid).msg
-        : buildProposalMessage(proposal, cid).msg;
+    proposal.addr = addr;
+    proposal.chainId = cid;
+    proposal["votingTimeSeconds"] = proposal.votingTime * 60 * 60;
+    proposal.metadata = {
+      uuid: proposal.addr,
+      private: proposal.private ? 1 : 0,
+      type: proposal.category,
+      subType: proposal.category,
+    };
+    console.log(proposal);
+    const newMessage = proposal.draft
+      ? await buildDraftMessage(proposal, snapshotHubURL)
+      : await buildProposalMessage(proposal, snapshotHubURL);
+
+    console.log(newMessage);
 
     console.log(
       getDraftERC712Hash(newMessage, verifyingContract, proposal.actionId, cid)
@@ -213,7 +220,7 @@ const App = () => {
     const cid = await web3.eth.net.getId();
 
     const preparedMessage = prepareMessage(
-      buildVoteMessage(vote, proposal, addr, cid).msg
+      buildVoteMessage(vote, proposal, snapshotHubURL)
     );
 
     const signer = Web3.utils.toChecksumAddress(addr);
