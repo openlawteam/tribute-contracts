@@ -8,6 +8,7 @@ import "../guards/MemberGuard.sol";
 import "../guards/AdapterGuard.sol";
 import "../helpers/FlagHelper.sol";
 import "../utils/SafeCast.sol";
+import "../utils/Signatures.sol";
 
 /**
 MIT License
@@ -46,14 +47,69 @@ contract CouponOnboardingContract is
         uint256 nonce;
     }
 
-	bytes32 publicKey;
+    string public constant COUPON_MESSAGE_TYPE =
+      "Message(address authorizedMember,uint256 amount,uint256 nonce)";
+    bytes32 public constant COUPON_MESSAGE_TYPEHASH =
+      keccak256(abi.encodePacked(COUPON_MESSAGE_TYPE));
+
+    uint256 chainId;
+    address publicKey;
 	mapping (address => mapping(uint256 => uint256)) flags;
 
-    function redeemCoupon(DaoRegistry dao, address authorizedMember, uint256 amount, uint256 nonce, bytes32 signature) external {
-        Coupon memory coupon = Coupon(authorizedMember, amount, nonce);
-        bytes32 signature = sigUtils
+    function hashCouponMessage(DaoRegistry dao, address actionId, Coupon memory coupon)
+    public
+    view
+    returns (bytes32)
+    {
+        bytes32 message = keccak256(
+            abi.encode(
+                COUPON_MESSAGE_TYPEHASH,
+                coupon.authorizedMember,
+                coupon.amount,
+                coupon.nonce
+            )
+        );
 
-        uint256 currentFlag = flags[dao][nonce / 256];
-        setFlag(currentFlag, nonce % 256, true);
+    return
+        Signatures.hashMessage(dao, chainId, actionId, message);
+    }
+
+    function redeemCoupon(DaoRegistry dao, address authorizedMember, uint256 amount, uint256 nonce, bytes memory signature) external {
+        uint256 currentFlag = flags[address(dao)][nonce / 256];
+        require (
+            _getFlag(currentFlag, nonce % 256) == false,
+            "coupon has already been redeemed"
+        );
+
+        Coupon memory coupon = Coupon(authorizedMember, amount, nonce);
+        bytes32 hash = hashCouponMessage(dao, msg.sender, coupon);
+        address recoveredKey = Signatures.recover(hash, signature);
+
+        require (
+            recoveredKey == publicKey,
+            "coupon signature is invalid"
+        );
+
+        flags[address(dao)][nonce / 256] = _setFlag(currentFlag, nonce % 256, true);
+    }
+
+    function _getFlag(uint256 _flags, uint256 flag) internal pure returns (bool) {
+        return (_flags >> uint8(flag)) % 2 == 1;
+    }
+
+    function _setFlag(
+        uint256 _flags,
+        uint256 flag,
+        bool value
+    ) public pure returns (uint256) {
+        if (_getFlag(_flags, flag) != value) {
+            if (value) {
+                return _flags + 2**uint256(flag);
+            } else {
+                return _flags - 2**uint256(flag);
+            }
+        } else {
+            return _flags;
+        }
     }
 }
