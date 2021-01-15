@@ -1,3 +1,9 @@
+type Laoland @entity {
+  id: ID!
+  laoland: Bytes! # address
+  name: String
+}
+
 type Token @entity {
   id: ID!
   tokenAddress: Bytes!
@@ -33,6 +39,5 @@ type Proposal @entity {
   id: ID!
   proposalId: BigInt!
   adapterAddress: Bytes!
-  flags: BigInt! 
+  flags: BigInt!
 }
-

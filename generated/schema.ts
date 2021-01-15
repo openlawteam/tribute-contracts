@@ -12,6 +12,63 @@ import {
   BigDecimal
 } from "@graphprotocol/graph-ts";
 
+export class Laoland extends Entity {
+  constructor(id: string) {
+    super();
+    this.set("id", Value.fromString(id));
+  }
+
+  save(): void {
+    let id = this.get("id");
+    assert(id !== null, "Cannot save Laoland entity without an ID");
+    assert(
+      id.kind == ValueKind.STRING,
+      "Cannot save Laoland entity with non-string ID. " +
+        'Considering using .toHex() to convert the "id" to a string.'
+    );
+    store.set("Laoland", id.toString(), this);
+  }
+
+  static load(id: string): Laoland | null {
+    return store.get("Laoland", id) as Laoland | null;
+  }
+
+  get id(): string {
+    let value = this.get("id");
+    return value.toString();
+  }
+
+  set id(value: string) {
+    this.set("id", Value.fromString(value));
+  }
+
+  get laoland(): Bytes {
+    let value = this.get("laoland");
+    return value.toBytes();
+  }
+
+  set laoland(value: Bytes) {
+    this.set("laoland", Value.fromBytes(value));
+  }
+
+  get name(): string | null {
+    let value = this.get("name");
+    if (value === null || value.kind == ValueKind.NULL) {
+      return null;
+    } else {
+      return value.toString();
+    }
+  }
+
+  set name(value: string | null) {
+    if (value === null) {
+      this.unset("name");
+    } else {
+      this.set("name", Value.fromString(value as string));
+    }
+  }
+}
+
 export class Token extends Entity {
   constructor(id: string) {
     super();
@@ -53,7 +110,7 @@ export class Token extends Entity {
 
   get ticker(): string | null {
     let value = this.get("ticker");
-    if (value === null) {
+    if (value === null || value.kind == ValueKind.NULL) {
       return null;
     } else {
       return value.toString();
@@ -70,7 +127,7 @@ export class Token extends Entity {
 
   get logo(): string | null {
     let value = this.get("logo");
-    if (value === null) {
+    if (value === null || value.kind == ValueKind.NULL) {
       return null;
     } else {
       return value.toString();
@@ -87,7 +144,7 @@ export class Token extends Entity {
 
   get details(): string | null {
     let value = this.get("details");
-    if (value === null) {
+    if (value === null || value.kind == ValueKind.NULL) {
       return null;
     } else {
       return value.toString();
@@ -153,7 +210,7 @@ export class TokenBalance extends Entity {
 
   get member(): string | null {
     let value = this.get("member");
-    if (value === null) {
+    if (value === null || value.kind == ValueKind.NULL) {
       return null;
     } else {
       return value.toString();
@@ -237,7 +294,7 @@ export class Member extends Entity {
 
   get tokenBalances(): Array<string> | null {
     let value = this.get("tokenBalances");
-    if (value === null) {
+    if (value === null || value.kind == ValueKind.NULL) {
       return null;
     } else {
       return value.toStringArray();

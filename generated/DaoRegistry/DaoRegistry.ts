@@ -129,16 +129,12 @@ export class ProcessedProposal__Params {
     this._event = event;
   }
 
-  get proposalId(): BigInt {
-    return this._event.parameters[0].value.toBigInt();
-  }
-
-  get processingTime(): BigInt {
-    return this._event.parameters[1].value.toBigInt();
+  get proposalId(): Bytes {
+    return this._event.parameters[0].value.toBytes();
   }
 
   get flags(): BigInt {
-    return this._event.parameters[2].value.toBigInt();
+    return this._event.parameters[1].value.toBigInt();
   }
 }
 
@@ -155,16 +151,12 @@ export class SponsoredProposal__Params {
     this._event = event;
   }
 
-  get proposalId(): BigInt {
-    return this._event.parameters[0].value.toBigInt();
+  get proposalId(): Bytes {
+    return this._event.parameters[0].value.toBytes();
   }
 
   get flags(): BigInt {
     return this._event.parameters[1].value.toBigInt();
-  }
-
-  get startingTime(): BigInt {
-    return this._event.parameters[2].value.toBigInt();
   }
 }
 
@@ -181,16 +173,12 @@ export class SubmittedProposal__Params {
     this._event = event;
   }
 
-  get proposalId(): BigInt {
-    return this._event.parameters[0].value.toBigInt();
+  get proposalId(): Bytes {
+    return this._event.parameters[0].value.toBytes();
   }
 
   get flags(): BigInt {
     return this._event.parameters[1].value.toBigInt();
-  }
-
-  get applicant(): Address {
-    return this._event.parameters[2].value.toAddress();
   }
 }
 
@@ -216,6 +204,32 @@ export class UpdateDelegateKey__Params {
   }
 }
 
+export class Withdraw extends ethereum.Event {
+  get params(): Withdraw__Params {
+    return new Withdraw__Params(this);
+  }
+}
+
+export class Withdraw__Params {
+  _event: Withdraw;
+
+  constructor(event: Withdraw) {
+    this._event = event;
+  }
+
+  get account(): Address {
+    return this._event.parameters[0].value.toAddress();
+  }
+
+  get tokenAddr(): Address {
+    return this._event.parameters[1].value.toAddress();
+  }
+
+  get amount(): BigInt {
+    return this._event.parameters[2].value.toBigInt();
+  }
+}
+
 export class DaoRegistry__inverseRegistryResult {
   value0: Bytes;
   value1: BigInt;
@@ -235,20 +249,17 @@ export class DaoRegistry__inverseRegistryResult {
 
 export class DaoRegistry__proposalsResult {
   value0: Address;
-  value1: Address;
-  value2: BigInt;
+  value1: BigInt;
 
-  constructor(value0: Address, value1: Address, value2: BigInt) {
+  constructor(value0: Address, value1: BigInt) {
     this.value0 = value0;
     this.value1 = value1;
-    this.value2 = value2;
   }
 
   toMap(): TypedMap<string, ethereum.Value> {
     let map = new TypedMap<string, ethereum.Value>();
     map.set("value0", ethereum.Value.fromAddress(this.value0));
-    map.set("value1", ethereum.Value.fromAddress(this.value1));
-    map.set("value2", ethereum.Value.fromUnsignedBigInt(this.value2));
+    map.set("value1", ethereum.Value.fromUnsignedBigInt(this.value1));
     return map;
   }
 }
@@ -301,6 +312,21 @@ export class DaoRegistry extends ethereum.SmartContract {
     }
     let value = result.value;
     return ethereum.CallResult.fromValue(value[0].toAddress());
+  }
+
+  GUILDKICK(): Bytes {
+    let result = super.call("GUILDKICK", "GUILDKICK():(bytes32)", []);
+
+    return result[0].toBytes();
+  }
+
+  try_GUILDKICK(): ethereum.CallResult<Bytes> {
+    let result = super.tryCall("GUILDKICK", "GUILDKICK():(bytes32)", []);
+    if (result.reverted) {
+      return new ethereum.CallResult();
+    }
+    let value = result.value;
+    return ethereum.CallResult.fromValue(value[0].toBytes());
   }
 
   LOCKED_LOOT(): Address {
@@ -446,6 +472,44 @@ export class DaoRegistry extends ethereum.SmartContract {
     return ethereum.CallResult.fromValue(value[0].toBytes());
   }
 
+  addressConfiguration(param0: Bytes): Address {
+    let result = super.call(
+      "addressConfiguration",
+      "addressConfiguration(bytes32):(address)",
+      [ethereum.Value.fromFixedBytes(param0)]
+    );
+
+    return result[0].toAddress();
+  }
+
+  try_addressConfiguration(param0: Bytes): ethereum.CallResult<Address> {
+    let result = super.tryCall(
+      "addressConfiguration",
+      "addressConfiguration(bytes32):(address)",
+      [ethereum.Value.fromFixedBytes(param0)]
+    );
+    if (result.reverted) {
+      return new ethereum.CallResult();
+    }
+    let value = result.value;
+    return ethereum.CallResult.fromValue(value[0].toAddress());
+  }
+
+  initialized(): boolean {
+    let result = super.call("initialized", "initialized():(bool)", []);
+
+    return result[0].toBoolean();
+  }
+
+  try_initialized(): ethereum.CallResult<boolean> {
+    let result = super.tryCall("initialized", "initialized():(bool)", []);
+    if (result.reverted) {
+      return new ethereum.CallResult();
+    }
+    let value = result.value;
+    return ethereum.CallResult.fromValue(value[0].toBoolean());
+  }
+
   inverseRegistry(param0: Address): DaoRegistry__inverseRegistryResult {
     let result = super.call(
       "inverseRegistry",
@@ -477,6 +541,29 @@ export class DaoRegistry extends ethereum.SmartContract {
         value[1].toBigInt()
       )
     );
+  }
+
+  mainConfiguration(param0: Bytes): BigInt {
+    let result = super.call(
+      "mainConfiguration",
+      "mainConfiguration(bytes32):(uint256)",
+      [ethereum.Value.fromFixedBytes(param0)]
+    );
+
+    return result[0].toBigInt();
+  }
+
+  try_mainConfiguration(param0: Bytes): ethereum.CallResult<BigInt> {
+    let result = super.tryCall(
+      "mainConfiguration",
+      "mainConfiguration(bytes32):(uint256)",
+      [ethereum.Value.fromFixedBytes(param0)]
+    );
+    if (result.reverted) {
+      return new ethereum.CallResult();
+    }
+    let value = result.value;
+    return ethereum.CallResult.fromValue(value[0].toBigInt());
   }
 
   memberAddressesByDelegatedKey(param0: Address): Address {
@@ -523,42 +610,26 @@ export class DaoRegistry extends ethereum.SmartContract {
     return ethereum.CallResult.fromValue(value[0].toBigInt());
   }
 
-  proposalCount(): BigInt {
-    let result = super.call("proposalCount", "proposalCount():(uint64)", []);
-
-    return result[0].toBigInt();
-  }
-
-  try_proposalCount(): ethereum.CallResult<BigInt> {
-    let result = super.tryCall("proposalCount", "proposalCount():(uint64)", []);
-    if (result.reverted) {
-      return new ethereum.CallResult();
-    }
-    let value = result.value;
-    return ethereum.CallResult.fromValue(value[0].toBigInt());
-  }
-
-  proposals(param0: BigInt): DaoRegistry__proposalsResult {
+  proposals(param0: Bytes): DaoRegistry__proposalsResult {
     let result = super.call(
       "proposals",
-      "proposals(uint64):(address,address,uint256)",
-      [ethereum.Value.fromUnsignedBigInt(param0)]
+      "proposals(bytes32):(address,uint256)",
+      [ethereum.Value.fromFixedBytes(param0)]
     );
 
     return new DaoRegistry__proposalsResult(
       result[0].toAddress(),
-      result[1].toAddress(),
-      result[2].toBigInt()
+      result[1].toBigInt()
     );
   }
 
   try_proposals(
-    param0: BigInt
+    param0: Bytes
   ): ethereum.CallResult<DaoRegistry__proposalsResult> {
     let result = super.tryCall(
       "proposals",
-      "proposals(uint64):(address,address,uint256)",
-      [ethereum.Value.fromUnsignedBigInt(param0)]
+      "proposals(bytes32):(address,uint256)",
+      [ethereum.Value.fromFixedBytes(param0)]
     );
     if (result.reverted) {
       return new ethereum.CallResult();
@@ -567,8 +638,7 @@ export class DaoRegistry extends ethereum.SmartContract {
     return ethereum.CallResult.fromValue(
       new DaoRegistry__proposalsResult(
         value[0].toAddress(),
-        value[1].toAddress(),
-        value[2].toBigInt()
+        value[1].toBigInt()
       )
     );
   }
@@ -605,6 +675,52 @@ export class DaoRegistry extends ethereum.SmartContract {
     }
     let value = result.value;
     return ethereum.CallResult.fromValue(value[0].toI32());
+  }
+
+  getConfiguration(key: Bytes): BigInt {
+    let result = super.call(
+      "getConfiguration",
+      "getConfiguration(bytes32):(uint256)",
+      [ethereum.Value.fromFixedBytes(key)]
+    );
+
+    return result[0].toBigInt();
+  }
+
+  try_getConfiguration(key: Bytes): ethereum.CallResult<BigInt> {
+    let result = super.tryCall(
+      "getConfiguration",
+      "getConfiguration(bytes32):(uint256)",
+      [ethereum.Value.fromFixedBytes(key)]
+    );
+    if (result.reverted) {
+      return new ethereum.CallResult();
+    }
+    let value = result.value;
+    return ethereum.CallResult.fromValue(value[0].toBigInt());
+  }
+
+  getAddressConfiguration(key: Bytes): Address {
+    let result = super.call(
+      "getAddressConfiguration",
+      "getAddressConfiguration(bytes32):(address)",
+      [ethereum.Value.fromFixedBytes(key)]
+    );
+
+    return result[0].toAddress();
+  }
+
+  try_getAddressConfiguration(key: Bytes): ethereum.CallResult<Address> {
+    let result = super.tryCall(
+      "getAddressConfiguration",
+      "getAddressConfiguration(bytes32):(address)",
+      [ethereum.Value.fromFixedBytes(key)]
+    );
+    if (result.reverted) {
+      return new ethereum.CallResult();
+    }
+    let value = result.value;
+    return ethereum.CallResult.fromValue(value[0].toAddress());
   }
 
   isAdapter(adapterAddress: Address): boolean {
@@ -716,44 +832,44 @@ export class DaoRegistry extends ethereum.SmartContract {
     return ethereum.CallResult.fromValue(value[0].toBytes());
   }
 
-  submitProposal(applicant: Address): BigInt {
-    let result = super.call(
-      "submitProposal",
-      "submitProposal(address):(uint64)",
-      [ethereum.Value.fromAddress(applicant)]
-    );
-
-    return result[0].toBigInt();
-  }
-
-  try_submitProposal(applicant: Address): ethereum.CallResult<BigInt> {
-    let result = super.tryCall(
-      "submitProposal",
-      "submitProposal(address):(uint64)",
-      [ethereum.Value.fromAddress(applicant)]
-    );
-    if (result.reverted) {
-      return new ethereum.CallResult();
-    }
-    let value = result.value;
-    return ethereum.CallResult.fromValue(value[0].toBigInt());
-  }
-
-  isInternalToken(tokenToMint: Address): boolean {
+  isInternalToken(token: Address): boolean {
     let result = super.call(
       "isInternalToken",
       "isInternalToken(address):(bool)",
-      [ethereum.Value.fromAddress(tokenToMint)]
+      [ethereum.Value.fromAddress(token)]
     );
 
     return result[0].toBoolean();
   }
 
-  try_isInternalToken(tokenToMint: Address): ethereum.CallResult<boolean> {
+  try_isInternalToken(token: Address): ethereum.CallResult<boolean> {
     let result = super.tryCall(
       "isInternalToken",
       "isInternalToken(address):(bool)",
-      [ethereum.Value.fromAddress(tokenToMint)]
+      [ethereum.Value.fromAddress(token)]
+    );
+    if (result.reverted) {
+      return new ethereum.CallResult();
+    }
+    let value = result.value;
+    return ethereum.CallResult.fromValue(value[0].toBoolean());
+  }
+
+  isTokenAllowed(token: Address): boolean {
+    let result = super.call(
+      "isTokenAllowed",
+      "isTokenAllowed(address):(bool)",
+      [ethereum.Value.fromAddress(token)]
+    );
+
+    return result[0].toBoolean();
+  }
+
+  try_isTokenAllowed(token: Address): ethereum.CallResult<boolean> {
+    let result = super.tryCall(
+      "isTokenAllowed",
+      "isTokenAllowed(address):(bool)",
+      [ethereum.Value.fromAddress(token)]
     );
     if (result.reverted) {
       return new ethereum.CallResult();
@@ -785,12 +901,12 @@ export class DaoRegistry extends ethereum.SmartContract {
     return ethereum.CallResult.fromValue(value[0].toBoolean());
   }
 
-  getProposalFlag(proposalId: BigInt, flag: i32): boolean {
+  getProposalFlag(proposalId: Bytes, flag: i32): boolean {
     let result = super.call(
       "getProposalFlag",
-      "getProposalFlag(uint64,uint8):(bool)",
+      "getProposalFlag(bytes32,uint8):(bool)",
       [
-        ethereum.Value.fromUnsignedBigInt(proposalId),
+        ethereum.Value.fromFixedBytes(proposalId),
         ethereum.Value.fromUnsignedBigInt(BigInt.fromI32(flag))
       ]
     );
@@ -799,14 +915,14 @@ export class DaoRegistry extends ethereum.SmartContract {
   }
 
   try_getProposalFlag(
-    proposalId: BigInt,
+    proposalId: Bytes,
     flag: i32
   ): ethereum.CallResult<boolean> {
     let result = super.tryCall(
       "getProposalFlag",
-      "getProposalFlag(uint64,uint8):(bool)",
+      "getProposalFlag(bytes32,uint8):(bool)",
       [
-        ethereum.Value.fromUnsignedBigInt(proposalId),
+        ethereum.Value.fromFixedBytes(proposalId),
         ethereum.Value.fromUnsignedBigInt(BigInt.fromI32(flag))
       ]
     );
@@ -815,44 +931,6 @@ export class DaoRegistry extends ethereum.SmartContract {
     }
     let value = result.value;
     return ethereum.CallResult.fromValue(value[0].toBoolean());
-  }
-
-  nbShares(member: Address): BigInt {
-    let result = super.call("nbShares", "nbShares(address):(uint256)", [
-      ethereum.Value.fromAddress(member)
-    ]);
-
-    return result[0].toBigInt();
-  }
-
-  try_nbShares(member: Address): ethereum.CallResult<BigInt> {
-    let result = super.tryCall("nbShares", "nbShares(address):(uint256)", [
-      ethereum.Value.fromAddress(member)
-    ]);
-    if (result.reverted) {
-      return new ethereum.CallResult();
-    }
-    let value = result.value;
-    return ethereum.CallResult.fromValue(value[0].toBigInt());
-  }
-
-  nbLoot(member: Address): BigInt {
-    let result = super.call("nbLoot", "nbLoot(address):(uint256)", [
-      ethereum.Value.fromAddress(member)
-    ]);
-
-    return result[0].toBigInt();
-  }
-
-  try_nbLoot(member: Address): ethereum.CallResult<BigInt> {
-    let result = super.tryCall("nbLoot", "nbLoot(address):(uint256)", [
-      ethereum.Value.fromAddress(member)
-    ]);
-    if (result.reverted) {
-      return new ethereum.CallResult();
-    }
-    let value = result.value;
-    return ethereum.CallResult.fromValue(value[0].toBigInt());
   }
 
   isNotReservedAddress(applicant: Address): boolean {
@@ -878,19 +956,84 @@ export class DaoRegistry extends ethereum.SmartContract {
     return ethereum.CallResult.fromValue(value[0].toBoolean());
   }
 
-  tokens(): Array<Address> {
-    let result = super.call("tokens", "tokens():(address[])", []);
+  getToken(index: BigInt): Address {
+    let result = super.call("getToken", "getToken(uint256):(address)", [
+      ethereum.Value.fromUnsignedBigInt(index)
+    ]);
 
-    return result[0].toAddressArray();
+    return result[0].toAddress();
   }
 
-  try_tokens(): ethereum.CallResult<Array<Address>> {
-    let result = super.tryCall("tokens", "tokens():(address[])", []);
+  try_getToken(index: BigInt): ethereum.CallResult<Address> {
+    let result = super.tryCall("getToken", "getToken(uint256):(address)", [
+      ethereum.Value.fromUnsignedBigInt(index)
+    ]);
     if (result.reverted) {
       return new ethereum.CallResult();
     }
     let value = result.value;
-    return ethereum.CallResult.fromValue(value[0].toAddressArray());
+    return ethereum.CallResult.fromValue(value[0].toAddress());
+  }
+
+  nbTokens(): BigInt {
+    let result = super.call("nbTokens", "nbTokens():(uint256)", []);
+
+    return result[0].toBigInt();
+  }
+
+  try_nbTokens(): ethereum.CallResult<BigInt> {
+    let result = super.tryCall("nbTokens", "nbTokens():(uint256)", []);
+    if (result.reverted) {
+      return new ethereum.CallResult();
+    }
+    let value = result.value;
+    return ethereum.CallResult.fromValue(value[0].toBigInt());
+  }
+
+  getInternalToken(index: BigInt): Address {
+    let result = super.call(
+      "getInternalToken",
+      "getInternalToken(uint256):(address)",
+      [ethereum.Value.fromUnsignedBigInt(index)]
+    );
+
+    return result[0].toAddress();
+  }
+
+  try_getInternalToken(index: BigInt): ethereum.CallResult<Address> {
+    let result = super.tryCall(
+      "getInternalToken",
+      "getInternalToken(uint256):(address)",
+      [ethereum.Value.fromUnsignedBigInt(index)]
+    );
+    if (result.reverted) {
+      return new ethereum.CallResult();
+    }
+    let value = result.value;
+    return ethereum.CallResult.fromValue(value[0].toAddress());
+  }
+
+  nbInternalTokens(): BigInt {
+    let result = super.call(
+      "nbInternalTokens",
+      "nbInternalTokens():(uint256)",
+      []
+    );
+
+    return result[0].toBigInt();
+  }
+
+  try_nbInternalTokens(): ethereum.CallResult<BigInt> {
+    let result = super.tryCall(
+      "nbInternalTokens",
+      "nbInternalTokens():(uint256)",
+      []
+    );
+    if (result.reverted) {
+      return new ethereum.CallResult();
+    }
+    let value = result.value;
+    return ethereum.CallResult.fromValue(value[0].toBigInt());
   }
 
   balanceOf(account: Address, tokenAddr: Address): BigInt {
@@ -962,6 +1105,29 @@ export class DaoRegistry extends ethereum.SmartContract {
     }
     let value = result.value;
     return ethereum.CallResult.fromValue(value[0].toBigInt());
+  }
+
+  getAddressIfDelegated(checkAddr: Address): Address {
+    let result = super.call(
+      "getAddressIfDelegated",
+      "getAddressIfDelegated(address):(address)",
+      [ethereum.Value.fromAddress(checkAddr)]
+    );
+
+    return result[0].toAddress();
+  }
+
+  try_getAddressIfDelegated(checkAddr: Address): ethereum.CallResult<Address> {
+    let result = super.tryCall(
+      "getAddressIfDelegated",
+      "getAddressIfDelegated(address):(address)",
+      [ethereum.Value.fromAddress(checkAddr)]
+    );
+    if (result.reverted) {
+      return new ethereum.CallResult();
+    }
+    let value = result.value;
+    return ethereum.CallResult.fromValue(value[0].toAddress());
   }
 
   getCurrentDelegateKey(memberAddr: Address): Address {
@@ -1045,28 +1211,32 @@ export class DaoRegistry extends ethereum.SmartContract {
   }
 }
 
-export class ConstructorCall extends ethereum.Call {
-  get inputs(): ConstructorCall__Inputs {
-    return new ConstructorCall__Inputs(this);
+export class InitializeCall extends ethereum.Call {
+  get inputs(): InitializeCall__Inputs {
+    return new InitializeCall__Inputs(this);
   }
 
-  get outputs(): ConstructorCall__Outputs {
-    return new ConstructorCall__Outputs(this);
+  get outputs(): InitializeCall__Outputs {
+    return new InitializeCall__Outputs(this);
   }
 }
 
-export class ConstructorCall__Inputs {
-  _call: ConstructorCall;
+export class InitializeCall__Inputs {
+  _call: InitializeCall;
 
-  constructor(call: ConstructorCall) {
+  constructor(call: InitializeCall) {
     this._call = call;
   }
+
+  get creator(): Address {
+    return this._call.inputValues[0].value.toAddress();
+  }
 }
 
-export class ConstructorCall__Outputs {
-  _call: ConstructorCall;
+export class InitializeCall__Outputs {
+  _call: InitializeCall;
 
-  constructor(call: ConstructorCall) {
+  constructor(call: InitializeCall) {
     this._call = call;
   }
 }
@@ -1097,6 +1267,74 @@ export class FinalizeDaoCall__Outputs {
   }
 }
 
+export class SetConfigurationCall extends ethereum.Call {
+  get inputs(): SetConfigurationCall__Inputs {
+    return new SetConfigurationCall__Inputs(this);
+  }
+
+  get outputs(): SetConfigurationCall__Outputs {
+    return new SetConfigurationCall__Outputs(this);
+  }
+}
+
+export class SetConfigurationCall__Inputs {
+  _call: SetConfigurationCall;
+
+  constructor(call: SetConfigurationCall) {
+    this._call = call;
+  }
+
+  get key(): Bytes {
+    return this._call.inputValues[0].value.toBytes();
+  }
+
+  get value(): BigInt {
+    return this._call.inputValues[1].value.toBigInt();
+  }
+}
+
+export class SetConfigurationCall__Outputs {
+  _call: SetConfigurationCall;
+
+  constructor(call: SetConfigurationCall) {
+    this._call = call;
+  }
+}
+
+export class SetAddressConfigurationCall extends ethereum.Call {
+  get inputs(): SetAddressConfigurationCall__Inputs {
+    return new SetAddressConfigurationCall__Inputs(this);
+  }
+
+  get outputs(): SetAddressConfigurationCall__Outputs {
+    return new SetAddressConfigurationCall__Outputs(this);
+  }
+}
+
+export class SetAddressConfigurationCall__Inputs {
+  _call: SetAddressConfigurationCall;
+
+  constructor(call: SetAddressConfigurationCall) {
+    this._call = call;
+  }
+
+  get key(): Bytes {
+    return this._call.inputValues[0].value.toBytes();
+  }
+
+  get value(): Address {
+    return this._call.inputValues[1].value.toAddress();
+  }
+}
+
+export class SetAddressConfigurationCall__Outputs {
+  _call: SetAddressConfigurationCall;
+
+  constructor(call: SetAddressConfigurationCall) {
+    this._call = call;
+  }
+}
+
 export class AddAdapterCall extends ethereum.Call {
   get inputs(): AddAdapterCall__Inputs {
     return new AddAdapterCall__Inputs(this);
@@ -1122,7 +1360,7 @@ export class AddAdapterCall__Inputs {
     return this._call.inputValues[1].value.toAddress();
   }
 
-  get flags(): BigInt {
+  get acl(): BigInt {
     return this._call.inputValues[2].value.toBigInt();
   }
 }
@@ -1267,6 +1505,44 @@ export class ExecuteCall__Outputs {
   }
 }
 
+export class WithdrawCall extends ethereum.Call {
+  get inputs(): WithdrawCall__Inputs {
+    return new WithdrawCall__Inputs(this);
+  }
+
+  get outputs(): WithdrawCall__Outputs {
+    return new WithdrawCall__Outputs(this);
+  }
+}
+
+export class WithdrawCall__Inputs {
+  _call: WithdrawCall;
+
+  constructor(call: WithdrawCall) {
+    this._call = call;
+  }
+
+  get account(): Address {
+    return this._call.inputValues[0].value.toAddress();
+  }
+
+  get tokenAddr(): Address {
+    return this._call.inputValues[1].value.toAddress();
+  }
+
+  get amount(): BigInt {
+    return this._call.inputValues[2].value.toBigInt();
+  }
+}
+
+export class WithdrawCall__Outputs {
+  _call: WithdrawCall;
+
+  constructor(call: WithdrawCall) {
+    this._call = call;
+  }
+}
+
 export class SubmitProposalCall extends ethereum.Call {
   get inputs(): SubmitProposalCall__Inputs {
     return new SubmitProposalCall__Inputs(this);
@@ -1284,8 +1560,8 @@ export class SubmitProposalCall__Inputs {
     this._call = call;
   }
 
-  get applicant(): Address {
-    return this._call.inputValues[0].value.toAddress();
+  get proposalId(): Bytes {
+    return this._call.inputValues[0].value.toBytes();
   }
 }
 
@@ -1294,10 +1570,6 @@ export class SubmitProposalCall__Outputs {
 
   constructor(call: SubmitProposalCall) {
     this._call = call;
-  }
-
-  get value0(): BigInt {
-    return this._call.outputValues[0].value.toBigInt();
   }
 }
 
@@ -1318,8 +1590,8 @@ export class SponsorProposalCall__Inputs {
     this._call = call;
   }
 
-  get _proposalId(): BigInt {
-    return this._call.inputValues[0].value.toBigInt();
+  get proposalId(): Bytes {
+    return this._call.inputValues[0].value.toBytes();
   }
 
   get sponsoringMember(): Address {
@@ -1352,8 +1624,8 @@ export class ProcessProposalCall__Inputs {
     this._call = call;
   }
 
-  get _proposalId(): BigInt {
-    return this._call.inputValues[0].value.toBigInt();
+  get proposalId(): Bytes {
+    return this._call.inputValues[0].value.toBytes();
   }
 }
 

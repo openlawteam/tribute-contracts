@@ -1,15 +1,37 @@
 specVersion: 0.0.2
-description: Laoland
+description: Laoland Subgraph
 repository: https://github.com/openlawteam/laoland
 schema:
   file: ./schema.graphql
 dataSources:
   - kind: ethereum/contract
-    name: Laoland
-    network: mainnet
+    name: DaoFactory
+    network: rinkeby
     source:
-      address: "0x2E645469f354BB4F5c8a05B3b30A929361cf77eC"
+      address: "0x4f33a9C1d06C35c72729331B8167C2a98C743324"
+      abi: DaoFactory
+      startBlock: 7898511
+    mapping:
+      kind: ethereum/events
+      apiVersion: 0.0.4
+      language: wasm/assemblyscript
+      entities:
+        - Dao
+      abis:
+        - name: DaoFactory
+          file: ./build/contracts/DaoFactory.json
+      eventHandlers:
+        - event: DAOCreated(address,string)
+          handler: handleDaoCreated
+      file: ./src/factory-mapping.ts
+
+  - kind: ethereum/contract
+    name: DaoRegistry
+    network: rinkeby
+    source:
+      address: "0x036E617aC57F08395bB4E248E0e99d308bC9a211"
       abi: DaoRegistry
+      startBlock: 7898511
     mapping:
       kind: ethereum/events
       apiVersion: 0.0.4
@@ -19,15 +41,16 @@ dataSources:
         - Member
         - TokenBalance
         - Token
+        - Adapter
       abis:
         - name: DaoRegistry
           file: ./build/contracts/DaoRegistry.json
       eventHandlers:
-        - event: SponsoredProposal(uint64,uint256)
+        - event: SponsoredProposal(bytes32,uint256)
           handler: handleSponsoredProposal
-        - event: ProcessedProposal(uint64,uint256)
+        - event: ProcessedProposal(bytes32,uint256)
           handler: handleProcessedProposal
-        - event: SubmittedProposal(uint64,uint256)
+        - event: SubmittedProposal(bytes32,uint256)
           handler: handleSubmittedProposal
         - event: AdapterAdded(bytes32,address,uint256)
           handler: handleAdapterAdded
@@ -41,4 +64,6 @@ dataSources:
           handler: handleMemberUnjailed
         - event: NewBalance(address,address,uint256)
           handler: handleNewBalance
-      file: ./src/mapping.ts
+        - event: Withdraw(address,address,uint256)
+          handler: handleWithdraw
+      file: ./src/registry-mapping.ts
