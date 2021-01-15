@@ -62,27 +62,28 @@ To fix the Solidity code with the linter hints, simply run:
 
 ### Helpers 
 #### FlagHelper.sol
-Flags are bool values to determine the state of a member, proposal, or an adapter.  
-`EXISTS` //true if a member or a proposal exists 
-`SPONSORED` // true if a submitted proposal has been sponsored by a member
-`PROCESSED` //true if a proprosal has been processed by DAO
-` JAILED` // true if a member has been jailed by the DAO. The member will not be able to participate in DAO
-` ADD_ADAPTER` // true if an adapter has been added to the DAO. 
-`REMOVE_ADAPTER` // true if an adapter has been removed from the DAO
-JAIL_MEMBER --What is this?  
-`UNJAIL_MEMBER` //true if a member has been released from jai. Member will be able to participate in DAO 
-`EXECUTE`  // true if a DAO adapter hasAccess to an arbitrary function call, see `execute` in DaoRegistry.sol 
-`SUBMIT_PROPOSAL` // true if a proposal has been been submitted 
-SPONSOR_PROPOSAL, -- what is this?
-`PROCESS_PROPOSAL` // true if a proposal has been processed 
-UPDATE_DELEGATE_KEY - n/a
-REGISTER_NEW_TOKEN - n/a 
-REGISTER_NEW_INTERNAL_TOKEN - n/a
-ADD_TO_BALANCE - n/a 
-SUB_FROM_BALANCE - n/a 
-INTERNAL_TRANSFER - n/a 
-SET_CONFIGURATION - n/a 
-WITHDRAW - n/a 
+Flags are bool values to determine the state of a member, proposal, or an adapter. 
+
+  `EXISTS` - true if a member or a proposal exists. 
+  `SPONSORED` - true if a submitted proposal has been sponsored by a member.
+  `PROCESSED` - true if a proprosal has been processed by DAO. 
+  `JAILED` - true if a member has been jailed by the DAO and then a member will not be able to participate in DAO.
+  `ADD_ADAPTER` - true if an adapter has been added to the DAO.  
+  `REMOVE_ADAPTER` -  true if an adapter has been removed from the DAO. 
+  `JAIL_MEMBER` - What is this?  
+  `UNJAIL_MEMBER` - true if a member has been released from jail, then Member will be able to participate in DAO.  
+  `EXECUTE`  -  true if a DAO adapter hasAccess to an arbitrary function call, see `execute` in DaoRegistry.sol.  
+  `SUBMIT_PROPOSAL` -  true if a proposal has been been submitted.   
+  `SPONSOR_PROPOSAL` - what is this?  
+  `PROCESS_PROPOSAL` -  true if a proposal has been processed.   
+   `UPDATE_DELEGATE_KEY` - n/a. 
+  `REGISTER_NEW_TOKEN` - n/a.  
+  `REGISTER_NEW_INTERNAL_TOKEN` - n/a. 
+  `ADD_TO_BALANCE` - n/a.    
+  `SUB_FROM_BALANCE` - n/a.  
+  `INTERNAL_TRANSFER` - n/a.  
+  `SET_CONFIGURATION` - n/a.  
+  `WITHDRAW` - n/a.  
 
 ### Guards 
 
