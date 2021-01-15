@@ -64,12 +64,12 @@ To fix the Solidity code with the linter hints, simply run:
 #### FlagHelper.sol
 Flags are bool values to determine the state of a member, proposal, or an adapter. 
 
-  `EXISTS` - true if a member or a proposal exists. 
-  `SPONSORED` - true if a submitted proposal has been sponsored by a member.
-  `PROCESSED` - true if a proprosal has been processed by DAO. 
-  `JAILED` - true if a member has been jailed by the DAO and then a member will not be able to participate in DAO.
-  `ADD_ADAPTER` - true if an adapter has been added to the DAO.  
-  `REMOVE_ADAPTER` -  true if an adapter has been removed from the DAO. 
+  `EXISTS` - true if a member or a proposal exists. \
+  `SPONSORED` - true if a submitted proposal has been sponsored by a member.\
+  `PROCESSED` - true if a proprosal has been processed by DAO. \
+  `JAILED` - true if a member has been jailed by the DAO. A member will then not be able to particpate in DAO. \
+  `ADD_ADAPTER` - true if an adapter has been added to the DAO.  \
+  `REMOVE_ADAPTER` -  true if an adapter has been removed from the DAO. \
   `JAIL_MEMBER` - What is this?  
   `UNJAIL_MEMBER` - true if a member has been released from jail, then Member will be able to participate in DAO.  
   `EXECUTE`  -  true if a DAO adapter hasAccess to an arbitrary function call, see `execute` in DaoRegistry.sol.  
