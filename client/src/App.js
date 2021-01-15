@@ -19,7 +19,6 @@ import DeployedContractsDialog from "./components/DeployedContractsDialog";
 
 import {
   getDomainDefinition,
-  getDraftERC712Hash,
   prepareMessage,
   signMessage,
   buildDraftMessage,
@@ -27,8 +26,11 @@ import {
   buildVoteMessage,
   getApiStatus,
   submitMessage,
-  VoteChoices,
-} from "@fforbeck/snapshot-js-erc712";
+  getDraftERC712Hash,
+  getMessageERC712Hash,
+} from "@openlaw/snapshot-js-erc712";
+import DraftCard from "./components/DraftCard";
+import axios from "axios";
 
 const useStyles = makeStyles((theme) => ({
   app: {
@@ -152,6 +154,7 @@ const App = () => {
     proposal.addr = addr;
     proposal.chainId = cid;
     proposal["votingTimeSeconds"] = proposal.votingTime * 60 * 60;
+    proposal["snapshot"] = 1;
     proposal.metadata = {
       uuid: proposal.addr,
       private: proposal.private ? 1 : 0,
@@ -162,16 +165,24 @@ const App = () => {
       ? await buildDraftMessage(proposal, snapshotHubURL)
       : await buildProposalMessage(proposal, snapshotHubURL);
 
-    // proposal["proposalHash"] = getDraftERC712Hash(
-    //   newMessage,
-    //   verifyingContract,
-    //   proposal.actionId,
-    //   cid
-    // );
-    // console.log(proposal.proposalHash);
-
     const preparedMessage = prepareMessage(newMessage);
-
+    if (proposal.draft) {
+      const erc712DraftHash = getMessageERC712Hash(
+        preparedMessage,
+        preparedMessage.verifyingContract,
+        preparedMessage.actionId,
+        preparedMessage.chainId
+      );
+      console.log("Draft hash: " + erc712DraftHash);
+    } else {
+      const erc712DraftHash = getDraftERC712Hash(
+        preparedMessage,
+        preparedMessage.verifyingContract,
+        preparedMessage.actionId,
+        preparedMessage.chainId
+      );
+      console.log("Draft hash from Proposal: " + erc712DraftHash);
+    }
     console.log(preparedMessage);
 
     const signer = Web3.utils.toChecksumAddress(addr);
@@ -190,18 +201,12 @@ const App = () => {
       message: preparedMessage,
     });
 
-    signMessage(provider, signer, data, (err, result) => {
-      if (err || result.error) {
-        console.error(err);
-        return alert(result.error.message);
-      }
-      const newSignature = result.result;
+    signMessage(provider, signer, data).then((newSignature) => {
       setSignature(newSignature);
       setLoading(true);
       submitMessage(snapshotHubURL, addr, preparedMessage, newSignature)
         .then((resp) => {
-          //TODO: update to read the erc712 hash when implemented in snapshot-hub
-          proposal["proposalHash"] = resp.data.ipfsHash;
+          proposal["proposalHash"] = resp.data.uniqueId;
           proposal["sig"] = newSignature;
           setProposals([...proposals, proposal]);
           setLoading(false);
@@ -216,6 +221,34 @@ const App = () => {
           }
         });
     });
+  };
+
+  const handleSponsorSubmit = async (draft) => {
+    console.log("Sponsored draft: " + JSON.stringify(draft));
+    const { data } = await axios.get(
+      `${snapshotHubURL}/api/${draft.space}/draft/${draft.proposalHash}`
+    );
+    const sponsoredDraft = data[draft.proposalHash];
+
+    const proposal = {
+      addr: sponsoredDraft.address,
+      chainId: chainId,
+      verifyingContract: verifyingContract,
+      name: draft.name,
+      body: draft.body,
+      category: draft.category,
+      actionId: draft.actionId,
+      votingTime: 1,
+      private: false,
+      draft: false,
+      type: "proposal",
+      token: draft.token,
+      space: draft.space,
+      snapshot: 1,
+      timestamp: sponsoredDraft.msg.timestamp,
+    };
+
+    await handleProposalSubmit(proposal);
   };
 
   const handleVoteSubmit = async (choice, proposal) => {
@@ -235,7 +268,6 @@ const App = () => {
     const preparedMessage = prepareMessage(
       await buildVoteMessage(vote, proposal, snapshotHubURL)
     );
-    console.log(preparedMessage);
 
     const signer = Web3.utils.toChecksumAddress(addr);
 
@@ -253,13 +285,7 @@ const App = () => {
       message: preparedMessage,
     });
 
-    signMessage(provider, signer, data, (err, result) => {
-      if (err || result.error) {
-        console.error(err);
-        alert(err);
-        return alert(result.error.message);
-      }
-      const newSignature = result.result;
+    signMessage(provider, signer, data).then((newSignature) => {
       setSignature(newSignature);
       setLoading(true);
       submitMessage(snapshotHubURL, addr, preparedMessage, newSignature)
@@ -321,7 +347,11 @@ const App = () => {
           <Grid container direction="row">
             {proposals.map((p) => (
               <Grid item xs={3} key={Math.random()}>
-                <ProposalCard proposal={p} onNewVote={handleVoteSubmit} />
+                {p.draft ? (
+                  <DraftCard draft={p} onSponsor={handleSponsorSubmit} />
+                ) : (
+                  <ProposalCard proposal={p} onNewVote={handleVoteSubmit} />
+                )}
               </Grid>
             ))}
           </Grid>
