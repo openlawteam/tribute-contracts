@@ -53,6 +53,7 @@ const ProposalForm = ({
     type: "proposal",
     token: "0x8f56682a50becb1df2fb8136954f2062871bc7fc",
     space: "thelao",
+    snapshot: "1",
   });
 
   const contracts = JSON.parse(process.env.REACT_APP_DEPLOYED_CONTRACTS) || {};
@@ -91,6 +92,7 @@ const ProposalForm = ({
       type: proposal.draft ? "draft" : "proposal",
       token: "0x8f56682a50becb1df2fb8136954f2062871bc7fc",
       space: "thelao",
+      snapshot: "1",
     });
   };
 

@@ -27,6 +27,7 @@ import {
   buildVoteMessage,
   getApiStatus,
   submitMessage,
+  VoteChoices,
 } from "@fforbeck/snapshot-js-erc712";
 
 const useStyles = makeStyles((theme) => ({
@@ -157,18 +158,21 @@ const App = () => {
       type: proposal.category,
       subType: proposal.category,
     };
-    console.log(proposal);
     const newMessage = proposal.draft
       ? await buildDraftMessage(proposal, snapshotHubURL)
       : await buildProposalMessage(proposal, snapshotHubURL);
 
-    console.log(newMessage);
-
-    console.log(
-      getDraftERC712Hash(newMessage, verifyingContract, proposal.actionId, cid)
-    );
+    // proposal["proposalHash"] = getDraftERC712Hash(
+    //   newMessage,
+    //   verifyingContract,
+    //   proposal.actionId,
+    //   cid
+    // );
+    // console.log(proposal.proposalHash);
 
     const preparedMessage = prepareMessage(newMessage);
+
+    console.log(preparedMessage);
 
     const signer = Web3.utils.toChecksumAddress(addr);
 
@@ -196,8 +200,8 @@ const App = () => {
       setLoading(true);
       submitMessage(snapshotHubURL, addr, preparedMessage, newSignature)
         .then((resp) => {
-          const ipfsHash = resp.data.ipfsHash;
-          proposal["ipfsHash"] = ipfsHash;
+          //TODO: update to read the erc712 hash when implemented in snapshot-hub
+          proposal["proposalHash"] = resp.data.ipfsHash;
           proposal["sig"] = newSignature;
           setProposals([...proposals, proposal]);
           setLoading(false);
@@ -214,14 +218,24 @@ const App = () => {
     });
   };
 
-  const handleVoteSubmit = async (vote, proposal) => {
+  const handleVoteSubmit = async (choice, proposal) => {
     if (!web3) return;
 
     const cid = await web3.eth.net.getId();
 
+    const vote = {
+      choice: choice,
+      metadata: {
+        memberAddress: addr,
+      },
+      chainId: cid,
+    };
+    proposal.address = addr;
+
     const preparedMessage = prepareMessage(
-      buildVoteMessage(vote, proposal, snapshotHubURL)
+      await buildVoteMessage(vote, proposal, snapshotHubURL)
     );
+    console.log(preparedMessage);
 
     const signer = Web3.utils.toChecksumAddress(addr);
 
@@ -254,7 +268,7 @@ const App = () => {
             ...preparedMessage,
             ipfsHash: resp.data.ipfsHash,
             proposalId: proposal.ipfsHash,
-            proposalTitle: proposal.title,
+            proposalName: proposal.name,
             sig: newSignature,
           };
           setProposals(

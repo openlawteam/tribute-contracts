@@ -6,6 +6,10 @@ import CardContent from "@material-ui/core/CardContent";
 import Button from "@material-ui/core/Button";
 import Typography from "@material-ui/core/Typography";
 import { Badge, Grid, Tooltip } from "@material-ui/core";
+import {
+  VoteChoices,
+  CoreProposalVoteChoices,
+} from "@fforbeck/snapshot-js-erc712";
 
 const useStyles = makeStyles({
   root: {
@@ -23,6 +27,7 @@ const useStyles = makeStyles({
 });
 
 const ProposalCard = ({ proposal, onNewVote }) => {
+  console.log(proposal.votes);
   const classes = useStyles();
   return (
     <Card className={classes.root} variant="outlined">
@@ -45,8 +50,7 @@ const ProposalCard = ({ proposal, onNewVote }) => {
             <Badge
               badgeContent={
                 proposal.votes
-                  ? proposal.votes.filter((v) => v.payload.choice === "yes")
-                      .length
+                  ? proposal.votes.filter((v) => v.payload.choice === 1).length
                   : 0
               }
               color="primary"
@@ -55,7 +59,7 @@ const ProposalCard = ({ proposal, onNewVote }) => {
               <Button
                 size="small"
                 color="primary"
-                onClick={() => onNewVote("yes", proposal)}
+                onClick={() => onNewVote(VoteChoices.Yes, proposal)}
                 variant="outlined"
               >
                 Yes
@@ -66,8 +70,7 @@ const ProposalCard = ({ proposal, onNewVote }) => {
             <Badge
               badgeContent={
                 proposal.votes
-                  ? proposal.votes.filter((v) => v.payload.choice === "no")
-                      .length
+                  ? proposal.votes.filter((v) => v.payload.choice === 2).length
                   : 0
               }
               color="secondary"
@@ -76,7 +79,7 @@ const ProposalCard = ({ proposal, onNewVote }) => {
               <Button
                 size="small"
                 color="secondary"
-                onClick={() => onNewVote("no", proposal)}
+                onClick={() => onNewVote(VoteChoices.No, proposal)}
                 variant="outlined"
               >
                 No
