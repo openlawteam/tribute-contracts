@@ -89,7 +89,7 @@ contract OffchainVotingContract is
             );
     }
 
-    VotingContract private _fallbackVoting;
+    VotingContract public fallbackVoting;
 
     struct Voting {
         uint256 snapshot;
@@ -155,7 +155,7 @@ contract OffchainVotingContract is
     mapping(address => mapping(bytes32 => Voting)) public votes;
 
     constructor(VotingContract _c, uint256 _chainId) {
-        _fallbackVoting = _c;
+        fallbackVoting = _c;
         chainId = _chainId;
     }
 

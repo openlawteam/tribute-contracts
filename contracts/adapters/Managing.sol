@@ -42,7 +42,7 @@ contract ManagingContract is IManaging, DaoConstants, MemberGuard {
         uint128 flags;
     }
 
-    mapping(bytes32 => ProposalDetails) public proposals;
+    mapping(address => mapping(bytes32 => ProposalDetails)) public proposals;
 
     /*
      * default fallback function to prevent from sending ether to the contract
@@ -77,7 +77,7 @@ contract ManagingContract is IManaging, DaoConstants, MemberGuard {
 
         dao.submitProposal(proposalId);
 
-        ProposalDetails storage proposal = proposals[proposalId];
+        ProposalDetails storage proposal = proposals[address(dao)][proposalId];
         proposal.applicant = msg.sender;
         proposal.moduleId = moduleId;
         proposal.moduleAddress = moduleAddress;
@@ -102,7 +102,7 @@ contract ManagingContract is IManaging, DaoConstants, MemberGuard {
         override
         onlyMember(dao)
     {
-        ProposalDetails memory proposal = proposals[proposalId];
+        ProposalDetails memory proposal = proposals[address(dao)][proposalId];
         require(
             !dao.getProposalFlag(proposalId, FlagHelper.Flag.PROCESSED),
             "proposal already processed"
