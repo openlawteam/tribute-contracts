@@ -32,7 +32,6 @@ const toBN = Web3Utils.toBN;
 const toWei = Web3Utils.toWei;
 const fromUtf8 = Web3Utils.fromUtf8;
 
-
 const GUILD = "0x000000000000000000000000000000000000dead";
 const TOTAL = "0x000000000000000000000000000000000000babe";
 const SHARES = "0x00000000000000000000000000000000000FF1CE";
@@ -58,16 +57,46 @@ const FinancingContract = artifacts.require("./adapter/FinancingContract");
 const RagequitContract = artifacts.require("./adapters/RagequitContract");
 const GuildKickContract = artifacts.require("./adapters/GuildKickContract");
 const OnboardingContract = artifacts.require("./adapters/OnboardingContract");
+const OffchainVotingContract = artifacts.require("./adapters/OffchainVotingContract");
 
-async function prepareSmartContracts() {
-  let voting = await VotingContract.new();
-  let configuration = await ConfigurationContract.new();
-  let ragequit = await RagequitContract.new();
-  let managing = await ManagingContract.new();
-  let financing = await FinancingContract.new();
-  let onboarding = await OnboardingContract.new();
-  let guildkick = await GuildKickContract.new();
-  let withdraw = await WithdrawContract.new();
+async function prepareSmartContracts(deployer) {
+  let voting;
+  let configuration;
+  let ragequit;
+  let managing;
+  let financing;
+  let onboarding;
+  let guildkick;
+  let withdraw;
+  console.log("deploying smart contracts .....");
+  if(deployer) {
+    await deployer.deploy(VotingContract);
+    await deployer.deploy(ConfigurationContract);
+    await deployer.deploy(RagequitContract);
+    await deployer.deploy(ManagingContract);
+    await deployer.deploy(FinancingContract);
+    await deployer.deploy(OnboardingContract);
+    await deployer.deploy(GuildKickContract);
+    await deployer.deploy(WithdrawContract);
+    await console.log("retrieving contracts .....");
+    voting = await VotingContract.deployed();
+    configuration = await ConfigurationContract.deployed();
+    ragequit = await RagequitContract.deployed();
+    managing = await ManagingContract.deployed();
+    financing = await FinancingContract.deployed();
+    onboarding = await OnboardingContract.deployed();
+    guildkick = await GuildKickContract.deployed();
+    withdraw = await WithdrawContract.deployed();
+  } else {
+    voting = await VotingContract.new();
+    configuration = await ConfigurationContract.new();
+    ragequit = await RagequitContract.new();
+    managing = await ManagingContract.new();
+    financing = await FinancingContract.new();
+    onboarding = await OnboardingContract.new();
+    guildkick = await GuildKickContract.new();
+    withdraw = await WithdrawContract.new();
+  }
 
   return {
     voting,
@@ -88,9 +117,17 @@ async function addDefaultAdapters(
   votingPeriod = 10,
   gracePeriod = 1,
   tokenAddr = ETH_TOKEN,
-  maxChunks = maximumChunks
+  maxChunks = maximumChunks,
+  deployer
 ) {
-  let daoFactory = await DaoFactory.new(dao.address);
+  let daoFactory;
+  if(deployer) {
+    await deployer.deploy(DaoFactory, dao.address);
+    daoFactory = await DaoFactory.deployed();
+  } else {
+    daoFactory = await DaoFactory.new(dao.address);
+  }
+  
   const {
     voting,
     configuration,
@@ -99,8 +136,8 @@ async function addDefaultAdapters(
     managing,
     financing,
     onboarding,
-    withdraw
-  } = await prepareSmartContracts();
+    withdraw    
+  } = await prepareSmartContracts(deployer);
 
   /**
      * EXISTS, SPONSORED, PROCESSED, JAILED,
@@ -178,7 +215,7 @@ async function addDefaultAdapters(
   );
   await voting.configureDao(dao.address, votingPeriod, gracePeriod);
 
-  return dao;
+  return {dao, daoFactory};
 }
 
 async function deployDao(
@@ -200,16 +237,33 @@ async function deployDao(
   
   const dao = await cloneDaoDeployer(deployer);
 
-  await addDefaultAdapters(
+  let {daoFactory} = await addDefaultAdapters(
     dao,
     unitPrice,
     nbShares,
     votingPeriod,
     gracePeriod,
     tokenAddr,
-    maxChunks
+    maxChunks,
+    deployer
   );
-  await dao.finalizeDao();
+
+  const votingAddress = await dao.getAdapterAddress(sha3("voting"));
+  const offchainVoting = await deployer.deploy(OffchainVotingContract, votingAddress, 1);
+  await daoFactory.updateAdapter(
+    dao.address,
+    entry("voting", offchainVoting, {
+      ADD_TO_BALANCE: true,
+      SUB_FROM_BALANCE: true,
+      INTERNAL_TRANSFER: true,
+    }));
+
+  await offchainVoting.configureDao(
+    dao.address,
+    votingPeriod,
+    gracePeriod,
+    10);
+  
   return dao;
 }
 

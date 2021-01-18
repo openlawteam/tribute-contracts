@@ -42,7 +42,7 @@ const {
   FinancingContract,
 } = require("../../utils/DaoFactory.js");
 const { checkLastEvent } = require("../../utils/TestUtils.js");
-
+let proposalCounter = 0;
 contract("LAOLAND - Ragequit Adapter", async (accounts) => {
   const submitNewMemberProposal = async (
     onboarding,
@@ -51,9 +51,10 @@ contract("LAOLAND - Ragequit Adapter", async (accounts) => {
     sharePrice
   ) => {
     const myAccount = accounts[1];
-
+    const proposalId = "0x" + proposalCounter++;
     await onboarding.onboard(
       dao.address,
+      proposalId,
       newMember,
       SHARES,
       sharePrice.mul(toBN(100)),
@@ -63,9 +64,6 @@ contract("LAOLAND - Ragequit Adapter", async (accounts) => {
         gasPrice: toBN("0"),
       }
     );
-    //Get the new proposal id
-    let pastEvents = await dao.getPastEvents();
-    let { proposalId } = pastEvents[0].returnValues;
     return proposalId;
   };
 
@@ -279,20 +277,17 @@ contract("LAOLAND - Ragequit Adapter", async (accounts) => {
     //Check New Member Shares
     let shares = await dao.balanceOf(newMember, SHARES);
     assert.equal(shares.toString(), "10000000000000000");
-
+    proposalId = "0x1";
     //Create Financing Request
     let requestedAmount = toBN(50000);
     await financing.createFinancingRequest(
       dao.address,
+      proposalId,
       applicant,
       ETH_TOKEN,
       requestedAmount,
       fromUtf8("")
     );
-
-    //Get the new proposalId from event log
-    proposalId = 1;
-    await checkLastEvent(dao, { proposalId });
 
     //Old Member sponsors the Financing proposal
     await financing.sponsorProposal(dao.address, proposalId, [], {
@@ -353,20 +348,17 @@ contract("LAOLAND - Ragequit Adapter", async (accounts) => {
     //Check New Member Shares
     let shares = await dao.balanceOf(newMember, SHARES);
     assert.equal(shares.toString(), "10000000000000000");
-
+    proposalId = "0x1";
     //Create Financing Request
     let requestedAmount = toBN(50000);
     await financing.createFinancingRequest(
       dao.address,
+      proposalId,
       applicant,
       ETH_TOKEN,
       requestedAmount,
       fromUtf8("")
     );
-
-    //Get the new proposalId from event log
-    proposalId = 1;
-    checkLastEvent(dao, { proposalId });
 
     //Old Member sponsors the Financing proposal
     await financing.sponsorProposal(dao.address, proposalId, [], {
@@ -437,15 +429,20 @@ contract("LAOLAND - Ragequit Adapter", async (accounts) => {
       from: advisorAccount,
       gasPrice: toBN(0),
     });
-
+    let proposalId = "0x0";
     // Send a request to join the DAO as an Advisor (non-voting power),
     // the tx passes the OLT ERC20 token, the amount and the nonVotingOnboarding adapter that handles the proposal
-    await onboarding.onboard(dao.address, advisorAccount, LOOT, tokenAmount, {
-      from: advisorAccount,
-      gasPrice: toBN("0"),
-    });
-
-    let proposalId = 0;
+    await onboarding.onboard(
+      dao.address,
+      proposalId,
+      advisorAccount,
+      LOOT,
+      tokenAmount,
+      {
+        from: advisorAccount,
+        gasPrice: toBN("0"),
+      }
+    );
 
     // Sponsor the new proposal to allow the Advisor to join the DAO
     await onboarding.sponsorProposal(dao.address, proposalId, [], {
@@ -505,16 +502,21 @@ contract("LAOLAND - Ragequit Adapter", async (accounts) => {
 
     // Total of OLT to be sent to the DAO in order to get the Loot shares
     let tokenAmount = 10;
-
+    let proposalId = "0x0";
     // Send a request to join the DAO as an Advisor (non-voting power),
     // the tx passes the OLT ERC20 token, the amount and the nonVotingOnboarding adapter that handles the proposal
-    await onboarding.onboard(dao.address, memberAccount, SHARES, tokenAmount, {
-      from: myAccount,
-      value: tokenAmount,
-      gasPrice: toBN("0"),
-    });
-
-    let proposalId = 0;
+    await onboarding.onboard(
+      dao.address,
+      proposalId,
+      memberAccount,
+      SHARES,
+      tokenAmount,
+      {
+        from: myAccount,
+        value: tokenAmount,
+        gasPrice: toBN("0"),
+      }
+    );
 
     // Sponsor the new proposal to allow the Advisor to join the DAO
     await onboarding.sponsorProposal(dao.address, proposalId, [], {
@@ -549,13 +551,20 @@ contract("LAOLAND - Ragequit Adapter", async (accounts) => {
       }
     ); // we are not burning all the shares so we are still members once it is done
 
-    await onboarding.onboard(dao.address, otherAccount, SHARES, tokenAmount, {
-      from: myAccount,
-      value: tokenAmount,
-      gasPrice: toBN("0"),
-    });
+    proposalId = "0x1";
 
-    proposalId = 1;
+    await onboarding.onboard(
+      dao.address,
+      proposalId,
+      otherAccount,
+      SHARES,
+      tokenAmount,
+      {
+        from: myAccount,
+        value: tokenAmount,
+        gasPrice: toBN("0"),
+      }
+    );
 
     // Sponsor the new proposal to allow the Advisor to join the DAO
     try {

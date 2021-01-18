@@ -7,7 +7,6 @@ import "../core/DaoRegistry.sol";
 import "../guards/MemberGuard.sol";
 import "./interfaces/IConfiguration.sol";
 import "../adapters/interfaces/IVoting.sol";
-import "../utils/SafeCast.sol";
 
 /**
 MIT License
@@ -34,8 +33,6 @@ SOFTWARE.
  */
 
 contract WithdrawContract is DaoConstants, MemberGuard {
-    using SafeCast for uint256;
-
     enum ConfigurationStatus {NOT_CREATED, IN_PROGRESS, DONE}
 
     /*

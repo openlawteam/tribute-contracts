@@ -31,18 +31,19 @@ SOFTWARE.
 interface IManaging {
     function createModuleChangeRequest(
         DaoRegistry dao,
+        bytes32 proposalId,
         bytes32 moduleId,
         address moduleAddress,
         bytes32[] calldata keys,
         uint256[] calldata values,
         uint256 flags
-    ) external returns (uint64);
+    ) external;
 
     function sponsorProposal(
         DaoRegistry dao,
-        uint256 proposalId,
+        bytes32 proposalId,
         bytes calldata data
     ) external;
 
-    function processProposal(DaoRegistry dao, uint256 proposalId) external;
+    function processProposal(DaoRegistry dao, bytes32 proposalId) external;
 }
