@@ -194,7 +194,10 @@ contract OnboardingContract is
         address tokenToMint,
         uint256 tokenAmount
     ) public payable override {
-        require(dao.isNotReservedAddress(applicant), "applicant is reserved address");
+        require(
+            dao.isNotReservedAddress(applicant),
+            "applicant is reserved address"
+        );
         address tokenAddr =
             address(
                 dao.getAddressConfiguration(configKey(tokenToMint, TokenAddr))
