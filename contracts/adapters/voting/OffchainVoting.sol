@@ -504,14 +504,13 @@ contract OffchainVotingContract is
 
         bytes32 proposalHash = hashMessage(dao, msg.sender, proposal);
         address addr = recover(proposalHash, proposal.sig);
-
         require(dao.isActiveMember(addr), "noActiveMember");
         require(
             blockNumber < block.number,
             "snapshot block number should not be in the future"
         );
-        require(blockNumber > 0, "block number cannot be 0");
-
+        require(blockNumber > 0, "block number cannot be 0");        
+        
         votes[address(dao)][proposalId].startingTime = block.timestamp;
         votes[address(dao)][proposalId].snapshot = blockNumber;
         votes[address(dao)][proposalId].proposalHash = proposalHash;
@@ -750,7 +749,6 @@ contract OffchainVotingContract is
                 sig
             );
     }
-
     function _hasVotedYes(
         DaoRegistry dao,
         address actionId,
