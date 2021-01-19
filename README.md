@@ -70,21 +70,24 @@ Flags are bool values to determine the state of a member, proposal, or an adapte
   `JAILED` - true if a member has been jailed by the DAO. A member will then not be able to particpate in DAO. \
   `ADD_ADAPTER` - true if an adapter has been added to the DAO.  \
   `REMOVE_ADAPTER` -  true if an adapter has been removed from the DAO. \
-  `JAIL_MEMBER` - What is this?  
-  `UNJAIL_MEMBER` - true if a member has been released from jail, then Member will be able to participate in DAO.  
-  `EXECUTE`  -  true if a DAO adapter hasAccess to an arbitrary function call, see `execute` in DaoRegistry.sol.  
-  `SUBMIT_PROPOSAL` -  true if a proposal has been been submitted.   
-  `SPONSOR_PROPOSAL` - what is this?  
-  `PROCESS_PROPOSAL` -  true if a proposal has been processed.   
-   `UPDATE_DELEGATE_KEY` - n/a. 
-  `REGISTER_NEW_TOKEN` - n/a.  
-  `REGISTER_NEW_INTERNAL_TOKEN` - n/a. 
-  `ADD_TO_BALANCE` - n/a.    
-  `SUB_FROM_BALANCE` - n/a.  
-  `INTERNAL_TRANSFER` - n/a.  
-  `SET_CONFIGURATION` - n/a.  
-  `WITHDRAW` - n/a.  
+  `JAIL_MEMBER` - true, if a DAO adapter is registered to `DaoRegistry.sol` and can call `jailMember` \
+  `UNJAIL_MEMBER` - true, if a DAO adapter is registered to `DaoRegistry.sol` and can call `unjailMember`\
+  `EXECUTE`  -  true if a DAO adapter hasAccess to an arbitrary function call, see `execute` in `DaoRegistry.sol`.  \
+  `SUBMIT_PROPOSAL` -  true if a proposal has been been submitted.\   
+  `SPONSOR_PROPOSAL` - true, if a DAO adapter is registered to the DAO and can call `sponsorProposal` function.\ 
+  `PROCESS_PROPOSAL` -  true if a proposal has been processed.\
+   `UPDATE_DELEGATE_KEY` - true, if a member has delegated their voting rights to another ETH address.  \
+  `REGISTER_NEW_TOKEN` - true, if a DAO adapter is registered to `DaoRegistry.sol` and can call `registerPotentialNewToken`.  \
+  `REGISTER_NEW_INTERNAL_TOKEN` - true, if a DAO adapter is registered `DaoRegistry.sol` and can call `registerPotentialNewInternalToken`. \
+  `ADD_TO_BALANCE` -  true, if a DAO adapter is registered to `DaoRegistry.sol`and can call `addToBalance`. \
+  `SUB_FROM_BALANCE` - true, if a DAO adapter is registered to `DaoRegistry.sol` and can call `subtractFromBalance`. \
+  `INTERNAL_TRANSFER` - true, if a DAO adapter is registered to `DaoRegistry.sol` and can call `internalTransfer`. \ 
+  `SET_CONFIGURATION` - true, if a key/value has been setup to `DaoRegistry.sol`. \
+  `WITHDRAW` - true, if a DAO adapter is registered to `DaoRegistry.sol` and can call `withdraw`.\
 
+#### FairShareHelper.sol
+  a library with one function `calc(balance, shares, _totalShares)` to calculate the fair share amount of tokens based the total shares and current balance.\
+  
 ### Guards 
 
 ### Adapters 
