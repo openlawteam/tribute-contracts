@@ -43,7 +43,7 @@ contract RagequitContract is IRagequit, DaoConstants, MemberGuard {
         uint256 currentIndex;
     }
 
-    mapping(address => Ragequit) public ragequits;
+    mapping(address => mapping(address => Ragequit)) public ragequits;
 
     /*
      * default fallback function to prevent from sending ether to the contract
@@ -60,7 +60,8 @@ contract RagequitContract is IRagequit, DaoConstants, MemberGuard {
         address memberAddr = msg.sender;
 
         require(
-            ragequits[memberAddr].status != RagequitStatus.IN_PROGRESS,
+            ragequits[address(dao)][memberAddr].status !=
+                RagequitStatus.IN_PROGRESS,
             "rage quit already in progress"
         );
         //Burn if member has enough shares and loot
@@ -84,7 +85,7 @@ contract RagequitContract is IRagequit, DaoConstants, MemberGuard {
     ) internal {
         // burn shares and loot
 
-        Ragequit storage ragequit = ragequits[memberAddr];
+        Ragequit storage ragequit = ragequits[address(dao)][memberAddr];
 
         ragequit.status = RagequitStatus.IN_PROGRESS;
         ragequit.blockNumber = block.number;
@@ -109,7 +110,7 @@ contract RagequitContract is IRagequit, DaoConstants, MemberGuard {
         uint256 toIndex
     ) external override {
         // burn shares and loot
-        Ragequit storage ragequit = ragequits[memberAddr];
+        Ragequit storage ragequit = ragequits[address(dao)][memberAddr];
         require(
             ragequit.status == RagequitStatus.IN_PROGRESS,
             "ragequit not in progress"
