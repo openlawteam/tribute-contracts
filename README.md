@@ -60,6 +60,41 @@ To fix the Solidity code with the linter hints, simply run:
 
 ### Core 
 
+#### DaoRegistry.sol 
+
+The DaoRegisrty.sol contract tracks the state of the DAO for 1) Adapter access, 2) State of Proposals, 3) Membership status, 4) Bank balances for the DAO and members. 
+For an Adapater to be used it must be registered to DaoRegistry.sol. 
+
+`enum DaoState {CREATION, READY}` CREATION  = the DAO has been deployed via `initializeDao`, but is not ready to be used. READY = the function `finalizeDao` has been called by the deployer is now ready to be used.  
+
+`struct Proposal` track the state of the proposal: exist, sponsored, processed, canceled. 
+
+`struct Member` track state of a member: exists, jailed. 
+
+`struct Checkpoint` Laoland makes use of the off-chain voting mechanism Snapshot. The `Checkpoint` struct assists with verifying the optimistic voting and proposal mechanisms at various blocktimes. See, https://github.com/snapshot-labs. 
+
+`struct Bank {
+      address[] tokens; 
+      address[] internalTokens;
+      // tokenAddress => availability
+      mapping(address => bool) availableTokens;
+      mapping(address => bool) availableInternalTokens;
+      // tokenAddress => memberAddress => checkpointNum => Checkpoint
+      mapping(address => mapping(address => mapping(uint32 => Checkpoint))) checkpoints;
+      // tokenAddress => memberAddress => numCheckpoints
+      mapping(address => mapping(address => uint32)) numCheckpoints;
+  }` 
+
+  Inside the `Bank` struct: 
+
+  - `tokens` tokens sent to the DAO.
+  - `internalTokens` are tokens managed by the DAO, similiar to shares in a company, or Shares from Moloch v.2 
+ 
+   -  `availableTokens` and `availableInteralTokens`, are tokens that have been whitelisted for use with the DAO.  A token goes from `tokens` or `internalTokens` to `avaialbleTokens` and `availableInternalTokens` when the function `registerPotentialNewToken` or `registerPotentialNewInternalToken` is called.   
+  - `checkpoints` and `numCheckpoints`  for each token in the Bank, we create checkpoints so we can figure out a balance at a certain block number. The balance is managed for the member address (not the delegate key).  The same technnique is to determine whiuch key controls a member at a certain block number (delegate key -> member address snapshot)
+
+`struct AdapterDetails` When an Adapter is added to `DaoRegistry` via the function `addAdapter`, a bytes32 `id` and a uint256 `acl` are parameters assigned to the Adapter for use in identifying the Adapter. 
+
 ### Helpers 
 #### FlagHelper.sol
 Flags are bool values to determine the state of a member, proposal, or an adapter. 
@@ -89,6 +124,14 @@ Flags are bool values to determine the state of a member, proposal, or an adapte
   a library with one function `calc(balance, shares, _totalShares)` to calculate the fair share amount of tokens based the total shares and current balance.\
   
 ### Guards 
+
+#### AdapterGuard.sol
+ `onlyAdapter(DaoRegistry dao)` a modifier to ensure that only adapters registered to the DAO can execute the function call.   
+
+ `hasAccess(DaoRegistry dao, FlagHelper.Flag flag)` a modifier to monitor the state of whether an adapter in the DAO can access one of the core functions in `DaoRegistry.sol`.  
+
+ #### MemberGuard.sol
+ `onlyMember(DaoRegistry dao)` Only members of the DAO are allowed to execute the function call.  
 
 ### Adapters 
 
