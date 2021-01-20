@@ -36,7 +36,8 @@ SOFTWARE.
 contract CouponOnboardingContract is
     DaoConstants,
     MemberGuard,
-    AdapterGuard
+    AdapterGuard,
+    Signatures
 {
 
     struct Coupon {
@@ -86,7 +87,7 @@ contract CouponOnboardingContract is
         );
 
     return
-        Signatures.hashMessage(dao, chainId, actionId, message);
+        hashMessage(dao, chainId, actionId, message);
     }
 
     function redeemCoupon(DaoRegistry dao, address authorizedMember, uint256 amount, uint256 nonce, bytes memory signature) external {
@@ -100,7 +101,7 @@ contract CouponOnboardingContract is
 
         Coupon memory coupon = Coupon(authorizedMember, amount, nonce);
         bytes32 hash = hashCouponMessage(dao, msg.sender, coupon);
-        address recoveredKey = Signatures.recover(hash, signature);
+        address recoveredKey = recover(hash, signature);
 
         require (
             recoveredKey == signerPublicKey,

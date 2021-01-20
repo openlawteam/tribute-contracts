@@ -33,7 +33,6 @@ const {
   DaoRegistry,
   DaoFactory,
   FlagHelperLib,
-  SignaturesLib,
   sharePrice,
   remaining,
   numberOfShares,
@@ -84,9 +83,6 @@ async function createOffchainVotingDao(
   let lib = await FlagHelperLib.new();
   await DaoRegistry.link("FlagHelper", lib.address);
   
-  let signLib = await SignaturesLib.new();
-  await OffchainVotingContract.link("Signatures", signLib.address);
-
   let dao = await DaoRegistry.new({ from: senderAccount, gasPrice: toBN("0") });
   await dao.initialize(members[0].address, {
     from: senderAccount,
@@ -120,13 +116,13 @@ async function createOffchainVotingDao(
   );
   await dao.finalizeDao({ from: senderAccount, gasPrice: toBN("0") });
 
-  return { dao, signLib, voting: offchainVoting };
+  return { dao, voting: offchainVoting };
 }
 
 contract("LAOLAND - Offchain Voting Module", async (accounts) => {
   it("should type & hash be consistent for proposals between javascript and solidity", async () => {
     const myAccount = accounts[1];
-    let { dao, signLib, voting } = await createOffchainVotingDao(myAccount);
+    let { dao, voting } = await createOffchainVotingDao(myAccount);
 
     let blockNumber = await web3.eth.getBlockNumber();
     const proposalPayload = {
@@ -184,7 +180,7 @@ contract("LAOLAND - Offchain Voting Module", async (accounts) => {
     assert.equal(hashStruct, solidityHash);
 
     //Checking domain
-    const domainDef = await signLib.EIP712_DOMAIN();
+    const domainDef = await voting.EIP712_DOMAIN();
     const jsDomainDef = TypedDataUtils.encodeType("EIP712Domain", types);
     assert.equal(jsDomainDef, domainDef);
 
@@ -193,7 +189,7 @@ contract("LAOLAND - Offchain Voting Module", async (accounts) => {
     console.log("my account: ", myAccount);
 
     //Checking domain separator
-    const domainHash = await signLib.domainSeparator(dao.address, chainId, myAccount);
+    const domainHash = await voting.domainSeparator(dao.address, chainId, myAccount);
     const jsDomainHash =
       "0x" +
       TypedDataUtils.hashStruct("EIP712Domain", domain, types, true).toString(
@@ -215,7 +211,7 @@ contract("LAOLAND - Offchain Voting Module", async (accounts) => {
 
   it("should type & hash be consistent for votes between javascript and solidity", async () => {
     const myAccount = accounts[1];
-    let { dao, signLib, voting } = await createOffchainVotingDao(myAccount);
+    let { dao, voting } = await createOffchainVotingDao(myAccount);
     const chainId = 1;
 
     const proposalHash = sha3("test");
@@ -242,7 +238,7 @@ contract("LAOLAND - Offchain Voting Module", async (accounts) => {
 
   it("should be possible to propose a new voting by signing the proposal hash", async () => {
     const myAccount = accounts[1];
-    let { dao, signLib, voting } = await createOffchainVotingDao(myAccount);
+    let { dao, voting } = await createOffchainVotingDao(myAccount);
 
     const onboardingAddress = await dao.getAdapterAddress(sha3("onboarding"));
     const onboarding = await OnboardingContract.at(onboardingAddress);

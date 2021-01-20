@@ -29,7 +29,7 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
  */
 
-library Signatures {
+abstract contract Signatures {
 
     string public constant EIP712_DOMAIN =
       "EIP712Domain(string name,string version,uint256 chainId,address verifyingContract,address actionId)";

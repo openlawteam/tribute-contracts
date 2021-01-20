@@ -39,7 +39,8 @@ contract OffchainVotingContract is
     IVoting,
     DaoConstants,
     MemberGuard,
-    AdapterGuard
+    AdapterGuard,
+    Signatures
 {
 
     string public constant PROPOSAL_MESSAGE_TYPE =
@@ -146,7 +147,7 @@ contract OffchainVotingContract is
         ProposalMessage memory message
     ) public view returns (bytes32) {
         return
-            Signatures.hashMessage(dao, chainId, actionId, hashProposalMessage(message));
+            hashMessage(dao, chainId, actionId, hashProposalMessage(message));
     }
 
     function hashResultRoot(
@@ -158,7 +159,7 @@ contract OffchainVotingContract is
             keccak256(
                 abi.encodePacked(
                     "\x19\x01",
-                    Signatures.domainSeparator(dao, chainId, actionId),
+                    domainSeparator(dao, chainId, actionId),
                     keccak256(abi.encode(VOTE_RESULT_ROOT_TYPEHASH, resultRoot))
                 )
             );
@@ -208,7 +209,7 @@ contract OffchainVotingContract is
             keccak256(
                 abi.encodePacked(
                     "\x19\x01",
-                    Signatures.domainSeparator(dao, chainId, actionId),
+                    domainSeparator(dao, chainId, actionId),
                     hashVoteInternal(message)
                 )
             );
@@ -273,7 +274,7 @@ contract OffchainVotingContract is
             keccak256(
                 abi.encodePacked(
                     "\x19\x01",
-                    Signatures.domainSeparator(dao, chainId, actionId),
+                    domainSeparator(dao, chainId, actionId),
                     hashVotingResultNode(node)
                 )
             );
@@ -375,7 +376,7 @@ contract OffchainVotingContract is
         bytes32 hashCurrent = nodeHash(dao, adapterAddress, result);
         uint256 blockNumber = vote.snapshot;
         address reporter =
-            Signatures.recover(
+            recover(
                 hashResultRoot(dao, adapterAddress, resultRoot),
                 result.rootSig
             );
@@ -463,7 +464,7 @@ contract OffchainVotingContract is
         address
     ) external view override returns (address) {
         ProposalMessage memory proposal = abi.decode(data, (ProposalMessage));
-        return Signatures.recover(hashMessage(dao, actionId, proposal), proposal.sig);
+        return recover(hashMessage(dao, actionId, proposal), proposal.sig);
     }
 
     function startNewVotingForProposal(
@@ -478,7 +479,7 @@ contract OffchainVotingContract is
         require(success, "snapshot conversion error");
 
         bytes32 proposalHash = hashMessage(dao, msg.sender, proposal);
-        address addr = Signatures.recover(proposalHash, proposal.sig);
+        address addr = recover(proposalHash, proposal.sig);
         require(dao.isActiveMember(addr), "noActiveMember");
         require(
             blockNumber < block.number,
@@ -714,7 +715,7 @@ contract OffchainVotingContract is
         bytes32 proposalHash =
             keccak256(abi.encode(snapshotRoot, dao, proposalId));
         return
-            Signatures.recover(
+            recover(
                 keccak256(
                     abi.encodePacked(
                         "\x19Ethereum Signed Message:\n32",
@@ -746,9 +747,9 @@ contract OffchainVotingContract is
                 VoteMessage(timestamp, VotePayload(2, proposalHash))
             );
 
-        if (Signatures.recover(voteHashYes, sig) == voter) {
+        if (recover(voteHashYes, sig) == voter) {
             return true;
-        } else if (Signatures.recover(voteHashNo, sig) == voter) {
+        } else if (recover(voteHashNo, sig) == voter) {
             return false;
         } else {
             revert("invalid signature or signed for neither yes nor no");
@@ -777,9 +778,9 @@ contract OffchainVotingContract is
                 VoteMessage(timestamp, VotePayload(2, proposalHash))
             );
 
-        if (Signatures.recover(voteHashYes, sig) == voter) {
+        if (recover(voteHashYes, sig) == voter) {
             return 1;
-        } else if (Signatures.recover(voteHashNo, sig) == voter) {
+        } else if (recover(voteHashNo, sig) == voter) {
             return 2;
         } else {
             return 0;
