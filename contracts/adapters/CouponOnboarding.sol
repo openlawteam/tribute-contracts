@@ -50,10 +50,26 @@ contract CouponOnboardingContract is
     bytes32 public constant COUPON_MESSAGE_TYPEHASH =
       keccak256(abi.encodePacked(COUPON_MESSAGE_TYPE));
 
-    address tokenToMint;
+    bytes32 constant SignerPublicKey = keccak256("coupon-onboarding.signerPublicKey");
+    bytes32 constant TokenAddrToMint = keccak256("coupon-onboarding.tokenAddrToMint");
+
+
     uint256 chainId;
-    address publicKey;
 	mapping (address => mapping(uint256 => uint256)) flags;
+
+    constructor(uint256 _chainId) {
+        chainId = _chainId;
+    }
+
+    function configureDao(
+        DaoRegistry dao,
+        address signerPublicKey,
+        address tokenAddrToMint
+    ) external onlyAdapter(dao) {
+        dao.setAddressConfiguration(SignerPublicKey, signerPublicKey);
+        dao.setAddressConfiguration(TokenAddrToMint, tokenAddrToMint);
+        dao.registerPotentialNewInternalToken(tokenAddrToMint);
+    }
 
     function hashCouponMessage(DaoRegistry dao, address actionId, Coupon memory coupon)
     public
@@ -80,18 +96,21 @@ contract CouponOnboardingContract is
             "coupon has already been redeemed"
         );
 
+        address signerPublicKey = address(dao.getAddressConfiguration(SignerPublicKey));
+
         Coupon memory coupon = Coupon(authorizedMember, amount, nonce);
         bytes32 hash = hashCouponMessage(dao, msg.sender, coupon);
         address recoveredKey = Signatures.recover(hash, signature);
 
         require (
-            recoveredKey == publicKey,
+            recoveredKey == signerPublicKey,
             "coupon signature is invalid"
         );
 
         flags[address(dao)][nonce / 256] = _setFlag(currentFlag, nonce % 256, true);
 
-        dao.addToBalance(authorizedMember, tokenToMint, amount);
+        address tokenAddrToMint = address(dao.getAddressConfiguration(TokenAddrToMint));
+        dao.addToBalance(authorizedMember, tokenAddrToMint, amount);
         // TODO: do we need shares accounting in onboarding adapter?
     }
 
