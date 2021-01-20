@@ -230,8 +230,10 @@ async function deployDao(
   const maxChunks = options.maximumChunks || maximumChunks;
 
   await deployer.deploy(FlagHelperLib);
+  await deployer.deploy(Signatures);
   
   await deployer.link(FlagHelperLib, DaoRegistry);
+  await deployer.link(Signatures, OffchainVotingContract);
 
   await deployer.deploy(DaoRegistry);
   
@@ -277,6 +279,7 @@ async function createDao(
 ) {
   let lib = await FlagHelperLib.new();
   await DaoRegistry.link("FlagHelper", lib.address);
+  await DaoRegistry.link("Signatures", lib.address);
 
   const identityDao = await DaoRegistry.new({
     from: senderAccount,

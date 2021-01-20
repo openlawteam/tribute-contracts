@@ -2,6 +2,7 @@ const Migrations = artifacts.require("Migrations");
 const DaoFactory = artifacts.require("./core/DaoFactory");
 const DaoRegistry = artifacts.require("./core/DaoRegistry");
 const FlagHelperLib = artifacts.require("./helpers/FlagHelper");
+const SignaturesLib = artifacts.require("./helpers/Signatures");
 const VotingContract = artifacts.require("./adapters/VotingContract");
 const ConfigurationContract = artifacts.require(
   "./adapter/ConfigurationContract"
@@ -10,6 +11,7 @@ const ManagingContract = artifacts.require("./adapter/ManagingContract");
 const FinancingContract = artifacts.require("./adapter/FinancingContract");
 const RagequitContract = artifacts.require("./adapters/RagequitContract");
 const GuildKickContract = artifacts.require("./adapters/GuildKickContract");
+const OffchainVotingContract = artifacts.require("./adapters/voting/OffchainVotingContract");
 const OnboardingContract = artifacts.require("./adapters/OnboardingContract");
 
 const fs = require("fs");
@@ -41,7 +43,12 @@ module.exports = async (deployer, network, accounts) => {
     .deploy(FlagHelperLib, { from: owner })
     .then((flagHelperLib) => (contracts.flagHelperLib = flagHelperLib.address));
 
+  await deployer
+    .deploy(Signatures, { from: owner })
+    .then((signaturesLib) => (contracts.signaturesLib = signaturesLib.address));
+
   deployer.link(FlagHelperLib, DaoRegistry);
+  deployer.link(Signatures, OffchainVotingContract);
 
   await deployer.deploy(DaoRegistry, { from: owner }).then((daoRegistry) => {
     contracts.identityDao = daoRegistry.address;
