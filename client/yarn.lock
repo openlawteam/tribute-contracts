@@ -2122,10 +2122,10 @@
   dependencies:
     mkdirp "^1.0.4"
 
-"@openlaw/snapshot-js-erc712@^1.0.3":
-  version "1.0.3"
-  resolved "https://registry.yarnpkg.com/@openlaw/snapshot-js-erc712/-/snapshot-js-erc712-1.0.3.tgz#e0fb2435d23ba1588dcf8e4326335bc0788c99a0"
-  integrity sha512-QgMxsIAh02a2m6kU/xMmxb+Y7F61A0mUd8ZWP7fnsaqU+8ppZbFX3+MYkhVeFqhfcP0+5P0m12Sm0hQ0qyzxZA==
+"@openlaw/snapshot-js-erc712@^1.0.8":
+  version "1.0.8"
+  resolved "https://registry.yarnpkg.com/@openlaw/snapshot-js-erc712/-/snapshot-js-erc712-1.0.8.tgz#ef2cf96e21bfca84500c8adcdfa357a851581f3d"
+  integrity sha512-aBODxcmEn5jUKKPNhRO16Z/6N2vHvrS4jc9ELd1zAPw7Bp4bIEd9Firs1p1tE5m3fuoGD+PWesbLJLNRGC528g==
   dependencies:
     axios "^0.21.1"
     eth-sig-util "^3.0.0"
