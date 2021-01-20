@@ -87,7 +87,7 @@ contract RagequitContract is IRagequit, DaoConstants, MemberGuard {
         // burn shares and loot
 
         Ragequit storage ragequit = ragequits[address(dao)][memberAddr];
-
+        BankExtension bank = BankExtension(dao.getExtensionAddress(BANK));
         ragequit.status = RagequitStatus.IN_PROGRESS;
         ragequit.blockNumber = block.number;
         //TODO: make this the sum of all the internal tokens
