@@ -50,6 +50,7 @@ contract CouponOnboardingContract is
     bytes32 public constant COUPON_MESSAGE_TYPEHASH =
       keccak256(abi.encodePacked(COUPON_MESSAGE_TYPE));
 
+    address tokenToMint;
     uint256 chainId;
     address publicKey;
 	mapping (address => mapping(uint256 => uint256)) flags;
@@ -90,8 +91,8 @@ contract CouponOnboardingContract is
 
         flags[address(dao)][nonce / 256] = _setFlag(currentFlag, nonce % 256, true);
 
-        dao.addToBalance(authorizedMember, tokenToMint, tokenAmount);
-        // shares accounting in onboarding adapter?
+        dao.addToBalance(authorizedMember, tokenToMint, amount);
+        // TODO: do we need shares accounting in onboarding adapter?
     }
 
     function _getFlag(uint256 _flags, uint256 flag) internal pure returns (bool) {
