@@ -188,8 +188,12 @@ contract("LAOLAND - Offchain Voting Module", async (accounts) => {
     const jsDomainDef = TypedDataUtils.encodeType("EIP712Domain", types);
     assert.equal(jsDomainDef, domainDef);
 
+    console.log("dao address: ", dao.address);
+    console.log("chain id: ", chainId);
+    console.log("my account: ", myAccount);
+
     //Checking domain separator
-    const domainHash = await signLib.domainSeparator(dao.address, voting.chainId, myAccount);
+    const domainHash = await signLib.domainSeparator(dao.address, chainId, myAccount);
     const jsDomainHash =
       "0x" +
       TypedDataUtils.hashStruct("EIP712Domain", domain, types, true).toString(

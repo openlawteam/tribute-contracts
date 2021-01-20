@@ -111,7 +111,6 @@ contract CouponOnboardingContract is
 
         address tokenAddrToMint = address(dao.getAddressConfiguration(TokenAddrToMint));
         dao.addToBalance(authorizedMember, tokenAddrToMint, amount);
-        // TODO: do we need shares accounting in onboarding adapter?
     }
 
     function _getFlag(uint256 _flags, uint256 flag) internal pure returns (bool) {
