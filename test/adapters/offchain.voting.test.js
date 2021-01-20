@@ -33,6 +33,7 @@ const {
   DaoRegistry,
   DaoFactory,
   FlagHelperLib,
+  SignaturesLib,
   sharePrice,
   remaining,
   numberOfShares,
@@ -82,6 +83,10 @@ async function createOffchainVotingDao(
 ) {
   let lib = await FlagHelperLib.new();
   await DaoRegistry.link("FlagHelper", lib.address);
+  
+  let signLib = await SignaturesLib.new();
+  await OffchainVotingContract.link("Signatures", signLib.address);
+
   let dao = await DaoRegistry.new({ from: senderAccount, gasPrice: toBN("0") });
   await dao.initialize(members[0].address, {
     from: senderAccount,
@@ -94,6 +99,7 @@ async function createOffchainVotingDao(
 
   await addDefaultAdapters(dao, unitPrice, nbShares, votingPeriod, gracePeriod);
   const votingAddress = await dao.getAdapterAddress(sha3("voting"));
+
   const offchainVoting = await OffchainVotingContract.new(votingAddress, 1);
   await daoFactory.updateAdapter(
     dao.address,
