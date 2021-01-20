@@ -47,6 +47,7 @@ const maximumChunks = toBN("11");
 const OLTokenContract = artifacts.require("./test/OLT");
 
 const FlagHelperLib = artifacts.require("./helpers/FlagHelper");
+const SignaturesLib = artifacts.require("./helpers/Signatures");
 const DaoFactory = artifacts.require("./core/DaoFactory");
 const DaoRegistry = artifacts.require("./core/DaoRegistry");
 const VotingContract = artifacts.require("./adapters/VotingContract");
@@ -230,10 +231,10 @@ async function deployDao(
   const maxChunks = options.maximumChunks || maximumChunks;
 
   await deployer.deploy(FlagHelperLib);
-  await deployer.deploy(Signatures);
+  await deployer.deploy(SignaturesLib);
   
   await deployer.link(FlagHelperLib, DaoRegistry);
-  await deployer.link(Signatures, OffchainVotingContract);
+  await deployer.link(SignaturesLib, OffchainVotingContract);
 
   await deployer.deploy(DaoRegistry);
   
@@ -279,7 +280,6 @@ async function createDao(
 ) {
   let lib = await FlagHelperLib.new();
   await DaoRegistry.link("FlagHelper", lib.address);
-  await DaoRegistry.link("Signatures", lib.address);
 
   const identityDao = await DaoRegistry.new({
     from: senderAccount,
@@ -442,6 +442,7 @@ module.exports = {
   DaoFactory,
   DaoRegistry,
   FlagHelperLib,
+  SignaturesLib,
   VotingContract,
   ManagingContract,
   FinancingContract,
@@ -449,6 +450,5 @@ module.exports = {
   GuildKickContract,
   OnboardingContract,
   WithdrawContract,
-  ConfigurationContract,
-  OnboardingContract,
+  ConfigurationContract
 };
