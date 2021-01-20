@@ -36,6 +36,8 @@ abstract contract DaoConstants {
     bytes32 public constant MANAGING = keccak256("managing");
     bytes32 public constant RAGEQUIT = keccak256("ragequit");
     bytes32 public constant GUILDKICK = keccak256("guildkick");
+    bytes32 public constant BANK = keccak256("bank");
+    bytes32 public constant EXECUTION = keccak256("execution");
 
     /// @notice The reserved address for Guild bank account
     address public constant GUILD = address(0xdead);
@@ -45,4 +47,25 @@ abstract contract DaoConstants {
     address public constant LOOT = address(0xB105F00D);
     address public constant LOCKED_LOOT = address(0xBAAAAAAD);
     address public constant ETH_TOKEN = address(0x0);
+
+    //helper
+    function getFlag(uint256 flags, uint256 flag) public pure returns (bool) {
+        return (flags >> uint8(flag)) % 2 == 1;
+    }
+
+    function setFlag(
+        uint256 flags,
+        uint256 flag,
+        bool value
+    ) public pure returns (uint256) {
+        if (getFlag(flags, flag) != value) {
+            if (value) {
+                return flags + 2**flag;
+            } else {
+                return flags - 2**flag;
+            }
+        } else {
+            return flags;
+        }
+    }
 }

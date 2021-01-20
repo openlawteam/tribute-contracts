@@ -5,9 +5,9 @@ pragma solidity ^0.8.0;
 import "./interfaces/IFinancing.sol";
 import "../core/DaoConstants.sol";
 import "../core/DaoRegistry.sol";
+import "../extensions/Bank.sol";
 import "../adapters/interfaces/IVoting.sol";
 import "../guards/MemberGuard.sol";
-import "../helpers/FlagHelper.sol";
 
 /**
 MIT License
@@ -59,7 +59,8 @@ contract FinancingContract is IFinancing, DaoConstants, MemberGuard {
         bytes32 details
     ) external override {
         require(amount > 0, "invalid requested amount");
-        require(dao.isTokenAllowed(token), "token not allowed");
+        BankExtension bank = BankExtension(dao.getExtensionAddress(BANK));
+        require(bank.isTokenAllowed(token), "token not allowed");
         require(
             dao.isNotReservedAddress(applicant),
             "applicant using reserved address"
@@ -92,11 +93,14 @@ contract FinancingContract is IFinancing, DaoConstants, MemberGuard {
         ProposalDetails memory details = proposals[address(dao)][proposalId];
 
         require(
-            !dao.getProposalFlag(proposalId, FlagHelper.Flag.PROCESSED),
+            !dao.getProposalFlag(
+                proposalId,
+                DaoRegistry.ProposalFlag.PROCESSED
+            ),
             "proposal already processed"
         );
         require(
-            dao.getProposalFlag(proposalId, FlagHelper.Flag.SPONSORED),
+            dao.getProposalFlag(proposalId, DaoRegistry.ProposalFlag.SPONSORED),
             "proposal not sponsored yet"
         );
 
@@ -106,8 +110,10 @@ contract FinancingContract is IFinancing, DaoConstants, MemberGuard {
             "proposal needs to pass"
         );
 
-        dao.subtractFromBalance(GUILD, details.token, details.amount);
-        dao.addToBalance(details.applicant, details.token, details.amount);
+        BankExtension bank = BankExtension(dao.getExtensionAddress(BANK));
+
+        bank.subtractFromBalance(GUILD, details.token, details.amount);
+        bank.addToBalance(details.applicant, details.token, details.amount);
         dao.processProposal(proposalId);
     }
 }

@@ -8,6 +8,7 @@ import "../guards/MemberGuard.sol";
 import "./interfaces/IGuildKick.sol";
 import "../adapters/interfaces/IVoting.sol";
 import "../helpers/FairShareHelper.sol";
+import "../extensions/Bank.sol";
 
 /**
 MIT License
@@ -62,12 +63,13 @@ contract GuildKickContract is IGuildKick, DaoConstants, MemberGuard {
         bytes calldata data
     ) external override onlyMember(dao) {
         // A kick proposal is created and needs to be voted
+        BankExtension bank = BankExtension(dao.getExtensionAddress(BANK));
         dao.submitProposal(proposalId);
         kicks[proposalId] = GuildKick(
             memberToKick,
             GuildKickStatus.IN_PROGRESS,
-            dao.balanceOf(memberToKick, SHARES),
-            dao.balanceOf(TOTAL, SHARES),
+            bank.balanceOf(memberToKick, SHARES),
+            bank.balanceOf(TOTAL, SHARES),
             data,
             0,
             block.number
@@ -101,13 +103,15 @@ contract GuildKickContract is IGuildKick, DaoConstants, MemberGuard {
             "proposal did not pass yet"
         );
 
+        BankExtension bank = BankExtension(dao.getExtensionAddress(BANK));
+
         // Member needs to have enough voting shares to be kicked
-        uint256 sharesToLock = dao.balanceOf(memberToKick, SHARES);
+        uint256 sharesToLock = bank.balanceOf(memberToKick, SHARES);
         require(sharesToLock > 0, "insufficient shares");
 
         // send to jail and convert all voting shares into loot to remove the voting power
-        dao.subtractFromBalance(memberToKick, SHARES, sharesToLock);
-        dao.addToBalance(memberToKick, LOOT, sharesToLock);
+        bank.subtractFromBalance(memberToKick, SHARES, sharesToLock);
+        bank.addToBalance(memberToKick, LOOT, sharesToLock);
         dao.jailMember(memberToKick);
         kick.status = GuildKickStatus.DONE;
 
@@ -130,8 +134,9 @@ contract GuildKickContract is IGuildKick, DaoConstants, MemberGuard {
         uint256 currentIndex = kick.currentIndex;
         require(currentIndex <= toIndex, "toIndex too low");
 
+        BankExtension bank = BankExtension(dao.getExtensionAddress(BANK));
         // Set the max index supported
-        uint256 tokenLength = dao.nbTokens();
+        uint256 tokenLength = bank.nbTokens();
         uint256 maxIndex = toIndex;
         if (maxIndex > tokenLength) {
             maxIndex = tokenLength;
@@ -141,10 +146,10 @@ contract GuildKickContract is IGuildKick, DaoConstants, MemberGuard {
         address kickedMember = kick.memberToKick;
         uint256 initialTotalShares = kick.initialTotalShares;
         for (uint256 i = currentIndex; i < maxIndex; i++) {
-            address token = dao.getToken(i);
+            address token = bank.getToken(i);
             uint256 amountToRagequit =
                 FairShareHelper.calc(
-                    dao.balanceOf(GUILD, token),
+                    bank.balanceOf(GUILD, token),
                     kick.sharesToBurn,
                     initialTotalShares
                 );
@@ -153,7 +158,7 @@ contract GuildKickContract is IGuildKick, DaoConstants, MemberGuard {
                 // deliberately not using safemath here to keep overflows from preventing the function execution
                 // (which would break ragekicks) if a token overflows,
                 // it is because the supply was artificially inflated to oblivion, so we probably don"t care about it anyways
-                dao.internalTransfer(
+                bank.internalTransfer(
                     GUILD,
                     kickedMember,
                     token,
@@ -164,7 +169,7 @@ contract GuildKickContract is IGuildKick, DaoConstants, MemberGuard {
 
         kick.currentIndex = maxIndex;
         if (maxIndex == tokenLength) {
-            dao.subtractFromBalance(kickedMember, LOOT, kick.sharesToBurn); //should we subtract at each iteration or only here at end?
+            bank.subtractFromBalance(kickedMember, LOOT, kick.sharesToBurn); //should we subtract at each iteration or only here at end?
             dao.unjailMember(kickedMember);
         }
     }

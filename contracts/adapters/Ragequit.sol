@@ -4,6 +4,7 @@ pragma solidity ^0.8.0;
 
 import "../core/DaoConstants.sol";
 import "../core/DaoRegistry.sol";
+import "../extensions/Bank.sol";
 import "../guards/MemberGuard.sol";
 import "./interfaces/IRagequit.sol";
 import "../helpers/FairShareHelper.sol";
@@ -58,18 +59,18 @@ contract RagequitContract is IRagequit, DaoConstants, MemberGuard {
         uint256 lootToBurn
     ) external override onlyMember(dao) {
         address memberAddr = msg.sender;
-
+        BankExtension bank = BankExtension(dao.getExtensionAddress(BANK));
         require(
             ragequits[memberAddr].status != RagequitStatus.IN_PROGRESS,
             "rage quit already in progress"
         );
         //Burn if member has enough shares and loot
         require(
-            dao.balanceOf(memberAddr, SHARES) >= sharesToBurn,
+            bank.balanceOf(memberAddr, SHARES) >= sharesToBurn,
             "insufficient shares"
         );
         require(
-            dao.balanceOf(memberAddr, LOOT) >= lootToBurn,
+            bank.balanceOf(memberAddr, LOOT) >= lootToBurn,
             "insufficient loot"
         );
 
@@ -83,22 +84,22 @@ contract RagequitContract is IRagequit, DaoConstants, MemberGuard {
         uint256 lootToBurn
     ) internal {
         // burn shares and loot
-
+        BankExtension bank = BankExtension(dao.getExtensionAddress(BANK));
         Ragequit storage ragequit = ragequits[memberAddr];
 
         ragequit.status = RagequitStatus.IN_PROGRESS;
         ragequit.blockNumber = block.number;
         //TODO: make this the sum of all the internal tokens
         ragequit.initialTotalSharesAndLoot =
-            dao.balanceOf(TOTAL, SHARES) +
-            dao.balanceOf(TOTAL, LOOT) +
-            dao.balanceOf(TOTAL, LOCKED_LOOT);
+            bank.balanceOf(TOTAL, SHARES) +
+            bank.balanceOf(TOTAL, LOOT) +
+            bank.balanceOf(TOTAL, LOCKED_LOOT);
 
         ragequit.sharesAndLootBurnt = sharesToBurn + lootToBurn;
         ragequit.currentIndex = 0;
 
-        dao.subtractFromBalance(memberAddr, SHARES, sharesToBurn);
-        dao.subtractFromBalance(memberAddr, LOOT, lootToBurn);
+        bank.subtractFromBalance(memberAddr, SHARES, sharesToBurn);
+        bank.subtractFromBalance(memberAddr, LOOT, lootToBurn);
 
         dao.jailMember(memberAddr);
     }
@@ -118,19 +119,19 @@ contract RagequitContract is IRagequit, DaoConstants, MemberGuard {
         require(currentIndex <= toIndex, "toIndex too low");
         uint256 sharesAndLootToBurn = ragequit.sharesAndLootBurnt;
         uint256 initialTotalSharesAndLoot = ragequit.initialTotalSharesAndLoot;
-
+        BankExtension bank = BankExtension(dao.getExtensionAddress(BANK));
         //Update internal Guild and Member balances
-        uint256 tokenLength = dao.nbTokens();
+        uint256 tokenLength = bank.nbTokens();
         uint256 maxIndex = toIndex;
         if (maxIndex > tokenLength) {
             maxIndex = tokenLength;
         }
         uint256 blockNumber = ragequit.blockNumber;
         for (uint256 i = currentIndex; i < maxIndex; i++) {
-            address token = dao.getToken(i);
+            address token = bank.getToken(i);
             uint256 amountToRagequit =
                 FairShareHelper.calc(
-                    dao.getPriorAmount(GUILD, token, blockNumber),
+                    bank.getPriorAmount(GUILD, token, blockNumber),
                     sharesAndLootToBurn,
                     initialTotalSharesAndLoot
                 );
@@ -139,7 +140,7 @@ contract RagequitContract is IRagequit, DaoConstants, MemberGuard {
                 // deliberately not using safemath here to keep overflows from preventing the function execution
                 // (which would break ragekicks) if a token overflows,
                 // it is because the supply was artificially inflated to oblivion, so we probably don"t care about it anyways
-                dao.internalTransfer(
+                bank.internalTransfer(
                     GUILD,
                     memberAddr,
                     token,

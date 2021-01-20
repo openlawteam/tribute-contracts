@@ -32,7 +32,6 @@ const {
   OnboardingContract,
   DaoRegistry,
   DaoFactory,
-  FlagHelperLib,
   sharePrice,
   remaining,
   numberOfShares,
@@ -80,8 +79,6 @@ async function createOffchainVotingDao(
   votingPeriod = 10,
   gracePeriod = 1
 ) {
-  let lib = await FlagHelperLib.new();
-  await DaoRegistry.link("FlagHelper", lib.address);
   let dao = await DaoRegistry.new({ from: senderAccount, gasPrice: toBN("0") });
   await dao.initialize(members[0].address, {
     from: senderAccount,

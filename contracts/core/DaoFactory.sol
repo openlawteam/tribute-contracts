@@ -53,18 +53,10 @@ contract DaoFactory is CloneFactory, DaoConstants {
     }
 
     /**
-     * @notice Create, initialize and configure a new DaoRegistry
+     * @notice Create and initialize a new DaoRegistry
      * @param daoName The name of the dao which, after being hashed, is used to access the address
-     * @param keys DAO's configuration keys
-     * @param values DAO's configuration values
-     * @param finalizeDao If true, call DaoRegistry.finalizeDao()
      */
-    function createDao(
-        string calldata daoName,
-        bytes32[] calldata keys,
-        uint256[] calldata values,
-        bool finalizeDao
-    ) external {
+    function createDao(string calldata daoName) external {
         DaoRegistry dao = DaoRegistry(_createClone(identityAddress));
         address daoAddr = address(dao);
         dao.initialize(msg.sender);
@@ -72,8 +64,6 @@ contract DaoFactory is CloneFactory, DaoConstants {
         bytes32 hashedName = keccak256(abi.encode(daoName));
         addresses[hashedName] = daoAddr;
         daos[daoAddr] = hashedName;
-
-        _configure(dao, keys, values, finalizeDao);
 
         emit DAOCreated(daoAddr, daoName);
     }

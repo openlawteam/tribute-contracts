@@ -26,7 +26,6 @@ SOFTWARE.
  */
 const DaoFactory = artifacts.require("./core/DaoFactory");
 const DaoRegistry = artifacts.require("./core/DaoRegistry");
-const FlagHelperLib = artifacts.require("./helpers/FlagHelper");
 
 const { sha3, toBN, addDefaultAdapters } = require("../../utils/DaoFactory.js");
 
@@ -35,9 +34,6 @@ contract("DaoFactory", async (accounts) => {
   const anotherOwner = accounts[2];
 
   const createIdentityDAO = async (owner) => {
-    let lib = await FlagHelperLib.new();
-    await DaoRegistry.link("FlagHelper", lib.address);
-
     let identityDao = await DaoRegistry.new({
       from: owner,
       gasPrice: toBN("0"),
