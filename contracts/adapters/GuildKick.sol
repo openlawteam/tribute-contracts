@@ -47,7 +47,7 @@ contract GuildKickContract is IGuildKick, DaoConstants, MemberGuard {
         uint256 blockNumber;
     }
 
-    mapping(bytes32 => GuildKick) public kicks;
+    mapping(address => mapping(bytes32 => GuildKick)) public kicks;
 
     /*
      * default fallback function to prevent from sending ether to the contract
@@ -65,7 +65,7 @@ contract GuildKickContract is IGuildKick, DaoConstants, MemberGuard {
         // A kick proposal is created and needs to be voted
         BankExtension bank = BankExtension(dao.getExtensionAddress(BANK));
         dao.submitProposal(proposalId);
-        kicks[proposalId] = GuildKick(
+        kicks[address(dao)][proposalId] = GuildKick(
             memberToKick,
             GuildKickStatus.IN_PROGRESS,
             bank.balanceOf(memberToKick, SHARES),
@@ -86,7 +86,7 @@ contract GuildKickContract is IGuildKick, DaoConstants, MemberGuard {
         override
         onlyMember(dao)
     {
-        GuildKick storage kick = kicks[proposalId];
+        GuildKick storage kick = kicks[address(dao)][proposalId];
         // If it does not exist or is not in progress we expect it to fail
         require(
             kick.status == GuildKickStatus.IN_PROGRESS,
@@ -123,7 +123,7 @@ contract GuildKickContract is IGuildKick, DaoConstants, MemberGuard {
         bytes32 proposalId,
         uint256 toIndex
     ) external override onlyMember(dao) {
-        GuildKick storage kick = kicks[proposalId];
+        GuildKick storage kick = kicks[address(dao)][proposalId];
         // If does not exist or is not DONE we expect it to fail
         require(
             kick.status == GuildKickStatus.DONE,

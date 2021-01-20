@@ -38,6 +38,8 @@ abstract contract DaoConstants {
     bytes32 public constant GUILDKICK = keccak256("guildkick");
     bytes32 public constant BANK = keccak256("bank");
     bytes32 public constant EXECUTION = keccak256("execution");
+    bytes32 public constant CONFIGURATION = keccak256("configuration");
+
 
     /// @notice The reserved address for Guild bank account
     address public constant GUILD = address(0xdead);

@@ -1,5 +1,5 @@
 // Whole-script strict mode syntax
-'use strict';
+"use strict";
 
 /**
 MIT License
@@ -24,8 +24,8 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
  */
-const { MerkleTree } = require('./merkleTree.js');
-const {SHARES} = require('./DaoFactory.js');
+const { MerkleTree } = require("./merkleTree.js");
+const { SHARES } = require("./DaoFactory.js");
 const sha3 = web3.utils.sha3;
 const sigUtil = require('eth-sig-util');
 
@@ -362,8 +362,8 @@ async function prepareVoteResult(votes, dao, actionId, chainId, snapshot) {
       const previousLeaf = leaves[idx - 1];
       leaf.nbYes = leaf.nbYes + previousLeaf.nbYes;
       leaf.nbNo = leaf.nbNo + previousLeaf.nbNo;
-    } 
-    
+    }
+
     leaf.index = idx;
   });
 

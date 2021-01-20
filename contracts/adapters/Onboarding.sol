@@ -198,6 +198,10 @@ contract OnboardingContract is
         address tokenToMint,
         uint256 tokenAmount
     ) public payable override {
+        require(
+            dao.isNotReservedAddress(applicant),
+            "applicant is reserved address"
+        );
         address tokenAddr =
             address(
                 dao.getAddressConfiguration(configKey(tokenToMint, TokenAddr))
@@ -356,7 +360,7 @@ contract OnboardingContract is
             uint256 totalShares =
                 shares[proposal.applicant] + proposal.sharesRequested;
             shares[proposal.applicant] = totalShares;
-        } else if (voteResult == 3) {
+        } else if (voteResult == 3 || voteResult == 1) {
             _refundTribute(proposal.token, proposal.proposer, proposal.amount);
         } else {
             revert("proposal has not been voted on yet");
