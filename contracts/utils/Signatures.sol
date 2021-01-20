@@ -4,7 +4,6 @@ pragma experimental ABIEncoderV2;
 // SPDX-License-Identifier: MIT
 
 import "../core/DaoRegistry.sol";
-import "./SafeCast.sol";
 
 /**
 MIT License

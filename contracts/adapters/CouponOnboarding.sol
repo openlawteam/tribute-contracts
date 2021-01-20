@@ -7,7 +7,6 @@ import "../core/DaoRegistry.sol";
 import "../guards/MemberGuard.sol";
 import "../guards/AdapterGuard.sol";
 import "../helpers/FlagHelper.sol";
-import "../utils/SafeCast.sol";
 import "../utils/Signatures.sol";
 
 /**
@@ -39,7 +38,6 @@ contract CouponOnboardingContract is
     MemberGuard,
     AdapterGuard
 {
-    using SafeCast for uint256;
 
     struct Coupon {
         address authorizedMember;
@@ -91,6 +89,9 @@ contract CouponOnboardingContract is
         );
 
         flags[address(dao)][nonce / 256] = _setFlag(currentFlag, nonce % 256, true);
+
+        dao.addToBalance(authorizedMember, tokenToMint, tokenAmount);
+        // shares accounting in onboarding adapter?
     }
 
     function _getFlag(uint256 _flags, uint256 flag) internal pure returns (bool) {
