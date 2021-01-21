@@ -67,6 +67,12 @@ contract RagequitContract is IRagequit, DaoConstants, MemberGuard {
         uint256 lootToBurn,
         address[] memory tokens
     ) external override {
+        // Checks if the are enough shares and/or loot to burn
+        require(sharesToBurn + lootToBurn > 0, "insufficient shares/loot");
+
+        // Checks if the member is not in jail due to a Guild Kick
+        // isActiveMember?
+
         // Gets the delegated address, otherwise returns the sender address.
         address memberAddr = dao.getAddressIfDelegated(msg.sender);
         // Instantiates the Bank extension to handle the internal balance checks and transfers.
@@ -106,8 +112,7 @@ contract RagequitContract is IRagequit, DaoConstants, MemberGuard {
         // but locked loot can not be burned.
         uint256 initialTotalSharesAndLoot =
             bank.balanceOf(TOTAL, SHARES) +
-                bank.balanceOf(TOTAL, LOOT) +
-                bank.balanceOf(TOTAL, LOCKED_LOOT);
+                bank.balanceOf(TOTAL, LOOT);
 
         // Burns / subtracts from member's balance the number of shares to burn.
         bank.subtractFromBalance(memberAddr, SHARES, sharesToBurn);

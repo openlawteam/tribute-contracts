@@ -200,7 +200,7 @@ contract("LAOLAND - GuildKick Adapter", async (accounts) => {
       gasPrice: toBN("0"),
     });
 
-    // Check Member Shares & Loot, the Shares must be converted to Loot to remove the voting power of the member
+    // Check Member Shares & Loot, it should be 0 because both were subtracted from internal
     shares = await bank.balanceOf(newMember, SHARES);
     assert.equal(shares.toString(), "0");
     loot = await bank.balanceOf(newMember, LOOT);
@@ -587,7 +587,7 @@ contract("LAOLAND - GuildKick Adapter", async (accounts) => {
         "should not be possible for an inactive member to be kicked out again"
       );
     } catch (e) {
-      assert.equal(e.reason, "memberToKick is not active");
+      assert.equal(e.reason, "member is not active");
     }
   });
 
@@ -1315,5 +1315,77 @@ contract("LAOLAND - GuildKick Adapter", async (accounts) => {
       from: member,
       gasPrice: toBN("0"),
     });
+  });
+
+  it("should not be possible to submit a guild kick if there another kick in progress", async () => {
+    const member = accounts[5];
+    const newMemberA = accounts[2];
+    const newMemberB = accounts[3];
+
+    let dao = await createDao(member);
+    const onboarding = await getContract(dao, "onboarding", OnboardingContract);
+    const voting = await getContract(dao, "voting", VotingContract);
+    const guildkickContract = await getContract(
+      dao,
+      "guildkick",
+      GuildKickContract
+    );
+    await onboardingNewMember(
+      dao,
+      onboarding,
+      voting,
+      newMemberA,
+      member,
+      sharePrice,
+      SHARES
+    );
+    await onboardingNewMember(
+      dao,
+      onboarding,
+      voting,
+      newMemberB,
+      member,
+      sharePrice,
+      SHARES
+    );
+
+    // Submit the first guild kick
+    let memberToKick = newMemberA;
+    let { kickProposalId } = await guildKickProposal(
+      dao,
+      guildkickContract,
+      memberToKick,
+      member
+    );
+
+    try {
+      let memberToKick = newMemberB;
+      await guildKickProposal(dao, guildkickContract, memberToKick, member);
+      assert.fail(
+        "should not be possible to start a new guild kick if there is one in progress"
+      );
+    } catch (e) {
+      assert.equal(e.reason, "there is a kick in progress");
+    }
+  });
+
+  it("should not be possible to submit a guild kick to kick yourself", async () => {
+    const member = accounts[5];
+
+    let dao = await createDao(member);
+    const guildkickContract = await getContract(
+      dao,
+      "guildkick",
+      GuildKickContract
+    );
+
+    try {
+      // Attempt to kick yourself
+      let memberToKick = member;
+      await guildKickProposal(dao, guildkickContract, memberToKick, member);
+      assert.fail("should not be possible to kick yourself");
+    } catch (e) {
+      assert.equal(e.reason, "you can not kick yourself");
+    }
   });
 });

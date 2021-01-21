@@ -1,4 +1,4 @@
-// Whole-script strict mode syntax
+d// Whole-script strict mode syntax
 "use strict";
 
 /**

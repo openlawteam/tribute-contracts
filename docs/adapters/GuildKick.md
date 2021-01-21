@@ -1,22 +1,26 @@
 ## Adapter description and scope
 
-Ragequit is the process in which a member of the DAO decides to opt out of the DAO for any given reason.
+Guild Kick is the process in which the DAO members decide to kick a member out of the DAO for any given reason.
 
-This implementation of ragequit adapter does not cover the case in which the member is put in jail before updating the internal balance - as it happens in Moloch V2 to disincentivize the behaviour in which members vote Yes on proposals that are essentially bad for the future of the DAO, and right after that they quit with their funds.
+In order to kick out a member of the DAO, the members must submit a proposal which needs to be voted on. If the proposal pass, then the member will be kicked out, and the kicked member will be able to withdraw his funds based on the number of shares and loot that the member was holding.
 
-It also does not check if the member has voted Yes on a proposal that is not processed yet, and does not keep track of the latest proposal that was voted Yes on.
-
-The main goal is to give the members the freedom to choose when it is the best time to withdraw their funds without any additional preconditions, except for the fact that they need have enough shares to be converted to funds, and do not need to convert all their shares/loot at once.
+The main goal is to give the members the freedom to choose which individuals should really be part of the DAO.
 
 ## Adapter workflow
 
-In order to opt out of the DAO, the member needs to indicate the amount of shares and/or loots that one have decided to burn (to convert back into a token value). Only members are allowed to opt out.
+The guild kick starts with the other members submitting a kick proposal (function `submitKickProposal`).
+The kick proposal indicates which member should be kicked out.
 
-The proportional shares and/or loots are burned when the member provides the tokens in which one expects to receive the funds. The funds are deducted from the internal DAO bank balance, and added to the member's internal balance.
+A member can not kick himself, and only one kick proposal can be executed at time. In addition to that, only members are allowed to create kick proposals.
 
-If the member provides at least one invalid token, e.g: a token that is not supported/allowed by the DAO, the entire ragequit process is canceled/reverted. In addition to that, if the member provides a list of tokens that may cause issues due to the block size limit, it is expected that the transaction does not complete and return a failure.
+The kick proposal gets created, open for voting, and sponsored by the message sender. The adapter tracks all the kicks that have been executed already by the DAO, and also tracks the current kick that is still in progress - this is done to ensure the kicks are executed sequentially.
 
-Once the process ragequit process is completed, the funds are deducted from the bank, and added to the member's internal balance, an event called `MemberRagequit` is emitted.
+Once the proposal to kick out the member has passed, the other members have to start the actual guild kick process (function `guildKick`). In this process the kicked member has its shares converted to loot, which removes his voting power, and after that his put in jail, so he can not perform any other actions in the DAO anymore. After that the kick proposal is completed, but the kicked member still does not have received his funds yet.
+
+While the kicked member is in jail, an active member of the DAO, or the actual kicked member can trigger the internal transfer process to grant the funds to the kicked member (function `rageKick`) (maybe we can make this function open, otherwise the kicked member wont be able to call it, because he is in jail).
+
+The rage kick process is only alternative for a kicked member to receive his funds, it checks the historical guild balance (when the guild kick proposal has been created) to calculate the fair amount of funds to return to the kicked member.
+It is important to mention that this process my take multiple steps, because it relies on the number of tokens available in the bank. The funds are internally transfered from the Guild bank to the kicked member's account, so the member can withdraw the funds later on. At the end of the process, after all the transfers were completed with success for all available tokens, the kicked member's loot are burned and the member is removed from jail - because he is not an active member anymore.
 
 ## Adapter configuration
 
