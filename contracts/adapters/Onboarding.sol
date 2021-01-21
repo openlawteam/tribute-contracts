@@ -66,7 +66,7 @@ contract OnboardingContract is
     }
 
     mapping(address => mapping(bytes32 => ProposalDetails)) public proposals;
-    mapping(address => uint256) public shares;
+    mapping(address => mapping(address => uint256)) public shares;
 
     function configKey(address tokenAddrToMint, bytes32 key)
         internal
@@ -133,7 +133,7 @@ contract OnboardingContract is
         details.sharesRequested =
             details.numberOfChunks *
             details.sharesPerChunk;
-        details.totalShares = shares[applicant] + details.sharesRequested;
+        details.totalShares = shares[applicant][tokenToMint] + details.sharesRequested;
 
         require(
             details.totalShares / details.sharesPerChunk <
@@ -249,10 +249,6 @@ contract OnboardingContract is
         }
     }
 
-    function updateDelegateKey(DaoRegistry dao, address delegateKey) external {
-        dao.updateDelegateKey(msg.sender, delegateKey);
-    }
-
     function _submitMembershipProposalInternal(
         DaoRegistry dao,
         bytes32 proposalId,
@@ -358,8 +354,8 @@ contract OnboardingContract is
             }
 
             uint256 totalShares =
-                shares[proposal.applicant] + proposal.sharesRequested;
-            shares[proposal.applicant] = totalShares;
+                shares[proposal.tokenToMint][proposal.applicant] + proposal.sharesRequested;
+            shares[proposal.tokenToMint][proposal.applicant] = totalShares;
         } else if (voteResult == 3 || voteResult == 1) {
             _refundTribute(proposal.token, proposal.proposer, proposal.amount);
         } else {

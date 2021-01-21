@@ -47,7 +47,7 @@ abstract contract DaoConstants {
     address public constant SHARES = address(0xFF1CE);
     address public constant LOOT = address(0xB105F00D);
     address public constant LOCKED_LOOT = address(0xBAAAAAAD);
-    address public constant ETH_TOKEN = address(0x0);
+    address public constant ETH_TOKEN = address(0x1);
 
     //helper
     function getFlag(uint256 flags, uint256 flag) public pure returns (bool) {
