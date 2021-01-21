@@ -119,6 +119,7 @@ async function addDefaultAdapters(
   gracePeriod = 1,
   tokenAddr = ETH_TOKEN,
   maxChunks = maximumChunks,
+  daoFactory,
   deployer
 ) {
   const {
@@ -131,94 +132,86 @@ async function addDefaultAdapters(
     onboarding,
     withdraw    
   } = await prepareAapters(deployer);
-  
-  await entryDao("voting", dao, voting, {});
-  
-  await entryDao("configuration", dao, configuration, {
-    SUBMIT_PROPOSAL: true,
-    PROCESS_PROPOSAL: true,
-    SPONSOR_PROPOSAL: true,
-    SET_CONFIGURATION: true,
-  });
-
-  await entryDao("ragequit", dao, ragequit, {
-    SUB_FROM_BALANCE: true,
-    JAIL_MEMBER: true,
-    UNJAIL_MEMBER: true,
-    INTERNAL_TRANSFER: true,
-  });
-
-  await entryDao("guildkick", dao, guildkick, {
-    SUBMIT_PROPOSAL: true,
-    SPONSOR_PROPOSAL: true,
-    PROCESS_PROPOSAL: true,
-    SUB_FROM_BALANCE: true,
-    ADD_TO_BALANCE: true,
-    JAIL_MEMBER: true,
-    UNJAIL_MEMBER: true,
-    INTERNAL_TRANSFER: true,
-  });
-
-  await entryDao("managing", dao, managing, {
-    SUBMIT_PROPOSAL: true,
-    PROCESS_PROPOSAL: true,
-    SPONSOR_PROPOSAL: true,
-    REMOVE_ADAPTER: true,
-    ADD_ADAPTER: true,
-  });
-
-  await entryDao("financing", dao, financing, {
-    SUBMIT_PROPOSAL: true,
-    SPONSOR_PROPOSAL: true,
-    PROCESS_PROPOSAL: true,
-    ADD_TO_BALANCE: true,
-    SUB_FROM_BALANCE: true,
-  });
-
-  await entryDao("onboarding", dao, onboarding, {
-    SUBMIT_PROPOSAL: true,
-    SPONSOR_PROPOSAL: true,
-    PROCESS_PROPOSAL: true,
-    ADD_TO_BALANCE: true,
-    UPDATE_DELEGATE_KEY: true,
-    NEW_MEMBER: true
-  });
-
-  await entryDao("withdraw", dao, withdraw, {
-    WITHDRAW: true,
-    SUB_FROM_BALANCE: true
-  });
+  await daoFactory.addAdapters(dao.address, [
+    entryDao("voting", voting, {}),
+    entryDao("configuration", configuration, {
+      SUBMIT_PROPOSAL: true,
+      PROCESS_PROPOSAL: true,
+      SPONSOR_PROPOSAL: true,
+      SET_CONFIGURATION: true,
+    }),
+    entryDao("ragequit", ragequit, {
+      SUB_FROM_BALANCE: true,
+      JAIL_MEMBER: true,
+      UNJAIL_MEMBER: true,
+      INTERNAL_TRANSFER: true,
+    }),
+    entryDao("guildkick", guildkick, {
+      SUBMIT_PROPOSAL: true,
+      SPONSOR_PROPOSAL: true,
+      PROCESS_PROPOSAL: true,
+      SUB_FROM_BALANCE: true,
+      ADD_TO_BALANCE: true,
+      JAIL_MEMBER: true,
+      UNJAIL_MEMBER: true,
+      INTERNAL_TRANSFER: true,
+    }),
+    entryDao("managing", managing, {
+      SUBMIT_PROPOSAL: true,
+      PROCESS_PROPOSAL: true,
+      SPONSOR_PROPOSAL: true,
+      REMOVE_ADAPTER: true,
+      ADD_ADAPTER: true,
+    }),
+    entryDao("financing", financing, {
+      SUBMIT_PROPOSAL: true,
+      SPONSOR_PROPOSAL: true,
+      PROCESS_PROPOSAL: true,
+      ADD_TO_BALANCE: true,
+      SUB_FROM_BALANCE: true,
+    }),
+    entryDao("onboarding", onboarding, {
+      SUBMIT_PROPOSAL: true,
+      SPONSOR_PROPOSAL: true,
+      PROCESS_PROPOSAL: true,
+      ADD_TO_BALANCE: true,
+      UPDATE_DELEGATE_KEY: true,
+      NEW_MEMBER: true
+    }),
+    entryDao("withdraw", withdraw, {
+      WITHDRAW: true,
+      SUB_FROM_BALANCE: true
+    })
+  ]);
 
   const bankAddress = await dao.getExtensionAddress(sha3("bank"));
   const bank = await BankExtension.at(bankAddress);
 
-  await dao.setAclToExtensionForAdapter(bank.address, ragequit.address, entryBank({
-    WITHDRAW: true,
-    INTERNAL_TRANSFER: true,
-    SUB_FROM_BALANCE: true,
-    ADD_TO_BALANCE: true,
-  }));
-
-  await dao.setAclToExtensionForAdapter(bank.address, guildkick.address, entryBank({
-    WITHDRAW: true,
-    INTERNAL_TRANSFER: true,
-    SUB_FROM_BALANCE: true,
-    ADD_TO_BALANCE: true,
-  }));
-
-  await dao.setAclToExtensionForAdapter(bank.address, withdraw.address, entryBank({
-    WITHDRAW: true,
-    SUB_FROM_BALANCE: true
-  }));
-
-  await dao.setAclToExtensionForAdapter(bank.address, onboarding.address, entryBank({
-    ADD_TO_BALANCE: true
-  }));
-
-  await dao.setAclToExtensionForAdapter(bank.address, financing.address, entryBank({
-    ADD_TO_BALANCE: true,
-    SUB_FROM_BALANCE: true,
-  }));
+  await daoFactory.configureExtension(dao.address, bank.address , [
+    entryBank(ragequit, {
+      WITHDRAW: true,
+      INTERNAL_TRANSFER: true,
+      SUB_FROM_BALANCE: true,
+      ADD_TO_BALANCE: true,
+    }),
+    entryBank(guildkick, {
+      WITHDRAW: true,
+      INTERNAL_TRANSFER: true,
+      SUB_FROM_BALANCE: true,
+      ADD_TO_BALANCE: true,
+    }), 
+    entryBank(withdraw, {
+      WITHDRAW: true,
+      SUB_FROM_BALANCE: true
+    }),
+    entryBank(onboarding, {
+      ADD_TO_BALANCE: true
+    }),
+    entryBank(financing, {
+      ADD_TO_BALANCE: true,
+      SUB_FROM_BALANCE: true,
+    })
+  ]);
 
   await onboarding.configureDao(
     dao.address,
@@ -264,6 +257,7 @@ async function deployDao(
     gracePeriod,
     tokenAddr,
     maxChunks,
+    daoFactory,
     deployer
   );
 
@@ -323,7 +317,9 @@ async function createDao(
     nbShares,
     votingPeriod,
     gracePeriod,
-    tokenAddr 
+    tokenAddr,
+    maximumChunks,
+    daoFactory 
   );
   if(finalize) {
     await dao.finalizeDao();
@@ -396,7 +392,7 @@ async function advanceTime(time) {
   });
 }
 
-function entryBank(flags) {
+function entryBank(contract, flags) {
   const values = [
     flags.ADD_TO_BALANCE,
     flags.SUB_FROM_BALANCE,
@@ -407,10 +403,16 @@ function entryBank(flags) {
     flags.REGISTER_NEW_INTERNAL_TOKEN
   ];
 
-  return entry(values);
+  const acl = entry(values);
+
+  return {
+    id: sha3("n/a"),
+    addr: contract.address,
+    flags: acl,
+  };
 }
 
-async function entryDao(name, dao, contract, flags) {
+function entryDao(name, contract, flags) {
   const values = [
     flags.ADD_ADAPTER,
     flags.REMOVE_ADAPTER,
@@ -427,8 +429,12 @@ async function entryDao(name, dao, contract, flags) {
   ];
 
   const acl = entry(values);
-  
-  await dao.addAdapter(sha3(name), contract.address, acl);
+
+  return {
+    id: sha3(name),
+    addr: contract.address,
+    flags: acl,
+  };
 }
 
 function entry(values) {

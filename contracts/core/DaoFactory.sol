@@ -76,14 +76,14 @@ contract DaoFactory is CloneFactory, DaoConstants {
      * @param finalizeDao If true, call DaoRegistry.finalizeDao()
      */
     function configureDao(
-        address daoAddr,
+        address payable daoAddr,
         bytes32[] calldata keys,
         uint256[] calldata values,
         bool finalizeDao
     ) external {
         require(daos[daoAddr] != bytes32(0), "dao not found");
 
-        DaoRegistry dao = DaoRegistry(payable(daoAddr));
+        DaoRegistry dao = DaoRegistry(daoAddr);
         _configure(dao, keys, values, finalizeDao);
     }
 
@@ -116,6 +116,32 @@ contract DaoFactory is CloneFactory, DaoConstants {
 
         for (uint256 i = 0; i < adapters.length; i++) {
             dao.addAdapter(adapters[i].id, adapters[i].addr, adapters[i].flags);
+        }
+    }
+
+    /**
+     * @dev A new DAO is instantiated with only the Core Modules enabled, to reduce the call cost.
+     *       Another call must be made to enable the default Adapters, see registerDefaultAdapters.
+     * @param dao DaoRegistry to have adapters added to
+     * @param adapters Adapter structs to be added to the dao
+     */
+    function configureExtension(
+        DaoRegistry dao,
+        address extension,
+        Adapter[] calldata adapters
+    ) external {
+        //Registring Adapters
+        require(
+            dao.state() == DaoRegistry.DaoState.CREATION,
+            "this DAO has already been setup"
+        );
+
+        for (uint256 i = 0; i < adapters.length; i++) {
+            dao.setAclToExtensionForAdapter(
+                extension,
+                adapters[i].addr,
+                adapters[i].flags
+            );
         }
     }
 
