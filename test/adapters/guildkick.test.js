@@ -42,6 +42,7 @@ const {
   FinancingContract,
   LOOT,
   ManagingContract,
+  BankExtension,
 } = require("../../utils/DaoFactory.js");
 let proposalCounter = 0;
 contract("LAOLAND - GuildKick Adapter", async (accounts) => {
@@ -160,13 +161,13 @@ contract("LAOLAND - GuildKick Adapter", async (accounts) => {
     );
 
     //Check Guild Bank Balance
-    let guildBalance = await dao.balanceOf(GUILD, ETH_TOKEN);
+    let guildBalance = await bank.balanceOf(GUILD, ETH_TOKEN);
     assert.equal(toBN(guildBalance).toString(), "1200000000000000000");
 
     //Check Member Shares & Loot
-    let shares = await dao.balanceOf(newMember, SHARES);
+    let shares = await bank.balanceOf(newMember, SHARES);
     assert.equal(shares.toString(), "10000000000000000");
-    let loot = await dao.balanceOf(newMember, LOOT);
+    let loot = await bank.balanceOf(newMember, LOOT);
     assert.equal(loot.toString(), "0");
 
     //SubGuildKick
@@ -198,9 +199,9 @@ contract("LAOLAND - GuildKick Adapter", async (accounts) => {
     });
 
     // Check Member Shares & Loot, the Shares must be converted to Loot to remove the voting power of the member
-    shares = await dao.balanceOf(newMember, SHARES);
+    shares = await bank.balanceOf(newMember, SHARES);
     assert.equal(shares.toString(), "0");
-    loot = await dao.balanceOf(newMember, LOOT);
+    loot = await bank.balanceOf(newMember, LOOT);
     assert.equal(loot.toString(), "10000000000000000");
 
     // Member must be inactive after the kick has happened
@@ -1095,6 +1096,8 @@ contract("LAOLAND - GuildKick Adapter", async (accounts) => {
     const newMember = accounts[2];
 
     let dao = await createDao(member);
+    const bankAddress = await dao.getExtensionAddress(sha3("bank"));
+    const bank = await BankExtension.at(bankAddress);
     const onboarding = await getContract(dao, "onboarding", OnboardingContract);
     const voting = await getContract(dao, "voting", VotingContract);
     const guildkickContract = await getContract(
@@ -1142,9 +1145,9 @@ contract("LAOLAND - GuildKick Adapter", async (accounts) => {
     assert.equal(activeMember.toString(), "false");
 
     // Check Members Bank Balance in LOOT before the ragekick is triggered by a DAO member
-    let memberEthToken = await dao.balanceOf(memberToKick, ETH_TOKEN);
+    let memberEthToken = await bank.balanceOf(memberToKick, ETH_TOKEN);
     assert.equal(memberEthToken.toString(), "0");
-    let memberLoot = await dao.balanceOf(memberToKick, LOOT);
+    let memberLoot = await bank.balanceOf(memberToKick, LOOT);
     assert.equal(memberLoot.toString(), "10000000000000000");
 
     // Process guild kick to remove the voting power of the kicked member
@@ -1155,13 +1158,13 @@ contract("LAOLAND - GuildKick Adapter", async (accounts) => {
     });
 
     // The kicked member should not have LOOT & SHARES anymore
-    memberLoot = await dao.balanceOf(memberToKick, LOOT);
+    memberLoot = await bank.balanceOf(memberToKick, LOOT);
     assert.equal(memberLoot.toString(), "0");
-    let memberShares = await dao.balanceOf(memberToKick, SHARES);
+    let memberShares = await bank.balanceOf(memberToKick, SHARES);
     assert.equal(memberShares.toString(), "0");
 
     // The kicked member must receive the funds in ETH_TOKEN after the ragekick was triggered by a DAO member
-    memberEthToken = await dao.balanceOf(memberToKick, ETH_TOKEN);
+    memberEthToken = await bank.balanceOf(memberToKick, ETH_TOKEN);
     assert.equal(memberEthToken.toString(), "1199999999999999880");
   });
 

@@ -46,7 +46,7 @@ contract("LAOLAND - Non Voting Onboarding Adapter", async (accounts) => {
 
     let dao = await createDao(myAccount);
     const bankAddress = await dao.getExtensionAddress(sha3("bank"));
-    const bank = BankExtension.at(bankAddress);
+    const bank = await BankExtension.at(bankAddress);
     const onboardingAddress = await dao.getAdapterAddress(sha3("onboarding"));
     const onboarding = await OnboardingContract.at(onboardingAddress);
 
@@ -115,7 +115,7 @@ contract("LAOLAND - Non Voting Onboarding Adapter", async (accounts) => {
     );
 
     const bankAddress = await dao.getExtensionAddress(sha3("bank"));
-    const bank = BankExtension.at(bankAddress);
+    const bank = await BankExtension.at(bankAddress);
 
     const onboardingAddress = await dao.getAdapterAddress(sha3("onboarding"));
     const onboarding = await OnboardingContract.at(onboardingAddress);

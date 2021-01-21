@@ -30,13 +30,13 @@ const {
   advanceTime,
   SHARES,
   OnboardingContract,
-  DaoRegistry,
-  DaoFactory,
   sharePrice,
   remaining,
   numberOfShares,
-  entry,
-  addDefaultAdapters,
+  entryBank,
+  entryDao,
+  createDao,
+  ETH_TOKEN,
 } = require("../../utils/DaoFactory.js");
 const {
   createVote,
@@ -79,27 +79,29 @@ async function createOffchainVotingDao(
   votingPeriod = 10,
   gracePeriod = 1
 ) {
-  let dao = await DaoRegistry.new({ from: senderAccount, gasPrice: toBN("0") });
-  await dao.initialize(members[0].address, {
-    from: senderAccount,
-    gasPrice: toBN("0"),
-  });
-  const daoFactory = await DaoFactory.new(dao.address, {
-    from: senderAccount,
-    gasPrice: toBN("0"),
-  });
+  let dao = await createDao(
+    senderAccount,
+    unitPrice,
+    nbShares,
+    votingPeriod,
+    gracePeriod,
+    ETH_TOKEN,
+    false
+  );
 
-  await addDefaultAdapters(dao, unitPrice, nbShares, votingPeriod, gracePeriod);
   const votingAddress = await dao.getAdapterAddress(sha3("voting"));
   const offchainVoting = await OffchainVotingContract.new(votingAddress, 1);
-  await daoFactory.updateAdapter(
-    dao.address,
-    entry("voting", offchainVoting, {
+  const bankAddress = await dao.getExtensionAddress(sha3("bank"));
+  await dao.removeAdapter(sha3("voting"));
+  await entryDao("voting", dao, offchainVoting, {});
+  await dao.setAclToExtensionForAdapter(
+    bankAddress,
+    offchainVoting.address,
+    entryBank({
       ADD_TO_BALANCE: true,
       SUB_FROM_BALANCE: true,
       INTERNAL_TRANSFER: true,
-    }),
-    { from: senderAccount, gasPrice: toBN("0") }
+    })
   );
 
   await offchainVoting.configureDao(

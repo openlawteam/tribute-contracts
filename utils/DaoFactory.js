@@ -292,7 +292,8 @@ async function createDao(
   nbShares = numberOfShares,
   votingPeriod = 10,
   gracePeriod = 1,
-  tokenAddr = ETH_TOKEN
+  tokenAddr = ETH_TOKEN,
+  finalize = true
 ) {
   const identityDao = await DaoRegistry.new({
     from: senderAccount,
@@ -324,8 +325,10 @@ async function createDao(
     gracePeriod,
     tokenAddr 
   );
-
-  await dao.finalizeDao();
+  if(finalize) {
+    await dao.finalizeDao();
+  }
+  
   return dao;
 }
 
@@ -482,6 +485,8 @@ module.exports = {
   addDefaultAdapters,
   getContract,
   entry,
+  entryBank,
+  entryDao,
   sha3,
   toBN,
   toWei,
