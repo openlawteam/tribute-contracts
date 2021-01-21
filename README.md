@@ -1,6 +1,10 @@
 
 [![codecov](https://codecov.io/gh/openlawteam/laoland/branch/master/graph/badge.svg?token=XZRL9RUYZE)](https://codecov.io/gh/openlawteam/laoland/)
 
+# Timelock Adapter Sandbox
+
+Timelocking is a basic business function to enforce “vesting” of founder shares and/or funds in a new enterprise. To bolt on this logic to Tribute, we can easily reframe the pull of tokens or ETH from a DAO into a smart contract deposit with an added mapping of permissioned accounts and timestamps, enforcing the right to withdraw only after termination (functions reformatted as `withdrawToTimelock()`, `withdrawFromTimelock()`, respectively).
+
 ## Overview
 
 At the LAO, we realized that even though Moloch is very useful and powerful, it has a lot of features that we don't necessarily need. Also, there are a few features that are missing and are hard to change.
