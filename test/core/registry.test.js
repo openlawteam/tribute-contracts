@@ -25,7 +25,6 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
  */
 const DaoRegistry = artifacts.require("./core/DaoRegistry");
-const FlagHelperLib = artifacts.require("./helpers/FlagHelper");
 
 const {
   sha3,
@@ -37,8 +36,6 @@ const {
 
 contract("Registry", async (accounts) => {
   it("should not be possible to add a module with invalid id", async () => {
-    let lib = await FlagHelperLib.new();
-    await DaoRegistry.link("FlagHelper", lib.address);
     let moduleId = fromUtf8("");
     let moduleAddress = "0x627306090abaB3A6e1400e9345bC60c78a8BEf57";
     let registry = await DaoRegistry.new();

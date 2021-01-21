@@ -1,13 +1,7 @@
 pragma solidity ^0.8.0;
+import "../core/DaoRegistry.sol";
 
 // SPDX-License-Identifier: MIT
-
-import "../core/DaoConstants.sol";
-import "../core/DaoRegistry.sol";
-import "../extensions/Bank.sol";
-import "../guards/MemberGuard.sol";
-import "./interfaces/IConfiguration.sol";
-import "../adapters/interfaces/IVoting.sol";
 
 /**
 MIT License
@@ -33,31 +27,6 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
  */
 
-contract WithdrawContract is DaoConstants, MemberGuard {
-    enum ConfigurationStatus {NOT_CREATED, IN_PROGRESS, DONE}
-
-    /*
-     * default fallback function to prevent from sending ether to the contract
-     */
-    receive() external payable {
-        revert("fallback revert");
-    }
-
-    function withdraw(
-        DaoRegistry dao,
-        address payable account,
-        address token
-    ) external {
-        require(
-            dao.isNotReservedAddress(account),
-            "withdraw::reserved address"
-        );
-
-        BankExtension bank = BankExtension(dao.getExtensionAddress(BANK));
-
-        uint256 balance = bank.balanceOf(account, token);
-        require(balance > 0, "nothing to withdraw");
-
-        bank.withdraw(account, token, balance);
-    }
+interface IExtension {
+    function initialize(DaoRegistry dao, address creator) external;
 }

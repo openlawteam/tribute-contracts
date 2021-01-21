@@ -4,6 +4,7 @@ pragma solidity ^0.8.0;
 
 import "../../core/DaoRegistry.sol";
 import "../../core/DaoConstants.sol";
+import "../../extensions/Bank.sol";
 import "../../guards/MemberGuard.sol";
 import "../../guards/AdapterGuard.sol";
 import "../interfaces/IVoting.sol";
@@ -85,12 +86,15 @@ contract VotingContract is IVoting, DaoConstants, MemberGuard, AdapterGuard {
     ) external onlyMember(dao) {
         require(dao.isActiveMember(msg.sender), "only active members can vote");
         require(
-            dao.getProposalFlag(proposalId, FlagHelper.Flag.SPONSORED),
+            dao.getProposalFlag(proposalId, DaoRegistry.ProposalFlag.SPONSORED),
             "the proposal has not been sponsored yet"
         );
 
         require(
-            !dao.getProposalFlag(proposalId, FlagHelper.Flag.PROCESSED),
+            !dao.getProposalFlag(
+                proposalId,
+                DaoRegistry.ProposalFlag.PROCESSED
+            ),
             "the proposal has already been processed"
         );
 
@@ -114,9 +118,9 @@ contract VotingContract is IVoting, DaoConstants, MemberGuard, AdapterGuard {
         address memberAddr = dao.getAddressIfDelegated(msg.sender);
 
         require(vote.votes[memberAddr] == 0, "member has already voted");
-
+        BankExtension bank = BankExtension(dao.getExtensionAddress(BANK));
         uint256 correctWeight =
-            dao.getPriorAmount(memberAddr, SHARES, vote.blockNumber);
+            bank.getPriorAmount(memberAddr, SHARES, vote.blockNumber);
 
         vote.votes[memberAddr] = voteValue;
 

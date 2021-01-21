@@ -36,7 +36,7 @@ const {
   OLTokenContract,
   OnboardingContract,
   VotingContract,
-  ETH_TOKEN,
+  BankExtension,
 } = require("../../utils/DaoFactory.js");
 
 contract("LAOLAND - Non Voting Onboarding Adapter", async (accounts) => {
@@ -45,7 +45,8 @@ contract("LAOLAND - Non Voting Onboarding Adapter", async (accounts) => {
     const advisorAccount = accounts[2];
 
     let dao = await createDao(myAccount);
-
+    const bankAddress = await dao.getExtensionAddress(sha3("bank"));
+    const bank = await BankExtension.at(bankAddress);
     const onboardingAddress = await dao.getAdapterAddress(sha3("onboarding"));
     const onboarding = await OnboardingContract.at(onboardingAddress);
 
@@ -82,11 +83,11 @@ contract("LAOLAND - Non Voting Onboarding Adapter", async (accounts) => {
     });
 
     // Check the number of Loot (non-voting shares) issued to the new Avisor
-    const advisorAccountLoot = await dao.balanceOf(advisorAccount, LOOT);
+    const advisorAccountLoot = await bank.balanceOf(advisorAccount, LOOT);
     assert.equal(advisorAccountLoot.toString(), "3000000000000000");
 
     // Guild balance must not change when Loot shares are issued
-    const guildBalance = await dao.balanceOf(
+    const guildBalance = await bank.balanceOf(
       GUILD,
       "0x0000000000000000000000000000000000000000"
     );
@@ -112,6 +113,9 @@ contract("LAOLAND - Non Voting Onboarding Adapter", async (accounts) => {
       1,
       oltContract.address
     );
+
+    const bankAddress = await dao.getExtensionAddress(sha3("bank"));
+    const bank = await BankExtension.at(bankAddress);
 
     const onboardingAddress = await dao.getAdapterAddress(sha3("onboarding"));
     const onboarding = await OnboardingContract.at(onboardingAddress);
@@ -192,11 +196,11 @@ contract("LAOLAND - Non Voting Onboarding Adapter", async (accounts) => {
     });
 
     // Check the number of Loot (non-voting shares) issued to the new Avisor
-    const advisorAccountLoot = await dao.balanceOf(advisorAccount, LOOT);
+    const advisorAccountLoot = await bank.balanceOf(advisorAccount, LOOT);
     assert.equal(advisorAccountLoot.toString(), "100000000");
 
     // Guild balance must not change when Loot shares are issued
-    const guildBalance = await dao.balanceOf(GUILD, oltContract.address);
+    const guildBalance = await bank.balanceOf(GUILD, oltContract.address);
     assert.equal(guildBalance.toString(), "10");
   });
 });

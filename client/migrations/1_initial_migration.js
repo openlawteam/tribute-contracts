@@ -1,7 +1,6 @@
 const Migrations = artifacts.require("Migrations");
 const DaoFactory = artifacts.require("./core/DaoFactory");
 const DaoRegistry = artifacts.require("./core/DaoRegistry");
-const FlagHelperLib = artifacts.require("./helpers/FlagHelper");
 const VotingContract = artifacts.require("./adapters/VotingContract");
 const ConfigurationContract = artifacts.require(
   "./adapter/ConfigurationContract"
@@ -25,7 +24,6 @@ module.exports = async (deployer, network, accounts) => {
   const contracts = {
     daoFactory: "",
     identityDao: "",
-    flagHelperLib: "",
     adapters: {
       voting: "",
       onboarding: "",
@@ -36,12 +34,6 @@ module.exports = async (deployer, network, accounts) => {
       configuration: "",
     },
   };
-
-  await deployer
-    .deploy(FlagHelperLib, { from: owner })
-    .then((flagHelperLib) => (contracts.flagHelperLib = flagHelperLib.address));
-
-  deployer.link(FlagHelperLib, DaoRegistry);
 
   await deployer.deploy(DaoRegistry, { from: owner }).then((daoRegistry) => {
     contracts.identityDao = daoRegistry.address;
