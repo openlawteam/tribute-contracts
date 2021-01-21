@@ -74,11 +74,11 @@ contract CouponOnboardingContract is
         bank.registerPotentialNewInternalToken(tokenAddrToMint);
     }
 
-    function hashCouponMessage(
+    function _hashCouponMessage(
         DaoRegistry dao,
         address actionId,
         Coupon memory coupon
-    ) public view returns (bytes32) {
+    ) internal view returns (bytes32) {
         bytes32 message =
             keccak256(
                 abi.encode(
@@ -109,7 +109,7 @@ contract CouponOnboardingContract is
             address(dao.getAddressConfiguration(SignerPublicKey));
 
         Coupon memory coupon = Coupon(authorizedMember, amount, nonce);
-        bytes32 hash = hashCouponMessage(dao, msg.sender, coupon);
+        bytes32 hash = _hashCouponMessage(dao, msg.sender, coupon);
         address recoveredKey = recover(hash, signature);
 
         require(recoveredKey == signerPublicKey, "coupon signature is invalid");
