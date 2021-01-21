@@ -143,6 +143,8 @@ contract("LAOLAND - GuildKick Adapter", async (accounts) => {
     const newMember = accounts[2];
 
     let dao = await createDao(member);
+    const bankAddress = await dao.getExtensionAddress(sha3("bank"));
+    const bank = await BankExtension.at(bankAddress);
     const onboarding = await getContract(dao, "onboarding", OnboardingContract);
     const voting = await getContract(dao, "voting", VotingContract);
     const guildkickContract = await getContract(
