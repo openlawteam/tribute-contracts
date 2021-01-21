@@ -37,6 +37,7 @@ const {
   VotingContract,
   FinancingContract,
   WithdrawContract,
+  BankExtension,
   sha3,
   ETH_TOKEN,
 } = require("../../utils/DaoFactory.js");

@@ -37,6 +37,7 @@ const {
   entryDao,
   createDao,
   ETH_TOKEN,
+  BankExtension,
 } = require("../../utils/DaoFactory.js");
 const {
   createVote,
@@ -86,8 +87,11 @@ async function createOffchainVotingDao(
     votingPeriod,
     gracePeriod,
     ETH_TOKEN,
-    false
+    false,
+    members[0].address
   );
+
+  await dao.potentialNewMember(members[0].address);
 
   const votingAddress = await dao.getAdapterAddress(sha3("voting"));
   const offchainVoting = await OffchainVotingContract.new(votingAddress, 1);
@@ -112,8 +116,9 @@ async function createOffchainVotingDao(
     { from: senderAccount, gasPrice: toBN("0") }
   );
   await dao.finalizeDao({ from: senderAccount, gasPrice: toBN("0") });
+  const bank = await BankExtension.at(bankAddress);
 
-  return { dao, voting: offchainVoting };
+  return { dao, voting: offchainVoting, bank };
 }
 
 contract("LAOLAND - Offchain Voting Module", async (accounts) => {
@@ -231,7 +236,7 @@ contract("LAOLAND - Offchain Voting Module", async (accounts) => {
 
   it("should be possible to propose a new voting by signing the proposal hash", async () => {
     const myAccount = accounts[1];
-    let { dao, voting } = await createOffchainVotingDao(myAccount);
+    let { dao, voting, bank } = await createOffchainVotingDao(myAccount);
 
     const onboardingAddress = await dao.getAdapterAddress(sha3("onboarding"));
     const onboarding = await OnboardingContract.at(onboardingAddress);
@@ -302,6 +307,7 @@ contract("LAOLAND - Offchain Voting Module", async (accounts) => {
     const { voteResultTree, votes } = await prepareVoteResult(
       [voteEntry],
       dao,
+      bank,
       onboarding.address,
       chainId,
       proposalPayload.snapshot
