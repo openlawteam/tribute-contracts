@@ -39,7 +39,6 @@ contract CouponOnboardingContract is
     AdapterGuard,
     Signatures
 {
-
     struct Coupon {
         address authorizedMember;
         uint256 amount;
@@ -47,16 +46,17 @@ contract CouponOnboardingContract is
     }
 
     string public constant COUPON_MESSAGE_TYPE =
-      "Message(address authorizedMember,uint256 amount,uint256 nonce)";
+        "Message(address authorizedMember,uint256 amount,uint256 nonce)";
     bytes32 public constant COUPON_MESSAGE_TYPEHASH =
-      keccak256(abi.encodePacked(COUPON_MESSAGE_TYPE));
+        keccak256(abi.encodePacked(COUPON_MESSAGE_TYPE));
 
-    bytes32 constant SignerPublicKey = keccak256("coupon-onboarding.signerPublicKey");
-    bytes32 constant TokenAddrToMint = keccak256("coupon-onboarding.tokenAddrToMint");
-
+    bytes32 constant SignerPublicKey =
+        keccak256("coupon-onboarding.signerPublicKey");
+    bytes32 constant TokenAddrToMint =
+        keccak256("coupon-onboarding.tokenAddrToMint");
 
     uint256 chainId;
-	mapping (address => mapping(uint256 => uint256)) flags;
+    mapping(address => mapping(uint256 => uint256)) flags;
 
     constructor(uint256 _chainId) {
         chainId = _chainId;
@@ -72,49 +72,62 @@ contract CouponOnboardingContract is
         dao.registerPotentialNewInternalToken(tokenAddrToMint);
     }
 
-    function hashCouponMessage(DaoRegistry dao, address actionId, Coupon memory coupon)
-    public
-    view
-    returns (bytes32)
-    {
-        bytes32 message = keccak256(
-            abi.encode(
-                COUPON_MESSAGE_TYPEHASH,
-                coupon.authorizedMember,
-                coupon.amount,
-                coupon.nonce
-            )
-        );
+    function hashCouponMessage(
+        DaoRegistry dao,
+        address actionId,
+        Coupon memory coupon
+    ) public view returns (bytes32) {
+        bytes32 message =
+            keccak256(
+                abi.encode(
+                    COUPON_MESSAGE_TYPEHASH,
+                    coupon.authorizedMember,
+                    coupon.amount,
+                    coupon.nonce
+                )
+            );
 
-    return
-        hashMessage(dao, chainId, actionId, message);
+        return hashMessage(dao, chainId, actionId, message);
     }
 
-    function redeemCoupon(DaoRegistry dao, address authorizedMember, uint256 amount, uint256 nonce, bytes memory signature) external {
+    function redeemCoupon(
+        DaoRegistry dao,
+        address authorizedMember,
+        uint256 amount,
+        uint256 nonce,
+        bytes memory signature
+    ) external {
         uint256 currentFlag = flags[address(dao)][nonce / 256];
-        require (
+        require(
             _getFlag(currentFlag, nonce % 256) == false,
             "coupon has already been redeemed"
         );
 
-        address signerPublicKey = address(dao.getAddressConfiguration(SignerPublicKey));
+        address signerPublicKey =
+            address(dao.getAddressConfiguration(SignerPublicKey));
 
         Coupon memory coupon = Coupon(authorizedMember, amount, nonce);
         bytes32 hash = hashCouponMessage(dao, msg.sender, coupon);
         address recoveredKey = recover(hash, signature);
 
-        require (
-            recoveredKey == signerPublicKey,
-            "coupon signature is invalid"
+        require(recoveredKey == signerPublicKey, "coupon signature is invalid");
+
+        flags[address(dao)][nonce / 256] = _setFlag(
+            currentFlag,
+            nonce % 256,
+            true
         );
 
-        flags[address(dao)][nonce / 256] = _setFlag(currentFlag, nonce % 256, true);
-
-        address tokenAddrToMint = address(dao.getAddressConfiguration(TokenAddrToMint));
+        address tokenAddrToMint =
+            address(dao.getAddressConfiguration(TokenAddrToMint));
         dao.addToBalance(authorizedMember, tokenAddrToMint, amount);
     }
 
-    function _getFlag(uint256 _flags, uint256 flag) internal pure returns (bool) {
+    function _getFlag(uint256 _flags, uint256 flag)
+        internal
+        pure
+        returns (bool)
+    {
         return (_flags >> uint8(flag)) % 2 == 1;
     }
 

@@ -30,13 +30,11 @@ SOFTWARE.
  */
 
 abstract contract Signatures {
-
     string public constant EIP712_DOMAIN =
-      "EIP712Domain(string name,string version,uint256 chainId,address verifyingContract,address actionId)";
+        "EIP712Domain(string name,string version,uint256 chainId,address verifyingContract,address actionId)";
 
     bytes32 public constant EIP712_DOMAIN_TYPEHASH =
-      keccak256(abi.encodePacked(EIP712_DOMAIN));
-
+        keccak256(abi.encodePacked(EIP712_DOMAIN));
 
     function hashMessage(
         DaoRegistry dao,
@@ -45,31 +43,31 @@ abstract contract Signatures {
         bytes32 message
     ) public pure returns (bytes32) {
         return
-        keccak256(
-            abi.encodePacked(
-                "\x19\x01",
-                domainSeparator(dao, chainId, actionId),
-                message
-            )
-        );
+            keccak256(
+                abi.encodePacked(
+                    "\x19\x01",
+                    domainSeparator(dao, chainId, actionId),
+                    message
+                )
+            );
     }
 
-    function domainSeparator(DaoRegistry dao, uint256 chainId, address actionId)
-    public
-    pure
-    returns (bytes32)
-    {
+    function domainSeparator(
+        DaoRegistry dao,
+        uint256 chainId,
+        address actionId
+    ) public pure returns (bytes32) {
         return
-        keccak256(
-            abi.encode(
-                EIP712_DOMAIN_TYPEHASH,
-                keccak256("Snapshot Message"), // string name
-                keccak256("4"), // string version
-                chainId, // uint256 chainId
-                address(dao), // address verifyingContract,
-                actionId
-            )
-        );
+            keccak256(
+                abi.encode(
+                    EIP712_DOMAIN_TYPEHASH,
+                    keccak256("Snapshot Message"), // string name
+                    keccak256("4"), // string version
+                    chainId, // uint256 chainId
+                    address(dao), // address verifyingContract,
+                    actionId
+                )
+            );
     }
 
     /**
@@ -78,9 +76,9 @@ abstract contract Signatures {
      * @param sig bytes signature, the signed message hash, generated using web3.eth.sign()
      */
     function recover(bytes32 hash, bytes memory sig)
-    public
-    pure
-    returns (address)
+        public
+        pure
+        returns (address)
     {
         bytes32 r;
         bytes32 s;
@@ -109,5 +107,4 @@ abstract contract Signatures {
         }
         return ecrecover(hash, v, r, s);
     }
-
 }

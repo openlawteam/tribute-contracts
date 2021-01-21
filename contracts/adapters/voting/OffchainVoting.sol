@@ -42,7 +42,6 @@ contract OffchainVotingContract is
     AdapterGuard,
     Signatures
 {
-
     string public constant PROPOSAL_MESSAGE_TYPE =
         "Message(uint256 timestamp,bytes32 spaceHash,MessagePayload payload)MessagePayload(bytes32 nameHash,bytes32 bodyHash,string[] choices,uint256 start,uint256 end,string snapshot)";
     string public constant PROPOSAL_PAYLOAD_TYPE =
@@ -69,7 +68,6 @@ contract OffchainVotingContract is
     bytes32 public constant VOTE_RESULT_ROOT_TYPEHASH =
         keccak256(abi.encodePacked(VOTE_RESULT_ROOT_TYPE));
     uint256 chainId;
-
 
     VotingContract public fallbackVoting;
 
@@ -485,8 +483,8 @@ contract OffchainVotingContract is
             blockNumber < block.number,
             "snapshot block number should not be in the future"
         );
-        require(blockNumber > 0, "block number cannot be 0");        
-        
+        require(blockNumber > 0, "block number cannot be 0");
+
         votes[address(dao)][proposalId].startingTime = block.timestamp;
         votes[address(dao)][proposalId].snapshot = blockNumber;
         votes[address(dao)][proposalId].proposalHash = proposalHash;
@@ -725,6 +723,7 @@ contract OffchainVotingContract is
                 sig
             );
     }
+
     function _hasVotedYes(
         DaoRegistry dao,
         address actionId,

@@ -82,7 +82,7 @@ async function createOffchainVotingDao(
 ) {
   let lib = await FlagHelperLib.new();
   await DaoRegistry.link("FlagHelper", lib.address);
-  
+
   let dao = await DaoRegistry.new({ from: senderAccount, gasPrice: toBN("0") });
   await dao.initialize(members[0].address, {
     from: senderAccount,
@@ -189,7 +189,11 @@ contract("LAOLAND - Offchain Voting Module", async (accounts) => {
     console.log("my account: ", myAccount);
 
     //Checking domain separator
-    const domainHash = await voting.domainSeparator(dao.address, chainId, myAccount);
+    const domainHash = await voting.domainSeparator(
+      dao.address,
+      chainId,
+      myAccount
+    );
     const jsDomainHash =
       "0x" +
       TypedDataUtils.hashStruct("EIP712Domain", domain, types, true).toString(
