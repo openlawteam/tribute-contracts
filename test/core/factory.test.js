@@ -59,6 +59,8 @@ contract("DaoFactory", async (accounts) => {
       gasPrice: toBN("0"),
     });
 
+    console.log("daoFactory", daoFactory);
+
     let pastEvents = await daoFactory.getPastEvents();
     let { _address, _name } = pastEvents[0].returnValues;
     return { daoFactory, daoAddress: _address, daoName: _name };

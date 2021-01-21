@@ -42,13 +42,21 @@ export class Laoland extends Entity {
     this.set("id", Value.fromString(value));
   }
 
-  get laoland(): Bytes {
-    let value = this.get("laoland");
-    return value.toBytes();
+  get daoAddress(): Bytes | null {
+    let value = this.get("daoAddress");
+    if (value === null || value.kind == ValueKind.NULL) {
+      return null;
+    } else {
+      return value.toBytes();
+    }
   }
 
-  set laoland(value: Bytes) {
-    this.set("laoland", Value.fromBytes(value));
+  set daoAddress(value: Bytes | null) {
+    if (value === null) {
+      this.unset("daoAddress");
+    } else {
+      this.set("daoAddress", Value.fromBytes(value as Bytes));
+    }
   }
 
   get name(): string | null {
@@ -65,6 +73,49 @@ export class Laoland extends Entity {
       this.unset("name");
     } else {
       this.set("name", Value.fromString(value as string));
+    }
+  }
+
+  get createdAt(): string | null {
+    let value = this.get("createdAt");
+    if (value === null || value.kind == ValueKind.NULL) {
+      return null;
+    } else {
+      return value.toString();
+    }
+  }
+
+  set createdAt(value: string | null) {
+    if (value === null) {
+      this.unset("createdAt");
+    } else {
+      this.set("createdAt", Value.fromString(value as string));
+    }
+  }
+
+  get initialized(): boolean {
+    let value = this.get("initialized");
+    return value.toBoolean();
+  }
+
+  set initialized(value: boolean) {
+    this.set("initialized", Value.fromBoolean(value));
+  }
+
+  get totalShares(): string | null {
+    let value = this.get("totalShares");
+    if (value === null || value.kind == ValueKind.NULL) {
+      return null;
+    } else {
+      return value.toString();
+    }
+  }
+
+  set totalShares(value: string | null) {
+    if (value === null) {
+      this.unset("totalShares");
+    } else {
+      this.set("totalShares", Value.fromString(value as string));
     }
   }
 }
@@ -283,13 +334,31 @@ export class Member extends Entity {
     this.set("delegateKey", Value.fromBytes(value));
   }
 
-  get flags(): BigInt {
-    let value = this.get("flags");
+  get shares(): BigInt {
+    let value = this.get("shares");
     return value.toBigInt();
   }
 
-  set flags(value: BigInt) {
-    this.set("flags", Value.fromBigInt(value));
+  set shares(value: BigInt) {
+    this.set("shares", Value.fromBigInt(value));
+  }
+
+  get loot(): BigInt {
+    let value = this.get("loot");
+    return value.toBigInt();
+  }
+
+  set loot(value: BigInt) {
+    this.set("loot", Value.fromBigInt(value));
+  }
+
+  get lockedLoot(): BigInt {
+    let value = this.get("lockedLoot");
+    return value.toBigInt();
+  }
+
+  set lockedLoot(value: BigInt) {
+    this.set("lockedLoot", Value.fromBigInt(value));
   }
 
   get tokenBalances(): Array<string> | null {
@@ -307,6 +376,15 @@ export class Member extends Entity {
     } else {
       this.set("tokenBalances", Value.fromStringArray(value as Array<string>));
     }
+  }
+
+  get jailed(): boolean {
+    let value = this.get("jailed");
+    return value.toBoolean();
+  }
+
+  set jailed(value: boolean) {
+    this.set("jailed", Value.fromBoolean(value));
   }
 }
 
@@ -389,22 +467,13 @@ export class Proposal extends Entity {
     this.set("id", Value.fromString(value));
   }
 
-  get proposalId(): BigInt {
+  get proposalId(): Bytes {
     let value = this.get("proposalId");
-    return value.toBigInt();
-  }
-
-  set proposalId(value: BigInt) {
-    this.set("proposalId", Value.fromBigInt(value));
-  }
-
-  get adapterAddress(): Bytes {
-    let value = this.get("adapterAddress");
     return value.toBytes();
   }
 
-  set adapterAddress(value: Bytes) {
-    this.set("adapterAddress", Value.fromBytes(value));
+  set proposalId(value: Bytes) {
+    this.set("proposalId", Value.fromBytes(value));
   }
 
   get flags(): BigInt {
@@ -414,5 +483,74 @@ export class Proposal extends Entity {
 
   set flags(value: BigInt) {
     this.set("flags", Value.fromBigInt(value));
+  }
+
+  get sponsoredAt(): string | null {
+    let value = this.get("sponsoredAt");
+    if (value === null || value.kind == ValueKind.NULL) {
+      return null;
+    } else {
+      return value.toString();
+    }
+  }
+
+  set sponsoredAt(value: string | null) {
+    if (value === null) {
+      this.unset("sponsoredAt");
+    } else {
+      this.set("sponsoredAt", Value.fromString(value as string));
+    }
+  }
+
+  get sponsored(): boolean {
+    let value = this.get("sponsored");
+    return value.toBoolean();
+  }
+
+  set sponsored(value: boolean) {
+    this.set("sponsored", Value.fromBoolean(value));
+  }
+
+  get sponsor(): string | null {
+    let value = this.get("sponsor");
+    if (value === null || value.kind == ValueKind.NULL) {
+      return null;
+    } else {
+      return value.toString();
+    }
+  }
+
+  set sponsor(value: string | null) {
+    if (value === null) {
+      this.unset("sponsor");
+    } else {
+      this.set("sponsor", Value.fromString(value as string));
+    }
+  }
+
+  get processedAt(): string | null {
+    let value = this.get("processedAt");
+    if (value === null || value.kind == ValueKind.NULL) {
+      return null;
+    } else {
+      return value.toString();
+    }
+  }
+
+  set processedAt(value: string | null) {
+    if (value === null) {
+      this.unset("processedAt");
+    } else {
+      this.set("processedAt", Value.fromString(value as string));
+    }
+  }
+
+  get processed(): boolean {
+    let value = this.get("processed");
+    return value.toBoolean();
+  }
+
+  set processed(value: boolean) {
+    this.set("processed", Value.fromBoolean(value));
   }
 }

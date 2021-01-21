@@ -1,7 +1,10 @@
 type Laoland @entity {
   id: ID!
-  laoland: Bytes! # address
+  daoAddress: Bytes # dao address
   name: String
+  createdAt: String
+  initialized: Boolean
+  totalShares: String
 }
 
 type Token @entity {
@@ -23,10 +26,16 @@ type TokenBalance @entity {
 type Member @entity {
   id: ID!
   memberAddress: Bytes!
+  # "TODO: members can be a part of multiple laolands"
+  # laolands: [Laoland!]
   createdAt: String!
   delegateKey: Bytes!
-  flags: BigInt!
+  shares: BigInt!
+  loot: BigInt!
+  lockedLoot: BigInt!
+  # flags: BigInt!
   tokenBalances: [TokenBalance!] @derivedFrom(field: "member")
+  jailed: Boolean!
 }
 
 type Adapter @entity {
@@ -37,7 +46,12 @@ type Adapter @entity {
 
 type Proposal @entity {
   id: ID!
-  proposalId: BigInt!
-  adapterAddress: Bytes!
+  proposalId: Bytes!
+  # adapterAddress: Bytes!
   flags: BigInt!
+  sponsoredAt: String
+  sponsored: Boolean
+  sponsor: String
+  processedAt: String
+  processed: Boolean
 }
