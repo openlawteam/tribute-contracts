@@ -40,8 +40,8 @@ const {
   VotingContract,
   RagequitContract,
   FinancingContract,
+  BankExtension,
 } = require("../../utils/DaoFactory.js");
-const { checkLastEvent } = require("../../utils/TestUtils.js");
 let proposalCounter = 0;
 contract("LAOLAND - Ragequit Adapter", async (accounts) => {
   const submitNewMemberProposal = async (
@@ -86,8 +86,11 @@ contract("LAOLAND - Ragequit Adapter", async (accounts) => {
   };
 
   const ragequit = async (dao, shares, loot, member) => {
+    const bankAddress = await dao.getExtensionAddress(sha3("bank"));
+    const bank = await BankExtension.at(bankAddress);
     let ragequitAddress = await dao.getAdapterAddress(sha3("ragequit"));
     let ragequitContract = await RagequitContract.at(ragequitAddress);
+
     await ragequitContract.startRagequit(
       dao.address,
       toBN(shares),
@@ -103,7 +106,7 @@ contract("LAOLAND - Ragequit Adapter", async (accounts) => {
     });
 
     //Check New Member Shares
-    let newShares = await dao.balanceOf(member, SHARES);
+    let newShares = await bank.balanceOf(member, SHARES);
     assert.equal(newShares.toString(), "0");
     return ragequitContract;
   };
@@ -113,6 +116,8 @@ contract("LAOLAND - Ragequit Adapter", async (accounts) => {
     const newMember = accounts[2];
 
     let dao = await createDao(myAccount);
+    const bankAddress = await dao.getExtensionAddress(sha3("bank"));
+    const bank = await BankExtension.at(bankAddress);
 
     //Add funds to the Guild Bank after sposoring a member to join the Guild
     const onboardingAddress = await dao.getAdapterAddress(sha3("onboarding"));
@@ -136,11 +141,11 @@ contract("LAOLAND - Ragequit Adapter", async (accounts) => {
     });
 
     //Check Guild Bank Balance
-    let guildBalance = await dao.balanceOf(GUILD, ETH_TOKEN);
+    let guildBalance = await bank.balanceOf(GUILD, ETH_TOKEN);
     assert.equal(toBN(guildBalance).toString(), "1200000000000000000");
 
     //Check Member Shares
-    let shares = await dao.balanceOf(newMember, SHARES);
+    let shares = await bank.balanceOf(newMember, SHARES);
     assert.equal(shares.toString(), "10000000000000000");
 
     //Ragequit
@@ -157,6 +162,8 @@ contract("LAOLAND - Ragequit Adapter", async (accounts) => {
     const newMember = accounts[2];
 
     let dao = await createDao(myAccount);
+    const bankAddress = await dao.getExtensionAddress(sha3("bank"));
+    const bank = await BankExtension.at(bankAddress);
 
     //Add funds to the Guild Bank after sposoring a member to join the Guild
     const onboardingAddress = await dao.getAdapterAddress(sha3("onboarding"));
@@ -180,11 +187,11 @@ contract("LAOLAND - Ragequit Adapter", async (accounts) => {
     });
 
     //Check Guild Bank Balance
-    let guildBalance = await dao.balanceOf(GUILD, ETH_TOKEN);
+    let guildBalance = await bank.balanceOf(GUILD, ETH_TOKEN);
     assert.equal(guildBalance.toString(), "1200000000000000000".toString());
 
     //Check Member Shares
-    let shares = await dao.balanceOf(newMember, SHARES);
+    let shares = await bank.balanceOf(newMember, SHARES);
     assert.equal(shares.toString(), "10000000000000000");
 
     //Ragequit
@@ -201,6 +208,8 @@ contract("LAOLAND - Ragequit Adapter", async (accounts) => {
     const newMember = accounts[2];
 
     let dao = await createDao(myAccount);
+    const bankAddress = await dao.getExtensionAddress(sha3("bank"));
+    const bank = await BankExtension.at(bankAddress);
 
     //Add funds to the Guild Bank after sposoring a member to join the Guild
     const onboardingAddress = await dao.getAdapterAddress(sha3("onboarding"));
@@ -224,18 +233,18 @@ contract("LAOLAND - Ragequit Adapter", async (accounts) => {
     });
 
     //Check Guild Bank Balance
-    let guildBalance = await dao.balanceOf(GUILD, ETH_TOKEN);
+    let guildBalance = await bank.balanceOf(GUILD, ETH_TOKEN);
     assert.equal(guildBalance.toString(), "1200000000000000000".toString());
 
     //Check New Member Shares
-    let shares = await dao.balanceOf(newMember, SHARES);
+    let shares = await bank.balanceOf(newMember, SHARES);
     assert.equal(shares.toString(), "10000000000000000");
 
     //Ragequit - Burn all the new member shares
     let ragequitContract = await ragequit(dao, shares, 0, newMember);
 
     //Check Guild Bank Balance
-    let newGuildBalance = await dao.balanceOf(GUILD, ETH_TOKEN);
+    let newGuildBalance = await bank.balanceOf(GUILD, ETH_TOKEN);
     assert.equal(toBN(newGuildBalance).toString(), "120"); //must be close to 0
   });
 
@@ -245,6 +254,8 @@ contract("LAOLAND - Ragequit Adapter", async (accounts) => {
     const applicant = accounts[3];
 
     let dao = await createDao(myAccount);
+    const bankAddress = await dao.getExtensionAddress(sha3("bank"));
+    const bank = await BankExtension.at(bankAddress);
 
     //Add funds to the Guild Bank after sposoring a member to join the Guild
     const onboardingAddress = await dao.getAdapterAddress(sha3("onboarding"));
@@ -271,11 +282,11 @@ contract("LAOLAND - Ragequit Adapter", async (accounts) => {
     });
 
     //Check Guild Bank Balance
-    let guildBalance = await dao.balanceOf(GUILD, ETH_TOKEN);
+    let guildBalance = await bank.balanceOf(GUILD, ETH_TOKEN);
     assert.equal(guildBalance.toString(), "1200000000000000000".toString());
 
     //Check New Member Shares
-    let shares = await dao.balanceOf(newMember, SHARES);
+    let shares = await bank.balanceOf(newMember, SHARES);
     assert.equal(shares.toString(), "10000000000000000");
     proposalId = "0x1";
     //Create Financing Request
@@ -306,7 +317,7 @@ contract("LAOLAND - Ragequit Adapter", async (accounts) => {
     let ragequitContract = await ragequit(dao, shares, 0, newMember);
 
     //Check Guild Bank Balance
-    let newGuildBalance = await dao.balanceOf(GUILD, ETH_TOKEN);
+    let newGuildBalance = await bank.balanceOf(GUILD, ETH_TOKEN);
     assert.equal(toBN(newGuildBalance).toString(), "120"); //must be close to 0
   });
 
@@ -316,6 +327,8 @@ contract("LAOLAND - Ragequit Adapter", async (accounts) => {
     const applicant = accounts[3];
 
     let dao = await createDao(myAccount);
+    const bankAddress = await dao.getExtensionAddress(sha3("bank"));
+    const bank = await BankExtension.at(bankAddress);
 
     //Add funds to the Guild Bank after sposoring a member to join the Guild
     const onboardingAddress = await dao.getAdapterAddress(sha3("onboarding"));
@@ -342,11 +355,11 @@ contract("LAOLAND - Ragequit Adapter", async (accounts) => {
     });
 
     //Check Guild Bank Balance
-    let guildBalance = await dao.balanceOf(GUILD, ETH_TOKEN);
+    let guildBalance = await bank.balanceOf(GUILD, ETH_TOKEN);
     assert.equal(guildBalance.toString(), "1200000000000000000".toString());
 
     //Check New Member Shares
-    let shares = await dao.balanceOf(newMember, SHARES);
+    let shares = await bank.balanceOf(newMember, SHARES);
     assert.equal(shares.toString(), "10000000000000000");
     proposalId = "0x1";
     //Create Financing Request
@@ -377,7 +390,7 @@ contract("LAOLAND - Ragequit Adapter", async (accounts) => {
     let ragequitContract = await ragequit(dao, shares, 0, newMember);
 
     //Check Guild Bank Balance
-    let newGuildBalance = await dao.balanceOf(GUILD, ETH_TOKEN);
+    let newGuildBalance = await bank.balanceOf(GUILD, ETH_TOKEN);
     assert.equal(toBN(newGuildBalance).toString(), "120"); //must be close to 0
   });
 
@@ -400,6 +413,8 @@ contract("LAOLAND - Ragequit Adapter", async (accounts) => {
       1,
       oltContract.address
     );
+    const bankAddress = await dao.getExtensionAddress(sha3("bank"));
+    const bank = await BankExtension.at(bankAddress);
 
     // Transfer 1000 OLTs to the Advisor account
     await oltContract.approve(advisorAccount, 100);
@@ -418,7 +433,7 @@ contract("LAOLAND - Ragequit Adapter", async (accounts) => {
     const voting = await VotingContract.at(votingAddress);
 
     // Guild balance must be 0 if no Loot shares are issued
-    let guildBalance = await dao.balanceOf(GUILD, ETH_TOKEN);
+    let guildBalance = await bank.balanceOf(GUILD, ETH_TOKEN);
     assert.equal(guildBalance.toString(), "0");
 
     // Total of OLT to be sent to the DAO in order to get the Loot shares
@@ -464,18 +479,18 @@ contract("LAOLAND - Ragequit Adapter", async (accounts) => {
     });
 
     // Check the number of Loot (non-voting shares) issued to the new Avisor
-    const advisorAccountLoot = await dao.balanceOf(advisorAccount, LOOT);
+    const advisorAccountLoot = await bank.balanceOf(advisorAccount, LOOT);
     assert.equal(advisorAccountLoot.toString(), "5");
 
     // Guild balance must change when Loot shares are issued
-    guildBalance = await dao.balanceOf(GUILD, oltContract.address);
+    guildBalance = await bank.balanceOf(GUILD, oltContract.address);
     assert.equal(guildBalance.toString(), "10");
 
     //Ragequit - Advisor ragequits
     await ragequit(dao, 0, advisorAccountLoot, advisorAccount);
 
     //Check Guild Bank Balance
-    let newGuildBalance = await dao.balanceOf(GUILD, oltContract.address);
+    let newGuildBalance = await bank.balanceOf(GUILD, oltContract.address);
     assert.equal(toBN(newGuildBalance).toString(), "2"); //must be close to
   });
 
@@ -488,7 +503,8 @@ contract("LAOLAND - Ragequit Adapter", async (accounts) => {
     let chunkSize = 5;
 
     let dao = await createDao(myAccount, lootSharePrice, chunkSize, 10, 1);
-
+    const bankAddress = await dao.getExtensionAddress(sha3("bank"));
+    const bank = await BankExtension.at(bankAddress);
     // Transfer 1000 OLTs to the Advisor account
     const onboardingAddress = await dao.getAdapterAddress(sha3("onboarding"));
     const onboarding = await OnboardingContract.at(onboardingAddress);
@@ -497,7 +513,7 @@ contract("LAOLAND - Ragequit Adapter", async (accounts) => {
     const voting = await VotingContract.at(votingAddress);
 
     // Guild balance must be 0 if no Loot shares are issued
-    let guildBalance = await dao.balanceOf(GUILD, ETH_TOKEN);
+    let guildBalance = await bank.balanceOf(GUILD, ETH_TOKEN);
     assert.equal(guildBalance.toString(), "0");
 
     // Total of OLT to be sent to the DAO in order to get the Loot shares
@@ -540,7 +556,7 @@ contract("LAOLAND - Ragequit Adapter", async (accounts) => {
     let ragequitAddress = await dao.getAdapterAddress(sha3("ragequit"));
     let ragequitContract = await RagequitContract.at(ragequitAddress);
 
-    const shares = await dao.balanceOf(memberAccount, SHARES);
+    const shares = await bank.balanceOf(memberAccount, SHARES);
     await ragequitContract.startRagequit(
       dao.address,
       toBN(Math.floor(shares / 2)),

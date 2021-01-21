@@ -397,6 +397,8 @@ contract OnboardingContract is
             "it can only mint internal tokens"
         );
 
+        dao.potentialNewMember(memberAddr);
+
         bank.addToBalance(memberAddr, tokenToMint, tokenAmount);
     }
 }

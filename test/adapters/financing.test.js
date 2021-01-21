@@ -50,6 +50,8 @@ contract("LAOLAND - Financing Adapter", async (accounts) => {
 
   it("should be possible to any individual to request financing", async () => {
     let dao = await createDao(myAccount);
+    const bankAddress = await dao.getExtensionAddress(sha3("bank"));
+    const bank = BankExtension.at(bankAddress);
     const voting = await getContract(dao, "voting", VotingContract);
     const financing = await getContract(dao, "financing", FinancingContract);
     const onboarding = await getContract(dao, "onboarding", OnboardingContract);
@@ -96,7 +98,7 @@ contract("LAOLAND - Financing Adapter", async (accounts) => {
       gasPrice: toBN("0"),
     });
     //Check Guild Bank Balance
-    checkBalance(dao, GUILD, ETH_TOKEN, expectedGuildBalance);
+    checkBalance(bank, GUILD, ETH_TOKEN, expectedGuildBalance);
 
     //Create Financing Request
     let requestedAmount = toBN(50000);
@@ -124,7 +126,7 @@ contract("LAOLAND - Financing Adapter", async (accounts) => {
     });
 
     //Check applicant balance before Financing proposal is processed
-    checkBalance(dao, applicant, ETH_TOKEN, "0");
+    checkBalance(bank, applicant, ETH_TOKEN, "0");
 
     //Process Financing proposal after voting
     await advanceTime(10000);
@@ -135,20 +137,20 @@ contract("LAOLAND - Financing Adapter", async (accounts) => {
 
     //Check Guild Bank balance to make sure the transfer has happened
     checkBalance(
-      dao,
+      bank,
       GUILD,
       ETH_TOKEN,
       expectedGuildBalance.sub(requestedAmount)
     );
     //Check the applicant token balance to make sure the funds are available in the bank for the applicant account
-    checkBalance(dao, applicant, ETH_TOKEN, requestedAmount);
+    checkBalance(bank, applicant, ETH_TOKEN, requestedAmount);
 
     const ethBalance = await web3.eth.getBalance(applicant);
     await withdraw.withdraw(dao.address, applicant, ETH_TOKEN, {
       from: myAccount,
       gasPrice: toBN("0"),
     });
-    checkBalance(dao, applicant, ETH_TOKEN, 0);
+    checkBalance(bank, applicant, ETH_TOKEN, 0);
     const ethBalance2 = await web3.eth.getBalance(applicant);
     assert.equal(
       toBN(ethBalance).add(requestedAmount).toString(),

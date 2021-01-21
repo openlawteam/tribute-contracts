@@ -75,7 +75,8 @@ contract DaoRegistry is DaoConstants, AdapterGuard {
         UPDATE_DELEGATE_KEY,
         SET_CONFIGURATION,
         ADD_EXTENSION,
-        REMOVE_EXTENSION
+        REMOVE_EXTENSION,
+        NEW_MEMBER
     }
 
     /*
@@ -157,11 +158,7 @@ contract DaoRegistry is DaoConstants, AdapterGuard {
      */
     function initialize(address creator) external {
         require(!initialized, "dao already initialized");
-
-        address memberAddr = creator;
-        Member storage member = members[memberAddr];
-        member.flags = setFlag(member.flags, uint8(MemberFlag.EXISTS), true);
-        memberAddressesByDelegatedKey[memberAddr] = memberAddr;
+        potentialNewMember(creator);
 
         initialized = true;
     }
@@ -190,6 +187,21 @@ contract DaoRegistry is DaoConstants, AdapterGuard {
         mainConfiguration[key] = value;
 
         emit ConfigurationUpdated(key, value);
+    }
+
+    function potentialNewMember(address memberAddress)
+        public
+        hasAccess(this, AclFlag.NEW_MEMBER)
+    {
+        Member storage member = members[memberAddress];
+        if (!getFlag(member.flags, uint8(MemberFlag.EXISTS))) {
+            member.flags = setFlag(
+                member.flags,
+                uint8(MemberFlag.EXISTS),
+                true
+            );
+            memberAddressesByDelegatedKey[memberAddress] = memberAddress;
+        }
     }
 
     /**

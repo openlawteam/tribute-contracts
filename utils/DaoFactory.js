@@ -181,6 +181,7 @@ async function addDefaultAdapters(
     PROCESS_PROPOSAL: true,
     ADD_TO_BALANCE: true,
     UPDATE_DELEGATE_KEY: true,
+    NEW_MEMBER: true
   });
 
   await entryDao("withdraw", dao, withdraw, {
@@ -193,12 +194,14 @@ async function addDefaultAdapters(
 
   await dao.setAclToExtensionForAdapter(bank.address, ragequit.address, entryBank({
     WITHDRAW: true,
+    INTERNAL_TRANSFER: true,
     SUB_FROM_BALANCE: true,
     ADD_TO_BALANCE: true,
   }));
 
   await dao.setAclToExtensionForAdapter(bank.address, guildkick.address, entryBank({
     WITHDRAW: true,
+    INTERNAL_TRANSFER: true,
     SUB_FROM_BALANCE: true,
     ADD_TO_BALANCE: true,
   }));
@@ -416,7 +419,8 @@ async function entryDao(name, dao, contract, flags) {
     flags.UPDATE_DELEGATE_KEY,
     flags.SET_CONFIGURATION,
     flags.ADD_EXTENSION,
-    flags.REMOVE_EXTENSION
+    flags.REMOVE_EXTENSION,
+    flags.NEW_MEMBER
   ];
 
   const acl = entry(values);
