@@ -34,14 +34,11 @@ SOFTWARE.
  */
 
 contract RagequitContract is IRagequit, DaoConstants, MemberGuard {
-    enum RagequitStatus {NOT_STARTED, IN_PROGRESS, DONE}
 
     struct Ragequit {
         uint256 blockNumber;
-        RagequitStatus status;
         uint256 initialTotalSharesAndLoot;
         uint256 sharesAndLootBurnt;
-        uint256 currentIndex;
     }
 
     mapping(address => mapping(address => Ragequit)) public ragequits;
@@ -56,15 +53,13 @@ contract RagequitContract is IRagequit, DaoConstants, MemberGuard {
     function startRagequit(
         DaoRegistry dao,
         uint256 sharesToBurn,
-        uint256 lootToBurn
-    ) external override {
-        address memberAddr = dao.getAddressIfDelegated(msg.sender);
+        uint256 lootToBurn,
+        address[] memory tokens
+    ) external override onlyMember(dao) {
+        address memberAddr = msg.sender;
+        // TODO check if member already execute the ragequit based on the dao and ragequit mapping?
+        // Ragequit storage ragequit = ragequits[address(dao)][memberAddr];
         BankExtension bank = BankExtension(dao.getExtensionAddress(BANK));
-        require(
-            ragequits[address(dao)][memberAddr].status !=
-                RagequitStatus.IN_PROGRESS,
-            "rage quit already in progress"
-        );
         //Burn if member has enough shares and loot
         require(
             bank.balanceOf(memberAddr, SHARES) >= sharesToBurn,
@@ -75,61 +70,52 @@ contract RagequitContract is IRagequit, DaoConstants, MemberGuard {
             "insufficient loot"
         );
 
-        _prepareRagequit(dao, memberAddr, sharesToBurn, lootToBurn);
+        _prepareRagequit(dao, memberAddr, sharesToBurn, lootToBurn, tokens);
     }
 
     function _prepareRagequit(
         DaoRegistry dao,
         address memberAddr,
         uint256 sharesToBurn,
-        uint256 lootToBurn
+        uint256 lootToBurn,
+        address[] memory tokens
     ) internal {
         // burn shares and loot
-
         Ragequit storage ragequit = ragequits[address(dao)][memberAddr];
         BankExtension bank = BankExtension(dao.getExtensionAddress(BANK));
-        ragequit.status = RagequitStatus.IN_PROGRESS;
         ragequit.blockNumber = block.number;
         //TODO: make this the sum of all the internal tokens
-        ragequit.initialTotalSharesAndLoot =
+        uint256 initialTotalSharesAndLoot =
             bank.balanceOf(TOTAL, SHARES) +
             bank.balanceOf(TOTAL, LOOT) +
             bank.balanceOf(TOTAL, LOCKED_LOOT);
 
-        ragequit.sharesAndLootBurnt = sharesToBurn + lootToBurn;
-        ragequit.currentIndex = 0;
+         uint256 sharesAndLootBurnt = sharesToBurn + lootToBurn;
 
         bank.subtractFromBalance(memberAddr, SHARES, sharesToBurn);
         bank.subtractFromBalance(memberAddr, LOOT, lootToBurn);
 
-        dao.jailMember(memberAddr);
+        _burnShares(dao, memberAddr, sharesAndLootBurnt, initialTotalSharesAndLoot, tokens);
+
     }
 
-    function burnShares(
+    function _burnShares(
         DaoRegistry dao,
         address memberAddr,
-        uint256 toIndex
-    ) external override {
+        uint256 sharesAndLootToBurn,
+        uint256 initialTotalSharesAndLoot,
+        address[] memory tokens
+    ) internal {
         // burn shares and loot
         Ragequit storage ragequit = ragequits[address(dao)][memberAddr];
-        require(
-            ragequit.status == RagequitStatus.IN_PROGRESS,
-            "ragequit not in progress"
-        );
-        uint256 currentIndex = ragequit.currentIndex;
-        require(currentIndex <= toIndex, "toIndex too low");
-        uint256 sharesAndLootToBurn = ragequit.sharesAndLootBurnt;
-        uint256 initialTotalSharesAndLoot = ragequit.initialTotalSharesAndLoot;
+
         BankExtension bank = BankExtension(dao.getExtensionAddress(BANK));
         //Update internal Guild and Member balances
-        uint256 tokenLength = bank.nbTokens();
-        uint256 maxIndex = toIndex;
-        if (maxIndex > tokenLength) {
-            maxIndex = tokenLength;
-        }
-        uint256 blockNumber = ragequit.blockNumber;
-        for (uint256 i = currentIndex; i < maxIndex; i++) {
-            address token = bank.getToken(i);
+        
+        uint256 blockNumber = block.number;//???
+        for (uint256 i = currentIndex; i < tokens.length; i++) {
+            address token = tokens[i];
+            require(dao.isAllowedToken(token), "token not allowed at " + i);
             uint256 amountToRagequit =
                 FairShareHelper.calc(
                     bank.getPriorAmount(GUILD, token, blockNumber),
@@ -148,12 +134,6 @@ contract RagequitContract is IRagequit, DaoConstants, MemberGuard {
                     amountToRagequit
                 );
             }
-        }
-
-        ragequit.currentIndex = maxIndex;
-        if (maxIndex == tokenLength) {
-            ragequit.status = RagequitStatus.DONE;
-            dao.unjailMember(memberAddr);
         }
     }
 }
