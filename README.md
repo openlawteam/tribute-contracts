@@ -67,6 +67,8 @@ For an Adapater to be used it must be registered to DaoRegistry.sol.
 
 `enum DaoState {CREATION, READY}` CREATION  = the DAO has been deployed via `initializeDao`, but is not ready to be used. READY = the function `finalizeDao` has been called by the deployer is now ready to be used.  
 
+**Structs**
+
 `struct Proposal` track the state of the proposal: exist, sponsored, processed, canceled. 
 
 `struct Member` track state of a member: exists, jailed. 
@@ -93,7 +95,36 @@ For an Adapater to be used it must be registered to DaoRegistry.sol.
    -  `availableTokens` and `availableInteralTokens`, are tokens that have been whitelisted for use with the DAO.  A token goes from `tokens` or `internalTokens` to `avaialbleTokens` and `availableInternalTokens` when the function `registerPotentialNewToken` or `registerPotentialNewInternalToken` is called.   
   - `checkpoints` and `numCheckpoints`  for each token in the Bank, we create checkpoints so we can figure out a balance at a certain block number. The balance is managed for the member address (not the delegate key).  The same technnique is to determine whiuch key controls a member at a certain block number (delegate key -> member address snapshot)
 
-`struct AdapterDetails` When an Adapter is added to `DaoRegistry` via the function `addAdapter`, a bytes32 `id` and a uint256 `acl` are parameters assigned to the Adapter for use in identifying the Adapter. 
+`struct AdapterDetails` When an Adapter is added to `DaoRegistry` via the function `addAdapter`, a bytes32 `id` and a uint256 `acl` are parameters assigned to the Adapter by for use in identifying the Adapter. 
+
+**Public Variables**
+
+`members` the map to track all members of the DAO.  
+` memberAddressesByDelegatedKey` delegate key => member address mapping.  
+`Bank` the state of the DAO Bank.  
+`checkpoints`  a map to track memberAddress => checkpointNum => DelegateCheckpoint.  
+`numCheckpoints` a map to track memberAddress to numDelegateCheckpoints.  
+`DaoState` track whether Dao is in CREATION or READY.  
+`proposals` map to track of all proposals submitted. 
+`registry` map to track all adapters registered to DAO.  
+`inverseRegistry` inverse map to get the adapter id based on its contract address. 
+`mainConfiguration` map to track configuration parameters.  
+`addressConfiguration` map to track configuration parameters.  
+
+**Functions**
+Note: the constructor function is non-existent, because this is a Cloneable contract. See, https://eips.ethereum.org/EIPS/eip-1167 
+
+`initialize(address creator)` This function initializes the DAO. It initializes the available tokens, checkpoints, and membership of the `creator` with 1 Share.  
+`receive` payable function.  
+`finalizeDao` sets the state of the Dao to READY.  
+
+Configure and save the DAO parameters. For example, Onboarding adapter uses `setConfiguration` to 1) save the max number of chunks allowed in the DAO, 2) save the number of shares per chunk and 3) save the chunk size. The stored configs will be read/used by the Adapters/Registry. This means values do not have to be hard coded in the contract, and also be updated. 
+
+`setConfiguration(bytes32 key, uint256 value)`  
+`setAddressConfiguration(bytes32 key, address value)`
+`getConfiguration(bytes32 key)` 
+`getAddressConfiguration(bytes32 key)`
+
 
 ### Helpers 
 #### FlagHelper.sol
