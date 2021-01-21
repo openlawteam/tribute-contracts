@@ -5,7 +5,6 @@ pragma solidity ^0.8.0;
 import "../core/DaoConstants.sol";
 import "../core/DaoRegistry.sol";
 import "../extensions/Bank.sol";
-import "../guards/MemberGuard.sol";
 import "../guards/AdapterGuard.sol";
 import "../utils/Signatures.sol";
 
@@ -33,12 +32,7 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
  */
 
-contract CouponOnboardingContract is
-    DaoConstants,
-    MemberGuard,
-    AdapterGuard,
-    Signatures
-{
+contract CouponOnboardingContract is DaoConstants, AdapterGuard, Signatures {
     struct Coupon {
         address authorizedMember;
         uint256 amount;
