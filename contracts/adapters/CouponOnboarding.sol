@@ -4,9 +4,9 @@ pragma solidity ^0.8.0;
 
 import "../core/DaoConstants.sol";
 import "../core/DaoRegistry.sol";
+import "../extensions/Bank.sol";
 import "../guards/MemberGuard.sol";
 import "../guards/AdapterGuard.sol";
-import "../helpers/FlagHelper.sol";
 import "../utils/Signatures.sol";
 
 /**
@@ -69,7 +69,9 @@ contract CouponOnboardingContract is
     ) external onlyAdapter(dao) {
         dao.setAddressConfiguration(SignerPublicKey, signerPublicKey);
         dao.setAddressConfiguration(TokenAddrToMint, tokenAddrToMint);
-        dao.registerPotentialNewInternalToken(tokenAddrToMint);
+
+        BankExtension bank = BankExtension(dao.getExtensionAddress(BANK));
+        bank.registerPotentialNewInternalToken(tokenAddrToMint);
     }
 
     function hashCouponMessage(
@@ -99,7 +101,7 @@ contract CouponOnboardingContract is
     ) external {
         uint256 currentFlag = flags[address(dao)][nonce / 256];
         require(
-            _getFlag(currentFlag, nonce % 256) == false,
+            getFlag(currentFlag, nonce % 256) == false,
             "coupon has already been redeemed"
         );
 
@@ -112,7 +114,7 @@ contract CouponOnboardingContract is
 
         require(recoveredKey == signerPublicKey, "coupon signature is invalid");
 
-        flags[address(dao)][nonce / 256] = _setFlag(
+        flags[address(dao)][nonce / 256] = setFlag(
             currentFlag,
             nonce % 256,
             true
@@ -120,30 +122,8 @@ contract CouponOnboardingContract is
 
         address tokenAddrToMint =
             address(dao.getAddressConfiguration(TokenAddrToMint));
-        dao.addToBalance(authorizedMember, tokenAddrToMint, amount);
-    }
 
-    function _getFlag(uint256 _flags, uint256 flag)
-        internal
-        pure
-        returns (bool)
-    {
-        return (_flags >> uint8(flag)) % 2 == 1;
-    }
-
-    function _setFlag(
-        uint256 _flags,
-        uint256 flag,
-        bool value
-    ) public pure returns (uint256) {
-        if (_getFlag(_flags, flag) != value) {
-            if (value) {
-                return _flags + 2**uint256(flag);
-            } else {
-                return _flags - 2**uint256(flag);
-            }
-        } else {
-            return _flags;
-        }
+        BankExtension bank = BankExtension(dao.getExtensionAddress(BANK));
+        bank.addToBalance(authorizedMember, tokenAddrToMint, amount);
     }
 }
