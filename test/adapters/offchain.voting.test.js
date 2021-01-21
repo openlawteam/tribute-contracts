@@ -97,7 +97,11 @@ async function createOffchainVotingDao(
   const offchainVoting = await OffchainVotingContract.new(votingAddress, 1);
   const bankAddress = await dao.getExtensionAddress(sha3("bank"));
   await dao.removeAdapter(sha3("voting"));
-  await dao.addAdapter(sha3("voting"), offchainVoting.address, entryDao("voting", dao, offchainVoting, {}).flags);
+  await dao.addAdapter(
+    sha3("voting"),
+    offchainVoting.address,
+    entryDao("voting", dao, offchainVoting, {}).flags
+  );
   await dao.setAclToExtensionForAdapter(
     bankAddress,
     offchainVoting.address,

@@ -249,6 +249,14 @@ async function deployDao(
   
   const {dao, daoFactory} = await cloneDaoDeployer(deployer);
 
+  await deployer.deploy(BankExtension);
+  const identityBank = await BankExtension.deployed();
+
+  await deployer.deploy(BankFactory, identityBank.address);
+  const bankFactory = await BankFactory.deployed();
+
+  await bankFactory.createBank(dao.address);
+
   await addDefaultAdapters(
     dao,
     unitPrice,
@@ -265,7 +273,7 @@ async function deployDao(
   const offchainVoting = await deployer.deploy(OffchainVotingContract, votingAddress, 1);
   await daoFactory.updateAdapter(
     dao.address,
-    entry("voting", offchainVoting, {
+    entryDao("voting", offchainVoting, {
       ADD_TO_BALANCE: true,
       SUB_FROM_BALANCE: true,
       INTERNAL_TRANSFER: true,
@@ -349,7 +357,7 @@ async function cloneDaoDeployer(deployer) {
   const dao = await DaoRegistry.deployed();
   await deployer.deploy(DaoFactory, dao.address);
   let daoFactory = await DaoFactory.deployed();
-  await daoFactory.createDao("test-dao", [], [], false);
+  await daoFactory.createDao("test-dao");
   // checking the gas usaged to clone a contract
   let pastEvents = await daoFactory.getPastEvents();
   let { _address } = pastEvents[0].returnValues;
