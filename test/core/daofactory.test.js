@@ -3,19 +3,15 @@
 
 /**
 MIT License
-
 Copyright (c) 2020 Openlaw
-
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
 in the Software without restriction, including without limitation the rights
 to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
 copies of the Software, and to permit persons to whom the Software is
 furnished to do so, subject to the following conditions:
-
 The above copyright notice and this permission notice shall be included in all
 copies or substantial portions of the Software.
-
 THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
 IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
 FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
@@ -26,7 +22,6 @@ SOFTWARE.
  */
 const DaoFactory = artifacts.require("./core/DaoFactory");
 const DaoRegistry = artifacts.require("./core/DaoRegistry");
-const FlagHelperLib = artifacts.require("./helpers/FlagHelper");
 
 const { sha3, toBN, addDefaultAdapters } = require("../../utils/DaoFactory.js");
 
@@ -35,9 +30,6 @@ contract("DaoFactory", async (accounts) => {
   const anotherOwner = accounts[2];
 
   const createIdentityDAO = async (owner) => {
-    let lib = await FlagHelperLib.new();
-    await DaoRegistry.link("FlagHelper", lib.address);
-
     let identityDao = await DaoRegistry.new({
       from: owner,
       gasPrice: toBN("0"),
@@ -45,16 +37,9 @@ contract("DaoFactory", async (accounts) => {
     return identityDao;
   };
 
-  const cloneDao = async (
-    owner,
-    identityAddr,
-    name,
-    keys = [],
-    values = [],
-    finalizeDao = false
-  ) => {
+  const cloneDao = async (owner, identityAddr, name) => {
     let daoFactory = await DaoFactory.new(identityAddr);
-    await daoFactory.createDao(name, keys, values, finalizeDao, {
+    await daoFactory.createDao(name, {
       from: owner,
       gasPrice: toBN("0"),
     });
@@ -121,13 +106,13 @@ contract("DaoFactory", async (accounts) => {
     let key2 = sha3("key2");
     let keys = [key1, key2];
     let values = [toBN("10"), toBN("15")];
-    let { daoAddress, daoName } = await cloneDao(
+    let { daoAddress, daoName, daoFactory } = await cloneDao(
       anotherOwner,
       identityDao.address,
-      "dao-with-configs",
-      keys,
-      values
+      "dao-with-configs"
     );
+
+    await daoFactory.configureDao(daoAddress, keys, values, false);
 
     assert.equal("dao-with-configs", daoName);
 

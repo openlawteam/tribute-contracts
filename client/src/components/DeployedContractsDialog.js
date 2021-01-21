@@ -24,7 +24,6 @@ const DeployedContractsDialog = ({ isOpen, onClose }) => {
   const contracts = JSON.parse(process.env.REACT_APP_DEPLOYED_CONTRACTS) || {
     daoFactory: "not deployed",
     identityDao: "not deployed",
-    flagHelperLib: "not deployed",
     adapters: {
       voting: "not deployed",
       onboarding: "not deployed",

@@ -5,9 +5,11 @@ pragma solidity ^0.8.0;
 import "./interfaces/IOnboarding.sol";
 import "../core/DaoConstants.sol";
 import "../core/DaoRegistry.sol";
+import "../extensions/Bank.sol";
 import "../adapters/interfaces/IVoting.sol";
 import "../guards/MemberGuard.sol";
 import "../guards/AdapterGuard.sol";
+import "../utils/IERC20.sol";
 
 /**
 MIT License
@@ -100,8 +102,10 @@ contract OnboardingContract is
             tokenAddr
         );
 
-        dao.registerPotentialNewInternalToken(tokenAddrToMint);
-        dao.registerPotentialNewToken(tokenAddr);
+        BankExtension bank = BankExtension(dao.getExtensionAddress(BANK));
+
+        bank.registerPotentialNewInternalToken(tokenAddrToMint);
+        bank.registerPotentialNewToken(tokenAddr);
     }
 
     function _submitMembershipProposal(
@@ -298,7 +302,10 @@ contract OnboardingContract is
         );
 
         require(
-            !dao.getProposalFlag(proposalId, FlagHelper.Flag.SPONSORED),
+            !dao.getProposalFlag(
+                proposalId,
+                DaoRegistry.ProposalFlag.SPONSORED
+            ),
             "proposal already sponsored"
         );
 
@@ -317,15 +324,18 @@ contract OnboardingContract is
             "proposal does not exist"
         );
         require(
-            !dao.getProposalFlag(proposalId, FlagHelper.Flag.PROCESSED),
+            !dao.getProposalFlag(
+                proposalId,
+                DaoRegistry.ProposalFlag.PROCESSED
+            ),
             "proposal already processed"
         );
 
         IVoting votingContract = IVoting(dao.getAdapterAddress(VOTING));
         uint256 voteResult = votingContract.voteResult(dao, proposalId);
-
         ProposalDetails storage proposal = proposals[address(dao)][proposalId];
         if (voteResult == 2) {
+            BankExtension bank = BankExtension(dao.getExtensionAddress(BANK));
             _mintTokensToMember(
                 dao,
                 proposal.tokenToMint,
@@ -335,13 +345,13 @@ contract OnboardingContract is
 
             address token = proposal.token;
             if (token == ETH_TOKEN) {
-                dao.addToBalance{value: proposal.amount}(
+                bank.addToBalance{value: proposal.amount}(
                     GUILD,
                     token,
                     proposal.amount
                 );
             } else {
-                dao.addToBalance(GUILD, token, proposal.amount);
+                bank.addToBalance(GUILD, token, proposal.amount);
 
                 IERC20 erc20 = IERC20(token);
                 erc20.transfer(address(dao), proposal.amount);
@@ -381,11 +391,14 @@ contract OnboardingContract is
         address memberAddr,
         uint256 tokenAmount
     ) internal {
+        BankExtension bank = BankExtension(dao.getExtensionAddress(BANK));
         require(
-            dao.isInternalToken(tokenToMint),
+            bank.isInternalToken(tokenToMint),
             "it can only mint internal tokens"
         );
 
-        dao.addToBalance(memberAddr, tokenToMint, tokenAmount);
+        dao.potentialNewMember(memberAddr);
+
+        bank.addToBalance(memberAddr, tokenToMint, tokenAmount);
     }
 }

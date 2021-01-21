@@ -345,10 +345,10 @@ function buildVoteLeafHashForMerkleTree(leaf, verifyingContract, actionId, chain
   return '0x' + sigUtil.TypedDataUtils.sign(msgParams).toString('hex');
 }
 
-async function prepareVoteResult(votes, dao, actionId, chainId, snapshot) {
+async function prepareVoteResult(votes, dao, bank, actionId, chainId, snapshot) {
   const sortedVotes = votes.sort((a,b) => a.account > b.account);
   const leaves = await Promise.all(sortedVotes.map(async (vote) => {
-    const weight = await dao.getPriorAmount(vote.payload.account, SHARES, snapshot);
+    const weight = await bank.getPriorAmount(vote.payload.account, SHARES, snapshot);
     return Object.assign(vote, {weight});
   }));
 

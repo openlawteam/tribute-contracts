@@ -3,9 +3,9 @@ pragma solidity ^0.8.0;
 // SPDX-License-Identifier: MIT
 
 import "./DaoConstants.sol";
-import "../helpers/FlagHelper.sol";
+
 import "../guards/AdapterGuard.sol";
-import "../utils/IERC20.sol";
+import "../extensions/IExtension.sol";
 
 /**
 MIT License
@@ -34,11 +34,6 @@ SOFTWARE.
 contract DaoRegistry is DaoConstants, AdapterGuard {
     bool public initialized = false; // internally tracks deployment under eip-1167 proxy pattern
 
-    /*
-     * LIBRARIES
-     */
-    using FlagHelper for uint256;
-
     enum DaoState {CREATION, READY}
 
     /*
@@ -55,17 +50,34 @@ contract DaoRegistry is DaoConstants, AdapterGuard {
     );
     event AdapterRemoved(bytes32 adapterId);
 
+    event ExtensionAdded(bytes32 extensionId, address extensionAddress);
+    event ExtensionRemoved(bytes32 extensionId);
+
     /// @dev - Events for Members
     event UpdateDelegateKey(address memberAddress, address newDelegateKey);
-
-    /// @dev - Events for Bank
     event MemberJailed(address memberAddr);
-
     event MemberUnjailed(address memberAddr);
+    event ConfigurationUpdated(bytes32 key, uint256 value);
+    event AddressConfigurationUpdated(bytes32 key, address value);
 
-    event NewBalance(address member, address tokenAddr, uint256 amount);
+    enum MemberFlag {EXISTS, JAILED}
 
-    event Withdraw(address account, address tokenAddr, uint256 amount);
+    enum ProposalFlag {EXISTS, SPONSORED, PROCESSED}
+
+    enum AclFlag {
+        ADD_ADAPTER,
+        REMOVE_ADAPTER,
+        JAIL_MEMBER,
+        UNJAIL_MEMBER,
+        SUBMIT_PROPOSAL,
+        SPONSOR_PROPOSAL,
+        PROCESS_PROPOSAL,
+        UPDATE_DELEGATE_KEY,
+        SET_CONFIGURATION,
+        ADD_EXTENSION,
+        REMOVE_EXTENSION,
+        NEW_MEMBER
+    }
 
     /*
      * STRUCTURES
@@ -93,21 +105,14 @@ contract DaoRegistry is DaoConstants, AdapterGuard {
         address delegateKey;
     }
 
-    struct Bank {
-        address[] tokens;
-        address[] internalTokens;
-        // tokenAddress => availability
-        mapping(address => bool) availableTokens;
-        mapping(address => bool) availableInternalTokens;
-        // tokenAddress => memberAddress => checkpointNum => Checkpoint
-        mapping(address => mapping(address => mapping(uint32 => Checkpoint))) checkpoints;
-        // tokenAddress => memberAddress => numCheckpoints
-        mapping(address => mapping(address => uint32)) numCheckpoints;
-    }
-
-    struct AdapterDetails {
+    struct AdapterEntry {
         bytes32 id;
         uint256 acl;
+    }
+
+    struct ExtensionEntry {
+        bytes32 id;
+        mapping(address => uint256) acl;
     }
 
     /*
@@ -117,7 +122,6 @@ contract DaoRegistry is DaoConstants, AdapterGuard {
 
     // delegate key => member address mapping
     mapping(address => address) public memberAddressesByDelegatedKey;
-    Bank private _bank; // the state of the DAO Bank
 
     // memberAddress => checkpointNum => DelegateCheckpoint
     mapping(address => mapping(uint32 => DelegateCheckpoint)) checkpoints;
@@ -129,9 +133,13 @@ contract DaoRegistry is DaoConstants, AdapterGuard {
     /// @notice The map that keeps track of all proposasls submitted to the DAO
     mapping(bytes32 => Proposal) public proposals;
     /// @notice The map that keeps track of all adapters registered in the DAO
-    mapping(bytes32 => address) public registry;
+    mapping(bytes32 => address) public adapters;
     /// @notice The inverse map to get the adapter id based on its address
-    mapping(address => AdapterDetails) public inverseRegistry;
+    mapping(address => AdapterEntry) public inverseAdapters;
+    /// @notice The map that keeps track of all extensions registered in the DAO
+    mapping(bytes32 => address) public extensions;
+    /// @notice The inverse map to get the extension id based on its address
+    mapping(address => ExtensionEntry) public inverseExtensions;
     /// @notice The map that keeps track of configuration parameters for the DAO and adapters
     mapping(bytes32 => uint256) public mainConfiguration;
     mapping(bytes32 => address) public addressConfiguration;
@@ -150,17 +158,7 @@ contract DaoRegistry is DaoConstants, AdapterGuard {
      */
     function initialize(address creator) external {
         require(!initialized, "dao already initialized");
-
-        address memberAddr = creator;
-        Member storage member = members[memberAddr];
-        member.flags = member.flags.setFlag(FlagHelper.Flag.EXISTS, true);
-        memberAddressesByDelegatedKey[memberAddr] = memberAddr;
-
-        _bank.availableInternalTokens[SHARES] = true;
-        _bank.internalTokens.push(SHARES);
-
-        _createNewAmountCheckpoint(memberAddr, SHARES, 1);
-        _createNewAmountCheckpoint(TOTAL, SHARES, 1);
+        potentialNewMember(creator);
 
         initialized = true;
     }
@@ -184,9 +182,26 @@ contract DaoRegistry is DaoConstants, AdapterGuard {
      */
     function setConfiguration(bytes32 key, uint256 value)
         external
-        hasAccess(this, FlagHelper.Flag.SET_CONFIGURATION)
+        hasAccess(this, AclFlag.SET_CONFIGURATION)
     {
         mainConfiguration[key] = value;
+
+        emit ConfigurationUpdated(key, value);
+    }
+
+    function potentialNewMember(address memberAddress)
+        public
+        hasAccess(this, AclFlag.NEW_MEMBER)
+    {
+        Member storage member = members[memberAddress];
+        if (!getFlag(member.flags, uint8(MemberFlag.EXISTS))) {
+            member.flags = setFlag(
+                member.flags,
+                uint8(MemberFlag.EXISTS),
+                true
+            );
+            memberAddressesByDelegatedKey[memberAddress] = memberAddress;
+        }
     }
 
     /**
@@ -197,9 +212,11 @@ contract DaoRegistry is DaoConstants, AdapterGuard {
      */
     function setAddressConfiguration(bytes32 key, address value)
         external
-        hasAccess(this, FlagHelper.Flag.SET_CONFIGURATION)
+        hasAccess(this, AclFlag.SET_CONFIGURATION)
     {
         addressConfiguration[key] = value;
+
+        emit AddressConfigurationUpdated(key, value);
     }
 
     /**
@@ -224,6 +241,27 @@ contract DaoRegistry is DaoConstants, AdapterGuard {
 
     /**
      * @notice Adds a new adapter to the registry
+     * @param extensionId The unique identifier of the new adapter
+     * @param extension The address of the adapter
+     */
+    function addExtension(
+        bytes32 extensionId,
+        IExtension extension,
+        address creator
+    ) external hasAccess(this, AclFlag.ADD_EXTENSION) {
+        require(extensionId != bytes32(0), "extension id must not be empty");
+        require(
+            extensions[extensionId] == address(0x0),
+            "extension Id already in use"
+        );
+        extensions[extensionId] = address(extension);
+        inverseExtensions[address(extension)].id = extensionId;
+        extension.initialize(this, creator);
+        emit ExtensionAdded(extensionId, address(extension));
+    }
+
+    /**
+     * @notice Adds a new adapter to the registry
      * @param adapterId The unique identifier of the new adapter
      * @param adapterAddress The address of the adapter
      * @param acl The access control list of the adapter
@@ -232,20 +270,30 @@ contract DaoRegistry is DaoConstants, AdapterGuard {
         bytes32 adapterId,
         address adapterAddress,
         uint256 acl
-    ) external hasAccess(this, FlagHelper.Flag.ADD_ADAPTER) {
+    ) external hasAccess(this, AclFlag.ADD_ADAPTER) {
         require(adapterId != bytes32(0), "adapterId must not be empty");
         require(
             adapterAddress != address(0x0),
             "adapterAddress must not be empty"
         );
         require(
-            registry[adapterId] == address(0x0),
+            adapters[adapterId] == address(0x0),
             "adapterId already in use"
         );
-        registry[adapterId] = adapterAddress;
-        inverseRegistry[adapterAddress].id = adapterId;
-        inverseRegistry[adapterAddress].acl = acl;
+        adapters[adapterId] = adapterAddress;
+        inverseAdapters[adapterAddress].id = adapterId;
+        inverseAdapters[adapterAddress].acl = acl;
         emit AdapterAdded(adapterId, adapterAddress, acl);
+    }
+
+    function setAclToExtensionForAdapter(
+        address extensionAddress,
+        address adapterAddress,
+        uint256 acl
+    ) external hasAccess(this, AclFlag.ADD_EXTENSION) {
+        require(isAdapter(adapterAddress), "not an adapter");
+        require(isExtension(extensionAddress), "not an extension");
+        inverseExtensions[extensionAddress].acl[adapterAddress] = acl;
     }
 
     /**
@@ -254,16 +302,43 @@ contract DaoRegistry is DaoConstants, AdapterGuard {
      */
     function removeAdapter(bytes32 adapterId)
         external
-        hasAccess(this, FlagHelper.Flag.REMOVE_ADAPTER)
+        hasAccess(this, AclFlag.REMOVE_ADAPTER)
     {
         require(adapterId != bytes32(0), "adapterId must not be empty");
         require(
-            registry[adapterId] != address(0x0),
+            adapters[adapterId] != address(0x0),
             "adapterId not registered"
         );
-        delete inverseRegistry[registry[adapterId]];
-        delete registry[adapterId];
+        delete inverseAdapters[adapters[adapterId]];
+        delete adapters[adapterId];
         emit AdapterRemoved(adapterId);
+    }
+
+    /**
+     * @notice Removes an adapter from the registry
+     * @param extensionId The unique identifier of the extension
+     */
+    function removeExtension(bytes32 extensionId)
+        external
+        hasAccess(this, AclFlag.REMOVE_EXTENSION)
+    {
+        require(extensionId != bytes32(0), "extensionId must not be empty");
+        require(
+            extensions[extensionId] != address(0x0),
+            "extensionId not registered"
+        );
+        delete inverseExtensions[extensions[extensionId]];
+        delete extensions[extensionId];
+        emit ExtensionRemoved(extensionId);
+    }
+
+    /**
+     * @notice Looks up if there is an extension of a given address
+     * @return Whether or not the address is an extension
+     * @param extensionAddr The address to look up
+     */
+    function isExtension(address extensionAddr) public view returns (bool) {
+        return inverseExtensions[extensionAddr].id != bytes32(0);
     }
 
     /**
@@ -272,7 +347,7 @@ contract DaoRegistry is DaoConstants, AdapterGuard {
      * @param adapterAddress The address to look up
      */
     function isAdapter(address adapterAddress) public view returns (bool) {
-        return inverseRegistry[adapterAddress].id != bytes32(0);
+        return inverseAdapters[adapterAddress].id != bytes32(0);
     }
 
     /**
@@ -281,14 +356,30 @@ contract DaoRegistry is DaoConstants, AdapterGuard {
      * @param adapterAddress The address to look up
      * @param flag The ACL flag to check against the given address
      */
-    function hasAdapterAccess(address adapterAddress, FlagHelper.Flag flag)
+    function hasAdapterAccess(address adapterAddress, AclFlag flag)
         public
         view
         returns (bool)
     {
+        return getFlag(inverseAdapters[adapterAddress].acl, uint8(flag));
+    }
+
+    /**
+     * @notice Checks if an adapter has a given ACL flag
+     * @return Whether or not the given adapter has the given flag set
+     * @param adapterAddress The address to look up
+     * @param flag The ACL flag to check against the given address
+     */
+    function hasAdapterAccessToExtension(
+        address adapterAddress,
+        address extensionAddress,
+        uint8 flag
+    ) public view returns (bool) {
         return
-            inverseRegistry[adapterAddress].id != bytes32(0) &&
-            inverseRegistry[adapterAddress].acl.getFlag(flag);
+            getFlag(
+                inverseExtensions[extensionAddress].acl[adapterAddress],
+                uint8(flag)
+            );
     }
 
     /**
@@ -300,7 +391,20 @@ contract DaoRegistry is DaoConstants, AdapterGuard {
         view
         returns (address)
     {
-        return registry[adapterId];
+        return adapters[adapterId];
+    }
+
+    /**
+     * @return The address of a given extension Id
+     * @param extensionId The ID to look up
+     */
+    function getExtensionAddress(bytes32 extensionId)
+        external
+        view
+        returns (address)
+    {
+        require(extensions[extensionId] != address(0), "extension not found");
+        return extensions[extensionId];
     }
 
     /**
@@ -310,13 +414,16 @@ contract DaoRegistry is DaoConstants, AdapterGuard {
      */
     function jailMember(address memberAddr)
         external
-        hasAccess(this, FlagHelper.Flag.JAIL_MEMBER)
+        hasAccess(this, AclFlag.JAIL_MEMBER)
     {
         Member storage member = members[memberAddr];
         uint256 flags = member.flags;
-        require(flags.getFlag(FlagHelper.Flag.EXISTS), "member does not exist");
-        if (!flags.getFlag(FlagHelper.Flag.JAILED)) {
-            member.flags = flags.setFlag(FlagHelper.Flag.JAILED, true);
+        require(
+            getFlag(flags, uint8(MemberFlag.EXISTS)),
+            "member does not exist"
+        );
+        if (!getFlag(flags, uint8(MemberFlag.JAILED))) {
+            member.flags = setFlag(flags, uint8(MemberFlag.JAILED), true);
 
             // Stop the member from voting at that point in time
             _createNewDelegateCheckpoint(memberAddr, address(1)); // 1 instead of 0 to avoid existence check
@@ -331,63 +438,22 @@ contract DaoRegistry is DaoConstants, AdapterGuard {
      */
     function unjailMember(address memberAddr)
         external
-        hasAccess(this, FlagHelper.Flag.UNJAIL_MEMBER)
+        hasAccess(this, AclFlag.UNJAIL_MEMBER)
     {
         Member storage member = members[memberAddr];
         uint256 flags = member.flags;
-        require(flags.getFlag(FlagHelper.Flag.EXISTS), "member does not exist");
-        if (flags.getFlag(FlagHelper.Flag.JAILED)) {
-            member.flags = flags.setFlag(FlagHelper.Flag.JAILED, false);
+        require(
+            getFlag(flags, uint8(MemberFlag.EXISTS)),
+            "member does not exist"
+        );
+        if (getFlag(flags, uint8(MemberFlag.JAILED))) {
+            member.flags = setFlag(flags, uint8(MemberFlag.JAILED), false);
             _createNewDelegateCheckpoint(
                 memberAddr,
                 getPreviousDelegateKey(memberAddr)
             ); // we do this to re-allow votes
             emit MemberUnjailed(memberAddr);
         }
-    }
-
-    /**
-     * @notice Executes an arbitrary function call
-     * @dev Calls a function and reverts if unsuccessful
-     * @return The return data of the function call
-     * @param _actionTo The address at which the function will be called
-     * @param _actionValue The value to pass in to function call
-     * @param _actionData The data to give the function call
-     */
-    function execute(
-        address _actionTo,
-        uint256 _actionValue,
-        bytes calldata _actionData
-    ) external hasAccess(this, FlagHelper.Flag.EXECUTE) returns (bytes memory) {
-        (bool success, bytes memory retData) =
-            _actionTo.call{value: _actionValue}(_actionData);
-
-        if (!success) {
-            string memory m = _getRevertMsg(retData);
-            revert(m);
-        }
-        return retData;
-    }
-
-    function withdraw(
-        address payable account,
-        address tokenAddr,
-        uint256 amount
-    ) external hasAccess(this, FlagHelper.Flag.WITHDRAW) {
-        require(
-            balanceOf(account, tokenAddr) >= amount,
-            "dao::withdraw::not enough funds"
-        );
-        subtractFromBalance(account, tokenAddr, amount);
-        if (tokenAddr == ETH_TOKEN) {
-            (bool success, ) = account.call{value: amount}("");
-            require(success, "withdraw failed");
-        } else {
-            IERC20 erc20 = IERC20(tokenAddr);
-            erc20.transfer(account, amount);
-        }
-
-        emit Withdraw(account, tokenAddr, amount);
     }
 
     /**
@@ -398,7 +464,7 @@ contract DaoRegistry is DaoConstants, AdapterGuard {
      */
     function submitProposal(bytes32 proposalId)
         external
-        hasAccess(this, FlagHelper.Flag.SUBMIT_PROPOSAL)
+        hasAccess(this, AclFlag.SUBMIT_PROPOSAL)
     {
         proposals[proposalId] = Proposal(msg.sender, 1);
         emit SubmittedProposal(proposalId, 1);
@@ -412,10 +478,10 @@ contract DaoRegistry is DaoConstants, AdapterGuard {
      */
     function sponsorProposal(bytes32 proposalId, address sponsoringMember)
         external
-        hasAccess(this, FlagHelper.Flag.SPONSOR_PROPOSAL)
+        hasAccess(this, AclFlag.SPONSOR_PROPOSAL)
     {
         Proposal storage proposal =
-            _setProposalFlag(proposalId, FlagHelper.Flag.SPONSORED);
+            _setProposalFlag(proposalId, ProposalFlag.SPONSORED);
 
         uint256 flags = proposal.flags;
 
@@ -424,11 +490,11 @@ contract DaoRegistry is DaoConstants, AdapterGuard {
             "only the adapter that submitted the proposal can process it"
         );
         require(
-            flags.getFlag(FlagHelper.Flag.EXISTS),
+            getFlag(flags, uint8(ProposalFlag.EXISTS)),
             "proposal does not exist"
         );
         require(
-            !flags.getFlag(FlagHelper.Flag.PROCESSED),
+            !getFlag(flags, uint8(ProposalFlag.PROCESSED)),
             "proposal must not be processed"
         );
         require(
@@ -445,10 +511,10 @@ contract DaoRegistry is DaoConstants, AdapterGuard {
      */
     function processProposal(bytes32 proposalId)
         external
-        hasAccess(this, FlagHelper.Flag.PROCESS_PROPOSAL)
+        hasAccess(this, AclFlag.PROCESS_PROPOSAL)
     {
         Proposal storage proposal =
-            _setProposalFlag(proposalId, FlagHelper.Flag.PROCESSED);
+            _setProposalFlag(proposalId, ProposalFlag.PROCESSED);
         uint256 flags = proposal.flags;
 
         emit ProcessedProposal(proposalId, flags);
@@ -460,7 +526,7 @@ contract DaoRegistry is DaoConstants, AdapterGuard {
      * @param proposalId The ID of the proposal to be changed
      * @param flag The flag that will be set on the proposal
      */
-    function _setProposalFlag(bytes32 proposalId, FlagHelper.Flag flag)
+    function _setProposalFlag(bytes32 proposalId, ProposalFlag flag)
         internal
         returns (Proposal storage)
     {
@@ -473,36 +539,20 @@ contract DaoRegistry is DaoConstants, AdapterGuard {
 
         uint256 flags = proposal.flags;
         require(
-            flags.getFlag(FlagHelper.Flag.EXISTS),
+            getFlag(flags, uint8(ProposalFlag.EXISTS)),
             "proposal does not exist for this dao"
         );
 
-        require(!flags.getFlag(flag), "flag already set");
+        require(!getFlag(flags, uint8(flag)), "flag already set");
 
         require(
-            !flags.getFlag(FlagHelper.Flag.PROCESSED),
+            !getFlag(flags, uint8(ProposalFlag.PROCESSED)),
             "proposal already processed"
         );
-        flags = flags.setFlag(flag, true);
+        flags = setFlag(flags, uint8(flag), true);
         proposals[proposalId].flags = flags;
 
         return proposals[proposalId];
-    }
-
-    /**
-     * @return Whether or not the given token is an available internal token in the bank
-     * @param token The address of the token to look up
-     */
-    function isInternalToken(address token) external view returns (bool) {
-        return _bank.availableInternalTokens[token];
-    }
-
-    /**
-     * @return Whether or not the given token is an available token in the bank
-     * @param token The address of the token to look up
-     */
-    function isTokenAllowed(address token) external view returns (bool) {
-        return _bank.availableTokens[token];
     }
 
     /*
@@ -519,11 +569,8 @@ contract DaoRegistry is DaoConstants, AdapterGuard {
         address memberAddr = memberAddressesByDelegatedKey[addr];
         uint256 memberFlags = members[memberAddr].flags;
         return
-            memberFlags.getFlag(FlagHelper.Flag.EXISTS) &&
-            !memberFlags.getFlag(FlagHelper.Flag.JAILED) &&
-            (balanceOf(memberAddr, SHARES) > 0 ||
-                balanceOf(memberAddr, LOOT) > 0 ||
-                balanceOf(memberAddr, LOCKED_LOOT) > 0);
+            getFlag(memberFlags, uint8(MemberFlag.EXISTS)) &&
+            !getFlag(memberFlags, uint8(MemberFlag.JAILED));
     }
 
     /**
@@ -531,12 +578,12 @@ contract DaoRegistry is DaoConstants, AdapterGuard {
      * @param proposalId The proposal to check against flag
      * @param flag The flag to check in the proposal
      */
-    function getProposalFlag(bytes32 proposalId, FlagHelper.Flag flag)
+    function getProposalFlag(bytes32 proposalId, ProposalFlag flag)
         external
         view
         returns (bool)
     {
-        return proposals[proposalId].flags.getFlag(flag);
+        return getFlag(proposals[proposalId].flags, uint8(flag));
     }
 
     /**
@@ -546,7 +593,7 @@ contract DaoRegistry is DaoConstants, AdapterGuard {
      */
     function updateDelegateKey(address memberAddr, address newDelegateKey)
         external
-        hasAccess(this, FlagHelper.Flag.UPDATE_DELEGATE_KEY)
+        hasAccess(this, AclFlag.UPDATE_DELEGATE_KEY)
     {
         require(newDelegateKey != address(0), "newDelegateKey cannot be 0");
 
@@ -561,7 +608,7 @@ contract DaoRegistry is DaoConstants, AdapterGuard {
 
         Member storage member = members[memberAddr];
         require(
-            member.flags.getFlag(FlagHelper.Flag.EXISTS),
+            getFlag(member.flags, uint8(MemberFlag.EXISTS)),
             "member does not exist"
         );
 
@@ -574,45 +621,6 @@ contract DaoRegistry is DaoConstants, AdapterGuard {
 
         _createNewDelegateCheckpoint(memberAddr, newDelegateKey);
         emit UpdateDelegateKey(memberAddr, newDelegateKey);
-    }
-
-    /*
-     * BANK
-     */
-
-    /**
-     * @notice Registers a potential new token in the bank
-     * @dev Can not be a reserved token or an available internal token
-     * @param token The address of the token
-     */
-    function registerPotentialNewToken(address token)
-        external
-        hasAccess(this, FlagHelper.Flag.REGISTER_NEW_TOKEN)
-    {
-        require(isNotReservedAddress(token), "reservedToken");
-        require(!_bank.availableInternalTokens[token], "internalToken");
-
-        if (!_bank.availableTokens[token]) {
-            _bank.availableTokens[token] = true;
-            _bank.tokens.push(token);
-        }
-    }
-
-    /**
-     * @notice Registers a potential new internal token in the bank
-     * @dev Can not be a reserved token or an available token
-     * @param token The address of the token
-     */
-    function registerPotentialNewInternalToken(address token)
-        external
-        hasAccess(this, FlagHelper.Flag.REGISTER_NEW_INTERNAL_TOKEN)
-    {
-        require(isNotReservedAddress(token), "reservedToken");
-        require(!_bank.availableTokens[token], "internalToken");
-        if (!_bank.availableInternalTokens[token]) {
-            _bank.availableInternalTokens[token] = true;
-            _bank.internalTokens.push(token);
-        }
     }
 
     /**
@@ -630,177 +638,6 @@ contract DaoRegistry is DaoConstants, AdapterGuard {
         returns (bool)
     {
         return applicant != GUILD && applicant != TOTAL;
-    }
-
-    /**
-     * Internal bookkeeping
-     */
-
-    /**
-     * @return The token from the bank of a given index
-     * @param index The index to look up in the bank's tokens
-     */
-    function getToken(uint256 index) external view returns (address) {
-        return _bank.tokens[index];
-    }
-
-    /**
-     * @return The amount of token addresses in the bank
-     */
-    function nbTokens() external view returns (uint256) {
-        return _bank.tokens.length;
-    }
-
-    /**
-     * @return The internal token at a given index
-     * @param index The index to look up in the bank's array of internal tokens
-     */
-    function getInternalToken(uint256 index) external view returns (address) {
-        return _bank.internalTokens[index];
-    }
-
-    /**
-     * @return The amount of internal token addresses in the bank
-     */
-    function nbInternalTokens() external view returns (uint256) {
-        return _bank.internalTokens.length;
-    }
-
-    /**
-     * @notice Adds to a user's balance of a given token
-     * @param user The user whose balance will be updated
-     * @param token The token to update
-     * @param amount The new balance
-     */
-    function addToBalance(
-        address user,
-        address token,
-        uint256 amount
-    ) public payable hasAccess(this, FlagHelper.Flag.ADD_TO_BALANCE) {
-        require(
-            _bank.availableTokens[token] ||
-                _bank.availableInternalTokens[token],
-            "unknown token address"
-        );
-        uint256 newAmount = balanceOf(user, token) + amount;
-        uint256 newTotalAmount = balanceOf(TOTAL, token) + amount;
-
-        _createNewAmountCheckpoint(user, token, newAmount);
-        _createNewAmountCheckpoint(TOTAL, token, newTotalAmount);
-
-        Member storage member = members[user];
-        if (!member.flags.getFlag(FlagHelper.Flag.EXISTS)) {
-            member.flags = member.flags.setFlag(FlagHelper.Flag.EXISTS, true);
-            memberAddressesByDelegatedKey[user] = user;
-        }
-    }
-
-    /**
-     * @notice Remove from a user's balance of a given token
-     * @param user The user whose balance will be updated
-     * @param token The token to update
-     * @param amount The new balance
-     */
-    function subtractFromBalance(
-        address user,
-        address token,
-        uint256 amount
-    ) public hasAccess(this, FlagHelper.Flag.SUB_FROM_BALANCE) {
-        uint256 newAmount = balanceOf(user, token) - amount;
-        uint256 newTotalAmount = balanceOf(TOTAL, token) - amount;
-
-        _createNewAmountCheckpoint(user, token, newAmount);
-        _createNewAmountCheckpoint(TOTAL, token, newTotalAmount);
-    }
-
-    /**
-     * @notice Make an internal token transfer
-     * @param from The user who is sending tokens
-     * @param to The user who is receiving tokens
-     * @param amount The new amount to transfer
-     */
-    function internalTransfer(
-        address from,
-        address to,
-        address token,
-        uint256 amount
-    ) public hasAccess(this, FlagHelper.Flag.INTERNAL_TRANSFER) {
-        uint256 newAmount = balanceOf(from, token) - amount;
-        uint256 newAmount2 = balanceOf(to, token) + amount;
-
-        _createNewAmountCheckpoint(from, token, newAmount);
-        _createNewAmountCheckpoint(to, token, newAmount2);
-    }
-
-    /**
-     * @notice Returns an account's balance of a given token
-     * @param account The address to look up
-     * @param tokenAddr The token where the user's balance of which will be returned
-     * @return The amount in account's tokenAddr balance
-     */
-    function balanceOf(address account, address tokenAddr)
-        public
-        view
-        returns (uint256)
-    {
-        uint32 nCheckpoints = _bank.numCheckpoints[tokenAddr][account];
-        return
-            nCheckpoints > 0
-                ? _bank.checkpoints[tokenAddr][account][nCheckpoints - 1].amount
-                : 0;
-    }
-
-    /**
-     * @notice Determine the prior number of votes for an account as of a block number
-     * @dev Block number must be a finalized block or else this function will revert to prevent misinformation.
-     * @param account The address of the account to check
-     * @param blockNumber The block number to get the vote balance at
-     * @return The number of votes the account had as of the given block
-     */
-    function getPriorAmount(
-        address account,
-        address tokenAddr,
-        uint256 blockNumber
-    ) external view returns (uint256) {
-        require(
-            blockNumber < block.number,
-            "Uni::getPriorAmount: not yet determined"
-        );
-
-        uint32 nCheckpoints = _bank.numCheckpoints[tokenAddr][account];
-        if (nCheckpoints == 0) {
-            return 0;
-        }
-
-        // First check most recent balance
-        if (
-            _bank.checkpoints[tokenAddr][account][nCheckpoints - 1].fromBlock <=
-            blockNumber
-        ) {
-            return
-                _bank.checkpoints[tokenAddr][account][nCheckpoints - 1].amount;
-        }
-
-        // Next check implicit zero balance
-        if (_bank.checkpoints[tokenAddr][account][0].fromBlock > blockNumber) {
-            return 0;
-        }
-
-        uint32 lower = 0;
-        uint32 upper = nCheckpoints - 1;
-        while (upper > lower) {
-            uint32 center = upper - (upper - lower) / 2; // ceil, avoiding overflow
-            Checkpoint memory cp =
-                _bank.checkpoints[tokenAddr][account][center];
-            if (cp.fromBlock == blockNumber) {
-                return cp.amount;
-            } else if (cp.fromBlock < blockNumber) {
-                lower = center;
-            } else {
-                upper = center - 1;
-            }
-        }
-        return _bank.checkpoints[tokenAddr][account][lower].amount;
     }
 
     /**
@@ -899,22 +736,6 @@ contract DaoRegistry is DaoConstants, AdapterGuard {
     }
 
     /**
-     * @notice Creates a new amount checkpoint for a token of a certain member
-     * @param member The member whose checkpoints will be added to
-     * @param tokenAddr The token of which the balance will be changed
-     * @param amount The amount to be written into the new checkpoint
-     */
-    function _createNewAmountCheckpoint(
-        address member,
-        address tokenAddr,
-        uint256 amount
-    ) internal {
-        uint32 srcRepNum = _bank.numCheckpoints[tokenAddr][member];
-        _writeAmountCheckpoint(member, tokenAddr, srcRepNum, amount);
-        emit NewBalance(member, tokenAddr, amount);
-    }
-
-    /**
      * @notice Creates a new delegate checkpoint of a certain member
      * @param member The member whose delegate checkpoints will be added to
      * @param newDelegateKey The delegate key that will be written into the new checkpoint
@@ -951,136 +772,5 @@ contract DaoRegistry is DaoConstants, AdapterGuard {
             );
             numCheckpoints[member] = nCheckpoints + 1;
         }
-    }
-
-    /**
-     * @notice Writes to an amount checkpoint of a certain checkpoint number
-     * @dev Creates a new checkpoint if there is not yet one of the given number
-     * @param member The member whose delegate checkpoints will overwritten
-     * @param tokenAddr The token that will have its balance for the user udpated
-     * @param nCheckpoints The number of the checkpoint to overwrite
-     * @param _newAmount The amount to write into the specified checkpoint
-     */
-    function _writeAmountCheckpoint(
-        address member,
-        address tokenAddr,
-        uint32 nCheckpoints,
-        uint256 _newAmount
-    ) internal {
-        require(_newAmount < type(uint160).max, "too big of a vote");
-        uint160 newAmount = uint160(_newAmount);
-
-        if (
-            nCheckpoints > 0 &&
-            _bank.checkpoints[tokenAddr][member][nCheckpoints - 1].fromBlock ==
-            block.number
-        ) {
-            _bank.checkpoints[tokenAddr][member][nCheckpoints - 1]
-                .amount = newAmount;
-        } else {
-            _bank.checkpoints[tokenAddr][member][nCheckpoints] = Checkpoint(
-                uint96(block.number),
-                newAmount
-            );
-            _bank.numCheckpoints[tokenAddr][member] = nCheckpoints + 1;
-        }
-    }
-
-    /*
-     * Internal Utility Functions
-     */
-
-    /**
-     * @dev Get the revert message from a call
-     * @notice This is needed in order to get the human-readable revert message from a call
-     * @param _res Response of the call
-     * @return Revert message string
-     */
-    function _getRevertMsg(bytes memory _res)
-        internal
-        pure
-        returns (string memory)
-    {
-        // If the _res length is less than 68, then the transaction failed silently (without a revert message)
-        if (_res.length < 68) return "Transaction reverted silently";
-        bytes memory revertData = _slice(_res, 4, _res.length - 4); // Remove the selector which is the first 4 bytes
-        return abi.decode(revertData, (string)); // All that remains is the revert string
-    }
-
-    /**
-     * @notice Slices a bytes type
-     * @param _bytes The bytes that will be sliced
-     * @param _start The start index to begin slicing from
-     * @param _length The number of bytes to include in the slice, starting from _start
-     * @return A new bytes object, that is the same as _bytes, from indices _start to (_start + length)
-     */
-    function _slice(
-        bytes memory _bytes,
-        uint256 _start,
-        uint256 _length
-    ) internal pure returns (bytes memory) {
-        require(_bytes.length >= (_start + _length), "Read out of bounds");
-
-        bytes memory tempBytes;
-
-        assembly {
-            switch iszero(_length)
-                case 0 {
-                    // Get a location of some free memory and store it in tempBytes as
-                    // Solidity does for memory variables.
-                    tempBytes := mload(0x40)
-
-                    // The first word of the slice result is potentially a partial
-                    // word read from the original array. To read it, we calculate
-                    // the length of that partial word and start copying that many
-                    // bytes into the array. The first word we copy will start with
-                    // data we don't care about, but the last `lengthmod` bytes will
-                    // land at the beginning of the contents of the new array. When
-                    // we're done copying, we overwrite the full first word with
-                    // the actual length of the slice.
-                    let lengthmod := and(_length, 31)
-
-                    // The multiplication in the next line is necessary
-                    // because when slicing multiples of 32 bytes (lengthmod == 0)
-                    // the following copy loop was copying the origin's length
-                    // and then ending prematurely not copying everything it should.
-                    let mc := add(
-                        add(tempBytes, lengthmod),
-                        mul(0x20, iszero(lengthmod))
-                    )
-                    let end := add(mc, _length)
-
-                    for {
-                        // The multiplication in the next line has the same exact purpose
-                        // as the one above.
-                        let cc := add(
-                            add(
-                                add(_bytes, lengthmod),
-                                mul(0x20, iszero(lengthmod))
-                            ),
-                            _start
-                        )
-                    } lt(mc, end) {
-                        mc := add(mc, 0x20)
-                        cc := add(cc, 0x20)
-                    } {
-                        mstore(mc, mload(cc))
-                    }
-
-                    mstore(tempBytes, _length)
-
-                    //update free-memory pointer
-                    //allocating the array padded to 32 bytes like the compiler does now
-                    mstore(0x40, and(add(mc, 31), not(31)))
-                }
-                //if we want a zero-length slice let's just return a zero-length array
-                default {
-                    tempBytes := mload(0x40)
-
-                    mstore(0x40, add(tempBytes, 0x20))
-                }
-        }
-
-        return tempBytes;
     }
 }
