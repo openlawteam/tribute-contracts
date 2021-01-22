@@ -33,7 +33,7 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
  */
 
-contract VotingContract is IVoting, MemberGuard, AdapterGuard {
+contract VotingContract is IVoting, DaoConstants, MemberGuard, AdapterGuard {
     struct Voting {
         uint256 nbYes;
         uint256 nbNo;

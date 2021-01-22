@@ -32,7 +32,7 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
  */
 
-contract ConfigurationContract is IConfiguration, MemberGuard {
+contract ConfigurationContract is IConfiguration, DaoConstants, MemberGuard {
     enum ConfigurationStatus {NOT_CREATED, IN_PROGRESS, DONE}
 
     struct Configuration {

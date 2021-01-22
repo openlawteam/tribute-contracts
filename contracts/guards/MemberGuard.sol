@@ -3,7 +3,6 @@ pragma solidity ^0.8.0;
 // SPDX-License-Identifier: MIT
 
 import "../core/DaoRegistry.sol";
-import "../extensions/Bank.sol";
 
 /**
 MIT License
@@ -28,16 +27,11 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
  */
-abstract contract MemberGuard is DaoConstants {
+abstract contract MemberGuard {
     /**
      * @dev Only members of the DAO are allowed to execute the function call.
      */
     modifier onlyMember(DaoRegistry dao) {
-        address bankAddress = dao.extensions(BANK);
-        if (bankAddress != address(0x0)) {
-            BankExtension bank = BankExtension(bankAddress);
-            require(bank.balanceOf(msg.sender, SHARES) > 0, "onlyMember");
-        }
         require(dao.isActiveMember(msg.sender), "onlyMember");
         _;
     }

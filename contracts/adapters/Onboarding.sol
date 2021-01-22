@@ -35,7 +35,12 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
  */
 
-contract OnboardingContract is IOnboarding, MemberGuard, AdapterGuard {
+contract OnboardingContract is
+    IOnboarding,
+    DaoConstants,
+    MemberGuard,
+    AdapterGuard
+{
     bytes32 constant ChunkSize = keccak256("onboarding.chunkSize");
     bytes32 constant SharesPerChunk = keccak256("onboarding.sharesPerChunk");
     bytes32 constant TokenAddr = keccak256("onboarding.tokenAddr");

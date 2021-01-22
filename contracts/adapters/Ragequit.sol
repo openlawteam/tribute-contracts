@@ -33,7 +33,7 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
  */
 
-contract RagequitContract is IRagequit, MemberGuard {
+contract RagequitContract is IRagequit, DaoConstants, MemberGuard {
     enum RagequitStatus {NOT_STARTED, IN_PROGRESS, DONE}
 
     struct Ragequit {

@@ -33,7 +33,7 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
  */
 
-contract WithdrawContract is MemberGuard {
+contract WithdrawContract is MemberGuard, DaoConstants {
     enum ConfigurationStatus {NOT_CREATED, IN_PROGRESS, DONE}
 
     /*
