@@ -386,6 +386,23 @@ export class Member extends Entity {
   set jailed(value: boolean) {
     this.set("jailed", Value.fromBoolean(value));
   }
+
+  get DAO(): Bytes | null {
+    let value = this.get("DAO");
+    if (value === null || value.kind == ValueKind.NULL) {
+      return null;
+    } else {
+      return value.toBytes();
+    }
+  }
+
+  set DAO(value: Bytes | null) {
+    if (value === null) {
+      this.unset("DAO");
+    } else {
+      this.set("DAO", Value.fromBytes(value as Bytes));
+    }
+  }
 }
 
 export class Adapter extends Entity {

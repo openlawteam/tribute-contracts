@@ -61,11 +61,16 @@ export function handleNewBalance(event: NewBalance): void {
   }
   member.memberAddress = event.params.member;
 
-  // @todo get all laos the member belongs to
-  // let laoMemberships: string[] = [];
-  // member.laolands = laoMemberships;
-
+  // get bank extension bindings
   let registry = BankExtension.bind(event.address);
+
+  // @todo test output only; remove
+  let memberDao = registry.try_dao();
+  if (memberDao.reverted) {
+    log.info("getBalanceOf member:DAO reverted", []);
+  } else {
+    member.DAO = memberDao.value;
+  }
 
   // get balanceOf member shares
   let callResultSHARES = registry.try_balanceOf(event.params.member, SHARES);

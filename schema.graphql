@@ -36,6 +36,7 @@ type Member @entity {
   # flags: BigInt!
   tokenBalances: [TokenBalance!] @derivedFrom(field: "member")
   jailed: Boolean!
+  DAO: Bytes
 }
 
 type Adapter @entity {
