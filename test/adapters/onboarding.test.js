@@ -36,6 +36,8 @@ const {
   numberOfShares,
   OnboardingContract,
   VotingContract,
+  BankExtension,
+  sha3,
   ETH_TOKEN,
 } = require("../../utils/DaoFactory.js");
 const { checkBalance } = require("../../utils/TestUtils.js");
@@ -47,6 +49,8 @@ contract("LAOLAND - Onboarding Adapter", async (accounts) => {
     const nonMemberAccount = accounts[3];
 
     let dao = await createDao(myAccount);
+    const bankAddress = await dao.getExtensionAddress(sha3("bank"));
+    const bank = await BankExtension.at(bankAddress);
 
     const onboarding = await getContract(dao, "onboarding", OnboardingContract);
     const voting = await getContract(dao, "voting", VotingContract);
@@ -81,9 +85,9 @@ contract("LAOLAND - Onboarding Adapter", async (accounts) => {
       gasPrice: toBN("0"),
     });
 
-    const myAccountShares = await dao.balanceOf(myAccount, SHARES);
-    const otherAccountShares = await dao.balanceOf(otherAccount, SHARES);
-    const nonMemberAccountShares = await dao.balanceOf(
+    const myAccountShares = await bank.balanceOf(myAccount, SHARES);
+    const otherAccountShares = await bank.balanceOf(otherAccount, SHARES);
+    const nonMemberAccountShares = await bank.balanceOf(
       nonMemberAccount,
       SHARES
     );
@@ -93,13 +97,16 @@ contract("LAOLAND - Onboarding Adapter", async (accounts) => {
       numberOfShares.mul(toBN("3")).toString()
     );
     assert.equal(nonMemberAccountShares.toString(), "0");
-    await checkBalance(dao, GUILD, ETH_TOKEN, sharePrice.mul(toBN("3")));
+    await checkBalance(bank, GUILD, ETH_TOKEN, sharePrice.mul(toBN("3")));
   });
 
   it("should be possible to cancel an onboarding proposal", async () => {
     const myAccount = accounts[1];
     const otherAccount = accounts[2];
     const dao = await createDao(myAccount);
+
+    const bankAddress = await dao.getExtensionAddress(sha3("bank"));
+    const bank = await BankExtension.at(bankAddress);
 
     const onboarding = await getContract(dao, "onboarding", OnboardingContract);
 
@@ -134,15 +141,15 @@ contract("LAOLAND - Onboarding Adapter", async (accounts) => {
       assert.equal(err.reason, "proposal already processed");
     }
 
-    const myAccountShares = await dao.balanceOf(myAccount, SHARES);
-    const otherAccountShares = await dao.balanceOf(otherAccount, SHARES);
+    const myAccountShares = await bank.balanceOf(myAccount, SHARES);
+    const otherAccountShares = await bank.balanceOf(otherAccount, SHARES);
     assert.equal(myAccountShares.toString(), "1");
     assert.equal(
       otherAccountShares.toString(),
       numberOfShares.mul(toBN("0")).toString()
     );
 
-    const guildBalance = await dao.balanceOf(
+    const guildBalance = await bank.balanceOf(
       GUILD,
       "0x0000000000000000000000000000000000000000"
     );
@@ -153,6 +160,9 @@ contract("LAOLAND - Onboarding Adapter", async (accounts) => {
     const myAccount = accounts[1];
     const otherAccount = accounts[2];
     let dao = await createDao(myAccount);
+
+    const bankAddress = await dao.getExtensionAddress(sha3("bank"));
+    const bank = await BankExtension.at(bankAddress);
 
     const onboarding = await getContract(dao, "onboarding", OnboardingContract);
     const voting = await getContract(dao, "voting", VotingContract);
@@ -183,15 +193,15 @@ contract("LAOLAND - Onboarding Adapter", async (accounts) => {
     const isProcessed = await dao.getProposalFlag("0x0", toBN("2")); // 2 is processed flag index
     assert.equal(isProcessed, true);
 
-    const myAccountShares = await dao.balanceOf(myAccount, SHARES);
-    const otherAccountShares = await dao.balanceOf(otherAccount, SHARES);
+    const myAccountShares = await bank.balanceOf(myAccount, SHARES);
+    const otherAccountShares = await bank.balanceOf(otherAccount, SHARES);
     assert.equal(myAccountShares.toString(), "1");
     assert.equal(
       otherAccountShares.toString(),
       numberOfShares.mul(toBN("0")).toString()
     );
 
-    const guildBalance = await dao.balanceOf(
+    const guildBalance = await bank.balanceOf(
       GUILD,
       "0x0000000000000000000000000000000000000000"
     );
@@ -243,6 +253,9 @@ contract("LAOLAND - Onboarding Adapter", async (accounts) => {
     const otherAccount = accounts[2];
     const dao = await createDao(myAccount);
 
+    const bankAddress = await dao.getExtensionAddress(sha3("bank"));
+    const bank = await BankExtension.at(bankAddress);
+
     const onboarding = await getContract(dao, "onboarding", OnboardingContract);
 
     await onboarding.onboard(dao.address, "0x0", otherAccount, SHARES, 0, {
@@ -276,12 +289,12 @@ contract("LAOLAND - Onboarding Adapter", async (accounts) => {
       assert.equal(err.reason, "proposal already processed");
     }
 
-    const myAccountShares = await dao.balanceOf(myAccount, SHARES);
-    const otherAccountShares = await dao.balanceOf(otherAccount, SHARES);
+    const myAccountShares = await bank.balanceOf(myAccount, SHARES);
+    const otherAccountShares = await bank.balanceOf(otherAccount, SHARES);
     assert.equal(myAccountShares.toString(), "1");
     assert.equal(otherAccountShares.toString(), "0");
 
-    const guildBalance = await dao.balanceOf(GUILD, ETH_TOKEN);
+    const guildBalance = await bank.balanceOf(GUILD, ETH_TOKEN);
     assert.equal(guildBalance.toString(), "0");
   });
 
@@ -289,6 +302,9 @@ contract("LAOLAND - Onboarding Adapter", async (accounts) => {
     const myAccount = accounts[1];
     const otherAccount = accounts[2];
     let dao = await createDao(myAccount);
+
+    const bankAddress = await dao.getExtensionAddress(sha3("bank"));
+    const bank = await BankExtension.at(bankAddress);
 
     const onboarding = await getContract(dao, "onboarding", OnboardingContract);
     const voting = await getContract(dao, "voting", VotingContract);
@@ -319,15 +335,15 @@ contract("LAOLAND - Onboarding Adapter", async (accounts) => {
     const isProcessed = await dao.getProposalFlag("0x0", toBN("2")); // 2 is processed flag index
     assert.equal(isProcessed, true);
 
-    const myAccountShares = await dao.balanceOf(myAccount, SHARES);
-    const otherAccountShares = await dao.balanceOf(otherAccount, SHARES);
+    const myAccountShares = await bank.balanceOf(myAccount, SHARES);
+    const otherAccountShares = await bank.balanceOf(otherAccount, SHARES);
     assert.equal(myAccountShares.toString(), "1");
     assert.equal(otherAccountShares.toString(), "0");
 
-    const guildBalance = await dao.balanceOf(GUILD, ETH_TOKEN);
+    const guildBalance = await bank.balanceOf(GUILD, ETH_TOKEN);
     assert.equal(guildBalance.toString(), "0");
 
-    const otherAccountBalance = await dao.balanceOf(otherAccount, ETH_TOKEN);
+    const otherAccountBalance = await bank.balanceOf(otherAccount, ETH_TOKEN);
 
     assert.equal(otherAccountBalance.toString(), "0");
 

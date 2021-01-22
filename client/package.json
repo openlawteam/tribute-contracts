@@ -1,0 +1,56 @@
+{
+  "name": "client",
+  "version": "0.1.0",
+  "private": true,
+  "dependencies": {
+    "@material-ui/core": "^4.11.2",
+    "@material-ui/icons": "^4.11.2",
+    "@openlaw/snapshot-js-erc712": "^1.0.8",
+    "@testing-library/jest-dom": "^5.11.4",
+    "@testing-library/react": "^11.1.0",
+    "@testing-library/user-event": "^12.1.10",
+    "@walletconnect/web3-provider": "^1.3.3",
+    "axios": "^0.21.0",
+    "ci": "^1.0.0",
+    "eth-sig-util": "^3.0.0",
+    "ethereumjs-util": "^7.0.7",
+    "ethers": "^5.0.24",
+    "ganache-cli": "^6.12.1",
+    "react": "^17.0.1",
+    "react-dom": "^17.0.1",
+    "react-scripts": "4.0.1",
+    "truffle": "^5.1.61",
+    "web-vitals": "^0.2.4",
+    "web3": "^1.3.0",
+    "web3-react": "^5.0.5",
+    "web3-utils": "^1.3.1",
+    "web3modal": "^1.9.2"
+  },
+  "scripts": {
+    "ganache": "node_modules/.bin/ganache-cli -s=test -g=0 --secure -u 0 -u 1 -p 8545 --networkId 1337",
+    "migrate": "cp -R ../contracts ./ && node_modules/.bin/truffle migrate --network local --reset",
+    "snapshot": "docker-compose up --remove-orphans -V",
+    "start": "REACT_APP_SNAPSHOT_HUB_API_URL=http://localhost:8081 REACT_APP_DEPLOYED_CONTRACTS=\"$(cat migrations/deployed-contracts.json)\" react-scripts start",
+    "build": "react-scripts build",
+    "test": "react-scripts test",
+    "eject": "react-scripts eject"
+  },
+  "eslintConfig": {
+    "extends": [
+      "react-app",
+      "react-app/jest"
+    ]
+  },
+  "browserslist": {
+    "production": [
+      ">0.2%",
+      "not dead",
+      "not op_mini all"
+    ],
+    "development": [
+      "last 1 chrome version",
+      "last 1 firefox version",
+      "last 1 safari version"
+    ]
+  }
+}

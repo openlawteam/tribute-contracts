@@ -10,8 +10,8 @@ async function checkLastEvent(dao, testObject) {
     });
 }
 
-async function checkBalance(dao, address, token, expectedBalance) {
-    const balance = await dao.balanceOf(address, token);
+async function checkBalance(bank, address, token, expectedBalance) {
+    const balance = await bank.balanceOf(address, token);
 
     assert.equal(balance.toString(), expectedBalance.toString());
 }

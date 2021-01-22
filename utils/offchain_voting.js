@@ -1,5 +1,5 @@
 // Whole-script strict mode syntax
-'use strict';
+"use strict";
 
 /**
 MIT License
@@ -24,8 +24,8 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
  */
-const { MerkleTree } = require('./merkleTree.js');
-const {SHARES} = require('./DaoFactory.js');
+const { MerkleTree } = require("./merkleTree.js");
+const { SHARES } = require("./DaoFactory.js");
 const sha3 = web3.utils.sha3;
 const sigUtil = require('eth-sig-util');
 
@@ -345,10 +345,10 @@ function buildVoteLeafHashForMerkleTree(leaf, verifyingContract, actionId, chain
   return '0x' + sigUtil.TypedDataUtils.sign(msgParams).toString('hex');
 }
 
-async function prepareVoteResult(votes, dao, actionId, chainId, snapshot) {
+async function prepareVoteResult(votes, dao, bank, actionId, chainId, snapshot) {
   const sortedVotes = votes.sort((a,b) => a.account > b.account);
   const leaves = await Promise.all(sortedVotes.map(async (vote) => {
-    const weight = await dao.getPriorAmount(vote.payload.account, SHARES, snapshot);
+    const weight = await bank.getPriorAmount(vote.payload.account, SHARES, snapshot);
     return Object.assign(vote, {weight});
   }));
 
@@ -362,8 +362,8 @@ async function prepareVoteResult(votes, dao, actionId, chainId, snapshot) {
       const previousLeaf = leaves[idx - 1];
       leaf.nbYes = leaf.nbYes + previousLeaf.nbYes;
       leaf.nbNo = leaf.nbNo + previousLeaf.nbNo;
-    } 
-    
+    }
+
     leaf.index = idx;
   });
 

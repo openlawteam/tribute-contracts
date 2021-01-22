@@ -4,6 +4,7 @@ pragma experimental ABIEncoderV2;
 // SPDX-License-Identifier: MIT
 
 import "../../core/DaoRegistry.sol";
+import "../../extensions/Bank.sol";
 import "../../core/DaoConstants.sol";
 import "../../guards/MemberGuard.sol";
 import "../../guards/AdapterGuard.sol";
@@ -89,7 +90,7 @@ contract OffchainVotingContract is
             );
     }
 
-    VotingContract private _fallbackVoting;
+    VotingContract public fallbackVoting;
 
     struct Voting {
         uint256 snapshot;
@@ -155,7 +156,7 @@ contract OffchainVotingContract is
     mapping(address => mapping(bytes32 => Voting)) public votes;
 
     constructor(VotingContract _c, uint256 _chainId) {
-        _fallbackVoting = _c;
+        fallbackVoting = _c;
         chainId = _chainId;
     }
 
@@ -324,8 +325,8 @@ contract OffchainVotingContract is
         dao.setConfiguration(VotingPeriod, votingPeriod);
         dao.setConfiguration(GracePeriod, gracePeriod);
         dao.setConfiguration(FallbackThreshold, fallbackThreshold);
-
-        dao.registerPotentialNewInternalToken(LOCKED_LOOT);
+        BankExtension bank = BankExtension(dao.getExtensionAddress(BANK));
+        bank.registerPotentialNewInternalToken(LOCKED_LOOT);
     }
 
     /** 
@@ -380,7 +381,8 @@ contract OffchainVotingContract is
         } else {
             diff = nbNo - nbYes;
         }
-        if (diff * 2 > dao.getPriorAmount(TOTAL, SHARES, vote.snapshot)) {
+        BankExtension bank = BankExtension(dao.getExtensionAddress(BANK));
+        if (diff * 2 > bank.getPriorAmount(TOTAL, SHARES, vote.snapshot)) {
             return true;
         }
 
@@ -436,28 +438,30 @@ contract OffchainVotingContract is
         uint256 lootToLock = dao.getConfiguration(StakingAmount);
         //lock if member has enough loot
         require(dao.isActiveMember(memberAddr), "must be an active member");
+        BankExtension bank = BankExtension(dao.getExtensionAddress(BANK));
         require(
-            dao.balanceOf(memberAddr, LOOT) >= lootToLock,
+            bank.balanceOf(memberAddr, LOOT) >= lootToLock,
             "insufficient loot"
         );
 
         // lock loot
-        dao.addToBalance(memberAddr, LOCKED_LOOT, lootToLock);
-        dao.subtractFromBalance(memberAddr, LOOT, lootToLock);
+        bank.addToBalance(memberAddr, LOCKED_LOOT, lootToLock);
+        bank.subtractFromBalance(memberAddr, LOOT, lootToLock);
     }
 
     function _releaseFunds(DaoRegistry dao, address memberAddr) internal {
         uint256 lootToRelease = dao.getConfiguration(StakingAmount);
         //release if member has enough locked loot
         require(dao.isActiveMember(memberAddr), "must be an active member");
+        BankExtension bank = BankExtension(dao.getExtensionAddress(BANK));
         require(
-            dao.balanceOf(memberAddr, LOCKED_LOOT) >= lootToRelease,
+            bank.balanceOf(memberAddr, LOCKED_LOOT) >= lootToRelease,
             "insufficient loot locked"
         );
 
         // release loot
-        dao.addToBalance(memberAddr, LOOT, lootToRelease);
-        dao.subtractFromBalance(memberAddr, LOCKED_LOOT, lootToRelease);
+        bank.addToBalance(memberAddr, LOOT, lootToRelease);
+        bank.subtractFromBalance(memberAddr, LOCKED_LOOT, lootToRelease);
     }
 
     function _stringToUint(string memory s)
@@ -504,7 +508,6 @@ contract OffchainVotingContract is
 
         bytes32 proposalHash = hashMessage(dao, msg.sender, proposal);
         address addr = recover(proposalHash, proposal.sig);
-
         require(dao.isActiveMember(addr), "noActiveMember");
         require(
             blockNumber < block.number,
@@ -684,8 +687,9 @@ contract OffchainVotingContract is
         Voting storage vote = votes[address(dao)][proposalId];
         address voter =
             dao.getPriorDelegateKey(nodeCurrent.account, vote.snapshot);
+        BankExtension bank = BankExtension(dao.getExtensionAddress(BANK));
         uint256 weight =
-            dao.getPriorAmount(nodeCurrent.account, SHARES, vote.snapshot);
+            bank.getPriorAmount(nodeCurrent.account, SHARES, vote.snapshot);
 
         if (
             _hasVotedYes(
@@ -712,8 +716,9 @@ contract OffchainVotingContract is
     }
 
     function _challengeResult(DaoRegistry dao, bytes32 proposalId) internal {
+        BankExtension bank = BankExtension(dao.getExtensionAddress(BANK));
         // burn locked loot
-        dao.subtractFromBalance(
+        bank.subtractFromBalance(
             votes[address(dao)][proposalId].reporter,
             LOCKED_LOOT,
             dao.getConfiguration(StakingAmount)

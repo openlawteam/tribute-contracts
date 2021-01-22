@@ -1,0 +1,47 @@
+version: "3.7"
+services:
+  laoland-snapshot-hub:
+    image: openlaw/snapshot-hub:erc-712
+    container_name: laoland-snapshot-hub
+    env_file:
+      - .env.local
+    environment:
+      PORT: 8081
+      DEV: "true"
+      ALLOWED_DOMAINS: "http://localhost:8080"
+      JAWSDB_URL: postgres://admin:admin@laoland-snapshot-postgres:5432/snapshot-db
+      TARGET_SNAPSHOT_HUB_API: https://snapshot-hub.dev.thelao.io/ # https://testnet.snapshot.page
+    depends_on:
+      - laoland-snapshot-postgres
+    ports:
+      - 8081:8081
+
+  laoland-snapshot-postgres:
+    image: bitnami/postgresql:13
+    container_name: laoland-snapshot-postgres
+    environment:
+      POSTGRESQL_USERNAME: admin
+      POSTGRESQL_PASSWORD: "admin"
+      POSTGRESQL_DATABASE: snapshot-db
+    ports:
+      - 5432:5432
+
+  laoland-snapshot-pgadmin:
+    image: dpage/pgadmin4
+    container_name: laoland-snapshot-pgadmin
+    environment:
+      PGADMIN_CONFIG_SERVER_MODE: "False"
+      PGADMIN_CONFIG_UPGRADE_CHECK_ENABLED: "False"
+      PGADMIN_CONFIG_MASTER_PASSWORD_REQUIRED: "False"
+      PGADMIN_CONFIG_CONSOLE_LOG_LEVEL: "40"
+      PGADMIN_CONFIG_FILE_LOG_LEVEL: "40"
+      PGADMIN_DEFAULT_EMAIL: "admin@admin.com"
+      PGADMIN_DEFAULT_PASSWORD: "admin"
+    ports:
+      - 5050:80
+    depends_on:
+      - laoland-snapshot-postgres
+
+networks:
+    default:
+      name: laoland-snapshot-network

@@ -41,7 +41,7 @@ contract ConfigurationContract is IConfiguration, DaoConstants, MemberGuard {
         uint256[] values;
     }
 
-    mapping(bytes32 => Configuration) public configurations;
+    mapping(address => mapping(bytes32 => Configuration)) public configurations;
 
     /*
      * default fallback function to prevent from sending ether to the contract
@@ -65,11 +65,10 @@ contract ConfigurationContract is IConfiguration, DaoConstants, MemberGuard {
         dao.submitProposal(proposalId);
         Configuration memory configuration =
             Configuration(ConfigurationStatus.IN_PROGRESS, keys, values);
-        configurations[proposalId] = configuration;
+        configurations[address(dao)][proposalId] = configuration;
 
         IVoting votingContract = IVoting(dao.getAdapterAddress(VOTING));
         votingContract.startNewVotingForProposal(dao, proposalId, data);
-        dao.sponsorProposal(proposalId, msg.sender);
     }
 
     function sponsorProposal(
@@ -78,8 +77,8 @@ contract ConfigurationContract is IConfiguration, DaoConstants, MemberGuard {
         bytes memory data
     ) external override onlyMember(dao) {
         IVoting votingContract = IVoting(dao.getAdapterAddress(VOTING));
-        votingContract.startNewVotingForProposal(dao, proposalId, data);
         dao.sponsorProposal(proposalId, msg.sender);
+        votingContract.startNewVotingForProposal(dao, proposalId, data);
     }
 
     function processProposal(DaoRegistry dao, bytes32 proposalId)
@@ -87,7 +86,8 @@ contract ConfigurationContract is IConfiguration, DaoConstants, MemberGuard {
         override
         onlyMember(dao)
     {
-        Configuration storage configuration = configurations[proposalId];
+        Configuration storage configuration =
+            configurations[address(dao)][proposalId];
 
         // If status is empty or DONE we expect it to fail
         require(
