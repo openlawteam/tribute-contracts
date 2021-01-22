@@ -37,6 +37,40 @@ export class DaoFactory extends ethereum.SmartContract {
     return new DaoFactory("DaoFactory", address);
   }
 
+  BANK(): Bytes {
+    let result = super.call("BANK", "BANK():(bytes32)", []);
+
+    return result[0].toBytes();
+  }
+
+  try_BANK(): ethereum.CallResult<Bytes> {
+    let result = super.tryCall("BANK", "BANK():(bytes32)", []);
+    if (result.reverted) {
+      return new ethereum.CallResult();
+    }
+    let value = result.value;
+    return ethereum.CallResult.fromValue(value[0].toBytes());
+  }
+
+  CONFIGURATION(): Bytes {
+    let result = super.call("CONFIGURATION", "CONFIGURATION():(bytes32)", []);
+
+    return result[0].toBytes();
+  }
+
+  try_CONFIGURATION(): ethereum.CallResult<Bytes> {
+    let result = super.tryCall(
+      "CONFIGURATION",
+      "CONFIGURATION():(bytes32)",
+      []
+    );
+    if (result.reverted) {
+      return new ethereum.CallResult();
+    }
+    let value = result.value;
+    return ethereum.CallResult.fromValue(value[0].toBytes());
+  }
+
   ETH_TOKEN(): Address {
     let result = super.call("ETH_TOKEN", "ETH_TOKEN():(address)", []);
 
@@ -50,6 +84,21 @@ export class DaoFactory extends ethereum.SmartContract {
     }
     let value = result.value;
     return ethereum.CallResult.fromValue(value[0].toAddress());
+  }
+
+  EXECUTION(): Bytes {
+    let result = super.call("EXECUTION", "EXECUTION():(bytes32)", []);
+
+    return result[0].toBytes();
+  }
+
+  try_EXECUTION(): ethereum.CallResult<Bytes> {
+    let result = super.tryCall("EXECUTION", "EXECUTION():(bytes32)", []);
+    if (result.reverted) {
+      return new ethereum.CallResult();
+    }
+    let value = result.value;
+    return ethereum.CallResult.fromValue(value[0].toBytes());
   }
 
   FINANCING(): Bytes {
@@ -278,6 +327,27 @@ export class DaoFactory extends ethereum.SmartContract {
     return ethereum.CallResult.fromValue(value[0].toBytes());
   }
 
+  getFlag(flags: BigInt, flag: BigInt): boolean {
+    let result = super.call("getFlag", "getFlag(uint256,uint256):(bool)", [
+      ethereum.Value.fromUnsignedBigInt(flags),
+      ethereum.Value.fromUnsignedBigInt(flag)
+    ]);
+
+    return result[0].toBoolean();
+  }
+
+  try_getFlag(flags: BigInt, flag: BigInt): ethereum.CallResult<boolean> {
+    let result = super.tryCall("getFlag", "getFlag(uint256,uint256):(bool)", [
+      ethereum.Value.fromUnsignedBigInt(flags),
+      ethereum.Value.fromUnsignedBigInt(flag)
+    ]);
+    if (result.reverted) {
+      return new ethereum.CallResult();
+    }
+    let value = result.value;
+    return ethereum.CallResult.fromValue(value[0].toBoolean());
+  }
+
   identityAddress(): Address {
     let result = super.call(
       "identityAddress",
@@ -299,6 +369,41 @@ export class DaoFactory extends ethereum.SmartContract {
     }
     let value = result.value;
     return ethereum.CallResult.fromValue(value[0].toAddress());
+  }
+
+  setFlag(flags: BigInt, flag: BigInt, value: boolean): BigInt {
+    let result = super.call(
+      "setFlag",
+      "setFlag(uint256,uint256,bool):(uint256)",
+      [
+        ethereum.Value.fromUnsignedBigInt(flags),
+        ethereum.Value.fromUnsignedBigInt(flag),
+        ethereum.Value.fromBoolean(value)
+      ]
+    );
+
+    return result[0].toBigInt();
+  }
+
+  try_setFlag(
+    flags: BigInt,
+    flag: BigInt,
+    value: boolean
+  ): ethereum.CallResult<BigInt> {
+    let result = super.tryCall(
+      "setFlag",
+      "setFlag(uint256,uint256,bool):(uint256)",
+      [
+        ethereum.Value.fromUnsignedBigInt(flags),
+        ethereum.Value.fromUnsignedBigInt(flag),
+        ethereum.Value.fromBoolean(value)
+      ]
+    );
+    if (result.reverted) {
+      return new ethereum.CallResult();
+    }
+    let value = result.value;
+    return ethereum.CallResult.fromValue(value[0].toBigInt());
   }
 
   getDaoAddress(daoName: string): Address {
@@ -374,18 +479,6 @@ export class CreateDaoCall__Inputs {
 
   get daoName(): string {
     return this._call.inputValues[0].value.toString();
-  }
-
-  get keys(): Array<Bytes> {
-    return this._call.inputValues[1].value.toBytesArray();
-  }
-
-  get values(): Array<BigInt> {
-    return this._call.inputValues[2].value.toBigIntArray();
-  }
-
-  get finalizeDao(): boolean {
-    return this._call.inputValues[3].value.toBoolean();
   }
 }
 
@@ -476,6 +569,60 @@ export class AddAdaptersCall__Outputs {
 }
 
 export class AddAdaptersCallAdaptersStruct extends ethereum.Tuple {
+  get id(): Bytes {
+    return this[0].toBytes();
+  }
+
+  get addr(): Address {
+    return this[1].toAddress();
+  }
+
+  get flags(): BigInt {
+    return this[2].toBigInt();
+  }
+}
+
+export class ConfigureExtensionCall extends ethereum.Call {
+  get inputs(): ConfigureExtensionCall__Inputs {
+    return new ConfigureExtensionCall__Inputs(this);
+  }
+
+  get outputs(): ConfigureExtensionCall__Outputs {
+    return new ConfigureExtensionCall__Outputs(this);
+  }
+}
+
+export class ConfigureExtensionCall__Inputs {
+  _call: ConfigureExtensionCall;
+
+  constructor(call: ConfigureExtensionCall) {
+    this._call = call;
+  }
+
+  get dao(): Address {
+    return this._call.inputValues[0].value.toAddress();
+  }
+
+  get extension(): Address {
+    return this._call.inputValues[1].value.toAddress();
+  }
+
+  get adapters(): Array<ConfigureExtensionCallAdaptersStruct> {
+    return this._call.inputValues[2].value.toTupleArray<
+      ConfigureExtensionCallAdaptersStruct
+    >();
+  }
+}
+
+export class ConfigureExtensionCall__Outputs {
+  _call: ConfigureExtensionCall;
+
+  constructor(call: ConfigureExtensionCall) {
+    this._call = call;
+  }
+}
+
+export class ConfigureExtensionCallAdaptersStruct extends ethereum.Tuple {
   get id(): Bytes {
     return this[0].toBytes();
   }
