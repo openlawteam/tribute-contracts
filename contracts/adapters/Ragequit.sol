@@ -33,7 +33,7 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
  */
 
-contract RagequitContract is IRagequit, DaoConstants, MemberGuard {
+contract RagequitContract is IRagequit, MemberGuard {
     enum RagequitStatus {NOT_STARTED, IN_PROGRESS, DONE}
 
     struct Ragequit {
@@ -56,8 +56,7 @@ contract RagequitContract is IRagequit, DaoConstants, MemberGuard {
     function startRagequit(
         DaoRegistry dao,
         uint256 sharesToBurn,
-        uint256 lootToBurn,
-        address[] memory tokens
+        uint256 lootToBurn
     ) external override onlyMember(dao) {
         address memberAddr = msg.sender;
         BankExtension bank = BankExtension(dao.getExtensionAddress(BANK));

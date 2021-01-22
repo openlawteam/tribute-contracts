@@ -35,12 +35,7 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
  */
 
-contract OffchainVotingContract is
-    IVoting,
-    DaoConstants,
-    MemberGuard,
-    AdapterGuard
-{
+contract OffchainVotingContract is IVoting, MemberGuard, AdapterGuard {
     string public constant EIP712_DOMAIN =
         "EIP712Domain(string name,string version,uint256 chainId,address verifyingContract,address actionId)";
     string public constant PROPOSAL_MESSAGE_TYPE =

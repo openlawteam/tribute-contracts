@@ -52,6 +52,7 @@ const BankExtension = artifacts.require("./extensions/BankExtension");
 const BankFactory = artifacts.require("./extensions/BankFactory");
 const VotingContract = artifacts.require("./adapters/VotingContract");
 const WithdrawContract = artifacts.require("./adapters/WithdrawContract")
+const UpdateDelegateKey = artifacts.require("./adapters/UpdateDelegateKeyContract")
 const ConfigurationContract = artifacts.require("./adapter/ConfigurationContract");
 const ManagingContract = artifacts.require("./adapter/ManagingContract");
 const FinancingContract = artifacts.require("./adapter/FinancingContract");
@@ -60,7 +61,7 @@ const GuildKickContract = artifacts.require("./adapters/GuildKickContract");
 const OnboardingContract = artifacts.require("./adapters/OnboardingContract");
 const OffchainVotingContract = artifacts.require("./adapters/OffchainVotingContract");
 
-async function prepareAapters(deployer) {
+async function prepareAdapters(deployer) {
   let voting;
   let configuration;
   let ragequit;
@@ -69,6 +70,7 @@ async function prepareAapters(deployer) {
   let onboarding;
   let guildkick;
   let withdraw;
+  let updateDelegateKey;
   if(deployer) {
     
     await deployer.deploy(VotingContract);
@@ -79,6 +81,7 @@ async function prepareAapters(deployer) {
     await deployer.deploy(OnboardingContract);
     await deployer.deploy(GuildKickContract);
     await deployer.deploy(WithdrawContract);
+    await deployer.deploy(UpdateDelegateKey);
 
     voting = await VotingContract.deployed();
     configuration = await ConfigurationContract.deployed();
@@ -88,6 +91,7 @@ async function prepareAapters(deployer) {
     onboarding = await OnboardingContract.deployed();
     guildkick = await GuildKickContract.deployed();
     withdraw = await WithdrawContract.deployed();
+    updateDelegateKey = await UpdateDelegateKey.deployed();
   } else {
     voting = await VotingContract.new();
     configuration = await ConfigurationContract.new();
@@ -97,6 +101,7 @@ async function prepareAapters(deployer) {
     onboarding = await OnboardingContract.new();
     guildkick = await GuildKickContract.new();
     withdraw = await WithdrawContract.new();
+    updateDelegateKey = await UpdateDelegateKey.new();
   }
 
   return {
@@ -107,7 +112,8 @@ async function prepareAapters(deployer) {
     managing,
     financing,
     onboarding,
-    withdraw
+    withdraw,
+    updateDelegateKey
   };
 }
 
@@ -130,9 +136,13 @@ async function addDefaultAdapters(
     managing,
     financing,
     onboarding,
-    withdraw    
-  } = await prepareAapters(deployer);
+    withdraw,
+    updateDelegateKey 
+  } = await prepareAdapters(deployer);
   await daoFactory.addAdapters(dao.address, [
+    entryDao("updateDelegateKey", updateDelegateKey, {
+      UPDATE_DELEGATE_KEY: true
+    }),
     entryDao("voting", voting, {}),
     entryDao("configuration", configuration, {
       SUBMIT_PROPOSAL: true,
@@ -150,11 +160,8 @@ async function addDefaultAdapters(
       SUBMIT_PROPOSAL: true,
       SPONSOR_PROPOSAL: true,
       PROCESS_PROPOSAL: true,
-      SUB_FROM_BALANCE: true,
-      ADD_TO_BALANCE: true,
       JAIL_MEMBER: true,
       UNJAIL_MEMBER: true,
-      INTERNAL_TRANSFER: true,
     }),
     entryDao("managing", managing, {
       SUBMIT_PROPOSAL: true,
@@ -488,11 +495,12 @@ async function advanceTime(time) {
 
 async function getContract(dao, id, contractFactory) {
   const address = await dao.getAdapterAddress(sha3(id));
+  console.log('address for ' + id +' is ' + address);
   return await contractFactory.at(address);
 }
 
 module.exports = {
-  prepareAapters,
+  prepareAdapters,
   advanceTime,
   createDao,
   deployDao,

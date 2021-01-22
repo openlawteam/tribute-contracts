@@ -33,7 +33,7 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
  */
 
-contract UpdateDelegateKeyContract is DaoConstants, MemberGuard {
+contract UpdateDelegateKeyContract is MemberGuard {
     /*
      * default fallback function to prevent from sending ether to the contract
      */

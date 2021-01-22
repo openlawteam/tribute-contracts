@@ -57,11 +57,16 @@ contract DaoFactory is CloneFactory, DaoConstants {
      * @param daoName The name of the dao which, after being hashed, is used to access the address
      */
     function createDao(string calldata daoName) external {
+        bytes32 hashedName = keccak256(abi.encode(daoName));
+
+        require(
+            addresses[hashedName] == address(0x0),
+            string(abi.encodePacked(daoName, " already registered"))
+        );
         DaoRegistry dao = DaoRegistry(_createClone(identityAddress));
         address daoAddr = address(dao);
         dao.initialize(msg.sender);
 
-        bytes32 hashedName = keccak256(abi.encode(daoName));
         addresses[hashedName] = daoAddr;
         daos[daoAddr] = hashedName;
 

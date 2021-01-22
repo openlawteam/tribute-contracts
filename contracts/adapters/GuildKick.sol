@@ -34,7 +34,7 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
  */
 
-contract GuildKickContract is IGuildKick, DaoConstants, MemberGuard {
+contract GuildKickContract is IGuildKick, MemberGuard {
     enum GuildKickStatus {NOT_STARTED, IN_PROGRESS, DONE}
 
     struct GuildKick {

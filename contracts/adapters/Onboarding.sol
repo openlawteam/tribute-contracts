@@ -35,12 +35,7 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
  */
 
-contract OnboardingContract is
-    IOnboarding,
-    DaoConstants,
-    MemberGuard,
-    AdapterGuard
-{
+contract OnboardingContract is IOnboarding, MemberGuard, AdapterGuard {
     bytes32 constant ChunkSize = keccak256("onboarding.chunkSize");
     bytes32 constant SharesPerChunk = keccak256("onboarding.sharesPerChunk");
     bytes32 constant TokenAddr = keccak256("onboarding.tokenAddr");
@@ -373,7 +368,7 @@ contract OnboardingContract is
         uint256 amount
     ) internal {
         if (tokenAddr == ETH_TOKEN) {
-            proposer.transfer(amount);
+            target.transfer(amount);
         } else {
             IERC20 token = IERC20(tokenAddr);
             require(

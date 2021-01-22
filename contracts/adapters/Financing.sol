@@ -33,7 +33,7 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
  */
 
-contract FinancingContract is IFinancing, DaoConstants, MemberGuard {
+contract FinancingContract is IFinancing, MemberGuard {
     struct ProposalDetails {
         address applicant;
         uint256 amount;

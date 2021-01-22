@@ -32,7 +32,7 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
  */
 
-contract ManagingContract is IManaging, DaoConstants, MemberGuard {
+contract ManagingContract is IManaging, MemberGuard {
     struct ProposalDetails {
         address applicant;
         bytes32 moduleId;
