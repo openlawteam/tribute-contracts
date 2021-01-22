@@ -35,22 +35,29 @@ SOFTWARE.
 
 contract RagequitContract is IRagequit, DaoConstants, MemberGuard {
 
-    struct Ragequit {
-        uint256 blockNumber;
-        uint256 initialTotalSharesAndLoot;
-        uint256 sharesAndLootBurnt;
-    }
+    event MemberRagequit(
+        address memberAddr, 
+        uint256 burnedShares, 
+        uint256 burnedLoot, 
+        uint256 initialTotalSharesAndLoot)
 
-    mapping(address => mapping(address => Ragequit)) public ragequits;
-
-    /*
-     * default fallback function to prevent from sending ether to the contract
+    /**
+     * @notice default fallback function to prevent from sending ether to the contract.
      */
     receive() external payable {
         revert("fallback revert");
     }
 
-    function startRagequit(
+    /**
+     * @notice Allows only members to opt out of the DAO by burning the proportional amount of shares/loot of the member. 
+     * @dev the member might not be part of the DAO anymore once all one shares/loot are burned.
+     * @dev if the member provides an invalida/not allowed token, the entire processed is reverted. 
+     * @param dao The dao address that the member is part of.
+     * @param sharesToBurn The amount of shares of the member that must be converted into funds.
+     * @param lootToBurn The amount of loot of the member that must be converted into funds.
+     * @param tokens The array of tokens that the funds should be sent to.
+     */
+    function ragequit(
         DaoRegistry dao,
         uint256 sharesToBurn,
         uint256 lootToBurn,
@@ -73,6 +80,15 @@ contract RagequitContract is IRagequit, DaoConstants, MemberGuard {
         _prepareRagequit(dao, memberAddr, sharesToBurn, lootToBurn, tokens);
     }
 
+    /**
+    * @notice Subtracts from the internal member's account the proportional shares and/or loot.
+    * @dev ...
+    * @param dao The dao address that the member is part of.
+    * @param memberAddr The member address that want to burn the shares and/or loot.
+    * @param sharesToBurn The amount of shares of the member that must be converted into funds.
+    * @param lootToBurn The amount of loot of the member that must be converted into funds.
+    * @param tokens The array of tokens that the funds should be sent to.
+    */
     function _prepareRagequit(
         DaoRegistry dao,
         address memberAddr,
@@ -81,7 +97,6 @@ contract RagequitContract is IRagequit, DaoConstants, MemberGuard {
         address[] memory tokens
     ) internal {
         // burn shares and loot
-        Ragequit storage ragequit = ragequits[address(dao)][memberAddr];
         BankExtension bank = BankExtension(dao.getExtensionAddress(BANK));
         ragequit.blockNumber = block.number;
         //TODO: make this the sum of all the internal tokens
@@ -90,28 +105,34 @@ contract RagequitContract is IRagequit, DaoConstants, MemberGuard {
             bank.balanceOf(TOTAL, LOOT) +
             bank.balanceOf(TOTAL, LOCKED_LOOT);
 
-         uint256 sharesAndLootBurnt = sharesToBurn + lootToBurn;
-
         bank.subtractFromBalance(memberAddr, SHARES, sharesToBurn);
         bank.subtractFromBalance(memberAddr, LOOT, lootToBurn);
 
-        _burnShares(dao, memberAddr, sharesAndLootBurnt, initialTotalSharesAndLoot, tokens);
-
+        _burnShares(dao, memberAddr, sharesToBurn, lootToBurn, initialTotalSharesAndLoot, tokens);
     }
 
+    /**
+    * @notice Subtracts from the bank's account the proportional shares and/or loot, 
+    * @notice and transfers the funds to the member's internal account based on the provided tokens.
+    * @dev ...
+    * @param dao The dao address that the member is part of.
+    * @param memberAddr The member address that want to burn the shares and/or loot.
+    * @param sharesToBurn The amount of shares of the member that must be converted into funds.
+    * @param lootToBurn The amount of loot of the member that must be converted into funds.
+    * @param initialTotalSharesAndLoot .
+    * @param tokens The array of tokens that the funds should be sent to.
+    */
     function _burnShares(
         DaoRegistry dao,
         address memberAddr,
-        uint256 sharesAndLootToBurn,
+        uint256 sharesToBurn,
+        uint256 lootToBurn,
         uint256 initialTotalSharesAndLoot,
         address[] memory tokens
     ) internal {
-        // burn shares and loot
-        Ragequit storage ragequit = ragequits[address(dao)][memberAddr];
-
         BankExtension bank = BankExtension(dao.getExtensionAddress(BANK));
         //Update internal Guild and Member balances
-        
+        uint256 sharesAndLootBurnt = sharesToBurn + lootToBurn;
         uint256 blockNumber = block.number;//???
         for (uint256 i = currentIndex; i < tokens.length; i++) {
             address token = tokens[i];
@@ -135,5 +156,7 @@ contract RagequitContract is IRagequit, DaoConstants, MemberGuard {
                 );
             }
         }
+
+        emit MemberRagequit(memberAddr, sharesToBurn, lootToBurn,  initialTotalSharesAndLoot)
     }
 }
