@@ -5,6 +5,20 @@ guild bank and internal tokens minted, otherwise the proposer can withdraw back 
 
 You can mint any internal tokens but it is usually to mint either SHARE or LOOT tokens.
 
+## Adapter workflow
+First, a potential new member (or a member who wants to increase his shares) and sends tokens to the onboarding adapter.
+The adapter is used as an escrow between the DAO and the potential new member.
+
+Sending the tokens means a proposal is submitted (but not sponsored)
+
+If the proposal has not been sponsored yet, the proposer can cancel the proposal and the tokens are sent back to the proposer.
+
+If the proposal is sponsored (only by a member), it is put up for vote.
+
+after the voting period is done, it is time to process the proposal.
+If the vote has passed, the tokens are moved to the guild bank and the shares minted (internal tokens)
+if it has failed, the money is returned to the applicant.
+
 ## Adapter configuration
 Each configuration is done based on the token address that needs to be minted.
 ### {tokenAddrToMint}.onboarding.chunkSize
@@ -62,18 +76,52 @@ The adapter also needs a Bank extension. So confgureDao will fail if no bank ext
 ### function onboard(DaoRegistry dao, bytes32 proposalId, address payable applicant, address tokenToMint, uint256 tokenAmount)
 Onboard submits the proposal but does not sponsor it yet. This is why anyone can call this function.
 
+**tokenAmount** is only relevant if you send ERC-20 tokens. If the payment is done directly in ETH, msg.value is being taken into account and the value passed is irrelevant.
+
+The tokens are then kept into escrow into the adapter and a proposal is being created. 
+
+If the amount sent is not a multiple of sharesPerChunk, the remainder is sent back to the proposer.
+
+this function uses **_submitMembershipProposal** to create the proposal
 
 ### function sponsorProposal(DaoRegistry dao, bytes32 proposalId, bytes calldata data)
+This function can only be called by an active member.
+
+This starts a vote on the proposal to onboard a new member. 
+
+**dao.sponsorProposal(proposalId)** checks already that the proposal has not been sponsored yet
+
+**voting.startNewVotingForProposal(dao, proposalId, data)** starts the vote process
+
 ### function onboardAndSponsor(DaoRegistry dao, bytes32 proposalId, address payable applicant, address tokenToMint, uint256 tokenAmount, bytes calldata data)
+This function is a helper function to get submit and sponsor in the same transaction.
+
+It does onboard & sponsor at the same time.
+
+Instead of checking who is sending the transaction, it uses the data passed to determine who is sending it. For the standard OnchainVoting, this is equivalent to msg.sender, but for offchain voting, this will use who has signed the data (and can use a relayer to send the transaction)
 
 ### function cancelProposal(DaoRegistry dao, bytes32 proposalId)
-    
+If a proposal exsits but has not been sponsored yet or processed yet, you can cancel it.
+Only the proposer can cancel a proposal.
+
+If the proposal is cancelled, it is marked as processed and the tribute is funded back to the proposer.
 ### function processProposal(DaoRegistry dao, bytes32 proposalId)
+Once the vote on a proposal is finished, it is time to process it. Anybody can call that
+
+The function checks that there is a vote in progrss for this proposalId and that it has not been processed yet.
+if the vote is a success (2), then we process it by minting the internal tokens and moving the tokens from the adapter to the bank extension
+
+if the vote is a tie or failed (1 or 3), then the funds are returned to the proposer
+
+Otherwise, the state is invalid and the tx is reverted (if the vote does not exist or if it is in progress)
 
 ### function _submitMembershipProposal(DaoRegistry dao, bytes32 proposalId, address tokenToMint, address payable applicant, address payable proposer, uint256 value, address token)
 
 ### function _submitMembershipProposalInternal(DaoRegistry dao, bytes32 proposalId, address tokenToMint, address payable newMember, address payable proposer, uint256 sharesRequested, uint256 amount, address token)
-
+This function marks the proposalId as submitted in the dao and saves the information in the internal adapter state
 ### function _refundTribute(address tokenAddr, address payable proposer, uint256 amount)
+It returns a certain amount to the proposer of a certain token address
+it handles whether it's an ERC-20 or simply ETH
 
 ### function _mintTokensToMember(DaoRegistry dao, address tokenToMint, address memberAddr, uint256 tokenAmount)
+This function mints the tokens to the new member, and creates the new member data if needed within the DAO

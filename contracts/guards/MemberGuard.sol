@@ -32,6 +32,11 @@ abstract contract MemberGuard {
      * @dev Only members of the DAO are allowed to execute the function call.
      */
     modifier onlyMember(DaoRegistry dao) {
+        address bankAddress = dao.extensions[BANK];
+        if (bankAddress != address(0x0)) {
+            BankExtension bank = BankExtension(bankAddress);
+            require(bank.balanceOf(msg.sender, SHARES) > 0, "onlyMember");
+        }
         require(dao.isActiveMember(msg.sender), "onlyMember");
         _;
     }

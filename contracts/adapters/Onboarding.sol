@@ -121,7 +121,7 @@ contract OnboardingContract is
         details.chunkSize = dao.getConfiguration(
             configKey(tokenToMint, ChunkSize)
         );
-        require(details.chunkSize > 0, "config missing");
+        require(details.chunkSize > 0, "config chunkSize missing");
 
         details.numberOfChunks = value / details.chunkSize;
         require(details.numberOfChunks > 0, "not sufficient funds");
@@ -129,11 +129,14 @@ contract OnboardingContract is
         details.sharesPerChunk = dao.getConfiguration(
             configKey(tokenToMint, SharesPerChunk)
         );
+        require(details.sharesPerChunk > 0, "cofig sharesPerChunk missing");
         details.amount = details.numberOfChunks * details.chunkSize;
         details.sharesRequested =
             details.numberOfChunks *
             details.sharesPerChunk;
-        details.totalShares = shares[applicant][tokenToMint] + details.sharesRequested;
+        details.totalShares =
+            shares[applicant][tokenToMint] +
+            details.sharesRequested;
 
         require(
             details.totalShares / details.sharesPerChunk <
@@ -164,11 +167,6 @@ contract OnboardingContract is
         bytes calldata data
     ) external payable {
         onboard(dao, proposalId, applicant, tokenToMint, tokenAmount);
-        require(
-            proposals[address(dao)][proposalId].id == proposalId,
-            "proposal does not exist"
-        );
-
         IVoting votingContract = IVoting(dao.getAdapterAddress(VOTING));
         try
             votingContract.startNewVotingForProposal(dao, proposalId, data)
@@ -203,9 +201,8 @@ contract OnboardingContract is
             "applicant is reserved address"
         );
         address tokenAddr =
-            address(
-                dao.getAddressConfiguration(configKey(tokenToMint, TokenAddr))
-            );
+            dao.getAddressConfiguration(configKey(tokenToMint, TokenAddr));
+        require(tokenAddr != address(0x0), "config missing");
         if (tokenAddr == ETH_TOKEN) {
             // ETH onboarding
             require(msg.value > 0, "not enough ETH");
@@ -290,7 +287,6 @@ contract OnboardingContract is
     function cancelProposal(DaoRegistry dao, bytes32 proposalId)
         external
         override
-        onlyMember(dao)
     {
         require(
             proposals[address(dao)][proposalId].id == proposalId,
@@ -303,6 +299,11 @@ contract OnboardingContract is
                 DaoRegistry.ProposalFlag.SPONSORED
             ),
             "proposal already sponsored"
+        );
+
+        require(
+            proposals[address(dao)][proposalId].proposer == msg.sender,
+            "only the proposer can cancel the call"
         );
 
         dao.processProposal(proposalId);
@@ -354,7 +355,8 @@ contract OnboardingContract is
             }
 
             uint256 totalShares =
-                shares[proposal.tokenToMint][proposal.applicant] + proposal.sharesRequested;
+                shares[proposal.tokenToMint][proposal.applicant] +
+                    proposal.sharesRequested;
             shares[proposal.tokenToMint][proposal.applicant] = totalShares;
         } else if (voteResult == 3 || voteResult == 1) {
             _refundTribute(proposal.token, proposal.proposer, proposal.amount);
@@ -367,7 +369,7 @@ contract OnboardingContract is
 
     function _refundTribute(
         address tokenAddr,
-        address payable proposer,
+        address payable target,
         uint256 amount
     ) internal {
         if (tokenAddr == ETH_TOKEN) {
@@ -375,7 +377,7 @@ contract OnboardingContract is
         } else {
             IERC20 token = IERC20(tokenAddr);
             require(
-                token.transferFrom(address(this), proposer, amount),
+                token.transferFrom(address(this), target, amount),
                 "ERC20 failed transferFrom"
             );
         }

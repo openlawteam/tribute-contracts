@@ -34,7 +34,6 @@ SOFTWARE.
  */
 
 contract UpdateDelegateKeyContract is DaoConstants, MemberGuard {
-
     /*
      * default fallback function to prevent from sending ether to the contract
      */

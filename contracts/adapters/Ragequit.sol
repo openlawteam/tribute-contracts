@@ -56,7 +56,8 @@ contract RagequitContract is IRagequit, DaoConstants, MemberGuard {
     function startRagequit(
         DaoRegistry dao,
         uint256 sharesToBurn,
-        uint256 lootToBurn
+        uint256 lootToBurn,
+        address[] memory tokens
     ) external override onlyMember(dao) {
         address memberAddr = msg.sender;
         BankExtension bank = BankExtension(dao.getExtensionAddress(BANK));
