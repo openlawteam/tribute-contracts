@@ -75,12 +75,11 @@ contract RagequitContract is IRagequit, DaoConstants, MemberGuard {
             "insufficient loot"
         );
 
-        _prepareRagequit(dao, memberAddr, sharesToBurn, lootToBurn, tokens, bank);
+        _prepareRagequit(memberAddr, sharesToBurn, lootToBurn, tokens, bank);
     }
 
     /**
     * @notice Subtracts from the internal member's account the proportional shares and/or loot.
-    * @param dao The dao address that the member is part of.
     * @param memberAddr The member address that want to burn the shares and/or loot.
     * @param sharesToBurn The amount of shares of the member that must be converted into funds.
     * @param lootToBurn The amount of loot of the member that must be converted into funds.
@@ -88,7 +87,6 @@ contract RagequitContract is IRagequit, DaoConstants, MemberGuard {
     * @param bank The bank extension.
     */
     function _prepareRagequit(
-        DaoRegistry dao,
         address memberAddr,
         uint256 sharesToBurn,
         uint256 lootToBurn,
@@ -107,13 +105,12 @@ contract RagequitContract is IRagequit, DaoConstants, MemberGuard {
         bank.subtractFromBalance(memberAddr, SHARES, sharesToBurn);
         bank.subtractFromBalance(memberAddr, LOOT, lootToBurn);
 
-        _burnShares(dao, memberAddr, sharesToBurn, lootToBurn, initialTotalSharesAndLoot, tokens, bank);
+        _burnShares(memberAddr, sharesToBurn, lootToBurn, initialTotalSharesAndLoot, tokens, bank);
     }
 
     /**
     * @notice Subtracts from the bank's account the proportional shares and/or loot, 
     * @notice and transfers the funds to the member's internal account based on the provided tokens.
-    * @param dao The dao address that the member is part of.
     * @param memberAddr The member address that want to burn the shares and/or loot.
     * @param sharesToBurn The amount of shares of the member that must be converted into funds.
     * @param lootToBurn The amount of loot of the member that must be converted into funds.
@@ -122,7 +119,6 @@ contract RagequitContract is IRagequit, DaoConstants, MemberGuard {
     * @param bank The bank extension.
     */
     function _burnShares(
-        DaoRegistry dao,
         address memberAddr,
         uint256 sharesToBurn,
         uint256 lootToBurn,
