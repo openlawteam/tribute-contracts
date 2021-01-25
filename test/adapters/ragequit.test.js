@@ -125,7 +125,7 @@ contract("LAOLAND - Ragequit Adapter", async (accounts) => {
     return ragequitContract;
   };
 
-  it("should not be possible for a non DAO member to ragequit", async () => {
+  it("should return an error if a non DAO member attempts to ragequit", async () => {
     const myAccount = accounts[1];
     const newMember = accounts[2];
 
@@ -167,11 +167,11 @@ contract("LAOLAND - Ragequit Adapter", async (accounts) => {
       let nonMember = accounts[4];
       await ragequit(dao, shares, 0, nonMember);
     } catch (error) {
-      assert.equal(error.reason, "onlyMember");
+      assert.equal(error.reason, "insufficient shares");
     }
   });
 
-  it("should not be possible to a member to ragequit when the member does not have enough shares", async () => {
+  it("should not be possible for a member to ragequit when the member does not have enough shares", async () => {
     const myAccount = accounts[1];
     const newMember = accounts[2];
 
@@ -217,7 +217,7 @@ contract("LAOLAND - Ragequit Adapter", async (accounts) => {
     }
   });
 
-  it("should be possible to a member to ragequit when the member has not voted on any proposals yet", async () => {
+  it("should be possible for a member to ragequit when the member has not voted on any proposals yet", async () => {
     const myAccount = accounts[1];
     const newMember = accounts[2];
 
@@ -262,7 +262,7 @@ contract("LAOLAND - Ragequit Adapter", async (accounts) => {
     assert.equal(toBN(newGuildBalance).toString(), "120"); //must be close to 0
   });
 
-  it("should be possible to a member to ragequit if the member voted YES on a proposal that is not processed", async () => {
+  it("should be possible for a member to ragequit if the member voted YES on a proposal that is not processed", async () => {
     const myAccount = accounts[1];
     const newMember = accounts[2];
     const applicant = accounts[3];
@@ -335,7 +335,7 @@ contract("LAOLAND - Ragequit Adapter", async (accounts) => {
     assert.equal(toBN(newGuildBalance).toString(), "120"); //must be close to 0
   });
 
-  it("should be possible to a member to ragequit if the member voted NO on a proposal that is not processed", async () => {
+  it("should be possible for a member to ragequit if the member voted NO on a proposal that is not processed", async () => {
     const myAccount = accounts[1];
     const newMember = accounts[2];
     const applicant = accounts[3];
@@ -408,7 +408,7 @@ contract("LAOLAND - Ragequit Adapter", async (accounts) => {
     assert.equal(toBN(newGuildBalance).toString(), "120"); //must be close to 0
   });
 
-  it("should be possible to an Advisor ragequit at any point in time", async () => {
+  it("should be possible for an Advisor to ragequit", async () => {
     const myAccount = accounts[1];
     const advisorAccount = accounts[2];
 
@@ -501,7 +501,13 @@ contract("LAOLAND - Ragequit Adapter", async (accounts) => {
     assert.equal(guildBalance.toString(), "10");
 
     //Ragequit - Advisor ragequits
-    await ragequit(dao, 0, advisorAccountLoot, advisorAccount);
+    await ragequit(
+      dao,
+      0,
+      advisorAccountLoot,
+      advisorAccount,
+      oltContract.address
+    );
 
     //Check Guild Bank Balance
     let newGuildBalance = await bank.balanceOf(GUILD, oltContract.address);
@@ -570,6 +576,29 @@ contract("LAOLAND - Ragequit Adapter", async (accounts) => {
       );
     } catch (err) {
       assert.equal(err.reason, "onlyMember");
+    }
+  });
+
+  it("should not be possible to ragequit if the member have provided an invalid token", async () => {
+    const myAccount = accounts[1];
+
+    let dao = await createDao(myAccount);
+    const bankAddress = await dao.getExtensionAddress(sha3("bank"));
+    const bank = await BankExtension.at(bankAddress);
+
+    // Check member shares
+    let shares = await bank.balanceOf(myAccount, SHARES);
+    assert.equal(shares.toString(), "1");
+
+    try {
+      //Ragequit - Attempts to ragequit using an invalid token to receive funds
+      let invalidToken = accounts[7];
+      await ragequit(dao, shares, 0, myAccount, invalidToken);
+      assert.fail(
+        "should not be possible to ragequit if the token is not allowed by the DAO"
+      );
+    } catch (err) {
+      assert.equal(err.reason, "token not allowed");
     }
   });
 });

@@ -53,9 +53,10 @@ contract RagequitContract is IRagequit, DaoConstants, MemberGuard {
     }
 
     /**
-     * @notice Allows only members to opt out of the DAO by burning the proportional amount of shares/loot of the member. 
-     * @dev the member might not be part of the DAO anymore once all one shares/loot are burned.
-     * @dev if the member provides an invalid/not allowed token, the entire processed is reverted. 
+     * @notice Allows a member or advisor of the DAO to opt out by burning the proportional amount of shares/loot of the member. 
+     * @notice Anyone is allowed to call this function, but only members and advisor that have shares are able to execute the entire ragequit process.
+     * @dev The member becomes an inative member of the DAO once all the shares/loot are burned.
+     * @dev If the member provides an invalid/not allowed token, the entire processed is reverted. 
      * @param dao The dao address that the member is part of.
      * @param sharesToBurn The amount of shares of the member that must be converted into funds.
      * @param lootToBurn The amount of loot of the member that must be converted into funds.
@@ -66,7 +67,7 @@ contract RagequitContract is IRagequit, DaoConstants, MemberGuard {
         uint256 sharesToBurn,
         uint256 lootToBurn,
         address[] memory tokens
-    ) external override onlyMember(dao) {
+    ) external override {
         // Gets the delegated address, otherwise returns the sender address.
         address memberAddr = dao.getAddressIfDelegated(msg.sender);
         // Instantiates the Bank extension to handle the internal balance checks and transfers.
