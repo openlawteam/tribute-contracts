@@ -10,7 +10,7 @@ The main goal is to give the members the freedom to choose when it is the best t
 
 ## Adapter workflow
 
-In order to opt out of the DAO, the member needs to indicate the amount of shares and/or loots that one have decided to burn (to convert back into a token value). Only members are allowed to opt out.
+In order to opt out of the DAO, the member needs to indicate the amount of shares and/or loots that one have decided to burn (to convert back into a token value).
 
 The proportional shares and/or loots are burned when the member provides the tokens in which one expects to receive the funds. The funds are deducted from the internal DAO bank balance, and added to the member's internal balance.
 
@@ -35,10 +35,6 @@ There are no state tracking for this adapter.
   - to check the member's balance
   - to subtract the member's balance.
   - to transfer the funds from the DAO account to the member's account taking into consideration the provided tokens.
-
-- DaoRegistry
-
-  - to check if the message sender is actually a member of the DAO.
   - to check if the provided token is supported/allowed by the DAO.
 
 - FairShareHelper
