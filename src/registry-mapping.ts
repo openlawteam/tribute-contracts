@@ -13,7 +13,7 @@ import { log, store } from "@graphprotocol/graph-ts";
 
 export function handleSubmittedProposal(event: SubmittedProposal): void {
   let id = event.params.proposalId;
-  let laoland = event.address.toHex();
+  let laoland = event.address.toHex(); // contract address
   let newProposalId = laoland.concat("-proposal-").concat(id.toHex());
 
   let proposal = Proposal.load(newProposalId);
@@ -34,7 +34,7 @@ export function handleSubmittedProposal(event: SubmittedProposal): void {
 
 export function handleSponsoredProposal(event: SponsoredProposal): void {
   let id = event.params.proposalId;
-  let laoland = event.address.toHex();
+  let laoland = event.address.toHex(); // contract address
   let newProposalId = laoland.concat("-proposal-").concat(id.toHex());
 
   let proposal = Proposal.load(newProposalId);
@@ -45,18 +45,16 @@ export function handleSponsoredProposal(event: SponsoredProposal): void {
     [event.params.proposalId.toHexString()]
   );
 
-  if (proposal != null) {
-    proposal.flags = event.params.flags;
-    proposal.sponsoredAt = sponsoredAt;
-    proposal.sponsored = true;
+  proposal.flags = event.params.flags;
+  proposal.sponsoredAt = sponsoredAt;
+  proposal.sponsored = true;
 
-    proposal.save();
-  }
+  proposal.save();
 }
 
 export function handleProcessedProposal(event: ProcessedProposal): void {
   let id = event.params.proposalId;
-  let laoland = event.address.toHex();
+  let laoland = event.address.toHex(); // contract address
   let newProposalId = laoland.concat("-proposal-").concat(id.toHex());
 
   let proposal = Proposal.load(newProposalId);

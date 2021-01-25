@@ -29,7 +29,7 @@ dataSources:
     name: DaoRegistry
     network: rinkeby
     source:
-      address: "0x4C38316bB940f0DAeE6b2AfDA8C1489fe51E6F57"
+      address: "0xC06faAFD887c946c68FCE5c71427A569BBB55e61" #dao address
       abi: DaoRegistry
       startBlock: 7939099
     mapping:
@@ -61,6 +61,7 @@ dataSources:
         - event: MemberUnjailed(address)
           handler: handleMemberUnjailed
       file: ./src/registry-mapping.ts
+
   - kind: ethereum/contract
     name: BankExtension
     network: rinkeby
