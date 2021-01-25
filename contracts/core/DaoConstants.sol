@@ -28,26 +28,24 @@ SOFTWARE.
 
 abstract contract DaoConstants {
     // Adapters
-    bytes32 public constant VOTING = keccak256("voting");
-    bytes32 public constant ONBOARDING = keccak256("onboarding");
-    bytes32 public constant NONVOTING_ONBOARDING =
+    bytes32 internal constant VOTING = keccak256("voting");
+    bytes32 internal constant ONBOARDING = keccak256("onboarding");
+    bytes32 internal constant NONVOTING_ONBOARDING =
         keccak256("nonvoting-onboarding");
-    bytes32 public constant FINANCING = keccak256("financing");
-    bytes32 public constant MANAGING = keccak256("managing");
-    bytes32 public constant RAGEQUIT = keccak256("ragequit");
-    bytes32 public constant GUILDKICK = keccak256("guildkick");
-    bytes32 public constant BANK = keccak256("bank");
-    bytes32 public constant EXECUTION = keccak256("execution");
-    bytes32 public constant CONFIGURATION = keccak256("configuration");
+    bytes32 internal constant FINANCING = keccak256("financing");
+    bytes32 internal constant MANAGING = keccak256("managing");
+    bytes32 internal constant RAGEQUIT = keccak256("ragequit");
+    bytes32 internal constant GUILDKICK = keccak256("guildkick");
+    bytes32 internal constant BANK = keccak256("bank");
+    bytes32 internal constant EXECUTION = keccak256("execution");
+    bytes32 internal constant CONFIGURATION = keccak256("configuration");
 
-    /// @notice The reserved address for Guild bank account
-    address public constant GUILD = address(0xdead);
-    /// @notice The reserved address for Total funds bank account
-    address public constant TOTAL = address(0xbabe);
-    address public constant SHARES = address(0xFF1CE);
-    address public constant LOOT = address(0xB105F00D);
-    address public constant LOCKED_LOOT = address(0xBAAAAAAD);
-    address public constant ETH_TOKEN = address(0x0);
+    address internal constant GUILD = address(0xdead);
+    address internal constant TOTAL = address(0xbabe);
+    address internal constant SHARES = address(0xFF1CE);
+    address internal constant LOOT = address(0xB105F00D);
+    address internal constant LOCKED_LOOT = address(0xBAAAAAAD);
+    address internal constant ETH_TOKEN = address(0x0);
 
     //helper
     function getFlag(uint256 flags, uint256 flag) public pure returns (bool) {
