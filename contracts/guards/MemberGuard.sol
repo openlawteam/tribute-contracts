@@ -35,8 +35,10 @@ abstract contract MemberGuard is DaoConstants {
     modifier onlyMember(DaoRegistry dao) {
         address bankAddress = dao.extensions(BANK);
         if (bankAddress != address(0x0)) {
+            address memberAddr = dao.getAddressIfDelegated(msg.sender);
+
             require(
-                BankExtension(bankAddress).balanceOf(msg.sender, SHARES) > 0,
+                BankExtension(bankAddress).balanceOf(memberAddr, SHARES) > 0,
                 "onlyMember"
             );
         }
