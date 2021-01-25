@@ -62,7 +62,7 @@ There are no state tracking for this adapter.
     /**
      * @notice Allows only members to opt out of the DAO by burning the proportional amount of shares/loot of the member.
      * @dev the member might not be part of the DAO anymore once all one shares/loot are burned.
-     * @dev if the member provides an invalida/not allowed token, the entire processed is reverted.
+     * @dev if the member provides an invalid/not allowed token, the entire processed is reverted.
      * @param dao The dao address that the member is part of.
      * @param sharesToBurn The amount of shares of the member that must be converted into funds.
      * @param lootToBurn The amount of loot of the member that must be converted into funds.
@@ -79,46 +79,55 @@ There are no state tracking for this adapter.
 ### function \_prepareRagequit
 
 ```solidity
-/**
+    /**
     * @notice Subtracts from the internal member's account the proportional shares and/or loot.
-    * @dev ...
-    * @param dao The dao address that the member is part of.
     * @param memberAddr The member address that want to burn the shares and/or loot.
     * @param sharesToBurn The amount of shares of the member that must be converted into funds.
     * @param lootToBurn The amount of loot of the member that must be converted into funds.
     * @param tokens The array of tokens that the funds should be sent to.
+    * @param bank The bank extension.
     */
     function _prepareRagequit(
-        DaoRegistry dao,
         address memberAddr,
         uint256 sharesToBurn,
         uint256 lootToBurn,
-        address[] memory tokens
+        address[] memory tokens,
+        BankExtension bank
     ) internal
 ```
 
 ### function \_burnShares
 
 ```solidity
-/**
+    /**
     * @notice Subtracts from the bank's account the proportional shares and/or loot,
     * @notice and transfers the funds to the member's internal account based on the provided tokens.
-    * @dev ...
-    * @param dao The dao address that the member is part of.
     * @param memberAddr The member address that want to burn the shares and/or loot.
     * @param sharesToBurn The amount of shares of the member that must be converted into funds.
     * @param lootToBurn The amount of loot of the member that must be converted into funds.
-    * @param initialTotalSharesAndLoot .
+    * @param initialTotalSharesAndLoot The sum of shares and loot before internal transfers.
     * @param tokens The array of tokens that the funds should be sent to.
+    * @param bank The bank extension.
     */
     function _burnShares(
-        DaoRegistry dao,
         address memberAddr,
         uint256 sharesToBurn,
         uint256 lootToBurn,
         uint256 initialTotalSharesAndLoot,
-        address[] memory tokens
+        address[] memory tokens,
+        BankExtension bank
     ) internal
 ```
 
 ## Events
+
+```solidity
+    /**
+     * @notice Event emitted when a member of the DAO executes a ragequit with all or parts of one shares/loot.
+     */
+    event MemberRagequit(
+        address memberAddr,
+        uint256 burnedShares,
+        uint256 burnedLoot,
+        uint256 initialTotalSharesAndLoot)
+```

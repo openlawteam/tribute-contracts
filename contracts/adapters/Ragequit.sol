@@ -35,6 +35,10 @@ SOFTWARE.
 
 contract RagequitContract is IRagequit, DaoConstants, MemberGuard {
 
+
+    /**
+     * @notice Event emitted when a member of the DAO executes a ragequit with all or parts of one shares/loot. 
+     */
     event MemberRagequit(
         address memberAddr, 
         uint256 burnedShares, 
@@ -63,18 +67,22 @@ contract RagequitContract is IRagequit, DaoConstants, MemberGuard {
         uint256 lootToBurn,
         address[] memory tokens
     ) external override onlyMember(dao) {
+        // Gets the delegated address, otherwise returns the sender address.
         address memberAddr = dao.getAddressIfDelegated(msg.sender);
+        // Instantiates the Bank extension to handle the internal balance checks and transfers.
         BankExtension bank = BankExtension(dao.getExtensionAddress(BANK));
-        //Check if member has enough shares and loot to burn
+        // Check if member has enough shares to burn.
         require(
             bank.balanceOf(memberAddr, SHARES) >= sharesToBurn,
             "insufficient shares"
         );
+        // Check if the member has enough loot to burn.
         require(
             bank.balanceOf(memberAddr, LOOT) >= lootToBurn,
             "insufficient loot"
         );
 
+        // Start the ragequit process by updating the member's internal account balances.
         _prepareRagequit(memberAddr, sharesToBurn, lootToBurn, tokens, bank);
     }
 
@@ -93,7 +101,7 @@ contract RagequitContract is IRagequit, DaoConstants, MemberGuard {
         address[] memory tokens,
         BankExtension bank
     ) internal {
-        // Calculate the total shares, loot and locked loot before any internal transfers
+        // Calculates the total shares, loot and locked loot before any internal transfers
         // it considers the locked loot to be able to calculate the fair amount to ragequit,
         // but locked loot can not be burned.
         uint256 initialTotalSharesAndLoot =
@@ -101,10 +109,12 @@ contract RagequitContract is IRagequit, DaoConstants, MemberGuard {
             bank.balanceOf(TOTAL, LOOT) +
             bank.balanceOf(TOTAL, LOCKED_LOOT);
 
-        // Burn / subtract from member's balance the shares/loot to burn
+        // Burns / subtracts from member's balance the number of shares to burn.
         bank.subtractFromBalance(memberAddr, SHARES, sharesToBurn);
+        // Burns / subtracts from member's balance the number of loot to burn.
         bank.subtractFromBalance(memberAddr, LOOT, lootToBurn);
 
+        // Completes the ragequit process by updating the GUILD internal balance based on each provided token.
         _burnShares(memberAddr, sharesToBurn, lootToBurn, initialTotalSharesAndLoot, tokens, bank);
     }
 
@@ -126,11 +136,16 @@ contract RagequitContract is IRagequit, DaoConstants, MemberGuard {
         address[] memory tokens,
         BankExtension bank
     ) internal {
-        //Update internal Guild and Member balances
+        // Calculates the total amount of shares and loot to burn
         uint256 sharesAndLootToBurn = sharesToBurn + lootToBurn;
+
+        // Transfers the funds from the internal Guild account to the internal member's account based on each token provided by the member.
+        // The provided token must be supported/allowed by the Guild Bank, otherwise it reverts the entire transaction. 
         for (uint256 i = 0; i < tokens.length; i++) {
             address token = tokens[i];
+            // Checks if the token is supported by the Guild Bank.
             require(bank.isTokenAllowed(token), "token not allowed");
+
             // Calculates the fair amount of funds to ragequit based on the token, shares and loot
             uint256 amountToRagequit =
                 FairShareHelper.calc(
@@ -138,6 +153,8 @@ contract RagequitContract is IRagequit, DaoConstants, MemberGuard {
                     sharesAndLootToBurn,
                     initialTotalSharesAndLoot
                 );
+            
+            // Ony execute the internal transfer if the user has enough funds to receive.
             if (amountToRagequit > 0) {
                 // gas optimization to allow a higher maximum token limit
                 // deliberately not using safemath here to keep overflows from preventing the function execution
@@ -152,6 +169,7 @@ contract RagequitContract is IRagequit, DaoConstants, MemberGuard {
             }
         }
 
+        // Once the shares and loot were burned, and the transfers completed, emit an event to indicate a successfull operation.
         emit MemberRagequit(memberAddr, sharesToBurn, lootToBurn,  initialTotalSharesAndLoot);
     }
 }
