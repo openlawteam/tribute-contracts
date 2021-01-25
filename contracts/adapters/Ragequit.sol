@@ -131,10 +131,10 @@ contract RagequitContract is IRagequit, DaoConstants, MemberGuard {
         BankExtension bank
     ) internal {
         //Update internal Guild and Member balances
-        uint256 sharesAndLootBurnt = sharesToBurn + lootToBurn;
+        uint256 sharesAndLootToBurn = sharesToBurn + lootToBurn;
         for (uint256 i = 0; i < tokens.length; i++) {
             address token = tokens[i];
-            require(dao.isAllowedToken(token), "token not allowed at " + i);
+            require(bank.isTokenAllowed(token), "token not allowed at " + i);
             // Calculates the fair amount of funds to ragequit based on the token, shares and loot
             uint256 amountToRagequit =
                 FairShareHelper.calc(
