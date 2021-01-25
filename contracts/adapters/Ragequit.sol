@@ -42,7 +42,7 @@ contract RagequitContract is IRagequit, DaoConstants, MemberGuard {
         uint256 initialTotalSharesAndLoot)
 
     /**
-     * @notice default fallback function to prevent from sending ether to the contract.
+     * default fallback function to prevent from sending ether to the contract.
      */
     receive() external payable {
         revert("fallback revert");
@@ -51,7 +51,7 @@ contract RagequitContract is IRagequit, DaoConstants, MemberGuard {
     /**
      * @notice Allows only members to opt out of the DAO by burning the proportional amount of shares/loot of the member. 
      * @dev the member might not be part of the DAO anymore once all one shares/loot are burned.
-     * @dev if the member provides an invalida/not allowed token, the entire processed is reverted. 
+     * @dev if the member provides an invalid/not allowed token, the entire processed is reverted. 
      * @param dao The dao address that the member is part of.
      * @param sharesToBurn The amount of shares of the member that must be converted into funds.
      * @param lootToBurn The amount of loot of the member that must be converted into funds.
