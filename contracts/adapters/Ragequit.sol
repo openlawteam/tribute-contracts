@@ -134,7 +134,7 @@ contract RagequitContract is IRagequit, DaoConstants, MemberGuard {
         uint256 sharesAndLootToBurn = sharesToBurn + lootToBurn;
         for (uint256 i = 0; i < tokens.length; i++) {
             address token = tokens[i];
-            require(bank.isTokenAllowed(token), "token not allowed at " + i);
+            require(bank.isTokenAllowed(token), "token not allowed");
             // Calculates the fair amount of funds to ragequit based on the token, shares and loot
             uint256 amountToRagequit =
                 FairShareHelper.calc(
