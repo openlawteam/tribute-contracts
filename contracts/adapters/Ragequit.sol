@@ -39,7 +39,7 @@ contract RagequitContract is IRagequit, DaoConstants, MemberGuard {
         address memberAddr, 
         uint256 burnedShares, 
         uint256 burnedLoot, 
-        uint256 initialTotalSharesAndLoot)
+        uint256 initialTotalSharesAndLoot);
 
     /**
      * default fallback function to prevent from sending ether to the contract.
@@ -132,7 +132,7 @@ contract RagequitContract is IRagequit, DaoConstants, MemberGuard {
     ) internal {
         //Update internal Guild and Member balances
         uint256 sharesAndLootBurnt = sharesToBurn + lootToBurn;
-        for (uint256 i = currentIndex; i < tokens.length; i++) {
+        for (uint256 i = 0; i < tokens.length; i++) {
             address token = tokens[i];
             require(dao.isAllowedToken(token), "token not allowed at " + i);
             // Calculates the fair amount of funds to ragequit based on the token, shares and loot
@@ -156,6 +156,6 @@ contract RagequitContract is IRagequit, DaoConstants, MemberGuard {
             }
         }
 
-        emit MemberRagequit(memberAddr, sharesToBurn, lootToBurn,  initialTotalSharesAndLoot)
+        emit MemberRagequit(memberAddr, sharesToBurn, lootToBurn,  initialTotalSharesAndLoot);
     }
 }
