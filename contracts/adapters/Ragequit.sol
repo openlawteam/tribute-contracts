@@ -63,7 +63,7 @@ contract RagequitContract is IRagequit, DaoConstants, MemberGuard {
         uint256 lootToBurn,
         address[] memory tokens
     ) external override onlyMember(dao) {
-        address memberAddr = msg.sender;
+        address memberAddr = dao.getAddressIfDelegated(msg.sender);
         BankExtension bank = BankExtension(dao.getExtensionAddress(BANK));
         //Check if member has enough shares and loot to burn
         require(
