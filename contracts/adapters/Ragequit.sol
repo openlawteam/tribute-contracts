@@ -77,7 +77,7 @@ contract RagequitContract is IRagequit, DaoConstants, MemberGuard {
             "insufficient loot"
         );
 
-        _prepareRagequit(dao, memberAddr, sharesToBurn, lootToBurn, tokens);
+        _prepareRagequit(dao, memberAddr, sharesToBurn, lootToBurn, tokens, bank);
     }
 
     /**
@@ -94,10 +94,9 @@ contract RagequitContract is IRagequit, DaoConstants, MemberGuard {
         address memberAddr,
         uint256 sharesToBurn,
         uint256 lootToBurn,
-        address[] memory tokens
+        address[] memory tokens,
+        BankExtension bank
     ) internal {
-        // burn shares and loot
-        BankExtension bank = BankExtension(dao.getExtensionAddress(BANK));
         ragequit.blockNumber = block.number;
         //TODO: make this the sum of all the internal tokens
         uint256 initialTotalSharesAndLoot =
@@ -114,7 +113,6 @@ contract RagequitContract is IRagequit, DaoConstants, MemberGuard {
     /**
     * @notice Subtracts from the bank's account the proportional shares and/or loot, 
     * @notice and transfers the funds to the member's internal account based on the provided tokens.
-    * @dev ...
     * @param dao The dao address that the member is part of.
     * @param memberAddr The member address that want to burn the shares and/or loot.
     * @param sharesToBurn The amount of shares of the member that must be converted into funds.
