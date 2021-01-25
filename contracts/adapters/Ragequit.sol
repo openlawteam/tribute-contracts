@@ -64,10 +64,8 @@ contract RagequitContract is IRagequit, DaoConstants, MemberGuard {
         address[] memory tokens
     ) external override onlyMember(dao) {
         address memberAddr = msg.sender;
-        // TODO check if member already execute the ragequit based on the dao and ragequit mapping?
-        // Ragequit storage ragequit = ragequits[address(dao)][memberAddr];
         BankExtension bank = BankExtension(dao.getExtensionAddress(BANK));
-        //Burn if member has enough shares and loot
+        //Check if member has enough shares and loot to burn
         require(
             bank.balanceOf(memberAddr, SHARES) >= sharesToBurn,
             "insufficient shares"
@@ -82,12 +80,12 @@ contract RagequitContract is IRagequit, DaoConstants, MemberGuard {
 
     /**
     * @notice Subtracts from the internal member's account the proportional shares and/or loot.
-    * @dev ...
     * @param dao The dao address that the member is part of.
     * @param memberAddr The member address that want to burn the shares and/or loot.
     * @param sharesToBurn The amount of shares of the member that must be converted into funds.
     * @param lootToBurn The amount of loot of the member that must be converted into funds.
     * @param tokens The array of tokens that the funds should be sent to.
+    * @param bank The bank extension.
     */
     function _prepareRagequit(
         DaoRegistry dao,
@@ -97,17 +95,19 @@ contract RagequitContract is IRagequit, DaoConstants, MemberGuard {
         address[] memory tokens,
         BankExtension bank
     ) internal {
-        ragequit.blockNumber = block.number;
-        //TODO: make this the sum of all the internal tokens
+        // Calculate the total shares, loot and locked loot before any internal transfers
+        // it considers the locked loot to be able to calculate the fair amount to ragequit,
+        // but locked loot can not be burned.
         uint256 initialTotalSharesAndLoot =
             bank.balanceOf(TOTAL, SHARES) +
             bank.balanceOf(TOTAL, LOOT) +
             bank.balanceOf(TOTAL, LOCKED_LOOT);
 
+        // Burn / subtract from member's balance the shares/loot to burn
         bank.subtractFromBalance(memberAddr, SHARES, sharesToBurn);
         bank.subtractFromBalance(memberAddr, LOOT, lootToBurn);
 
-        _burnShares(dao, memberAddr, sharesToBurn, lootToBurn, initialTotalSharesAndLoot, tokens);
+        _burnShares(dao, memberAddr, sharesToBurn, lootToBurn, initialTotalSharesAndLoot, tokens, bank);
     }
 
     /**
@@ -117,8 +117,9 @@ contract RagequitContract is IRagequit, DaoConstants, MemberGuard {
     * @param memberAddr The member address that want to burn the shares and/or loot.
     * @param sharesToBurn The amount of shares of the member that must be converted into funds.
     * @param lootToBurn The amount of loot of the member that must be converted into funds.
-    * @param initialTotalSharesAndLoot .
+    * @param initialTotalSharesAndLoot The sum of shares and loot before internal transfers.
     * @param tokens The array of tokens that the funds should be sent to.
+    * @param bank The bank extension.
     */
     function _burnShares(
         DaoRegistry dao,
@@ -126,18 +127,18 @@ contract RagequitContract is IRagequit, DaoConstants, MemberGuard {
         uint256 sharesToBurn,
         uint256 lootToBurn,
         uint256 initialTotalSharesAndLoot,
-        address[] memory tokens
+        address[] memory tokens,
+        BankExtension bank
     ) internal {
-        BankExtension bank = BankExtension(dao.getExtensionAddress(BANK));
         //Update internal Guild and Member balances
         uint256 sharesAndLootBurnt = sharesToBurn + lootToBurn;
-        uint256 blockNumber = block.number;//???
         for (uint256 i = currentIndex; i < tokens.length; i++) {
             address token = tokens[i];
             require(dao.isAllowedToken(token), "token not allowed at " + i);
+            // Calculates the fair amount of funds to ragequit based on the token, shares and loot
             uint256 amountToRagequit =
                 FairShareHelper.calc(
-                    bank.getPriorAmount(GUILD, token, blockNumber),
+                    bank.balanceOf(GUILD, token),
                     sharesAndLootToBurn,
                     initialTotalSharesAndLoot
                 );
