@@ -107,9 +107,7 @@ contract("LAOLAND - Ragequit Adapter", async (accounts) => {
     await advanceTime(10000);
   };
 
-  const ragequit = async (dao, shares, loot, member) => {
-    const bankAddress = await dao.getExtensionAddress(sha3("bank"));
-    const bank = await BankExtension.at(bankAddress);
+  const ragequit = async (dao, shares, loot, member, token = ETH_TOKEN) => {
     let ragequitAddress = await dao.getAdapterAddress(sha3("ragequit"));
     let ragequitContract = await RagequitContract.at(ragequitAddress);
 
@@ -117,16 +115,13 @@ contract("LAOLAND - Ragequit Adapter", async (accounts) => {
       dao.address,
       toBN(shares),
       toBN(loot),
-      [ETH_TOKEN],
+      [token],
       {
         from: member,
         gasPrice: toBN("0"),
       }
     );
 
-    //Check New Member Shares
-    let newShares = await bank.balanceOf(member, SHARES);
-    assert.equal(newShares.toString(), "0");
     return ragequitContract;
   };
 
@@ -172,7 +167,7 @@ contract("LAOLAND - Ragequit Adapter", async (accounts) => {
       let nonMember = accounts[4];
       await ragequit(dao, shares, 0, nonMember);
     } catch (error) {
-      assert.equal(error.reason, "insufficient shares");
+      assert.equal(error.reason, "onlyMember");
     }
   });
 
@@ -513,121 +508,68 @@ contract("LAOLAND - Ragequit Adapter", async (accounts) => {
     assert.equal(toBN(newGuildBalance).toString(), "2"); //must be close to
   });
 
-  it("should not be to a member to vote after the ragequit", async () => {
+  it("should not be possible to vote after the ragequit", async () => {
     const myAccount = accounts[1];
-    const memberAccount = accounts[2];
-    const otherAccount = accounts[3];
+    const memberAddr = accounts[2];
 
-    let lootSharePrice = 10;
-    let chunkSize = 5;
-
-    let dao = await createDao(myAccount, lootSharePrice, chunkSize, 10, 1);
+    let dao = await createDao(myAccount);
     const bankAddress = await dao.getExtensionAddress(sha3("bank"));
     const bank = await BankExtension.at(bankAddress);
-    // Transfer 1000 OLTs to the Advisor account
+
+    //Add funds to the Guild Bank after sposoring a member to join the Guild
     const onboardingAddress = await dao.getAdapterAddress(sha3("onboarding"));
     const onboarding = await OnboardingContract.at(onboardingAddress);
 
     const votingAddress = await dao.getAdapterAddress(sha3("voting"));
     const voting = await VotingContract.at(votingAddress);
 
-    // Guild balance must be 0 if no Loot shares are issued
-    let guildBalance = await bank.balanceOf(GUILD, ETH_TOKEN);
-    assert.equal(guildBalance.toString(), "0");
-
-    // Total of OLT to be sent to the DAO in order to get the Loot shares
-    let tokenAmount = 10;
-    let proposalId = "0x0";
-    // Send a request to join the DAO as an Advisor (non-voting power),
-    // the tx passes the OLT ERC20 token, the amount and the nonVotingOnboarding adapter that handles the proposal
-    await onboarding.onboard(
-      dao.address,
-      proposalId,
-      memberAccount,
-      SHARES,
-      tokenAmount,
-      {
-        from: myAccount,
-        value: tokenAmount,
-        gasPrice: toBN("0"),
-      }
+    let proposalId = await submitNewMemberProposal(
+      onboarding,
+      dao,
+      memberAddr,
+      sharePrice
     );
 
-    // Sponsor the new proposal to allow the Advisor to join the DAO
-    await onboarding.sponsorProposal(dao.address, proposalId, [], {
-      from: myAccount,
-      gasPrice: toBN("0"),
-    });
-
-    // Vote on the new proposal to accept the new Advisor
-    await voting.submitVote(dao.address, proposalId, 1, {
-      from: myAccount,
-      gasPrice: toBN("0"),
-    });
-
-    // Process the new proposal
-    await advanceTime(10000);
+    //Sponsor the new proposal to admit the new member, vote and process it
+    await sponsorNewMember(onboarding, dao, proposalId, myAccount, voting);
     await onboarding.processProposal(dao.address, proposalId, {
       from: myAccount,
       gasPrice: toBN("0"),
     });
 
-    let ragequitAddress = await dao.getAdapterAddress(sha3("ragequit"));
-    let ragequitContract = await RagequitContract.at(ragequitAddress);
+    //Check Guild Bank Balance
+    let guildBalance = await bank.balanceOf(GUILD, ETH_TOKEN);
+    assert.equal(guildBalance.toString(), "1200000000000000000".toString());
 
-    const shares = await bank.balanceOf(memberAccount, SHARES);
-    // we are not burning all the shares so we are still members once it is done
-    await ragequit(
-      dao.address,
-      toBN(Math.floor(shares / 2)),
-      toBN(0),
-      memberAccount
-    );
+    //Check New Member Shares
+    let shares = await bank.balanceOf(memberAddr, SHARES);
+    assert.equal(shares.toString(), "10000000000000000");
 
-    proposalId = "0x1";
+    //Ragequit - Burn all the new member shares
+    await ragequit(dao, shares, 0, memberAddr);
 
-    await onboarding.onboard(
-      dao.address,
-      proposalId,
-      otherAccount,
-      SHARES,
-      tokenAmount,
-      {
-        from: myAccount,
-        value: tokenAmount,
-        gasPrice: toBN("0"),
-      }
-    );
-
-    // Sponsor the new proposal to allow the Advisor to join the DAO
+    //Member attempts to sponsor a proposal after the ragequit
     try {
       await onboarding.sponsorProposal(dao.address, proposalId, [], {
-        from: memberAccount,
+        from: memberAddr,
         gasPrice: toBN("0"),
       });
-      throw new Error("should fail");
+      assert.fail(
+        "should not be possible to sponsor a proposal if the member has executed a full ragequit"
+      );
     } catch (err) {
-      assert.equal(err.message.indexOf("onlyMember") > -1, true);
+      assert.equal(err.reason, "onlyMember");
     }
-
-    await ragequitContract.burnShares(dao.address, memberAccount, 2, {
-      gasPrice: toBN("0"),
-    });
-
-    // member can vote again!
-
-    await onboarding.sponsorProposal(dao.address, proposalId, [], {
-      from: memberAccount,
-      gasPrice: toBN("0"),
-    });
-
-    await voting.submitVote(dao.address, proposalId, 1, {
-      from: memberAccount,
-      gasPrice: toBN("0"),
-    });
-
-    const delegateKey = await dao.getCurrentDelegateKey(memberAccount);
-
-    assert.equal(memberAccount, delegateKey);
+    try {
+      await voting.submitVote(dao.address, proposalId, 1, {
+        from: memberAddr,
+        gasPrice: toBN("0"),
+      });
+      assert.fail(
+        "should not be possible to vote on a proposal if the member has executed a full ragequit"
+      );
+    } catch (err) {
+      assert.equal(err.reason, "onlyMember");
+    }
   });
 });
