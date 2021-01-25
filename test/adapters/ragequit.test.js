@@ -24,6 +24,28 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
  */
+
+async function ragequit(dao, shares, loot, member) {
+  const bankAddress = await dao.getExtensionAddress(sha3("bank"));
+  const bank = await BankExtension.at(bankAddress);
+  let ragequitAddress = await dao.getAdapterAddress(sha3("ragequit"));
+  let ragequitContract = await RagequitContract.at(ragequitAddress);
+
+  await ragequitContract.startRagequit(dao.address, toBN(shares), toBN(loot), {
+    from: member,
+    gasPrice: toBN("0"),
+  });
+
+  await ragequitContract.burnShares(dao.address, member, 2, {
+    gasPrice: toBN("0"),
+  });
+
+  //Check New Member Shares
+  let newShares = await bank.balanceOf(member, SHARES);
+  assert.equal(newShares.toString(), "0");
+  return ragequitContract;
+}
+
 const {
   sha3,
   toBN,
@@ -85,32 +107,6 @@ contract("LAOLAND - Ragequit Adapter", async (accounts) => {
     await advanceTime(10000);
   };
 
-  const ragequit = async (dao, shares, loot, member) => {
-    const bankAddress = await dao.getExtensionAddress(sha3("bank"));
-    const bank = await BankExtension.at(bankAddress);
-    let ragequitAddress = await dao.getAdapterAddress(sha3("ragequit"));
-    let ragequitContract = await RagequitContract.at(ragequitAddress);
-
-    await ragequitContract.startRagequit(
-      dao.address,
-      toBN(shares),
-      toBN(loot),
-      {
-        from: member,
-        gasPrice: toBN("0"),
-      }
-    );
-
-    await ragequitContract.burnShares(dao.address, member, 2, {
-      gasPrice: toBN("0"),
-    });
-
-    //Check New Member Shares
-    let newShares = await bank.balanceOf(member, SHARES);
-    assert.equal(newShares.toString(), "0");
-    return ragequitContract;
-  };
-
   it("should not be possible for a non DAO member to ragequit", async () => {
     const myAccount = accounts[1];
     const newMember = accounts[2];
@@ -153,7 +149,7 @@ contract("LAOLAND - Ragequit Adapter", async (accounts) => {
       let nonMember = accounts[4];
       await ragequit(dao, shares, 0, nonMember);
     } catch (error) {
-      assert.equal(error.reason, "onlyMember");
+      assert.equal(error.reason, "insufficient shares");
     }
   });
 
@@ -241,7 +237,7 @@ contract("LAOLAND - Ragequit Adapter", async (accounts) => {
     assert.equal(shares.toString(), "10000000000000000");
 
     //Ragequit - Burn all the new member shares
-    let ragequitContract = await ragequit(dao, shares, 0, newMember);
+    await ragequit(dao, shares, 0, newMember);
 
     //Check Guild Bank Balance
     let newGuildBalance = await bank.balanceOf(GUILD, ETH_TOKEN);
