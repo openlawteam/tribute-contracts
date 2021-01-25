@@ -2,7 +2,7 @@
 
 Ragequit is the process in which a member of the DAO decides to opt out of the DAO for any given reason.
 
-This implementation of ragequit adapter does not cover the case in which the member is put in jail before updating the internal balance - as it happens in Moloch V2 to disincentivize the behaviour in which members vote Yes on proposals that are essentially bad for the future of the DAO, and right after that ragequit with their funds.
+This implementation of ragequit adapter does not cover the case in which the member is put in jail before updating the internal balance - as it happens in Moloch V2 to disincentivize the behaviour in which members vote Yes on proposals that are essentially bad for the future of the DAO, and right after that they quit with their funds.
 
 It also does not check if the member has voted Yes on a proposal that is not processed yet, and does not keep track of the latest proposal that was voted Yes on.
 
