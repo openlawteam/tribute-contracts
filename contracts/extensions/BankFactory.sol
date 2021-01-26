@@ -34,31 +34,31 @@ SOFTWARE.
  */
 
 contract BankFactory is CloneFactory, DaoConstants {
-  address public identityAddress;
+    address public identityAddress;
 
-  event BankCreated(address bankAddress);
+    event BankCreated(address bankAddress);
 
-  constructor(address _identityAddress) {
-    identityAddress = _identityAddress;
-  }
+    constructor(address _identityAddress) {
+        identityAddress = _identityAddress;
+    }
 
-  /**
-   * @notice Create and initialize a new DaoRegistry
-   * @param dao The name of the dao which, after being hashed, is used to access the address
-   */
-  function createBank(DaoRegistry dao) external {
-    BankExtension bank = BankExtension(_createClone(identityAddress));
-    address bankAddr = address(bank);
+    /**
+     * @notice Create and initialize a new DaoRegistry
+     * @param dao The name of the dao which, after being hashed, is used to access the address
+     */
+    function createBank(DaoRegistry dao) external {
+        BankExtension bank = BankExtension(_createClone(identityAddress));
+        address bankAddr = address(bank);
 
-    dao.addExtension(BANK, bank, msg.sender);
+        dao.addExtension(BANK, bank, msg.sender);
 
-    emit BankCreated(bankAddr);
-  }
+        emit BankCreated(bankAddr);
+    }
 
-  function configureAdadpter(
-    DaoRegistry dao,
-    BankExtension bank,
-    address adapter,
-    uint256 acl
-  ) external {}
+    function configureAdadpter(
+        DaoRegistry dao,
+        BankExtension bank,
+        address adapter,
+        uint256 acl
+    ) external {}
 }
