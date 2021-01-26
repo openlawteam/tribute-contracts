@@ -54,8 +54,7 @@ contract ConfigurationContract is IConfiguration, DaoConstants, MemberGuard {
         DaoRegistry dao,
         bytes32 proposalId,
         bytes32[] calldata keys,
-        uint256[] calldata values,
-        bytes memory data
+        uint256[] calldata values
     ) external override onlyMember(dao) {
         require(
             keys.length == values.length,
@@ -68,7 +67,11 @@ contract ConfigurationContract is IConfiguration, DaoConstants, MemberGuard {
         configurations[address(dao)][proposalId] = configuration;
     }
 
-    function sponsorProposal(DaoRegistry dao, bytes32 proposalId) external override onlyMember(dao) {
+    function sponsorProposal(
+        DaoRegistry dao,
+        bytes32 proposalId,
+        bytes calldata data
+    ) external override onlyMember(dao) {
         IVoting votingContract = IVoting(dao.getAdapterAddress(VOTING));
         votingContract.startNewVotingForProposal(dao, proposalId, data);
     }
