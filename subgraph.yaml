@@ -23,15 +23,35 @@ dataSources:
       eventHandlers:
         - event: DAOCreated(address,string)
           handler: handleDaoCreated
-      file: ./src/factory-mapping.ts
+      file: ./src/dao-factory-mapping.ts
 
+  - kind: ethereum/contract
+    name: BankFactory
+    network: rinkeby
+    source:
+      address: "0x8B5cC8E7a410a0f7CA854Df2fE5eEA2853c646e0"
+      abi: BankFactory
+      startBlock: 7939103
+    mapping:
+      kind: ethereum/events
+      apiVersion: 0.0.4
+      language: wasm/assemblyscript
+      entities:
+        - Bank
+      abis:
+        - name: BankFactory
+          file: ./build/contracts/BankFactory.json
+      eventHandlers:
+        - event: BankCreated(address)
+          handler: handleBankCreated
+      file: ./src/bank-factory-mapping.ts
+
+templates:
   - kind: ethereum/contract
     name: DaoRegistry
     network: rinkeby
     source:
-      address: "0xC06faAFD887c946c68FCE5c71427A569BBB55e61" #dao address
       abi: DaoRegistry
-      startBlock: 7939099
     mapping:
       kind: ethereum/events
       apiVersion: 0.0.4
@@ -60,15 +80,13 @@ dataSources:
           handler: handleMemberJailed
         - event: MemberUnjailed(address)
           handler: handleMemberUnjailed
-      file: ./src/registry-mapping.ts
+      file: ./src/dao-registry-mapping.ts
 
   - kind: ethereum/contract
     name: BankExtension
     network: rinkeby
     source:
-      address: "0x2FA7dDF1A7Fb8667D5077b04Bb8ffBc774BF5202"
       abi: BankExtension
-      startBlock: 7939102
     mapping:
       kind: ethereum/events
       apiVersion: 0.0.4

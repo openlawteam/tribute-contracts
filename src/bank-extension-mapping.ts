@@ -2,14 +2,14 @@ import {
   BankExtension,
   NewBalance,
   Withdraw,
-} from "../generated/BankExtension/BankExtension";
+} from "../generated/templates/BankExtension/BankExtension";
 import { Laoland, Member, Token, TokenBalance } from "../generated/schema";
 import {
   Address,
   BigInt,
   Bytes,
   log,
-  dataSource,
+  // dataSource,
 } from "@graphprotocol/graph-ts";
 
 const ZERO_ADDRESS: string = "0x0000000000000000000000000000000000000000";
@@ -42,19 +42,29 @@ function subtractFromBalance(
   balance.tokenBalance = balance.tokenBalance.minus(amount);
 
   balance.save();
+
   return tokenBalanceId;
 }
 
 export function handleNewBalance(event: NewBalance): void {
-  let laolandId = event.address.toHexString();
-  let memberId = laolandId
+  log.info(
+    "**************** handleNewBalance event fired. member {}, tokenAddr {}, amount {}",
+    [
+      event.params.member.toHexString(),
+      event.params.tokenAddr.toHexString(),
+      event.params.amount.toHexString(),
+    ]
+  );
+
+  let daoAddress = event.address.toHexString();
+  let memberId = daoAddress
     .concat("-member-")
     .concat(event.params.member.toHex());
   let tokenId = event.params.tokenAddr.toHex();
   // let amount = event.params.amount;
   let tokenBalanceId = memberId + ":" + tokenId;
 
-  let lao = Laoland.load(laolandId);
+  let lao = Laoland.load(daoAddress);
   let member = Member.load(memberId);
   let token = Token.load(tokenId);
   let tokenBalance = TokenBalance.load(tokenBalanceId);
@@ -111,7 +121,7 @@ export function handleNewBalance(event: NewBalance): void {
     log.info("getBalanceOf laoland:totalShares reverted", []);
   } else {
     if (lao == null) {
-      lao = new Laoland(laolandId);
+      lao = new Laoland(daoAddress);
       lao.totalShares = callResultTotalShares.value.toString();
 
       lao.save();
@@ -129,15 +139,6 @@ export function handleNewBalance(event: NewBalance): void {
 
   tokenBalance.token = tokenId;
   tokenBalance.tokenBalance = event.params.amount;
-
-  log.info(
-    "**************** handleNewBalance event fired. member {}, tokenAddr {}, amount {}",
-    [
-      event.params.member.toHexString(),
-      event.params.tokenAddr.toHexString(),
-      event.params.amount.toHexString(),
-    ]
-  );
 
   member.save();
   token.save();

@@ -76,6 +76,23 @@ export class Laoland extends Entity {
     }
   }
 
+  get totalShares(): string | null {
+    let value = this.get("totalShares");
+    if (value === null || value.kind == ValueKind.NULL) {
+      return null;
+    } else {
+      return value.toString();
+    }
+  }
+
+  set totalShares(value: string | null) {
+    if (value === null) {
+      this.unset("totalShares");
+    } else {
+      this.set("totalShares", Value.fromString(value as string));
+    }
+  }
+
   get createdAt(): string | null {
     let value = this.get("createdAt");
     if (value === null || value.kind == ValueKind.NULL) {
@@ -102,8 +119,8 @@ export class Laoland extends Entity {
     this.set("initialized", Value.fromBoolean(value));
   }
 
-  get totalShares(): string | null {
-    let value = this.get("totalShares");
+  get bank(): string | null {
+    let value = this.get("bank");
     if (value === null || value.kind == ValueKind.NULL) {
       return null;
     } else {
@@ -111,11 +128,93 @@ export class Laoland extends Entity {
     }
   }
 
-  set totalShares(value: string | null) {
+  set bank(value: string | null) {
     if (value === null) {
-      this.unset("totalShares");
+      this.unset("bank");
     } else {
-      this.set("totalShares", Value.fromString(value as string));
+      this.set("bank", Value.fromString(value as string));
+    }
+  }
+}
+
+export class Bank extends Entity {
+  constructor(id: string) {
+    super();
+    this.set("id", Value.fromString(id));
+  }
+
+  save(): void {
+    let id = this.get("id");
+    assert(id !== null, "Cannot save Bank entity without an ID");
+    assert(
+      id.kind == ValueKind.STRING,
+      "Cannot save Bank entity with non-string ID. " +
+        'Considering using .toHex() to convert the "id" to a string.'
+    );
+    store.set("Bank", id.toString(), this);
+  }
+
+  static load(id: string): Bank | null {
+    return store.get("Bank", id) as Bank | null;
+  }
+
+  get id(): string {
+    let value = this.get("id");
+    return value.toString();
+  }
+
+  set id(value: string) {
+    this.set("id", Value.fromString(value));
+  }
+
+  get bankAddress(): Bytes | null {
+    let value = this.get("bankAddress");
+    if (value === null || value.kind == ValueKind.NULL) {
+      return null;
+    } else {
+      return value.toBytes();
+    }
+  }
+
+  set bankAddress(value: Bytes | null) {
+    if (value === null) {
+      this.unset("bankAddress");
+    } else {
+      this.set("bankAddress", Value.fromBytes(value as Bytes));
+    }
+  }
+
+  get createdAt(): string | null {
+    let value = this.get("createdAt");
+    if (value === null || value.kind == ValueKind.NULL) {
+      return null;
+    } else {
+      return value.toString();
+    }
+  }
+
+  set createdAt(value: string | null) {
+    if (value === null) {
+      this.unset("createdAt");
+    } else {
+      this.set("createdAt", Value.fromString(value as string));
+    }
+  }
+
+  get laoland(): string | null {
+    let value = this.get("laoland");
+    if (value === null || value.kind == ValueKind.NULL) {
+      return null;
+    } else {
+      return value.toString();
+    }
+  }
+
+  set laoland(value: string | null) {
+    if (value === null) {
+      this.unset("laoland");
+    } else {
+      this.set("laoland", Value.fromString(value as string));
     }
   }
 }

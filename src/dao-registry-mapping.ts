@@ -7,7 +7,7 @@ import {
   AdapterRemoved,
   MemberJailed,
   MemberUnjailed,
-} from "../generated/DaoRegistry/DaoRegistry";
+} from "../generated/templates/DaoRegistry/DaoRegistry";
 import { Proposal, Adapter, Member } from "../generated/schema";
 import { log, store } from "@graphprotocol/graph-ts";
 
@@ -19,8 +19,8 @@ export function handleSubmittedProposal(event: SubmittedProposal): void {
   let proposal = Proposal.load(newProposalId);
 
   log.info(
-    "**************** handleSubmittedProposal event fired. proposalId: {}",
-    [event.params.proposalId.toHexString()]
+    "**************** handleSubmittedProposal event fired. daoAddress: {}, proposalId: {}",
+    [event.address.toHexString(), event.params.proposalId.toHexString()]
   );
 
   if (proposal == null) {

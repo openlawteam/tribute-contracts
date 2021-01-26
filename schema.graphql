@@ -2,9 +2,19 @@ type Laoland @entity {
   id: ID!
   daoAddress: Bytes # dao address
   name: String
+  totalShares: String
   createdAt: String
   initialized: Boolean
-  totalShares: String
+  bank: Bank
+}
+
+type Bank @entity {
+  id: ID!
+  bankAddress: Bytes # dao bank address
+  createdAt: String
+  laoland: Laoland
+  balance: String
+  # totalShares: String
 }
 
 type Token @entity {
