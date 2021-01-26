@@ -13,6 +13,10 @@ Submit proposal
 
 - submit proposal to DAO
 - create and store configuration structure
+
+Sponsor module change request
+- check that caller is valid member
+
 - initiate vote
 
 Process proposal
