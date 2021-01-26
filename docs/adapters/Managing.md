@@ -64,10 +64,25 @@ The ACL for the new module.
 
 Creates a proposal to add/replace the given module with a new version including configuration and flags.
 
+**dao** is the DAO instance to be configured
+**proposalId** is the ID chosen for this module proposal, must be unique
+**moduleId** the ID of the new module
+**moduleAddress** the contract address of the new module
+**keys** the configuration keys to set
+**values** the configuration values to set, must be same length as keys
+**flags** the ACL for the new module
+
 ### function sponsorProposal(DaoRegistry dao, bytes32 proposalId, bytes calldata data)
 
 Sponsors a proposal to add/replace a module.
 
+**dao** is the DAO instance to be configured
+**proposalId** is the ID of a previously created module proposal which has not been sponsored
+**data**
+
 ### function processProposal(DaoRegistry dao, bytes32 proposalId)
 
 Processes a proposal to add/replace a module.
+
+**dao** is the DAO instance to be configured
+**proposalId** is the ID of a previously created configuration proposal which has passed the vote

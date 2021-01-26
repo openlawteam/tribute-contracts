@@ -52,10 +52,26 @@ The array of values to set in the configuration
 
 ## Functions description and assumptions / checks
 
-### function submitConfigurationProposal(DaoRegistry dao, bytes32 proposalId, bytes32[] calldata keys, uint256[] calldata values, bytes memory data )
+### function submitConfigurationProposal(DaoRegistry dao, bytes32 proposalId, bytes32[] calldata keys, uint256[] calldata values)
 
 Creates and submits a new configuration proposal on behalf of the member calling the function.
+
+**dao** is the DAO instance to be configured
+**proposalId** is the ID chosen for this configuration proposal, must be unique
+**keys** the configuration keys to set
+**values** the configuration values to set, must be same length as keys
 
 ### function processProposal(DaoRegistry dao, bytes32 proposalId)
 
 Processes a previously created configuration proposal by applying the configuration to the DAO.
+
+**dao** is the DAO instance to be configured
+**proposalId** is the ID of a previously created configuration proposal which has not been sponsored
+**data**
+
+### function processProposal(DaoRegistry dao, bytes32 proposalId)
+
+Processes a previously created configuration proposal by applying the configuration to the DAO.
+
+**dao** is the DAO instance to be configured
+**proposalId** is the ID of a previously created and sponsored configuration proposal which has passed the vote
