@@ -141,7 +141,7 @@ contract BankExtension is DaoConstants, AdapterGuard, IExtension {
      * @return Whether or not the given token is an available token in the bank
      * @param token The address of the token to look up
      */
-    function isTokenAllowed(address token) external view returns (bool) {
+    function isTokenAllowed(address token) public view returns (bool) {
         return availableTokens[token];
     }
 
@@ -181,6 +181,32 @@ contract BankExtension is DaoConstants, AdapterGuard, IExtension {
         if (!availableInternalTokens[token]) {
             availableInternalTokens[token] = true;
             internalTokens.push(token);
+        }
+    }
+
+    function updateToken(address tokenAddr) external {
+        require(isTokenAllowed(tokenAddr), "non allowed token");
+        uint256 totalBalance = balanceOf(TOTAL, tokenAddr);
+
+        uint256 realBalance;
+
+        if (tokenAddr == ETH_TOKEN) {
+            realBalance = address(this).balance;
+        } else {
+            IERC20 erc20 = IERC20(tokenAddr);
+            realBalance = erc20.balanceOf(address(this));
+        }
+
+        if (totalBalance < realBalance) {
+            addToBalance(GUILD, tokenAddr, realBalance - totalBalance);
+        } else if (totalBalance > realBalance) {
+            uint256 tokensToRemove = totalBalance - realBalance;
+            uint256 guildBalance = balanceOf(GUILD, tokenAddr);
+            if (guildBalance > tokensToRemove) {
+                subtractFromBalance(GUILD, tokenAddr, tokensToRemove);
+            } else {
+                subtractFromBalance(GUILD, tokenAddr, guildBalance);
+            }
         }
     }
 

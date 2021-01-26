@@ -1,6 +1,6 @@
-## Adapter description and scope
-
-## Adapter state
+## Extension description and scope
+This extension 
+## Extension state
 bool public initialized = false; // internally tracks deployment under eip-1167 proxy pattern
 DaoRegistry public dao;
 
@@ -15,9 +15,7 @@ mapping(address => mapping(address => mapping(uint32 => Checkpoint)))
 // tokenAddress => memberAddress => numCheckpoints
 mapping(address => mapping(address => uint32)) public numCheckpoints;
 
-## Adapter workflow
-
-## Adapter configuration
+## Extension workflow
 
 ## Functions description, assumptions, checks, dependencies, interactions and access control
     
@@ -55,25 +53,14 @@ mapping(address => mapping(address => uint32)) public numCheckpoints;
     function getInternalToken(uint256 index) external view returns (address) 
 
     function nbInternalTokens() external view returns (uint256) 
-
-    function addToBalance(
-        address user,
-        address token,
-        uint256 amount
-    ) public payable 
     
-    function subtractFromBalance(
-        address user,
-        address token,
-        uint256 amount
-    ) public 
+    function addToBalance( address user, address token, uint256 amount)
+    
+    function subtractFromBalance(address user, address token, uint256 amount)
 
-    function internalTransfer(
-        address from,
-        address to,
-        address token,
-        uint256 amount
-    ) public 
+    function internalTransfer( address from, address to, address token, uint256 amount)
+
+    function updateToken(address tokenAddr)
 
     function balanceOf(address account, address tokenAddr)
         public
