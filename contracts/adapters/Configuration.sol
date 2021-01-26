@@ -71,16 +71,6 @@ contract ConfigurationContract is IConfiguration, DaoConstants, MemberGuard {
         votingContract.startNewVotingForProposal(dao, proposalId, data);
     }
 
-    function sponsorProposal(
-        DaoRegistry dao,
-        bytes32 proposalId,
-        bytes memory data
-    ) external override onlyMember(dao) {
-        IVoting votingContract = IVoting(dao.getAdapterAddress(VOTING));
-        dao.sponsorProposal(proposalId, msg.sender);
-        votingContract.startNewVotingForProposal(dao, proposalId, data);
-    }
-
     function processProposal(DaoRegistry dao, bytes32 proposalId)
         external
         override
