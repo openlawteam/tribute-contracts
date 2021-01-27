@@ -120,7 +120,9 @@ contract ManagingContract is IManaging, DaoConstants, MemberGuard {
             "proposal did not pass yet"
         );
 
-        dao.removeAdapter(proposal.moduleId);
+        if (dao.getAdapterAddress(proposal.moduleId) != 0x0) {
+            dao.removeAdapter(proposal.moduleId);
+        }
 
         bytes32[] memory keys = proposal.keys;
         uint256[] memory values = proposal.values;
