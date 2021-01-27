@@ -463,7 +463,7 @@ contract DaoRegistry is DaoConstants, AdapterGuard {
      * @notice Submit proposals to the DAO registry
      */
     function submitProposal(bytes32 proposalId)
-        external
+        public
         hasAccess(this, AclFlag.SUBMIT_PROPOSAL)
     {
         require(
@@ -583,7 +583,7 @@ contract DaoRegistry is DaoConstants, AdapterGuard {
      * @param flag The flag to check in the proposal
      */
     function getProposalFlag(bytes32 proposalId, ProposalFlag flag)
-        external
+        public
         view
         returns (bool)
     {

@@ -62,9 +62,11 @@ contract ConfigurationContract is IConfiguration, DaoConstants, MemberGuard {
         );
 
         dao.submitProposal(proposalId);
-        Configuration memory configuration =
-            Configuration(ConfigurationStatus.IN_PROGRESS, keys, values);
-        configurations[address(dao)][proposalId] = configuration;
+        configurations[address(dao)][proposalId] = Configuration(
+            ConfigurationStatus.IN_PROGRESS,
+            keys,
+            values
+        );
     }
 
     function sponsorProposal(
@@ -72,9 +74,10 @@ contract ConfigurationContract is IConfiguration, DaoConstants, MemberGuard {
         bytes32 proposalId,
         bytes calldata data
     ) external override onlyMember(dao) {
+        dao.sponsorProposal(proposalId, msg.sender);
+
         IVoting votingContract = IVoting(dao.getAdapterAddress(VOTING));
         votingContract.startNewVotingForProposal(dao, proposalId, data);
-        dao.sponsorProposal(proposalId, msg.sender);
     }
 
     function processProposal(DaoRegistry dao, bytes32 proposalId)
@@ -99,7 +102,7 @@ contract ConfigurationContract is IConfiguration, DaoConstants, MemberGuard {
         IVoting votingContract = IVoting(dao.getAdapterAddress(VOTING));
         require(
             votingContract.voteResult(dao, proposalId) == 2,
-            "proposal did not pass yet"
+            "proposal did not pass"
         );
 
         bytes32[] memory keys = configuration.keys;
