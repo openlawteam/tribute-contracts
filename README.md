@@ -67,6 +67,27 @@ For an Adapater to be used it must be registered to DaoRegistry.sol.
 
 `enum DaoState {CREATION, READY}` CREATION  = the DAO has been deployed via `initializeDao`, but is not ready to be used. READY = the function `finalizeDao` has been called by the deployer is now ready to be used.  
 
+**Events**
+
+    Events for Dao Registry - The proposal order follows Moloch v2, in 1) a proposal is submitted, 2) then it sponsored by a member, and 3) after a proposal is voted on, it can finally be processed. 
+
+    `event SubmittedProposal(bytes32 proposalId, uint256 flags);`
+    `event SponsoredProposal(bytes32 proposalId, uint256 flags);`
+    `event ProcessedProposal(bytes32 proposalId, uint256 flags);`
+    
+    Events for Adding and Removing Adapters
+    `event AdapterAdded(bytes32 adapterId,address adapterAddress,uint256 flags);`
+    `event AdapterRemoved(bytes32 adapterId);`
+
+    Events for Members
+    `event UpdateDelegateKey(address memberAddress, address newDelegateKey);`
+
+    Events for Bank
+    `event MemberJailed(address memberAddr);`
+    `event MemberUnjailed(address memberAddr);`
+    `event NewBalance(address member, address tokenAddr, uint256 amount);`
+    `event Withdraw(address account, address tokenAddr, uint256 amount);`
+
 **Structs**
 
 `struct Proposal` track the state of the proposal: exist, sponsored, processed, canceled. 
@@ -114,10 +135,12 @@ For an Adapater to be used it must be registered to DaoRegistry.sol.
 **Functions**
 Note: the constructor function is non-existent, because this is a Cloneable contract. See, https://eips.ethereum.org/EIPS/eip-1167 
 
+DEPLOYING.   
 `initialize(address creator)` This function initializes the DAO. It initializes the available tokens, checkpoints, and membership of the `creator` with 1 Share.  
 `receive` payable function.  
 `finalizeDao` sets the state of the Dao to READY.  
 
+CONFIGURING.   
 Configure and save the DAO parameters. For example, Onboarding adapter uses `setConfiguration` to 1) save the max number of chunks allowed in the DAO, 2) save the number of shares per chunk and 3) save the chunk size. The stored configs will be read/used by the Adapters/Registry. This means values do not have to be hard coded in the contract, and also be updated. 
 
 `setConfiguration(bytes32 key, uint256 value)`  
@@ -125,6 +148,10 @@ Configure and save the DAO parameters. For example, Onboarding adapter uses `set
 `getConfiguration(bytes32 key)` 
 `getAddressConfiguration(bytes32 key)`
 
+
+ADDING & REMOVING ADAPTERS.     
+`addAdapter(bytes32 adapterId, address adapterAddress, uint256 acl)`
+`removeAdapter(bytes32 adapterId)`
 
 ### Helpers 
 #### FlagHelper.sol
