@@ -1,6 +1,10 @@
 
 [![codecov](https://codecov.io/gh/openlawteam/laoland/branch/master/graph/badge.svg?token=XZRL9RUYZE)](https://codecov.io/gh/openlawteam/laoland/)
 
+# Bonding Curve Adapter Sandbox
+
+Effectively pricing entry into a DAO is important to protect the value of the membership and collected assets. In Moloch DAO, social consensus determines how shares are priced in each member proposal (to join or otherwise increase shares), and members rationally only accept attached tribute that matches their expectations and risk appetite. However, this entails a degree of attention in the voting queue -- as a more automated alternative, an adapter contract can set a predictable “curve” price to mint membership shares determined by the assets held or total DAO shares minted.
+ 
 ## Overview
 
 At the LAO, we realized that even though Moloch is very useful and powerful, it has a lot of features that we don't necessarily need. Also, there are a few features that are missing and are hard to change.
