@@ -43,5 +43,4 @@ interface IGuildKick {
         bytes32 proposalId,
         uint256 toIndex
     ) external;
-
 }

@@ -1,5 +1,5 @@
-d// Whole-script strict mode syntax
-"use strict";
+d; // Whole-script strict mode syntax
+("use strict");
 
 /**
 MIT License

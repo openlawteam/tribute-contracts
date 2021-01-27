@@ -111,8 +111,7 @@ contract RagequitContract is IRagequit, DaoConstants, MemberGuard {
         // it considers the locked loot to be able to calculate the fair amount to ragequit,
         // but locked loot can not be burned.
         uint256 initialTotalSharesAndLoot =
-            bank.balanceOf(TOTAL, SHARES) +
-                bank.balanceOf(TOTAL, LOOT);
+            bank.balanceOf(TOTAL, SHARES) + bank.balanceOf(TOTAL, LOOT);
 
         // Burns / subtracts from member's balance the number of shares to burn.
         bank.subtractFromBalance(memberAddr, SHARES, sharesToBurn);
