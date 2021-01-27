@@ -202,7 +202,7 @@ contract DaoRegistry is DaoConstants, AdapterGuard {
                 true
             );
             memberAddressesByDelegatedKey[memberAddress] = memberAddress;
-            members[members.length] = memberAddress;
+            _members.push(memberAddress);
         }
     }
 
@@ -602,11 +602,11 @@ contract DaoRegistry is DaoConstants, AdapterGuard {
     }
 
     function getNbMember() public view returns (uint256) {
-        return members.length;
+        return _members.length;
     }
 
     function getMemberAddress(uint256 index) public view returns (address) {
-        return members[index];
+        return _members[index];
     }
 
     /**
