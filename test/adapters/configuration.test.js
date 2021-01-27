@@ -52,7 +52,6 @@ contract("LAOLAND - Configuration Adapter", async (accounts) => {
       "0x0",
       [key],
       [toBN("10")],
-      fromUtf8(""),
       { from: myAccount, gasPrice: toBN("0") }
     );
 
@@ -103,7 +102,6 @@ contract("LAOLAND - Configuration Adapter", async (accounts) => {
       "0x0",
       [key1, key2],
       [toBN("10"), toBN("15")],
-      fromUtf8(""),
       { from: myAccount, gasPrice: toBN("0") }
     );
 
@@ -161,7 +159,6 @@ contract("LAOLAND - Configuration Adapter", async (accounts) => {
         "0x0",
         [key],
         [],
-        fromUtf8(""),
         { from: myAccount, gasPrice: toBN("0") }
       );
     } catch (err) {

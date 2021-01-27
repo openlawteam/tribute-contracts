@@ -72,6 +72,7 @@ contract ConfigurationContract is IConfiguration, DaoConstants, MemberGuard {
         bytes32 proposalId,
         bytes calldata data
     ) external override onlyMember(dao) {
+        dao.sponsorProposal(proposalId, msg.sender);
         IVoting votingContract = IVoting(dao.getAdapterAddress(VOTING));
         votingContract.startNewVotingForProposal(dao, proposalId, data);
     }
