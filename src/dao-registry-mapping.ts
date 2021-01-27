@@ -13,8 +13,8 @@ import { log, store } from "@graphprotocol/graph-ts";
 
 export function handleSubmittedProposal(event: SubmittedProposal): void {
   let id = event.params.proposalId;
-  let laoland = event.address.toHex(); // contract address
-  let newProposalId = laoland.concat("-proposal-").concat(id.toHex());
+  let daoAddress = event.address.toHex(); // dao contract address
+  let newProposalId = daoAddress.concat("-proposal-").concat(id.toHex());
 
   let proposal = Proposal.load(newProposalId);
 
@@ -34,8 +34,8 @@ export function handleSubmittedProposal(event: SubmittedProposal): void {
 
 export function handleSponsoredProposal(event: SponsoredProposal): void {
   let id = event.params.proposalId;
-  let laoland = event.address.toHex(); // contract address
-  let newProposalId = laoland.concat("-proposal-").concat(id.toHex());
+  let daoAddress = event.address.toHex(); // dao contract address
+  let newProposalId = daoAddress.concat("-proposal-").concat(id.toHex());
 
   let proposal = Proposal.load(newProposalId);
   let sponsoredAt = event.block.timestamp.toString();
@@ -54,8 +54,8 @@ export function handleSponsoredProposal(event: SponsoredProposal): void {
 
 export function handleProcessedProposal(event: ProcessedProposal): void {
   let id = event.params.proposalId;
-  let laoland = event.address.toHex(); // contract address
-  let newProposalId = laoland.concat("-proposal-").concat(id.toHex());
+  let daoAddress = event.address.toHex(); // dao contract address
+  let newProposalId = daoAddress.concat("-proposal-").concat(id.toHex());
 
   let proposal = Proposal.load(newProposalId);
   let processedAt = event.block.timestamp.toString();
@@ -103,9 +103,9 @@ export function handleAdapterRemoved(event: AdapterRemoved): void {
 }
 
 export function handleUpdateDelegateKey(event: UpdateDelegateKey): void {
-  let laolandId = event.address.toHexString();
+  let daoAddress = event.address.toHexString();
   let delegateKey = event.params.newDelegateKey;
-  let memberId = laolandId
+  let memberId = daoAddress
     .concat("-member-")
     .concat(event.params.memberAddress.toHex());
 
@@ -124,8 +124,8 @@ export function handleUpdateDelegateKey(event: UpdateDelegateKey): void {
 }
 
 export function handleMemberJailed(event: MemberJailed): void {
-  let laolandId = event.address.toHexString();
-  let memberId = laolandId
+  let daoAddress = event.address.toHexString();
+  let memberId = daoAddress
     .concat("-member-")
     .concat(event.params.memberAddr.toHex());
 
@@ -140,8 +140,8 @@ export function handleMemberJailed(event: MemberJailed): void {
 }
 
 export function handleMemberUnjailed(event: MemberUnjailed): void {
-  let laolandId = event.address.toHexString();
-  let memberId = laolandId
+  let daoAddress = event.address.toHexString();
+  let memberId = daoAddress
     .concat("-member-")
     .concat(event.params.memberAddr.toHex());
 

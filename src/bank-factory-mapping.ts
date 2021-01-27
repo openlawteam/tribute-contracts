@@ -1,4 +1,4 @@
-import { BankExtension, DaoRegistry } from "../generated/templates";
+import { BankExtension } from "../generated/templates";
 import { BankCreated } from "../generated/BankFactory/BankFactory";
 import { Bank } from "../generated/schema";
 import { log } from "@graphprotocol/graph-ts";

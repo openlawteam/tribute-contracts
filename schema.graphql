@@ -5,14 +5,14 @@ type Laoland @entity {
   totalShares: String
   createdAt: String
   initialized: Boolean
-  bank: Bank
+  # bank: Bank
 }
 
 type Bank @entity {
   id: ID!
   bankAddress: Bytes # dao bank address
   createdAt: String
-  laoland: Laoland
+  # laoland: Laoland
   balance: String
   # totalShares: String
 }

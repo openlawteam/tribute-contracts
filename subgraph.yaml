@@ -8,9 +8,9 @@ dataSources:
     name: DaoFactory
     network: rinkeby
     source:
-      address: "0x5EB49442e092fE3cc7654195693124009Ac8fCf2"
+      address: "0xc45120B62DDc75ac194419b5F326161f93BecDAa"
       abi: DaoFactory
-      startBlock: 7939100
+      startBlock: 7963015
     mapping:
       kind: ethereum/events
       apiVersion: 0.0.4
@@ -29,9 +29,9 @@ dataSources:
     name: BankFactory
     network: rinkeby
     source:
-      address: "0x8B5cC8E7a410a0f7CA854Df2fE5eEA2853c646e0"
+      address: "0x3de52d40f3ec08C87d67866B1642d6348e68A018"
       abi: BankFactory
-      startBlock: 7939103
+      startBlock: 7963018
     mapping:
       kind: ethereum/events
       apiVersion: 0.0.4

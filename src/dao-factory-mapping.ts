@@ -1,4 +1,4 @@
-import { BankExtension, DaoRegistry } from "../generated/templates";
+import { DaoRegistry } from "../generated/templates";
 import { DAOCreated } from "../generated/DaoFactory/DaoFactory";
 import { Laoland } from "../generated/schema";
 import { log } from "@graphprotocol/graph-ts";
@@ -36,7 +36,6 @@ export function handleDaoCreated(event: DAOCreated): void {
   dao.name = event.params._name;
 
   DaoRegistry.create(event.params._address);
-  // BankExtension.create(event.params._address);
 
   dao.save();
 }

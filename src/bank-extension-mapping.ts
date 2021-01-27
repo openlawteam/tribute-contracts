@@ -4,13 +4,7 @@ import {
   Withdraw,
 } from "../generated/templates/BankExtension/BankExtension";
 import { Laoland, Member, Token, TokenBalance } from "../generated/schema";
-import {
-  Address,
-  BigInt,
-  Bytes,
-  log,
-  // dataSource,
-} from "@graphprotocol/graph-ts";
+import { Address, BigInt, Bytes, log } from "@graphprotocol/graph-ts";
 
 const ZERO_ADDRESS: string = "0x0000000000000000000000000000000000000000";
 let SHARES: Address = Address.fromString(
@@ -47,16 +41,18 @@ function subtractFromBalance(
 }
 
 export function handleNewBalance(event: NewBalance): void {
+  let daoAddress = event.address.toHexString();
+
   log.info(
-    "**************** handleNewBalance event fired. member {}, tokenAddr {}, amount {}",
+    "**************** handleNewBalance event fired. member {}, tokenAddr {}, amount {}, daoAddress {}",
     [
       event.params.member.toHexString(),
       event.params.tokenAddr.toHexString(),
-      event.params.amount.toHexString(),
+      event.params.amount.toString(),
+      daoAddress,
     ]
   );
 
-  let daoAddress = event.address.toHexString();
   let memberId = daoAddress
     .concat("-member-")
     .concat(event.params.member.toHex());
@@ -64,7 +60,7 @@ export function handleNewBalance(event: NewBalance): void {
   // let amount = event.params.amount;
   let tokenBalanceId = memberId + ":" + tokenId;
 
-  let lao = Laoland.load(daoAddress);
+  let dao = Laoland.load(daoAddress);
   let member = Member.load(memberId);
   let token = Token.load(tokenId);
   let tokenBalance = TokenBalance.load(tokenBalanceId);
@@ -120,12 +116,18 @@ export function handleNewBalance(event: NewBalance): void {
   if (callResultTotalShares.reverted) {
     log.info("getBalanceOf laoland:totalShares reverted", []);
   } else {
-    if (lao == null) {
-      lao = new Laoland(daoAddress);
-      lao.totalShares = callResultTotalShares.value.toString();
+    if (dao !== null) {
+      // lao = new Laoland(daoAddress);
+      dao.totalShares = callResultTotalShares.value.toString();
 
-      lao.save();
+      dao.save();
     }
+    // if (lao == null) {
+    //   lao = new Laoland(daoAddress);
+    //   lao.totalShares = callResultTotalShares.value.toString();
+
+    //   lao.save();
+    // }
   }
 
   if (token == null) {
@@ -146,21 +148,24 @@ export function handleNewBalance(event: NewBalance): void {
 }
 
 export function handleWithdraw(event: Withdraw): void {
-  let laoId = event.address.toHexString();
-  let tokenId = laoId.concat("-token-").concat(event.params.tokenAddr.toHex());
+  let daoAddress = event.address.toHexString();
+  let tokenId = daoAddress
+    .concat("-token-")
+    .concat(event.params.tokenAddr.toHex());
 
   log.info(
-    "**************** handleWithdraw event fired. account {}, tokenAddr {}, amount {}",
+    "**************** handleWithdraw event fired. account {}, tokenAddr {}, amount {}, daoAddress {}",
     [
       event.params.account.toHexString(),
       event.params.tokenAddr.toHexString(),
-      event.params.amount.toHexString(),
+      event.params.amount.toString(),
+      daoAddress,
     ]
   );
 
   if (event.params.amount > BigInt.fromI32(0)) {
     subtractFromBalance(
-      laoId,
+      daoAddress,
       event.transaction.from,
       tokenId,
       event.params.amount
