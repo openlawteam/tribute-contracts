@@ -63,8 +63,8 @@ contract GuildKickContract is IGuildKick, DaoConstants, MemberGuard {
     // Keeps track of the latest ongoing kick proposal per DAO to ensure only 1 kick happens at time.
     mapping(address => GuildKickStatus) public ongoingKicks;
 
-    /*
-     * default fallback function to prevent from sending ether to the contract
+    /**
+     * @notice default fallback function to prevent from sending ether to the contract.
      */
     receive() external payable {
         revert("fallback revert");
@@ -75,7 +75,7 @@ contract GuildKickContract is IGuildKick, DaoConstants, MemberGuard {
      * @dev A member can not kick himself.     
      * @dev Only one kick per DAO can be executed at time.
      * @dev Only members that have shares can be kicked out.
-     *** @dev Proposal ids can not be reused.
+     * @dev Proposal ids can not be reused.
      * @param dao The dao address.
      * @param proposalId The guild kick proposal id.
      * @param memberToKick The member address that should be kicked out of the DAO.
@@ -93,8 +93,8 @@ contract GuildKickContract is IGuildKick, DaoConstants, MemberGuard {
         // Checks if there is an ongoing kick proposal, only one kick can be executed at time.
         require(ongoingKicks[address(dao)] != GuildKickStatus.IN_PROGRESS, "there is a kick in progress");
 
-        //TODO Checks if the proposalId already exists
-        //require(kicks[address(dao)][proposalId].status == GuildKickStatus.NOT_STARTED, "");
+        // Checks if the proposalId already exists
+        require(kicks[address(dao)][proposalId].status == GuildKickStatus.NOT_STARTED, "kick proposal id already used");
 
         // Creates a guild kick proposal.
         dao.submitProposal(proposalId);
@@ -205,7 +205,7 @@ contract GuildKickContract is IGuildKick, DaoConstants, MemberGuard {
         DaoRegistry dao,
         bytes32 proposalId,
         uint256 toIndex
-    ) external override onlyMember(dao) {//should be open?
+    ) external override onlyMember(dao) {//should be open it so the kicked member is able to call this function?
         // Checks if the kick proposal does not exist or is not completed yet
         GuildKick storage kick = kicks[address(dao)][proposalId];
         require(
