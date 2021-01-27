@@ -466,6 +466,10 @@ contract DaoRegistry is DaoConstants, AdapterGuard {
         external
         hasAccess(this, AclFlag.SUBMIT_PROPOSAL)
     {
+        require(
+            !getProposalFlag(proposalId, ProposalFlag.EXISTS),
+            "proposalId must be unique"
+        );
         proposals[proposalId] = Proposal(msg.sender, 1);
         emit SubmittedProposal(proposalId, 1);
     }
