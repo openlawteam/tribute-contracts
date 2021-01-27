@@ -119,6 +119,7 @@ contract DaoRegistry is DaoConstants, AdapterGuard {
      * PUBLIC VARIABLES
      */
     mapping(address => Member) public members; // the map to track all members of the DAO
+    address[] private _members;
 
     // delegate key => member address mapping
     mapping(address => address) public memberAddressesByDelegatedKey;
@@ -201,6 +202,7 @@ contract DaoRegistry is DaoConstants, AdapterGuard {
                 true
             );
             memberAddressesByDelegatedKey[memberAddress] = memberAddress;
+            members[members.length] = memberAddress;
         }
     }
 
@@ -597,6 +599,14 @@ contract DaoRegistry is DaoConstants, AdapterGuard {
         returns (bool)
     {
         return getFlag(members[memberAddress].flags, uint8(flag));
+    }
+
+    function getNbMember() public view returns (uint256) {
+        return members.length;
+    }
+
+    function getMemberAddress(uint256 index) public view returns (address) {
+        return members[index];
     }
 
     /**
