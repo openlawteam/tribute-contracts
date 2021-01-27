@@ -31,7 +31,7 @@ module.exports = async function(deployer, network) {
       votingPeriod: 60, //in seconds
       gracePeriod: 60 // in seconds
     });
-  } else if (network === 'test') {
+  } else if (network === 'test' || network === 'coverage') {
     dao = await deployDao(deployer, {
       unitPrice: sharePrice,
       nbShares: numberOfShares,
