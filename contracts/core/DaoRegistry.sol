@@ -587,6 +587,19 @@ contract DaoRegistry is DaoConstants, AdapterGuard {
     }
 
     /**
+     * @return Whether or not a flag is set for a given member
+     * @param memberAddress The member to check against flag
+     * @param flag The flag to check in the member
+     */
+    function getMemberFlag(address memberAddress, MemberFlag flag)
+        external
+        view
+        returns (bool)
+    {
+        return getFlag(members[memberAddress].flags, uint8(flag));
+    }
+
+    /**
      * @notice Updates the delegate key of a member
      * @param memberAddr The member doing the delegation
      * @param newDelegateKey The member who is being delegated to

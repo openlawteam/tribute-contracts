@@ -109,24 +109,24 @@ contract BankExtension is DaoConstants, AdapterGuard, IExtension {
     }
 
     function withdraw(
-        address payable account,
+        address payable member,
         address tokenAddr,
         uint256 amount
     ) external hasExtensionAccess(this, AclFlag.WITHDRAW) {
         require(
-            balanceOf(account, tokenAddr) >= amount,
+            balanceOf(member, tokenAddr) >= amount,
             "dao::withdraw::not enough funds"
         );
-        subtractFromBalance(account, tokenAddr, amount);
+        subtractFromBalance(member, tokenAddr, amount);
         if (tokenAddr == ETH_TOKEN) {
-            (bool success, ) = account.call{value: amount}("");
+            (bool success, ) = member.call{value: amount}("");
             require(success, "withdraw failed");
         } else {
             IERC20 erc20 = IERC20(tokenAddr);
-            erc20.transfer(account, amount);
+            erc20.transfer(member, amount);
         }
 
-        emit Withdraw(account, tokenAddr, amount);
+        emit Withdraw(member, tokenAddr, amount);
     }
 
     /**
@@ -262,13 +262,13 @@ contract BankExtension is DaoConstants, AdapterGuard, IExtension {
     }
 
     /**
-     * @notice Adds to a user's balance of a given token
-     * @param user The user whose balance will be updated
+     * @notice Adds to a member's balance of a given token
+     * @param member The member whose balance will be updated
      * @param token The token to update
      * @param amount The new balance
      */
     function addToBalance(
-        address user,
+        address member,
         address token,
         uint256 amount
     ) public payable hasExtensionAccess(this, AclFlag.ADD_TO_BALANCE) {
@@ -276,35 +276,35 @@ contract BankExtension is DaoConstants, AdapterGuard, IExtension {
             availableTokens[token] || availableInternalTokens[token],
             "unknown token address"
         );
-        uint256 newAmount = balanceOf(user, token) + amount;
+        uint256 newAmount = balanceOf(member, token) + amount;
         uint256 newTotalAmount = balanceOf(TOTAL, token) + amount;
 
-        _createNewAmountCheckpoint(user, token, newAmount);
+        _createNewAmountCheckpoint(member, token, newAmount);
         _createNewAmountCheckpoint(TOTAL, token, newTotalAmount);
     }
 
     /**
-     * @notice Remove from a user's balance of a given token
-     * @param user The user whose balance will be updated
+     * @notice Remove from a member's balance of a given token
+     * @param member The member whose balance will be updated
      * @param token The token to update
      * @param amount The new balance
      */
     function subtractFromBalance(
-        address user,
+        address member,
         address token,
         uint256 amount
     ) public hasExtensionAccess(this, AclFlag.SUB_FROM_BALANCE) {
-        uint256 newAmount = balanceOf(user, token) - amount;
+        uint256 newAmount = balanceOf(member, token) - amount;
         uint256 newTotalAmount = balanceOf(TOTAL, token) - amount;
 
-        _createNewAmountCheckpoint(user, token, newAmount);
+        _createNewAmountCheckpoint(member, token, newAmount);
         _createNewAmountCheckpoint(TOTAL, token, newTotalAmount);
     }
 
     /**
      * @notice Make an internal token transfer
-     * @param from The user who is sending tokens
-     * @param to The user who is receiving tokens
+     * @param from The member who is sending tokens
+     * @param to The member who is receiving tokens
      * @param amount The new amount to transfer
      */
     function internalTransfer(
@@ -321,20 +321,20 @@ contract BankExtension is DaoConstants, AdapterGuard, IExtension {
     }
 
     /**
-     * @notice Returns an account's balance of a given token
-     * @param account The address to look up
-     * @param tokenAddr The token where the user's balance of which will be returned
+     * @notice Returns an member's balance of a given token
+     * @param member The address to look up
+     * @param tokenAddr The token where the member's balance of which will be returned
      * @return The amount in account's tokenAddr balance
      */
-    function balanceOf(address account, address tokenAddr)
+    function balanceOf(address member, address tokenAddr)
         public
         view
         returns (uint256)
     {
-        uint32 nCheckpoints = numCheckpoints[tokenAddr][account];
+        uint32 nCheckpoints = numCheckpoints[tokenAddr][member];
         return
             nCheckpoints > 0
-                ? checkpoints[tokenAddr][account][nCheckpoints - 1].amount
+                ? checkpoints[tokenAddr][member][nCheckpoints - 1].amount
                 : 0;
     }
 
@@ -400,27 +400,9 @@ contract BankExtension is DaoConstants, AdapterGuard, IExtension {
         address tokenAddr,
         uint256 amount
     ) internal {
-        uint32 srcRepNum = numCheckpoints[tokenAddr][member];
-        _writeAmountCheckpoint(member, tokenAddr, srcRepNum, amount);
-        emit NewBalance(member, tokenAddr, amount);
-    }
-
-    /**
-     * @notice Writes to an amount checkpoint of a certain checkpoint number
-     * @dev Creates a new checkpoint if there is not yet one of the given number
-     * @param member The member whose delegate checkpoints will overwritten
-     * @param tokenAddr The token that will have its balance for the user udpated
-     * @param nCheckpoints The number of the checkpoint to overwrite
-     * @param _newAmount The amount to write into the specified checkpoint
-     */
-    function _writeAmountCheckpoint(
-        address member,
-        address tokenAddr,
-        uint32 nCheckpoints,
-        uint256 _newAmount
-    ) internal {
-        require(_newAmount < type(uint160).max, "too big of a vote");
-        uint160 newAmount = uint160(_newAmount);
+        uint32 nCheckpoints = numCheckpoints[tokenAddr][member];
+        require(amount < type(uint160).max, "too big of a vote");
+        uint160 newAmount = uint160(amount);
 
         if (
             nCheckpoints > 0 &&
@@ -435,5 +417,6 @@ contract BankExtension is DaoConstants, AdapterGuard, IExtension {
             );
             numCheckpoints[tokenAddr][member] = nCheckpoints + 1;
         }
+        emit NewBalance(member, tokenAddr, amount);
     }
 }
