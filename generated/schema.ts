@@ -167,6 +167,40 @@ export class Bank extends Entity {
     }
   }
 
+  get daoAddress(): Bytes | null {
+    let value = this.get("daoAddress");
+    if (value === null || value.kind == ValueKind.NULL) {
+      return null;
+    } else {
+      return value.toBytes();
+    }
+  }
+
+  set daoAddress(value: Bytes | null) {
+    if (value === null) {
+      this.unset("daoAddress");
+    } else {
+      this.set("daoAddress", Value.fromBytes(value as Bytes));
+    }
+  }
+
+  get balance(): BigInt | null {
+    let value = this.get("balance");
+    if (value === null || value.kind == ValueKind.NULL) {
+      return null;
+    } else {
+      return value.toBigInt();
+    }
+  }
+
+  set balance(value: BigInt | null) {
+    if (value === null) {
+      this.unset("balance");
+    } else {
+      this.set("balance", Value.fromBigInt(value as BigInt));
+    }
+  }
+
   get createdAt(): string | null {
     let value = this.get("createdAt");
     if (value === null || value.kind == ValueKind.NULL) {
@@ -181,23 +215,6 @@ export class Bank extends Entity {
       this.unset("createdAt");
     } else {
       this.set("createdAt", Value.fromString(value as string));
-    }
-  }
-
-  get balance(): string | null {
-    let value = this.get("balance");
-    if (value === null || value.kind == ValueKind.NULL) {
-      return null;
-    } else {
-      return value.toString();
-    }
-  }
-
-  set balance(value: string | null) {
-    if (value === null) {
-      this.unset("balance");
-    } else {
-      this.set("balance", Value.fromString(value as string));
     }
   }
 }

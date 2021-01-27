@@ -23,8 +23,12 @@ export class BankCreated__Params {
     this._event = event;
   }
 
-  get bankAddress(): Address {
+  get daoAddress(): Address {
     return this._event.parameters[0].value.toAddress();
+  }
+
+  get bankAddress(): Address {
+    return this._event.parameters[1].value.toAddress();
   }
 }
 
