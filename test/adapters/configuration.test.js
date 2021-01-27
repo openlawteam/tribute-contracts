@@ -164,7 +164,7 @@ contract("LAOLAND - Configuration Adapter", async (accounts) => {
     } catch (err) {
       assert.equal(
         err.reason,
-        "configuration must have the same number of keys and values"
+        "must be an equal number of config keys and values"
       );
     }
   });

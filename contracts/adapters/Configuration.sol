@@ -58,7 +58,7 @@ contract ConfigurationContract is IConfiguration, DaoConstants, MemberGuard {
     ) external override onlyMember(dao) {
         require(
             keys.length == values.length,
-            "configuration must have the same number of keys and values"
+            "must be an equal number of config keys and values"
         );
 
         dao.submitProposal(proposalId);
@@ -72,9 +72,9 @@ contract ConfigurationContract is IConfiguration, DaoConstants, MemberGuard {
         bytes32 proposalId,
         bytes calldata data
     ) external override onlyMember(dao) {
-        dao.sponsorProposal(proposalId, msg.sender);
         IVoting votingContract = IVoting(dao.getAdapterAddress(VOTING));
         votingContract.startNewVotingForProposal(dao, proposalId, data);
+        dao.sponsorProposal(proposalId, msg.sender);
     }
 
     function processProposal(DaoRegistry dao, bytes32 proposalId)
@@ -89,6 +89,11 @@ contract ConfigurationContract is IConfiguration, DaoConstants, MemberGuard {
         require(
             configuration.status == ConfigurationStatus.IN_PROGRESS,
             "reconfiguration already completed or does not exist"
+        );
+
+        require(
+            dao.getProposalFlag(proposalId, DaoRegistry.ProposalFlag.SPONSORED),
+            "proposal not sponsored yet"
         );
 
         IVoting votingContract = IVoting(dao.getAdapterAddress(VOTING));

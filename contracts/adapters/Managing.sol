@@ -73,8 +73,6 @@ contract ManagingContract is IManaging, DaoConstants, MemberGuard {
             "module is using reserved address"
         );
 
-        //is there a way to check if the new module implements the module interface properly?
-
         dao.submitProposal(proposalId);
 
         ProposalDetails storage proposal = proposals[address(dao)][proposalId];
@@ -93,7 +91,6 @@ contract ManagingContract is IManaging, DaoConstants, MemberGuard {
     ) external override onlyMember(dao) {
         IVoting votingContract = IVoting(dao.getAdapterAddress(VOTING));
         votingContract.startNewVotingForProposal(dao, proposalId, data);
-
         dao.sponsorProposal(proposalId, msg.sender);
     }
 
@@ -103,6 +100,7 @@ contract ManagingContract is IManaging, DaoConstants, MemberGuard {
         onlyMember(dao)
     {
         ProposalDetails memory proposal = proposals[address(dao)][proposalId];
+
         require(
             !dao.getProposalFlag(
                 proposalId,
@@ -110,6 +108,7 @@ contract ManagingContract is IManaging, DaoConstants, MemberGuard {
             ),
             "proposal already processed"
         );
+
         require(
             dao.getProposalFlag(proposalId, DaoRegistry.ProposalFlag.SPONSORED),
             "proposal not sponsored yet"
