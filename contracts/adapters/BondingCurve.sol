@@ -34,7 +34,6 @@ SOFTWARE.
  */
 
 contract BondingCurveContract is
-    IOnboarding,
     DaoConstants,
     MemberGuard,
     AdapterGuard
@@ -43,16 +42,6 @@ contract BondingCurveContract is
     bytes32 constant SharesPerChunk = keccak256("onboarding.sharesPerChunk");
     bytes32 constant TokenAddr = keccak256("onboarding.tokenAddr");
     bytes32 constant MaximumChunks = keccak256("onboarding.maximumChunks");
-
-    struct ProposalDetails {
-        bytes32 id;
-        address tokenToMint;
-        uint256 amount;
-        uint256 sharesRequested;
-        address token;
-        address payable applicant;
-        address payable proposer;
-    }
 
     struct OnboardingDetails {
         uint256 chunkSize;
@@ -63,7 +52,6 @@ contract BondingCurveContract is
         uint256 totalShares;
     }
 
-    mapping(address => mapping(bytes32 => ProposalDetails)) public proposals;
     mapping(address => uint256) public shares;
 
     function configKey(address tokenAddrToMint, bytes32 key)
@@ -104,112 +92,15 @@ contract BondingCurveContract is
         dao.registerPotentialNewToken(tokenAddr);
     }
 
-    function _submitMembershipProposal(
-        DaoRegistry dao,
-        bytes32 proposalId,
-        address tokenToMint,
-        address payable applicant,
-        address payable proposer,
-        uint256 value,
-        address token
-    ) internal returns (uint256) {
-        OnboardingDetails memory details;
-        details.chunkSize = dao.getConfiguration(
-            configKey(tokenToMint, ChunkSize)
-        );
-        require(details.chunkSize > 0, "config missing");
-
-        details.numberOfChunks = value / details.chunkSize;
-        require(details.numberOfChunks > 0, "not sufficient funds");
-
-        details.sharesPerChunk = dao.getConfiguration(
-            configKey(tokenToMint, SharesPerChunk)
-        );
-        details.amount = details.numberOfChunks * details.chunkSize;
-        details.sharesRequested =
-            details.numberOfChunks *
-            details.sharesPerChunk;
-        details.totalShares = shares[applicant] + details.sharesRequested;
-
-        require(
-            details.totalShares / details.sharesPerChunk <
-                dao.getConfiguration(configKey(tokenToMint, MaximumChunks)),
-            "total shares for this member must be lower than the maximum"
-        );
-
-        _submitMembershipProposalInternal(
-            dao,
-            proposalId,
-            tokenToMint,
-            applicant,
-            proposer,
-            details.sharesRequested,
-            details.amount,
-            token
-        );
-
-        return details.amount;
-    }
-
-    function onboardAndSponsor(
-        DaoRegistry dao,
-        bytes32 proposalId,
-        address payable applicant,
-        address tokenToMint,
-        uint256 tokenAmount,
-        bytes calldata data
-    ) external payable {
-        onboard(dao, proposalId, applicant, tokenToMint, tokenAmount);
-        require(
-            proposals[address(dao)][proposalId].id == proposalId,
-            "proposal does not exist"
-        );
-
-        IVoting votingContract = IVoting(dao.getAdapterAddress(VOTING));
-        try
-            votingContract.startNewVotingForProposal(dao, proposalId, data)
-        {} catch Error(string memory reason) {
-            revert(reason);
-        } catch (
-            bytes memory /*lowLevelData*/
-        ) {
-            revert("system error from voting");
-        }
-
-        address submittedBy =
-            votingContract.getSenderAddress(
-                dao,
-                address(this),
-                data,
-                msg.sender
-            );
-
-        dao.sponsorProposal(proposalId, submittedBy);
-    }
-
-    function onboard(
-        DaoRegistry dao,
-        bytes32 proposalId,
-        address payable applicant,
-        address tokenToMint,
-        uint256 tokenAmount
-    ) public payable override {
-        require(
-            dao.isNotReservedAddress(applicant),
-            "applicant is reserved address"
-        );
-        address tokenAddr =
-            address(
-                dao.getAddressConfiguration(configKey(tokenToMint, TokenAddr))
-            );
+    function contributeCapital(address contributionToken, address tokenToMint, uint256 contribution) override onlyMember(dao) {
         if (tokenAddr == ETH_TOKEN) {
-            // ETH onboarding
+            // ETH contribution
             require(msg.value > 0, "not enough ETH");
             // If the applicant sends ETH to onboard, use the msg.value as default token amount
             tokenAmount = msg.value;
         } else {
             IERC20 token = IERC20(tokenAddr);
-            // ERC20 onboarding
+            // ERC20 contribution
             require(
                 token.allowance(msg.sender, address(this)) >= tokenAmount,
                 "ERC20 transfer not allowed"
@@ -219,93 +110,10 @@ contract BondingCurveContract is
                 "ERC20 failed transferFrom"
             );
         }
-
-        uint256 amountUsed =
-            _submitMembershipProposal(
-                dao,
-                proposalId,
-                tokenToMint,
-                applicant,
-                payable(msg.sender),
-                tokenAmount,
-                tokenAddr
-            );
-
-        if (amountUsed < tokenAmount) {
-            uint256 amount = tokenAmount - amountUsed;
-            if (tokenAddr == ETH_TOKEN) {
-                payable(msg.sender).transfer(amount);
-            } else {
-                IERC20 token = IERC20(tokenAddr);
-                require(
-                    token.transfer(msg.sender, amount),
-                    "ERC20 failed transfer"
-                );
-            }
-        }
-    }
-
-    function updateDelegateKey(DaoRegistry dao, address delegateKey) external {
-        dao.updateDelegateKey(msg.sender, delegateKey);
-    }
-
-    function _submitMembershipProposalInternal(
-        DaoRegistry dao,
-        bytes32 proposalId,
-        address tokenToMint,
-        address payable newMember,
-        address payable proposer,
-        uint256 sharesRequested,
-        uint256 amount,
-        address token
-    ) internal {
-        dao.submitProposal(proposalId);
-        proposals[address(dao)][proposalId] = ProposalDetails(
-            proposalId,
-            tokenToMint,
-            amount,
-            sharesRequested,
-            token,
-            newMember,
-            proposer
-        );
-    }
-
-    function sponsorProposal(
-        DaoRegistry dao,
-        bytes32 proposalId,
-        bytes calldata data
-    ) external override onlyMember(dao) {
-        require(
-            proposals[address(dao)][proposalId].id == proposalId,
-            "proposal does not exist"
-        );
-
-        IVoting votingContract = IVoting(dao.getAdapterAddress(VOTING));
-        votingContract.startNewVotingForProposal(dao, proposalId, data);
-
-        dao.sponsorProposal(proposalId, msg.sender);
-    }
-
-    function cancelProposal(DaoRegistry dao, bytes32 proposalId)
-        external
-        override
-        onlyMember(dao)
-    {
-        require(
-            proposals[address(dao)][proposalId].id == proposalId,
-            "proposal does not exist"
-        );
-
-        require(
-            !dao.getProposalFlag(proposalId, FlagHelper.Flag.SPONSORED),
-            "proposal already sponsored"
-        );
-
-        dao.processProposal(proposalId);
-
-        ProposalDetails storage proposal = proposals[address(dao)][proposalId];
-        _refundTribute(proposal.token, proposal.proposer, proposal.amount);
+        
+        uint256 tokenAmount = curvePrice * dao.balanceOfbalanceOf(TOTAL, tokenToMint);
+        dao.addToBalance(msg.sender, tokenToMint, tokenAmount);
+        curvePrice++;
     }
 
     function processProposal(DaoRegistry dao, bytes32 proposalId)
@@ -356,23 +164,6 @@ contract BondingCurveContract is
             revert("proposal has not been voted on yet");
         }
 
-        dao.processProposal(proposalId);
-    }
-
-    function _refundTribute(
-        address tokenAddr,
-        address payable proposer,
-        uint256 amount
-    ) internal {
-        if (tokenAddr == ETH_TOKEN) {
-            proposer.transfer(amount);
-        } else {
-            IERC20 token = IERC20(tokenAddr);
-            require(
-                token.transferFrom(address(this), proposer, amount),
-                "ERC20 failed transferFrom"
-            );
-        }
     }
 
     function _mintTokensToMember(
