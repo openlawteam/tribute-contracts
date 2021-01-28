@@ -395,6 +395,11 @@ contract OnboardingContract is
             "it can only mint internal tokens"
         );
 
+        require(
+            !dao.getMemberFlag(memberAddr, DaoRegistry.MemberFlag.JAILED),
+            "cannot process jailed member"
+        );
+
         dao.potentialNewMember(memberAddr);
 
         bank.addToBalance(memberAddr, tokenToMint, tokenAmount);
