@@ -234,10 +234,13 @@ contract GuildKickContract is IGuildKick, DaoConstants, MemberGuard {
             maxIndex = nbTokens;
         }
 
-        // Calculates the total shares and loot before any internal transfers.
+        // Calculates the total shares, loot and locked loot before any internal transfers
+        // it considers the locked loot to be able to calculate the fair amount to ragequit,
+        // but locked loot can not be burned.
         uint256 initialTotalSharesAndLoot =
             bank.getPriorAmount(TOTAL, SHARES, kick.blockNumber) +
-                bank.getPriorAmount(TOTAL, LOOT, kick.blockNumber);
+                bank.getPriorAmount(TOTAL, LOOT, kick.blockNumber) +
+                bank.getPriorAmount(TOTAL, LOCKED_LOOT, kick.blockNumber);
 
         // Get the member address to kick out of the DAO
         address kickedMember = kick.memberToKick;

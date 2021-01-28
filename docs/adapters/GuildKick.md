@@ -57,7 +57,7 @@ The member needs to have enough shares and/or loot in order to convert it to fun
 
   - checks if the message sender is actually a member of the DAO.
   - checks if the kicked member is actually a member of the DAO.
-  - processing the kick proposal.
+  - process the kick proposal.
   - jail/unjail the kicked member
 
 - Voting
