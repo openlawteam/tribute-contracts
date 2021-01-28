@@ -708,4 +708,6 @@ contract("LAOLAND - Ragequit Adapter", async (accounts) => {
       assert.equal(err.reason, "jailed member can not ragequit");
     }
   });
+
+  //TODO test fairShareHelper overflow
 });
