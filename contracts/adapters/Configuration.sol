@@ -54,30 +54,29 @@ contract ConfigurationContract is IConfiguration, DaoConstants, MemberGuard {
         DaoRegistry dao,
         bytes32 proposalId,
         bytes32[] calldata keys,
-        uint256[] calldata values,
-        bytes memory data
+        uint256[] calldata values
     ) external override onlyMember(dao) {
         require(
             keys.length == values.length,
-            "configuration must have the same number of keys and values"
+            "must be an equal number of config keys and values"
         );
 
         dao.submitProposal(proposalId);
-        Configuration memory configuration =
-            Configuration(ConfigurationStatus.IN_PROGRESS, keys, values);
-        configurations[address(dao)][proposalId] = configuration;
-
-        IVoting votingContract = IVoting(dao.getAdapterAddress(VOTING));
-        votingContract.startNewVotingForProposal(dao, proposalId, data);
+        configurations[address(dao)][proposalId] = Configuration(
+            ConfigurationStatus.IN_PROGRESS,
+            keys,
+            values
+        );
     }
 
     function sponsorProposal(
         DaoRegistry dao,
         bytes32 proposalId,
-        bytes memory data
+        bytes calldata data
     ) external override onlyMember(dao) {
-        IVoting votingContract = IVoting(dao.getAdapterAddress(VOTING));
         dao.sponsorProposal(proposalId, msg.sender);
+
+        IVoting votingContract = IVoting(dao.getAdapterAddress(VOTING));
         votingContract.startNewVotingForProposal(dao, proposalId, data);
     }
 
@@ -95,10 +94,15 @@ contract ConfigurationContract is IConfiguration, DaoConstants, MemberGuard {
             "reconfiguration already completed or does not exist"
         );
 
+        require(
+            dao.getProposalFlag(proposalId, DaoRegistry.ProposalFlag.SPONSORED),
+            "proposal not sponsored yet"
+        );
+
         IVoting votingContract = IVoting(dao.getAdapterAddress(VOTING));
         require(
             votingContract.voteResult(dao, proposalId) == 2,
-            "proposal did not pass yet"
+            "proposal did not pass"
         );
 
         bytes32[] memory keys = configuration.keys;

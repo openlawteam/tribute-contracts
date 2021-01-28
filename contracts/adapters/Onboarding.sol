@@ -66,7 +66,7 @@ contract OnboardingContract is
     }
 
     mapping(address => mapping(bytes32 => ProposalDetails)) public proposals;
-    mapping(address => uint256) public shares;
+    mapping(address => mapping(address => uint256)) public shares;
 
     function configKey(address tokenAddrToMint, bytes32 key)
         internal
@@ -121,7 +121,7 @@ contract OnboardingContract is
         details.chunkSize = dao.getConfiguration(
             configKey(tokenToMint, ChunkSize)
         );
-        require(details.chunkSize > 0, "config missing");
+        require(details.chunkSize > 0, "config chunkSize missing");
 
         details.numberOfChunks = value / details.chunkSize;
         require(details.numberOfChunks > 0, "not sufficient funds");
@@ -129,11 +129,14 @@ contract OnboardingContract is
         details.sharesPerChunk = dao.getConfiguration(
             configKey(tokenToMint, SharesPerChunk)
         );
+        require(details.sharesPerChunk > 0, "config sharesPerChunk missing");
         details.amount = details.numberOfChunks * details.chunkSize;
         details.sharesRequested =
             details.numberOfChunks *
             details.sharesPerChunk;
-        details.totalShares = shares[applicant] + details.sharesRequested;
+        details.totalShares =
+            shares[applicant][tokenToMint] +
+            details.sharesRequested;
 
         require(
             details.totalShares / details.sharesPerChunk <
@@ -164,10 +167,6 @@ contract OnboardingContract is
         bytes calldata data
     ) external payable {
         onboard(dao, proposalId, applicant, tokenToMint, tokenAmount);
-        require(
-            proposals[address(dao)][proposalId].id == proposalId,
-            "proposal does not exist"
-        );
 
         IVoting votingContract = IVoting(dao.getAdapterAddress(VOTING));
         try
@@ -203,9 +202,7 @@ contract OnboardingContract is
             "applicant is reserved address"
         );
         address tokenAddr =
-            address(
-                dao.getAddressConfiguration(configKey(tokenToMint, TokenAddr))
-            );
+            dao.getAddressConfiguration(configKey(tokenToMint, TokenAddr));
         if (tokenAddr == ETH_TOKEN) {
             // ETH onboarding
             require(msg.value > 0, "not enough ETH");
@@ -280,21 +277,15 @@ contract OnboardingContract is
         bytes32 proposalId,
         bytes calldata data
     ) external override onlyMember(dao) {
-        require(
-            proposals[address(dao)][proposalId].id == proposalId,
-            "proposal does not exist"
-        );
+        dao.sponsorProposal(proposalId, msg.sender);
 
         IVoting votingContract = IVoting(dao.getAdapterAddress(VOTING));
         votingContract.startNewVotingForProposal(dao, proposalId, data);
-
-        dao.sponsorProposal(proposalId, msg.sender);
     }
 
     function cancelProposal(DaoRegistry dao, bytes32 proposalId)
         external
         override
-        onlyMember(dao)
     {
         require(
             proposals[address(dao)][proposalId].id == proposalId,
@@ -358,8 +349,10 @@ contract OnboardingContract is
             }
 
             uint256 totalShares =
-                shares[proposal.applicant] + proposal.sharesRequested;
-            shares[proposal.applicant] = totalShares;
+                shares[proposal.tokenToMint][proposal.applicant] +
+                    proposal.sharesRequested;
+
+            shares[proposal.tokenToMint][proposal.applicant] = totalShares;
         } else if (voteResult == 3 || voteResult == 1) {
             _refundTribute(proposal.token, proposal.proposer, proposal.amount);
         } else {
@@ -395,6 +388,11 @@ contract OnboardingContract is
         require(
             bank.isInternalToken(tokenToMint),
             "it can only mint internal tokens"
+        );
+
+        require(
+            !dao.getMemberFlag(memberAddr, DaoRegistry.MemberFlag.JAILED),
+            "cannot process jailed member"
         );
 
         dao.potentialNewMember(memberAddr);

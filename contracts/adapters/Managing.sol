@@ -73,17 +73,16 @@ contract ManagingContract is IManaging, DaoConstants, MemberGuard {
             "module is using reserved address"
         );
 
-        //is there a way to check if the new module implements the module interface properly?
-
         dao.submitProposal(proposalId);
 
-        ProposalDetails storage proposal = proposals[address(dao)][proposalId];
-        proposal.applicant = msg.sender;
-        proposal.moduleId = moduleId;
-        proposal.moduleAddress = moduleAddress;
-        proposal.keys = keys;
-        proposal.values = values;
-        proposal.flags = flags;
+        proposals[address(dao)][proposalId] = ProposalDetails(
+            msg.sender,
+            moduleId,
+            moduleAddress,
+            keys,
+            values,
+            flags
+        );
     }
 
     function sponsorProposal(
@@ -91,10 +90,10 @@ contract ManagingContract is IManaging, DaoConstants, MemberGuard {
         bytes32 proposalId,
         bytes calldata data
     ) external override onlyMember(dao) {
+        dao.sponsorProposal(proposalId, msg.sender);
+
         IVoting votingContract = IVoting(dao.getAdapterAddress(VOTING));
         votingContract.startNewVotingForProposal(dao, proposalId, data);
-
-        dao.sponsorProposal(proposalId, msg.sender);
     }
 
     function processProposal(DaoRegistry dao, bytes32 proposalId)
@@ -103,6 +102,7 @@ contract ManagingContract is IManaging, DaoConstants, MemberGuard {
         onlyMember(dao)
     {
         ProposalDetails memory proposal = proposals[address(dao)][proposalId];
+
         require(
             !dao.getProposalFlag(
                 proposalId,
@@ -110,6 +110,7 @@ contract ManagingContract is IManaging, DaoConstants, MemberGuard {
             ),
             "proposal already processed"
         );
+
         require(
             dao.getProposalFlag(proposalId, DaoRegistry.ProposalFlag.SPONSORED),
             "proposal not sponsored yet"
@@ -118,10 +119,12 @@ contract ManagingContract is IManaging, DaoConstants, MemberGuard {
         IVoting votingContract = IVoting(dao.getAdapterAddress(VOTING));
         require(
             votingContract.voteResult(dao, proposalId) == 2,
-            "proposal did not pass yet"
+            "proposal did not pass"
         );
 
-        dao.removeAdapter(proposal.moduleId);
+        if (dao.getAdapterAddress(proposal.moduleId) != address(0x0)) {
+            dao.removeAdapter(proposal.moduleId);
+        }
 
         bytes32[] memory keys = proposal.keys;
         uint256[] memory values = proposal.values;

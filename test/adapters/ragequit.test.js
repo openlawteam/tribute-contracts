@@ -24,6 +24,28 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
  */
+
+async function ragequit(dao, shares, loot, member) {
+  const bankAddress = await dao.getExtensionAddress(sha3("bank"));
+  const bank = await BankExtension.at(bankAddress);
+  let ragequitAddress = await dao.getAdapterAddress(sha3("ragequit"));
+  let ragequitContract = await RagequitContract.at(ragequitAddress);
+
+  await ragequitContract.startRagequit(dao.address, toBN(shares), toBN(loot), {
+    from: member,
+    gasPrice: toBN("0"),
+  });
+
+  await ragequitContract.burnShares(dao.address, member, 2, {
+    gasPrice: toBN("0"),
+  });
+
+  //Check New Member Shares
+  let newShares = await bank.balanceOf(member, SHARES);
+  assert.equal(newShares.toString(), "0");
+  return ragequitContract;
+}
+
 const {
   sha3,
   toBN,
@@ -85,33 +107,25 @@ contract("LAOLAND - Ragequit Adapter", async (accounts) => {
     await advanceTime(10000);
   };
 
-  const ragequit = async (dao, shares, loot, member) => {
-    const bankAddress = await dao.getExtensionAddress(sha3("bank"));
-    const bank = await BankExtension.at(bankAddress);
+  const ragequit = async (dao, shares, loot, member, token = ETH_TOKEN) => {
     let ragequitAddress = await dao.getAdapterAddress(sha3("ragequit"));
     let ragequitContract = await RagequitContract.at(ragequitAddress);
 
-    await ragequitContract.startRagequit(
+    await ragequitContract.ragequit(
       dao.address,
       toBN(shares),
       toBN(loot),
+      [token],
       {
         from: member,
         gasPrice: toBN("0"),
       }
     );
 
-    await ragequitContract.burnShares(dao.address, member, 2, {
-      gasPrice: toBN("0"),
-    });
-
-    //Check New Member Shares
-    let newShares = await bank.balanceOf(member, SHARES);
-    assert.equal(newShares.toString(), "0");
     return ragequitContract;
   };
 
-  it("should not be possible for a non DAO member to ragequit", async () => {
+  it("should return an error if a non DAO member attempts to ragequit", async () => {
     const myAccount = accounts[1];
     const newMember = accounts[2];
 
@@ -153,11 +167,11 @@ contract("LAOLAND - Ragequit Adapter", async (accounts) => {
       let nonMember = accounts[4];
       await ragequit(dao, shares, 0, nonMember);
     } catch (error) {
-      assert.equal(error.reason, "onlyMember");
+      assert.equal(error.reason, "insufficient shares");
     }
   });
 
-  it("should not be possible to a member to ragequit when the member does not have enough shares", async () => {
+  it("should not be possible for a member to ragequit when the member does not have enough shares", async () => {
     const myAccount = accounts[1];
     const newMember = accounts[2];
 
@@ -203,7 +217,7 @@ contract("LAOLAND - Ragequit Adapter", async (accounts) => {
     }
   });
 
-  it("should be possible to a member to ragequit when the member has not voted on any proposals yet", async () => {
+  it("should be possible for a member to ragequit when the member has not voted on any proposals yet", async () => {
     const myAccount = accounts[1];
     const newMember = accounts[2];
 
@@ -241,14 +255,14 @@ contract("LAOLAND - Ragequit Adapter", async (accounts) => {
     assert.equal(shares.toString(), "10000000000000000");
 
     //Ragequit - Burn all the new member shares
-    let ragequitContract = await ragequit(dao, shares, 0, newMember);
+    await ragequit(dao, shares, 0, newMember);
 
     //Check Guild Bank Balance
     let newGuildBalance = await bank.balanceOf(GUILD, ETH_TOKEN);
     assert.equal(toBN(newGuildBalance).toString(), "120"); //must be close to 0
   });
 
-  it("should be possible to a member to ragequit if the member voted YES on a proposal that is not processed", async () => {
+  it("should be possible for a member to ragequit if the member voted YES on a proposal that is not processed", async () => {
     const myAccount = accounts[1];
     const newMember = accounts[2];
     const applicant = accounts[3];
@@ -314,14 +328,14 @@ contract("LAOLAND - Ragequit Adapter", async (accounts) => {
     });
 
     //Ragequit - New member ragequits after YES vote
-    let ragequitContract = await ragequit(dao, shares, 0, newMember);
+    await ragequit(dao, shares, 0, newMember);
 
     //Check Guild Bank Balance
     let newGuildBalance = await bank.balanceOf(GUILD, ETH_TOKEN);
     assert.equal(toBN(newGuildBalance).toString(), "120"); //must be close to 0
   });
 
-  it("should be possible to a member to ragequit if the member voted NO on a proposal that is not processed", async () => {
+  it("should be possible for a member to ragequit if the member voted NO on a proposal that is not processed", async () => {
     const myAccount = accounts[1];
     const newMember = accounts[2];
     const applicant = accounts[3];
@@ -387,14 +401,14 @@ contract("LAOLAND - Ragequit Adapter", async (accounts) => {
     });
 
     //Ragequit - New member ragequits after YES vote
-    let ragequitContract = await ragequit(dao, shares, 0, newMember);
+    await ragequit(dao, shares, 0, newMember);
 
     //Check Guild Bank Balance
     let newGuildBalance = await bank.balanceOf(GUILD, ETH_TOKEN);
     assert.equal(toBN(newGuildBalance).toString(), "120"); //must be close to 0
   });
 
-  it("should be possible to an Advisor ragequit at any point in time", async () => {
+  it("should be possible for an Advisor to ragequit", async () => {
     const myAccount = accounts[1];
     const advisorAccount = accounts[2];
 
@@ -487,130 +501,104 @@ contract("LAOLAND - Ragequit Adapter", async (accounts) => {
     assert.equal(guildBalance.toString(), "10");
 
     //Ragequit - Advisor ragequits
-    await ragequit(dao, 0, advisorAccountLoot, advisorAccount);
+    await ragequit(
+      dao,
+      0,
+      advisorAccountLoot,
+      advisorAccount,
+      oltContract.address
+    );
 
     //Check Guild Bank Balance
     let newGuildBalance = await bank.balanceOf(GUILD, oltContract.address);
     assert.equal(toBN(newGuildBalance).toString(), "2"); //must be close to
   });
 
-  it("should not be possible to vote if you are jailed", async () => {
+  it("should not be possible to vote after the ragequit", async () => {
     const myAccount = accounts[1];
-    const memberAccount = accounts[2];
-    const otherAccount = accounts[3];
+    const memberAddr = accounts[2];
 
-    let lootSharePrice = 10;
-    let chunkSize = 5;
-
-    let dao = await createDao(myAccount, lootSharePrice, chunkSize, 10, 1);
+    let dao = await createDao(myAccount);
     const bankAddress = await dao.getExtensionAddress(sha3("bank"));
     const bank = await BankExtension.at(bankAddress);
-    // Transfer 1000 OLTs to the Advisor account
+
+    //Add funds to the Guild Bank after sposoring a member to join the Guild
     const onboardingAddress = await dao.getAdapterAddress(sha3("onboarding"));
     const onboarding = await OnboardingContract.at(onboardingAddress);
 
     const votingAddress = await dao.getAdapterAddress(sha3("voting"));
     const voting = await VotingContract.at(votingAddress);
 
-    // Guild balance must be 0 if no Loot shares are issued
-    let guildBalance = await bank.balanceOf(GUILD, ETH_TOKEN);
-    assert.equal(guildBalance.toString(), "0");
-
-    // Total of OLT to be sent to the DAO in order to get the Loot shares
-    let tokenAmount = 10;
-    let proposalId = "0x0";
-    // Send a request to join the DAO as an Advisor (non-voting power),
-    // the tx passes the OLT ERC20 token, the amount and the nonVotingOnboarding adapter that handles the proposal
-    await onboarding.onboard(
-      dao.address,
-      proposalId,
-      memberAccount,
-      SHARES,
-      tokenAmount,
-      {
-        from: myAccount,
-        value: tokenAmount,
-        gasPrice: toBN("0"),
-      }
+    let proposalId = await submitNewMemberProposal(
+      onboarding,
+      dao,
+      memberAddr,
+      sharePrice
     );
 
-    // Sponsor the new proposal to allow the Advisor to join the DAO
-    await onboarding.sponsorProposal(dao.address, proposalId, [], {
-      from: myAccount,
-      gasPrice: toBN("0"),
-    });
-
-    // Vote on the new proposal to accept the new Advisor
-    await voting.submitVote(dao.address, proposalId, 1, {
-      from: myAccount,
-      gasPrice: toBN("0"),
-    });
-
-    // Process the new proposal
-    await advanceTime(10000);
+    //Sponsor the new proposal to admit the new member, vote and process it
+    await sponsorNewMember(onboarding, dao, proposalId, myAccount, voting);
     await onboarding.processProposal(dao.address, proposalId, {
       from: myAccount,
       gasPrice: toBN("0"),
     });
 
-    let ragequitAddress = await dao.getAdapterAddress(sha3("ragequit"));
-    let ragequitContract = await RagequitContract.at(ragequitAddress);
+    //Check Guild Bank Balance
+    let guildBalance = await bank.balanceOf(GUILD, ETH_TOKEN);
+    assert.equal(guildBalance.toString(), "1200000000000000000".toString());
 
-    const shares = await bank.balanceOf(memberAccount, SHARES);
-    await ragequitContract.startRagequit(
-      dao.address,
-      toBN(Math.floor(shares / 2)),
-      toBN(0),
-      {
-        from: memberAccount,
-        gasPrice: toBN("0"),
-      }
-    ); // we are not burning all the shares so we are still members once it is done
+    //Check New Member Shares
+    let shares = await bank.balanceOf(memberAddr, SHARES);
+    assert.equal(shares.toString(), "10000000000000000");
 
-    proposalId = "0x1";
+    //Ragequit - Burn all the new member shares
+    await ragequit(dao, shares, 0, memberAddr);
 
-    await onboarding.onboard(
-      dao.address,
-      proposalId,
-      otherAccount,
-      SHARES,
-      tokenAmount,
-      {
-        from: myAccount,
-        value: tokenAmount,
-        gasPrice: toBN("0"),
-      }
-    );
-
-    // Sponsor the new proposal to allow the Advisor to join the DAO
+    //Member attempts to sponsor a proposal after the ragequit
     try {
       await onboarding.sponsorProposal(dao.address, proposalId, [], {
-        from: memberAccount,
+        from: memberAddr,
         gasPrice: toBN("0"),
       });
-      throw new Error("should fail");
+      assert.fail(
+        "should not be possible to sponsor a proposal if the member has executed a full ragequit"
+      );
     } catch (err) {
-      assert.equal(err.message.indexOf("onlyMember") > -1, true);
+      assert.equal(err.reason, "onlyMember");
     }
+    try {
+      await voting.submitVote(dao.address, proposalId, 1, {
+        from: memberAddr,
+        gasPrice: toBN("0"),
+      });
+      assert.fail(
+        "should not be possible to vote on a proposal if the member has executed a full ragequit"
+      );
+    } catch (err) {
+      assert.equal(err.reason, "onlyMember");
+    }
+  });
 
-    await ragequitContract.burnShares(dao.address, memberAccount, 2, {
-      gasPrice: toBN("0"),
-    });
+  it("should not be possible to ragequit if the member have provided an invalid token", async () => {
+    const myAccount = accounts[1];
 
-    // member can vote again!
+    let dao = await createDao(myAccount);
+    const bankAddress = await dao.getExtensionAddress(sha3("bank"));
+    const bank = await BankExtension.at(bankAddress);
 
-    await onboarding.sponsorProposal(dao.address, proposalId, [], {
-      from: memberAccount,
-      gasPrice: toBN("0"),
-    });
+    // Check member shares
+    let shares = await bank.balanceOf(myAccount, SHARES);
+    assert.equal(shares.toString(), "1");
 
-    await voting.submitVote(dao.address, proposalId, 1, {
-      from: memberAccount,
-      gasPrice: toBN("0"),
-    });
-
-    const delegateKey = await dao.getCurrentDelegateKey(memberAccount);
-
-    assert.equal(memberAccount, delegateKey);
+    try {
+      //Ragequit - Attempts to ragequit using an invalid token to receive funds
+      let invalidToken = accounts[7];
+      await ragequit(dao, shares, 0, myAccount, invalidToken);
+      assert.fail(
+        "should not be possible to ragequit if the token is not allowed by the DAO"
+      );
+    } catch (err) {
+      assert.equal(err.reason, "token not allowed");
+    }
   });
 });
