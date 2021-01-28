@@ -10,13 +10,15 @@ The main goal is to give the members the freedom to choose when it is the best t
 
 ## Adapter workflow
 
-In order to opt out of the DAO, the member needs to indicate the amount of shares and/or loots that one have decided to burn (to convert back into a token value). Only members are allowed to opt out.
+In order to opt out of the DAO, the member needs to indicate the amount of shares and/or loots that one have decided to burn (to convert back into a token value).
 
 The proportional shares and/or loots are burned when the member provides the tokens in which one expects to receive the funds. The funds are deducted from the internal DAO bank balance, and added to the member's internal balance.
 
 If the member provides at least one invalid token, e.g: a token that is not supported/allowed by the DAO, the entire ragequit process is canceled/reverted. In addition to that, if the member provides a list of tokens that may cause issues due to the block size limit, it is expected that the transaction does not complete and return a failure.
 
 Once the process ragequit process is completed, the funds are deducted from the bank, and added to the member's internal balance, an event called `MemberRagequit` is emitted.
+
+It is important to mention that members that are in jail are not allowed to ragequit, and the function is open (without access modifier) because advisors should be able to ragequit - and advisor are not active members (shares > 0) because they only hold loot.
 
 ## Adapter configuration
 
