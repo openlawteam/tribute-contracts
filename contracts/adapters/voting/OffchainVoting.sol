@@ -349,20 +349,17 @@ contract OffchainVotingContract is
         VoteResultNode memory result
     ) external {
         Voting storage vote = votes[address(dao)][proposalId];
-        require(vote.snapshot > 0, "the vote has not started yet");
+        require(vote.snapshot > 0, "vote:not stsarted");
 
         if (vote.resultRoot == bytes32(0) || vote.isChallenged) {
             require(
                 _readyToSubmitResult(dao, vote, result.nbYes, result.nbNo),
-                "the voting period need to end or the difference between yes and no need to be more than 50% of the votes"
+                "vote:notReadyToSubmitResult"
             );
             _submitVoteResult(dao, vote, proposalId, result, resultRoot);
         } else {
             //TODO: we shouldnt' check nbYes + nbNo but rather the index (the number of voters)
-            require(
-                result.index > vote.index,
-                "to override a result, the sum of yes and no has to be greater than the current one"
-            );
+            require(result.index > vote.index, "vote:notEnoughSteps");
             _submitVoteResult(dao, vote, proposalId, result, resultRoot);
         }
     }
@@ -409,7 +406,7 @@ contract OffchainVotingContract is
         address voter = dao.getPriorDelegateKey(result.account, blockNumber);
         require(
             verify(resultRoot, hashCurrent, result.proof),
-            "result node & result merkle root / proof mismatch"
+            "vote:proof bad"
         );
         (address actionId, ) = dao.proposals(proposalId);
         require(
@@ -421,7 +418,7 @@ contract OffchainVotingContract is
                 result.proposalHash,
                 result.sig
             ) != 0,
-            "wrong vote signature!"
+            "vote:sig bad"
         );
 
         _lockFunds(dao, reporter);
@@ -449,6 +446,7 @@ contract OffchainVotingContract is
         bank.subtractFromBalance(memberAddr, LOOT, lootToLock);
     }
 
+    /*
     function _releaseFunds(DaoRegistry dao, address memberAddr) internal {
         uint256 lootToRelease = dao.getConfiguration(StakingAmount);
         //release if member has enough locked loot
@@ -462,7 +460,7 @@ contract OffchainVotingContract is
         // release loot
         bank.addToBalance(memberAddr, LOOT, lootToRelease);
         bank.subtractFromBalance(memberAddr, LOCKED_LOOT, lootToRelease);
-    }
+    }*/
 
     function _stringToUint(string memory s)
         internal
@@ -567,6 +565,7 @@ contract OffchainVotingContract is
         return 1;
     }
 
+    /*
     function challengeWrongSignature(
         DaoRegistry dao,
         bytes32 proposalId,
@@ -663,7 +662,7 @@ contract OffchainVotingContract is
         (address actionId, ) = dao.proposals(proposalId);
 
         _checkStep(dao, actionId, nodeCurrent, nodePrevious, proposalId);
-    }
+    }*/
 
     function requestFallback(DaoRegistry dao, bytes32 proposalId)
         external

@@ -132,6 +132,12 @@ async function addDefaultAdapters(
     onboarding,
     withdraw    
   } = await prepareAapters(deployer);
+  await configureDao(daoFactory, dao, ragequit, guildkick, managing, financing, onboarding, withdraw, voting, configuration, unitPrice, nbShares, votingPeriod, gracePeriod, tokenAddr, maxChunks);
+
+  return {dao};
+}
+
+async function configureDao(daoFactory, dao, ragequit, guildkick, managing, financing, onboarding, withdraw, voting, configuration, unitPrice, nbShares, votingPeriod, gracePeriod, tokenAddr, maxChunks) {
   await daoFactory.addAdapters(dao.address, [
     entryDao("voting", voting, {}),
     entryDao("configuration", configuration, {
@@ -230,8 +236,6 @@ async function addDefaultAdapters(
     tokenAddr
   );
   await voting.configureDao(dao.address, votingPeriod, gracePeriod);
-
-  return {dao};
 }
 
 async function deployDao(
@@ -244,6 +248,7 @@ async function deployDao(
   const gracePeriod = options.gracePeriod || 1;
   const tokenAddr = options.tokenAddr || ETH_TOKEN;
   const maxChunks = options.maximumChunks || maximumChunks;
+  const isOffchainVoting = !!options.offchainVoting;
 
   await deployer.deploy(DaoRegistry);
   
@@ -270,23 +275,27 @@ async function deployDao(
   );
 
   const votingAddress = await dao.getAdapterAddress(sha3("voting"));
-  const offchainVoting = await deployer.deploy(OffchainVotingContract, votingAddress, 1);
-  await daoFactory.updateAdapter(
-    dao.address,
-    entryDao("voting", offchainVoting, {
-      ADD_TO_BALANCE: true,
-      SUB_FROM_BALANCE: true,
-      INTERNAL_TRANSFER: true,
-    }));
-
-  await offchainVoting.configureDao(
-    dao.address,
-    votingPeriod,
-    gracePeriod,
-    10);
+  if(isOffchainVoting) {
+    const offchainVoting = await deployer.deploy(OffchainVotingContract, votingAddress, 1);
+    await daoFactory.updateAdapter(
+      dao.address,
+      entryDao("voting", offchainVoting, {
+        ADD_TO_BALANCE: true,
+        SUB_FROM_BALANCE: true,
+        INTERNAL_TRANSFER: true,
+      }));
+  
+    await offchainVoting.configureDao(
+      dao.address,
+      votingPeriod,
+      gracePeriod,
+      10);
+  }
   
   return dao;
 }
+
+let counter = 0;
 
 async function createDao(
   senderAccount,
@@ -297,38 +306,30 @@ async function createDao(
   tokenAddr = ETH_TOKEN,
   finalize = true
 ) {
-  const identityDao = await DaoRegistry.new({
-    from: senderAccount,
-    gasPrice: toBN("0"),
-  });
 
-  const identityBank = await BankExtension.new({
-    from: senderAccount,
-    gasPrice: toBN("0"),
-  });
+  const bankFactory = await BankFactory.deployed();
+  const daoFactory = await DaoFactory.deployed();
+  const daoName = "test-dao-" + (counter++)
+  await daoFactory.createDao(daoName, {from:senderAccount});
 
-  const bankFactory = await BankFactory.new(identityBank.address, {
-    from: senderAccount,
-    gasPrice: toBN("0"),
-  });
+  // checking the gas usaged to clone a contract
+  const daoAddress = await daoFactory.getDaoAddress(daoName);
 
-  const {dao, daoFactory} = await cloneDao(identityDao.address, senderAccount);
+  let dao = await DaoRegistry.at(daoAddress);
 
-  await bankFactory.createBank(dao.address, {
-    from: senderAccount,
-    gasPrice: toBN("0"),
-  });
-  
-  await addDefaultAdapters(
-    dao,
-    unitPrice,
-    nbShares,
-    votingPeriod,
-    gracePeriod,
-    tokenAddr,
-    maximumChunks,
-    daoFactory 
-  );
+  await bankFactory.createBank(dao.address, {from:senderAccount});
+
+  const voting = await VotingContract.deployed();
+  const configuration = await ConfigurationContract.deployed();
+  const ragequit = await RagequitContract.deployed();
+  const managing = await ManagingContract.deployed();
+  const financing = await FinancingContract.deployed();
+  const onboarding = await OnboardingContract.deployed();
+  const guildkick = await GuildKickContract.deployed();
+  const withdraw = await WithdrawContract.deployed();
+
+  await configureDao(daoFactory, dao, ragequit, guildkick, managing, financing, onboarding, withdraw, voting, configuration, unitPrice, nbShares, votingPeriod, gracePeriod, tokenAddr, maximumChunks);
+
   if(finalize) {
     await dao.finalizeDao();
   }
@@ -505,6 +506,7 @@ module.exports = {
   toBN,
   toWei,
   fromUtf8,
+  maximumChunks,
   GUILD,
   TOTAL,
   DAI_TOKEN,
@@ -526,5 +528,6 @@ module.exports = {
   WithdrawContract,
   ConfigurationContract,
   OnboardingContract,
+  OffchainVotingContract,
   BankExtension,
 };

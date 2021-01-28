@@ -55,11 +55,4 @@ contract BankFactory is CloneFactory, DaoConstants {
 
         emit BankCreated(daoAddr, bankAddr);
     }
-
-    function configureAdadpter(
-        DaoRegistry dao,
-        BankExtension bank,
-        address adapter,
-        uint256 acl
-    ) external {}
 }
