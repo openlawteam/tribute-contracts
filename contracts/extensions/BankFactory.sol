@@ -50,11 +50,4 @@ contract BankFactory is CloneFactory, DaoConstants {
         BankExtension bank = BankExtension(_createClone(identityAddress));
         dao.addExtension(BANK, bank, msg.sender);
     }
-
-    function configureAdadpter(
-        DaoRegistry dao,
-        BankExtension bank,
-        address adapter,
-        uint256 acl
-    ) external {}
 }
