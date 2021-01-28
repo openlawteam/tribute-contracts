@@ -32,7 +32,7 @@ In which currency (tokenAddr) should the onboarding take place
 
 ### {tokenAddrToMint}.onboarding.maximumChunks
 How many chunks can someone buy max. This helps force decentralization of token holders.
-## Aapter state
+## Adapter state
 Onboarding keeps track of every proposal that goes through it as well as the number of tokens that have been minted so far
 ### ProposalDetails
 For each proposal created through the adapter, we keep track of the following information
