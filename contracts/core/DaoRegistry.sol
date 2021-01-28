@@ -538,15 +538,15 @@ contract DaoRegistry is DaoConstants, AdapterGuard {
     {
         Proposal storage proposal = proposals[proposalId];
 
-        require(
-            proposal.adapterAddress == msg.sender,
-            "only the adapter that submitted the proposal can set its flag"
-        );
-
         uint256 flags = proposal.flags;
         require(
             getFlag(flags, uint8(ProposalFlag.EXISTS)),
             "proposal does not exist for this dao"
+        );
+
+        require(
+            proposal.adapterAddress == msg.sender,
+            "only the adapter that submitted the proposal can set its flag"
         );
 
         require(!getFlag(flags, uint8(flag)), "flag already set");

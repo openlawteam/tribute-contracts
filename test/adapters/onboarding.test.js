@@ -220,10 +220,7 @@ contract("LAOLAND - Onboarding Adapter", async (accounts) => {
         gasPrice: toBN("0"),
       });
     } catch (err) {
-      assert.equal(
-        err.reason,
-        "only the adapter that submitted the proposal can set its flag"
-      );
+      assert.equal(err.reason, "proposal does not exist for this dao");
     }
   });
 
@@ -366,10 +363,7 @@ contract("LAOLAND - Onboarding Adapter", async (accounts) => {
         gasPrice: toBN("0"),
       });
     } catch (err) {
-      assert.equal(
-        err.reason,
-        "only the adapter that submitted the proposal can set its flag"
-      );
+      assert.equal(err.reason, "proposal does not exist for this dao");
     }
   });
 });
