@@ -5,7 +5,7 @@ type Laoland @entity {
   totalShares: String
   createdAt: String
   initialized: Boolean
-  # bank: Bank!
+  bank: Bank
 }
 
 type Bank @entity {
@@ -15,16 +15,16 @@ type Bank @entity {
   balance: BigInt
   createdAt: String
   # totalShares: BigInt
-  # dao: Laoland!
+  laoland: Laoland!
 }
 
 type Token @entity {
   id: ID!
   tokenAddress: Bytes!
-  "TODO: pull in from etherscan"
-  ticker: String
+  symbol: String
   logo: String
-  details: String
+  decimals: String
+  whitelisted: Boolean
 }
 
 type TokenBalance @entity {
@@ -47,19 +47,17 @@ type Member @entity {
   # flags: BigInt!
   tokenBalances: [TokenBalance!] @derivedFrom(field: "member")
   jailed: Boolean!
-  DAO: Bytes
 }
 
 type Adapter @entity {
   id: ID!
   adapterAddress: Bytes!
-  acl: BigInt!
+  acl: BigInt! #access control layer
 }
 
 type Proposal @entity {
   id: ID!
   proposalId: Bytes!
-  # adapterAddress: Bytes!
   flags: BigInt!
   sponsoredAt: String
   sponsored: Boolean

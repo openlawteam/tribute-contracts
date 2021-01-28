@@ -118,6 +118,23 @@ export class Laoland extends Entity {
   set initialized(value: boolean) {
     this.set("initialized", Value.fromBoolean(value));
   }
+
+  get bank(): string | null {
+    let value = this.get("bank");
+    if (value === null || value.kind == ValueKind.NULL) {
+      return null;
+    } else {
+      return value.toString();
+    }
+  }
+
+  set bank(value: string | null) {
+    if (value === null) {
+      this.unset("bank");
+    } else {
+      this.set("bank", Value.fromString(value as string));
+    }
+  }
 }
 
 export class Bank extends Entity {
@@ -216,6 +233,15 @@ export class Bank extends Entity {
     } else {
       this.set("createdAt", Value.fromString(value as string));
     }
+  }
+
+  get laoland(): string {
+    let value = this.get("laoland");
+    return value.toString();
+  }
+
+  set laoland(value: string) {
+    this.set("laoland", Value.fromString(value));
   }
 }
 

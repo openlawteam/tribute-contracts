@@ -64,22 +64,30 @@ templates:
         - name: DaoRegistry
           file: ./build/contracts/DaoRegistry.json
       eventHandlers:
+        - event: SubmittedProposal(bytes32,uint256)
+          handler: handleSubmittedProposal
         - event: SponsoredProposal(bytes32,uint256)
           handler: handleSponsoredProposal
         - event: ProcessedProposal(bytes32,uint256)
           handler: handleProcessedProposal
-        - event: SubmittedProposal(bytes32,uint256)
-          handler: handleSubmittedProposal
         - event: AdapterAdded(bytes32,address,uint256)
           handler: handleAdapterAdded
         - event: AdapterRemoved(bytes32)
           handler: handleAdapterRemoved
+        - event: ExtensionAdded(bytes32,address)
+          handler: handleExtensionAdded
+        - event: ExtensionRemoved(bytes32)
+          handler: handleExtensionRemoved
         - event: UpdateDelegateKey(address,address)
           handler: handleUpdateDelegateKey
         - event: MemberJailed(address)
           handler: handleMemberJailed
         - event: MemberUnjailed(address)
           handler: handleMemberUnjailed
+        - event: ConfigurationUpdated(bytes32,uint256)
+          handler: handleConfigurationUpdated
+        - event: AddressConfigurationUpdated(bytes32,address)
+          handler: handleAddressConfigurationUpdated
       file: ./src/dao-registry-mapping.ts
 
   - kind: ethereum/contract

@@ -38,6 +38,9 @@ export function handleBankCreated(event: BankCreated): void {
   bank.daoAddress = event.params.daoAddress;
   bank.balance = BigInt.fromI32(0);
 
+  // create 1-to-1 relationship between the bank and its dao
+  bank.laoland = event.params.daoAddress.toHexString();
+
   BankExtension.create(event.params.daoAddress);
 
   bank.save();

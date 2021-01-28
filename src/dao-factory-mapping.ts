@@ -35,6 +35,9 @@ export function handleDaoCreated(event: DAOCreated): void {
   dao.initialized = true;
   dao.name = event.params._name;
 
+  // create 1-to-1 relationship between the dao and its bank
+  dao.bank = event.params._address.toHexString();
+
   DaoRegistry.create(event.params._address);
 
   dao.save();

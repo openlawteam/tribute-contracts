@@ -76,14 +76,6 @@ export function handleNewBalance(event: NewBalance): void {
   // get bank extension bindings
   let registry = BankExtension.bind(event.address);
 
-  // @todo test output only; remove
-  let memberDao = registry.try_dao();
-  if (memberDao.reverted) {
-    log.info("getBalanceOf member:DAO reverted", []);
-  } else {
-    member.DAO = memberDao.value;
-  }
-
   // get balanceOf member shares
   let callResultSHARES = registry.try_balanceOf(event.params.member, SHARES);
   if (callResultSHARES.reverted) {
@@ -117,17 +109,10 @@ export function handleNewBalance(event: NewBalance): void {
     log.info("getBalanceOf laoland:totalShares reverted", []);
   } else {
     if (dao !== null) {
-      // lao = new Laoland(daoAddress);
       dao.totalShares = callResultTotalShares.value.toString();
 
       dao.save();
     }
-    // if (lao == null) {
-    //   lao = new Laoland(daoAddress);
-    //   lao.totalShares = callResultTotalShares.value.toString();
-
-    //   lao.save();
-    // }
   }
 
   if (token == null) {

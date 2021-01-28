@@ -7,6 +7,10 @@ import {
   AdapterRemoved,
   MemberJailed,
   MemberUnjailed,
+  ExtensionAdded,
+  ExtensionRemoved,
+  ConfigurationUpdated,
+  AddressConfigurationUpdated,
 } from "../generated/templates/DaoRegistry/DaoRegistry";
 import { Proposal, Adapter, Member } from "../generated/schema";
 import { log, store } from "@graphprotocol/graph-ts";
@@ -153,4 +157,37 @@ export function handleMemberUnjailed(event: MemberUnjailed): void {
   ]);
 
   member.save();
+}
+
+export function handleExtensionAdded(event: ExtensionAdded): void {
+  log.info(
+    "**************** handleExtensionAdded event fired. extensionAddress {}, extensionId {}",
+    [
+      event.params.extensionAddress.toHexString(),
+      event.params.extensionId.toString(),
+    ]
+  );
+}
+
+export function handleExtensionRemoved(event: ExtensionRemoved): void {
+  log.info(
+    "**************** handleExtensionRemoved event fired. extensionId {}",
+    [event.params.extensionId.toString()]
+  );
+}
+
+export function handleConfigurationUpdated(event: ConfigurationUpdated): void {
+  log.info(
+    "**************** handleConfigurationUpdated event fired. key {}, value {}",
+    [event.params.key.toString(), event.params.value.toString()]
+  );
+}
+
+export function handleAddressConfigurationUpdated(
+  event: AddressConfigurationUpdated
+): void {
+  log.info(
+    "**************** handleAddressConfigurationUpdated event fired. key {}, value {}",
+    [event.params.key.toString(), event.params.value.toString()]
+  );
 }
