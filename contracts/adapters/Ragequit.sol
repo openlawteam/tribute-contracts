@@ -70,8 +70,11 @@ contract RagequitContract is IRagequit, DaoConstants, MemberGuard {
         // Checks if the are enough shares and/or loot to burn
         require(sharesToBurn + lootToBurn > 0, "insufficient shares/loot");
 
-        // Checks if the member is not in jail due to a Guild Kick
-        // isActiveMember?
+        // Checks if the member is not in jail
+        require(
+            !dao.getMemberFlag(msg.sender, DaoRegistry.MemberFlag.JAILED),
+            "jailed member can not ragequit"
+        );
 
         // Gets the delegated address, otherwise returns the sender address.
         address memberAddr = dao.getAddressIfDelegated(msg.sender);
