@@ -54,6 +54,8 @@ contract RagequitContract is IRagequit, DaoConstants, MemberGuard {
     /**
      * @notice Allows a member or advisor of the DAO to opt out by burning the proportional amount of shares/loot of the member.
      * @notice Anyone is allowed to call this function, but only members and advisor that have shares are able to execute the entire ragequit process.
+     * @dev The sum of sharesToBurn and lootToBurn have to be greater than zero.
+     * @dev The member can not be in jail to execute a ragequit.
      * @dev The member becomes an inative member of the DAO once all the shares/loot are burned.
      * @dev If the member provides an invalid/not allowed token, the entire processed is reverted.
      * @param dao The dao address that the member is part of.
