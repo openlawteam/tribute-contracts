@@ -19,7 +19,7 @@
     "@graphprotocol/graph-ts": "^0.18.1",
     "eth-gas-reporter": "^0.2.20",
     "prettier": "^2.1.2",
-    "prettier-plugin-solidity": "^1.0.0-beta.2",
+    "prettier-plugin-solidity": "^1.0.0-beta.3",
     "solhint": "^3.2.0",
     "solidity-coverage": "^0.7.10"
   },

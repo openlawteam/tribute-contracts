@@ -26,7 +26,6 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
  */
 library FairShareHelper {
-
     /**
      * @notice calculates the fair share amount based the total shares and current balance.
      */
@@ -40,8 +39,11 @@ library FairShareHelper {
             return 0;
         }
         uint256 prod;
-        unchecked { prod = balance * shares; } // prevents revert call on overflow
-        if (prod / balance == shares) { // checks against overflow
+        unchecked {
+            prod = balance * shares;
+        } // prevents revert call on overflow
+        if (prod / balance == shares) {
+            // checks against overflow
             return prod / _totalShares;
         }
         return (balance / _totalShares) * shares;
