@@ -119,6 +119,7 @@ contract DaoRegistry is DaoConstants, AdapterGuard {
      * PUBLIC VARIABLES
      */
     mapping(address => Member) public members; // the map to track all members of the DAO
+    address[] private _members;
 
     // delegate key => member address mapping
     mapping(address => address) public memberAddressesByDelegatedKey;
@@ -201,6 +202,7 @@ contract DaoRegistry is DaoConstants, AdapterGuard {
                 true
             );
             memberAddressesByDelegatedKey[memberAddress] = memberAddress;
+            _members.push(memberAddress);
         }
     }
 
@@ -463,9 +465,13 @@ contract DaoRegistry is DaoConstants, AdapterGuard {
      * @notice Submit proposals to the DAO registry
      */
     function submitProposal(bytes32 proposalId)
-        external
+        public
         hasAccess(this, AclFlag.SUBMIT_PROPOSAL)
     {
+        require(
+            !getProposalFlag(proposalId, ProposalFlag.EXISTS),
+            "proposalId must be unique"
+        );
         proposals[proposalId] = Proposal(msg.sender, 1);
         emit SubmittedProposal(proposalId, 1);
     }
@@ -532,15 +538,15 @@ contract DaoRegistry is DaoConstants, AdapterGuard {
     {
         Proposal storage proposal = proposals[proposalId];
 
-        require(
-            proposal.adapterAddress == msg.sender,
-            "only the adapter that submitted the proposal can set its flag"
-        );
-
         uint256 flags = proposal.flags;
         require(
             getFlag(flags, uint8(ProposalFlag.EXISTS)),
             "proposal does not exist for this dao"
+        );
+
+        require(
+            proposal.adapterAddress == msg.sender,
+            "only the adapter that submitted the proposal can set its flag"
         );
 
         require(!getFlag(flags, uint8(flag)), "flag already set");
@@ -579,11 +585,32 @@ contract DaoRegistry is DaoConstants, AdapterGuard {
      * @param flag The flag to check in the proposal
      */
     function getProposalFlag(bytes32 proposalId, ProposalFlag flag)
-        external
+        public
         view
         returns (bool)
     {
         return getFlag(proposals[proposalId].flags, uint8(flag));
+    }
+
+    /**
+     * @return Whether or not a flag is set for a given member
+     * @param memberAddress The member to check against flag
+     * @param flag The flag to check in the member
+     */
+    function getMemberFlag(address memberAddress, MemberFlag flag)
+        external
+        view
+        returns (bool)
+    {
+        return getFlag(members[memberAddress].flags, uint8(flag));
+    }
+
+    function getNbMember() public view returns (uint256) {
+        return _members.length;
+    }
+
+    function getMemberAddress(uint256 index) public view returns (address) {
+        return _members[index];
     }
 
     /**

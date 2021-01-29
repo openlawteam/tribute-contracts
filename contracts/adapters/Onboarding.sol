@@ -277,15 +277,10 @@ contract OnboardingContract is
         bytes32 proposalId,
         bytes calldata data
     ) external override onlyMember(dao) {
-        require(
-            proposals[address(dao)][proposalId].id == proposalId,
-            "proposal does not exist"
-        );
+        dao.sponsorProposal(proposalId, msg.sender);
 
         IVoting votingContract = IVoting(dao.getAdapterAddress(VOTING));
         votingContract.startNewVotingForProposal(dao, proposalId, data);
-
-        dao.sponsorProposal(proposalId, msg.sender);
     }
 
     function cancelProposal(DaoRegistry dao, bytes32 proposalId)
@@ -393,6 +388,11 @@ contract OnboardingContract is
         require(
             bank.isInternalToken(tokenToMint),
             "it can only mint internal tokens"
+        );
+
+        require(
+            !dao.getMemberFlag(memberAddr, DaoRegistry.MemberFlag.JAILED),
+            "cannot process jailed member"
         );
 
         dao.potentialNewMember(memberAddr);
