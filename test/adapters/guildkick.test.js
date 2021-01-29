@@ -1296,7 +1296,6 @@ contract("LAOLAND - GuildKick Adapter", async (accounts) => {
     );
 
     //Vote YES on kick proposal
-    console.log("kick proposal id " + kickProposalId);
     await voting.submitVote(dao.address, kickProposalId, 1, {
       from: member,
       gasPrice: toBN("0"),

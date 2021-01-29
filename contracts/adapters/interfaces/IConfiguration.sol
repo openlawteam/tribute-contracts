@@ -33,8 +33,7 @@ interface IConfiguration {
         DaoRegistry dao,
         bytes32 proposalId,
         bytes32[] calldata keys,
-        uint256[] calldata values,
-        bytes calldata data
+        uint256[] calldata values
     ) external;
 
     function sponsorProposal(
