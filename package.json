@@ -11,7 +11,7 @@
     "ethereumjs-util": "^7.0.5",
     "ganache-cli": "^6.12.1",
     "keccak256": "^1.0.0",
-    "truffle": "^5.1.60",
+    "truffle": "^5.1.63",
     "web3-utils": "^1.3.1"
   },
   "devDependencies": {
@@ -20,8 +20,8 @@
     "eth-gas-reporter": "^0.2.20",
     "prettier": "^2.1.2",
     "prettier-plugin-solidity": "^1.0.0-beta.3",
-    "solhint": "^3.2.0",
-    "solidity-coverage": "^0.7.10"
+    "solhint": "^3.3.2",
+    "solidity-coverage": "^0.7.14"
   },
   "scripts": {
     "test": "truffle test",
