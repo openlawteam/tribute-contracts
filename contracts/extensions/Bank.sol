@@ -182,7 +182,7 @@ contract BankExtension is DaoConstants, AdapterGuard, IExtension {
         hasExtensionAccess(this, AclFlag.REGISTER_NEW_INTERNAL_TOKEN)
     {
         require(isNotReservedAddress(token), "reservedToken");
-        require(!availableTokens[token], "internalToken");
+        require(!availableTokens[token], "availableToken");
         if (!availableInternalTokens[token]) {
             availableInternalTokens[token] = true;
             internalTokens.push(token);
