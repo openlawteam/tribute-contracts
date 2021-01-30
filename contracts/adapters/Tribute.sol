@@ -67,7 +67,15 @@ contract TributeContract is ITribute, DaoConstants, MemberGuard, AdapterGuard {
         uint256 tributeAmount,
         bytes calldata data
     ) external {
-        provideTribute(dao, proposalId, applicant, tokenToMint, requestAmount, tokenAddr, tributeAmount);
+        provideTribute(
+            dao,
+            proposalId,
+            applicant,
+            tokenToMint,
+            requestAmount,
+            tokenAddr,
+            tributeAmount
+        );
 
         IVoting votingContract = IVoting(dao.getAdapterAddress(VOTING));
         try
