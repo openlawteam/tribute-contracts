@@ -29,13 +29,15 @@ SOFTWARE.
  */
 
 interface ITribute {
-    function submitTributeProposal(
+    function provideTribute(
         DaoRegistry dao,
         bytes32 proposalId,
-        address payable applicant,
+        address applicant,
         address tokenToMint,
-        uint256 tokenAmount
-    ) external payable;
+        uint256 requestAmount,
+        address tokenAddr,
+        uint256 tributeAmount
+    ) external;
 
     function sponsorProposal(
         DaoRegistry dao,
