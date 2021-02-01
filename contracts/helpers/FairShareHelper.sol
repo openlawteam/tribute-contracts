@@ -43,7 +43,6 @@ library FairShareHelper {
             prod = balance * shares;
         } // prevents revert call on overflow
         if (prod / balance == shares) {
-            // checks against overflow
             return prod / _totalShares;
         }
         return (balance / _totalShares) * shares;
