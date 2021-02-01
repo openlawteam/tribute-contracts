@@ -147,279 +147,46 @@ Checks that the adapter that sponsors the proposal is the one that submitted it
 Checks that it has not been processed yet
 Checks that the member sponsoring it is an active member
 
-    /**
-     * @notice Mark a proposal as processed in the DAO registry
-     * @param proposalId The ID of the proposal that is being processed
-     */
 ### function processProposal(bytes32 proposalId)
-    {
-        Proposal storage proposal =
-            _setProposalFlag(proposalId, ProposalFlag.PROCESSED);
-        uint256 flags = proposal.flags;
+Marks an existing proposal as processed
+Checks that the proposal has not been processed already and that it exists
 
-        emit ProcessedProposal(proposalId, flags);
-    }
+### function _setProposalFlag(bytes32 proposalId, ProposalFlag flag)
+internal utility function to set a flag to a proposal.
+It checks that the proposal exists and that the flag ahs not been already set
+### function isActiveMember(address addr) public view returns (bool)
+returns true if the address is the delegate key of an existing member and that the member is not jailed
+### function getProposalFlag(bytes32 proposalId, ProposalFlag flag) returns (bool)
+Helper function to get the flag value for a proposal
+### function getMemberFlag(address memberAddress, MemberFlag flag) returns (bool)
+Helper function to get the flag value for a member
 
-    /**
-     * @notice Sets a flag of a proposal
-     * @dev Reverts if the proposal is already processed
-     * @param proposalId The ID of the proposal to be changed
-     * @param flag The flag that will be set on the proposal
-     */
-### function _setProposalFlag(bytes32 proposalId, ProposalFlag flag)     
-    {
-        Proposal storage proposal = proposals[proposalId];
+### function getNbMember() public view returns (uint256) 
+return how many members have been registered in the DAO
 
-        uint256 flags = proposal.flags;
-        require(
-            getFlag(flags, uint8(ProposalFlag.EXISTS)),
-            "proposal does not exist for this dao"
-        );
-
-        require(
-            proposal.adapterAddress == msg.sender,
-            "only the adapter that submitted the proposal can set its flag"
-        );
-
-        require(!getFlag(flags, uint8(flag)), "flag already set");
-
-        require(
-            !getFlag(flags, uint8(ProposalFlag.PROCESSED)),
-            "proposal already processed"
-        );
-        flags = setFlag(flags, uint8(flag), true);
-        proposals[proposalId].flags = flags;
-
-        return proposals[proposalId];
-    }
-
-    /*
-     * MEMBERS
-     */
-
-    /**
-     * @return Whether or not a given address is an active member of the DAO
-     * @dev Requires the user to not be jailed and have a positive balance in either
-     *      SHARES, LOOT or LOCKED_LOOT
-     * @param addr The address to look up
-     */
-### function isActiveMember(address addr) public view returns (bool) {
-        address memberAddr = memberAddressesByDelegatedKey[addr];
-        uint256 memberFlags = members[memberAddr].flags;
-        return
-            getFlag(memberFlags, uint8(MemberFlag.EXISTS)) &&
-            !getFlag(memberFlags, uint8(MemberFlag.JAILED));
-    }
-
-    /**
-     * @return Whether or not a flag is set for a given proposal
-     * @param proposalId The proposal to check against flag
-     * @param flag The flag to check in the proposal
-     */
-### function getProposalFlag(bytes32 proposalId, ProposalFlag flag)
-        public
-        view
-        returns (bool)
-    {
-        return getFlag(proposals[proposalId].flags, uint8(flag));
-    }
-
-    /**
-     * @return Whether or not a flag is set for a given member
-     * @param memberAddress The member to check against flag
-     * @param flag The flag to check in the member
-     */
-### function getMemberFlag(address memberAddress, MemberFlag flag)
-        external
-        view
-        returns (bool)
-    {
-        return getFlag(members[memberAddress].flags, uint8(flag));
-    }
-
-### function getNbMember() public view returns (uint256) {
-        return _members.length;
-    }
-
-### function getMemberAddress(uint256 index) public view returns (address) {
-        return _members[index];
-    }
-
-    /**
-     * @notice Updates the delegate key of a member
-     * @param memberAddr The member doing the delegation
-     * @param newDelegateKey The member who is being delegated to
-     */
+### function getMemberAddress(uint256 index) public view returns (address) 
+get an address at a certain index in the members list
 ### function updateDelegateKey(address memberAddr, address newDelegateKey) 
-    {
-        require(newDelegateKey != address(0), "newDelegateKey cannot be 0");
+Updates the delegate key of a certain member.
+It checks that the delegate key is not being used by another member and is not the address of an existing member.
+It also checks that the member exists
 
-        // skip checks if member is setting the delegate key to their member address
-        if (newDelegateKey != memberAddr) {
-            require(
-                // newDelegate must not be delegated to
-                memberAddressesByDelegatedKey[newDelegateKey] == address(0x0),
-                "cannot overwrite existing members"
-            );
-        }
+If it all checks out, the delegate key is being updated and a elegate key checkpoint is created
 
-        Member storage member = members[memberAddr];
-        require(
-            getFlag(member.flags, uint8(MemberFlag.EXISTS)),
-            "member does not exist"
-        );
-
-        // Reset the delegation of the previous delegate
-        memberAddressesByDelegatedKey[
-            getCurrentDelegateKey(memberAddr)
-        ] = address(0x0);
-
-        memberAddressesByDelegatedKey[newDelegateKey] = memberAddr;
-
-        _createNewDelegateCheckpoint(memberAddr, newDelegateKey);
-        emit UpdateDelegateKey(memberAddr, newDelegateKey);
-    }
-
-    /**
-     * Public read-only functions
-     */
-
-    /**
-     * @return Whether or not a given address is reserved
-     * @dev Returns false if applicant address is one of the constants GUILD or TOTAL
-     * @param applicant The address to check
-     */
 ### function isNotReservedAddress(address applicant)
-    {
-        return applicant != GUILD && applicant != TOTAL;
-    }
+make sure that the addres is not reserved (not TOTAL or GUILD)
 
-    /**
-     * @param checkAddr The address to check for a delegate
-     * @return the delegated address or the checked address if it is not a delegate
-     */
 ### function getAddressIfDelegated(address checkAddr)
-        public
-        view
-        returns (address)
-    {
-        address delegatedKey = memberAddressesByDelegatedKey[checkAddr];
-        return delegatedKey == address(0x0) ? checkAddr : delegatedKey;
-    }
+returns the member address if the address is used as a delegate key or the address itself if it is not.
+    
+### function getCurrentDelegateKey(address memberAddr) returns (address)
+returns the current delegate key for a member address
 
-    /**
-     * @param memberAddr The member whose delegate will be returned
-     * @return the delegate key at the current time for a member
-     */
-### function getCurrentDelegateKey(address memberAddr)    
-        returns (address)
-    {
-        uint32 nCheckpoints = numCheckpoints[memberAddr];
-        return
-            nCheckpoints > 0
-                ? checkpoints[memberAddr][nCheckpoints - 1].delegateKey
-                : memberAddr;
-    }
+### function getPreviousDelegateKey(address memberAddr) returns (address)
+returns the previous delegate key for a member address. It is used to prepare the checkpoint
+### function getPriorDelegateKey(address memberAddr, uint256 blockNumber) returns (address)
+return the delegate key for a member at a certain block number
+If none are found, the memberAddr is returned instead.
 
-    /**
-     * @param memberAddr The member address to look up
-     * @return The delegate key address for memberAddr at the second last checkpoint number
-     */
-### function getPreviousDelegateKey(address memberAddr)
-        public
-        view
-        returns (address)
-    {
-        uint32 nCheckpoints = numCheckpoints[memberAddr];
-        return
-            nCheckpoints > 1
-                ? checkpoints[memberAddr][nCheckpoints - 2].delegateKey
-                : memberAddr;
-    }
-
-    /**
-     * @notice Determine the prior number of votes for an account as of a block number
-     * @dev Block number must be a finalized block or else this function will revert to prevent misinformation.
-     * @param memberAddr The address of the account to check
-     * @param blockNumber The block number to get the vote balance at
-     * @return The number of votes the account had as of the given block
-     */
-### function getPriorDelegateKey(address memberAddr, uint256 blockNumber)
-        returns (address)
-    {
-        require(
-            blockNumber < block.number,
-            "Uni::getPriorDelegateKey: not yet determined"
-        );
-
-        uint32 nCheckpoints = numCheckpoints[memberAddr];
-        if (nCheckpoints == 0) {
-            return memberAddr;
-        }
-
-        // First check most recent balance
-        if (
-            checkpoints[memberAddr][nCheckpoints - 1].fromBlock <= blockNumber
-        ) {
-            return checkpoints[memberAddr][nCheckpoints - 1].delegateKey;
-        }
-
-        // Next check implicit zero balance
-        if (checkpoints[memberAddr][0].fromBlock > blockNumber) {
-            return memberAddr;
-        }
-
-        uint32 lower = 0;
-        uint32 upper = nCheckpoints - 1;
-        while (upper > lower) {
-            uint32 center = upper - (upper - lower) / 2; // ceil, avoiding overflow
-            DelegateCheckpoint memory cp = checkpoints[memberAddr][center];
-            if (cp.fromBlock == blockNumber) {
-                return cp.delegateKey;
-            } else if (cp.fromBlock < blockNumber) {
-                lower = center;
-            } else {
-                upper = center - 1;
-            }
-        }
-        return checkpoints[memberAddr][lower].delegateKey;
-    }
-
-    /**
-     * @notice Creates a new delegate checkpoint of a certain member
-     * @param member The member whose delegate checkpoints will be added to
-     * @param newDelegateKey The delegate key that will be written into the new checkpoint
-     */
-### function _createNewDelegateCheckpoint(
-        address member,
-        address newDelegateKey
-    ) internal {
-        uint32 srcRepNum = numCheckpoints[member];
-        _writeDelegateCheckpoint(member, srcRepNum, newDelegateKey);
-    }
-
-    /**
-     * @notice Writes to a delegate checkpoint of a certain checkpoint number
-     * @dev Creates a new checkpoint if there is not yet one of the given number
-     * @param member The member whose delegate checkpoints will overwritten
-     * @param nCheckpoints The number of the checkpoint to overwrite
-     * @param newDelegateKey The delegate key that will be written into the checkpoint
-     */
-### function _writeDelegateCheckpoint(
-        address member,
-        uint32 nCheckpoints,
-        address newDelegateKey
-    ) internal {
-        if (
-            nCheckpoints > 0 &&
-            checkpoints[member][nCheckpoints - 1].fromBlock == block.number
-        ) {
-            checkpoints[member][nCheckpoints - 1].delegateKey = newDelegateKey;
-        } else {
-            checkpoints[member][nCheckpoints] = DelegateCheckpoint(
-                uint96(block.number),
-                newDelegateKey
-            );
-            numCheckpoints[member] = nCheckpoints + 1;
-        }
-    }
+### function _createNewDelegateCheckpoint( address member, address newDelegateKey) internal
+Writes a new checkpoint for a specific member

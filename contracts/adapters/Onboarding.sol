@@ -296,7 +296,10 @@ contract OnboardingContract is
         );
         ProposalDetails storage proposal = proposals[address(dao)][proposalId];
 
-        require(proposal.proposer == msg.sender, "only proposer can cancel a proposal");
+        require(
+            proposal.proposer == msg.sender,
+            "only proposer can cancel a proposal"
+        );
 
         dao.processProposal(proposalId);
 

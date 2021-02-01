@@ -156,9 +156,7 @@ contract("LAOLAND - Non Voting Onboarding Adapter", async (accounts) => {
         }
       );
       assert.equal(true, false, "should have failed!");
-    } catch (err) {
-      
-    }
+    } catch (err) {}
 
     await oltContract.approve(onboarding.address, tokenAmount, {
       from: advisorAccount,
