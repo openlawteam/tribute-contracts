@@ -62,12 +62,14 @@ contract("LAOLAND - Coupon Onboarding Adapter", async (accounts) => {
     const couponOnboarding = await getContract(dao, "coupon-onboarding", CouponOnboardingContract);
 
     const couponData = {
+      type: "coupon",
       authorizedMember: otherAccount,
       amount: 10,
       nonce: 1
     };
 
-    var signature = signerUtil(couponData, dao.address, onboarding.address, chainId);
+    var signature = signerUtil(couponData, dao.address, couponOnboarding.address, 1);
+    console.log("signature:", signature);
 
     await couponOnboarding.redeemCoupon(dao.address, otherAccount, 10, 1, signature);
 

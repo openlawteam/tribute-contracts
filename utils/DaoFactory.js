@@ -101,7 +101,7 @@ async function prepareAdapters(deployer) {
     onboarding = await OnboardingContract.new();
     guildkick = await GuildKickContract.new();
     withdraw = await WithdrawContract.new();
-    couponOnboarding = await CouponOnboardingContract.new();
+    couponOnboarding = await CouponOnboardingContract.new(1);
   }
 
   return {
@@ -568,5 +568,6 @@ module.exports = {
   OnboardingContract,
   OffchainVotingContract,
   BankExtension,
-  OnboardingContract
+  OnboardingContract,
+  CouponOnboardingContract
 };
