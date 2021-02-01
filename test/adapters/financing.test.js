@@ -417,6 +417,36 @@ contract("LAOLAND - Financing Adapter", async (accounts) => {
     }
   });
 
+  it("should not be possible to sponsor proposal more than once", async () => {
+    let dao = await createDao(myAccount);
+    const financing = await getContract(dao, "financing", FinancingContract);
+
+    let proposalId = "0x1";
+    await financing.createFinancingRequest(
+      dao.address,
+      proposalId,
+      applicant,
+      ETH_TOKEN,
+      toBN(50000),
+      fromUtf8(""),
+      { gasPrice: toBN("0") }
+    );
+
+    await financing.sponsorProposal(dao.address, proposalId, fromUtf8(""), {
+      from: myAccount,
+      gasPrice: toBN("0"),
+    });
+
+    try {
+      await financing.sponsorProposal(dao.address, proposalId, fromUtf8(""), {
+        from: myAccount,
+        gasPrice: toBN("0"),
+      });
+    } catch (err) {
+      assert.equal(err.reason, "flag already set");
+    }
+  });
+
   it("should not be possible to process a proposal that does not exist", async () => {
     let dao = await createDao(myAccount);
     const financing = await getContract(dao, "financing", FinancingContract);
