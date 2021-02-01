@@ -102,6 +102,10 @@ async function createOffchainVotingDao(
     offchainVoting.address,
     entryDao("voting", dao, offchainVoting, {}).flags
   );
+
+  const bank = await BankExtension.at(bankAddress);
+
+  await bank.addToBalance(members[0].address, SHARES, 1);
   await dao.setAclToExtensionForAdapter(
     bankAddress,
     offchainVoting.address,
@@ -120,7 +124,6 @@ async function createOffchainVotingDao(
     { from: senderAccount, gasPrice: toBN("0") }
   );
   await dao.finalizeDao({ from: senderAccount, gasPrice: toBN("0") });
-  const bank = await BankExtension.at(bankAddress);
 
   return { dao, voting: offchainVoting, bank };
 }
