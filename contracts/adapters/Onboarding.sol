@@ -372,10 +372,7 @@ contract OnboardingContract is
             proposer.transfer(amount);
         } else {
             IERC20 token = IERC20(tokenAddr);
-            require(
-                token.safeTransferFrom(address(this), proposer, amount),
-                "ERC20 failed transferFrom"
-            );
+            token.safeTransferFrom(address(this), proposer, amount);
         }
     }
 
