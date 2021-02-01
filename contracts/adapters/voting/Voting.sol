@@ -99,8 +99,8 @@ contract VotingContract is IVoting, DaoConstants, MemberGuard, AdapterGuard {
         );
 
         require(
-            voteValue < 3,
-            "only blank (0), yes (1) and no (2) are possible values"
+            voteValue < 3 && voteValue > 0,
+            "only yes (1) and no (2) are possible values"
         );
 
         Voting storage vote = votes[address(dao)][proposalId];
