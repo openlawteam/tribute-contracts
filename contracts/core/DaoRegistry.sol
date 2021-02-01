@@ -5,6 +5,7 @@ pragma solidity ^0.8.0;
 import "./DaoConstants.sol";
 
 import "../guards/AdapterGuard.sol";
+import "../guards/MemberGuard.sol";
 import "../extensions/IExtension.sol";
 
 /**
@@ -31,7 +32,7 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
  */
 
-contract DaoRegistry is DaoConstants, AdapterGuard {
+contract DaoRegistry is MemberGuard, AdapterGuard {
     bool public initialized = false; // internally tracks deployment under eip-1167 proxy pattern
 
     enum DaoState {CREATION, READY}
@@ -393,6 +394,7 @@ contract DaoRegistry is DaoConstants, AdapterGuard {
         view
         returns (address)
     {
+        require(adapters[adapterId] != address(0), "adapter not found");
         return adapters[adapterId];
     }
 
@@ -472,7 +474,7 @@ contract DaoRegistry is DaoConstants, AdapterGuard {
             !getProposalFlag(proposalId, ProposalFlag.EXISTS),
             "proposalId must be unique"
         );
-        proposals[proposalId] = Proposal(msg.sender, 1);
+        proposals[proposalId] = Proposal(msg.sender, 1); // 1 means that only the first flag is being set i.e. EXISTS
         emit SubmittedProposal(proposalId, 1);
     }
 
@@ -485,6 +487,7 @@ contract DaoRegistry is DaoConstants, AdapterGuard {
     function sponsorProposal(bytes32 proposalId, address sponsoringMember)
         external
         hasAccess(this, AclFlag.SPONSOR_PROPOSAL)
+        onlyMember2(this, sponsoringMember)
     {
         Proposal storage proposal =
             _setProposalFlag(proposalId, ProposalFlag.SPONSORED);
@@ -495,17 +498,10 @@ contract DaoRegistry is DaoConstants, AdapterGuard {
             proposal.adapterAddress == msg.sender,
             "only the adapter that submitted the proposal can process it"
         );
-        require(
-            getFlag(flags, uint8(ProposalFlag.EXISTS)),
-            "proposal does not exist"
-        );
+
         require(
             !getFlag(flags, uint8(ProposalFlag.PROCESSED)),
-            "proposal must not be processed"
-        );
-        require(
-            isActiveMember(sponsoringMember),
-            "only active members can sponsor proposals"
+            "proposal already processed"
         );
 
         emit SponsoredProposal(proposalId, flags);
@@ -551,10 +547,6 @@ contract DaoRegistry is DaoConstants, AdapterGuard {
 
         require(!getFlag(flags, uint8(flag)), "flag already set");
 
-        require(
-            !getFlag(flags, uint8(ProposalFlag.PROCESSED)),
-            "proposal already processed"
-        );
         flags = setFlag(flags, uint8(flag), true);
         proposals[proposalId].flags = flags;
 
@@ -771,22 +763,7 @@ contract DaoRegistry is DaoConstants, AdapterGuard {
         address member,
         address newDelegateKey
     ) internal {
-        uint32 srcRepNum = numCheckpoints[member];
-        _writeDelegateCheckpoint(member, srcRepNum, newDelegateKey);
-    }
-
-    /**
-     * @notice Writes to a delegate checkpoint of a certain checkpoint number
-     * @dev Creates a new checkpoint if there is not yet one of the given number
-     * @param member The member whose delegate checkpoints will overwritten
-     * @param nCheckpoints The number of the checkpoint to overwrite
-     * @param newDelegateKey The delegate key that will be written into the checkpoint
-     */
-    function _writeDelegateCheckpoint(
-        address member,
-        uint32 nCheckpoints,
-        address newDelegateKey
-    ) internal {
+        uint32 nCheckpoints = numCheckpoints[member];
         if (
             nCheckpoints > 0 &&
             checkpoints[member][nCheckpoints - 1].fromBlock == block.number

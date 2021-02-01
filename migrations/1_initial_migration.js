@@ -5,17 +5,10 @@ const toWei = Web3Utils.toWei;
 
 const {
   deployDao,
-  sha3,
   ETH_TOKEN,
-  votingPeriod,
   maximumChunks,
   sharePrice,
-  numberOfShares,
-  gracePeriod,
-  VotingContract,
-  OffchainVotingContract,
-  entryDao,
-  DaoFactory
+  numberOfShares
 } = require("../utils/DaoFactory.js");
 
 module.exports = async function(deployer, network) {
@@ -29,7 +22,8 @@ module.exports = async function(deployer, network) {
       tokenAddr: ETH_TOKEN,
       maximumChunks: toBN("100000"),
       votingPeriod: 60, //in seconds
-      gracePeriod: 60 // in seconds
+      gracePeriod: 60, // in seconds
+      offchainVoting: true
     });
   } else if (network === 'test' || network === 'coverage') {
     dao = await deployDao(deployer, {
