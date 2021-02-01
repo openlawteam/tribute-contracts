@@ -1,12 +1,13 @@
 ## Adapter description and scope
-
+This adapter manages on chain "simple" voting
 ## Adapter workflow
 
 ## Adapter configuration
-
+bytes32 constant VotingPeriod = keccak256("voting.votingPeriod");
+    bytes32 constant GracePeriod = keccak256("voting.gracePeriod");
 ## Functions description, assumptions, checks, dependencies, interactions and access control
+    mapping(address => mapping(bytes32 => Voting)) public votes;
 
-contract VotingContract is IVoting, DaoConstants, MemberGuard, AdapterGuard {
     struct Voting {
         uint256 nbYes;
         uint256 nbNo;
@@ -15,10 +16,6 @@ contract VotingContract is IVoting, DaoConstants, MemberGuard, AdapterGuard {
         mapping(address => uint256) votes;
     }
 
-    bytes32 constant VotingPeriod = keccak256("voting.votingPeriod");
-    bytes32 constant GracePeriod = keccak256("voting.gracePeriod");
-
-    mapping(address => mapping(bytes32 => Voting)) public votes;
 
     function configureDao(
         DaoRegistry dao,
@@ -107,11 +104,6 @@ contract VotingContract is IVoting, DaoConstants, MemberGuard, AdapterGuard {
     //Public Functions
     /**
     possible results here:
-    0: has not started
-    1: tie
-    2: pass
-    3: not pass
-    4: in progress
      */
     function voteResult(DaoRegistry dao, bytes32 proposalId)
         external

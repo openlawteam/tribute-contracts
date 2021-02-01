@@ -99,22 +99,8 @@ contract ManagingContract is IManaging, DaoConstants, MemberGuard {
     function processProposal(DaoRegistry dao, bytes32 proposalId)
         external
         override
-        onlyMember(dao)
     {
         ProposalDetails memory proposal = proposals[address(dao)][proposalId];
-
-        require(
-            !dao.getProposalFlag(
-                proposalId,
-                DaoRegistry.ProposalFlag.PROCESSED
-            ),
-            "proposal already processed"
-        );
-
-        require(
-            dao.getProposalFlag(proposalId, DaoRegistry.ProposalFlag.SPONSORED),
-            "proposal not sponsored yet"
-        );
 
         IVoting votingContract = IVoting(dao.getAdapterAddress(VOTING));
         require(
@@ -123,6 +109,7 @@ contract ManagingContract is IManaging, DaoConstants, MemberGuard {
             "proposal did not pass"
         );
 
+        dao.processProposal(proposalId);
         if (dao.getAdapterAddress(proposal.moduleId) != address(0x0)) {
             dao.removeAdapter(proposal.moduleId);
         }
@@ -138,6 +125,5 @@ contract ManagingContract is IManaging, DaoConstants, MemberGuard {
             proposal.moduleAddress,
             proposal.flags
         );
-        dao.processProposal(proposalId);
     }
 }

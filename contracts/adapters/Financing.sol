@@ -89,21 +89,8 @@ contract FinancingContract is IFinancing, DaoConstants, MemberGuard {
     function processProposal(DaoRegistry dao, bytes32 proposalId)
         external
         override
-        onlyMember(dao)
     {
         ProposalDetails memory details = proposals[address(dao)][proposalId];
-
-        require(
-            !dao.getProposalFlag(
-                proposalId,
-                DaoRegistry.ProposalFlag.PROCESSED
-            ),
-            "proposal already processed"
-        );
-        require(
-            dao.getProposalFlag(proposalId, DaoRegistry.ProposalFlag.SPONSORED),
-            "proposal not sponsored yet"
-        );
 
         IVoting votingContract = IVoting(dao.getAdapterAddress(VOTING));
         require(
@@ -111,11 +98,10 @@ contract FinancingContract is IFinancing, DaoConstants, MemberGuard {
                 IVoting.VotingState.PASS,
             "proposal needs to pass"
         );
-
+        dao.processProposal(proposalId);
         BankExtension bank = BankExtension(dao.getExtensionAddress(BANK));
 
         bank.subtractFromBalance(GUILD, details.token, details.amount);
         bank.addToBalance(details.applicant, details.token, details.amount);
-        dao.processProposal(proposalId);
     }
 }

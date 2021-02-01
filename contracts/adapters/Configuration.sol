@@ -83,7 +83,6 @@ contract ConfigurationContract is IConfiguration, DaoConstants, MemberGuard {
     function processProposal(DaoRegistry dao, bytes32 proposalId)
         external
         override
-        onlyMember(dao)
     {
         Configuration storage configuration =
             configurations[address(dao)][proposalId];
@@ -92,11 +91,6 @@ contract ConfigurationContract is IConfiguration, DaoConstants, MemberGuard {
         require(
             configuration.status == ConfigurationStatus.IN_PROGRESS,
             "reconfiguration already completed or does not exist"
-        );
-
-        require(
-            dao.getProposalFlag(proposalId, DaoRegistry.ProposalFlag.SPONSORED),
-            "proposal not sponsored yet"
         );
 
         IVoting votingContract = IVoting(dao.getAdapterAddress(VOTING));

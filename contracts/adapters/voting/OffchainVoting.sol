@@ -498,7 +498,6 @@ contract OffchainVotingContract is
         bytes32 proposalId,
         bytes memory data
     ) public override onlyAdapter(dao) {
-        // it is called from Registry
         ProposalMessage memory proposal = abi.decode(data, (ProposalMessage));
         (bool success, uint256 blockNumber) =
             _stringToUint(proposal.payload.snapshot);
