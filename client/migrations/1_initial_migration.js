@@ -77,7 +77,7 @@ module.exports = async (deployer, network, accounts) => {
       contracts.adapters.onboarding = onboarding.address;
     });
 
-    await deployer
+  await deployer
     .deploy(TributeContract, { from: owner })
     .then((tribute) => {
       contracts.adapters.tribute = tribute.address;
