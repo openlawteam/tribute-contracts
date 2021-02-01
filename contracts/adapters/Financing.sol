@@ -35,21 +35,34 @@ SOFTWARE.
 
 contract FinancingContract is IFinancing, DaoConstants, MemberGuard {
     struct ProposalDetails {
-        address applicant;
-        uint256 amount;
-        address token;
-        bytes32 details;
+        address applicant; // the proposal applicant address, can not be a reserver address
+        uint256 amount; // the amount requested for funding
+        address token; // the token address in which the funding must be sent to
+        bytes32 details; // additional details about the financing proposal
     }
 
+    // keeps track of all financing proposals handled by each dao
     mapping(address => mapping(bytes32 => ProposalDetails)) public proposals;
 
     /*
-     * default fallback function to prevent from sending ether to the contract
+     * @notice default fallback function to prevent from sending ether to the contract
      */
     receive() external payable {
         revert("fallback revert");
     }
 
+    /**
+     * @notice Creates a financing proposal.
+     * @dev Applicant address must not be reserved.
+     * @dev Token address must be allowed/supported by the DAO Bank.
+     * @dev Requested amount must be greater than zero.
+     * @param dao The DAO Address.
+     * @param proposalId The proposal id.
+     * @param applicant The applicant address.
+     * @param token The token to receive the funds.
+     * @param amount The desired amount.
+     * @param details Additional detais about the financing proposal.
+     */
     function createFinancingRequest(
         DaoRegistry dao,
         bytes32 proposalId,
@@ -65,7 +78,6 @@ contract FinancingContract is IFinancing, DaoConstants, MemberGuard {
             dao.isNotReservedAddress(applicant),
             "applicant using reserved address"
         );
-
         dao.submitProposal(proposalId);
 
         ProposalDetails storage proposal = proposals[address(dao)][proposalId];
@@ -75,6 +87,13 @@ contract FinancingContract is IFinancing, DaoConstants, MemberGuard {
         proposal.token = token;
     }
 
+    /**
+     * @notice Sponsor a financing proposal to start the voting process.
+     * @dev Only members of the DAO can sponsor a financing proposal.
+     * @param dao The DAO Address.
+     * @param proposalId The proposal id.
+     * @param data Additional detais about the sponsorship process.
+     */
     function sponsorProposal(
         DaoRegistry dao,
         bytes32 proposalId,
@@ -86,13 +105,20 @@ contract FinancingContract is IFinancing, DaoConstants, MemberGuard {
         votingContract.startNewVotingForProposal(dao, proposalId, data);
     }
 
+    /**
+     * @notice Processing a financing proposal to grant the requested funds.
+     * @dev Only members of the DAO can process a financing proposal.
+     * @dev Only proposals that were not processed are accepted.
+     * @dev Only proposals that were sponsored are accepted.
+     * @dev Only proposals that passed can get processed and have the funds released.
+     * @param dao The DAO Address.
+     * @param proposalId The proposal id.
+     */
     function processProposal(DaoRegistry dao, bytes32 proposalId)
         external
         override
         onlyMember(dao)
     {
-        ProposalDetails memory details = proposals[address(dao)][proposalId];
-
         require(
             !dao.getProposalFlag(
                 proposalId,
@@ -105,6 +131,7 @@ contract FinancingContract is IFinancing, DaoConstants, MemberGuard {
             "proposal not sponsored yet"
         );
 
+        dao.processProposal(proposalId);
         IVoting votingContract = IVoting(dao.getAdapterAddress(VOTING));
         require(
             votingContract.voteResult(dao, proposalId) == 2,
@@ -113,8 +140,8 @@ contract FinancingContract is IFinancing, DaoConstants, MemberGuard {
 
         BankExtension bank = BankExtension(dao.getExtensionAddress(BANK));
 
+        ProposalDetails memory details = proposals[address(dao)][proposalId];
         bank.subtractFromBalance(GUILD, details.token, details.amount);
         bank.addToBalance(details.applicant, details.token, details.amount);
-        dao.processProposal(proposalId);
     }
 }
