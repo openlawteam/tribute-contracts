@@ -490,7 +490,7 @@ contract DaoRegistry is MemberGuard, AdapterGuard {
         hasAccess(this, AclFlag.SPONSOR_PROPOSAL)
         onlyMember2(this, sponsoringMember)
     {
-        // also checks if the flag was already set 
+        // also checks if the flag was already set
         Proposal storage proposal =
             _setProposalFlag(proposalId, ProposalFlag.SPONSORED);
 
