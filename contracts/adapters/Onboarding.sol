@@ -348,7 +348,7 @@ contract OnboardingContract is
                 bank.addToBalance(GUILD, token, proposal.amount);
 
                 IERC20 erc20 = IERC20(token);
-                erc20.transfer(address(dao), proposal.amount);
+                erc20.safeTransfer(address(dao), proposal.amount);
             }
 
             uint256 totalShares =
@@ -373,7 +373,7 @@ contract OnboardingContract is
         } else {
             IERC20 token = IERC20(tokenAddr);
             require(
-                token.transferFrom(address(this), proposer, amount),
+                token.safeTransferFrom(address(this), proposer, amount),
                 "ERC20 failed transferFrom"
             );
         }
