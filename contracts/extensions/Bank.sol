@@ -8,6 +8,9 @@ import "./IExtension.sol";
 import "../guards/AdapterGuard.sol";
 import "../utils/IERC20.sol";
 
+import "../helpers/AddressLib.sol";
+import "../helpers/SafeERC20.sol";
+
 /**
 MIT License
 
@@ -33,6 +36,9 @@ SOFTWARE.
  */
 
 contract BankExtension is DaoConstants, AdapterGuard, IExtension {
+    using Address for address payable;
+    using SafeERC20 for IERC20;
+
     bool public initialized = false; // internally tracks deployment under eip-1167 proxy pattern
     DaoRegistry public dao;
 
@@ -119,11 +125,10 @@ contract BankExtension is DaoConstants, AdapterGuard, IExtension {
         );
         subtractFromBalance(member, tokenAddr, amount);
         if (tokenAddr == ETH_TOKEN) {
-            (bool success, ) = member.call{value: amount}("");
-            require(success, "withdraw failed");
+            member.sendValue(amount);
         } else {
             IERC20 erc20 = IERC20(tokenAddr);
-            erc20.transfer(member, amount);
+            erc20.safeTransfer(member, amount);
         }
 
         emit Withdraw(member, tokenAddr, amount);
