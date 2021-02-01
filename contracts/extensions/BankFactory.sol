@@ -5,9 +5,8 @@ pragma experimental ABIEncoderV2;
 
 import "../core/DaoConstants.sol";
 import "../core/DaoRegistry.sol";
-import "./Bank.sol";
 import "../core/CloneFactory.sol";
-import "../adapters/Onboarding.sol";
+import "./Bank.sol";
 
 /**
 MIT License

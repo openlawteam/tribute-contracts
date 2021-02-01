@@ -6,7 +6,6 @@ pragma experimental ABIEncoderV2;
 import "./DaoConstants.sol";
 import "./DaoRegistry.sol";
 import "./CloneFactory.sol";
-import "../adapters/Onboarding.sol";
 
 /**
 MIT License
