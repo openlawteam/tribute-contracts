@@ -323,7 +323,8 @@ contract OnboardingContract is
         );
 
         IVoting votingContract = IVoting(dao.getAdapterAddress(VOTING));
-        IVoting.VotingState voteResult = votingContract.voteResult(dao, proposalId);
+        IVoting.VotingState voteResult =
+            votingContract.voteResult(dao, proposalId);
         ProposalDetails storage proposal = proposals[address(dao)][proposalId];
 
         dao.processProposal(proposalId);
@@ -356,7 +357,10 @@ contract OnboardingContract is
                     proposal.sharesRequested;
 
             shares[proposal.tokenToMint][proposal.applicant] = totalShares;
-        } else if (voteResult == IVoting.VotingState.NOT_PASS || voteResult == IVoting.VotingState.TIE) {
+        } else if (
+            voteResult == IVoting.VotingState.NOT_PASS ||
+            voteResult == IVoting.VotingState.TIE
+        ) {
             _refundTribute(proposal.token, proposal.proposer, proposal.amount);
         } else {
             revert("proposal has not been voted on yet");

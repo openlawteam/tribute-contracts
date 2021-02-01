@@ -107,7 +107,8 @@ contract FinancingContract is IFinancing, DaoConstants, MemberGuard {
 
         IVoting votingContract = IVoting(dao.getAdapterAddress(VOTING));
         require(
-            votingContract.voteResult(dao, proposalId) == IVoting.VotingState.PASS,
+            votingContract.voteResult(dao, proposalId) ==
+                IVoting.VotingState.PASS,
             "proposal needs to pass"
         );
 

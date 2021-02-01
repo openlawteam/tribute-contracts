@@ -29,7 +29,6 @@ SOFTWARE.
  */
 
 interface IVoting {
-
     enum VotingState {NOT_STARTED, TIE, PASS, NOT_PASS, IN_PROGRESS}
 
     function startNewVotingForProposal(
