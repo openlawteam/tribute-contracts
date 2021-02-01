@@ -10,6 +10,8 @@ import "../adapters/interfaces/IVoting.sol";
 import "../guards/MemberGuard.sol";
 import "../guards/AdapterGuard.sol";
 import "../utils/IERC20.sol";
+import "../helpers/AddressLib.sol";
+import "../helpers/SafeERC20.sol";
 
 /**
 MIT License
@@ -36,6 +38,9 @@ SOFTWARE.
  */
 
 contract TributeContract is ITribute, DaoConstants, MemberGuard, AdapterGuard {
+    using Address for address;
+    using SafeERC20 for IERC20;
+
     struct ProposalDetails {
         bytes32 id;
         address applicant;
@@ -113,14 +118,7 @@ contract TributeContract is ITribute, DaoConstants, MemberGuard, AdapterGuard {
             "applicant is reserved address"
         );
         IERC20 token = IERC20(tokenAddr);
-        require(
-            token.allowance(msg.sender, address(this)) >= tributeAmount,
-            "ERC20 transfer not allowed"
-        );
-        require(
-            token.transferFrom(msg.sender, address(this), tributeAmount),
-            "ERC20 failed transferFrom"
-        );
+        token.safeTransferFrom(msg.sender, address(this), tributeAmount);
 
         _submitTributeProposal(
             dao,
@@ -149,10 +147,8 @@ contract TributeContract is ITribute, DaoConstants, MemberGuard, AdapterGuard {
         external
         override
     {
-        require(
-            proposals[address(dao)][proposalId].id == proposalId,
-            "proposal does not exist"
-        );
+        ProposalDetails storage proposal = proposals[address(dao)][proposalId];
+        require(proposal.id == proposalId, "proposal does not exist");
         require(
             !dao.getProposalFlag(
                 proposalId,
@@ -161,13 +157,12 @@ contract TributeContract is ITribute, DaoConstants, MemberGuard, AdapterGuard {
             "proposal already sponsored"
         );
         require(
-            proposals[address(dao)][proposalId].proposer == msg.sender,
-            "only proposer can cancel proposal"
+            proposal.proposer == msg.sender,
+            "only proposer can cancel a proposal"
         );
 
         dao.processProposal(proposalId);
 
-        ProposalDetails storage proposal = proposals[address(dao)][proposalId];
         _refundTribute(
             proposal.token,
             proposal.proposer,
@@ -180,10 +175,8 @@ contract TributeContract is ITribute, DaoConstants, MemberGuard, AdapterGuard {
         override
         onlyMember(dao)
     {
-        require(
-            proposals[address(dao)][proposalId].id == proposalId,
-            "proposal does not exist"
-        );
+        ProposalDetails storage proposal = proposals[address(dao)][proposalId];
+        require(proposal.id == proposalId, "proposal does not exist");
         require(
             !dao.getProposalFlag(
                 proposalId,
@@ -194,7 +187,9 @@ contract TributeContract is ITribute, DaoConstants, MemberGuard, AdapterGuard {
 
         IVoting votingContract = IVoting(dao.getAdapterAddress(VOTING));
         uint256 voteResult = votingContract.voteResult(dao, proposalId);
-        ProposalDetails storage proposal = proposals[address(dao)][proposalId];
+
+        dao.processProposal(proposalId);
+
         if (voteResult == 2) {
             BankExtension bank = BankExtension(dao.getExtensionAddress(BANK));
             _mintTokensToMember(
@@ -210,7 +205,7 @@ contract TributeContract is ITribute, DaoConstants, MemberGuard, AdapterGuard {
             }
             bank.addToBalance(GUILD, token, proposal.tributeAmount);
             IERC20 erc20 = IERC20(token);
-            erc20.transfer(address(dao), proposal.tributeAmount);
+            erc20.safeTransfer(address(dao), proposal.tributeAmount);
         } else if (voteResult == 3 || voteResult == 1) {
             _refundTribute(
                 proposal.token,
@@ -220,8 +215,6 @@ contract TributeContract is ITribute, DaoConstants, MemberGuard, AdapterGuard {
         } else {
             revert("proposal has not been voted on yet");
         }
-
-        dao.processProposal(proposalId);
     }
 
     function _submitTributeProposal(
@@ -252,7 +245,7 @@ contract TributeContract is ITribute, DaoConstants, MemberGuard, AdapterGuard {
         uint256 amount
     ) internal {
         IERC20 token = IERC20(tokenAddr);
-        require(token.transfer(proposer, amount), "ERC20 failed transfer");
+        token.safeTransfer(proposer, amount);
     }
 
     function _mintTokensToMember(
