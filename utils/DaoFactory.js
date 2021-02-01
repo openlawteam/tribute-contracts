@@ -260,7 +260,14 @@ async function deployDao(
   await deployer.deploy(BankFactory, identityBank.address);
   const bankFactory = await BankFactory.deployed();
 
-  await bankFactory.createBank(dao.address);
+  await bankFactory.createBank();
+
+  let pastEvents = await bankFactory.getPastEvents();  
+  let {bankAddress} = pastEvents[0].returnValues;
+  let bank = await BankExtension.at(bankAddress);
+  let creator = await dao.getMemberAddress(0);
+
+  dao.addExtension(sha3("bank"), bank.address, creator);
 
   await addDefaultAdapters(
     dao,
@@ -317,7 +324,13 @@ async function createDao(
 
   let dao = await DaoRegistry.at(daoAddress);
 
-  await bankFactory.createBank(dao.address, {from:senderAccount});
+  await bankFactory.createBank();
+
+  let pastEvents = await bankFactory.getPastEvents();
+  let {bankAddress} = pastEvents[0].returnValues;
+  let bank = await BankExtension.at(bankAddress);
+
+  dao.addExtension(sha3("bank"), bank.address, senderAccount);
 
   const voting = await VotingContract.deployed();
   const configuration = await ConfigurationContract.deployed();

@@ -38,9 +38,11 @@ library FairShareHelper {
         if (balance == 0) {
             return 0;
         }
-        uint256 prod = balance * shares;
+        uint256 prod;
+        unchecked {
+            prod = balance * shares;
+        } // prevents revert call on overflow
         if (prod / balance == shares) {
-            // no overflow in multiplication above?
             return prod / _totalShares;
         }
         return (balance / _totalShares) * shares;
