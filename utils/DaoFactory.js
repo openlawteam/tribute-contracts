@@ -59,8 +59,9 @@ const RagequitContract = artifacts.require("./adapters/RagequitContract");
 const GuildKickContract = artifacts.require("./adapters/GuildKickContract");
 const OnboardingContract = artifacts.require("./adapters/OnboardingContract");
 const OffchainVotingContract = artifacts.require("./adapters/OffchainVotingContract");
+const CouponOnboardingContract = artifacts.require("./adapters/CouponOnboardingContract");
 
-async function prepareAapters(deployer) {
+async function prepareAdapters(deployer) {
   let voting;
   let configuration;
   let ragequit;
@@ -69,6 +70,7 @@ async function prepareAapters(deployer) {
   let onboarding;
   let guildkick;
   let withdraw;
+  let couponOnboarding;
   if(deployer) {
     
     await deployer.deploy(VotingContract);
@@ -79,6 +81,7 @@ async function prepareAapters(deployer) {
     await deployer.deploy(OnboardingContract);
     await deployer.deploy(GuildKickContract);
     await deployer.deploy(WithdrawContract);
+    await deployer.deploy(CouponOnboardingContract, 1);
 
     voting = await VotingContract.deployed();
     configuration = await ConfigurationContract.deployed();
@@ -88,6 +91,7 @@ async function prepareAapters(deployer) {
     onboarding = await OnboardingContract.deployed();
     guildkick = await GuildKickContract.deployed();
     withdraw = await WithdrawContract.deployed();
+    couponOnboarding = await CouponOnboardingContract.deployed();
   } else {
     voting = await VotingContract.new();
     configuration = await ConfigurationContract.new();
@@ -97,6 +101,7 @@ async function prepareAapters(deployer) {
     onboarding = await OnboardingContract.new();
     guildkick = await GuildKickContract.new();
     withdraw = await WithdrawContract.new();
+    couponOnboarding = await CouponOnboardingContract.new();
   }
 
   return {
@@ -107,7 +112,8 @@ async function prepareAapters(deployer) {
     managing,
     financing,
     onboarding,
-    withdraw
+    withdraw,
+    couponOnboarding
   };
 }
 
@@ -130,14 +136,15 @@ async function addDefaultAdapters(
     managing,
     financing,
     onboarding,
-    withdraw    
-  } = await prepareAapters(deployer);
-  await configureDao(daoFactory, dao, ragequit, guildkick, managing, financing, onboarding, withdraw, voting, configuration, unitPrice, nbShares, votingPeriod, gracePeriod, tokenAddr, maxChunks);
+    withdraw,
+    couponOnboarding
+  } = await prepareAdapters(deployer);
+  await configureDao(daoFactory, dao, ragequit, guildkick, managing, financing, onboarding, withdraw, voting, configuration, couponOnboarding, unitPrice, nbShares, votingPeriod, gracePeriod, tokenAddr, maxChunks);
 
   return {dao};
 }
 
-async function configureDao(daoFactory, dao, ragequit, guildkick, managing, financing, onboarding, withdraw, voting, configuration, unitPrice, nbShares, votingPeriod, gracePeriod, tokenAddr, maxChunks) {
+async function configureDao(daoFactory, dao, ragequit, guildkick, managing, financing, onboarding, withdraw, voting, configuration, couponOnboarding, unitPrice, nbShares, votingPeriod, gracePeriod, tokenAddr, maxChunks) {
   await daoFactory.addAdapters(dao.address, [
     entryDao("voting", voting, {}),
     entryDao("configuration", configuration, {
@@ -184,6 +191,14 @@ async function configureDao(daoFactory, dao, ragequit, guildkick, managing, fina
       UPDATE_DELEGATE_KEY: true,
       NEW_MEMBER: true
     }),
+    entryDao("coupon-onboarding", couponOnboarding, {
+      SUBMIT_PROPOSAL: false,
+      SPONSOR_PROPOSAL: false,
+      PROCESS_PROPOSAL: false,
+      ADD_TO_BALANCE: true,
+      UPDATE_DELEGATE_KEY: false,
+      NEW_MEMBER: true
+    }),
     entryDao("withdraw", withdraw, {
       WITHDRAW: true,
       SUB_FROM_BALANCE: true
@@ -213,6 +228,9 @@ async function configureDao(daoFactory, dao, ragequit, guildkick, managing, fina
     entryBank(onboarding, {
       ADD_TO_BALANCE: true
     }),
+    entryBank(couponOnboarding, {
+      ADD_TO_BALANCE: true
+    }),
     entryBank(financing, {
       ADD_TO_BALANCE: true,
       SUB_FROM_BALANCE: true,
@@ -235,6 +253,12 @@ async function configureDao(daoFactory, dao, ragequit, guildkick, managing, fina
     maxChunks,
     tokenAddr
   );
+  await couponOnboarding.configureDao(
+    dao.address,
+    "0x7D8cad0bbD68deb352C33e80fccd4D8e88b4aBb8",
+    SHARES
+  );
+
   await voting.configureDao(dao.address, votingPeriod, gracePeriod);
 }
 
@@ -340,8 +364,9 @@ async function createDao(
   const onboarding = await OnboardingContract.deployed();
   const guildkick = await GuildKickContract.deployed();
   const withdraw = await WithdrawContract.deployed();
+  const couponOnboarding = await CouponOnboardingContract.deployed();
 
-  await configureDao(daoFactory, dao, ragequit, guildkick, managing, financing, onboarding, withdraw, voting, configuration, unitPrice, nbShares, votingPeriod, gracePeriod, tokenAddr, maximumChunks);
+  await configureDao(daoFactory, dao, ragequit, guildkick, managing, financing, onboarding, withdraw, voting, configuration, couponOnboarding, unitPrice, nbShares, votingPeriod, gracePeriod, tokenAddr, maximumChunks);
 
   if(finalize) {
     await dao.finalizeDao();
@@ -506,7 +531,7 @@ async function getContract(dao, id, contractFactory) {
 }
 
 module.exports = {
-  prepareAapters,
+  prepareAdapters,
   advanceTime,
   createDao,
   deployDao,
@@ -543,4 +568,5 @@ module.exports = {
   OnboardingContract,
   OffchainVotingContract,
   BankExtension,
+  OnboardingContract
 };
