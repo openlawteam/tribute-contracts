@@ -40,7 +40,6 @@ library FairShareHelper {
         }
         uint256 prod = balance * shares;
         if (prod / balance == shares) {
-            // no overflow in multiplication above?
             return prod / _totalShares;
         }
         return (balance / _totalShares) * shares;
