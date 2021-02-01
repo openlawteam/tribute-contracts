@@ -44,7 +44,7 @@ const {
   ManagingContract,
   BankExtension,
 } = require("../../utils/DaoFactory.js");
-let proposalCounter = 0;
+let proposalCounter = 1;
 contract("LAOLAND - GuildKick Adapter", async (accounts) => {
   const submitNewMemberProposal = async (
     member,

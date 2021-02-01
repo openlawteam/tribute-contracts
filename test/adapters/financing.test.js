@@ -50,7 +50,7 @@ contract("LAOLAND - Financing Adapter", async (accounts) => {
   const newMember = accounts[3];
   const expectedGuildBalance = toBN("1200000000000000000");
 
-  it("should be possible to any individual to request financing", async () => {
+  it("should be possible to create a financing proposal and get the funds when the proposal pass", async () => {
     let dao = await createDao(myAccount);
     const bankAddress = await dao.getExtensionAddress(sha3("bank"));
     const bank = await BankExtension.at(bankAddress);
@@ -59,7 +59,7 @@ contract("LAOLAND - Financing Adapter", async (accounts) => {
     const onboarding = await getContract(dao, "onboarding", OnboardingContract);
     const withdraw = await getContract(dao, "withdraw", WithdrawContract);
 
-    let proposalId = "0x0";
+    let proposalId = "0x1";
 
     //Add funds to the Guild Bank after sposoring a member to join the Guild
     await onboarding.onboard(
@@ -104,7 +104,7 @@ contract("LAOLAND - Financing Adapter", async (accounts) => {
 
     //Create Financing Request
     let requestedAmount = toBN(50000);
-    proposalId = "0x1";
+    proposalId = "0x2";
     await financing.createFinancingRequest(
       dao.address,
       proposalId,
@@ -167,7 +167,7 @@ contract("LAOLAND - Financing Adapter", async (accounts) => {
     const onboarding = await getContract(dao, "onboarding", OnboardingContract);
 
     //Add funds to the Guild Bank after sposoring a member to join the Guild
-    let proposalId = "0x0";
+    let proposalId = "0x1";
     await onboarding.onboard(
       dao.address,
       proposalId,
@@ -199,7 +199,7 @@ contract("LAOLAND - Financing Adapter", async (accounts) => {
 
     //Create Financing Request
     let requestedAmount = toBN(50000);
-    proposalId = "0x1";
+    proposalId = "0x2";
     await financing.createFinancingRequest(
       dao.address,
       proposalId,
@@ -238,7 +238,7 @@ contract("LAOLAND - Financing Adapter", async (accounts) => {
     const voting = await getContract(dao, "voting", VotingContract);
     const financing = await getContract(dao, "financing", FinancingContract);
     const onboarding = await getContract(dao, "onboarding", OnboardingContract);
-    let proposalId = "0x0";
+    let proposalId = "0x1";
     //Add funds to the Guild Bank after sposoring a member to join the Guild
     await onboarding.onboard(
       dao.address,
@@ -295,7 +295,7 @@ contract("LAOLAND - Financing Adapter", async (accounts) => {
     const voting = await getContract(dao, "voting", VotingContract);
     const financing = await getContract(dao, "financing", FinancingContract);
     const onboarding = await getContract(dao, "onboarding", OnboardingContract);
-    let proposalId = "0x0";
+    let proposalId = "0x1";
     //Add funds to the Guild Bank after sposoring a member to join the Guild
     await onboarding.onboard(
       dao.address,
@@ -343,6 +343,147 @@ contract("LAOLAND - Financing Adapter", async (accounts) => {
       );
     } catch (err) {
       assert.equal(err.reason, "invalid requested amount");
+    }
+  });
+
+  it("should not be possible to request funding with an invalid proposal id", async () => {
+    let dao = await createDao(myAccount);
+    const financing = await getContract(dao, "financing", FinancingContract);
+    try {
+      let invalidProposalId = "0x0";
+      await financing.createFinancingRequest(
+        dao.address,
+        invalidProposalId,
+        applicant,
+        ETH_TOKEN,
+        toBN(10),
+        fromUtf8("")
+      );
+      assert.fail("should not be possible to use proposal id == 0");
+    } catch (err) {
+      assert.equal(err.reason, "invalid proposalId");
+    }
+  });
+
+  it("should not be possible to reuse a proposalId", async () => {
+    let dao = await createDao(myAccount);
+    const financing = await getContract(dao, "financing", FinancingContract);
+    const onboarding = await getContract(dao, "onboarding", OnboardingContract);
+
+    let proposalId = "0x1";
+
+    //Add funds to the Guild Bank after sposoring a member to join the Guild
+    await onboarding.onboard(
+      dao.address,
+      proposalId,
+      newMember,
+      SHARES,
+      sharePrice.mul(toBN(10)).add(remaining),
+      {
+        from: myAccount,
+        value: sharePrice.mul(toBN(10)).add(remaining),
+        gasPrice: toBN("0"),
+      }
+    );
+
+    try {
+      let reusedProposalId = proposalId;
+      await financing.createFinancingRequest(
+        dao.address,
+        reusedProposalId,
+        applicant,
+        ETH_TOKEN,
+        toBN(50000),
+        fromUtf8(""),
+        { gasPrice: toBN("0") }
+      );
+    } catch (err) {
+      assert.equal(err.reason, "proposalId must be unique");
+    }
+  });
+
+  it("should not be possible to sponsor proposal that does not exist", async () => {
+    let dao = await createDao(myAccount);
+    const financing = await getContract(dao, "financing", FinancingContract);
+
+    try {
+      let proposalId = "0x1";
+      await financing.sponsorProposal(dao.address, proposalId, fromUtf8(""), {
+        from: myAccount,
+        gasPrice: toBN("0"),
+      });
+    } catch (err) {
+      assert.equal(err.reason, "proposal does not exist for this dao");
+    }
+  });
+
+  it("should not be possible to sponsor proposal more than once", async () => {
+    let dao = await createDao(myAccount);
+    const financing = await getContract(dao, "financing", FinancingContract);
+
+    let proposalId = "0x1";
+    await financing.createFinancingRequest(
+      dao.address,
+      proposalId,
+      applicant,
+      ETH_TOKEN,
+      toBN(50000),
+      fromUtf8(""),
+      { gasPrice: toBN("0") }
+    );
+
+    await financing.sponsorProposal(dao.address, proposalId, fromUtf8(""), {
+      from: myAccount,
+      gasPrice: toBN("0"),
+    });
+
+    try {
+      await financing.sponsorProposal(dao.address, proposalId, fromUtf8(""), {
+        from: myAccount,
+        gasPrice: toBN("0"),
+      });
+    } catch (err) {
+      assert.equal(err.reason, "flag already set");
+    }
+  });
+
+  it("should not be possible to process a proposal that does not exist", async () => {
+    let dao = await createDao(myAccount);
+    const financing = await getContract(dao, "financing", FinancingContract);
+
+    try {
+      let proposalId = "0x1";
+      await financing.processProposal(dao.address, proposalId, {
+        from: myAccount,
+        gasPrice: toBN("0"),
+      });
+    } catch (err) {
+      assert.equal(err.reason, "proposal not sponsored yet");
+    }
+  });
+
+  it("should not be possible to process a proposal that is not sponsored", async () => {
+    let dao = await createDao(myAccount);
+    const financing = await getContract(dao, "financing", FinancingContract);
+
+    let proposalId = "0x1";
+    await financing.createFinancingRequest(
+      dao.address,
+      proposalId,
+      applicant,
+      ETH_TOKEN,
+      toBN(50000),
+      fromUtf8(""),
+      { gasPrice: toBN("0") }
+    );
+
+    try {
+      await financing.processProposal(dao.address, proposalId, {
+        from: myAccount,
+        gasPrice: toBN("0"),
+      });
+    } catch (err) {
+      assert.equal(err.reason, "proposal not sponsored yet");
     }
   });
 });
