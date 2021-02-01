@@ -114,8 +114,14 @@ contract("Registry", async (accounts) => {
     let address = await registry.getAdapterAddress(moduleId);
     assert.equal(address, moduleAddress);
     await registry.removeAdapter(moduleId);
-    address = await registry.getAdapterAddress(moduleId);
-    assert.equal(address, "0x0000000000000000000000000000000000000000");
+    try {
+      await registry.getAdapterAddress(moduleId);
+    } catch (error) {
+      assert.equal(
+        error.toString().indexOf("revert adapter not found") > -1,
+        true
+      );
+    }
   });
 
   it("should not be possible to remove a module that is not registered", async () => {
