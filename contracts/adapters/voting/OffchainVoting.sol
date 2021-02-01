@@ -530,39 +530,39 @@ contract OffchainVotingContract is
         external
         view
         override
-        returns (uint256 state)
+        returns (VotingState state)
     {
         Voting storage vote = votes[address(dao)][proposalId];
         if (vote.startingTime == 0) {
-            return 0;
+            return VotingState.NOT_STARTED;
         }
 
         if (vote.isChallenged) {
-            return 4;
+            return VotingState.IN_PROGRESS;
         }
 
         if (
             block.timestamp <
             vote.startingTime + dao.getConfiguration(VotingPeriod)
         ) {
-            return 4;
+            return VotingState.IN_PROGRESS;
         }
 
         if (
             block.timestamp <
             vote.gracePeriodStartingTime + dao.getConfiguration(GracePeriod)
         ) {
-            return 4;
+            return VotingState.IN_PROGRESS;
         }
 
         if (vote.nbYes > vote.nbNo) {
-            return 2;
+            return VotingState.PASS;
         }
         if (vote.nbYes < vote.nbNo) {
-            return 3;
+            return VotingState.NOT_PASS;
         }
 
-        return 1;
+        return VotingState.TIE;
     }
 
     /*

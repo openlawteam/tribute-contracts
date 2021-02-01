@@ -29,6 +29,9 @@ SOFTWARE.
  */
 
 interface IVoting {
+
+    enum VotingState {NOT_STARTED, TIE, PASS, NOT_PASS, IN_PROGRESS}
+
     function startNewVotingForProposal(
         DaoRegistry dao,
         bytes32 proposalId,
@@ -44,5 +47,5 @@ interface IVoting {
 
     function voteResult(DaoRegistry dao, bytes32 proposalId)
         external
-        returns (uint256 state);
+        returns (VotingState state);
 }

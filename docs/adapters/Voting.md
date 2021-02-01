@@ -1,37 +1,10 @@
-pragma solidity ^0.8.0;
+## Adapter description and scope
 
-// SPDX-License-Identifier: MIT
+## Adapter workflow
 
-import "../../core/DaoRegistry.sol";
-import "../../core/DaoConstants.sol";
-import "../../extensions/Bank.sol";
-import "../../guards/MemberGuard.sol";
-import "../../guards/AdapterGuard.sol";
-import "../interfaces/IVoting.sol";
+## Adapter configuration
 
-/**
-MIT License
-
-Copyright (c) 2020 Openlaw
-
-Permission is hereby granted, free of charge, to any person obtaining a copy
-of this software and associated documentation files (the "Software"), to deal
-in the Software without restriction, including without limitation the rights
-to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-copies of the Software, and to permit persons to whom the Software is
-furnished to do so, subject to the following conditions:
-
-The above copyright notice and this permission notice shall be included in all
-copies or substantial portions of the Software.
-
-THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
-SOFTWARE.
- */
+## Functions description, assumptions, checks, dependencies, interactions and access control
 
 contract VotingContract is IVoting, DaoConstants, MemberGuard, AdapterGuard {
     struct Voting {
@@ -144,26 +117,26 @@ contract VotingContract is IVoting, DaoConstants, MemberGuard, AdapterGuard {
         external
         view
         override
-        returns (VotingState state)
+        returns (uint256 state)
     {
         Voting storage vote = votes[address(dao)][proposalId];
         if (vote.startingTime == 0) {
-            return VotingState.NOT_STARTED;
+            return 0;
         }
 
         if (
             block.timestamp <
             vote.startingTime + dao.getConfiguration(VotingPeriod)
         ) {
-            return VotingState.IN_PROGRESS;
+            return 4;
         }
 
         if (vote.nbYes > vote.nbNo) {
-            return VotingState.PASS;
+            return 2;
         } else if (vote.nbYes < vote.nbNo) {
-            return VotingState.NOT_PASS;
+            return 3;
         } else {
-            return VotingState.TIE;
+            return 1;
         }
     }
 }

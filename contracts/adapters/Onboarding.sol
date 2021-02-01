@@ -323,9 +323,9 @@ contract OnboardingContract is
         );
 
         IVoting votingContract = IVoting(dao.getAdapterAddress(VOTING));
-        uint256 voteResult = votingContract.voteResult(dao, proposalId);
+        IVoting.VotingState voteResult = votingContract.voteResult(dao, proposalId);
         ProposalDetails storage proposal = proposals[address(dao)][proposalId];
-        if (voteResult == 2) {
+        if (voteResult == IVoting.VotingState.PASS) {
             BankExtension bank = BankExtension(dao.getExtensionAddress(BANK));
             _mintTokensToMember(
                 dao,
@@ -353,7 +353,7 @@ contract OnboardingContract is
                     proposal.sharesRequested;
 
             shares[proposal.tokenToMint][proposal.applicant] = totalShares;
-        } else if (voteResult == 3 || voteResult == 1) {
+        } else if (voteResult == IVoting.VotingState.NOT_PASS || voteResult == IVoting.VotingState.TIE) {
             _refundTribute(proposal.token, proposal.proposer, proposal.amount);
         } else {
             revert("proposal has not been voted on yet");

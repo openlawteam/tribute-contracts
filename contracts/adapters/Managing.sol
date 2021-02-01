@@ -118,7 +118,7 @@ contract ManagingContract is IManaging, DaoConstants, MemberGuard {
 
         IVoting votingContract = IVoting(dao.getAdapterAddress(VOTING));
         require(
-            votingContract.voteResult(dao, proposalId) == 2,
+            votingContract.voteResult(dao, proposalId) == IVoting.VotingState.PASS,
             "proposal did not pass"
         );
 
