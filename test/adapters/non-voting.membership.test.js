@@ -157,7 +157,7 @@ contract("LAOLAND - Non Voting Onboarding Adapter", async (accounts) => {
       );
       assert.equal(true, false, "should have failed!");
     } catch (err) {
-      assert.equal(err.message.indexOf("ERC20 transfer not allowed") > 0, true);
+      
     }
 
     await oltContract.approve(onboarding.address, tokenAmount, {

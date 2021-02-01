@@ -393,6 +393,7 @@ contract DaoRegistry is DaoConstants, AdapterGuard {
         view
         returns (address)
     {
+        require(adapters[adapterId] != address(0), "adapter not found");
         return adapters[adapterId];
     }
 

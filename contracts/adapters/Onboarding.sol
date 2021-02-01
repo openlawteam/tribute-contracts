@@ -10,6 +10,8 @@ import "../adapters/interfaces/IVoting.sol";
 import "../guards/MemberGuard.sol";
 import "../guards/AdapterGuard.sol";
 import "../utils/IERC20.sol";
+import "../helpers/AddressLib.sol";
+import "../helpers/SafeERC20.sol";
 
 /**
 MIT License
@@ -41,6 +43,9 @@ contract OnboardingContract is
     MemberGuard,
     AdapterGuard
 {
+    using Address for address payable;
+    using SafeERC20 for IERC20;
+
     bytes32 constant ChunkSize = keccak256("onboarding.chunkSize");
     bytes32 constant SharesPerChunk = keccak256("onboarding.sharesPerChunk");
     bytes32 constant TokenAddr = keccak256("onboarding.tokenAddr");
@@ -211,14 +216,7 @@ contract OnboardingContract is
         } else {
             IERC20 token = IERC20(tokenAddr);
             // ERC20 onboarding
-            require(
-                token.allowance(msg.sender, address(this)) >= tokenAmount,
-                "ERC20 transfer not allowed"
-            );
-            require(
-                token.transferFrom(msg.sender, address(this), tokenAmount),
-                "ERC20 failed transferFrom"
-            );
+            token.safeTransferFrom(msg.sender, address(this), tokenAmount);
         }
 
         uint256 amountUsed =
@@ -235,13 +233,10 @@ contract OnboardingContract is
         if (amountUsed < tokenAmount) {
             uint256 amount = tokenAmount - amountUsed;
             if (tokenAddr == ETH_TOKEN) {
-                payable(msg.sender).transfer(amount);
+                payable(msg.sender).sendValue(amount);
             } else {
                 IERC20 token = IERC20(tokenAddr);
-                require(
-                    token.transfer(msg.sender, amount),
-                    "ERC20 failed transfer"
-                );
+                token.safeTransfer(msg.sender, amount);
             }
         }
     }
@@ -299,10 +294,12 @@ contract OnboardingContract is
             ),
             "proposal already sponsored"
         );
+        ProposalDetails storage proposal = proposals[address(dao)][proposalId];
+
+        require(proposal.proposer == msg.sender, "only proposer can cancel a proposal");
 
         dao.processProposal(proposalId);
 
-        ProposalDetails storage proposal = proposals[address(dao)][proposalId];
         _refundTribute(proposal.token, proposal.proposer, proposal.amount);
     }
 
@@ -325,6 +322,9 @@ contract OnboardingContract is
         IVoting votingContract = IVoting(dao.getAdapterAddress(VOTING));
         uint256 voteResult = votingContract.voteResult(dao, proposalId);
         ProposalDetails storage proposal = proposals[address(dao)][proposalId];
+
+        dao.processProposal(proposalId);
+
         if (voteResult == 2) {
             BankExtension bank = BankExtension(dao.getExtensionAddress(BANK));
             _mintTokensToMember(
@@ -358,8 +358,6 @@ contract OnboardingContract is
         } else {
             revert("proposal has not been voted on yet");
         }
-
-        dao.processProposal(proposalId);
     }
 
     function _refundTribute(
