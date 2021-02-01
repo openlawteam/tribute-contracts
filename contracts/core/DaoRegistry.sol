@@ -470,6 +470,7 @@ contract DaoRegistry is MemberGuard, AdapterGuard {
         public
         hasAccess(this, AclFlag.SUBMIT_PROPOSAL)
     {
+        require(proposalId != bytes32(0), "invalid proposalId");
         require(
             !getProposalFlag(proposalId, ProposalFlag.EXISTS),
             "proposalId must be unique"

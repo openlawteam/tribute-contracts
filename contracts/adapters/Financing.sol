@@ -78,7 +78,6 @@ contract FinancingContract is IFinancing, DaoConstants, MemberGuard {
             dao.isNotReservedAddress(applicant),
             "applicant using reserved address"
         );
-        //FIXME does it check if the proposalId was already used?
         dao.submitProposal(proposalId);
 
         ProposalDetails storage proposal = proposals[address(dao)][proposalId];
@@ -100,7 +99,6 @@ contract FinancingContract is IFinancing, DaoConstants, MemberGuard {
         bytes32 proposalId,
         bytes calldata data
     ) external override onlyMember(dao) {
-        //FIXME does it chekc if the proposalId was not sponsored already?
         dao.sponsorProposal(proposalId, msg.sender);
 
         IVoting votingContract = IVoting(dao.getAdapterAddress(VOTING));
@@ -121,8 +119,6 @@ contract FinancingContract is IFinancing, DaoConstants, MemberGuard {
         override
         onlyMember(dao)
     {
-        ProposalDetails memory details = proposals[address(dao)][proposalId];
-
         require(
             !dao.getProposalFlag(
                 proposalId,
@@ -135,6 +131,7 @@ contract FinancingContract is IFinancing, DaoConstants, MemberGuard {
             "proposal not sponsored yet"
         );
 
+        dao.processProposal(proposalId);
         IVoting votingContract = IVoting(dao.getAdapterAddress(VOTING));
         require(
             votingContract.voteResult(dao, proposalId) == 2,
@@ -143,9 +140,8 @@ contract FinancingContract is IFinancing, DaoConstants, MemberGuard {
 
         BankExtension bank = BankExtension(dao.getExtensionAddress(BANK));
 
+        ProposalDetails memory details = proposals[address(dao)][proposalId];
         bank.subtractFromBalance(GUILD, details.token, details.amount);
         bank.addToBalance(details.applicant, details.token, details.amount);
-        //FIXME does it check if the proposal was already processed?
-        dao.processProposal(proposalId);
     }
 }
