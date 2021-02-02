@@ -135,6 +135,7 @@ contract("LAOLAND - Onboarding Adapter", async (accounts) => {
       1,
       oltContract.address
     );
+
     const bankAddress = await dao.getExtensionAddress(sha3("bank"));
     const bank = await BankExtension.at(bankAddress);
 
@@ -142,11 +143,11 @@ contract("LAOLAND - Onboarding Adapter", async (accounts) => {
     const voting = await getContract(dao, "voting", VotingContract);
 
     // Transfer OLTs to myAccount
-    const myAccountInitialTokenBalance = toBN("100");
-    await oltContract.transfer(myAccount, myAccountInitialTokenBalance);
+    const initialTokenBalance = toBN("100");
+    await oltContract.transfer(myAccount, initialTokenBalance);
     let myAccountTokenBalance = await oltContract.balanceOf.call(myAccount);
     assert.equal(
-      myAccountInitialTokenBalance.toString(),
+      initialTokenBalance.toString(),
       myAccountTokenBalance.toString(),
       "myAccount must be initialized with 100 OLT Tokens"
     );
@@ -190,10 +191,7 @@ contract("LAOLAND - Onboarding Adapter", async (accounts) => {
     // test return of remaining amount in excess of multiple of sharesPerChunk
     myAccountTokenBalance = await oltContract.balanceOf.call(myAccount);
     assert.equal(
-      myAccountInitialTokenBalance
-        .sub(tokenAmount)
-        .add(erc20Remaining)
-        .toString(),
+      initialTokenBalance.sub(tokenAmount).add(erc20Remaining).toString(),
       myAccountTokenBalance.toString(),
       "myAccount did not receive remaining amount in excess of multiple of sharesPerChunk"
     );
@@ -258,7 +256,7 @@ contract("LAOLAND - Onboarding Adapter", async (accounts) => {
     }
   });
 
-  it("should be possible to cancel an onboarding proposal", async () => {
+  it("should be possible to cancel an ETH onboarding proposal", async () => {
     const myAccount = accounts[1];
     const otherAccount = accounts[2];
     const dao = await createDao(myAccount);
@@ -291,12 +289,12 @@ contract("LAOLAND - Onboarding Adapter", async (accounts) => {
     const isProcessed = await dao.getProposalFlag("0x1", toBN("2")); // 2 is processed flag index
     assert.equal(isProcessed, true);
 
-    // test refund of ether contribution
+    // test refund of ETH contribution
     const myAccountBalance = await web3.eth.getBalance(myAccount);
     assert.equal(
       myAccountInitialBalance.toString(),
       myAccountBalance.toString(),
-      "myAccount did not receive refund of ether contribution"
+      "myAccount did not receive refund of ETH contribution"
     );
 
     try {
@@ -323,6 +321,113 @@ contract("LAOLAND - Onboarding Adapter", async (accounts) => {
     assert.equal(otherAccountShares.toString(), "0");
 
     const guildBalance = await bank.balanceOf(GUILD, ETH_TOKEN);
+    assert.equal(guildBalance.toString(), "0");
+  });
+
+  it("should be possible to cancel an ERC20 onboarding proposal", async () => {
+    const myAccount = accounts[1];
+    const otherAccount = accounts[2];
+
+    // Issue OpenLaw ERC20 Basic Token for tests
+    const tokenSupply = 1000000;
+    let oltContract = await OLTokenContract.new(tokenSupply);
+
+    const nbOfERC20Shares = 100000000;
+    const erc20SharePrice = toBN("10");
+    const erc20Remaining = erc20SharePrice.sub(toBN("1"));
+
+    const dao = await createDao(
+      myAccount,
+      erc20SharePrice,
+      nbOfERC20Shares,
+      10,
+      1,
+      oltContract.address
+    );
+
+    const bankAddress = await dao.getExtensionAddress(sha3("bank"));
+    const bank = await BankExtension.at(bankAddress);
+
+    const onboarding = await getContract(dao, "onboarding", OnboardingContract);
+
+    // Transfer OLTs to myAccount
+    const initialTokenBalance = toBN("100");
+    await oltContract.transfer(myAccount, initialTokenBalance);
+    let myAccountTokenBalance = await oltContract.balanceOf.call(myAccount);
+    assert.equal(
+      initialTokenBalance.toString(),
+      myAccountTokenBalance.toString(),
+      "myAccount must be initialized with 100 OLT Tokens"
+    );
+
+    // Total of OLTs to be sent to the DAO in order to get the shares
+    const tokenAmount = erc20SharePrice.add(toBN(erc20Remaining));
+
+    // Pre-approve spender (onboarding adapter) to transfer proposer tokens
+    await oltContract.approve(onboarding.address, tokenAmount, {
+      from: myAccount,
+    });
+
+    await onboarding.onboard(
+      dao.address,
+      "0x1",
+      otherAccount,
+      SHARES,
+      tokenAmount,
+      {
+        from: myAccount,
+        gasPrice: toBN("0"),
+      }
+    );
+
+    try {
+      await onboarding.cancelProposal(dao.address, "0x1", {
+        from: otherAccount,
+        gasPrice: toBN("0"),
+      });
+    } catch (err) {
+      assert.equal(err.reason, "only proposer can cancel a proposal");
+    }
+
+    await onboarding.cancelProposal(dao.address, "0x1", {
+      from: myAccount,
+      gasPrice: toBN("0"),
+    });
+    const isProcessed = await dao.getProposalFlag("0x1", toBN("2")); // 2 is processed flag index
+    assert.equal(isProcessed, true);
+
+    // test refund of ERC20 contribution
+    myAccountTokenBalance = await oltContract.balanceOf.call(myAccount);
+    assert.equal(
+      initialTokenBalance.toString(),
+      myAccountTokenBalance.toString(),
+      "myAccount did not receive refund of ERC20 contribution"
+    );
+
+    try {
+      await onboarding.sponsorProposal(dao.address, "0x1", [], {
+        from: myAccount,
+        gasPrice: toBN("0"),
+      });
+    } catch (err) {
+      assert.equal(err.reason, "proposal already processed");
+    }
+
+    try {
+      await onboarding.processProposal(dao.address, "0x1", {
+        from: myAccount,
+        gasPrice: toBN("0"),
+      });
+    } catch (err) {
+      assert.equal(err.reason, "proposal already processed");
+    }
+
+    const myAccountShares = await bank.balanceOf(myAccount, SHARES);
+    const otherAccountShares = await bank.balanceOf(otherAccount, SHARES);
+    assert.equal(myAccountShares.toString(), "1");
+    assert.equal(otherAccountShares.toString(), "0");
+
+    const guildBalance = await bank.balanceOf(GUILD, oltContract.address);
     assert.equal(guildBalance.toString(), "0");
   });
 
@@ -364,12 +469,12 @@ contract("LAOLAND - Onboarding Adapter", async (accounts) => {
     const isProcessed = await dao.getProposalFlag("0x1", toBN("2")); // 2 is processed flag index
     assert.equal(isProcessed, true);
 
-    // test refund of ether contribution
+    // test refund of ETH contribution
     const myAccountBalance = await web3.eth.getBalance(myAccount);
     assert.equal(
       myAccountInitialBalance.toString(),
       myAccountBalance.toString(),
-      "myAccount did not receive refund of ether contribution"
+      "myAccount did not receive refund of ETH contribution"
     );
 
     const myAccountShares = await bank.balanceOf(myAccount, SHARES);
@@ -381,10 +486,9 @@ contract("LAOLAND - Onboarding Adapter", async (accounts) => {
     assert.equal(guildBalance.toString(), "0");
 
     const otherAccountBalance = await bank.balanceOf(otherAccount, ETH_TOKEN);
-
     assert.equal(otherAccountBalance.toString(), "0");
 
-    let onboardingBalance = await web3.eth.getBalance(onboarding.address);
+    const onboardingBalance = await web3.eth.getBalance(onboarding.address);
     assert.equal(onboardingBalance.toString(), "0");
   });
 
