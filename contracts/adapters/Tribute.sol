@@ -68,48 +68,6 @@ contract TributeContract is ITribute, DaoConstants, MemberGuard, AdapterGuard {
         bank.registerPotentialNewInternalToken(tokenAddrToMint);
     }
 
-    function provideTributeAndSponsor(
-        DaoRegistry dao,
-        bytes32 proposalId,
-        address applicant,
-        address tokenToMint,
-        uint256 requestAmount,
-        address tokenAddr,
-        uint256 tributeAmount,
-        bytes calldata data
-    ) external {
-        provideTribute(
-            dao,
-            proposalId,
-            applicant,
-            tokenToMint,
-            requestAmount,
-            tokenAddr,
-            tributeAmount
-        );
-
-        IVoting votingContract = IVoting(dao.getAdapterAddress(VOTING));
-        try
-            votingContract.startNewVotingForProposal(dao, proposalId, data)
-        {} catch Error(string memory reason) {
-            revert(reason);
-        } catch (
-            bytes memory /*lowLevelData*/
-        ) {
-            revert("system error from voting");
-        }
-
-        address submittedBy =
-            votingContract.getSenderAddress(
-                dao,
-                address(this),
-                data,
-                msg.sender
-            );
-
-        dao.sponsorProposal(proposalId, submittedBy);
-    }
-
     function provideTribute(
         DaoRegistry dao,
         bytes32 proposalId,
@@ -141,11 +99,27 @@ contract TributeContract is ITribute, DaoConstants, MemberGuard, AdapterGuard {
     function sponsorProposal(
         DaoRegistry dao,
         bytes32 proposalId,
-        bytes calldata data
-    ) external override onlyMember(dao) {
-        dao.sponsorProposal(proposalId, msg.sender);
-
+        bytes memory data
+    ) external override {
         IVoting votingContract = IVoting(dao.getAdapterAddress(VOTING));
+        address sponsoredBy =
+            votingContract.getSenderAddress(
+                dao,
+                address(this),
+                data,
+                msg.sender
+            );
+        _sponsorProposal(dao, proposalId, data, sponsoredBy, votingContract);
+    }
+
+    function _sponsorProposal(
+        DaoRegistry dao,
+        bytes32 proposalId,
+        bytes memory data,
+        address sponsoredBy,
+        IVoting votingContract
+    ) internal {
+        dao.sponsorProposal(proposalId, sponsoredBy);
         votingContract.startNewVotingForProposal(dao, proposalId, data);
     }
 
@@ -191,11 +165,12 @@ contract TributeContract is ITribute, DaoConstants, MemberGuard, AdapterGuard {
         );
 
         IVoting votingContract = IVoting(dao.getAdapterAddress(VOTING));
-        uint256 voteResult = votingContract.voteResult(dao, proposalId);
+        IVoting.VotingState voteResult =
+            votingContract.voteResult(dao, proposalId);
 
         dao.processProposal(proposalId);
 
-        if (voteResult == 2) {
+        if (voteResult == IVoting.VotingState.PASS) {
             BankExtension bank = BankExtension(dao.getExtensionAddress(BANK));
             _mintTokensToMember(
                 dao,
@@ -211,7 +186,10 @@ contract TributeContract is ITribute, DaoConstants, MemberGuard, AdapterGuard {
             bank.addToBalance(GUILD, token, proposal.tributeAmount);
             IERC20 erc20 = IERC20(token);
             erc20.safeTransfer(address(dao), proposal.tributeAmount);
-        } else if (voteResult == 3 || voteResult == 1) {
+        } else if (
+            voteResult == IVoting.VotingState.NOT_PASS ||
+            voteResult == IVoting.VotingState.TIE
+        ) {
             _refundTribute(
                 proposal.token,
                 proposal.proposer,
