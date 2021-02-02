@@ -26,6 +26,10 @@ Tokens that are provided by the member have to be allowed/supported by the DAO.
 
 The member needs to have enough shares and/or loot in order to convert it to funds.
 
+DAORegistry Access Flags: `SUB_FROM_BALANCE`, `JAIL_MEMBER`, `UNJAIL_MEMBER`, `INTERNAL_TRANSFER`.
+
+Bank Extension Access Flags: `WITHDRAW`, `INTERNAL_TRANSFER`, `SUB_FROM_BALANCE`, `ADD_TO_BALANCE`.
+
 ## Adapter state
 
 There are no state tracking for this adapter.

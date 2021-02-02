@@ -1,4 +1,5 @@
 ## Adapter description and scope
+
 The Configuration adapter manages storing and retrieving per-DAO settings required by shared adapters.
 
 Some adapters have configurable settings which must be stored for each DAO instance that uses the shared adapter. This
@@ -7,6 +8,7 @@ adapter provides
 ## Workflows
 
 Submit proposal
+
 - check that caller is valid member
 - check that keys/values are same length
 - check that proposalId is unique
@@ -15,11 +17,13 @@ Submit proposal
 - create and store configuration structure
 
 Sponsor module change request
+
 - check that caller is valid member
 
 - initiate vote
 
 Process proposal
+
 - check that caller is valid member
 - check that proposalId exists
 - check that status is in progress
@@ -29,14 +33,15 @@ Process proposal
 - set configuration status to done
 - process proposal
 
-
 ## Adapter state
 
 The adapter stores the proposed configuration changes.
 
 ### Configuration
 
-#### status 
+DAORegistry Access Flags: `SUBMIT_PROPOSAL`, `PROCESS_PROPOSAL`, `SPONSOR_PROPOSAL`,`SET_CONFIGURATION`.
+
+#### status
 
 The status of this configuration change, an enum with values: NOT_CREATED, IN_PROGRESS, DONE
 
