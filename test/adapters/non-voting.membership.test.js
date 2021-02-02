@@ -121,7 +121,6 @@ contract("LAOLAND - Non Voting Onboarding Adapter", async (accounts) => {
     const onboarding = await OnboardingContract.at(onboardingAddress);
 
     // Transfer 1000 OLTs to the Advisor account
-    await oltContract.approve(advisorAccount, 100);
     await oltContract.transfer(advisorAccount, 100);
     let advisorTokenBalance = await oltContract.balanceOf.call(advisorAccount);
     assert.equal(
