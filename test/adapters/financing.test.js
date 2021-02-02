@@ -458,7 +458,7 @@ contract("LAOLAND - Financing Adapter", async (accounts) => {
         gasPrice: toBN("0"),
       });
     } catch (err) {
-      assert.equal(err.reason, "proposal not sponsored yet");
+      assert.equal(err.reason, "proposal needs to pass");
     }
   });
 
@@ -483,7 +483,7 @@ contract("LAOLAND - Financing Adapter", async (accounts) => {
         gasPrice: toBN("0"),
       });
     } catch (err) {
-      assert.equal(err.reason, "proposal not sponsored yet");
+      assert.equal(err.reason, "proposal needs to pass");
     }
   });
 });

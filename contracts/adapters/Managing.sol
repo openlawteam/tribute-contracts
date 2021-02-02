@@ -89,39 +89,43 @@ contract ManagingContract is IManaging, DaoConstants, MemberGuard {
         DaoRegistry dao,
         bytes32 proposalId,
         bytes calldata data
-    ) external override onlyMember(dao) {
-        dao.sponsorProposal(proposalId, msg.sender);
-
+    ) external override {
         IVoting votingContract = IVoting(dao.getAdapterAddress(VOTING));
+        address sponsoredBy =
+            votingContract.getSenderAddress(
+                dao,
+                address(this),
+                data,
+                msg.sender
+            );
+        _sponsorProposal(dao, proposalId, data, sponsoredBy, votingContract);
+    }
+
+    function _sponsorProposal(
+        DaoRegistry dao,
+        bytes32 proposalId,
+        bytes memory data,
+        address sponsoredBy,
+        IVoting votingContract
+    ) internal {
+        dao.sponsorProposal(proposalId, sponsoredBy);
         votingContract.startNewVotingForProposal(dao, proposalId, data);
     }
 
     function processProposal(DaoRegistry dao, bytes32 proposalId)
         external
         override
-        onlyMember(dao)
     {
         ProposalDetails memory proposal = proposals[address(dao)][proposalId];
 
-        require(
-            !dao.getProposalFlag(
-                proposalId,
-                DaoRegistry.ProposalFlag.PROCESSED
-            ),
-            "proposal already processed"
-        );
-
-        require(
-            dao.getProposalFlag(proposalId, DaoRegistry.ProposalFlag.SPONSORED),
-            "proposal not sponsored yet"
-        );
-
         IVoting votingContract = IVoting(dao.getAdapterAddress(VOTING));
         require(
-            votingContract.voteResult(dao, proposalId) == 2,
+            votingContract.voteResult(dao, proposalId) ==
+                IVoting.VotingState.PASS,
             "proposal did not pass"
         );
 
+        dao.processProposal(proposalId);
         if (dao.getAdapterAddress(proposal.moduleId) != address(0x0)) {
             dao.removeAdapter(proposal.moduleId);
         }
@@ -137,6 +141,5 @@ contract ManagingContract is IManaging, DaoConstants, MemberGuard {
             proposal.moduleAddress,
             proposal.flags
         );
-        dao.processProposal(proposalId);
     }
 }
