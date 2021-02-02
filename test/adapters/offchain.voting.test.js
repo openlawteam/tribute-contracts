@@ -102,6 +102,10 @@ async function createOffchainVotingDao(
     offchainVoting.address,
     entryDao("voting", dao, offchainVoting, {}).flags
   );
+
+  const bank = await BankExtension.at(bankAddress);
+
+  await bank.addToBalance(members[0].address, SHARES, 1);
   await dao.setAclToExtensionForAdapter(
     bankAddress,
     offchainVoting.address,
@@ -120,7 +124,6 @@ async function createOffchainVotingDao(
     { from: senderAccount, gasPrice: toBN("0") }
   );
   await dao.finalizeDao({ from: senderAccount, gasPrice: toBN("0") });
-  const bank = await BankExtension.at(bankAddress);
 
   return { dao, voting: offchainVoting, bank };
 }
@@ -282,12 +285,13 @@ contract("LAOLAND - Offchain Voting Module", async (accounts) => {
 
     await onboarding.onboardAndSponsor(
       dao.address,
-      "0x0",
+      "0x1",
       members[1].address,
       SHARES,
       sharePrice.mul(toBN(3)).add(remaining),
       prepareVoteProposalData(proposalData),
       {
+        from: myAccount,
         value: sharePrice.mul(toBN("3")).add(remaining),
         gasPrice: toBN("0"),
       }
@@ -355,13 +359,13 @@ contract("LAOLAND - Offchain Voting Module", async (accounts) => {
 
     await voting.submitVoteResult(
       dao.address,
-      "0x0",
+      "0x1",
       voteResultTree.getHexRoot(),
       result,
       { from: myAccount, gasPrice: toBN("0") }
     );
     await advanceTime(10000);
-    await onboarding.processProposal(dao.address, "0x0", {
+    await onboarding.processProposal(dao.address, "0x1", {
       from: myAccount,
       gasPrice: toBN("0"),
     });

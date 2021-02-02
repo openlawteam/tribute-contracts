@@ -1,5 +1,5 @@
 // Whole-script strict mode syntax
-"use strict";
+("use strict");
 
 /**
 MIT License
@@ -24,34 +24,13 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
  */
-
-async function ragequit(dao, shares, loot, member) {
-  const bankAddress = await dao.getExtensionAddress(sha3("bank"));
-  const bank = await BankExtension.at(bankAddress);
-  let ragequitAddress = await dao.getAdapterAddress(sha3("ragequit"));
-  let ragequitContract = await RagequitContract.at(ragequitAddress);
-
-  await ragequitContract.startRagequit(dao.address, toBN(shares), toBN(loot), {
-    from: member,
-    gasPrice: toBN("0"),
-  });
-
-  await ragequitContract.burnShares(dao.address, member, 2, {
-    gasPrice: toBN("0"),
-  });
-
-  //Check New Member Shares
-  let newShares = await bank.balanceOf(member, SHARES);
-  assert.equal(newShares.toString(), "0");
-  return ragequitContract;
-}
-
 const {
   sha3,
   toBN,
   fromUtf8,
   advanceTime,
   createDao,
+  getContract,
   sharePrice,
   GUILD,
   ETH_TOKEN,
@@ -61,27 +40,30 @@ const {
   OnboardingContract,
   VotingContract,
   RagequitContract,
+  GuildKickContract,
   FinancingContract,
   BankExtension,
 } = require("../../utils/DaoFactory.js");
-let proposalCounter = 0;
+
+let proposalCounter = 1;
 contract("LAOLAND - Ragequit Adapter", async (accounts) => {
   const submitNewMemberProposal = async (
     onboarding,
     dao,
     newMember,
-    sharePrice
+    sharePrice,
+    token,
+    sponsor
   ) => {
-    const myAccount = accounts[1];
     const proposalId = "0x" + proposalCounter++;
     await onboarding.onboard(
       dao.address,
       proposalId,
       newMember,
-      SHARES,
+      token ? token : SHARES,
       sharePrice.mul(toBN(100)),
       {
-        from: myAccount,
+        from: sponsor ? sponsor : accounts[1],
         value: sharePrice.mul(toBN(10)),
         gasPrice: toBN("0"),
       }
@@ -105,6 +87,28 @@ contract("LAOLAND - Ragequit Adapter", async (accounts) => {
       gasPrice: toBN("0"),
     });
     await advanceTime(10000);
+  };
+
+  const guildKickProposal = async (
+    dao,
+    guildkickContract,
+    memberToKick,
+    sender,
+    proposalId = null
+  ) => {
+    const newProposalId = proposalId ? proposalId : "0x" + proposalCounter++;
+    await guildkickContract.submitKickProposal(
+      dao.address,
+      newProposalId,
+      memberToKick,
+      fromUtf8(""),
+      {
+        from: sender,
+        gasPrice: toBN("0"),
+      }
+    );
+
+    return { kickProposalId: newProposalId };
   };
 
   const ragequit = async (dao, shares, loot, member, token = ETH_TOKEN) => {
@@ -431,7 +435,6 @@ contract("LAOLAND - Ragequit Adapter", async (accounts) => {
     const bank = await BankExtension.at(bankAddress);
 
     // Transfer 1000 OLTs to the Advisor account
-    await oltContract.approve(advisorAccount, 100);
     await oltContract.transfer(advisorAccount, 100);
     let advisorTokenBalance = await oltContract.balanceOf(advisorAccount);
     assert.equal(
@@ -458,7 +461,7 @@ contract("LAOLAND - Ragequit Adapter", async (accounts) => {
       from: advisorAccount,
       gasPrice: toBN(0),
     });
-    let proposalId = "0x0";
+    let proposalId = "0x1";
     // Send a request to join the DAO as an Advisor (non-voting power),
     // the tx passes the OLT ERC20 token, the amount and the nonVotingOnboarding adapter that handles the proposal
     await onboarding.onboard(
@@ -601,4 +604,109 @@ contract("LAOLAND - Ragequit Adapter", async (accounts) => {
       assert.equal(err.reason, "token not allowed");
     }
   });
+
+  it("should be possible to ragequit if the member is part of a guild kick proposal but the proposal is not processed yet", async () => {
+    const daoOwner = accounts[1];
+    const memberA = accounts[2];
+
+    let dao = await createDao(daoOwner);
+    const onboarding = await getContract(dao, "onboarding", OnboardingContract);
+    const voting = await getContract(dao, "voting", VotingContract);
+    const guildkickContract = await getContract(
+      dao,
+      "guildkick",
+      GuildKickContract
+    );
+
+    let proposalId = await submitNewMemberProposal(
+      onboarding,
+      dao,
+      memberA,
+      sharePrice
+    );
+
+    //Sponsor the new proposal to admit the new member, vote and process it
+    await sponsorNewMember(onboarding, dao, proposalId, daoOwner, voting);
+    await onboarding.processProposal(dao.address, proposalId, {
+      from: daoOwner,
+      gasPrice: toBN("0"),
+    });
+
+    // Check memberA shares
+    const bankAddress = await dao.getExtensionAddress(sha3("bank"));
+    const bank = await BankExtension.at(bankAddress);
+    let memberAShares = await bank.balanceOf(memberA, SHARES);
+
+    // Submit GuildKick for memberA
+    await guildKickProposal(dao, guildkickContract, memberA, daoOwner);
+
+    // MemberA ragequits before the kick proposal is processed
+    await ragequit(dao, memberAShares, 0, memberA, ETH_TOKEN);
+  });
+
+  it("should not be possible to ragequit if the member is in jail", async () => {
+    const daoOwner = accounts[1];
+    const memberA = accounts[2];
+
+    let dao = await createDao(daoOwner);
+    const onboarding = await getContract(dao, "onboarding", OnboardingContract);
+    const voting = await getContract(dao, "voting", VotingContract);
+    const guildkickContract = await getContract(
+      dao,
+      "guildkick",
+      GuildKickContract
+    );
+
+    let proposalId = await submitNewMemberProposal(
+      onboarding,
+      dao,
+      memberA,
+      sharePrice
+    );
+
+    //Sponsor the new proposal to admit the new member, vote and process it
+    await sponsorNewMember(onboarding, dao, proposalId, daoOwner, voting);
+    await onboarding.processProposal(dao.address, proposalId, {
+      from: daoOwner,
+      gasPrice: toBN("0"),
+    });
+
+    // Check memberA shares
+    const bankAddress = await dao.getExtensionAddress(sha3("bank"));
+    const bank = await BankExtension.at(bankAddress);
+    let memberAShares = await bank.balanceOf(memberA, SHARES);
+
+    // Submit GuildKick for memberA
+    let { kickProposalId } = await guildKickProposal(
+      dao,
+      guildkickContract,
+      memberA,
+      daoOwner
+    );
+
+    //Vote YES on kick proposal
+    await voting.submitVote(dao.address, kickProposalId, 1, {
+      from: daoOwner,
+      gasPrice: toBN("0"),
+    });
+    await advanceTime(10000);
+
+    // Process the guild kick proposal to put the member in jail
+    await guildkickContract.guildKick(dao.address, kickProposalId, {
+      from: daoOwner,
+      gasPrice: toBN("0"),
+    });
+
+    try {
+      // MemberA attempts to ragequit, but he is in jail due to the guild kick
+      await ragequit(dao, memberAShares, 0, memberA, ETH_TOKEN);
+      assert.fail(
+        "should not be possible to ragequit if the member is in jail"
+      );
+    } catch (err) {
+      assert.equal(err.reason, "jailed member can not ragequit");
+    }
+  });
+
+  //TODO test fairShareHelper overflow
 });

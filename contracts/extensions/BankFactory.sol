@@ -44,9 +44,8 @@ contract BankFactory is CloneFactory, DaoConstants {
 
     /**
      * @notice Create and initialize a new DaoRegistry
-     * @param dao The name of the dao which, after being hashed, is used to access the address
      */
-    function createBank(DaoRegistry dao) external {
+    function createBank() external {
         BankExtension bank = BankExtension(_createClone(identityAddress));
         address bankAddr = address(bank);
         address daoAddr = address(dao);
