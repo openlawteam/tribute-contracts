@@ -4,11 +4,11 @@ A brief description of the adapter and what is the use-case covered by the imple
 
 ## Adapter workflow
 
-Describe the entire process, interactions and routines covered/executed by this Adapter.
+An overview of the entire process executed by Adapter functions, the main interactions and routines covered/executed.
 
 ## Adapter configuration
 
-Specify which additional configurations are required to make this adapter work. For instance: needs access to the DAO member, needs access to the DAO Bank, relies on Adapter X, Y and Extension Z.
+Specify which additional configurations are required to make this adapter work. For instance: needs access to the DAO members, needs access to the DAO Bank, relies on Adapter X, Y and Extension Z.
 
 DAORegistry Access Flags: `SUB_FROM_BALANCE`, ....
 
@@ -24,7 +24,7 @@ Add the information about all the interactions that are triggered by this DAO, w
 
 ## Functions description and assumptions / checks
 
-Descrive the public and private function signatures with proper documentation that clearly explains what the function does, what are expected the arguments and pre-conditions to execute the function. Also, provide what is the expected outcome.
+Describe the public and private functions signatures with proper documentation and clearly explaining what each function does. Specify what are expected the arguments and pre-conditions to execute the functions. Also, provide what is the expected outcome.
 
 Examples:
 
