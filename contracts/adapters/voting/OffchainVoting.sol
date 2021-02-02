@@ -70,7 +70,8 @@ contract OffchainVotingContract is
         keccak256(abi.encodePacked(VOTE_RESULT_NODE_TYPE));
     bytes32 public constant VOTE_RESULT_ROOT_TYPEHASH =
         keccak256(abi.encodePacked(VOTE_RESULT_ROOT_TYPE));
-    uint256 chainId;
+    
+    uint256 public chainId;
 
     function DOMAIN_SEPARATOR(DaoRegistry dao, address actionId)
         public
