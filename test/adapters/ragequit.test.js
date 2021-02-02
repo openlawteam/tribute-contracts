@@ -435,7 +435,6 @@ contract("LAOLAND - Ragequit Adapter", async (accounts) => {
     const bank = await BankExtension.at(bankAddress);
 
     // Transfer 1000 OLTs to the Advisor account
-    await oltContract.approve(advisorAccount, 100);
     await oltContract.transfer(advisorAccount, 100);
     let advisorTokenBalance = await oltContract.balanceOf(advisorAccount);
     assert.equal(
