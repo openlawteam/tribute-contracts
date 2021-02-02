@@ -150,7 +150,7 @@ contract("LAOLAND - Managing Adapter", async (accounts) => {
 
     //Submit a new Bank module proposal
     let newModuleId = sha3("onboarding");
-    let proposalId = "0x0";
+    let proposalId = "0x1";
     let newModuleAddress = accounts[3]; //TODO deploy some Banking test contract
     await managing.createModuleChangeRequest(
       dao.address,
@@ -195,7 +195,7 @@ contract("LAOLAND - Managing Adapter", async (accounts) => {
     let votingContract = await dao.getAdapterAddress(sha3("voting"));
     let voting = await VotingContract.at(votingContract);
 
-    let proposalId = "0x0";
+    let proposalId = "0x1";
 
     //Submit a new Bank module proposal
     let newModuleId = sha3("onboarding");

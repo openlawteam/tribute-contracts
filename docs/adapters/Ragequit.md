@@ -18,6 +18,8 @@ If the member provides at least one invalid token, e.g: a token that is not supp
 
 Once the process ragequit process is completed, the funds are deducted from the bank, and added to the member's internal balance, an event called `MemberRagequit` is emitted.
 
+It is important to mention that members that are in jail are not allowed to ragequit, and the function is open (without access modifier) because advisors should be able to ragequit - and advisor are not active members (shares > 0) because they only hold loot.
+
 ## Adapter configuration
 
 Tokens that are provided by the member have to be allowed/supported by the DAO.
@@ -32,14 +34,19 @@ There are no state tracking for this adapter.
 
 - BankExtension
 
-  - to check the member's balance
-  - to subtract the member's balance.
-  - to transfer the funds from the DAO account to the member's account taking into consideration the provided tokens.
-  - to check if the provided token is supported/allowed by the DAO.
+  - checks the member's balance.
+  - subtracts the member's balance.
+  - transfers the funds from the DAO account to the member's account taking into consideration the provided tokens.
+  - checks if the provided token is supported/allowed by the DAO.
+
+- DaoRegistry
+
+  - checks if the member is not in jail before allowing the ragequit.
+  - checks if the message sender is actually a member of the DAO.
 
 - FairShareHelper
 
-  - to calculate the amount of funds to be returned to the member based on the provided numbers of shares and/or loot.
+  - calculates the amount of funds to be returned to the member based on the provided numbers of shares and/or loot.
 
 ## Functions description and assumptions / checks
 
@@ -58,6 +65,8 @@ There are no state tracking for this adapter.
     /**
      * @notice Allows a member or advisor of the DAO to opt out by burning the proportional amount of shares/loot of the member.
      * @notice Anyone is allowed to call this function, but only members and advisor that have shares are able to execute the entire ragequit process.
+     * @dev The sum of sharesToBurn and lootToBurn have to be greater than zero.
+     * @dev The member can not be in jail to execute a ragequit.
      * @dev The member becomes an inative member of the DAO once all the shares/loot are burned.
      * @dev If the member provides an invalid/not allowed token, the entire processed is reverted.
      * @param dao The dao address that the member is part of.

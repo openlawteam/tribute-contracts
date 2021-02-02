@@ -1,20 +1,51 @@
 // Whole-script strict mode syntax
-'use strict';
+"use strict";
 
-async function checkLastEvent(dao, testObject) {
-    let pastEvents = await dao.getPastEvents();
-    let returnValues  = pastEvents[0].returnValues;
-    
-    Object.keys(testObject).forEach(key => {
-        assert.equal(testObject[key], returnValues[key], "value mismatch for key " + key);
-    });
-}
+const { toBN, advanceTime, SHARES } = require("./DaoFactory.js");
 
-async function checkBalance(bank, address, token, expectedBalance) {
-    const balance = await bank.balanceOf(address, token);
+const checkLastEvent = async (dao, testObject) => {
+  let pastEvents = await dao.getPastEvents();
+  let returnValues = pastEvents[0].returnValues;
 
-    assert.equal(balance.toString(), expectedBalance.toString());
-}
+  Object.keys(testObject).forEach((key) => {
+    assert.equal(
+      testObject[key],
+      returnValues[key],
+      "value mismatch for key " + key
+    );
+  });
+};
 
+const checkBalance = async (bank, address, token, expectedBalance) => {
+  const balance = await bank.balanceOf(address, token);
 
-module.exports = {checkLastEvent, checkBalance};
+  assert.equal(balance.toString(), expectedBalance.toString());
+};
+
+const submitNewMemberProposal = async (
+  onboarding,
+  dao,
+  newMember,
+  sharePrice,
+  sender,
+  proposalId
+) => {
+  await onboarding.onboard(
+    dao.address,
+    proposalId,
+    newMember,
+    SHARES,
+    sharePrice.mul(toBN(100)),
+    {
+      from: sender,
+      value: sharePrice.mul(toBN(10)),
+      gasPrice: toBN("0"),
+    }
+  );
+  return proposalId;
+};
+
+module.exports = {
+  checkLastEvent,
+  checkBalance,
+};
