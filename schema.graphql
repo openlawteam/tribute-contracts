@@ -49,12 +49,6 @@ type Member @entity {
   jailed: Boolean!
 }
 
-type Adapter @entity {
-  id: ID!
-  adapterAddress: Bytes!
-  acl: BigInt! #access control layer
-}
-
 type Proposal @entity {
   id: ID!
   proposalId: Bytes!
@@ -64,4 +58,16 @@ type Proposal @entity {
   sponsor: String
   processedAt: String
   processed: Boolean
+}
+
+type Adapter @entity {
+  id: ID!
+  adapterAddress: Bytes!
+  acl: BigInt! #access control layer
+}
+
+type Extension @entity {
+  id: ID!
+  extensionAddress: Bytes!
+  extensionId: Bytes!
 }

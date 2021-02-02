@@ -284,8 +284,8 @@ export class Token extends Entity {
     this.set("tokenAddress", Value.fromBytes(value));
   }
 
-  get ticker(): string | null {
-    let value = this.get("ticker");
+  get symbol(): string | null {
+    let value = this.get("symbol");
     if (value === null || value.kind == ValueKind.NULL) {
       return null;
     } else {
@@ -293,11 +293,11 @@ export class Token extends Entity {
     }
   }
 
-  set ticker(value: string | null) {
+  set symbol(value: string | null) {
     if (value === null) {
-      this.unset("ticker");
+      this.unset("symbol");
     } else {
-      this.set("ticker", Value.fromString(value as string));
+      this.set("symbol", Value.fromString(value as string));
     }
   }
 
@@ -318,8 +318,8 @@ export class Token extends Entity {
     }
   }
 
-  get details(): string | null {
-    let value = this.get("details");
+  get decimals(): string | null {
+    let value = this.get("decimals");
     if (value === null || value.kind == ValueKind.NULL) {
       return null;
     } else {
@@ -327,12 +327,21 @@ export class Token extends Entity {
     }
   }
 
-  set details(value: string | null) {
+  set decimals(value: string | null) {
     if (value === null) {
-      this.unset("details");
+      this.unset("decimals");
     } else {
-      this.set("details", Value.fromString(value as string));
+      this.set("decimals", Value.fromString(value as string));
     }
+  }
+
+  get whitelisted(): boolean {
+    let value = this.get("whitelisted");
+    return value.toBoolean();
+  }
+
+  set whitelisted(value: boolean) {
+    this.set("whitelisted", Value.fromBoolean(value));
   }
 }
 
@@ -511,72 +520,6 @@ export class Member extends Entity {
   set jailed(value: boolean) {
     this.set("jailed", Value.fromBoolean(value));
   }
-
-  get DAO(): Bytes | null {
-    let value = this.get("DAO");
-    if (value === null || value.kind == ValueKind.NULL) {
-      return null;
-    } else {
-      return value.toBytes();
-    }
-  }
-
-  set DAO(value: Bytes | null) {
-    if (value === null) {
-      this.unset("DAO");
-    } else {
-      this.set("DAO", Value.fromBytes(value as Bytes));
-    }
-  }
-}
-
-export class Adapter extends Entity {
-  constructor(id: string) {
-    super();
-    this.set("id", Value.fromString(id));
-  }
-
-  save(): void {
-    let id = this.get("id");
-    assert(id !== null, "Cannot save Adapter entity without an ID");
-    assert(
-      id.kind == ValueKind.STRING,
-      "Cannot save Adapter entity with non-string ID. " +
-        'Considering using .toHex() to convert the "id" to a string.'
-    );
-    store.set("Adapter", id.toString(), this);
-  }
-
-  static load(id: string): Adapter | null {
-    return store.get("Adapter", id) as Adapter | null;
-  }
-
-  get id(): string {
-    let value = this.get("id");
-    return value.toString();
-  }
-
-  set id(value: string) {
-    this.set("id", Value.fromString(value));
-  }
-
-  get adapterAddress(): Bytes {
-    let value = this.get("adapterAddress");
-    return value.toBytes();
-  }
-
-  set adapterAddress(value: Bytes) {
-    this.set("adapterAddress", Value.fromBytes(value));
-  }
-
-  get acl(): BigInt {
-    let value = this.get("acl");
-    return value.toBigInt();
-  }
-
-  set acl(value: BigInt) {
-    this.set("acl", Value.fromBigInt(value));
-  }
 }
 
 export class Proposal extends Entity {
@@ -694,5 +637,103 @@ export class Proposal extends Entity {
 
   set processed(value: boolean) {
     this.set("processed", Value.fromBoolean(value));
+  }
+}
+
+export class Adapter extends Entity {
+  constructor(id: string) {
+    super();
+    this.set("id", Value.fromString(id));
+  }
+
+  save(): void {
+    let id = this.get("id");
+    assert(id !== null, "Cannot save Adapter entity without an ID");
+    assert(
+      id.kind == ValueKind.STRING,
+      "Cannot save Adapter entity with non-string ID. " +
+        'Considering using .toHex() to convert the "id" to a string.'
+    );
+    store.set("Adapter", id.toString(), this);
+  }
+
+  static load(id: string): Adapter | null {
+    return store.get("Adapter", id) as Adapter | null;
+  }
+
+  get id(): string {
+    let value = this.get("id");
+    return value.toString();
+  }
+
+  set id(value: string) {
+    this.set("id", Value.fromString(value));
+  }
+
+  get adapterAddress(): Bytes {
+    let value = this.get("adapterAddress");
+    return value.toBytes();
+  }
+
+  set adapterAddress(value: Bytes) {
+    this.set("adapterAddress", Value.fromBytes(value));
+  }
+
+  get acl(): BigInt {
+    let value = this.get("acl");
+    return value.toBigInt();
+  }
+
+  set acl(value: BigInt) {
+    this.set("acl", Value.fromBigInt(value));
+  }
+}
+
+export class Extension extends Entity {
+  constructor(id: string) {
+    super();
+    this.set("id", Value.fromString(id));
+  }
+
+  save(): void {
+    let id = this.get("id");
+    assert(id !== null, "Cannot save Extension entity without an ID");
+    assert(
+      id.kind == ValueKind.STRING,
+      "Cannot save Extension entity with non-string ID. " +
+        'Considering using .toHex() to convert the "id" to a string.'
+    );
+    store.set("Extension", id.toString(), this);
+  }
+
+  static load(id: string): Extension | null {
+    return store.get("Extension", id) as Extension | null;
+  }
+
+  get id(): string {
+    let value = this.get("id");
+    return value.toString();
+  }
+
+  set id(value: string) {
+    this.set("id", Value.fromString(value));
+  }
+
+  get extensionAddress(): Bytes {
+    let value = this.get("extensionAddress");
+    return value.toBytes();
+  }
+
+  set extensionAddress(value: Bytes) {
+    this.set("extensionAddress", Value.fromBytes(value));
+  }
+
+  get extensionId(): Bytes {
+    let value = this.get("extensionId");
+    return value.toBytes();
+  }
+
+  set extensionId(value: Bytes) {
+    this.set("extensionId", Value.fromBytes(value));
   }
 }

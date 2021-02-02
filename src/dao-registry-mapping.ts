@@ -12,7 +12,7 @@ import {
   ConfigurationUpdated,
   AddressConfigurationUpdated,
 } from "../generated/templates/DaoRegistry/DaoRegistry";
-import { Proposal, Adapter, Member } from "../generated/schema";
+import { Adapter, Extension, Proposal, Member } from "../generated/schema";
 import { log, store } from "@graphprotocol/graph-ts";
 
 export function handleSubmittedProposal(event: SubmittedProposal): void {
@@ -167,6 +167,16 @@ export function handleExtensionAdded(event: ExtensionAdded): void {
       event.params.extensionId.toString(),
     ]
   );
+
+  let extension = Extension.load(event.params.extensionId.toHex());
+
+  if (extension == null) {
+    extension = new Extension(event.params.extensionId.toHex());
+    extension.extensionAddress = event.params.extensionAddress;
+    extension.extensionId = event.params.extensionId;
+
+    extension.save();
+  }
 }
 
 export function handleExtensionRemoved(event: ExtensionRemoved): void {
@@ -174,6 +184,12 @@ export function handleExtensionRemoved(event: ExtensionRemoved): void {
     "**************** handleExtensionRemoved event fired. extensionId {}",
     [event.params.extensionId.toString()]
   );
+
+  let extension = Extension.load(event.params.extensionId.toHex());
+
+  if (extension !== null) {
+    store.remove("Extension", event.params.extensionId.toHex());
+  }
 }
 
 export function handleConfigurationUpdated(event: ConfigurationUpdated): void {

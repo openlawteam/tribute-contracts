@@ -480,12 +480,12 @@ export class BankExtension extends ethereum.SmartContract {
     return ethereum.CallResult.fromValue(value[0].toBigInt());
   }
 
-  balanceOf(account: Address, tokenAddr: Address): BigInt {
+  balanceOf(member: Address, tokenAddr: Address): BigInt {
     let result = super.call(
       "balanceOf",
       "balanceOf(address,address):(uint256)",
       [
-        ethereum.Value.fromAddress(account),
+        ethereum.Value.fromAddress(member),
         ethereum.Value.fromAddress(tokenAddr)
       ]
     );
@@ -494,14 +494,14 @@ export class BankExtension extends ethereum.SmartContract {
   }
 
   try_balanceOf(
-    account: Address,
+    member: Address,
     tokenAddr: Address
   ): ethereum.CallResult<BigInt> {
     let result = super.tryCall(
       "balanceOf",
       "balanceOf(address,address):(uint256)",
       [
-        ethereum.Value.fromAddress(account),
+        ethereum.Value.fromAddress(member),
         ethereum.Value.fromAddress(tokenAddr)
       ]
     );
@@ -603,7 +603,7 @@ export class WithdrawCall__Inputs {
     this._call = call;
   }
 
-  get account(): Address {
+  get member(): Address {
     return this._call.inputValues[0].value.toAddress();
   }
 
@@ -684,6 +684,36 @@ export class RegisterPotentialNewInternalTokenCall__Outputs {
   }
 }
 
+export class UpdateTokenCall extends ethereum.Call {
+  get inputs(): UpdateTokenCall__Inputs {
+    return new UpdateTokenCall__Inputs(this);
+  }
+
+  get outputs(): UpdateTokenCall__Outputs {
+    return new UpdateTokenCall__Outputs(this);
+  }
+}
+
+export class UpdateTokenCall__Inputs {
+  _call: UpdateTokenCall;
+
+  constructor(call: UpdateTokenCall) {
+    this._call = call;
+  }
+
+  get tokenAddr(): Address {
+    return this._call.inputValues[0].value.toAddress();
+  }
+}
+
+export class UpdateTokenCall__Outputs {
+  _call: UpdateTokenCall;
+
+  constructor(call: UpdateTokenCall) {
+    this._call = call;
+  }
+}
+
 export class AddToBalanceCall extends ethereum.Call {
   get inputs(): AddToBalanceCall__Inputs {
     return new AddToBalanceCall__Inputs(this);
@@ -701,7 +731,7 @@ export class AddToBalanceCall__Inputs {
     this._call = call;
   }
 
-  get user(): Address {
+  get member(): Address {
     return this._call.inputValues[0].value.toAddress();
   }
 
@@ -739,7 +769,7 @@ export class SubtractFromBalanceCall__Inputs {
     this._call = call;
   }
 
-  get user(): Address {
+  get member(): Address {
     return this._call.inputValues[0].value.toAddress();
   }
 

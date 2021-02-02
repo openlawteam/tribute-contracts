@@ -860,6 +860,76 @@ export class DaoRegistry extends ethereum.SmartContract {
     return ethereum.CallResult.fromValue(value[0].toBoolean());
   }
 
+  getMemberFlag(memberAddress: Address, flag: i32): boolean {
+    let result = super.call(
+      "getMemberFlag",
+      "getMemberFlag(address,uint8):(bool)",
+      [
+        ethereum.Value.fromAddress(memberAddress),
+        ethereum.Value.fromUnsignedBigInt(BigInt.fromI32(flag))
+      ]
+    );
+
+    return result[0].toBoolean();
+  }
+
+  try_getMemberFlag(
+    memberAddress: Address,
+    flag: i32
+  ): ethereum.CallResult<boolean> {
+    let result = super.tryCall(
+      "getMemberFlag",
+      "getMemberFlag(address,uint8):(bool)",
+      [
+        ethereum.Value.fromAddress(memberAddress),
+        ethereum.Value.fromUnsignedBigInt(BigInt.fromI32(flag))
+      ]
+    );
+    if (result.reverted) {
+      return new ethereum.CallResult();
+    }
+    let value = result.value;
+    return ethereum.CallResult.fromValue(value[0].toBoolean());
+  }
+
+  getNbMember(): BigInt {
+    let result = super.call("getNbMember", "getNbMember():(uint256)", []);
+
+    return result[0].toBigInt();
+  }
+
+  try_getNbMember(): ethereum.CallResult<BigInt> {
+    let result = super.tryCall("getNbMember", "getNbMember():(uint256)", []);
+    if (result.reverted) {
+      return new ethereum.CallResult();
+    }
+    let value = result.value;
+    return ethereum.CallResult.fromValue(value[0].toBigInt());
+  }
+
+  getMemberAddress(index: BigInt): Address {
+    let result = super.call(
+      "getMemberAddress",
+      "getMemberAddress(uint256):(address)",
+      [ethereum.Value.fromUnsignedBigInt(index)]
+    );
+
+    return result[0].toAddress();
+  }
+
+  try_getMemberAddress(index: BigInt): ethereum.CallResult<Address> {
+    let result = super.tryCall(
+      "getMemberAddress",
+      "getMemberAddress(uint256):(address)",
+      [ethereum.Value.fromUnsignedBigInt(index)]
+    );
+    if (result.reverted) {
+      return new ethereum.CallResult();
+    }
+    let value = result.value;
+    return ethereum.CallResult.fromValue(value[0].toAddress());
+  }
+
   isNotReservedAddress(applicant: Address): boolean {
     let result = super.call(
       "isNotReservedAddress",

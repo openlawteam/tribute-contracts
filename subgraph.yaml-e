@@ -60,7 +60,6 @@ templates:
         - Proposal
         - Member
         - Adapter
-        - Extension
       abis:
         - name: DaoRegistry
           file: ./build/contracts/DaoRegistry.json
