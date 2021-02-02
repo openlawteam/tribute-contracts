@@ -283,18 +283,21 @@ contract("LAOLAND - Offchain Voting Module", async (accounts) => {
       chainId
     ).toString("hex");
 
-    await onboarding.onboardAndSponsor(
-      dao.address,
+    await onboarding.onboard(dao.address,
       "0x1",
       members[1].address,
       SHARES,
       sharePrice.mul(toBN(3)).add(remaining),
-      prepareVoteProposalData(proposalData),
       {
         from: myAccount,
         value: sharePrice.mul(toBN("3")).add(remaining),
         gasPrice: toBN("0"),
-      }
+      });
+
+    await onboarding.sponsorProposal(
+      dao.address,
+      "0x1",
+      prepareVoteProposalData(proposalData)
     );
 
     const voteEntry = await createVote(proposalHash, members[0].address, true);

@@ -107,7 +107,7 @@ contract FinancingContract is IFinancing, DaoConstants, MemberGuard {
                 data,
                 msg.sender
             );
-        _sponsorProposal(dao, proposalI, data, sponsoredBy, votingContract);
+        _sponsorProposal(dao, proposalId, data, sponsoredBy, votingContract);
     }
 
     function _sponsorProposal(

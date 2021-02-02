@@ -82,7 +82,7 @@ contract ConfigurationContract is IConfiguration, DaoConstants, MemberGuard {
                 data,
                 msg.sender
             );
-        _sponsorProposal(dao, proposalI, data, sponsoredBy, votingContract);
+        _sponsorProposal(dao, proposalId, data, sponsoredBy, votingContract);
     }
 
     function _sponsorProposal(
@@ -93,19 +93,6 @@ contract ConfigurationContract is IConfiguration, DaoConstants, MemberGuard {
         IVoting votingContract
     ) internal {
         dao.sponsorProposal(proposalId, sponsoredBy);
-        votingContract.startNewVotingForProposal(dao, proposalId, data);
-    }
-
-    function _sponsorProposal(
-        DaoRegistry dao,
-        bytes32 proposalId,
-        bytes memory data,
-        address sponsoredBy,
-        IVoting votingContract
-    ) internal {
-        dao.sponsorProposal(proposalId, sponsoredBy);
-
-        IVoting votingContract = IVoting(dao.getAdapterAddress(VOTING));
         votingContract.startNewVotingForProposal(dao, proposalId, data);
     }
 
