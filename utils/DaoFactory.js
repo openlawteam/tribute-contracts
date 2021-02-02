@@ -540,7 +540,6 @@ module.exports = {
   OnboardingContract,
   WithdrawContract,
   ConfigurationContract,
-  OnboardingContract,
   OffchainVotingContract,
   BankExtension,
 };
