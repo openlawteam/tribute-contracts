@@ -372,7 +372,7 @@ contract OnboardingContract is
             proposer.transfer(amount);
         } else {
             IERC20 token = IERC20(tokenAddr);
-            token.safeTransferFrom(address(this), proposer, amount);
+            token.safeTransfer(proposer, amount);
         }
     }
 
