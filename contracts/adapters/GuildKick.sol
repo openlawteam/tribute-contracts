@@ -45,11 +45,7 @@ contract GuildKickContract is IGuildKick, DaoConstants, MemberGuard {
         // The kick status.
         GuildKickStatus status;
         // The number of shares of the member that should be burned.
-        uint256 sharesToBurn;
-        // The number of loot of the member that should be burned.
-        uint256 lootToBurn;
-        // Additional information related to the kick proposal.
-        bytes data;
+        uint256 tokensToBurn;
         // Current iteration index to control the cached for-loop.
         uint256 currentIndex;
         // The block number in which the guild kick proposal has been created.
@@ -60,7 +56,7 @@ contract GuildKickContract is IGuildKick, DaoConstants, MemberGuard {
     mapping(address => mapping(bytes32 => GuildKick)) public kicks;
 
     // Keeps track of the latest ongoing kick proposal per DAO to ensure only 1 kick happens at time.
-    mapping(address => GuildKickStatus) public ongoingKicks;
+    mapping(address => bytes32) public ongoingKicks;
 
     /**
      * @notice default fallback function to prevent from sending ether to the contract.
@@ -85,42 +81,45 @@ contract GuildKickContract is IGuildKick, DaoConstants, MemberGuard {
         bytes32 proposalId,
         address memberToKick,
         bytes calldata data
-    ) external override onlyMember(dao) {
+    ) external override {
         // Checks if the sender address is not the same as the member to kick to prevent auto kick.
-        require(msg.sender != memberToKick, "you can not kick yourself");
+        IVoting votingContract = IVoting(dao.getAdapterAddress(VOTING));
+        address submittedBy =
+            votingContract.getSenderAddress(
+                dao,
+                address(this),
+                data,
+                msg.sender
+            );
+        require(submittedBy != memberToKick, "you can not kick yourself");
+        _submitKickProposal(dao, proposalId, memberToKick, data, submittedBy);
+    }
 
-        // Checks if there is an ongoing kick proposal, only one kick can be executed at time.
-        require(
-            ongoingKicks[address(dao)] != GuildKickStatus.IN_PROGRESS,
-            "there is a kick in progress"
-        );
-
-        // Checks if the proposalId already exists
-        require(
-            kicks[address(dao)][proposalId].status ==
-                GuildKickStatus.NOT_STARTED,
-            "kick proposal id already used"
-        );
-
+    function _submitKickProposal(
+        DaoRegistry dao,
+        bytes32 proposalId,
+        address memberToKick,
+        bytes calldata data,
+        address submittedBy
+    ) internal onlyMember2(dao, submittedBy) {
         // Creates a guild kick proposal.
         dao.submitProposal(proposalId);
 
         BankExtension bank = BankExtension(dao.getExtensionAddress(BANK));
         // Gets the number of shares of the member
         uint256 sharesToBurn = bank.balanceOf(memberToKick, SHARES);
-        // Checks if the member has enough shares to be converted to loot.
-        require(sharesToBurn > 0, "insufficient shares");
 
         // Gets the number of loot of the member
         uint256 lootToBurn = bank.balanceOf(memberToKick, LOOT);
 
+        // Checks if the member has enough shares to be converted to loot.
+        require(sharesToBurn + lootToBurn > 0, "no shares or loot");
+
         // Saves the state of the guild kick proposal.
         kicks[address(dao)][proposalId] = GuildKick(
             memberToKick,
-            GuildKickStatus.IN_PROGRESS,
-            sharesToBurn,
-            lootToBurn,
-            data,
+            GuildKickStatus.NOT_STARTED,
+            0,
             0,
             block.number
         );
@@ -129,11 +128,8 @@ contract GuildKickContract is IGuildKick, DaoConstants, MemberGuard {
         IVoting votingContract = IVoting(dao.getAdapterAddress(VOTING));
         votingContract.startNewVotingForProposal(dao, proposalId, data);
 
-        // Sets the state of the current kick proposal.
-        ongoingKicks[address(dao)] = GuildKickStatus.IN_PROGRESS;
-
         // Sponsors the guild kick proposal.
-        dao.sponsorProposal(proposalId, msg.sender);
+        dao.sponsorProposal(proposalId, submittedBy);
     }
 
     /**
@@ -146,53 +142,58 @@ contract GuildKickContract is IGuildKick, DaoConstants, MemberGuard {
      * @param dao The dao address.
      * @param proposalId The guild kick proposal id.
      */
-    function guildKick(DaoRegistry dao, bytes32 proposalId)
+    function processProposal(DaoRegistry dao, bytes32 proposalId)
         external
         override
-        onlyMember(dao)
     {
+        dao.processProposal(proposalId);
         // Checks if the proposal exists or is not in progress yet.
         GuildKick storage kick = kicks[address(dao)][proposalId];
         require(
-            kick.status == GuildKickStatus.IN_PROGRESS,
-            "guild kick already completed or does not exist"
+            kick.status == GuildKickStatus.NOT_STARTED,
+            "guild kick already completed or in progress"
         );
 
         // Checks if there is an ongoing kick proposal, only one kick can be executed at time.
+        bytes32 ongoingProposalId = ongoingKicks[address(dao)];
         require(
-            ongoingKicks[address(dao)] == GuildKickStatus.IN_PROGRESS,
-            "guild kick not in progress"
+            ongoingProposalId == bytes32(0) ||
+                kicks[ongoingProposalId].status != GuildKickStatus.IN_PROGRESS,
+            "another kick already in progress"
         );
-
-        // Only active members can be kicked out.
-        address memberToKick = kick.memberToKick;
-        require(dao.isActiveMember(memberToKick), "member is not active");
 
         // Checks if the proposal has passed.
         IVoting votingContract = IVoting(dao.getAdapterAddress(VOTING));
         require(
             votingContract.voteResult(dao, proposalId) ==
                 IVoting.VotingState.PASS,
-            "proposal did not pass yet"
+            "proposal did not pass"
         );
 
         // Calculates the total shares, loot of the member.
         BankExtension bank = BankExtension(dao.getExtensionAddress(BANK));
-
+        address memberToKick = kick.memberToKick;
+        // Gets the number of shares of the member
+        uint256 sharesToBurn = bank.balanceOf(memberToKick, SHARES);
         // Burns / subtracts from member's balance the number of shares to burn.
-        bank.subtractFromBalance(memberToKick, SHARES, kick.sharesToBurn);
+        bank.subtractFromBalance(memberToKick, SHARES, sharesToBurn);
         // Burns / subtracts from member's balance the number of loot to burn.
         // bank.subtractFromBalance(memberToKick, LOOT, kick.lootToBurn);
-        bank.addToBalance(memberToKick, LOOT, kick.sharesToBurn);
+        bank.addToBalance(memberToKick, LOOT, sharesToBurn);
+
+        uint256 tokensToBurn = bank.balanceOf(memberToKick, LOOT);
 
         // Member is sent to jail to prevent any actions in the DAO anymore.
         dao.jailMember(memberToKick);
 
         // Set the kick proposal to done/completed.
-        kick.status = GuildKickStatus.DONE;
+        kick.status = GuildKickStatus.IN_PROGRESS;
+
+        kick.blockNumber = block.number;
+        kick.tokensToBurn = tokensToBurn;
+
         // Set the current kick proposal to done/completed.
-        ongoingKicks[address(dao)] = GuildKickStatus.DONE;
-        dao.processProposal(proposalId);
+        ongoingKicks[address(dao)] = proposalId;
     }
 
     /**
@@ -208,17 +209,15 @@ contract GuildKickContract is IGuildKick, DaoConstants, MemberGuard {
      * @param proposalId The guild kick proposal id.
      * @param toIndex The index to control the cached for-loop.
      */
-    function rageKick(
-        DaoRegistry dao,
-        bytes32 proposalId,
-        uint256 toIndex
-    ) external override onlyMember(dao) {
+    function rageKick(DaoRegistry dao, uint256 toIndex) external override {
         //should be open it so the kicked member is able to call this function?
         // Checks if the kick proposal does not exist or is not completed yet
-        GuildKick storage kick = kicks[address(dao)][proposalId];
+        bytes32 ongoingProposalId = ongoingKicks[address(dao)];
+        GuildKick storage kick = kicks[address(dao)][ongoingProposalId];
+        uint256 kickBlockNumber = kick.blockNumber;
         require(
-            kick.status == GuildKickStatus.DONE,
-            "guild kick not completed or does not exist"
+            kick.status == GuildKickStatus.IN_PROGRESS,
+            "guild kick completed or does not exist"
         );
 
         // Check if the given index was already processed
@@ -239,14 +238,14 @@ contract GuildKickContract is IGuildKick, DaoConstants, MemberGuard {
         // it considers the locked loot to be able to calculate the fair amount to ragequit,
         // but locked loot can not be burned.
         uint256 initialTotalSharesAndLoot =
-            bank.getPriorAmount(TOTAL, SHARES, kick.blockNumber) +
-                bank.getPriorAmount(TOTAL, LOOT, kick.blockNumber) +
-                bank.getPriorAmount(TOTAL, LOCKED_LOOT, kick.blockNumber);
+            bank.getPriorAmount(TOTAL, SHARES, kickBlockNumber) +
+                bank.getPriorAmount(TOTAL, LOOT, kickBlockNumber) +
+                bank.getPriorAmount(TOTAL, LOCKED_LOOT, kickBlockNumber);
 
         // Get the member address to kick out of the DAO
         address kickedMember = kick.memberToKick;
         // Get amount of shares and loot to burn
-        uint256 sharesAndLootToBurn = kick.sharesToBurn + kick.lootToBurn;
+        uint256 sharesAndLootToBurn = kick.tokensToBurn;
 
         // Transfers the funds from the internal Guild account to the internal member's account.
         for (uint256 i = currentIndex; i < maxIndex; i++) {
@@ -255,7 +254,7 @@ contract GuildKickContract is IGuildKick, DaoConstants, MemberGuard {
             // It takes into account the historical guild balance when the kick proposal was created.
             uint256 amountToRagequit =
                 FairShareHelper.calc(
-                    bank.getPriorAmount(GUILD, token, kick.blockNumber),
+                    bank.getPriorAmount(GUILD, token, kickBlockNumber),
                     sharesAndLootToBurn,
                     initialTotalSharesAndLoot
                 );
@@ -281,6 +280,7 @@ contract GuildKickContract is IGuildKick, DaoConstants, MemberGuard {
             bank.subtractFromBalance(kickedMember, LOOT, sharesAndLootToBurn);
             // Unjail the member once the internal transfer is completed.
             dao.unjailMember(kickedMember);
+            kick.status = GuildKickStatus.DONE;
         }
     }
 }

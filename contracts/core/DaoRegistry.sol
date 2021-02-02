@@ -569,8 +569,8 @@ contract DaoRegistry is MemberGuard, AdapterGuard {
         address memberAddr = memberAddressesByDelegatedKey[addr];
         uint256 memberFlags = members[memberAddr].flags;
         return
-            getFlag(memberFlags, uint8(MemberFlag.EXISTS)) &&
-            !getFlag(memberFlags, uint8(MemberFlag.JAILED));
+            getMemberFlag(memberFlags, MemberFlag.EXISTS) &&
+            !getMemberFlag(memberFlags, MemberFlag.JAILED);
     }
 
     /**
