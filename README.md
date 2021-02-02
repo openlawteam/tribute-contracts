@@ -12,27 +12,60 @@ This is why we would like to introduce a more modular approach to Moloch archite
 
 Inspired by the hexagonal architecture pattern we believe that we can have additional layers of security, and break the main contract into smaller contracts. With that, we create loosely coupled modules/contracts, easier to audit, and can be easily connected to the DAO.
 
-The architecture is composed by 3 main types of components:
+The architecture is composed by 4 main types of components:
 
-**Core Contracts**
+**External World**
 
-- The Core Contact (DaoRegistry) keeps track of the state changes of the DAO.
-- The Registry tracks all the registered Adapters, Proposals, and Bank Accounts of the DAO.
+The external world is essentially anything that interacts with the DAO. An example of that are RPC clients that are responsible for calling the Adapters public/external functions to pull/push data to the DAO Core Contracts and its Extensions.
+
+**Adapters**
+
+Adapters are well defined, tested and extensible smart contracts that are created with a unique purpose. One Adapter is responsible for performing one or a set of tasks in a given context. With this approach we can developer adapters targeting specific use-cases and update the DAO configurations to use these new adapters.
+
+When a new adapter is created, one needs to submit a Managing proposal to add the new adapter to the DAO. Once the proposal pass, the new adapter is added, and becomes available for use.
+
+Adapters implemented in the LAOLand project:
+
+- [Configuration](https://github.com/openlawteam/laoland/blob/master/docs/adapters/Configuration.md): manages storing and retrieving per-DAO settings required by shared adapters.
+- [Financing](https://github.com/openlawteam/laoland/blob/master/docs/adapters/Financing.md):
+- [GuildKick](https://github.com/openlawteam/laoland/blob/master/docs/adapters/GuildKick.md):
+- [Managing](https://github.com/openlawteam/laoland/blob/master/docs/adapters/Managing.md):
+- [OffchainVoting](https://github.com/openlawteam/laoland/blob/master/docs/adapters/OffchainVoting.md):
+- [Onboarding](https://github.com/openlawteam/laoland/blob/master/docs/adapters/Onboarding.md):
+- [Ragequit](https://github.com/openlawteam/laoland/blob/master/docs/adapters/Ragequit.md):
+- [Voting](https://github.com/openlawteam/laoland/blob/master/docs/adapters/Voting.md):
+- [Withdraw](https://github.com/openlawteam/laoland/blob/master/docs/adapters/Withdraw.md):
+
+Conventions:
+
+- Adapters do not keep track of the state of the DAO, they might use storage to control its own state, but the ideal is that any DAO relevant state change is propagated to the DAORegistry Core Contract.
+- Adapters just execute Smart Contract logic that changes the state of the DAO by calling the DAORegistry, they also can compose complex calls that interact with External World to pull/push additional information.
+- Each Adapter is a very specialized Smart Contract designed to do one thing very well.
+- Adapters can have public access or access limited to members of the DAO (`onlyMember` modifier).
+- The adapter must follow the rules defined by the [Template Adapter](#) TODO
+
+**Extensions**
+In order to isolate complex state changes from the DAO contract code to simplify the logic, we created the concept of Extensions. As things evolve we can implement different flavors of extensions, at the moment we have only the Bank Extension available:
+
+- Bank: enhances the DAO state with banking capabilities, keeps track of the DAO and members accounts and internal balances.
+
 - Only Adapters are allowed to call functions from the Registry Module.
 - The Registry does not communicate with External World directly, it needs to go through an Adapter to pull or push information.
 - The Registry uses the `onlyAdapter` modifier to functions that change the state of the Registry/DAO, in the future we may want to grant different access types based on the Adapter type. It may expose some **read-only** public functions (`external` or `public`) to facilitate queries.
 
-**Adapters**
+**Core Contracts**
 
-- Public/External accessible functions called from External World.
-- Adapters do not keep track of the state of the DAO, they might use storage but the ideal is that any DAO relevant state change is propagated to the Registry Core Module.
-- Adapters just execute Smart Contract logic that changes the state of the DAO by calling the Registry Core Module, they also can compose complex calls that interact with External World to pull/push additional information.
-- Each Adapter is a very specialized Smart Contract designed to do one thing very well.
-- Adapters can have public access or access limited to members of the DAO (`onlyMember` modifier).
+A core contract is a contract that composes the DAO itself, and directly changes the DAO state without the need to go through an Adapter.
+Ideally a core contract should never pull information from the external world
 
-**External World**
-
-- RPC clients responsible for calling the Adapters public/external functions to interact with the DAO Core Module.
+- DaoRegistry:
+  - tracks the state changes of the DAO.
+- CloneFactory:
+  - creates a clone of the DAO based on its address.
+- DaoFactory:
+  - creates, initializes, and add adapters configurations to a new DAO. The DAO is created using CloneFactory to reduce the transaction costs.
+- DaoConstants:
+  - defines all the constants used by the DAO contracts, and implements some helper functions to manage the access flags.
 
 ![laoland_hexagon_architecture](https://user-images.githubusercontent.com/708579/106510703-096a9880-64ae-11eb-8e48-3745e36a7b80.png)
 
