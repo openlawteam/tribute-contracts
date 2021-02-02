@@ -53,12 +53,18 @@ contract TributeContract is ITribute, DaoConstants, MemberGuard, AdapterGuard {
 
     mapping(address => mapping(bytes32 => ProposalDetails)) public proposals;
 
+    /*
+     * default fallback function to prevent from sending ether to the contract
+     */
+    receive() external payable {
+        revert("fallback revert");
+    }
+
     function configureDao(DaoRegistry dao, address tokenAddrToMint)
         external
         onlyAdapter(dao)
     {
         BankExtension bank = BankExtension(dao.getExtensionAddress(BANK));
-
         bank.registerPotentialNewInternalToken(tokenAddrToMint);
     }
 
@@ -173,7 +179,6 @@ contract TributeContract is ITribute, DaoConstants, MemberGuard, AdapterGuard {
     function processProposal(DaoRegistry dao, bytes32 proposalId)
         external
         override
-        onlyMember(dao)
     {
         ProposalDetails storage proposal = proposals[address(dao)][proposalId];
         require(proposal.id == proposalId, "proposal does not exist");

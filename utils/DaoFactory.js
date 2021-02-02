@@ -220,7 +220,8 @@ async function configureDao(daoFactory, dao, ragequit, guildkick, managing, fina
       SUB_FROM_BALANCE: true,
     }),
     entryBank(tribute, {
-      ADD_TO_BALANCE: true
+      ADD_TO_BALANCE: true,
+      REGISTER_NEW_TOKEN: true,
     }),
   ]);
 
