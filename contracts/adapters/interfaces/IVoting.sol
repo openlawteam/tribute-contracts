@@ -29,7 +29,14 @@ SOFTWARE.
  */
 
 interface IVoting {
-    enum VotingState {NOT_STARTED, TIE, PASS, NOT_PASS, IN_PROGRESS}
+    enum VotingState {
+        NOT_STARTED,
+        TIE,
+        PASS,
+        NOT_PASS,
+        IN_PROGRESS,
+        GRACE_PERIOD
+    }
 
     function startNewVotingForProposal(
         DaoRegistry dao,

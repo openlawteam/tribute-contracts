@@ -1,14 +1,7 @@
 ## Adapter description and scope
 This adapter manages on chain "simple" voting
-## Adapter workflow
-
-## Adapter configuration
-bytes32 constant VotingPeriod = keccak256("voting.votingPeriod");
-    bytes32 constant GracePeriod = keccak256("voting.gracePeriod");
-## Functions description, assumptions, checks, dependencies, interactions and access control
-    mapping(address => mapping(bytes32 => Voting)) public votes;
-
-    struct Voting {
+## Adapter state
+struct Voting {
         uint256 nbYes;
         uint256 nbNo;
         uint256 startingTime;
@@ -16,119 +9,47 @@ bytes32 constant VotingPeriod = keccak256("voting.votingPeriod");
         mapping(address => uint256) votes;
     }
 
+mapping(address => mapping(bytes32 => Voting)) public votes;
+mapping for each adapter of proposalId => voting state where voting state is
+- nbYes : how many yes have been casted
+- nbNo: how many no have been casted
+- startingTime: starting time of the voting process
+- mapping of member => vote to keep track of everybody's vote and know if they have already voted or not
 
-    function configureDao(
-        DaoRegistry dao,
-        uint256 votingPeriod,
-        uint256 gracePeriod
-    ) external onlyAdapter(dao) {
-        dao.setConfiguration(VotingPeriod, votingPeriod);
-        dao.setConfiguration(GracePeriod, gracePeriod);
-    }
+## Adapter configuration
+Two configurations are possible for the voting adapter
+### VotingPeriod = keccak256("voting.votingPeriod")
+How long after the starting time is the voting valid
 
-    //voting  data is not used for pure onchain voting
-    function startNewVotingForProposal(
-        DaoRegistry dao,
-        bytes32 proposalId,
-        bytes calldata
-    ) external override onlyAdapter(dao) {
-        //it is called from Registry
-        // compute startingPeriod for proposal
+### GracePeriod = keccak256("voting.gracePeriod")
+How long after the end of the voting period is the result settled 
+## Functions description, assumptions, checks, dependencies, interactions and access control
 
-        Voting storage vote = votes[address(dao)][proposalId];
-        vote.startingTime = block.timestamp;
-        vote.blockNumber = block.number;
-    }
+### function startNewVotingForProposal(DaoRegistry dao, bytes32 proposalId, bytes calldata)
+This is called every time a proposal is being sponsored. This starts the voting process
 
-    function getSenderAddress(
-        DaoRegistry,
-        address,
-        bytes memory,
-        address sender
-    ) external pure override returns (address) {
-        return sender;
-    }
+We assume here that the adapter uses `dao.sponsorProposal()` to make sure it is not called multiple times on the same proposal
 
-    function submitVote(
-        DaoRegistry dao,
-        bytes32 proposalId,
-        uint256 voteValue
-    ) external onlyMember(dao) {
-        require(dao.isActiveMember(msg.sender), "only active members can vote");
-        require(
-            dao.getProposalFlag(proposalId, DaoRegistry.ProposalFlag.SPONSORED),
-            "the proposal has not been sponsored yet"
-        );
+### function getSenderAddress(DaoRegistry, address,bytes memory,address sender) returns (address) 
+This function let's the voting adapter determine who is signing the message based on the data sent. 
+In the case of Voting, it's always msg.sender. But for other implementations, signed data could be used to determine it and let a relayer do the call
 
-        require(
-            !dao.getProposalFlag(
-                proposalId,
-                DaoRegistry.ProposalFlag.PROCESSED
-            ),
-            "the proposal has already been processed"
-        );
+### function submitVote(DaoRegistry dao, bytes32 proposalId, uint256 voteValue)
+Casts a vote. Only a member can do that.
 
-        require(
-            voteValue < 3,
-            "only blank (0), yes (1) and no (2) are possible values"
-        );
+We check that:
+- The proposal has been sponsored
+- The proposal has not been processed yet
+- The vote has started (startingTime > 0)
+- The vote has not ended yet
+- The member has not voted yet
+- The vote is valid (only either yes or no)
 
-        Voting storage vote = votes[address(dao)][proposalId];
-
-        require(
-            vote.startingTime > 0,
-            "this proposalId has no vote going on at the moment"
-        );
-        require(
-            block.timestamp <
-                vote.startingTime + dao.getConfiguration(VotingPeriod),
-            "vote has already ended"
-        );
-
-        address memberAddr = dao.getAddressIfDelegated(msg.sender);
-
-        require(vote.votes[memberAddr] == 0, "member has already voted");
-        BankExtension bank = BankExtension(dao.getExtensionAddress(BANK));
-        uint256 correctWeight =
-            bank.getPriorAmount(memberAddr, SHARES, vote.blockNumber);
-
-        vote.votes[memberAddr] = voteValue;
-
-        if (voteValue == 1) {
-            vote.nbYes = vote.nbYes + correctWeight;
-        } else if (voteValue == 2) {
-            vote.nbNo = vote.nbNo + correctWeight;
-        }
-    }
-
-    //Public Functions
-    /**
-    possible results here:
-     */
-    function voteResult(DaoRegistry dao, bytes32 proposalId)
-        external
-        view
-        override
-        returns (uint256 state)
-    {
-        Voting storage vote = votes[address(dao)][proposalId];
-        if (vote.startingTime == 0) {
-            return 0;
-        }
-
-        if (
-            block.timestamp <
-            vote.startingTime + dao.getConfiguration(VotingPeriod)
-        ) {
-            return 4;
-        }
-
-        if (vote.nbYes > vote.nbNo) {
-            return 2;
-        } else if (vote.nbYes < vote.nbNo) {
-            return 3;
-        } else {
-            return 1;
-        }
-    }
-}
+### function voteResult(DaoRegistry dao, bytes32 proposalId) returns (VotingState state)
+Gets back the vote result for a certain proposal.
+If the vote has not started yet, return NOT_STARTED
+If the vote is still on going (after starting time but before startingTime + voting period) return IN_PROGRESS
+If the vote has ended but is still in grace period, return GRACE_PERIOD
+If none of the above and more yes than no, return PASS
+if more no then yes, return NOT_PASS
+if nbYes == nbNo , return TIE
