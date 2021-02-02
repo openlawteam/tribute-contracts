@@ -282,10 +282,8 @@ contract OnboardingContract is
         external
         override
     {
-        require(
-            proposals[address(dao)][proposalId].id == proposalId,
-            "proposal does not exist"
-        );
+        ProposalDetails storage proposal = proposals[address(dao)][proposalId];
+        require(proposal.id == proposalId, "proposal does not exist");
 
         require(
             !dao.getProposalFlag(
@@ -294,7 +292,6 @@ contract OnboardingContract is
             ),
             "proposal already sponsored"
         );
-        ProposalDetails storage proposal = proposals[address(dao)][proposalId];
 
         require(
             proposal.proposer == msg.sender,
@@ -310,10 +307,8 @@ contract OnboardingContract is
         external
         override
     {
-        require(
-            proposals[address(dao)][proposalId].id == proposalId,
-            "proposal does not exist"
-        );
+        ProposalDetails storage proposal = proposals[address(dao)][proposalId];
+        require(proposal.id == proposalId, "proposal does not exist");
         require(
             !dao.getProposalFlag(
                 proposalId,
@@ -324,7 +319,6 @@ contract OnboardingContract is
 
         IVoting votingContract = IVoting(dao.getAdapterAddress(VOTING));
         uint256 voteResult = votingContract.voteResult(dao, proposalId);
-        ProposalDetails storage proposal = proposals[address(dao)][proposalId];
 
         dao.processProposal(proposalId);
 
