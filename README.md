@@ -24,7 +24,7 @@ The external world is essentially anything that interacts with the DAO. An examp
 
 **Adapters**
 
-Adapters are well defined, tested and extensible smart contracts that are created with a unique purpose. One Adapter is responsible for performing one or a set of tasks in a given context. With this approach we can develop adapters targeting specific use-cases, and updating the DAO configurations to use these new adapters.
+Adapters are well defined, tested and extensible smart contracts that are created with a unique purpose. One Adapter is responsible for performing one or a set of tasks in a given context. With this approach we can develop adapters targeting specific use-cases, and update the DAO configurations to use these new adapters.
 
 When a new adapter is created, one needs to submit a Managing proposal to add the new adapter to the DAO. Once the proposal pass, the new adapter is added, and becomes available for use.
 
