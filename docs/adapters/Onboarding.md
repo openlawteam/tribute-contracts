@@ -97,7 +97,7 @@ Here is the list of all the functions in onboarding, what they are for, the chec
 
 ### function configKey(address tokenAddrToMint, bytes32 key) returns (bytes32)
 
-This is the function to buil the config key for a particular tokenAddrToMint.
+This is the function to build the config key for a particular tokenAddrToMint.
 it's a pure function
 
 ### function configureDao(DaoRegistry dao, address tokenAddrToMint, uint256 chunkSize, uint256 sharesPerChunk, uint256 maximumChunks, address tokenAddr)
