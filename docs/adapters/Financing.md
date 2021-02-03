@@ -22,7 +22,7 @@ Bank Access Flags: `ADD_TO_BALANCE`, `SUB_FROM_BALANCE`.
 
 ## Adapter state
 
-- `proposals`: all financing proposals handled by each dao.
+- `proposals`: all financing proposals handled by each DAO.
 - `ProposalDetails`:
   - `applicant`: the proposal applicant address, can not be a reserver address.
   - `amount`: the amount requested for funding.
