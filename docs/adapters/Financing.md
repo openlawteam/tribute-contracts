@@ -1,14 +1,14 @@
 ## Adapter description and scope
 
-Financing is the process in which an applicant, member or a non-member of the DAO, submits a proposal asking for funds. If the proposal pass, the funds are released to the applicant.
+Financing is the process in which an applicant, member or a non-member of the DAO, submits a proposal asking for funds. If the proposal passes, the funds are released to the applicant.
 
 The main goal is to allow individuals and/or organizations to request funds to finance their projects, and the members of the DAO have the power to vote and decide which projects should be funded.
 
 ## Adapter workflow
 
-In order to request funds to the DAO members, the applicant must submit a proposal in which one must specify the desired amount, the token address to receive the funds.
+In order to request funds from the DAO, the applicant must submit a proposal in which one must specify the desired amount and the token address to receive the funds.
 
-The applicant address can not be a reserved address, which means the address is already reserved for the DAO internal usage. Also, the token address must be allowed/supported by the DAO Bank. If these two conditions are not met, the funding proposal is not created.
+The applicant address cannot be a reserved address, which means the address is already reserved for the DAO internal usage. Also, the token address must be allowed/supported by the DAO Bank. If these two conditions are not met, the funding proposal is not created.
 
 ## Adapter configuration
 
@@ -24,9 +24,9 @@ Bank Access Flags: `ADD_TO_BALANCE`, `SUB_FROM_BALANCE`.
 
 - `proposals`: all financing proposals handled by each DAO.
 - `ProposalDetails`:
-  - `applicant`: the proposal applicant address, can not be a reserver address.
+  - `applicant`: the proposal applicant address, cannot be a reserved address.
   - `amount`: the amount requested for funding.
-  - `token`: the token address in which the funding must be sent to, needs to be allowed/supported by the DAO Bank.
+  - `token`: the token address in which the funding is made to the applicant, needs to be allowed/supported by the DAO Bank.
   - `details`: additional details about the financing proposal.
 
 ## Dependencies and interactions (internal / external)
@@ -77,7 +77,7 @@ Bank Access Flags: `ADD_TO_BALANCE`, `SUB_FROM_BALANCE`.
      * @dev Only members of the DAO can sponsor a financing proposal.
      * @param dao The DAO Address.
      * @param proposalId The proposal id.
-     * @param data Additional detais about the sponsorship process.
+     * @param data Additional details about the sponsorship process.
      */
     function sponsorProposal(
         DaoRegistry dao,
@@ -91,7 +91,6 @@ Bank Access Flags: `ADD_TO_BALANCE`, `SUB_FROM_BALANCE`.
 ```solidity
     /**
      * @notice Processing a financing proposal to grant the requested funds.
-     * @dev Only members of the DAO can process a financing proposal.
      * @dev Only proposals that were not processed are accepted.
      * @dev Only proposals that were sponsored are accepted.
      * @dev Only proposals that passed can get processed and have the funds released.
@@ -101,7 +100,6 @@ Bank Access Flags: `ADD_TO_BALANCE`, `SUB_FROM_BALANCE`.
     function processProposal(DaoRegistry dao, bytes32 proposalId)
         external
         override
-        onlyMember(dao)
 ```
 
 ## Events
