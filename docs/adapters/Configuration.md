@@ -2,8 +2,7 @@
 
 The Configuration adapter manages storing and retrieving per-DAO settings required by shared adapters.
 
-Some adapters have configurable settings which must be stored for each DAO instance that uses the shared adapter. This
-adapter provides
+Some adapters have configurable settings which must be stored for each DAO instance that uses the shared adapter.
 
 ## Workflows
 
