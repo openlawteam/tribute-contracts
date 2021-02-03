@@ -59,7 +59,7 @@ The ID of the module to add or replace.
 
 The address of the new module contract.
 
-### keys
+#### keys
 
 The configuration keys for the module.
 
