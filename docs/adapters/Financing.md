@@ -18,7 +18,7 @@ The member needs to have enough shares and/or loot in order to convert it to fun
 
 DAORegistry Access Flags: `SUBMIT_PROPOSAL`, `SPONSOR_PROPOSAL`, `PROCESS_PROPOSAL`.
 
-Bank Acess Flags: `ADD_TO_BALANCE`, `SUB_FROM_BALANCE`.
+Bank Access Flags: `ADD_TO_BALANCE`, `SUB_FROM_BALANCE`.
 
 ## Adapter state
 
