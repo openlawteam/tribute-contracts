@@ -3,7 +3,40 @@
 The DaoRegisrty.sol contract tracks the state of the DAO for 1) Adapter access, 2) State of Proposals, 3) Membership status, 4) Bank balances for the DAO and members. 
 For an Adapater to be used it must be registered to DaoRegistry.sol. 
 
-`enum DaoState {CREATION, READY}` CREATION  = the DAO has been deployed via `initializeDao`, but is not ready to be used. READY = the function `finalizeDao` has been called by the deployer is now ready to be used.  
+`enum DaoState {CREATION, READY}` CREATION  = the DAO has been deployed via `initializeDao`, but is not ready to be used. READY = the function `finalizeDao` has been called by the deployer is now ready to be used.  Once the DaoState = `READY` then the only way to add additional Adapters is to via the proposal process. 
+
+`enum MemberFlag {EXISTS, JAILED}` = `EXISTS` is true if a member or a proposal exists. `JAILED` is true if a member has been jailed by the DAO. A member will then not be able to particpate in DAO. 
+
+` enum ProposalFlag {EXISTS, SPONSORED, PROCESSED}` = `EXISTS` true if a proposal has been been submitted. `SPONSORED` is true if a Submitted proposal has been Sponsored by an existing Member.
+
+`enum AclFlag {
+    ADD_ADAPTER,
+    REMOVE_ADAPTER,
+    JAIL_MEMBER,
+    UNJAIL_MEMBER,
+    SUBMIT_PROPOSAL,
+    SPONSOR_PROPOSAL,
+    PROCESS_PROPOSAL,
+    UPDATE_DELEGATE_KEY,
+    SET_CONFIGURATION,
+    ADD_EXTENSION,
+    REMOVE_EXTENSION,
+    NEW_MEMBER
+}`
+
+  `ADD_ADAPTER` - true if an adapter has been added to the DAO.  
+  `REMOVE_ADAPTER` -  true if an adapter has been removed from the DAO. 
+  `JAIL_MEMBER` - true, if a DAO adapter is registered to `DaoRegistry.sol` and can call `jailMember`.
+  `UNJAIL_MEMBER` - true, if a DAO adapter is registered to `DaoRegistry.sol` and can call `unjailMember
+  `SUBMIT_PROPOSAL` -  true, if a DAO adapter is registered to the DAO and can call `submitProposal`.
+  `SPONSOR_PROPOSAL` - true, if a DAO adapter is registered to the DAO and can call `sponsorProposal` function.
+  `PROCESS_PROPOSAL` true, if a DAO adapter is registered to the DAO and can call `processProposal` function.
+   `UPDATE_DELEGATE_KEY` - true, if a member has delegated their voting rights to another ETH address. 
+   `SET_CONFIGURATION` - true, if a key/value has been setup to `DaoRegistry.sol`.
+   `ADD_EXTENSION` - true, if a DAO adapter is registered to the DAO and can call `addExtension`
+   `REMOVE_EXTENSION` - true, if a DAO adapter is registered to the DAO and can call `removeExtension` 
+   `NEW_MEMBER` - true, if a DAO adapter is registered to the DAO and can call `potentialNewMember`  
+
 
 **Events**
 
@@ -19,12 +52,13 @@ For an Adapater to be used it must be registered to DaoRegistry.sol.
 
     Events for Members
     `event UpdateDelegateKey(address memberAddress, address newDelegateKey);`
-
-    Events for Bank
     `event MemberJailed(address memberAddr);`
     `event MemberUnjailed(address memberAddr);`
-    `event NewBalance(address member, address tokenAddr, uint256 amount);`
-    `event Withdraw(address account, address tokenAddr, uint256 amount);`
+
+    Configuration Events
+    `event ConfigurationUpdated(bytes32 key, uint256 value);`
+    `event AddressConfigurationUpdated(bytes32 key, address value);`
+
 
 **Structs**
 
@@ -34,6 +68,9 @@ For an Adapater to be used it must be registered to DaoRegistry.sol.
 
 `struct Checkpoint` Laoland makes use of the off-chain voting mechanism Snapshot. The `Checkpoint` struct assists with verifying the optimistic voting and proposal mechanisms at various blocktimes. See, https://github.com/snapshot-labs. 
 
+`struct AdapterEntry` When an Adapter is added to `DaoRegistry` via the function `addAdapter`, a bytes32 `id` and a uint256 `acl` are parameters assigned to the Adapter for use in identifying the Adapter. 
+
+`struct ExtensionEntry` When an Extension is added to `DaoRegistry` via `addExtenstion`  a bytes32 `id` and a uint256 `acl` are parameters assigned to the Extension for use in identifying the Extension. 
 `struct Bank {
       address[] tokens; 
       address[] internalTokens;
@@ -54,7 +91,7 @@ For an Adapater to be used it must be registered to DaoRegistry.sol.
    -  `availableTokens` and `availableInteralTokens`, are tokens that have been whitelisted for use with the DAO.  A token goes from `tokens` or `internalTokens` to `avaialbleTokens` and `availableInternalTokens` when the function `registerPotentialNewToken` or `registerPotentialNewInternalToken` is called.   
   - `checkpoints` and `numCheckpoints`  for each token in the Bank, we create checkpoints so we can figure out a balance at a certain block number. The balance is managed for the member address (not the delegate key).  The same technnique is to determine whiuch key controls a member at a certain block number (delegate key -> member address snapshot)
 
-`struct AdapterDetails` When an Adapter is added to `DaoRegistry` via the function `addAdapter`, a bytes32 `id` and a uint256 `acl` are parameters assigned to the Adapter by for use in identifying the Adapter. 
+
 
 **Public Variables**
 

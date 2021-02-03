@@ -3,7 +3,10 @@ This extension manages the funds of the DAO. The funds can be ETH or any erc-20 
 
 It also manages internal tokens such as shares, loot (but could be anything else).
 
-On top of that, it implements balance checkpoints so it is possible to retrieve prior balance at a certain block number.
+On top of that, it implements balance checkpoints so it is possible to retrieve prior balance at a certain block number. The balance is managed for the member address (not the delegate key).  
+
+`availableTokens` and `availableInteralTokens`, are tokens that have been whitelisted for use with the DAO.  A token goes from `tokens` or `internalTokens` to `avaialbleTokens` and `availableInternalTokens` respectively when the function `registerPotentialNewToken` or `registerPotentialNewInternalToken` is called. 
+
 ## Extension state
 
 ### address[] public tokens;
