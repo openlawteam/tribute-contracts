@@ -69,6 +69,10 @@ The key advantage of the adapters is to make them very small and suitable to a v
 
   ```
 
+- Make sure you add the correct `require` checks
+
+  - Usually the adapter needs to perform some verifications before executing the calls that may change the DAO state. Double check if the DAORegistry functions that your adapter uses already implement some checks, so you do not need to repeat them in the adapter.
+
 - Update the DAOConstants
   - If you are creating an adapter that does not have the `keccak256` id declared in the [DAOConstants](https://github.com/openlawteam/laoland/blob/master/contracts/core/DaoConstants.sol#L30) make sure you add it there.
 
