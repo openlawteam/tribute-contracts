@@ -46,7 +46,7 @@ Adapters implemented in the Laoland project:
 
 Considerations:
 
-- Adapters do not keep track of the state of the DAO. An adapter might use storage to control it's own state, but ideally any DAO state change must be propagated to the DAORegistry Core Contract.
+- Adapters do not keep track of the state of the DAO. An adapter might use storage to control its own state, but ideally any DAO state change must be propagated to the DAORegistry Core Contract.
 - Adapters just execute smart contract logic that changes the state of the DAO by calling the DAORegistry. They also can compose complex calls that interact with External World, other Adapters or even Extensions, to pull/push additional information.
 - The adapter must follow the rules defined by the [Template Adapter](https://github.com/openlawteam/laoland/blob/master/docs/adapters/Template.md).
 - If you want to contribute and create an Adapter, please checkout this: [How to create an Adapter](https://github.com/openlawteam/laoland/blob/master/docs/adapters/HowToCreate.md).
