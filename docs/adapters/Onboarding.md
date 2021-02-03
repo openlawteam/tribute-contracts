@@ -27,7 +27,7 @@ Each configuration is done based on the token address that needs to be minted.
 
 DAORegistry Access Flags: `SUBMIT_PROPOSAL`, `SPONSOR_PROPOSAL`, `PROCESS_PROPOSAL`, `UPDATE_DELEGATE_KEY`, `NEW_MEMBER`.
 
-Bank Access Flags: `ADD_TO_BALANCE`.
+Bank Extension Access Flags: `ADD_TO_BALANCE`.
 
 ### {tokenAddrToMint}.onboarding.chunkSize
 
