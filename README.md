@@ -2,13 +2,13 @@
 
 ## Overview
 
-At the LAO, we realized that even though Moloch is very useful and powerful, it has a lot of features that we don't necessarily need. Also, there are a few features that are missing and are hard to change.
+At the LAO, we realized that even though Moloch is very useful and powerful, it has many features that are not necessary for all DAOs. There are also a few features that are missing and are difficult to add.
 
 This is why we would like to introduce a more modular approach to Moloch architecture, which will give us:
 
-- Simpler code - each part would do something more specific, this means easier to understand.
-- Adaptability - we will be able to adapt each part of the DAO to the needs of the ones using it without the need to audit the entire code base every time.
-- Upgradability - it should be easier to upgrade parts once the need evolves. The best example we have in mind is voting. Maybe the way of voting evolves with time and it is good to be able to upgrade that economic. We can imagine some modules being used by multiple DAOs without the need to be redeployed.
+- Simpler code - each module is responsible for only one function which reduces coupling and makes the system easier to understand.
+- Adaptability - each part of the DAO can be adapted to the needs of a particular DAO without the need to audit the entire code base every time.
+- Upgradability - modules can be easily upgraded as necessary. For example, as the voting process evolves over time the module responsible for managing the voting process can be upgraded without changing any other modules or the Core Contract. Modules can also be used by multiple DAOs without the need to be redeployed.
 
 Inspired by the [hexagonal architecture design pattern](<https://en.wikipedia.org/wiki/Hexagonal_architecture_(software)>) we believe that we can have additional layers of security, and break the main contract into smaller contracts. With that, we create loosely coupled modules/contracts, easier to audit, and can be easily connected to the DAO.
 
@@ -16,9 +16,9 @@ Inspired by the [hexagonal architecture design pattern](<https://en.wikipedia.or
 
 ![laoland_hexagon_architecture](https://user-images.githubusercontent.com/708579/106510703-096a9880-64ae-11eb-8e48-3745e36a7b80.png)
 
-The main idea is to limit the access to the contracts according to each layer. External World (e.g: RPC clients) can access the core contracts only via Adapters, never directly. Every adapter contains all the necessary logic and data to update/change the state of the DAO in the DAORegistry Contract. A Core Contract tracks all the state changes of the DAO, and an Adapter tracks only the state changes in its own context. Extensions enhance the DAO capabilities, and simplify the Core Contract code. The information always flows from the External World to the Core Contracts, never the other way around. If a Core Contract needs external info, it must be provided by an Adapter and/or an Extension instead of calling External World directly.
+The main design goal is to limit access to the smart contracts according at layer boundaries. The External World (i.e. RPC clients) can access the core contracts only via Adapters, never directly. Every adapter contains all the necessary logic and data to update/change the state of the DAO in the DAORegistry Contract. The Core Contract tracks all the state changes of the DAO, and an Adapter tracks only the state changes in its own context. Extensions enhance the DAO capabilities and simplify the Core Contract code. The information always flows from the External World to the Core Contracts, never the other way around. If a Core Contract needs external info, it must be provided by an Adapter and/or an Extension instead of calling External World directly.
 
-The are five main components in the Laoland architecture:
+There are five main components in the Laoland architecture:
 
 #### External World
 
@@ -26,7 +26,7 @@ The external world is essentially anything that interacts with the DAO. An examp
 
 #### Adapters
 
-Adapters are well defined, tested and extensible smart contracts that are created with a unique purpose. One Adapter is responsible for performing one or a set of tasks in a given context. With this approach we can develop adapters targeting specific use-cases, and update the DAO configurations to use these new adapters.
+Adapters are well-defined, tested and extensible smart contracts that are created with a unique purpose. One Adapter is responsible for performing one or a set of tasks in a given context. With this approach we can develop adapters targeting specific use-cases, and update the DAO configurations to use these new adapters.
 
 When a new adapter is created, one needs to submit a Managing proposal to add the new adapter to the DAO. Once the proposal passes, the new adapter is added and becomes available for use.
 
@@ -38,7 +38,7 @@ Adapters implemented in the Laoland project:
 - [Financing](https://github.com/openlawteam/laoland/blob/master/docs/adapters/Financing.md): allows individuals and/or organizations to request funds to finance their projects, and the members of the DAO have the power to vote and decide which projects should be funded.
 - [GuildKick](https://github.com/openlawteam/laoland/blob/master/docs/adapters/GuildKick.md): gives the members the freedom to choose which individuals or organizations should really be part of the DAO.
 - [Managing](https://github.com/openlawteam/laoland/blob/master/docs/adapters/Managing.md): enhances the DAO capabilities by adding/updating the DAO Adapters through a voting process.
-- [OffchainVoting](https://github.com/openlawteam/laoland/blob/master/docs/adapters/OffchainVoting.md): adds the offchain voting governance process to the DAO.
+- [OffchainVoting](https://github.com/openlawteam/laoland/blob/master/docs/adapters/OffchainVoting.md): adds the offchain voting governance process to the DAO to support gasless voting.
 - [Onboarding](https://github.com/openlawteam/laoland/blob/master/docs/adapters/Onboarding.md): triggers the process of minting internal tokens in exchange of a specific token at a fixed price.
 - [Ragequit](https://github.com/openlawteam/laoland/blob/master/docs/adapters/Ragequit.md): gives the members the freedom to choose when it is the best time to exit the DAO for any given reason.
 - [Voting](https://github.com/openlawteam/laoland/blob/master/docs/adapters/Voting.md): adds the simple on chain voting governance process to the DAO.
@@ -46,7 +46,7 @@ Adapters implemented in the Laoland project:
 
 Considerations:
 
-- Adapters do not keep track of the state of the DAO. They might use storage to control its own state, but ideally any DAO state change must be propagated to the DAORegistry Core Contract.
+- Adapters do not keep track of the state of the DAO. An adapter might use storage to control it's own state, but ideally any DAO state change must be propagated to the DAORegistry Core Contract.
 - Adapters just execute smart contract logic that changes the state of the DAO by calling the DAORegistry. They also can compose complex calls that interact with External World, other Adapters or even Extensions, to pull/push additional information.
 - The adapter must follow the rules defined by the [Template Adapter](https://github.com/openlawteam/laoland/blob/master/docs/adapters/Template.md).
 - If you want to contribute and create an Adapter, please checkout this: [How to create an Adapter](https://github.com/openlawteam/laoland/blob/master/docs/adapters/HowToCreate.md).
