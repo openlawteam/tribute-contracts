@@ -11,8 +11,28 @@ const {
   numberOfShares
 } = require("../utils/DaoFactory.js");
 
+const networks = [
+  {
+    name:'ganache',
+    chainId: 1337
+}, 
+{
+  name:'rinkeby', chainId: 4
+},
+{
+  name:'test', chainId: 1
+},
+{
+  name:'coverage', chainId: 1
+},
+];
+
+function getNetworkDetails(name) {
+  return networks.find(n => n.name === name)
+}
+
 module.exports = async function(deployer, network) {
-  const networks = ['ganache', 'rinkeby'];
+
   deployer.deploy(Migrations);
   let dao;
   if(network === 'ganache' || network === 'rinkeby') {
@@ -23,7 +43,8 @@ module.exports = async function(deployer, network) {
       maximumChunks: toBN("100000"),
       votingPeriod: 60, //in seconds
       gracePeriod: 60, // in seconds
-      offchainVoting: true
+      offchainVoting: true,
+      chainId: getNetworkDetails(network).chainId
     });
   } else if (network === 'test' || network === 'coverage') {
     dao = await deployDao(deployer, {
@@ -33,7 +54,8 @@ module.exports = async function(deployer, network) {
       maximumChunks: maximumChunks,
       votingPeriod: 10,
       gracePeriod: 1,
-      offchainVoting: true 
+      offchainVoting: true,
+      chainId: getNetworkDetails(network).chainId
     });
   }
   if(dao) {
