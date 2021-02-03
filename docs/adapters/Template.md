@@ -1,6 +1,8 @@
 ## Adapter description and scope
 
-A brief description of the adapter and what is the use-case covered by the implementation. It is also good to add the goal of the Adapter and which value it brings to the DAO.
+This is a template for the documentation of an Adapter.
+
+Here you can provide brief description of the adapter and what is the use-case covered by the implementation. It is also good to add the goal of the Adapter and which value it brings to the DAO.
 
 ## Adapter workflow
 
