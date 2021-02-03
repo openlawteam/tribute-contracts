@@ -6,29 +6,29 @@ Currently this adapter only supports adding and replacing adapters, but cannot d
 
 ## Adapter workflow
 
-Create module change request
+Create adapter change request
 - check that caller is valid member
 - check that keys and values are equal length
-- check that module address is valid
+- check that adapter address is valid
 - check that flags don't overflow
-- check that the module address is not reserved
+- check that the adapter address is not reserved
 
 - submit proposal
-- store module data
+- store adapter data
 
-Sponsor module change request
+Sponsor adapter change request
 - check that caller is valid member
 
 - sponsor proposal
 - initiate vote
 
-Process module change proposal
+Process adapter change proposal
 - check that caller is valid member
 - check that proposal has not been processed
 - check that proposal has been sponsored
 - check that proposal has passed
 
-- remove existing module
+- remove existing adapter
 - for each key and value, set it in the configuration for this DAO
 - add the adapter to the DAO
 - process proposal
@@ -39,50 +39,50 @@ Process module change proposal
 For each proposal created through the adapter, we keep track of the following information
 
 #### applicant
-The member who is initiating the module proposal.
+The member who is initiating the adapter proposal.
 
-#### moduleId
-The ID of the module to add or replace.
+#### adapterId
+The ID of the adapter to add or replace.
 
-### moduleAddress
-The address of the new module contract.
+### adapterAddress
+The address of the new adapter contract.
 
 ### keys
-The configuration keys for the module.
+The configuration keys for the adapter.
 
 ### values
-The values to set for the module configuraition.
+The values to set for the adapter configuraition.
 
 ### flags
-The ACL for the new module.
+The ACL for the new adapter.
 
 ## Dependencies and interactions (internal / external)
 
 ## Functions description and assumptions / checks
 
-### function createModuleChangeRequest(DaoRegistry dao, bytes32 proposalId, bytes32 moduleId, address moduleAddress, bytes32[] calldata keys, uint256[] calldata values, uint256 _flags)
+### function createAdapterChangeRequest(DaoRegistry dao, bytes32 proposalId, bytes32 adapterId, address adapterAddress, bytes32[] calldata keys, uint256[] calldata values, uint256 _flags)
 
-Creates a proposal to add/replace the given module with a new version including configuration and flags.
+Creates a proposal to add/replace/remove the given adapter with a new version including configuration and flags.
 
 **dao** is the DAO instance to be configured
-**proposalId** is the ID chosen for this module proposal, must be unique
-**moduleId** the ID of the new module
-**moduleAddress** the contract address of the new module
+**proposalId** is the ID chosen for this adapter proposal, must be unique
+**adapterId** the ID of the new adapter
+**adapterAddress** the contract address of the new adapter. If the address equals 0x0, it means the adapterId needs to be removed.
 **keys** the configuration keys to set
 **values** the configuration values to set, must be same length as keys
-**flags** the ACL for the new module
+**flags** the ACL for the new adapter
 
 ### function sponsorProposal(DaoRegistry dao, bytes32 proposalId, bytes calldata data)
 
-Sponsors a proposal to add/replace a module.
+Sponsors a proposal to add/replace a adapter.
 
 **dao** is the DAO instance to be configured
-**proposalId** is the ID of a previously created module proposal which has not been sponsored
+**proposalId** is the ID of a previously created adapter proposal which has not been sponsored
 **data**
 
 ### function processProposal(DaoRegistry dao, bytes32 proposalId)
 
-Processes a proposal to add/replace a module.
+Processes a proposal to add/replace a adapter.
 
 **dao** is the DAO instance to be configured
 **proposalId** is the ID of a previously created configuration proposal which has passed the vote

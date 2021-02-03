@@ -29,11 +29,11 @@ SOFTWARE.
  */
 
 interface IManaging {
-    function createModuleChangeRequest(
+    function createAdapterChangeRequest(
         DaoRegistry dao,
         bytes32 proposalId,
-        bytes32 moduleId,
-        address moduleAddress,
+        bytes32 adapterId,
+        address adapterAddress,
         bytes32[] calldata keys,
         uint256[] calldata values,
         uint256 flags
