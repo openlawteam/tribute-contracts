@@ -1,6 +1,6 @@
 ## Adapter description and scope
 
-The Managing adapter manages proposal creation, sponsorship and processing of a new adapter including it's initial configuration.
+The Managing adapter manages proposal creation, sponsorship and processing of a new adapter including its initial configuration.
 
 Open questions:
 Currently this adapter only supports adding and replacing adapters, but cannot delete. Is this intended?
