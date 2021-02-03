@@ -6,7 +6,7 @@ At the LAO, we realized that even though Moloch is very useful and powerful, it 
 
 This is why we would like to introduce a more modular approach to Moloch architecture, which will give us:
 
-- Simpler code, each part would do something more specific, this means easier to understand.
+- Simpler code - each part would do something more specific, this means easier to understand.
 - Adaptable, we will be able to adapt each part of the DAO to the needs of the ones using it without the need to audit the entire code base every time.
 - Upgradability - it should be easier to upgrade parts once the need evolves. The best example we have in mind is voting. Maybe the way of voting evolves with time and it is good to be able to upgrade that economic. We can imagine some modules being used by multiple DAOs without the need to be redeployed.
 
