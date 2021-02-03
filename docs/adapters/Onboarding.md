@@ -39,7 +39,7 @@ How many shares (tokens from tokenAddr) are being minted per chunk.
 
 ### {tokenAddrToMint}.onboarding.tokenAddr
 
-In which currency (tokenAddr) should the onboarding take place
+In which currency (tokenAddr) should the onboarding take place.
 
 ### {tokenAddrToMint}.onboarding.maximumChunks
 
