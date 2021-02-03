@@ -135,13 +135,6 @@ This starts a vote on the proposal to onboard a new member.
 
 **voting.startNewVotingForProposal(dao, proposalId, data)** starts the vote process
 
-### function onboardAndSponsor(DaoRegistry dao, bytes32 proposalId, address payable applicant, address tokenToMint, uint256 tokenAmount, bytes calldata data)
-
-This function is a helper function to get submit and sponsor in the same transaction.
-
-It does onboard & sponsor at the same time.
-
-Instead of checking who is sending the transaction, it uses the data passed to determine who is sending it. For the standard OnchainVoting, this is equivalent to msg.sender, but for offchain voting, this will use who has signed the data (and can use a relayer to send the transaction)
 
 ### function cancelProposal(DaoRegistry dao, bytes32 proposalId)
 
