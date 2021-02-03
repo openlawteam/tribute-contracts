@@ -85,7 +85,7 @@ The proposer address.
 
 ### proposals mapping
 
-The proposals are organized by dao address and then by proposal id
+The proposals are organized by DAO address and then by proposal id.
 
 ### shares
 
