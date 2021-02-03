@@ -38,21 +38,21 @@ const {
 } = require("../../utils/DaoFactory.js");
 
 contract("LAOLAND - Managing Adapter", async (accounts) => {
-  it("should not be possible to propose a new module with 0x0 module address", async () => {
+  it("should not be possible to propose a new adapter with 0x0 adapter address", async () => {
     const myAccount = accounts[1];
 
     //Create the new DAO
     let dao = await createDao(myAccount);
 
-    //Submit a new Bank module proposal
-    let newModuleId = sha3("bank");
+    //Submit a new Bank adapter proposal
+    let newAdapterId = sha3("bank");
     let managingContract = await dao.getAdapterAddress(sha3("managing"));
     let managing = await ManagingContract.at(managingContract);
     try {
-      await managing.createModuleChangeRequest(
+      await managing.createAdapterChangeRequest(
         dao.address,
         "0x0",
-        newModuleId,
+        newAdapterId,
         ETH_TOKEN,
         [],
         [],
@@ -61,25 +61,25 @@ contract("LAOLAND - Managing Adapter", async (accounts) => {
       );
       assert.err("should not pass");
     } catch (err) {
-      assert.equal(err.reason, "invalid module address");
+      assert.equal(err.reason, "invalid proposalId");
     }
   });
 
-  it("should not be possible to propose a new module when the module has a reserved address", async () => {
+  it("should not be possible to propose a new adapter when the adapter has a reserved address", async () => {
     const myAccount = accounts[1];
 
     //Create the new DAO
     let dao = await createDao(myAccount);
 
-    //Submit a new Bank module proposal
-    let newModuleId = sha3("bank");
+    //Submit a new Bank adapter proposal
+    let newAdapterId = sha3("bank");
     let managingContract = await dao.getAdapterAddress(sha3("managing"));
     let managing = await ManagingContract.at(managingContract);
     try {
-      await managing.createModuleChangeRequest(
+      await managing.createAdapterChangeRequest(
         dao.address,
         "0x0",
-        newModuleId,
+        newAdapterId,
         GUILD,
         [],
         [],
@@ -88,14 +88,14 @@ contract("LAOLAND - Managing Adapter", async (accounts) => {
       );
       assert.err("should not pass");
     } catch (err) {
-      assert.equal(err.reason, "module is using reserved address");
+      assert.equal(err.reason, "adapter is using reserved address");
     }
 
     try {
-      await managing.createModuleChangeRequest(
+      await managing.createAdapterChangeRequest(
         dao.address,
         "0x0",
-        newModuleId,
+        newAdapterId,
         TOTAL,
         [],
         [],
@@ -104,25 +104,25 @@ contract("LAOLAND - Managing Adapter", async (accounts) => {
       );
       assert.err("should not pass");
     } catch (err) {
-      assert.equal(err.reason, "module is using reserved address");
+      assert.equal(err.reason, "adapter is using reserved address");
     }
   });
 
-  it("should not be possible to propose a new module with an empty module address", async () => {
+  it("should not be possible to propose a new adapter with an empty adapter address", async () => {
     const myAccount = accounts[1];
 
     //Create the new DAO
     let dao = await createDao(myAccount);
 
-    //Submit a new Bank module proposal
-    let newModuleId = sha3("managing");
+    //Submit a new Bank adapter proposal
+    let newAdapterId = sha3("managing");
     let managingContract = await dao.getAdapterAddress(sha3("managing"));
     let managing = await ManagingContract.at(managingContract);
     try {
-      await managing.createModuleChangeRequest(
+      await managing.createAdapterChangeRequest(
         dao.address,
         "0x45",
-        newModuleId,
+        newAdapterId,
         "",
         [],
         [],
@@ -137,7 +137,7 @@ contract("LAOLAND - Managing Adapter", async (accounts) => {
     }
   });
 
-  it("should be possible to any individual to propose a new DAO module", async () => {
+  it("should be possible to any individual to propose a new DAO adapter", async () => {
     const myAccount = accounts[1];
 
     //Create the new DAO
@@ -148,15 +148,15 @@ contract("LAOLAND - Managing Adapter", async (accounts) => {
     let votingContract = await dao.getAdapterAddress(sha3("voting"));
     let voting = await VotingContract.at(votingContract);
 
-    //Submit a new Bank module proposal
-    let newModuleId = sha3("onboarding");
+    //Submit a new Bank adapter proposal
+    let newAdapterId = sha3("onboarding");
     let proposalId = "0x1";
-    let newModuleAddress = accounts[3]; //TODO deploy some Banking test contract
-    await managing.createModuleChangeRequest(
+    let newAdapterAddress = accounts[3]; //TODO deploy some Banking test contract
+    await managing.createAdapterChangeRequest(
       dao.address,
       proposalId,
-      newModuleId,
-      newModuleAddress,
+      newAdapterId,
+      newAdapterAddress,
       [],
       [],
       0,
@@ -178,12 +178,12 @@ contract("LAOLAND - Managing Adapter", async (accounts) => {
       gasPrice: toBN("0"),
     });
 
-    //Check if the Bank Module was added to the Registry
+    //Check if the Bank Adapter was added to the Registry
     let newBankAddress = await dao.getAdapterAddress(sha3("onboarding"));
-    assert.equal(newBankAddress.toString(), newModuleAddress.toString());
+    assert.equal(newBankAddress.toString(), newAdapterAddress.toString());
   });
 
-  it("should be possible to propose a new DAO module with a delegate key", async () => {
+  it("should be possible to propose a new DAO adapter with a delegate key", async () => {
     const myAccount = accounts[1];
     const delegateKey = accounts[3];
 
@@ -197,14 +197,14 @@ contract("LAOLAND - Managing Adapter", async (accounts) => {
 
     let proposalId = "0x1";
 
-    //Submit a new Bank module proposal
-    let newModuleId = sha3("onboarding");
-    let newModuleAddress = accounts[4]; //TODO deploy some Banking test contract
-    await managing.createModuleChangeRequest(
+    //Submit a new onboarding adapter proposal
+    let newAdapterId = sha3("onboarding");
+    let newAdapterAddress = accounts[4];
+    await managing.createAdapterChangeRequest(
       dao.address,
       proposalId,
-      newModuleId,
-      newModuleAddress,
+      newAdapterId,
+      newAdapterAddress,
       [],
       [],
       0,
@@ -243,8 +243,8 @@ contract("LAOLAND - Managing Adapter", async (accounts) => {
       gasPrice: toBN("0"),
     });
 
-    //Check if the Bank Module was added to the Registry
-    let newBankAddress = await dao.getAdapterAddress(sha3("onboarding"));
-    assert.equal(newBankAddress.toString(), newModuleAddress.toString());
+    //Check if the onboarding adapter was added to the Registry
+    let newOnboardingAddress = await dao.getAdapterAddress(sha3("onboarding"));
+    assert.equal(newOnboardingAddress.toString(), newAdapterAddress.toString());
   });
 });

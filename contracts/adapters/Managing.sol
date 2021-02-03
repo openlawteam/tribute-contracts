@@ -35,8 +35,8 @@ SOFTWARE.
 contract ManagingContract is IManaging, DaoConstants, MemberGuard {
     struct ProposalDetails {
         address applicant;
-        bytes32 moduleId;
-        address moduleAddress;
+        bytes32 adapterId;
+        address adapterAddress;
         bytes32[] keys;
         uint256[] values;
         uint128 flags;
@@ -51,11 +51,11 @@ contract ManagingContract is IManaging, DaoConstants, MemberGuard {
         revert("fallback revert");
     }
 
-    function createModuleChangeRequest(
+    function createAdapterChangeRequest(
         DaoRegistry dao,
         bytes32 proposalId,
-        bytes32 moduleId,
-        address moduleAddress,
+        bytes32 adapterId,
+        address adapterAddress,
         bytes32[] calldata keys,
         uint256[] calldata values,
         uint256 _flags
@@ -64,21 +64,21 @@ contract ManagingContract is IManaging, DaoConstants, MemberGuard {
             keys.length == values.length,
             "must be an equal number of config keys and values"
         );
-        require(moduleAddress != address(0x0), "invalid module address");
+
         require(_flags < type(uint128).max, "flags parameter overflow");
         uint128 flags = uint128(_flags);
 
         require(
-            dao.isNotReservedAddress(moduleAddress),
-            "module is using reserved address"
+            dao.isNotReservedAddress(adapterAddress),
+            "adapter is using reserved address"
         );
 
         dao.submitProposal(proposalId);
 
         proposals[address(dao)][proposalId] = ProposalDetails(
             msg.sender,
-            moduleId,
-            moduleAddress,
+            adapterId,
+            adapterAddress,
             keys,
             values,
             flags
@@ -126,8 +126,8 @@ contract ManagingContract is IManaging, DaoConstants, MemberGuard {
         );
 
         dao.processProposal(proposalId);
-        if (dao.getAdapterAddress(proposal.moduleId) != address(0x0)) {
-            dao.removeAdapter(proposal.moduleId);
+        if (dao.adapters(proposal.adapterId) != address(0x0)) {
+            dao.removeAdapter(proposal.adapterId);
         }
 
         bytes32[] memory keys = proposal.keys;
@@ -136,10 +136,14 @@ contract ManagingContract is IManaging, DaoConstants, MemberGuard {
             dao.setConfiguration(keys[i], values[i]);
         }
 
-        dao.addAdapter(
-            proposal.moduleId,
-            proposal.moduleAddress,
-            proposal.flags
-        );
+        if (proposal.adapterAddress == address(0x0)) {
+            dao.removeAdapter(proposal.adapterId);
+        } else {
+            dao.addAdapter(
+                proposal.adapterId,
+                proposal.adapterAddress,
+                proposal.flags
+            );
+        }
     }
 }
