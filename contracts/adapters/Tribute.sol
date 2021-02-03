@@ -174,9 +174,12 @@ contract TributeContract is ITribute, DaoConstants, MemberGuard, AdapterGuard {
             BankExtension bank = BankExtension(dao.getExtensionAddress(BANK));
             _mintTokensToMember(
                 dao,
-                proposal.tokenToMint,
                 proposal.applicant,
-                proposal.requestAmount
+                proposal.proposer,
+                proposal.tokenToMint,
+                proposal.requestAmount,
+                proposal.token,
+                proposal.tributeAmount
             );
 
             address token = proposal.token;
@@ -233,9 +236,12 @@ contract TributeContract is ITribute, DaoConstants, MemberGuard, AdapterGuard {
 
     function _mintTokensToMember(
         DaoRegistry dao,
+        address applicant,
+        address proposer,
         address tokenToMint,
-        address memberAddr,
-        uint256 tokenAmount
+        uint256 requestAmount,
+        address token,
+        uint256 tributeAmount
     ) internal {
         BankExtension bank = BankExtension(dao.getExtensionAddress(BANK));
         require(
@@ -243,12 +249,16 @@ contract TributeContract is ITribute, DaoConstants, MemberGuard, AdapterGuard {
             "it can only mint internal tokens"
         );
         require(
-            !dao.getMemberFlag(memberAddr, DaoRegistry.MemberFlag.JAILED),
+            !dao.getMemberFlag(applicant, DaoRegistry.MemberFlag.JAILED),
             "cannot process jailed member"
         );
 
-        dao.potentialNewMember(memberAddr);
+        dao.potentialNewMember(applicant);
 
-        bank.addToBalance(memberAddr, tokenToMint, tokenAmount);
+        try bank.addToBalance(applicant, tokenToMint, requestAmount) {
+            // do nothing
+        } catch {
+            _refundTribute(token, proposer, tributeAmount);
+        }
     }
 }
