@@ -51,6 +51,7 @@ The key advantage of the adapters is to make them very small and suitable to a v
 ### Conventions & Implementation
 
 - Function names (public)
+
   - For Adapter that are based on Proposals
     - submitXProposal
     - processProposal
@@ -68,10 +69,16 @@ The key advantage of the adapters is to make them very small and suitable to a v
 
   ```
 
+- Update the DAOConstants
+  - If you are creating an adapter that does not have the `keccak256` id declared in the [DAOConstants](https://github.com/openlawteam/laoland/blob/master/contracts/core/DaoConstants.sol#L30) make sure you add it there.
+
 ### Testing the new Adapter
 
-- DAO Constants
-- DAO Factory.js
+In order to verify if the new adapter works properly, one needs to implement the basic test suite, so we can ensure it is actually doing what it was supposed to do.
+
+There are several examples of tests that you can check to start building your own. Take a look at the [tests/adapters](https://github.com/openlawteam/laoland/tree/master/test/adapters).
+
+Another important step in the test phase, is to configure the adapter permissions during the DAO creation in the [DAOFactory.js](https://github.com/openlawteam/laoland/blob/master/utils/DaoFactory.js#L140).
 
 ### Adding documentation
 
