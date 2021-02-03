@@ -55,7 +55,7 @@ For each proposal created through the adapter, we keep track of the following in
 
 #### id
 
-The proposalId (provided offchain)
+The proposalId (provided offchain).
 
 #### tokenToMint
 
