@@ -34,15 +34,24 @@ SOFTWARE.
  */
 
 contract WithdrawContract is DaoConstants, MemberGuard {
-    enum ConfigurationStatus {NOT_CREATED, IN_PROGRESS, DONE}
 
-    /*
-     * default fallback function to prevent from sending ether to the contract
+    event Withdraw(address account, address token, uint256 amount);
+
+    /**
+     * @notice default fallback function to prevent from sending ether to the contract
      */
     receive() external payable {
         revert("fallback revert");
     }
 
+    /**
+     * @notice Allows the member/advisor of the DAO to withdraw the funds from their internal bank account.
+     * @notice Only accounts that are not reserved can withdraw the funds.
+     * @notice If theres is no available balance in the user's account, the transaction is reverted.
+     * @param dao The DAO address.
+     * @param account The account to receive the funds.
+     * @param token The token address to receive the funds.
+     */
     function withdraw(
         DaoRegistry dao,
         address payable account,
@@ -54,10 +63,14 @@ contract WithdrawContract is DaoConstants, MemberGuard {
         );
 
         BankExtension bank = BankExtension(dao.getExtensionAddress(BANK));
-
+        //TODO do we need to check if the token is supported by the DAO?
+        //require(bank.isTokenAllowed(token), "token not allowed");
+        
         uint256 balance = bank.balanceOf(account, token);
         require(balance > 0, "nothing to withdraw");
 
         bank.withdraw(account, token, balance);
+
+        emit Withdraw(account, token, balance);
     }
 }
