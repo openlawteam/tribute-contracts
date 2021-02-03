@@ -88,7 +88,7 @@ This project uses truffle. To run the tests, simply run:
 
 ### Code Format
 
-To fix the Solidity code with the linter hints, simply run:
+To fix the Solidity code and documentation with the linter hints, simply run:
 
 > npm run lint:fix
 
