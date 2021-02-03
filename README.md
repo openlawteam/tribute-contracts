@@ -60,7 +60,7 @@ A core contract is a contract that composes the DAO itself, and directly changes
 
 - [DaoRegistry](https://github.com/openlawteam/laoland/blob/master/docs/core/DaoRegistry.md): tracks the state changes of the DAO, only adapters with .
 - CloneFactory: creates a clone of the DAO based on its address.
-- DaoFactory: creates, initializes, and add adapters configurations to the new DAO, and uses the CloneFactory to reduce the DAO creation transaction costs.
+- DaoFactory: creates, initializes, and adds adapter configurations to the new DAO, and uses the CloneFactory to reduce the DAO creation transaction costs.
 - DaoConstants: defines all the constants used by the DAO contracts, and implements some helper functions to manage the Access Flags.
 
 **Access Control Layer**
