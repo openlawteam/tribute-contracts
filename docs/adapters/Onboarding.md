@@ -51,7 +51,7 @@ Onboarding keeps track of every proposal that goes through it as well as the num
 
 ### ProposalDetails
 
-For each proposal created through the adapter, we keep track of the following information
+For each proposal created through the adapter, we keep track of the following information:
 
 #### id
 
