@@ -67,7 +67,7 @@ The configuration keys for the module.
 
 The values to set for the module configuration.
 
-### flags
+#### flags
 
 The ACL for the new module.
 
