@@ -39,7 +39,7 @@ Process module change proposal
 
 ## Adapter configuration
 
-DAORegistry Access Flags: `SUBMIT_PROPOSAL`, `PROCESS_PROPOSAL`, `SPONSOR_PROPOSAL`,`REMOVE_ADAPTER`, `ADD_ADAPTER`.
+DAORegistry Access Flags: `SUBMIT_PROPOSAL`, `PROCESS_PROPOSAL`, `SPONSOR_PROPOSAL`, `REMOVE_ADAPTER`, `ADD_ADAPTER`.
 
 ## Adapter state
 
