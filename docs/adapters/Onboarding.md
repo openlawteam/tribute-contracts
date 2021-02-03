@@ -8,7 +8,7 @@ You can mint any internal tokens but it is usually to mint either SHARE or LOOT 
 
 ## Adapter workflow
 
-First, a potential new member (or a member who wants to increase his shares) and sends tokens to the onboarding adapter.
+First, a potential new member (or a member who wants to increase his shares) sends tokens to the onboarding adapter.
 The adapter is used as an escrow between the DAO and the potential new member.
 
 Sending the tokens means a proposal is submitted (but not sponsored)
