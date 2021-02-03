@@ -102,7 +102,7 @@ It's a pure function.
 
 ### function configureDao(DaoRegistry dao, address tokenAddrToMint, uint256 chunkSize, uint256 sharesPerChunk, uint256 maximumChunks, address tokenAddr)
 
-This function configures the adapter for a particular dao.
+This function configures the adapter for a particular DAO.
 The modifier is adapterOnly which means that only if the sender is either a registered adapter of the DAO or if it is in creation mode can it be called.
 The function checks that chunkSize, sharesPerChunks and maximumChunks cannot be 0
 
