@@ -65,7 +65,7 @@ The configuration keys for the module.
 
 #### values
 
-The values to set for the module configuraition.
+The values to set for the module configuration.
 
 ### flags
 
