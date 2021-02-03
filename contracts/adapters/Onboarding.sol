@@ -313,7 +313,10 @@ contract OnboardingContract is
                 dao,
                 proposal.tokenToMint,
                 proposal.applicant,
-                proposal.sharesRequested
+                proposal.sharesRequested,
+                proposal.proposer,
+                proposal.token,
+                proposal.amount
             );
 
             address token = proposal.token;
@@ -362,7 +365,10 @@ contract OnboardingContract is
         DaoRegistry dao,
         address tokenToMint,
         address memberAddr,
-        uint256 tokenAmount
+        uint256 tokenAmount,
+        address payable proposer,
+        address proposalToken,
+        uint256 proposalAmount
     ) internal {
         BankExtension bank = BankExtension(dao.getExtensionAddress(BANK));
         require(
@@ -377,6 +383,10 @@ contract OnboardingContract is
 
         dao.potentialNewMember(memberAddr);
 
-        bank.addToBalance(memberAddr, tokenToMint, tokenAmount);
+        try bank.addToBalance(memberAddr, tokenToMint, tokenAmount) {
+            // do nothing
+        } catch {
+            _refundTribute(proposalToken, proposer, proposalAmount);
+        }
     }
 }

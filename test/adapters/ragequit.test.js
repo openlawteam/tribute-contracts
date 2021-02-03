@@ -692,7 +692,7 @@ contract("LAOLAND - Ragequit Adapter", async (accounts) => {
     await advanceTime(10000);
 
     // Process the guild kick proposal to put the member in jail
-    await guildkickContract.guildKick(dao.address, kickProposalId, {
+    await guildkickContract.processProposal(dao.address, kickProposalId, {
       from: daoOwner,
       gasPrice: toBN("0"),
     });

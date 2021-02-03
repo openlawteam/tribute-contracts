@@ -567,10 +567,9 @@ contract DaoRegistry is MemberGuard, AdapterGuard {
      */
     function isActiveMember(address addr) public view returns (bool) {
         address memberAddr = memberAddressesByDelegatedKey[addr];
-        uint256 memberFlags = members[memberAddr].flags;
         return
-            getMemberFlag(memberFlags, MemberFlag.EXISTS) &&
-            !getMemberFlag(memberFlags, MemberFlag.JAILED);
+            getMemberFlag(memberAddr, MemberFlag.EXISTS) &&
+            !getMemberFlag(memberAddr, MemberFlag.JAILED);
     }
 
     /**
@@ -592,7 +591,7 @@ contract DaoRegistry is MemberGuard, AdapterGuard {
      * @param flag The flag to check in the member
      */
     function getMemberFlag(address memberAddress, MemberFlag flag)
-        external
+        public
         view
         returns (bool)
     {

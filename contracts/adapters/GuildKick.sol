@@ -158,7 +158,8 @@ contract GuildKickContract is IGuildKick, DaoConstants, MemberGuard {
         bytes32 ongoingProposalId = ongoingKicks[address(dao)];
         require(
             ongoingProposalId == bytes32(0) ||
-                kicks[ongoingProposalId].status != GuildKickStatus.IN_PROGRESS,
+                kicks[address(dao)][ongoingProposalId].status !=
+                GuildKickStatus.IN_PROGRESS,
             "another kick already in progress"
         );
 
@@ -206,7 +207,6 @@ contract GuildKickContract is IGuildKick, DaoConstants, MemberGuard {
      * @dev Only active members can be kicked out.
      * @dev Only proposals that passed the voting can be completed.
      * @param dao The dao address.
-     * @param proposalId The guild kick proposal id.
      * @param toIndex The index to control the cached for-loop.
      */
     function rageKick(DaoRegistry dao, uint256 toIndex) external override {
