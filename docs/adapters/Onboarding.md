@@ -59,7 +59,7 @@ The proposalId (provided offchain).
 
 #### tokenToMint
 
-Which token needs to be minted if the proposal passes
+Which token needs to be minted if the proposal passes.
 
 #### amount
 
