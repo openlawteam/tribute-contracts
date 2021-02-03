@@ -72,7 +72,7 @@ The Access Control Layer (ACL) is implemented using Access Flags to indicate whi
 
 The Access Flags of each adapter must be provided to the DAOFactory when the `daoFactory.addAdapters` function is called passing the new adapters. These flags will grant the access to the DAORegistry contract, and the same process must be done to grant the access of each Adapter to each Extension (function `daoFactory.configureExtension`).
 
-The access flags are defined in the DAORegistry using the modifier `hasAccess`, e.g: `hasAccess(this, AclFlag.JAIL_MEMBER)`, which means the called of the functions needs to have the Access Flag `JAIL_MEMBER` enabled, otherwise the call will revert. In order to create an Adapter with the proper Access Flags one needs to first map out all the functions that the Adapter will be calling in the DAORegistry and Extensions, and provide these Access Flags using the DAO Factory as described above.
+The Access Flags are defined in the DAORegistry using the modifier `hasAccess`. For example, a function with the modifier `hasAccess(this, AclFlag.JAIL_MEMBER)` means the adapter calling this function needs to have the Access Flag `JAIL_MEMBER` enabled, otherwise the call will revert. In order to create an Adapter with the proper Access Flags one needs to first map out all the functions that the Adapter will be calling in the DAORegistry and Extensions, and provide these Access Flags using the DAO Factory as described above.
 
 ### Usage
 
