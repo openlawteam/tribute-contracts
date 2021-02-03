@@ -78,7 +78,7 @@ The Access Flags are defined in the DAORegistry using the modifier `hasAccess`. 
 
 #### Run Tests
 
-This project uses truffle, to run the tests, simply run:
+This project uses truffle. To run the tests, simply run:
 
 > npm run test
 
