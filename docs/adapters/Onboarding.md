@@ -89,7 +89,7 @@ The proposals are organized by DAO address and then by proposal id.
 
 ### shares
 
-Accounting to see the amount of a particular internal token that has been minted for a particular applicant. This is then checked against the maxChunks configuration to make sure the onboarding proposal is allowed or not
+Accounting to see the amount of a particular internal token that has been minted for a particular applicant. This is then checked against the maxChunks configuration to determine if the onboarding proposal is allowed or not.
 
 ## Functions description, assumptions, checks, dependencies, interactions and access control
 
