@@ -55,7 +55,7 @@ The member who is initiating the module proposal.
 
 The ID of the module to add or replace.
 
-### moduleAddress
+#### moduleAddress
 
 The address of the new module contract.
 
