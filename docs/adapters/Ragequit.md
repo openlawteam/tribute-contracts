@@ -6,7 +6,7 @@ This implementation of ragequit adapter does not cover the case in which the mem
 
 It also does not check if the member has voted Yes on a proposal that is not processed yet, and does not keep track of the latest proposal that was voted Yes on.
 
-The main goal is to give the members the freedom to choose when it is the best time to withdraw their funds without any additional preconditions, except for the fact that they need have enough shares to be converted to funds, and do not need to convert all their shares/loot at once.
+The main goal is to give the members the freedom to choose when it is the best time to withdraw their funds without any additional preconditions, except for the fact that they need to have enough shares to be converted to funds, and do not need to convert all their shares/loot at once.
 
 ## Adapter workflow
 
@@ -16,7 +16,7 @@ The proportional shares and/or loots are burned when the member provides the tok
 
 If the member provides at least one invalid token, e.g: a token that is not supported/allowed by the DAO, the entire ragequit process is canceled/reverted. In addition to that, if the member provides a list of tokens that may cause issues due to the block size limit, it is expected that the transaction does not complete and return a failure.
 
-Once the process ragequit process is completed, the funds are deducted from the bank, and added to the member's internal balance, an event called `MemberRagequit` is emitted.
+Once the ragequit process is completed, the funds are deducted from the bank, and added to the member's internal balance, an event called `MemberRagequit` is emitted.
 
 It is important to mention that members that are in jail are not allowed to ragequit, and the function is open (without access modifier) because advisors should be able to ragequit - and advisor are not active members (shares > 0) because they only hold loot.
 
@@ -24,7 +24,7 @@ It is important to mention that members that are in jail are not allowed to rage
 
 Tokens that are provided by the member have to be allowed/supported by the DAO.
 
-The member needs to have enough shares and/or loot in order to convert it to funds.
+The member/advisor needs to have enough shares and/or loot in order to convert it to funds.
 
 DAORegistry Access Flags: `JAIL_MEMBER`, `UNJAIL_MEMBER`.
 
@@ -46,11 +46,11 @@ There is no state tracking for this adapter.
 - DaoRegistry
 
   - checks if the member is not in jail before allowing the ragequit.
-  - checks if the message sender is actually a member of the DAO.
+  - checks if the message sender is actually a member or an advisor of the DAO.
 
 - FairShareHelper
 
-  - calculates the amount of funds to be returned to the member based on the provided numbers of shares and/or loot.
+  - calculates the amount of funds to be returned to the member based on the provided numbers of shares and/or loot, and current balance of the Guild.
 
 ## Functions description and assumptions / checks
 
@@ -90,13 +90,13 @@ There is no state tracking for this adapter.
 
 ```solidity
     /**
-    * @notice Subtracts from the internal member's account the proportional shares and/or loot.
-    * @param memberAddr The member address that want to burn the shares and/or loot.
-    * @param sharesToBurn The amount of shares of the member that must be converted into funds.
-    * @param lootToBurn The amount of loot of the member that must be converted into funds.
-    * @param tokens The array of tokens that the funds should be sent to.
-    * @param bank The bank extension.
-    */
+     * @notice Subtracts from the internal member's account the proportional shares and/or loot.
+     * @param memberAddr The member address that want to burn the shares and/or loot.
+     * @param sharesToBurn The amount of shares of the member that must be converted into funds.
+     * @param lootToBurn The amount of loot of the member that must be converted into funds.
+     * @param tokens The array of tokens that the funds should be sent to.
+     * @param bank The bank extension.
+     */
     function _prepareRagequit(
         address memberAddr,
         uint256 sharesToBurn,
@@ -110,15 +110,15 @@ There is no state tracking for this adapter.
 
 ```solidity
     /**
-    * @notice Subtracts from the bank's account the proportional shares and/or loot,
-    * @notice and transfers the funds to the member's internal account based on the provided tokens.
-    * @param memberAddr The member address that want to burn the shares and/or loot.
-    * @param sharesToBurn The amount of shares of the member that must be converted into funds.
-    * @param lootToBurn The amount of loot of the member that must be converted into funds.
-    * @param initialTotalSharesAndLoot The sum of shares and loot before internal transfers.
-    * @param tokens The array of tokens that the funds should be sent to.
-    * @param bank The bank extension.
-    */
+     * @notice Subtracts from the bank's account the proportional shares and/or loot,
+     * @notice and transfers the funds to the member's internal account based on the provided tokens.
+     * @param memberAddr The member address that want to burn the shares and/or loot.
+     * @param sharesToBurn The amount of shares of the member that must be converted into funds.
+     * @param lootToBurn The amount of loot of the member that must be converted into funds.
+     * @param initialTotalSharesAndLoot The sum of shares and loot before internal transfers.
+     * @param tokens The array of tokens that the funds should be sent to.
+     * @param bank The bank extension.
+     */
     function _burnShares(
         address memberAddr,
         uint256 sharesToBurn,
@@ -133,7 +133,8 @@ There is no state tracking for this adapter.
 
 ```solidity
     /**
-     * @notice Event emitted when a member of the DAO executes a ragequit with all or parts of one shares/loot.
+     * @notice Event emitted when a member of the DAO executes a ragequit
+     * with all or parts of one shares/loot.
      */
     event MemberRagequit(
         address memberAddr,
