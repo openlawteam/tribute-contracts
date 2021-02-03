@@ -10,7 +10,6 @@ Describe the entire process, interactions and routines covered/executed by this 
 
 Specify which additional configurations are required to make this adapter work. For instance: needs access to the DAO member, needs access to the DAO Bank, relies on Adapter X, Y and Extension Z.
 
-DAORegistry Access Flags: `WITHDRAW`, `SUB_FROM_BALANCE`.
 
 Bank Extension Access Flags: `WITHDRAW`, `SUB_FROM_BALANCE`.
 
