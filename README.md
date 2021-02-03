@@ -30,7 +30,7 @@ When a new adapter is created, one needs to submit a Managing proposal to add th
 
 Each adapter needs to implement a given set of access rules, otherwise it wont ...
 
-Adapters implemented in the LAOLand project:
+Adapters implemented in the Laoland project:
 
 - [Configuration](https://github.com/openlawteam/laoland/blob/master/docs/adapters/Configuration.md): manages storing and retrieving per-DAO settings required by shared adapters.
 - [Financing](https://github.com/openlawteam/laoland/blob/master/docs/adapters/Financing.md): allows individuals and/or organizations to request funds to finance their projects, and the members of the DAO have the power to vote and decide which projects should be funded.
