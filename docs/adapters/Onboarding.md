@@ -81,7 +81,7 @@ The applicant address.
 
 #### proposer
 
-The proposer address
+The proposer address.
 
 ### proposals mapping
 
