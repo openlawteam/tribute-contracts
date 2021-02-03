@@ -14,7 +14,7 @@ Inspired by the hexagonal architecture pattern we believe that we can have addit
 
 ![laoland_hexagon_architecture](https://user-images.githubusercontent.com/708579/106510703-096a9880-64ae-11eb-8e48-3745e36a7b80.png)
 
-The main idea is to limit the access to the contracts according to each layer. External World (e.g: RPC clients) can access the core contracts only via Adapters, never directly. Every adapter contains all the necessary logic and data to update/change the state of the DAO in the DAORegistry Contract. A Core Contract tracks all the state changes of the DAO, and an Adapter tracks only the state changes in its own context. Extensions enhance the DAO capabilites, and simplify the Core Contract code. The information always flows from the External World to the Core Contracts, never the other way around. If a Core Contract needs external info, it must be provided by an Adapter and/or an Extension instead of calling External World directly.
+The main idea is to limit the access to the contracts according to each layer. External World (e.g: RPC clients) can access the core contracts only via Adapters, never directly. Every adapter contains all the necessary logic and data to update/change the state of the DAO in the DAORegistry Contract. A Core Contract tracks all the state changes of the DAO, and an Adapter tracks only the state changes in its own context. Extensions enhance the DAO capabilities, and simplify the Core Contract code. The information always flows from the External World to the Core Contracts, never the other way around. If a Core Contract needs external info, it must be provided by an Adapter and/or an Extension instead of calling External World directly.
 
 The are five main components in the LAO Land architecture:
 
