@@ -104,7 +104,7 @@ It's a pure function.
 
 This function configures the adapter for a particular DAO.
 The modifier is adapterOnly which means that only if the sender is either a registered adapter of the DAO or if it is in creation mode can it be called.
-The function checks that chunkSize, sharesPerChunks and maximumChunks cannot be 0
+The function checks that chunkSize, sharesPerChunks and maximumChunks cannot be 0.
 
 **tokenAddr** is being whitelisted in the bank extension as an ERC-20 token
 **tokenAddrToMint** is being whitelisted in the bank extension as an internal token
@@ -125,7 +125,7 @@ If the amount sent is not a multiple of sharesPerChunk, the remainder is sent ba
 
 this function uses **\_submitMembershipProposal** to create the proposal
 
-### function sponsorProposal(DaoRegistry dao, bytes32 proposalId, bytes calldata data)
+### function sponsorProposal(DaoRegistry dao, bytes32 proposalId, bytes memory data)
 
 This function can only be called by an active member.
 
@@ -138,33 +138,33 @@ This starts a vote on the proposal to onboard a new member.
 
 ### function cancelProposal(DaoRegistry dao, bytes32 proposalId)
 
-If a proposal exsits but has not been sponsored yet or processed yet, you can cancel it.
+If a proposal exists but has not been sponsored yet or processed yet, you can cancel it.
 Only the proposer can cancel a proposal.
 
-If the proposal is cancelled, it is marked as processed and the tribute is funded back to the proposer.
+If the proposal is cancelled, it is marked as processed and the tribute is refunded back to the proposer.
 
 ### function processProposal(DaoRegistry dao, bytes32 proposalId)
 
-Once the vote on a proposal is finished, it is time to process it. Anybody can call that
+Once the vote on a proposal is finished, it is time to process it. Anybody can call this function.
 
-The function checks that there is a vote in progrss for this proposalId and that it has not been processed yet.
+The function checks that there is a vote in progress for this proposalId and that it has not been processed yet.
 if the vote is a success (2), then we process it by minting the internal tokens and moving the tokens from the adapter to the bank extension
 
 if the vote is a tie or failed (1 or 3), then the funds are returned to the proposer
 
-Otherwise, the state is invalid and the tx is reverted (if the vote does not exist or if it is in progress)
+Otherwise, the state is invalid and the tx is reverted (if the vote does not exist or if it is in progress).
 
 ### function \_submitMembershipProposal(DaoRegistry dao, bytes32 proposalId, address tokenToMint, address payable applicant, address payable proposer, uint256 value, address token)
 
 ### function \_submitMembershipProposalInternal(DaoRegistry dao, bytes32 proposalId, address tokenToMint, address payable newMember, address payable proposer, uint256 sharesRequested, uint256 amount, address token)
 
-This function marks the proposalId as submitted in the dao and saves the information in the internal adapter state
+This function marks the proposalId as submitted in the DAO and saves the information in the internal adapter state.
 
 ### function \_refundTribute(address tokenAddr, address payable proposer, uint256 amount)
 
-It returns a certain amount to the proposer of a certain token address
-it handles whether it's an ERC-20 or simply ETH
+It returns a certain amount to the proposer of a certain token address.
+It handles whether it's an ERC-20 or simply ETH.
 
 ### function \_mintTokensToMember(DaoRegistry dao, address tokenToMint, address memberAddr, uint256 tokenAmount)
 
-This function mints the tokens to the new member, and creates the new member data if needed within the DAO
+This function mints the tokens to the new member and creates the new member data if needed within the DAO.
