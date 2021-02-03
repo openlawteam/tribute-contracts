@@ -61,12 +61,12 @@ The key advantage of the adapters is to make them very small and suitable to a v
 
 - Your adapter should not accept any funds. So it is a good practice to always revert the receive call.
 
-```solidity
-receive() external payable {
-  revert("fallback revert");
-}
+  ```solidity
+  receive() external payable {
+    revert("fallback revert");
+  }
 
-```
+  ```
 
 ### Testing the new Adapter
 
