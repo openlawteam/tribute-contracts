@@ -838,17 +838,17 @@ contract("LAOLAND - GuildKick Adapter", async (accounts) => {
     });
     assert.equal(activeMember.toString(), "false");
 
-    //Submit a new Bank module proposal
-    let newModuleId = sha3("onboarding");
-    let newModuleAddress = accounts[8];
+    //Submit a new Bank adapter proposal
+    let newAdapterId = sha3("onboarding");
+    let newAdapterAddress = accounts[8];
 
     try {
       // kicked member attemps to submit a managing proposal
-      await managing.createModuleChangeRequest(
+      await managing.createAdapterChangeRequest(
         dao.address,
         "0x45",
-        newModuleId,
-        newModuleAddress,
+        newAdapterId,
+        newAdapterAddress,
         [],
         [],
         0,
@@ -914,14 +914,14 @@ contract("LAOLAND - GuildKick Adapter", async (accounts) => {
     });
     assert.equal(activeMember.toString(), "false");
     const proposalId = "0x" + proposalCounter++;
-    //Submit a new Bank module proposal
-    let newModuleId = sha3("onboarding");
-    let newModuleAddress = accounts[3]; //TODO deploy some Banking test contract
-    await managing.createModuleChangeRequest(
+    //Submit a new Bank adapter proposal
+    let newadapterId = sha3("onboarding");
+    let newadapterAddress = accounts[3]; //TODO deploy some Banking test contract
+    await managing.createAdapterChangeRequest(
       dao.address,
       proposalId,
-      newModuleId,
-      newModuleAddress,
+      newadapterId,
+      newadapterAddress,
       [],
       [],
       0,
