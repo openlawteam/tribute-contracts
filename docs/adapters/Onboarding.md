@@ -47,7 +47,7 @@ How many chunks can someone buy max. This helps force decentralization of token 
 
 ## Adapter state
 
-Onboarding keeps track of every proposal that goes through it as well as the number of tokens that have been minted so far
+Onboarding keeps track of every proposal that goes through it as well as the number of tokens that have been minted so far.
 
 ### ProposalDetails
 
