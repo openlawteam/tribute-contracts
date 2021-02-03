@@ -63,7 +63,7 @@ Which token needs to be minted if the proposal passes.
 
 #### amount
 
-The amount sent by the applicant
+The amount sent by the applicant.
 
 #### sharesRequested
 
