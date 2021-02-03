@@ -35,7 +35,7 @@ How many tokens need to be minted per chunk bought.
 
 ### {tokenAddrToMint}.onboarding.sharesPerChunk
 
-How many shares (tokens from tokenAddr) are being minted per chunk
+How many shares (tokens from tokenAddr) are being minted per chunk.
 
 ### {tokenAddrToMint}.onboarding.tokenAddr
 
