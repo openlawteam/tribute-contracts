@@ -63,7 +63,7 @@ The address of the new module contract.
 
 The configuration keys for the module.
 
-### values
+#### values
 
 The values to set for the module configuraition.
 
