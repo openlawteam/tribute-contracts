@@ -77,7 +77,7 @@ We keep this information even though it is part of the configuration to handle t
 
 #### applicant
 
-The applicant address
+The applicant address.
 
 #### proposer
 
