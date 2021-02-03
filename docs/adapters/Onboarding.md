@@ -67,7 +67,7 @@ The amount sent by the applicant
 
 #### sharesRequested
 
-The amount of internal tokens that needs to be minted if the proposal passes
+The amount of internal tokens that needs to be minted if the proposal passes.
 
 #### token
 
