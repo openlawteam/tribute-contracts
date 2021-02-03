@@ -70,7 +70,7 @@ contract ManagingContract is IManaging, DaoConstants, MemberGuard {
 
         require(
             dao.isNotReservedAddress(adapterAddress),
-            "adapter is using reserved address"
+            "adapter address is reserved address"
         );
 
         dao.submitProposal(proposalId);
@@ -126,6 +126,7 @@ contract ManagingContract is IManaging, DaoConstants, MemberGuard {
         );
 
         dao.processProposal(proposalId);
+
         if (dao.adapters(proposal.adapterId) != address(0x0)) {
             dao.removeAdapter(proposal.adapterId);
         }
@@ -136,9 +137,7 @@ contract ManagingContract is IManaging, DaoConstants, MemberGuard {
             dao.setConfiguration(keys[i], values[i]);
         }
 
-        if (proposal.adapterAddress == address(0x0)) {
-            dao.removeAdapter(proposal.adapterId);
-        } else {
+        if (proposal.adapterAddress != address(0x0)) {
             dao.addAdapter(
                 proposal.adapterId,
                 proposal.adapterAddress,

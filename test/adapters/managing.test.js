@@ -38,33 +38,6 @@ const {
 } = require("../../utils/DaoFactory.js");
 
 contract("LAOLAND - Managing Adapter", async (accounts) => {
-  it("should not be possible to propose a new adapter with 0x0 adapter address", async () => {
-    const myAccount = accounts[1];
-
-    //Create the new DAO
-    let dao = await createDao(myAccount);
-
-    //Submit a new Bank adapter proposal
-    let newAdapterId = sha3("bank");
-    let managingContract = await dao.getAdapterAddress(sha3("managing"));
-    let managing = await ManagingContract.at(managingContract);
-    try {
-      await managing.createAdapterChangeRequest(
-        dao.address,
-        "0x0",
-        newAdapterId,
-        ETH_TOKEN,
-        [],
-        [],
-        0,
-        { from: myAccount, gasPrice: toBN("0") }
-      );
-      assert.err("should not pass");
-    } catch (err) {
-      assert.equal(err.reason, "invalid proposalId");
-    }
-  });
-
   it("should not be possible to propose a new adapter when the adapter has a reserved address", async () => {
     const myAccount = accounts[1];
 
@@ -78,7 +51,7 @@ contract("LAOLAND - Managing Adapter", async (accounts) => {
     try {
       await managing.createAdapterChangeRequest(
         dao.address,
-        "0x0",
+        "0x1",
         newAdapterId,
         GUILD,
         [],
@@ -88,7 +61,7 @@ contract("LAOLAND - Managing Adapter", async (accounts) => {
       );
       assert.err("should not pass");
     } catch (err) {
-      assert.equal(err.reason, "adapter is using reserved address");
+      assert.equal(err.reason, "adapter address is reserved address");
     }
 
     try {
@@ -104,36 +77,121 @@ contract("LAOLAND - Managing Adapter", async (accounts) => {
       );
       assert.err("should not pass");
     } catch (err) {
-      assert.equal(err.reason, "adapter is using reserved address");
+      assert.equal(err.reason, "adapter address is reserved address");
     }
   });
 
-  it("should not be possible to propose a new adapter with an empty adapter address", async () => {
+  it("passing 0x0 as the new adapter address should remove the adapter", async () => {
     const myAccount = accounts[1];
 
     //Create the new DAO
     let dao = await createDao(myAccount);
 
     //Submit a new Bank adapter proposal
-    let newAdapterId = sha3("managing");
+    let newAdapterId = sha3("onboarding");
     let managingContract = await dao.getAdapterAddress(sha3("managing"));
     let managing = await ManagingContract.at(managingContract);
+
+    await managing.createAdapterChangeRequest(
+      dao.address,
+      "0x45",
+      newAdapterId,
+      "0x0000000000000000000000000000000000000000",
+      [],
+      [],
+      0,
+      {
+        from: myAccount,
+        gasPrice: toBN("0"),
+      }
+    );
+
+    managing.spon;
+
     try {
-      await managing.createAdapterChangeRequest(
-        dao.address,
-        "0x45",
-        newAdapterId,
-        "",
-        [],
-        [],
-        {
-          from: myAccount,
-          gasPrice: toBN("0"),
-        }
-      );
-      assert.err("should not pass");
-    } catch (err) {
-      assert.equal(err.reason.indexOf("invalid address"), 0);
+      dao.getAdapterAddress(sha3("onboarding"));
+    } catch (ex) {}
+  });
+
+  it("passing 0x0 as the new adapter address means you delete it", async () => {
+    const myAccount = accounts[1];
+
+    //Create the new DAO
+    let dao = await createDao(myAccount);
+
+    //Submit a new Bank adapter proposal
+    let newAdapterId = sha3("onboarding");
+
+    let managingContract = await dao.getAdapterAddress(sha3("managing"));
+    let managing = await ManagingContract.at(managingContract);
+
+    let votingContract = await dao.getAdapterAddress(sha3("voting"));
+    let voting = await VotingContract.at(votingContract);
+
+    let proposalId = "0x44";
+    await managing.createAdapterChangeRequest(
+      dao.address,
+      proposalId,
+      newAdapterId,
+      "0x0000000000000000000000000000000000000000",
+      [],
+      [],
+      0,
+      {
+        from: myAccount,
+        gasPrice: toBN("0"),
+      }
+    );
+
+    await managing.sponsorProposal(dao.address, proposalId, [], {
+      from: myAccount,
+      gasPrice: toBN("0"),
+    });
+
+    await voting.submitVote(dao.address, proposalId, 1, {
+      from: myAccount,
+      gasPrice: toBN("0"),
+    });
+    await advanceTime(10000);
+
+    await managing.processProposal(dao.address, proposalId, {
+      from: myAccount,
+      gasPrice: toBN("0"),
+    });
+
+    proposalId = "0x45";
+    newAdapterId = sha3("not_an_adapter");
+    await managing.createAdapterChangeRequest(
+      dao.address,
+      proposalId,
+      newAdapterId,
+      "0x0000000000000000000000000000000000000000",
+      [],
+      [],
+      0,
+      {
+        from: myAccount,
+        gasPrice: toBN("0"),
+      }
+    );
+
+    await managing.sponsorProposal(dao.address, proposalId, [], {
+      from: myAccount,
+      gasPrice: toBN("0"),
+    });
+
+    await voting.submitVote(dao.address, proposalId, 1, {
+      from: myAccount,
+      gasPrice: toBN("0"),
+    });
+    await advanceTime(10000);
+    try {
+      await managing.processProposal(dao.address, proposalId, {
+        from: myAccount,
+        gasPrice: toBN("0"),
+      });
+    } catch (ex) {
+      assert.equal(err.reason, "onlyMember");
     }
   });
 
@@ -151,7 +209,7 @@ contract("LAOLAND - Managing Adapter", async (accounts) => {
     //Submit a new Bank adapter proposal
     let newAdapterId = sha3("onboarding");
     let proposalId = "0x1";
-    let newAdapterAddress = accounts[3]; //TODO deploy some Banking test contract
+    let newAdapterAddress = accounts[3];
     await managing.createAdapterChangeRequest(
       dao.address,
       proposalId,
