@@ -40,7 +40,7 @@ Adapters implemented in the Laoland project:
 - [Onboarding](https://github.com/openlawteam/laoland/blob/master/docs/adapters/Onboarding.md): triggers the process of minting internal tokens in exchange of a specific token at a fixed price.
 - [Ragequit](https://github.com/openlawteam/laoland/blob/master/docs/adapters/Ragequit.md): gives the members the freedom to choose when it is the best time to exit the DAO for any given reason.
 - [Voting](https://github.com/openlawteam/laoland/blob/master/docs/adapters/Voting.md): adds the simple on chain voting governance process to the DAO.
-- [Withdraw](https://github.com/openlawteam/laoland/blob/master/docs/adapters/Withdraw.md): allows the members to withdraw theirs funds from the DAO bank.
+- [Withdraw](https://github.com/openlawteam/laoland/blob/master/docs/adapters/Withdraw.md): allows the members to withdraw their funds from the DAO bank.
 
 Considerations:
 
