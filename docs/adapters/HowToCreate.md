@@ -27,26 +27,26 @@ The adapter must implement one or more of the available interfaces at [contracts
 
 There are two main types of adapters that serve for different purposes:
 
-- Proposal: the type of adapter that writes/reads to/from the DAO state based on a proposal.
-- Generic: the type of adapter that writes/reads to/from the DAO state without any proposal data.
+- Proposal: writes/reads to/from the DAO state based on a proposal, and the proposal needs to pass, otherwise the DAO state changes are not applied, e.g: [GuildKick.sol](https://github.com/openlawteam/laoland/blob/master/contracts/adapters/GuildKick.sol).
+- Generic: writes/reads to/from the DAO state without a proposal, e.g: [Withdraw.sol](https://github.com/openlawteam/laoland/blob/master/contracts/adapters/Withdraw.sol).
 
 ### Identifying the Modifiers
 
-We have adapters that are accessible only to members/advisors of the DAO (e.g: [Ragequit.sol](https://github.com/openlawteam/laoland/blob/master/docs/adapters/Ragequit.md)), and adapters that are open to any individual or organization, e.g: [Financing.sol](https://github.com/openlawteam/laoland/blob/master/docs/adapters/Financing.md).
+We have adapters that are accessible only to members and/or advisors of the DAO (e.g: [Ragequit.sol](https://github.com/openlawteam/laoland/blob/master/docs/adapters/Ragequit.md)), and adapters that are open to any individual or organization, e.g: [Financing.sol](https://github.com/openlawteam/laoland/blob/master/docs/adapters/Financing.md).
 
-While creating the adapter try to map out which sort of users you want to grant access to. Remember that the adapters are the only way we have to alter the DAO state, so be careful with the access modifiers you use. We already have some of them implemented, take a look at the [docs/guards](https://github.com/openlawteam/laoland/blob/master/docs/guards).
+While creating the adapter try to identify which sort of users you want to grant access to. Remember that the adapters are the only way we have to alter the DAO state, so be careful with the access modifiers you use. We already have some of them implemented, take a look at the [docs/guards](https://github.com/openlawteam/laoland/blob/master/docs/guards), and feel free to suggest new ones if needed.
 
 ### Map out the proper Access Flags
 
-Another important point is to identify which sort of permissions your adapter needs in order to write/read data to/from the DAO. If your adapter requires an [Extension](https://github.com/openlawteam/laoland#extensions), you will also need to provide the correct [Access Flags](https://github.com/openlawteam/laoland#access-control-layer) to access that extension. Checkout which permission each flag grant: [Flag Helper](https://github.com/openlawteam/laoland/blob/master/docs/helpers/FlagHelper.md)
+Another important point is to map out which sort of permissions your adapter needs in order to write/read data to/from the DAO. If your adapter requires an [Extension](https://github.com/openlawteam/laoland#extensions), you will also need to provide the correct [Access Flags](https://github.com/openlawteam/laoland#access-control-layer) to access that extension. Checkout which permission each flag grants: [Flag Helper](https://github.com/openlawteam/laoland/blob/master/docs/helpers/FlagHelper.md)
 
 ### Set up the DAO custom configurations
 
-Some adapters might need additional configurations to make decisions on the fly, these configurations can and should be set per DAO, in order to do that you need to identify what sort of parameters that you want to keep customizable and set up them through the [Configuration Adapter](https://github.com/openlawteam/laoland/blob/master/docs/adapters/Configuration.md).
+Some adapters might need customized/additional configurations to make decisions on the fly, these configurations can and should be set per DAO, in order to do that you need to identify what sort of parameters that you want to keep customizable and set up them through the [Configuration Adapter](https://github.com/openlawteam/laoland/blob/master/docs/adapters/Configuration.md).
 
 ### Be mindful of the storage costs
 
-The key advantage of the adapters is to make them very small and suitable to a very specific use-case, with that in mind we try to not use the storage that much. We prefer efficient and cheap adapters that can be easily deployable and maintable. The less state maintains and operations it executes, the better.
+The key advantage of the adapters is to make them very small and suitable to a very specific use-case, with that in mind we try to not use the storage that much. We prefer efficient and cheap adapters that can be easily deployable and maintanable. The less state maintains and operations it executes, the better.
 
 ### Conventions & Implementation
 
