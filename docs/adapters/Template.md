@@ -24,7 +24,7 @@ Add the information about all the interactions that are triggered by this DAO, w
 
 ## Functions description and assumptions / checks
 
-Describe the public and private functions signatures with proper documentation and clearly explaining what each function does. Specify what are expected the arguments and pre-conditions to execute the functions. Also, provide what is the expected outcome.
+Describe the public and private functions signatures with proper documentation and clearly explain what each function does. Specify what are expected the arguments and pre-conditions to execute the functions. Also, provide what is the expected outcome.
 
 Examples:
 
