@@ -17,7 +17,7 @@
 
 When a new adapter is created, one needs to submit a Managing proposal to add the new adapter to the DAO. Once the proposal passes, the new adapter is added and becomes available for use.
 
-Each adapter needs to be configured with the [Access Flags](https://github.com/openlawteam/laoland#access-control-layer) in order to access the [Core Contracts](https://github.com/openlawteam/laoland#core-contracts), and/or [Extensions](https://github.com/openlawteam/laoland##extensions). Otherwise the Adapter will not able to pull/push information to/from the DAO.
+Each adapter needs to be configured with the [Access Flags](https://github.com/openlawteam/laoland#access-control-layer) in order to access the [Core Contracts](https://github.com/openlawteam/laoland#core-contracts), and/or [Extensions](https://github.com/openlawteam/laoland##extensions). Otherwise the Adapter will not able to interact with the DAO.
 
 ### Defining the Interface
 
