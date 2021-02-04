@@ -43,10 +43,6 @@ DAORegistry Access Flags: `SUBMIT_PROPOSAL`, `PROCESS_PROPOSAL`, `SPONSOR_PROPOS
 
 For each proposal created through the adapter, we keep track of the following information:
 
-#### applicant
-
-The member who is initiating the adapter proposal.
-
 #### adapterId
 
 The ID of the adapter to add or replace.
