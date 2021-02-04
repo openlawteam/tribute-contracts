@@ -34,7 +34,6 @@ SOFTWARE.
 
 contract ManagingContract is IManaging, DaoConstants, MemberGuard {
     struct ProposalDetails {
-        address applicant;
         bytes32 adapterId;
         address adapterAddress;
         bytes32[] keys;
@@ -76,7 +75,6 @@ contract ManagingContract is IManaging, DaoConstants, MemberGuard {
         dao.submitProposal(proposalId);
 
         proposals[address(dao)][proposalId] = ProposalDetails(
-            msg.sender,
             adapterId,
             adapterAddress,
             keys,
