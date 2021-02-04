@@ -273,6 +273,7 @@ async function deployDao(
   const tokenAddr = options.tokenAddr || ETH_TOKEN;
   const maxChunks = options.maximumChunks || maximumChunks;
   const isOffchainVoting = !!options.offchainVoting;
+  const chainId = options.chainId || 1;
 
   await deployer.deploy(DaoRegistry);
   
@@ -307,7 +308,7 @@ async function deployDao(
 
   const votingAddress = await dao.getAdapterAddress(sha3("voting"));
   if(isOffchainVoting) {
-    const offchainVoting = await deployer.deploy(OffchainVotingContract, votingAddress, 1);
+    const offchainVoting = await deployer.deploy(OffchainVotingContract, votingAddress, chainId);
     await daoFactory.updateAdapter(
       dao.address,
       entryDao("voting", offchainVoting, {
@@ -565,7 +566,6 @@ module.exports = {
   OnboardingContract,
   WithdrawContract,
   ConfigurationContract,
-  OnboardingContract,
   OffchainVotingContract,
   BankExtension,
   OnboardingContract,

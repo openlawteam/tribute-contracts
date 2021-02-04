@@ -470,6 +470,7 @@ contract DaoRegistry is MemberGuard, AdapterGuard {
         public
         hasAccess(this, AclFlag.SUBMIT_PROPOSAL)
     {
+        require(proposalId != bytes32(0), "invalid proposalId");
         require(
             !getProposalFlag(proposalId, ProposalFlag.EXISTS),
             "proposalId must be unique"
@@ -489,6 +490,7 @@ contract DaoRegistry is MemberGuard, AdapterGuard {
         hasAccess(this, AclFlag.SPONSOR_PROPOSAL)
         onlyMember2(this, sponsoringMember)
     {
+        // also checks if the flag was already set
         Proposal storage proposal =
             _setProposalFlag(proposalId, ProposalFlag.SPONSORED);
 
@@ -565,10 +567,9 @@ contract DaoRegistry is MemberGuard, AdapterGuard {
      */
     function isActiveMember(address addr) public view returns (bool) {
         address memberAddr = memberAddressesByDelegatedKey[addr];
-        uint256 memberFlags = members[memberAddr].flags;
         return
-            getFlag(memberFlags, uint8(MemberFlag.EXISTS)) &&
-            !getFlag(memberFlags, uint8(MemberFlag.JAILED));
+            getMemberFlag(memberAddr, MemberFlag.EXISTS) &&
+            !getMemberFlag(memberAddr, MemberFlag.JAILED);
     }
 
     /**
@@ -590,7 +591,7 @@ contract DaoRegistry is MemberGuard, AdapterGuard {
      * @param flag The flag to check in the member
      */
     function getMemberFlag(address memberAddress, MemberFlag flag)
-        external
+        public
         view
         returns (bool)
     {

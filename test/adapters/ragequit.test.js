@@ -45,7 +45,7 @@ const {
   BankExtension,
 } = require("../../utils/DaoFactory.js");
 
-let proposalCounter = 0;
+let proposalCounter = 1;
 contract("LAOLAND - Ragequit Adapter", async (accounts) => {
   const submitNewMemberProposal = async (
     onboarding,
@@ -435,7 +435,6 @@ contract("LAOLAND - Ragequit Adapter", async (accounts) => {
     const bank = await BankExtension.at(bankAddress);
 
     // Transfer 1000 OLTs to the Advisor account
-    await oltContract.approve(advisorAccount, 100);
     await oltContract.transfer(advisorAccount, 100);
     let advisorTokenBalance = await oltContract.balanceOf(advisorAccount);
     assert.equal(
@@ -462,7 +461,7 @@ contract("LAOLAND - Ragequit Adapter", async (accounts) => {
       from: advisorAccount,
       gasPrice: toBN(0),
     });
-    let proposalId = "0x0";
+    let proposalId = "0x1";
     // Send a request to join the DAO as an Advisor (non-voting power),
     // the tx passes the OLT ERC20 token, the amount and the nonVotingOnboarding adapter that handles the proposal
     await onboarding.onboard(
@@ -693,7 +692,7 @@ contract("LAOLAND - Ragequit Adapter", async (accounts) => {
     await advanceTime(10000);
 
     // Process the guild kick proposal to put the member in jail
-    await guildkickContract.guildKick(dao.address, kickProposalId, {
+    await guildkickContract.processProposal(dao.address, kickProposalId, {
       from: daoOwner,
       gasPrice: toBN("0"),
     });

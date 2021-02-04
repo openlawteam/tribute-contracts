@@ -37,12 +37,12 @@ There are no state tracking for this adapter.
   - checks the member's balance.
   - subtracts the member's balance.
   - transfers the funds from the DAO account to the member's account taking into consideration the provided tokens.
+  - checks if the provided token is supported/allowed by the DAO.
 
 - DaoRegistry
 
   - checks if the member is not in jail before allowing the ragequit.
   - checks if the message sender is actually a member of the DAO.
-  - checks if the provided token is supported/allowed by the DAO.
 
 - FairShareHelper
 

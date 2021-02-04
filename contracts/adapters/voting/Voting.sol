@@ -84,7 +84,6 @@ contract VotingContract is IVoting, DaoConstants, MemberGuard, AdapterGuard {
         bytes32 proposalId,
         uint256 voteValue
     ) external onlyMember(dao) {
-        require(dao.isActiveMember(msg.sender), "only active members can vote");
         require(
             dao.getProposalFlag(proposalId, DaoRegistry.ProposalFlag.SPONSORED),
             "the proposal has not been sponsored yet"
@@ -144,26 +143,35 @@ contract VotingContract is IVoting, DaoConstants, MemberGuard, AdapterGuard {
         external
         view
         override
-        returns (uint256 state)
+        returns (VotingState state)
     {
         Voting storage vote = votes[address(dao)][proposalId];
         if (vote.startingTime == 0) {
-            return 0;
+            return VotingState.NOT_STARTED;
         }
 
         if (
             block.timestamp <
             vote.startingTime + dao.getConfiguration(VotingPeriod)
         ) {
-            return 4;
+            return VotingState.IN_PROGRESS;
+        }
+
+        if (
+            block.timestamp <
+            vote.startingTime +
+                dao.getConfiguration(VotingPeriod) +
+                dao.getConfiguration(GracePeriod)
+        ) {
+            return VotingState.GRACE_PERIOD;
         }
 
         if (vote.nbYes > vote.nbNo) {
-            return 2;
+            return VotingState.PASS;
         } else if (vote.nbYes < vote.nbNo) {
-            return 3;
+            return VotingState.NOT_PASS;
         } else {
-            return 1;
+            return VotingState.TIE;
         }
     }
 }
