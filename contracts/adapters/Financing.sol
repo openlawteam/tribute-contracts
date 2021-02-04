@@ -97,7 +97,7 @@ contract FinancingContract is IFinancing, DaoConstants, MemberGuard {
     function sponsorProposal(
         DaoRegistry dao,
         bytes32 proposalId,
-        bytes calldata data
+        bytes memory data
     ) external override {
         IVoting votingContract = IVoting(dao.getAdapterAddress(VOTING));
         address sponsoredBy =
