@@ -2,13 +2,13 @@
 
 ## Description and scope
 
-The DAO Registry is the identity of the DAO. This is the contract address that is passed to every adapter.
+The DAO Registry is the identity of the DAO. This is the contract address that is every adapter usually interacts with.
 
 The scope of the registry is to manage the following:
 
-- The adapter registry - which adapter is being used by this DAO and which access it has
-- The extension registry - which extension is part of the DAO and the adapter's access to it
-- Members registry - whether members exist, their delegate key and their flags
+- The adapter registry - which adapter is being used by this DAO and which access it has to the DAO state.
+- The extension registry - which extension is part of the DAO and the adapter's access to it.
+- Members registry - whether members exist, their delegate key and their access flags.
 
 
 Each non-constant function in the DAO has an access control modifier linked to it, to make sure the caller has the right to call it.
@@ -38,18 +38,18 @@ The DaoRegisrty.sol contract tracks the state of the DAO for 1) Adapter and Exte
     NEW_MEMBER
 }`
 
-  `ADD_ADAPTER` - true if an adapter has been added to the DAO.  
-  `REMOVE_ADAPTER` -  true if an adapter has been removed from the DAO. 
-  `JAIL_MEMBER` - true, if a DAO adapter is registered to `DaoRegistry.sol` and can call `jailMember`.
-  `UNJAIL_MEMBER` - true, if a DAO adapter is registered to `DaoRegistry.sol` and can call `unjailMember
-  `SUBMIT_PROPOSAL` -  true, if a DAO adapter is registered to the DAO and can call `submitProposal`.
-  `SPONSOR_PROPOSAL` - true, if a DAO adapter is registered to the DAO and can call `sponsorProposal` function.
-  `PROCESS_PROPOSAL` true, if a DAO adapter is registered to the DAO and can call `processProposal` function.
-   `UPDATE_DELEGATE_KEY` - true, if a member has delegated their voting rights to another ETH address. 
-   `SET_CONFIGURATION` - true, if a key/value has been setup to `DaoRegistry.sol`.
-   `ADD_EXTENSION` - true, if a DAO adapter is registered to the DAO and can call `addExtension`
-   `REMOVE_EXTENSION` - true, if a DAO adapter is registered to the DAO and can call `removeExtension` 
-   `NEW_MEMBER` - true, if a DAO adapter is registered to the DAO and can call `potentialNewMember`  
+- `ADD_ADAPTER` - if true, the caller adapter has access to add new adapters to the DAO, function `dao.addAdapter`.  
+- `REMOVE_ADAPTER` - if true, the caller adapter access to remove other adapters from the DAO, function `dao.removeAdapter`. 
+- `JAIL_MEMBER` - if true, the caller adapter is allowed to jail a member of the DAO, function `dao.jailMember`.
+- `UNJAIL_MEMBER` - if true, the caller adapter is allowed to unjail a member of the DAO, function `dao.unjailMember`.
+- `SUBMIT_PROPOSAL` -  if true, the caller adapter is allowed to submit/create proposals in the DAO, function `dao.submitProposal`.
+- `SPONSOR_PROPOSAL` - if true, the caller adapter is allowed to sponsor an existing proposal in the DAO, function `dao.sponsorProposal`.
+- `PROCESS_PROPOSAL` - if true, the caller adapter has the right to process a DAO proposal, function `dao.processProposal`.
+- `UPDATE_DELEGATE_KEY` - if true, the caller adapter has the access to update the member's delegated key in the DAO, function `dao.updateDelegatedKey`.
+- `SET_CONFIGURATION` - if true, the caller adapter is allowed to store custom configurations as key/value in the DAO, function `dao.setConfiguration`.
+- `ADD_EXTENSION` - if true, the caller adapter is allowed to add new Extensions to the DAO, function `dao.addExtension`.
+- `REMOVE_EXTENSION` - if true, the caller adapter is allowed to remove Extensions from the DAO, function `dao.removeExtension`. 
+- `NEW_MEMBER` - if true, the caller adapter has access to register new members in the DAO, function `dao.potentialNewMember`.  
 
 ## Events
 
