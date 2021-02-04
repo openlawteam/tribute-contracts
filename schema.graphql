@@ -62,6 +62,7 @@ type Proposal @entity {
 
 type Adapter @entity {
   id: ID!
+  adapterId: Bytes!
   adapterAddress: Bytes!
   acl: BigInt! #access control layer
 }
@@ -70,4 +71,15 @@ type Extension @entity {
   id: ID!
   extensionAddress: Bytes!
   extensionId: Bytes!
+}
+
+type DaoConstants @entity {
+  id: ID!
+  # dao constants
+  GUILD: Bytes
+  TOTAL: Bytes
+  SHARES: Bytes
+  LOOT: Bytes
+  LOCKED_LOOT: Bytes
+  ETH_TOKEN: Bytes
 }

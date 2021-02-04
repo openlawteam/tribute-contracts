@@ -1,6 +1,14 @@
 import { DaoRegistry } from "../generated/templates";
 import { DAOCreated } from "../generated/DaoFactory/DaoFactory";
-import { Laoland } from "../generated/schema";
+import { DaoConstants, Laoland } from "../generated/schema";
+import {
+  ETH_TOKEN,
+  GUILD,
+  LOCKED_LOOT,
+  LOOT,
+  SHARES,
+  TOTAL,
+} from "./bank-extension-mapping";
 import { log } from "@graphprotocol/graph-ts";
 
 // helper
@@ -10,6 +18,23 @@ function loadOrCreateDao(address: string): Laoland {
     dao = new Laoland(address);
   }
   return dao as Laoland;
+}
+
+function loadOrCreateDaoConstants(address: string): DaoConstants {
+  let daoConstants = DaoConstants.load(address);
+  if (daoConstants == null) {
+    daoConstants = new DaoConstants(address);
+
+    // constants
+    daoConstants.GUILD = GUILD;
+    daoConstants.TOTAL = TOTAL;
+    daoConstants.SHARES = SHARES;
+    daoConstants.LOOT = LOOT;
+    daoConstants.LOCKED_LOOT = LOCKED_LOOT;
+    daoConstants.ETH_TOKEN = ETH_TOKEN;
+  }
+
+  return daoConstants as DaoConstants;
 }
 
 /**
@@ -28,6 +53,11 @@ export function handleDaoCreated(event: DAOCreated): void {
     [event.params._address.toHexString(), event.params._name.toString()]
   );
 
+  // load or create dao constants and save
+  // let daoConstants = loadOrCreateDaoConstants(event.address.toHexString());
+  // daoConstants.save();
+
+  // load or create dao and save
   let dao = loadOrCreateDao(event.params._address.toHexString());
 
   dao.createdAt = event.block.timestamp.toString();

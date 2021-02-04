@@ -17,6 +17,7 @@ dataSources:
       language: wasm/assemblyscript
       entities:
         - Dao
+        - DaoConstants
       abis:
         - name: DaoFactory
           file: ./build/contracts/DaoFactory.json

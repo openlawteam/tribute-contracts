@@ -79,14 +79,20 @@ export function handleProcessedProposal(event: ProcessedProposal): void {
 }
 
 export function handleAdapterAdded(event: AdapterAdded): void {
-  let adapter = Adapter.load(event.params.adapterId.toHex());
+  let daoAddress = event.address.toHexString();
+  let adapterId = daoAddress
+    .concat("-adapter-")
+    .concat(event.params.adapterId.toHex());
+
+  let adapter = Adapter.load(adapterId);
 
   log.info("**************** handleAdapterAdded event fired. adapterId: {}", [
     event.params.adapterId.toHexString(),
   ]);
 
   if (adapter == null) {
-    adapter = new Adapter(event.params.adapterId.toHex());
+    adapter = new Adapter(adapterId);
+    adapter.adapterId = event.params.adapterId;
     adapter.acl = event.params.flags;
     adapter.adapterAddress = event.params.adapterAddress;
 
@@ -95,14 +101,19 @@ export function handleAdapterAdded(event: AdapterAdded): void {
 }
 
 export function handleAdapterRemoved(event: AdapterRemoved): void {
-  let adapter = Adapter.load(event.params.adapterId.toHex());
+  let daoAddress = event.address.toHexString();
+  let adapterId = daoAddress
+    .concat("-adapter-")
+    .concat(event.params.adapterId.toHex());
+
+  let adapter = Adapter.load(adapterId);
 
   log.info("**************** handleAdapterRemoved event fired. adapterId: {}", [
     event.params.adapterId.toHexString(),
   ]);
 
   if (adapter !== null) {
-    store.remove("Adapter", event.params.adapterId.toHex());
+    store.remove("Adapter", adapterId);
   }
 }
 
@@ -164,7 +175,7 @@ export function handleExtensionAdded(event: ExtensionAdded): void {
     "**************** handleExtensionAdded event fired. extensionAddress {}, extensionId {}",
     [
       event.params.extensionAddress.toHexString(),
-      event.params.extensionId.toString(),
+      event.params.extensionId.toHexString(),
     ]
   );
 
@@ -182,7 +193,7 @@ export function handleExtensionAdded(event: ExtensionAdded): void {
 export function handleExtensionRemoved(event: ExtensionRemoved): void {
   log.info(
     "**************** handleExtensionRemoved event fired. extensionId {}",
-    [event.params.extensionId.toString()]
+    [event.params.extensionId.toHexString()]
   );
 
   let extension = Extension.load(event.params.extensionId.toHex());
@@ -195,7 +206,7 @@ export function handleExtensionRemoved(event: ExtensionRemoved): void {
 export function handleConfigurationUpdated(event: ConfigurationUpdated): void {
   log.info(
     "**************** handleConfigurationUpdated event fired. key {}, value {}",
-    [event.params.key.toString(), event.params.value.toString()]
+    [event.params.key.toHexString(), event.params.value.toHexString()]
   );
 }
 
@@ -204,6 +215,6 @@ export function handleAddressConfigurationUpdated(
 ): void {
   log.info(
     "**************** handleAddressConfigurationUpdated event fired. key {}, value {}",
-    [event.params.key.toString(), event.params.value.toString()]
+    [event.params.key.toHexString(), event.params.value.toHexString()]
   );
 }

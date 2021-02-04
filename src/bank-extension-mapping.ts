@@ -6,20 +6,22 @@ import {
 import { Laoland, Member, Token, TokenBalance } from "../generated/schema";
 import { Address, BigInt, Bytes, log } from "@graphprotocol/graph-ts";
 
-const ZERO_ADDRESS: string = "0x0000000000000000000000000000000000000000";
-let SHARES: Address = Address.fromString(
+export const ETH_TOKEN: Address = Address.fromString(
+  "0x0000000000000000000000000000000000000000"
+);
+export const SHARES: Address = Address.fromString(
   "0x00000000000000000000000000000000000Ff1CE"
 );
-let LOCKED_LOOT: Address = Address.fromString(
+export const LOCKED_LOOT: Address = Address.fromString(
   "0x00000000000000000000000000000000BaaaAaad"
 );
-let LOOT: Address = Address.fromString(
+export const LOOT: Address = Address.fromString(
   "0x00000000000000000000000000000000b105f00D"
 );
-let GUILD: Address = Address.fromString(
+export const GUILD: Address = Address.fromString(
   "0x000000000000000000000000000000000000dEaD"
 );
-let TOTAL: Address = Address.fromString(
+export const TOTAL: Address = Address.fromString(
   "0x000000000000000000000000000000000000baBe"
 );
 
