@@ -16,7 +16,11 @@ The DaoRegisrty.sol contract tracks the state of the DAO for 1) Adapter and Exte
 
 ## Enums
 
+### DAO State
+
 `enum DaoState {CREATION, READY}` CREATION = the DAO has been deployed via `initializeDao`, but is not ready to be used. READY = the function `finalizeDao` has been called and is now ready to be used. Once the DaoState = `READY` then the only way to add additional Adapters is to via the proposal process.
+
+### Access Flags
 
 `enum MemberFlag {EXISTS, JAILED}` = `EXISTS` is true if a member or a proposal exists. `JAILED` is true if a member has been jailed by the DAO. A member will then not be able to particpate in DAO.
 
