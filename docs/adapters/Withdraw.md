@@ -6,7 +6,7 @@ It is considered a Generic adapter because it does not rely on any proposals to 
 
 ## Adapter workflow
 
-The user sends a transaction to withdraw the funds from the internal bank account. If there are no available funds, the transaction is reverted. If the user is using an address that is reserved to the DAO, the transaction is also reverted. And when the user provides a token that is not supported by the bank, the transaction gets reverted as well.
+The user sends a transaction to withdraw the funds from the internal bank account. If there are no available funds, the transaction is reverted. If the user is using an address that is reserved to the DAO, the transaction is also reverted. And when the user provides a token that is not supported by the bank, the balance is always zero and the transaction gets reverted as well.
 
 If all the parameters are valid, the user should be able to identify the funds transferred to its own account.
 
@@ -27,7 +27,6 @@ DAORegistry
 Bank Extension
 
 - Checks the account balance.
-- Checks if the token is supported.
 - Executes the withdraw process.
 
 ## Functions description and assumptions / checks
