@@ -11,14 +11,12 @@ Submit proposal
 - check that caller is valid member
 - check that keys/values are same length
 - check that proposalId is unique
-
 - submit proposal to DAO
 - create and store configuration structure
 
 Sponsor module change request
 
 - check that caller is valid member
-
 - initiate vote
 
 Process proposal
@@ -27,7 +25,6 @@ Process proposal
 - check that proposalId exists
 - check that status is in progress
 - check that proposal passed
-
 - for each key and value, set it in the configuration for this DAO
 - set configuration status to done
 - process proposal
