@@ -34,7 +34,6 @@ SOFTWARE.
  */
 
 contract WithdrawContract is DaoConstants, MemberGuard {
-
     event Withdraw(address account, address token, uint256 amount);
 
     /**
@@ -65,7 +64,7 @@ contract WithdrawContract is DaoConstants, MemberGuard {
         BankExtension bank = BankExtension(dao.getExtensionAddress(BANK));
         //TODO do we need to check if the token is supported by the DAO?
         //require(bank.isTokenAllowed(token), "token not allowed");
-        
+
         uint256 balance = bank.balanceOf(account, token);
         require(balance > 0, "nothing to withdraw");
 
