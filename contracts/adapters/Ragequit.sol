@@ -34,7 +34,7 @@ SOFTWARE.
 
 contract RagequitContract is IRagequit, DaoConstants {
     /**
-     * @notice Event emitted when a member of the DAO executes a ragequit with all or parts of one shares/loot.
+     * @notice Event emitted when a member of the DAO executes a ragequit with all or parts of the member's shares/loot.
      */
     event MemberRagequit(
         address memberAddr,
@@ -44,7 +44,7 @@ contract RagequitContract is IRagequit, DaoConstants {
     );
 
     /**
-     * default fallback function to prevent from sending ether to the contract.
+     * @notice default fallback function to prevent from sending ether to the contract.
      */
     receive() external payable {
         revert("fallback revert");
@@ -52,10 +52,10 @@ contract RagequitContract is IRagequit, DaoConstants {
 
     /**
      * @notice Allows a member or advisor of the DAO to opt out by burning the proportional amount of shares/loot of the member.
-     * @notice Anyone is allowed to call this function, but only members and advisor that have shares are able to execute the entire ragequit process.
+     * @notice Anyone is allowed to call this function, but only members and advisors that have shares are able to execute the entire ragequit process.
      * @dev The sum of sharesToBurn and lootToBurn have to be greater than zero.
      * @dev The member can not be in jail to execute a ragequit.
-     * @dev The member becomes an inative member of the DAO once all the shares/loot are burned.
+     * @dev The member becomes an inactive member of the DAO once all the shares/loot are burned.
      * @dev If the member provides an invalid/not allowed token, the entire processed is reverted.
      * @param dao The dao address that the member is part of.
      * @param sharesToBurn The amount of shares of the member that must be converted into funds.
@@ -98,7 +98,7 @@ contract RagequitContract is IRagequit, DaoConstants {
 
     /**
      * @notice Subtracts from the internal member's account the proportional shares and/or loot.
-     * @param memberAddr The member address that want to burn the shares and/or loot.
+     * @param memberAddr The member address that wants to burn the shares and/or loot.
      * @param sharesToBurn The amount of shares of the member that must be converted into funds.
      * @param lootToBurn The amount of loot of the member that must be converted into funds.
      * @param tokens The array of tokens that the funds should be sent to.
@@ -138,7 +138,7 @@ contract RagequitContract is IRagequit, DaoConstants {
     /**
      * @notice Subtracts from the bank's account the proportional shares and/or loot,
      * @notice and transfers the funds to the member's internal account based on the provided tokens.
-     * @param memberAddr The member address that want to burn the shares and/or loot.
+     * @param memberAddr The member address that wants to burn the shares and/or loot.
      * @param sharesToBurn The amount of shares of the member that must be converted into funds.
      * @param lootToBurn The amount of loot of the member that must be converted into funds.
      * @param initialTotalSharesAndLoot The sum of shares and loot before internal transfers.

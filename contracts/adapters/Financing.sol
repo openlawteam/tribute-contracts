@@ -92,7 +92,7 @@ contract FinancingContract is IFinancing, DaoConstants, MemberGuard {
      * @dev Only members of the DAO can sponsor a financing proposal.
      * @param dao The DAO Address.
      * @param proposalId The proposal id.
-     * @param data Additional detais about the sponsorship process.
+     * @param data Additional details about the sponsorship process.
      */
     function sponsorProposal(
         DaoRegistry dao,
@@ -123,7 +123,6 @@ contract FinancingContract is IFinancing, DaoConstants, MemberGuard {
 
     /**
      * @notice Processing a financing proposal to grant the requested funds.
-     * @dev Only members of the DAO can process a financing proposal.
      * @dev Only proposals that were not processed are accepted.
      * @dev Only proposals that were sponsored are accepted.
      * @dev Only proposals that passed can get processed and have the funds released.
