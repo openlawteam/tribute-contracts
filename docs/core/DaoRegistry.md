@@ -1,16 +1,82 @@
+## DaoRegistry.sol
+
 ## Description and scope
 
-The DAO Registry is the identity of the DAO. This is the contract address that is passed to every adapter.
+The DAO Registry is the identity of the DAO. This is the contract address that is every adapter usually interacts with.
 
 The scope of the registry is to manage the following:
 
-- The adapter registry - which adapter is being used by this DAO and which access it has
-- The extension registry - which extension is part of the DAO and the adapter's access to it
-- Members registry - whether members exist, their delegate key and their flags
+- The adapter registry - which adapter is being used by this DAO and which access it has to the DAO state.
+- The extension registry - which extension is part of the DAO and the adapter's access to it.
+- Members registry - whether members exist, their delegate key and their access flags.
 
 Each non-constant function in the DAO has an access control modifier linked to it, to make sure the caller has the right to call it.
 
-## Registry state
+The DaoRegisrty.sol contract tracks the state of the DAO for 1) Adapter and Extension access, 2) State of Proposals, 3) Membership status. For an Adapater to be used it must be registered to DaoRegistry.sol.
+
+## Enums
+
+### DAO State
+
+`enum DaoState {CREATION, READY}` CREATION = the DAO has been deployed via `initializeDao`, but is not ready to be used. READY = the function `finalizeDao` has been called and is now ready to be used. Once the DaoState = `READY` then the only way to add additional Adapters is to via the proposal process.
+
+### Access Flags
+
+`enum MemberFlag {EXISTS, JAILED}` = `EXISTS` is true if a member or a proposal exists. `JAILED` is true if a member has been jailed by the DAO. A member will then not be able to particpate in DAO.
+
+` enum ProposalFlag {EXISTS, SPONSORED, PROCESSED}` = `EXISTS` true if a proposal has been been submitted. `SPONSORED` is true if a Submitted proposal has been Sponsored by an existing Member.
+
+`enum AclFlag { ADD_ADAPTER, REMOVE_ADAPTER, JAIL_MEMBER, UNJAIL_MEMBER, SUBMIT_PROPOSAL, SPONSOR_PROPOSAL, PROCESS_PROPOSAL, UPDATE_DELEGATE_KEY, SET_CONFIGURATION, ADD_EXTENSION, REMOVE_EXTENSION, NEW_MEMBER }`
+
+- `ADD_ADAPTER` - if true, the caller adapter has access to add new adapters to the DAO, function `dao.addAdapter`.
+- `REMOVE_ADAPTER` - if true, the caller adapter access to remove other adapters from the DAO, function `dao.removeAdapter`.
+- `JAIL_MEMBER` - if true, the caller adapter is allowed to jail a member of the DAO, function `dao.jailMember`.
+- `UNJAIL_MEMBER` - if true, the caller adapter is allowed to unjail a member of the DAO, function `dao.unjailMember`.
+- `SUBMIT_PROPOSAL` - if true, the caller adapter is allowed to submit/create proposals in the DAO, function `dao.submitProposal`.
+- `SPONSOR_PROPOSAL` - if true, the caller adapter is allowed to sponsor an existing proposal in the DAO, function `dao.sponsorProposal`.
+- `PROCESS_PROPOSAL` - if true, the caller adapter has the right to process a DAO proposal, function `dao.processProposal`.
+- `UPDATE_DELEGATE_KEY` - if true, the caller adapter has the access to update the member's delegated key in the DAO, function `dao.updateDelegatedKey`.
+- `SET_CONFIGURATION` - if true, the caller adapter is allowed to store custom configurations as key/value in the DAO, function `dao.setConfiguration`.
+- `ADD_EXTENSION` - if true, the caller adapter is allowed to add new Extensions to the DAO, function `dao.addExtension`.
+- `REMOVE_EXTENSION` - if true, the caller adapter is allowed to remove Extensions from the DAO, function `dao.removeExtension`.
+- `NEW_MEMBER` - if true, the caller adapter has access to register new members in the DAO, function `dao.potentialNewMember`.
+
+## Events
+
+    Events for Proposals - The proposal order follows Moloch v2, in 1) a proposal is submitted, 2) then it sponsored by a member, and 3) after a proposal is voted on, it can finally be processed.
+
+    `event SubmittedProposal(bytes32 proposalId, uint256 flags);`
+    `event SponsoredProposal(bytes32 proposalId, uint256 flags);`
+    `event ProcessedProposal(bytes32 proposalId, uint256 flags);`
+
+    Events for Adding and Removing Adapters
+    `event AdapterAdded(bytes32 adapterId,address adapterAddress,uint256 flags);`
+    `event AdapterRemoved(bytes32 adapterId);`
+
+    Events for Members
+    `event UpdateDelegateKey(address memberAddress, address newDelegateKey);`
+    `event MemberJailed(address memberAddr);`
+    `event MemberUnjailed(address memberAddr);`
+
+    Configuration Events
+    `event ConfigurationUpdated(bytes32 key, uint256 value);`
+    `event AddressConfigurationUpdated(bytes32 key, address value);`
+
+## Structs
+
+`struct Proposal` the structure to track all the proposals in the DAO and their state (EXISTS, SPONSORED, PROCESSED).
+
+`struct Member` the structure to track all the members in the DAO and their state (EXISTS, JAILED).
+
+`struct Checkpoint` Laoland makes use of the off-chain voting mechanism Snapshot. The `Checkpoint` struct assists with verifying the optimistic voting and proposal mechanisms at various blocktimes. See, https://github.com/snapshot-labs.
+
+`struct DelegateCheckpoint` A checkpoint for marking number of votes from a given block.
+
+`struct AdapterEntry` When an Adapter is added to `DaoRegistry` via the function `addAdapter`, a bytes32 `id` and a uint256 `acl` are parameters assigned to the Adapter for use in identifying the Adapter.
+
+`struct ExtensionEntry` When an Extension is added to `DaoRegistry` via `addExtenstion` a bytes32 `id` and a uint256 `acl` are parameters assigned to the Extension for use in identifying the Extension.
+
+## Registry state & Public Variables
 
 ### mapping(address => Member) public members
 
@@ -66,6 +132,8 @@ Generic configuration mapping from key (keccak256(name)) to any type that can be
 Since addresses are not encoded in 256 bytes, we need a separate configuration mapping for this type.
 
 ## Functions description, assumptions, checks, dependencies, interactions and access control
+
+Note: the constructor function is non-existent, because this is a Cloneable contract. See, https://eips.ethereum.org/EIPS/eip-1167
 
 ### function initialize(address creator) external
 
