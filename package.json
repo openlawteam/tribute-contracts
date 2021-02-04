@@ -17,6 +17,7 @@
   "devDependencies": {
     "@graphprotocol/graph-cli": "^0.18.0",
     "@graphprotocol/graph-ts": "^0.18.1",
+    "@smartdec/smartcheck": "^2.0.1",
     "eth-gas-reporter": "^0.2.20",
     "prettier": "^2.1.2",
     "prettier-plugin-solidity": "^1.0.0-beta.3",
@@ -27,8 +28,8 @@
     "test": "truffle test",
     "test:debug": "truffle test --stacktrace",
     "coverage": "truffle run coverage --network coverage",
-    "lint:fix": "prettier --write contracts/**/* test/**/*.test.js",
-    "lint": "prettier --list-different contracts/**/*.sol test/**/*.test.js",
+    "lint:fix": "prettier --write 'contracts/**/*.sol' 'test/**/*.test.js' '**/*.md'",
+    "lint": "prettier --list-different 'contracts/**/*.sol' 'test/**/*.test.js' '**/*.md'",
     "create": "graph create openlawteam/laoland-graph --node https://api.thegraph.com/deploy/",
     "create-local": "graph create openlawteam/laoland-graph --node http://127.0.0.1:8020",
     "codegen": "graph codegen",

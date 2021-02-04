@@ -55,7 +55,7 @@ contract GuildKickContract is IGuildKick, DaoConstants, MemberGuard {
     // Keeps track of all the kicks executed per DAO.
     mapping(address => mapping(bytes32 => GuildKick)) public kicks;
 
-    // Keeps track of the latest ongoing kick proposal per DAO to ensure only 1 kick happens at time.
+    // Keeps track of the latest ongoing kick proposal per DAO to ensure only 1 kick happens at a time.
     mapping(address => bytes32) public ongoingKicks;
 
     /**
@@ -69,7 +69,7 @@ contract GuildKickContract is IGuildKick, DaoConstants, MemberGuard {
      * @notice Creates a guild kick proposal, opens it for voting, and sponsors it.
      * @dev A member can not kick himself.
      * @dev Only one kick per DAO can be executed at time.
-     * @dev Only members that have shares can be kicked out.
+     * @dev Only members that have shares or loot can be kicked out.
      * @dev Proposal ids can not be reused.
      * @param dao The dao address.
      * @param proposalId The guild kick proposal id.
@@ -82,7 +82,6 @@ contract GuildKickContract is IGuildKick, DaoConstants, MemberGuard {
         address memberToKick,
         bytes calldata data
     ) external override {
-        // Checks if the sender address is not the same as the member to kick to prevent auto kick.
         IVoting votingContract = IVoting(dao.getAdapterAddress(VOTING));
         address submittedBy =
             votingContract.getSenderAddress(
@@ -91,10 +90,21 @@ contract GuildKickContract is IGuildKick, DaoConstants, MemberGuard {
                 data,
                 msg.sender
             );
+        // Checks if the sender address is not the same as the member to kick to prevent auto kick.
         require(submittedBy != memberToKick, "you can not kick yourself");
         _submitKickProposal(dao, proposalId, memberToKick, data, submittedBy);
     }
 
+    /**
+     * @notice Converts the shares into loot to remove the voting power, and sponsors the kick proposal.
+     * @dev Only members that have shares or loot can be kicked out.
+     * @dev Proposal ids can not be reused.
+     * @param dao The dao address.
+     * @param proposalId The guild kick proposal id.
+     * @param memberToKick The member address that should be kicked out of the DAO.
+     * @param data Additional information related to the kick proposal.
+     * @param submittedBy The address of the individual that created the kick proposal.
+     */
     function _submitKickProposal(
         DaoRegistry dao,
         bytes32 proposalId,
@@ -138,7 +148,7 @@ contract GuildKickContract is IGuildKick, DaoConstants, MemberGuard {
      * @dev A kick proposal must be in progress.
      * @dev Only one kick per DAO can be executed at time.
      * @dev Only active members can be kicked out.
-     * @dev Only proposals that passed the voting can be completed.
+     * @dev Only proposals that passed the voting can be set to In Progress status.
      * @param dao The dao address.
      * @param proposalId The guild kick proposal id.
      */
