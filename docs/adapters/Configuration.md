@@ -11,14 +11,12 @@ Submit proposal
 - check that caller is valid member
 - check that keys/values are same length
 - check that proposalId is unique
-
 - submit proposal to DAO
 - create and store configuration structure
 
 Sponsor module change request
 
 - check that caller is valid member
-
 - initiate vote
 
 Process proposal
@@ -27,7 +25,6 @@ Process proposal
 - check that proposalId exists
 - check that status is in progress
 - check that proposal passed
-
 - for each key and value, set it in the configuration for this DAO
 - set configuration status to done
 - process proposal
@@ -42,15 +39,15 @@ DAORegistry Access Flags: `SUBMIT_PROPOSAL`, `PROCESS_PROPOSAL`, `SPONSOR_PROPOS
 
 #### status
 
-The status of this configuration change, an enum with values: NOT_CREATED, IN_PROGRESS, DONE
+The status of this configuration change, an enum with values: `NOT_CREATED`, `IN_PROGRESS`, `DONE`.
 
 #### keys
 
-The array of keys to set in the configuration
+The array of keys to set in the configuration.
 
 #### values
 
-The array of values to set in the configuration
+The array of values to set in the configuration.
 
 ## Dependencies and interactions (internal / external)
 
@@ -65,9 +62,9 @@ Creates and submits a new configuration proposal on behalf of the member calling
 **keys** the configuration keys to set
 **values** the configuration values to set, must be same length as keys
 
-### function processProposal(DaoRegistry dao, bytes32 proposalId)
+### function sponsorProposal(DaoRegistry dao, bytes32 proposalId, bytes memory data)
 
-Processes a previously created configuration proposal by applying the configuration to the DAO.
+Sponsors a proposal to apply a configuration change.
 
 **dao** is the DAO instance to be configured
 **proposalId** is the ID of a previously created configuration proposal which has not been sponsored

@@ -6,13 +6,11 @@ It is considered a Generic adapter because it does not rely on any proposals to 
 
 ## Adapter workflow
 
-The user sends a transaction to withdraw the funds from the internal bank account. If there are no avaialable funds, the transaction is reverted. If the user is using an address that is reserved to the DAO, the transaction is also reverted. And when the user provides a token that is not supported by the bank, the transaction gets reverted as well.
+The user sends a transaction to withdraw the funds from the internal bank account. If there are no available funds, the transaction is reverted. If the user is using an address that is reserved to the DAO, the transaction is also reverted. And when the user provides a token that is not supported by the bank, the transaction gets reverted as well.
 
-If all the parameters are valid, the user should be able to identify the funds transfered to it's own account.
+If all the parameters are valid, the user should be able to identify the funds transferred to its own account.
 
 ## Adapter configuration
-
-DAORegistry Access Flags: `WITHDRAW`, `SUB_FROM_BALANCE`.
 
 Bank Extension Access Flags: `WITHDRAW`, `SUB_FROM_BALANCE`.
 
@@ -34,10 +32,6 @@ Bank Extension
 
 ## Functions description and assumptions / checks
 
-Describe the public and private functions signatures with proper documentation and clearly explain what each function does. Specify what are expected the arguments and pre-conditions to execute the functions. Also, provide what is the expected outcome.
-
-Examples:
-
 ### receive() external payable
 
 ```solidity
@@ -47,7 +41,7 @@ Examples:
     receive() external payable
 ```
 
-### function submitKickProposal
+### function withdraw
 
 ```solidity
     /**

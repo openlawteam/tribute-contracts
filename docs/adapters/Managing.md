@@ -13,7 +13,6 @@ Create adapter change request
 - check that adapter address is valid
 - check that flags don't overflow
 - check that the adapter address is not reserved
-
 - submit proposal
 - store adapter data
 
@@ -29,7 +28,6 @@ Process adapter change proposal
 - check that proposal has not been processed
 - check that proposal has been sponsored
 - check that proposal has passed
-
 - remove existing adapter
 - for each key and value, set it in the configuration for this DAO
 - add the adapter to the DAO
@@ -53,19 +51,19 @@ The member who is initiating the adapter proposal.
 
 The ID of the adapter to add or replace.
 
-### adapterAddress
+#### adapterAddress
 
 The address of the new adapter contract.
 
-### keys
+#### keys
 
 The configuration keys for the adapter.
 
-### values
+#### values
 
-The values to set for the adapter configuraition.
+The values to set for the adapter configuration.
 
-### flags
+#### flags
 
 The ACL for the new adapter.
 
@@ -80,7 +78,7 @@ Creates a proposal to add/replace/remove the given adapter with a new version in
 **dao** is the DAO instance to be configured
 **proposalId** is the ID chosen for this adapter proposal, must be unique
 **adapterId** the ID of the new adapter
-**adapterAddress** the contract address of the new adapter. If the address equals 0x0, it means the adapterId needs to be removed.
+**adapterAddress** the contract address of the new adapter. If the address equals `0x0`, it means the adapterId needs to be removed.
 **keys** the configuration keys to set
 **values** the configuration values to set, must be same length as keys
 **flags** the ACL for the new adapter

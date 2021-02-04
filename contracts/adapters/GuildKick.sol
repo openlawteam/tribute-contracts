@@ -55,7 +55,7 @@ contract GuildKickContract is IGuildKick, DaoConstants, MemberGuard {
     // Keeps track of all the kicks executed per DAO.
     mapping(address => mapping(bytes32 => GuildKick)) public kicks;
 
-    // Keeps track of the latest ongoing kick proposal per DAO to ensure only 1 kick happens at time.
+    // Keeps track of the latest ongoing kick proposal per DAO to ensure only 1 kick happens at a time.
     mapping(address => bytes32) public ongoingKicks;
 
     /**
