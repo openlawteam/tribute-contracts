@@ -33,15 +33,13 @@ SOFTWARE.
  */
 
 contract ConfigurationContract is IConfiguration, DaoConstants, MemberGuard {
-    enum ConfigurationStatus {NOT_CREATED, IN_PROGRESS, DONE}
-
     struct Configuration {
-        ConfigurationStatus status;
         bytes32[] keys;
         uint256[] values;
     }
 
-    mapping(address => mapping(bytes32 => Configuration)) public configurations;
+    mapping(address => mapping(bytes32 => Configuration))
+        private _configurations;
 
     /*
      * default fallback function to prevent from sending ether to the contract
@@ -62,18 +60,14 @@ contract ConfigurationContract is IConfiguration, DaoConstants, MemberGuard {
         );
 
         dao.submitProposal(proposalId);
-        configurations[address(dao)][proposalId] = Configuration(
-            ConfigurationStatus.IN_PROGRESS,
-            keys,
-            values
-        );
+        _configurations[address(dao)][proposalId] = Configuration(keys, values);
     }
 
     function sponsorProposal(
         DaoRegistry dao,
         bytes32 proposalId,
         bytes memory data
-    ) external override onlyMember(dao) {
+    ) external override {
         IVoting votingContract = IVoting(dao.getAdapterAddress(VOTING));
         address sponsoredBy =
             votingContract.getSenderAddress(
@@ -100,14 +94,10 @@ contract ConfigurationContract is IConfiguration, DaoConstants, MemberGuard {
         external
         override
     {
-        Configuration storage configuration =
-            configurations[address(dao)][proposalId];
+        dao.processProposal(proposalId);
 
-        // If status is empty or DONE we expect it to fail
-        require(
-            configuration.status == ConfigurationStatus.IN_PROGRESS,
-            "reconfiguration already completed or does not exist"
-        );
+        Configuration storage configuration =
+            _configurations[address(dao)][proposalId];
 
         IVoting votingContract = IVoting(dao.getAdapterAddress(VOTING));
         require(
@@ -121,9 +111,5 @@ contract ConfigurationContract is IConfiguration, DaoConstants, MemberGuard {
         for (uint256 i = 0; i < keys.length; i++) {
             dao.setConfiguration(keys[i], values[i]);
         }
-
-        configuration.status = ConfigurationStatus.DONE;
-
-        dao.processProposal(proposalId);
     }
 }
