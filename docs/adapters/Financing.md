@@ -82,8 +82,8 @@ Bank Access Flags: `ADD_TO_BALANCE`, `SUB_FROM_BALANCE`.
     function sponsorProposal(
         DaoRegistry dao,
         bytes32 proposalId,
-        bytes calldata data
-    ) external override onlyMember(dao)
+        bytes memory data
+    ) external override
 ```
 
 ### function processProposal

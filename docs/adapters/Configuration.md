@@ -23,10 +23,8 @@ Process proposal
 
 - check that caller is valid member
 - check that proposalId exists
-- check that status is in progress
 - check that proposal passed
 - for each key and value, set it in the configuration for this DAO
-- set configuration status to done
 - process proposal
 
 ## Adapter state
@@ -36,10 +34,6 @@ The adapter stores the proposed configuration changes.
 ### Configuration
 
 DAORegistry Access Flags: `SUBMIT_PROPOSAL`, `PROCESS_PROPOSAL`, `SPONSOR_PROPOSAL`, `SET_CONFIGURATION`.
-
-#### status
-
-The status of this configuration change, an enum with values: `NOT_CREATED`, `IN_PROGRESS`, `DONE`.
 
 #### keys
 
