@@ -13,7 +13,6 @@ Create adapter change request
 - check that adapter address is valid
 - check that flags don't overflow
 - check that the adapter address is not reserved
-
 - submit proposal
 - store adapter data
 
@@ -29,7 +28,6 @@ Process adapter change proposal
 - check that proposal has not been processed
 - check that proposal has been sponsored
 - check that proposal has passed
-
 - remove existing adapter
 - for each key and value, set it in the configuration for this DAO
 - add the adapter to the DAO
