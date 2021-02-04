@@ -34,9 +34,8 @@ SOFTWARE.
 
 contract ManagingContract is IManaging, DaoConstants, MemberGuard {
     struct ProposalDetails {
-        address applicant;
-        bytes32 moduleId;
-        address moduleAddress;
+        bytes32 adapterId;
+        address adapterAddress;
         bytes32[] keys;
         uint256[] values;
         uint128 flags;
@@ -51,11 +50,11 @@ contract ManagingContract is IManaging, DaoConstants, MemberGuard {
         revert("fallback revert");
     }
 
-    function createModuleChangeRequest(
+    function createAdapterChangeRequest(
         DaoRegistry dao,
         bytes32 proposalId,
-        bytes32 moduleId,
-        address moduleAddress,
+        bytes32 adapterId,
+        address adapterAddress,
         bytes32[] calldata keys,
         uint256[] calldata values,
         uint256 _flags
@@ -64,21 +63,20 @@ contract ManagingContract is IManaging, DaoConstants, MemberGuard {
             keys.length == values.length,
             "must be an equal number of config keys and values"
         );
-        require(moduleAddress != address(0x0), "invalid module address");
+
         require(_flags < type(uint128).max, "flags parameter overflow");
         uint128 flags = uint128(_flags);
 
         require(
-            dao.isNotReservedAddress(moduleAddress),
-            "module is using reserved address"
+            dao.isNotReservedAddress(adapterAddress),
+            "adapter address is reserved address"
         );
 
         dao.submitProposal(proposalId);
 
         proposals[address(dao)][proposalId] = ProposalDetails(
-            msg.sender,
-            moduleId,
-            moduleAddress,
+            adapterId,
+            adapterAddress,
             keys,
             values,
             flags
@@ -89,41 +87,46 @@ contract ManagingContract is IManaging, DaoConstants, MemberGuard {
         DaoRegistry dao,
         bytes32 proposalId,
         bytes calldata data
-    ) external override onlyMember(dao) {
-        dao.sponsorProposal(proposalId, msg.sender);
-
+    ) external override {
         IVoting votingContract = IVoting(dao.getAdapterAddress(VOTING));
+        address sponsoredBy =
+            votingContract.getSenderAddress(
+                dao,
+                address(this),
+                data,
+                msg.sender
+            );
+        _sponsorProposal(dao, proposalId, data, sponsoredBy, votingContract);
+    }
+
+    function _sponsorProposal(
+        DaoRegistry dao,
+        bytes32 proposalId,
+        bytes memory data,
+        address sponsoredBy,
+        IVoting votingContract
+    ) internal {
+        dao.sponsorProposal(proposalId, sponsoredBy);
         votingContract.startNewVotingForProposal(dao, proposalId, data);
     }
 
     function processProposal(DaoRegistry dao, bytes32 proposalId)
         external
         override
-        onlyMember(dao)
     {
         ProposalDetails memory proposal = proposals[address(dao)][proposalId];
 
-        require(
-            !dao.getProposalFlag(
-                proposalId,
-                DaoRegistry.ProposalFlag.PROCESSED
-            ),
-            "proposal already processed"
-        );
-
-        require(
-            dao.getProposalFlag(proposalId, DaoRegistry.ProposalFlag.SPONSORED),
-            "proposal not sponsored yet"
-        );
-
         IVoting votingContract = IVoting(dao.getAdapterAddress(VOTING));
         require(
-            votingContract.voteResult(dao, proposalId) == 2,
+            votingContract.voteResult(dao, proposalId) ==
+                IVoting.VotingState.PASS,
             "proposal did not pass"
         );
 
-        if (dao.getAdapterAddress(proposal.moduleId) != address(0x0)) {
-            dao.removeAdapter(proposal.moduleId);
+        dao.processProposal(proposalId);
+
+        if (dao.adapters(proposal.adapterId) != address(0x0)) {
+            dao.removeAdapter(proposal.adapterId);
         }
 
         bytes32[] memory keys = proposal.keys;
@@ -132,11 +135,12 @@ contract ManagingContract is IManaging, DaoConstants, MemberGuard {
             dao.setConfiguration(keys[i], values[i]);
         }
 
-        dao.addAdapter(
-            proposal.moduleId,
-            proposal.moduleAddress,
-            proposal.flags
-        );
-        dao.processProposal(proposalId);
+        if (proposal.adapterAddress != address(0x0)) {
+            dao.addAdapter(
+                proposal.adapterId,
+                proposal.adapterAddress,
+                proposal.flags
+            );
+        }
     }
 }

@@ -163,38 +163,6 @@ contract OnboardingContract is
         return details.amount;
     }
 
-    function onboardAndSponsor(
-        DaoRegistry dao,
-        bytes32 proposalId,
-        address payable applicant,
-        address tokenToMint,
-        uint256 tokenAmount,
-        bytes calldata data
-    ) external payable {
-        onboard(dao, proposalId, applicant, tokenToMint, tokenAmount);
-
-        IVoting votingContract = IVoting(dao.getAdapterAddress(VOTING));
-        try
-            votingContract.startNewVotingForProposal(dao, proposalId, data)
-        {} catch Error(string memory reason) {
-            revert(reason);
-        } catch (
-            bytes memory /*lowLevelData*/
-        ) {
-            revert("system error from voting");
-        }
-
-        address submittedBy =
-            votingContract.getSenderAddress(
-                dao,
-                address(this),
-                data,
-                msg.sender
-            );
-
-        dao.sponsorProposal(proposalId, submittedBy);
-    }
-
     function onboard(
         DaoRegistry dao,
         bytes32 proposalId,
@@ -270,11 +238,27 @@ contract OnboardingContract is
     function sponsorProposal(
         DaoRegistry dao,
         bytes32 proposalId,
-        bytes calldata data
-    ) external override onlyMember(dao) {
-        dao.sponsorProposal(proposalId, msg.sender);
-
+        bytes memory data
+    ) external override {
         IVoting votingContract = IVoting(dao.getAdapterAddress(VOTING));
+        address sponsoredBy =
+            votingContract.getSenderAddress(
+                dao,
+                address(this),
+                data,
+                msg.sender
+            );
+        _sponsorProposal(dao, proposalId, data, sponsoredBy, votingContract);
+    }
+
+    function _sponsorProposal(
+        DaoRegistry dao,
+        bytes32 proposalId,
+        bytes memory data,
+        address sponsoredBy,
+        IVoting votingContract
+    ) internal {
+        dao.sponsorProposal(proposalId, sponsoredBy);
         votingContract.startNewVotingForProposal(dao, proposalId, data);
     }
 
@@ -318,17 +302,21 @@ contract OnboardingContract is
         );
 
         IVoting votingContract = IVoting(dao.getAdapterAddress(VOTING));
-        uint256 voteResult = votingContract.voteResult(dao, proposalId);
+        IVoting.VotingState voteResult =
+            votingContract.voteResult(dao, proposalId);
 
         dao.processProposal(proposalId);
 
-        if (voteResult == 2) {
+        if (voteResult == IVoting.VotingState.PASS) {
             BankExtension bank = BankExtension(dao.getExtensionAddress(BANK));
             _mintTokensToMember(
                 dao,
                 proposal.tokenToMint,
                 proposal.applicant,
-                proposal.sharesRequested
+                proposal.sharesRequested,
+                proposal.proposer,
+                proposal.token,
+                proposal.amount
             );
 
             address token = proposal.token;
@@ -350,7 +338,10 @@ contract OnboardingContract is
                     proposal.sharesRequested;
 
             shares[proposal.tokenToMint][proposal.applicant] = totalShares;
-        } else if (voteResult == 3 || voteResult == 1) {
+        } else if (
+            voteResult == IVoting.VotingState.NOT_PASS ||
+            voteResult == IVoting.VotingState.TIE
+        ) {
             _refundTribute(proposal.token, proposal.proposer, proposal.amount);
         } else {
             revert("proposal has not been voted on yet");
@@ -374,7 +365,10 @@ contract OnboardingContract is
         DaoRegistry dao,
         address tokenToMint,
         address memberAddr,
-        uint256 tokenAmount
+        uint256 tokenAmount,
+        address payable proposer,
+        address proposalToken,
+        uint256 proposalAmount
     ) internal {
         BankExtension bank = BankExtension(dao.getExtensionAddress(BANK));
         require(
@@ -389,6 +383,10 @@ contract OnboardingContract is
 
         dao.potentialNewMember(memberAddr);
 
-        bank.addToBalance(memberAddr, tokenToMint, tokenAmount);
+        try bank.addToBalance(memberAddr, tokenToMint, tokenAmount) {
+            // do nothing
+        } catch {
+            _refundTribute(proposalToken, proposer, proposalAmount);
+        }
     }
 }

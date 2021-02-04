@@ -97,11 +97,27 @@ contract FinancingContract is IFinancing, DaoConstants, MemberGuard {
     function sponsorProposal(
         DaoRegistry dao,
         bytes32 proposalId,
-        bytes calldata data
-    ) external override onlyMember(dao) {
-        dao.sponsorProposal(proposalId, msg.sender);
-
+        bytes memory data
+    ) external override {
         IVoting votingContract = IVoting(dao.getAdapterAddress(VOTING));
+        address sponsoredBy =
+            votingContract.getSenderAddress(
+                dao,
+                address(this),
+                data,
+                msg.sender
+            );
+        _sponsorProposal(dao, proposalId, data, sponsoredBy, votingContract);
+    }
+
+    function _sponsorProposal(
+        DaoRegistry dao,
+        bytes32 proposalId,
+        bytes memory data,
+        address sponsoredBy,
+        IVoting votingContract
+    ) internal {
+        dao.sponsorProposal(proposalId, sponsoredBy);
         votingContract.startNewVotingForProposal(dao, proposalId, data);
     }
 
@@ -117,30 +133,18 @@ contract FinancingContract is IFinancing, DaoConstants, MemberGuard {
     function processProposal(DaoRegistry dao, bytes32 proposalId)
         external
         override
-        onlyMember(dao)
     {
-        require(
-            !dao.getProposalFlag(
-                proposalId,
-                DaoRegistry.ProposalFlag.PROCESSED
-            ),
-            "proposal already processed"
-        );
-        require(
-            dao.getProposalFlag(proposalId, DaoRegistry.ProposalFlag.SPONSORED),
-            "proposal not sponsored yet"
-        );
+        ProposalDetails memory details = proposals[address(dao)][proposalId];
 
-        dao.processProposal(proposalId);
         IVoting votingContract = IVoting(dao.getAdapterAddress(VOTING));
         require(
-            votingContract.voteResult(dao, proposalId) == 2,
+            votingContract.voteResult(dao, proposalId) ==
+                IVoting.VotingState.PASS,
             "proposal needs to pass"
         );
-
+        dao.processProposal(proposalId);
         BankExtension bank = BankExtension(dao.getExtensionAddress(BANK));
 
-        ProposalDetails memory details = proposals[address(dao)][proposalId];
         bank.subtractFromBalance(GUILD, details.token, details.amount);
         bank.addToBalance(details.applicant, details.token, details.amount);
     }

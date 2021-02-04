@@ -5,7 +5,6 @@ pragma solidity ^0.8.0;
 import "../core/DaoConstants.sol";
 import "../core/DaoRegistry.sol";
 import "../extensions/Bank.sol";
-import "../guards/MemberGuard.sol";
 import "./interfaces/IRagequit.sol";
 import "../helpers/FairShareHelper.sol";
 
@@ -33,7 +32,7 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
  */
 
-contract RagequitContract is IRagequit, DaoConstants, MemberGuard {
+contract RagequitContract is IRagequit, DaoConstants {
     /**
      * @notice Event emitted when a member of the DAO executes a ragequit with all or parts of one shares/loot.
      */
@@ -71,15 +70,15 @@ contract RagequitContract is IRagequit, DaoConstants, MemberGuard {
     ) external override {
         // Checks if the are enough shares and/or loot to burn
         require(sharesToBurn + lootToBurn > 0, "insufficient shares/loot");
+        // Gets the delegated address, otherwise returns the sender address.
+        address memberAddr = dao.getAddressIfDelegated(msg.sender);
 
         // Checks if the member is not in jail
         require(
-            !dao.getMemberFlag(msg.sender, DaoRegistry.MemberFlag.JAILED),
+            !dao.getMemberFlag(memberAddr, DaoRegistry.MemberFlag.JAILED),
             "jailed member can not ragequit"
         );
 
-        // Gets the delegated address, otherwise returns the sender address.
-        address memberAddr = dao.getAddressIfDelegated(msg.sender);
         // Instantiates the Bank extension to handle the internal balance checks and transfers.
         BankExtension bank = BankExtension(dao.getExtensionAddress(BANK));
         // Check if member has enough shares to burn.

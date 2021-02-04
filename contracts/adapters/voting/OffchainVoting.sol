@@ -70,7 +70,8 @@ contract OffchainVotingContract is
         keccak256(abi.encodePacked(VOTE_RESULT_NODE_TYPE));
     bytes32 public constant VOTE_RESULT_ROOT_TYPEHASH =
         keccak256(abi.encodePacked(VOTE_RESULT_ROOT_TYPE));
-    uint256 chainId;
+
+    uint256 public chainId;
 
     function DOMAIN_SEPARATOR(DaoRegistry dao, address actionId)
         public
@@ -498,7 +499,6 @@ contract OffchainVotingContract is
         bytes32 proposalId,
         bytes memory data
     ) public override onlyAdapter(dao) {
-        // it is called from Registry
         ProposalMessage memory proposal = abi.decode(data, (ProposalMessage));
         (bool success, uint256 blockNumber) =
             _stringToUint(proposal.payload.snapshot);
@@ -530,39 +530,39 @@ contract OffchainVotingContract is
         external
         view
         override
-        returns (uint256 state)
+        returns (VotingState state)
     {
         Voting storage vote = votes[address(dao)][proposalId];
         if (vote.startingTime == 0) {
-            return 0;
+            return VotingState.NOT_STARTED;
         }
 
         if (vote.isChallenged) {
-            return 4;
+            return VotingState.IN_PROGRESS;
         }
 
         if (
             block.timestamp <
             vote.startingTime + dao.getConfiguration(VotingPeriod)
         ) {
-            return 4;
+            return VotingState.IN_PROGRESS;
         }
 
         if (
             block.timestamp <
             vote.gracePeriodStartingTime + dao.getConfiguration(GracePeriod)
         ) {
-            return 4;
+            return VotingState.IN_PROGRESS;
         }
 
         if (vote.nbYes > vote.nbNo) {
-            return 2;
+            return VotingState.PASS;
         }
         if (vote.nbYes < vote.nbNo) {
-            return 3;
+            return VotingState.NOT_PASS;
         }
 
-        return 1;
+        return VotingState.TIE;
     }
 
     /*

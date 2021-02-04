@@ -19,7 +19,9 @@ import DeployedContractsDialog from "./components/DeployedContractsDialog";
 
 import {
   getDomainDefinition,
-  prepareMessage,
+  prepareVoteMessage,
+  prepareDraftMessage,
+  prepareProposalMessage,
   signMessage,
   buildDraftMessage,
   buildProposalMessage,
@@ -165,21 +167,24 @@ const App = () => {
       ? await buildDraftMessage(proposal, snapshotHubURL)
       : await buildProposalMessage(proposal, snapshotHubURL);
 
-    const preparedMessage = prepareMessage(newMessage);
+    const preparedMessage = proposal.draft
+      ? prepareDraftMessage(newMessage)
+      : prepareProposalMessage(newMessage);
+
     if (proposal.draft) {
       const erc712DraftHash = getMessageERC712Hash(
-        preparedMessage,
-        preparedMessage.verifyingContract,
-        preparedMessage.actionId,
-        preparedMessage.chainId
+        newMessage,
+        verifyingContract,
+        proposal.actionId,
+        cid
       );
       console.log("Draft hash: " + erc712DraftHash);
     } else {
       const erc712DraftHash = getDraftERC712Hash(
-        preparedMessage,
-        preparedMessage.verifyingContract,
-        preparedMessage.actionId,
-        preparedMessage.chainId
+        newMessage,
+        verifyingContract,
+        proposal.actionId,
+        cid
       );
       console.log("Draft hash from Proposal: " + erc712DraftHash);
     }
@@ -188,7 +193,7 @@ const App = () => {
     const signer = Web3.utils.toChecksumAddress(addr);
 
     const { domain, types } = getDomainDefinition(
-      preparedMessage,
+      { ...preparedMessage, type: newMessage.type },
       verifyingContract,
       proposal.actionId,
       cid
@@ -204,7 +209,12 @@ const App = () => {
     signMessage(provider, signer, data).then((newSignature) => {
       setSignature(newSignature);
       setLoading(true);
-      submitMessage(snapshotHubURL, addr, preparedMessage, newSignature)
+      submitMessage(snapshotHubURL, addr, newMessage, newSignature, {
+        actionId: proposal.actionId,
+        chainId: cid,
+        verifyingContract,
+        message: preparedMessage,
+      })
         .then((resp) => {
           proposal["proposalHash"] = resp.data.uniqueId;
           proposal["sig"] = newSignature;
@@ -265,14 +275,13 @@ const App = () => {
     };
     proposal.address = addr;
 
-    const preparedMessage = prepareMessage(
-      await buildVoteMessage(vote, proposal, snapshotHubURL)
-    );
+    const newMessage = await buildVoteMessage(vote, proposal, snapshotHubURL);
+    const preparedMessage = prepareVoteMessage(newMessage);
 
     const signer = Web3.utils.toChecksumAddress(addr);
 
     const { domain, types } = getDomainDefinition(
-      preparedMessage,
+      { ...preparedMessage, type: newMessage.type },
       verifyingContract,
       proposal.actionId,
       cid
@@ -288,10 +297,15 @@ const App = () => {
     signMessage(provider, signer, data).then((newSignature) => {
       setSignature(newSignature);
       setLoading(true);
-      submitMessage(snapshotHubURL, addr, preparedMessage, newSignature)
+      submitMessage(snapshotHubURL, addr, newMessage, newSignature, {
+        actionId: proposal.actionId,
+        chainId: cid,
+        verifyingContract,
+        message: preparedMessage,
+      })
         .then((resp) => {
           const v = {
-            ...preparedMessage,
+            ...newMessage,
             ipfsHash: resp.data.ipfsHash,
             proposalId: proposal.ipfsHash,
             proposalName: proposal.name,
