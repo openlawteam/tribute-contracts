@@ -110,6 +110,15 @@ contract FinancingContract is IFinancing, DaoConstants, MemberGuard {
         _sponsorProposal(dao, proposalId, data, sponsoredBy, votingContract);
     }
 
+    /**
+     * @notice Sponsors a financing proposal to start the voting process.
+     * @dev Only members of the DAO can sponsor a financing proposal.
+     * @param dao The DAO Address.
+     * @param proposalId The proposal id.
+     * @param data Additional details about the sponsorship process.
+     * @param sponsoredBy The address of the sponsoring member.
+     * @param votingContract The voting contract used by the DAO.
+     */
     function _sponsorProposal(
         DaoRegistry dao,
         bytes32 proposalId,
