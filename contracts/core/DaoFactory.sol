@@ -63,7 +63,7 @@ contract DaoFactory is CloneFactory, DaoConstants {
         );
         DaoRegistry dao = DaoRegistry(_createClone(identityAddress));
         address daoAddr = address(dao);
-        dao.initialize(creator, msg.sender);
+        dao.initialize(creator, address(this));
 
         addresses[hashedName] = daoAddr;
         daos[daoAddr] = hashedName;
