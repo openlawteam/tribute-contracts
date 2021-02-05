@@ -158,9 +158,10 @@ contract DaoRegistry is MemberGuard, AdapterGuard {
      * @dev Can only be called once
      * @param creator The DAO's creator, who will be the first member
      */
-    function initialize(address creator) external {
+    function initialize(address creator, address factory) external {
         require(!initialized, "dao already initialized");
         potentialNewMember(creator);
+        potentialNewMember(factory);
 
         initialized = true;
     }
