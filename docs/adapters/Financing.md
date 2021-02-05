@@ -39,8 +39,16 @@ Bank Extension Access Flags: `ADD_TO_BALANCE`, `SUB_FROM_BALANCE`.
 
 - DaoRegistry
 
+  - gets Bank extension address.
   - checks if member address is not reserved.
-  - creates/sponsors/process the financing proposal.
+  - submits/sponsors/processes the financing proposal.
+  - gets Voting adapter address.
+
+- Voting
+
+  - gets address that sent the sponsorProposal transaction.
+  - starts new voting for the financing proposal.
+  - checks the voting results.
 
 ## Functions description and assumptions / checks
 
