@@ -44,6 +44,15 @@ Bank Extension Access Flags: `ADD_TO_BALANCE`, `SUB_FROM_BALANCE`.
 
 ## Functions description and assumptions / checks
 
+### receive() external payable
+
+```solidity
+    /**
+     * @notice default fallback function to prevent from sending ether to the contract.
+     */
+    receive() external payable
+```
+
 ### function createFinancingRequest
 
 ```solidity
@@ -84,6 +93,27 @@ Bank Extension Access Flags: `ADD_TO_BALANCE`, `SUB_FROM_BALANCE`.
         bytes32 proposalId,
         bytes memory data
     ) external override
+```
+
+### function \_sponsorProposal
+
+```solidity
+    /**
+     * @notice Sponsors a financing proposal to start the voting process.
+     * @dev Only members of the DAO can sponsor a financing proposal.
+     * @param dao The DAO Address.
+     * @param proposalId The proposal id.
+     * @param data Additional details about the sponsorship process.
+     * @param sponsoredBy The address of the sponsoring member.
+     * @param votingContract The voting contract used by the DAO.
+     */
+    function _sponsorProposal(
+        DaoRegistry dao,
+        bytes32 proposalId,
+        bytes memory data,
+        address sponsoredBy,
+        IVoting votingContract
+    ) internal
 ```
 
 ### function processProposal
