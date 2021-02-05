@@ -216,7 +216,6 @@ async function configureDao(daoFactory, dao, ragequit, guildkick, managing, fina
     maxChunks,
     tokenAddr
   );
-  
   await onboarding.configureDao(
     dao.address,
     LOOT,
@@ -225,7 +224,6 @@ async function configureDao(daoFactory, dao, ragequit, guildkick, managing, fina
     maxChunks,
     tokenAddr
   );
-
   await voting.configureDao(dao.address, votingPeriod, gracePeriod);
 }
 
@@ -305,7 +303,7 @@ async function createDao(
   const bankFactory = await BankFactory.deployed();
   const daoFactory = await DaoFactory.deployed();
   const daoName = "test-dao-" + (counter++)
-  await daoFactory.createDao(daoName, senderAccount);
+  await daoFactory.createDao(daoName, {from:senderAccount});
 
   // checking the gas usaged to clone a contract
   const daoAddress = await daoFactory.getDaoAddress(daoName);
@@ -341,7 +339,10 @@ async function createDao(
 async function cloneDao(identityAddress, senderAccount) {
   // newDao: uses clone factory to clone the contract deployed at the identityAddress
   let daoFactory = await DaoFactory.new(identityAddress);
-  await daoFactory.createDao("test-dao", senderAccount);
+  await daoFactory.createDao("test-dao", {
+    from: senderAccount,
+    gasPrice: toBN("0"),
+  });
   // checking the gas usaged to clone a contract
   let pastEvents = await daoFactory.getPastEvents();
   let { _address} = pastEvents[0].returnValues;
@@ -356,7 +357,7 @@ async function cloneDaoDeployer(deployer) {
   const dao = await DaoRegistry.deployed();
   await deployer.deploy(DaoFactory, dao.address);
   let daoFactory = await DaoFactory.deployed();
-  await daoFactory.createDao("test-dao", ETH_TOKEN);
+  await daoFactory.createDao("test-dao");
   // checking the gas usaged to clone a contract
   let pastEvents = await daoFactory.getPastEvents();
   let { _address } = pastEvents[0].returnValues;

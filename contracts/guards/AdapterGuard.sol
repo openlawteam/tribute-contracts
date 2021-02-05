@@ -34,8 +34,8 @@ abstract contract AdapterGuard {
      */
     modifier onlyAdapter(DaoRegistry dao) {
         require(
-            (dao.state() == DaoRegistry.DaoState.CREATION &&
-                dao.isActiveMember(msg.sender)) || dao.isAdapter(msg.sender),
+            dao.state() == DaoRegistry.DaoState.CREATION ||
+                dao.isAdapter(msg.sender),
             "onlyAdapter"
         );
         _;
