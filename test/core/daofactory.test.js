@@ -39,7 +39,7 @@ contract("DaoFactory", async (accounts) => {
 
   const cloneDao = async (owner, identityAddr, name) => {
     let daoFactory = await DaoFactory.new(identityAddr);
-    await daoFactory.createDao(name, {
+    await daoFactory.createDao(name, owner, {
       from: owner,
       gasPrice: toBN("0"),
     });
