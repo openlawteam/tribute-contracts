@@ -104,4 +104,4 @@ Bank Extension Access Flags: `ADD_TO_BALANCE`, `SUB_FROM_BALANCE`.
 
 ## Events
 
-No event are emitted from this adapter.
+No events are emitted from this adapter.

@@ -35,7 +35,7 @@ SOFTWARE.
 
 contract FinancingContract is IFinancing, DaoConstants, MemberGuard {
     struct ProposalDetails {
-        address applicant; // the proposal applicant address, can not be a reserver address
+        address applicant; // the proposal applicant address, can not be a reserved address
         uint256 amount; // the amount requested for funding
         address token; // the token address in which the funding must be sent to
         bytes32 details; // additional details about the financing proposal
@@ -44,8 +44,8 @@ contract FinancingContract is IFinancing, DaoConstants, MemberGuard {
     // keeps track of all financing proposals handled by each dao
     mapping(address => mapping(bytes32 => ProposalDetails)) public proposals;
 
-    /*
-     * @notice default fallback function to prevent from sending ether to the contract
+    /**
+     * @notice default fallback function to prevent from sending ether to the contract.
      */
     receive() external payable {
         revert("fallback revert");
