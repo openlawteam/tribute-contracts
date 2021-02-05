@@ -147,20 +147,15 @@ async function configureDao(daoFactory, dao, ragequit, guildkick, managing, fina
       SET_CONFIGURATION: true,
     }),
     entryDao("ragequit", ragequit, {
-      SUB_FROM_BALANCE: true,
       JAIL_MEMBER: true,
       UNJAIL_MEMBER: true,
-      INTERNAL_TRANSFER: true,
     }),
     entryDao("guildkick", guildkick, {
       SUBMIT_PROPOSAL: true,
       SPONSOR_PROPOSAL: true,
       PROCESS_PROPOSAL: true,
-      SUB_FROM_BALANCE: true,
-      ADD_TO_BALANCE: true,
       JAIL_MEMBER: true,
       UNJAIL_MEMBER: true,
-      INTERNAL_TRANSFER: true,
     }),
     entryDao("managing", managing, {
       SUBMIT_PROPOSAL: true,
@@ -173,21 +168,15 @@ async function configureDao(daoFactory, dao, ragequit, guildkick, managing, fina
       SUBMIT_PROPOSAL: true,
       SPONSOR_PROPOSAL: true,
       PROCESS_PROPOSAL: true,
-      ADD_TO_BALANCE: true,
-      SUB_FROM_BALANCE: true,
     }),
     entryDao("onboarding", onboarding, {
       SUBMIT_PROPOSAL: true,
       SPONSOR_PROPOSAL: true,
       PROCESS_PROPOSAL: true,
-      ADD_TO_BALANCE: true,
       UPDATE_DELEGATE_KEY: true,
       NEW_MEMBER: true
     }),
-    entryDao("withdraw", withdraw, {
-      WITHDRAW: true,
-      SUB_FROM_BALANCE: true
-    })
+    entryDao("withdraw", withdraw, {})
   ]);
 
   const bankAddress = await dao.getExtensionAddress(sha3("bank"));
@@ -287,11 +276,7 @@ async function deployDao(
     const offchainVoting = await deployer.deploy(OffchainVotingContract, votingAddress, chainId);
     await daoFactory.updateAdapter(
       dao.address,
-      entryDao("voting", offchainVoting, {
-        ADD_TO_BALANCE: true,
-        SUB_FROM_BALANCE: true,
-        INTERNAL_TRANSFER: true,
-      }));
+      entryDao("voting", offchainVoting, {}));
   
     await offchainVoting.configureDao(
       dao.address,
