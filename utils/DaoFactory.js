@@ -245,6 +245,7 @@ async function configureDao(daoFactory, dao, ragequit, guildkick, managing, fina
 
   await voting.configureDao(dao.address, votingPeriod, gracePeriod);
   await tribute.configureDao(dao.address, SHARES);
+  await tribute.configureDao(dao.address, LOOT);
 }
 
 async function deployDao(
