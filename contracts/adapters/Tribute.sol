@@ -58,7 +58,7 @@ contract TributeContract is ITribute, DaoConstants, MemberGuard, AdapterGuard {
         uint256 tributeAmount;
     }
 
-    // keeps track of all tribute proposals handled by each DAO
+    // Keeps track of all tribute proposals handled by each DAO.
     mapping(address => mapping(bytes32 => ProposalDetails)) public proposals;
 
     /**
@@ -72,6 +72,7 @@ contract TributeContract is ITribute, DaoConstants, MemberGuard, AdapterGuard {
      * @notice Configures the adapter for a particular DAO.
      * @notice Registers the DAO internal token with the DAO Bank.
      * @dev Only adapters registered to the DAO can execute the function call (or if the DAO is in creation mode).
+     * @dev A DAO Bank extension must exist and be configured with proper access for this adapter.
      * @param dao The DAO address.
      * @param tokenAddrToMint The internal token address to be registered with the DAO Bank.
      */
