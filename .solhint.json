@@ -4,16 +4,13 @@
     "func-order": "off",
     "mark-callable-contracts": "off",
     "no-empty-blocks": "off",
-    "compiler-version": ["error", "^0.7.0"],
+    "compiler-version": ["error", "^0.8.0"],
     "private-vars-leading-underscore": "error",
     "reason-string": "on",
     "no-unused-vars": "warn",
     "payable-fallback": "error",
     "reentrancy": "error",
-    "code-complexity": [
-      "warn",
-      7
-    ],
+    "code-complexity": ["warn", 7],
     "no-inline-assembly": "warn"
   }
 }
