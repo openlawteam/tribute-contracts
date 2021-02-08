@@ -1,57 +1,101 @@
 ## DaoFactory description and scope
 
-The DaoFactory is using CloneFactory to let you create a cost effective DaoRegistry and initialize it properly.
-It also serves as a registry of created DAO to help others find it by name.
+The DaoFactory uses the CloneFactory to let you create a cost effective DaoRegistry and initialize and configure it properly.
+It also serves as a registry of created DAOs to help others find a DAO by name.
 
-## Adapter workflow
+## DaoFactory state
 
-An overview of the entire process executed by Adapter functions, the main interactions and routines covered/executed.
-
-## Adapter state
-
-The state consists of 2 mapping to get the sha3(name) of a dao given an address and the address given the sha3(name)
+The state consists of two mappings to get the sha3(name) of a DAO given an address and the address given the sha3(name).
 
 **mapping(address => bytes32) public daos**
 **mapping(bytes32 => address) public addresses**
 
-We also have the address of the identityDao **address public identityAddress** that is being used to clone the Dao.
+We also have the address of the identityDao **address public identityAddress** that is being used to clone the DAO.
 
 ## Functions description and assumptions / checks
 
-### function createDao(string calldata daoName)
+### function createDao
 
-It clone the DaoFactory and initializes it with the sender.
-It then registeres it in the registry in the factory.
-
-It fails if the name is already taken
-
-### function getDaoAddress(string calldata daoName) returns (address)
-
-Returns the DAO address based on its name
-
+```solidity
     /**
-     * @dev A new DAO is instantiated with only the Core Modules enabled, to reduce the call cost.
-     *       Another call must be made to enable the default Adapters, see registerDefaultAdapters.
-     * @param dao DaoRegistry to have adapters added to
-     * @param adapters Adapter structs to be added to the dao
+     * @notice Creates and initializes a new DaoRegistry with the DAO creator and the transaction sender.
+     * @notice Enters the new DaoRegistry in the DaoFactory state.
+     * @dev The daoName must not already have been taken.
+     * @param daoName The name of the DAO which, after being hashed, is used to access the address.
+     * @param creator The DAO's creator, who will be an initial member.
      */
+    function createDao(string calldata daoName, address creator) external
+```
 
-### function addAdapters(DaoRegistry dao, Adapter[] calldata adapters)
+### function getDaoAddress
 
-Add adapters and set their ACL for DaoRegistry functions
+```solidity
+    /**
+     * @notice Returns the DAO address based on its name.
+     * @return The address of a DAO, given its name.
+     * @param daoName Name of the DAO to be searched.
+     */
+    function getDaoAddress(string calldata daoName)
+        public
+        view
+        returns (address)
+```
 
-### function configureExtension(DaoRegistry dao, address extension, Adapter[] calldata adapters)
+### function addAdapters
 
-Helper function to configure extensions.
+```solidity
+    /**
+     * @notice Adds adapters and sets their ACL for DaoRegistry functions.
+     * @dev A new DAO is instantiated with only the Core Modules enabled, to reduce the call cost. This call must be made to add adapters.
+     * @dev The message sender must be an active member of the DAO.
+     * @dev The DAO must be in `CREATION` state.
+     * @param dao DaoRegistry to have adapters added to.
+     * @param adapters Adapter structs to be added to the DAO.
+     */
+    function addAdapters(DaoRegistry dao, Adapter[] calldata adapters)
+        external
+```
 
-It sets the ACL for each adapter that needs to access this extension
+### function configureExtension
 
-### function updateAdapter(DaoRegistry dao, Adapter calldata adapter) external {
+```solidity
+    /**
+     * @notice Configures extension to set the ACL for each adapter that needs to access the extension.
+     * @dev The message sender must be an active member of the DAO.
+     * @dev The DAO must be in `CREATION` state.
+     * @param dao DaoRegistry for which the extension is being configured.
+     * @param extension The address of the extension to be configured.
+     * @param adapters Adapter structs for which the ACL is being set for the extension.
+     */
+    function configureExtension(
+        DaoRegistry dao,
+        address extension,
+        Adapter[] calldata adapters
+    ) external
+```
 
-remove and add the adapter again with the setup passed in the Adapter struct
+### function updateAdapter
+
+```solidity
+    /**
+     * @notice Removes an adapter with a given ID from a DAO, and adds a new one of the same ID.
+     * @dev The message sender must be an active member of the DAO.
+     * @dev The DAO must be in `CREATION` state.
+     * @param dao DAO to be updated.
+     * @param adapter Adapter that will be replacing the currently-existing adapter of the same ID.
+     */
+    function updateAdapter(DaoRegistry dao, Adapter calldata adapter) external
+```
 
 ## Events
 
-### event DAOCreated(address \_address, string \_name);
+### event DAOCreated
 
-Emitted when a new DAO has been created
+```solidity
+    /**
+     * @notice Event emitted when a new DAO has been created.
+     * @param _address The DAO address.
+     * @param _name The DAO name.
+     */
+    event DAOCreated(address _address, string _name)
+```

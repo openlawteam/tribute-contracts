@@ -99,7 +99,7 @@ contract BankExtension is DaoConstants, AdapterGuard, IExtension {
      * @notice Initialises the DAO
      * @dev Involves initialising available tokens, checkpoints, and membership of creator
      * @dev Can only be called once
-     * @param creator The DAO's creator, who will be the first member
+     * @param creator The DAO's creator, who will be an initial member
      */
     function initialize(DaoRegistry _dao, address creator) external override {
         require(!initialized, "bank already initialized");

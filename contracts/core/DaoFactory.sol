@@ -45,6 +45,11 @@ contract DaoFactory is CloneFactory, DaoConstants {
 
     address public identityAddress;
 
+    /**
+     * @notice Event emitted when a new DAO has been created.
+     * @param _address The DAO address.
+     * @param _name The DAO name.
+     */
     event DAOCreated(address _address, string _name);
 
     constructor(address _identityAddress) {
@@ -52,8 +57,11 @@ contract DaoFactory is CloneFactory, DaoConstants {
     }
 
     /**
-     * @notice Create and initialize a new DaoRegistry
-     * @param daoName The name of the dao which, after being hashed, is used to access the address
+     * @notice Creates and initializes a new DaoRegistry with the DAO creator and the transaction sender.
+     * @notice Enters the new DaoRegistry in the DaoFactory state.
+     * @dev The daoName must not already have been taken.
+     * @param daoName The name of the DAO which, after being hashed, is used to access the address.
+     * @param creator The DAO's creator, who will be an initial member.
      */
     function createDao(string calldata daoName, address creator) external {
         bytes32 hashedName = keccak256(abi.encode(daoName));
@@ -73,8 +81,9 @@ contract DaoFactory is CloneFactory, DaoConstants {
     }
 
     /**
-     * @return The address of a DAO, given its name
-     * @param daoName Name of the DAO to be searched
+     * @notice Returns the DAO address based on its name.
+     * @return The address of a DAO, given its name.
+     * @param daoName Name of the DAO to be searched.
      */
     function getDaoAddress(string calldata daoName)
         public
@@ -85,10 +94,12 @@ contract DaoFactory is CloneFactory, DaoConstants {
     }
 
     /**
-     * @dev A new DAO is instantiated with only the Core Modules enabled, to reduce the call cost.
-     *       Another call must be made to enable the default Adapters, see registerDefaultAdapters.
-     * @param dao DaoRegistry to have adapters added to
-     * @param adapters Adapter structs to be added to the dao
+     * @notice Adds adapters and sets their ACL for DaoRegistry functions.
+     * @dev A new DAO is instantiated with only the Core Modules enabled, to reduce the call cost. This call must be made to add adapters.
+     * @dev The message sender must be an active member of the DAO.
+     * @dev The DAO must be in `CREATION` state.
+     * @param dao DaoRegistry to have adapters added to.
+     * @param adapters Adapter structs to be added to the DAO.
      */
     function addAdapters(DaoRegistry dao, Adapter[] calldata adapters)
         external
@@ -106,10 +117,12 @@ contract DaoFactory is CloneFactory, DaoConstants {
     }
 
     /**
-     * @dev A new DAO is instantiated with only the Core Modules enabled, to reduce the call cost.
-     *       Another call must be made to enable the default Adapters, see registerDefaultAdapters.
-     * @param dao DaoRegistry to have adapters added to
-     * @param adapters Adapter structs to be added to the dao
+     * @notice Configures extension to set the ACL for each adapter that needs to access the extension.
+     * @dev The message sender must be an active member of the DAO.
+     * @dev The DAO must be in `CREATION` state.
+     * @param dao DaoRegistry for which the extension is being configured.
+     * @param extension The address of the extension to be configured.
+     * @param adapters Adapter structs for which the ACL is being set for the extension.
      */
     function configureExtension(
         DaoRegistry dao,
@@ -133,9 +146,11 @@ contract DaoFactory is CloneFactory, DaoConstants {
     }
 
     /**
-     * @dev Removes an adapter with a given ID from a DAO, and add a new one of the same ID
-     * @param dao DAO to be updated
-     * @param adapter Adapter that will be replacing the currently-existing adapter of the same ID
+     * @notice Removes an adapter with a given ID from a DAO, and adds a new one of the same ID.
+     * @dev The message sender must be an active member of the DAO.
+     * @dev The DAO must be in `CREATION` state.
+     * @param dao DAO to be updated.
+     * @param adapter Adapter that will be replacing the currently-existing adapter of the same ID.
      */
     function updateAdapter(DaoRegistry dao, Adapter calldata adapter) external {
         require(dao.isActiveMember(msg.sender), "not active member");
