@@ -62,12 +62,9 @@ contract DaoFactory is CloneFactory, DaoConstants {
             string(abi.encodePacked("name ", daoName, " already taken"))
         );
         DaoRegistry dao = DaoRegistry(_createClone(identityAddress));
-        if (creator == address(0x0)) {
-            creator = msg.sender;
-        }
 
         address daoAddr = address(dao);
-        dao.initialize(creator, address(this));
+        dao.initialize(creator, msg.sender);
 
         addresses[hashedName] = daoAddr;
         daos[daoAddr] = hashedName;

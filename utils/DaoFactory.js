@@ -356,6 +356,7 @@ async function cloneDaoDeployer(deployer) {
   const dao = await DaoRegistry.deployed();
   await deployer.deploy(DaoFactory, dao.address);
   let daoFactory = await DaoFactory.deployed();
+  
   await daoFactory.createDao("test-dao", ETH_TOKEN);
   // checking the gas usaged to clone a contract
   let pastEvents = await daoFactory.getPastEvents();

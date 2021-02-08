@@ -35,7 +35,7 @@ abstract contract AdapterGuard {
     modifier onlyAdapter(DaoRegistry dao) {
         require(
             (dao.state() == DaoRegistry.DaoState.CREATION &&
-                dao.isActiveMember(msg.sender)) || dao.isAdapter(msg.sender),
+                creationModeCheck(dao)) || dao.isAdapter(msg.sender),
             "onlyAdapter"
         );
         _;
@@ -44,10 +44,17 @@ abstract contract AdapterGuard {
     modifier hasAccess(DaoRegistry dao, DaoRegistry.AclFlag flag) {
         require(
             (dao.state() == DaoRegistry.DaoState.CREATION &&
-                dao.isActiveMember(msg.sender)) ||
+                creationModeCheck(dao)) ||
                 dao.hasAdapterAccess(msg.sender, flag),
             "hasAccess"
         );
         _;
+    }
+
+    function creationModeCheck(DaoRegistry dao) internal view returns (bool) {
+        return
+            dao.getNbMembers() == 0 ||
+            dao.isActiveMember(msg.sender) ||
+            dao.isAdapter(msg.sender);
     }
 }

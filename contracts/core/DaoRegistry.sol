@@ -158,10 +158,11 @@ contract DaoRegistry is MemberGuard, AdapterGuard {
      * @dev Can only be called once
      * @param creator The DAO's creator, who will be the first member
      */
-    function initialize(address creator, address factory) external {
+    function initialize(address creator, address payer) external {
         require(!initialized, "dao already initialized");
+        potentialNewMember(msg.sender);
+        potentialNewMember(payer);
         potentialNewMember(creator);
-        potentialNewMember(factory);
 
         initialized = true;
     }
@@ -599,7 +600,7 @@ contract DaoRegistry is MemberGuard, AdapterGuard {
         return getFlag(members[memberAddress].flags, uint8(flag));
     }
 
-    function getNbMember() public view returns (uint256) {
+    function getNbMembers() public view returns (uint256) {
         return _members.length;
     }
 
