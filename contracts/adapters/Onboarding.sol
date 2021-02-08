@@ -383,6 +383,8 @@ contract OnboardingContract is
 
         dao.potentialNewMember(memberAddr);
 
+        // Overflow risk may cause this to fail in which case the proposal
+        // tokens are refunded to the proposer.
         try bank.addToBalance(memberAddr, tokenToMint, tokenAmount) {
             // do nothing
         } catch {

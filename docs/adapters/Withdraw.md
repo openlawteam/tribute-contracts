@@ -20,14 +20,14 @@ The adapter does not keep track of any state during the withdraw process.
 
 ## Dependencies and interactions (internal / external)
 
-DAORegistry
-
-- Checks if the account address is not a reserved address.
-
-Bank Extension
+BankExtension
 
 - Checks the account balance.
 - Executes the withdraw process.
+
+DAORegistry
+
+- Checks if the account address is not a reserved address.
 
 ## Functions description and assumptions / checks
 

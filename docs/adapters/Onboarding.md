@@ -19,7 +19,7 @@ If the proposal is sponsored (only by a member), it is put up for vote.
 
 After the voting period is done, it is time to process the proposal.
 If the vote has passed, the tokens are moved to the guild bank and the shares minted (internal tokens).
-If it has failed, the money is returned to the applicant.
+If it has failed, the money is returned to the proposer.
 
 ## Adapter configuration
 

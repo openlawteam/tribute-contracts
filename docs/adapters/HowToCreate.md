@@ -43,10 +43,10 @@ There are two main types of adapters that serve different purposes:
      * @notice Explain what the function does in addition to the proposal submission.
      * @dev Describe any required states/checks/parameters that are necessary to execute the function.
      * @param dao The DAO address.
-     * @param dao The proposal id that is managed by the client.
+     * @param proposalId The proposal id that is managed by the client.
      * @param param1 Description of the parameter 1.
      * @param param2 Description of the parameter 2.
-     * @param param2 Description of the parameter n.
+     * @param paramN Description of the parameter n.
      */
     function submitXProposal(
       DaoRegistry dao,
@@ -72,12 +72,12 @@ There are two main types of adapters that serve different purposes:
     /**
      * @notice Explain what the submission function does, what kind of checks/validations are performed. Sometimes you may want to sponsor the proposal
      * right away in the same transaction, so you can do that at the end of the submission process, by calling the dao.sponsorProposal.
-     * @dev Describe any additional checks that the function performs, e.g: only member are allowed, etc.
+     * @dev Describe any additional checks that the function performs, e.g: only members are allowed, etc.
      * @param dao The dao address.
      * @param proposalId The guild kick proposal id.
      * @param param1 Description of the parameter 1.
      * @param param2 Description of the parameter 2.
-     * @param param2 Description of the parameter n.
+     * @param paramN Description of the parameter n.
      */
     function _submitXProposal(
       DaoRegistry dao,
@@ -86,29 +86,29 @@ There are two main types of adapters that serve different purposes:
       type2 param2,
       typeN paramN
     ) internal onlyMember2(dao, submittedBy) {
-      // onlyMembe2 in this case we are restricting the access to members/advisors only
+      // onlyMember2 in this case we are restricting the access to members/advisors only
 
-      // Make sure you creates the proposal in the DAO.
-      // The DAO already checks if the proposal id is not duplicate.
+      // Make sure you create the proposal in the DAO.
+      // The DAO already checks if the proposal id is not a duplicate.
       dao.submitProposal(proposalId);
 
-      // Perfom any addition checks or logic you may need.
+      // Perfom any additional checks or logic you may need.
 
       // If you want to sponsor the proposal right away, you need to start the voting process.
       IVoting votingContract = IVoting(dao.getAdapterAddress(VOTING));
       votingContract.startNewVotingForProposal(dao, proposalId, data);
 
-      // Finally sponsors the x proposal.
+      // Finally sponsor the x proposal.
       // The DAO already checks if the proposal exists and is being sent by a member/advisor.
       dao.sponsorProposal(proposalId, submittedBy);
 
       // If you do want to start the voting and sponsor the proposal in the same transaction,
-      // Just include these 2 last calls into a new function that must be triggered in another transaction.
+      // just include these 2 last calls into a new function that must be triggered in another transaction.
     }
 
     /**
      * @notice Explain what happens during the processProposal execution.
-     * @dev Describe addition validations that are performed in the function.
+     * @dev Describe additional validations that are performed in the function.
      * @param dao The dao address.
      * @param proposalId The guild kick proposal id.
      */
@@ -137,38 +137,38 @@ There are two main types of adapters that serve different purposes:
 
   - **Example of a Generic Adapter**
 
-  ```solidity
-  /**
-   * @notice default fallback function to prevent from sending ether to the contract
-   */
-  receive() external payable {
-    revert("fallback revert");
-  }
+    ```solidity
+    /**
+     * @notice default fallback function to prevent from sending ether to the contract.
+     */
+    receive() external payable {
+      revert("fallback revert");
+    }
 
-  /**
-   * @notice Explain what the function does, if it changes the DAO state or just reads, etc.
-   * @dev Describe any additional requirements/checks/configurations.
-   * @param dao The DAO address.
-   * @param param1 The description of the parameter 1.
-   */
-  function myFunction(DaoRegistry dao, type1 param1) external {
-    // Add any checks / validation you may need
-    require(pre - condition, "error message");
+    /**
+     * @notice Explain what the function does, if it changes the DAO state or just reads, etc.
+     * @dev Describe any additional requirements/checks/configurations.
+     * @param dao The DAO address.
+     * @param param1 The description of the parameter 1.
+     */
+    function myFunction(DaoRegistry dao, type1 param1) external {
+      // Add any checks / validation you may need
+      require(pre - condition, "error message");
 
-    // Instantiate any Extension that you may want to use, e.g:
-    BankExtension bank = BankExtension(dao.getExtensionAddress(BANK));
+      // Instantiate any Extension that you may want to use, e.g:
+      BankExtension bank = BankExtension(dao.getExtensionAddress(BANK));
 
-    // Using the extension
-    uint256 balance = bank.balanceOf(account, token);
+      // Using the extension
+      uint256 balance = bank.balanceOf(account, token);
 
-    // Executing an transaction that changes the Extension state.
-    bank.functionToCall(param1);
+      // Executing a transaction that changes the Extension state.
+      bank.functionToCall(param1);
 
-    // Emit an event if needed.
-    emit MyEvent(address(dao), param1);
-  }
+      // Emit an event if needed.
+      emit MyEvent(address(dao), param1);
+    }
 
-  ```
+    ```
 
 ### Identifying the Modifiers
 
@@ -178,7 +178,7 @@ While creating the adapter try to identify which sort of users you want to grant
 
 ### Map out the proper Access Flags
 
-Another important point is to map out which sort of permissions your adapter needs in order to write/read data to/from the DAO. If your adapter requires an [Extension](https://github.com/openlawteam/laoland#extensions), you will also need to provide the correct [Access Flags](https://github.com/openlawteam/laoland#access-control-layer) to access that extension. Checkout which permission each flag grants: [Flag Helper](https://github.com/openlawteam/laoland/blob/master/docs/helpers/FlagHelper.md)
+Another important point is to map out which sort of permissions your adapter needs in order to write/read data to/from the DAO. If your adapter requires an [Extension](https://github.com/openlawteam/laoland#extensions), you will also need to provide the correct [Access Flags](https://github.com/openlawteam/laoland#access-control-layer) to access that extension. Checkout which permission each flag grants: [Flag Helper](https://github.com/openlawteam/laoland/blob/master/docs/helpers/FlagHelper.md).
 
 ### Set up the DAO custom configurations
 
@@ -217,6 +217,7 @@ The key advantage of the adapters is to make them very small and suitable to a v
   - Usually the adapter needs to perform some verifications before executing the calls that may change the DAO state. Double check if the DAORegistry functions that your adapter uses already implement some checks, so you do not need to repeat them in the adapter.
 
 - Update the DAOConstants
+
   - If you are creating an adapter that does not have the `keccak256` id declared in the [DAOConstants](https://github.com/openlawteam/laoland/blob/master/contracts/core/DaoConstants.sol#L30) make sure you add it there.
 
 ### Testing the new Adapter

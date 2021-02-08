@@ -32,6 +32,7 @@ abstract contract DaoConstants {
     bytes32 internal constant ONBOARDING = keccak256("onboarding");
     bytes32 internal constant NONVOTING_ONBOARDING =
         keccak256("nonvoting-onboarding");
+    bytes32 internal constant TRIBUTE = keccak256("tribute");
     bytes32 internal constant FINANCING = keccak256("financing");
     bytes32 internal constant MANAGING = keccak256("managing");
     bytes32 internal constant RAGEQUIT = keccak256("ragequit");

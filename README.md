@@ -14,7 +14,7 @@ Inspired by the [hexagonal architecture design pattern](<https://en.wikipedia.or
 
 ### Architecture
 
-![laoland_hexagon_architecture](https://user-images.githubusercontent.com/708579/106510703-096a9880-64ae-11eb-8e48-3745e36a7b80.png)
+![laoland_hexagon_architecture](https://user-images.githubusercontent.com/708579/107071164-1398d980-67c3-11eb-8292-fd49b9e60fb8.png)
 
 The main design goal is to limit access to the smart contracts according at layer boundaries. The External World (i.e. RPC clients) can access the core contracts only via Adapters, never directly. Every adapter contains all the necessary logic and data to update/change the state of the DAO in the DAORegistry Contract. The Core Contract tracks all the state changes of the DAO, and an Adapter tracks only the state changes in its own context. Extensions enhance the DAO capabilities and simplify the Core Contract code. The information always flows from the External World to the Core Contracts, never the other way around. If a Core Contract needs external info, it must be provided by an Adapter and/or an Extension instead of calling External World directly.
 
@@ -40,6 +40,7 @@ Adapters implemented in the Laoland project:
 - [Managing](https://github.com/openlawteam/laoland/blob/master/docs/adapters/Managing.md): enhances the DAO capabilities by adding/updating the DAO Adapters through a voting process.
 - [OffchainVoting](https://github.com/openlawteam/laoland/blob/master/docs/adapters/OffchainVoting.md): adds the offchain voting governance process to the DAO to support gasless voting.
 - [Onboarding](https://github.com/openlawteam/laoland/blob/master/docs/adapters/Onboarding.md): triggers the process of minting internal tokens in exchange of a specific token at a fixed price.
+- [Tribute](https://github.com/openlawteam/laoland/blob/master/docs/adapters/Tribute.md): allows potential and existing DAO members to contribute any amount of ERC-20 tokens to the DAO in exchange for any amount of DAO internal tokens.
 - [Ragequit](https://github.com/openlawteam/laoland/blob/master/docs/adapters/Ragequit.md): gives the members the freedom to choose when it is the best time to exit the DAO for any given reason.
 - [Voting](https://github.com/openlawteam/laoland/blob/master/docs/adapters/Voting.md): adds the simple on chain voting governance process to the DAO.
 - [Withdraw](https://github.com/openlawteam/laoland/blob/master/docs/adapters/Withdraw.md): allows the members to withdraw their funds from the DAO bank.
