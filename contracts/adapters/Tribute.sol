@@ -346,6 +346,8 @@ contract TributeContract is ITribute, DaoConstants, MemberGuard, AdapterGuard {
 
         dao.potentialNewMember(applicant);
 
+        // Overflow risk may cause this to fail in which case the tribute tokens
+        // are refunded to the proposer.
         try bank.addToBalance(applicant, tokenToMint, requestAmount) {
             // do nothing
         } catch {
