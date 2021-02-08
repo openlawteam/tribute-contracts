@@ -55,35 +55,21 @@ contract DaoFactory is CloneFactory, DaoConstants {
      * @notice Create and initialize a new DaoRegistry
      * @param daoName The name of the dao which, after being hashed, is used to access the address
      */
-    function createDao(string calldata daoName) external {
-        DaoRegistry dao = DaoRegistry(_createClone(identityAddress));
-        address daoAddr = address(dao);
-        dao.initialize(msg.sender);
-
+    function createDao(string calldata daoName, address creator) external {
         bytes32 hashedName = keccak256(abi.encode(daoName));
+        require(
+            addresses[hashedName] == address(0x0),
+            string(abi.encodePacked("name ", daoName, " already taken"))
+        );
+        DaoRegistry dao = DaoRegistry(_createClone(identityAddress));
+
+        address daoAddr = address(dao);
+        dao.initialize(creator, msg.sender);
+
         addresses[hashedName] = daoAddr;
         daos[daoAddr] = hashedName;
 
         emit DAOCreated(daoAddr, daoName);
-    }
-
-    /**
-     * @notice Sets a DAO's configuration key-value pairs and finalizes it if requested
-     * @param daoAddr Address of the DAO being configured
-     * @param keys Configuration keys for the DAO
-     * @param values Configuration values for the DAO
-     * @param finalizeDao If true, call DaoRegistry.finalizeDao()
-     */
-    function configureDao(
-        address payable daoAddr,
-        bytes32[] calldata keys,
-        uint256[] calldata values,
-        bool finalizeDao
-    ) external {
-        require(daos[daoAddr] != bytes32(0), "dao not found");
-
-        DaoRegistry dao = DaoRegistry(daoAddr);
-        _configure(dao, keys, values, finalizeDao);
     }
 
     /**
@@ -107,6 +93,7 @@ contract DaoFactory is CloneFactory, DaoConstants {
     function addAdapters(DaoRegistry dao, Adapter[] calldata adapters)
         external
     {
+        require(dao.isActiveMember(msg.sender), "not active member");
         //Registring Adapters
         require(
             dao.state() == DaoRegistry.DaoState.CREATION,
@@ -129,6 +116,7 @@ contract DaoFactory is CloneFactory, DaoConstants {
         address extension,
         Adapter[] calldata adapters
     ) external {
+        require(dao.isActiveMember(msg.sender), "not active member");
         //Registring Adapters
         require(
             dao.state() == DaoRegistry.DaoState.CREATION,
@@ -150,6 +138,7 @@ contract DaoFactory is CloneFactory, DaoConstants {
      * @param adapter Adapter that will be replacing the currently-existing adapter of the same ID
      */
     function updateAdapter(DaoRegistry dao, Adapter calldata adapter) external {
+        require(dao.isActiveMember(msg.sender), "not active member");
         require(
             dao.state() == DaoRegistry.DaoState.CREATION,
             "this DAO has already been setup"
@@ -157,27 +146,5 @@ contract DaoFactory is CloneFactory, DaoConstants {
 
         dao.removeAdapter(adapter.id);
         dao.addAdapter(adapter.id, adapter.addr, adapter.flags);
-    }
-
-    /**
-     * @notice Sets the configuration key-value pairs for a DaoRegistry
-     * @param dao To configure
-     * @param keys Configuration keys
-     * @param values Configuration values
-     * @param finalizeDao Whether or not to call DaoRegistry.finalizeDao after configuration
-     */
-    function _configure(
-        DaoRegistry dao,
-        bytes32[] calldata keys,
-        uint256[] calldata values,
-        bool finalizeDao
-    ) internal {
-        require(keys.length == values.length, "invalid keys and values");
-        for (uint256 i = 0; i < keys.length; i++) {
-            dao.setConfiguration(keys[i], values[i]);
-        }
-        if (finalizeDao) {
-            dao.finalizeDao();
-        }
     }
 }
