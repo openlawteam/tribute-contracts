@@ -43,7 +43,8 @@ abstract contract AdapterGuard {
 
     modifier hasAccess(DaoRegistry dao, DaoRegistry.AclFlag flag) {
         require(
-            dao.state() == DaoRegistry.DaoState.CREATION ||
+            (dao.state() == DaoRegistry.DaoState.CREATION &&
+                dao.isActiveMember(msg.sender)) ||
                 dao.hasAdapterAccess(msg.sender, flag),
             "hasAccess"
         );
