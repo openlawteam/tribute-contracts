@@ -1,6 +1,4 @@
-## DaoRegistry.sol
-
-## Description and scope
+## DaoRegistry description and scope
 
 The DAO Registry is the identity of the DAO. This is the contract address that is every adapter usually interacts with.
 
@@ -12,7 +10,7 @@ The scope of the registry is to manage the following:
 
 Each non-constant function in the DAO has an access control modifier linked to it, to make sure the caller has the right to call it.
 
-The DaoRegisrty.sol contract tracks the state of the DAO for 1) Adapter and Extension access, 2) State of Proposals, 3) Membership status. For an Adapater to be used it must be registered to DaoRegistry.sol.
+The DaoRegistry.sol contract tracks the state of the DAO for 1) Adapter and Extension access, 2) State of Proposals, 3) Membership status. For an Adapter to be used it must be registered to DaoRegistry.sol.
 
 ## Enums
 
@@ -135,9 +133,9 @@ Since addresses are not encoded in 256 bytes, we need a separate configuration m
 
 Note: the constructor function is non-existent, because this is a Cloneable contract. See, https://eips.ethereum.org/EIPS/eip-1167
 
-### function initialize(address creator) external
+### function initialize(address creator, address payer) external
 
-Initializes the DAO by creating the first member who is the creator passed to the function.
+Initializes the DAO by creating the initial members who are 1) the DAO creator passed to the function, 2) the account passed to the function which paid for the transaction to create the DAO, and 3) the DaoFactory calling this function.
 
 ### function finalizeDao()
 
@@ -266,7 +264,7 @@ Helper function to get the flag value for a proposal.
 
 Helper function to get the flag value for a member.
 
-### function getNbMember() public view returns (uint256)
+### function getNbMembers() public view returns (uint256)
 
 Returns how many members have been registered in the DAO.
 
