@@ -46,7 +46,7 @@ const { checkBalance } = require("../../utils/TestUtils.js");
 contract("LAOLAND - Onboarding Adapter", async (accounts) => {
   it("should be possible to join a DAO with ETH contribution", async () => {
     const myAccount = accounts[1];
-    const otherAccount = accounts[2];
+    const applicant = accounts[2];
     const nonMemberAccount = accounts[3];
 
     let dao = await createDao(myAccount);
@@ -60,7 +60,7 @@ contract("LAOLAND - Onboarding Adapter", async (accounts) => {
     // remaining amount to test sending back to proposer
     const ethAmount = sharePrice.mul(toBN(3)).add(remaining);
 
-    await onboarding.onboard(dao.address, "0x1", otherAccount, SHARES, 0, {
+    await onboarding.onboard(dao.address, "0x1", applicant, SHARES, 0, {
       from: myAccount,
       value: ethAmount,
       gasPrice: toBN("0"),
@@ -79,11 +79,12 @@ contract("LAOLAND - Onboarding Adapter", async (accounts) => {
       gasPrice: toBN("0"),
     });
 
-    voting.submitVote(dao.address, "0x1", 1, {
+    await voting.submitVote(dao.address, "0x1", 1, {
       from: myAccount,
       gasPrice: toBN("0"),
     });
 
+    // should not be able to process before the voting period has ended
     try {
       await onboarding.processProposal(dao.address, "0x1", {
         from: myAccount,
@@ -100,23 +101,31 @@ contract("LAOLAND - Onboarding Adapter", async (accounts) => {
     });
 
     const myAccountShares = await bank.balanceOf(myAccount, SHARES);
-    const otherAccountShares = await bank.balanceOf(otherAccount, SHARES);
+    const applicantShares = await bank.balanceOf(applicant, SHARES);
     const nonMemberAccountShares = await bank.balanceOf(
       nonMemberAccount,
       SHARES
     );
     assert.equal(myAccountShares.toString(), "1");
     assert.equal(
-      otherAccountShares.toString(),
+      applicantShares.toString(),
       numberOfShares.mul(toBN("3")).toString()
     );
     assert.equal(nonMemberAccountShares.toString(), "0");
     await checkBalance(bank, GUILD, ETH_TOKEN, sharePrice.mul(toBN("3")));
+
+    // test active member status
+    const applicantIsActiveMember = await dao.isActiveMember(applicant);
+    assert.equal(applicantIsActiveMember, true);
+    const nonMemberAccountIsActiveMember = await dao.isActiveMember(
+      nonMemberAccount
+    );
+    assert.equal(nonMemberAccountIsActiveMember, false);
   });
 
   it("should be possible to join a DAO with ERC20 contribution", async () => {
     const myAccount = accounts[1];
-    const otherAccount = accounts[2];
+    const applicant = accounts[2];
     const nonMemberAccount = accounts[3];
 
     // Issue OpenLaw ERC20 Basic Token for tests
@@ -160,7 +169,7 @@ contract("LAOLAND - Onboarding Adapter", async (accounts) => {
       await onboarding.onboard(
         dao.address,
         "0x1",
-        otherAccount,
+        applicant,
         SHARES,
         tokenAmount,
         {
@@ -168,7 +177,7 @@ contract("LAOLAND - Onboarding Adapter", async (accounts) => {
           gasPrice: toBN("0"),
         }
       );
-      assert.equal(true, false, "should have failed without spender approval!");
+      assert.fail("should have failed without spender approval!");
     } catch (err) {}
 
     // Pre-approve spender (onboarding adapter) to transfer proposer tokens
@@ -179,7 +188,7 @@ contract("LAOLAND - Onboarding Adapter", async (accounts) => {
     await onboarding.onboard(
       dao.address,
       "0x1",
-      otherAccount,
+      applicant,
       SHARES,
       tokenAmount,
       {
@@ -201,11 +210,12 @@ contract("LAOLAND - Onboarding Adapter", async (accounts) => {
       gasPrice: toBN("0"),
     });
 
-    voting.submitVote(dao.address, "0x1", 1, {
+    await voting.submitVote(dao.address, "0x1", 1, {
       from: myAccount,
       gasPrice: toBN("0"),
     });
 
+    // should not be able to process before the voting period has ended
     try {
       await onboarding.processProposal(dao.address, "0x1", {
         from: myAccount,
@@ -222,27 +232,35 @@ contract("LAOLAND - Onboarding Adapter", async (accounts) => {
     });
 
     const myAccountShares = await bank.balanceOf(myAccount, SHARES);
-    const otherAccountShares = await bank.balanceOf(otherAccount, SHARES);
+    const applicantShares = await bank.balanceOf(applicant, SHARES);
     const nonMemberAccountShares = await bank.balanceOf(
       nonMemberAccount,
       SHARES
     );
     assert.equal(myAccountShares.toString(), "1");
-    assert.equal(otherAccountShares.toString(), "100000000");
+    assert.equal(applicantShares.toString(), "100000000");
     assert.equal(nonMemberAccountShares.toString(), "0");
     await checkBalance(bank, GUILD, oltContract.address, "10");
+
+    // test active member status
+    const applicantIsActiveMember = await dao.isActiveMember(applicant);
+    assert.equal(applicantIsActiveMember, true);
+    const nonMemberAccountIsActiveMember = await dao.isActiveMember(
+      nonMemberAccount
+    );
+    assert.equal(nonMemberAccountIsActiveMember, false);
   });
 
   it("should not be possible to have more than the maximum number of shares", async () => {
     const myAccount = accounts[1];
-    const otherAccount = accounts[2];
+    const applicant = accounts[2];
 
     let dao = await createDao(myAccount);
 
     const onboarding = await getContract(dao, "onboarding", OnboardingContract);
 
     try {
-      await onboarding.onboard(dao.address, "0x1", otherAccount, SHARES, 0, {
+      await onboarding.onboard(dao.address, "0x1", applicant, SHARES, 0, {
         from: myAccount,
         value: sharePrice.mul(toBN(11)).add(remaining),
         gasPrice: toBN("0"),
@@ -258,8 +276,8 @@ contract("LAOLAND - Onboarding Adapter", async (accounts) => {
 
   it("should be possible to cancel an ETH onboarding proposal", async () => {
     const myAccount = accounts[1];
-    const otherAccount = accounts[2];
-    const dao = await createDao(myAccount);
+    const applicant = accounts[2];
+    let dao = await createDao(myAccount);
 
     const bankAddress = await dao.getExtensionAddress(sha3("bank"));
     const bank = await BankExtension.at(bankAddress);
@@ -267,7 +285,7 @@ contract("LAOLAND - Onboarding Adapter", async (accounts) => {
     const onboarding = await getContract(dao, "onboarding", OnboardingContract);
 
     const myAccountInitialBalance = await web3.eth.getBalance(myAccount);
-    await onboarding.onboard(dao.address, "0x1", otherAccount, SHARES, 0, {
+    await onboarding.onboard(dao.address, "0x1", applicant, SHARES, 0, {
       from: myAccount,
       value: sharePrice.mul(toBN(3)).add(remaining),
       gasPrice: toBN("0"),
@@ -275,7 +293,7 @@ contract("LAOLAND - Onboarding Adapter", async (accounts) => {
 
     try {
       await onboarding.cancelProposal(dao.address, "0x1", {
-        from: otherAccount,
+        from: applicant,
         gasPrice: toBN("0"),
       });
     } catch (err) {
@@ -297,6 +315,7 @@ contract("LAOLAND - Onboarding Adapter", async (accounts) => {
       "myAccount did not receive refund of ETH contribution"
     );
 
+    // should not be able to sponsor if the proposal has already been cancelled
     try {
       await onboarding.sponsorProposal(dao.address, "0x1", [], {
         from: myAccount,
@@ -306,6 +325,7 @@ contract("LAOLAND - Onboarding Adapter", async (accounts) => {
       assert.equal(err.reason, "proposal already processed");
     }
 
+    // should not be able to process if the proposal has already been cancelled
     try {
       await onboarding.processProposal(dao.address, "0x1", {
         from: myAccount,
@@ -316,9 +336,9 @@ contract("LAOLAND - Onboarding Adapter", async (accounts) => {
     }
 
     const myAccountShares = await bank.balanceOf(myAccount, SHARES);
-    const otherAccountShares = await bank.balanceOf(otherAccount, SHARES);
+    const applicantShares = await bank.balanceOf(applicant, SHARES);
     assert.equal(myAccountShares.toString(), "1");
-    assert.equal(otherAccountShares.toString(), "0");
+    assert.equal(applicantShares.toString(), "0");
 
     const guildBalance = await bank.balanceOf(GUILD, ETH_TOKEN);
     assert.equal(guildBalance.toString(), "0");
@@ -326,7 +346,7 @@ contract("LAOLAND - Onboarding Adapter", async (accounts) => {
 
   it("should be possible to cancel an ERC20 onboarding proposal", async () => {
     const myAccount = accounts[1];
-    const otherAccount = accounts[2];
+    const applicant = accounts[2];
 
     // Issue OpenLaw ERC20 Basic Token for tests
     const tokenSupply = 1000000;
@@ -336,7 +356,7 @@ contract("LAOLAND - Onboarding Adapter", async (accounts) => {
     const erc20SharePrice = toBN("10");
     const erc20Remaining = erc20SharePrice.sub(toBN("1"));
 
-    const dao = await createDao(
+    let dao = await createDao(
       myAccount,
       erc20SharePrice,
       nbOfERC20Shares,
@@ -371,7 +391,7 @@ contract("LAOLAND - Onboarding Adapter", async (accounts) => {
     await onboarding.onboard(
       dao.address,
       "0x1",
-      otherAccount,
+      applicant,
       SHARES,
       tokenAmount,
       {
@@ -382,7 +402,7 @@ contract("LAOLAND - Onboarding Adapter", async (accounts) => {
 
     try {
       await onboarding.cancelProposal(dao.address, "0x1", {
-        from: otherAccount,
+        from: applicant,
         gasPrice: toBN("0"),
       });
     } catch (err) {
@@ -404,6 +424,7 @@ contract("LAOLAND - Onboarding Adapter", async (accounts) => {
       "myAccount did not receive refund of ERC20 contribution"
     );
 
+    // should not be able to sponsor if the proposal has already been cancelled
     try {
       await onboarding.sponsorProposal(dao.address, "0x1", [], {
         from: myAccount,
@@ -413,6 +434,7 @@ contract("LAOLAND - Onboarding Adapter", async (accounts) => {
       assert.equal(err.reason, "proposal already processed");
     }
 
+    // should not be able to process if the proposal has already been cancelled
     try {
       await onboarding.processProposal(dao.address, "0x1", {
         from: myAccount,
@@ -423,9 +445,9 @@ contract("LAOLAND - Onboarding Adapter", async (accounts) => {
     }
 
     const myAccountShares = await bank.balanceOf(myAccount, SHARES);
-    const otherAccountShares = await bank.balanceOf(otherAccount, SHARES);
+    const applicantShares = await bank.balanceOf(applicant, SHARES);
     assert.equal(myAccountShares.toString(), "1");
-    assert.equal(otherAccountShares.toString(), "0");
+    assert.equal(applicantShares.toString(), "0");
 
     const guildBalance = await bank.balanceOf(GUILD, oltContract.address);
     assert.equal(guildBalance.toString(), "0");
@@ -433,7 +455,7 @@ contract("LAOLAND - Onboarding Adapter", async (accounts) => {
 
   it("should handle an onboarding proposal with a failed vote", async () => {
     const myAccount = accounts[1];
-    const otherAccount = accounts[2];
+    const applicant = accounts[2];
     let dao = await createDao(myAccount);
 
     const bankAddress = await dao.getExtensionAddress(sha3("bank"));
@@ -443,7 +465,7 @@ contract("LAOLAND - Onboarding Adapter", async (accounts) => {
     const voting = await getContract(dao, "voting", VotingContract);
 
     const myAccountInitialBalance = await web3.eth.getBalance(myAccount);
-    await onboarding.onboard(dao.address, "0x1", otherAccount, SHARES, 0, {
+    await onboarding.onboard(dao.address, "0x1", applicant, SHARES, 0, {
       from: myAccount,
       value: sharePrice.mul(toBN(3)).add(remaining),
       gasPrice: toBN("0"),
@@ -478,21 +500,25 @@ contract("LAOLAND - Onboarding Adapter", async (accounts) => {
     );
 
     const myAccountShares = await bank.balanceOf(myAccount, SHARES);
-    const otherAccountShares = await bank.balanceOf(otherAccount, SHARES);
+    const applicantShares = await bank.balanceOf(applicant, SHARES);
     assert.equal(myAccountShares.toString(), "1");
-    assert.equal(otherAccountShares.toString(), "0");
+    assert.equal(applicantShares.toString(), "0");
 
     const guildBalance = await bank.balanceOf(GUILD, ETH_TOKEN);
     assert.equal(guildBalance.toString(), "0");
 
-    const otherAccountBalance = await bank.balanceOf(otherAccount, ETH_TOKEN);
-    assert.equal(otherAccountBalance.toString(), "0");
+    const applicantBalance = await bank.balanceOf(applicant, ETH_TOKEN);
+    assert.equal(applicantBalance.toString(), "0");
 
     const onboardingBalance = await web3.eth.getBalance(onboarding.address);
     assert.equal(onboardingBalance.toString(), "0");
+
+    // test active member status
+    const applicantIsActiveMember = await dao.isActiveMember(applicant);
+    assert.equal(applicantIsActiveMember, false);
   });
 
-  it("should validate inputs", async () => {
+  it("should not be possible to sponsor proposal that does not exist", async () => {
     const myAccount = accounts[1];
     let dao = await createDao(myAccount);
 
@@ -505,6 +531,22 @@ contract("LAOLAND - Onboarding Adapter", async (accounts) => {
       });
     } catch (err) {
       assert.equal(err.reason, "proposal does not exist for this dao");
+    }
+  });
+
+  it("should not be possible to process proposal that does not exist", async () => {
+    const myAccount = accounts[1];
+    let dao = await createDao(myAccount);
+
+    const onboarding = await getContract(dao, "onboarding", OnboardingContract);
+
+    try {
+      await onboarding.processProposal(dao.address, "0x1", {
+        from: myAccount,
+        gasPrice: toBN("0"),
+      });
+    } catch (err) {
+      assert.equal(err.reason, "proposal does not exist");
     }
   });
 });

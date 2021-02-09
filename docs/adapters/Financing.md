@@ -18,7 +18,7 @@ The member needs to have enough shares and/or loot in order to convert it to fun
 
 DAORegistry Access Flags: `SUBMIT_PROPOSAL`, `SPONSOR_PROPOSAL`, `PROCESS_PROPOSAL`.
 
-Bank Access Flags: `ADD_TO_BALANCE`, `SUB_FROM_BALANCE`.
+Bank Extension Access Flags: `ADD_TO_BALANCE`, `SUB_FROM_BALANCE`.
 
 ## Adapter state
 
@@ -39,10 +39,27 @@ Bank Access Flags: `ADD_TO_BALANCE`, `SUB_FROM_BALANCE`.
 
 - DaoRegistry
 
+  - gets Bank extension address.
   - checks if member address is not reserved.
-  - creates/sponsors/process the financing proposal.
+  - submits/sponsors/processes the financing proposal.
+  - gets Voting adapter address.
+
+- Voting
+
+  - gets address that sent the sponsorProposal transaction.
+  - starts new voting for the financing proposal.
+  - checks the voting results.
 
 ## Functions description and assumptions / checks
+
+### receive() external payable
+
+```solidity
+    /**
+     * @notice default fallback function to prevent from sending ether to the contract.
+     */
+    receive() external payable
+```
 
 ### function createFinancingRequest
 
@@ -86,6 +103,27 @@ Bank Access Flags: `ADD_TO_BALANCE`, `SUB_FROM_BALANCE`.
     ) external override
 ```
 
+### function \_sponsorProposal
+
+```solidity
+    /**
+     * @notice Sponsors a financing proposal to start the voting process.
+     * @dev Only members of the DAO can sponsor a financing proposal.
+     * @param dao The DAO Address.
+     * @param proposalId The proposal id.
+     * @param data Additional details about the sponsorship process.
+     * @param sponsoredBy The address of the sponsoring member.
+     * @param votingContract The voting contract used by the DAO.
+     */
+    function _sponsorProposal(
+        DaoRegistry dao,
+        bytes32 proposalId,
+        bytes memory data,
+        address sponsoredBy,
+        IVoting votingContract
+    ) internal
+```
+
 ### function processProposal
 
 ```solidity
@@ -104,4 +142,4 @@ Bank Access Flags: `ADD_TO_BALANCE`, `SUB_FROM_BALANCE`.
 
 ## Events
 
-No event are emitted from this adapter.
+No events are emitted from this adapter.

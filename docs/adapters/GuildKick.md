@@ -162,4 +162,4 @@ Bank Extension Access Flags: `WITHDRAW`, `INTERNAL_TRANSFER`, `SUB_FROM_BALANCE`
 
 ## Events
 
-None
+No events are emitted from this adapter.

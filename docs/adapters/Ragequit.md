@@ -131,6 +131,8 @@ There is no state tracking for this adapter.
 
 ## Events
 
+### event MemberRagequit
+
 ```solidity
     /**
      * @notice Event emitted when a member of the DAO executes a ragequit

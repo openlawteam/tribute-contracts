@@ -37,7 +37,7 @@ contract WithdrawContract is DaoConstants, MemberGuard {
     event Withdraw(address account, address token, uint256 amount);
 
     /**
-     * @notice default fallback function to prevent from sending ether to the contract
+     * @notice default fallback function to prevent from sending ether to the contract.
      */
     receive() external payable {
         revert("fallback revert");
