@@ -1,0 +1,277 @@
+pragma solidity ^0.8.0;
+
+// SPDX-License-Identifier: MIT
+
+import "../core/DaoConstants.sol";
+import "../core/DaoRegistry.sol";
+import "../guards/MemberGuard.sol";
+import "../adapters/interfaces/IVoting.sol";
+import "../adapters/interfaces/IDistribute.sol";
+import "../helpers/FairShareHelper.sol";
+import "../extensions/Bank.sol";
+
+/**
+MIT License
+
+Copyright (c) 2020 Openlaw
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.
+ */
+
+contract DistributeContract is IDistribute, DaoConstants, MemberGuard {
+
+    // The distribution status
+    enum DistributionStatus {NOT_STARTED, IN_PROGRESS, DONE}
+
+    // State of the guild kick proposal
+    struct Distribution {
+        // The distribution token in which the members should receive the funds. Must be supported by the DAO.
+        address token;
+        // The amount to distribute.
+        uint256 amount;
+        // The share holder address that will receive the funds. If 0x0, the funds will be distributed to all members of the DAO.
+        address shareHolderAddr;
+        // The distribution status.
+        DistributionStatus status;
+        // Current iteration index to control the cached for-loop.
+        uint256 currentIndex;
+        // The block number in which the proposal has been created.
+        uint256 blockNumber;
+    }
+
+    // Keeps track of all the distributions executed per DAO.
+    mapping(address => mapping(bytes32 => GuildKick)) public distributions;
+
+    // Keeps track of the latest ongoing distribution proposal per DAO to ensure only 1 proposal can be processed at a time.
+    mapping(address => bytes32) public ongoingDistributions;
+
+    /**
+     * @notice default fallback function to prevent from sending ether to the contract.
+     */
+    receive() external payable {
+        revert("fallback revert");
+    }
+
+    /**
+     * @notice Creates a distribution proposal for one or all members of the DAO, opens it for voting, and sponsors it.
+     * @dev Only tokens that are allowed by the Bank are accepted.
+     * @dev If the shareHolderAddr is 0x0, then the funds will be distributed to all members of the DAO.
+     * @dev Proposal ids can not be reused.
+     * @dev The amount must be greater than zero.
+     * @param dao The dao address.
+     * @param proposalId The guild kick proposal id.
+     * @param shareHolderAddr The member address that should receive the funds, if 0x0, the funds will be distributed to all members of the DAO.
+     * @param token The distribution token in which the members should receive the funds. Must be supported by the DAO.
+     * @param amount The amount to distribute.
+     * @param data Additional information related to the distribution proposal.
+     */
+    function submitProposal(
+        DaoRegistry dao,
+        bytes32 proposalId,
+        address shareHolderAddr,
+        address token,
+        int256 amount,
+        bytes calldata data
+    ) external override {
+        IVoting votingContract = IVoting(dao.getAdapterAddress(VOTING));
+        address submittedBy =
+            votingContract.getSenderAddress(
+                dao,
+                address(this),
+                data,
+                msg.sender
+            );
+
+        require(amount > 0, "invalid amount");
+
+        _submitProposal(dao, proposalId, shareHolderAddr, token, amount, data, submittedBy);
+    }
+
+    function _submitProposal(
+        DaoRegistry dao,
+        bytes32 proposalId,
+        address shareHolderAddr,
+        address token,
+        uint256 amount,
+        bytes calldata data,
+        address submittedBy
+    ) internal onlyMember2(dao, submittedBy) {
+        // Creates the distribution proposal.
+        dao.submitProposal(proposalId);
+
+        BankExtension bank = BankExtension(dao.getExtensionAddress(BANK));
+        require(bank.isTokenAllowed(token), "token not allowed");
+
+        // Only check the number of shares if there is a valid share holder address.
+        if (shareHolderAddr != address(0x0)) {
+            // Gets the number of shares of the member
+            uint256 sharesToBurn = bank.balanceOf(shareHolderAddr, SHARES);
+            // Checks if the member has enough shares to reveice the funds.
+            require(sharesToBurn > 0, "not enough shares");
+        }
+       
+        // Saves the state of the proposal.
+        distributions[address(dao)][proposalId] = Distribution(
+            token,
+            amount,
+            shareHolderAddr,
+            DistributionStatus.NOT_STARTED,
+            0,
+            block.number
+        );
+
+        // Starts the voting process for the proposal.
+        IVoting votingContract = IVoting(dao.getAdapterAddress(VOTING));
+        votingContract.startNewVotingForProposal(dao, proposalId, data);
+
+        // Sponsors the proposal.
+        dao.sponsorProposal(proposalId, submittedBy);
+    }
+
+    /**
+     * @notice Process the distribution proposal, calculates the fair amount of funds to distribute to the members based on the shares holdings.
+     * @dev A distribution proposal proposal must be in progress.
+     * @dev Only one proposal per DAO can be executed at time.
+     * @dev Only active members can reveice funds.
+     * @dev Only proposals that passed the voting can be set to In Progress status.
+     * @param dao The dao address.
+     * @param proposalId The distribution proposal id.
+     */
+    function processProposal(DaoRegistry dao, bytes32 proposalId)
+        external
+        override
+    {
+        dao.processProposal(proposalId);
+
+        // Checks if the proposal exists or is not in progress yet.
+        Distribution storage distribution = distributions[address(dao)][proposalId];
+        require(
+            distribution.status == DistributionStatus.NOT_STARTED,
+            "proposal already completed or in progress"
+        );
+
+        // Checks if there is an ongoing proposal, only one proposal can be executed at time.
+        bytes32 ongoingProposalId = ongoingDistributions[address(dao)];
+        require(
+            ongoingProposalId == bytes32(0) ||
+                distributions[address(dao)][ongoingProposalId].status !=
+                DistributionStatus.IN_PROGRESS,
+            "another proposal already in progress"
+        );
+
+        // Checks if the proposal has passed.
+        IVoting votingContract = IVoting(dao.getAdapterAddress(VOTING));
+        require(
+            votingContract.voteResult(dao, proposalId) ==
+                IVoting.VotingState.PASS,
+            "proposal did not pass"
+        );
+
+        distribution.status = GuildKickStatus.IN_PROGRESS;
+        distribution.blockNumber = block.number;
+        ongoingDistributions[address(dao)] = proposalId;
+    }
+
+    /**
+     * @notice Transfers the funds from the Guild account to the member's internal accounts.
+     * @notice The amount of funds is caculated using the historical number of shares of each member.
+     * @dev A distribution proposal must be in progress.
+     * @dev Only proposals that have passed the voting can be completed.
+     * @dev Only active members can receive funds.
+     * @param dao The dao address.
+     * @param toIndex The index to control the cached for-loop.
+     */
+    function distribute(DaoRegistry dao, uint256 toIndex) external override {
+        // Checks if the proposal does not exist or is not completed yet
+        bytes32 ongoingProposalId = ongoingDistributions[address(dao)];
+        Distribution storage distribution = kicks[address(dao)][ongoingProposalId];
+        uint256 blockNumber = distribution.blockNumber;
+        require(
+            distribution.status == DistributionStatus.IN_PROGRESS,
+            "distribution completed or does not exist"
+        );
+
+        // Check if the given index was already processed
+        uint256 currentIndex = distribution.currentIndex;
+        require(currentIndex <= toIndex, "toIndex too low");
+
+        // Get the total number of shares when the proposal was processed.
+        BankExtension bank = BankExtension(dao.getExtensionAddress(BANK));
+        uint256 totalShares = bank.getPriorAmount(TOTAL, SHARES, blockNumber);
+
+        if (distribution.shareHolderAddr != address(0x0)) {
+            // Distributes the funds to 1 share holder only
+            _distribute(dao, distribution.shareHolderAddr, token, amount, totalShares, blockNumber);
+            distribution.status = DistributionStatus.DONE;
+            //emit event
+        } else {
+            // Set the max index supported which is based on the number of members
+            uint256 nbMembers = dao.getNbMembers();
+            uint256 maxIndex = toIndex;
+            if (maxIndex > nbMembers) {
+                maxIndex = nbMembers;
+            }
+            // Distributes the funds to all share holders / active members of the DAO.
+            for (uint256 i = currentIndex; i < maxIndex; i++) {
+                _distribute(dao, dao.getMemberAddress(i), token, amount, totalShares, blockNumber);
+            }
+            distribution.currentIndex = maxIndex;
+            if (maxIndex == nbMembers) {
+                distribution.status = DistributionStatus.DONE;
+                //emit event
+            }
+        }
+        
+    }
+
+    /** 
+     * @notice Transfers the funds from the internal Guild account to the internal member's account.
+     */
+    function _distribute(
+        DaoRegistry dao, 
+        address shareHolderAddr,
+        address token,
+        uint256 amount,
+        uint256 daoShares,
+        uint256 blockNumber
+        ) internal {
+
+            require(shareHolderAddr != address(0x0), "invalid member address");
+            
+            uint256 memberShares = bank.getPriorAmount(shareHolderAddr, SHARES, blockNumber);
+            require(memberShares != 0, "not enough address");
+            
+            //TODO double check the math
+            uint256 amountToDistribute =
+                FairShareHelper.calc(
+                    amount,
+                    memberShares,
+                    daoShares
+                );
+
+            if (amountToDistribute > 0) {
+                bank.internalTransfer(
+                    GUILD,
+                    shareHolderAddr,
+                    token,
+                    amountToDistribute
+                );
+            }
+        }
+}

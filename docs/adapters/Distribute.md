@@ -22,9 +22,10 @@ Bank Extension Access Flags: `INTERNAL_TRANSFER`, `ADD_TO_BALANCE`.
 
 - `DistributionStatus`: The distribution status (`Not Started`, `In Progress`, `Done`).
 - `Distribution`: State of the proposal.
-  - `token`: The distribution token in which the members should receive the funds.
+  - `token`: The distribution token in which the members should receive the funds. Must be supported by the DAO.
+  - `amount`: The amount to distribute.
   - `status`: The distribution status.
-  - `memberAddr`: The member address that should receive the funds, if 0x0, the funds will be distributed to all members of the DAO.
+  - `shareHolderAddr`: The member address that should receive the funds, if 0x0, the funds will be distributed to all members of the DAO.
   - `currentIndex`: Current iteration index to control the cached for-loop.
   - `blockNumber`: The block number in which the proposal has been created.
 - `distributions`: Keeps track of all the distributions executed per DAO.
@@ -70,7 +71,19 @@ Bank Extension Access Flags: `INTERNAL_TRANSFER`, `ADD_TO_BALANCE`.
 
 ```
 
-### \_submitKickProposal
+### \_submitProposal
+
+```solidity
+
+```
+
+### processProposal
+
+```solidity
+
+```
+
+### distribute
 
 ```solidity
 
