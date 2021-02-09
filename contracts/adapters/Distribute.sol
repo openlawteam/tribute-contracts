@@ -36,6 +36,10 @@ SOFTWARE.
 
 contract DistributeContract is IDistribute, DaoConstants, MemberGuard {
 
+    // Event to indicate the distribution process has been completed
+    // if the shareHolder address is 0x0, then the amount were distributed to all members of the DAO.
+    event Distributed(address token, uint256 amount, address shareHolder);
+
     // The distribution status
     enum DistributionStatus {NOT_STARTED, IN_PROGRESS, DONE}
 
@@ -56,7 +60,7 @@ contract DistributeContract is IDistribute, DaoConstants, MemberGuard {
     }
 
     // Keeps track of all the distributions executed per DAO.
-    mapping(address => mapping(bytes32 => GuildKick)) public distributions;
+    mapping(address => mapping(bytes32 => Distribution)) public distributions;
 
     // Keeps track of the latest ongoing distribution proposal per DAO to ensure only 1 proposal can be processed at a time.
     mapping(address => bytes32) public ongoingDistributions;
@@ -121,9 +125,9 @@ contract DistributeContract is IDistribute, DaoConstants, MemberGuard {
         // Only check the number of shares if there is a valid share holder address.
         if (shareHolderAddr != address(0x0)) {
             // Gets the number of shares of the member
-            uint256 sharesToBurn = bank.balanceOf(shareHolderAddr, SHARES);
+            uint256 shares = bank.balanceOf(shareHolderAddr, SHARES);
             // Checks if the member has enough shares to reveice the funds.
-            require(sharesToBurn > 0, "not enough shares");
+            require(shares > 0, "not enough shares");
         }
        
         // Saves the state of the proposal.
@@ -183,7 +187,7 @@ contract DistributeContract is IDistribute, DaoConstants, MemberGuard {
             "proposal did not pass"
         );
 
-        distribution.status = GuildKickStatus.IN_PROGRESS;
+        distribution.status = DistributionStatus.IN_PROGRESS;
         distribution.blockNumber = block.number;
         ongoingDistributions[address(dao)] = proposalId;
     }
@@ -215,11 +219,20 @@ contract DistributeContract is IDistribute, DaoConstants, MemberGuard {
         BankExtension bank = BankExtension(dao.getExtensionAddress(BANK));
         uint256 totalShares = bank.getPriorAmount(TOTAL, SHARES, blockNumber);
 
-        if (distribution.shareHolderAddr != address(0x0)) {
+        address shareHolderAddr = distribution.shareHolderAddr;
+        if (shareHolderAddr != address(0x0)) {
             // Distributes the funds to 1 share holder only
-            _distribute(dao, distribution.shareHolderAddr, token, amount, totalShares, blockNumber);
+            uint256 memberShares = bank.getPriorAmount(shareHolderAddr, SHARES, blockNumber);
+            require(memberShares != 0, "not enough address");
+            uint256 
+            bank.internalTransfer(
+                GUILD,
+                shareHolderAddr,
+                token,
+                amount
+            );
             distribution.status = DistributionStatus.DONE;
-            //emit event
+            emit Distributed(token, amount, shareHolderAddr);
         } else {
             // Set the max index supported which is based on the number of members
             uint256 nbMembers = dao.getNbMembers();
@@ -234,7 +247,7 @@ contract DistributeContract is IDistribute, DaoConstants, MemberGuard {
             distribution.currentIndex = maxIndex;
             if (maxIndex == nbMembers) {
                 distribution.status = DistributionStatus.DONE;
-                //emit event
+                emit Distributed(token, amount, shareHolderAddr);
             }
         }
         
@@ -257,7 +270,6 @@ contract DistributeContract is IDistribute, DaoConstants, MemberGuard {
             uint256 memberShares = bank.getPriorAmount(shareHolderAddr, SHARES, blockNumber);
             require(memberShares != 0, "not enough address");
             
-            //TODO double check the math
             uint256 amountToDistribute =
                 FairShareHelper.calc(
                     amount,

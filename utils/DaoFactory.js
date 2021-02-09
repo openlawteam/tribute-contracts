@@ -276,7 +276,7 @@ async function deployDao(
   let pastEvents = await bankFactory.getPastEvents();  
   let {bankAddress} = pastEvents[0].returnValues;
   let bank = await BankExtension.at(bankAddress);
-  let creator = await dao.getMemberAddress(0);
+  let creator = await dao.getMemberAddress(1);
 
   dao.addExtension(sha3("bank"), bank.address, creator);
 
