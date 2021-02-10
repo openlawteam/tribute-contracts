@@ -107,6 +107,10 @@ contract DistributeContract is IDistribute, DaoConstants, MemberGuard {
         _submitProposal(dao, proposalId, shareHolderAddr, token, amount, data, submittedBy);
     }
 
+    /** 
+     * @notice Creates the proposal, starts the voting process and sponsors the proposal.
+     * @dev If the share holder address was provided in the params, the share holder must have enough shares to receive the funds.
+     */
     function _submitProposal(
         DaoRegistry dao,
         bytes32 proposalId,
@@ -221,10 +225,9 @@ contract DistributeContract is IDistribute, DaoConstants, MemberGuard {
 
         address shareHolderAddr = distribution.shareHolderAddr;
         if (shareHolderAddr != address(0x0)) {
-            // Distributes the funds to 1 share holder only
             uint256 memberShares = bank.getPriorAmount(shareHolderAddr, SHARES, blockNumber);
             require(memberShares != 0, "not enough address");
-            uint256 
+            // Distributes the funds to 1 share holder only
             bank.internalTransfer(
                 GUILD,
                 shareHolderAddr,
@@ -240,7 +243,7 @@ contract DistributeContract is IDistribute, DaoConstants, MemberGuard {
             if (maxIndex > nbMembers) {
                 maxIndex = nbMembers;
             }
-            // Distributes the funds to all share holders / active members of the DAO.
+            // Distributes the funds to all share holders of the DAO and ignores non-active members.
             for (uint256 i = currentIndex; i < maxIndex; i++) {
                 _distribute(dao, dao.getMemberAddress(i), token, amount, totalShares, blockNumber);
             }
@@ -250,11 +253,11 @@ contract DistributeContract is IDistribute, DaoConstants, MemberGuard {
                 emit Distributed(token, amount, shareHolderAddr);
             }
         }
-        
     }
 
     /** 
      * @notice Transfers the funds from the internal Guild account to the internal member's account.
+     * @dev If the member was kicked out, is in jail, or is an advisor, will not receive the funds.
      */
     function _distribute(
         DaoRegistry dao, 
@@ -264,26 +267,23 @@ contract DistributeContract is IDistribute, DaoConstants, MemberGuard {
         uint256 daoShares,
         uint256 blockNumber
         ) internal {
-
             require(shareHolderAddr != address(0x0), "invalid member address");
-            
             uint256 memberShares = bank.getPriorAmount(shareHolderAddr, SHARES, blockNumber);
-            require(memberShares != 0, "not enough address");
-            
-            uint256 amountToDistribute =
-                FairShareHelper.calc(
+            if (memberShares > 0 ) {
+                uint256 amountToDistribute = FairShareHelper.calc(
                     amount,
                     memberShares,
                     daoShares
                 );
 
-            if (amountToDistribute > 0) {
-                bank.internalTransfer(
-                    GUILD,
-                    shareHolderAddr,
-                    token,
-                    amountToDistribute
-                );
+                if (amountToDistribute > 0) {
+                    bank.internalTransfer(
+                        GUILD,
+                        shareHolderAddr,
+                        token,
+                        amountToDistribute
+                    );
+                }
             }
         }
 }
