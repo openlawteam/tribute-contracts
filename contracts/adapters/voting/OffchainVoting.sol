@@ -382,13 +382,15 @@ contract OffchainVotingContract is
         }
 
         BankExtension bank = BankExtension(dao.getExtensionAddress(BANK));
-        if (diff * 2 > bank.getPriorAmount(TOTAL, SHARES, vote.snapshot)) {
+        uint256 totalWeight = bank.getPriorAmount(TOTAL, SHARES, vote.snapshot);
+        uint256 unvotedWeights = totalWeight - nbYes - nbNo;
+        if (diff > unvotedWeights) {
             return true;
         }
 
         uint256 votingPeriod = dao.getConfiguration(VotingPeriod);
 
-        return vote.startingTime + votingPeriod > block.timestamp;
+        return vote.startingTime + votingPeriod <= block.timestamp;
     }
 
     function _submitVoteResult(

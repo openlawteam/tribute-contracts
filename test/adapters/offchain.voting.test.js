@@ -400,6 +400,8 @@ contract("LAOLAND - Offchain Voting Module", async (accounts) => {
     console.log("result", result);
     console.log("voteResultTree.getHexRoot()", voteResultTree.getHexRoot());
 
+    await advanceTime(10000);
+
     await voting.submitVoteResult(
       dao.address,
       "0x1",
