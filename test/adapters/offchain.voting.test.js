@@ -241,7 +241,7 @@ contract("LAOLAND - Offchain Voting Module", async (accounts) => {
     assert.equal(hashStruct, solidityHash);
   });
 
-  it.only("should be possible to propose a new voting by signing the proposal hash", async () => {
+  it("should be possible to propose a new voting by signing the proposal hash", async () => {
     const myAccount = accounts[1];
     let { dao, voting, bank } = await createOffchainVotingDao(myAccount);
 
