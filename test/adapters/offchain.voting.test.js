@@ -1,12 +1,6 @@
 // Whole-script strict mode syntax
 "use strict";
 
-const {
-  createVote,
-  toStepNode,
-  prepareVoteResult,
-} = require("@openlaw/snapshot-js-erc712");
-
 /**
 MIT License
 
@@ -46,15 +40,15 @@ const {
   BankExtension,
 } = require("../../utils/DaoFactory.js");
 const {
-  // createVote,
+  createVote,
   getDomainDefinition,
   TypedDataUtils,
   getMessageERC712Hash,
   prepareProposalPayload,
   prepareVoteProposalData,
   prepareProposalMessage,
-  // prepareVoteResult,
-  // toStepNode,
+  prepareVoteResult,
+  toStepNode,
   getVoteStepDomainDefinition,
   validateMessage,
   SigUtilSigner,
@@ -308,18 +302,7 @@ contract("LAOLAND - Offchain Voting Module", async (accounts) => {
       prepareVoteProposalData(proposalData)
     );
 
-    // const voteEntry = await createVote(proposalHash, members[0].address, true);
-    // @todo REMOVE.
-    const voteEntry = await createVote({
-      account: members[0].address,
-      proposalHash,
-      voteYes: true,
-      timestamp: Math.floor(Date.now() / 1000),
-    });
-
-    // @todo REMOVE.
-    // Add weight. Maybe this is the issue as the weight was not set correctly before?
-    voteEntry.weight = 1;
+    const voteEntry = await createVote(proposalHash, members[0].address, true);
 
     voteEntry.sig = signer(voteEntry, dao.address, onboarding.address, chainId);
     assert.equal(
@@ -334,38 +317,21 @@ contract("LAOLAND - Offchain Voting Module", async (accounts) => {
       )
     );
 
-    console.log("voteEntry", voteEntry);
-
-    // const { voteResultTree, votes } = await prepareVoteResult(
-    //   [voteEntry],
-    //   dao,
-    //   bank,
-    //   onboarding.address,
-    //   chainId,
-    //   proposalPayload.snapshot
-    // );
-    // @todo REMOVE.
-    const { voteResultTree, votes } = await prepareVoteResult({
-      actionId: onboarding.address,
+    const { voteResultTree, votes } = await prepareVoteResult(
+      [voteEntry],
+      dao,
+      bank,
+      onboarding.address,
       chainId,
-      daoAddress: dao.address,
-      votes: [voteEntry],
-    });
-    // const result = toStepNode(
-    //   votes[0],
-    //   dao.address,
-    //   onboarding.address,
-    //   chainId,
-    //   voteResultTree
-    // );
-    // @todo REMOVE.
-    const result = toStepNode({
-      actionId: onboarding.address,
+      proposalPayload.snapshot
+    );
+    const result = toStepNode(
+      votes[0],
+      dao.address,
+      onboarding.address,
       chainId,
-      merkleTree: voteResultTree,
-      step: votes[0],
-      verifyingContract: dao.address,
-    });
+      voteResultTree
+    );
 
     result.rootSig = signer(
       { root: voteResultTree.getHexRoot(), type: "result" },
@@ -396,10 +362,6 @@ contract("LAOLAND - Offchain Voting Module", async (accounts) => {
     );
     assert.equal(solAddress, members[0].address);
 
-    // @todo REMOVE.
-    console.log("result", result);
-    console.log("voteResultTree.getHexRoot()", voteResultTree.getHexRoot());
-
     await advanceTime(10000);
 
     await voting.submitVoteResult(
@@ -409,7 +371,9 @@ contract("LAOLAND - Offchain Voting Module", async (accounts) => {
       result,
       { from: myAccount, gasPrice: toBN("0") }
     );
+
     await advanceTime(10000);
+
     await onboarding.processProposal(dao.address, "0x1", {
       from: myAccount,
       gasPrice: toBN("0"),
