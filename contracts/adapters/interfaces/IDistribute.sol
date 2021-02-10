@@ -34,7 +34,7 @@ interface IDistribute {
         bytes32 proposalId,
         address shareHolderAdrr,
         address token,
-        int256 amount,
+        uint256 amount,
         bytes calldata data
     ) external;
 

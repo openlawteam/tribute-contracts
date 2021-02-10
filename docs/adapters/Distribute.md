@@ -16,7 +16,7 @@ The member needs to have at least 1 share to be able to receive funds from a dis
 
 DAORegistry Access Flags: `SUBMIT_PROPOSAL`, `SPONSOR_PROPOSAL`, `PROCESS_PROPOSAL`.
 
-Bank Extension Access Flags: `INTERNAL_TRANSFER`, `ADD_TO_BALANCE`.
+Bank Extension Access Flags: `INTERNAL_TRANSFER`.
 
 ## Adapter state
 
