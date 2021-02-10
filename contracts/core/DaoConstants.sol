@@ -40,6 +40,7 @@ abstract contract DaoConstants {
     bytes32 internal constant BANK = keccak256("bank");
     bytes32 internal constant EXECUTION = keccak256("execution");
     bytes32 internal constant CONFIGURATION = keccak256("configuration");
+    bytes32 internal constant DISTRIBUTE = keccak256("distribute");
 
     address internal constant GUILD = address(0xdead);
     address internal constant TOTAL = address(0xbabe);

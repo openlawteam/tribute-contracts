@@ -68,27 +68,98 @@ Bank Extension Access Flags: `INTERNAL_TRANSFER`, `ADD_TO_BALANCE`.
 ### function submitProposal
 
 ```solidity
+    /**
+     * @notice Creates a distribution proposal for one or all members of the DAO, opens it for voting, and sponsors it.
+     * @dev Only tokens that are allowed by the Bank are accepted.
+     * @dev If the shareHolderAddr is 0x0, then the funds will be distributed to all members of the DAO.
+     * @dev Proposal ids can not be reused.
+     * @dev The amount must be greater than zero.
+     * @param dao The dao address.
+     * @param proposalId The guild kick proposal id.
+     * @param shareHolderAddr The member address that should receive the funds, if 0x0, the funds will be distributed to all members of the DAO.
+     * @param token The distribution token in which the members should receive the funds. Must be supported by the DAO.
+     * @param amount The amount to distribute.
+     * @param data Additional information related to the distribution proposal.
+     */
+    function submitProposal(
+        DaoRegistry dao,
+        bytes32 proposalId,
+        address shareHolderAddr,
+        address token,
+        int256 amount,
+        bytes calldata data
+    ) external
 
 ```
 
 ### \_submitProposal
 
 ```solidity
-
+    /**
+     * @notice Creates the proposal, starts the voting process and sponsors the proposal.
+     * @dev If the share holder address was provided in the params, the share holder must have enough shares to receive the funds.
+     */
+    function _submitProposal(
+        DaoRegistry dao,
+        bytes32 proposalId,
+        address shareHolderAddr,
+        address token,
+        uint256 amount,
+        bytes calldata data,
+        address submittedBy
+    ) internal onlyMember2(dao, submittedBy)
 ```
 
 ### processProposal
 
 ```solidity
+    /**
+     * @notice Process the distribution proposal, calculates the fair amount of funds to distribute to the members based on the shares holdings.
+     * @dev A distribution proposal proposal must be in progress.
+     * @dev Only one proposal per DAO can be executed at time.
+     * @dev Only active members can reveice funds.
+     * @dev Only proposals that passed the voting can be set to In Progress status.
+     * @param dao The dao address.
+     * @param proposalId The distribution proposal id.
+     */
+    function processProposal(DaoRegistry dao, bytes32 proposalId)
+        external
 
 ```
 
 ### distribute
 
 ```solidity
+    /**
+     * @notice Transfers the funds from the Guild account to the member's internal accounts.
+     * @notice The amount of funds is caculated using the historical number of shares of each member.
+     * @dev A distribution proposal must be in progress.
+     * @dev Only proposals that have passed the voting can be completed.
+     * @dev Only active members can receive funds.
+     * @param dao The dao address.
+     * @param toIndex The index to control the cached for-loop.
+     */
+    function distribute(DaoRegistry dao, uint256 toIndex) external override
 
+```
+
+### \_distribute
+
+```solidity
+    /**
+     * @notice Transfers the funds from the internal Guild account to the internal member's account.
+     * @dev If the member was kicked out, is in jail, or is an advisor, will not receive the funds.
+     */
+    function _distribute(
+        DaoRegistry dao,
+        address shareHolderAddr,
+        address token,
+        uint256 amount,
+        uint256 daoShares,
+        uint256 blockNumber
+        ) internal
 ```
 
 ## Events
 
-TODO emit distribution event
+When the distribution process is completed the `Distributed` event is emitted with the `token`, `amount`, and `shareHolder` parameters. If the `shareHolder` is `0x0`, the amount was distributed to **all** members of the DAO, otherwise it was distributed to the share holder only.
