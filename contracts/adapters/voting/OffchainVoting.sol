@@ -374,19 +374,23 @@ contract OffchainVotingContract is
         uint256 nbNo
     ) internal view returns (bool) {
         uint256 diff;
-        if (vote.nbYes > nbNo) {
+
+        if (nbYes > nbNo) {
             diff = nbYes - nbNo;
         } else {
             diff = nbNo - nbYes;
         }
+
         BankExtension bank = BankExtension(dao.getExtensionAddress(BANK));
-        if (diff * 2 > bank.getPriorAmount(TOTAL, SHARES, vote.snapshot)) {
+        uint256 totalWeight = bank.getPriorAmount(TOTAL, SHARES, vote.snapshot);
+        uint256 unvotedWeights = totalWeight - nbYes - nbNo;
+        if (diff > unvotedWeights) {
             return true;
         }
 
         uint256 votingPeriod = dao.getConfiguration(VotingPeriod);
 
-        return vote.startingTime + votingPeriod > block.timestamp;
+        return vote.startingTime + votingPeriod <= block.timestamp;
     }
 
     function _submitVoteResult(

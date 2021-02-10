@@ -362,6 +362,8 @@ contract("LAOLAND - Offchain Voting Module", async (accounts) => {
     );
     assert.equal(solAddress, members[0].address);
 
+    await advanceTime(10000);
+
     await voting.submitVoteResult(
       dao.address,
       "0x1",
@@ -369,7 +371,9 @@ contract("LAOLAND - Offchain Voting Module", async (accounts) => {
       result,
       { from: myAccount, gasPrice: toBN("0") }
     );
+
     await advanceTime(10000);
+
     await onboarding.processProposal(dao.address, "0x1", {
       from: myAccount,
       gasPrice: toBN("0"),
