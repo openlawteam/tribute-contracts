@@ -36,12 +36,11 @@ const {
   GUILD,
   ETH_TOKEN,
   SHARES,
+  LOOT,
   OnboardingContract,
   VotingContract,
   DistributeContract,
-  FinancingContract,
-  LOOT,
-  ManagingContract,
+  GuildKickContract,
   BankExtension,
 } = require("../../utils/DaoFactory.js");
 
@@ -120,6 +119,28 @@ contract("LAOLAND - Distribute Adapter", async (accounts) => {
       from: sponsor,
       gasPrice: toBN("0"),
     });
+  };
+
+  const guildKickProposal = async (
+    dao,
+    guildkickContract,
+    memberToKick,
+    sender,
+    proposalId = null
+  ) => {
+    const newProposalId = proposalId ? proposalId : "0x" + proposalCounter++;
+    await guildkickContract.submitKickProposal(
+      dao.address,
+      newProposalId,
+      memberToKick,
+      fromUtf8(""),
+      {
+        from: sender,
+        gasPrice: toBN("0"),
+      }
+    );
+
+    return { kickProposalId: newProposalId };
   };
 
   const distributeFundsProposal = async (
@@ -217,7 +238,6 @@ contract("LAOLAND - Distribute Adapter", async (accounts) => {
     });
 
     memberBalance = await bank.balanceOf(daoMember, ETH_TOKEN);
-    console.log(toBN(memberBalance).toString());
     assert.equal(toBN(memberBalance).toString(), amountToDistribute);
   });
 
@@ -322,5 +342,672 @@ contract("LAOLAND - Distribute Adapter", async (accounts) => {
     assert.equal(toBN(memberBBalance).toString(), 3);
     let ownerBalance = await bank.balanceOf(daoOwner, ETH_TOKEN);
     assert.equal(toBN(ownerBalance).toString(), 0);
+  });
+
+  it("should not be possible to create a proposal with the amount equals to 0", async () => {
+    const daoOwner = accounts[2];
+
+    let dao = await createDao(daoOwner);
+    const distributeContract = await getContract(
+      dao,
+      "distribute",
+      DistributeContract
+    );
+
+    // Submit distribute proposal with invalid amount
+    const amountToDistribute = 0;
+    try {
+      await distributeFundsProposal(
+        dao,
+        distributeContract,
+        ETH_TOKEN,
+        amountToDistribute,
+        daoOwner,
+        daoOwner
+      );
+      assert.fail("should not be possible to distribute 0 funds to members");
+    } catch (err) {
+      assert.equal(err.reason, "invalid amount");
+    }
+  });
+
+  it("should not be possible to create a proposal with an invalid token", async () => {
+    const daoOwner = accounts[2];
+
+    let dao = await createDao(daoOwner);
+    const distributeContract = await getContract(
+      dao,
+      "distribute",
+      DistributeContract
+    );
+
+    // Submit distribute proposal with invalid amount
+    const invalidToken = "0x0000000000000000000000000000000000000123";
+    try {
+      await distributeFundsProposal(
+        dao,
+        distributeContract,
+        invalidToken,
+        10,
+        daoOwner,
+        daoOwner
+      );
+      assert.fail(
+        "should not be possible to distribute funds using an invalid token"
+      );
+    } catch (err) {
+      assert.equal(err.reason, "token not allowed");
+    }
+  });
+
+  it("should not be possible to create a proposal if the sender is not a member", async () => {
+    const daoOwner = accounts[2];
+    const nonMember = accounts[5];
+
+    let dao = await createDao(daoOwner);
+    const distributeContract = await getContract(
+      dao,
+      "distribute",
+      DistributeContract
+    );
+
+    // Submit distribute proposal with invalid amount
+    const invalidToken = "0x0000000000000000000000000000000000000123";
+    try {
+      await distributeFundsProposal(
+        dao,
+        distributeContract,
+        invalidToken,
+        10,
+        daoOwner,
+        nonMember
+      );
+      assert.fail(
+        "should not be create a proposal if it was sent by a non member"
+      );
+    } catch (err) {
+      assert.equal(err.reason, "onlyMember");
+    }
+  });
+
+  it("should not be possible to create a proposal if the target member does not have shares (advisor)", async () => {
+    const daoOwner = accounts[2];
+    const advisor = accounts[3];
+
+    let dao = await createDao(daoOwner);
+    const distributeContract = await getContract(
+      dao,
+      "distribute",
+      DistributeContract
+    );
+    const onboarding = await getContract(dao, "onboarding", OnboardingContract);
+    const voting = await getContract(dao, "voting", VotingContract);
+    // New member joins as an Advisor (only receives LOOT)
+    await onboardingNewMember(
+      dao,
+      onboarding,
+      voting,
+      advisor,
+      daoOwner,
+      sharePrice,
+      LOOT,
+      10
+    );
+
+    // Submit distribute proposal with a non active member
+    try {
+      await distributeFundsProposal(
+        dao,
+        distributeContract,
+        ETH_TOKEN,
+        10,
+        advisor,
+        daoOwner
+      );
+      assert.fail(
+        "should not be create a proposal if the member does not have shares"
+      );
+    } catch (err) {
+      assert.equal(err.reason, "not enough shares");
+    }
+  });
+
+  it("should not be possible to create a proposal if the target member is in jail due to a guild kick", async () => {
+    const daoOwner = accounts[2];
+    const jailedMember = accounts[8];
+
+    let dao = await createDao(daoOwner);
+    const distributeContract = await getContract(
+      dao,
+      "distribute",
+      DistributeContract
+    );
+    const onboarding = await getContract(dao, "onboarding", OnboardingContract);
+    const voting = await getContract(dao, "voting", VotingContract);
+    // New member joins as an Advisor (only receives LOOT)
+    await onboardingNewMember(
+      dao,
+      onboarding,
+      voting,
+      jailedMember,
+      daoOwner,
+      sharePrice,
+      SHARES,
+      10
+    );
+
+    const guildkickContract = await getContract(
+      dao,
+      "guildkick",
+      GuildKickContract
+    );
+    let { kickProposalId } = await guildKickProposal(
+      dao,
+      guildkickContract,
+      jailedMember,
+      daoOwner
+    );
+    //Vote YES on kick proposal
+    await voting.submitVote(dao.address, kickProposalId, 1, {
+      from: daoOwner,
+      gasPrice: toBN("0"),
+    });
+    await advanceTime(10000);
+    await guildkickContract.processProposal(dao.address, kickProposalId, {
+      from: daoOwner,
+      gasPrice: toBN("0"),
+    });
+
+    // Submit distribute proposal with a member that is in jail
+    try {
+      await distributeFundsProposal(
+        dao,
+        distributeContract,
+        ETH_TOKEN,
+        10,
+        jailedMember,
+        daoOwner
+      );
+      assert.fail(
+        "should not be possible to create a proposal if the member does not have shares"
+      );
+    } catch (err) {
+      assert.equal(err.reason, "not enough shares");
+    }
+  });
+
+  it("should not be possible to create a proposal if the a non member is indicated to receive the funds", async () => {
+    const daoOwner = accounts[2];
+    const nonMember = accounts[3];
+
+    let dao = await createDao(daoOwner);
+    const distributeContract = await getContract(
+      dao,
+      "distribute",
+      DistributeContract
+    );
+
+    // Submit distribute proposal with a non member
+    try {
+      await distributeFundsProposal(
+        dao,
+        distributeContract,
+        ETH_TOKEN,
+        10,
+        nonMember,
+        daoOwner
+      );
+      assert.fail(
+        "should not be possible to create a proposal if a non member was indicated to receive the funds"
+      );
+    } catch (err) {
+      assert.equal(err.reason, "not enough shares");
+    }
+  });
+
+  it("should not be possible to create more than one proposal using the same proposal id", async () => {
+    const daoOwner = accounts[2];
+    const daoMember = accounts[3];
+
+    let dao = await createDao(daoOwner);
+    const bankAddress = await dao.getExtensionAddress(sha3("bank"));
+    const onboarding = await getContract(dao, "onboarding", OnboardingContract);
+    const voting = await getContract(dao, "voting", VotingContract);
+    const distributeContract = await getContract(
+      dao,
+      "distribute",
+      DistributeContract
+    );
+    await onboardingNewMember(
+      dao,
+      onboarding,
+      voting,
+      daoMember,
+      daoOwner,
+      sharePrice,
+      SHARES,
+      10
+    );
+
+    // Submit distribute proposal for the 1st time
+    let { proposalId } = await distributeFundsProposal(
+      dao,
+      distributeContract,
+      ETH_TOKEN,
+      10,
+      daoMember,
+      daoOwner
+    );
+
+    // Submit distribute proposal using the same id
+    try {
+      await distributeFundsProposal(
+        dao,
+        distributeContract,
+        ETH_TOKEN,
+        10,
+        daoMember,
+        daoOwner,
+        proposalId
+      );
+      assert.fail(
+        "should not be possible to create a proposal with the same id"
+      );
+    } catch (err) {
+      assert.equal(err.reason, "proposalId must be unique");
+    }
+  });
+
+  it("should not be possible to process a proposal that did not pass", async () => {
+    const daoOwner = accounts[2];
+    const daoMemberA = accounts[3];
+
+    let dao = await createDao(daoOwner);
+    const onboarding = await getContract(dao, "onboarding", OnboardingContract);
+    const voting = await getContract(dao, "voting", VotingContract);
+    const distributeContract = await getContract(
+      dao,
+      "distribute",
+      DistributeContract
+    );
+    await onboardingNewMember(
+      dao,
+      onboarding,
+      voting,
+      daoMemberA,
+      daoOwner,
+      sharePrice,
+      SHARES,
+      10
+    );
+
+    // Submit distribute proposal for the 1st time
+    let { proposalId } = await distributeFundsProposal(
+      dao,
+      distributeContract,
+      ETH_TOKEN,
+      5,
+      daoMemberA,
+      daoOwner
+    );
+
+    try {
+      // Starts to process the proposal
+      await distributeContract.processProposal(dao.address, proposalId, {
+        from: daoOwner,
+        gasPrice: toBN("0"),
+      });
+      assert.fail(
+        "should not be possible to process a proposal that did not pass"
+      );
+    } catch (err) {
+      assert.equal(err.reason, "proposal did not pass");
+    }
+  });
+
+  it("should not be possible to process a proposal that was already processed", async () => {
+    const daoOwner = accounts[2];
+    const daoMemberA = accounts[3];
+
+    let dao = await createDao(daoOwner);
+    const onboarding = await getContract(dao, "onboarding", OnboardingContract);
+    const voting = await getContract(dao, "voting", VotingContract);
+    const distributeContract = await getContract(
+      dao,
+      "distribute",
+      DistributeContract
+    );
+    await onboardingNewMember(
+      dao,
+      onboarding,
+      voting,
+      daoMemberA,
+      daoOwner,
+      sharePrice,
+      SHARES,
+      10
+    );
+
+    // Submit distribute proposal for the 1st time
+    let { proposalId } = await distributeFundsProposal(
+      dao,
+      distributeContract,
+      ETH_TOKEN,
+      5,
+      daoMemberA,
+      daoOwner
+    );
+
+    // Vote YES on the proposal
+    await voting.submitVote(dao.address, proposalId, 1, {
+      from: daoOwner,
+      gasPrice: toBN("0"),
+    });
+    await advanceTime(10000);
+
+    // Starts to process the proposal
+    await distributeContract.processProposal(dao.address, proposalId, {
+      from: daoOwner,
+      gasPrice: toBN("0"),
+    });
+
+    try {
+      // Attempt to process the same proposal that is already in progress
+      await distributeContract.processProposal(dao.address, proposalId, {
+        from: daoOwner,
+        gasPrice: toBN("0"),
+      });
+      assert.fail(
+        "should not be possible to process a proposal that was already processed"
+      );
+    } catch (err) {
+      // when the flag is already set, it means the proposal was processed already,
+      // so it is not possible to process it again
+      assert.equal(err.reason, "flag already set");
+    }
+  });
+
+  it("should not be possible to process a new proposal if there is another in progress", async () => {
+    const daoOwner = accounts[2];
+    const daoMemberA = accounts[3];
+
+    let dao = await createDao(daoOwner);
+    const onboarding = await getContract(dao, "onboarding", OnboardingContract);
+    const voting = await getContract(dao, "voting", VotingContract);
+    const distributeContract = await getContract(
+      dao,
+      "distribute",
+      DistributeContract
+    );
+    await onboardingNewMember(
+      dao,
+      onboarding,
+      voting,
+      daoMemberA,
+      daoOwner,
+      sharePrice,
+      SHARES,
+      10
+    );
+
+    // Submit distribute proposal for the 1st time
+    let { proposalId } = await distributeFundsProposal(
+      dao,
+      distributeContract,
+      ETH_TOKEN,
+      5,
+      daoMemberA,
+      daoOwner
+    );
+
+    // Vote YES on the proposal
+    await voting.submitVote(dao.address, proposalId, 1, {
+      from: daoOwner,
+      gasPrice: toBN("0"),
+    });
+    await advanceTime(10000);
+
+    // Starts to process the proposal
+    await distributeContract.processProposal(dao.address, proposalId, {
+      from: daoOwner,
+      gasPrice: toBN("0"),
+    });
+
+    // Creates a new distribution proposal
+    let result = await distributeFundsProposal(
+      dao,
+      distributeContract,
+      ETH_TOKEN,
+      5,
+      daoMemberA,
+      daoOwner
+    );
+
+    // Vote YES on the proposal
+    await voting.submitVote(dao.address, result.proposalId, 1, {
+      from: daoOwner,
+      gasPrice: toBN("0"),
+    });
+    await advanceTime(10000);
+
+    try {
+      // Attempt to process the new proposal but there is one in progress already
+      await distributeContract.processProposal(dao.address, result.proposalId, {
+        from: daoOwner,
+        gasPrice: toBN("0"),
+      });
+      assert.fail(
+        "should not be possible to process more than one proposal at time"
+      );
+    } catch (err) {
+      assert.equal(err.reason, "another proposal already in progress");
+    }
+  });
+
+  it("should not be possible to distribute the funds if the proposal is not in progress", async () => {
+    const daoOwner = accounts[2];
+    const daoMemberA = accounts[3];
+
+    let dao = await createDao(daoOwner);
+    const onboarding = await getContract(dao, "onboarding", OnboardingContract);
+    const voting = await getContract(dao, "voting", VotingContract);
+    const distributeContract = await getContract(
+      dao,
+      "distribute",
+      DistributeContract
+    );
+    await onboardingNewMember(
+      dao,
+      onboarding,
+      voting,
+      daoMemberA,
+      daoOwner,
+      sharePrice,
+      SHARES,
+      10
+    );
+
+    // Submit distribute proposal for the 1st time
+    await distributeFundsProposal(
+      dao,
+      distributeContract,
+      ETH_TOKEN,
+      5,
+      daoMemberA,
+      daoOwner
+    );
+
+    try {
+      // Try to distribute funds when the proposal is not in progress
+      await distributeContract.distribute(dao.address, 1, {
+        from: daoOwner,
+        gasPrice: toBN("0"),
+      });
+      assert.fail(
+        "should not be possible to distribute if the proposal is not in progress"
+      );
+    } catch (err) {
+      assert.equal(err.reason, "distribution completed or does not exist");
+    }
+  });
+
+  it("should be possible to distribute the funds if the member was put in jail after the distribution proposal was processed", async () => {
+    const daoOwner = accounts[2];
+    const jailedMember = accounts[8];
+
+    let dao = await createDao(daoOwner);
+    const distributeContract = await getContract(
+      dao,
+      "distribute",
+      DistributeContract
+    );
+    const onboarding = await getContract(dao, "onboarding", OnboardingContract);
+    const voting = await getContract(dao, "voting", VotingContract);
+    // New member joins as an Advisor (only receives LOOT)
+    await onboardingNewMember(
+      dao,
+      onboarding,
+      voting,
+      jailedMember,
+      daoOwner,
+      sharePrice,
+      SHARES,
+      10
+    );
+
+    // Creates the distribution proposal
+    let { proposalId } = await distributeFundsProposal(
+      dao,
+      distributeContract,
+      ETH_TOKEN,
+      10,
+      jailedMember,
+      daoOwner
+    );
+    await voting.submitVote(dao.address, proposalId, 1, {
+      from: daoOwner,
+      gasPrice: toBN("0"),
+    });
+    await advanceTime(10000);
+    // Starts to process the proposal
+    await distributeContract.processProposal(dao.address, proposalId, {
+      from: daoOwner,
+      gasPrice: toBN("0"),
+    });
+
+    // The members decide to kick out a share holder
+    const guildkickContract = await getContract(
+      dao,
+      "guildkick",
+      GuildKickContract
+    );
+    let { kickProposalId } = await guildKickProposal(
+      dao,
+      guildkickContract,
+      jailedMember,
+      daoOwner
+    );
+    await voting.submitVote(dao.address, kickProposalId, 1, {
+      from: daoOwner,
+      gasPrice: toBN("0"),
+    });
+    await advanceTime(10000);
+    // Share holder is put in jail and has the shares converted to Loot
+    await guildkickContract.processProposal(dao.address, kickProposalId, {
+      from: daoOwner,
+      gasPrice: toBN("0"),
+    });
+
+    // Attempt to distribute the funds after the member was jailed
+    await distributeContract.distribute(dao.address, 1, {
+      from: daoOwner,
+      gasPrice: toBN("0"),
+    });
+
+    const bankAddress = await dao.getExtensionAddress(sha3("bank"));
+    const bank = await BankExtension.at(bankAddress);
+    let jailedMemberBalance = await bank.balanceOf(jailedMember, ETH_TOKEN);
+    assert.equal(toBN(jailedMemberBalance).toString(), 10);
+  });
+
+  it("should not be possible to distribute the funds if the member was put in jail before the distribution proposal was processed", async () => {
+    const daoOwner = accounts[2];
+    const jailedMember = accounts[8];
+
+    let dao = await createDao(daoOwner);
+    const distributeContract = await getContract(
+      dao,
+      "distribute",
+      DistributeContract
+    );
+
+    const onboarding = await getContract(dao, "onboarding", OnboardingContract);
+    const voting = await getContract(dao, "voting", VotingContract);
+    // New member joins as an Advisor (only receives LOOT)
+    await onboardingNewMember(
+      dao,
+      onboarding,
+      voting,
+      jailedMember,
+      daoOwner,
+      sharePrice,
+      SHARES,
+      10
+    );
+
+    // Creates the distribution proposal
+    let { proposalId } = await distributeFundsProposal(
+      dao,
+      distributeContract,
+      ETH_TOKEN,
+      10,
+      jailedMember,
+      daoOwner
+    );
+    await voting.submitVote(dao.address, proposalId, 1, {
+      from: daoOwner,
+      gasPrice: toBN("0"),
+    });
+    await advanceTime(10000);
+
+    // The members decide to kick out a share holder
+    const guildkickContract = await getContract(
+      dao,
+      "guildkick",
+      GuildKickContract
+    );
+    let { kickProposalId } = await guildKickProposal(
+      dao,
+      guildkickContract,
+      jailedMember,
+      daoOwner
+    );
+    await voting.submitVote(dao.address, kickProposalId, 1, {
+      from: daoOwner,
+      gasPrice: toBN("0"),
+    });
+    await advanceTime(10000);
+
+    // Share holder is put in jail and has the shares converted to Loot
+    await guildkickContract.processProposal(dao.address, kickProposalId, {
+      from: daoOwner,
+      gasPrice: toBN("0"),
+    });
+
+    // The distribution proposal is processed after the guild kick proposal is processed
+    await distributeContract.processProposal(dao.address, proposalId, {
+      from: daoOwner,
+      gasPrice: toBN("0"),
+    });
+
+    try {
+      // Attempt to distribute the funds after the member was jailed
+      await distributeContract.distribute(dao.address, 1, {
+        from: daoOwner,
+        gasPrice: toBN("0"),
+      });
+    } catch (err) {
+      assert.equal(err.reason, "not enough shares");
+    }
   });
 });

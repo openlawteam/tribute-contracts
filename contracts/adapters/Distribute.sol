@@ -229,7 +229,7 @@ contract DistributeContract is IDistribute, DaoConstants, MemberGuard {
         address shareHolderAddr = distribution.shareHolderAddr;
         if (shareHolderAddr != address(0x0)) {
             uint256 memberShares = bank.getPriorAmount(shareHolderAddr, SHARES, blockNumber);
-            require(memberShares != 0, "not enough address");
+            require(memberShares != 0, "not enough shares");
             // Distributes the funds to 1 share holder only
             bank.internalTransfer(
                 GUILD,
