@@ -44,6 +44,7 @@ Adapters implemented in the Laoland project:
 - [Ragequit](https://github.com/openlawteam/laoland/blob/master/docs/adapters/Ragequit.md): gives the members the freedom to choose when it is the best time to exit the DAO for any given reason.
 - [Voting](https://github.com/openlawteam/laoland/blob/master/docs/adapters/Voting.md): adds the simple on chain voting governance process to the DAO.
 - [Withdraw](https://github.com/openlawteam/laoland/blob/master/docs/adapters/Withdraw.md): allows the members to withdraw their funds from the DAO bank.
+- [Distribute](https://github.com/openlawteam/laoland/blob/master/docs/adapters/Distribute.md): allows the members to distribute funds to one or all members of the DAO.
 
 Considerations:
 
