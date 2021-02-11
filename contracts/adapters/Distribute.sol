@@ -35,7 +35,6 @@ SOFTWARE.
  */
 
 contract DistributeContract is IDistribute, DaoConstants, MemberGuard {
-
     // Event to indicate the distribution process has been completed
     // if the shareHolder address is 0x0, then the amount were distributed to all members of the DAO.
     event Distributed(address token, uint256 amount, address shareHolder);
@@ -104,10 +103,18 @@ contract DistributeContract is IDistribute, DaoConstants, MemberGuard {
 
         require(amount > 0, "invalid amount");
 
-        _submitProposal(dao, proposalId, shareHolderAddr, token, amount, data, submittedBy);
+        _submitProposal(
+            dao,
+            proposalId,
+            shareHolderAddr,
+            token,
+            amount,
+            data,
+            submittedBy
+        );
     }
 
-    /** 
+    /**
      * @notice Creates the proposal, starts the voting process and sponsors the proposal.
      * @dev If the share holder address was provided in the params, the share holder must have enough shares to receive the funds.
      */
@@ -133,7 +140,7 @@ contract DistributeContract is IDistribute, DaoConstants, MemberGuard {
             // Checks if the member has enough shares to reveice the funds.
             require(shares > 0, "not enough shares");
         }
-       
+
         // Saves the state of the proposal.
         distributions[address(dao)][proposalId] = Distribution(
             token,
@@ -168,7 +175,8 @@ contract DistributeContract is IDistribute, DaoConstants, MemberGuard {
         dao.processProposal(proposalId);
 
         // Checks if the proposal exists or is not in progress yet.
-        Distribution storage distribution = distributions[address(dao)][proposalId];
+        Distribution storage distribution =
+            distributions[address(dao)][proposalId];
         require(
             distribution.status == DistributionStatus.NOT_STARTED,
             "proposal already completed or in progress"
@@ -208,7 +216,8 @@ contract DistributeContract is IDistribute, DaoConstants, MemberGuard {
     function distribute(DaoRegistry dao, uint256 toIndex) external override {
         // Checks if the proposal does not exist or is not completed yet
         bytes32 ongoingProposalId = ongoingDistributions[address(dao)];
-        Distribution storage distribution = distributions[address(dao)][ongoingProposalId];
+        Distribution storage distribution =
+            distributions[address(dao)][ongoingProposalId];
         uint256 blockNumber = distribution.blockNumber;
         require(
             distribution.status == DistributionStatus.IN_PROGRESS,
@@ -228,15 +237,11 @@ contract DistributeContract is IDistribute, DaoConstants, MemberGuard {
 
         address shareHolderAddr = distribution.shareHolderAddr;
         if (shareHolderAddr != address(0x0)) {
-            uint256 memberShares = bank.getPriorAmount(shareHolderAddr, SHARES, blockNumber);
+            uint256 memberShares =
+                bank.getPriorAmount(shareHolderAddr, SHARES, blockNumber);
             require(memberShares != 0, "not enough shares");
             // Distributes the funds to 1 share holder only
-            bank.internalTransfer(
-                GUILD,
-                shareHolderAddr,
-                token,
-                amount
-            );
+            bank.internalTransfer(GUILD, shareHolderAddr, token, amount);
             distribution.status = DistributionStatus.DONE;
             emit Distributed(token, amount, shareHolderAddr);
         } else {
@@ -249,13 +254,11 @@ contract DistributeContract is IDistribute, DaoConstants, MemberGuard {
             // Distributes the funds to all share holders of the DAO and ignores non-active members.
             for (uint256 i = currentIndex; i < maxIndex; i++) {
                 address memberAddr = dao.getMemberAddress(i);
-                uint256 memberShares = bank.getPriorAmount(memberAddr, SHARES, blockNumber);
-                if (memberShares > 0 ) {
-                    uint256 amountToDistribute = FairShareHelper.calc(
-                        amount,
-                        memberShares,
-                        totalShares
-                    );
+                uint256 memberShares =
+                    bank.getPriorAmount(memberAddr, SHARES, blockNumber);
+                if (memberShares > 0) {
+                    uint256 amountToDistribute =
+                        FairShareHelper.calc(amount, memberShares, totalShares);
 
                     if (amountToDistribute > 0) {
                         bank.internalTransfer(
