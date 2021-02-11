@@ -354,7 +354,17 @@ async function deployDao(deployer, options) {
     );
     await daoFactory.updateAdapter(
       dao.address,
-      entryDao("voting", offchainVoting, {})
+
+    entryDao("voting", offchainVoting, {}));
+      
+    await dao.setAclToExtensionForAdapter(
+      bankAddress,
+      offchainVoting.address,
+      entryBank(offchainVoting, {
+        ADD_TO_BALANCE: true,
+        SUB_FROM_BALANCE: true,
+        INTERNAL_TRANSFER: true,
+      }).flags
     );
 
     await offchainVoting.configureDao(
