@@ -130,7 +130,7 @@ Bank Extension Access Flags: `INTERNAL_TRANSFER`.
 ### distribute
 
 ```solidity
-    /**
+     /**
      * @notice Transfers the funds from the Guild account to the member's internal accounts.
      * @notice The amount of funds is caculated using the historical number of shares of each member.
      * @dev A distribution proposal must be in progress.
@@ -141,23 +141,6 @@ Bank Extension Access Flags: `INTERNAL_TRANSFER`.
      */
     function distribute(DaoRegistry dao, uint256 toIndex) external override
 
-```
-
-### \_distribute
-
-```solidity
-    /**
-     * @notice Transfers the funds from the internal Guild account to the internal member's account.
-     * @dev If the member was kicked out, is in jail, or is an advisor, will not receive the funds.
-     */
-    function _distribute(
-        DaoRegistry dao,
-        address shareHolderAddr,
-        address token,
-        uint256 amount,
-        uint256 daoShares,
-        uint256 blockNumber
-        ) internal
 ```
 
 ## Events
