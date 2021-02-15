@@ -111,15 +111,22 @@ contract("LAOLAND - Ragequit Adapter", async (accounts) => {
     return { kickProposalId: newProposalId };
   };
 
-  const ragequit = async (dao, shares, loot, member, token = ETH_TOKEN) => {
+  const ragequit = async (
+    dao,
+    shares,
+    loot,
+    member,
+    token = ETH_TOKEN,
+    tokens = []
+  ) => {
     let ragequitAddress = await dao.getAdapterAddress(sha3("ragequit"));
     let ragequitContract = await RagequitContract.at(ragequitAddress);
-
+    console.log(`Tokens: ${tokens}`);
     await ragequitContract.ragequit(
       dao.address,
       toBN(shares),
       toBN(loot),
-      [token],
+      tokens.length > 0 ? tokens : [token],
       {
         from: member,
         gasPrice: toBN("0"),
@@ -708,5 +715,40 @@ contract("LAOLAND - Ragequit Adapter", async (accounts) => {
     }
   });
 
-  //TODO test fairShareHelper overflow
+  it("should not be possible to ragequit if there is a duplicate token", async () => {
+    const daoOwner = accounts[1];
+    const memberA = accounts[2];
+
+    let dao = await createDao(daoOwner);
+    const onboarding = await getContract(dao, "onboarding", OnboardingContract);
+    const voting = await getContract(dao, "voting", VotingContract);
+    let proposalId = await submitNewMemberProposal(
+      onboarding,
+      dao,
+      memberA,
+      sharePrice,
+      ETH_TOKEN,
+      daoOwner
+    );
+
+    // Sponsor the new proposal to admit the new member, vote and process it
+    await sponsorNewMember(onboarding, dao, proposalId, memberA, voting);
+
+    const bank = await BankExtension.at(bankAddress);
+    const memberAShares = await bank.balanceOf(memberA, SHARES);
+
+    try {
+      // MemberA attempts to ragequit using the same token twice
+      await ragequit(dao, memberAShares, 0, memberA, null, [
+        ETH_TOKEN,
+        ETH_TOKEN,
+        ETH_TOKEN,
+      ]);
+      assert.fail(
+        "should not be possible to ragequit if there is a duplicate token"
+      );
+    } catch (err) {
+      assert.equal(err.reason, "duplicate token");
+    }
+  });
 });
