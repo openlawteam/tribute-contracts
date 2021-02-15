@@ -618,7 +618,9 @@ contract("LAOLAND - Ragequit Adapter", async (accounts) => {
     const daoOwner = accounts[1];
     const memberA = accounts[2];
 
-    let dao = await createDao(daoOwner);
+    const dao = await createDao(daoOwner);
+    const bankAddress = await dao.getExtensionAddress(sha3("bank"));
+    const bank = await BankExtension.at(bankAddress);
     const onboarding = await getContract(dao, "onboarding", OnboardingContract);
     const voting = await getContract(dao, "voting", VotingContract);
     const guildkickContract = await getContract(
@@ -627,7 +629,7 @@ contract("LAOLAND - Ragequit Adapter", async (accounts) => {
       GuildKickContract
     );
 
-    let proposalId = await submitNewMemberProposal(
+    const proposalId = await submitNewMemberProposal(
       onboarding,
       dao,
       memberA,
@@ -641,9 +643,6 @@ contract("LAOLAND - Ragequit Adapter", async (accounts) => {
       gasPrice: toBN("0"),
     });
 
-    // Check memberA shares
-    const bankAddress = await dao.getExtensionAddress(sha3("bank"));
-    const bank = await BankExtension.at(bankAddress);
     let memberAShares = await bank.balanceOf(memberA, SHARES);
 
     // Submit GuildKick for memberA
@@ -669,7 +668,7 @@ contract("LAOLAND - Ragequit Adapter", async (accounts) => {
 
     try {
       // MemberA attempts to ragequit, but he is in jail due to the guild kick
-      await ragequit(dao, memberAShares, 0, memberA, ETH_TOKEN);
+      await ragequit(dao, memberAShares, 0, memberA);
       assert.fail(
         "should not be possible to ragequit if the member is in jail"
       );
@@ -679,41 +678,51 @@ contract("LAOLAND - Ragequit Adapter", async (accounts) => {
   });
 
   it("should not be possible to ragequit if there are no tokens to receive the funds", async () => {
-    const daoOwner = accounts[1];
-    const memberA = accounts[2];
+    const myAccount = accounts[1];
+    const newMember = accounts[2];
 
-    let dao = await createDao(daoOwner);
+    let dao = await createDao(myAccount);
+    const bankAddress = await dao.getExtensionAddress(sha3("bank"));
+    const bank = await BankExtension.at(bankAddress);
     const onboarding = await getContract(dao, "onboarding", OnboardingContract);
     const voting = await getContract(dao, "voting", VotingContract);
+
     let proposalId = await submitNewMemberProposal(
       onboarding,
       dao,
-      memberA,
-      sharePrice,
-      ETH_TOKEN,
-      daoOwner
+      newMember,
+      sharePrice
     );
 
-    // Sponsor the new proposal to admit the new member, vote and process it
-    await sponsorNewMember(onboarding, dao, proposalId, memberA, voting);
+    //Sponsor the new proposal to admit the new member, vote and process it
+    await sponsorNewMember(onboarding, dao, proposalId, myAccount, voting);
+    await onboarding.processProposal(dao.address, proposalId, {
+      from: myAccount,
+      gasPrice: toBN("0"),
+    });
 
-    const bank = await BankExtension.at(bankAddress);
-    const memberAShares = await bank.balanceOf(memberA, SHARES);
+    //Check Guild Bank Balance
+    let guildBalance = await bank.balanceOf(GUILD, ETH_TOKEN);
+    assert.equal(guildBalance.toString(), "1200000000000000000".toString());
+
+    //Check New Member Shares
+    let shares = await bank.balanceOf(newMember, SHARES);
+    assert.equal(shares.toString(), "10000000000000000");
 
     try {
-      // MemberA attempts to ragequit without a valid token
       const ragequitContract = await getContract(
         dao,
         "ragequit",
         RagequitContract
       );
+      // MemberA attempts to ragequit using a duplicate token
       await ragequitContract.ragequit(
         dao.address,
-        toBN(memberAShares),
+        toBN(shares),
         toBN(0),
         [ETH_TOKEN, ETH_TOKEN], // token array with duplicates
         {
-          from: member,
+          from: newMember,
           gasPrice: toBN("0"),
         }
       );
@@ -727,7 +736,7 @@ contract("LAOLAND - Ragequit Adapter", async (accounts) => {
 
   it("should not be possible to ragequit if there is a duplicate token", async () => {
     const daoOwner = accounts[1];
-    const memberA = accounts[2];
+    const memberA = accounts[5];
 
     const dao = await createDao(daoOwner);
     const onboarding = await getContract(dao, "onboarding", OnboardingContract);
@@ -737,31 +746,34 @@ contract("LAOLAND - Ragequit Adapter", async (accounts) => {
       onboarding,
       dao,
       memberA,
-      sharePrice,
-      ETH_TOKEN,
-      daoOwner
+      sharePrice
     );
 
     // Sponsor the new proposal to admit the new member, vote and process it
-    await sponsorNewMember(onboarding, dao, proposalId, memberA, voting);
+    await sponsorNewMember(onboarding, dao, proposalId, daoOwner, voting);
+    await onboarding.processProposal(dao.address, proposalId, {
+      from: daoOwner,
+      gasPrice: toBN("0"),
+    });
 
+    const bankAddress = await dao.getExtensionAddress(sha3("bank"));
     const bank = await BankExtension.at(bankAddress);
     const memberAShares = await bank.balanceOf(memberA, SHARES);
+    const ragequitContract = await getContract(
+      dao,
+      "ragequit",
+      RagequitContract
+    );
 
     try {
       // MemberA attempts to ragequit without a valid token
-      const ragequitContract = await getContract(
-        dao,
-        "ragequit",
-        RagequitContract
-      );
       await ragequitContract.ragequit(
         dao.address,
         toBN(memberAShares),
         toBN(0),
         [], //empty token array
         {
-          from: member,
+          from: memberA,
           gasPrice: toBN("0"),
         }
       );
@@ -770,6 +782,4 @@ contract("LAOLAND - Ragequit Adapter", async (accounts) => {
       assert.equal(err.reason, "missing tokens");
     }
   });
-
-  //TODO test with multiple tokens (sorted array)
 });

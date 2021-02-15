@@ -68,7 +68,7 @@ contract RagequitContract is IRagequit, DaoConstants {
         DaoRegistry dao,
         uint256 sharesToBurn,
         uint256 lootToBurn,
-        address[] memory tokens
+        address[] calldata tokens
     ) external override {
         // At least one token needs to be provided
         require(tokens.length > 0, "missing tokens");
@@ -169,8 +169,8 @@ contract RagequitContract is IRagequit, DaoConstants {
             if (j < length) {
                 // Next token needs to be greater than the current one to prevent duplicates
                 require(currentToken < tokens[j], "duplicate token");
-            } 
-            
+            }
+
             // Checks if the token is supported by the Guild Bank.
             require(bank.isTokenAllowed(currentToken), "token not allowed");
 
