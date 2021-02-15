@@ -163,10 +163,6 @@ contract RagequitContract is IRagequit, DaoConstants {
         // Transfers the funds from the internal Guild account to the internal member's account based on each token provided by the member.
         // The provided token must be supported/allowed by the Guild Bank, otherwise it reverts the entire transaction.
         uint256 length = tokens.length;
-        // 1,2
-        // length=2,
-        // i=0,j=i+1=1, j < length = 1 < 2: true
-        // i=1,j=i+1=2, j < length = 1 < 2: true
         for (uint256 i = 0; i < length; i++) {
             address currentToken = tokens[i];
             uint256 j = i + 1;
