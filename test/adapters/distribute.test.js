@@ -290,7 +290,7 @@ contract("LAOLAND - Distribute Adapter", async (accounts) => {
     assert.equal(sharesMemberB.toString(), "10000000000000000");
 
     // Submit distribute proposal
-    const amountToDistribute = 6;
+    const amountToDistribute = 15;
     let { proposalId } = await distributeFundsProposal(
       dao,
       distributeContract,
@@ -337,9 +337,9 @@ contract("LAOLAND - Distribute Adapter", async (accounts) => {
     });
 
     memberABalance = await bank.balanceOf(daoMemberA, ETH_TOKEN);
-    assert.equal(toBN(memberABalance).toString(), 1);
+    assert.equal(toBN(memberABalance).toString(), 5);
     memberBBalance = await bank.balanceOf(daoMemberB, ETH_TOKEN);
-    assert.equal(toBN(memberBBalance).toString(), 3);
+    assert.equal(toBN(memberBBalance).toString(), 10);
     let ownerBalance = await bank.balanceOf(daoOwner, ETH_TOKEN);
     assert.equal(toBN(ownerBalance).toString(), 0);
   });
