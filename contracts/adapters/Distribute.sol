@@ -233,15 +233,10 @@ contract DistributeContract is IDistribute, DaoConstants, MemberGuard {
 
         // Get the total number of shares when the proposal was processed.
         BankExtension bank = BankExtension(dao.getExtensionAddress(BANK));
-        uint256 totalShares = bank.getPriorAmount(TOTAL, SHARES, blockNumber);
 
         address shareHolderAddr = distribution.shareHolderAddr;
         if (shareHolderAddr != address(0x0)) {
-            uint256 memberShares =
-                bank.getPriorAmount(shareHolderAddr, SHARES, blockNumber);
-            require(memberShares != 0, "not enough shares");
-            // Distributes the funds to 1 share holder only
-            bank.internalTransfer(GUILD, shareHolderAddr, token, amount);
+            _distributeOne(bank, shareHolderAddr, blockNumber, token, amount);
             distribution.status = DistributionStatus.DONE;
             emit Distributed(token, amount, shareHolderAddr);
         } else {
@@ -251,29 +246,58 @@ contract DistributeContract is IDistribute, DaoConstants, MemberGuard {
             if (maxIndex > nbMembers) {
                 maxIndex = nbMembers;
             }
-            // Distributes the funds to all share holders of the DAO and ignores non-active members.
-            for (uint256 i = currentIndex; i < maxIndex; i++) {
-                address memberAddr = dao.getMemberAddress(i);
-                uint256 memberShares =
-                    bank.getPriorAmount(memberAddr, SHARES, blockNumber);
-                if (memberShares > 0) {
-                    uint256 amountToDistribute =
-                        FairShareHelper.calc(amount, memberShares, totalShares);
 
-                    if (amountToDistribute > 0) {
-                        bank.internalTransfer(
-                            GUILD,
-                            memberAddr,
-                            token,
-                            amountToDistribute
-                        );
-                    }
-                }
-            }
+            _distributeAll(dao, bank, currentIndex, maxIndex, blockNumber, token, amount);
+            
             distribution.currentIndex = maxIndex;
             if (maxIndex == nbMembers) {
                 distribution.status = DistributionStatus.DONE;
                 emit Distributed(token, amount, shareHolderAddr);
+            }
+        }
+    }
+
+    function _distributeOne(
+        BankExtension bank,
+        address shareHolderAddr, 
+        uint256 blockNumber, 
+        address token, 
+        uint256 amount
+    ) internal {
+        uint256 memberShares =
+                bank.getPriorAmount(shareHolderAddr, SHARES, blockNumber);
+        require(memberShares != 0, "not enough shares");
+        // Distributes the funds to 1 share holder only
+        bank.internalTransfer(GUILD, shareHolderAddr, token, amount);
+    }
+
+    function _distributeAll(
+        DaoRegistry dao, 
+        BankExtension bank,
+        uint256 currentIndex, 
+        uint256 maxIndex, 
+        uint256 blockNumber, 
+        address token, 
+        uint256 amount 
+    ) internal {
+        uint256 totalShares = bank.getPriorAmount(TOTAL, SHARES, blockNumber);
+        // Distributes the funds to all share holders of the DAO and ignores non-active members.
+        for (uint256 i = currentIndex; i < maxIndex; i++) {
+            address memberAddr = dao.getMemberAddress(i);
+            uint256 memberShares =
+                bank.getPriorAmount(memberAddr, SHARES, blockNumber);
+            if (memberShares > 0) {
+                uint256 amountToDistribute =
+                    FairShareHelper.calc(amount, memberShares, totalShares);
+
+                if (amountToDistribute > 0) {
+                    bank.internalTransfer(
+                        GUILD,
+                        memberAddr,
+                        token,
+                        amountToDistribute
+                    );
+                }
             }
         }
     }

@@ -320,7 +320,7 @@ contract("LAOLAND - Distribute Adapter", async (accounts) => {
     assert.equal(toBN(memberBBalance).toString(), "0");
 
     let numberOfMembers = toBN(await dao.getNbMembers()).toNumber();
-    // It is expected to get 4 members:
+    // It is expected to get 5 members:
     // 1 - dao owner
     // 1 - dao factory
     // 1 - dao payer (who paid to create the dao)
