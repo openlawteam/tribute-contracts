@@ -179,6 +179,7 @@ contract BatchVotingContract is
         address
     ) external view override returns (address) {
         SnapshotProposalContract.ProposalMessage memory proposal = abi.decode(data, (SnapshotProposalContract.ProposalMessage));
+        
         return recover(_snapshotContract.hashMessage(dao, actionId, proposal), proposal.sig);
     }
 
@@ -187,6 +188,7 @@ contract BatchVotingContract is
         bytes32 proposalId,
         bytes memory data
     ) public override onlyAdapter(dao) {
+        /*
         SnapshotProposalContract.ProposalMessage memory proposal = abi.decode(data, (SnapshotProposalContract.ProposalMessage));
         (bool success, uint256 blockNumber) =
             _stringToUint(proposal.payload.snapshot);
@@ -204,6 +206,7 @@ contract BatchVotingContract is
         votingSessions[address(dao)][proposalId].startingTime = block.timestamp;
         votingSessions[address(dao)][proposalId].snapshot = blockNumber;
         votingSessions[address(dao)][proposalId].proposalHash = proposalHash;
+        */
     }
 
     /**

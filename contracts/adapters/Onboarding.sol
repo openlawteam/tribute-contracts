@@ -248,6 +248,7 @@ contract OnboardingContract is
                 data,
                 msg.sender
             );
+        
         _sponsorProposal(dao, proposalId, data, sponsoredBy, votingContract);
     }
 
