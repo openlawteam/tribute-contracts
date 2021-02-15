@@ -554,7 +554,7 @@ contract OffchainVotingContract is
             block.timestamp <
             vote.gracePeriodStartingTime + dao.getConfiguration(GracePeriod)
         ) {
-            return VotingState.IN_PROGRESS;
+            return VotingState.GRACE_PERIOD;
         }
 
         if (vote.nbYes > vote.nbNo) {

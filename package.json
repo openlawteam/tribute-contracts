@@ -22,7 +22,8 @@
     "prettier": "^2.1.2",
     "prettier-plugin-solidity": "^1.0.0-beta.3",
     "solhint": "^3.3.2",
-    "solidity-coverage": "^0.7.14"
+    "solidity-coverage": "^0.7.14",
+    "truffle-abi": "^1.0.3"
   },
   "scripts": {
     "test": "truffle test",
@@ -35,7 +36,8 @@
     "codegen": "graph codegen",
     "build": "graph build",
     "deploy": "graph deploy openlawteam/laoland-graph --ipfs https://api.thegraph.com/ipfs/ --node https://api.thegraph.com/deploy/",
-    "deploy-local": "graph deploy openlawteam/laoland-graph --ipfs http://localhost:5001 --node http://127.0.0.1:8020"
+    "deploy-local": "graph deploy openlawteam/laoland-graph --ipfs http://localhost:5001 --node http://127.0.0.1:8020",
+    "compile-abi": "truffle compile && truffle-abi"
   },
   "repository": {
     "type": "git",
