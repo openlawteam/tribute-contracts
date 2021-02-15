@@ -35,7 +35,7 @@ SOFTWARE.
 
 contract FinancingContract is IFinancing, DaoConstants, MemberGuard {
     struct ProposalDetails {
-        address applicant; // the proposal applicant address, can not be a reserver address
+        address applicant; // the proposal applicant address, can not be a reserved address
         uint256 amount; // the amount requested for funding
         address token; // the token address in which the funding must be sent to
         bytes32 details; // additional details about the financing proposal
@@ -44,8 +44,8 @@ contract FinancingContract is IFinancing, DaoConstants, MemberGuard {
     // keeps track of all financing proposals handled by each dao
     mapping(address => mapping(bytes32 => ProposalDetails)) public proposals;
 
-    /*
-     * @notice default fallback function to prevent from sending ether to the contract
+    /**
+     * @notice default fallback function to prevent from sending ether to the contract.
      */
     receive() external payable {
         revert("fallback revert");
@@ -92,7 +92,7 @@ contract FinancingContract is IFinancing, DaoConstants, MemberGuard {
      * @dev Only members of the DAO can sponsor a financing proposal.
      * @param dao The DAO Address.
      * @param proposalId The proposal id.
-     * @param data Additional detais about the sponsorship process.
+     * @param data Additional details about the sponsorship process.
      */
     function sponsorProposal(
         DaoRegistry dao,
@@ -110,6 +110,15 @@ contract FinancingContract is IFinancing, DaoConstants, MemberGuard {
         _sponsorProposal(dao, proposalId, data, sponsoredBy, votingContract);
     }
 
+    /**
+     * @notice Sponsors a financing proposal to start the voting process.
+     * @dev Only members of the DAO can sponsor a financing proposal.
+     * @param dao The DAO Address.
+     * @param proposalId The proposal id.
+     * @param data Additional details about the sponsorship process.
+     * @param sponsoredBy The address of the sponsoring member.
+     * @param votingContract The voting contract used by the DAO.
+     */
     function _sponsorProposal(
         DaoRegistry dao,
         bytes32 proposalId,
@@ -123,7 +132,6 @@ contract FinancingContract is IFinancing, DaoConstants, MemberGuard {
 
     /**
      * @notice Processing a financing proposal to grant the requested funds.
-     * @dev Only members of the DAO can process a financing proposal.
      * @dev Only proposals that were not processed are accepted.
      * @dev Only proposals that were sponsored are accepted.
      * @dev Only proposals that passed can get processed and have the funds released.

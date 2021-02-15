@@ -1,9 +1,8 @@
 pragma solidity ^0.8.0;
 
-// SPDX-License-Identifier: MIT
+import "../../core/DaoRegistry.sol";
 
-import "../core/DaoRegistry.sol";
-import "../extensions/IExtension.sol";
+// SPDX-License-Identifier: MIT
 
 /**
 MIT License
@@ -28,33 +27,25 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
  */
-abstract contract AdapterGuard {
-    /**
-     * @dev Only registered adapters are allowed to execute the function call.
-     */
-    modifier onlyAdapter(DaoRegistry dao) {
-        require(
-            (dao.state() == DaoRegistry.DaoState.CREATION &&
-                creationModeCheck(dao)) || dao.isAdapter(msg.sender),
-            "onlyAdapter"
-        );
-        _;
-    }
 
-    modifier hasAccess(DaoRegistry dao, DaoRegistry.AclFlag flag) {
-        require(
-            (dao.state() == DaoRegistry.DaoState.CREATION &&
-                creationModeCheck(dao)) ||
-                dao.hasAdapterAccess(msg.sender, flag),
-            "hasAccess"
-        );
-        _;
-    }
+interface ITribute {
+    function provideTribute(
+        DaoRegistry dao,
+        bytes32 proposalId,
+        address applicant,
+        address tokenToMint,
+        uint256 requestAmount,
+        address tokenAddr,
+        uint256 tributeAmount
+    ) external;
 
-    function creationModeCheck(DaoRegistry dao) internal view returns (bool) {
-        return
-            dao.getNbMembers() == 0 ||
-            dao.isActiveMember(msg.sender) ||
-            dao.isAdapter(msg.sender);
-    }
+    function sponsorProposal(
+        DaoRegistry dao,
+        bytes32 proposalId,
+        bytes calldata data
+    ) external;
+
+    function cancelProposal(DaoRegistry dao, bytes32 proposalId) external;
+
+    function processProposal(DaoRegistry dao, bytes32 proposalId) external;
 }

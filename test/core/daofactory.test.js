@@ -39,7 +39,7 @@ contract("DaoFactory", async (accounts) => {
 
   const cloneDao = async (owner, identityAddr, name) => {
     let daoFactory = await DaoFactory.new(identityAddr);
-    await daoFactory.createDao(name, {
+    await daoFactory.createDao(name, owner, {
       from: owner,
       gasPrice: toBN("0"),
     });
@@ -99,105 +99,5 @@ contract("DaoFactory", async (accounts) => {
       "0x0000000000000000000000000000000000000000",
       retrievedAddress
     );
-  });
-
-  it("should be possible to clone a DAO with configurations parameters", async () => {
-    let identityDao = await createIdentityDAO(owner);
-
-    let key1 = sha3("key1");
-    let key2 = sha3("key2");
-    let keys = [key1, key2];
-    let values = [toBN("10"), toBN("15")];
-    let { daoAddress, daoName, daoFactory } = await cloneDao(
-      anotherOwner,
-      identityDao.address,
-      "dao-with-configs"
-    );
-
-    await daoFactory.configureDao(daoAddress, keys, values, false);
-
-    assert.equal("dao-with-configs", daoName);
-
-    let newDao = await DaoRegistry.at(daoAddress);
-
-    let value1 = await newDao.getConfiguration(key1);
-    assert.equal("10", value1.toString());
-    let value2 = await newDao.getConfiguration(key2);
-    assert.equal("15", value2.toString());
-  });
-
-  it("should be possible to configure a DAO after it has been cloned", async () => {
-    let identityDao = await createIdentityDAO(owner);
-
-    let { daoFactory, daoAddress, daoName } = await cloneDao(
-      anotherOwner,
-      identityDao.address,
-      "dao-config"
-    );
-
-    assert.equal("dao-config", daoName);
-
-    let key1 = sha3("key1");
-    let key2 = sha3("key2");
-    let keys = [key1, key2];
-    let values = [toBN("123"), toBN("456")];
-    await daoFactory.configureDao(daoAddress, keys, values, false, {
-      from: owner,
-      gasPrice: toBN("0"),
-    });
-
-    let newDao = await DaoRegistry.at(daoAddress);
-    let value1 = await newDao.getConfiguration(key1);
-    assert.equal("123", value1.toString());
-    let value2 = await newDao.getConfiguration(key2);
-    assert.equal("456", value2.toString());
-  });
-
-  it("should not be possible to provide a different number of keys and values", async () => {
-    let identityDao = await createIdentityDAO(owner);
-
-    let { daoFactory, daoAddress, daoName } = await cloneDao(
-      anotherOwner,
-      identityDao.address,
-      "dao-config"
-    );
-
-    assert.equal("dao-config", daoName);
-
-    try {
-      await daoFactory.configureDao(
-        daoAddress,
-        [sha3("key1")], //keys length == 1
-        [], //values length == 0
-        false,
-        {
-          from: anotherOwner,
-          gasPrice: toBN("0"),
-        }
-      );
-      assert.fail(
-        "should not be possible to provide a different number of keys and values"
-      );
-    } catch (err) {
-      assert.equal("invalid keys and values", err.reason);
-    }
-
-    try {
-      await daoFactory.configureDao(
-        daoAddress,
-        [], //keys length == 0
-        [toBN("123")], //values length == 1
-        false,
-        {
-          from: anotherOwner,
-          gasPrice: toBN("0"),
-        }
-      );
-      assert.fail(
-        "should not be possible to provide a different number of keys and values"
-      );
-    } catch (err) {
-      assert.equal("invalid keys and values", err.reason);
-    }
   });
 });

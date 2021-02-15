@@ -135,11 +135,6 @@ contract("LAOLAND - Non Voting Onboarding Adapter", async (accounts) => {
     // Total of OLT to be sent to the DAO in order to get the Loot shares
     let tokenAmount = 10;
 
-    // Pre-approve spender (DAO) to transfer applicant tokens
-    await oltContract.approve(dao.address, tokenAmount, {
-      from: advisorAccount,
-    });
-
     // Send a request to join the DAO as an Advisor (non-voting power),
     // the tx passes the OLT ERC20 token, the amount and the nonVotingOnboarding adapter that handles the proposal
     try {
@@ -154,9 +149,10 @@ contract("LAOLAND - Non Voting Onboarding Adapter", async (accounts) => {
           gasPrice: toBN("0"),
         }
       );
-      assert.equal(true, false, "should have failed!");
+      assert.fail("should have failed without spender approval!");
     } catch (err) {}
 
+    // Pre-approve spender (onboarding adapter) to transfer proposer tokens
     await oltContract.approve(onboarding.address, tokenAmount, {
       from: advisorAccount,
     });

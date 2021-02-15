@@ -156,15 +156,21 @@ contract DaoRegistry is MemberGuard, AdapterGuard {
      * @notice Initialises the DAO
      * @dev Involves initialising available tokens, checkpoints, and membership of creator
      * @dev Can only be called once
-     * @param creator The DAO's creator, who will be the first member
+     * @param creator The DAO's creator, who will be an initial member
+     * @param payer The account which paid for the transaction to create the DAO, who will be an initial member
      */
-    function initialize(address creator) external {
+    function initialize(address creator, address payer) external {
         require(!initialized, "dao already initialized");
+        potentialNewMember(msg.sender);
+        potentialNewMember(payer);
         potentialNewMember(creator);
 
         initialized = true;
     }
 
+    /**
+     * @notice default fallback function to prevent from sending ether to the contract
+     */
     receive() external payable {
         revert("you cannot send money back directly");
     }
@@ -243,9 +249,10 @@ contract DaoRegistry is MemberGuard, AdapterGuard {
     }
 
     /**
-     * @notice Adds a new adapter to the registry
-     * @param extensionId The unique identifier of the new adapter
-     * @param extension The address of the adapter
+     * @notice Adds a new extension to the registry
+     * @param extensionId The unique identifier of the new extension
+     * @param extension The address of the extension
+     * @param creator The DAO's creator, who will be an initial member
      */
     function addExtension(
         bytes32 extensionId,
@@ -598,7 +605,7 @@ contract DaoRegistry is MemberGuard, AdapterGuard {
         return getFlag(members[memberAddress].flags, uint8(flag));
     }
 
-    function getNbMember() public view returns (uint256) {
+    function getNbMembers() public view returns (uint256) {
         return _members.length;
     }
 
