@@ -27,6 +27,7 @@ const DeployedContractsDialog = ({ isOpen, onClose }) => {
     adapters: {
       voting: "not deployed",
       onboarding: "not deployed",
+      tribute: "not deployed",
       financing: "not deployed",
       managing: "not deployed",
       ragequit: "not deployed",

@@ -348,19 +348,21 @@ contract OffchainVotingContract is
         uint256 nbNo
     ) internal view returns (bool) {
         uint256 diff;
-        if (vote.nbYes > nbNo) {
+        if (nbYes > nbNo) {
             diff = nbYes - nbNo;
         } else {
             diff = nbNo - nbYes;
         }
         BankExtension bank = BankExtension(dao.getExtensionAddress(BANK));
-        if (diff * 2 > bank.getPriorAmount(TOTAL, SHARES, vote.snapshot)) {
+        uint256 totalWeight = bank.getPriorAmount(TOTAL, SHARES, vote.snapshot);
+        uint256 unvotedWeights = totalWeight - nbYes - nbNo;
+        if (diff > unvotedWeights) {
             return true;
         }
 
         uint256 votingPeriod = dao.getConfiguration(VotingPeriod);
 
-        return vote.startingTime + votingPeriod > block.timestamp;
+        return vote.startingTime + votingPeriod <= block.timestamp;
     }
 
     function _submitVoteResult(
@@ -396,7 +398,7 @@ contract OffchainVotingContract is
             "vote:sig bad"
         );
 
-        _lockFunds(dao, reporter);
+        //_lockFunds(dao, reporter);
         vote.nbNo = result.nbNo;
         vote.nbYes = result.nbYes;
         vote.index = result.index;
@@ -406,6 +408,7 @@ contract OffchainVotingContract is
         vote.gracePeriodStartingTime = block.timestamp;
     }
 
+    /*
     function _lockFunds(DaoRegistry dao, address memberAddr) internal {
         uint256 lootToLock = dao.getConfiguration(StakingAmount);
         //lock if member has enough loot
@@ -421,7 +424,6 @@ contract OffchainVotingContract is
         bank.subtractFromBalance(memberAddr, LOOT, lootToLock);
     }
 
-    /*
     function _releaseFunds(DaoRegistry dao, address memberAddr) internal {
         uint256 lootToRelease = dao.getConfiguration(StakingAmount);
         //release if member has enough locked loot
@@ -526,7 +528,7 @@ contract OffchainVotingContract is
             block.timestamp <
             vote.gracePeriodStartingTime + dao.getConfiguration(GracePeriod)
         ) {
-            return VotingState.IN_PROGRESS;
+            return VotingState.GRACE_PERIOD;
         }
 
         if (vote.nbYes > vote.nbNo) {

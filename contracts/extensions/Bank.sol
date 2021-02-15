@@ -99,7 +99,7 @@ contract BankExtension is DaoConstants, AdapterGuard, IExtension {
      * @notice Initialises the DAO
      * @dev Involves initialising available tokens, checkpoints, and membership of creator
      * @dev Can only be called once
-     * @param creator The DAO's creator, who will be the first member
+     * @param creator The DAO's creator, who will be an initial member
      */
     function initialize(DaoRegistry _dao, address creator) external override {
         require(!initialized, "bank already initialized");
@@ -182,7 +182,7 @@ contract BankExtension is DaoConstants, AdapterGuard, IExtension {
         hasExtensionAccess(this, AclFlag.REGISTER_NEW_INTERNAL_TOKEN)
     {
         require(isNotReservedAddress(token), "reservedToken");
-        require(!availableTokens[token], "internalToken");
+        require(!availableTokens[token], "availableToken");
         if (!availableInternalTokens[token]) {
             availableInternalTokens[token] = true;
             internalTokens.push(token);
