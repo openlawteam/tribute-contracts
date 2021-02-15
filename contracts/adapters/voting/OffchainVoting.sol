@@ -241,13 +241,11 @@ string public constant VOTE_RESULT_NODE_TYPE =
         uint256 nbNo
     ) internal view returns (bool) {
         uint256 diff;
-
         if (nbYes > nbNo) {
             diff = nbYes - nbNo;
         } else {
             diff = nbNo - nbYes;
         }
-
         BankExtension bank = BankExtension(dao.getExtensionAddress(BANK));
         uint256 totalWeight = bank.getPriorAmount(TOTAL, SHARES, vote.snapshot);
         uint256 unvotedWeights = totalWeight - nbYes - nbNo;
@@ -293,7 +291,7 @@ string public constant VOTE_RESULT_NODE_TYPE =
             "vote:sig bad"
         );
 
-        _lockFunds(dao, reporter);
+        //_lockFunds(dao, reporter);
         vote.nbNo = result.nbNo;
         vote.nbYes = result.nbYes;
         vote.index = result.index;
@@ -303,6 +301,7 @@ string public constant VOTE_RESULT_NODE_TYPE =
         vote.gracePeriodStartingTime = block.timestamp;
     }
 
+    /*
     function _lockFunds(DaoRegistry dao, address memberAddr) internal {
         uint256 lootToLock = dao.getConfiguration(StakingAmount);
         //lock if member has enough loot
@@ -318,7 +317,6 @@ string public constant VOTE_RESULT_NODE_TYPE =
         bank.subtractFromBalance(memberAddr, LOOT, lootToLock);
     }
 
-    /*
     function _releaseFunds(DaoRegistry dao, address memberAddr) internal {
         uint256 lootToRelease = dao.getConfiguration(StakingAmount);
         //release if member has enough locked loot
@@ -423,7 +421,7 @@ string public constant VOTE_RESULT_NODE_TYPE =
             block.timestamp <
             vote.gracePeriodStartingTime + dao.getConfiguration(GracePeriod)
         ) {
-            return VotingState.IN_PROGRESS;
+            return VotingState.GRACE_PERIOD;
         }
 
         if (vote.nbYes > vote.nbNo) {
