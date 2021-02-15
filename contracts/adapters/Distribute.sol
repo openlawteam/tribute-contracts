@@ -247,8 +247,16 @@ contract DistributeContract is IDistribute, DaoConstants, MemberGuard {
                 maxIndex = nbMembers;
             }
 
-            _distributeAll(dao, bank, currentIndex, maxIndex, blockNumber, token, amount);
-            
+            _distributeAll(
+                dao,
+                bank,
+                currentIndex,
+                maxIndex,
+                blockNumber,
+                token,
+                amount
+            );
+
             distribution.currentIndex = maxIndex;
             if (maxIndex == nbMembers) {
                 distribution.status = DistributionStatus.DONE;
@@ -259,26 +267,26 @@ contract DistributeContract is IDistribute, DaoConstants, MemberGuard {
 
     function _distributeOne(
         BankExtension bank,
-        address shareHolderAddr, 
-        uint256 blockNumber, 
-        address token, 
+        address shareHolderAddr,
+        uint256 blockNumber,
+        address token,
         uint256 amount
     ) internal {
         uint256 memberShares =
-                bank.getPriorAmount(shareHolderAddr, SHARES, blockNumber);
+            bank.getPriorAmount(shareHolderAddr, SHARES, blockNumber);
         require(memberShares != 0, "not enough shares");
         // Distributes the funds to 1 share holder only
         bank.internalTransfer(GUILD, shareHolderAddr, token, amount);
     }
 
     function _distributeAll(
-        DaoRegistry dao, 
+        DaoRegistry dao,
         BankExtension bank,
-        uint256 currentIndex, 
-        uint256 maxIndex, 
-        uint256 blockNumber, 
-        address token, 
-        uint256 amount 
+        uint256 currentIndex,
+        uint256 maxIndex,
+        uint256 blockNumber,
+        address token,
+        uint256 amount
     ) internal {
         uint256 totalShares = bank.getPriorAmount(TOTAL, SHARES, blockNumber);
         // Distributes the funds to all share holders of the DAO and ignores non-active members.

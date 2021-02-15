@@ -337,11 +337,11 @@ contract("LAOLAND - Distribute Adapter", async (accounts) => {
     });
 
     memberABalance = await bank.balanceOf(daoMemberA, ETH_TOKEN);
-    assert.equal(toBN(memberABalance).toString(), 5);
+    assert.equal(memberABalance, 4); //4.9999... rounded to 4
     memberBBalance = await bank.balanceOf(daoMemberB, ETH_TOKEN);
-    assert.equal(toBN(memberBBalance).toString(), 10);
+    assert.equal(memberBBalance, 9); //9.9999... rounded to 9
     let ownerBalance = await bank.balanceOf(daoOwner, ETH_TOKEN);
-    assert.equal(toBN(ownerBalance).toString(), 0);
+    assert.equal(ownerBalance, 0);
   });
 
   it("should not be possible to create a proposal with the amount equals to 0", async () => {
