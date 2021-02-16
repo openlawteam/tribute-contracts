@@ -77,6 +77,7 @@ async function prepareAapters(deployer) {
   let withdraw;
   let tribute;
   let distribute;
+
   if (deployer) {
     await deployer.deploy(VotingContract);
     await deployer.deploy(ConfigurationContract);
@@ -148,6 +149,7 @@ async function addDefaultAdapters(
     withdraw,
     tribute,
     distribute,
+
   } = await prepareAapters(deployer);
   await configureDao(
     daoFactory,
@@ -354,9 +356,9 @@ async function deployDao(deployer, options) {
     );
     await daoFactory.updateAdapter(
       dao.address,
+      entryDao("voting", offchainVoting, {})
+    );
 
-    entryDao("voting", offchainVoting, {}));
-      
     await dao.setAclToExtensionForAdapter(
       bankAddress,
       offchainVoting.address,

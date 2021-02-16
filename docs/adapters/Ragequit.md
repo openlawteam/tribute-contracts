@@ -14,7 +14,8 @@ In order to opt out of the DAO, the member needs to indicate the amount of share
 
 The proportional shares and/or loots are burned when the member provides the tokens in which one expects to receive the funds. The funds are deducted from the internal DAO bank balance, and added to the member's internal balance.
 
-If the member provides at least one invalid token, e.g: a token that is not supported/allowed by the DAO, the entire ragequit process is canceled/reverted. In addition to that, if the member provides a list of tokens that may cause issues due to the block size limit, it is expected that the transaction does not complete and returns a failure.
+If the member provides at least one invalid token, e.g: a token that is not supported/allowed by the DAO, the entire ragequit process is canceled/reverted. By default the adapter expects that the token array is sorted in ascending order. This is done to test for duplicates, and each token needs to be smaller than the next one, otherwise the transaction is reverted.
+In addition to that, if the member provides a long list of tokens that may cause issues due to the block size limit, it is expected that the transaction returns a failure, so it can be retried in another run with a fewer tokens.
 
 Once the ragequit process is completed, the funds are deducted from the bank, added to the member's internal balance, and an event called `MemberRagequit` is emitted.
 
@@ -69,10 +70,12 @@ There is no state tracking for this adapter.
     /**
      * @notice Allows a member or advisor of the DAO to opt out by burning the proportional amount of shares/loot of the member.
      * @notice Anyone is allowed to call this function, but only members and advisors that have shares are able to execute the entire ragequit process.
+     * @notice The array of token needs to be sorted in ascending order before executing this call, otherwise the transaction will fail.
      * @dev The sum of sharesToBurn and lootToBurn have to be greater than zero.
      * @dev The member can not be in jail to execute a ragequit.
      * @dev The member becomes an inactive member of the DAO once all the shares/loot are burned.
      * @dev If the member provides an invalid/not allowed token, the entire processed is reverted.
+     * @dev If no tokens are informed, the transaction is reverted.
      * @param dao The dao address that the member is part of.
      * @param sharesToBurn The amount of shares of the member that must be converted into funds.
      * @param lootToBurn The amount of loot of the member that must be converted into funds.
@@ -101,7 +104,7 @@ There is no state tracking for this adapter.
         address memberAddr,
         uint256 sharesToBurn,
         uint256 lootToBurn,
-        address[] memory tokens,
+        address[] calldata tokens,
         BankExtension bank
     ) internal
 ```
