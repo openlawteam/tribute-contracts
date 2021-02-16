@@ -40,15 +40,17 @@ const {
   ETH_TOKEN,
 } = require("../../utils/DaoFactory.js");
 const { checkBalance } = require("../../utils/TestUtils.js");
-const { SigUtilSigner } = require("../../utils/offchain_voting.js");
+const {
+  SigUtilSigner,
+  getMessageERC712Hash,
+} = require("../../utils/offchain_voting.js");
 
 const signer = {
-    address: "0x7D8cad0bbD68deb352C33e80fccd4D8e88b4aBb8",
-    privKey: "c150429d49e8799f119434acd3f816f299a5c7e3891455ee12269cb47a5f987c",
-}
+  address: "0x7D8cad0bbD68deb352C33e80fccd4D8e88b4aBb8",
+  privKey: "c150429d49e8799f119434acd3f816f299a5c7e3891455ee12269cb47a5f987c",
+};
 
 contract("LAOLAND - Coupon Onboarding Adapter", async (accounts) => {
-
   it("should be possible to join a DAO", async () => {
     const myAccount = accounts[1];
     const otherAccount = accounts[2];
@@ -59,19 +61,54 @@ contract("LAOLAND - Coupon Onboarding Adapter", async (accounts) => {
     const bankAddress = await dao.getExtensionAddress(sha3("bank"));
     const bank = await BankExtension.at(bankAddress);
 
-    const couponOnboarding = await getContract(dao, "coupon-onboarding", CouponOnboardingContract);
+    let signerAddr = await dao.getAddressConfiguration(
+      sha3("coupon-onboarding.signerAddress")
+    );
+    assert.equal(signerAddr, signer.address);
+
+    const couponOnboarding = await getContract(
+      dao,
+      "coupon-onboarding",
+      CouponOnboardingContract
+    );
 
     const couponData = {
       type: "coupon",
       authorizedMember: otherAccount,
       amount: 10,
-      nonce: 1
+      nonce: 1,
     };
 
-    var signature = signerUtil(couponData, dao.address, couponOnboarding.address, 1);
-    console.log("signature:", signature);
+    let jsHash = getMessageERC712Hash(
+      couponData,
+      dao.address,
+      couponOnboarding.address,
+      1
+    );
+    let solHash = await couponOnboarding.hashCouponMessage(
+      dao.address,
+      couponData
+    );
+    assert.equal(jsHash, solHash);
 
-    await couponOnboarding.redeemCoupon(dao.address, otherAccount, 10, 1, signature);
+    var signature = signerUtil(
+      couponData,
+      dao.address,
+      couponOnboarding.address,
+      1
+    );
+
+    const recAddr = await couponOnboarding.recover(jsHash, signature);
+
+    assert.equal(recAddr, signer.address);
+
+    await couponOnboarding.redeemCoupon(
+      dao.address,
+      otherAccount,
+      10,
+      1,
+      signature
+    );
 
     const myAccountShares = await bank.balanceOf(myAccount, SHARES);
     const otherAccountShares = await bank.balanceOf(otherAccount, SHARES);

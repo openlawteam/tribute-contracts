@@ -118,7 +118,7 @@ async function prepareAdapters(deployer) {
     financing,
     onboarding,
     withdraw,
-    couponOnboarding
+    couponOnboarding,
     tribute
   };
 }

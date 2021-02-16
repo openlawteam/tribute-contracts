@@ -44,8 +44,8 @@ contract CouponOnboardingContract is DaoConstants, AdapterGuard, Signatures {
     bytes32 public constant COUPON_MESSAGE_TYPEHASH =
         keccak256(abi.encodePacked(COUPON_MESSAGE_TYPE));
 
-    bytes32 constant SignerPublicKey =
-        keccak256("coupon-onboarding.signerPublicKey");
+    bytes32 constant SignerAddressConfig =
+        keccak256("coupon-onboarding.signerAddress");
     bytes32 constant TokenAddrToMint =
         keccak256("coupon-onboarding.tokenAddrToMint");
 
@@ -58,21 +58,21 @@ contract CouponOnboardingContract is DaoConstants, AdapterGuard, Signatures {
 
     function configureDao(
         DaoRegistry dao,
-        address signerPublicKey,
+        address signerAddress,
         address tokenAddrToMint
     ) external onlyAdapter(dao) {
-        dao.setAddressConfiguration(SignerPublicKey, signerPublicKey);
+        dao.setAddressConfiguration(SignerAddressConfig, signerAddress);
         dao.setAddressConfiguration(TokenAddrToMint, tokenAddrToMint);
 
         BankExtension bank = BankExtension(dao.getExtensionAddress(BANK));
         bank.registerPotentialNewInternalToken(tokenAddrToMint);
     }
 
-    function _hashCouponMessage(
-        DaoRegistry dao,
-        address actionId,
-        Coupon memory coupon
-    ) internal view returns (bytes32) {
+    function hashCouponMessage(DaoRegistry dao, Coupon memory coupon)
+        public
+        view
+        returns (bytes32)
+    {
         bytes32 message =
             keccak256(
                 abi.encode(
@@ -83,7 +83,7 @@ contract CouponOnboardingContract is DaoConstants, AdapterGuard, Signatures {
                 )
             );
 
-        return hashMessage(dao, chainId, actionId, message);
+        return hashMessage(dao, chainId, address(this), message);
     }
 
     function redeemCoupon(
@@ -99,14 +99,14 @@ contract CouponOnboardingContract is DaoConstants, AdapterGuard, Signatures {
             "coupon has already been redeemed"
         );
 
-        address signerPublicKey =
-            address(dao.getAddressConfiguration(SignerPublicKey));
+        address signerAddress =
+            dao.getAddressConfiguration(SignerAddressConfig);
 
         Coupon memory coupon = Coupon(authorizedMember, amount, nonce);
-        bytes32 hash = _hashCouponMessage(dao, msg.sender, coupon);
+        bytes32 hash = hashCouponMessage(dao, coupon);
         address recoveredKey = recover(hash, signature);
 
-        require(recoveredKey == signerPublicKey, "coupon signature is invalid");
+        require(recoveredKey == signerAddress, "invalid sig");
 
         flags[address(dao)][nonce / 256] = setFlag(
             currentFlag,
