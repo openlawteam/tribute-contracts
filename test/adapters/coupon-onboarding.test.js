@@ -102,6 +102,8 @@ contract("LAOLAND - Coupon Onboarding Adapter", async (accounts) => {
 
     assert.equal(recAddr, signer.address);
 
+    assert.equal(await bank.balanceOf(otherAccount, SHARES), "0");
+
     await couponOnboarding.redeemCoupon(
       dao.address,
       otherAccount,
@@ -114,11 +116,8 @@ contract("LAOLAND - Coupon Onboarding Adapter", async (accounts) => {
     const otherAccountShares = await bank.balanceOf(otherAccount, SHARES);
 
     assert.equal(myAccountShares.toString(), "1");
+    assert.equal(otherAccountShares.toString(), "10");
 
-    assert.equal(
-      otherAccountShares.toString(),
-      numberOfShares.mul(toBN("10")).toString()
-    );
-    await checkBalance(bank, GUILD, ETH_TOKEN, sharePrice.mul(toBN("10")));
+    await checkBalance(bank, GUILD, ETH_TOKEN, toBN("0"));
   });
 });
