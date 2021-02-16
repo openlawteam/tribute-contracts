@@ -106,7 +106,7 @@ contract CouponOnboardingContract is DaoConstants, AdapterGuard, Signatures {
         bytes32 hash = hashCouponMessage(dao, coupon);
 
         require(
-            keccak256(abi.encodePacked(hash)) == keccak256(signature),
+            hash == keccak256(signature),
             "coupon and arguments do not match")
         ;
 
