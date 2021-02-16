@@ -64,6 +64,7 @@ const OffchainVotingContract = artifacts.require(
   "./adapters/OffchainVotingContract"
 );
 const TributeContract = artifacts.require("./adapters/TributeContract");
+const DistributeContract = artifacts.require("./adapters/DistributeContract");
 
 async function prepareAapters(deployer) {
   let voting;
@@ -75,6 +76,8 @@ async function prepareAapters(deployer) {
   let guildkick;
   let withdraw;
   let tribute;
+  let distribute;
+
   if (deployer) {
     await deployer.deploy(VotingContract);
     await deployer.deploy(ConfigurationContract);
@@ -85,6 +88,7 @@ async function prepareAapters(deployer) {
     await deployer.deploy(GuildKickContract);
     await deployer.deploy(WithdrawContract);
     await deployer.deploy(TributeContract);
+    await deployer.deploy(DistributeContract);
 
     voting = await VotingContract.deployed();
     configuration = await ConfigurationContract.deployed();
@@ -95,6 +99,7 @@ async function prepareAapters(deployer) {
     guildkick = await GuildKickContract.deployed();
     withdraw = await WithdrawContract.deployed();
     tribute = await TributeContract.deployed();
+    distribute = await DistributeContract.deployed();
   } else {
     voting = await VotingContract.new();
     configuration = await ConfigurationContract.new();
@@ -105,6 +110,7 @@ async function prepareAapters(deployer) {
     guildkick = await GuildKickContract.new();
     withdraw = await WithdrawContract.new();
     tribute = await TributeContract.new();
+    distribute = await DistributeContract.new();
   }
 
   return {
@@ -117,6 +123,7 @@ async function prepareAapters(deployer) {
     onboarding,
     withdraw,
     tribute,
+    distribute,
   };
 }
 
@@ -141,6 +148,8 @@ async function addDefaultAdapters(
     onboarding,
     withdraw,
     tribute,
+    distribute,
+
   } = await prepareAapters(deployer);
   await configureDao(
     daoFactory,
@@ -154,6 +163,7 @@ async function addDefaultAdapters(
     voting,
     configuration,
     tribute,
+    distribute,
     unitPrice,
     nbShares,
     votingPeriod,
@@ -177,6 +187,7 @@ async function configureDao(
   voting,
   configuration,
   tribute,
+  distribute,
   unitPrice,
   nbShares,
   votingPeriod,
@@ -229,6 +240,11 @@ async function configureDao(
       PROCESS_PROPOSAL: true,
       NEW_MEMBER: true,
     }),
+    entryDao("distribute", distribute, {
+      SUBMIT_PROPOSAL: true,
+      SPONSOR_PROPOSAL: true,
+      PROCESS_PROPOSAL: true,
+    }),
   ]);
 
   const bankAddress = await dao.getExtensionAddress(sha3("bank"));
@@ -261,6 +277,9 @@ async function configureDao(
     entryBank(tribute, {
       ADD_TO_BALANCE: true,
       REGISTER_NEW_TOKEN: true,
+    }),
+    entryBank(distribute, {
+      INTERNAL_TRANSFER: true,
     }),
   ]);
 
@@ -399,6 +418,7 @@ async function createDao(
   const guildkick = await GuildKickContract.deployed();
   const withdraw = await WithdrawContract.deployed();
   const tribute = await TributeContract.deployed();
+  const distribute = await DistributeContract.deployed();
 
   await configureDao(
     daoFactory,
@@ -412,6 +432,7 @@ async function createDao(
     voting,
     configuration,
     tribute,
+    distribute,
     unitPrice,
     nbShares,
     votingPeriod,
@@ -617,5 +638,6 @@ module.exports = {
   ConfigurationContract,
   OffchainVotingContract,
   TributeContract,
+  DistributeContract,
   BankExtension,
 };
