@@ -8,9 +8,9 @@ dataSources:
     name: DaoFactory
     network: rinkeby
     source:
-      address: "0x04151C7f016d6A6B7E186f79410f27d20545ff8A"
+      address: "0xC40757FF6aa46284eB792fD3284cccd733a191a3"
       abi: DaoFactory
-      startBlock: 7967858
+      startBlock: 8089900
     mapping:
       kind: ethereum/events
       apiVersion: 0.0.4
@@ -30,9 +30,9 @@ dataSources:
     name: BankFactory
     network: rinkeby
     source:
-      address: "0xC425A43e2d8BFEF03A68E3Bee6Fae8B1a5884F1E"
+      address: "0x073051BaC53869c8ED907F42f608a374C67c734E"
       abi: BankFactory
-      startBlock: 7967861
+      startBlock: 8089903
     mapping:
       kind: ethereum/events
       apiVersion: 0.0.4
@@ -43,7 +43,7 @@ dataSources:
         - name: BankFactory
           file: ./build/contracts/BankFactory.json
       eventHandlers:
-        - event: BankCreated(address,address)
+        - event: BankCreated(address)
           handler: handleBankCreated
       file: ./src/bank-factory-mapping.ts
 
