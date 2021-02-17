@@ -105,11 +105,6 @@ contract CouponOnboardingContract is DaoConstants, AdapterGuard, Signatures {
         Coupon memory coupon = Coupon(authorizedMember, amount, nonce);
         bytes32 hash = hashCouponMessage(dao, coupon);
 
-        require(
-            hash == keccak256(signature),
-            "coupon and arguments do not match")
-        ;
-
         address recoveredKey = recover(hash, signature);
 
         require(recoveredKey == signerAddress, "invalid sig");
