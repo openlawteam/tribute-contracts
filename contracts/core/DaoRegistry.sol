@@ -3,7 +3,6 @@ pragma solidity ^0.8.0;
 // SPDX-License-Identifier: MIT
 
 import "./DaoConstants.sol";
-
 import "../guards/AdapterGuard.sol";
 import "../guards/MemberGuard.sol";
 import "../extensions/IExtension.sol";
