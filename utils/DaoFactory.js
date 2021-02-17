@@ -128,8 +128,8 @@ async function prepareAdapters(deployer) {
     onboarding,
     withdraw,
     couponOnboarding,
-    tribute
-    distribute,
+    tribute,
+    distribute
   };
 }
 
@@ -155,7 +155,7 @@ async function addDefaultAdapters(
     withdraw,
     couponOnboarding,
     tribute,
-    distribute,
+    distribute
   } = await prepareAdapters(deployer);
   await configureDao(
     daoFactory,
