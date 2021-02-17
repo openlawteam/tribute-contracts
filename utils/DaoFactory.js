@@ -44,7 +44,9 @@ const sharePrice = toBN(toWei("120", "finney"));
 const remaining = sharePrice.sub(toBN("50000000000000"));
 const maximumChunks = toBN("11");
 
-const OLTokenContract = artifacts.require("./test/OLT");
+const OLToken = artifacts.require("./test/OLToken");
+const TestToken1 = artifacts.require("./test/TestToken1");
+const TestToken2 = artifacts.require("./test/TestToken2");
 
 const DaoFactory = artifacts.require("./core/DaoFactory");
 const DaoRegistry = artifacts.require("./core/DaoRegistry");
@@ -376,6 +378,12 @@ async function deployDao(deployer, options) {
     );
   }
 
+  // deploy test token contracts (for testing convenience)
+  const tokenSupply = 1000000;
+  await deployer.deploy(OLToken, tokenSupply);
+  await deployer.deploy(TestToken1, tokenSupply);
+  await deployer.deploy(TestToken2, tokenSupply);
+
   return dao;
 }
 
@@ -624,7 +632,9 @@ module.exports = {
   sharePrice,
   remaining,
   ETH_TOKEN,
-  OLTokenContract,
+  OLToken,
+  TestToken1,
+  TestToken2,
   DaoFactory,
   DaoRegistry,
   VotingContract,
