@@ -35,7 +35,7 @@ SOFTWARE.
 contract BankFactory is CloneFactory, DaoConstants {
     address public identityAddress;
 
-    event BankCreated(address daoAddress, address bankAddress);
+    event BankCreated(address bankAddress);
 
     constructor(address _identityAddress) {
         identityAddress = _identityAddress;
@@ -46,11 +46,6 @@ contract BankFactory is CloneFactory, DaoConstants {
      */
     function createBank() external {
         BankExtension bank = BankExtension(_createClone(identityAddress));
-        address bankAddr = address(bank);
-        address daoAddr = address(dao);
-
-        dao.addExtension(BANK, bank, msg.sender);
-
-        emit BankCreated(daoAddr, bankAddr);
+        emit BankCreated(address(bank));
     }
 }
