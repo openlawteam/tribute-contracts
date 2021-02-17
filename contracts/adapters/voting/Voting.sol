@@ -49,7 +49,7 @@ contract VotingContract is IVoting, DaoConstants, MemberGuard, AdapterGuard {
 
     string public constant ADAPTER_NAME = "VotingContract";
 
-    function getAdapterName() override public pure returns (string memory) {
+    function getAdapterName() public pure override returns (string memory) {
         return ADAPTER_NAME;
     }
 
