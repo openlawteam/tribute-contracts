@@ -47,6 +47,12 @@ contract VotingContract is IVoting, DaoConstants, MemberGuard, AdapterGuard {
 
     mapping(address => mapping(bytes32 => Voting)) public votes;
 
+    string constant public ADAPTER_NAME = "VotingContract";
+
+    function getAdapterName() override external returns (string) {
+        return ADAPTER_NAME;
+    }
+
     function configureDao(
         DaoRegistry dao,
         uint256 votingPeriod,
