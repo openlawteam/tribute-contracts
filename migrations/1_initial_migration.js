@@ -32,7 +32,6 @@ function getNetworkDetails(name) {
 }
 
 module.exports = async function(deployer, network) {
-  console.log('********* deploying contracts ...');
   deployer.deploy(Migrations);
   let dao;
   if(network === 'ganache' || network === 'rinkeby') {
@@ -47,7 +46,6 @@ module.exports = async function(deployer, network) {
       chainId: getNetworkDetails(network).chainId,
       deployTestTokens: true
     });
-    console.log('********* contract deployed!');
   } else if (network === 'test' || network === 'coverage') {
     dao = await deployDao(deployer, {
       unitPrice: sharePrice,
