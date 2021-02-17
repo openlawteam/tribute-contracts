@@ -2,7 +2,7 @@ pragma solidity ^0.8.0;
 
 // SPDX-License-Identifier: MIT
 
-import "../utils/ERC20.sol";
+import "../../core/DaoRegistry.sol";
 
 /**
 MIT License
@@ -27,8 +27,18 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
  */
-contract OLToken is ERC20 {
-    constructor(uint256 _totalSupply) ERC20("OpenLawToken", "OLT") {
-        _mint(msg.sender, _totalSupply * (10**uint256(decimals())));
-    }
+
+interface IDistribute {
+    function submitProposal(
+        DaoRegistry dao,
+        bytes32 proposalId,
+        address shareHolderAdrr,
+        address token,
+        uint256 amount,
+        bytes calldata data
+    ) external;
+
+    function processProposal(DaoRegistry dao, bytes32 proposalId) external;
+
+    function distribute(DaoRegistry dao, uint256 toIndex) external;
 }
