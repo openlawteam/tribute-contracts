@@ -170,19 +170,26 @@ contract("LAOLAND - Coupon Onboarding Adapter", async (accounts) => {
 
     assert.equal(await bank.balanceOf(otherAccount, SHARES), "0");
 
-    await couponOnboarding.redeemCoupon(
-      dao.address,
-      otherAccount,
-      10,
-      1,
-      signature
-    );
+    try {
+      await couponOnboarding.redeemCoupon(
+        dao.address,
+        otherAccount,
+        100,
+        1,
+        signature
+      );
+    } catch (err) {
+      assert.equal(
+        err.reason,
+        "invalid sig"
+      );
+    }
 
     const myAccountShares = await bank.balanceOf(myAccount, SHARES);
     const otherAccountShares = await bank.balanceOf(otherAccount, SHARES);
 
     assert.equal(myAccountShares.toString(), "1");
-    assert.equal(otherAccountShares.toString(), "10");
+    assert.equal(otherAccountShares.toString(), "0");
 
     await checkBalance(bank, GUILD, ETH_TOKEN, toBN("0"));
   });
@@ -235,19 +242,25 @@ contract("LAOLAND - Coupon Onboarding Adapter", async (accounts) => {
 
     assert.equal(await bank.balanceOf(otherAccount, SHARES), "0");
 
-    await couponOnboarding.redeemCoupon(
-      dao.address,
-      otherAccount,
-      10,
-      1,
-      signature
-    );
-
+    try {
+      await couponOnboarding.redeemCoupon(
+        dao.address,
+        myAccount,
+        10,
+        1,
+        signature
+      );
+    } catch (err) {
+      assert.equal(
+        err.reason,
+        "invalid sig"
+      );
+    }
     const myAccountShares = await bank.balanceOf(myAccount, SHARES);
     const otherAccountShares = await bank.balanceOf(otherAccount, SHARES);
 
     assert.equal(myAccountShares.toString(), "1");
-    assert.equal(otherAccountShares.toString(), "10");
+    assert.equal(otherAccountShares.toString(), "0");
 
     await checkBalance(bank, GUILD, ETH_TOKEN, toBN("0"));
   });
