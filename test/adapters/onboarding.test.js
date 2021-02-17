@@ -33,7 +33,7 @@ const {
   SHARES,
   sharePrice,
   remaining,
-  OLTokenContract,
+  OLToken,
   numberOfShares,
   OnboardingContract,
   VotingContract,
@@ -130,7 +130,7 @@ contract("LAOLAND - Onboarding Adapter", async (accounts) => {
 
     // Issue OpenLaw ERC20 Basic Token for tests
     const tokenSupply = 1000000;
-    let oltContract = await OLTokenContract.new(tokenSupply);
+    let oltContract = await OLToken.new(tokenSupply);
 
     const nbOfERC20Shares = 100000000;
     const erc20SharePrice = toBN("10");
@@ -350,7 +350,7 @@ contract("LAOLAND - Onboarding Adapter", async (accounts) => {
 
     // Issue OpenLaw ERC20 Basic Token for tests
     const tokenSupply = 1000000;
-    let oltContract = await OLTokenContract.new(tokenSupply);
+    let oltContract = await OLToken.new(tokenSupply);
 
     const nbOfERC20Shares = 100000000;
     const erc20SharePrice = toBN("10");

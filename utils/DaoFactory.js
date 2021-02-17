@@ -44,7 +44,9 @@ const sharePrice = toBN(toWei("120", "finney"));
 const remaining = sharePrice.sub(toBN("50000000000000"));
 const maximumChunks = toBN("11");
 
-const OLTokenContract = artifacts.require("./test/OLT");
+const OLToken = artifacts.require("./test/OLToken");
+const TestToken1 = artifacts.require("./test/TestToken1");
+const TestToken2 = artifacts.require("./test/TestToken2");
 
 const DaoFactory = artifacts.require("./core/DaoFactory");
 const DaoRegistry = artifacts.require("./core/DaoRegistry");
@@ -66,7 +68,7 @@ const OffchainVotingContract = artifacts.require(
 const TributeContract = artifacts.require("./adapters/TributeContract");
 const DistributeContract = artifacts.require("./adapters/DistributeContract");
 
-async function prepareAapters(deployer) {
+async function prepareAdapters(deployer) {
   let voting;
   let configuration;
   let ragequit;
@@ -149,8 +151,7 @@ async function addDefaultAdapters(
     withdraw,
     tribute,
     distribute,
-
-  } = await prepareAapters(deployer);
+  } = await prepareAdapters(deployer);
   await configureDao(
     daoFactory,
     dao,
@@ -315,6 +316,7 @@ async function deployDao(deployer, options) {
   const maxChunks = options.maximumChunks || maximumChunks;
   const isOffchainVoting = !!options.offchainVoting;
   const chainId = options.chainId || 1;
+  const deployTestTokens = !!options.deployTestTokens;
 
   await deployer.deploy(DaoRegistry);
 
@@ -375,6 +377,14 @@ async function deployDao(deployer, options) {
       gracePeriod,
       10
     );
+  }
+
+  // deploy test token contracts (for testing convenience)
+  if (deployTestTokens) {
+    const tokenSupply = 1000000;
+    await deployer.deploy(OLToken, tokenSupply);
+    await deployer.deploy(TestToken1, tokenSupply);
+    await deployer.deploy(TestToken2, tokenSupply);
   }
 
   return dao;
@@ -602,7 +612,7 @@ async function getContract(dao, id, contractFactory) {
 }
 
 module.exports = {
-  prepareAapters,
+  prepareAdapters,
   advanceTime,
   createDao,
   deployDao,
@@ -625,7 +635,9 @@ module.exports = {
   sharePrice,
   remaining,
   ETH_TOKEN,
-  OLTokenContract,
+  OLToken,
+  TestToken1,
+  TestToken2,
   DaoFactory,
   DaoRegistry,
   VotingContract,

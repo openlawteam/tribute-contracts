@@ -44,7 +44,8 @@ module.exports = async function(deployer, network) {
       votingPeriod: 60, //in seconds
       gracePeriod: 60, // in seconds
       offchainVoting: true,
-      chainId: getNetworkDetails(network).chainId
+      chainId: getNetworkDetails(network).chainId,
+      deployTestTokens: true
     });
     console.log('********* contract deployed!');
   } else if (network === 'test' || network === 'coverage') {
@@ -56,7 +57,8 @@ module.exports = async function(deployer, network) {
       votingPeriod: 10,
       gracePeriod: 1,
       offchainVoting: true,
-      chainId: getNetworkDetails(network).chainId
+      chainId: getNetworkDetails(network).chainId,
+      deployTestTokens: false
     });
   }
   if(dao) {

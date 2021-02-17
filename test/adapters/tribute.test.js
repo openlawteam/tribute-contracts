@@ -31,7 +31,7 @@ const {
   getContract,
   GUILD,
   SHARES,
-  OLTokenContract,
+  OLToken,
   TributeContract,
   VotingContract,
   BankExtension,
@@ -54,7 +54,7 @@ contract("LAOLAND - Tribute Adapter", async (accounts) => {
 
     // Issue OpenLaw ERC20 Basic Token for tests
     const tokenSupply = 1000000;
-    let oltContract = await OLTokenContract.new(tokenSupply);
+    let oltContract = await OLToken.new(tokenSupply);
 
     // Transfer OLTs to myAccount
     const initialTokenBalance = toBN("100");
@@ -170,7 +170,7 @@ contract("LAOLAND - Tribute Adapter", async (accounts) => {
 
     // Issue OpenLaw ERC20 Basic Token for tests
     const tokenSupply = 1000000;
-    let oltContract = await OLTokenContract.new(tokenSupply);
+    let oltContract = await OLToken.new(tokenSupply);
 
     // Transfer OLTs to myAccount
     const initialTokenBalance = toBN("100");
@@ -271,7 +271,7 @@ contract("LAOLAND - Tribute Adapter", async (accounts) => {
 
     // Issue OpenLaw ERC20 Basic Token for tests
     const tokenSupply = 1000000;
-    let oltContract = await OLTokenContract.new(tokenSupply);
+    let oltContract = await OLToken.new(tokenSupply);
 
     // Transfer OLTs to myAccount
     const initialTokenBalance = toBN("100");
