@@ -29,7 +29,6 @@ SOFTWARE.
  */
 
 interface IManaging {
-
     function getVotingAdapterName() external returns (string);
 
     function createAdapterChangeRequest(
