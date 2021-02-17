@@ -316,6 +316,7 @@ async function deployDao(deployer, options) {
   const maxChunks = options.maximumChunks || maximumChunks;
   const isOffchainVoting = !!options.offchainVoting;
   const chainId = options.chainId || 1;
+  const deployTestTokens = !!options.deployTestTokens;
 
   await deployer.deploy(DaoRegistry);
 
@@ -379,10 +380,12 @@ async function deployDao(deployer, options) {
   }
 
   // deploy test token contracts (for testing convenience)
-  const tokenSupply = 1000000;
-  await deployer.deploy(OLToken, tokenSupply);
-  await deployer.deploy(TestToken1, tokenSupply);
-  await deployer.deploy(TestToken2, tokenSupply);
+  if (deployTestTokens) {
+    const tokenSupply = 1000000;
+    await deployer.deploy(OLToken, tokenSupply);
+    await deployer.deploy(TestToken1, tokenSupply);
+    await deployer.deploy(TestToken2, tokenSupply);
+  }
 
   return dao;
 }
