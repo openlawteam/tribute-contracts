@@ -75,7 +75,7 @@ contract OffchainVotingContract is
 
     string public constant ADAPTER_NAME = "OffchainVotingContract";
 
-    function getAdapterName() external override returns (string) {
+    function getAdapterName() override public pure returns (string memory) {
         return ADAPTER_NAME;
     }
 
