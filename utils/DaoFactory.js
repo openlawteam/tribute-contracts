@@ -66,7 +66,7 @@ const OffchainVotingContract = artifacts.require(
 const TributeContract = artifacts.require("./adapters/TributeContract");
 const DistributeContract = artifacts.require("./adapters/DistributeContract");
 
-async function prepareAapters(deployer) {
+async function prepareAdapters(deployer) {
   let voting;
   let configuration;
   let ragequit;
@@ -149,8 +149,7 @@ async function addDefaultAdapters(
     withdraw,
     tribute,
     distribute,
-
-  } = await prepareAapters(deployer);
+  } = await prepareAdapters(deployer);
   await configureDao(
     daoFactory,
     dao,
@@ -602,7 +601,7 @@ async function getContract(dao, id, contractFactory) {
 }
 
 module.exports = {
-  prepareAapters,
+  prepareAdapters,
   advanceTime,
   createDao,
   deployDao,
