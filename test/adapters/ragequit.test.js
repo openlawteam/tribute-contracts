@@ -36,7 +36,7 @@ const {
   ETH_TOKEN,
   SHARES,
   LOOT,
-  OLTokenContract,
+  OLToken,
   OnboardingContract,
   VotingContract,
   RagequitContract,
@@ -398,7 +398,7 @@ contract("LAOLAND - Ragequit Adapter", async (accounts) => {
 
     // Issue OpenLaw ERC20 Basic Token for tests
     let tokenSupply = 1000000;
-    let oltContract = await OLTokenContract.new(tokenSupply);
+    let oltContract = await OLToken.new(tokenSupply);
 
     let dao = await createDao(
       myAccount,

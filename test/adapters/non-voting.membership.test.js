@@ -33,7 +33,7 @@ const {
   LOOT,
   sharePrice,
   remaining,
-  OLTokenContract,
+  OLToken,
   OnboardingContract,
   VotingContract,
   BankExtension,
@@ -100,7 +100,7 @@ contract("LAOLAND - Non Voting Onboarding Adapter", async (accounts) => {
 
     // Issue OpenLaw ERC20 Basic Token for tests
     let tokenSupply = 1000000;
-    let oltContract = await OLTokenContract.new(tokenSupply);
+    let oltContract = await OLToken.new(tokenSupply);
 
     let lootSharePrice = 10;
     let nbOfLootShares = 100000000;
