@@ -37,11 +37,16 @@ abstract contract DaoConstants {
     bytes32 internal constant MANAGING = keccak256("managing");
     bytes32 internal constant RAGEQUIT = keccak256("ragequit");
     bytes32 internal constant GUILDKICK = keccak256("guildkick");
-    bytes32 internal constant BANK = keccak256("bank");
     bytes32 internal constant EXECUTION = keccak256("execution");
     bytes32 internal constant CONFIGURATION = keccak256("configuration");
     bytes32 internal constant DISTRIBUTE = keccak256("distribute");
+    bytes32 internal constant TRIBUTE_NFT = keccak256("tribute-nft");
 
+    // Extensions
+    bytes32 internal constant BANK = keccak256("bank");
+    bytes32 internal constant NFT = keccak256("nft");
+
+    // Reserved Addresses
     address internal constant GUILD = address(0xdead);
     address internal constant TOTAL = address(0xbabe);
     address internal constant ESCROW = address(0x4bec);

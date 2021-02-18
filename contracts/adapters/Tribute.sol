@@ -68,6 +68,16 @@ contract TributeContract is ITribute, DaoConstants, MemberGuard, AdapterGuard {
         revert("fallback revert");
     }
 
+    function provideTributeNFT(
+        DaoRegistry dao,
+        bytes32 proposalId,
+        address nftAddr,
+        uint256 nftTokenId,
+        uint256 requestedShares
+    ) external pure override {
+        revert("not supported operation");
+    }
+
     /**
      * @notice Configures the adapter for a particular DAO.
      * @notice Registers the DAO internal token with the DAO Bank.

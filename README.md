@@ -1,4 +1,4 @@
-[![codecov](https://codecov.io/gh/openlawteam/molochv3-contracts/branch/master/graph/badge.svg?token=XZRL9RUYZE)](https://codecov.io/gh/openlawteam/laoland/)
+[![codecov](https://codecov.io/gh/openlawteam/molochv3-contracts/branch/master/graph/badge.svg?token=XZRL9RUYZE)](https://codecov.io/gh/openlawteam/molochv3-contracts/)
 
 ## Overview
 
