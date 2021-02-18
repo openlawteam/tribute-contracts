@@ -51,7 +51,6 @@ const signer = {
 };
 
 contract("LAOLAND - Coupon Onboarding Adapter", async (accounts) => {
-
   it("should be possible to join a DAO with a valid coupon", async () => {
     const myAccount = accounts[1];
     const otherAccount = accounts[2];
@@ -179,10 +178,7 @@ contract("LAOLAND - Coupon Onboarding Adapter", async (accounts) => {
         signature
       );
     } catch (err) {
-      assert.equal(
-        err.reason,
-        "invalid sig"
-      );
+      assert.equal(err.reason, "invalid sig");
     }
 
     const myAccountShares = await bank.balanceOf(myAccount, SHARES);
@@ -251,10 +247,7 @@ contract("LAOLAND - Coupon Onboarding Adapter", async (accounts) => {
         signature
       );
     } catch (err) {
-      assert.equal(
-        err.reason,
-        "invalid sig"
-      );
+      assert.equal(err.reason, "invalid sig");
     }
     const myAccountShares = await bank.balanceOf(myAccount, SHARES);
     const otherAccountShares = await bank.balanceOf(otherAccount, SHARES);
