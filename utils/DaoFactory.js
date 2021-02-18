@@ -386,14 +386,7 @@ async function deployDao(deployer, options) {
     await deployer.deploy(OLToken, tokenSupply);
     await deployer.deploy(TestToken1, tokenSupply);
     await deployer.deploy(TestToken2, tokenSupply);
-
     await deployer.deploy(Multicall);
-
-    let multicall = await Multicall.deployed();
-
-    console.log('***********************');
-    console.log('multicall address:' + multicall.address);
-    console.log('***********************');
   }
 
   return dao;
