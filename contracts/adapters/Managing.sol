@@ -53,7 +53,12 @@ contract ManagingContract is IManaging, DaoConstants, MemberGuard {
     /**
      * @notice returns the voting adapter name that is configured in the DAO.
      */
-    function getVotingAdapterName(DaoRegistry dao) external returns (string) {
+    function getVotingAdapterName(DaoRegistry dao)
+        external
+        view
+        override
+        returns (string memory)
+    {
         IVoting votingContract = IVoting(dao.getAdapterAddress(VOTING));
         return votingContract.getAdapterName();
     }
