@@ -71,6 +71,30 @@ contract OffchainVotingContract is
 
     uint256 public chainId;
 
+    string public constant ADAPTER_NAME = "OffchainVotingContract";
+
+    function getAdapterName() external pure override returns (string memory) {
+        return ADAPTER_NAME;
+    }
+
+    function DOMAIN_SEPARATOR(DaoRegistry dao, address actionId)
+        public
+        view
+        returns (bytes32)
+    {
+        return
+            keccak256(
+                abi.encode(
+                    EIP712_DOMAIN_TYPEHASH,
+                    keccak256("Snapshot Message"), // string name
+                    keccak256("4"), // string version
+                    chainId, // uint256 chainId
+                    address(dao), // address verifyingContract,
+                    actionId
+                )
+            );
+    }
+
     VotingContract public fallbackVoting;
 
     struct Voting {

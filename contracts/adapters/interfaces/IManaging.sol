@@ -29,6 +29,10 @@ SOFTWARE.
  */
 
 interface IManaging {
+    function getVotingAdapterName(DaoRegistry dao)
+        external
+        returns (string memory);
+
     function createAdapterChangeRequest(
         DaoRegistry dao,
         bytes32 proposalId,

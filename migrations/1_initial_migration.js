@@ -32,7 +32,6 @@ function getNetworkDetails(name) {
 }
 
 module.exports = async function(deployer, network) {
-
   deployer.deploy(Migrations);
   let dao;
   if(network === 'ganache' || network === 'rinkeby') {
