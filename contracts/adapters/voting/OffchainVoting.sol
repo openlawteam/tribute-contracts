@@ -73,6 +73,12 @@ contract OffchainVotingContract is
 
     uint256 public chainId;
 
+    string public constant ADAPTER_NAME = "OffchainVotingContract";
+
+    function getAdapterName() external pure override returns (string memory) {
+        return ADAPTER_NAME;
+    }
+
     function DOMAIN_SEPARATOR(DaoRegistry dao, address actionId)
         public
         view

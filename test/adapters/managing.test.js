@@ -305,4 +305,19 @@ contract("LAOLAND - Managing Adapter", async (accounts) => {
     let newOnboardingAddress = await dao.getAdapterAddress(sha3("onboarding"));
     assert.equal(newOnboardingAddress.toString(), newAdapterAddress.toString());
   });
+
+  it("should be possible to get the voting contract name", async () => {
+    const daoOwner = accounts[1];
+
+    // Create the new DAO
+    let dao = await createDao(daoOwner);
+    let managingContract = await dao.getAdapterAddress(sha3("managing"));
+    let managing = await ManagingContract.at(managingContract);
+
+    // Check if the voting adapter (VotingContract) was added to the Registry
+    let votingAdapterName = await managing.getVotingAdapterName(dao.address, {
+      from: daoOwner,
+    });
+    assert.equal(votingAdapterName, "VotingContract");
+  });
 });

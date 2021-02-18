@@ -38,6 +38,8 @@ interface IVoting {
         GRACE_PERIOD
     }
 
+    function getAdapterName() external pure returns (string memory);
+
     function startNewVotingForProposal(
         DaoRegistry dao,
         bytes32 proposalId,
