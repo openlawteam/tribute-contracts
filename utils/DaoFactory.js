@@ -389,10 +389,10 @@ async function deployDao(deployer, options) {
 
     await deployer.deploy(Multicall);
 
-    let multicallAddr = await Multicall.deployed();
+    let multicall = await Multicall.deployed();
 
     console.log('***********************');
-    console.log('multicall address:' + multicallAddr);
+    console.log('multicall address:' + multicall.address);
     console.log('***********************');
   }
 
