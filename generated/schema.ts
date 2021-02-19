@@ -135,6 +135,23 @@ export class Laoland extends Entity {
       this.set("bank", Value.fromString(value as string));
     }
   }
+
+  get daoConstants(): string | null {
+    let value = this.get("daoConstants");
+    if (value === null || value.kind == ValueKind.NULL) {
+      return null;
+    } else {
+      return value.toString();
+    }
+  }
+
+  set daoConstants(value: string | null) {
+    if (value === null) {
+      this.unset("daoConstants");
+    } else {
+      this.set("daoConstants", Value.fromString(value as string));
+    }
+  }
 }
 
 export class Bank extends Entity {
@@ -181,23 +198,6 @@ export class Bank extends Entity {
       this.unset("bankAddress");
     } else {
       this.set("bankAddress", Value.fromBytes(value as Bytes));
-    }
-  }
-
-  get daoAddress(): Bytes | null {
-    let value = this.get("daoAddress");
-    if (value === null || value.kind == ValueKind.NULL) {
-      return null;
-    } else {
-      return value.toBytes();
-    }
-  }
-
-  set daoAddress(value: Bytes | null) {
-    if (value === null) {
-      this.unset("daoAddress");
-    } else {
-      this.set("daoAddress", Value.fromBytes(value as Bytes));
     }
   }
 
@@ -775,6 +775,23 @@ export class DaoConstants extends Entity {
 
   set id(value: string) {
     this.set("id", Value.fromString(value));
+  }
+
+  get laoland(): string | null {
+    let value = this.get("laoland");
+    if (value === null || value.kind == ValueKind.NULL) {
+      return null;
+    } else {
+      return value.toString();
+    }
+  }
+
+  set laoland(value: string | null) {
+    if (value === null) {
+      this.unset("laoland");
+    } else {
+      this.set("laoland", Value.fromString(value as string));
+    }
   }
 
   get GUILD(): Bytes | null {

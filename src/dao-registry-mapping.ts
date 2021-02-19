@@ -12,8 +12,16 @@ import {
   ConfigurationUpdated,
   AddressConfigurationUpdated,
 } from "../generated/templates/DaoRegistry/DaoRegistry";
-import { Adapter, Extension, Proposal, Member } from "../generated/schema";
-import { log, store } from "@graphprotocol/graph-ts";
+import {
+  Adapter,
+  Extension,
+  Laoland,
+  Proposal,
+  Member,
+} from "../generated/schema";
+import { log, store, crypto } from "@graphprotocol/graph-ts";
+
+// const bankAdapterId = Web3.sha3(DaoConstants.BANK);
 
 export function handleSubmittedProposal(event: SubmittedProposal): void {
   let id = event.params.proposalId;
@@ -180,6 +188,23 @@ export function handleExtensionAdded(event: ExtensionAdded): void {
   );
 
   let extension = Extension.load(event.params.extensionId.toHex());
+
+  // let bankAdapterId = crypto.keccak256("0xea0ca03c7adbe41dc655fec28a9209dc8e6e042f3d991a67765ba285b9cf73a0").toHexString()
+  // // if extension is `bank` the BankExtension
+  // if (
+  //   bankAdapterId == event.params.extensionId.toHexString() &&
+  //   extension == null
+  // ) {
+  //   let dao = Laoland.load(event.address.toHexString());
+  //   // let dao = loadOrCreateDao(event.params._address.toHexString());
+
+  //   // create 1-to-1 relationship between the bank and its dao
+  //   // bank.laoland = event.params.bankAddress.toHexString();
+
+  //   // create 1-to-1 relationship between the dao and its bank
+  //   dao.bank = event.address.toHexString();
+  //   dao.save();
+  // } else
 
   if (extension == null) {
     extension = new Extension(event.params.extensionId.toHex());

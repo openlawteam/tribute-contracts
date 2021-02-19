@@ -10,7 +10,7 @@ dataSources:
     source:
       address: "0xC40757FF6aa46284eB792fD3284cccd733a191a3"
       abi: DaoFactory
-      startBlock: 8089900
+      startBlock: 8099921
     mapping:
       kind: ethereum/events
       apiVersion: 0.0.4
@@ -32,7 +32,7 @@ dataSources:
     source:
       address: "0x073051BaC53869c8ED907F42f608a374C67c734E"
       abi: BankFactory
-      startBlock: 8089903
+      startBlock: 8099924
     mapping:
       kind: ethereum/events
       apiVersion: 0.0.4

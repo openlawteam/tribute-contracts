@@ -228,54 +228,16 @@ export class CreateDaoCall__Inputs {
   get daoName(): string {
     return this._call.inputValues[0].value.toString();
   }
+
+  get creator(): Address {
+    return this._call.inputValues[1].value.toAddress();
+  }
 }
 
 export class CreateDaoCall__Outputs {
   _call: CreateDaoCall;
 
   constructor(call: CreateDaoCall) {
-    this._call = call;
-  }
-}
-
-export class ConfigureDaoCall extends ethereum.Call {
-  get inputs(): ConfigureDaoCall__Inputs {
-    return new ConfigureDaoCall__Inputs(this);
-  }
-
-  get outputs(): ConfigureDaoCall__Outputs {
-    return new ConfigureDaoCall__Outputs(this);
-  }
-}
-
-export class ConfigureDaoCall__Inputs {
-  _call: ConfigureDaoCall;
-
-  constructor(call: ConfigureDaoCall) {
-    this._call = call;
-  }
-
-  get daoAddr(): Address {
-    return this._call.inputValues[0].value.toAddress();
-  }
-
-  get keys(): Array<Bytes> {
-    return this._call.inputValues[1].value.toBytesArray();
-  }
-
-  get values(): Array<BigInt> {
-    return this._call.inputValues[2].value.toBigIntArray();
-  }
-
-  get finalizeDao(): boolean {
-    return this._call.inputValues[3].value.toBoolean();
-  }
-}
-
-export class ConfigureDaoCall__Outputs {
-  _call: ConfigureDaoCall;
-
-  constructor(call: ConfigureDaoCall) {
     this._call = call;
   }
 }

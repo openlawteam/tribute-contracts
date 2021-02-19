@@ -892,14 +892,14 @@ export class DaoRegistry extends ethereum.SmartContract {
     return ethereum.CallResult.fromValue(value[0].toBoolean());
   }
 
-  getNbMember(): BigInt {
-    let result = super.call("getNbMember", "getNbMember():(uint256)", []);
+  getNbMembers(): BigInt {
+    let result = super.call("getNbMembers", "getNbMembers():(uint256)", []);
 
     return result[0].toBigInt();
   }
 
-  try_getNbMember(): ethereum.CallResult<BigInt> {
-    let result = super.tryCall("getNbMember", "getNbMember():(uint256)", []);
+  try_getNbMembers(): ethereum.CallResult<BigInt> {
+    let result = super.tryCall("getNbMembers", "getNbMembers():(uint256)", []);
     if (result.reverted) {
       return new ethereum.CallResult();
     }
@@ -1076,6 +1076,10 @@ export class InitializeCall__Inputs {
 
   get creator(): Address {
     return this._call.inputValues[0].value.toAddress();
+  }
+
+  get payer(): Address {
+    return this._call.inputValues[1].value.toAddress();
   }
 }
 

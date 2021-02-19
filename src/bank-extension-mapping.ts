@@ -4,26 +4,8 @@ import {
   Withdraw,
 } from "../generated/templates/BankExtension/BankExtension";
 import { Laoland, Member, Token, TokenBalance } from "../generated/schema";
-import { Address, BigInt, Bytes, log } from "@graphprotocol/graph-ts";
-
-export const ETH_TOKEN: Address = Address.fromString(
-  "0x0000000000000000000000000000000000000000"
-);
-export const SHARES: Address = Address.fromString(
-  "0x00000000000000000000000000000000000Ff1CE"
-);
-export const LOCKED_LOOT: Address = Address.fromString(
-  "0x00000000000000000000000000000000BaaaAaad"
-);
-export const LOOT: Address = Address.fromString(
-  "0x00000000000000000000000000000000b105f00D"
-);
-export const GUILD: Address = Address.fromString(
-  "0x000000000000000000000000000000000000dEaD"
-);
-export const TOTAL: Address = Address.fromString(
-  "0x000000000000000000000000000000000000baBe"
-);
+import { LOCKED_LOOT, LOOT, SHARES, TOTAL } from "./dao-constants";
+import { BigInt, Bytes, log } from "@graphprotocol/graph-ts";
 
 // helpers
 function subtractFromBalance(

@@ -8,7 +8,8 @@ import {
   LOOT,
   SHARES,
   TOTAL,
-} from "./bank-extension-mapping";
+  VOTING_CONTRACT_ADDRESS,
+} from "./dao-constants";
 import { log } from "@graphprotocol/graph-ts";
 
 // helper
@@ -24,6 +25,9 @@ function loadOrCreateDaoConstants(address: string): DaoConstants {
   let daoConstants = DaoConstants.load(address);
   if (daoConstants == null) {
     daoConstants = new DaoConstants(address);
+
+    // create 1-to-1 relationship between the dao and its bank and constants
+    daoConstants.laoland = address;
 
     // constants
     daoConstants.GUILD = GUILD;
@@ -54,8 +58,7 @@ export function handleDaoCreated(event: DAOCreated): void {
   );
 
   // load or create dao constants and save
-  // let daoConstants = loadOrCreateDaoConstants(event.address.toHexString());
-  // daoConstants.save();
+  let daoConstants = loadOrCreateDaoConstants(event.address.toHexString());
 
   // load or create dao and save
   let dao = loadOrCreateDao(event.params._address.toHexString());
@@ -65,10 +68,12 @@ export function handleDaoCreated(event: DAOCreated): void {
   dao.initialized = true;
   dao.name = event.params._name;
 
-  // create 1-to-1 relationship between the dao and its bank
+  // create 1-to-1 relationship between the dao and its bank and constants
   dao.bank = event.params._address.toHexString();
+  dao.daoConstants = event.params._address.toHexString();
 
   DaoRegistry.create(event.params._address);
 
   dao.save();
+  daoConstants.save();
 }

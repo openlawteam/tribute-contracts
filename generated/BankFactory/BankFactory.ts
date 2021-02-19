@@ -23,12 +23,8 @@ export class BankCreated__Params {
     this._event = event;
   }
 
-  get daoAddress(): Address {
-    return this._event.parameters[0].value.toAddress();
-  }
-
   get bankAddress(): Address {
-    return this._event.parameters[1].value.toAddress();
+    return this._event.parameters[0].value.toAddress();
   }
 }
 
@@ -162,10 +158,6 @@ export class CreateBankCall__Inputs {
 
   constructor(call: CreateBankCall) {
     this._call = call;
-  }
-
-  get dao(): Address {
-    return this._call.inputValues[0].value.toAddress();
   }
 }
 

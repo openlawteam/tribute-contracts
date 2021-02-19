@@ -26,17 +26,17 @@ export function handleBankCreated(event: BankCreated): void {
     event.params.bankAddress.toHexString(),
   ]);
 
-  let bank = loadOrCreateBank(event.params.daoAddress.toHexString());
+  let bank = loadOrCreateBank(event.params.bankAddress.toHexString());
 
   bank.createdAt = event.block.timestamp.toString();
   bank.bankAddress = event.params.bankAddress;
-  // bank.daoAddress = event.params.daoAddress;
+  // // bank.daoAddress = event.params.daoAddress;
   bank.balance = BigInt.fromI32(0);
 
   // create 1-to-1 relationship between the bank and its dao
-  // bank.laoland = event.params.daoAddress.toHexString();
+  bank.laoland = event.params.bankAddress.toHexString();
 
-  BankExtension.create(event.params.daoAddress);
+  BankExtension.create(event.params.bankAddress);
 
   bank.save();
 }

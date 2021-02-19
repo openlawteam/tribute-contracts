@@ -6,12 +6,13 @@ type Laoland @entity {
   createdAt: String
   initialized: Boolean
   bank: Bank
+  daoConstants: DaoConstants
 }
 
 type Bank @entity {
   id: ID!
   bankAddress: Bytes # bank address
-  daoAddress: Bytes # dao address
+  # daoAddress: Bytes # dao address
   balance: BigInt
   createdAt: String
   # totalShares: BigInt
@@ -75,6 +76,7 @@ type Extension @entity {
 
 type DaoConstants @entity {
   id: ID!
+  laoland: Laoland
   # dao constants
   GUILD: Bytes
   TOTAL: Bytes
