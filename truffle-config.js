@@ -56,8 +56,8 @@ module.exports = {
         return new HDWalletProvider(mnemonic, infuraUrl);
       },
       network_id: 4,
-      gas: 4500000,
       gasPrice: 10000000000,
+      skipDryRun: true,
     },
     // Another network with more advanced options...
     // advanced: {

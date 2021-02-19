@@ -47,6 +47,7 @@ const maximumChunks = toBN("11");
 const OLToken = artifacts.require("./test/OLToken");
 const TestToken1 = artifacts.require("./test/TestToken1");
 const TestToken2 = artifacts.require("./test/TestToken2");
+const Multicall = artifacts.require("./util/Multicall");
 
 const DaoFactory = artifacts.require("./core/DaoFactory");
 const DaoRegistry = artifacts.require("./core/DaoRegistry");
@@ -329,9 +330,13 @@ async function deployDao(deployer, options) {
   const bankFactory = await BankFactory.deployed();
 
   await bankFactory.createBank();
+  let pastEvent;
+  while(pastEvent === undefined) {
+    let pastEvents = await bankFactory.getPastEvents();
+    pastEvent = pastEvents[0];
+  }
 
-  let pastEvents = await bankFactory.getPastEvents();
-  let { bankAddress } = pastEvents[0].returnValues;
+  let { bankAddress } = pastEvent.returnValues;
   let bank = await BankExtension.at(bankAddress);
   let creator = await dao.getMemberAddress(1);
 
@@ -385,6 +390,7 @@ async function deployDao(deployer, options) {
     await deployer.deploy(OLToken, tokenSupply);
     await deployer.deploy(TestToken1, tokenSupply);
     await deployer.deploy(TestToken2, tokenSupply);
+    await deployer.deploy(Multicall);
   }
 
   return dao;
