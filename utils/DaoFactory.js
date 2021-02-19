@@ -329,9 +329,13 @@ async function deployDao(deployer, options) {
   const bankFactory = await BankFactory.deployed();
 
   await bankFactory.createBank();
+  let pastEvent;
+  while(pastEvent === undefined) {
+    let pastEvents = await bankFactory.getPastEvents();
+    pastEvent = pastEvents[0];
+  }
 
-  let pastEvents = await bankFactory.getPastEvents();
-  let { bankAddress } = pastEvents[0].returnValues;
+  let { bankAddress } = pastEvent.returnValues;
   let bank = await BankExtension.at(bankAddress);
   let creator = await dao.getMemberAddress(1);
 
