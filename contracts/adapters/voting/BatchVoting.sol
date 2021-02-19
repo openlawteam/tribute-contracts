@@ -64,6 +64,8 @@ contract BatchVotingContract is
 
    event NewVotResult(address dao, address actionId, uint256 nbYes, uint256 nbNo);
 
+    string public constant ADAPTER_NAME = "BatchVotingContract";
+
     SnapshotProposalContract private _snapshotContract;
     
     bytes32 constant _VOTING_PERIOD = keccak256("batchvoting.votingPeriod");
@@ -115,6 +117,10 @@ contract BatchVotingContract is
 
             emit NewVotResult(address(dao), vote.actionId, result.nbYes, result.nbNo);
         }
+    }
+
+    function getAdapterName() external pure override returns (string memory) {
+        return ADAPTER_NAME;
     }
 
     function processVotes(DaoRegistry dao,

@@ -47,6 +47,18 @@ module.exports = {
       port: 7545,            // Standard Ethereum port (default: none)
       network_id: "*",       // Any network (default: none)
     },
+    rinkeby: {
+      provider: function() { 
+        let infuraKey = process.env.INFURA_KEY;
+        let HDWalletProvider = require("truffle-hdwallet-provider");
+        let mnemonic = process.env.TRUFFLE_MNEMONIC;
+        let infuraUrl = "https://rinkeby.infura.io/v3/" + infuraKey;
+        return new HDWalletProvider(mnemonic, infuraUrl);
+      },
+      network_id: 4,
+      gasPrice: 10000000000,
+      skipDryRun: true,
+    },
     // Another network with more advanced options...
     // advanced: {
     // port: 8777,             // Custom port

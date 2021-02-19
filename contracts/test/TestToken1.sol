@@ -2,7 +2,7 @@ pragma solidity ^0.8.0;
 
 // SPDX-License-Identifier: MIT
 
-import "../../core/DaoRegistry.sol";
+import "../utils/ERC20.sol";
 
 /**
 MIT License
@@ -27,33 +27,8 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
  */
-
-interface IVoting {
-    enum VotingState {
-        NOT_STARTED,
-        TIE,
-        PASS,
-        NOT_PASS,
-        IN_PROGRESS,
-        GRACE_PERIOD
+contract TestToken1 is ERC20 {
+    constructor(uint256 _totalSupply) ERC20("TestToken1", "TT1") {
+        _mint(msg.sender, _totalSupply * (10**uint256(decimals())));
     }
-
-    function getAdapterName() external pure returns (string memory);
-
-    function startNewVotingForProposal(
-        DaoRegistry dao,
-        bytes32 proposalId,
-        bytes calldata data
-    ) external;
-
-    function getSenderAddress(
-        DaoRegistry dao,
-        address actionId,
-        bytes memory data,
-        address sender
-    ) external returns (address);
-
-    function voteResult(DaoRegistry dao, bytes32 proposalId)
-        external
-        returns (VotingState state);
 }

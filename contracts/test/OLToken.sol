@@ -27,10 +27,8 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
  */
-contract OLT is ERC20 {
-    constructor(uint256 _totalSupply)
-        ERC20("OpenLawToken", "OLT", _totalSupply)
-    {
-        _mint(msg.sender, 10000 * (10**uint256(decimals())));
+contract OLToken is ERC20 {
+    constructor(uint256 _totalSupply) ERC20("OpenLawToken", "OLT") {
+        _mint(msg.sender, _totalSupply * (10**uint256(decimals())));
     }
 }

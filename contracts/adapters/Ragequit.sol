@@ -53,10 +53,12 @@ contract RagequitContract is IRagequit, DaoConstants {
     /**
      * @notice Allows a member or advisor of the DAO to opt out by burning the proportional amount of shares/loot of the member.
      * @notice Anyone is allowed to call this function, but only members and advisors that have shares are able to execute the entire ragequit process.
+     * @notice The array of token needs to be sorted in ascending order before executing this call, otherwise the transaction will fail.
      * @dev The sum of sharesToBurn and lootToBurn have to be greater than zero.
      * @dev The member can not be in jail to execute a ragequit.
      * @dev The member becomes an inactive member of the DAO once all the shares/loot are burned.
      * @dev If the member provides an invalid/not allowed token, the entire processed is reverted.
+     * @dev If no tokens are informed, the transaction is reverted.
      * @param dao The dao address that the member is part of.
      * @param sharesToBurn The amount of shares of the member that must be converted into funds.
      * @param lootToBurn The amount of loot of the member that must be converted into funds.
@@ -66,8 +68,10 @@ contract RagequitContract is IRagequit, DaoConstants {
         DaoRegistry dao,
         uint256 sharesToBurn,
         uint256 lootToBurn,
-        address[] memory tokens
+        address[] calldata tokens
     ) external override {
+        // At least one token needs to be provided
+        require(tokens.length > 0, "missing tokens");
         // Checks if the are enough shares and/or loot to burn
         require(sharesToBurn + lootToBurn > 0, "insufficient shares/loot");
         // Gets the delegated address, otherwise returns the sender address.
@@ -158,15 +162,22 @@ contract RagequitContract is IRagequit, DaoConstants {
 
         // Transfers the funds from the internal Guild account to the internal member's account based on each token provided by the member.
         // The provided token must be supported/allowed by the Guild Bank, otherwise it reverts the entire transaction.
-        for (uint256 i = 0; i < tokens.length; i++) {
-            address token = tokens[i];
+        uint256 length = tokens.length;
+        for (uint256 i = 0; i < length; i++) {
+            address currentToken = tokens[i];
+            uint256 j = i + 1;
+            if (j < length) {
+                // Next token needs to be greater than the current one to prevent duplicates
+                require(currentToken < tokens[j], "duplicate token");
+            }
+
             // Checks if the token is supported by the Guild Bank.
-            require(bank.isTokenAllowed(token), "token not allowed");
+            require(bank.isTokenAllowed(currentToken), "token not allowed");
 
             // Calculates the fair amount of funds to ragequit based on the token, shares and loot
             uint256 amountToRagequit =
                 FairShareHelper.calc(
-                    bank.balanceOf(GUILD, token),
+                    bank.balanceOf(GUILD, currentToken),
                     sharesAndLootToBurn,
                     initialTotalSharesAndLoot
                 );
@@ -180,7 +191,7 @@ contract RagequitContract is IRagequit, DaoConstants {
                 bank.internalTransfer(
                     GUILD,
                     memberAddr,
-                    token,
+                    currentToken,
                     amountToRagequit
                 );
             }

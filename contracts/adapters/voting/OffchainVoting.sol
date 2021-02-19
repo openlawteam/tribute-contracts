@@ -8,6 +8,7 @@ import "../../extensions/Bank.sol";
 import "../../core/DaoConstants.sol";
 import "../../guards/MemberGuard.sol";
 import "../../guards/AdapterGuard.sol";
+import "../../utils/Signatures.sol";
 import "../interfaces/IVoting.sol";
 import "./Voting.sol";
 import "./SnapshotProposalContract.sol";
@@ -40,13 +41,16 @@ contract OffchainVotingContract is
     IVoting,
     DaoConstants,
     MemberGuard,
-    AdapterGuard
+    AdapterGuard,
+    Signatures
 {
 
     SnapshotProposalContract private _snapshotContract;
 
 string public constant VOTE_RESULT_NODE_TYPE =
         "Message(address account,uint256 timestamp,uint256 nbYes,uint256 nbNo,uint256 index,uint256 choice,bytes32 proposalHash)";
+
+    string public constant ADAPTER_NAME = "OffchainVotingContract";
     string public constant VOTE_RESULT_ROOT_TYPE = "Message(bytes32 root)";
     bytes32 public constant VOTE_RESULT_NODE_TYPEHASH =
         keccak256(abi.encodePacked(VOTE_RESULT_NODE_TYPE));
@@ -136,6 +140,10 @@ string public constant VOTE_RESULT_NODE_TYPE =
                     keccak256(abi.encode(VOTE_RESULT_ROOT_TYPEHASH, resultRoot))
                 )
             );
+    }
+
+    function getAdapterName() external pure override returns (string memory) {
+        return ADAPTER_NAME;
     }
 
     function hashVotingResultNode(VoteResultNode memory node)
@@ -684,44 +692,6 @@ string public constant VOTE_RESULT_NODE_TYPE =
         } else {
             return 0;
         }
-    }
-
-    /**
-     * @dev Recover signer address from a message by using his signature
-     * @param hash bytes32 message, the hash is the signed message. What is recovered is the signer address.
-     * @param sig bytes signature, the signature is generated using web3.eth.sign()
-     */
-    function recover(bytes32 hash, bytes memory sig)
-        public
-        pure
-        returns (address)
-    {
-        bytes32 r;
-        bytes32 s;
-        uint8 v;
-
-        //Check the signature length
-        if (sig.length != 65) {
-            return (address(0));
-        }
-
-        // Divide the signature in r, s and v variables
-        assembly {
-            r := mload(add(sig, 32))
-            s := mload(add(sig, 64))
-            v := byte(0, mload(add(sig, 96)))
-        }
-
-        // Version of signature should be 27 or 28, but 0 and 1 are also possible versions
-        if (v < 27) {
-            v += 27;
-        }
-
-        // If the version is correct return the signer address
-        if (v != 27 && v != 28) {
-            return (address(0));
-        }
-        return ecrecover(hash, v, r, s);
     }
 
     function verify(
