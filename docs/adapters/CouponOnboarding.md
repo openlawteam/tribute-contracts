@@ -8,6 +8,7 @@ the shares are directly issued to the new member.
 ## Adapter workflow
 
 Redeem coupon request
+
 - check that the coupon has not already been redeemed
 - check that the signed hash matches the hash of the redeem arguments
 - check that the signer of the coupon matches the configured signer
