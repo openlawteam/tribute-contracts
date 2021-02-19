@@ -8,6 +8,7 @@ import "../../extensions/Bank.sol";
 import "../../core/DaoConstants.sol";
 import "../../guards/MemberGuard.sol";
 import "../../guards/AdapterGuard.sol";
+import "../../utils/Signatures.sol";
 import "../interfaces/IVoting.sol";
 import "./Voting.sol";
 
@@ -39,10 +40,9 @@ contract OffchainVotingContract is
     IVoting,
     DaoConstants,
     MemberGuard,
-    AdapterGuard
+    AdapterGuard,
+    Signatures
 {
-    string public constant EIP712_DOMAIN =
-        "EIP712Domain(string name,string version,uint256 chainId,address verifyingContract,address actionId)";
     string public constant PROPOSAL_MESSAGE_TYPE =
         "Message(uint256 timestamp,bytes32 spaceHash,MessagePayload payload)MessagePayload(bytes32 nameHash,bytes32 bodyHash,string[] choices,uint256 start,uint256 end,string snapshot)";
     string public constant PROPOSAL_PAYLOAD_TYPE =
@@ -56,8 +56,6 @@ contract OffchainVotingContract is
 
     string public constant VOTE_RESULT_ROOT_TYPE = "Message(bytes32 root)";
 
-    bytes32 public constant EIP712_DOMAIN_TYPEHASH =
-        keccak256(abi.encodePacked(EIP712_DOMAIN));
     bytes32 public constant PROPOSAL_MESSAGE_TYPEHASH =
         keccak256(abi.encodePacked(PROPOSAL_MESSAGE_TYPE));
     bytes32 public constant PROPOSAL_PAYLOAD_TYPEHASH =
@@ -173,13 +171,7 @@ contract OffchainVotingContract is
         ProposalMessage memory message
     ) public view returns (bytes32) {
         return
-            keccak256(
-                abi.encodePacked(
-                    "\x19\x01",
-                    DOMAIN_SEPARATOR(dao, actionId),
-                    hashProposalMessage(message)
-                )
-            );
+            hashMessage(dao, chainId, actionId, hashProposalMessage(message));
     }
 
     function hashResultRoot(
@@ -191,7 +183,7 @@ contract OffchainVotingContract is
             keccak256(
                 abi.encodePacked(
                     "\x19\x01",
-                    DOMAIN_SEPARATOR(dao, actionId),
+                    domainSeparator(dao, chainId, actionId),
                     keccak256(abi.encode(VOTE_RESULT_ROOT_TYPEHASH, resultRoot))
                 )
             );
@@ -241,7 +233,7 @@ contract OffchainVotingContract is
             keccak256(
                 abi.encodePacked(
                     "\x19\x01",
-                    DOMAIN_SEPARATOR(dao, actionId),
+                    domainSeparator(dao, chainId, actionId),
                     hashVoteInternal(message)
                 )
             );
@@ -306,7 +298,7 @@ contract OffchainVotingContract is
             keccak256(
                 abi.encodePacked(
                     "\x19\x01",
-                    DOMAIN_SEPARATOR(dao, actionId),
+                    domainSeparator(dao, chainId, actionId),
                     hashVotingResultNode(node)
                 )
             );
@@ -823,44 +815,6 @@ contract OffchainVotingContract is
         } else {
             return 0;
         }
-    }
-
-    /**
-     * @dev Recover signer address from a message by using his signature
-     * @param hash bytes32 message, the hash is the signed message. What is recovered is the signer address.
-     * @param sig bytes signature, the signature is generated using web3.eth.sign()
-     */
-    function recover(bytes32 hash, bytes memory sig)
-        public
-        pure
-        returns (address)
-    {
-        bytes32 r;
-        bytes32 s;
-        uint8 v;
-
-        //Check the signature length
-        if (sig.length != 65) {
-            return (address(0));
-        }
-
-        // Divide the signature in r, s and v variables
-        assembly {
-            r := mload(add(sig, 32))
-            s := mload(add(sig, 64))
-            v := byte(0, mload(add(sig, 96)))
-        }
-
-        // Version of signature should be 27 or 28, but 0 and 1 are also possible versions
-        if (v < 27) {
-            v += 27;
-        }
-
-        // If the version is correct return the signer address
-        if (v != 27 && v != 28) {
-            return (address(0));
-        }
-        return ecrecover(hash, v, r, s);
     }
 
     function verify(

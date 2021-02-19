@@ -9,6 +9,7 @@ const ManagingContract = artifacts.require("./adapter/ManagingContract");
 const FinancingContract = artifacts.require("./adapter/FinancingContract");
 const RagequitContract = artifacts.require("./adapters/RagequitContract");
 const GuildKickContract = artifacts.require("./adapters/GuildKickContract");
+const OffchainVotingContract = artifacts.require("./adapters/voting/OffchainVotingContract");
 const OnboardingContract = artifacts.require("./adapters/OnboardingContract");
 const TributeContract = artifacts.require("./adapters/TributeContract");
 
