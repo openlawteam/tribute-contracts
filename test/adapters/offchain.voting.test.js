@@ -132,7 +132,7 @@ async function createOffchainVotingDao(
 contract("LAOLAND - Offchain Voting Module", async (accounts) => {
   it("should type & hash be consistent for proposals between javascript and solidity", async () => {
     const myAccount = accounts[1];
-    let { dao, voting } = await createOffchainVotingDao(myAccount);
+    let { dao } = await createOffchainVotingDao(myAccount);
 
     let blockNumber = await web3.eth.getBlockNumber();
     const proposalPayload = {
@@ -159,8 +159,9 @@ contract("LAOLAND - Offchain Voting Module", async (accounts) => {
       myAccount,
       chainId
     );
+    const snapshotContract = await SnapshotProposalContract.deployed();
     //Checking proposal type
-    const solProposalMsg = await voting.PROPOSAL_MESSAGE_TYPE();
+    const solProposalMsg = await snapshotContract.PROPOSAL_MESSAGE_TYPE();
     const jsProposalMsg = TypedDataUtils.encodeType("Message", types);
     assert.equal(jsProposalMsg, solProposalMsg);
 
@@ -173,7 +174,7 @@ contract("LAOLAND - Offchain Voting Module", async (accounts) => {
         types,
         true
       ).toString("hex");
-    const solidityHashPayload = await voting.hashProposalPayload(
+    const solidityHashPayload = await snapshotContract.hashProposalPayload(
       proposalPayload
     );
 
@@ -186,22 +187,17 @@ contract("LAOLAND - Offchain Voting Module", async (accounts) => {
         prepareProposalMessage(proposalData),
         types
       ).toString("hex");
-    const solidityHash = await voting.hashProposalMessage(proposalData);
+    const solidityHash = await snapshotContract.hashProposalMessage(proposalData);
     assert.equal(hashStruct, solidityHash);
 
     //Checking domain
-    const domainDef = await voting.EIP712_DOMAIN();
+    const domainDef = await snapshotContract.EIP712_DOMAIN();
     const jsDomainDef = TypedDataUtils.encodeType("EIP712Domain", types);
     assert.equal(jsDomainDef, domainDef);
 
-    console.log("dao address: ", dao.address);
-    console.log("chain id: ", chainId);
-    console.log("my account: ", myAccount);
-
     //Checking domain separator
-    const domainHash = await voting.domainSeparator(
+    const domainHash = await snapshotContract.DOMAIN_SEPARATOR(
       dao.address,
-      chainId,
       myAccount
     );
     const jsDomainHash =
@@ -212,7 +208,7 @@ contract("LAOLAND - Offchain Voting Module", async (accounts) => {
     assert.equal(jsDomainHash, domainHash);
 
     //Checking the actual ERC-712 hash
-    const proposalHash = await voting.hashMessage(
+    const proposalHash = await snapshotContract.hashMessage(
       dao.address,
       myAccount,
       proposalData
@@ -237,8 +233,11 @@ contract("LAOLAND - Offchain Voting Module", async (accounts) => {
       myAccount,
       chainId
     );
+
+    const snapshotContract = await SnapshotProposalContract.deployed();
+
     //Checking proposal type
-    const solProposalMsg = await voting.VOTE_MESSAGE_TYPE();
+    const solProposalMsg = await snapshotContract.VOTE_MESSAGE_TYPE();
     const jsProposalMsg = TypedDataUtils.encodeType("Message", types);
     assert.equal(jsProposalMsg, solProposalMsg);
 
@@ -246,7 +245,7 @@ contract("LAOLAND - Offchain Voting Module", async (accounts) => {
     const hashStruct =
       "0x" +
       TypedDataUtils.hashStruct("Message", voteEntry, types).toString("hex");
-    const solidityHash = await voting.hashVoteInternal(voteEntry);
+    const solidityHash = await snapshotContract.hashVoteInternal(voteEntry);
     assert.equal(hashStruct, solidityHash);
   });
 

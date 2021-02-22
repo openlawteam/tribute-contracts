@@ -185,8 +185,10 @@ contract BatchVotingContract is
         address
     ) external view override returns (address) {
         SnapshotProposalContract.ProposalMessage memory proposal = abi.decode(data, (SnapshotProposalContract.ProposalMessage));
+        bytes32 hash = _snapshotContract.hashMessage(dao, actionId, proposal);
+        return address(this);
         
-        return recover(_snapshotContract.hashMessage(dao, actionId, proposal), proposal.sig);
+        //return recover(hash, proposal.sig);
     }
 
     function startNewVotingForProposal(

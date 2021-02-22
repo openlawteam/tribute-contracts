@@ -36,6 +36,7 @@ const {
   entryDao,
   createDao,
   ETH_TOKEN,
+  OffchainVotingContract,
 } = require("../../utils/DaoFactory.js");
 const {
   createVote,
@@ -115,6 +116,9 @@ contract("LAOLAND - Batch Voting Module", async (accounts) => {
     const myAccount = accounts[1];
     let { dao, voting } = await createBatchVotingDao(myAccount);
 
+    const votingName = await voting.getAdapterName();
+    console.log('voting name:' + votingName);
+
     const onboardingAddress = await dao.getAdapterAddress(sha3("onboarding"));
     const onboarding = await OnboardingContract.at(onboardingAddress);
     let blockNumber = await web3.eth.getBlockNumber();
@@ -166,7 +170,9 @@ contract("LAOLAND - Batch Voting Module", async (accounts) => {
       }
     );
 
-    console.log(proposalData);
+    const offchainVoting = await OffchainVotingContract.deployed();
+
+    offchainVoting.getSenderAddress()
 
     await onboarding.sponsorProposal(
       dao.address,
