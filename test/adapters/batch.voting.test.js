@@ -37,6 +37,8 @@ const {
   createDao,
   ETH_TOKEN,
   OffchainVotingContract,
+  SnapshotProposalContract,
+  BankExtension,
 } = require("../../utils/DaoFactory.js");
 const {
   createVote,
@@ -50,23 +52,18 @@ const {
   SigUtilSigner,
 } = require("../../utils/offchain_voting.js");
 
-const BatchVotingContract = artifacts.require(
-  "./adapters/BatchVotingContract"
-);
-
-
+const BatchVotingContract = artifacts.require("./adapters/BatchVotingContract");
 
 const members = generateMembers(10);
 
 function generateMembers(amount) {
   let accounts = [];
-  for(let i = 0; i < amount; i++) {
+  for (let i = 0; i < amount; i++) {
     const account = web3.eth.accounts.create();
     accounts.push(account);
   }
 
   return accounts;
-  
 }
 
 async function createBatchVotingDao(
@@ -88,10 +85,14 @@ async function createBatchVotingDao(
     members[0].address
   );
 
-  await dao.potentialNewMember(members[0].address);
+  const bankAddress = await dao.getExtensionAddress(sha3("bank"));
+  const bank = await BankExtension.at(bankAddress);
 
-  const votingAddress = await dao.getAdapterAddress(sha3("voting"));
-  const batchVoting = await BatchVotingContract.new(votingAddress, 1);
+  await dao.potentialNewMember(members[0].address);
+  await bank.addToBalance(members[0].address, SHARES, 1);
+
+  const snapshotContract = await SnapshotProposalContract.deployed();
+  const batchVoting = await BatchVotingContract.new(snapshotContract.address);
   await dao.removeAdapter(sha3("voting"));
   await dao.addAdapter(
     sha3("voting"),
@@ -99,25 +100,22 @@ async function createBatchVotingDao(
     entryDao("voting", dao, batchVoting, {}).flags
   );
 
-  await batchVoting.configureDao(
-    dao.address,
-    votingPeriod,
-    gracePeriod,
-    { from: senderAccount, gasPrice: toBN("0") }
-  );
+  await batchVoting.configureDao(dao.address, votingPeriod, gracePeriod, {
+    from: senderAccount,
+    gasPrice: toBN("0"),
+  });
   await dao.finalizeDao({ from: senderAccount, gasPrice: toBN("0") });
 
-  return { dao, voting: batchVoting };
+  return { dao, voting: batchVoting, bank };
 }
 
 contract("LAOLAND - Batch Voting Module", async (accounts) => {
-
   it("should be possible to propose a new voting by signing the proposal hash", async () => {
     const myAccount = accounts[1];
-    let { dao, voting } = await createBatchVotingDao(myAccount);
+    let { dao, voting, bank } = await createBatchVotingDao(myAccount);
 
     const votingName = await voting.getAdapterName();
-    console.log('voting name:' + votingName);
+    console.log("voting name:" + votingName);
 
     const onboardingAddress = await dao.getAdapterAddress(sha3("onboarding"));
     const onboarding = await OnboardingContract.at(onboardingAddress);
@@ -170,10 +168,6 @@ contract("LAOLAND - Batch Voting Module", async (accounts) => {
       }
     );
 
-    const offchainVoting = await OffchainVotingContract.deployed();
-
-    offchainVoting.getSenderAddress()
-
     await onboarding.sponsorProposal(
       dao.address,
       "0x1",
@@ -182,7 +176,7 @@ contract("LAOLAND - Batch Voting Module", async (accounts) => {
 
     const voteEntry = await createVote(proposalHash, members[0].address, true);
 
-    voteEntry.sig = signer(voteEntry, dao.address, onboarding.address, chainId);
+    const sig = signer(voteEntry, dao.address, onboarding.address, chainId);
     assert.equal(
       true,
       validateMessage(
@@ -191,64 +185,22 @@ contract("LAOLAND - Batch Voting Module", async (accounts) => {
         dao.address,
         onboarding.address,
         chainId,
-        voteEntry.sig
+        sig
       )
     );
 
-    const { voteResultTree, votes } = await prepareVoteResult(
-      [voteEntry],
-      dao,
-      bank,
-      onboarding.address,
-      chainId,
-      proposalPayload.snapshot
-    );
-    const result = toStepNode(
-      votes[0],
-      dao.address,
-      onboarding.address,
-      chainId,
-      voteResultTree
-    );
-
-    result.rootSig = signer(
-      { root: voteResultTree.getHexRoot(), type: "result" },
-      dao.address,
-      onboarding.address,
-      chainId
-    );
-
-    const { types } = getVoteStepDomainDefinition(
-      dao.address,
-      myAccount,
-      chainId
-    );
-    //Checking vote result hash
-    const solVoteResultType = await voting.VOTE_RESULT_NODE_TYPE();
-    const jsVoteResultType = TypedDataUtils.encodeType("Message", types);
-    assert.equal(solVoteResultType, jsVoteResultType);
-
-    const hashStruct =
-      "0x" +
-      TypedDataUtils.hashStruct("Message", result, types).toString("hex");
-    const solidityHash = await voting.hashVotingResultNode(result);
-    assert.equal(hashStruct, solidityHash);
-
-    const solAddress = await dao.getPriorDelegateKey(
-      members[0].address,
-      blockNumber
-    );
-    assert.equal(solAddress, members[0].address);
-
     await advanceTime(10000);
 
-    await voting.submitVoteResult(
-      dao.address,
-      "0x1",
-      voteResultTree.getHexRoot(),
-      result,
-      { from: myAccount, gasPrice: toBN("0") }
-    );
+    const prepareVoteEntry = {
+      vote: voteEntry,
+      memberAddress: members[0].address,
+      sig,
+    };
+
+    await voting.submitVoteResult(dao.address, "0x1", [prepareVoteEntry], {
+      from: myAccount,
+      gasPrice: toBN("0"),
+    });
 
     await advanceTime(10000);
 

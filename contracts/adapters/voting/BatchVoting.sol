@@ -60,18 +60,27 @@ contract BatchVotingContract is
         SnapshotProposalContract.VoteMessage vote;
         address memberAddress;
         bytes sig;
-   }
+    }
 
-   event NewVotResult(address dao, address actionId, uint256 nbYes, uint256 nbNo);
+    event NewVotResult(
+        address dao,
+        address actionId,
+        uint256 nbYes,
+        uint256 nbNo
+    );
 
     string public constant ADAPTER_NAME = "BatchVotingContract";
 
     SnapshotProposalContract private _snapshotContract;
-    
+
     bytes32 constant _VOTING_PERIOD = keccak256("batchvoting.votingPeriod");
     bytes32 constant _GRACE_PERIOD = keccak256("batchvoting.gracePeriod");
 
     mapping(address => mapping(bytes32 => Voting)) public votingSessions;
+
+    constructor(SnapshotProposalContract _spc) {
+        _snapshotContract = _spc;
+    }
 
     function configureDao(
         DaoRegistry dao,
@@ -100,22 +109,29 @@ contract BatchVotingContract is
         bytes32 proposalId,
         VoteEntry[] memory votes
     ) external {
-
         Voting storage vote = votingSessions[address(dao)][proposalId];
         require(vote.snapshot > 0, "vote:not started");
 
         VotingResult memory result = processVotes(dao, proposalId, votes);
 
         //if the new result has more weight than the previous one
-        if(result.nbYes + result.nbNo > vote.nbYes + vote.nbNo) {
-            if(vote.gracePeriodStartingTime == 0 || ((result.nbYes > result.nbNo) != (vote.nbYes > result.nbNo))) {
+        if (result.nbYes + result.nbNo > vote.nbYes + vote.nbNo) {
+            if (
+                vote.gracePeriodStartingTime == 0 ||
+                ((result.nbYes > result.nbNo) != (vote.nbYes > result.nbNo))
+            ) {
                 vote.gracePeriodStartingTime = block.timestamp;
             }
 
             vote.nbYes = result.nbYes;
             vote.nbNo = result.nbNo;
 
-            emit NewVotResult(address(dao), vote.actionId, result.nbYes, result.nbNo);
+            emit NewVotResult(
+                address(dao),
+                vote.actionId,
+                result.nbYes,
+                result.nbNo
+            );
         }
     }
 
@@ -123,15 +139,17 @@ contract BatchVotingContract is
         return ADAPTER_NAME;
     }
 
-    function processVotes(DaoRegistry dao,
+    function processVotes(
+        DaoRegistry dao,
         bytes32 proposalId,
-        VoteEntry[] memory votes) view public returns (VotingResult memory) {
+        VoteEntry[] memory votes
+    ) public view returns (VotingResult memory) {
         VotingResult memory result;
-        for(uint256 i = 0 ; i < votes.length ; i++) {
+        for (uint256 i = 0; i < votes.length; i++) {
             VoteEntry memory vote = votes[i];
 
             uint256 weight = validateVote(dao, proposalId, vote);
-            if(vote.vote.payload.choice == 1) {
+            if (vote.vote.payload.choice == 1) {
                 result.nbYes += weight;
             } else {
                 result.nbNo += weight;
@@ -141,22 +159,39 @@ contract BatchVotingContract is
         return result;
     }
 
-    function validateVote(DaoRegistry dao, bytes32 proposalId, VoteEntry memory vote) public view returns (uint256) {
+    function validateVote(
+        DaoRegistry dao,
+        bytes32 proposalId,
+        VoteEntry memory entry
+    ) public view returns (uint256) {
         Voting memory voteState = votingSessions[address(dao)][proposalId];
 
-        bytes32 hashVote = _snapshotContract.hashVote(dao, voteState.actionId, vote.vote);
-        address addr = recover(hashVote, vote.sig);
-        address delegateKey = dao.getPriorDelegateKey(vote.memberAddress, voteState.snapshot);
+        bytes32 hashVote =
+            _snapshotContract.hashVote(dao, voteState.actionId, entry.vote);
+        address addr = recover(hashVote, entry.sig);
+        address delegateKey =
+            dao.getPriorDelegateKey(entry.memberAddress, voteState.snapshot);
 
         require(addr == delegateKey, "signing key mismatch");
 
-        require(dao.getMemberFlag(vote.memberAddress, DaoRegistry.MemberFlag.JAILED), "member is jailed");
+        require(
+            !dao.getMemberFlag(
+                entry.memberAddress,
+                DaoRegistry.MemberFlag.JAILED
+            ),
+            "member is jailed"
+        );
 
         BankExtension bank = BankExtension(dao.getExtensionAddress(BANK));
 
-        return bank.getPriorAmount(vote.memberAddress, SHARES, voteState.snapshot);
+        return
+            bank.getPriorAmount(
+                entry.memberAddress,
+                SHARES,
+                voteState.snapshot
+            );
     }
-    
+
     function _stringToUint(string memory s)
         internal
         pure
@@ -184,11 +219,14 @@ contract BatchVotingContract is
         bytes memory data,
         address
     ) external view override returns (address) {
-        SnapshotProposalContract.ProposalMessage memory proposal = abi.decode(data, (SnapshotProposalContract.ProposalMessage));
-        bytes32 hash = _snapshotContract.hashMessage(dao, actionId, proposal);
-        return address(this);
-        
-        //return recover(hash, proposal.sig);
+        SnapshotProposalContract.ProposalMessage memory proposal =
+            abi.decode(data, (SnapshotProposalContract.ProposalMessage));
+
+        return
+            recover(
+                _snapshotContract.hashMessage(dao, actionId, proposal),
+                proposal.sig
+            );
     }
 
     function startNewVotingForProposal(
@@ -196,13 +234,14 @@ contract BatchVotingContract is
         bytes32 proposalId,
         bytes memory data
     ) public override onlyAdapter(dao) {
-        /*
-        SnapshotProposalContract.ProposalMessage memory proposal = abi.decode(data, (SnapshotProposalContract.ProposalMessage));
+        SnapshotProposalContract.ProposalMessage memory proposal =
+            abi.decode(data, (SnapshotProposalContract.ProposalMessage));
         (bool success, uint256 blockNumber) =
             _stringToUint(proposal.payload.snapshot);
         require(success, "snapshot conversion error");
 
-        bytes32 proposalHash = _snapshotContract.hashMessage(dao, msg.sender, proposal);
+        bytes32 proposalHash =
+            _snapshotContract.hashMessage(dao, msg.sender, proposal);
         address addr = recover(proposalHash, proposal.sig);
         require(dao.isActiveMember(addr), "noActiveMember");
         require(
@@ -211,10 +250,10 @@ contract BatchVotingContract is
         );
         require(blockNumber > 0, "block number cannot be 0");
 
+        votingSessions[address(dao)][proposalId].actionId = msg.sender;
         votingSessions[address(dao)][proposalId].startingTime = block.timestamp;
         votingSessions[address(dao)][proposalId].snapshot = blockNumber;
         votingSessions[address(dao)][proposalId].proposalHash = proposalHash;
-        */
     }
 
     /**
@@ -302,14 +341,20 @@ contract BatchVotingContract is
             _snapshotContract.hashVote(
                 dao,
                 actionId,
-                SnapshotProposalContract.VoteMessage(timestamp, SnapshotProposalContract.VotePayload(1, proposalHash))
+                SnapshotProposalContract.VoteMessage(
+                    timestamp,
+                    SnapshotProposalContract.VotePayload(1, proposalHash)
+                )
             );
 
         bytes32 voteHashNo =
             _snapshotContract.hashVote(
                 dao,
                 actionId,
-                SnapshotProposalContract.VoteMessage(timestamp, SnapshotProposalContract.VotePayload(2, proposalHash))
+                SnapshotProposalContract.VoteMessage(
+                    timestamp,
+                    SnapshotProposalContract.VotePayload(2, proposalHash)
+                )
             );
 
         if (recover(voteHashYes, sig) == voter) {
@@ -333,14 +378,20 @@ contract BatchVotingContract is
             _snapshotContract.hashVote(
                 dao,
                 actionId,
-                SnapshotProposalContract.VoteMessage(timestamp, SnapshotProposalContract.VotePayload(1, proposalHash))
+                SnapshotProposalContract.VoteMessage(
+                    timestamp,
+                    SnapshotProposalContract.VotePayload(1, proposalHash)
+                )
             );
 
         bytes32 voteHashNo =
             _snapshotContract.hashVote(
                 dao,
                 actionId,
-                SnapshotProposalContract.VoteMessage(timestamp, SnapshotProposalContract.VotePayload(2, proposalHash))
+                SnapshotProposalContract.VoteMessage(
+                    timestamp,
+                    SnapshotProposalContract.VotePayload(2, proposalHash)
+                )
             );
 
         if (recover(voteHashYes, sig) == voter) {

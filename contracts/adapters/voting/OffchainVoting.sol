@@ -44,10 +44,9 @@ contract OffchainVotingContract is
     AdapterGuard,
     Signatures
 {
-
     SnapshotProposalContract private _snapshotContract;
 
-string public constant VOTE_RESULT_NODE_TYPE =
+    string public constant VOTE_RESULT_NODE_TYPE =
         "Message(address account,uint256 timestamp,uint256 nbYes,uint256 nbNo,uint256 index,uint256 choice,bytes32 proposalHash)";
 
     string public constant ADAPTER_NAME = "OffchainVotingContract";
@@ -367,8 +366,13 @@ string public constant VOTE_RESULT_NODE_TYPE =
         bytes memory data,
         address
     ) external view override returns (address) {
-        SnapshotProposalContract.ProposalMessage memory proposal = abi.decode(data, (SnapshotProposalContract.ProposalMessage));
-        return recover(_snapshotContract.hashMessage(dao, actionId, proposal), proposal.sig);
+        SnapshotProposalContract.ProposalMessage memory proposal =
+            abi.decode(data, (SnapshotProposalContract.ProposalMessage));
+        return
+            recover(
+                _snapshotContract.hashMessage(dao, actionId, proposal),
+                proposal.sig
+            );
     }
 
     function startNewVotingForProposal(
@@ -376,12 +380,14 @@ string public constant VOTE_RESULT_NODE_TYPE =
         bytes32 proposalId,
         bytes memory data
     ) public override onlyAdapter(dao) {
-        SnapshotProposalContract.ProposalMessage memory proposal = abi.decode(data, (SnapshotProposalContract.ProposalMessage));
+        SnapshotProposalContract.ProposalMessage memory proposal =
+            abi.decode(data, (SnapshotProposalContract.ProposalMessage));
         (bool success, uint256 blockNumber) =
             _stringToUint(proposal.payload.snapshot);
         require(success, "snapshot conversion error");
 
-        bytes32 proposalHash = _snapshotContract.hashMessage(dao, msg.sender, proposal);
+        bytes32 proposalHash =
+            _snapshotContract.hashMessage(dao, msg.sender, proposal);
         address addr = recover(proposalHash, proposal.sig);
         require(dao.isActiveMember(addr), "noActiveMember");
         require(
@@ -644,14 +650,20 @@ string public constant VOTE_RESULT_NODE_TYPE =
             _snapshotContract.hashVote(
                 dao,
                 actionId,
-                SnapshotProposalContract.VoteMessage(timestamp, SnapshotProposalContract.VotePayload(1, proposalHash))
+                SnapshotProposalContract.VoteMessage(
+                    timestamp,
+                    SnapshotProposalContract.VotePayload(1, proposalHash)
+                )
             );
 
         bytes32 voteHashNo =
             _snapshotContract.hashVote(
                 dao,
                 actionId,
-                SnapshotProposalContract.VoteMessage(timestamp, SnapshotProposalContract.VotePayload(2, proposalHash))
+                SnapshotProposalContract.VoteMessage(
+                    timestamp,
+                    SnapshotProposalContract.VotePayload(2, proposalHash)
+                )
             );
 
         if (recover(voteHashYes, sig) == voter) {
@@ -675,14 +687,20 @@ string public constant VOTE_RESULT_NODE_TYPE =
             _snapshotContract.hashVote(
                 dao,
                 actionId,
-                SnapshotProposalContract.VoteMessage(timestamp, SnapshotProposalContract.VotePayload(1, proposalHash))
+                SnapshotProposalContract.VoteMessage(
+                    timestamp,
+                    SnapshotProposalContract.VotePayload(1, proposalHash)
+                )
             );
 
         bytes32 voteHashNo =
             _snapshotContract.hashVote(
                 dao,
                 actionId,
-                SnapshotProposalContract.VoteMessage(timestamp, SnapshotProposalContract.VotePayload(2, proposalHash))
+                SnapshotProposalContract.VoteMessage(
+                    timestamp,
+                    SnapshotProposalContract.VotePayload(2, proposalHash)
+                )
             );
 
         if (recover(voteHashYes, sig) == voter) {

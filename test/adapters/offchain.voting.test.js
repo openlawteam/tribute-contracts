@@ -95,7 +95,10 @@ async function createOffchainVotingDao(
   await dao.potentialNewMember(members[0].address);
   let snapshotProposalContract = await SnapshotProposalContract.deployed();
   const votingAddress = await dao.getAdapterAddress(sha3("voting"));
-  const offchainVoting = await OffchainVotingContract.new(votingAddress, snapshotProposalContract.address);
+  const offchainVoting = await OffchainVotingContract.new(
+    votingAddress,
+    snapshotProposalContract.address
+  );
   const bankAddress = await dao.getExtensionAddress(sha3("bank"));
   await dao.removeAdapter(sha3("voting"));
   await dao.addAdapter(
@@ -187,7 +190,9 @@ contract("LAOLAND - Offchain Voting Module", async (accounts) => {
         prepareProposalMessage(proposalData),
         types
       ).toString("hex");
-    const solidityHash = await snapshotContract.hashProposalMessage(proposalData);
+    const solidityHash = await snapshotContract.hashProposalMessage(
+      proposalData
+    );
     assert.equal(hashStruct, solidityHash);
 
     //Checking domain
