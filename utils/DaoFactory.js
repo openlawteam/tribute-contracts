@@ -63,9 +63,8 @@ const FinancingContract = artifacts.require("./adapter/FinancingContract");
 const RagequitContract = artifacts.require("./adapters/RagequitContract");
 const GuildKickContract = artifacts.require("./adapters/GuildKickContract");
 const OnboardingContract = artifacts.require("./adapters/OnboardingContract");
-const OffchainVotingContract = artifacts.require(
-  "./adapters/OffchainVotingContract"
-);
+const OffchainVotingContract = artifacts.require("./adapters/OffchainVotingContract");
+const CouponOnboardingContract = artifacts.require("./adapters/CouponOnboardingContract");
 const TributeContract = artifacts.require("./adapters/TributeContract");
 const DistributeContract = artifacts.require("./adapters/DistributeContract");
 
@@ -78,6 +77,7 @@ async function prepareAdapters(deployer) {
   let onboarding;
   let guildkick;
   let withdraw;
+  let couponOnboarding;
   let tribute;
   let distribute;
 
@@ -90,6 +90,7 @@ async function prepareAdapters(deployer) {
     await deployer.deploy(OnboardingContract);
     await deployer.deploy(GuildKickContract);
     await deployer.deploy(WithdrawContract);
+    await deployer.deploy(CouponOnboardingContract, 1);
     await deployer.deploy(TributeContract);
     await deployer.deploy(DistributeContract);
 
@@ -101,6 +102,7 @@ async function prepareAdapters(deployer) {
     onboarding = await OnboardingContract.deployed();
     guildkick = await GuildKickContract.deployed();
     withdraw = await WithdrawContract.deployed();
+    couponOnboarding = await CouponOnboardingContract.deployed();
     tribute = await TributeContract.deployed();
     distribute = await DistributeContract.deployed();
   } else {
@@ -112,6 +114,7 @@ async function prepareAdapters(deployer) {
     onboarding = await OnboardingContract.new();
     guildkick = await GuildKickContract.new();
     withdraw = await WithdrawContract.new();
+    couponOnboarding = await CouponOnboardingContract.new(1);
     tribute = await TributeContract.new();
     distribute = await DistributeContract.new();
   }
@@ -125,8 +128,9 @@ async function prepareAdapters(deployer) {
     financing,
     onboarding,
     withdraw,
+    couponOnboarding,
     tribute,
-    distribute,
+    distribute
   };
 }
 
@@ -150,8 +154,9 @@ async function addDefaultAdapters(
     financing,
     onboarding,
     withdraw,
+    couponOnboarding,
     tribute,
-    distribute,
+    distribute
   } = await prepareAdapters(deployer);
   await configureDao(
     daoFactory,
@@ -164,6 +169,7 @@ async function addDefaultAdapters(
     withdraw,
     voting,
     configuration,
+		couponOnboarding,
     tribute,
     distribute,
     unitPrice,
@@ -188,6 +194,7 @@ async function configureDao(
   withdraw,
   voting,
   configuration,
+	couponOnboarding,
   tribute,
   distribute,
   unitPrice,
@@ -235,6 +242,14 @@ async function configureDao(
       UPDATE_DELEGATE_KEY: true,
       NEW_MEMBER: true,
     }),
+    entryDao("coupon-onboarding", couponOnboarding, {
+      SUBMIT_PROPOSAL: false,
+      SPONSOR_PROPOSAL: false,
+      PROCESS_PROPOSAL: false,
+      ADD_TO_BALANCE: true,
+      UPDATE_DELEGATE_KEY: false,
+      NEW_MEMBER: true
+    }),
     entryDao("withdraw", withdraw, {}),
     entryDao("tribute", tribute, {
       SUBMIT_PROPOSAL: true,
@@ -272,6 +287,9 @@ async function configureDao(
     entryBank(onboarding, {
       ADD_TO_BALANCE: true,
     }),
+    entryBank(couponOnboarding, {
+      ADD_TO_BALANCE: true
+    }),
     entryBank(financing, {
       ADD_TO_BALANCE: true,
       SUB_FROM_BALANCE: true,
@@ -301,6 +319,11 @@ async function configureDao(
     nbShares,
     maxChunks,
     tokenAddr
+  );
+  await couponOnboarding.configureDao(
+    dao.address,
+    "0x7D8cad0bbD68deb352C33e80fccd4D8e88b4aBb8",
+    SHARES
   );
 
   await voting.configureDao(dao.address, votingPeriod, gracePeriod);
@@ -433,6 +456,7 @@ async function createDao(
   const onboarding = await OnboardingContract.deployed();
   const guildkick = await GuildKickContract.deployed();
   const withdraw = await WithdrawContract.deployed();
+  const couponOnboarding = await CouponOnboardingContract.deployed();
   const tribute = await TributeContract.deployed();
   const distribute = await DistributeContract.deployed();
 
@@ -447,6 +471,7 @@ async function createDao(
     withdraw,
     voting,
     configuration,
+		couponOnboarding,
     tribute,
     distribute,
     unitPrice,
@@ -658,4 +683,6 @@ module.exports = {
   TributeContract,
   DistributeContract,
   BankExtension,
+  OnboardingContract,
+  CouponOnboardingContract
 };

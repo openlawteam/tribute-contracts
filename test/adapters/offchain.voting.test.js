@@ -94,6 +94,7 @@ async function createOffchainVotingDao(
   await dao.potentialNewMember(members[0].address);
 
   const votingAddress = await dao.getAdapterAddress(sha3("voting"));
+
   const offchainVoting = await OffchainVotingContract.new(votingAddress, 1);
   const bankAddress = await dao.getExtensionAddress(sha3("bank"));
   await dao.removeAdapter(sha3("voting"));
@@ -193,8 +194,16 @@ contract("LAOLAND - Offchain Voting Module", async (accounts) => {
     const jsDomainDef = TypedDataUtils.encodeType("EIP712Domain", types);
     assert.equal(jsDomainDef, domainDef);
 
+    console.log("dao address: ", dao.address);
+    console.log("chain id: ", chainId);
+    console.log("my account: ", myAccount);
+
     //Checking domain separator
-    const domainHash = await voting.DOMAIN_SEPARATOR(dao.address, myAccount);
+    const domainHash = await voting.domainSeparator(
+      dao.address,
+      chainId,
+      myAccount
+    );
     const jsDomainHash =
       "0x" +
       TypedDataUtils.hashStruct("EIP712Domain", domain, types, true).toString(

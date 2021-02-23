@@ -56,6 +56,8 @@ function getDomainDefinition(message, verifyingContract, actionId, chainId) {
       return getDraftDomainDefinition(verifyingContract, actionId, chainId);
     case "result":
       return getVoteResultRootDomainDefinition(verifyingContract, actionId, chainId);
+    case "coupon":
+      return getCouponDomainDefinition(verifyingContract, actionId, chainId);
     default:
       throw new Error("unknown type '" + message.type + "'");
   }
@@ -166,6 +168,22 @@ function getVoteResultRootDomainDefinition(verifyingContract, actionId, chainId)
   return { domain, types}
 }
 
+
+function getCouponDomainDefinition(verifyingContract, actionId, chainId) {
+  const domain = getMessageDomainType(chainId, verifyingContract, actionId);
+
+  const types = {
+      Message: [
+        { name: 'authorizedMember', type: 'address' },
+        { name: 'amount', type: 'uint256' },
+        { name: 'nonce', type: 'uint256' }
+      ],
+      EIP712Domain: getDomainType()
+  };
+
+  return { domain, types}
+}
+
 function getDomainType() {
   return [
     { name: 'name', type: 'string' },
@@ -252,6 +270,8 @@ function prepareMessage(message) {
     case "proposal":
       return prepareProposalMessage(message);
     case "result":
+        return message;
+    case "coupon":
         return message;
     default:
       throw new Error("unknown type " + message.type);
