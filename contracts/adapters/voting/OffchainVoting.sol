@@ -508,7 +508,7 @@ contract OffchainVotingContract is
         address addr = recover(proposalHash, proposal.sig);
         require(dao.isActiveMember(addr), "noActiveMember");
         require(
-            blockNumber < block.number,
+            blockNumber <= block.number,
             "snapshot block number should not be in the future"
         );
         require(blockNumber > 0, "block number cannot be 0");
