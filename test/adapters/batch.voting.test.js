@@ -36,25 +36,20 @@ const {
   entryDao,
   createDao,
   ETH_TOKEN,
-  OffchainVotingContract,
   SnapshotProposalContract,
   BankExtension,
 } = require("../../utils/DaoFactory.js");
 const {
   createVote,
-  TypedDataUtils,
   getMessageERC712Hash,
   prepareVoteProposalData,
-  prepareVoteResult,
-  toStepNode,
-  getVoteStepDomainDefinition,
   validateMessage,
   SigUtilSigner,
 } = require("../../utils/offchain_voting.js");
 
 const BatchVotingContract = artifacts.require("./adapters/BatchVotingContract");
 
-const members = generateMembers(10);
+const members = generateMembers(5);
 
 function generateMembers(amount) {
   let accounts = [];
@@ -64,6 +59,107 @@ function generateMembers(amount) {
   }
 
   return accounts;
+}
+
+let proposals = 1000000;
+let proposalCounter = proposals;
+
+async function onboardMember(dao, voting, onboarding, index) {
+  let blockNumber = await web3.eth.getBlockNumber();
+  const proposalId = web3.utils.numberToHex(proposalCounter++);
+
+  const proposalPayload = {
+    name: "some proposal",
+    body: "this is my proposal",
+    choices: ["yes", "no"],
+    start: Math.floor(new Date().getTime() / 1000),
+    end: Math.floor(new Date().getTime() / 1000) + 10000,
+    snapshot: blockNumber.toString(),
+  };
+
+  const space = "laoland";
+  const chainId = 1;
+
+  const proposalData = {
+    type: "proposal",
+    timestamp: Math.floor(new Date().getTime() / 1000),
+    space,
+    payload: proposalPayload,
+  };
+
+  //signer for myAccount (its private key)
+  const signer = SigUtilSigner(members[0].privateKey);
+  proposalData.sig = await signer(
+    proposalData,
+    dao.address,
+    onboarding.address,
+    chainId
+  );
+
+  const proposalHash = getMessageERC712Hash(
+    proposalData,
+    dao.address,
+    onboarding.address,
+    chainId
+  ).toString("hex");
+
+  await onboarding.onboard(
+    dao.address,
+    proposalId,
+    members[1].address,
+    SHARES,
+    sharePrice.mul(toBN(3)).add(remaining),
+    {
+      value: sharePrice.mul(toBN("3")).add(remaining),
+      gasPrice: toBN("0"),
+    }
+  );
+
+  await onboarding.sponsorProposal(
+    dao.address,
+    proposalId,
+    prepareVoteProposalData(proposalData)
+  );
+  const voteEntries = [];
+  for (let i = 0; i < index; i++) {
+    const voteSigner = SigUtilSigner(members[i].privateKey);
+    const voteEntry = await createVote(proposalHash, members[i].address, true);
+    const sig = voteSigner(voteEntry, dao.address, onboarding.address, chainId);
+
+    const prepareVoteEntry = {
+      vote: voteEntry,
+      memberAddress: members[i].address,
+      sig,
+    };
+    voteEntries.push(prepareVoteEntry);
+
+    assert.equal(
+      true,
+      validateMessage(
+        voteEntry,
+        members[i].address,
+        dao.address,
+        onboarding.address,
+        chainId,
+        sig
+      )
+    );
+  }
+
+  await advanceTime(10000);
+
+  let tx = await voting.submitVoteResult(dao.address, proposalId, voteEntries);
+
+  console.log(
+    "gas used for (" +
+      (proposalCounter - proposals) +
+      ") votes:" +
+      new Intl.NumberFormat().format(tx.receipt.gasUsed)
+  );
+
+  await advanceTime(10000);
+
+  await onboarding.processProposal(dao.address, proposalId);
 }
 
 async function createBatchVotingDao(
@@ -112,101 +208,15 @@ async function createBatchVotingDao(
 contract("LAOLAND - Batch Voting Module", async (accounts) => {
   it("should be possible to propose a new voting by signing the proposal hash", async () => {
     const myAccount = accounts[1];
-    let { dao, voting, bank } = await createBatchVotingDao(myAccount);
+    let { dao, voting } = await createBatchVotingDao(myAccount);
 
     const votingName = await voting.getAdapterName();
     console.log("voting name:" + votingName);
 
     const onboardingAddress = await dao.getAdapterAddress(sha3("onboarding"));
     const onboarding = await OnboardingContract.at(onboardingAddress);
-    let blockNumber = await web3.eth.getBlockNumber();
-    const proposalPayload = {
-      name: "some proposal",
-      body: "this is my proposal",
-      choices: ["yes", "no"],
-      start: Math.floor(new Date().getTime() / 1000),
-      end: Math.floor(new Date().getTime() / 1000) + 10000,
-      snapshot: blockNumber.toString(),
-    };
-
-    const space = "laoland";
-
-    const proposalData = {
-      type: "proposal",
-      timestamp: Math.floor(new Date().getTime() / 1000),
-      space,
-      payload: proposalPayload,
-    };
-
-    const chainId = 1;
-    //signer for myAccount (its private key)
-    const signer = SigUtilSigner(members[0].privateKey);
-    proposalData.sig = await signer(
-      proposalData,
-      dao.address,
-      onboarding.address,
-      chainId
-    );
-
-    const proposalHash = getMessageERC712Hash(
-      proposalData,
-      dao.address,
-      onboarding.address,
-      chainId
-    ).toString("hex");
-
-    await onboarding.onboard(
-      dao.address,
-      "0x1",
-      members[1].address,
-      SHARES,
-      sharePrice.mul(toBN(3)).add(remaining),
-      {
-        from: myAccount,
-        value: sharePrice.mul(toBN("3")).add(remaining),
-        gasPrice: toBN("0"),
-      }
-    );
-
-    await onboarding.sponsorProposal(
-      dao.address,
-      "0x1",
-      prepareVoteProposalData(proposalData)
-    );
-
-    const voteEntry = await createVote(proposalHash, members[0].address, true);
-
-    const sig = signer(voteEntry, dao.address, onboarding.address, chainId);
-    assert.equal(
-      true,
-      validateMessage(
-        voteEntry,
-        members[0].address,
-        dao.address,
-        onboarding.address,
-        chainId,
-        sig
-      )
-    );
-
-    await advanceTime(10000);
-
-    const prepareVoteEntry = {
-      vote: voteEntry,
-      memberAddress: members[0].address,
-      sig,
-    };
-
-    await voting.submitVoteResult(dao.address, "0x1", [prepareVoteEntry], {
-      from: myAccount,
-      gasPrice: toBN("0"),
-    });
-
-    await advanceTime(10000);
-
-    await onboarding.processProposal(dao.address, "0x1", {
-      from: myAccount,
-      gasPrice: toBN("0"),
-    });
+    for (var i = 0; i < members.length; i++) {
+      await onboardMember(dao, voting, onboarding, i);
+    }
   });
 });

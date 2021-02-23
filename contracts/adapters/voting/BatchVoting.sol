@@ -112,26 +112,20 @@ contract BatchVotingContract is
         Voting storage vote = votingSessions[address(dao)][proposalId];
         require(vote.snapshot > 0, "vote:not started");
 
-        VotingResult memory result = processVotes(dao, proposalId, votes);
-
+        (uint256 nbYes, uint256 nbNo) = processVotes(dao, proposalId, votes);
         //if the new result has more weight than the previous one
-        if (result.nbYes + result.nbNo > vote.nbYes + vote.nbNo) {
+        if (nbYes + nbNo > vote.nbYes + vote.nbNo) {
             if (
                 vote.gracePeriodStartingTime == 0 ||
-                ((result.nbYes > result.nbNo) != (vote.nbYes > result.nbNo))
+                ((nbYes > nbNo) != (vote.nbYes > nbNo))
             ) {
                 vote.gracePeriodStartingTime = block.timestamp;
             }
 
-            vote.nbYes = result.nbYes;
-            vote.nbNo = result.nbNo;
+            vote.nbYes = nbYes;
+            vote.nbNo = nbNo;
 
-            emit NewVotResult(
-                address(dao),
-                vote.actionId,
-                result.nbYes,
-                result.nbNo
-            );
+            emit NewVotResult(address(dao), vote.actionId, nbYes, nbNo);
         }
     }
 
@@ -142,35 +136,40 @@ contract BatchVotingContract is
     function processVotes(
         DaoRegistry dao,
         bytes32 proposalId,
-        VoteEntry[] memory votes
-    ) public view returns (VotingResult memory) {
-        VotingResult memory result;
-        for (uint256 i = 0; i < votes.length; i++) {
-            VoteEntry memory vote = votes[i];
+        VoteEntry[] memory entries
+    ) public view returns (uint256 nbYes, uint256 nbNo) {
+        BankExtension bank = BankExtension(dao.getExtensionAddress(BANK));
+        Voting storage voteState = votingSessions[address(dao)][proposalId];
+        uint256 snapshot = voteState.snapshot;
+        address actionId = voteState.actionId;
 
-            uint256 weight = validateVote(dao, proposalId, vote);
-            if (vote.vote.payload.choice == 1) {
-                result.nbYes += weight;
+        for (uint256 i = 0; i < entries.length; i++) {
+            VoteEntry memory entry = entries[i];
+
+            uint256 weight = validateVote(dao, bank, actionId, snapshot, entry);
+
+            if (entry.vote.payload.choice == 1) {
+                nbYes += weight;
             } else {
-                result.nbNo += weight;
+                nbNo += weight;
             }
         }
-
-        return result;
     }
 
     function validateVote(
         DaoRegistry dao,
-        bytes32 proposalId,
+        BankExtension bank,
+        address actionId,
+        uint256 snapshot,
         VoteEntry memory entry
     ) public view returns (uint256) {
-        Voting memory voteState = votingSessions[address(dao)][proposalId];
-
         bytes32 hashVote =
-            _snapshotContract.hashVote(dao, voteState.actionId, entry.vote);
+            _snapshotContract.hashVote(dao, actionId, entry.vote);
+
         address addr = recover(hashVote, entry.sig);
+
         address delegateKey =
-            dao.getPriorDelegateKey(entry.memberAddress, voteState.snapshot);
+            dao.getPriorDelegateKey(entry.memberAddress, snapshot);
 
         require(addr == delegateKey, "signing key mismatch");
 
@@ -182,14 +181,7 @@ contract BatchVotingContract is
             "member is jailed"
         );
 
-        BankExtension bank = BankExtension(dao.getExtensionAddress(BANK));
-
-        return
-            bank.getPriorAmount(
-                entry.memberAddress,
-                SHARES,
-                voteState.snapshot
-            );
+        return bank.getPriorAmount(entry.memberAddress, SHARES, snapshot);
     }
 
     function _stringToUint(string memory s)
