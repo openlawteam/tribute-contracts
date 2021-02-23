@@ -39,6 +39,7 @@ export function handleSubmittedProposal(event: SubmittedProposal): void {
     proposal = new Proposal(newProposalId);
     proposal.flags = event.params.flags;
     proposal.proposalId = id;
+    proposal.sponsored = false;
 
     proposal.save();
   }
@@ -60,6 +61,7 @@ export function handleSponsoredProposal(event: SponsoredProposal): void {
   proposal.flags = event.params.flags;
   proposal.sponsoredAt = sponsoredAt;
   proposal.sponsored = true;
+  proposal.sponsoredBy = event.transaction.from;
 
   proposal.save();
 }
@@ -81,6 +83,7 @@ export function handleProcessedProposal(event: ProcessedProposal): void {
     proposal.flags = event.params.flags;
     proposal.processedAt = processedAt;
     proposal.processed = true;
+    proposal.processedBy = event.transaction.from;
 
     proposal.save();
   }

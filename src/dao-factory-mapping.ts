@@ -8,7 +8,6 @@ import {
   LOOT,
   SHARES,
   TOTAL,
-  VOTING_CONTRACT_ADDRESS,
 } from "./dao-constants";
 import { log } from "@graphprotocol/graph-ts";
 
@@ -23,7 +22,13 @@ function loadOrCreateDao(address: string): Laoland {
 
 function loadOrCreateDaoConstants(address: string): DaoConstants {
   let daoConstants = DaoConstants.load(address);
+
   if (daoConstants == null) {
+    log.info(
+      "**************** loadOrCreateDaoConstants function. daoAddress: {}",
+      [address.toString()]
+    );
+
     daoConstants = new DaoConstants(address);
 
     // create 1-to-1 relationship between the dao and its bank and constants
@@ -58,7 +63,9 @@ export function handleDaoCreated(event: DAOCreated): void {
   );
 
   // load or create dao constants and save
-  let daoConstants = loadOrCreateDaoConstants(event.address.toHexString());
+  let daoConstants = loadOrCreateDaoConstants(
+    event.params._address.toHexString()
+  );
 
   // load or create dao and save
   let dao = loadOrCreateDao(event.params._address.toHexString());
@@ -67,6 +74,7 @@ export function handleDaoCreated(event: DAOCreated): void {
   dao.daoAddress = event.params._address;
   dao.initialized = true;
   dao.name = event.params._name;
+  dao.creator = event.transaction.from;
 
   // create 1-to-1 relationship between the dao and its bank and constants
   dao.bank = event.params._address.toHexString();

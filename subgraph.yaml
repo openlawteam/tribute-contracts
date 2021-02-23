@@ -16,7 +16,7 @@ dataSources:
       apiVersion: 0.0.4
       language: wasm/assemblyscript
       entities:
-        - Dao
+        - Laoland
         - DaoConstants
       abis:
         - name: DaoFactory

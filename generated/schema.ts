@@ -76,6 +76,23 @@ export class Laoland extends Entity {
     }
   }
 
+  get creator(): Bytes | null {
+    let value = this.get("creator");
+    if (value === null || value.kind == ValueKind.NULL) {
+      return null;
+    } else {
+      return value.toBytes();
+    }
+  }
+
+  set creator(value: Bytes | null) {
+    if (value === null) {
+      this.unset("creator");
+    } else {
+      this.set("creator", Value.fromBytes(value as Bytes));
+    }
+  }
+
   get totalShares(): string | null {
     let value = this.get("totalShares");
     if (value === null || value.kind == ValueKind.NULL) {
@@ -570,6 +587,15 @@ export class Proposal extends Entity {
     this.set("flags", Value.fromBigInt(value));
   }
 
+  get sponsored(): boolean {
+    let value = this.get("sponsored");
+    return value.toBoolean();
+  }
+
+  set sponsored(value: boolean) {
+    this.set("sponsored", Value.fromBoolean(value));
+  }
+
   get sponsoredAt(): string | null {
     let value = this.get("sponsoredAt");
     if (value === null || value.kind == ValueKind.NULL) {
@@ -587,30 +613,30 @@ export class Proposal extends Entity {
     }
   }
 
-  get sponsored(): boolean {
-    let value = this.get("sponsored");
-    return value.toBoolean();
-  }
-
-  set sponsored(value: boolean) {
-    this.set("sponsored", Value.fromBoolean(value));
-  }
-
-  get sponsor(): string | null {
-    let value = this.get("sponsor");
+  get sponsoredBy(): Bytes | null {
+    let value = this.get("sponsoredBy");
     if (value === null || value.kind == ValueKind.NULL) {
       return null;
     } else {
-      return value.toString();
+      return value.toBytes();
     }
   }
 
-  set sponsor(value: string | null) {
+  set sponsoredBy(value: Bytes | null) {
     if (value === null) {
-      this.unset("sponsor");
+      this.unset("sponsoredBy");
     } else {
-      this.set("sponsor", Value.fromString(value as string));
+      this.set("sponsoredBy", Value.fromBytes(value as Bytes));
     }
+  }
+
+  get processed(): boolean {
+    let value = this.get("processed");
+    return value.toBoolean();
+  }
+
+  set processed(value: boolean) {
+    this.set("processed", Value.fromBoolean(value));
   }
 
   get processedAt(): string | null {
@@ -630,13 +656,21 @@ export class Proposal extends Entity {
     }
   }
 
-  get processed(): boolean {
-    let value = this.get("processed");
-    return value.toBoolean();
+  get processedBy(): Bytes | null {
+    let value = this.get("processedBy");
+    if (value === null || value.kind == ValueKind.NULL) {
+      return null;
+    } else {
+      return value.toBytes();
+    }
   }
 
-  set processed(value: boolean) {
-    this.set("processed", Value.fromBoolean(value));
+  set processedBy(value: Bytes | null) {
+    if (value === null) {
+      this.unset("processedBy");
+    } else {
+      this.set("processedBy", Value.fromBytes(value as Bytes));
+    }
   }
 }
 
