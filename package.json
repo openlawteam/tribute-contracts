@@ -41,7 +41,8 @@
     "deploy": "graph deploy openlawteam/laoland-graph --ipfs https://api.thegraph.com/ipfs/ --node https://api.thegraph.com/deploy/",
     "deploy-local": "graph deploy openlawteam/laoland-graph --ipfs http://localhost:5001 --node http://127.0.0.1:8020",
     "compile-abi": "truffle compile && truffle-abi",
-    "verify": "truffle run verify X --network"
+    "migrate": "truffle migrate --network",
+    "verify": "truffle run verify"
   },
   "repository": {
     "type": "git",
