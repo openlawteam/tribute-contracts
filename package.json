@@ -13,6 +13,7 @@
     "keccak256": "^1.0.0",
     "truffle": "^5.1.63",
     "truffle-hdwallet-provider": "^1.0.17",
+    "truffle-plugin-verify": "^0.5.4",
     "web3-utils": "^1.3.1"
   },
   "devDependencies": {
@@ -39,7 +40,8 @@
     "build": "graph build",
     "deploy": "graph deploy openlawteam/laoland-graph --ipfs https://api.thegraph.com/ipfs/ --node https://api.thegraph.com/deploy/",
     "deploy-local": "graph deploy openlawteam/laoland-graph --ipfs http://localhost:5001 --node http://127.0.0.1:8020",
-    "compile-abi": "truffle compile && truffle-abi"
+    "compile-abi": "truffle compile && truffle-abi",
+    "verify": "truffle run verify X --network"
   },
   "repository": {
     "type": "git",
