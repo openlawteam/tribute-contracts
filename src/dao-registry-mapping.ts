@@ -12,16 +12,8 @@ import {
   ConfigurationUpdated,
   AddressConfigurationUpdated,
 } from "../generated/templates/DaoRegistry/DaoRegistry";
-import {
-  Adapter,
-  Extension,
-  Laoland,
-  Proposal,
-  Member,
-} from "../generated/schema";
-import { log, store, crypto } from "@graphprotocol/graph-ts";
-
-// const bankAdapterId = Web3.sha3(DaoConstants.BANK);
+import { Adapter, Extension, Proposal, Member } from "../generated/schema";
+import { log, store } from "@graphprotocol/graph-ts";
 
 export function handleSubmittedProposal(event: SubmittedProposal): void {
   let id = event.params.proposalId;
@@ -89,45 +81,6 @@ export function handleProcessedProposal(event: ProcessedProposal): void {
   }
 }
 
-export function handleAdapterAdded(event: AdapterAdded): void {
-  let daoAddress = event.address.toHexString();
-  let adapterId = daoAddress
-    .concat("-adapter-")
-    .concat(event.params.adapterId.toHex());
-
-  let adapter = Adapter.load(adapterId);
-
-  log.info("**************** handleAdapterAdded event fired. adapterId: {}", [
-    event.params.adapterId.toHexString(),
-  ]);
-
-  if (adapter == null) {
-    adapter = new Adapter(adapterId);
-    adapter.adapterId = event.params.adapterId;
-    adapter.acl = event.params.flags;
-    adapter.adapterAddress = event.params.adapterAddress;
-
-    adapter.save();
-  }
-}
-
-export function handleAdapterRemoved(event: AdapterRemoved): void {
-  let daoAddress = event.address.toHexString();
-  let adapterId = daoAddress
-    .concat("-adapter-")
-    .concat(event.params.adapterId.toHex());
-
-  let adapter = Adapter.load(adapterId);
-
-  log.info("**************** handleAdapterRemoved event fired. adapterId: {}", [
-    event.params.adapterId.toHexString(),
-  ]);
-
-  if (adapter !== null) {
-    store.remove("Adapter", adapterId);
-  }
-}
-
 export function handleUpdateDelegateKey(event: UpdateDelegateKey): void {
   let daoAddress = event.address.toHexString();
   let delegateKey = event.params.newDelegateKey;
@@ -181,7 +134,52 @@ export function handleMemberUnjailed(event: MemberUnjailed): void {
   member.save();
 }
 
+export function handleAdapterAdded(event: AdapterAdded): void {
+  let daoAddress = event.address.toHexString();
+  let adapterId = event.params.adapterId.toHex();
+  let daoAdapterId = daoAddress.concat("-adapter-").concat(adapterId);
+
+  let adapter = Adapter.load(daoAdapterId);
+
+  log.info("**************** handleAdapterAdded event fired. adapterId: {}", [
+    event.params.adapterId.toHexString(),
+  ]);
+
+  if (adapter == null) {
+    adapter = new Adapter(adapterId);
+    adapter.adapterId = event.params.adapterId;
+    adapter.acl = event.params.flags;
+    adapter.adapterAddress = event.params.adapterAddress;
+
+    // create 1-1 relationship with adapter and its dao
+    adapter.molochv3 = daoAddress;
+
+    adapter.save();
+  }
+}
+
+export function handleAdapterRemoved(event: AdapterRemoved): void {
+  let daoAddress = event.address.toHexString();
+  let adapterId = event.params.adapterId.toHex();
+  let daoAdapterId = daoAddress.concat("-adapter-").concat(adapterId);
+
+  let adapter = Adapter.load(daoAdapterId);
+
+  log.info("**************** handleAdapterRemoved event fired. adapterId: {}", [
+    event.params.adapterId.toHexString(),
+  ]);
+
+  if (adapter !== null) {
+    store.remove("Adapter", adapterId);
+  }
+}
+
 export function handleExtensionAdded(event: ExtensionAdded): void {
+  let daoAddress = event.address.toHexString();
+  let extensionId = daoAddress
+    .concat("-extension-")
+    .concat(event.params.extensionId.toHex());
+
   log.info(
     "**************** handleExtensionAdded event fired. extensionAddress {}, extensionId {}",
     [
@@ -190,7 +188,7 @@ export function handleExtensionAdded(event: ExtensionAdded): void {
     ]
   );
 
-  let extension = Extension.load(event.params.extensionId.toHex());
+  let extension = Extension.load(extensionId);
 
   // let bankAdapterId = crypto.keccak256("0xea0ca03c7adbe41dc655fec28a9209dc8e6e042f3d991a67765ba285b9cf73a0").toHexString()
   // // if extension is `bank` the BankExtension
@@ -198,11 +196,11 @@ export function handleExtensionAdded(event: ExtensionAdded): void {
   //   bankAdapterId == event.params.extensionId.toHexString() &&
   //   extension == null
   // ) {
-  //   let dao = Laoland.load(event.address.toHexString());
+  //   let dao = Molochv3.load(event.address.toHexString());
   //   // let dao = loadOrCreateDao(event.params._address.toHexString());
 
   //   // create 1-to-1 relationship between the bank and its dao
-  //   // bank.laoland = event.params.bankAddress.toHexString();
+  //   // bank.Molochv3 = event.params.bankAddress.toHexString();
 
   //   // create 1-to-1 relationship between the dao and its bank
   //   dao.bank = event.address.toHexString();
@@ -210,9 +208,12 @@ export function handleExtensionAdded(event: ExtensionAdded): void {
   // } else
 
   if (extension == null) {
-    extension = new Extension(event.params.extensionId.toHex());
+    extension = new Extension(extensionId);
     extension.extensionAddress = event.params.extensionAddress;
     extension.extensionId = event.params.extensionId;
+
+    // create 1-1 relationship with extensions and its dao
+    // extension.molochv3 = daoAddress;
 
     extension.save();
   }

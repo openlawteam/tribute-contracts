@@ -1,6 +1,6 @@
 import { DaoRegistry } from "../generated/templates";
 import { DAOCreated } from "../generated/DaoFactory/DaoFactory";
-import { DaoConstants, Laoland } from "../generated/schema";
+import { DaoConstants, Molochv3 } from "../generated/schema";
 import {
   ETH_TOKEN,
   GUILD,
@@ -12,12 +12,12 @@ import {
 import { log } from "@graphprotocol/graph-ts";
 
 // helper
-function loadOrCreateDao(address: string): Laoland {
-  let dao = Laoland.load(address);
+function loadOrCreateDao(address: string): Molochv3 {
+  let dao = Molochv3.load(address);
   if (dao == null) {
-    dao = new Laoland(address);
+    dao = new Molochv3(address);
   }
-  return dao as Laoland;
+  return dao as Molochv3;
 }
 
 function loadOrCreateDaoConstants(address: string): DaoConstants {
@@ -32,7 +32,7 @@ function loadOrCreateDaoConstants(address: string): DaoConstants {
     daoConstants = new DaoConstants(address);
 
     // create 1-to-1 relationship between the dao and its bank and constants
-    daoConstants.laoland = address;
+    // daoConstants.molochv3 = address;
 
     // constants
     daoConstants.GUILD = GUILD;
@@ -76,7 +76,9 @@ export function handleDaoCreated(event: DAOCreated): void {
   dao.name = event.params._name;
   dao.creator = event.transaction.from;
 
-  // create 1-to-1 relationship between the dao and its bank and constants
+  // create 1-to-1 relationship between the dao and its;
+  // - bank
+  // - constants
   dao.bank = event.params._address.toHexString();
   dao.daoConstants = event.params._address.toHexString();
 

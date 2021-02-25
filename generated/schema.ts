@@ -12,7 +12,7 @@ import {
   BigDecimal
 } from "@graphprotocol/graph-ts";
 
-export class Laoland extends Entity {
+export class Molochv3 extends Entity {
   constructor(id: string) {
     super();
     this.set("id", Value.fromString(id));
@@ -20,17 +20,17 @@ export class Laoland extends Entity {
 
   save(): void {
     let id = this.get("id");
-    assert(id !== null, "Cannot save Laoland entity without an ID");
+    assert(id !== null, "Cannot save Molochv3 entity without an ID");
     assert(
       id.kind == ValueKind.STRING,
-      "Cannot save Laoland entity with non-string ID. " +
+      "Cannot save Molochv3 entity with non-string ID. " +
         'Considering using .toHex() to convert the "id" to a string.'
     );
-    store.set("Laoland", id.toString(), this);
+    store.set("Molochv3", id.toString(), this);
   }
 
-  static load(id: string): Laoland | null {
-    return store.get("Laoland", id) as Laoland | null;
+  static load(id: string): Molochv3 | null {
+    return store.get("Molochv3", id) as Molochv3 | null;
   }
 
   get id(): string {
@@ -169,6 +169,24 @@ export class Laoland extends Entity {
       this.set("daoConstants", Value.fromString(value as string));
     }
   }
+
+  get adapters(): Array<string> {
+    let value = this.get("adapters");
+    return value.toStringArray();
+  }
+
+  set adapters(value: Array<string>) {
+    this.set("adapters", Value.fromStringArray(value));
+  }
+
+  get extensions(): Array<string> {
+    let value = this.get("extensions");
+    return value.toStringArray();
+  }
+
+  set extensions(value: Array<string>) {
+    this.set("extensions", Value.fromStringArray(value));
+  }
 }
 
 export class Bank extends Entity {
@@ -252,13 +270,13 @@ export class Bank extends Entity {
     }
   }
 
-  get laoland(): string {
-    let value = this.get("laoland");
+  get molochv3(): string {
+    let value = this.get("molochv3");
     return value.toString();
   }
 
-  set laoland(value: string) {
-    this.set("laoland", Value.fromString(value));
+  set molochv3(value: string) {
+    this.set("molochv3", Value.fromString(value));
   }
 }
 
@@ -730,6 +748,23 @@ export class Adapter extends Entity {
   set acl(value: BigInt) {
     this.set("acl", Value.fromBigInt(value));
   }
+
+  get molochv3(): string | null {
+    let value = this.get("molochv3");
+    if (value === null || value.kind == ValueKind.NULL) {
+      return null;
+    } else {
+      return value.toString();
+    }
+  }
+
+  set molochv3(value: string | null) {
+    if (value === null) {
+      this.unset("molochv3");
+    } else {
+      this.set("molochv3", Value.fromString(value as string));
+    }
+  }
 }
 
 export class Extension extends Entity {
@@ -779,6 +814,23 @@ export class Extension extends Entity {
   set extensionId(value: Bytes) {
     this.set("extensionId", Value.fromBytes(value));
   }
+
+  get molochv3(): string | null {
+    let value = this.get("molochv3");
+    if (value === null || value.kind == ValueKind.NULL) {
+      return null;
+    } else {
+      return value.toString();
+    }
+  }
+
+  set molochv3(value: string | null) {
+    if (value === null) {
+      this.unset("molochv3");
+    } else {
+      this.set("molochv3", Value.fromString(value as string));
+    }
+  }
 }
 
 export class DaoConstants extends Entity {
@@ -811,8 +863,8 @@ export class DaoConstants extends Entity {
     this.set("id", Value.fromString(value));
   }
 
-  get laoland(): string | null {
-    let value = this.get("laoland");
+  get molochv3(): string | null {
+    let value = this.get("molochv3");
     if (value === null || value.kind == ValueKind.NULL) {
       return null;
     } else {
@@ -820,11 +872,11 @@ export class DaoConstants extends Entity {
     }
   }
 
-  set laoland(value: string | null) {
+  set molochv3(value: string | null) {
     if (value === null) {
-      this.unset("laoland");
+      this.unset("molochv3");
     } else {
-      this.set("laoland", Value.fromString(value as string));
+      this.set("molochv3", Value.fromString(value as string));
     }
   }
 

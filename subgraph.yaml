@@ -1,6 +1,6 @@
 specVersion: 0.0.2
-description: Laoland Subgraph
-repository: https://github.com/openlawteam/laoland
+description: Molochv3 Subgraph
+repository: https://github.com/openlawteam/Molochv3
 schema:
   file: ./schema.graphql
 dataSources:
@@ -8,15 +8,15 @@ dataSources:
     name: DaoFactory
     network: rinkeby
     source:
-      address: "0xC40757FF6aa46284eB792fD3284cccd733a191a3"
+      address: "0xC3014c82dB7677032ed3C136B740563978505c34"
       abi: DaoFactory
-      startBlock: 8099921
+      startBlock: 8129087
     mapping:
       kind: ethereum/events
       apiVersion: 0.0.4
       language: wasm/assemblyscript
       entities:
-        - Laoland
+        - Molochv3
         - DaoConstants
       abis:
         - name: DaoFactory
@@ -30,9 +30,9 @@ dataSources:
     name: BankFactory
     network: rinkeby
     source:
-      address: "0x073051BaC53869c8ED907F42f608a374C67c734E"
+      address: "0x80cA95EEC79064279420C323B3e842027c2ca4Da"
       abi: BankFactory
-      startBlock: 8099924
+      startBlock: 8129090
     mapping:
       kind: ethereum/events
       apiVersion: 0.0.4

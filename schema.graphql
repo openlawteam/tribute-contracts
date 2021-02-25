@@ -1,4 +1,4 @@
-type Laoland @entity {
+type Molochv3 @entity {
   id: ID!
   daoAddress: Bytes # dao address
   name: String
@@ -8,6 +8,11 @@ type Laoland @entity {
   initialized: Boolean
   bank: Bank
   daoConstants: DaoConstants
+
+  "list of registered adapters"
+  adapters: [Adapter!]! @derivedFrom(field: "molochv3")
+  "list of registered extensions"
+  extensions: [Extension!]! @derivedFrom(field: "molochv3")
 }
 
 type Bank @entity {
@@ -17,7 +22,7 @@ type Bank @entity {
   balance: BigInt
   createdAt: String
   # totalShares: BigInt
-  laoland: Laoland!
+  molochv3: Molochv3!
 }
 
 type Token @entity {
@@ -38,9 +43,8 @@ type TokenBalance @entity {
 
 type Member @entity {
   id: ID!
+  # "TODO: members can be a part of multiple Molochv3"
   memberAddress: Bytes!
-  # "TODO: members can be a part of multiple laolands"
-  # laolands: [Laoland!]
   createdAt: String!
   delegateKey: Bytes!
   shares: BigInt!
@@ -68,18 +72,22 @@ type Adapter @entity {
   id: ID!
   adapterId: Bytes!
   adapterAddress: Bytes!
-  acl: BigInt! #access control layer
+  "adapter acl (access control layer)"
+  acl: BigInt!
+  molochv3: Molochv3
 }
 
 type Extension @entity {
   id: ID!
   extensionAddress: Bytes!
   extensionId: Bytes!
+  molochv3: Molochv3
 }
 
 type DaoConstants @entity {
   id: ID!
-  laoland: Laoland
+  molochv3: Molochv3
+
   GUILD: Bytes
   TOTAL: Bytes
   SHARES: Bytes

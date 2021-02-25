@@ -3,7 +3,7 @@ import {
   NewBalance,
   Withdraw,
 } from "../generated/templates/BankExtension/BankExtension";
-import { Laoland, Member, Token, TokenBalance } from "../generated/schema";
+import { Member, Molochv3, Token, TokenBalance } from "../generated/schema";
 import { LOCKED_LOOT, LOOT, SHARES, TOTAL } from "./dao-constants";
 import { BigInt, Bytes, log } from "@graphprotocol/graph-ts";
 
@@ -44,7 +44,7 @@ export function handleNewBalance(event: NewBalance): void {
   // let amount = event.params.amount;
   let tokenBalanceId = memberId + ":" + tokenId;
 
-  let dao = Laoland.load(daoAddress);
+  let dao = Molochv3.load(daoAddress);
   let member = Member.load(memberId);
   let token = Token.load(tokenId);
   let tokenBalance = TokenBalance.load(tokenBalanceId);
