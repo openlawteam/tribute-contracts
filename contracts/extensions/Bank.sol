@@ -252,6 +252,13 @@ contract BankExtension is DaoConstants, AdapterGuard, IExtension {
     }
 
     /**
+     * @return All the tokens registered in the bank.
+     */
+    function getTokens() external view returns (address[] memory) {
+        return tokens;
+    }
+
+    /**
      * @return The internal token at a given index
      * @param index The index to look up in the bank's array of internal tokens
      */
