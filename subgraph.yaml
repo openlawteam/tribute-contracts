@@ -1,11 +1,11 @@
 specVersion: 0.0.2
-description: Laoland
-repository: https://github.com/openlawteam/laoland
+description: molochv3
+repository: https://github.com/openlawteam/molochv3-contracts
 schema:
   file: ./schema.graphql
 dataSources:
   - kind: ethereum/contract
-    name: Laoland
+    name: MolochV3
     network: mainnet
     source:
       address: '0x2E645469f354BB4F5c8a05B3b30A929361cf77eC'
