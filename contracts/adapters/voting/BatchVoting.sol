@@ -8,6 +8,7 @@ import "../../core/DaoConstants.sol";
 import "../../guards/MemberGuard.sol";
 import "../../guards/AdapterGuard.sol";
 import "../interfaces/IVoting.sol";
+import "../../utils/Signatures.sol";
 import "./Voting.sol";
 import "./SnapshotProposalContract.sol";
 
@@ -39,7 +40,8 @@ contract BatchVotingContract is
     IVoting,
     DaoConstants,
     MemberGuard,
-    AdapterGuard
+    AdapterGuard,
+    Signatures
 {
     struct Voting {
         uint256 snapshot;
@@ -51,18 +53,13 @@ contract BatchVotingContract is
         uint256 gracePeriodStartingTime;
     }
 
-    struct VotingResult {
-        uint256 nbYes;
-        uint256 nbNo;
-    }
-
     struct VoteEntry {
         SnapshotProposalContract.VoteMessage vote;
         address memberAddress;
         bytes sig;
     }
 
-    event NewVotResult(
+    event NewVoteResult(
         address dao,
         address actionId,
         uint256 nbYes,
@@ -122,10 +119,18 @@ contract BatchVotingContract is
                 vote.gracePeriodStartingTime = block.timestamp;
             }
 
-            vote.nbYes = nbYes;
-            vote.nbNo = nbNo;
+            if (
+                block.timestamp <
+                vote.startingTime + dao.getConfiguration(_VOTING_PERIOD) ||
+                block.timestamp <
+                vote.gracePeriodStartingTime +
+                    dao.getConfiguration(_GRACE_PERIOD)
+            ) {
+                vote.nbYes = nbYes;
+                vote.nbNo = nbNo;
 
-            emit NewVotResult(address(dao), vote.actionId, nbYes, nbNo);
+                emit NewVoteResult(address(dao), vote.actionId, nbYes, nbNo);
+            }
         }
     }
 
@@ -298,7 +303,7 @@ contract BatchVotingContract is
             block.timestamp <
             vote.gracePeriodStartingTime + dao.getConfiguration(_GRACE_PERIOD)
         ) {
-            return VotingState.IN_PROGRESS;
+            return VotingState.GRACE_PERIOD;
         }
 
         if (vote.nbYes > vote.nbNo) {
@@ -309,173 +314,5 @@ contract BatchVotingContract is
         }
 
         return VotingState.TIE;
-    }
-
-    function getSignedHash(
-        bytes32 snapshotRoot,
-        address dao,
-        bytes32 proposalId
-    ) external pure returns (bytes32) {
-        bytes32 proposalHash =
-            keccak256(abi.encode(snapshotRoot, dao, proposalId));
-        return keccak256(abi.encode(proposalHash, 1));
-    }
-
-    function getSignedAddress(
-        bytes32 snapshotRoot,
-        address dao,
-        bytes32 proposalId,
-        bytes calldata sig
-    ) external pure returns (address) {
-        bytes32 proposalHash =
-            keccak256(abi.encode(snapshotRoot, dao, proposalId));
-        return
-            recover(
-                keccak256(
-                    abi.encodePacked(
-                        "\x19Ethereum Signed Message:\n32",
-                        keccak256(abi.encode(proposalHash, 1))
-                    )
-                ),
-                sig
-            );
-    }
-
-    function _hasVotedYes(
-        DaoRegistry dao,
-        address actionId,
-        address voter,
-        uint256 timestamp,
-        bytes32 proposalHash,
-        bytes memory sig
-    ) internal view returns (bool) {
-        bytes32 voteHashYes =
-            _snapshotContract.hashVote(
-                dao,
-                actionId,
-                SnapshotProposalContract.VoteMessage(
-                    timestamp,
-                    SnapshotProposalContract.VotePayload(1, proposalHash)
-                )
-            );
-
-        bytes32 voteHashNo =
-            _snapshotContract.hashVote(
-                dao,
-                actionId,
-                SnapshotProposalContract.VoteMessage(
-                    timestamp,
-                    SnapshotProposalContract.VotePayload(2, proposalHash)
-                )
-            );
-
-        if (recover(voteHashYes, sig) == voter) {
-            return true;
-        } else if (recover(voteHashNo, sig) == voter) {
-            return false;
-        } else {
-            revert("invalid signature or signed for neither yes nor no");
-        }
-    }
-
-    function _hasVoted(
-        DaoRegistry dao,
-        address actionId,
-        address voter,
-        uint256 timestamp,
-        bytes32 proposalHash,
-        bytes memory sig
-    ) internal view returns (uint256) {
-        bytes32 voteHashYes =
-            _snapshotContract.hashVote(
-                dao,
-                actionId,
-                SnapshotProposalContract.VoteMessage(
-                    timestamp,
-                    SnapshotProposalContract.VotePayload(1, proposalHash)
-                )
-            );
-
-        bytes32 voteHashNo =
-            _snapshotContract.hashVote(
-                dao,
-                actionId,
-                SnapshotProposalContract.VoteMessage(
-                    timestamp,
-                    SnapshotProposalContract.VotePayload(2, proposalHash)
-                )
-            );
-
-        if (recover(voteHashYes, sig) == voter) {
-            return 1;
-        } else if (recover(voteHashNo, sig) == voter) {
-            return 2;
-        } else {
-            return 0;
-        }
-    }
-
-    /**
-     * @dev Recover signer address from a message by using his signature
-     * @param hash bytes32 message, the hash is the signed message. What is recovered is the signer address.
-     * @param sig bytes signature, the signature is generated using web3.eth.sign()
-     */
-    function recover(bytes32 hash, bytes memory sig)
-        public
-        pure
-        returns (address)
-    {
-        bytes32 r;
-        bytes32 s;
-        uint8 v;
-
-        //Check the signature length
-        if (sig.length != 65) {
-            return (address(0));
-        }
-
-        // Divide the signature in r, s and v variables
-        assembly {
-            r := mload(add(sig, 32))
-            s := mload(add(sig, 64))
-            v := byte(0, mload(add(sig, 96)))
-        }
-
-        // Version of signature should be 27 or 28, but 0 and 1 are also possible versions
-        if (v < 27) {
-            v += 27;
-        }
-
-        // If the version is correct return the signer address
-        if (v != 27 && v != 28) {
-            return (address(0));
-        }
-        return ecrecover(hash, v, r, s);
-    }
-
-    function verify(
-        bytes32 root,
-        bytes32 leaf,
-        bytes32[] memory proof
-    ) public pure returns (bool) {
-        bytes32 computedHash = leaf;
-
-        for (uint256 i = 0; i < proof.length; i++) {
-            bytes32 proofElement = proof[i];
-            if (computedHash < proofElement) {
-                // Hash(current computed hash + current element of the proof)
-                computedHash = keccak256(
-                    abi.encodePacked(computedHash, proofElement)
-                );
-            } else {
-                // Hash(current element of the proof + current computed hash)
-                computedHash = keccak256(
-                    abi.encodePacked(proofElement, computedHash)
-                );
-            }
-        }
-
-        // Check if the computed hash (root) is equal to the provided root
-        return computedHash == root;
     }
 }

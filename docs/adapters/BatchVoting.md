@@ -12,6 +12,12 @@ startNewVotingForProposal starts a voting session
 Then all the votes happen offchain in snapshot
 Once the votes are done, the client prepares a list of all the votes and sends it to submitVoteResult
 
+While processing the votes we check that:
+
+- the signature is correct
+- the vote was for this particular proposal
+- the member addresses are in order and with no duplicate
+
 From there, the vote enters grace period if potential new votes could change the result and just resolves the vote otherwise.
 
 ## Adapter configuration
@@ -45,30 +51,55 @@ Describe the public and private functions signatures with proper documentation a
 
 Examples:
 
-### receive() external payable
+### function submitVoteResult(DaoRegistry dao, bytes32 proposalId, VoteEntry[] memory votes)
 
-### function submitKickProposal
+this function submits a vote result for a certain proposal.
 
-```solidity
-    /**
-     * @notice Creates a guild kick proposal, opens it for voting, and sponsors it.
-     * @dev A member can not kick himself.
-     * @dev Only one kick per DAO can be executed at time.
-     * @dev Only members that have shares can be kicked out.
-     * @dev Proposal ids can not be reused.
-     * @param dao The dao address.
-     * @param proposalId The guild kick proposal id.
-     * @param memberToKick The member address that should be kicked out of the DAO.
-     * @param data Additional information related to the kick proposal.
-     */
-    function submitKickProposal(
-        DaoRegistry dao,
-        bytes32 proposalId,
-        address memberToKick,
-        bytes calldata data
-    ) external override onlyMember(dao)
-```
+- It first processes the votes
+- If the result has more weight than the previous one and the vote is still going on, update the result
+- If the result has changed from before (pass -> fail or fail -> pass), update the start of grace period to now
+
+### function getAdapterName()
+
+returns the voting adapter name "BatchVotingContract"
+
+### function processVotes(DaoRegistry dao, bytes32 proposalId, VoteEntry[] memory entries)
+
+Process all the votes.
+
+For each entry, it validates the vote and then computes the result.
+
+### function validateVote(DaoRegistry dao, BankExtension bank, address actionId, uint256 snapshot, bytes32 proposalHash, address previousAddress, VoteEntry memory entry)
+
+It validates the vote entry.
+It does the following checks:
+
+- checks that the memberAddress is the one who signed the vote (or its delegate key)
+- checks that the member is not jailed
+- checks that the previous member address is "before" (hex order) the current one
+- checks that the vote is actually for this proposal
+
+If it is all good, returns the amount of shares the member has at that point in time
+
+### function getSenderAddress(DaoRegistry dao, address actionId, bytes memory data,address)
+
+returns the address that has signed the proposal hash
+
+### function startNewVotingForProposal(DaoRegistry dao, bytes32 proposalId, bytes memory data)
+
+Starts a new voting session.
+It first decode the proposal data, then builds the proposal hash.
+From there, it checks that the signature is for this hash and from an active member.
+It also checks that the block number is not 0 and is not in the future
+
+if all checks out, we write the actionId (msg.sender), startingTime (block.timestamp), snapshot and proposal hash into the voting session struct
+
+### function voteResult(DaoRegistry dao, bytes32 proposalId)
+
+returns the vote status.
 
 ## Events
 
-List all the events that are emitted by the function in this Adapter implementation.
+### NewVoteResult(address dao, address actionId, uint256 nbYes, uint256 nbNo)
+
+is emitted when a new vote result has been submitted
