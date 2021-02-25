@@ -49,7 +49,19 @@ const {
 
 const BatchVotingContract = artifacts.require("./adapters/BatchVotingContract");
 
-const members = generateMembers(5);
+let members = generateMembers(5);
+
+function compare(a, b) {
+  if (a.address.toLowerCase() < b.address.toLowerCase()) {
+    return -1;
+  }
+  if (a.address.toLowerCase() > b.address.toLowerCase()) {
+    return 1;
+  }
+  return 0;
+}
+
+members = members.sort(compare);
 
 function generateMembers(amount) {
   let accounts = [];

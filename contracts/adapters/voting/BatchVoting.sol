@@ -142,11 +142,24 @@ contract BatchVotingContract is
         Voting storage voteState = votingSessions[address(dao)][proposalId];
         uint256 snapshot = voteState.snapshot;
         address actionId = voteState.actionId;
+        address previousMember = address(0x0);
+        bytes32 proposalHash = voteState.proposalHash;
 
         for (uint256 i = 0; i < entries.length; i++) {
             VoteEntry memory entry = entries[i];
 
-            uint256 weight = validateVote(dao, bank, actionId, snapshot, entry);
+            uint256 weight =
+                validateVote(
+                    dao,
+                    bank,
+                    actionId,
+                    snapshot,
+                    proposalHash,
+                    previousMember,
+                    entry
+                );
+
+            previousMember = entry.memberAddress;
 
             if (entry.vote.payload.choice == 1) {
                 nbYes += weight;
@@ -161,6 +174,8 @@ contract BatchVotingContract is
         BankExtension bank,
         address actionId,
         uint256 snapshot,
+        bytes32 proposalHash,
+        address previousAddress,
         VoteEntry memory entry
     ) public view returns (uint256) {
         bytes32 hashVote =
@@ -171,7 +186,12 @@ contract BatchVotingContract is
         address delegateKey =
             dao.getPriorDelegateKey(entry.memberAddress, snapshot);
 
+        require(entry.memberAddress > previousAddress, "unsorted members");
         require(addr == delegateKey, "signing key mismatch");
+        require(
+            entry.vote.payload.proposalHash == proposalHash,
+            "wrong proposal vote"
+        );
 
         require(
             !dao.getMemberFlag(
