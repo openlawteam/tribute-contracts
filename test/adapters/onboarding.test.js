@@ -43,7 +43,7 @@ const {
 } = require("../../utils/DaoFactory.js");
 const { checkBalance } = require("../../utils/TestUtils.js");
 
-contract("LAOLAND - Onboarding Adapter", async (accounts) => {
+contract("MolochV3 - Onboarding Adapter", async (accounts) => {
   it("should be possible to join a DAO with ETH contribution", async () => {
     const myAccount = accounts[1];
     const applicant = accounts[2];

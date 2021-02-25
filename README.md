@@ -1,4 +1,4 @@
-[![codecov](https://codecov.io/gh/openlawteam/laoland/branch/master/graph/badge.svg?token=XZRL9RUYZE)](https://codecov.io/gh/openlawteam/laoland/)
+[![codecov](https://codecov.io/gh/openlawteam/molochv3-contracts/branch/master/graph/badge.svg?token=XZRL9RUYZE)](https://codecov.io/gh/openlawteam/laoland/)
 
 ## Overview
 
@@ -18,7 +18,7 @@ Inspired by the [hexagonal architecture design pattern](<https://en.wikipedia.or
 
 The main design goal is to limit access to the smart contracts according at layer boundaries. The External World (i.e. RPC clients) can access the core contracts only via Adapters, never directly. Every adapter contains all the necessary logic and data to update/change the state of the DAO in the DAORegistry Contract. The Core Contract tracks all the state changes of the DAO, and an Adapter tracks only the state changes in its own context. Extensions enhance the DAO capabilities and simplify the Core Contract code. The information always flows from the External World to the Core Contracts, never the other way around. If a Core Contract needs external info, it must be provided by an Adapter and/or an Extension instead of calling External World directly.
 
-There are five main components in the Laoland architecture:
+There are five main components in the Moloch V3 architecture:
 
 #### External World
 
@@ -32,45 +32,45 @@ When a new adapter is created, one needs to submit a Managing proposal to add th
 
 Each adapter needs to be configured with the [Access Flags](#access-control-layer) in order to access the [Core Contracts](#core-contracts), and/or [Extensions](#extensions). Otherwise the Adapter will not able to pull/push information to/from the DAO.
 
-Adapters implemented in the Laoland project:
+Adapters implemented in the MolochV3 project:
 
-- [Configuration](https://github.com/openlawteam/laoland/blob/master/docs/adapters/Configuration.md): manages storing and retrieving per-DAO settings required by shared adapters.
-- [Financing](https://github.com/openlawteam/laoland/blob/master/docs/adapters/Financing.md): allows individuals and/or organizations to request funds to finance their projects, and the members of the DAO have the power to vote and decide which projects should be funded.
-- [GuildKick](https://github.com/openlawteam/laoland/blob/master/docs/adapters/GuildKick.md): gives the members the freedom to choose which individuals or organizations should really be part of the DAO.
-- [Managing](https://github.com/openlawteam/laoland/blob/master/docs/adapters/Managing.md): enhances the DAO capabilities by adding/updating the DAO Adapters through a voting process.
-- [OffchainVoting](https://github.com/openlawteam/laoland/blob/master/docs/adapters/OffchainVoting.md): adds the offchain voting governance process to the DAO to support gasless voting.
-- [Onboarding](https://github.com/openlawteam/laoland/blob/master/docs/adapters/Onboarding.md): triggers the process of minting internal tokens in exchange of a specific token at a fixed price.
-- [Tribute](https://github.com/openlawteam/laoland/blob/master/docs/adapters/Tribute.md): allows potential and existing DAO members to contribute any amount of ERC-20 tokens to the DAO in exchange for any amount of DAO internal tokens.
-- [Ragequit](https://github.com/openlawteam/laoland/blob/master/docs/adapters/Ragequit.md): gives the members the freedom to choose when it is the best time to exit the DAO for any given reason.
-- [Voting](https://github.com/openlawteam/laoland/blob/master/docs/adapters/Voting.md): adds the simple on chain voting governance process to the DAO.
-- [Withdraw](https://github.com/openlawteam/laoland/blob/master/docs/adapters/Withdraw.md): allows the members to withdraw their funds from the DAO bank.
-- [Distribute](https://github.com/openlawteam/laoland/blob/master/docs/adapters/Distribute.md): allows the members to distribute funds to one or all members of the DAO.
+- [Configuration](https://github.com/openlawteam/molochv3-contracts/blob/master/docs/adapters/Configuration.md): manages storing and retrieving per-DAO settings required by shared adapters.
+- [Financing](https://github.com/openlawteam/molochv3-contracts/blob/master/docs/adapters/Financing.md): allows individuals and/or organizations to request funds to finance their projects, and the members of the DAO have the power to vote and decide which projects should be funded.
+- [GuildKick](https://github.com/openlawteam/molochv3-contracts/blob/master/docs/adapters/GuildKick.md): gives the members the freedom to choose which individuals or organizations should really be part of the DAO.
+- [Managing](https://github.com/openlawteam/molochv3-contracts/blob/master/docs/adapters/Managing.md): enhances the DAO capabilities by adding/updating the DAO Adapters through a voting process.
+- [OffchainVoting](https://github.com/openlawteam/molochv3-contracts/blob/master/docs/adapters/OffchainVoting.md): adds the offchain voting governance process to the DAO to support gasless voting.
+- [Onboarding](https://github.com/openlawteam/molochv3-contracts/blob/master/docs/adapters/Onboarding.md): triggers the process of minting internal tokens in exchange of a specific token at a fixed price.
+- [Tribute](https://github.com/openlawteam/molochv3-contracts/blob/master/docs/adapters/Tribute.md): allows potential and existing DAO members to contribute any amount of ERC-20 tokens to the DAO in exchange for any amount of DAO internal tokens.
+- [Ragequit](https://github.com/openlawteam/molochv3-contracts/blob/master/docs/adapters/Ragequit.md): gives the members the freedom to choose when it is the best time to exit the DAO for any given reason.
+- [Voting](https://github.com/openlawteam/molochv3-contracts/blob/master/docs/adapters/Voting.md): adds the simple on chain voting governance process to the DAO.
+- [Withdraw](https://github.com/openlawteam/molochv3-contracts/blob/master/docs/adapters/Withdraw.md): allows the members to withdraw their funds from the DAO bank.
+- [Distribute](https://github.com/openlawteam/molochv3-contracts/blob/master/docs/adapters/Distribute.md): allows the members to distribute funds to one or all members of the DAO.
 
 Considerations:
 
 - Adapters do not keep track of the state of the DAO. An adapter might use storage to control its own state, but ideally any DAO state change must be propagated to the DAORegistry Core Contract.
 - Adapters just execute smart contract logic that changes the state of the DAO by calling the DAORegistry. They also can compose complex calls that interact with External World, other Adapters or even Extensions, to pull/push additional information.
-- The adapter must follow the rules defined by the [Template Adapter](https://github.com/openlawteam/laoland/blob/master/docs/adapters/Template.md).
-- If you want to contribute and create an Adapter, please checkout this: [How to create an Adapter](https://github.com/openlawteam/laoland/blob/master/docs/adapters/HowToCreate.md).
+- The adapter must follow the rules defined by the [Template Adapter](https://github.com/openlawteam/molochv3-contracts/blob/master/docs/adapters/Template.md).
+- If you want to contribute and create an Adapter, please checkout this: [How to create an Adapter](https://github.com/openlawteam/molochv3-contracts/blob/master/docs/adapters/HowToCreate.md).
 
 #### Extensions
 
 Extensions are conceived to isolate the complexity of state changes from the DAORegistry contract, and to simplify the core logic. Essentially an Extension is similar to an Adapter, but the main difference is that it is used by several adapters and by the DAORegistry - which end up enhancing the DAO capabilities and the state management without cluttering the DAO core contract.
 
-- [Bank](https://github.com/openlawteam/laoland/blob/master/docs/extensions/Bank.md): adds the banking capabilities to the DAO, and keeps track of the DAO accounts and internal token balances.
+- [Bank](https://github.com/openlawteam/molochv3-contracts/blob/master/docs/extensions/Bank.md): adds the banking capabilities to the DAO, and keeps track of the DAO accounts and internal token balances.
 
 #### Core Contracts
 
 A core contract is a contract that composes the DAO itself, and directly changes the DAO state without the need of going through an Adapter. Ideally a core contract shall never pull information directly from the external world. For that we use Adapters and Extensions, and the natural information flow is always from the external world to the core contracts.
 
-- [DaoRegistry](https://github.com/openlawteam/laoland/blob/master/docs/core/DaoRegistry.md): tracks the state changes of the DAO, only adapters with proper [Access Flags](#access-control-layer) can alter the DAO state.
+- [DaoRegistry](https://github.com/openlawteam/molochv3-contracts/blob/master/docs/core/DaoRegistry.md): tracks the state changes of the DAO, only adapters with proper [Access Flags](#access-control-layer) can alter the DAO state.
 - CloneFactory: creates a clone of the DAO based on its address.
-- [DaoFactory](https://github.com/openlawteam/laoland/blob/master/docs/core/DaoFactory.md): creates, initializes, and adds adapter configurations to the new DAO, and uses the CloneFactory to reduce the DAO creation transaction costs.
+- [DaoFactory](https://github.com/openlawteam/molochv3-contracts/blob/master/docs/core/DaoFactory.md): creates, initializes, and adds adapter configurations to the new DAO, and uses the CloneFactory to reduce the DAO creation transaction costs.
 - DaoConstants: defines all the constants used by the DAO contracts, and implements some helper functions to manage the Access Flags.
 
 #### Access Control Layer
 
-The Access Control Layer (ACL) is implemented using Access Flags to indicate which permissions an adapter must have in order to access and modify the DAO state. The are 3 main categories of [Access Flags](https://github.com/openlawteam/laoland/blob/master/docs/core/DaoRegistry.md#access-flags):
+The Access Control Layer (ACL) is implemented using Access Flags to indicate which permissions an adapter must have in order to access and modify the DAO state. The are 3 main categories of [Access Flags](https://github.com/openlawteam/molochv3-contracts/blob/master/docs/core/DaoRegistry.md#access-flags):
 
 - MemberFlag: `EXISTS`, `JAILED`.
 - ProposalFlag: `EXISTS`, `SPONSORED`, `PROCESSED`.
@@ -80,7 +80,7 @@ The Access Flags of each adapter must be provided to the DAOFactory when the `da
 
 The Access Flags are defined in the DAORegistry using the modifier `hasAccess`. For example, a function with the modifier `hasAccess(this, AclFlag.JAIL_MEMBER)` means the adapter calling this function needs to have the Access Flag `JAIL_MEMBER` enabled, otherwise the call will revert. In order to create an Adapter with the proper Access Flags one needs to first map out all the functions that the Adapter will be calling in the DAORegistry and Extensions, and provide these Access Flags using the DAO Factory as described above.
 
-You can find more information about the purpose of each access flag at [DAO Registry - Access Flags](https://github.com/openlawteam/laoland/blob/master/docs/core/DaoRegistry.md#access-flags).
+You can find more information about the purpose of each access flag at [DAO Registry - Access Flags](https://github.com/openlawteam/molochv3-contracts/blob/master/docs/core/DaoRegistry.md#access-flags).
 
 ## Usage
 
@@ -98,8 +98,8 @@ To fix the Solidity code and documentation with the linter hints, simply run:
 
 ## Contribute
 
-Laoland exists thanks to its contributors. There are many ways you can participate and help build high quality software. Check out the [contribution guide](CONTRIBUTING.md)!
+MolochV3 exists thanks to its contributors. There are many ways you can participate and help build high quality software. Check out the [contribution guide](CONTRIBUTING.md)!
 
 ## License
 
-Laoland is released under the [MIT License](LICENSE).
+MolochV3 is released under the [MIT License](LICENSE).

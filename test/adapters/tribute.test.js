@@ -39,7 +39,7 @@ const {
 } = require("../../utils/DaoFactory.js");
 const { checkBalance } = require("../../utils/TestUtils.js");
 
-contract("LAOLAND - Tribute Adapter", async (accounts) => {
+contract("MolochV3 - Tribute Adapter", async (accounts) => {
   it("should be possible to provide ERC20 tokens in exchange for DAO shares", async () => {
     const myAccount = accounts[1];
     const applicant = accounts[2];

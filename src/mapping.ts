@@ -1,4 +1,4 @@
-import { ProcessedProposal, SponsoredProposal, SubmittedProposal, UpdateDelegateKey, AdapterAdded, AdapterRemoved, MemberJailed, MemberUnjailed, NewBalance } from '../generated/Laoland/DaoRegistry'
+import { ProcessedProposal, SponsoredProposal, SubmittedProposal, UpdateDelegateKey, AdapterAdded, AdapterRemoved, MemberJailed, MemberUnjailed, NewBalance } from '../generated/molochv3/DaoRegistry'
 import { Proposal, Adapter, Member, Token, TokenBalance } from '../generated/schema'
 import { Bytes, store } from '@graphprotocol/graph-ts'
 

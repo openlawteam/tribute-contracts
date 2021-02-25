@@ -44,7 +44,7 @@ const {
 const { checkBalance } = require("../../utils/TestUtils.js");
 const remaining = sharePrice.sub(toBN("50000000000000"));
 
-contract("LAOLAND - Financing Adapter", async (accounts) => {
+contract("MolochV3 - Financing Adapter", async (accounts) => {
   const myAccount = accounts[1];
   const applicant = accounts[2];
   const newMember = accounts[3];

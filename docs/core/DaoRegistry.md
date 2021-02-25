@@ -66,7 +66,7 @@ The DaoRegistry.sol contract tracks the state of the DAO for 1) Adapter and Exte
 
 `struct Member` the structure to track all the members in the DAO and their state (EXISTS, JAILED).
 
-`struct Checkpoint` Laoland makes use of the off-chain voting mechanism Snapshot. The `Checkpoint` struct assists with verifying the optimistic voting and proposal mechanisms at various blocktimes. See, https://github.com/snapshot-labs.
+`struct Checkpoint` MolochV3 makes use of the off-chain voting mechanism Snapshot. The `Checkpoint` struct assists with verifying the optimistic voting and proposal mechanisms at various blocktimes. See, https://github.com/snapshot-labs.
 
 `struct DelegateCheckpoint` A checkpoint for marking number of votes from a given block.
 

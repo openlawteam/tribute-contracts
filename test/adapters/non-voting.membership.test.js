@@ -39,7 +39,7 @@ const {
   BankExtension,
 } = require("../../utils/DaoFactory.js");
 
-contract("LAOLAND - Non Voting Onboarding Adapter", async (accounts) => {
+contract("MolochV3 - Non Voting Onboarding Adapter", async (accounts) => {
   it("should be possible to join a DAO as a member without any voting power by requesting Loot while staking raw ETH", async () => {
     const myAccount = accounts[1];
     const advisorAccount = accounts[2];

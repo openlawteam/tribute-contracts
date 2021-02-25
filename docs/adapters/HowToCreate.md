@@ -13,21 +13,21 @@
 
 ### Introduction
 
-[Adapters](https://github.com/openlawteam/laoland#adapters) are well defined, tested and extensible smart contracts that are created with a unique purpose. One Adapter is responsible for performing one or a set of tasks in a given context. With this approach we can develop adapters targeting specific use-cases, and update the DAO configurations to use these new adapters.
+[Adapters](https://github.com/openlawteam/molochv3-contracts#adapters) are well defined, tested and extensible smart contracts that are created with a unique purpose. One Adapter is responsible for performing one or a set of tasks in a given context. With this approach we can develop adapters targeting specific use-cases, and update the DAO configurations to use these new adapters.
 
 When a new adapter is created, one needs to submit a Managing proposal to add the new adapter to the DAO. Once the proposal passes, the new adapter is added and becomes available for use.
 
-Each adapter needs to be configured with the [Access Flags](https://github.com/openlawteam/laoland#access-control-layer) in order to access the [Core Contracts](https://github.com/openlawteam/laoland#core-contracts), and/or [Extensions](https://github.com/openlawteam/laoland##extensions). Otherwise the Adapter will not able to interact with the DAO.
+Each adapter needs to be configured with the [Access Flags](https://github.com/openlawteam/molochv3-contracts#access-control-layer) in order to access the [Core Contracts](https://github.com/openlawteam/molochv3-contracts#core-contracts), and/or [Extensions](https://github.com/openlawteam/molochv3-contracts##extensions). Otherwise the Adapter will not able to interact with the DAO.
 
 ### Defining the Interface
 
-The adapter must implement one or more of the available interfaces at [contracts/adapters/interfaces](https://github.com/openlawteam/laoland/tree/master/contracts/adapters/interfaces). If none of these interfaces match the use-case of your adapter, feel free to suggest a new interface.
+The adapter must implement one or more of the available interfaces at [contracts/adapters/interfaces](https://github.com/openlawteam/molochv3-contracts/tree/master/contracts/adapters/interfaces). If none of these interfaces match the use-case of your adapter, feel free to suggest a new interface.
 
 ### Pick the right Adapter type
 
 There are two main types of adapters that serve different purposes:
 
-- Proposal: writes/reads to/from the DAO state based on a proposal, and the proposal needs to pass, otherwise the DAO state changes are not applied, e.g: [GuildKick.sol](https://github.com/openlawteam/laoland/blob/master/contracts/adapters/GuildKick.sol).
+- Proposal: writes/reads to/from the DAO state based on a proposal, and the proposal needs to pass, otherwise the DAO state changes are not applied, e.g: [GuildKick.sol](https://github.com/openlawteam/molochv3-contracts/blob/master/contracts/adapters/GuildKick.sol).
 
   - **Example of a Proposal Adapter**
 
@@ -133,7 +133,7 @@ There are two main types of adapters that serve different purposes:
     }
     ```
 
-- Generic: writes/reads to/from the DAO state without a proposal, e.g: [Withdraw.sol](https://github.com/openlawteam/laoland/blob/master/contracts/adapters/Withdraw.sol).
+- Generic: writes/reads to/from the DAO state without a proposal, e.g: [Withdraw.sol](https://github.com/openlawteam/molochv3-contracts/blob/master/contracts/adapters/Withdraw.sol).
 
   - **Example of a Generic Adapter**
 
@@ -172,17 +172,17 @@ There are two main types of adapters that serve different purposes:
 
 ### Identifying the Modifiers
 
-We have adapters that are accessible only to members and/or advisors of the DAO (e.g: [Ragequit.sol](https://github.com/openlawteam/laoland/blob/master/docs/adapters/Ragequit.md)), and adapters that are open to any individual or organization, e.g: [Financing.sol](https://github.com/openlawteam/laoland/blob/master/docs/adapters/Financing.md).
+We have adapters that are accessible only to members and/or advisors of the DAO (e.g: [Ragequit.sol](https://github.com/openlawteam/molochv3-contracts/blob/master/docs/adapters/Ragequit.md)), and adapters that are open to any individual or organization, e.g: [Financing.sol](https://github.com/openlawteam/molochv3-contracts/blob/master/docs/adapters/Financing.md).
 
-While creating the adapter try to identify which sort of users you want to grant access to. Remember that the adapters are the only way we have to alter the DAO state, so be careful with the access modifiers you use. We already have some of them implemented, take a look at the [docs/guards](https://github.com/openlawteam/laoland/blob/master/docs/guards), and feel free to suggest new ones if needed.
+While creating the adapter try to identify which sort of users you want to grant access to. Remember that the adapters are the only way we have to alter the DAO state, so be careful with the access modifiers you use. We already have some of them implemented, take a look at the [docs/guards](https://github.com/openlawteam/molochv3-contracts/blob/master/docs/guards), and feel free to suggest new ones if needed.
 
 ### Map out the proper Access Flags
 
-Another important point is to map out which sort of permissions your adapter needs in order to write/read data to/from the DAO. If your adapter requires an [Extension](https://github.com/openlawteam/laoland#extensions), you will also need to provide the correct [Access Flags](https://github.com/openlawteam/laoland#access-control-layer) to access that extension. Checkout which permission each flag grants: [Flag Helper](https://github.com/openlawteam/laoland/blob/master/docs/helpers/FlagHelper.md).
+Another important point is to map out which sort of permissions your adapter needs in order to write/read data to/from the DAO. If your adapter requires an [Extension](https://github.com/openlawteam/molochv3-contracts#extensions), you will also need to provide the correct [Access Flags](https://github.com/openlawteam/molochv3-contracts#access-control-layer) to access that extension. Checkout which permission each flag grants: [Flag Helper](https://github.com/openlawteam/molochv3-contracts/blob/master/docs/helpers/FlagHelper.md).
 
 ### Set up the DAO custom configurations
 
-Some adapters might need customized/additional configurations to make decisions on the fly. These configurations can and should be set per DAO. In order to do that you need to identify what sort of parameters that you want to keep customizable and set them up through the [Configuration Adapter](https://github.com/openlawteam/laoland/blob/master/docs/adapters/Configuration.md).
+Some adapters might need customized/additional configurations to make decisions on the fly. These configurations can and should be set per DAO. In order to do that you need to identify what sort of parameters that you want to keep customizable and set them up through the [Configuration Adapter](https://github.com/openlawteam/molochv3-contracts/blob/master/docs/adapters/Configuration.md).
 
 ### Be mindful of the storage costs
 
@@ -218,19 +218,19 @@ The key advantage of the adapters is to make them very small and suitable to a v
 
 - Update the DAOConstants
 
-  - If you are creating an adapter that does not have the `keccak256` id declared in the [DAOConstants](https://github.com/openlawteam/laoland/blob/master/contracts/core/DaoConstants.sol#L30) make sure you add it there.
+  - If you are creating an adapter that does not have the `keccak256` id declared in the [DAOConstants](https://github.com/openlawteam/molochv3-contracts/blob/master/contracts/core/DaoConstants.sol#L30) make sure you add it there.
 
 ### Testing the new Adapter
 
 In order to verify if the new adapter works properly, one needs to implement the basic test suite, so we can ensure it is actually doing what it was supposed to do.
 
-There are several examples of tests that you can check to start building your own. Take a look at the [tests/adapters](https://github.com/openlawteam/laoland/tree/master/test/adapters).
+There are several examples of tests that you can check to start building your own. Take a look at the [tests/adapters](https://github.com/openlawteam/molochv3-contracts/tree/master/test/adapters).
 
-Another important step in the test phase is to configure the adapter permissions during the DAO creation in the [DAOFactory.js](https://github.com/openlawteam/laoland/blob/master/utils/DaoFactory.js#L140).
+Another important step in the test phase is to configure the adapter permissions during the DAO creation in the [DAOFactory.js](https://github.com/openlawteam/molochv3-contracts/blob/master/utils/DaoFactory.js#L140).
 
 ### Adding documentation
 
-Each adapter must provide its own documentation describing what is the use-case it solves, what are the functions and interactions it contains. There is a template that you can use to create the docs for your new adapter, check out the [Template.md](https://github.com/openlawteam/laoland/blob/master/docs/adapters/Template.md).
+Each adapter must provide its own documentation describing what is the use-case it solves, what are the functions and interactions it contains. There is a template that you can use to create the docs for your new adapter, check out the [Template.md](https://github.com/openlawteam/molochv3-contracts/blob/master/docs/adapters/Template.md).
 
 ### Done
 

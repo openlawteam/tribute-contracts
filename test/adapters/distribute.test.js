@@ -46,7 +46,7 @@ const {
 
 let proposalCounter = 1;
 
-contract("LAOLAND - Distribute Adapter", async (accounts) => {
+contract("MolochV3 - Distribute Adapter", async (accounts) => {
   const submitNewMemberProposal = async (
     member,
     onboarding,
