@@ -618,7 +618,7 @@ contract("LAOLAND - Distribute Adapter", async (accounts) => {
     }
   });
 
-  it("should not be possible to process a proposal that did not pass", async () => {
+  it("should not be possible to process a proposal that was not voted on", async () => {
     const daoOwner = accounts[2];
     const daoMemberA = accounts[3];
 
@@ -661,7 +661,139 @@ contract("LAOLAND - Distribute Adapter", async (accounts) => {
         "should not be possible to process a proposal that did not pass"
       );
     } catch (err) {
-      assert.equal(err.reason, "proposal did not pass");
+      assert.equal(err.reason, "proposal has not been voted on");
+    }
+  });
+
+  it("should not be possible to distribute if proposal vote result is TIE", async () => {
+    const daoOwner = accounts[2];
+    const daoMemberA = accounts[3];
+
+    let dao = await createDao(daoOwner);
+    const onboarding = await getContract(dao, "onboarding", OnboardingContract);
+    const voting = await getContract(dao, "voting", VotingContract);
+    const distributeContract = await getContract(
+      dao,
+      "distribute",
+      DistributeContract
+    );
+    await onboardingNewMember(
+      dao,
+      onboarding,
+      voting,
+      daoMemberA,
+      daoOwner,
+      sharePrice,
+      SHARES,
+      10
+    );
+
+    // Submit distribute proposal for the 1st time
+    let { proposalId } = await distributeFundsProposal(
+      dao,
+      distributeContract,
+      ETH_TOKEN,
+      5,
+      daoMemberA,
+      daoOwner
+    );
+
+    // Vote YES on the proposal
+    await voting.submitVote(dao.address, proposalId, 1, {
+      from: daoOwner,
+      gasPrice: toBN("0"),
+    });
+
+    // Vote NO on the proposal
+    await voting.submitVote(dao.address, proposalId, 2, {
+      from: daoMemberA,
+      gasPrice: toBN("0"),
+    });
+    await advanceTime(10000);
+
+    // Starts to process the proposal
+    await distributeContract.processProposal(dao.address, proposalId, {
+      from: daoOwner,
+      gasPrice: toBN("0"),
+    });
+
+    try {
+      // Try to distribute funds when the proposal is not in progress
+      await distributeContract.distribute(dao.address, 0, {
+        from: daoOwner,
+        gasPrice: toBN("0"),
+      });
+      assert.fail(
+        "should not be possible to process a proposal that was a tie"
+      );
+    } catch (err) {
+      assert.equal(err.reason, "distribution completed or does not exist");
+    }
+  });
+
+  it("should not be possible to distribute if proposal vote result is NOT_PASS", async () => {
+    const daoOwner = accounts[2];
+    const daoMemberA = accounts[3];
+
+    let dao = await createDao(daoOwner);
+    const onboarding = await getContract(dao, "onboarding", OnboardingContract);
+    const voting = await getContract(dao, "voting", VotingContract);
+    const distributeContract = await getContract(
+      dao,
+      "distribute",
+      DistributeContract
+    );
+    await onboardingNewMember(
+      dao,
+      onboarding,
+      voting,
+      daoMemberA,
+      daoOwner,
+      sharePrice,
+      SHARES,
+      10
+    );
+
+    // Submit distribute proposal for the 1st time
+    let { proposalId } = await distributeFundsProposal(
+      dao,
+      distributeContract,
+      ETH_TOKEN,
+      5,
+      daoMemberA,
+      daoOwner
+    );
+
+    // Vote NO on the proposal
+    await voting.submitVote(dao.address, proposalId, 2, {
+      from: daoOwner,
+      gasPrice: toBN("0"),
+    });
+
+    // Vote NO on the proposal
+    await voting.submitVote(dao.address, proposalId, 2, {
+      from: daoMemberA,
+      gasPrice: toBN("0"),
+    });
+    await advanceTime(10000);
+
+    // Starts to process the proposal
+    await distributeContract.processProposal(dao.address, proposalId, {
+      from: daoOwner,
+      gasPrice: toBN("0"),
+    });
+
+    try {
+      // Try to distribute funds when the proposal is not in progress
+      await distributeContract.distribute(dao.address, 0, {
+        from: daoOwner,
+        gasPrice: toBN("0"),
+      });
+      assert.fail(
+        "should not be possible to process a proposal that did not pass"
+      );
+    } catch (err) {
+      assert.equal(err.reason, "distribution completed or does not exist");
     }
   });
 

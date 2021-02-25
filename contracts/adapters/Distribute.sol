@@ -40,7 +40,7 @@ contract DistributeContract is IDistribute, DaoConstants, MemberGuard {
     event Distributed(address token, uint256 amount, address shareHolder);
 
     // The distribution status
-    enum DistributionStatus {NOT_STARTED, IN_PROGRESS, DONE}
+    enum DistributionStatus {NOT_STARTED, IN_PROGRESS, DONE, FAILED}
 
     // State of the guild kick proposal
     struct Distribution {
@@ -193,15 +193,20 @@ contract DistributeContract is IDistribute, DaoConstants, MemberGuard {
 
         // Checks if the proposal has passed.
         IVoting votingContract = IVoting(dao.getAdapterAddress(VOTING));
-        require(
-            votingContract.voteResult(dao, proposalId) ==
-                IVoting.VotingState.PASS,
-            "proposal did not pass"
-        );
-
-        distribution.status = DistributionStatus.IN_PROGRESS;
-        distribution.blockNumber = block.number;
-        ongoingDistributions[address(dao)] = proposalId;
+        IVoting.VotingState voteResult =
+            votingContract.voteResult(dao, proposalId);
+        if (voteResult == IVoting.VotingState.PASS) {
+            distribution.status = DistributionStatus.IN_PROGRESS;
+            distribution.blockNumber = block.number;
+            ongoingDistributions[address(dao)] = proposalId;
+        } else if (
+            voteResult == IVoting.VotingState.NOT_PASS ||
+            voteResult == IVoting.VotingState.TIE
+        ) {
+            distribution.status = DistributionStatus.FAILED;
+        } else {
+            revert("proposal has not been voted on");
+        }
     }
 
     /**
