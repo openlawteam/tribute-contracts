@@ -1,4 +1,6 @@
 const Web3Utils = require("web3-utils");
+const fs = require("fs");
+const path = require("path");
 const toBN = Web3Utils.toBN;
 const toWei = Web3Utils.toWei;
 
@@ -38,9 +40,9 @@ function getNetworkDetails(name) {
 }
 
 module.exports = async function (deployer, network) {
-  let dao;
+  let result;
   if (network === "ganache" || network === "rinkeby") {
-    dao = await deployDao(deployer, {
+    result = await deployDao(deployer, {
       unitPrice: toBN(toWei("100", "finney")),
       nbShares: toBN("100000"),
       tokenAddr: ETH_TOKEN,
@@ -52,7 +54,7 @@ module.exports = async function (deployer, network) {
       deployTestTokens: true,
     });
   } else if (network === "test" || network === "coverage") {
-    dao = await deployDao(deployer, {
+    result = await deployDao(deployer, {
       unitPrice: sharePrice,
       nbShares: numberOfShares,
       tokenAddr: ETH_TOKEN,
@@ -64,17 +66,18 @@ module.exports = async function (deployer, network) {
       deployTestTokens: false,
     });
   }
+  let dao = result.dao;
   if (dao) {
     await dao.finalizeDao();
 
     console.log("************************");
-    console.log("new DAO address:");
-    console.log(dao.address);
+    console.log(`DaoRegistry: ${dao.address}`);
+    console.log(`Contracts: ${result.deployedContracts}`);
     console.log("************************");
-    // Save the dao.address to file in order to read it from client app or from the verification tool
+    // Save the addresses to file in order to read it from client app or from the verification tool
     fs.writeFileSync(
-      __dirname + "/deployed-contracts.json",
-      JSON.stringify({ dao: dao.address })
+      path.join(__dirname, "/deployed-contracts.json"),
+      JSON.stringify({ DaoRegistry: dao.address, ...result.deployedContracts })
     );
   } else {
     console.log("************************");

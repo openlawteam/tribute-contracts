@@ -9,7 +9,9 @@ const ManagingContract = artifacts.require("./adapter/ManagingContract");
 const FinancingContract = artifacts.require("./adapter/FinancingContract");
 const RagequitContract = artifacts.require("./adapters/RagequitContract");
 const GuildKickContract = artifacts.require("./adapters/GuildKickContract");
-const OffchainVotingContract = artifacts.require("./adapters/voting/OffchainVotingContract");
+const OffchainVotingContract = artifacts.require(
+  "./adapters/voting/OffchainVotingContract"
+);
 const OnboardingContract = artifacts.require("./adapters/OnboardingContract");
 const TributeContract = artifacts.require("./adapters/TributeContract");
 
@@ -78,11 +80,9 @@ module.exports = async (deployer, network, accounts) => {
       contracts.adapters.onboarding = onboarding.address;
     });
 
-  await deployer
-    .deploy(TributeContract, { from: owner })
-    .then((tribute) => {
-      contracts.adapters.tribute = tribute.address;
-    });
+  await deployer.deploy(TributeContract, { from: owner }).then((tribute) => {
+    contracts.adapters.tribute = tribute.address;
+  });
 
   await deployer
     .deploy(GuildKickContract, { from: owner })

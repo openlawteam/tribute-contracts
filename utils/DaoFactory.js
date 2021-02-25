@@ -63,8 +63,12 @@ const FinancingContract = artifacts.require("./adapter/FinancingContract");
 const RagequitContract = artifacts.require("./adapters/RagequitContract");
 const GuildKickContract = artifacts.require("./adapters/GuildKickContract");
 const OnboardingContract = artifacts.require("./adapters/OnboardingContract");
-const OffchainVotingContract = artifacts.require("./adapters/OffchainVotingContract");
-const CouponOnboardingContract = artifacts.require("./adapters/CouponOnboardingContract");
+const OffchainVotingContract = artifacts.require(
+  "./adapters/OffchainVotingContract"
+);
+const CouponOnboardingContract = artifacts.require(
+  "./adapters/CouponOnboardingContract"
+);
 const TributeContract = artifacts.require("./adapters/TributeContract");
 const DistributeContract = artifacts.require("./adapters/DistributeContract");
 
@@ -130,7 +134,7 @@ async function prepareAdapters(deployer) {
     withdraw,
     couponOnboarding,
     tribute,
-    distribute
+    distribute,
   };
 }
 
@@ -156,7 +160,7 @@ async function addDefaultAdapters(
     withdraw,
     couponOnboarding,
     tribute,
-    distribute
+    distribute,
   } = await prepareAdapters(deployer);
   await configureDao(
     daoFactory,
@@ -169,7 +173,7 @@ async function addDefaultAdapters(
     withdraw,
     voting,
     configuration,
-		couponOnboarding,
+    couponOnboarding,
     tribute,
     distribute,
     unitPrice,
@@ -180,7 +184,22 @@ async function addDefaultAdapters(
     maxChunks
   );
 
-  return { dao };
+  return {
+    dao,
+    deployedContracts: {
+      VotingContract: voting.address,
+      ConfigurationContract: configuration.address,
+      RagequitContract: ragequit.address,
+      GuildKickContract: guildkick.address,
+      ManagingContract: managing.address,
+      FinancingContract: financing.address,
+      OnboardingContract: onboarding.address,
+      WithdrawContract: withdraw.address,
+      CouponOnboardingContract: couponOnboarding.address,
+      TributeContract: tribute.address,
+      DistributeContract: distribute.address,
+    },
+  };
 }
 
 async function configureDao(
@@ -194,7 +213,7 @@ async function configureDao(
   withdraw,
   voting,
   configuration,
-	couponOnboarding,
+  couponOnboarding,
   tribute,
   distribute,
   unitPrice,
@@ -248,7 +267,7 @@ async function configureDao(
       PROCESS_PROPOSAL: false,
       ADD_TO_BALANCE: true,
       UPDATE_DELEGATE_KEY: false,
-      NEW_MEMBER: true
+      NEW_MEMBER: true,
     }),
     entryDao("withdraw", withdraw, {}),
     entryDao("tribute", tribute, {
@@ -288,7 +307,7 @@ async function configureDao(
       ADD_TO_BALANCE: true,
     }),
     entryBank(couponOnboarding, {
-      ADD_TO_BALANCE: true
+      ADD_TO_BALANCE: true,
     }),
     entryBank(financing, {
       ADD_TO_BALANCE: true,
@@ -354,7 +373,7 @@ async function deployDao(deployer, options) {
 
   await bankFactory.createBank();
   let pastEvent;
-  while(pastEvent === undefined) {
+  while (pastEvent === undefined) {
     let pastEvents = await bankFactory.getPastEvents();
     pastEvent = pastEvents[0];
   }
@@ -365,7 +384,7 @@ async function deployDao(deployer, options) {
 
   dao.addExtension(sha3("bank"), bank.address, creator);
 
-  await addDefaultAdapters(
+  let { deployedContracts } = await addDefaultAdapters(
     dao,
     unitPrice,
     nbShares,
@@ -416,7 +435,7 @@ async function deployDao(deployer, options) {
     await deployer.deploy(Multicall);
   }
 
-  return dao;
+  return { dao, deployedContracts };
 }
 
 let counter = 0;
@@ -471,7 +490,7 @@ async function createDao(
     withdraw,
     voting,
     configuration,
-		couponOnboarding,
+    couponOnboarding,
     tribute,
     distribute,
     unitPrice,
@@ -684,5 +703,5 @@ module.exports = {
   DistributeContract,
   BankExtension,
   OnboardingContract,
-  CouponOnboardingContract
+  CouponOnboardingContract,
 };
