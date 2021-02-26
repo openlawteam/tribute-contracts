@@ -1,6 +1,6 @@
 specVersion: 0.0.2
 description: Molochv3 Subgraph
-repository: https://github.com/openlawteam/Molochv3
+repository: https://github.com/openlawteam/molochv3-contracts
 schema:
   file: ./schema.graphql
 dataSources:

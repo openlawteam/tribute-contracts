@@ -50,7 +50,7 @@ const signer = {
   privKey: "c150429d49e8799f119434acd3f816f299a5c7e3891455ee12269cb47a5f987c",
 };
 
-contract("LAOLAND - Coupon Onboarding Adapter", async (accounts) => {
+contract("MolochV3 - Coupon Onboarding Adapter", async (accounts) => {
   it("should be possible to join a DAO with a valid coupon", async () => {
     const myAccount = accounts[1];
     const otherAccount = accounts[2];

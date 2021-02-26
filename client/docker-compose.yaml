@@ -1,24 +1,24 @@
 version: "3.7"
 services:
-  laoland-snapshot-hub:
+  molochv3-snapshot-hub:
     image: openlaw/snapshot-hub:erc-712
-    container_name: laoland-snapshot-hub
+    container_name: molochv3-snapshot-hub
     env_file:
       - .env.local
     environment:
       PORT: 8081
       DEV: "true"
       ALLOWED_DOMAINS: "http://localhost:8080"
-      JAWSDB_URL: postgres://admin:admin@laoland-snapshot-postgres:5432/snapshot-db
+      JAWSDB_URL: postgres://admin:admin@molochv3-snapshot-postgres:5432/snapshot-db
       TARGET_SNAPSHOT_HUB_API: https://snapshot-hub.dev.thelao.io/ # https://testnet.snapshot.page
     depends_on:
-      - laoland-snapshot-postgres
+      - molochv3-snapshot-postgres
     ports:
       - 8081:8081
 
-  laoland-snapshot-postgres:
+  molochv3-snapshot-postgres:
     image: bitnami/postgresql:13
-    container_name: laoland-snapshot-postgres
+    container_name: molochv3-snapshot-postgres
     environment:
       POSTGRESQL_USERNAME: admin
       POSTGRESQL_PASSWORD: "admin"
@@ -26,9 +26,9 @@ services:
     ports:
       - 5432:5432
 
-  laoland-snapshot-pgadmin:
+  molochv3-snapshot-pgadmin:
     image: dpage/pgadmin4
-    container_name: laoland-snapshot-pgadmin
+    container_name: molochv3-snapshot-pgadmin
     environment:
       PGADMIN_CONFIG_SERVER_MODE: "False"
       PGADMIN_CONFIG_UPGRADE_CHECK_ENABLED: "False"
@@ -40,8 +40,8 @@ services:
     ports:
       - 5050:80
     depends_on:
-      - laoland-snapshot-postgres
+      - molochv3-snapshot-postgres
 
 networks:
     default:
-      name: laoland-snapshot-network
+      name: molochv3-snapshot-network
