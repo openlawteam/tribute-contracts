@@ -41,7 +41,7 @@ const {
   numberOfShares,
 } = require("../../utils/DaoFactory.js");
 
-contract("LAOLAND - Managing Adapter", async (accounts) => {
+contract("MolochV3 - Managing Adapter", async (accounts) => {
   it("should not be possible to propose a new adapter when the adapter has a reserved address", async () => {
     const myAccount = accounts[1];
 

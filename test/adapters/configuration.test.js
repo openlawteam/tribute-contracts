@@ -34,7 +34,7 @@ const {
   ConfigurationContract,
 } = require("../../utils/DaoFactory.js");
 
-contract("LAOLAND - Configuration Adapter", async (accounts) => {
+contract("MolochV3 - Configuration Adapter", async (accounts) => {
   it("should be possible to set a single configuration parameter", async () => {
     const myAccount = accounts[1];
 

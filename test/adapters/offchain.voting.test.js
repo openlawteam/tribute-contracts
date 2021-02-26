@@ -132,7 +132,7 @@ async function createOffchainVotingDao(
   return { dao, voting: offchainVoting, bank };
 }
 
-contract("LAOLAND - Offchain Voting Module", async (accounts) => {
+contract("MolochV3 - Offchain Voting Module", async (accounts) => {
   it("should type & hash be consistent for proposals between javascript and solidity", async () => {
     const myAccount = accounts[1];
     let { dao } = await createOffchainVotingDao(myAccount);
@@ -151,7 +151,7 @@ contract("LAOLAND - Offchain Voting Module", async (accounts) => {
     const proposalData = {
       type: "proposal",
       timestamp: Math.floor(new Date().getTime() / 1000),
-      space: "laoland",
+      space: "molochv3",
       payload: proposalPayload,
       sig: "0x00",
     };
@@ -270,7 +270,7 @@ contract("LAOLAND - Offchain Voting Module", async (accounts) => {
       snapshot: blockNumber.toString(),
     };
 
-    const space = "laoland";
+    const space = "molochv3";
 
     const proposalData = {
       type: "proposal",

@@ -35,7 +35,7 @@ const {
   VotingContract,
 } = require("../../utils/DaoFactory.js");
 
-contract("LAOLAND - Voting Adapter", async (accounts) => {
+contract("MolochV3 - Voting Adapter", async (accounts) => {
   it("should be possible to vote", async () => {
     const account1 = accounts[1];
     const account2 = accounts[2];
