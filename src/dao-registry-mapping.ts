@@ -13,9 +13,15 @@ import {
   AddressConfigurationUpdated,
 } from "../generated/templates/DaoRegistry/DaoRegistry";
 import { Adapter, Extension, Proposal, Member } from "../generated/schema";
-import { log, store } from "@graphprotocol/graph-ts";
+import { crypto, log, store } from "@graphprotocol/graph-ts";
+import { BankExtension } from "../generated/templates";
+import {
+  // The contract class:
+  BankFactory,
+} from "../generated/BankFactory/BankFactory";
 
 export function handleSubmittedProposal(event: SubmittedProposal): void {
+  let submittedBy = event.transaction.from;
   let id = event.params.proposalId;
   let daoAddress = event.address.toHex(); // dao contract address
   let newProposalId = daoAddress.concat("-proposal-").concat(id.toHex());
@@ -29,6 +35,7 @@ export function handleSubmittedProposal(event: SubmittedProposal): void {
 
   if (proposal == null) {
     proposal = new Proposal(newProposalId);
+    proposal.submittedBy = submittedBy;
     proposal.flags = event.params.flags;
     proposal.proposalId = id;
     proposal.sponsored = false;
@@ -170,15 +177,14 @@ export function handleAdapterRemoved(event: AdapterRemoved): void {
   ]);
 
   if (adapter !== null) {
-    store.remove("Adapter", adapterId);
+    store.remove("Adapter", daoAdapterId);
   }
 }
 
 export function handleExtensionAdded(event: ExtensionAdded): void {
   let daoAddress = event.address.toHexString();
-  let extensionId = daoAddress
-    .concat("-extension-")
-    .concat(event.params.extensionId.toHex());
+  let extensionId = event.params.extensionId.toHex();
+  let daoExtensionId = daoAddress.concat("-extension-").concat(extensionId);
 
   log.info(
     "**************** handleExtensionAdded event fired. extensionAddress {}, extensionId {}",
@@ -188,7 +194,13 @@ export function handleExtensionAdded(event: ExtensionAdded): void {
     ]
   );
 
-  let extension = Extension.load(extensionId);
+  let extension = Extension.load(daoExtensionId);
+
+  // https://thegraph.com/docs/define-a-subgraph#code-generation
+  // 1. `BankFactory` ... `identifyAddress` returns `BankExtension`
+  // 2. check the `BankExtension` addr against the `extensionAddress`
+  // 3. if it matches then create a `bank` entity with the `daoAddress`
+  // let bankFactory =   BankFactory.bind()
 
   // let bankAdapterId = crypto.keccak256("0xea0ca03c7adbe41dc655fec28a9209dc8e6e042f3d991a67765ba285b9cf73a0").toHexString()
   // // if extension is `bank` the BankExtension
@@ -213,22 +225,25 @@ export function handleExtensionAdded(event: ExtensionAdded): void {
     extension.extensionId = event.params.extensionId;
 
     // create 1-1 relationship with extensions and its dao
-    // extension.molochv3 = daoAddress;
+    extension.molochv3 = daoAddress;
 
     extension.save();
   }
 }
 
 export function handleExtensionRemoved(event: ExtensionRemoved): void {
+  let daoAddress = event.address.toHexString();
+  let extensionId = event.params.extensionId.toHex();
+  let daoExtensionId = daoAddress.concat("-extension-").concat(extensionId);
+
   log.info(
     "**************** handleExtensionRemoved event fired. extensionId {}",
     [event.params.extensionId.toHexString()]
   );
-
-  let extension = Extension.load(event.params.extensionId.toHex());
+  let extension = Extension.load(daoExtensionId);
 
   if (extension !== null) {
-    store.remove("Extension", event.params.extensionId.toHex());
+    store.remove("Extension", daoExtensionId);
   }
 }
 

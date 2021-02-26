@@ -127,15 +127,6 @@ export class Molochv3 extends Entity {
     }
   }
 
-  get initialized(): boolean {
-    let value = this.get("initialized");
-    return value.toBoolean();
-  }
-
-  set initialized(value: boolean) {
-    this.set("initialized", Value.fromBoolean(value));
-  }
-
   get bank(): string | null {
     let value = this.get("bank");
     if (value === null || value.kind == ValueKind.NULL) {
@@ -150,23 +141,6 @@ export class Molochv3 extends Entity {
       this.unset("bank");
     } else {
       this.set("bank", Value.fromString(value as string));
-    }
-  }
-
-  get daoConstants(): string | null {
-    let value = this.get("daoConstants");
-    if (value === null || value.kind == ValueKind.NULL) {
-      return null;
-    } else {
-      return value.toString();
-    }
-  }
-
-  set daoConstants(value: string | null) {
-    if (value === null) {
-      this.unset("daoConstants");
-    } else {
-      this.set("daoConstants", Value.fromString(value as string));
     }
   }
 
@@ -236,6 +210,23 @@ export class Bank extends Entity {
     }
   }
 
+  get daoAddress(): Bytes | null {
+    let value = this.get("daoAddress");
+    if (value === null || value.kind == ValueKind.NULL) {
+      return null;
+    } else {
+      return value.toBytes();
+    }
+  }
+
+  set daoAddress(value: Bytes | null) {
+    if (value === null) {
+      this.unset("daoAddress");
+    } else {
+      this.set("daoAddress", Value.fromBytes(value as Bytes));
+    }
+  }
+
   get balance(): BigInt | null {
     let value = this.get("balance");
     if (value === null || value.kind == ValueKind.NULL) {
@@ -267,6 +258,23 @@ export class Bank extends Entity {
       this.unset("createdAt");
     } else {
       this.set("createdAt", Value.fromString(value as string));
+    }
+  }
+
+  get totalShares(): BigInt | null {
+    let value = this.get("totalShares");
+    if (value === null || value.kind == ValueKind.NULL) {
+      return null;
+    } else {
+      return value.toBigInt();
+    }
+  }
+
+  set totalShares(value: BigInt | null) {
+    if (value === null) {
+      this.unset("totalShares");
+    } else {
+      this.set("totalShares", Value.fromBigInt(value as BigInt));
     }
   }
 
@@ -605,6 +613,23 @@ export class Proposal extends Entity {
     this.set("flags", Value.fromBigInt(value));
   }
 
+  get submittedBy(): Bytes | null {
+    let value = this.get("submittedBy");
+    if (value === null || value.kind == ValueKind.NULL) {
+      return null;
+    } else {
+      return value.toBytes();
+    }
+  }
+
+  set submittedBy(value: Bytes | null) {
+    if (value === null) {
+      this.unset("submittedBy");
+    } else {
+      this.set("submittedBy", Value.fromBytes(value as Bytes));
+    }
+  }
+
   get sponsored(): boolean {
     let value = this.get("sponsored");
     return value.toBoolean();
@@ -829,156 +854,6 @@ export class Extension extends Entity {
       this.unset("molochv3");
     } else {
       this.set("molochv3", Value.fromString(value as string));
-    }
-  }
-}
-
-export class DaoConstants extends Entity {
-  constructor(id: string) {
-    super();
-    this.set("id", Value.fromString(id));
-  }
-
-  save(): void {
-    let id = this.get("id");
-    assert(id !== null, "Cannot save DaoConstants entity without an ID");
-    assert(
-      id.kind == ValueKind.STRING,
-      "Cannot save DaoConstants entity with non-string ID. " +
-        'Considering using .toHex() to convert the "id" to a string.'
-    );
-    store.set("DaoConstants", id.toString(), this);
-  }
-
-  static load(id: string): DaoConstants | null {
-    return store.get("DaoConstants", id) as DaoConstants | null;
-  }
-
-  get id(): string {
-    let value = this.get("id");
-    return value.toString();
-  }
-
-  set id(value: string) {
-    this.set("id", Value.fromString(value));
-  }
-
-  get molochv3(): string | null {
-    let value = this.get("molochv3");
-    if (value === null || value.kind == ValueKind.NULL) {
-      return null;
-    } else {
-      return value.toString();
-    }
-  }
-
-  set molochv3(value: string | null) {
-    if (value === null) {
-      this.unset("molochv3");
-    } else {
-      this.set("molochv3", Value.fromString(value as string));
-    }
-  }
-
-  get GUILD(): Bytes | null {
-    let value = this.get("GUILD");
-    if (value === null || value.kind == ValueKind.NULL) {
-      return null;
-    } else {
-      return value.toBytes();
-    }
-  }
-
-  set GUILD(value: Bytes | null) {
-    if (value === null) {
-      this.unset("GUILD");
-    } else {
-      this.set("GUILD", Value.fromBytes(value as Bytes));
-    }
-  }
-
-  get TOTAL(): Bytes | null {
-    let value = this.get("TOTAL");
-    if (value === null || value.kind == ValueKind.NULL) {
-      return null;
-    } else {
-      return value.toBytes();
-    }
-  }
-
-  set TOTAL(value: Bytes | null) {
-    if (value === null) {
-      this.unset("TOTAL");
-    } else {
-      this.set("TOTAL", Value.fromBytes(value as Bytes));
-    }
-  }
-
-  get SHARES(): Bytes | null {
-    let value = this.get("SHARES");
-    if (value === null || value.kind == ValueKind.NULL) {
-      return null;
-    } else {
-      return value.toBytes();
-    }
-  }
-
-  set SHARES(value: Bytes | null) {
-    if (value === null) {
-      this.unset("SHARES");
-    } else {
-      this.set("SHARES", Value.fromBytes(value as Bytes));
-    }
-  }
-
-  get LOOT(): Bytes | null {
-    let value = this.get("LOOT");
-    if (value === null || value.kind == ValueKind.NULL) {
-      return null;
-    } else {
-      return value.toBytes();
-    }
-  }
-
-  set LOOT(value: Bytes | null) {
-    if (value === null) {
-      this.unset("LOOT");
-    } else {
-      this.set("LOOT", Value.fromBytes(value as Bytes));
-    }
-  }
-
-  get LOCKED_LOOT(): Bytes | null {
-    let value = this.get("LOCKED_LOOT");
-    if (value === null || value.kind == ValueKind.NULL) {
-      return null;
-    } else {
-      return value.toBytes();
-    }
-  }
-
-  set LOCKED_LOOT(value: Bytes | null) {
-    if (value === null) {
-      this.unset("LOCKED_LOOT");
-    } else {
-      this.set("LOCKED_LOOT", Value.fromBytes(value as Bytes));
-    }
-  }
-
-  get ETH_TOKEN(): Bytes | null {
-    let value = this.get("ETH_TOKEN");
-    if (value === null || value.kind == ValueKind.NULL) {
-      return null;
-    } else {
-      return value.toBytes();
-    }
-  }
-
-  set ETH_TOKEN(value: Bytes | null) {
-    if (value === null) {
-      this.unset("ETH_TOKEN");
-    } else {
-      this.set("ETH_TOKEN", Value.fromBytes(value as Bytes));
     }
   }
 }
