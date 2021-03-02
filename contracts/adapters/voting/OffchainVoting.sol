@@ -11,6 +11,7 @@ import "../../guards/AdapterGuard.sol";
 import "../../utils/Signatures.sol";
 import "../interfaces/IVoting.sol";
 import "./Voting.sol";
+import "./HandleBadReporter.sol";
 import "./SnapshotProposalContract.sol";
 
 /**
@@ -50,6 +51,7 @@ contract OffchainVotingContract is
     }
 
     SnapshotProposalContract private _snapshotContract;
+    HandleBadReporterAdapter private _handleBadReporterAdapter;
 
     string public constant VOTE_RESULT_NODE_TYPE =
         "Message(address account,uint256 timestamp,uint256 nbYes,uint256 nbNo,uint256 index,uint256 choice,bytes32 proposalHash)";
@@ -63,7 +65,7 @@ contract OffchainVotingContract is
 
     VotingContract public fallbackVoting;
 
-    mapping(bytes32 => ProposalChallenge) challengeProposals;
+    mapping(address => mapping(bytes32 => ProposalChallenge)) challengeProposals;
 
     struct Voting {
         uint256 snapshot;
@@ -120,6 +122,11 @@ contract OffchainVotingContract is
         bytes32 proposalHash;
     }
 
+    modifier onlyBadReporterAdapter() {
+        require(msg.sender == address(_handleBadReporterAdapter), "only:hbra");
+        _;
+    }
+
     bytes32 constant VotingPeriod = keccak256("offchainvoting.votingPeriod");
     bytes32 constant GracePeriod = keccak256("offchainvoting.gracePeriod");
     bytes32 constant StakingAmount = keccak256("offchainvoting.stakingAmount");
@@ -128,9 +135,17 @@ contract OffchainVotingContract is
 
     mapping(address => mapping(bytes32 => Voting)) public votes;
 
-    constructor(VotingContract _c, SnapshotProposalContract _spc) {
+    constructor(
+        VotingContract _c,
+        SnapshotProposalContract _spc,
+        HandleBadReporterAdapter _hbra
+    ) {
+        require(address(_c) != address(0x0), "voting contract");
+        require(address(_spc) != address(0x0), "snapshot proposal");
+        require(address(_hbra) != address(0x0), "handle bad reporter");
         fallbackVoting = _c;
         _snapshotContract = _spc;
+        _handleBadReporterAdapter = _hbra;
     }
 
     function hashResultRoot(
@@ -573,6 +588,21 @@ contract OffchainVotingContract is
         }
     }
 
+    function sponsorChallengeProposal(
+        DaoRegistry dao,
+        bytes32 proposalId,
+        address sponsoredBy
+    ) external onlyBadReporterAdapter {
+        dao.sponsorProposal(proposalId, sponsoredBy);
+    }
+
+    function processChallengeProposal(DaoRegistry dao, bytes32 proposalId)
+        external
+        onlyBadReporterAdapter
+    {
+        dao.processProposal(proposalId);
+    }
+
     function _challengeResult(DaoRegistry dao, bytes32 proposalId) internal {
         BankExtension bank = BankExtension(dao.getExtensionAddress(BANK));
 
@@ -590,10 +620,9 @@ contract OffchainVotingContract is
 
         uint256 shares = bank.balanceOf(challengedReporter, SHARES);
 
-        challengeProposals[challengeProposalId] = ProposalChallenge(
-            challengedReporter,
-            shares
-        );
+        challengeProposals[address(dao)][
+            challengeProposalId
+        ] = ProposalChallenge(challengedReporter, shares);
 
         // Burns / subtracts from member's balance the number of shares to burn.
         bank.subtractFromBalance(challengedReporter, SHARES, shares);

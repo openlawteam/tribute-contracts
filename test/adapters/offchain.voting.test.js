@@ -31,6 +31,7 @@ const {
   SHARES,
   OnboardingContract,
   SnapshotProposalContract,
+  HandleBadReporterAdapter,
   sharePrice,
   remaining,
   numberOfShares,
@@ -94,10 +95,12 @@ async function createOffchainVotingDao(
 
   await dao.potentialNewMember(members[0].address);
   let snapshotProposalContract = await SnapshotProposalContract.deployed();
+  let handleBadReporterAdapter = await HandleBadReporterAdapter.deployed();
   const votingAddress = await dao.getAdapterAddress(sha3("voting"));
   const offchainVoting = await OffchainVotingContract.new(
     votingAddress,
-    snapshotProposalContract.address
+    snapshotProposalContract.address,
+    handleBadReporterAdapter.address
   );
   const bankAddress = await dao.getExtensionAddress(sha3("bank"));
   await dao.removeAdapter(sha3("voting"));

@@ -67,12 +67,16 @@ contract HandleBadReporterAdapter is DaoConstants, MemberGuard {
         address sponsoredBy,
         OffchainVotingContract votingContract
     ) internal onlyMember2(dao, sponsoredBy) {
-        dao.sponsorProposal(proposalId, sponsoredBy);
+        votingContract.sponsorChallengeProposal(dao, proposalId, sponsoredBy);
         votingContract.startNewVotingForProposal(dao, proposalId, data);
     }
 
     function processProposal(DaoRegistry dao, bytes32 proposalId) external {
-        IVoting votingContract = IVoting(dao.getAdapterAddress(VOTING));
+        OffchainVotingContract votingContract =
+            OffchainVotingContract(dao.getAdapterAddress(VOTING));
+
+        votingContract.processChallengeProposal(dao, proposalId);
+
         IVoting.VotingState votingState =
             votingContract.voteResult(dao, proposalId);
         // the person has been kicked out
@@ -86,7 +90,5 @@ contract HandleBadReporterAdapter is DaoConstants, MemberGuard {
         } else {
             revert("vote not finished yet");
         }
-
-        dao.processProposal(proposalId);
     }
 }
