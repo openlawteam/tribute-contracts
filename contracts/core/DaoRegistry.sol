@@ -568,7 +568,7 @@ contract DaoRegistry is MemberGuard, AdapterGuard {
     /**
      * @return Whether or not a given address is an active member of the DAO
      * @dev Requires the user to not be jailed and have a positive balance in either
-     *      SHARES, LOOT or LOCKED_LOOT
+     *      SHARES, LOOT
      * @param addr The address to look up
      */
     function isActiveMember(address addr) public view returns (bool) {

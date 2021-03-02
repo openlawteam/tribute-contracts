@@ -91,7 +91,8 @@ contract GuildKickContract is IGuildKick, DaoConstants, MemberGuard {
                 msg.sender
             );
         // Checks if the sender address is not the same as the member to kick to prevent auto kick.
-        require(submittedBy != memberToKick, "you can not kick yourself");
+        require(submittedBy != memberToKick, "use ragequit");
+
         _submitKickProposal(dao, proposalId, memberToKick, data, submittedBy);
     }
 
@@ -139,6 +140,7 @@ contract GuildKickContract is IGuildKick, DaoConstants, MemberGuard {
         votingContract.startNewVotingForProposal(dao, proposalId, data);
 
         // Sponsors the guild kick proposal.
+
         dao.sponsorProposal(proposalId, submittedBy);
     }
 
@@ -249,8 +251,7 @@ contract GuildKickContract is IGuildKick, DaoConstants, MemberGuard {
         // but locked loot can not be burned.
         uint256 initialTotalSharesAndLoot =
             bank.getPriorAmount(TOTAL, SHARES, kickBlockNumber) +
-                bank.getPriorAmount(TOTAL, LOOT, kickBlockNumber) +
-                bank.getPriorAmount(TOTAL, LOCKED_LOOT, kickBlockNumber);
+                bank.getPriorAmount(TOTAL, LOOT, kickBlockNumber);
 
         // Get the member address to kick out of the DAO
         address kickedMember = kick.memberToKick;

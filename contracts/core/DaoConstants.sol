@@ -46,7 +46,6 @@ abstract contract DaoConstants {
     address internal constant TOTAL = address(0xbabe);
     address internal constant SHARES = address(0xFF1CE);
     address internal constant LOOT = address(0xB105F00D);
-    address internal constant LOCKED_LOOT = address(0xBAAAAAAD);
     address internal constant ETH_TOKEN = address(0x0);
 
     //helper
