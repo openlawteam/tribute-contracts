@@ -12,7 +12,7 @@ import {
   ConfigurationUpdated,
   AddressConfigurationUpdated,
 } from "../generated/templates/DaoRegistry/DaoRegistry";
-import { Adapter, Extension, Proposal, Member } from "../generated/schema";
+import { Adapter, Extension, Proposal, Member, Molochv3 } from "../generated/schema";
 import { crypto, log, store } from "@graphprotocol/graph-ts";
 import { BankExtension } from "../generated/templates";
 import {
@@ -183,14 +183,16 @@ export function handleAdapterRemoved(event: AdapterRemoved): void {
 
 export function handleExtensionAdded(event: ExtensionAdded): void {
   let daoAddress = event.address.toHexString();
-  let extensionId = event.params.extensionId.toHex();
-  let daoExtensionId = daoAddress.concat("-extension-").concat(extensionId);
+  let extensionId = event.params.extensionId;
+
+  let daoExtensionId = daoAddress.concat("-extension-").concat(extensionId.toHex());
 
   log.info(
-    "**************** handleExtensionAdded event fired. extensionAddress {}, extensionId {}",
+    "**************** handleExtensionAdded event fired. extensionAddress {}, extensionId {}, daoAddress {}",
     [
       event.params.extensionAddress.toHexString(),
       event.params.extensionId.toHexString(),
+      daoAddress,
     ]
   );
 
@@ -202,39 +204,49 @@ export function handleExtensionAdded(event: ExtensionAdded): void {
   // 3. if it matches then create a `bank` entity with the `daoAddress`
   // let bankFactory =   BankFactory.bind()
 
-  // let bankAdapterId = crypto.keccak256("0xea0ca03c7adbe41dc655fec28a9209dc8e6e042f3d991a67765ba285b9cf73a0").toHexString()
-  // // if extension is `bank` the BankExtension
-  // if (
-  //   bankAdapterId == event.params.extensionId.toHexString() &&
-  //   extension == null
-  // ) {
-  //   let dao = Molochv3.load(event.address.toHexString());
-  //   // let dao = loadOrCreateDao(event.params._address.toHexString());
+  // let bankAdapterId = crypto.keccak256().toHexString()
+  let bankExtensionId = "0xea0ca03c7adbe41dc655fec28a9209dc8e6e042f3d991a67765ba285b9cf73a0"
+  log.info('====== bankExtensionId, {}, extensionId {}', 
+  [bankExtensionId.toString(), extensionId.toString()])
+  // if extension is `bank` the assign to its dao
+  if (
+    // bankExtensionId.toHex() == extensionId // .toString()
+    "0xea0ca03c7adbe41dc655fec28a9209dc8e6e042f3d991a67765ba285b9cf73a0" ==
+    event.params.extensionId.toHexString()
+  ) {
+    log.info('====== add dao bankExtensionId, {}', [bankExtensionId.toString()])
 
-  //   // create 1-to-1 relationship between the bank and its dao
-  //   // bank.Molochv3 = event.params.bankAddress.toHexString();
+    let dao = Molochv3.load(event.address.toHexString());
+    // let dao = loadOrCreateDao(event.params._address.toHexString());
 
-  //   // create 1-to-1 relationship between the dao and its bank
-  //   dao.bank = event.address.toHexString();
-  //   dao.save();
-  // } else
+    // create 1-to-1 relationship between the bank and its dao
+    // bank.Molochv3 = event.params.bankAddress.toHexString();
+    if (dao == null) {
+      log.info('NOT EXIST', [])
+    } else {
+      log.info('EXISTS', [])
+      // create 1-to-1 relationship between the dao and its bank
+      dao.bank = event.address.toHexString();
+      dao.save();
+    }
+  }
 
   if (extension == null) {
-    extension = new Extension(extensionId);
-    extension.extensionAddress = event.params.extensionAddress;
-    extension.extensionId = event.params.extensionId;
-
-    // create 1-1 relationship with extensions and its dao
-    extension.molochv3 = daoAddress;
-
-    extension.save();
+    extension = new Extension(daoExtensionId);
   }
+
+  extension.extensionAddress = event.params.extensionAddress;
+  extension.extensionId = event.params.extensionId;
+
+  // create 1-1 relationship with extensions and its dao
+  extension.molochv3 = daoAddress;
+  extension.save();
 }
 
 export function handleExtensionRemoved(event: ExtensionRemoved): void {
   let daoAddress = event.address.toHexString();
-  let extensionId = event.params.extensionId.toHex();
-  let daoExtensionId = daoAddress.concat("-extension-").concat(extensionId);
+  let extensionId = event.params.extensionId;
+  let daoExtensionId = daoAddress.concat("-extension-").concat(extensionId.toHex());
 
   log.info(
     "**************** handleExtensionRemoved event fired. extensionId {}",

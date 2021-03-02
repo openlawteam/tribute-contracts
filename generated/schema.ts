@@ -278,13 +278,21 @@ export class Bank extends Entity {
     }
   }
 
-  get molochv3(): string {
+  get molochv3(): string | null {
     let value = this.get("molochv3");
-    return value.toString();
+    if (value === null || value.kind == ValueKind.NULL) {
+      return null;
+    } else {
+      return value.toString();
+    }
   }
 
-  set molochv3(value: string) {
-    this.set("molochv3", Value.fromString(value));
+  set molochv3(value: string | null) {
+    if (value === null) {
+      this.unset("molochv3");
+    } else {
+      this.set("molochv3", Value.fromString(value as string));
+    }
   }
 }
 

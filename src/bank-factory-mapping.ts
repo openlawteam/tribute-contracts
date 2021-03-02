@@ -38,7 +38,7 @@ export function handleBankCreated(event: BankCreated): void {
   bank.balance = BigInt.fromI32(0);
 
   // create 1-to-1 relationship between the bank and its dao
-  bank.molochv3 = event.params.bankAddress.toHexString();
+  // bank.molochv3 = event.params.bankAddress.toHexString();
 
   BankExtension.create(event.params.bankAddress);
 

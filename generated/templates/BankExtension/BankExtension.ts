@@ -434,6 +434,21 @@ export class BankExtension extends ethereum.SmartContract {
     return ethereum.CallResult.fromValue(value[0].toBigInt());
   }
 
+  getTokens(): Array<Address> {
+    let result = super.call("getTokens", "getTokens():(address[])", []);
+
+    return result[0].toAddressArray();
+  }
+
+  try_getTokens(): ethereum.CallResult<Array<Address>> {
+    let result = super.tryCall("getTokens", "getTokens():(address[])", []);
+    if (result.reverted) {
+      return new ethereum.CallResult();
+    }
+    let value = result.value;
+    return ethereum.CallResult.fromValue(value[0].toAddressArray());
+  }
+
   getInternalToken(index: BigInt): Address {
     let result = super.call(
       "getInternalToken",

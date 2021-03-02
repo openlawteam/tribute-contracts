@@ -5,14 +5,12 @@ type Molochv3 @entity {
   creator: Bytes
   totalShares: String
   createdAt: String
-  # initialized: Boolean
-  # daoConstants: DaoConstants
 
-  "bank of the dao"
+  "The bank of the DAO"
   bank: Bank
-  "list of registered adapters"
+  "List of registered adapters"
   adapters: [Adapter!]! @derivedFrom(field: "molochv3")
-  "list of registered extensions"
+  "List of registered extensions"
   extensions: [Extension!]! @derivedFrom(field: "molochv3")
 }
 
@@ -23,7 +21,7 @@ type Bank @entity {
   balance: BigInt
   createdAt: String
   totalShares: BigInt
-  molochv3: Molochv3! @derivedFrom(field: "bank")
+  # molochv3: Molochv3
 }
 
 type Token @entity {
@@ -54,8 +52,6 @@ type Member @entity {
   # flags: BigInt!
   tokenBalances: [TokenBalance!] @derivedFrom(field: "member")
   jailed: Boolean!
-
-  # proposals @todo
 }
 
 type Proposal @entity {
@@ -69,8 +65,6 @@ type Proposal @entity {
   processed: Boolean
   processedAt: String
   processedBy: Bytes
-
-  # member @todo
   # votes #todo 1-1
 }
 
@@ -78,26 +72,16 @@ type Adapter @entity {
   id: ID!
   adapterId: Bytes!
   adapterAddress: Bytes!
-  "adapter acl (access control layer)"
+  "Adapter acl (access control layer)"
   acl: BigInt!
   molochv3: Molochv3
 }
 
 type Extension @entity {
   id: ID!
+  "Extension contract address"
   extensionAddress: Bytes!
+  "Extension id"
   extensionId: Bytes!
   molochv3: Molochv3
 }
-
-# type DaoConstants @entity {
-#   id: ID!
-#   molochv3: Molochv3
-
-#   GUILD: Bytes
-#   TOTAL: Bytes
-#   SHARES: Bytes
-#   LOOT: Bytes
-#   LOCKED_LOOT: Bytes
-#   ETH_TOKEN: Bytes
-# }
