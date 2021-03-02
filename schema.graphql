@@ -14,6 +14,36 @@ type Molochv3 @entity {
   extensions: [Extension!]! @derivedFrom(field: "molochv3")
 }
 
+type Member @entity {
+  id: ID!
+  # "TODO: members can be a part of multiple Molochv3"
+  memberAddress: Bytes!
+  createdAt: String!
+  delegateKey: Bytes!
+  shares: BigInt!
+  loot: BigInt!
+  lockedLoot: BigInt!
+  # flags: BigInt!
+  tokenBalances: [TokenBalance!] @derivedFrom(field: "member")
+  proposals: [Proposal!] @derivedFrom(field: "member")
+  jailed: Boolean!
+}
+
+type Proposal @entity {
+  id: ID!
+  proposalId: Bytes!
+  flags: BigInt!
+  submittedBy: Bytes
+  sponsored: Boolean
+  sponsoredAt: String
+  sponsoredBy: Bytes
+  processed: Boolean
+  processedAt: String
+  processedBy: Bytes
+  member: Member
+  # votes #todo 1-1
+}
+
 type Bank @entity {
   id: ID!
   bankAddress: Bytes # bank address
@@ -40,33 +70,6 @@ type TokenBalance @entity {
   member: Member
 }
 
-type Member @entity {
-  id: ID!
-  # "TODO: members can be a part of multiple Molochv3"
-  memberAddress: Bytes!
-  createdAt: String!
-  delegateKey: Bytes!
-  shares: BigInt!
-  loot: BigInt!
-  lockedLoot: BigInt!
-  # flags: BigInt!
-  tokenBalances: [TokenBalance!] @derivedFrom(field: "member")
-  jailed: Boolean!
-}
-
-type Proposal @entity {
-  id: ID!
-  proposalId: Bytes!
-  flags: BigInt!
-  submittedBy: Bytes
-  sponsored: Boolean
-  sponsoredAt: String
-  sponsoredBy: Bytes
-  processed: Boolean
-  processedAt: String
-  processedBy: Bytes
-  # votes #todo 1-1
-}
 
 type Adapter @entity {
   id: ID!

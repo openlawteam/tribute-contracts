@@ -39,6 +39,7 @@ export function handleSubmittedProposal(event: SubmittedProposal): void {
     proposal.flags = event.params.flags;
     proposal.proposalId = id;
     proposal.sponsored = false;
+    proposal.member = submittedBy.toHex();
 
     proposal.save();
   }

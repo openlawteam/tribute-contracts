@@ -277,23 +277,6 @@ export class Bank extends Entity {
       this.set("totalShares", Value.fromBigInt(value as BigInt));
     }
   }
-
-  get molochv3(): string | null {
-    let value = this.get("molochv3");
-    if (value === null || value.kind == ValueKind.NULL) {
-      return null;
-    } else {
-      return value.toString();
-    }
-  }
-
-  set molochv3(value: string | null) {
-    if (value === null) {
-      this.unset("molochv3");
-    } else {
-      this.set("molochv3", Value.fromString(value as string));
-    }
-  }
 }
 
 export class Token extends Entity {
@@ -563,6 +546,23 @@ export class Member extends Entity {
     }
   }
 
+  get proposals(): Array<string> | null {
+    let value = this.get("proposals");
+    if (value === null || value.kind == ValueKind.NULL) {
+      return null;
+    } else {
+      return value.toStringArray();
+    }
+  }
+
+  set proposals(value: Array<string> | null) {
+    if (value === null) {
+      this.unset("proposals");
+    } else {
+      this.set("proposals", Value.fromStringArray(value as Array<string>));
+    }
+  }
+
   get jailed(): boolean {
     let value = this.get("jailed");
     return value.toBoolean();
@@ -721,6 +721,23 @@ export class Proposal extends Entity {
       this.unset("processedBy");
     } else {
       this.set("processedBy", Value.fromBytes(value as Bytes));
+    }
+  }
+
+  get member(): string | null {
+    let value = this.get("member");
+    if (value === null || value.kind == ValueKind.NULL) {
+      return null;
+    } else {
+      return value.toString();
+    }
+  }
+
+  set member(value: string | null) {
+    if (value === null) {
+      this.unset("member");
+    } else {
+      this.set("member", Value.fromString(value as string));
     }
   }
 }

@@ -109,106 +109,111 @@ function internalTransfer(
 }
 
 export function handleNewBalance(event: NewBalance): void {
-  let tokenId = event.params.tokenAddr.toHex();
   let memberId = event.params.member.toHex();
-  let amount = event.params.amount;
-  let tokenBalanceId = memberId + ":" + tokenId;
 
-  log.info(
-    "**************** handleNewBalance event fired. member {}, tokenAddr {}, amount {}",
-    [
-      event.params.member.toHexString(),
-      event.params.tokenAddr.toHexString(),
-      event.params.amount.toString(),
-    ]
-  );
+  // omit TOTAL from the members list
+  if ("0x000000000000000000000000000000000000babe" != memberId) {
 
-  //.concat("-member-").concat(tokenId);
-  let member = Member.load(memberId);
-  let token = Token.load(tokenId);
-  let tokenBalance = TokenBalance.load(tokenBalanceId);
+    let tokenId = event.params.tokenAddr.toHex();
+    let amount = event.params.amount;
+    let tokenBalanceId = memberId + ":" + tokenId;
 
-  if (member == null) {
-    member = new Member(memberId);
-    member.createdAt = event.block.timestamp.toString();
-    member.delegateKey = event.params.member;
-    member.jailed = false;
-    member.memberAddress = event.params.member;
+    log.info(
+      "**************** handleNewBalance event fired. member {}, tokenAddr {}, amount {}",
+      [
+        event.params.member.toHexString(),
+        event.params.tokenAddr.toHexString(),
+        event.params.amount.toString(),
+      ]
+    );
+
+    //.concat("-member-").concat(tokenId);
+    let member = Member.load(memberId);
+    let token = Token.load(tokenId);
+    let tokenBalance = TokenBalance.load(tokenBalanceId);
+
+    if (member == null) {
+      member = new Member(memberId);
+      member.createdAt = event.block.timestamp.toString();
+      member.delegateKey = event.params.member;
+      member.jailed = false;
+      member.memberAddress = event.params.member;
+    }
+
+    if (token == null) {
+      token = new Token(tokenId);
+      token.tokenAddress = event.params.tokenAddr;
+    }
+
+    //----
+    // log.info("********** add (or create) to balance " + member.toHex(), []);
+    // let balance: TokenBalance | null = loadOrCreateTokenBalance(
+    //   memberId,
+    //   token
+    // );
+    // balance.tokenBalance = balance.tokenBalance.plus(amount);
+    // balance.save();
+    //----
+    if (tokenBalance == null) {
+      // format - memberId:tokenId;
+      tokenBalance = new TokenBalance(tokenBalanceId);
+      // resolves - `Value is not a BigInt.` issue; because `tokenBalance`
+      // wasn't set, so we give it an initial 0 balance
+      tokenBalance.tokenBalance = BigInt.fromI32(0);
+    }
+
+    tokenBalance.token = tokenId;
+    tokenBalance.tokenBalance = tokenBalance.tokenBalance.plus(amount);
+    tokenBalance.member = memberId;
+
+    // internalTransfer(event.params.member, event.params.member, tokenId, amount);
+
+    // get bank extension bindings
+    let registry = BankExtension.bind(event.address);
+
+    // get balanceOf member shares
+    let callResultSHARES = registry.try_balanceOf(event.params.member, SHARES);
+    if (callResultSHARES.reverted) {
+      log.info("getBalanceOf member:shares reverted", []);
+    } else {
+      member.shares = callResultSHARES.value;
+    }
+
+    // get balanceOf member loot
+    let callResultLOOT = registry.try_balanceOf(event.params.member, LOOT);
+    if (callResultLOOT.reverted) {
+      log.info("getBalanceOf member:loot reverted", []);
+    } else {
+      member.loot = callResultLOOT.value;
+    }
+
+    // get balanceOf member locked loot
+    let callResultLOCKED_LOOT = registry.try_balanceOf(
+      event.params.member,
+      LOCKED_LOOT
+    );
+    if (callResultLOCKED_LOOT.reverted) {
+      log.info("getBalanceOf member:loot reverted", []);
+    } else {
+      member.lockedLoot = callResultLOCKED_LOOT.value;
+    }
+
+    // get totalShares in the lao
+    // let callResultTotalShares = registry.try_balanceOf(TOTAL, SHARES);
+    // if (callResultTotalShares.reverted) {
+    //   log.info("getBalanceOf laoland:totalShares reverted", []);
+    // } else {
+    //   if (dao !== null) {
+    //     dao.totalShares = callResultTotalShares.value.toString();
+
+    //     dao.save();
+    //   }
+    // }
+
+    member.save();
+    token.save();
+    tokenBalance.save();
   }
-
-  if (token == null) {
-    token = new Token(tokenId);
-    token.tokenAddress = event.params.tokenAddr;
-  }
-
-  //----
-  // log.info("********** add (or create) to balance " + member.toHex(), []);
-  // let balance: TokenBalance | null = loadOrCreateTokenBalance(
-  //   memberId,
-  //   token
-  // );
-  // balance.tokenBalance = balance.tokenBalance.plus(amount);
-  // balance.save();
-  //----
-  if (tokenBalance == null) {
-    // format - memberId:tokenId;
-    tokenBalance = new TokenBalance(tokenBalanceId);
-    // resolves - `Value is not a BigInt.` issue; because `tokenBalance`
-    // wasn't set, so we give it an initial 0 balance
-    tokenBalance.tokenBalance = BigInt.fromI32(0);
-  }
-
-  tokenBalance.token = tokenId;
-  tokenBalance.tokenBalance = tokenBalance.tokenBalance.plus(amount);
-  tokenBalance.member = memberId;
-
-  // internalTransfer(event.params.member, event.params.member, tokenId, amount);
-
-  // get bank extension bindings
-  let registry = BankExtension.bind(event.address);
-
-  // get balanceOf member shares
-  let callResultSHARES = registry.try_balanceOf(event.params.member, SHARES);
-  if (callResultSHARES.reverted) {
-    log.info("getBalanceOf member:shares reverted", []);
-  } else {
-    member.shares = callResultSHARES.value;
-  }
-
-  // get balanceOf member loot
-  let callResultLOOT = registry.try_balanceOf(event.params.member, LOOT);
-  if (callResultLOOT.reverted) {
-    log.info("getBalanceOf member:loot reverted", []);
-  } else {
-    member.loot = callResultLOOT.value;
-  }
-
-  // get balanceOf member locked loot
-  let callResultLOCKED_LOOT = registry.try_balanceOf(
-    event.params.member,
-    LOCKED_LOOT
-  );
-  if (callResultLOCKED_LOOT.reverted) {
-    log.info("getBalanceOf member:loot reverted", []);
-  } else {
-    member.lockedLoot = callResultLOCKED_LOOT.value;
-  }
-
-  // get totalShares in the lao
-  // let callResultTotalShares = registry.try_balanceOf(TOTAL, SHARES);
-  // if (callResultTotalShares.reverted) {
-  //   log.info("getBalanceOf laoland:totalShares reverted", []);
-  // } else {
-  //   if (dao !== null) {
-  //     dao.totalShares = callResultTotalShares.value.toString();
-
-  //     dao.save();
-  //   }
-  // }
-
-  member.save();
-  token.save();
-  tokenBalance.save();
 }
 
 export function handleWithdraw(event: Withdraw): void {
