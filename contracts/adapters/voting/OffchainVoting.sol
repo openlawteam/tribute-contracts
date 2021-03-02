@@ -167,8 +167,15 @@ contract OffchainVotingContract is
         return ADAPTER_NAME;
     }
 
-    function getChallengeDetails(DaoRegistry dao, bytes32 proposalId) external view returns (uint256) {
-        return (challengeProposals[address(dao)][proposalId].shares, challengeProposals[address(dao)][proposalId].reporter);
+    function getChallengeDetails(DaoRegistry dao, bytes32 proposalId)
+        external
+        view
+        returns (uint256, address)
+    {
+        return (
+            challengeProposals[address(dao)][proposalId].shares,
+            challengeProposals[address(dao)][proposalId].reporter
+        );
     }
 
     function hashVotingResultNode(VoteResultNode memory node)

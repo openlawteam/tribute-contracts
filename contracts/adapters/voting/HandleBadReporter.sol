@@ -81,17 +81,17 @@ contract HandleBadReporterAdapter is DaoConstants, MemberGuard {
             votingContract.voteResult(dao, proposalId);
         // the person has been kicked out
         if (votingState == IVoting.VotingState.PASS) {
-            //TODO: initiate guild kick here
+            //TODO: process guild kick
         } else if (
             votingState == IVoting.VotingState.NOT_PASS ||
             votingState == IVoting.VotingState.TIE
         ) {
-            (uint256 shares, address challengeAddress) = votingContract.getChallengeDetails(dao, proposalId);
+            (uint256 shares, address challengeAddress) =
+                votingContract.getChallengeDetails(dao, proposalId);
             BankExtension bank = BankExtension(dao.getExtensionAddress(BANK));
 
-            bank.subtractFromBalance(challengeAddress, LOOT, shares);            
+            bank.subtractFromBalance(challengeAddress, LOOT, shares);
             bank.addToBalance(challengeAddress, SHARES, shares);
-            
         } else {
             revert("vote not finished yet");
         }
