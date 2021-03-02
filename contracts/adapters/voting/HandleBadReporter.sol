@@ -86,6 +86,7 @@ contract HandleBadReporterAdapter is DaoConstants, MemberGuard {
             votingState == IVoting.VotingState.NOT_PASS ||
             votingState == IVoting.VotingState.TIE
         ) {
+            uint256 shares = votingContract.getBurntSharesFromChallenge(dao, proposalId);
             //give back the shares
         } else {
             revert("vote not finished yet");
