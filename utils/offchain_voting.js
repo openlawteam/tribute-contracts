@@ -251,6 +251,9 @@ function Web3Signer(ethers, account) {
 function SigUtilSigner(privateKeyStr) {
   return function(m, verifyingContract, actionId, chainId) {
     const message = prepareMessage(m);
+    if(privateKeyStr.indexOf('0x') === 0) {
+      privateKeyStr = privateKeyStr.slice(2);
+    }
     const privateKey = Buffer.from(privateKeyStr, 'hex');
     const {domain, types} = getDomainDefinition(message, verifyingContract, actionId, chainId);
     const msgParams = {
