@@ -8,7 +8,7 @@ dataSources:
     name: DaoFactory
     network: mainnet
     source:
-      address: "0xa549101aAD5143d89aEC2aa330754cEB2C0FF607"
+      address: "0xe38e1Ea1cbE7a306A96b4b89fbC48f033F4D2870"
       abi: DaoFactory
       # startBlock: 8129087
     mapping:
@@ -30,7 +30,7 @@ dataSources:
     name: BankFactory
     network: mainnet
     source:
-      address: "0x14ba31613422b6BE3558571B5174E51936056076"
+      address: "0x323bD8e9B7e0C17FC4D7320c235a0d96a7283489"
       abi: BankFactory
       # startBlock: 8129090
     mapping:

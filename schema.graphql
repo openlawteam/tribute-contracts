@@ -1,11 +1,13 @@
 type Molochv3 @entity {
   id: ID!
+  "The DAO address"
   daoAddress: Bytes # dao address
+  "The name of the DAO"
   name: String
+  "The DAO creator address"
   creator: Bytes
   totalShares: String
   createdAt: String
-
   "The bank of the DAO"
   bank: Bank
   "List of registered adapters"
@@ -23,7 +25,6 @@ type Member @entity {
   shares: BigInt!
   loot: BigInt!
   lockedLoot: BigInt!
-  # flags: BigInt!
   tokenBalances: [TokenBalance!] @derivedFrom(field: "member")
   proposals: [Proposal!] @derivedFrom(field: "member")
   jailed: Boolean!
@@ -41,7 +42,6 @@ type Proposal @entity {
   processedAt: String
   processedBy: Bytes
   member: Member
-  # votes #todo 1-1
 }
 
 type Bank @entity {
@@ -51,7 +51,6 @@ type Bank @entity {
   balance: BigInt
   createdAt: String
   totalShares: BigInt
-  # molochv3: Molochv3
 }
 
 type Token @entity {
@@ -70,7 +69,6 @@ type TokenBalance @entity {
   member: Member
 }
 
-
 type Adapter @entity {
   id: ID!
   adapterId: Bytes!
@@ -84,7 +82,7 @@ type Extension @entity {
   id: ID!
   "Extension contract address"
   extensionAddress: Bytes!
-  "Extension id"
+  "Extension ID"
   extensionId: Bytes!
   molochv3: Molochv3
 }

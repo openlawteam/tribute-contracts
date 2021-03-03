@@ -1,3 +1,5 @@
+import { crypto, log, store } from "@graphprotocol/graph-ts";
+
 import {
   ProcessedProposal,
   SponsoredProposal,
@@ -12,13 +14,14 @@ import {
   ConfigurationUpdated,
   AddressConfigurationUpdated,
 } from "../generated/templates/DaoRegistry/DaoRegistry";
-import { Adapter, Extension, Proposal, Member, Molochv3 } from "../generated/schema";
-import { crypto, log, store } from "@graphprotocol/graph-ts";
-import { BankExtension } from "../generated/templates";
 import {
-  // The contract class:
-  BankFactory,
-} from "../generated/BankFactory/BankFactory";
+  Adapter,
+  Extension,
+  Proposal,
+  Member,
+  Molochv3,
+} from "../generated/schema";
+import { BANK_EXTENSION_ID } from "./constants";
 
 export function handleSubmittedProposal(event: SubmittedProposal): void {
   let submittedBy = event.transaction.from;
@@ -39,6 +42,7 @@ export function handleSubmittedProposal(event: SubmittedProposal): void {
     proposal.flags = event.params.flags;
     proposal.proposalId = id;
     proposal.sponsored = false;
+    proposal.processed = false;
     proposal.member = submittedBy.toHex();
 
     proposal.save();
@@ -154,7 +158,7 @@ export function handleAdapterAdded(event: AdapterAdded): void {
   ]);
 
   if (adapter == null) {
-    adapter = new Adapter(adapterId);
+    adapter = new Adapter(daoAdapterId);
     adapter.adapterId = event.params.adapterId;
     adapter.acl = event.params.flags;
     adapter.adapterAddress = event.params.adapterAddress;
@@ -186,7 +190,9 @@ export function handleExtensionAdded(event: ExtensionAdded): void {
   let daoAddress = event.address.toHexString();
   let extensionId = event.params.extensionId;
 
-  let daoExtensionId = daoAddress.concat("-extension-").concat(extensionId.toHex());
+  let daoExtensionId = daoAddress
+    .concat("-extension-")
+    .concat(extensionId.toHex());
 
   log.info(
     "**************** handleExtensionAdded event fired. extensionAddress {}, extensionId {}, daoAddress {}",
@@ -205,27 +211,26 @@ export function handleExtensionAdded(event: ExtensionAdded): void {
   // 3. if it matches then create a `bank` entity with the `daoAddress`
   // let bankFactory =   BankFactory.bind()
 
-  // let bankAdapterId = crypto.keccak256().toHexString()
-  let bankExtensionId = "0xea0ca03c7adbe41dc655fec28a9209dc8e6e042f3d991a67765ba285b9cf73a0"
-  log.info('====== bankExtensionId, {}, extensionId {}', 
-  [bankExtensionId.toString(), extensionId.toString()])
+  log.info("====== bankExtensionId, {}, extensionId {}", [
+    BANK_EXTENSION_ID.toString(),
+    extensionId.toString(),
+  ]);
   // if extension is `bank` the assign to its dao
   if (
-    // bankExtensionId.toHex() == extensionId // .toString()
     "0xea0ca03c7adbe41dc655fec28a9209dc8e6e042f3d991a67765ba285b9cf73a0" ==
     event.params.extensionId.toHexString()
   ) {
-    log.info('====== add dao bankExtensionId, {}', [bankExtensionId.toString()])
+    log.info("====== add dao bankExtensionId, {}", [
+      BANK_EXTENSION_ID.toString(),
+    ]);
 
     let dao = Molochv3.load(event.address.toHexString());
     // let dao = loadOrCreateDao(event.params._address.toHexString());
 
     // create 1-to-1 relationship between the bank and its dao
     // bank.Molochv3 = event.params.bankAddress.toHexString();
-    if (dao == null) {
-      log.info('NOT EXIST', [])
-    } else {
-      log.info('EXISTS', [])
+    if (dao != null) {
+      log.info("is bank extension", []);
       // create 1-to-1 relationship between the dao and its bank
       dao.bank = event.address.toHexString();
       dao.save();
@@ -247,7 +252,9 @@ export function handleExtensionAdded(event: ExtensionAdded): void {
 export function handleExtensionRemoved(event: ExtensionRemoved): void {
   let daoAddress = event.address.toHexString();
   let extensionId = event.params.extensionId;
-  let daoExtensionId = daoAddress.concat("-extension-").concat(extensionId.toHex());
+  let daoExtensionId = daoAddress
+    .concat("-extension-")
+    .concat(extensionId.toHex());
 
   log.info(
     "**************** handleExtensionRemoved event fired. extensionId {}",

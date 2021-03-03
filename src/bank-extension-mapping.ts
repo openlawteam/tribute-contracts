@@ -4,7 +4,7 @@ import {
   Withdraw,
 } from "../generated/templates/BankExtension/BankExtension";
 import { Member, Molochv3, Token, TokenBalance } from "../generated/schema";
-import { LOCKED_LOOT, LOOT, SHARES, TOTAL } from "./dao-constants";
+import { GUILD, LOCKED_LOOT, LOOT, SHARES, TOTAL } from "./constants";
 import { BigInt, Bytes, log } from "@graphprotocol/graph-ts";
 
 // helpers
@@ -111,9 +111,9 @@ function internalTransfer(
 export function handleNewBalance(event: NewBalance): void {
   let memberId = event.params.member.toHex();
 
-  // omit TOTAL from the members list
-  if ("0x000000000000000000000000000000000000babe" != memberId) {
-
+  // omit the `TOTAL` & `GUILD` addresses from the list of members
+  // addresses must be lowercase
+  if (TOTAL.toHex() != memberId && GUILD.toHex() != memberId) {
     let tokenId = event.params.tokenAddr.toHex();
     let amount = event.params.amount;
     let tokenBalanceId = memberId + ":" + tokenId;
@@ -171,7 +171,9 @@ export function handleNewBalance(event: NewBalance): void {
     // get bank extension bindings
     let registry = BankExtension.bind(event.address);
 
-    // get balanceOf member shares
+    /**
+     * get `balanceOf` member shares
+     */
     let callResultSHARES = registry.try_balanceOf(event.params.member, SHARES);
     if (callResultSHARES.reverted) {
       log.info("getBalanceOf member:shares reverted", []);
