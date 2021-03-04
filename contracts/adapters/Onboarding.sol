@@ -331,7 +331,7 @@ contract OnboardingContract is
                 bank.addToBalance(GUILD, token, proposal.amount);
 
                 IERC20 erc20 = IERC20(token);
-                erc20.safeTransfer(address(dao), proposal.amount);
+                erc20.safeTransfer(address(bank), proposal.amount);
             }
 
             uint256 totalShares =
