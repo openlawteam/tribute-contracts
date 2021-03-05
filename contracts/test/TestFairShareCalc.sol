@@ -1,6 +1,7 @@
 pragma solidity ^0.8.0;
 
 // SPDX-License-Identifier: MIT
+import "../helpers/FairShareHelper.sol";
 
 /**
 MIT License
@@ -25,27 +26,13 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
  */
-library FairShareHelper {
-    /**
-     * @notice calculates the fair share amount based the total shares and current balance.
-     */
-    function calc(
+
+contract TestFairShareCalc {
+    function calculate(
         uint256 balance,
         uint256 shares,
         uint256 totalShares
-    ) internal pure returns (uint256) {
-        require(totalShares > 0, "totalShares must be greater than 0");
-        require(
-            shares <= totalShares,
-            "shares must be less than or equal to totalShares"
-        );
-        if (balance == 0) {
-            return 0;
-        }
-        // The balance for Internal and External tokens are limited to 2^64-1 (see Bank.sol:L411-L421)
-        // The maximum number of shares is limited to 2^64-1 (see ...)
-        // Worst case cenario is: balance=2^64-1 * shares=2^64-1, no overflows.
-        uint256 prod = balance * shares;
-        return prod / totalShares;
+    ) external pure returns (uint256) {
+        return FairShareHelper.calc(balance, shares, totalShares);
     }
 }

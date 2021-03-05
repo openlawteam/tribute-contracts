@@ -65,7 +65,7 @@ contract BankExtension is DaoConstants, AdapterGuard, IExtension {
     struct Checkpoint {
         // A checkpoint for marking number of votes from a given block
         uint96 fromBlock;
-        uint160 amount;
+        uint64 amount;
     }
 
     address[] public tokens;
@@ -422,32 +422,48 @@ contract BankExtension is DaoConstants, AdapterGuard, IExtension {
 
     /**
      * @notice Creates a new amount checkpoint for a token of a certain member
+     * @dev Reverts if the amount is greater than 2**64-1
      * @param member The member whose checkpoints will be added to
-     * @param tokenAddr The token of which the balance will be changed
+     * @param token The token of which the balance will be changed
      * @param amount The amount to be written into the new checkpoint
      */
     function _createNewAmountCheckpoint(
         address member,
-        address tokenAddr,
+        address token,
         uint256 amount
     ) internal {
-        uint32 nCheckpoints = numCheckpoints[tokenAddr][member];
-        require(amount < type(uint160).max, "too big of a vote");
-        uint160 newAmount = uint160(amount);
+        bool isValidToken = false;
+        if (availableInternalTokens[token]) {
+            require(
+                amount < type(uint64).max,
+                "token amount exceeds the maximum limit for internal tokens"
+            );
+            isValidToken = true;
+        } else if (availableTokens[token]) {
+            require(
+                amount < type(uint88).max,
+                "token amount exceeds the maximum limit for external tokens"
+            );
+            isValidToken = true;
+        }
+        require(isValidToken, "token not registered");
 
+        uint64 newAmount = uint64(amount);
+
+        uint32 nCheckpoints = numCheckpoints[token][member];
         if (
             nCheckpoints > 0 &&
-            checkpoints[tokenAddr][member][nCheckpoints - 1].fromBlock ==
+            checkpoints[token][member][nCheckpoints - 1].fromBlock ==
             block.number
         ) {
-            checkpoints[tokenAddr][member][nCheckpoints - 1].amount = newAmount;
+            checkpoints[token][member][nCheckpoints - 1].amount = newAmount;
         } else {
-            checkpoints[tokenAddr][member][nCheckpoints] = Checkpoint(
+            checkpoints[token][member][nCheckpoints] = Checkpoint(
                 uint96(block.number),
                 newAmount
             );
-            numCheckpoints[tokenAddr][member] = nCheckpoints + 1;
+            numCheckpoints[token][member] = nCheckpoints + 1;
         }
-        emit NewBalance(member, tokenAddr, amount);
+        emit NewBalance(member, token, amount);
     }
 }
