@@ -249,7 +249,7 @@ contract TributeContract is ITribute, DaoConstants, MemberGuard, AdapterGuard {
             }
             bank.addToBalance(GUILD, token, proposal.tributeAmount);
             IERC20 erc20 = IERC20(token);
-            erc20.safeTransfer(address(dao), proposal.tributeAmount);
+            erc20.safeTransfer(address(bank), proposal.tributeAmount);
         } else if (
             voteResult == IVoting.VotingState.NOT_PASS ||
             voteResult == IVoting.VotingState.TIE
