@@ -35,7 +35,7 @@ contract DaoFactory is CloneFactory, DaoConstants {
     struct Adapter {
         bytes32 id;
         address addr;
-        uint256 flags;
+        uint128 flags;
     }
 
     // daoAddr => hashedName
@@ -112,7 +112,13 @@ contract DaoFactory is CloneFactory, DaoConstants {
         );
 
         for (uint256 i = 0; i < adapters.length; i++) {
-            dao.addAdapter(adapters[i].id, adapters[i].addr, adapters[i].flags);
+            dao.replaceAdapter(
+                adapters[i].id,
+                adapters[i].addr,
+                adapters[i].flags,
+                new bytes32[](0),
+                new uint256[](0)
+            );
         }
     }
 
@@ -159,7 +165,12 @@ contract DaoFactory is CloneFactory, DaoConstants {
             "this DAO has already been setup"
         );
 
-        dao.removeAdapter(adapter.id);
-        dao.addAdapter(adapter.id, adapter.addr, adapter.flags);
+        dao.replaceAdapter(
+            adapter.id,
+            adapter.addr,
+            adapter.flags,
+            new bytes32[](0),
+            new uint256[](0)
+        );
     }
 }
