@@ -163,6 +163,676 @@ export class Molochv3 extends Entity {
   }
 }
 
+export class Member extends Entity {
+  constructor(id: string) {
+    super();
+    this.set("id", Value.fromString(id));
+  }
+
+  save(): void {
+    let id = this.get("id");
+    assert(id !== null, "Cannot save Member entity without an ID");
+    assert(
+      id.kind == ValueKind.STRING,
+      "Cannot save Member entity with non-string ID. " +
+        'Considering using .toHex() to convert the "id" to a string.'
+    );
+    store.set("Member", id.toString(), this);
+  }
+
+  static load(id: string): Member | null {
+    return store.get("Member", id) as Member | null;
+  }
+
+  get id(): string {
+    let value = this.get("id");
+    return value.toString();
+  }
+
+  set id(value: string) {
+    this.set("id", Value.fromString(value));
+  }
+
+  get memberAddress(): Bytes | null {
+    let value = this.get("memberAddress");
+    if (value === null || value.kind == ValueKind.NULL) {
+      return null;
+    } else {
+      return value.toBytes();
+    }
+  }
+
+  set memberAddress(value: Bytes | null) {
+    if (value === null) {
+      this.unset("memberAddress");
+    } else {
+      this.set("memberAddress", Value.fromBytes(value as Bytes));
+    }
+  }
+
+  get createdAt(): string | null {
+    let value = this.get("createdAt");
+    if (value === null || value.kind == ValueKind.NULL) {
+      return null;
+    } else {
+      return value.toString();
+    }
+  }
+
+  set createdAt(value: string | null) {
+    if (value === null) {
+      this.unset("createdAt");
+    } else {
+      this.set("createdAt", Value.fromString(value as string));
+    }
+  }
+
+  get delegateKey(): Bytes | null {
+    let value = this.get("delegateKey");
+    if (value === null || value.kind == ValueKind.NULL) {
+      return null;
+    } else {
+      return value.toBytes();
+    }
+  }
+
+  set delegateKey(value: Bytes | null) {
+    if (value === null) {
+      this.unset("delegateKey");
+    } else {
+      this.set("delegateKey", Value.fromBytes(value as Bytes));
+    }
+  }
+
+  get shares(): BigInt {
+    let value = this.get("shares");
+    return value.toBigInt();
+  }
+
+  set shares(value: BigInt) {
+    this.set("shares", Value.fromBigInt(value));
+  }
+
+  get loot(): BigInt {
+    let value = this.get("loot");
+    return value.toBigInt();
+  }
+
+  set loot(value: BigInt) {
+    this.set("loot", Value.fromBigInt(value));
+  }
+
+  get lockedLoot(): BigInt {
+    let value = this.get("lockedLoot");
+    return value.toBigInt();
+  }
+
+  set lockedLoot(value: BigInt) {
+    this.set("lockedLoot", Value.fromBigInt(value));
+  }
+
+  get tokenBalances(): Array<string> | null {
+    let value = this.get("tokenBalances");
+    if (value === null || value.kind == ValueKind.NULL) {
+      return null;
+    } else {
+      return value.toStringArray();
+    }
+  }
+
+  set tokenBalances(value: Array<string> | null) {
+    if (value === null) {
+      this.unset("tokenBalances");
+    } else {
+      this.set("tokenBalances", Value.fromStringArray(value as Array<string>));
+    }
+  }
+
+  get proposals(): Array<string> | null {
+    let value = this.get("proposals");
+    if (value === null || value.kind == ValueKind.NULL) {
+      return null;
+    } else {
+      return value.toStringArray();
+    }
+  }
+
+  set proposals(value: Array<string> | null) {
+    if (value === null) {
+      this.unset("proposals");
+    } else {
+      this.set("proposals", Value.fromStringArray(value as Array<string>));
+    }
+  }
+
+  get isDelegated(): boolean {
+    let value = this.get("isDelegated");
+    return value.toBoolean();
+  }
+
+  set isDelegated(value: boolean) {
+    this.set("isDelegated", Value.fromBoolean(value));
+  }
+
+  get isJailed(): boolean {
+    let value = this.get("isJailed");
+    return value.toBoolean();
+  }
+
+  set isJailed(value: boolean) {
+    this.set("isJailed", Value.fromBoolean(value));
+  }
+}
+
+export class Proposal extends Entity {
+  constructor(id: string) {
+    super();
+    this.set("id", Value.fromString(id));
+  }
+
+  save(): void {
+    let id = this.get("id");
+    assert(id !== null, "Cannot save Proposal entity without an ID");
+    assert(
+      id.kind == ValueKind.STRING,
+      "Cannot save Proposal entity with non-string ID. " +
+        'Considering using .toHex() to convert the "id" to a string.'
+    );
+    store.set("Proposal", id.toString(), this);
+  }
+
+  static load(id: string): Proposal | null {
+    return store.get("Proposal", id) as Proposal | null;
+  }
+
+  get id(): string {
+    let value = this.get("id");
+    return value.toString();
+  }
+
+  set id(value: string) {
+    this.set("id", Value.fromString(value));
+  }
+
+  get proposalId(): Bytes {
+    let value = this.get("proposalId");
+    return value.toBytes();
+  }
+
+  set proposalId(value: Bytes) {
+    this.set("proposalId", Value.fromBytes(value));
+  }
+
+  get flags(): BigInt {
+    let value = this.get("flags");
+    return value.toBigInt();
+  }
+
+  set flags(value: BigInt) {
+    this.set("flags", Value.fromBigInt(value));
+  }
+
+  get submittedBy(): Bytes | null {
+    let value = this.get("submittedBy");
+    if (value === null || value.kind == ValueKind.NULL) {
+      return null;
+    } else {
+      return value.toBytes();
+    }
+  }
+
+  set submittedBy(value: Bytes | null) {
+    if (value === null) {
+      this.unset("submittedBy");
+    } else {
+      this.set("submittedBy", Value.fromBytes(value as Bytes));
+    }
+  }
+
+  get sponsored(): boolean {
+    let value = this.get("sponsored");
+    return value.toBoolean();
+  }
+
+  set sponsored(value: boolean) {
+    this.set("sponsored", Value.fromBoolean(value));
+  }
+
+  get sponsoredAt(): string | null {
+    let value = this.get("sponsoredAt");
+    if (value === null || value.kind == ValueKind.NULL) {
+      return null;
+    } else {
+      return value.toString();
+    }
+  }
+
+  set sponsoredAt(value: string | null) {
+    if (value === null) {
+      this.unset("sponsoredAt");
+    } else {
+      this.set("sponsoredAt", Value.fromString(value as string));
+    }
+  }
+
+  get sponsoredBy(): Bytes | null {
+    let value = this.get("sponsoredBy");
+    if (value === null || value.kind == ValueKind.NULL) {
+      return null;
+    } else {
+      return value.toBytes();
+    }
+  }
+
+  set sponsoredBy(value: Bytes | null) {
+    if (value === null) {
+      this.unset("sponsoredBy");
+    } else {
+      this.set("sponsoredBy", Value.fromBytes(value as Bytes));
+    }
+  }
+
+  get processed(): boolean {
+    let value = this.get("processed");
+    return value.toBoolean();
+  }
+
+  set processed(value: boolean) {
+    this.set("processed", Value.fromBoolean(value));
+  }
+
+  get processedAt(): string | null {
+    let value = this.get("processedAt");
+    if (value === null || value.kind == ValueKind.NULL) {
+      return null;
+    } else {
+      return value.toString();
+    }
+  }
+
+  set processedAt(value: string | null) {
+    if (value === null) {
+      this.unset("processedAt");
+    } else {
+      this.set("processedAt", Value.fromString(value as string));
+    }
+  }
+
+  get processedBy(): Bytes | null {
+    let value = this.get("processedBy");
+    if (value === null || value.kind == ValueKind.NULL) {
+      return null;
+    } else {
+      return value.toBytes();
+    }
+  }
+
+  set processedBy(value: Bytes | null) {
+    if (value === null) {
+      this.unset("processedBy");
+    } else {
+      this.set("processedBy", Value.fromBytes(value as Bytes));
+    }
+  }
+
+  get member(): string | null {
+    let value = this.get("member");
+    if (value === null || value.kind == ValueKind.NULL) {
+      return null;
+    } else {
+      return value.toString();
+    }
+  }
+
+  set member(value: string | null) {
+    if (value === null) {
+      this.unset("member");
+    } else {
+      this.set("member", Value.fromString(value as string));
+    }
+  }
+
+  get tokenToMint(): Bytes | null {
+    let value = this.get("tokenToMint");
+    if (value === null || value.kind == ValueKind.NULL) {
+      return null;
+    } else {
+      return value.toBytes();
+    }
+  }
+
+  set tokenToMint(value: Bytes | null) {
+    if (value === null) {
+      this.unset("tokenToMint");
+    } else {
+      this.set("tokenToMint", Value.fromBytes(value as Bytes));
+    }
+  }
+
+  get amount(): BigInt | null {
+    let value = this.get("amount");
+    if (value === null || value.kind == ValueKind.NULL) {
+      return null;
+    } else {
+      return value.toBigInt();
+    }
+  }
+
+  set amount(value: BigInt | null) {
+    if (value === null) {
+      this.unset("amount");
+    } else {
+      this.set("amount", Value.fromBigInt(value as BigInt));
+    }
+  }
+
+  get sharesRequested(): BigInt | null {
+    let value = this.get("sharesRequested");
+    if (value === null || value.kind == ValueKind.NULL) {
+      return null;
+    } else {
+      return value.toBigInt();
+    }
+  }
+
+  set sharesRequested(value: BigInt | null) {
+    if (value === null) {
+      this.unset("sharesRequested");
+    } else {
+      this.set("sharesRequested", Value.fromBigInt(value as BigInt));
+    }
+  }
+
+  get token(): Bytes | null {
+    let value = this.get("token");
+    if (value === null || value.kind == ValueKind.NULL) {
+      return null;
+    } else {
+      return value.toBytes();
+    }
+  }
+
+  set token(value: Bytes | null) {
+    if (value === null) {
+      this.unset("token");
+    } else {
+      this.set("token", Value.fromBytes(value as Bytes));
+    }
+  }
+
+  get applicant(): Bytes | null {
+    let value = this.get("applicant");
+    if (value === null || value.kind == ValueKind.NULL) {
+      return null;
+    } else {
+      return value.toBytes();
+    }
+  }
+
+  set applicant(value: Bytes | null) {
+    if (value === null) {
+      this.unset("applicant");
+    } else {
+      this.set("applicant", Value.fromBytes(value as Bytes));
+    }
+  }
+
+  get proposer(): Bytes | null {
+    let value = this.get("proposer");
+    if (value === null || value.kind == ValueKind.NULL) {
+      return null;
+    } else {
+      return value.toBytes();
+    }
+  }
+
+  set proposer(value: Bytes | null) {
+    if (value === null) {
+      this.unset("proposer");
+    } else {
+      this.set("proposer", Value.fromBytes(value as Bytes));
+    }
+  }
+
+  get shareHolderAddr(): Bytes | null {
+    let value = this.get("shareHolderAddr");
+    if (value === null || value.kind == ValueKind.NULL) {
+      return null;
+    } else {
+      return value.toBytes();
+    }
+  }
+
+  set shareHolderAddr(value: Bytes | null) {
+    if (value === null) {
+      this.unset("shareHolderAddr");
+    } else {
+      this.set("shareHolderAddr", Value.fromBytes(value as Bytes));
+    }
+  }
+
+  get status(): string | null {
+    let value = this.get("status");
+    if (value === null || value.kind == ValueKind.NULL) {
+      return null;
+    } else {
+      return value.toString();
+    }
+  }
+
+  set status(value: string | null) {
+    if (value === null) {
+      this.unset("status");
+    } else {
+      this.set("status", Value.fromString(value as string));
+    }
+  }
+
+  get currentIndex(): BigInt | null {
+    let value = this.get("currentIndex");
+    if (value === null || value.kind == ValueKind.NULL) {
+      return null;
+    } else {
+      return value.toBigInt();
+    }
+  }
+
+  set currentIndex(value: BigInt | null) {
+    if (value === null) {
+      this.unset("currentIndex");
+    } else {
+      this.set("currentIndex", Value.fromBigInt(value as BigInt));
+    }
+  }
+
+  get blockNumber(): BigInt | null {
+    let value = this.get("blockNumber");
+    if (value === null || value.kind == ValueKind.NULL) {
+      return null;
+    } else {
+      return value.toBigInt();
+    }
+  }
+
+  set blockNumber(value: BigInt | null) {
+    if (value === null) {
+      this.unset("blockNumber");
+    } else {
+      this.set("blockNumber", Value.fromBigInt(value as BigInt));
+    }
+  }
+
+  get requestAmount(): BigInt | null {
+    let value = this.get("requestAmount");
+    if (value === null || value.kind == ValueKind.NULL) {
+      return null;
+    } else {
+      return value.toBigInt();
+    }
+  }
+
+  set requestAmount(value: BigInt | null) {
+    if (value === null) {
+      this.unset("requestAmount");
+    } else {
+      this.set("requestAmount", Value.fromBigInt(value as BigInt));
+    }
+  }
+
+  get tributeAmount(): BigInt | null {
+    let value = this.get("tributeAmount");
+    if (value === null || value.kind == ValueKind.NULL) {
+      return null;
+    } else {
+      return value.toBigInt();
+    }
+  }
+
+  set tributeAmount(value: BigInt | null) {
+    if (value === null) {
+      this.unset("tributeAmount");
+    } else {
+      this.set("tributeAmount", Value.fromBigInt(value as BigInt));
+    }
+  }
+
+  get ongoingKicks(): Bytes | null {
+    let value = this.get("ongoingKicks");
+    if (value === null || value.kind == ValueKind.NULL) {
+      return null;
+    } else {
+      return value.toBytes();
+    }
+  }
+
+  set ongoingKicks(value: Bytes | null) {
+    if (value === null) {
+      this.unset("ongoingKicks");
+    } else {
+      this.set("ongoingKicks", Value.fromBytes(value as Bytes));
+    }
+  }
+
+  get memberToKick(): Bytes | null {
+    let value = this.get("memberToKick");
+    if (value === null || value.kind == ValueKind.NULL) {
+      return null;
+    } else {
+      return value.toBytes();
+    }
+  }
+
+  set memberToKick(value: Bytes | null) {
+    if (value === null) {
+      this.unset("memberToKick");
+    } else {
+      this.set("memberToKick", Value.fromBytes(value as Bytes));
+    }
+  }
+
+  get tokensToBurn(): BigInt | null {
+    let value = this.get("tokensToBurn");
+    if (value === null || value.kind == ValueKind.NULL) {
+      return null;
+    } else {
+      return value.toBigInt();
+    }
+  }
+
+  set tokensToBurn(value: BigInt | null) {
+    if (value === null) {
+      this.unset("tokensToBurn");
+    } else {
+      this.set("tokensToBurn", Value.fromBigInt(value as BigInt));
+    }
+  }
+
+  get details(): Bytes | null {
+    let value = this.get("details");
+    if (value === null || value.kind == ValueKind.NULL) {
+      return null;
+    } else {
+      return value.toBytes();
+    }
+  }
+
+  set details(value: Bytes | null) {
+    if (value === null) {
+      this.unset("details");
+    } else {
+      this.set("details", Value.fromBytes(value as Bytes));
+    }
+  }
+
+  get adapterId(): Bytes | null {
+    let value = this.get("adapterId");
+    if (value === null || value.kind == ValueKind.NULL) {
+      return null;
+    } else {
+      return value.toBytes();
+    }
+  }
+
+  set adapterId(value: Bytes | null) {
+    if (value === null) {
+      this.unset("adapterId");
+    } else {
+      this.set("adapterId", Value.fromBytes(value as Bytes));
+    }
+  }
+
+  get adapterAddress(): Bytes | null {
+    let value = this.get("adapterAddress");
+    if (value === null || value.kind == ValueKind.NULL) {
+      return null;
+    } else {
+      return value.toBytes();
+    }
+  }
+
+  set adapterAddress(value: Bytes | null) {
+    if (value === null) {
+      this.unset("adapterAddress");
+    } else {
+      this.set("adapterAddress", Value.fromBytes(value as Bytes));
+    }
+  }
+
+  get keys(): Array<Bytes> | null {
+    let value = this.get("keys");
+    if (value === null || value.kind == ValueKind.NULL) {
+      return null;
+    } else {
+      return value.toBytesArray();
+    }
+  }
+
+  set keys(value: Array<Bytes> | null) {
+    if (value === null) {
+      this.unset("keys");
+    } else {
+      this.set("keys", Value.fromBytesArray(value as Array<Bytes>));
+    }
+  }
+
+  get values(): Array<BigInt> | null {
+    let value = this.get("values");
+    if (value === null || value.kind == ValueKind.NULL) {
+      return null;
+    } else {
+      return value.toBigIntArray();
+    }
+  }
+
+  set values(value: Array<BigInt> | null) {
+    if (value === null) {
+      this.unset("values");
+    } else {
+      this.set("values", Value.fromBigIntArray(value as Array<BigInt>));
+    }
+  }
+}
+
 export class Bank extends Entity {
   constructor(id: string) {
     super();
@@ -425,303 +1095,6 @@ export class TokenBalance extends Entity {
 
   set tokenBalance(value: BigInt) {
     this.set("tokenBalance", Value.fromBigInt(value));
-  }
-
-  get member(): string | null {
-    let value = this.get("member");
-    if (value === null || value.kind == ValueKind.NULL) {
-      return null;
-    } else {
-      return value.toString();
-    }
-  }
-
-  set member(value: string | null) {
-    if (value === null) {
-      this.unset("member");
-    } else {
-      this.set("member", Value.fromString(value as string));
-    }
-  }
-}
-
-export class Member extends Entity {
-  constructor(id: string) {
-    super();
-    this.set("id", Value.fromString(id));
-  }
-
-  save(): void {
-    let id = this.get("id");
-    assert(id !== null, "Cannot save Member entity without an ID");
-    assert(
-      id.kind == ValueKind.STRING,
-      "Cannot save Member entity with non-string ID. " +
-        'Considering using .toHex() to convert the "id" to a string.'
-    );
-    store.set("Member", id.toString(), this);
-  }
-
-  static load(id: string): Member | null {
-    return store.get("Member", id) as Member | null;
-  }
-
-  get id(): string {
-    let value = this.get("id");
-    return value.toString();
-  }
-
-  set id(value: string) {
-    this.set("id", Value.fromString(value));
-  }
-
-  get memberAddress(): Bytes {
-    let value = this.get("memberAddress");
-    return value.toBytes();
-  }
-
-  set memberAddress(value: Bytes) {
-    this.set("memberAddress", Value.fromBytes(value));
-  }
-
-  get createdAt(): string {
-    let value = this.get("createdAt");
-    return value.toString();
-  }
-
-  set createdAt(value: string) {
-    this.set("createdAt", Value.fromString(value));
-  }
-
-  get delegateKey(): Bytes {
-    let value = this.get("delegateKey");
-    return value.toBytes();
-  }
-
-  set delegateKey(value: Bytes) {
-    this.set("delegateKey", Value.fromBytes(value));
-  }
-
-  get shares(): BigInt {
-    let value = this.get("shares");
-    return value.toBigInt();
-  }
-
-  set shares(value: BigInt) {
-    this.set("shares", Value.fromBigInt(value));
-  }
-
-  get loot(): BigInt {
-    let value = this.get("loot");
-    return value.toBigInt();
-  }
-
-  set loot(value: BigInt) {
-    this.set("loot", Value.fromBigInt(value));
-  }
-
-  get lockedLoot(): BigInt {
-    let value = this.get("lockedLoot");
-    return value.toBigInt();
-  }
-
-  set lockedLoot(value: BigInt) {
-    this.set("lockedLoot", Value.fromBigInt(value));
-  }
-
-  get tokenBalances(): Array<string> | null {
-    let value = this.get("tokenBalances");
-    if (value === null || value.kind == ValueKind.NULL) {
-      return null;
-    } else {
-      return value.toStringArray();
-    }
-  }
-
-  set tokenBalances(value: Array<string> | null) {
-    if (value === null) {
-      this.unset("tokenBalances");
-    } else {
-      this.set("tokenBalances", Value.fromStringArray(value as Array<string>));
-    }
-  }
-
-  get proposals(): Array<string> | null {
-    let value = this.get("proposals");
-    if (value === null || value.kind == ValueKind.NULL) {
-      return null;
-    } else {
-      return value.toStringArray();
-    }
-  }
-
-  set proposals(value: Array<string> | null) {
-    if (value === null) {
-      this.unset("proposals");
-    } else {
-      this.set("proposals", Value.fromStringArray(value as Array<string>));
-    }
-  }
-
-  get jailed(): boolean {
-    let value = this.get("jailed");
-    return value.toBoolean();
-  }
-
-  set jailed(value: boolean) {
-    this.set("jailed", Value.fromBoolean(value));
-  }
-}
-
-export class Proposal extends Entity {
-  constructor(id: string) {
-    super();
-    this.set("id", Value.fromString(id));
-  }
-
-  save(): void {
-    let id = this.get("id");
-    assert(id !== null, "Cannot save Proposal entity without an ID");
-    assert(
-      id.kind == ValueKind.STRING,
-      "Cannot save Proposal entity with non-string ID. " +
-        'Considering using .toHex() to convert the "id" to a string.'
-    );
-    store.set("Proposal", id.toString(), this);
-  }
-
-  static load(id: string): Proposal | null {
-    return store.get("Proposal", id) as Proposal | null;
-  }
-
-  get id(): string {
-    let value = this.get("id");
-    return value.toString();
-  }
-
-  set id(value: string) {
-    this.set("id", Value.fromString(value));
-  }
-
-  get proposalId(): Bytes {
-    let value = this.get("proposalId");
-    return value.toBytes();
-  }
-
-  set proposalId(value: Bytes) {
-    this.set("proposalId", Value.fromBytes(value));
-  }
-
-  get flags(): BigInt {
-    let value = this.get("flags");
-    return value.toBigInt();
-  }
-
-  set flags(value: BigInt) {
-    this.set("flags", Value.fromBigInt(value));
-  }
-
-  get submittedBy(): Bytes | null {
-    let value = this.get("submittedBy");
-    if (value === null || value.kind == ValueKind.NULL) {
-      return null;
-    } else {
-      return value.toBytes();
-    }
-  }
-
-  set submittedBy(value: Bytes | null) {
-    if (value === null) {
-      this.unset("submittedBy");
-    } else {
-      this.set("submittedBy", Value.fromBytes(value as Bytes));
-    }
-  }
-
-  get sponsored(): boolean {
-    let value = this.get("sponsored");
-    return value.toBoolean();
-  }
-
-  set sponsored(value: boolean) {
-    this.set("sponsored", Value.fromBoolean(value));
-  }
-
-  get sponsoredAt(): string | null {
-    let value = this.get("sponsoredAt");
-    if (value === null || value.kind == ValueKind.NULL) {
-      return null;
-    } else {
-      return value.toString();
-    }
-  }
-
-  set sponsoredAt(value: string | null) {
-    if (value === null) {
-      this.unset("sponsoredAt");
-    } else {
-      this.set("sponsoredAt", Value.fromString(value as string));
-    }
-  }
-
-  get sponsoredBy(): Bytes | null {
-    let value = this.get("sponsoredBy");
-    if (value === null || value.kind == ValueKind.NULL) {
-      return null;
-    } else {
-      return value.toBytes();
-    }
-  }
-
-  set sponsoredBy(value: Bytes | null) {
-    if (value === null) {
-      this.unset("sponsoredBy");
-    } else {
-      this.set("sponsoredBy", Value.fromBytes(value as Bytes));
-    }
-  }
-
-  get processed(): boolean {
-    let value = this.get("processed");
-    return value.toBoolean();
-  }
-
-  set processed(value: boolean) {
-    this.set("processed", Value.fromBoolean(value));
-  }
-
-  get processedAt(): string | null {
-    let value = this.get("processedAt");
-    if (value === null || value.kind == ValueKind.NULL) {
-      return null;
-    } else {
-      return value.toString();
-    }
-  }
-
-  set processedAt(value: string | null) {
-    if (value === null) {
-      this.unset("processedAt");
-    } else {
-      this.set("processedAt", Value.fromString(value as string));
-    }
-  }
-
-  get processedBy(): Bytes | null {
-    let value = this.get("processedBy");
-    if (value === null || value.kind == ValueKind.NULL) {
-      return null;
-    } else {
-      return value.toBytes();
-    }
-  }
-
-  set processedBy(value: Bytes | null) {
-    if (value === null) {
-      this.unset("processedBy");
-    } else {
-      this.set("processedBy", Value.fromBytes(value as Bytes));
-    }
   }
 
   get member(): string | null {

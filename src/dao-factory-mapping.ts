@@ -1,14 +1,6 @@
 import { DaoRegistry } from "../generated/templates";
 import { DAOCreated } from "../generated/DaoFactory/DaoFactory";
 import { Molochv3 } from "../generated/schema";
-// import {
-//   ETH_TOKEN,
-//   GUILD,
-//   LOCKED_LOOT,
-//   LOOT,
-//   SHARES,
-//   TOTAL,
-// } from "./dao-constants";
 import { log } from "@graphprotocol/graph-ts";
 
 // helper
@@ -72,7 +64,6 @@ export function handleDaoCreated(event: DAOCreated): void {
 
   dao.createdAt = event.block.timestamp.toString();
   dao.daoAddress = event.params._address;
-  // dao.initialized = true;
   dao.name = event.params._name;
   dao.creator = event.transaction.from;
 

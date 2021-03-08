@@ -1,5 +1,4 @@
-import { crypto, log, store } from "@graphprotocol/graph-ts";
-
+import { log, store } from "@graphprotocol/graph-ts";
 import {
   ProcessedProposal,
   SponsoredProposal,
@@ -13,6 +12,7 @@ import {
   ExtensionRemoved,
   ConfigurationUpdated,
   AddressConfigurationUpdated,
+  DaoRegistry,
 } from "../generated/templates/DaoRegistry/DaoRegistry";
 import {
   Adapter,
@@ -21,31 +21,66 @@ import {
   Member,
   Molochv3,
 } from "../generated/schema";
-import { BANK_EXTENSION_ID } from "./constants";
+import { BANK_EXTENSION_ID } from "./helpers/constants";
+import { getProposalDetails } from "./helpers/proposal-details";
 
 export function handleSubmittedProposal(event: SubmittedProposal): void {
   let submittedBy = event.transaction.from;
-  let id = event.params.proposalId;
-  let daoAddress = event.address.toHex(); // dao contract address
-  let newProposalId = daoAddress.concat("-proposal-").concat(id.toHex());
+  let proposalId = event.params.proposalId;
+  let daoAddress = event.address;
+  let daoProposalId = daoAddress
+    .toHex()
+    .concat("-proposal-")
+    .concat(proposalId.toHex());
 
-  let proposal = Proposal.load(newProposalId);
+  let proposal = Proposal.load(daoProposalId);
+
+  if (proposal == null) {
+    proposal = new Proposal(daoProposalId);
+
+    proposal.submittedBy = submittedBy;
+    proposal.flags = event.params.flags;
+    proposal.proposalId = proposalId;
+    proposal.sponsored = false;
+    proposal.processed = false;
+    proposal.member = submittedBy.toHex();
+
+    proposal.save();
+  }
 
   log.info(
     "**************** handleSubmittedProposal event fired. daoAddress: {}, proposalId: {}",
     [event.address.toHexString(), event.params.proposalId.toHexString()]
   );
 
-  if (proposal == null) {
-    proposal = new Proposal(newProposalId);
-    proposal.submittedBy = submittedBy;
-    proposal.flags = event.params.flags;
-    proposal.proposalId = id;
-    proposal.sponsored = false;
-    proposal.processed = false;
-    proposal.member = submittedBy.toHex();
+  let daoRegistry = DaoRegistry.bind(event.address);
+  let callResult = daoRegistry.try_proposals(event.params.proposalId);
 
-    proposal.save();
+  if (callResult.reverted) {
+    log.info("daoRegistry try_proposals reverted", []);
+  } else {
+    let data = callResult.value;
+
+    log.info("daoRegistry try_proposals data, {}, {}", [
+      data.value0.toHexString(), // `adapterAddress`
+      data.value1.toString(), // `flags`
+    ]);
+
+    let adapterAdddress = data.value0;
+
+    let inverseAdapter = daoRegistry.inverseAdapters(adapterAdddress);
+
+    log.info("INFO inverseAdapter , {}, {}", [
+      inverseAdapter.value0.toHexString(), // adapterId
+      inverseAdapter.value1.toString(), // acl
+    ]);
+
+    getProposalDetails(
+      inverseAdapter.value0,
+      adapterAdddress,
+      daoAddress,
+      proposalId
+    );
   }
 }
 
@@ -102,6 +137,8 @@ export function handleUpdateDelegateKey(event: UpdateDelegateKey): void {
 
   let member = Member.load(memberId);
   member.delegateKey = delegateKey;
+  member.isDelegated =
+    event.params.memberAddress != event.params.newDelegateKey;
 
   log.info(
     "**************** handleUpdateDelegateKey event fired. memberAddress {}, newDelegateKey {}",
@@ -121,7 +158,7 @@ export function handleMemberJailed(event: MemberJailed): void {
     .concat(event.params.memberAddr.toHex());
 
   let member = Member.load(memberId);
-  member.jailed = true;
+  member.isJailed = true;
 
   log.info("**************** handleMemberJailed event fired. memberAddr {}", [
     event.params.memberAddr.toHexString(),
@@ -137,7 +174,7 @@ export function handleMemberUnjailed(event: MemberUnjailed): void {
     .concat(event.params.memberAddr.toHex());
 
   let member = Member.load(memberId);
-  member.jailed = false;
+  member.isJailed = false;
 
   log.info("**************** handleMemberUnjailed event fired. memberAddr {}", [
     event.params.memberAddr.toHexString(),
@@ -148,8 +185,8 @@ export function handleMemberUnjailed(event: MemberUnjailed): void {
 
 export function handleAdapterAdded(event: AdapterAdded): void {
   let daoAddress = event.address.toHexString();
-  let adapterId = event.params.adapterId.toHex();
-  let daoAdapterId = daoAddress.concat("-adapter-").concat(adapterId);
+  let adapterId = event.params.adapterId;
+  let daoAdapterId = daoAddress.concat("-adapter-").concat(adapterId.toHex());
 
   let adapter = Adapter.load(daoAdapterId);
 
@@ -172,8 +209,8 @@ export function handleAdapterAdded(event: AdapterAdded): void {
 
 export function handleAdapterRemoved(event: AdapterRemoved): void {
   let daoAddress = event.address.toHexString();
-  let adapterId = event.params.adapterId.toHex();
-  let daoAdapterId = daoAddress.concat("-adapter-").concat(adapterId);
+  let adapterId = event.params.adapterId;
+  let daoAdapterId = daoAddress.concat("-adapter-").concat(adapterId.toHex());
 
   let adapter = Adapter.load(daoAdapterId);
 
@@ -181,7 +218,7 @@ export function handleAdapterRemoved(event: AdapterRemoved): void {
     event.params.adapterId.toHexString(),
   ]);
 
-  if (adapter !== null) {
+  if (adapter != null) {
     store.remove("Adapter", daoAdapterId);
   }
 }
@@ -211,15 +248,16 @@ export function handleExtensionAdded(event: ExtensionAdded): void {
   // 3. if it matches then create a `bank` entity with the `daoAddress`
   // let bankFactory =   BankFactory.bind()
 
-  log.info("====== bankExtensionId, {}, extensionId {}", [
-    BANK_EXTENSION_ID.toString(),
-    extensionId.toString(),
-  ]);
   // if extension is `bank` the assign to its dao
   if (
-    "0xea0ca03c7adbe41dc655fec28a9209dc8e6e042f3d991a67765ba285b9cf73a0" ==
-    event.params.extensionId.toHexString()
+    // "0xea0ca03c7adbe41dc655fec28a9209dc8e6e042f3d991a67765ba285b9cf73a0" ==
+    BANK_EXTENSION_ID.toString() == event.params.extensionId.toHexString()
   ) {
+    log.info("====== bankExtensionId, {}, extensionId {}", [
+      BANK_EXTENSION_ID.toString(),
+      extensionId.toString(),
+    ]);
+
     log.info("====== add dao bankExtensionId, {}", [
       BANK_EXTENSION_ID.toString(),
     ]);
@@ -262,7 +300,7 @@ export function handleExtensionRemoved(event: ExtensionRemoved): void {
   );
   let extension = Extension.load(daoExtensionId);
 
-  if (extension !== null) {
+  if (extension != null) {
     store.remove("Extension", daoExtensionId);
   }
 }

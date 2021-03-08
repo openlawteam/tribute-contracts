@@ -1,7 +1,7 @@
 type Molochv3 @entity {
   id: ID!
   "The DAO address"
-  daoAddress: Bytes # dao address
+  daoAddress: Bytes
   "The name of the DAO"
   name: String
   "The DAO creator address"
@@ -18,16 +18,16 @@ type Molochv3 @entity {
 
 type Member @entity {
   id: ID!
-  # "TODO: members can be a part of multiple Molochv3"
-  memberAddress: Bytes!
-  createdAt: String!
-  delegateKey: Bytes!
+  memberAddress: Bytes
+  createdAt: String
+  delegateKey: Bytes
   shares: BigInt!
   loot: BigInt!
   lockedLoot: BigInt!
   tokenBalances: [TokenBalance!] @derivedFrom(field: "member")
   proposals: [Proposal!] @derivedFrom(field: "member")
-  jailed: Boolean!
+  isDelegated: Boolean
+  isJailed: Boolean
 }
 
 type Proposal @entity {
@@ -42,12 +42,54 @@ type Proposal @entity {
   processedAt: String
   processedBy: Bytes
   member: Member
+
+  # onboarding; proposal details
+  tokenToMint: Bytes
+  amount: BigInt
+  sharesRequested: BigInt
+  token: Bytes
+  applicant: Bytes
+  proposer: Bytes
+
+  # distribute; proposal details
+  "The share holder address that will receive the funds. If 0x0, the funds will be distributed to all members of the DAO."
+  shareHolderAddr: Bytes
+  "The distribution status or the kick status"
+  status: String
+  "Current iteration index to control the cached for-loop."
+  currentIndex: BigInt
+  "The block number in which the proposal has been created."
+  blockNumber: BigInt
+
+  # tribute; proposal details
+  "The amount requested of DAO internal tokens."
+  requestAmount: BigInt
+  "The amount of tribute tokens."
+  tributeAmount: BigInt
+
+  # guildkick; proposal details
+  "Keeps track of the latest ongoing kick proposal per DAO to ensure only 1 kick happens at a time."
+  ongoingKicks: Bytes
+  "The address of the member to kick out of the DAO."
+  memberToKick: Bytes
+  "The number of shares of the member that should be burned."
+  tokensToBurn: BigInt
+
+  # financing; proposal details
+  "Additional details about the financing proposal"
+  details: Bytes
+
+  # managing; proposal details
+  adapterId: Bytes
+  adapterAddress: Bytes
+  keys: [Bytes!]
+  values: [BigInt!]
 }
 
 type Bank @entity {
   id: ID!
-  bankAddress: Bytes # bank address
-  daoAddress: Bytes # dao address
+  bankAddress: Bytes
+  daoAddress: Bytes
   balance: BigInt
   createdAt: String
   totalShares: BigInt

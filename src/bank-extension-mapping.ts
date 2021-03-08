@@ -4,7 +4,7 @@ import {
   Withdraw,
 } from "../generated/templates/BankExtension/BankExtension";
 import { Member, Molochv3, Token, TokenBalance } from "../generated/schema";
-import { GUILD, LOCKED_LOOT, LOOT, SHARES, TOTAL } from "./constants";
+import { GUILD, LOCKED_LOOT, LOOT, SHARES, TOTAL } from "./helpers/constants";
 import { BigInt, Bytes, log } from "@graphprotocol/graph-ts";
 
 // helpers
@@ -127,18 +127,15 @@ export function handleNewBalance(event: NewBalance): void {
       ]
     );
 
-    //.concat("-member-").concat(tokenId);
     let member = Member.load(memberId);
     let token = Token.load(tokenId);
     let tokenBalance = TokenBalance.load(tokenBalanceId);
 
-    if (member == null) {
-      member = new Member(memberId);
-      member.createdAt = event.block.timestamp.toString();
-      member.delegateKey = event.params.member;
-      member.jailed = false;
-      member.memberAddress = event.params.member;
-    }
+    // if (member == null) {
+    //   member = new Member(memberId);
+    //   member.createdAt = event.block.timestamp.toString();
+    //   member.memberAddress = event.params.member;
+    // }
 
     if (token == null) {
       token = new Token(tokenId);
