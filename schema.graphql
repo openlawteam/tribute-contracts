@@ -42,6 +42,7 @@ type Proposal @entity {
   processedAt: String
   processedBy: Bytes
   member: Member
+  # adapterName: String
 
   # onboarding; proposal details
   tokenToMint: Bytes

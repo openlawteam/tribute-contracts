@@ -72,6 +72,9 @@ function onboarding(
     proposal.applicant = data.value5;
     proposal.proposer = data.value6;
 
+    // proposal.adapterName = "onboarding";
+    proposal.adapterAddress = adapterAdddress;
+
     proposal.save();
   }
 }
@@ -102,6 +105,9 @@ function distribute(
     proposal.status = data.value3.toString();
     proposal.currentIndex = data.value4;
     proposal.blockNumber = data.value5;
+
+    // proposal.adapterName = "distribute";
+    proposal.adapterAddress = adapterAdddress;
 
     proposal.save();
   }
@@ -134,6 +140,9 @@ function tribute(
     proposal.token = data.value5;
     proposal.tributeAmount = data.value6;
 
+    // proposal.adapterName = "tribute";
+    proposal.adapterAddress = adapterAdddress;
+
     proposal.save();
   }
 }
@@ -160,6 +169,9 @@ function managing(
   if (proposal) {
     proposal.adapterId = data.value0;
     proposal.adapterAddress = data.value1;
+
+    // proposal.adapterName = "managing";
+    proposal.adapterAddress = adapterAdddress;
 
     // @todo
     // let keys: Bytes[] = [];
@@ -207,6 +219,9 @@ function financing(
     proposal.token = data.value2;
     proposal.details = data.value3;
 
+    // proposal.adapterName = "financing";
+    proposal.adapterAddress = adapterAdddress;
+
     proposal.save();
   }
 }
@@ -239,6 +254,9 @@ function guildkick(
     proposal.currentIndex = data.value3;
     proposal.blockNumber = data.value4;
     proposal.ongoingKicks = ongoingKicks;
+
+    // proposal.adapterName = "guildkick";
+    proposal.adapterAddress = adapterAdddress;
 
     proposal.save();
   }

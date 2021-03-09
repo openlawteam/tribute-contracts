@@ -35,11 +35,34 @@ export function handleSubmittedProposal(event: SubmittedProposal): void {
 
   let proposal = Proposal.load(daoProposalId);
 
+  log.info(
+    "**************** handleSubmittedProposal event fired. daoAddress: {}, proposalId: {}",
+    [event.address.toHexString(), event.params.proposalId.toHexString()]
+  );
+
+  let daoRegistry = DaoRegistry.bind(event.address);
+  let data = daoRegistry.proposals(event.params.proposalId);
+
+  log.info("INFO proposals , {}, {}", [
+    data.value0.toHexString(), // `adapterAddress`
+    data.value1.toString(), // `flags`
+  ]);
+
+  let adapterAdddress = data.value0;
+
+  let inverseAdapter = daoRegistry.inverseAdapters(adapterAdddress);
+
+  log.info("INFO inverseAdapter , {}, {}", [
+    inverseAdapter.value0.toHexString(), // adapterId
+    inverseAdapter.value1.toString(), // acl
+  ]);
+
   if (proposal == null) {
     proposal = new Proposal(daoProposalId);
 
-    proposal.submittedBy = submittedBy;
+    proposal.adapterId = inverseAdapter.value0;
     proposal.flags = event.params.flags;
+    proposal.submittedBy = submittedBy;
     proposal.proposalId = proposalId;
     proposal.sponsored = false;
     proposal.processed = false;
@@ -48,40 +71,12 @@ export function handleSubmittedProposal(event: SubmittedProposal): void {
     proposal.save();
   }
 
-  log.info(
-    "**************** handleSubmittedProposal event fired. daoAddress: {}, proposalId: {}",
-    [event.address.toHexString(), event.params.proposalId.toHexString()]
+  getProposalDetails(
+    inverseAdapter.value0,
+    adapterAdddress,
+    daoAddress,
+    proposalId
   );
-
-  let daoRegistry = DaoRegistry.bind(event.address);
-  let callResult = daoRegistry.try_proposals(event.params.proposalId);
-
-  if (callResult.reverted) {
-    log.info("daoRegistry try_proposals reverted", []);
-  } else {
-    let data = callResult.value;
-
-    log.info("daoRegistry try_proposals data, {}, {}", [
-      data.value0.toHexString(), // `adapterAddress`
-      data.value1.toString(), // `flags`
-    ]);
-
-    let adapterAdddress = data.value0;
-
-    let inverseAdapter = daoRegistry.inverseAdapters(adapterAdddress);
-
-    log.info("INFO inverseAdapter , {}, {}", [
-      inverseAdapter.value0.toHexString(), // adapterId
-      inverseAdapter.value1.toString(), // acl
-    ]);
-
-    getProposalDetails(
-      inverseAdapter.value0,
-      adapterAdddress,
-      daoAddress,
-      proposalId
-    );
-  }
 }
 
 export function handleSponsoredProposal(event: SponsoredProposal): void {

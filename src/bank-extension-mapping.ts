@@ -39,41 +39,41 @@ function loadOrCreateTokenBalance(
     return tokenBalance;
   }
 }
-function addToBalance(
-  // molochId: string,
-  member: Bytes,
-  token: string,
-  amount: BigInt
-): string {
-  let tokenBalanceId = token.concat("-member-").concat(member.toHex());
-  log.info("********** add (or create) to balance " + member.toHex(), []);
-  let balance: TokenBalance | null = loadOrCreateTokenBalance(member, token);
-  balance.tokenBalance = balance.tokenBalance.plus(amount);
-  balance.save();
-  return tokenBalanceId;
-}
-function subtractFromBalance(
-  member: Bytes,
-  token: string,
-  amount: BigInt
-): string {
-  let tokenBalanceId = token.concat("-member-").concat(member.toHex());
-  log.info("********** substract from balance " + member.toHex(), []);
-  let balanceUnsafe: TokenBalance | null = TokenBalance.load(tokenBalanceId);
-  if (balanceUnsafe == null) {
-    log.info(
-      "********** error while substracting balance from missing balance " +
-        member.toHex(),
-      []
-    );
-  }
-  let balance =
-    balanceUnsafe == null ? new TokenBalance(tokenBalanceId) : balanceUnsafe;
-  balance.tokenBalance = balance.tokenBalance.minus(amount);
+// function addToBalance(
+//   // molochId: string,
+//   member: Bytes,
+//   token: string,
+//   amount: BigInt
+// ): string {
+//   let tokenBalanceId = token.concat("-member-").concat(member.toHex());
+//   log.info("********** add (or create) to balance " + member.toHex(), []);
+//   let balance: TokenBalance | null = loadOrCreateTokenBalance(member, token);
+//   balance.tokenBalance = balance.tokenBalance.plus(amount);
+//   balance.save();
+//   return tokenBalanceId;
+// }
+// function subtractFromBalance(
+//   member: Bytes,
+//   token: string,
+//   amount: BigInt
+// ): string {
+//   let tokenBalanceId = token.concat("-member-").concat(member.toHex());
+//   log.info("********** substract from balance " + member.toHex(), []);
+//   let balanceUnsafe: TokenBalance | null = TokenBalance.load(tokenBalanceId);
+//   if (balanceUnsafe == null) {
+//     log.info(
+//       "********** error while substracting balance from missing balance " +
+//         member.toHex(),
+//       []
+//     );
+//   }
+//   let balance =
+//     balanceUnsafe == null ? new TokenBalance(tokenBalanceId) : balanceUnsafe;
+//   balance.tokenBalance = balance.tokenBalance.minus(amount);
 
-  balance.save();
-  return tokenBalanceId;
-}
+//   balance.save();
+//   return tokenBalanceId;
+// }
 
 export function createMemberTokenBalance(
   // molochId: string,
@@ -89,24 +89,14 @@ export function createMemberTokenBalance(
   memberTokenBalance.token = token;
   memberTokenBalance.tokenBalance = amount;
   memberTokenBalance.member = memberId;
-  // memberTokenBalance.guildBank = false;
-  // memberTokenBalance.ecrowBank = false;
-  // memberTokenBalance.memberBank = true;
 
   memberTokenBalance.save();
   return memberTokenBalanceId;
 }
 
-function internalTransfer(
-  // molochId: string,
-  from: Bytes,
-  to: Bytes,
-  token: string,
-  amount: BigInt
-): void {
-  subtractFromBalance(from, token, amount);
-  addToBalance(to, token, amount);
-}
+// event NewBalance(address member, address tokenAddr, uint256 amount);
+
+// event Withdraw(address account, address tokenAddr, uint256 amount);
 
 export function handleNewBalance(event: NewBalance): void {
   let memberId = event.params.member.toHex();
@@ -131,11 +121,11 @@ export function handleNewBalance(event: NewBalance): void {
     let token = Token.load(tokenId);
     let tokenBalance = TokenBalance.load(tokenBalanceId);
 
-    // if (member == null) {
-    //   member = new Member(memberId);
-    //   member.createdAt = event.block.timestamp.toString();
-    //   member.memberAddress = event.params.member;
-    // }
+    if (member == null) {
+      member = new Member(memberId);
+      member.createdAt = event.block.timestamp.toString();
+      member.memberAddress = event.params.member;
+    }
 
     if (token == null) {
       token = new Token(tokenId);
@@ -221,6 +211,8 @@ export function handleWithdraw(event: Withdraw): void {
   // daoAddress
   //   .concat("-token-")
   //   .concat(event.params.tokenAddr.toHex());
+
+  // subtractFromBalance(member, tokenAddr, amount)
 
   log.info(
     "**************** handleWithdraw event fired. account {}, tokenAddr {}, amount {}",
