@@ -72,7 +72,6 @@ function onboarding(
     proposal.applicant = data.value5;
     proposal.proposer = data.value6;
 
-    // proposal.adapterName = "onboarding";
     proposal.adapterAddress = adapterAdddress;
 
     proposal.save();
@@ -106,7 +105,6 @@ function distribute(
     proposal.currentIndex = data.value4;
     proposal.blockNumber = data.value5;
 
-    // proposal.adapterName = "distribute";
     proposal.adapterAddress = adapterAdddress;
 
     proposal.save();
@@ -140,7 +138,6 @@ function tribute(
     proposal.token = data.value5;
     proposal.tributeAmount = data.value6;
 
-    // proposal.adapterName = "tribute";
     proposal.adapterAddress = adapterAdddress;
 
     proposal.save();
@@ -170,7 +167,6 @@ function managing(
     proposal.adapterId = data.value0;
     proposal.adapterAddress = data.value1;
 
-    // proposal.adapterName = "managing";
     proposal.adapterAddress = adapterAdddress;
 
     // @todo
@@ -219,7 +215,6 @@ function financing(
     proposal.token = data.value2;
     proposal.details = data.value3;
 
-    // proposal.adapterName = "financing";
     proposal.adapterAddress = adapterAdddress;
 
     proposal.save();
@@ -255,7 +250,6 @@ function guildkick(
     proposal.blockNumber = data.value4;
     proposal.ongoingKicks = ongoingKicks;
 
-    // proposal.adapterName = "guildkick";
     proposal.adapterAddress = adapterAdddress;
 
     proposal.save();

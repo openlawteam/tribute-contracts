@@ -28,6 +28,7 @@ type Member @entity {
   proposals: [Proposal!] @derivedFrom(field: "member")
   isDelegated: Boolean
   isJailed: Boolean
+  didFullyRagequit: Boolean
 }
 
 type Proposal @entity {
@@ -42,7 +43,6 @@ type Proposal @entity {
   processedAt: String
   processedBy: Bytes
   member: Member
-  # adapterName: String
 
   # onboarding; proposal details
   tokenToMint: Bytes
@@ -53,17 +53,17 @@ type Proposal @entity {
   proposer: Bytes
 
   # distribute; proposal details
-  "The share holder address that will receive the funds. If 0x0, the funds will be distributed to all members of the DAO."
+  "The share holder address that will receive the funds. If 0x0, the funds will be distributed to all members of the DAO"
   shareHolderAddr: Bytes
   "The distribution status or the kick status"
   status: String
-  "Current iteration index to control the cached for-loop."
+  "Current iteration index to control the cached for-loop"
   currentIndex: BigInt
-  "The block number in which the proposal has been created."
+  "The block number in which the proposal has been created"
   blockNumber: BigInt
 
   # tribute; proposal details
-  "The amount requested of DAO internal tokens."
+  "The amount requested of DAO internal tokens"
   requestAmount: BigInt
   "The amount of tribute tokens."
   tributeAmount: BigInt
@@ -94,20 +94,18 @@ type Bank @entity {
   balance: BigInt
   createdAt: String
   totalShares: BigInt
+  molochv3: Molochv3
 }
 
 type Token @entity {
   id: ID!
   tokenAddress: Bytes!
-  symbol: String
-  logo: String
-  decimals: String
-  whitelisted: Boolean
+  balance: BigInt
 }
 
 type TokenBalance @entity {
   id: ID!
-  token: Token!
+  token: Token! #[Token!]
   tokenBalance: BigInt!
   member: Member
 }

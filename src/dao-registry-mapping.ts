@@ -20,6 +20,7 @@ import {
   Proposal,
   Member,
   Molochv3,
+  Bank,
 } from "../generated/schema";
 import { BANK_EXTENSION_ID } from "./helpers/constants";
 import { getProposalDetails } from "./helpers/proposal-details";
@@ -237,17 +238,8 @@ export function handleExtensionAdded(event: ExtensionAdded): void {
 
   let extension = Extension.load(daoExtensionId);
 
-  // https://thegraph.com/docs/define-a-subgraph#code-generation
-  // 1. `BankFactory` ... `identifyAddress` returns `BankExtension`
-  // 2. check the `BankExtension` addr against the `extensionAddress`
-  // 3. if it matches then create a `bank` entity with the `daoAddress`
-  // let bankFactory =   BankFactory.bind()
-
-  // if extension is `bank` the assign to its dao
-  if (
-    // "0xea0ca03c7adbe41dc655fec28a9209dc8e6e042f3d991a67765ba285b9cf73a0" ==
-    BANK_EXTENSION_ID.toString() == event.params.extensionId.toHexString()
-  ) {
+  // if extension is `bank` then assign to its dao
+  if (BANK_EXTENSION_ID.toString() == event.params.extensionId.toHexString()) {
     log.info("====== bankExtensionId, {}, extensionId {}", [
       BANK_EXTENSION_ID.toString(),
       extensionId.toString(),
@@ -258,10 +250,11 @@ export function handleExtensionAdded(event: ExtensionAdded): void {
     ]);
 
     let dao = Molochv3.load(event.address.toHexString());
-    // let dao = loadOrCreateDao(event.params._address.toHexString());
+    // let daoBankId = event.address
+    //   .toHex()
+    //   .concat("-bank-")
+    //   .concat(extensionId.toHex());
 
-    // create 1-to-1 relationship between the bank and its dao
-    // bank.Molochv3 = event.params.bankAddress.toHexString();
     if (dao != null) {
       log.info("is bank extension", []);
       // create 1-to-1 relationship between the dao and its bank

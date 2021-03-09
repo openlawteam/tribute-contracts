@@ -322,6 +322,15 @@ export class Member extends Entity {
   set isJailed(value: boolean) {
     this.set("isJailed", Value.fromBoolean(value));
   }
+
+  get didFullyRagequit(): boolean {
+    let value = this.get("didFullyRagequit");
+    return value.toBoolean();
+  }
+
+  set didFullyRagequit(value: boolean) {
+    this.set("didFullyRagequit", Value.fromBoolean(value));
+  }
 }
 
 export class Proposal extends Entity {
@@ -947,6 +956,23 @@ export class Bank extends Entity {
       this.set("totalShares", Value.fromBigInt(value as BigInt));
     }
   }
+
+  get molochv3(): string | null {
+    let value = this.get("molochv3");
+    if (value === null || value.kind == ValueKind.NULL) {
+      return null;
+    } else {
+      return value.toString();
+    }
+  }
+
+  set molochv3(value: string | null) {
+    if (value === null) {
+      this.unset("molochv3");
+    } else {
+      this.set("molochv3", Value.fromString(value as string));
+    }
+  }
 }
 
 export class Token extends Entity {
@@ -988,64 +1014,21 @@ export class Token extends Entity {
     this.set("tokenAddress", Value.fromBytes(value));
   }
 
-  get symbol(): string | null {
-    let value = this.get("symbol");
+  get balance(): BigInt | null {
+    let value = this.get("balance");
     if (value === null || value.kind == ValueKind.NULL) {
       return null;
     } else {
-      return value.toString();
+      return value.toBigInt();
     }
   }
 
-  set symbol(value: string | null) {
+  set balance(value: BigInt | null) {
     if (value === null) {
-      this.unset("symbol");
+      this.unset("balance");
     } else {
-      this.set("symbol", Value.fromString(value as string));
+      this.set("balance", Value.fromBigInt(value as BigInt));
     }
-  }
-
-  get logo(): string | null {
-    let value = this.get("logo");
-    if (value === null || value.kind == ValueKind.NULL) {
-      return null;
-    } else {
-      return value.toString();
-    }
-  }
-
-  set logo(value: string | null) {
-    if (value === null) {
-      this.unset("logo");
-    } else {
-      this.set("logo", Value.fromString(value as string));
-    }
-  }
-
-  get decimals(): string | null {
-    let value = this.get("decimals");
-    if (value === null || value.kind == ValueKind.NULL) {
-      return null;
-    } else {
-      return value.toString();
-    }
-  }
-
-  set decimals(value: string | null) {
-    if (value === null) {
-      this.unset("decimals");
-    } else {
-      this.set("decimals", Value.fromString(value as string));
-    }
-  }
-
-  get whitelisted(): boolean {
-    let value = this.get("whitelisted");
-    return value.toBoolean();
-  }
-
-  set whitelisted(value: boolean) {
-    this.set("whitelisted", Value.fromBoolean(value));
   }
 }
 

@@ -1,7 +1,7 @@
 import { BankExtension } from "../generated/templates";
 import { BankCreated } from "../generated/BankFactory/BankFactory";
 import { Bank } from "../generated/schema";
-import { BigInt, DataSourceContext, log } from "@graphprotocol/graph-ts";
+import { BigInt, log } from "@graphprotocol/graph-ts";
 
 // helper
 function loadOrCreateBank(address: string): Bank {
@@ -22,12 +22,10 @@ function loadOrCreateBank(address: string): Bank {
  *  BankExtension.create(event.params.bankAddress);
  */
 export function handleBankCreated(event: BankCreated): void {
-  // let context = new DataSourceContext();
-  // context.setBytes("bankAddress", event.params.bankAddress);
-
-  log.info("**************** handleBankCreated event fired. bankAddress: {}", [
-    event.params.bankAddress.toHexString(),
-  ]);
+  log.info(
+    "**************** handleBankCreated event fired. bankAddress: {}, {}",
+    [event.params.bankAddress.toHexString(), event.address.toHexString()]
+  );
   // let daoAddress = event.address;
   let bankAddress = event.params.bankAddress;
 
@@ -38,7 +36,7 @@ export function handleBankCreated(event: BankCreated): void {
   bank.balance = BigInt.fromI32(0);
 
   // create 1-to-1 relationship between the bank and its dao
-  // bank.molochv3 = event.params.bankAddress.toHexString();
+  bank.molochv3 = event.params.bankAddress.toHexString();
 
   BankExtension.create(event.params.bankAddress);
 
