@@ -31,7 +31,7 @@ const {
   ETH_TOKEN,
 } = require("../../../utils/DaoFactory.js");
 
-contract("Bank", async (accounts) => {
+contract("MolochV3 - Bank Extension", async (accounts) => {
   it("should be possible to create a dao with a bank extension pre-configured", async () => {
     const daoOwner = accounts[0];
     let dao = await createDao(daoOwner);

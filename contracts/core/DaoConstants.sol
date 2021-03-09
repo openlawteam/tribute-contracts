@@ -50,6 +50,8 @@ abstract contract DaoConstants {
     address internal constant LOCKED_LOOT = address(0xBAAAAAAD);
     address internal constant ETH_TOKEN = address(0x0);
 
+    uint8 internal constant MAX_TOKENS_GUILD_BANK = 200;
+
     //helper
     function getFlag(uint256 flags, uint256 flag) public pure returns (bool) {
         return (flags >> uint8(flag)) % 2 == 1;

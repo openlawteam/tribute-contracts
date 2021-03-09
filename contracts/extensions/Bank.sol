@@ -7,7 +7,6 @@ import "../core/DaoRegistry.sol";
 import "./IExtension.sol";
 import "../guards/AdapterGuard.sol";
 import "../utils/IERC20.sol";
-
 import "../helpers/AddressLib.sol";
 import "../helpers/SafeERC20.sol";
 
@@ -38,6 +37,8 @@ SOFTWARE.
 contract BankExtension is DaoConstants, AdapterGuard, IExtension {
     using Address for address payable;
     using SafeERC20 for IERC20;
+
+    uint8 public maxTokensAllowed;
 
     bool public initialized = false; // internally tracks deployment under eip-1167 proxy pattern
     DaoRegistry public dao;
@@ -90,7 +91,7 @@ contract BankExtension is DaoConstants, AdapterGuard, IExtension {
                     address(extension),
                     uint8(flag)
                 ),
-            "bank::hasAccess"
+            "bank::accessDenied"
         );
         _;
     }
@@ -104,8 +105,11 @@ contract BankExtension is DaoConstants, AdapterGuard, IExtension {
     function initialize(DaoRegistry _dao, address creator) external override {
         require(!initialized, "bank already initialized");
         require(_dao.isActiveMember(creator), "bank::not active member");
+        // require(_maxTokens <= MAX_TOKENS_GUILD_BANK, "maximum number of tokens allowed in the bank is 200");
+        // maxTokensAllowed = _maxTokens;
         availableInternalTokens[SHARES] = true;
         internalTokens.push(SHARES);
+
 
         _createNewAmountCheckpoint(creator, SHARES, 1);
         _createNewAmountCheckpoint(TOTAL, SHARES, 1);
@@ -121,7 +125,7 @@ contract BankExtension is DaoConstants, AdapterGuard, IExtension {
     ) external hasExtensionAccess(this, AclFlag.WITHDRAW) {
         require(
             balanceOf(member, tokenAddr) >= amount,
-            "dao::withdraw::not enough funds"
+            "bank::withdraw::not enough funds"
         );
         subtractFromBalance(member, tokenAddr, amount);
         if (tokenAddr == ETH_TOKEN) {
@@ -165,6 +169,7 @@ contract BankExtension is DaoConstants, AdapterGuard, IExtension {
     {
         require(isNotReservedAddress(token), "reservedToken");
         require(!availableInternalTokens[token], "internalToken");
+        require(tokens.length <= maxTokensAllowed, "exceeds the maximum tokens allowed");
 
         if (!availableTokens[token]) {
             availableTokens[token] = true;
@@ -183,6 +188,8 @@ contract BankExtension is DaoConstants, AdapterGuard, IExtension {
     {
         require(isNotReservedAddress(token), "reservedToken");
         require(!availableTokens[token], "availableToken");
+        require(internalTokens.length <= maxTokensAllowed, "exceeds the maximum internal tokens allowed");
+
         if (!availableInternalTokens[token]) {
             availableInternalTokens[token] = true;
             internalTokens.push(token);
@@ -190,7 +197,7 @@ contract BankExtension is DaoConstants, AdapterGuard, IExtension {
     }
 
     function updateToken(address tokenAddr) external {
-        require(isTokenAllowed(tokenAddr), "non allowed token");
+        require(isTokenAllowed(tokenAddr), "token not allowed");
         uint256 totalBalance = balanceOf(TOTAL, tokenAddr);
 
         uint256 realBalance;
