@@ -70,8 +70,11 @@ contract OnboardingContract is
         uint256 totalShares;
     }
 
+    // proposals per dao
     mapping(address => mapping(bytes32 => ProposalDetails)) public proposals;
-    mapping(address => mapping(address => uint256)) public shares;
+    // minted shares per dao, per token, per applicant
+    mapping(address => mapping(address => mapping(address => uint256)))
+        public shares;
 
     function configKey(address tokenAddrToMint, bytes32 key)
         internal
@@ -108,7 +111,6 @@ contract OnboardingContract is
         );
 
         BankExtension bank = BankExtension(dao.getExtensionAddress(BANK));
-
         bank.registerPotentialNewInternalToken(tokenAddrToMint);
         bank.registerPotentialNewToken(tokenAddr);
     }
@@ -140,7 +142,7 @@ contract OnboardingContract is
             details.numberOfChunks *
             details.sharesPerChunk;
         details.totalShares =
-            shares[applicant][tokenToMint] +
+            _getShares(dao, token, applicant) +
             details.sharesRequested;
 
         require(
@@ -309,11 +311,13 @@ contract OnboardingContract is
         dao.processProposal(proposalId);
 
         if (voteResult == IVoting.VotingState.PASS) {
+            address tokenToMint = proposal.tokenToMint;
+            address applicant = proposal.applicant;
             BankExtension bank = BankExtension(dao.getExtensionAddress(BANK));
             _mintTokensToMember(
                 dao,
-                proposal.tokenToMint,
-                proposal.applicant,
+                tokenToMint,
+                applicant,
                 proposal.sharesRequested,
                 proposal.proposer,
                 proposal.token,
@@ -335,10 +339,10 @@ contract OnboardingContract is
             }
 
             uint256 totalShares =
-                shares[proposal.tokenToMint][proposal.applicant] +
+                _getShares(dao, tokenToMint, applicant) +
                     proposal.sharesRequested;
 
-            shares[proposal.tokenToMint][proposal.applicant] = totalShares;
+            shares[address(dao)][tokenToMint][applicant] = totalShares;
         } else if (
             voteResult == IVoting.VotingState.NOT_PASS ||
             voteResult == IVoting.VotingState.TIE
@@ -391,5 +395,13 @@ contract OnboardingContract is
         } catch {
             _refundTribute(proposalToken, proposer, proposalAmount);
         }
+    }
+
+    function _getShares(
+        DaoRegistry dao,
+        address token,
+        address applicant
+    ) internal view returns (uint256) {
+        return shares[address(dao)][token][applicant];
     }
 }
