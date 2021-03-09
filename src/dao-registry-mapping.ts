@@ -239,29 +239,31 @@ export function handleExtensionAdded(event: ExtensionAdded): void {
   let extension = Extension.load(daoExtensionId);
 
   // if extension is `bank` then assign to its dao
-  if (BANK_EXTENSION_ID.toString() == event.params.extensionId.toHexString()) {
-    log.info("====== bankExtensionId, {}, extensionId {}", [
-      BANK_EXTENSION_ID.toString(),
-      extensionId.toString(),
-    ]);
+  // if (BANK_EXTENSION_ID.toString() == event.params.extensionId.toHexString()) {
+  //   log.info("====== bankExtensionId, {}, extensionId {}", [
+  //     BANK_EXTENSION_ID.toString(),
+  //     extensionId.toString(),
+  //   ]);
 
-    log.info("====== add dao bankExtensionId, {}", [
-      BANK_EXTENSION_ID.toString(),
-    ]);
+  //   log.info("====== add dao bankExtensionId, {}", [
+  //     BANK_EXTENSION_ID.toString(),
+  //   ]);
 
-    let dao = Molochv3.load(event.address.toHexString());
-    // let daoBankId = event.address
-    //   .toHex()
-    //   .concat("-bank-")
-    //   .concat(extensionId.toHex());
+  // @todo
+  // let dao = Molochv3.load(event.address.toHexString());
+  // let daoBankId = event.address
+  //   .toHex()
+  //   .concat("-bank-")
+  //   .concat(extensionId.toHex());
 
-    if (dao != null) {
-      log.info("is bank extension", []);
-      // create 1-to-1 relationship between the dao and its bank
-      dao.bank = event.address.toHexString();
-      dao.save();
-    }
-  }
+  // @todo
+  // if (dao != null) {
+  //   log.info("is bank extension", []);
+  //   // create 1-to-1 relationship between the dao and its bank
+  //   dao.bank = event.address.toHexString();
+  //   dao.save();
+  // }
+  // }
 
   if (extension == null) {
     extension = new Extension(daoExtensionId);

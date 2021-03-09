@@ -127,23 +127,6 @@ export class Molochv3 extends Entity {
     }
   }
 
-  get bank(): string | null {
-    let value = this.get("bank");
-    if (value === null || value.kind == ValueKind.NULL) {
-      return null;
-    } else {
-      return value.toString();
-    }
-  }
-
-  set bank(value: string | null) {
-    if (value === null) {
-      this.unset("bank");
-    } else {
-      this.set("bank", Value.fromString(value as string));
-    }
-  }
-
   get adapters(): Array<string> {
     let value = this.get("adapters");
     return value.toStringArray();

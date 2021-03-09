@@ -8,8 +8,8 @@ type Molochv3 @entity {
   creator: Bytes
   totalShares: String
   createdAt: String
-  "The bank of the DAO"
-  bank: Bank
+  # "The bank of the DAO"
+  # bank: Bank
   "List of registered adapters"
   adapters: [Adapter!]! @derivedFrom(field: "molochv3")
   "List of registered extensions"
