@@ -32,6 +32,7 @@ const {
   fromUtf8,
   createDao,
   OnboardingContract,
+  ETH_TOKEN,
 } = require("../../utils/DaoFactory.js");
 
 contract("Registry", async (accounts) => {
@@ -40,7 +41,7 @@ contract("Registry", async (accounts) => {
     let moduleAddress = "0x627306090abaB3A6e1400e9345bC60c78a8BEf57";
     let registry = await DaoRegistry.new();
     try {
-      await registry.addAdapter(moduleId, moduleAddress, 0);
+      await registry.replaceAdapter(moduleId, moduleAddress, 0, [], []);
     } catch (error) {
       assert.equal(error.reason, "adapterId must not be empty");
     }
@@ -50,7 +51,7 @@ contract("Registry", async (accounts) => {
     let moduleId = fromUtf8("1");
     let registry = await DaoRegistry.new();
     try {
-      await registry.removeAdapter(moduleId);
+      await registry.replaceAdapter(moduleId, ETH_TOKEN, 0, [], []);
     } catch (error) {
       assert.equal(error.reason, "adapterId not registered");
     }
@@ -61,7 +62,7 @@ contract("Registry", async (accounts) => {
     let moduleAddress = "";
     let registry = await DaoRegistry.new();
     try {
-      await registry.addAdapter(moduleId, moduleAddress, 0);
+      await registry.replaceAdapter(moduleId, moduleAddress, 0, [], []);
     } catch (error) {
       assert.equal(error.reason.indexOf("invalid address"), 0);
     }
@@ -72,7 +73,7 @@ contract("Registry", async (accounts) => {
     let moduleAddress = "0x0000000000000000000000000000000000000000";
     let registry = await DaoRegistry.new();
     try {
-      await registry.addAdapter(moduleId, moduleAddress, 0);
+      await registry.replaceAdapter(moduleId, moduleAddress, 0, [], []);
     } catch (error) {
       assert.equal(error.reason, "adapterAddress must not be empty");
     }
@@ -83,14 +84,16 @@ contract("Registry", async (accounts) => {
     let moduleAddress = "0x627306090abaB3A6e1400e9345bC60c78a8BEf57";
     let registry = await DaoRegistry.new();
     //Add a module with id 1
-    await registry.addAdapter(moduleId, moduleAddress, 0);
+    await registry.replaceAdapter(moduleId, moduleAddress, 0, [], []);
 
     try {
       //Try to add another module using the same id 1
-      await registry.addAdapter(
+      await registry.replaceAdapter(
         moduleId,
         "0xd7bCe30D77DE56E3D21AEfe7ad144b3134438F5B",
-        0
+        0,
+        [],
+        []
       );
     } catch (error) {
       assert.equal(error.reason, "adapterId already in use");
@@ -101,7 +104,7 @@ contract("Registry", async (accounts) => {
     let moduleId = fromUtf8("1");
     let moduleAddress = "0x627306090abaB3A6e1400e9345bC60c78a8BEf57";
     let registry = await DaoRegistry.new();
-    await registry.addAdapter(moduleId, moduleAddress, 0);
+    await registry.replaceAdapter(moduleId, moduleAddress, 0, [], []);
     let address = await registry.getAdapterAddress(moduleId);
     assert.equal(address, moduleAddress);
   });
@@ -110,10 +113,10 @@ contract("Registry", async (accounts) => {
     let moduleId = fromUtf8("2");
     let moduleAddress = "0x627306090abaB3A6e1400e9345bC60c78a8BEf57";
     let registry = await DaoRegistry.new();
-    await registry.addAdapter(moduleId, moduleAddress, 0);
+    await registry.replaceAdapter(moduleId, moduleAddress, 0, [], []);
     let address = await registry.getAdapterAddress(moduleId);
     assert.equal(address, moduleAddress);
-    await registry.removeAdapter(moduleId);
+    await registry.replaceAdapter(moduleId, ETH_TOKEN, 0, [], []);
     try {
       await registry.getAdapterAddress(moduleId);
     } catch (error) {
@@ -129,7 +132,7 @@ contract("Registry", async (accounts) => {
     let registry = await DaoRegistry.new();
 
     try {
-      await registry.removeAdapter(moduleId);
+      await registry.replaceAdapter(moduleId, ETH_TOKEN, 0, [], []);
     } catch (error) {
       assert.equal(error.reason, "adapterId not registered");
     }
@@ -140,7 +143,7 @@ contract("Registry", async (accounts) => {
     let registry = await DaoRegistry.new();
 
     try {
-      await registry.removeAdapter(moduleId);
+      await registry.replaceAdapter(moduleId, ETH_TOKEN, 0, [], []);
     } catch (error) {
       assert.equal(error.reason, "adapterId must not be empty");
     }

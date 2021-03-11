@@ -43,7 +43,9 @@ const {
   LOOT,
   ManagingContract,
   BankExtension,
+  expectRevert,
 } = require("../../utils/DaoFactory.js");
+
 let proposalCounter = 1;
 contract("MolochV3 - GuildKick Adapter", async (accounts) => {
   const submitNewMemberProposal = async (
@@ -227,15 +229,11 @@ contract("MolochV3 - GuildKick Adapter", async (accounts) => {
     );
 
     // Non member attemps to submit a guild kick proposal
-    try {
-      let memberToKick = member;
-      await guildKickProposal(dao, guildkickContract, memberToKick, nonMember);
-      assert.fail(
-        "should not be possible a non-member to submit a guild kick proposal"
-      );
-    } catch (e) {
-      assert.equal(e.reason, "onlyMember");
-    }
+    let memberToKick = member;
+    await expectRevert(
+      guildKickProposal(dao, guildkickContract, memberToKick, nonMember),
+      "onlyMember"
+    );
   });
 
   it("should not be possible for a non-active member to submit a guild kick proposal", async () => {
@@ -282,17 +280,12 @@ contract("MolochV3 - GuildKick Adapter", async (accounts) => {
       gasPrice: toBN("0"),
     });
 
-    try {
-      // The kicked member which is now inactive attemps to submit a kick proposal
-      // to kick the member that started the previous guild kick
-      await guildKickProposal(dao, guildkickContract, member, memberToKick);
-
-      assert.fail(
-        "a member that is not active (kicked out) should not be able to submit a guild kick proposal"
-      );
-    } catch (e) {
-      assert.equal(e.reason, "onlyMember");
-    }
+    // The kicked member which is now inactive attemps to submit a kick proposal
+    // to kick the member that started the previous guild kick
+    await expectRevert(
+      guildKickProposal(dao, guildkickContract, member, memberToKick),
+      "onlyMember"
+    );
   });
 
   it("should be possible for a non-member to process a kick proposal", async () => {
@@ -386,18 +379,14 @@ contract("MolochV3 - GuildKick Adapter", async (accounts) => {
       gasPrice: toBN("0"),
     });
 
-    try {
-      // The member attempts to process the same proposal again
-      await guildkickContract.processProposal(dao.address, kickProposalId, {
+    // The member attempts to process the same proposal again
+    await expectRevert(
+      guildkickContract.processProposal(dao.address, kickProposalId, {
         from: member,
         gasPrice: toBN("0"),
-      });
-      assert.fail(
-        "should not be possible to process a proposal that was already processed"
-      );
-    } catch (e) {
-      assert.equal(e.reason, "flag already set");
-    }
+      }),
+      "flag already set"
+    );
   });
 
   it("should not be possible to process a kick proposal that does not exist", async () => {
@@ -439,23 +428,15 @@ contract("MolochV3 - GuildKick Adapter", async (accounts) => {
     });
     await advanceTime(10000);
 
-    try {
-      // The member attempts to process the same proposal again
-      let invalidKickProposalId = "0x89";
-      await guildkickContract.processProposal(
-        dao.address,
-        invalidKickProposalId,
-        {
-          from: member,
-          gasPrice: toBN("0"),
-        }
-      );
-      assert.fail(
-        "should not be possible to process a proposal that does not exist"
-      );
-    } catch (e) {
-      assert.equal(e.reason, "proposal does not exist for this dao");
-    }
+    // The member attempts to process the same proposal again
+    let invalidKickProposalId = "0x89";
+    await expectRevert(
+      guildkickContract.processProposal(dao.address, invalidKickProposalId, {
+        from: member,
+        gasPrice: toBN("0"),
+      }),
+      "proposal does not exist for this dao"
+    );
   });
 
   it("should not be possible to process a kick proposal if the voting did not pass", async () => {
@@ -497,18 +478,14 @@ contract("MolochV3 - GuildKick Adapter", async (accounts) => {
     });
     await advanceTime(10000);
 
-    try {
-      // The member attemps to process the kick proposal that did not pass
-      await guildkickContract.processProposal(dao.address, kickProposalId, {
+    // The member attemps to process the kick proposal that did not pass
+    await expectRevert(
+      guildkickContract.processProposal(dao.address, kickProposalId, {
         from: member,
         gasPrice: toBN("0"),
-      });
-      assert.fail(
-        "should not be possible to process a guild kick proposal that did not pass"
-      );
-    } catch (e) {
-      assert.equal(e.reason, "proposal did not pass");
-    }
+      }),
+      "proposal did not pass"
+    );
   });
 
   it("should not be possible to process a kick proposal if the member to kick does not have any shares nor loot", async () => {
@@ -536,15 +513,11 @@ contract("MolochV3 - GuildKick Adapter", async (accounts) => {
       LOOT
     );
 
-    try {
-      // The member attemps to process the kick proposal, but the Advisor does not have any SHARES, only LOOT
-      await guildKickProposal(dao, guildkickContract, nonMember, member);
-      assert.fail(
-        "should not be possible to process a guild kick proposal if the member/advisor does not have any shares"
-      );
-    } catch (e) {
-      assert.equal(e.reason, "no shares or loot");
-    }
+    // The member attemps to process the kick proposal, but the Advisor does not have any SHARES, only LOOT
+    await expectRevert(
+      guildKickProposal(dao, guildkickContract, nonMember, member),
+      "no shares or loot"
+    );
   });
 
   it("should not be possible for a kicked member to sponsor an onboarding proposal", async () => {
@@ -609,21 +582,17 @@ contract("MolochV3 - GuildKick Adapter", async (accounts) => {
       SHARES
     );
 
-    try {
-      // kicked member attemps to sponsor a new member
-      await sponsorNewMember(
+    // kicked member attemps to sponsor a new member
+    await expectRevert(
+      sponsorNewMember(
         onboarding,
         dao,
         onboardProposalId,
         kickedMember,
         voting
-      );
-      assert.fail(
-        "should not be possible for a kicked member to sponsor a new member"
-      );
-    } catch (e) {
-      assert.equal(e.reason, "onlyMember");
-    }
+      ),
+      "onlyMember"
+    );
   });
 
   it("should not be possible for a kicked member to vote on in an onboarding proposal", async () => {
@@ -695,16 +664,14 @@ contract("MolochV3 - GuildKick Adapter", async (accounts) => {
       gasPrice: toBN("0"),
     });
 
-    try {
-      // kicked member attemps to vote
-      await voting.submitVote(dao.address, onboardProposalId, 1, {
+    // kicked member attemps to vote
+    await expectRevert(
+      voting.submitVote(dao.address, onboardProposalId, 1, {
         from: kickedMember,
         gasPrice: toBN("0"),
-      });
-      assert.fail("should not be possible for a kicked member to vote");
-    } catch (e) {
-      assert.equal(e.reason, "onlyMember");
-    }
+      }),
+      "onlyMember"
+    );
   });
 
   it("should not be possible for a kicked member to sponsor a financing proposal", async () => {
@@ -772,18 +739,14 @@ contract("MolochV3 - GuildKick Adapter", async (accounts) => {
       { gasPrice: toBN("0") }
     );
 
-    try {
-      // kicked member attemps to sponsor the financing proposal to get grant
-      await financing.sponsorProposal(dao.address, proposalId, [], {
+    // kicked member attemps to sponsor the financing proposal to get grant
+    await expectRevert(
+      financing.sponsorProposal(dao.address, proposalId, [], {
         from: kickedMember,
         gasPrice: toBN("0"),
-      });
-      assert.fail(
-        "should not be possible for a kicked member to sponsor a financing proposal"
-      );
-    } catch (e) {
-      assert.equal(e.reason, "onlyMember");
-    }
+      }),
+      "onlyMember"
+    );
   });
 
   it("should not be possible for a kicked member to sponsor a financing proposal", async () => {
@@ -842,9 +805,9 @@ contract("MolochV3 - GuildKick Adapter", async (accounts) => {
     let newAdapterId = sha3("onboarding");
     let newAdapterAddress = accounts[8];
 
-    try {
-      // kicked member attemps to submit a managing proposal
-      await managing.createAdapterChangeRequest(
+    // kicked member attemps to submit a managing proposal
+    await expectRevert(
+      managing.submitProposal(
         dao.address,
         "0x45",
         newAdapterId,
@@ -853,13 +816,9 @@ contract("MolochV3 - GuildKick Adapter", async (accounts) => {
         [],
         0,
         { from: kickedMember, gasPrice: toBN("0") }
-      );
-      assert.fail(
-        "should not be possible for a kicked member to submit a managing proposal"
-      );
-    } catch (e) {
-      assert.equal(e.reason, "onlyMember");
-    }
+      ),
+      "onlyMember"
+    );
   });
 
   it("should not be possible for a kicked member to sponsor a managing proposal", async () => {
@@ -917,7 +876,7 @@ contract("MolochV3 - GuildKick Adapter", async (accounts) => {
     //Submit a new Bank adapter proposal
     let newadapterId = sha3("onboarding");
     let newadapterAddress = accounts[3]; //TODO deploy some Banking test contract
-    await managing.createAdapterChangeRequest(
+    await managing.submitProposal(
       dao.address,
       proposalId,
       newadapterId,
@@ -928,18 +887,14 @@ contract("MolochV3 - GuildKick Adapter", async (accounts) => {
       { from: member, gasPrice: toBN("0") }
     );
 
-    try {
-      // kicked member attemps to sponsor a managing proposal
-      await managing.sponsorProposal(dao.address, proposalId, [], {
+    // kicked member attemps to sponsor a managing proposal
+    await expectRevert(
+      managing.sponsorProposal(dao.address, proposalId, [], {
         from: kickedMember,
         gasPrice: toBN("0"),
-      });
-      assert.fail(
-        "should not be possible for a kicked member to sponsor a managing proposal"
-      );
-    } catch (e) {
-      assert.equal(e.reason, "onlyMember");
-    }
+      }),
+      "onlyMember"
+    );
   });
 
   it("should be possible to process a ragekick to return the funds to the kicked member", async () => {
@@ -1079,14 +1034,12 @@ contract("MolochV3 - GuildKick Adapter", async (accounts) => {
       GuildKickContract
     );
 
-    try {
-      // Attempt to kick yourself
-      let memberToKick = member;
-      await guildKickProposal(dao, guildkickContract, memberToKick, member);
-      assert.fail("should not be possible to kick yourself");
-    } catch (e) {
-      assert.equal(e.reason, "you can not kick yourself");
-    }
+    // Attempt to kick yourself
+    let memberToKick = member;
+    await expectRevert(
+      guildKickProposal(dao, guildkickContract, memberToKick, member),
+      "you can not kick yourself"
+    );
   });
 
   it("should not be possible to execute more than one kick at time", async () => {
@@ -1141,20 +1094,14 @@ contract("MolochV3 - GuildKick Adapter", async (accounts) => {
       gasPrice: toBN("0"),
     });
 
-    try {
-      // Submit the first guild kick with proposalId 0x1
-
-      await guildkickContract.processProposal(dao.address, p2.kickProposalId, {
+    // Submit the first guild kick with proposalId 0x1
+    await expectRevert(
+      guildkickContract.processProposal(dao.address, p2.kickProposalId, {
         from: memberA,
         gasPrice: toBN("0"),
-      });
-
-      assert.fail(
-        "should not be possible to run more than one kick at time per DAO"
-      );
-    } catch (e) {
-      assert.equal(e.reason, "another kick already in progress");
-    }
+      }),
+      "another kick already in progress"
+    );
   });
 
   it("should not be possible to reuse the kick proposal id", async () => {
@@ -1212,18 +1159,10 @@ contract("MolochV3 - GuildKick Adapter", async (accounts) => {
       gasPrice: toBN("0"),
     });
 
-    try {
-      // Submit the first guild kick with proposalId 0x1
-      await guildKickProposal(
-        dao,
-        guildkickContract,
-        memberC,
-        memberA,
-        proposalId
-      );
-      assert.fail("should not be possible to reuse a proposal id");
-    } catch (e) {
-      assert.equal(e.reason, "proposalId must be unique");
-    }
+    // Submit the first guild kick with proposalId 0x1
+    await expectRevert(
+      guildKickProposal(dao, guildkickContract, memberC, memberA, proposalId),
+      "proposalId must be unique"
+    );
   });
 });

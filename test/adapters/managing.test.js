@@ -37,9 +37,8 @@ const {
   ManagingContract,
   VotingContract,
   OnboardingContract,
+  expectRevert,
 } = require("../../utils/DaoFactory.js");
-
-const { expectRevert } = require("@openzeppelin/test-helpers");
 
 contract("MolochV3 - Managing Adapter", async (accounts) => {
   it("should not be possible to send ETH to the adapter", async () => {

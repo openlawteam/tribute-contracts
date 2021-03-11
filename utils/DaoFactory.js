@@ -26,6 +26,7 @@ SOFTWARE.
  */
 
 const Web3Utils = require("web3-utils");
+const { expectRevert } = require("@openzeppelin/test-helpers");
 
 const sha3 = Web3Utils.sha3;
 const toBN = Web3Utils.toBN;
@@ -668,6 +669,7 @@ module.exports = {
   toBN,
   toWei,
   fromUtf8,
+  expectRevert,
   maximumChunks,
   GUILD,
   TOTAL,

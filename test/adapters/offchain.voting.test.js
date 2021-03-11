@@ -100,11 +100,12 @@ async function createOffchainVotingDao(
     snapshotProposalContract.address
   );
   const bankAddress = await dao.getExtensionAddress(sha3("bank"));
-  await dao.removeAdapter(sha3("voting"));
-  await dao.addAdapter(
+  await dao.replaceAdapter(
     sha3("voting"),
     offchainVoting.address,
-    entryDao("voting", dao, offchainVoting, {}).flags
+    entryDao("voting", dao, offchainVoting, {}).flags,
+    [],
+    []
   );
 
   const bank = await BankExtension.at(bankAddress);
