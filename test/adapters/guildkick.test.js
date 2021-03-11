@@ -1002,8 +1002,7 @@ contract("MolochV3 - GuildKick Adapter", async (accounts) => {
     assert.equal(memberLoot.toString(), "10000000000000000");
 
     // Process guild kick to remove the voting power of the kicked member
-    let toIndex = 10;
-    await guildkickContract.rageKick(dao.address, toIndex, {
+    await guildkickContract.rageKick(dao.address, {
       from: member,
       gasPrice: toBN("0"),
     });
@@ -1064,8 +1063,7 @@ contract("MolochV3 - GuildKick Adapter", async (accounts) => {
     });
 
     // Process guild kick to remove the voting power of the kicked member
-    let toIndex = 1;
-    await guildkickContract.rageKick(dao.address, toIndex, {
+    await guildkickContract.rageKick(dao.address, {
       from: member,
       gasPrice: toBN("0"),
     });
