@@ -18,8 +18,7 @@ Once the kick proposal has passed, the other members have to start the actual gu
 
 While the kicked member is in jail, anyone can trigger the internal transfer process to release the funds of the kicked member. To do that, one just needs to execute the rage kick process (function `rageKick`).
 
-The rage kick process is the only alternative for a kicked member to receive his funds. It checks the historical guild balance (when the guild kick proposal was processed) to calculate the fair amount of funds to return to the kicked member.
-It is important to mention that this process might be executed in multiple steps, because it relies on the number of tokens available in the bank. The funds are internally transferred from the Guild bank to the kicked member's account, so the member can withdraw the funds later on using the Withdraw Adapter. At the end of the process, after all the transfers were completed with success for all available tokens, the kicked member's loot are burned and the member is removed from jail - because he is not an active member anymore. During the rage kick process, only loot is burned because the shares were already converted to loot during the `processProposal` step.
+The rage kick process is the only alternative for a kicked member to receive his funds. It uses the current guild balance to calculate the fair amount of funds to return to the kicked member. It is important to mention that this step relies on the number of tokens available in the bank, at this moment there is no limit of tokens available in the bank, but soon it will be updated to have a fixed size. The funds are internally transferred from the Guild bank to the kicked member's account, so the member can withdraw the funds later on using the Withdraw Adapter. At the end of the process, after all the transfers were completed with success for all available tokens, the kicked member's loot are burned and the member is removed from jail - because he is not an active member anymore (there are no shares left for that member). During the rage kick process, only loot is burned because the shares were already converted to loot during the `processProposal` step.
 
 ## Adapter configuration
 
@@ -38,8 +37,6 @@ Bank Extension Access Flags: `WITHDRAW`, `INTERNAL_TRANSFER`, `SUB_FROM_BALANCE`
   - `memberToKick`: The address of the member to kick out of the DAO.
   - `status`: The kick status.
   - `tokensToBurn`: The number of shares of the member that should be burned.
-  - `currentIndex`: Current iteration index to control the cached for-loop.
-  - `blockNumber`: The block number in which the guild kick proposal has been created.
 - `kicks`: Keeps track of all the kicks executed per DAO.
 - `ongoingKicks`: Keeps track of the latest ongoing kick proposal per DAO to ensure only 1 kick happens at a time.
 
@@ -52,7 +49,7 @@ Bank Extension Access Flags: `WITHDRAW`, `INTERNAL_TRANSFER`, `SUB_FROM_BALANCE`
   - adds the burned shares to the kicked member's loot account.
   - transfers the funds from the DAO account to the kicked member's account.
   - gets the available tokens.
-  - gets the historical balance of the guild account.
+  - gets the current balance of the guild account.
 
 - DaoRegistry
 
@@ -68,7 +65,7 @@ Bank Extension Access Flags: `WITHDRAW`, `INTERNAL_TRANSFER`, `SUB_FROM_BALANCE`
 
 - FairShareHelper
 
-  - to calculate the amount of funds to be returned to the member based on the provided numbers of shares and/or loot, taking into account the historical balance of the GUILD and kicked member's accounts.
+  - to calculate the amount of funds to be returned to the member based on the provided numbers of shares and/or loot, taking into account the current balance of the GUILD and kicked member's accounts.
 
 ## Functions description and assumptions / checks
 
@@ -88,7 +85,7 @@ Bank Extension Access Flags: `WITHDRAW`, `INTERNAL_TRANSFER`, `SUB_FROM_BALANCE`
      * @notice Creates a guild kick proposal, opens it for voting, and sponsors it.
      * @dev A member can not kick himself.
      * @dev Only one kick per DAO can be executed at time.
-     * @dev Only members that have shares can be kicked out.
+     * @dev Only members that have shares or loot can be kicked out.
      * @dev Proposal ids can not be reused.
      * @param dao The dao address.
      * @param proposalId The guild kick proposal id.
@@ -129,17 +126,16 @@ Bank Extension Access Flags: `WITHDRAW`, `INTERNAL_TRANSFER`, `SUB_FROM_BALANCE`
 
 ```solidity
     /**
-     * @notice Process the guild kick proposal, converts the member's shares into loot.
-     * @notice The kicked member is put in jail, so he can not perform any other action in the DAO.
+     * @notice Transfers the funds from the Guild account to the kicked member account based on the current kick proposal id.
+     * @notice The amount of funds is caculated using the actual balance of the member to make sure the member has not ragequited.
+     * @notice The member is released from jail once the funds distribution ends.
      * @dev A kick proposal must be in progress.
      * @dev Only one kick per DAO can be executed at time.
      * @dev Only active members can be kicked out.
-     * @dev Only proposals that passed the voting can be set to In Progress status.
+     * @dev Only proposals that passed the voting process can be completed.
      * @param dao The dao address.
-     * @param proposalId The guild kick proposal id.
      */
-    function processProposal(DaoRegistry dao, bytes32 proposalId)
-        external
+    function rageKick(DaoRegistry dao) external
 ```
 
 ### function rageKick
