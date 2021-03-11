@@ -18,6 +18,5 @@ jobs:
         uses: actions/setup-node@v1
         with:
           node-version: "12"
-      - run: npm install npm@latest
       - run: npm install
       - run: npm test
