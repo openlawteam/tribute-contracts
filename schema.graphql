@@ -44,6 +44,24 @@ type Proposal @entity {
   processedBy: Bytes
   member: Member
 
+  # offchain votes
+  snapshot: BigInt
+  proposalHash: Bytes
+  reporter: Bytes
+  resultRoot: Bytes
+  nbVoters: BigInt
+  nbNoVotes: BigInt
+  nbYesVotes: BigInt
+  index: BigInt
+  startingTime: BigInt
+  gracePeriodStartingTime: BigInt
+  isChallenged: Boolean
+  fallbackVotes: Boolean
+  fallbackVotesCount: BigInt
+
+  # onchain votes
+  votes: BigInt
+
   # onboarding; proposal details
   tokenToMint: Bytes
   amount: BigInt
@@ -59,7 +77,7 @@ type Proposal @entity {
   status: String
   "Current iteration index to control the cached for-loop"
   currentIndex: BigInt
-  "The block number in which the proposal has been created"
+  "The block number in which the proposal/or vote results has been created"
   blockNumber: BigInt
 
   # tribute; proposal details

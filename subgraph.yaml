@@ -78,6 +78,12 @@ templates:
           file: ./build/contracts/GuildKickContract.json
         - name: FinancingContract
           file: ./build/contracts/FinancingContract.json
+        - name: OffchainVotingContract
+          file: ./build/contracts/OffchainVotingContract.json
+        - name: VotingContract
+          file: ./build/contracts/VotingContract.json
+        - name: IVoting
+          file: ./build/contracts/IVoting.json
       eventHandlers:
         - event: SubmittedProposal(bytes32,uint256)
           handler: handleSubmittedProposal

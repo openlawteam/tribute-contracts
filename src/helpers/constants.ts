@@ -40,3 +40,6 @@ export let GUILDKICK_ID: string =
 
 export let FINANCING_ID: string =
   "0x903b70ab7c13e94d5db58ae5205461e75e7c006ddff7cb26a3d9c1b246a62a5f";
+
+export let VOTING_ID: string =
+  "0x0e49311626a26ba5be58a3b13d239908e80ce0dffdd5c50bf1d9c82ff35d1ab3";
