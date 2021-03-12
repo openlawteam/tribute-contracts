@@ -26,7 +26,6 @@ SOFTWARE.
  */
 
 const Web3Utils = require("web3-utils");
-const { expectRevert } = require("@openzeppelin/test-helpers");
 
 const sha3 = Web3Utils.sha3;
 const toBN = Web3Utils.toBN;
@@ -147,7 +146,7 @@ async function prepareAdapters(deployer) {
   };
 }
 
-async function addDefaultAdapters(
+const addDefaultAdapters = async (
   dao,
   unitPrice = sharePrice,
   nbShares = numberOfShares,
@@ -157,7 +156,7 @@ async function addDefaultAdapters(
   maxChunks = maximumChunks,
   daoFactory,
   deployer
-) {
+) => {
   const {
     voting,
     configuration,
@@ -194,9 +193,9 @@ async function addDefaultAdapters(
   );
 
   return { dao };
-}
+};
 
-async function configureDao(
+const configureDao = async (
   daoFactory,
   dao,
   ragequit,
@@ -216,7 +215,7 @@ async function configureDao(
   gracePeriod,
   tokenAddr,
   maxChunks
-) {
+) => {
   await daoFactory.addAdapters(dao.address, [
     entryDao("voting", voting, {}),
     entryDao("configuration", configuration, {
@@ -341,9 +340,9 @@ async function configureDao(
   await voting.configureDao(dao.address, votingPeriod, gracePeriod);
   await tribute.configureDao(dao.address, SHARES);
   await tribute.configureDao(dao.address, LOOT);
-}
+};
 
-async function deployDao(deployer, options) {
+const deployDao = async (deployer, options) => {
   const unitPrice = options.unitPrice || sharePrice;
   const nbShares = options.nbShares || numberOfShares;
   const votingPeriod = options.votingPeriod || 10;
@@ -431,11 +430,11 @@ async function deployDao(deployer, options) {
   }
 
   return dao;
-}
+};
 
 let counter = 0;
 
-async function createDao(
+const createDao = async (
   senderAccount,
   unitPrice = sharePrice,
   nbShares = numberOfShares,
@@ -443,7 +442,7 @@ async function createDao(
   gracePeriod = 1,
   tokenAddr = ETH_TOKEN,
   finalize = true
-) {
+) => {
   const bankFactory = await BankFactory.deployed();
   const daoFactory = await DaoFactory.deployed();
   const daoName = "test-dao-" + counter++;
@@ -501,9 +500,9 @@ async function createDao(
   }
 
   return dao;
-}
+};
 
-async function cloneDao(identityAddress, senderAccount) {
+const cloneDao = async (identityAddress, senderAccount) => {
   // newDao: uses clone factory to clone the contract deployed at the identityAddress
   let daoFactory = await DaoFactory.new(identityAddress);
   await daoFactory.createDao("test-dao", senderAccount);
@@ -514,9 +513,9 @@ async function cloneDao(identityAddress, senderAccount) {
   let dao = await DaoRegistry.at(_address);
 
   return { dao, daoFactory };
-}
+};
 
-async function cloneDaoDeployer(deployer) {
+const cloneDaoDeployer = async (deployer) => {
   // newDao: uses clone factory to clone the contract deployed at the identityAddress
   const dao = await DaoRegistry.deployed();
   await deployer.deploy(DaoFactory, dao.address);
@@ -528,9 +527,9 @@ async function cloneDaoDeployer(deployer) {
   let { _address } = pastEvents[0].returnValues;
   let newDao = await DaoRegistry.at(_address);
   return { dao: newDao, daoFactory };
-}
+};
 
-async function advanceTime(time) {
+const advanceTime = async (time) => {
   await new Promise((resolve, reject) => {
     web3.currentProvider.send(
       {
@@ -563,9 +562,9 @@ async function advanceTime(time) {
       }
     );
   });
-}
+};
 
-function entryBank(contract, flags) {
+const entryBank = (contract, flags) => {
   const values = [
     flags.ADD_TO_BALANCE,
     flags.SUB_FROM_BALANCE,
@@ -583,9 +582,9 @@ function entryBank(contract, flags) {
     addr: contract.address,
     flags: acl,
   };
-}
+};
 
-function entryDao(name, contract, flags) {
+const entryDao = (name, contract, flags) => {
   const values = [
     flags.REPLACE_ADAPTER,
     flags.JAIL_MEMBER,
@@ -607,53 +606,18 @@ function entryDao(name, contract, flags) {
     addr: contract.address,
     flags: acl,
   };
-}
+};
 
-function entry(values) {
+const entry = (values) => {
   return values
     .map((v, idx) => (v !== undefined ? 2 ** idx : 0))
     .reduce((a, b) => a + b);
-}
+};
 
-async function advanceTime(time) {
-  await new Promise((resolve, reject) => {
-    web3.currentProvider.send(
-      {
-        jsonrpc: "2.0",
-        method: "evm_increaseTime",
-        params: [time],
-        id: new Date().getTime(),
-      },
-      (err, result) => {
-        if (err) {
-          return reject(err);
-        }
-        return resolve(result);
-      }
-    );
-  });
-
-  await new Promise((resolve, reject) => {
-    web3.currentProvider.send(
-      {
-        jsonrpc: "2.0",
-        method: "evm_mine",
-        id: new Date().getTime(),
-      },
-      (err, result) => {
-        if (err) {
-          return reject(err);
-        }
-        return resolve(result);
-      }
-    );
-  });
-}
-
-async function getContract(dao, id, contractFactory) {
+const getContract = async (dao, id, contractFactory) => {
   const address = await dao.getAdapterAddress(sha3(id));
   return await contractFactory.at(address);
-}
+};
 
 module.exports = {
   prepareAdapters,
@@ -669,7 +633,6 @@ module.exports = {
   toBN,
   toWei,
   fromUtf8,
-  expectRevert,
   maximumChunks,
   GUILD,
   TOTAL,

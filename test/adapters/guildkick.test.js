@@ -43,8 +43,9 @@ const {
   LOOT,
   ManagingContract,
   BankExtension,
-  expectRevert,
 } = require("../../utils/DaoFactory.js");
+
+const { expectRevert } = require("@openzeppelin/test-helpers");
 
 let proposalCounter = 1;
 contract("MolochV3 - GuildKick Adapter", async (accounts) => {

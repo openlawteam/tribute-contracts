@@ -37,8 +37,9 @@ const {
   ManagingContract,
   VotingContract,
   OnboardingContract,
-  expectRevert,
 } = require("../../utils/DaoFactory.js");
+
+const { expectRevert } = require("@openzeppelin/test-helpers");
 
 contract("MolochV3 - Managing Adapter", async (accounts) => {
   it("should not be possible to send ETH to the adapter", async () => {
@@ -52,7 +53,7 @@ contract("MolochV3 - Managing Adapter", async (accounts) => {
         gasPrice: toBN("0"),
         value: toWei(toBN("1"), "ether"),
       }),
-      "fallback revert"
+      "Returned error: VM Exception while processing transaction: revert fallback revert"
     );
   });
 
@@ -446,7 +447,7 @@ contract("MolochV3 - Managing Adapter", async (accounts) => {
           gasPrice: toBN("0"),
         }
       ),
-      "accessDenied."
+      "accessDenied"
     );
   });
 
