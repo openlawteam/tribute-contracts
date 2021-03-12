@@ -1,3 +1,13 @@
+interface GetYAMLType {
+  daoFactoryAddress: string;
+  bankFactoryAddress: string;
+}
+
+export const getYAML = ({
+  daoFactoryAddress,
+  bankFactoryAddress,
+}: GetYAMLType): string => {
+  return ` 
 specVersion: 0.0.2
 description: Molochv3 Subgraph
 repository: https://github.com/openlawteam/molochv3-contracts
@@ -7,11 +17,10 @@ dataSources:
   # ====================================== DaoFactory ====================================
   - kind: ethereum/contract
     name: DaoFactory
-    network: rinkeby
+    network: mainnet
     source:
-      address: "0xCC7158B10515B266244c643A2527f7EFfc911421"
+      address: "${daoFactoryAddress}"
       abi: DaoFactory
-      startBlock: 8141988
     mapping:
       kind: ethereum/events
       apiVersion: 0.0.4
@@ -30,9 +39,8 @@ dataSources:
     name: BankFactory
     network: rinkeby
     source:
-      address: "0xD2ADbf1843A5480fBe6597D80cE500a59F8e5268"
+      address: "${bankFactoryAddress}"
       abi: BankFactory
-      startBlock: 8141991
     mapping:
       kind: ethereum/events
       apiVersion: 0.0.4
@@ -51,7 +59,7 @@ templates:
   # ====================================== DaoRegistry ====================================
   - kind: ethereum/contract
     name: DaoRegistry
-    network: rinkeby
+    network: mainnet
     source:
       abi: DaoRegistry
     mapping:
@@ -107,7 +115,7 @@ templates:
   # ====================================== BankExtension ====================================
   - kind: ethereum/contract
     name: BankExtension
-    network: rinkeby
+    network: mainnet
     source:
       abi: BankExtension
     mapping:
@@ -127,3 +135,7 @@ templates:
         - event: Withdraw(address,address,uint256)
           handler: handleWithdraw
       file: ./src/bank-extension-mapping.ts
+
+          
+`;
+};

@@ -117,3 +117,8 @@ coverageEnv
 .DS_Store
 .idea
 .DS_Store
+
+docker/data
+artifacts
+cache
+typechain
