@@ -6,13 +6,14 @@ import { expect } from "chai";
 import { ApolloFetch, FetchResult } from "apollo-fetch";
 
 // Contract Artifacts
-import DaoRegistryArtifact from "../../artifacts/contracts/core/DaoRegistry.sol/DaoRegistry.json";
-import DaoFactoryArtifact from "../../artifacts/contracts/core/DaoFactory.sol/DaoFactory.json";
-import BankFactoryArtifact from "../../artifacts/contracts/extensions/BankFactory.sol/BankFactory.json";
+import DaoRegistryArtifact from "../artifacts/contracts/core/DaoRegistry.sol/DaoRegistry.json";
+import DaoFactoryArtifact from "../artifacts/contracts/core/DaoFactory.sol/DaoFactory.json";
+import BankFactoryArtifact from "../artifacts/contracts/extensions/BankFactory.sol/BankFactory.json";
 
-// misc
-const { deployContract, deployMockContract } = waffle;
-const srcDir = path.join(__dirname, "..");
+// Contract Types
+import { DaoRegistry } from "../typechain/DaoRegistry";
+import { DaoFactory } from "../typechain/DaoFactory";
+import { BankFactory } from "../typechain/BankFactory";
 
 // Utils
 import {
@@ -24,13 +25,12 @@ import {
 // Subgraph Types
 import { SubgraphResponseType, SubgraphResponseDaoType } from "./helpers/types";
 
-// Contract Types
-import { DaoRegistry } from "../../typechain/DaoRegistry";
-import { DaoFactory } from "../../typechain/DaoFactory";
-import { BankFactory } from "../../typechain/BankFactory";
-
 // Queries
 import { queryProposalById, queryDaoByName } from "./helpers/queries";
+
+// misc
+const { deployContract, deployMockContract } = waffle;
+const srcDir = path.join(__dirname, "..");
 
 // Subgraph Name
 const subgraphUser = "openlawteam";

@@ -45,7 +45,7 @@ const config = {
   },
   paths: {
     sources: "./contracts",
-    tests: "./test/subgraph",
+    tests: "./test-subgraph",
     cache: "./cache",
     artifacts: "./artifacts",
   },
