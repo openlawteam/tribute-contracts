@@ -65,8 +65,7 @@ contract DaoRegistry is MemberGuard, AdapterGuard {
     enum ProposalFlag {EXISTS, SPONSORED, PROCESSED}
 
     enum AclFlag {
-        ADD_ADAPTER,
-        REMOVE_ADAPTER,
+        REPLACE_ADAPTER,
         JAIL_MEMBER,
         UNJAIL_MEMBER,
         SUBMIT_PROPOSAL,
@@ -269,32 +268,6 @@ contract DaoRegistry is MemberGuard, AdapterGuard {
         emit ExtensionAdded(extensionId, address(extension));
     }
 
-    /**
-     * @notice Adds a new adapter to the registry
-     * @param adapterId The unique identifier of the new adapter
-     * @param adapterAddress The address of the adapter
-     * @param acl The access control list of the adapter
-     */
-    function addAdapter(
-        bytes32 adapterId,
-        address adapterAddress,
-        uint256 acl
-    ) external hasAccess(this, AclFlag.ADD_ADAPTER) {
-        require(adapterId != bytes32(0), "adapterId must not be empty");
-        require(
-            adapterAddress != address(0x0),
-            "adapterAddress must not be empty"
-        );
-        require(
-            adapters[adapterId] == address(0x0),
-            "adapterId already in use"
-        );
-        adapters[adapterId] = adapterAddress;
-        inverseAdapters[adapterAddress].id = adapterId;
-        inverseAdapters[adapterAddress].acl = acl;
-        emit AdapterAdded(adapterId, adapterAddress, acl);
-    }
-
     function setAclToExtensionForAdapter(
         address extensionAddress,
         address adapterAddress,
@@ -306,21 +279,49 @@ contract DaoRegistry is MemberGuard, AdapterGuard {
     }
 
     /**
-     * @notice Removes an adapter from the registry
+     * @notice Replaces an adapter in the registry in a single step.
+     * @notice It handles addition and removal of adapters as special cases.
+     * @dev It removes the current adapter if the adapterId maps to an existing adapter address.
+     * @dev It adds an adapter if the adapterAddress parameter is not zeroed.
      * @param adapterId The unique identifier of the adapter
+     * @param adapterAddress The address of the new adapter or zero if it is a removal operation
+     * @param acl The flags indicating the access control layer or permissions of the new adapter
+     * @param keys The keys indicating the adapter configuration names.
+     * @param values The values indicating the adapter configuration values.
      */
-    function removeAdapter(bytes32 adapterId)
-        external
-        hasAccess(this, AclFlag.REMOVE_ADAPTER)
-    {
+    function replaceAdapter(
+        bytes32 adapterId,
+        address adapterAddress,
+        uint128 acl,
+        bytes32[] calldata keys,
+        uint256[] calldata values
+    ) external hasAccess(this, AclFlag.REPLACE_ADAPTER) {
         require(adapterId != bytes32(0), "adapterId must not be empty");
-        require(
-            adapters[adapterId] != address(0x0),
-            "adapterId not registered"
-        );
-        delete inverseAdapters[adapters[adapterId]];
-        delete adapters[adapterId];
-        emit AdapterRemoved(adapterId);
+
+        address currentAdapterAddr = adapters[adapterId];
+        if (currentAdapterAddr != address(0x0)) {
+            delete inverseAdapters[currentAdapterAddr];
+            delete adapters[adapterId];
+            emit AdapterRemoved(adapterId);
+        }
+
+        for (uint256 i = 0; i < keys.length; i++) {
+            bytes32 key = keys[i];
+            uint256 value = values[i];
+            mainConfiguration[key] = value;
+            emit ConfigurationUpdated(key, value);
+        }
+
+        if (adapterAddress != address(0x0)) {
+            require(
+                inverseAdapters[adapterAddress].id == bytes32(0),
+                "adapterAddress already in use"
+            );
+            adapters[adapterId] = adapterAddress;
+            inverseAdapters[adapterAddress].id = adapterId;
+            inverseAdapters[adapterAddress].acl = acl;
+            emit AdapterAdded(adapterId, adapterAddress, acl);
+        }
     }
 
     /**
