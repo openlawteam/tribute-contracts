@@ -43,11 +43,9 @@ const config = {
       },
     },
   },
+  // https://hardhat.org/config/#path-configuration
   paths: {
-    sources: "./contracts",
     tests: "./test-subgraph",
-    cache: "./cache",
-    artifacts: "./artifacts",
   },
 };
 

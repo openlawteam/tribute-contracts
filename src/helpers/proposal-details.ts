@@ -25,22 +25,22 @@ export function getProposalDetails(
   proposalId: Bytes
 ): void {
   if (ONBOARDING_ID.toString() == adapterId.toHexString()) {
-    log.info("ONBOARDING_ID, proposalId: {}", [proposalId.toHexString()]);
+    log.info("INFO ONBOARDING_ID, proposalId: {}", [proposalId.toHexString()]);
     onboarding(adapterAdddress, daoAddress, proposalId);
   } else if (DISTRIBUTE_ID.toString() == adapterId.toHexString()) {
-    log.info("DISTRIBUTE_ID, proposalId: {}", [proposalId.toHexString()]);
+    log.info("INFO DISTRIBUTE_ID, proposalId: {}", [proposalId.toHexString()]);
     distribute(adapterAdddress, daoAddress, proposalId);
   } else if (TRIBUTE_ID.toString() == adapterId.toHexString()) {
-    log.info("TRIBUTE_ID, proposalId: {}", [proposalId.toHexString()]);
+    log.info("INFO TRIBUTE_ID, proposalId: {}", [proposalId.toHexString()]);
     tribute(adapterAdddress, daoAddress, proposalId);
   } else if (MANAGING_ID.toString() == adapterId.toHexString()) {
-    log.info("MANAGING_ID, proposalId: {}", [proposalId.toHexString()]);
+    log.info("INFO MANAGING_ID, proposalId: {}", [proposalId.toHexString()]);
     managing(adapterAdddress, daoAddress, proposalId);
   } else if (FINANCING_ID.toString() == adapterId.toHexString()) {
-    log.info("FINANCING_ID, proposalId: {}", [proposalId.toHexString()]);
+    log.info("INFO FINANCING_ID, proposalId: {}", [proposalId.toHexString()]);
     financing(adapterAdddress, daoAddress, proposalId);
   } else if (GUILDKICK_ID.toString() == adapterId.toHexString()) {
-    log.info("GUILDKICK_ID, proposalId: {}", [proposalId.toHexString()]);
+    log.info("INFO GUILDKICK_ID, proposalId: {}", [proposalId.toHexString()]);
     guildkick(adapterAdddress, daoAddress, proposalId);
   }
 }
@@ -246,8 +246,7 @@ function guildkick(
     proposal.memberToKick = data.value0;
     proposal.status = data.value1.toString();
     proposal.tokensToBurn = data.value2;
-    proposal.currentIndex = data.value3;
-    proposal.blockNumber = data.value4;
+
     proposal.ongoingKicks = ongoingKicks;
 
     proposal.adapterAddress = adapterAdddress;

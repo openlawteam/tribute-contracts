@@ -23,7 +23,7 @@ function loadOrCreateBank(address: string): Bank {
  */
 export function handleBankCreated(event: BankCreated): void {
   log.info(
-    "**************** handleBankCreated event fired. bankAddress: {}, {}",
+    "================ handleBankCreated event fired. bankAddress: {}, {}",
     [event.params.bankAddress.toHexString(), event.address.toHexString()]
   );
   // let daoAddress = event.address;

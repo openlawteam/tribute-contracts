@@ -37,7 +37,7 @@ dataSources:
   # ====================================== BankFactory ====================================
   - kind: ethereum/contract
     name: BankFactory
-    network: rinkeby
+    network: mainnet
     source:
       address: "${bankFactoryAddress}"
       abi: BankFactory
@@ -67,10 +67,11 @@ templates:
       apiVersion: 0.0.4
       language: wasm/assemblyscript
       entities:
-        - Proposal
-        - Member
         - Adapter
         - Extension
+        - Proposal
+        - Member
+        - Vote
       abis:
         - name: DaoRegistry
           file: ./build/contracts/DaoRegistry.json
@@ -86,6 +87,12 @@ templates:
           file: ./build/contracts/GuildKickContract.json
         - name: FinancingContract
           file: ./build/contracts/FinancingContract.json
+        - name: OffchainVotingContract
+          file: ./build/contracts/OffchainVotingContract.json
+        - name: VotingContract
+          file: ./build/contracts/VotingContract.json
+        - name: IVoting
+          file: ./build/contracts/IVoting.json
       eventHandlers:
         - event: SubmittedProposal(bytes32,uint256)
           handler: handleSubmittedProposal

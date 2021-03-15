@@ -20,7 +20,7 @@ function loadOrCreateDao(address: string): Molochv3 {
  */
 export function handleDaoCreated(event: DAOCreated): void {
   log.info(
-    "**************** handleDaoCreated event fired. daoAddress: {}, daoName: {}",
+    "================ handleDaoCreated event fired. daoAddress: {}, daoName: {}",
     [event.params._address.toHexString(), event.params._name.toString()]
   );
 

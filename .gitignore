@@ -114,9 +114,9 @@ coverageEnv
 .coverage_contracts
 
 
-.DS_Store
-.idea
-.DS_Store
+/generated
+/build
+.env
 
 docker/data
 artifacts

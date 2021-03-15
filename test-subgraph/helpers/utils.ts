@@ -29,6 +29,7 @@ export const fetchSubgraph = (subgraphUser: string, subgraphName: string) => {
 };
 
 const checkIfAllSynced = (subgraphs: SyncedSubgraphType[]) => {
+  console.log("subgraphs", subgraphs);
   const result = subgraphs.find(
     (el: SyncedSubgraphType) => el.synced === false
   );
@@ -38,7 +39,8 @@ const checkIfAllSynced = (subgraphs: SyncedSubgraphType[]) => {
 export const waitForSubgraphToBeSynced = async (delay: number) =>
   new Promise<{ synced: boolean }>((resolve, reject) => {
     // Wait for 5s
-    let deadline = Date.now() + 5 * 1000;
+    // let deadline = Date.now() + 5 * 1000;
+    let deadline = Date.now() + 60 * 1000;
 
     // Function to check if the subgraph is synced
     const checkSubgraphSynced = async () => {
@@ -47,6 +49,10 @@ export const waitForSubgraphToBeSynced = async (delay: number) =>
           query: `{ indexingStatuses { synced } }`,
         });
 
+        console.log(
+          "================ result.data.indexingStatuses",
+          result.data.indexingStatuses
+        );
         if (checkIfAllSynced(result.data.indexingStatuses)) {
           resolve({ synced: true });
         } else {

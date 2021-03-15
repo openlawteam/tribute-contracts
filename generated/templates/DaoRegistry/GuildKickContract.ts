@@ -14,21 +14,11 @@ export class GuildKickContract__kicksResult {
   value0: Address;
   value1: i32;
   value2: BigInt;
-  value3: BigInt;
-  value4: BigInt;
 
-  constructor(
-    value0: Address,
-    value1: i32,
-    value2: BigInt,
-    value3: BigInt,
-    value4: BigInt
-  ) {
+  constructor(value0: Address, value1: i32, value2: BigInt) {
     this.value0 = value0;
     this.value1 = value1;
     this.value2 = value2;
-    this.value3 = value3;
-    this.value4 = value4;
   }
 
   toMap(): TypedMap<string, ethereum.Value> {
@@ -39,8 +29,6 @@ export class GuildKickContract__kicksResult {
       ethereum.Value.fromUnsignedBigInt(BigInt.fromI32(this.value1))
     );
     map.set("value2", ethereum.Value.fromUnsignedBigInt(this.value2));
-    map.set("value3", ethereum.Value.fromUnsignedBigInt(this.value3));
-    map.set("value4", ethereum.Value.fromUnsignedBigInt(this.value4));
     return map;
   }
 }
@@ -74,7 +62,7 @@ export class GuildKickContract extends ethereum.SmartContract {
   kicks(param0: Address, param1: Bytes): GuildKickContract__kicksResult {
     let result = super.call(
       "kicks",
-      "kicks(address,bytes32):(address,uint8,uint256,uint256,uint256)",
+      "kicks(address,bytes32):(address,uint8,uint256)",
       [
         ethereum.Value.fromAddress(param0),
         ethereum.Value.fromFixedBytes(param1)
@@ -84,9 +72,7 @@ export class GuildKickContract extends ethereum.SmartContract {
     return new GuildKickContract__kicksResult(
       result[0].toAddress(),
       result[1].toI32(),
-      result[2].toBigInt(),
-      result[3].toBigInt(),
-      result[4].toBigInt()
+      result[2].toBigInt()
     );
   }
 
@@ -96,7 +82,7 @@ export class GuildKickContract extends ethereum.SmartContract {
   ): ethereum.CallResult<GuildKickContract__kicksResult> {
     let result = super.tryCall(
       "kicks",
-      "kicks(address,bytes32):(address,uint8,uint256,uint256,uint256)",
+      "kicks(address,bytes32):(address,uint8,uint256)",
       [
         ethereum.Value.fromAddress(param0),
         ethereum.Value.fromFixedBytes(param1)
@@ -110,9 +96,7 @@ export class GuildKickContract extends ethereum.SmartContract {
       new GuildKickContract__kicksResult(
         value[0].toAddress(),
         value[1].toI32(),
-        value[2].toBigInt(),
-        value[3].toBigInt(),
-        value[4].toBigInt()
+        value[2].toBigInt()
       )
     );
   }
@@ -269,10 +253,6 @@ export class RageKickCall__Inputs {
 
   get dao(): Address {
     return this._call.inputValues[0].value.toAddress();
-  }
-
-  get toIndex(): BigInt {
-    return this._call.inputValues[1].value.toBigInt();
   }
 }
 

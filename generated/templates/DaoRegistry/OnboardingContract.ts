@@ -164,20 +164,34 @@ export class OnboardingContract extends ethereum.SmartContract {
     return ethereum.CallResult.fromValue(value[0].toBigInt());
   }
 
-  shares(param0: Address, param1: Address): BigInt {
-    let result = super.call("shares", "shares(address,address):(uint256)", [
-      ethereum.Value.fromAddress(param0),
-      ethereum.Value.fromAddress(param1)
-    ]);
+  shares(param0: Address, param1: Address, param2: Address): BigInt {
+    let result = super.call(
+      "shares",
+      "shares(address,address,address):(uint256)",
+      [
+        ethereum.Value.fromAddress(param0),
+        ethereum.Value.fromAddress(param1),
+        ethereum.Value.fromAddress(param2)
+      ]
+    );
 
     return result[0].toBigInt();
   }
 
-  try_shares(param0: Address, param1: Address): ethereum.CallResult<BigInt> {
-    let result = super.tryCall("shares", "shares(address,address):(uint256)", [
-      ethereum.Value.fromAddress(param0),
-      ethereum.Value.fromAddress(param1)
-    ]);
+  try_shares(
+    param0: Address,
+    param1: Address,
+    param2: Address
+  ): ethereum.CallResult<BigInt> {
+    let result = super.tryCall(
+      "shares",
+      "shares(address,address,address):(uint256)",
+      [
+        ethereum.Value.fromAddress(param0),
+        ethereum.Value.fromAddress(param1),
+        ethereum.Value.fromAddress(param2)
+      ]
+    );
     if (result.reverted) {
       return new ethereum.CallResult();
     }

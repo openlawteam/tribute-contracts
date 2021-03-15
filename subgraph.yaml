@@ -7,11 +7,11 @@ dataSources:
   # ====================================== DaoFactory ====================================
   - kind: ethereum/contract
     name: DaoFactory
-    network: rinkeby
+    network: mainnet
     source:
-      address: "0xCC7158B10515B266244c643A2527f7EFfc911421"
+      address: "0xFCc30f42843d0848Dc91B1187A1cB1357D671366"
       abi: DaoFactory
-      startBlock: 8141988
+      startBlock: 21
     mapping:
       kind: ethereum/events
       apiVersion: 0.0.4
@@ -28,11 +28,11 @@ dataSources:
   # ====================================== BankFactory ====================================
   - kind: ethereum/contract
     name: BankFactory
-    network: rinkeby
+    network: mainnet
     source:
-      address: "0xD2ADbf1843A5480fBe6597D80cE500a59F8e5268"
+      address: "0x439A479e8A567A83392961bC6d026Ea99368cD8F"
       abi: BankFactory
-      startBlock: 8141991
+      startBlock: 24
     mapping:
       kind: ethereum/events
       apiVersion: 0.0.4
@@ -51,7 +51,7 @@ templates:
   # ====================================== DaoRegistry ====================================
   - kind: ethereum/contract
     name: DaoRegistry
-    network: rinkeby
+    network: mainnet
     source:
       abi: DaoRegistry
     mapping:
@@ -59,10 +59,11 @@ templates:
       apiVersion: 0.0.4
       language: wasm/assemblyscript
       entities:
-        - Proposal
-        - Member
         - Adapter
         - Extension
+        - Proposal
+        - Member
+        - Vote
       abis:
         - name: DaoRegistry
           file: ./build/contracts/DaoRegistry.json
@@ -113,7 +114,7 @@ templates:
   # ====================================== BankExtension ====================================
   - kind: ethereum/contract
     name: BankExtension
-    network: rinkeby
+    network: mainnet
     source:
       abi: BankExtension
     mapping:

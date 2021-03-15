@@ -106,7 +106,7 @@ function internalTransfer(
 // event NewBalance(address member, address tokenAddr, uint256 amount);
 export function handleNewBalance(event: NewBalance): void {
   log.info(
-    "**************** handleNewBalance event fired. member {}, tokenAddr {}, amount {}",
+    "================ handleNewBalance event fired. member {}, tokenAddr {}, amount {}",
     [
       event.params.member.toHexString(),
       event.params.tokenAddr.toHexString(),
@@ -125,7 +125,7 @@ export function handleNewBalance(event: NewBalance): void {
 // event Withdraw(address member, address tokenAddr, uint256 amount);
 export function handleWithdraw(event: Withdraw): void {
   log.info(
-    "**************** handleWithdraw event fired. account {}, tokenAddr {}, amount {}",
+    "================ handleWithdraw event fired. account {}, tokenAddr {}, amount {}",
     [
       event.params.account.toHexString(),
       event.params.tokenAddr.toHexString(),
