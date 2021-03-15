@@ -7,7 +7,7 @@ import {
   Entity,
   Bytes,
   Address,
-  BigInt
+  BigInt,
 } from "@graphprotocol/graph-ts";
 
 export class AdapterAdded extends ethereum.Event {
@@ -506,7 +506,7 @@ export class DaoRegistry extends ethereum.SmartContract {
 
   members(param0: Address): BigInt {
     let result = super.call("members", "members(address):(uint256)", [
-      ethereum.Value.fromAddress(param0)
+      ethereum.Value.fromAddress(param0),
     ]);
 
     return result[0].toBigInt();
@@ -514,7 +514,7 @@ export class DaoRegistry extends ethereum.SmartContract {
 
   try_members(param0: Address): ethereum.CallResult<BigInt> {
     let result = super.tryCall("members", "members(address):(uint256)", [
-      ethereum.Value.fromAddress(param0)
+      ethereum.Value.fromAddress(param0),
     ]);
     if (result.reverted) {
       return new ethereum.CallResult();
@@ -575,7 +575,7 @@ export class DaoRegistry extends ethereum.SmartContract {
 
   registry(param0: Bytes): Address {
     let result = super.call("registry", "registry(bytes32):(address)", [
-      ethereum.Value.fromFixedBytes(param0)
+      ethereum.Value.fromFixedBytes(param0),
     ]);
 
     return result[0].toAddress();
@@ -583,7 +583,7 @@ export class DaoRegistry extends ethereum.SmartContract {
 
   try_registry(param0: Bytes): ethereum.CallResult<Address> {
     let result = super.tryCall("registry", "registry(bytes32):(address)", [
-      ethereum.Value.fromFixedBytes(param0)
+      ethereum.Value.fromFixedBytes(param0),
     ]);
     if (result.reverted) {
       return new ethereum.CallResult();
@@ -609,7 +609,7 @@ export class DaoRegistry extends ethereum.SmartContract {
 
   isAdapter(adapterAddress: Address): boolean {
     let result = super.call("isAdapter", "isAdapter(address):(bool)", [
-      ethereum.Value.fromAddress(adapterAddress)
+      ethereum.Value.fromAddress(adapterAddress),
     ]);
 
     return result[0].toBoolean();
@@ -617,7 +617,7 @@ export class DaoRegistry extends ethereum.SmartContract {
 
   try_isAdapter(adapterAddress: Address): ethereum.CallResult<boolean> {
     let result = super.tryCall("isAdapter", "isAdapter(address):(bool)", [
-      ethereum.Value.fromAddress(adapterAddress)
+      ethereum.Value.fromAddress(adapterAddress),
     ]);
     if (result.reverted) {
       return new ethereum.CallResult();
@@ -632,7 +632,7 @@ export class DaoRegistry extends ethereum.SmartContract {
       "hasAdapterAccess(address,uint8):(bool)",
       [
         ethereum.Value.fromAddress(adapterAddress),
-        ethereum.Value.fromUnsignedBigInt(BigInt.fromI32(flag))
+        ethereum.Value.fromUnsignedBigInt(BigInt.fromI32(flag)),
       ]
     );
 
@@ -648,7 +648,7 @@ export class DaoRegistry extends ethereum.SmartContract {
       "hasAdapterAccess(address,uint8):(bool)",
       [
         ethereum.Value.fromAddress(adapterAddress),
-        ethereum.Value.fromUnsignedBigInt(BigInt.fromI32(flag))
+        ethereum.Value.fromUnsignedBigInt(BigInt.fromI32(flag)),
       ]
     );
     if (result.reverted) {
@@ -688,7 +688,7 @@ export class DaoRegistry extends ethereum.SmartContract {
       [
         ethereum.Value.fromAddress(_actionTo),
         ethereum.Value.fromUnsignedBigInt(_actionValue),
-        ethereum.Value.fromBytes(_actionData)
+        ethereum.Value.fromBytes(_actionData),
       ]
     );
 
@@ -706,7 +706,7 @@ export class DaoRegistry extends ethereum.SmartContract {
       [
         ethereum.Value.fromAddress(_actionTo),
         ethereum.Value.fromUnsignedBigInt(_actionValue),
-        ethereum.Value.fromBytes(_actionData)
+        ethereum.Value.fromBytes(_actionData),
       ]
     );
     if (result.reverted) {
@@ -791,7 +791,7 @@ export class DaoRegistry extends ethereum.SmartContract {
       "getProposalFlag(uint64,uint8):(bool)",
       [
         ethereum.Value.fromUnsignedBigInt(proposalId),
-        ethereum.Value.fromUnsignedBigInt(BigInt.fromI32(flag))
+        ethereum.Value.fromUnsignedBigInt(BigInt.fromI32(flag)),
       ]
     );
 
@@ -807,7 +807,7 @@ export class DaoRegistry extends ethereum.SmartContract {
       "getProposalFlag(uint64,uint8):(bool)",
       [
         ethereum.Value.fromUnsignedBigInt(proposalId),
-        ethereum.Value.fromUnsignedBigInt(BigInt.fromI32(flag))
+        ethereum.Value.fromUnsignedBigInt(BigInt.fromI32(flag)),
       ]
     );
     if (result.reverted) {
@@ -819,7 +819,7 @@ export class DaoRegistry extends ethereum.SmartContract {
 
   nbShares(member: Address): BigInt {
     let result = super.call("nbShares", "nbShares(address):(uint256)", [
-      ethereum.Value.fromAddress(member)
+      ethereum.Value.fromAddress(member),
     ]);
 
     return result[0].toBigInt();
@@ -827,7 +827,7 @@ export class DaoRegistry extends ethereum.SmartContract {
 
   try_nbShares(member: Address): ethereum.CallResult<BigInt> {
     let result = super.tryCall("nbShares", "nbShares(address):(uint256)", [
-      ethereum.Value.fromAddress(member)
+      ethereum.Value.fromAddress(member),
     ]);
     if (result.reverted) {
       return new ethereum.CallResult();
@@ -838,7 +838,7 @@ export class DaoRegistry extends ethereum.SmartContract {
 
   nbLoot(member: Address): BigInt {
     let result = super.call("nbLoot", "nbLoot(address):(uint256)", [
-      ethereum.Value.fromAddress(member)
+      ethereum.Value.fromAddress(member),
     ]);
 
     return result[0].toBigInt();
@@ -846,7 +846,7 @@ export class DaoRegistry extends ethereum.SmartContract {
 
   try_nbLoot(member: Address): ethereum.CallResult<BigInt> {
     let result = super.tryCall("nbLoot", "nbLoot(address):(uint256)", [
-      ethereum.Value.fromAddress(member)
+      ethereum.Value.fromAddress(member),
     ]);
     if (result.reverted) {
       return new ethereum.CallResult();
@@ -899,7 +899,7 @@ export class DaoRegistry extends ethereum.SmartContract {
       "balanceOf(address,address):(uint256)",
       [
         ethereum.Value.fromAddress(account),
-        ethereum.Value.fromAddress(tokenAddr)
+        ethereum.Value.fromAddress(tokenAddr),
       ]
     );
 
@@ -915,7 +915,7 @@ export class DaoRegistry extends ethereum.SmartContract {
       "balanceOf(address,address):(uint256)",
       [
         ethereum.Value.fromAddress(account),
-        ethereum.Value.fromAddress(tokenAddr)
+        ethereum.Value.fromAddress(tokenAddr),
       ]
     );
     if (result.reverted) {
@@ -936,7 +936,7 @@ export class DaoRegistry extends ethereum.SmartContract {
       [
         ethereum.Value.fromAddress(account),
         ethereum.Value.fromAddress(tokenAddr),
-        ethereum.Value.fromUnsignedBigInt(blockNumber)
+        ethereum.Value.fromUnsignedBigInt(blockNumber),
       ]
     );
 
@@ -954,7 +954,7 @@ export class DaoRegistry extends ethereum.SmartContract {
       [
         ethereum.Value.fromAddress(account),
         ethereum.Value.fromAddress(tokenAddr),
-        ethereum.Value.fromUnsignedBigInt(blockNumber)
+        ethereum.Value.fromUnsignedBigInt(blockNumber),
       ]
     );
     if (result.reverted) {
@@ -1018,7 +1018,7 @@ export class DaoRegistry extends ethereum.SmartContract {
       "getPriorDelegateKey(address,uint256):(address)",
       [
         ethereum.Value.fromAddress(memberAddr),
-        ethereum.Value.fromUnsignedBigInt(blockNumber)
+        ethereum.Value.fromUnsignedBigInt(blockNumber),
       ]
     );
 
@@ -1034,7 +1034,7 @@ export class DaoRegistry extends ethereum.SmartContract {
       "getPriorDelegateKey(address,uint256):(address)",
       [
         ethereum.Value.fromAddress(memberAddr),
-        ethereum.Value.fromUnsignedBigInt(blockNumber)
+        ethereum.Value.fromUnsignedBigInt(blockNumber),
       ]
     );
     if (result.reverted) {
@@ -1097,20 +1097,10 @@ export class FinalizeDaoCall__Outputs {
   }
 }
 
-export class AddAdapterCall extends ethereum.Call {
-  get inputs(): AddAdapterCall__Inputs {
-    return new AddAdapterCall__Inputs(this);
-  }
+export class ReplaceAdapterCall__Inputs {
+  _call: ReplaceAdapterCall;
 
-  get outputs(): AddAdapterCall__Outputs {
-    return new AddAdapterCall__Outputs(this);
-  }
-}
-
-export class AddAdapterCall__Inputs {
-  _call: AddAdapterCall;
-
-  constructor(call: AddAdapterCall) {
+  constructor(call: ReplaceAdapterCall) {
     this._call = call;
   }
 
@@ -1126,42 +1116,21 @@ export class AddAdapterCall__Inputs {
     return this._call.inputValues[2].value.toBigInt();
   }
 }
+export class ReplaceAdapterCall__Outputs {
+  _call: ReplaceAdapterCall;
 
-export class AddAdapterCall__Outputs {
-  _call: AddAdapterCall;
-
-  constructor(call: AddAdapterCall) {
+  constructor(call: ReplaceAdapterCall) {
     this._call = call;
   }
 }
 
-export class RemoveAdapterCall extends ethereum.Call {
-  get inputs(): RemoveAdapterCall__Inputs {
-    return new RemoveAdapterCall__Inputs(this);
+export class ReplaceAdapterCall extends ethereum.Call {
+  get inputs(): ReplaceAdapterCall__Inputs {
+    return new ReplaceAdapterCall__Inputs(this);
   }
 
-  get outputs(): RemoveAdapterCall__Outputs {
-    return new RemoveAdapterCall__Outputs(this);
-  }
-}
-
-export class RemoveAdapterCall__Inputs {
-  _call: RemoveAdapterCall;
-
-  constructor(call: RemoveAdapterCall) {
-    this._call = call;
-  }
-
-  get adapterId(): Bytes {
-    return this._call.inputValues[0].value.toBytes();
-  }
-}
-
-export class RemoveAdapterCall__Outputs {
-  _call: RemoveAdapterCall;
-
-  constructor(call: RemoveAdapterCall) {
-    this._call = call;
+  get outputs(): ReplaceAdapterCall__Outputs {
+    return new ReplaceAdapterCall__Outputs(this);
   }
 }
 

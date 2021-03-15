@@ -44,12 +44,8 @@ contract GuildKickContract is IGuildKick, DaoConstants, MemberGuard {
         address memberToKick;
         // The kick status.
         GuildKickStatus status;
-        // The number of shares of the member that should be burned.
+        // The amount of shares/tokens to burn
         uint256 tokensToBurn;
-        // Current iteration index to control the cached for-loop.
-        uint256 currentIndex;
-        // The block number in which the guild kick proposal has been created.
-        uint256 blockNumber;
     }
 
     // Keeps track of all the kicks executed per DAO.
@@ -123,15 +119,15 @@ contract GuildKickContract is IGuildKick, DaoConstants, MemberGuard {
         uint256 lootToBurn = bank.balanceOf(memberToKick, LOOT);
 
         // Checks if the member has enough shares to be converted to loot.
+        // Overflow is not possible because max value for each var is 2^64
+        // See bank._createNewAmountCheckpoint function
         require(sharesToBurn + lootToBurn > 0, "no shares or loot");
 
         // Saves the state of the guild kick proposal.
         kicks[address(dao)][proposalId] = GuildKick(
             memberToKick,
             GuildKickStatus.NOT_STARTED,
-            0,
-            0,
-            block.number
+            0
         );
 
         // Starts the voting process for the guild kick proposal.
@@ -181,90 +177,72 @@ contract GuildKickContract is IGuildKick, DaoConstants, MemberGuard {
             "proposal did not pass"
         );
 
-        // Calculates the total shares, loot of the member.
-        BankExtension bank = BankExtension(dao.getExtensionAddress(BANK));
         address memberToKick = kick.memberToKick;
-        // Gets the number of shares of the member
+
+        // In order to prevent the member from executing actions in the DAO
+        // we subtract from member's balance the number of shares to burn.
+        BankExtension bank = BankExtension(dao.getExtensionAddress(BANK));
         uint256 sharesToBurn = bank.balanceOf(memberToKick, SHARES);
-        // Burns / subtracts from member's balance the number of shares to burn.
         bank.subtractFromBalance(memberToKick, SHARES, sharesToBurn);
-        // Burns / subtracts from member's balance the number of loot to burn.
-        // bank.subtractFromBalance(memberToKick, LOOT, kick.lootToBurn);
+
+        // Then we convert that amount into LOOT, so the member becomes a non active member.
         bank.addToBalance(memberToKick, LOOT, sharesToBurn);
 
-        uint256 tokensToBurn = bank.balanceOf(memberToKick, LOOT);
-
-        // Member is sent to jail to prevent any actions in the DAO anymore.
+        // Then send the member to jail to prevent any other actions in the DAO, such as ragequit.
         dao.jailMember(memberToKick);
 
-        // Set the kick proposal to done/completed.
         kick.status = GuildKickStatus.IN_PROGRESS;
-
-        kick.blockNumber = block.number;
+        uint256 tokensToBurn = bank.balanceOf(memberToKick, LOOT);
         kick.tokensToBurn = tokensToBurn;
 
-        // Set the current kick proposal to done/completed.
+        // Set the proposal id as the current ongoing kick proposal until it is not completed.
         ongoingKicks[address(dao)] = proposalId;
     }
 
     /**
-     * @notice Transfers the funds from the Guild account to the kicked member account.
-     * @notice The amount of funds is caculated using the historical balance when the proposal was created.
-     * @notice loot
-     * @notice The kicked member is put in jail, so he can not perform any other action in the DAO.
+     * @notice Transfers the funds from the Guild account to the kicked member account based on the current kick proposal id.
+     * @notice The amount of funds is caculated using the actual balance of the member to make sure the member has not ragequited.
+     * @notice The member is released from jail once the funds distribution ends.
      * @dev A kick proposal must be in progress.
      * @dev Only one kick per DAO can be executed at time.
      * @dev Only active members can be kicked out.
-     * @dev Only proposals that passed the voting can be completed.
+     * @dev Only proposals that passed the voting process can be completed.
      * @param dao The dao address.
-     * @param toIndex The index to control the cached for-loop.
      */
-    function rageKick(DaoRegistry dao, uint256 toIndex) external override {
-        //should be open it so the kicked member is able to call this function?
-        // Checks if the kick proposal does not exist or is not completed yet
+    function rageKick(DaoRegistry dao) external override {
         bytes32 ongoingProposalId = ongoingKicks[address(dao)];
         GuildKick storage kick = kicks[address(dao)][ongoingProposalId];
-        uint256 kickBlockNumber = kick.blockNumber;
         require(
             kick.status == GuildKickStatus.IN_PROGRESS,
             "guild kick completed or does not exist"
         );
 
-        // Check if the given index was already processed
-        uint256 currentIndex = kick.currentIndex;
-        require(currentIndex <= toIndex, "toIndex too low");
-
         // Get the bank extension
         BankExtension bank = BankExtension(dao.getExtensionAddress(BANK));
-
-        // Set the max index supported
         uint256 nbTokens = bank.nbTokens();
-        uint256 maxIndex = toIndex;
-        if (maxIndex > nbTokens) {
-            maxIndex = nbTokens;
-        }
 
         // Calculates the total shares, loot and locked loot before any internal transfers
         // it considers the locked loot to be able to calculate the fair amount to ragequit,
         // but locked loot can not be burned.
         uint256 initialTotalSharesAndLoot =
-            bank.getPriorAmount(TOTAL, SHARES, kickBlockNumber) +
-                bank.getPriorAmount(TOTAL, LOOT, kickBlockNumber) +
-                bank.getPriorAmount(TOTAL, LOCKED_LOOT, kickBlockNumber);
+            bank.balanceOf(TOTAL, SHARES) +
+                bank.balanceOf(TOTAL, LOOT) +
+                bank.balanceOf(TOTAL, LOCKED_LOOT);
 
-        // Get the member address to kick out of the DAO
         address kickedMember = kick.memberToKick;
-        // Get amount of shares and loot to burn
+        // Considering the shares were converted to LOOT when the proposal was processed,
+        // we now want to burn all the remaining loot to be able to kick the member out.
         uint256 sharesAndLootToBurn = kick.tokensToBurn;
 
         // Transfers the funds from the internal Guild account to the internal member's account.
-        for (uint256 i = currentIndex; i < maxIndex; i++) {
+        // TODO: set a max limit for nbTokens in the Bank.
+        for (uint256 i = 0; i < nbTokens; i++) {
             address token = bank.getToken(i);
             // Calculates the fair amount of funds to ragequit based on the token, shares and loot.
             // It takes into account the historical guild balance when the kick proposal was created.
             uint256 amountToRagequit =
                 FairShareHelper.calc(
-                    bank.getPriorAmount(GUILD, token, kickBlockNumber),
+                    bank.balanceOf(GUILD, token),
                     sharesAndLootToBurn,
                     initialTotalSharesAndLoot
                 );
@@ -284,13 +262,9 @@ contract GuildKickContract is IGuildKick, DaoConstants, MemberGuard {
             }
         }
 
-        kick.currentIndex = maxIndex;
-        if (maxIndex == nbTokens) {
-            // Burns the Loot+Shares, because the Shares were converted to Loot during the kick process.
-            bank.subtractFromBalance(kickedMember, LOOT, sharesAndLootToBurn);
-            // Unjail the member once the internal transfer is completed.
-            dao.unjailMember(kickedMember);
-            kick.status = GuildKickStatus.DONE;
-        }
+        // Burning the shares and loot to finalize the kick process, and set proposal status to DONE.
+        bank.subtractFromBalance(kickedMember, LOOT, sharesAndLootToBurn);
+        dao.unjailMember(kickedMember);
+        kick.status = GuildKickStatus.DONE;
     }
 }

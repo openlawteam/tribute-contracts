@@ -38,5 +38,5 @@ interface IGuildKick {
 
     function processProposal(DaoRegistry dao, bytes32 proposalId) external;
 
-    function rageKick(DaoRegistry dao, uint256 toIndex) external;
+    function rageKick(DaoRegistry dao) external;
 }
