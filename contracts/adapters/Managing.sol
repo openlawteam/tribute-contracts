@@ -50,7 +50,21 @@ contract ManagingContract is IManaging, DaoConstants, MemberGuard {
         revert("fallback revert");
     }
 
-    function createAdapterChangeRequest(
+    /**
+     * @notice Creates a proposal to replace, remove or add an adapter.
+     * @dev If the adapterAddress is equal to 0x0, the adapterId is removed from the registry if available.
+     * @dev If the adapterAddress is a reserved address, it reverts.
+     * @dev keys and value must have the same length.
+     * @dev proposalId can not be reused.
+     * @param dao The dao address.
+     * @param proposalId The guild kick proposal id.
+     * @param adapterId The adapter id to replace, remove or add.
+     * @param adapterAddress The adapter address to add or replace. Use 0x0 if you want to remove the adapter.
+     * @param keys The configuration keys for the adapter.
+     * @param values The values to set for the adapter configuration.
+     * @param _flags The ACL for the new adapter, up to 2**128-1.
+     */
+    function submitProposal(
         DaoRegistry dao,
         bytes32 proposalId,
         bytes32 adapterId,
@@ -83,6 +97,13 @@ contract ManagingContract is IManaging, DaoConstants, MemberGuard {
         );
     }
 
+    /**
+     * @notice Sponsor a proposal if the proposal id exists.
+     * @dev Only members are allowed to sponsor proposals.
+     * @param dao The dao address.
+     * @param proposalId The guild kick proposal id.
+     * @param data Additional data that can be used for offchain voting validation.
+     */
     function sponsorProposal(
         DaoRegistry dao,
         bytes32 proposalId,
@@ -110,6 +131,14 @@ contract ManagingContract is IManaging, DaoConstants, MemberGuard {
         votingContract.startNewVotingForProposal(dao, proposalId, data);
     }
 
+    /**
+     * @notice Processes a proposal that was sponsored.
+     * @dev Only members can process a proposal.
+     * @dev Only if the voting pass the proposal is processed.
+     * @dev Reverts when the adapter address is already in use and it is an adapter addition.
+     * @param dao The dao address.
+     * @param proposalId The guild kick proposal id.
+     */
     function processProposal(DaoRegistry dao, bytes32 proposalId)
         external
         override
@@ -124,23 +153,12 @@ contract ManagingContract is IManaging, DaoConstants, MemberGuard {
         );
 
         dao.processProposal(proposalId);
-
-        if (dao.adapters(proposal.adapterId) != address(0x0)) {
-            dao.removeAdapter(proposal.adapterId);
-        }
-
-        bytes32[] memory keys = proposal.keys;
-        uint256[] memory values = proposal.values;
-        for (uint256 i = 0; i < keys.length; i++) {
-            dao.setConfiguration(keys[i], values[i]);
-        }
-
-        if (proposal.adapterAddress != address(0x0)) {
-            dao.addAdapter(
-                proposal.adapterId,
-                proposal.adapterAddress,
-                proposal.flags
-            );
-        }
+        dao.replaceAdapter(
+            proposal.adapterId,
+            proposal.adapterAddress,
+            proposal.flags,
+            proposal.keys,
+            proposal.values
+        );
     }
 }
