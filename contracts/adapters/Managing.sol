@@ -117,7 +117,7 @@ contract ManagingContract is IManaging, DaoConstants, MemberGuard {
                 data,
                 msg.sender
             );
-         _sponsorProposal(dao, proposalId, data, sponsoredBy, votingContract);
+        _sponsorProposal(dao, proposalId, data, sponsoredBy, votingContract);
     }
 
     function _sponsorProposal(
