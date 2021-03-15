@@ -44,24 +44,6 @@ type Proposal @entity {
   processedBy: Bytes
   member: Member
 
-  # offchain votes
-  snapshot: BigInt
-  proposalHash: Bytes
-  reporter: Bytes
-  resultRoot: Bytes
-  nbVoters: BigInt
-  nbNoVotes: BigInt
-  nbYesVotes: BigInt
-  index: BigInt
-  startingTime: BigInt
-  gracePeriodStartingTime: BigInt
-  isChallenged: Boolean
-  fallbackVotes: Boolean
-  fallbackVotesCount: BigInt
-
-  # onchain votes
-  votes: BigInt
-
   # onboarding; proposal details
   tokenToMint: Bytes
   amount: BigInt
@@ -103,6 +85,35 @@ type Proposal @entity {
   adapterAddress: Bytes
   keys: [Bytes!]
   values: [BigInt!]
+
+  # offchain votes
+  snapshot: BigInt
+  proposalHash: Bytes
+  reporter: Bytes
+  resultRoot: Bytes
+  nbVoters: BigInt
+  nbNo: BigInt
+  nbYes: BigInt
+  index: BigInt
+  startingTime: BigInt
+  gracePeriodStartingTime: BigInt
+  isChallenged: Boolean
+  fallbackVotes: Boolean
+  fallbackVotesCount: BigInt
+
+  # onchain votes
+  votes: BigInt
+
+  offChainVotes: Vote
+  onChainVotes: Vote
+}
+
+type Vote @entity {
+  id: ID!
+  nbNo: BigInt!
+  nbYes: BigInt!
+  nbVoters: BigInt
+  proposal: Proposal
 }
 
 type Bank @entity {

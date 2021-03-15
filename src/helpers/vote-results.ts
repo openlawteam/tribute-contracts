@@ -4,7 +4,7 @@ import { OffchainVotingContract } from "../../generated/templates/DaoRegistry/Of
 import { VotingContract } from "../../generated/templates/DaoRegistry/VotingContract";
 import { IVoting } from "../../generated/templates/DaoRegistry/IVoting";
 
-import { Proposal, Adapter } from "../../generated/schema";
+import { Adapter, Proposal, Vote } from "../../generated/schema";
 
 import { VOTING_ID } from "./constants";
 
@@ -18,6 +18,9 @@ export function loadProposalAndSaveVoteResults(
     .concat("-proposal-")
     .concat(proposalId.toHex());
   let proposal = Proposal.load(maybeProposalId);
+
+  let voteId = daoAddress.toHex().concat("-vote-").concat(proposalId.toHex());
+  let vote = new Vote(voteId);
 
   // load the voting adapter data
   let votingAdapterId = daoAddress
@@ -46,11 +49,17 @@ export function loadProposalAndSaveVoteResults(
       // get vote results
       let voteResults = votingContract.votes(daoAddress, proposalId);
 
+      // assign voting data
+      vote.nbYes = voteResults.value0;
+      vote.nbNo = voteResults.value1;
+
       if (proposal) {
-        proposal.nbYesVotes = voteResults.value0;
-        proposal.nbNoVotes = voteResults.value1;
+        proposal.nbYes = voteResults.value0;
+        proposal.nbNo = voteResults.value1;
         proposal.startingTime = voteResults.value2;
         proposal.blockNumber = voteResults.value3;
+
+        proposal.onChainVotes = voteId; // voteId; // proposalId.toHex();
       }
     } else if (votingAdapterName == "OffchainVotingContract") {
       log.info("=============== OffchainVotingContract, {}", [
@@ -65,6 +74,11 @@ export function loadProposalAndSaveVoteResults(
       // get vote results
       let voteResults = offchainVotingContract.votes(daoAddress, proposalId);
 
+      // assign voting data
+      vote.nbVoters = voteResults.value4;
+      vote.nbYes = voteResults.value5;
+      vote.nbNo = voteResults.value6;
+
       if (proposal) {
         proposal.snapshot = voteResults.value0;
         proposal.proposalHash = voteResults.value1;
@@ -72,17 +86,23 @@ export function loadProposalAndSaveVoteResults(
         proposal.resultRoot = voteResults.value3;
 
         proposal.nbVoters = voteResults.value4;
-        proposal.nbYesVotes = voteResults.value5;
-        proposal.nbNoVotes = voteResults.value6;
+        proposal.nbYes = voteResults.value5;
+        proposal.nbNo = voteResults.value6;
         proposal.index = voteResults.value7;
 
         proposal.startingTime = voteResults.value8;
         proposal.gracePeriodStartingTime = voteResults.value9;
         proposal.isChallenged = voteResults.value10;
         proposal.fallbackVotesCount = voteResults.value11;
+
+        proposal.offChainVotes = voteId; // voteId; // proposalId.toHex();
       }
     }
   }
+
+  // vote.proposal = maybeProposalId; // proposalId.toHex();
+
+  vote.save();
 
   return proposal;
 }

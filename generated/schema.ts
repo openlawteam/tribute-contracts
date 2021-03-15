@@ -484,228 +484,6 @@ export class Proposal extends Entity {
     }
   }
 
-  get snapshot(): BigInt | null {
-    let value = this.get("snapshot");
-    if (value === null || value.kind == ValueKind.NULL) {
-      return null;
-    } else {
-      return value.toBigInt();
-    }
-  }
-
-  set snapshot(value: BigInt | null) {
-    if (value === null) {
-      this.unset("snapshot");
-    } else {
-      this.set("snapshot", Value.fromBigInt(value as BigInt));
-    }
-  }
-
-  get proposalHash(): Bytes | null {
-    let value = this.get("proposalHash");
-    if (value === null || value.kind == ValueKind.NULL) {
-      return null;
-    } else {
-      return value.toBytes();
-    }
-  }
-
-  set proposalHash(value: Bytes | null) {
-    if (value === null) {
-      this.unset("proposalHash");
-    } else {
-      this.set("proposalHash", Value.fromBytes(value as Bytes));
-    }
-  }
-
-  get reporter(): Bytes | null {
-    let value = this.get("reporter");
-    if (value === null || value.kind == ValueKind.NULL) {
-      return null;
-    } else {
-      return value.toBytes();
-    }
-  }
-
-  set reporter(value: Bytes | null) {
-    if (value === null) {
-      this.unset("reporter");
-    } else {
-      this.set("reporter", Value.fromBytes(value as Bytes));
-    }
-  }
-
-  get resultRoot(): Bytes | null {
-    let value = this.get("resultRoot");
-    if (value === null || value.kind == ValueKind.NULL) {
-      return null;
-    } else {
-      return value.toBytes();
-    }
-  }
-
-  set resultRoot(value: Bytes | null) {
-    if (value === null) {
-      this.unset("resultRoot");
-    } else {
-      this.set("resultRoot", Value.fromBytes(value as Bytes));
-    }
-  }
-
-  get nbVoters(): BigInt | null {
-    let value = this.get("nbVoters");
-    if (value === null || value.kind == ValueKind.NULL) {
-      return null;
-    } else {
-      return value.toBigInt();
-    }
-  }
-
-  set nbVoters(value: BigInt | null) {
-    if (value === null) {
-      this.unset("nbVoters");
-    } else {
-      this.set("nbVoters", Value.fromBigInt(value as BigInt));
-    }
-  }
-
-  get nbNoVotes(): BigInt | null {
-    let value = this.get("nbNoVotes");
-    if (value === null || value.kind == ValueKind.NULL) {
-      return null;
-    } else {
-      return value.toBigInt();
-    }
-  }
-
-  set nbNoVotes(value: BigInt | null) {
-    if (value === null) {
-      this.unset("nbNoVotes");
-    } else {
-      this.set("nbNoVotes", Value.fromBigInt(value as BigInt));
-    }
-  }
-
-  get nbYesVotes(): BigInt | null {
-    let value = this.get("nbYesVotes");
-    if (value === null || value.kind == ValueKind.NULL) {
-      return null;
-    } else {
-      return value.toBigInt();
-    }
-  }
-
-  set nbYesVotes(value: BigInt | null) {
-    if (value === null) {
-      this.unset("nbYesVotes");
-    } else {
-      this.set("nbYesVotes", Value.fromBigInt(value as BigInt));
-    }
-  }
-
-  get index(): BigInt | null {
-    let value = this.get("index");
-    if (value === null || value.kind == ValueKind.NULL) {
-      return null;
-    } else {
-      return value.toBigInt();
-    }
-  }
-
-  set index(value: BigInt | null) {
-    if (value === null) {
-      this.unset("index");
-    } else {
-      this.set("index", Value.fromBigInt(value as BigInt));
-    }
-  }
-
-  get startingTime(): BigInt | null {
-    let value = this.get("startingTime");
-    if (value === null || value.kind == ValueKind.NULL) {
-      return null;
-    } else {
-      return value.toBigInt();
-    }
-  }
-
-  set startingTime(value: BigInt | null) {
-    if (value === null) {
-      this.unset("startingTime");
-    } else {
-      this.set("startingTime", Value.fromBigInt(value as BigInt));
-    }
-  }
-
-  get gracePeriodStartingTime(): BigInt | null {
-    let value = this.get("gracePeriodStartingTime");
-    if (value === null || value.kind == ValueKind.NULL) {
-      return null;
-    } else {
-      return value.toBigInt();
-    }
-  }
-
-  set gracePeriodStartingTime(value: BigInt | null) {
-    if (value === null) {
-      this.unset("gracePeriodStartingTime");
-    } else {
-      this.set("gracePeriodStartingTime", Value.fromBigInt(value as BigInt));
-    }
-  }
-
-  get isChallenged(): boolean {
-    let value = this.get("isChallenged");
-    return value.toBoolean();
-  }
-
-  set isChallenged(value: boolean) {
-    this.set("isChallenged", Value.fromBoolean(value));
-  }
-
-  get fallbackVotes(): boolean {
-    let value = this.get("fallbackVotes");
-    return value.toBoolean();
-  }
-
-  set fallbackVotes(value: boolean) {
-    this.set("fallbackVotes", Value.fromBoolean(value));
-  }
-
-  get fallbackVotesCount(): BigInt | null {
-    let value = this.get("fallbackVotesCount");
-    if (value === null || value.kind == ValueKind.NULL) {
-      return null;
-    } else {
-      return value.toBigInt();
-    }
-  }
-
-  set fallbackVotesCount(value: BigInt | null) {
-    if (value === null) {
-      this.unset("fallbackVotesCount");
-    } else {
-      this.set("fallbackVotesCount", Value.fromBigInt(value as BigInt));
-    }
-  }
-
-  get votes(): BigInt | null {
-    let value = this.get("votes");
-    if (value === null || value.kind == ValueKind.NULL) {
-      return null;
-    } else {
-      return value.toBigInt();
-    }
-  }
-
-  set votes(value: BigInt | null) {
-    if (value === null) {
-      this.unset("votes");
-    } else {
-      this.set("votes", Value.fromBigInt(value as BigInt));
-    }
-  }
-
   get tokenToMint(): Bytes | null {
     let value = this.get("tokenToMint");
     if (value === null || value.kind == ValueKind.NULL) {
@@ -1043,6 +821,345 @@ export class Proposal extends Entity {
       this.unset("values");
     } else {
       this.set("values", Value.fromBigIntArray(value as Array<BigInt>));
+    }
+  }
+
+  get snapshot(): BigInt | null {
+    let value = this.get("snapshot");
+    if (value === null || value.kind == ValueKind.NULL) {
+      return null;
+    } else {
+      return value.toBigInt();
+    }
+  }
+
+  set snapshot(value: BigInt | null) {
+    if (value === null) {
+      this.unset("snapshot");
+    } else {
+      this.set("snapshot", Value.fromBigInt(value as BigInt));
+    }
+  }
+
+  get proposalHash(): Bytes | null {
+    let value = this.get("proposalHash");
+    if (value === null || value.kind == ValueKind.NULL) {
+      return null;
+    } else {
+      return value.toBytes();
+    }
+  }
+
+  set proposalHash(value: Bytes | null) {
+    if (value === null) {
+      this.unset("proposalHash");
+    } else {
+      this.set("proposalHash", Value.fromBytes(value as Bytes));
+    }
+  }
+
+  get reporter(): Bytes | null {
+    let value = this.get("reporter");
+    if (value === null || value.kind == ValueKind.NULL) {
+      return null;
+    } else {
+      return value.toBytes();
+    }
+  }
+
+  set reporter(value: Bytes | null) {
+    if (value === null) {
+      this.unset("reporter");
+    } else {
+      this.set("reporter", Value.fromBytes(value as Bytes));
+    }
+  }
+
+  get resultRoot(): Bytes | null {
+    let value = this.get("resultRoot");
+    if (value === null || value.kind == ValueKind.NULL) {
+      return null;
+    } else {
+      return value.toBytes();
+    }
+  }
+
+  set resultRoot(value: Bytes | null) {
+    if (value === null) {
+      this.unset("resultRoot");
+    } else {
+      this.set("resultRoot", Value.fromBytes(value as Bytes));
+    }
+  }
+
+  get nbVoters(): BigInt | null {
+    let value = this.get("nbVoters");
+    if (value === null || value.kind == ValueKind.NULL) {
+      return null;
+    } else {
+      return value.toBigInt();
+    }
+  }
+
+  set nbVoters(value: BigInt | null) {
+    if (value === null) {
+      this.unset("nbVoters");
+    } else {
+      this.set("nbVoters", Value.fromBigInt(value as BigInt));
+    }
+  }
+
+  get nbNo(): BigInt | null {
+    let value = this.get("nbNo");
+    if (value === null || value.kind == ValueKind.NULL) {
+      return null;
+    } else {
+      return value.toBigInt();
+    }
+  }
+
+  set nbNo(value: BigInt | null) {
+    if (value === null) {
+      this.unset("nbNo");
+    } else {
+      this.set("nbNo", Value.fromBigInt(value as BigInt));
+    }
+  }
+
+  get nbYes(): BigInt | null {
+    let value = this.get("nbYes");
+    if (value === null || value.kind == ValueKind.NULL) {
+      return null;
+    } else {
+      return value.toBigInt();
+    }
+  }
+
+  set nbYes(value: BigInt | null) {
+    if (value === null) {
+      this.unset("nbYes");
+    } else {
+      this.set("nbYes", Value.fromBigInt(value as BigInt));
+    }
+  }
+
+  get index(): BigInt | null {
+    let value = this.get("index");
+    if (value === null || value.kind == ValueKind.NULL) {
+      return null;
+    } else {
+      return value.toBigInt();
+    }
+  }
+
+  set index(value: BigInt | null) {
+    if (value === null) {
+      this.unset("index");
+    } else {
+      this.set("index", Value.fromBigInt(value as BigInt));
+    }
+  }
+
+  get startingTime(): BigInt | null {
+    let value = this.get("startingTime");
+    if (value === null || value.kind == ValueKind.NULL) {
+      return null;
+    } else {
+      return value.toBigInt();
+    }
+  }
+
+  set startingTime(value: BigInt | null) {
+    if (value === null) {
+      this.unset("startingTime");
+    } else {
+      this.set("startingTime", Value.fromBigInt(value as BigInt));
+    }
+  }
+
+  get gracePeriodStartingTime(): BigInt | null {
+    let value = this.get("gracePeriodStartingTime");
+    if (value === null || value.kind == ValueKind.NULL) {
+      return null;
+    } else {
+      return value.toBigInt();
+    }
+  }
+
+  set gracePeriodStartingTime(value: BigInt | null) {
+    if (value === null) {
+      this.unset("gracePeriodStartingTime");
+    } else {
+      this.set("gracePeriodStartingTime", Value.fromBigInt(value as BigInt));
+    }
+  }
+
+  get isChallenged(): boolean {
+    let value = this.get("isChallenged");
+    return value.toBoolean();
+  }
+
+  set isChallenged(value: boolean) {
+    this.set("isChallenged", Value.fromBoolean(value));
+  }
+
+  get fallbackVotes(): boolean {
+    let value = this.get("fallbackVotes");
+    return value.toBoolean();
+  }
+
+  set fallbackVotes(value: boolean) {
+    this.set("fallbackVotes", Value.fromBoolean(value));
+  }
+
+  get fallbackVotesCount(): BigInt | null {
+    let value = this.get("fallbackVotesCount");
+    if (value === null || value.kind == ValueKind.NULL) {
+      return null;
+    } else {
+      return value.toBigInt();
+    }
+  }
+
+  set fallbackVotesCount(value: BigInt | null) {
+    if (value === null) {
+      this.unset("fallbackVotesCount");
+    } else {
+      this.set("fallbackVotesCount", Value.fromBigInt(value as BigInt));
+    }
+  }
+
+  get votes(): BigInt | null {
+    let value = this.get("votes");
+    if (value === null || value.kind == ValueKind.NULL) {
+      return null;
+    } else {
+      return value.toBigInt();
+    }
+  }
+
+  set votes(value: BigInt | null) {
+    if (value === null) {
+      this.unset("votes");
+    } else {
+      this.set("votes", Value.fromBigInt(value as BigInt));
+    }
+  }
+
+  get offChainVotes(): string | null {
+    let value = this.get("offChainVotes");
+    if (value === null || value.kind == ValueKind.NULL) {
+      return null;
+    } else {
+      return value.toString();
+    }
+  }
+
+  set offChainVotes(value: string | null) {
+    if (value === null) {
+      this.unset("offChainVotes");
+    } else {
+      this.set("offChainVotes", Value.fromString(value as string));
+    }
+  }
+
+  get onChainVotes(): string | null {
+    let value = this.get("onChainVotes");
+    if (value === null || value.kind == ValueKind.NULL) {
+      return null;
+    } else {
+      return value.toString();
+    }
+  }
+
+  set onChainVotes(value: string | null) {
+    if (value === null) {
+      this.unset("onChainVotes");
+    } else {
+      this.set("onChainVotes", Value.fromString(value as string));
+    }
+  }
+}
+
+export class Vote extends Entity {
+  constructor(id: string) {
+    super();
+    this.set("id", Value.fromString(id));
+  }
+
+  save(): void {
+    let id = this.get("id");
+    assert(id !== null, "Cannot save Vote entity without an ID");
+    assert(
+      id.kind == ValueKind.STRING,
+      "Cannot save Vote entity with non-string ID. " +
+        'Considering using .toHex() to convert the "id" to a string.'
+    );
+    store.set("Vote", id.toString(), this);
+  }
+
+  static load(id: string): Vote | null {
+    return store.get("Vote", id) as Vote | null;
+  }
+
+  get id(): string {
+    let value = this.get("id");
+    return value.toString();
+  }
+
+  set id(value: string) {
+    this.set("id", Value.fromString(value));
+  }
+
+  get nbNo(): BigInt {
+    let value = this.get("nbNo");
+    return value.toBigInt();
+  }
+
+  set nbNo(value: BigInt) {
+    this.set("nbNo", Value.fromBigInt(value));
+  }
+
+  get nbYes(): BigInt {
+    let value = this.get("nbYes");
+    return value.toBigInt();
+  }
+
+  set nbYes(value: BigInt) {
+    this.set("nbYes", Value.fromBigInt(value));
+  }
+
+  get nbVoters(): BigInt | null {
+    let value = this.get("nbVoters");
+    if (value === null || value.kind == ValueKind.NULL) {
+      return null;
+    } else {
+      return value.toBigInt();
+    }
+  }
+
+  set nbVoters(value: BigInt | null) {
+    if (value === null) {
+      this.unset("nbVoters");
+    } else {
+      this.set("nbVoters", Value.fromBigInt(value as BigInt));
+    }
+  }
+
+  get proposal(): string | null {
+    let value = this.get("proposal");
+    if (value === null || value.kind == ValueKind.NULL) {
+      return null;
+    } else {
+      return value.toString();
+    }
+  }
+
+  set proposal(value: string | null) {
+    if (value === null) {
+      this.unset("proposal");
+    } else {
+      this.set("proposal", Value.fromString(value as string));
     }
   }
 }
