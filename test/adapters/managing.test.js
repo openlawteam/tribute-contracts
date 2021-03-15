@@ -506,7 +506,7 @@ contract("MolochV3 - Managing Adapter", async (accounts) => {
     );
   });
 
-  it("should not be possible for a non member to process a proposal", async () => {
+  it("should be possible for a non member to process a proposal", async () => {
     const daoOwner = accounts[1];
     const nonMember = accounts[5];
     const dao = await createDao(daoOwner);
@@ -540,13 +540,10 @@ contract("MolochV3 - Managing Adapter", async (accounts) => {
 
     advanceTime(1000);
 
-    await expectRevert(
-      managing.processProposal(dao.address, proposalId, {
-        from: nonMember,
-        gasPrice: toBN("0"),
-      }),
-      "onlyMember"
-    );
+    await managing.processProposal(dao.address, proposalId, {
+      from: nonMember,
+      gasPrice: toBN("0"),
+    });
   });
 
   it("should not be possible to process a proposal if the voting did not pass", async () => {

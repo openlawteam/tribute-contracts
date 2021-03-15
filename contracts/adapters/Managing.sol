@@ -108,7 +108,7 @@ contract ManagingContract is IManaging, DaoConstants, MemberGuard {
         DaoRegistry dao,
         bytes32 proposalId,
         bytes calldata data
-    ) external override onlyMember(dao) {
+    ) external override {
         IVoting votingContract = IVoting(dao.getAdapterAddress(VOTING));
         address sponsoredBy =
             votingContract.getSenderAddress(
@@ -117,6 +117,16 @@ contract ManagingContract is IManaging, DaoConstants, MemberGuard {
                 data,
                 msg.sender
             );
+         _sponsorProposal(dao, proposalId, data, sponsoredBy, votingContract);
+    }
+
+    function _sponsorProposal(
+        DaoRegistry dao,
+        bytes32 proposalId,
+        bytes memory data,
+        address sponsoredBy,
+        IVoting votingContract
+    ) internal {
         dao.sponsorProposal(proposalId, sponsoredBy);
         votingContract.startNewVotingForProposal(dao, proposalId, data);
     }
@@ -132,7 +142,6 @@ contract ManagingContract is IManaging, DaoConstants, MemberGuard {
     function processProposal(DaoRegistry dao, bytes32 proposalId)
         external
         override
-        onlyMember(dao)
     {
         ProposalDetails memory proposal = proposals[address(dao)][proposalId];
 
