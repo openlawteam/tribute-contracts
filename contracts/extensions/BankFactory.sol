@@ -44,8 +44,9 @@ contract BankFactory is CloneFactory, DaoConstants {
     /**
      * @notice Create and initialize a new DaoRegistry
      */
-    function createBank() external {
+    function createBank(uint8 maxTokensAllowed) external {
         BankExtension bank = BankExtension(_createClone(identityAddress));
+        bank.setMaxTokensAllowed(maxTokensAllowed);
         emit BankCreated(address(bank));
     }
 }

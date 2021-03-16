@@ -105,8 +105,6 @@ contract BankExtension is DaoConstants, AdapterGuard, IExtension {
     function initialize(DaoRegistry _dao, address creator) external override {
         require(!initialized, "bank already initialized");
         require(_dao.isActiveMember(creator), "bank::not active member");
-        // require(_maxTokens <= MAX_TOKENS_GUILD_BANK, "maximum number of tokens allowed in the bank is 200");
-        // maxTokensAllowed = _maxTokens;
         availableInternalTokens[SHARES] = true;
         internalTokens.push(SHARES);
 
@@ -152,6 +150,16 @@ contract BankExtension is DaoConstants, AdapterGuard, IExtension {
      */
     function isTokenAllowed(address token) public view returns (bool) {
         return availableTokens[token];
+    }
+
+    /**
+     * @notice Sets the maximum amount of tokens allowed in the BANK
+     * @param maxTokens The maximum amount of token allowed
+     */
+    function setMaxTokensAllowed(uint8 maxTokens) external {
+        require(!initialized, "bank already initialized");
+        require(maxTokens <= MAX_TOKENS_GUILD_BANK, "maximum number of tokens allowed in the bank is 200");
+        maxTokensAllowed = maxTokens;
     }
 
     /*

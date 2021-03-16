@@ -89,7 +89,7 @@ async function createOffchainVotingDao(
     gracePeriod,
     ETH_TOKEN,
     false,
-    members[0].address
+    10
   );
 
   await dao.potentialNewMember(members[0].address);
