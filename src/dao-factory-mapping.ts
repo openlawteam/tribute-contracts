@@ -1,7 +1,7 @@
 import { DaoRegistry } from "../generated/templates";
 import { DAOCreated } from "../generated/DaoFactory/DaoFactory";
 import { Molochv3 } from "../generated/schema";
-import { log } from "@graphprotocol/graph-ts";
+import { BigInt, log } from "@graphprotocol/graph-ts";
 
 function loadOrCreateDao(address: string): Molochv3 {
   let dao = Molochv3.load(address);
@@ -31,6 +31,7 @@ export function handleDaoCreated(event: DAOCreated): void {
   dao.daoAddress = event.params._address;
   dao.name = event.params._name;
   dao.creator = event.transaction.from;
+  dao.totalShares = BigInt.fromI32(0).toString();
 
   DaoRegistry.create(event.params._address);
 

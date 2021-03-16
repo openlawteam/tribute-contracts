@@ -103,7 +103,6 @@ export function handleSponsoredProposal(event: SponsoredProposal): void {
 }
 
 export function handleProcessedProposal(event: ProcessedProposal): void {
-  // let proposal = Proposal.load(proposalId);
   let processedAt = event.block.timestamp.toString();
 
   log.info(

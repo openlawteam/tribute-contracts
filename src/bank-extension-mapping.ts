@@ -114,6 +114,8 @@ export function handleNewBalance(event: NewBalance): void {
     ]
   );
 
+  log.info("event.address, {}", [event.address.toHex()]);
+
   internalTransfer(
     event.block.timestamp.toString(),
     event.address,

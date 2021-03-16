@@ -52,6 +52,11 @@ export function loadProposalAndSaveVoteResults(
       // assign voting data
       vote.nbYes = voteResults.value0;
       vote.nbNo = voteResults.value1;
+      vote.onChain = proposal.id; // maybeProposalId;
+
+      vote.proposal = proposal.id; // maybeProposalId; //maybeProposalId; // proposalId.toHex();
+
+      vote.save();
 
       if (proposal) {
         proposal.nbYes = voteResults.value0;
@@ -59,10 +64,10 @@ export function loadProposalAndSaveVoteResults(
         proposal.startingTime = voteResults.value2;
         proposal.blockNumber = voteResults.value3;
 
-        proposal.onChainVotes = voteId; // voteId; // proposalId.toHex();
+        proposal.onChainVotes = proposal.id;
       }
     } else if (votingAdapterName == "OffchainVotingContract") {
-      log.info("=============== OffchainVotingContract, {}", [
+      log.info("=============== VotingContract, {}", [
         votingAdapterName.toString(),
       ]);
 
@@ -78,6 +83,11 @@ export function loadProposalAndSaveVoteResults(
       vote.nbVoters = voteResults.value4;
       vote.nbYes = voteResults.value5;
       vote.nbNo = voteResults.value6;
+      vote.offChain = proposal.id; //maybeProposalId;
+
+      vote.proposal = proposal.id; // maybeProposalId; //maybeProposalId; // proposalId.toHex();
+
+      vote.save();
 
       if (proposal) {
         proposal.snapshot = voteResults.value0;
@@ -95,14 +105,10 @@ export function loadProposalAndSaveVoteResults(
         proposal.isChallenged = voteResults.value10;
         proposal.fallbackVotesCount = voteResults.value11;
 
-        proposal.offChainVotes = voteId; // voteId; // proposalId.toHex();
+        proposal.offChainVotes = proposal.id;
       }
     }
   }
-
-  // vote.proposal = maybeProposalId; // proposalId.toHex();
-
-  vote.save();
 
   return proposal;
 }

@@ -1,5 +1,6 @@
 type Molochv3 @entity {
-  id: ID!
+  "unique identifier and primary key of the `Tribute` entity"
+  id: ID! # Set to `${molochv3.id}
   "The DAO address"
   daoAddress: Bytes
   "The name of the DAO"
@@ -14,10 +15,13 @@ type Molochv3 @entity {
   adapters: [Adapter!]! @derivedFrom(field: "molochv3")
   "List of registered extensions"
   extensions: [Extension!]! @derivedFrom(field: "molochv3")
+
+  # members: [MemberMolochv3]! @derivedFrom(field: "user")
 }
 
 type Member @entity {
-  id: ID!
+  "unique identifier and primary key of the `Member` entity"
+  id: ID! # Set to `${member.id}`
   memberAddress: Bytes
   createdAt: String
   delegateKey: Bytes
@@ -26,13 +30,22 @@ type Member @entity {
   lockedLoot: BigInt!
   tokenBalances: [TokenBalance!] @derivedFrom(field: "member")
   proposals: [Proposal!] @derivedFrom(field: "member")
+  didFullyRagequit: Boolean
   isDelegated: Boolean
   isJailed: Boolean
-  didFullyRagequit: Boolean
+
+  # organizations: [MemberMolochv3!] @derivedFrom(field: "molochv3")
 }
 
+# type MemberMolochv3 @entity {
+#   id: ID! # Set to `${member.id}-${molochv3.id}`
+#   member: Member!
+#   molochv3: Molochv3!
+# }
+
 type Proposal @entity {
-  id: ID!
+  "unique identifier and primary key of the `Proposal` entity"
+  id: ID! # Set to `${molochv3.id}-proposal-${proposal.id}`
   proposalId: Bytes!
   flags: BigInt!
   submittedBy: Bytes
@@ -104,20 +117,24 @@ type Proposal @entity {
   # onchain votes
   votes: BigInt
 
-  offChainVotes: Vote
-  onChainVotes: Vote
+  offChainVotes: Vote # @derivedFrom(field: "offChain")
+  onChainVotes: Vote # @derivedFrom(field: "onChain")
 }
 
 type Vote @entity {
-  id: ID!
+  "unique identifier and primary key of the `Vote` entity"
+  id: ID! # Set to `${molochv3.id}-vote-${proposal.id}`
   nbNo: BigInt!
   nbYes: BigInt!
   nbVoters: BigInt
+  offChain: Proposal
+  onChain: Proposal
   proposal: Proposal
 }
 
 type Bank @entity {
-  id: ID!
+  "unique identifier and primary key of the `Bank` entity"
+  id: ID! # Set to `${bank.id}`
   bankAddress: Bytes
   daoAddress: Bytes
   balance: BigInt
@@ -127,20 +144,23 @@ type Bank @entity {
 }
 
 type Token @entity {
-  id: ID!
+  "unique identifier and primary key of the `Token` entity"
+  id: ID! # Set to `${molochv3.id}-token-${token.id}`
   tokenAddress: Bytes!
   balance: BigInt
 }
 
 type TokenBalance @entity {
-  id: ID!
+  "unique identifier and primary key of the `TokenBalance` entity"
+  id: ID! # Set to `${molochv3.id}-tokenbalance-${tokenBalance.id}`
   token: Token! #[Token!]
   tokenBalance: BigInt!
   member: Member
 }
 
 type Adapter @entity {
-  id: ID!
+  "unique identifier and primary key of the `Adapter` entity"
+  id: ID! # Set to `${molochv3.id}-adapter-${adapter.id}`
   adapterId: Bytes!
   adapterAddress: Bytes!
   "Adapter acl (access control layer)"
@@ -149,7 +169,8 @@ type Adapter @entity {
 }
 
 type Extension @entity {
-  id: ID!
+  "unique identifier and primary key of the `Extension` entity"
+  id: ID! # Set to `${molochv3.id}-extension-${extension.id}`
   "Extension contract address"
   extensionAddress: Bytes!
   "Extension ID"

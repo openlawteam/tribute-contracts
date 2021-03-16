@@ -1146,6 +1146,40 @@ export class Vote extends Entity {
     }
   }
 
+  get offChain(): string | null {
+    let value = this.get("offChain");
+    if (value === null || value.kind == ValueKind.NULL) {
+      return null;
+    } else {
+      return value.toString();
+    }
+  }
+
+  set offChain(value: string | null) {
+    if (value === null) {
+      this.unset("offChain");
+    } else {
+      this.set("offChain", Value.fromString(value as string));
+    }
+  }
+
+  get onChain(): string | null {
+    let value = this.get("onChain");
+    if (value === null || value.kind == ValueKind.NULL) {
+      return null;
+    } else {
+      return value.toString();
+    }
+  }
+
+  set onChain(value: string | null) {
+    if (value === null) {
+      this.unset("onChain");
+    } else {
+      this.set("onChain", Value.fromString(value as string));
+    }
+  }
+
   get proposal(): string | null {
     let value = this.get("proposal");
     if (value === null || value.kind == ValueKind.NULL) {
