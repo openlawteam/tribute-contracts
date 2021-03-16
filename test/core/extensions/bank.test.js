@@ -27,7 +27,10 @@ SOFTWARE.
 const {
   sha3,
   createDao,
+  sharePrice,
+  numberOfShares,
   BankExtension,
+  BankFactory,
   ETH_TOKEN,
 } = require("../../../utils/DaoFactory.js");
 
@@ -69,4 +72,79 @@ contract("MolochV3 - Bank Extension", async (accounts) => {
     const totalTokens = await bank.nbTokens();
     assert.equal(totalTokens, 1);
   });
+
+  it("should not be possible to create a bank that supports more than 200 internal tokens", async () => {
+    const daoOwner = accounts[0];
+    const maxInternalTokens = 201;
+    try {
+      await createDao(
+        daoOwner,
+        sharePrice,
+        numberOfShares,
+        10,
+        1,
+        ETH_TOKEN,
+        true,
+        maxInternalTokens,
+        10
+      );
+      assert.fail("should not be possible to create the bank extension");
+    } catch (e) {
+      assert.equal(e.reason, "max number of internal tokens should be (0,200)");
+    }
+  });
+
+  it("should not be possible to create a bank that supports more than 200 internal tokens", async () => {
+    const maxInternalTokens = 201;
+    const maxExternalTokens = 10;
+    try {
+      const identityBank = await BankExtension.deployed();
+      const bankFactory = await BankFactory.new(identityBank.address);
+      await bankFactory.createBank(maxInternalTokens, maxExternalTokens);
+      assert.fail("should not be possible to create the bank extension");
+    } catch (e) {
+      assert.equal(e.reason, "max number of internal tokens should be (0,200)");
+    }
+  });
+
+  it("should not be possible to create a bank that supports more than 200 external tokens", async () => {
+    const maxInternalTokens = 10;
+    const maxExternalTokens = 201;
+    try {
+      const identityBank = await BankExtension.deployed();
+      const bankFactory = await BankFactory.new(identityBank.address);
+      await bankFactory.createBank(maxInternalTokens, maxExternalTokens);
+      assert.fail("should not be possible to create the bank extension");
+    } catch (e) {
+      assert.equal(e.reason, "max number of external tokens should be (0,200)");
+    }
+  });
+
+  it("should not be possible to create a bank that supports 0 internal tokens", async () => {
+    const maxInternalTokens = 0;
+    const maxExternalTokens = 10;
+    try {
+      const identityBank = await BankExtension.deployed();
+      const bankFactory = await BankFactory.new(identityBank.address);
+      await bankFactory.createBank(maxInternalTokens, maxExternalTokens);
+      assert.fail("should not be possible to create the bank extension");
+    } catch (e) {
+      assert.equal(e.reason, "max number of internal tokens should be (0,200)");
+    }
+  });
+
+  it("should not be possible to create a bank that supports 0 external tokens", async () => {
+    const maxInternalTokens = 10;
+    const maxExternalTokens = 0;
+    try {
+      const identityBank = await BankExtension.deployed();
+      const bankFactory = await BankFactory.new(identityBank.address);
+      await bankFactory.createBank(maxInternalTokens, maxExternalTokens);
+      assert.fail("should not be possible to create the bank extension");
+    } catch (e) {
+      assert.equal(e.reason, "max number of external tokens should be (0,200)");
+    }
+  });
+
+  //TODO should not be possible to set maxTokens if extension already initialized
 });

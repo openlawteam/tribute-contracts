@@ -190,7 +190,8 @@ async function createBatchVotingDao(
     gracePeriod,
     ETH_TOKEN,
     false,
-    members[0].address
+    100,
+    100
   );
 
   const bankAddress = await dao.getExtensionAddress(sha3("bank"));
