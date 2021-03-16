@@ -38,7 +38,7 @@ export function handleSubmittedProposal(event: SubmittedProposal): void {
   let proposal = Proposal.load(daoProposalId);
 
   log.info(
-    "=============== handleSubmittedProposal event fired. daoAddress: {}, proposalId: {}",
+    "=============== SubmittedProposal event fired. daoAddress: {}, proposalId: {}",
     [event.address.toHexString(), event.params.proposalId.toHexString()]
   );
 
@@ -89,10 +89,9 @@ export function handleSponsoredProposal(event: SponsoredProposal): void {
   let proposal = Proposal.load(newProposalId);
   let sponsoredAt = event.block.timestamp.toString();
 
-  log.info(
-    "=============== handleSponsoredProposal event fired. proposalId: {}",
-    [event.params.proposalId.toHexString()]
-  );
+  log.info("=============== SponsoredProposal event fired. proposalId: {}", [
+    event.params.proposalId.toHexString(),
+  ]);
 
   proposal.flags = event.params.flags;
   proposal.sponsoredAt = sponsoredAt;
@@ -105,10 +104,9 @@ export function handleSponsoredProposal(event: SponsoredProposal): void {
 export function handleProcessedProposal(event: ProcessedProposal): void {
   let processedAt = event.block.timestamp.toString();
 
-  log.info(
-    "=============== handleProcessedProposal event fired. proposalId: {}",
-    [event.params.proposalId.toHexString()]
-  );
+  log.info("=============== ProcessedProposal event fired. proposalId: {}", [
+    event.params.proposalId.toHexString(),
+  ]);
 
   let proposal = loadProposalAndSaveVoteResults(
     event.address,
@@ -138,7 +136,7 @@ export function handleUpdateDelegateKey(event: UpdateDelegateKey): void {
     event.params.memberAddress != event.params.newDelegateKey;
 
   log.info(
-    "=============== handleUpdateDelegateKey event fired. memberAddress {}, newDelegateKey {}",
+    "=============== UpdateDelegateKey event fired. memberAddress {}, newDelegateKey {}",
     [
       event.params.memberAddress.toHexString(),
       event.params.newDelegateKey.toHexString(),
@@ -157,7 +155,7 @@ export function handleMemberJailed(event: MemberJailed): void {
   let member = Member.load(memberId);
   member.isJailed = true;
 
-  log.info("=============== handleMemberJailed event fired. memberAddr {}", [
+  log.info("=============== MemberJailed event fired. memberAddr {}", [
     event.params.memberAddr.toHexString(),
   ]);
 
@@ -173,7 +171,7 @@ export function handleMemberUnjailed(event: MemberUnjailed): void {
   let member = Member.load(memberId);
   member.isJailed = false;
 
-  log.info("=============== handleMemberUnjailed event fired. memberAddr {}", [
+  log.info("=============== MemberUnjailed event fired. memberAddr {}", [
     event.params.memberAddr.toHexString(),
   ]);
 
@@ -187,7 +185,7 @@ export function handleAdapterAdded(event: AdapterAdded): void {
 
   let adapter = Adapter.load(daoAdapterId);
 
-  log.info("=============== handleAdapterAdded event fired. adapterId: {}", [
+  log.info("=============== AdapterAdded event fired. adapterId: {}", [
     event.params.adapterId.toHexString(),
   ]);
 
@@ -211,7 +209,7 @@ export function handleAdapterRemoved(event: AdapterRemoved): void {
 
   let adapter = Adapter.load(daoAdapterId);
 
-  log.info("=============== handleAdapterRemoved event fired. adapterId: {}", [
+  log.info("=============== AdapterRemoved event fired. adapterId: {}", [
     event.params.adapterId.toHexString(),
   ]);
 
@@ -229,7 +227,7 @@ export function handleExtensionAdded(event: ExtensionAdded): void {
     .concat(extensionId.toHex());
 
   log.info(
-    "=============== handleExtensionAdded event fired. extensionAddress {}, extensionId {}, daoAddress {}",
+    "=============== ExtensionAdded event fired. extensionAddress {}, extensionId {}, daoAddress {}",
     [
       event.params.extensionAddress.toHexString(),
       event.params.extensionId.toHexString(),
@@ -285,10 +283,9 @@ export function handleExtensionRemoved(event: ExtensionRemoved): void {
     .concat("-extension-")
     .concat(extensionId.toHex());
 
-  log.info(
-    "=============== handleExtensionRemoved event fired. extensionId {}",
-    [event.params.extensionId.toHexString()]
-  );
+  log.info("=============== ExtensionRemoved event fired. extensionId {}", [
+    event.params.extensionId.toHexString(),
+  ]);
   let extension = Extension.load(daoExtensionId);
 
   if (extension != null) {
@@ -298,7 +295,7 @@ export function handleExtensionRemoved(event: ExtensionRemoved): void {
 
 export function handleConfigurationUpdated(event: ConfigurationUpdated): void {
   log.info(
-    "=============== handleConfigurationUpdated event fired. key {}, value {}",
+    "=============== ConfigurationUpdated event fired. key {}, value {}",
     [event.params.key.toHexString(), event.params.value.toHexString()]
   );
 }
@@ -307,7 +304,7 @@ export function handleAddressConfigurationUpdated(
   event: AddressConfigurationUpdated
 ): void {
   log.info(
-    "=============== handleAddressConfigurationUpdated event fired. key {}, value {}",
+    "=============== AddressConfigurationUpdated event fired. key {}, value {}",
     [event.params.key.toHexString(), event.params.value.toHexString()]
   );
 }

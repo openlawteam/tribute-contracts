@@ -22,10 +22,10 @@ function loadOrCreateBank(address: string): Bank {
  *  BankExtension.create(event.params.bankAddress);
  */
 export function handleBankCreated(event: BankCreated): void {
-  log.info(
-    "================ handleBankCreated event fired. bankAddress: {}, {}",
-    [event.params.bankAddress.toHexString(), event.address.toHexString()]
-  );
+  log.info("================ BankCreated event fired. bankAddress: {}, {}", [
+    event.params.bankAddress.toHexString(),
+    event.address.toHexString(),
+  ]);
   // let daoAddress = event.address;
   let bankAddress = event.params.bankAddress;
 
