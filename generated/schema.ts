@@ -288,6 +288,15 @@ export class Member extends Entity {
     }
   }
 
+  get didFullyRagequit(): boolean {
+    let value = this.get("didFullyRagequit");
+    return value.toBoolean();
+  }
+
+  set didFullyRagequit(value: boolean) {
+    this.set("didFullyRagequit", Value.fromBoolean(value));
+  }
+
   get isDelegated(): boolean {
     let value = this.get("isDelegated");
     return value.toBoolean();
@@ -304,15 +313,6 @@ export class Member extends Entity {
 
   set isJailed(value: boolean) {
     this.set("isJailed", Value.fromBoolean(value));
-  }
-
-  get didFullyRagequit(): boolean {
-    let value = this.get("didFullyRagequit");
-    return value.toBoolean();
-  }
-
-  set didFullyRagequit(value: boolean) {
-    this.set("didFullyRagequit", Value.fromBoolean(value));
   }
 }
 

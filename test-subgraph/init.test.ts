@@ -1,12 +1,12 @@
 import { Signer } from "@ethersproject/abstract-signer";
 import fs from "fs";
-// import path from "path";
 import { ethers, waffle } from "hardhat";
 import { expect } from "chai";
 import { ApolloFetch, FetchResult } from "apollo-fetch";
 
 import { config as dotenvConfig } from "dotenv";
 import path, { resolve } from "path";
+
 dotenvConfig({ path: resolve(__dirname, "./.env") });
 
 // Contract Artifacts

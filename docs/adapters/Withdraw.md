@@ -60,4 +60,4 @@ DAORegistry
 
 ## Events
 
-When the withdraw process is completed a `Withdraw` event is emitted with the `account`, `token`, and `amount` parameters.
+No events are emitted from this adapter.
