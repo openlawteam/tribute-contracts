@@ -108,7 +108,6 @@ contract BankExtension is DaoConstants, AdapterGuard, IExtension {
         availableInternalTokens[SHARES] = true;
         internalTokens.push(SHARES);
 
-
         _createNewAmountCheckpoint(creator, SHARES, 1);
         _createNewAmountCheckpoint(TOTAL, SHARES, 1);
 
@@ -158,7 +157,10 @@ contract BankExtension is DaoConstants, AdapterGuard, IExtension {
      */
     function setMaxTokensAllowed(uint8 maxTokens) external {
         require(!initialized, "bank already initialized");
-        require(maxTokens <= MAX_TOKENS_GUILD_BANK, "maximum number of tokens allowed in the bank is 200");
+        require(
+            maxTokens <= MAX_TOKENS_GUILD_BANK,
+            "maximum number of tokens allowed in the bank is 200"
+        );
         maxTokensAllowed = maxTokens;
     }
 
@@ -177,7 +179,10 @@ contract BankExtension is DaoConstants, AdapterGuard, IExtension {
     {
         require(isNotReservedAddress(token), "reservedToken");
         require(!availableInternalTokens[token], "internalToken");
-        require(tokens.length <= maxTokensAllowed, "exceeds the maximum tokens allowed");
+        require(
+            tokens.length <= maxTokensAllowed,
+            "exceeds the maximum tokens allowed"
+        );
 
         if (!availableTokens[token]) {
             availableTokens[token] = true;
@@ -196,7 +201,10 @@ contract BankExtension is DaoConstants, AdapterGuard, IExtension {
     {
         require(isNotReservedAddress(token), "reservedToken");
         require(!availableTokens[token], "availableToken");
-        require(internalTokens.length <= maxTokensAllowed, "exceeds the maximum internal tokens allowed");
+        require(
+            internalTokens.length <= maxTokensAllowed,
+            "exceeds the maximum internal tokens allowed"
+        );
 
         if (!availableInternalTokens[token]) {
             availableInternalTokens[token] = true;
