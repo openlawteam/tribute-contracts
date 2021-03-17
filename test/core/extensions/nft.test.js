@@ -47,7 +47,7 @@ contract("MolochV3 - NFT Extension", async (accounts) => {
       1,
       ETH_TOKEN,
       true,
-      true
+      100
     );
 
     const nftExtension = await dao.getExtensionAddress(sha3("nft"));

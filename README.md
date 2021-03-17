@@ -35,16 +35,18 @@ Each adapter needs to be configured with the [Access Flags](#access-control-laye
 Adapters implemented in the MolochV3 project:
 
 - [Configuration](https://github.com/openlawteam/molochv3-contracts/blob/master/docs/adapters/Configuration.md): manages storing and retrieving per-DAO settings required by shared adapters.
+- [Distribute](https://github.com/openlawteam/molochv3-contracts/blob/master/docs/adapters/Distribute.md): allows the members to distribute funds to one or all members of the DAO.
 - [Financing](https://github.com/openlawteam/molochv3-contracts/blob/master/docs/adapters/Financing.md): allows individuals and/or organizations to request funds to finance their projects, and the members of the DAO have the power to vote and decide which projects should be funded.
 - [GuildKick](https://github.com/openlawteam/molochv3-contracts/blob/master/docs/adapters/GuildKick.md): gives the members the freedom to choose which individuals or organizations should really be part of the DAO.
 - [Managing](https://github.com/openlawteam/molochv3-contracts/blob/master/docs/adapters/Managing.md): enhances the DAO capabilities by adding/updating the DAO Adapters through a voting process.
 - [OffchainVoting](https://github.com/openlawteam/molochv3-contracts/blob/master/docs/adapters/OffchainVoting.md): adds the offchain voting governance process to the DAO to support gasless voting.
 - [Onboarding](https://github.com/openlawteam/molochv3-contracts/blob/master/docs/adapters/Onboarding.md): triggers the process of minting internal tokens in exchange of a specific token at a fixed price.
-- [Tribute](https://github.com/openlawteam/molochv3-contracts/blob/master/docs/adapters/Tribute.md): allows potential and existing DAO members to contribute any amount of ERC-20 tokens to the DAO in exchange for any amount of DAO internal tokens.
 - [Ragequit](https://github.com/openlawteam/molochv3-contracts/blob/master/docs/adapters/Ragequit.md): gives the members the freedom to choose when it is the best time to exit the DAO for any given reason.
+- [Tribute](https://github.com/openlawteam/molochv3-contracts/blob/master/docs/adapters/Tribute.md): allows potential and existing DAO members to contribute any amount of ERC-20 tokens to the DAO in exchange for any amount of DAO internal tokens.
+- [TributeNFT](https://github.com/openlawteam/molochv3-contracts/blob/master/docs/adapters/TributeNFT.md): allows potential DAO members to contribute a registered ERC-712 asset to the DAO in exchange for any amount of DAO shares.
 - [Voting](https://github.com/openlawteam/molochv3-contracts/blob/master/docs/adapters/Voting.md): adds the simple on chain voting governance process to the DAO.
 - [Withdraw](https://github.com/openlawteam/molochv3-contracts/blob/master/docs/adapters/Withdraw.md): allows the members to withdraw their funds from the DAO bank.
-- [Distribute](https://github.com/openlawteam/molochv3-contracts/blob/master/docs/adapters/Distribute.md): allows the members to distribute funds to one or all members of the DAO.
+
 
 Considerations:
 

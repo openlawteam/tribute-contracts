@@ -1,59 +1,171 @@
 ## Adapter description and scope
 
-This is a template for the documentation of an Adapter.
+The Tribute NFT adapter allows potential and existing DAO members to contribute any ERC-712 tokens to the DAO in exchange for any amount of DAO internal tokens (in this case it mints SHARES always). If the proposal passes, the requested internal tokens are minted to the applicant, and the ERC-712 asset provided as tribute is transferred to the NFT Extension. In addition, the applicant becomes a member of the DAO (if not already one).
 
-Here you can provide a brief description of the adapter and what is the use-case covered by the implementation. It is also good to add the goal of the Adapter and what value it brings to the DAO.
+The Tribute NFT adapter is similar to the Onboarding adapter in that both allow for joining the DAO (or increasing a stake in the DAO) through the exchange of contributed assets for DAO internal tokens. However, there are key differences:
+
+- The Tribute NFT adapter accepts only ERC-712 tokens.
+
+- The Tribute NFT adapter has more open-ended proposal parameters. The proposer can request any amount of internal tokens to be minted in exchange for any amount of the ERC-712 tokens contributed. The ERC-712 must be supported/registered in the NFT Extension. The worthiness of that transfer proposal for the DAO is left to the vote of its members.
 
 ## Adapter workflow
 
-An overview of the entire process executed by Adapter functions, the main interactions and routines covered/executed.
+A tribute is made by first submitting a proposal specifying (1) the applicant who wishes to join the DAO (or increase his stake in the DAO), (2) the amount of internal tokens (SHARES) the applicant desires, and (3) the ERC-712 NFT address, and token id the applicant will transfer to the DAO in exchange for those internal tokens. The ERC-712 token must be already registered with the DAO NFT extension. Prior to submitting the proposal, the applicant must first separately `approve` the adapter as spender of the ERC-712 tokens provided as tribute. The proposal submission will transfer the tribute tokens from the applicant to the adapter to be held in escrow.
+
+If the proposal has not been sponsored yet, the applicant can cancel the proposal. Upon cancellation, the proposal is marked as processed and the tribute tokens are returned to the proposer. Only the applicant can cancel the proposal.
+
+When a DAO member sponsors the proposal, the voting period begins allowing members to vote for or against the proposal. Only a member can sponsor the proposal.
+
+After the voting period is done along with its subsequent grace period, the proposal can be processed. Any account can process the proposal. Upon processing, if the vote has passed, the requested internal tokens are minted to the applicant and the applicant is added as a DAO member (if not already one). The tribute token is registered with the DAO Bank (if not already registered), and the tribute NFT token id is added to the NFT Extension, transferred out of escrow from the adapter to the NFT extension.
+
+Upon processing, if the vote has failed, the tribute tokens are returned to the proposer.
 
 ## Adapter configuration
 
-Specify which additional configurations are required to make this adapter work. For instance: needs access to the DAO members, needs access to the DAO Bank, relies on Adapter X, Y and Extension Z.
+A DAO NFT extension must exist and be configured with proper access for this adapter.
 
-DAORegistry Access Flags: `SUBMIT_PROPOSAL`, ....
+The DAO internal tokens to be minted to the applicant must be registered with the DAO Bank.
 
-Bank Extension Access Flags: `WITHDRAW`, `INTERNAL_TRANSFER`, ....
+DAORegistry Access Flags: `SUBMIT_PROPOSAL`, `SPONSOR_PROPOSAL`, `PROCESS_PROPOSAL`, `NEW_MEMBER`.
+
+NFT Extension Access Flags: `TRANSFER_NFT`.
 
 ## Adapter state
 
-Describe each variable public and private of the adapter and what is the purpose of that variable.
+- `proposals`: All tribute NFT proposals handled by each DAO.
+- `ProposalDetails`:
+  - `id`: The proposal id.
+  - `applicant`: The applicant address (who will receive the DAO internal tokens and become a member).
+  - `nftAddr`: The address of the NFT in ERC-712 standard to be locked in the DAO in exchange for voting power.
+  - `nftTokenId`: The nft token identifier.
+  - `requestedShares`: The amount of shares requested to lock the NFT in exchange of DAO internal tokens.
 
 ## Dependencies and interactions (internal / external)
 
-Add the information about all the interactions that are triggered by this DAO, which contracts it depends on, and which functions it calls.
+- BankExtension
+
+  - Adds to the applicant balance the amount of requested DAO internal tokens.
+
+- NFTExtension
+
+  - Transfers the NFT asset from the adapter escrow to the extension collection.
+
+- DaoRegistry
+
+  - Gets Bank extension address.
+  - Checks if applicant address is not reserved.
+  - Gets Voting adapter address.
+  - Submits/sponsors/processes the tribute proposal.
+  - Checks if proposal flag is `SPONSORED`, `PROCESSED`.
+  - Checks if applicant is `JAILED`.
+  - Creates a new member entry (if applicant is not already a member).
+
+- Voting
+
+  - Gets address that sent the sponsorProposal transaction.
+  - Starts new voting for the tribute proposal.
+  - Checks the voting results.
 
 ## Functions description and assumptions / checks
 
-Describe the public and private functions signatures with proper documentation and clearly explain what each function does. Specify what are expected the arguments and pre-conditions to execute the functions. Also, provide what is the expected outcome.
-
-Examples:
-
 ### receive() external payable
-
-### function submitKickProposal
 
 ```solidity
     /**
-     * @notice Creates a guild kick proposal, opens it for voting, and sponsors it.
-     * @dev A member can not kick himself.
-     * @dev Only one kick per DAO can be executed at time.
-     * @dev Only members that have shares can be kicked out.
-     * @dev Proposal ids can not be reused.
-     * @param dao The dao address.
-     * @param proposalId The guild kick proposal id.
-     * @param memberToKick The member address that should be kicked out of the DAO.
-     * @param data Additional information related to the kick proposal.
+     * @notice default fallback function to prevent from sending ether to the contract.
      */
-    function submitKickProposal(
+    receive() external payable
+```
+
+### function provideTribute
+
+Not implemented because the adapter does not handle ERC20 tokens.
+
+```solidity
+function provideTribute(
+  DaoRegistry dao,
+  bytes32 proposalId,
+  address applicant,
+  address tokenToMint,
+  uint256 requestAmount,
+  address tokenAddr,
+  uint256 tributeAmount
+) external pure override {
+  revert("not supported operation");
+}
+
+```
+
+### function provideTributeNFT
+
+```solidity
+   /**
+     * @notice Creates a tribute proposal and escrows received tokens into the adapter.
+     * @dev Applicant address must not be reserved.
+     * @dev The proposer must first separately `approve` the adapter as spender of the ERC-20 tokens provided as tribute.
+     * @param dao The DAO address.
+     * @param proposalId The proposal id (managed by the client).
+     * @param nftAddr The address of the ERC-721 NFT DAO that will be locked in the DAO in exchange for Shares.
+     * @param nftTokenId The NFT token id.
+     * @param requestedShares The amount of Shares requested of DAO as voting power.
+     */
+    function provideTributeNFT(
         DaoRegistry dao,
         bytes32 proposalId,
-        address memberToKick,
-        bytes calldata data
-    ) external override onlyMember(dao)
+        address nftAddr,
+        uint256 nftTokenId,
+        uint256 requestedShares
+    ) external
+```
+
+### function sponsorProposal
+
+```solidity
+    /**
+     * @notice Sponsors a tribute proposal to start the voting process.
+     * @dev Only members of the DAO can sponsor a tribute proposal.
+     * @param dao The DAO address.
+     * @param proposalId The proposal id.
+     * @param data Additional details about the proposal.
+     */
+    function sponsorProposal(
+        DaoRegistry dao,
+        bytes32 proposalId,
+        bytes memory data
+    ) external
+```
+
+### function cancelProposal
+
+```solidity
+    /**
+     * @notice Cancels a tribute proposal which marks it as processed and returns the NFT to the original ow.
+     * @dev Proposal id must exist.
+     * @dev Only proposals that have not already been sponsored can be cancelled.
+     * @dev Only proposer can cancel a tribute proposal.
+     * @param dao The DAO address.
+     * @param proposalId The proposal id.
+     */
+    function cancelProposal(DaoRegistry dao, bytes32 proposalId)
+        external
+```
+
+### function processProposal
+
+```solidity
+   /**
+     * @notice Processes the proposal to handle minting and exchange of DAO internal tokens for tribute tokens (passed vote) or the return the NFT to the original owner (failed vote).
+     * @dev Proposal id must exist.
+     * @dev Only proposals that have not already been processed are accepted.
+     * @dev Only sponsored proposals with completed voting are accepted.
+     * @dev ERC-721 tribute tokens must be registered with the DAO Bank.
+     * @param dao The DAO address.
+     * @param proposalId The proposal id.
+     */
+    function processProposal(DaoRegistry dao, bytes32 proposalId)
+        external
 ```
 
 ## Events
 
-List all the events that are emitted by the function in this Adapter implementation.
+No events are emitted from this adapter.
