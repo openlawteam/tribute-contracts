@@ -23,7 +23,7 @@ SOFTWARE.
 const DaoFactory = artifacts.require("./core/DaoFactory");
 const DaoRegistry = artifacts.require("./core/DaoRegistry");
 
-const { sha3, toBN, addDefaultAdapters } = require("../../utils/DaoFactory.js");
+const { toBN } = require("../../utils/DaoFactory.js");
 
 contract("DaoFactory", async (accounts) => {
   const owner = accounts[1];
@@ -43,8 +43,6 @@ contract("DaoFactory", async (accounts) => {
       from: owner,
       gasPrice: toBN("0"),
     });
-
-    console.log("daoFactory", daoFactory);
 
     let pastEvents = await daoFactory.getPastEvents();
     let { _address, _name } = pastEvents[0].returnValues;

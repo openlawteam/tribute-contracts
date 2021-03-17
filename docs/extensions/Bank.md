@@ -6,7 +6,7 @@ It also manages internal tokens such as shares and loot (but could be anything e
 
 On top of that, it implements balance checkpoints so it is possible to retrieve prior balance at a certain block number. The balance is managed for the member address (not the delegate key).
 
-`availableTokens` and `availableInteralTokens`, are tokens that have been whitelisted for use with the DAO. A token goes from `tokens` or `internalTokens` to `avaialbleTokens` and `availableInternalTokens` respectively when the function `registerPotentialNewToken` or `registerPotentialNewInternalToken` is called.
+`availableTokens` and `availableInteralTokens`, are tokens that have been whitelisted for use with the DAO. A token goes from `tokens` or `internalTokens` to `availableTokens` and `availableInternalTokens` respectively when the function `registerPotentialNewToken` or `registerPotentialNewInternalToken` is called.
 
 ## Extension state
 
@@ -54,6 +54,10 @@ Returns true if the token address is a registered internal token.
 ### function isTokenAllowed(address token) returns (bool)
 
 Returns true if the token address is a registered external token.
+
+### function setMaxExternalTokens(uint8 maxTokens)
+
+Sets the maximum number of external tokens managed by the Bank. It is possible to set that only if the Bank extension has not been initialized, otherwise it will fail. By default the extension can not handle more than 200 tokens - to prevent issues with block size limit.
 
 ### function registerPotentialNewToken(address token)
 

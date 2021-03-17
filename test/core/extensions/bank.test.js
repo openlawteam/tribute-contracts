@@ -27,11 +27,14 @@ SOFTWARE.
 const {
   sha3,
   createDao,
+  sharePrice,
+  numberOfShares,
   BankExtension,
+  BankFactory,
   ETH_TOKEN,
 } = require("../../../utils/DaoFactory.js");
 
-contract("Bank", async (accounts) => {
+contract("MolochV3 - Bank Extension", async (accounts) => {
   it("should be possible to create a dao with a bank extension pre-configured", async () => {
     const daoOwner = accounts[0];
     let dao = await createDao(daoOwner);
@@ -68,5 +71,55 @@ contract("Bank", async (accounts) => {
     const bank = await BankExtension.at(bankAddress);
     const totalTokens = await bank.nbTokens();
     assert.equal(totalTokens, 1);
+  });
+
+  it("should not be possible to create a bank that supports more than 200 external tokens", async () => {
+    const maxExternalTokens = 201;
+    try {
+      const identityBank = await BankExtension.deployed();
+      const bankFactory = await BankFactory.new(identityBank.address);
+      await bankFactory.createBank(maxExternalTokens);
+      assert.fail("should not be possible to create the bank extension");
+    } catch (e) {
+      assert.equal(e.reason, "max number of external tokens should be (0,200)");
+    }
+  });
+
+  it("should not be possible to create a bank that supports 0 external tokens", async () => {
+    const maxExternalTokens = 0;
+    try {
+      const identityBank = await BankExtension.deployed();
+      const bankFactory = await BankFactory.new(identityBank.address);
+      await bankFactory.createBank(maxExternalTokens);
+      assert.fail("should not be possible to create the bank extension");
+    } catch (e) {
+      assert.equal(e.reason, "max number of external tokens should be (0,200)");
+    }
+  });
+
+  it("should not be possible to set the max external tokens if bank is already initialized", async () => {
+    const maxExternalTokens = 10;
+    const daoOwner = accounts[0];
+    const dao = await createDao(
+      daoOwner,
+      sharePrice,
+      numberOfShares,
+      10,
+      1,
+      ETH_TOKEN,
+      true,
+      maxExternalTokens
+    );
+
+    const bankAddress = await dao.getExtensionAddress(sha3("bank"));
+    const bank = await BankExtension.at(bankAddress);
+    try {
+      await bank.setMaxExternalTokens(10);
+      assert.equal(
+        "should not be possible to set the max external tokens if the bank is initialized"
+      );
+    } catch (e) {
+      assert.equal(e.reason, "bank already initialized");
+    }
   });
 });
