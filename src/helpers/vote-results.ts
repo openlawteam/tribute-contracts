@@ -49,7 +49,7 @@ export function loadProposalAndSaveVoteResults(
       vote.nbYes = voteResults.value0;
       vote.nbNo = voteResults.value1;
 
-      vote.adapterName = "VotingContract";
+      vote.adapterName = votingAdapterName;
       vote.adapterAddress = votingAdapter.adapterAddress;
 
       vote.save();
@@ -74,7 +74,7 @@ export function loadProposalAndSaveVoteResults(
       vote.nbYes = voteResults.value5;
       vote.nbNo = voteResults.value6;
 
-      vote.adapterName = "OffchainVotingContract";
+      vote.adapterName = votingAdapterName;
       vote.adapterAddress = votingAdapter.adapterAddress;
 
       vote.save();
