@@ -18,12 +18,6 @@
  *
  */
 
-// const HDWalletProvider = require('@truffle/hdwallet-provider');
-// const infuraKey = "fj4jll3k.....";
-//
-// const fs = require('fs');
-// const mnemonic = fs.readFileSync(".secret").toString().trim();
-
 require("dotenv").config();
 
 module.exports = {
@@ -37,7 +31,7 @@ module.exports = {
    * $ truffle test --network <network-name>
    */
 
-  networks: {  
+  networks: {
     // Useful for testing. The `development` name is special - truffle uses it by default
     // if it's defined here and no other network is specified at the command line.
     // You should run a client (like ganache-cli, geth or parity) in a separate terminal
@@ -45,12 +39,12 @@ module.exports = {
     // options below to some value.
     //
     ganache: {
-      host: "127.0.0.1",     // Localhost (default: none)
-      port: 7545,            // Standard Ethereum port (default: none)
-      network_id: "*",       // Any network (default: none)
+      host: "127.0.0.1", // Localhost (default: none)
+      port: 7545, // Standard Ethereum port (default: none)
+      network_id: "1337", // Any network (default: none)
     },
     rinkeby: {
-      provider: function() { 
+      provider: function () {
         let infuraKey = process.env.INFURA_KEY;
         let HDWalletProvider = require("truffle-hdwallet-provider");
         let mnemonic = process.env.TRUFFLE_MNEMONIC;
