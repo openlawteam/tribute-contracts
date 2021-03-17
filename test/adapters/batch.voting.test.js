@@ -190,7 +190,6 @@ async function createBatchVotingDao(
     gracePeriod,
     ETH_TOKEN,
     false,
-    100,
     100
   );
 

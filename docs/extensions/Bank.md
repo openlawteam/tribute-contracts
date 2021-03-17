@@ -57,7 +57,7 @@ Returns true if the token address is a registered external token.
 
 ### function setMaxExternalTokens(uint8 maxTokens)
 
-Sets the maximum number of external tokens managed by the Bank. It is possible to set that only if the Bank extension has not been initialized, otherwise it will fail. By default the extension can not handle more than 200 tokens - to prevent issues with block size limit. 
+Sets the maximum number of external tokens managed by the Bank. It is possible to set that only if the Bank extension has not been initialized, otherwise it will fail. By default the extension can not handle more than 200 tokens - to prevent issues with block size limit.
 
 ### function registerPotentialNewToken(address token)
 
