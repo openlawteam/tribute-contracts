@@ -59,6 +59,23 @@ export class Molochv3 extends Entity {
     }
   }
 
+  get bankAddress(): Bytes | null {
+    let value = this.get("bankAddress");
+    if (value === null || value.kind == ValueKind.NULL) {
+      return null;
+    } else {
+      return value.toBytes();
+    }
+  }
+
+  set bankAddress(value: Bytes | null) {
+    if (value === null) {
+      this.unset("bankAddress");
+    } else {
+      this.set("bankAddress", Value.fromBytes(value as Bytes));
+    }
+  }
+
   get name(): string | null {
     let value = this.get("name");
     if (value === null || value.kind == ValueKind.NULL) {
@@ -1194,139 +1211,6 @@ export class Vote extends Entity {
       this.unset("proposal");
     } else {
       this.set("proposal", Value.fromString(value as string));
-    }
-  }
-}
-
-export class Bank extends Entity {
-  constructor(id: string) {
-    super();
-    this.set("id", Value.fromString(id));
-  }
-
-  save(): void {
-    let id = this.get("id");
-    assert(id !== null, "Cannot save Bank entity without an ID");
-    assert(
-      id.kind == ValueKind.STRING,
-      "Cannot save Bank entity with non-string ID. " +
-        'Considering using .toHex() to convert the "id" to a string.'
-    );
-    store.set("Bank", id.toString(), this);
-  }
-
-  static load(id: string): Bank | null {
-    return store.get("Bank", id) as Bank | null;
-  }
-
-  get id(): string {
-    let value = this.get("id");
-    return value.toString();
-  }
-
-  set id(value: string) {
-    this.set("id", Value.fromString(value));
-  }
-
-  get bankAddress(): Bytes | null {
-    let value = this.get("bankAddress");
-    if (value === null || value.kind == ValueKind.NULL) {
-      return null;
-    } else {
-      return value.toBytes();
-    }
-  }
-
-  set bankAddress(value: Bytes | null) {
-    if (value === null) {
-      this.unset("bankAddress");
-    } else {
-      this.set("bankAddress", Value.fromBytes(value as Bytes));
-    }
-  }
-
-  get daoAddress(): Bytes | null {
-    let value = this.get("daoAddress");
-    if (value === null || value.kind == ValueKind.NULL) {
-      return null;
-    } else {
-      return value.toBytes();
-    }
-  }
-
-  set daoAddress(value: Bytes | null) {
-    if (value === null) {
-      this.unset("daoAddress");
-    } else {
-      this.set("daoAddress", Value.fromBytes(value as Bytes));
-    }
-  }
-
-  get balance(): BigInt | null {
-    let value = this.get("balance");
-    if (value === null || value.kind == ValueKind.NULL) {
-      return null;
-    } else {
-      return value.toBigInt();
-    }
-  }
-
-  set balance(value: BigInt | null) {
-    if (value === null) {
-      this.unset("balance");
-    } else {
-      this.set("balance", Value.fromBigInt(value as BigInt));
-    }
-  }
-
-  get createdAt(): string | null {
-    let value = this.get("createdAt");
-    if (value === null || value.kind == ValueKind.NULL) {
-      return null;
-    } else {
-      return value.toString();
-    }
-  }
-
-  set createdAt(value: string | null) {
-    if (value === null) {
-      this.unset("createdAt");
-    } else {
-      this.set("createdAt", Value.fromString(value as string));
-    }
-  }
-
-  get totalShares(): BigInt | null {
-    let value = this.get("totalShares");
-    if (value === null || value.kind == ValueKind.NULL) {
-      return null;
-    } else {
-      return value.toBigInt();
-    }
-  }
-
-  set totalShares(value: BigInt | null) {
-    if (value === null) {
-      this.unset("totalShares");
-    } else {
-      this.set("totalShares", Value.fromBigInt(value as BigInt));
-    }
-  }
-
-  get molochv3(): string | null {
-    let value = this.get("molochv3");
-    if (value === null || value.kind == ValueKind.NULL) {
-      return null;
-    } else {
-      return value.toString();
-    }
-  }
-
-  set molochv3(value: string | null) {
-    if (value === null) {
-      this.unset("molochv3");
-    } else {
-      this.set("molochv3", Value.fromString(value as string));
     }
   }
 }

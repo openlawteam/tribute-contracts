@@ -1,16 +1,21 @@
+enum Voting {
+  OFFCHAIN
+  ONCHAIN
+}
+
 type Molochv3 @entity {
   "unique identifier and primary key of the `Tribute` entity"
   id: ID! # Set to `${molochv3.id}
   "The DAO address"
   daoAddress: Bytes
+  "The bank of the DAO"
+  bankAddress: Bytes
   "The name of the DAO"
   name: String
   "The DAO creator address"
   creator: Bytes
   totalShares: String
   createdAt: String
-  # "The bank of the DAO"
-  # bank: Bank
   "List of registered adapters"
   adapters: [Adapter!]! @derivedFrom(field: "molochv3")
   "List of registered extensions"
@@ -34,7 +39,7 @@ type Member @entity {
   isDelegated: Boolean
   isJailed: Boolean
 
-  # organizations: [MemberMolochv3!] @derivedFrom(field: "molochv3")
+  # molochv3: [MemberMolochv3!] @derivedFrom(field: "molochv3")
 }
 
 # type MemberMolochv3 @entity {
@@ -130,17 +135,7 @@ type Vote @entity {
   offChain: Proposal
   onChain: Proposal
   proposal: Proposal
-}
-
-type Bank @entity {
-  "unique identifier and primary key of the `Bank` entity"
-  id: ID! # Set to `${bank.id}`
-  bankAddress: Bytes
-  daoAddress: Bytes
-  balance: BigInt
-  createdAt: String
-  totalShares: BigInt
-  molochv3: Molochv3
+  # votingType: Voting!
 }
 
 type Token @entity {
