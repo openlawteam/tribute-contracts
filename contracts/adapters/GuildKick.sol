@@ -235,7 +235,6 @@ contract GuildKickContract is IGuildKick, DaoConstants, MemberGuard {
         uint256 sharesAndLootToBurn = kick.tokensToBurn;
 
         // Transfers the funds from the internal Guild account to the internal member's account.
-        // TODO: set a max limit for nbTokens in the Bank.
         for (uint256 i = 0; i < nbTokens; i++) {
             address token = bank.getToken(i);
             // Calculates the fair amount of funds to ragequit based on the token, shares and loot.

@@ -353,6 +353,7 @@ const deployDao = async (deployer, options) => {
   const isOffchainVoting = !!options.offchainVoting;
   const chainId = options.chainId || 1;
   const deployTestTokens = !!options.deployTestTokens;
+  const maxExternalTokens = options.maxExternalTokens || 100;
 
   await deployer.deploy(DaoRegistry);
 
@@ -364,7 +365,7 @@ const deployDao = async (deployer, options) => {
   await deployer.deploy(BankFactory, identityBank.address);
   const bankFactory = await BankFactory.deployed();
 
-  await bankFactory.createBank();
+  await bankFactory.createBank(maxExternalTokens);
   let pastEvent;
   while (pastEvent === undefined) {
     let pastEvents = await bankFactory.getPastEvents();
@@ -442,7 +443,8 @@ const createDao = async (
   votingPeriod = 10,
   gracePeriod = 1,
   tokenAddr = ETH_TOKEN,
-  finalize = true
+  finalize = true,
+  maxExternalTokens = 100
 ) => {
   const bankFactory = await BankFactory.deployed();
   const daoFactory = await DaoFactory.deployed();
@@ -454,7 +456,7 @@ const createDao = async (
 
   let dao = await DaoRegistry.at(daoAddress);
 
-  await bankFactory.createBank();
+  await bankFactory.createBank(maxExternalTokens);
 
   let pastEvents = await bankFactory.getPastEvents();
   let { bankAddress } = pastEvents[0].returnValues;
@@ -650,6 +652,7 @@ module.exports = {
   TestToken2,
   DaoFactory,
   DaoRegistry,
+  BankFactory,
   VotingContract,
   ManagingContract,
   FinancingContract,
