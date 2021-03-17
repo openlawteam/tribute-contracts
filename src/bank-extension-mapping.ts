@@ -37,6 +37,8 @@ function internalTransfer(
       member.delegateKey = memberAddress;
       member.isDelegated = false;
       member.isJailed = false;
+      // create 1-1 relationship between member and dao
+      member.molochv3 = daoAddress.toHexString();
     }
 
     if (token == null) {

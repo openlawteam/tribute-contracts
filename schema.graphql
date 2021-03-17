@@ -21,7 +21,7 @@ type Molochv3 @entity {
   "List of registered extensions"
   extensions: [Extension!]! @derivedFrom(field: "molochv3")
 
-  # members: [MemberMolochv3]! @derivedFrom(field: "user")
+  members: [Member]! @derivedFrom(field: "molochv3")
 }
 
 type Member @entity {
@@ -39,14 +39,8 @@ type Member @entity {
   isDelegated: Boolean
   isJailed: Boolean
 
-  # molochv3: [MemberMolochv3!] @derivedFrom(field: "molochv3")
+  molochv3: Molochv3
 }
-
-# type MemberMolochv3 @entity {
-#   id: ID! # Set to `${member.id}-${molochv3.id}`
-#   member: Member!
-#   molochv3: Molochv3!
-# }
 
 type Proposal @entity {
   "unique identifier and primary key of the `Proposal` entity"
