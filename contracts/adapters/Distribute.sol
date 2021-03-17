@@ -199,6 +199,20 @@ contract DistributeContract is IDistribute, DaoConstants, MemberGuard {
             distribution.status = DistributionStatus.IN_PROGRESS;
             distribution.blockNumber = block.number;
             ongoingDistributions[address(dao)] = proposalId;
+
+            BankExtension bank = BankExtension(dao.getExtensionAddress(BANK));
+            uint256 balance = bank.balanceOf(GUILD, distribution.token);
+            require(
+                balance - distribution.amount >= 0,
+                "not enough funds for the given token"
+            );
+
+            bank.internalTransfer(
+                GUILD,
+                ESCROW,
+                distribution.token,
+                distribution.amount
+            );
         } else if (
             voteResult == IVoting.VotingState.NOT_PASS ||
             voteResult == IVoting.VotingState.TIE
@@ -281,7 +295,7 @@ contract DistributeContract is IDistribute, DaoConstants, MemberGuard {
             bank.getPriorAmount(shareHolderAddr, SHARES, blockNumber);
         require(memberShares != 0, "not enough shares");
         // Distributes the funds to 1 share holder only
-        bank.internalTransfer(GUILD, shareHolderAddr, token, amount);
+        bank.internalTransfer(ESCROW, shareHolderAddr, token, amount);
     }
 
     function _distributeAll(
@@ -305,7 +319,7 @@ contract DistributeContract is IDistribute, DaoConstants, MemberGuard {
 
                 if (amountToDistribute > 0) {
                     bank.internalTransfer(
-                        GUILD,
+                        ESCROW,
                         memberAddr,
                         token,
                         amountToDistribute
