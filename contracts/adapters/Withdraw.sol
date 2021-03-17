@@ -34,8 +34,6 @@ SOFTWARE.
  */
 
 contract WithdrawContract is DaoConstants, MemberGuard {
-    event Withdraw(address account, address token, uint256 amount);
-
     /**
      * @notice default fallback function to prevent from sending ether to the contract.
      */
@@ -68,7 +66,5 @@ contract WithdrawContract is DaoConstants, MemberGuard {
         require(balance > 0, "nothing to withdraw");
 
         bank.withdraw(account, token, balance);
-
-        emit Withdraw(account, token, balance);
     }
 }

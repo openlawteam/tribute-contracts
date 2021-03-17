@@ -3,8 +3,8 @@ name: Truffle CI
 on:
   push:
     branches:
-    # long-lived branches
-    - master
+      # long-lived branches
+      - master
   pull_request:
     branches:
       - "*"
@@ -13,10 +13,14 @@ jobs:
   test:
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@v1
-    - name: Use Node.js 12.X
-      uses: actions/setup-node@v1
-      with:
-        node-version: '12'
-    - run: npm install
-    - run: npm test
+      - uses: actions/checkout@v1
+      - name: Use Node.js 12.X
+        uses: actions/setup-node@v1
+        with:
+          node-version: "12"
+      - name: Setup SSH to install dependencies
+        uses: webfactory/ssh-agent@v0.5.0
+        with:
+          ssh-private-key: ${{ secrets.SSH_PRIVATE_KEY }}
+      - run: npm install
+      - run: npm test
