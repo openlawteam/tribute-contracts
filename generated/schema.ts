@@ -1062,40 +1062,6 @@ export class Proposal extends Entity {
       this.set("votes", Value.fromBigInt(value as BigInt));
     }
   }
-
-  get offChainVotes(): string | null {
-    let value = this.get("offChainVotes");
-    if (value === null || value.kind == ValueKind.NULL) {
-      return null;
-    } else {
-      return value.toString();
-    }
-  }
-
-  set offChainVotes(value: string | null) {
-    if (value === null) {
-      this.unset("offChainVotes");
-    } else {
-      this.set("offChainVotes", Value.fromString(value as string));
-    }
-  }
-
-  get onChainVotes(): string | null {
-    let value = this.get("onChainVotes");
-    if (value === null || value.kind == ValueKind.NULL) {
-      return null;
-    } else {
-      return value.toString();
-    }
-  }
-
-  set onChainVotes(value: string | null) {
-    if (value === null) {
-      this.unset("onChainVotes");
-    } else {
-      this.set("onChainVotes", Value.fromString(value as string));
-    }
-  }
 }
 
 export class Vote extends Entity {
@@ -1163,55 +1129,13 @@ export class Vote extends Entity {
     }
   }
 
-  get offChain(): string | null {
-    let value = this.get("offChain");
-    if (value === null || value.kind == ValueKind.NULL) {
-      return null;
-    } else {
-      return value.toString();
-    }
+  get voteType(): string {
+    let value = this.get("voteType");
+    return value.toString();
   }
 
-  set offChain(value: string | null) {
-    if (value === null) {
-      this.unset("offChain");
-    } else {
-      this.set("offChain", Value.fromString(value as string));
-    }
-  }
-
-  get onChain(): string | null {
-    let value = this.get("onChain");
-    if (value === null || value.kind == ValueKind.NULL) {
-      return null;
-    } else {
-      return value.toString();
-    }
-  }
-
-  set onChain(value: string | null) {
-    if (value === null) {
-      this.unset("onChain");
-    } else {
-      this.set("onChain", Value.fromString(value as string));
-    }
-  }
-
-  get proposal(): string | null {
-    let value = this.get("proposal");
-    if (value === null || value.kind == ValueKind.NULL) {
-      return null;
-    } else {
-      return value.toString();
-    }
-  }
-
-  set proposal(value: string | null) {
-    if (value === null) {
-      this.unset("proposal");
-    } else {
-      this.set("proposal", Value.fromString(value as string));
-    }
+  set voteType(value: string) {
+    this.set("voteType", Value.fromString(value));
   }
 }
 

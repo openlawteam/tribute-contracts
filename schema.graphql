@@ -1,3 +1,4 @@
+# Also defined in src/helpers/enums.ts
 enum Voting {
   OFFCHAIN
   ONCHAIN
@@ -122,8 +123,10 @@ type Proposal @entity {
   # onchain votes
   votes: BigInt
 
-  offChainVotes: Vote # @derivedFrom(field: "offChain")
-  onChainVotes: Vote # @derivedFrom(field: "onChain")
+  # onChainOrOffChainVotes: Vote @derivedFrom(field: "proposal")
+
+  # offChainVotes: Vote # @derivedFrom(field: "proposal")
+  # onChainVotes: Vote # @derivedFrom(field: "proposal")
 }
 
 type Vote @entity {
@@ -132,10 +135,10 @@ type Vote @entity {
   nbNo: BigInt!
   nbYes: BigInt!
   nbVoters: BigInt
-  offChain: Proposal
-  onChain: Proposal
-  proposal: Proposal
-  # votingType: Voting!
+  # offChain: Proposal
+  # onChain: Proposal
+  # proposal: Proposal
+  voteType: Voting!
 }
 
 type Token @entity {

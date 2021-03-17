@@ -112,7 +112,7 @@ export function handleProcessedProposal(event: ProcessedProposal): void {
     event.params.proposalId
   );
 
-  if (proposal != null) {
+  if (proposal) {
     proposal.flags = event.params.flags;
     proposal.processedAt = processedAt;
     proposal.processed = true;
