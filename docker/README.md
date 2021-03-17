@@ -28,4 +28,4 @@ can access these via:
 - Postgres:
   - `postgresql://graph-node:let-me-in@localhost:5432/graph-node`
 
-Once this is up and running, you can create and deploy your subgraph to the running Graph Node. To do this, in another terminal window `cd ..` to return to the root `/molochv3-contracts` directory and `yarn create-local` and then to deploy the local subgraph `yarn deploy-local`.
+Once this is up and running, you can create and deploy your subgraph to the running Graph Node. To do this, in another terminal window `cd ..` to return to the root `/molochv3-contracts` directory, `truffle compile` to build the contracts, if they aren't already built. Then `graph codegen` to run the code generation, then `yarn create-local` and lastly to deploy the local subgraph `yarn deploy-local`.
