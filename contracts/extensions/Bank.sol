@@ -38,8 +38,7 @@ contract BankExtension is DaoConstants, AdapterGuard, IExtension {
     using Address for address payable;
     using SafeERC20 for IERC20;
 
-    uint8 public maxInternalTokens;
-    uint8 public maxExternalTokens;
+    uint8 public maxExternalTokens; // the maximum number of external tokens that can be stored in the bank
 
     bool public initialized = false; // internally tracks deployment under eip-1167 proxy pattern
     DaoRegistry public dao;
@@ -153,19 +152,6 @@ contract BankExtension is DaoConstants, AdapterGuard, IExtension {
     }
 
     /**
-     * @notice Sets the maximum amount of internal tokens allowed in the bank
-     * @param maxTokens The maximum amount of token allowed
-     */
-    function setMaxInternalTokens(uint8 maxTokens) external {
-        require(!initialized, "bank already initialized");
-        require(
-            maxTokens > 0 && maxTokens <= MAX_TOKENS_GUILD_BANK,
-            "max number of internal tokens should be (0,200)"
-        );
-        maxInternalTokens = maxTokens;
-    }
-
-    /**
      * @notice Sets the maximum amount of external tokens allowed in the bank
      * @param maxTokens The maximum amount of token allowed
      */
@@ -215,10 +201,6 @@ contract BankExtension is DaoConstants, AdapterGuard, IExtension {
     {
         require(isNotReservedAddress(token), "reservedToken");
         require(!availableTokens[token], "availableToken");
-        require(
-            internalTokens.length <= maxInternalTokens,
-            "exceeds the maximum internal tokens allowed"
-        );
 
         if (!availableInternalTokens[token]) {
             availableInternalTokens[token] = true;
