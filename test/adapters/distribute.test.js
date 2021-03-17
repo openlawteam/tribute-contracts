@@ -36,6 +36,7 @@ const {
   GUILD,
   ETH_TOKEN,
   SHARES,
+  ESCROW,
   LOOT,
   OnboardingContract,
   VotingContract,
@@ -226,6 +227,9 @@ contract("MolochV3 - Distribute Adapter", async (accounts) => {
       gasPrice: toBN("0"),
     });
 
+    const escrowBalance = await bank.balanceOf(ESCROW, ETH_TOKEN);
+    assert.equal(toBN(escrowBalance).toString(), amountToDistribute);
+
     // Checks the member's internal balance before sending the funds
     let memberBalance = await bank.balanceOf(daoMember, ETH_TOKEN);
     assert.equal(toBN(memberBalance).toString(), "0");
@@ -239,6 +243,9 @@ contract("MolochV3 - Distribute Adapter", async (accounts) => {
 
     memberBalance = await bank.balanceOf(daoMember, ETH_TOKEN);
     assert.equal(toBN(memberBalance).toString(), amountToDistribute);
+
+    const newEscrowBalance = await bank.balanceOf(ESCROW, ETH_TOKEN);
+    assert.equal(toBN(newEscrowBalance).toString(), "0");
   });
 
   it("should be possible to distribute funds to all active members of the DAO", async () => {
