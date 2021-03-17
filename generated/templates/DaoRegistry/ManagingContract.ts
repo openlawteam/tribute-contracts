@@ -134,20 +134,20 @@ export class ManagingContract extends ethereum.SmartContract {
   }
 }
 
-export class CreateAdapterChangeRequestCall extends ethereum.Call {
-  get inputs(): CreateAdapterChangeRequestCall__Inputs {
-    return new CreateAdapterChangeRequestCall__Inputs(this);
+export class SubmitProposalCall extends ethereum.Call {
+  get inputs(): SubmitProposalCall__Inputs {
+    return new SubmitProposalCall__Inputs(this);
   }
 
-  get outputs(): CreateAdapterChangeRequestCall__Outputs {
-    return new CreateAdapterChangeRequestCall__Outputs(this);
+  get outputs(): SubmitProposalCall__Outputs {
+    return new SubmitProposalCall__Outputs(this);
   }
 }
 
-export class CreateAdapterChangeRequestCall__Inputs {
-  _call: CreateAdapterChangeRequestCall;
+export class SubmitProposalCall__Inputs {
+  _call: SubmitProposalCall;
 
-  constructor(call: CreateAdapterChangeRequestCall) {
+  constructor(call: SubmitProposalCall) {
     this._call = call;
   }
 
@@ -180,10 +180,10 @@ export class CreateAdapterChangeRequestCall__Inputs {
   }
 }
 
-export class CreateAdapterChangeRequestCall__Outputs {
-  _call: CreateAdapterChangeRequestCall;
+export class SubmitProposalCall__Outputs {
+  _call: SubmitProposalCall;
 
-  constructor(call: CreateAdapterChangeRequestCall) {
+  constructor(call: SubmitProposalCall) {
     this._call = call;
   }
 }

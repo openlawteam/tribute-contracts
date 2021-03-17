@@ -1129,13 +1129,22 @@ export class Vote extends Entity {
     }
   }
 
-  get voteType(): string {
-    let value = this.get("voteType");
+  get adapterName(): string {
+    let value = this.get("adapterName");
     return value.toString();
   }
 
-  set voteType(value: string) {
-    this.set("voteType", Value.fromString(value));
+  set adapterName(value: string) {
+    this.set("adapterName", Value.fromString(value));
+  }
+
+  get adapterAddress(): Bytes {
+    let value = this.get("adapterAddress");
+    return value.toBytes();
+  }
+
+  set adapterAddress(value: Bytes) {
+    this.set("adapterAddress", Value.fromBytes(value));
   }
 }
 

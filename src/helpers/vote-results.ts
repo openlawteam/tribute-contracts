@@ -8,11 +8,6 @@ import { Adapter, Proposal, Vote } from "../../generated/schema";
 
 import { VOTING_ID } from "./constants";
 
-enum Voting {
-  OFFCHAIN,
-  ONCHAIN,
-}
-
 export function loadProposalAndSaveVoteResults(
   daoAddress: Address,
   proposalId: Bytes
@@ -42,10 +37,6 @@ export function loadProposalAndSaveVoteResults(
     let votingAdapterName = votingIContract.getAdapterName();
 
     if (votingAdapterName == "VotingContract") {
-      log.info("=============== VotingContract, {}", [
-        votingAdapterName.toString(),
-      ]);
-
       let votingContract = VotingContract.bind(
         Address.fromHexString(
           votingAdapter.adapterAddress.toHexString()
@@ -57,10 +48,9 @@ export function loadProposalAndSaveVoteResults(
       // assign voting data
       vote.nbYes = voteResults.value0;
       vote.nbNo = voteResults.value1;
-      // vote.onChain = proposal.id; // maybeProposalId;
 
-      vote.voteType = "ONCHAIN";
-      // vote.proposal = proposal.id; // maybeProposalId; //maybeProposalId; // proposalId.toHex();
+      vote.adapterName = "VotingContract";
+      vote.adapterAddress = votingAdapter.adapterAddress;
 
       vote.save();
 
@@ -69,17 +59,8 @@ export function loadProposalAndSaveVoteResults(
         proposal.nbNo = voteResults.value1;
         proposal.startingTime = voteResults.value2;
         proposal.blockNumber = voteResults.value3;
-
-        // proposal.onChainOrOffChainVotes = proposal.id;
-        // proposal.onChainOrOffChainVotes = voteId;
-
-        // proposal.onChainVotes = proposal.id;
       }
     } else if (votingAdapterName == "OffchainVotingContract") {
-      log.info("=============== VotingContract, {}", [
-        votingAdapterName.toString(),
-      ]);
-
       let offchainVotingContract = OffchainVotingContract.bind(
         Address.fromHexString(
           votingAdapter.adapterAddress.toHexString()
@@ -93,9 +74,8 @@ export function loadProposalAndSaveVoteResults(
       vote.nbYes = voteResults.value5;
       vote.nbNo = voteResults.value6;
 
-      vote.voteType = "OFFCHAIN";
-      // vote.proposal = maybeProposalId; //  proposal.id; //maybeProposalId; // proposalId.toHex();
-      // vote.offChain = proposal.id; //maybeProposalId;
+      vote.adapterName = "OffchainVotingContract";
+      vote.adapterAddress = votingAdapter.adapterAddress;
 
       vote.save();
 
@@ -114,13 +94,8 @@ export function loadProposalAndSaveVoteResults(
         proposal.gracePeriodStartingTime = voteResults.value9;
         proposal.isChallenged = voteResults.value10;
         proposal.fallbackVotesCount = voteResults.value11;
-
-        // proposal.onChainOrOffChainVotes = voteId; // proposal.id;
-        // proposal.offChainVotes = proposal.id;
       }
     }
-
-    // proposal.onChainOrOffChainVotes = proposal.id; //voteId; // ;
   }
 
   return proposal;

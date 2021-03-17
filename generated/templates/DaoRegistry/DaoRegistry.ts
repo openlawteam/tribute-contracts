@@ -1253,44 +1253,6 @@ export class AddExtensionCall__Outputs {
   }
 }
 
-export class AddAdapterCall extends ethereum.Call {
-  get inputs(): AddAdapterCall__Inputs {
-    return new AddAdapterCall__Inputs(this);
-  }
-
-  get outputs(): AddAdapterCall__Outputs {
-    return new AddAdapterCall__Outputs(this);
-  }
-}
-
-export class AddAdapterCall__Inputs {
-  _call: AddAdapterCall;
-
-  constructor(call: AddAdapterCall) {
-    this._call = call;
-  }
-
-  get adapterId(): Bytes {
-    return this._call.inputValues[0].value.toBytes();
-  }
-
-  get adapterAddress(): Address {
-    return this._call.inputValues[1].value.toAddress();
-  }
-
-  get acl(): BigInt {
-    return this._call.inputValues[2].value.toBigInt();
-  }
-}
-
-export class AddAdapterCall__Outputs {
-  _call: AddAdapterCall;
-
-  constructor(call: AddAdapterCall) {
-    this._call = call;
-  }
-}
-
 export class SetAclToExtensionForAdapterCall extends ethereum.Call {
   get inputs(): SetAclToExtensionForAdapterCall__Inputs {
     return new SetAclToExtensionForAdapterCall__Inputs(this);
@@ -1329,32 +1291,48 @@ export class SetAclToExtensionForAdapterCall__Outputs {
   }
 }
 
-export class RemoveAdapterCall extends ethereum.Call {
-  get inputs(): RemoveAdapterCall__Inputs {
-    return new RemoveAdapterCall__Inputs(this);
+export class ReplaceAdapterCall extends ethereum.Call {
+  get inputs(): ReplaceAdapterCall__Inputs {
+    return new ReplaceAdapterCall__Inputs(this);
   }
 
-  get outputs(): RemoveAdapterCall__Outputs {
-    return new RemoveAdapterCall__Outputs(this);
+  get outputs(): ReplaceAdapterCall__Outputs {
+    return new ReplaceAdapterCall__Outputs(this);
   }
 }
 
-export class RemoveAdapterCall__Inputs {
-  _call: RemoveAdapterCall;
+export class ReplaceAdapterCall__Inputs {
+  _call: ReplaceAdapterCall;
 
-  constructor(call: RemoveAdapterCall) {
+  constructor(call: ReplaceAdapterCall) {
     this._call = call;
   }
 
   get adapterId(): Bytes {
     return this._call.inputValues[0].value.toBytes();
   }
+
+  get adapterAddress(): Address {
+    return this._call.inputValues[1].value.toAddress();
+  }
+
+  get acl(): BigInt {
+    return this._call.inputValues[2].value.toBigInt();
+  }
+
+  get keys(): Array<Bytes> {
+    return this._call.inputValues[3].value.toBytesArray();
+  }
+
+  get values(): Array<BigInt> {
+    return this._call.inputValues[4].value.toBigIntArray();
+  }
 }
 
-export class RemoveAdapterCall__Outputs {
-  _call: RemoveAdapterCall;
+export class ReplaceAdapterCall__Outputs {
+  _call: ReplaceAdapterCall;
 
-  constructor(call: RemoveAdapterCall) {
+  constructor(call: ReplaceAdapterCall) {
     this._call = call;
   }
 }
