@@ -322,9 +322,9 @@ contract OnboardingContract is
                 tokenToMint,
                 applicant,
                 proposal.sharesRequested,
-                proposal.proposer,
-                proposal.token,
-                proposal.amount
+                proposer,
+                token,
+                amount
             );
 
             if (token == ETH_TOKEN) {
@@ -346,11 +346,19 @@ contract OnboardingContract is
                 }
             }
 
-            uint256 totalShares =
+            uint256 totalShares;
+            unchecked {
+                totalShares = 
                 _getShares(dao, tokenToMint, applicant) +
                     proposal.sharesRequested;
-
-            shares[address(dao)][tokenToMint][applicant] = totalShares;
+            }
+            // If totalShares == 0, then we must return the funds due to an overflow
+            if (totalShares > 0) {
+                shares[address(dao)][tokenToMint][applicant] = totalShares;
+            } else {
+                _refundTribute(token, proposer, amount);
+            }
+            
         } else if (
             voteResult == IVoting.VotingState.NOT_PASS ||
             voteResult == IVoting.VotingState.TIE
