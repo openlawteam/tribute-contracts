@@ -90,7 +90,7 @@ async function createOffchainVotingDao(
     gracePeriod,
     ETH_TOKEN,
     false,
-    members[0].address
+    10
   );
 
   await dao.potentialNewMember(members[0].address);
@@ -103,11 +103,12 @@ async function createOffchainVotingDao(
     handleBadReporterAdapter.address
   );
   const bankAddress = await dao.getExtensionAddress(sha3("bank"));
-  await dao.removeAdapter(sha3("voting"));
-  await dao.addAdapter(
+  await dao.replaceAdapter(
     sha3("voting"),
     offchainVoting.address,
-    entryDao("voting", dao, offchainVoting, {}).flags
+    entryDao("voting", dao, offchainVoting, {}).flags,
+    [],
+    []
   );
 
   const bank = await BankExtension.at(bankAddress);

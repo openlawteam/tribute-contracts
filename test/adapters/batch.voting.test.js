@@ -190,7 +190,7 @@ async function createBatchVotingDao(
     gracePeriod,
     ETH_TOKEN,
     false,
-    members[0].address
+    100
   );
 
   const bankAddress = await dao.getExtensionAddress(sha3("bank"));
@@ -201,11 +201,12 @@ async function createBatchVotingDao(
 
   const snapshotContract = await SnapshotProposalContract.deployed();
   const batchVoting = await BatchVotingContract.new(snapshotContract.address);
-  await dao.removeAdapter(sha3("voting"));
-  await dao.addAdapter(
+  await dao.replaceAdapter(
     sha3("voting"),
     batchVoting.address,
-    entryDao("voting", dao, batchVoting, {}).flags
+    entryDao("voting", dao, batchVoting, {}).flags,
+    [],
+    []
   );
 
   await batchVoting.configureDao(dao.address, votingPeriod, gracePeriod, {

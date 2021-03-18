@@ -34,6 +34,7 @@ const fromUtf8 = Web3Utils.fromUtf8;
 
 const GUILD = "0x000000000000000000000000000000000000dead";
 const TOTAL = "0x000000000000000000000000000000000000babe";
+const ESCROW = "0x0000000000000000000000000000000000004bec";
 const SHARES = "0x00000000000000000000000000000000000FF1CE";
 const LOOT = "0x00000000000000000000000000000000B105F00D";
 const ETH_TOKEN = "0x0000000000000000000000000000000000000000";
@@ -63,6 +64,7 @@ const FinancingContract = artifacts.require("./adapter/FinancingContract");
 const RagequitContract = artifacts.require("./adapters/RagequitContract");
 const GuildKickContract = artifacts.require("./adapters/GuildKickContract");
 const OnboardingContract = artifacts.require("./adapters/OnboardingContract");
+
 
 const SnapshotProposalContract = artifacts.require("./adapters/voting/SnapshotProposalContract");
 const OffchainVotingContract = artifacts.require("./adapters/voting/OffchainVotingContract");
@@ -136,11 +138,11 @@ async function prepareAdapters(deployer) {
     withdraw,
     couponOnboarding,
     tribute,
-    distribute
+    distribute,
   };
 }
 
-async function addDefaultAdapters(
+const addDefaultAdapters = async (
   dao,
   unitPrice = sharePrice,
   nbShares = numberOfShares,
@@ -150,7 +152,7 @@ async function addDefaultAdapters(
   maxChunks = maximumChunks,
   daoFactory,
   deployer
-) {
+) => {
   const {
     voting,
     configuration,
@@ -162,7 +164,7 @@ async function addDefaultAdapters(
     withdraw,
     couponOnboarding,
     tribute,
-    distribute
+    distribute,
   } = await prepareAdapters(deployer);
   await configureDao(
     daoFactory,
@@ -175,7 +177,7 @@ async function addDefaultAdapters(
     withdraw,
     voting,
     configuration,
-		couponOnboarding,
+    couponOnboarding,
     tribute,
     distribute,
     unitPrice,
@@ -187,9 +189,9 @@ async function addDefaultAdapters(
   );
 
   return { dao };
-}
+};
 
-async function configureDao(
+const configureDao = async (
   daoFactory,
   dao,
   ragequit,
@@ -200,7 +202,7 @@ async function configureDao(
   withdraw,
   voting,
   configuration,
-	couponOnboarding,
+  couponOnboarding,
   tribute,
   distribute,
   unitPrice,
@@ -209,7 +211,7 @@ async function configureDao(
   gracePeriod,
   tokenAddr,
   maxChunks
-) {
+) => {
   await daoFactory.addAdapters(dao.address, [
     entryDao("voting", voting, {}),
     entryDao("configuration", configuration, {
@@ -233,8 +235,7 @@ async function configureDao(
       SUBMIT_PROPOSAL: true,
       PROCESS_PROPOSAL: true,
       SPONSOR_PROPOSAL: true,
-      REMOVE_ADAPTER: true,
-      ADD_ADAPTER: true,
+      REPLACE_ADAPTER: true,
     }),
     entryDao("financing", financing, {
       SUBMIT_PROPOSAL: true,
@@ -254,7 +255,7 @@ async function configureDao(
       PROCESS_PROPOSAL: false,
       ADD_TO_BALANCE: true,
       UPDATE_DELEGATE_KEY: false,
-      NEW_MEMBER: true
+      NEW_MEMBER: true,
     }),
     entryDao("withdraw", withdraw, {}),
     entryDao("tribute", tribute, {
@@ -294,7 +295,7 @@ async function configureDao(
       ADD_TO_BALANCE: true,
     }),
     entryBank(couponOnboarding, {
-      ADD_TO_BALANCE: true
+      ADD_TO_BALANCE: true,
     }),
     entryBank(financing, {
       ADD_TO_BALANCE: true,
@@ -335,9 +336,9 @@ async function configureDao(
   await voting.configureDao(dao.address, votingPeriod, gracePeriod);
   await tribute.configureDao(dao.address, SHARES);
   await tribute.configureDao(dao.address, LOOT);
-}
+};
 
-async function deployDao(deployer, options) {
+const deployDao = async (deployer, options) => {
   const unitPrice = options.unitPrice || sharePrice;
   const nbShares = options.nbShares || numberOfShares;
   const votingPeriod = options.votingPeriod || 10;
@@ -347,6 +348,7 @@ async function deployDao(deployer, options) {
   const isOffchainVoting = !!options.offchainVoting;
   const chainId = options.chainId || 1;
   const deployTestTokens = !!options.deployTestTokens;
+  const maxExternalTokens = options.maxExternalTokens || 100;
 
   await deployer.deploy(DaoRegistry);
 
@@ -358,9 +360,9 @@ async function deployDao(deployer, options) {
   await deployer.deploy(BankFactory, identityBank.address);
   const bankFactory = await BankFactory.deployed();
 
-  await bankFactory.createBank();
+  await bankFactory.createBank(maxExternalTokens);
   let pastEvent;
-  while(pastEvent === undefined) {
+  while (pastEvent === undefined) {
     let pastEvents = await bankFactory.getPastEvents();
     pastEvent = pastEvents[0];
   }
@@ -384,13 +386,14 @@ async function deployDao(deployer, options) {
   );
 
   const votingAddress = await dao.getAdapterAddress(sha3("voting"));
-  if(isOffchainVoting) {
+  if (isOffchainVoting) {
     await deployer.deploy(SnapshotProposalContract, chainId);
     await deployer.deploy(HandleBadReporterAdapter);
 
     const snapshotProposalContract = await SnapshotProposalContract.deployed();
     const handleBadReporterAdapter = await HandleBadReporterAdapter.deployed();
     const offchainVoting = await deployer.deploy(OffchainVotingContract, votingAddress, snapshotProposalContract.address, handleBadReporterAdapter.address);
+
     await daoFactory.updateAdapter(
       dao.address,
       entryDao("voting", offchainVoting, {})
@@ -424,19 +427,20 @@ async function deployDao(deployer, options) {
   }
 
   return dao;
-}
+};
 
 let counter = 0;
 
-async function createDao(
+const createDao = async (
   senderAccount,
   unitPrice = sharePrice,
   nbShares = numberOfShares,
   votingPeriod = 10,
   gracePeriod = 1,
   tokenAddr = ETH_TOKEN,
-  finalize = true
-) {
+  finalize = true,
+  maxExternalTokens = 100
+) => {
   const bankFactory = await BankFactory.deployed();
   const daoFactory = await DaoFactory.deployed();
   const daoName = "test-dao-" + counter++;
@@ -447,7 +451,7 @@ async function createDao(
 
   let dao = await DaoRegistry.at(daoAddress);
 
-  await bankFactory.createBank();
+  await bankFactory.createBank(maxExternalTokens);
 
   let pastEvents = await bankFactory.getPastEvents();
   let { bankAddress } = pastEvents[0].returnValues;
@@ -478,7 +482,7 @@ async function createDao(
     withdraw,
     voting,
     configuration,
-		couponOnboarding,
+    couponOnboarding,
     tribute,
     distribute,
     unitPrice,
@@ -494,9 +498,9 @@ async function createDao(
   }
 
   return dao;
-}
+};
 
-async function cloneDao(identityAddress, senderAccount) {
+const cloneDao = async (identityAddress, senderAccount) => {
   // newDao: uses clone factory to clone the contract deployed at the identityAddress
   let daoFactory = await DaoFactory.new(identityAddress);
   await daoFactory.createDao("test-dao", senderAccount);
@@ -507,9 +511,9 @@ async function cloneDao(identityAddress, senderAccount) {
   let dao = await DaoRegistry.at(_address);
 
   return { dao, daoFactory };
-}
+};
 
-async function cloneDaoDeployer(deployer) {
+const cloneDaoDeployer = async (deployer) => {
   // newDao: uses clone factory to clone the contract deployed at the identityAddress
   const dao = await DaoRegistry.deployed();
   await deployer.deploy(DaoFactory, dao.address);
@@ -521,9 +525,9 @@ async function cloneDaoDeployer(deployer) {
   let { _address } = pastEvents[0].returnValues;
   let newDao = await DaoRegistry.at(_address);
   return { dao: newDao, daoFactory };
-}
+};
 
-async function advanceTime(time) {
+const advanceTime = async (time) => {
   await new Promise((resolve, reject) => {
     web3.currentProvider.send(
       {
@@ -556,9 +560,9 @@ async function advanceTime(time) {
       }
     );
   });
-}
+};
 
-function entryBank(contract, flags) {
+const entryBank = (contract, flags) => {
   const values = [
     flags.ADD_TO_BALANCE,
     flags.SUB_FROM_BALANCE,
@@ -576,12 +580,11 @@ function entryBank(contract, flags) {
     addr: contract.address,
     flags: acl,
   };
-}
+};
 
-function entryDao(name, contract, flags) {
+const entryDao = (name, contract, flags) => {
   const values = [
-    flags.ADD_ADAPTER,
-    flags.REMOVE_ADAPTER,
+    flags.REPLACE_ADAPTER,
     flags.JAIL_MEMBER,
     flags.UNJAIL_MEMBER,
     flags.SUBMIT_PROPOSAL,
@@ -601,53 +604,18 @@ function entryDao(name, contract, flags) {
     addr: contract.address,
     flags: acl,
   };
-}
+};
 
-function entry(values) {
+const entry = (values) => {
   return values
     .map((v, idx) => (v !== undefined ? 2 ** idx : 0))
     .reduce((a, b) => a + b);
-}
+};
 
-async function advanceTime(time) {
-  await new Promise((resolve, reject) => {
-    web3.currentProvider.send(
-      {
-        jsonrpc: "2.0",
-        method: "evm_increaseTime",
-        params: [time],
-        id: new Date().getTime(),
-      },
-      (err, result) => {
-        if (err) {
-          return reject(err);
-        }
-        return resolve(result);
-      }
-    );
-  });
-
-  await new Promise((resolve, reject) => {
-    web3.currentProvider.send(
-      {
-        jsonrpc: "2.0",
-        method: "evm_mine",
-        id: new Date().getTime(),
-      },
-      (err, result) => {
-        if (err) {
-          return reject(err);
-        }
-        return resolve(result);
-      }
-    );
-  });
-}
-
-async function getContract(dao, id, contractFactory) {
+const getContract = async (dao, id, contractFactory) => {
   const address = await dao.getAdapterAddress(sha3(id));
   return await contractFactory.at(address);
-}
+};
 
 module.exports = {
   prepareAdapters,
@@ -666,6 +634,7 @@ module.exports = {
   maximumChunks,
   GUILD,
   TOTAL,
+  ESCROW,
   DAI_TOKEN,
   SHARES,
   LOOT,
@@ -678,6 +647,7 @@ module.exports = {
   TestToken2,
   DaoFactory,
   DaoRegistry,
+  BankFactory,
   VotingContract,
   ManagingContract,
   FinancingContract,
@@ -694,5 +664,5 @@ module.exports = {
   DistributeContract,
   BankExtension,
   OnboardingContract,
-  CouponOnboardingContract
+  CouponOnboardingContract,
 };

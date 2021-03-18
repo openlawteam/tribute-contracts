@@ -29,7 +29,7 @@ SOFTWARE.
  */
 
 interface IManaging {
-    function createAdapterChangeRequest(
+    function submitProposal(
         DaoRegistry dao,
         bytes32 proposalId,
         bytes32 adapterId,

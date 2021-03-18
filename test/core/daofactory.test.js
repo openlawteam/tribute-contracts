@@ -23,7 +23,7 @@ SOFTWARE.
 const DaoFactory = artifacts.require("./core/DaoFactory");
 const DaoRegistry = artifacts.require("./core/DaoRegistry");
 
-const { sha3, toBN, addDefaultAdapters } = require("../../utils/DaoFactory.js");
+const { toBN } = require("../../utils/DaoFactory.js");
 
 contract("DaoFactory", async (accounts) => {
   const owner = accounts[1];

@@ -46,7 +46,7 @@ abstract contract AdapterGuard {
             (dao.state() == DaoRegistry.DaoState.CREATION &&
                 creationModeCheck(dao)) ||
                 dao.hasAdapterAccess(msg.sender, flag),
-            "hasAccess"
+            "accessDenied"
         );
         _;
     }

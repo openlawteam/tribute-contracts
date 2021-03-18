@@ -24,10 +24,9 @@ The DaoRegistry.sol contract tracks the state of the DAO for 1) Adapter and Exte
 
 ` enum ProposalFlag {EXISTS, SPONSORED, PROCESSED}` = `EXISTS` true if a proposal has been been submitted. `SPONSORED` is true if a Submitted proposal has been Sponsored by an existing Member.
 
-`enum AclFlag { ADD_ADAPTER, REMOVE_ADAPTER, JAIL_MEMBER, UNJAIL_MEMBER, SUBMIT_PROPOSAL, SPONSOR_PROPOSAL, PROCESS_PROPOSAL, UPDATE_DELEGATE_KEY, SET_CONFIGURATION, ADD_EXTENSION, REMOVE_EXTENSION, NEW_MEMBER }`
+`enum AclFlag { REPLACE_ADAPTER, JAIL_MEMBER, UNJAIL_MEMBER, SUBMIT_PROPOSAL, SPONSOR_PROPOSAL, PROCESS_PROPOSAL, UPDATE_DELEGATE_KEY, SET_CONFIGURATION, ADD_EXTENSION, REMOVE_EXTENSION, NEW_MEMBER }`
 
-- `ADD_ADAPTER` - if true, the caller adapter has access to add new adapters to the DAO, function `dao.addAdapter`.
-- `REMOVE_ADAPTER` - if true, the caller adapter access to remove other adapters from the DAO, function `dao.removeAdapter`.
+- `REPLACE_ADAPTER` - if true, the caller adapter has access to add, remove, and replace adapters in the DAO, function `dao.replaceAdapter`.
 - `JAIL_MEMBER` - if true, the caller adapter is allowed to jail a member of the DAO, function `dao.jailMember`.
 - `UNJAIL_MEMBER` - if true, the caller adapter is allowed to unjail a member of the DAO, function `dao.unjailMember`.
 - `SUBMIT_PROPOSAL` - if true, the caller adapter is allowed to submit/create proposals in the DAO, function `dao.submitProposal`.
@@ -70,7 +69,7 @@ The DaoRegistry.sol contract tracks the state of the DAO for 1) Adapter and Exte
 
 `struct DelegateCheckpoint` A checkpoint for marking number of votes from a given block.
 
-`struct AdapterEntry` When an Adapter is added to `DaoRegistry` via the function `addAdapter`, a bytes32 `id` and a uint256 `acl` are parameters assigned to the Adapter for use in identifying the Adapter.
+`struct AdapterEntry` When an Adapter is added to `DaoRegistry` via the function `replaceAdapter`, a bytes32 `id` and a uint256 `acl` are parameters assigned to the Adapter for use in identifying the Adapter.
 
 `struct ExtensionEntry` When an Extension is added to `DaoRegistry` via `addExtenstion` a bytes32 `id` and a uint256 `acl` are parameters assigned to the Extension for use in identifying the Extension.
 
@@ -179,15 +178,11 @@ Removes the extension by extension id. It reverts if no extension has been regis
 Sets the access control for a particular adapter (by address) to a specific extension.
 Both adapter and extension need to be already registered to the DAO.
 
-### function addAdapter(bytes32 adapterId, address adapterAddress, uint256 acl)
+### function replaceAdapter(bytes32 adapterId, address adapterAddress, uint256 acl, bytes32[] calldata keys,uint256[] calldata values)
 
-Adds an adapter to the DAO adapter registry. It also sets the access control.
-
-The adapter can be added only if the adapter id is not already used.
-
-### function removeAdapter(bytes32 adapterId)
-
-Removes an adapter from the DAO. Reverts if no adapter has been registered to the adapterId.
+Adds, removes or replaces an adapter om the DAO registry. It also sets the access control.
+The adapter can be added only if the adapter id is not already in use.
+To remove an adapter from the DAO just set the address to 0x0.
 
 ### function isExtension(address extensionAddr) public view returns (bool)
 

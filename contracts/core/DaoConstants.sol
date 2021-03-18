@@ -44,9 +44,12 @@ abstract contract DaoConstants {
 
     address internal constant GUILD = address(0xdead);
     address internal constant TOTAL = address(0xbabe);
+    address internal constant ESCROW = address(0x4bec);
     address internal constant SHARES = address(0xFF1CE);
     address internal constant LOOT = address(0xB105F00D);
     address internal constant ETH_TOKEN = address(0x0);
+
+    uint8 internal constant MAX_TOKENS_GUILD_BANK = 200;
 
     //helper
     function getFlag(uint256 flags, uint256 flag) public pure returns (bool) {

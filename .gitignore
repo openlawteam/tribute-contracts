@@ -105,6 +105,7 @@ dist
 
 # Build/Contracts
 build/
+generated/
 
 # Test Coverage Reports
 coverage
@@ -113,7 +114,9 @@ coverageEnv
 .coverage_artifacts
 .coverage_contracts
 
+.env
 
-.DS_Store
-.idea
-.DS_Store
+docker/data
+artifacts
+cache
+typechain
