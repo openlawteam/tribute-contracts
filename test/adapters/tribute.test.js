@@ -85,7 +85,9 @@ contract("MolochV3 - Tribute Adapter", async (accounts) => {
         }
       );
       assert.fail("should have failed without spender approval!");
-    } catch (err) {}
+    } catch (e) {
+      assert.equal(e.reason, "ERC20: transfer amount exceeds allowance");
+    }
 
     // Pre-approve spender (tribute adapter) to transfer proposer tokens
     await oltContract.approve(tribute.address, tributeAmount, {
@@ -122,6 +124,7 @@ contract("MolochV3 - Tribute Adapter", async (accounts) => {
         from: myAccount,
         gasPrice: toBN("0"),
       });
+      assert.fail("should not process the proposal before voting");
     } catch (err) {
       assert.equal(err.reason, "proposal has not been voted on yet");
     }
@@ -391,5 +394,86 @@ contract("MolochV3 - Tribute Adapter", async (accounts) => {
     } catch (err) {
       assert.equal(err.reason, "proposal does not exist");
     }
+  });
+
+  it("should not be possible to join if the provided token exceeds the bank token limits", async () => {
+    const daoOwner = accounts[1];
+    const applicant = accounts[2];
+
+    // Issue OpenLaw ERC20 Basic Token for tests
+    // Token supply higher than the limit for external tokens
+    // defined in Bank._createNewAmountCheckpoint function (2**160-1).
+     const supply = toBN("2").pow(toBN("180")).toString();
+     const oltContract = await OLToken.new(supply, { from: daoOwner });
+     const nbOfERC20Shares = 100000000;
+     const erc20SharePrice = toBN("10");
+
+     const dao = await createDao(
+       daoOwner,
+       erc20SharePrice,
+       nbOfERC20Shares,
+       10,
+       1,
+       oltContract.address
+     );
+
+    const tribute = await getContract(dao, "tribute", TributeContract);
+    const voting = await getContract(dao, "voting", VotingContract);
+
+    // Transfer OLTs to myAccount
+    // Use an amount that will cause an overflow 2**161 > 2**160-1 for external tokens
+    const initialTokenBalance = toBN("2").pow(toBN("161")).toString();
+    await oltContract.approve.sendTransaction(applicant, initialTokenBalance, {
+      from: daoOwner,
+    });
+
+    await oltContract.transfer(applicant, initialTokenBalance, {
+      from: daoOwner,
+    });
+
+    let applicantTokenBalance = await oltContract.balanceOf.call(applicant);
+    assert.equal(
+      initialTokenBalance.toString(),
+      applicantTokenBalance.toString(),
+      "applicant account must be initialized with 2**161 OLT Tokens"
+    );
+
+    // Pre-approve spender (tribute adapter) to transfer proposer tokens
+    const tributeAmount = initialTokenBalance;
+    await oltContract.approve(tribute.address, initialTokenBalance.toString(), {
+      from: applicant,
+      gasPrice: toBN("0"),
+    });
+
+    const requestAmount = 100000000;
+    const proposalId = "0x1";
+
+     try {
+       await tribute.provideTribute(
+         dao.address,
+         proposalId,
+         applicant,
+         SHARES,
+         requestAmount,
+         oltContract.address,
+         tributeAmount.toString(),
+         {
+           from: applicant,
+           gasPrice: toBN("0"),
+         }
+       );
+     } catch (e) {
+       assert.equal(
+         e.message,
+         "Returned error: VM Exception while processing transaction: revert"
+       );
+       // In case of failures the funds must be in the applicant's account
+       applicantTokenBalance = await oltContract.balanceOf.call(applicant);
+       assert.equal(
+         initialTokenBalance.toString(),
+         applicantTokenBalance.toString(),
+         "applicant account should contain 2**161 OLT Tokens when the onboard fails"
+       );
+     }
   });
 });
