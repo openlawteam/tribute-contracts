@@ -54,10 +54,12 @@ contract("MolochV3 - Onboarding Adapter", async (accounts) => {
     // defined in Bank._createNewAmountCheckpoint function (2**160-1).
     const supply = toBN("2").pow(toBN("180")).toString();
     const oltContract = await OLToken.new(supply, { from: daoOwner });
-    const oltContractAddr = oltContract.address;
+    const nbOfERC20Shares = 100000000;
+    const erc20SharePrice = toBN("10");
 
     const dao = await createDao(
       daoOwner,
+<<<<<<< HEAD
       toBN("1"), // share price
       toBN("10").pow(toBN("4")), // max shares per chunk
       10, // voting period
@@ -66,9 +68,15 @@ contract("MolochV3 - Onboarding Adapter", async (accounts) => {
       true, // finalize dao creation
       100, // max external tokens
       toBN("2").pow(toBN("180")).toString() // max chunks
+=======
+      erc20SharePrice,
+      nbOfERC20Shares,
+      10,
+      1,
+      oltContract.address
+>>>>>>> e4b7728... return tribute on onboarding failures
     );
 
-    const voting = await getContract(dao, "voting", VotingContract);
     const onboarding = await getContract(dao, "onboarding", OnboardingContract);
 
     // Transfer OLTs to myAccount
@@ -88,10 +96,12 @@ contract("MolochV3 - Onboarding Adapter", async (accounts) => {
     );
 
     // Pre-approve spender (onboarding adapter) to transfer proposer tokens
+    // Higher than the current limit for external tokens: 2^160-1
     const tokenAmount = initialTokenBalance;
     await oltContract.approve.sendTransaction(
       onboarding.address,
       initialTokenBalance.toString(),
+<<<<<<< HEAD
       {
         from: applicant,
         gasPrice: toBN("0"),
@@ -105,46 +115,41 @@ contract("MolochV3 - Onboarding Adapter", async (accounts) => {
       applicant,
       SHARES,
       tokenAmount,
+=======
+>>>>>>> e4b7728... return tribute on onboarding failures
       {
         from: applicant,
         gasPrice: toBN("0"),
       }
     );
 
-    await onboarding.sponsorProposal(dao.address, proposalId, [], {
-      from: daoOwner,
-      gasPrice: toBN("0"),
-    });
-
-    await voting.submitVote(dao.address, proposalId, 1, {
-      from: daoOwner,
-      gasPrice: toBN("0"),
-    });
-
-    await advanceTime(10000);
-
+    const proposalId = "0x1";
     try {
-      // It should fail because the external token is limited to 2^88
-      // and the proposal provided 2^89
-      await onboarding.processProposal(dao.address, proposalId, {
-        from: daoOwner,
-        gasPrice: toBN("0"),
-      });
-      assert.fail(
-        "should not be possible to join if the token amount exceeds the DAO limits"
+      await onboarding.onboard(
+        dao.address,
+        proposalId,
+        applicant,
+        SHARES,
+        tokenAmount,
+        {
+          from: applicant,
+          gasPrice: toBN("0"),
+        }
       );
+      assert.fail("should not be possible to onboard")
     } catch (e) {
       assert.equal(
-        e.reason,
-        "token amount exceeds the maximum limit for external tokens"
+        e.message,
+        "Returned error: VM Exception while processing transaction: revert"
       );
+
+      // In case of failures the funds must be in the applicant account
       applicantTokenBalance = await oltContract.balanceOf.call(applicant);
-      //TODO: The amount should be sent back to the applicant
-      // assert.equal(
-      //   initialTokenBalance.toString(),
-      //   applicantTokenBalance.toString(),
-      //   "applicant account should contain 2**64 OLT Tokens when the onboard fails"
-      // );
+      assert.equal(
+        initialTokenBalance.toString(),
+        applicantTokenBalance.toString(),
+        "applicant account should contain 2**161 OLT Tokens when the onboard fails"
+      );
     }
   });
 

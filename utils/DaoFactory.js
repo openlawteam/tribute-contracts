@@ -34,9 +34,13 @@ const fromUtf8 = Web3Utils.fromUtf8;
 <<<<<<< HEAD
 const toAscii = Web3Utils.toAscii;
 const fromAscii = Web3Utils.fromAscii;
+<<<<<<< HEAD
 =======
 const toUtf8 = Web3Utils.toUtf8;
 >>>>>>> 90787bf... emit event on onboarding failure
+=======
+const toUtf8 = Web3Utils.toUtf8;
+>>>>>>> e4b7728... return tribute on onboarding failures
 
 const GUILD = "0x000000000000000000000000000000000000dead";
 const TOTAL = "0x000000000000000000000000000000000000babe";
@@ -699,9 +703,13 @@ module.exports = {
 <<<<<<< HEAD
   toAscii,
   fromAscii,
+<<<<<<< HEAD
 =======
   toUtf8,
 >>>>>>> 90787bf... emit event on onboarding failure
+=======
+  toUtf8,
+>>>>>>> e4b7728... return tribute on onboarding failures
   maximumChunks,
   GUILD,
   TOTAL,
