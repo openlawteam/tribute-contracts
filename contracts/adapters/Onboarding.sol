@@ -310,6 +310,9 @@ contract OnboardingContract is
 
         dao.processProposal(proposalId);
 
+        address token = proposal.token;
+        address payable proposer = proposal.proposer;
+        uint256 amount = proposal.amount;
         if (voteResult == IVoting.VotingState.PASS) {
             address tokenToMint = proposal.tokenToMint;
             address applicant = proposal.applicant;
@@ -324,18 +327,23 @@ contract OnboardingContract is
                 proposal.amount
             );
 
-            address token = proposal.token;
             if (token == ETH_TOKEN) {
-                bank.addToBalance{value: proposal.amount}(
-                    GUILD,
-                    token,
-                    proposal.amount
-                );
+                // Overflow risk may cause this to fail in which case the proposal
+                // tokens are refunded to the proposer.
+                try bank.addToBalance{value: amount}(GUILD, token, amount) {
+                    // do nothing
+                } catch {
+                    _refundTribute(token, proposer, amount);
+                }
             } else {
-                bank.addToBalance(GUILD, token, proposal.amount);
-
-                IERC20 erc20 = IERC20(token);
-                erc20.safeTransfer(address(bank), proposal.amount);
+                // Overflow risk may cause this to fail in which case the proposal
+                // tokens are refunded to the proposer.
+                try bank.addToBalance(GUILD, token, amount) {
+                   IERC20 erc20 = IERC20(token);
+                    erc20.safeTransfer(address(bank), amount);
+                } catch {
+                    _refundTribute(token, proposer, amount);
+                }
             }
 
             uint256 totalShares =
@@ -347,22 +355,9 @@ contract OnboardingContract is
             voteResult == IVoting.VotingState.NOT_PASS ||
             voteResult == IVoting.VotingState.TIE
         ) {
-            _refundTribute(proposal.token, proposal.proposer, proposal.amount);
+            _refundTribute(token, proposer, amount);
         } else {
             revert("proposal has not been voted on yet");
-        }
-    }
-
-    function _refundTribute(
-        address tokenAddr,
-        address payable proposer,
-        uint256 amount
-    ) internal {
-        if (tokenAddr == ETH_TOKEN) {
-            proposer.transfer(amount);
-        } else {
-            IERC20 token = IERC20(tokenAddr);
-            token.safeTransfer(proposer, amount);
         }
     }
 
@@ -398,5 +393,18 @@ contract OnboardingContract is
         address applicant
     ) internal view returns (uint256) {
         return shares[address(dao)][token][applicant];
+    }
+
+    function _refundTribute(
+        address tokenAddr,
+        address payable proposer,
+        uint256 amount
+    ) internal {
+        if (tokenAddr == ETH_TOKEN) {
+            proposer.transfer(amount);
+        } else {
+            IERC20 token = IERC20(tokenAddr);
+            token.safeTransfer(proposer, amount);
+        }
     }
 }
