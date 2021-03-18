@@ -241,33 +241,40 @@ contract TributeContract is ITribute, DaoConstants, MemberGuard, AdapterGuard {
 
         dao.processProposal(proposalId);
 
+        address token = proposal.token;
+        address proposer = proposal.proposer;
+        uint256 tributeAmount = proposal.tributeAmount;
         if (voteResult == IVoting.VotingState.PASS) {
             BankExtension bank = BankExtension(dao.getExtensionAddress(BANK));
             _mintTokensToMember(
                 dao,
                 proposal.applicant,
-                proposal.proposer,
+                proposer,
                 proposal.tokenToMint,
                 proposal.requestAmount,
                 proposal.token,
-                proposal.tributeAmount
+                tributeAmount
             );
-
-            address token = proposal.token;
+            
             if (!bank.isTokenAllowed(token)) {
                 bank.registerPotentialNewToken(token);
             }
-            bank.addToBalance(GUILD, token, proposal.tributeAmount);
-            IERC20 erc20 = IERC20(token);
-            erc20.safeTransfer(address(bank), proposal.tributeAmount);
+            // Overflow risk may cause this to fail in which case the tribute tokens
+            // are refunded to the proposer.
+            try bank.addToBalance(GUILD, token, tributeAmount) {
+                IERC20 erc20 = IERC20(token);
+                erc20.safeTransfer(address(bank), tributeAmount);
+            } catch {
+                _refundTribute(token, proposer, tributeAmount);
+            }
         } else if (
             voteResult == IVoting.VotingState.NOT_PASS ||
             voteResult == IVoting.VotingState.TIE
         ) {
             _refundTribute(
-                proposal.token,
-                proposal.proposer,
-                proposal.tributeAmount
+                token,
+                proposer,
+                tributeAmount
             );
         } else {
             revert("proposal has not been voted on yet");
