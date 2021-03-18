@@ -54,7 +54,7 @@ contract BankExtension is DaoConstants, AdapterGuard, IExtension {
     }
 
     /// @dev - Events for Bank
-    event NewBalance(address member, address tokenAddr, uint256 amount);
+    event NewBalance(address member, address tokenAddr, uint160 amount);
 
     event Withdraw(address account, address tokenAddr, uint256 amount);
 
@@ -65,7 +65,7 @@ contract BankExtension is DaoConstants, AdapterGuard, IExtension {
     struct Checkpoint {
         // A checkpoint for marking number of votes from a given block
         uint96 fromBlock;
-        uint64 amount;
+        uint160 amount;
     }
 
     address[] public tokens;
@@ -435,20 +435,20 @@ contract BankExtension is DaoConstants, AdapterGuard, IExtension {
         bool isValidToken = false;
         if (availableInternalTokens[token]) {
             require(
-                amount < type(uint64).max,
+                amount < type(uint88).max,
                 "token amount exceeds the maximum limit for internal tokens"
             );
             isValidToken = true;
         } else if (availableTokens[token]) {
             require(
-                amount < type(uint88).max,
+                amount < type(uint160).max,
                 "token amount exceeds the maximum limit for external tokens"
             );
             isValidToken = true;
         }
-        require(isValidToken, "token not registered");
+        uint160 newAmount = uint160(amount);
 
-        uint64 newAmount = uint64(amount);
+        require(isValidToken, "token not registered");
 
         uint32 nCheckpoints = numCheckpoints[token][member];
         if (
@@ -464,6 +464,6 @@ contract BankExtension is DaoConstants, AdapterGuard, IExtension {
             );
             numCheckpoints[token][member] = nCheckpoints + 1;
         }
-        emit NewBalance(member, token, amount);
+        emit NewBalance(member, token, newAmount);
     }
 }
