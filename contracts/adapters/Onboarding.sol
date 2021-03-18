@@ -339,7 +339,7 @@ contract OnboardingContract is
                 // Overflow risk may cause this to fail in which case the proposal
                 // tokens are refunded to the proposer.
                 try bank.addToBalance(GUILD, token, amount) {
-                   IERC20 erc20 = IERC20(token);
+                    IERC20 erc20 = IERC20(token);
                     erc20.safeTransfer(address(bank), amount);
                 } catch {
                     _refundTribute(token, proposer, amount);
@@ -348,8 +348,8 @@ contract OnboardingContract is
 
             uint256 totalShares;
             unchecked {
-                totalShares = 
-                _getShares(dao, tokenToMint, applicant) +
+                totalShares =
+                    _getShares(dao, tokenToMint, applicant) +
                     proposal.sharesRequested;
             }
             // If totalShares == 0, then we must return the funds due to an overflow
@@ -358,7 +358,6 @@ contract OnboardingContract is
             } else {
                 _refundTribute(token, proposer, amount);
             }
-            
         } else if (
             voteResult == IVoting.VotingState.NOT_PASS ||
             voteResult == IVoting.VotingState.TIE

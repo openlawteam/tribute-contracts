@@ -245,7 +245,7 @@ contract TributeContract is ITribute, DaoConstants, MemberGuard, AdapterGuard {
                 proposal.token,
                 tributeAmount
             );
-            
+
             if (!bank.isTokenAllowed(token)) {
                 bank.registerPotentialNewToken(token);
             }
@@ -261,11 +261,7 @@ contract TributeContract is ITribute, DaoConstants, MemberGuard, AdapterGuard {
             voteResult == IVoting.VotingState.NOT_PASS ||
             voteResult == IVoting.VotingState.TIE
         ) {
-            _refundTribute(
-                token,
-                proposer,
-                tributeAmount
-            );
+            _refundTribute(token, proposer, tributeAmount);
         } else {
             revert("proposal has not been voted on yet");
         }
