@@ -25,7 +25,7 @@ const DaoRegistry = artifacts.require("./core/DaoRegistry");
 
 const { toBN } = require("../../utils/DaoFactory.js");
 
-contract("DaoFactory", async (accounts) => {
+contract("MolochV3 - Core - DaoFactory", async (accounts) => {
   const owner = accounts[1];
   const anotherOwner = accounts[2];
 

@@ -92,9 +92,9 @@ contract OnboardingContract is
         uint256 maximumChunks,
         address tokenAddr
     ) external onlyAdapter(dao) {
-        require(maximumChunks > 0, "maximumChunks must be higher than 0");
-        require(chunkSize > 0, "chunkSize must be higher than 0");
-        require(sharesPerChunk > 0, "sharesPerChunk must be higher than 0");
+        require(chunkSize > 0, "chunkSize must be greater than 0");
+        require(maximumChunks > 0, "maximumChunks must be greater than 0");
+        require(sharesPerChunk > 0, "sharesPerChunk must be greater than 0");
 
         dao.setConfiguration(
             configKey(tokenAddrToMint, MaximumChunks),
