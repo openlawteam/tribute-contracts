@@ -40,84 +40,7 @@ const {
 const { createNFTDao, onboardNewMember } = require("../../utils/TestUtils.js");
 
 contract("MolochV3 - TributeNFT Adapter", async (accounts) => {
-  it("should be not be possible to submit a non nft tribute", async () => {
-    const { dao } = await createNFTDao(accounts[0]);
-    const tributeNFT = await getContract(
-      dao,
-      "tribute-nft",
-      TributeNFTContract
-    );
-    try {
-      await tributeNFT.provideTribute(
-        dao.address,
-        "0x1",
-        accounts[0],
-        ETH_TOKEN,
-        10,
-        ETH_TOKEN,
-        1
-      );
-      assert.fail("should be not be possible to submit a non nft tribute");
-    } catch (e) {
-      // ignore error: VM Exception while processing transaction: revert not supported operation
-    }
-  });
-
-  it("should be not be possible to submit a nft tribute if applicant uses a reserved address", async () => {
-    const { dao, pixelNFT } = await createNFTDao(accounts[0]);
-    const tributeNFT = await getContract(
-      dao,
-      "tribute-nft",
-      TributeNFTContract
-    );
-    const nftOwner = accounts[1];
-    await pixelNFT.mintPixel(nftOwner, 1, 1);
-    let pastEvents = await pixelNFT.getPastEvents();
-    let { owner, tokenId, uri, metadata } = pastEvents[1].returnValues;
-
-    try {
-      await tributeNFT.provideTributeNFT(
-        dao.address,
-        "0x1",
-        pixelNFT.address,
-        tokenId,
-        10,
-        { from: GUILD } // using GUILD address (reserved)
-      );
-    } catch (e) {
-      assert.equal(e.reason, "applicant is reserved address");
-    }
-  });
-
-  it("should be not be possible to submit a nft tribute if the nft address is not allowed", async () => {
-    const daoOwner = accounts[0];
-    const nftOwner = accounts[1];
-    const { dao, pixelNFT } = await createNFTDao(daoOwner);
-    const tributeNFT = await getContract(
-      dao,
-      "tribute-nft",
-      TributeNFTContract
-    );
-
-    await pixelNFT.mintPixel(nftOwner, 1, 1);
-    let pastEvents = await pixelNFT.getPastEvents();
-    let { tokenId } = pastEvents[1].returnValues;
-
-    try {
-      await tributeNFT.provideTributeNFT(
-        dao.address,
-        "0x1",
-        ETH_TOKEN, // address not allowed
-        tokenId,
-        10,
-        { from: nftOwner, gasPrice: toBN("0") }
-      );
-    } catch (e) {
-      assert.equal(e.reason, "nft not allowed");
-    }
-  });
-
-  it("should be be possible to submit a nft tribute proposal", async () => {
+  it("should be possible to submit a nft tribute proposal", async () => {
     const daoOwner = accounts[0];
     const nftOwner = accounts[1];
     const { dao, pixelNFT } = await createNFTDao(daoOwner);
@@ -144,6 +67,83 @@ contract("MolochV3 - TributeNFT Adapter", async (accounts) => {
       10,
       { from: nftOwner, gasPrice: toBN("0") }
     );
+  });
+
+  it("should not be possible to submit a non nft tribute", async () => {
+    const { dao } = await createNFTDao(accounts[0]);
+    const tributeNFT = await getContract(
+      dao,
+      "tribute-nft",
+      TributeNFTContract
+    );
+    try {
+      await tributeNFT.provideTribute(
+        dao.address,
+        "0x1",
+        accounts[0],
+        ETH_TOKEN,
+        10,
+        ETH_TOKEN,
+        1
+      );
+      assert.fail("should be not be possible to submit a non nft tribute");
+    } catch (e) {
+      // ignore error: VM Exception while processing transaction: revert not supported operation
+    }
+  });
+
+  it("should not possible to submit a nft tribute if applicant uses a reserved address", async () => {
+    const { dao, pixelNFT } = await createNFTDao(accounts[0]);
+    const tributeNFT = await getContract(
+      dao,
+      "tribute-nft",
+      TributeNFTContract
+    );
+    const nftOwner = accounts[1];
+    await pixelNFT.mintPixel(nftOwner, 1, 1);
+    let pastEvents = await pixelNFT.getPastEvents();
+    let { owner, tokenId, uri, metadata } = pastEvents[1].returnValues;
+
+    try {
+      await tributeNFT.provideTributeNFT(
+        dao.address,
+        "0x1",
+        pixelNFT.address,
+        tokenId,
+        10,
+        { from: GUILD } // using GUILD address (reserved)
+      );
+    } catch (e) {
+      assert.equal(e.reason, "applicant is reserved address");
+    }
+  });
+
+  it("should not be possible to submit a nft tribute if the nft address is not allowed", async () => {
+    const daoOwner = accounts[0];
+    const nftOwner = accounts[1];
+    const { dao, pixelNFT } = await createNFTDao(daoOwner);
+    const tributeNFT = await getContract(
+      dao,
+      "tribute-nft",
+      TributeNFTContract
+    );
+
+    await pixelNFT.mintPixel(nftOwner, 1, 1);
+    let pastEvents = await pixelNFT.getPastEvents();
+    let { tokenId } = pastEvents[1].returnValues;
+
+    try {
+      await tributeNFT.provideTributeNFT(
+        dao.address,
+        "0x1",
+        ETH_TOKEN, // address not allowed
+        tokenId,
+        10,
+        { from: nftOwner, gasPrice: toBN("0") }
+      );
+    } catch (e) {
+      assert.equal(e.reason, "nft not allowed");
+    }
   });
 
   it("should be possible to sponsor a nft tribute proposal", async () => {
@@ -310,7 +310,6 @@ contract("MolochV3 - TributeNFT Adapter", async (accounts) => {
 
   it("should not be possible to cancel a nft tribute proposal if it does not exist", async () => {
     const daoOwner = accounts[0];
-    const nftOwner = accounts[1];
     const proposalId = "0x1";
     const { dao } = await createNFTDao(daoOwner);
     const tributeNFT = await getContract(

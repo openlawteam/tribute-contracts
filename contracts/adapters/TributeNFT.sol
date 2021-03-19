@@ -230,8 +230,7 @@ contract TributeNFTContract is
             nftExt.transferFrom(
                 address(this),
                 proposal.nftAddr,
-                proposal.nftTokenId,
-                proposal.applicant
+                proposal.nftTokenId
             );
         } else if (
             voteResult == IVoting.VotingState.NOT_PASS ||

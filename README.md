@@ -43,10 +43,9 @@ Adapters implemented in the MolochV3 project:
 - [Onboarding](https://github.com/openlawteam/molochv3-contracts/blob/master/docs/adapters/Onboarding.md): triggers the process of minting internal tokens in exchange of a specific token at a fixed price.
 - [Ragequit](https://github.com/openlawteam/molochv3-contracts/blob/master/docs/adapters/Ragequit.md): gives the members the freedom to choose when it is the best time to exit the DAO for any given reason.
 - [Tribute](https://github.com/openlawteam/molochv3-contracts/blob/master/docs/adapters/Tribute.md): allows potential and existing DAO members to contribute any amount of ERC-20 tokens to the DAO in exchange for any amount of DAO internal tokens.
-- [TributeNFT](https://github.com/openlawteam/molochv3-contracts/blob/master/docs/adapters/TributeNFT.md): allows potential DAO members to contribute a registered ERC-712 asset to the DAO in exchange for any amount of DAO shares.
+- [TributeNFT](https://github.com/openlawteam/molochv3-contracts/blob/master/docs/adapters/TributeNFT.md): allows potential DAO members to contribute a registered ERC-721 asset to the DAO in exchange for any amount of DAO shares.
 - [Voting](https://github.com/openlawteam/molochv3-contracts/blob/master/docs/adapters/Voting.md): adds the simple on chain voting governance process to the DAO.
 - [Withdraw](https://github.com/openlawteam/molochv3-contracts/blob/master/docs/adapters/Withdraw.md): allows the members to withdraw their funds from the DAO bank.
-
 
 Considerations:
 
@@ -60,6 +59,8 @@ Considerations:
 Extensions are conceived to isolate the complexity of state changes from the DAORegistry contract, and to simplify the core logic. Essentially an Extension is similar to an Adapter, but the main difference is that it is used by several adapters and by the DAORegistry - which end up enhancing the DAO capabilities and the state management without cluttering the DAO core contract.
 
 - [Bank](https://github.com/openlawteam/molochv3-contracts/blob/master/docs/extensions/Bank.md): adds the banking capabilities to the DAO, and keeps track of the DAO accounts and internal token balances.
+
+- [NFT](https://github.com/openlawteam/molochv3-contracts/blob/master/docs/extensions/NFT.md): adds to the DAO the capability of managing and curate a collection of standard NFTs.
 
 #### Core Contracts
 

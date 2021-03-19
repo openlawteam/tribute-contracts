@@ -134,12 +134,7 @@ contract("MolochV3 - NFT Extension", async (accounts) => {
     const nftExtAddr = await dao.getExtensionAddress(sha3("nft"));
     const nftExtension = await NFTExtension.at(nftExtAddr);
     try {
-      await nftExtension.transferFrom(
-        accounts[1],
-        pixelNFT.address,
-        1,
-        accounts[1]
-      );
+      await nftExtension.transferFrom(accounts[1], pixelNFT.address, 1);
       assert.fail(
         "should not be possible to transfer a NFT without the TRANSFER permission"
       );
@@ -204,11 +199,8 @@ contract("MolochV3 - NFT Extension", async (accounts) => {
       gasPrice: toBN("0"),
     });
 
-    const isOwner = await nftExtension.isOriginalOwner(
-      nftOwner,
-      pixelNFT.address,
-      tokenId
-    );
-    assert.equal(isOwner, true);
+    // Make sure it was collected
+    const nftAddr = await nftExtension.getNFTByIndex(0);
+    assert.equal(nftAddr, pixelNFT.address);
   });
 });
