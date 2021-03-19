@@ -48,6 +48,7 @@ const maximumChunks = toBN("11");
 const OLToken = artifacts.require("./test/OLToken");
 const TestToken1 = artifacts.require("./test/TestToken1");
 const TestToken2 = artifacts.require("./test/TestToken2");
+const TestFairShareCalc = artifacts.require("./test/TestFairShareCalc");
 const Multicall = artifacts.require("./util/Multicall");
 
 const DaoFactory = artifacts.require("./core/DaoFactory");
@@ -424,10 +425,9 @@ const deployDao = async (deployer, options) => {
 
   // deploy test token contracts (for testing convenience)
   if (deployTestTokens) {
-    const tokenSupply = 1000000;
-    await deployer.deploy(OLToken, tokenSupply);
-    await deployer.deploy(TestToken1, tokenSupply);
-    await deployer.deploy(TestToken2, tokenSupply);
+    await deployer.deploy(OLToken, toBN("1000000000000000000000000"));
+    await deployer.deploy(TestToken1, 1000000);
+    await deployer.deploy(TestToken2, 1000000);
     await deployer.deploy(Multicall);
   }
 
@@ -444,7 +444,8 @@ const createDao = async (
   gracePeriod = 1,
   tokenAddr = ETH_TOKEN,
   finalize = true,
-  maxExternalTokens = 100
+  maxExternalTokens = 100,
+  maxChunks = maximumChunks
 ) => {
   const bankFactory = await BankFactory.deployed();
   const daoFactory = await DaoFactory.deployed();
@@ -495,7 +496,7 @@ const createDao = async (
     votingPeriod,
     gracePeriod,
     tokenAddr,
-    maximumChunks
+    maxChunks
   );
 
   if (finalize) {
@@ -650,6 +651,7 @@ module.exports = {
   OLToken,
   TestToken1,
   TestToken2,
+  TestFairShareCalc,
   DaoFactory,
   DaoRegistry,
   BankFactory,

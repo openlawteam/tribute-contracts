@@ -1,8 +1,7 @@
 pragma solidity ^0.8.0;
 
 // SPDX-License-Identifier: MIT
-
-import "../utils/ERC20.sol";
+import "../helpers/FairShareHelper.sol";
 
 /**
 MIT License
@@ -27,8 +26,13 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
  */
-contract OLToken is ERC20 {
-    constructor(uint256 _totalSupply) ERC20("OpenLawToken", "OLT") {
-        _mint(msg.sender, _totalSupply);
+
+contract TestFairShareCalc {
+    function calculate(
+        uint256 balance,
+        uint256 shares,
+        uint256 totalShares
+    ) external pure returns (uint256) {
+        return FairShareHelper.calc(balance, shares, totalShares);
     }
 }

@@ -32,19 +32,20 @@ library FairShareHelper {
     function calc(
         uint256 balance,
         uint256 shares,
-        uint256 _totalShares
+        uint256 totalShares
     ) internal pure returns (uint256) {
-        require(_totalShares != 0, "total shares should not be 0");
+        require(totalShares > 0, "totalShares must be greater than 0");
+        require(
+            shares <= totalShares,
+            "shares must be less than or equal to totalShares"
+        );
         if (balance == 0) {
             return 0;
         }
-        uint256 prod;
-        unchecked {
-            prod = balance * shares;
-        } // prevents revert call on overflow
-        if (prod / balance == shares) {
-            return prod / _totalShares;
-        }
-        return (balance / _totalShares) * shares;
+        // The balance for Internal and External tokens are limited to 2^64-1 (see Bank.sol:L411-L421)
+        // The maximum number of shares is limited to 2^64-1 (see ...)
+        // Worst case cenario is: balance=2^64-1 * shares=2^64-1, no overflows.
+        uint256 prod = balance * shares;
+        return prod / totalShares;
     }
 }
