@@ -85,7 +85,9 @@ contract("MolochV3 - Tribute Adapter", async (accounts) => {
         }
       );
       assert.fail("should have failed without spender approval!");
-    } catch (err) {}
+    } catch (e) {
+      assert.equal(e.reason, "ERC20: transfer amount exceeds allowance");
+    }
 
     // Pre-approve spender (tribute adapter) to transfer proposer tokens
     await oltContract.approve(tribute.address, tributeAmount, {
@@ -122,6 +124,7 @@ contract("MolochV3 - Tribute Adapter", async (accounts) => {
         from: myAccount,
         gasPrice: toBN("0"),
       });
+      assert.fail("should not process the proposal before voting");
     } catch (err) {
       assert.equal(err.reason, "proposal has not been voted on yet");
     }
