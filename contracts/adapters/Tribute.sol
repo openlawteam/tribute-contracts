@@ -246,26 +246,35 @@ contract TributeContract is ITribute, DaoConstants, MemberGuard, AdapterGuard {
         uint256 tributeAmount = proposal.tributeAmount;
         if (voteResult == IVoting.VotingState.PASS) {
             BankExtension bank = BankExtension(dao.getExtensionAddress(BANK));
-            _mintTokensToMember(
-                dao,
-                proposal.applicant,
-                proposer,
-                proposal.tokenToMint,
-                proposal.requestAmount,
-                proposal.token,
-                tributeAmount
-            );
-
-            if (!bank.isTokenAllowed(token)) {
-                bank.registerPotentialNewToken(token);
-            }
-            // Overflow risk may cause this to fail in which case the tribute tokens
-            // are refunded to the proposer.
-            try bank.addToBalance(GUILD, token, tributeAmount) {
-                IERC20 erc20 = IERC20(token);
-                erc20.safeTransfer(address(bank), tributeAmount);
-            } catch {
-                _refundTribute(token, proposer, tributeAmount);
+            address tokenToMint = proposal.tokenToMint;
+            address applicant = proposal.applicant;
+            bool success =
+                _mintTokensToMember(
+                    dao,
+                    applicant,
+                    proposer,
+                    tokenToMint,
+                    proposal.requestAmount,
+                    token,
+                    tributeAmount
+                );
+            if (success) {
+                if (!bank.isTokenAllowed(token)) {
+                    bank.registerPotentialNewToken(token);
+                }
+                // On overflow failure, totalShares is 0, then return tokens to the proposer.
+                try bank.addToBalance(GUILD, token, tributeAmount) {
+                    IERC20 erc20 = IERC20(token);
+                    erc20.safeTransfer(address(bank), tributeAmount);
+                } catch {
+                    _refundTribute(token, proposer, tributeAmount);
+                    // Remove the minted tokens
+                    bank.subtractFromBalance(
+                        applicant,
+                        token,
+                        proposal.requestAmount
+                    );
+                }
             }
         } else if (
             voteResult == IVoting.VotingState.NOT_PASS ||
@@ -345,7 +354,7 @@ contract TributeContract is ITribute, DaoConstants, MemberGuard, AdapterGuard {
         uint256 requestAmount,
         address token,
         uint256 tributeAmount
-    ) internal {
+    ) internal returns (bool) {
         BankExtension bank = BankExtension(dao.getExtensionAddress(BANK));
         require(
             bank.isInternalToken(tokenToMint),
@@ -357,9 +366,10 @@ contract TributeContract is ITribute, DaoConstants, MemberGuard, AdapterGuard {
         // Overflow risk may cause this to fail in which case the tribute tokens
         // are refunded to the proposer.
         try bank.addToBalance(applicant, tokenToMint, requestAmount) {
-            // do nothing
+            return true;
         } catch {
             _refundTribute(token, proposer, tributeAmount);
+            return false;
         }
     }
 }

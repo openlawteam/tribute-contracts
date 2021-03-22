@@ -28,6 +28,7 @@ const {
   toBN,
   advanceTime,
   createDao,
+  toUtf8,
   getContract,
   GUILD,
   SHARES,
@@ -40,19 +41,18 @@ const {
   BankExtension,
   sha3,
   ETH_TOKEN,
-  toWei,
 } = require("../../utils/DaoFactory.js");
 const { checkBalance } = require("../../utils/TestUtils.js");
 
 contract("MolochV3 - Onboarding Adapter", async (accounts) => {
-  it("should not be possible onboard when the token amount exeeds the external token limits", async () => {
-    const daoOwner = accounts[1];
+  it("should not be possible onboard when the token amount exceeds the external token limits", async () => {
+    const daoOwner = accounts[0];
     const applicant = accounts[2];
 
     // Issue OpenLaw ERC20 Basic Token for tests
     // Token supply higher than the limit for external tokens
     // defined in Bank._createNewAmountCheckpoint function (2**160-1).
-    const supply = toBN("2").pow(toBN("180"));
+    const supply = toBN("2").pow(toBN("180")).toString();
     const oltContract = await OLToken.new(supply, { from: daoOwner });
     const oltContractAddr = oltContract.address;
 
@@ -65,16 +65,16 @@ contract("MolochV3 - Onboarding Adapter", async (accounts) => {
       oltContractAddr, // token address to mint
       true, // finalize dao creation
       100, // max external tokens
-      toBN("2").pow(toBN("180")) // max chunks
+      toBN("2").pow(toBN("180")).toString() // max chunks
     );
 
     const voting = await getContract(dao, "voting", VotingContract);
     const onboarding = await getContract(dao, "onboarding", OnboardingContract);
 
     // Transfer OLTs to myAccount
-    // Use an amount that will cause an overflow 2**160 > 2**160-1 for external tokens
-    const initialTokenBalance = toBN("2").pow(toBN("160")).toString();
-    await oltContract.approve(applicant, initialTokenBalance, {
+    // Use an amount that will cause an overflow 2**161 > 2**160-1 for external tokens
+    const initialTokenBalance = toBN("2").pow(toBN("161")).toString();
+    await oltContract.approve.sendTransaction(applicant, initialTokenBalance, {
       from: daoOwner,
     });
     await oltContract.transfer(applicant, initialTokenBalance, {
@@ -84,14 +84,19 @@ contract("MolochV3 - Onboarding Adapter", async (accounts) => {
     assert.equal(
       initialTokenBalance.toString(),
       applicantTokenBalance.toString(),
-      "applicant account must be initialized with 2**160 OLT Tokens"
+      "applicant account must be initialized with 2**161 OLT Tokens"
     );
 
     // Pre-approve spender (onboarding adapter) to transfer proposer tokens
     const tokenAmount = initialTokenBalance;
-    await oltContract.approve(onboarding.address, tokenAmount, {
-      from: applicant,
-    });
+    await oltContract.approve.sendTransaction(
+      onboarding.address,
+      initialTokenBalance.toString(),
+      {
+        from: applicant,
+        gasPrice: toBN("0"),
+      }
+    );
 
     const proposalId = "0x1";
     await onboarding.onboard(

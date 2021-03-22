@@ -46,6 +46,8 @@ contract OnboardingContract is
     using Address for address payable;
     using SafeERC20 for IERC20;
 
+    event FailedOnboarding(address applicant, bytes32 cause);
+
     bytes32 constant ChunkSize = keccak256("onboarding.chunkSize");
     bytes32 constant SharesPerChunk = keccak256("onboarding.sharesPerChunk");
     bytes32 constant TokenAddr = keccak256("onboarding.tokenAddr");
@@ -142,7 +144,7 @@ contract OnboardingContract is
             details.numberOfChunks *
             details.sharesPerChunk;
         details.totalShares =
-            _getShares(dao, token, applicant) +
+            _getShares(address(dao), token, applicant) +
             details.sharesRequested;
 
         require(
@@ -287,7 +289,12 @@ contract OnboardingContract is
 
         dao.processProposal(proposalId);
 
-        _refundTribute(proposal.token, proposal.proposer, proposal.amount);
+        _refundTribute(
+            proposal.token,
+            proposal.proposer,
+            proposal.amount,
+            "canceled"
+        );
     }
 
     function processProposal(DaoRegistry dao, bytes32 proposalId)
@@ -315,54 +322,79 @@ contract OnboardingContract is
         uint256 amount = proposal.amount;
         if (voteResult == IVoting.VotingState.PASS) {
             address tokenToMint = proposal.tokenToMint;
+            uint256 sharesRequested = proposal.sharesRequested;
             address applicant = proposal.applicant;
             BankExtension bank = BankExtension(dao.getExtensionAddress(BANK));
-            _mintTokensToMember(
-                dao,
-                tokenToMint,
-                applicant,
-                proposal.sharesRequested,
-                proposer,
-                token,
-                amount
-            );
-
-            if (token == ETH_TOKEN) {
-                // Overflow risk may cause this to fail in which case the proposal
-                // tokens are refunded to the proposer.
-                try bank.addToBalance{value: amount}(GUILD, token, amount) {
-                    // do nothing
-                } catch {
-                    _refundTribute(token, proposer, amount);
+            bool success =
+                _mintTokensToMember(
+                    dao,
+                    tokenToMint,
+                    applicant,
+                    sharesRequested,
+                    proposer,
+                    token,
+                    amount
+                );
+            address daoAddress = address(dao);
+            if (success) {
+                if (token == ETH_TOKEN) {
+                    // On overflow failure return tokens to the proposer.
+                    try bank.addToBalance{value: amount}(GUILD, token, amount) {
+                        // do nothing
+                    } catch {
+                        _refundTribute(token, proposer, amount, "overflow:eth");
+                        // Remove the minted tokens
+                        bank.subtractFromBalance(
+                            applicant,
+                            tokenToMint,
+                            sharesRequested
+                        );
+                    }
+                } else {
+                    // On overflow failure return tokens to the proposer.
+                    try bank.addToBalance(GUILD, token, amount) {
+                        IERC20 erc20 = IERC20(token);
+                        erc20.safeTransfer(address(bank), amount);
+                    } catch {
+                        _refundTribute(
+                            token,
+                            proposer,
+                            amount,
+                            "overflow:erc20"
+                        );
+                        // Remove the minted tokens
+                        bank.subtractFromBalance(
+                            applicant,
+                            tokenToMint,
+                            sharesRequested
+                        );
+                    }
                 }
-            } else {
-                // Overflow risk may cause this to fail in which case the proposal
-                // tokens are refunded to the proposer.
-                try bank.addToBalance(GUILD, token, amount) {
-                    IERC20 erc20 = IERC20(token);
-                    erc20.safeTransfer(address(bank), amount);
-                } catch {
-                    _refundTribute(token, proposer, amount);
-                }
-            }
 
-            uint256 totalShares;
-            unchecked {
-                totalShares =
-                    _getShares(dao, tokenToMint, applicant) +
-                    proposal.sharesRequested;
-            }
-            // If totalShares == 0, then we must return the funds due to an overflow
-            if (totalShares > 0) {
-                shares[address(dao)][tokenToMint][applicant] = totalShares;
-            } else {
-                _refundTribute(token, proposer, amount);
+                uint256 totalShares;
+                unchecked {
+                    totalShares =
+                        _getShares(daoAddress, tokenToMint, applicant) +
+                        proposal.sharesRequested;
+                }
+                // On overflow failure, totalShares is 0, then return tokens to the proposer.
+                if (totalShares == 0) {
+                    _refundTribute(token, proposer, amount, "overflow:shares");
+                    // Remove the minted tokens
+                    bank.subtractFromBalance(
+                        applicant,
+                        tokenToMint,
+                        sharesRequested
+                    );
+                } else {
+                    shares[daoAddress][tokenToMint][applicant] = totalShares;
+                }
             }
         } else if (
             voteResult == IVoting.VotingState.NOT_PASS ||
             voteResult == IVoting.VotingState.TIE
         ) {
-            _refundTribute(token, proposer, amount);
+            _refundTribute(token, proposer, amount, "voting:fail");
         } else {
             revert("proposal has not been voted on yet");
         }
@@ -376,7 +408,7 @@ contract OnboardingContract is
         address payable proposer,
         address proposalToken,
         uint256 proposalAmount
-    ) internal {
+    ) internal returns (bool) {
         BankExtension bank = BankExtension(dao.getExtensionAddress(BANK));
         require(
             bank.isInternalToken(tokenToMint),
@@ -385,33 +417,49 @@ contract OnboardingContract is
 
         dao.potentialNewMember(memberAddr);
 
-        // Overflow risk may cause this to fail in which case the proposal
-        // tokens are refunded to the proposer.
+        // On overflow failure, totalShares is 0, then return tokens to the proposer.
         try bank.addToBalance(memberAddr, tokenToMint, tokenAmount) {
-            // do nothing
+            return true;
         } catch {
-            _refundTribute(proposalToken, proposer, proposalAmount);
+            _refundTribute(
+                proposalToken,
+                proposer,
+                proposalAmount,
+                "overflow:mint"
+            );
+            return false;
         }
     }
 
     function _getShares(
-        DaoRegistry dao,
+        address daoAddress,
         address token,
         address applicant
     ) internal view returns (uint256) {
-        return shares[address(dao)][token][applicant];
+        return shares[daoAddress][token][applicant];
     }
 
     function _refundTribute(
         address tokenAddr,
         address payable proposer,
-        uint256 amount
+        uint256 amount,
+        bytes32 cause
     ) internal {
         if (tokenAddr == ETH_TOKEN) {
             proposer.transfer(amount);
         } else {
-            IERC20 token = IERC20(tokenAddr);
-            token.safeTransfer(proposer, amount);
+            IERC20 erc20 = IERC20(tokenAddr);
+            uint256 balance = erc20.balanceOf(address(this));
+            if (balance > 0) {
+                if (balance < amount) {
+                    erc20.approve(proposer, balance);
+                    erc20.safeTransfer(proposer, balance);
+                } else {
+                    erc20.approve(proposer, amount);
+                    erc20.safeTransfer(proposer, amount);
+                }
+                emit FailedOnboarding(proposer, cause);
+            }
         }
     }
 }
