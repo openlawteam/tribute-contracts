@@ -1,10 +1,11 @@
 ## Adapter description and scope
 
 The Onboarding adapter is the process of minting internal tokens in exchange of a specific token at a fixed price.
-The tokens sent by a proposer are converted into a proposal that the community votes on. If it passes, the tokens are moved to the
-guild bank and internal tokens minted, otherwise the proposer can withdraw back his tokens.
+The tokens sent by a proposer are converted into a proposal that the community votes on. If it passes, the tokens are moved to the guild bank and internal tokens minted, otherwise the proposer can withdraw back his tokens.
 
-You can mint any internal tokens but it is usually to mint either SHARE or LOOT tokens.
+You can mint any internal tokens but it is usually to mint either SHARE or LOOT tokens. The onboarding process supports raw ether, and ERC20 tokens tributes. The ERC20 token must be allowed/supported by the Bank.
+
+In case of any failure during the `processProposal` step, the funds are returned to the applicant, and the minted shares burned if needed.
 
 ## Adapter workflow
 
@@ -28,6 +29,8 @@ Each configuration is done based on the token address that needs to be minted.
 DAORegistry Access Flags: `SUBMIT_PROPOSAL`, `SPONSOR_PROPOSAL`, `PROCESS_PROPOSAL`, `UPDATE_DELEGATE_KEY`, `NEW_MEMBER`.
 
 Bank Extension Access Flags: `ADD_TO_BALANCE`, `SUB_FROM_BALANCE`.
+
+## Adapter state
 
 ### {tokenAddrToMint}.onboarding.chunkSize
 
@@ -91,9 +94,7 @@ The proposals are organized by DAO address and then by proposal id.
 
 Accounting to see the amount of a particular internal token that has been minted for a particular applicant. This is then checked against the maxChunks configuration to determine if the onboarding proposal is allowed or not.
 
-## Functions description, assumptions, checks, dependencies, interactions and access control
-
-Here is the list of all the functions in onboarding, what they are for, the checks and assumptions.
+## Functions description and assumptions / checks
 
 ### function configKey(address tokenAddrToMint, bytes32 key) returns (bytes32)
 
@@ -169,3 +170,8 @@ It handles whether it's an ERC-20 or simply ETH.
 ### function \_mintTokensToMember(DaoRegistry dao, address tokenToMint, address memberAddr, uint256 tokenAmount, address payable proposer, address proposalToken, uint256 proposalAmount)
 
 This function mints the tokens to the new member and creates the member data if it doesn't already exist within the DAO.
+
+
+### Events
+
+- `FailedOnboarding(address applicant, bytes32 cause)`: when there is an overflow while minting new tokens or updating ERC20/ETH token balance in the Bank.

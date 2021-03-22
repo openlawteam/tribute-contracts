@@ -395,4 +395,102 @@ contract("MolochV3 - Tribute Adapter", async (accounts) => {
       assert.equal(err.reason, "proposal does not exist");
     }
   });
+
+  it("should not be possible to join if the provided token exceeds the bank token limits", async () => {
+    const daoOwner = accounts[1];
+    const applicant = accounts[2];
+
+    // Issue OpenLaw ERC20 Basic Token for tests
+    // Token supply higher than the limit for external tokens
+    // defined in Bank._createNewAmountCheckpoint function (2**160-1).
+    const supply = toBN("2").pow(toBN("180")).toString();
+    const oltContract = await OLToken.new(supply, { from: daoOwner });
+    const oltContractAddr = oltContract.address;
+
+    const dao = await createDao(
+      daoOwner,
+      toBN("1"), // share price
+      toBN("10").pow(toBN("4")), // max shares per chunk
+      10, // voting period
+      1, // voting grace period
+      oltContractAddr, // token address to mint
+      true, // finalize dao creation
+      100, // max external tokens
+      toBN("2").pow(toBN("180")).toString() // max chunks
+    );
+
+    const tribute = await getContract(dao, "tribute", TributeContract);
+    const voting = await getContract(dao, "voting", VotingContract);
+
+    // Transfer OLTs to myAccount
+    // Use an amount that will cause an overflow 2**161 > 2**160-1 for external tokens
+    const initialTokenBalance = toBN("2").pow(toBN("161")).toString();
+    await oltContract.approve.sendTransaction(applicant, initialTokenBalance, {
+      from: daoOwner,
+    });
+
+    await oltContract.transfer(applicant, initialTokenBalance, {
+      from: daoOwner,
+    });
+
+    let applicantTokenBalance = await oltContract.balanceOf.call(applicant);
+    assert.equal(
+      initialTokenBalance.toString(),
+      applicantTokenBalance.toString(),
+      "applicant account must be initialized with 2**161 OLT Tokens"
+    );
+
+    // Pre-approve spender (tribute adapter) to transfer proposer tokens
+    const tributeAmount = initialTokenBalance;
+    await oltContract.approve(tribute.address, initialTokenBalance.toString(), {
+      from: applicant,
+      gasPrice: toBN("0"),
+    });
+
+    const requestAmount = 100000000;
+    const proposalId = "0x1";
+    await tribute.provideTribute(
+      dao.address,
+      proposalId,
+      applicant,
+      SHARES,
+      requestAmount,
+      oltContract.address,
+      tributeAmount.toString(),
+      {
+        from: applicant,
+        gasPrice: toBN("0"),
+      }
+    );
+
+    await tribute.sponsorProposal(dao.address, proposalId, [], {
+      from: daoOwner,
+      gasPrice: toBN("0"),
+    });
+
+    await voting.submitVote(dao.address, proposalId, 1, {
+      from: daoOwner,
+      gasPrice: toBN("0"),
+    });
+
+    await advanceTime(10000);
+
+    try {
+      await tribute.processProposal(dao.address, proposalId, {
+        from: daoOwner,
+        gasPrice: toBN("0"),
+      });
+    } catch (e) {
+      console.log(e);
+      assert.equal(e.reason, "");
+    }
+
+    // In case of failures the funds must be returned to the applicant
+    applicantTokenBalance = await oltContract.balanceOf.call(applicant);
+    assert.equal(
+      initialTokenBalance.toString(),
+      applicantTokenBalance.toString(),
+      "applicant account should contain 2**161 OLT Tokens when the onboard fails"
+    );
+  });
 });
