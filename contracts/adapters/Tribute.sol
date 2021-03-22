@@ -41,6 +41,8 @@ contract TributeContract is ITribute, DaoConstants, MemberGuard, AdapterGuard {
     using Address for address;
     using SafeERC20 for IERC20;
 
+    event FailedOnboarding(address applicant, bytes32 cause); 
+
     struct ProposalDetails {
         // The proposal id.
         bytes32 id;
@@ -109,8 +111,8 @@ contract TributeContract is ITribute, DaoConstants, MemberGuard, AdapterGuard {
             dao.isNotReservedAddress(applicant),
             "applicant is reserved address"
         );
-        IERC20 token = IERC20(tokenAddr);
-        token.safeTransferFrom(msg.sender, address(this), tributeAmount);
+        IERC20 erc20 = IERC20(tokenAddr);
+        erc20.safeTransferFrom(msg.sender, address(this), tributeAmount);
 
         _submitTributeProposal(
             dao,
@@ -198,7 +200,8 @@ contract TributeContract is ITribute, DaoConstants, MemberGuard, AdapterGuard {
         _refundTribute(
             proposal.token,
             proposal.proposer,
-            proposal.tributeAmount
+            proposal.tributeAmount,
+            "canceled"
         );
     }
 
@@ -257,7 +260,7 @@ contract TributeContract is ITribute, DaoConstants, MemberGuard, AdapterGuard {
                     IERC20 erc20 = IERC20(token);
                     erc20.safeTransfer(address(bank), tributeAmount);
                 } catch {
-                    _refundTribute(token, proposer, tributeAmount);
+                    _refundTribute(token, proposer, tributeAmount, "overflow:erc20");
                     // Remove the minted tokens
                     bank.subtractFromBalance(
                         applicant,
@@ -270,7 +273,7 @@ contract TributeContract is ITribute, DaoConstants, MemberGuard, AdapterGuard {
             voteResult == IVoting.VotingState.NOT_PASS ||
             voteResult == IVoting.VotingState.TIE
         ) {
-            _refundTribute(token, proposer, tributeAmount);
+            _refundTribute(token, proposer, tributeAmount, "voting:fail");
         } else {
             revert("proposal has not been voted on yet");
         }
@@ -319,10 +322,12 @@ contract TributeContract is ITribute, DaoConstants, MemberGuard, AdapterGuard {
     function _refundTribute(
         address tokenAddr,
         address proposer,
-        uint256 amount
+        uint256 amount,
+        bytes32 cause
     ) internal {
-        IERC20 token = IERC20(tokenAddr);
-        token.safeTransfer(proposer, amount);
+        IERC20 erc20 = IERC20(tokenAddr);
+        erc20.safeTransfer(proposer, amount);
+        emit FailedOnboarding(proposer, cause);
     }
 
     /**
@@ -363,7 +368,7 @@ contract TributeContract is ITribute, DaoConstants, MemberGuard, AdapterGuard {
         try bank.addToBalance(applicant, tokenToMint, requestAmount) {
             return true;
         } catch {
-            _refundTribute(token, proposer, tributeAmount);
+            _refundTribute(token, proposer, tributeAmount, "overflow:mint");
             return false;
         }
     }

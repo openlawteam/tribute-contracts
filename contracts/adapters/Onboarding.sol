@@ -207,8 +207,8 @@ contract OnboardingContract is
             if (tokenAddr == ETH_TOKEN) {
                 payable(msg.sender).sendValue(amount);
             } else {
-                IERC20 token = IERC20(tokenAddr);
-                token.safeTransfer(msg.sender, amount);
+                IERC20 erc20 = IERC20(tokenAddr);
+                erc20.safeTransfer(msg.sender, amount);
             }
         }
     }
