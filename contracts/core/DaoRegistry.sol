@@ -148,8 +148,6 @@ contract DaoRegistry is MemberGuard, AdapterGuard {
     // constructor() {
     // }
 
-    //TODO: we may need to add some ACL to ensure only the factory is allowed to clone it, otherwise
-    //any will able to deploy it, and the first one to call this function is added to the DAO as a member.
     /**
      * @notice Initialises the DAO
      * @dev Involves initialising available tokens, checkpoints, and membership of creator
