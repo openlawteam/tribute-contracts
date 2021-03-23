@@ -171,7 +171,6 @@ It handles whether it's an ERC-20 or simply ETH.
 
 This function mints the tokens to the new member and creates the member data if it doesn't already exist within the DAO.
 
-
 ### Events
 
 - `FailedOnboarding(address applicant, bytes32 cause)`: when there is an overflow while minting new tokens or updating ERC20/ETH token balance in the Bank.
