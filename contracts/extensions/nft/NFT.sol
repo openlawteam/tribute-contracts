@@ -156,7 +156,6 @@ contract NFTExtension is
 
         // Remove the NFT from the contract address to the actual owner
         IERC721 erc721 = IERC721(nftAddr);
-        erc721.approve(newOwner, nftTokenId);
         erc721.safeTransferFrom(address(this), newOwner, nftTokenId);
         // Remove the asset from the GUILD collection
         _nftCollection[GUILD][nftAddr].remove(nftTokenId);
@@ -176,18 +175,11 @@ contract NFTExtension is
         public
         hasExtensionAccess(this, AclFlag.REGISTER_NFT)
     {
-        require(isNotReservedAddress(nftAddr), "reservedToken");
+        require(isNotReservedAddress(nftAddr) && nftAddr != SHARES, "reservedToken");
 
         if (!availableNFTs[nftAddr]) {
             availableNFTs[nftAddr] = true;
         }
-    }
-
-    /**
-     * @notice Checks if a given token address is reserved.
-     */
-    function isNotReservedAddress(address addr) public pure returns (bool) {
-        return addr != GUILD && addr != TOTAL && addr != SHARES;
     }
 
     /**

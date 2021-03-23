@@ -107,7 +107,7 @@ contract TributeNFTContract is
     ) external override {
         address applicant = msg.sender;
         require(
-            dao.isNotReservedAddress(applicant),
+            isNotReservedAddress(applicant),
             "applicant is reserved address"
         );
 

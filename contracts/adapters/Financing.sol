@@ -75,7 +75,7 @@ contract FinancingContract is IFinancing, DaoConstants, MemberGuard {
         BankExtension bank = BankExtension(dao.getExtensionAddress(BANK));
         require(bank.isTokenAllowed(token), "token not allowed");
         require(
-            dao.isNotReservedAddress(applicant),
+            isNotReservedAddress(applicant),
             "applicant using reserved address"
         );
         dao.submitProposal(proposalId);

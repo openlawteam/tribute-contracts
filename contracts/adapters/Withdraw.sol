@@ -55,7 +55,7 @@ contract WithdrawContract is DaoConstants, MemberGuard {
         address token
     ) external {
         require(
-            dao.isNotReservedAddress(account),
+            isNotReservedAddress(account),
             "withdraw::reserved address"
         );
 

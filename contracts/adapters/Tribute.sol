@@ -116,7 +116,7 @@ contract TributeContract is ITribute, DaoConstants, MemberGuard, AdapterGuard {
         uint256 tributeAmount
     ) public override {
         require(
-            dao.isNotReservedAddress(applicant),
+            isNotReservedAddress(applicant),
             "applicant is reserved address"
         );
         IERC20 token = IERC20(tokenAddr);

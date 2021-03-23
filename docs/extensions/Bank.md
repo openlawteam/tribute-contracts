@@ -67,10 +67,6 @@ Whitelists a token if it is not already the case.
 
 Whitelists an internal token if it is not already the case.
 
-### function isNotReservedAddress(address applicant) returns (bool)
-
-Checks that the address is not a reserved address.
-
 ### function getToken(uint256 index) external view returns (address)
 
 Gets the token at index in tokens.

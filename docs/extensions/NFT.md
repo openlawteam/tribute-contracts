@@ -120,15 +120,6 @@ function registerPotentialNewNFT(address nftAddr)
     hasExtensionAccess(this, AclFlag.REGISTER_NFT)
 ```
 
-### function isNotReservedAddress
-
-```solidity
-/**
-  * @notice Checks if a given token address is reserved.
-  */
-function isNotReservedAddress(address addr) public pure returns (bool)
-```
-
 ### function isNFTAllowed
 
 ```solidity

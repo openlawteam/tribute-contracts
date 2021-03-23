@@ -77,4 +77,11 @@ abstract contract DaoConstants {
             return flags;
         }
     }
+
+    /**
+     * @notice Checks if a given address is reserved.
+     */
+    function isNotReservedAddress(address addr) public pure returns (bool) {
+        return addr != GUILD && addr != TOTAL && addr != ESCROW;
+    }
 }
