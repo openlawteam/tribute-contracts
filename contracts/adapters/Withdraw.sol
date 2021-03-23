@@ -54,10 +54,7 @@ contract WithdrawContract is DaoConstants, MemberGuard {
         address payable account,
         address token
     ) external {
-        require(
-            isNotReservedAddress(account),
-            "withdraw::reserved address"
-        );
+        require(isNotReservedAddress(account), "withdraw::reserved address");
 
         // We do not need to check if the token is supported by the bank,
         // because if it is not, the balance will always be zero.

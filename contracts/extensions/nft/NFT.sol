@@ -175,7 +175,10 @@ contract NFTExtension is
         public
         hasExtensionAccess(this, AclFlag.REGISTER_NFT)
     {
-        require(isNotReservedAddress(nftAddr) && nftAddr != SHARES, "reservedToken");
+        require(
+            isNotReservedAddress(nftAddr) && nftAddr != SHARES,
+            "reservedToken"
+        );
 
         if (!availableNFTs[nftAddr]) {
             availableNFTs[nftAddr] = true;
