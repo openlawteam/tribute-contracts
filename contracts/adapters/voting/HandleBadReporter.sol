@@ -5,6 +5,7 @@ pragma solidity ^0.8.0;
 import "../../core/DaoRegistry.sol";
 import "../../extensions/Bank.sol";
 import "../../core/DaoConstants.sol";
+import "../../adapters/GuildKickLogic.sol";
 import "../../guards/MemberGuard.sol";
 import "../../guards/AdapterGuard.sol";
 import "../interfaces/IVoting.sol";
@@ -35,7 +36,7 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
  */
 
-contract HandleBadReporterAdapter is DaoConstants, MemberGuard {
+contract HandleBadReporterAdapter is GuildKickLogic, MemberGuard {
     /*
      * default fallback function to prevent from sending ether to the contract
      */
@@ -81,7 +82,9 @@ contract HandleBadReporterAdapter is DaoConstants, MemberGuard {
             votingContract.voteResult(dao, proposalId);
         // the person has been kicked out
         if (votingState == IVoting.VotingState.PASS) {
-            //TODO: process guild kick
+            (, address challengeAddress) =
+                votingContract.getChallengeDetails(dao, proposalId);
+            rageKick(dao, challengeAddress);
         } else if (
             votingState == IVoting.VotingState.NOT_PASS ||
             votingState == IVoting.VotingState.TIE
