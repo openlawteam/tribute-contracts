@@ -41,7 +41,7 @@ contract TributeContract is ITribute, DaoConstants, MemberGuard, AdapterGuard {
     using Address for address;
     using SafeERC20 for IERC20;
 
-    event FailedOnboarding(address applicant, bytes32 cause); 
+    event FailedOnboarding(address applicant, bytes32 cause);
 
     struct ProposalDetails {
         // The proposal id.
@@ -270,7 +270,12 @@ contract TributeContract is ITribute, DaoConstants, MemberGuard, AdapterGuard {
                     IERC20 erc20 = IERC20(token);
                     erc20.safeTransfer(address(bank), tributeAmount);
                 } catch {
-                    _refundTribute(token, proposer, tributeAmount, "overflow:erc20");
+                    _refundTribute(
+                        token,
+                        proposer,
+                        tributeAmount,
+                        "overflow:erc20"
+                    );
                     // Remove the minted tokens
                     bank.subtractFromBalance(
                         applicant,
