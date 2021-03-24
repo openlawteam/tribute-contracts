@@ -19,7 +19,7 @@ import {
   Extension,
   Proposal,
   Member,
-  Tribute,
+  TributeDao,
 } from "../generated/schema";
 import { BANK_EXTENSION_ID } from "./helpers/constants";
 import { getProposalDetails } from "./helpers/proposal-details";
@@ -195,7 +195,7 @@ export function handleAdapterAdded(event: AdapterAdded): void {
     adapter.adapterAddress = event.params.adapterAddress;
 
     // create 1-1 relationship with adapter and its dao
-    adapter.tribute = daoAddress;
+    adapter.tributedao = daoAddress;
 
     adapter.save();
   }
@@ -238,7 +238,7 @@ export function handleExtensionAdded(event: ExtensionAdded): void {
 
   // if extension is `bank` then assign to its dao
   if (BANK_EXTENSION_ID.toString() == event.params.extensionId.toHexString()) {
-    let tribute = Tribute.load(daoAddress);
+    let tribute = TributeDao.load(daoAddress);
 
     tribute.bankAddress = event.params.extensionAddress;
     tribute.save();
@@ -252,7 +252,7 @@ export function handleExtensionAdded(event: ExtensionAdded): void {
   extension.extensionId = event.params.extensionId;
 
   // create 1-1 relationship with extensions and its dao
-  extension.tribute = daoAddress;
+  extension.tributedao = daoAddress;
   extension.save();
 }
 

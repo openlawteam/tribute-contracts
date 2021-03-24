@@ -3,8 +3,8 @@ enum VotingAdapterName {
   VotingContract
 }
 
-type Tribute @entity {
-  "Unique identifier and primary key of the `Tribute` entity"
+type TributeDao @entity {
+  "Unique identifier and primary key of the `TributeDao` entity"
   id: ID! # Set to `${tribute.id}
   "The DAO address"
   daoAddress: Bytes
@@ -17,11 +17,11 @@ type Tribute @entity {
   totalShares: String
   createdAt: String
   "List of registered adapters"
-  adapters: [Adapter!]! @derivedFrom(field: "tribute")
+  adapters: [Adapter!]! @derivedFrom(field: "tributedao")
   "List of registered extensions"
-  extensions: [Extension!]! @derivedFrom(field: "tribute")
+  extensions: [Extension!]! @derivedFrom(field: "tributedao")
   "List of members in the DAO"
-  members: [Member]! @derivedFrom(field: "tributes")
+  members: [Member]! @derivedFrom(field: "tributedaos")
 }
 
 type Member @entity {
@@ -39,7 +39,7 @@ type Member @entity {
   isDelegated: Boolean
   isJailed: Boolean
   "List of DAOs the member belongs to"
-  tributes: [Tribute!]!
+  tributedaos: [TributeDao!]!
 }
 
 type Proposal @entity {
@@ -153,7 +153,7 @@ type Adapter @entity {
   adapterAddress: Bytes!
   "Adapter acl (access control layer)"
   acl: BigInt!
-  tribute: Tribute
+  tributedao: TributeDao
 }
 
 type Extension @entity {
@@ -163,5 +163,5 @@ type Extension @entity {
   extensionAddress: Bytes!
   "Extension ID"
   extensionId: Bytes!
-  tribute: Tribute
+  tributedao: TributeDao
 }

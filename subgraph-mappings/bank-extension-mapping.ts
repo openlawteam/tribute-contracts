@@ -3,7 +3,7 @@ import {
   NewBalance,
   Withdraw,
 } from "../generated/templates/BankExtension/BankExtension";
-import { Member, Tribute, Token, TokenBalance } from "../generated/schema";
+import { Member, TributeDao, Token, TokenBalance } from "../generated/schema";
 import { GUILD, LOCKED_LOOT, LOOT, SHARES, TOTAL } from "./helpers/constants";
 import { Address, BigInt, log } from "@graphprotocol/graph-ts";
 
@@ -39,16 +39,16 @@ function internalTransfer(
       member.isJailed = false;
 
       // create 1-1 relationship between member and dao
-      let tributes: string[] = [];
-      tributes.push(daoAddress.toHexString());
+      let tributedaos: string[] = [];
+      tributedaos.push(daoAddress.toHexString());
 
-      member.tributes = tributes;
+      member.tributedaos = tributedaos;
     } else {
       // get members daos
-      let tributes: string[] = member.tributes;
+      let tributedaos: string[] = member.tributedaos;
 
-      tributes.push(daoAddress.toHexString());
-      member.tributes = tributes;
+      tributedaos.push(daoAddress.toHexString());
+      member.tributedaos = tributedaos;
 
       // let alreadyExists = false;
 
@@ -121,7 +121,7 @@ function internalTransfer(
 
   // get totalShares in the dao
   let balanceOfTotalShares = registry.balanceOf(TOTAL, SHARES);
-  let dao = Tribute.load(daoAddress.toHexString());
+  let dao = TributeDao.load(daoAddress.toHexString());
 
   if (dao != null) {
     dao.totalShares = balanceOfTotalShares.toString();
