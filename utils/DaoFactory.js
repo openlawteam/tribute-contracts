@@ -69,7 +69,7 @@ const OnboardingContract = artifacts.require("./adapters/OnboardingContract");
 
 const SnapshotProposalContract = artifacts.require("./adapters/voting/SnapshotProposalContract");
 const OffchainVotingContract = artifacts.require("./adapters/voting/OffchainVotingContract");
-const HandleBadReporterAdapter = artifacts.require("./adapters/voting/HandleBadReporterAdapter");
+const KickBadReporterAdapter = artifacts.require("./adapters/voting/KickBadReporterAdapter");
 
 const BatchVotingContract = artifacts.require("./adapters/voting/BatchVotingContract");
 const CouponOnboardingContract = artifacts.require("./adapters/CouponOnboardingContract");
@@ -389,10 +389,10 @@ const deployDao = async (deployer, options) => {
   const votingAddress = await dao.getAdapterAddress(sha3("voting"));
   if (isOffchainVoting) {
     await deployer.deploy(SnapshotProposalContract, chainId);
-    await deployer.deploy(HandleBadReporterAdapter);
+    await deployer.deploy(KickBadReporterAdapter);
 
     const snapshotProposalContract = await SnapshotProposalContract.deployed();
-    const handleBadReporterAdapter = await HandleBadReporterAdapter.deployed();
+    const handleBadReporterAdapter = await KickBadReporterAdapter.deployed();
     const offchainVoting = await deployer.deploy(OffchainVotingContract, votingAddress, snapshotProposalContract.address, handleBadReporterAdapter.address);
 
     await daoFactory.updateAdapter(
@@ -659,7 +659,7 @@ module.exports = {
   WithdrawContract,
   ConfigurationContract,
   OffchainVotingContract,
-  HandleBadReporterAdapter,
+  KickBadReporterAdapter,
   SnapshotProposalContract,
   BatchVotingContract,
   TributeContract,
