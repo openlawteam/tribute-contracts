@@ -1,14 +1,14 @@
 import { DaoRegistry } from "../generated/templates";
 import { DAOCreated } from "../generated/DaoFactory/DaoFactory";
-import { Molochv3 } from "../generated/schema";
+import { Tribute } from "../generated/schema";
 import { BigInt, log } from "@graphprotocol/graph-ts";
 
-function loadOrCreateDao(address: string): Molochv3 {
-  let dao = Molochv3.load(address);
+function loadOrCreateDao(address: string): Tribute {
+  let dao = Tribute.load(address);
   if (dao == null) {
-    dao = new Molochv3(address);
+    dao = new Tribute(address);
   }
-  return dao as Molochv3;
+  return dao as Tribute;
 }
 
 /**

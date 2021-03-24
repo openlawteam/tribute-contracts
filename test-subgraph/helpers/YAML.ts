@@ -9,8 +9,8 @@ export const getYAML = ({
 }: GetYAMLType): string => {
   return ` 
 specVersion: 0.0.2
-description: Molochv3 Subgraph
-repository: https://github.com/openlawteam/molochv3-contracts
+description: Tribute DAO Framework Subgraph
+repository: https://github.com/openlawteam/tribute-contracts
 schema:
   file: ./schema.graphql
 dataSources:
@@ -26,7 +26,7 @@ dataSources:
       apiVersion: 0.0.4
       language: wasm/assemblyscript
       entities:
-        - Molochv3
+        - Tribute
       abis:
         - name: DaoFactory
           file: ./build/contracts/DaoFactory.json
@@ -137,7 +137,7 @@ templates:
         - name: BankExtension
           file: ./build/contracts/BankExtension.json
       eventHandlers:
-        - event: NewBalance(address,address,uint256)
+        - event: NewBalance(address,address,uint160)
           handler: handleNewBalance
         - event: Withdraw(address,address,uint256)
           handler: handleWithdraw

@@ -3,7 +3,7 @@ import {
   NewBalance,
   Withdraw,
 } from "../generated/templates/BankExtension/BankExtension";
-import { Member, Molochv3, Token, TokenBalance } from "../generated/schema";
+import { Member, Tribute, Token, TokenBalance } from "../generated/schema";
 import { GUILD, LOCKED_LOOT, LOOT, SHARES, TOTAL } from "./helpers/constants";
 import { Address, BigInt, log } from "@graphprotocol/graph-ts";
 
@@ -37,8 +37,33 @@ function internalTransfer(
       member.delegateKey = memberAddress;
       member.isDelegated = false;
       member.isJailed = false;
+
       // create 1-1 relationship between member and dao
-      member.molochv3 = daoAddress.toHexString();
+      let tributes: string[] = [];
+      tributes.push(daoAddress.toHexString());
+
+      member.tributes = tributes;
+    } else {
+      // get members daos
+      let tributes: string[] = member.tributes;
+
+      tributes.push(daoAddress.toHexString());
+      member.tributes = tributes;
+
+      // let alreadyExists = false;
+
+      // for (let i = 0; i < tributes.length; i++) {
+      //   if (tributes[i].daoAddress === daoAddress.toHexString()) {
+      //     alreadyExists = true;
+      //     break;
+      //   }
+      // }
+
+      // if (alreadyExists === false) {
+      //   // add the member to the dao
+      //   tributes.push(daoAddress.toHexString());
+      //   member.tributes = tributes;
+      // }
     }
 
     if (token == null) {
@@ -96,7 +121,7 @@ function internalTransfer(
 
   // get totalShares in the dao
   let balanceOfTotalShares = registry.balanceOf(TOTAL, SHARES);
-  let dao = Molochv3.load(daoAddress.toHexString());
+  let dao = Tribute.load(daoAddress.toHexString());
 
   if (dao != null) {
     dao.totalShares = balanceOfTotalShares.toString();

@@ -1,6 +1,6 @@
 specVersion: 0.0.2
-description: Molochv3 Subgraph
-repository: https://github.com/openlawteam/molochv3-contracts
+description: Tribute DAO Framework Subgraph
+repository: https://github.com/openlawteam/tribute-contracts
 schema:
   file: ./schema.graphql
 dataSources:
@@ -11,20 +11,20 @@ dataSources:
     source:
       address: "0xFCc30f42843d0848Dc91B1187A1cB1357D671366"
       abi: DaoFactory
-      startBlock: 21
+      startBlock: 5
     mapping:
       kind: ethereum/events
       apiVersion: 0.0.4
       language: wasm/assemblyscript
       entities:
-        - Molochv3
+        - Tribute
       abis:
         - name: DaoFactory
           file: ./build/contracts/DaoFactory.json
       eventHandlers:
         - event: DAOCreated(address,string)
           handler: handleDaoCreated
-      file: ./src/dao-factory-mapping.ts
+      file: ./subgraph-mappings/dao-factory-mapping.ts
   # ====================================== BankFactory ====================================
   - kind: ethereum/contract
     name: BankFactory
@@ -32,7 +32,7 @@ dataSources:
     source:
       address: "0x439A479e8A567A83392961bC6d026Ea99368cD8F"
       abi: BankFactory
-      startBlock: 24
+      startBlock: 8
     mapping:
       kind: ethereum/events
       apiVersion: 0.0.4
@@ -45,7 +45,7 @@ dataSources:
       eventHandlers:
         - event: BankCreated(address)
           handler: handleBankCreated
-      file: ./src/bank-factory-mapping.ts
+      file: ./subgraph-mappings/bank-factory-mapping.ts
 
 templates:
   # ====================================== DaoRegistry ====================================
@@ -110,7 +110,7 @@ templates:
           handler: handleConfigurationUpdated
         - event: AddressConfigurationUpdated(bytes32,address)
           handler: handleAddressConfigurationUpdated
-      file: ./src/dao-registry-mapping.ts
+      file: ./subgraph-mappings/dao-registry-mapping.ts
   # ====================================== BankExtension ====================================
   - kind: ethereum/contract
     name: BankExtension
@@ -129,8 +129,8 @@ templates:
         - name: BankExtension
           file: ./build/contracts/BankExtension.json
       eventHandlers:
-        - event: NewBalance(address,address,uint256)
+        - event: NewBalance(address,address,uint160)
           handler: handleNewBalance
         - event: Withdraw(address,address,uint256)
           handler: handleWithdraw
-      file: ./src/bank-extension-mapping.ts
+      file: ./subgraph-mappings/bank-extension-mapping.ts
