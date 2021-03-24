@@ -17,7 +17,7 @@ dataSources:
       apiVersion: 0.0.4
       language: wasm/assemblyscript
       entities:
-        - Tribute
+        - TributeDao
       abis:
         - name: DaoFactory
           file: ./build/contracts/DaoFactory.json
