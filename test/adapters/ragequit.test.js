@@ -40,9 +40,11 @@ const {
   OnboardingContract,
   VotingContract,
   RagequitContract,
-  GuildKickContract,
   FinancingContract,
   BankExtension,
+  numberOfShares,
+  DaoFactory,
+  entryDao,
 } = require("../../utils/DaoFactory.js");
 
 let proposalCounter = 1;
@@ -89,28 +91,6 @@ contract("MolochV3 - Ragequit Adapter", async (accounts) => {
     await advanceTime(10000);
   };
 
-  const guildKickProposal = async (
-    dao,
-    guildkickContract,
-    memberToKick,
-    sender,
-    proposalId = null
-  ) => {
-    const newProposalId = proposalId ? proposalId : "0x" + proposalCounter++;
-    await guildkickContract.submitKickProposal(
-      dao.address,
-      newProposalId,
-      memberToKick,
-      fromUtf8(""),
-      {
-        from: sender,
-        gasPrice: toBN("0"),
-      }
-    );
-
-    return { kickProposalId: newProposalId };
-  };
-
   const ragequit = async (
     dao,
     shares,
@@ -140,6 +120,7 @@ contract("MolochV3 - Ragequit Adapter", async (accounts) => {
     const newMember = accounts[2];
 
     let dao = await createDao(myAccount);
+
     const bankAddress = await dao.getExtensionAddress(sha3("bank"));
     const bank = await BankExtension.at(bankAddress);
     const onboarding = await getContract(dao, "onboarding", OnboardingContract);
@@ -575,59 +556,36 @@ contract("MolochV3 - Ragequit Adapter", async (accounts) => {
     }
   });
 
-  it("should be possible to ragequit if the member is part of a guild kick proposal but the proposal is not processed yet", async () => {
-    const daoOwner = accounts[1];
-    const memberA = accounts[2];
-
-    let dao = await createDao(daoOwner);
-    const onboarding = await getContract(dao, "onboarding", OnboardingContract);
-    const voting = await getContract(dao, "voting", VotingContract);
-    const guildkickContract = await getContract(
-      dao,
-      "guildkick",
-      GuildKickContract
-    );
-
-    let proposalId = await submitNewMemberProposal(
-      onboarding,
-      dao,
-      memberA,
-      sharePrice
-    );
-
-    //Sponsor the new proposal to admit the new member, vote and process it
-    await sponsorNewMember(onboarding, dao, proposalId, daoOwner, voting);
-    await onboarding.processProposal(dao.address, proposalId, {
-      from: daoOwner,
-      gasPrice: toBN("0"),
-    });
-
-    // Check memberA shares
-    const bankAddress = await dao.getExtensionAddress(sha3("bank"));
-    const bank = await BankExtension.at(bankAddress);
-    let memberAShares = await bank.balanceOf(memberA, SHARES);
-
-    // Submit GuildKick for memberA
-    await guildKickProposal(dao, guildkickContract, memberA, daoOwner);
-
-    // MemberA ragequits before the kick proposal is processed
-    await ragequit(dao, memberAShares, 0, memberA, ETH_TOKEN);
-  });
-
   it("should not be possible to ragequit if the member is in jail", async () => {
     const daoOwner = accounts[1];
     const memberA = accounts[2];
+    const otherAddr = accounts[3];
 
-    const dao = await createDao(daoOwner);
+    const dao = await createDao(
+      daoOwner,
+      sharePrice,
+      numberOfShares,
+      10,
+      1,
+      ETH_TOKEN,
+      false
+    );
+
+    let daoFactory = await DaoFactory.deployed();
+
+    const c = entryDao(
+      "blabla",
+      { address: otherAddr },
+      { JAIL_MEMBER: true, UNJAIL_MEMBER: true }
+    );
+
+    daoFactory.addAdapters(dao.address, [c]),
+      await dao.finalizeDao({ from: otherAddr, gasPrice: toBN("0") });
+
     const bankAddress = await dao.getExtensionAddress(sha3("bank"));
     const bank = await BankExtension.at(bankAddress);
     const onboarding = await getContract(dao, "onboarding", OnboardingContract);
     const voting = await getContract(dao, "voting", VotingContract);
-    const guildkickContract = await getContract(
-      dao,
-      "guildkick",
-      GuildKickContract
-    );
 
     const proposalId = await submitNewMemberProposal(
       onboarding,
@@ -645,26 +603,11 @@ contract("MolochV3 - Ragequit Adapter", async (accounts) => {
 
     let memberAShares = await bank.balanceOf(memberA, SHARES);
 
-    // Submit GuildKick for memberA
-    let { kickProposalId } = await guildKickProposal(
-      dao,
-      guildkickContract,
-      memberA,
-      daoOwner
-    );
+    const entry = await dao.inverseAdapters(daoOwner);
 
-    //Vote YES on kick proposal
-    await voting.submitVote(dao.address, kickProposalId, 1, {
-      from: daoOwner,
-      gasPrice: toBN("0"),
-    });
-    await advanceTime(10000);
+    console.log(entry.acl.toString());
 
-    // Process the guild kick proposal to put the member in jail
-    await guildkickContract.processProposal(dao.address, kickProposalId, {
-      from: daoOwner,
-      gasPrice: toBN("0"),
-    });
+    await dao.jailMember(memberA, { from: otherAddr });
 
     try {
       // MemberA attempts to ragequit, but he is in jail due to the guild kick
