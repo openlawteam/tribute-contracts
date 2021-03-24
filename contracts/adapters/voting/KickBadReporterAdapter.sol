@@ -36,7 +36,7 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
  */
 
-contract HandleBadReporterAdapter is DaoConstants, MemberGuard {
+contract KickBadReporterAdapter is DaoConstants, MemberGuard {
     /*
      * default fallback function to prevent from sending ether to the contract
      */
