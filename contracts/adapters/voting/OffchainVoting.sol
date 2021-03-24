@@ -11,7 +11,7 @@ import "../../guards/AdapterGuard.sol";
 import "../../utils/Signatures.sol";
 import "../interfaces/IVoting.sol";
 import "./Voting.sol";
-import "./HandleBadReporter.sol";
+import "./KickBadReporterAdapter.sol";
 import "./SnapshotProposalContract.sol";
 
 /**
@@ -51,7 +51,7 @@ contract OffchainVotingContract is
     }
 
     SnapshotProposalContract private _snapshotContract;
-    HandleBadReporterAdapter private _handleBadReporterAdapter;
+    KickBadReporterAdapter private _handleBadReporterAdapter;
 
     string public constant VOTE_RESULT_NODE_TYPE =
         "Message(address account,uint256 timestamp,uint256 nbYes,uint256 nbNo,uint256 index,uint256 choice,bytes32 proposalHash)";
@@ -138,7 +138,7 @@ contract OffchainVotingContract is
     constructor(
         VotingContract _c,
         SnapshotProposalContract _spc,
-        HandleBadReporterAdapter _hbra
+        KickBadReporterAdapter _hbra
     ) {
         require(address(_c) != address(0x0), "voting contract");
         require(address(_spc) != address(0x0), "snapshot proposal");
