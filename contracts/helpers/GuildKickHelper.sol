@@ -2,10 +2,8 @@ pragma solidity ^0.8.0;
 
 // SPDX-License-Identifier: MIT
 
-import "../core/DaoConstants.sol";
 import "../core/DaoRegistry.sol";
 import "../guards/MemberGuard.sol";
-import "./interfaces/IGuildKick.sol";
 import "../adapters/interfaces/IVoting.sol";
 import "../helpers/FairShareHelper.sol";
 import "../extensions/Bank.sol";
@@ -34,7 +32,14 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
  */
 
-contract GuildKickLogic is DaoConstants {
+library GuildKickHelper {
+    address internal constant TOTAL = address(0xbabe);
+    address internal constant SHARES = address(0xFF1CE);
+    address internal constant LOOT = address(0xB105F00D);
+
+    bytes32 internal constant BANK = keccak256("bank");
+    address internal constant GUILD = address(0xdead);
+
     /**
      * @notice Transfers the funds from the Guild account to the kicked member account based on the current kick proposal id.
      * @notice The amount of funds is caculated using the actual balance of the member to make sure the member has not ragequited.

@@ -6,7 +6,7 @@ import "../core/DaoConstants.sol";
 import "../core/DaoRegistry.sol";
 import "../guards/MemberGuard.sol";
 import "./interfaces/IGuildKick.sol";
-import "./GuildKickLogic.sol";
+import "../helpers/GuildKickHelper.sol";
 import "../adapters/interfaces/IVoting.sol";
 import "../helpers/FairShareHelper.sol";
 import "../extensions/Bank.sol";
@@ -35,7 +35,7 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
  */
 
-contract GuildKickContract is IGuildKick, GuildKickLogic, MemberGuard {
+contract GuildKickContract is IGuildKick, MemberGuard {
     // State of the guild kick proposal
     struct GuildKick {
         // The address of the member to kick out of the DAO.
@@ -151,6 +151,9 @@ contract GuildKickContract is IGuildKick, GuildKickLogic, MemberGuard {
             "proposal did not pass"
         );
 
-        rageKick(dao, kicks[address(dao)][proposalId].memberToKick);
+        GuildKickHelper.rageKick(
+            dao,
+            kicks[address(dao)][proposalId].memberToKick
+        );
     }
 }
