@@ -68,7 +68,7 @@ contract OnboardingContract is
         uint88 numberOfChunks;
         uint88 sharesPerChunk;
         uint88 sharesRequested;
-        uint88 totalShares;
+        uint96 totalShares;
         uint160 amount;
     }
 
@@ -157,6 +157,7 @@ contract OnboardingContract is
         details.sharesRequested =
             details.numberOfChunks *
             details.sharesPerChunk;
+
         details.totalShares =
             _getShares(address(dao), token, applicant) +
             details.sharesRequested;
@@ -386,11 +387,11 @@ contract OnboardingContract is
                 }
 
                 uint88 totalShares;
-                unchecked {
-                    totalShares =
-                        _getShares(daoAddress, tokenToMint, applicant) +
-                        proposal.sharesRequested;
-                }
+
+                totalShares =
+                    _getShares(daoAddress, tokenToMint, applicant) +
+                    proposal.sharesRequested;
+
                 // On overflow failure, totalShares is 0, then return tokens to the proposer.
                 if (totalShares == 0) {
                     _refundTribute(token, proposer, amount, "overflow:shares");
