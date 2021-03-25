@@ -9,6 +9,7 @@
   "dependencies": {
     "@truffle/hdwallet-provider": "^1.2.3",
     "@typechain/ethers-v5": "^6.0.2",
+    "@openzeppelin/contracts": "^4.0.0-beta.0",
     "eth-sig-util": "^3.0.0",
     "ethereumjs-util": "^7.0.5",
     "ganache-cli": "^6.12.1",
@@ -57,7 +58,8 @@
     "build": "graph build",
     "deploy": "graph deploy openlawteam/molochv3-graph --ipfs https://api.thegraph.com/ipfs/ --node https://api.thegraph.com/deploy/",
     "deploy-local": "graph deploy openlawteam/molochv3-graph --ipfs http://localhost:5001 --node http://127.0.0.1:8020",
-    "compile-abi": "truffle compile && truffle-abi"
+    "compile-abi": "truffle compile && truffle-abi",
+    "ganache": "node_modules/.bin/ganache-cli -s=test -g=0 --secure -u 0 -u 1 -p 8545 --networkId 1337"
   },
   "repository": {
     "type": "git",

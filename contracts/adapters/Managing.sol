@@ -82,7 +82,7 @@ contract ManagingContract is IManaging, DaoConstants, MemberGuard {
         uint128 flags = uint128(_flags);
 
         require(
-            dao.isNotReservedAddress(adapterAddress),
+            isNotReservedAddress(adapterAddress),
             "adapter address is reserved address"
         );
 
