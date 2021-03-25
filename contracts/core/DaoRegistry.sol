@@ -41,7 +41,11 @@ contract DaoRegistry is MemberGuard, AdapterGuard {
      */
     /// @dev - Events for Proposals
     event SubmittedProposal(bytes32 proposalId, uint256 flags);
-    event SponsoredProposal(bytes32 proposalId, uint256 flags);
+    event SponsoredProposal(
+        bytes32 proposalId,
+        uint256 flags,
+        address votingAdapter
+    );
     event ProcessedProposal(bytes32 proposalId, uint256 flags);
     event AdapterAdded(
         bytes32 adapterId,
@@ -128,6 +132,7 @@ contract DaoRegistry is MemberGuard, AdapterGuard {
 
     /// @notice The map that keeps track of all proposasls submitted to the DAO
     mapping(bytes32 => Proposal) public proposals;
+    mapping(bytes32 => address) public votingAdapter;
     /// @notice The map that keeps track of all adapters registered in the DAO
     mapping(bytes32 => address) public adapters;
     /// @notice The inverse map to get the adapter id based on its address
@@ -437,7 +442,11 @@ contract DaoRegistry is MemberGuard, AdapterGuard {
      * @param proposalId The ID of the proposal to sponsor
      * @param sponsoringMember The member who is sponsoring the proposal
      */
-    function sponsorProposal(bytes32 proposalId, address sponsoringMember)
+    function sponsorProposal(
+        bytes32 proposalId,
+        address sponsoringMember,
+        address votingAdapterAddr
+    )
         external
         hasAccess(this, AclFlag.SPONSOR_PROPOSAL)
         onlyMember2(this, sponsoringMember)
@@ -457,8 +466,8 @@ contract DaoRegistry is MemberGuard, AdapterGuard {
             !getFlag(flags, uint8(ProposalFlag.PROCESSED)),
             "proposal already processed"
         );
-
-        emit SponsoredProposal(proposalId, flags);
+        votingAdapter[proposalId] = votingAdapterAddr;
+        emit SponsoredProposal(proposalId, flags, votingAdapterAddr);
     }
 
     /**

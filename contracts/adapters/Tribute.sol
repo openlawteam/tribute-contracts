@@ -175,7 +175,7 @@ contract TributeContract is ITribute, DaoConstants, MemberGuard, AdapterGuard {
         address sponsoredBy,
         IVoting votingContract
     ) internal {
-        dao.sponsorProposal(proposalId, sponsoredBy);
+        dao.sponsorProposal(proposalId, sponsoredBy, address(votingContract));
         votingContract.startNewVotingForProposal(dao, proposalId, data);
     }
 
@@ -238,7 +238,9 @@ contract TributeContract is ITribute, DaoConstants, MemberGuard, AdapterGuard {
             "proposal already processed"
         );
 
-        IVoting votingContract = IVoting(dao.getAdapterAddress(VOTING));
+        IVoting votingContract = IVoting(dao.votingAdapter(proposalId));
+        require(address(votingContract) != address(0), "adapter not found");
+
         IVoting.VotingState voteResult =
             votingContract.voteResult(dao, proposalId);
 
