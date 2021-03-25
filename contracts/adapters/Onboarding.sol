@@ -173,7 +173,7 @@ contract OnboardingContract is
         uint256 tokenAmount
     ) public payable override {
         require(
-            dao.isNotReservedAddress(applicant),
+            isNotReservedAddress(applicant),
             "applicant is reserved address"
         );
         address tokenAddr =

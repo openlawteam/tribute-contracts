@@ -1,6 +1,6 @@
 ## Adapter description and scope
 
-The Tribute adapter allows potential and existing DAO members to contribute any amount of ERC-20 tokens to the DAO in exchange for any amount of DAO internal tokens (e.g., SHARE or LOOT tokens already registered with the DAO Bank). If the proposal passes, the requested internal tokens are minted to the applicant and the tokens provided as tribute are transferred to the DAO. In addition, the applicant becomes a member of the DAO (if not already one).
+The Tribute adapter allows potential and existing DAO members to contribute any amount of ERC-20 tokens to the DAO in exchange for any amount of DAO internal tokens (e.g., SHARE or LOOT tokens already registered with the DAO Bank). If the proposal passes, the requested internal tokens are minted to the applicant and the tokens provided as tribute are transferred to the Bank Extension. In addition, the applicant becomes a member of the DAO (if not already one).
 
 The Tribute adapter is similar to the Onboarding adapter in that both allow for joining the DAO (or increasing a stake in the DAO) through the exchange of contributed assets for DAO internal tokens. However, there are key differences:
 
@@ -16,7 +16,7 @@ If the proposal has not been sponsored yet, the proposer can cancel the proposal
 
 When a DAO member sponsors the proposal, the voting period begins allowing members to vote for or against the proposal. Only a member can sponsor the proposal.
 
-After the voting period is done along with its subsequent grace period, the proposal can be processed. Any account can process the proposal. Upon processing, if the vote has passed, the requested internal tokens are minted to the applicant and the applicant is added as a DAO member (if not already one). The tribute token is registered with the DAO Bank (if not already registered), and the amount of tribute tokens are added to the Guild balance and transferred out of escrow from the adapter to the DAO.
+After the voting period is done along with its subsequent grace period, the proposal can be processed. Any account can process the proposal. Upon processing, if the vote has passed, the requested internal tokens are minted to the applicant and the applicant is added as a DAO member (if not already one). The tribute token is registered with the DAO Bank (if not already registered), and the amount of tribute tokens are added to the Guild balance and transferred out of escrow from the adapter to the Bank Extension.
 
 Upon processing, if the vote has failed, the tribute tokens are refunded to the proposer.
 
