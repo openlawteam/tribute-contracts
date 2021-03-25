@@ -135,7 +135,7 @@ contract GuildKickContract is IGuildKick, DaoConstants, MemberGuard {
         votingContract.startNewVotingForProposal(dao, proposalId, data);
 
         // Sponsors the guild kick proposal.
-        dao.sponsorProposal(proposalId, submittedBy);
+        dao.sponsorProposal(proposalId, submittedBy, address(votingContract));
     }
 
     /**
@@ -170,7 +170,9 @@ contract GuildKickContract is IGuildKick, DaoConstants, MemberGuard {
         );
 
         // Checks if the proposal has passed.
-        IVoting votingContract = IVoting(dao.getAdapterAddress(VOTING));
+        IVoting votingContract = IVoting(dao.votingAdapter(proposalId));
+        require(address(votingContract) != address(0), "adapter not found");
+
         require(
             votingContract.voteResult(dao, proposalId) ==
                 IVoting.VotingState.PASS,

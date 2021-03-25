@@ -126,7 +126,7 @@ contract FinancingContract is IFinancing, DaoConstants, MemberGuard {
         address sponsoredBy,
         IVoting votingContract
     ) internal {
-        dao.sponsorProposal(proposalId, sponsoredBy);
+        dao.sponsorProposal(proposalId, sponsoredBy, address(votingContract));
         votingContract.startNewVotingForProposal(dao, proposalId, data);
     }
 
@@ -144,7 +144,9 @@ contract FinancingContract is IFinancing, DaoConstants, MemberGuard {
     {
         ProposalDetails memory details = proposals[address(dao)][proposalId];
 
-        IVoting votingContract = IVoting(dao.getAdapterAddress(VOTING));
+        IVoting votingContract = IVoting(dao.votingAdapter(proposalId));
+        require(address(votingContract) != address(0), "adapter not found");
+
         require(
             votingContract.voteResult(dao, proposalId) ==
                 IVoting.VotingState.PASS,
