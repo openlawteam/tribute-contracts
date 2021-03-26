@@ -109,7 +109,7 @@ contract("MolochV3 - Onboarding Adapter", async (accounts) => {
           gasPrice: toBN("0"),
         }
       );
-      assert.fail("should not be possible to onboard")
+      assert.fail("should not be possible to onboard");
     } catch (e) {
       assert.equal(
         e.message,

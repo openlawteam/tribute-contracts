@@ -403,19 +403,19 @@ contract("MolochV3 - Tribute Adapter", async (accounts) => {
     // Issue OpenLaw ERC20 Basic Token for tests
     // Token supply higher than the limit for external tokens
     // defined in Bank._createNewAmountCheckpoint function (2**160-1).
-     const supply = toBN("2").pow(toBN("180")).toString();
-     const oltContract = await OLToken.new(supply, { from: daoOwner });
-     const nbOfERC20Shares = 100000000;
-     const erc20SharePrice = toBN("10");
+    const supply = toBN("2").pow(toBN("180")).toString();
+    const oltContract = await OLToken.new(supply, { from: daoOwner });
+    const nbOfERC20Shares = 100000000;
+    const erc20SharePrice = toBN("10");
 
-     const dao = await createDao(
-       daoOwner,
-       erc20SharePrice,
-       nbOfERC20Shares,
-       10,
-       1,
-       oltContract.address
-     );
+    const dao = await createDao(
+      daoOwner,
+      erc20SharePrice,
+      nbOfERC20Shares,
+      10,
+      1,
+      oltContract.address
+    );
 
     const tribute = await getContract(dao, "tribute", TributeContract);
     const voting = await getContract(dao, "voting", VotingContract);
@@ -448,32 +448,32 @@ contract("MolochV3 - Tribute Adapter", async (accounts) => {
     const requestAmount = 100000000;
     const proposalId = "0x1";
 
-     try {
-       await tribute.provideTribute(
-         dao.address,
-         proposalId,
-         applicant,
-         SHARES,
-         requestAmount,
-         oltContract.address,
-         tributeAmount.toString(),
-         {
-           from: applicant,
-           gasPrice: toBN("0"),
-         }
-       );
-     } catch (e) {
-       assert.equal(
-         e.message,
-         "Returned error: VM Exception while processing transaction: revert"
-       );
-       // In case of failures the funds must be in the applicant's account
-       applicantTokenBalance = await oltContract.balanceOf.call(applicant);
-       assert.equal(
-         initialTokenBalance.toString(),
-         applicantTokenBalance.toString(),
-         "applicant account should contain 2**161 OLT Tokens when the onboard fails"
-       );
-     }
+    try {
+      await tribute.provideTribute(
+        dao.address,
+        proposalId,
+        applicant,
+        SHARES,
+        requestAmount,
+        oltContract.address,
+        tributeAmount.toString(),
+        {
+          from: applicant,
+          gasPrice: toBN("0"),
+        }
+      );
+    } catch (e) {
+      assert.equal(
+        e.message,
+        "Returned error: VM Exception while processing transaction: revert"
+      );
+      // In case of failures the funds must be in the applicant's account
+      applicantTokenBalance = await oltContract.balanceOf.call(applicant);
+      assert.equal(
+        initialTokenBalance.toString(),
+        applicantTokenBalance.toString(),
+        "applicant account should contain 2**161 OLT Tokens when the onboard fails"
+      );
+    }
   });
 });
