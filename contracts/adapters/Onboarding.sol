@@ -154,6 +154,8 @@ contract OnboardingContract is
             token.safeTransferFrom(msg.sender, address(this), tokenAmount);
         }
 
+        dao.potentialNewMember(applicant);
+
         uint256 amountUsed =
             _submitMembershipProposal(
                 dao,
@@ -429,8 +431,6 @@ contract OnboardingContract is
             bank.isInternalToken(tokenToMint),
             "it can only mint internal tokens"
         );
-
-        dao.potentialNewMember(memberAddr);
 
         // On overflow failure, totalShares is 0, then return tokens to the proposer.
         try bank.addToBalance(memberAddr, tokenToMint, tokenAmount) {
