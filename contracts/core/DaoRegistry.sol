@@ -55,19 +55,15 @@ contract DaoRegistry is MemberGuard, AdapterGuard {
 
     /// @dev - Events for Members
     event UpdateDelegateKey(address memberAddress, address newDelegateKey);
-    event MemberJailed(address memberAddr);
-    event MemberUnjailed(address memberAddr);
     event ConfigurationUpdated(bytes32 key, uint256 value);
     event AddressConfigurationUpdated(bytes32 key, address value);
 
-    enum MemberFlag {EXISTS, JAILED}
+    enum MemberFlag {EXISTS}
 
     enum ProposalFlag {EXISTS, SPONSORED, PROCESSED}
 
     enum AclFlag {
         REPLACE_ADAPTER,
-        JAIL_MEMBER,
-        UNJAIL_MEMBER,
         SUBMIT_PROPOSAL,
         SPONSOR_PROPOSAL,
         PROCESS_PROPOSAL,
@@ -89,7 +85,7 @@ contract DaoRegistry is MemberGuard, AdapterGuard {
 
     struct Member {
         // the structure to track all the members in the DAO
-        uint256 flags; // flags to track the state of the member: exist, jailed, etc
+        uint256 flags; // flags to track the state of the member: exists, etc
     }
 
     struct Checkpoint {
@@ -148,8 +144,6 @@ contract DaoRegistry is MemberGuard, AdapterGuard {
     // constructor() {
     // }
 
-    //TODO: we may need to add some ACL to ensure only the factory is allowed to clone it, otherwise
-    //any will able to deploy it, and the first one to call this function is added to the DAO as a member.
     /**
      * @notice Initialises the DAO
      * @dev Involves initialising available tokens, checkpoints, and membership of creator
@@ -419,55 +413,6 @@ contract DaoRegistry is MemberGuard, AdapterGuard {
     }
 
     /**
-     * @notice Jails a member
-     * @dev Sets all relevant flags and delegations to ensure a user can not participate
-     * @param memberAddr The member to jail
-     */
-    function jailMember(address memberAddr)
-        external
-        hasAccess(this, AclFlag.JAIL_MEMBER)
-    {
-        Member storage member = members[memberAddr];
-        uint256 flags = member.flags;
-        require(
-            getFlag(flags, uint8(MemberFlag.EXISTS)),
-            "member does not exist"
-        );
-        if (!getFlag(flags, uint8(MemberFlag.JAILED))) {
-            member.flags = setFlag(flags, uint8(MemberFlag.JAILED), true);
-
-            // Stop the member from voting at that point in time
-            _createNewDelegateCheckpoint(memberAddr, address(1)); // 1 instead of 0 to avoid existence check
-            emit MemberJailed(memberAddr);
-        }
-    }
-
-    /**
-     * @notice Unjails a member
-     * @dev Resets all relevant flags to allow participation
-     * @param memberAddr The member to unjail
-     */
-    function unjailMember(address memberAddr)
-        external
-        hasAccess(this, AclFlag.UNJAIL_MEMBER)
-    {
-        Member storage member = members[memberAddr];
-        uint256 flags = member.flags;
-        require(
-            getFlag(flags, uint8(MemberFlag.EXISTS)),
-            "member does not exist"
-        );
-        if (getFlag(flags, uint8(MemberFlag.JAILED))) {
-            member.flags = setFlag(flags, uint8(MemberFlag.JAILED), false);
-            _createNewDelegateCheckpoint(
-                memberAddr,
-                getPreviousDelegateKey(memberAddr)
-            ); // we do this to re-allow votes
-            emit MemberUnjailed(memberAddr);
-        }
-    }
-
-    /**
      * PROPOSALS
      */
     /**
@@ -568,15 +513,12 @@ contract DaoRegistry is MemberGuard, AdapterGuard {
 
     /**
      * @return Whether or not a given address is an active member of the DAO
-     * @dev Requires the user to not be jailed and have a positive balance in either
-     *      SHARES, LOOT or LOCKED_LOOT
+     * @dev Requires the user to have a positive balance in either SHARES, LOOT
      * @param addr The address to look up
      */
     function isActiveMember(address addr) public view returns (bool) {
         address memberAddr = memberAddressesByDelegatedKey[addr];
-        return
-            getMemberFlag(memberAddr, MemberFlag.EXISTS) &&
-            !getMemberFlag(memberAddr, MemberFlag.JAILED);
+        return getMemberFlag(memberAddr, MemberFlag.EXISTS);
     }
 
     /**

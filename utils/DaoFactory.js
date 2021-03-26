@@ -75,18 +75,13 @@ const RagequitContract = artifacts.require("./adapters/RagequitContract");
 const GuildKickContract = artifacts.require("./adapters/GuildKickContract");
 const OnboardingContract = artifacts.require("./adapters/OnboardingContract");
 
-const SnapshotProposalContract = artifacts.require(
-  "./adapters/voting/SnapshotProposalContract"
-);
-const OffchainVotingContract = artifacts.require(
-  "./adapters/voting/OffchainVotingContract"
-);
-const BatchVotingContract = artifacts.require(
-  "./adapters/voting/BatchVotingContract"
-);
-const CouponOnboardingContract = artifacts.require(
-  "./adapters/CouponOnboardingContract"
-);
+
+const SnapshotProposalContract = artifacts.require("./adapters/voting/SnapshotProposalContract");
+const OffchainVotingContract = artifacts.require("./adapters/voting/OffchainVotingContract");
+const KickBadReporterAdapter = artifacts.require("./adapters/voting/KickBadReporterAdapter");
+
+const BatchVotingContract = artifacts.require("./adapters/voting/BatchVotingContract");
+const CouponOnboardingContract = artifacts.require("./adapters/CouponOnboardingContract");
 
 const TributeContract = artifacts.require("./adapters/TributeContract");
 const DistributeContract = artifacts.require("./adapters/DistributeContract");
@@ -246,16 +241,11 @@ const configureDao = async (
       SPONSOR_PROPOSAL: true,
       SET_CONFIGURATION: true,
     }),
-    entryDao("ragequit", ragequit, {
-      JAIL_MEMBER: true,
-      UNJAIL_MEMBER: true,
-    }),
+    entryDao("ragequit", ragequit, {}),
     entryDao("guildkick", guildkick, {
       SUBMIT_PROPOSAL: true,
       SPONSOR_PROPOSAL: true,
-      PROCESS_PROPOSAL: true,
-      JAIL_MEMBER: true,
-      UNJAIL_MEMBER: true,
+      PROCESS_PROPOSAL: true
     }),
     entryDao("managing", managing, {
       SUBMIT_PROPOSAL: true,
@@ -445,12 +435,12 @@ const deployDao = async (deployer, options) => {
   const votingAddress = await dao.getAdapterAddress(sha3("voting"));
   if (isOffchainVoting) {
     await deployer.deploy(SnapshotProposalContract, chainId);
+    await deployer.deploy(KickBadReporterAdapter);
+
     const snapshotProposalContract = await SnapshotProposalContract.deployed();
-    const offchainVoting = await deployer.deploy(
-      OffchainVotingContract,
-      votingAddress,
-      snapshotProposalContract.address
-    );
+    const handleBadReporterAdapter = await KickBadReporterAdapter.deployed();
+    const offchainVoting = await deployer.deploy(OffchainVotingContract, votingAddress, snapshotProposalContract.address, handleBadReporterAdapter.address);
+
     await daoFactory.updateAdapter(
       dao.address,
       entryDao("voting", offchainVoting, {})
@@ -656,8 +646,6 @@ const entryBank = (contract, flags) => {
 const entryDao = (name, contract, flags) => {
   const values = [
     flags.REPLACE_ADAPTER,
-    flags.JAIL_MEMBER,
-    flags.UNJAIL_MEMBER,
     flags.SUBMIT_PROPOSAL,
     flags.SPONSOR_PROPOSAL,
     flags.PROCESS_PROPOSAL,
@@ -733,6 +721,7 @@ module.exports = {
   WithdrawContract,
   ConfigurationContract,
   OffchainVotingContract,
+  KickBadReporterAdapter,
   SnapshotProposalContract,
   BatchVotingContract,
   TributeContract,

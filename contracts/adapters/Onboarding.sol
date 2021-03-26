@@ -10,7 +10,7 @@ import "../adapters/interfaces/IVoting.sol";
 import "../guards/MemberGuard.sol";
 import "../guards/AdapterGuard.sol";
 import "../utils/IERC20.sol";
-import "../helpers/AddressLib.sol";
+import "@openzeppelin/contracts/utils/Address.sol";
 import "../helpers/SafeERC20.sol";
 
 /**
@@ -379,11 +379,6 @@ contract OnboardingContract is
         require(
             bank.isInternalToken(tokenToMint),
             "it can only mint internal tokens"
-        );
-
-        require(
-            !dao.getMemberFlag(memberAddr, DaoRegistry.MemberFlag.JAILED),
-            "cannot process jailed member"
         );
 
         dao.potentialNewMember(memberAddr);

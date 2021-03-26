@@ -198,14 +198,6 @@ contract BatchVotingContract is
             "wrong proposal vote"
         );
 
-        require(
-            !dao.getMemberFlag(
-                entry.memberAddress,
-                DaoRegistry.MemberFlag.JAILED
-            ),
-            "member is jailed"
-        );
-
         return bank.getPriorAmount(entry.memberAddress, SHARES, snapshot);
     }
 

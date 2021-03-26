@@ -242,7 +242,6 @@ Bank Extension Access Flags: `ADD_TO_BALANCE`, `REGISTER_NEW_TOKEN`.
     /**
      * @notice Adds DAO internal tokens to applicant's balance and creates a new member entry (if applicant is not already a member).
      * @dev Internal tokens to be minted to the applicant must be registered with the DAO Bank.
-     * @dev The applicant member cannot be jailed.
      * @param dao The DAO address.
      * @param applicant The applicant address (who will receive the DAO internal tokens and become a member).
      * @param proposer The proposer address (who will be refunded the tribute tokens if the minting of internal tokens fails).

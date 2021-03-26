@@ -5,8 +5,8 @@ pragma solidity ^0.8.0;
 import "../../core/DaoConstants.sol";
 import "../../core/DaoRegistry.sol";
 import "../../guards/AdapterGuard.sol";
-import "../../helpers/AddressLib.sol";
 import "../IExtension.sol";
+import "@openzeppelin/contracts/utils/Address.sol";
 import "@openzeppelin/contracts/token/ERC721/IERC721.sol";
 import "@openzeppelin/contracts/token/ERC721/IERC721Receiver.sol";
 import "@openzeppelin/contracts/utils/structs/EnumerableSet.sol";
@@ -211,11 +211,11 @@ contract NFTExtension is
      * @notice Required function from IERC721 standard to be able to receive assets to this contract address
      */
     function onERC721Received(
-        address operator,
-        address from,
-        uint256 tokenId,
-        bytes calldata data
-    ) external override returns (bytes4) {
+        address,
+        address,
+        uint256,
+        bytes calldata
+    ) external pure override returns (bytes4) {
         return this.onERC721Received.selector;
     }
 }

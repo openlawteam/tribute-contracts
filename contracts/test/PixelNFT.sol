@@ -52,7 +52,7 @@ contract PixelNFT is ERC721 {
         string metadata
     );
 
-    constructor(uint32 dimension) public ERC721("Pixel Token", "PIX") {
+    constructor(uint32 dimension) ERC721("Pixel Token", "PIX") {
         require(
             dimension * dimension <= _maxPixels,
             "too many pixels - max allowed: 1Mi"
