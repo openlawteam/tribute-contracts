@@ -74,7 +74,6 @@ It validates the vote entry.
 It does the following checks:
 
 - checks that the memberAddress is the one who signed the vote (or its delegate key)
-- checks that the member is not jailed
 - checks that the previous member address is "before" (hex order) the current one
 - checks that the vote is actually for this proposal
 

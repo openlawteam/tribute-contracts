@@ -20,7 +20,7 @@ The DaoRegistry.sol contract tracks the state of the DAO for 1) Adapter and Exte
 
 ### Access Flags
 
-`enum MemberFlag {EXISTS, JAILED}` = `EXISTS` is true if a member or a proposal exists. `JAILED` is true if a member has been jailed by the DAO. A member will then not be able to particpate in DAO.
+`enum MemberFlag {EXISTS}` = `EXISTS` is true if a member or a proposal exists.
 
 ` enum ProposalFlag {EXISTS, SPONSORED, PROCESSED}` = `EXISTS` true if a proposal has been been submitted. `SPONSORED` is true if a Submitted proposal has been Sponsored by an existing Member.
 
@@ -50,8 +50,6 @@ The DaoRegistry.sol contract tracks the state of the DAO for 1) Adapter and Exte
 
     Events for Members
     `event UpdateDelegateKey(address memberAddress, address newDelegateKey);`
-    `event MemberJailed(address memberAddr);`
-    `event MemberUnjailed(address memberAddr);`
 
     Configuration Events
     `event ConfigurationUpdated(bytes32 key, uint256 value);`
@@ -236,7 +234,7 @@ It checks that the proposal exists and that the flag has not been already set.
 
 ### function isActiveMember(address addr) public view returns (bool)
 
-Returns true if the address is the delegate key of an existing member and that the member is not jailed.
+Returns true if the address is the delegate key of an existing member
 
 ### function getProposalFlag(bytes32 proposalId, ProposalFlag flag) returns (bool)
 

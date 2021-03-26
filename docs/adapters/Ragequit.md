@@ -19,8 +19,6 @@ In addition to that, if the member provides a long list of tokens that may cause
 
 Once the ragequit process is completed, the funds are deducted from the bank, added to the member's internal balance, and an event called `MemberRagequit` is emitted.
 
-It is important to mention that members that are in jail are not allowed to ragequit, and the function is open (without access modifier) because advisors should be able to ragequit. Advisors are not active members (shares > 0) because they only hold loot.
-
 ## Adapter configuration
 
 Tokens that are provided by the member have to be allowed/supported by the DAO.
@@ -46,7 +44,6 @@ There is no state tracking for this adapter.
 
 - DaoRegistry
 
-  - checks if the member is not in jail before allowing the ragequit.
   - checks if the message sender is actually a member or an advisor of the DAO.
 
 - FairShareHelper
@@ -72,7 +69,6 @@ There is no state tracking for this adapter.
      * @notice Anyone is allowed to call this function, but only members and advisors that have shares are able to execute the entire ragequit process.
      * @notice The array of token needs to be sorted in ascending order before executing this call, otherwise the transaction will fail.
      * @dev The sum of sharesToBurn and lootToBurn have to be greater than zero.
-     * @dev The member can not be in jail to execute a ragequit.
      * @dev The member becomes an inactive member of the DAO once all the shares/loot are burned.
      * @dev If the member provides an invalid/not allowed token, the entire processed is reverted.
      * @dev If no tokens are informed, the transaction is reverted.
