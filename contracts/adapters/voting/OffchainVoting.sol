@@ -307,32 +307,8 @@ contract OffchainVotingContract is
                 result.rootSig
             );
 
-        _submitVoteInternal(
-            dao,
-            vote,
-            proposalId,
-            result,
-            resultRoot,
-            reporter,
-            adapterAddress
-        );
-    }
-
-    function _submitVoteInternal(
-        DaoRegistry dao,
-        Voting storage vote,
-        bytes32 proposalId,
-        VoteResultNode memory result,
-        bytes32 resultRoot,
-        address reporter,
-        address adapterAddress
-    ) internal onlyMember2(dao, reporter) {
-        uint256 blockNumber = vote.snapshot;
-        address voter = dao.getPriorDelegateKey(result.account, blockNumber);
-        bytes32 hashCurrent = nodeHash(dao, adapterAddress, result);
-
         require(
-            verify(resultRoot, hashCurrent, result.proof),
+            verify(resultRoot, nodeHash(dao, adapterAddress, result), result.proof),
             "vote:proof bad"
         );
         (address actionId, ) = dao.proposals(proposalId);
@@ -340,7 +316,7 @@ contract OffchainVotingContract is
             _hasVoted(
                 dao,
                 actionId,
-                voter,
+                dao.getPriorDelegateKey(result.account, vote.snapshot),
                 result.timestamp,
                 result.proposalHash,
                 result.sig
