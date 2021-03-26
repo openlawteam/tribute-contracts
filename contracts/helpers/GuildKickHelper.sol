@@ -43,7 +43,6 @@ library GuildKickHelper {
     /**
      * @notice Transfers the funds from the Guild account to the kicked member account based on the current kick proposal id.
      * @notice The amount of funds is caculated using the actual balance of the member to make sure the member has not ragequited.
-     * @notice The member is released from jail once the funds distribution ends.
      * @dev A kick proposal must be in progress.
      * @dev Only one kick per DAO can be executed at time.
      * @dev Only active members can be kicked out.

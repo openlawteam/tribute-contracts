@@ -7,7 +7,7 @@ import "../core/DaoRegistry.sol";
 import "./IExtension.sol";
 import "../guards/AdapterGuard.sol";
 import "../utils/IERC20.sol";
-import "../helpers/AddressLib.sol";
+import "@openzeppelin/contracts/utils/Address.sol";
 import "../helpers/SafeERC20.sol";
 
 /**

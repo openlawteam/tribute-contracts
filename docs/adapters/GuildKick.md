@@ -56,7 +56,6 @@ Bank Extension Access Flags: `WITHDRAW`, `INTERNAL_TRANSFER`, `SUB_FROM_BALANCE`
   - checks if the message sender is actually a member of the DAO.
   - checks if the kicked member is actually a member of the DAO.
   - process the kick proposal.
-  - jail/unjail the kicked member
 
 - Voting
 

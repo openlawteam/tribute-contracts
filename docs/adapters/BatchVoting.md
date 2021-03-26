@@ -43,7 +43,6 @@ The info is:
 
 - its delegate key at the time of voting
 - how many shares does the member have
-- is the member jailed or not
 
 ## Functions description and assumptions / checks
 

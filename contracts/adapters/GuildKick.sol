@@ -128,12 +128,8 @@ contract GuildKickContract is IGuildKick, MemberGuard {
     }
 
     /**
-     * @notice Process the guild kick proposal, converts the member's shares into loot.
-     * @notice The kicked member is put in jail, so he can not perform any other action in the DAO.
-     * @dev A kick proposal must be in progress.
-     * @dev Only one kick per DAO can be executed at time.
+     * @notice Process the guild kick proposal
      * @dev Only active members can be kicked out.
-     * @dev Only proposals that passed the voting can be set to In Progress status.
      * @param dao The dao address.
      * @param proposalId The guild kick proposal id.
      */
