@@ -9,6 +9,7 @@
   "dependencies": {
     "@truffle/hdwallet-provider": "^1.2.3",
     "@typechain/ethers-v5": "^6.0.2",
+    "@openzeppelin/contracts": "^4.0.0-beta.0",
     "eth-sig-util": "^3.0.0",
     "ethereumjs-util": "^7.0.5",
     "ganache-cli": "^6.12.1",
@@ -51,13 +52,14 @@
     "coverage": "truffle run coverage --network coverage",
     "lint:fix": "prettier --write 'contracts/**/*.sol' 'test/**/*.test.js' '**/*.md'",
     "lint": "prettier --list-different 'contracts/**/*.sol' 'test/**/*.test.js' '**/*.md'",
-    "create": "graph create openlawteam/tribute-graph --node https://api.thegraph.com/deploy/",
-    "create-local": "graph create openlawteam/tribute-graph --node http://127.0.0.1:8020",
+    "create": "graph create openlawteam/tribute --node https://api.thegraph.com/deploy/",
+    "create-local": "graph create openlawteam/tribute --node http://127.0.0.1:8020",
     "codegen": "graph codegen",
     "build": "graph build",
-    "deploy": "graph deploy openlawteam/tribute-graph --ipfs https://api.thegraph.com/ipfs/ --node https://api.thegraph.com/deploy/",
-    "deploy-local": "graph deploy openlawteam/tribute-graph --ipfs http://localhost:5001 --node http://127.0.0.1:8020",
-    "compile-abi": "truffle compile && truffle-abi"
+    "deploy": "graph deploy openlawteam/tribute --ipfs https://api.thegraph.com/ipfs/ --node https://api.thegraph.com/deploy/",
+    "deploy-local": "graph deploy openlawteam/tribute --ipfs http://localhost:5001 --node http://127.0.0.1:8020",
+    "compile-abi": "truffle compile && truffle-abi",
+    "ganache": "node_modules/.bin/ganache-cli -s=test -g=0 --secure -u 0 -u 1 -p 8545 --networkId 1337"
   },
   "repository": {
     "type": "git",

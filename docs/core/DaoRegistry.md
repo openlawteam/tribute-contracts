@@ -275,10 +275,6 @@ It also checks that the member exists.
 
 If all the checks pass, the delegate key is updated and a delegate key checkpoint is created.
 
-### function isNotReservedAddress(address applicant)
-
-Checks that the address is not reserved (not TOTAL or GUILD).
-
 ### function getAddressIfDelegated(address checkAddr)
 
 Returns the member address if the address is used as a delegate key or the address itself if it is not.

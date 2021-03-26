@@ -655,19 +655,6 @@ contract DaoRegistry is MemberGuard, AdapterGuard {
      */
 
     /**
-     * @return Whether or not a given address is reserved
-     * @dev Returns false if applicant address is one of the constants GUILD or TOTAL
-     * @param applicant The address to check
-     */
-    function isNotReservedAddress(address applicant)
-        public
-        pure
-        returns (bool)
-    {
-        return applicant != GUILD && applicant != TOTAL;
-    }
-
-    /**
      * @param checkAddr The address to check for a delegate
      * @return the delegated address or the checked address if it is not a delegate
      */

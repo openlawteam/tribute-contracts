@@ -89,7 +89,7 @@ async function onboardMember(dao, voting, onboarding, index) {
     snapshot: blockNumber.toString(),
   };
 
-  const space = "laoland";
+  const space = "molochv3";
   const chainId = 1;
 
   const proposalData = {
@@ -218,7 +218,7 @@ async function createBatchVotingDao(
   return { dao, voting: batchVoting, bank };
 }
 
-contract("LAOLAND - Batch Voting Module", async (accounts) => {
+contract("MolochV3 - BatchVoting Adapter", async (accounts) => {
   it("should be possible to propose a new voting by signing the proposal hash", async () => {
     const myAccount = accounts[1];
     let { dao, voting } = await createBatchVotingDao(myAccount);
