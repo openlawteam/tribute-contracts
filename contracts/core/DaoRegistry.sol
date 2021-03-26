@@ -64,8 +64,6 @@ contract DaoRegistry is MemberGuard, AdapterGuard {
 
     enum AclFlag {
         REPLACE_ADAPTER,
-        JAIL_MEMBER,
-        UNJAIL_MEMBER,
         SUBMIT_PROPOSAL,
         SPONSOR_PROPOSAL,
         PROCESS_PROPOSAL,

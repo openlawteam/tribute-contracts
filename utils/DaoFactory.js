@@ -241,16 +241,11 @@ const configureDao = async (
       SPONSOR_PROPOSAL: true,
       SET_CONFIGURATION: true,
     }),
-    entryDao("ragequit", ragequit, {
-      JAIL_MEMBER: true,
-      UNJAIL_MEMBER: true,
-    }),
+    entryDao("ragequit", ragequit, {}),
     entryDao("guildkick", guildkick, {
       SUBMIT_PROPOSAL: true,
       SPONSOR_PROPOSAL: true,
-      PROCESS_PROPOSAL: true,
-      JAIL_MEMBER: true,
-      UNJAIL_MEMBER: true,
+      PROCESS_PROPOSAL: true
     }),
     entryDao("managing", managing, {
       SUBMIT_PROPOSAL: true,
@@ -651,8 +646,6 @@ const entryBank = (contract, flags) => {
 const entryDao = (name, contract, flags) => {
   const values = [
     flags.REPLACE_ADAPTER,
-    flags.JAIL_MEMBER,
-    flags.UNJAIL_MEMBER,
     flags.SUBMIT_PROPOSAL,
     flags.SPONSOR_PROPOSAL,
     flags.PROCESS_PROPOSAL,
