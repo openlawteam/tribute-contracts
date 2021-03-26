@@ -17,6 +17,8 @@ function internalTransfer(
   let registry = BankExtension.bind(extensionAddress);
   let daoAddress = registry.dao();
 
+  let tributedaos: string[] = [];
+
   if (
     TOTAL.toHex() != memberAddress.toHex() &&
     GUILD.toHex() != memberAddress.toHex()
@@ -37,34 +39,15 @@ function internalTransfer(
       member.delegateKey = memberAddress;
       member.isDelegated = false;
       member.isJailed = false;
-
-      // create 1-1 relationship between member and dao
-      let tributedaos: string[] = [];
-      tributedaos.push(daoAddress.toHexString());
-
-      member.tributedaos = tributedaos;
     } else {
       // get members daos
-      let tributedaos: string[] = member.tributedaos;
-
-      tributedaos.push(daoAddress.toHexString());
-      member.tributedaos = tributedaos;
-
-      // let alreadyExists = false;
-
-      // for (let i = 0; i < tributes.length; i++) {
-      //   if (tributes[i].daoAddress === daoAddress.toHexString()) {
-      //     alreadyExists = true;
-      //     break;
-      //   }
-      // }
-
-      // if (alreadyExists === false) {
-      //   // add the member to the dao
-      //   tributes.push(daoAddress.toHexString());
-      //   member.tributes = tributes;
-      // }
+      tributedaos = member.tributedaos;
     }
+
+    // create 1-1 relationship between member and dao
+    tributedaos.push(daoAddress.toHexString());
+    // add members daos
+    member.tributedaos = tributedaos;
 
     if (token == null) {
       token = new Token(tokenAddress.toHex());
@@ -78,7 +61,7 @@ function internalTransfer(
     }
 
     /**
-     * get `balanceOf`
+     * get `balanceOf` for members SHARES, LOOT and LOCKED_LOOT
      */
 
     // get balanceOf member shares
