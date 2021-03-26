@@ -308,7 +308,11 @@ contract OffchainVotingContract is
             );
 
         require(
-            verify(resultRoot, nodeHash(dao, adapterAddress, result), result.proof),
+            verify(
+                resultRoot,
+                nodeHash(dao, adapterAddress, result),
+                result.proof
+            ),
             "vote:proof bad"
         );
         (address actionId, ) = dao.proposals(proposalId);
