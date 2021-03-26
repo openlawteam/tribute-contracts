@@ -59,22 +59,11 @@ contract("MolochV3 - Onboarding Adapter", async (accounts) => {
 
     const dao = await createDao(
       daoOwner,
-<<<<<<< HEAD
-      toBN("1"), // share price
-      toBN("10").pow(toBN("4")), // max shares per chunk
-      10, // voting period
-      1, // voting grace period
-      oltContractAddr, // token address to mint
-      true, // finalize dao creation
-      100, // max external tokens
-      toBN("2").pow(toBN("180")).toString() // max chunks
-=======
       erc20SharePrice,
       nbOfERC20Shares,
       10,
       1,
       oltContract.address
->>>>>>> e4b7728... return tribute on onboarding failures
     );
 
     const onboarding = await getContract(dao, "onboarding", OnboardingContract);
@@ -101,22 +90,6 @@ contract("MolochV3 - Onboarding Adapter", async (accounts) => {
     await oltContract.approve.sendTransaction(
       onboarding.address,
       initialTokenBalance.toString(),
-<<<<<<< HEAD
-      {
-        from: applicant,
-        gasPrice: toBN("0"),
-      }
-    );
-
-    const proposalId = "0x1";
-    await onboarding.onboard(
-      dao.address,
-      proposalId,
-      applicant,
-      SHARES,
-      tokenAmount,
-=======
->>>>>>> e4b7728... return tribute on onboarding failures
       {
         from: applicant,
         gasPrice: toBN("0"),
@@ -136,7 +109,7 @@ contract("MolochV3 - Onboarding Adapter", async (accounts) => {
           gasPrice: toBN("0"),
         }
       );
-      assert.fail("should not be possible to onboard")
+      assert.fail("should not be possible to onboard");
     } catch (e) {
       assert.equal(
         e.message,

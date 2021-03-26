@@ -403,23 +403,6 @@ contract("MolochV3 - Tribute Adapter", async (accounts) => {
     // Issue OpenLaw ERC20 Basic Token for tests
     // Token supply higher than the limit for external tokens
     // defined in Bank._createNewAmountCheckpoint function (2**160-1).
-<<<<<<< HEAD
-    const supply = toBN("2").pow(toBN("180")).toString();
-    const oltContract = await OLToken.new(supply, { from: daoOwner });
-    const oltContractAddr = oltContract.address;
-
-    const dao = await createDao(
-      daoOwner,
-      toBN("1"), // share price
-      toBN("10").pow(toBN("4")), // max shares per chunk
-      10, // voting period
-      1, // voting grace period
-      oltContractAddr, // token address to mint
-      true, // finalize dao creation
-      100, // max external tokens
-      toBN("2").pow(toBN("180")).toString() // max chunks
-    );
-=======
      const supply = toBN("2").pow(toBN("180")).toString();
      const oltContract = await OLToken.new(supply, { from: daoOwner });
      const nbOfERC20Shares = 100000000;
@@ -433,7 +416,19 @@ contract("MolochV3 - Tribute Adapter", async (accounts) => {
        1,
        oltContract.address
      );
->>>>>>> e4b7728... return tribute on onboarding failures
+    const supply = toBN("2").pow(toBN("180")).toString();
+    const oltContract = await OLToken.new(supply, { from: daoOwner });
+    const nbOfERC20Shares = 100000000;
+    const erc20SharePrice = toBN("10");
+
+    const dao = await createDao(
+      daoOwner,
+      erc20SharePrice,
+      nbOfERC20Shares,
+      10,
+      1,
+      oltContract.address
+    );
 
     const tribute = await getContract(dao, "tribute", TributeContract);
     const voting = await getContract(dao, "voting", VotingContract);
@@ -465,52 +460,6 @@ contract("MolochV3 - Tribute Adapter", async (accounts) => {
 
     const requestAmount = 100000000;
     const proposalId = "0x1";
-<<<<<<< HEAD
-    await tribute.provideTribute(
-      dao.address,
-      proposalId,
-      applicant,
-      SHARES,
-      requestAmount,
-      oltContract.address,
-      tributeAmount.toString(),
-      {
-        from: applicant,
-        gasPrice: toBN("0"),
-      }
-    );
-
-    await tribute.sponsorProposal(dao.address, proposalId, [], {
-      from: daoOwner,
-      gasPrice: toBN("0"),
-    });
-
-    await voting.submitVote(dao.address, proposalId, 1, {
-      from: daoOwner,
-      gasPrice: toBN("0"),
-    });
-
-    await advanceTime(10000);
-
-    try {
-      await tribute.processProposal(dao.address, proposalId, {
-        from: daoOwner,
-        gasPrice: toBN("0"),
-      });
-    } catch (e) {
-      console.log(e);
-      assert.equal(e.reason, "");
-    }
-
-    // In case of failures the funds must be returned to the applicant
-    applicantTokenBalance = await oltContract.balanceOf.call(applicant);
-    assert.equal(
-      initialTokenBalance.toString(),
-      applicantTokenBalance.toString(),
-      "applicant account should contain 2**161 OLT Tokens when the onboard fails"
-    );
-=======
-
      try {
        await tribute.provideTribute(
          dao.address,
@@ -538,6 +487,5 @@ contract("MolochV3 - Tribute Adapter", async (accounts) => {
          "applicant account should contain 2**161 OLT Tokens when the onboard fails"
        );
      }
->>>>>>> e4b7728... return tribute on onboarding failures
   });
 });
