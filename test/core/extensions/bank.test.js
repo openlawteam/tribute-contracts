@@ -36,7 +36,7 @@ const {
 
 contract("MolochV3 - Bank Extension", async (accounts) => {
 
-  it("", async () => {
+  it("", () => {
     //dummy test
   });
 
