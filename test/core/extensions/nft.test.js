@@ -64,7 +64,7 @@ contract("MolochV3 - NFT Extension", async (accounts) => {
   });
 
   it("should be possible check how many NFTs are in the collection", async () => {
-    const { dao, pixelNFT } = await createNFTDao(accounts[0]);
+    const { dao } = await createNFTDao(accounts[0]);
 
     const nftExtAddr = await dao.getExtensionAddress(sha3("nft"));
     const nftExtension = await NFTExtension.at(nftExtAddr);
@@ -104,13 +104,44 @@ contract("MolochV3 - NFT Extension", async (accounts) => {
     const nftExtAddr = await dao.getExtensionAddress(sha3("nft"));
     const nftExtension = await NFTExtension.at(nftExtAddr);
     try {
-      await nftExtension.registerPotentialNewNFT(ETH_TOKEN);
+      await nftExtension.registerPotentialNewNFT(ETH_TOKEN, {
+        from: accounts[6],
+      });
       assert.fail(
         "should not be possible to register a new NFT without the REGISTER_NEW_NFT permission"
       );
     } catch (e) {
-      assert.equal(e.reason, "nft::accessDenied");
+      assert.equal(e.reason, "nft::accessDenied::notCreator");
     }
+  });
+
+  it("should not be possible to register a new NFT without the REGISTER_NEW_NFT permission", async () => {
+    const { dao } = await createNFTDao(accounts[0]);
+
+    const nftExtAddr = await dao.getExtensionAddress(sha3("nft"));
+    const nftExtension = await NFTExtension.at(nftExtAddr);
+    try {
+      await nftExtension.registerPotentialNewNFT(ETH_TOKEN, {
+        from: accounts[6],
+      });
+      assert.fail(
+        "should not be possible to register a new NFT without the REGISTER_NEW_NFT permission"
+      );
+    } catch (e) {
+      assert.equal(e.reason, "nft::accessDenied::notCreator");
+    }
+  });
+
+  it("should be possible to register a new NFT if you are the extension creator", async () => {
+    const { dao } = await createNFTDao(accounts[0]);
+
+    const nftExtAddr = await dao.getExtensionAddress(sha3("nft"));
+    const nftExtension = await NFTExtension.at(nftExtAddr);
+    await nftExtension.registerPotentialNewNFT(ETH_TOKEN, {
+      from: accounts[0],
+    });
+
+    assert.equal(await nftExtension.isNFTAllowed(ETH_TOKEN), true);
   });
 
   it("should not be possible to return a NFT without the RETURN permission", async () => {
