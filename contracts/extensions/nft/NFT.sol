@@ -77,7 +77,8 @@ contract NFTExtension is
 
     modifier isCreatorOrHasExtensionAccess(IExtension extension, AclFlag flag) {
         require(
-            (initialized && msg.sender == _creator) ||
+            msg.sender == _creator ||
+                dao.state() == DaoRegistry.DaoState.CREATION ||
                 dao.hasAdapterAccessToExtension(
                     msg.sender,
                     address(extension),
