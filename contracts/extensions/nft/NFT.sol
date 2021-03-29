@@ -48,6 +48,7 @@ contract NFTExtension is
 
     bool public initialized = false; // internally tracks deployment under eip-1167 proxy pattern
     DaoRegistry public dao;
+    address private _creator;
 
     enum AclFlag {TRANSFER_NFT, RETURN_NFT, REGISTER_NFT}
 
@@ -69,7 +70,20 @@ contract NFTExtension is
                     address(extension),
                     uint8(flag)
                 ),
-            "nft-extension::accessDenied"
+            "nft::accessDenied"
+        );
+        _;
+    }
+
+    modifier isCreatorOrHasExtensionAccess(IExtension extension, AclFlag flag) {
+        require(
+            (initialized && msg.sender == _creator) ||
+                dao.hasAdapterAccessToExtension(
+                    msg.sender,
+                    address(extension),
+                    uint8(flag)
+                ),
+            "nft::accessDenied::notCreator"
         );
         _;
     }
@@ -87,6 +101,7 @@ contract NFTExtension is
         require(_dao.isActiveMember(creator), "not active member");
 
         initialized = true;
+        _creator = creator;
         dao = _dao;
     }
 
@@ -173,7 +188,7 @@ contract NFTExtension is
      */
     function registerPotentialNewNFT(address nftAddr)
         public
-        hasExtensionAccess(this, AclFlag.REGISTER_NFT)
+        isCreatorOrHasExtensionAccess(this, AclFlag.REGISTER_NFT)
     {
         require(
             isNotReservedAddress(nftAddr) && nftAddr != SHARES,

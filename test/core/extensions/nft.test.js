@@ -109,7 +109,7 @@ contract("MolochV3 - NFT Extension", async (accounts) => {
         "should not be possible to register a new NFT without the REGISTER_NEW_NFT permission"
       );
     } catch (e) {
-      assert.equal(e.reason, "nft-extension::accessDenied");
+      assert.equal(e.reason, "nft::accessDenied");
     }
   });
 
@@ -124,7 +124,7 @@ contract("MolochV3 - NFT Extension", async (accounts) => {
         "should not be possible to return a NFT without the RETURN permission"
       );
     } catch (e) {
-      assert.equal(e.reason, "nft-extension::accessDenied");
+      assert.equal(e.reason, "nft::accessDenied");
     }
   });
 
@@ -139,7 +139,7 @@ contract("MolochV3 - NFT Extension", async (accounts) => {
         "should not be possible to transfer a NFT without the TRANSFER permission"
       );
     } catch (e) {
-      assert.equal(e.reason, "nft-extension::accessDenied");
+      assert.equal(e.reason, "nft::accessDenied");
     }
   });
 
