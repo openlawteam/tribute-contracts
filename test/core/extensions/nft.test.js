@@ -38,7 +38,7 @@ const { createNFTDao } = require("../../../utils/TestUtils.js");
 
 contract("MolochV3 - NFT Extension", async (accounts) => {
 
-  it("",async () => {
+  it("", () => {
     //dummy test 
   });
 

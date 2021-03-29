@@ -13,7 +13,8 @@ module.exports = {
     "test/TestToken1",
     "test/TestToken2",
     // Skip openzeppelin contracts
-    // "ERC20", "IERC20", TODO: skip it when importing from openzeppelin
+    "utils/ERC20",
+    "utils/IERC20",
     "ERC721",
     "IERC721",
     "IERC721Receiver",
