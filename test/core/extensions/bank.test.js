@@ -35,6 +35,11 @@ const {
 } = require("../../../utils/DaoFactory.js");
 
 contract("MolochV3 - Bank Extension", async (accounts) => {
+
+  it("", async () => {
+    //dummy test
+  });
+
   it("should be possible to create a dao with a bank extension pre-configured", async () => {
     const daoOwner = accounts[0];
     let dao = await createDao(daoOwner);
