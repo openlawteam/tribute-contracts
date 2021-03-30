@@ -121,6 +121,9 @@ contract TributeContract is ITribute, DaoConstants, MemberGuard, AdapterGuard {
             isNotReservedAddress(applicant),
             "applicant is reserved address"
         );
+
+        dao.potentialNewMember(applicant);
+        
         IERC20 erc20 = IERC20(tokenAddr);
         erc20.safeTransferFrom(msg.sender, address(this), tributeAmount);
 
@@ -372,8 +375,6 @@ contract TributeContract is ITribute, DaoConstants, MemberGuard, AdapterGuard {
             bank.isInternalToken(tokenToMint),
             "it can only mint internal tokens"
         );
-
-        dao.potentialNewMember(applicant);
 
         // Overflow risk may cause this to fail in which case the tribute tokens
         // are refunded to the proposer.
