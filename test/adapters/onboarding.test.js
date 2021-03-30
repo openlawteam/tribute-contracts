@@ -42,7 +42,7 @@ const {
   sha3,
   ETH_TOKEN,
 } = require("../../utils/DaoFactory.js");
-const { checkBalance } = require("../../utils/TestUtils.js");
+const { checkBalance, isActiveMember } = require("../../utils/TestUtils.js");
 
 contract("MolochV3 - Onboarding Adapter", async (accounts) => {
   it("should not be possible onboard when the token amount exceeds the external token limits", async () => {
@@ -197,9 +197,10 @@ contract("MolochV3 - Onboarding Adapter", async (accounts) => {
     await checkBalance(bank, GUILD, ETH_TOKEN, sharePrice.mul(toBN("3")));
 
     // test active member status
-    const applicantIsActiveMember = await dao.isActiveMember(applicant);
+    const applicantIsActiveMember = await isActiveMember(bank, applicant);
     assert.equal(applicantIsActiveMember, true);
-    const nonMemberAccountIsActiveMember = await dao.isActiveMember(
+    const nonMemberAccountIsActiveMember = await isActiveMember(
+      bank,
       nonMemberAccount
     );
     assert.equal(nonMemberAccountIsActiveMember, false);
@@ -325,9 +326,10 @@ contract("MolochV3 - Onboarding Adapter", async (accounts) => {
     await checkBalance(bank, GUILD, oltContract.address, "10");
 
     // test active member status
-    const applicantIsActiveMember = await dao.isActiveMember(applicant);
+    const applicantIsActiveMember = await isActiveMember(bank, applicant);
     assert.equal(applicantIsActiveMember, true);
-    const nonMemberAccountIsActiveMember = await dao.isActiveMember(
+    const nonMemberAccountIsActiveMember = await isActiveMember(
+      bank,
       nonMemberAccount
     );
     assert.equal(nonMemberAccountIsActiveMember, false);
@@ -596,7 +598,7 @@ contract("MolochV3 - Onboarding Adapter", async (accounts) => {
     assert.equal(onboardingBalance.toString(), "0");
 
     // test active member status
-    const applicantIsActiveMember = await dao.isActiveMember(applicant);
+    const applicantIsActiveMember = await isActiveMember(bank, applicant);
     assert.equal(applicantIsActiveMember, false);
   });
 

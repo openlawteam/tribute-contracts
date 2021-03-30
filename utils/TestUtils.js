@@ -16,6 +16,7 @@ const {
   PixelNFT,
   VotingContract,
   BankExtension,
+  LOOT,
 } = require("./DaoFactory.js");
 
 const checkLastEvent = async (dao, testObject) => {
@@ -35,6 +36,13 @@ const checkBalance = async (bank, address, token, expectedBalance) => {
   const balance = await bank.balanceOf(address, token);
 
   assert.equal(balance.toString(), expectedBalance.toString());
+};
+
+const isActiveMember = async (bank, member) => {
+  const shares = await bank.balanceOf(member, SHARES);
+  const loot = await bank.balanceOf(member, LOOT);
+
+  return shares > toBN("0") || loot > toBN("0");
 };
 
 const createNFTDao = async (daoOwner) => {
@@ -107,4 +115,5 @@ module.exports = {
   checkBalance,
   createNFTDao,
   onboardNewMember,
+  isActiveMember,
 };
