@@ -416,20 +416,6 @@ contract("MolochV3 - Tribute Adapter", async (accounts) => {
        1,
        oltContract.address
      );
-    const supply = toBN("2").pow(toBN("180")).toString();
-    const oltContract = await OLToken.new(supply, { from: daoOwner });
-    const nbOfERC20Shares = 100000000;
-    const erc20SharePrice = toBN("10");
-
-    const dao = await createDao(
-      daoOwner,
-      erc20SharePrice,
-      nbOfERC20Shares,
-      10,
-      1,
-      oltContract.address
-    );
-
     const tribute = await getContract(dao, "tribute", TributeContract);
     const voting = await getContract(dao, "voting", VotingContract);
 

@@ -149,7 +149,7 @@ contract TributeNFTContract is
                 data,
                 msg.sender
             );
-        dao.sponsorProposal(proposalId, sponsoredBy);
+        dao.sponsorProposal(proposalId, sponsoredBy, address(votingContract));
         votingContract.startNewVotingForProposal(dao, proposalId, data);
     }
 
