@@ -46,7 +46,7 @@ module.exports = {
     rinkeby: {
       provider: function () {
         let infuraKey = process.env.INFURA_KEY;
-        let HDWalletProvider = require("truffle-hdwallet-provider");
+        let HDWalletProvider = require("@truffle/hdwallet-provider");
         let mnemonic = process.env.TRUFFLE_MNEMONIC;
         let infuraUrl = "https://rinkeby.infura.io/v3/" + infuraKey;
         return new HDWalletProvider(mnemonic, infuraUrl);
@@ -105,8 +105,8 @@ module.exports = {
         "test/TestToken1",
         "test/TestToken2",
         // Skip openzeppelin contracts
-        "ERC20", 
-        "IERC20", 
+        "ERC20",
+        "IERC20",
         "ERC721",
         "IERC721",
         "IERC721Receiver",
