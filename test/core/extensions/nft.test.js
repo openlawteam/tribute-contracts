@@ -37,6 +37,10 @@ const {
 const { createNFTDao } = require("../../../utils/TestUtils.js");
 
 contract("MolochV3 - NFT Extension", async (accounts) => {
+  it("", () => {
+    //dummy test
+  });
+
   it("should be possible to create a dao with a nft extension pre-configured", async () => {
     const daoOwner = accounts[0];
     const dao = await createDao(
