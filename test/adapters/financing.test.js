@@ -458,7 +458,7 @@ contract("MolochV3 - Financing Adapter", async (accounts) => {
         gasPrice: toBN("0"),
       });
     } catch (err) {
-      assert.equal(err.reason, "proposal needs to pass");
+      assert.equal(err.reason, "adapter not found");
     }
   });
 
@@ -483,7 +483,7 @@ contract("MolochV3 - Financing Adapter", async (accounts) => {
         gasPrice: toBN("0"),
       });
     } catch (err) {
-      assert.equal(err.reason, "proposal needs to pass");
+      assert.equal(err.reason, "adapter not found");
     }
   });
 });

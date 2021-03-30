@@ -132,6 +132,7 @@ contract DaoRegistry is MemberGuard, AdapterGuard {
 
     /// @notice The map that keeps track of all proposasls submitted to the DAO
     mapping(bytes32 => Proposal) public proposals;
+    /// @notice The map that tracks the voting adapter address per proposalId
     mapping(bytes32 => address) public votingAdapter;
     /// @notice The map that keeps track of all adapters registered in the DAO
     mapping(bytes32 => address) public adapters;

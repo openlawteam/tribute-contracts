@@ -69,7 +69,6 @@ contract("MolochV3 - Core - Registry", async (accounts) => {
     try {
       await registry.replaceAdapter(moduleId, moduleAddress, 0, [], []);
     } catch (error) {
-      console.error(error);
       assert.equal(error.reason.indexOf("invalid address"), 0);
     }
   });
