@@ -105,7 +105,6 @@ function internalTransfer(
   }
 }
 
-// event NewBalance(address member, address tokenAddr, uint256 amount);
 export function handleNewBalance(event: NewBalance): void {
   log.info(
     "================ NewBalance event fired. member {}, tokenAddr {}, amount {}",
