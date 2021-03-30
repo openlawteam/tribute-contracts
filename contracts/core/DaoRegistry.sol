@@ -204,6 +204,10 @@ contract DaoRegistry is MemberGuard, AdapterGuard {
                 uint8(MemberFlag.EXISTS),
                 true
             );
+            require(
+                memberAddressesByDelegatedKey[memberAddress] == address(0x0),
+                "member address already taken as delegated key"
+            );
             memberAddressesByDelegatedKey[memberAddress] = memberAddress;
             _members.push(memberAddress);
         }
