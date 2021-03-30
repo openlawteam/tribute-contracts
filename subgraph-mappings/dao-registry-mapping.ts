@@ -6,8 +6,6 @@ import {
   UpdateDelegateKey,
   AdapterAdded,
   AdapterRemoved,
-  MemberJailed,
-  MemberUnjailed,
   ExtensionAdded,
   ExtensionRemoved,
   ConfigurationUpdated,
@@ -141,38 +139,6 @@ export function handleUpdateDelegateKey(event: UpdateDelegateKey): void {
       event.params.newDelegateKey.toHexString(),
     ]
   );
-
-  member.save();
-}
-
-export function handleMemberJailed(event: MemberJailed): void {
-  let daoAddress = event.address.toHexString();
-  let memberId = daoAddress
-    .concat("-member-")
-    .concat(event.params.memberAddr.toHex());
-
-  let member = Member.load(memberId);
-  member.isJailed = true;
-
-  log.info("=============== MemberJailed event fired. memberAddr {}", [
-    event.params.memberAddr.toHexString(),
-  ]);
-
-  member.save();
-}
-
-export function handleMemberUnjailed(event: MemberUnjailed): void {
-  let daoAddress = event.address.toHexString();
-  let memberId = daoAddress
-    .concat("-member-")
-    .concat(event.params.memberAddr.toHex());
-
-  let member = Member.load(memberId);
-  member.isJailed = false;
-
-  log.info("=============== MemberUnjailed event fired. memberAddr {}", [
-    event.params.memberAddr.toHexString(),
-  ]);
 
   member.save();
 }

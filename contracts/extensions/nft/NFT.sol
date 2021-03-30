@@ -5,8 +5,8 @@ pragma solidity ^0.8.0;
 import "../../core/DaoConstants.sol";
 import "../../core/DaoRegistry.sol";
 import "../../guards/AdapterGuard.sol";
-import "../../helpers/AddressLib.sol";
 import "../IExtension.sol";
+import "@openzeppelin/contracts/utils/Address.sol";
 import "@openzeppelin/contracts/token/ERC721/IERC721.sol";
 import "@openzeppelin/contracts/token/ERC721/IERC721Receiver.sol";
 import "@openzeppelin/contracts/utils/structs/EnumerableSet.sol";
@@ -48,6 +48,7 @@ contract NFTExtension is
 
     bool public initialized = false; // internally tracks deployment under eip-1167 proxy pattern
     DaoRegistry public dao;
+    address private _creator;
 
     enum AclFlag {TRANSFER_NFT, RETURN_NFT, REGISTER_NFT}
 
@@ -69,7 +70,21 @@ contract NFTExtension is
                     address(extension),
                     uint8(flag)
                 ),
-            "nft-extension::accessDenied"
+            "nft::accessDenied"
+        );
+        _;
+    }
+
+    modifier isCreatorOrHasExtensionAccess(IExtension extension, AclFlag flag) {
+        require(
+            msg.sender == _creator ||
+                dao.state() == DaoRegistry.DaoState.CREATION ||
+                dao.hasAdapterAccessToExtension(
+                    msg.sender,
+                    address(extension),
+                    uint8(flag)
+                ),
+            "nft::accessDenied::notCreator"
         );
         _;
     }
@@ -87,6 +102,7 @@ contract NFTExtension is
         require(_dao.isActiveMember(creator), "not active member");
 
         initialized = true;
+        _creator = creator;
         dao = _dao;
     }
 
@@ -173,7 +189,7 @@ contract NFTExtension is
      */
     function registerPotentialNewNFT(address nftAddr)
         public
-        hasExtensionAccess(this, AclFlag.REGISTER_NFT)
+        isCreatorOrHasExtensionAccess(this, AclFlag.REGISTER_NFT)
     {
         require(
             isNotReservedAddress(nftAddr) && nftAddr != SHARES,
@@ -211,11 +227,11 @@ contract NFTExtension is
      * @notice Required function from IERC721 standard to be able to receive assets to this contract address
      */
     function onERC721Received(
-        address operator,
-        address from,
-        uint256 tokenId,
-        bytes calldata data
-    ) external override returns (bytes4) {
+        address,
+        address,
+        uint256,
+        bytes calldata
+    ) external pure override returns (bytes4) {
         return this.onERC721Received.selector;
     }
 }

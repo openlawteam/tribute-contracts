@@ -9,7 +9,7 @@ import "../extensions/nft/NFT.sol";
 import "../adapters/interfaces/IVoting.sol";
 import "../guards/MemberGuard.sol";
 import "../guards/AdapterGuard.sol";
-import "../helpers/AddressLib.sol";
+import "@openzeppelin/contracts/utils/Address.sol";
 import "@openzeppelin/contracts/token/ERC721/IERC721.sol";
 import "@openzeppelin/contracts/token/ERC721/IERC721Receiver.sol";
 
@@ -77,13 +77,13 @@ contract TributeNFTContract is
     }
 
     function provideTribute(
-        DaoRegistry dao,
-        bytes32 proposalId,
-        address applicant,
-        address tokenToMint,
-        uint256 requestAmount,
-        address tokenAddr,
-        uint256 tributeAmount
+        DaoRegistry,
+        bytes32,
+        address,
+        address,
+        uint256,
+        address,
+        uint256
     ) external pure override {
         revert("not supported operation");
     }
@@ -259,10 +259,6 @@ contract TributeNFTContract is
             bank.isInternalToken(SHARES),
             "SHARES token is not an internal token"
         );
-        require(
-            !dao.getMemberFlag(applicant, DaoRegistry.MemberFlag.JAILED),
-            "cannot mint shares for jailed member"
-        );
 
         dao.potentialNewMember(applicant);
 
@@ -278,11 +274,11 @@ contract TributeNFTContract is
     }
 
     function onERC721Received(
-        address operator,
-        address from,
-        uint256 tokenId,
-        bytes calldata data
-    ) external override returns (bytes4) {
+        address,
+        address,
+        uint256,
+        bytes calldata
+    ) external pure override returns (bytes4) {
         return this.onERC721Received.selector;
     }
 }

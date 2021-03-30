@@ -134,7 +134,6 @@ contract("MolochV3 - Onboarding Adapter", async (accounts) => {
         "token amount exceeds the maximum limit for external tokens"
       );
       applicantTokenBalance = await oltContract.balanceOf.call(applicant);
-      console.log(applicantTokenBalance);
       //TODO: The amount should be sent back to the applicant
       // assert.equal(
       //   initialTokenBalance.toString(),

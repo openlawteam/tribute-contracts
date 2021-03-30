@@ -10,7 +10,7 @@ import "../adapters/interfaces/IVoting.sol";
 import "../guards/MemberGuard.sol";
 import "../guards/AdapterGuard.sol";
 import "../utils/IERC20.sol";
-import "../helpers/AddressLib.sol";
+import "@openzeppelin/contracts/utils/Address.sol";
 import "../helpers/SafeERC20.sol";
 
 /**
@@ -69,11 +69,11 @@ contract TributeContract is ITribute, DaoConstants, MemberGuard, AdapterGuard {
     }
 
     function provideTributeNFT(
-        DaoRegistry dao,
-        bytes32 proposalId,
-        address nftAddr,
-        uint256 nftTokenId,
-        uint256 requestedShares
+        DaoRegistry,
+        bytes32,
+        address,
+        uint256,
+        uint256
     ) external pure override {
         revert("not supported operation");
     }
@@ -326,7 +326,6 @@ contract TributeContract is ITribute, DaoConstants, MemberGuard, AdapterGuard {
     /**
      * @notice Adds DAO internal tokens to applicant's balance and creates a new member entry (if applicant is not already a member).
      * @dev Internal tokens to be minted to the applicant must be registered with the DAO Bank.
-     * @dev The applicant member cannot be jailed.
      * @param dao The DAO address.
      * @param applicant The applicant address (who will receive the DAO internal tokens and become a member).
      * @param proposer The proposer address (who will be refunded the tribute tokens if the minting of internal tokens fails).
@@ -348,10 +347,6 @@ contract TributeContract is ITribute, DaoConstants, MemberGuard, AdapterGuard {
         require(
             bank.isInternalToken(tokenToMint),
             "it can only mint internal tokens"
-        );
-        require(
-            !dao.getMemberFlag(applicant, DaoRegistry.MemberFlag.JAILED),
-            "cannot process jailed member"
         );
 
         dao.potentialNewMember(applicant);

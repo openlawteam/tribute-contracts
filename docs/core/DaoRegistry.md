@@ -20,15 +20,13 @@ The DaoRegistry.sol contract tracks the state of the DAO for 1) Adapter and Exte
 
 ### Access Flags
 
-`enum MemberFlag {EXISTS, JAILED}` = `EXISTS` is true if a member or a proposal exists. `JAILED` is true if a member has been jailed by the DAO. A member will then not be able to particpate in DAO.
+`enum MemberFlag {EXISTS}` = `EXISTS` is true if a member or a proposal exists.
 
 ` enum ProposalFlag {EXISTS, SPONSORED, PROCESSED}` = `EXISTS` true if a proposal has been been submitted. `SPONSORED` is true if a Submitted proposal has been Sponsored by an existing Member.
 
-`enum AclFlag { REPLACE_ADAPTER, JAIL_MEMBER, UNJAIL_MEMBER, SUBMIT_PROPOSAL, SPONSOR_PROPOSAL, PROCESS_PROPOSAL, UPDATE_DELEGATE_KEY, SET_CONFIGURATION, ADD_EXTENSION, REMOVE_EXTENSION, NEW_MEMBER }`
+`enum AclFlag { REPLACE_ADAPTER, SUBMIT_PROPOSAL, SPONSOR_PROPOSAL, PROCESS_PROPOSAL, UPDATE_DELEGATE_KEY, SET_CONFIGURATION, ADD_EXTENSION, REMOVE_EXTENSION, NEW_MEMBER }`
 
 - `REPLACE_ADAPTER` - if true, the caller adapter has access to add, remove, and replace adapters in the DAO, function `dao.replaceAdapter`.
-- `JAIL_MEMBER` - if true, the caller adapter is allowed to jail a member of the DAO, function `dao.jailMember`.
-- `UNJAIL_MEMBER` - if true, the caller adapter is allowed to unjail a member of the DAO, function `dao.unjailMember`.
 - `SUBMIT_PROPOSAL` - if true, the caller adapter is allowed to submit/create proposals in the DAO, function `dao.submitProposal`.
 - `SPONSOR_PROPOSAL` - if true, the caller adapter is allowed to sponsor an existing proposal in the DAO, function `dao.sponsorProposal`.
 - `PROCESS_PROPOSAL` - if true, the caller adapter has the right to process a DAO proposal, function `dao.processProposal`.
@@ -52,8 +50,6 @@ The DaoRegistry.sol contract tracks the state of the DAO for 1) Adapter and Exte
 
     Events for Members
     `event UpdateDelegateKey(address memberAddress, address newDelegateKey);`
-    `event MemberJailed(address memberAddr);`
-    `event MemberUnjailed(address memberAddr);`
 
     Configuration Events
     `event ConfigurationUpdated(bytes32 key, uint256 value);`
@@ -212,17 +208,6 @@ Returns the extension address registered for this extensionId and reverts if not
 
 The reason we revert here is to avoid the need to check everywhere that the return value is 0x0 when we want to use an extension.
 
-### function jailMember(address memberAddr)
-
-Marks the member as jailed.
-Reverts if the member does not exist.
-The call can be done multiple times but if the member is already jailed, nothing happens.
-
-### function unjailMember(address memberAddr)
-
-Unmarks a member as jailed.
-Reverts if the member does not exist, does nothing if the member is not jailed.
-
 ### function submitProposal(bytes32 proposalId)
 
 Creates a proposal entry for the DAO.
@@ -249,7 +234,7 @@ It checks that the proposal exists and that the flag has not been already set.
 
 ### function isActiveMember(address addr) public view returns (bool)
 
-Returns true if the address is the delegate key of an existing member and that the member is not jailed.
+Returns true if the address is the delegate key of an existing member
 
 ### function getProposalFlag(bytes32 proposalId, ProposalFlag flag) returns (bool)
 

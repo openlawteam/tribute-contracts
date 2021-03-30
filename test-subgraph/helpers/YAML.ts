@@ -110,10 +110,6 @@ templates:
           handler: handleExtensionRemoved
         - event: UpdateDelegateKey(address,address)
           handler: handleUpdateDelegateKey
-        - event: MemberJailed(address)
-          handler: handleMemberJailed
-        - event: MemberUnjailed(address)
-          handler: handleMemberUnjailed
         - event: ConfigurationUpdated(bytes32,uint256)
           handler: handleConfigurationUpdated
         - event: AddressConfigurationUpdated(bytes32,address)
@@ -139,7 +135,7 @@ templates:
       eventHandlers:
         - event: NewBalance(address,address,uint160)
           handler: handleNewBalance
-        - event: Withdraw(address,address,uint256)
+        - event: Withdraw(address,address,uint160)
           handler: handleWithdraw
       file: ./src/bank-extension-mapping.ts
 

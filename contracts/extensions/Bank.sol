@@ -7,7 +7,7 @@ import "../core/DaoRegistry.sol";
 import "./IExtension.sol";
 import "../guards/AdapterGuard.sol";
 import "../utils/IERC20.sol";
-import "../helpers/AddressLib.sol";
+import "@openzeppelin/contracts/utils/Address.sol";
 import "../helpers/SafeERC20.sol";
 
 /**
@@ -56,7 +56,7 @@ contract BankExtension is DaoConstants, AdapterGuard, IExtension {
     /// @dev - Events for Bank
     event NewBalance(address member, address tokenAddr, uint160 amount);
 
-    event Withdraw(address account, address tokenAddr, uint256 amount);
+    event Withdraw(address account, address tokenAddr, uint160 amount);
 
     /*
      * STRUCTURES
@@ -132,7 +132,7 @@ contract BankExtension is DaoConstants, AdapterGuard, IExtension {
             erc20.safeTransfer(member, amount);
         }
 
-        emit Withdraw(member, tokenAddr, amount);
+        emit Withdraw(member, tokenAddr, uint160(amount));
     }
 
     /**
@@ -347,7 +347,7 @@ contract BankExtension is DaoConstants, AdapterGuard, IExtension {
     function balanceOf(address member, address tokenAddr)
         public
         view
-        returns (uint256)
+        returns (uint160)
     {
         uint32 nCheckpoints = numCheckpoints[tokenAddr][member];
         return

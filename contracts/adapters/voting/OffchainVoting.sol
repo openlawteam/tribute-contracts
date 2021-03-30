@@ -11,6 +11,7 @@ import "../../guards/AdapterGuard.sol";
 import "../../utils/Signatures.sol";
 import "../interfaces/IVoting.sol";
 import "./Voting.sol";
+import "./KickBadReporterAdapter.sol";
 import "./SnapshotProposalContract.sol";
 
 /**
@@ -44,7 +45,13 @@ contract OffchainVotingContract is
     AdapterGuard,
     Signatures
 {
+    struct ProposalChallenge {
+        address reporter;
+        uint256 shares;
+    }
+
     SnapshotProposalContract private _snapshotContract;
+    KickBadReporterAdapter private _handleBadReporterAdapter;
 
     string public constant VOTE_RESULT_NODE_TYPE =
         "Message(address account,uint256 timestamp,uint256 nbYes,uint256 nbNo,uint256 index,uint256 choice,bytes32 proposalHash)";
@@ -57,6 +64,8 @@ contract OffchainVotingContract is
         keccak256(abi.encodePacked(VOTE_RESULT_ROOT_TYPE));
 
     VotingContract public fallbackVoting;
+
+    mapping(address => mapping(bytes32 => ProposalChallenge)) challengeProposals;
 
     struct Voting {
         uint256 snapshot;
@@ -113,6 +122,11 @@ contract OffchainVotingContract is
         bytes32 proposalHash;
     }
 
+    modifier onlyBadReporterAdapter() {
+        require(msg.sender == address(_handleBadReporterAdapter), "only:hbra");
+        _;
+    }
+
     bytes32 constant VotingPeriod = keccak256("offchainvoting.votingPeriod");
     bytes32 constant GracePeriod = keccak256("offchainvoting.gracePeriod");
     bytes32 constant StakingAmount = keccak256("offchainvoting.stakingAmount");
@@ -121,9 +135,17 @@ contract OffchainVotingContract is
 
     mapping(address => mapping(bytes32 => Voting)) public votes;
 
-    constructor(VotingContract _c, SnapshotProposalContract _spc) {
+    constructor(
+        VotingContract _c,
+        SnapshotProposalContract _spc,
+        KickBadReporterAdapter _hbra
+    ) {
+        require(address(_c) != address(0x0), "voting contract");
+        require(address(_spc) != address(0x0), "snapshot proposal");
+        require(address(_hbra) != address(0x0), "handle bad reporter");
         fallbackVoting = _c;
         _snapshotContract = _spc;
+        _handleBadReporterAdapter = _hbra;
     }
 
     function hashResultRoot(
@@ -143,6 +165,17 @@ contract OffchainVotingContract is
 
     function getAdapterName() external pure override returns (string memory) {
         return ADAPTER_NAME;
+    }
+
+    function getChallengeDetails(DaoRegistry dao, bytes32 proposalId)
+        external
+        view
+        returns (uint256, address)
+    {
+        return (
+            challengeProposals[address(dao)][proposalId].shares,
+            challengeProposals[address(dao)][proposalId].reporter
+        );
     }
 
     function hashVotingResultNode(VoteResultNode memory node)
@@ -200,8 +233,6 @@ contract OffchainVotingContract is
         dao.setConfiguration(VotingPeriod, votingPeriod);
         dao.setConfiguration(GracePeriod, gracePeriod);
         dao.setConfiguration(FallbackThreshold, fallbackThreshold);
-        BankExtension bank = BankExtension(dao.getExtensionAddress(BANK));
-        bank.registerPotentialNewInternalToken(LOCKED_LOOT);
     }
 
     /** 
@@ -233,13 +264,10 @@ contract OffchainVotingContract is
             );
             _submitVoteResult(dao, vote, proposalId, result, resultRoot);
         } else {
-            //TODO: we shouldnt' check nbYes + nbNo but rather the index (the number of voters)
             require(result.index > vote.index, "vote:notEnoughSteps");
             _submitVoteResult(dao, vote, proposalId, result, resultRoot);
         }
     }
-
-    //TODO: generale challenge to go through each node to see which vote has been missing
 
     function _readyToSubmitResult(
         DaoRegistry dao,
@@ -273,16 +301,18 @@ contract OffchainVotingContract is
         bytes32 resultRoot
     ) internal {
         (address adapterAddress, ) = dao.proposals(proposalId);
-        bytes32 hashCurrent = nodeHash(dao, adapterAddress, result);
-        uint256 blockNumber = vote.snapshot;
         address reporter =
             recover(
                 hashResultRoot(dao, adapterAddress, resultRoot),
                 result.rootSig
             );
-        address voter = dao.getPriorDelegateKey(result.account, blockNumber);
+
         require(
-            verify(resultRoot, hashCurrent, result.proof),
+            verify(
+                resultRoot,
+                nodeHash(dao, adapterAddress, result),
+                result.proof
+            ),
             "vote:proof bad"
         );
         (address actionId, ) = dao.proposals(proposalId);
@@ -290,7 +320,7 @@ contract OffchainVotingContract is
             _hasVoted(
                 dao,
                 actionId,
-                voter,
+                dao.getPriorDelegateKey(result.account, vote.snapshot),
                 result.timestamp,
                 result.proposalHash,
                 result.sig
@@ -298,66 +328,19 @@ contract OffchainVotingContract is
             "vote:sig bad"
         );
 
-        //_lockFunds(dao, reporter);
+        if (
+            vote.gracePeriodStartingTime == 0 ||
+            vote.nbNo > vote.nbYes != result.nbNo > result.nbYes
+        ) {
+            vote.gracePeriodStartingTime = block.timestamp;
+        }
+
         vote.nbNo = result.nbNo;
         vote.nbYes = result.nbYes;
         vote.index = result.index;
         vote.resultRoot = resultRoot;
         vote.reporter = reporter;
         vote.isChallenged = false;
-        vote.gracePeriodStartingTime = block.timestamp;
-    }
-
-    /*
-    function _lockFunds(DaoRegistry dao, address memberAddr) internal {
-        uint256 lootToLock = dao.getConfiguration(StakingAmount);
-        //lock if member has enough loot
-        require(dao.isActiveMember(memberAddr), "must be an active member");
-        BankExtension bank = BankExtension(dao.getExtensionAddress(BANK));
-        require(
-            bank.balanceOf(memberAddr, LOOT) >= lootToLock,
-            "insufficient loot"
-        );
-
-        // lock loot
-        bank.addToBalance(memberAddr, LOCKED_LOOT, lootToLock);
-        bank.subtractFromBalance(memberAddr, LOOT, lootToLock);
-    }
-
-    function _releaseFunds(DaoRegistry dao, address memberAddr) internal {
-        uint256 lootToRelease = dao.getConfiguration(StakingAmount);
-        //release if member has enough locked loot
-        require(dao.isActiveMember(memberAddr), "must be an active member");
-        BankExtension bank = BankExtension(dao.getExtensionAddress(BANK));
-        require(
-            bank.balanceOf(memberAddr, LOCKED_LOOT) >= lootToRelease,
-            "insufficient loot locked"
-        );
-
-        // release loot
-        bank.addToBalance(memberAddr, LOOT, lootToRelease);
-        bank.subtractFromBalance(memberAddr, LOCKED_LOOT, lootToRelease);
-    }*/
-
-    function _stringToUint(string memory s)
-        internal
-        pure
-        returns (bool success, uint256 result)
-    {
-        bytes memory b = bytes(s);
-        result = 0;
-        success = false;
-        for (uint256 i = 0; i < b.length; i++) {
-            if (uint8(b[i]) >= 48 && uint8(b[i]) <= 57) {
-                result = result * 10 + (uint8(b[i]) - 48);
-                success = true;
-            } else {
-                result = 0;
-                success = false;
-                break;
-            }
-        }
-        return (success, result);
     }
 
     function getSenderAddress(
@@ -448,7 +431,6 @@ contract OffchainVotingContract is
         return VotingState.TIE;
     }
 
-    /*
     function challengeWrongSignature(
         DaoRegistry dao,
         bytes32 proposalId,
@@ -545,7 +527,7 @@ contract OffchainVotingContract is
         (address actionId, ) = dao.proposals(proposalId);
 
         _checkStep(dao, actionId, nodeCurrent, nodePrevious, proposalId);
-    }*/
+    }
 
     function requestFallback(DaoRegistry dao, bytes32 proposalId)
         external
@@ -597,15 +579,47 @@ contract OffchainVotingContract is
         }
     }
 
+    function sponsorChallengeProposal(
+        DaoRegistry dao,
+        bytes32 proposalId,
+        address sponsoredBy
+    ) external onlyBadReporterAdapter {
+        dao.sponsorProposal(proposalId, sponsoredBy);
+    }
+
+    function processChallengeProposal(DaoRegistry dao, bytes32 proposalId)
+        external
+        onlyBadReporterAdapter
+    {
+        dao.processProposal(proposalId);
+    }
+
     function _challengeResult(DaoRegistry dao, bytes32 proposalId) internal {
         BankExtension bank = BankExtension(dao.getExtensionAddress(BANK));
-        // burn locked loot
-        bank.subtractFromBalance(
-            votes[address(dao)][proposalId].reporter,
-            LOCKED_LOOT,
-            dao.getConfiguration(StakingAmount)
-        );
+
         votes[address(dao)][proposalId].isChallenged = true;
+        address challengedReporter = votes[address(dao)][proposalId].reporter;
+        bytes32 challengeProposalId =
+            keccak256(
+                abi.encodePacked(
+                    proposalId,
+                    votes[address(dao)][proposalId].resultRoot
+                )
+            );
+
+        dao.submitProposal(challengeProposalId);
+
+        uint256 shares = bank.balanceOf(challengedReporter, SHARES);
+
+        challengeProposals[address(dao)][
+            challengeProposalId
+        ] = ProposalChallenge(challengedReporter, shares);
+
+        // Burns / subtracts from member's balance the number of shares to burn.
+        bank.subtractFromBalance(challengedReporter, SHARES, shares);
+        // Burns / subtracts from member's balance the number of loot to burn.
+        // bank.subtractFromBalance(memberToKick, LOOT, kick.lootToBurn);
+        bank.addToBalance(challengedReporter, LOOT, shares);
     }
 
     function getSignedHash(
@@ -646,33 +660,10 @@ contract OffchainVotingContract is
         bytes32 proposalHash,
         bytes memory sig
     ) internal view returns (bool) {
-        bytes32 voteHashYes =
-            _snapshotContract.hashVote(
-                dao,
-                actionId,
-                SnapshotProposalContract.VoteMessage(
-                    timestamp,
-                    SnapshotProposalContract.VotePayload(1, proposalHash)
-                )
-            );
-
-        bytes32 voteHashNo =
-            _snapshotContract.hashVote(
-                dao,
-                actionId,
-                SnapshotProposalContract.VoteMessage(
-                    timestamp,
-                    SnapshotProposalContract.VotePayload(2, proposalHash)
-                )
-            );
-
-        if (recover(voteHashYes, sig) == voter) {
-            return true;
-        } else if (recover(voteHashNo, sig) == voter) {
-            return false;
-        } else {
-            revert("invalid signature or signed for neither yes nor no");
-        }
+        uint256 result =
+            _hasVoted(dao, actionId, voter, timestamp, proposalHash, sig);
+        require(result != 0, "invalid sig");
+        return result == 1;
     }
 
     function _hasVoted(
@@ -736,5 +727,26 @@ contract OffchainVotingContract is
 
         // Check if the computed hash (root) is equal to the provided root
         return computedHash == root;
+    }
+
+    function _stringToUint(string memory s)
+        internal
+        pure
+        returns (bool success, uint256 result)
+    {
+        bytes memory b = bytes(s);
+        result = 0;
+        success = false;
+        for (uint256 i = 0; i < b.length; i++) {
+            if (uint8(b[i]) >= 48 && uint8(b[i]) <= 57) {
+                result = result * 10 + (uint8(b[i]) - 48);
+                success = true;
+            } else {
+                result = 0;
+                success = false;
+                break;
+            }
+        }
+        return (success, result);
     }
 }

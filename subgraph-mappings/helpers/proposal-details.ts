@@ -233,8 +233,6 @@ function guildkick(
     proposalId
   );
 
-  let ongoingKicks = guildkick.ongoingKicks(daoAddress);
-
   let daoProposalId = daoAddress
     .toHex()
     .concat("-proposal-")
@@ -243,12 +241,7 @@ function guildkick(
   let proposal = Proposal.load(daoProposalId);
 
   if (proposal) {
-    proposal.memberToKick = data.value0;
-    proposal.status = data.value1.toString();
-    proposal.tokensToBurn = data.value2;
-
-    proposal.ongoingKicks = ongoingKicks;
-
+    proposal.memberToKick = data;
     proposal.adapterAddress = adapterAdddress;
 
     proposal.save();
