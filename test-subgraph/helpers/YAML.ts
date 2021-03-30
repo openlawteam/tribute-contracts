@@ -133,9 +133,9 @@ templates:
         - name: BankExtension
           file: ./build/contracts/BankExtension.json
       eventHandlers:
-        - event: NewBalance(address,address,uint256)
+        - event: NewBalance(address,address,uint160)
           handler: handleNewBalance
-        - event: Withdraw(address,address,uint256)
+        - event: Withdraw(address,address,uint160)
           handler: handleWithdraw
       file: ./src/bank-extension-mapping.ts
 

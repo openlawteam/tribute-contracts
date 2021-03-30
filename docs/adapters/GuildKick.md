@@ -34,9 +34,7 @@ Bank Extension Access Flags: `WITHDRAW`, `INTERNAL_TRANSFER`, `SUB_FROM_BALANCE`
 - `GuildKick`: State of the guild kick proposal.
   - `memberToKick`: The address of the member to kick out of the DAO.
   - `status`: The kick status.
-  - `tokensToBurn`: The number of shares of the member that should be burned.
 - `kicks`: Keeps track of all the kicks executed per DAO.
-- `ongoingKicks`: Keeps track of the latest ongoing kick proposal per DAO to ensure only 1 kick happens at a time.
 
 ## Dependencies and interactions (internal / external)
 

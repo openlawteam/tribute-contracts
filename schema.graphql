@@ -81,12 +81,8 @@ type Proposal @entity {
   tributeAmount: BigInt
 
   # guildkick; proposal details
-  "Keeps track of the latest ongoing kick proposal per DAO to ensure only 1 kick happens at a time."
-  ongoingKicks: Bytes
   "The address of the member to kick out of the DAO."
   memberToKick: Bytes
-  "The number of shares of the member that should be burned."
-  tokensToBurn: BigInt
 
   # financing; proposal details
   "Additional details about the financing proposal"
