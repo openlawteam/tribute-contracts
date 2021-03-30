@@ -35,7 +35,6 @@ const {
 } = require("../../../utils/DaoFactory.js");
 
 contract("MolochV3 - Bank Extension", async (accounts) => {
-
   it("", () => {
     //dummy test
   });

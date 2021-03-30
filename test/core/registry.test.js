@@ -36,7 +36,6 @@ const {
 } = require("../../utils/DaoFactory.js");
 
 contract("MolochV3 - Core - Registry", async (accounts) => {
-
   it("", async () => {
     //dummy test
   });
