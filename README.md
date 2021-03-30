@@ -1,4 +1,4 @@
-[![codecov](https://codecov.io/gh/openlawteam/molochv3-contracts/branch/master/graph/badge.svg?token=XZRL9RUYZE)](https://codecov.io/gh/openlawteam/laoland/)
+[![codecov](https://codecov.io/gh/openlawteam/molochv3-contracts/branch/master/graph/badge.svg?token=XZRL9RUYZE)](https://codecov.io/gh/openlawteam/molochv3-contracts/)
 
 ## Overview
 
@@ -35,16 +35,17 @@ Each adapter needs to be configured with the [Access Flags](#access-control-laye
 Adapters implemented in the MolochV3 project:
 
 - [Configuration](https://github.com/openlawteam/molochv3-contracts/blob/master/docs/adapters/Configuration.md): manages storing and retrieving per-DAO settings required by shared adapters.
+- [Distribute](https://github.com/openlawteam/molochv3-contracts/blob/master/docs/adapters/Distribute.md): allows the members to distribute funds to one or all members of the DAO.
 - [Financing](https://github.com/openlawteam/molochv3-contracts/blob/master/docs/adapters/Financing.md): allows individuals and/or organizations to request funds to finance their projects, and the members of the DAO have the power to vote and decide which projects should be funded.
 - [GuildKick](https://github.com/openlawteam/molochv3-contracts/blob/master/docs/adapters/GuildKick.md): gives the members the freedom to choose which individuals or organizations should really be part of the DAO.
 - [Managing](https://github.com/openlawteam/molochv3-contracts/blob/master/docs/adapters/Managing.md): enhances the DAO capabilities by adding/updating the DAO Adapters through a voting process.
 - [OffchainVoting](https://github.com/openlawteam/molochv3-contracts/blob/master/docs/adapters/OffchainVoting.md): adds the offchain voting governance process to the DAO to support gasless voting.
 - [Onboarding](https://github.com/openlawteam/molochv3-contracts/blob/master/docs/adapters/Onboarding.md): triggers the process of minting internal tokens in exchange of a specific token at a fixed price.
-- [Tribute](https://github.com/openlawteam/molochv3-contracts/blob/master/docs/adapters/Tribute.md): allows potential and existing DAO members to contribute any amount of ERC-20 tokens to the DAO in exchange for any amount of DAO internal tokens.
 - [Ragequit](https://github.com/openlawteam/molochv3-contracts/blob/master/docs/adapters/Ragequit.md): gives the members the freedom to choose when it is the best time to exit the DAO for any given reason.
+- [Tribute](https://github.com/openlawteam/molochv3-contracts/blob/master/docs/adapters/Tribute.md): allows potential and existing DAO members to contribute any amount of ERC-20 tokens to the DAO in exchange for any amount of DAO internal tokens.
+- [TributeNFT](https://github.com/openlawteam/molochv3-contracts/blob/master/docs/adapters/TributeNFT.md): allows potential DAO members to contribute a registered ERC-721 asset to the DAO in exchange for any amount of DAO shares.
 - [Voting](https://github.com/openlawteam/molochv3-contracts/blob/master/docs/adapters/Voting.md): adds the simple on chain voting governance process to the DAO.
 - [Withdraw](https://github.com/openlawteam/molochv3-contracts/blob/master/docs/adapters/Withdraw.md): allows the members to withdraw their funds from the DAO bank.
-- [Distribute](https://github.com/openlawteam/molochv3-contracts/blob/master/docs/adapters/Distribute.md): allows the members to distribute funds to one or all members of the DAO.
 
 Considerations:
 
@@ -59,6 +60,8 @@ Extensions are conceived to isolate the complexity of state changes from the DAO
 
 - [Bank](https://github.com/openlawteam/molochv3-contracts/blob/master/docs/extensions/Bank.md): adds the banking capabilities to the DAO, and keeps track of the DAO accounts and internal token balances.
 
+- [NFT](https://github.com/openlawteam/molochv3-contracts/blob/master/docs/extensions/NFT.md): adds to the DAO the capability of managing and curate a collection of standard NFTs.
+
 #### Core Contracts
 
 A core contract is a contract that composes the DAO itself, and directly changes the DAO state without the need of going through an Adapter. Ideally a core contract shall never pull information directly from the external world. For that we use Adapters and Extensions, and the natural information flow is always from the external world to the core contracts.
@@ -72,13 +75,13 @@ A core contract is a contract that composes the DAO itself, and directly changes
 
 The Access Control Layer (ACL) is implemented using Access Flags to indicate which permissions an adapter must have in order to access and modify the DAO state. The are 3 main categories of [Access Flags](https://github.com/openlawteam/molochv3-contracts/blob/master/docs/core/DaoRegistry.md#access-flags):
 
-- MemberFlag: `EXISTS`, `JAILED`.
+- MemberFlag: `EXISTS`.
 - ProposalFlag: `EXISTS`, `SPONSORED`, `PROCESSED`.
-- AclFlag: `ADD_ADAPTER`, `REMOVE_ADAPTER`, `JAIL_MEMBER`, `UNJAIL_MEMBER`, `SUBMIT_PROPOSAL`, `SPONSOR_PROPOSAL`, `PROCESS_PROPOSAL`, `UPDATE_DELEGATE_KEY`, `SET_CONFIGURATION`, `ADD_EXTENSION`, `REMOVE_EXTENSION`, `NEW_MEMBER`.
+- AclFlag: `REPLACE_ADAPTER`, `SUBMIT_PROPOSAL`, `SPONSOR_PROPOSAL`, `PROCESS_PROPOSAL`, `UPDATE_DELEGATE_KEY`, `SET_CONFIGURATION`, `ADD_EXTENSION`, `REMOVE_EXTENSION`, `NEW_MEMBER`.
 
 The Access Flags of each adapter must be provided to the DAOFactory when the `daoFactory.addAdapters` function is called passing the new adapters. These flags will grant the access to the DAORegistry contract, and the same process must be done to grant the access of each Adapter to each Extension (function `daoFactory.configureExtension`).
 
-The Access Flags are defined in the DAORegistry using the modifier `hasAccess`. For example, a function with the modifier `hasAccess(this, AclFlag.JAIL_MEMBER)` means the adapter calling this function needs to have the Access Flag `JAIL_MEMBER` enabled, otherwise the call will revert. In order to create an Adapter with the proper Access Flags one needs to first map out all the functions that the Adapter will be calling in the DAORegistry and Extensions, and provide these Access Flags using the DAO Factory as described above.
+The Access Flags are defined in the DAORegistry using the modifier `hasAccess`. For example, a function with the modifier `hasAccess(this, AclFlag.REPLACE_ADAPTER)` means the adapter calling this function needs to have the Access Flag `REPLACE_ADAPTER` enabled, otherwise the call will revert. In order to create an Adapter with the proper Access Flags one needs to first map out all the functions that the Adapter will be calling in the DAORegistry and Extensions, and provide these Access Flags using the DAO Factory as described above.
 
 You can find more information about the purpose of each access flag at [DAO Registry - Access Flags](https://github.com/openlawteam/molochv3-contracts/blob/master/docs/core/DaoRegistry.md#access-flags).
 

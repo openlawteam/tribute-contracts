@@ -10,7 +10,7 @@ import "../adapters/interfaces/IVoting.sol";
 import "../guards/MemberGuard.sol";
 import "../guards/AdapterGuard.sol";
 import "../utils/IERC20.sol";
-import "../helpers/AddressLib.sol";
+import "@openzeppelin/contracts/utils/Address.sol";
 import "../helpers/SafeERC20.sol";
 
 /**
@@ -56,26 +56,26 @@ contract OnboardingContract is
     struct ProposalDetails {
         bytes32 id;
         address tokenToMint;
-        uint256 amount;
-        uint256 sharesRequested;
+        uint160 amount;
+        uint88 sharesRequested;
         address token;
         address payable applicant;
         address payable proposer;
     }
 
     struct OnboardingDetails {
-        uint256 chunkSize;
-        uint256 numberOfChunks;
-        uint256 sharesPerChunk;
-        uint256 amount;
-        uint256 sharesRequested;
-        uint256 totalShares;
+        uint88 chunkSize;
+        uint88 numberOfChunks;
+        uint88 sharesPerChunk;
+        uint88 sharesRequested;
+        uint96 totalShares;
+        uint160 amount;
     }
 
     // proposals per dao
     mapping(address => mapping(bytes32 => ProposalDetails)) public proposals;
     // minted shares per dao, per token, per applicant
-    mapping(address => mapping(address => mapping(address => uint256)))
+    mapping(address => mapping(address => mapping(address => uint88)))
         public shares;
 
     function configKey(address tokenAddrToMint, bytes32 key)
@@ -94,9 +94,22 @@ contract OnboardingContract is
         uint256 maximumChunks,
         address tokenAddr
     ) external onlyAdapter(dao) {
-        require(chunkSize > 0, "chunkSize must be greater than 0");
-        require(maximumChunks > 0, "maximumChunks must be greater than 0");
-        require(sharesPerChunk > 0, "sharesPerChunk must be greater than 0");
+        require(
+            chunkSize > 0 && chunkSize < type(uint88).max,
+            "chunkSize::invalid"
+        );
+        require(
+            maximumChunks > 0 && maximumChunks < type(uint88).max,
+            "maximumChunks::invalid"
+        );
+        require(
+            sharesPerChunk > 0 && sharesPerChunk < type(uint88).max,
+            "sharesPerChunk::invalid"
+        );
+        require(
+            maximumChunks * sharesPerChunk < type(uint88).max,
+            "potential overflow"
+        );
 
         dao.setConfiguration(
             configKey(tokenAddrToMint, MaximumChunks),
@@ -117,56 +130,6 @@ contract OnboardingContract is
         bank.registerPotentialNewToken(tokenAddr);
     }
 
-    function _submitMembershipProposal(
-        DaoRegistry dao,
-        bytes32 proposalId,
-        address tokenToMint,
-        address payable applicant,
-        address payable proposer,
-        uint256 value,
-        address token
-    ) internal returns (uint256) {
-        OnboardingDetails memory details;
-        details.chunkSize = dao.getConfiguration(
-            configKey(tokenToMint, ChunkSize)
-        );
-        require(details.chunkSize > 0, "config chunkSize missing");
-
-        details.numberOfChunks = value / details.chunkSize;
-        require(details.numberOfChunks > 0, "not sufficient funds");
-
-        details.sharesPerChunk = dao.getConfiguration(
-            configKey(tokenToMint, SharesPerChunk)
-        );
-        require(details.sharesPerChunk > 0, "config sharesPerChunk missing");
-        details.amount = details.numberOfChunks * details.chunkSize;
-        details.sharesRequested =
-            details.numberOfChunks *
-            details.sharesPerChunk;
-        details.totalShares =
-            _getShares(address(dao), token, applicant) +
-            details.sharesRequested;
-
-        require(
-            details.totalShares / details.sharesPerChunk <
-                dao.getConfiguration(configKey(tokenToMint, MaximumChunks)),
-            "total shares for this member must be lower than the maximum"
-        );
-
-        _submitMembershipProposalInternal(
-            dao,
-            proposalId,
-            tokenToMint,
-            applicant,
-            proposer,
-            details.sharesRequested,
-            details.amount,
-            token
-        );
-
-        return details.amount;
-    }
-
     function onboard(
         DaoRegistry dao,
         bytes32 proposalId,
@@ -175,7 +138,7 @@ contract OnboardingContract is
         uint256 tokenAmount
     ) public payable override {
         require(
-            dao.isNotReservedAddress(applicant),
+            isNotReservedAddress(applicant),
             "applicant is reserved address"
         );
         address tokenAddr =
@@ -217,28 +180,6 @@ contract OnboardingContract is
         dao.updateDelegateKey(msg.sender, delegateKey);
     }
 
-    function _submitMembershipProposalInternal(
-        DaoRegistry dao,
-        bytes32 proposalId,
-        address tokenToMint,
-        address payable newMember,
-        address payable proposer,
-        uint256 sharesRequested,
-        uint256 amount,
-        address token
-    ) internal {
-        dao.submitProposal(proposalId);
-        proposals[address(dao)][proposalId] = ProposalDetails(
-            proposalId,
-            tokenToMint,
-            amount,
-            sharesRequested,
-            token,
-            newMember,
-            proposer
-        );
-    }
-
     function sponsorProposal(
         DaoRegistry dao,
         bytes32 proposalId,
@@ -254,17 +195,6 @@ contract OnboardingContract is
             );
 
         _sponsorProposal(dao, proposalId, data, sponsoredBy, votingContract);
-    }
-
-    function _sponsorProposal(
-        DaoRegistry dao,
-        bytes32 proposalId,
-        bytes memory data,
-        address sponsoredBy,
-        IVoting votingContract
-    ) internal {
-        dao.sponsorProposal(proposalId, sponsoredBy, address(votingContract));
-        votingContract.startNewVotingForProposal(dao, proposalId, data);
     }
 
     function cancelProposal(DaoRegistry dao, bytes32 proposalId)
@@ -373,12 +303,12 @@ contract OnboardingContract is
                     }
                 }
 
-                uint256 totalShares;
-                unchecked {
-                    totalShares =
-                        _getShares(daoAddress, tokenToMint, applicant) +
-                        proposal.sharesRequested;
-                }
+                uint88 totalShares;
+
+                totalShares =
+                    _getShares(daoAddress, tokenToMint, applicant) +
+                    proposal.sharesRequested;
+
                 // On overflow failure, totalShares is 0, then return tokens to the proposer.
                 if (totalShares == 0) {
                     _refundTribute(token, proposer, amount, "overflow:shares");
@@ -402,6 +332,91 @@ contract OnboardingContract is
         }
     }
 
+    function _submitMembershipProposal(
+        DaoRegistry dao,
+        bytes32 proposalId,
+        address tokenToMint,
+        address payable applicant,
+        address payable proposer,
+        uint256 value,
+        address token
+    ) internal returns (uint256) {
+        OnboardingDetails memory details;
+        details.chunkSize = uint88(
+            dao.getConfiguration(configKey(tokenToMint, ChunkSize))
+        );
+        require(details.chunkSize > 0, "config chunkSize missing");
+
+        details.numberOfChunks = uint88(value / details.chunkSize);
+        require(details.numberOfChunks > 0, "not sufficient funds");
+
+        details.sharesPerChunk = uint88(
+            dao.getConfiguration(configKey(tokenToMint, SharesPerChunk))
+        );
+
+        require(details.sharesPerChunk > 0, "config sharesPerChunk missing");
+        details.amount = details.numberOfChunks * details.chunkSize;
+        details.sharesRequested =
+            details.numberOfChunks *
+            details.sharesPerChunk;
+
+        details.totalShares =
+            _getShares(address(dao), token, applicant) +
+            details.sharesRequested;
+
+        require(
+            details.totalShares / details.sharesPerChunk <
+                dao.getConfiguration(configKey(tokenToMint, MaximumChunks)),
+            "total shares for this member must be lower than the maximum"
+        );
+
+        _submitMembershipProposalInternal(
+            dao,
+            proposalId,
+            tokenToMint,
+            applicant,
+            proposer,
+            details.sharesRequested,
+            details.amount,
+            token
+        );
+
+        return details.amount;
+    }
+
+    function _submitMembershipProposalInternal(
+        DaoRegistry dao,
+        bytes32 proposalId,
+        address tokenToMint,
+        address payable newMember,
+        address payable proposer,
+        uint88 sharesRequested,
+        uint160 amount,
+        address token
+    ) internal {
+        dao.submitProposal(proposalId);
+        proposals[address(dao)][proposalId] = ProposalDetails(
+            proposalId,
+            tokenToMint,
+            amount,
+            sharesRequested,
+            token,
+            newMember,
+            proposer
+        );
+    }
+
+    function _sponsorProposal(
+        DaoRegistry dao,
+        bytes32 proposalId,
+        bytes memory data,
+        address sponsoredBy,
+        IVoting votingContract
+    ) internal {
+        dao.sponsorProposal(proposalId, sponsoredBy, address(votingContract));
+        votingContract.startNewVotingForProposal(dao, proposalId, data);
+    }
+
     function _mintTokensToMember(
         DaoRegistry dao,
         address tokenToMint,
@@ -415,11 +430,6 @@ contract OnboardingContract is
         require(
             bank.isInternalToken(tokenToMint),
             "it can only mint internal tokens"
-        );
-
-        require(
-            !dao.getMemberFlag(memberAddr, DaoRegistry.MemberFlag.JAILED),
-            "cannot process jailed member"
         );
 
         dao.potentialNewMember(memberAddr);
@@ -442,7 +452,7 @@ contract OnboardingContract is
         address daoAddress,
         address token,
         address applicant
-    ) internal view returns (uint256) {
+    ) internal view returns (uint88) {
         return shares[daoAddress][token][applicant];
     }
 

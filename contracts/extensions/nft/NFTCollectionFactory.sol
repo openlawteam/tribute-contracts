@@ -2,7 +2,10 @@ pragma solidity ^0.8.0;
 
 // SPDX-License-Identifier: MIT
 
+import "../../core/DaoConstants.sol";
 import "../../core/DaoRegistry.sol";
+import "../../core/CloneFactory.sol";
+import "./NFT.sol";
 
 /**
 MIT License
@@ -28,13 +31,20 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
  */
 
-interface IGuildKick {
-    function submitKickProposal(
-        DaoRegistry dao,
-        bytes32 proposalId,
-        address memberToKick,
-        bytes calldata data
-    ) external;
+contract NFTCollectionFactory is CloneFactory, DaoConstants {
+    address public identityAddress;
 
-    function processProposal(DaoRegistry dao, bytes32 proposalId) external;
+    event NFTCollectionCreated(address nftCollAddress);
+
+    constructor(address _identityAddress) {
+        identityAddress = _identityAddress;
+    }
+
+    /**
+     * @notice Create and initialize a new Standard NFT Extension which is based on ERC712
+     */
+    function createNFTCollection() external {
+        NFTExtension extension = NFTExtension(_createClone(identityAddress));
+        emit NFTCollectionCreated(address(extension));
+    }
 }

@@ -91,9 +91,36 @@ module.exports = {
 
   // Set default mocha options here, use special reporters etc.
   mocha: {
-    // timeout: 100000
+    enableTimeouts: false,
+    useColors: true,
     reporter: "eth-gas-reporter",
-    reporterOptions: { excludeContracts: ["Migrations"] },
+    reporterOptions: {
+      excludeContracts: [
+        // Skip config contracts
+        "Migration",
+        // Skip Test Contracts
+        "test/OLToken",
+        "test/PixelNFT",
+        "test/TestFairShareCalc",
+        "test/TestToken1",
+        "test/TestToken2",
+        // Skip openzeppelin contracts
+        "ERC20", 
+        "IERC20", 
+        "ERC721",
+        "IERC721",
+        "IERC721Receiver",
+        "IERC721Enumerable",
+        "IERC721Metadata",
+        "Address",
+        "Context",
+        "Counters",
+        "Strings",
+        "ERC165",
+        "IERC165",
+        "EnumerableSet",
+      ],
+    },
   },
 
   // Configure your compilers

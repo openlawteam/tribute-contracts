@@ -39,6 +39,14 @@ interface ITribute {
         uint256 tributeAmount
     ) external;
 
+    function provideTributeNFT(
+        DaoRegistry dao,
+        bytes32 proposalId,
+        address nftAddr,
+        uint256 nftTokenId,
+        uint256 requestedShares
+    ) external;
+
     function sponsorProposal(
         DaoRegistry dao,
         bytes32 proposalId,

@@ -192,13 +192,6 @@ contract("MolochV3 - GuildKick Adapter", async (accounts) => {
     });
     await advanceTime(10000);
 
-    // Member must be active before the kick happens
-    let activeMember = await dao.isActiveMember(memberToKick, {
-      from: member,
-      gasPrice: toBN("0"),
-    });
-    assert.equal(activeMember.toString(), "true");
-
     await guildkickContract.processProposal(dao.address, kickProposalId, {
       from: member,
       gasPrice: toBN("0"),
@@ -208,14 +201,7 @@ contract("MolochV3 - GuildKick Adapter", async (accounts) => {
     shares = await bank.balanceOf(newMember, SHARES);
     assert.equal(shares.toString(), "0");
     loot = await bank.balanceOf(newMember, LOOT);
-    assert.equal(loot.toString(), "10000000000000000");
-
-    // Member must be inactive after the kick has happened
-    activeMember = await dao.isActiveMember(memberToKick, {
-      from: member,
-      gasPrice: toBN("0"),
-    });
-    assert.equal(activeMember.toString(), "false");
+    assert.equal(loot.toString(), "0");
   });
 
   it("should not be possible for a non-member to submit a guild kick proposal", async () => {
@@ -566,11 +552,6 @@ contract("MolochV3 - GuildKick Adapter", async (accounts) => {
 
     // Member must be inactive after the kick has happened
     let kickedMember = memberToKick;
-    let activeMember = await dao.isActiveMember(kickedMember, {
-      from: member,
-      gasPrice: toBN("0"),
-    });
-    assert.equal(activeMember.toString(), "false");
 
     // Submit proposal to onboard new member
     let newMemberB = accounts[3];
@@ -642,11 +623,6 @@ contract("MolochV3 - GuildKick Adapter", async (accounts) => {
 
     // Member must be inactive after the kick has happened
     let kickedMember = memberToKick;
-    let activeMember = await dao.isActiveMember(kickedMember, {
-      from: member,
-      gasPrice: toBN("0"),
-    });
-    assert.equal(activeMember.toString(), "false");
 
     // Submit proposal to onboard new member
     let newMemberB = accounts[3];
@@ -721,11 +697,6 @@ contract("MolochV3 - GuildKick Adapter", async (accounts) => {
 
     // Member must be inactive after the kick has happened
     let kickedMember = memberToKick;
-    let activeMember = await dao.isActiveMember(kickedMember, {
-      from: member,
-      gasPrice: toBN("0"),
-    });
-    assert.equal(activeMember.toString(), "false");
 
     // Create Financing Request, the kicked member is the applicant and it is fine for now
     let requestedAmount = toBN(50000);
@@ -796,11 +767,6 @@ contract("MolochV3 - GuildKick Adapter", async (accounts) => {
 
     // Member must be inactive after the kick has happened
     let kickedMember = memberToKick;
-    let activeMember = await dao.isActiveMember(kickedMember, {
-      from: member,
-      gasPrice: toBN("0"),
-    });
-    assert.equal(activeMember.toString(), "false");
 
     //Submit a new Bank adapter proposal
     let newAdapterId = sha3("onboarding");
@@ -868,11 +834,7 @@ contract("MolochV3 - GuildKick Adapter", async (accounts) => {
 
     // Member must be inactive after the kick has happened
     let kickedMember = memberToKick;
-    let activeMember = await dao.isActiveMember(kickedMember, {
-      from: member,
-      gasPrice: toBN("0"),
-    });
-    assert.equal(activeMember.toString(), "false");
+
     const proposalId = "0x" + proposalCounter++;
     //Submit a new Bank adapter proposal
     let newadapterId = sha3("onboarding");
@@ -944,33 +906,14 @@ contract("MolochV3 - GuildKick Adapter", async (accounts) => {
       gasPrice: toBN("0"),
     });
 
-    // Member must be inactive after the kick has happened
-    let activeMember = await dao.isActiveMember(memberToKick, {
-      from: member,
-      gasPrice: toBN("0"),
-    });
-    assert.equal(activeMember.toString(), "false");
-
-    // Check Members Bank Balance in LOOT before the ragekick is triggered by a DAO member
-    let memberEthToken = await bank.balanceOf(memberToKick, ETH_TOKEN);
-    assert.equal(memberEthToken.toString(), "0");
-    let memberLoot = await bank.balanceOf(memberToKick, LOOT);
-    assert.equal(memberLoot.toString(), "10000000000000000");
-
-    // Process guild kick to remove the voting power of the kicked member
-    await guildkickContract.rageKick(dao.address, {
-      from: member,
-      gasPrice: toBN("0"),
-    });
-
     // The kicked member should not have LOOT & SHARES anymore
-    memberLoot = await bank.balanceOf(memberToKick, LOOT);
+    let memberLoot = await bank.balanceOf(memberToKick, LOOT);
     assert.equal(memberLoot.toString(), "0");
     let memberShares = await bank.balanceOf(memberToKick, SHARES);
     assert.equal(memberShares.toString(), "0");
 
     // The kicked member must receive the funds in ETH_TOKEN after the ragekick was triggered by a DAO member
-    memberEthToken = await bank.balanceOf(memberToKick, ETH_TOKEN);
+    let memberEthToken = await bank.balanceOf(memberToKick, ETH_TOKEN);
     assert.equal(memberEthToken.toString(), "1199999999999999880");
   });
 
@@ -1017,12 +960,6 @@ contract("MolochV3 - GuildKick Adapter", async (accounts) => {
       from: member,
       gasPrice: toBN("0"),
     });
-
-    // Process guild kick to remove the voting power of the kicked member
-    await guildkickContract.rageKick(dao.address, {
-      from: member,
-      gasPrice: toBN("0"),
-    });
   });
 
   it("should not be possible to submit a guild kick to kick yourself", async () => {
@@ -1039,69 +976,7 @@ contract("MolochV3 - GuildKick Adapter", async (accounts) => {
     let memberToKick = member;
     await expectRevert(
       guildKickProposal(dao, guildkickContract, memberToKick, member),
-      "you can not kick yourself"
-    );
-  });
-
-  it("should not be possible to execute more than one kick at time", async () => {
-    const memberA = accounts[1];
-    const memberB = accounts[3];
-    const memberC = accounts[5];
-
-    let dao = await createDao(memberA);
-    const onboarding = await getContract(dao, "onboarding", OnboardingContract);
-    const voting = await getContract(dao, "voting", VotingContract);
-    const guildkickContract = await getContract(
-      dao,
-      "guildkick",
-      GuildKickContract
-    );
-    await onboardingNewMember(
-      dao,
-      onboarding,
-      voting,
-      memberB,
-      memberA,
-      sharePrice,
-      SHARES
-    );
-    await onboardingNewMember(
-      dao,
-      onboarding,
-      voting,
-      memberC,
-      memberA,
-      sharePrice,
-      SHARES
-    );
-
-    // Submit the first guild kick with proposalId 0x1
-    let p1 = await guildKickProposal(dao, guildkickContract, memberB, memberA);
-    let p2 = await guildKickProposal(dao, guildkickContract, memberC, memberA);
-
-    await voting.submitVote(dao.address, p1.kickProposalId, 1, {
-      from: memberA,
-      gasPrice: toBN("0"),
-    });
-
-    await voting.submitVote(dao.address, p2.kickProposalId, 1, {
-      from: memberA,
-      gasPrice: toBN("0"),
-    });
-    await advanceTime(10000);
-
-    await guildkickContract.processProposal(dao.address, p1.kickProposalId, {
-      from: memberA,
-      gasPrice: toBN("0"),
-    });
-
-    // Submit the first guild kick with proposalId 0x1
-    await expectRevert(
-      guildkickContract.processProposal(dao.address, p2.kickProposalId, {
-        from: memberA,
-        gasPrice: toBN("0"),
-      }),
-      "another kick already in progress"
+      "use ragequit"
     );
   });
 

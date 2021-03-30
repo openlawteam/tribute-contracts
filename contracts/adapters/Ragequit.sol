@@ -55,7 +55,6 @@ contract RagequitContract is IRagequit, DaoConstants {
      * @notice Anyone is allowed to call this function, but only members and advisors that have shares are able to execute the entire ragequit process.
      * @notice The array of token needs to be sorted in ascending order before executing this call, otherwise the transaction will fail.
      * @dev The sum of sharesToBurn and lootToBurn have to be greater than zero.
-     * @dev The member can not be in jail to execute a ragequit.
      * @dev The member becomes an inactive member of the DAO once all the shares/loot are burned.
      * @dev If the member provides an invalid/not allowed token, the entire processed is reverted.
      * @dev If no tokens are informed, the transaction is reverted.
@@ -76,12 +75,6 @@ contract RagequitContract is IRagequit, DaoConstants {
         require(sharesToBurn + lootToBurn > 0, "insufficient shares/loot");
         // Gets the delegated address, otherwise returns the sender address.
         address memberAddr = dao.getAddressIfDelegated(msg.sender);
-
-        // Checks if the member is not in jail
-        require(
-            !dao.getMemberFlag(memberAddr, DaoRegistry.MemberFlag.JAILED),
-            "jailed member can not ragequit"
-        );
 
         // Instantiates the Bank extension to handle the internal balance checks and transfers.
         BankExtension bank = BankExtension(dao.getExtensionAddress(BANK));
@@ -119,9 +112,7 @@ contract RagequitContract is IRagequit, DaoConstants {
         // it considers the locked loot to be able to calculate the fair amount to ragequit,
         // but locked loot can not be burned.
         uint256 initialTotalSharesAndLoot =
-            bank.balanceOf(TOTAL, SHARES) +
-                bank.balanceOf(TOTAL, LOOT) +
-                bank.balanceOf(TOTAL, LOCKED_LOOT);
+            bank.balanceOf(TOTAL, SHARES) + bank.balanceOf(TOTAL, LOOT);
 
         // Burns / subtracts from member's balance the number of shares to burn.
         bank.subtractFromBalance(memberAddr, SHARES, sharesToBurn);

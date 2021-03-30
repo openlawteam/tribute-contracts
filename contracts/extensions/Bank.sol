@@ -7,7 +7,7 @@ import "../core/DaoRegistry.sol";
 import "./IExtension.sol";
 import "../guards/AdapterGuard.sol";
 import "../utils/IERC20.sol";
-import "../helpers/AddressLib.sol";
+import "@openzeppelin/contracts/utils/Address.sol";
 import "../helpers/SafeERC20.sol";
 
 /**
@@ -237,19 +237,6 @@ contract BankExtension is DaoConstants, AdapterGuard, IExtension {
     /**
      * Public read-only functions
      */
-
-    /**
-     * @return Whether or not a given address is reserved
-     * @dev Returns false if applicant address is one of the constants GUILD or TOTAL
-     * @param applicant The address to check
-     */
-    function isNotReservedAddress(address applicant)
-        public
-        pure
-        returns (bool)
-    {
-        return applicant != GUILD && applicant != TOTAL;
-    }
 
     /**
      * Internal bookkeeping
