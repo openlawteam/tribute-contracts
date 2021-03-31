@@ -146,6 +146,15 @@ contract DaoRegistry is MemberGuard, AdapterGuard {
     mapping(bytes32 => uint256) public mainConfiguration;
     mapping(bytes32 => address) public addressConfiguration;
 
+    bytes32 public currentProposal;
+
+    modifier proposalLock(bytes32 _cp) {
+        require(currentProposal == bytes32(0x0), "proposal lock");
+        currentProposal = _cp;
+        _;
+        currentProposal = bytes32(0x0);
+    }
+
     /// @notice Clonable contract must have an empty constructor
     // constructor() {
     // }
@@ -427,6 +436,7 @@ contract DaoRegistry is MemberGuard, AdapterGuard {
     function submitProposal(bytes32 proposalId)
         public
         hasAccess(this, AclFlag.SUBMIT_PROPOSAL)
+        proposalLock(proposalId)
     {
         require(proposalId != bytes32(0), "invalid proposalId");
         require(
@@ -478,6 +488,7 @@ contract DaoRegistry is MemberGuard, AdapterGuard {
     function processProposal(bytes32 proposalId)
         external
         hasAccess(this, AclFlag.PROCESS_PROPOSAL)
+        proposalLock(proposalId)
     {
         Proposal storage proposal =
             _setProposalFlag(proposalId, ProposalFlag.PROCESSED);

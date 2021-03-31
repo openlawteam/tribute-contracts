@@ -303,24 +303,10 @@ contract OnboardingContract is
                     }
                 }
 
-                uint88 totalShares;
-
-                totalShares =
+                uint88 totalShares =
                     _getShares(daoAddress, tokenToMint, applicant) +
-                    proposal.sharesRequested;
-
-                // On overflow failure, totalShares is 0, then return tokens to the proposer.
-                if (totalShares == 0) {
-                    _refundTribute(token, proposer, amount, "overflow:shares");
-                    // Remove the minted tokens
-                    bank.subtractFromBalance(
-                        applicant,
-                        tokenToMint,
-                        sharesRequested
-                    );
-                } else {
-                    shares[daoAddress][tokenToMint][applicant] = totalShares;
-                }
+                        proposal.sharesRequested;
+                shares[daoAddress][tokenToMint][applicant] = totalShares;
             }
         } else if (
             voteResult == IVoting.VotingState.NOT_PASS ||
@@ -340,7 +326,7 @@ contract OnboardingContract is
         address payable proposer,
         uint256 value,
         address token
-    ) internal returns (uint256) {
+    ) internal returns (uint160) {
         OnboardingDetails memory details;
         details.chunkSize = uint88(
             dao.getConfiguration(configKey(tokenToMint, ChunkSize))

@@ -53,6 +53,11 @@ contract BankExtension is DaoConstants, AdapterGuard, IExtension {
         REGISTER_NEW_INTERNAL_TOKEN
     }
 
+    modifier noProposal {
+        require(dao.currentProposal() == bytes32(0x0), "proposal lock");
+        _;
+    }
+
     /// @dev - Events for Bank
     event NewBalance(address member, address tokenAddr, uint160 amount);
 
@@ -208,7 +213,7 @@ contract BankExtension is DaoConstants, AdapterGuard, IExtension {
         }
     }
 
-    function updateToken(address tokenAddr) external {
+    function updateToken(address tokenAddr) external noProposal {
         require(isTokenAllowed(tokenAddr), "token not allowed");
         uint256 totalBalance = balanceOf(TOTAL, tokenAddr);
 
