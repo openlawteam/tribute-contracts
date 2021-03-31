@@ -33,6 +33,7 @@ const toWei = Web3Utils.toWei;
 const fromUtf8 = Web3Utils.fromUtf8;
 const toAscii = Web3Utils.toAscii;
 const fromAscii = Web3Utils.fromAscii;
+const toUtf8 = Web3Utils.toUtf8;
 
 const GUILD = "0x000000000000000000000000000000000000dead";
 const TOTAL = "0x000000000000000000000000000000000000babe";
@@ -315,6 +316,7 @@ const configureDao = async (
     }),
     entryBank(onboarding, {
       ADD_TO_BALANCE: true,
+      SUB_FROM_BALANCE: true,
     }),
     entryBank(couponOnboarding, {
       ADD_TO_BALANCE: true,
@@ -325,6 +327,7 @@ const configureDao = async (
     }),
     entryBank(tribute, {
       ADD_TO_BALANCE: true,
+      SUB_FROM_BALANCE: true,
       REGISTER_NEW_TOKEN: true,
     }),
     entryBank(distribute, {
@@ -692,6 +695,7 @@ module.exports = {
   fromUtf8,
   toAscii,
   fromAscii,
+  toUtf8,
   maximumChunks,
   GUILD,
   TOTAL,

@@ -213,9 +213,10 @@ The reason we revert here is to avoid the need to check everywhere that the retu
 Creates a proposal entry for the DAO.
 It checks that the proposal was not previously created.
 
-### function sponsorProposal(bytes32 proposalId, address sponsoringMember)
+### function sponsorProposal(bytes32 proposalId, address sponsoringMember, address votingAdapterAddress)
 
 Marks an existing proposal as sponsored.
+saves which voting adapter is being used for this proposal.
 Checks that the proposal has not been sponsored yet.
 Checks that the proposal exists.
 Checks that the adapter that sponsors the proposal is the one that submitted it.

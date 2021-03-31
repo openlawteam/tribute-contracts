@@ -41,6 +41,8 @@ contract TributeContract is ITribute, DaoConstants, MemberGuard, AdapterGuard {
     using Address for address;
     using SafeERC20 for IERC20;
 
+    event FailedOnboarding(address applicant, bytes32 cause);
+
     struct ProposalDetails {
         // The proposal id.
         bytes32 id;
@@ -119,8 +121,8 @@ contract TributeContract is ITribute, DaoConstants, MemberGuard, AdapterGuard {
             isNotReservedAddress(applicant),
             "applicant is reserved address"
         );
-        IERC20 token = IERC20(tokenAddr);
-        token.safeTransferFrom(msg.sender, address(this), tributeAmount);
+        IERC20 erc20 = IERC20(tokenAddr);
+        erc20.safeTransferFrom(msg.sender, address(this), tributeAmount);
 
         _submitTributeProposal(
             dao,
@@ -173,7 +175,7 @@ contract TributeContract is ITribute, DaoConstants, MemberGuard, AdapterGuard {
         address sponsoredBy,
         IVoting votingContract
     ) internal {
-        dao.sponsorProposal(proposalId, sponsoredBy);
+        dao.sponsorProposal(proposalId, sponsoredBy, address(votingContract));
         votingContract.startNewVotingForProposal(dao, proposalId, data);
     }
 
@@ -208,7 +210,8 @@ contract TributeContract is ITribute, DaoConstants, MemberGuard, AdapterGuard {
         _refundTribute(
             proposal.token,
             proposal.proposer,
-            proposal.tributeAmount
+            proposal.tributeAmount,
+            "canceled"
         );
     }
 
@@ -235,40 +238,59 @@ contract TributeContract is ITribute, DaoConstants, MemberGuard, AdapterGuard {
             "proposal already processed"
         );
 
-        IVoting votingContract = IVoting(dao.getAdapterAddress(VOTING));
+        IVoting votingContract = IVoting(dao.votingAdapter(proposalId));
+        require(address(votingContract) != address(0), "adapter not found");
+
         IVoting.VotingState voteResult =
             votingContract.voteResult(dao, proposalId);
 
         dao.processProposal(proposalId);
 
+        address token = proposal.token;
+        address proposer = proposal.proposer;
+        uint256 tributeAmount = proposal.tributeAmount;
         if (voteResult == IVoting.VotingState.PASS) {
             BankExtension bank = BankExtension(dao.getExtensionAddress(BANK));
-            _mintTokensToMember(
-                dao,
-                proposal.applicant,
-                proposal.proposer,
-                proposal.tokenToMint,
-                proposal.requestAmount,
-                proposal.token,
-                proposal.tributeAmount
-            );
-
-            address token = proposal.token;
-            if (!bank.isTokenAllowed(token)) {
-                bank.registerPotentialNewToken(token);
+            address tokenToMint = proposal.tokenToMint;
+            address applicant = proposal.applicant;
+            bool success =
+                _mintTokensToMember(
+                    dao,
+                    applicant,
+                    proposer,
+                    tokenToMint,
+                    proposal.requestAmount,
+                    token,
+                    tributeAmount
+                );
+            if (success) {
+                if (!bank.isTokenAllowed(token)) {
+                    bank.registerPotentialNewToken(token);
+                }
+                // On overflow failure, totalShares is 0, then return tokens to the proposer.
+                try bank.addToBalance(GUILD, token, tributeAmount) {
+                    IERC20 erc20 = IERC20(token);
+                    erc20.safeTransfer(address(bank), tributeAmount);
+                } catch {
+                    _refundTribute(
+                        token,
+                        proposer,
+                        tributeAmount,
+                        "overflow:erc20"
+                    );
+                    // Remove the minted tokens
+                    bank.subtractFromBalance(
+                        applicant,
+                        token,
+                        proposal.requestAmount
+                    );
+                }
             }
-            bank.addToBalance(GUILD, token, proposal.tributeAmount);
-            IERC20 erc20 = IERC20(token);
-            erc20.safeTransfer(address(bank), proposal.tributeAmount);
         } else if (
             voteResult == IVoting.VotingState.NOT_PASS ||
             voteResult == IVoting.VotingState.TIE
         ) {
-            _refundTribute(
-                proposal.token,
-                proposal.proposer,
-                proposal.tributeAmount
-            );
+            _refundTribute(token, proposer, tributeAmount, "voting:fail");
         } else {
             revert("proposal has not been voted on yet");
         }
@@ -317,10 +339,12 @@ contract TributeContract is ITribute, DaoConstants, MemberGuard, AdapterGuard {
     function _refundTribute(
         address tokenAddr,
         address proposer,
-        uint256 amount
+        uint256 amount,
+        bytes32 cause
     ) internal {
-        IERC20 token = IERC20(tokenAddr);
-        token.safeTransfer(proposer, amount);
+        IERC20 erc20 = IERC20(tokenAddr);
+        erc20.safeTransfer(proposer, amount);
+        emit FailedOnboarding(proposer, cause);
     }
 
     /**
@@ -342,7 +366,7 @@ contract TributeContract is ITribute, DaoConstants, MemberGuard, AdapterGuard {
         uint256 requestAmount,
         address token,
         uint256 tributeAmount
-    ) internal {
+    ) internal returns (bool) {
         BankExtension bank = BankExtension(dao.getExtensionAddress(BANK));
         require(
             bank.isInternalToken(tokenToMint),
@@ -354,9 +378,10 @@ contract TributeContract is ITribute, DaoConstants, MemberGuard, AdapterGuard {
         // Overflow risk may cause this to fail in which case the tribute tokens
         // are refunded to the proposer.
         try bank.addToBalance(applicant, tokenToMint, requestAmount) {
-            // do nothing
+            return true;
         } catch {
-            _refundTribute(token, proposer, tributeAmount);
+            _refundTribute(token, proposer, tributeAmount, "overflow:mint");
+            return false;
         }
     }
 }

@@ -156,7 +156,7 @@ contract DistributeContract is IDistribute, DaoConstants, MemberGuard {
         votingContract.startNewVotingForProposal(dao, proposalId, data);
 
         // Sponsors the proposal.
-        dao.sponsorProposal(proposalId, submittedBy);
+        dao.sponsorProposal(proposalId, submittedBy, address(votingContract));
     }
 
     /**
@@ -192,7 +192,9 @@ contract DistributeContract is IDistribute, DaoConstants, MemberGuard {
         );
 
         // Checks if the proposal has passed.
-        IVoting votingContract = IVoting(dao.getAdapterAddress(VOTING));
+        IVoting votingContract = IVoting(dao.votingAdapter(proposalId));
+        require(address(votingContract) != address(0), "adapter not found");
+
         IVoting.VotingState voteResult =
             votingContract.voteResult(dao, proposalId);
         if (voteResult == IVoting.VotingState.PASS) {

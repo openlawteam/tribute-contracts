@@ -584,7 +584,7 @@ contract OffchainVotingContract is
         bytes32 proposalId,
         address sponsoredBy
     ) external onlyBadReporterAdapter {
-        dao.sponsorProposal(proposalId, sponsoredBy);
+        dao.sponsorProposal(proposalId, sponsoredBy, address(this));
     }
 
     function processChallengeProposal(DaoRegistry dao, bytes32 proposalId)
