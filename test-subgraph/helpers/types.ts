@@ -13,5 +13,5 @@ interface DaoType {
 }
 
 export interface SubgraphResponseDaoType {
-  molochv3S: DaoType;
+  tributes: DaoType;
 }

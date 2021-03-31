@@ -1,5 +1,5 @@
 {
-  "name": "molochv3-contracts",
+  "name": "tribute-contracts",
   "version": "0.0.1",
   "description": "",
   "main": "truffle-config.js",
@@ -52,23 +52,23 @@
     "coverage": "truffle run coverage --network coverage",
     "lint:fix": "prettier --write 'contracts/**/*.sol' 'test/**/*.test.js' '**/*.md'",
     "lint": "prettier --list-different 'contracts/**/*.sol' 'test/**/*.test.js' '**/*.md'",
-    "create": "graph create openlawteam/molochv3-graph --node https://api.thegraph.com/deploy/",
-    "create-local": "graph create openlawteam/molochv3-graph --node http://127.0.0.1:8020",
+    "create": "graph create openlawteam/tribute --node https://api.thegraph.com/deploy/",
+    "create-local": "graph create openlawteam/tribute --node http://127.0.0.1:8020",
     "codegen": "graph codegen",
     "build": "graph build",
-    "deploy": "graph deploy openlawteam/molochv3-graph --ipfs https://api.thegraph.com/ipfs/ --node https://api.thegraph.com/deploy/",
-    "deploy-local": "graph deploy openlawteam/molochv3-graph --ipfs http://localhost:5001 --node http://127.0.0.1:8020",
+    "deploy": "graph deploy openlawteam/tribute --ipfs https://api.thegraph.com/ipfs/ --node https://api.thegraph.com/deploy/",
+    "deploy-local": "graph deploy openlawteam/tribute --ipfs http://localhost:5001 --node http://127.0.0.1:8020",
     "compile-abi": "truffle compile && truffle-abi",
     "ganache": "node_modules/.bin/ganache-cli -s=test -g=0 --secure -u 0 -u 1 -p 8545 --networkId 1337"
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/openlawteam/molochv3-contracts.git"
+    "url": "git+https://github.com/openlawteam/tribute-contracts.git"
   },
   "author": "",
   "license": "ISC",
   "bugs": {
-    "url": "https://github.com/openlawteam/molochv3-contracts/issues"
+    "url": "https://github.com/openlawteam/tribute-contracts/issues"
   },
-  "homepage": "https://github.com/openlawteam/molochv3-contracts#readme"
+  "homepage": "https://github.com/openlawteam/tribute-contracts#readme"
 }

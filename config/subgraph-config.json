@@ -1,0 +1,11 @@
+[
+  {
+    "network": "mainnet",
+    "daoFactoryAddress": "0xFCc30f42843d0848Dc91B1187A1cB1357D671366",
+    "daoFactoryStartBlock": 5,
+    "bankFactoryAddress": "0x439A479e8A567A83392961bC6d026Ea99368cD8F",
+    "bankFactoryStartBlock": 8,
+    "GITHUB_USERNAME": "openlawteam",
+    "SUBGRAPH_NAME": "tribute-dev"
+  }
+]
