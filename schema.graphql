@@ -60,6 +60,8 @@ type Proposal @entity {
   adapterId: Bytes
   "Adapter contract address of the proposal"
   adapterAddress: Bytes
+  "Voting adapter address"
+  votingAdapter: Bytes
 
   # onboarding; proposal details
   tokenToMint: Bytes

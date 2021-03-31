@@ -94,6 +94,7 @@ export function handleSponsoredProposal(event: SponsoredProposal): void {
   proposal.sponsoredAt = sponsoredAt;
   proposal.sponsored = true;
   proposal.sponsoredBy = event.transaction.from;
+  proposal.votingAdapter = event.params.votingAdapter;
 
   proposal.save();
 }
