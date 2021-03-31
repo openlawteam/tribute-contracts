@@ -385,7 +385,8 @@ contract DaoRegistry is MemberGuard, AdapterGuard {
         address extensionAddress,
         uint8 flag
     ) public view returns (bool) {
-        return isAdapter(adapterAddress) && 
+        return
+            isAdapter(adapterAddress) &&
             getFlag(
                 inverseExtensions[extensionAddress].acl[adapterAddress],
                 uint8(flag)
