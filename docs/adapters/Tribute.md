@@ -26,7 +26,7 @@ A DAO Bank extension must exist and be configured with proper access for this ad
 
 The DAO internal tokens to be minted to the applicant must be registered with the DAO Bank.
 
-DAORegistry Access Flags: `SUBMIT_PROPOSAL`, `SPONSOR_PROPOSAL`, `PROCESS_PROPOSAL`, `NEW_MEMBER`.
+DAORegistry Access Flags: `SUBMIT_PROPOSAL`, `NEW_MEMBER`.
 
 Bank Extension Access Flags: `ADD_TO_BALANCE`, `REGISTER_NEW_TOKEN`, `SUB_FROM_BALANCE`.
 

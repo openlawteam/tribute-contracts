@@ -27,7 +27,7 @@ Once the voting period ends, only a member can process the proposal. The proposa
 
 ## Adapter configuration
 
-DAORegistry Access Flags: `SUBMIT_PROPOSAL`, `PROCESS_PROPOSAL`, `SPONSOR_PROPOSAL`, `REPLACE_ADAPTER`.
+DAORegistry Access Flags: `SUBMIT_PROPOSAL`, `REPLACE_ADAPTER`.
 
 ## Adapter state
 

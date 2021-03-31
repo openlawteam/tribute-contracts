@@ -238,38 +238,26 @@ const configureDao = async (
     entryDao("voting", voting, {}),
     entryDao("configuration", configuration, {
       SUBMIT_PROPOSAL: true,
-      PROCESS_PROPOSAL: true,
-      SPONSOR_PROPOSAL: true,
       SET_CONFIGURATION: true,
     }),
     entryDao("ragequit", ragequit, {}),
     entryDao("guildkick", guildkick, {
-      SUBMIT_PROPOSAL: true,
-      SPONSOR_PROPOSAL: true,
-      PROCESS_PROPOSAL: true
+      SUBMIT_PROPOSAL: true
     }),
     entryDao("managing", managing, {
       SUBMIT_PROPOSAL: true,
-      PROCESS_PROPOSAL: true,
-      SPONSOR_PROPOSAL: true,
       REPLACE_ADAPTER: true,
     }),
     entryDao("financing", financing, {
       SUBMIT_PROPOSAL: true,
-      SPONSOR_PROPOSAL: true,
-      PROCESS_PROPOSAL: true,
     }),
     entryDao("onboarding", onboarding, {
       SUBMIT_PROPOSAL: true,
-      SPONSOR_PROPOSAL: true,
-      PROCESS_PROPOSAL: true,
       UPDATE_DELEGATE_KEY: true,
       NEW_MEMBER: true,
     }),
     entryDao("coupon-onboarding", couponOnboarding, {
       SUBMIT_PROPOSAL: false,
-      SPONSOR_PROPOSAL: false,
-      PROCESS_PROPOSAL: false,
       ADD_TO_BALANCE: true,
       UPDATE_DELEGATE_KEY: false,
       NEW_MEMBER: true,
@@ -277,21 +265,15 @@ const configureDao = async (
     entryDao("withdraw", withdraw, {}),
     entryDao("tribute", tribute, {
       SUBMIT_PROPOSAL: true,
-      SPONSOR_PROPOSAL: true,
-      PROCESS_PROPOSAL: true,
       NEW_MEMBER: true,
     }),
     entryDao("tribute-nft", tributeNFT, {
       SUBMIT_PROPOSAL: true,
-      SPONSOR_PROPOSAL: true,
-      PROCESS_PROPOSAL: true,
       NEW_MEMBER: true,
       TRANSFER_NFT: true,
     }),
     entryDao("distribute", distribute, {
-      SUBMIT_PROPOSAL: true,
-      SPONSOR_PROPOSAL: true,
-      PROCESS_PROPOSAL: true,
+      SUBMIT_PROPOSAL: true
     }),
   ]);
 
@@ -650,8 +632,6 @@ const entryDao = (name, contract, flags) => {
   const values = [
     flags.REPLACE_ADAPTER,
     flags.SUBMIT_PROPOSAL,
-    flags.SPONSOR_PROPOSAL,
-    flags.PROCESS_PROPOSAL,
     flags.UPDATE_DELEGATE_KEY,
     flags.SET_CONFIGURATION,
     flags.ADD_EXTENSION,

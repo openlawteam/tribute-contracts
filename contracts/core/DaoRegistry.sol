@@ -69,8 +69,6 @@ contract DaoRegistry is MemberGuard, AdapterGuard {
     enum AclFlag {
         REPLACE_ADAPTER,
         SUBMIT_PROPOSAL,
-        SPONSOR_PROPOSAL,
-        PROCESS_PROPOSAL,
         UPDATE_DELEGATE_KEY,
         SET_CONFIGURATION,
         ADD_EXTENSION,
@@ -447,11 +445,7 @@ contract DaoRegistry is MemberGuard, AdapterGuard {
         bytes32 proposalId,
         address sponsoringMember,
         address votingAdapterAddr
-    )
-        external
-        hasAccess(this, AclFlag.SPONSOR_PROPOSAL)
-        onlyMember2(this, sponsoringMember)
-    {
+    ) external onlyMember2(this, sponsoringMember) {
         // also checks if the flag was already set
         Proposal storage proposal =
             _setProposalFlag(proposalId, ProposalFlag.SPONSORED);
@@ -475,12 +469,11 @@ contract DaoRegistry is MemberGuard, AdapterGuard {
      * @notice Mark a proposal as processed in the DAO registry
      * @param proposalId The ID of the proposal that is being processed
      */
-    function processProposal(bytes32 proposalId)
-        external
-        hasAccess(this, AclFlag.PROCESS_PROPOSAL)
-    {
+    function processProposal(bytes32 proposalId) external {
         Proposal storage proposal =
             _setProposalFlag(proposalId, ProposalFlag.PROCESSED);
+
+        require(proposal.adapterAddress == msg.sender, "err::adapter mismatch");
         uint256 flags = proposal.flags;
 
         emit ProcessedProposal(proposalId, flags);

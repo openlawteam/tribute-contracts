@@ -309,8 +309,6 @@ contract("MolochV3 - Managing Adapter", async (accounts) => {
     const proposalId = "0x1";
     const { flags } = entryDao("managing", newManaging, {
       SUBMIT_PROPOSAL: true,
-      PROCESS_PROPOSAL: true,
-      SPONSOR_PROPOSAL: true,
       REPLACE_ADAPTER: true,
     });
     await managing.submitProposal(

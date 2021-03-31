@@ -26,7 +26,7 @@ If it has failed, the money is returned to the proposer.
 
 Each configuration is done based on the token address that needs to be minted.
 
-DAORegistry Access Flags: `SUBMIT_PROPOSAL`, `SPONSOR_PROPOSAL`, `PROCESS_PROPOSAL`, `UPDATE_DELEGATE_KEY`, `NEW_MEMBER`.
+DAORegistry Access Flags: `SUBMIT_PROPOSAL`, `UPDATE_DELEGATE_KEY`, `NEW_MEMBER`.
 
 Bank Extension Access Flags: `ADD_TO_BALANCE`, `SUB_FROM_BALANCE`.
 
