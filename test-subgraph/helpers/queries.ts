@@ -1,6 +1,6 @@
 export const queryDaoByName = (name: string) => `
   {
-      molochv3S(name: "${name}") {
+      tributes(name: "${name}") {
         id
         name
       }

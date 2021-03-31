@@ -17,7 +17,7 @@ import {
   Extension,
   Proposal,
   Member,
-  Molochv3,
+  TributeDao,
 } from "../generated/schema";
 import { BANK_EXTENSION_ID } from "./helpers/constants";
 import { getProposalDetails } from "./helpers/proposal-details";
@@ -94,6 +94,7 @@ export function handleSponsoredProposal(event: SponsoredProposal): void {
   proposal.sponsoredAt = sponsoredAt;
   proposal.sponsored = true;
   proposal.sponsoredBy = event.transaction.from;
+  proposal.votingAdapter = event.params.votingAdapter;
 
   proposal.save();
 }
@@ -161,7 +162,7 @@ export function handleAdapterAdded(event: AdapterAdded): void {
     adapter.adapterAddress = event.params.adapterAddress;
 
     // create 1-1 relationship with adapter and its dao
-    adapter.molochv3 = daoAddress;
+    adapter.tributedao = daoAddress;
 
     adapter.save();
   }
@@ -204,10 +205,10 @@ export function handleExtensionAdded(event: ExtensionAdded): void {
 
   // if extension is `bank` then assign to its dao
   if (BANK_EXTENSION_ID.toString() == event.params.extensionId.toHexString()) {
-    let molochv3 = Molochv3.load(daoAddress);
+    let tribute = TributeDao.load(daoAddress);
 
-    molochv3.bankAddress = event.params.extensionAddress;
-    molochv3.save();
+    tribute.bankAddress = event.params.extensionAddress;
+    tribute.save();
   }
 
   if (extension == null) {
@@ -218,7 +219,7 @@ export function handleExtensionAdded(event: ExtensionAdded): void {
   extension.extensionId = event.params.extensionId;
 
   // create 1-1 relationship with extensions and its dao
-  extension.molochv3 = daoAddress;
+  extension.tributedao = daoAddress;
   extension.save();
 }
 

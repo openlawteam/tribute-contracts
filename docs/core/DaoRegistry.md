@@ -41,7 +41,7 @@ The DaoRegistry.sol contract tracks the state of the DAO for 1) Adapter and Exte
     Events for Proposals - The proposal order follows Moloch v2, in 1) a proposal is submitted, 2) then it sponsored by a member, and 3) after a proposal is voted on, it can finally be processed.
 
     `event SubmittedProposal(bytes32 proposalId, uint256 flags);`
-    `event SponsoredProposal(bytes32 proposalId, uint256 flags);`
+    `event SponsoredProposal(bytes32 proposalId, uint256 flags, address votingAdapter);`
     `event ProcessedProposal(bytes32 proposalId, uint256 flags);`
 
     Events for Adding and Removing Adapters

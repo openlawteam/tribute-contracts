@@ -1,14 +1,14 @@
-import { DaoRegistry } from "../generated/templates";
+import { DaoRegistry as DaoRegistryTemplate } from "../generated/templates";
 import { DAOCreated } from "../generated/DaoFactory/DaoFactory";
-import { Molochv3 } from "../generated/schema";
+import { TributeDao } from "../generated/schema";
 import { BigInt, log } from "@graphprotocol/graph-ts";
 
-function loadOrCreateDao(address: string): Molochv3 {
-  let dao = Molochv3.load(address);
+function loadOrCreateDao(daoAddress: string): TributeDao {
+  let dao = TributeDao.load(daoAddress);
   if (dao == null) {
-    dao = new Molochv3(address);
+    dao = new TributeDao(daoAddress);
   }
-  return dao as Molochv3;
+  return dao as TributeDao;
 }
 
 /**
@@ -33,7 +33,7 @@ export function handleDaoCreated(event: DAOCreated): void {
   dao.creator = event.transaction.from;
   dao.totalShares = BigInt.fromI32(0).toString();
 
-  DaoRegistry.create(event.params._address);
+  DaoRegistryTemplate.create(event.params._address);
 
   dao.save();
 }

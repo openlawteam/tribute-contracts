@@ -1,5 +1,5 @@
 import { BankCreated } from "../generated/BankFactory/BankFactory";
-import { BankExtension } from "../generated/templates";
+import { BankExtension as BankExtensionTemplate } from "../generated/templates";
 import { log } from "@graphprotocol/graph-ts";
 
 /**
@@ -16,5 +16,5 @@ export function handleBankCreated(event: BankCreated): void {
     event.params.bankAddress.toHexString(),
   ]);
 
-  BankExtension.create(event.params.bankAddress);
+  BankExtensionTemplate.create(event.params.bankAddress);
 }
