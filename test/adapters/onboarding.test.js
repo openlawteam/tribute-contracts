@@ -633,4 +633,104 @@ contract("MolochV3 - Onboarding Adapter", async (accounts) => {
       assert.equal(err.reason, "proposal does not exist");
     }
   });
+
+  it("should be possible to update delegate key and the member continues as an active member", async () => {
+    const myAccount = accounts[1];
+    const delegateKey = accounts[2];
+    let dao = await createDao(myAccount);
+
+    const onboardingAddr = await dao.getAdapterAddress(sha3("onboarding"));
+    const onboarding = await OnboardingContract.at(onboardingAddr);
+    const bankAddress = await dao.getExtensionAddress(sha3("bank"));
+    const bank = await BankExtension.at(bankAddress);
+
+    const myAccountActive1 = await isActiveMember(bank, myAccount);
+    const delegateKeyActive1 = await dao.isActiveMember(delegateKey); // use the dao to check delegatedKeys
+
+    assert.equal(true, myAccountActive1);
+    assert.equal(false, delegateKeyActive1);
+
+    const newDelegatedKey = accounts[9];
+    await onboarding.updateDelegateKey(dao.address, newDelegatedKey, {
+      from: myAccount,
+      gasPrice: toBN("0"),
+    });
+
+    assert.equal(true, await isActiveMember(bank, myAccount));
+    assert.equal(true, await dao.isActiveMember(newDelegatedKey)); // use the dao to check delegatedKeys
+  });
+
+  it("should not be possible to overwrite a delegated key", async () => {
+    const myAccount = accounts[1];
+    const applicant = accounts[2];
+    let dao = await createDao(myAccount);
+
+    const onboardingAddr = await dao.getAdapterAddress(sha3("onboarding"));
+    const onboarding = await OnboardingContract.at(onboardingAddr);
+
+    const proposalId = "0x1";
+
+    await onboarding.onboard(dao.address, proposalId, applicant, SHARES, 1, {
+      from: myAccount,
+      value: sharePrice.mul(toBN(3)).add(remaining),
+      gasPrice: toBN("0"),
+    });
+
+    try {
+      // try to update the delegated key using the address of another member
+      await onboarding.updateDelegateKey(dao.address, applicant, {
+        from: myAccount,
+        gasPrice: toBN("0"),
+      });
+      assert.fail("should not be possible to update the delegate key");
+    } catch (e) {
+      assert.equal(e.reason, "cannot overwrite existing delegated keys");
+    }
+  });
+
+  it("should not be possible to update delegate key if the address is already taken as delegated key", async () => {
+    const myAccount = accounts[1];
+    const applicant = accounts[2];
+    let dao = await createDao(myAccount);
+
+    const onboardingAddr = await dao.getAdapterAddress(sha3("onboarding"));
+    const onboarding = await OnboardingContract.at(onboardingAddr);
+
+    const proposalId = "0x1";
+
+    await onboarding.onboard(dao.address, proposalId, applicant, SHARES, 1, {
+      from: myAccount,
+      value: sharePrice.mul(toBN(3)).add(remaining),
+      gasPrice: toBN("0"),
+    });
+    await onboarding.sponsorProposal(dao.address, proposalId, [], {
+      from: myAccount,
+      gasPrice: toBN("0"),
+    });
+
+    const voting = await getContract(dao, "voting", VotingContract);
+    await voting.submitVote(dao.address, proposalId, 1, {
+      from: myAccount,
+      gasPrice: toBN("0"),
+    });
+    await advanceTime(10000);
+    const vote = await voting.voteResult(dao.address, proposalId);
+    assert.equal(vote.toString(), "2"); // vote pass
+
+    await onboarding.processProposal(dao.address, proposalId, {
+      from: myAccount,
+      gasPrice: toBN("0"),
+    });
+
+    try {
+      // try to update the delegated key using the same address as the member address
+      await onboarding.updateDelegateKey(dao.address, applicant, {
+        from: applicant,
+        gasPrice: toBN("0"),
+      });
+      assert.fail("should not be possible to update the delegate key");
+    } catch (e) {
+      assert.equal(e.reason, "address already taken as delegated key");
+    }
+  });
 });
