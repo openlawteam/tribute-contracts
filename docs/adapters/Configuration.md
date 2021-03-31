@@ -33,7 +33,7 @@ The adapter stores the proposed configuration changes.
 
 ### Configuration
 
-DAORegistry Access Flags: `SUBMIT_PROPOSAL`, `PROCESS_PROPOSAL`, `SPONSOR_PROPOSAL`, `SET_CONFIGURATION`.
+DAORegistry Access Flags: `SUBMIT_PROPOSAL`, `SET_CONFIGURATION`.
 
 #### keys
 

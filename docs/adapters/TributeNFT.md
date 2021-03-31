@@ -26,7 +26,7 @@ A DAO NFT extension must exist and be configured with proper access for this ada
 
 The DAO internal tokens to be minted to the applicant must be registered with the DAO Bank.
 
-DAORegistry Access Flags: `SUBMIT_PROPOSAL`, `SPONSOR_PROPOSAL`, `PROCESS_PROPOSAL`, `NEW_MEMBER`.
+DAORegistry Access Flags: `SUBMIT_PROPOSAL`, `NEW_MEMBER`.
 
 NFT Extension Access Flags: `TRANSFER_NFT`.
 

@@ -24,12 +24,10 @@ The DaoRegistry.sol contract tracks the state of the DAO for 1) Adapter and Exte
 
 ` enum ProposalFlag {EXISTS, SPONSORED, PROCESSED}` = `EXISTS` true if a proposal has been been submitted. `SPONSORED` is true if a Submitted proposal has been Sponsored by an existing Member.
 
-`enum AclFlag { REPLACE_ADAPTER, SUBMIT_PROPOSAL, SPONSOR_PROPOSAL, PROCESS_PROPOSAL, UPDATE_DELEGATE_KEY, SET_CONFIGURATION, ADD_EXTENSION, REMOVE_EXTENSION, NEW_MEMBER }`
+`enum AclFlag { REPLACE_ADAPTER, SUBMIT_PROPOSAL, UPDATE_DELEGATE_KEY, SET_CONFIGURATION, ADD_EXTENSION, REMOVE_EXTENSION, NEW_MEMBER }`
 
 - `REPLACE_ADAPTER` - if true, the caller adapter has access to add, remove, and replace adapters in the DAO, function `dao.replaceAdapter`.
 - `SUBMIT_PROPOSAL` - if true, the caller adapter is allowed to submit/create proposals in the DAO, function `dao.submitProposal`.
-- `SPONSOR_PROPOSAL` - if true, the caller adapter is allowed to sponsor an existing proposal in the DAO, function `dao.sponsorProposal`.
-- `PROCESS_PROPOSAL` - if true, the caller adapter has the right to process a DAO proposal, function `dao.processProposal`.
 - `UPDATE_DELEGATE_KEY` - if true, the caller adapter has the access to update the member's delegated key in the DAO, function `dao.updateDelegatedKey`.
 - `SET_CONFIGURATION` - if true, the caller adapter is allowed to store custom configurations as key/value in the DAO, function `dao.setConfiguration`.
 - `ADD_EXTENSION` - if true, the caller adapter is allowed to add new Extensions to the DAO, function `dao.addExtension`.

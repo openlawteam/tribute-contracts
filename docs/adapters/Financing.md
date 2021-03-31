@@ -16,7 +16,7 @@ Tokens that are provided by the member have to be allowed/supported by the DAO.
 
 The member needs to have enough shares and/or loot in order to convert it to funds.
 
-DAORegistry Access Flags: `SUBMIT_PROPOSAL`, `SPONSOR_PROPOSAL`, `PROCESS_PROPOSAL`.
+DAORegistry Access Flags: `SUBMIT_PROPOSAL`.
 
 Bank Extension Access Flags: `ADD_TO_BALANCE`, `SUB_FROM_BALANCE`.
 
