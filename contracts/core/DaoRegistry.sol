@@ -69,8 +69,6 @@ contract DaoRegistry is MemberGuard, AdapterGuard {
     enum AclFlag {
         REPLACE_ADAPTER,
         SUBMIT_PROPOSAL,
-        SPONSOR_PROPOSAL,
-        PROCESS_PROPOSAL,
         UPDATE_DELEGATE_KEY,
         SET_CONFIGURATION,
         ADD_EXTENSION,
@@ -214,6 +212,10 @@ contract DaoRegistry is MemberGuard, AdapterGuard {
                 member.flags,
                 uint8(MemberFlag.EXISTS),
                 true
+            );
+            require(
+                memberAddressesByDelegatedKey[memberAddress] == address(0x0),
+                "member address already taken as delegated key"
             );
             memberAddressesByDelegatedKey[memberAddress] = memberAddress;
             _members.push(memberAddress);
@@ -458,11 +460,7 @@ contract DaoRegistry is MemberGuard, AdapterGuard {
         bytes32 proposalId,
         address sponsoringMember,
         address votingAdapterAddr
-    )
-        external
-        hasAccess(this, AclFlag.SPONSOR_PROPOSAL)
-        onlyMember2(this, sponsoringMember)
-    {
+    ) external onlyMember2(this, sponsoringMember) {
         // also checks if the flag was already set
         Proposal storage proposal =
             _setProposalFlag(proposalId, ProposalFlag.SPONSORED);
@@ -488,11 +486,12 @@ contract DaoRegistry is MemberGuard, AdapterGuard {
      */
     function processProposal(bytes32 proposalId)
         external
-        hasAccess(this, AclFlag.PROCESS_PROPOSAL)
         proposalLock(proposalId)
     {
         Proposal storage proposal =
             _setProposalFlag(proposalId, ProposalFlag.PROCESSED);
+
+        require(proposal.adapterAddress == msg.sender, "err::adapter mismatch");
         uint256 flags = proposal.flags;
 
         emit ProcessedProposal(proposalId, flags);
@@ -586,14 +585,19 @@ contract DaoRegistry is MemberGuard, AdapterGuard {
         external
         hasAccess(this, AclFlag.UPDATE_DELEGATE_KEY)
     {
-        require(newDelegateKey != address(0), "newDelegateKey cannot be 0");
+        require(newDelegateKey != address(0x0), "newDelegateKey cannot be 0");
 
         // skip checks if member is setting the delegate key to their member address
         if (newDelegateKey != memberAddr) {
             require(
                 // newDelegate must not be delegated to
                 memberAddressesByDelegatedKey[newDelegateKey] == address(0x0),
-                "cannot overwrite existing members"
+                "cannot overwrite existing delegated keys"
+            );
+        } else {
+            require(
+                memberAddressesByDelegatedKey[memberAddr] == address(0x0),
+                "address already taken as delegated key"
             );
         }
 

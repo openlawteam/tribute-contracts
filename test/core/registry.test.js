@@ -33,7 +33,13 @@ const {
   createDao,
   OnboardingContract,
   ETH_TOKEN,
+  BankExtension,
+  SHARES,
+  sharePrice,
+  remaining,
 } = require("../../utils/DaoFactory.js");
+
+const { isActiveMember } = require("../../utils/TestUtils.js");
 
 contract("MolochV3 - Core - Registry", async (accounts) => {
   it("", async () => {
@@ -151,31 +157,5 @@ contract("MolochV3 - Core - Registry", async (accounts) => {
     } catch (error) {
       assert.equal(error.reason, "adapterId must not be empty");
     }
-  });
-
-  it("should be possible to update delegate key", async () => {
-    const myAccount = accounts[1];
-    const delegateKey = accounts[2];
-    let dao = await createDao(myAccount);
-
-    const onboardingAddr = await dao.getAdapterAddress(sha3("onboarding"));
-    const onboarding = await OnboardingContract.at(onboardingAddr);
-
-    const myAccountActive1 = await dao.isActiveMember(myAccount);
-    const delegateKeyActive1 = await dao.isActiveMember(delegateKey);
-
-    assert.equal(true, myAccountActive1);
-    assert.equal(false, delegateKeyActive1);
-
-    await onboarding.updateDelegateKey(dao.address, delegateKey, {
-      from: myAccount,
-      gasPrice: toBN("0"),
-    });
-
-    const myAccountActive2 = await dao.isActiveMember(myAccount);
-    const delegateKeyActive2 = await dao.isActiveMember(delegateKey);
-
-    assert.equal(false, myAccountActive2);
-    assert.equal(true, delegateKeyActive2);
   });
 });
