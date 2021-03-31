@@ -141,6 +141,9 @@ contract OnboardingContract is
             isNotReservedAddress(applicant),
             "applicant is reserved address"
         );
+
+        dao.potentialNewMember(applicant);
+
         address tokenAddr =
             dao.getAddressConfiguration(configKey(tokenToMint, TokenAddr));
         if (tokenAddr == ETH_TOKEN) {
@@ -431,8 +434,6 @@ contract OnboardingContract is
             bank.isInternalToken(tokenToMint),
             "it can only mint internal tokens"
         );
-
-        dao.potentialNewMember(memberAddr);
 
         // On overflow failure, totalShares is 0, then return tokens to the proposer.
         try bank.addToBalance(memberAddr, tokenToMint, tokenAmount) {
