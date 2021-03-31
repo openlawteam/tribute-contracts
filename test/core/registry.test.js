@@ -158,5 +158,4 @@ contract("MolochV3 - Core - Registry", async (accounts) => {
       assert.equal(error.reason, "adapterId must not be empty");
     }
   });
-
 });

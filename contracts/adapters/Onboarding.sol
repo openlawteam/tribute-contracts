@@ -141,7 +141,7 @@ contract OnboardingContract is
             isNotReservedAddress(applicant),
             "applicant is reserved address"
         );
-        
+
         dao.potentialNewMember(applicant);
 
         address tokenAddr =

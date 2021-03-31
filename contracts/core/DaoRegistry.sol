@@ -573,7 +573,6 @@ contract DaoRegistry is MemberGuard, AdapterGuard {
         hasAccess(this, AclFlag.UPDATE_DELEGATE_KEY)
     {
         require(newDelegateKey != address(0x0), "newDelegateKey cannot be 0");
-       
 
         // skip checks if member is setting the delegate key to their member address
         if (newDelegateKey != memberAddr) {

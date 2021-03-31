@@ -123,7 +123,7 @@ contract TributeContract is ITribute, DaoConstants, MemberGuard, AdapterGuard {
         );
 
         dao.potentialNewMember(applicant);
-        
+
         IERC20 erc20 = IERC20(tokenAddr);
         erc20.safeTransferFrom(msg.sender, address(this), tributeAmount);
 
