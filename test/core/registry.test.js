@@ -33,7 +33,12 @@ const {
   createDao,
   OnboardingContract,
   ETH_TOKEN,
+  BankExtension,
 } = require("../../utils/DaoFactory.js");
+
+const {
+  isActiveMember,
+} = require("../../utils/TestUtils.js");
 
 contract("MolochV3 - Core - Registry", async (accounts) => {
   it("", async () => {
@@ -160,22 +165,49 @@ contract("MolochV3 - Core - Registry", async (accounts) => {
 
     const onboardingAddr = await dao.getAdapterAddress(sha3("onboarding"));
     const onboarding = await OnboardingContract.at(onboardingAddr);
+    const bankAddress = await dao.getExtensionAddress(sha3("bank"));
+    const bank = await BankExtension.at(bankAddress);
 
-    const myAccountActive1 = await dao.isActiveMember(myAccount);
-    const delegateKeyActive1 = await dao.isActiveMember(delegateKey);
+    const myAccountActive1 = await isActiveMember(bank, myAccount);
+    const delegateKeyActive1 = await isActiveMember(bank, delegateKey);
 
     assert.equal(true, myAccountActive1);
     assert.equal(false, delegateKeyActive1);
 
-    await onboarding.updateDelegateKey(dao.address, delegateKey, {
+    const newDelegatedKey = accounts[9];
+    await onboarding.updateDelegateKey(dao.address, newDelegatedKey, {
       from: myAccount,
       gasPrice: toBN("0"),
     });
 
-    const myAccountActive2 = await dao.isActiveMember(myAccount);
-    const delegateKeyActive2 = await dao.isActiveMember(delegateKey);
-
-    assert.equal(false, myAccountActive2);
-    assert.equal(true, delegateKeyActive2);
+    assert.equal(false, await isActiveMember(bank, myAccount));
+    assert.equal(true, await isActiveMember(bank, newDelegatedKey));
   });
+
+   it("should not be possible to update delegate key if the member address is already taken as delegated key", async () => {
+     const myAccount = accounts[1];
+     const delegateKey = accounts[2];
+     let dao = await createDao(myAccount);
+
+     const onboardingAddr = await dao.getAdapterAddress(sha3("onboarding"));
+     const onboarding = await OnboardingContract.at(onboardingAddr);
+     const bankAddress = await dao.getExtensionAddress(sha3("bank"));
+     const bank = await BankExtension.at(bankAddress);
+
+     const myAccountActive1 = await isActiveMember(bank, myAccount);
+     const delegateKeyActive1 = await isActiveMember(bank, delegateKey);
+
+     assert.equal(true, myAccountActive1);
+     assert.equal(false, delegateKeyActive1);
+
+     try {
+       await onboarding.updateDelegateKey(dao.address, delegateKey, {
+         from: myAccount,
+         gasPrice: toBN("0"),
+       });
+       assert.fail("should not be possible to update the delegate key");
+     } catch (e) {
+       assert.equal(e.reason, "member address already taken as delegated key");
+     }
+   });
 });

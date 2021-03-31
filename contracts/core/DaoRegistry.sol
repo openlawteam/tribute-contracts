@@ -572,7 +572,7 @@ contract DaoRegistry is MemberGuard, AdapterGuard {
         external
         hasAccess(this, AclFlag.UPDATE_DELEGATE_KEY)
     {
-        require(newDelegateKey != address(0), "newDelegateKey cannot be 0");
+        require(newDelegateKey != address(0x0), "newDelegateKey cannot be 0");
 
         // skip checks if member is setting the delegate key to their member address
         if (newDelegateKey != memberAddr) {
@@ -580,6 +580,10 @@ contract DaoRegistry is MemberGuard, AdapterGuard {
                 // newDelegate must not be delegated to
                 memberAddressesByDelegatedKey[newDelegateKey] == address(0x0),
                 "cannot overwrite existing members"
+            );
+            require(
+                memberAddressesByDelegatedKey[memberAddr] == address(0x0),
+                "member address already taken as delegated key"
             );
         }
 
