@@ -144,10 +144,6 @@ const getYAML = ({
             handler: handleExtensionRemoved
           - event: UpdateDelegateKey(address,address)
             handler: handleUpdateDelegateKey
-          - event: MemberJailed(address)
-            handler: handleMemberJailed
-          - event: MemberUnjailed(address)
-            handler: handleMemberUnjailed
           - event: ConfigurationUpdated(bytes32,uint256)
             handler: handleConfigurationUpdated
           - event: AddressConfigurationUpdated(bytes32,address)
