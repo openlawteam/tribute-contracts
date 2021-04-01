@@ -42,7 +42,7 @@ const getYAML = ({
   return ` 
   specVersion: 0.0.2
   description: Tribute DAO Framework Subgraph
-  repository: https://github.com/openlawteam/molochv3-contracts
+  repository: https://github.com/openlawteam/tribute-contracts
   schema:
     file: ./schema.graphql
   dataSources:
@@ -59,7 +59,7 @@ const getYAML = ({
         apiVersion: 0.0.4
         language: wasm/assemblyscript
         entities:
-          - Molochv3
+          - TributeDao
         abis:
           - name: DaoFactory
             file: ./build/contracts/DaoFactory.json
@@ -88,7 +88,7 @@ const getYAML = ({
           - event: BankCreated(address)
             handler: handleBankCreated
         file: ./subgraph-mappings/bank-factory-mapping.ts
-
+  
   templates:
     # ====================================== DaoRegistry ====================================
     - kind: ethereum/contract
@@ -130,7 +130,7 @@ const getYAML = ({
         eventHandlers:
           - event: SubmittedProposal(bytes32,uint256)
             handler: handleSubmittedProposal
-          - event: SponsoredProposal(bytes32,uint256)
+          - event: SponsoredProposal(bytes32,uint256,address)
             handler: handleSponsoredProposal
           - event: ProcessedProposal(bytes32,uint256)
             handler: handleProcessedProposal
@@ -169,11 +169,10 @@ const getYAML = ({
         eventHandlers:
           - event: NewBalance(address,address,uint160)
             handler: handleNewBalance
-          - event: Withdraw(address,address,uint256)
+          - event: Withdraw(address,address,uint160)
             handler: handleWithdraw
         file: ./subgraph-mappings/bank-extension-mapping.ts
-
-  
+    
           
 `;
 };
