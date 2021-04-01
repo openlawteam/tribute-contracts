@@ -42,7 +42,7 @@ const getYAML = ({
   return ` 
   specVersion: 0.0.2
   description: Tribute DAO Framework Subgraph
-  repository: https://github.com/openlawteam/molochv3-contracts
+  repository: https://github.com/openlawteam/tribute-contracts
   schema:
     file: ./schema.graphql
   dataSources:
@@ -59,7 +59,7 @@ const getYAML = ({
         apiVersion: 0.0.4
         language: wasm/assemblyscript
         entities:
-          - Molochv3
+          - TributeDao
         abis:
           - name: DaoFactory
             file: ./build/contracts/DaoFactory.json
@@ -88,6 +88,27 @@ const getYAML = ({
           - event: BankCreated(address)
             handler: handleBankCreated
         file: ./subgraph-mappings/bank-factory-mapping.ts
+    # ====================================== NFTCollectionFactory ====================================
+    - kind: ethereum/contract
+      name: NFTCollectionFactory
+      network: ${network}
+      source:
+        address: "0x120AcB4EeDf8Af8F79D86E3D211C96cBF09e493c"
+        abi: NFTCollectionFactory
+        startBlock: 17
+      mapping:
+        kind: ethereum/events
+        apiVersion: 0.0.4
+        language: wasm/assemblyscript
+        entities:
+          - NFTCollection
+        abis:
+          - name: NFTCollectionFactory
+            file: ./build/contracts/NFTCollectionFactory.json
+        eventHandlers:
+          - event: NFTCollectionCreated(address)
+            handler: handleNFTCollectionCreated
+        file: ./subgraph-mappings/nft-collection-factory-mapping.ts
 
   templates:
     # ====================================== DaoRegistry ====================================
@@ -130,7 +151,7 @@ const getYAML = ({
         eventHandlers:
           - event: SubmittedProposal(bytes32,uint256)
             handler: handleSubmittedProposal
-          - event: SponsoredProposal(bytes32,uint256)
+          - event: SponsoredProposal(bytes32,uint256,address)
             handler: handleSponsoredProposal
           - event: ProcessedProposal(bytes32,uint256)
             handler: handleProcessedProposal
@@ -144,10 +165,6 @@ const getYAML = ({
             handler: handleExtensionRemoved
           - event: UpdateDelegateKey(address,address)
             handler: handleUpdateDelegateKey
-          - event: MemberJailed(address)
-            handler: handleMemberJailed
-          - event: MemberUnjailed(address)
-            handler: handleMemberUnjailed
           - event: ConfigurationUpdated(bytes32,uint256)
             handler: handleConfigurationUpdated
           - event: AddressConfigurationUpdated(bytes32,address)
@@ -173,11 +190,30 @@ const getYAML = ({
         eventHandlers:
           - event: NewBalance(address,address,uint160)
             handler: handleNewBalance
-          - event: Withdraw(address,address,uint256)
+          - event: Withdraw(address,address,uint160)
             handler: handleWithdraw
         file: ./subgraph-mappings/bank-extension-mapping.ts
-
-  
+      # ====================================== NFTExtension ====================================
+      # - kind: ethereum/contract
+      #   name: NFTExtension
+      #   network: mainnet
+      #   source:
+      #     abi: NFTExtension
+      #   mapping:
+      #     kind: ethereum/events
+      #     apiVersion: 0.0.4
+      #     language: wasm/assemblyscript
+      #     entities:
+      #       - NFT
+      #     abis:
+      #       - name: NFTExtension
+      #         file: ./build/contracts/NFTExtension.json
+      #     eventHandlers:
+      #       - event: NewBalance(address,address,uint160)
+      #         handler: handleNewBalance
+      #       - event: Withdraw(address,address,uint160)
+      #         handler: handleWithdraw
+      #     file: ./subgraph-mappings/nft-extension-mapping.ts
           
 `;
 };

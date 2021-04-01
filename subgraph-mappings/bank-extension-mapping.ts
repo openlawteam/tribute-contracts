@@ -4,7 +4,7 @@ import {
   Withdraw,
 } from "../generated/templates/BankExtension/BankExtension";
 import { Member, TributeDao, Token, TokenBalance } from "../generated/schema";
-import { GUILD, LOCKED_LOOT, LOOT, SHARES, TOTAL } from "./helpers/constants";
+import { GUILD, LOOT, SHARES, TOTAL } from "./helpers/constants";
 import { Address, BigInt, log } from "@graphprotocol/graph-ts";
 
 function internalTransfer(
@@ -38,7 +38,6 @@ function internalTransfer(
       member.memberAddress = memberAddress;
       member.delegateKey = memberAddress;
       member.isDelegated = false;
-      member.isJailed = false;
     } else {
       // get members daos
       tributedaos = member.tributedaos;
@@ -61,7 +60,7 @@ function internalTransfer(
     }
 
     /**
-     * get `balanceOf` for members SHARES, LOOT and LOCKED_LOOT
+     * get `balanceOf` for members SHARES, and LOOT
      */
 
     // get balanceOf member shares
@@ -72,10 +71,6 @@ function internalTransfer(
     let balanceOfLOOT = registry.balanceOf(memberAddress, LOOT);
     member.loot = balanceOfLOOT;
 
-    // get balanceOf member locked loot
-    let balanceOfLOCKED_LOOT = registry.balanceOf(memberAddress, LOCKED_LOOT);
-    member.lockedLoot = balanceOfLOCKED_LOOT;
-
     // omit the `TOTAL` & `GUILD` addresses from the ragequit check
     if (
       TOTAL.toHex() != memberAddress.toHex() &&
@@ -83,8 +78,7 @@ function internalTransfer(
     ) {
       let didFullyRagequit =
         balanceOfSHARES.equals(BigInt.fromI32(0)) &&
-        balanceOfLOOT.equals(BigInt.fromI32(0)) &&
-        balanceOfLOCKED_LOOT.equals(BigInt.fromI32(0));
+        balanceOfLOOT.equals(BigInt.fromI32(0));
 
       // fully raged quit
       member.didFullyRagequit = didFullyRagequit;
@@ -93,9 +87,7 @@ function internalTransfer(
     tokenBalance.token = tokenAddress.toHex();
     tokenBalance.member = memberAddress.toHex();
 
-    tokenBalance.tokenBalance = balanceOfSHARES
-      .plus(balanceOfLOOT)
-      .plus(balanceOfLOCKED_LOOT);
+    tokenBalance.tokenBalance = balanceOfSHARES.plus(balanceOfLOOT);
 
     member.save();
     token.save();

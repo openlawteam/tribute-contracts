@@ -32,12 +32,10 @@ type Member @entity {
   delegateKey: Bytes
   shares: BigInt!
   loot: BigInt!
-  lockedLoot: BigInt!
   tokenBalances: [TokenBalance!] @derivedFrom(field: "member")
   proposals: [Proposal!] @derivedFrom(field: "member")
   didFullyRagequit: Boolean
   isDelegated: Boolean
-  isJailed: Boolean
   "List of DAOs the member belongs to"
   tributedaos: [TributeDao!]!
 }
