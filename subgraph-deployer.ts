@@ -88,7 +88,28 @@ const getYAML = ({
           - event: BankCreated(address)
             handler: handleBankCreated
         file: ./subgraph-mappings/bank-factory-mapping.ts
-  
+    # ====================================== NFTCollectionFactory ====================================
+    - kind: ethereum/contract
+      name: NFTCollectionFactory
+      network: ${network}
+      source:
+        address: "0x120AcB4EeDf8Af8F79D86E3D211C96cBF09e493c"
+        abi: NFTCollectionFactory
+        startBlock: 17
+      mapping:
+        kind: ethereum/events
+        apiVersion: 0.0.4
+        language: wasm/assemblyscript
+        entities:
+          - NFTCollection
+        abis:
+          - name: NFTCollectionFactory
+            file: ./build/contracts/NFTCollectionFactory.json
+        eventHandlers:
+          - event: NFTCollectionCreated(address)
+            handler: handleNFTCollectionCreated
+        file: ./subgraph-mappings/nft-collection-factory-mapping.ts
+
   templates:
     # ====================================== DaoRegistry ====================================
     - kind: ethereum/contract
@@ -172,7 +193,27 @@ const getYAML = ({
           - event: Withdraw(address,address,uint160)
             handler: handleWithdraw
         file: ./subgraph-mappings/bank-extension-mapping.ts
-    
+      # ====================================== NFTExtension ====================================
+      # - kind: ethereum/contract
+      #   name: NFTExtension
+      #   network: mainnet
+      #   source:
+      #     abi: NFTExtension
+      #   mapping:
+      #     kind: ethereum/events
+      #     apiVersion: 0.0.4
+      #     language: wasm/assemblyscript
+      #     entities:
+      #       - NFT
+      #     abis:
+      #       - name: NFTExtension
+      #         file: ./build/contracts/NFTExtension.json
+      #     eventHandlers:
+      #       - event: NewBalance(address,address,uint160)
+      #         handler: handleNewBalance
+      #       - event: Withdraw(address,address,uint160)
+      #         handler: handleWithdraw
+      #     file: ./subgraph-mappings/nft-extension-mapping.ts
           
 `;
 };
