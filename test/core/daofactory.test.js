@@ -49,10 +49,6 @@ contract("MolochV3 - Core - DaoFactory", async (accounts) => {
     return { daoFactory, daoAddress: _address, daoName: _name };
   };
 
-  it("", async () => {
-    //dummy test
-  });
-
   it("should be possible create an identity dao and clone it", async () => {
     let identityDao = await createIdentityDAO(owner);
 

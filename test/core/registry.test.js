@@ -26,26 +26,9 @@ SOFTWARE.
  */
 const DaoRegistry = artifacts.require("./core/DaoRegistry");
 
-const {
-  sha3,
-  toBN,
-  fromUtf8,
-  createDao,
-  OnboardingContract,
-  ETH_TOKEN,
-  BankExtension,
-  SHARES,
-  sharePrice,
-  remaining,
-} = require("../../utils/DaoFactory.js");
-
-const { isActiveMember } = require("../../utils/TestUtils.js");
+const { fromUtf8, ETH_TOKEN } = require("../../utils/DaoFactory.js");
 
 contract("MolochV3 - Core - Registry", async (accounts) => {
-  it("", async () => {
-    //dummy test
-  });
-
   it("should not be possible to add a module with invalid id", async () => {
     let moduleId = fromUtf8("");
     let moduleAddress = "0x627306090abaB3A6e1400e9345bC60c78a8BEf57";
