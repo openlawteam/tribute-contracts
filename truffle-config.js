@@ -48,7 +48,7 @@ module.exports = {
         let infuraKey = process.env.INFURA_KEY;
         let HDWalletProvider = require("@truffle/hdwallet-provider");
         let mnemonic = process.env.TRUFFLE_MNEMONIC;
-        let infuraUrl = "https://rinkeby.infura.io/v3/" + infuraKey;
+        let infuraUrl = "wss://rinkeby.infura.io/ws/v3/" + infuraKey;
         return new HDWalletProvider(mnemonic, infuraUrl);
       },
       network_id: 4,
