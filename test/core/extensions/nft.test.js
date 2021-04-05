@@ -37,7 +37,6 @@ const {
 const { createNFTDao } = require("../../../utils/TestUtils.js");
 
 contract("MolochV3 - NFT Extension", async (accounts) => {
-
   it("should be possible to create a dao with a nft extension pre-configured", async () => {
     const daoOwner = accounts[0];
     const dao = await createDao(
@@ -74,13 +73,12 @@ contract("MolochV3 - NFT Extension", async (accounts) => {
   });
 
   it("should be possible get an NFT in the collection using the index", async () => {
-    const { dao } = await createNFTDao(accounts[0]);
+    const { dao, pixelNFT } = await createNFTDao(accounts[0]);
 
     const nftExtAddr = await dao.getExtensionAddress(sha3("nft"));
     const nftExtension = await NFTExtension.at(nftExtAddr);
-    //TODO needs to contain at least 1 nft
-    // const nftAddr = await nftExtension.getNFTByIndex(0);
-    // assert.equal(nftAddr, "0x0");
+    const nftAddr = await nftExtension.getNFTByIndex(0);
+    assert.equal(pixelNFT.address, nftAddr);
   });
 
   it("should not be possible get an NFT in the collection if it is empty", async () => {
@@ -95,7 +93,10 @@ contract("MolochV3 - NFT Extension", async (accounts) => {
         "should not be possible get an NFT in the collection if it is empty"
       );
     } catch (e) {
-      //ignore the error:  Error: Returned error: VM Exception while processing transaction: revert
+      assert.equal(
+        e.message,
+        "Returned error: VM Exception while processing transaction: revert"
+      );
     }
   });
 

@@ -29,89 +29,95 @@ const DaoRegistry = artifacts.require("./core/DaoRegistry");
 const { fromUtf8, ETH_TOKEN } = require("../../utils/DaoFactory.js");
 
 contract("MolochV3 - Core - Registry", async (accounts) => {
-  it("should not be possible to add a module with invalid id", async () => {
-    let moduleId = fromUtf8("");
-    let moduleAddress = "0x627306090abaB3A6e1400e9345bC60c78a8BEf57";
+  it("should not be possible to add an adapter with invalid id", async () => {
+    let adapterId = fromUtf8("");
+    let adapterAddr = "0x627306090abaB3A6e1400e9345bC60c78a8BEf57";
     let registry = await DaoRegistry.new();
     try {
-      await registry.replaceAdapter(moduleId, moduleAddress, 0, [], []);
+      await registry.replaceAdapter(adapterId, adapterAddr, 0, [], []);
+      assert.fail("should not be possible to add the adapter");
     } catch (error) {
       assert.equal(error.reason, "adapterId must not be empty");
     }
   });
 
-  it("should not be possible to remove a module when it not registered", async () => {
-    let moduleId = fromUtf8("1");
+  it("should not be possible to remove an adapter when it is not registered", async () => {
+    let adapterId = fromUtf8("1");
     let registry = await DaoRegistry.new();
     try {
-      await registry.replaceAdapter(moduleId, ETH_TOKEN, 0, [], []);
+      await registry.replaceAdapter(adapterId, ETH_TOKEN, 0, [], []);
+      assert.fail("should not be possible to remove the adapter");
     } catch (error) {
       assert.equal(error.reason, "adapterId not registered");
     }
   });
 
-  it("should not be possible to add a module with invalid address", async () => {
-    let moduleId = fromUtf8("1");
-    let moduleAddress = "";
+  it("should not be possible to add an adapter with invalid address", async () => {
+    let adapterId = fromUtf8("1");
+    let adapterAddr = "";
     let registry = await DaoRegistry.new();
     try {
-      await registry.replaceAdapter(moduleId, moduleAddress, 0, [], []);
+      await registry.replaceAdapter(adapterId, adapterAddr, 0, [], []);
+      assert.fail("should not be possible to add the adapter");
     } catch (error) {
       assert.equal(error.reason.indexOf("invalid address"), 0);
     }
   });
 
-  it("should not be possible to add a module with empty address", async () => {
-    let moduleId = fromUtf8("1");
-    let moduleAddress = "0x0000000000000000000000000000000000000000";
+  it("should not be possible to add an adapter with empty address", async () => {
+    let adapterId = fromUtf8("1");
+    let adapterAddr = "0x0000000000000000000000000000000000000000";
     let registry = await DaoRegistry.new();
     try {
-      await registry.replaceAdapter(moduleId, moduleAddress, 0, [], []);
+      await registry.replaceAdapter(adapterId, adapterAddr, 0, [], []);
+      assert.fail("should not be possible to add the adapter");
     } catch (error) {
       assert.equal(error.reason, "adapterAddress must not be empty");
     }
   });
 
-  it("should not be possible to add a module when the id is already in use", async () => {
-    let moduleId = fromUtf8("1");
-    let moduleAddress = "0x627306090abaB3A6e1400e9345bC60c78a8BEf57";
+  it("should not be possible to add an adapter when the id is already in use", async () => {
+    let adapterId = fromUtf8("1");
+    let adapterAddr = "0x627306090abaB3A6e1400e9345bC60c78a8BEf57";
     let registry = await DaoRegistry.new();
     //Add a module with id 1
-    await registry.replaceAdapter(moduleId, moduleAddress, 0, [], []);
+    await registry.replaceAdapter(adapterId, adapterAddr, 0, [], []);
 
     try {
       //Try to add another module using the same id 1
       await registry.replaceAdapter(
-        moduleId,
+        adapterId,
         "0xd7bCe30D77DE56E3D21AEfe7ad144b3134438F5B",
         0,
         [],
         []
       );
+      assert.fail("should not be possible to add the adapter");
     } catch (error) {
       assert.equal(error.reason, "adapterId already in use");
     }
   });
 
-  it("should be possible to add a module with a valid id and address", async () => {
-    let moduleId = fromUtf8("1");
-    let moduleAddress = "0x627306090abaB3A6e1400e9345bC60c78a8BEf57";
+  it("should be possible to add an adapter with a valid id and address", async () => {
+    let adapterId = fromUtf8("1");
+    let adapterAddr = "0x627306090abaB3A6e1400e9345bC60c78a8BEf57";
     let registry = await DaoRegistry.new();
-    await registry.replaceAdapter(moduleId, moduleAddress, 0, [], []);
-    let address = await registry.getAdapterAddress(moduleId);
-    assert.equal(address, moduleAddress);
+    await registry.replaceAdapter(adapterId, adapterAddr, 0, [], []);
+    let address = await registry.getAdapterAddress(adapterId);
+    assert.equal(address, adapterAddr);
   });
 
-  it("should be possible to remove a module", async () => {
-    let moduleId = fromUtf8("2");
-    let moduleAddress = "0x627306090abaB3A6e1400e9345bC60c78a8BEf57";
+  it("should be possible to remove an adapter", async () => {
+    let adapterId = fromUtf8("2");
+    let adapterAddr = "0x627306090abaB3A6e1400e9345bC60c78a8BEf57";
     let registry = await DaoRegistry.new();
-    await registry.replaceAdapter(moduleId, moduleAddress, 0, [], []);
-    let address = await registry.getAdapterAddress(moduleId);
-    assert.equal(address, moduleAddress);
-    await registry.replaceAdapter(moduleId, ETH_TOKEN, 0, [], []);
+    await registry.replaceAdapter(adapterId, adapterAddr, 0, [], []);
+    let address = await registry.getAdapterAddress(adapterId);
+    assert.equal(address, adapterAddr);
+    await registry.replaceAdapter(adapterId, ETH_TOKEN, 0, [], []);
     try {
-      await registry.getAdapterAddress(moduleId);
+      await registry.getAdapterAddress(adapterId);
+      assert.fail("should not be possible to remove the adapter");
     } catch (error) {
       assert.equal(
         error.toString().indexOf("revert adapter not found") > -1,
@@ -120,23 +126,25 @@ contract("MolochV3 - Core - Registry", async (accounts) => {
     }
   });
 
-  it("should not be possible to remove a module that is not registered", async () => {
-    let moduleId = fromUtf8("1");
+  it("should not be possible to remove an adapter that is not registered", async () => {
+    let adapterId = fromUtf8("1");
     let registry = await DaoRegistry.new();
 
     try {
-      await registry.replaceAdapter(moduleId, ETH_TOKEN, 0, [], []);
+      await registry.replaceAdapter(adapterId, ETH_TOKEN, 0, [], []);
+      assert.fail("should not be possible to remove the adapter");
     } catch (error) {
       assert.equal(error.reason, "adapterId not registered");
     }
   });
 
-  it("should not be possible to remove a module with an empty id", async () => {
-    let moduleId = fromUtf8("");
+  it("should not be possible to remove an adapter with an empty id", async () => {
+    let adapterId = fromUtf8("");
     let registry = await DaoRegistry.new();
 
     try {
-      await registry.replaceAdapter(moduleId, ETH_TOKEN, 0, [], []);
+      await registry.replaceAdapter(adapterId, ETH_TOKEN, 0, [], []);
+      assert.fail("should not be possible to remove the adapter");
     } catch (error) {
       assert.equal(error.reason, "adapterId must not be empty");
     }
