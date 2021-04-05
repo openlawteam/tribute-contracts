@@ -75,7 +75,7 @@ Bank Extension Access Flags: `INTERNAL_TRANSFER`.
      * @dev Proposal ids can not be reused.
      * @dev The amount must be greater than zero.
      * @param dao The dao address.
-     * @param proposalId The guild kick proposal id.
+     * @param proposalId The distribution proposal id.
      * @param shareHolderAddr The member address that should receive the funds, if 0x0, the funds will be distributed to all members of the DAO.
      * @param token The distribution token in which the members should receive the funds. Must be supported by the DAO.
      * @param amount The amount to distribute.
@@ -115,9 +115,9 @@ Bank Extension Access Flags: `INTERNAL_TRANSFER`.
 ```solidity
     /**
      * @notice Process the distribution proposal, calculates the fair amount of funds to distribute to the members based on the shares holdings.
-     * @dev A distribution proposal proposal must be in progress.
+     * @dev A distribution proposal must be in progress.
      * @dev Only one proposal per DAO can be executed at time.
-     * @dev Only active members can reveice funds.
+     * @dev Only active members can receive funds.
      * @dev Only proposals that passed the voting can be set to In Progress status.
      * @param dao The dao address.
      * @param proposalId The distribution proposal id.
