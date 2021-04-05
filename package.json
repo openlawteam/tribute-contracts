@@ -26,6 +26,7 @@
     "@nomiclabs/hardhat-ethers": "^2.0.1",
     "@nomiclabs/hardhat-ganache": "^2.0.0",
     "@nomiclabs/hardhat-waffle": "^2.0.1",
+    "@openzeppelin/test-environment": "^0.1.9",
     "@openzeppelin/test-helpers": "^0.5.10",
     "@smartdec/smartcheck": "^2.0.1",
     "@types/chai": "^4.2.15",
@@ -39,6 +40,7 @@
     "ethereum-waffle": "^3.3.0",
     "ethers": "^5.0.32",
     "hardhat": "^2.1.1",
+    "jest": "^26.6.3",
     "prettier": "^2.1.2",
     "prettier-plugin-solidity": "^1.0.0-beta.3",
     "solhint": "^3.3.2",
@@ -47,8 +49,7 @@
     "ts-node": "^9.1.1"
   },
   "scripts": {
-    "test": "truffle test",
-    "test:debug": "truffle test --stacktrace",
+    "test": "truffle compile && jest",
     "coverage": "truffle run coverage --network coverage --file='test/**/*.js' --solcoverjs ./.solcover.js",
     "lint:fix": "prettier --write 'contracts/**/*.sol' 'test/**/*.test.js' '**/*.md'",
     "lint": "prettier --list-different 'contracts/**/*.sol' 'test/**/*.test.js' '**/*.md'",

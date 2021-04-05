@@ -31,15 +31,14 @@ const {
   sha3,
   GUILD,
   VotingContract,
-  OnboardingContract,
-  NFTExtension,
   ETH_TOKEN,
   TributeNFTContract,
+  accounts,
 } = require("../../utils/DaoFactory.js");
 
 const { createNFTDao, onboardNewMember } = require("../../utils/TestUtils.js");
 
-contract("MolochV3 - TributeNFT Adapter", async (accounts) => {
+describe("MolochV3 - TributeNFT Adapter", async () => {
   it("should be possible to submit a nft tribute proposal", async () => {
     const daoOwner = accounts[0];
     const nftOwner = accounts[1];

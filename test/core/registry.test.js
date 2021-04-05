@@ -41,7 +41,7 @@ contract("MolochV3 - Core - Registry", async (accounts) => {
     }
   });
 
-  it("should not be possible to remove an adapter when it is not registered", async () => {
+  it("should not be possible to remove an adapter when it is not registered [ @skip-on-coverage ]", async () => {
     let adapterId = fromUtf8("1");
     let registry = await DaoRegistry.new();
     try {
@@ -52,7 +52,7 @@ contract("MolochV3 - Core - Registry", async (accounts) => {
     }
   });
 
-  it("should not be possible to add an adapter with invalid address", async () => {
+  it("should not be possible to add an adapter with invalid address [ @skip-on-coverage ]", async () => {
     let adapterId = fromUtf8("1");
     let adapterAddr = "";
     let registry = await DaoRegistry.new();

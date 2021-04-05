@@ -37,7 +37,6 @@ module.exports = {
     // You should run a client (like ganache-cli, geth or parity) in a separate terminal
     // tab if you use this network and you must also set the `host`, `port` and `network_id`
     // options below to some value.
-    //
     ganache: {
       host: "127.0.0.1", // Localhost (default: none)
       port: 7545, // Standard Ethereum port (default: none)
@@ -55,37 +54,12 @@ module.exports = {
       gasPrice: 10000000000,
       skipDryRun: true,
     },
-    // Another network with more advanced options...
-    // advanced: {
-    // port: 8777,             // Custom port
-    // network_id: 1342,       // Custom network
-    // gas: 8500000,           // Gas sent with each transaction (default: ~6700000)
-    // gasPrice: 20000000000,  // 20 gwei (in wei) (default: 100 gwei)
-    // from: <address>,        // Account to send txs from (default: accounts[0])
-    // websockets: true        // Enable EventEmitter interface for web3 (default: false)
-    // },
-    // Useful for deploying to a public network.
-    // NB: It's important to wrap the provider as a function.
-    // ropsten: {
-    // provider: () => new HDWalletProvider(mnemonic, `https://ropsten.infura.io/v3/YOUR-PROJECT-ID`),
-    // network_id: 3,       // Ropsten's id
-    // gas: 5500000,        // Ropsten has a lower block limit than mainnet
-    // confirmations: 2,    // # of confs to wait between deployments. (default: 0)
-    // timeoutBlocks: 200,  // # of blocks before a deployment times out  (minimum/default: 50)
-    // skipDryRun: true     // Skip dry run before migrations? (default: false for public nets )
-    // },
-    // Useful for private networks
-    // private: {
-    // provider: () => new HDWalletProvider(mnemonic, `https://network.io`),
-    // network_id: 2111,   // This network is yours, in the cloud.
-    // production: true    // Treats this network as if it was a public net. (default: false)
-    // }
+    // Test network to run solidity coverage plugin.
+    // Do not set the gas price because coverage distorts gas consumption. See https://github.com/sc-forks/solidity-coverage#usage-notes
     coverage: {
       host: "localhost",
       network_id: "*",
       port: 8555,
-      gas: 0xfffffffffff,
-      gasPrice: 0x01,
     },
   },
 
@@ -93,6 +67,11 @@ module.exports = {
   mocha: {
     enableTimeouts: false,
     useColors: true,
+    // grep: "@skip-on-coverage", // Find everything with this tag
+    // invert: true, // Run the grep's inverse set.
+    // retries: 1,
+    parallel: true,
+    jobs: 2,
     reporter: "eth-gas-reporter",
     reporterOptions: {
       excludeContracts: [
@@ -105,8 +84,8 @@ module.exports = {
         "test/TestToken1",
         "test/TestToken2",
         // Skip openzeppelin contracts
-        "ERC20",
-        "IERC20",
+        "utils/ERC20",
+        "utils/IERC20",
         "ERC721",
         "IERC721",
         "IERC721Receiver",

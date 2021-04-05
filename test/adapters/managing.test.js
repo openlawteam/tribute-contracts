@@ -40,8 +40,9 @@ const {
 } = require("../../utils/DaoFactory.js");
 
 const { expectRevert } = require("@openzeppelin/test-helpers");
+const { accounts, contract } = require("@openzeppelin/test-environment");
 
-contract("MolochV3 - Managing Adapter", async (accounts) => {
+describe("MolochV3 - Managing Adapter", async () => {
   it("should not be possible to send ETH to the adapter", async () => {
     const daoOwner = accounts[1];
     const dao = await createDao(daoOwner);

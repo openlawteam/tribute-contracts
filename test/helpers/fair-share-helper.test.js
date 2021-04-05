@@ -24,7 +24,7 @@ SOFTWARE.
 const { TestFairShareCalc, toWei } = require("../../utils/DaoFactory.js");
 
 contract("MolochV3 - Helper - FairShareHelper", (accounts) => {
-  it("should calculate the fair share if the given parameters are valid", async () => {
+  it("should calculate the fair share if the given parameters are valid [ @skip-on-coverage ]", async () => {
     const fairShareCalc = await TestFairShareCalc.new();
     const balance = toWei("4.3", "ether");
     const shares = toWei("100", "ether");

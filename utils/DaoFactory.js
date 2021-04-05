@@ -26,6 +26,7 @@ SOFTWARE.
  */
 
 const Web3Utils = require("web3-utils");
+const { contract, web3, accounts } = require("@openzeppelin/test-environment");
 
 const sha3 = Web3Utils.sha3;
 const toBN = Web3Utils.toBN;
@@ -48,45 +49,44 @@ const sharePrice = toBN(toWei("120", "finney"));
 const remaining = sharePrice.sub(toBN("50000000000000"));
 const maximumChunks = toBN("11");
 
-const OLToken = artifacts.require("./test/OLToken");
-const TestToken1 = artifacts.require("./test/TestToken1");
-const TestToken2 = artifacts.require("./test/TestToken2");
-const TestFairShareCalc = artifacts.require("./test/TestFairShareCalc");
-const PixelNFT = artifacts.require("./test/PixelNFT");
-const Multicall = artifacts.require("./util/Multicall");
+const OLToken = contract.fromArtifact("OLToken");
+const TestToken1 = contract.fromArtifact("TestToken1");
+const TestToken2 = contract.fromArtifact("TestToken2");
+const TestFairShareCalc = contract.fromArtifact("TestFairShareCalc");
+const PixelNFT = contract.fromArtifact("PixelNFT");
+const Multicall = contract.fromArtifact("Multicall");
 
-const DaoFactory = artifacts.require("./core/DaoFactory");
-const DaoRegistry = artifacts.require("./core/DaoRegistry");
+const DaoFactory = contract.fromArtifact("DaoFactory");
+const DaoRegistry = contract.fromArtifact("DaoRegistry");
 
-const NFTExtension = artifacts.require("./extensions/nft/NFTExtension");
-const NFTCollectionFactory = artifacts.require(
-  "./extensions/NFTCollectionFactory"
+const NFTExtension = contract.fromArtifact("NFTExtension");
+const NFTCollectionFactory = contract.fromArtifact("NFTCollectionFactory");
+const BankExtension = contract.fromArtifact("BankExtension");
+const BankFactory = contract.fromArtifact("BankFactory");
+
+const VotingContract = contract.fromArtifact("VotingContract");
+const WithdrawContract = contract.fromArtifact("WithdrawContract");
+const ConfigurationContract = contract.fromArtifact("ConfigurationContract");
+const ManagingContract = contract.fromArtifact("ManagingContract");
+const FinancingContract = contract.fromArtifact("FinancingContract");
+const RagequitContract = contract.fromArtifact("RagequitContract");
+const GuildKickContract = contract.fromArtifact("GuildKickContract");
+const OnboardingContract = contract.fromArtifact("OnboardingContract");
+
+const SnapshotProposalContract = contract.fromArtifact(
+  "SnapshotProposalContract"
 );
-const BankExtension = artifacts.require("./extensions/BankExtension");
-const BankFactory = artifacts.require("./extensions/BankFactory");
+const OffchainVotingContract = contract.fromArtifact("OffchainVotingContract");
+const KickBadReporterAdapter = contract.fromArtifact("KickBadReporterAdapter");
 
-const VotingContract = artifacts.require("./adapters/VotingContract");
-const WithdrawContract = artifacts.require("./adapters/WithdrawContract");
-const ConfigurationContract = artifacts.require(
-  "./adapter/ConfigurationContract"
+const BatchVotingContract = contract.fromArtifact("BatchVotingContract");
+const CouponOnboardingContract = contract.fromArtifact(
+  "CouponOnboardingContract"
 );
-const ManagingContract = artifacts.require("./adapter/ManagingContract");
-const FinancingContract = artifacts.require("./adapter/FinancingContract");
-const RagequitContract = artifacts.require("./adapters/RagequitContract");
-const GuildKickContract = artifacts.require("./adapters/GuildKickContract");
-const OnboardingContract = artifacts.require("./adapters/OnboardingContract");
 
-
-const SnapshotProposalContract = artifacts.require("./adapters/voting/SnapshotProposalContract");
-const OffchainVotingContract = artifacts.require("./adapters/voting/OffchainVotingContract");
-const KickBadReporterAdapter = artifacts.require("./adapters/voting/KickBadReporterAdapter");
-
-const BatchVotingContract = artifacts.require("./adapters/voting/BatchVotingContract");
-const CouponOnboardingContract = artifacts.require("./adapters/CouponOnboardingContract");
-
-const TributeContract = artifacts.require("./adapters/TributeContract");
-const DistributeContract = artifacts.require("./adapters/DistributeContract");
-const TributeNFTContract = artifacts.require("./adapters/TributeNFTContract");
+const TributeContract = contract.fromArtifact("TributeContract");
+const DistributeContract = contract.fromArtifact("DistributeContract");
+const TributeNFTContract = contract.fromArtifact("TributeNFTContract");
 
 async function prepareAdapters(deployer) {
   let voting;
@@ -242,7 +242,7 @@ const configureDao = async (
     }),
     entryDao("ragequit", ragequit, {}),
     entryDao("guildkick", guildkick, {
-      SUBMIT_PROPOSAL: true
+      SUBMIT_PROPOSAL: true,
     }),
     entryDao("managing", managing, {
       SUBMIT_PROPOSAL: true,
@@ -273,7 +273,7 @@ const configureDao = async (
       TRANSFER_NFT: true,
     }),
     entryDao("distribute", distribute, {
-      SUBMIT_PROPOSAL: true
+      SUBMIT_PROPOSAL: true,
     }),
   ]);
 
@@ -424,7 +424,12 @@ const deployDao = async (deployer, options) => {
 
     const snapshotProposalContract = await SnapshotProposalContract.deployed();
     const handleBadReporterAdapter = await KickBadReporterAdapter.deployed();
-    const offchainVoting = await deployer.deploy(OffchainVotingContract, votingAddress, snapshotProposalContract.address, handleBadReporterAdapter.address);
+    const offchainVoting = await deployer.deploy(
+      OffchainVotingContract,
+      votingAddress,
+      snapshotProposalContract.address,
+      handleBadReporterAdapter.address
+    );
 
     await daoFactory.updateAdapter(
       dao.address,
@@ -676,6 +681,8 @@ module.exports = {
   toAscii,
   fromAscii,
   toUtf8,
+  accounts,
+  web3,
   maximumChunks,
   GUILD,
   TOTAL,

@@ -4,14 +4,14 @@
 // Shamelessly adapted from OpenZeppelin-contracts test utils
 
 const { keccak256, keccakFromString, bufferToHex } = require("ethereumjs-util");
-const utils = web3.utils;
+const Web3Utils = require("web3-utils");
 
 // Merkle tree called with 32 byte hex values
 class MerkleTree {
   constructor(elements) {
     this.elements = elements
-      .filter(el => el)
-      .map(el => Buffer.from(utils.hexToBytes(el)));
+      .filter((el) => el)
+      .map((el) => Buffer.from(Web3Utils.hexToBytes(el)));
 
     // Sort elements
     //this.elements.sort(Buffer.compare);

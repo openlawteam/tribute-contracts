@@ -48,7 +48,7 @@ const {
 } = require("../../utils/DaoFactory.js");
 
 let proposalCounter = 1;
-contract("MolochV3 - Ragequit Adapter", async (accounts) => {
+describe("MolochV3 - Ragequit Adapter", async (accounts) => {
   const submitNewMemberProposal = async (
     onboarding,
     dao,

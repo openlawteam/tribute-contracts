@@ -32,9 +32,10 @@ const {
   createDao,
   VotingContract,
   ConfigurationContract,
+  accounts
 } = require("../../utils/DaoFactory.js");
 
-contract("MolochV3 - Configuration Adapter", async (accounts) => {
+describe("MolochV3 - Configuration Adapter", async () => {
   it("should be possible to set a single configuration parameter", async () => {
     const myAccount = accounts[1];
 

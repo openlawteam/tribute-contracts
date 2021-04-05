@@ -37,7 +37,10 @@ const {
   createDao,
   ETH_TOKEN,
   SnapshotProposalContract,
+  BatchVotingContract,
   BankExtension,
+  web3,
+  accounts,
 } = require("../../utils/DaoFactory.js");
 const {
   createVote,
@@ -46,8 +49,6 @@ const {
   validateMessage,
   SigUtilSigner,
 } = require("../../utils/offchain_voting.js");
-
-const BatchVotingContract = artifacts.require("./adapters/BatchVotingContract");
 
 let members = generateMembers(5);
 
@@ -218,7 +219,7 @@ async function createBatchVotingDao(
   return { dao, voting: batchVoting, bank };
 }
 
-contract("MolochV3 - BatchVoting Adapter", async (accounts) => {
+describe("MolochV3 - BatchVoting Adapter", async () => {
   it("should be possible to propose a new voting by signing the proposal hash", async () => {
     const myAccount = accounts[1];
     let { dao, voting } = await createBatchVotingDao(myAccount);
