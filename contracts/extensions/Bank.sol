@@ -54,7 +54,7 @@ contract BankExtension is DaoConstants, AdapterGuard, IExtension {
     }
 
     modifier noProposal {
-        require(dao.currentProposal() == bytes32(0x0), "proposal lock");
+        require(dao.lockedAt() < block.number, "proposal lock");
         _;
     }
 
