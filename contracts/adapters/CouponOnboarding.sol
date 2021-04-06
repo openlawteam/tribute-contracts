@@ -6,6 +6,7 @@ import "../core/DaoConstants.sol";
 import "../core/DaoRegistry.sol";
 import "../extensions/Bank.sol";
 import "../guards/AdapterGuard.sol";
+import "../guards/ReentrancyGuard.sol";
 import "../utils/Signatures.sol";
 
 /**
@@ -92,7 +93,7 @@ contract CouponOnboardingContract is DaoConstants, AdapterGuard, Signatures {
         uint256 amount,
         uint256 nonce,
         bytes memory signature
-    ) external {
+    ) external reentrancyGuard(dao) {
         uint256 currentFlag = flags[address(dao)][nonce / 256];
         require(
             getFlag(currentFlag, nonce % 256) == false,

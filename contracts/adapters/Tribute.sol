@@ -116,7 +116,7 @@ contract TributeContract is ITribute, DaoConstants, MemberGuard, AdapterGuard {
         uint256 requestAmount,
         address tokenAddr,
         uint256 tributeAmount
-    ) public override {
+    ) public override reentrancyGuard(dao) {
         require(
             isNotReservedAddress(applicant),
             "applicant is reserved address"
@@ -150,7 +150,7 @@ contract TributeContract is ITribute, DaoConstants, MemberGuard, AdapterGuard {
         DaoRegistry dao,
         bytes32 proposalId,
         bytes memory data
-    ) external override {
+    ) external override reentrancyGuard(dao) {
         IVoting votingContract = IVoting(dao.getAdapterAddress(VOTING));
         address sponsoredBy =
             votingContract.getSenderAddress(
@@ -193,6 +193,7 @@ contract TributeContract is ITribute, DaoConstants, MemberGuard, AdapterGuard {
     function cancelProposal(DaoRegistry dao, bytes32 proposalId)
         external
         override
+        reentrancyGuard(dao)
     {
         ProposalDetails storage proposal = proposals[address(dao)][proposalId];
         require(proposal.id == proposalId, "proposal does not exist");
@@ -230,6 +231,7 @@ contract TributeContract is ITribute, DaoConstants, MemberGuard, AdapterGuard {
     function processProposal(DaoRegistry dao, bytes32 proposalId)
         external
         override
+        reentrancyGuard(dao)
     {
         ProposalDetails storage proposal = proposals[address(dao)][proposalId];
         require(proposal.id == proposalId, "proposal does not exist");

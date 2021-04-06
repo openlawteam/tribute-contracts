@@ -136,7 +136,7 @@ contract OnboardingContract is
         address payable applicant,
         address tokenToMint,
         uint256 tokenAmount
-    ) public payable override {
+    ) public payable override reentrancyGuard(dao) {
         require(
             isNotReservedAddress(applicant),
             "applicant is reserved address"
@@ -187,7 +187,7 @@ contract OnboardingContract is
         DaoRegistry dao,
         bytes32 proposalId,
         bytes memory data
-    ) external override {
+    ) external override reentrancyGuard(dao) {
         IVoting votingContract = IVoting(dao.getAdapterAddress(VOTING));
         address sponsoredBy =
             votingContract.getSenderAddress(
@@ -203,6 +203,7 @@ contract OnboardingContract is
     function cancelProposal(DaoRegistry dao, bytes32 proposalId)
         external
         override
+        reentrancyGuard(dao)
     {
         ProposalDetails storage proposal = proposals[address(dao)][proposalId];
         require(proposal.id == proposalId, "proposal does not exist");
@@ -233,6 +234,7 @@ contract OnboardingContract is
     function processProposal(DaoRegistry dao, bytes32 proposalId)
         external
         override
+        reentrancyGuard(dao)
     {
         ProposalDetails storage proposal = proposals[address(dao)][proposalId];
         require(proposal.id == proposalId, "proposal does not exist");

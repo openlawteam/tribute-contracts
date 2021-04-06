@@ -7,6 +7,7 @@ import "../core/DaoRegistry.sol";
 import "../extensions/Bank.sol";
 import "./interfaces/IRagequit.sol";
 import "../helpers/FairShareHelper.sol";
+import "../guards/AdapterGuard.sol";
 
 /**
 MIT License
@@ -32,7 +33,7 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
  */
 
-contract RagequitContract is IRagequit, DaoConstants {
+contract RagequitContract is IRagequit, DaoConstants, AdapterGuard {
     /**
      * @notice Event emitted when a member of the DAO executes a ragequit with all or parts of the member's shares/loot.
      */
@@ -68,7 +69,7 @@ contract RagequitContract is IRagequit, DaoConstants {
         uint256 sharesToBurn,
         uint256 lootToBurn,
         address[] calldata tokens
-    ) external override {
+    ) external override reentrancyGuard(dao) {
         // At least one token needs to be provided
         require(tokens.length > 0, "missing tokens");
         // Checks if the are enough shares and/or loot to burn

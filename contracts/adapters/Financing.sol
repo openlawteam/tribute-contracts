@@ -8,6 +8,7 @@ import "../core/DaoRegistry.sol";
 import "../extensions/Bank.sol";
 import "../adapters/interfaces/IVoting.sol";
 import "../guards/MemberGuard.sol";
+import "../guards/AdapterGuard.sol";
 
 /**
 MIT License
@@ -33,7 +34,12 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
  */
 
-contract FinancingContract is IFinancing, DaoConstants, MemberGuard {
+contract FinancingContract is
+    IFinancing,
+    DaoConstants,
+    MemberGuard,
+    AdapterGuard
+{
     struct ProposalDetails {
         address applicant; // the proposal applicant address, can not be a reserved address
         uint256 amount; // the amount requested for funding
@@ -70,7 +76,7 @@ contract FinancingContract is IFinancing, DaoConstants, MemberGuard {
         address token,
         uint256 amount,
         bytes32 details
-    ) external override {
+    ) external override reentrancyGuard(dao) {
         require(amount > 0, "invalid requested amount");
         BankExtension bank = BankExtension(dao.getExtensionAddress(BANK));
         require(bank.isTokenAllowed(token), "token not allowed");
@@ -98,7 +104,7 @@ contract FinancingContract is IFinancing, DaoConstants, MemberGuard {
         DaoRegistry dao,
         bytes32 proposalId,
         bytes memory data
-    ) external override {
+    ) external override reentrancyGuard(dao) {
         IVoting votingContract = IVoting(dao.getAdapterAddress(VOTING));
         address sponsoredBy =
             votingContract.getSenderAddress(
@@ -141,6 +147,7 @@ contract FinancingContract is IFinancing, DaoConstants, MemberGuard {
     function processProposal(DaoRegistry dao, bytes32 proposalId)
         external
         override
+        reentrancyGuard(dao)
     {
         ProposalDetails memory details = proposals[address(dao)][proposalId];
 

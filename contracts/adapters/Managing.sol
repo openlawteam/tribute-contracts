@@ -7,6 +7,7 @@ import "../core/DaoConstants.sol";
 import "../core/DaoRegistry.sol";
 import "../adapters/interfaces/IVoting.sol";
 import "../guards/MemberGuard.sol";
+import "../guards/AdapterGuard.sol";
 
 /**
 MIT License
@@ -32,7 +33,12 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
  */
 
-contract ManagingContract is IManaging, DaoConstants, MemberGuard {
+contract ManagingContract is
+    IManaging,
+    DaoConstants,
+    MemberGuard,
+    AdapterGuard
+{
     struct ProposalDetails {
         bytes32 adapterId;
         address adapterAddress;
@@ -72,7 +78,7 @@ contract ManagingContract is IManaging, DaoConstants, MemberGuard {
         bytes32[] calldata keys,
         uint256[] calldata values,
         uint256 _flags
-    ) external override onlyMember(dao) {
+    ) external override onlyMember(dao) reentrancyGuard(dao) {
         require(
             keys.length == values.length,
             "must be an equal number of config keys and values"
@@ -108,7 +114,7 @@ contract ManagingContract is IManaging, DaoConstants, MemberGuard {
         DaoRegistry dao,
         bytes32 proposalId,
         bytes calldata data
-    ) external override {
+    ) external override reentrancyGuard(dao) {
         IVoting votingContract = IVoting(dao.getAdapterAddress(VOTING));
         address sponsoredBy =
             votingContract.getSenderAddress(
@@ -142,6 +148,7 @@ contract ManagingContract is IManaging, DaoConstants, MemberGuard {
     function processProposal(DaoRegistry dao, bytes32 proposalId)
         external
         override
+        reentrancyGuard(dao)
     {
         ProposalDetails memory proposal = proposals[address(dao)][proposalId];
 

@@ -5,6 +5,7 @@ pragma solidity ^0.8.0;
 import "../core/DaoConstants.sol";
 import "../core/DaoRegistry.sol";
 import "../guards/MemberGuard.sol";
+import "../guards/AdapterGuard.sol";
 import "../adapters/interfaces/IVoting.sol";
 import "../adapters/interfaces/IDistribute.sol";
 import "../helpers/FairShareHelper.sol";
@@ -34,7 +35,12 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
  */
 
-contract DistributeContract is IDistribute, DaoConstants, MemberGuard {
+contract DistributeContract is
+    IDistribute,
+    DaoConstants,
+    MemberGuard,
+    AdapterGuard
+{
     // Event to indicate the distribution process has been completed
     // if the shareHolder address is 0x0, then the amount were distributed to all members of the DAO.
     event Distributed(address token, uint256 amount, address shareHolder);
@@ -91,7 +97,7 @@ contract DistributeContract is IDistribute, DaoConstants, MemberGuard {
         address token,
         uint256 amount,
         bytes calldata data
-    ) external override {
+    ) external override reentrancyGuard(dao) {
         IVoting votingContract = IVoting(dao.getAdapterAddress(VOTING));
         address submittedBy =
             votingContract.getSenderAddress(
@@ -171,6 +177,7 @@ contract DistributeContract is IDistribute, DaoConstants, MemberGuard {
     function processProposal(DaoRegistry dao, bytes32 proposalId)
         external
         override
+        reentrancyGuard(dao)
     {
         dao.processProposal(proposalId);
 
@@ -234,7 +241,11 @@ contract DistributeContract is IDistribute, DaoConstants, MemberGuard {
      * @param dao The dao address.
      * @param toIndex The index to control the cached for-loop.
      */
-    function distribute(DaoRegistry dao, uint256 toIndex) external override {
+    function distribute(DaoRegistry dao, uint256 toIndex)
+        external
+        override
+        reentrancyGuard(dao)
+    {
         // Checks if the proposal does not exist or is not completed yet
         bytes32 ongoingProposalId = ongoingDistributions[address(dao)];
         Distribution storage distribution =
