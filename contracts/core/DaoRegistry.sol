@@ -444,7 +444,6 @@ contract DaoRegistry is MemberGuard, AdapterGuard {
     function submitProposal(bytes32 proposalId)
         public
         hasAccess(this, AclFlag.SUBMIT_PROPOSAL)
-        proposalLock(proposalId)
     {
         require(proposalId != bytes32(0), "invalid proposalId");
         require(
@@ -491,7 +490,6 @@ contract DaoRegistry is MemberGuard, AdapterGuard {
      */
     function processProposal(bytes32 proposalId)
         external
-        proposalLock(proposalId)
     {
         Proposal storage proposal =
             _setProposalFlag(proposalId, ProposalFlag.PROCESSED);
