@@ -32,6 +32,7 @@ const {
   advanceTime,
   createDao,
   getContract,
+  accounts,
   sharePrice,
   GUILD,
   ETH_TOKEN,
@@ -48,7 +49,7 @@ const {
 const { expectRevert } = require("@openzeppelin/test-helpers");
 
 let proposalCounter = 1;
-contract("MolochV3 - GuildKick Adapter", async (accounts) => {
+describe("MolochV3 - GuildKick Adapter", () => {
   const submitNewMemberProposal = async (
     member,
     onboarding,

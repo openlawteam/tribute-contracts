@@ -28,6 +28,7 @@ const {
   toBN,
   createDao,
   getContract,
+  accounts,
   SHARES,
   sharePrice,
   remaining,
@@ -35,7 +36,7 @@ const {
   VotingContract,
 } = require("../../utils/DaoFactory.js");
 
-contract("MolochV3 - Voting Adapter", async (accounts) => {
+describe("MolochV3 - Voting Adapter",  () => {
   it("should be possible to vote", async () => {
     const account1 = accounts[1];
     const account2 = accounts[2];

@@ -24,11 +24,15 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
  */
-const DaoRegistry = artifacts.require("./core/DaoRegistry");
 
-const { fromUtf8, ETH_TOKEN } = require("../../utils/DaoFactory.js");
+const {
+  fromUtf8,
+  accounts,
+  ETH_TOKEN,
+  DaoRegistry,
+} = require("../../utils/DaoFactory.js");
 
-contract("MolochV3 - Core - Registry", async (accounts) => {
+describe("MolochV3 - Core - Registry", () => {
   it("should not be possible to add an adapter with invalid id", async () => {
     let adapterId = fromUtf8("");
     let adapterAddr = "0x627306090abaB3A6e1400e9345bC60c78a8BEf57";

@@ -133,8 +133,10 @@ async function prepareAdapters(deployer) {
     configuration = await ConfigurationContract.new();
     ragequit = await RagequitContract.new();
     managing = await ManagingContract.new();
+    await ManagingContract.detectNetwork();
     financing = await FinancingContract.new();
     onboarding = await OnboardingContract.new();
+    await OnboardingContract.detectNetwork();
     guildkick = await GuildKickContract.new();
     withdraw = await WithdrawContract.new();
     couponOnboarding = await CouponOnboardingContract.new(1);
@@ -510,6 +512,7 @@ const createDao = async (
   const managing = await ManagingContract.deployed();
   const financing = await FinancingContract.deployed();
   const onboarding = await OnboardingContract.deployed();
+  await OnboardingContract.detectNetwork();
   const guildkick = await GuildKickContract.deployed();
   const withdraw = await WithdrawContract.deployed();
   const couponOnboarding = await CouponOnboardingContract.deployed();
@@ -683,6 +686,7 @@ module.exports = {
   toUtf8,
   accounts,
   web3,
+  contract,
   maximumChunks,
   GUILD,
   TOTAL,

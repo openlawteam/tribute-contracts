@@ -32,6 +32,7 @@ const {
   advanceTime,
   createDao,
   getContract,
+  accounts,
   sharePrice,
   GUILD,
   ETH_TOKEN,
@@ -41,13 +42,12 @@ const {
   OnboardingContract,
   VotingContract,
   DistributeContract,
-  GuildKickContract,
   BankExtension,
 } = require("../../utils/DaoFactory.js");
 
 let proposalCounter = 1;
 
-contract("MolochV3 - Distribute Adapter", async (accounts) => {
+describe("MolochV3 - Distribute Adapter", () => {
   const submitNewMemberProposal = async (
     member,
     onboarding,

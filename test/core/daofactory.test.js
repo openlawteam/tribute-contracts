@@ -20,12 +20,15 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
  */
-const DaoFactory = artifacts.require("./core/DaoFactory");
-const DaoRegistry = artifacts.require("./core/DaoRegistry");
 
-const { toBN } = require("../../utils/DaoFactory.js");
+const {
+  toBN,
+  accounts,
+  DaoFactory,
+  DaoRegistry,
+} = require("../../utils/DaoFactory.js");
 
-contract("MolochV3 - Core - DaoFactory", async (accounts) => {
+describe("MolochV3 - Core - DaoFactory", () => {
   const owner = accounts[1];
   const anotherOwner = accounts[2];
 

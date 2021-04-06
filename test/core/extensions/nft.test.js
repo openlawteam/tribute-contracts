@@ -25,18 +25,19 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
  */
 const {
+  sha3,
+  toBN,
   createDao,
+  accounts,
   sharePrice,
   numberOfShares,
   ETH_TOKEN,
   NFTExtension,
-  sha3,
-  toBN,
 } = require("../../../utils/DaoFactory.js");
 
 const { createNFTDao } = require("../../../utils/TestUtils.js");
 
-contract("MolochV3 - NFT Extension", async (accounts) => {
+describe("MolochV3 - NFT Extension", () => {
   it("should be possible to create a dao with a nft extension pre-configured [ @skip-on-coverage ]", async () => {
     const daoOwner = accounts[0];
     const dao = await createDao(

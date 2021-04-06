@@ -29,6 +29,7 @@ const {
   toBN,
   advanceTime,
   createDao,
+  accounts,
   GUILD,
   LOOT,
   sharePrice,
@@ -39,7 +40,7 @@ const {
   BankExtension,
 } = require("../../utils/DaoFactory.js");
 
-contract("MolochV3 - Non Voting Onboarding Adapter", async (accounts) => {
+describe("MolochV3 - Non Voting Onboarding Adapter",  () => {
   it("should be possible to join a DAO as a member without any voting power by requesting Loot while staking raw ETH", async () => {
     const myAccount = accounts[1];
     const advisorAccount = accounts[2];

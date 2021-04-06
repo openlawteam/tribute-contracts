@@ -26,14 +26,11 @@ SOFTWARE.
  */
 const {
   toBN,
-  advanceTime,
   createDao,
   getContract,
   GUILD,
   SHARES,
-  sharePrice,
-  remaining,
-  numberOfShares,
+  accounts,
   CouponOnboardingContract,
   BankExtension,
   sha3,
@@ -50,7 +47,7 @@ const signer = {
   privKey: "c150429d49e8799f119434acd3f816f299a5c7e3891455ee12269cb47a5f987c",
 };
 
-contract("MolochV3 - Coupon Onboarding Adapter", async (accounts) => {
+describe("MolochV3 - Coupon Onboarding Adapter", () => {
   it("should be possible to join a DAO with a valid coupon", async () => {
     const myAccount = accounts[1];
     const otherAccount = accounts[2];

@@ -28,8 +28,9 @@ const {
   toBN,
   advanceTime,
   createDao,
-  toUtf8,
   getContract,
+  sha3,
+  accounts,
   GUILD,
   SHARES,
   sharePrice,
@@ -39,12 +40,11 @@ const {
   OnboardingContract,
   VotingContract,
   BankExtension,
-  sha3,
   ETH_TOKEN,
 } = require("../../utils/DaoFactory.js");
 const { checkBalance, isActiveMember } = require("../../utils/TestUtils.js");
 
-contract("MolochV3 - Onboarding Adapter", async (accounts) => {
+describe("MolochV3 - Onboarding Adapter",  () => {
   it("should not be possible onboard when the token amount exceeds the external token limits", async () => {
     const daoOwner = accounts[0];
     const applicant = accounts[2];

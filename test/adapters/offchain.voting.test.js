@@ -35,11 +35,14 @@ const {
   sharePrice,
   remaining,
   numberOfShares,
+  accounts,
+  contract,
   entryBank,
   entryDao,
   createDao,
   ETH_TOKEN,
   BankExtension,
+  OffchainVotingContract,
 } = require("../../utils/DaoFactory.js");
 const {
   createVote,
@@ -55,10 +58,6 @@ const {
   validateMessage,
   SigUtilSigner,
 } = require("../../utils/offchain_voting.js");
-
-const OffchainVotingContract = artifacts.require(
-  "./adapters/OffchainVotingContract"
-);
 
 const members = [
   {
@@ -136,7 +135,7 @@ async function createOffchainVotingDao(
   return { dao, voting: offchainVoting, bank };
 }
 
-contract("MolochV3 - Offchain Voting Module", async (accounts) => {
+describe("MolochV3 - Offchain Voting Module",  () => {
   it("should type & hash be consistent for proposals between javascript and solidity", async () => {
     const myAccount = accounts[1];
     let { dao } = await createOffchainVotingDao(myAccount);

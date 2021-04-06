@@ -50,6 +50,7 @@
   },
   "scripts": {
     "test": "truffle compile && jest",
+    "testmocha": "mocha --exit --recursive",
     "coverage": "truffle run coverage --network coverage --file='test/**/*.js' --solcoverjs ./.solcover.js",
     "lint:fix": "prettier --write 'contracts/**/*.sol' 'test/**/*.test.js' '**/*.md'",
     "lint": "prettier --list-different 'contracts/**/*.sol' 'test/**/*.test.js' '**/*.md'",

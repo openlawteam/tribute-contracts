@@ -26,20 +26,21 @@ SOFTWARE.
  */
 const {
   toBN,
+  sha3,
   advanceTime,
   createDao,
   getContract,
+  accounts,
   GUILD,
   SHARES,
   OLToken,
   TributeContract,
   VotingContract,
   BankExtension,
-  sha3,
 } = require("../../utils/DaoFactory.js");
 const { checkBalance, isActiveMember } = require("../../utils/TestUtils.js");
 
-contract("MolochV3 - Tribute Adapter", async (accounts) => {
+describe("MolochV3 - Tribute Adapter",  () => {
   it("should be possible to provide ERC20 tokens in exchange for DAO shares", async () => {
     const myAccount = accounts[1];
     const applicant = accounts[2];

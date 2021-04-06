@@ -30,6 +30,7 @@ const {
   getContract,
   advanceTime,
   createDao,
+  accounts,
   GUILD,
   SHARES,
   sharePrice,
@@ -44,7 +45,7 @@ const {
 const { checkBalance } = require("../../utils/TestUtils.js");
 const remaining = sharePrice.sub(toBN("50000000000000"));
 
-contract("MolochV3 - Financing Adapter", async (accounts) => {
+describe("MolochV3 - Financing Adapter", () => {
   const myAccount = accounts[1];
   const applicant = accounts[2];
   const newMember = accounts[3];

@@ -21,9 +21,15 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
  */
 
-const { TestFairShareCalc, toWei } = require("../../utils/DaoFactory.js");
+const {
+  TestFairShareCalc,
+  toWei,
+  accounts,
+} = require("../../utils/DaoFactory.js");
 
-contract("MolochV3 - Helper - FairShareHelper", (accounts) => {
+require("chai");
+
+describe("MolochV3 - Helper - FairShareHelper", () => {
   it("should calculate the fair share if the given parameters are valid [ @skip-on-coverage ]", async () => {
     const fairShareCalc = await TestFairShareCalc.new();
     const balance = toWei("4.3", "ether");
