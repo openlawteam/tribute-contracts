@@ -488,9 +488,7 @@ contract DaoRegistry is MemberGuard, AdapterGuard {
      * @notice Mark a proposal as processed in the DAO registry
      * @param proposalId The ID of the proposal that is being processed
      */
-    function processProposal(bytes32 proposalId)
-        external
-    {
+    function processProposal(bytes32 proposalId) external {
         Proposal storage proposal =
             _setProposalFlag(proposalId, ProposalFlag.PROCESSED);
 
