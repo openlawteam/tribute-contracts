@@ -6,7 +6,6 @@ import "../core/DaoConstants.sol";
 import "../core/DaoRegistry.sol";
 import "../extensions/Bank.sol";
 import "../guards/AdapterGuard.sol";
-import "../guards/ReentrancyGuard.sol";
 import "../utils/Signatures.sol";
 
 /**
