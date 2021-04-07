@@ -43,12 +43,9 @@ contract BankAdapterContract is DaoConstants, MemberGuard, AdapterGuard {
     }
 
     /**
-     * @notice Allows the member/advisor of the DAO to withdraw the funds from their internal bank account.
-     * @notice Only accounts that are not reserved can withdraw the funds.
-     * @notice If theres is no available balance in the user's account, the transaction is reverted.
+     * @notice Allows the member/advisor to update their delegate key
      * @param dao The DAO address.
-     * @param account The account to receive the funds.
-     * @param token The token address to receive the funds.
+     * @param delegateKey the new delegate key.
      */
     function updateDelegateKey(DaoRegistry dao, address delegateKey)
         external
