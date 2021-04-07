@@ -24,13 +24,14 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
  */
+
+const { contract, accounts } = require("@openzeppelin/test-environment");
 const {
   toBN,
   fromUtf8,
   getContract,
   advanceTime,
   createDao,
-  accounts,
   GUILD,
   SHARES,
   sharePrice,
@@ -52,7 +53,7 @@ describe("MolochV3 - Financing Adapter", () => {
   const expectedGuildBalance = toBN("1200000000000000000");
 
   it("should be possible to create a financing proposal and get the funds when the proposal pass", async () => {
-    let dao = await createDao(myAccount);
+    let dao = await createDao(myAccount, contract);
     const bankAddress = await dao.getExtensionAddress(sha3("bank"));
     const bank = await BankExtension.at(bankAddress);
     const voting = await getContract(dao, "voting", VotingContract);

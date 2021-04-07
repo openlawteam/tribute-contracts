@@ -2,6 +2,7 @@ module.exports = {
   node: {
     // Options passed directly to Ganache client
     allowUnlimitedContractSize: true, // Allows unlimited contract sizes.
+    gasPrice: 0
   },
   accounts: {
     amount: 10, // Number of unlocked accounts
@@ -13,8 +14,8 @@ module.exports = {
     defaultGas: 6e6, // Maximum gas for contract calls (when unspecified)
 
     // Options available since v0.1.2
-    defaultGasPrice: 20e9, // Gas price for contract calls (when unspecified)
-    artifactsDir: "build/contracts", // Directory where contract artifacts are stored
+    defaultGasPrice: 0, // Gas price for contract calls (when unspecified)
+    artifactsDir: "./build/contracts", // Directory where contract artifacts are stored
   },
 
   node: {

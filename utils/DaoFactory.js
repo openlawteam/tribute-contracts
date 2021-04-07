@@ -26,7 +26,7 @@ SOFTWARE.
  */
 
 const Web3Utils = require("web3-utils");
-const { contract, web3, accounts } = require("@openzeppelin/test-environment");
+const { contract, web3 } = require("@openzeppelin/test-environment");
 
 const sha3 = Web3Utils.sha3;
 const toBN = Web3Utils.toBN;
@@ -472,6 +472,7 @@ let counter = 0;
 
 const createDao = async (
   senderAccount,
+  contract,
   unitPrice = sharePrice,
   nbShares = numberOfShares,
   votingPeriod = 10,
@@ -481,7 +482,7 @@ const createDao = async (
   maxExternalTokens = 100,
   maxChunks = maximumChunks
 ) => {
-  const daoFactory = await DaoFactory.deployed();
+  const daoFactory = DaoFactory;
   const daoName = "test-dao-" + counter++;
   await daoFactory.createDao(daoName, senderAccount);
 
@@ -684,9 +685,6 @@ module.exports = {
   toAscii,
   fromAscii,
   toUtf8,
-  accounts,
-  web3,
-  contract,
   maximumChunks,
   GUILD,
   TOTAL,

@@ -30,7 +30,6 @@ module.exports = {
    *
    * $ truffle test --network <network-name>
    */
-
   networks: {
     ganache: {
       host: "127.0.0.1", // Localhost (default: none)
