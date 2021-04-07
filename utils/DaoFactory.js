@@ -62,8 +62,8 @@ const NFTExtension = artifacts.require("./extensions/nft/NFTExtension");
 const NFTCollectionFactory = artifacts.require(
   "./extensions/NFTCollectionFactory"
 );
-const BankExtension = artifacts.require("./extensions/BankExtension");
-const BankFactory = artifacts.require("./extensions/BankFactory");
+const BankExtension = artifacts.require("./extensions/bank/BankExtension");
+const BankFactory = artifacts.require("./extensions/bank/BankFactory");
 
 const VotingContract = artifacts.require("./adapters/VotingContract");
 const DaoRegistryAdapterContract = artifacts.require("./adapters/DaoRegistryAdapterContract");

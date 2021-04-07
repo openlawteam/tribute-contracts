@@ -4,7 +4,7 @@ pragma solidity ^0.8.0;
 
 import "../core/DaoConstants.sol";
 import "../core/DaoRegistry.sol";
-import "../extensions/Bank.sol";
+import "../extensions/bank/Bank.sol";
 import "../guards/AdapterGuard.sol";
 import "../utils/Signatures.sol";
 

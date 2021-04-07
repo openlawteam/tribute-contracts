@@ -2,13 +2,13 @@ pragma solidity ^0.8.0;
 
 // SPDX-License-Identifier: MIT
 
-import "../core/DaoConstants.sol";
-import "../core/DaoRegistry.sol";
-import "./IExtension.sol";
-import "../guards/AdapterGuard.sol";
-import "../utils/IERC20.sol";
+import "../../core/DaoConstants.sol";
+import "../../core/DaoRegistry.sol";
+import "../IExtension.sol";
+import "../../guards/AdapterGuard.sol";
+import "../../utils/IERC20.sol";
 import "@openzeppelin/contracts/utils/Address.sol";
-import "../helpers/SafeERC20.sol";
+import "../../helpers/SafeERC20.sol";
 
 /**
 MIT License

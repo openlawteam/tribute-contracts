@@ -58,7 +58,7 @@ Considerations:
 
 Extensions are conceived to isolate the complexity of state changes from the DAORegistry contract, and to simplify the core logic. Essentially an Extension is similar to an Adapter, but the main difference is that it is used by several adapters and by the DAORegistry - which end up enhancing the DAO capabilities and the state management without cluttering the DAO core contract.
 
-- [Bank](https://github.com/openlawteam/molochv3-contracts/blob/master/docs/extensions/Bank.md): adds the banking capabilities to the DAO, and keeps track of the DAO accounts and internal token balances.
+- [Bank](https://github.com/openlawteam/molochv3-contracts/blob/master/docs/extensions/bank/Bank.md): adds the banking capabilities to the DAO, and keeps track of the DAO accounts and internal token balances.
 
 - [NFT](https://github.com/openlawteam/molochv3-contracts/blob/master/docs/extensions/NFT.md): adds to the DAO the capability of managing and curate a collection of standard NFTs.
 

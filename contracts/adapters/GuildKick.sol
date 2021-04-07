@@ -10,7 +10,7 @@ import "./interfaces/IGuildKick.sol";
 import "../helpers/GuildKickHelper.sol";
 import "../adapters/interfaces/IVoting.sol";
 import "../helpers/FairShareHelper.sol";
-import "../extensions/Bank.sol";
+import "../extensions/bank/Bank.sol";
 
 /**
 MIT License

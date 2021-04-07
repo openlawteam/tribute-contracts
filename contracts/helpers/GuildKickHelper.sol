@@ -6,7 +6,7 @@ import "../core/DaoRegistry.sol";
 import "../guards/MemberGuard.sol";
 import "../adapters/interfaces/IVoting.sol";
 import "../helpers/FairShareHelper.sol";
-import "../extensions/Bank.sol";
+import "../extensions/bank/Bank.sol";
 
 /**
 MIT License

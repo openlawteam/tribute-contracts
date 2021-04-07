@@ -9,7 +9,7 @@ import "../guards/AdapterGuard.sol";
 import "../adapters/interfaces/IVoting.sol";
 import "../adapters/interfaces/IDistribute.sol";
 import "../helpers/FairShareHelper.sol";
-import "../extensions/Bank.sol";
+import "../extensions/bank/Bank.sol";
 
 /**
 MIT License
