@@ -4,7 +4,7 @@ pragma solidity ^0.8.0;
 
 import "../core/DaoConstants.sol";
 import "../core/DaoRegistry.sol";
-import "../extensions/Bank.sol";
+import "../extensions/nft/NFT.sol";
 import "../guards/MemberGuard.sol";
 import "../guards/AdapterGuard.sol";
 import "./interfaces/IConfiguration.sol";
@@ -34,7 +34,7 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
  */
 
-contract DaoRegistryAdapterContract is DaoConstants, MemberGuard, AdapterGuard {
+contract NFTAdapterContract is DaoConstants, MemberGuard, AdapterGuard {
     /**
      * @notice default fallback function to prevent from sending ether to the contract.
      */
@@ -45,13 +45,17 @@ contract DaoRegistryAdapterContract is DaoConstants, MemberGuard, AdapterGuard {
     /**
      * @notice Allows the member/advisor to update their delegate key
      * @param dao The DAO address.
-     * @param delegateKey the new delegate key.
+     * @param owner the current owner of the NFT
+     * @param nftAddr the nft smart contract address
+     * @param nftTokenId the nft token id
      */
-    function updateDelegateKey(DaoRegistry dao, address delegateKey)
-        external
-        reentrancyGuard(dao)
-        onlyMember(dao)
-    {
-        dao.updateDelegateKey(msg.sender, delegateKey);
+    function collect(
+        DaoRegistry dao,
+        address owner,
+        address nftAddr,
+        uint256 nftTokenId
+    ) external reentrancyGuard(dao) {
+        NFTExtension nft = NFTExtension(dao.getExtensionAddress(NFT));
+        nft.collect(owner, nftAddr, nftTokenId);
     }
 }

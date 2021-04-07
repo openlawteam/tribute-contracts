@@ -66,7 +66,9 @@ const BankExtension = artifacts.require("./extensions/BankExtension");
 const BankFactory = artifacts.require("./extensions/BankFactory");
 
 const VotingContract = artifacts.require("./adapters/VotingContract");
-const WithdrawContract = artifacts.require("./adapters/WithdrawContract");
+const DaoRegistryAdapterContract = artifacts.require("./adapters/DaoRegistryAdapterContract");
+const BankAdapterContract = artifacts.require("./adapters/BankAdapterContract");
+const NFTAdapterContract = artifacts.require("./adapters/NFTAdapterContract");
 const ConfigurationContract = artifacts.require(
   "./adapter/ConfigurationContract"
 );
@@ -96,7 +98,9 @@ async function prepareAdapters(deployer) {
   let financing;
   let onboarding;
   let guildkick;
-  let withdraw;
+  let daoRegistryAdapter;
+  let bankAdapter;
+  let nftAdapter;
   let couponOnboarding;
   let tribute;
   let distribute;
@@ -110,7 +114,9 @@ async function prepareAdapters(deployer) {
     await deployer.deploy(FinancingContract);
     await deployer.deploy(OnboardingContract);
     await deployer.deploy(GuildKickContract);
-    await deployer.deploy(WithdrawContract);
+    await deployer.deploy(DaoRegistryAdapterContract);
+    await deployer.deploy(BankAdapterContract);
+    await deployer.deploy(NFTAdapterContract);
     await deployer.deploy(CouponOnboardingContract, 1);
     await deployer.deploy(TributeContract);
     await deployer.deploy(DistributeContract);
@@ -123,7 +129,9 @@ async function prepareAdapters(deployer) {
     financing = await FinancingContract.deployed();
     onboarding = await OnboardingContract.deployed();
     guildkick = await GuildKickContract.deployed();
-    withdraw = await WithdrawContract.deployed();
+    daoRegistryAdapter = await DaoRegistryAdapterContract.deployed();
+    bankAdapter = await BankAdapterContract.deployed();
+    nftAdapter = await NFTAdapterContract.deployed();
     couponOnboarding = await CouponOnboardingContract.deployed();
     tribute = await TributeContract.deployed();
     distribute = await DistributeContract.deployed();
@@ -136,7 +144,9 @@ async function prepareAdapters(deployer) {
     financing = await FinancingContract.new();
     onboarding = await OnboardingContract.new();
     guildkick = await GuildKickContract.new();
-    withdraw = await WithdrawContract.new();
+    daoRegistryAdapter = await DaoRegistryAdapterContract.new();
+    bankAdapter = await BankAdapterContract.new();
+    nftAdapter = await NFTAdapterContract.new();
     couponOnboarding = await CouponOnboardingContract.new(1);
     tribute = await TributeContract.new();
     distribute = await DistributeContract.new();
@@ -151,7 +161,9 @@ async function prepareAdapters(deployer) {
     managing,
     financing,
     onboarding,
-    withdraw,
+    daoRegistryAdapter,
+    bankAdapter,
+    nftAdapter,
     couponOnboarding,
     tribute,
     distribute,
@@ -179,13 +191,15 @@ const addDefaultAdapters = async (
     managing,
     financing,
     onboarding,
-    withdraw,
+    daoRegistryAdapter,
+    bankAdapter,
+    nftAdapter,
     couponOnboarding,
     tribute,
     distribute,
     tributeNFT,
   } = await prepareAdapters(deployer);
-  await configureDao(
+  await configureDao({
     daoFactory,
     dao,
     ragequit,
@@ -193,7 +207,9 @@ const addDefaultAdapters = async (
     managing,
     financing,
     onboarding,
-    withdraw,
+    daoRegistryAdapter,
+    bankAdapter,
+    nftAdapter,
     voting,
     configuration,
     couponOnboarding,
@@ -207,12 +223,12 @@ const addDefaultAdapters = async (
     tokenAddr,
     maxChunks,
     nftAddr
-  );
+  });
 
   return { dao };
 };
 
-const configureDao = async (
+const configureDao = async ({
   daoFactory,
   dao,
   ragequit,
@@ -220,7 +236,9 @@ const configureDao = async (
   managing,
   financing,
   onboarding,
-  withdraw,
+  daoRegistryAdapter,
+  bankAdapter,
+  nftAdapter,
   voting,
   configuration,
   couponOnboarding,
@@ -233,7 +251,7 @@ const configureDao = async (
   gracePeriod,
   tokenAddr,
   maxChunks
-) => {
+}) => {
   await daoFactory.addAdapters(dao.address, [
     entryDao("voting", voting, {}),
     entryDao("configuration", configuration, {
@@ -253,7 +271,6 @@ const configureDao = async (
     }),
     entryDao("onboarding", onboarding, {
       SUBMIT_PROPOSAL: true,
-      UPDATE_DELEGATE_KEY: true,
       NEW_MEMBER: true,
     }),
     entryDao("coupon-onboarding", couponOnboarding, {
@@ -262,7 +279,11 @@ const configureDao = async (
       UPDATE_DELEGATE_KEY: false,
       NEW_MEMBER: true,
     }),
-    entryDao("withdraw", withdraw, {}),
+    entryDao("daoRegistry", daoRegistryAdapter, {
+      UPDATE_DELEGATE_KEY: true
+    }),
+    entryDao("nft", nftAdapter, {}),
+    entryDao("bank", bankAdapter, {}),
     entryDao("tribute", tribute, {
       SUBMIT_PROPOSAL: true,
       NEW_MEMBER: true,
@@ -281,20 +302,19 @@ const configureDao = async (
   const bankExt = await BankExtension.at(bankAddress);
   await daoFactory.configureExtension(dao.address, bankExt.address, [
     entryBank(ragequit, {
-      WITHDRAW: true,
       INTERNAL_TRANSFER: true,
       SUB_FROM_BALANCE: true,
       ADD_TO_BALANCE: true,
     }),
     entryBank(guildkick, {
-      WITHDRAW: true,
       INTERNAL_TRANSFER: true,
       SUB_FROM_BALANCE: true,
       ADD_TO_BALANCE: true,
     }),
-    entryBank(withdraw, {
+    entryBank(bankAdapter, {
       WITHDRAW: true,
       SUB_FROM_BALANCE: true,
+      UPDATE_TOKEN: true,
     }),
     entryBank(onboarding, {
       ADD_TO_BALANCE: true,
@@ -327,6 +347,9 @@ const configureDao = async (
       ADD_TO_BALANCE: true,
       REGISTER_NFT: true,
       TRANSFER_NFT: true,
+    }),
+    entryBank(nftAdapter, {
+      COLLECT_NFT: true,
     }),
   ]);
 
@@ -506,13 +529,15 @@ const createDao = async (
   const financing = await FinancingContract.deployed();
   const onboarding = await OnboardingContract.deployed();
   const guildkick = await GuildKickContract.deployed();
-  const withdraw = await WithdrawContract.deployed();
+  const daoRegistryAdapter = await DaoRegistryAdapterContract.deployed();
+  const bankAdapter = await BankAdapterContract.deployed();
+  const nftAdapter = await NFTAdapterContract.deployed();
   const couponOnboarding = await CouponOnboardingContract.deployed();
   const tribute = await TributeContract.deployed();
   const distribute = await DistributeContract.deployed();
   const tributeNFT = await TributeNFTContract.deployed();
 
-  await configureDao(
+  await configureDao({
     daoFactory,
     dao,
     ragequit,
@@ -520,7 +545,9 @@ const createDao = async (
     managing,
     financing,
     onboarding,
-    withdraw,
+    daoRegistryAdapter,
+    bankAdapter,
+    nftAdapter,
     voting,
     configuration,
     couponOnboarding,
@@ -533,7 +560,7 @@ const createDao = async (
     gracePeriod,
     tokenAddr,
     maxChunks
-  );
+  });
 
   if (finalize) {
     await dao.finalizeDao();
@@ -702,7 +729,9 @@ module.exports = {
   RagequitContract,
   GuildKickContract,
   OnboardingContract,
-  WithdrawContract,
+  DaoRegistryAdapterContract,
+  BankAdapterContract,
+  NFTAdapterContract,
   ConfigurationContract,
   OffchainVotingContract,
   KickBadReporterAdapter,
