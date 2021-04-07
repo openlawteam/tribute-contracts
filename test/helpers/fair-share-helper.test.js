@@ -25,7 +25,7 @@ const {
   toWei,
   expect,
   expectRevert,
-} = require("../../utils/DaoFactory.js")();
+} = require("../../utils/DaoFactory.js");
 
 describe("Helper - FairShareHelper", () => {
   it("should calculate the fair share if the given parameters are valid", async () => {

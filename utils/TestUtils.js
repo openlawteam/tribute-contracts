@@ -4,16 +4,11 @@
 const {
   sha3,
   toBN,
-  createDao,
   getContract,
   advanceTime,
   sharePrice,
-  numberOfShares,
   SHARES,
-  ETH_TOKEN,
-  TributeNFTContract,
   OnboardingContract,
-  PixelNFT,
   VotingContract,
   BankExtension,
   LOOT,
@@ -43,29 +38,6 @@ const isActiveMember = async (bank, member) => {
   const loot = await bank.balanceOf(member, LOOT);
 
   return shares > toBN("0") || loot > toBN("0");
-};
-
-const createNFTDao = async (daoOwner) => {
-  const dimenson = 100; // 100x100 pixel matrix
-  const pixelNFT = await PixelNFT.new(dimenson);
-
-  const dao = await createDao(
-    daoOwner,
-    sharePrice,
-    numberOfShares,
-    10,
-    1,
-    ETH_TOKEN,
-    false
-  );
-
-  const tributeNFT = await getContract(dao, "tribute-nft", TributeNFTContract);
-
-  await tributeNFT.configureDao(dao.address, pixelNFT.address);
-
-  await dao.finalizeDao();
-
-  return { dao, pixelNFT };
 };
 
 const onboardNewMember = async (dao, sponsor, newMember, proposalId) => {
@@ -113,7 +85,6 @@ const onboardNewMember = async (dao, sponsor, newMember, proposalId) => {
 module.exports = {
   checkLastEvent,
   checkBalance,
-  createNFTDao,
   onboardNewMember,
   isActiveMember,
 };

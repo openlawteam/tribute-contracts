@@ -31,7 +31,7 @@ const {
   DaoRegistry,
   expect,
   expectRevert,
-} = require("../../utils/DaoFactory.js")();
+} = require("../../utils/DaoFactory.js");
 
 describe("Core - Registry", () => {
   it("should not be possible to add an adapter with invalid id", async () => {
