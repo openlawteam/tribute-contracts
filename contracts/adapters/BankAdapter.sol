@@ -5,7 +5,6 @@ pragma solidity ^0.8.0;
 import "../core/DaoConstants.sol";
 import "../core/DaoRegistry.sol";
 import "../extensions/Bank.sol";
-import "../guards/MemberGuard.sol";
 import "../guards/AdapterGuard.sol";
 import "./interfaces/IConfiguration.sol";
 import "../adapters/interfaces/IVoting.sol";
@@ -34,7 +33,7 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
  */
 
-contract DaoRegistryAdapterContract is DaoConstants, MemberGuard, AdapterGuard {
+contract BankAdapterContract is DaoConstants, AdapterGuard {
     /**
      * @notice default fallback function to prevent from sending ether to the contract.
      */
