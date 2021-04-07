@@ -26,7 +26,7 @@ SOFTWARE.
  */
 
 const Web3Utils = require("web3-utils");
-const { web3, contract } = require("@openzeppelin/test-environment");
+const { web3, contract, accounts } = require("@openzeppelin/test-environment");
 const { expectRevert } = require("@openzeppelin/test-helpers");
 const { expect } = require("chai");
 
@@ -688,6 +688,7 @@ module.exports = () => {
     toUtf8,
     web3,
     contractRepo,
+    accounts,
     expectRevert,
     expect,
     maximumChunks,
