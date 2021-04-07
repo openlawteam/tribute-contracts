@@ -21,7 +21,7 @@ export function loadProposalAndSaveVoteResults(
     let voteId = daoAddress.toHex().concat("-vote-").concat(proposalId.toHex());
     let vote = new Vote(voteId);
 
-    // get the voting adapter address of the proposal
+    // get the voting adapter address from the proposal
     let votingAdapterAddress: Bytes = proposal.votingAdapter as Bytes;
 
     if (votingAdapterAddress) {
