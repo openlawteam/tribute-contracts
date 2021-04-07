@@ -50,7 +50,8 @@ contract BankExtension is DaoConstants, AdapterGuard, IExtension {
         WITHDRAW,
         EXECUTE,
         REGISTER_NEW_TOKEN,
-        REGISTER_NEW_INTERNAL_TOKEN
+        REGISTER_NEW_INTERNAL_TOKEN,
+        UPDATE_TOKEN
     }
 
     modifier noProposal {
@@ -213,7 +214,10 @@ contract BankExtension is DaoConstants, AdapterGuard, IExtension {
         }
     }
 
-    function updateToken(address tokenAddr) external noProposal {
+    function updateToken(address tokenAddr)
+        external
+        hasExtensionAccess(this, AclFlag.UPDATE_TOKEN)
+    {
         require(isTokenAllowed(tokenAddr), "token not allowed");
         uint256 totalBalance = balanceOf(TOTAL, tokenAddr);
 

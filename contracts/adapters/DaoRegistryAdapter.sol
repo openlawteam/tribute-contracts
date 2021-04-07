@@ -34,7 +34,7 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
  */
 
-contract WithdrawContract is DaoConstants, MemberGuard, AdapterGuard {
+contract BankAdapterContract is DaoConstants, MemberGuard, AdapterGuard {
     /**
      * @notice default fallback function to prevent from sending ether to the contract.
      */
@@ -50,19 +50,11 @@ contract WithdrawContract is DaoConstants, MemberGuard, AdapterGuard {
      * @param account The account to receive the funds.
      * @param token The token address to receive the funds.
      */
-    function withdraw(
-        DaoRegistry dao,
-        address payable account,
-        address token
-    ) external reentrancyGuard(dao) {
-        require(isNotReservedAddress(account), "withdraw::reserved address");
-
-        // We do not need to check if the token is supported by the bank,
-        // because if it is not, the balance will always be zero.
-        BankExtension bank = BankExtension(dao.getExtensionAddress(BANK));
-        uint256 balance = bank.balanceOf(account, token);
-        require(balance > 0, "nothing to withdraw");
-
-        bank.withdraw(account, token, balance);
+    function updateDelegateKey(DaoRegistry dao, address delegateKey)
+        external
+        reentrancyGuard(dao)
+        onlyMember(dao)
+    {
+        dao.updateDelegateKey(msg.sender, delegateKey);
     }
 }

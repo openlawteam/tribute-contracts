@@ -179,10 +179,6 @@ contract OnboardingContract is
         }
     }
 
-    function updateDelegateKey(DaoRegistry dao, address delegateKey) external {
-        dao.updateDelegateKey(msg.sender, delegateKey);
-    }
-
     function sponsorProposal(
         DaoRegistry dao,
         bytes32 proposalId,
