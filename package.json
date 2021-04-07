@@ -49,8 +49,7 @@
     "ts-node": "^9.1.1"
   },
   "scripts": {
-    "test": "truffle compile && jest",
-    "testmocha": "mocha --exit --recursive",
+    "test": "jest",
     "coverage": "truffle run coverage --network coverage --file='test/**/*.js' --solcoverjs ./.solcover.js",
     "lint:fix": "prettier --write 'contracts/**/*.sol' 'test/**/*.test.js' '**/*.md'",
     "lint": "prettier --list-different 'contracts/**/*.sol' 'test/**/*.test.js' '**/*.md'",
@@ -61,7 +60,8 @@
     "deploy": "graph deploy openlawteam/tribute --ipfs https://api.thegraph.com/ipfs/ --node https://api.thegraph.com/deploy/",
     "deploy-local": "graph deploy openlawteam/tribute --ipfs http://localhost:5001 --node http://127.0.0.1:8020",
     "compile-abi": "truffle compile && truffle-abi",
-    "ganache": "node_modules/.bin/ganache-cli -s=test -g=0 --secure -u 0 -u 1 -p 8545 --networkId 1337"
+    "ganache": "ganache-cli --deterministic -p 8545 --networkId 1337",
+    "migrate": "truffle migrate --network ganache"
   },
   "repository": {
     "type": "git",
