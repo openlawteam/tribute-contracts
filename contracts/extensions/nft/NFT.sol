@@ -50,6 +50,11 @@ contract NFTExtension is
     DaoRegistry public dao;
     address private _creator;
 
+    event CollectedNFT(address nftAddr, uint256 nftTokenId);
+    event RegisteredNFT(address nftAddr);
+    event ReturnedNFT(address nftAddr, uint256 nftTokenId, address newOwner);
+    event TransferredNFT(address nftAddr, uint256 nftTokenId);
+
     enum AclFlag {TRANSFER_NFT, RETURN_NFT, REGISTER_NFT, COLLECT_NFT}
 
     // All the NFTs and Token ids that belong to the GUILD
@@ -127,6 +132,8 @@ contract NFTExtension is
         _nftCollection[GUILD][nftAddr].add(nftTokenId);
         // Keep track of the collected assets
         _collectedNFTs.add(nftAddr);
+
+        emit CollectedNFT(nftAddr, nftTokenId);
     }
 
     /**
@@ -152,10 +159,12 @@ contract NFTExtension is
         _nftCollection[GUILD][nftAddr].add(nftTokenId);
         // Keep track of the collected assets
         _collectedNFTs.add(nftAddr);
+
+        emit TransferredNFT(nftAddr, nftTokenId);
     }
 
     /**
-     * @notice Ttransfers the NFT token from the extension address to the new owner.
+     * @notice Transfers the NFT token from the extension address to the new owner.
      * @notice It also updates the internal state to keep track of the all the NFTs collected by the extension.
      * @notice The caller must have the ACL Flag: RETURN_NFT
      * @dev Reverts if the NFT is not support/allowed, or is not in ERC721 standard.
@@ -179,6 +188,8 @@ contract NFTExtension is
         if (_nftCollection[GUILD][nftAddr].length() == 0) {
             _collectedNFTs.remove(nftAddr);
         }
+
+        emit ReturnedNFT(nftAddr, nftTokenId, newOwner);
     }
 
     /**
@@ -199,6 +210,8 @@ contract NFTExtension is
         if (!availableNFTs[nftAddr]) {
             availableNFTs[nftAddr] = true;
         }
+
+        emit RegisteredNFT(nftAddr);
     }
 
     /**
