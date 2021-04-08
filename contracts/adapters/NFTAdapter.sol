@@ -4,8 +4,9 @@ pragma solidity ^0.8.0;
 
 import "../core/DaoConstants.sol";
 import "../core/DaoRegistry.sol";
-import "../extensions/Bank.sol";
+import "../extensions/nft/NFT.sol";
 import "../guards/MemberGuard.sol";
+import "../guards/AdapterGuard.sol";
 import "./interfaces/IConfiguration.sol";
 import "../adapters/interfaces/IVoting.sol";
 
@@ -33,7 +34,7 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
  */
 
-contract WithdrawContract is DaoConstants, MemberGuard {
+contract NFTAdapterContract is DaoConstants, MemberGuard, AdapterGuard {
     /**
      * @notice default fallback function to prevent from sending ether to the contract.
      */
@@ -42,26 +43,19 @@ contract WithdrawContract is DaoConstants, MemberGuard {
     }
 
     /**
-     * @notice Allows the member/advisor of the DAO to withdraw the funds from their internal bank account.
-     * @notice Only accounts that are not reserved can withdraw the funds.
-     * @notice If theres is no available balance in the user's account, the transaction is reverted.
+     * @notice Allows the member/advisor to update their delegate key
      * @param dao The DAO address.
-     * @param account The account to receive the funds.
-     * @param token The token address to receive the funds.
+     * @param owner the current owner of the NFT
+     * @param nftAddr the nft smart contract address
+     * @param nftTokenId the nft token id
      */
-    function withdraw(
+    function collect(
         DaoRegistry dao,
-        address payable account,
-        address token
-    ) external {
-        require(isNotReservedAddress(account), "withdraw::reserved address");
-
-        // We do not need to check if the token is supported by the bank,
-        // because if it is not, the balance will always be zero.
-        BankExtension bank = BankExtension(dao.getExtensionAddress(BANK));
-        uint256 balance = bank.balanceOf(account, token);
-        require(balance > 0, "nothing to withdraw");
-
-        bank.withdraw(account, token, balance);
+        address owner,
+        address nftAddr,
+        uint256 nftTokenId
+    ) external reentrancyGuard(dao) {
+        NFTExtension nft = NFTExtension(dao.getExtensionAddress(NFT));
+        nft.collect(owner, nftAddr, nftTokenId);
     }
 }

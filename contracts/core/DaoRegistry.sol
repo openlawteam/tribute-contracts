@@ -144,6 +144,8 @@ contract DaoRegistry is MemberGuard, AdapterGuard {
     mapping(bytes32 => uint256) public mainConfiguration;
     mapping(bytes32 => address) public addressConfiguration;
 
+    uint256 public lockedAt;
+
     /// @notice Clonable contract must have an empty constructor
     // constructor() {
     // }
@@ -176,6 +178,18 @@ contract DaoRegistry is MemberGuard, AdapterGuard {
      */
     function finalizeDao() external {
         state = DaoState.READY;
+    }
+
+    function lockSession() external {
+        if (isAdapter(msg.sender) || isExtension(msg.sender)) {
+            lockedAt = block.number;
+        }
+    }
+
+    function unlockSession() external {
+        if (isAdapter(msg.sender) || isExtension(msg.sender)) {
+            lockedAt = 0;
+        }
     }
 
     /**

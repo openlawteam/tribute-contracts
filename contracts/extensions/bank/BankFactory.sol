@@ -3,9 +3,9 @@ pragma experimental ABIEncoderV2;
 
 // SPDX-License-Identifier: MIT
 
-import "../core/DaoConstants.sol";
-import "../core/DaoRegistry.sol";
-import "../core/CloneFactory.sol";
+import "../../core/DaoConstants.sol";
+import "../../core/DaoRegistry.sol";
+import "../../core/CloneFactory.sol";
 import "./Bank.sol";
 
 /**

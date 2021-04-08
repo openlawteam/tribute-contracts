@@ -28,7 +28,6 @@ const {
   toBN,
   advanceTime,
   createDao,
-  toUtf8,
   getContract,
   GUILD,
   SHARES,
@@ -39,6 +38,7 @@ const {
   OnboardingContract,
   VotingContract,
   BankExtension,
+  DaoRegistryAdapterContract,
   sha3,
   ETH_TOKEN,
 } = require("../../utils/DaoFactory.js");
@@ -639,10 +639,14 @@ contract("MolochV3 - Onboarding Adapter", async (accounts) => {
     const delegateKey = accounts[2];
     let dao = await createDao(myAccount);
 
-    const onboardingAddr = await dao.getAdapterAddress(sha3("onboarding"));
-    const onboarding = await OnboardingContract.at(onboardingAddr);
     const bankAddress = await dao.getExtensionAddress(sha3("bank"));
     const bank = await BankExtension.at(bankAddress);
+    const daoRegistryAdapterAddress = await dao.getAdapterAddress(
+      sha3("daoRegistry")
+    );
+    const daoRegistryAdapter = await DaoRegistryAdapterContract.at(
+      daoRegistryAdapterAddress
+    );
 
     const myAccountActive1 = await isActiveMember(bank, myAccount);
     const delegateKeyActive1 = await dao.isActiveMember(delegateKey); // use the dao to check delegatedKeys
@@ -651,7 +655,7 @@ contract("MolochV3 - Onboarding Adapter", async (accounts) => {
     assert.equal(false, delegateKeyActive1);
 
     const newDelegatedKey = accounts[9];
-    await onboarding.updateDelegateKey(dao.address, newDelegatedKey, {
+    await daoRegistryAdapter.updateDelegateKey(dao.address, newDelegatedKey, {
       from: myAccount,
       gasPrice: toBN("0"),
     });
@@ -668,6 +672,13 @@ contract("MolochV3 - Onboarding Adapter", async (accounts) => {
     const onboardingAddr = await dao.getAdapterAddress(sha3("onboarding"));
     const onboarding = await OnboardingContract.at(onboardingAddr);
 
+    const daoRegistryAdapterAddress = await dao.getAdapterAddress(
+      sha3("daoRegistry")
+    );
+    const daoRegistryAdapter = await DaoRegistryAdapterContract.at(
+      daoRegistryAdapterAddress
+    );
+
     const proposalId = "0x1";
 
     await onboarding.onboard(dao.address, proposalId, applicant, SHARES, 1, {
@@ -678,7 +689,7 @@ contract("MolochV3 - Onboarding Adapter", async (accounts) => {
 
     try {
       // try to update the delegated key using the address of another member
-      await onboarding.updateDelegateKey(dao.address, applicant, {
+      await daoRegistryAdapter.updateDelegateKey(dao.address, applicant, {
         from: myAccount,
         gasPrice: toBN("0"),
       });
@@ -695,6 +706,13 @@ contract("MolochV3 - Onboarding Adapter", async (accounts) => {
 
     const onboardingAddr = await dao.getAdapterAddress(sha3("onboarding"));
     const onboarding = await OnboardingContract.at(onboardingAddr);
+
+    const daoRegistryAdapterAddress = await dao.getAdapterAddress(
+      sha3("daoRegistry")
+    );
+    const daoRegistryAdapter = await DaoRegistryAdapterContract.at(
+      daoRegistryAdapterAddress
+    );
 
     const proposalId = "0x1";
 
@@ -724,7 +742,7 @@ contract("MolochV3 - Onboarding Adapter", async (accounts) => {
 
     try {
       // try to update the delegated key using the same address as the member address
-      await onboarding.updateDelegateKey(dao.address, applicant, {
+      await daoRegistryAdapter.updateDelegateKey(dao.address, applicant, {
         from: applicant,
         gasPrice: toBN("0"),
       });

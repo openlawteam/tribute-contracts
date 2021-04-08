@@ -5,6 +5,7 @@ pragma solidity ^0.8.0;
 import "../core/DaoConstants.sol";
 import "../core/DaoRegistry.sol";
 import "../guards/MemberGuard.sol";
+import "../guards/AdapterGuard.sol";
 import "./interfaces/IConfiguration.sol";
 import "../adapters/interfaces/IVoting.sol";
 
@@ -32,7 +33,12 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
  */
 
-contract ConfigurationContract is IConfiguration, DaoConstants, MemberGuard {
+contract ConfigurationContract is
+    IConfiguration,
+    DaoConstants,
+    MemberGuard,
+    AdapterGuard
+{
     struct Configuration {
         bytes32[] keys;
         uint256[] values;
@@ -53,7 +59,7 @@ contract ConfigurationContract is IConfiguration, DaoConstants, MemberGuard {
         bytes32 proposalId,
         bytes32[] calldata keys,
         uint256[] calldata values
-    ) external override onlyMember(dao) {
+    ) external override onlyMember(dao) reentrancyGuard(dao) {
         require(
             keys.length == values.length,
             "must be an equal number of config keys and values"
@@ -93,6 +99,7 @@ contract ConfigurationContract is IConfiguration, DaoConstants, MemberGuard {
     function processProposal(DaoRegistry dao, bytes32 proposalId)
         external
         override
+        reentrancyGuard(dao)
     {
         dao.processProposal(proposalId);
 

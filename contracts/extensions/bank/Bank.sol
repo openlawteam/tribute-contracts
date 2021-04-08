@@ -2,13 +2,13 @@ pragma solidity ^0.8.0;
 
 // SPDX-License-Identifier: MIT
 
-import "../core/DaoConstants.sol";
-import "../core/DaoRegistry.sol";
-import "./IExtension.sol";
-import "../guards/AdapterGuard.sol";
-import "../utils/IERC20.sol";
+import "../../core/DaoConstants.sol";
+import "../../core/DaoRegistry.sol";
+import "../IExtension.sol";
+import "../../guards/AdapterGuard.sol";
+import "../../utils/IERC20.sol";
 import "@openzeppelin/contracts/utils/Address.sol";
-import "../helpers/SafeERC20.sol";
+import "../../helpers/SafeERC20.sol";
 
 /**
 MIT License
@@ -50,7 +50,13 @@ contract BankExtension is DaoConstants, AdapterGuard, IExtension {
         WITHDRAW,
         EXECUTE,
         REGISTER_NEW_TOKEN,
-        REGISTER_NEW_INTERNAL_TOKEN
+        REGISTER_NEW_INTERNAL_TOKEN,
+        UPDATE_TOKEN
+    }
+
+    modifier noProposal {
+        require(dao.lockedAt() < block.number, "proposal lock");
+        _;
     }
 
     /// @dev - Events for Bank
@@ -208,7 +214,10 @@ contract BankExtension is DaoConstants, AdapterGuard, IExtension {
         }
     }
 
-    function updateToken(address tokenAddr) external {
+    function updateToken(address tokenAddr)
+        external
+        hasExtensionAccess(this, AclFlag.UPDATE_TOKEN)
+    {
         require(isTokenAllowed(tokenAddr), "token not allowed");
         uint256 totalBalance = balanceOf(TOTAL, tokenAddr);
 
