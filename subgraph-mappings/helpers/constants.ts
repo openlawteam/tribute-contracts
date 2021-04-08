@@ -26,6 +26,9 @@ export let DISTRIBUTE_ID: string =
 export let TRIBUTE_ID: string =
   "0x9f3f3b08778f7e67091ae6263e03332fca03c910449d2c2eec3320e107a90ad6";
 
+export let TRIBUTE_NFT: string =
+  "0x5cdd394d9967cda884ceb725728ffb6d8963934b8aef7dfb14a58f3e9eea6a3a";
+
 export let MANAGING_ID: string =
   "0xb5d1b10526b91c1951e75295138b32c80917c8ba0b96f19926ef2008a82b6511";
 
@@ -37,3 +40,6 @@ export let FINANCING_ID: string =
 
 export let VOTING_ID: string =
   "0x0e49311626a26ba5be58a3b13d239908e80ce0dffdd5c50bf1d9c82ff35d1ab3";
+
+export let NFT_EXTENSION: string =
+  "0x7dd481eb4b63b94bb55e6b98aabb06c3b8484f82a4d656d6bca0b0cf9b446be0";

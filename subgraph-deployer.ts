@@ -220,10 +220,10 @@ const getYAML = ({
 
 (function () {
   // Authenticate access
-  console.log("🔑 ### Authenticating The Graph access token...");
-  exec(
-    `graph auth https://api.thegraph.com/deploy/ ${process.env.GRAPH_ACCESS_TOKEN}`
-  );
+  // console.log("🔑 ### Authenticating The Graph access token...");
+  // exec(
+  //   `graph auth https://api.thegraph.com/deploy/ ${process.env.GRAPH_ACCESS_TOKEN}`
+  // );
 
   // Compile the solidity contracts
   console.log("📦 ### 1/3 Compiling the smart contracts...");
@@ -276,7 +276,7 @@ const getYAML = ({
     // Deploy subgraph <GITHUB_USERNAME/SUBGRAPH_NAME>
     console.log("🚗 ### Deploying subgraph...");
     exec(
-      `graph deploy --node https://api.thegraph.com/deploy/ --ipfs https://api.thegraph.com/ipfs/ ${subgraph.GITHUB_USERNAME}/${subgraph.SUBGRAPH_NAME}`
+      `graph deploy --access-token ${process.env.GRAPH_ACCESS_TOKEN} --node https://api.thegraph.com/deploy/ --ipfs https://api.thegraph.com/ipfs/ ${subgraph.GITHUB_USERNAME}/${subgraph.SUBGRAPH_NAME}`
     );
 
     console.log("👏 ### Done.");

@@ -60,7 +60,7 @@ export function loadProposalAndSaveVoteResults(
         let voteResults = offchainVotingContract.votes(daoAddress, proposalId);
 
         // assign voting data
-        vote.nbVoters = voteResults.value4;
+        vote.nbVoters = voteResults.value5.plus(voteResults.value6);
         vote.nbYes = voteResults.value5;
         vote.nbNo = voteResults.value6;
 
@@ -75,7 +75,7 @@ export function loadProposalAndSaveVoteResults(
           proposal.reporter = voteResults.value2;
           proposal.resultRoot = voteResults.value3;
 
-          proposal.nbVoters = voteResults.value4;
+          proposal.nbVoters = voteResults.value5.plus(voteResults.value6);
           proposal.nbYes = voteResults.value5;
           proposal.nbNo = voteResults.value6;
           proposal.index = voteResults.value7;

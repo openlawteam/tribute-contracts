@@ -66,6 +66,7 @@ export function handleSubmittedProposal(event: SubmittedProposal): void {
     proposal.sponsored = false;
     proposal.processed = false;
     proposal.member = submittedBy.toHex();
+    proposal.tributedao = daoAddress.toHex();
 
     proposal.save();
   }

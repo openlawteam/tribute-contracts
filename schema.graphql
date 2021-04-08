@@ -22,6 +22,8 @@ type TributeDao @entity {
   extensions: [Extension!]! @derivedFrom(field: "tributedao")
   "List of members in the DAO"
   members: [Member]! @derivedFrom(field: "tributedaos")
+  "List of proposals in the DAO"
+  proposals: [Proposal]! @derivedFrom(field: "tributedao")
 }
 
 type Member @entity {
@@ -53,6 +55,7 @@ type Proposal @entity {
   processedAt: String
   processedBy: Bytes
   member: Member
+  tributedao: TributeDao
 
   "Adapter ID of the proposal"
   adapterId: Bytes
