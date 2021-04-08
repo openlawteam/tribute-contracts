@@ -32,6 +32,7 @@ const {
   sharePrice,
   remaining,
   OnboardingContract,
+  DaoRegistryAdapterContract,
   VotingContract,
 } = require("../../utils/DaoFactory.js");
 
@@ -131,6 +132,12 @@ contract("MolochV3 - Voting Adapter", async (accounts) => {
     const onboarding = await getContract(dao, "onboarding", OnboardingContract);
     const voting = await getContract(dao, "voting", VotingContract);
 
+    const daoRegistryAdapter = await getContract(
+      dao,
+      "daoRegistry",
+      DaoRegistryAdapterContract
+    );
+
     await onboarding.onboard(dao.address, "0x1", account2, SHARES, 0, {
       from: account1,
       value: sharePrice.mul(toBN(3)).add(remaining),
@@ -141,7 +148,7 @@ contract("MolochV3 - Voting Adapter", async (accounts) => {
       gasPrice: toBN("0"),
     });
 
-    await onboarding.updateDelegateKey(dao.address, account3, {
+    await daoRegistryAdapter.updateDelegateKey(dao.address, account3, {
       from: account1,
       gasPrice: toBN("0"),
     });

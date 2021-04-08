@@ -4,7 +4,7 @@ pragma solidity ^0.8.0;
 
 import "../core/DaoConstants.sol";
 import "../core/DaoRegistry.sol";
-import "../extensions/Bank.sol";
+import "../extensions/bank/Bank.sol";
 import "../guards/AdapterGuard.sol";
 import "../utils/Signatures.sol";
 
@@ -92,7 +92,7 @@ contract CouponOnboardingContract is DaoConstants, AdapterGuard, Signatures {
         uint256 amount,
         uint256 nonce,
         bytes memory signature
-    ) external {
+    ) external reentrancyGuard(dao) {
         uint256 currentFlag = flags[address(dao)][nonce / 256];
         require(
             getFlag(currentFlag, nonce % 256) == false,

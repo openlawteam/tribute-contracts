@@ -104,7 +104,7 @@ contract TributeNFTContract is
         address nftAddr,
         uint256 nftTokenId,
         uint256 requestedShares
-    ) external override {
+    ) external override reentrancyGuard(dao) {
         address applicant = msg.sender;
         require(
             isNotReservedAddress(applicant),
@@ -140,7 +140,7 @@ contract TributeNFTContract is
         DaoRegistry dao,
         bytes32 proposalId,
         bytes memory data
-    ) external override {
+    ) external override reentrancyGuard(dao) {
         IVoting votingContract = IVoting(dao.getAdapterAddress(VOTING));
         address sponsoredBy =
             votingContract.getSenderAddress(
@@ -164,6 +164,7 @@ contract TributeNFTContract is
     function cancelProposal(DaoRegistry dao, bytes32 proposalId)
         external
         override
+        reentrancyGuard(dao)
     {
         ProposalDetails storage proposal = proposals[address(dao)][proposalId];
         require(proposal.id == proposalId, "proposal does not exist");
@@ -202,6 +203,7 @@ contract TributeNFTContract is
     function processProposal(DaoRegistry dao, bytes32 proposalId)
         external
         override
+        reentrancyGuard(dao)
     {
         ProposalDetails storage proposal = proposals[address(dao)][proposalId];
         require(proposal.id == proposalId, "proposal does not exist");

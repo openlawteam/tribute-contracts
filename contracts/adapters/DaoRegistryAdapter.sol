@@ -2,8 +2,13 @@ pragma solidity ^0.8.0;
 
 // SPDX-License-Identifier: MIT
 
+import "../core/DaoConstants.sol";
 import "../core/DaoRegistry.sol";
 import "../extensions/bank/Bank.sol";
+import "../guards/MemberGuard.sol";
+import "../guards/AdapterGuard.sol";
+import "./interfaces/IConfiguration.sol";
+import "../adapters/interfaces/IVoting.sol";
 
 /**
 MIT License
@@ -28,30 +33,25 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
  */
-abstract contract MemberGuard is DaoConstants {
+
+contract DaoRegistryAdapterContract is DaoConstants, MemberGuard, AdapterGuard {
     /**
-     * @dev Only members of the DAO are allowed to execute the function call.
+     * @notice default fallback function to prevent from sending ether to the contract.
      */
-    modifier onlyMember(DaoRegistry dao) {
-        _onlyMember(dao, msg.sender);
-        _;
+    receive() external payable {
+        revert("fallback revert");
     }
 
-    modifier onlyMember2(DaoRegistry dao, address _addr) {
-        _onlyMember(dao, _addr);
-        _;
-    }
-
-    function _onlyMember(DaoRegistry dao, address _addr) internal view {
-        address bankAddress = dao.extensions(BANK);
-        if (bankAddress != address(0x0)) {
-            address memberAddr = dao.getAddressIfDelegated(_addr);
-
-            require(
-                BankExtension(bankAddress).balanceOf(memberAddr, SHARES) > 0,
-                "onlyMember"
-            );
-        }
-        require(dao.isActiveMember(_addr), "onlyMember");
+    /**
+     * @notice Allows the member/advisor to update their delegate key
+     * @param dao The DAO address.
+     * @param delegateKey the new delegate key.
+     */
+    function updateDelegateKey(DaoRegistry dao, address delegateKey)
+        external
+        reentrancyGuard(dao)
+        onlyMember(dao)
+    {
+        dao.updateDelegateKey(msg.sender, delegateKey);
     }
 }

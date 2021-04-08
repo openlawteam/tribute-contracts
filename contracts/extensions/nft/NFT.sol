@@ -50,7 +50,7 @@ contract NFTExtension is
     DaoRegistry public dao;
     address private _creator;
 
-    enum AclFlag {TRANSFER_NFT, RETURN_NFT, REGISTER_NFT}
+    enum AclFlag {TRANSFER_NFT, RETURN_NFT, REGISTER_NFT, COLLECT_NFT}
 
     // All the NFTs and Token ids that belong to the GUILD
     mapping(address => mapping(address => EnumerableSet.UintSet))
@@ -118,7 +118,7 @@ contract NFTExtension is
         address owner,
         address nftAddr,
         uint256 nftTokenId
-    ) external {
+    ) external hasExtensionAccess(this, AclFlag.COLLECT_NFT) {
         require(isNFTAllowed(nftAddr), "nft not allowed");
         IERC721 erc721 = IERC721(nftAddr);
         // Move the NFT to the contract address

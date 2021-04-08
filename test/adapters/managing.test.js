@@ -36,7 +36,7 @@ const {
   TOTAL,
   ManagingContract,
   VotingContract,
-  OnboardingContract,
+  DaoRegistryAdapterContract,
 } = require("../../utils/DaoFactory.js");
 
 const { expectRevert } = require("@openzeppelin/test-helpers");
@@ -222,9 +222,14 @@ contract("MolochV3 - Managing Adapter", async (accounts) => {
     );
 
     //set new delegate key
-    const onboardingAddr = await dao.getAdapterAddress(sha3("onboarding"));
-    const onboarding = await OnboardingContract.at(onboardingAddr);
-    await onboarding.updateDelegateKey(dao.address, delegateKey, {
+    const daoRegistryAdapterAddress = await dao.getAdapterAddress(
+      sha3("daoRegistry")
+    );
+    const daoRegistryAdapter = await DaoRegistryAdapterContract.at(
+      daoRegistryAdapterAddress
+    );
+
+    await daoRegistryAdapter.updateDelegateKey(dao.address, delegateKey, {
       from: myAccount,
       gasPrice: toBN("0"),
     });

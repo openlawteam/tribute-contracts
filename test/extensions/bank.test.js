@@ -32,7 +32,7 @@ const {
   BankExtension,
   BankFactory,
   ETH_TOKEN,
-} = require("../../../utils/DaoFactory.js");
+} = require("../../utils/DaoFactory.js");
 
 contract("MolochV3 - Bank Extension", async (accounts) => {
   it("", () => {
