@@ -30,11 +30,13 @@ const {
   numberOfShares,
   ETH_TOKEN,
   NFTExtension,
+  getContract,
   sha3,
   toBN,
-} = require("../../../utils/DaoFactory.js");
+  NFTAdapterContract,
+} = require("../../utils/DaoFactory.js");
 
-const { createNFTDao } = require("../../../utils/TestUtils.js");
+const { createNFTDao } = require("../../utils/TestUtils.js");
 
 contract("MolochV3 - NFT Extension", async (accounts) => {
   it("", () => {
@@ -139,11 +141,12 @@ contract("MolochV3 - NFT Extension", async (accounts) => {
   it("should be possible to register a new NFT if you are the extension creator", async () => {
     const { dao } = await createNFTDao(accounts[0]);
 
-    const nftExtAddr = await dao.getExtensionAddress(sha3("nft"));
-    const nftExtension = await NFTExtension.at(nftExtAddr);
-    await nftExtension.registerPotentialNewNFT(ETH_TOKEN, {
+    const nft = await getContract(dao, "nft", NFTAdapterContract);
+    await nft.registerPotentialNewNFT(dao.address, ETH_TOKEN, {
       from: accounts[0],
     });
+    const nftExtAddr = await dao.getExtensionAddress(sha3("nft"));
+    const nftExtension = await NFTExtension.at(nftExtAddr);
 
     assert.equal(await nftExtension.isNFTAllowed(ETH_TOKEN), true);
   });
@@ -168,6 +171,7 @@ contract("MolochV3 - NFT Extension", async (accounts) => {
 
     const nftExtAddr = await dao.getExtensionAddress(sha3("nft"));
     const nftExtension = await NFTExtension.at(nftExtAddr);
+
     try {
       await nftExtension.transferFrom(accounts[1], pixelNFT.address, 1);
       assert.fail(
@@ -196,11 +200,10 @@ contract("MolochV3 - NFT Extension", async (accounts) => {
   it("should not be possible to collect a NFT that is not allowed", async () => {
     const { dao } = await createNFTDao(accounts[0]);
 
-    const nftExtAddr = await dao.getExtensionAddress(sha3("nft"));
-    const nftExtension = await NFTExtension.at(nftExtAddr);
+    const nft = await getContract(dao, "nft", NFTAdapterContract);
     try {
       const fakeNFTAddr = accounts[2];
-      await nftExtension.collect(accounts[1], fakeNFTAddr, 1);
+      await nft.collect(dao.address, accounts[1], fakeNFTAddr, 1);
       assert.fail(
         "should not be possible to collect a NFT that is not allowed"
       );
@@ -223,13 +226,14 @@ contract("MolochV3 - NFT Extension", async (accounts) => {
     assert.equal(owner, nftOwner);
 
     const nftExtAddr = await dao.getExtensionAddress(sha3("nft"));
+    const nftExtension = await NFTExtension.at(nftExtAddr);
     await pixelNFT.approve(nftExtAddr, tokenId, {
       from: nftOwner,
       gasPrice: toBN("0"),
     });
 
-    const nftExtension = await NFTExtension.at(nftExtAddr);
-    await nftExtension.collect(nftOwner, pixelNFT.address, tokenId, {
+    const nft = await getContract(dao, "nft", NFTAdapterContract);
+    await nft.collect(dao.address, nftOwner, pixelNFT.address, tokenId, {
       from: nftOwner,
       gasPrice: toBN("0"),
     });

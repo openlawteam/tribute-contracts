@@ -133,6 +133,7 @@ contract("MolochV3 - Voting Adapter", async (accounts) => {
     const voting = await getContract(dao, "voting", VotingContract);
 
     const daoRegistryAdapter = await getContract(
+      dao,
       "daoRegistry",
       DaoRegistryAdapterContract
     );

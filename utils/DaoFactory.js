@@ -343,13 +343,12 @@ const configureDao = async ({
   const nftExtAddr = await dao.getExtensionAddress(sha3("nft"));
   const nftExt = await NFTExtension.at(nftExtAddr);
   await daoFactory.configureExtension(dao.address, nftExt.address, [
-    entryBank(tributeNFT, {
-      ADD_TO_BALANCE: true,
+    entryNft(tributeNFT, {
       REGISTER_NFT: true,
       TRANSFER_NFT: true,
     }),
-    entryBank(nftAdapter, {
-      COLLECT_NFT: true,
+    entryNft(nftAdapter, {
+      COLLECT_NFT: true
     }),
   ]);
 
@@ -629,6 +628,23 @@ const advanceTime = async (time) => {
       }
     );
   });
+};
+
+const entryNft = (contract, flags) => {
+  const values = [
+    flags.TRANSFER_NFT,
+    flags.RETURN_NFT,
+    flags.REGISTER_NFT,
+    flags.COLLECT_NFT
+  ];
+
+  const acl = entry(values);
+
+  return {
+    id: sha3("n/a"),
+    addr: contract.address,
+    flags: acl,
+  };
 };
 
 const entryBank = (contract, flags) => {

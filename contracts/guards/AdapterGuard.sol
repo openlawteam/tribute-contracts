@@ -42,6 +42,7 @@ abstract contract AdapterGuard {
     }
 
     modifier reentrancyGuard(DaoRegistry dao) {
+        require(dao.lockedAt() < block.number, "reentrancy guard");
         dao.lockSession();
         _;
         dao.unlockSession();

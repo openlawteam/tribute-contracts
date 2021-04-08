@@ -36,10 +36,10 @@ const {
   OnboardingContract,
   VotingContract,
   FinancingContract,
-  WithdrawContract,
   BankExtension,
   sha3,
   ETH_TOKEN,
+  BankAdapterContract,
 } = require("../../utils/DaoFactory.js");
 const { checkBalance } = require("../../utils/TestUtils.js");
 const remaining = sharePrice.sub(toBN("50000000000000"));
@@ -57,7 +57,7 @@ contract("MolochV3 - Financing Adapter", async (accounts) => {
     const voting = await getContract(dao, "voting", VotingContract);
     const financing = await getContract(dao, "financing", FinancingContract);
     const onboarding = await getContract(dao, "onboarding", OnboardingContract);
-    const withdraw = await getContract(dao, "withdraw", WithdrawContract);
+    const bankAdapter = await getContract(dao, "bank", BankAdapterContract);
 
     let proposalId = "0x1";
 
@@ -148,7 +148,7 @@ contract("MolochV3 - Financing Adapter", async (accounts) => {
     checkBalance(bank, applicant, ETH_TOKEN, requestedAmount);
 
     const ethBalance = await web3.eth.getBalance(applicant);
-    await withdraw.withdraw(dao.address, applicant, ETH_TOKEN, {
+    await bankAdapter.withdraw(dao.address, applicant, ETH_TOKEN, {
       from: myAccount,
       gasPrice: toBN("0"),
     });
