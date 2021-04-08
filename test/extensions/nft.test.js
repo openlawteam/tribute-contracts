@@ -140,13 +140,12 @@ contract("MolochV3 - NFT Extension", async (accounts) => {
 
   it("should be possible to register a new NFT if you are the extension creator", async () => {
     const { dao } = await createNFTDao(accounts[0]);
-
-    const nft = await getContract(dao, "nft", NFTAdapterContract);
-    await nft.registerPotentialNewNFT(dao.address, ETH_TOKEN, {
-      from: accounts[0],
-    });
     const nftExtAddr = await dao.getExtensionAddress(sha3("nft"));
     const nftExtension = await NFTExtension.at(nftExtAddr);
+
+    await nftExtension.registerPotentialNewNFT(ETH_TOKEN, {
+      from: accounts[0],
+    });
 
     assert.equal(await nftExtension.isNFTAllowed(ETH_TOKEN), true);
   });
