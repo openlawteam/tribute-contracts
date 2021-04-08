@@ -11,7 +11,7 @@ dataSources:
     source:
       address: "0xFCc30f42843d0848Dc91B1187A1cB1357D671366"
       abi: DaoFactory
-      startBlock: 11
+      startBlock: 5
     mapping:
       kind: ethereum/events
       apiVersion: 0.0.4
@@ -32,7 +32,7 @@ dataSources:
     source:
       address: "0x439A479e8A567A83392961bC6d026Ea99368cD8F"
       abi: BankFactory
-      startBlock: 14
+      startBlock: 8
     mapping:
       kind: ethereum/events
       apiVersion: 0.0.4
@@ -152,23 +152,27 @@ templates:
           handler: handleWithdraw
       file: ./subgraph-mappings/bank-extension-mapping.ts
   # ====================================== NFTExtension ====================================
-  # - kind: ethereum/contract
-  #   name: NFTExtension
-  #   network: mainnet
-  #   source:
-  #     abi: NFTExtension
-  #   mapping:
-  #     kind: ethereum/events
-  #     apiVersion: 0.0.4
-  #     language: wasm/assemblyscript
-  #     entities:
-  #       - NFT
-  #     abis:
-  #       - name: NFTExtension
-  #         file: ./build/contracts/NFTExtension.json
-  #     eventHandlers:
-  #       - event: NewBalance(address,address,uint160)
-  #         handler: handleNewBalance
-  #       - event: Withdraw(address,address,uint160)
-  #         handler: handleWithdraw
-  #     file: ./subgraph-mappings/nft-extension-mapping.ts
+  - kind: ethereum/contract
+    name: NFTExtension
+    network: mainnet
+    source:
+      abi: NFTExtension
+    mapping:
+      kind: ethereum/events
+      apiVersion: 0.0.4
+      language: wasm/assemblyscript
+      entities:
+        - NFT
+      abis:
+        - name: NFTExtension
+          file: ./build/contracts/NFTExtension.json
+      eventHandlers:
+        - event: CollectedNFT(address,uint256)
+          handler: handleCollectedNFT
+        - event: RegisteredNFT(address)
+          handler: handleRegisteredNFT
+        - event: ReturnedNFT(address,uint256,address)
+          handler: handleReturnedNFT
+        - event: TransferredNFT(address,uint256)
+          handler: handleTransferredNFT
+      file: ./subgraph-mappings/nft-extension-mapping.ts

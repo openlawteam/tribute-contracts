@@ -17,6 +17,8 @@ type YAMLSettings = {
   daoFactoryStartBlock: number;
   bankFactoryAddress: string;
   bankFactoryStartBlock: number;
+  nftCollFactoryAddress: string;
+  nftCollFactoryStartBlock: number;
   network: string;
 };
 
@@ -37,6 +39,8 @@ const getYAML = ({
   daoFactoryStartBlock,
   bankFactoryAddress,
   bankFactoryStartBlock,
+  nftCollFactoryAddress,
+  nftCollFactoryStartBlock,
   network,
 }: YAMLSettings): string => {
   return ` 
@@ -93,9 +97,9 @@ const getYAML = ({
       name: NFTCollectionFactory
       network: ${network}
       source:
-        address: "0x120AcB4EeDf8Af8F79D86E3D211C96cBF09e493c"
+        address: "${nftCollFactoryAddress}"
         abi: NFTCollectionFactory
-        startBlock: 17
+        startBlock: ${nftCollFactoryStartBlock}
       mapping:
         kind: ethereum/events
         apiVersion: 0.0.4
@@ -194,37 +198,35 @@ const getYAML = ({
             handler: handleWithdraw
         file: ./subgraph-mappings/bank-extension-mapping.ts
       # ====================================== NFTExtension ====================================
-      # - kind: ethereum/contract
-      #   name: NFTExtension
-      #   network: mainnet
-      #   source:
-      #     abi: NFTExtension
-      #   mapping:
-      #     kind: ethereum/events
-      #     apiVersion: 0.0.4
-      #     language: wasm/assemblyscript
-      #     entities:
-      #       - NFT
-      #     abis:
-      #       - name: NFTExtension
-      #         file: ./build/contracts/NFTExtension.json
-      #     eventHandlers:
-      #       - event: NewBalance(address,address,uint160)
-      #         handler: handleNewBalance
-      #       - event: Withdraw(address,address,uint160)
-      #         handler: handleWithdraw
-      #     file: ./subgraph-mappings/nft-extension-mapping.ts
+      - kind: ethereum/contract
+      name: NFTExtension
+      network: ${network}
+      source:
+        abi: NFTExtension
+      mapping:
+        kind: ethereum/events
+        apiVersion: 0.0.4
+        language: wasm/assemblyscript
+        entities:
+          - NFT
+        abis:
+          - name: NFTExtension
+            file: ./build/contracts/NFTExtension.json
+        eventHandlers:
+          - event: CollectedNFT(address,uint256)
+            handler: handleCollectedNFT
+          - event: RegisteredNFT(address)
+            handler: handleRegisteredNFT
+          - event: ReturnedNFT(address,uint256,address)
+            handler: handleReturnedNFT
+          - event: TransferredNFT(address,uint256)
+            handler: handleTransferredNFT
+        file: ./subgraph-mappings/nft-extension-mapping.ts
           
 `;
 };
 
 (function () {
-  // Authenticate access
-  // console.log("🔑 ### Authenticating The Graph access token...");
-  // exec(
-  //   `graph auth https://api.thegraph.com/deploy/ ${process.env.GRAPH_ACCESS_TOKEN}`
-  // );
-
   // Compile the solidity contracts
   console.log("📦 ### 1/3 Compiling the smart contracts...");
   exec(`truffle compile`);
@@ -253,12 +255,18 @@ const getYAML = ({
     GITHUB_USERNAME: ${subgraph.GITHUB_USERNAME}
     SUBGRAPH_NAME: ${subgraph.SUBGRAPH_NAME}
     Network: ${subgraph.network}
+
     === DAO FACTORY ===
     Address: ${subgraph.daoFactoryAddress}
     Start Block: ${subgraph.daoFactoryStartBlock}
+
     === BANK FACTORY ===
     Address: ${subgraph.bankFactoryAddress}
     Start Block: ${subgraph.bankFactoryStartBlock}
+    
+    === NFT COLLECTION FACTORY ===
+    Address: ${subgraph.nftCollFactoryAddress}
+    Start Block: ${subgraph.nftCollFactoryStartBlock}
     `);
 
     // Write YAML file
@@ -269,6 +277,8 @@ const getYAML = ({
         daoFactoryStartBlock: subgraph.daoFactoryStartBlock,
         bankFactoryAddress: subgraph.bankFactoryAddress,
         bankFactoryStartBlock: subgraph.bankFactoryStartBlock,
+        nftCollFactoryAddress: subgraph.nftCollFactoryAddress,
+        nftCollFactoryStartBlock: subgraph.nftCollFactoryStartBlock,
         network: subgraph.network,
       })
     );
