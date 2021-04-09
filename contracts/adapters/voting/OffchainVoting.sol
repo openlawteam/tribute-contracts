@@ -368,11 +368,14 @@ contract OffchainVotingContract is
         (bool success, uint256 blockNumber) =
             _stringToUint(proposal.payload.snapshot);
         require(success, "snapshot conversion error");
-
+        BankExtension bank = BankExtension(dao.getExtensionAddress(BANK));
+        
         bytes32 proposalHash =
             _snapshotContract.hashMessage(dao, msg.sender, proposal);
         address addr = recover(proposalHash, proposal.sig);
-        require(dao.isActiveMember(addr), "noActiveMember");
+
+        address memberAddr = dao.getAddressIfDelegated(addr);
+        require(bank.balanceOf(memberAddr, SHARES) > 0, "noActiveMember");
         require(
             blockNumber <= block.number,
             "snapshot block number should not be in the future"
