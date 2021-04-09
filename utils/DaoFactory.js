@@ -90,6 +90,34 @@ const TributeContract = artifacts.require("./adapters/TributeContract");
 const DistributeContract = artifacts.require("./adapters/DistributeContract");
 const TributeNFTContract = artifacts.require("./adapters/TributeNFTContract");
 
+const networks = [
+  {
+    name: "ganache",
+    chainId: 1337,
+  },
+  {
+    name: "rinkeby",
+    chainId: 4,
+  },
+  {
+    name: "rinkeby-fork",
+    chainId: 4,
+  },
+  {
+    name: "test",
+    chainId: 1,
+  },
+  {
+    name: "coverage",
+    chainId: 1,
+  },
+];
+
+const getNetworkDetails = (name) => {
+  return networks.find((n) => n.name === name);
+};
+
+
 async function prepareAdapters(deployer) {
   let voting;
   let configuration;
@@ -719,6 +747,7 @@ module.exports = {
   toAscii,
   fromAscii,
   toUtf8,
+  getNetworkDetails,
   maximumChunks,
   GUILD,
   TOTAL,
