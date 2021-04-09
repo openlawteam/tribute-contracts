@@ -81,22 +81,6 @@ contract("MolochV3 - NFT Extension", async (accounts) => {
     assert.equal(total.toString(), "0");
   });
 
-  it("should not be possible get an NFT in the collection if it is empty", async () => {
-    const { dao } = await createNFTDao(accounts[0]);
-
-    const nftExtAddr = await dao.getExtensionAddress(sha3("nft"));
-    const nftExtension = await NFTExtension.at(nftExtAddr);
-
-    try {
-      await nftExtension.getNFTByIndex(0);
-      assert.fail(
-        "should not be possible get an NFT in the collection if it is empty"
-      );
-    } catch (e) {
-      //ignore the error:  Error: Returned error: VM Exception while processing transaction: revert
-    }
-  });
-
   it("should not be possible to initialize the extension if it was already initialized", async () => {
     const { dao } = await createNFTDao(accounts[0]);
 
