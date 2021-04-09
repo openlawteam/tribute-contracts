@@ -81,16 +81,6 @@ contract("MolochV3 - NFT Extension", async (accounts) => {
     assert.equal(total.toString(), "0");
   });
 
-  it("should be possible get an NFT in the collection using the index", async () => {
-    const { dao } = await createNFTDao(accounts[0]);
-
-    const nftExtAddr = await dao.getExtensionAddress(sha3("nft"));
-    const nftExtension = await NFTExtension.at(nftExtAddr);
-    //TODO needs to contain at least 1 nft
-    // const nftAddr = await nftExtension.getNFTByIndex(0);
-    // assert.equal(nftAddr, "0x0");
-  });
-
   it("should not be possible get an NFT in the collection if it is empty", async () => {
     const { dao } = await createNFTDao(accounts[0]);
 
