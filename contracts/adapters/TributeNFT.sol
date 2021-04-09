@@ -229,11 +229,7 @@ contract TributeNFTContract is
             // Approve the Ext Address to move the asset
             erc721.approve(address(nftExt), proposal.nftTokenId);
             // Transfers the asset to the DAO Collection, and checks if the NFT is supported/valid.
-            nftExt.collect(
-                address(this),
-                proposal.nftAddr,
-                proposal.nftTokenId
-            );
+            nftExt.collect(proposal.nftAddr, proposal.nftTokenId);
         } else if (
             voteResult == IVoting.VotingState.NOT_PASS ||
             voteResult == IVoting.VotingState.TIE

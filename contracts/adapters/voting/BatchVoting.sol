@@ -252,7 +252,7 @@ contract BatchVotingContract is
         bytes32 proposalHash =
             _snapshotContract.hashMessage(dao, msg.sender, proposal);
         address addr = recover(proposalHash, proposal.sig);
-        require(dao.isActiveMember(addr), "noActiveMember");
+        require(dao.isMember(addr), "noMember");
         require(
             blockNumber < block.number,
             "snapshot block number should not be in the future"

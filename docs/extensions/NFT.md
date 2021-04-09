@@ -161,3 +161,10 @@ function onERC721Received(
     bytes calldata data
 ) external override returns (bytes4)
 ```
+
+## Events
+
+- `CollectedNFT`: when a NFT is collected/stored into the NFT collection.
+- `RegisteredNFT`: when a new NFT address is registered into the NFT collection, so it can be collected.
+- `ReturnedNFT`: when a NFT is transferred from the extension to another owner.
+- `TransferredNFT`: when a NFT is transferred from the escrow adapter to the NFT collection in the extension.

@@ -110,7 +110,7 @@ contract BankExtension is DaoConstants, AdapterGuard, IExtension {
      */
     function initialize(DaoRegistry _dao, address creator) external override {
         require(!initialized, "bank already initialized");
-        require(_dao.isActiveMember(creator), "bank::not active member");
+        require(_dao.isMember(creator), "bank::not member");
         availableInternalTokens[SHARES] = true;
         internalTokens.push(SHARES);
 

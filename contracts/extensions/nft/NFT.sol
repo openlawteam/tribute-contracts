@@ -57,6 +57,16 @@ contract NFTExtension is
         INTERNAL_TRANSFER
     }
 
+    event CollectedNFT(address nftAddr, uint256 nftTokenId);
+    event RegisteredNFTAddress(address nftAddr);
+    event TransferredNFT(
+        address nftAddr,
+        uint256 nftTokenId,
+        address oldOwner,
+        address newOwner
+    );
+    event WithdrawnNFT(address nftAddr, uint256 nftTokenId, address toAddress);
+
     // All the NFTs and Token ids that belong to the GUILD
     mapping(address => EnumerableSet.UintSet) private _nfts;
     mapping(bytes32 => address) private _ownership;
@@ -87,7 +97,7 @@ contract NFTExtension is
      */
     function initialize(DaoRegistry _dao, address creator) external override {
         require(!initialized, "already initialized");
-        require(_dao.isActiveMember(creator), "not active member");
+        require(_dao.isMember(creator), "not a member");
 
         initialized = true;
         dao = _dao;
@@ -112,11 +122,15 @@ contract NFTExtension is
         if (currentOwner == address(this)) {
             if (_ownership[getNFTId(nftAddr, nftTokenId)] == address(0x0)) {
                 _saveNft(nftAddr, nftTokenId, GUILD);
+
+                emit CollectedNFT(nftAddr, nftTokenId);
             }
             //If the NFT is not in the NFTExtension, we try to transfer from the current owner of the NFT to the extension
         } else {
             erc721.safeTransferFrom(currentOwner, address(this), nftTokenId);
             _saveNft(nftAddr, nftTokenId, GUILD);
+
+            emit CollectedNFT(nftAddr, nftTokenId);
         }
     }
 
@@ -145,6 +159,8 @@ contract NFTExtension is
         if (_nfts[nftAddr].length() == 0) {
             _nftAddresses.remove(nftAddr);
         }
+
+        emit WithdrawnNFT(nftAddr, nftTokenId, newOwner);
     }
 
     /**
@@ -161,11 +177,12 @@ contract NFTExtension is
         address newOwner
     ) public hasExtensionAccess(this, AclFlag.INTERNAL_TRANSFER) {
         require(newOwner != address(0x0), "new owner is 0");
-        require(
-            _ownership[getNFTId(nftAddr, nftTokenId)] != address(0x0),
-            "nft not found"
-        );
+        address currentOwner = _ownership[getNFTId(nftAddr, nftTokenId)];
+        require(currentOwner != address(0x0), "nft not found");
+
         _ownership[getNFTId(nftAddr, nftTokenId)] = newOwner;
+
+        emit TransferredNFT(nftAddr, nftTokenId, currentOwner, newOwner);
     }
 
     /**
@@ -184,6 +201,8 @@ contract NFTExtension is
         );
 
         _nftAddresses.add(nftAddr);
+
+        emit RegisteredNFTAddress(nftAddr);
     }
 
     /**
