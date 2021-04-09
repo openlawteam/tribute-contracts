@@ -633,9 +633,10 @@ const advanceTime = async (time) => {
 const entryNft = (contract, flags) => {
   const values = [
     flags.TRANSFER_NFT,
-    flags.RETURN_NFT,
+    flags.WITHDRAW_NFT,
     flags.REGISTER_NFT,
-    flags.COLLECT_NFT
+    flags.COLLECT_NFT,
+    flags.INTERNAL_TRANSFER
   ];
 
   const acl = entry(values);

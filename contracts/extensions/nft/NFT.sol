@@ -59,7 +59,7 @@ contract NFTExtension is
 
     // All the NFTs and Token ids that belong to the GUILD
     mapping(address => EnumerableSet.UintSet) private _nfts;
-    mapping(bytes32 => address) _ownership;
+    mapping(bytes32 => address) private _ownership;
 
     // All the NFTs addresses collected and stored in the GUILD collection
     EnumerableSet.AddressSet private _nftAddresses;
@@ -141,6 +141,8 @@ contract NFTExtension is
         erc721.safeTransferFrom(address(this), newOwner, nftTokenId);
         // Remove the asset from the GUILD collection
         _nfts[nftAddr].remove(nftTokenId);
+        delete _ownership[getNFTId(nftAddr, nftTokenId)];
+
         // If we dont hold the asset anymore, we can remove it
         if (_nfts[nftAddr].length() == 0) {
             _nftAddresses.remove(nftAddr);

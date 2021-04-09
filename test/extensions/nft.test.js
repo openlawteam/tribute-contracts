@@ -74,8 +74,11 @@ contract("MolochV3 - NFT Extension", async (accounts) => {
 
     const nftExtAddr = await dao.getExtensionAddress(sha3("nft"));
     const nftExtension = await NFTExtension.at(nftExtAddr);
-    const total = await nftExtension.nbNFTs();
-    assert.equal(total, 0);
+    let total = await nftExtension.nbNFTAddresses();
+    assert.equal(total.toString(), "1");
+    let nftAddr = await nftExtension.getNFTAddress(0);
+    total = await nftExtension.nbNFTs(nftAddr);
+    assert.equal(total.toString(), "0");
   });
 
   it("should be possible get an NFT in the collection using the index", async () => {
@@ -104,83 +107,6 @@ contract("MolochV3 - NFT Extension", async (accounts) => {
     }
   });
 
-  it("should not be possible to register a new NFT without the REGISTER_NEW_NFT permission", async () => {
-    const { dao } = await createNFTDao(accounts[0]);
-
-    const nftExtAddr = await dao.getExtensionAddress(sha3("nft"));
-    const nftExtension = await NFTExtension.at(nftExtAddr);
-    try {
-      await nftExtension.registerPotentialNewNFT(ETH_TOKEN, {
-        from: accounts[6],
-      });
-      assert.fail(
-        "should not be possible to register a new NFT without the REGISTER_NEW_NFT permission"
-      );
-    } catch (e) {
-      assert.equal(e.reason, "nft::accessDenied::notCreator");
-    }
-  });
-
-  it("should not be possible to register a new NFT without the REGISTER_NEW_NFT permission", async () => {
-    const { dao } = await createNFTDao(accounts[0]);
-
-    const nftExtAddr = await dao.getExtensionAddress(sha3("nft"));
-    const nftExtension = await NFTExtension.at(nftExtAddr);
-    try {
-      await nftExtension.registerPotentialNewNFT(ETH_TOKEN, {
-        from: accounts[6],
-      });
-      assert.fail(
-        "should not be possible to register a new NFT without the REGISTER_NEW_NFT permission"
-      );
-    } catch (e) {
-      assert.equal(e.reason, "nft::accessDenied::notCreator");
-    }
-  });
-
-  it("should be possible to register a new NFT if you are the extension creator", async () => {
-    const { dao } = await createNFTDao(accounts[0]);
-    const nftExtAddr = await dao.getExtensionAddress(sha3("nft"));
-    const nftExtension = await NFTExtension.at(nftExtAddr);
-
-    await nftExtension.registerPotentialNewNFT(ETH_TOKEN, {
-      from: accounts[0],
-    });
-
-    assert.equal(await nftExtension.isNFTAllowed(ETH_TOKEN), true);
-  });
-
-  it("should not be possible to return a NFT without the RETURN permission", async () => {
-    const { dao, pixelNFT } = await createNFTDao(accounts[0]);
-
-    const nftExtAddr = await dao.getExtensionAddress(sha3("nft"));
-    const nftExtension = await NFTExtension.at(nftExtAddr);
-    try {
-      await nftExtension.returnNFT(accounts[1], pixelNFT.address, 1);
-      assert.fail(
-        "should not be possible to return a NFT without the RETURN permission"
-      );
-    } catch (e) {
-      assert.equal(e.reason, "nft::accessDenied");
-    }
-  });
-
-  it("should not be possible to transfer a NFT without the TRANSFER permission", async () => {
-    const { dao, pixelNFT } = await createNFTDao(accounts[0]);
-
-    const nftExtAddr = await dao.getExtensionAddress(sha3("nft"));
-    const nftExtension = await NFTExtension.at(nftExtAddr);
-
-    try {
-      await nftExtension.transferFrom(accounts[1], pixelNFT.address, 1);
-      assert.fail(
-        "should not be possible to transfer a NFT without the TRANSFER permission"
-      );
-    } catch (e) {
-      assert.equal(e.reason, "nft::accessDenied");
-    }
-  });
-
   it("should not be possible to initialize the extension if it was already initialized", async () => {
     const { dao } = await createNFTDao(accounts[0]);
 
@@ -193,21 +119,6 @@ contract("MolochV3 - NFT Extension", async (accounts) => {
       );
     } catch (e) {
       assert.equal(e.reason, "already initialized");
-    }
-  });
-
-  it("should not be possible to collect a NFT that is not allowed", async () => {
-    const { dao } = await createNFTDao(accounts[0]);
-
-    const nft = await getContract(dao, "nft", NFTAdapterContract);
-    try {
-      const fakeNFTAddr = accounts[2];
-      await nft.collect(dao.address, accounts[1], fakeNFTAddr, 1);
-      assert.fail(
-        "should not be possible to collect a NFT that is not allowed"
-      );
-    } catch (e) {
-      assert.equal(e.reason, "nft not allowed");
     }
   });
 
@@ -238,7 +149,9 @@ contract("MolochV3 - NFT Extension", async (accounts) => {
     });
 
     // Make sure it was collected
-    const nftAddr = await nftExtension.getNFTByIndex(0);
+    const nftAddr = await nftExtension.getNFTAddress(0);
+    const nftId = await nftExtension.getNFT(nftAddr, 0);
     assert.equal(nftAddr, pixelNFT.address);
+    assert.equal(nftId, tokenId);
   });
 });
