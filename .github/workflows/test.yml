@@ -38,5 +38,8 @@ jobs:
         if: steps.cache-node-modules.outputs.cache-hit != 'true'
         run: npm ci
 
-      - name: Run tests
-        run: npm test
+      # - name: Compile Solidity Contracts
+      #   run: npm compile
+      
+      # - name: Run Tests
+      #   run: npm test

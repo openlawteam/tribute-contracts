@@ -20,10 +20,14 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
  */
+const {
+  TestFairShareCalc,
+  toWei,
+  expect,
+  expectRevert,
+} = require("../../utils/DaoFactory.js");
 
-const { TestFairShareCalc, toWei } = require("../../utils/DaoFactory.js");
-
-contract("MolochV3 - Helper - FairShareHelper", (accounts) => {
+describe("Helper - FairShareHelper", () => {
   it("should calculate the fair share if the given parameters are valid", async () => {
     const fairShareCalc = await TestFairShareCalc.new();
     const balance = toWei("4.3", "ether");
@@ -35,7 +39,7 @@ contract("MolochV3 - Helper - FairShareHelper", (accounts) => {
       totalShares
     );
     // It should return 43% of the shares based on the balance
-    assert.equal(fairShare.toString() / 10 ** 18, "0.43");
+    expect(fairShare.toString() / 10 ** 18).to.equal(0.43);
   });
 
   it("should revert when the totalShares parameter is equal to zero", async () => {
@@ -43,15 +47,10 @@ contract("MolochV3 - Helper - FairShareHelper", (accounts) => {
     const balance = toWei("4.3", "ether");
     const shares = toWei("100", "ether");
     const totalShares = toWei("0", "ether");
-    try {
-      await fairShareCalc.calculate(balance, shares, totalShares);
-      assert.fail("should not be possible calculate the fair share");
-    } catch (e) {
-      assert.equal(
-        e.message,
-        "Returned error: VM Exception while processing transaction: revert totalShares must be greater than 0"
-      );
-    }
+    await expectRevert(
+      fairShareCalc.calculate(balance, shares, totalShares),
+      "revert totalShares must be greater than 0"
+    );
   });
 
   it("should revert when the shares is greater than the totalShares", async () => {
@@ -59,15 +58,10 @@ contract("MolochV3 - Helper - FairShareHelper", (accounts) => {
     const balance = toWei("4.3", "ether");
     const shares = toWei("100", "ether");
     const totalShares = toWei("10", "ether");
-    try {
-      await fairShareCalc.calculate(balance, shares, totalShares);
-      assert.fail("should not be possible calculate the fair share");
-    } catch (e) {
-      assert.equal(
-        e.message,
-        "Returned error: VM Exception while processing transaction: revert shares must be less than or equal to totalShares"
-      );
-    }
+    await expectRevert(
+      fairShareCalc.calculate(balance, shares, totalShares),
+      "revert shares must be less than or equal to totalShares"
+    );
   });
 
   it("should return 100% of the shares if the member holds all the shares of the dao", async () => {
@@ -81,6 +75,6 @@ contract("MolochV3 - Helper - FairShareHelper", (accounts) => {
       totalShares
     );
     // It should return 100% of the shares based on the balance
-    assert.equal(fairShare.toString() / 10 ** 18, "1.00");
+    expect(fairShare.toString() / 10 ** 18).to.equal(1.0);
   });
 });
