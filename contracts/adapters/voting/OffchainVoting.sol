@@ -369,7 +369,7 @@ contract OffchainVotingContract is
             _stringToUint(proposal.payload.snapshot);
         require(success, "snapshot conversion error");
         BankExtension bank = BankExtension(dao.getExtensionAddress(BANK));
-        
+
         bytes32 proposalHash =
             _snapshotContract.hashMessage(dao, msg.sender, proposal);
         address addr = recover(proposalHash, proposal.sig);
