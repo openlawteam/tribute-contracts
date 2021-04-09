@@ -41,5 +41,5 @@ export let FINANCING_ID: string =
 export let VOTING_ID: string =
   "0x0e49311626a26ba5be58a3b13d239908e80ce0dffdd5c50bf1d9c82ff35d1ab3";
 
-export let NFT_EXTENSION: string =
+export let NFT_EXTENSION_ID: string =
   "0x7dd481eb4b63b94bb55e6b98aabb06c3b8484f82a4d656d6bca0b0cf9b446be0";

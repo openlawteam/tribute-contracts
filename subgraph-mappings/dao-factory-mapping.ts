@@ -32,8 +32,7 @@ export function handleDaoCreated(event: DAOCreated): void {
   dao.name = event.params._name;
   dao.creator = event.transaction.from;
   dao.totalShares = BigInt.fromI32(0).toString();
+  dao.save();
 
   DaoRegistryTemplate.create(event.params._address);
-
-  dao.save();
 }

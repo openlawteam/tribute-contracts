@@ -3,6 +3,14 @@ enum VotingAdapterName {
   VotingContract
 }
 
+interface ITransfer {
+  id: ID!
+  from: Bytes! # Member!
+  to: Bytes # Member!
+  transferAt: BigInt!
+  transaction: Bytes! #Transaction!
+}
+
 type TributeDao @entity {
   "Unique identifier and primary key of the `TributeDao` entity"
   id: ID! # Set to `${tribute.id}
@@ -14,16 +22,20 @@ type TributeDao @entity {
   name: String
   "The DAO creator address"
   creator: Bytes
-  totalShares: String
   createdAt: String
+  totalShares: String
+  "The bank of the DAO"
+  bank: Bank! @derivedFrom(field: "tributeDao")
   "List of registered adapters"
-  adapters: [Adapter!]! @derivedFrom(field: "tributedao")
+  adapters: [Adapter!]! @derivedFrom(field: "tributeDao")
   "List of registered extensions"
-  extensions: [Extension!]! @derivedFrom(field: "tributedao")
+  extensions: [Extension!]! @derivedFrom(field: "tributeDao")
   "List of members in the DAO"
-  members: [Member]! @derivedFrom(field: "tributedaos")
+  members: [Member]! @derivedFrom(field: "tributeDaos")
   "List of proposals in the DAO"
-  proposals: [Proposal]! @derivedFrom(field: "tributedao")
+  proposals: [Proposal]! @derivedFrom(field: "tributeDao")
+  "List of nfts in the DAO"
+  nftCollections: NFTCollection! @derivedFrom(field: "tributeDao")
 }
 
 type Member @entity {
@@ -39,7 +51,7 @@ type Member @entity {
   didFullyRagequit: Boolean
   isDelegated: Boolean
   "List of DAOs the member belongs to"
-  tributedaos: [TributeDao!]!
+  tributeDaos: [TributeDao!]!
 }
 
 type Proposal @entity {
@@ -55,7 +67,7 @@ type Proposal @entity {
   processedAt: String
   processedBy: Bytes
   member: Member
-  tributedao: TributeDao
+  tributeDao: TributeDao
 
   "Adapter ID of the proposal"
   adapterId: Bytes
@@ -130,11 +142,22 @@ type Vote @entity {
   adapterAddress: Bytes!
 }
 
+type Bank @entity {
+  "Unique identifier and primary key of the `Bank` entity"
+  id: ID! # Set to `${tribute.id}-vote-${bank.id}`
+  # tokenBalances: [TokenBalance!] @derivedFrom(field: "tributeDao")
+  # nftCollections: [NFTCollection!] @derivedFrom(field: "tributeDao")
+  tributeDao: TributeDao!
+}
+
 type Token @entity {
   "Unique identifier and primary key of the `Token` entity"
   id: ID! # Set to `${tribute.id}-token-${token.id}`
+  name: String
+  symbol: String
   tokenAddress: Bytes!
   balance: BigInt
+  # transfers: [Transfer!]
 }
 
 type TokenBalance @entity {
@@ -143,6 +166,47 @@ type TokenBalance @entity {
   token: Token! #[Token!]
   tokenBalance: BigInt!
   member: Member
+  bank: Bank
+  tributeDao: TributeDao
+}
+
+# type TokenTransfer implements ITransfer @entity {
+#   id: ID!
+#   from: Bytes! # Member!
+#   to: Bytes! # Member!
+#   transferAt: BigInt!
+#   transaction: Bytes! # Transaction!
+#   token: Token!
+# }
+
+type NFT @entity {
+  "Unique identifier and primary key of the `NFT` entity"
+  id: ID! # Set to `${tribute.id}-nft-${nftAddress.id}`
+  nftAddress: Bytes!
+  owner: Bytes! # or Member!
+  name: String
+  symbol: String
+  tokenId: BigInt
+  # tokenUri: String!
+  # createdAt: BigInt!
+  nftCollection: NFTCollection
+}
+
+type NFTCollection @entity {
+  "Unique identifier and primary key of the `NFTCollection` entity"
+  id: ID! # Set to `${tribute.id}-nftcollection-${extensionAddress}`
+  nfts: [NFT!] @derivedFrom(field: "nftCollection")
+  tributeDao: TributeDao!
+  # transfers: [Transfer!]
+}
+
+type NFTTransfer implements ITransfer @entity {
+  id: ID!
+  from: Bytes! # Member!
+  to: Bytes # Member!
+  transferAt: BigInt!
+  transaction: Bytes! #Transaction!
+  nft: NFT!
 }
 
 type Adapter @entity {
@@ -152,7 +216,7 @@ type Adapter @entity {
   adapterAddress: Bytes!
   "Adapter acl (access control layer)"
   acl: BigInt!
-  tributedao: TributeDao
+  tributeDao: TributeDao
 }
 
 type Extension @entity {
@@ -162,5 +226,11 @@ type Extension @entity {
   extensionAddress: Bytes!
   "Extension ID"
   extensionId: Bytes!
-  tributedao: TributeDao
+  tributeDao: TributeDao
 }
+
+# type Transaction @entity {
+#   id: ID!
+#   timestamp: BigInt!
+#   blockNumber: BigInt!
+# }

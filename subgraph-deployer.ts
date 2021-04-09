@@ -191,6 +191,8 @@ const getYAML = ({
         abis:
           - name: BankExtension
             file: ./build/contracts/BankExtension.json
+          - name: ERC20
+            file: ./build/contracts/ERC20.json
         eventHandlers:
           - event: NewBalance(address,address,uint160)
             handler: handleNewBalance
@@ -208,10 +210,13 @@ const getYAML = ({
         apiVersion: 0.0.4
         language: wasm/assemblyscript
         entities:
+          - NFTCollection
           - NFT
         abis:
           - name: NFTExtension
             file: ./build/contracts/NFTExtension.json
+          - name: ERC721
+            file: ./build/contracts/ERC721.json
         eventHandlers:
           - event: CollectedNFT(address,uint256)
             handler: handleCollectedNFT

@@ -3,6 +3,7 @@ import {
   NewBalance,
   Withdraw,
 } from "../generated/templates/BankExtension/BankExtension";
+import { ERC20 } from "../generated/templates/BankExtension/ERC20";
 import { Member, TributeDao, Token, TokenBalance } from "../generated/schema";
 import { GUILD, LOOT, SHARES, TOTAL } from "./helpers/constants";
 import { Address, BigInt, log } from "@graphprotocol/graph-ts";
@@ -17,7 +18,7 @@ function internalTransfer(
   let registry = BankExtension.bind(extensionAddress);
   let daoAddress = registry.dao();
 
-  let tributedaos: string[] = [];
+  let tributeDaos: string[] = [];
 
   if (
     TOTAL.toHex() != memberAddress.toHex() &&
@@ -40,17 +41,36 @@ function internalTransfer(
       member.isDelegated = false;
     } else {
       // get members daos
-      tributedaos = member.tributedaos;
+      tributeDaos = member.tributeDaos;
     }
 
     // create 1-1 relationship between member and dao
-    tributedaos.push(daoAddress.toHexString());
+    tributeDaos.push(daoAddress.toHexString());
     // add members daos
-    member.tributedaos = tributedaos;
+    member.tributeDaos = tributeDaos;
 
     if (token == null) {
       token = new Token(tokenAddress.toHex());
       token.tokenAddress = tokenAddress;
+
+      // get additional ERC20 info
+      let erc20Registry = ERC20.bind(tokenAddress);
+
+      // try get the token name
+      let callResult_name = erc20Registry.try_name();
+      if (callResult_name.reverted) {
+        log.info("try_name reverted", []);
+      } else {
+        token.name = callResult_name.value;
+      }
+
+      // try get the token symbol
+      let callResult_symbol = erc20Registry.try_symbol();
+      if (callResult_symbol.reverted) {
+        log.info("try_symbol reverted", []);
+      } else {
+        token.symbol = callResult_symbol.value;
+      }
     }
 
     if (tokenBalance == null) {

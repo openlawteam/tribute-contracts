@@ -18,8 +18,9 @@ import {
   Proposal,
   Member,
   TributeDao,
+  NFTCollection,
 } from "../generated/schema";
-import { BANK_EXTENSION_ID } from "./helpers/constants";
+import { BANK_EXTENSION_ID, NFT_EXTENSION_ID } from "./helpers/constants";
 import { getProposalDetails } from "./helpers/proposal-details";
 import { loadProposalAndSaveVoteResults } from "./helpers/vote-results";
 
@@ -66,7 +67,7 @@ export function handleSubmittedProposal(event: SubmittedProposal): void {
     proposal.sponsored = false;
     proposal.processed = false;
     proposal.member = submittedBy.toHex();
-    proposal.tributedao = daoAddress.toHex();
+    proposal.tributeDao = daoAddress.toHex();
 
     proposal.save();
   }
@@ -163,7 +164,7 @@ export function handleAdapterAdded(event: AdapterAdded): void {
     adapter.adapterAddress = event.params.adapterAddress;
 
     // create 1-1 relationship with adapter and its dao
-    adapter.tributedao = daoAddress;
+    adapter.tributeDao = daoAddress;
 
     adapter.save();
   }
@@ -204,12 +205,27 @@ export function handleExtensionAdded(event: ExtensionAdded): void {
 
   let extension = Extension.load(daoExtensionId);
 
-  // if extension is `bank` then assign to its dao
+  // if extension is a `bank` then assign to its dao
   if (BANK_EXTENSION_ID.toString() == event.params.extensionId.toHexString()) {
     let tribute = TributeDao.load(daoAddress);
 
     tribute.bankAddress = event.params.extensionAddress;
     tribute.save();
+  }
+
+  // if extension is an `nft` then assign to its dao
+  if (NFT_EXTENSION_ID.toString() == event.params.extensionId.toHexString()) {
+    let nftCollectionId = daoAddress
+      .concat("-nftcollection-")
+      .concat(event.params.extensionAddress.toHex());
+    let nftCollection = NFTCollection.load(nftCollectionId);
+
+    if (nftCollection == null) {
+      nftCollection = new NFTCollection(nftCollectionId);
+      nftCollection.tributeDao = daoAddress;
+
+      nftCollection.save();
+    }
   }
 
   if (extension == null) {
@@ -220,7 +236,7 @@ export function handleExtensionAdded(event: ExtensionAdded): void {
   extension.extensionId = event.params.extensionId;
 
   // create 1-1 relationship with extensions and its dao
-  extension.tributedao = daoAddress;
+  extension.tributeDao = daoAddress;
   extension.save();
 }
 
