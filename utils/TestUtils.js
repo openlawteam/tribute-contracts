@@ -38,7 +38,7 @@ const checkBalance = async (bank, address, token, expectedBalance) => {
   assert.equal(balance.toString(), expectedBalance.toString());
 };
 
-const isActiveMember = async (bank, member) => {
+const isMember = async (bank, member) => {
   const shares = await bank.balanceOf(member, SHARES);
   const loot = await bank.balanceOf(member, LOOT);
 
@@ -115,5 +115,5 @@ module.exports = {
   checkBalance,
   createNFTDao,
   onboardNewMember,
-  isActiveMember,
+  isMember,
 };

@@ -39,7 +39,7 @@ const {
   remaining,
 } = require("../../utils/DaoFactory.js");
 
-const { isActiveMember } = require("../../utils/TestUtils.js");
+const { isMember } = require("../../utils/TestUtils.js");
 
 contract("MolochV3 - Core - Registry", async (accounts) => {
   it("", async () => {
