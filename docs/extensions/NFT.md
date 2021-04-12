@@ -166,11 +166,11 @@ function getNFTAddress(uint256 index) external view returns (address)
   * @notice Required function from IERC721 standard to be able to receive assets to this contract address.
   */
 function onERC721Received(
-    address operator,
-    address from,
-    uint256 tokenId,
-    bytes calldata data
-) external override returns (bytes4)
+    address,
+    address,
+    uint256,
+    bytes calldata
+) external pure override returns (bytes4)
 ```
 
 ### function \_saveNft
@@ -183,10 +183,10 @@ function onERC721Received(
   * @param owner The address of the owner.
   */
 function _saveNft(
-        address nftAddr,
-        uint256 nftTokenId,
-        address owner
-    ) private
+    address nftAddr,
+    uint256 nftTokenId,
+    address owner
+) private
 ```
 
 ## Events

@@ -93,12 +93,12 @@ contract TributeNFTContract is
     }
 
     /**
-     * @notice Creates a tribute proposal and escrows received tokens into the adapter.
+     * @notice Creates a tribute proposal and escrows received token into the adapter.
      * @dev Applicant address must not be reserved.
-     * @dev The proposer must first separately `approve` the adapter as spender of the ERC-20 tokens provided as tribute.
+     * @dev The proposer must first separately `approve` the adapter as spender of the ERC-721 token provided as tribute.
      * @param dao The DAO address.
      * @param proposalId The proposal id (managed by the client).
-     * @param nftAddr The address of the ERC-721 NFT DAO that will be locked in the DAO in exchange for Shares.
+     * @param nftAddr The address of the ERC-721 token that will be locked in the DAO in exchange for Shares.
      * @param nftTokenId The NFT token id.
      * @param requestedShares The amount of Shares requested of DAO as voting power.
      */
@@ -155,7 +155,7 @@ contract TributeNFTContract is
     }
 
     /**
-     * @notice Cancels a tribute proposal which marks it as processed and returns the NFT to the original ow.
+     * @notice Cancels a tribute proposal which marks it as processed and returns the NFT to the original owner.
      * @dev Proposal id must exist.
      * @dev Only proposals that have not already been sponsored can be cancelled.
      * @dev Only proposer can cancel a tribute proposal.
@@ -193,11 +193,10 @@ contract TributeNFTContract is
     }
 
     /**
-     * @notice Processes the proposal to handle minting and exchange of DAO internal tokens for tribute tokens (passed vote) or the return the NFT to the original owner (failed vote).
+     * @notice Processes the proposal to handle minting and exchange of DAO internal tokens for tribute token (passed vote) or the return of the NFT to the original owner (failed vote).
      * @dev Proposal id must exist.
      * @dev Only proposals that have not already been processed are accepted.
      * @dev Only sponsored proposals with completed voting are accepted.
-     * @dev ERC-721 tribute tokens must be registered with the DAO Bank.
      * @param dao The DAO address.
      * @param proposalId The proposal id.
      */
@@ -246,6 +245,15 @@ contract TributeNFTContract is
         }
     }
 
+    /**
+     * @notice Adds DAO internal tokens (SHARES) to applicant's balance and creates a new member entry (if applicant is not already a member).
+     * @dev Internal tokens to be minted to the applicant must be registered with the DAO Bank.
+     * @param dao The DAO address.
+     * @param applicant The applicant address (who will receive the DAO internal tokens and become a member).
+     * @param nftAddr The address of the ERC-721 tribute token.
+     * @param nftTokenId The NFT token id.
+     * @param requestShares The amount requested of DAO internal tokens (SHARES).
+     */
     function _mintSharesToNewMember(
         DaoRegistry dao,
         address applicant,
@@ -261,8 +269,8 @@ contract TributeNFTContract is
 
         dao.potentialNewMember(applicant);
 
-        // Overflow risk may cause this to fail in which case the tribute tokens
-        // are refunded to the proposer.
+        // Overflow risk may cause this to fail in which case the tribute token
+        // is refunded to the proposer.
         try bank.addToBalance(applicant, SHARES, requestedShares) {
             // do nothing
         } catch {
@@ -272,6 +280,9 @@ contract TributeNFTContract is
         }
     }
 
+    /**
+     * @notice Required function from IERC721 standard to be able to receive assets to this contract address.
+     */
     function onERC721Received(
         address,
         address,
