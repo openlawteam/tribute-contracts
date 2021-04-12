@@ -52,7 +52,7 @@
     "lint": "prettier --list-different 'contracts/**/*.sol' 'test/**/*.test.js' '**/*.md'",
     "compile-abi": "truffle compile && truffle-abi",
     "ganache": "node_modules/.bin/ganache-cli -s=test -g=0 --secure -u 0 -u 1 -p 8545 --networkId 1337",
-    "codegen": "cd subgraph && graph codegen",
+    "codegen": "cd subgraph && npm ci && graph codegen",
     "build": "graph build"
   },
   "repository": {
