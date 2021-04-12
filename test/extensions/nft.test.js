@@ -60,25 +60,13 @@ contract("MolochV3 - NFT Extension", async (accounts) => {
     assert.notEqual(nftExtension, null);
   });
 
-  it("should be possible to create a dao and register a new NFT token to the collection", async () => {
-    const { dao, pixelNFT } = await createNFTDao(accounts[0]);
-
-    const nftExtAddr = await dao.getExtensionAddress(sha3("nft"));
-    const nftExtension = await NFTExtension.at(nftExtAddr);
-    const isAllowed = await nftExtension.isNFTAllowed(pixelNFT.address);
-    assert.equal(isAllowed, true);
-  });
-
   it("should be possible check how many NFTs are in the collection", async () => {
     const { dao } = await createNFTDao(accounts[0]);
 
     const nftExtAddr = await dao.getExtensionAddress(sha3("nft"));
     const nftExtension = await NFTExtension.at(nftExtAddr);
-    let total = await nftExtension.nbNFTAddresses();
-    assert.equal(total.toString(), "1");
-    let nftAddr = await nftExtension.getNFTAddress(0);
-    total = await nftExtension.nbNFTs(nftAddr);
-    assert.equal(total.toString(), "0");
+    const total = await nftExtension.nbNFTAddresses();
+    assert.equal(total, 0);
   });
 
   it("should not be possible to initialize the extension if it was already initialized", async () => {
@@ -96,7 +84,7 @@ contract("MolochV3 - NFT Extension", async (accounts) => {
     }
   });
 
-  it("should be possible to collect a NFT that is allowed", async () => {
+  it("should be possible to collect a NFT", async () => {
     const daoOwner = accounts[0];
     const { dao, pixelNFT } = await createNFTDao(daoOwner);
 
@@ -117,7 +105,7 @@ contract("MolochV3 - NFT Extension", async (accounts) => {
     });
 
     const nft = await getContract(dao, "nft", NFTAdapterContract);
-    await nft.collect(dao.address, nftOwner, pixelNFT.address, tokenId, {
+    await nft.collect(dao.address, pixelNFT.address, tokenId, {
       from: nftOwner,
       gasPrice: toBN("0"),
     });
