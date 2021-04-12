@@ -49,16 +49,9 @@ contract NFTExtension is
     bool public initialized = false; // internally tracks deployment under eip-1167 proxy pattern
     DaoRegistry public dao;
 
-    enum AclFlag {
-        TRANSFER_NFT,
-        WITHDRAW_NFT,
-        REGISTER_NFT,
-        COLLECT_NFT,
-        INTERNAL_TRANSFER
-    }
+    enum AclFlag {TRANSFER_NFT, WITHDRAW_NFT, COLLECT_NFT, INTERNAL_TRANSFER}
 
     event CollectedNFT(address nftAddr, uint256 nftTokenId);
-    event RegisteredNFTAddress(address nftAddr);
     event TransferredNFT(
         address nftAddr,
         uint256 nftTokenId,
@@ -182,26 +175,6 @@ contract NFTExtension is
         _ownership[getNFTId(nftAddr, nftTokenId)] = newOwner;
 
         emit TransferredNFT(nftAddr, nftTokenId, currentOwner, newOwner);
-    }
-
-    /**
-     * @notice Registers a potential new NFT in the NFT extension.
-     * @notice The caller must have the ACL Flag: REGISTER_NFT.
-     * @dev Reverts if the token address is reserved.
-     * @param nftAddr The address of the new NFT.
-     */
-    function registerPotentialNewNFT(address nftAddr)
-        public
-        hasExtensionAccess(this, AclFlag.REGISTER_NFT)
-    {
-        require(
-            isNotReservedAddress(nftAddr) && nftAddr != SHARES,
-            "reservedToken"
-        );
-
-        _nftAddresses.add(nftAddr);
-
-        emit RegisteredNFTAddress(nftAddr);
     }
 
     function getNFTId(address nftAddress, uint256 tokenId)

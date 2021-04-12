@@ -11,7 +11,6 @@ const {
   numberOfShares,
   SHARES,
   ETH_TOKEN,
-  TributeNFTContract,
   OnboardingContract,
   PixelNFT,
   VotingContract,
@@ -58,10 +57,6 @@ const createNFTDao = async (daoOwner) => {
     ETH_TOKEN,
     false
   );
-
-  const tributeNFT = await getContract(dao, "tribute-nft", TributeNFTContract);
-
-  await tributeNFT.configureDao(dao.address, pixelNFT.address);
 
   await dao.finalizeDao();
 

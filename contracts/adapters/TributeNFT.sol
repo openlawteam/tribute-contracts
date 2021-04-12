@@ -68,14 +68,6 @@ contract TributeNFTContract is
         revert("fallback revert");
     }
 
-    function configureDao(DaoRegistry dao, address nftToCollect)
-        external
-        onlyAdapter(dao)
-    {
-        NFTExtension nftExt = NFTExtension(dao.getExtensionAddress(NFT));
-        nftExt.registerPotentialNewNFT(nftToCollect);
-    }
-
     function provideTribute(
         DaoRegistry,
         bytes32,
