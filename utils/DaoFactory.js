@@ -356,6 +356,7 @@ const configureDao = async ({
   await daoFactory.configureExtension(dao.address, nftExt.address, [
     entryNft(tributeNFT, {
       TRANSFER_NFT: true,
+      COLLECT_NFT: true,
     }),
     entryNft(nftAdapter, {
       COLLECT_NFT: true,
