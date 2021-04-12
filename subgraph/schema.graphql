@@ -43,7 +43,6 @@ type Member @entity {
   createdAt: String
   delegateKey: Bytes
   shares: BigInt!
-  loot: BigInt!
   tokenBalances: [TokenBalance!] @derivedFrom(field: "member")
   proposals: [Proposal!] @derivedFrom(field: "member")
   didFullyRagequit: Boolean

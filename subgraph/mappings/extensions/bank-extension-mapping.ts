@@ -12,7 +12,7 @@ import {
   Token,
   TokenBalance,
 } from "../../generated/schema";
-import { GUILD, LOOT, SHARES, TOTAL } from "../helpers/constants";
+import { GUILD, SHARES, TOTAL } from "../helpers/constants";
 
 function internalTransfer(
   createdAt: string,
@@ -93,7 +93,7 @@ function internalTransfer(
     }
 
     /**
-     * get `balanceOf` for members SHARES, and LOOT
+     * get `balanceOf` for members SHARES
      */
 
     // get balanceOf member shares
