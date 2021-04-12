@@ -25,11 +25,16 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
  */
 
-const { web3, contract, accounts } = require("@openzeppelin/test-environment");
+const {
+  web3,
+  contract,
+  accounts,
+  provider,
+} = require("@openzeppelin/test-environment");
 const { expectRevert } = require("@openzeppelin/test-helpers");
 const { expect } = require("chai");
-const Web3Utils = require("web3-utils");
 
+const Web3Utils = require("web3-utils");
 const sha3 = Web3Utils.sha3;
 const toBN = Web3Utils.toBN;
 const toWei = Web3Utils.toWei;
@@ -848,6 +853,43 @@ const getContract = async (dao, id, contractFactory) => {
   return await contractFactory.at(address);
 };
 
+const takeChainSnapshot = () => {
+  return new Promise((resolve, reject) =>
+    web3.currentProvider.send(
+      {
+        jsonrpc: "2.0",
+        method: "evm_snapshot",
+        id: new Date().getTime(),
+      },
+      (err, result) => {
+        if (err) {
+          return reject(err);
+        }
+        return resolve(result);
+      }
+    )
+  );
+};
+
+const revertChainSnapshot = (snapshotId) => {
+  return new Promise((resolve, reject) =>
+    web3.currentProvider.send(
+      {
+        jsonrpc: "2.0",
+        method: "evm_revert",
+        params: [snapshotId],
+        id: new Date().getTime(),
+      },
+      (err, result) => {
+        if (err) {
+          return reject(err);
+        }
+        return resolve(result);
+      }
+    )
+  );
+};
+
 module.exports = {
   prepareAdapters,
   advanceTime,
@@ -863,12 +905,6 @@ module.exports = {
   entryBank,
   entryDao,
   getNetworkDetails,
-  networks,
-  web3,
-  contract,
-  accounts,
-  expectRevert,
-  expect,
   sha3,
   toBN,
   toWei,
@@ -876,7 +912,15 @@ module.exports = {
   toAscii,
   fromAscii,
   toUtf8,
+  takeChainSnapshot,
+  revertChainSnapshot,
   maximumChunks,
+  networks,
+  web3,
+  contract,
+  accounts,
+  expectRevert,
+  expect,
   GUILD,
   TOTAL,
   ESCROW,
