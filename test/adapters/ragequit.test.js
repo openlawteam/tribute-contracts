@@ -478,186 +478,174 @@ describe("Adapter - Ragequit", () => {
     expect(newGuildBalance.toString()).to.equal("2"); //must be close to zero
   });
 
-  test(
-    "should not be possible to vote after the ragequit",
-    async () => {
-      const owner = accounts[1];
-      const memberAddr = accounts[2];
-      const { dao, adapters, extensions } = await deployDefaultDao(owner);
+  test("should not be possible to vote after the ragequit", async () => {
+    const owner = accounts[1];
+    const memberAddr = accounts[2];
+    const { dao, adapters, extensions } = await deployDefaultDao(owner);
 
-      const bank = extensions.bank;
-      const onboarding = adapters.onboarding;
-      const voting = adapters.voting;
+    const bank = extensions.bank;
+    const onboarding = adapters.onboarding;
+    const voting = adapters.voting;
 
-      let proposalId = await submitNewMemberProposal(
-        onboarding,
-        dao,
-        memberAddr,
-        sharePrice
-      );
+    let proposalId = await submitNewMemberProposal(
+      onboarding,
+      dao,
+      memberAddr,
+      sharePrice
+    );
 
-      //Sponsor the new proposal to admit the new member, vote and process it
-      await sponsorNewMember(onboarding, dao, proposalId, owner, voting);
-      await onboarding.processProposal(dao.address, proposalId, {
-        from: owner,
+    //Sponsor the new proposal to admit the new member, vote and process it
+    await sponsorNewMember(onboarding, dao, proposalId, owner, voting);
+    await onboarding.processProposal(dao.address, proposalId, {
+      from: owner,
+      gasPrice: toBN("0"),
+    });
+
+    //Check Guild Bank Balance
+    let guildBalance = await bank.balanceOf(GUILD, ETH_TOKEN);
+    expect(guildBalance.toString()).to.equal("1200000000000000000");
+
+    //Check New Member Shares
+    let shares = await bank.balanceOf(memberAddr, SHARES);
+    expect(shares.toString()).to.equal("10000000000000000");
+
+    //Ragequit - Burn all the new member shares
+    await adapters.ragequit.ragequit(
+      dao.address,
+      toBN(shares),
+      toBN(0),
+      [ETH_TOKEN],
+      {
+        from: memberAddr,
         gasPrice: toBN("0"),
-      });
+      }
+    );
 
-      //Check Guild Bank Balance
-      let guildBalance = await bank.balanceOf(GUILD, ETH_TOKEN);
-      expect(guildBalance.toString()).to.equal("1200000000000000000");
+    //Member attempts to sponsor a proposal after the ragequit
+    let res = onboarding.sponsorProposal(dao.address, proposalId, [], {
+      from: memberAddr,
+      gasPrice: toBN("0"),
+    });
+    await expectRevert(res, "onlyMember");
 
-      //Check New Member Shares
-      let shares = await bank.balanceOf(memberAddr, SHARES);
-      expect(shares.toString()).to.equal("10000000000000000");
+    res = voting.submitVote(dao.address, proposalId, 1, {
+      from: memberAddr,
+      gasPrice: toBN("0"),
+    });
+    await expectRevert(res, "onlyMember");
+  });
 
-      //Ragequit - Burn all the new member shares
-      await adapters.ragequit.ragequit(
+  test("should not be possible to ragequit if the member have provided an invalid token", async () => {
+    const owner = accounts[1];
+    const { dao, adapters, extensions } = await deployDefaultDao(owner);
+
+    const bank = extensions.bank;
+
+    // Check member shares
+    let shares = await bank.balanceOf(owner, SHARES);
+    expect(shares.toString()).to.equal("1");
+
+    //Ragequit - Attempts to ragequit using an invalid token to receive funds
+    let invalidToken = accounts[7];
+    await expectRevert(
+      adapters.ragequit.ragequit(
         dao.address,
         toBN(shares),
         toBN(0),
-        [ETH_TOKEN],
+        [invalidToken],
         {
-          from: memberAddr,
+          from: owner,
           gasPrice: toBN("0"),
         }
-      );
+      ),
+      "token not allowed"
+    );
+  });
 
-      //Member attempts to sponsor a proposal after the ragequit
-      let res = onboarding.sponsorProposal(dao.address, proposalId, [], {
-        from: memberAddr,
-        gasPrice: toBN("0"),
-      });
-      await expectRevert(res, "onlyMember");
+  test("should not be possible to ragequit if there are no tokens to receive the funds", async () => {
+    const owner = accounts[1];
+    const newMember = accounts[2];
+    const { dao, adapters, extensions } = await deployDefaultDao(owner);
 
-      res = voting.submitVote(dao.address, proposalId, 1, {
-        from: memberAddr,
-        gasPrice: toBN("0"),
-      });
-      await expectRevert(res, "onlyMember");
-    }
-  );
+    const bank = extensions.bank;
+    const onboarding = adapters.onboarding;
+    const voting = adapters.voting;
 
-  test(
-    "should not be possible to ragequit if the member have provided an invalid token",
-    async () => {
-      const owner = accounts[1];
-      const { dao, adapters, extensions } = await deployDefaultDao(owner);
+    let proposalId = await submitNewMemberProposal(
+      onboarding,
+      dao,
+      newMember,
+      sharePrice
+    );
 
-      const bank = extensions.bank;
+    //Sponsor the new proposal to admit the new member, vote and process it
+    await sponsorNewMember(onboarding, dao, proposalId, owner, voting);
+    await onboarding.processProposal(dao.address, proposalId, {
+      from: owner,
+      gasPrice: toBN("0"),
+    });
 
-      // Check member shares
-      let shares = await bank.balanceOf(owner, SHARES);
-      expect(shares.toString()).to.equal("1");
+    //Check Guild Bank Balance
+    let guildBalance = await bank.balanceOf(GUILD, ETH_TOKEN);
+    expect(guildBalance.toString()).to.equal("1200000000000000000");
 
-      //Ragequit - Attempts to ragequit using an invalid token to receive funds
-      let invalidToken = accounts[7];
-      await expectRevert(
-        adapters.ragequit.ragequit(
-          dao.address,
-          toBN(shares),
-          toBN(0),
-          [invalidToken],
-          {
-            from: owner,
-            gasPrice: toBN("0"),
-          }
-        ),
-        "token not allowed"
-      );
-    }
-  );
+    //Check New Member Shares
+    let shares = await bank.balanceOf(newMember, SHARES);
+    expect(shares.toString()).to.equal("10000000000000000");
 
-  test(
-    "should not be possible to ragequit if there are no tokens to receive the funds",
-    async () => {
-      const owner = accounts[1];
-      const newMember = accounts[2];
-      const { dao, adapters, extensions } = await deployDefaultDao(owner);
+    await expectRevert(
+      adapters.ragequit.ragequit(
+        dao.address,
+        toBN(shares),
+        toBN(0),
+        [ETH_TOKEN, ETH_TOKEN], // token array with duplicates
+        {
+          from: newMember,
+          gasPrice: toBN("0"),
+        }
+      ),
+      "duplicate token"
+    );
+  });
 
-      const bank = extensions.bank;
-      const onboarding = adapters.onboarding;
-      const voting = adapters.voting;
+  test("should not be possible to ragequit if there is a duplicate token", async () => {
+    const owner = accounts[1];
+    const memberA = accounts[2];
+    const { dao, adapters, extensions } = await deployDefaultDao(owner);
 
-      let proposalId = await submitNewMemberProposal(
-        onboarding,
-        dao,
-        newMember,
-        sharePrice
-      );
+    const bank = extensions.bank;
+    const onboarding = adapters.onboarding;
+    const voting = adapters.voting;
 
-      //Sponsor the new proposal to admit the new member, vote and process it
-      await sponsorNewMember(onboarding, dao, proposalId, owner, voting);
-      await onboarding.processProposal(dao.address, proposalId, {
-        from: owner,
-        gasPrice: toBN("0"),
-      });
+    let proposalId = await submitNewMemberProposal(
+      onboarding,
+      dao,
+      memberA,
+      sharePrice
+    );
 
-      //Check Guild Bank Balance
-      let guildBalance = await bank.balanceOf(GUILD, ETH_TOKEN);
-      expect(guildBalance.toString()).to.equal("1200000000000000000");
+    // Sponsor the new proposal to admit the new member, vote and process it
+    await sponsorNewMember(onboarding, dao, proposalId, owner, voting);
+    await onboarding.processProposal(dao.address, proposalId, {
+      from: owner,
+      gasPrice: toBN("0"),
+    });
 
-      //Check New Member Shares
-      let shares = await bank.balanceOf(newMember, SHARES);
-      expect(shares.toString()).to.equal("10000000000000000");
+    const memberAShares = await bank.balanceOf(memberA, SHARES);
+    expect(memberAShares.toString()).to.equal("10000000000000000");
 
-      await expectRevert(
-        adapters.ragequit.ragequit(
-          dao.address,
-          toBN(shares),
-          toBN(0),
-          [ETH_TOKEN, ETH_TOKEN], // token array with duplicates
-          {
-            from: newMember,
-            gasPrice: toBN("0"),
-          }
-        ),
-        "duplicate token"
-      );
-    }
-  );
-
-  test(
-    "should not be possible to ragequit if there is a duplicate token",
-    async () => {
-      const owner = accounts[1];
-      const memberA = accounts[2];
-      const { dao, adapters, extensions } = await deployDefaultDao(owner);
-
-      const bank = extensions.bank;
-      const onboarding = adapters.onboarding;
-      const voting = adapters.voting;
-
-      let proposalId = await submitNewMemberProposal(
-        onboarding,
-        dao,
-        memberA,
-        sharePrice
-      );
-
-      // Sponsor the new proposal to admit the new member, vote and process it
-      await sponsorNewMember(onboarding, dao, proposalId, owner, voting);
-      await onboarding.processProposal(dao.address, proposalId, {
-        from: owner,
-        gasPrice: toBN("0"),
-      });
-
-      const memberAShares = await bank.balanceOf(memberA, SHARES);
-      expect(memberAShares.toString()).to.equal("10000000000000000");
-
-      await expectRevert(
-        adapters.ragequit.ragequit(
-          dao.address,
-          toBN(memberAShares),
-          toBN(0),
-          [], //empty token array
-          {
-            from: memberA,
-            gasPrice: toBN("0"),
-          }
-        ),
-        "missing tokens"
-      );
-    }
-  );
+    await expectRevert(
+      adapters.ragequit.ragequit(
+        dao.address,
+        toBN(memberAShares),
+        toBN(0),
+        [], //empty token array
+        {
+          from: memberA,
+          gasPrice: toBN("0"),
+        }
+      ),
+      "missing tokens"
+    );
+  });
 });

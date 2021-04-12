@@ -38,8 +38,8 @@ jobs:
         if: steps.cache-node-modules.outputs.cache-hit != 'true'
         run: npm ci
 
-      # - name: Compile Solidity Contracts
-      #   run: npm compile
+      - name: Compile Solidity Contracts
+        run: npm compile
       
-      # - name: Run Tests
-      #   run: npm test
+      - name: Run Tests
+        run: npm test test/adapters/ragequit.test.js test/core/daofactory.test.js test/core/registry.test.js test/adapters/guildkick.test.js
