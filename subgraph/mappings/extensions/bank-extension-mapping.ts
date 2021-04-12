@@ -100,18 +100,12 @@ function internalTransfer(
     let balanceOfSHARES = registry.balanceOf(memberAddress, SHARES);
     member.shares = balanceOfSHARES;
 
-    // get balanceOf member loot
-    let balanceOfLOOT = registry.balanceOf(memberAddress, LOOT);
-    member.loot = balanceOfLOOT;
-
     // omit the `TOTAL` & `GUILD` addresses from the ragequit check
     if (
       TOTAL.toHex() != memberAddress.toHex() &&
       GUILD.toHex() != memberAddress.toHex()
     ) {
-      let didFullyRagequit =
-        balanceOfSHARES.equals(BigInt.fromI32(0)) &&
-        balanceOfLOOT.equals(BigInt.fromI32(0));
+      let didFullyRagequit = balanceOfSHARES.equals(BigInt.fromI32(0));
 
       // fully raged quit
       member.didFullyRagequit = didFullyRagequit;
@@ -120,7 +114,7 @@ function internalTransfer(
     tokenBalance.token = tokenAddress.toHex();
     tokenBalance.member = memberAddress.toHex();
 
-    tokenBalance.tokenBalance = balanceOfSHARES.plus(balanceOfLOOT);
+    tokenBalance.tokenBalance = balanceOfSHARES;
 
     member.save();
     token.save();

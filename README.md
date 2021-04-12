@@ -1,5 +1,12 @@
 [![codecov](https://codecov.io/gh/openlawteam/molochv3-contracts/branch/master/graph/badge.svg?token=XZRL9RUYZE)](https://codecov.io/gh/openlawteam/molochv3-contracts/)
 
+## Contents
+
+- [Overview](#overview)
+- [Usage](#Usage)
+- [Contribute](#contribute)
+- [Subgraph](https://github.com/openlawteam/molochv3-contracts/tree/master/subgraph/README.md)
+
 ## Overview
 
 At the LAO, we realized that even though Moloch is very useful and powerful, it has many features that are not necessary for all DAOs. There are also a few features that are missing and are difficult to add.
