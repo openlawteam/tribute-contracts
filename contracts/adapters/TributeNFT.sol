@@ -111,9 +111,6 @@ contract TributeNFTContract is
             "applicant is reserved address"
         );
 
-        NFTExtension nftExt = NFTExtension(dao.getExtensionAddress(NFT));
-        require(nftExt.isNFTAllowed(nftAddr), "nft not allowed");
-
         dao.submitProposal(proposalId);
 
         // Transfers the NFT to the Escrow Adapter, and checks if the NFT is supported/valid.

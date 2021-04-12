@@ -114,7 +114,6 @@ contract NFTExtension is
         external
         hasExtensionAccess(this, AclFlag.COLLECT_NFT)
     {
-        require(isNFTAllowed(nftAddr), "nft not allowed");
         IERC721 erc721 = IERC721(nftAddr);
         // Move the NFT to the contract address
         address currentOwner = erc721.ownerOf(nftTokenId);
@@ -203,13 +202,6 @@ contract NFTExtension is
         _nftAddresses.add(nftAddr);
 
         emit RegisteredNFTAddress(nftAddr);
-    }
-
-    /**
-     * @notice Checks if a given token address is allowed/supported by the extension.
-     */
-    function isNFTAllowed(address nftAddr) public view returns (bool) {
-        return _nftAddresses.contains(nftAddr);
     }
 
     function getNFTId(address nftAddress, uint256 tokenId)
