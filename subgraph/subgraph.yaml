@@ -20,11 +20,11 @@ dataSources:
         - TributeDao
       abis:
         - name: DaoFactory
-          file: ./build/contracts/DaoFactory.json
+          file: ../build/contracts/DaoFactory.json
       eventHandlers:
         - event: DAOCreated(address,string)
           handler: handleDaoCreated
-      file: ./subgraph-mappings/dao-factory-mapping.ts
+      file: ./mappings/dao-factory-mapping.ts
 
 templates:
   # ====================================== DaoRegistry ====================================
@@ -45,25 +45,25 @@ templates:
         - Vote
       abis:
         - name: DaoRegistry
-          file: ./build/contracts/DaoRegistry.json
+          file: ../build/contracts/DaoRegistry.json
         - name: OnboardingContract
-          file: ./build/contracts/OnboardingContract.json
+          file: ../build/contracts/OnboardingContract.json
         - name: DistributeContract
-          file: ./build/contracts/DistributeContract.json
+          file: ../build/contracts/DistributeContract.json
         - name: TributeContract
-          file: ./build/contracts/TributeContract.json
+          file: ../build/contracts/TributeContract.json
         - name: ManagingContract
-          file: ./build/contracts/ManagingContract.json
+          file: ../build/contracts/ManagingContract.json
         - name: GuildKickContract
-          file: ./build/contracts/GuildKickContract.json
+          file: ../build/contracts/GuildKickContract.json
         - name: FinancingContract
-          file: ./build/contracts/FinancingContract.json
+          file: ../build/contracts/FinancingContract.json
         - name: OffchainVotingContract
-          file: ./build/contracts/OffchainVotingContract.json
+          file: ../build/contracts/OffchainVotingContract.json
         - name: VotingContract
-          file: ./build/contracts/VotingContract.json
+          file: ../build/contracts/VotingContract.json
         - name: IVoting
-          file: ./build/contracts/IVoting.json
+          file: ../build/contracts/IVoting.json
       eventHandlers:
         - event: SubmittedProposal(bytes32,uint256)
           handler: handleSubmittedProposal
@@ -85,7 +85,7 @@ templates:
           handler: handleConfigurationUpdated
         - event: AddressConfigurationUpdated(bytes32,address)
           handler: handleAddressConfigurationUpdated
-      file: ./subgraph-mappings/dao-registry-mapping.ts
+      file: ./mappings/dao-registry-mapping.ts
   # ====================================== BankExtension ====================================
   - kind: ethereum/contract
     name: BankExtension
@@ -102,15 +102,15 @@ templates:
         - Member
       abis:
         - name: BankExtension
-          file: ./build/contracts/BankExtension.json
+          file: ../build/contracts/BankExtension.json
         - name: ERC20
-          file: ./build/contracts/ERC20.json
+          file: ../build/contracts/ERC20.json
       eventHandlers:
         - event: NewBalance(address,address,uint160)
           handler: handleNewBalance
         - event: Withdraw(address,address,uint160)
           handler: handleWithdraw
-      file: ./subgraph-mappings/extensions/bank-extension-mapping.ts
+      file: ./mappings/extensions/bank-extension-mapping.ts
   # ====================================== NFTExtension ====================================
   - kind: ethereum/contract
     name: NFTExtension
@@ -126,9 +126,9 @@ templates:
         - NFT
       abis:
         - name: NFTExtension
-          file: ./build/contracts/NFTExtension.json
+          file: ../build/contracts/NFTExtension.json
         - name: ERC721
-          file: ./build/contracts/ERC721.json
+          file: ../build/contracts/ERC721.json
       eventHandlers:
         - event: CollectedNFT(address,uint256)
           handler: handleCollectedNFT
@@ -136,4 +136,4 @@ templates:
           handler: handleReturnedNFT
         - event: TransferredNFT(address,uint256)
           handler: handleTransferredNFT
-      file: ./subgraph-mappings/extensions/nft-extension-mapping.ts
+      file: ./mappings/extensions/nft-extension-mapping.ts
