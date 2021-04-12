@@ -1,4 +1,5 @@
 import { log, store } from "@graphprotocol/graph-ts";
+
 import {
   ProcessedProposal,
   SponsoredProposal,
@@ -12,16 +13,10 @@ import {
   AddressConfigurationUpdated,
   DaoRegistry,
 } from "../generated/templates/DaoRegistry/DaoRegistry";
-import {
-  Adapter,
-  Extension,
-  Proposal,
-  Member,
-  TributeDao,
-  NFTCollection,
-} from "../generated/schema";
-import { BANK_EXTENSION_ID, NFT_EXTENSION_ID } from "./helpers/constants";
+import { Adapter, Extension, Proposal, Member } from "../generated/schema";
+
 import { getProposalDetails } from "./helpers/proposal-details";
+import { loadOrCreateExtensionEntity } from "./helpers/extension-entities";
 import { loadProposalAndSaveVoteResults } from "./helpers/vote-results";
 
 export function handleSubmittedProposal(event: SubmittedProposal): void {
@@ -205,28 +200,11 @@ export function handleExtensionAdded(event: ExtensionAdded): void {
 
   let extension = Extension.load(daoExtensionId);
 
-  // if extension is a `bank` then assign to its dao
-  if (BANK_EXTENSION_ID.toString() == event.params.extensionId.toHexString()) {
-    let tribute = TributeDao.load(daoAddress);
-
-    tribute.bankAddress = event.params.extensionAddress;
-    tribute.save();
-  }
-
-  // if extension is an `nft` then assign to its dao
-  if (NFT_EXTENSION_ID.toString() == event.params.extensionId.toHexString()) {
-    let nftCollectionId = daoAddress
-      .concat("-nftcollection-")
-      .concat(event.params.extensionAddress.toHex());
-    let nftCollection = NFTCollection.load(nftCollectionId);
-
-    if (nftCollection == null) {
-      nftCollection = new NFTCollection(nftCollectionId);
-      nftCollection.tributeDao = daoAddress;
-
-      nftCollection.save();
-    }
-  }
+  loadOrCreateExtensionEntity(
+    event.address,
+    event.params.extensionId,
+    event.params.extensionAddress
+  );
 
   if (extension == null) {
     extension = new Extension(daoExtensionId);

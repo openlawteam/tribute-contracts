@@ -16,8 +16,6 @@ type TributeDao @entity {
   id: ID! # Set to `${tribute.id}
   "The DAO address"
   daoAddress: Bytes
-  "The bank of the DAO"
-  bankAddress: Bytes
   "The name of the DAO"
   name: String
   "The DAO creator address"
@@ -35,7 +33,7 @@ type TributeDao @entity {
   "List of proposals in the DAO"
   proposals: [Proposal]! @derivedFrom(field: "tributeDao")
   "List of nfts in the DAO"
-  nftCollections: NFTCollection! @derivedFrom(field: "tributeDao")
+  nftCollection: NFTCollection! @derivedFrom(field: "tributeDao")
 }
 
 type Member @entity {
@@ -144,9 +142,10 @@ type Vote @entity {
 
 type Bank @entity {
   "Unique identifier and primary key of the `Bank` entity"
-  id: ID! # Set to `${tribute.id}-vote-${bank.id}`
-  # tokenBalances: [TokenBalance!] @derivedFrom(field: "tributeDao")
-  # nftCollections: [NFTCollection!] @derivedFrom(field: "tributeDao")
+  id: ID! # Set to `${tribute.id}-bank-${bank.id}`
+  "The bank of the DAO"
+  bankAddress: Bytes!
+  tokenBalances: [TokenBalance!] @derivedFrom(field: "bank")
   tributeDao: TributeDao!
 }
 
@@ -181,15 +180,16 @@ type TokenBalance @entity {
 
 type NFT @entity {
   "Unique identifier and primary key of the `NFT` entity"
-  id: ID! # Set to `${tribute.id}-nft-${nftAddress.id}`
+  id: ID! # Set to `${tribute.id}-nft-${nftAddress.id}-$tokenId}`
   nftAddress: Bytes!
   owner: Bytes! # or Member!
-  name: String
-  symbol: String
-  tokenId: BigInt
-  # tokenUri: String!
+  name: String!
+  symbol: String!
+  tokenId: BigInt!
+  tokenUri: String!
   # createdAt: BigInt!
   nftCollection: NFTCollection
+  transfers: [NFTTransfer!] @derivedFrom(field: "nft")
 }
 
 type NFTCollection @entity {
@@ -201,7 +201,8 @@ type NFTCollection @entity {
 }
 
 type NFTTransfer implements ITransfer @entity {
-  id: ID!
+  "Unique identifier and primary key of the `NFTTransfer` entity"
+  id: ID! # Set to `${tribute.id}-nfttransfer-${nftAdresss}-${tokenId}`
   from: Bytes! # Member!
   to: Bytes # Member!
   transferAt: BigInt!

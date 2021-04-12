@@ -1,12 +1,18 @@
+import { Address, BigInt, log } from "@graphprotocol/graph-ts";
+
 import {
   BankExtension,
   NewBalance,
   Withdraw,
-} from "../generated/templates/BankExtension/BankExtension";
-import { ERC20 } from "../generated/templates/BankExtension/ERC20";
-import { Member, TributeDao, Token, TokenBalance } from "../generated/schema";
-import { GUILD, LOOT, SHARES, TOTAL } from "./helpers/constants";
-import { Address, BigInt, log } from "@graphprotocol/graph-ts";
+} from "../../generated/templates/BankExtension/BankExtension";
+import { ERC20 } from "../../generated/templates/BankExtension/ERC20";
+import {
+  Member,
+  TributeDao,
+  Token,
+  TokenBalance,
+} from "../../generated/schema";
+import { GUILD, LOOT, SHARES, TOTAL } from "../helpers/constants";
 
 function internalTransfer(
   createdAt: string,
@@ -77,6 +83,13 @@ function internalTransfer(
       tokenBalance = new TokenBalance(membertokenBalanceId);
       // we give it an initial 0 balance
       tokenBalance.tokenBalance = BigInt.fromI32(0);
+      tokenBalance.tributeDao = daoAddress.toHex();
+
+      let bankId = daoAddress
+        .toHex()
+        .concat("-bank-")
+        .concat(extensionAddress.toHex());
+      tokenBalance.bank = bankId;
     }
 
     /**
