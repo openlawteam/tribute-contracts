@@ -60,8 +60,10 @@ contract NFTExtension is
     );
     event WithdrawnNFT(address nftAddr, uint256 nftTokenId, address toAddress);
 
-    // All the NFTs and Token ids that belong to the GUILD
+    // All the Token IDs that belong to an NFT address stored in the GUILD collection
     mapping(address => EnumerableSet.UintSet) private _nfts;
+
+    // The internal owner of record of an NFT that has been transferred to the extension
     mapping(bytes32 => address) private _ownership;
 
     // All the NFTs addresses collected and stored in the GUILD collection
@@ -84,7 +86,7 @@ contract NFTExtension is
     constructor() {}
 
     /**
-     * @notice Initializes the extension with the DAO address that it belongs too.
+     * @notice Initializes the extension with the DAO address that it belongs to.
      * @param _dao The address of the DAO that owns the extension.
      * @param creator The owner of the DAO and Extension that is also a member of the DAO.
      */
@@ -97,10 +99,10 @@ contract NFTExtension is
     }
 
     /**
-     * @notice Collects the NFT from the owner and moves to the contract address
+     * @notice Collects the NFT from the owner and moves it to the NFT extension.
      * @notice It must be have been allowed to move this token by either {approve} or {setApprovalForAll}.
-     * @dev Reverts if the NFT is not support/allowed, or is not in ERC721 standard.
-     * @param nftAddr The NFT address that must be in ERC721 and allowed/supported by the extension.
+     * @dev Reverts if the NFT is not in ERC721 standard.
+     * @param nftAddr The NFT contract address.
      * @param nftTokenId The NFT token id.
      */
     function collect(address nftAddr, uint256 nftTokenId)
@@ -130,9 +132,9 @@ contract NFTExtension is
      * @notice Transfers the NFT token from the extension address to the new owner.
      * @notice It also updates the internal state to keep track of the all the NFTs collected by the extension.
      * @notice The caller must have the ACL Flag: WITHDRAW_NFT
-     * @dev Reverts if the NFT is not support/allowed, or is not in ERC721 standard.
+     * @dev Reverts if the NFT is not in ERC721 standard.
      * @param newOwner The address of the new owner.
-     * @param nftAddr The NFT address that must be in ERC721 and allowed/supported by the extension.
+     * @param nftAddr The NFT address that must be in ERC721 standard.
      * @param nftTokenId The NFT token id.
      */
     function withdrawNFT(
@@ -156,10 +158,10 @@ contract NFTExtension is
     }
 
     /**
-     * @notice Updates internally the ownership of the NFT
+     * @notice Updates internally the ownership of the NFT.
      * @notice The caller must have the ACL Flag: INTERNAL_TRANSFER
-     * @dev Reverts if the NFT is not support/allowed, or is not in ERC721 standard.
-     * @param nftAddr The NFT address that must be in ERC721 and allowed/supported by the extension.
+     * @dev Reverts if the NFT is not already internally owned in the extension.
+     * @param nftAddr The NFT address.
      * @param nftTokenId The NFT token id.
      * @param newOwner The address of the new owner.
      */
@@ -177,6 +179,11 @@ contract NFTExtension is
         emit TransferredNFT(nftAddr, nftTokenId, currentOwner, newOwner);
     }
 
+    /**
+     * @notice Gets ID generated from an NFT address and token id (used internally to map ownership).
+     * @param nftAddress The NFT address.
+     * @param tokenId The NFT token id.
+     */
     function getNFTId(address nftAddress, uint256 tokenId)
         public
         pure
@@ -185,10 +192,19 @@ contract NFTExtension is
         return keccak256(abi.encodePacked(nftAddress, tokenId));
     }
 
+    /**
+     * @notice Returns the total amount of token ids collected for an NFT address.
+     * @param tokenAddr The NFT address.
+     */
     function nbNFTs(address tokenAddr) public view returns (uint256) {
         return _nfts[tokenAddr].length();
     }
 
+    /**
+     * @notice Returns token id associated with an NFT address stored in the GUILD collection at the specified index.
+     * @param tokenAddr The NFT address.
+     * @param index The index to get the token id if it exists.
+     */
     function getNFT(address tokenAddr, uint256 index)
         public
         view
@@ -197,16 +213,23 @@ contract NFTExtension is
         return _nfts[tokenAddr].at(index);
     }
 
+    /**
+     * @notice Returns the total amount of NFT addresses collected.
+     */
     function nbNFTAddresses() external view returns (uint256) {
         return _nftAddresses.length();
     }
 
+    /**
+     * @notice Returns NFT address stored in the GUILD collection at the specified index.
+     * @param index The index to get the NFT address if it exists.
+     */
     function getNFTAddress(uint256 index) external view returns (address) {
         return _nftAddresses.at(index);
     }
 
     /**
-     * @notice Required function from IERC721 standard to be able to receive assets to this contract address
+     * @notice Required function from IERC721 standard to be able to receive assets to this contract address.
      */
     function onERC721Received(
         address,
@@ -217,6 +240,12 @@ contract NFTExtension is
         return this.onERC721Received.selector;
     }
 
+    /**
+     * @notice Helper function to update the extension states for an NFT collected by the extension.
+     * @param nftAddr The NFT address.
+     * @param nftTokenId The token id.
+     * @param owner The address of the owner.
+     */
     function _saveNft(
         address nftAddr,
         uint256 nftTokenId,
