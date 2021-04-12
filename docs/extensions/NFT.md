@@ -159,6 +159,20 @@ function nbNFTAddresses() external view returns (uint256)
 function getNFTAddress(uint256 index) external view returns (address)
 ```
 
+### function getNFTOwner
+
+```solidity
+/**
+  * @notice Returns owner of NFT that has been transferred to the extension.
+  * @param nftAddress The NFT address.
+  * @param tokenId The NFT token id.
+  */
+function getNFTOwner(address nftAddress, uint256 tokenId)
+    public
+    view
+    returns (address)
+```
+
 ### function onERC721Received
 
 ```solidity

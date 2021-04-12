@@ -34,6 +34,7 @@ const {
   sha3,
   toBN,
   NFTAdapterContract,
+  GUILD,
 } = require("../../utils/DaoFactory.js");
 
 const { createNFTDao } = require("../../utils/TestUtils.js");
@@ -115,5 +116,9 @@ contract("MolochV3 - NFT Extension", async (accounts) => {
     const nftId = await nftExtension.getNFT(nftAddr, 0);
     assert.equal(nftAddr, pixelNFT.address);
     assert.equal(nftId, tokenId);
+
+    // Check internal owner of record
+    const newOwner = await nftExtension.getNFTOwner(nftAddr, tokenId);
+    assert.equal(newOwner.toLowerCase(), GUILD.toLowerCase());
   });
 });
