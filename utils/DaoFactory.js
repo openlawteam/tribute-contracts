@@ -302,7 +302,6 @@ const configureDao = async ({
     entryDao("tribute-nft", tributeNFT, {
       SUBMIT_PROPOSAL: true,
       NEW_MEMBER: true,
-      TRANSFER_NFT: true,
     }),
     entryDao("distribute", distribute, {
       SUBMIT_PROPOSAL: true,
@@ -355,7 +354,6 @@ const configureDao = async ({
   const nftExt = await NFTExtension.at(nftExtAddr);
   await daoFactory.configureExtension(dao.address, nftExt.address, [
     entryNft(tributeNFT, {
-      TRANSFER_NFT: true,
       COLLECT_NFT: true,
     }),
     entryNft(nftAdapter, {
@@ -648,7 +646,6 @@ const advanceTime = async (time) => {
 
 const entryNft = (contract, flags) => {
   const values = [
-    flags.TRANSFER_NFT,
     flags.WITHDRAW_NFT,
     flags.COLLECT_NFT,
     flags.INTERNAL_TRANSFER,
