@@ -1,6 +1,3 @@
-// Whole-script strict mode syntax
-"use strict";
-
 /**
 MIT License
 
@@ -25,39 +22,34 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
  */
 const {
+  web3,
   toBN,
   fromUtf8,
-  getContract,
   advanceTime,
-  createDao,
+  deployDefaultDao,
+  accounts,
   GUILD,
   SHARES,
   sharePrice,
-  OnboardingContract,
-  VotingContract,
-  FinancingContract,
-  BankExtension,
-  sha3,
   ETH_TOKEN,
-  BankAdapterContract,
+  expect,
 } = require("../../utils/DaoFactory.js");
 const { checkBalance } = require("../../utils/TestUtils.js");
 const remaining = sharePrice.sub(toBN("50000000000000"));
 
-contract("MolochV3 - Financing Adapter", async (accounts) => {
+describe("Adapter - Financing", () => {
   const myAccount = accounts[1];
   const applicant = accounts[2];
   const newMember = accounts[3];
   const expectedGuildBalance = toBN("1200000000000000000");
 
-  it("should be possible to create a financing proposal and get the funds when the proposal pass", async () => {
-    let dao = await createDao(myAccount);
-    const bankAddress = await dao.getExtensionAddress(sha3("bank"));
-    const bank = await BankExtension.at(bankAddress);
-    const voting = await getContract(dao, "voting", VotingContract);
-    const financing = await getContract(dao, "financing", FinancingContract);
-    const onboarding = await getContract(dao, "onboarding", OnboardingContract);
-    const bankAdapter = await getContract(dao, "bank", BankAdapterContract);
+  test("should be possible to create a financing proposal and get the funds when the proposal pass", async () => {
+    const { dao, adapters, extensions } = await deployDefaultDao(myAccount);
+    const bank = extensions.bank;
+    const voting = adapters.voting;
+    const financing = adapters.financing;
+    const onboarding = adapters.onboarding;
+    const bankAdapter = adapters.bankAdapter;
 
     let proposalId = "0x1";
 
@@ -91,7 +83,7 @@ contract("MolochV3 - Financing Adapter", async (accounts) => {
         gasPrice: toBN("0"),
       });
     } catch (err) {
-      assert.equal(err.reason, "proposal has not been voted on yet");
+      expect(err.reason).to.equals("proposal has not been voted on yet");
     }
 
     await advanceTime(10000);
@@ -154,17 +146,16 @@ contract("MolochV3 - Financing Adapter", async (accounts) => {
     });
     checkBalance(bank, applicant, ETH_TOKEN, 0);
     const ethBalance2 = await web3.eth.getBalance(applicant);
-    assert.equal(
-      toBN(ethBalance).add(requestedAmount).toString(),
+    expect(toBN(ethBalance).add(requestedAmount).toString()).to.equal(
       ethBalance2.toString()
     );
   });
 
-  it("should not be possible to get the money if the proposal fails", async () => {
-    let dao = await createDao(myAccount);
-    const voting = await getContract(dao, "voting", VotingContract);
-    const financing = await getContract(dao, "financing", FinancingContract);
-    const onboarding = await getContract(dao, "onboarding", OnboardingContract);
+  test("should not be possible to get the money if the proposal fails", async () => {
+    const { dao, adapters } = await deployDefaultDao(myAccount);
+    const voting = adapters.voting;
+    const financing = adapters.financing;
+    const onboarding = adapters.onboarding;
 
     //Add funds to the Guild Bank after sposoring a member to join the Guild
     let proposalId = "0x1";
@@ -229,15 +220,16 @@ contract("MolochV3 - Financing Adapter", async (accounts) => {
         gasPrice: toBN("0"),
       });
     } catch (err) {
-      assert.equal(err.reason, "proposal needs to pass");
+      expect(err.reason).to.equal("proposal needs to pass");
     }
   });
 
   it("should not be possible to submit a proposal with a token that is not allowed", async () => {
-    let dao = await createDao(myAccount);
-    const voting = await getContract(dao, "voting", VotingContract);
-    const financing = await getContract(dao, "financing", FinancingContract);
-    const onboarding = await getContract(dao, "onboarding", OnboardingContract);
+    const { dao, adapters } = await deployDefaultDao(myAccount);
+    const voting = adapters.voting;
+    const financing = adapters.financing;
+    const onboarding = adapters.onboarding;
+
     let proposalId = "0x1";
     //Add funds to the Guild Bank after sposoring a member to join the Guild
     await onboarding.onboard(
@@ -282,19 +274,20 @@ contract("MolochV3 - Financing Adapter", async (accounts) => {
         requestedAmount,
         fromUtf8("")
       );
-      assert.fail(
+      throw Error(
         "should not be possible to submit a proposal with a token that is not allowed"
       );
     } catch (err) {
-      assert.equal(err.reason, "token not allowed");
+      expect(err.reason).to.equal("token not allowed");
     }
   });
 
-  it("should not be possible to submit a proposal to request funding with an amount equals to zero", async () => {
-    let dao = await createDao(myAccount);
-    const voting = await getContract(dao, "voting", VotingContract);
-    const financing = await getContract(dao, "financing", FinancingContract);
-    const onboarding = await getContract(dao, "onboarding", OnboardingContract);
+  test("should not be possible to submit a proposal to request funding with an amount equals to zero", async () => {
+    const { dao, adapters } = await deployDefaultDao(myAccount);
+    const voting = adapters.voting;
+    const financing = adapters.financing;
+    const onboarding = adapters.onboarding;
+
     let proposalId = "0x1";
     //Add funds to the Guild Bank after sposoring a member to join the Guild
     await onboarding.onboard(
@@ -338,17 +331,18 @@ contract("MolochV3 - Financing Adapter", async (accounts) => {
         requestedAmount,
         fromUtf8("")
       );
-      assert.fail(
+      throw Error(
         "should not be possible to submit a proposal with an amount == 0"
       );
     } catch (err) {
-      assert.equal(err.reason, "invalid requested amount");
+      expect(err.reason).to.equal("invalid requested amount");
     }
   });
 
-  it("should not be possible to request funding with an invalid proposal id", async () => {
-    let dao = await createDao(myAccount);
-    const financing = await getContract(dao, "financing", FinancingContract);
+  test("should not be possible to request funding with an invalid proposal id", async () => {
+    const { dao, adapters } = await deployDefaultDao(myAccount);
+    const financing = adapters.financing;
+
     try {
       let invalidProposalId = "0x0";
       await financing.createFinancingRequest(
@@ -359,16 +353,16 @@ contract("MolochV3 - Financing Adapter", async (accounts) => {
         toBN(10),
         fromUtf8("")
       );
-      assert.fail("should not be possible to use proposal id == 0");
+      throw Error("should not be possible to use proposal id == 0");
     } catch (err) {
-      assert.equal(err.reason, "invalid proposalId");
+      expect(err.reason).to.equal("invalid proposalId");
     }
   });
 
-  it("should not be possible to reuse a proposalId", async () => {
-    let dao = await createDao(myAccount);
-    const financing = await getContract(dao, "financing", FinancingContract);
-    const onboarding = await getContract(dao, "onboarding", OnboardingContract);
+  test("should not be possible to reuse a proposalId", async () => {
+    const { dao, adapters } = await deployDefaultDao(myAccount);
+    const financing = adapters.financing;
+    const onboarding = adapters.onboarding;
 
     let proposalId = "0x1";
 
@@ -397,14 +391,15 @@ contract("MolochV3 - Financing Adapter", async (accounts) => {
         fromUtf8(""),
         { gasPrice: toBN("0") }
       );
+      throw Error("should not be possible to create a financing request");
     } catch (err) {
-      assert.equal(err.reason, "proposalId must be unique");
+      expect(err.reason).to.equal("proposalId must be unique");
     }
   });
 
-  it("should not be possible to sponsor proposal that does not exist", async () => {
-    let dao = await createDao(myAccount);
-    const financing = await getContract(dao, "financing", FinancingContract);
+  test("should not be possible to sponsor proposal that does not exist", async () => {
+    const { dao, adapters } = await deployDefaultDao(myAccount);
+    const financing = adapters.financing;
 
     try {
       let proposalId = "0x1";
@@ -412,14 +407,15 @@ contract("MolochV3 - Financing Adapter", async (accounts) => {
         from: myAccount,
         gasPrice: toBN("0"),
       });
+      throw Error("should not be possible to sponsor");
     } catch (err) {
-      assert.equal(err.reason, "proposal does not exist for this dao");
+      expect(err.reason).to.equal("proposal does not exist for this dao");
     }
   });
 
-  it("should not be possible to sponsor proposal more than once", async () => {
-    let dao = await createDao(myAccount);
-    const financing = await getContract(dao, "financing", FinancingContract);
+  test("should not be possible to sponsor proposal more than once", async () => {
+    const { dao, adapters } = await deployDefaultDao(myAccount);
+    const financing = adapters.financing;
 
     let proposalId = "0x1";
     await financing.createFinancingRequest(
@@ -443,13 +439,13 @@ contract("MolochV3 - Financing Adapter", async (accounts) => {
         gasPrice: toBN("0"),
       });
     } catch (err) {
-      assert.equal(err.reason, "flag already set");
+      expect(err.reason).to.equal("flag already set");
     }
   });
 
   it("should not be possible to process a proposal that does not exist", async () => {
-    let dao = await createDao(myAccount);
-    const financing = await getContract(dao, "financing", FinancingContract);
+    const { dao, adapters } = await deployDefaultDao(myAccount);
+    const financing = adapters.financing;
 
     try {
       let proposalId = "0x1";
@@ -458,13 +454,13 @@ contract("MolochV3 - Financing Adapter", async (accounts) => {
         gasPrice: toBN("0"),
       });
     } catch (err) {
-      assert.equal(err.reason, "adapter not found");
+      expect(err.reason).to.equal("adapter not found");
     }
   });
 
   it("should not be possible to process a proposal that is not sponsored", async () => {
-    let dao = await createDao(myAccount);
-    const financing = await getContract(dao, "financing", FinancingContract);
+    const { dao, adapters } = await deployDefaultDao(myAccount);
+    const financing = adapters.financing;
 
     let proposalId = "0x1";
     await financing.createFinancingRequest(
@@ -482,8 +478,9 @@ contract("MolochV3 - Financing Adapter", async (accounts) => {
         from: myAccount,
         gasPrice: toBN("0"),
       });
+      throw Error("should not be possible to process");
     } catch (err) {
-      assert.equal(err.reason, "adapter not found");
+      expect(err.reason).to.equal("adapter not found");
     }
   });
 });

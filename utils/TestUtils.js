@@ -17,6 +17,7 @@ const {
   VotingContract,
   BankExtension,
   LOOT,
+  expect,
 } = require("./DaoFactory.js");
 
 const checkLastEvent = async (dao, testObject) => {
@@ -24,10 +25,8 @@ const checkLastEvent = async (dao, testObject) => {
   let returnValues = pastEvents[0].returnValues;
 
   Object.keys(testObject).forEach((key) => {
-    assert.equal(
-      testObject[key],
-      returnValues[key],
-      "value mismatch for key " + key
+    expect(testObject[key], "value mismatch for key " + key).to.equals(
+      returnValues[key]
     );
   });
 };
@@ -35,7 +34,7 @@ const checkLastEvent = async (dao, testObject) => {
 const checkBalance = async (bank, address, token, expectedBalance) => {
   const balance = await bank.balanceOf(address, token);
 
-  assert.equal(balance.toString(), expectedBalance.toString());
+  expect(balance.toString()).to.equal(expectedBalance.toString());
 };
 
 const isActiveMember = async (bank, member) => {
@@ -107,7 +106,7 @@ const onboardNewMember = async (dao, sponsor, newMember, proposalId) => {
   const bankAddress = await dao.getExtensionAddress(sha3("bank"));
   const bank = await BankExtension.at(bankAddress);
   const nbShares = await bank.balanceOf(newMember, SHARES);
-  assert.equal(nbShares.toString(), "10000000000000000");
+  expect(nbShares.toString()).to.equal("10000000000000000");
 };
 
 module.exports = {
