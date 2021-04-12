@@ -3,7 +3,7 @@
     "network": "rinkeby",
     "daoFactoryAddress": "0x10a14A1665DE72faeDb866Fc75c57036813E2Eb2",
     "daoFactoryStartBlock": 8332211,
-    "GITHUB_USERNAME": "sophiacodes",
-    "SUBGRAPH_NAME": "tribute-localhost"
+    "GITHUB_USERNAME": "openlawteam",
+    "SUBGRAPH_NAME": "tribute-dev"
   }
 ]
