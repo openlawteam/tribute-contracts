@@ -38,8 +38,9 @@ const {
   expect,
 } = require("../../utils/DaoFactory.js");
 
-let proposalCounter = 1;
 describe("Adapter - Ragequit", () => {
+  var proposalCounter = 1;
+
   const submitNewMemberProposal = async (
     onboarding,
     dao,
