@@ -2,9 +2,11 @@
 
 > Graph definition for the Tribute DAO Framework
 
+## Subgraph Setup
+
 ### Multiple Ethereum Networks Setup
 
-Managing different network deployments for the contracts, is currently setup using a config file in `config/subgraph-config.json`, providing the network, start block, subgraph directory, github username, and contract addresses for the DaoFactory and BankFactory, for each subgraph:
+Managing different network deployments for the contracts, is currently setup using a config file in `config/subgraph-config.json`, providing the network, start block, subgraph directory, github username, and contract address for the DaoFactory:
 
 For example:
 
@@ -33,7 +35,7 @@ In `.env` (create `.env` file if necessary):
 GRAPH_ACCESS_TOKEN=...
 ```
 
-Then from the root directory, simply run the following command to deploy the subgraphs:
+Then from the `subgraph` directory, simply run the following command to deploy the subgraphs:
 
 ```
 npx ts-node subgraph-deployer.ts
@@ -44,3 +46,7 @@ See [here](https://thegraph.com/docs/deploy-a-subgraph#redeploying-a-subgraph) f
 ### Local Development Graph Setup
 
 Check out the setup guide [here](https://github.com/openlawteam/molochv3-contracts/blob/master/docker/README.md)
+
+## Subgraph Tests
+
+TODO
