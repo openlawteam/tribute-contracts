@@ -121,5 +121,7 @@ docker/data
 artifacts
 cache
 typechain
+# this subgraph.yaml is created during the hardhat test; ignore it
+subgraph.yaml
 
 .DS_Store
