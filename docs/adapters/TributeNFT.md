@@ -189,7 +189,7 @@ function provideTribute(
      * @param applicant The applicant address (who will receive the DAO internal tokens and become a member).
      * @param nftAddr The address of the ERC-721 tribute token.
      * @param nftTokenId The NFT token id.
-     * @param requestShares The amount requested of DAO internal tokens (SHARES).
+     * @param requestedShares The amount requested of DAO internal tokens (SHARES).
      */
     function _mintSharesToNewMember(
         DaoRegistry dao,
