@@ -26,29 +26,23 @@ SOFTWARE.
 "use strict";
 
 const {
-  sha3,
   toBN,
   fromUtf8,
   advanceTime,
-  createDao,
-  getContract,
+  deployDefaultDao,
+  sha3,
+  accounts,
   sharePrice,
   GUILD,
   ETH_TOKEN,
   SHARES,
-  OnboardingContract,
-  VotingContract,
-  GuildKickContract,
-  FinancingContract,
   LOOT,
-  ManagingContract,
-  BankExtension,
+  expect,
+  expectRevert,
 } = require("../../utils/DaoFactory.js");
 
-const { expectRevert } = require("@openzeppelin/test-helpers");
-
 let proposalCounter = 1;
-contract("MolochV3 - GuildKick Adapter", async (accounts) => {
+describe("Adapter - GuildKick", () => {
   const submitNewMemberProposal = async (
     member,
     onboarding,
@@ -142,99 +136,102 @@ contract("MolochV3 - GuildKick Adapter", async (accounts) => {
     return { kickProposalId: newProposalId };
   };
 
-  it("should be possible to kick a DAO member", async () => {
-    const member = accounts[5];
+  test("should be possible to kick a DAO member", async () => {
+    const owner = accounts[1];
     const newMember = accounts[2];
+    const { dao, adapters, extensions } = await deployDefaultDao(owner);
 
-    let dao = await createDao(member);
-    const bankAddress = await dao.getExtensionAddress(sha3("bank"));
-    const bank = await BankExtension.at(bankAddress);
-    const onboarding = await getContract(dao, "onboarding", OnboardingContract);
-    const voting = await getContract(dao, "voting", VotingContract);
-    const guildkickContract = await getContract(
-      dao,
-      "guildkick",
-      GuildKickContract
-    );
+    const bank = extensions.bank;
+    const onboarding = adapters.onboarding;
+    const voting = adapters.voting;
+    const guildkickContract = adapters.guildkick;
+
     await onboardingNewMember(
       dao,
       onboarding,
       voting,
       newMember,
-      member,
+      owner,
       sharePrice,
       SHARES
     );
 
     //Check Guild Bank Balance
-    let guildBalance = await bank.balanceOf(GUILD, ETH_TOKEN);
-    assert.equal(toBN(guildBalance).toString(), "1200000000000000000");
+    const guildBalance = await bank.balanceOf(GUILD, ETH_TOKEN);
+    expect(guildBalance.toString()).equal("1200000000000000000");
 
     //Check Member Shares & Loot
     let shares = await bank.balanceOf(newMember, SHARES);
-    assert.equal(shares.toString(), "10000000000000000");
+    expect(shares.toString()).equal("10000000000000000");
     let loot = await bank.balanceOf(newMember, LOOT);
-    assert.equal(loot.toString(), "0");
+    expect(loot.toString()).equal("0");
 
     //SubGuildKick
-    let memberToKick = newMember;
-    let { kickProposalId } = await guildKickProposal(
-      dao,
-      guildkickContract,
+    const memberToKick = newMember;
+    const kickProposalId = `0x${proposalCounter++}`;
+    await adapters.guildkick.submitKickProposal(
+      dao.address,
+      kickProposalId,
       memberToKick,
-      member
+      fromUtf8(""),
+      {
+        from: owner,
+        gasPrice: toBN("0"),
+      }
     );
 
     //Vote YES on kick proposal
     await voting.submitVote(dao.address, kickProposalId, 1, {
-      from: member,
+      from: owner,
       gasPrice: toBN("0"),
     });
     await advanceTime(10000);
 
     await guildkickContract.processProposal(dao.address, kickProposalId, {
-      from: member,
+      from: owner,
       gasPrice: toBN("0"),
     });
 
     // Check Member Shares & Loot, it should be 0 because both were subtracted from internal
     shares = await bank.balanceOf(newMember, SHARES);
-    assert.equal(shares.toString(), "0");
+    expect(shares.toString()).equal("0");
     loot = await bank.balanceOf(newMember, LOOT);
-    assert.equal(loot.toString(), "0");
+    expect(loot.toString()).to.equals("0");
   });
 
-  it("should not be possible for a non-member to submit a guild kick proposal", async () => {
-    const member = accounts[4];
+  test("should not be possible for a non-member to submit a guild kick proposal", async () => {
+    const owner = accounts[5];
     const nonMember = accounts[2];
-
-    let dao = await createDao(member);
-    const guildkickContract = await getContract(
-      dao,
-      "guildkick",
-      GuildKickContract
-    );
+    const { dao, adapters } = await deployDefaultDao(owner);
 
     // Non member attemps to submit a guild kick proposal
-    let memberToKick = member;
+    const memberToKick = owner;
+    const newProposalId = proposalCounter + 1;
     await expectRevert(
-      guildKickProposal(dao, guildkickContract, memberToKick, nonMember),
+      adapters.guildkick.submitKickProposal(
+        dao.address,
+        `0x${newProposalId}`,
+        memberToKick,
+        fromUtf8(""),
+        {
+          from: nonMember,
+          gasPrice: toBN("0"),
+        }
+      ),
       "onlyMember"
     );
   });
 
-  it("should not be possible for a non-active member to submit a guild kick proposal", async () => {
+  //FIXME
+  test("should not be possible for a non-active member to submit a guild kick proposal", async () => {
     const member = accounts[6];
     const newMember = accounts[2];
 
-    let dao = await createDao(member);
-    const onboarding = await getContract(dao, "onboarding", OnboardingContract);
-    const voting = await getContract(dao, "voting", VotingContract);
-    const guildkickContract = await getContract(
-      dao,
-      "guildkick",
-      GuildKickContract
-    );
+    const { dao, adapters } = await deployDefaultDao(member);
+    const onboarding = adapters.onboarding;
+    const voting = adapters.voting;
+    const guildkickContract = adapters.guildkick;
+
     await onboardingNewMember(
       dao,
       onboarding,
@@ -269,25 +266,34 @@ contract("MolochV3 - GuildKick Adapter", async (accounts) => {
 
     // The kicked member which is now inactive attemps to submit a kick proposal
     // to kick the member that started the previous guild kick
-    await expectRevert(
-      guildKickProposal(dao, guildkickContract, member, memberToKick),
-      "onlyMember"
-    );
+    const newProposalId = proposalCounter + 1;
+    try {
+      await adapters.guildkick.submitKickProposal(
+        dao.address,
+        `0x${newProposalId}`,
+        member,
+        fromUtf8(""),
+        {
+          from: memberToKick,
+          gasPrice: toBN("0"),
+        }
+      );
+      throw Error("should not be possible to kick");
+    } catch (e) {
+      e.reason;
+      expect(e.reason).to.equals("onlyMember");
+    }
   });
 
-  it("should be possible for a non-member to process a kick proposal", async () => {
+  test("should be possible for a non-member to process a kick proposal", async () => {
     const member = accounts[7];
     const newMemberA = accounts[2];
     const nonMember = accounts[3];
 
-    let dao = await createDao(member);
-    const onboarding = await getContract(dao, "onboarding", OnboardingContract);
-    const voting = await getContract(dao, "voting", VotingContract);
-    const guildkickContract = await getContract(
-      dao,
-      "guildkick",
-      GuildKickContract
-    );
+    const { dao, adapters } = await deployDefaultDao(member);
+    const onboarding = adapters.onboarding;
+    const voting = adapters.voting;
+    const guildkickContract = adapters.guildkick;
 
     await onboardingNewMember(
       dao,
@@ -321,18 +327,14 @@ contract("MolochV3 - GuildKick Adapter", async (accounts) => {
     });
   });
 
-  it("should not be possible to process a kick proposal that was already processed", async () => {
+  test("should not be possible to process a kick proposal that was already processed", async () => {
     const member = accounts[9];
     const newMember = accounts[2];
 
-    let dao = await createDao(member);
-    const onboarding = await getContract(dao, "onboarding", OnboardingContract);
-    const voting = await getContract(dao, "voting", VotingContract);
-    const guildkickContract = await getContract(
-      dao,
-      "guildkick",
-      GuildKickContract
-    );
+    const { dao, adapters } = await deployDefaultDao(member);
+    const onboarding = adapters.onboarding;
+    const voting = adapters.voting;
+    const guildkickContract = adapters.guildkick;
 
     await onboardingNewMember(
       dao,
@@ -376,18 +378,14 @@ contract("MolochV3 - GuildKick Adapter", async (accounts) => {
     );
   });
 
-  it("should not be possible to process a kick proposal that does not exist", async () => {
+  test("should not be possible to process a kick proposal that does not exist", async () => {
     const member = accounts[3];
     const newMember = accounts[2];
 
-    let dao = await createDao(member);
-    const onboarding = await getContract(dao, "onboarding", OnboardingContract);
-    const voting = await getContract(dao, "voting", VotingContract);
-    const guildkickContract = await getContract(
-      dao,
-      "guildkick",
-      GuildKickContract
-    );
+    const { dao, adapters } = await deployDefaultDao(member);
+    const onboarding = adapters.onboarding;
+    const voting = adapters.voting;
+    const guildkickContract = adapters.guildkick;
 
     await onboardingNewMember(
       dao,
@@ -408,7 +406,7 @@ contract("MolochV3 - GuildKick Adapter", async (accounts) => {
       member
     );
 
-    //Vote YES on kick proposal
+    // Vote YES on kick proposal
     await voting.submitVote(dao.address, kickProposalId, 1, {
       from: member,
       gasPrice: toBN("0"),
@@ -426,18 +424,14 @@ contract("MolochV3 - GuildKick Adapter", async (accounts) => {
     );
   });
 
-  it("should not be possible to process a kick proposal if the voting did not pass", async () => {
+  test("should not be possible to process a kick proposal if the voting did not pass", async () => {
     const member = accounts[7];
     const newMember = accounts[2];
 
-    let dao = await createDao(member);
-    const onboarding = await getContract(dao, "onboarding", OnboardingContract);
-    const voting = await getContract(dao, "voting", VotingContract);
-    const guildkickContract = await getContract(
-      dao,
-      "guildkick",
-      GuildKickContract
-    );
+    const { dao, adapters } = await deployDefaultDao(member);
+    const onboarding = adapters.onboarding;
+    const voting = adapters.voting;
+    const guildkickContract = adapters.guildkick;
 
     await onboardingNewMember(
       dao,
@@ -475,19 +469,15 @@ contract("MolochV3 - GuildKick Adapter", async (accounts) => {
     );
   });
 
-  it("should not be possible to process a kick proposal if the member to kick does not have any shares nor loot", async () => {
+  test("should not be possible to process a kick proposal if the member to kick does not have any shares nor loot", async () => {
     const member = accounts[8];
     const advisor = accounts[3];
     const nonMember = accounts[4];
 
-    let dao = await createDao(member);
-    const onboarding = await getContract(dao, "onboarding", OnboardingContract);
-    const voting = await getContract(dao, "voting", VotingContract);
-    const guildkickContract = await getContract(
-      dao,
-      "guildkick",
-      GuildKickContract
-    );
+    const { dao, adapters } = await deployDefaultDao(member);
+    const onboarding = adapters.onboarding;
+    const voting = adapters.voting;
+    const guildkickContract = adapters.guildkick;
 
     // New member joins as an Advisor (only receives LOOT)
     await onboardingNewMember(
@@ -507,18 +497,15 @@ contract("MolochV3 - GuildKick Adapter", async (accounts) => {
     );
   });
 
-  it("should not be possible for a kicked member to sponsor an onboarding proposal", async () => {
+  test("should not be possible for a kicked member to sponsor an onboarding proposal", async () => {
     const member = accounts[5];
     const newMember = accounts[2];
 
-    let dao = await createDao(member);
-    const onboarding = await getContract(dao, "onboarding", OnboardingContract);
-    const voting = await getContract(dao, "voting", VotingContract);
-    const guildkickContract = await getContract(
-      dao,
-      "guildkick",
-      GuildKickContract
-    );
+    const { dao, adapters } = await deployDefaultDao(member);
+    const onboarding = adapters.onboarding;
+    const voting = adapters.voting;
+    const guildkickContract = adapters.guildkick;
+
     await onboardingNewMember(
       dao,
       onboarding,
@@ -577,18 +564,15 @@ contract("MolochV3 - GuildKick Adapter", async (accounts) => {
     );
   });
 
-  it("should not be possible for a kicked member to vote on in an onboarding proposal", async () => {
+  test("should not be possible for a kicked member to vote on in an onboarding proposal", async () => {
     const member = accounts[5];
     const newMember = accounts[2];
 
-    let dao = await createDao(member);
-    const onboarding = await getContract(dao, "onboarding", OnboardingContract);
-    const voting = await getContract(dao, "voting", VotingContract);
-    const guildkickContract = await getContract(
-      dao,
-      "guildkick",
-      GuildKickContract
-    );
+    const { dao, adapters } = await deployDefaultDao(member);
+    const onboarding = adapters.onboarding;
+    const voting = adapters.voting;
+    const guildkickContract = adapters.guildkick;
+
     await onboardingNewMember(
       dao,
       onboarding,
@@ -651,19 +635,16 @@ contract("MolochV3 - GuildKick Adapter", async (accounts) => {
     );
   });
 
-  it("should not be possible for a kicked member to sponsor a financing proposal", async () => {
+  test("should not be possible for a kicked member to sponsor a financing proposal", async () => {
     const member = accounts[5];
     const newMember = accounts[2];
 
-    let dao = await createDao(member);
-    const onboarding = await getContract(dao, "onboarding", OnboardingContract);
-    const voting = await getContract(dao, "voting", VotingContract);
-    const guildkickContract = await getContract(
-      dao,
-      "guildkick",
-      GuildKickContract
-    );
-    const financing = await getContract(dao, "financing", FinancingContract);
+    const { dao, adapters } = await deployDefaultDao(member);
+    const onboarding = adapters.onboarding;
+    const voting = adapters.voting;
+    const guildkickContract = adapters.guildkick;
+    const financing = adapters.financing;
+
     await onboardingNewMember(
       dao,
       onboarding,
@@ -721,19 +702,16 @@ contract("MolochV3 - GuildKick Adapter", async (accounts) => {
     );
   });
 
-  it("should not be possible for a kicked member to sponsor a financing proposal", async () => {
+  test("should not be possible for a kicked member to sponsor a financing proposal", async () => {
     const member = accounts[5];
     const newMember = accounts[2];
 
-    let dao = await createDao(member);
-    const onboarding = await getContract(dao, "onboarding", OnboardingContract);
-    const voting = await getContract(dao, "voting", VotingContract);
-    const guildkickContract = await getContract(
-      dao,
-      "guildkick",
-      GuildKickContract
-    );
-    const managing = await getContract(dao, "managing", ManagingContract);
+    const { dao, adapters } = await deployDefaultDao(member);
+    const onboarding = adapters.onboarding;
+    const voting = adapters.voting;
+    const guildkickContract = adapters.guildkick;
+    const managing = adapters.managing;
+
     await onboardingNewMember(
       dao,
       onboarding,
@@ -788,19 +766,16 @@ contract("MolochV3 - GuildKick Adapter", async (accounts) => {
     );
   });
 
-  it("should not be possible for a kicked member to sponsor a managing proposal", async () => {
+  test("should not be possible for a kicked member to sponsor a managing proposal", async () => {
     const member = accounts[5];
     const newMember = accounts[2];
 
-    let dao = await createDao(member);
-    const onboarding = await getContract(dao, "onboarding", OnboardingContract);
-    const voting = await getContract(dao, "voting", VotingContract);
-    const guildkickContract = await getContract(
-      dao,
-      "guildkick",
-      GuildKickContract
-    );
-    const managing = await getContract(dao, "managing", ManagingContract);
+    const { dao, adapters } = await deployDefaultDao(member);
+    const onboarding = adapters.onboarding;
+    const voting = adapters.voting;
+    const guildkickContract = adapters.guildkick;
+    const managing = adapters.managing;
+
     await onboardingNewMember(
       dao,
       onboarding,
@@ -860,20 +835,16 @@ contract("MolochV3 - GuildKick Adapter", async (accounts) => {
     );
   });
 
-  it("should be possible to process a ragekick to return the funds to the kicked member", async () => {
+  test("should be possible to process a ragekick to return the funds to the kicked member", async () => {
     const member = accounts[5];
     const newMember = accounts[2];
 
-    let dao = await createDao(member);
-    const bankAddress = await dao.getExtensionAddress(sha3("bank"));
-    const bank = await BankExtension.at(bankAddress);
-    const onboarding = await getContract(dao, "onboarding", OnboardingContract);
-    const voting = await getContract(dao, "voting", VotingContract);
-    const guildkickContract = await getContract(
-      dao,
-      "guildkick",
-      GuildKickContract
-    );
+    const { dao, adapters, extensions } = await deployDefaultDao(member);
+    const onboarding = adapters.onboarding;
+    const voting = adapters.voting;
+    const guildkickContract = adapters.guildkick;
+    const bank = extensions.bank;
+
     await onboardingNewMember(
       dao,
       onboarding,
@@ -908,27 +879,24 @@ contract("MolochV3 - GuildKick Adapter", async (accounts) => {
 
     // The kicked member should not have LOOT & SHARES anymore
     let memberLoot = await bank.balanceOf(memberToKick, LOOT);
-    assert.equal(memberLoot.toString(), "0");
+    expect(memberLoot.toString()).to.equals("0");
     let memberShares = await bank.balanceOf(memberToKick, SHARES);
-    assert.equal(memberShares.toString(), "0");
+    expect(memberLoot.toString()).to.equals("0");
 
     // The kicked member must receive the funds in ETH_TOKEN after the ragekick was triggered by a DAO member
     let memberEthToken = await bank.balanceOf(memberToKick, ETH_TOKEN);
-    assert.equal(memberEthToken.toString(), "1199999999999999880");
+    expect(memberEthToken.toString()).to.equals("1199999999999999880");
   });
 
-  it("should not be possible to process a ragekick if the batch index is smaller than the current processing index", async () => {
+  test("should not be possible to process a ragekick if the batch index is smaller than the current processing index", async () => {
     const member = accounts[5];
     const newMember = accounts[2];
 
-    let dao = await createDao(member);
-    const onboarding = await getContract(dao, "onboarding", OnboardingContract);
-    const voting = await getContract(dao, "voting", VotingContract);
-    const guildkickContract = await getContract(
-      dao,
-      "guildkick",
-      GuildKickContract
-    );
+    const { dao, adapters } = await deployDefaultDao(member);
+    const onboarding = adapters.onboarding;
+    const voting = adapters.voting;
+    const guildkickContract = adapters.guildkick;
+
     await onboardingNewMember(
       dao,
       onboarding,
@@ -965,12 +933,8 @@ contract("MolochV3 - GuildKick Adapter", async (accounts) => {
   it("should not be possible to submit a guild kick to kick yourself", async () => {
     const member = accounts[5];
 
-    let dao = await createDao(member);
-    const guildkickContract = await getContract(
-      dao,
-      "guildkick",
-      GuildKickContract
-    );
+    const { dao, adapters } = await deployDefaultDao(member);
+    const guildkickContract = adapters.guildkick;
 
     // Attempt to kick yourself
     let memberToKick = member;
@@ -980,19 +944,16 @@ contract("MolochV3 - GuildKick Adapter", async (accounts) => {
     );
   });
 
-  it("should not be possible to reuse the kick proposal id", async () => {
+  test("should not be possible to reuse the kick proposal id", async () => {
     const memberA = accounts[1];
     const memberB = accounts[3];
     const memberC = accounts[5];
 
-    let dao = await createDao(memberA);
-    const onboarding = await getContract(dao, "onboarding", OnboardingContract);
-    const voting = await getContract(dao, "voting", VotingContract);
-    const guildkickContract = await getContract(
-      dao,
-      "guildkick",
-      GuildKickContract
-    );
+    const { dao, adapters } = await deployDefaultDao(memberA);
+    const onboarding = adapters.onboarding;
+    const voting = adapters.voting;
+    const guildkickContract = adapters.guildkick;
+
     await onboardingNewMember(
       dao,
       onboarding,

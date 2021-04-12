@@ -30,7 +30,7 @@ const {
 } = require("../../utils/DaoFactory.js");
 
 describe("Core - Registry", () => {
-  it("should not be possible to add an adapter with invalid id", async () => {
+  test("should not be possible to add an adapter with invalid id", async () => {
     let adapterId = fromUtf8("");
     let adapterAddr = "0x627306090abaB3A6e1400e9345bC60c78a8BEf57";
     let registry = await DaoRegistry.new();
@@ -40,7 +40,7 @@ describe("Core - Registry", () => {
     );
   });
 
-  it("should not be possible to add an adapter with invalid address]", async () => {
+  test("should not be possible to add an adapter with invalid address]", async () => {
     let adapterId = fromUtf8("1");
     let adapterAddr = "";
     let registry = await DaoRegistry.new();
@@ -50,7 +50,7 @@ describe("Core - Registry", () => {
     );
   });
 
-  it("should be possible to replace an adapter when the id is already in use", async () => {
+  test("should be possible to replace an adapter when the id is already in use", async () => {
     let adapterId = fromUtf8("1");
     let adapterAddr = "0x627306090abaB3A6e1400e9345bC60c78a8BEf57";
     let newAdapterAddr = "0xd7bCe30D77DE56E3D21AEfe7ad144b3134438F5B";
@@ -62,7 +62,7 @@ describe("Core - Registry", () => {
     expect(address).to.equals(newAdapterAddr);
   });
 
-  it("should be possible to add an adapter with a valid id and address", async () => {
+  test("should be possible to add an adapter with a valid id and address", async () => {
     let adapterId = fromUtf8("1");
     let adapterAddr = "0x627306090abaB3A6e1400e9345bC60c78a8BEf57";
     let registry = await DaoRegistry.new();
@@ -71,7 +71,7 @@ describe("Core - Registry", () => {
     expect(address).equals(adapterAddr);
   });
 
-  it("should be possible to remove an adapter", async () => {
+  test("should be possible to remove an adapter", async () => {
     let adapterId = fromUtf8("2");
     let adapterAddr = "0x627306090abaB3A6e1400e9345bC60c78a8BEf57";
     let registry = await DaoRegistry.new();
@@ -85,7 +85,7 @@ describe("Core - Registry", () => {
     );
   });
 
-  it("should not be possible to remove an adapter with an empty id", async () => {
+  test("should not be possible to remove an adapter with an empty id", async () => {
     let adapterId = fromUtf8("");
     let registry = await DaoRegistry.new();
     await expectRevert(

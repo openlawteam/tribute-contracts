@@ -45,7 +45,7 @@
     "ts-node": "^9.1.1"
   },
   "scripts": {
-    "test": "jest",
+    "test": "jest --clearCache && jest",
     "lint:fix": "prettier --write 'contracts/**/*.sol' 'test/**/*.test.js' '**/*.md'",
     "lint": "prettier --list-different 'contracts/**/*.sol' 'test/**/*.test.js' '**/*.md'",
     "create": "graph create openlawteam/tribute --node https://api.thegraph.com/deploy/",

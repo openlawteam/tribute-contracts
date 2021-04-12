@@ -33,7 +33,7 @@ describe("Core - DaoFactory", () => {
   const owner = accounts[1];
   const anotherOwner = accounts[2];
 
-  it("should be possible create an identity dao and clone it", async () => {
+  test("should be possible create an identity dao and clone it", async () => {
     let identityDao = await createIdentityDao(owner);
 
     let { daoName } = await cloneDao(
@@ -46,7 +46,7 @@ describe("Core - DaoFactory", () => {
     expect(daoName).to.equals("cloned-dao");
   });
 
-  it("should be possible to get a DAO address by its name if it was created by the factory", async () => {
+  test("should be possible to get a DAO address by its name if it was created by the factory", async () => {
     let identityDao = await createIdentityDao(owner);
 
     let { daoFactory, dao } = await cloneDao(
@@ -63,7 +63,7 @@ describe("Core - DaoFactory", () => {
     expect(retrievedAddress).to.equals(dao.address);
   });
 
-  it("should not be possible to get a DAO address of it was not created by the factory", async () => {
+  test("should not be possible to get a DAO address of it was not created by the factory", async () => {
     let identityDao = await createIdentityDao(owner);
 
     let { daoFactory } = await cloneDao(
