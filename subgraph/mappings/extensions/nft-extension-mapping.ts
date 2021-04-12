@@ -3,12 +3,11 @@ import { Address, BigInt, log } from "@graphprotocol/graph-ts";
 import {
   NFTExtension,
   CollectedNFT,
-  RegisteredNFT,
   ReturnedNFT,
   TransferredNFT,
 } from "../../generated/templates/NFTExtension/NFTExtension";
 import { ERC721 } from "../../generated/templates/NFTExtension/ERC721";
-import { NFT, NFTCollection, NFTTransfer } from "../../generated/schema";
+import { NFT, NFTCollection } from "../../generated/schema";
 
 function loadOrCreateNFT(
   extensionAddress: Address,
@@ -77,12 +76,6 @@ export function handleCollectedNFT(event: CollectedNFT): void {
   nft.save();
 }
 
-export function handleRegisteredNFT(event: RegisteredNFT): void {
-  log.info("================ RegisteredNFT event fired. nftAddr: {}", [
-    event.params.nftAddr.toHexString(),
-  ]);
-}
-
 export function handleReturnedNFT(event: ReturnedNFT): void {
   log.info(
     "================ ReturnedNFT event fired. newOwner: {}, nftAddr: {}, nftTokenId: {}",
@@ -100,29 +93,28 @@ export function handleTransferredNFT(event: TransferredNFT): void {
     [event.params.nftAddr.toHexString(), event.params.nftTokenId.toString()]
   );
 
-  let nftTransferId = event.params.nftAddr
-    .toHex()
-    .concat("-nfttransfer-")
-    .concat(event.params.nftTokenId.toString())
-    .concat("-")
-    .concat(event.block.timestamp.toHexString());
+  // let nftTransferId = event.params.nftAddr
+  //   .toHex()
+  //   .concat("-nfttransfer-")
+  //   .concat(event.params.nftTokenId.toString())
+  //   .concat("-")
+  //   .concat(event.block.timestamp.toHexString());
 
-  let nftTransfer = NFTTransfer.load(nftTransferId);
-  if (nftTransfer == null) {
-    nftTransfer = new NFTTransfer(nftTransferId);
-  }
+  // let nftTransfer = NFTTransfer.load(nftTransferId);
+  // if (nftTransfer == null) {
+  //   nftTransfer = new NFTTransfer(nftTransferId);
+  // }
 
-  nftTransfer.from = event.transaction.from;
-  // nftTransfer.to = event.transaction.to;
-  nftTransfer.transferAt = event.block.timestamp;
-  nftTransfer.transaction = event.transaction.hash;
+  // nftTransfer.from = event.transaction.from;
+  // // nftTransfer.to = event.transaction.to;
+  // nftTransfer.transferAt = event.block.timestamp;
+  // nftTransfer.transaction = event.transaction.hash;
 
-  let nft = loadOrCreateNFT(
-    event.address,
-    event.params.nftAddr,
-    event.params.nftTokenId
-  );
-  nftTransfer.nft = nft.id;
+  // let nft = loadOrCreateNFT(
+  //   event.address,
+  //   event.params.nftAddr,
+  //   event.params.nftTokenId
+  // );
 
-  nftTransfer.save();
+  // nftTransfer.save();
 }

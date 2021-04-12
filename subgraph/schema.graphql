@@ -155,7 +155,6 @@ type Token @entity {
   symbol: String
   tokenAddress: Bytes!
   balance: BigInt
-  # transfers: [Transfer!]
 }
 
 type TokenBalance @entity {
@@ -168,15 +167,6 @@ type TokenBalance @entity {
   tributeDao: TributeDao
 }
 
-# type TokenTransfer implements ITransfer @entity {
-#   id: ID!
-#   from: Bytes! # Member!
-#   to: Bytes! # Member!
-#   transferAt: BigInt!
-#   transaction: Bytes! # Transaction!
-#   token: Token!
-# }
-
 type NFT @entity {
   "Unique identifier and primary key of the `NFT` entity"
   id: ID! # Set to `${tribute.id}-nft-${nftAddress.id}-$tokenId}`
@@ -188,7 +178,11 @@ type NFT @entity {
   tokenUri: String!
   # createdAt: BigInt!
   nftCollection: NFTCollection
-  transfers: [NFTTransfer!] @derivedFrom(field: "nft")
+
+  # from: Bytes! # Member!
+  # to: Bytes # Member!
+  # transferAt: BigInt!
+  # transaction: Bytes! #Transaction!
 }
 
 type NFTCollection @entity {
@@ -196,17 +190,6 @@ type NFTCollection @entity {
   id: ID! # Set to `${tribute.id}-nftcollection-${extensionAddress}`
   nfts: [NFT!] @derivedFrom(field: "nftCollection")
   tributeDao: TributeDao!
-  # transfers: [Transfer!]
-}
-
-type NFTTransfer implements ITransfer @entity {
-  "Unique identifier and primary key of the `NFTTransfer` entity"
-  id: ID! # Set to `${tribute.id}-nfttransfer-${nftAdresss}-${tokenId}`
-  from: Bytes! # Member!
-  to: Bytes # Member!
-  transferAt: BigInt!
-  transaction: Bytes! #Transaction!
-  nft: NFT!
 }
 
 type Adapter @entity {
@@ -228,9 +211,3 @@ type Extension @entity {
   extensionId: Bytes!
   tributeDao: TributeDao
 }
-
-# type Transaction @entity {
-#   id: ID!
-#   timestamp: BigInt!
-#   blockNumber: BigInt!
-# }
