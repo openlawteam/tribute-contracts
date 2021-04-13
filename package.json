@@ -53,7 +53,7 @@
     "compile-abi": "truffle compile && truffle-abi",
     "ganache": "node_modules/.bin/ganache-cli -s=test -g=0 --secure -u 0 -u 1 -p 8545 --networkId 1337",
     "codegen": "cd subgraph && npm ci && graph codegen",
-    "build": "graph build"
+    "build": "cd subgraph && graph build"
   },
   "repository": {
     "type": "git",
