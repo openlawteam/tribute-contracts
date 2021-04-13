@@ -891,6 +891,16 @@ const revertChainSnapshot = (snapshotId) => {
   );
 };
 
+const proposalIdGenerator = () => {
+  var idCounter = 0;
+  return {
+    *generator() {
+      idCounter++;
+      return `0x${idCounter}`;
+    },
+  };
+};
+
 module.exports = {
   prepareAdapters,
   advanceTime,
@@ -915,6 +925,7 @@ module.exports = {
   toUtf8,
   takeChainSnapshot,
   revertChainSnapshot,
+  proposalIdGenerator,
   maximumChunks,
   networks,
   web3,

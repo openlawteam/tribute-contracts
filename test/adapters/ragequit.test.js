@@ -27,6 +27,9 @@ const {
   deployDefaultDao,
   toBN,
   fromUtf8,
+  takeChainSnapshot,
+  revertChainSnapshot,
+  proposalIdGenerator,
   accounts,
   sharePrice,
   GUILD,
@@ -39,7 +42,27 @@ const {
 } = require("../../utils/DaoFactory.js");
 
 describe("Adapter - Ragequit", () => {
-  var proposalCounter = 1;
+  const proposalCounter = proposalIdGenerator().generator;
+  const owner = accounts[1];
+
+  const getProposalCounter = () => {
+    return proposalCounter().next().value;
+  };
+
+  beforeAll(async () => {
+    const { dao, adapters, extensions } = await deployDefaultDao(owner);
+    this.dao = dao;
+    this.adapters = adapters;
+    this.extensions = extensions;
+  });
+
+  beforeEach(async () => {
+    this.snapshotId = await takeChainSnapshot();
+  });
+
+  afterEach(async () => {
+    await revertChainSnapshot(this.snapshotId);
+  });
 
   const submitNewMemberProposal = async (
     onboarding,
@@ -49,7 +72,7 @@ describe("Adapter - Ragequit", () => {
     token,
     sponsor
   ) => {
-    const proposalId = "0x" + proposalCounter++;
+    const proposalId = getProposalCounter();
     await onboarding.onboard(
       dao.address,
       proposalId,
@@ -84,24 +107,21 @@ describe("Adapter - Ragequit", () => {
   };
 
   test("should return an error if a non DAO member attempts to ragequit", async () => {
-    const owner = accounts[1];
     const newMember = accounts[2];
-    const { dao, adapters, extensions } = await deployDefaultDao(owner);
-
-    const bank = extensions.bank;
-    const onboarding = adapters.onboarding;
-    const voting = adapters.voting;
+    const bank = this.extensions.bank;
+    const onboarding = this.adapters.onboarding;
+    const voting = this.adapters.voting;
 
     const proposalId = await submitNewMemberProposal(
       onboarding,
-      dao,
+      this.dao,
       newMember,
       sharePrice
     );
 
     //Sponsor the new proposal, vote and process it
-    await sponsorNewMember(onboarding, dao, proposalId, owner, voting);
-    await onboarding.processProposal(dao.address, proposalId, {
+    await sponsorNewMember(onboarding, this.dao, proposalId, owner, voting);
+    await onboarding.processProposal(this.dao.address, proposalId, {
       from: owner,
       gasPrice: toBN("0"),
     });
@@ -117,8 +137,8 @@ describe("Adapter - Ragequit", () => {
     //Ragequit
     const nonMember = accounts[4];
     await expectRevert(
-      adapters.ragequit.ragequit(
-        dao.address,
+      this.adapters.ragequit.ragequit(
+        this.dao.address,
         toBN(shares),
         toBN(0),
         [ETH_TOKEN],
@@ -132,24 +152,21 @@ describe("Adapter - Ragequit", () => {
   });
 
   test("should not be possible for a member to ragequit when the member does not have enough shares", async () => {
-    const owner = accounts[1];
     const newMember = accounts[2];
-    const { dao, adapters, extensions } = await deployDefaultDao(owner);
-
-    const bank = extensions.bank;
-    const onboarding = adapters.onboarding;
-    const voting = adapters.voting;
+    const bank = this.extensions.bank;
+    const onboarding = this.adapters.onboarding;
+    const voting = this.adapters.voting;
 
     const proposalId = await submitNewMemberProposal(
       onboarding,
-      dao,
+      this.dao,
       newMember,
       sharePrice
     );
 
     //Sponsor the new proposal, vote and process it
-    await sponsorNewMember(onboarding, dao, proposalId, owner, voting);
-    await onboarding.processProposal(dao.address, proposalId, {
+    await sponsorNewMember(onboarding, this.dao, proposalId, owner, voting);
+    await onboarding.processProposal(this.dao.address, proposalId, {
       from: owner,
       gasPrice: toBN("0"),
     });
@@ -164,8 +181,8 @@ describe("Adapter - Ragequit", () => {
 
     //Ragequit
     await expectRevert(
-      adapters.ragequit.ragequit(
-        dao.address,
+      this.adapters.ragequit.ragequit(
+        this.dao.address,
         toBN("100000000000000001"),
         toBN(0),
         [ETH_TOKEN],
@@ -179,24 +196,21 @@ describe("Adapter - Ragequit", () => {
   });
 
   test("should be possible for a member to ragequit when the member has not voted on any proposals yet", async () => {
-    const owner = accounts[1];
     const newMember = accounts[2];
-    const { dao, adapters, extensions } = await deployDefaultDao(owner);
-
-    const bank = extensions.bank;
-    const onboarding = adapters.onboarding;
-    const voting = adapters.voting;
+    const bank = this.extensions.bank;
+    const onboarding = this.adapters.onboarding;
+    const voting = this.adapters.voting;
 
     const proposalId = await submitNewMemberProposal(
       onboarding,
-      dao,
+      this.dao,
       newMember,
       sharePrice
     );
 
     // Sponsor the new proposal to admit the new member, vote and process it
-    await sponsorNewMember(onboarding, dao, proposalId, owner, voting);
-    await onboarding.processProposal(dao.address, proposalId, {
+    await sponsorNewMember(onboarding, this.dao, proposalId, owner, voting);
+    await onboarding.processProposal(this.dao.address, proposalId, {
       from: owner,
       gasPrice: toBN("0"),
     });
@@ -210,8 +224,8 @@ describe("Adapter - Ragequit", () => {
     expect(shares.toString()).to.equal("10000000000000000");
 
     //Ragequit - Burn all the new member shares
-    await adapters.ragequit.ragequit(
-      dao.address,
+    await this.adapters.ragequit.ragequit(
+      this.dao.address,
       toBN(shares),
       toBN(0),
       [ETH_TOKEN],
@@ -227,26 +241,23 @@ describe("Adapter - Ragequit", () => {
   });
 
   test("should be possible for a member to ragequit if the member voted YES on a proposal that is not processed", async () => {
-    const owner = accounts[1];
     const newMember = accounts[2];
     const applicant = accounts[3];
-    const { dao, adapters, extensions } = await deployDefaultDao(owner);
-
-    const bank = extensions.bank;
-    const onboarding = adapters.onboarding;
-    const financing = adapters.financing;
-    const voting = adapters.voting;
+    const bank = this.extensions.bank;
+    const onboarding = this.adapters.onboarding;
+    const financing = this.adapters.financing;
+    const voting = this.adapters.voting;
 
     let proposalId = await submitNewMemberProposal(
       onboarding,
-      dao,
+      this.dao,
       newMember,
       sharePrice
     );
 
     //Sponsor the new proposal to admit the new member, vote and process it
-    await sponsorNewMember(onboarding, dao, proposalId, owner, voting);
-    await onboarding.processProposal(dao.address, proposalId, {
+    await sponsorNewMember(onboarding, this.dao, proposalId, owner, voting);
+    await onboarding.processProposal(this.dao.address, proposalId, {
       from: owner,
       gasPrice: toBN("0"),
     });
@@ -258,12 +269,12 @@ describe("Adapter - Ragequit", () => {
     //Check New Member Shares
     const shares = await bank.balanceOf(newMember, SHARES);
     expect(shares.toString()).equal("10000000000000000");
-    proposalId = "0x101";
+    proposalId = getProposalCounter();
 
     //Create Financing Request
     const requestedAmount = toBN(50000);
     await financing.createFinancingRequest(
-      dao.address,
+      this.dao.address,
       proposalId,
       applicant,
       ETH_TOKEN,
@@ -272,21 +283,21 @@ describe("Adapter - Ragequit", () => {
     );
 
     //Old Member sponsors the Financing proposal
-    await financing.sponsorProposal(dao.address, proposalId, [], {
+    await financing.sponsorProposal(this.dao.address, proposalId, [], {
       from: owner,
       gasPrice: toBN("0"),
     });
 
     //New Member votes YES on the Financing proposal
     let vote = 1; //YES
-    await voting.submitVote(dao.address, proposalId, vote, {
+    await voting.submitVote(this.dao.address, proposalId, vote, {
       from: newMember,
       gasPrice: toBN("0"),
     });
 
     //Ragequit - New member ragequits after YES vote
-    await adapters.ragequit.ragequit(
-      dao.address,
+    await this.adapters.ragequit.ragequit(
+      this.dao.address,
       toBN(shares),
       toBN(0),
       [ETH_TOKEN],
@@ -302,26 +313,23 @@ describe("Adapter - Ragequit", () => {
   });
 
   test("should be possible for a member to ragequit if the member voted NO on a proposal that is not processed", async () => {
-    const owner = accounts[1];
     const newMember = accounts[2];
     const applicant = accounts[3];
-    const { dao, adapters, extensions } = await deployDefaultDao(owner);
-
-    const bank = extensions.bank;
-    const onboarding = adapters.onboarding;
-    const financing = adapters.financing;
-    const voting = adapters.voting;
+    const bank = this.extensions.bank;
+    const onboarding = this.adapters.onboarding;
+    const financing = this.adapters.financing;
+    const voting = this.adapters.voting;
 
     let proposalId = await submitNewMemberProposal(
       onboarding,
-      dao,
+      this.dao,
       newMember,
       sharePrice
     );
 
     //Sponsor the new proposal to admit the new member, vote and process it
-    await sponsorNewMember(onboarding, dao, proposalId, owner, voting);
-    await onboarding.processProposal(dao.address, proposalId, {
+    await sponsorNewMember(onboarding, this.dao, proposalId, owner, voting);
+    await onboarding.processProposal(this.dao.address, proposalId, {
       from: owner,
       gasPrice: toBN("0"),
     });
@@ -334,11 +342,11 @@ describe("Adapter - Ragequit", () => {
     const shares = await bank.balanceOf(newMember, SHARES);
     expect(shares.toString()).equal("10000000000000000");
 
-    proposalId = "0x101";
+    proposalId = getProposalCounter();
     //Create Financing Request
     const requestedAmount = toBN(50000);
     await financing.createFinancingRequest(
-      dao.address,
+      this.dao.address,
       proposalId,
       applicant,
       ETH_TOKEN,
@@ -347,21 +355,21 @@ describe("Adapter - Ragequit", () => {
     );
 
     //Old Member sponsors the Financing proposal
-    await financing.sponsorProposal(dao.address, proposalId, [], {
+    await financing.sponsorProposal(this.dao.address, proposalId, [], {
       from: owner,
       gasPrice: toBN("0"),
     });
 
     //New Member votes NO on the Financing proposal
     const vote = 2; //NO
-    await voting.submitVote(dao.address, proposalId, vote, {
+    await voting.submitVote(this.dao.address, proposalId, vote, {
       from: newMember,
       gasPrice: toBN("0"),
     });
 
     //Ragequit - New member ragequits after YES vote
-    await adapters.ragequit.ragequit(
-      dao.address,
+    await this.adapters.ragequit.ragequit(
+      this.dao.address,
       toBN(shares),
       toBN(0),
       [ETH_TOKEN],
@@ -422,7 +430,7 @@ describe("Adapter - Ragequit", () => {
 
     // Send a request to join the DAO as an Advisor (non-voting power),
     // the tx passes the OLT ERC20 token, the amount and the nonVotingOnboarding adapter that handles the proposal
-    const proposalId = "0x101";
+    const proposalId = getProposalCounter();
     await onboarding.onboard(
       dao.address,
       proposalId,
@@ -480,24 +488,21 @@ describe("Adapter - Ragequit", () => {
   });
 
   test("should not be possible to vote after the ragequit", async () => {
-    const owner = accounts[1];
     const memberAddr = accounts[2];
-    const { dao, adapters, extensions } = await deployDefaultDao(owner);
-
-    const bank = extensions.bank;
-    const onboarding = adapters.onboarding;
-    const voting = adapters.voting;
+    const bank = this.extensions.bank;
+    const onboarding = this.adapters.onboarding;
+    const voting = this.adapters.voting;
 
     let proposalId = await submitNewMemberProposal(
       onboarding,
-      dao,
+      this.dao,
       memberAddr,
       sharePrice
     );
 
     //Sponsor the new proposal to admit the new member, vote and process it
-    await sponsorNewMember(onboarding, dao, proposalId, owner, voting);
-    await onboarding.processProposal(dao.address, proposalId, {
+    await sponsorNewMember(onboarding, this.dao, proposalId, owner, voting);
+    await onboarding.processProposal(this.dao.address, proposalId, {
       from: owner,
       gasPrice: toBN("0"),
     });
@@ -511,8 +516,8 @@ describe("Adapter - Ragequit", () => {
     expect(shares.toString()).to.equal("10000000000000000");
 
     //Ragequit - Burn all the new member shares
-    await adapters.ragequit.ragequit(
-      dao.address,
+    await this.adapters.ragequit.ragequit(
+      this.dao.address,
       toBN(shares),
       toBN(0),
       [ETH_TOKEN],
@@ -523,13 +528,13 @@ describe("Adapter - Ragequit", () => {
     );
 
     //Member attempts to sponsor a proposal after the ragequit
-    let res = onboarding.sponsorProposal(dao.address, proposalId, [], {
+    let res = onboarding.sponsorProposal(this.dao.address, proposalId, [], {
       from: memberAddr,
       gasPrice: toBN("0"),
     });
     await expectRevert(res, "onlyMember");
 
-    res = voting.submitVote(dao.address, proposalId, 1, {
+    res = voting.submitVote(this.dao.address, proposalId, 1, {
       from: memberAddr,
       gasPrice: toBN("0"),
     });
@@ -537,10 +542,7 @@ describe("Adapter - Ragequit", () => {
   });
 
   test("should not be possible to ragequit if the member have provided an invalid token", async () => {
-    const owner = accounts[1];
-    const { dao, adapters, extensions } = await deployDefaultDao(owner);
-
-    const bank = extensions.bank;
+    const bank = this.extensions.bank;
 
     // Check member shares
     let shares = await bank.balanceOf(owner, SHARES);
@@ -549,8 +551,8 @@ describe("Adapter - Ragequit", () => {
     //Ragequit - Attempts to ragequit using an invalid token to receive funds
     let invalidToken = accounts[7];
     await expectRevert(
-      adapters.ragequit.ragequit(
-        dao.address,
+      this.adapters.ragequit.ragequit(
+        this.dao.address,
         toBN(shares),
         toBN(0),
         [invalidToken],
@@ -564,24 +566,21 @@ describe("Adapter - Ragequit", () => {
   });
 
   test("should not be possible to ragequit if there are no tokens to receive the funds", async () => {
-    const owner = accounts[1];
     const newMember = accounts[2];
-    const { dao, adapters, extensions } = await deployDefaultDao(owner);
-
-    const bank = extensions.bank;
-    const onboarding = adapters.onboarding;
-    const voting = adapters.voting;
+    const bank = this.extensions.bank;
+    const onboarding = this.adapters.onboarding;
+    const voting = this.adapters.voting;
 
     let proposalId = await submitNewMemberProposal(
       onboarding,
-      dao,
+      this.dao,
       newMember,
       sharePrice
     );
 
     //Sponsor the new proposal to admit the new member, vote and process it
-    await sponsorNewMember(onboarding, dao, proposalId, owner, voting);
-    await onboarding.processProposal(dao.address, proposalId, {
+    await sponsorNewMember(onboarding, this.dao, proposalId, owner, voting);
+    await onboarding.processProposal(this.dao.address, proposalId, {
       from: owner,
       gasPrice: toBN("0"),
     });
@@ -595,8 +594,8 @@ describe("Adapter - Ragequit", () => {
     expect(shares.toString()).to.equal("10000000000000000");
 
     await expectRevert(
-      adapters.ragequit.ragequit(
-        dao.address,
+      this.adapters.ragequit.ragequit(
+        this.dao.address,
         toBN(shares),
         toBN(0),
         [ETH_TOKEN, ETH_TOKEN], // token array with duplicates
@@ -610,24 +609,21 @@ describe("Adapter - Ragequit", () => {
   });
 
   test("should not be possible to ragequit if there is a duplicate token", async () => {
-    const owner = accounts[1];
     const memberA = accounts[2];
-    const { dao, adapters, extensions } = await deployDefaultDao(owner);
-
-    const bank = extensions.bank;
-    const onboarding = adapters.onboarding;
-    const voting = adapters.voting;
+    const bank = this.extensions.bank;
+    const onboarding = this.adapters.onboarding;
+    const voting = this.adapters.voting;
 
     let proposalId = await submitNewMemberProposal(
       onboarding,
-      dao,
+      this.dao,
       memberA,
       sharePrice
     );
 
     // Sponsor the new proposal to admit the new member, vote and process it
-    await sponsorNewMember(onboarding, dao, proposalId, owner, voting);
-    await onboarding.processProposal(dao.address, proposalId, {
+    await sponsorNewMember(onboarding, this.dao, proposalId, owner, voting);
+    await onboarding.processProposal(this.dao.address, proposalId, {
       from: owner,
       gasPrice: toBN("0"),
     });
@@ -636,8 +632,8 @@ describe("Adapter - Ragequit", () => {
     expect(memberAShares.toString()).to.equal("10000000000000000");
 
     await expectRevert(
-      adapters.ragequit.ragequit(
-        dao.address,
+      this.adapters.ragequit.ragequit(
+        this.dao.address,
         toBN(memberAShares),
         toBN(0),
         [], //empty token array

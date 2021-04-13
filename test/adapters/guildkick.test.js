@@ -31,6 +31,9 @@ const {
   advanceTime,
   deployDefaultDao,
   sha3,
+  takeChainSnapshot,
+  revertChainSnapshot,
+  proposalIdGenerator,
   accounts,
   sharePrice,
   GUILD,
@@ -38,18 +41,15 @@ const {
   SHARES,
   LOOT,
   expect,
-  expectRevert,
-  takeChainSnapshot,
-  revertChainSnapshot,
+  expectRevert
 } = require("../../utils/DaoFactory.js");
 
 describe("Adapter - GuildKick", () => {
   const owner = accounts[1];
-  let proposalCounter = 0;
+  const proposalCounter = proposalIdGenerator().generator;
 
   const getProposalCounter = () => {
-    proposalCounter++;
-    return "0x" + proposalCounter;
+    return proposalCounter().next().value;
   };
 
   beforeAll(async () => {
