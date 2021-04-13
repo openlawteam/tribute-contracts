@@ -165,9 +165,6 @@ type NFT @entity {
   id: ID! # Set to `${tribute.id}-nft-${nftAddress.id}-$tokenId}`
   nftAddress: Bytes!
   tokenId: BigInt!
-  tokenUri: String
-  name: String
-  symbol: String
   from: Bytes
   to: Bytes
   nftCollection: NFTCollection

@@ -6,7 +6,6 @@ import {
   WithdrawnNFT,
   TransferredNFT,
 } from "../../generated/templates/NFTExtension/NFTExtension";
-// import { ERC721 } from "../../generated/templates/NFTExtension/ERC721";
 import { NFT, NFTCollection } from "../../generated/schema";
 
 function loadOrCreateNFT(
@@ -50,14 +49,6 @@ export function handleCollectedNFT(event: CollectedNFT): void {
   nft.tokenId = event.params.nftTokenId;
   nft.from = event.transaction.from;
   nft.to = event.address;
-
-  // get additional ERC721 info
-  // let erc721Registry = ERC721.bind(event.params.nftAddr);
-
-  // nft.name = erc721Registry.name();
-  // nft.symbol = erc721Registry.symbol();
-  // nft.owner = erc721Registry.ownerOf(event.params.nftTokenId);
-  // nft.tokenUri = erc721Registry.tokenURI(event.params.nftTokenId);
 
   let nftRegistry = NFTExtension.bind(event.address);
   let daoAddress = nftRegistry.dao();

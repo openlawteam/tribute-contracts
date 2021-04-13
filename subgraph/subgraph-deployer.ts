@@ -165,16 +165,15 @@ const getYAML = ({
         abis:
           - name: NFTExtension
             file: ../build/contracts/NFTExtension.json
-          - name: ERC721
-            file: ../build/contracts/ERC721.json
         eventHandlers:
           - event: CollectedNFT(address,uint256)
             handler: handleCollectedNFT
-          - event: ReturnedNFT(address,uint256,address)
-            handler: handleReturnedNFT
-          - event: TransferredNFT(address,uint256)
+          - event: TransferredNFT(address,uint256,address,address)
             handler: handleTransferredNFT
+          - event: WithdrawnNFT(address,uint256,address)
+            handler: handleWithdrawnNFT
         file: ./mappings/extensions/nft-extension-mapping.ts
+
         
 `;
 };
