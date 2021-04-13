@@ -1,4 +1,4 @@
-import { Address, Bytes } from "@graphprotocol/graph-ts";
+import { Address, BigInt, Bytes } from "@graphprotocol/graph-ts";
 
 import { OffchainVotingContract } from "../../generated/templates/DaoRegistry/OffchainVotingContract";
 import { VotingContract } from "../../generated/templates/DaoRegistry/VotingContract";
@@ -43,6 +43,7 @@ export function loadProposalAndSaveVoteResults(
 
         vote.adapterName = votingAdapterName;
         vote.adapterAddress = votingAdapterAddress;
+        vote.proposal = maybeProposalId;
 
         vote.save();
 
@@ -51,6 +52,8 @@ export function loadProposalAndSaveVoteResults(
           proposal.nbNo = voteResults.value1;
           proposal.startingTime = voteResults.value2;
           proposal.blockNumber = voteResults.value3;
+
+          proposal.voteResult = voteId;
         }
       } else if (votingAdapterName == "OffchainVotingContract") {
         let offchainVotingContract = OffchainVotingContract.bind(
@@ -65,6 +68,7 @@ export function loadProposalAndSaveVoteResults(
 
         vote.adapterName = votingAdapterName;
         vote.adapterAddress = votingAdapterAddress;
+        vote.proposal = maybeProposalId;
 
         vote.save();
 
@@ -74,12 +78,18 @@ export function loadProposalAndSaveVoteResults(
           proposal.reporter = voteResults.value2;
           proposal.resultRoot = voteResults.value3;
 
-          proposal.nbYes = voteResults.value5;
-          proposal.nbNo = voteResults.value6;
-          proposal.index = voteResults.value7;
+          proposal.nbYes = voteResults.value4;
+          proposal.nbNo = voteResults.value5;
+          proposal.index = voteResults.value6;
 
-          proposal.startingTime = voteResults.value8;
+          proposal.startingTime = voteResults.value7;
+          proposal.gracePeriodStartingTime = voteResults.value8;
+          proposal.isChallenged = voteResults.value9;
+          // @todo its a mapping, not generated in schema
+          // proposal.fallbackVotes = voteResults.value10;
           proposal.fallbackVotesCount = voteResults.value10;
+
+          proposal.voteResult = voteId;
         }
       }
     }

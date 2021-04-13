@@ -1,11 +1,10 @@
 import { config as dotenvConfig } from "dotenv";
 import { resolve } from "path";
-dotenvConfig({ path: resolve(__dirname, "./.env") });
+dotenvConfig({ path: resolve(__dirname, ".env") });
 
 import "@nomiclabs/hardhat-waffle";
 import "hardhat-typechain";
 import "@nomiclabs/hardhat-ganache";
-import "solidity-coverage";
 
 // Ensure that we have all the environment variables we need.
 let mnemonic: string;
@@ -45,7 +44,9 @@ const config = {
   },
   // https://hardhat.org/config/#path-configuration
   paths: {
-    tests: "./test-subgraph",
+    tests: "./subgraph/subgraph-tests",
+    cache: "./subgraph/subgraph-tests/cache",
+    artifacts: "./subgraph/subgraph-tests/artifacts",
   },
 };
 

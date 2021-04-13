@@ -1,5 +1,5 @@
-import { Signer } from "@ethersproject/abstract-signer";
 import fs from "fs";
+import { Signer } from "@ethersproject/abstract-signer";
 import { ethers, waffle } from "hardhat";
 import { expect } from "chai";
 import { ApolloFetch, FetchResult } from "apollo-fetch";
@@ -10,16 +10,12 @@ import path, { resolve } from "path";
 dotenvConfig({ path: resolve(__dirname, "./.env") });
 
 // Contract Artifacts
-import DaoRegistryArtifact from "../artifacts/contracts/core/DaoRegistry.sol/DaoRegistry.json";
-import DaoFactoryArtifact from "../artifacts/contracts/core/DaoFactory.sol/DaoFactory.json";
-import BankFactoryArtifact from "../artifacts/contracts/extensions/BankFactory.sol/BankFactory.json";
-import BankExtensionArtifact from "../artifacts/contracts/extensions/Bank.sol/BankExtension.json";
+import DaoRegistryArtifact from "./artifacts/contracts/core/DaoRegistry.sol/DaoRegistry.json";
+import DaoFactoryArtifact from "./artifacts/contracts/core/DaoFactory.sol/DaoFactory.json";
 
 // Contract Types
-import { DaoRegistry } from "../typechain/DaoRegistry";
-import { DaoFactory } from "../typechain/DaoFactory";
-import { BankFactory } from "../typechain/BankFactory";
-import { BankExtension } from "../typechain/BankExtension";
+import { DaoRegistry } from "../../typechain/DaoRegistry";
+import { DaoFactory } from "../../typechain/DaoFactory";
 
 // Utils
 import {
@@ -49,8 +45,6 @@ import { getYAML } from "./helpers/YAML";
 describe("Dao and Bank Creation", function () {
   let daoRegistry: DaoRegistry;
   let daoFactory: DaoFactory;
-  let bankFactory: BankFactory;
-  let identityBank: BankExtension;
 
   let subgraph: ApolloFetch;
   let signers: Signer[];
@@ -85,29 +79,11 @@ describe("Dao and Bank Creation", function () {
       daoFactory.address
     );
 
-    identityBank = (await deployContract(
-      signers[0],
-      BankExtensionArtifact,
-      []
-    )) as BankExtension;
-
-    console.log("============= deployed identityBank", identityBank.address);
-
-    bankFactory = (await deployContract(signers[0], BankFactoryArtifact, [
-      identityBank.address,
-    ])) as BankFactory;
-
-    console.log(
-      "============= deployed bankFactory.address",
-      bankFactory.address
-    );
-
     // Write YAML file
     fs.writeFileSync(
       "subgraph.yaml",
       getYAML({
         daoFactoryAddress: daoFactory.address,
-        bankFactoryAddress: bankFactory.address,
       })
     );
 

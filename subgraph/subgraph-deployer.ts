@@ -15,8 +15,6 @@ type DeploySettings = {
 type YAMLSettings = {
   daoFactoryAddress: string;
   daoFactoryStartBlock: number;
-  bankFactoryAddress: string;
-  bankFactoryStartBlock: number;
   network: string;
 };
 
@@ -35,8 +33,6 @@ export const exec = (cmd: string) => {
 const getYAML = ({
   daoFactoryAddress,
   daoFactoryStartBlock,
-  bankFactoryAddress,
-  bankFactoryStartBlock,
   network,
 }: YAMLSettings): string => {
   return ` 
@@ -62,53 +58,11 @@ const getYAML = ({
           - TributeDao
         abis:
           - name: DaoFactory
-            file: ./build/contracts/DaoFactory.json
+            file: ../build/contracts/DaoFactory.json
         eventHandlers:
           - event: DAOCreated(address,string)
             handler: handleDaoCreated
-        file: ./subgraph-mappings/dao-factory-mapping.ts
-    # ====================================== BankFactory ====================================
-    - kind: ethereum/contract
-      name: BankFactory
-      network: ${network}
-      source:
-        address: "${bankFactoryAddress}"
-        abi: BankFactory
-        startBlock: ${bankFactoryStartBlock}
-      mapping:
-        kind: ethereum/events
-        apiVersion: 0.0.4
-        language: wasm/assemblyscript
-        entities:
-          - Bank
-        abis:
-          - name: BankFactory
-            file: ./build/contracts/BankFactory.json
-        eventHandlers:
-          - event: BankCreated(address)
-            handler: handleBankCreated
-        file: ./subgraph-mappings/bank-factory-mapping.ts
-    # ====================================== NFTCollectionFactory ====================================
-    - kind: ethereum/contract
-      name: NFTCollectionFactory
-      network: ${network}
-      source:
-        address: "0x120AcB4EeDf8Af8F79D86E3D211C96cBF09e493c"
-        abi: NFTCollectionFactory
-        startBlock: 17
-      mapping:
-        kind: ethereum/events
-        apiVersion: 0.0.4
-        language: wasm/assemblyscript
-        entities:
-          - NFTCollection
-        abis:
-          - name: NFTCollectionFactory
-            file: ./build/contracts/NFTCollectionFactory.json
-        eventHandlers:
-          - event: NFTCollectionCreated(address)
-            handler: handleNFTCollectionCreated
-        file: ./subgraph-mappings/nft-collection-factory-mapping.ts
+        file: ./mappings/dao-factory-mapping.ts
 
   templates:
     # ====================================== DaoRegistry ====================================
@@ -129,25 +83,25 @@ const getYAML = ({
           - Vote
         abis:
           - name: DaoRegistry
-            file: ./build/contracts/DaoRegistry.json
+            file: ../build/contracts/DaoRegistry.json
           - name: OnboardingContract
-            file: ./build/contracts/OnboardingContract.json
+            file: ../build/contracts/OnboardingContract.json
           - name: DistributeContract
-            file: ./build/contracts/DistributeContract.json
+            file: ../build/contracts/DistributeContract.json
           - name: TributeContract
-            file: ./build/contracts/TributeContract.json
+            file: ../build/contracts/TributeContract.json
           - name: ManagingContract
-            file: ./build/contracts/ManagingContract.json
+            file: ../build/contracts/ManagingContract.json
           - name: GuildKickContract
-            file: ./build/contracts/GuildKickContract.json
+            file: ../build/contracts/GuildKickContract.json
           - name: FinancingContract
-            file: ./build/contracts/FinancingContract.json
+            file: ../build/contracts/FinancingContract.json
           - name: OffchainVotingContract
-            file: ./build/contracts/OffchainVotingContract.json
+            file: ../build/contracts/OffchainVotingContract.json
           - name: VotingContract
-            file: ./build/contracts/VotingContract.json
+            file: ../build/contracts/VotingContract.json
           - name: IVoting
-            file: ./build/contracts/IVoting.json
+            file: ../build/contracts/IVoting.json
         eventHandlers:
           - event: SubmittedProposal(bytes32,uint256)
             handler: handleSubmittedProposal
@@ -169,7 +123,7 @@ const getYAML = ({
             handler: handleConfigurationUpdated
           - event: AddressConfigurationUpdated(bytes32,address)
             handler: handleAddressConfigurationUpdated
-        file: ./subgraph-mappings/dao-registry-mapping.ts
+        file: ./mappings/dao-registry-mapping.ts
     # ====================================== BankExtension ====================================
     - kind: ethereum/contract
       name: BankExtension
@@ -186,52 +140,53 @@ const getYAML = ({
           - Member
         abis:
           - name: BankExtension
-            file: ./build/contracts/BankExtension.json
+            file: ../build/contracts/BankExtension.json
+          - name: ERC20
+            file: ../build/contracts/ERC20.json
         eventHandlers:
           - event: NewBalance(address,address,uint160)
             handler: handleNewBalance
           - event: Withdraw(address,address,uint160)
             handler: handleWithdraw
-        file: ./subgraph-mappings/bank-extension-mapping.ts
-      # ====================================== NFTExtension ====================================
-      # - kind: ethereum/contract
-      #   name: NFTExtension
-      #   network: mainnet
-      #   source:
-      #     abi: NFTExtension
-      #   mapping:
-      #     kind: ethereum/events
-      #     apiVersion: 0.0.4
-      #     language: wasm/assemblyscript
-      #     entities:
-      #       - NFT
-      #     abis:
-      #       - name: NFTExtension
-      #         file: ./build/contracts/NFTExtension.json
-      #     eventHandlers:
-      #       - event: NewBalance(address,address,uint160)
-      #         handler: handleNewBalance
-      #       - event: Withdraw(address,address,uint160)
-      #         handler: handleWithdraw
-      #     file: ./subgraph-mappings/nft-extension-mapping.ts
-          
+        file: ./mappings/extensions/bank-extension-mapping.ts
+    # ====================================== NFTExtension ====================================
+    - kind: ethereum/contract
+      name: NFTExtension
+      network: ${network}
+      source:
+        abi: NFTExtension
+      mapping:
+        kind: ethereum/events
+        apiVersion: 0.0.4
+        language: wasm/assemblyscript
+        entities:
+          - NFTCollection
+          - NFT
+        abis:
+          - name: NFTExtension
+            file: ../build/contracts/NFTExtension.json
+          - name: ERC721
+            file: ../build/contracts/ERC721.json
+        eventHandlers:
+          - event: CollectedNFT(address,uint256)
+            handler: handleCollectedNFT
+          - event: ReturnedNFT(address,uint256,address)
+            handler: handleReturnedNFT
+          - event: TransferredNFT(address,uint256)
+            handler: handleTransferredNFT
+        file: ./mappings/extensions/nft-extension-mapping.ts
+        
 `;
 };
 
 (function () {
-  // Authenticate access
-  console.log("🔑 ### Authenticating The Graph access token...");
-  exec(
-    `graph auth https://api.thegraph.com/deploy/ ${process.env.GRAPH_ACCESS_TOKEN}`
-  );
-
   // Compile the solidity contracts
   console.log("📦 ### 1/3 Compiling the smart contracts...");
-  exec(`truffle compile`);
+  exec(`cd .. && truffle compile`);
 
   // Create the graph code generation files
   console.log("📦 ### 2/3 Creating the graph scheme...");
-  exec(`graph codegen`);
+  exec(`cd subgraph && graph codegen`);
 
   // Building the graph scheme
   console.log("📦 ### 3/3 Building the graph scheme...");
@@ -253,12 +208,8 @@ const getYAML = ({
     GITHUB_USERNAME: ${subgraph.GITHUB_USERNAME}
     SUBGRAPH_NAME: ${subgraph.SUBGRAPH_NAME}
     Network: ${subgraph.network}
-    === DAO FACTORY ===
     Address: ${subgraph.daoFactoryAddress}
     Start Block: ${subgraph.daoFactoryStartBlock}
-    === BANK FACTORY ===
-    Address: ${subgraph.bankFactoryAddress}
-    Start Block: ${subgraph.bankFactoryStartBlock}
     `);
 
     // Write YAML file
@@ -267,8 +218,6 @@ const getYAML = ({
       getYAML({
         daoFactoryAddress: subgraph.daoFactoryAddress,
         daoFactoryStartBlock: subgraph.daoFactoryStartBlock,
-        bankFactoryAddress: subgraph.bankFactoryAddress,
-        bankFactoryStartBlock: subgraph.bankFactoryStartBlock,
         network: subgraph.network,
       })
     );
@@ -276,7 +225,7 @@ const getYAML = ({
     // Deploy subgraph <GITHUB_USERNAME/SUBGRAPH_NAME>
     console.log("🚗 ### Deploying subgraph...");
     exec(
-      `graph deploy --node https://api.thegraph.com/deploy/ --ipfs https://api.thegraph.com/ipfs/ ${subgraph.GITHUB_USERNAME}/${subgraph.SUBGRAPH_NAME}`
+      `graph deploy --access-token ${process.env.GRAPH_ACCESS_TOKEN} --node https://api.thegraph.com/deploy/ --ipfs https://api.thegraph.com/ipfs/ ${subgraph.GITHUB_USERNAME}/${subgraph.SUBGRAPH_NAME}`
     );
 
     console.log("👏 ### Done.");

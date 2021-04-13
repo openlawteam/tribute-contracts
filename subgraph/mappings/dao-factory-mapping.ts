@@ -1,7 +1,8 @@
+import { BigInt, log } from "@graphprotocol/graph-ts";
+
 import { DaoRegistry as DaoRegistryTemplate } from "../generated/templates";
 import { DAOCreated } from "../generated/DaoFactory/DaoFactory";
 import { TributeDao } from "../generated/schema";
-import { BigInt, log } from "@graphprotocol/graph-ts";
 
 function loadOrCreateDao(daoAddress: string): TributeDao {
   let dao = TributeDao.load(daoAddress);
@@ -32,8 +33,7 @@ export function handleDaoCreated(event: DAOCreated): void {
   dao.name = event.params._name;
   dao.creator = event.transaction.from;
   dao.totalShares = BigInt.fromI32(0).toString();
+  dao.save();
 
   DaoRegistryTemplate.create(event.params._address);
-
-  dao.save();
 }
