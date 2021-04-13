@@ -38,19 +38,24 @@ export function loadProposalAndSaveVoteResults(
         let voteResults = votingContract.votes(daoAddress, proposalId);
 
         // assign voting data
+        vote.nbVoters = voteResults.value0.plus(voteResults.value1);
         vote.nbYes = voteResults.value0;
         vote.nbNo = voteResults.value1;
 
         vote.adapterName = votingAdapterName;
         vote.adapterAddress = votingAdapterAddress;
+        vote.proposal = maybeProposalId;
 
         vote.save();
 
         if (proposal) {
+          proposal.nbVoters = voteResults.value0.plus(voteResults.value1);
           proposal.nbYes = voteResults.value0;
           proposal.nbNo = voteResults.value1;
           proposal.startingTime = voteResults.value2;
           proposal.blockNumber = voteResults.value3;
+
+          proposal.voteResult = voteId;
         }
       } else if (votingAdapterName == "OffchainVotingContract") {
         let offchainVotingContract = OffchainVotingContract.bind(
@@ -66,6 +71,7 @@ export function loadProposalAndSaveVoteResults(
 
         vote.adapterName = votingAdapterName;
         vote.adapterAddress = votingAdapterAddress;
+        vote.proposal = maybeProposalId;
 
         vote.save();
 
@@ -84,6 +90,8 @@ export function loadProposalAndSaveVoteResults(
           proposal.gracePeriodStartingTime = voteResults.value9;
           proposal.isChallenged = voteResults.value10;
           proposal.fallbackVotesCount = voteResults.value11;
+
+          proposal.voteResult = voteId;
         }
       }
     }

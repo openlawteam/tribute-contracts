@@ -127,6 +127,8 @@ type Proposal @entity {
 
   # onchain votes
   votes: BigInt
+
+  voteResult: Vote
 }
 
 type Vote @entity {
@@ -134,9 +136,10 @@ type Vote @entity {
   id: ID! # Set to `${tribute.id}-vote-${proposal.id}`
   nbNo: BigInt!
   nbYes: BigInt!
-  nbVoters: BigInt
+  nbVoters: BigInt!
   adapterName: VotingAdapterName!
   adapterAddress: Bytes!
+  proposal: Proposal
 }
 
 type Bank @entity {
