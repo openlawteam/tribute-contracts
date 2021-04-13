@@ -17,7 +17,7 @@ export const getYAML = ({ daoFactoryAddress }: GetYAMLType): string => {
       source:
         address: "${daoFactoryAddress}"
         abi: DaoFactory
-        # startBlock: 6
+        startBlock: 0
       mapping:
         kind: ethereum/events
         apiVersion: 0.0.4
@@ -31,7 +31,7 @@ export const getYAML = ({ daoFactoryAddress }: GetYAMLType): string => {
           - event: DAOCreated(address,string)
             handler: handleDaoCreated
         file: ./mappings/dao-factory-mapping.ts
-  
+
   templates:
     # ====================================== DaoRegistry ====================================
     - kind: ethereum/contract
@@ -133,17 +133,14 @@ export const getYAML = ({ daoFactoryAddress }: GetYAMLType): string => {
         abis:
           - name: NFTExtension
             file: ../build/contracts/NFTExtension.json
-          - name: ERC721
-            file: ../build/contracts/ERC721.json
         eventHandlers:
           - event: CollectedNFT(address,uint256)
             handler: handleCollectedNFT
-          - event: ReturnedNFT(address,uint256,address)
-            handler: handleReturnedNFT
-          - event: TransferredNFT(address,uint256)
+          - event: TransferredNFT(address,uint256,address,address)
             handler: handleTransferredNFT
+          - event: WithdrawnNFT(address,uint256,address)
+            handler: handleWithdrawnNFT
         file: ./mappings/extensions/nft-extension-mapping.ts
-  
 
           
 `;
