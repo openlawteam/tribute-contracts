@@ -54,7 +54,7 @@ export function loadProposalAndSaveVoteResults(
           proposal.startingTime = voteResults.value2;
           proposal.blockNumber = voteResults.value3;
 
-          proposal.votingState = voteState;
+          proposal.votingState = voteState as string;
           proposal.voteResult = voteId;
         }
       } else if (votingAdapterName == "OffchainVotingContract") {
