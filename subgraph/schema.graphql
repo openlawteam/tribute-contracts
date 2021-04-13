@@ -172,18 +172,13 @@ type NFT @entity {
   "Unique identifier and primary key of the `NFT` entity"
   id: ID! # Set to `${tribute.id}-nft-${nftAddress.id}-$tokenId}`
   nftAddress: Bytes!
-  owner: Bytes! # or Member!
-  name: String!
-  symbol: String!
   tokenId: BigInt!
-  tokenUri: String!
-  # createdAt: BigInt!
+  tokenUri: String
+  name: String
+  symbol: String
+  from: Bytes
+  to: Bytes
   nftCollection: NFTCollection
-
-  # from: Bytes! # Member!
-  # to: Bytes # Member!
-  # transferAt: BigInt!
-  # transaction: Bytes! #Transaction!
 }
 
 type NFTCollection @entity {
