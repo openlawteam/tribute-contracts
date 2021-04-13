@@ -103,7 +103,6 @@ type Proposal @entity {
   proposalHash: Bytes
   reporter: Bytes
   resultRoot: Bytes
-  nbVoters: BigInt
   nbNo: BigInt
   nbYes: BigInt
   index: BigInt
@@ -122,7 +121,6 @@ type Vote @entity {
   id: ID! # Set to `${tribute.id}-vote-${proposal.id}`
   nbNo: BigInt!
   nbYes: BigInt!
-  nbVoters: BigInt
   adapterName: VotingAdapterName!
   adapterAddress: Bytes!
 }

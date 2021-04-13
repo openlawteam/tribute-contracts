@@ -52,6 +52,6 @@ abstract contract MemberGuard is DaoConstants {
                 "onlyMember"
             );
         }
-        require(dao.isActiveMember(_addr), "onlyMember");
+        require(dao.isMember(_addr), "onlyMember");
     }
 }

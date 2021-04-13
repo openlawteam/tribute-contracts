@@ -118,34 +118,6 @@ contract("MolochV3 - TributeNFT Adapter", async (accounts) => {
     }
   });
 
-  it("should not be possible to submit a nft tribute if the nft address is not allowed", async () => {
-    const daoOwner = accounts[0];
-    const nftOwner = accounts[1];
-    const { dao, pixelNFT } = await createNFTDao(daoOwner);
-    const tributeNFT = await getContract(
-      dao,
-      "tribute-nft",
-      TributeNFTContract
-    );
-
-    await pixelNFT.mintPixel(nftOwner, 1, 1);
-    let pastEvents = await pixelNFT.getPastEvents();
-    let { tokenId } = pastEvents[1].returnValues;
-
-    try {
-      await tributeNFT.provideTributeNFT(
-        dao.address,
-        "0x1",
-        ETH_TOKEN, // address not allowed
-        tokenId,
-        10,
-        { from: nftOwner, gasPrice: toBN("0") }
-      );
-    } catch (e) {
-      assert.equal(e.reason, "nft not allowed");
-    }
-  });
-
   it("should be possible to sponsor a nft tribute proposal", async () => {
     const daoOwner = accounts[0];
     const nftOwner = accounts[1];

@@ -60,7 +60,6 @@ export function loadProposalAndSaveVoteResults(
         let voteResults = offchainVotingContract.votes(daoAddress, proposalId);
 
         // assign voting data
-        vote.nbVoters = voteResults.value4;
         vote.nbYes = voteResults.value5;
         vote.nbNo = voteResults.value6;
 
@@ -75,15 +74,12 @@ export function loadProposalAndSaveVoteResults(
           proposal.reporter = voteResults.value2;
           proposal.resultRoot = voteResults.value3;
 
-          proposal.nbVoters = voteResults.value4;
           proposal.nbYes = voteResults.value5;
           proposal.nbNo = voteResults.value6;
           proposal.index = voteResults.value7;
 
           proposal.startingTime = voteResults.value8;
-          proposal.gracePeriodStartingTime = voteResults.value9;
-          proposal.isChallenged = voteResults.value10;
-          proposal.fallbackVotesCount = voteResults.value11;
+          proposal.fallbackVotesCount = voteResults.value10;
         }
       }
     }

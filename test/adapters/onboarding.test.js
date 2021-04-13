@@ -42,7 +42,7 @@ const {
   sha3,
   ETH_TOKEN,
 } = require("../../utils/DaoFactory.js");
-const { checkBalance, isActiveMember } = require("../../utils/TestUtils.js");
+const { checkBalance, isMember } = require("../../utils/TestUtils.js");
 
 contract("MolochV3 - Onboarding Adapter", async (accounts) => {
   it("should not be possible onboard when the token amount exceeds the external token limits", async () => {
@@ -197,9 +197,9 @@ contract("MolochV3 - Onboarding Adapter", async (accounts) => {
     await checkBalance(bank, GUILD, ETH_TOKEN, sharePrice.mul(toBN("3")));
 
     // test active member status
-    const applicantIsActiveMember = await isActiveMember(bank, applicant);
+    const applicantIsActiveMember = await isMember(bank, applicant);
     assert.equal(applicantIsActiveMember, true);
-    const nonMemberAccountIsActiveMember = await isActiveMember(
+    const nonMemberAccountIsActiveMember = await isMember(
       bank,
       nonMemberAccount
     );
@@ -326,9 +326,9 @@ contract("MolochV3 - Onboarding Adapter", async (accounts) => {
     await checkBalance(bank, GUILD, oltContract.address, "10");
 
     // test active member status
-    const applicantIsActiveMember = await isActiveMember(bank, applicant);
+    const applicantIsActiveMember = await isMember(bank, applicant);
     assert.equal(applicantIsActiveMember, true);
-    const nonMemberAccountIsActiveMember = await isActiveMember(
+    const nonMemberAccountIsActiveMember = await isMember(
       bank,
       nonMemberAccount
     );
@@ -598,8 +598,8 @@ contract("MolochV3 - Onboarding Adapter", async (accounts) => {
     assert.equal(onboardingBalance.toString(), "0");
 
     // test active member status
-    const applicantIsActiveMember = await isActiveMember(bank, applicant);
-    assert.equal(applicantIsActiveMember, false);
+    const applicantIsMember = await isMember(bank, applicant);
+    assert.equal(applicantIsMember, false);
   });
 
   it("should not be possible to sponsor proposal that does not exist", async () => {
@@ -648,8 +648,8 @@ contract("MolochV3 - Onboarding Adapter", async (accounts) => {
       daoRegistryAdapterAddress
     );
 
-    const myAccountActive1 = await isActiveMember(bank, myAccount);
-    const delegateKeyActive1 = await dao.isActiveMember(delegateKey); // use the dao to check delegatedKeys
+    const myAccountActive1 = await isMember(bank, myAccount);
+    const delegateKeyActive1 = await dao.isMember(delegateKey); // use the dao to check delegatedKeys
 
     assert.equal(true, myAccountActive1);
     assert.equal(false, delegateKeyActive1);
@@ -660,8 +660,8 @@ contract("MolochV3 - Onboarding Adapter", async (accounts) => {
       gasPrice: toBN("0"),
     });
 
-    assert.equal(true, await isActiveMember(bank, myAccount));
-    assert.equal(true, await dao.isActiveMember(newDelegatedKey)); // use the dao to check delegatedKeys
+    assert.equal(true, await isMember(bank, myAccount));
+    assert.equal(true, await dao.isMember(newDelegatedKey)); // use the dao to check delegatedKeys
   });
 
   it("should not be possible to overwrite a delegated key", async () => {

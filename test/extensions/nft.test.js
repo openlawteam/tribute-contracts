@@ -34,6 +34,7 @@ const {
   sha3,
   toBN,
   NFTAdapterContract,
+  GUILD,
 } = require("../../utils/DaoFactory.js");
 
 const { createNFTDao } = require("../../utils/TestUtils.js");
@@ -60,125 +61,13 @@ contract("MolochV3 - NFT Extension", async (accounts) => {
     assert.notEqual(nftExtension, null);
   });
 
-  it("should be possible to create a dao and register a new NFT token to the collection", async () => {
-    const { dao, pixelNFT } = await createNFTDao(accounts[0]);
-
-    const nftExtAddr = await dao.getExtensionAddress(sha3("nft"));
-    const nftExtension = await NFTExtension.at(nftExtAddr);
-    const isAllowed = await nftExtension.isNFTAllowed(pixelNFT.address);
-    assert.equal(isAllowed, true);
-  });
-
   it("should be possible check how many NFTs are in the collection", async () => {
     const { dao } = await createNFTDao(accounts[0]);
 
     const nftExtAddr = await dao.getExtensionAddress(sha3("nft"));
     const nftExtension = await NFTExtension.at(nftExtAddr);
-    const total = await nftExtension.nbNFTs();
+    const total = await nftExtension.nbNFTAddresses();
     assert.equal(total, 0);
-  });
-
-  it("should be possible get an NFT in the collection using the index", async () => {
-    const { dao } = await createNFTDao(accounts[0]);
-
-    const nftExtAddr = await dao.getExtensionAddress(sha3("nft"));
-    const nftExtension = await NFTExtension.at(nftExtAddr);
-    //TODO needs to contain at least 1 nft
-    // const nftAddr = await nftExtension.getNFTByIndex(0);
-    // assert.equal(nftAddr, "0x0");
-  });
-
-  it("should not be possible get an NFT in the collection if it is empty", async () => {
-    const { dao } = await createNFTDao(accounts[0]);
-
-    const nftExtAddr = await dao.getExtensionAddress(sha3("nft"));
-    const nftExtension = await NFTExtension.at(nftExtAddr);
-
-    try {
-      await nftExtension.getNFTByIndex(0);
-      assert.fail(
-        "should not be possible get an NFT in the collection if it is empty"
-      );
-    } catch (e) {
-      //ignore the error:  Error: Returned error: VM Exception while processing transaction: revert
-    }
-  });
-
-  it("should not be possible to register a new NFT without the REGISTER_NEW_NFT permission", async () => {
-    const { dao } = await createNFTDao(accounts[0]);
-
-    const nftExtAddr = await dao.getExtensionAddress(sha3("nft"));
-    const nftExtension = await NFTExtension.at(nftExtAddr);
-    try {
-      await nftExtension.registerPotentialNewNFT(ETH_TOKEN, {
-        from: accounts[6],
-      });
-      assert.fail(
-        "should not be possible to register a new NFT without the REGISTER_NEW_NFT permission"
-      );
-    } catch (e) {
-      assert.equal(e.reason, "nft::accessDenied::notCreator");
-    }
-  });
-
-  it("should not be possible to register a new NFT without the REGISTER_NEW_NFT permission", async () => {
-    const { dao } = await createNFTDao(accounts[0]);
-
-    const nftExtAddr = await dao.getExtensionAddress(sha3("nft"));
-    const nftExtension = await NFTExtension.at(nftExtAddr);
-    try {
-      await nftExtension.registerPotentialNewNFT(ETH_TOKEN, {
-        from: accounts[6],
-      });
-      assert.fail(
-        "should not be possible to register a new NFT without the REGISTER_NEW_NFT permission"
-      );
-    } catch (e) {
-      assert.equal(e.reason, "nft::accessDenied::notCreator");
-    }
-  });
-
-  it("should be possible to register a new NFT if you are the extension creator", async () => {
-    const { dao } = await createNFTDao(accounts[0]);
-    const nftExtAddr = await dao.getExtensionAddress(sha3("nft"));
-    const nftExtension = await NFTExtension.at(nftExtAddr);
-
-    await nftExtension.registerPotentialNewNFT(ETH_TOKEN, {
-      from: accounts[0],
-    });
-
-    assert.equal(await nftExtension.isNFTAllowed(ETH_TOKEN), true);
-  });
-
-  it("should not be possible to return a NFT without the RETURN permission", async () => {
-    const { dao, pixelNFT } = await createNFTDao(accounts[0]);
-
-    const nftExtAddr = await dao.getExtensionAddress(sha3("nft"));
-    const nftExtension = await NFTExtension.at(nftExtAddr);
-    try {
-      await nftExtension.returnNFT(accounts[1], pixelNFT.address, 1);
-      assert.fail(
-        "should not be possible to return a NFT without the RETURN permission"
-      );
-    } catch (e) {
-      assert.equal(e.reason, "nft::accessDenied");
-    }
-  });
-
-  it("should not be possible to transfer a NFT without the TRANSFER permission", async () => {
-    const { dao, pixelNFT } = await createNFTDao(accounts[0]);
-
-    const nftExtAddr = await dao.getExtensionAddress(sha3("nft"));
-    const nftExtension = await NFTExtension.at(nftExtAddr);
-
-    try {
-      await nftExtension.transferFrom(accounts[1], pixelNFT.address, 1);
-      assert.fail(
-        "should not be possible to transfer a NFT without the TRANSFER permission"
-      );
-    } catch (e) {
-      assert.equal(e.reason, "nft::accessDenied");
-    }
   });
 
   it("should not be possible to initialize the extension if it was already initialized", async () => {
@@ -196,22 +85,7 @@ contract("MolochV3 - NFT Extension", async (accounts) => {
     }
   });
 
-  it("should not be possible to collect a NFT that is not allowed", async () => {
-    const { dao } = await createNFTDao(accounts[0]);
-
-    const nft = await getContract(dao, "nft", NFTAdapterContract);
-    try {
-      const fakeNFTAddr = accounts[2];
-      await nft.collect(dao.address, accounts[1], fakeNFTAddr, 1);
-      assert.fail(
-        "should not be possible to collect a NFT that is not allowed"
-      );
-    } catch (e) {
-      assert.equal(e.reason, "nft not allowed");
-    }
-  });
-
-  it("should be possible to collect a NFT that is allowed", async () => {
+  it("should be possible to collect a NFT", async () => {
     const daoOwner = accounts[0];
     const { dao, pixelNFT } = await createNFTDao(daoOwner);
 
@@ -232,13 +106,19 @@ contract("MolochV3 - NFT Extension", async (accounts) => {
     });
 
     const nft = await getContract(dao, "nft", NFTAdapterContract);
-    await nft.collect(dao.address, nftOwner, pixelNFT.address, tokenId, {
+    await nft.collect(dao.address, pixelNFT.address, tokenId, {
       from: nftOwner,
       gasPrice: toBN("0"),
     });
 
     // Make sure it was collected
-    const nftAddr = await nftExtension.getNFTByIndex(0);
+    const nftAddr = await nftExtension.getNFTAddress(0);
+    const nftId = await nftExtension.getNFT(nftAddr, 0);
     assert.equal(nftAddr, pixelNFT.address);
+    assert.equal(nftId, tokenId);
+
+    // Check internal owner of record
+    const newOwner = await nftExtension.getNFTOwner(nftAddr, tokenId);
+    assert.equal(newOwner.toLowerCase(), GUILD.toLowerCase());
   });
 });

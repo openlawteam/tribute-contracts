@@ -72,7 +72,6 @@ contract OffchainVotingContract is
         bytes32 proposalHash;
         address reporter;
         bytes32 resultRoot;
-        uint256 nbVoters;
         uint256 nbYes;
         uint256 nbNo;
         uint256 index;
