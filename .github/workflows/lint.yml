@@ -42,10 +42,11 @@ jobs:
         run: npm run lint
 
       - name: Run Truffle Compile
-        run: npm run compile-abi 
+        run: npm run compile-abi
 
       - name: Generate subgraph files
-        run: npm run codegen 
+        if: steps.cache-node-modules.outputs.cache-hit != 'true'
+        run: npm run codegen
 
       - name: Build subgraph
         run: npm run build
