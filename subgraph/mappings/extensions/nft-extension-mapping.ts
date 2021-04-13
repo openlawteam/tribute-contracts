@@ -3,10 +3,10 @@ import { Address, BigInt, log } from "@graphprotocol/graph-ts";
 import {
   NFTExtension,
   CollectedNFT,
-  ReturnedNFT,
+  WithdrawnNFT,
   TransferredNFT,
 } from "../../generated/templates/NFTExtension/NFTExtension";
-import { ERC721 } from "../../generated/templates/NFTExtension/ERC721";
+// import { ERC721 } from "../../generated/templates/NFTExtension/ERC721";
 import { NFT, NFTCollection } from "../../generated/schema";
 
 function loadOrCreateNFT(
@@ -49,12 +49,12 @@ export function handleCollectedNFT(event: CollectedNFT): void {
   nft.nftAddress = event.params.nftAddr;
 
   // get additional ERC721 info
-  let erc721Registry = ERC721.bind(event.params.nftAddr);
+  // let erc721Registry = ERC721.bind(event.params.nftAddr);
 
-  nft.name = erc721Registry.name();
-  nft.symbol = erc721Registry.symbol();
-  nft.owner = erc721Registry.ownerOf(event.params.nftTokenId);
-  nft.tokenUri = erc721Registry.tokenURI(event.params.nftTokenId);
+  // nft.name = erc721Registry.name();
+  // nft.symbol = erc721Registry.symbol();
+  // nft.owner = erc721Registry.ownerOf(event.params.nftTokenId);
+  // nft.tokenUri = erc721Registry.tokenURI(event.params.nftTokenId);
   nft.tokenId = event.params.nftTokenId;
 
   let nftRegistry = NFTExtension.bind(event.address);
@@ -76,11 +76,11 @@ export function handleCollectedNFT(event: CollectedNFT): void {
   nft.save();
 }
 
-export function handleReturnedNFT(event: ReturnedNFT): void {
+export function handleWithdrawnNFT(event: WithdrawnNFT): void {
   log.info(
-    "================ ReturnedNFT event fired. newOwner: {}, nftAddr: {}, nftTokenId: {}",
+    "================ WithdrawnNFT event fired. toAddress: {}, nftAddr: {}, nftTokenId: {}",
     [
-      event.params.newOwner.toHexString(),
+      event.params.toAddress.toHexString(),
       event.params.nftAddr.toHexString(),
       event.params.nftTokenId.toString(),
     ]

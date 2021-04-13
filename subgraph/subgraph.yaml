@@ -9,7 +9,7 @@ dataSources:
     name: DaoFactory
     network: mainnet
     source:
-      address: "0xFCc30f42843d0848Dc91B1187A1cB1357D671366"
+      address: "0x6d92a8E4aB80adcBbFDA44ef69fe847f82def641"
       abi: DaoFactory
       # startBlock: 6
     mapping:
@@ -127,13 +127,13 @@ templates:
       abis:
         - name: NFTExtension
           file: ../build/contracts/NFTExtension.json
-        - name: ERC721
-          file: ../build/contracts/ERC721.json
+        # - name: ERC721
+        #   file: ../build/contracts/ERC721.json
       eventHandlers:
         - event: CollectedNFT(address,uint256)
           handler: handleCollectedNFT
-        - event: ReturnedNFT(address,uint256,address)
-          handler: handleReturnedNFT
-        - event: TransferredNFT(address,uint256)
+        - event: TransferredNFT(address,uint256,address,address)
           handler: handleTransferredNFT
+        - event: WithdrawnNFT(address,uint256,address)
+          handler: handleWithdrawnNFT
       file: ./mappings/extensions/nft-extension-mapping.ts

@@ -1,4 +1,4 @@
-import { Address, Bytes } from "@graphprotocol/graph-ts";
+import { Address, BigInt, Bytes } from "@graphprotocol/graph-ts";
 
 import { OffchainVotingContract } from "../../generated/templates/DaoRegistry/OffchainVotingContract";
 import { VotingContract } from "../../generated/templates/DaoRegistry/VotingContract";
@@ -78,15 +78,16 @@ export function loadProposalAndSaveVoteResults(
           proposal.reporter = voteResults.value2;
           proposal.resultRoot = voteResults.value3;
 
-          proposal.nbYes = voteResults.value5;
-          proposal.nbNo = voteResults.value6;
-          proposal.index = voteResults.value7;
+          proposal.nbYes = voteResults.value4;
+          proposal.nbNo = voteResults.value5;
+          proposal.index = voteResults.value6;
 
-          proposal.startingTime = voteResults.value8;
-          proposal.gracePeriodStartingTime = voteResults.value9;
-          proposal.isChallenged = voteResults.value10;
-          proposal.fallbackVotes = voteResults.value11;
-          proposal.fallbackVotesCount = voteResults.value12;
+          proposal.startingTime = voteResults.value7;
+          proposal.gracePeriodStartingTime = voteResults.value8;
+          proposal.isChallenged = voteResults.value9;
+          // @todo its a mapping, not generated in schema
+          // proposal.fallbackVotes = voteResults.value10;
+          proposal.fallbackVotesCount = voteResults.value10;
 
           proposal.voteResult = voteId;
         }

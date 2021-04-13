@@ -121,7 +121,7 @@ type Proposal @entity {
   startingTime: BigInt
   gracePeriodStartingTime: BigInt
   isChallenged: Boolean
-  fallbackVotes: Boolean
+  # fallbackVotes: BigInt
   fallbackVotesCount: BigInt
 
   # onchain votes
