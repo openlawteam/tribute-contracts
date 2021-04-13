@@ -31,7 +31,6 @@ const {
   advanceTime,
   deployDefaultDao,
   sha3,
-  web3,
   accounts,
   sharePrice,
   GUILD,
@@ -46,12 +45,12 @@ const {
 
 describe("Adapter - GuildKick", () => {
   const owner = accounts[1];
-  let proposalCounter = 1;
+  let proposalCounter = 0;
 
   const getProposalCounter = () => {
-    console.log(proposalCounter);
-    return "0x" + proposalCounter++;
-  }
+    proposalCounter++;
+    return "0x" + proposalCounter;
+  };
 
   beforeAll(async () => {
     const { dao, adapters, extensions } = await deployDefaultDao(owner);
@@ -76,7 +75,7 @@ describe("Adapter - GuildKick", () => {
     sharePrice,
     token
   ) => {
-    let proposalId = + getProposalCounter();
+    let proposalId = getProposalCounter();
     await onboarding.onboard(
       dao.address,
       proposalId,
@@ -90,7 +89,6 @@ describe("Adapter - GuildKick", () => {
       }
     );
     //Get the new proposal id
-
     return proposalId;
   };
 
@@ -231,7 +229,7 @@ describe("Adapter - GuildKick", () => {
     await expectRevert(
       this.adapters.guildkick.submitKickProposal(
         this.dao.address,
-        `0x${newProposalId}`,
+        newProposalId,
         memberToKick,
         fromUtf8(""),
         {
@@ -288,7 +286,7 @@ describe("Adapter - GuildKick", () => {
     try {
       await this.adapters.guildkick.submitKickProposal(
         this.dao.address,
-        `0x${newProposalId}`,
+        newProposalId,
         owner,
         fromUtf8(""),
         {
@@ -428,7 +426,7 @@ describe("Adapter - GuildKick", () => {
     await advanceTime(10000);
 
     // The member attempts to process the same proposal again
-    let invalidKickProposalId = "0x89";
+    let invalidKickProposalId = getProposalCounter();
     await expectRevert(
       guildkickContract.processProposal(
         this.dao.address,
@@ -766,7 +764,7 @@ describe("Adapter - GuildKick", () => {
     await expectRevert(
       managing.submitProposal(
         this.dao.address,
-        "0x45",
+        getProposalCounter(),
         newAdapterId,
         newAdapterAddress,
         [],
@@ -889,13 +887,13 @@ describe("Adapter - GuildKick", () => {
 
     // The kicked member should not have LOOT & SHARES anymore
     let memberLoot = await bank.balanceOf(memberToKick, LOOT);
-    expect(memberLoot.toString()).toBe("0");
+    expect(memberLoot.toString()).equal("0");
     let memberShares = await bank.balanceOf(memberToKick, SHARES);
-    expect(memberLoot.toString()).toBe("0");
+    expect(memberShares.toString()).equal("0");
 
     // The kicked member must receive the funds in ETH_TOKEN after the ragekick was triggered by a DAO member
     let memberEthToken = await bank.balanceOf(memberToKick, ETH_TOKEN);
-    expect(memberEthToken.toString()).toBe("1199999999999999880");
+    expect(memberEthToken.toString()).equal("1199999999999999880");
   });
 
   test("should not be possible to process a ragekick if the batch index is smaller than the current processing index", async () => {
@@ -979,25 +977,22 @@ describe("Adapter - GuildKick", () => {
       SHARES
     );
 
-    let proposalId = "0x1";
-
     // Submit the first guild kick with proposalId 0x1
-    await guildKickProposal(
+    const { kickProposalId } = await guildKickProposal(
       this.dao,
       guildkickContract,
       memberB,
-      memberA,
-      proposalId
+      memberA
     );
 
     //Vote YES on kick proposal
-    await voting.submitVote(this.dao.address, proposalId, 1, {
+    await voting.submitVote(this.dao.address, kickProposalId, 1, {
       from: memberA,
       gasPrice: toBN("0"),
     });
     await advanceTime(10000);
 
-    await guildkickContract.processProposal(this.dao.address, proposalId, {
+    await guildkickContract.processProposal(this.dao.address, kickProposalId, {
       from: memberA,
       gasPrice: toBN("0"),
     });
@@ -1009,7 +1004,7 @@ describe("Adapter - GuildKick", () => {
         guildkickContract,
         memberC,
         memberA,
-        proposalId
+        kickProposalId
       ),
       "proposalId must be unique"
     );

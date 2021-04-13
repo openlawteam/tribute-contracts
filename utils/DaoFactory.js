@@ -865,7 +865,8 @@ const takeChainSnapshot = () => {
         if (err) {
           return reject(err);
         }
-        return resolve(result);
+        let snapshotId = result.result; // {"id":X,"jsonrpc":"2.0","result":"0x..."}
+        return resolve(snapshotId);
       }
     )
   );
