@@ -30,119 +30,48 @@ const {
   toBN,
   fromUtf8,
   advanceTime,
-  createDao,
-  getContract,
+  deployDefaultDao,
+  takeChainSnapshot,
+  revertChainSnapshot,
+  proposalIdGenerator,
+  accounts,
   sharePrice,
   GUILD,
   ETH_TOKEN,
   SHARES,
   ESCROW,
   LOOT,
-  OnboardingContract,
-  VotingContract,
-  DistributeContract,
-  GuildKickContract,
-  BankExtension,
+  expect,
+  expectRevert,
 } = require("../../utils/DaoFactory.js");
 
-let proposalCounter = 1;
+const {
+  sponsorNewMember,
+  onboardingNewMember,
+} = require("../../utils/TestUtils.js");
 
-contract("MolochV3 - Distribute Adapter", async (accounts) => {
-  const submitNewMemberProposal = async (
-    member,
-    onboarding,
-    dao,
-    newMember,
-    sharePrice,
-    token,
-    desiredShares
-  ) => {
-    let proposalId = "0x" + proposalCounter;
-    proposalCounter++;
-    await onboarding.onboard(
-      dao.address,
-      proposalId,
-      newMember,
-      token,
-      sharePrice.mul(toBN(desiredShares)),
-      {
-        from: member,
-        value: sharePrice.mul(toBN(desiredShares)),
-        gasPrice: toBN("0"),
-      }
-    );
-    //Get the new proposal id
+describe("Adapter - Distribute", () => {
+  const daoOwner = accounts[2];
+  const proposalCounter = proposalIdGenerator().generator;
 
-    return proposalId;
+  const getProposalCounter = () => {
+    return proposalCounter().next().value;
   };
 
-  const sponsorNewMember = async (
-    onboarding,
-    dao,
-    proposalId,
-    sponsor,
-    voting
-  ) => {
-    await onboarding.sponsorProposal(dao.address, proposalId, [], {
-      from: sponsor,
-      gasPrice: toBN("0"),
-    });
-    await voting.submitVote(dao.address, proposalId, 1, {
-      from: sponsor,
-      gasPrice: toBN("0"),
-    });
-    await advanceTime(10000);
-  };
+  beforeAll(async () => {
+    const { dao, adapters, extensions } = await deployDefaultDao(daoOwner);
+    this.dao = dao;
+    this.adapters = adapters;
+    this.extensions = extensions;
+  });
 
-  const onboardingNewMember = async (
-    dao,
-    onboarding,
-    voting,
-    newMember,
-    sponsor,
-    sharePrice,
-    token,
-    desiredShares
-  ) => {
-    let newProposalId = await submitNewMemberProposal(
-      sponsor,
-      onboarding,
-      dao,
-      newMember,
-      sharePrice,
-      token,
-      desiredShares
-    );
+  beforeEach(async () => {
+    this.snapshotId = await takeChainSnapshot();
+  });
 
-    //Sponsor the new proposal, vote and process it
-    await sponsorNewMember(onboarding, dao, newProposalId, sponsor, voting);
-    await onboarding.processProposal(dao.address, newProposalId, {
-      from: sponsor,
-      gasPrice: toBN("0"),
-    });
-  };
-
-  const guildKickProposal = async (
-    dao,
-    guildkickContract,
-    memberToKick,
-    sender,
-    proposalId = null
-  ) => {
-    const newProposalId = proposalId ? proposalId : "0x" + proposalCounter++;
-    await guildkickContract.submitKickProposal(
-      dao.address,
-      newProposalId,
-      memberToKick,
-      fromUtf8(""),
-      {
-        from: sender,
-        gasPrice: toBN("0"),
-      }
-    );
-
-    return { kickProposalId: newProposalId };
-  };
+  afterEach(async () => {
+    await revertChainSnapshot(this.snapshotId);
+  });
 
   const distributeFundsProposal = async (
     dao,
@@ -153,7 +82,7 @@ contract("MolochV3 - Distribute Adapter", async (accounts) => {
     sender,
     proposalId = null
   ) => {
-    const newProposalId = proposalId ? proposalId : "0x" + proposalCounter++;
+    const newProposalId = proposalId ? proposalId : getProposalCounter();
     await distributeContract.submitProposal(
       dao.address,
       newProposalId,
@@ -171,20 +100,15 @@ contract("MolochV3 - Distribute Adapter", async (accounts) => {
   };
 
   it("should be possible to distribute funds to only 1 member of the DAO", async () => {
-    const daoOwner = accounts[2];
     const daoMember = accounts[3];
+    const dao = this.dao;
+    const bank = this.extensions.bank;
+    const onboarding = this.adapters.onboarding;
+    const voting = this.adapters.voting;
+    const distributeContract = this.adapters.distribute;
 
-    let dao = await createDao(daoOwner);
-    const bankAddress = await dao.getExtensionAddress(sha3("bank"));
-    const bank = await BankExtension.at(bankAddress);
-    const onboarding = await getContract(dao, "onboarding", OnboardingContract);
-    const voting = await getContract(dao, "voting", VotingContract);
-    const distributeContract = await getContract(
-      dao,
-      "distribute",
-      DistributeContract
-    );
     await onboardingNewMember(
+      getProposalCounter(),
       dao,
       onboarding,
       voting,
@@ -197,11 +121,11 @@ contract("MolochV3 - Distribute Adapter", async (accounts) => {
 
     // Checks the Guild Bank Balance
     let guildBalance = await bank.balanceOf(GUILD, ETH_TOKEN);
-    assert.equal(toBN(guildBalance).toString(), "1200000000000000000");
+    expect(toBN(guildBalance).toString()).equal("1200000000000000000");
 
     // Checks the member shares (to make sure it was created)
     let shares = await bank.balanceOf(daoMember, SHARES);
-    assert.equal(shares.toString(), "10000000000000000");
+    expect(shares.toString()).equal("10000000000000000");
 
     // Submit distribute proposal
     const amountToDistribute = 10;
@@ -228,11 +152,11 @@ contract("MolochV3 - Distribute Adapter", async (accounts) => {
     });
 
     const escrowBalance = await bank.balanceOf(ESCROW, ETH_TOKEN);
-    assert.equal(toBN(escrowBalance).toString(), amountToDistribute);
+    expect(toBN(escrowBalance).toString()).equal(amountToDistribute.toString());
 
     // Checks the member's internal balance before sending the funds
     let memberBalance = await bank.balanceOf(daoMember, ETH_TOKEN);
-    assert.equal(toBN(memberBalance).toString(), "0");
+    expect(toBN(memberBalance).toString()).equal("0");
 
     // Distribute the funds to the DAO member
     // We can use 0 index here because the distribution happens for only 1 member
@@ -242,28 +166,23 @@ contract("MolochV3 - Distribute Adapter", async (accounts) => {
     });
 
     memberBalance = await bank.balanceOf(daoMember, ETH_TOKEN);
-    assert.equal(toBN(memberBalance).toString(), amountToDistribute);
+    expect(memberBalance.toString()).equal(amountToDistribute.toString());
 
     const newEscrowBalance = await bank.balanceOf(ESCROW, ETH_TOKEN);
-    assert.equal(toBN(newEscrowBalance).toString(), "0");
+    expect(newEscrowBalance.toString()).equal("0");
   });
 
   it("should be possible to distribute funds to all active members of the DAO", async () => {
-    const daoOwner = accounts[2];
     const daoMemberA = accounts[3];
     const daoMemberB = accounts[4];
+    const dao = this.dao;
+    const bank = this.extensions.bank;
+    const onboarding = this.adapters.onboarding;
+    const voting = this.adapters.voting;
+    const distributeContract = this.adapters.distribute;
 
-    let dao = await createDao(daoOwner);
-    const bankAddress = await dao.getExtensionAddress(sha3("bank"));
-    const bank = await BankExtension.at(bankAddress);
-    const onboarding = await getContract(dao, "onboarding", OnboardingContract);
-    const voting = await getContract(dao, "voting", VotingContract);
-    const distributeContract = await getContract(
-      dao,
-      "distribute",
-      DistributeContract
-    );
     await onboardingNewMember(
+      getProposalCounter(),
       dao,
       onboarding,
       voting,
@@ -275,6 +194,7 @@ contract("MolochV3 - Distribute Adapter", async (accounts) => {
     );
 
     await onboardingNewMember(
+      getProposalCounter(),
       dao,
       onboarding,
       voting,
@@ -287,14 +207,14 @@ contract("MolochV3 - Distribute Adapter", async (accounts) => {
 
     // Checks the Guild Bank Balance
     let guildBalance = await bank.balanceOf(GUILD, ETH_TOKEN);
-    assert.equal(toBN(guildBalance).toString(), "1800000000000000000");
+    expect(toBN(guildBalance).toString()).equal("1800000000000000000");
 
     // Checks the member shares (to make sure it was created)
     let sharesMemberA = await bank.balanceOf(daoMemberA, SHARES);
-    assert.equal(sharesMemberA.toString(), "5000000000000000");
+    expect(sharesMemberA.toString()).equal("5000000000000000");
     // Checks the member shares (to make sure it was created)
     let sharesMemberB = await bank.balanceOf(daoMemberB, SHARES);
-    assert.equal(sharesMemberB.toString(), "10000000000000000");
+    expect(sharesMemberB.toString()).equal("10000000000000000");
 
     // Submit distribute proposal
     const amountToDistribute = 15;
@@ -322,9 +242,9 @@ contract("MolochV3 - Distribute Adapter", async (accounts) => {
 
     // Checks the member's internal balance before sending the funds
     let memberABalance = await bank.balanceOf(daoMemberA, ETH_TOKEN);
-    assert.equal(toBN(memberABalance).toString(), "0");
+    expect(toBN(memberABalance).toString()).equal("0");
     let memberBBalance = await bank.balanceOf(daoMemberB, ETH_TOKEN);
-    assert.equal(toBN(memberBBalance).toString(), "0");
+    expect(toBN(memberBBalance).toString()).equal("0");
 
     let numberOfMembers = toBN(await dao.getNbMembers()).toNumber();
     // It is expected to get 5 members:
@@ -334,7 +254,7 @@ contract("MolochV3 - Distribute Adapter", async (accounts) => {
     // 2 - dao members
     // But the dao owner and the factory addresses are not active members
     // so they will not receive funds.
-    assert.equal(numberOfMembers, 5);
+    expect(numberOfMembers).equal(5);
 
     // Distribute the funds to the DAO member
     // toIndex = number of members to process and distribute the funds to all members
@@ -344,113 +264,91 @@ contract("MolochV3 - Distribute Adapter", async (accounts) => {
     });
 
     memberABalance = await bank.balanceOf(daoMemberA, ETH_TOKEN);
-    assert.equal(memberABalance, 4); //4.9999... rounded to 4
+    expect(memberABalance.toString()).equal("4"); //4.9999... rounded to 4
     memberBBalance = await bank.balanceOf(daoMemberB, ETH_TOKEN);
-    assert.equal(memberBBalance, 9); //9.9999... rounded to 9
+    expect(memberBBalance.toString()).equal("9"); //9.9999... rounded to 9
     let ownerBalance = await bank.balanceOf(daoOwner, ETH_TOKEN);
-    assert.equal(ownerBalance, 0);
+    expect(ownerBalance.toString()).equal("0");
   });
 
   it("should not be possible to create a proposal with the amount equals to 0", async () => {
-    const daoOwner = accounts[2];
-
-    let dao = await createDao(daoOwner);
-    const distributeContract = await getContract(
-      dao,
-      "distribute",
-      DistributeContract
-    );
+    const dao = this.dao;
+    const distributeContract = this.adapters.distribute;
 
     // Submit distribute proposal with invalid amount
     const amountToDistribute = 0;
-    try {
-      await distributeFundsProposal(
-        dao,
-        distributeContract,
+    await expectRevert(
+      distributeContract.submitProposal(
+        dao.address,
+        getProposalCounter(),
+        daoOwner,
         ETH_TOKEN,
         amountToDistribute,
-        daoOwner,
-        daoOwner
-      );
-      assert.fail("should not be possible to distribute 0 funds to members");
-    } catch (err) {
-      assert.equal(err.reason, "invalid amount");
-    }
+        fromUtf8("paying dividends"),
+        {
+          from: daoOwner,
+          gasPrice: toBN("0"),
+        }
+      ),
+      "invalid amount"
+    );
   });
 
   it("should not be possible to create a proposal with an invalid token", async () => {
-    const daoOwner = accounts[2];
+    const dao = this.dao;
+    const distributeContract = this.adapters.distribute;
 
-    let dao = await createDao(daoOwner);
-    const distributeContract = await getContract(
-      dao,
-      "distribute",
-      DistributeContract
-    );
-
-    // Submit distribute proposal with invalid amount
+    // Submit distribute proposal with invalid token
     const invalidToken = "0x0000000000000000000000000000000000000123";
-    try {
-      await distributeFundsProposal(
-        dao,
-        distributeContract,
+    await expectRevert(
+      distributeContract.submitProposal(
+        dao.address,
+        getProposalCounter(),
+        daoOwner,
         invalidToken,
         10,
-        daoOwner,
-        daoOwner
-      );
-      assert.fail(
-        "should not be possible to distribute funds using an invalid token"
-      );
-    } catch (err) {
-      assert.equal(err.reason, "token not allowed");
-    }
+        fromUtf8("paying dividends"),
+        {
+          from: daoOwner,
+          gasPrice: toBN("0"),
+        }
+      ),
+      "token not allowed"
+    );
   });
 
   it("should not be possible to create a proposal if the sender is not a member", async () => {
-    const daoOwner = accounts[2];
     const nonMember = accounts[5];
+    const dao = this.dao;
+    const distributeContract = this.adapters.distribute;
 
-    let dao = await createDao(daoOwner);
-    const distributeContract = await getContract(
-      dao,
-      "distribute",
-      DistributeContract
-    );
-
-    // Submit distribute proposal with invalid amount
-    const invalidToken = "0x0000000000000000000000000000000000000123";
-    try {
-      await distributeFundsProposal(
-        dao,
-        distributeContract,
-        invalidToken,
-        10,
+    await expectRevert(
+      distributeContract.submitProposal(
+        dao.address,
+        getProposalCounter(),
         daoOwner,
-        nonMember
-      );
-      assert.fail(
-        "should not be create a proposal if it was sent by a non member"
-      );
-    } catch (err) {
-      assert.equal(err.reason, "onlyMember");
-    }
+        ETH_TOKEN,
+        10,
+        fromUtf8("paying dividends"),
+        {
+          from: nonMember, // The sender is not a member
+          gasPrice: toBN("0"),
+        }
+      ),
+      "onlyMember"
+    );
   });
 
   it("should not be possible to create a proposal if the target member does not have shares (advisor)", async () => {
-    const daoOwner = accounts[2];
     const advisor = accounts[3];
+    const dao = this.dao;
+    const onboarding = this.adapters.onboarding;
+    const voting = this.adapters.voting;
+    const distributeContract = this.adapters.distribute;
 
-    let dao = await createDao(daoOwner);
-    const distributeContract = await getContract(
-      dao,
-      "distribute",
-      DistributeContract
-    );
-    const onboarding = await getContract(dao, "onboarding", OnboardingContract);
-    const voting = await getContract(dao, "voting", VotingContract);
     // New member joins as an Advisor (only receives LOOT)
     await onboardingNewMember(
+      getProposalCounter(),
       dao,
       onboarding,
       voting,
@@ -462,66 +360,55 @@ contract("MolochV3 - Distribute Adapter", async (accounts) => {
     );
 
     // Submit distribute proposal with a non active member
-    try {
-      await distributeFundsProposal(
-        dao,
-        distributeContract,
+    await expectRevert(
+      distributeContract.submitProposal(
+        dao.address,
+        getProposalCounter(),
+        advisor,
         ETH_TOKEN,
         10,
-        advisor,
-        daoOwner
-      );
-      assert.fail(
-        "should not be create a proposal if the member does not have shares"
-      );
-    } catch (err) {
-      assert.equal(err.reason, "not enough shares");
-    }
+        fromUtf8("paying dividends"),
+        {
+          from: daoOwner,
+          gasPrice: toBN("0"),
+        }
+      ),
+      "not enough shares"
+    );
   });
 
   it("should not be possible to create a proposal if the a non member is indicated to receive the funds", async () => {
-    const daoOwner = accounts[2];
     const nonMember = accounts[3];
-
-    let dao = await createDao(daoOwner);
-    const distributeContract = await getContract(
-      dao,
-      "distribute",
-      DistributeContract
-    );
+    const dao = this.dao;
+    const distributeContract = this.adapters.distribute;
 
     // Submit distribute proposal with a non member
-    try {
-      await distributeFundsProposal(
-        dao,
-        distributeContract,
+    await expectRevert(
+      distributeContract.submitProposal(
+        dao.address,
+        getProposalCounter(),
+        nonMember,
         ETH_TOKEN,
         10,
-        nonMember,
-        daoOwner
-      );
-      assert.fail(
-        "should not be possible to create a proposal if a non member was indicated to receive the funds"
-      );
-    } catch (err) {
-      assert.equal(err.reason, "not enough shares");
-    }
+        fromUtf8("paying dividends"),
+        {
+          from: daoOwner,
+          gasPrice: toBN("0"),
+        }
+      ),
+      "not enough shares"
+    );
   });
 
   it("should not be possible to create more than one proposal using the same proposal id", async () => {
-    const daoOwner = accounts[2];
     const daoMember = accounts[3];
+    const dao = this.dao;
+    const onboarding = this.adapters.onboarding;
+    const voting = this.adapters.voting;
+    const distributeContract = this.adapters.distribute;
 
-    let dao = await createDao(daoOwner);
-    const bankAddress = await dao.getExtensionAddress(sha3("bank"));
-    const onboarding = await getContract(dao, "onboarding", OnboardingContract);
-    const voting = await getContract(dao, "voting", VotingContract);
-    const distributeContract = await getContract(
-      dao,
-      "distribute",
-      DistributeContract
-    );
     await onboardingNewMember(
+      getProposalCounter(),
       dao,
       onboarding,
       voting,
@@ -543,37 +430,32 @@ contract("MolochV3 - Distribute Adapter", async (accounts) => {
     );
 
     // Submit distribute proposal using the same id
-    try {
-      await distributeFundsProposal(
-        dao,
-        distributeContract,
+    await expectRevert(
+      distributeContract.submitProposal(
+        dao.address,
+        proposalId,
+        daoMember,
         ETH_TOKEN,
         10,
-        daoMember,
-        daoOwner,
-        proposalId
-      );
-      assert.fail(
-        "should not be possible to create a proposal with the same id"
-      );
-    } catch (err) {
-      assert.equal(err.reason, "proposalId must be unique");
-    }
+        fromUtf8("paying dividends"),
+        {
+          from: daoOwner,
+          gasPrice: toBN("0"),
+        }
+      ),
+      "proposalId must be unique"
+    );
   });
 
   it("should not be possible to process a proposal that was not voted on", async () => {
-    const daoOwner = accounts[2];
     const daoMemberA = accounts[3];
+    const dao = this.dao;
+    const onboarding = this.adapters.onboarding;
+    const voting = this.adapters.voting;
+    const distributeContract = this.adapters.distribute;
 
-    let dao = await createDao(daoOwner);
-    const onboarding = await getContract(dao, "onboarding", OnboardingContract);
-    const voting = await getContract(dao, "voting", VotingContract);
-    const distributeContract = await getContract(
-      dao,
-      "distribute",
-      DistributeContract
-    );
     await onboardingNewMember(
+      getProposalCounter(),
       dao,
       onboarding,
       voting,
@@ -594,33 +476,25 @@ contract("MolochV3 - Distribute Adapter", async (accounts) => {
       daoOwner
     );
 
-    try {
-      // Starts to process the proposal
-      await distributeContract.processProposal(dao.address, proposalId, {
+    // Starts to process the proposal
+    await expectRevert(
+      distributeContract.processProposal(dao.address, proposalId, {
         from: daoOwner,
         gasPrice: toBN("0"),
-      });
-      assert.fail(
-        "should not be possible to process a proposal that did not pass"
-      );
-    } catch (err) {
-      assert.equal(err.reason, "proposal has not been voted on");
-    }
+      }),
+      "proposal has not been voted on"
+    );
   });
 
   it("should not be possible to distribute if proposal vote result is TIE", async () => {
-    const daoOwner = accounts[2];
     const daoMemberA = accounts[3];
+    const dao = this.dao;
+    const onboarding = this.adapters.onboarding;
+    const voting = this.adapters.voting;
+    const distributeContract = this.adapters.distribute;
 
-    let dao = await createDao(daoOwner);
-    const onboarding = await getContract(dao, "onboarding", OnboardingContract);
-    const voting = await getContract(dao, "voting", VotingContract);
-    const distributeContract = await getContract(
-      dao,
-      "distribute",
-      DistributeContract
-    );
     await onboardingNewMember(
+      getProposalCounter(),
       dao,
       onboarding,
       voting,
@@ -660,33 +534,26 @@ contract("MolochV3 - Distribute Adapter", async (accounts) => {
       gasPrice: toBN("0"),
     });
 
-    try {
-      // Try to distribute funds when the proposal is not in progress
-      await distributeContract.distribute(dao.address, 0, {
+    // Try to distribute funds when the proposal is not in progress
+    await expectRevert(
+      distributeContract.distribute(dao.address, 0, {
         from: daoOwner,
         gasPrice: toBN("0"),
-      });
-      assert.fail(
-        "should not be possible to process a proposal that was a tie"
-      );
-    } catch (err) {
-      assert.equal(err.reason, "distribution completed or does not exist");
-    }
+      }),
+      "distribution completed or does not exist"
+    );
   });
 
   it("should not be possible to distribute if proposal vote result is NOT_PASS", async () => {
-    const daoOwner = accounts[2];
     const daoMemberA = accounts[3];
 
-    let dao = await createDao(daoOwner);
-    const onboarding = await getContract(dao, "onboarding", OnboardingContract);
-    const voting = await getContract(dao, "voting", VotingContract);
-    const distributeContract = await getContract(
-      dao,
-      "distribute",
-      DistributeContract
-    );
+    const dao = this.dao;
+    const onboarding = this.adapters.onboarding;
+    const voting = this.adapters.voting;
+    const distributeContract = this.adapters.distribute;
+
     await onboardingNewMember(
+      getProposalCounter(),
       dao,
       onboarding,
       voting,
@@ -726,33 +593,25 @@ contract("MolochV3 - Distribute Adapter", async (accounts) => {
       gasPrice: toBN("0"),
     });
 
-    try {
-      // Try to distribute funds when the proposal is not in progress
-      await distributeContract.distribute(dao.address, 0, {
+    // Try to distribute funds when the proposal is not in progress
+    await expectRevert(
+      distributeContract.distribute(dao.address, 0, {
         from: daoOwner,
         gasPrice: toBN("0"),
-      });
-      assert.fail(
-        "should not be possible to process a proposal that did not pass"
-      );
-    } catch (err) {
-      assert.equal(err.reason, "distribution completed or does not exist");
-    }
+      }),
+      "distribution completed or does not exist"
+    );
   });
 
   it("should not be possible to process a proposal that was already processed", async () => {
-    const daoOwner = accounts[2];
     const daoMemberA = accounts[3];
+    const dao = this.dao;
+    const onboarding = this.adapters.onboarding;
+    const voting = this.adapters.voting;
+    const distributeContract = this.adapters.distribute;
 
-    let dao = await createDao(daoOwner);
-    const onboarding = await getContract(dao, "onboarding", OnboardingContract);
-    const voting = await getContract(dao, "voting", VotingContract);
-    const distributeContract = await getContract(
-      dao,
-      "distribute",
-      DistributeContract
-    );
     await onboardingNewMember(
+      getProposalCounter(),
       dao,
       onboarding,
       voting,
@@ -786,35 +645,25 @@ contract("MolochV3 - Distribute Adapter", async (accounts) => {
       gasPrice: toBN("0"),
     });
 
-    try {
-      // Attempt to process the same proposal that is already in progress
-      await distributeContract.processProposal(dao.address, proposalId, {
+    // Attempt to process the same proposal that is already in progress
+    await expectRevert(
+      distributeContract.processProposal(dao.address, proposalId, {
         from: daoOwner,
         gasPrice: toBN("0"),
-      });
-      assert.fail(
-        "should not be possible to process a proposal that was already processed"
-      );
-    } catch (err) {
-      // when the flag is already set, it means the proposal was processed already,
-      // so it is not possible to process it again
-      assert.equal(err.reason, "flag already set");
-    }
+      }),
+      "flag already set"
+    );
   });
 
   it("should not be possible to process a new proposal if there is another in progress", async () => {
-    const daoOwner = accounts[2];
     const daoMemberA = accounts[3];
+    const dao = this.dao;
+    const onboarding = this.adapters.onboarding;
+    const voting = this.adapters.voting;
+    const distributeContract = this.adapters.distribute;
 
-    let dao = await createDao(daoOwner);
-    const onboarding = await getContract(dao, "onboarding", OnboardingContract);
-    const voting = await getContract(dao, "voting", VotingContract);
-    const distributeContract = await getContract(
-      dao,
-      "distribute",
-      DistributeContract
-    );
     await onboardingNewMember(
+      getProposalCounter(),
       dao,
       onboarding,
       voting,
@@ -865,33 +714,25 @@ contract("MolochV3 - Distribute Adapter", async (accounts) => {
     });
     await advanceTime(10000);
 
-    try {
-      // Attempt to process the new proposal but there is one in progress already
-      await distributeContract.processProposal(dao.address, result.proposalId, {
+    // Attempt to process the new proposal but there is one in progress already
+    await expectRevert(
+      distributeContract.processProposal(dao.address, result.proposalId, {
         from: daoOwner,
         gasPrice: toBN("0"),
-      });
-      assert.fail(
-        "should not be possible to process more than one proposal at time"
-      );
-    } catch (err) {
-      assert.equal(err.reason, "another proposal already in progress");
-    }
+      }),
+      "another proposal already in progress"
+    );
   });
 
   it("should not be possible to distribute the funds if the proposal is not in progress", async () => {
-    const daoOwner = accounts[2];
     const daoMemberA = accounts[3];
+    const dao = this.dao;
+    const onboarding = this.adapters.onboarding;
+    const voting = this.adapters.voting;
+    const distributeContract = this.adapters.distribute;
 
-    let dao = await createDao(daoOwner);
-    const onboarding = await getContract(dao, "onboarding", OnboardingContract);
-    const voting = await getContract(dao, "voting", VotingContract);
-    const distributeContract = await getContract(
-      dao,
-      "distribute",
-      DistributeContract
-    );
     await onboardingNewMember(
+      getProposalCounter(),
       dao,
       onboarding,
       voting,
@@ -912,17 +753,13 @@ contract("MolochV3 - Distribute Adapter", async (accounts) => {
       daoOwner
     );
 
-    try {
-      // Try to distribute funds when the proposal is not in progress
-      await distributeContract.distribute(dao.address, 1, {
+    // Try to distribute funds when the proposal is not in progress
+    await expectRevert(
+      distributeContract.distribute(dao.address, 1, {
         from: daoOwner,
         gasPrice: toBN("0"),
-      });
-      assert.fail(
-        "should not be possible to distribute if the proposal is not in progress"
-      );
-    } catch (err) {
-      assert.equal(err.reason, "distribution completed or does not exist");
-    }
+      }),
+      "distribution completed or does not exist"
+    );
   });
 });

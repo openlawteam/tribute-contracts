@@ -41,6 +41,8 @@ const {
   expect,
 } = require("../../utils/DaoFactory.js");
 
+const { sponsorNewMember } = require("../../utils/TestUtils.js");
+
 describe("Adapter - Ragequit", () => {
   const proposalCounter = proposalIdGenerator().generator;
   const owner = accounts[1];
@@ -86,24 +88,6 @@ describe("Adapter - Ragequit", () => {
       }
     );
     return proposalId;
-  };
-
-  const sponsorNewMember = async (
-    onboarding,
-    dao,
-    proposalId,
-    member,
-    voting
-  ) => {
-    await onboarding.sponsorProposal(dao.address, proposalId, [], {
-      from: member,
-      gasPrice: toBN("0"),
-    });
-    await voting.submitVote(dao.address, proposalId, 1, {
-      from: member,
-      gasPrice: toBN("0"),
-    });
-    await advanceTime(10000);
   };
 
   test("should return an error if a non DAO member attempts to ragequit", async () => {

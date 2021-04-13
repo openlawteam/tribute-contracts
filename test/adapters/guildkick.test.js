@@ -41,8 +41,10 @@ const {
   SHARES,
   LOOT,
   expect,
-  expectRevert
+  expectRevert,
 } = require("../../utils/DaoFactory.js");
+
+const { sponsorNewMember } = require("../../utils/TestUtils.js");
 
 describe("Adapter - GuildKick", () => {
   const owner = accounts[1];
@@ -90,24 +92,6 @@ describe("Adapter - GuildKick", () => {
     );
     //Get the new proposal id
     return proposalId;
-  };
-
-  const sponsorNewMember = async (
-    onboarding,
-    dao,
-    proposalId,
-    sponsor,
-    voting
-  ) => {
-    await onboarding.sponsorProposal(dao.address, proposalId, [], {
-      from: sponsor,
-      gasPrice: toBN("0"),
-    });
-    await voting.submitVote(dao.address, proposalId, 1, {
-      from: sponsor,
-      gasPrice: toBN("0"),
-    });
-    await advanceTime(10000);
   };
 
   const onboardingNewMember = async (

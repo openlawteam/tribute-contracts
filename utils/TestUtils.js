@@ -67,6 +67,30 @@ const createNFTDao = async (daoOwner) => {
   return { dao, pixelNFT };
 };
 
+const submitNewMemberProposal = async (
+  proposalId,
+  member,
+  onboarding,
+  dao,
+  newMember,
+  sharePrice,
+  token,
+  desiredShares
+) => {
+  await onboarding.onboard(
+    dao.address,
+    proposalId,
+    newMember,
+    token,
+    sharePrice.mul(toBN(desiredShares)),
+    {
+      from: member,
+      value: sharePrice.mul(toBN(desiredShares)),
+      gasPrice: toBN("0"),
+    }
+  );
+};
+
 const onboardNewMember = async (dao, sponsor, newMember, proposalId) => {
   const voting = await getContract(dao, "voting", VotingContract);
   const onboarding = await getContract(dao, "onboarding", OnboardingContract);
@@ -109,10 +133,61 @@ const onboardNewMember = async (dao, sponsor, newMember, proposalId) => {
   expect(nbShares.toString()).to.equal("10000000000000000");
 };
 
+const onboardingNewMember = async (
+  proposalId,
+  dao,
+  onboarding,
+  voting,
+  newMember,
+  sponsor,
+  sharePrice,
+  token,
+  desiredShares
+) => {
+  await submitNewMemberProposal(
+    proposalId,
+    sponsor,
+    onboarding,
+    dao,
+    newMember,
+    sharePrice,
+    token,
+    desiredShares
+  );
+
+  //Sponsor the new proposal, vote and process it
+  await sponsorNewMember(onboarding, dao, proposalId, sponsor, voting);
+  await onboarding.processProposal(dao.address, proposalId, {
+    from: sponsor,
+    gasPrice: toBN("0"),
+  });
+};
+
+const sponsorNewMember = async (
+  onboarding,
+  dao,
+  proposalId,
+  sponsor,
+  voting
+) => {
+  await onboarding.sponsorProposal(dao.address, proposalId, [], {
+    from: sponsor,
+    gasPrice: toBN("0"),
+  });
+  await voting.submitVote(dao.address, proposalId, 1, {
+    from: sponsor,
+    gasPrice: toBN("0"),
+  });
+  await advanceTime(10000);
+};
+
 module.exports = {
   checkLastEvent,
   checkBalance,
   createNFTDao,
   onboardNewMember,
+  submitNewMemberProposal,
+  sponsorNewMember,
+  onboardingNewMember,
   isActiveMember,
 };

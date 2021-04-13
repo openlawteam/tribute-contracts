@@ -50,6 +50,7 @@
   },
   "scripts": {
     "test": "jest --clearCache && jest",
+    "test:all": "jest --clearCache && jest test/adapters/guildkick.test.js test/adapters/ragequit.test.js test/adapters/financing.test.js",
     "lint:fix": "prettier --write 'contracts/**/*.sol' 'test/**/*.test.js' '**/*.md'",
     "lint": "prettier --list-different 'contracts/**/*.sol' 'test/**/*.test.js' '**/*.md'",
     "create": "graph create openlawteam/tribute --node https://api.thegraph.com/deploy/",

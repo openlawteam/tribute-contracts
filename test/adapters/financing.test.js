@@ -37,10 +37,11 @@ const {
   ETH_TOKEN,
   expect,
 } = require("../../utils/DaoFactory.js");
-const { checkBalance } = require("../../utils/TestUtils.js");
-const remaining = sharePrice.sub(toBN("50000000000000"));
 
-describe("Adapter - Financing", () => {
+const { checkBalance } = require("../../utils/TestUtils.js");
+
+describe("Adapter - Financing", async () => {
+  const remaining = sharePrice.sub(toBN("50000000000000"));
   const myAccount = accounts[1];
   const applicant = accounts[2];
   const newMember = accounts[3];
