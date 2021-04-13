@@ -61,7 +61,7 @@ abstract contract AdapterGuard {
     function creationModeCheck(DaoRegistry dao) internal view returns (bool) {
         return
             dao.getNbMembers() == 0 ||
-            dao.isActiveMember(msg.sender) ||
+            dao.isMember(msg.sender) ||
             dao.isAdapter(msg.sender);
     }
 }

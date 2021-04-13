@@ -66,7 +66,9 @@ const BankExtension = artifacts.require("./extensions/bank/BankExtension");
 const BankFactory = artifacts.require("./extensions/bank/BankFactory");
 
 const VotingContract = artifacts.require("./adapters/VotingContract");
-const DaoRegistryAdapterContract = artifacts.require("./adapters/DaoRegistryAdapterContract");
+const DaoRegistryAdapterContract = artifacts.require(
+  "./adapters/DaoRegistryAdapterContract"
+);
 const BankAdapterContract = artifacts.require("./adapters/BankAdapterContract");
 const NFTAdapterContract = artifacts.require("./adapters/NFTAdapterContract");
 const ConfigurationContract = artifacts.require(
@@ -78,13 +80,22 @@ const RagequitContract = artifacts.require("./adapters/RagequitContract");
 const GuildKickContract = artifacts.require("./adapters/GuildKickContract");
 const OnboardingContract = artifacts.require("./adapters/OnboardingContract");
 
+const SnapshotProposalContract = artifacts.require(
+  "./adapters/voting/SnapshotProposalContract"
+);
+const OffchainVotingContract = artifacts.require(
+  "./adapters/voting/OffchainVotingContract"
+);
+const KickBadReporterAdapter = artifacts.require(
+  "./adapters/voting/KickBadReporterAdapter"
+);
 
-const SnapshotProposalContract = artifacts.require("./adapters/voting/SnapshotProposalContract");
-const OffchainVotingContract = artifacts.require("./adapters/voting/OffchainVotingContract");
-const KickBadReporterAdapter = artifacts.require("./adapters/voting/KickBadReporterAdapter");
-
-const BatchVotingContract = artifacts.require("./adapters/voting/BatchVotingContract");
-const CouponOnboardingContract = artifacts.require("./adapters/CouponOnboardingContract");
+const BatchVotingContract = artifacts.require(
+  "./adapters/voting/BatchVotingContract"
+);
+const CouponOnboardingContract = artifacts.require(
+  "./adapters/CouponOnboardingContract"
+);
 
 const TributeContract = artifacts.require("./adapters/TributeContract");
 const DistributeContract = artifacts.require("./adapters/DistributeContract");
@@ -222,7 +233,7 @@ const addDefaultAdapters = async (
     gracePeriod,
     tokenAddr,
     maxChunks,
-    nftAddr
+    nftAddr,
   });
 
   return { dao };
@@ -250,7 +261,7 @@ const configureDao = async ({
   votingPeriod,
   gracePeriod,
   tokenAddr,
-  maxChunks
+  maxChunks,
 }) => {
   await daoFactory.addAdapters(dao.address, [
     entryDao("voting", voting, {}),
@@ -260,7 +271,7 @@ const configureDao = async ({
     }),
     entryDao("ragequit", ragequit, {}),
     entryDao("guildkick", guildkick, {
-      SUBMIT_PROPOSAL: true
+      SUBMIT_PROPOSAL: true,
     }),
     entryDao("managing", managing, {
       SUBMIT_PROPOSAL: true,
@@ -280,7 +291,7 @@ const configureDao = async ({
       NEW_MEMBER: true,
     }),
     entryDao("daoRegistry", daoRegistryAdapter, {
-      UPDATE_DELEGATE_KEY: true
+      UPDATE_DELEGATE_KEY: true,
     }),
     entryDao("nft", nftAdapter, {}),
     entryDao("bank", bankAdapter, {}),
@@ -291,10 +302,9 @@ const configureDao = async ({
     entryDao("tribute-nft", tributeNFT, {
       SUBMIT_PROPOSAL: true,
       NEW_MEMBER: true,
-      TRANSFER_NFT: true,
     }),
     entryDao("distribute", distribute, {
-      SUBMIT_PROPOSAL: true
+      SUBMIT_PROPOSAL: true,
     }),
   ]);
 
@@ -344,11 +354,10 @@ const configureDao = async ({
   const nftExt = await NFTExtension.at(nftExtAddr);
   await daoFactory.configureExtension(dao.address, nftExt.address, [
     entryNft(tributeNFT, {
-      REGISTER_NFT: true,
-      TRANSFER_NFT: true,
+      COLLECT_NFT: true,
     }),
     entryNft(nftAdapter, {
-      COLLECT_NFT: true
+      COLLECT_NFT: true,
     }),
   ]);
 
@@ -378,6 +387,7 @@ const configureDao = async ({
   await voting.configureDao(dao.address, votingPeriod, gracePeriod);
   await tribute.configureDao(dao.address, SHARES);
   await tribute.configureDao(dao.address, LOOT);
+  await tributeNFT.configureDao(dao.address);
 };
 
 const deployDao = async (deployer, options) => {
@@ -446,7 +456,12 @@ const deployDao = async (deployer, options) => {
 
     const snapshotProposalContract = await SnapshotProposalContract.deployed();
     const handleBadReporterAdapter = await KickBadReporterAdapter.deployed();
-    const offchainVoting = await deployer.deploy(OffchainVotingContract, votingAddress, snapshotProposalContract.address, handleBadReporterAdapter.address);
+    const offchainVoting = await deployer.deploy(
+      OffchainVotingContract,
+      votingAddress,
+      snapshotProposalContract.address,
+      handleBadReporterAdapter.address
+    );
 
     await daoFactory.updateAdapter(
       dao.address,
@@ -558,7 +573,7 @@ const createDao = async (
     votingPeriod,
     gracePeriod,
     tokenAddr,
-    maxChunks
+    maxChunks,
   });
 
   if (finalize) {
@@ -632,10 +647,9 @@ const advanceTime = async (time) => {
 
 const entryNft = (contract, flags) => {
   const values = [
-    flags.TRANSFER_NFT,
-    flags.RETURN_NFT,
-    flags.REGISTER_NFT,
-    flags.COLLECT_NFT
+    flags.WITHDRAW_NFT,
+    flags.COLLECT_NFT,
+    flags.INTERNAL_TRANSFER,
   ];
 
   const acl = entry(values);
@@ -656,10 +670,6 @@ const entryBank = (contract, flags) => {
     flags.EXECUTE,
     flags.REGISTER_NEW_TOKEN,
     flags.REGISTER_NEW_INTERNAL_TOKEN,
-    flags.COLLECT_NFT,
-    flags.TRANSFER_NFT,
-    flags.RETURN_NFT,
-    flags.REGISTER_NFT,
   ];
 
   const acl = entry(values);

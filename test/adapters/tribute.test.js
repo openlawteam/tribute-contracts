@@ -37,7 +37,7 @@ const {
   BankExtension,
   sha3,
 } = require("../../utils/DaoFactory.js");
-const { checkBalance, isActiveMember } = require("../../utils/TestUtils.js");
+const { checkBalance, isMember } = require("../../utils/TestUtils.js");
 
 contract("MolochV3 - Tribute Adapter", async (accounts) => {
   it("should be possible to provide ERC20 tokens in exchange for DAO shares", async () => {
@@ -153,9 +153,9 @@ contract("MolochV3 - Tribute Adapter", async (accounts) => {
     );
 
     // test active member status
-    const applicantIsActiveMember = await isActiveMember(bank, applicant);
+    const applicantIsActiveMember = await isMember(bank, applicant);
     assert.equal(applicantIsActiveMember, true);
-    const nonMemberAccountIsActiveMember = await isActiveMember(
+    const nonMemberAccountIsActiveMember = await isMember(
       bank,
       nonMemberAccount
     );
@@ -360,9 +360,9 @@ contract("MolochV3 - Tribute Adapter", async (accounts) => {
       "tribute adapter did not refund ERC20 contribution"
     );
 
-    // test active member status
-    const applicantIsActiveMember = await isActiveMember(bank, applicant);
-    assert.equal(applicantIsActiveMember, false);
+    // test member status
+    const applicantIsMember = await isMember(bank, applicant);
+    assert.equal(applicantIsMember, false);
   });
 
   it("should not be possible to sponsor proposal that does not exist", async () => {

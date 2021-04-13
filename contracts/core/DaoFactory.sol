@@ -104,7 +104,7 @@ contract DaoFactory is CloneFactory, DaoConstants {
     function addAdapters(DaoRegistry dao, Adapter[] calldata adapters)
         external
     {
-        require(dao.isActiveMember(msg.sender), "not active member");
+        require(dao.isMember(msg.sender), "not member");
         //Registring Adapters
         require(
             dao.state() == DaoRegistry.DaoState.CREATION,
@@ -135,7 +135,7 @@ contract DaoFactory is CloneFactory, DaoConstants {
         address extension,
         Adapter[] calldata adapters
     ) external {
-        require(dao.isActiveMember(msg.sender), "not active member");
+        require(dao.isMember(msg.sender), "not member");
         //Registring Adapters
         require(
             dao.state() == DaoRegistry.DaoState.CREATION,
@@ -159,7 +159,7 @@ contract DaoFactory is CloneFactory, DaoConstants {
      * @param adapter Adapter that will be replacing the currently-existing adapter of the same ID.
      */
     function updateAdapter(DaoRegistry dao, Adapter calldata adapter) external {
-        require(dao.isActiveMember(msg.sender), "not active member");
+        require(dao.isMember(msg.sender), "not member");
         require(
             dao.state() == DaoRegistry.DaoState.CREATION,
             "this DAO has already been setup"
