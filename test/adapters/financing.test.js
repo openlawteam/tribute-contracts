@@ -40,7 +40,7 @@ const {
 
 const { checkBalance } = require("../../utils/TestUtils.js");
 
-describe("Adapter - Financing", async () => {
+describe("Adapter - Financing", () => {
   const remaining = sharePrice.sub(toBN("50000000000000"));
   const myAccount = accounts[1];
   const applicant = accounts[2];

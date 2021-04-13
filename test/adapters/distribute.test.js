@@ -26,7 +26,6 @@ SOFTWARE.
 "use strict";
 
 const {
-  sha3,
   toBN,
   fromUtf8,
   advanceTime,
