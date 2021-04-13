@@ -41,7 +41,7 @@ const {
   expect,
 } = require("../../utils/DaoFactory.js");
 
-const { sponsorNewMember } = require("../../utils/TestUtils.js");
+const { onboardingNewMember } = require("../../utils/TestUtils.js");
 
 describe("Adapter - Ragequit", () => {
   const proposalCounter = proposalIdGenerator().generator;
@@ -66,49 +66,23 @@ describe("Adapter - Ragequit", () => {
     await revertChainSnapshot(this.snapshotId);
   });
 
-  const submitNewMemberProposal = async (
-    onboarding,
-    dao,
-    newMember,
-    sharePrice,
-    token,
-    sponsor
-  ) => {
-    const proposalId = getProposalCounter();
-    await onboarding.onboard(
-      dao.address,
-      proposalId,
-      newMember,
-      token ? token : SHARES,
-      sharePrice.mul(toBN(100)),
-      {
-        from: sponsor ? sponsor : accounts[1],
-        value: sharePrice.mul(toBN(10)),
-        gasPrice: toBN("0"),
-      }
-    );
-    return proposalId;
-  };
-
   test("should return an error if a non DAO member attempts to ragequit", async () => {
     const newMember = accounts[2];
     const bank = this.extensions.bank;
     const onboarding = this.adapters.onboarding;
     const voting = this.adapters.voting;
 
-    const proposalId = await submitNewMemberProposal(
-      onboarding,
+    const proposalId = getProposalCounter();
+    await onboardingNewMember(
+      proposalId,
       this.dao,
+      onboarding,
+      voting,
       newMember,
-      sharePrice
+      owner,
+      sharePrice,
+      SHARES
     );
-
-    //Sponsor the new proposal, vote and process it
-    await sponsorNewMember(onboarding, this.dao, proposalId, owner, voting);
-    await onboarding.processProposal(this.dao.address, proposalId, {
-      from: owner,
-      gasPrice: toBN("0"),
-    });
 
     //Check Guild Bank Balance
     const guildBalance = await bank.balanceOf(GUILD, ETH_TOKEN);
@@ -141,19 +115,17 @@ describe("Adapter - Ragequit", () => {
     const onboarding = this.adapters.onboarding;
     const voting = this.adapters.voting;
 
-    const proposalId = await submitNewMemberProposal(
-      onboarding,
+    const proposalId = getProposalCounter();
+    await onboardingNewMember(
+      proposalId,
       this.dao,
+      onboarding,
+      voting,
       newMember,
-      sharePrice
+      owner,
+      sharePrice,
+      SHARES
     );
-
-    //Sponsor the new proposal, vote and process it
-    await sponsorNewMember(onboarding, this.dao, proposalId, owner, voting);
-    await onboarding.processProposal(this.dao.address, proposalId, {
-      from: owner,
-      gasPrice: toBN("0"),
-    });
 
     //Check Guild Bank Balance
     const guildBalance = await bank.balanceOf(GUILD, ETH_TOKEN);
@@ -185,19 +157,17 @@ describe("Adapter - Ragequit", () => {
     const onboarding = this.adapters.onboarding;
     const voting = this.adapters.voting;
 
-    const proposalId = await submitNewMemberProposal(
-      onboarding,
+    const proposalId = getProposalCounter();
+    await onboardingNewMember(
+      proposalId,
       this.dao,
+      onboarding,
+      voting,
       newMember,
-      sharePrice
+      owner,
+      sharePrice,
+      SHARES
     );
-
-    // Sponsor the new proposal to admit the new member, vote and process it
-    await sponsorNewMember(onboarding, this.dao, proposalId, owner, voting);
-    await onboarding.processProposal(this.dao.address, proposalId, {
-      from: owner,
-      gasPrice: toBN("0"),
-    });
 
     //Check Guild Bank Balance
     const guildBalance = await bank.balanceOf(GUILD, ETH_TOKEN);
@@ -232,19 +202,17 @@ describe("Adapter - Ragequit", () => {
     const financing = this.adapters.financing;
     const voting = this.adapters.voting;
 
-    let proposalId = await submitNewMemberProposal(
-      onboarding,
+    const proposalId = getProposalCounter();
+    await onboardingNewMember(
+      proposalId,
       this.dao,
+      onboarding,
+      voting,
       newMember,
-      sharePrice
+      owner,
+      sharePrice,
+      SHARES
     );
-
-    //Sponsor the new proposal to admit the new member, vote and process it
-    await sponsorNewMember(onboarding, this.dao, proposalId, owner, voting);
-    await onboarding.processProposal(this.dao.address, proposalId, {
-      from: owner,
-      gasPrice: toBN("0"),
-    });
 
     //Check Guild Bank Balance
     const guildBalance = await bank.balanceOf(GUILD, ETH_TOKEN);
@@ -253,13 +221,13 @@ describe("Adapter - Ragequit", () => {
     //Check New Member Shares
     const shares = await bank.balanceOf(newMember, SHARES);
     expect(shares.toString()).equal("10000000000000000");
-    proposalId = getProposalCounter();
+    const financingProposalId = getProposalCounter();
 
     //Create Financing Request
     const requestedAmount = toBN(50000);
     await financing.createFinancingRequest(
       this.dao.address,
-      proposalId,
+      financingProposalId,
       applicant,
       ETH_TOKEN,
       requestedAmount,
@@ -267,14 +235,14 @@ describe("Adapter - Ragequit", () => {
     );
 
     //Old Member sponsors the Financing proposal
-    await financing.sponsorProposal(this.dao.address, proposalId, [], {
+    await financing.sponsorProposal(this.dao.address, financingProposalId, [], {
       from: owner,
       gasPrice: toBN("0"),
     });
 
     //New Member votes YES on the Financing proposal
     let vote = 1; //YES
-    await voting.submitVote(this.dao.address, proposalId, vote, {
+    await voting.submitVote(this.dao.address, financingProposalId, vote, {
       from: newMember,
       gasPrice: toBN("0"),
     });
@@ -304,19 +272,17 @@ describe("Adapter - Ragequit", () => {
     const financing = this.adapters.financing;
     const voting = this.adapters.voting;
 
-    let proposalId = await submitNewMemberProposal(
-      onboarding,
+    const proposalId = getProposalCounter();
+    await onboardingNewMember(
+      proposalId,
       this.dao,
+      onboarding,
+      voting,
       newMember,
-      sharePrice
+      owner,
+      sharePrice,
+      SHARES
     );
-
-    //Sponsor the new proposal to admit the new member, vote and process it
-    await sponsorNewMember(onboarding, this.dao, proposalId, owner, voting);
-    await onboarding.processProposal(this.dao.address, proposalId, {
-      from: owner,
-      gasPrice: toBN("0"),
-    });
 
     //Check Guild Bank Balance
     const guildBalance = await bank.balanceOf(GUILD, ETH_TOKEN);
@@ -326,12 +292,12 @@ describe("Adapter - Ragequit", () => {
     const shares = await bank.balanceOf(newMember, SHARES);
     expect(shares.toString()).equal("10000000000000000");
 
-    proposalId = getProposalCounter();
+    const financingProposalId = getProposalCounter();
     //Create Financing Request
     const requestedAmount = toBN(50000);
     await financing.createFinancingRequest(
       this.dao.address,
-      proposalId,
+      financingProposalId,
       applicant,
       ETH_TOKEN,
       requestedAmount,
@@ -339,14 +305,14 @@ describe("Adapter - Ragequit", () => {
     );
 
     //Old Member sponsors the Financing proposal
-    await financing.sponsorProposal(this.dao.address, proposalId, [], {
+    await financing.sponsorProposal(this.dao.address, financingProposalId, [], {
       from: owner,
       gasPrice: toBN("0"),
     });
 
     //New Member votes NO on the Financing proposal
     const vote = 2; //NO
-    await voting.submitVote(this.dao.address, proposalId, vote, {
+    await voting.submitVote(this.dao.address, financingProposalId, vote, {
       from: newMember,
       gasPrice: toBN("0"),
     });
@@ -477,19 +443,17 @@ describe("Adapter - Ragequit", () => {
     const onboarding = this.adapters.onboarding;
     const voting = this.adapters.voting;
 
-    let proposalId = await submitNewMemberProposal(
-      onboarding,
+    const proposalId = getProposalCounter();
+    await onboardingNewMember(
+      proposalId,
       this.dao,
+      onboarding,
+      voting,
       memberAddr,
-      sharePrice
+      owner,
+      sharePrice,
+      SHARES
     );
-
-    //Sponsor the new proposal to admit the new member, vote and process it
-    await sponsorNewMember(onboarding, this.dao, proposalId, owner, voting);
-    await onboarding.processProposal(this.dao.address, proposalId, {
-      from: owner,
-      gasPrice: toBN("0"),
-    });
 
     //Check Guild Bank Balance
     let guildBalance = await bank.balanceOf(GUILD, ETH_TOKEN);
@@ -555,19 +519,17 @@ describe("Adapter - Ragequit", () => {
     const onboarding = this.adapters.onboarding;
     const voting = this.adapters.voting;
 
-    let proposalId = await submitNewMemberProposal(
-      onboarding,
+    const proposalId = getProposalCounter();
+    await onboardingNewMember(
+      proposalId,
       this.dao,
+      onboarding,
+      voting,
       newMember,
-      sharePrice
+      owner,
+      sharePrice,
+      SHARES
     );
-
-    //Sponsor the new proposal to admit the new member, vote and process it
-    await sponsorNewMember(onboarding, this.dao, proposalId, owner, voting);
-    await onboarding.processProposal(this.dao.address, proposalId, {
-      from: owner,
-      gasPrice: toBN("0"),
-    });
 
     //Check Guild Bank Balance
     let guildBalance = await bank.balanceOf(GUILD, ETH_TOKEN);
@@ -598,19 +560,17 @@ describe("Adapter - Ragequit", () => {
     const onboarding = this.adapters.onboarding;
     const voting = this.adapters.voting;
 
-    let proposalId = await submitNewMemberProposal(
-      onboarding,
+    const proposalId = getProposalCounter();
+    await onboardingNewMember(
+      proposalId,
       this.dao,
+      onboarding,
+      voting,
       memberA,
-      sharePrice
+      owner,
+      sharePrice,
+      SHARES
     );
-
-    // Sponsor the new proposal to admit the new member, vote and process it
-    await sponsorNewMember(onboarding, this.dao, proposalId, owner, voting);
-    await onboarding.processProposal(this.dao.address, proposalId, {
-      from: owner,
-      gasPrice: toBN("0"),
-    });
 
     const memberAShares = await bank.balanceOf(memberA, SHARES);
     expect(memberAShares.toString()).to.equal("10000000000000000");

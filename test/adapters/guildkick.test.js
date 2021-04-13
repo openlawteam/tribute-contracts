@@ -44,7 +44,12 @@ const {
   expectRevert,
 } = require("../../utils/DaoFactory.js");
 
-const { sponsorNewMember } = require("../../utils/TestUtils.js");
+const {
+  sponsorNewMember,
+  onboardingNewMember,
+  submitNewMemberProposal,
+  guildKickProposal,
+} = require("../../utils/TestUtils.js");
 
 describe("Adapter - GuildKick", () => {
   const owner = accounts[1];
@@ -69,79 +74,6 @@ describe("Adapter - GuildKick", () => {
     await revertChainSnapshot(this.snapshotId);
   });
 
-  const submitNewMemberProposal = async (
-    member,
-    onboarding,
-    dao,
-    newMember,
-    sharePrice,
-    token
-  ) => {
-    let proposalId = getProposalCounter();
-    await onboarding.onboard(
-      dao.address,
-      proposalId,
-      newMember,
-      token,
-      sharePrice.mul(toBN(10)),
-      {
-        from: member,
-        value: sharePrice.mul(toBN(10)),
-        gasPrice: toBN("0"),
-      }
-    );
-    //Get the new proposal id
-    return proposalId;
-  };
-
-  const onboardingNewMember = async (
-    dao,
-    onboarding,
-    voting,
-    newMember,
-    sponsor,
-    sharePrice,
-    token
-  ) => {
-    let newProposalId = await submitNewMemberProposal(
-      sponsor,
-      onboarding,
-      dao,
-      newMember,
-      sharePrice,
-      token
-    );
-
-    //Sponsor the new proposal, vote and process it
-    await sponsorNewMember(onboarding, dao, newProposalId, sponsor, voting);
-    await onboarding.processProposal(dao.address, newProposalId, {
-      from: sponsor,
-      gasPrice: toBN("0"),
-    });
-  };
-
-  const guildKickProposal = async (
-    dao,
-    guildkickContract,
-    memberToKick,
-    sender,
-    proposalId = null
-  ) => {
-    const newProposalId = proposalId ? proposalId : getProposalCounter();
-    await guildkickContract.submitKickProposal(
-      dao.address,
-      newProposalId,
-      memberToKick,
-      fromUtf8(""),
-      {
-        from: sender,
-        gasPrice: toBN("0"),
-      }
-    );
-
-    return { kickProposalId: newProposalId };
-  };
-
   test("should be possible to kick a DAO member", async () => {
     const newMember = accounts[2];
 
@@ -151,6 +83,7 @@ describe("Adapter - GuildKick", () => {
     const guildkickContract = this.adapters.guildkick;
 
     await onboardingNewMember(
+      getProposalCounter(),
       this.dao,
       onboarding,
       voting,
@@ -173,15 +106,12 @@ describe("Adapter - GuildKick", () => {
     //SubGuildKick
     const memberToKick = newMember;
     const kickProposalId = getProposalCounter();
-    await this.adapters.guildkick.submitKickProposal(
-      this.dao.address,
-      kickProposalId,
+    await guildKickProposal(
+      this.dao,
+      this.adapters.guildkick,
       memberToKick,
-      fromUtf8(""),
-      {
-        from: owner,
-        gasPrice: toBN("0"),
-      }
+      owner,
+      kickProposalId
     );
 
     //Vote YES on kick proposal
@@ -211,28 +141,25 @@ describe("Adapter - GuildKick", () => {
     const memberToKick = owner;
     const newProposalId = getProposalCounter();
     await expectRevert(
-      this.adapters.guildkick.submitKickProposal(
-        this.dao.address,
-        newProposalId,
+      guildKickProposal(
+        this.dao,
+        this.adapters.guildkick,
         memberToKick,
-        fromUtf8(""),
-        {
-          from: nonMember,
-          gasPrice: toBN("0"),
-        }
+        nonMember,
+        newProposalId
       ),
       "onlyMember"
     );
   });
 
   test("should not be possible for a non-active member to submit a guild kick proposal", async () => {
-    // const member = accounts[6];
     const newMember = accounts[2];
     const onboarding = this.adapters.onboarding;
     const voting = this.adapters.voting;
     const guildkickContract = this.adapters.guildkick;
 
     await onboardingNewMember(
+      getProposalCounter(),
       this.dao,
       onboarding,
       voting,
@@ -244,11 +171,13 @@ describe("Adapter - GuildKick", () => {
 
     // Start a new kick poposal
     let memberToKick = newMember;
-    let { kickProposalId } = await guildKickProposal(
+    let kickProposalId = getProposalCounter();
+    await guildKickProposal(
       this.dao,
       guildkickContract,
       memberToKick,
-      owner
+      owner,
+      kickProposalId
     );
 
     //Vote YES on kick proposal
@@ -268,15 +197,12 @@ describe("Adapter - GuildKick", () => {
     // to kick the member that started the previous guild kick
     const newProposalId = getProposalCounter();
     try {
-      await this.adapters.guildkick.submitKickProposal(
-        this.dao.address,
-        newProposalId,
+      await guildKickProposal(
+        this.dao,
+        this.adapters.guildkick,
         owner,
-        fromUtf8(""),
-        {
-          from: memberToKick,
-          gasPrice: toBN("0"),
-        }
+        memberToKick,
+        newProposalId
       );
       throw Error("should not be possible to kick");
     } catch (e) {
@@ -294,6 +220,7 @@ describe("Adapter - GuildKick", () => {
     const guildkickContract = this.adapters.guildkick;
 
     await onboardingNewMember(
+      getProposalCounter(),
       this.dao,
       onboarding,
       voting,
@@ -305,11 +232,13 @@ describe("Adapter - GuildKick", () => {
 
     // Start a new kick poposal
     let memberToKick = newMemberA;
-    let { kickProposalId } = await guildKickProposal(
+    let kickProposalId = getProposalCounter();
+    await guildKickProposal(
       this.dao,
       guildkickContract,
       memberToKick,
-      member
+      member,
+      kickProposalId
     );
 
     //Vote YES on kick proposal
@@ -334,6 +263,7 @@ describe("Adapter - GuildKick", () => {
     const guildkickContract = this.adapters.guildkick;
 
     await onboardingNewMember(
+      getProposalCounter(),
       this.dao,
       onboarding,
       voting,
@@ -345,11 +275,13 @@ describe("Adapter - GuildKick", () => {
 
     // Start a new kick poposal
     let memberToKick = newMember;
-    let { kickProposalId } = await guildKickProposal(
+    let kickProposalId = getProposalCounter();
+    await guildKickProposal(
       this.dao,
       guildkickContract,
       memberToKick,
-      member
+      member,
+      kickProposalId
     );
 
     //Vote YES on kick proposal
@@ -384,6 +316,7 @@ describe("Adapter - GuildKick", () => {
     const guildkickContract = this.adapters.guildkick;
 
     await onboardingNewMember(
+      getProposalCounter(),
       this.dao,
       onboarding,
       voting,
@@ -395,11 +328,13 @@ describe("Adapter - GuildKick", () => {
 
     // Start a new kick poposal
     let memberToKick = newMember;
-    let { kickProposalId } = await guildKickProposal(
+    let kickProposalId = getProposalCounter();
+    await guildKickProposal(
       this.dao,
       guildkickContract,
       memberToKick,
-      member
+      member,
+      kickProposalId
     );
 
     // Vote YES on kick proposal
@@ -433,6 +368,7 @@ describe("Adapter - GuildKick", () => {
     const guildkickContract = this.adapters.guildkick;
 
     await onboardingNewMember(
+      getProposalCounter(),
       this.dao,
       onboarding,
       voting,
@@ -444,11 +380,13 @@ describe("Adapter - GuildKick", () => {
 
     // Start a new kick poposal
     let memberToKick = newMember;
-    let { kickProposalId } = await guildKickProposal(
+    let kickProposalId = getProposalCounter();
+    await guildKickProposal(
       this.dao,
       guildkickContract,
       memberToKick,
-      member
+      member,
+      kickProposalId
     );
 
     //Vote NO on kick proposal
@@ -479,6 +417,7 @@ describe("Adapter - GuildKick", () => {
 
     // New member joins as an Advisor (only receives LOOT)
     await onboardingNewMember(
+      getProposalCounter(),
       this.dao,
       onboarding,
       voting,
@@ -490,7 +429,13 @@ describe("Adapter - GuildKick", () => {
 
     // The member attemps to process the kick proposal, but the Advisor does not have any SHARES, only LOOT
     await expectRevert(
-      guildKickProposal(this.dao, guildkickContract, nonMember, member),
+      guildKickProposal(
+        this.dao,
+        guildkickContract,
+        nonMember,
+        member,
+        getProposalCounter()
+      ),
       "no shares or loot"
     );
   });
@@ -504,6 +449,7 @@ describe("Adapter - GuildKick", () => {
     const guildkickContract = this.adapters.guildkick;
 
     await onboardingNewMember(
+      getProposalCounter(),
       this.dao,
       onboarding,
       voting,
@@ -515,11 +461,13 @@ describe("Adapter - GuildKick", () => {
 
     //SubGuildKick
     let memberToKick = newMember;
-    let { kickProposalId } = await guildKickProposal(
+    let kickProposalId = getProposalCounter();
+    await guildKickProposal(
       this.dao,
       guildkickContract,
       memberToKick,
-      member
+      member,
+      kickProposalId
     );
 
     //Vote YES on kick proposal
@@ -539,13 +487,16 @@ describe("Adapter - GuildKick", () => {
 
     // Submit proposal to onboard new member
     let newMemberB = accounts[3];
-    let onboardProposalId = await submitNewMemberProposal(
+    let onboardProposalId = getProposalCounter();
+    await submitNewMemberProposal(
+      onboardProposalId,
       member,
       onboarding,
       this.dao,
       newMemberB,
       sharePrice,
-      SHARES
+      SHARES,
+      toBN(10)
     );
 
     // kicked member attemps to sponsor a new member
@@ -570,6 +521,7 @@ describe("Adapter - GuildKick", () => {
     const guildkickContract = this.adapters.guildkick;
 
     await onboardingNewMember(
+      getProposalCounter(),
       this.dao,
       onboarding,
       voting,
@@ -581,11 +533,13 @@ describe("Adapter - GuildKick", () => {
 
     // Submit guild kick proposal
     let memberToKick = newMember;
-    let { kickProposalId } = await guildKickProposal(
+    let kickProposalId = getProposalCounter();
+    await guildKickProposal(
       this.dao,
       guildkickContract,
       memberToKick,
-      member
+      member,
+      kickProposalId
     );
 
     // Vote YES on a kick proposal
@@ -606,13 +560,16 @@ describe("Adapter - GuildKick", () => {
 
     // Submit proposal to onboard new member
     let newMemberB = accounts[3];
-    let onboardProposalId = await submitNewMemberProposal(
+    let onboardProposalId = getProposalCounter();
+    await submitNewMemberProposal(
+      onboardProposalId,
       member,
       onboarding,
       this.dao,
       newMemberB,
       sharePrice,
-      SHARES
+      SHARES,
+      toBN(10)
     );
 
     //Sponsor the new proposal to start the voting process
@@ -641,6 +598,7 @@ describe("Adapter - GuildKick", () => {
     const financing = this.adapters.financing;
 
     await onboardingNewMember(
+      getProposalCounter(),
       this.dao,
       onboarding,
       voting,
@@ -652,11 +610,13 @@ describe("Adapter - GuildKick", () => {
 
     //SubGuildKick
     let memberToKick = newMember;
-    let { kickProposalId } = await guildKickProposal(
+    let kickProposalId = getProposalCounter();
+    await guildKickProposal(
       this.dao,
       guildkickContract,
       memberToKick,
-      member
+      member,
+      kickProposalId
     );
 
     //Vote YES on kick proposal
@@ -707,6 +667,7 @@ describe("Adapter - GuildKick", () => {
     const managing = this.adapters.managing;
 
     await onboardingNewMember(
+      getProposalCounter(),
       this.dao,
       onboarding,
       voting,
@@ -718,11 +679,13 @@ describe("Adapter - GuildKick", () => {
 
     //SubGuildKick
     let memberToKick = newMember;
-    let { kickProposalId } = await guildKickProposal(
+    let kickProposalId = getProposalCounter();
+    await guildKickProposal(
       this.dao,
       guildkickContract,
       memberToKick,
-      member
+      member,
+      kickProposalId
     );
 
     //Vote YES on kick proposal
@@ -770,6 +733,7 @@ describe("Adapter - GuildKick", () => {
     const managing = this.adapters.managing;
 
     await onboardingNewMember(
+      getProposalCounter(),
       this.dao,
       onboarding,
       voting,
@@ -781,11 +745,13 @@ describe("Adapter - GuildKick", () => {
 
     //SubGuildKick
     let memberToKick = newMember;
-    let { kickProposalId } = await guildKickProposal(
+    let kickProposalId = getProposalCounter();
+    await guildKickProposal(
       this.dao,
       guildkickContract,
       memberToKick,
-      member
+      member,
+      kickProposalId
     );
 
     //Vote YES on kick proposal
@@ -838,6 +804,7 @@ describe("Adapter - GuildKick", () => {
     const bank = this.extensions.bank;
 
     await onboardingNewMember(
+      getProposalCounter(),
       this.dao,
       onboarding,
       voting,
@@ -849,11 +816,13 @@ describe("Adapter - GuildKick", () => {
 
     // Submit GuildKick
     let memberToKick = newMember;
-    let { kickProposalId } = await guildKickProposal(
+    let kickProposalId = getProposalCounter();
+    await guildKickProposal(
       this.dao,
       guildkickContract,
       memberToKick,
-      member
+      member,
+      kickProposalId
     );
 
     //Vote YES on kick proposal
@@ -889,6 +858,7 @@ describe("Adapter - GuildKick", () => {
     const guildkickContract = this.adapters.guildkick;
 
     await onboardingNewMember(
+      getProposalCounter(),
       this.dao,
       onboarding,
       voting,
@@ -900,11 +870,13 @@ describe("Adapter - GuildKick", () => {
 
     // Submit GuildKick
     let memberToKick = newMember;
-    let { kickProposalId } = await guildKickProposal(
+    let kickProposalId = getProposalCounter();
+    await guildKickProposal(
       this.dao,
       guildkickContract,
       memberToKick,
-      member
+      member,
+      kickProposalId
     );
 
     //Vote YES on kick proposal
@@ -928,7 +900,13 @@ describe("Adapter - GuildKick", () => {
     // Attempt to kick yourself
     let memberToKick = member;
     await expectRevert(
-      guildKickProposal(this.dao, guildkickContract, memberToKick, member),
+      guildKickProposal(
+        this.dao,
+        guildkickContract,
+        memberToKick,
+        member,
+        getProposalCounter()
+      ),
       "use ragequit"
     );
   });
@@ -943,6 +921,7 @@ describe("Adapter - GuildKick", () => {
     const guildkickContract = this.adapters.guildkick;
 
     await onboardingNewMember(
+      getProposalCounter(),
       this.dao,
       onboarding,
       voting,
@@ -952,6 +931,7 @@ describe("Adapter - GuildKick", () => {
       SHARES
     );
     await onboardingNewMember(
+      getProposalCounter(),
       this.dao,
       onboarding,
       voting,
@@ -962,11 +942,13 @@ describe("Adapter - GuildKick", () => {
     );
 
     // Submit the first guild kick with proposalId 0x1
-    const { kickProposalId } = await guildKickProposal(
+    const kickProposalId = getProposalCounter();
+    await guildKickProposal(
       this.dao,
       guildkickContract,
       memberB,
-      memberA
+      memberA,
+      kickProposalId
     );
 
     //Vote YES on kick proposal

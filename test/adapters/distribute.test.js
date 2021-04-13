@@ -44,10 +44,7 @@ const {
   expectRevert,
 } = require("../../utils/DaoFactory.js");
 
-const {
-  sponsorNewMember,
-  onboardingNewMember,
-} = require("../../utils/TestUtils.js");
+const { onboardingNewMember } = require("../../utils/TestUtils.js");
 
 describe("Adapter - Distribute", () => {
   const daoOwner = accounts[2];
@@ -98,7 +95,7 @@ describe("Adapter - Distribute", () => {
     return { proposalId: newProposalId };
   };
 
-  it("should be possible to distribute funds to only 1 member of the DAO", async () => {
+  test("should be possible to distribute funds to only 1 member of the DAO", async () => {
     const daoMember = accounts[3];
     const dao = this.dao;
     const bank = this.extensions.bank;
@@ -171,7 +168,7 @@ describe("Adapter - Distribute", () => {
     expect(newEscrowBalance.toString()).equal("0");
   });
 
-  it("should be possible to distribute funds to all active members of the DAO", async () => {
+  test("should be possible to distribute funds to all active members of the DAO", async () => {
     const daoMemberA = accounts[3];
     const daoMemberB = accounts[4];
     const dao = this.dao;
@@ -270,7 +267,7 @@ describe("Adapter - Distribute", () => {
     expect(ownerBalance.toString()).equal("0");
   });
 
-  it("should not be possible to create a proposal with the amount equals to 0", async () => {
+  test("should not be possible to create a proposal with the amount equals to 0", async () => {
     const dao = this.dao;
     const distributeContract = this.adapters.distribute;
 
@@ -293,7 +290,7 @@ describe("Adapter - Distribute", () => {
     );
   });
 
-  it("should not be possible to create a proposal with an invalid token", async () => {
+  test("should not be possible to create a proposal with an invalid token", async () => {
     const dao = this.dao;
     const distributeContract = this.adapters.distribute;
 
@@ -316,7 +313,7 @@ describe("Adapter - Distribute", () => {
     );
   });
 
-  it("should not be possible to create a proposal if the sender is not a member", async () => {
+  test("should not be possible to create a proposal if the sender is not a member", async () => {
     const nonMember = accounts[5];
     const dao = this.dao;
     const distributeContract = this.adapters.distribute;
@@ -338,7 +335,7 @@ describe("Adapter - Distribute", () => {
     );
   });
 
-  it("should not be possible to create a proposal if the target member does not have shares (advisor)", async () => {
+  test("should not be possible to create a proposal if the target member does not have shares (advisor)", async () => {
     const advisor = accounts[3];
     const dao = this.dao;
     const onboarding = this.adapters.onboarding;
@@ -376,7 +373,7 @@ describe("Adapter - Distribute", () => {
     );
   });
 
-  it("should not be possible to create a proposal if the a non member is indicated to receive the funds", async () => {
+  test("should not be possible to create a proposal if the a non member is indicated to receive the funds", async () => {
     const nonMember = accounts[3];
     const dao = this.dao;
     const distributeContract = this.adapters.distribute;
@@ -399,7 +396,7 @@ describe("Adapter - Distribute", () => {
     );
   });
 
-  it("should not be possible to create more than one proposal using the same proposal id", async () => {
+  test("should not be possible to create more than one proposal using the same proposal id", async () => {
     const daoMember = accounts[3];
     const dao = this.dao;
     const onboarding = this.adapters.onboarding;
@@ -446,7 +443,7 @@ describe("Adapter - Distribute", () => {
     );
   });
 
-  it("should not be possible to process a proposal that was not voted on", async () => {
+  test("should not be possible to process a proposal that was not voted on", async () => {
     const daoMemberA = accounts[3];
     const dao = this.dao;
     const onboarding = this.adapters.onboarding;
@@ -485,7 +482,7 @@ describe("Adapter - Distribute", () => {
     );
   });
 
-  it("should not be possible to distribute if proposal vote result is TIE", async () => {
+  test("should not be possible to distribute if proposal vote result is TIE", async () => {
     const daoMemberA = accounts[3];
     const dao = this.dao;
     const onboarding = this.adapters.onboarding;
@@ -543,7 +540,7 @@ describe("Adapter - Distribute", () => {
     );
   });
 
-  it("should not be possible to distribute if proposal vote result is NOT_PASS", async () => {
+  test("should not be possible to distribute if proposal vote result is NOT_PASS", async () => {
     const daoMemberA = accounts[3];
 
     const dao = this.dao;
@@ -602,7 +599,7 @@ describe("Adapter - Distribute", () => {
     );
   });
 
-  it("should not be possible to process a proposal that was already processed", async () => {
+  test("should not be possible to process a proposal that was already processed", async () => {
     const daoMemberA = accounts[3];
     const dao = this.dao;
     const onboarding = this.adapters.onboarding;
@@ -654,7 +651,7 @@ describe("Adapter - Distribute", () => {
     );
   });
 
-  it("should not be possible to process a new proposal if there is another in progress", async () => {
+  test("should not be possible to process a new proposal if there is another in progress", async () => {
     const daoMemberA = accounts[3];
     const dao = this.dao;
     const onboarding = this.adapters.onboarding;
@@ -723,7 +720,7 @@ describe("Adapter - Distribute", () => {
     );
   });
 
-  it("should not be possible to distribute the funds if the proposal is not in progress", async () => {
+  test("should not be possible to distribute the funds if the proposal is not in progress", async () => {
     const daoMemberA = accounts[3];
     const dao = this.dao;
     const onboarding = this.adapters.onboarding;

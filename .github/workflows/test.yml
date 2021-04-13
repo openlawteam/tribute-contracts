@@ -42,4 +42,4 @@ jobs:
         run: npm run compile
       
       - name: Run Tests
-        run: npm test test/adapters/ragequit.test.js test/core/daofactory.test.js test/core/registry.test.js test/adapters/guildkick.test.js test/adapters/financing.test.js test/adapters/distribute.test.js
+        run: npm test test/adapters/ragequit.test.js test/core/daofactory.test.js test/core/registry.test.js test/adapters/guildkick.test.js test/adapters/financing.test.js test/adapters/distribute.test.js test/adapters/configuration.test.js

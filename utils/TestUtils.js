@@ -3,6 +3,7 @@
 
 const {
   sha3,
+  fromUtf8,
   toBN,
   createDao,
   getContract,
@@ -75,17 +76,17 @@ const submitNewMemberProposal = async (
   newMember,
   sharePrice,
   token,
-  desiredShares
+  desiredShares = toBN(10)
 ) => {
   await onboarding.onboard(
     dao.address,
     proposalId,
     newMember,
     token,
-    sharePrice.mul(toBN(desiredShares)),
+    sharePrice.mul(desiredShares),
     {
       from: member,
-      value: sharePrice.mul(toBN(desiredShares)),
+      value: sharePrice.mul(desiredShares),
       gasPrice: toBN("0"),
     }
   );
@@ -142,7 +143,7 @@ const onboardingNewMember = async (
   sponsor,
   sharePrice,
   token,
-  desiredShares
+  desiredShares = toBN(10)
 ) => {
   await submitNewMemberProposal(
     proposalId,
@@ -181,6 +182,25 @@ const sponsorNewMember = async (
   await advanceTime(10000);
 };
 
+const guildKickProposal = async (
+  dao,
+  guildkickContract,
+  memberToKick,
+  sender,
+  proposalId
+) => {
+  await guildkickContract.submitKickProposal(
+    dao.address,
+    proposalId,
+    memberToKick,
+    fromUtf8(""),
+    {
+      from: sender,
+      gasPrice: toBN("0"),
+    }
+  );
+};
+
 module.exports = {
   checkLastEvent,
   checkBalance,
@@ -189,5 +209,6 @@ module.exports = {
   submitNewMemberProposal,
   sponsorNewMember,
   onboardingNewMember,
+  guildKickProposal,
   isActiveMember,
 };
