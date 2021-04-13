@@ -1,4 +1,4 @@
-import { Address, BigInt, Bytes } from "@graphprotocol/graph-ts";
+import { Address, Bytes } from "@graphprotocol/graph-ts";
 
 import { OffchainVotingContract } from "../../generated/templates/DaoRegistry/OffchainVotingContract";
 import { VotingContract } from "../../generated/templates/DaoRegistry/VotingContract";
@@ -34,8 +34,9 @@ export function loadProposalAndSaveVoteResults(
         let votingContract = VotingContract.bind(
           Address.fromString(votingAdapterAddress.toHex()) as Address
         );
-        // get vote results
+        // get vote results and voting state
         let voteResults = votingContract.votes(daoAddress, proposalId);
+        let voteState = votingContract.voteResult(daoAddress, proposalId);
 
         // assign voting data
         vote.nbYes = voteResults.value0;
@@ -53,14 +54,19 @@ export function loadProposalAndSaveVoteResults(
           proposal.startingTime = voteResults.value2;
           proposal.blockNumber = voteResults.value3;
 
+          proposal.votingState = voteState as string;
           proposal.voteResult = voteId;
         }
       } else if (votingAdapterName == "OffchainVotingContract") {
         let offchainVotingContract = OffchainVotingContract.bind(
           Address.fromString(votingAdapterAddress.toHex()) as Address
         );
-        // get vote results
+        // get vote results and state
         let voteResults = offchainVotingContract.votes(daoAddress, proposalId);
+        let voteState = offchainVotingContract.voteResult(
+          daoAddress,
+          proposalId
+        );
 
         // assign voting data
         vote.nbYes = voteResults.value5;
@@ -89,6 +95,7 @@ export function loadProposalAndSaveVoteResults(
           // proposal.fallbackVotes = voteResults.value10;
           proposal.fallbackVotesCount = voteResults.value10;
 
+          proposal.votingState = voteState as string;
           proposal.voteResult = voteId;
         }
       }

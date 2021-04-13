@@ -3,6 +3,15 @@ enum VotingAdapterName {
   VotingContract
 }
 
+enum VotingState {
+  NOT_STARTED
+  TIE
+  PASS
+  NOT_PASS
+  IN_PROGRESS
+  GRACE_PERIOD
+}
+
 type TributeDao @entity {
   "Unique identifier and primary key of the `TributeDao` entity"
   id: ID! # Set to `${tribute.id}
@@ -119,6 +128,7 @@ type Proposal @entity {
   # ONCHAIN VOTES: additional info
   votes: BigInt
 
+  votingState: VotingState
   voteResult: Vote
 }
 
@@ -165,9 +175,6 @@ type NFT @entity {
   id: ID! # Set to `${tribute.id}-nft-${nftAddress.id}-$tokenId}`
   nftAddress: Bytes!
   tokenId: BigInt!
-  tokenUri: String
-  name: String
-  symbol: String
   from: Bytes
   to: Bytes
   nftCollection: NFTCollection

@@ -127,8 +127,6 @@ templates:
       abis:
         - name: NFTExtension
           file: ../build/contracts/NFTExtension.json
-        # - name: ERC721
-        #   file: ../build/contracts/ERC721.json
       eventHandlers:
         - event: CollectedNFT(address,uint256)
           handler: handleCollectedNFT
