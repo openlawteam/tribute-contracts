@@ -10,7 +10,7 @@ Start ganache with `ganache-cli --host 0.0.0.0 --port 7545 --networkId 1337 --bl
 
 [the graph]: https://thegraph.com/docs/quick-start#1.-set-up-ganache-cli
 
-In a new terminal window, `truffle deploy --network=ganache` and copy the `DaoFactory` and `BankFactory` contract addresses and block numbers into the respective `address` and `startBlock` (important: make sure the block number starts from 1 previous block, for example, if the block number is 19 add 18 as the `startBlock`) for each source in `/subgraph.yaml`.
+In a new terminal window, `truffle deploy --network ganache` and copy the `DaoFactory` contract address and block number into the respective `address` and `startBlock` (important: make sure the block number starts from 1 previous block, for example, if the block number is 19 add 18 as the `startBlock`) for the `DaoFactory` source in `subgraph/subgraph.yaml`.
 
 Then, `cd docker/` and `docker-compose up`.
 
@@ -28,4 +28,11 @@ can access these via:
 - Postgres:
   - `postgresql://graph-node:let-me-in@localhost:5432/graph-node`
 
-Once this is up and running, you can create and deploy your subgraph to the running Graph Node. To do this, in another terminal window `cd ..` to return to the root `/molochv3-contracts` directory, `truffle compile` to build the contracts, if they aren't already built. Then `graph codegen` to run the code generation, then `yarn create-local` and lastly to deploy the local subgraph `yarn deploy-local`.
+Once this is up and running, you can create and deploy your subgraph to the running Graph Node. To do this, in another terminal window from the project root directory, `truffle compile` to build the contracts, if they aren't already built.
+
+Then from the `subgraph` directory:
+
+- `npm ci` to install dependencies
+- `npm run codegen` to run the code generation
+- `yarn create-local` to allocate the subgraph name in the Graph Node
+- `yarn deploy-local` to deploy the subgraph to your local Graph Node
