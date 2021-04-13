@@ -3,14 +3,6 @@ enum VotingAdapterName {
   VotingContract
 }
 
-interface ITransfer {
-  id: ID!
-  from: Bytes! # Member!
-  to: Bytes # Member!
-  transferAt: BigInt!
-  transaction: Bytes! #Transaction!
-}
-
 type TributeDao @entity {
   "Unique identifier and primary key of the `TributeDao` entity"
   id: ID! # Set to `${tribute.id}
@@ -73,7 +65,7 @@ type Proposal @entity {
   "Voting adapter address"
   votingAdapter: Bytes
 
-  # onboarding; proposal details
+  # ONBOARDING; proposal details
   tokenToMint: Bytes
   amount: BigInt
   sharesRequested: BigInt
@@ -81,7 +73,7 @@ type Proposal @entity {
   applicant: Bytes
   proposer: Bytes
 
-  # distribute; proposal details
+  # DISTRIBUTE; proposal details
   "The share holder address that will receive the funds. If 0x0, the funds will be distributed to all members of the DAO"
   shareHolderAddr: Bytes
   "The distribution status or the kick status"
@@ -91,26 +83,26 @@ type Proposal @entity {
   "The block number in which the proposal/or vote results has been created"
   blockNumber: BigInt
 
-  # tribute; proposal details
+  # TRIBUTE; proposal details
   "The amount requested of DAO internal tokens"
   requestAmount: BigInt
   "The amount of tribute tokens."
   tributeAmount: BigInt
 
-  # guildkick; proposal details
+  # GUILDKICK; proposal details
   "The address of the member to kick out of the DAO."
   memberToKick: Bytes
 
-  # financing; proposal details
+  # FINANCING; proposal details
   "Additional details for the financing proposal"
   details: Bytes
 
-  # managing; proposal details
+  # MANAGING; proposal details
   "Additional details for the managing proposal"
   keys: [Bytes!]
   values: [BigInt!]
 
-  # offchain votes
+  # OFFCHAIN VOTES: additional info
   snapshot: BigInt
   proposalHash: Bytes
   reporter: Bytes
@@ -124,7 +116,7 @@ type Proposal @entity {
   # fallbackVotes: BigInt
   fallbackVotesCount: BigInt
 
-  # onchain votes
+  # ONCHAIN VOTES: additional info
   votes: BigInt
 
   voteResult: Vote
