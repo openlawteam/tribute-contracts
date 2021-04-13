@@ -59,7 +59,7 @@ jobs:
           ssh-private-key: ${{ secrets.SSH_PRIVATE_KEY }}
 
       - name: Install Subgraph dependencies
-        if: steps.cache-node-modules.outputs.cache-hit != 'true'
+        if: steps.cache-subgraph-node-modules.outputs.cache-hit != 'true'
         run: npm ci
         working-directory: subgraph
 
