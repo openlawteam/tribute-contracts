@@ -38,7 +38,6 @@ export function loadProposalAndSaveVoteResults(
         let voteResults = votingContract.votes(daoAddress, proposalId);
 
         // assign voting data
-        vote.nbVoters = voteResults.value0.plus(voteResults.value1);
         vote.nbYes = voteResults.value0;
         vote.nbNo = voteResults.value1;
 
@@ -49,7 +48,6 @@ export function loadProposalAndSaveVoteResults(
         vote.save();
 
         if (proposal) {
-          proposal.nbVoters = voteResults.value0.plus(voteResults.value1);
           proposal.nbYes = voteResults.value0;
           proposal.nbNo = voteResults.value1;
           proposal.startingTime = voteResults.value2;
