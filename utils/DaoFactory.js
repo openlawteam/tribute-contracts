@@ -39,6 +39,7 @@ const sha3 = Web3Utils.sha3;
 const toBN = Web3Utils.toBN;
 const toWei = Web3Utils.toWei;
 const fromUtf8 = Web3Utils.fromUtf8;
+const hexToBytes = Web3Utils.hexToBytes;
 const toAscii = Web3Utils.toAscii;
 const fromAscii = Web3Utils.fromAscii;
 const toUtf8 = Web3Utils.toUtf8;
@@ -282,7 +283,7 @@ const deployDao = async (deployer, options) => {
       testContracts["testToken1"] = await TestToken1.new(1000000);
       testContracts["testToken2"] = await TestToken2.new(1000000);
       testContracts["multicall"] = await Multicall.new();
-      testContracts["pixelNFT"] = await deployPixelNFTer.new(100);
+      testContracts["pixelNFT"] = await PixelNFT.new(100);
     }
   }
 
@@ -919,6 +920,7 @@ module.exports = {
   sha3,
   toBN,
   toWei,
+  hexToBytes,
   fromUtf8,
   toAscii,
   fromAscii,

@@ -25,7 +25,6 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
  */
 const {
-  sha3,
   toBN,
   advanceTime,
   deployDao,
@@ -37,9 +36,6 @@ const {
   GUILD,
   SHARES,
   OLToken,
-  TributeContract,
-  VotingContract,
-  BankExtension,
   expect,
   expectRevert,
 } = require("../../utils/DaoFactory.js");
