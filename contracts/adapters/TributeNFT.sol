@@ -68,14 +68,6 @@ contract TributeNFTContract is
         revert("fallback revert");
     }
 
-    function configureDao(DaoRegistry dao, address nftToCollect)
-        external
-        onlyAdapter(dao)
-    {
-        NFTExtension nftExt = NFTExtension(dao.getExtensionAddress(NFT));
-        nftExt.registerPotentialNewNFT(nftToCollect);
-    }
-
     function provideTribute(
         DaoRegistry,
         bytes32,
@@ -89,12 +81,24 @@ contract TributeNFTContract is
     }
 
     /**
-     * @notice Creates a tribute proposal and escrows received tokens into the adapter.
+     * @notice Configures the adapter for a particular DAO.
+     * @notice Registers the DAO internal token SHARES with the DAO Bank.
+     * @dev Only adapters registered to the DAO can execute the function call (or if the DAO is in creation mode).
+     * @dev A DAO Bank extension must exist and be configured with proper access for this adapter.
+     * @param dao The DAO address.
+     */
+    function configureDao(DaoRegistry dao) external onlyAdapter(dao) {
+        BankExtension bank = BankExtension(dao.getExtensionAddress(BANK));
+        bank.registerPotentialNewInternalToken(SHARES);
+    }
+
+    /**
+     * @notice Creates a tribute proposal and escrows received token into the adapter.
      * @dev Applicant address must not be reserved.
-     * @dev The proposer must first separately `approve` the adapter as spender of the ERC-20 tokens provided as tribute.
+     * @dev The proposer must first separately `approve` the adapter as spender of the ERC-721 token provided as tribute.
      * @param dao The DAO address.
      * @param proposalId The proposal id (managed by the client).
-     * @param nftAddr The address of the ERC-721 NFT DAO that will be locked in the DAO in exchange for Shares.
+     * @param nftAddr The address of the ERC-721 token that will be locked in the DAO in exchange for Shares.
      * @param nftTokenId The NFT token id.
      * @param requestedShares The amount of Shares requested of DAO as voting power.
      */
@@ -110,9 +114,6 @@ contract TributeNFTContract is
             isNotReservedAddress(applicant),
             "applicant is reserved address"
         );
-
-        NFTExtension nftExt = NFTExtension(dao.getExtensionAddress(NFT));
-        require(nftExt.isNFTAllowed(nftAddr), "nft not allowed");
 
         dao.submitProposal(proposalId);
 
@@ -154,7 +155,7 @@ contract TributeNFTContract is
     }
 
     /**
-     * @notice Cancels a tribute proposal which marks it as processed and returns the NFT to the original ow.
+     * @notice Cancels a tribute proposal which marks it as processed and returns the NFT to the original owner.
      * @dev Proposal id must exist.
      * @dev Only proposals that have not already been sponsored can be cancelled.
      * @dev Only proposer can cancel a tribute proposal.
@@ -192,11 +193,10 @@ contract TributeNFTContract is
     }
 
     /**
-     * @notice Processes the proposal to handle minting and exchange of DAO internal tokens for tribute tokens (passed vote) or the return the NFT to the original owner (failed vote).
+     * @notice Processes the proposal to handle minting and exchange of DAO internal tokens for tribute token (passed vote) or the return of the NFT to the original owner (failed vote).
      * @dev Proposal id must exist.
      * @dev Only proposals that have not already been processed are accepted.
      * @dev Only sponsored proposals with completed voting are accepted.
-     * @dev ERC-721 tribute tokens must be registered with the DAO Bank.
      * @param dao The DAO address.
      * @param proposalId The proposal id.
      */
@@ -229,11 +229,7 @@ contract TributeNFTContract is
             // Approve the Ext Address to move the asset
             erc721.approve(address(nftExt), proposal.nftTokenId);
             // Transfers the asset to the DAO Collection, and checks if the NFT is supported/valid.
-            nftExt.transferFrom(
-                address(this),
-                proposal.nftAddr,
-                proposal.nftTokenId
-            );
+            nftExt.collect(proposal.nftAddr, proposal.nftTokenId);
         } else if (
             voteResult == IVoting.VotingState.NOT_PASS ||
             voteResult == IVoting.VotingState.TIE
@@ -249,6 +245,15 @@ contract TributeNFTContract is
         }
     }
 
+    /**
+     * @notice Adds DAO internal tokens (SHARES) to applicant's balance and creates a new member entry (if applicant is not already a member).
+     * @dev Internal tokens to be minted to the applicant must be registered with the DAO Bank.
+     * @param dao The DAO address.
+     * @param applicant The applicant address (who will receive the DAO internal tokens and become a member).
+     * @param nftAddr The address of the ERC-721 tribute token.
+     * @param nftTokenId The NFT token id.
+     * @param requestedShares The amount requested of DAO internal tokens (SHARES).
+     */
     function _mintSharesToNewMember(
         DaoRegistry dao,
         address applicant,
@@ -264,8 +269,8 @@ contract TributeNFTContract is
 
         dao.potentialNewMember(applicant);
 
-        // Overflow risk may cause this to fail in which case the tribute tokens
-        // are refunded to the proposer.
+        // Overflow risk may cause this to fail in which case the tribute token
+        // is refunded to the proposer.
         try bank.addToBalance(applicant, SHARES, requestedShares) {
             // do nothing
         } catch {
@@ -275,6 +280,9 @@ contract TributeNFTContract is
         }
     }
 
+    /**
+     * @notice Required function from IERC721 standard to be able to receive assets to this contract address.
+     */
     function onERC721Received(
         address,
         address,

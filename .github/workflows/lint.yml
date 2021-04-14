@@ -42,10 +42,31 @@ jobs:
         run: npm run lint
 
       - name: Run Truffle Compile
-        run: npm run compile-abi 
+        run: npm run compile-abi
+
+      ### Subgraph Lint ###
+      - name: Cache Subgraph node modules
+        id: cache-subgraph-node-modules
+        uses: actions/cache@v2
+        with:
+          path: subgraph/node_modules
+          key: subgraph-node-modules-${{ hashFiles('subgraph/package-lock.json') }}
+
+      - name: Setup SSH to install Subgraph dependencies
+        if: steps.cache-subgraph-node-modules.outputs.cache-hit != 'true'
+        uses: webfactory/ssh-agent@v0.5.0
+        with:
+          ssh-private-key: ${{ secrets.SSH_PRIVATE_KEY }}
+
+      - name: Install Subgraph dependencies
+        if: steps.cache-subgraph-node-modules.outputs.cache-hit != 'true'
+        run: npm ci
+        working-directory: subgraph
 
       - name: Generate subgraph files
-        run: npm run codegen 
+        run: npm run codegen
+        working-directory: subgraph
 
       - name: Build subgraph
         run: npm run build
+        working-directory: subgraph

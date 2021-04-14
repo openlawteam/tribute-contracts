@@ -47,7 +47,7 @@ const {
   expectRevert,
 } = require("../../utils/DaoFactory.js");
 
-const { checkBalance, isActiveMember } = require("../../utils/TestUtils.js");
+const { checkBalance, isMember } = require("../../utils/TestUtils.js");
 
 describe("Adapter - Onboarding", () => {
   const daoOwner = accounts[0];
@@ -211,9 +211,9 @@ describe("Adapter - Onboarding", () => {
     await checkBalance(bank, GUILD, ETH_TOKEN, sharePrice.mul(toBN("3")));
 
     // test active member status
-    const applicantIsActiveMember = await isActiveMember(bank, applicant);
+    const applicantIsActiveMember = await isMember(bank, applicant);
     expect(applicantIsActiveMember).toEqual(true);
-    const nonMemberAccountIsActiveMember = await isActiveMember(
+    const nonMemberAccountIsActiveMember = await isMember(
       bank,
       nonMemberAccount
     );
@@ -339,9 +339,9 @@ describe("Adapter - Onboarding", () => {
     await checkBalance(bank, GUILD, oltContract.address, "10");
 
     // test active member status
-    const applicantIsActiveMember = await isActiveMember(bank, applicant);
+    const applicantIsActiveMember = await isMember(bank, applicant);
     expect(applicantIsActiveMember, true);
-    const nonMemberAccountIsActiveMember = await isActiveMember(
+    const nonMemberAccountIsActiveMember = await isMember(
       bank,
       nonMemberAccount
     );
@@ -611,7 +611,7 @@ describe("Adapter - Onboarding", () => {
     expect(onboardingBalance.toString(), "0");
 
     // test active member status
-    const applicantIsActiveMember = await isActiveMember(bank, applicant);
+    const applicantIsActiveMember = await isMember(bank, applicant);
     expect(applicantIsActiveMember, false);
   });
 
@@ -661,8 +661,8 @@ describe("Adapter - Onboarding", () => {
       daoRegistryAdapterAddress
     );
 
-    const myAccountActive1 = await isActiveMember(bank, myAccount);
-    const delegateKeyActive1 = await dao.isActiveMember(delegateKey); // use the dao to check delegatedKeys
+    const myAccountActive1 = await isMember(bank, myAccount);
+    const delegateKeyActive1 = await dao.isMember(delegateKey); // use the dao to check delegatedKeys
 
     expect(true, myAccountActive1);
     expect(false, delegateKeyActive1);
@@ -673,8 +673,8 @@ describe("Adapter - Onboarding", () => {
       gasPrice: toBN("0"),
     });
 
-    expect(true, await isActiveMember(bank, myAccount));
-    expect(true, await dao.isActiveMember(newDelegatedKey)); // use the dao to check delegatedKeys
+    expect(true, await isMember(bank, myAccount));
+    expect(true, await dao.isMember(newDelegatedKey)); // use the dao to check delegatedKeys
   });
 
   it("should not be possible to overwrite a delegated key", async () => {

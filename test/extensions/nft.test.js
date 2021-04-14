@@ -134,6 +134,12 @@ describe("Extension - NFT", () => {
     );
   });
 
+  it("should be possible check how many NFTs are in the collection", async () => {
+    const nftExtension = this.extensions.nft;
+    const total = await nftExtension.nbNFTAddresses();
+    expect(total.toString).toEqual("0");
+  });
+
   it("should not be possible to initialize the extension if it was already initialized", async () => {
     const nftExtension = this.extensions.nft;
     await expectRevert(
@@ -179,7 +185,11 @@ describe("Extension - NFT", () => {
     });
 
     // Make sure it was collected
-    const nftAddr = await nftExtension.getNFTByIndex(0);
+    const nftAddr = await nftExtension.getNFTAddress(0);
     expect(nftAddr).toEqual(pixelNFT.address);
+    const nftId = await nftExtension.getNFT(nftAddr, 0);
+    expect(nftId).toEqual(tokenId);
+    const newOwner = await nftExtension.getNFTOwner(nftAddr, tokenId);
+    expect(newOwner.toLowerCase()).toEqual(GUILD.toLowerCase());
   });
 });

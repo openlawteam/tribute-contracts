@@ -231,7 +231,7 @@ Checks that the proposal has not been processed already and that it exists.
 Internal utility function to set a flag to a proposal.
 It checks that the proposal exists and that the flag has not been already set.
 
-### function isActiveMember(address addr) public view returns (bool)
+### function isMember(address addr) public view returns (bool)
 
 Returns true if the address is the delegate key of an existing member
 

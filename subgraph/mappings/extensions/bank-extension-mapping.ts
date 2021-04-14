@@ -1,11 +1,18 @@
+import { Address, BigInt, log } from "@graphprotocol/graph-ts";
+
 import {
   BankExtension,
   NewBalance,
   Withdraw,
-} from "../generated/templates/BankExtension/BankExtension";
-import { Member, TributeDao, Token, TokenBalance } from "../generated/schema";
-import { GUILD, LOOT, SHARES, TOTAL } from "./helpers/constants";
-import { Address, BigInt, log } from "@graphprotocol/graph-ts";
+} from "../../generated/templates/BankExtension/BankExtension";
+import { ERC20 } from "../../generated/templates/BankExtension/ERC20";
+import {
+  Member,
+  TributeDao,
+  Token,
+  TokenBalance,
+} from "../../generated/schema";
+import { GUILD, SHARES, TOTAL } from "../helpers/constants";
 
 function internalTransfer(
   createdAt: string,
@@ -17,7 +24,7 @@ function internalTransfer(
   let registry = BankExtension.bind(extensionAddress);
   let daoAddress = registry.dao();
 
-  let tributedaos: string[] = [];
+  let tributeDaos: string[] = [];
 
   if (
     TOTAL.toHex() != memberAddress.toHex() &&
@@ -40,45 +47,65 @@ function internalTransfer(
       member.isDelegated = false;
     } else {
       // get members daos
-      tributedaos = member.tributedaos;
+      tributeDaos = member.tributeDaos;
     }
 
     // create 1-1 relationship between member and dao
-    tributedaos.push(daoAddress.toHexString());
+    tributeDaos.push(daoAddress.toHexString());
     // add members daos
-    member.tributedaos = tributedaos;
+    member.tributeDaos = tributeDaos;
 
     if (token == null) {
       token = new Token(tokenAddress.toHex());
       token.tokenAddress = tokenAddress;
+
+      // get additional ERC20 info
+      let erc20Registry = ERC20.bind(tokenAddress);
+
+      // try get the token name
+      let callResult_name = erc20Registry.try_name();
+      if (callResult_name.reverted) {
+        log.info("try_name reverted", []);
+      } else {
+        token.name = callResult_name.value;
+      }
+
+      // try get the token symbol
+      let callResult_symbol = erc20Registry.try_symbol();
+      if (callResult_symbol.reverted) {
+        log.info("try_symbol reverted", []);
+      } else {
+        token.symbol = callResult_symbol.value;
+      }
     }
 
     if (tokenBalance == null) {
       tokenBalance = new TokenBalance(membertokenBalanceId);
       // we give it an initial 0 balance
       tokenBalance.tokenBalance = BigInt.fromI32(0);
+      tokenBalance.tributeDao = daoAddress.toHex();
+
+      let bankId = daoAddress
+        .toHex()
+        .concat("-bank-")
+        .concat(extensionAddress.toHex());
+      tokenBalance.bank = bankId;
     }
 
     /**
-     * get `balanceOf` for members SHARES, and LOOT
+     * get `balanceOf` for members SHARES
      */
 
     // get balanceOf member shares
     let balanceOfSHARES = registry.balanceOf(memberAddress, SHARES);
     member.shares = balanceOfSHARES;
 
-    // get balanceOf member loot
-    let balanceOfLOOT = registry.balanceOf(memberAddress, LOOT);
-    member.loot = balanceOfLOOT;
-
     // omit the `TOTAL` & `GUILD` addresses from the ragequit check
     if (
       TOTAL.toHex() != memberAddress.toHex() &&
       GUILD.toHex() != memberAddress.toHex()
     ) {
-      let didFullyRagequit =
-        balanceOfSHARES.equals(BigInt.fromI32(0)) &&
-        balanceOfLOOT.equals(BigInt.fromI32(0));
+      let didFullyRagequit = balanceOfSHARES.equals(BigInt.fromI32(0));
 
       // fully raged quit
       member.didFullyRagequit = didFullyRagequit;
@@ -87,7 +114,7 @@ function internalTransfer(
     tokenBalance.token = tokenAddress.toHex();
     tokenBalance.member = memberAddress.toHex();
 
-    tokenBalance.tokenBalance = balanceOfSHARES.plus(balanceOfLOOT);
+    tokenBalance.tokenBalance = balanceOfSHARES;
 
     member.save();
     token.save();

@@ -1,4 +1,4 @@
-import { Address, Bytes } from "@graphprotocol/graph-ts";
+import { Address, Bytes, log } from "@graphprotocol/graph-ts";
 
 import { OffchainVotingContract } from "../../generated/templates/DaoRegistry/OffchainVotingContract";
 import { VotingContract } from "../../generated/templates/DaoRegistry/VotingContract";
@@ -34,8 +34,9 @@ export function loadProposalAndSaveVoteResults(
         let votingContract = VotingContract.bind(
           Address.fromString(votingAdapterAddress.toHex()) as Address
         );
-        // get vote results
+        // get vote results and voting state
         let voteResults = votingContract.votes(daoAddress, proposalId);
+        let voteState = votingContract.voteResult(daoAddress, proposalId);
 
         // assign voting data
         vote.nbYes = voteResults.value0;
@@ -43,31 +44,35 @@ export function loadProposalAndSaveVoteResults(
 
         vote.adapterName = votingAdapterName;
         vote.adapterAddress = votingAdapterAddress;
-
-        vote.save();
+        vote.proposal = maybeProposalId;
 
         if (proposal) {
           proposal.nbYes = voteResults.value0;
           proposal.nbNo = voteResults.value1;
           proposal.startingTime = voteResults.value2;
           proposal.blockNumber = voteResults.value3;
+
+          proposal.votingState = voteState.toString();
+          proposal.votingResult = voteId;
         }
       } else if (votingAdapterName == "OffchainVotingContract") {
         let offchainVotingContract = OffchainVotingContract.bind(
           Address.fromString(votingAdapterAddress.toHex()) as Address
         );
-        // get vote results
+        // get vote results and state
         let voteResults = offchainVotingContract.votes(daoAddress, proposalId);
+        let voteState = offchainVotingContract.voteResult(
+          daoAddress,
+          proposalId
+        );
 
         // assign voting data
-        vote.nbVoters = voteResults.value4;
-        vote.nbYes = voteResults.value5;
-        vote.nbNo = voteResults.value6;
+        vote.nbYes = voteResults.value4;
+        vote.nbNo = voteResults.value5;
 
         vote.adapterName = votingAdapterName;
         vote.adapterAddress = votingAdapterAddress;
-
-        vote.save();
+        vote.proposal = maybeProposalId;
 
         if (proposal) {
           proposal.snapshot = voteResults.value0;
@@ -75,18 +80,24 @@ export function loadProposalAndSaveVoteResults(
           proposal.reporter = voteResults.value2;
           proposal.resultRoot = voteResults.value3;
 
-          proposal.nbVoters = voteResults.value4;
-          proposal.nbYes = voteResults.value5;
-          proposal.nbNo = voteResults.value6;
-          proposal.index = voteResults.value7;
+          proposal.nbYes = voteResults.value4;
+          proposal.nbNo = voteResults.value5;
+          proposal.index = voteResults.value6;
 
-          proposal.startingTime = voteResults.value8;
-          proposal.gracePeriodStartingTime = voteResults.value9;
-          proposal.isChallenged = voteResults.value10;
-          proposal.fallbackVotesCount = voteResults.value11;
+          proposal.startingTime = voteResults.value7;
+          proposal.gracePeriodStartingTime = voteResults.value8;
+          proposal.isChallenged = voteResults.value9;
+          // @todo its a mapping, not generated in schema
+          // proposal.fallbackVotes = voteResults.value10;
+          proposal.fallbackVotesCount = voteResults.value10;
+
+          proposal.votingState = voteState.toString();
+          proposal.votingResult = voteId;
         }
       }
     }
+
+    vote.save();
   }
 
   return proposal;

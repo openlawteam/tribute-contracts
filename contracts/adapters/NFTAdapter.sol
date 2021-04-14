@@ -43,19 +43,17 @@ contract NFTAdapterContract is DaoConstants, MemberGuard, AdapterGuard {
     }
 
     /**
-     * @notice Allows the member/advisor to update their delegate key
+     * @notice Collects the NFT from the owner and moves to the NFT extension address
      * @param dao The DAO address.
-     * @param owner the current owner of the NFT
-     * @param nftAddr the nft smart contract address
-     * @param nftTokenId the nft token id
+     * @param nftAddr The NFT smart contract address.
+     * @param nftTokenId The NFT token id.
      */
     function collect(
         DaoRegistry dao,
-        address owner,
         address nftAddr,
         uint256 nftTokenId
     ) external reentrancyGuard(dao) {
         NFTExtension nft = NFTExtension(dao.getExtensionAddress(NFT));
-        nft.collect(owner, nftAddr, nftTokenId);
+        nft.collect(nftAddr, nftTokenId);
     }
 }

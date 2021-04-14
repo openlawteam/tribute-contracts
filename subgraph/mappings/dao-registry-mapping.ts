@@ -1,4 +1,5 @@
 import { log, store } from "@graphprotocol/graph-ts";
+
 import {
   ProcessedProposal,
   SponsoredProposal,
@@ -12,15 +13,10 @@ import {
   AddressConfigurationUpdated,
   DaoRegistry,
 } from "../generated/templates/DaoRegistry/DaoRegistry";
-import {
-  Adapter,
-  Extension,
-  Proposal,
-  Member,
-  TributeDao,
-} from "../generated/schema";
-import { BANK_EXTENSION_ID } from "./helpers/constants";
+import { Adapter, Extension, Proposal, Member } from "../generated/schema";
+
 import { getProposalDetails } from "./helpers/proposal-details";
+import { loadOrCreateExtensionEntity } from "./helpers/extension-entities";
 import { loadProposalAndSaveVoteResults } from "./helpers/vote-results";
 
 export function handleSubmittedProposal(event: SubmittedProposal): void {
@@ -66,6 +62,7 @@ export function handleSubmittedProposal(event: SubmittedProposal): void {
     proposal.sponsored = false;
     proposal.processed = false;
     proposal.member = submittedBy.toHex();
+    proposal.tributeDao = daoAddress.toHex();
 
     proposal.save();
   }
@@ -162,7 +159,7 @@ export function handleAdapterAdded(event: AdapterAdded): void {
     adapter.adapterAddress = event.params.adapterAddress;
 
     // create 1-1 relationship with adapter and its dao
-    adapter.tributedao = daoAddress;
+    adapter.tributeDao = daoAddress;
 
     adapter.save();
   }
@@ -203,13 +200,11 @@ export function handleExtensionAdded(event: ExtensionAdded): void {
 
   let extension = Extension.load(daoExtensionId);
 
-  // if extension is `bank` then assign to its dao
-  if (BANK_EXTENSION_ID.toString() == event.params.extensionId.toHexString()) {
-    let tribute = TributeDao.load(daoAddress);
-
-    tribute.bankAddress = event.params.extensionAddress;
-    tribute.save();
-  }
+  loadOrCreateExtensionEntity(
+    event.address,
+    event.params.extensionId,
+    event.params.extensionAddress
+  );
 
   if (extension == null) {
     extension = new Extension(daoExtensionId);
@@ -219,7 +214,7 @@ export function handleExtensionAdded(event: ExtensionAdded): void {
   extension.extensionId = event.params.extensionId;
 
   // create 1-1 relationship with extensions and its dao
-  extension.tributedao = daoAddress;
+  extension.tributeDao = daoAddress;
   extension.save();
 }
 

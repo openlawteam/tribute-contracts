@@ -38,7 +38,7 @@ const {
   OLToken,
   expectRevert,
 } = require("../../utils/DaoFactory.js");
-const { checkBalance, isActiveMember } = require("../../utils/TestUtils.js");
+const { checkBalance, isMember } = require("../../utils/TestUtils.js");
 
 describe("Adapter - Tribute", () => {
   const daoOwner = accounts[1];
@@ -168,9 +168,9 @@ describe("Adapter - Tribute", () => {
     );
 
     // test active member status
-    const applicantIsActiveMember = await isActiveMember(bank, applicant);
+    const applicantIsActiveMember = await isMember(bank, applicant);
     expect(applicantIsActiveMember).toEqual(true);
-    const nonMemberAccountIsActiveMember = await isActiveMember(
+    const nonMemberAccountIsActiveMember = await isMember(
       bank,
       nonMemberAccount
     );
@@ -363,7 +363,7 @@ describe("Adapter - Tribute", () => {
     ).toEqual("0");
 
     // test active member status
-    const applicantIsActiveMember = await isActiveMember(bank, applicant);
+    const applicantIsActiveMember = await isMember(bank, applicant);
     expect(applicantIsActiveMember).toEqual(false);
   });
 

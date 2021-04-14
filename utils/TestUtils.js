@@ -12,7 +12,6 @@ const {
   numberOfShares,
   SHARES,
   ETH_TOKEN,
-  TributeNFTContract,
   OnboardingContract,
   PixelNFT,
   VotingContract,
@@ -38,7 +37,7 @@ const checkBalance = async (bank, address, token, expectedBalance) => {
   expect(balance.toString()).to.equal(expectedBalance.toString());
 };
 
-const isActiveMember = async (bank, member) => {
+const isMember = async (bank, member) => {
   const shares = await bank.balanceOf(member, SHARES);
   const loot = await bank.balanceOf(member, LOOT);
 
@@ -58,10 +57,6 @@ const createNFTDao = async (daoOwner) => {
     ETH_TOKEN,
     false
   );
-
-  const tributeNFT = await getContract(dao, "tribute-nft", TributeNFTContract);
-
-  await tributeNFT.configureDao(dao.address, pixelNFT.address);
 
   await dao.finalizeDao();
 
@@ -210,5 +205,5 @@ module.exports = {
   sponsorNewMember,
   onboardingNewMember,
   guildKickProposal,
-  isActiveMember,
+  isMember,
 };

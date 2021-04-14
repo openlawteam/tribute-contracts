@@ -25,12 +25,7 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
  */
 
-const {
-  web3,
-  contract,
-  accounts,
-  provider,
-} = require("@openzeppelin/test-environment");
+const { web3, contract, accounts } = require("@openzeppelin/test-environment");
 const { expectRevert } = require("@openzeppelin/test-helpers");
 
 const Web3Utils = require("web3-utils");
@@ -218,9 +213,9 @@ const deployDao = async (deployer, options) => {
   let nftExtension = await NFTExtension.at(nftCollAddress);
   dao.addExtension(sha3("nft"), nftExtension.address, creator);
 
-  let extensions = { bank: bank, nft: nftExtension };
+  const extensions = { bank: bank, nft: nftExtension };
 
-  let { adapters } = await addDefaultAdapters(
+  const { adapters } = await addDefaultAdapters(
     deployer,
     dao,
     unitPrice,
@@ -283,7 +278,7 @@ const deployDao = async (deployer, options) => {
   }
 
   // deploy test token contracts (for testing convenience)
-  let testContracts = {
+  const testContracts = {
     oltToken: null,
     testToken1: null,
     testToken2: null,
@@ -312,10 +307,15 @@ const deployDao = async (deployer, options) => {
   }
 
   if (finalize) {
-    await dao.finalizeDao();
+    await dao.finalizeDao({ from: owner });
   }
 
-  return { dao, adapters, extensions, testContracts };
+  return {
+    dao: dao,
+    adapters: adapters,
+    extensions: extensions,
+    testContracts: testContracts,
+  };
 };
 
 const createNFTDao = async (daoOwner) => {
@@ -568,7 +568,6 @@ const configureDao = async ({
     entryDao("tribute-nft", tributeNFT, {
       SUBMIT_PROPOSAL: true,
       NEW_MEMBER: true,
-      TRANSFER_NFT: true,
     }),
     entryDao("distribute", distribute, {
       SUBMIT_PROPOSAL: true,
@@ -621,8 +620,7 @@ const configureDao = async ({
   const nftExt = await NFTExtension.at(nftExtAddr);
   await daoFactory.configureExtension(dao.address, nftExt.address, [
     entryNft(tributeNFT, {
-      REGISTER_NFT: true,
-      TRANSFER_NFT: true,
+      COLLECT_NFT: true,
     }),
     entryNft(nftAdapter, {
       COLLECT_NFT: true,
@@ -655,6 +653,7 @@ const configureDao = async ({
   await voting.configureDao(dao.address, votingPeriod, gracePeriod);
   await tribute.configureDao(dao.address, SHARES);
   await tribute.configureDao(dao.address, LOOT);
+  await tributeNFT.configureDao(dao.address);
 };
 
 const createDao = async (
@@ -812,10 +811,9 @@ const advanceTime = async (time) => {
 
 const entryNft = (contract, flags) => {
   const values = [
-    flags.TRANSFER_NFT,
-    flags.RETURN_NFT,
-    flags.REGISTER_NFT,
+    flags.WITHDRAW_NFT,
     flags.COLLECT_NFT,
+    flags.INTERNAL_TRANSFER,
   ];
 
   const acl = entry(values);
@@ -836,10 +834,6 @@ const entryBank = (contract, flags) => {
     flags.EXECUTE,
     flags.REGISTER_NEW_TOKEN,
     flags.REGISTER_NEW_INTERNAL_TOKEN,
-    flags.COLLECT_NFT,
-    flags.TRANSFER_NFT,
-    flags.RETURN_NFT,
-    flags.REGISTER_NFT,
   ];
 
   const acl = entry(values);

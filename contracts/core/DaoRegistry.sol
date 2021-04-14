@@ -534,11 +534,11 @@ contract DaoRegistry is MemberGuard, AdapterGuard {
      */
 
     /**
-     * @return Whether or not a given address is an active member of the DAO
-     * @dev Requires the user to have a positive balance in either SHARES, LOOT
+     * @return Whether or not a given address is a member of the DAO.
+     * @dev it will resolve by delegate key, not member address.
      * @param addr The address to look up
      */
-    function isActiveMember(address addr) public view returns (bool) {
+    function isMember(address addr) public view returns (bool) {
         address memberAddr = memberAddressesByDelegatedKey[addr];
         return getMemberFlag(memberAddr, MemberFlag.EXISTS);
     }
