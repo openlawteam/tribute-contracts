@@ -111,8 +111,7 @@ describe("Adapter - Distribute", () => {
       daoMember,
       daoOwner,
       sharePrice,
-      SHARES,
-      10
+      SHARES
     );
 
     // Checks the Guild Bank Balance
@@ -186,7 +185,7 @@ describe("Adapter - Distribute", () => {
       daoOwner,
       sharePrice,
       SHARES,
-      5 // asking for 5 shares
+      toBN(5) // asking for 5 shares
     );
 
     await onboardingNewMember(
@@ -197,8 +196,7 @@ describe("Adapter - Distribute", () => {
       daoMemberB,
       daoOwner,
       sharePrice,
-      SHARES,
-      10 // asking for 10 shares
+      SHARES
     );
 
     // Checks the Guild Bank Balance
@@ -351,8 +349,7 @@ describe("Adapter - Distribute", () => {
       advisor,
       daoOwner,
       sharePrice,
-      LOOT,
-      10
+      LOOT
     );
 
     // Submit distribute proposal with a non active member
@@ -411,8 +408,7 @@ describe("Adapter - Distribute", () => {
       daoMember,
       daoOwner,
       sharePrice,
-      SHARES,
-      10
+      SHARES
     );
 
     // Submit distribute proposal for the 1st time
@@ -458,8 +454,7 @@ describe("Adapter - Distribute", () => {
       daoMemberA,
       daoOwner,
       sharePrice,
-      SHARES,
-      10
+      SHARES
     );
 
     // Submit distribute proposal for the 1st time
@@ -497,8 +492,7 @@ describe("Adapter - Distribute", () => {
       daoMemberA,
       daoOwner,
       sharePrice,
-      SHARES,
-      10
+      SHARES
     );
 
     // Submit distribute proposal for the 1st time
@@ -556,8 +550,7 @@ describe("Adapter - Distribute", () => {
       daoMemberA,
       daoOwner,
       sharePrice,
-      SHARES,
-      10
+      SHARES
     );
 
     // Submit distribute proposal for the 1st time
@@ -614,8 +607,7 @@ describe("Adapter - Distribute", () => {
       daoMemberA,
       daoOwner,
       sharePrice,
-      SHARES,
-      10
+      SHARES
     );
 
     // Submit distribute proposal for the 1st time
@@ -666,8 +658,7 @@ describe("Adapter - Distribute", () => {
       daoMemberA,
       daoOwner,
       sharePrice,
-      SHARES,
-      10
+      SHARES
     );
 
     // Submit distribute proposal for the 1st time
@@ -735,8 +726,7 @@ describe("Adapter - Distribute", () => {
       daoMemberA,
       daoOwner,
       sharePrice,
-      SHARES,
-      10
+      SHARES
     );
 
     // Submit distribute proposal for the 1st time

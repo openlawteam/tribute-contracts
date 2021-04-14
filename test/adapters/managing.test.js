@@ -415,14 +415,13 @@ describe("Adapter - Managing", () => {
     );
   });
 
+  //FIXME - for some reason the adapter with flag = 0 is able to submit a proposal, but it shouldnt be possible
   it("should not be possible to use an adapter if it is not configured with the permission flags", async () => {
     const dao = this.dao;
     const managing = this.adapters.managing;
     const voting = this.adapters.voting;
 
     const newManaging = await ManagingContract.new();
-    console.log(newManaging.address);
-    console.log(managing.address);
     const newAdapterId = sha3("managing");
 
     const proposalId = getProposalCounter();
@@ -433,7 +432,10 @@ describe("Adapter - Managing", () => {
       newManaging.address,
       [],
       [],
-      entryDao("managing", newManaging, {}).flags, // no permissions were set
+      entryDao("managing", newManaging, {
+        SUBMIT_PROPOSAL: false,
+        REPLACE_ADAPTER: false,
+      }).flags, // no permissions were set
       {
         from: daoOwner,
         gasPrice: toBN("0"),
@@ -456,10 +458,11 @@ describe("Adapter - Managing", () => {
     });
 
     // the new adapter is not configured with the correct access flags, so it must return an error
+    const newProposalId = getProposalCounter();
     await expectRevert(
       newManaging.submitProposal(
         dao.address,
-        getProposalCounter(),
+        newProposalId,
         sha3("voting"),
         voting.address,
         [],
