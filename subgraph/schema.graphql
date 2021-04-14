@@ -128,8 +128,8 @@ type Proposal @entity {
   # ONCHAIN VOTES: additional info
   votes: BigInt
 
-  votingState: String # VotingState
-  # votingResult: Vote # @derivedFrom(field: "proposal")
+  votingState: String
+  votingResult: Vote
 }
 
 type Vote @entity {
@@ -139,7 +139,7 @@ type Vote @entity {
   nbYes: BigInt!
   adapterName: VotingAdapterName!
   adapterAddress: Bytes!
-  # proposal: Proposal @derivedFrom(field: "votingResult")
+  proposal: Proposal
 }
 
 type Bank @entity {
