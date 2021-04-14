@@ -25,122 +25,114 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
  */
 const {
-  sha3,
   toBN,
   advanceTime,
-  createDao,
+  deployDao,
+  deployDefaultDao,
+  proposalIdGenerator,
+  accounts,
   GUILD,
   LOOT,
   sharePrice,
   remaining,
   OLToken,
-  OnboardingContract,
-  VotingContract,
-  BankExtension,
+  expectRevert,
 } = require("../../utils/DaoFactory.js");
 
-contract("MolochV3 - Non Voting Onboarding Adapter", async (accounts) => {
+describe("Adapter - Non Voting Onboarding", () => {
+  const daoOwner = accounts[1];
+  const proposalCounter = proposalIdGenerator().generator;
+
+  const getProposalCounter = () => {
+    return proposalCounter().next().value;
+  };
+
   it("should be possible to join a DAO as a member without any voting power by requesting Loot while staking raw ETH", async () => {
-    const myAccount = accounts[1];
     const advisorAccount = accounts[2];
 
-    let dao = await createDao(myAccount);
-    const bankAddress = await dao.getExtensionAddress(sha3("bank"));
-    const bank = await BankExtension.at(bankAddress);
-    const onboardingAddress = await dao.getAdapterAddress(sha3("onboarding"));
-    const onboarding = await OnboardingContract.at(onboardingAddress);
-
-    const votingAddress = await dao.getAdapterAddress(sha3("voting"));
-    const voting = await VotingContract.at(votingAddress);
+    const { dao, adapters, extensions } = await deployDefaultDao(daoOwner);
+    const bank = extensions.bank;
+    const onboarding = adapters.onboarding;
+    const voting = adapters.voting;
 
     // Total of ETH to be sent to the DAO in order to get the Loot shares
     let ethAmount = sharePrice.mul(toBN(3)).add(remaining);
     let proposalId = "0x1";
     // Request to join the DAO as an Advisor (non-voting power), Send a tx with RAW ETH only and specify the nonVotingOnboarding
     await onboarding.onboard(dao.address, proposalId, advisorAccount, LOOT, 0, {
-      from: myAccount,
+      from: daoOwner,
       value: ethAmount,
       gasPrice: toBN("0"),
     });
 
     // Sponsor the new proposal to allow the Advisor to join the DAO
     await onboarding.sponsorProposal(dao.address, proposalId, [], {
-      from: myAccount,
+      from: daoOwner,
       gasPrice: toBN("0"),
     });
 
     // Vote on the new proposal to accept the new Advisor
     await voting.submitVote(dao.address, proposalId, 1, {
-      from: myAccount,
+      from: daoOwner,
       gasPrice: toBN("0"),
     });
 
     // Process the new proposal
     await advanceTime(10000);
     await onboarding.processProposal(dao.address, proposalId, {
-      from: myAccount,
+      from: daoOwner,
       gasPrice: toBN("0"),
     });
 
     // Check the number of Loot (non-voting shares) issued to the new Avisor
     const advisorAccountLoot = await bank.balanceOf(advisorAccount, LOOT);
-    assert.equal(advisorAccountLoot.toString(), "3000000000000000");
+    expect(advisorAccountLoot.toString()).toEqual("3000000000000000");
 
     // Guild balance must not change when Loot shares are issued
     const guildBalance = await bank.balanceOf(
       GUILD,
       "0x0000000000000000000000000000000000000000"
     );
-    assert.equal(guildBalance.toString(), "360000000000000000");
+    expect(guildBalance.toString()).toEqual("360000000000000000");
   });
 
   it("should be possible to join a DAO as a member without any voting power by requesting Loot while staking ERC20 token", async () => {
-    const myAccount = accounts[1];
     const advisorAccount = accounts[2];
 
     // Issue OpenLaw ERC20 Basic Token for tests
-    let tokenSupply = 1000000;
-    let oltContract = await OLToken.new(tokenSupply);
+    const tokenSupply = 1000000;
+    const oltContract = await OLToken.new(tokenSupply);
+    const lootSharePrice = 10;
+    const nbOfLootShares = 100000000;
 
-    let lootSharePrice = 10;
-    let nbOfLootShares = 100000000;
+    const { dao, adapters, extensions } = await deployDao(null, {
+      owner: daoOwner,
+      unitPrice: lootSharePrice,
+      nbShares: nbOfLootShares,
+      tokenAddr: oltContract.address,
+    });
 
-    let dao = await createDao(
-      myAccount,
-      lootSharePrice,
-      nbOfLootShares,
-      10,
-      1,
-      oltContract.address
-    );
-
-    const bankAddress = await dao.getExtensionAddress(sha3("bank"));
-    const bank = await BankExtension.at(bankAddress);
-
-    const onboardingAddress = await dao.getAdapterAddress(sha3("onboarding"));
-    const onboarding = await OnboardingContract.at(onboardingAddress);
+    const bank = extensions.bank;
+    const onboarding = adapters.onboarding;
+    const voting = adapters.voting;
 
     // Transfer 1000 OLTs to the Advisor account
     await oltContract.transfer(advisorAccount, 100);
-    let advisorTokenBalance = await oltContract.balanceOf.call(advisorAccount);
-    assert.equal(
-      "100",
-      advisorTokenBalance.toString(),
-      "Advisor account must be initialized with 100 OLT Tokens"
+    const advisorTokenBalance = await oltContract.balanceOf.call(
+      advisorAccount
     );
-
-    const votingAddress = await dao.getAdapterAddress(sha3("voting"));
-    const voting = await VotingContract.at(votingAddress);
+    expect(advisorTokenBalance.toString()).toEqual("100");
 
     // Total of OLT to be sent to the DAO in order to get the Loot shares
-    let tokenAmount = 10;
+    const tokenAmount = 10;
 
     // Send a request to join the DAO as an Advisor (non-voting power),
     // the tx passes the OLT ERC20 token, the amount and the nonVotingOnboarding adapter that handles the proposal
-    try {
-      await onboarding.onboard(
+    const proposalId = getProposalCounter();
+    await expectRevert.unspecified(
+      onboarding.onboard(
         dao.address,
-        "0x1",
+        proposalId,
         advisorAccount,
         LOOT,
         tokenAmount,
@@ -148,9 +140,8 @@ contract("MolochV3 - Non Voting Onboarding Adapter", async (accounts) => {
           from: advisorAccount,
           gasPrice: toBN("0"),
         }
-      );
-      assert.fail("should have failed without spender approval!");
-    } catch (err) {}
+      )
+    );
 
     // Pre-approve spender (onboarding adapter) to transfer proposer tokens
     await oltContract.approve(onboarding.address, tokenAmount, {
@@ -159,7 +150,7 @@ contract("MolochV3 - Non Voting Onboarding Adapter", async (accounts) => {
 
     await onboarding.onboard(
       dao.address,
-      "0x1",
+      proposalId,
       advisorAccount,
       LOOT,
       tokenAmount,
@@ -170,30 +161,30 @@ contract("MolochV3 - Non Voting Onboarding Adapter", async (accounts) => {
     );
 
     // Sponsor the new proposal to allow the Advisor to join the DAO
-    await onboarding.sponsorProposal(dao.address, "0x1", [], {
-      from: myAccount,
+    await onboarding.sponsorProposal(dao.address, proposalId, [], {
+      from: daoOwner,
       gasPrice: toBN("0"),
     });
 
     // Vote on the new proposal to accept the new Advisor
-    await voting.submitVote(dao.address, "0x1", 1, {
-      from: myAccount,
+    await voting.submitVote(dao.address, proposalId, 1, {
+      from: daoOwner,
       gasPrice: toBN("0"),
     });
 
     // Process the new proposal
     await advanceTime(10000);
-    await onboarding.processProposal(dao.address, "0x1", {
-      from: myAccount,
+    await onboarding.processProposal(dao.address, proposalId, {
+      from: daoOwner,
       gasPrice: toBN("0"),
     });
 
     // Check the number of Loot (non-voting shares) issued to the new Avisor
     const advisorAccountLoot = await bank.balanceOf(advisorAccount, LOOT);
-    assert.equal(advisorAccountLoot.toString(), "100000000");
+    expect(advisorAccountLoot.toString()).toEqual("100000000");
 
     // Guild balance must not change when Loot shares are issued
     const guildBalance = await bank.balanceOf(GUILD, oltContract.address);
-    assert.equal(guildBalance.toString(), "10");
+    expect(guildBalance.toString()).toEqual("10");
   });
 });

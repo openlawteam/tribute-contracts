@@ -41,7 +41,6 @@ const {
   VotingContract,
   ManagingContract,
   DaoRegistryAdapterContract,
-  expect,
   expectRevert,
 } = require("../../utils/DaoFactory.js");
 
@@ -215,8 +214,8 @@ describe("Adapter - Managing", () => {
       dao.getAdapterAddress(sha3("onboarding")),
       "adapter not found"
     );
-    expect(tx[1].event).equal("AdapterRemoved");
-    expect(tx[1].returnValues.adapterId).equal(adapterIdToRemove);
+    expect(tx[1].event).toEqual("AdapterRemoved");
+    expect(tx[1].returnValues.adapterId).toEqual(adapterIdToRemove);
   });
 
   it("should be possible to propose a new DAO adapter with a delegate key", async () => {
@@ -281,7 +280,7 @@ describe("Adapter - Managing", () => {
     const newOnboardingAddress = await dao.getAdapterAddress(
       sha3("onboarding")
     );
-    expect(newOnboardingAddress.toString()).equal(newAdapterAddress.toString());
+    expect(newOnboardingAddress.toString()).toEqual(newAdapterAddress.toString());
   });
 
   it("should not be possible to reuse a proposal id", async () => {
@@ -362,17 +361,17 @@ describe("Adapter - Managing", () => {
       gasPrice: toBN("0"),
     });
     let tx = await dao.getPastEvents();
-    expect(tx[1].event).equal("AdapterRemoved");
-    expect(tx[1].returnValues.adapterId).equal(newAdapterId);
+    expect(tx[1].event).toEqual("AdapterRemoved");
+    expect(tx[1].returnValues.adapterId).toEqual(newAdapterId);
 
-    expect(tx[2].event).equal("AdapterAdded");
-    expect(tx[2].returnValues.adapterId).equal(newAdapterId);
-    expect(tx[2].returnValues.adapterAddress).equal(newManaging.address);
-    expect(tx[2].returnValues.flags).equal(flags.toString());
+    expect(tx[2].event).toEqual("AdapterAdded");
+    expect(tx[2].returnValues.adapterId).toEqual(newAdapterId);
+    expect(tx[2].returnValues.adapterAddress).toEqual(newManaging.address);
+    expect(tx[2].returnValues.flags).toEqual(flags.toString());
 
     //Check if the new adapter was added to the Registry
     const newAddress = await dao.getAdapterAddress(sha3("managing"));
-    expect(newAddress.toString()).equal(newManaging.address.toString());
+    expect(newAddress.toString()).toEqual(newManaging.address.toString());
 
     // Lets try to remove the financing adapter using the new managing adapter to test its permission flags
     const newProposalId = "0x3";
@@ -406,8 +405,8 @@ describe("Adapter - Managing", () => {
     });
 
     tx = await dao.getPastEvents();
-    expect(tx[1].event).equal("AdapterRemoved");
-    expect(tx[1].returnValues.adapterId).equal(sha3("financing"));
+    expect(tx[1].event).toEqual("AdapterRemoved");
+    expect(tx[1].returnValues.adapterId).toEqual(sha3("financing"));
 
     await expectRevert(
       dao.getAdapterAddress(sha3("financing")),

@@ -25,7 +25,6 @@ const {
   fromUtf8,
   ETH_TOKEN,
   DaoRegistry,
-  expect,
   expectRevert,
 } = require("../../utils/DaoFactory.js");
 
@@ -59,7 +58,7 @@ describe("Core - Registry", () => {
     await registry.replaceAdapter(adapterId, adapterAddr, 0, [], []);
     await registry.replaceAdapter(adapterId, newAdapterAddr, 0, [], []);
     let address = await registry.getAdapterAddress(adapterId);
-    expect(address).to.equals(newAdapterAddr);
+    expect(address).toEqual(newAdapterAddr);
   });
 
   test("should be possible to add an adapter with a valid id and address", async () => {
@@ -68,7 +67,7 @@ describe("Core - Registry", () => {
     let registry = await DaoRegistry.new();
     await registry.replaceAdapter(adapterId, adapterAddr, 0, [], []);
     let address = await registry.getAdapterAddress(adapterId);
-    expect(address).equals(adapterAddr);
+    expect(address).toEqual(adapterAddr);
   });
 
   test("should be possible to remove an adapter", async () => {
@@ -77,7 +76,7 @@ describe("Core - Registry", () => {
     let registry = await DaoRegistry.new();
     await registry.replaceAdapter(adapterId, adapterAddr, 0, [], []);
     let address = await registry.getAdapterAddress(adapterId);
-    expect(address).equals(adapterAddr);
+    expect(address).toEqual(adapterAddr);
     await registry.replaceAdapter(adapterId, ETH_TOKEN, 0, [], []);
     await expectRevert(
       registry.getAdapterAddress(adapterId),

@@ -34,7 +34,6 @@ const {
   GUILD,
   SHARES,
   ETH_TOKEN,
-  expect,
   expectRevert,
 } = require("../../utils/DaoFactory.js");
 
@@ -79,7 +78,7 @@ describe("Adapter - Coupon Onboarding ", () => {
     let signerAddr = await dao.getAddressConfiguration(
       sha3("coupon-onboarding.signerAddress")
     );
-    expect(signerAddr).equal(signer.address);
+    expect(signerAddr).toEqual(signer.address);
 
     const couponOnboarding = this.adapters.couponOnboarding;
 
@@ -100,7 +99,7 @@ describe("Adapter - Coupon Onboarding ", () => {
       dao.address,
       couponData
     );
-    expect(jsHash).equal(solHash);
+    expect(jsHash).toEqual(solHash);
 
     var signature = signerUtil(
       couponData,
@@ -111,10 +110,10 @@ describe("Adapter - Coupon Onboarding ", () => {
 
     const recAddr = await couponOnboarding.recover(jsHash, signature);
 
-    expect(recAddr).equal(signer.address);
+    expect(recAddr).toEqual(signer.address);
 
     let balance = await bank.balanceOf(otherAccount, SHARES);
-    expect(balance.toString()).equal("0");
+    expect(balance.toString()).toEqual("0");
 
     await couponOnboarding.redeemCoupon(
       dao.address,
@@ -127,8 +126,8 @@ describe("Adapter - Coupon Onboarding ", () => {
     const daoOwnerShares = await bank.balanceOf(daoOwner, SHARES);
     const otherAccountShares = await bank.balanceOf(otherAccount, SHARES);
 
-    expect(daoOwnerShares.toString()).equal("1");
-    expect(otherAccountShares.toString()).equal("10");
+    expect(daoOwnerShares.toString()).toEqual("1");
+    expect(otherAccountShares.toString()).toEqual("10");
 
     await checkBalance(bank, GUILD, ETH_TOKEN, toBN("0"));
   });
@@ -171,10 +170,10 @@ describe("Adapter - Coupon Onboarding ", () => {
 
     const recAddr = await couponOnboarding.recover(jsHash, signature);
 
-    expect(recAddr).equal(signer.address);
+    expect(recAddr).toEqual(signer.address);
 
     let balance = await bank.balanceOf(otherAccount, SHARES);
-    expect(balance.toString()).equal("0");
+    expect(balance.toString()).toEqual("0");
 
     await expectRevert(
       couponOnboarding.redeemCoupon(
@@ -190,8 +189,8 @@ describe("Adapter - Coupon Onboarding ", () => {
     const daoOwnerShares = await bank.balanceOf(daoOwner, SHARES);
     const otherAccountShares = await bank.balanceOf(otherAccount, SHARES);
 
-    expect(daoOwnerShares.toString()).equal("1");
-    expect(otherAccountShares.toString()).equal("0");
+    expect(daoOwnerShares.toString()).toEqual("1");
+    expect(otherAccountShares.toString()).toEqual("0");
 
     await checkBalance(bank, GUILD, ETH_TOKEN, toBN("0"));
   });
@@ -207,7 +206,7 @@ describe("Adapter - Coupon Onboarding ", () => {
     let signerAddr = await dao.getAddressConfiguration(
       sha3("coupon-onboarding.signerAddress")
     );
-    expect(signerAddr).equal(signer.address);
+    expect(signerAddr).toEqual(signer.address);
 
     const couponOnboarding = this.adapters.couponOnboarding;
 
@@ -234,9 +233,9 @@ describe("Adapter - Coupon Onboarding ", () => {
 
     const recAddr = await couponOnboarding.recover(jsHash, signature);
 
-    expect(recAddr).equal(signer.address);
+    expect(recAddr).toEqual(signer.address);
     let balance = await bank.balanceOf(otherAccount, SHARES);
-    expect(balance.toString()).equal("0");
+    expect(balance.toString()).toEqual("0");
 
     await expectRevert(
       couponOnboarding.redeemCoupon(dao.address, daoOwner, 10, 1, signature),
@@ -246,8 +245,8 @@ describe("Adapter - Coupon Onboarding ", () => {
     const daoOwnerShares = await bank.balanceOf(daoOwner, SHARES);
     const otherAccountShares = await bank.balanceOf(otherAccount, SHARES);
 
-    expect(daoOwnerShares.toString()).equal("1");
-    expect(otherAccountShares.toString()).equal("0");
+    expect(daoOwnerShares.toString()).toEqual("1");
+    expect(otherAccountShares.toString()).toEqual("0");
 
     await checkBalance(bank, GUILD, ETH_TOKEN, toBN("0"));
   });

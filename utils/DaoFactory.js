@@ -32,7 +32,6 @@ const {
   provider,
 } = require("@openzeppelin/test-environment");
 const { expectRevert } = require("@openzeppelin/test-helpers");
-const { expect } = require("chai");
 
 const Web3Utils = require("web3-utils");
 const sha3 = Web3Utils.sha3;
@@ -140,6 +139,24 @@ const deployDefaultDao = async (owner) => {
   return await deployDao(null, { owner });
 };
 
+const deployDefaultNFTDao = async (owner) => {
+  const { dao, adapters, extensions, testContracts } = await deployDao(null, {
+    owner,
+    deployTestTokens: true,
+    finalize: false,
+  });
+
+  const tributeNFT = adapters.tributeNFT;
+  await tributeNFT.configureDao(dao.address, testContracts.pixelNFT.address);
+  await dao.finalizeDao({ from: owner });
+  return {
+    dao: dao,
+    adapters: adapters,
+    extensions: extensions,
+    testContracts: testContracts,
+  };
+};
+
 const deployDao = async (deployer, options) => {
   const unitPrice = options.unitPrice || sharePrice;
   const nbShares = options.nbShares || numberOfShares;
@@ -152,7 +169,7 @@ const deployDao = async (deployer, options) => {
   const deployTestTokens = !!options.deployTestTokens;
   const maxExternalTokens = options.maxExternalTokens || 100;
   const owner = options.owner;
-  const finalize = options.finalize || true;
+  const finalize = !!options.finalize;
 
   let daoRegistry;
   let bankFactory;
@@ -266,25 +283,31 @@ const deployDao = async (deployer, options) => {
   }
 
   // deploy test token contracts (for testing convenience)
-  let testContracts;
+  let testContracts = {
+    oltToken: null,
+    testToken1: null,
+    testToken2: null,
+    multicall: null,
+    pixelNFT: null,
+  };
   if (deployTestTokens) {
     if (deployer) {
-      testContracts["oltToken"] = await deployer.deploy(
+      testContracts.oltToken = await deployer.deploy(
         OLToken,
         toBN("1000000000000000000000000")
       );
-      testContracts["testToken1"] = await deployer.deploy(TestToken1, 1000000);
-      testContracts["testToken2"] = await deployer.deploy(TestToken2, 1000000);
-      testContracts["multicall"] = await deployer.deploy(Multicall);
-      testContracts["pixelNFT"] = await deployer.deploy(PixelNFT, 100);
+      testContracts.testToken1 = await deployer.deploy(TestToken1, 1000000);
+      testContracts.testToken2 = await deployer.deploy(TestToken2, 1000000);
+      testContracts.multicall = await deployer.deploy(Multicall);
+      testContracts.pixelNFT = await deployer.deploy(PixelNFT, 100);
     } else {
-      testContracts["oltToken"] = await OLToken.deploy(
+      testContracts.oltToken = await OLToken.new(
         toBN("1000000000000000000000000")
       );
-      testContracts["testToken1"] = await TestToken1.new(1000000);
-      testContracts["testToken2"] = await TestToken2.new(1000000);
-      testContracts["multicall"] = await Multicall.new();
-      testContracts["pixelNFT"] = await PixelNFT.new(100);
+      testContracts.testToken1 = await TestToken1.new(1000000);
+      testContracts.testToken2 = await TestToken2.new(1000000);
+      testContracts.multicall = await Multicall.new();
+      testContracts.pixelNFT = await PixelNFT.new(100);
     }
   }
 
@@ -915,6 +938,7 @@ module.exports = {
   createIdentityDao,
   deployDao,
   deployDefaultDao,
+  deployDefaultNFTDao,
   cloneDao,
   addDefaultAdapters,
   getContract,
@@ -939,7 +963,6 @@ module.exports = {
   contract,
   accounts,
   expectRevert,
-  expect,
   GUILD,
   TOTAL,
   ESCROW,

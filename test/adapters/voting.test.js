@@ -35,7 +35,6 @@ const {
   sharePrice,
   remaining,
   SHARES,
-  expect,
   expectRevert
 } = require("../../utils/DaoFactory.js");
 
@@ -86,7 +85,7 @@ describe("Adapter - Voting", () => {
 
     await advanceTime(10000);
     const vote = await voting.voteResult(dao.address, proposalId);
-    expect(vote.toString()).equal("2"); // vote should be "pass = 2"
+    expect(vote.toString()).toEqual("2"); // vote should be "pass = 2"
   });
 
   it("should not be possible to vote twice", async () => {
@@ -178,6 +177,6 @@ describe("Adapter - Voting", () => {
 
     await advanceTime(10000);
     const vote = await voting.voteResult(dao.address, proposalId);
-    expect(vote.toString()).equal("2"); // vote should be "pass = 2"
+    expect(vote.toString()).toEqual("2"); // vote should be "pass = 2"
   });
 });

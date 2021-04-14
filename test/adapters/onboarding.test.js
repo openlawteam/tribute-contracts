@@ -25,10 +25,14 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
  */
 const {
+  sha3,
   toBN,
   advanceTime,
-  createDao,
-  getContract,
+  deployDefaultDao,
+  takeChainSnapshot,
+  revertChainSnapshot,
+  proposalIdGenerator,
+  accounts,
   GUILD,
   SHARES,
   sharePrice,
@@ -39,14 +43,36 @@ const {
   VotingContract,
   BankExtension,
   DaoRegistryAdapterContract,
-  sha3,
   ETH_TOKEN,
+  expectRevert,
 } = require("../../utils/DaoFactory.js");
+
 const { checkBalance, isActiveMember } = require("../../utils/TestUtils.js");
 
-contract("MolochV3 - Onboarding Adapter", async (accounts) => {
+describe("Adapter - Onboarding", () => {
+  const daoOwner = accounts[0];
+  const proposalCounter = proposalIdGenerator().generator;
+
+  const getProposalCounter = () => {
+    return proposalCounter().next().value;
+  };
+
+  beforeAll(async () => {
+    const { dao, adapters, extensions } = await deployDefaultDao(daoOwner);
+    this.dao = dao;
+    this.adapters = adapters;
+    this.extensions = extensions;
+  });
+
+  beforeEach(async () => {
+    this.snapshotId = await takeChainSnapshot();
+  });
+
+  afterEach(async () => {
+    await revertChainSnapshot(this.snapshotId);
+  });
+
   it("should not be possible onboard when the token amount exceeds the external token limits", async () => {
-    const daoOwner = accounts[0];
     const applicant = accounts[2];
 
     // Issue OpenLaw ERC20 Basic Token for tests
@@ -78,10 +104,9 @@ contract("MolochV3 - Onboarding Adapter", async (accounts) => {
       from: daoOwner,
     });
     let applicantTokenBalance = await oltContract.balanceOf.call(applicant);
-    assert.equal(
-      initialTokenBalance.toString(),
-      applicantTokenBalance.toString(),
-      "applicant account must be initialized with 2**161 OLT Tokens"
+    // applicant account must be initialized with 2**161 OLT Tokens
+    expect(initialTokenBalance.toString()).toEqual(
+      applicantTokenBalance.toString()
     );
 
     // Pre-approve spender (onboarding adapter) to transfer proposer tokens
@@ -96,9 +121,9 @@ contract("MolochV3 - Onboarding Adapter", async (accounts) => {
       }
     );
 
-    const proposalId = "0x1";
-    try {
-      await onboarding.onboard(
+    const proposalId = getProposalCounter();
+    await expectRevert(
+      onboarding.onboard(
         dao.address,
         proposalId,
         applicant,
@@ -108,41 +133,33 @@ contract("MolochV3 - Onboarding Adapter", async (accounts) => {
           from: applicant,
           gasPrice: toBN("0"),
         }
-      );
-      assert.fail("should not be possible to onboard");
-    } catch (e) {
-      assert.equal(
-        e.message,
-        "Returned error: VM Exception while processing transaction: revert"
-      );
+      ),
+      "Returned error: VM Exception while processing transaction: revert"
+    );
 
-      // In case of failures the funds must be in the applicant account
-      applicantTokenBalance = await oltContract.balanceOf.call(applicant);
-      assert.equal(
-        initialTokenBalance.toString(),
-        applicantTokenBalance.toString(),
-        "applicant account should contain 2**161 OLT Tokens when the onboard fails"
-      );
-    }
+    // In case of failures the funds must be in the applicant account
+    applicantTokenBalance = await oltContract.balanceOf.call(applicant);
+    // "applicant account should contain 2**161 OLT Tokens when the onboard fails"
+    expect(initialTokenBalance.toString()).toEqual(
+      applicantTokenBalance.toString()
+    );
   });
 
   it("should be possible to join a DAO with ETH contribution", async () => {
-    const myAccount = accounts[1];
     const applicant = accounts[2];
     const nonMemberAccount = accounts[3];
 
-    let dao = await createDao(myAccount);
-    const bankAddress = await dao.getExtensionAddress(sha3("bank"));
-    const bank = await BankExtension.at(bankAddress);
-
-    const onboarding = await getContract(dao, "onboarding", OnboardingContract);
-    const voting = await getContract(dao, "voting", VotingContract);
+    const dao = this.dao;
+    const bank = this.extensions.bank;
+    const onboarding = this.adapters.onboarding;
+    const voting = this.adapters.voting;
 
     const myAccountInitialBalance = await web3.eth.getBalance(myAccount);
     // remaining amount to test sending back to proposer
     const ethAmount = sharePrice.mul(toBN(3)).add(remaining);
 
-    await onboarding.onboard(dao.address, "0x1", applicant, SHARES, 0, {
+    const proposalId = getProposalCounter();
+    await onboarding.onboard(dao.address, proposalId, applicant, SHARES, 0, {
       from: myAccount,
       value: ethAmount,
       gasPrice: toBN("0"),
@@ -150,64 +167,60 @@ contract("MolochV3 - Onboarding Adapter", async (accounts) => {
 
     // test return of remaining amount in excess of multiple of sharesPerChunk
     const myAccountBalance = await web3.eth.getBalance(myAccount);
-    assert.equal(
-      toBN(myAccountInitialBalance).sub(ethAmount).add(remaining).toString(),
-      myAccountBalance.toString(),
-      "myAccount did not receive remaining amount in excess of multiple of sharesPerChunk"
-    );
+    // daoOwner did not receive remaining amount in excess of multiple of sharesPerChunk
+    expect(
+      toBN(myAccountInitialBalance).sub(ethAmount).add(remaining).toString()
+    ).toEqual(myAccountBalance.toString());
 
-    await onboarding.sponsorProposal(dao.address, "0x1", [], {
+    await onboarding.sponsorProposal(dao.address, proposalId, [], {
       from: myAccount,
       gasPrice: toBN("0"),
     });
 
-    await voting.submitVote(dao.address, "0x1", 1, {
+    await voting.submitVote(dao.address, proposalId, 1, {
       from: myAccount,
       gasPrice: toBN("0"),
     });
 
     // should not be able to process before the voting period has ended
-    try {
-      await onboarding.processProposal(dao.address, "0x1", {
+    await expectRevert(
+      onboarding.processProposal(dao.address, proposalId, {
         from: myAccount,
         gasPrice: toBN("0"),
-      });
-    } catch (err) {
-      assert.equal(err.reason, "proposal has not been voted on yet");
-    }
+      }),
+      "proposal has not been voted on yet"
+    );
 
     await advanceTime(10000);
-    await onboarding.processProposal(dao.address, "0x1", {
+    await onboarding.processProposal(dao.address, proposalId, {
       from: myAccount,
       gasPrice: toBN("0"),
     });
 
-    const myAccountShares = await bank.balanceOf(myAccount, SHARES);
+    const myAccountShares = await bank.balanceOf(daoOwner, SHARES);
     const applicantShares = await bank.balanceOf(applicant, SHARES);
     const nonMemberAccountShares = await bank.balanceOf(
       nonMemberAccount,
       SHARES
     );
-    assert.equal(myAccountShares.toString(), "1");
-    assert.equal(
-      applicantShares.toString(),
+    expect(myAccountShares.toString()).toEqual("1");
+    expect(applicantShares.toString()).toEqual(
       numberOfShares.mul(toBN("3")).toString()
     );
-    assert.equal(nonMemberAccountShares.toString(), "0");
+    expect(nonMemberAccountShares.toString()).toEqual("0");
     await checkBalance(bank, GUILD, ETH_TOKEN, sharePrice.mul(toBN("3")));
 
     // test active member status
     const applicantIsActiveMember = await isActiveMember(bank, applicant);
-    assert.equal(applicantIsActiveMember, true);
+    expect(applicantIsActiveMember).toEqual(true);
     const nonMemberAccountIsActiveMember = await isActiveMember(
       bank,
       nonMemberAccount
     );
-    assert.equal(nonMemberAccountIsActiveMember, false);
+    expect(nonMemberAccountIsActiveMember).toEqual(false);
   });
 
   it("should be possible to join a DAO with ERC20 contribution", async () => {
-    const myAccount = accounts[1];
     const applicant = accounts[2];
     const nonMemberAccount = accounts[3];
 
@@ -238,7 +251,7 @@ contract("MolochV3 - Onboarding Adapter", async (accounts) => {
     const initialTokenBalance = toBN("100");
     await oltContract.transfer(myAccount, initialTokenBalance);
     let myAccountTokenBalance = await oltContract.balanceOf.call(myAccount);
-    assert.equal(
+    expect(
       initialTokenBalance.toString(),
       myAccountTokenBalance.toString(),
       "myAccount must be initialized with 100 OLT Tokens"
@@ -282,7 +295,7 @@ contract("MolochV3 - Onboarding Adapter", async (accounts) => {
 
     // test return of remaining amount in excess of multiple of sharesPerChunk
     myAccountTokenBalance = await oltContract.balanceOf.call(myAccount);
-    assert.equal(
+    expect(
       initialTokenBalance.sub(tokenAmount).add(erc20Remaining).toString(),
       myAccountTokenBalance.toString(),
       "myAccount did not receive remaining amount in excess of multiple of sharesPerChunk"
@@ -305,7 +318,7 @@ contract("MolochV3 - Onboarding Adapter", async (accounts) => {
         gasPrice: toBN("0"),
       });
     } catch (err) {
-      assert.equal(err.reason, "proposal has not been voted on yet");
+      expect(err.reason, "proposal has not been voted on yet");
     }
 
     await advanceTime(10000);
@@ -320,19 +333,19 @@ contract("MolochV3 - Onboarding Adapter", async (accounts) => {
       nonMemberAccount,
       SHARES
     );
-    assert.equal(myAccountShares.toString(), "1");
-    assert.equal(applicantShares.toString(), "100000000");
-    assert.equal(nonMemberAccountShares.toString(), "0");
+    expect(myAccountShares.toString(), "1");
+    expect(applicantShares.toString(), "100000000");
+    expect(nonMemberAccountShares.toString(), "0");
     await checkBalance(bank, GUILD, oltContract.address, "10");
 
     // test active member status
     const applicantIsActiveMember = await isActiveMember(bank, applicant);
-    assert.equal(applicantIsActiveMember, true);
+    expect(applicantIsActiveMember, true);
     const nonMemberAccountIsActiveMember = await isActiveMember(
       bank,
       nonMemberAccount
     );
-    assert.equal(nonMemberAccountIsActiveMember, false);
+    expect(nonMemberAccountIsActiveMember, false);
   });
 
   it("should not be possible to have more than the maximum number of shares", async () => {
@@ -351,7 +364,7 @@ contract("MolochV3 - Onboarding Adapter", async (accounts) => {
       });
       assert.err("should not allow more than maxumum shared to be requested");
     } catch (err) {
-      assert.equal(
+      expect(
         err.reason,
         "total shares for this member must be lower than the maximum"
       );
@@ -381,7 +394,7 @@ contract("MolochV3 - Onboarding Adapter", async (accounts) => {
         gasPrice: toBN("0"),
       });
     } catch (err) {
-      assert.equal(err.reason, "only proposer can cancel a proposal");
+      expect(err.reason, "only proposer can cancel a proposal");
     }
 
     await onboarding.cancelProposal(dao.address, "0x1", {
@@ -389,11 +402,11 @@ contract("MolochV3 - Onboarding Adapter", async (accounts) => {
       gasPrice: toBN("0"),
     });
     const isProcessed = await dao.getProposalFlag("0x1", toBN("2")); // 2 is processed flag index
-    assert.equal(isProcessed, true);
+    expect(isProcessed, true);
 
     // test refund of ETH contribution
     const myAccountBalance = await web3.eth.getBalance(myAccount);
-    assert.equal(
+    expect(
       myAccountInitialBalance.toString(),
       myAccountBalance.toString(),
       "myAccount did not receive refund of ETH contribution"
@@ -406,7 +419,7 @@ contract("MolochV3 - Onboarding Adapter", async (accounts) => {
         gasPrice: toBN("0"),
       });
     } catch (err) {
-      assert.equal(err.reason, "proposal already processed");
+      expect(err.reason, "proposal already processed");
     }
 
     // should not be able to process if the proposal has already been cancelled
@@ -416,16 +429,16 @@ contract("MolochV3 - Onboarding Adapter", async (accounts) => {
         gasPrice: toBN("0"),
       });
     } catch (err) {
-      assert.equal(err.reason, "proposal already processed");
+      expect(err.reason, "proposal already processed");
     }
 
     const myAccountShares = await bank.balanceOf(myAccount, SHARES);
     const applicantShares = await bank.balanceOf(applicant, SHARES);
-    assert.equal(myAccountShares.toString(), "1");
-    assert.equal(applicantShares.toString(), "0");
+    expect(myAccountShares.toString(), "1");
+    expect(applicantShares.toString(), "0");
 
     const guildBalance = await bank.balanceOf(GUILD, ETH_TOKEN);
-    assert.equal(guildBalance.toString(), "0");
+    expect(guildBalance.toString(), "0");
   });
 
   it("should be possible to cancel an ERC20 onboarding proposal", async () => {
@@ -458,7 +471,7 @@ contract("MolochV3 - Onboarding Adapter", async (accounts) => {
     const initialTokenBalance = toBN("100");
     await oltContract.transfer(myAccount, initialTokenBalance);
     let myAccountTokenBalance = await oltContract.balanceOf.call(myAccount);
-    assert.equal(
+    expect(
       initialTokenBalance.toString(),
       myAccountTokenBalance.toString(),
       "myAccount must be initialized with 100 OLT Tokens"
@@ -490,7 +503,7 @@ contract("MolochV3 - Onboarding Adapter", async (accounts) => {
         gasPrice: toBN("0"),
       });
     } catch (err) {
-      assert.equal(err.reason, "only proposer can cancel a proposal");
+      expect(err.reason, "only proposer can cancel a proposal");
     }
 
     await onboarding.cancelProposal(dao.address, "0x1", {
@@ -498,11 +511,11 @@ contract("MolochV3 - Onboarding Adapter", async (accounts) => {
       gasPrice: toBN("0"),
     });
     const isProcessed = await dao.getProposalFlag("0x1", toBN("2")); // 2 is processed flag index
-    assert.equal(isProcessed, true);
+    expect(isProcessed, true);
 
     // test refund of ERC20 contribution
     myAccountTokenBalance = await oltContract.balanceOf.call(myAccount);
-    assert.equal(
+    expect(
       initialTokenBalance.toString(),
       myAccountTokenBalance.toString(),
       "myAccount did not receive refund of ERC20 contribution"
@@ -515,7 +528,7 @@ contract("MolochV3 - Onboarding Adapter", async (accounts) => {
         gasPrice: toBN("0"),
       });
     } catch (err) {
-      assert.equal(err.reason, "proposal already processed");
+      expect(err.reason, "proposal already processed");
     }
 
     // should not be able to process if the proposal has already been cancelled
@@ -525,16 +538,16 @@ contract("MolochV3 - Onboarding Adapter", async (accounts) => {
         gasPrice: toBN("0"),
       });
     } catch (err) {
-      assert.equal(err.reason, "proposal already processed");
+      expect(err.reason, "proposal already processed");
     }
 
     const myAccountShares = await bank.balanceOf(myAccount, SHARES);
     const applicantShares = await bank.balanceOf(applicant, SHARES);
-    assert.equal(myAccountShares.toString(), "1");
-    assert.equal(applicantShares.toString(), "0");
+    expect(myAccountShares.toString(), "1");
+    expect(applicantShares.toString(), "0");
 
     const guildBalance = await bank.balanceOf(GUILD, oltContract.address);
-    assert.equal(guildBalance.toString(), "0");
+    expect(guildBalance.toString(), "0");
   });
 
   it("should handle an onboarding proposal with a failed vote", async () => {
@@ -565,7 +578,7 @@ contract("MolochV3 - Onboarding Adapter", async (accounts) => {
     });
     await advanceTime(10000);
     const vote = await voting.voteResult(dao.address, "0x1");
-    assert.equal(vote.toString(), "3"); // vote should be "not passed"
+    expect(vote.toString(), "3"); // vote should be "not passed"
 
     await onboarding.processProposal(dao.address, "0x1", {
       from: myAccount,
@@ -573,11 +586,11 @@ contract("MolochV3 - Onboarding Adapter", async (accounts) => {
     });
 
     const isProcessed = await dao.getProposalFlag("0x1", toBN("2")); // 2 is processed flag index
-    assert.equal(isProcessed, true);
+    expect(isProcessed, true);
 
     // test refund of ETH contribution
     const myAccountBalance = await web3.eth.getBalance(myAccount);
-    assert.equal(
+    expect(
       myAccountInitialBalance.toString(),
       myAccountBalance.toString(),
       "myAccount did not receive refund of ETH contribution"
@@ -585,21 +598,21 @@ contract("MolochV3 - Onboarding Adapter", async (accounts) => {
 
     const myAccountShares = await bank.balanceOf(myAccount, SHARES);
     const applicantShares = await bank.balanceOf(applicant, SHARES);
-    assert.equal(myAccountShares.toString(), "1");
-    assert.equal(applicantShares.toString(), "0");
+    expect(myAccountShares.toString(), "1");
+    expect(applicantShares.toString(), "0");
 
     const guildBalance = await bank.balanceOf(GUILD, ETH_TOKEN);
-    assert.equal(guildBalance.toString(), "0");
+    expect(guildBalance.toString(), "0");
 
     const applicantBalance = await bank.balanceOf(applicant, ETH_TOKEN);
-    assert.equal(applicantBalance.toString(), "0");
+    expect(applicantBalance.toString(), "0");
 
     const onboardingBalance = await web3.eth.getBalance(onboarding.address);
-    assert.equal(onboardingBalance.toString(), "0");
+    expect(onboardingBalance.toString(), "0");
 
     // test active member status
     const applicantIsActiveMember = await isActiveMember(bank, applicant);
-    assert.equal(applicantIsActiveMember, false);
+    expect(applicantIsActiveMember, false);
   });
 
   it("should not be possible to sponsor proposal that does not exist", async () => {
@@ -614,7 +627,7 @@ contract("MolochV3 - Onboarding Adapter", async (accounts) => {
         gasPrice: toBN("0"),
       });
     } catch (err) {
-      assert.equal(err.reason, "proposal does not exist for this dao");
+      expect(err.reason, "proposal does not exist for this dao");
     }
   });
 
@@ -630,7 +643,7 @@ contract("MolochV3 - Onboarding Adapter", async (accounts) => {
         gasPrice: toBN("0"),
       });
     } catch (err) {
-      assert.equal(err.reason, "proposal does not exist");
+      expect(err.reason, "proposal does not exist");
     }
   });
 
@@ -651,8 +664,8 @@ contract("MolochV3 - Onboarding Adapter", async (accounts) => {
     const myAccountActive1 = await isActiveMember(bank, myAccount);
     const delegateKeyActive1 = await dao.isActiveMember(delegateKey); // use the dao to check delegatedKeys
 
-    assert.equal(true, myAccountActive1);
-    assert.equal(false, delegateKeyActive1);
+    expect(true, myAccountActive1);
+    expect(false, delegateKeyActive1);
 
     const newDelegatedKey = accounts[9];
     await daoRegistryAdapter.updateDelegateKey(dao.address, newDelegatedKey, {
@@ -660,8 +673,8 @@ contract("MolochV3 - Onboarding Adapter", async (accounts) => {
       gasPrice: toBN("0"),
     });
 
-    assert.equal(true, await isActiveMember(bank, myAccount));
-    assert.equal(true, await dao.isActiveMember(newDelegatedKey)); // use the dao to check delegatedKeys
+    expect(true, await isActiveMember(bank, myAccount));
+    expect(true, await dao.isActiveMember(newDelegatedKey)); // use the dao to check delegatedKeys
   });
 
   it("should not be possible to overwrite a delegated key", async () => {
@@ -695,7 +708,7 @@ contract("MolochV3 - Onboarding Adapter", async (accounts) => {
       });
       assert.fail("should not be possible to update the delegate key");
     } catch (e) {
-      assert.equal(e.reason, "cannot overwrite existing delegated keys");
+      expect(e.reason, "cannot overwrite existing delegated keys");
     }
   });
 
@@ -733,7 +746,7 @@ contract("MolochV3 - Onboarding Adapter", async (accounts) => {
     });
     await advanceTime(10000);
     const vote = await voting.voteResult(dao.address, proposalId);
-    assert.equal(vote.toString(), "2"); // vote pass
+    expect(vote.toString(), "2"); // vote pass
 
     await onboarding.processProposal(dao.address, proposalId, {
       from: myAccount,
@@ -748,7 +761,7 @@ contract("MolochV3 - Onboarding Adapter", async (accounts) => {
       });
       assert.fail("should not be possible to update the delegate key");
     } catch (e) {
-      assert.equal(e.reason, "address already taken as delegated key");
+      expect(e.reason, "address already taken as delegated key");
     }
   });
 });

@@ -37,8 +37,7 @@ const {
   GUILD,
   SHARES,
   sharePrice,
-  ETH_TOKEN,
-  expect,
+  ETH_TOKEN
 } = require("../../utils/DaoFactory.js");
 
 const { checkBalance } = require("../../utils/TestUtils.js");
@@ -109,7 +108,7 @@ describe("Adapter - Financing", () => {
         gasPrice: toBN("0"),
       });
     } catch (err) {
-      expect(err.reason).to.equals("proposal has not been voted on yet");
+      expect(err.reason).toEqual("proposal has not been voted on yet");
     }
 
     await advanceTime(10000);
@@ -172,7 +171,7 @@ describe("Adapter - Financing", () => {
     });
     checkBalance(bank, applicant, ETH_TOKEN, 0);
     const ethBalance2 = await web3.eth.getBalance(applicant);
-    expect(toBN(ethBalance).add(requestedAmount).toString()).to.equal(
+    expect(toBN(ethBalance).add(requestedAmount).toString()).toEqual(
       ethBalance2.toString()
     );
   });
@@ -245,7 +244,7 @@ describe("Adapter - Financing", () => {
         gasPrice: toBN("0"),
       });
     } catch (err) {
-      expect(err.reason).to.equal("proposal needs to pass");
+      expect(err.reason).toEqual("proposal needs to pass");
     }
   });
 
@@ -302,11 +301,11 @@ describe("Adapter - Financing", () => {
         "should not be possible to submit a proposal with a token that is not allowed"
       );
     } catch (err) {
-      expect(err.reason).to.equal("token not allowed");
+      expect(err.reason).toEqual("token not allowed");
     }
   });
 
-  test("should not be possible to submit a proposal to request funding with an amount equals to zero", async () => {
+  test("should not be possible to submit a proposal to request funding with an amount.toEqual to zero", async () => {
     const voting = this.adapters.voting;
     const financing = this.adapters.financing;
     const onboarding = this.adapters.onboarding;
@@ -358,7 +357,7 @@ describe("Adapter - Financing", () => {
         "should not be possible to submit a proposal with an amount == 0"
       );
     } catch (err) {
-      expect(err.reason).to.equal("invalid requested amount");
+      expect(err.reason).toEqual("invalid requested amount");
     }
   });
 
@@ -377,7 +376,7 @@ describe("Adapter - Financing", () => {
       );
       throw Error("should not be possible to use proposal id == 0");
     } catch (err) {
-      expect(err.reason).to.equal("invalid proposalId");
+      expect(err.reason).toEqual("invalid proposalId");
     }
   });
 
@@ -414,7 +413,7 @@ describe("Adapter - Financing", () => {
       );
       throw Error("should not be possible to create a financing request");
     } catch (err) {
-      expect(err.reason).to.equal("proposalId must be unique");
+      expect(err.reason).toEqual("proposalId must be unique");
     }
   });
 
@@ -432,7 +431,7 @@ describe("Adapter - Financing", () => {
       );
       throw Error("should not be possible to sponsor");
     } catch (err) {
-      expect(err.reason).to.equal("proposal does not exist for this dao");
+      expect(err.reason).toEqual("proposal does not exist for this dao");
     }
   });
 
@@ -469,7 +468,7 @@ describe("Adapter - Financing", () => {
         }
       );
     } catch (err) {
-      expect(err.reason).to.equal("flag already set");
+      expect(err.reason).toEqual("flag already set");
     }
   });
 
@@ -486,7 +485,7 @@ describe("Adapter - Financing", () => {
       );
       throw Error("should not be possible to process it");
     } catch (err) {
-      expect(err.reason).to.equal("adapter not found");
+      expect(err.reason).toEqual("adapter not found");
     }
   });
 
@@ -513,7 +512,7 @@ describe("Adapter - Financing", () => {
       );
       throw Error("should not be possible to process");
     } catch (err) {
-      expect(err.reason).to.equal("adapter not found");
+      expect(err.reason).toEqual("adapter not found");
     }
   });
 });

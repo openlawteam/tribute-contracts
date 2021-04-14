@@ -33,7 +33,6 @@ const {
   proposalIdGenerator,
   advanceTime,
   accounts,
-  expect,
   expectRevert,
 } = require("../../utils/DaoFactory.js");
 
@@ -78,7 +77,7 @@ describe("Adapter - Configuration", () => {
     );
 
     let value = await dao.getConfiguration(key);
-    expect(value.toString()).equal("0");
+    expect(value.toString()).toEqual("0");
 
     //Sponsor the new proposal, vote and process it
     await configuration.sponsorProposal(dao.address, proposalId, [], {
@@ -87,7 +86,7 @@ describe("Adapter - Configuration", () => {
     });
 
     value = await dao.getConfiguration(key);
-    expect(value.toString()).equal("0");
+    expect(value.toString()).toEqual("0");
 
     await voting.submitVote(dao.address, proposalId, 1, {
       from: owner,
@@ -101,7 +100,7 @@ describe("Adapter - Configuration", () => {
     });
 
     value = await dao.getConfiguration(key);
-    expect(value.toString()).equal("11");
+    expect(value.toString()).toEqual("11");
   });
 
   test("should be possible to set multiple configuration parameters", async () => {
@@ -123,8 +122,8 @@ describe("Adapter - Configuration", () => {
 
     let value1 = await dao.getConfiguration(key1);
     let value2 = await dao.getConfiguration(key2);
-    expect(value1.toString()).equal("0");
-    expect(value2.toString()).equal("0");
+    expect(value1.toString()).toEqual("0");
+    expect(value2.toString()).toEqual("0");
 
     //Sponsor the new proposal, vote and process it
     await configuration.sponsorProposal(dao.address, "0x1", [], {
@@ -134,8 +133,8 @@ describe("Adapter - Configuration", () => {
 
     value1 = await dao.getConfiguration(key1);
     value2 = await dao.getConfiguration(key2);
-    expect(value1.toString()).equal("0");
-    expect(value2.toString()).equal("0");
+    expect(value1.toString()).toEqual("0");
+    expect(value2.toString()).toEqual("0");
 
     await voting.submitVote(dao.address, "0x1", 1, {
       from: owner,
@@ -150,8 +149,8 @@ describe("Adapter - Configuration", () => {
 
     value1 = await dao.getConfiguration(key1);
     value2 = await dao.getConfiguration(key2);
-    expect(value1.toString()).equal("10");
-    expect(value2.toString()).equal("15");
+    expect(value1.toString()).toEqual("10");
+    expect(value2.toString()).toEqual("15");
   });
 
   test("should not be possible to provide a different number of keys and values", async () => {
@@ -164,7 +163,7 @@ describe("Adapter - Configuration", () => {
         from: owner,
         gasPrice: toBN("0"),
       }),
-      "must be an equal number of config keys and values"
+      "must be an toEqual number of config keys and values"
     );
   });
 });

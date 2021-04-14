@@ -26,7 +26,6 @@ const {
   accounts,
   createIdentityDao,
   cloneDao,
-  expect,
 } = require("../../utils/DaoFactory.js");
 
 describe("Core - DaoFactory", () => {
@@ -43,7 +42,7 @@ describe("Core - DaoFactory", () => {
       "cloned-dao"
     );
 
-    expect(daoName).to.equals("cloned-dao");
+    expect(daoName).toEqual("cloned-dao");
   });
 
   test("should be possible to get a DAO address by its name if it was created by the factory", async () => {
@@ -60,7 +59,7 @@ describe("Core - DaoFactory", () => {
       from: anotherOwner,
       gasPrice: toBN("0"),
     });
-    expect(retrievedAddress).to.equals(dao.address);
+    expect(retrievedAddress).toEqual(dao.address);
   });
 
   test("should not be possible to get a DAO address of it was not created by the factory", async () => {
@@ -78,7 +77,7 @@ describe("Core - DaoFactory", () => {
       gasPrice: toBN("0"),
     });
 
-    expect(retrievedAddress).equals(
+    expect(retrievedAddress).toEqual(
       "0x0000000000000000000000000000000000000000"
     );
   });
