@@ -22,6 +22,7 @@ module.exports = async (deployer, network) => {
       offchainVoting: true,
       chainId: getNetworkDetails(network).chainId,
       deployTestTokens: true,
+      finalize: false,
     });
   } else if (network === "rinkeby") {
     dao = await deployDao(deployer, {
@@ -34,6 +35,7 @@ module.exports = async (deployer, network) => {
       offchainVoting: true,
       chainId: getNetworkDetails(network).chainId,
       deployTestTokens: true,
+      finalize: false,
     });
   } else if (network === "test" || network === "coverage") {
     dao = await deployDao(deployer, {
@@ -46,6 +48,7 @@ module.exports = async (deployer, network) => {
       offchainVoting: true,
       chainId: getNetworkDetails(network).chainId,
       deployTestTokens: false,
+      finalize: false,
     });
   }
   if (dao) {

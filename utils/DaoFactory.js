@@ -152,6 +152,7 @@ const deployDao = async (deployer, options) => {
   const deployTestTokens = !!options.deployTestTokens;
   const maxExternalTokens = options.maxExternalTokens || 100;
   const owner = options.owner;
+  const finalize = options.finalize || true;
 
   let daoRegistry;
   let bankFactory;
@@ -285,6 +286,10 @@ const deployDao = async (deployer, options) => {
       testContracts["multicall"] = await Multicall.new();
       testContracts["pixelNFT"] = await PixelNFT.new(100);
     }
+  }
+
+  if (finalize) {
+    await dao.finalizeDao();
   }
 
   return { dao, adapters, extensions, testContracts };
