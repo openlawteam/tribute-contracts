@@ -185,7 +185,7 @@ const getYAML = ({
 
   // Create the graph code generation files
   console.log("📦 ### 2/3 Creating the graph scheme...");
-  exec(`cd subgraph && graph codegen`);
+  exec(`graph codegen`);
 
   // Building the graph scheme
   console.log("📦 ### 3/3 Building the graph scheme...");
