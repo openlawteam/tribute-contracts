@@ -191,9 +191,7 @@ const getYAML = ({
   console.log("📦 ### 3/3 Building the graph scheme...");
   exec(`graph build`);
 
-  console.log(`📦 ### Build complete, preparing deployment...
-  
-  `);
+  console.log("📦 ### Build complete, preparing deployment...");
 
   let executedDeployments: number = 0;
 
