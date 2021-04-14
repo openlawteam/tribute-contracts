@@ -44,7 +44,7 @@ export function loadProposalAndSaveVoteResults(
 
         vote.adapterName = votingAdapterName;
         vote.adapterAddress = votingAdapterAddress;
-        // vote.proposal = maybeProposalId;
+        vote.proposal = maybeProposalId;
 
         if (proposal) {
           proposal.nbYes = voteResults.value0;
@@ -53,7 +53,7 @@ export function loadProposalAndSaveVoteResults(
           proposal.blockNumber = voteResults.value3;
 
           proposal.votingState = voteState.toString();
-          // proposal.votingResult = voteId;
+          proposal.votingResult = voteId;
         }
       } else if (votingAdapterName == "OffchainVotingContract") {
         let offchainVotingContract = OffchainVotingContract.bind(
@@ -67,12 +67,12 @@ export function loadProposalAndSaveVoteResults(
         );
 
         // assign voting data
-        vote.nbYes = voteResults.value5;
-        vote.nbNo = voteResults.value6;
+        vote.nbYes = voteResults.value4;
+        vote.nbNo = voteResults.value5;
 
         vote.adapterName = votingAdapterName;
         vote.adapterAddress = votingAdapterAddress;
-        // vote.proposal = maybeProposalId;
+        vote.proposal = maybeProposalId;
 
         if (proposal) {
           proposal.snapshot = voteResults.value0;
@@ -92,7 +92,7 @@ export function loadProposalAndSaveVoteResults(
           proposal.fallbackVotesCount = voteResults.value10;
 
           proposal.votingState = voteState.toString();
-          // proposal.votingResult = voteId;
+          proposal.votingResult = voteId;
         }
       }
     }
