@@ -1,4 +1,3 @@
-process.on("unhandledRejection", (err, r) => {
-  console.log(r); // to show where it has failed
-  throw err;
+process.on("unhandledRejection", async (err, p) => {
+  p.catch(() => {});
 });

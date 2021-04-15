@@ -280,7 +280,9 @@ describe("Adapter - Managing", () => {
     const newOnboardingAddress = await dao.getAdapterAddress(
       sha3("onboarding")
     );
-    expect(newOnboardingAddress.toString()).toEqual(newAdapterAddress.toString());
+    expect(newOnboardingAddress.toString()).toEqual(
+      newAdapterAddress.toString()
+    );
   });
 
   it("should not be possible to reuse a proposal id", async () => {
