@@ -163,7 +163,7 @@ describe("Adapter - Configuration", () => {
         from: owner,
         gasPrice: toBN("0"),
       }),
-      "must be an toEqual number of config keys and values"
+      "must be an equal number of config keys and values"
     );
   });
 });

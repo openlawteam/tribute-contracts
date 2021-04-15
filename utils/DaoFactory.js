@@ -152,7 +152,35 @@ const deployDefaultNFTDao = async (owner) => {
   };
 };
 
+const deployDaoWithOffchainVoting = async (owner, newMember) => {
+  const {
+    dao,
+    adapters,
+    extensions,
+    testContracts,
+    offchain,
+  } = await deployDao(null, {
+    owner,
+    offchainVoting: true,
+    deployTestTokens: true,
+    finalize: false,
+  });
+
+  await dao.potentialNewMember(newMember);
+  await extensions.bank.addToBalance(newMember, SHARES, 1);
+
+  await dao.finalizeDao({ from: owner });
+  return {
+    dao: dao,
+    adapters: adapters,
+    extensions: extensions,
+    testContracts: testContracts,
+    offchain: offchain,
+  };
+};
+
 const deployDao = async (deployer, options) => {
+  const owner = options.owner;
   const unitPrice = options.unitPrice || sharePrice;
   const nbShares = options.nbShares || numberOfShares;
   const votingPeriod = options.votingPeriod || 10;
@@ -163,7 +191,6 @@ const deployDao = async (deployer, options) => {
   const chainId = options.chainId || 1;
   const deployTestTokens = !!options.deployTestTokens;
   const maxExternalTokens = options.maxExternalTokens || 100;
-  const owner = options.owner;
   const finalize = !!options.finalize;
 
   let daoRegistry;
@@ -228,52 +255,59 @@ const deployDao = async (deployer, options) => {
   );
 
   const votingAddress = await dao.getAdapterAddress(sha3("voting"));
+  const offchain = {
+    snapshotProposalContract: null,
+    handleBadReporterAdapter: null,
+    offchainVoting: null,
+  };
   if (isOffchainVoting) {
-    let snapshotProposalContract;
-    let handleBadReporterAdapter;
-    let offchainVoting;
     if (deployer) {
-      snapshotProposalContract = await deployer.deploy(
+      offchain.snapshotProposalContract = await deployer.deploy(
         SnapshotProposalContract,
         chainId
       );
-      handleBadReporterAdapter = await deployer.deploy(KickBadReporterAdapter);
-      offchainVoting = await deployer.deploy(
+      offchain.handleBadReporterAdapter = await deployer.deploy(
+        KickBadReporterAdapter
+      );
+      offchain.offchainVoting = await deployer.deploy(
         OffchainVotingContract,
         votingAddress,
-        snapshotProposalContract.address,
-        handleBadReporterAdapter.address
+        offchain.snapshotProposalContract.address,
+        offchain.handleBadReporterAdapter.address
       );
     } else {
-      snapshotProposalContract = await SnapshotProposalContract.new(chainId);
-      handleBadReporterAdapter = await KickBadReporterAdapter.new();
-      offchainVoting = await OffchainVotingContract.new(
+      offchain.snapshotProposalContract = await SnapshotProposalContract.new(
+        chainId
+      );
+      offchain.handleBadReporterAdapter = await KickBadReporterAdapter.new();
+      offchain.offchainVoting = await OffchainVotingContract.new(
         votingAddress,
-        snapshotProposalContract.address,
-        handleBadReporterAdapter.address
+        offchain.snapshotProposalContract.address,
+        offchain.handleBadReporterAdapter.address
       );
     }
 
     await daoFactory.updateAdapter(
       dao.address,
-      entryDao("voting", offchainVoting, {})
+      entryDao("voting", offchain.offchainVoting, {})
     );
 
     await dao.setAclToExtensionForAdapter(
       bankAddress,
-      offchainVoting.address,
-      entryBank(offchainVoting, {
+      offchain.offchainVoting.address,
+      entryBank(offchain.offchainVoting, {
         ADD_TO_BALANCE: true,
         SUB_FROM_BALANCE: true,
         INTERNAL_TRANSFER: true,
       }).flags
     );
 
-    await offchainVoting.configureDao(
+    await offchain.offchainVoting.configureDao(
       dao.address,
       votingPeriod,
       gracePeriod,
-      10
+      10,
+      { from: owner }
     );
   }
 
@@ -315,6 +349,7 @@ const deployDao = async (deployer, options) => {
     adapters: adapters,
     extensions: extensions,
     testContracts: testContracts,
+    offchain: offchain,
   };
 };
 
@@ -933,6 +968,7 @@ module.exports = {
   deployDao,
   deployDefaultDao,
   deployDefaultNFTDao,
+  deployDaoWithOffchainVoting,
   cloneDao,
   addDefaultAdapters,
   getContract,

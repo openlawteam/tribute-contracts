@@ -19,6 +19,7 @@
  */
 
 require("dotenv").config();
+require("solidity-coverage");
 
 module.exports = {
   /**
@@ -57,40 +58,6 @@ module.exports = {
       gasPrice: 0x01,
     },
   },
-
-  // Set default mocha options here, use special reporters etc.
-  // mocha: {
-  //   enableTimeouts: false,
-  //   useColors: true,
-  //   reporter: "eth-gas-reporter",
-  //   reporterOptions: {
-  //     excludeContracts: [
-  //       // Skip config contracts
-  //       "Migration",
-  //       // Skip Test Contracts
-  //       "test/OLToken",
-  //       "test/PixelNFT",
-  //       "test/TestFairShareCalc",
-  //       "test/TestToken1",
-  //       "test/TestToken2",
-  //       // Skip openzeppelin contracts
-  //       "utils/ERC20",
-  //       "utils/IERC20",
-  //       "ERC721",
-  //       "IERC721",
-  //       "IERC721Receiver",
-  //       "IERC721Enumerable",
-  //       "IERC721Metadata",
-  //       "Address",
-  //       "Context",
-  //       "Counters",
-  //       "Strings",
-  //       "ERC165",
-  //       "IERC165",
-  //       "EnumerableSet",
-  //     ],
-  //   },
-  // },
 
   // Configure your compilers
   compilers: {

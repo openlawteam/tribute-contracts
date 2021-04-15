@@ -1,8 +1,10 @@
 module.exports = {
-  norpc: false,
-  compileCommand: "truffle compile",
-  testCommand:
-    "export ETHEREUM_RPC_PORT=8555 && truffle test --network coverage --timeout 10000",
+  norpc: true,
+  testCommand: "npm test",
+  compileCommand: "npm run compile",
+  providerOptions: {
+    default_balance_ether: "10000000000000000000000000",
+  },
   skipFiles: [
     // Skip config contracts
     "Migration",

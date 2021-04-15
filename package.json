@@ -43,7 +43,8 @@
     "codegen": "cd subgraph && npm ci && npm run codegen",
     "build": "cd subgraph && npm run build",
     "ganache": "ganache-cli --deterministic -p 8545 --networkId 1337",
-    "migrate": "truffle migrate --network ganache"
+    "migrate": "truffle migrate --network ganache",
+    "coverage": "truffle run coverage"
   },
   "repository": {
     "type": "git",
