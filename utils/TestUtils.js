@@ -67,48 +67,6 @@ const submitNewMemberProposal = async (
   );
 };
 
-const onboardNewMember = async (dao, sponsor, newMember, proposalId) => {
-  const voting = await getContract(dao, "voting", VotingContract);
-  const onboarding = await getContract(dao, "onboarding", OnboardingContract);
-  //Add funds to the Guild Bank after sposoring a member to join the Guild
-  await onboarding.onboard(
-    dao.address,
-    proposalId,
-    newMember,
-    SHARES,
-    sharePrice.mul(toBN(10)),
-    {
-      from: sponsor,
-      value: sharePrice.mul(toBN(10)),
-      gasPrice: toBN("0"),
-    }
-  );
-
-  // Sponsor the new proposal
-  await onboarding.sponsorProposal(dao.address, proposalId, [], {
-    from: sponsor,
-    gasPrice: toBN("0"),
-  });
-
-  // Vote yes
-  await voting.submitVote(dao.address, proposalId, 1, {
-    from: sponsor,
-    gasPrice: toBN("0"),
-  });
-
-  await advanceTime(10000);
-
-  await onboarding.processProposal(dao.address, proposalId, {
-    from: sponsor,
-    gasPrice: toBN("0"),
-  });
-
-  const bankAddress = await dao.getExtensionAddress(sha3("bank"));
-  const bank = await BankExtension.at(bankAddress);
-  const nbShares = await bank.balanceOf(newMember, SHARES);
-  expect(nbShares.toString()).to.equal("10000000000000000");
-};
-
 const onboardingNewMember = async (
   proposalId,
   dao,
@@ -179,7 +137,6 @@ const guildKickProposal = async (
 module.exports = {
   checkLastEvent,
   checkBalance,
-  onboardNewMember,
   submitNewMemberProposal,
   sponsorNewMember,
   onboardingNewMember,

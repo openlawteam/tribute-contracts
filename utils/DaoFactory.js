@@ -141,8 +141,8 @@ const deployDefaultNFTDao = async (owner) => {
     finalize: false,
   });
 
-  const tributeNFT = adapters.tributeNFT;
-  await tributeNFT.configureDao(dao.address, testContracts.pixelNFT.address);
+  // const tributeNFT = adapters.tributeNFT;
+  // await tributeNFT.configureDao(dao.address, testContracts.pixelNFT.address);
   await dao.finalizeDao({ from: owner });
   return {
     dao: dao,

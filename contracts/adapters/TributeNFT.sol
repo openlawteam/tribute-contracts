@@ -81,18 +81,6 @@ contract TributeNFTContract is
     }
 
     /**
-     * @notice Configures the adapter for a particular DAO.
-     * @notice Registers the DAO internal token SHARES with the DAO Bank.
-     * @dev Only adapters registered to the DAO can execute the function call (or if the DAO is in creation mode).
-     * @dev A DAO Bank extension must exist and be configured with proper access for this adapter.
-     * @param dao The DAO address.
-     */
-    function configureDao(DaoRegistry dao) external onlyAdapter(dao) {
-        BankExtension bank = BankExtension(dao.getExtensionAddress(BANK));
-        bank.registerPotentialNewInternalToken(SHARES);
-    }
-
-    /**
      * @notice Creates a tribute proposal and escrows received token into the adapter.
      * @dev Applicant address must not be reserved.
      * @dev The proposer must first separately `approve` the adapter as spender of the ERC-721 token provided as tribute.
