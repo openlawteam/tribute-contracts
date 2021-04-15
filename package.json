@@ -35,7 +35,6 @@
   },
   "scripts": {
     "test": "jest --clearCache && jest --runInBand",
-    "test:all": "jest --clearCache && jest test/core/daofactory.js test/core/registry.test.js test/adapters/ragequit.test.js test/adapters/guildkick.test.js test/adapters/financing.test.js test/adapters/distribute.test.js test/adapters/configuration.test.js test/adapters/managing.test.js test/adapters/tribute.test.js",
     "lint:fix": "prettier --write 'contracts/**/*.sol' 'test/**/*.test.js' '**/*.md'",
     "lint": "prettier --list-different 'contracts/**/*.sol' 'test/**/*.test.js' '**/*.md'",
     "compile": "truffle compile",

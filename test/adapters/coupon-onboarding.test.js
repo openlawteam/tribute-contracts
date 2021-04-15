@@ -143,7 +143,7 @@ describe("Adapter - Coupon Onboarding ", () => {
     let signerAddr = await dao.getAddressConfiguration(
       sha3("coupon-onboarding.signerAddress")
     );
-    expect(signerAddr, signer.address);
+    expect(signerAddr).toEqual(signer.address);
 
     const couponOnboarding = this.adapters.couponOnboarding;
 

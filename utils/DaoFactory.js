@@ -25,7 +25,12 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
  */
 
-const { web3, contract, accounts } = require("@openzeppelin/test-environment");
+const {
+  web3,
+  contract,
+  accounts,
+  provider,
+} = require("@openzeppelin/test-environment");
 const { expectRevert } = require("@openzeppelin/test-helpers");
 
 const Web3Utils = require("web3-utils");
@@ -911,9 +916,9 @@ const getContract = async (dao, id, contractFactory) => {
   return await contractFactory.at(address);
 };
 
-const takeChainSnapshot = () => {
-  return new Promise((resolve, reject) =>
-    web3.currentProvider.send(
+const takeChainSnapshot = async () => {
+  return await new Promise((resolve, reject) =>
+    provider.send(
       {
         jsonrpc: "2.0",
         method: "evm_snapshot",
@@ -930,9 +935,9 @@ const takeChainSnapshot = () => {
   );
 };
 
-const revertChainSnapshot = (snapshotId) => {
-  return new Promise((resolve, reject) =>
-    web3.currentProvider.send(
+const revertChainSnapshot = async (snapshotId) => {
+  return await new Promise((resolve, reject) =>
+    provider.send(
       {
         jsonrpc: "2.0",
         method: "evm_revert",
@@ -946,7 +951,7 @@ const revertChainSnapshot = (snapshotId) => {
         return resolve(result);
       }
     )
-  );
+  ).catch((e) => console.error(e));
 };
 
 const proposalIdGenerator = () => {
@@ -990,6 +995,7 @@ module.exports = {
   maximumChunks,
   networks,
   web3,
+  provider,
   contract,
   accounts,
   expectRevert,

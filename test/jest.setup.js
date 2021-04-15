@@ -1,3 +1,3 @@
-process.on("unhandledRejection", async (err, p) => {
-  p.catch(() => {});
+const unhandledRejectionPromise = new Promise((resolve) => {
+  process.on("unhandledRejection", resolve);
 });

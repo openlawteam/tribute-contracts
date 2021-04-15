@@ -80,10 +80,9 @@ describe("Adapter - Tribute", () => {
     const initialTokenBalance = toBN("100");
     await oltContract.transfer(daoOwner, initialTokenBalance);
     let daoOwnerTokenBalance = await oltContract.balanceOf.call(daoOwner);
-    expect(
-      initialTokenBalance.toString(),
-      "daoOwner must be initialized with 100 OLT Tokens"
-    ).toEqual(daoOwnerTokenBalance.toString());
+    expect(daoOwnerTokenBalance.toString()).toEqual(
+      initialTokenBalance.toString()
+    );
 
     // Number of OLTs to be sent to the DAO in exchange for number of requested shares
     const tributeAmount = 10;
@@ -192,10 +191,9 @@ describe("Adapter - Tribute", () => {
     const initialTokenBalance = toBN("100");
     await oltContract.transfer(daoOwner, initialTokenBalance);
     let daoOwnerTokenBalance = await oltContract.balanceOf.call(daoOwner);
-    expect(
-      initialTokenBalance.toString(),
-      "daoOwner must be initialized with 100 OLT Tokens"
-    ).toEqual(daoOwnerTokenBalance.toString());
+    expect(daoOwnerTokenBalance.toString()).toEqual(
+      initialTokenBalance.toString()
+    );
 
     // Number of OLTs to be sent to the DAO in exchange for number of requested shares
     const tributeAmount = 10;
@@ -237,10 +235,10 @@ describe("Adapter - Tribute", () => {
 
     // test refund of ERC20 contribution
     daoOwnerTokenBalance = await oltContract.balanceOf.call(daoOwner);
-    expect(
-      initialTokenBalance.toString(),
-      "daoOwner did not receive refund of ERC20 contribution"
-    ).toEqual(daoOwnerTokenBalance.toString());
+    // "daoOwner did not receive refund of ERC20 contribution"
+    expect(daoOwnerTokenBalance.toString()).toEqual(
+      initialTokenBalance.toString()
+    );
 
     // should not be able to sponsor if the proposal has already been cancelled
     await expectRevert(
@@ -285,10 +283,10 @@ describe("Adapter - Tribute", () => {
     const initialTokenBalance = toBN("100");
     await oltContract.transfer(daoOwner, initialTokenBalance);
     let daoOwnerTokenBalance = await oltContract.balanceOf.call(daoOwner);
-    expect(
-      initialTokenBalance.toString(),
-      "daoOwner must be initialized with 100 OLT Tokens"
-    ).toEqual(daoOwnerTokenBalance.toString());
+    // "daoOwner must be initialized with 100 OLT Tokens"
+    expect(daoOwnerTokenBalance.toString()).toEqual(
+      initialTokenBalance.toString()
+    );
 
     // Number of OLTs to be sent to the DAO in exchange for number of requested shares
     const tributeAmount = 10;
@@ -337,10 +335,10 @@ describe("Adapter - Tribute", () => {
 
     // test refund of ERC20 contribution
     daoOwnerTokenBalance = await oltContract.balanceOf.call(daoOwner);
-    expect(
-      initialTokenBalance.toString(),
-      "daoOwner did not receive refund of ERC20 contribution"
-    ).toEqual(daoOwnerTokenBalance.toString());
+    // "daoOwner did not receive refund of ERC20 contribution"
+    expect(daoOwnerTokenBalance.toString()).toEqual(
+      initialTokenBalance.toString()
+    );
 
     // test balances after proposal is processed
     const daoOwnerShares = await bank.balanceOf(daoOwner, SHARES);
@@ -357,10 +355,8 @@ describe("Adapter - Tribute", () => {
     const tributeAdapterBalance = await oltContract.balanceOf.call(
       tribute.address
     );
-    expect(
-      tributeAdapterBalance.toString(),
-      "tribute adapter did not refund ERC20 contribution"
-    ).toEqual("0");
+    // "tribute adapter did not refund ERC20 contribution";
+    expect(tributeAdapterBalance.toString()).toEqual("0");
 
     // test active member status
     const applicantIsActiveMember = await isMember(bank, applicant);
@@ -399,7 +395,7 @@ describe("Adapter - Tribute", () => {
     // Issue OpenLaw ERC20 Basic Token for tests
     // Token supply higher than the limit for external tokens
     // defined in Bank._createNewAmountCheckpoint function (2**160-1).
-    const supply = toBN("2").pow(toBN("180")).toString();
+    const supply = toBN("2").pow(toBN("180"));
     const oltContract = await OLToken.new(supply, { from: daoOwner });
     const nbOfERC20Shares = 100000000;
     const erc20SharePrice = toBN("10");
@@ -426,10 +422,10 @@ describe("Adapter - Tribute", () => {
     });
 
     let applicantTokenBalance = await oltContract.balanceOf.call(applicant);
-    expect(
-      initialTokenBalance.toString(),
-      "applicant account must be initialized with 2**161 OLT Tokens"
-    ).toEqual(applicantTokenBalance.toString());
+    // "applicant account must be initialized with 2**161 OLT Tokens";
+    expect(applicantTokenBalance.toString()).toEqual(
+      initialTokenBalance.toString()
+    );
 
     // Pre-approve spender (tribute adapter) to transfer proposer tokens
     const tributeAmount = initialTokenBalance;
@@ -477,9 +473,9 @@ describe("Adapter - Tribute", () => {
 
     // Due to the overflow it fails, and the funds must be in the applicant's account
     applicantTokenBalance = await oltContract.balanceOf.call(applicant);
-    expect(
-      initialTokenBalance.toString(),
-      "applicant account should contain 2**161 OLT Tokens when the onboard fails"
-    ).toEqual(applicantTokenBalance.toString());
+    // "applicant account should contain 2**161 OLT Tokens when the onboard fails";
+    expect(applicantTokenBalance.toString()).toEqual(
+      initialTokenBalance.toString()
+    );
   });
 });

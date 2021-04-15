@@ -37,6 +37,7 @@ const {
   takeChainSnapshot,
   revertChainSnapshot,
   proposalIdGenerator,
+  provider,
   accounts,
   sharePrice,
   GUILD,
@@ -76,7 +77,7 @@ describe("Adapter - GuildKick", () => {
     await revertChainSnapshot(this.snapshotId);
   });
 
-  test("should be possible to kick a DAO member", async () => {
+  it("should be possible to kick a DAO member", async () => {
     const newMember = accounts[2];
 
     const bank = this.extensions.bank;
@@ -135,7 +136,7 @@ describe("Adapter - GuildKick", () => {
     expect(loot.toString()).toEqual("0");
   });
 
-  test("should not be possible for a non-member to submit a guild kick proposal", async () => {
+  it("should not be possible for a non-member to submit a guild kick proposal", async () => {
     const owner = accounts[5];
     const nonMember = accounts[2];
 
@@ -154,7 +155,7 @@ describe("Adapter - GuildKick", () => {
     );
   });
 
-  test("should not be possible for a non-active member to submit a guild kick proposal", async () => {
+  it("should not be possible for a non-active member to submit a guild kick proposal", async () => {
     const newMember = accounts[2];
     const onboarding = this.adapters.onboarding;
     const voting = this.adapters.voting;
@@ -212,7 +213,7 @@ describe("Adapter - GuildKick", () => {
     }
   });
 
-  test("should be possible for a non-member to process a kick proposal", async () => {
+  it("should be possible for a non-member to process a kick proposal", async () => {
     const member = owner;
     const newMemberA = accounts[2];
     const nonMember = accounts[3];
@@ -256,7 +257,7 @@ describe("Adapter - GuildKick", () => {
     });
   });
 
-  test("should not be possible to process a kick proposal that was already processed", async () => {
+  it("should not be possible to process a kick proposal that was already processed", async () => {
     const member = owner;
     const newMember = accounts[2];
 
@@ -309,7 +310,7 @@ describe("Adapter - GuildKick", () => {
     );
   });
 
-  test("should not be possible to process a kick proposal that does not exist", async () => {
+  it("should not be possible to process a kick proposal that does not exist", async () => {
     const member = owner;
     const newMember = accounts[2];
 
@@ -361,7 +362,7 @@ describe("Adapter - GuildKick", () => {
     );
   });
 
-  test("should not be possible to process a kick proposal if the voting did not pass", async () => {
+  it("should not be possible to process a kick proposal if the voting did not pass", async () => {
     const member = owner;
     const newMember = accounts[2];
 
@@ -408,7 +409,7 @@ describe("Adapter - GuildKick", () => {
     );
   });
 
-  test("should not be possible to process a kick proposal if the member to kick does not have any shares nor loot", async () => {
+  it("should not be possible to process a kick proposal if the member to kick does not have any shares nor loot", async () => {
     const member = owner;
     const advisor = accounts[3];
     const nonMember = accounts[4];
@@ -442,7 +443,7 @@ describe("Adapter - GuildKick", () => {
     );
   });
 
-  test("should not be possible for a kicked member to sponsor an onboarding proposal", async () => {
+  it("should not be possible for a kicked member to sponsor an onboarding proposal", async () => {
     const member = owner;
     const newMember = accounts[2];
 
@@ -514,7 +515,7 @@ describe("Adapter - GuildKick", () => {
     );
   });
 
-  test("should not be possible for a kicked member to vote on in an onboarding proposal", async () => {
+  it("should not be possible for a kicked member to vote on in an onboarding proposal", async () => {
     const member = owner;
     const newMember = accounts[2];
 
@@ -590,7 +591,7 @@ describe("Adapter - GuildKick", () => {
     );
   });
 
-  test("should not be possible for a kicked member to sponsor a financing proposal", async () => {
+  it("should not be possible for a kicked member to sponsor a financing proposal", async () => {
     const member = owner;
     const newMember = accounts[2];
 
@@ -659,7 +660,7 @@ describe("Adapter - GuildKick", () => {
     );
   });
 
-  test("should not be possible for a kicked member to sponsor a financing proposal", async () => {
+  it("should not be possible for a kicked member to sponsor a financing proposal", async () => {
     const member = owner;
     const newMember = accounts[2];
 
@@ -725,7 +726,7 @@ describe("Adapter - GuildKick", () => {
     );
   });
 
-  test("should not be possible for a kicked member to sponsor a managing proposal", async () => {
+  it("should not be possible for a kicked member to sponsor a managing proposal", async () => {
     const member = owner;
     const newMember = accounts[2];
 
@@ -796,7 +797,7 @@ describe("Adapter - GuildKick", () => {
     );
   });
 
-  test("should be possible to process a ragekick to return the funds to the kicked member", async () => {
+  it("should be possible to process a ragekick to return the funds to the kicked member", async () => {
     const member = owner;
     const newMember = accounts[2];
 
@@ -851,7 +852,7 @@ describe("Adapter - GuildKick", () => {
     expect(memberEthToken.toString()).toEqual("1199999999999999880");
   });
 
-  test("should not be possible to process a ragekick if the batch index is smaller than the current processing index", async () => {
+  it("should not be possible to process a ragekick if the batch index is smaller than the current processing index", async () => {
     const member = owner;
     const newMember = accounts[2];
 
@@ -913,7 +914,7 @@ describe("Adapter - GuildKick", () => {
     );
   });
 
-  test("should not be possible to reuse the kick proposal id", async () => {
+  it("should not be possible to reuse the kick proposal id", async () => {
     const memberA = owner;
     const memberB = accounts[3];
     const memberC = accounts[5];
