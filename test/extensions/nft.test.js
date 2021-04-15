@@ -30,7 +30,7 @@ const {
   takeChainSnapshot,
   revertChainSnapshot,
   accounts,
-  ETH_TOKEN,
+  GUILD,
   expectRevert,
 } = require("../../utils/DaoFactory.js");
 
@@ -63,73 +63,27 @@ describe("Extension - NFT", () => {
     expect(nftExtension).not.toBeNull();
   });
 
-  it("should be possible to create a dao and register a new NFT token to the collection", async () => {
-    const nftExtension = this.extensions.nft;
-    const pixelNFT = this.testContracts.pixelNFT;
-    const isAllowed = await nftExtension.isNFTAllowed(pixelNFT.address);
-    expect(isAllowed).toEqual(true);
-  });
-
   it("should be possible check how many NFTs are in the collection", async () => {
     const nftExtension = this.extensions.nft;
-    const total = await nftExtension.nbNFTs();
+    const pixelNFT = this.testContracts.pixelNFT;
+    const total = await nftExtension.nbNFTs(pixelNFT.address);
     expect(total.toString()).toEqual("0");
-  });
-
-  it("should be possible get an NFT in the collection using the index", async () => {
-    const nftExtension = this.extensions.nft;
-    // const nftAddr = await nftExtension.getNFTByIndex(0);
-    // expect(nftAddr).toEqual("0x0");
   });
 
   it("should not be possible get an NFT in the collection if it is empty", async () => {
     const nftExtension = this.extensions.nft;
-    await expectRevert.unspecified(nftExtension.getNFTByIndex(0));
-  });
-
-  it("should not be possible to register a new NFT without the REGISTER_NEW_NFT permission", async () => {
-    const nftExtension = this.extensions.nft;
+    const pixelNFT = this.testContracts.pixelNFT;
     await expectRevert(
-      nftExtension.registerPotentialNewNFT(ETH_TOKEN, {
-        from: accounts[6],
-      }),
-      "nft::accessDenied::notCreator"
+      nftExtension.getNFT(pixelNFT.address, 0),
+      "index out of bounds"
     );
-  });
-
-  it("should not be possible to register a new NFT without the REGISTER_NEW_NFT permission", async () => {
-    const nftExtension = this.extensions.nft;
-    await expectRevert(
-      nftExtension.registerPotentialNewNFT(ETH_TOKEN, {
-        from: accounts[6],
-      }),
-      "nft::accessDenied::notCreator"
-    );
-  });
-
-  it("should be possible to register a new NFT if you are the extension creator", async () => {
-    const nftExtension = this.extensions.nft;
-    await nftExtension.registerPotentialNewNFT(ETH_TOKEN, {
-      from: daoOwner,
-    });
-    const isAllowed = await nftExtension.isNFTAllowed(ETH_TOKEN);
-    expect(isAllowed).toEqual(true);
   });
 
   it("should not be possible to return a NFT without the RETURN permission", async () => {
     const nftExtension = this.extensions.nft;
     const pixelNFT = this.testContracts.pixelNFT;
     await expectRevert(
-      nftExtension.returnNFT(accounts[1], pixelNFT.address, 1),
-      "nft::accessDenied"
-    );
-  });
-
-  it("should not be possible to transfer a NFT without the TRANSFER permission", async () => {
-    const nftExtension = this.extensions.nft;
-    const pixelNFT = this.testContracts.pixelNFT;
-    await expectRevert(
-      nftExtension.transferFrom(accounts[1], pixelNFT.address, 1),
+      nftExtension.withdrawNFT(accounts[1], pixelNFT.address, 1),
       "nft::accessDenied"
     );
   });
@@ -137,7 +91,7 @@ describe("Extension - NFT", () => {
   it("should be possible check how many NFTs are in the collection", async () => {
     const nftExtension = this.extensions.nft;
     const total = await nftExtension.nbNFTAddresses();
-    expect(total.toString).toEqual("0");
+    expect(total.toString()).toEqual("0");
   });
 
   it("should not be possible to initialize the extension if it was already initialized", async () => {
@@ -148,17 +102,7 @@ describe("Extension - NFT", () => {
     );
   });
 
-  it("should not be possible to collect a NFT that is not allowed", async () => {
-    const nftAdapter = this.adapters.nftAdapter;
-    const fakeNFTAddr = accounts[2];
-    await expectRevert(
-      nftAdapter.collect(this.dao.address, accounts[1], fakeNFTAddr, 1),
-      "nft not allowed"
-    );
-  });
-
   it("should be possible to collect a NFT that is allowed", async () => {
-    const dao = this.dao;
     const pixelNFT = this.testContracts.pixelNFT;
 
     const nftOwner = accounts[1];
@@ -179,7 +123,7 @@ describe("Extension - NFT", () => {
     });
 
     const nftAdapter = this.adapters.nftAdapter;
-    await nftAdapter.collect(dao.address, nftOwner, pixelNFT.address, tokenId, {
+    await nftAdapter.collect(this.dao.address, pixelNFT.address, tokenId, {
       from: nftOwner,
       gasPrice: toBN("0"),
     });
@@ -188,7 +132,7 @@ describe("Extension - NFT", () => {
     const nftAddr = await nftExtension.getNFTAddress(0);
     expect(nftAddr).toEqual(pixelNFT.address);
     const nftId = await nftExtension.getNFT(nftAddr, 0);
-    expect(nftId).toEqual(tokenId);
+    expect(nftId.toString()).toEqual(tokenId.toString());
     const newOwner = await nftExtension.getNFTOwner(nftAddr, tokenId);
     expect(newOwner.toLowerCase()).toEqual(GUILD.toLowerCase());
   });
