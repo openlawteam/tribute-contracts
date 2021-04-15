@@ -22,5 +22,5 @@
     "typechain/**/*",
     "types/**/*",
     "hardhat.config.ts"
-  ]
+, "test/jest.setup.js"  ]
 }
