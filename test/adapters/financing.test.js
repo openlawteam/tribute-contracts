@@ -37,7 +37,7 @@ const {
   GUILD,
   SHARES,
   sharePrice,
-  ETH_TOKEN
+  ETH_TOKEN,
 } = require("../../utils/DaoFactory.js");
 
 const { checkBalance } = require("../../utils/TestUtils.js");

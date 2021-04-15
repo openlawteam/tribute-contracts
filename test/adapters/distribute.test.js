@@ -149,7 +149,9 @@ describe("Adapter - Distribute", () => {
     });
 
     const escrowBalance = await bank.balanceOf(ESCROW, ETH_TOKEN);
-    expect(toBN(escrowBalance).toString()).toEqual(amountToDistribute.toString());
+    expect(toBN(escrowBalance).toString()).toEqual(
+      amountToDistribute.toString()
+    );
 
     // Checks the member's internal balance before sending the funds
     let memberBalance = await bank.balanceOf(daoMember, ETH_TOKEN);

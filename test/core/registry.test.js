@@ -29,13 +29,14 @@ const {
 } = require("../../utils/DaoFactory.js");
 
 describe("Core - Registry", () => {
-
   test("should not be possible to add a module with invalid id", async () => {
     let moduleId = fromUtf8("");
     let moduleAddress = "0x627306090abaB3A6e1400e9345bC60c78a8BEf57";
     let registry = await DaoRegistry.new();
-    await expectRevert(registry.replaceAdapter(moduleId, moduleAddress, 0, [], []), 
-    "adapterId must not be empty");
+    await expectRevert(
+      registry.replaceAdapter(moduleId, moduleAddress, 0, [], []),
+      "adapterId must not be empty"
+    );
   });
 
   test("should not be possible to add an adapter with invalid id", async () => {

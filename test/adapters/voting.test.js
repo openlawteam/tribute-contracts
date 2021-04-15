@@ -35,7 +35,7 @@ const {
   sharePrice,
   remaining,
   SHARES,
-  expectRevert
+  expectRevert,
 } = require("../../utils/DaoFactory.js");
 
 describe("Adapter - Voting", () => {
