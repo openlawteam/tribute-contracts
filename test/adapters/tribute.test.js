@@ -53,14 +53,12 @@ describe("Adapter - Tribute", () => {
     this.dao = dao;
     this.adapters = adapters;
     this.extensions = extensions;
-  });
-
-  beforeEach(async () => {
     this.snapshotId = await takeChainSnapshot();
   });
 
-  afterEach(async () => {
+  beforeEach(async () => {
     await revertChainSnapshot(this.snapshotId);
+    this.snapshotId = await takeChainSnapshot();
   });
 
   it("should be possible to provide ERC20 tokens in exchange for DAO shares", async () => {

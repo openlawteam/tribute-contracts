@@ -58,14 +58,12 @@ describe("Adapter - Ragequit", () => {
     this.dao = dao;
     this.adapters = adapters;
     this.extensions = extensions;
-  });
-
-  beforeEach(async () => {
     this.snapshotId = await takeChainSnapshot();
   });
 
-  afterEach(async () => {
+  beforeEach(async () => {
     await revertChainSnapshot(this.snapshotId);
+    this.snapshotId = await takeChainSnapshot();
   });
 
   test("should return an error if a non DAO member attempts to ragequit", async () => {

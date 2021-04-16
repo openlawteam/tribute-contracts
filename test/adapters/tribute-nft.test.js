@@ -61,14 +61,12 @@ describe("Adapter - TributeNFT", () => {
     this.adapters = adapters;
     this.extensions = extensions;
     this.testContracts = testContracts;
-  });
-
-  beforeEach(async () => {
     this.snapshotId = await takeChainSnapshot();
   });
 
-  afterEach(async () => {
+  beforeEach(async () => {
     await revertChainSnapshot(this.snapshotId);
+    this.snapshotId = await takeChainSnapshot();
   });
 
   it("should be possible to submit a nft tribute proposal", async () => {
