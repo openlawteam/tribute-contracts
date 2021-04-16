@@ -19,6 +19,8 @@
     "web3-utils": "^1.3.5"
   },
   "devDependencies": {
+    "@nomiclabs/hardhat-truffle5": "^2.0.0",
+    "@nomiclabs/hardhat-web3": "^2.0.0",
     "@openzeppelin/test-environment": "^0.1.9",
     "@openzeppelin/test-helpers": "^0.5.10",
     "@smartdec/smartcheck": "^2.0.1",
@@ -26,12 +28,14 @@
     "dotenv": "^8.2.0",
     "eth-gas-reporter": "^0.2.22",
     "ethers": "^5.1.0",
+    "hardhat": "^2.2.0",
     "jest": "^26.6.3",
     "prettier": "^2.1.2",
     "prettier-plugin-solidity": "^1.0.0-beta.3",
     "solhint": "^3.3.2",
     "solidity-coverage": "^0.7.16",
-    "truffle-abi": "^1.0.3"
+    "truffle-abi": "^1.0.3",
+    "web3": "^1.3.5"
   },
   "scripts": {
     "test": "jest --clearCache && jest --maxWorkers=3",

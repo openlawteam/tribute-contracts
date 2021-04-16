@@ -86,12 +86,12 @@ describe("Adapter - Offchain Voting", () => {
       dao,
       adapters,
       extensions,
-      offchain,
+      votingHelpers,
     } = await deployDaoWithOffchainVoting(daoOwner, newMember.address);
     this.dao = dao;
     this.adapters = adapters;
     this.extensions = extensions;
-    this.offchain = offchain;
+    this.votingHelpers = votingHelpers;
     this.snapshotId = await takeChainSnapshot();
   });
 
@@ -128,7 +128,7 @@ describe("Adapter - Offchain Voting", () => {
       daoOwner,
       chainId
     );
-    const snapshotContract = this.offchain.snapshotProposalContract;
+    const snapshotContract = this.votingHelpers.snapshotProposalContract;
     //Checking proposal type
     const solProposalMsg = await snapshotContract.PROPOSAL_MESSAGE_TYPE();
     const jsProposalMsg = TypedDataUtils.encodeType("Message", types);
@@ -192,7 +192,7 @@ describe("Adapter - Offchain Voting", () => {
   it("should type & hash be consistent for votes between javascript and solidity", async () => {
     const chainId = 1;
     const dao = this.dao;
-    const snapshotContract = this.offchain.snapshotProposalContract;
+    const snapshotContract = this.votingHelpers.snapshotProposalContract;
 
     const proposalHash = sha3("test");
     const voteEntry = await createVote(proposalHash, daoOwner, true);
@@ -219,7 +219,7 @@ describe("Adapter - Offchain Voting", () => {
 
   it("should be possible to propose a new voting by signing the proposal hash", async () => {
     const dao = this.dao;
-    const voting = this.offchain.offchainVoting;
+    const voting = this.votingHelpers.offchainVoting;
     const onboarding = this.adapters.onboarding;
     const bank = this.extensions.bank;
 

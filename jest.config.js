@@ -1,9 +1,10 @@
 module.exports = async () => {
   return {
+    setupFiles: ["./jest.setup.js"], // https://jestjs.io/pt-BR/docs/configuration#setupfiles-array
     verbose: true, // https://jestjs.io/docs/configuration#verbose-boolean
-    // maxConcurrency: 20, // https://jestjs.io/docs/configuration#maxconcurrency-number
     testTimeout: 25000, // https://jestjs.io/docs/configuration#testtimeout-number
     rootDir: "./test", // https://jestjs.io/docs/configuration#rootdir-string
-    setupFiles: ["./jest.setup.js"],
+    // maxConcurrency: 5, // https://jestjs.io/pt-BR/docs/configuration#maxconcurrency-number
+    maxWorkers: 3, // https://jestjs.io/pt-BR/docs/configuration#maxworkers-number--string
   };
 };

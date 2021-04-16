@@ -146,8 +146,6 @@ const deployDefaultNFTDao = async (owner) => {
     finalize: false,
   });
 
-  // const tributeNFT = adapters.tributeNFT;
-  // await tributeNFT.configureDao(dao.address, testContracts.pixelNFT.address);
   await dao.finalizeDao({ from: owner });
   return {
     dao: dao,
@@ -163,7 +161,7 @@ const deployDaoWithOffchainVoting = async (owner, newMember) => {
     adapters,
     extensions,
     testContracts,
-    offchain,
+    votingHelpers,
   } = await deployDao(null, {
     owner,
     offchainVoting: true,
@@ -171,16 +169,51 @@ const deployDaoWithOffchainVoting = async (owner, newMember) => {
     finalize: false,
   });
 
-  await dao.potentialNewMember(newMember);
-  await extensions.bank.addToBalance(newMember, SHARES, 1);
+  await dao.potentialNewMember(newMember, {
+    from: owner,
+  });
+  await extensions.bank.addToBalance(newMember, SHARES, 1, {
+    from: owner,
+  });
 
   await dao.finalizeDao({ from: owner });
+
+  adapters["voting"] = votingHelpers.offchainVoting;
+
   return {
     dao: dao,
     adapters: adapters,
     extensions: extensions,
     testContracts: testContracts,
-    offchain: offchain,
+    votingHelpers: votingHelpers,
+  };
+};
+
+const deployDaoWithBatchVoting = async (owner, newMember) => {
+  const { dao, adapters, extensions, votingHelpers } = await deployDao(null, {
+    owner,
+    deployTestTokens: false,
+    batchVoting: true,
+    finalize: false,
+  });
+
+  await dao.potentialNewMember(newMember, {
+    from: owner,
+  });
+
+  await extensions.bank.addToBalance(newMember, SHARES, 1, {
+    from: owner,
+  });
+
+  await dao.finalizeDao({ from: owner });
+
+  adapters["voting"] = adapters.batchVoting;
+
+  return {
+    dao: dao,
+    adapters: adapters,
+    extensions: extensions,
+    votingHelpers: votingHelpers,
   };
 };
 
@@ -193,6 +226,7 @@ const deployDao = async (deployer, options) => {
   const tokenAddr = options.tokenAddr || ETH_TOKEN;
   const maxChunks = options.maximumChunks || maximumChunks;
   const isOffchainVoting = !!options.offchainVoting;
+  const isBatchVoting = !!options.batchVoting;
   const chainId = options.chainId || 1;
   const deployTestTokens = !!options.deployTestTokens;
   const maxExternalTokens = options.maxExternalTokens || 100;
@@ -229,10 +263,10 @@ const deployDao = async (deployer, options) => {
     pastEvent = pastEvents[0];
   }
 
-  let { bankAddress } = pastEvent.returnValues;
-  let bank = await BankExtension.at(bankAddress);
-  let creator = await dao.getMemberAddress(1);
-  await dao.addExtension(sha3("bank"), bank.address, creator);
+  const { bankAddress } = pastEvent.returnValues;
+  const bankExtension = await BankExtension.at(bankAddress);
+  const creator = await dao.getMemberAddress(1);
+  await dao.addExtension(sha3("bank"), bankExtension.address, creator);
 
   await nftFactory.createNFTCollection();
   pastEvent = undefined;
@@ -241,11 +275,11 @@ const deployDao = async (deployer, options) => {
     pastEvent = pastEvents[0];
   }
 
-  let { nftCollAddress } = pastEvent.returnValues;
-  let nftExtension = await NFTExtension.at(nftCollAddress);
+  const { nftCollAddress } = pastEvent.returnValues;
+  const nftExtension = await NFTExtension.at(nftCollAddress);
   await dao.addExtension(sha3("nft"), nftExtension.address, creator);
 
-  const extensions = { bank: bank, nft: nftExtension };
+  const extensions = { bank: bankExtension, nft: nftExtension };
 
   const { adapters } = await addDefaultAdapters(
     deployer,
@@ -260,60 +294,47 @@ const deployDao = async (deployer, options) => {
   );
 
   const votingAddress = await dao.getAdapterAddress(sha3("voting"));
-  const offchain = {
+  const votingHelpers = {
     snapshotProposalContract: null,
     handleBadReporterAdapter: null,
     offchainVoting: null,
+    batchVoting: null,
   };
+
   if (isOffchainVoting) {
-    if (deployer) {
-      offchain.snapshotProposalContract = await deployer.deploy(
-        SnapshotProposalContract,
-        chainId
-      );
-      offchain.handleBadReporterAdapter = await deployer.deploy(
-        KickBadReporterAdapter
-      );
-      offchain.offchainVoting = await deployer.deploy(
-        OffchainVotingContract,
-        votingAddress,
-        offchain.snapshotProposalContract.address,
-        offchain.handleBadReporterAdapter.address
-      );
-    } else {
-      offchain.snapshotProposalContract = await SnapshotProposalContract.new(
-        chainId
-      );
-      offchain.handleBadReporterAdapter = await KickBadReporterAdapter.new();
-      offchain.offchainVoting = await OffchainVotingContract.new(
-        votingAddress,
-        offchain.snapshotProposalContract.address,
-        offchain.handleBadReporterAdapter.address
-      );
-    }
-
-    await daoFactory.updateAdapter(
-      dao.address,
-      entryDao("voting", offchain.offchainVoting, {})
-    );
-
-    await dao.setAclToExtensionForAdapter(
+    const {
+      offchainVoting,
+      handleBadReporterAdapter,
+      snapshotProposalContract,
+    } = await configureOffchainVoting(
+      owner,
+      dao,
+      daoFactory,
+      chainId,
+      votingAddress,
       bankAddress,
-      offchain.offchainVoting.address,
-      entryBank(offchain.offchainVoting, {
-        ADD_TO_BALANCE: true,
-        SUB_FROM_BALANCE: true,
-        INTERNAL_TRANSFER: true,
-      }).flags
-    );
-
-    await offchain.offchainVoting.configureDao(
-      dao.address,
       votingPeriod,
       gracePeriod,
-      10,
-      { from: owner }
+      deployer
     );
+    votingHelpers.offchainVoting = offchainVoting;
+    votingHelpers.handleBadReporterAdapter = handleBadReporterAdapter;
+    votingHelpers.snapshotProposalContract = snapshotProposalContract;
+  } else if (isBatchVoting) {
+    const {
+      batchVoting,
+      snapshotProposalContract,
+    } = await configureBatchVoting(
+      owner,
+      dao,
+      daoFactory,
+      chainId,
+      votingPeriod,
+      gracePeriod,
+      deployer
+    );
+    votingHelpers.batchVoting = batchVoting;
+    votingHelpers.snapshotProposalContract = snapshotProposalContract;
   }
 
   // deploy test token contracts (for testing convenience)
@@ -324,6 +345,7 @@ const deployDao = async (deployer, options) => {
     multicall: null,
     pixelNFT: null,
   };
+
   if (deployTestTokens) {
     if (deployer) {
       testContracts.oltToken = await deployer.deploy(
@@ -354,38 +376,8 @@ const deployDao = async (deployer, options) => {
     adapters: adapters,
     extensions: extensions,
     testContracts: testContracts,
-    offchain: offchain,
+    votingHelpers: votingHelpers,
   };
-};
-
-const createNFTDao = async (daoOwner) => {
-  const dimenson = 100; // 100x100 pixel matrix
-  const pixelNFT = await PixelNFT.new(dimenson);
-
-  const dao = await createDao(
-    daoOwner,
-    sharePrice,
-    numberOfShares,
-    10,
-    1,
-    ETH_TOKEN,
-    false
-  );
-
-  const tributeNFT = await getContract(dao, "tribute-nft", TributeNFTContract);
-
-  await tributeNFT.configureDao(dao.address, pixelNFT.address);
-
-  await dao.finalizeDao();
-
-  return { dao, pixelNFT };
-};
-
-const createIdentityDao = async (owner) => {
-  return await DaoRegistry.new({
-    from: owner,
-    gasPrice: toBN("0"),
-  });
 };
 
 const prepareAdapters = async (deployer) => {
@@ -696,89 +688,6 @@ const configureDao = async ({
   await tributeNFT.configureDao(dao.address);
 };
 
-const createDao = async (
-  senderAccount,
-  unitPrice = sharePrice,
-  nbShares = numberOfShares,
-  votingPeriod = 10,
-  gracePeriod = 1,
-  tokenAddr = ETH_TOKEN,
-  finalize = true,
-  maxExternalTokens = 100,
-  maxChunks = maximumChunks
-) => {
-  const daoFactory = await DaoFactory.deployed();
-  const daoName = "test-dao-" + counter++;
-  await daoFactory.createDao(daoName, senderAccount);
-
-  // checking the gas usaged to clone a contract
-  const daoAddress = await daoFactory.getDaoAddress(daoName);
-  let dao = await DaoRegistry.at(daoAddress);
-
-  // Create and add the Bank Extension to the DAO
-  const bankFactory = await BankFactory.deployed();
-  await bankFactory.createBank(maxExternalTokens);
-  let pastEvents = await bankFactory.getPastEvents();
-  let { bankAddress } = pastEvents[0].returnValues;
-  let bank = await BankExtension.at(bankAddress);
-  await dao.addExtension(sha3("bank"), bank.address, senderAccount);
-
-  // Create and add the NFT Collection Extension to the DAO
-  const nftFactory = await NFTCollectionFactory.deployed();
-  await nftFactory.createNFTCollection();
-  pastEvents = await nftFactory.getPastEvents();
-  let { nftCollAddress } = pastEvents[0].returnValues;
-  let nftExt = await NFTExtension.at(nftCollAddress);
-  await dao.addExtension(sha3("nft"), nftExt.address, senderAccount);
-
-  // Create and set up the DAO Adapters
-  const voting = await VotingContract.deployed();
-  const configuration = await ConfigurationContract.deployed();
-  const ragequit = await RagequitContract.deployed();
-  const managing = await ManagingContract.deployed();
-  const financing = await FinancingContract.deployed();
-  const onboarding = await OnboardingContract.deployed();
-  const guildkick = await GuildKickContract.deployed();
-  const daoRegistryAdapter = await DaoRegistryAdapterContract.deployed();
-  const bankAdapter = await BankAdapterContract.deployed();
-  const nftAdapter = await NFTAdapterContract.deployed();
-  const couponOnboarding = await CouponOnboardingContract.deployed();
-  const tribute = await TributeContract.deployed();
-  const distribute = await DistributeContract.deployed();
-  const tributeNFT = await TributeNFTContract.deployed();
-
-  await configureDao({
-    daoFactory,
-    dao,
-    ragequit,
-    guildkick,
-    managing,
-    financing,
-    onboarding,
-    daoRegistryAdapter,
-    bankAdapter,
-    nftAdapter,
-    voting,
-    configuration,
-    couponOnboarding,
-    tribute,
-    distribute,
-    tributeNFT,
-    unitPrice,
-    nbShares,
-    votingPeriod,
-    gracePeriod,
-    tokenAddr,
-    maxChunks,
-  });
-
-  if (finalize) {
-    await dao.finalizeDao();
-  }
-
-  return dao;
-};
-
 const cloneDao = async (deployer, identityDao, owner, name = "test-dao") => {
   // The owner of the DAO is always the 1st unlocked address if none is provided
   let txArgs = {
@@ -901,11 +810,6 @@ const entry = (values) => {
     .reduce((a, b) => a + b);
 };
 
-const getContract = async (dao, id, contractFactory) => {
-  const address = await dao.getAdapterAddress(sha3(id));
-  return await contractFactory.at(address);
-};
-
 const takeChainSnapshot = async () => {
   return await new Promise((resolve, reject) =>
     provider.send(
@@ -954,23 +858,124 @@ const proposalIdGenerator = () => {
   };
 };
 
+const configureOffchainVoting = async (
+  owner,
+  dao,
+  daoFactory,
+  chainId,
+  votingAddress,
+  bankAddress,
+  votingPeriod,
+  gracePeriod,
+  deployer
+) => {
+  let snapshotProposalContract;
+  let handleBadReporterAdapter;
+  let offchainVoting;
+  if (deployer) {
+    snapshotProposalContract = await deployer.deploy(
+      SnapshotProposalContract,
+      chainId
+    );
+    handleBadReporterAdapter = await deployer.deploy(KickBadReporterAdapter);
+    offchainVoting = await deployer.deploy(
+      OffchainVotingContract,
+      votingAddress,
+      snapshotProposalContract.address,
+      handleBadReporterAdapter.address
+    );
+  } else {
+    snapshotProposalContract = await SnapshotProposalContract.new(chainId);
+    handleBadReporterAdapter = await KickBadReporterAdapter.new();
+    offchainVoting = await OffchainVotingContract.new(
+      votingAddress,
+      snapshotProposalContract.address,
+      handleBadReporterAdapter.address
+    );
+  }
+
+  await daoFactory.updateAdapter(
+    dao.address,
+    entryDao("voting", offchainVoting, {})
+  );
+
+  await dao.setAclToExtensionForAdapter(
+    bankAddress,
+    offchainVoting.address,
+    entryBank(offchainVoting, {
+      ADD_TO_BALANCE: true,
+      SUB_FROM_BALANCE: true,
+      INTERNAL_TRANSFER: true,
+    }).flags
+  );
+
+  await offchainVoting.configureDao(
+    dao.address,
+    votingPeriod,
+    gracePeriod,
+    10,
+    { from: owner }
+  );
+
+  return { offchainVoting, snapshotProposalContract, handleBadReporterAdapter };
+};
+
+const configureBatchVoting = async (
+  owner,
+  dao,
+  daoFactory,
+  chainId,
+  votingPeriod,
+  gracePeriod,
+  deployer
+) => {
+  let snapshotProposalContract, batchVoting;
+  if (deployer) {
+    snapshotProposalContract = await deployer.deploy(
+      SnapshotProposalContract,
+      chainId
+    );
+    batchVoting = await deployer.deploy(
+      BatchVotingContract,
+      snapshotProposalContract.address
+    );
+  } else {
+    snapshotProposalContract = await SnapshotProposalContract.new(chainId);
+    batchVoting = await BatchVotingContract.new(
+      snapshotProposalContract.address
+    );
+  }
+
+  await daoFactory.updateAdapter(
+    dao.address,
+    entryDao("voting", batchVoting, {}),
+    { from: owner }
+  );
+
+  await batchVoting.configureDao(dao.address, votingPeriod, gracePeriod, {
+    from: owner,
+  });
+
+  return { batchVoting, snapshotProposalContract };
+};
+
 module.exports = {
-  prepareAdapters,
-  advanceTime,
-  createDao,
-  createNFTDao,
-  createIdentityDao,
   deployDao,
   deployDefaultDao,
   deployDefaultNFTDao,
+  deployDaoWithBatchVoting,
   deployDaoWithOffchainVoting,
   cloneDao,
+  prepareAdapters,
   addDefaultAdapters,
-  getContract,
   entry,
   entryBank,
   entryDao,
+  takeChainSnapshot,
+  revertChainSnapshot,
+  proposalIdGenerator,
   getNetworkDetails,
+  advanceTime,
   sha3,
   toBN,
   toWei,
@@ -979,25 +984,22 @@ module.exports = {
   toAscii,
   fromAscii,
   toUtf8,
-  takeChainSnapshot,
-  revertChainSnapshot,
-  proposalIdGenerator,
-  maximumChunks,
-  networks,
   web3,
+  networks,
+  maximumChunks,
   provider,
   contract,
   accounts,
   expectRevert,
+  numberOfShares,
+  sharePrice,
+  remaining,
   GUILD,
   TOTAL,
   ESCROW,
   DAI_TOKEN,
   SHARES,
   LOOT,
-  numberOfShares,
-  sharePrice,
-  remaining,
   ETH_TOKEN,
   OLToken,
   TestToken1,
