@@ -23,7 +23,8 @@ SOFTWARE.
 const {
   TestFairShareCalc,
   toWei,
-  expectRevert, expect,
+  expectRevert,
+  expect,
 } = require("../../utils/DaoFactory.js");
 
 describe("Helper - FairShareHelper", () => {

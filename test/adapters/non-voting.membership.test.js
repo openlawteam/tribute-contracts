@@ -36,7 +36,8 @@ const {
   sharePrice,
   remaining,
   OLToken,
-  expectRevert, expect,
+  expectRevert,
+  expect,
 } = require("../../utils/DaoFactory.js");
 
 const daoOwner = accounts[1];

@@ -35,7 +35,8 @@ const {
   sharePrice,
   remaining,
   SHARES,
-  expectRevert, expect,
+  expectRevert,
+  expect,
 } = require("../../utils/DaoFactory.js");
 
 describe("Adapter - Voting", () => {
@@ -46,7 +47,7 @@ describe("Adapter - Voting", () => {
     return proposalCounter().next().value;
   };
 
-  before("deploy dao",  async () => {
+  before("deploy dao", async () => {
     const { dao, adapters, extensions } = await deployDefaultDao(daoOwner);
     this.dao = dao;
     this.adapters = adapters;

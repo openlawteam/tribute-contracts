@@ -41,7 +41,8 @@ const {
   VotingContract,
   ManagingContract,
   DaoRegistryAdapterContract,
-  expectRevert, expect,
+  expectRevert,
+  expect,
 } = require("../../utils/DaoFactory.js");
 
 const daoOwner = accounts[1];
@@ -52,7 +53,7 @@ function getProposalCounter() {
 }
 
 describe("Adapter - Managing", () => {
-  before("deploy dao",  async () => {
+  before("deploy dao", async () => {
     const { dao, adapters, extensions } = await deployDefaultDao(daoOwner);
     this.dao = dao;
     this.adapters = adapters;
@@ -277,9 +278,7 @@ describe("Adapter - Managing", () => {
     const newOnboardingAddress = await dao.getAdapterAddress(
       sha3("onboarding")
     );
-    expect(newOnboardingAddress.toString()).equal(
-      newAdapterAddress.toString()
-    );
+    expect(newOnboardingAddress.toString()).equal(newAdapterAddress.toString());
   });
 
   it("should not be possible to reuse a proposal id", async () => {

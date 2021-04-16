@@ -33,7 +33,8 @@ const {
   proposalIdGenerator,
   advanceTime,
   accounts,
-  expectRevert, expect,
+  expectRevert,
+  expect,
 } = require("../../utils/DaoFactory.js");
 
 const owner = accounts[1];
@@ -44,7 +45,7 @@ function getProposalCounter() {
 }
 
 describe("Adapter - Configuration", () => {
-  before("deploy dao",  async () => {
+  before("deploy dao", async () => {
     const { dao, adapters, extensions } = await deployDefaultDao(owner);
     this.dao = dao;
     this.adapters = adapters;

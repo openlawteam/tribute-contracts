@@ -37,7 +37,8 @@ const {
   GUILD,
   ETH_TOKEN,
   SHARES,
-  expectRevert, expect,
+  expectRevert,
+  expect,
 } = require("../../utils/DaoFactory.js");
 
 const { onboardingNewMember } = require("../../utils/TestUtils.js");
@@ -50,7 +51,7 @@ describe("Adapter - TributeNFT", () => {
     return proposalCounter().next().value;
   };
 
-  before("deploy dao",  async () => {
+  before("deploy dao", async () => {
     const {
       dao,
       adapters,

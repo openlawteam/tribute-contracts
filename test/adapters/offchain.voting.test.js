@@ -37,7 +37,7 @@ const {
   SHARES,
   sharePrice,
   remaining,
-  expect
+  expect,
 } = require("../../utils/DaoFactory.js");
 
 const {
@@ -79,7 +79,7 @@ function getProposalCounter() {
 }
 
 describe("Adapter - Offchain Voting", () => {
-  before("deploy dao",  async () => {
+  before("deploy dao", async () => {
     const {
       dao,
       adapters,

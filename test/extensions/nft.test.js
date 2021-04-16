@@ -31,13 +31,14 @@ const {
   revertChainSnapshot,
   accounts,
   GUILD,
-  expectRevert, expect,
+  expectRevert,
+  expect,
 } = require("../../utils/DaoFactory.js");
 
 describe("Extension - NFT", () => {
   const daoOwner = accounts[0];
 
-  before("deploy dao",  async () => {
+  before("deploy dao", async () => {
     const {
       dao,
       adapters,

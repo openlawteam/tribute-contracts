@@ -43,7 +43,8 @@ const {
   SHARES,
   ESCROW,
   LOOT,
-  expectRevert, expect,
+  expectRevert,
+  expect,
 } = require("../../utils/DaoFactory.js");
 
 const { onboardingNewMember } = require("../../utils/TestUtils.js");
@@ -56,7 +57,7 @@ function getProposalCounter() {
 }
 
 describe("Adapter - Distribute", () => {
-  before("deploy dao",  async () => {
+  before("deploy dao", async () => {
     const { dao, adapters, extensions } = await deployDefaultDao(daoOwner);
     this.dao = dao;
     this.adapters = adapters;
@@ -147,9 +148,7 @@ describe("Adapter - Distribute", () => {
     });
 
     const escrowBalance = await bank.balanceOf(ESCROW, ETH_TOKEN);
-    expect(toBN(escrowBalance).toString()).equal(
-      amountToDistribute.toString()
-    );
+    expect(toBN(escrowBalance).toString()).equal(amountToDistribute.toString());
 
     // Checks the member's internal balance before sending the funds
     let memberBalance = await bank.balanceOf(daoMember, ETH_TOKEN);

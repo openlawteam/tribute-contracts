@@ -40,7 +40,8 @@ const {
   SHARES,
   LOOT,
   OLToken,
-  expectRevert, expect,
+  expectRevert,
+  expect,
 } = require("../../utils/DaoFactory.js");
 
 const { onboardingNewMember } = require("../../utils/TestUtils.js");
@@ -53,7 +54,7 @@ function getProposalCounter() {
 }
 
 describe("Adapter - Ragequit", () => {
-  before("deploy dao",  async () => {
+  before("deploy dao", async () => {
     const { dao, adapters, extensions } = await deployDefaultDao(owner);
     this.dao = dao;
     this.adapters = adapters;

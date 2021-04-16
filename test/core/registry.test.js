@@ -25,7 +25,8 @@ const {
   fromUtf8,
   ETH_TOKEN,
   DaoRegistry,
-  expectRevert, expect,
+  expectRevert,
+  expect,
 } = require("../../utils/DaoFactory.js");
 
 describe("Core - Registry", () => {

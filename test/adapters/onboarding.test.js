@@ -41,7 +41,8 @@ const {
   OLToken,
   numberOfShares,
   ETH_TOKEN,
-  expectRevert, expect,
+  expectRevert,
+  expect,
 } = require("../../utils/DaoFactory.js");
 
 const { checkBalance, isMember } = require("../../utils/TestUtils.js");
@@ -54,7 +55,7 @@ function getProposalCounter() {
 }
 
 describe("Adapter - Onboarding", () => {
-  before("deploy dao",  async () => {
+  before("deploy dao", async () => {
     const { dao, adapters, extensions } = await deployDefaultDao(daoOwner);
     this.dao = dao;
     this.adapters = adapters;

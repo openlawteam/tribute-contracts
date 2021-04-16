@@ -36,7 +36,8 @@ const {
   GUILD,
   SHARES,
   OLToken,
-  expectRevert, expect,
+  expectRevert,
+  expect,
 } = require("../../utils/DaoFactory.js");
 const { checkBalance, isMember } = require("../../utils/TestUtils.js");
 
@@ -48,7 +49,7 @@ describe("Adapter - Tribute", () => {
     return proposalCounter().next().value;
   };
 
-  before("deploy dao",  async () => {
+  before("deploy dao", async () => {
     const { dao, adapters, extensions } = await deployDefaultDao(daoOwner);
     this.dao = dao;
     this.adapters = adapters;
