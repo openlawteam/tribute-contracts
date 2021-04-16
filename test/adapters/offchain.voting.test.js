@@ -57,18 +57,15 @@ const {
 const members = [
   {
     address: "0x7D8cad0bbD68deb352C33e80fccd4D8e88b4aBb8",
-    privKey:
-      "c150429d49e8799f119434acd3f816f299a5c7e3891455ee12269cb47a5f987c",
+    privKey: "c150429d49e8799f119434acd3f816f299a5c7e3891455ee12269cb47a5f987c",
   },
   {
     address: "0x9A60E6865b717f4DA53e0F3d53A30Ac3Dd2C743e",
-    privKey:
-      "14ecc272f178289e8b119769b4a86ff9ec54457a39a611b20d1c92102aa9bf1b",
+    privKey: "14ecc272f178289e8b119769b4a86ff9ec54457a39a611b20d1c92102aa9bf1b",
   },
   {
     address: "0xc08964fd0cEBCAC1BF73D1457b10fFFD9Ed25d55",
-    privKey:
-      "7aa9805ef135bf9b4d67b68ceccdaee8cc937c0784d92b51cf49e6911fc5f787",
+    privKey: "7aa9805ef135bf9b4d67b68ceccdaee8cc937c0784d92b51cf49e6911fc5f787",
   },
 ];
 
@@ -78,7 +75,7 @@ const proposalCounter = proposalIdGenerator().generator;
 
 function getProposalCounter() {
   return proposalCounter().next().value;
-};
+}
 
 describe("Adapter - Offchain Voting", () => {
   beforeAll(async () => {

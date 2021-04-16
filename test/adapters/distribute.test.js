@@ -53,7 +53,7 @@ const proposalCounter = proposalIdGenerator().generator;
 
 function getProposalCounter() {
   return proposalCounter().next().value;
-};
+}
 
 describe("Adapter - Distribute", () => {
   beforeAll(async () => {

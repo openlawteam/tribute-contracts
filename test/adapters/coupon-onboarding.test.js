@@ -52,7 +52,6 @@ const signer = {
 const daoOwner = accounts[1];
 
 describe("Adapter - Coupon Onboarding ", () => {
-
   beforeAll(async () => {
     const { dao, adapters, extensions } = await deployDefaultDao(daoOwner);
     this.dao = dao;

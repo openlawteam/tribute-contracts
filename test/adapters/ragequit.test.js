@@ -50,10 +50,9 @@ const owner = accounts[1];
 
 function getProposalCounter() {
   return proposalCounter().next().value;
-};
+}
 
 describe("Adapter - Ragequit", () => {
-
   beforeAll(async () => {
     const { dao, adapters, extensions } = await deployDefaultDao(owner);
     this.dao = dao;

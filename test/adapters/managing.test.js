@@ -49,7 +49,7 @@ const proposalCounter = proposalIdGenerator().generator;
 
 function getProposalCounter() {
   return proposalCounter().next().value;
-};
+}
 
 describe("Adapter - Managing", () => {
   beforeAll(async () => {

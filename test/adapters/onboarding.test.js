@@ -51,7 +51,7 @@ const proposalCounter = proposalIdGenerator().generator;
 
 function getProposalCounter() {
   return proposalCounter().next().value;
-};
+}
 
 describe("Adapter - Onboarding", () => {
   beforeAll(async () => {

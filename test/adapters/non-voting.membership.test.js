@@ -44,7 +44,7 @@ const proposalCounter = proposalIdGenerator().generator;
 
 function getProposalCounter() {
   return proposalCounter().next().value;
-};
+}
 
 describe("Adapter - Non Voting Onboarding", () => {
   it("should be possible to join a DAO as a member without any voting power by requesting Loot while staking raw ETH", async () => {

@@ -59,7 +59,7 @@ const proposalCounter = proposalIdGenerator().generator;
 
 function getProposalCounter() {
   return proposalCounter().next().value;
-};
+}
 
 describe("Adapter - GuildKick", () => {
   beforeAll(async () => {
