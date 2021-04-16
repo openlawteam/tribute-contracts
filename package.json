@@ -7,7 +7,7 @@
     "test": "test"
   },
   "dependencies": {
-    "@openzeppelin/contracts": "^4.0.0-beta.0",
+    "@openzeppelin/contracts": "^4.0.0",
     "@truffle/contract": "^4.3.13",
     "@truffle/hdwallet-provider": "1.2.2",
     "eth-sig-util": "^3.0.0",
@@ -40,8 +40,6 @@
     "lint:fix": "prettier --write 'contracts/**/*.sol' 'test/**/*.test.js' '**/*.md'",
     "compile": "truffle compile",
     "test": "jest --clearCache && jest",
-    "codegen:subgraph": "cd subgraph && npm ci && npm run codegen",
-    "build:subgraph": "cd subgraph && npm run build",
     "ganache": "ganache-cli --deterministic -p 8545 --networkId 1337",
     "migrate": "truffle migrate --network ganache",
     "coverage": "truffle run coverage"
