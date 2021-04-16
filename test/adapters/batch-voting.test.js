@@ -65,7 +65,7 @@ describe("Adapter - BatchVoting", () => {
     return proposalCounter().next().value;
   };
 
-  beforeAll(async () => {
+  beforeAll(async (done) => {
     this.members = generateMembers(5).sort((a, b) =>
       a.address.toLowerCase() < b.address.toLowerCase()
         ? -1
@@ -84,6 +84,7 @@ describe("Adapter - BatchVoting", () => {
     this.extensions = extensions;
     this.votingHelpers = votingHelpers;
     this.snapshotId = await takeChainSnapshot();
+    done();
   });
 
   beforeEach(async () => {

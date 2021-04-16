@@ -56,8 +56,6 @@ const sharePrice = toBN(toWei("120", "finney"));
 const remaining = sharePrice.sub(toBN("50000000000000"));
 const maximumChunks = toBN("11");
 
-let counter = 0;
-
 // Test Util Contracts
 const OLToken = contract.fromArtifact("OLToken");
 const TestToken1 = contract.fromArtifact("TestToken1");
@@ -66,11 +64,11 @@ const TestFairShareCalc = contract.fromArtifact("TestFairShareCalc");
 const PixelNFT = contract.fromArtifact("PixelNFT");
 
 // DAO Contracts
-const Multicall = contract.fromArtifact("Multicall");
 const DaoFactory = contract.fromArtifact("DaoFactory");
-const NFTCollectionFactory = contract.fromArtifact("NFTCollectionFactory");
 const DaoRegistry = contract.fromArtifact("DaoRegistry");
+const NFTCollectionFactory = contract.fromArtifact("NFTCollectionFactory");
 const BankFactory = contract.fromArtifact("BankFactory");
+const Multicall = contract.fromArtifact("Multicall");
 
 // Extensions
 const NFTExtension = contract.fromArtifact("NFTExtension");
@@ -692,7 +690,6 @@ const configureDao = async ({
   await voting.configureDao(dao.address, votingPeriod, gracePeriod);
   await tribute.configureDao(dao.address, SHARES);
   await tribute.configureDao(dao.address, LOOT);
-  await tributeNFT.configureDao(dao.address);
 };
 
 const cloneDao = async (deployer, identityDao, owner, name = "test-dao") => {

@@ -64,9 +64,9 @@ jobs:
         working-directory: subgraph
 
       - name: Generate subgraph files
-        run: npm run codegen
+        run: npm run codegen:subgraph
         working-directory: subgraph
 
       - name: Build subgraph
-        run: npm run build
+        run: npm run build:subgraph
         working-directory: subgraph
