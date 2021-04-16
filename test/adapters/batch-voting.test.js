@@ -25,6 +25,7 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
  */
 const {
+  sha3,
   toBN,
   advanceTime,
   deployDaoWithBatchVoting,
@@ -36,6 +37,7 @@ const {
   SHARES,
   sharePrice,
   remaining,
+  BatchVotingContract,
 } = require("../../utils/DaoFactory.js");
 
 const {
@@ -177,7 +179,7 @@ describe("Adapter - BatchVoting", () => {
           chainId,
           sig
         )
-      ).equal(true);
+      ).toEqual(true);
     }
 
     await advanceTime(10000);
@@ -189,9 +191,7 @@ describe("Adapter - BatchVoting", () => {
     );
 
     console.log(
-      "gas used for (" +
-        (proposalCounter - proposals) +
-        ") votes:" +
+      `gas used for ( ${proposalId} ) votes: ` +
         new Intl.NumberFormat().format(tx.receipt.gasUsed)
     );
 
@@ -202,11 +202,12 @@ describe("Adapter - BatchVoting", () => {
 
   it("should be possible to propose a new voting by signing the proposal hash", async () => {
     const dao = this.dao;
-    const voting = this.adapters.voting;
     const onboarding = this.adapters.onboarding;
 
-    const votingName = await voting.getAdapterName();
-    expect(votingName).toEqual("BatchVotingContract");
+    const batchVotingAddr = await dao.getAdapterAddress(sha3("voting"));
+    const voting = await BatchVotingContract.at(batchVotingAddr);
+    const adapterName = await voting.getAdapterName();
+    expect(adapterName).toEqual("BatchVotingContract");
 
     for (var i = 0; i < this.members.length; i++) {
       await onboardMember(dao, voting, onboarding, i);

@@ -461,6 +461,13 @@ const prepareAdapters = async (deployer) => {
   };
 };
 
+const createIdentityDao = async (owner) => {
+  return await DaoRegistry.new({
+    from: owner,
+    gasPrice: toBN("0"),
+  });
+};
+
 const addDefaultAdapters = async (
   deployer,
   dao,
@@ -711,7 +718,6 @@ const cloneDao = async (deployer, identityDao, owner, name = "test-dao") => {
 };
 
 const advanceTime = async (time) => {
-  
   await new Promise((resolve, reject) => {
     web3.currentProvider.send(
       {
@@ -965,6 +971,7 @@ module.exports = {
   deployDefaultNFTDao,
   deployDaoWithBatchVoting,
   deployDaoWithOffchainVoting,
+  createIdentityDao,
   cloneDao,
   prepareAdapters,
   addDefaultAdapters,
