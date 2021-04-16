@@ -196,7 +196,7 @@ const deployDao = async (deployer, options) => {
   const chainId = options.chainId || 1;
   const deployTestTokens = !!options.deployTestTokens;
   const maxExternalTokens = options.maxExternalTokens || 100;
-  const finalize = !!options.finalize;
+  const finalize = options.finalize === undefined || !!options.finalize;
 
   let daoRegistry;
   let bankFactory;
@@ -907,7 +907,7 @@ const entryDao = (name, contract, flags) => {
 
 const entry = (values) => {
   return values
-    .map((v, idx) => (v !== undefined ? 2 ** idx : 0))
+    .map((v, idx) => (v === true ? 2 ** idx : 0))
     .reduce((a, b) => a + b);
 };
 

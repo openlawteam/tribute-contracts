@@ -59,14 +59,12 @@ describe("Adapter - Onboarding", () => {
     this.dao = dao;
     this.adapters = adapters;
     this.extensions = extensions;
-  });
-
-  beforeEach(async () => {
     this.snapshotId = await takeChainSnapshot();
   });
 
-  afterEach(async () => {
+  beforeEach(async () => {
     await revertChainSnapshot(this.snapshotId);
+    this.snapshotId = await takeChainSnapshot();
   });
 
   it("should not be possible onboard when the token amount exceeds the external token limits", async () => {

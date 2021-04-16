@@ -92,14 +92,12 @@ describe("Adapter - Offchain Voting", () => {
     this.adapters = adapters;
     this.extensions = extensions;
     this.offchain = offchain;
-  });
-
-  beforeEach(async () => {
     this.snapshotId = await takeChainSnapshot();
   });
 
-  afterEach(async () => {
+  beforeEach(async () => {
     await revertChainSnapshot(this.snapshotId);
+    this.snapshotId = await takeChainSnapshot();
   });
 
   it("should type & hash be consistent for proposals between javascript and solidity", async () => {

@@ -61,14 +61,12 @@ describe("Adapter - Distribute", () => {
     this.dao = dao;
     this.adapters = adapters;
     this.extensions = extensions;
-  });
-
-  beforeEach(async () => {
     this.snapshotId = await takeChainSnapshot();
   });
 
-  afterEach(async () => {
+  beforeEach(async () => {
     await revertChainSnapshot(this.snapshotId);
+    this.snapshotId = await takeChainSnapshot();
   });
 
   const distributeFundsProposal = async (

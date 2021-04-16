@@ -57,14 +57,12 @@ describe("Adapter - Coupon Onboarding ", () => {
     this.dao = dao;
     this.adapters = adapters;
     this.extensions = extensions;
-  });
-
-  beforeEach(async () => {
     this.snapshotId = await takeChainSnapshot();
   });
 
-  afterEach(async () => {
+  beforeEach(async () => {
     await revertChainSnapshot(this.snapshotId);
+    this.snapshotId = await takeChainSnapshot();
   });
 
   it("should be possible to join a DAO with a valid coupon", async () => {
