@@ -38,6 +38,7 @@ const {
   SHARES,
   sharePrice,
   ETH_TOKEN,
+  expect,
 } = require("../../utils/DaoFactory.js");
 
 const { checkBalance } = require("../../utils/TestUtils.js");
@@ -54,7 +55,7 @@ function getProposalCounter() {
 }
 
 describe("Adapter - Financing", () => {
-  beforeAll(async () => {
+  before("deploy dao", async () => {
     const { dao, adapters, extensions } = await deployDefaultDao(myAccount);
     this.dao = dao;
     this.adapters = adapters;
@@ -67,7 +68,7 @@ describe("Adapter - Financing", () => {
     this.snapshotId = await takeChainSnapshot();
   });
 
-  test("should be possible to create a financing proposal and get the funds when the proposal pass", async () => {
+  it("should be possible to create a financing proposal and get the funds when the proposal pass", async () => {
     const bank = this.extensions.bank;
     const voting = this.adapters.voting;
     const financing = this.adapters.financing;
@@ -106,7 +107,7 @@ describe("Adapter - Financing", () => {
         gasPrice: toBN("0"),
       });
     } catch (err) {
-      expect(err.reason).toEqual("proposal has not been voted on yet");
+      expect(err.reason).equal("proposal has not been voted on yet");
     }
 
     await advanceTime(10000);
@@ -169,12 +170,12 @@ describe("Adapter - Financing", () => {
     });
     checkBalance(bank, applicant, ETH_TOKEN, 0);
     const ethBalance2 = await web3.eth.getBalance(applicant);
-    expect(toBN(ethBalance).add(requestedAmount).toString()).toEqual(
+    expect(toBN(ethBalance).add(requestedAmount).toString()).equal(
       ethBalance2.toString()
     );
   });
 
-  test("should not be possible to get the money if the proposal fails", async () => {
+  it("should not be possible to get the money if the proposal fails", async () => {
     const voting = this.adapters.voting;
     const financing = this.adapters.financing;
     const onboarding = this.adapters.onboarding;
@@ -242,7 +243,7 @@ describe("Adapter - Financing", () => {
         gasPrice: toBN("0"),
       });
     } catch (err) {
-      expect(err.reason).toEqual("proposal needs to pass");
+      expect(err.reason).equal("proposal needs to pass");
     }
   });
 
@@ -299,11 +300,11 @@ describe("Adapter - Financing", () => {
         "should not be possible to submit a proposal with a token that is not allowed"
       );
     } catch (err) {
-      expect(err.reason).toEqual("token not allowed");
+      expect(err.reason).equal("token not allowed");
     }
   });
 
-  test("should not be possible to submit a proposal to request funding with an amount.toEqual to zero", async () => {
+  it("should not be possible to submit a proposal to request funding with an amount.toEqual to zero", async () => {
     const voting = this.adapters.voting;
     const financing = this.adapters.financing;
     const onboarding = this.adapters.onboarding;
@@ -355,11 +356,11 @@ describe("Adapter - Financing", () => {
         "should not be possible to submit a proposal with an amount == 0"
       );
     } catch (err) {
-      expect(err.reason).toEqual("invalid requested amount");
+      expect(err.reason).equal("invalid requested amount");
     }
   });
 
-  test("should not be possible to request funding with an invalid proposal id", async () => {
+  it("should not be possible to request funding with an invalid proposal id", async () => {
     const financing = this.adapters.financing;
 
     try {
@@ -374,11 +375,11 @@ describe("Adapter - Financing", () => {
       );
       throw Error("should not be possible to use proposal id == 0");
     } catch (err) {
-      expect(err.reason).toEqual("invalid proposalId");
+      expect(err.reason).equal("invalid proposalId");
     }
   });
 
-  test("should not be possible to reuse a proposalId", async () => {
+  it("should not be possible to reuse a proposalId", async () => {
     const financing = this.adapters.financing;
     const onboarding = this.adapters.onboarding;
 
@@ -411,11 +412,11 @@ describe("Adapter - Financing", () => {
       );
       throw Error("should not be possible to create a financing request");
     } catch (err) {
-      expect(err.reason).toEqual("proposalId must be unique");
+      expect(err.reason).equal("proposalId must be unique");
     }
   });
 
-  test("should not be possible to sponsor proposal that does not exist", async () => {
+  it("should not be possible to sponsor proposal that does not exist", async () => {
     try {
       let proposalId = "0x1";
       await this.adapters.financing.sponsorProposal(
@@ -429,11 +430,11 @@ describe("Adapter - Financing", () => {
       );
       throw Error("should not be possible to sponsor");
     } catch (err) {
-      expect(err.reason).toEqual("proposal does not exist for this dao");
+      expect(err.reason).equal("proposal does not exist for this dao");
     }
   });
 
-  test("should not be possible to sponsor proposal more than once", async () => {
+  it("should not be possible to sponsor proposal more than once", async () => {
     let proposalId = getProposalCounter();
     await this.adapters.financing.createFinancingRequest(
       this.dao.address,
@@ -466,7 +467,7 @@ describe("Adapter - Financing", () => {
         }
       );
     } catch (err) {
-      expect(err.reason).toEqual("flag already set");
+      expect(err.reason).equal("flag already set");
     }
   });
 
@@ -483,7 +484,7 @@ describe("Adapter - Financing", () => {
       );
       throw Error("should not be possible to process it");
     } catch (err) {
-      expect(err.reason).toEqual("adapter not found");
+      expect(err.reason).equal("adapter not found");
     }
   });
 
@@ -510,7 +511,7 @@ describe("Adapter - Financing", () => {
       );
       throw Error("should not be possible to process");
     } catch (err) {
-      expect(err.reason).toEqual("adapter not found");
+      expect(err.reason).equal("adapter not found");
     }
   });
 });

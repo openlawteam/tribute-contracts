@@ -32,6 +32,7 @@ const {
   provider,
 } = require("@openzeppelin/test-environment");
 const { expectRevert } = require("@openzeppelin/test-helpers");
+const { expect } = require("chai");
 
 const Web3Utils = require("web3-utils");
 const sha3 = Web3Utils.sha3;
@@ -994,7 +995,8 @@ module.exports = {
   provider,
   contract,
   accounts,
-  expectRevert,
+  expect,
+  expectRevert, expect,
   numberOfShares,
   sharePrice,
   remaining,

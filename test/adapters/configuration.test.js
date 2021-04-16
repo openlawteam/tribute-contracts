@@ -33,7 +33,7 @@ const {
   proposalIdGenerator,
   advanceTime,
   accounts,
-  expectRevert,
+  expectRevert, expect,
 } = require("../../utils/DaoFactory.js");
 
 const owner = accounts[1];
@@ -44,7 +44,7 @@ function getProposalCounter() {
 }
 
 describe("Adapter - Configuration", () => {
-  beforeAll(async () => {
+  before("deploy dao",  async () => {
     const { dao, adapters, extensions } = await deployDefaultDao(owner);
     this.dao = dao;
     this.adapters = adapters;
@@ -59,7 +59,7 @@ describe("Adapter - Configuration", () => {
     await revertChainSnapshot(this.snapshotId);
   });
 
-  test("should be possible to set a single configuration parameter", async () => {
+  it("should be possible to set a single configuration parameter", async () => {
     const dao = this.dao;
     const configuration = this.adapters.configuration;
     const voting = this.adapters.voting;
@@ -77,7 +77,7 @@ describe("Adapter - Configuration", () => {
     );
 
     let value = await dao.getConfiguration(key);
-    expect(value.toString()).toEqual("0");
+    expect(value.toString()).equal("0");
 
     //Sponsor the new proposal, vote and process it
     await configuration.sponsorProposal(dao.address, proposalId, [], {
@@ -86,7 +86,7 @@ describe("Adapter - Configuration", () => {
     });
 
     value = await dao.getConfiguration(key);
-    expect(value.toString()).toEqual("0");
+    expect(value.toString()).equal("0");
 
     await voting.submitVote(dao.address, proposalId, 1, {
       from: owner,
@@ -100,10 +100,10 @@ describe("Adapter - Configuration", () => {
     });
 
     value = await dao.getConfiguration(key);
-    expect(value.toString()).toEqual("11");
+    expect(value.toString()).equal("11");
   });
 
-  test("should be possible to set multiple configuration parameters", async () => {
+  it("should be possible to set multiple configuration parameters", async () => {
     const dao = this.dao;
     const configuration = this.adapters.configuration;
     const voting = this.adapters.voting;
@@ -122,8 +122,8 @@ describe("Adapter - Configuration", () => {
 
     let value1 = await dao.getConfiguration(key1);
     let value2 = await dao.getConfiguration(key2);
-    expect(value1.toString()).toEqual("0");
-    expect(value2.toString()).toEqual("0");
+    expect(value1.toString()).equal("0");
+    expect(value2.toString()).equal("0");
 
     //Sponsor the new proposal, vote and process it
     await configuration.sponsorProposal(dao.address, "0x1", [], {
@@ -133,8 +133,8 @@ describe("Adapter - Configuration", () => {
 
     value1 = await dao.getConfiguration(key1);
     value2 = await dao.getConfiguration(key2);
-    expect(value1.toString()).toEqual("0");
-    expect(value2.toString()).toEqual("0");
+    expect(value1.toString()).equal("0");
+    expect(value2.toString()).equal("0");
 
     await voting.submitVote(dao.address, "0x1", 1, {
       from: owner,
@@ -149,11 +149,11 @@ describe("Adapter - Configuration", () => {
 
     value1 = await dao.getConfiguration(key1);
     value2 = await dao.getConfiguration(key2);
-    expect(value1.toString()).toEqual("10");
-    expect(value2.toString()).toEqual("15");
+    expect(value1.toString()).equal("10");
+    expect(value2.toString()).equal("15");
   });
 
-  test("should not be possible to provide a different number of keys and values", async () => {
+  it("should not be possible to provide a different number of keys and values", async () => {
     const dao = this.dao;
     const configuration = this.adapters.configuration;
     let key = sha3("key");

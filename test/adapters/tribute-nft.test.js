@@ -37,7 +37,7 @@ const {
   GUILD,
   ETH_TOKEN,
   SHARES,
-  expectRevert,
+  expectRevert, expect,
 } = require("../../utils/DaoFactory.js");
 
 const { onboardingNewMember } = require("../../utils/TestUtils.js");
@@ -50,7 +50,7 @@ describe("Adapter - TributeNFT", () => {
     return proposalCounter().next().value;
   };
 
-  beforeAll(async () => {
+  before("deploy dao",  async () => {
     const {
       dao,
       adapters,
@@ -167,7 +167,7 @@ describe("Adapter - TributeNFT", () => {
 
     // The NFT should be transfered to the adapter contract
     const ownerAddress = await pixelNFT.ownerOf(tokenId);
-    expect(ownerAddress).toEqual(tributeNFT.address);
+    expect(ownerAddress).equal(tributeNFT.address);
   });
 
   it("should not be possible to sponsor a nft tribute proposal if it is called by a non member", async () => {
@@ -235,7 +235,7 @@ describe("Adapter - TributeNFT", () => {
 
     // The NFT should be transfered back to the original owner
     const ownerAddress = await pixelNFT.ownerOf(tokenId);
-    expect(ownerAddress).toEqual(nftOwner);
+    expect(ownerAddress).equal(nftOwner);
   });
 
   it("should not be possible to cancel a nft tribute proposal if you are not a member", async () => {
@@ -299,7 +299,7 @@ describe("Adapter - TributeNFT", () => {
 
     let newOwnerAddr = await pixelNFT.ownerOf(tokenId);
     // While the proposal is not process / canceled the escrow contract is the owner
-    expect(newOwnerAddr).toEqual(tributeNFT.address);
+    expect(newOwnerAddr).equal(tributeNFT.address);
 
     await tributeNFT.cancelProposal(dao.address, proposalId, {
       from: daoOwner, // a member of the dao cancels a proposal
@@ -308,7 +308,7 @@ describe("Adapter - TributeNFT", () => {
 
     newOwnerAddr = await pixelNFT.ownerOf(tokenId);
     // After the proposal is canceled it must be returned back to the original owner
-    expect(newOwnerAddr).toEqual(nftOwner);
+    expect(newOwnerAddr).equal(nftOwner);
   });
 
   it("should not be possible to cancel a nft tribute proposal if it does not exist", async () => {
@@ -411,7 +411,7 @@ describe("Adapter - TributeNFT", () => {
     const nftExtAddr = await dao.getExtensionAddress(sha3("nft"));
     const newOwnerAddr = await pixelNFT.ownerOf(tokenId);
     // Make the asset was transfered from the Adapter Escrow contract to the NFT Extension contract
-    expect(newOwnerAddr).toEqual(nftExtAddr);
+    expect(newOwnerAddr).equal(nftExtAddr);
   });
 
   it("should not be possible to process a nft tribute proposal if it does not exist", async () => {
@@ -455,7 +455,7 @@ describe("Adapter - TributeNFT", () => {
     );
 
     const newOwnerAddr = await pixelNFT.ownerOf(tokenId);
-    expect(newOwnerAddr).toEqual(tributeNFT.address);
+    expect(newOwnerAddr).equal(tributeNFT.address);
 
     await tributeNFT.sponsorProposal(dao.address, proposalId, [], {
       from: daoOwner,
@@ -477,7 +477,7 @@ describe("Adapter - TributeNFT", () => {
 
     const newOwnerAddr2 = await pixelNFT.ownerOf(tokenId);
     // Make the asset was transfered from the Adapter Escrow contract to the original owner
-    expect(newOwnerAddr2).toEqual(nftOwner);
+    expect(newOwnerAddr2).equal(nftOwner);
   });
 
   it("should return the nft tribute if the proposal result is a tie", async () => {
@@ -520,7 +520,7 @@ describe("Adapter - TributeNFT", () => {
     );
 
     const newOwnerAddr = await pixelNFT.ownerOf(tokenId);
-    expect(newOwnerAddr).toEqual(tributeNFT.address);
+    expect(newOwnerAddr).equal(tributeNFT.address);
 
     await tributeNFT.sponsorProposal(dao.address, proposalId, [], {
       from: daoOwner,
@@ -549,7 +549,7 @@ describe("Adapter - TributeNFT", () => {
 
     const newOwnerAddr2 = await pixelNFT.ownerOf(tokenId);
     // Make sure the asset was transfered from the Adapter Escrow to the original owner beacuse it was a tie
-    expect(newOwnerAddr2).toEqual(nftOwner);
+    expect(newOwnerAddr2).equal(nftOwner);
   });
 
   it("should not be possible process a proposal that was not voted", async () => {
@@ -578,7 +578,7 @@ describe("Adapter - TributeNFT", () => {
     );
 
     const newOwnerAddr = await pixelNFT.ownerOf(tokenId);
-    expect(newOwnerAddr).toEqual(tributeNFT.address);
+    expect(newOwnerAddr).equal(tributeNFT.address);
 
     await tributeNFT.sponsorProposal(dao.address, proposalId, [], {
       from: daoOwner,

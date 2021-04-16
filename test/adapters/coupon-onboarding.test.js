@@ -35,6 +35,7 @@ const {
   SHARES,
   ETH_TOKEN,
   expectRevert,
+  expect,
 } = require("../../utils/DaoFactory.js");
 
 const { checkBalance } = require("../../utils/TestUtils.js");
@@ -52,7 +53,7 @@ const signer = {
 const daoOwner = accounts[1];
 
 describe("Adapter - Coupon Onboarding ", () => {
-  beforeAll(async () => {
+  before("deploy dao", async () => {
     const { dao, adapters, extensions } = await deployDefaultDao(daoOwner);
     this.dao = dao;
     this.adapters = adapters;
@@ -65,7 +66,7 @@ describe("Adapter - Coupon Onboarding ", () => {
     this.snapshotId = await takeChainSnapshot();
   });
 
-  test("should be possible to join a DAO with a valid coupon", async () => {
+  it("should be possible to join a DAO with a valid coupon", async () => {
     const otherAccount = accounts[2];
 
     const signerUtil = SigUtilSigner(signer.privKey);
@@ -76,7 +77,7 @@ describe("Adapter - Coupon Onboarding ", () => {
     let signerAddr = await dao.getAddressConfiguration(
       sha3("coupon-onboarding.signerAddress")
     );
-    expect(signerAddr).toEqual(signer.address);
+    expect(signerAddr).equal(signer.address);
 
     const couponOnboarding = this.adapters.couponOnboarding;
 
@@ -97,7 +98,7 @@ describe("Adapter - Coupon Onboarding ", () => {
       dao.address,
       couponData
     );
-    expect(jsHash).toEqual(solHash);
+    expect(jsHash).equal(solHash);
 
     var signature = signerUtil(
       couponData,
@@ -108,10 +109,10 @@ describe("Adapter - Coupon Onboarding ", () => {
 
     const recAddr = await couponOnboarding.recover(jsHash, signature);
 
-    expect(recAddr).toEqual(signer.address);
+    expect(recAddr).equal(signer.address);
 
     let balance = await bank.balanceOf(otherAccount, SHARES);
-    expect(balance.toString()).toEqual("0");
+    expect(balance.toString()).equal("0");
 
     await couponOnboarding.redeemCoupon(
       dao.address,
@@ -124,13 +125,13 @@ describe("Adapter - Coupon Onboarding ", () => {
     const daoOwnerShares = await bank.balanceOf(daoOwner, SHARES);
     const otherAccountShares = await bank.balanceOf(otherAccount, SHARES);
 
-    expect(daoOwnerShares.toString()).toEqual("1");
-    expect(otherAccountShares.toString()).toEqual("10");
+    expect(daoOwnerShares.toString()).equal("1");
+    expect(otherAccountShares.toString()).equal("10");
 
     await checkBalance(bank, GUILD, ETH_TOKEN, toBN("0"));
   });
 
-  test("should not be possible to join a DAO with mismatched coupon values", async () => {
+  it("should not be possible to join a DAO with mismatched coupon values", async () => {
     const otherAccount = accounts[2];
 
     const signerUtil = SigUtilSigner(signer.privKey);
@@ -141,7 +142,7 @@ describe("Adapter - Coupon Onboarding ", () => {
     let signerAddr = await dao.getAddressConfiguration(
       sha3("coupon-onboarding.signerAddress")
     );
-    expect(signerAddr).toEqual(signer.address);
+    expect(signerAddr).equal(signer.address);
 
     const couponOnboarding = this.adapters.couponOnboarding;
 
@@ -168,10 +169,10 @@ describe("Adapter - Coupon Onboarding ", () => {
 
     const recAddr = await couponOnboarding.recover(jsHash, signature);
 
-    expect(recAddr).toEqual(signer.address);
+    expect(recAddr).equal(signer.address);
 
     let balance = await bank.balanceOf(otherAccount, SHARES);
-    expect(balance.toString()).toEqual("0");
+    expect(balance.toString()).equal("0");
 
     await expectRevert(
       couponOnboarding.redeemCoupon(
@@ -187,13 +188,13 @@ describe("Adapter - Coupon Onboarding ", () => {
     const daoOwnerShares = await bank.balanceOf(daoOwner, SHARES);
     const otherAccountShares = await bank.balanceOf(otherAccount, SHARES);
 
-    expect(daoOwnerShares.toString()).toEqual("1");
-    expect(otherAccountShares.toString()).toEqual("0");
+    expect(daoOwnerShares.toString()).equal("1");
+    expect(otherAccountShares.toString()).equal("0");
 
     await checkBalance(bank, GUILD, ETH_TOKEN, toBN("0"));
   });
 
-  test("should not be possible to join a DAO with an invalid coupon", async () => {
+  it("should not be possible to join a DAO with an invalid coupon", async () => {
     const otherAccount = accounts[2];
 
     const signerUtil = SigUtilSigner(signer.privKey);
@@ -204,7 +205,7 @@ describe("Adapter - Coupon Onboarding ", () => {
     let signerAddr = await dao.getAddressConfiguration(
       sha3("coupon-onboarding.signerAddress")
     );
-    expect(signerAddr).toEqual(signer.address);
+    expect(signerAddr).equal(signer.address);
 
     const couponOnboarding = this.adapters.couponOnboarding;
 
@@ -231,9 +232,9 @@ describe("Adapter - Coupon Onboarding ", () => {
 
     const recAddr = await couponOnboarding.recover(jsHash, signature);
 
-    expect(recAddr).toEqual(signer.address);
+    expect(recAddr).equal(signer.address);
     let balance = await bank.balanceOf(otherAccount, SHARES);
-    expect(balance.toString()).toEqual("0");
+    expect(balance.toString()).equal("0");
 
     await expectRevert(
       couponOnboarding.redeemCoupon(dao.address, daoOwner, 10, 1, signature),
@@ -243,8 +244,8 @@ describe("Adapter - Coupon Onboarding ", () => {
     const daoOwnerShares = await bank.balanceOf(daoOwner, SHARES);
     const otherAccountShares = await bank.balanceOf(otherAccount, SHARES);
 
-    expect(daoOwnerShares.toString()).toEqual("1");
-    expect(otherAccountShares.toString()).toEqual("0");
+    expect(daoOwnerShares.toString()).equal("1");
+    expect(otherAccountShares.toString()).equal("0");
 
     await checkBalance(bank, GUILD, ETH_TOKEN, toBN("0"));
   });

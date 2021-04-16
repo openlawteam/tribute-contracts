@@ -43,7 +43,7 @@ const {
   SHARES,
   ESCROW,
   LOOT,
-  expectRevert,
+  expectRevert, expect,
 } = require("../../utils/DaoFactory.js");
 
 const { onboardingNewMember } = require("../../utils/TestUtils.js");
@@ -56,7 +56,7 @@ function getProposalCounter() {
 }
 
 describe("Adapter - Distribute", () => {
-  beforeAll(async () => {
+  before("deploy dao",  async () => {
     const { dao, adapters, extensions } = await deployDefaultDao(daoOwner);
     this.dao = dao;
     this.adapters = adapters;
@@ -95,7 +95,7 @@ describe("Adapter - Distribute", () => {
     return { proposalId: newProposalId };
   };
 
-  test("should be possible to distribute funds to only 1 member of the DAO", async () => {
+  it("should be possible to distribute funds to only 1 member of the DAO", async () => {
     const daoMember = accounts[3];
     const dao = this.dao;
     const bank = this.extensions.bank;
@@ -116,11 +116,11 @@ describe("Adapter - Distribute", () => {
 
     // Checks the Guild Bank Balance
     let guildBalance = await bank.balanceOf(GUILD, ETH_TOKEN);
-    expect(toBN(guildBalance).toString()).toEqual("1200000000000000000");
+    expect(toBN(guildBalance).toString()).equal("1200000000000000000");
 
     // Checks the member shares (to make sure it was created)
     let shares = await bank.balanceOf(daoMember, SHARES);
-    expect(shares.toString()).toEqual("10000000000000000");
+    expect(shares.toString()).equal("10000000000000000");
 
     // Submit distribute proposal
     const amountToDistribute = 10;
@@ -147,13 +147,13 @@ describe("Adapter - Distribute", () => {
     });
 
     const escrowBalance = await bank.balanceOf(ESCROW, ETH_TOKEN);
-    expect(toBN(escrowBalance).toString()).toEqual(
+    expect(toBN(escrowBalance).toString()).equal(
       amountToDistribute.toString()
     );
 
     // Checks the member's internal balance before sending the funds
     let memberBalance = await bank.balanceOf(daoMember, ETH_TOKEN);
-    expect(toBN(memberBalance).toString()).toEqual("0");
+    expect(toBN(memberBalance).toString()).equal("0");
 
     // Distribute the funds to the DAO member
     // We can use 0 index here because the distribution happens for only 1 member
@@ -163,13 +163,13 @@ describe("Adapter - Distribute", () => {
     });
 
     memberBalance = await bank.balanceOf(daoMember, ETH_TOKEN);
-    expect(memberBalance.toString()).toEqual(amountToDistribute.toString());
+    expect(memberBalance.toString()).equal(amountToDistribute.toString());
 
     const newEscrowBalance = await bank.balanceOf(ESCROW, ETH_TOKEN);
-    expect(newEscrowBalance.toString()).toEqual("0");
+    expect(newEscrowBalance.toString()).equal("0");
   });
 
-  test("should be possible to distribute funds to all active members of the DAO", async () => {
+  it("should be possible to distribute funds to all active members of the DAO", async () => {
     const daoMemberA = accounts[3];
     const daoMemberB = accounts[4];
     const dao = this.dao;
@@ -203,14 +203,14 @@ describe("Adapter - Distribute", () => {
 
     // Checks the Guild Bank Balance
     let guildBalance = await bank.balanceOf(GUILD, ETH_TOKEN);
-    expect(toBN(guildBalance).toString()).toEqual("1800000000000000000");
+    expect(toBN(guildBalance).toString()).equal("1800000000000000000");
 
     // Checks the member shares (to make sure it was created)
     let sharesMemberA = await bank.balanceOf(daoMemberA, SHARES);
-    expect(sharesMemberA.toString()).toEqual("5000000000000000");
+    expect(sharesMemberA.toString()).equal("5000000000000000");
     // Checks the member shares (to make sure it was created)
     let sharesMemberB = await bank.balanceOf(daoMemberB, SHARES);
-    expect(sharesMemberB.toString()).toEqual("10000000000000000");
+    expect(sharesMemberB.toString()).equal("10000000000000000");
 
     // Submit distribute proposal
     const amountToDistribute = 15;
@@ -238,9 +238,9 @@ describe("Adapter - Distribute", () => {
 
     // Checks the member's internal balance before sending the funds
     let memberABalance = await bank.balanceOf(daoMemberA, ETH_TOKEN);
-    expect(toBN(memberABalance).toString()).toEqual("0");
+    expect(toBN(memberABalance).toString()).equal("0");
     let memberBBalance = await bank.balanceOf(daoMemberB, ETH_TOKEN);
-    expect(toBN(memberBBalance).toString()).toEqual("0");
+    expect(toBN(memberBBalance).toString()).equal("0");
 
     let numberOfMembers = toBN(await dao.getNbMembers()).toNumber();
     // It is expected to get 5 members:
@@ -250,7 +250,7 @@ describe("Adapter - Distribute", () => {
     // 2 - dao members
     // But the dao owner and the factory addresses are not active members
     // so they will not receive funds.
-    expect(numberOfMembers).toEqual(5);
+    expect(numberOfMembers).equal(5);
 
     // Distribute the funds to the DAO member
     // toIndex = number of members to process and distribute the funds to all members
@@ -260,14 +260,14 @@ describe("Adapter - Distribute", () => {
     });
 
     memberABalance = await bank.balanceOf(daoMemberA, ETH_TOKEN);
-    expect(memberABalance.toString()).toEqual("4"); //4.9999... rounded to 4
+    expect(memberABalance.toString()).equal("4"); //4.9999... rounded to 4
     memberBBalance = await bank.balanceOf(daoMemberB, ETH_TOKEN);
-    expect(memberBBalance.toString()).toEqual("9"); //9.9999... rounded to 9
+    expect(memberBBalance.toString()).equal("9"); //9.9999... rounded to 9
     let ownerBalance = await bank.balanceOf(daoOwner, ETH_TOKEN);
-    expect(ownerBalance.toString()).toEqual("0");
+    expect(ownerBalance.toString()).equal("0");
   });
 
-  test("should not be possible to create a proposal with the amount.toEquals to 0", async () => {
+  it("should not be possible to create a proposal with the amount.toEquals to 0", async () => {
     const dao = this.dao;
     const distributeContract = this.adapters.distribute;
 
@@ -290,7 +290,7 @@ describe("Adapter - Distribute", () => {
     );
   });
 
-  test("should not be possible to create a proposal with an invalid token", async () => {
+  it("should not be possible to create a proposal with an invalid token", async () => {
     const dao = this.dao;
     const distributeContract = this.adapters.distribute;
 
@@ -313,7 +313,7 @@ describe("Adapter - Distribute", () => {
     );
   });
 
-  test("should not be possible to create a proposal if the sender is not a member", async () => {
+  it("should not be possible to create a proposal if the sender is not a member", async () => {
     const nonMember = accounts[5];
     const dao = this.dao;
     const distributeContract = this.adapters.distribute;
@@ -335,7 +335,7 @@ describe("Adapter - Distribute", () => {
     );
   });
 
-  test("should not be possible to create a proposal if the target member does not have shares (advisor)", async () => {
+  it("should not be possible to create a proposal if the target member does not have shares (advisor)", async () => {
     const advisor = accounts[3];
     const dao = this.dao;
     const onboarding = this.adapters.onboarding;
@@ -372,7 +372,7 @@ describe("Adapter - Distribute", () => {
     );
   });
 
-  test("should not be possible to create a proposal if the a non member is indicated to receive the funds", async () => {
+  it("should not be possible to create a proposal if the a non member is indicated to receive the funds", async () => {
     const nonMember = accounts[3];
     const dao = this.dao;
     const distributeContract = this.adapters.distribute;
@@ -395,7 +395,7 @@ describe("Adapter - Distribute", () => {
     );
   });
 
-  test("should not be possible to create more than one proposal using the same proposal id", async () => {
+  it("should not be possible to create more than one proposal using the same proposal id", async () => {
     const daoMember = accounts[3];
     const dao = this.dao;
     const onboarding = this.adapters.onboarding;
@@ -441,7 +441,7 @@ describe("Adapter - Distribute", () => {
     );
   });
 
-  test("should not be possible to process a proposal that was not voted on", async () => {
+  it("should not be possible to process a proposal that was not voted on", async () => {
     const daoMemberA = accounts[3];
     const dao = this.dao;
     const onboarding = this.adapters.onboarding;
@@ -479,7 +479,7 @@ describe("Adapter - Distribute", () => {
     );
   });
 
-  test("should not be possible to distribute if proposal vote result is TIE", async () => {
+  it("should not be possible to distribute if proposal vote result is TIE", async () => {
     const daoMemberA = accounts[3];
     const dao = this.dao;
     const onboarding = this.adapters.onboarding;
@@ -536,7 +536,7 @@ describe("Adapter - Distribute", () => {
     );
   });
 
-  test("should not be possible to distribute if proposal vote result is NOT_PASS", async () => {
+  it("should not be possible to distribute if proposal vote result is NOT_PASS", async () => {
     const daoMemberA = accounts[3];
 
     const dao = this.dao;
@@ -594,7 +594,7 @@ describe("Adapter - Distribute", () => {
     );
   });
 
-  test("should not be possible to process a proposal that was already processed", async () => {
+  it("should not be possible to process a proposal that was already processed", async () => {
     const daoMemberA = accounts[3];
     const dao = this.dao;
     const onboarding = this.adapters.onboarding;
@@ -645,7 +645,7 @@ describe("Adapter - Distribute", () => {
     );
   });
 
-  test("should not be possible to process a new proposal if there is another in progress", async () => {
+  it("should not be possible to process a new proposal if there is another in progress", async () => {
     const daoMemberA = accounts[3];
     const dao = this.dao;
     const onboarding = this.adapters.onboarding;
@@ -713,7 +713,7 @@ describe("Adapter - Distribute", () => {
     );
   });
 
-  test("should not be possible to distribute the funds if the proposal is not in progress", async () => {
+  it("should not be possible to distribute the funds if the proposal is not in progress", async () => {
     const daoMemberA = accounts[3];
     const dao = this.dao;
     const onboarding = this.adapters.onboarding;

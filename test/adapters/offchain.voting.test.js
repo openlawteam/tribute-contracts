@@ -37,6 +37,7 @@ const {
   SHARES,
   sharePrice,
   remaining,
+  expect
 } = require("../../utils/DaoFactory.js");
 
 const {
@@ -78,7 +79,7 @@ function getProposalCounter() {
 }
 
 describe("Adapter - Offchain Voting", () => {
-  beforeAll(async () => {
+  before("deploy dao",  async () => {
     const {
       dao,
       adapters,
@@ -129,7 +130,7 @@ describe("Adapter - Offchain Voting", () => {
     //Checking proposal type
     const solProposalMsg = await snapshotContract.PROPOSAL_MESSAGE_TYPE();
     const jsProposalMsg = TypedDataUtils.encodeType("Message", types);
-    expect(jsProposalMsg).toEqual(solProposalMsg);
+    expect(jsProposalMsg).equal(solProposalMsg);
 
     //Checking payload
     const hashStructPayload =
@@ -143,7 +144,7 @@ describe("Adapter - Offchain Voting", () => {
     const solidityHashPayload = await snapshotContract.hashProposalPayload(
       proposalPayload
     );
-    expect(solidityHashPayload).toEqual(hashStructPayload);
+    expect(solidityHashPayload).equal(hashStructPayload);
 
     //Checking entire payload
     const hashStruct =
@@ -156,12 +157,12 @@ describe("Adapter - Offchain Voting", () => {
     const solidityHash = await snapshotContract.hashProposalMessage(
       proposalData
     );
-    expect(solidityHash).toEqual(hashStruct);
+    expect(solidityHash).equal(hashStruct);
 
     //Checking domain
     const domainDef = await snapshotContract.EIP712_DOMAIN();
     const jsDomainDef = TypedDataUtils.encodeType("EIP712Domain", types);
-    expect(domainDef).toEqual(jsDomainDef);
+    expect(domainDef).equal(jsDomainDef);
 
     //Checking domain separator
     const domainHash = await snapshotContract.DOMAIN_SEPARATOR(
@@ -173,7 +174,7 @@ describe("Adapter - Offchain Voting", () => {
       TypedDataUtils.hashStruct("EIP712Domain", domain, types, true).toString(
         "hex"
       );
-    expect(domainHash).toEqual(jsDomainHash);
+    expect(domainHash).equal(jsDomainHash);
 
     //Checking the actual ERC-712 hash
     const proposalHash = await snapshotContract.hashMessage(
@@ -183,7 +184,7 @@ describe("Adapter - Offchain Voting", () => {
     );
     expect(
       getMessageERC712Hash(proposalData, dao.address, daoOwner, chainId)
-    ).toEqual(proposalHash);
+    ).equal(proposalHash);
   });
 
   it("should type & hash be consistent for votes between javascript and solidity", async () => {
@@ -204,14 +205,14 @@ describe("Adapter - Offchain Voting", () => {
     //Checking proposal type
     const solProposalMsg = await snapshotContract.VOTE_MESSAGE_TYPE();
     const jsProposalMsg = TypedDataUtils.encodeType("Message", types);
-    expect(jsProposalMsg).toEqual(solProposalMsg);
+    expect(jsProposalMsg).equal(solProposalMsg);
 
     //Checking entire payload
     const hashStruct =
       "0x" +
       TypedDataUtils.hashStruct("Message", voteEntry, types).toString("hex");
     const solidityHash = await snapshotContract.hashVoteInternal(voteEntry);
-    expect(hashStruct).toEqual(solidityHash);
+    expect(hashStruct).equal(solidityHash);
   });
 
   it("should be possible to propose a new voting by signing the proposal hash", async () => {
@@ -288,7 +289,7 @@ describe("Adapter - Offchain Voting", () => {
         chainId,
         voteEntry.sig
       )
-    ).toEqual(true);
+    ).equal(true);
 
     const { voteResultTree, votes } = await prepareVoteResult(
       [voteEntry],
@@ -321,19 +322,19 @@ describe("Adapter - Offchain Voting", () => {
     //Checking vote result hash
     const solVoteResultType = await voting.VOTE_RESULT_NODE_TYPE();
     const jsVoteResultType = TypedDataUtils.encodeType("Message", types);
-    expect(jsVoteResultType).toEqual(solVoteResultType);
+    expect(jsVoteResultType).equal(solVoteResultType);
 
     const hashStruct =
       "0x" +
       TypedDataUtils.hashStruct("Message", result, types).toString("hex");
     const solidityHash = await voting.hashVotingResultNode(result);
-    expect(hashStruct).toEqual(solidityHash);
+    expect(hashStruct).equal(solidityHash);
 
     const solAddress = await dao.getPriorDelegateKey(
       newMember.address,
       blockNumber
     );
-    expect(solAddress).toEqual(newMember.address);
+    expect(solAddress).equal(newMember.address);
 
     await advanceTime(10000);
 

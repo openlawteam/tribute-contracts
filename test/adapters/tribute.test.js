@@ -36,7 +36,7 @@ const {
   GUILD,
   SHARES,
   OLToken,
-  expectRevert,
+  expectRevert, expect,
 } = require("../../utils/DaoFactory.js");
 const { checkBalance, isMember } = require("../../utils/TestUtils.js");
 
@@ -48,7 +48,7 @@ describe("Adapter - Tribute", () => {
     return proposalCounter().next().value;
   };
 
-  beforeAll(async () => {
+  before("deploy dao",  async () => {
     const { dao, adapters, extensions } = await deployDefaultDao(daoOwner);
     this.dao = dao;
     this.adapters = adapters;
@@ -78,7 +78,7 @@ describe("Adapter - Tribute", () => {
     const initialTokenBalance = toBN("100");
     await oltContract.transfer(daoOwner, initialTokenBalance);
     let daoOwnerTokenBalance = await oltContract.balanceOf.call(daoOwner);
-    expect(daoOwnerTokenBalance.toString()).toEqual(
+    expect(daoOwnerTokenBalance.toString()).equal(
       initialTokenBalance.toString()
     );
 
@@ -149,14 +149,14 @@ describe("Adapter - Tribute", () => {
 
     // test balances after proposal is processed
     const daoOwnerShares = await bank.balanceOf(daoOwner, SHARES);
-    expect(daoOwnerShares.toString()).toEqual("1");
+    expect(daoOwnerShares.toString()).equal("1");
     const applicantShares = await bank.balanceOf(applicant, SHARES);
-    expect(applicantShares.toString()).toEqual(requestAmount.toString());
+    expect(applicantShares.toString()).equal(requestAmount.toString());
     const nonMemberAccountShares = await bank.balanceOf(
       nonMemberAccount,
       SHARES
     );
-    expect(nonMemberAccountShares.toString()).toEqual("0");
+    expect(nonMemberAccountShares.toString()).equal("0");
     await checkBalance(
       bank,
       GUILD,
@@ -166,12 +166,12 @@ describe("Adapter - Tribute", () => {
 
     // test active member status
     const applicantIsActiveMember = await isMember(bank, applicant);
-    expect(applicantIsActiveMember).toEqual(true);
+    expect(applicantIsActiveMember).equal(true);
     const nonMemberAccountIsActiveMember = await isMember(
       bank,
       nonMemberAccount
     );
-    expect(nonMemberAccountIsActiveMember).toEqual(false);
+    expect(nonMemberAccountIsActiveMember).equal(false);
   });
 
   it("should be possible to cancel a tribute proposal", async () => {
@@ -189,7 +189,7 @@ describe("Adapter - Tribute", () => {
     const initialTokenBalance = toBN("100");
     await oltContract.transfer(daoOwner, initialTokenBalance);
     let daoOwnerTokenBalance = await oltContract.balanceOf.call(daoOwner);
-    expect(daoOwnerTokenBalance.toString()).toEqual(
+    expect(daoOwnerTokenBalance.toString()).equal(
       initialTokenBalance.toString()
     );
 
@@ -229,12 +229,12 @@ describe("Adapter - Tribute", () => {
       gasPrice: toBN("0"),
     });
     const isProcessed = await dao.getProposalFlag("0x1", toBN("2")); // 2 is processed flag index
-    expect(isProcessed).toEqual(true);
+    expect(isProcessed).equal(true);
 
     // test refund of ERC20 contribution
     daoOwnerTokenBalance = await oltContract.balanceOf.call(daoOwner);
     // "daoOwner did not receive refund of ERC20 contribution"
-    expect(daoOwnerTokenBalance.toString()).toEqual(
+    expect(daoOwnerTokenBalance.toString()).equal(
       initialTokenBalance.toString()
     );
 
@@ -258,11 +258,11 @@ describe("Adapter - Tribute", () => {
 
     // test balances after proposal is processed
     const daoOwnerShares = await bank.balanceOf(daoOwner, SHARES);
-    expect(daoOwnerShares.toString()).toEqual("1");
+    expect(daoOwnerShares.toString()).equal("1");
     const applicantShares = await bank.balanceOf(applicant, SHARES);
-    expect(applicantShares.toString()).toEqual("0");
+    expect(applicantShares.toString()).equal("0");
     const guildBalance = await bank.balanceOf(GUILD, oltContract.address);
-    expect(guildBalance.toString()).toEqual("0");
+    expect(guildBalance.toString()).equal("0");
   });
 
   it("should handle a tribute proposal with a failed vote", async () => {
@@ -282,7 +282,7 @@ describe("Adapter - Tribute", () => {
     await oltContract.transfer(daoOwner, initialTokenBalance);
     let daoOwnerTokenBalance = await oltContract.balanceOf.call(daoOwner);
     // "daoOwner must be initialized with 100 OLT Tokens"
-    expect(daoOwnerTokenBalance.toString()).toEqual(
+    expect(daoOwnerTokenBalance.toString()).equal(
       initialTokenBalance.toString()
     );
 
@@ -321,7 +321,7 @@ describe("Adapter - Tribute", () => {
     });
     await advanceTime(10000);
     const vote = await voting.voteResult(dao.address, proposalId);
-    expect(vote.toString()).toEqual("3"); // vote should be "not passed"
+    expect(vote.toString()).equal("3"); // vote should be "not passed"
 
     await tribute.processProposal(dao.address, proposalId, {
       from: daoOwner,
@@ -329,36 +329,36 @@ describe("Adapter - Tribute", () => {
     });
 
     const isProcessed = await dao.getProposalFlag(proposalId, toBN("2")); // 2 is processed flag index
-    expect(isProcessed).toEqual(true);
+    expect(isProcessed).equal(true);
 
     // test refund of ERC20 contribution
     daoOwnerTokenBalance = await oltContract.balanceOf.call(daoOwner);
     // "daoOwner did not receive refund of ERC20 contribution"
-    expect(daoOwnerTokenBalance.toString()).toEqual(
+    expect(daoOwnerTokenBalance.toString()).equal(
       initialTokenBalance.toString()
     );
 
     // test balances after proposal is processed
     const daoOwnerShares = await bank.balanceOf(daoOwner, SHARES);
-    expect(daoOwnerShares.toString()).toEqual("1");
+    expect(daoOwnerShares.toString()).equal("1");
     const applicantShares = await bank.balanceOf(applicant, SHARES);
-    expect(applicantShares.toString()).toEqual("0");
+    expect(applicantShares.toString()).equal("0");
     const guildBalance = await bank.balanceOf(GUILD, oltContract.address);
-    expect(guildBalance.toString()).toEqual("0");
+    expect(guildBalance.toString()).equal("0");
     const applicantBalance = await bank.balanceOf(
       applicant,
       oltContract.address
     );
-    expect(applicantBalance.toString()).toEqual("0");
+    expect(applicantBalance.toString()).equal("0");
     const tributeAdapterBalance = await oltContract.balanceOf.call(
       tribute.address
     );
     // "tribute adapter did not refund ERC20 contribution";
-    expect(tributeAdapterBalance.toString()).toEqual("0");
+    expect(tributeAdapterBalance.toString()).equal("0");
 
     // test active member status
     const applicantIsActiveMember = await isMember(bank, applicant);
-    expect(applicantIsActiveMember).toEqual(false);
+    expect(applicantIsActiveMember).equal(false);
   });
 
   it("should not be possible to sponsor proposal that does not exist", async () => {
@@ -421,7 +421,7 @@ describe("Adapter - Tribute", () => {
 
     let applicantTokenBalance = await oltContract.balanceOf.call(applicant);
     // "applicant account must be initialized with 2**161 OLT Tokens";
-    expect(applicantTokenBalance.toString()).toEqual(
+    expect(applicantTokenBalance.toString()).equal(
       initialTokenBalance.toString()
     );
 
@@ -460,7 +460,7 @@ describe("Adapter - Tribute", () => {
     });
     await advanceTime(10000);
     const vote = await voting.voteResult(dao.address, proposalId);
-    expect(vote.toString()).toEqual("2");
+    expect(vote.toString()).equal("2");
 
     // Proposal is processed, but due to the overflow error the funds must be returned
     // to the applicant
@@ -472,7 +472,7 @@ describe("Adapter - Tribute", () => {
     // Due to the overflow it fails, and the funds must be in the applicant's account
     applicantTokenBalance = await oltContract.balanceOf.call(applicant);
     // "applicant account should contain 2**161 OLT Tokens when the onboard fails";
-    expect(applicantTokenBalance.toString()).toEqual(
+    expect(applicantTokenBalance.toString()).equal(
       initialTokenBalance.toString()
     );
   });

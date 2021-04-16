@@ -23,7 +23,7 @@ SOFTWARE.
 const {
   TestFairShareCalc,
   toWei,
-  expectRevert,
+  expectRevert, expect,
 } = require("../../utils/DaoFactory.js");
 
 describe("Helper - FairShareHelper", () => {
@@ -38,7 +38,7 @@ describe("Helper - FairShareHelper", () => {
       totalShares
     );
     // It should return 43% of the shares based on the balance
-    expect(fairShare.toString() / 10 ** 18).toEqual(0.43);
+    expect(fairShare.toString() / 10 ** 18).equal(0.43);
   });
 
   it("should revert when the totalShares parameter is.toEqual to zero", async () => {
@@ -74,6 +74,6 @@ describe("Helper - FairShareHelper", () => {
       totalShares
     );
     // It should return 100% of the shares based on the balance
-    expect(fairShare.toString() / 10 ** 18).toEqual(1.0);
+    expect(fairShare.toString() / 10 ** 18).equal(1.0);
   });
 });

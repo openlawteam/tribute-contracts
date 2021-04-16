@@ -33,12 +33,13 @@ const {
   BankFactory,
   ETH_TOKEN,
   expectRevert,
+  expect,
 } = require("../../utils/DaoFactory.js");
 
 describe("Extension - Bank", () => {
   const daoOwner = accounts[0];
 
-  beforeAll(async () => {
+  before("deploy dao", async () => {
     const { dao, adapters, extensions } = await deployDefaultDao(daoOwner);
     this.dao = dao;
     this.adapters = adapters;
@@ -56,25 +57,25 @@ describe("Extension - Bank", () => {
   it("should be possible to create a dao with a bank extension pre-configured", async () => {
     const dao = this.dao;
     const bankAddress = await dao.getExtensionAddress(sha3("bank"));
-    expect(bankAddress).not.toBeNull();
+    expect(bankAddress).to.not.be.null;
   });
 
   it("should be possible to get all the tokens registered in the bank", async () => {
     const bank = this.extensions.bank;
     const tokens = await bank.getTokens();
-    expect(tokens.toString()).toEqual([ETH_TOKEN].toString());
+    expect(tokens.toString()).equal([ETH_TOKEN].toString());
   });
 
   it("should be possible to get a registered token using the token index", async () => {
     const bank = this.extensions.bank;
     const token = await bank.getToken(0);
-    expect(token.toString()).toEqual(ETH_TOKEN.toString());
+    expect(token.toString()).equal(ETH_TOKEN.toString());
   });
 
   it("should be possible to get the total amount of tokens registered in the bank", async () => {
     const bank = this.extensions.bank;
     const totalTokens = await bank.nbTokens();
-    expect(totalTokens.toString()).toEqual("1");
+    expect(totalTokens.toString()).equal("1");
   });
 
   it("should not be possible to create a bank that supports more than 200 external tokens", async () => {

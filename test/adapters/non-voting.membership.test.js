@@ -36,7 +36,7 @@ const {
   sharePrice,
   remaining,
   OLToken,
-  expectRevert,
+  expectRevert, expect,
 } = require("../../utils/DaoFactory.js");
 
 const daoOwner = accounts[1];
@@ -86,14 +86,14 @@ describe("Adapter - Non Voting Onboarding", () => {
 
     // Check the number of Loot (non-voting shares) issued to the new Avisor
     const advisorAccountLoot = await bank.balanceOf(advisorAccount, LOOT);
-    expect(advisorAccountLoot.toString()).toEqual("3000000000000000");
+    expect(advisorAccountLoot.toString()).equal("3000000000000000");
 
     // Guild balance must not change when Loot shares are issued
     const guildBalance = await bank.balanceOf(
       GUILD,
       "0x0000000000000000000000000000000000000000"
     );
-    expect(guildBalance.toString()).toEqual("360000000000000000");
+    expect(guildBalance.toString()).equal("360000000000000000");
   });
 
   it("should be possible to join a DAO as a member without any voting power by requesting Loot while staking ERC20 token", async () => {
@@ -121,7 +121,7 @@ describe("Adapter - Non Voting Onboarding", () => {
     const advisorTokenBalance = await oltContract.balanceOf.call(
       advisorAccount
     );
-    expect(advisorTokenBalance.toString()).toEqual("100");
+    expect(advisorTokenBalance.toString()).equal("100");
 
     // Total of OLT to be sent to the DAO in order to get the Loot shares
     const tokenAmount = 10;
@@ -181,10 +181,10 @@ describe("Adapter - Non Voting Onboarding", () => {
 
     // Check the number of Loot (non-voting shares) issued to the new Avisor
     const advisorAccountLoot = await bank.balanceOf(advisorAccount, LOOT);
-    expect(advisorAccountLoot.toString()).toEqual("100000000");
+    expect(advisorAccountLoot.toString()).equal("100000000");
 
     // Guild balance must not change when Loot shares are issued
     const guildBalance = await bank.balanceOf(GUILD, oltContract.address);
-    expect(guildBalance.toString()).toEqual("10");
+    expect(guildBalance.toString()).equal("10");
   });
 });

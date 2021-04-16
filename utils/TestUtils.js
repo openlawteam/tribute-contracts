@@ -2,21 +2,12 @@
 "use strict";
 
 const {
-  sha3,
   fromUtf8,
   toBN,
-  createDao,
-  getContract,
   advanceTime,
-  sharePrice,
-  numberOfShares,
   SHARES,
-  ETH_TOKEN,
-  OnboardingContract,
-  PixelNFT,
-  VotingContract,
-  BankExtension,
   LOOT,
+  expect,
 } = require("./DaoFactory.js");
 
 const checkLastEvent = async (dao, testObject) => {
@@ -24,7 +15,7 @@ const checkLastEvent = async (dao, testObject) => {
   let returnValues = pastEvents[0].returnValues;
 
   Object.keys(testObject).forEach((key) =>
-    expect(testObject[key], "value mismatch for key " + key).toEqual(
+    expect(testObject[key], "value mismatch for key " + key).equal(
       returnValues[key]
     )
   );
@@ -33,7 +24,7 @@ const checkLastEvent = async (dao, testObject) => {
 const checkBalance = async (bank, address, token, expectedBalance) => {
   const balance = await bank.balanceOf(address, token);
 
-  expect(balance.toString()).toEqual(expectedBalance.toString());
+  expect(balance.toString()).equal(expectedBalance.toString());
 };
 
 const isMember = async (bank, member) => {

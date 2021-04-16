@@ -38,6 +38,7 @@ const {
   sharePrice,
   remaining,
   BatchVotingContract,
+  expect,
 } = require("../../utils/DaoFactory.js");
 
 const {
@@ -65,7 +66,7 @@ describe("Adapter - BatchVoting", () => {
     return proposalCounter().next().value;
   };
 
-  beforeAll(async (done) => {
+  before("deploy dao", async () => {
     this.members = generateMembers(5).sort((a, b) =>
       a.address.toLowerCase() < b.address.toLowerCase()
         ? -1
@@ -84,7 +85,6 @@ describe("Adapter - BatchVoting", () => {
     this.extensions = extensions;
     this.votingHelpers = votingHelpers;
     this.snapshotId = await takeChainSnapshot();
-    done();
   });
 
   beforeEach(async () => {
@@ -180,7 +180,7 @@ describe("Adapter - BatchVoting", () => {
           chainId,
           sig
         )
-      ).toEqual(true);
+      ).equal(true);
     }
 
     await advanceTime(10000);
@@ -208,7 +208,7 @@ describe("Adapter - BatchVoting", () => {
     const batchVotingAddr = await dao.getAdapterAddress(sha3("voting"));
     const voting = await BatchVotingContract.at(batchVotingAddr);
     const adapterName = await voting.getAdapterName();
-    expect(adapterName).toEqual("BatchVotingContract");
+    expect(adapterName).equal("BatchVotingContract");
 
     for (var i = 0; i < this.members.length; i++) {
       await onboardMember(dao, voting, onboarding, i);

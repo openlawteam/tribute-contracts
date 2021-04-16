@@ -37,7 +37,6 @@ const {
   takeChainSnapshot,
   revertChainSnapshot,
   proposalIdGenerator,
-  provider,
   accounts,
   sharePrice,
   GUILD,
@@ -45,6 +44,7 @@ const {
   SHARES,
   LOOT,
   expectRevert,
+  expect,
 } = require("../../utils/DaoFactory.js");
 
 const {
@@ -62,7 +62,7 @@ function getProposalCounter() {
 }
 
 describe("Adapter - GuildKick", () => {
-  beforeAll(async () => {
+  before("deploy dao", async () => {
     const { dao, adapters, extensions } = await deployDefaultDao(owner);
     this.dao = dao;
     this.adapters = adapters;
@@ -96,13 +96,13 @@ describe("Adapter - GuildKick", () => {
 
     //Check Guild Bank Balance
     const guildBalance = await bank.balanceOf(GUILD, ETH_TOKEN);
-    expect(guildBalance.toString()).toEqual("1200000000000000000");
+    expect(guildBalance.toString()).equal("1200000000000000000");
 
     //Check Member Shares & Loot
     let shares = await bank.balanceOf(newMember, SHARES);
-    expect(shares.toString()).toEqual("10000000000000000");
+    expect(shares.toString()).equal("10000000000000000");
     let loot = await bank.balanceOf(newMember, LOOT);
-    expect(loot.toString()).toEqual("0");
+    expect(loot.toString()).equal("0");
 
     //SubGuildKick
     const memberToKick = newMember;
@@ -129,9 +129,9 @@ describe("Adapter - GuildKick", () => {
 
     // Check Member Shares & Loot, it should be 0 because both were subtracted from internal
     shares = await bank.balanceOf(newMember, SHARES);
-    expect(shares.toString()).toEqual("0");
+    expect(shares.toString()).equal("0");
     loot = await bank.balanceOf(newMember, LOOT);
-    expect(loot.toString()).toEqual("0");
+    expect(loot.toString()).equal("0");
   });
 
   it("should not be possible for a non-member to submit a guild kick proposal", async () => {
@@ -207,7 +207,7 @@ describe("Adapter - GuildKick", () => {
       );
       throw Error("should not be possible to kick");
     } catch (e) {
-      expect(e.reason).toEqual("onlyMember");
+      expect(e.reason).equal("onlyMember");
     }
   });
 
@@ -841,13 +841,13 @@ describe("Adapter - GuildKick", () => {
 
     // The kicked member should not have LOOT & SHARES anymore
     let memberLoot = await bank.balanceOf(memberToKick, LOOT);
-    expect(memberLoot.toString()).toEqual("0");
+    expect(memberLoot.toString()).equal("0");
     let memberShares = await bank.balanceOf(memberToKick, SHARES);
-    expect(memberShares.toString()).toEqual("0");
+    expect(memberShares.toString()).equal("0");
 
     // The kicked member must receive the funds in ETH_TOKEN after the ragekick was triggered by a DAO member
     let memberEthToken = await bank.balanceOf(memberToKick, ETH_TOKEN);
-    expect(memberEthToken.toString()).toEqual("1199999999999999880");
+    expect(memberEthToken.toString()).equal("1199999999999999880");
   });
 
   it("should not be possible to process a ragekick if the batch index is smaller than the current processing index", async () => {

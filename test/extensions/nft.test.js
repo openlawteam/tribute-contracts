@@ -31,13 +31,13 @@ const {
   revertChainSnapshot,
   accounts,
   GUILD,
-  expectRevert,
+  expectRevert, expect,
 } = require("../../utils/DaoFactory.js");
 
 describe("Extension - NFT", () => {
   const daoOwner = accounts[0];
 
-  beforeAll(async () => {
+  before("deploy dao",  async () => {
     const {
       dao,
       adapters,
@@ -60,14 +60,14 @@ describe("Extension - NFT", () => {
 
   it("should be possible to create a dao with a nft extension pre-configured", async () => {
     const nftExtension = this.extensions.nft;
-    expect(nftExtension).not.toBeNull();
+    expect(nftExtension).to.not.be.null;
   });
 
   it("should be possible check how many NFTs are in the collection", async () => {
     const nftExtension = this.extensions.nft;
     const pixelNFT = this.testContracts.pixelNFT;
     const total = await nftExtension.nbNFTs(pixelNFT.address);
-    expect(total.toString()).toEqual("0");
+    expect(total.toString()).equal("0");
   });
 
   it("should not be possible get an NFT in the collection if it is empty", async () => {
@@ -91,7 +91,7 @@ describe("Extension - NFT", () => {
   it("should be possible check how many NFTs are in the collection", async () => {
     const nftExtension = this.extensions.nft;
     const total = await nftExtension.nbNFTAddresses();
-    expect(total.toString()).toEqual("0");
+    expect(total.toString()).equal("0");
   });
 
   it("should not be possible to initialize the extension if it was already initialized", async () => {
@@ -111,10 +111,10 @@ describe("Extension - NFT", () => {
     const pastEvents = await pixelNFT.getPastEvents();
     const { owner, tokenId, uri, metadata } = pastEvents[1].returnValues;
 
-    expect(tokenId).toEqual("1");
-    expect(uri).toEqual("https://www.openlaw.io/nfts/pix/1");
-    expect(metadata).toEqual("pixel: 1,1");
-    expect(owner).toEqual(nftOwner);
+    expect(tokenId).equal("1");
+    expect(uri).equal("https://www.openlaw.io/nfts/pix/1");
+    expect(metadata).equal("pixel: 1,1");
+    expect(owner).equal(nftOwner);
 
     const nftExtension = this.extensions.nft;
     await pixelNFT.approve(nftExtension.address, tokenId, {
@@ -130,10 +130,10 @@ describe("Extension - NFT", () => {
 
     // Make sure it was collected
     const nftAddr = await nftExtension.getNFTAddress(0);
-    expect(nftAddr).toEqual(pixelNFT.address);
+    expect(nftAddr).equal(pixelNFT.address);
     const nftId = await nftExtension.getNFT(nftAddr, 0);
-    expect(nftId.toString()).toEqual(tokenId.toString());
+    expect(nftId.toString()).equal(tokenId.toString());
     const newOwner = await nftExtension.getNFTOwner(nftAddr, tokenId);
-    expect(newOwner.toLowerCase()).toEqual(GUILD.toLowerCase());
+    expect(newOwner.toLowerCase()).equal(GUILD.toLowerCase());
   });
 });

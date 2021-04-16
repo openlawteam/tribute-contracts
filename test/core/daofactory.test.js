@@ -26,13 +26,14 @@ const {
   accounts,
   createIdentityDao,
   cloneDao,
+  expect,
 } = require("../../utils/DaoFactory.js");
 
 describe("Core - DaoFactory", () => {
   const owner = accounts[1];
   const anotherOwner = accounts[2];
 
-  test("should be possible create an identity dao and clone it", async () => {
+  it("should be possible create an identity dao and clone it", async () => {
     let identityDao = await createIdentityDao(owner);
 
     let { daoName } = await cloneDao(
@@ -42,10 +43,10 @@ describe("Core - DaoFactory", () => {
       "cloned-dao"
     );
 
-    expect(daoName).toEqual("cloned-dao");
+    expect(daoName).equal("cloned-dao");
   });
 
-  test("should be possible to get a DAO address by its name if it was created by the factory", async () => {
+  it("should be possible to get a DAO address by its name if it was created by the factory", async () => {
     let identityDao = await createIdentityDao(owner);
 
     let { daoFactory, dao } = await cloneDao(
@@ -59,10 +60,10 @@ describe("Core - DaoFactory", () => {
       from: anotherOwner,
       gasPrice: toBN("0"),
     });
-    expect(retrievedAddress).toEqual(dao.address);
+    expect(retrievedAddress).equal(dao.address);
   });
 
-  test("should not be possible to get a DAO address of it was not created by the factory", async () => {
+  it("should not be possible to get a DAO address of it was not created by the factory", async () => {
     let identityDao = await createIdentityDao(owner);
 
     let { daoFactory } = await cloneDao(
@@ -77,7 +78,7 @@ describe("Core - DaoFactory", () => {
       gasPrice: toBN("0"),
     });
 
-    expect(retrievedAddress).toEqual(
+    expect(retrievedAddress).equal(
       "0x0000000000000000000000000000000000000000"
     );
   });

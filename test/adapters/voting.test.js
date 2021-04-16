@@ -35,7 +35,7 @@ const {
   sharePrice,
   remaining,
   SHARES,
-  expectRevert,
+  expectRevert, expect,
 } = require("../../utils/DaoFactory.js");
 
 describe("Adapter - Voting", () => {
@@ -46,7 +46,7 @@ describe("Adapter - Voting", () => {
     return proposalCounter().next().value;
   };
 
-  beforeAll(async () => {
+  before("deploy dao",  async () => {
     const { dao, adapters, extensions } = await deployDefaultDao(daoOwner);
     this.dao = dao;
     this.adapters = adapters;
@@ -83,7 +83,7 @@ describe("Adapter - Voting", () => {
 
     await advanceTime(10000);
     const vote = await voting.voteResult(dao.address, proposalId);
-    expect(vote.toString()).toEqual("2"); // vote should be "pass = 2"
+    expect(vote.toString()).equal("2"); // vote should be "pass = 2"
   });
 
   it("should not be possible to vote twice", async () => {
@@ -175,6 +175,6 @@ describe("Adapter - Voting", () => {
 
     await advanceTime(10000);
     const vote = await voting.voteResult(dao.address, proposalId);
-    expect(vote.toString()).toEqual("2"); // vote should be "pass = 2"
+    expect(vote.toString()).equal("2"); // vote should be "pass = 2"
   });
 });
