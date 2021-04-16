@@ -36,14 +36,14 @@ const {
   expectRevert,
 } = require("../../utils/DaoFactory.js");
 
+const owner = accounts[1];
+const proposalCounter = proposalIdGenerator().generator;
+
+function getProposalCounter() {
+  return proposalCounter().next().value;
+};
+
 describe("Adapter - Configuration", () => {
-  const owner = accounts[1];
-  const proposalCounter = proposalIdGenerator().generator;
-
-  const getProposalCounter = () => {
-    return proposalCounter().next().value;
-  };
-
   beforeAll(async () => {
     const { dao, adapters, extensions } = await deployDefaultDao(owner);
     this.dao = dao;

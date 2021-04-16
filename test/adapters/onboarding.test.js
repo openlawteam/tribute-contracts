@@ -46,14 +46,14 @@ const {
 
 const { checkBalance, isMember } = require("../../utils/TestUtils.js");
 
+const daoOwner = accounts[0];
+const proposalCounter = proposalIdGenerator().generator;
+
+function getProposalCounter() {
+  return proposalCounter().next().value;
+};
+
 describe("Adapter - Onboarding", () => {
-  const daoOwner = accounts[0];
-  const proposalCounter = proposalIdGenerator().generator;
-
-  const getProposalCounter = () => {
-    return proposalCounter().next().value;
-  };
-
   beforeAll(async () => {
     const { dao, adapters, extensions } = await deployDefaultDao(daoOwner);
     this.dao = dao;
@@ -78,7 +78,7 @@ describe("Adapter - Onboarding", () => {
     const nbOfERC20Shares = 100000000;
     const erc20SharePrice = toBN("10");
 
-    const { dao, adapters, extensions } = await deployDao(null, {
+    const { dao, adapters } = await deployDao(null, {
       owner: daoOwner,
       unitPrice: erc20SharePrice,
       nbShares: nbOfERC20Shares,
@@ -591,7 +591,7 @@ describe("Adapter - Onboarding", () => {
       from: daoOwner,
       gasPrice: toBN("0"),
     });
-    expectRevert(result, "proposal does not exist");
+    await expectRevert(result, "proposal does not exist");
   });
 
   it("should be possible to update delegate key and the member continues as an active member", async () => {

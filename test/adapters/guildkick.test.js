@@ -54,14 +54,14 @@ const {
   guildKickProposal,
 } = require("../../utils/TestUtils.js");
 
+const owner = accounts[1];
+const proposalCounter = proposalIdGenerator().generator;
+
+function getProposalCounter() {
+  return proposalCounter().next().value;
+};
+
 describe("Adapter - GuildKick", () => {
-  const owner = accounts[1];
-  const proposalCounter = proposalIdGenerator().generator;
-
-  const getProposalCounter = () => {
-    return proposalCounter().next().value;
-  };
-
   beforeAll(async () => {
     const { dao, adapters, extensions } = await deployDefaultDao(owner);
     this.dao = dao;

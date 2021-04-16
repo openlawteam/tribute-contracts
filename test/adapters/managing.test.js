@@ -44,14 +44,14 @@ const {
   expectRevert,
 } = require("../../utils/DaoFactory.js");
 
+const daoOwner = accounts[1];
+const proposalCounter = proposalIdGenerator().generator;
+
+function getProposalCounter() {
+  return proposalCounter().next().value;
+};
+
 describe("Adapter - Managing", () => {
-  const daoOwner = accounts[1];
-  const proposalCounter = proposalIdGenerator().generator;
-
-  const getProposalCounter = () => {
-    return proposalCounter().next().value;
-  };
-
   beforeAll(async () => {
     const { dao, adapters, extensions } = await deployDefaultDao(daoOwner);
     this.dao = dao;
@@ -66,7 +66,6 @@ describe("Adapter - Managing", () => {
   });
 
   it("should not be possible to send ETH to the adapter", async () => {
-    const dao = this.dao;
     const managing = this.adapters.managing;
     await expectRevert(
       web3.eth.sendTransaction({
@@ -354,7 +353,7 @@ describe("Adapter - Managing", () => {
       from: daoOwner,
       gasPrice: toBN("0"),
     });
-    advanceTime(1000);
+    await advanceTime(1000);
 
     await managing.processProposal(dao.address, proposalId, {
       from: daoOwner,
@@ -397,7 +396,7 @@ describe("Adapter - Managing", () => {
       from: daoOwner,
       gasPrice: toBN("0"),
     });
-    advanceTime(1000);
+    await advanceTime(1000);
 
     await newManaging.processProposal(dao.address, newProposalId, {
       from: daoOwner,
@@ -449,7 +448,7 @@ describe("Adapter - Managing", () => {
       from: daoOwner,
       gasPrice: toBN("0"),
     });
-    advanceTime(1000);
+    await advanceTime(1000);
 
     await managing.processProposal(dao.address, proposalId, {
       from: daoOwner,
@@ -563,7 +562,7 @@ describe("Adapter - Managing", () => {
       gasPrice: toBN("0"),
     });
 
-    advanceTime(1000);
+    await advanceTime(1000);
 
     await managing.processProposal(dao.address, proposalId, {
       from: nonMember,
@@ -601,7 +600,7 @@ describe("Adapter - Managing", () => {
       from: daoOwner,
       gasPrice: toBN("0"),
     });
-    advanceTime(1000);
+    await advanceTime(1000);
 
     await expectRevert(
       managing.processProposal(dao.address, proposalId, {
@@ -672,7 +671,7 @@ describe("Adapter - Managing", () => {
       gasPrice: toBN("0"),
     });
 
-    advanceTime(1000);
+    await advanceTime(1000);
 
     await managing.processProposal(dao.address, proposalId, {
       from: daoOwner,
@@ -710,7 +709,7 @@ describe("Adapter - Managing", () => {
       gasPrice: toBN("0"),
     });
 
-    advanceTime(1000);
+    await advanceTime(1000);
 
     await expectRevert(
       managing.processProposal(dao.address, proposalId, {

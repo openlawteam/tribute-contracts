@@ -39,14 +39,14 @@ const {
   expectRevert,
 } = require("../../utils/DaoFactory.js");
 
+const daoOwner = accounts[1];
+const proposalCounter = proposalIdGenerator().generator;
+
+function getProposalCounter() {
+  return proposalCounter().next().value;
+};
+
 describe("Adapter - Non Voting Onboarding", () => {
-  const daoOwner = accounts[1];
-  const proposalCounter = proposalIdGenerator().generator;
-
-  const getProposalCounter = () => {
-    return proposalCounter().next().value;
-  };
-
   it("should be possible to join a DAO as a member without any voting power by requesting Loot while staking raw ETH", async () => {
     const advisorAccount = accounts[2];
 

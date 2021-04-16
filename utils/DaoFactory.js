@@ -232,7 +232,7 @@ const deployDao = async (deployer, options) => {
   let { bankAddress } = pastEvent.returnValues;
   let bank = await BankExtension.at(bankAddress);
   let creator = await dao.getMemberAddress(1);
-  dao.addExtension(sha3("bank"), bank.address, creator);
+  await dao.addExtension(sha3("bank"), bank.address, creator);
 
   await nftFactory.createNFTCollection();
   pastEvent = undefined;
@@ -243,7 +243,7 @@ const deployDao = async (deployer, options) => {
 
   let { nftCollAddress } = pastEvent.returnValues;
   let nftExtension = await NFTExtension.at(nftCollAddress);
-  dao.addExtension(sha3("nft"), nftExtension.address, creator);
+  await dao.addExtension(sha3("nft"), nftExtension.address, creator);
 
   const extensions = { bank: bank, nft: nftExtension };
 
@@ -721,7 +721,7 @@ const createDao = async (
   let pastEvents = await bankFactory.getPastEvents();
   let { bankAddress } = pastEvents[0].returnValues;
   let bank = await BankExtension.at(bankAddress);
-  dao.addExtension(sha3("bank"), bank.address, senderAccount);
+  await dao.addExtension(sha3("bank"), bank.address, senderAccount);
 
   // Create and add the NFT Collection Extension to the DAO
   const nftFactory = await NFTCollectionFactory.deployed();
@@ -729,7 +729,7 @@ const createDao = async (
   pastEvents = await nftFactory.getPastEvents();
   let { nftCollAddress } = pastEvents[0].returnValues;
   let nftExt = await NFTExtension.at(nftCollAddress);
-  dao.addExtension(sha3("nft"), nftExt.address, senderAccount);
+  await dao.addExtension(sha3("nft"), nftExt.address, senderAccount);
 
   // Create and set up the DAO Adapters
   const voting = await VotingContract.deployed();
@@ -779,19 +779,6 @@ const createDao = async (
   return dao;
 };
 
-const cloneIdentityDao = async (identityAddress, senderAccount) => {
-  // newDao: uses clone factory to clone the contract deployed at the identityAddress
-  let daoFactory = await DaoFactory.new(identityAddress);
-  await daoFactory.createDao("test-dao", senderAccount);
-  // checking the gas usaged to clone a contract
-  let pastEvents = await daoFactory.getPastEvents();
-  let { _address } = pastEvents[0].returnValues;
-
-  let dao = await DaoRegistry.at(_address);
-
-  return { dao, daoFactory };
-};
-
 const cloneDao = async (deployer, identityDao, owner, name = "test-dao") => {
   // The owner of the DAO is always the 1st unlocked address if none is provided
   let txArgs = {
@@ -815,6 +802,7 @@ const cloneDao = async (deployer, identityDao, owner, name = "test-dao") => {
 };
 
 const advanceTime = async (time) => {
+  
   await new Promise((resolve, reject) => {
     web3.currentProvider.send(
       {
@@ -847,6 +835,8 @@ const advanceTime = async (time) => {
       }
     );
   });
+
+  return true;
 };
 
 const entryNft = (contract, flags) => {

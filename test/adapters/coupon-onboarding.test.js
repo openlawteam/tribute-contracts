@@ -49,8 +49,9 @@ const signer = {
   privKey: "c150429d49e8799f119434acd3f816f299a5c7e3891455ee12269cb47a5f987c",
 };
 
+const daoOwner = accounts[1];
+
 describe("Adapter - Coupon Onboarding ", () => {
-  const daoOwner = accounts[1];
 
   beforeAll(async () => {
     const { dao, adapters, extensions } = await deployDefaultDao(daoOwner);
@@ -65,7 +66,7 @@ describe("Adapter - Coupon Onboarding ", () => {
     this.snapshotId = await takeChainSnapshot();
   });
 
-  it("should be possible to join a DAO with a valid coupon", async () => {
+  test("should be possible to join a DAO with a valid coupon", async () => {
     const otherAccount = accounts[2];
 
     const signerUtil = SigUtilSigner(signer.privKey);
@@ -130,7 +131,7 @@ describe("Adapter - Coupon Onboarding ", () => {
     await checkBalance(bank, GUILD, ETH_TOKEN, toBN("0"));
   });
 
-  it("should not be possible to join a DAO with mismatched coupon values", async () => {
+  test("should not be possible to join a DAO with mismatched coupon values", async () => {
     const otherAccount = accounts[2];
 
     const signerUtil = SigUtilSigner(signer.privKey);
@@ -193,7 +194,7 @@ describe("Adapter - Coupon Onboarding ", () => {
     await checkBalance(bank, GUILD, ETH_TOKEN, toBN("0"));
   });
 
-  it("should not be possible to join a DAO with an invalid coupon", async () => {
+  test("should not be possible to join a DAO with an invalid coupon", async () => {
     const otherAccount = accounts[2];
 
     const signerUtil = SigUtilSigner(signer.privKey);

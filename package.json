@@ -34,7 +34,7 @@
     "truffle-abi": "^1.0.3"
   },
   "scripts": {
-    "test": "jest --clearCache && jest --runInBand",
+    "test": "jest --clearCache && jest --maxWorkers=3",
     "lint:fix": "prettier --write 'contracts/**/*.sol' 'test/**/*.test.js' '**/*.md'",
     "lint": "prettier --list-different 'contracts/**/*.sol' 'test/**/*.test.js' '**/*.md'",
     "compile": "truffle compile",

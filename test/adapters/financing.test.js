@@ -42,18 +42,18 @@ const {
 
 const { checkBalance } = require("../../utils/TestUtils.js");
 
+const remaining = sharePrice.sub(toBN("50000000000000"));
+const myAccount = accounts[1];
+const applicant = accounts[2];
+const newMember = accounts[3];
+const expectedGuildBalance = toBN("1200000000000000000");
+const proposalCounter = proposalIdGenerator().generator;
+
+function getProposalCounter() {
+  return proposalCounter().next().value;
+};
+
 describe("Adapter - Financing", () => {
-  const remaining = sharePrice.sub(toBN("50000000000000"));
-  const myAccount = accounts[1];
-  const applicant = accounts[2];
-  const newMember = accounts[3];
-  const expectedGuildBalance = toBN("1200000000000000000");
-  const proposalCounter = proposalIdGenerator().generator;
-
-  const getProposalCounter = () => {
-    return proposalCounter().next().value;
-  };
-
   beforeAll(async () => {
     const { dao, adapters, extensions } = await deployDefaultDao(myAccount);
     this.dao = dao;

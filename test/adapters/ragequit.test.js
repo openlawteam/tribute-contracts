@@ -45,13 +45,14 @@ const {
 
 const { onboardingNewMember } = require("../../utils/TestUtils.js");
 
-describe("Adapter - Ragequit", () => {
-  const proposalCounter = proposalIdGenerator().generator;
-  const owner = accounts[1];
+const proposalCounter = proposalIdGenerator().generator;
+const owner = accounts[1];
 
-  const getProposalCounter = () => {
-    return proposalCounter().next().value;
-  };
+function getProposalCounter() {
+  return proposalCounter().next().value;
+};
+
+describe("Adapter - Ragequit", () => {
 
   beforeAll(async () => {
     const { dao, adapters, extensions } = await deployDefaultDao(owner);
