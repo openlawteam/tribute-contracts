@@ -696,6 +696,7 @@ const configureDao = async ({
   await voting.configureDao(dao.address, votingPeriod, gracePeriod);
   await tribute.configureDao(dao.address, SHARES);
   await tribute.configureDao(dao.address, LOOT);
+  await tributeNFT.configureDao(dao.address);
 };
 
 const cloneDao = async (deployer, identityDao, owner, name = "test-dao") => {
