@@ -28,7 +28,7 @@
     "install": "^0.13.0",
     "mocha": "^8.3.2",
     "npm": "^7.10.0",
-    "prettier": "^2.1.2",
+    "prettier": "^2.2.1",
     "prettier-plugin-solidity": "^1.0.0-beta.3",
     "solhint": "^3.3.2",
     "solidity-coverage": "^0.7.16",
@@ -38,6 +38,7 @@
   },
   "scripts": {
     "compile": "truffle compile",
+    "compile-abi": "truffle compile && truffle-abi",
     "coverage": "scripts/coverage.js",
     "ganache": "ganache-cli --deterministic -p 8545 --networkId 1337",
     "lint": "prettier --list-different 'contracts/**/*.sol' 'test/**/*.test.js' '**/*.md'",
