@@ -12,45 +12,13 @@ const {
 module.exports = async (deployer, network) => {
   let dao;
   if (network === "ganache") {
-    dao = await deployDao(deployer, {
-      unitPrice: toBN(toWei("100", "finney")),
-      nbShares: toBN("100000"),
-      tokenAddr: ETH_TOKEN,
-      maximumChunks: toBN("100000"),
-      votingPeriod: 120, // 120 secs (2 mins)
-      gracePeriod: 60, // 60 secs (1 min)
-      offchainVoting: true,
-      chainId: getNetworkDetails(network).chainId,
-      deployTestTokens: true,
-      finalize: false,
-    });
+    dao = await deployGanacheDao(deployer, network);
   } else if (network === "rinkeby") {
-    dao = await deployDao(deployer, {
-      unitPrice: toBN(toWei("100", "finney")),
-      nbShares: toBN("100000"),
-      tokenAddr: ETH_TOKEN,
-      maximumChunks: toBN("100000"),
-      votingPeriod: 600, // 600 secs (10 mins)
-      gracePeriod: 600, // 600 secs (10 mins)
-      offchainVoting: true,
-      chainId: getNetworkDetails(network).chainId,
-      deployTestTokens: true,
-      finalize: false,
-    });
+    dao = await deployRinkebyDao(deployer, network);
   } else if (network === "test" || network === "coverage") {
-    dao = await deployDao(deployer, {
-      unitPrice: sharePrice,
-      nbShares: numberOfShares,
-      tokenAddr: ETH_TOKEN,
-      maximumChunks: maximumChunks,
-      votingPeriod: 10, // 10 secs
-      gracePeriod: 1, // 1 sec
-      offchainVoting: true,
-      chainId: getNetworkDetails(network).chainId,
-      deployTestTokens: false,
-      finalize: false,
-    });
+    dao = await deployTestDao(deployer, network);
   }
+
   if (dao) {
     await dao.finalizeDao();
 
@@ -64,3 +32,51 @@ module.exports = async (deployer, network) => {
     console.log("************************");
   }
 };
+
+async function deployTestDao(deployer, network) {
+  let { dao } = await deployDao(deployer, {
+    unitPrice: sharePrice,
+    nbShares: numberOfShares,
+    tokenAddr: ETH_TOKEN,
+    maximumChunks: maximumChunks,
+    votingPeriod: 10,
+    gracePeriod: 1,
+    offchainVoting: true,
+    chainId: getNetworkDetails(network).chainId,
+    deployTestTokens: false,
+    finalize: false,
+  });
+  return dao;
+}
+
+async function deployRinkebyDao(deployer, network) {
+  let { dao } = await deployDao(deployer, {
+    unitPrice: toBN(toWei("100", "finney")),
+    nbShares: toBN("100000"),
+    tokenAddr: ETH_TOKEN,
+    maximumChunks: toBN("100000"),
+    votingPeriod: 600,
+    gracePeriod: 600,
+    offchainVoting: true,
+    chainId: getNetworkDetails(network).chainId,
+    deployTestTokens: true,
+    finalize: false,
+  });
+  return dao;
+}
+
+async function deployGanacheDao(deployer, network) {
+  let { dao } = await deployDao(deployer, {
+    unitPrice: toBN(toWei("100", "finney")),
+    nbShares: toBN("100000"),
+    tokenAddr: ETH_TOKEN,
+    maximumChunks: toBN("100000"),
+    votingPeriod: 120,
+    gracePeriod: 60,
+    offchainVoting: true,
+    chainId: getNetworkDetails(network).chainId,
+    deployTestTokens: true,
+    finalize: false,
+  });
+  return dao;
+}

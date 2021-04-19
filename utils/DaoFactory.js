@@ -243,6 +243,11 @@ const deployDao = async (deployer, options) => {
     const bankExt = await BankExtension.deployed();
     await deployer.deploy(BankFactory, bankExt.address);
     bankFactory = await BankFactory.deployed();
+
+    await deployer.deploy(NFTExtension);
+    const nftExt = await NFTExtension.deployed();
+    await deployer.deploy(NFTCollectionFactory, nftExt.address);
+    nftFactory = await NFTCollectionFactory.deployed();
   } else {
     daoRegistry = await DaoRegistry.new();
 
@@ -912,14 +917,7 @@ const configureOffchainVoting = async (
       INTERNAL_TRANSFER: true,
     }).flags
   );
-
-  await offchainVoting.configureDao(
-    dao.address,
-    votingPeriod,
-    gracePeriod,
-    10,
-    { from: owner }
-  );
+  await offchainVoting.configureDao(dao.address, votingPeriod, gracePeriod, 10);
 
   return { offchainVoting, snapshotProposalContract, handleBadReporterAdapter };
 };
@@ -996,7 +994,8 @@ module.exports = {
   contract,
   accounts,
   expect,
-  expectRevert, expect,
+  expectRevert,
+  expect,
   numberOfShares,
   sharePrice,
   remaining,

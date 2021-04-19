@@ -47,7 +47,7 @@
     "compile": "truffle compile",
     "test": "mocha --timeout 20000 --exit --recursive",
     "ganache": "ganache-cli --deterministic -p 8545 --networkId 1337",
-    "migrate": "truffle migrate --network ganache",
+    "migrate": "truffle migrate --network",
     "coverage": "truffle run coverage"
   },
   "repository": {
