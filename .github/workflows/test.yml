@@ -1,4 +1,4 @@
-name: CI
+name: Test
 
 on:
   push:
@@ -11,7 +11,7 @@ on:
 
 jobs:
   test:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-18.04
     steps:
       - name: Checkout code
         uses: actions/checkout@v2
@@ -19,7 +19,7 @@ jobs:
       - name: Setup node
         uses: actions/setup-node@v2
         with:
-          node-version: 12.x
+          node-version: '12.22.x'
 
       - name: Cache node modules
         id: cache-node-modules
@@ -38,5 +38,11 @@ jobs:
         if: steps.cache-node-modules.outputs.cache-hit != 'true'
         run: npm ci
 
-      - name: Run tests
+      - name: Run Linter
+        run: npm run lint
+
+      - name: Compile Solidity Contracts
+        run: npm run compile
+
+      - name: Run Tests
         run: npm test

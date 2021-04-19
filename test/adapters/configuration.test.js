@@ -27,145 +27,144 @@ SOFTWARE.
 const {
   sha3,
   toBN,
-  fromUtf8,
+  deployDefaultDao,
+  takeChainSnapshot,
+  revertChainSnapshot,
+  proposalIdGenerator,
   advanceTime,
-  createDao,
-  VotingContract,
-  ConfigurationContract,
+  accounts,
+  expectRevert,
+  expect,
 } = require("../../utils/DaoFactory.js");
 
-contract("MolochV3 - Configuration Adapter", async (accounts) => {
-  it("should be possible to set a single configuration parameter", async () => {
-    const myAccount = accounts[1];
+const owner = accounts[1];
+const proposalCounter = proposalIdGenerator().generator;
 
-    //Create the new DAO
-    let dao = await createDao(myAccount);
+function getProposalCounter() {
+  return proposalCounter().next().value;
+}
+
+describe("Adapter - Configuration", () => {
+  before("deploy dao", async () => {
+    const { dao, adapters, extensions } = await deployDefaultDao(owner);
+    this.dao = dao;
+    this.adapters = adapters;
+    this.extensions = extensions;
+  });
+
+  beforeEach(async () => {
+    this.snapshotId = await takeChainSnapshot();
+  });
+
+  afterEach(async () => {
+    await revertChainSnapshot(this.snapshotId);
+  });
+
+  it("should be possible to set a single configuration parameter", async () => {
+    const dao = this.dao;
+    const configuration = this.adapters.configuration;
+    const voting = this.adapters.voting;
+
     let key = sha3("key");
 
+    const proposalId = getProposalCounter();
     //Submit a new configuration proposal
-    let configurationContract = await dao.getAdapterAddress(
-      sha3("configuration")
-    );
-    let configuration = await ConfigurationContract.at(configurationContract);
     await configuration.submitConfigurationProposal(
       dao.address,
-      "0x1",
+      proposalId,
       [key],
-      [toBN("10")],
-      { from: myAccount, gasPrice: toBN("0") }
+      [toBN("11")],
+      { from: owner, gasPrice: toBN("0") }
     );
 
     let value = await dao.getConfiguration(key);
-    assert.equal("0", value.toString());
+    expect(value.toString()).equal("0");
 
     //Sponsor the new proposal, vote and process it
-    await configuration.sponsorProposal(dao.address, "0x1", [], {
-      from: myAccount,
+    await configuration.sponsorProposal(dao.address, proposalId, [], {
+      from: owner,
       gasPrice: toBN("0"),
     });
 
-    let votingContract = await dao.getAdapterAddress(sha3("voting"));
-    let voting = await VotingContract.at(votingContract);
-
     value = await dao.getConfiguration(key);
-    assert.equal(value.toString(), toBN("0").toString());
-    await voting.submitVote(dao.address, "0x1", 1, {
-      from: myAccount,
+    expect(value.toString()).equal("0");
+
+    await voting.submitVote(dao.address, proposalId, 1, {
+      from: owner,
       gasPrice: toBN("0"),
     });
 
     await advanceTime(10000);
-    await configuration.processProposal(dao.address, "0x1", {
-      from: myAccount,
+    await configuration.processProposal(dao.address, proposalId, {
+      from: owner,
       gasPrice: toBN("0"),
     });
 
     value = await dao.getConfiguration(key);
-    assert.equal("10", value.toString());
+    expect(value.toString()).equal("11");
   });
 
   it("should be possible to set multiple configuration parameters", async () => {
-    const myAccount = accounts[1];
+    const dao = this.dao;
+    const configuration = this.adapters.configuration;
+    const voting = this.adapters.voting;
 
-    //Create the new DAO
-    let dao = await createDao(myAccount);
     let key1 = sha3("key1");
     let key2 = sha3("key2");
 
     //Submit a new configuration proposal
-    let configurationContract = await dao.getAdapterAddress(
-      sha3("configuration")
-    );
-    let configuration = await ConfigurationContract.at(configurationContract);
     await configuration.submitConfigurationProposal(
       dao.address,
       "0x1",
       [key1, key2],
       [toBN("10"), toBN("15")],
-      { from: myAccount, gasPrice: toBN("0") }
+      { from: owner, gasPrice: toBN("0") }
     );
 
     let value1 = await dao.getConfiguration(key1);
     let value2 = await dao.getConfiguration(key2);
-    assert.equal("0", value1.toString());
-    assert.equal("0", value2.toString());
+    expect(value1.toString()).equal("0");
+    expect(value2.toString()).equal("0");
 
     //Sponsor the new proposal, vote and process it
     await configuration.sponsorProposal(dao.address, "0x1", [], {
-      from: myAccount,
+      from: owner,
       gasPrice: toBN("0"),
     });
 
-    let votingContract = await dao.getAdapterAddress(sha3("voting"));
-    let voting = await VotingContract.at(votingContract);
-
     value1 = await dao.getConfiguration(key1);
     value2 = await dao.getConfiguration(key2);
-    assert.equal("0", value1.toString());
-    assert.equal("0", value2.toString());
+    expect(value1.toString()).equal("0");
+    expect(value2.toString()).equal("0");
 
     await voting.submitVote(dao.address, "0x1", 1, {
-      from: myAccount,
+      from: owner,
       gasPrice: toBN("0"),
     });
 
     await advanceTime(10000);
     await configuration.processProposal(dao.address, "0x1", {
-      from: myAccount,
+      from: owner,
       gasPrice: toBN("0"),
     });
 
     value1 = await dao.getConfiguration(key1);
     value2 = await dao.getConfiguration(key2);
-    assert.equal("10", value1.toString());
-    assert.equal("15", value2.toString());
+    expect(value1.toString()).equal("10");
+    expect(value2.toString()).equal("15");
   });
 
   it("should not be possible to provide a different number of keys and values", async () => {
-    const myAccount = accounts[1];
-
-    //Create the new DAO
-    let dao = await createDao(myAccount);
+    const dao = this.dao;
+    const configuration = this.adapters.configuration;
     let key = sha3("key");
 
-    //Submit a new configuration proposal
-    let configurationContract = await dao.getAdapterAddress(
-      sha3("configuration")
+    await expectRevert(
+      configuration.submitConfigurationProposal(dao.address, "0x1", [key], [], {
+        from: owner,
+        gasPrice: toBN("0"),
+      }),
+      "must be an equal number of config keys and values"
     );
-    let configuration = await ConfigurationContract.at(configurationContract);
-    try {
-      await configuration.submitConfigurationProposal(
-        dao.address,
-        "0x1",
-        [key],
-        [],
-        { from: myAccount, gasPrice: toBN("0") }
-      );
-    } catch (err) {
-      assert.equal(
-        err.reason,
-        "must be an equal number of config keys and values"
-      );
-    }
   });
 });

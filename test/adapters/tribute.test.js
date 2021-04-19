@@ -27,71 +27,86 @@ SOFTWARE.
 const {
   toBN,
   advanceTime,
-  createDao,
-  getContract,
+  deployDao,
+  deployDefaultDao,
+  takeChainSnapshot,
+  revertChainSnapshot,
+  proposalIdGenerator,
+  accounts,
   GUILD,
   SHARES,
   OLToken,
-  TributeContract,
-  VotingContract,
-  BankExtension,
-  sha3,
+  expectRevert,
+  expect,
 } = require("../../utils/DaoFactory.js");
 const { checkBalance, isMember } = require("../../utils/TestUtils.js");
 
-contract("MolochV3 - Tribute Adapter", async (accounts) => {
+describe("Adapter - Tribute", () => {
+  const daoOwner = accounts[1];
+  const proposalCounter = proposalIdGenerator().generator;
+
+  const getProposalCounter = () => {
+    return proposalCounter().next().value;
+  };
+
+  before("deploy dao", async () => {
+    const { dao, adapters, extensions } = await deployDefaultDao(daoOwner);
+    this.dao = dao;
+    this.adapters = adapters;
+    this.extensions = extensions;
+    this.snapshotId = await takeChainSnapshot();
+  });
+
+  beforeEach(async () => {
+    await revertChainSnapshot(this.snapshotId);
+    this.snapshotId = await takeChainSnapshot();
+  });
+
   it("should be possible to provide ERC20 tokens in exchange for DAO shares", async () => {
-    const myAccount = accounts[1];
     const applicant = accounts[2];
     const nonMemberAccount = accounts[3];
 
-    let dao = await createDao(myAccount);
-    const bankAddress = await dao.getExtensionAddress(sha3("bank"));
-    const bank = await BankExtension.at(bankAddress);
-
-    const tribute = await getContract(dao, "tribute", TributeContract);
-    const voting = await getContract(dao, "voting", VotingContract);
+    const dao = this.dao;
+    const bank = this.extensions.bank;
+    const tribute = this.adapters.tribute;
+    const voting = this.adapters.voting;
 
     // Issue OpenLaw ERC20 Basic Token for tests
     const tokenSupply = 1000000;
     let oltContract = await OLToken.new(tokenSupply);
 
-    // Transfer OLTs to myAccount
+    // Transfer OLTs to daoOwner
     const initialTokenBalance = toBN("100");
-    await oltContract.transfer(myAccount, initialTokenBalance);
-    let myAccountTokenBalance = await oltContract.balanceOf.call(myAccount);
-    assert.equal(
-      initialTokenBalance.toString(),
-      myAccountTokenBalance.toString(),
-      "myAccount must be initialized with 100 OLT Tokens"
+    await oltContract.transfer(daoOwner, initialTokenBalance);
+    let daoOwnerTokenBalance = await oltContract.balanceOf.call(daoOwner);
+    expect(daoOwnerTokenBalance.toString()).equal(
+      initialTokenBalance.toString()
     );
 
     // Number of OLTs to be sent to the DAO in exchange for number of requested shares
     const tributeAmount = 10;
     const requestAmount = 100000000;
 
-    try {
-      await tribute.provideTribute(
+    await expectRevert(
+      tribute.provideTribute(
         dao.address,
-        "0x1",
+        getProposalCounter(),
         applicant,
         SHARES,
         requestAmount,
         oltContract.address,
         tributeAmount,
         {
-          from: myAccount,
+          from: daoOwner,
           gasPrice: toBN("0"),
         }
-      );
-      assert.fail("should have failed without spender approval!");
-    } catch (e) {
-      assert.equal(e.reason, "ERC20: transfer amount exceeds allowance");
-    }
+      ),
+      "ERC20: transfer amount exceeds allowance"
+    );
 
     // Pre-approve spender (tribute adapter) to transfer proposer tokens
     await oltContract.approve(tribute.address, tributeAmount, {
-      from: myAccount,
+      from: daoOwner,
     });
 
     await tribute.provideTribute(
@@ -103,48 +118,46 @@ contract("MolochV3 - Tribute Adapter", async (accounts) => {
       oltContract.address,
       tributeAmount,
       {
-        from: myAccount,
+        from: daoOwner,
         gasPrice: toBN("0"),
       }
     );
 
     await tribute.sponsorProposal(dao.address, "0x1", [], {
-      from: myAccount,
+      from: daoOwner,
       gasPrice: toBN("0"),
     });
 
     await voting.submitVote(dao.address, "0x1", 1, {
-      from: myAccount,
+      from: daoOwner,
       gasPrice: toBN("0"),
     });
 
     // should not be able to process before the voting period has ended
-    try {
-      await tribute.processProposal(dao.address, "0x1", {
-        from: myAccount,
+    await expectRevert(
+      tribute.processProposal(dao.address, "0x1", {
+        from: daoOwner,
         gasPrice: toBN("0"),
-      });
-      assert.fail("should not process the proposal before voting");
-    } catch (err) {
-      assert.equal(err.reason, "proposal has not been voted on yet");
-    }
+      }),
+      "proposal has not been voted on yet"
+    );
 
     await advanceTime(10000);
     await tribute.processProposal(dao.address, "0x1", {
-      from: myAccount,
+      from: daoOwner,
       gasPrice: toBN("0"),
     });
 
     // test balances after proposal is processed
-    const myAccountShares = await bank.balanceOf(myAccount, SHARES);
-    assert.equal(myAccountShares.toString(), "1");
+    const daoOwnerShares = await bank.balanceOf(daoOwner, SHARES);
+    expect(daoOwnerShares.toString()).equal("1");
     const applicantShares = await bank.balanceOf(applicant, SHARES);
-    assert.equal(applicantShares.toString(), requestAmount.toString());
+    expect(applicantShares.toString()).equal(requestAmount.toString());
     const nonMemberAccountShares = await bank.balanceOf(
       nonMemberAccount,
       SHARES
     );
-    assert.equal(nonMemberAccountShares.toString(), "0");
+    expect(nonMemberAccountShares.toString()).equal("0");
     await checkBalance(
       bank,
       GUILD,
@@ -154,36 +167,31 @@ contract("MolochV3 - Tribute Adapter", async (accounts) => {
 
     // test active member status
     const applicantIsActiveMember = await isMember(bank, applicant);
-    assert.equal(applicantIsActiveMember, true);
+    expect(applicantIsActiveMember).equal(true);
     const nonMemberAccountIsActiveMember = await isMember(
       bank,
       nonMemberAccount
     );
-    assert.equal(nonMemberAccountIsActiveMember, false);
+    expect(nonMemberAccountIsActiveMember).equal(false);
   });
 
   it("should be possible to cancel a tribute proposal", async () => {
-    const myAccount = accounts[1];
     const applicant = accounts[2];
 
-    let dao = await createDao(myAccount);
-    const bankAddress = await dao.getExtensionAddress(sha3("bank"));
-    const bank = await BankExtension.at(bankAddress);
-
-    const tribute = await getContract(dao, "tribute", TributeContract);
+    const dao = this.dao;
+    const bank = this.extensions.bank;
+    const tribute = this.adapters.tribute;
 
     // Issue OpenLaw ERC20 Basic Token for tests
     const tokenSupply = 1000000;
     let oltContract = await OLToken.new(tokenSupply);
 
-    // Transfer OLTs to myAccount
+    // Transfer OLTs to daoOwner
     const initialTokenBalance = toBN("100");
-    await oltContract.transfer(myAccount, initialTokenBalance);
-    let myAccountTokenBalance = await oltContract.balanceOf.call(myAccount);
-    assert.equal(
-      initialTokenBalance.toString(),
-      myAccountTokenBalance.toString(),
-      "myAccount must be initialized with 100 OLT Tokens"
+    await oltContract.transfer(daoOwner, initialTokenBalance);
+    let daoOwnerTokenBalance = await oltContract.balanceOf.call(daoOwner);
+    expect(daoOwnerTokenBalance.toString()).equal(
+      initialTokenBalance.toString()
     );
 
     // Number of OLTs to be sent to the DAO in exchange for number of requested shares
@@ -192,7 +200,7 @@ contract("MolochV3 - Tribute Adapter", async (accounts) => {
 
     // Pre-approve spender (tribute adapter) to transfer proposer tokens
     await oltContract.approve(tribute.address, tributeAmount, {
-      from: myAccount,
+      from: daoOwner,
     });
 
     await tribute.provideTribute(
@@ -204,87 +212,79 @@ contract("MolochV3 - Tribute Adapter", async (accounts) => {
       oltContract.address,
       tributeAmount,
       {
-        from: myAccount,
+        from: daoOwner,
         gasPrice: toBN("0"),
       }
     );
 
-    try {
-      await tribute.cancelProposal(dao.address, "0x1", {
+    await expectRevert(
+      tribute.cancelProposal(dao.address, "0x1", {
         from: applicant,
         gasPrice: toBN("0"),
-      });
-    } catch (err) {
-      assert.equal(err.reason, "only proposer can cancel a proposal");
-    }
+      }),
+      "only proposer can cancel a proposal"
+    );
 
     await tribute.cancelProposal(dao.address, "0x1", {
-      from: myAccount,
+      from: daoOwner,
       gasPrice: toBN("0"),
     });
     const isProcessed = await dao.getProposalFlag("0x1", toBN("2")); // 2 is processed flag index
-    assert.equal(isProcessed, true);
+    expect(isProcessed).equal(true);
 
     // test refund of ERC20 contribution
-    myAccountTokenBalance = await oltContract.balanceOf.call(myAccount);
-    assert.equal(
-      initialTokenBalance.toString(),
-      myAccountTokenBalance.toString(),
-      "myAccount did not receive refund of ERC20 contribution"
+    daoOwnerTokenBalance = await oltContract.balanceOf.call(daoOwner);
+    // "daoOwner did not receive refund of ERC20 contribution"
+    expect(daoOwnerTokenBalance.toString()).equal(
+      initialTokenBalance.toString()
     );
 
     // should not be able to sponsor if the proposal has already been cancelled
-    try {
-      await tribute.sponsorProposal(dao.address, "0x1", [], {
-        from: myAccount,
+    await expectRevert(
+      tribute.sponsorProposal(dao.address, "0x1", [], {
+        from: daoOwner,
         gasPrice: toBN("0"),
-      });
-    } catch (err) {
-      assert.equal(err.reason, "proposal already processed");
-    }
+      }),
+      "proposal already processed"
+    );
 
     // should not be able to process if the proposal has already been cancelled
-    try {
-      await tribute.processProposal(dao.address, "0x1", {
-        from: myAccount,
+    await expectRevert(
+      tribute.processProposal(dao.address, "0x1", {
+        from: daoOwner,
         gasPrice: toBN("0"),
-      });
-    } catch (err) {
-      assert.equal(err.reason, "proposal already processed");
-    }
+      }),
+      "proposal already processed"
+    );
 
     // test balances after proposal is processed
-    const myAccountShares = await bank.balanceOf(myAccount, SHARES);
-    assert.equal(myAccountShares.toString(), "1");
+    const daoOwnerShares = await bank.balanceOf(daoOwner, SHARES);
+    expect(daoOwnerShares.toString()).equal("1");
     const applicantShares = await bank.balanceOf(applicant, SHARES);
-    assert.equal(applicantShares.toString(), "0");
+    expect(applicantShares.toString()).equal("0");
     const guildBalance = await bank.balanceOf(GUILD, oltContract.address);
-    assert.equal(guildBalance.toString(), "0");
+    expect(guildBalance.toString()).equal("0");
   });
 
   it("should handle a tribute proposal with a failed vote", async () => {
-    const myAccount = accounts[1];
     const applicant = accounts[2];
-    let dao = await createDao(myAccount);
 
-    const bankAddress = await dao.getExtensionAddress(sha3("bank"));
-    const bank = await BankExtension.at(bankAddress);
-
-    const tribute = await getContract(dao, "tribute", TributeContract);
-    const voting = await getContract(dao, "voting", VotingContract);
+    const dao = this.dao;
+    const bank = this.extensions.bank;
+    const tribute = this.adapters.tribute;
+    const voting = this.adapters.voting;
 
     // Issue OpenLaw ERC20 Basic Token for tests
     const tokenSupply = 1000000;
     let oltContract = await OLToken.new(tokenSupply);
 
-    // Transfer OLTs to myAccount
+    // Transfer OLTs to daoOwner
     const initialTokenBalance = toBN("100");
-    await oltContract.transfer(myAccount, initialTokenBalance);
-    let myAccountTokenBalance = await oltContract.balanceOf.call(myAccount);
-    assert.equal(
-      initialTokenBalance.toString(),
-      myAccountTokenBalance.toString(),
-      "myAccount must be initialized with 100 OLT Tokens"
+    await oltContract.transfer(daoOwner, initialTokenBalance);
+    let daoOwnerTokenBalance = await oltContract.balanceOf.call(daoOwner);
+    // "daoOwner must be initialized with 100 OLT Tokens"
+    expect(daoOwnerTokenBalance.toString()).equal(
+      initialTokenBalance.toString()
     );
 
     // Number of OLTs to be sent to the DAO in exchange for number of requested shares
@@ -293,134 +293,123 @@ contract("MolochV3 - Tribute Adapter", async (accounts) => {
 
     // Pre-approve spender (tribute adapter) to transfer proposer tokens
     await oltContract.approve(tribute.address, tributeAmount, {
-      from: myAccount,
+      from: daoOwner,
     });
 
+    const proposalId = getProposalCounter();
     await tribute.provideTribute(
       dao.address,
-      "0x1",
+      proposalId,
       applicant,
       SHARES,
       requestAmount,
       oltContract.address,
       tributeAmount,
       {
-        from: myAccount,
+        from: daoOwner,
         gasPrice: toBN("0"),
       }
     );
 
-    await tribute.sponsorProposal(dao.address, "0x1", [], {
-      from: myAccount,
+    await tribute.sponsorProposal(dao.address, proposalId, [], {
+      from: daoOwner,
       gasPrice: toBN("0"),
     });
 
-    await voting.submitVote(dao.address, "0x1", 2, {
-      from: myAccount,
+    await voting.submitVote(dao.address, proposalId, 2, {
+      from: daoOwner,
       gasPrice: toBN("0"),
     });
     await advanceTime(10000);
-    const vote = await voting.voteResult(dao.address, "0x1");
-    assert.equal(vote.toString(), "3"); // vote should be "not passed"
+    const vote = await voting.voteResult(dao.address, proposalId);
+    expect(vote.toString()).equal("3"); // vote should be "not passed"
 
-    await tribute.processProposal(dao.address, "0x1", {
-      from: myAccount,
+    await tribute.processProposal(dao.address, proposalId, {
+      from: daoOwner,
       gasPrice: toBN("0"),
     });
 
-    const isProcessed = await dao.getProposalFlag("0x1", toBN("2")); // 2 is processed flag index
-    assert.equal(isProcessed, true);
+    const isProcessed = await dao.getProposalFlag(proposalId, toBN("2")); // 2 is processed flag index
+    expect(isProcessed).equal(true);
 
     // test refund of ERC20 contribution
-    myAccountTokenBalance = await oltContract.balanceOf.call(myAccount);
-    assert.equal(
-      initialTokenBalance.toString(),
-      myAccountTokenBalance.toString(),
-      "myAccount did not receive refund of ERC20 contribution"
+    daoOwnerTokenBalance = await oltContract.balanceOf.call(daoOwner);
+    // "daoOwner did not receive refund of ERC20 contribution"
+    expect(daoOwnerTokenBalance.toString()).equal(
+      initialTokenBalance.toString()
     );
 
     // test balances after proposal is processed
-    const myAccountShares = await bank.balanceOf(myAccount, SHARES);
-    assert.equal(myAccountShares.toString(), "1");
+    const daoOwnerShares = await bank.balanceOf(daoOwner, SHARES);
+    expect(daoOwnerShares.toString()).equal("1");
     const applicantShares = await bank.balanceOf(applicant, SHARES);
-    assert.equal(applicantShares.toString(), "0");
+    expect(applicantShares.toString()).equal("0");
     const guildBalance = await bank.balanceOf(GUILD, oltContract.address);
-    assert.equal(guildBalance.toString(), "0");
+    expect(guildBalance.toString()).equal("0");
     const applicantBalance = await bank.balanceOf(
       applicant,
       oltContract.address
     );
-    assert.equal(applicantBalance.toString(), "0");
+    expect(applicantBalance.toString()).equal("0");
     const tributeAdapterBalance = await oltContract.balanceOf.call(
       tribute.address
     );
-    assert.equal(
-      tributeAdapterBalance.toString(),
-      "0",
-      "tribute adapter did not refund ERC20 contribution"
-    );
+    // "tribute adapter did not refund ERC20 contribution";
+    expect(tributeAdapterBalance.toString()).equal("0");
 
-    // test member status
-    const applicantIsMember = await isMember(bank, applicant);
-    assert.equal(applicantIsMember, false);
+    // test active member status
+    const applicantIsActiveMember = await isMember(bank, applicant);
+    expect(applicantIsActiveMember).equal(false);
   });
 
   it("should not be possible to sponsor proposal that does not exist", async () => {
-    const myAccount = accounts[1];
-    let dao = await createDao(myAccount);
+    const dao = this.dao;
+    const tribute = this.adapters.tribute;
 
-    const tribute = await getContract(dao, "tribute", TributeContract);
-
-    try {
-      await tribute.sponsorProposal(dao.address, "0x1", [], {
-        from: myAccount,
+    await expectRevert(
+      tribute.sponsorProposal(dao.address, "0x1", [], {
+        from: daoOwner,
         gasPrice: toBN("0"),
-      });
-    } catch (err) {
-      assert.equal(err.reason, "proposal does not exist for this dao");
-    }
+      }),
+      "proposal does not exist for this dao"
+    );
   });
 
   it("should not be possible to process proposal that does not exist", async () => {
-    const myAccount = accounts[1];
-    let dao = await createDao(myAccount);
+    const dao = this.dao;
+    const tribute = this.adapters.tribute;
 
-    const tribute = await getContract(dao, "tribute", TributeContract);
-
-    try {
-      await tribute.processProposal(dao.address, "0x1", {
-        from: myAccount,
+    await expectRevert(
+      tribute.processProposal(dao.address, "0x1", {
+        from: daoOwner,
         gasPrice: toBN("0"),
-      });
-    } catch (err) {
-      assert.equal(err.reason, "proposal does not exist");
-    }
+      }),
+      "proposal does not exist"
+    );
   });
 
   it("should not be possible to join if the provided token exceeds the bank token limits", async () => {
-    const daoOwner = accounts[1];
     const applicant = accounts[2];
 
     // Issue OpenLaw ERC20 Basic Token for tests
     // Token supply higher than the limit for external tokens
     // defined in Bank._createNewAmountCheckpoint function (2**160-1).
-    const supply = toBN("2").pow(toBN("180")).toString();
+    const supply = toBN("2").pow(toBN("180"));
     const oltContract = await OLToken.new(supply, { from: daoOwner });
     const nbOfERC20Shares = 100000000;
     const erc20SharePrice = toBN("10");
 
-    const dao = await createDao(
-      daoOwner,
-      erc20SharePrice,
-      nbOfERC20Shares,
-      10,
-      1,
-      oltContract.address
-    );
-    const tribute = await getContract(dao, "tribute", TributeContract);
-    const voting = await getContract(dao, "voting", VotingContract);
+    const { dao, adapters } = await deployDao(null, {
+      owner: daoOwner,
+      unitPrice: erc20SharePrice,
+      nbShares: nbOfERC20Shares,
+      tokenAddr: oltContract.address,
+    });
 
-    // Transfer OLTs to myAccount
+    const tribute = adapters.tribute;
+    const voting = adapters.voting;
+
+    // Transfer OLTs to daoOwner
     // Use an amount that will cause an overflow 2**161 > 2**160-1 for external tokens
     const initialTokenBalance = toBN("2").pow(toBN("161")).toString();
     await oltContract.approve.sendTransaction(applicant, initialTokenBalance, {
@@ -432,10 +421,9 @@ contract("MolochV3 - Tribute Adapter", async (accounts) => {
     });
 
     let applicantTokenBalance = await oltContract.balanceOf.call(applicant);
-    assert.equal(
-      initialTokenBalance.toString(),
-      applicantTokenBalance.toString(),
-      "applicant account must be initialized with 2**161 OLT Tokens"
+    // "applicant account must be initialized with 2**161 OLT Tokens";
+    expect(applicantTokenBalance.toString()).equal(
+      initialTokenBalance.toString()
     );
 
     // Pre-approve spender (tribute adapter) to transfer proposer tokens
@@ -445,34 +433,48 @@ contract("MolochV3 - Tribute Adapter", async (accounts) => {
       gasPrice: toBN("0"),
     });
 
-    const requestAmount = 100000000;
-    const proposalId = "0x1";
-    try {
-      await tribute.provideTribute(
-        dao.address,
-        proposalId,
-        applicant,
-        SHARES,
-        requestAmount,
-        oltContract.address,
-        tributeAmount.toString(),
-        {
-          from: applicant,
-          gasPrice: toBN("0"),
-        }
-      );
-    } catch (e) {
-      assert.equal(
-        e.message,
-        "Returned error: VM Exception while processing transaction: revert"
-      );
-      // In case of failures the funds must be in the applicant's account
-      applicantTokenBalance = await oltContract.balanceOf.call(applicant);
-      assert.equal(
-        initialTokenBalance.toString(),
-        applicantTokenBalance.toString(),
-        "applicant account should contain 2**161 OLT Tokens when the onboard fails"
-      );
-    }
+    const requestAmount = tributeAmount;
+    const proposalId = getProposalCounter();
+
+    await tribute.provideTribute(
+      dao.address,
+      proposalId,
+      applicant,
+      SHARES,
+      requestAmount,
+      oltContract.address,
+      tributeAmount.toString(),
+      {
+        from: applicant,
+        gasPrice: toBN("0"),
+      }
+    );
+
+    await tribute.sponsorProposal(dao.address, proposalId, [], {
+      from: daoOwner,
+      gasPrice: toBN("0"),
+    });
+
+    await voting.submitVote(dao.address, proposalId, 1, {
+      from: daoOwner,
+      gasPrice: toBN("0"),
+    });
+    await advanceTime(10000);
+    const vote = await voting.voteResult(dao.address, proposalId);
+    expect(vote.toString()).equal("2");
+
+    // Proposal is processed, but due to the overflow error the funds must be returned
+    // to the applicant
+    await tribute.processProposal(dao.address, proposalId, {
+      from: daoOwner,
+      gasPrice: toBN("0"),
+    });
+
+    // Due to the overflow it fails, and the funds must be in the applicant's account
+    applicantTokenBalance = await oltContract.balanceOf.call(applicant);
+    // "applicant account should contain 2**161 OLT Tokens when the onboard fails";
+    expect(applicantTokenBalance.toString()).equal(
+      initialTokenBalance.toString()
+    );
   });
 });

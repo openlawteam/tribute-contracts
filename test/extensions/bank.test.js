@@ -26,104 +26,83 @@ SOFTWARE.
  */
 const {
   sha3,
-  createDao,
-  sharePrice,
-  numberOfShares,
-  BankExtension,
+  deployDefaultDao,
+  takeChainSnapshot,
+  revertChainSnapshot,
+  accounts,
   BankFactory,
   ETH_TOKEN,
+  expectRevert,
+  expect,
 } = require("../../utils/DaoFactory.js");
 
-contract("MolochV3 - Bank Extension", async (accounts) => {
-  it("", () => {
-    //dummy test
+describe("Extension - Bank", () => {
+  const daoOwner = accounts[0];
+
+  before("deploy dao", async () => {
+    const { dao, adapters, extensions } = await deployDefaultDao(daoOwner);
+    this.dao = dao;
+    this.adapters = adapters;
+    this.extensions = extensions;
+  });
+
+  beforeEach(async () => {
+    this.snapshotId = await takeChainSnapshot();
+  });
+
+  afterEach(async () => {
+    await revertChainSnapshot(this.snapshotId);
   });
 
   it("should be possible to create a dao with a bank extension pre-configured", async () => {
-    const daoOwner = accounts[0];
-    let dao = await createDao(daoOwner);
-
+    const dao = this.dao;
     const bankAddress = await dao.getExtensionAddress(sha3("bank"));
-    assert.notEqual(bankAddress, null);
+    expect(bankAddress).to.not.be.null;
   });
 
   it("should be possible to get all the tokens registered in the bank", async () => {
-    const daoOwner = accounts[0];
-    let dao = await createDao(daoOwner);
-
-    const bankAddress = await dao.getExtensionAddress(sha3("bank"));
-    const bank = await BankExtension.at(bankAddress);
+    const bank = this.extensions.bank;
     const tokens = await bank.getTokens();
-    assert.equal(tokens.toString(), [ETH_TOKEN].toString());
+    expect(tokens.toString()).equal([ETH_TOKEN].toString());
   });
 
   it("should be possible to get a registered token using the token index", async () => {
-    const daoOwner = accounts[0];
-    let dao = await createDao(daoOwner);
-
-    const bankAddress = await dao.getExtensionAddress(sha3("bank"));
-    const bank = await BankExtension.at(bankAddress);
+    const bank = this.extensions.bank;
     const token = await bank.getToken(0);
-    assert.equal(token.toString(), ETH_TOKEN.toString());
+    expect(token.toString()).equal(ETH_TOKEN.toString());
   });
 
   it("should be possible to get the total amount of tokens registered in the bank", async () => {
-    const daoOwner = accounts[0];
-    let dao = await createDao(daoOwner);
-
-    const bankAddress = await dao.getExtensionAddress(sha3("bank"));
-    const bank = await BankExtension.at(bankAddress);
+    const bank = this.extensions.bank;
     const totalTokens = await bank.nbTokens();
-    assert.equal(totalTokens, 1);
+    expect(totalTokens.toString()).equal("1");
   });
 
   it("should not be possible to create a bank that supports more than 200 external tokens", async () => {
     const maxExternalTokens = 201;
-    try {
-      const identityBank = await BankExtension.deployed();
-      const bankFactory = await BankFactory.new(identityBank.address);
-      await bankFactory.createBank(maxExternalTokens);
-      assert.fail("should not be possible to create the bank extension");
-    } catch (e) {
-      assert.equal(e.reason, "max number of external tokens should be (0,200)");
-    }
+    const identityBank = this.extensions.bank;
+    const bankFactory = await BankFactory.new(identityBank.address);
+    await expectRevert(
+      bankFactory.createBank(maxExternalTokens),
+      "max number of external tokens should be (0,200)"
+    );
   });
 
   it("should not be possible to create a bank that supports 0 external tokens", async () => {
     const maxExternalTokens = 0;
-    try {
-      const identityBank = await BankExtension.deployed();
-      const bankFactory = await BankFactory.new(identityBank.address);
-      await bankFactory.createBank(maxExternalTokens);
-      assert.fail("should not be possible to create the bank extension");
-    } catch (e) {
-      assert.equal(e.reason, "max number of external tokens should be (0,200)");
-    }
+    const identityBank = this.extensions.bank;
+    const bankFactory = await BankFactory.new(identityBank.address);
+    await expectRevert(
+      bankFactory.createBank(maxExternalTokens),
+      "max number of external tokens should be (0,200)"
+    );
   });
 
   it("should not be possible to set the max external tokens if bank is already initialized", async () => {
-    const maxExternalTokens = 10;
-    const daoOwner = accounts[0];
-    const dao = await createDao(
-      daoOwner,
-      sharePrice,
-      numberOfShares,
-      10,
-      1,
-      ETH_TOKEN,
-      true,
-      maxExternalTokens
+    const bank = this.extensions.bank;
+    await expectRevert(
+      bank.setMaxExternalTokens(10),
+      "bank already initialized"
     );
-
-    const bankAddress = await dao.getExtensionAddress(sha3("bank"));
-    const bank = await BankExtension.at(bankAddress);
-    try {
-      await bank.setMaxExternalTokens(10);
-      assert.equal(
-        "should not be possible to set the max external tokens if the bank is initialized"
-      );
-    } catch (e) {
-      assert.equal(e.reason, "bank already initialized");
-    }
   });
 });

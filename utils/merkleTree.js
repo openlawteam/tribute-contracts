@@ -1,17 +1,17 @@
 // Whole-script strict mode syntax
-'use strict';
+"use strict";
 
 // Shamelessly adapted from OpenZeppelin-contracts test utils
 
 const { keccak256, keccakFromString, bufferToHex } = require("ethereumjs-util");
-const utils = web3.utils;
+const { hexToBytes } = require("./DaoFactory");
 
 // Merkle tree called with 32 byte hex values
 class MerkleTree {
   constructor(elements) {
     this.elements = elements
-      .filter(el => el)
-      .map(el => Buffer.from(utils.hexToBytes(el)));
+      .filter((el) => el)
+      .map((el) => Buffer.from(hexToBytes(el)));
 
     // Sort elements
     //this.elements.sort(Buffer.compare);
@@ -89,7 +89,7 @@ class MerkleTree {
 
   // external call - convert to buffer
   getHexProof(_el) {
-    const el = Buffer.from(utils.hexToBytes(_el));
+    const el = Buffer.from(hexToBytes(_el));
 
     const proof = this.getProof(el);
 
@@ -132,11 +132,11 @@ class MerkleTree {
   }
 
   bufArrToHexArr(arr) {
-    if (arr.some(el => !Buffer.isBuffer(el))) {
+    if (arr.some((el) => !Buffer.isBuffer(el))) {
       throw new Error("Array is not an array of buffers");
     }
 
-    return arr.map(el => "0x" + el.toString("hex"));
+    return arr.map((el) => "0x" + el.toString("hex"));
   }
 
   sortAndConcat(...args) {
@@ -145,5 +145,5 @@ class MerkleTree {
 }
 
 module.exports = {
-  MerkleTree
+  MerkleTree,
 };

@@ -26,136 +26,156 @@ SOFTWARE.
  */
 const {
   toBN,
-  createDao,
-  getContract,
-  SHARES,
+  advanceTime,
+  deployDefaultDao,
+  proposalIdGenerator,
+  takeChainSnapshot,
+  revertChainSnapshot,
+  accounts,
   sharePrice,
   remaining,
-  OnboardingContract,
-  DaoRegistryAdapterContract,
-  VotingContract,
+  SHARES,
+  expectRevert,
+  expect,
 } = require("../../utils/DaoFactory.js");
 
-contract("MolochV3 - Voting Adapter", async (accounts) => {
+describe("Adapter - Voting", () => {
+  const daoOwner = accounts[1];
+  const proposalCounter = proposalIdGenerator().generator;
+
+  const getProposalCounter = () => {
+    return proposalCounter().next().value;
+  };
+
+  before("deploy dao", async () => {
+    const { dao, adapters, extensions } = await deployDefaultDao(daoOwner);
+    this.dao = dao;
+    this.adapters = adapters;
+    this.extensions = extensions;
+    this.snapshotId = await takeChainSnapshot();
+  });
+
+  beforeEach(async () => {
+    await revertChainSnapshot(this.snapshotId);
+    this.snapshotId = await takeChainSnapshot();
+  });
+
   it("should be possible to vote", async () => {
-    const account1 = accounts[1];
     const account2 = accounts[2];
+    const dao = this.dao;
+    const onboarding = this.adapters.onboarding;
+    const voting = this.adapters.voting;
 
-    let dao = await createDao(account1);
-    const onboarding = await getContract(dao, "onboarding", OnboardingContract);
-    const voting = await getContract(dao, "voting", VotingContract);
-
-    await onboarding.onboard(dao.address, "0x1", account2, SHARES, 0, {
-      from: account1,
+    const proposalId = getProposalCounter();
+    await onboarding.onboard(dao.address, proposalId, account2, SHARES, 0, {
+      from: daoOwner,
       value: sharePrice.mul(toBN(3)).add(remaining),
       gasPrice: toBN("0"),
     });
-    await onboarding.sponsorProposal(dao.address, "0x1", [], {
-      from: account1,
+    await onboarding.sponsorProposal(dao.address, proposalId, [], {
+      from: daoOwner,
       gasPrice: toBN("0"),
     });
 
-    await voting.submitVote(dao.address, "0x1", 1, {
-      from: account1,
+    await voting.submitVote(dao.address, proposalId, 1, {
+      from: daoOwner,
       gasPrice: toBN("0"),
     });
+
+    await advanceTime(10000);
+    const vote = await voting.voteResult(dao.address, proposalId);
+    expect(vote.toString()).equal("2"); // vote should be "pass = 2"
   });
 
   it("should not be possible to vote twice", async () => {
-    const account1 = accounts[1];
     const account2 = accounts[2];
+    const dao = this.dao;
+    const onboarding = this.adapters.onboarding;
+    const voting = this.adapters.voting;
 
-    let dao = await createDao(account1);
-    const onboarding = await getContract(dao, "onboarding", OnboardingContract);
-    const voting = await getContract(dao, "voting", VotingContract);
-
-    await onboarding.onboard(dao.address, "0x1", account2, SHARES, 0, {
-      from: account1,
+    const proposalId = getProposalCounter();
+    await onboarding.onboard(dao.address, proposalId, account2, SHARES, 0, {
+      from: daoOwner,
       value: sharePrice.mul(toBN(3)).add(remaining),
       gasPrice: toBN("0"),
     });
-    await onboarding.sponsorProposal(dao.address, "0x1", [], {
-      from: account1,
+    await onboarding.sponsorProposal(dao.address, proposalId, [], {
+      from: daoOwner,
       gasPrice: toBN("0"),
     });
 
-    await voting.submitVote(dao.address, "0x1", 1, {
-      from: account1,
+    await voting.submitVote(dao.address, proposalId, 1, {
+      from: daoOwner,
       gasPrice: toBN("0"),
     });
 
-    try {
-      await voting.submitVote(dao.address, "0x1", 1, {
-        from: account1,
+    await expectRevert(
+      voting.submitVote(dao.address, proposalId, 2, {
+        from: daoOwner,
         gasPrice: toBN("0"),
-      });
-    } catch (err) {
-      assert.equal(err.reason, "member has already voted");
-    }
+      }),
+      "member has already voted"
+    );
   });
 
   it("should not be possible to vote with a non-member address", async () => {
-    const account1 = accounts[1];
     const account2 = accounts[2];
     const account3 = accounts[3];
+    const dao = this.dao;
+    const onboarding = this.adapters.onboarding;
+    const voting = this.adapters.voting;
 
-    let dao = await createDao(account1);
-    const onboarding = await getContract(dao, "onboarding", OnboardingContract);
-    const voting = await getContract(dao, "voting", VotingContract);
-
-    await onboarding.onboard(dao.address, "0x1", account2, SHARES, 0, {
-      from: account1,
+    const proposalId = getProposalCounter();
+    await onboarding.onboard(dao.address, proposalId, account2, SHARES, 0, {
+      from: daoOwner,
       value: sharePrice.mul(toBN(3)).add(remaining),
       gasPrice: toBN("0"),
     });
-    await onboarding.sponsorProposal(dao.address, "0x1", [], {
-      from: account1,
+    await onboarding.sponsorProposal(dao.address, proposalId, [], {
+      from: daoOwner,
       gasPrice: toBN("0"),
     });
 
-    try {
-      await voting.submitVote(dao.address, "0x1", 1, {
+    await expectRevert(
+      voting.submitVote(dao.address, proposalId, 1, {
         from: account3,
         gasPrice: toBN("0"),
-      });
-    } catch (err) {
-      assert.equal(err.reason, "onlyMember");
-    }
+      }),
+      "onlyMember"
+    );
   });
 
   it("should be possible to vote with a delegate non-member address", async () => {
-    const account1 = accounts[1];
     const account2 = accounts[2];
     const account3 = accounts[3];
+    const dao = this.dao;
+    const onboarding = this.adapters.onboarding;
+    const voting = this.adapters.voting;
+    const daoRegistryAdapter = this.adapters.daoRegistryAdapter;
 
-    let dao = await createDao(account1);
-    const onboarding = await getContract(dao, "onboarding", OnboardingContract);
-    const voting = await getContract(dao, "voting", VotingContract);
-
-    const daoRegistryAdapter = await getContract(
-      dao,
-      "daoRegistry",
-      DaoRegistryAdapterContract
-    );
-
-    await onboarding.onboard(dao.address, "0x1", account2, SHARES, 0, {
-      from: account1,
+    const proposalId = getProposalCounter();
+    await onboarding.onboard(dao.address, proposalId, account2, SHARES, 0, {
+      from: daoOwner,
       value: sharePrice.mul(toBN(3)).add(remaining),
       gasPrice: toBN("0"),
     });
-    await onboarding.sponsorProposal(dao.address, "0x1", [], {
-      from: account1,
+    await onboarding.sponsorProposal(dao.address, proposalId, [], {
+      from: daoOwner,
       gasPrice: toBN("0"),
     });
 
     await daoRegistryAdapter.updateDelegateKey(dao.address, account3, {
-      from: account1,
+      from: daoOwner,
       gasPrice: toBN("0"),
     });
 
-    await voting.submitVote(dao.address, "0x1", 1, {
+    await voting.submitVote(dao.address, proposalId, 1, {
       from: account3,
       gasPrice: toBN("0"),
     });
+
+    await advanceTime(10000);
+    const vote = await voting.voteResult(dao.address, proposalId);
+    expect(vote.toString()).equal("2"); // vote should be "pass = 2"
   });
 });

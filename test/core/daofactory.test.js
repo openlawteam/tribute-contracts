@@ -20,75 +20,56 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
  */
-const DaoFactory = artifacts.require("./core/DaoFactory");
-const DaoRegistry = artifacts.require("./core/DaoRegistry");
 
-const { toBN } = require("../../utils/DaoFactory.js");
+const {
+  toBN,
+  accounts,
+  createIdentityDao,
+  cloneDao,
+  expect,
+} = require("../../utils/DaoFactory.js");
 
-contract("MolochV3 - Core - DaoFactory", async (accounts) => {
+describe("Core - DaoFactory", () => {
   const owner = accounts[1];
   const anotherOwner = accounts[2];
 
-  const createIdentityDAO = async (owner) => {
-    let identityDao = await DaoRegistry.new({
-      from: owner,
-      gasPrice: toBN("0"),
-    });
-    return identityDao;
-  };
-
-  const cloneDao = async (owner, identityAddr, name) => {
-    let daoFactory = await DaoFactory.new(identityAddr);
-    await daoFactory.createDao(name, owner, {
-      from: owner,
-      gasPrice: toBN("0"),
-    });
-
-    let pastEvents = await daoFactory.getPastEvents();
-    let { _address, _name } = pastEvents[0].returnValues;
-    return { daoFactory, daoAddress: _address, daoName: _name };
-  };
-
-  it("", async () => {
-    //dummy test
-  });
-
   it("should be possible create an identity dao and clone it", async () => {
-    let identityDao = await createIdentityDAO(owner);
+    let identityDao = await createIdentityDao(owner);
 
     let { daoName } = await cloneDao(
+      null,
+      identityDao,
       anotherOwner,
-      identityDao.address,
       "cloned-dao"
     );
 
-    assert.equal("cloned-dao", daoName);
+    expect(daoName).equal("cloned-dao");
   });
 
   it("should be possible to get a DAO address by its name if it was created by the factory", async () => {
-    let identityDao = await createIdentityDAO(owner);
+    let identityDao = await createIdentityDao(owner);
 
-    let { daoFactory, daoName, daoAddress } = await cloneDao(
+    let { daoFactory, dao } = await cloneDao(
+      null,
+      identityDao,
       anotherOwner,
-      identityDao.address,
       "new-dao"
     );
-
-    assert.equal(daoName, "new-dao");
 
     let retrievedAddress = await daoFactory.getDaoAddress("new-dao", {
       from: anotherOwner,
       gasPrice: toBN("0"),
     });
-    assert.equal(daoAddress, retrievedAddress);
+    expect(retrievedAddress).equal(dao.address);
   });
 
   it("should not be possible to get a DAO address of it was not created by the factory", async () => {
-    let identityDao = await createIdentityDAO(owner);
+    let identityDao = await createIdentityDao(owner);
 
     let { daoFactory } = await cloneDao(
+      null,
+      identityDao,
       anotherOwner,
-      identityDao.address,
       "new-dao"
     );
 
@@ -97,9 +78,8 @@ contract("MolochV3 - Core - DaoFactory", async (accounts) => {
       gasPrice: toBN("0"),
     });
 
-    assert.equal(
-      "0x0000000000000000000000000000000000000000",
-      retrievedAddress
+    expect(retrievedAddress).equal(
+      "0x0000000000000000000000000000000000000000"
     );
   });
 });

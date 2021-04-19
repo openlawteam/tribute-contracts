@@ -25,21 +25,21 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
  */
 const {
+  sha3,
   toBN,
-  advanceTime,
-  createDao,
-  getContract,
+  deployDefaultDao,
+  takeChainSnapshot,
+  revertChainSnapshot,
+  accounts,
   GUILD,
   SHARES,
-  sharePrice,
-  remaining,
-  numberOfShares,
-  CouponOnboardingContract,
-  BankExtension,
-  sha3,
   ETH_TOKEN,
+  expectRevert,
+  expect,
 } = require("../../utils/DaoFactory.js");
+
 const { checkBalance } = require("../../utils/TestUtils.js");
+
 const {
   SigUtilSigner,
   getMessageERC712Hash,
@@ -50,27 +50,36 @@ const signer = {
   privKey: "c150429d49e8799f119434acd3f816f299a5c7e3891455ee12269cb47a5f987c",
 };
 
-contract("MolochV3 - Coupon Onboarding Adapter", async (accounts) => {
+const daoOwner = accounts[1];
+
+describe("Adapter - Coupon Onboarding ", () => {
+  before("deploy dao", async () => {
+    const { dao, adapters, extensions } = await deployDefaultDao(daoOwner);
+    this.dao = dao;
+    this.adapters = adapters;
+    this.extensions = extensions;
+    this.snapshotId = await takeChainSnapshot();
+  });
+
+  beforeEach(async () => {
+    await revertChainSnapshot(this.snapshotId);
+    this.snapshotId = await takeChainSnapshot();
+  });
+
   it("should be possible to join a DAO with a valid coupon", async () => {
-    const myAccount = accounts[1];
     const otherAccount = accounts[2];
 
     const signerUtil = SigUtilSigner(signer.privKey);
 
-    let dao = await createDao(myAccount);
-    const bankAddress = await dao.getExtensionAddress(sha3("bank"));
-    const bank = await BankExtension.at(bankAddress);
+    const dao = this.dao;
+    const bank = this.extensions.bank;
 
     let signerAddr = await dao.getAddressConfiguration(
       sha3("coupon-onboarding.signerAddress")
     );
-    assert.equal(signerAddr, signer.address);
+    expect(signerAddr).equal(signer.address);
 
-    const couponOnboarding = await getContract(
-      dao,
-      "coupon-onboarding",
-      CouponOnboardingContract
-    );
+    const couponOnboarding = this.adapters.couponOnboarding;
 
     const couponData = {
       type: "coupon",
@@ -89,7 +98,7 @@ contract("MolochV3 - Coupon Onboarding Adapter", async (accounts) => {
       dao.address,
       couponData
     );
-    assert.equal(jsHash, solHash);
+    expect(jsHash).equal(solHash);
 
     var signature = signerUtil(
       couponData,
@@ -100,9 +109,10 @@ contract("MolochV3 - Coupon Onboarding Adapter", async (accounts) => {
 
     const recAddr = await couponOnboarding.recover(jsHash, signature);
 
-    assert.equal(recAddr, signer.address);
+    expect(recAddr).equal(signer.address);
 
-    assert.equal(await bank.balanceOf(otherAccount, SHARES), "0");
+    let balance = await bank.balanceOf(otherAccount, SHARES);
+    expect(balance.toString()).equal("0");
 
     await couponOnboarding.redeemCoupon(
       dao.address,
@@ -112,35 +122,29 @@ contract("MolochV3 - Coupon Onboarding Adapter", async (accounts) => {
       signature
     );
 
-    const myAccountShares = await bank.balanceOf(myAccount, SHARES);
+    const daoOwnerShares = await bank.balanceOf(daoOwner, SHARES);
     const otherAccountShares = await bank.balanceOf(otherAccount, SHARES);
 
-    assert.equal(myAccountShares.toString(), "1");
-    assert.equal(otherAccountShares.toString(), "10");
+    expect(daoOwnerShares.toString()).equal("1");
+    expect(otherAccountShares.toString()).equal("10");
 
     await checkBalance(bank, GUILD, ETH_TOKEN, toBN("0"));
   });
 
   it("should not be possible to join a DAO with mismatched coupon values", async () => {
-    const myAccount = accounts[1];
     const otherAccount = accounts[2];
 
     const signerUtil = SigUtilSigner(signer.privKey);
 
-    let dao = await createDao(myAccount);
-    const bankAddress = await dao.getExtensionAddress(sha3("bank"));
-    const bank = await BankExtension.at(bankAddress);
+    const dao = this.dao;
+    const bank = this.extensions.bank;
 
     let signerAddr = await dao.getAddressConfiguration(
       sha3("coupon-onboarding.signerAddress")
     );
-    assert.equal(signerAddr, signer.address);
+    expect(signerAddr).equal(signer.address);
 
-    const couponOnboarding = await getContract(
-      dao,
-      "coupon-onboarding",
-      CouponOnboardingContract
-    );
+    const couponOnboarding = this.adapters.couponOnboarding;
 
     const couponData = {
       type: "coupon",
@@ -165,51 +169,45 @@ contract("MolochV3 - Coupon Onboarding Adapter", async (accounts) => {
 
     const recAddr = await couponOnboarding.recover(jsHash, signature);
 
-    assert.equal(recAddr, signer.address);
+    expect(recAddr).equal(signer.address);
 
-    assert.equal(await bank.balanceOf(otherAccount, SHARES), "0");
+    let balance = await bank.balanceOf(otherAccount, SHARES);
+    expect(balance.toString()).equal("0");
 
-    try {
-      await couponOnboarding.redeemCoupon(
+    await expectRevert(
+      couponOnboarding.redeemCoupon(
         dao.address,
         otherAccount,
         100,
         1,
         signature
-      );
-    } catch (err) {
-      assert.equal(err.reason, "invalid sig");
-    }
+      ),
+      "invalid sig"
+    );
 
-    const myAccountShares = await bank.balanceOf(myAccount, SHARES);
+    const daoOwnerShares = await bank.balanceOf(daoOwner, SHARES);
     const otherAccountShares = await bank.balanceOf(otherAccount, SHARES);
 
-    assert.equal(myAccountShares.toString(), "1");
-    assert.equal(otherAccountShares.toString(), "0");
+    expect(daoOwnerShares.toString()).equal("1");
+    expect(otherAccountShares.toString()).equal("0");
 
     await checkBalance(bank, GUILD, ETH_TOKEN, toBN("0"));
   });
 
   it("should not be possible to join a DAO with an invalid coupon", async () => {
-    const myAccount = accounts[1];
     const otherAccount = accounts[2];
 
     const signerUtil = SigUtilSigner(signer.privKey);
 
-    let dao = await createDao(myAccount);
-    const bankAddress = await dao.getExtensionAddress(sha3("bank"));
-    const bank = await BankExtension.at(bankAddress);
+    const dao = this.dao;
+    const bank = this.extensions.bank;
 
     let signerAddr = await dao.getAddressConfiguration(
       sha3("coupon-onboarding.signerAddress")
     );
-    assert.equal(signerAddr, signer.address);
+    expect(signerAddr).equal(signer.address);
 
-    const couponOnboarding = await getContract(
-      dao,
-      "coupon-onboarding",
-      CouponOnboardingContract
-    );
+    const couponOnboarding = this.adapters.couponOnboarding;
 
     const couponData = {
       type: "coupon",
@@ -234,26 +232,20 @@ contract("MolochV3 - Coupon Onboarding Adapter", async (accounts) => {
 
     const recAddr = await couponOnboarding.recover(jsHash, signature);
 
-    assert.equal(recAddr, signer.address);
+    expect(recAddr).equal(signer.address);
+    let balance = await bank.balanceOf(otherAccount, SHARES);
+    expect(balance.toString()).equal("0");
 
-    assert.equal(await bank.balanceOf(otherAccount, SHARES), "0");
+    await expectRevert(
+      couponOnboarding.redeemCoupon(dao.address, daoOwner, 10, 1, signature),
+      "invalid sig"
+    );
 
-    try {
-      await couponOnboarding.redeemCoupon(
-        dao.address,
-        myAccount,
-        10,
-        1,
-        signature
-      );
-    } catch (err) {
-      assert.equal(err.reason, "invalid sig");
-    }
-    const myAccountShares = await bank.balanceOf(myAccount, SHARES);
+    const daoOwnerShares = await bank.balanceOf(daoOwner, SHARES);
     const otherAccountShares = await bank.balanceOf(otherAccount, SHARES);
 
-    assert.equal(myAccountShares.toString(), "1");
-    assert.equal(otherAccountShares.toString(), "0");
+    expect(daoOwnerShares.toString()).equal("1");
+    expect(otherAccountShares.toString()).equal("0");
 
     await checkBalance(bank, GUILD, ETH_TOKEN, toBN("0"));
   });

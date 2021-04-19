@@ -1,4 +1,4 @@
-name: Codecov
+name: Coverage
 
 on:
   push:
@@ -9,7 +9,7 @@ on:
       - "*"
 jobs:
   coverage:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-18.04
     steps:
       - name: Checkout code
         uses: actions/checkout@v2
@@ -32,12 +32,12 @@ jobs:
         with:
           ssh-private-key: ${{ secrets.SSH_PRIVATE_KEY }}
       
-      - name: Install dependencies
-        if: steps.cache-node-modules.outputs.cache-hit != 'true'
-        run: npm ci
+      # - name: Install dependencies
+      #   if: steps.cache-node-modules.outputs.cache-hit != 'true'
+      #   run: npm ci
       
-      - name: Run Sol Coverage
-        run: npm run coverage
+      # - name: Run Sol Coverage
+      #   run: npm run coverage
       
-      - name: Publish to Codecov.io
-        run: bash <(curl -s https://codecov.io/bash) -t ${{ secrets.CODECOV_TOKEN }}
+      # - name: Publish to Codecov.io
+      #   run: bash <(curl -s https://codecov.io/bash) -t ${{ secrets.CODECOV_TOKEN }}

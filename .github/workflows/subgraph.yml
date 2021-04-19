@@ -1,4 +1,4 @@
-name: CI
+name: Subgraph
 
 on:
   push:
@@ -11,7 +11,7 @@ on:
 
 jobs:
   lint:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-18.04
     steps:
       - name: Checkout code
         uses: actions/checkout@v2
@@ -37,9 +37,6 @@ jobs:
       - name: Install dependencies
         if: steps.cache-node-modules.outputs.cache-hit != 'true'
         run: npm ci
-
-      - name: Run .sol and .md linter
-        run: npm run lint
 
       - name: Run Truffle Compile
         run: npm run compile-abi

@@ -68,18 +68,6 @@ contract TributeNFTContract is
         revert("fallback revert");
     }
 
-    function provideTribute(
-        DaoRegistry,
-        bytes32,
-        address,
-        address,
-        uint256,
-        address,
-        uint256
-    ) external pure override {
-        revert("not supported operation");
-    }
-
     /**
      * @notice Configures the adapter for a particular DAO.
      * @notice Registers the DAO internal token SHARES with the DAO Bank.
@@ -90,6 +78,18 @@ contract TributeNFTContract is
     function configureDao(DaoRegistry dao) external onlyAdapter(dao) {
         BankExtension bank = BankExtension(dao.getExtensionAddress(BANK));
         bank.registerPotentialNewInternalToken(SHARES);
+    }
+
+    function provideTribute(
+        DaoRegistry,
+        bytes32,
+        address,
+        address,
+        uint256,
+        address,
+        uint256
+    ) external pure override {
+        revert("not supported operation");
     }
 
     /**
