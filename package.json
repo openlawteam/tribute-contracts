@@ -38,13 +38,13 @@
     "web3": "^1.3.5"
   },
   "scripts": {
+    "compile": "truffle compile",
+    "coverage": "scripts/coverage.js",
+    "ganache": "ganache-cli --deterministic -p 8545 --networkId 1337",
     "lint": "prettier --list-different 'contracts/**/*.sol' 'test/**/*.test.js' '**/*.md'",
     "lint:fix": "prettier --write 'contracts/**/*.sol' 'test/**/*.test.js' '**/*.md'",
-    "compile": "truffle compile",
-    "test": "mocha --timeout 20000 --exit --recursive",
-    "ganache": "ganache-cli --deterministic -p 8545 --networkId 1337",
     "migrate": "truffle migrate --network",
-    "coverage": "npm run compile && truffle run coverage"
+    "test": "mocha --timeout 20000 --exit --recursive"
   },
   "repository": {
     "type": "git",
