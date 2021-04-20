@@ -254,7 +254,7 @@ contract OffchainVotingContract is
         VoteResultNode memory result
     ) external {
         Voting storage vote = votes[address(dao)][proposalId];
-        require(vote.snapshot > 0, "vote:not stsarted");
+        require(vote.snapshot > 0, "vote:not started");
 
         if (vote.resultRoot == bytes32(0) || vote.isChallenged) {
             require(
@@ -314,6 +314,10 @@ contract OffchainVotingContract is
             ),
             "vote:proof bad"
         );
+
+        address memberAddr = dao.getAddressIfDelegated(reporter);
+        require(isActiveMember(dao, memberAddr), "not active member");
+
         (address actionId, ) = dao.proposals(proposalId);
         require(
             _hasVoted(
@@ -338,7 +342,7 @@ contract OffchainVotingContract is
         vote.nbYes = result.nbYes;
         vote.index = result.index;
         vote.resultRoot = resultRoot;
-        vote.reporter = reporter;
+        vote.reporter = memberAddr;
         vote.isChallenged = false;
     }
 
@@ -409,17 +413,25 @@ contract OffchainVotingContract is
             return VotingState.IN_PROGRESS;
         }
 
-        if (
-            block.timestamp <
-            vote.startingTime + dao.getConfiguration(VotingPeriod)
-        ) {
+        uint256 votingPeriod = dao.getConfiguration(VotingPeriod);
+
+        //if the vote has started but the voting period has not passed yet, it's in progress
+        if (block.timestamp < vote.startingTime + votingPeriod) {
             return VotingState.IN_PROGRESS;
         }
 
+        uint256 gracePeriod = dao.getConfiguration(GracePeriod);
+
+        //if no result have been submitted but we are after grace + voting period, then the proposal is TIE
         if (
-            block.timestamp <
-            vote.gracePeriodStartingTime + dao.getConfiguration(GracePeriod)
+            vote.gracePeriodStartingTime == 0 &&
+            block.timestamp > vote.startingTime + gracePeriod + votingPeriod
         ) {
+            return VotingState.TIE;
+        }
+
+        //if the vote has started but the voting period has not passed yet, it's in progress
+        if (block.timestamp < vote.gracePeriodStartingTime + gracePeriod) {
             return VotingState.GRACE_PERIOD;
         }
 
