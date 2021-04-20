@@ -43,15 +43,20 @@ abstract contract MemberGuard is DaoConstants {
     }
 
     function _onlyMember(DaoRegistry dao, address _addr) internal view {
+        require(isActiveMember(dao, _addr), "onlyMember");
+    }
+
+    function isActiveMember(DaoRegistry dao, address _addr)
+        public
+        view
+        returns (bool)
+    {
         address bankAddress = dao.extensions(BANK);
         if (bankAddress != address(0x0)) {
             address memberAddr = dao.getAddressIfDelegated(_addr);
-
-            require(
-                BankExtension(bankAddress).balanceOf(memberAddr, SHARES) > 0,
-                "onlyMember"
-            );
+            return BankExtension(bankAddress).balanceOf(memberAddr, SHARES) > 0;
         }
-        require(dao.isMember(_addr), "onlyMember");
+
+        return dao.isMember(_addr);
     }
 }

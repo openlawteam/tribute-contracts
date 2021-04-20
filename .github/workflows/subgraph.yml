@@ -21,42 +21,20 @@ jobs:
         with:
           node-version: 12.x
 
-      - name: Cache node modules
-        id: cache-node-modules
-        uses: actions/cache@v2
-        with:
-          path: node_modules
-          key: node-modules-${{ hashFiles('package-lock.json') }}
-
       - name: Setup SSH to install dependencies
-        if: steps.cache-node-modules.outputs.cache-hit != 'true'
         uses: webfactory/ssh-agent@v0.5.0
         with:
           ssh-private-key: ${{ secrets.SSH_PRIVATE_KEY }}
 
       - name: Install dependencies
-        if: steps.cache-node-modules.outputs.cache-hit != 'true'
         run: npm ci
 
       - name: Run Truffle Compile
-        run: npm run compile-abi
+        run: npm run compile
 
       ### Subgraph Lint ###
-      - name: Cache Subgraph node modules
-        id: cache-subgraph-node-modules
-        uses: actions/cache@v2
-        with:
-          path: subgraph/node_modules
-          key: subgraph-node-modules-${{ hashFiles('subgraph/package-lock.json') }}
-
-      - name: Setup SSH to install Subgraph dependencies
-        if: steps.cache-subgraph-node-modules.outputs.cache-hit != 'true'
-        uses: webfactory/ssh-agent@v0.5.0
-        with:
-          ssh-private-key: ${{ secrets.SSH_PRIVATE_KEY }}
 
       - name: Install Subgraph dependencies
-        if: steps.cache-subgraph-node-modules.outputs.cache-hit != 'true'
         run: npm ci
         working-directory: subgraph
 

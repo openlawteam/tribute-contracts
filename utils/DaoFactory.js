@@ -230,6 +230,7 @@ const deployDao = async (deployer, options) => {
   const deployTestTokens = !!options.deployTestTokens;
   const maxExternalTokens = options.maxExternalTokens || 100;
   const finalize = options.finalize === undefined || !!options.finalize;
+  const couponCreatorAddress = options.couponCreatorAddress || '0x7D8cad0bbD68deb352C33e80fccd4D8e88b4aBb8';
 
   let daoRegistry;
   let bankFactory;
@@ -294,7 +295,9 @@ const deployDao = async (deployer, options) => {
     gracePeriod,
     tokenAddr,
     maxChunks,
-    daoFactory
+    daoFactory,
+    null,
+    couponCreatorAddress
   );
 
   const votingAddress = await dao.getAdapterAddress(sha3("voting"));
@@ -482,7 +485,8 @@ const addDefaultAdapters = async (
   tokenAddr = ETH_TOKEN,
   maxChunks = maximumChunks,
   daoFactory,
-  nftAddr
+  nftAddr,
+  couponCreatorAddress
 ) => {
   const {
     voting,
@@ -524,6 +528,7 @@ const addDefaultAdapters = async (
     tokenAddr,
     maxChunks,
     nftAddr,
+    couponCreatorAddress
   });
 
   return {
@@ -570,6 +575,7 @@ const configureDao = async ({
   gracePeriod,
   tokenAddr,
   maxChunks,
+  couponCreatorAddress
 }) => {
   await daoFactory.addAdapters(dao.address, [
     entryDao("voting", voting, {}),
@@ -689,7 +695,7 @@ const configureDao = async ({
   );
   await couponOnboarding.configureDao(
     dao.address,
-    "0x7D8cad0bbD68deb352C33e80fccd4D8e88b4aBb8",
+    couponCreatorAddress,
     SHARES
   );
 
