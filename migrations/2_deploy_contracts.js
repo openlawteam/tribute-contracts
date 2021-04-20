@@ -9,6 +9,8 @@ const {
   numberOfShares,
 } = require("../utils/DaoFactory.js");
 
+require("dotenv").config();
+
 module.exports = async (deployer, network) => {
   let dao;
   if (network === "ganache") {
@@ -45,6 +47,7 @@ async function deployTestDao(deployer, network) {
     chainId: getNetworkDetails(network).chainId,
     deployTestTokens: false,
     finalize: false,
+    couponCreatorAddress : '0x7D8cad0bbD68deb352C33e80fccd4D8e88b4aBb8'
   });
   return dao;
 }
@@ -61,6 +64,7 @@ async function deployRinkebyDao(deployer, network) {
     chainId: getNetworkDetails(network).chainId,
     deployTestTokens: true,
     finalize: false,
+    couponCreatorAddress : process.env.COUPON_CREATOR_ADDR
   });
   return dao;
 }
