@@ -39,7 +39,7 @@ jobs:
         run: npm ci
 
       - name: Run Truffle Compile
-        run: npm run compile-abi
+        run: npm run compile
 
       ### Subgraph Lint ###
       - name: Cache Subgraph node modules
