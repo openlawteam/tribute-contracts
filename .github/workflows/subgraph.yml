@@ -26,7 +26,7 @@ jobs:
         uses: actions/cache@v2
         with:
           path: node_modules
-          key: node-modules-${{ hashFiles('package.json') }}
+          key: node-modules-${{ hashFiles('package-lock.json') }}
 
       - name: Setup SSH to install dependencies
         if: steps.cache-node-modules.outputs.cache-hit != 'true'
@@ -36,10 +36,10 @@ jobs:
 
       - name: Install dependencies
         if: steps.cache-node-modules.outputs.cache-hit != 'true'
-        run: npm install
+        run: npm ci
 
       - name: Run Truffle Compile
-        run: npm run compile-abi
+        run: npm run compile
 
       ### Subgraph Lint ###
       - name: Cache Subgraph node modules

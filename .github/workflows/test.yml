@@ -19,14 +19,14 @@ jobs:
       - name: Setup node
         uses: actions/setup-node@v2
         with:
-          node-version: '12.22.x'
+          node-version: "12.22.x"
 
       - name: Cache node modules
         id: cache-node-modules
         uses: actions/cache@v2
         with:
           path: node_modules
-          key: node-modules-${{ hashFiles('package.json') }}
+          key: node-modules-${{ hashFiles('package-lock.json') }}
 
       - name: Setup SSH to install dependencies
         if: steps.cache-node-modules.outputs.cache-hit != 'true'
@@ -36,7 +36,7 @@ jobs:
 
       - name: Install dependencies
         if: steps.cache-node-modules.outputs.cache-hit != 'true'
-        run: npm install
+        run: npm ci
 
       - name: Run Linter
         run: npm run lint
