@@ -44,7 +44,9 @@
     "lint": "prettier --list-different 'contracts/**/*.sol' 'test/**/*.test.js' '**/*.md'",
     "lint:fix": "prettier --write 'contracts/**/*.sol' 'test/**/*.test.js' '**/*.md'",
     "migrate": "truffle migrate --network",
-    "test": "mocha --timeout 20000 --exit --recursive"
+    "test": "mocha --timeout 20000 --exit --recursive",
+    "deploy:ganache": "truffle deploy --network ganache",
+    "deploy:rinkeby": "truffle deploy --network rinkeby"
   },
   "repository": {
     "type": "git",

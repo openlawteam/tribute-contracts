@@ -80,7 +80,7 @@ async function deployGanacheDao(deployer, network) {
     offchainVoting: true,
     chainId: getNetworkDetails(network).chainId,
     deployTestTokens: true,
-    finalize: false,
+    finalize: false
   });
   return dao;
 }
