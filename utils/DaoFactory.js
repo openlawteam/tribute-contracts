@@ -527,6 +527,7 @@ const prepareAdapters = async (deployer) => {
 };
 
 const createIdentityDao = async (owner) => {
+  let DaoRegistry = getContractFromOpenZepplin(DaoRegistryName);
   return await DaoRegistry.new({
     from: owner,
     gasPrice: toBN("0"),
@@ -1027,6 +1028,8 @@ const configureBatchVoting = async (
 ) => {
   let snapshotProposalContract, batchVoting;
   if (deployer) {
+    let SnapshotProposalContract = getContractFromTruffle(SnapshotProposalContractName);
+    let BatchVotingContract = getContractFromTruffle(BatchVotingContractName);
     snapshotProposalContract = await deployer.deploy(
       SnapshotProposalContract,
       chainId
@@ -1036,6 +1039,8 @@ const configureBatchVoting = async (
       snapshotProposalContract.address
     );
   } else {
+    let SnapshotProposalContract = getContractFromOpenZepplin(SnapshotProposalContractName);
+    let BatchVotingContract = getContractFromOpenZepplin(BatchVotingContractName);
     snapshotProposalContract = await SnapshotProposalContract.new(chainId);
     batchVoting = await BatchVotingContract.new(
       snapshotProposalContract.address
