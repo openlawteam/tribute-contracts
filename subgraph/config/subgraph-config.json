@@ -5,5 +5,12 @@
     "daoFactoryStartBlock": 8453183,
     "GITHUB_USERNAME": "openlawteam",
     "SUBGRAPH_NAME": "tribute-dev"
+  },
+  {
+    "network": "rinkeby",
+    "daoFactoryAddress": "0x7e4d1b80Bec9afb7c0Dfd5995B35b4D54b5Dcd7A",
+    "daoFactoryStartBlock": 8453515,
+    "GITHUB_USERNAME": "openlawteam",
+    "SUBGRAPH_NAME": "museo-dev"
   }
 ]
