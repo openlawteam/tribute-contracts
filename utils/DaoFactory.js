@@ -31,6 +31,7 @@ const {
   accounts,
   provider,
 } = require("@openzeppelin/test-environment");
+
 const { expectRevert } = require("@openzeppelin/test-helpers");
 const { expect } = require("chai");
 
@@ -57,55 +58,57 @@ const sharePrice = toBN(toWei("120", "finney"));
 const remaining = sharePrice.sub(toBN("50000000000000"));
 const maximumChunks = toBN("11");
 
+function getContractFromTruffle(c) {
+  return artifacts.require(c);
+}
+
+function getContractFromOpenZepplin(c) {
+  return contract.fromArtifact(c.substring(c.lastIndexOf("/") + 1));
+}
+
 // Test Util Contracts
-const OLToken = contract.fromArtifact("OLToken");
-const TestToken1 = contract.fromArtifact("TestToken1");
-const TestToken2 = contract.fromArtifact("TestToken2");
-const TestFairShareCalc = contract.fromArtifact("TestFairShareCalc");
-const PixelNFT = contract.fromArtifact("PixelNFT");
+let OLTokenName = "./test/OLToken";
+let TestToken1Name = "./test/TestToken1";
+let TestToken2Name = "./test/TestToken2";
+let TestFairShareCalcName = "./test/TestFairShareCalc";
+let PixelNFTName = "./test/PixelNFT";
 
 // DAO Contracts
-const DaoFactory = contract.fromArtifact("DaoFactory");
-const DaoRegistry = contract.fromArtifact("DaoRegistry");
-const NFTCollectionFactory = contract.fromArtifact("NFTCollectionFactory");
-const BankFactory = contract.fromArtifact("BankFactory");
-const Multicall = contract.fromArtifact("Multicall");
+let DaoFactoryName = "./core/DaoFactory";
+let DaoRegistryName = "./core/DaoRegistry";
+let NFTCollectionFactoryName = "./extensions/NFTCollectionFactory";
+let BankFactoryName = "./extensions/bank/BankFactory";
+let MulticallName = "./util/Multicall";
 
 // Extensions
-const NFTExtension = contract.fromArtifact("NFTExtension");
-const BankExtension = contract.fromArtifact("BankExtension");
+let NFTExtensionName = "./extensions/nft/NFTExtension";
+let BankExtensionName = "./extensions/bank/BankExtension";
 
 // Config Adapters
-const BankAdapterContract = contract.fromArtifact("BankAdapterContract");
-const NFTAdapterContract = contract.fromArtifact("NFTAdapterContract");
-const ConfigurationContract = contract.fromArtifact("ConfigurationContract");
-const ManagingContract = contract.fromArtifact("ManagingContract");
-const DaoRegistryAdapterContract = contract.fromArtifact(
-  "DaoRegistryAdapterContract"
-);
+let DaoRegistryAdapterContractName = "./adapters/DaoRegistryAdapterContract";
+let BankAdapterContractName = "./adapters/BankAdapterContract";
+let NFTAdapterContractName = "./adapters/NFTAdapterContract";
+let ConfigurationContractName = "./adapter/ConfigurationContract";
+let ManagingContractName = "./adapter/ManagingContract";
 
 // Voting Adapters
-const VotingContract = contract.fromArtifact("VotingContract");
-const OffchainVotingContract = contract.fromArtifact("OffchainVotingContract");
-const KickBadReporterAdapter = contract.fromArtifact("KickBadReporterAdapter");
-const BatchVotingContract = contract.fromArtifact("BatchVotingContract");
-const SnapshotProposalContract = contract.fromArtifact(
-  "SnapshotProposalContract"
-);
+let VotingContractName = "./adapters/VotingContract";
+let SnapshotProposalContractName = "./adapters/voting/SnapshotProposalContract";
+let OffchainVotingContractName = "./adapters/voting/OffchainVotingContract";
+let KickBadReporterAdapterName = "./adapters/voting/KickBadReporterAdapter";
+let BatchVotingContractName = "./adapters/voting/BatchVotingContract";
 
 // Withdraw Adapters
-const RagequitContract = contract.fromArtifact("RagequitContract");
-const GuildKickContract = contract.fromArtifact("GuildKickContract");
-const DistributeContract = contract.fromArtifact("DistributeContract");
+let RagequitContractName = "./adapters/RagequitContract";
+let GuildKickContractName = "./adapters/GuildKickContract";
+let DistributeContractName = "./adapters/DistributeContract";
 
 // Funding/Onboarding Adapters
-const FinancingContract = contract.fromArtifact("FinancingContract");
-const OnboardingContract = contract.fromArtifact("OnboardingContract");
-const TributeContract = contract.fromArtifact("TributeContract");
-const TributeNFTContract = contract.fromArtifact("TributeNFTContract");
-const CouponOnboardingContract = contract.fromArtifact(
-  "CouponOnboardingContract"
-);
+let FinancingContractName = "./adapter/FinancingContract";
+let OnboardingContractName = "./adapters/OnboardingContract";
+let CouponOnboardingContractName = "./adapters/CouponOnboardingContract";
+let TributeContractName = "./adapters/TributeContract";
+let TributeNFTContractName = "./adapters/TributeNFTContract";
 
 const networks = [
   {
@@ -236,7 +239,15 @@ const deployDao = async (deployer, options) => {
   let bankFactory;
   let nftFactory;
 
+  let DaoRegistry, BankExtension, BankFactory, NFTExtension, NFTCollectionFactory;
+
   if (deployer) {
+    DaoRegistry = getContractFromTruffle(DaoRegistryName);
+    BankExtension = getContractFromTruffle(BankExtensionName);
+    BankFactory = getContractFromTruffle(BankFactoryName);
+    NFTExtension = getContractFromTruffle(NFTExtensionName);
+    NFTCollectionFactory = getContractFromTruffle(NFTCollectionFactoryName);
+
     await deployer.deploy(DaoRegistry);
     daoRegistry = await DaoRegistry.deployed();
 
@@ -250,6 +261,11 @@ const deployDao = async (deployer, options) => {
     await deployer.deploy(NFTCollectionFactory, nftExt.address);
     nftFactory = await NFTCollectionFactory.deployed();
   } else {
+    DaoRegistry = getContractFromOpenZepplin(DaoRegistryName);
+    BankExtension = getContractFromOpenZepplin(BankExtensionName);
+    BankFactory = getContractFromOpenZepplin(BankFactoryName);
+    NFTExtension = getContractFromOpenZepplin(NFTExtensionName);
+    NFTCollectionFactory = getContractFromOpenZepplin(NFTCollectionFactoryName);
     daoRegistry = await DaoRegistry.new();
 
     const identityBank = await BankExtension.new();
@@ -258,7 +274,7 @@ const deployDao = async (deployer, options) => {
     const nftExt = await NFTExtension.new();
     nftFactory = await NFTCollectionFactory.new(nftExt.address);
   }
-
+  
   const { dao, daoFactory } = await cloneDao(deployer, daoRegistry, owner);
 
   await bankFactory.createBank(maxExternalTokens);
@@ -355,6 +371,11 @@ const deployDao = async (deployer, options) => {
 
   if (deployTestTokens) {
     if (deployer) {
+      let OLToken = getContractFromTruffle(OLTokenName);
+      let TestToken1 = getContractFromTruffle(TestToken1Name);
+      let TestToken2 = getContractFromTruffle(TestToken2Name);
+      let Multicall = getContractFromTruffle(MulticallName);
+      let PixelNFT = getContractFromTruffle(PixelNFTName);
       testContracts.oltToken = await deployer.deploy(
         OLToken,
         toBN("1000000000000000000000000")
@@ -364,6 +385,11 @@ const deployDao = async (deployer, options) => {
       testContracts.multicall = await deployer.deploy(Multicall);
       testContracts.pixelNFT = await deployer.deploy(PixelNFT, 100);
     } else {
+      let OLToken = getContractFromOpenZepplin(OLTokenName);
+      let TestToken1 = getContractFromOpenZepplin(TestToken1Name);
+      let TestToken2 = getContractFromOpenZepplin(TestToken2Name);
+      let Multicall = getContractFromOpenZepplin(MulticallName);
+      let PixelNFT = getContractFromOpenZepplin(PixelNFTName);
       testContracts.oltToken = await OLToken.new(
         toBN("1000000000000000000000000")
       );
@@ -404,6 +430,22 @@ const prepareAdapters = async (deployer) => {
   let tributeNFT;
 
   if (deployer) {
+
+    let VotingContract = getContractFromTruffle(VotingContractName);
+    let ConfigurationContract = getContractFromTruffle(ConfigurationContractName);
+    let RagequitContract = getContractFromTruffle(RagequitContractName);
+    let ManagingContract = getContractFromTruffle(ManagingContractName);
+    let FinancingContract = getContractFromTruffle(FinancingContractName);
+    let OnboardingContract = getContractFromTruffle(OnboardingContractName);
+    let GuildKickContract = getContractFromTruffle(GuildKickContractName);
+    let DaoRegistryAdapterContract = getContractFromTruffle(DaoRegistryAdapterContractName);
+    let BankAdapterContract = getContractFromTruffle(BankAdapterContractName);
+    let NFTAdapterContract = getContractFromTruffle(NFTAdapterContractName);
+    let CouponOnboardingContract = getContractFromTruffle(CouponOnboardingContractName);
+    let TributeContract = getContractFromTruffle(TributeContractName);
+    let DistributeContract = getContractFromTruffle(DistributeContractName);
+    let TributeNFTContract = getContractFromTruffle(TributeNFTContractName);
+
     await deployer.deploy(VotingContract);
     await deployer.deploy(ConfigurationContract);
     await deployer.deploy(RagequitContract);
@@ -434,6 +476,22 @@ const prepareAdapters = async (deployer) => {
     distribute = await DistributeContract.deployed();
     tributeNFT = await TributeNFTContract.deployed();
   } else {
+
+    let VotingContract = getContractFromOpenZepplin(VotingContractName);
+    let ConfigurationContract = getContractFromOpenZepplin(ConfigurationContractName);
+    let RagequitContract = getContractFromOpenZepplin(RagequitContractName);
+    let ManagingContract = getContractFromOpenZepplin(ManagingContractName);
+    let FinancingContract = getContractFromOpenZepplin(FinancingContractName);
+    let OnboardingContract = getContractFromOpenZepplin(OnboardingContractName);
+    let GuildKickContract = getContractFromOpenZepplin(GuildKickContractName);
+    let DaoRegistryAdapterContract = getContractFromOpenZepplin(DaoRegistryAdapterContractName);
+    let BankAdapterContract = getContractFromOpenZepplin(BankAdapterContractName);
+    let NFTAdapterContract = getContractFromOpenZepplin(NFTAdapterContractName);
+    let CouponOnboardingContract = getContractFromOpenZepplin(CouponOnboardingContractName);
+    let TributeContract = getContractFromOpenZepplin(TributeContractName);
+    let DistributeContract = getContractFromOpenZepplin(DistributeContractName);
+    let TributeNFTContract = getContractFromOpenZepplin(TributeNFTContractName);
+
     voting = await VotingContract.new();
     configuration = await ConfigurationContract.new();
     ragequit = await RagequitContract.new();
@@ -504,6 +562,23 @@ const addDefaultAdapters = async (
     distribute,
     tributeNFT,
   } = await prepareAdapters(deployer);
+
+  let BankExtension, NFTExtension;
+
+  if(deployer) {
+    BankExtension = getContractFromTruffle(BankExtensionName);
+    NFTExtension = getContractFromTruffle(NFTExtensionName);
+  } else {
+    BankExtension = getContractFromOpenZepplin(BankExtensionName);
+    NFTExtension = getContractFromOpenZepplin(NFTExtensionName);
+  }
+
+  const bankAddress = await dao.getExtensionAddress(sha3("bank"));
+  const bankExtension = await BankExtension.at(bankAddress);
+
+  const nftExtAddr = await dao.getExtensionAddress(sha3("nft"));
+  const nftExtension = await NFTExtension.at(nftExtAddr);
+
   await configureDao({
     daoFactory,
     dao,
@@ -528,7 +603,9 @@ const addDefaultAdapters = async (
     tokenAddr,
     maxChunks,
     nftAddr,
-    couponCreatorAddress
+    couponCreatorAddress,
+    bankExtension,
+    nftExtension
   });
 
   return {
@@ -562,6 +639,8 @@ const configureDao = async ({
   onboarding,
   daoRegistryAdapter,
   bankAdapter,
+  bankExtension,
+  nftExtension,
   nftAdapter,
   voting,
   configuration,
@@ -623,9 +702,7 @@ const configureDao = async ({
     }),
   ]);
 
-  const bankAddress = await dao.getExtensionAddress(sha3("bank"));
-  const bankExt = await BankExtension.at(bankAddress);
-  await daoFactory.configureExtension(dao.address, bankExt.address, [
+  await daoFactory.configureExtension(dao.address, bankExtension.address, [
     entryBank(ragequit, {
       INTERNAL_TRANSFER: true,
       SUB_FROM_BALANCE: true,
@@ -665,9 +742,7 @@ const configureDao = async ({
     }),
   ]);
 
-  const nftExtAddr = await dao.getExtensionAddress(sha3("nft"));
-  const nftExt = await NFTExtension.at(nftExtAddr);
-  await daoFactory.configureExtension(dao.address, nftExt.address, [
+  await daoFactory.configureExtension(dao.address, nftExtension.address, [
     entryNft(tributeNFT, {
       COLLECT_NFT: true,
     }),
@@ -707,19 +782,25 @@ const configureDao = async ({
 
 const cloneDao = async (deployer, identityDao, owner, name = "test-dao") => {
   // The owner of the DAO is always the 1st unlocked address if none is provided
-  let txArgs = {
-    from: owner ? owner : accounts[0],
-  };
+  let txArgs = owner ? {from: owner } : undefined;
 
-  let daoFactory;
+  let daoFactory, DaoRegistry;
   if (deployer) {
-    await deployer.deploy(DaoFactory, identityDao.address, txArgs);
+    let DaoFactory = getContractFromTruffle(DaoFactoryName);
+    DaoRegistry = getContractFromTruffle(DaoRegistryName);
+    await deployer.deploy(DaoFactory, identityDao.address);
     daoFactory = await DaoFactory.deployed();
   } else {
+    let DaoFactory = getContractFromOpenZepplin(DaoFactoryName);
+    DaoRegistry = getContractFromOpenZepplin(DaoRegistryName);
     daoFactory = await DaoFactory.new(identityDao.address, txArgs);
   }
-
-  await daoFactory.createDao(name, ETH_TOKEN, txArgs);
+  if(txArgs) {
+    await daoFactory.createDao(name, ETH_TOKEN, txArgs);
+  } else {
+    await daoFactory.createDao(name, ETH_TOKEN);
+  }
+  
   // checking the gas usaged to clone a contract
   let pastEvents = await daoFactory.getPastEvents();
   let { _address, _name } = pastEvents[0].returnValues;
@@ -889,6 +970,9 @@ const configureOffchainVoting = async (
   let handleBadReporterAdapter;
   let offchainVoting;
   if (deployer) {
+    let SnapshotProposalContract = getContractFromTruffle(SnapshotProposalContractName);
+    let KickBadReporterAdapter = getContractFromTruffle(KickBadReporterAdapterName);
+    let OffchainVotingContract = getContractFromTruffle(OffchainVotingContractName);
     snapshotProposalContract = await deployer.deploy(
       SnapshotProposalContract,
       chainId
@@ -901,6 +985,9 @@ const configureOffchainVoting = async (
       handleBadReporterAdapter.address
     );
   } else {
+    let SnapshotProposalContract = getContractFromOpenZepplin(SnapshotProposalContractName);
+    let KickBadReporterAdapter = getContractFromOpenZepplin(KickBadReporterAdapterName);
+    let OffchainVotingContract = getContractFromOpenZepplin(OffchainVotingContractName);
     snapshotProposalContract = await SnapshotProposalContract.new(chainId);
     handleBadReporterAdapter = await KickBadReporterAdapter.new();
     offchainVoting = await OffchainVotingContract.new(
@@ -1002,7 +1089,6 @@ module.exports = {
   accounts,
   expect,
   expectRevert,
-  expect,
   numberOfShares,
   sharePrice,
   remaining,
@@ -1013,34 +1099,33 @@ module.exports = {
   SHARES,
   LOOT,
   ETH_TOKEN,
-  OLToken,
-  TestToken1,
-  TestToken2,
-  TestFairShareCalc,
-  Multicall,
-  PixelNFT,
-  DaoFactory,
-  DaoRegistry,
-  BankFactory,
-  VotingContract,
-  ManagingContract,
-  FinancingContract,
-  RagequitContract,
-  GuildKickContract,
-  OnboardingContract,
-  DaoRegistryAdapterContract,
-  BankAdapterContract,
-  NFTAdapterContract,
-  ConfigurationContract,
-  OffchainVotingContract,
-  KickBadReporterAdapter,
-  SnapshotProposalContract,
-  BatchVotingContract,
-  TributeContract,
-  DistributeContract,
-  TributeNFTContract,
-  OnboardingContract,
-  CouponOnboardingContract,
-  BankExtension,
-  NFTExtension,
+  OLToken: getContractFromOpenZepplin(OLTokenName),
+  TestToken1: getContractFromOpenZepplin(TestToken1Name),
+  TestToken2: getContractFromOpenZepplin(TestToken2Name),
+  TestFairShareCalc: getContractFromOpenZepplin(TestFairShareCalcName),
+  Multicall: getContractFromOpenZepplin(MulticallName),
+  PixelNFT: getContractFromOpenZepplin(PixelNFTName),
+  DaoFactory: getContractFromOpenZepplin(DaoFactoryName),
+  DaoRegistry: getContractFromOpenZepplin(DaoRegistryName),
+  BankFactory: getContractFromOpenZepplin(BankFactoryName),
+  VotingContract: getContractFromOpenZepplin(VotingContractName),
+  ManagingContract: getContractFromOpenZepplin(ManagingContractName),
+  FinancingContract: getContractFromOpenZepplin(FinancingContractName),
+  RagequitContract: getContractFromOpenZepplin(RagequitContractName),
+  GuildKickContract: getContractFromOpenZepplin(GuildKickContractName),
+  OnboardingContract: getContractFromOpenZepplin(OnboardingContractName),
+  DaoRegistryAdapterContract: getContractFromOpenZepplin(DaoRegistryAdapterContractName),
+  BankAdapterContract: getContractFromOpenZepplin(BankAdapterContractName),
+  NFTAdapterContract: getContractFromOpenZepplin(NFTAdapterContractName),
+  ConfigurationContract: getContractFromOpenZepplin(ConfigurationContractName),
+  OffchainVotingContract: getContractFromOpenZepplin(OffchainVotingContractName),
+  KickBadReporterAdapter: getContractFromOpenZepplin(KickBadReporterAdapterName),
+  SnapshotProposalContract: getContractFromOpenZepplin(SnapshotProposalContractName),
+  BatchVotingContract: getContractFromOpenZepplin(BatchVotingContractName),
+  TributeContract: getContractFromOpenZepplin(TributeContractName),
+  DistributeContract: getContractFromOpenZepplin(DistributeContractName),
+  TributeNFTContract: getContractFromOpenZepplin(TributeNFTContractName),
+  CouponOnboardingContract: getContractFromOpenZepplin(CouponOnboardingContractName),
+  BankExtension: getContractFromOpenZepplin(BankExtensionName),
+  NFTExtension: getContractFromOpenZepplin(NFTExtensionName)
 };
