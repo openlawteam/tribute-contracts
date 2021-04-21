@@ -233,13 +233,19 @@ const deployDao = async (deployer, options) => {
   const deployTestTokens = !!options.deployTestTokens;
   const maxExternalTokens = options.maxExternalTokens || 100;
   const finalize = options.finalize === undefined || !!options.finalize;
-  const couponCreatorAddress = options.couponCreatorAddress || '0x7D8cad0bbD68deb352C33e80fccd4D8e88b4aBb8';
+  const couponCreatorAddress =
+    options.couponCreatorAddress ||
+    "0x7D8cad0bbD68deb352C33e80fccd4D8e88b4aBb8";
 
   let daoRegistry;
   let bankFactory;
   let nftFactory;
 
-  let DaoRegistry, BankExtension, BankFactory, NFTExtension, NFTCollectionFactory;
+  let DaoRegistry,
+    BankExtension,
+    BankFactory,
+    NFTExtension,
+    NFTCollectionFactory;
 
   if (deployer) {
     DaoRegistry = getContractFromTruffle(DaoRegistryName);
@@ -274,7 +280,7 @@ const deployDao = async (deployer, options) => {
     const nftExt = await NFTExtension.new();
     nftFactory = await NFTCollectionFactory.new(nftExt.address);
   }
-  
+
   const { dao, daoFactory } = await cloneDao(deployer, daoRegistry, owner);
 
   await bankFactory.createBank(maxExternalTokens);
@@ -430,18 +436,23 @@ const prepareAdapters = async (deployer) => {
   let tributeNFT;
 
   if (deployer) {
-
     let VotingContract = getContractFromTruffle(VotingContractName);
-    let ConfigurationContract = getContractFromTruffle(ConfigurationContractName);
+    let ConfigurationContract = getContractFromTruffle(
+      ConfigurationContractName
+    );
     let RagequitContract = getContractFromTruffle(RagequitContractName);
     let ManagingContract = getContractFromTruffle(ManagingContractName);
     let FinancingContract = getContractFromTruffle(FinancingContractName);
     let OnboardingContract = getContractFromTruffle(OnboardingContractName);
     let GuildKickContract = getContractFromTruffle(GuildKickContractName);
-    let DaoRegistryAdapterContract = getContractFromTruffle(DaoRegistryAdapterContractName);
+    let DaoRegistryAdapterContract = getContractFromTruffle(
+      DaoRegistryAdapterContractName
+    );
     let BankAdapterContract = getContractFromTruffle(BankAdapterContractName);
     let NFTAdapterContract = getContractFromTruffle(NFTAdapterContractName);
-    let CouponOnboardingContract = getContractFromTruffle(CouponOnboardingContractName);
+    let CouponOnboardingContract = getContractFromTruffle(
+      CouponOnboardingContractName
+    );
     let TributeContract = getContractFromTruffle(TributeContractName);
     let DistributeContract = getContractFromTruffle(DistributeContractName);
     let TributeNFTContract = getContractFromTruffle(TributeNFTContractName);
@@ -476,18 +487,25 @@ const prepareAdapters = async (deployer) => {
     distribute = await DistributeContract.deployed();
     tributeNFT = await TributeNFTContract.deployed();
   } else {
-
     let VotingContract = getContractFromOpenZepplin(VotingContractName);
-    let ConfigurationContract = getContractFromOpenZepplin(ConfigurationContractName);
+    let ConfigurationContract = getContractFromOpenZepplin(
+      ConfigurationContractName
+    );
     let RagequitContract = getContractFromOpenZepplin(RagequitContractName);
     let ManagingContract = getContractFromOpenZepplin(ManagingContractName);
     let FinancingContract = getContractFromOpenZepplin(FinancingContractName);
     let OnboardingContract = getContractFromOpenZepplin(OnboardingContractName);
     let GuildKickContract = getContractFromOpenZepplin(GuildKickContractName);
-    let DaoRegistryAdapterContract = getContractFromOpenZepplin(DaoRegistryAdapterContractName);
-    let BankAdapterContract = getContractFromOpenZepplin(BankAdapterContractName);
+    let DaoRegistryAdapterContract = getContractFromOpenZepplin(
+      DaoRegistryAdapterContractName
+    );
+    let BankAdapterContract = getContractFromOpenZepplin(
+      BankAdapterContractName
+    );
     let NFTAdapterContract = getContractFromOpenZepplin(NFTAdapterContractName);
-    let CouponOnboardingContract = getContractFromOpenZepplin(CouponOnboardingContractName);
+    let CouponOnboardingContract = getContractFromOpenZepplin(
+      CouponOnboardingContractName
+    );
     let TributeContract = getContractFromOpenZepplin(TributeContractName);
     let DistributeContract = getContractFromOpenZepplin(DistributeContractName);
     let TributeNFTContract = getContractFromOpenZepplin(TributeNFTContractName);
@@ -566,7 +584,7 @@ const addDefaultAdapters = async (
 
   let BankExtension, NFTExtension;
 
-  if(deployer) {
+  if (deployer) {
     BankExtension = getContractFromTruffle(BankExtensionName);
     NFTExtension = getContractFromTruffle(NFTExtensionName);
   } else {
@@ -606,7 +624,7 @@ const addDefaultAdapters = async (
     nftAddr,
     couponCreatorAddress,
     bankExtension,
-    nftExtension
+    nftExtension,
   });
 
   return {
@@ -655,7 +673,7 @@ const configureDao = async ({
   gracePeriod,
   tokenAddr,
   maxChunks,
-  couponCreatorAddress
+  couponCreatorAddress,
 }) => {
   await daoFactory.addAdapters(dao.address, [
     entryDao("voting", voting, {}),
@@ -783,7 +801,7 @@ const configureDao = async ({
 
 const cloneDao = async (deployer, identityDao, owner, name = "test-dao") => {
   // The owner of the DAO is always the 1st unlocked address if none is provided
-  let txArgs = owner ? {from: owner } : undefined;
+  let txArgs = owner ? { from: owner } : undefined;
 
   let daoFactory, DaoRegistry;
   if (deployer) {
@@ -796,12 +814,12 @@ const cloneDao = async (deployer, identityDao, owner, name = "test-dao") => {
     DaoRegistry = getContractFromOpenZepplin(DaoRegistryName);
     daoFactory = await DaoFactory.new(identityDao.address, txArgs);
   }
-  if(txArgs) {
+  if (txArgs) {
     await daoFactory.createDao(name, ETH_TOKEN, txArgs);
   } else {
     await daoFactory.createDao(name, ETH_TOKEN);
   }
-  
+
   // checking the gas usaged to clone a contract
   let pastEvents = await daoFactory.getPastEvents();
   let { _address, _name } = pastEvents[0].returnValues;
@@ -971,9 +989,15 @@ const configureOffchainVoting = async (
   let handleBadReporterAdapter;
   let offchainVoting;
   if (deployer) {
-    let SnapshotProposalContract = getContractFromTruffle(SnapshotProposalContractName);
-    let KickBadReporterAdapter = getContractFromTruffle(KickBadReporterAdapterName);
-    let OffchainVotingContract = getContractFromTruffle(OffchainVotingContractName);
+    let SnapshotProposalContract = getContractFromTruffle(
+      SnapshotProposalContractName
+    );
+    let KickBadReporterAdapter = getContractFromTruffle(
+      KickBadReporterAdapterName
+    );
+    let OffchainVotingContract = getContractFromTruffle(
+      OffchainVotingContractName
+    );
     snapshotProposalContract = await deployer.deploy(
       SnapshotProposalContract,
       chainId
@@ -986,9 +1010,15 @@ const configureOffchainVoting = async (
       handleBadReporterAdapter.address
     );
   } else {
-    let SnapshotProposalContract = getContractFromOpenZepplin(SnapshotProposalContractName);
-    let KickBadReporterAdapter = getContractFromOpenZepplin(KickBadReporterAdapterName);
-    let OffchainVotingContract = getContractFromOpenZepplin(OffchainVotingContractName);
+    let SnapshotProposalContract = getContractFromOpenZepplin(
+      SnapshotProposalContractName
+    );
+    let KickBadReporterAdapter = getContractFromOpenZepplin(
+      KickBadReporterAdapterName
+    );
+    let OffchainVotingContract = getContractFromOpenZepplin(
+      OffchainVotingContractName
+    );
     snapshotProposalContract = await SnapshotProposalContract.new(chainId);
     handleBadReporterAdapter = await KickBadReporterAdapter.new();
     offchainVoting = await OffchainVotingContract.new(
@@ -1028,7 +1058,9 @@ const configureBatchVoting = async (
 ) => {
   let snapshotProposalContract, batchVoting;
   if (deployer) {
-    let SnapshotProposalContract = getContractFromTruffle(SnapshotProposalContractName);
+    let SnapshotProposalContract = getContractFromTruffle(
+      SnapshotProposalContractName
+    );
     let BatchVotingContract = getContractFromTruffle(BatchVotingContractName);
     snapshotProposalContract = await deployer.deploy(
       SnapshotProposalContract,
@@ -1039,8 +1071,12 @@ const configureBatchVoting = async (
       snapshotProposalContract.address
     );
   } else {
-    let SnapshotProposalContract = getContractFromOpenZepplin(SnapshotProposalContractName);
-    let BatchVotingContract = getContractFromOpenZepplin(BatchVotingContractName);
+    let SnapshotProposalContract = getContractFromOpenZepplin(
+      SnapshotProposalContractName
+    );
+    let BatchVotingContract = getContractFromOpenZepplin(
+      BatchVotingContractName
+    );
     snapshotProposalContract = await SnapshotProposalContract.new(chainId);
     batchVoting = await BatchVotingContract.new(
       snapshotProposalContract.address
@@ -1119,18 +1155,28 @@ module.exports = {
   RagequitContract: getContractFromOpenZepplin(RagequitContractName),
   GuildKickContract: getContractFromOpenZepplin(GuildKickContractName),
   OnboardingContract: getContractFromOpenZepplin(OnboardingContractName),
-  DaoRegistryAdapterContract: getContractFromOpenZepplin(DaoRegistryAdapterContractName),
+  DaoRegistryAdapterContract: getContractFromOpenZepplin(
+    DaoRegistryAdapterContractName
+  ),
   BankAdapterContract: getContractFromOpenZepplin(BankAdapterContractName),
   NFTAdapterContract: getContractFromOpenZepplin(NFTAdapterContractName),
   ConfigurationContract: getContractFromOpenZepplin(ConfigurationContractName),
-  OffchainVotingContract: getContractFromOpenZepplin(OffchainVotingContractName),
-  KickBadReporterAdapter: getContractFromOpenZepplin(KickBadReporterAdapterName),
-  SnapshotProposalContract: getContractFromOpenZepplin(SnapshotProposalContractName),
+  OffchainVotingContract: getContractFromOpenZepplin(
+    OffchainVotingContractName
+  ),
+  KickBadReporterAdapter: getContractFromOpenZepplin(
+    KickBadReporterAdapterName
+  ),
+  SnapshotProposalContract: getContractFromOpenZepplin(
+    SnapshotProposalContractName
+  ),
   BatchVotingContract: getContractFromOpenZepplin(BatchVotingContractName),
   TributeContract: getContractFromOpenZepplin(TributeContractName),
   DistributeContract: getContractFromOpenZepplin(DistributeContractName),
   TributeNFTContract: getContractFromOpenZepplin(TributeNFTContractName),
-  CouponOnboardingContract: getContractFromOpenZepplin(CouponOnboardingContractName),
+  CouponOnboardingContract: getContractFromOpenZepplin(
+    CouponOnboardingContractName
+  ),
   BankExtension: getContractFromOpenZepplin(BankExtensionName),
-  NFTExtension: getContractFromOpenZepplin(NFTExtensionName)
+  NFTExtension: getContractFromOpenZepplin(NFTExtensionName),
 };

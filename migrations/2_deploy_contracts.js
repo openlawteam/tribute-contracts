@@ -47,7 +47,7 @@ async function deployTestDao(deployer, network) {
     chainId: getNetworkDetails(network).chainId,
     deployTestTokens: false,
     finalize: false,
-    couponCreatorAddress : '0x7D8cad0bbD68deb352C33e80fccd4D8e88b4aBb8'
+    couponCreatorAddress: "0x7D8cad0bbD68deb352C33e80fccd4D8e88b4aBb8",
   });
   return dao;
 }
@@ -64,7 +64,7 @@ async function deployRinkebyDao(deployer, network) {
     chainId: getNetworkDetails(network).chainId,
     deployTestTokens: true,
     finalize: false,
-    couponCreatorAddress : process.env.COUPON_CREATOR_ADDR
+    couponCreatorAddress: process.env.COUPON_CREATOR_ADDR,
   });
   return dao;
 }
@@ -80,7 +80,7 @@ async function deployGanacheDao(deployer, network) {
     offchainVoting: true,
     chainId: getNetworkDetails(network).chainId,
     deployTestTokens: true,
-    finalize: false
+    finalize: false,
   });
   return dao;
 }
