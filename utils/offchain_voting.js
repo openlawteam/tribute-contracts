@@ -25,7 +25,7 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
  */
 const { MerkleTree } = require("./merkleTree.js");
-const { SHARES, sha3, web3 } = require("./DaoFactory.js");
+const { SHARES, sha3 } = require("./DaoFactory.js");
 const sigUtil = require('eth-sig-util');
 
 function getDraftIdFromProposal(proposal, verifyingContract, actionId, chainId) {
@@ -393,7 +393,7 @@ async function prepareVoteResult(votes, dao, bank, actionId, chainId, snapshot) 
   return {voteResultTree: tree, votes: leaves};
 }
 
-function prepareVoteProposalData(data) {
+function prepareVoteProposalData(data, web3) {
   return web3.eth.abi.encodeParameter({
     "ProposalMessage": {
       "timestamp": 'uint256',

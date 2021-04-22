@@ -24,21 +24,21 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
  */
+const { toBN, SHARES, GUILD } = require("../../utils/DaoFactory.js");
+
 const {
-  toBN,
-  advanceTime,
-  deployDao,
   deployDefaultDao,
   takeChainSnapshot,
   revertChainSnapshot,
   proposalIdGenerator,
+  advanceTime,
   accounts,
-  GUILD,
-  SHARES,
-  OLToken,
   expectRevert,
   expect,
-} = require("../../utils/DaoFactory.js");
+  OLToken,
+  deployDefaultNFTDao,
+} = require("../../utils/OZTestUtil.js");
+
 const { checkBalance, isMember } = require("../../utils/TestUtils.js");
 
 describe("Adapter - Tribute", () => {
@@ -50,7 +50,9 @@ describe("Adapter - Tribute", () => {
   };
 
   before("deploy dao", async () => {
-    const { dao, adapters, extensions } = await deployDefaultDao(daoOwner);
+    const { dao, adapters, extensions } = await deployDefaultDao({
+      owner: daoOwner,
+    });
     this.dao = dao;
     this.adapters = adapters;
     this.extensions = extensions;
@@ -399,7 +401,7 @@ describe("Adapter - Tribute", () => {
     const nbOfERC20Shares = 100000000;
     const erc20SharePrice = toBN("10");
 
-    const { dao, adapters } = await deployDao(null, {
+    const { dao, adapters } = await deployDefaultNFTDao({
       owner: daoOwner,
       unitPrice: erc20SharePrice,
       nbShares: nbOfERC20Shares,

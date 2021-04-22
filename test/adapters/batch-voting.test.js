@@ -28,18 +28,21 @@ const {
   sha3,
   toBN,
   advanceTime,
-  deployDaoWithBatchVoting,
-  proposalIdGenerator,
-  takeChainSnapshot,
-  revertChainSnapshot,
-  web3,
-  accounts,
   SHARES,
   sharePrice,
   remaining,
+} = require("../../utils/DaoFactory.js");
+
+const {
+  accounts,
+  web3,
+  proposalIdGenerator,
   BatchVotingContract,
   expect,
-} = require("../../utils/DaoFactory.js");
+  deployDaoWithBatchVoting,
+  takeChainSnapshot,
+  revertChainSnapshot,
+} = require("../../utils/OZTestUtil.js");
 
 const {
   createVote,
@@ -79,7 +82,10 @@ describe("Adapter - BatchVoting", () => {
       adapters,
       extensions,
       votingHelpers,
-    } = await deployDaoWithBatchVoting(owner, this.members[0].address);
+    } = await deployDaoWithBatchVoting({
+      owner,
+      newMember: this.members[0].address,
+    });
     this.dao = dao;
     this.adapters = adapters;
     this.extensions = extensions;

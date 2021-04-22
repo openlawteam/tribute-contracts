@@ -24,9 +24,9 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
  */
+const { sha3, toBN } = require("../../utils/DaoFactory.js");
+
 const {
-  sha3,
-  toBN,
   deployDefaultDao,
   takeChainSnapshot,
   revertChainSnapshot,
@@ -35,7 +35,7 @@ const {
   accounts,
   expectRevert,
   expect,
-} = require("../../utils/DaoFactory.js");
+} = require("../../utils/OZTestUtil.js");
 
 const owner = accounts[1];
 const proposalCounter = proposalIdGenerator().generator;
@@ -46,7 +46,7 @@ function getProposalCounter() {
 
 describe("Adapter - Configuration", () => {
   before("deploy dao", async () => {
-    const { dao, adapters, extensions } = await deployDefaultDao(owner);
+    const { dao, adapters, extensions } = await deployDefaultDao({ owner });
     this.dao = dao;
     this.adapters = adapters;
     this.extensions = extensions;

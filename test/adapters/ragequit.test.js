@@ -27,22 +27,24 @@ SOFTWARE.
 const {
   toBN,
   fromUtf8,
-  advanceTime,
-  deployDao,
+  sharePrice,
+  SHARES,
+  GUILD,
+  ETH_TOKEN,
+  LOOT,
+} = require("../../utils/DaoFactory.js");
+
+const {
   deployDefaultDao,
   takeChainSnapshot,
   revertChainSnapshot,
   proposalIdGenerator,
+  advanceTime,
   accounts,
-  sharePrice,
-  GUILD,
-  ETH_TOKEN,
-  SHARES,
-  LOOT,
-  OLToken,
   expectRevert,
   expect,
-} = require("../../utils/DaoFactory.js");
+  OLToken,
+} = require("../../utils/OZTestUtil.js");
 
 const { onboardingNewMember } = require("../../utils/TestUtils.js");
 
@@ -55,7 +57,7 @@ function getProposalCounter() {
 
 describe("Adapter - Ragequit", () => {
   before("deploy dao", async () => {
-    const { dao, adapters, extensions } = await deployDefaultDao(owner);
+    const { dao, adapters, extensions } = await deployDefaultDao({ owner });
     this.dao = dao;
     this.adapters = adapters;
     this.extensions = extensions;
@@ -345,7 +347,7 @@ describe("Adapter - Ragequit", () => {
     // let tokenSupply = 1000000;
     const oltContract = await OLToken.new(1000000, { from: owner });
 
-    const { dao, adapters, extensions } = await deployDao(null, {
+    const { dao, adapters, extensions } = await deployDefaultDao({
       owner: owner,
       unitPrice: lootSharePrice,
       nbShares: chunkSize,

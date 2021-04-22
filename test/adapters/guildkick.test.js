@@ -31,21 +31,24 @@ SOFTWARE.
 const {
   toBN,
   fromUtf8,
+  sharePrice,
+  SHARES,
+  LOOT,
+  GUILD,
+  ETH_TOKEN,
   sha3,
-  advanceTime,
+} = require("../../utils/DaoFactory.js");
+
+const {
   deployDefaultDao,
   takeChainSnapshot,
   revertChainSnapshot,
   proposalIdGenerator,
+  advanceTime,
   accounts,
-  sharePrice,
-  GUILD,
-  ETH_TOKEN,
-  SHARES,
-  LOOT,
-  expectRevert,
   expect,
-} = require("../../utils/DaoFactory.js");
+  expectRevert,
+} = require("../../utils/OZTestUtil.js");
 
 const {
   sponsorNewMember,
@@ -63,7 +66,7 @@ function getProposalCounter() {
 
 describe("Adapter - GuildKick", () => {
   before("deploy dao", async () => {
-    const { dao, adapters, extensions } = await deployDefaultDao(owner);
+    const { dao, adapters, extensions } = await deployDefaultDao({ owner });
     this.dao = dao;
     this.adapters = adapters;
     this.extensions = extensions;

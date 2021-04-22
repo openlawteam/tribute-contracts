@@ -27,16 +27,19 @@ SOFTWARE.
 const {
   sha3,
   toBN,
+  SHARES,
+  GUILD,
+  ETH_TOKEN,
+} = require("../../utils/DaoFactory.js");
+
+const {
   deployDefaultDao,
   takeChainSnapshot,
   revertChainSnapshot,
   accounts,
-  GUILD,
-  SHARES,
-  ETH_TOKEN,
   expectRevert,
   expect,
-} = require("../../utils/DaoFactory.js");
+} = require("../../utils/OZTestUtil.js");
 
 const { checkBalance } = require("../../utils/TestUtils.js");
 
@@ -54,7 +57,9 @@ const daoOwner = accounts[1];
 
 describe("Adapter - Coupon Onboarding ", () => {
   before("deploy dao", async () => {
-    const { dao, adapters, extensions } = await deployDefaultDao(daoOwner);
+    const { dao, adapters, extensions } = await deployDefaultDao({
+      owner: daoOwner,
+    });
     this.dao = dao;
     this.adapters = adapters;
     this.extensions = extensions;

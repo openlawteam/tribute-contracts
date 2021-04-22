@@ -25,25 +25,27 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
  */
 const {
-  web3,
   toBN,
-  advanceTime,
-  deployDao,
+  sharePrice,
+  SHARES,
+  GUILD,
+  ETH_TOKEN,
+  remaining,
+  numberOfShares,
+} = require("../../utils/DaoFactory.js");
+
+const {
   deployDefaultDao,
   takeChainSnapshot,
   revertChainSnapshot,
   proposalIdGenerator,
+  advanceTime,
   accounts,
-  GUILD,
-  SHARES,
-  sharePrice,
-  remaining,
-  OLToken,
-  numberOfShares,
-  ETH_TOKEN,
   expectRevert,
   expect,
-} = require("../../utils/DaoFactory.js");
+  web3,
+  OLToken,
+} = require("../../utils/OZTestUtil.js");
 
 const { checkBalance, isMember } = require("../../utils/TestUtils.js");
 
@@ -56,7 +58,9 @@ function getProposalCounter() {
 
 describe("Adapter - Onboarding", () => {
   before("deploy dao", async () => {
-    const { dao, adapters, extensions } = await deployDefaultDao(daoOwner);
+    const { dao, adapters, extensions } = await deployDefaultDao({
+      owner: daoOwner,
+    });
     this.dao = dao;
     this.adapters = adapters;
     this.extensions = extensions;
@@ -79,7 +83,7 @@ describe("Adapter - Onboarding", () => {
     const nbOfERC20Shares = 100000000;
     const erc20SharePrice = toBN("10");
 
-    const { dao, adapters } = await deployDao(null, {
+    const { dao, adapters } = await deployDefaultDao({
       owner: daoOwner,
       unitPrice: erc20SharePrice,
       nbShares: nbOfERC20Shares,
@@ -226,7 +230,7 @@ describe("Adapter - Onboarding", () => {
     const erc20SharePrice = toBN("10");
     const erc20Remaining = erc20SharePrice.sub(toBN("1"));
 
-    const { dao, adapters, extensions } = await deployDao(null, {
+    const { dao, adapters, extensions } = await deployDefaultDao({
       owner: daoOwner,
       unitPrice: erc20SharePrice,
       nbShares: nbOfERC20Shares,
@@ -423,7 +427,7 @@ describe("Adapter - Onboarding", () => {
     const erc20SharePrice = toBN("10");
     const erc20Remaining = erc20SharePrice.sub(toBN("1"));
 
-    const { dao, adapters, extensions } = await deployDao(null, {
+    const { dao, adapters, extensions } = await deployDefaultDao({
       owner: daoOwner,
       unitPrice: erc20SharePrice,
       nbShares: nbOfERC20Shares,

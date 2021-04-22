@@ -26,20 +26,23 @@ SOFTWARE.
  */
 const {
   toBN,
+  sharePrice,
+  SHARES,
+  GUILD,
+  ETH_TOKEN,
   sha3,
-  advanceTime,
+} = require("../../utils/DaoFactory.js");
+
+const {
   deployDefaultNFTDao,
   takeChainSnapshot,
   revertChainSnapshot,
   proposalIdGenerator,
+  advanceTime,
   accounts,
-  sharePrice,
-  GUILD,
-  ETH_TOKEN,
-  SHARES,
   expectRevert,
   expect,
-} = require("../../utils/DaoFactory.js");
+} = require("../../utils/OZTestUtil.js");
 
 const { onboardingNewMember } = require("../../utils/TestUtils.js");
 
@@ -57,7 +60,7 @@ describe("Adapter - TributeNFT", () => {
       adapters,
       extensions,
       testContracts,
-    } = await deployDefaultNFTDao(daoOwner);
+    } = await deployDefaultNFTDao({ owner: daoOwner });
     this.dao = dao;
     this.adapters = adapters;
     this.extensions = extensions;

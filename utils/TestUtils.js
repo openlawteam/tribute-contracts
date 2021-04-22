@@ -4,11 +4,11 @@
 const {
   fromUtf8,
   toBN,
-  advanceTime,
   SHARES,
   LOOT,
-  expect,
 } = require("./DaoFactory.js");
+
+const {expect, advanceTime} = require('./OZTestUtil.js');
 
 const checkLastEvent = async (dao, testObject) => {
   let pastEvents = await dao.getPastEvents();

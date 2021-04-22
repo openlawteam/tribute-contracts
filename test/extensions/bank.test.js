@@ -24,23 +24,25 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
  */
+const { ETH_TOKEN, sha3 } = require("../../utils/DaoFactory.js");
+
 const {
-  sha3,
   deployDefaultDao,
   takeChainSnapshot,
   revertChainSnapshot,
   accounts,
-  BankFactory,
-  ETH_TOKEN,
   expectRevert,
   expect,
-} = require("../../utils/DaoFactory.js");
+  BankFactory,
+} = require("../../utils/OZTestUtil.js");
 
 describe("Extension - Bank", () => {
   const daoOwner = accounts[0];
 
   before("deploy dao", async () => {
-    const { dao, adapters, extensions } = await deployDefaultDao(daoOwner);
+    const { dao, adapters, extensions } = await deployDefaultDao({
+      owner: daoOwner,
+    });
     this.dao = dao;
     this.adapters = adapters;
     this.extensions = extensions;
