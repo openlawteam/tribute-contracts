@@ -236,6 +236,7 @@ const deployDao = async (deployer, options) => {
   const couponCreatorAddress =
     options.couponCreatorAddress ||
     "0x7D8cad0bbD68deb352C33e80fccd4D8e88b4aBb8";
+  const daoName = options.daoName || "test-dao";
 
   let daoRegistry;
   let bankFactory;
@@ -281,7 +282,12 @@ const deployDao = async (deployer, options) => {
     nftFactory = await NFTCollectionFactory.new(nftExt.address);
   }
 
-  const { dao, daoFactory } = await cloneDao(deployer, daoRegistry, owner);
+  const { dao, daoFactory } = await cloneDao(
+    deployer,
+    daoRegistry,
+    owner,
+    daoName
+  );
 
   await bankFactory.createBank(maxExternalTokens);
   let pastEvent;
