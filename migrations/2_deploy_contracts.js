@@ -65,6 +65,7 @@ async function deployRinkebyDao(deployer, network) {
     deployTestTokens: true,
     finalize: false,
     couponCreatorAddress: process.env.COUPON_CREATOR_ADDR,
+    daoName: process.env.DAO_NAME,
   });
   return dao;
 }
@@ -81,6 +82,8 @@ async function deployGanacheDao(deployer, network) {
     chainId: getNetworkDetails(network).chainId,
     deployTestTokens: true,
     finalize: false,
+    couponCreatorAddress: process.env.COUPON_CREATOR_ADDR,
+    daoName: process.env.DAO_NAME,
   });
   return dao;
 }
