@@ -181,7 +181,7 @@ const deployDao = async (options) => {
     votingHelpers.offchainVoting = offchainVoting;
     votingHelpers.handleBadReporterAdapter = handleBadReporterAdapter;
     votingHelpers.snapshotProposalContract = snapshotProposalContract;
-  } else if (options.isBatchVoting) {
+  } else if (options.batchVoting) {
     const {
       batchVoting,
       snapshotProposalContract,
@@ -616,22 +616,25 @@ const configureBatchVoting = async ({
   daoFactory,
   deployFunction,
   chainId,
+  votingPeriod,
+  gracePeriod,
+  owner,
   SnapshotProposalContract,
   BatchVotingContract
 }
 ) => {
   let snapshotProposalContract, batchVoting;
   snapshotProposalContract = await deployFunction(SnapshotProposalContract, [chainId]);
-  batchVoting = await options.deployFunction(BatchVotingContract, [snapshotProposalContract.address]);
+  batchVoting = await deployFunction(BatchVotingContract, [snapshotProposalContract.address]);
   
   await daoFactory.updateAdapter(
     dao.address,
     entryDao("voting", batchVoting, {}),
-    { from: options.owner }
+    { from: owner }
   );
 
-  await batchVoting.configureDao(dao.address, options.votingPeriod, options.gracePeriod, {
-    from: options.owner,
+  await batchVoting.configureDao(dao.address, votingPeriod, gracePeriod, {
+    from: owner,
   });
 
   return { batchVoting, snapshotProposalContract };

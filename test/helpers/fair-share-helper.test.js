@@ -20,12 +20,13 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
  */
+const { toWei } = require("../../utils/DaoFactory.js");
+
 const {
   TestFairShareCalc,
-  toWei,
-  expectRevert,
   expect,
-} = require("../../utils/DaoFactory.js");
+  expectRevert,
+} = require("../../utils/OZTestUtil.js");
 
 describe("Helper - FairShareHelper", () => {
   it("should calculate the fair share if the given parameters are valid", async () => {

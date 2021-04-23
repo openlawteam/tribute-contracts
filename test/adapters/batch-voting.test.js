@@ -27,7 +27,6 @@ SOFTWARE.
 const {
   sha3,
   toBN,
-  advanceTime,
   SHARES,
   sharePrice,
   remaining,
@@ -36,6 +35,7 @@ const {
 const {
   accounts,
   web3,
+  advanceTime,
   proposalIdGenerator,
   BatchVotingContract,
   expect,
@@ -152,7 +152,7 @@ describe("Adapter - BatchVoting", () => {
     await onboarding.sponsorProposal(
       dao.address,
       proposalId,
-      prepareVoteProposalData(proposalData)
+      prepareVoteProposalData(proposalData, web3)
     );
 
     const voteEntries = [];
