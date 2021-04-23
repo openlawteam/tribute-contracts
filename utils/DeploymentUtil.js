@@ -33,88 +33,6 @@ const {
   toBN,
 } = require('./DaoFactory');
 
-const deployDefaultDao = async (owner) => {
-  return await deployDao(null, { owner });
-};
-
-const deployDefaultNFTDao = async (owner) => {
-  const { dao, adapters, extensions, testContracts } = await deployDao(null, {
-    owner,
-    deployTestTokens: true,
-    finalize: false,
-  });
-
-  await dao.finalizeDao({ from: owner });
-  return {
-    dao: dao,
-    adapters: adapters,
-    extensions: extensions,
-    testContracts: testContracts,
-  };
-};
-
-const deployDaoWithOffchainVoting = async (owner, newMember) => {
-  const {
-    dao,
-    adapters,
-    extensions,
-    testContracts,
-    votingHelpers,
-  } = await deployDao(null, {
-    owner,
-    offchainVoting: true,
-    deployTestTokens: true,
-    finalize: false,
-  });
-
-  await dao.potentialNewMember(newMember, {
-    from: owner,
-  });
-  await extensions.bank.addToBalance(newMember, SHARES, 1, {
-    from: owner,
-  });
-
-  await dao.finalizeDao({ from: owner });
-
-  adapters["voting"] = votingHelpers.offchainVoting;
-
-  return {
-    dao: dao,
-    adapters: adapters,
-    extensions: extensions,
-    testContracts: testContracts,
-    votingHelpers: votingHelpers,
-  };
-};
-
-const deployDaoWithBatchVoting = async (owner, newMember) => {
-  const { dao, adapters, extensions, votingHelpers } = await deployDao(null, {
-    owner,
-    deployTestTokens: false,
-    batchVoting: true,
-    finalize: false,
-  });
-
-  await dao.potentialNewMember(newMember, {
-    from: owner,
-  });
-
-  await extensions.bank.addToBalance(newMember, SHARES, 1, {
-    from: owner,
-  });
-
-  await dao.finalizeDao({ from: owner });
-
-  adapters["voting"] = adapters.batchVoting;
-
-  return {
-    dao: dao,
-    adapters: adapters,
-    extensions: extensions,
-    votingHelpers: votingHelpers,
-  };
-};
-
 const deployDao = async (options) => {
   const {deployFunction, owner, deployTestTokens, finalize, DaoRegistry, BankExtension, BankFactory, NFTExtension, NFTCollectionFactory, TestToken1, TestToken2, Multicall, PixelNFT, OLToken} = options;
 
@@ -575,71 +493,6 @@ const entry = (values) => {
     .reduce((a, b) => a + b);
 };
 
-const configureOffchainVoting = async ({
-  dao,
-  daoFactory,
-  chainId,
-  votingAddress,
-  bankAddress,
-  votingPeriod,
-  gracePeriod,
-  deployFunction,
-  SnapshotProposalContract,
-  KickBadReporterAdapter,
-  OffchainVotingContract
-}) => {
-  let snapshotProposalContract = await deployFunction(SnapshotProposalContract, [chainId]);
-  let handleBadReporterAdapter = await deployFunction(KickBadReporterAdapter);
-  let offchainVoting = await deployFunction(OffchainVotingContract, [votingAddress, snapshotProposalContract.address, handleBadReporterAdapter.address]);
-
-  await daoFactory.updateAdapter(
-    dao.address,
-    entryDao("voting", offchainVoting, {})
-  );
-
-  await dao.setAclToExtensionForAdapter(
-    bankAddress,
-    offchainVoting.address,
-    entryBank(offchainVoting, {
-      ADD_TO_BALANCE: true,
-      SUB_FROM_BALANCE: true,
-      INTERNAL_TRANSFER: true,
-    }).flags
-  );
-  await offchainVoting.configureDao(dao.address, votingPeriod, gracePeriod, 10);
-
-  return { offchainVoting, snapshotProposalContract, handleBadReporterAdapter };
-};
-
-const configureBatchVoting = async ({
-  dao,
-  daoFactory,
-  deployFunction,
-  chainId,
-  votingPeriod,
-  gracePeriod,
-  owner,
-  SnapshotProposalContract,
-  BatchVotingContract
-}
-) => {
-  let snapshotProposalContract, batchVoting;
-  snapshotProposalContract = await deployFunction(SnapshotProposalContract, [chainId]);
-  batchVoting = await deployFunction(BatchVotingContract, [snapshotProposalContract.address]);
-  
-  await daoFactory.updateAdapter(
-    dao.address,
-    entryDao("voting", batchVoting, {}),
-    { from: owner }
-  );
-
-  await batchVoting.configureDao(dao.address, votingPeriod, gracePeriod, {
-    from: owner,
-  });
-
-  return { batchVoting, snapshotProposalContract };
-};
-
 const networks = [
   {
     name: "ganache",
@@ -669,10 +522,6 @@ const getNetworkDetails = (name) => {
 
 module.exports = {
   deployDao,
-  deployDefaultDao,
-  deployDefaultNFTDao,
-  deployDaoWithBatchVoting,
-  deployDaoWithOffchainVoting,
   createIdentityDao,
   cloneDao,
   prepareAdapters,
