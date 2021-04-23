@@ -25,7 +25,7 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
  */
 const { MerkleTree } = require("./merkleTree.js");
-const { SHARES, sha3 } = require("./DaoFactory.js");
+const { SHARES, sha3 } = require("./ContractUtil.js");
 const sigUtil = require("eth-sig-util");
 
 function getMessageERC712Hash(m, verifyingContract, actionId, chainId) {

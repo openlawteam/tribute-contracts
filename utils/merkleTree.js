@@ -4,7 +4,7 @@
 // Shamelessly adapted from OpenZeppelin-contracts test utils
 
 const { keccak256, keccakFromString, bufferToHex } = require("ethereumjs-util");
-const { hexToBytes } = require("./DaoFactory");
+const { hexToBytes } = require("./ContractUtil.js");
 
 // Merkle tree called with 32 byte hex values
 class MerkleTree {

@@ -1,5 +1,5 @@
 const Migrations = artifacts.require("Migrations");
-const DaoFactory = artifacts.require("./core/DaoFactory");
+const DaoFactory = artifacts.require("./core/ContractUtil");
 const DaoRegistry = artifacts.require("./core/DaoRegistry");
 const VotingContract = artifacts.require("./adapters/VotingContract");
 const ConfigurationContract = artifacts.require(
