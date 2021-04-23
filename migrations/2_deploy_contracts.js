@@ -7,10 +7,7 @@ const {
   numberOfShares,
 } = require("../utils/DaoFactory.js");
 
-const {
-  deployDao,
-  getNetworkDetails,
-} = require("../utils/DeploymentUtil.js");
+const { deployDao, getNetworkDetails } = require("../utils/DeploymentUtil.js");
 
 const truffleImports = require("../utils/TruffleUtil.js");
 
@@ -18,7 +15,7 @@ require("dotenv").config();
 
 module.exports = async (deployer, network) => {
   let dao;
-  const deployFunction  = truffleImports.deployFunctionFactory(deployer);
+  const deployFunction = truffleImports.deployFunctionFactory(deployer);
   if (network === "ganache") {
     dao = await deployGanacheDao(deployFunction, network);
   } else if (network === "rinkeby") {
@@ -56,7 +53,8 @@ async function deployTestDao(deployFunction, network) {
     deployTestTokens: false,
     finalize: false,
     maxExternalTokens: 100,
-    couponCreatorAddress : '0x7D8cad0bbD68deb352C33e80fccd4D8e88b4aBb8'
+    couponCreatorAddress: "0x7D8cad0bbD68deb352C33e80fccd4D8e88b4aBb8",
+    daoName: process.env.DAO_NAME,
   });
   return dao;
 }
@@ -76,7 +74,8 @@ async function deployRinkebyDao(deployFunction, network) {
     deployTestTokens: true,
     finalize: false,
     maxExternalTokens: 100,
-    couponCreatorAddress : process.env.COUPON_CREATOR_ADDR
+    couponCreatorAddress: process.env.COUPON_CREATOR_ADDR,
+    daoName: process.env.DAO_NAME,
   });
   return dao;
 }
@@ -96,7 +95,8 @@ async function deployGanacheDao(deployFunction, network) {
     deployTestTokens: true,
     finalize: false,
     maxExternalTokens: 100,
-    couponCreatorAddress : process.env.COUPON_CREATOR_ADDR
+    couponCreatorAddress: process.env.COUPON_CREATOR_ADDR,
+    daoName: process.env.DAO_NAME,
   });
   return dao;
 }

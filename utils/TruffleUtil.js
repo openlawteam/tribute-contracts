@@ -25,29 +25,27 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
  */
 
-const {
-  contracts
-} = require("./DaoFactory");
+const { contracts } = require("./DaoFactory");
 
 const truffleContracts = getContracts();
 
-const deployFunctionFactory = (deployer) => { 
+const deployFunctionFactory = (deployer) => {
   const deployFunction = async (contractInterface, args) => {
     let result;
-    if(args) {
-      result = await deployer.deploy(contractInterface, ... args);
+    if (args) {
+      result = await deployer.deploy(contractInterface, ...args);
     } else {
       result = await deployer.deploy(contractInterface);
-    } 
+    }
     result = await contractInterface.deployed();
     return result;
-  }
+  };
 
   return deployFunction;
-}
+};
 
 function getContractFromTruffle(c) {
-  return  artifacts.require(c);
+  return artifacts.require(c);
 }
 
 function getContracts() {
@@ -59,5 +57,5 @@ function getContracts() {
 
 module.exports = {
   ...truffleContracts,
-  deployFunctionFactory
+  deployFunctionFactory,
 };

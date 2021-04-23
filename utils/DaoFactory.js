@@ -56,49 +56,49 @@ function getContractFromOpenZepplin(c) {
   return contract.fromArtifact(c.substring(c.lastIndexOf("/") + 1));
 }
 const contracts = {
-// Test Util Contracts
-OLToken:"./test/OLToken",
-TestToken1:"./test/TestToken1",
-TestToken2:"./test/TestToken2",
-TestFairShareCalc:"./test/TestFairShareCalc",
-PixelNFT:"./test/PixelNFT",
+  // Test Util Contracts
+  OLToken: "./test/OLToken",
+  TestToken1: "./test/TestToken1",
+  TestToken2: "./test/TestToken2",
+  TestFairShareCalc: "./test/TestFairShareCalc",
+  PixelNFT: "./test/PixelNFT",
 
-// DAO Contracts
-DaoFactory:"./core/DaoFactory",
-DaoRegistry:"./core/DaoRegistry",
-NFTCollectionFactory:"./extensions/NFTCollectionFactory",
-BankFactory:"./extensions/bank/BankFactory",
-Multicall:"./util/Multicall",
+  // DAO Contracts
+  DaoFactory: "./core/DaoFactory",
+  DaoRegistry: "./core/DaoRegistry",
+  NFTCollectionFactory: "./extensions/NFTCollectionFactory",
+  BankFactory: "./extensions/bank/BankFactory",
+  Multicall: "./util/Multicall",
 
-// Extensions
-NFTExtension:"./extensions/nft/NFTExtension",
-BankExtension:"./extensions/bank/BankExtension",
+  // Extensions
+  NFTExtension: "./extensions/nft/NFTExtension",
+  BankExtension: "./extensions/bank/BankExtension",
 
-// Config Adapters
-DaoRegistryAdapterContract:"./adapters/DaoRegistryAdapterContract",
-BankAdapterContract:"./adapters/BankAdapterContract",
-NFTAdapterContract:"./adapters/NFTAdapterContract",
-ConfigurationContract:"./adapter/ConfigurationContract",
-ManagingContract:"./adapter/ManagingContract",
+  // Config Adapters
+  DaoRegistryAdapterContract: "./adapters/DaoRegistryAdapterContract",
+  BankAdapterContract: "./adapters/BankAdapterContract",
+  NFTAdapterContract: "./adapters/NFTAdapterContract",
+  ConfigurationContract: "./adapter/ConfigurationContract",
+  ManagingContract: "./adapter/ManagingContract",
 
-// Voting Adapters
-VotingContract:"./adapters/VotingContract",
-SnapshotProposalContract:"./adapters/voting/SnapshotProposalContract",
-OffchainVotingContract:"./adapters/voting/OffchainVotingContract",
-KickBadReporterAdapter:"./adapters/voting/KickBadReporterAdapter",
-BatchVotingContract:"./adapters/voting/BatchVotingContract",
+  // Voting Adapters
+  VotingContract: "./adapters/VotingContract",
+  SnapshotProposalContract: "./adapters/voting/SnapshotProposalContract",
+  OffchainVotingContract: "./adapters/voting/OffchainVotingContract",
+  KickBadReporterAdapter: "./adapters/voting/KickBadReporterAdapter",
+  BatchVotingContract: "./adapters/voting/BatchVotingContract",
 
-// Withdraw Adapters
-RagequitContract:"./adapters/RagequitContract",
-GuildKickContract:"./adapters/GuildKickContract",
-DistributeContract:"./adapters/DistributeContract",
+  // Withdraw Adapters
+  RagequitContract: "./adapters/RagequitContract",
+  GuildKickContract: "./adapters/GuildKickContract",
+  DistributeContract: "./adapters/DistributeContract",
 
-// Funding/Onboarding Adapters
-FinancingContract:"./adapter/FinancingContract",
-OnboardingContract:"./adapters/OnboardingContract",
-CouponOnboardingContract:"./adapters/CouponOnboardingContract",
-TributeContract:"./adapters/TributeContract",
-TributeNFTContract:"./adapters/TributeNFTContract",
+  // Funding/Onboarding Adapters
+  FinancingContract: "./adapter/FinancingContract",
+  OnboardingContract: "./adapters/OnboardingContract",
+  CouponOnboardingContract: "./adapters/CouponOnboardingContract",
+  TributeContract: "./adapters/TributeContract",
+  TributeNFTContract: "./adapters/TributeNFTContract",
 };
 
 module.exports = {
@@ -121,5 +121,5 @@ module.exports = {
   DAI_TOKEN,
   SHARES,
   LOOT,
-  ETH_TOKEN
+  ETH_TOKEN,
 };

@@ -38,26 +38,21 @@ const {
   numberOfShares,
   maximumChunks,
   ETH_TOKEN,
-  SHARES
+  SHARES,
 } = require("./DaoFactory");
 
-const {
-  deployDao,
-  entryDao,
-  entryBank,
-  entry
-} = require("./DeploymentUtil");
+const { deployDao, entryDao, entryBank, entry } = require("./DeploymentUtil");
 
 const ozContracts = getContracts();
 
 const deployFunction = async (contractInterface, args, from) => {
   const f = from ? from : accounts[0];
-  if(args) {
-    return await contractInterface.new(...args, {from: f});
+  if (args) {
+    return await contractInterface.new(...args, { from: f });
   } else {
-    return await contractInterface.new({from: f});
+    return await contractInterface.new({ from: f });
   }
-}
+};
 
 const { expectRevert } = require("@openzeppelin/test-helpers");
 const { expect } = require("chai");
@@ -78,14 +73,14 @@ function getDefaultOptions(options) {
     unitPrice: sharePrice,
     nbShares: numberOfShares,
     votingPeriod: 10,
-    gracePeriod : 1,
-    tokenAddr : ETH_TOKEN,
+    gracePeriod: 1,
+    tokenAddr: ETH_TOKEN,
     maxChunks: maximumChunks,
-    chainId : 1,
-    maxExternalTokens : 100,
-    couponCreatorAddress : '0x7D8cad0bbD68deb352C33e80fccd4D8e88b4aBb8',
+    chainId: 1,
+    maxExternalTokens: 100,
+    couponCreatorAddress: "0x7D8cad0bbD68deb352C33e80fccd4D8e88b4aBb8",
     deployTestTokens: true,
-    ... options
+    ...options,
   };
 
   o.finalize = options.finalize === undefined || !!options.finalize;
@@ -93,16 +88,20 @@ function getDefaultOptions(options) {
 }
 
 const deployDefaultDao = async (options) => {
-  return await deployDao({ ... getDefaultOptions(options) , ... ozContracts, deployFunction});
+  return await deployDao({
+    ...getDefaultOptions(options),
+    ...ozContracts,
+    deployFunction,
+  });
 };
 
-const deployDefaultNFTDao = async ({owner}) => {
+const deployDefaultNFTDao = async ({ owner }) => {
   const { dao, adapters, extensions, testContracts } = await deployDao({
-    ... getDefaultOptions({owner}),
+    ...getDefaultOptions({ owner }),
     deployTestTokens: true,
     finalize: false,
     ...ozContracts,
-    deployFunction
+    deployFunction,
   });
 
   await dao.finalizeDao({ from: owner });
@@ -115,7 +114,7 @@ const deployDefaultNFTDao = async ({owner}) => {
   };
 };
 
-const deployDaoWithOffchainVoting = async ({owner, newMember}) => {
+const deployDaoWithOffchainVoting = async ({ owner, newMember }) => {
   const {
     dao,
     adapters,
@@ -123,12 +122,12 @@ const deployDaoWithOffchainVoting = async ({owner, newMember}) => {
     testContracts,
     votingHelpers,
   } = await deployDao({
-    ...getDefaultOptions({owner}),
+    ...getDefaultOptions({ owner }),
     isOffchainVoting: true,
     deployTestTokens: true,
     finalize: false,
     ...ozContracts,
-    deployFunction
+    deployFunction,
   });
 
   await dao.potentialNewMember(newMember, {
@@ -151,15 +150,14 @@ const deployDaoWithOffchainVoting = async ({owner, newMember}) => {
   };
 };
 
-const deployDaoWithBatchVoting = async ({owner, newMember}) => {
-
+const deployDaoWithBatchVoting = async ({ owner, newMember }) => {
   const { dao, adapters, extensions, votingHelpers } = await deployDao({
-    ...getDefaultOptions({owner}),
+    ...getDefaultOptions({ owner }),
     ...ozContracts,
     deployTestTokens: false,
     batchVoting: true,
     finalize: false,
-    deployFunction
+    deployFunction,
   });
 
   await dao.potentialNewMember(newMember, {
@@ -293,5 +291,5 @@ module.exports = {
   expect,
   expectRevert,
   deployFunction,
-  ...ozContracts
+  ...ozContracts,
 };
