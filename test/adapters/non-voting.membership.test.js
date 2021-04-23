@@ -26,19 +26,21 @@ SOFTWARE.
  */
 const {
   toBN,
-  advanceTime,
-  deployDao,
-  deployDefaultDao,
-  proposalIdGenerator,
-  accounts,
   GUILD,
-  LOOT,
   sharePrice,
   remaining,
-  OLToken,
-  expectRevert,
+  LOOT,
+} = require("../../utils/ContractUtil.js");
+
+const {
+  deployDefaultDao,
+  proposalIdGenerator,
+  advanceTime,
+  accounts,
   expect,
-} = require("../../utils/DaoFactory.js");
+  expectRevert,
+  OLToken,
+} = require("../../utils/OZTestUtil.js");
 
 const daoOwner = accounts[1];
 const proposalCounter = proposalIdGenerator().generator;
@@ -51,7 +53,9 @@ describe("Adapter - Non Voting Onboarding", () => {
   it("should be possible to join a DAO as a member without any voting power by requesting Loot while staking raw ETH", async () => {
     const advisorAccount = accounts[2];
 
-    const { dao, adapters, extensions } = await deployDefaultDao(daoOwner);
+    const { dao, adapters, extensions } = await deployDefaultDao({
+      owner: daoOwner,
+    });
     const bank = extensions.bank;
     const onboarding = adapters.onboarding;
     const voting = adapters.voting;
@@ -106,7 +110,7 @@ describe("Adapter - Non Voting Onboarding", () => {
     const lootSharePrice = 10;
     const nbOfLootShares = 100000000;
 
-    const { dao, adapters, extensions } = await deployDao(null, {
+    const { dao, adapters, extensions } = await deployDefaultDao({
       owner: daoOwner,
       unitPrice: lootSharePrice,
       nbShares: nbOfLootShares,

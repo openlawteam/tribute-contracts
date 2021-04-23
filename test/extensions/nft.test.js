@@ -24,16 +24,16 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
  */
+const { toBN, GUILD } = require("../../utils/ContractUtil.js");
+
 const {
-  toBN,
-  deployDefaultNFTDao,
   takeChainSnapshot,
   revertChainSnapshot,
+  deployDefaultNFTDao,
   accounts,
-  GUILD,
   expectRevert,
   expect,
-} = require("../../utils/DaoFactory.js");
+} = require("../../utils/OZTestUtil.js");
 
 describe("Extension - NFT", () => {
   const daoOwner = accounts[0];
@@ -44,7 +44,7 @@ describe("Extension - NFT", () => {
       adapters,
       extensions,
       testContracts,
-    } = await deployDefaultNFTDao(daoOwner);
+    } = await deployDefaultNFTDao({ owner: daoOwner });
     this.dao = dao;
     this.adapters = adapters;
     this.extensions = extensions;

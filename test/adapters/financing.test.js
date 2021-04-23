@@ -25,21 +25,24 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
  */
 const {
-  web3,
   toBN,
   fromUtf8,
-  advanceTime,
+  sharePrice,
+  SHARES,
+  GUILD,
+  ETH_TOKEN,
+} = require("../../utils/ContractUtil.js");
+
+const {
   deployDefaultDao,
   takeChainSnapshot,
   revertChainSnapshot,
   proposalIdGenerator,
+  advanceTime,
   accounts,
-  GUILD,
-  SHARES,
-  sharePrice,
-  ETH_TOKEN,
   expect,
-} = require("../../utils/DaoFactory.js");
+  web3,
+} = require("../../utils/OZTestUtil.js");
 
 const { checkBalance } = require("../../utils/TestUtils.js");
 
@@ -56,7 +59,9 @@ function getProposalCounter() {
 
 describe("Adapter - Financing", () => {
   before("deploy dao", async () => {
-    const { dao, adapters, extensions } = await deployDefaultDao(myAccount);
+    const { dao, adapters, extensions } = await deployDefaultDao({
+      owner: myAccount,
+    });
     this.dao = dao;
     this.adapters = adapters;
     this.extensions = extensions;

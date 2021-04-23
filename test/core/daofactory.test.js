@@ -21,40 +21,59 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
  */
 
+const { toBN } = require("../../utils/ContractUtil.js");
+
 const {
-  toBN,
-  accounts,
   createIdentityDao,
   cloneDao,
+} = require("../../utils/DeploymentUtil.js");
+
+const {
+  accounts,
   expect,
-} = require("../../utils/DaoFactory.js");
+  DaoRegistry,
+  DaoFactory,
+  deployFunction,
+} = require("../../utils/OZTestUtil.js");
 
 describe("Core - DaoFactory", () => {
   const owner = accounts[1];
   const anotherOwner = accounts[2];
 
   it("should be possible create an identity dao and clone it", async () => {
-    let identityDao = await createIdentityDao(owner);
+    let identityDao = await createIdentityDao({
+      owner,
+      DaoRegistry,
+      DaoFactory,
+    });
 
-    let { daoName } = await cloneDao(
-      null,
+    let { daoName } = await cloneDao({
       identityDao,
-      anotherOwner,
-      "cloned-dao"
-    );
+      owner: anotherOwner,
+      name: "cloned-dao",
+      DaoRegistry,
+      DaoFactory,
+      deployFunction,
+    });
 
     expect(daoName).equal("cloned-dao");
   });
 
   it("should be possible to get a DAO address by its name if it was created by the factory", async () => {
-    let identityDao = await createIdentityDao(owner);
+    let identityDao = await createIdentityDao({
+      owner,
+      DaoRegistry,
+      DaoFactory,
+    });
 
-    let { daoFactory, dao } = await cloneDao(
-      null,
+    let { daoFactory, dao } = await cloneDao({
       identityDao,
-      anotherOwner,
-      "new-dao"
-    );
+      owner: anotherOwner,
+      name: "new-dao",
+      DaoRegistry,
+      DaoFactory,
+      deployFunction,
+    });
 
     let retrievedAddress = await daoFactory.getDaoAddress("new-dao", {
       from: anotherOwner,
@@ -64,14 +83,20 @@ describe("Core - DaoFactory", () => {
   });
 
   it("should not be possible to get a DAO address of it was not created by the factory", async () => {
-    let identityDao = await createIdentityDao(owner);
+    let identityDao = await createIdentityDao({
+      owner,
+      DaoRegistry,
+      DaoFactory,
+    });
 
-    let { daoFactory } = await cloneDao(
-      null,
+    let { daoFactory } = await cloneDao({
       identityDao,
-      anotherOwner,
-      "new-dao"
-    );
+      owner: anotherOwner,
+      name: "new-dao",
+      DaoRegistry,
+      DaoFactory,
+      deployFunction,
+    });
 
     let retrievedAddress = await daoFactory.getDaoAddress("random-dao", {
       from: anotherOwner,

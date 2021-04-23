@@ -21,13 +21,13 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
  */
 
+const { fromUtf8, ETH_TOKEN } = require("../../utils/ContractUtil.js");
+
 const {
-  fromUtf8,
-  ETH_TOKEN,
-  DaoRegistry,
   expectRevert,
   expect,
-} = require("../../utils/DaoFactory.js");
+  DaoRegistry,
+} = require("../../utils/OZTestUtil.js");
 
 describe("Core - Registry", () => {
   it("should not be possible to add a module with invalid id", async () => {
