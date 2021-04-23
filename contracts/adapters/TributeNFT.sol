@@ -48,13 +48,15 @@ contract TributeNFTContract is
     struct ProposalDetails {
         // The proposal id.
         bytes32 id;
-        // The applicant address (who will receive the DAO Shares and become a member).
+        // The applicant address (who will receive the DAO Shares and become a member; this address may be different than the actual proposer).
         address applicant;
+        // The proposer address (who will provide the NFT tribute).
+        address proposer;
         // The address of the NFT to be locked in the DAO in exchange for voting power.
         address nftAddr;
         // The nft token identifier.
         uint256 nftTokenId;
-        // The amount of shares requested to lock the NFT in exchange of DAO internal tokens.
+        // The amount requested of DAO internal tokens (SHARES).
         uint256 requestedShares;
     }
 
@@ -93,23 +95,23 @@ contract TributeNFTContract is
     }
 
     /**
-     * @notice Creates a tribute proposal and escrows received token into the adapter.
+     * @notice Creates a tribute proposal.
      * @dev Applicant address must not be reserved.
-     * @dev The proposer must first separately `approve` the adapter as spender of the ERC-721 token provided as tribute.
      * @param dao The DAO address.
      * @param proposalId The proposal id (managed by the client).
-     * @param nftAddr The address of the ERC-721 token that will be locked in the DAO in exchange for Shares.
+     * @param applicant The applicant address (who will receive the DAO internal tokens and become a member).
+     * @param nftAddr The address of the ERC-721 token that will be transferred to the DAO in exchange for Shares.
      * @param nftTokenId The NFT token id.
-     * @param requestedShares The amount of Shares requested of DAO as voting power.
+     * @param requestedShares The amount requested of DAO internal tokens (SHARES).
      */
     function provideTributeNFT(
         DaoRegistry dao,
         bytes32 proposalId,
+        address applicant,
         address nftAddr,
         uint256 nftTokenId,
         uint256 requestedShares
     ) external override reentrancyGuard(dao) {
-        address applicant = msg.sender;
         require(
             isNotReservedAddress(applicant),
             "applicant is reserved address"
@@ -117,13 +119,10 @@ contract TributeNFTContract is
 
         dao.submitProposal(proposalId);
 
-        // Transfers the NFT to the Escrow Adapter, and checks if the NFT is supported/valid.
-        IERC721 erc721 = IERC721(nftAddr);
-        erc721.safeTransferFrom(applicant, address(this), nftTokenId);
-
         proposals[address(dao)][proposalId] = ProposalDetails(
             proposalId,
             applicant,
+            msg.sender,
             nftAddr,
             nftTokenId,
             requestedShares
@@ -155,7 +154,7 @@ contract TributeNFTContract is
     }
 
     /**
-     * @notice Cancels a tribute proposal which marks it as processed and returns the NFT to the original owner.
+     * @notice Cancels a tribute proposal which marks it as processed.
      * @dev Proposal id must exist.
      * @dev Only proposals that have not already been sponsored can be cancelled.
      * @dev Only proposer can cancel a tribute proposal.
@@ -177,26 +176,19 @@ contract TributeNFTContract is
             "proposal already sponsored"
         );
         require(
-            proposal.applicant == msg.sender,
-            "only the applicant can cancel a proposal"
+            proposal.proposer == msg.sender,
+            "only the proposer can cancel a proposal"
         );
 
         dao.processProposal(proposalId);
-
-        // Transfers the NFT to back to the original owner.
-        IERC721 erc721 = IERC721(proposal.nftAddr);
-        erc721.safeTransferFrom(
-            address(this),
-            proposal.applicant,
-            proposal.nftTokenId
-        );
     }
 
     /**
-     * @notice Processes the proposal to handle minting and exchange of DAO internal tokens for tribute token (passed vote) or the return of the NFT to the original owner (failed vote).
+     * @notice Processes the proposal to handle minting and exchange of DAO internal tokens for tribute token (passed vote).
      * @dev Proposal id must exist.
      * @dev Only proposals that have not already been processed are accepted.
      * @dev Only sponsored proposals with completed voting are accepted.
+     * @dev The proposer must first separately `approve` the NFT extension as spender of the ERC-721 token provided as tribute (so the NFT can be transferred for a passed vote).
      * @param dao The DAO address.
      * @param proposalId The proposal id.
      */
@@ -214,32 +206,28 @@ contract TributeNFTContract is
         IVoting.VotingState voteResult =
             votingContract.voteResult(dao, proposalId);
 
-        IERC721 erc721 = IERC721(proposal.nftAddr);
-
         if (voteResult == IVoting.VotingState.PASS) {
-            _mintSharesToNewMember(
-                dao,
-                proposal.applicant,
-                proposal.nftAddr,
-                proposal.nftTokenId,
-                proposal.requestedShares
-            );
-
             NFTExtension nftExt = NFTExtension(dao.getExtensionAddress(NFT));
-            // Approve the Ext Address to move the asset
-            erc721.approve(address(nftExt), proposal.nftTokenId);
-            // Transfers the asset to the DAO Collection, and checks if the NFT is supported/valid.
-            nftExt.collect(proposal.nftAddr, proposal.nftTokenId);
+
+            // Transfers the asset to the DAO Collection, and checks if the NFT is supported/valid. (The proposer must first separately `approve` the NFT extension as spender of the ERC-721 token.)
+            try nftExt.collect(proposal.nftAddr, proposal.nftTokenId) {
+                // shares should be minted only if the transfer to the DAO collection is successful
+                _mintSharesToNewMember(
+                    dao,
+                    proposal.applicant,
+                    proposal.proposer,
+                    proposal.nftAddr,
+                    proposal.nftTokenId,
+                    proposal.requestedShares
+                );
+            } catch {
+                // do nothing
+            }
         } else if (
             voteResult == IVoting.VotingState.NOT_PASS ||
             voteResult == IVoting.VotingState.TIE
         ) {
-            // Transfers the asset to back to the original owner.
-            erc721.safeTransferFrom(
-                address(this),
-                proposal.applicant,
-                proposal.nftTokenId
-            );
+            // do nothing
         } else {
             revert("proposal has not been voted on");
         }
@@ -257,6 +245,7 @@ contract TributeNFTContract is
     function _mintSharesToNewMember(
         DaoRegistry dao,
         address applicant,
+        address proposer,
         address nftAddr,
         uint256 nftTokenId,
         uint256 requestedShares
@@ -267,16 +256,14 @@ contract TributeNFTContract is
             "SHARES token is not an internal token"
         );
 
-        dao.potentialNewMember(applicant);
-
         // Overflow risk may cause this to fail in which case the tribute token
         // is refunded to the proposer.
         try bank.addToBalance(applicant, SHARES, requestedShares) {
-            // do nothing
+            dao.potentialNewMember(applicant);
         } catch {
-            // Transfers the NFT to back to the original owner.
-            IERC721 erc721 = IERC721(nftAddr);
-            erc721.safeTransferFrom(address(this), applicant, nftTokenId);
+            // Transfers the NFT to back to the original proposer.
+            NFTExtension nftExt = NFTExtension(dao.getExtensionAddress(NFT));
+            nftExt.withdrawNFT(proposer, nftAddr, nftTokenId);
         }
     }
 
