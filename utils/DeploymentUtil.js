@@ -159,6 +159,86 @@ const deployDao = async (options) => {
   };
 };
 
+const configureOffchainVoting = async ({
+  dao,
+  daoFactory,
+  chainId,
+  votingAddress,
+  bankAddress,
+  votingPeriod,
+  gracePeriod,
+  SnapshotProposalContract,
+  KickBadReporterAdapter,
+  OffchainVotingContract,
+  deployFunction
+}) => {
+  
+  let snapshotProposalContract = await deployFunction(
+    SnapshotProposalContract,
+    [chainId]
+  );
+  let handleBadReporterAdapter = await deployFunction(KickBadReporterAdapter);
+  let offchainVoting = await deployFunction(
+    OffchainVotingContract,
+    [votingAddress,
+    snapshotProposalContract.address,
+    handleBadReporterAdapter.address]
+  );
+
+  await daoFactory.updateAdapter(
+    dao.address,
+    entryDao("voting", offchainVoting, {})
+  );
+
+  await dao.setAclToExtensionForAdapter(
+    bankAddress,
+    offchainVoting.address,
+    entryBank(offchainVoting, {
+      ADD_TO_BALANCE: true,
+      SUB_FROM_BALANCE: true,
+      INTERNAL_TRANSFER: true,
+    }).flags
+  );
+  await offchainVoting.configureDao(dao.address, votingPeriod, gracePeriod, 10);
+
+  return { offchainVoting, snapshotProposalContract, handleBadReporterAdapter };
+};
+
+const configureBatchVoting = async ({
+  owner,
+  dao,
+  daoFactory,
+  chainId,
+  votingPeriod,
+  gracePeriod,
+  SnapshotProposalContract,
+  BatchVotingContract,
+  deployFunction
+}) => {
+  let snapshotProposalContract, batchVoting;
+  
+  snapshotProposalContract = await deployFunction(
+    SnapshotProposalContract,
+    [chainId]
+  );
+  batchVoting = await deployFunction(
+    BatchVotingContract,
+    [snapshotProposalContract.address]
+  );
+
+  await daoFactory.updateAdapter(
+    dao.address,
+    entryDao("voting", batchVoting, {}),
+    { from: owner }
+  );
+
+  await batchVoting.configureDao(dao.address, votingPeriod, gracePeriod, {
+    from: owner,
+  });
+
+  return { batchVoting, snapshotProposalContract };
+};
+
 const prepareAdapters = async ({
   deployFunction,
   VotingContract,

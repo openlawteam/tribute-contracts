@@ -459,7 +459,7 @@ async function prepareVoteResult(
   return { voteResultTree: tree, votes: leaves };
 }
 
-function prepareVoteProposalData(data) {
+function prepareVoteProposalData(data, web3) {
   return web3.eth.abi.encodeParameter(
     {
       ProposalMessage: {
