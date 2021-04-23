@@ -25,7 +25,7 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
  */
 
-const { SHARES, LOOT, ETH_TOKEN, sha3, toBN } = require("./DaoFactory");
+const { SHARES, LOOT, ETH_TOKEN, sha3, toBN } = require("./ContractUtil");
 
 const deployDao = async (options) => {
   const {

@@ -30,7 +30,7 @@ const {
   SHARES,
   sharePrice,
   remaining,
-} = require("../../utils/DaoFactory.js");
+} = require("../../utils/ContractUtil.js");
 
 const {
   accounts,

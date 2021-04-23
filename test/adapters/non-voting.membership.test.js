@@ -30,7 +30,7 @@ const {
   sharePrice,
   remaining,
   LOOT,
-} = require("../../utils/DaoFactory.js");
+} = require("../../utils/ContractUtil.js");
 
 const {
   deployDefaultDao,

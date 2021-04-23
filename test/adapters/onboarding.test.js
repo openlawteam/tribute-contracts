@@ -32,7 +32,7 @@ const {
   ETH_TOKEN,
   remaining,
   numberOfShares,
-} = require("../../utils/DaoFactory.js");
+} = require("../../utils/ContractUtil.js");
 
 const {
   deployDefaultDao,

@@ -39,7 +39,7 @@ const {
   maximumChunks,
   ETH_TOKEN,
   SHARES,
-} = require("./DaoFactory");
+} = require("./ContractUtil");
 
 const { deployDao, entryDao, entryBank, entry } = require("./DeploymentUtil");
 

@@ -21,7 +21,7 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
  */
 
-const { toBN } = require("../../utils/DaoFactory.js");
+const { toBN } = require("../../utils/ContractUtil.js");
 
 const {
   createIdentityDao,

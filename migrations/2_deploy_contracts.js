@@ -5,7 +5,7 @@ const {
   maximumChunks,
   sharePrice,
   numberOfShares,
-} = require("../utils/DaoFactory.js");
+} = require("../utils/ContractUtil.js");
 
 const { deployDao, getNetworkDetails } = require("../utils/DeploymentUtil.js");
 

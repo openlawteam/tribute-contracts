@@ -37,7 +37,7 @@ const {
   ETH_TOKEN,
   LOOT,
   ESCROW,
-} = require("../../utils/DaoFactory.js");
+} = require("../../utils/ContractUtil.js");
 
 const {
   deployDefaultDao,

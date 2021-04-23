@@ -31,7 +31,7 @@ const {
   SHARES,
   GUILD,
   ETH_TOKEN,
-} = require("../../utils/DaoFactory.js");
+} = require("../../utils/ContractUtil.js");
 
 const {
   deployDefaultDao,

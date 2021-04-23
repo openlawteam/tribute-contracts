@@ -48,13 +48,6 @@ const sharePrice = toBN(toWei("120", "finney"));
 const remaining = sharePrice.sub(toBN("50000000000000"));
 const maximumChunks = toBN("11");
 
-function getContractFromTruffle(c) {
-  return artifacts.require(c);
-}
-
-function getContractFromOpenZepplin(c) {
-  return contract.fromArtifact(c.substring(c.lastIndexOf("/") + 1));
-}
 const contracts = {
   // Test Util Contracts
   OLToken: "./test/OLToken",

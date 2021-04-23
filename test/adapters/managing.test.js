@@ -30,7 +30,7 @@ const {
   TOTAL,
   GUILD,
   sha3,
-} = require("../../utils/DaoFactory.js");
+} = require("../../utils/ContractUtil.js");
 
 const {
   deployDefaultDao,

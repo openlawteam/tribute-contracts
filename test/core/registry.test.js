@@ -21,7 +21,7 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
  */
 
-const { fromUtf8, ETH_TOKEN } = require("../../utils/DaoFactory.js");
+const { fromUtf8, ETH_TOKEN } = require("../../utils/ContractUtil.js");
 
 const {
   expectRevert,

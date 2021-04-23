@@ -37,7 +37,7 @@ const {
   GUILD,
   ETH_TOKEN,
   sha3,
-} = require("../../utils/DaoFactory.js");
+} = require("../../utils/ContractUtil.js");
 
 const {
   deployDefaultDao,

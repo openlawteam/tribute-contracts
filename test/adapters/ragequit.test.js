@@ -32,7 +32,7 @@ const {
   GUILD,
   ETH_TOKEN,
   LOOT,
-} = require("../../utils/DaoFactory.js");
+} = require("../../utils/ContractUtil.js");
 
 const {
   deployDefaultDao,
