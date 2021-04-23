@@ -43,7 +43,6 @@ const {
 
 const {
   deployDao,
-  prepareAdapters,
   entryDao,
   entryBank,
   entry

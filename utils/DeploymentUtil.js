@@ -640,6 +640,33 @@ const configureBatchVoting = async ({
   return { batchVoting, snapshotProposalContract };
 };
 
+const networks = [
+  {
+    name: "ganache",
+    chainId: 1337,
+  },
+  {
+    name: "rinkeby",
+    chainId: 4,
+  },
+  {
+    name: "rinkeby-fork",
+    chainId: 4,
+  },
+  {
+    name: "test",
+    chainId: 1,
+  },
+  {
+    name: "coverage",
+    chainId: 1,
+  },
+];
+
+const getNetworkDetails = (name) => {
+  return networks.find((n) => n.name === name);
+};
+
 module.exports = {
   deployDao,
   deployDefaultDao,
@@ -652,5 +679,6 @@ module.exports = {
   addDefaultAdapters,
   entry,
   entryBank,
-  entryDao
+  entryDao,
+  getNetworkDetails
 };
