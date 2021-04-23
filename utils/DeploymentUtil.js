@@ -170,20 +170,18 @@ const configureOffchainVoting = async ({
   SnapshotProposalContract,
   KickBadReporterAdapter,
   OffchainVotingContract,
-  deployFunction
+  deployFunction,
 }) => {
-  
   let snapshotProposalContract = await deployFunction(
     SnapshotProposalContract,
     [chainId]
   );
   let handleBadReporterAdapter = await deployFunction(KickBadReporterAdapter);
-  let offchainVoting = await deployFunction(
-    OffchainVotingContract,
-    [votingAddress,
+  let offchainVoting = await deployFunction(OffchainVotingContract, [
+    votingAddress,
     snapshotProposalContract.address,
-    handleBadReporterAdapter.address]
-  );
+    handleBadReporterAdapter.address,
+  ]);
 
   await daoFactory.updateAdapter(
     dao.address,
@@ -213,18 +211,16 @@ const configureBatchVoting = async ({
   gracePeriod,
   SnapshotProposalContract,
   BatchVotingContract,
-  deployFunction
+  deployFunction,
 }) => {
   let snapshotProposalContract, batchVoting;
-  
-  snapshotProposalContract = await deployFunction(
-    SnapshotProposalContract,
-    [chainId]
-  );
-  batchVoting = await deployFunction(
-    BatchVotingContract,
-    [snapshotProposalContract.address]
-  );
+
+  snapshotProposalContract = await deployFunction(SnapshotProposalContract, [
+    chainId,
+  ]);
+  batchVoting = await deployFunction(BatchVotingContract, [
+    snapshotProposalContract.address,
+  ]);
 
   await daoFactory.updateAdapter(
     dao.address,
