@@ -74,6 +74,7 @@ contract TributeContract is ITribute, DaoConstants, MemberGuard, AdapterGuard {
         DaoRegistry,
         bytes32,
         address,
+        address,
         uint256,
         uint256
     ) external pure override {

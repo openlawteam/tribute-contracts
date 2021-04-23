@@ -42,6 +42,7 @@ interface ITribute {
     function provideTributeNFT(
         DaoRegistry dao,
         bytes32 proposalId,
+        address applicant,
         address nftAddr,
         uint256 nftTokenId,
         uint256 requestedShares
