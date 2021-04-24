@@ -18,7 +18,7 @@ When a DAO member sponsors the proposal, the voting period begins allowing membe
 
 After the voting period is done along with its subsequent grace period, the proposal can be processed. Any account can process the proposal. Upon processing, if the vote has passed, the requested internal tokens are minted to the applicant and the applicant is added as a DAO member (if not already one). The tribute token is registered with the DAO Bank (if not already registered), and the amount of tribute tokens are added to the Guild balance and transferred out of escrow from the adapter to the Bank Extension.
 
-Upon processing, if the vote has failed, the tribute tokens are refunded to the proposer.
+Upon processing, if the vote has failed (i.e., more NO votes then YES votes or a tie), the tribute tokens are refunded to the proposer.
 
 ## Adapter configuration
 
@@ -60,7 +60,6 @@ Bank Extension Access Flags: `ADD_TO_BALANCE`, `REGISTER_NEW_TOKEN`, `SUB_FROM_B
   - Gets Voting adapter address.
   - Submits/sponsors/processes the tribute proposal.
   - Checks if proposal flag is `SPONSORED`, `PROCESSED`.
-  - Checks if applicant is `JAILED`.
   - Creates a new member entry (if applicant is not already a member).
 
 - Voting

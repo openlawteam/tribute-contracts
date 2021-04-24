@@ -45,11 +45,11 @@ contract TributeNFTContract is
     struct ProposalDetails {
         // The proposal id.
         bytes32 id;
-        // The applicant address (who will receive the DAO Shares and become a member; this address may be different than the actual proposer).
+        // The applicant address (who will receive the DAO internal tokens and become a member; this address may be different than the actual proposer).
         address applicant;
         // The proposer address (who will provide the NFT tribute).
         address proposer;
-        // The address of the NFT to be locked in the DAO in exchange for voting power.
+        // The address of the ERC-721 token that will be transferred to the DAO in exchange for DAO internal tokens.
         address nftAddr;
         // The nft token identifier.
         uint256 nftTokenId;
@@ -97,7 +97,7 @@ contract TributeNFTContract is
      * @param dao The DAO address.
      * @param proposalId The proposal id (managed by the client).
      * @param applicant The applicant address (who will receive the DAO internal tokens and become a member).
-     * @param nftAddr The address of the ERC-721 token that will be transferred to the DAO in exchange for Shares.
+     * @param nftAddr The address of the ERC-721 token that will be transferred to the DAO in exchange for DAO internal tokens.
      * @param nftTokenId The NFT token id.
      * @param requestedShares The amount requested of DAO internal tokens (SHARES).
      */
