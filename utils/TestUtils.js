@@ -24,9 +24,8 @@ const checkBalance = async (bank, address, token, expectedBalance) => {
 
 const isMember = async (bank, member) => {
   const shares = await bank.balanceOf(member, SHARES);
-  const loot = await bank.balanceOf(member, LOOT);
 
-  return shares > toBN("0") || loot > toBN("0");
+  return shares > toBN("0");
 };
 
 const submitNewMemberProposal = async (
