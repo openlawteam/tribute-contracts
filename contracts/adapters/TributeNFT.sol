@@ -205,7 +205,6 @@ contract TributeNFTContract is
 
         if (voteResult == IVoting.VotingState.PASS) {
             NFTExtension nftExt = NFTExtension(dao.getExtensionAddress(NFT));
-            
 
             // Transfers the asset to the DAO Collection, and checks if the NFT is supported/valid. (The proposer must first separately `approve` the NFT extension as spender of the ERC-721 token.)
             try nftExt.collect(proposal.nftAddr, proposal.nftTokenId) {
