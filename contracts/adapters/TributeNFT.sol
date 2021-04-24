@@ -10,8 +10,6 @@ import "../adapters/interfaces/IVoting.sol";
 import "../guards/MemberGuard.sol";
 import "../guards/AdapterGuard.sol";
 import "@openzeppelin/contracts/utils/Address.sol";
-import "@openzeppelin/contracts/token/ERC721/IERC721.sol";
-import "@openzeppelin/contracts/token/ERC721/IERC721Receiver.sol";
 
 /**
 MIT License
@@ -41,8 +39,7 @@ contract TributeNFTContract is
     ITribute,
     DaoConstants,
     MemberGuard,
-    AdapterGuard,
-    IERC721Receiver
+    AdapterGuard
 {
     using Address for address payable;
     struct ProposalDetails {
@@ -208,6 +205,7 @@ contract TributeNFTContract is
 
         if (voteResult == IVoting.VotingState.PASS) {
             NFTExtension nftExt = NFTExtension(dao.getExtensionAddress(NFT));
+            
 
             // Transfers the asset to the DAO Collection, and checks if the NFT is supported/valid. (The proposer must first separately `approve` the NFT extension as spender of the ERC-721 token.)
             try nftExt.collect(proposal.nftAddr, proposal.nftTokenId) {
@@ -265,17 +263,5 @@ contract TributeNFTContract is
             NFTExtension nftExt = NFTExtension(dao.getExtensionAddress(NFT));
             nftExt.withdrawNFT(proposer, nftAddr, nftTokenId);
         }
-    }
-
-    /**
-     * @notice Required function from IERC721 standard to be able to receive assets to this contract address.
-     */
-    function onERC721Received(
-        address,
-        address,
-        uint256,
-        bytes calldata
-    ) external pure override returns (bytes4) {
-        return this.onERC721Received.selector;
     }
 }
