@@ -71,8 +71,8 @@ const contracts = {
   DaoRegistryAdapterContract: "./adapters/DaoRegistryAdapterContract",
   BankAdapterContract: "./adapters/BankAdapterContract",
   NFTAdapterContract: "./adapters/NFTAdapterContract",
-  ConfigurationContract: "./adapter/ConfigurationContract",
-  ManagingContract: "./adapter/ManagingContract",
+  ConfigurationContract: "./adapters/ConfigurationContract",
+  ManagingContract: "./adapters/ManagingContract",
 
   // Voting Adapters
   VotingContract: "./adapters/VotingContract",
@@ -87,7 +87,7 @@ const contracts = {
   DistributeContract: "./adapters/DistributeContract",
 
   // Funding/Onboarding Adapters
-  FinancingContract: "./adapter/FinancingContract",
+  FinancingContract: "./adapters/FinancingContract",
   OnboardingContract: "./adapters/OnboardingContract",
   CouponOnboardingContract: "./adapters/CouponOnboardingContract",
   TributeContract: "./adapters/TributeContract",
