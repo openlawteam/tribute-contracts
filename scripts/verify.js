@@ -2,36 +2,21 @@
 
 const util = require("util");
 const path = require("path");
+const { contracts } = require("../utils/ContractUtil");
 const exec = util.promisify(require("child_process").exec);
 const debugMode = process.env.DEBUG_CONTRACT_VERIFICATION || false;
 const verifyCMD = `./node_modules/.bin/truffle run verify ${
   debugMode ? "--debug --network" : "--network"
 }`;
 
-const contractsToVerify = [
-  "DaoRegistry",
-  "BankExtension",
-  "BankFactory",
-  "NFTExtension",
-  "NFTCollectionFactory",
-  "DaoFactory",
-  "VotingContract",
-  "ConfigurationContract",
-  "RagequitContract",
-  "ManagingContract",
-  "FinancingContract",
-  "OnboardingContract",
-  "GuildKickContract",
-  "DaoRegistryAdapterContract",
-  "BankAdapterContract",
-  "NFTAdapterContract",
-  "CouponOnboardingContract",
-  "TributeContract",
-  "DistributeContract",
-  "TributeNFTContract",
-  "SnapshotProposalContract",
-  "KickBadReporterAdapter",
-  "OffchainVotingContract",
+const skipContracts = [
+  // Test Contracts
+  "OLToken",
+  "TestToken1",
+  "TestToken2",
+  "TestFairShareCalc",
+  "PixelNFT",
+  // Already Verified
   "Multicall",
 ];
 
@@ -64,7 +49,8 @@ const main = async () => {
     `cat ${deployLog} | grep -e Deploying -e "contract address:"`
   );
 
-  return contractsToVerify
+  return Object.keys(contracts)
+    .filter((c) => !skipContracts.includes(c))
     .map(
       (contractName) =>
         new RegExp(
