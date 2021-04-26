@@ -481,7 +481,6 @@ const configureDao = async ({
     }),
     entryBank(tribute, {
       ADD_TO_BALANCE: true,
-      SUB_FROM_BALANCE: true,
       REGISTER_NEW_TOKEN: true,
     }),
     entryBank(distribute, {
@@ -495,7 +494,6 @@ const configureDao = async ({
   await daoFactory.configureExtension(dao.address, nftExtension.address, [
     entryNft(tributeNFT, {
       COLLECT_NFT: true,
-      WITHDRAW_NFT: true,
     }),
     entryNft(nftAdapter, {
       COLLECT_NFT: true,

@@ -1,22 +1,20 @@
 ## Adapter description and scope
 
-The Tribute NFT adapter allows potential and existing DAO members to contribute any ERC-721 tokens to the DAO in exchange for any amount of DAO internal tokens (in this case it mints SHARES always). If the proposal passes, the requested internal tokens are minted to the applicant, and the ERC-721 asset provided as tribute is transferred to the NFT extension. In addition, the applicant becomes a member of the DAO (if not already one).
+The Tribute NFT adapter allows potential and existing DAO members to contribute any ERC-721 tokens to the DAO in exchange for any amount of DAO internal tokens (in this case it mints SHARES always). If the proposal passes, the requested internal tokens are minted to the applicant (which effectively makes the applicant a member of the DAO if not already one) and the ERC-721 asset provided as tribute is transferred to the NFT extension.
 
 The Tribute NFT adapter is similar to the Onboarding adapter in that both allow for joining the DAO (or increasing a stake in the DAO) through the exchange of contributed assets for DAO internal tokens. However, there are key differences:
 
-- The Tribute NFT adapter accepts only ERC-721 tokens.
+- The Onboarding adapter allows both Ether and ERC-20 tokens to be contributed. The Tribute NFT adapter accepts only ERC-721 tokens.
 
-- The Tribute NFT adapter has more open-ended proposal parameters. The proposer can request any amount of internal tokens to be minted in exchange for an ERC-721 token contributed. The worthiness of that transfer proposal for the DAO is left to the vote of its members.
+- The Onboarding adapter mints a fixed amount of internal tokens to the applicant based on the amount of assets contributed. In other words, an onboarding proposal does not specify the amount of internal tokens requested. That is calculated from the DAO's configurations and the amount of assets contributed. The Tribute NFT adapter has more open-ended proposal parameters. The proposer can request any amount of internal tokens to be minted in exchange for an ERC-721 token contributed. The worthiness of that transfer proposal for the DAO is left to the vote of its members.
 
 ## Adapter workflow
 
-A tribute is made by first submitting a proposal specifying (1) the applicant who wishes to join the DAO (or increase his stake in the DAO), (2) the amount of internal tokens (SHARES) the applicant desires, and (3) the ERC-721 NFT address and token id the proposer will transfer to the DAO in exchange for those internal tokens. The applicant and proposer can be separate accounts (e.g., proposer is applying and providing tribute on behalf of the applicant). The proposal submission does not actually transfer the ERC-721 token from its owner. That occurs only after the proposal passes and is processed.
+A tribute is made by a member first submitting a proposal specifying (1) the applicant who wishes to join the DAO (or increase his stake in the DAO), (2) the amount of internal tokens (SHARES) the applicant desires, and (3) the ERC-721 address and token id of the NFT that will transfer to the DAO in exchange for those internal tokens. The applicant and actual owner of the NFT can be separate accounts (e.g., the NFT owner is providing tribute on behalf of the applicant). The proposal submission does not actually transfer the ERC-721 token from its owner. That occurs only after the proposal passes and is processed.
 
-If the proposal has not been sponsored yet, the applicant can cancel the proposal. Upon cancellation, the proposal is marked as processed and no further action is required. Only the applicant can cancel the proposal.
+The proposal is also sponsored in the same transaction when it is submitted. When a DAO member sponsors the proposal, the voting period begins allowing members to vote for or against the proposal. Only a member can sponsor the proposal.
 
-When a DAO member sponsors the proposal, the voting period begins allowing members to vote for or against the proposal. Only a member can sponsor the proposal.
-
-After the voting period is done along with its subsequent grace period, the proposal can be processed. Any account can process the proposal. Prior to processing a passed proposal, the ERC-721 token owner must first separately `approve` the NFT extension as spender of the token provided as tribute. Upon processing, if the vote has passed, the requested internal tokens are minted to the applicant and the applicant is added as a DAO member (if not already one). The tribute token is transferred from the token owner to the NFT extension.
+After the voting period is done along with its subsequent grace period, the proposal can be processed. Any account can process the proposal. However, prior to processing a passed proposal, the ERC-721 token owner must first separately `approve` the NFT extension as spender of the token provided as tribute. Upon processing, if the vote has passed, the requested internal tokens are minted to the applicant (which effectively makes the applicant a member of the DAO if not already one). The tribute token is transferred from the token owner to the NFT extension.
 
 Upon processing, if the vote has failed (i.e., more NO votes then YES votes or a tie), no further action is taken (the ERC-721 token owner still retains ownership of the token).
 
@@ -28,7 +26,7 @@ The DAO internal tokens (in this case SHARES) to be minted to the applicant must
 
 DAORegistry Access Flags: `SUBMIT_PROPOSAL`, `NEW_MEMBER`.
 
-NFT Extension Access Flags: `COLLECT_NFT`. `WITHDRAW_NFT`.
+NFT Extension Access Flags: `COLLECT_NFT`.
 
 Bank Extension Access Flags: `ADD_TO_BALANCE`.
 
@@ -37,11 +35,10 @@ Bank Extension Access Flags: `ADD_TO_BALANCE`.
 - `proposals`: All tribute NFT proposals handled by each DAO.
 - `ProposalDetails`:
   - `id`: The proposal id.
-  - `applicant`: The applicant address (who will receive the DAO internal tokens and become a member; this address may be different than the actual proposer).
-  - `proposer`: The proposer address (who will provide the NFT tribute).
+  - `applicant`: The applicant address (who will receive the DAO internal tokens and become a member; this address may be different than the actual owner of the ERC-721 token being provided as tribute).
   - `nftAddr`: The address of the ERC-721 token that will be transferred to the DAO in exchange for DAO internal tokens.
   - `nftTokenId`: The NFT token identifier.
-  - `requestedShares`: The amount requested of DAO internal tokens (SHARES).
+  - `requestAmount`: The amount requested of DAO internal tokens (SHARES).
 
 ## Dependencies and interactions (internal / external)
 
@@ -53,7 +50,6 @@ Bank Extension Access Flags: `ADD_TO_BALANCE`.
 - NFTExtension
 
   - Transfers the NFT asset from the owner to the NFT extension collection.
-  - Transfers the NFT asset from the NFT extension back to the original owner (if there was an overflow failure in minting internal tokens to the applicant).
 
 - DaoRegistry
 
@@ -96,75 +92,30 @@ Bank Extension Access Flags: `ADD_TO_BALANCE`.
         onlyAdapter(dao)
 ```
 
-### function provideTribute
-
-Not implemented because the adapter does not handle ERC20 tokens.
-
-```solidity
-function provideTribute(
-  DaoRegistry,
-  bytes32,
-  address,
-  address,
-  uint256,
-  address,
-  uint256
-) external pure override
-```
-
-### function provideTributeNFT
+### function submitProposal
 
 ```solidity
    /**
-     * @notice Creates a tribute proposal.
+     * @notice Creates and sponsors a tribute proposal to start the voting process.
      * @dev Applicant address must not be reserved.
+     * @dev Only members of the DAO can sponsor a tribute proposal.
      * @param dao The DAO address.
      * @param proposalId The proposal id (managed by the client).
      * @param applicant The applicant address (who will receive the DAO internal tokens and become a member).
      * @param nftAddr The address of the ERC-721 token that will be transferred to the DAO in exchange for DAO internal tokens.
      * @param nftTokenId The NFT token id.
-     * @param requestedShares The amount requested of DAO internal tokens (SHARES).
+     * @param requestAmount The amount requested of DAO internal tokens (SHARES).
+     * @param data Additional information related to the tribute proposal.
      */
-    function provideTributeNFT(
+    function submitProposal(
         DaoRegistry dao,
         bytes32 proposalId,
         address applicant,
         address nftAddr,
         uint256 nftTokenId,
-        uint256 requestedShares
-    ) external override
-```
-
-### function sponsorProposal
-
-```solidity
-    /**
-     * @notice Sponsors a tribute proposal to start the voting process.
-     * @dev Only members of the DAO can sponsor a tribute proposal.
-     * @param dao The DAO address.
-     * @param proposalId The proposal id.
-     * @param data Additional details about the proposal.
-     */
-    function sponsorProposal(
-        DaoRegistry dao,
-        bytes32 proposalId,
+        uint256 requestAmount
         bytes memory data
-    ) external override
-```
-
-### function cancelProposal
-
-```solidity
-    /**
-     * @notice Cancels a tribute proposal which marks it as processed.
-     * @dev Proposal id must exist.
-     * @dev Only proposals that have not already been sponsored can be cancelled.
-     * @dev Only proposer can cancel a tribute proposal.
-     * @param dao The DAO address.
-     * @param proposalId The proposal id.
-     */
-    function cancelProposal(DaoRegistry dao, bytes32 proposalId)
-        external override
+    ) external reentrancyGuard(dao)
 ```
 
 ### function processProposal
@@ -175,33 +126,12 @@ function provideTribute(
      * @dev Proposal id must exist.
      * @dev Only proposals that have not already been processed are accepted.
      * @dev Only sponsored proposals with completed voting are accepted.
-     * @dev The proposer must first separately `approve` the NFT extension as spender of the ERC-721 token provided as tribute (so the NFT can be transferred for a passed vote).
+     * @dev The owner of the ERC-721 token provided as tribute must first separately `approve` the NFT extension as spender of that token (so the NFT can be transferred for a passed vote).
      * @param dao The DAO address.
      * @param proposalId The proposal id.
      */
     function processProposal(DaoRegistry dao, bytes32 proposalId)
-        external override
-```
-
-### function \_mintSharesToNewMember
-
-```solidity
-    /**
-     * @notice Adds DAO internal tokens (SHARES) to applicant's balance and creates a new member entry (if applicant is not already a member).
-     * @dev Internal tokens to be minted to the applicant must be registered with the DAO Bank.
-     * @param dao The DAO address.
-     * @param applicant The applicant address (who will receive the DAO internal tokens and become a member).
-     * @param nftAddr The address of the ERC-721 tribute token.
-     * @param nftTokenId The NFT token id.
-     * @param requestedShares The amount requested of DAO internal tokens (SHARES).
-     */
-    function _mintSharesToNewMember(
-        DaoRegistry dao,
-        address applicant,
-        address nftAddr,
-        uint256 nftTokenId,
-        uint256 requestedShares
-    ) internal
+        external reentrancyGuard(dao)
 ```
 
 ## Events

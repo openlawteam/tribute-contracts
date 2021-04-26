@@ -97,6 +97,14 @@ type Proposal @entity {
   requestAmount: BigInt
   "The amount of tribute tokens."
   tributeAmount: BigInt
+  "The owner of the ERC-20 tokens being provided as tribute."
+  tributeTokenOwner: Bytes
+
+  # TRIBUTE NFT; propoal details
+  "The address of the ERC-721 token that will be transferred to the DAO in exchange for DAO internal tokens."
+  nftAddr: Bytes
+  "The nft token identifier."
+  nftTokenId: BigInt
 
   # GUILDKICK; proposal details
   "The address of the member to kick out of the DAO."

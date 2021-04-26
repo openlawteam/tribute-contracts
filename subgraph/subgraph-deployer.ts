@@ -90,6 +90,8 @@ const getYAML = ({
             file: ../build/contracts/DistributeContract.json
           - name: TributeContract
             file: ../build/contracts/TributeContract.json
+          - name: TributeNFTContract
+            file: ../build/contracts/TributeNFTContract.json
           - name: ManagingContract
             file: ../build/contracts/ManagingContract.json
           - name: GuildKickContract
