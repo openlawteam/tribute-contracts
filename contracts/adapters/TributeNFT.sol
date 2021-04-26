@@ -72,8 +72,9 @@ contract TributeNFTContract is DaoConstants, MemberGuard, AdapterGuard {
     }
 
     /**
-     * @notice Creates a tribute proposal.
+     * @notice Creates and sponsors a tribute proposal to start the voting process.
      * @dev Applicant address must not be reserved.
+     * @dev Only members of the DAO can sponsor a tribute proposal.
      * @param dao The DAO address.
      * @param proposalId The proposal id (managed by the client).
      * @param applicant The applicant address (who will receive the DAO internal tokens and become a member).
@@ -81,7 +82,7 @@ contract TributeNFTContract is DaoConstants, MemberGuard, AdapterGuard {
      * @param nftTokenId The NFT token id.
      * @param requestedShares The amount requested of DAO internal tokens (SHARES).
      */
-    function provideTributeNFT(
+    function submitProposal(
         DaoRegistry dao,
         bytes32 proposalId,
         address applicant,
