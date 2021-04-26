@@ -37,7 +37,7 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
  */
 
-contract TributeContract is ITribute, DaoConstants, MemberGuard, AdapterGuard {
+contract TributeContract is DaoConstants, MemberGuard, AdapterGuard {
     using Address for address;
     using SafeERC20 for IERC20;
 
@@ -48,8 +48,6 @@ contract TributeContract is ITribute, DaoConstants, MemberGuard, AdapterGuard {
         bytes32 id;
         // The applicant address (who will receive the DAO internal tokens and become a member).
         address applicant;
-        // The proposer address (who will provide the token tribute).
-        address proposer;
         // The address of the DAO internal token to be minted to the applicant.
         address tokenToMint;
         // The amount requested of DAO internal tokens.
@@ -68,17 +66,6 @@ contract TributeContract is ITribute, DaoConstants, MemberGuard, AdapterGuard {
      */
     receive() external payable {
         revert("fallback revert");
-    }
-
-    function provideTributeNFT(
-        DaoRegistry,
-        bytes32,
-        address,
-        address,
-        uint256,
-        uint256
-    ) external pure override {
-        revert("not supported operation");
     }
 
     /**
@@ -116,8 +103,9 @@ contract TributeContract is ITribute, DaoConstants, MemberGuard, AdapterGuard {
         address tokenToMint,
         uint256 requestAmount,
         address tokenAddr,
-        uint256 tributeAmount
-    ) public override reentrancyGuard(dao) {
+        uint256 tributeAmount,
+        bytes memory data
+    ) public reentrancyGuard(dao) {
         require(
             isNotReservedAddress(applicant),
             "applicant is reserved address"
@@ -125,33 +113,8 @@ contract TributeContract is ITribute, DaoConstants, MemberGuard, AdapterGuard {
 
         dao.potentialNewMember(applicant);
 
-        IERC20 erc20 = IERC20(tokenAddr);
-        erc20.safeTransferFrom(msg.sender, address(this), tributeAmount);
+        dao.submitProposal(proposalId);
 
-        _submitTributeProposal(
-            dao,
-            proposalId,
-            applicant,
-            msg.sender,
-            tokenToMint,
-            requestAmount,
-            tokenAddr,
-            tributeAmount
-        );
-    }
-
-    /**
-     * @notice Sponsors a tribute proposal to start the voting process.
-     * @dev Only members of the DAO can sponsor a tribute proposal.
-     * @param dao The DAO address.
-     * @param proposalId The proposal id.
-     * @param data Additional details about the proposal.
-     */
-    function sponsorProposal(
-        DaoRegistry dao,
-        bytes32 proposalId,
-        bytes memory data
-    ) external override reentrancyGuard(dao) {
         IVoting votingContract = IVoting(dao.getAdapterAddress(VOTING));
         address sponsoredBy =
             votingContract.getSenderAddress(
@@ -160,63 +123,17 @@ contract TributeContract is ITribute, DaoConstants, MemberGuard, AdapterGuard {
                 data,
                 msg.sender
             );
-        _sponsorProposal(dao, proposalId, data, sponsoredBy, votingContract);
-    }
 
-    /**
-     * @notice Sponsors a tribute proposal to start the voting process.
-     * @dev Only members of the DAO can sponsor a tribute proposal.
-     * @param dao The DAO address.
-     * @param proposalId The proposal id.
-     * @param data Additional details about the proposal.
-     * @param sponsoredBy The address of the sponsoring member.
-     * @param votingContract The voting contract used by the DAO.
-     */
-    function _sponsorProposal(
-        DaoRegistry dao,
-        bytes32 proposalId,
-        bytes memory data,
-        address sponsoredBy,
-        IVoting votingContract
-    ) internal {
         dao.sponsorProposal(proposalId, sponsoredBy, address(votingContract));
         votingContract.startNewVotingForProposal(dao, proposalId, data);
-    }
 
-    /**
-     * @notice Cancels a tribute proposal which marks it as processed and initiates refund of the tribute tokens to the proposer.
-     * @dev Proposal id must exist.
-     * @dev Only proposals that have not already been sponsored can be cancelled.
-     * @dev Only proposer can cancel a tribute proposal.
-     * @param dao The DAO address.
-     * @param proposalId The proposal id.
-     */
-    function cancelProposal(DaoRegistry dao, bytes32 proposalId)
-        external
-        override
-        reentrancyGuard(dao)
-    {
-        ProposalDetails storage proposal = proposals[address(dao)][proposalId];
-        require(proposal.id == proposalId, "proposal does not exist");
-        require(
-            !dao.getProposalFlag(
-                proposalId,
-                DaoRegistry.ProposalFlag.SPONSORED
-            ),
-            "proposal already sponsored"
-        );
-        require(
-            proposal.proposer == msg.sender,
-            "only proposer can cancel a proposal"
-        );
-
-        dao.processProposal(proposalId);
-
-        _refundTribute(
-            proposal.token,
-            proposal.proposer,
-            proposal.tributeAmount,
-            "canceled"
+        proposals[address(dao)][proposalId] = ProposalDetails(
+            proposalId,
+            applicant,
+            tokenToMint,
+            requestAmount,
+            tokenAddr,
+            tributeAmount
         );
     }
 
@@ -231,10 +148,9 @@ contract TributeContract is ITribute, DaoConstants, MemberGuard, AdapterGuard {
      */
     function processProposal(DaoRegistry dao, bytes32 proposalId)
         external
-        override
         reentrancyGuard(dao)
     {
-        ProposalDetails storage proposal = proposals[address(dao)][proposalId];
+        ProposalDetails memory proposal = proposals[address(dao)][proposalId];
         require(proposal.id == proposalId, "proposal does not exist");
         require(
             !dao.getProposalFlag(
@@ -252,140 +168,32 @@ contract TributeContract is ITribute, DaoConstants, MemberGuard, AdapterGuard {
 
         dao.processProposal(proposalId);
 
-        address token = proposal.token;
-        address proposer = proposal.proposer;
         uint256 tributeAmount = proposal.tributeAmount;
         if (voteResult == IVoting.VotingState.PASS) {
             BankExtension bank = BankExtension(dao.getExtensionAddress(BANK));
             address tokenToMint = proposal.tokenToMint;
             address applicant = proposal.applicant;
-            bool success =
-                _mintTokensToMember(
-                    dao,
-                    applicant,
-                    proposer,
-                    tokenToMint,
-                    proposal.requestAmount,
-                    token,
-                    tributeAmount
-                );
-            if (success) {
-                if (!bank.isTokenAllowed(token)) {
-                    bank.registerPotentialNewToken(token);
-                }
-                // On overflow failure, totalShares is 0, then return tokens to the proposer.
-                try bank.addToBalance(GUILD, token, tributeAmount) {
-                    IERC20 erc20 = IERC20(token);
-                    erc20.safeTransfer(address(bank), tributeAmount);
-                } catch {
-                    _refundTribute(
-                        token,
-                        proposer,
-                        tributeAmount,
-                        "overflow:erc20"
-                    );
-                    // Remove the minted tokens
-                    bank.subtractFromBalance(
-                        applicant,
-                        token,
-                        proposal.requestAmount
-                    );
-                }
+            require(
+                bank.isInternalToken(tokenToMint),
+                "it can only mint internal tokens"
+            );
+
+            bank.addToBalance(applicant, tokenToMint, proposal.requestAmount);
+
+            if (!bank.isTokenAllowed(proposal.token)) {
+                bank.registerPotentialNewToken(proposal.token);
             }
+
+            IERC20 erc20 = IERC20(proposal.token);
+            erc20.safeTransferFrom(msg.sender, address(bank), tributeAmount);
+            bank.addToBalance(GUILD, proposal.token, tributeAmount);
         } else if (
             voteResult == IVoting.VotingState.NOT_PASS ||
             voteResult == IVoting.VotingState.TIE
         ) {
-            _refundTribute(token, proposer, tributeAmount, "voting:fail");
+            //do nothing
         } else {
             revert("proposal has not been voted on yet");
-        }
-    }
-
-    /**
-     * @notice Submits a tribute proposal to the DAO.
-     * @dev Proposal ids must be valid and cannot be reused.
-     * @param dao The DAO address.
-     * @param proposalId The proposal id.
-     * @param applicant The applicant address (who will receive the DAO internal tokens and become a member).
-     * @param proposer The proposer address (who will provide the token tribute).
-     * @param tokenToMint The address of the DAO internal token to be minted to the applicant.
-     * @param requestAmount The amount requested of DAO internal tokens.
-     * @param tokenAddr The address of the ERC-20 tokens provided as tribute by the proposer.
-     * @param tributeAmount The amount of tribute tokens.
-     */
-    function _submitTributeProposal(
-        DaoRegistry dao,
-        bytes32 proposalId,
-        address applicant,
-        address proposer,
-        address tokenToMint,
-        uint256 requestAmount,
-        address tokenAddr,
-        uint256 tributeAmount
-    ) internal {
-        dao.submitProposal(proposalId);
-        proposals[address(dao)][proposalId] = ProposalDetails(
-            proposalId,
-            applicant,
-            proposer,
-            tokenToMint,
-            requestAmount,
-            tokenAddr,
-            tributeAmount
-        );
-    }
-
-    /**
-     * @notice Refunds tribute tokens to the proposer.
-     * @param tokenAddr The address of the ERC-20 tokens provided as tribute by the proposer.
-     * @param proposer The proposer address (who will receive back the tribute tokens).
-     * @param amount The amount of tribute tokens to be refunded.
-     */
-    function _refundTribute(
-        address tokenAddr,
-        address proposer,
-        uint256 amount,
-        bytes32 cause
-    ) internal {
-        IERC20 erc20 = IERC20(tokenAddr);
-        erc20.safeTransfer(proposer, amount);
-        emit FailedOnboarding(proposer, cause);
-    }
-
-    /**
-     * @notice Adds DAO internal tokens to applicant's balance and creates a new member entry (if applicant is not already a member).
-     * @dev Internal tokens to be minted to the applicant must be registered with the DAO Bank.
-     * @param dao The DAO address.
-     * @param applicant The applicant address (who will receive the DAO internal tokens and become a member).
-     * @param proposer The proposer address (who will be refunded the tribute tokens if the minting of internal tokens fails).
-     * @param tokenToMint The address of the DAO internal token to be minted to the applicant.
-     * @param requestAmount The amount requested of DAO internal tokens.
-     * @param token The address of the ERC-20 tokens provided as tribute by the proposer.
-     * @param tributeAmount The amount of tribute tokens to be refunded if the minting of internal tokens fails.
-     */
-    function _mintTokensToMember(
-        DaoRegistry dao,
-        address applicant,
-        address proposer,
-        address tokenToMint,
-        uint256 requestAmount,
-        address token,
-        uint256 tributeAmount
-    ) internal returns (bool) {
-        BankExtension bank = BankExtension(dao.getExtensionAddress(BANK));
-        require(
-            bank.isInternalToken(tokenToMint),
-            "it can only mint internal tokens"
-        );
-
-        // Overflow risk may cause this to fail in which case the tribute tokens
-        // are refunded to the proposer.
-        try bank.addToBalance(applicant, tokenToMint, requestAmount) {
-            return true;
-        } catch {
-            _refundTribute(token, proposer, tributeAmount, "overflow:mint");
-            return false;
         }
     }
 }

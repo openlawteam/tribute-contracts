@@ -78,7 +78,7 @@ describe("Adapter - Tribute", () => {
     let oltContract = await OLToken.new(tokenSupply);
 
     // Transfer OLTs to daoOwner
-    const initialTokenBalance = toBN("100");
+    const initialTokenBalance = toBN("10000");
     await oltContract.transfer(daoOwner, initialTokenBalance);
     let daoOwnerTokenBalance = await oltContract.balanceOf.call(daoOwner);
     expect(daoOwnerTokenBalance.toString()).equal(
@@ -87,22 +87,34 @@ describe("Adapter - Tribute", () => {
 
     // Number of OLTs to be sent to the DAO in exchange for number of requested shares
     const tributeAmount = 10;
-    const requestAmount = 100000000;
+    const requestAmount = 1000;
+    await tribute.provideTribute(
+      dao.address,
+      getProposalCounter(),
+      applicant,
+      SHARES,
+      requestAmount,
+      oltContract.address,
+      tributeAmount,
+      [],
+      {
+        from: daoOwner,
+        gasPrice: toBN("0"),
+      }
+    );
+
+    await voting.submitVote(dao.address, "0x1", 1, {
+      from: daoOwner,
+      gasPrice: toBN("0"),
+    });
+
+    await advanceTime(10000);
 
     await expectRevert(
-      tribute.provideTribute(
-        dao.address,
-        getProposalCounter(),
-        applicant,
-        SHARES,
-        requestAmount,
-        oltContract.address,
-        tributeAmount,
-        {
-          from: daoOwner,
-          gasPrice: toBN("0"),
-        }
-      ),
+      tribute.processProposal(dao.address, "0x1", {
+        from: daoOwner,
+        gasPrice: toBN("0"),
+      }),
       "ERC20: transfer amount exceeds allowance"
     );
 
@@ -111,40 +123,6 @@ describe("Adapter - Tribute", () => {
       from: daoOwner,
     });
 
-    await tribute.provideTribute(
-      dao.address,
-      "0x1",
-      applicant,
-      SHARES,
-      requestAmount,
-      oltContract.address,
-      tributeAmount,
-      {
-        from: daoOwner,
-        gasPrice: toBN("0"),
-      }
-    );
-
-    await tribute.sponsorProposal(dao.address, "0x1", [], {
-      from: daoOwner,
-      gasPrice: toBN("0"),
-    });
-
-    await voting.submitVote(dao.address, "0x1", 1, {
-      from: daoOwner,
-      gasPrice: toBN("0"),
-    });
-
-    // should not be able to process before the voting period has ended
-    await expectRevert(
-      tribute.processProposal(dao.address, "0x1", {
-        from: daoOwner,
-        gasPrice: toBN("0"),
-      }),
-      "proposal has not been voted on yet"
-    );
-
-    await advanceTime(10000);
     await tribute.processProposal(dao.address, "0x1", {
       from: daoOwner,
       gasPrice: toBN("0"),
@@ -175,97 +153,6 @@ describe("Adapter - Tribute", () => {
       nonMemberAccount
     );
     expect(nonMemberAccountIsActiveMember).equal(false);
-  });
-
-  it("should be possible to cancel a tribute proposal", async () => {
-    const applicant = accounts[2];
-
-    const dao = this.dao;
-    const bank = this.extensions.bank;
-    const tribute = this.adapters.tribute;
-
-    // Issue OpenLaw ERC20 Basic Token for tests
-    const tokenSupply = 1000000;
-    let oltContract = await OLToken.new(tokenSupply);
-
-    // Transfer OLTs to daoOwner
-    const initialTokenBalance = toBN("100");
-    await oltContract.transfer(daoOwner, initialTokenBalance);
-    let daoOwnerTokenBalance = await oltContract.balanceOf.call(daoOwner);
-    expect(daoOwnerTokenBalance.toString()).equal(
-      initialTokenBalance.toString()
-    );
-
-    // Number of OLTs to be sent to the DAO in exchange for number of requested shares
-    const tributeAmount = 10;
-    const requestAmount = 100000000;
-
-    // Pre-approve spender (tribute adapter) to transfer proposer tokens
-    await oltContract.approve(tribute.address, tributeAmount, {
-      from: daoOwner,
-    });
-
-    await tribute.provideTribute(
-      dao.address,
-      "0x1",
-      applicant,
-      SHARES,
-      requestAmount,
-      oltContract.address,
-      tributeAmount,
-      {
-        from: daoOwner,
-        gasPrice: toBN("0"),
-      }
-    );
-
-    await expectRevert(
-      tribute.cancelProposal(dao.address, "0x1", {
-        from: applicant,
-        gasPrice: toBN("0"),
-      }),
-      "only proposer can cancel a proposal"
-    );
-
-    await tribute.cancelProposal(dao.address, "0x1", {
-      from: daoOwner,
-      gasPrice: toBN("0"),
-    });
-    const isProcessed = await dao.getProposalFlag("0x1", toBN("2")); // 2 is processed flag index
-    expect(isProcessed).equal(true);
-
-    // test refund of ERC20 contribution
-    daoOwnerTokenBalance = await oltContract.balanceOf.call(daoOwner);
-    // "daoOwner did not receive refund of ERC20 contribution"
-    expect(daoOwnerTokenBalance.toString()).equal(
-      initialTokenBalance.toString()
-    );
-
-    // should not be able to sponsor if the proposal has already been cancelled
-    await expectRevert(
-      tribute.sponsorProposal(dao.address, "0x1", [], {
-        from: daoOwner,
-        gasPrice: toBN("0"),
-      }),
-      "proposal already processed"
-    );
-
-    // should not be able to process if the proposal has already been cancelled
-    await expectRevert(
-      tribute.processProposal(dao.address, "0x1", {
-        from: daoOwner,
-        gasPrice: toBN("0"),
-      }),
-      "proposal already processed"
-    );
-
-    // test balances after proposal is processed
-    const daoOwnerShares = await bank.balanceOf(daoOwner, SHARES);
-    expect(daoOwnerShares.toString()).equal("1");
-    const applicantShares = await bank.balanceOf(applicant, SHARES);
-    expect(applicantShares.toString()).equal("0");
-    const guildBalance = await bank.balanceOf(GUILD, oltContract.address);
-    expect(guildBalance.toString()).equal("0");
   });
 
   it("should handle a tribute proposal with a failed vote", async () => {
@@ -307,16 +194,12 @@ describe("Adapter - Tribute", () => {
       requestAmount,
       oltContract.address,
       tributeAmount,
+      [],
       {
         from: daoOwner,
         gasPrice: toBN("0"),
       }
     );
-
-    await tribute.sponsorProposal(dao.address, proposalId, [], {
-      from: daoOwner,
-      gasPrice: toBN("0"),
-    });
 
     await voting.submitVote(dao.address, proposalId, 2, {
       from: daoOwner,
@@ -362,19 +245,6 @@ describe("Adapter - Tribute", () => {
     // test active member status
     const applicantIsActiveMember = await isMember(bank, applicant);
     expect(applicantIsActiveMember).equal(false);
-  });
-
-  it("should not be possible to sponsor proposal that does not exist", async () => {
-    const dao = this.dao;
-    const tribute = this.adapters.tribute;
-
-    await expectRevert(
-      tribute.sponsorProposal(dao.address, "0x1", [], {
-        from: daoOwner,
-        gasPrice: toBN("0"),
-      }),
-      "proposal does not exist for this dao"
-    );
   });
 
   it("should not be possible to process proposal that does not exist", async () => {
@@ -446,16 +316,12 @@ describe("Adapter - Tribute", () => {
       requestAmount,
       oltContract.address,
       tributeAmount.toString(),
+      [],
       {
-        from: applicant,
+        from: daoOwner,
         gasPrice: toBN("0"),
       }
     );
-
-    await tribute.sponsorProposal(dao.address, proposalId, [], {
-      from: daoOwner,
-      gasPrice: toBN("0"),
-    });
 
     await voting.submitVote(dao.address, proposalId, 1, {
       from: daoOwner,
@@ -467,16 +333,12 @@ describe("Adapter - Tribute", () => {
 
     // Proposal is processed, but due to the overflow error the funds must be returned
     // to the applicant
-    await tribute.processProposal(dao.address, proposalId, {
-      from: daoOwner,
-      gasPrice: toBN("0"),
-    });
-
-    // Due to the overflow it fails, and the funds must be in the applicant's account
-    applicantTokenBalance = await oltContract.balanceOf.call(applicant);
-    // "applicant account should contain 2**161 OLT Tokens when the onboard fails";
-    expect(applicantTokenBalance.toString()).equal(
-      initialTokenBalance.toString()
+    await expectRevert(
+      tribute.processProposal(dao.address, proposalId, {
+        from: daoOwner,
+        gasPrice: toBN("0"),
+      }),
+      "token amount exceeds the maximum limit for internal tokens"
     );
   });
 });
