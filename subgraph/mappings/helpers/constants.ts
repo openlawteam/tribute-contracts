@@ -23,7 +23,7 @@ export let DISTRIBUTE_ID: string =
 export let TRIBUTE_ID: string =
   "0x9f3f3b08778f7e67091ae6263e03332fca03c910449d2c2eec3320e107a90ad6";
 
-export let TRIBUTE_NFT: string =
+export let TRIBUTE_NFT_ID: string =
   "0x5cdd394d9967cda884ceb725728ffb6d8963934b8aef7dfb14a58f3e9eea6a3a";
 
 export let MANAGING_ID: string =

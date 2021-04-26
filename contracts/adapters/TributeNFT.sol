@@ -49,7 +49,7 @@ contract TributeNFTContract is DaoConstants, MemberGuard, AdapterGuard {
         // The nft token identifier.
         uint256 nftTokenId;
         // The amount requested of DAO internal tokens (SHARES).
-        uint256 requestedShares;
+        uint256 requestAmount;
     }
 
     // Keeps track of all nft tribute proposals handled by each DAO.
@@ -83,7 +83,7 @@ contract TributeNFTContract is DaoConstants, MemberGuard, AdapterGuard {
      * @param applicant The applicant address (who will receive the DAO internal tokens and become a member).
      * @param nftAddr The address of the ERC-721 token that will be transferred to the DAO in exchange for DAO internal tokens.
      * @param nftTokenId The NFT token id.
-     * @param requestedShares The amount requested of DAO internal tokens (SHARES).
+     * @param requestAmount The amount requested of DAO internal tokens (SHARES).
      * @param data Additional information related to the tribute proposal.
      */
     function submitProposal(
@@ -92,7 +92,7 @@ contract TributeNFTContract is DaoConstants, MemberGuard, AdapterGuard {
         address applicant,
         address nftAddr,
         uint256 nftTokenId,
-        uint256 requestedShares,
+        uint256 requestAmount,
         bytes memory data
     ) external reentrancyGuard(dao) {
         require(
@@ -119,7 +119,7 @@ contract TributeNFTContract is DaoConstants, MemberGuard, AdapterGuard {
             applicant,
             nftAddr,
             nftTokenId,
-            requestedShares
+            requestAmount
         );
     }
 
@@ -166,7 +166,7 @@ contract TributeNFTContract is DaoConstants, MemberGuard, AdapterGuard {
             bank.addToBalance(
                 proposal.applicant,
                 SHARES,
-                proposal.requestedShares
+                proposal.requestAmount
             );
         } else if (
             voteResult == IVoting.VotingState.NOT_PASS ||

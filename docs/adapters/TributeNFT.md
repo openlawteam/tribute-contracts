@@ -38,7 +38,7 @@ Bank Extension Access Flags: `ADD_TO_BALANCE`.
   - `applicant`: The applicant address (who will receive the DAO internal tokens and become a member; this address may be different than the actual owner of the ERC-721 token being provided as tribute).
   - `nftAddr`: The address of the ERC-721 token that will be transferred to the DAO in exchange for DAO internal tokens.
   - `nftTokenId`: The NFT token identifier.
-  - `requestedShares`: The amount requested of DAO internal tokens (SHARES).
+  - `requestAmount`: The amount requested of DAO internal tokens (SHARES).
 
 ## Dependencies and interactions (internal / external)
 
@@ -104,7 +104,7 @@ Bank Extension Access Flags: `ADD_TO_BALANCE`.
      * @param applicant The applicant address (who will receive the DAO internal tokens and become a member).
      * @param nftAddr The address of the ERC-721 token that will be transferred to the DAO in exchange for DAO internal tokens.
      * @param nftTokenId The NFT token id.
-     * @param requestedShares The amount requested of DAO internal tokens (SHARES).
+     * @param requestAmount The amount requested of DAO internal tokens (SHARES).
      * @param data Additional information related to the tribute proposal.
      */
     function submitProposal(
@@ -113,7 +113,7 @@ Bank Extension Access Flags: `ADD_TO_BALANCE`.
         address applicant,
         address nftAddr,
         uint256 nftTokenId,
-        uint256 requestedShares
+        uint256 requestAmount
         bytes memory data
     ) external reentrancyGuard(dao)
 ```
