@@ -70,7 +70,6 @@ function onboarding(
     proposal.sharesRequested = data.value3;
     proposal.token = data.value4;
     proposal.applicant = data.value5;
-    proposal.proposer = data.value6;
 
     proposal.adapterAddress = adapterAdddress;
 
@@ -132,11 +131,10 @@ function tribute(
 
   if (proposal) {
     proposal.applicant = data.value1;
-    proposal.proposer = data.value2;
-    proposal.tokenToMint = data.value3;
-    proposal.requestAmount = data.value4;
-    proposal.token = data.value5;
-    proposal.tributeAmount = data.value6;
+    proposal.tokenToMint = data.value2;
+    proposal.requestAmount = data.value3;
+    proposal.token = data.value4;
+    proposal.tributeAmount = data.value5;
 
     proposal.adapterAddress = adapterAdddress;
 
