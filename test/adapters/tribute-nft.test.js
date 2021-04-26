@@ -473,21 +473,12 @@ describe("Adapter - TributeNFT", () => {
 
     // Proposal is processed, but due to the overflow error the NFT must be
     // returned to the proposer
-    await tributeNFT.processProposal(dao.address, proposalId, {
-      from: nftOwner,
-      gasPrice: toBN("0"),
-    });
-
-    // test balance after proposal is processed
-    const applicantShares = await bank.balanceOf(nftOwner, SHARES);
-    expect(applicantShares.toString()).equal("0");
-
-    // test active member status
-    const applicantIsActiveMember = await isMember(bank, nftOwner);
-    expect(applicantIsActiveMember).equal(false);
-
-    // Check if asset was returned to the original owner
-    const newOwnerAddr = await pixelNFT.ownerOf(tokenId);
-    expect(newOwnerAddr).equal(nftOwner);
+    await expectRevert(
+      tributeNFT.processProposal(dao.address, proposalId, {
+        from: nftOwner,
+        gasPrice: toBN("0"),
+      }),
+      "token amount exceeds the maximum limit for internal tokens."
+    );
   });
 });
