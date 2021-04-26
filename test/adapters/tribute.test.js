@@ -88,7 +88,8 @@ describe("Adapter - Tribute", () => {
     // Number of OLTs to be sent to the DAO in exchange for number of requested shares
     const tributeAmount = 10;
     const requestAmount = 1000;
-    await tribute.provideTribute(
+
+    await tribute.submitProposal(
       dao.address,
       getProposalCounter(),
       applicant,
@@ -96,6 +97,7 @@ describe("Adapter - Tribute", () => {
       requestAmount,
       oltContract.address,
       tributeAmount,
+      daoOwner,
       [],
       {
         from: daoOwner,
@@ -180,13 +182,8 @@ describe("Adapter - Tribute", () => {
     const tributeAmount = 10;
     const requestAmount = 100000000;
 
-    // Pre-approve spender (tribute adapter) to transfer proposer tokens
-    await oltContract.approve(tribute.address, tributeAmount, {
-      from: daoOwner,
-    });
-
     const proposalId = getProposalCounter();
-    await tribute.provideTribute(
+    await tribute.submitProposal(
       dao.address,
       proposalId,
       applicant,
@@ -194,6 +191,7 @@ describe("Adapter - Tribute", () => {
       requestAmount,
       oltContract.address,
       tributeAmount,
+      daoOwner,
       [],
       {
         from: daoOwner,
@@ -209,6 +207,11 @@ describe("Adapter - Tribute", () => {
     const vote = await voting.voteResult(dao.address, proposalId);
     expect(vote.toString()).equal("3"); // vote should be "not passed"
 
+    // Pre-approve spender (tribute adapter) to transfer proposer tokens
+    await oltContract.approve(tribute.address, tributeAmount, {
+      from: daoOwner,
+    });
+
     await tribute.processProposal(dao.address, proposalId, {
       from: daoOwner,
       gasPrice: toBN("0"),
@@ -216,13 +219,6 @@ describe("Adapter - Tribute", () => {
 
     const isProcessed = await dao.getProposalFlag(proposalId, toBN("2")); // 2 is processed flag index
     expect(isProcessed).equal(true);
-
-    // test refund of ERC20 contribution
-    daoOwnerTokenBalance = await oltContract.balanceOf.call(daoOwner);
-    // "daoOwner did not receive refund of ERC20 contribution"
-    expect(daoOwnerTokenBalance.toString()).equal(
-      initialTokenBalance.toString()
-    );
 
     // test balances after proposal is processed
     const daoOwnerShares = await bank.balanceOf(daoOwner, SHARES);
@@ -239,12 +235,17 @@ describe("Adapter - Tribute", () => {
     const tributeAdapterBalance = await oltContract.balanceOf.call(
       tribute.address
     );
-    // "tribute adapter did not refund ERC20 contribution";
     expect(tributeAdapterBalance.toString()).equal("0");
 
     // test active member status
     const applicantIsActiveMember = await isMember(bank, applicant);
     expect(applicantIsActiveMember).equal(false);
+
+    // check if ERC20 tokens are still owned by the original owner
+    daoOwnerTokenBalance = await oltContract.balanceOf.call(daoOwner);
+    expect(daoOwnerTokenBalance.toString()).equal(
+      initialTokenBalance.toString()
+    );
   });
 
   it("should not be possible to process proposal that does not exist", async () => {
@@ -260,7 +261,7 @@ describe("Adapter - Tribute", () => {
     );
   });
 
-  it("should not be possible to join if the provided token exceeds the bank token limits", async () => {
+  it("should not be possible to join if the tribute amount exceeds the bank external token limit", async () => {
     const applicant = accounts[2];
 
     // Issue OpenLaw ERC20 Basic Token for tests
@@ -281,41 +282,30 @@ describe("Adapter - Tribute", () => {
     const tribute = adapters.tribute;
     const voting = adapters.voting;
 
-    // Transfer OLTs to daoOwner
+    // Transfer OLTs to applicant
     // Use an amount that will cause an overflow 2**161 > 2**160-1 for external tokens
     const initialTokenBalance = toBN("2").pow(toBN("161")).toString();
-    await oltContract.approve.sendTransaction(applicant, initialTokenBalance, {
-      from: daoOwner,
-    });
-
     await oltContract.transfer(applicant, initialTokenBalance, {
       from: daoOwner,
     });
-
     let applicantTokenBalance = await oltContract.balanceOf.call(applicant);
     // "applicant account must be initialized with 2**161 OLT Tokens";
-    expect(applicantTokenBalance.toString()).equal(
-      initialTokenBalance.toString()
-    );
+    expect(applicantTokenBalance.toString()).equal(initialTokenBalance);
 
-    // Pre-approve spender (tribute adapter) to transfer proposer tokens
+    // Number of OLTs to be sent to the DAO in exchange for number of requested shares
     const tributeAmount = initialTokenBalance;
-    await oltContract.approve(tribute.address, initialTokenBalance.toString(), {
-      from: applicant,
-      gasPrice: toBN("0"),
-    });
+    const requestAmount = 100000000;
 
-    const requestAmount = tributeAmount;
     const proposalId = getProposalCounter();
-
-    await tribute.provideTribute(
+    await tribute.submitProposal(
       dao.address,
       proposalId,
       applicant,
       SHARES,
       requestAmount,
       oltContract.address,
-      tributeAmount.toString(),
+      tributeAmount,
+      applicant,
       [],
       {
         from: daoOwner,
@@ -331,8 +321,80 @@ describe("Adapter - Tribute", () => {
     const vote = await voting.voteResult(dao.address, proposalId);
     expect(vote.toString()).equal("2");
 
-    // Proposal is processed, but due to the overflow error the funds must be returned
-    // to the applicant
+    // Pre-approve spender (tribute adapter) to transfer proposer tokens
+    await oltContract.approve(tribute.address, initialTokenBalance, {
+      from: applicant,
+      gasPrice: toBN("0"),
+    });
+
+    // Proposal is processed, but due to the overflow error the transaction is
+    // reverted.
+    await expectRevert(
+      tribute.processProposal(dao.address, proposalId, {
+        from: applicant,
+        gasPrice: toBN("0"),
+      }),
+      "token amount exceeds the maximum limit for external tokens"
+    );
+  });
+
+  it("should not be possible to join if the requested amount exceeds the bank internal token limit", async () => {
+    const applicant = accounts[2];
+
+    const dao = this.dao;
+    const bank = this.extensions.bank;
+    const tribute = this.adapters.tribute;
+    const voting = this.adapters.voting;
+
+    // Issue OpenLaw ERC20 Basic Token for tests
+    const tokenSupply = 1000000;
+    let oltContract = await OLToken.new(tokenSupply);
+
+    // Transfer OLTs to daoOwner
+    const initialTokenBalance = toBN("10000");
+    await oltContract.transfer(daoOwner, initialTokenBalance);
+    let daoOwnerTokenBalance = await oltContract.balanceOf.call(daoOwner);
+    expect(daoOwnerTokenBalance.toString()).equal(
+      initialTokenBalance.toString()
+    );
+
+    // Number of OLTs to be sent to the DAO in exchange for number of requested shares
+    const tributeAmount = 10;
+    // Use an amount that will cause an overflow 2**89 > 2**88-1 for internal
+    // tokens
+    const requestAmount = toBN("2").pow(toBN("89")).toString();
+
+    const proposalId = getProposalCounter();
+    await tribute.submitProposal(
+      dao.address,
+      proposalId,
+      applicant,
+      SHARES,
+      requestAmount,
+      oltContract.address,
+      tributeAmount,
+      daoOwner,
+      [],
+      {
+        from: daoOwner,
+        gasPrice: toBN("0"),
+      }
+    );
+
+    await voting.submitVote(dao.address, proposalId, 1, {
+      from: daoOwner,
+      gasPrice: toBN("0"),
+    });
+
+    await advanceTime(10000);
+
+    // Pre-approve spender (tribute adapter) to transfer proposer tokens
+    await oltContract.approve(tribute.address, tributeAmount, {
+      from: daoOwner,
+    });
+
+    // Proposal is processed, but due to the overflow error the transaction is
+    // reverted.
     await expectRevert(
       tribute.processProposal(dao.address, proposalId, {
         from: daoOwner,

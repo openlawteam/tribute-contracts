@@ -35,7 +35,7 @@ Bank Extension Access Flags: `ADD_TO_BALANCE`.
 - `proposals`: All tribute NFT proposals handled by each DAO.
 - `ProposalDetails`:
   - `id`: The proposal id.
-  - `applicant`: The applicant address (who will receive the DAO internal tokens and become a member; this address may be different than the actual proposer).
+  - `applicant`: The applicant address (who will receive the DAO internal tokens and become a member; this address may be different than the actual owner of the ERC-721 token being provided as tribute).
   - `nftAddr`: The address of the ERC-721 token that will be transferred to the DAO in exchange for DAO internal tokens.
   - `nftTokenId`: The NFT token identifier.
   - `requestedShares`: The amount requested of DAO internal tokens (SHARES).
@@ -105,14 +105,16 @@ Bank Extension Access Flags: `ADD_TO_BALANCE`.
      * @param nftAddr The address of the ERC-721 token that will be transferred to the DAO in exchange for DAO internal tokens.
      * @param nftTokenId The NFT token id.
      * @param requestedShares The amount requested of DAO internal tokens (SHARES).
+     * @param data Additional information related to the tribute proposal.
      */
-    function provideTributeNFT(
+    function submitProposal(
         DaoRegistry dao,
         bytes32 proposalId,
         address applicant,
         address nftAddr,
         uint256 nftTokenId,
         uint256 requestedShares
+        bytes memory data
     ) external reentrancyGuard(dao)
 ```
 
@@ -124,7 +126,7 @@ Bank Extension Access Flags: `ADD_TO_BALANCE`.
      * @dev Proposal id must exist.
      * @dev Only proposals that have not already been processed are accepted.
      * @dev Only sponsored proposals with completed voting are accepted.
-     * @dev The proposer must first separately `approve` the NFT extension as spender of the ERC-721 token provided as tribute (so the NFT can be transferred for a passed vote).
+     * @dev The owner of the ERC-721 token provided as tribute must first separately `approve` the NFT extension as spender of that token (so the NFT can be transferred for a passed vote).
      * @param dao The DAO address.
      * @param proposalId The proposal id.
      */

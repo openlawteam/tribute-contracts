@@ -39,9 +39,12 @@ contract TributeNFTContract is DaoConstants, MemberGuard, AdapterGuard {
     struct ProposalDetails {
         // The proposal id.
         bytes32 id;
-        // The applicant address (who will receive the DAO internal tokens and become a member; this address may be different than the actual proposer).
+        // The applicant address (who will receive the DAO internal tokens and
+        // become a member; this address may be different than the actual owner
+        // of the ERC-721 token being provided as tribute).
         address applicant;
-        // The address of the ERC-721 token that will be transferred to the DAO in exchange for DAO internal tokens.
+        // The address of the ERC-721 token that will be transferred to the DAO
+        // in exchange for DAO internal tokens.
         address nftAddr;
         // The nft token identifier.
         uint256 nftTokenId;
@@ -81,6 +84,7 @@ contract TributeNFTContract is DaoConstants, MemberGuard, AdapterGuard {
      * @param nftAddr The address of the ERC-721 token that will be transferred to the DAO in exchange for DAO internal tokens.
      * @param nftTokenId The NFT token id.
      * @param requestedShares The amount requested of DAO internal tokens (SHARES).
+     * @param data Additional information related to the tribute proposal.
      */
     function submitProposal(
         DaoRegistry dao,
@@ -124,7 +128,7 @@ contract TributeNFTContract is DaoConstants, MemberGuard, AdapterGuard {
      * @dev Proposal id must exist.
      * @dev Only proposals that have not already been processed are accepted.
      * @dev Only sponsored proposals with completed voting are accepted.
-     * @dev The proposer must first separately `approve` the NFT extension as spender of the ERC-721 token provided as tribute (so the NFT can be transferred for a passed vote).
+     * @dev The owner of the ERC-721 token provided as tribute must first separately `approve` the NFT extension as spender of that token (so the NFT can be transferred for a passed vote).
      * @param dao The DAO address.
      * @param proposalId The proposal id.
      */
@@ -134,12 +138,21 @@ contract TributeNFTContract is DaoConstants, MemberGuard, AdapterGuard {
     {
         ProposalDetails storage proposal = proposals[address(dao)][proposalId];
         require(proposal.id == proposalId, "proposal does not exist");
+        require(
+            !dao.getProposalFlag(
+                proposalId,
+                DaoRegistry.ProposalFlag.PROCESSED
+            ),
+            "proposal already processed"
+        );
 
-        dao.processProposal(proposalId);
+        IVoting votingContract = IVoting(dao.votingAdapter(proposalId));
+        require(address(votingContract) != address(0), "adapter not found");
 
-        IVoting votingContract = IVoting(dao.getAdapterAddress(VOTING));
         IVoting.VotingState voteResult =
             votingContract.voteResult(dao, proposalId);
+
+        dao.processProposal(proposalId);
 
         if (voteResult == IVoting.VotingState.PASS) {
             NFTExtension nftExt = NFTExtension(dao.getExtensionAddress(NFT));
@@ -161,7 +174,7 @@ contract TributeNFTContract is DaoConstants, MemberGuard, AdapterGuard {
         ) {
             // do nothing
         } else {
-            revert("proposal has not been voted on");
+            revert("proposal has not been voted on yet");
         }
     }
 }
