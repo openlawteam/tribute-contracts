@@ -34,19 +34,22 @@
     "solidity-coverage": "^0.7.16",
     "truffle": "^5.3.2",
     "truffle-abi": "^1.0.3",
+    "truffle-plugin-verify": "^0.5.7",
     "web3": "^1.3.5"
   },
   "scripts": {
     "compile": "truffle compile",
     "compile-abi": "truffle compile && truffle-abi",
     "coverage": "scripts/coverage.js",
+    "deploy:ganache": "truffle deploy --network ganache 2>&1 | tee ganache-deploy.log",
+    "deploy:rinkeby": "truffle deploy --network rinkeby 2>&1 | tee rinkeby-deploy.log",
+    "deploy:mainnet": "truffle deploy --network mainnet 2>&1 | tee mainnet-deploy.log",
     "ganache": "ganache-cli --deterministic -p 8545 --networkId 1337",
     "lint": "prettier --list-different 'contracts/**/*.sol' '**/*.js' '**/*.md'",
     "lint:fix": "prettier --write 'contracts/**/*.sol' '**/*.js' '**/*.md'",
     "migrate": "truffle migrate --network",
     "test": "mocha --timeout 20000 --exit --recursive",
-    "deploy:ganache": "truffle deploy --network ganache",
-    "deploy:rinkeby": "truffle deploy --network rinkeby"
+    "verify": "scripts/verify.js"
   },
   "repository": {
     "type": "git",

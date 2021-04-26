@@ -125,3 +125,6 @@ typechain
 subgraph.yaml
 
 .DS_Store
+
+# Logs of the contract deployment
+*-deploy.log

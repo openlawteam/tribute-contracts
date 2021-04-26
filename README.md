@@ -94,6 +94,17 @@ You can find more information about the purpose of each access flag at [DAO Regi
 
 ## Usage
 
+### Environment Variables
+
+Added the following environment variables to your local .env file:
+
+```
+ETHERSCAN_API_KEY=
+TRUFFLE_MNEMONIC=. . . . . . . . . . . .
+INFURA_KEY=
+DEBUG_CONTRACT_VERIFICATION=false
+```
+
 ### Run Tests
 
 This project uses truffle. To run the tests, simply run:
@@ -105,6 +116,27 @@ This project uses truffle. To run the tests, simply run:
 To fix the Solidity code and documentation with the linter hints, simply run:
 
 > npm run lint:fix
+
+### Running with Ganache
+
+...
+
+> npm run ganache
+
+### Deploying the contracts
+
+> npm run deploy:ganache
+
+or
+
+> npm run deploy:rinkeby
+
+### Verifying Contracts
+
+To verify the contract using Etherscan you need to create an API key and update the .env file with your API key.
+Then execute the following script:
+
+> npm run verify rinkeby
 
 ## Contribute
 
