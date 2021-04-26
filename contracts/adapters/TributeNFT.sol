@@ -2,7 +2,6 @@ pragma solidity ^0.8.0;
 
 // SPDX-License-Identifier: MIT
 
-import "./interfaces/ITribute.sol";
 import "../core/DaoConstants.sol";
 import "../core/DaoRegistry.sol";
 import "../extensions/nft/NFT.sol";
