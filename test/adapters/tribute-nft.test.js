@@ -73,7 +73,7 @@ describe("Adapter - TributeNFT", () => {
     this.snapshotId = await takeChainSnapshot();
   });
 
-  it("should be possible to submit a nft tribute proposal", async () => {
+  it("should be possible to submit and sponsor a nft tribute proposal", async () => {
     const nftOwner = accounts[2];
     const dao = this.dao;
     const pixelNFT = this.testContracts.pixelNFT;
@@ -83,7 +83,7 @@ describe("Adapter - TributeNFT", () => {
     let pastEvents = await pixelNFT.getPastEvents();
     let { tokenId } = pastEvents[1].returnValues;
 
-    await tributeNFT.provideTributeNFT(
+    await tributeNFT.submitProposal(
       dao.address,
       "0x1",
       nftOwner,
@@ -106,7 +106,7 @@ describe("Adapter - TributeNFT", () => {
     let { tokenId } = pastEvents[1].returnValues;
 
     await expectRevert(
-      tributeNFT.provideTributeNFT(
+      tributeNFT.submitProposal(
         dao.address,
         "0x1",
         GUILD, // using GUILD address (reserved)
@@ -120,31 +120,7 @@ describe("Adapter - TributeNFT", () => {
     );
   });
 
-  it("should be possible to sponsor a nft tribute proposal", async () => {
-    const nftOwner = accounts[2];
-    const proposalId = getProposalCounter();
-
-    const dao = this.dao;
-    const tributeNFT = this.adapters.tributeNFT;
-    const pixelNFT = this.testContracts.pixelNFT;
-
-    await pixelNFT.mintPixel(nftOwner, 1, 1, { from: daoOwner });
-    let pastEvents = await pixelNFT.getPastEvents();
-    let { tokenId } = pastEvents[1].returnValues;
-
-    await tributeNFT.provideTributeNFT(
-      dao.address,
-      proposalId,
-      nftOwner,
-      pixelNFT.address,
-      tokenId,
-      10,
-      [],
-      { from: daoOwner, gasPrice: toBN("0") }
-    );
-  });
-
-  it("should not be possible to sponsor a nft tribute proposal if it is called by a non member", async () => {
+  it("should not be possible to submit and sponsor a nft tribute proposal if it is called by a non member", async () => {
     const nftOwner = accounts[2];
     const proposalId = getProposalCounter();
     const dao = this.dao;
@@ -155,7 +131,7 @@ describe("Adapter - TributeNFT", () => {
     let pastEvents = await pixelNFT.getPastEvents();
     let { tokenId } = pastEvents[1].returnValues;
 
-    let revertedCall = tributeNFT.provideTributeNFT(
+    let revertedCall = tributeNFT.submitProposal(
       dao.address,
       proposalId,
       nftOwner,
@@ -183,7 +159,7 @@ describe("Adapter - TributeNFT", () => {
     let pastEvents = await pixelNFT.getPastEvents();
     let { tokenId } = pastEvents[1].returnValues;
 
-    await tributeNFT.provideTributeNFT(
+    await tributeNFT.submitProposal(
       dao.address,
       proposalId,
       nftOwner,
@@ -254,7 +230,7 @@ describe("Adapter - TributeNFT", () => {
     let pastEvents = await pixelNFT.getPastEvents();
     let { tokenId } = pastEvents[1].returnValues;
 
-    await tributeNFT.provideTributeNFT(
+    await tributeNFT.submitProposal(
       dao.address,
       proposalId,
       nftOwner,
@@ -324,7 +300,7 @@ describe("Adapter - TributeNFT", () => {
     let pastEvents = await pixelNFT.getPastEvents();
     let { tokenId } = pastEvents[1].returnValues;
 
-    await tributeNFT.provideTributeNFT(
+    await tributeNFT.submitProposal(
       dao.address,
       proposalId,
       nftOwner,
@@ -387,7 +363,7 @@ describe("Adapter - TributeNFT", () => {
     let pastEvents = await pixelNFT.getPastEvents();
     let { tokenId } = pastEvents[1].returnValues;
 
-    await tributeNFT.provideTributeNFT(
+    await tributeNFT.submitProposal(
       dao.address,
       proposalId,
       nftOwner,
@@ -443,7 +419,7 @@ describe("Adapter - TributeNFT", () => {
     // tokens
     const requestAmount = toBN("2").pow(toBN("89")).toString();
 
-    await tributeNFT.provideTributeNFT(
+    await tributeNFT.submitProposal(
       dao.address,
       proposalId,
       nftOwner,
@@ -471,8 +447,8 @@ describe("Adapter - TributeNFT", () => {
       gasPrice: toBN("0"),
     });
 
-    // Proposal is processed, but due to the overflow error the NFT must be
-    // returned to the proposer
+    // Proposal is processed, but due to the overflow error the transaction is
+    // reverted
     await expectRevert(
       tributeNFT.processProposal(dao.address, proposalId, {
         from: nftOwner,
