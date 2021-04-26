@@ -25,20 +25,23 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
  */
 const {
-  web3,
-  sha3,
   toBN,
-  advanceTime,
-  deployDaoWithOffchainVoting,
-  proposalIdGenerator,
-  takeChainSnapshot,
-  revertChainSnapshot,
-  accounts,
-  SHARES,
+  sha3,
   sharePrice,
   remaining,
+  SHARES,
+} = require("../../utils/ContractUtil.js");
+
+const {
+  proposalIdGenerator,
+  advanceTime,
+  deployDaoWithOffchainVoting,
+  accounts,
   expect,
-} = require("../../utils/DaoFactory.js");
+  takeChainSnapshot,
+  revertChainSnapshot,
+  web3,
+} = require("../../utils/OZTestUtil.js");
 
 const {
   createVote,
@@ -85,7 +88,10 @@ describe("Adapter - Offchain Voting", () => {
       adapters,
       extensions,
       votingHelpers,
-    } = await deployDaoWithOffchainVoting(daoOwner, newMember.address);
+    } = await deployDaoWithOffchainVoting({
+      owner: daoOwner,
+      newMember: newMember.address,
+    });
     this.dao = dao;
     this.adapters = adapters;
     this.extensions = extensions;
@@ -274,7 +280,7 @@ describe("Adapter - Offchain Voting", () => {
     await onboarding.sponsorProposal(
       dao.address,
       proposalId,
-      prepareVoteProposalData(proposalData),
+      prepareVoteProposalData(proposalData, web3),
       { from: daoOwner }
     );
 

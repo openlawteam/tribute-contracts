@@ -31,21 +31,24 @@ SOFTWARE.
 const {
   toBN,
   fromUtf8,
-  advanceTime,
+  sharePrice,
+  SHARES,
+  GUILD,
+  ETH_TOKEN,
+  LOOT,
+  ESCROW,
+} = require("../../utils/ContractUtil.js");
+
+const {
   deployDefaultDao,
   takeChainSnapshot,
   revertChainSnapshot,
   proposalIdGenerator,
+  advanceTime,
   accounts,
-  sharePrice,
-  GUILD,
-  ETH_TOKEN,
-  SHARES,
-  ESCROW,
-  LOOT,
   expectRevert,
   expect,
-} = require("../../utils/DaoFactory.js");
+} = require("../../utils/OZTestUtil.js");
 
 const { onboardingNewMember } = require("../../utils/TestUtils.js");
 
@@ -58,7 +61,9 @@ function getProposalCounter() {
 
 describe("Adapter - Distribute", () => {
   before("deploy dao", async () => {
-    const { dao, adapters, extensions } = await deployDefaultDao(daoOwner);
+    const { dao, adapters, extensions } = await deployDefaultDao({
+      owner: daoOwner,
+    });
     this.dao = dao;
     this.adapters = adapters;
     this.extensions = extensions;

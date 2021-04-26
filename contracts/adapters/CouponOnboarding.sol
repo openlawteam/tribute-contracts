@@ -119,6 +119,12 @@ contract CouponOnboardingContract is DaoConstants, AdapterGuard, Signatures {
             address(dao.getAddressConfiguration(TokenAddrToMint));
 
         BankExtension bank = BankExtension(dao.getExtensionAddress(BANK));
-        bank.addToBalance(authorizedMember, tokenAddrToMint, amount);
+        // Overflow risk may cause this to fail
+        try bank.addToBalance(authorizedMember, tokenAddrToMint, amount) {
+            // address needs to be added to the members mappings
+            dao.potentialNewMember(authorizedMember);
+        } catch {
+            // do nothing
+        }
     }
 }

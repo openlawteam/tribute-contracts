@@ -25,25 +25,29 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
  */
 const {
-  web3,
-  sha3,
   toBN,
   toWei,
-  advanceTime,
+  TOTAL,
+  GUILD,
+  sha3,
+} = require("../../utils/ContractUtil.js");
+
+const {
   deployDefaultDao,
   takeChainSnapshot,
   revertChainSnapshot,
   proposalIdGenerator,
-  entryDao,
+  advanceTime,
   accounts,
-  GUILD,
-  TOTAL,
-  VotingContract,
-  ManagingContract,
-  DaoRegistryAdapterContract,
-  expectRevert,
   expect,
-} = require("../../utils/DaoFactory.js");
+  expectRevert,
+  web3,
+  DaoRegistryAdapterContract,
+  ManagingContract,
+  VotingContract,
+} = require("../../utils/OZTestUtil.js");
+
+const { entryDao } = require("../../utils/DeploymentUtil.js");
 
 const daoOwner = accounts[1];
 const proposalCounter = proposalIdGenerator().generator;
@@ -54,7 +58,9 @@ function getProposalCounter() {
 
 describe("Adapter - Managing", () => {
   before("deploy dao", async () => {
-    const { dao, adapters, extensions } = await deployDefaultDao(daoOwner);
+    const { dao, adapters, extensions } = await deployDefaultDao({
+      owner: daoOwner,
+    });
     this.dao = dao;
     this.adapters = adapters;
     this.extensions = extensions;

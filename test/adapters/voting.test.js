@@ -26,18 +26,21 @@ SOFTWARE.
  */
 const {
   toBN,
-  advanceTime,
-  deployDefaultDao,
-  proposalIdGenerator,
-  takeChainSnapshot,
-  revertChainSnapshot,
-  accounts,
   sharePrice,
   remaining,
   SHARES,
+} = require("../../utils/ContractUtil.js");
+
+const {
+  deployDefaultDao,
+  takeChainSnapshot,
+  revertChainSnapshot,
+  proposalIdGenerator,
+  advanceTime,
+  accounts,
   expectRevert,
   expect,
-} = require("../../utils/DaoFactory.js");
+} = require("../../utils/OZTestUtil.js");
 
 describe("Adapter - Voting", () => {
   const daoOwner = accounts[1];
@@ -48,7 +51,9 @@ describe("Adapter - Voting", () => {
   };
 
   before("deploy dao", async () => {
-    const { dao, adapters, extensions } = await deployDefaultDao(daoOwner);
+    const { dao, adapters, extensions } = await deployDefaultDao({
+      owner: daoOwner,
+    });
     this.dao = dao;
     this.adapters = adapters;
     this.extensions = extensions;

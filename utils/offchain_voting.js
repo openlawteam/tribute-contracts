@@ -25,18 +25,8 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
  */
 const { MerkleTree } = require("./merkleTree.js");
-const { SHARES, sha3, web3 } = require("./DaoFactory.js");
+const { SHARES, sha3 } = require("./ContractUtil.js");
 const sigUtil = require("eth-sig-util");
-
-function getDraftIdFromProposal(
-  proposal,
-  verifyingContract,
-  actionId,
-  chainId
-) {
-  const draft = Object.assign(proposal, { type: "draft" });
-  return getMessageERC712Hash(draft, verifyingContract, actionId, chainId);
-}
 
 function getMessageERC712Hash(m, verifyingContract, actionId, chainId) {
   const message = prepareMessage(m);
@@ -469,7 +459,7 @@ async function prepareVoteResult(
   return { voteResultTree: tree, votes: leaves };
 }
 
-function prepareVoteProposalData(data) {
+function prepareVoteProposalData(data, web3) {
   return web3.eth.abi.encodeParameter(
     {
       ProposalMessage: {
