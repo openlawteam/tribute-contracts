@@ -1,16 +1,16 @@
 ## Adapter description and scope
 
-The Tribute NFT adapter allows potential and existing DAO members to contribute any ERC-721 tokens to the DAO in exchange for any amount of DAO internal tokens (in this case it mints SHARES always). If the proposal passes, the requested internal tokens are minted to the applicant (which effectively makes the applicant a member of the DAO if not already one), and the ERC-721 asset provided as tribute is transferred to the NFT extension.
+The Tribute NFT adapter allows potential and existing DAO members to contribute any ERC-721 tokens to the DAO in exchange for any amount of DAO internal tokens (in this case it mints SHARES always). If the proposal passes, the requested internal tokens are minted to the applicant (which effectively makes the applicant a member of the DAO if not already one) and the ERC-721 asset provided as tribute is transferred to the NFT extension.
 
 The Tribute NFT adapter is similar to the Onboarding adapter in that both allow for joining the DAO (or increasing a stake in the DAO) through the exchange of contributed assets for DAO internal tokens. However, there are key differences:
 
-- The Tribute NFT adapter accepts only ERC-721 tokens.
+- The Onboarding adapter allows both Ether and ERC-20 tokens to be contributed. The Tribute NFT adapter accepts only ERC-721 tokens.
 
-- The Tribute NFT adapter has more open-ended proposal parameters. The proposer can request any amount of internal tokens to be minted in exchange for an ERC-721 token contributed. The worthiness of that transfer proposal for the DAO is left to the vote of its members.
+- The Onboarding adapter mints a fixed amount of internal tokens to the applicant based on the amount of assets contributed. In other words, an onboarding proposal does not specify the amount of internal tokens requested. That is calculated from the DAO's configurations and the amount of assets contributed. The Tribute NFT adapter has more open-ended proposal parameters. The proposer can request any amount of internal tokens to be minted in exchange for an ERC-721 token contributed. The worthiness of that transfer proposal for the DAO is left to the vote of its members.
 
 ## Adapter workflow
 
-A tribute is made by a member first submitting a proposal specifying (1) the applicant who wishes to join the DAO (or increase his stake in the DAO), (2) the amount of internal tokens (SHARES) the applicant desires, and (3) the ERC-721 address and token id of the NFT that will transfer to the DAO in exchange for those internal tokens. The applicant and proposer can be separate accounts (e.g., proposer is applying and providing tribute on behalf of the applicant). The proposal submission does not actually transfer the ERC-721 token from its owner. That occurs only after the proposal passes and is processed.
+A tribute is made by a member first submitting a proposal specifying (1) the applicant who wishes to join the DAO (or increase his stake in the DAO), (2) the amount of internal tokens (SHARES) the applicant desires, and (3) the ERC-721 address and token id of the NFT that will transfer to the DAO in exchange for those internal tokens. The applicant and actual owner of the NFT can be separate accounts (e.g., the NFT owner is providing tribute on behalf of the applicant). The proposal submission does not actually transfer the ERC-721 token from its owner. That occurs only after the proposal passes and is processed.
 
 The proposal is also sponsored in the same transaction when it is submitted. When a DAO member sponsors the proposal, the voting period begins allowing members to vote for or against the proposal. Only a member can sponsor the proposal.
 

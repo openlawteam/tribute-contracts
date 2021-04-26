@@ -40,8 +40,6 @@ contract TributeContract is DaoConstants, MemberGuard, AdapterGuard {
     using Address for address;
     using SafeERC20 for IERC20;
 
-    event FailedOnboarding(address applicant, bytes32 cause);
-
     struct ProposalDetails {
         // The proposal id.
         bytes32 id;
@@ -112,7 +110,7 @@ contract TributeContract is DaoConstants, MemberGuard, AdapterGuard {
         uint256 tributeAmount,
         address tributeTokenOwner,
         bytes memory data
-    ) public reentrancyGuard(dao) {
+    ) external reentrancyGuard(dao) {
         require(
             isNotReservedAddress(applicant),
             "applicant is reserved address"
@@ -191,7 +189,11 @@ contract TributeContract is DaoConstants, MemberGuard, AdapterGuard {
                 bank.registerPotentialNewToken(proposal.token);
             }
             IERC20 erc20 = IERC20(proposal.token);
-            erc20.safeTransferFrom(tributeTokenOwner, address(bank), tributeAmount);
+            erc20.safeTransferFrom(
+                tributeTokenOwner,
+                address(bank),
+                tributeAmount
+            );
 
             bank.addToBalance(applicant, tokenToMint, proposal.requestAmount);
             bank.addToBalance(GUILD, proposal.token, tributeAmount);
