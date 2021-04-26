@@ -149,12 +149,12 @@ contract TributeNFTContract is DaoConstants, MemberGuard, AdapterGuard {
                 "SHARES token is not an internal token"
             );
 
+            nftExt.collect(proposal.nftAddr, proposal.nftTokenId);
             bank.addToBalance(
                 proposal.applicant,
                 SHARES,
                 proposal.requestedShares
             );
-            nftExt.collect(proposal.nftAddr, proposal.nftTokenId);
         } else if (
             voteResult == IVoting.VotingState.NOT_PASS ||
             voteResult == IVoting.VotingState.TIE
