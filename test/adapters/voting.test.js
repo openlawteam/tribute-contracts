@@ -73,10 +73,18 @@ describe("Adapter - Voting", () => {
     const voting = this.adapters.voting;
 
     const proposalId = getProposalCounter();
-    await onboarding.onboard(dao.address, proposalId, account2, SHARES, 0, [], {
-      from: daoOwner,
-      gasPrice: toBN("0"),
-    });
+    await onboarding.onboard(
+      dao.address,
+      proposalId,
+      account2,
+      SHARES,
+      sharePrice.mul(toBN(3)).add(remaining),
+      [],
+      {
+        from: daoOwner,
+        gasPrice: toBN("0"),
+      }
+    );
 
     await voting.submitVote(dao.address, proposalId, 1, {
       from: daoOwner,
@@ -95,10 +103,18 @@ describe("Adapter - Voting", () => {
     const voting = this.adapters.voting;
 
     const proposalId = getProposalCounter();
-    await onboarding.onboard(dao.address, proposalId, account2, SHARES, 0, [], {
-      from: daoOwner,
-      gasPrice: toBN("0"),
-    });
+    await onboarding.onboard(
+      dao.address,
+      proposalId,
+      account2,
+      SHARES,
+      sharePrice.mul(toBN(3)).add(remaining),
+      [],
+      {
+        from: daoOwner,
+        gasPrice: toBN("0"),
+      }
+    );
 
     await voting.submitVote(dao.address, proposalId, 1, {
       from: daoOwner,
@@ -122,10 +138,18 @@ describe("Adapter - Voting", () => {
     const voting = this.adapters.voting;
 
     const proposalId = getProposalCounter();
-    await onboarding.onboard(dao.address, proposalId, account2, SHARES, 0, [], {
-      from: daoOwner,
-      gasPrice: toBN("0"),
-    });
+    await onboarding.onboard(
+      dao.address,
+      proposalId,
+      account2,
+      SHARES,
+      sharePrice.mul(toBN(3)).add(remaining),
+      [],
+      {
+        from: daoOwner,
+        gasPrice: toBN("0"),
+      }
+    );
 
     await expectRevert(
       voting.submitVote(dao.address, proposalId, 1, {
@@ -145,10 +169,18 @@ describe("Adapter - Voting", () => {
     const daoRegistryAdapter = this.adapters.daoRegistryAdapter;
 
     const proposalId = getProposalCounter();
-    await onboarding.onboard(dao.address, proposalId, account2, SHARES, 0, [], {
-      from: daoOwner,
-      gasPrice: toBN("0"),
-    });
+    await onboarding.onboard(
+      dao.address,
+      proposalId,
+      account2,
+      SHARES,
+      sharePrice.mul(toBN(3)).add(remaining),
+      [],
+      {
+        from: daoOwner,
+        gasPrice: toBN("0"),
+      }
+    );
 
     await daoRegistryAdapter.updateDelegateKey(dao.address, account3, {
       from: daoOwner,
