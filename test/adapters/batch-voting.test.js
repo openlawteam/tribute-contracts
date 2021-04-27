@@ -143,16 +143,10 @@ describe("Adapter - BatchVoting", () => {
       this.members[1].address,
       SHARES,
       sharePrice.mul(toBN(3)).add(remaining),
+      prepareVoteProposalData(proposalData, web3),
       {
-        value: sharePrice.mul(toBN("3")).add(remaining),
         gasPrice: toBN("0"),
       }
-    );
-
-    await onboarding.sponsorProposal(
-      dao.address,
-      proposalId,
-      prepareVoteProposalData(proposalData, web3)
     );
 
     const voteEntries = [];
@@ -204,7 +198,9 @@ describe("Adapter - BatchVoting", () => {
 
     await advanceTime(10000);
 
-    await onboarding.processProposal(dao.address, proposalId);
+    await onboarding.processProposal(dao.address, proposalId, {
+      value: sharePrice.mul(toBN("3")).add(remaining),
+    });
   };
 
   it("should be possible to propose a new voting by signing the proposal hash", async () => {

@@ -89,18 +89,13 @@ describe("Adapter - Financing", () => {
       newMember,
       SHARES,
       sharePrice.mul(toBN(10)).add(remaining),
+      [],
       {
         from: myAccount,
-        value: sharePrice.mul(toBN(10)).add(remaining),
         gasPrice: toBN("0"),
       }
     );
 
-    //Sponsor the new proposal, vote and process it
-    await onboarding.sponsorProposal(this.dao.address, proposalId, [], {
-      from: myAccount,
-      gasPrice: toBN("0"),
-    });
     await voting.submitVote(this.dao.address, proposalId, 1, {
       from: myAccount,
       gasPrice: toBN("0"),
@@ -109,6 +104,7 @@ describe("Adapter - Financing", () => {
     try {
       await onboarding.processProposal(this.dao.address, proposalId, {
         from: myAccount,
+        value: sharePrice.mul(toBN(10)).add(remaining),
         gasPrice: toBN("0"),
       });
     } catch (err) {
@@ -118,6 +114,7 @@ describe("Adapter - Financing", () => {
     await advanceTime(10000);
     await onboarding.processProposal(this.dao.address, proposalId, {
       from: myAccount,
+      value: sharePrice.mul(toBN(10)).add(remaining),
       gasPrice: toBN("0"),
     });
     //Check Guild Bank Balance
@@ -193,18 +190,13 @@ describe("Adapter - Financing", () => {
       newMember,
       SHARES,
       sharePrice.mul(toBN(10)).add(remaining),
+      [],
       {
         from: myAccount,
-        value: sharePrice.mul(toBN(10)).add(remaining),
         gasPrice: toBN("0"),
       }
     );
 
-    //Sponsor the new proposal, vote and process it
-    await onboarding.sponsorProposal(this.dao.address, proposalId, [], {
-      from: myAccount,
-      gasPrice: toBN("0"),
-    });
     await voting.submitVote(this.dao.address, proposalId, 1, {
       from: myAccount,
       gasPrice: toBN("0"),
@@ -213,6 +205,7 @@ describe("Adapter - Financing", () => {
 
     await onboarding.processProposal(this.dao.address, proposalId, {
       from: myAccount,
+      value: sharePrice.mul(toBN(10)).add(remaining),
       gasPrice: toBN("0"),
     });
 
@@ -265,18 +258,13 @@ describe("Adapter - Financing", () => {
       newMember,
       SHARES,
       sharePrice.mul(toBN(10)).add(remaining),
+      [],
       {
         from: myAccount,
-        value: sharePrice.mul(toBN(10)).add(remaining),
         gasPrice: toBN("0"),
       }
     );
 
-    //Sponsor the new proposal, vote and process it
-    await onboarding.sponsorProposal(this.dao.address, proposalId, [], {
-      from: myAccount,
-      gasPrice: toBN("0"),
-    });
     await voting.submitVote(this.dao.address, proposalId, 1, {
       from: myAccount,
       gasPrice: toBN("0"),
@@ -285,6 +273,7 @@ describe("Adapter - Financing", () => {
 
     await onboarding.processProposal(this.dao.address, proposalId, {
       from: myAccount,
+      value: sharePrice.mul(toBN(10)).add(remaining),
       gasPrice: toBN("0"),
     });
 
@@ -322,18 +311,13 @@ describe("Adapter - Financing", () => {
       newMember,
       SHARES,
       sharePrice.mul(toBN(10)).add(remaining),
+      [],
       {
         from: myAccount,
-        value: sharePrice.mul(toBN(10)).add(remaining),
         gasPrice: toBN("0"),
       }
     );
 
-    //Sponsor the new proposal, vote and process it
-    await onboarding.sponsorProposal(this.dao.address, proposalId, [], {
-      from: myAccount,
-      gasPrice: toBN("0"),
-    });
     await voting.submitVote(this.dao.address, proposalId, 1, {
       from: myAccount,
       gasPrice: toBN("0"),
@@ -342,6 +326,7 @@ describe("Adapter - Financing", () => {
 
     await onboarding.processProposal(this.dao.address, proposalId, {
       from: myAccount,
+      value: sharePrice.mul(toBN(10)).add(remaining),
       gasPrice: toBN("0"),
     });
 
@@ -397,9 +382,9 @@ describe("Adapter - Financing", () => {
       newMember,
       SHARES,
       sharePrice.mul(toBN(10)).add(remaining),
+      [],
       {
         from: myAccount,
-        value: sharePrice.mul(toBN(10)).add(remaining),
         gasPrice: toBN("0"),
       }
     );

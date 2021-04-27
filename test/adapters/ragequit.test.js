@@ -387,17 +387,12 @@ describe("Adapter - Ragequit", () => {
       advisorAccount,
       LOOT,
       tokenAmount,
+      [],
       {
-        from: advisorAccount,
+        from: owner,
         gasPrice: toBN("0"),
       }
     );
-
-    // Sponsor the new proposal to allow the Advisor to join the DAO
-    await onboarding.sponsorProposal(dao.address, proposalId, [], {
-      from: owner,
-      gasPrice: toBN("0"),
-    });
 
     // Vote on the new proposal to accept the new Advisor
     await voting.submitVote(dao.address, proposalId, 1, {
@@ -408,7 +403,8 @@ describe("Adapter - Ragequit", () => {
     // Process the new proposal
     await advanceTime(10000);
     await onboarding.processProposal(dao.address, proposalId, {
-      from: owner,
+      from: advisorAccount,
+      owner: tokenAmount,
       gasPrice: toBN("0"),
     });
 
@@ -443,7 +439,7 @@ describe("Adapter - Ragequit", () => {
     const onboarding = this.adapters.onboarding;
     const voting = this.adapters.voting;
 
-    const proposalId = getProposalCounter();
+    let proposalId = getProposalCounter();
     await onboardingNewMember(
       proposalId,
       this.dao,
@@ -476,17 +472,28 @@ describe("Adapter - Ragequit", () => {
     );
 
     //Member attempts to sponsor a proposal after the ragequit
-    let res = onboarding.sponsorProposal(this.dao.address, proposalId, [], {
-      from: memberAddr,
-      gasPrice: toBN("0"),
-    });
-    await expectRevert(res, "onlyMember");
+    proposalId = getProposalCounter();
+    await expectRevert(
+      onboardingNewMember(
+        proposalId,
+        this.dao,
+        onboarding,
+        voting,
+        memberAddr,
+        memberAddr,
+        sharePrice,
+        SHARES
+      ),
+      "onlyMember"
+    );
 
-    res = voting.submitVote(this.dao.address, proposalId, 1, {
-      from: memberAddr,
-      gasPrice: toBN("0"),
-    });
-    await expectRevert(res, "onlyMember");
+    await expectRevert(
+      voting.submitVote(this.dao.address, proposalId, 1, {
+        from: memberAddr,
+        gasPrice: toBN("0"),
+      }),
+      "onlyMember"
+    );
   });
 
   it("should not be possible to ragequit if the member have provided an invalid token", async () => {

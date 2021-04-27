@@ -44,9 +44,9 @@ const submitNewMemberProposal = async (
     newMember,
     token,
     sharePrice.mul(desiredShares),
+    [],
     {
       from: member,
-      value: sharePrice.mul(desiredShares),
       gasPrice: toBN("0"),
     }
   );
@@ -74,30 +74,18 @@ const onboardingNewMember = async (
     desiredShares
   );
 
-  //Sponsor the new proposal, vote and process it
-  await sponsorNewMember(onboarding, dao, proposalId, sponsor, voting);
-  await onboarding.processProposal(dao.address, proposalId, {
-    from: sponsor,
-    gasPrice: toBN("0"),
-  });
-};
-
-const sponsorNewMember = async (
-  onboarding,
-  dao,
-  proposalId,
-  sponsor,
-  voting
-) => {
-  await onboarding.sponsorProposal(dao.address, proposalId, [], {
-    from: sponsor,
-    gasPrice: toBN("0"),
-  });
+  //vote and process it
   await voting.submitVote(dao.address, proposalId, 1, {
     from: sponsor,
     gasPrice: toBN("0"),
   });
   await advanceTime(10000);
+
+  await onboarding.processProposal(dao.address, proposalId, {
+    from: sponsor,
+    value: sharePrice.mul(desiredShares),
+    gasPrice: toBN("0"),
+  });
 };
 
 const guildKickProposal = async (
@@ -123,7 +111,6 @@ module.exports = {
   checkLastEvent,
   checkBalance,
   submitNewMemberProposal,
-  sponsorNewMember,
   onboardingNewMember,
   guildKickProposal,
   isMember,

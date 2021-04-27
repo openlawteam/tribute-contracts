@@ -64,17 +64,18 @@ describe("Adapter - Non Voting Onboarding", () => {
     let ethAmount = sharePrice.mul(toBN(3)).add(remaining);
     let proposalId = "0x1";
     // Request to join the DAO as an Advisor (non-voting power), Send a tx with RAW ETH only and specify the nonVotingOnboarding
-    await onboarding.onboard(dao.address, proposalId, advisorAccount, LOOT, 0, {
-      from: daoOwner,
-      value: ethAmount,
-      gasPrice: toBN("0"),
-    });
-
-    // Sponsor the new proposal to allow the Advisor to join the DAO
-    await onboarding.sponsorProposal(dao.address, proposalId, [], {
-      from: daoOwner,
-      gasPrice: toBN("0"),
-    });
+    await onboarding.onboard(
+      dao.address,
+      proposalId,
+      advisorAccount,
+      LOOT,
+      ethAmount,
+      [],
+      {
+        from: daoOwner,
+        gasPrice: toBN("0"),
+      }
+    );
 
     // Vote on the new proposal to accept the new Advisor
     await voting.submitVote(dao.address, proposalId, 1, {
@@ -86,6 +87,7 @@ describe("Adapter - Non Voting Onboarding", () => {
     await advanceTime(10000);
     await onboarding.processProposal(dao.address, proposalId, {
       from: daoOwner,
+      value: ethAmount,
       gasPrice: toBN("0"),
     });
 
@@ -141,6 +143,7 @@ describe("Adapter - Non Voting Onboarding", () => {
         advisorAccount,
         LOOT,
         tokenAmount,
+        [],
         {
           from: advisorAccount,
           gasPrice: toBN("0"),
@@ -159,17 +162,12 @@ describe("Adapter - Non Voting Onboarding", () => {
       advisorAccount,
       LOOT,
       tokenAmount,
+      [],
       {
-        from: advisorAccount,
+        from: daoOwner,
         gasPrice: toBN("0"),
       }
     );
-
-    // Sponsor the new proposal to allow the Advisor to join the DAO
-    await onboarding.sponsorProposal(dao.address, proposalId, [], {
-      from: daoOwner,
-      gasPrice: toBN("0"),
-    });
 
     // Vote on the new proposal to accept the new Advisor
     await voting.submitVote(dao.address, proposalId, 1, {
@@ -180,7 +178,7 @@ describe("Adapter - Non Voting Onboarding", () => {
     // Process the new proposal
     await advanceTime(10000);
     await onboarding.processProposal(dao.address, proposalId, {
-      from: daoOwner,
+      from: advisorAccount,
       gasPrice: toBN("0"),
     });
 

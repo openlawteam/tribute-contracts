@@ -270,18 +270,11 @@ describe("Adapter - Offchain Voting", () => {
       members[1].address,
       SHARES,
       sharePrice.mul(toBN(3)).add(remaining),
+      prepareVoteProposalData(proposalData, web3),
       {
         from: daoOwner,
-        value: sharePrice.mul(toBN("3")).add(remaining),
         gasPrice: toBN("0"),
       }
-    );
-
-    await onboarding.sponsorProposal(
-      dao.address,
-      proposalId,
-      prepareVoteProposalData(proposalData, web3),
-      { from: daoOwner }
     );
 
     const voteEntry = await createVote(proposalHash, newMember.address, true);
@@ -356,6 +349,7 @@ describe("Adapter - Offchain Voting", () => {
 
     await onboarding.processProposal(dao.address, proposalId, {
       from: daoOwner,
+      value: sharePrice.mul(toBN("3")).add(remaining),
       gasPrice: toBN("0"),
     });
 

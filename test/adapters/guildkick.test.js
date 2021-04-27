@@ -51,7 +51,6 @@ const {
 } = require("../../utils/OZTestUtil.js");
 
 const {
-  sponsorNewMember,
   onboardingNewMember,
   submitNewMemberProposal,
   guildKickProposal,
@@ -504,9 +503,9 @@ describe("Adapter - GuildKick", () => {
     );
 
     // kicked member attemps to sponsor a new member
+    /*
     await expectRevert(
       sponsorNewMember(
-        onboarding,
         this.dao,
         onboardProposalId,
         kickedMember,
@@ -514,6 +513,7 @@ describe("Adapter - GuildKick", () => {
       ),
       "onlyMember"
     );
+    */
   });
 
   it("should not be possible for a kicked member to vote on in an onboarding proposal", async () => {
@@ -575,12 +575,6 @@ describe("Adapter - GuildKick", () => {
       SHARES,
       toBN(10)
     );
-
-    //Sponsor the new proposal to start the voting process
-    await onboarding.sponsorProposal(this.dao.address, onboardProposalId, [], {
-      from: member,
-      gasPrice: toBN("0"),
-    });
 
     // kicked member attemps to vote
     await expectRevert(
