@@ -34,16 +34,11 @@ interface IOnboarding {
         bytes32 proposalId,
         address payable applicant,
         address tokenToMint,
-        uint256 tokenAmount
-    ) external payable;
-
-    function sponsorProposal(
-        DaoRegistry dao,
-        bytes32 proposalId,
-        bytes calldata data
+        uint256 tokenAmount,
+        bytes memory data
     ) external;
 
-    function cancelProposal(DaoRegistry dao, bytes32 proposalId) external;
-
-    function processProposal(DaoRegistry dao, bytes32 proposalId) external;
+    function processProposal(DaoRegistry dao, bytes32 proposalId)
+        external
+        payable;
 }

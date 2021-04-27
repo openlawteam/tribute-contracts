@@ -447,8 +447,6 @@ describe("Adapter - TributeNFT", () => {
       gasPrice: toBN("0"),
     });
 
-    // Proposal is processed, but due to the overflow error the transaction is
-    // reverted
     await expectRevert(
       tributeNFT.processProposal(dao.address, proposalId, {
         from: nftOwner,

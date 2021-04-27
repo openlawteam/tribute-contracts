@@ -127,6 +127,7 @@ describe("Adapter - Onboarding", () => {
         applicant,
         SHARES,
         tokenAmount,
+        [],
         {
           from: applicant,
           gasPrice: toBN("0"),
@@ -157,23 +158,18 @@ describe("Adapter - Onboarding", () => {
     const ethAmount = sharePrice.mul(toBN(3)).add(remaining);
 
     const proposalId = getProposalCounter();
-    await onboarding.onboard(dao.address, proposalId, applicant, SHARES, 0, {
-      from: daoOwner,
-      value: ethAmount,
-      gasPrice: toBN("0"),
-    });
-
-    // test return of remaining amount in excess of multiple of sharesPerChunk
-    const myAccountBalance = await web3.eth.getBalance(daoOwner);
-    // daoOwner did not receive remaining amount in excess of multiple of sharesPerChunk
-    expect(
-      toBN(myAccountInitialBalance).sub(ethAmount).add(remaining).toString()
-    ).equal(myAccountBalance.toString());
-
-    await onboarding.sponsorProposal(dao.address, proposalId, [], {
-      from: daoOwner,
-      gasPrice: toBN("0"),
-    });
+    await onboarding.onboard(
+      dao.address,
+      proposalId,
+      applicant,
+      SHARES,
+      ethAmount,
+      [],
+      {
+        from: daoOwner,
+        gasPrice: toBN("0"),
+      }
+    );
 
     await voting.submitVote(dao.address, proposalId, 1, {
       from: daoOwner,
@@ -184,6 +180,7 @@ describe("Adapter - Onboarding", () => {
     await expectRevert(
       onboarding.processProposal(dao.address, proposalId, {
         from: daoOwner,
+        value: ethAmount,
         gasPrice: toBN("0"),
       }),
       "proposal has not been voted on yet"
@@ -192,8 +189,16 @@ describe("Adapter - Onboarding", () => {
     await advanceTime(10000);
     await onboarding.processProposal(dao.address, proposalId, {
       from: daoOwner,
+      value: ethAmount,
       gasPrice: toBN("0"),
     });
+
+    // test return of remaining amount in excess of multiple of unitsPerChunk
+    const myAccountBalance = await web3.eth.getBalance(daoOwner);
+    // daoOwner did not receive remaining amount in excess of multiple of unitsPerChunk
+    expect(
+      toBN(myAccountInitialBalance).sub(ethAmount).add(remaining).toString()
+    ).equal(myAccountBalance.toString());
 
     const myAccountShares = await bank.balanceOf(daoOwner, SHARES);
     const applicantShares = await bank.balanceOf(applicant, SHARES);
@@ -249,29 +254,11 @@ describe("Adapter - Onboarding", () => {
       initialTokenBalance.toString()
     );
 
-    // Total of OLTs to be sent to the DAO in order to get the shares
+    // Total of OLTs to be sent to the DAO in order to get the units
     // (remaining amount to test sending back to proposer)
     const tokenAmount = erc20SharePrice.add(toBN(erc20Remaining));
 
     const proposalId = getProposalCounter();
-    await expectRevert.unspecified(
-      onboarding.onboard(
-        dao.address,
-        proposalId,
-        applicant,
-        SHARES,
-        tokenAmount,
-        {
-          from: daoOwner,
-          gasPrice: toBN("0"),
-        }
-      )
-    );
-
-    // Pre-approve spender (onboarding adapter) to transfer proposer tokens
-    await oltContract.approve(onboarding.address, tokenAmount, {
-      from: daoOwner,
-    });
 
     await onboarding.onboard(
       dao.address,
@@ -279,23 +266,12 @@ describe("Adapter - Onboarding", () => {
       applicant,
       SHARES,
       tokenAmount,
+      [],
       {
         from: daoOwner,
         gasPrice: toBN("0"),
       }
     );
-
-    // test return of remaining amount in excess of multiple of sharesPerChunk
-    myAccountTokenBalance = await oltContract.balanceOf.call(daoOwner);
-    // "myAccount did not receive remaining amount in excess of multiple of sharesPerChunk"
-    expect(myAccountTokenBalance.toString()).equal(
-      initialTokenBalance.sub(tokenAmount).add(erc20Remaining).toString()
-    );
-
-    await onboarding.sponsorProposal(dao.address, proposalId, [], {
-      from: daoOwner,
-      gasPrice: toBN("0"),
-    });
 
     await voting.submitVote(dao.address, proposalId, 1, {
       from: daoOwner,
@@ -312,10 +288,30 @@ describe("Adapter - Onboarding", () => {
     );
 
     await advanceTime(10000);
-    await onboarding.processProposal(dao.address, proposalId, {
+    await expectRevert(
+      onboarding.processProposal(dao.address, proposalId, {
+        from: daoOwner,
+        gasPrice: toBN("0"),
+      }),
+      "RC20: transfer amount exceeds allowance."
+    );
+
+    // Pre-approve spender (onboarding adapter) to transfer proposer tokens
+    await oltContract.approve(onboarding.address, tokenAmount, {
+      from: daoOwner,
+    });
+
+    onboarding.processProposal(dao.address, proposalId, {
       from: daoOwner,
       gasPrice: toBN("0"),
     });
+
+    // test return of remaining amount in excess of multiple of unitsPerChunk
+    myAccountTokenBalance = await oltContract.balanceOf.call(daoOwner);
+    // "myAccount did not receive remaining amount in excess of multiple of unitsPerChunk"
+    expect(myAccountTokenBalance.toString()).equal(
+      initialTokenBalance.sub(tokenAmount).add(erc20Remaining).toString()
+    );
 
     const myAccountShares = await bank.balanceOf(daoOwner, SHARES);
     const applicantShares = await bank.balanceOf(applicant, SHARES);
@@ -338,182 +334,26 @@ describe("Adapter - Onboarding", () => {
     expect(nonMemberAccountIsActiveMember).equal(false);
   });
 
-  it("should not be possible to have more than the maximum number of shares", async () => {
+  it("should not be possible to have more than the maximum number of units", async () => {
     const applicant = accounts[2];
     const dao = this.dao;
     const onboarding = this.adapters.onboarding;
 
     await expectRevert(
-      onboarding.onboard(dao.address, "0x1", applicant, SHARES, 0, {
-        from: daoOwner,
-        value: sharePrice.mul(toBN(11)).add(remaining),
-        gasPrice: toBN("0"),
-      }),
-      "total shares for this member must be lower than the maximum"
+      onboarding.onboard(
+        dao.address,
+        "0x1",
+        applicant,
+        SHARES,
+        sharePrice.mul(toBN(11)).add(remaining),
+        [],
+        {
+          from: daoOwner,
+          gasPrice: toBN("0"),
+        }
+      ),
+      "total units for this member must be lower than the maximum"
     );
-  });
-
-  it("should be possible to cancel an ETH onboarding proposal", async () => {
-    const applicant = accounts[2];
-    const dao = this.dao;
-    const onboarding = this.adapters.onboarding;
-    const bank = this.extensions.bank;
-
-    const myAccountInitialBalance = await web3.eth.getBalance(daoOwner);
-    const proposalId = getProposalCounter();
-    await onboarding.onboard(dao.address, proposalId, applicant, SHARES, 0, {
-      from: daoOwner,
-      value: sharePrice.mul(toBN(3)).add(remaining),
-      gasPrice: toBN("0"),
-    });
-
-    await expectRevert(
-      onboarding.cancelProposal(dao.address, proposalId, {
-        from: applicant,
-        gasPrice: toBN("0"),
-      }),
-      "only proposer can cancel a proposal"
-    );
-
-    await onboarding.cancelProposal(dao.address, proposalId, {
-      from: daoOwner,
-      gasPrice: toBN("0"),
-    });
-    const isProcessed = await dao.getProposalFlag(proposalId, toBN("2")); // 2 is processed flag index
-    expect(isProcessed).equal(true);
-
-    // test refund of ETH contribution
-    const myAccountBalance = await web3.eth.getBalance(daoOwner);
-    // "myAccount did not receive refund of ETH contribution"
-    expect(myAccountBalance.toString()).equal(
-      myAccountInitialBalance.toString()
-    );
-
-    // should not be able to sponsor if the proposal has already been cancelled
-    await expectRevert(
-      onboarding.sponsorProposal(dao.address, proposalId, [], {
-        from: daoOwner,
-        gasPrice: toBN("0"),
-      }),
-      "proposal already processed"
-    );
-
-    // should not be able to process if the proposal has already been cancelled
-    await expectRevert(
-      onboarding.processProposal(dao.address, proposalId, {
-        from: daoOwner,
-        gasPrice: toBN("0"),
-      }),
-      "proposal already processed"
-    );
-
-    const myAccountShares = await bank.balanceOf(daoOwner, SHARES);
-    const applicantShares = await bank.balanceOf(applicant, SHARES);
-    expect(myAccountShares.toString()).equal("1");
-    expect(applicantShares.toString()).equal("0");
-
-    const guildBalance = await bank.balanceOf(GUILD, ETH_TOKEN);
-    expect(guildBalance.toString()).equal("0");
-  });
-
-  it("should be possible to cancel an ERC20 onboarding proposal", async () => {
-    const applicant = accounts[2];
-
-    // Issue OpenLaw ERC20 Basic Token for tests
-    const tokenSupply = 1000000;
-    let oltContract = await OLToken.new(tokenSupply);
-
-    const nbOfERC20Shares = 100000000;
-    const erc20SharePrice = toBN("10");
-    const erc20Remaining = erc20SharePrice.sub(toBN("1"));
-
-    const { dao, adapters, extensions } = await deployDefaultDao({
-      owner: daoOwner,
-      unitPrice: erc20SharePrice,
-      nbShares: nbOfERC20Shares,
-      tokenAddr: oltContract.address,
-    });
-
-    const bank = extensions.bank;
-    const onboarding = adapters.onboarding;
-
-    // Transfer OLTs to myAccount
-    const initialTokenBalance = toBN("100");
-    await oltContract.transfer(daoOwner, initialTokenBalance);
-    let myAccountTokenBalance = await oltContract.balanceOf.call(daoOwner);
-    // "myAccount must be initialized with 100 OLT Tokens"
-    expect(myAccountTokenBalance.toString()).equal(
-      initialTokenBalance.toString()
-    );
-
-    // Total of OLTs to be sent to the DAO in order to get the shares
-    const tokenAmount = erc20SharePrice.add(toBN(erc20Remaining));
-
-    // Pre-approve spender (onboarding adapter) to transfer proposer tokens
-    await oltContract.approve(onboarding.address, tokenAmount, {
-      from: daoOwner,
-    });
-
-    const proposalId = getProposalCounter();
-    await onboarding.onboard(
-      dao.address,
-      proposalId,
-      applicant,
-      SHARES,
-      tokenAmount,
-      {
-        from: daoOwner,
-        gasPrice: toBN("0"),
-      }
-    );
-
-    await expectRevert(
-      onboarding.cancelProposal(dao.address, proposalId, {
-        from: applicant,
-        gasPrice: toBN("0"),
-      }),
-      "only proposer can cancel a proposal"
-    );
-
-    await onboarding.cancelProposal(dao.address, proposalId, {
-      from: daoOwner,
-      gasPrice: toBN("0"),
-    });
-    const isProcessed = await dao.getProposalFlag(proposalId, toBN("2")); // 2 is processed flag index
-    expect(isProcessed).equal(true);
-
-    // test refund of ERC20 contribution
-    myAccountTokenBalance = await oltContract.balanceOf.call(daoOwner);
-    // "myAccount did not receive refund of ERC20 contribution"
-    expect(myAccountTokenBalance.toString()).equal(
-      initialTokenBalance.toString()
-    );
-
-    // should not be able to sponsor if the proposal has already been cancelled
-    await expectRevert(
-      onboarding.sponsorProposal(dao.address, proposalId, [], {
-        from: daoOwner,
-        gasPrice: toBN("0"),
-      }),
-      "proposal already processed"
-    );
-
-    // should not be able to process if the proposal has already been cancelled
-    await expectRevert(
-      onboarding.processProposal(dao.address, proposalId, {
-        from: daoOwner,
-        gasPrice: toBN("0"),
-      }),
-      "proposal already processed"
-    );
-
-    const myAccountShares = await bank.balanceOf(daoOwner, SHARES);
-    const applicantShares = await bank.balanceOf(applicant, SHARES);
-    expect(myAccountShares.toString()).equal("1");
-    expect(applicantShares.toString()).equal("0");
-
-    const guildBalance = await bank.balanceOf(GUILD, oltContract.address);
-    expect(guildBalance.toString()).equal("0");
   });
 
   it("should handle an onboarding proposal with a failed vote", async () => {
@@ -525,15 +365,18 @@ describe("Adapter - Onboarding", () => {
 
     const myAccountInitialBalance = await web3.eth.getBalance(daoOwner);
     const proposalId = getProposalCounter();
-    await onboarding.onboard(dao.address, proposalId, applicant, SHARES, 0, {
-      from: daoOwner,
-      value: sharePrice.mul(toBN(3)).add(remaining),
-      gasPrice: toBN("0"),
-    });
-    await onboarding.sponsorProposal(dao.address, proposalId, [], {
-      from: daoOwner,
-      gasPrice: toBN("0"),
-    });
+    await onboarding.onboard(
+      dao.address,
+      proposalId,
+      applicant,
+      SHARES,
+      sharePrice.mul(toBN(3)).add(remaining),
+      [],
+      {
+        from: daoOwner,
+        gasPrice: toBN("0"),
+      }
+    );
 
     await voting.submitVote(dao.address, proposalId, 2, {
       from: daoOwner,
@@ -577,18 +420,6 @@ describe("Adapter - Onboarding", () => {
     expect(applicantIsActiveMember).equal(false);
   });
 
-  it("should not be possible to sponsor proposal that does not exist", async () => {
-    const dao = this.dao;
-    const onboarding = this.adapters.onboarding;
-    await expectRevert(
-      onboarding.sponsorProposal(dao.address, "0x1", [], {
-        from: daoOwner,
-        gasPrice: toBN("0"),
-      }),
-      "proposal does not exist for this dao"
-    );
-  });
-
   it("should not be possible to process proposal that does not exist", async () => {
     const dao = this.dao;
     const onboarding = this.adapters.onboarding;
@@ -625,11 +456,18 @@ describe("Adapter - Onboarding", () => {
     const onboarding = this.adapters.onboarding;
 
     const proposalId = getProposalCounter();
-    await onboarding.onboard(dao.address, proposalId, applicant, SHARES, 1, {
-      from: daoOwner,
-      value: sharePrice.mul(toBN(3)).add(remaining),
-      gasPrice: toBN("0"),
-    });
+    await onboarding.onboard(
+      dao.address,
+      proposalId,
+      applicant,
+      SHARES,
+      sharePrice.mul(toBN(3)).add(remaining),
+      [],
+      {
+        from: daoOwner,
+        gasPrice: toBN("0"),
+      }
+    );
 
     // try to update the delegated key using the address of another member
     await expectRevert(
@@ -650,15 +488,18 @@ describe("Adapter - Onboarding", () => {
 
     const proposalId = getProposalCounter();
 
-    await onboarding.onboard(dao.address, proposalId, applicant, SHARES, 1, {
-      from: daoOwner,
-      value: sharePrice.mul(toBN(3)).add(remaining),
-      gasPrice: toBN("0"),
-    });
-    await onboarding.sponsorProposal(dao.address, proposalId, [], {
-      from: daoOwner,
-      gasPrice: toBN("0"),
-    });
+    await onboarding.onboard(
+      dao.address,
+      proposalId,
+      applicant,
+      SHARES,
+      sharePrice.mul(toBN(3)).add(remaining),
+      [],
+      {
+        from: daoOwner,
+        gasPrice: toBN("0"),
+      }
+    );
 
     await voting.submitVote(dao.address, proposalId, 1, {
       from: daoOwner,
@@ -670,6 +511,7 @@ describe("Adapter - Onboarding", () => {
 
     await onboarding.processProposal(dao.address, proposalId, {
       from: daoOwner,
+      value: sharePrice.mul(toBN(3)).add(remaining),
       gasPrice: toBN("0"),
     });
 
