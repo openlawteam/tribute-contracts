@@ -98,7 +98,7 @@ const deployDao = async (options) => {
     batchVoting: null,
   };
 
-  if (options.isOffchainVoting) {
+  if (options.offchainVoting) {
     const {
       offchainVoting,
       handleBadReporterAdapter,

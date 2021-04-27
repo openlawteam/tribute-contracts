@@ -123,7 +123,7 @@ const deployDaoWithOffchainVoting = async ({ owner, newMember }) => {
     votingHelpers,
   } = await deployDao({
     ...getDefaultOptions({ owner }),
-    isOffchainVoting: true,
+    offchainVoting: true,
     deployTestTokens: true,
     finalize: false,
     ...ozContracts,
