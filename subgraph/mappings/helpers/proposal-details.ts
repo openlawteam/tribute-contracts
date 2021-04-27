@@ -6,6 +6,7 @@ import { TributeContract } from "../../generated/templates/DaoRegistry/TributeCo
 import { ManagingContract } from "../../generated/templates/DaoRegistry/ManagingContract";
 import { FinancingContract } from "../../generated/templates/DaoRegistry/FinancingContract";
 import { GuildKickContract } from "../../generated/templates/DaoRegistry/GuildKickContract";
+import { TributeNFTContract } from "../../generated/templates/DaoRegistry/TributeNFTContract";
 
 import { Proposal } from "../../generated/schema";
 
@@ -16,6 +17,7 @@ import {
   MANAGING_ID,
   FINANCING_ID,
   GUILDKICK_ID,
+  TRIBUTE_NFT_ID,
 } from "./constants";
 
 export function getProposalDetails(
@@ -42,6 +44,9 @@ export function getProposalDetails(
   } else if (GUILDKICK_ID.toString() == adapterId.toHexString()) {
     log.info("INFO GUILDKICK_ID, proposalId: {}", [proposalId.toHexString()]);
     guildkick(adapterAdddress, daoAddress, proposalId);
+  } else if (TRIBUTE_NFT_ID.toString() == adapterId.toHexString()) {
+    log.info("INFO TRIBUTE_NFT_ID, proposalId: {}", [proposalId.toHexString()]);
+    tributeNFT(adapterAdddress, daoAddress, proposalId);
   }
 }
 
@@ -132,11 +137,11 @@ function tribute(
 
   if (proposal) {
     proposal.applicant = data.value1;
-    proposal.proposer = data.value2;
-    proposal.tokenToMint = data.value3;
-    proposal.requestAmount = data.value4;
-    proposal.token = data.value5;
-    proposal.tributeAmount = data.value6;
+    proposal.tokenToMint = data.value2;
+    proposal.requestAmount = data.value3;
+    proposal.token = data.value4;
+    proposal.tributeAmount = data.value5;
+    proposal.tributeTokenOwner = data.value6;
 
     proposal.adapterAddress = adapterAdddress;
 
@@ -242,6 +247,37 @@ function guildkick(
 
   if (proposal) {
     proposal.memberToKick = data;
+    proposal.adapterAddress = adapterAdddress;
+
+    proposal.save();
+  }
+}
+
+function tributeNFT(
+  adapterAdddress: Address,
+  daoAddress: Address,
+  proposalId: Bytes
+): void {
+  let tributeNFT = TributeNFTContract.bind(adapterAdddress);
+
+  let data = tributeNFT.proposals(
+    Address.fromString(daoAddress.toHexString()),
+    proposalId
+  );
+
+  let daoProposalId = daoAddress
+    .toHex()
+    .concat("-proposal-")
+    .concat(proposalId.toHex());
+
+  let proposal = Proposal.load(daoProposalId);
+
+  if (proposal) {
+    proposal.applicant = data.value1;
+    proposal.nftAddr = data.value2;
+    proposal.nftTokenId = data.value3;
+    proposal.requestAmount = data.value4;
+
     proposal.adapterAddress = adapterAdddress;
 
     proposal.save();

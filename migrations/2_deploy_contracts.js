@@ -46,8 +46,8 @@ async function deployTestDao(deployFunction, network) {
     nbShares: numberOfShares,
     tokenAddr: ETH_TOKEN,
     maxChunks: maximumChunks,
-    votingPeriod: 10,
-    gracePeriod: 1,
+    votingPeriod: 10, // 10 secs
+    gracePeriod: 1, // 1 sec
     offchainVoting: true,
     chainId: getNetworkDetails(network).chainId,
     deployTestTokens: false,
@@ -67,8 +67,8 @@ async function deployRinkebyDao(deployFunction, network) {
     nbShares: toBN("100000"),
     tokenAddr: ETH_TOKEN,
     maxChunks: toBN("100000"),
-    votingPeriod: 600,
-    gracePeriod: 600,
+    votingPeriod: 600, // 600 secs = 10 mins
+    gracePeriod: 600, // 600 secs = 10 mins
     offchainVoting: true,
     chainId: getNetworkDetails(network).chainId,
     deployTestTokens: true,
@@ -88,8 +88,8 @@ async function deployGanacheDao(deployFunction, network) {
     nbShares: toBN("100000"),
     tokenAddr: ETH_TOKEN,
     maxChunks: toBN("100000"),
-    votingPeriod: 120,
-    gracePeriod: 60,
+    votingPeriod: 120, // 120 secs = 2 mins
+    gracePeriod: 60, // 60 secs = 1 min
     offchainVoting: true,
     chainId: getNetworkDetails(network).chainId,
     deployTestTokens: true,
