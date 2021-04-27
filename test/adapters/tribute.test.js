@@ -24,7 +24,7 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
  */
-const { toBN, SHARES, GUILD } = require("../../utils/ContractUtil.js");
+const { toBN, UNITS, GUILD } = require("../../utils/ContractUtil.js");
 
 const {
   deployDefaultDao,
@@ -64,7 +64,7 @@ describe("Adapter - Tribute", () => {
     this.snapshotId = await takeChainSnapshot();
   });
 
-  it("should be possible to provide ERC20 tokens in exchange for DAO shares", async () => {
+  it("should be possible to provide ERC20 tokens in exchange for DAO units", async () => {
     const applicant = accounts[2];
     const nonMemberAccount = accounts[3];
 
@@ -85,7 +85,7 @@ describe("Adapter - Tribute", () => {
       initialTokenBalance.toString()
     );
 
-    // Number of OLTs to be sent to the DAO in exchange for number of requested shares
+    // Number of OLTs to be sent to the DAO in exchange for number of requested units
     const tributeAmount = 10;
     const requestAmount = 1000;
 
@@ -93,7 +93,7 @@ describe("Adapter - Tribute", () => {
       dao.address,
       getProposalCounter(),
       applicant,
-      SHARES,
+      UNITS,
       requestAmount,
       oltContract.address,
       tributeAmount,
@@ -131,13 +131,13 @@ describe("Adapter - Tribute", () => {
     });
 
     // test balances after proposal is processed
-    const daoOwnerShares = await bank.balanceOf(daoOwner, SHARES);
+    const daoOwnerShares = await bank.balanceOf(daoOwner, UNITS);
     expect(daoOwnerShares.toString()).equal("1");
-    const applicantShares = await bank.balanceOf(applicant, SHARES);
+    const applicantShares = await bank.balanceOf(applicant, UNITS);
     expect(applicantShares.toString()).equal(requestAmount.toString());
     const nonMemberAccountShares = await bank.balanceOf(
       nonMemberAccount,
-      SHARES
+      UNITS
     );
     expect(nonMemberAccountShares.toString()).equal("0");
     await checkBalance(
@@ -178,7 +178,7 @@ describe("Adapter - Tribute", () => {
       initialTokenBalance.toString()
     );
 
-    // Number of OLTs to be sent to the DAO in exchange for number of requested shares
+    // Number of OLTs to be sent to the DAO in exchange for number of requested units
     const tributeAmount = 10;
     const requestAmount = 100000000;
 
@@ -187,7 +187,7 @@ describe("Adapter - Tribute", () => {
       dao.address,
       proposalId,
       applicant,
-      SHARES,
+      UNITS,
       requestAmount,
       oltContract.address,
       tributeAmount,
@@ -221,9 +221,9 @@ describe("Adapter - Tribute", () => {
     expect(isProcessed).equal(true);
 
     // test balances after proposal is processed
-    const daoOwnerShares = await bank.balanceOf(daoOwner, SHARES);
+    const daoOwnerShares = await bank.balanceOf(daoOwner, UNITS);
     expect(daoOwnerShares.toString()).equal("1");
-    const applicantShares = await bank.balanceOf(applicant, SHARES);
+    const applicantShares = await bank.balanceOf(applicant, UNITS);
     expect(applicantShares.toString()).equal("0");
     const guildBalance = await bank.balanceOf(GUILD, oltContract.address);
     expect(guildBalance.toString()).equal("0");
@@ -292,7 +292,7 @@ describe("Adapter - Tribute", () => {
     // "applicant account must be initialized with 2**161 OLT Tokens";
     expect(applicantTokenBalance.toString()).equal(initialTokenBalance);
 
-    // Number of OLTs to be sent to the DAO in exchange for number of requested shares
+    // Number of OLTs to be sent to the DAO in exchange for number of requested units
     const tributeAmount = initialTokenBalance;
     const requestAmount = 100000000;
 
@@ -301,7 +301,7 @@ describe("Adapter - Tribute", () => {
       dao.address,
       proposalId,
       applicant,
-      SHARES,
+      UNITS,
       requestAmount,
       oltContract.address,
       tributeAmount,
@@ -358,7 +358,7 @@ describe("Adapter - Tribute", () => {
       initialTokenBalance.toString()
     );
 
-    // Number of OLTs to be sent to the DAO in exchange for number of requested shares
+    // Number of OLTs to be sent to the DAO in exchange for number of requested units
     const tributeAmount = 10;
     // Use an amount that will cause an overflow 2**89 > 2**88-1 for internal
     // tokens
@@ -369,7 +369,7 @@ describe("Adapter - Tribute", () => {
       dao.address,
       proposalId,
       applicant,
-      SHARES,
+      UNITS,
       requestAmount,
       oltContract.address,
       tributeAmount,

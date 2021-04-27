@@ -1,7 +1,7 @@
 // Whole-script strict mode syntax
 "use strict";
 
-const { fromUtf8, toBN, SHARES, LOOT } = require("./ContractUtil.js");
+const { fromUtf8, toBN, UNITS, LOOT } = require("./ContractUtil.js");
 
 const { expect, advanceTime } = require("./OZTestUtil.js");
 
@@ -23,9 +23,9 @@ const checkBalance = async (bank, address, token, expectedBalance) => {
 };
 
 const isMember = async (bank, member) => {
-  const shares = await bank.balanceOf(member, SHARES);
+  const units = await bank.balanceOf(member, UNITS);
 
-  return shares > toBN("0");
+  return units > toBN("0");
 };
 
 const submitNewMemberProposal = async (
@@ -34,7 +34,7 @@ const submitNewMemberProposal = async (
   onboarding,
   dao,
   newMember,
-  sharePrice,
+  unitPrice,
   token,
   desiredShares = toBN(10)
 ) => {
@@ -43,7 +43,7 @@ const submitNewMemberProposal = async (
     proposalId,
     newMember,
     token,
-    sharePrice.mul(desiredShares),
+    unitPrice.mul(desiredShares),
     [],
     {
       from: member,
@@ -59,7 +59,7 @@ const onboardingNewMember = async (
   voting,
   newMember,
   sponsor,
-  sharePrice,
+  unitPrice,
   token,
   desiredShares = toBN(10)
 ) => {
@@ -69,7 +69,7 @@ const onboardingNewMember = async (
     onboarding,
     dao,
     newMember,
-    sharePrice,
+    unitPrice,
     token,
     desiredShares
   );
@@ -83,7 +83,7 @@ const onboardingNewMember = async (
 
   await onboarding.processProposal(dao.address, proposalId, {
     from: sponsor,
-    value: sharePrice.mul(desiredShares),
+    value: unitPrice.mul(desiredShares),
     gasPrice: toBN("0"),
   });
 };

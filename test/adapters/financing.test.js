@@ -27,8 +27,8 @@ SOFTWARE.
 const {
   toBN,
   fromUtf8,
-  sharePrice,
-  SHARES,
+  unitPrice,
+  UNITS,
   GUILD,
   ETH_TOKEN,
 } = require("../../utils/ContractUtil.js");
@@ -46,7 +46,7 @@ const {
 
 const { checkBalance } = require("../../utils/TestUtils.js");
 
-const remaining = sharePrice.sub(toBN("50000000000000"));
+const remaining = unitPrice.sub(toBN("50000000000000"));
 const myAccount = accounts[1];
 const applicant = accounts[2];
 const newMember = accounts[3];
@@ -87,8 +87,8 @@ describe("Adapter - Financing", () => {
       this.dao.address,
       proposalId,
       newMember,
-      SHARES,
-      sharePrice.mul(toBN(10)).add(remaining),
+      UNITS,
+      unitPrice.mul(toBN(10)).add(remaining),
       [],
       {
         from: myAccount,
@@ -104,7 +104,7 @@ describe("Adapter - Financing", () => {
     try {
       await onboarding.processProposal(this.dao.address, proposalId, {
         from: myAccount,
-        value: sharePrice.mul(toBN(10)).add(remaining),
+        value: unitPrice.mul(toBN(10)).add(remaining),
         gasPrice: toBN("0"),
       });
     } catch (err) {
@@ -114,7 +114,7 @@ describe("Adapter - Financing", () => {
     await advanceTime(10000);
     await onboarding.processProposal(this.dao.address, proposalId, {
       from: myAccount,
-      value: sharePrice.mul(toBN(10)).add(remaining),
+      value: unitPrice.mul(toBN(10)).add(remaining),
       gasPrice: toBN("0"),
     });
     //Check Guild Bank Balance
@@ -188,8 +188,8 @@ describe("Adapter - Financing", () => {
       this.dao.address,
       proposalId,
       newMember,
-      SHARES,
-      sharePrice.mul(toBN(10)).add(remaining),
+      UNITS,
+      unitPrice.mul(toBN(10)).add(remaining),
       [],
       {
         from: myAccount,
@@ -205,7 +205,7 @@ describe("Adapter - Financing", () => {
 
     await onboarding.processProposal(this.dao.address, proposalId, {
       from: myAccount,
-      value: sharePrice.mul(toBN(10)).add(remaining),
+      value: unitPrice.mul(toBN(10)).add(remaining),
       gasPrice: toBN("0"),
     });
 
@@ -256,8 +256,8 @@ describe("Adapter - Financing", () => {
       this.dao.address,
       proposalId,
       newMember,
-      SHARES,
-      sharePrice.mul(toBN(10)).add(remaining),
+      UNITS,
+      unitPrice.mul(toBN(10)).add(remaining),
       [],
       {
         from: myAccount,
@@ -273,7 +273,7 @@ describe("Adapter - Financing", () => {
 
     await onboarding.processProposal(this.dao.address, proposalId, {
       from: myAccount,
-      value: sharePrice.mul(toBN(10)).add(remaining),
+      value: unitPrice.mul(toBN(10)).add(remaining),
       gasPrice: toBN("0"),
     });
 
@@ -309,8 +309,8 @@ describe("Adapter - Financing", () => {
       this.dao.address,
       proposalId,
       newMember,
-      SHARES,
-      sharePrice.mul(toBN(10)).add(remaining),
+      UNITS,
+      unitPrice.mul(toBN(10)).add(remaining),
       [],
       {
         from: myAccount,
@@ -326,7 +326,7 @@ describe("Adapter - Financing", () => {
 
     await onboarding.processProposal(this.dao.address, proposalId, {
       from: myAccount,
-      value: sharePrice.mul(toBN(10)).add(remaining),
+      value: unitPrice.mul(toBN(10)).add(remaining),
       gasPrice: toBN("0"),
     });
 
@@ -380,8 +380,8 @@ describe("Adapter - Financing", () => {
       this.dao.address,
       proposalId,
       newMember,
-      SHARES,
-      sharePrice.mul(toBN(10)).add(remaining),
+      UNITS,
+      unitPrice.mul(toBN(10)).add(remaining),
       [],
       {
         from: myAccount,

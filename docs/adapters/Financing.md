@@ -14,7 +14,7 @@ The applicant address cannot be a reserved address, which means the address is a
 
 Tokens that are provided by the member have to be allowed/supported by the DAO.
 
-The member needs to have enough shares and/or loot in order to convert it to funds.
+The member needs to have enough units and/or loot in order to convert it to funds.
 
 DAORegistry Access Flags: `SUBMIT_PROPOSAL`.
 

@@ -5,11 +5,11 @@ The tokens sent by a proposer are converted into a proposal that the community v
 
 You can mint any internal tokens but it is usually to mint either SHARE or LOOT tokens. The onboarding process supports raw ether, and ERC20 tokens tributes. The ERC20 token must be allowed/supported by the Bank.
 
-In case of any failure during the `processProposal` step, the funds are returned to the applicant, and the minted shares burned if needed.
+In case of any failure during the `processProposal` step, the funds are returned to the applicant, and the minted units burned if needed.
 
 ## Adapter workflow
 
-First, a potential new member (or a member who wants to increase his shares) sends tokens to the onboarding adapter.
+First, a potential new member (or a member who wants to increase his units) sends tokens to the onboarding adapter.
 The adapter is used as an escrow between the DAO and the potential new member.
 
 Sending the tokens means a proposal is submitted (but not sponsored).
@@ -19,7 +19,7 @@ If the proposal has not been sponsored yet, the proposer can cancel the proposal
 If the proposal is sponsored (only by a member), it is put up for vote.
 
 After the voting period is done, it is time to process the proposal.
-If the vote has passed, the tokens are moved to the guild bank and the shares minted (internal tokens).
+If the vote has passed, the tokens are moved to the guild bank and the units minted (internal tokens).
 If it has failed, the money is returned to the proposer.
 
 ## Adapter configuration
@@ -36,9 +36,9 @@ Bank Extension Access Flags: `ADD_TO_BALANCE`, `SUB_FROM_BALANCE`.
 
 How many tokens need to be minted per chunk bought.
 
-### {tokenAddrToMint}.onboarding.sharesPerChunk
+### {tokenAddrToMint}.onboarding.unitsPerChunk
 
-How many shares (tokens from tokenAddr) are being minted per chunk.
+How many units (tokens from tokenAddr) are being minted per chunk.
 
 ### {tokenAddrToMint}.onboarding.tokenAddr
 
@@ -68,7 +68,7 @@ Which token needs to be minted if the proposal passes.
 
 The amount sent by the proposer.
 
-#### sharesRequested
+#### unitsRequested
 
 The amount of internal tokens that needs to be minted to the applicant if the proposal passes.
 
@@ -90,7 +90,7 @@ The proposer address.
 
 The proposals are organized by DAO address and then by proposal id.
 
-### shares
+### units
 
 Accounting to see the amount of a particular internal token that has been minted for a particular applicant. This is then checked against the maxChunks configuration to determine if the onboarding proposal is allowed or not.
 
@@ -101,11 +101,11 @@ Accounting to see the amount of a particular internal token that has been minted
 This is the function to build the config key for a particular tokenAddrToMint.
 It's a pure function.
 
-### function configureDao(DaoRegistry dao, address tokenAddrToMint, uint256 chunkSize, uint256 sharesPerChunk, uint256 maximumChunks, address tokenAddr)
+### function configureDao(DaoRegistry dao, address tokenAddrToMint, uint256 chunkSize, uint256 unitsPerChunk, uint256 maximumChunks, address tokenAddr)
 
 This function configures the adapter for a particular DAO.
 The modifier is adapterOnly which means that only if the sender is either a registered adapter of the DAO or if it is in creation mode can it be called.
-The function checks that chunkSize, sharesPerChunks and maximumChunks cannot be 0.
+The function checks that chunkSize, unitsPerChunks and maximumChunks cannot be 0.
 
 **tokenAddr** is being whitelisted in the bank extension as an ERC-20 token
 **tokenAddrToMint** is being whitelisted in the bank extension as an internal token
@@ -122,7 +122,7 @@ Onboard submits the proposal but does not sponsor it yet. This is why anyone can
 
 The tokens are then kept into escrow in the adapter and a proposal is created.
 
-If the amount sent is not a multiple of sharesPerChunk, the remainder is sent back to the proposer.
+If the amount sent is not a multiple of unitsPerChunk, the remainder is sent back to the proposer.
 
 This function uses **\_submitMembershipProposal** to create the proposal.
 
@@ -158,7 +158,7 @@ Otherwise, the state is invalid and the transaction is reverted (if the vote doe
 
 ### function \_submitMembershipProposal(DaoRegistry dao, bytes32 proposalId, address tokenToMint, address payable applicant, address payable proposer, uint256 value, address token)
 
-### function \_submitMembershipProposalInternal(DaoRegistry dao, bytes32 proposalId, address tokenToMint, address payable newMember, address payable proposer, uint256 sharesRequested, uint256 amount, address token)
+### function \_submitMembershipProposalInternal(DaoRegistry dao, bytes32 proposalId, address tokenToMint, address payable newMember, address payable proposer, uint256 unitsRequested, uint256 amount, address token)
 
 This function marks the proposalId as submitted in the DAO and saves the information in the internal adapter state.
 

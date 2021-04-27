@@ -42,7 +42,7 @@ BatchVoting interacts with Bank extension and DaoRegistry to get information abo
 The info is:
 
 - its delegate key at the time of voting
-- how many shares does the member have
+- how many units does the member have
 
 ## Functions description and assumptions / checks
 
@@ -77,7 +77,7 @@ It does the following checks:
 - checks that the previous member address is "before" (hex order) the current one
 - checks that the vote is actually for this proposal
 
-If it is all good, returns the amount of shares the member has at that point in time
+If it is all good, returns the amount of units the member has at that point in time
 
 ### function getSenderAddress(DaoRegistry dao, address actionId, bytes memory data,address)
 

@@ -26,8 +26,8 @@ SOFTWARE.
  */
 const {
   toBN,
-  sharePrice,
-  SHARES,
+  unitPrice,
+  UNITS,
   GUILD,
   ETH_TOKEN,
   sha3,
@@ -190,7 +190,7 @@ describe("Adapter - TributeNFT", () => {
     });
 
     // test balance after proposal is processed
-    const applicantShares = await bank.balanceOf(nftOwner, SHARES);
+    const applicantShares = await bank.balanceOf(nftOwner, UNITS);
     expect(applicantShares.toString()).equal("10");
 
     // test active member status
@@ -261,7 +261,7 @@ describe("Adapter - TributeNFT", () => {
     });
 
     // test balance after proposal is processed
-    const applicantShares = await bank.balanceOf(nftOwner, SHARES);
+    const applicantShares = await bank.balanceOf(nftOwner, UNITS);
     expect(applicantShares.toString()).equal("0");
 
     // test active member status
@@ -291,8 +291,8 @@ describe("Adapter - TributeNFT", () => {
       this.adapters.voting,
       newMemberA,
       daoOwner,
-      sharePrice.mul(toBN(10)),
-      SHARES,
+      unitPrice.mul(toBN(10)),
+      UNITS,
       toBN("1")
     );
 
@@ -338,7 +338,7 @@ describe("Adapter - TributeNFT", () => {
     });
 
     // test balance after proposal is processed
-    const applicantShares = await bank.balanceOf(nftOwner, SHARES);
+    const applicantShares = await bank.balanceOf(nftOwner, UNITS);
     expect(applicantShares.toString()).equal("0");
 
     // test active member status
@@ -389,7 +389,7 @@ describe("Adapter - TributeNFT", () => {
     );
 
     // test balance after proposal is processed
-    const applicantShares = await bank.balanceOf(nftOwner, SHARES);
+    const applicantShares = await bank.balanceOf(nftOwner, UNITS);
     expect(applicantShares.toString()).equal("0");
 
     // test active member status

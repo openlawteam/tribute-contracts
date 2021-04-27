@@ -198,7 +198,7 @@ contract BatchVotingContract is
             "wrong proposal vote"
         );
 
-        return bank.getPriorAmount(entry.memberAddress, SHARES, snapshot);
+        return bank.getPriorAmount(entry.memberAddress, UNITS, snapshot);
     }
 
     function _stringToUint(string memory s)
@@ -255,7 +255,7 @@ contract BatchVotingContract is
             _snapshotContract.hashMessage(dao, msg.sender, proposal);
         address addr = recover(proposalHash, proposal.sig);
         address memberAddr = dao.getAddressIfDelegated(addr);
-        require(bank.balanceOf(memberAddr, SHARES) > 0, "noActiveMember");
+        require(bank.balanceOf(memberAddr, UNITS) > 0, "noActiveMember");
         require(
             blockNumber < block.number,
             "snapshot block number should not be in the future"

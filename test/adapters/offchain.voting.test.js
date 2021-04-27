@@ -27,9 +27,9 @@ SOFTWARE.
 const {
   toBN,
   sha3,
-  sharePrice,
+  unitPrice,
   remaining,
-  SHARES,
+  UNITS,
 } = require("../../utils/ContractUtil.js");
 
 const {
@@ -268,8 +268,8 @@ describe("Adapter - Offchain Voting", () => {
       dao.address,
       proposalId,
       members[1].address,
-      SHARES,
-      sharePrice.mul(toBN(3)).add(remaining),
+      UNITS,
+      unitPrice.mul(toBN(3)).add(remaining),
       prepareVoteProposalData(proposalData, web3),
       {
         from: daoOwner,
@@ -349,7 +349,7 @@ describe("Adapter - Offchain Voting", () => {
 
     await onboarding.processProposal(dao.address, proposalId, {
       from: daoOwner,
-      value: sharePrice.mul(toBN("3")).add(remaining),
+      value: unitPrice.mul(toBN("3")).add(remaining),
       gasPrice: toBN("0"),
     });
 

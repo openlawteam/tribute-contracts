@@ -47,7 +47,7 @@ contract OffchainVotingContract is
 {
     struct ProposalChallenge {
         address reporter;
-        uint256 shares;
+        uint256 units;
     }
 
     SnapshotProposalContract private _snapshotContract;
@@ -172,7 +172,7 @@ contract OffchainVotingContract is
         returns (uint256, address)
     {
         return (
-            challengeProposals[address(dao)][proposalId].shares,
+            challengeProposals[address(dao)][proposalId].units,
             challengeProposals[address(dao)][proposalId].reporter
         );
     }
@@ -281,7 +281,7 @@ contract OffchainVotingContract is
             diff = nbNo - nbYes;
         }
         BankExtension bank = BankExtension(dao.getExtensionAddress(BANK));
-        uint256 totalWeight = bank.getPriorAmount(TOTAL, SHARES, vote.snapshot);
+        uint256 totalWeight = bank.getPriorAmount(TOTAL, UNITS, vote.snapshot);
         uint256 unvotedWeights = totalWeight - nbYes - nbNo;
         if (diff > unvotedWeights) {
             return true;
@@ -378,7 +378,7 @@ contract OffchainVotingContract is
         address addr = recover(proposalHash, proposal.sig);
 
         address memberAddr = dao.getAddressIfDelegated(addr);
-        require(bank.balanceOf(memberAddr, SHARES) > 0, "noActiveMember");
+        require(bank.balanceOf(memberAddr, UNITS) > 0, "noActiveMember");
         require(
             blockNumber <= block.number,
             "snapshot block number should not be in the future"
@@ -541,7 +541,7 @@ contract OffchainVotingContract is
             dao.getPriorDelegateKey(nodeCurrent.account, vote.snapshot);
         BankExtension bank = BankExtension(dao.getExtensionAddress(BANK));
         uint256 weight =
-            bank.getPriorAmount(nodeCurrent.account, SHARES, vote.snapshot);
+            bank.getPriorAmount(nodeCurrent.account, UNITS, vote.snapshot);
 
         if (
             _hasVotedYes(
@@ -597,17 +597,17 @@ contract OffchainVotingContract is
 
         dao.submitProposal(challengeProposalId);
 
-        uint256 shares = bank.balanceOf(challengedReporter, SHARES);
+        uint256 units = bank.balanceOf(challengedReporter, UNITS);
 
         challengeProposals[address(dao)][
             challengeProposalId
-        ] = ProposalChallenge(challengedReporter, shares);
+        ] = ProposalChallenge(challengedReporter, units);
 
-        // Burns / subtracts from member's balance the number of shares to burn.
-        bank.subtractFromBalance(challengedReporter, SHARES, shares);
+        // Burns / subtracts from member's balance the number of units to burn.
+        bank.subtractFromBalance(challengedReporter, UNITS, units);
         // Burns / subtracts from member's balance the number of loot to burn.
         // bank.subtractFromBalance(memberToKick, LOOT, kick.lootToBurn);
-        bank.addToBalance(challengedReporter, LOOT, shares);
+        bank.addToBalance(challengedReporter, LOOT, units);
     }
 
     function getSignedHash(

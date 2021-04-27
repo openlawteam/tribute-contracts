@@ -2,8 +2,8 @@
 
 The CouponOnboarding adapter provides a way to onboard an initial group of members quickly without requiring multiple proposals.
 
-The DAO creator can produce and sign coupons which allow redemption of a particular number of shares by a given address. When the coupon is redeemed
-the shares are directly issued to the new member.
+The DAO creator can produce and sign coupons which allow redemption of a particular number of units by a given address. When the coupon is redeemed
+the units are directly issued to the new member.
 
 ## Adapter workflow
 
@@ -41,7 +41,7 @@ The address that this coupon authorized to become a new member.
 
 #### amount
 
-The amount of shares that this member will receive.
+The amount of units that this member will receive.
 
 #### nonce
 
@@ -64,5 +64,5 @@ Redeems a coupon to add a new member.
 
 **dao** is the DAO instance to be configured
 **authorizedMember** is the address that this coupon authorized to become a new member.
-**amount** is the amount of shares that this member will receive.
+**amount** is the amount of units that this member will receive.
 **nonce** is a unique identifier for this coupon request.

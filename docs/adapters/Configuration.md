@@ -1,8 +1,8 @@
 ## Adapter description and scope
 
-The Configuration adapter manages storing and retrieving per-DAO settings required by shared adapters.
+The Configuration adapter manages storing and retrieving per-DAO settings required by unitd adapters.
 
-Some adapters have configurable settings which must be stored for each DAO instance that uses the shared adapter.
+Some adapters have configurable settings which must be stored for each DAO instance that uses the unitd adapter.
 
 ## Workflows
 

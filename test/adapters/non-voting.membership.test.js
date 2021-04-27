@@ -27,7 +27,7 @@ SOFTWARE.
 const {
   toBN,
   GUILD,
-  sharePrice,
+  unitPrice,
   remaining,
   LOOT,
 } = require("../../utils/ContractUtil.js");
@@ -60,8 +60,8 @@ describe("Adapter - Non Voting Onboarding", () => {
     const onboarding = adapters.onboarding;
     const voting = adapters.voting;
 
-    // Total of ETH to be sent to the DAO in order to get the Loot shares
-    let ethAmount = sharePrice.mul(toBN(3)).add(remaining);
+    // Total of ETH to be sent to the DAO in order to get the Loot units
+    let ethAmount = unitPrice.mul(toBN(3)).add(remaining);
     let proposalId = "0x1";
     // Request to join the DAO as an Advisor (non-voting power), Send a tx with RAW ETH only and specify the nonVotingOnboarding
     await onboarding.onboard(
@@ -91,11 +91,11 @@ describe("Adapter - Non Voting Onboarding", () => {
       gasPrice: toBN("0"),
     });
 
-    // Check the number of Loot (non-voting shares) issued to the new Avisor
+    // Check the number of Loot (non-voting units) issued to the new Avisor
     const advisorAccountLoot = await bank.balanceOf(advisorAccount, LOOT);
     expect(advisorAccountLoot.toString()).equal("3000000000000000");
 
-    // Guild balance must not change when Loot shares are issued
+    // Guild balance must not change when Loot units are issued
     const guildBalance = await bank.balanceOf(
       GUILD,
       "0x0000000000000000000000000000000000000000"
@@ -130,7 +130,7 @@ describe("Adapter - Non Voting Onboarding", () => {
     );
     expect(advisorTokenBalance.toString()).equal("100");
 
-    // Total of OLT to be sent to the DAO in order to get the Loot shares
+    // Total of OLT to be sent to the DAO in order to get the Loot units
     const tokenAmount = 10;
 
     // Send a request to join the DAO as an Advisor (non-voting power),
@@ -182,11 +182,11 @@ describe("Adapter - Non Voting Onboarding", () => {
       gasPrice: toBN("0"),
     });
 
-    // Check the number of Loot (non-voting shares) issued to the new Avisor
+    // Check the number of Loot (non-voting units) issued to the new Avisor
     const advisorAccountLoot = await bank.balanceOf(advisorAccount, LOOT);
     expect(advisorAccountLoot.toString()).equal("100000000");
 
-    // Guild balance must not change when Loot shares are issued
+    // Guild balance must not change when Loot units are issued
     const guildBalance = await bank.balanceOf(GUILD, oltContract.address);
     expect(guildBalance.toString()).equal("10");
   });

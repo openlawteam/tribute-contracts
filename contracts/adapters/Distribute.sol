@@ -42,8 +42,8 @@ contract DistributeContract is
     AdapterGuard
 {
     // Event to indicate the distribution process has been completed
-    // if the shareHolder address is 0x0, then the amount were distributed to all members of the DAO.
-    event Distributed(address token, uint256 amount, address shareHolder);
+    // if the unitHolder address is 0x0, then the amount were distributed to all members of the DAO.
+    event Distributed(address token, uint256 amount, address unitHolder);
 
     // The distribution status
     enum DistributionStatus {NOT_STARTED, IN_PROGRESS, DONE, FAILED}
@@ -54,8 +54,8 @@ contract DistributeContract is
         address token;
         // The amount to distribute.
         uint256 amount;
-        // The share holder address that will receive the funds. If 0x0, the funds will be distributed to all members of the DAO.
-        address shareHolderAddr;
+        // The unit holder address that will receive the funds. If 0x0, the funds will be distributed to all members of the DAO.
+        address unitHolderAddr;
         // The distribution status.
         DistributionStatus status;
         // Current iteration index to control the cached for-loop.
@@ -80,12 +80,12 @@ contract DistributeContract is
     /**
      * @notice Creates a distribution proposal for one or all members of the DAO, opens it for voting, and sponsors it.
      * @dev Only tokens that are allowed by the Bank are accepted.
-     * @dev If the shareHolderAddr is 0x0, then the funds will be distributed to all members of the DAO.
+     * @dev If the unitHolderAddr is 0x0, then the funds will be distributed to all members of the DAO.
      * @dev Proposal ids can not be reused.
      * @dev The amount must be greater than zero.
      * @param dao The dao address.
      * @param proposalId The guild kick proposal id.
-     * @param shareHolderAddr The member address that should receive the funds, if 0x0, the funds will be distributed to all members of the DAO.
+     * @param unitHolderAddr The member address that should receive the funds, if 0x0, the funds will be distributed to all members of the DAO.
      * @param token The distribution token in which the members should receive the funds. Must be supported by the DAO.
      * @param amount The amount to distribute.
      * @param data Additional information related to the distribution proposal.
@@ -93,7 +93,7 @@ contract DistributeContract is
     function submitProposal(
         DaoRegistry dao,
         bytes32 proposalId,
-        address shareHolderAddr,
+        address unitHolderAddr,
         address token,
         uint256 amount,
         bytes calldata data
@@ -112,7 +112,7 @@ contract DistributeContract is
         _submitProposal(
             dao,
             proposalId,
-            shareHolderAddr,
+            unitHolderAddr,
             token,
             amount,
             data,
@@ -122,12 +122,12 @@ contract DistributeContract is
 
     /**
      * @notice Creates the proposal, starts the voting process and sponsors the proposal.
-     * @dev If the share holder address was provided in the params, the share holder must have enough shares to receive the funds.
+     * @dev If the uint holder address was provided in the params, the unit holder must have enough uints to receive the funds.
      */
     function _submitProposal(
         DaoRegistry dao,
         bytes32 proposalId,
-        address shareHolderAddr,
+        address uintHolderAddr,
         address token,
         uint256 amount,
         bytes calldata data,
@@ -139,19 +139,19 @@ contract DistributeContract is
         BankExtension bank = BankExtension(dao.getExtensionAddress(BANK));
         require(bank.isTokenAllowed(token), "token not allowed");
 
-        // Only check the number of shares if there is a valid share holder address.
-        if (shareHolderAddr != address(0x0)) {
-            // Gets the number of shares of the member
-            uint256 shares = bank.balanceOf(shareHolderAddr, SHARES);
-            // Checks if the member has enough shares to reveice the funds.
-            require(shares > 0, "not enough shares");
+        // Only check the number of units if there is a valid unit holder address.
+        if (uintHolderAddr != address(0x0)) {
+            // Gets the number of units of the member
+            uint256 units = bank.balanceOf(uintHolderAddr, UNITS);
+            // Checks if the member has enough units to reveice the funds.
+            require(units > 0, "not enough units");
         }
 
         // Saves the state of the proposal.
         distributions[address(dao)][proposalId] = Distribution(
             token,
             amount,
-            shareHolderAddr,
+            uintHolderAddr,
             DistributionStatus.NOT_STARTED,
             0,
             block.number
@@ -166,7 +166,7 @@ contract DistributeContract is
     }
 
     /**
-     * @notice Process the distribution proposal, calculates the fair amount of funds to distribute to the members based on the shares holdings.
+     * @notice Process the distribution proposal, calculates the fair amount of funds to distribute to the members based on the units holdings.
      * @dev A distribution proposal proposal must be in progress.
      * @dev Only one proposal per DAO can be executed at time.
      * @dev Only active members can reveice funds.
@@ -234,7 +234,7 @@ contract DistributeContract is
 
     /**
      * @notice Transfers the funds from the Guild account to the member's internal accounts.
-     * @notice The amount of funds is caculated using the historical number of shares of each member.
+     * @notice The amount of funds is caculated using the historical number of units of each member.
      * @dev A distribution proposal must be in progress.
      * @dev Only proposals that have passed the voting can be completed.
      * @dev Only active members can receive funds.
@@ -263,14 +263,14 @@ contract DistributeContract is
         address token = distribution.token;
         uint256 amount = distribution.amount;
 
-        // Get the total number of shares when the proposal was processed.
+        // Get the total number of units when the proposal was processed.
         BankExtension bank = BankExtension(dao.getExtensionAddress(BANK));
 
-        address shareHolderAddr = distribution.shareHolderAddr;
-        if (shareHolderAddr != address(0x0)) {
-            _distributeOne(bank, shareHolderAddr, blockNumber, token, amount);
+        address unitHolderAddr = distribution.unitHolderAddr;
+        if (unitHolderAddr != address(0x0)) {
+            _distributeOne(bank, unitHolderAddr, blockNumber, token, amount);
             distribution.status = DistributionStatus.DONE;
-            emit Distributed(token, amount, shareHolderAddr);
+            emit Distributed(token, amount, unitHolderAddr);
         } else {
             // Set the max index supported which is based on the number of members
             uint256 nbMembers = dao.getNbMembers();
@@ -292,23 +292,23 @@ contract DistributeContract is
             distribution.currentIndex = maxIndex;
             if (maxIndex == nbMembers) {
                 distribution.status = DistributionStatus.DONE;
-                emit Distributed(token, amount, shareHolderAddr);
+                emit Distributed(token, amount, unitHolderAddr);
             }
         }
     }
 
     function _distributeOne(
         BankExtension bank,
-        address shareHolderAddr,
+        address unitHolderAddr,
         uint256 blockNumber,
         address token,
         uint256 amount
     ) internal {
         uint256 memberShares =
-            bank.getPriorAmount(shareHolderAddr, SHARES, blockNumber);
-        require(memberShares != 0, "not enough shares");
-        // Distributes the funds to 1 share holder only
-        bank.internalTransfer(ESCROW, shareHolderAddr, token, amount);
+            bank.getPriorAmount(unitHolderAddr, UNITS, blockNumber);
+        require(memberShares != 0, "not enough units");
+        // Distributes the funds to 1 unit holder only
+        bank.internalTransfer(ESCROW, unitHolderAddr, token, amount);
     }
 
     function _distributeAll(
@@ -320,15 +320,15 @@ contract DistributeContract is
         address token,
         uint256 amount
     ) internal {
-        uint256 totalShares = bank.getPriorAmount(TOTAL, SHARES, blockNumber);
-        // Distributes the funds to all share holders of the DAO and ignores non-active members.
+        uint256 totalUnits = bank.getPriorAmount(TOTAL, UNITS, blockNumber);
+        // Distributes the funds to all unit holders of the DAO and ignores non-active members.
         for (uint256 i = currentIndex; i < maxIndex; i++) {
             address memberAddr = dao.getMemberAddress(i);
             uint256 memberShares =
-                bank.getPriorAmount(memberAddr, SHARES, blockNumber);
+                bank.getPriorAmount(memberAddr, UNITS, blockNumber);
             if (memberShares > 0) {
                 uint256 amountToDistribute =
-                    FairShareHelper.calc(amount, memberShares, totalShares);
+                    FairShareHelper.calc(amount, memberShares, totalUnits);
 
                 if (amountToDistribute > 0) {
                     bank.internalTransfer(

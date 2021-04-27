@@ -31,8 +31,8 @@ SOFTWARE.
 const {
   toBN,
   fromUtf8,
-  sharePrice,
-  SHARES,
+  unitPrice,
+  UNITS,
   LOOT,
   GUILD,
   ETH_TOKEN,
@@ -92,8 +92,8 @@ describe("Adapter - GuildKick", () => {
       voting,
       newMember,
       owner,
-      sharePrice,
-      SHARES
+      unitPrice,
+      UNITS
     );
 
     //Check Guild Bank Balance
@@ -101,8 +101,8 @@ describe("Adapter - GuildKick", () => {
     expect(guildBalance.toString()).equal("1200000000000000000");
 
     //Check Member Shares & Loot
-    let shares = await bank.balanceOf(newMember, SHARES);
-    expect(shares.toString()).equal("10000000000000000");
+    let units = await bank.balanceOf(newMember, UNITS);
+    expect(units.toString()).equal("10000000000000000");
     let loot = await bank.balanceOf(newMember, LOOT);
     expect(loot.toString()).equal("0");
 
@@ -130,8 +130,8 @@ describe("Adapter - GuildKick", () => {
     });
 
     // Check Member Shares & Loot, it should be 0 because both were subtracted from internal
-    shares = await bank.balanceOf(newMember, SHARES);
-    expect(shares.toString()).equal("0");
+    units = await bank.balanceOf(newMember, UNITS);
+    expect(units.toString()).equal("0");
     loot = await bank.balanceOf(newMember, LOOT);
     expect(loot.toString()).equal("0");
   });
@@ -168,8 +168,8 @@ describe("Adapter - GuildKick", () => {
       voting,
       newMember,
       owner,
-      sharePrice,
-      SHARES
+      unitPrice,
+      UNITS
     );
 
     // Start a new kick poposal
@@ -229,8 +229,8 @@ describe("Adapter - GuildKick", () => {
       voting,
       newMemberA,
       owner,
-      sharePrice,
-      SHARES
+      unitPrice,
+      UNITS
     );
 
     // Start a new kick poposal
@@ -272,8 +272,8 @@ describe("Adapter - GuildKick", () => {
       voting,
       newMember,
       member,
-      sharePrice,
-      SHARES
+      unitPrice,
+      UNITS
     );
 
     // Start a new kick poposal
@@ -325,8 +325,8 @@ describe("Adapter - GuildKick", () => {
       voting,
       newMember,
       member,
-      sharePrice,
-      SHARES
+      unitPrice,
+      UNITS
     );
 
     // Start a new kick poposal
@@ -377,8 +377,8 @@ describe("Adapter - GuildKick", () => {
       voting,
       newMember,
       member,
-      sharePrice,
-      SHARES
+      unitPrice,
+      UNITS
     );
 
     // Start a new kick poposal
@@ -409,7 +409,7 @@ describe("Adapter - GuildKick", () => {
     );
   });
 
-  it("should not be possible to process a kick proposal if the member to kick does not have any shares nor loot", async () => {
+  it("should not be possible to process a kick proposal if the member to kick does not have any units nor loot", async () => {
     const member = owner;
     const advisor = accounts[3];
     const nonMember = accounts[4];
@@ -426,11 +426,11 @@ describe("Adapter - GuildKick", () => {
       voting,
       advisor,
       member,
-      sharePrice,
+      unitPrice,
       LOOT
     );
 
-    // The member attemps to process the kick proposal, but the Advisor does not have any SHARES, only LOOT
+    // The member attemps to process the kick proposal, but the Advisor does not have any UNITS, only LOOT
     await expectRevert(
       guildKickProposal(
         this.dao,
@@ -439,7 +439,7 @@ describe("Adapter - GuildKick", () => {
         member,
         getProposalCounter()
       ),
-      "no shares or loot"
+      "no units or loot"
     );
   });
 
@@ -458,8 +458,8 @@ describe("Adapter - GuildKick", () => {
       voting,
       newMember,
       member,
-      sharePrice,
-      SHARES
+      unitPrice,
+      UNITS
     );
 
     //SubGuildKick
@@ -497,8 +497,8 @@ describe("Adapter - GuildKick", () => {
       onboarding,
       this.dao,
       newMemberB,
-      sharePrice,
-      SHARES,
+      unitPrice,
+      UNITS,
       toBN(10)
     );
 
@@ -531,8 +531,8 @@ describe("Adapter - GuildKick", () => {
       voting,
       newMember,
       member,
-      sharePrice,
-      SHARES
+      unitPrice,
+      UNITS
     );
 
     // Submit guild kick proposal
@@ -571,8 +571,8 @@ describe("Adapter - GuildKick", () => {
       onboarding,
       this.dao,
       newMemberB,
-      sharePrice,
-      SHARES,
+      unitPrice,
+      UNITS,
       toBN(10)
     );
 
@@ -602,8 +602,8 @@ describe("Adapter - GuildKick", () => {
       voting,
       newMember,
       member,
-      sharePrice,
-      SHARES
+      unitPrice,
+      UNITS
     );
 
     //SubGuildKick
@@ -671,8 +671,8 @@ describe("Adapter - GuildKick", () => {
       voting,
       newMember,
       member,
-      sharePrice,
-      SHARES
+      unitPrice,
+      UNITS
     );
 
     //SubGuildKick
@@ -737,8 +737,8 @@ describe("Adapter - GuildKick", () => {
       voting,
       newMember,
       member,
-      sharePrice,
-      SHARES
+      unitPrice,
+      UNITS
     );
 
     //SubGuildKick
@@ -808,8 +808,8 @@ describe("Adapter - GuildKick", () => {
       voting,
       newMember,
       member,
-      sharePrice,
-      SHARES
+      unitPrice,
+      UNITS
     );
 
     // Submit GuildKick
@@ -836,10 +836,10 @@ describe("Adapter - GuildKick", () => {
       gasPrice: toBN("0"),
     });
 
-    // The kicked member should not have LOOT & SHARES anymore
+    // The kicked member should not have LOOT & UNITS anymore
     let memberLoot = await bank.balanceOf(memberToKick, LOOT);
     expect(memberLoot.toString()).equal("0");
-    let memberShares = await bank.balanceOf(memberToKick, SHARES);
+    let memberShares = await bank.balanceOf(memberToKick, UNITS);
     expect(memberShares.toString()).equal("0");
 
     // The kicked member must receive the funds in ETH_TOKEN after the ragekick was triggered by a DAO member
@@ -862,8 +862,8 @@ describe("Adapter - GuildKick", () => {
       voting,
       newMember,
       member,
-      sharePrice,
-      SHARES
+      unitPrice,
+      UNITS
     );
 
     // Submit GuildKick
@@ -925,8 +925,8 @@ describe("Adapter - GuildKick", () => {
       voting,
       memberB,
       memberA,
-      sharePrice,
-      SHARES
+      unitPrice,
+      UNITS
     );
     await onboardingNewMember(
       getProposalCounter(),
@@ -935,8 +935,8 @@ describe("Adapter - GuildKick", () => {
       voting,
       memberC,
       memberA,
-      sharePrice,
-      SHARES
+      unitPrice,
+      UNITS
     );
 
     // Submit the first guild kick with proposalId 0x1

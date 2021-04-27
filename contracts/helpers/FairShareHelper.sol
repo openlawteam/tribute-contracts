@@ -27,25 +27,25 @@ SOFTWARE.
  */
 library FairShareHelper {
     /**
-     * @notice calculates the fair share amount based the total shares and current balance.
+     * @notice calculates the fair unit amount based the total units and current balance.
      */
     function calc(
         uint256 balance,
-        uint256 shares,
-        uint256 totalShares
+        uint256 units,
+        uint256 totalUnits
     ) internal pure returns (uint256) {
-        require(totalShares > 0, "totalShares must be greater than 0");
+        require(totalUnits > 0, "totalUnits must be greater than 0");
         require(
-            shares <= totalShares,
-            "shares must be less than or equal to totalShares"
+            units <= totalUnits,
+            "units must be less than or equal to totalUnits"
         );
         if (balance == 0) {
             return 0;
         }
         // The balance for Internal and External tokens are limited to 2^64-1 (see Bank.sol:L411-L421)
-        // The maximum number of shares is limited to 2^64-1 (see ...)
-        // Worst case cenario is: balance=2^64-1 * shares=2^64-1, no overflows.
-        uint256 prod = balance * shares;
-        return prod / totalShares;
+        // The maximum number of units is limited to 2^64-1 (see ...)
+        // Worst case cenario is: balance=2^64-1 * units=2^64-1, no overflows.
+        uint256 prod = balance * units;
+        return prod / totalUnits;
     }
 }

@@ -48,7 +48,7 @@ contract TributeNFTContract is DaoConstants, MemberGuard, AdapterGuard {
         address nftAddr;
         // The nft token identifier.
         uint256 nftTokenId;
-        // The amount requested of DAO internal tokens (SHARES).
+        // The amount requested of DAO internal tokens (UNITS).
         uint256 requestAmount;
     }
 
@@ -64,14 +64,14 @@ contract TributeNFTContract is DaoConstants, MemberGuard, AdapterGuard {
 
     /**
      * @notice Configures the adapter for a particular DAO.
-     * @notice Registers the DAO internal token SHARES with the DAO Bank.
+     * @notice Registers the DAO internal token UNITS with the DAO Bank.
      * @dev Only adapters registered to the DAO can execute the function call (or if the DAO is in creation mode).
      * @dev A DAO Bank extension must exist and be configured with proper access for this adapter.
      * @param dao The DAO address.
      */
     function configureDao(DaoRegistry dao) external onlyAdapter(dao) {
         BankExtension bank = BankExtension(dao.getExtensionAddress(BANK));
-        bank.registerPotentialNewInternalToken(SHARES);
+        bank.registerPotentialNewInternalToken(UNITS);
     }
 
     /**
@@ -83,7 +83,7 @@ contract TributeNFTContract is DaoConstants, MemberGuard, AdapterGuard {
      * @param applicant The applicant address (who will receive the DAO internal tokens and become a member).
      * @param nftAddr The address of the ERC-721 token that will be transferred to the DAO in exchange for DAO internal tokens.
      * @param nftTokenId The NFT token id.
-     * @param requestAmount The amount requested of DAO internal tokens (SHARES).
+     * @param requestAmount The amount requested of DAO internal tokens (UNITS).
      * @param data Additional information related to the tribute proposal.
      */
     function submitProposal(
@@ -158,14 +158,14 @@ contract TributeNFTContract is DaoConstants, MemberGuard, AdapterGuard {
             NFTExtension nftExt = NFTExtension(dao.getExtensionAddress(NFT));
             BankExtension bank = BankExtension(dao.getExtensionAddress(BANK));
             require(
-                bank.isInternalToken(SHARES),
-                "SHARES token is not an internal token"
+                bank.isInternalToken(UNITS),
+                "UNITS token is not an internal token"
             );
 
             nftExt.collect(proposal.nftAddr, proposal.nftTokenId);
             bank.addToBalance(
                 proposal.applicant,
-                SHARES,
+                UNITS,
                 proposal.requestAmount
             );
         } else if (

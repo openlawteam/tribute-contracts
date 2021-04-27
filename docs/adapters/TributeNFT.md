@@ -1,6 +1,6 @@
 ## Adapter description and scope
 
-The Tribute NFT adapter allows potential and existing DAO members to contribute any ERC-721 tokens to the DAO in exchange for any amount of DAO internal tokens (in this case it mints SHARES always). If the proposal passes, the requested internal tokens are minted to the applicant (which effectively makes the applicant a member of the DAO if not already one) and the ERC-721 asset provided as tribute is transferred to the NFT extension.
+The Tribute NFT adapter allows potential and existing DAO members to contribute any ERC-721 tokens to the DAO in exchange for any amount of DAO internal tokens (in this case it mints UNITS always). If the proposal passes, the requested internal tokens are minted to the applicant (which effectively makes the applicant a member of the DAO if not already one) and the ERC-721 asset provided as tribute is transferred to the NFT extension.
 
 The Tribute NFT adapter is similar to the Onboarding adapter in that both allow for joining the DAO (or increasing a stake in the DAO) through the exchange of contributed assets for DAO internal tokens. However, there are key differences:
 
@@ -10,7 +10,7 @@ The Tribute NFT adapter is similar to the Onboarding adapter in that both allow 
 
 ## Adapter workflow
 
-A tribute is made by a member first submitting a proposal specifying (1) the applicant who wishes to join the DAO (or increase his stake in the DAO), (2) the amount of internal tokens (SHARES) the applicant desires, and (3) the ERC-721 address and token id of the NFT that will transfer to the DAO in exchange for those internal tokens. The applicant and actual owner of the NFT can be separate accounts (e.g., the NFT owner is providing tribute on behalf of the applicant). The proposal submission does not actually transfer the ERC-721 token from its owner. That occurs only after the proposal passes and is processed.
+A tribute is made by a member first submitting a proposal specifying (1) the applicant who wishes to join the DAO (or increase his stake in the DAO), (2) the amount of internal tokens (UNITS) the applicant desires, and (3) the ERC-721 address and token id of the NFT that will transfer to the DAO in exchange for those internal tokens. The applicant and actual owner of the NFT can be separate accounts (e.g., the NFT owner is providing tribute on behalf of the applicant). The proposal submission does not actually transfer the ERC-721 token from its owner. That occurs only after the proposal passes and is processed.
 
 The proposal is also sponsored in the same transaction when it is submitted. When a DAO member sponsors the proposal, the voting period begins allowing members to vote for or against the proposal. Only a member can sponsor the proposal.
 
@@ -22,7 +22,7 @@ Upon processing, if the vote has failed (i.e., more NO votes then YES votes or a
 
 A DAO NFT extension and a DAO Bank extension must exist and be configured with proper access for this adapter.
 
-The DAO internal tokens (in this case SHARES) to be minted to the applicant must be registered with the DAO Bank.
+The DAO internal tokens (in this case UNITS) to be minted to the applicant must be registered with the DAO Bank.
 
 DAORegistry Access Flags: `SUBMIT_PROPOSAL`, `NEW_MEMBER`.
 
@@ -38,13 +38,13 @@ Bank Extension Access Flags: `ADD_TO_BALANCE`.
   - `applicant`: The applicant address (who will receive the DAO internal tokens and become a member; this address may be different than the actual owner of the ERC-721 token being provided as tribute).
   - `nftAddr`: The address of the ERC-721 token that will be transferred to the DAO in exchange for DAO internal tokens.
   - `nftTokenId`: The NFT token identifier.
-  - `requestAmount`: The amount requested of DAO internal tokens (SHARES).
+  - `requestAmount`: The amount requested of DAO internal tokens (UNITS).
 
 ## Dependencies and interactions (internal / external)
 
 - BankExtension
 
-  - Registers DAO internal token (in this case SHARES) to be minted to the applicant in adapter configuration.
+  - Registers DAO internal token (in this case UNITS) to be minted to the applicant in adapter configuration.
   - Adds to the applicant balance the amount of requested DAO internal tokens.
 
 - NFTExtension
@@ -82,7 +82,7 @@ Bank Extension Access Flags: `ADD_TO_BALANCE`.
 ```solidity
     /**
      * @notice Configures the adapter for a particular DAO.
-     * @notice Registers the DAO internal token SHARES with the DAO Bank.
+     * @notice Registers the DAO internal token UNITS with the DAO Bank.
      * @dev Only adapters registered to the DAO can execute the function call (or if the DAO is in creation mode).
      * @dev A DAO Bank extension must exist and be configured with proper access for this adapter.
      * @param dao The DAO address.
@@ -104,7 +104,7 @@ Bank Extension Access Flags: `ADD_TO_BALANCE`.
      * @param applicant The applicant address (who will receive the DAO internal tokens and become a member).
      * @param nftAddr The address of the ERC-721 token that will be transferred to the DAO in exchange for DAO internal tokens.
      * @param nftTokenId The NFT token id.
-     * @param requestAmount The amount requested of DAO internal tokens (SHARES).
+     * @param requestAmount The amount requested of DAO internal tokens (UNITS).
      * @param data Additional information related to the tribute proposal.
      */
     function submitProposal(

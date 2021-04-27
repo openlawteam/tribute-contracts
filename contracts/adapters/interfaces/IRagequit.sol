@@ -31,7 +31,7 @@ SOFTWARE.
 interface IRagequit {
     function ragequit(
         DaoRegistry dao,
-        uint256 sharesToBurn,
+        uint256 unitsToBurn,
         uint256 lootToBurn,
         address[] memory tokens
     ) external;

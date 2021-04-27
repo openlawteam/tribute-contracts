@@ -3,7 +3,7 @@ const {
   toWei,
   ETH_TOKEN,
   maximumChunks,
-  sharePrice,
+  unitPrice,
   numberOfShares,
 } = require("../utils/ContractUtil.js");
 
@@ -42,7 +42,7 @@ async function deployTestDao(deployFunction, network) {
   let { dao } = await deployDao({
     ...truffleImports,
     deployFunction,
-    unitPrice: sharePrice,
+    unitPrice: unitPrice,
     nbShares: numberOfShares,
     tokenAddr: ETH_TOKEN,
     maxChunks: maximumChunks,

@@ -26,9 +26,9 @@ SOFTWARE.
  */
 const {
   toBN,
-  sharePrice,
+  unitPrice,
   remaining,
-  SHARES,
+  UNITS,
   maximumChunks,
 } = require("../../utils/ContractUtil.js");
 
@@ -77,8 +77,8 @@ describe("Adapter - Voting", () => {
       dao.address,
       proposalId,
       account2,
-      SHARES,
-      sharePrice.mul(toBN(3)).add(remaining),
+      UNITS,
+      unitPrice.mul(toBN(3)).add(remaining),
       [],
       {
         from: daoOwner,
@@ -107,8 +107,8 @@ describe("Adapter - Voting", () => {
       dao.address,
       proposalId,
       account2,
-      SHARES,
-      sharePrice.mul(toBN(3)).add(remaining),
+      UNITS,
+      unitPrice.mul(toBN(3)).add(remaining),
       [],
       {
         from: daoOwner,
@@ -142,8 +142,8 @@ describe("Adapter - Voting", () => {
       dao.address,
       proposalId,
       account2,
-      SHARES,
-      sharePrice.mul(toBN(3)).add(remaining),
+      UNITS,
+      unitPrice.mul(toBN(3)).add(remaining),
       [],
       {
         from: daoOwner,
@@ -173,8 +173,8 @@ describe("Adapter - Voting", () => {
       dao.address,
       proposalId,
       account2,
-      SHARES,
-      sharePrice.mul(toBN(3)).add(remaining),
+      UNITS,
+      unitPrice.mul(toBN(3)).add(remaining),
       [],
       {
         from: daoOwner,

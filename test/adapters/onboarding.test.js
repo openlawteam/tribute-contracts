@@ -26,8 +26,8 @@ SOFTWARE.
  */
 const {
   toBN,
-  sharePrice,
-  SHARES,
+  unitPrice,
+  UNITS,
   GUILD,
   ETH_TOKEN,
   remaining,
@@ -125,7 +125,7 @@ describe("Adapter - Onboarding", () => {
         dao.address,
         proposalId,
         applicant,
-        SHARES,
+        UNITS,
         tokenAmount,
         [],
         {
@@ -155,14 +155,14 @@ describe("Adapter - Onboarding", () => {
 
     const myAccountInitialBalance = await web3.eth.getBalance(daoOwner);
     // remaining amount to test sending back to proposer
-    const ethAmount = sharePrice.mul(toBN(3)).add(remaining);
+    const ethAmount = unitPrice.mul(toBN(3)).add(remaining);
 
     const proposalId = getProposalCounter();
     await onboarding.onboard(
       dao.address,
       proposalId,
       applicant,
-      SHARES,
+      UNITS,
       ethAmount,
       [],
       {
@@ -200,18 +200,18 @@ describe("Adapter - Onboarding", () => {
       toBN(myAccountInitialBalance).sub(ethAmount).add(remaining).toString()
     ).equal(myAccountBalance.toString());
 
-    const myAccountShares = await bank.balanceOf(daoOwner, SHARES);
-    const applicantShares = await bank.balanceOf(applicant, SHARES);
+    const myAccountShares = await bank.balanceOf(daoOwner, UNITS);
+    const applicantShares = await bank.balanceOf(applicant, UNITS);
     const nonMemberAccountShares = await bank.balanceOf(
       nonMemberAccount,
-      SHARES
+      UNITS
     );
     expect(myAccountShares.toString()).equal("1");
     expect(applicantShares.toString()).equal(
       numberOfShares.mul(toBN("3")).toString()
     );
     expect(nonMemberAccountShares.toString()).equal("0");
-    await checkBalance(bank, GUILD, ETH_TOKEN, sharePrice.mul(toBN("3")));
+    await checkBalance(bank, GUILD, ETH_TOKEN, unitPrice.mul(toBN("3")));
 
     // test active member status
     const applicantIsActiveMember = await isMember(bank, applicant);
@@ -264,7 +264,7 @@ describe("Adapter - Onboarding", () => {
       dao.address,
       proposalId,
       applicant,
-      SHARES,
+      UNITS,
       tokenAmount,
       [],
       {
@@ -313,11 +313,11 @@ describe("Adapter - Onboarding", () => {
       initialTokenBalance.sub(tokenAmount).add(erc20Remaining).toString()
     );
 
-    const myAccountShares = await bank.balanceOf(daoOwner, SHARES);
-    const applicantShares = await bank.balanceOf(applicant, SHARES);
+    const myAccountShares = await bank.balanceOf(daoOwner, UNITS);
+    const applicantShares = await bank.balanceOf(applicant, UNITS);
     const nonMemberAccountShares = await bank.balanceOf(
       nonMemberAccount,
-      SHARES
+      UNITS
     );
     expect(myAccountShares.toString()).equal("1");
     expect(applicantShares.toString()).equal("100000000");
@@ -344,8 +344,8 @@ describe("Adapter - Onboarding", () => {
         dao.address,
         "0x1",
         applicant,
-        SHARES,
-        sharePrice.mul(toBN(11)).add(remaining),
+        UNITS,
+        unitPrice.mul(toBN(11)).add(remaining),
         [],
         {
           from: daoOwner,
@@ -369,8 +369,8 @@ describe("Adapter - Onboarding", () => {
       dao.address,
       proposalId,
       applicant,
-      SHARES,
-      sharePrice.mul(toBN(3)).add(remaining),
+      UNITS,
+      unitPrice.mul(toBN(3)).add(remaining),
       [],
       {
         from: daoOwner,
@@ -401,8 +401,8 @@ describe("Adapter - Onboarding", () => {
       myAccountInitialBalance.toString()
     );
 
-    const myAccountShares = await bank.balanceOf(daoOwner, SHARES);
-    const applicantShares = await bank.balanceOf(applicant, SHARES);
+    const myAccountShares = await bank.balanceOf(daoOwner, UNITS);
+    const applicantShares = await bank.balanceOf(applicant, UNITS);
     expect(myAccountShares.toString()).equal("1");
     expect(applicantShares.toString()).equal("0");
 
@@ -460,8 +460,8 @@ describe("Adapter - Onboarding", () => {
       dao.address,
       proposalId,
       applicant,
-      SHARES,
-      sharePrice.mul(toBN(3)).add(remaining),
+      UNITS,
+      unitPrice.mul(toBN(3)).add(remaining),
       [],
       {
         from: daoOwner,
@@ -492,8 +492,8 @@ describe("Adapter - Onboarding", () => {
       dao.address,
       proposalId,
       applicant,
-      SHARES,
-      sharePrice.mul(toBN(3)).add(remaining),
+      UNITS,
+      unitPrice.mul(toBN(3)).add(remaining),
       [],
       {
         from: daoOwner,
@@ -511,7 +511,7 @@ describe("Adapter - Onboarding", () => {
 
     await onboarding.processProposal(dao.address, proposalId, {
       from: daoOwner,
-      value: sharePrice.mul(toBN(3)).add(remaining),
+      value: unitPrice.mul(toBN(3)).add(remaining),
       gasPrice: toBN("0"),
     });
 

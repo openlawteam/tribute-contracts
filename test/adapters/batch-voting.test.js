@@ -27,8 +27,8 @@ SOFTWARE.
 const {
   sha3,
   toBN,
-  SHARES,
-  sharePrice,
+  UNITS,
+  unitPrice,
   remaining,
 } = require("../../utils/ContractUtil.js");
 
@@ -141,8 +141,8 @@ describe("Adapter - BatchVoting", () => {
       dao.address,
       proposalId,
       this.members[1].address,
-      SHARES,
-      sharePrice.mul(toBN(3)).add(remaining),
+      UNITS,
+      unitPrice.mul(toBN(3)).add(remaining),
       prepareVoteProposalData(proposalData, web3),
       {
         gasPrice: toBN("0"),
@@ -199,7 +199,7 @@ describe("Adapter - BatchVoting", () => {
     await advanceTime(10000);
 
     await onboarding.processProposal(dao.address, proposalId, {
-      value: sharePrice.mul(toBN("3")).add(remaining),
+      value: unitPrice.mul(toBN("3")).add(remaining),
     });
   };
 
