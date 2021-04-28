@@ -39,9 +39,9 @@ contract RagequitContract is IRagequit, DaoConstants, AdapterGuard {
      */
     event MemberRagequit(
         address memberAddr,
-        uint256 burnedShares,
+        uint256 burnedUnits,
         uint256 burnedLoot,
-        uint256 initialTotalSharesAndLoot
+        uint256 initialTotalUnitsAndLoot
     );
 
     /**
@@ -112,7 +112,7 @@ contract RagequitContract is IRagequit, DaoConstants, AdapterGuard {
         // Calculates the total units, loot and locked loot before any internal transfers
         // it considers the locked loot to be able to calculate the fair amount to ragequit,
         // but locked loot can not be burned.
-        uint256 initialTotalSharesAndLoot =
+        uint256 initialTotalUnitsAndLoot =
             bank.balanceOf(TOTAL, UNITS) + bank.balanceOf(TOTAL, LOOT);
 
         // Burns / subtracts from member's balance the number of units to burn.
@@ -121,11 +121,11 @@ contract RagequitContract is IRagequit, DaoConstants, AdapterGuard {
         bank.subtractFromBalance(memberAddr, LOOT, lootToBurn);
 
         // Completes the ragequit process by updating the GUILD internal balance based on each provided token.
-        _burnShares(
+        _burnUnits(
             memberAddr,
             unitsToBurn,
             lootToBurn,
-            initialTotalSharesAndLoot,
+            initialTotalUnitsAndLoot,
             tokens,
             bank
         );
@@ -137,15 +137,15 @@ contract RagequitContract is IRagequit, DaoConstants, AdapterGuard {
      * @param memberAddr The member address that wants to burn the units and/or loot.
      * @param unitsToBurn The amount of units of the member that must be converted into funds.
      * @param lootToBurn The amount of loot of the member that must be converted into funds.
-     * @param initialTotalSharesAndLoot The sum of units and loot before internal transfers.
+     * @param initialTotalUnitsAndLoot The sum of units and loot before internal transfers.
      * @param tokens The array of tokens that the funds should be sent to.
      * @param bank The bank extension.
      */
-    function _burnShares(
+    function _burnUnits(
         address memberAddr,
         uint256 unitsToBurn,
         uint256 lootToBurn,
-        uint256 initialTotalSharesAndLoot,
+        uint256 initialTotalUnitsAndLoot,
         address[] memory tokens,
         BankExtension bank
     ) internal {
@@ -171,7 +171,7 @@ contract RagequitContract is IRagequit, DaoConstants, AdapterGuard {
                 FairShareHelper.calc(
                     bank.balanceOf(GUILD, currentToken),
                     unitsAndLootToBurn,
-                    initialTotalSharesAndLoot
+                    initialTotalUnitsAndLoot
                 );
 
             // Ony execute the internal transfer if the user has enough funds to receive.
@@ -194,7 +194,7 @@ contract RagequitContract is IRagequit, DaoConstants, AdapterGuard {
             memberAddr,
             unitsToBurn,
             lootToBurn,
-            initialTotalSharesAndLoot
+            initialTotalUnitsAndLoot
         );
     }
 }
