@@ -29,7 +29,7 @@ SOFTWARE.
  */
 
 interface IOnboarding {
-    function onboard(
+    function submitProposal(
         DaoRegistry dao,
         bytes32 proposalId,
         address payable applicant,

@@ -121,7 +121,7 @@ describe("Adapter - Onboarding", () => {
 
     const proposalId = getProposalCounter();
     await expectRevert(
-      onboarding.onboard(
+      onboarding.submitProposal(
         dao.address,
         proposalId,
         applicant,
@@ -158,7 +158,7 @@ describe("Adapter - Onboarding", () => {
     const ethAmount = unitPrice.mul(toBN(3)).add(remaining);
 
     const proposalId = getProposalCounter();
-    await onboarding.onboard(
+    await onboarding.submitProposal(
       dao.address,
       proposalId,
       applicant,
@@ -260,7 +260,7 @@ describe("Adapter - Onboarding", () => {
 
     const proposalId = getProposalCounter();
 
-    await onboarding.onboard(
+    await onboarding.submitProposal(
       dao.address,
       proposalId,
       applicant,
@@ -340,7 +340,7 @@ describe("Adapter - Onboarding", () => {
     const onboarding = this.adapters.onboarding;
 
     await expectRevert(
-      onboarding.onboard(
+      onboarding.submitProposal(
         dao.address,
         "0x1",
         applicant,
@@ -365,7 +365,7 @@ describe("Adapter - Onboarding", () => {
 
     const myAccountInitialBalance = await web3.eth.getBalance(daoOwner);
     const proposalId = getProposalCounter();
-    await onboarding.onboard(
+    await onboarding.submitProposal(
       dao.address,
       proposalId,
       applicant,
@@ -456,7 +456,7 @@ describe("Adapter - Onboarding", () => {
     const onboarding = this.adapters.onboarding;
 
     const proposalId = getProposalCounter();
-    await onboarding.onboard(
+    await onboarding.submitProposal(
       dao.address,
       proposalId,
       applicant,
@@ -488,7 +488,7 @@ describe("Adapter - Onboarding", () => {
 
     const proposalId = getProposalCounter();
 
-    await onboarding.onboard(
+    await onboarding.submitProposal(
       dao.address,
       proposalId,
       applicant,

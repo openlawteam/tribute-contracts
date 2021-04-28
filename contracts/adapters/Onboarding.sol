@@ -129,7 +129,7 @@ contract OnboardingContract is
         bank.registerPotentialNewToken(tokenAddr);
     }
 
-    function onboard(
+    function submitProposal(
         DaoRegistry dao,
         bytes32 proposalId,
         address payable applicant,
