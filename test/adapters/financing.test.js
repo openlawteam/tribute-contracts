@@ -83,7 +83,7 @@ describe("Adapter - Financing", () => {
     let proposalId = getProposalCounter();
 
     //Add funds to the Guild Bank after sposoring a member to join the Guild
-    await onboarding.onboard(
+    await onboarding.submitProposal(
       this.dao.address,
       proposalId,
       newMember,
@@ -178,7 +178,7 @@ describe("Adapter - Financing", () => {
 
     //Add funds to the Guild Bank after sposoring a member to join the Guild
     let proposalId = getProposalCounter();
-    await onboarding.onboard(
+    await onboarding.submitProposal(
       this.dao.address,
       proposalId,
       newMember,
@@ -244,7 +244,7 @@ describe("Adapter - Financing", () => {
 
     let proposalId = getProposalCounter();
     //Add funds to the Guild Bank after sposoring a member to join the Guild
-    await onboarding.onboard(
+    await onboarding.submitProposal(
       this.dao.address,
       proposalId,
       newMember,
@@ -297,7 +297,7 @@ describe("Adapter - Financing", () => {
 
     let proposalId = getProposalCounter();
     //Add funds to the Guild Bank after sposoring a member to join the Guild
-    await onboarding.onboard(
+    await onboarding.submitProposal(
       this.dao.address,
       proposalId,
       newMember,
@@ -368,7 +368,7 @@ describe("Adapter - Financing", () => {
     let proposalId = getProposalCounter();
 
     //Add funds to the Guild Bank after sposoring a member to join the Guild
-    await onboarding.onboard(
+    await onboarding.submitProposal(
       this.dao.address,
       proposalId,
       newMember,

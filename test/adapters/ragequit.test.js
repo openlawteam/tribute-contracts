@@ -371,7 +371,7 @@ describe("Adapter - Ragequit", () => {
     // Send a request to join the DAO as an Advisor (non-voting power),
     // the tx passes the OLT ERC20 token, the amount and the nonVotingOnboarding adapter that handles the proposal
     const proposalId = getProposalCounter();
-    await onboarding.onboard(
+    await onboarding.submitProposal(
       dao.address,
       proposalId,
       advisorAccount,

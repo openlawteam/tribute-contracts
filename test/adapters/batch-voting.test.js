@@ -137,7 +137,7 @@ describe("Adapter - BatchVoting", () => {
       chainId
     ).toString("hex");
 
-    await onboarding.onboard(
+    await onboarding.submitProposal(
       dao.address,
       proposalId,
       this.members[1].address,

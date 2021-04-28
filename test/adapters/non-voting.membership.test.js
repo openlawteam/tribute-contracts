@@ -64,7 +64,7 @@ describe("Adapter - Non Voting Onboarding", () => {
     let ethAmount = unitPrice.mul(toBN(3)).add(remaining);
     let proposalId = "0x1";
     // Request to join the DAO as an Advisor (non-voting power), Send a tx with RAW ETH only and specify the nonVotingOnboarding
-    await onboarding.onboard(
+    await onboarding.submitProposal(
       dao.address,
       proposalId,
       advisorAccount,
@@ -137,7 +137,7 @@ describe("Adapter - Non Voting Onboarding", () => {
     // the tx passes the OLT ERC20 token, the amount and the nonVotingOnboarding adapter that handles the proposal
     const proposalId = getProposalCounter();
     await expectRevert.unspecified(
-      onboarding.onboard(
+      onboarding.submitProposal(
         dao.address,
         proposalId,
         advisorAccount,
@@ -156,7 +156,7 @@ describe("Adapter - Non Voting Onboarding", () => {
       from: advisorAccount,
     });
 
-    await onboarding.onboard(
+    await onboarding.submitProposal(
       dao.address,
       proposalId,
       advisorAccount,

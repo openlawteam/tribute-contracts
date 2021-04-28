@@ -38,7 +38,7 @@ const submitNewMemberProposal = async (
   token,
   desiredUnits = toBN(10)
 ) => {
-  await onboarding.onboard(
+  await onboarding.submitProposal(
     dao.address,
     proposalId,
     newMember,

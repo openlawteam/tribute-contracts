@@ -73,7 +73,7 @@ describe("Adapter - Voting", () => {
     const voting = this.adapters.voting;
 
     const proposalId = getProposalCounter();
-    await onboarding.onboard(
+    await onboarding.submitProposal(
       dao.address,
       proposalId,
       account2,
@@ -103,7 +103,7 @@ describe("Adapter - Voting", () => {
     const voting = this.adapters.voting;
 
     const proposalId = getProposalCounter();
-    await onboarding.onboard(
+    await onboarding.submitProposal(
       dao.address,
       proposalId,
       account2,
@@ -138,7 +138,7 @@ describe("Adapter - Voting", () => {
     const voting = this.adapters.voting;
 
     const proposalId = getProposalCounter();
-    await onboarding.onboard(
+    await onboarding.submitProposal(
       dao.address,
       proposalId,
       account2,
@@ -169,7 +169,7 @@ describe("Adapter - Voting", () => {
     const daoRegistryAdapter = this.adapters.daoRegistryAdapter;
 
     const proposalId = getProposalCounter();
-    await onboarding.onboard(
+    await onboarding.submitProposal(
       dao.address,
       proposalId,
       account2,

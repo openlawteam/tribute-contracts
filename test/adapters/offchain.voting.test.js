@@ -264,7 +264,7 @@ describe("Adapter - Offchain Voting", () => {
     ).toString("hex");
 
     const proposalId = getProposalCounter();
-    await onboarding.onboard(
+    await onboarding.submitProposal(
       dao.address,
       proposalId,
       members[1].address,
