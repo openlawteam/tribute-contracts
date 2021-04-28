@@ -57,15 +57,17 @@ contract FinancingContract is
     }
 
     /**
-     * @notice Creates a financing proposal.
+     * @notice Creates and sponsors a financing proposal.
      * @dev Applicant address must not be reserved.
      * @dev Token address must be allowed/supported by the DAO Bank.
      * @dev Requested amount must be greater than zero.
+     * @dev Only members of the DAO can sponsor a financing proposal.
      * @param dao The DAO Address.
      * @param proposalId The proposal id.
      * @param applicant The applicant address.
      * @param token The token to receive the funds.
      * @param amount The desired amount.
+     * @param data Additional details about the financing proposal.
      */
     function submitProposal(
         DaoRegistry dao,
