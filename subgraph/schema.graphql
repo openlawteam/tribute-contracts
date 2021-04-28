@@ -75,12 +75,11 @@ type Proposal @entity {
   votingAdapter: Bytes
 
   # ONBOARDING; proposal details
-  tokenToMint: Bytes
+  unitsToMint: Bytes
   amount: BigInt
   unitsRequested: BigInt
   token: Bytes
   applicant: Bytes
-  proposer: Bytes
 
   # DISTRIBUTE; proposal details
   "The unit holder address that will receive the funds. If 0x0, the funds will be distributed to all members of the DAO"
@@ -93,6 +92,8 @@ type Proposal @entity {
   blockNumber: BigInt
 
   # TRIBUTE; proposal details
+  "The address of the DAO internal token to be minted to the applicant."
+  tokenToMint: Bytes
   "The amount requested of DAO internal tokens"
   requestAmount: BigInt
   "The amount of tribute tokens."

@@ -122,11 +122,11 @@ function internalTransfer(
   }
 
   // get totalUnits in the dao
-  let balanceOfTotalShares = registry.balanceOf(TOTAL, UNITS);
+  let balanceOfTotalUnits = registry.balanceOf(TOTAL, UNITS);
   let dao = TributeDao.load(daoAddress.toHexString());
 
   if (dao != null) {
-    dao.totalUnits = balanceOfTotalShares.toString();
+    dao.totalUnits = balanceOfTotalUnits.toString();
 
     dao.save();
   }

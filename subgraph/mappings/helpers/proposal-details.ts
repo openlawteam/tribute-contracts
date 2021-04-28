@@ -70,7 +70,7 @@ function onboarding(
   let proposal = Proposal.load(daoProposalId);
 
   if (proposal) {
-    proposal.tokenToMint = data.value1;
+    proposal.unitsToMint = data.value1;
     proposal.amount = data.value2;
     proposal.unitsRequested = data.value3;
     proposal.token = data.value4;
