@@ -122,12 +122,12 @@ contract DistributeContract is
 
     /**
      * @notice Creates the proposal, starts the voting process and sponsors the proposal.
-     * @dev If the uint holder address was provided in the params, the unit holder must have enough uints to receive the funds.
+     * @dev If the unit holder address was provided in the params, the unit holder must have enough units to receive the funds.
      */
     function _submitProposal(
         DaoRegistry dao,
         bytes32 proposalId,
-        address uintHolderAddr,
+        address unitHolderAddr,
         address token,
         uint256 amount,
         bytes calldata data,
@@ -140,9 +140,9 @@ contract DistributeContract is
         require(bank.isTokenAllowed(token), "token not allowed");
 
         // Only check the number of units if there is a valid unit holder address.
-        if (uintHolderAddr != address(0x0)) {
+        if (unitHolderAddr != address(0x0)) {
             // Gets the number of units of the member
-            uint256 units = bank.balanceOf(uintHolderAddr, UNITS);
+            uint256 units = bank.balanceOf(unitHolderAddr, UNITS);
             // Checks if the member has enough units to reveice the funds.
             require(units > 0, "not enough units");
         }
@@ -151,7 +151,7 @@ contract DistributeContract is
         distributions[address(dao)][proposalId] = Distribution(
             token,
             amount,
-            uintHolderAddr,
+            unitHolderAddr,
             DistributionStatus.NOT_STARTED,
             0,
             block.number
@@ -304,9 +304,9 @@ contract DistributeContract is
         address token,
         uint256 amount
     ) internal {
-        uint256 memberShares =
+        uint256 memberUnits =
             bank.getPriorAmount(unitHolderAddr, UNITS, blockNumber);
-        require(memberShares != 0, "not enough units");
+        require(memberUnits != 0, "not enough units");
         // Distributes the funds to 1 unit holder only
         bank.internalTransfer(ESCROW, unitHolderAddr, token, amount);
     }
@@ -324,11 +324,11 @@ contract DistributeContract is
         // Distributes the funds to all unit holders of the DAO and ignores non-active members.
         for (uint256 i = currentIndex; i < maxIndex; i++) {
             address memberAddr = dao.getMemberAddress(i);
-            uint256 memberShares =
+            uint256 memberUnits =
                 bank.getPriorAmount(memberAddr, UNITS, blockNumber);
-            if (memberShares > 0) {
+            if (memberUnits > 0) {
                 uint256 amountToDistribute =
-                    FairShareHelper.calc(amount, memberShares, totalUnits);
+                    FairShareHelper.calc(amount, memberUnits, totalUnits);
 
                 if (amountToDistribute > 0) {
                     bank.internalTransfer(

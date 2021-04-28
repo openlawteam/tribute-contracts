@@ -41,7 +41,7 @@ Each adapter needs to be configured with the [Access Flags](#access-control-laye
 
 Adapters implemented in the MolochV3 project:
 
-- [Configuration](https://github.com/openlawteam/molochv3-contracts/blob/master/docs/adapters/Configuration.md): manages storing and retrieving per-DAO settings required by unitd adapters.
+- [Configuration](https://github.com/openlawteam/molochv3-contracts/blob/master/docs/adapters/Configuration.md): manages storing and retrieving per-DAO settings required by shared adapters.
 - [Distribute](https://github.com/openlawteam/molochv3-contracts/blob/master/docs/adapters/Distribute.md): allows the members to distribute funds to one or all members of the DAO.
 - [Financing](https://github.com/openlawteam/molochv3-contracts/blob/master/docs/adapters/Financing.md): allows individuals and/or organizations to request funds to finance their projects, and the members of the DAO have the power to vote and decide which projects should be funded.
 - [GuildKick](https://github.com/openlawteam/molochv3-contracts/blob/master/docs/adapters/GuildKick.md): gives the members the freedom to choose which individuals or organizations should really be part of the DAO.
