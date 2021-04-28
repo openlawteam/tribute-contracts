@@ -56,7 +56,7 @@ library GuildKickHelper {
         // Calculates the total units, loot and locked loot before any internal transfers
         // it considers the locked loot to be able to calculate the fair amount to ragequit,
         // but locked loot can not be burned.
-        uint256 initialTotalSharesAndLoot =
+        uint256 initialTotalUnitsAndLoot =
             bank.balanceOf(TOTAL, UNITS) + bank.balanceOf(TOTAL, LOOT);
 
         uint256 unitsToBurn = bank.balanceOf(kickedMember, UNITS);
@@ -72,7 +72,7 @@ library GuildKickHelper {
                 FairShareHelper.calc(
                     bank.balanceOf(GUILD, token),
                     unitsAndLootToBurn,
-                    initialTotalSharesAndLoot
+                    initialTotalUnitsAndLoot
                 );
 
             // Ony execute the internal transfer if the user has enough funds to receive.
