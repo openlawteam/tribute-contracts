@@ -56,7 +56,7 @@ const deployDao = async (options) => {
   const { dao, daoFactory } = await cloneDao({
     ...options,
     identityDao,
-    name: "test-dao",
+    name: options.daoName || "test-dao",
   });
 
   await bankFactory.createBank(options.maxExternalTokens);
