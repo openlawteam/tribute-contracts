@@ -267,11 +267,11 @@ describe("Adapter - Tribute", () => {
     const supply = toBN("2").pow(toBN("180"));
     const oltContract = await OLToken.new(supply, { from: daoOwner });
     const nbOfERC20Units = 100000000;
-    const erc20SharePrice = toBN("10");
+    const erc20UnitPrice = toBN("10");
 
     const { dao, adapters } = await deployDefaultNFTDao({
       owner: daoOwner,
-      unitPrice: erc20SharePrice,
+      unitPrice: erc20UnitPrice,
       nbUnits: nbOfERC20Units,
       tokenAddr: oltContract.address,
     });

@@ -100,7 +100,7 @@ describe("Adapter - GuildKick", () => {
     const guildBalance = await bank.balanceOf(GUILD, ETH_TOKEN);
     expect(guildBalance.toString()).equal("1200000000000000000");
 
-    //Check Member Shares & Loot
+    //Check Member Units & Loot
     let units = await bank.balanceOf(newMember, UNITS);
     expect(units.toString()).equal("10000000000000000");
     let loot = await bank.balanceOf(newMember, LOOT);
@@ -129,7 +129,7 @@ describe("Adapter - GuildKick", () => {
       gasPrice: toBN("0"),
     });
 
-    // Check Member Shares & Loot, it should be 0 because both were subtracted from internal
+    // Check Member Units & Loot, it should be 0 because both were subtracted from internal
     units = await bank.balanceOf(newMember, UNITS);
     expect(units.toString()).equal("0");
     loot = await bank.balanceOf(newMember, LOOT);
@@ -833,8 +833,8 @@ describe("Adapter - GuildKick", () => {
     // The kicked member should not have LOOT & UNITS anymore
     let memberLoot = await bank.balanceOf(memberToKick, LOOT);
     expect(memberLoot.toString()).equal("0");
-    let memberShares = await bank.balanceOf(memberToKick, UNITS);
-    expect(memberShares.toString()).equal("0");
+    let memberUnits = await bank.balanceOf(memberToKick, UNITS);
+    expect(memberUnits.toString()).equal("0");
 
     // The kicked member must receive the funds in ETH_TOKEN after the ragekick was triggered by a DAO member
     let memberEthToken = await bank.balanceOf(memberToKick, ETH_TOKEN);

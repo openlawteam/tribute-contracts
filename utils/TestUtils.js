@@ -36,14 +36,14 @@ const submitNewMemberProposal = async (
   newMember,
   unitPrice,
   token,
-  desiredShares = toBN(10)
+  desiredUnits = toBN(10)
 ) => {
   await onboarding.onboard(
     dao.address,
     proposalId,
     newMember,
     token,
-    unitPrice.mul(desiredShares),
+    unitPrice.mul(desiredUnits),
     [],
     {
       from: member,
@@ -61,7 +61,7 @@ const onboardingNewMember = async (
   sponsor,
   unitPrice,
   token,
-  desiredShares = toBN(10)
+  desiredUnits = toBN(10)
 ) => {
   await submitNewMemberProposal(
     proposalId,
@@ -71,7 +71,7 @@ const onboardingNewMember = async (
     newMember,
     unitPrice,
     token,
-    desiredShares
+    desiredUnits
   );
 
   //vote and process it
@@ -83,7 +83,7 @@ const onboardingNewMember = async (
 
   await onboarding.processProposal(dao.address, proposalId, {
     from: sponsor,
-    value: unitPrice.mul(desiredShares),
+    value: unitPrice.mul(desiredUnits),
     gasPrice: toBN("0"),
   });
 };
