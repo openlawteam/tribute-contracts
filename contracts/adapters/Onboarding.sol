@@ -46,8 +46,6 @@ contract OnboardingContract is
     using Address for address payable;
     using SafeERC20 for IERC20;
 
-    event FailedOnboarding(address applicant, bytes32 cause);
-
     bytes32 constant ChunkSize = keccak256("onboarding.chunkSize");
     bytes32 constant UnitsPerChunk = keccak256("onboarding.unitsPerChunk");
     bytes32 constant TokenAddr = keccak256("onboarding.tokenAddr");
