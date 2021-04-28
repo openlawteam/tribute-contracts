@@ -29,7 +29,7 @@ SOFTWARE.
  */
 
 interface IGuildKick {
-    function submitKickProposal(
+    function submitProposal(
         DaoRegistry dao,
         bytes32 proposalId,
         address memberToKick,

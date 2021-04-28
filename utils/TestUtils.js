@@ -95,11 +95,11 @@ const guildKickProposal = async (
   sender,
   proposalId
 ) => {
-  await guildkickContract.submitKickProposal(
+  await guildkickContract.submitProposal(
     dao.address,
     proposalId,
     memberToKick,
-    fromUtf8(""),
+    [],
     {
       from: sender,
       gasPrice: toBN("0"),

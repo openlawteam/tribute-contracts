@@ -54,11 +54,12 @@ contract ConfigurationContract is
         revert("fallback revert");
     }
 
-    function submitConfigurationProposal(
+    function submitProposal(
         DaoRegistry dao,
         bytes32 proposalId,
         bytes32[] calldata keys,
-        uint256[] calldata values
+        uint256[] calldata values,
+        bytes calldata data
     ) external override onlyMember(dao) reentrancyGuard(dao) {
         require(
             keys.length == values.length,
@@ -67,13 +68,7 @@ contract ConfigurationContract is
 
         dao.submitProposal(proposalId);
         _configurations[address(dao)][proposalId] = Configuration(keys, values);
-    }
 
-    function sponsorProposal(
-        DaoRegistry dao,
-        bytes32 proposalId,
-        bytes memory data
-    ) external override {
         IVoting votingContract = IVoting(dao.getAdapterAddress(VOTING));
         address sponsoredBy =
             votingContract.getSenderAddress(
@@ -82,16 +77,7 @@ contract ConfigurationContract is
                 data,
                 msg.sender
             );
-        _sponsorProposal(dao, proposalId, data, sponsoredBy, votingContract);
-    }
 
-    function _sponsorProposal(
-        DaoRegistry dao,
-        bytes32 proposalId,
-        bytes memory data,
-        address sponsoredBy,
-        IVoting votingContract
-    ) internal {
         dao.sponsorProposal(proposalId, sponsoredBy, address(votingContract));
         votingContract.startNewVotingForProposal(dao, proposalId, data);
     }

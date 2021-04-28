@@ -123,21 +123,15 @@ describe("Adapter - Financing", () => {
     //Create Financing Request
     let requestedAmount = toBN(50000);
     proposalId = getProposalCounter();
-    await financing.createFinancingRequest(
+    await financing.submitProposal(
       this.dao.address,
       proposalId,
       applicant,
       ETH_TOKEN,
       requestedAmount,
       fromUtf8(""),
-      { gasPrice: toBN("0") }
+      { from: myAccount, gasPrice: toBN("0") }
     );
-
-    //Member sponsors the Financing proposal
-    await financing.sponsorProposal(this.dao.address, proposalId, [], {
-      from: myAccount,
-      gasPrice: toBN("0"),
-    });
 
     //Member votes on the Financing proposal
     await voting.submitVote(this.dao.address, proposalId, 1, {
@@ -212,20 +206,18 @@ describe("Adapter - Financing", () => {
     //Create Financing Request
     let requestedAmount = toBN(50000);
     proposalId = "0x2";
-    await financing.createFinancingRequest(
+    await financing.submitProposal(
       this.dao.address,
       proposalId,
       applicant,
       ETH_TOKEN,
       requestedAmount,
-      fromUtf8("")
+      fromUtf8(""),
+      {
+        from: myAccount,
+        gasPrice: toBN("0"),
+      }
     );
-
-    //Member sponsors the Financing proposal
-    await financing.sponsorProposal(this.dao.address, proposalId, [], {
-      from: myAccount,
-      gasPrice: toBN("0"),
-    });
 
     //Member votes on the Financing proposal
     await voting.submitVote(this.dao.address, proposalId, 2, {
@@ -282,7 +274,7 @@ describe("Adapter - Financing", () => {
       const invalidToken = "0x6941a80e1a034f57ed3b1d642fc58ddcb91e2596";
       //Create Financing Request with a token that is not allowed
       let requestedAmount = toBN(50000);
-      await financing.createFinancingRequest(
+      await financing.submitProposal(
         this.dao.address,
         proposalId,
         applicant,
@@ -334,7 +326,7 @@ describe("Adapter - Financing", () => {
       proposalId = getProposalCounter();
       // Create Financing Request with amount = 0
       let requestedAmount = toBN(0);
-      await financing.createFinancingRequest(
+      await financing.submitProposal(
         this.dao.address,
         proposalId,
         applicant,
@@ -355,7 +347,7 @@ describe("Adapter - Financing", () => {
 
     try {
       let invalidProposalId = "0x0";
-      await financing.createFinancingRequest(
+      await financing.submitProposal(
         this.dao.address,
         invalidProposalId,
         applicant,
@@ -391,73 +383,17 @@ describe("Adapter - Financing", () => {
 
     try {
       let reusedProposalId = proposalId;
-      await financing.createFinancingRequest(
+      await financing.submitProposal(
         this.dao.address,
         reusedProposalId,
         applicant,
         ETH_TOKEN,
         toBN(50000),
-        fromUtf8(""),
-        { gasPrice: toBN("0") }
+        fromUtf8("")
       );
       throw Error("should not be possible to create a financing request");
     } catch (err) {
       expect(err.reason).equal("proposalId must be unique");
-    }
-  });
-
-  it("should not be possible to sponsor proposal that does not exist", async () => {
-    try {
-      let proposalId = "0x1";
-      await this.adapters.financing.sponsorProposal(
-        this.dao.address,
-        proposalId,
-        fromUtf8(""),
-        {
-          from: myAccount,
-          gasPrice: toBN("0"),
-        }
-      );
-      throw Error("should not be possible to sponsor");
-    } catch (err) {
-      expect(err.reason).equal("proposal does not exist for this dao");
-    }
-  });
-
-  it("should not be possible to sponsor proposal more than once", async () => {
-    let proposalId = getProposalCounter();
-    await this.adapters.financing.createFinancingRequest(
-      this.dao.address,
-      proposalId,
-      applicant,
-      ETH_TOKEN,
-      toBN(50000),
-      fromUtf8(""),
-      { gasPrice: toBN("0") }
-    );
-
-    await this.adapters.financing.sponsorProposal(
-      this.dao.address,
-      proposalId,
-      fromUtf8(""),
-      {
-        from: myAccount,
-        gasPrice: toBN("0"),
-      }
-    );
-
-    try {
-      await this.adapters.financing.sponsorProposal(
-        this.dao.address,
-        proposalId,
-        fromUtf8(""),
-        {
-          from: myAccount,
-          gasPrice: toBN("0"),
-        }
-      );
-    } catch (err) {
-      expect(err.reason).equal("flag already set");
     }
   });
 
@@ -473,33 +409,6 @@ describe("Adapter - Financing", () => {
         }
       );
       throw Error("should not be possible to process it");
-    } catch (err) {
-      expect(err.reason).equal("adapter not found");
-    }
-  });
-
-  it("should not be possible to process a proposal that is not sponsored", async () => {
-    let proposalId = getProposalCounter();
-    await this.adapters.financing.createFinancingRequest(
-      this.dao.address,
-      proposalId,
-      applicant,
-      ETH_TOKEN,
-      toBN(50000),
-      fromUtf8(""),
-      { gasPrice: toBN("0") }
-    );
-
-    try {
-      await this.adapters.financing.processProposal(
-        this.dao.address,
-        proposalId,
-        {
-          from: myAccount,
-          gasPrice: toBN("0"),
-        }
-      );
-      throw Error("should not be possible to process");
     } catch (err) {
       expect(err.reason).equal("adapter not found");
     }

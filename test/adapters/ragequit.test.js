@@ -228,20 +228,15 @@ describe("Adapter - Ragequit", () => {
 
     //Create Financing Request
     const requestedAmount = toBN(50000);
-    await financing.createFinancingRequest(
+    await financing.submitProposal(
       this.dao.address,
       financingProposalId,
       applicant,
       ETH_TOKEN,
       requestedAmount,
-      fromUtf8("")
+      fromUtf8(""),
+      { from: owner }
     );
-
-    //Old Member sponsors the Financing proposal
-    await financing.sponsorProposal(this.dao.address, financingProposalId, [], {
-      from: owner,
-      gasPrice: toBN("0"),
-    });
 
     //New Member votes YES on the Financing proposal
     let vote = 1; //YES
@@ -298,20 +293,15 @@ describe("Adapter - Ragequit", () => {
     const financingProposalId = getProposalCounter();
     //Create Financing Request
     const requestedAmount = toBN(50000);
-    await financing.createFinancingRequest(
+    await financing.submitProposal(
       this.dao.address,
       financingProposalId,
       applicant,
       ETH_TOKEN,
       requestedAmount,
-      fromUtf8("")
+      fromUtf8(""),
+      { from: owner }
     );
-
-    //Old Member sponsors the Financing proposal
-    await financing.sponsorProposal(this.dao.address, financingProposalId, [], {
-      from: owner,
-      gasPrice: toBN("0"),
-    });
 
     //New Member votes NO on the Financing proposal
     const vote = 2; //NO

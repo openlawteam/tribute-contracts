@@ -89,15 +89,19 @@ describe("Adapter - Managing", () => {
     const dao = this.dao;
     const managing = this.adapters.managing;
     const newAdapterId = sha3("bank");
+
     await expectRevert(
       managing.submitProposal(
         dao.address,
         "0x1",
-        newAdapterId,
-        GUILD,
+        {
+          adapterId: newAdapterId,
+          adapterAddress: GUILD,
+          flags: 0,
+        },
         ["0x1", "0x2", "0x3"], // 3 keys
         [], // 0 values
-        0,
+        [],
         { from: daoOwner, gasPrice: toBN("0") }
       ),
       "must be an equal number of config keys and values"
@@ -112,33 +116,17 @@ describe("Adapter - Managing", () => {
       managing.submitProposal(
         dao.address,
         "0x1",
-        newAdapterId,
-        GUILD,
+        {
+          adapterId: newAdapterId,
+          adapterAddress: GUILD,
+          flags: 0,
+        },
         [], // 0 keys
         [1, 2, 3], // 3 values
-        0,
+        [],
         { from: daoOwner, gasPrice: toBN("0") }
       ),
       "must be an equal number of config keys and values"
-    );
-  });
-
-  it("should not be possible to propose a new adapter with a flag value higher than 2**128-1", async () => {
-    const dao = this.dao;
-    const managing = this.adapters.managing;
-    const newAdapterId = sha3("bank");
-    await expectRevert(
-      managing.submitProposal(
-        dao.address,
-        "0x1",
-        newAdapterId,
-        GUILD,
-        [], // 0 keys
-        [], // 0 values
-        toBN("340282366920938463463374607431768211456"), //2**128
-        { from: daoOwner, gasPrice: toBN("0") }
-      ),
-      "flags parameter overflow"
     );
   });
 
@@ -150,11 +138,14 @@ describe("Adapter - Managing", () => {
       managing.submitProposal(
         dao.address,
         "0x1",
-        newAdapterId,
-        GUILD,
+        {
+          adapterId: newAdapterId,
+          adapterAddress: GUILD,
+          flags: 0,
+        },
         [],
         [],
-        0,
+        [],
         { from: daoOwner, gasPrice: toBN("0") }
       ),
       "adapter address is reserved address"
@@ -164,11 +155,14 @@ describe("Adapter - Managing", () => {
       managing.submitProposal(
         dao.address,
         "0x0",
-        newAdapterId,
-        TOTAL,
+        {
+          adapterId: newAdapterId,
+          adapterAddress: TOTAL,
+          flags: 0,
+        },
         [],
         [],
-        0,
+        [],
         { from: daoOwner, gasPrice: toBN("0") }
       ),
       "adapter address is reserved address"
@@ -185,21 +179,19 @@ describe("Adapter - Managing", () => {
     await managing.submitProposal(
       dao.address,
       proposalId,
-      adapterIdToRemove,
-      "0x0000000000000000000000000000000000000000",
+      {
+        adapterId: adapterIdToRemove,
+        adapterAddress: "0x0000000000000000000000000000000000000000",
+        flags: 0,
+      },
       [],
       [],
-      0,
+      [],
       {
         from: daoOwner,
         gasPrice: toBN("0"),
       }
     );
-
-    await managing.sponsorProposal(dao.address, proposalId, [], {
-      from: daoOwner,
-      gasPrice: toBN("0"),
-    });
 
     await voting.submitVote(dao.address, proposalId, 1, {
       from: daoOwner,
@@ -234,11 +226,14 @@ describe("Adapter - Managing", () => {
     await managing.submitProposal(
       dao.address,
       proposalId,
-      newAdapterId,
-      newAdapterAddress,
+      {
+        adapterId: newAdapterId,
+        adapterAddress: newAdapterAddress,
+        flags: 0,
+      },
       [],
       [],
-      0,
+      [],
       { from: daoOwner, gasPrice: toBN("0") }
     );
 
@@ -256,10 +251,6 @@ describe("Adapter - Managing", () => {
     });
 
     //Sponsor the new proposal, vote and process it
-    await managing.sponsorProposal(dao.address, proposalId, [], {
-      from: delegateKey,
-      gasPrice: toBN("0"),
-    });
     await voting.submitVote(dao.address, proposalId, 1, {
       from: delegateKey,
       gasPrice: toBN("0"),
@@ -296,11 +287,14 @@ describe("Adapter - Managing", () => {
     await managing.submitProposal(
       dao.address,
       proposalId,
-      newAdapterId,
-      newManaging.address,
+      {
+        adapterId: newAdapterId,
+        adapterAddress: newManaging.address,
+        flags: 0,
+      },
       [],
       [],
-      0,
+      [],
       {
         from: daoOwner,
         gasPrice: toBN("0"),
@@ -311,11 +305,14 @@ describe("Adapter - Managing", () => {
       managing.submitProposal(
         dao.address,
         proposalId,
-        newAdapterId,
-        newManaging.address,
+        {
+          adapterId: newAdapterId,
+          adapterAddress: newManaging.address,
+          flags: 0,
+        },
         [],
         [],
-        0,
+        [],
         {
           from: daoOwner,
           gasPrice: toBN("0"),
@@ -339,21 +336,20 @@ describe("Adapter - Managing", () => {
     await managing.submitProposal(
       dao.address,
       proposalId,
-      newAdapterId,
-      newManaging.address,
+      {
+        adapterId: newAdapterId,
+        adapterAddress: newManaging.address,
+        flags,
+      },
       [],
       [],
-      flags,
+      [],
       {
         from: daoOwner,
         gasPrice: toBN("0"),
       }
     );
 
-    await managing.sponsorProposal(dao.address, proposalId, [], {
-      from: daoOwner,
-      gasPrice: toBN("0"),
-    });
     await voting.submitVote(dao.address, proposalId, 1, {
       from: daoOwner,
       gasPrice: toBN("0"),
@@ -382,21 +378,20 @@ describe("Adapter - Managing", () => {
     await newManaging.submitProposal(
       dao.address,
       newProposalId,
-      sha3("financing"),
-      "0x0000000000000000000000000000000000000000",
+      {
+        adapterId: sha3("financing"),
+        adapterAddress: "0x0000000000000000000000000000000000000000",
+        flags: 0,
+      },
       [],
       [],
-      0,
+      [],
       {
         from: daoOwner,
         gasPrice: toBN("0"),
       }
     );
 
-    await newManaging.sponsorProposal(dao.address, newProposalId, [], {
-      from: daoOwner,
-      gasPrice: toBN("0"),
-    });
     await voting.submitVote(dao.address, newProposalId, 1, {
       from: daoOwner,
       gasPrice: toBN("0"),
@@ -431,24 +426,20 @@ describe("Adapter - Managing", () => {
     await managing.submitProposal(
       dao.address,
       proposalId,
-      newAdapterId,
-      newManaging.address,
+      {
+        adapterId: newAdapterId,
+        adapterAddress: newManaging.address,
+        flags: entryDao("managing", newManaging, {}).flags, // no permissions were set
+      },
       [],
       [],
-      entryDao("managing", newManaging, {
-        SUBMIT_PROPOSAL: false,
-        REPLACE_ADAPTER: false,
-      }).flags, // no permissions were set
+      [],
       {
         from: daoOwner,
         gasPrice: toBN("0"),
       }
     );
 
-    await managing.sponsorProposal(dao.address, proposalId, [], {
-      from: daoOwner,
-      gasPrice: toBN("0"),
-    });
     await voting.submitVote(dao.address, proposalId, 1, {
       from: daoOwner,
       gasPrice: toBN("0"),
@@ -466,11 +457,14 @@ describe("Adapter - Managing", () => {
       newManaging.submitProposal(
         dao.address,
         newProposalId,
-        sha3("voting"),
-        voting.address,
+        {
+          adapterId: sha3("voting"),
+          adapterAddress: voting.address,
+          flags: 0,
+        },
         [],
         [],
-        0,
+        [],
         {
           from: daoOwner,
           gasPrice: toBN("0"),
@@ -492,45 +486,45 @@ describe("Adapter - Managing", () => {
       managing.submitProposal(
         dao.address,
         proposalId,
-        newAdapterId,
-        newAdapterAddress,
+        {
+          adapterId: newAdapterId,
+          adapterAddress: newAdapterAddress,
+          flags: 0,
+        },
         [],
         [],
-        0,
+        [],
         { from: nonMember, gasPrice: toBN("0") }
       ),
       "onlyMember"
     );
   });
 
-  it("should not be possible for a non member to sponsor a proposal", async () => {
+  it("should not be possible for a non member to submit a proposal", async () => {
     const dao = this.dao;
     const managing = this.adapters.managing;
-
+    const nonMemberAddress = accounts[5];
     const newVoting = await VotingContract.new();
     const newAdapterId = sha3("voting");
 
     const proposalId = getProposalCounter();
-    await managing.submitProposal(
-      dao.address,
-      proposalId,
-      newAdapterId,
-      newVoting.address,
-      [],
-      [],
-      0,
-      {
-        from: daoOwner,
-        gasPrice: toBN("0"),
-      }
-    );
-
-    const nonMemberAddress = accounts[5];
     await expectRevert(
-      managing.sponsorProposal(dao.address, proposalId, [], {
-        from: nonMemberAddress,
-        gasPrice: toBN("0"),
-      }),
+      managing.submitProposal(
+        dao.address,
+        proposalId,
+        {
+          adapterId: newAdapterId,
+          adapterAddress: newVoting.address,
+          flags: 0,
+        },
+        [],
+        [],
+        [],
+        {
+          from: nonMemberAddress,
+          gasPrice: toBN("0"),
+        }
+      ),
       "onlyMember"
     );
   });
@@ -546,21 +540,19 @@ describe("Adapter - Managing", () => {
     await managing.submitProposal(
       dao.address,
       proposalId,
-      newAdapterId,
-      accounts[6], //any sample address
+      {
+        adapterId: newAdapterId,
+        adapterAddress: accounts[6], //any sample address
+        flags: 0,
+      },
       [],
       [],
-      0,
+      [],
       {
         from: daoOwner,
         gasPrice: toBN("0"),
       }
     );
-
-    await managing.sponsorProposal(dao.address, proposalId, [], {
-      from: daoOwner,
-      gasPrice: toBN("0"),
-    });
 
     await voting.submitVote(dao.address, proposalId, 1, {
       from: daoOwner,
@@ -584,21 +576,19 @@ describe("Adapter - Managing", () => {
     await managing.submitProposal(
       dao.address,
       proposalId,
-      newAdapterId,
-      accounts[6], //any sample address
+      {
+        adapterId: newAdapterId,
+        adapterAddress: accounts[6], //any sample address
+        flags: 0,
+      },
       [],
       [],
-      0,
+      [],
       {
         from: daoOwner,
         gasPrice: toBN("0"),
       }
     );
-
-    await managing.sponsorProposal(dao.address, proposalId, [], {
-      from: daoOwner,
-      gasPrice: toBN("0"),
-    });
 
     // Voting NO = 2
     await voting.submitVote(dao.address, proposalId, 2, {
@@ -616,36 +606,6 @@ describe("Adapter - Managing", () => {
     );
   });
 
-  it("should not be possible to vote if the proposal was not sponsored", async () => {
-    const dao = this.dao;
-    const managing = this.adapters.managing;
-    const voting = this.adapters.voting;
-    const newAdapterId = sha3("voting");
-    const proposalId = getProposalCounter();
-    await managing.submitProposal(
-      dao.address,
-      proposalId,
-      newAdapterId,
-      accounts[6], //any sample address
-      [],
-      [],
-      0,
-      {
-        from: daoOwner,
-        gasPrice: toBN("0"),
-      }
-    );
-
-    // Voting NO = 2
-    await expectRevert(
-      voting.submitVote(dao.address, proposalId, 2, {
-        from: daoOwner,
-        gasPrice: toBN("0"),
-      }),
-      "the proposal has not been sponsored yet"
-    );
-  });
-
   it("should not fail if the adapter id used for removal is not valid", async () => {
     const dao = this.dao;
     const managing = this.adapters.managing;
@@ -655,21 +615,19 @@ describe("Adapter - Managing", () => {
     await managing.submitProposal(
       dao.address,
       proposalId,
-      newAdapterId,
-      "0x0000000000000000000000000000000000000000", // 0ed address to indicate a removal operation
+      {
+        adapterId: newAdapterId,
+        adapterAddress: "0x0000000000000000000000000000000000000000", // 0ed address to indicate a removal operation
+        flags: 0,
+      },
       [],
       [],
-      0,
+      [],
       {
         from: daoOwner,
         gasPrice: toBN("0"),
       }
     );
-
-    await managing.sponsorProposal(dao.address, proposalId, [], {
-      from: daoOwner,
-      gasPrice: toBN("0"),
-    });
 
     await voting.submitVote(dao.address, proposalId, 1, {
       from: daoOwner,
@@ -693,21 +651,19 @@ describe("Adapter - Managing", () => {
     await managing.submitProposal(
       dao.address,
       proposalId,
-      newAdapterId,
-      voting.address, // using the voting.address as the new financing adapter address
+      {
+        adapterId: newAdapterId,
+        adapterAddress: voting.address, // using the voting.address as the new financing adapter address
+        flags: 0,
+      },
       [],
       [],
-      0,
+      [],
       {
         from: daoOwner,
         gasPrice: toBN("0"),
       }
     );
-
-    await managing.sponsorProposal(dao.address, proposalId, [], {
-      from: daoOwner,
-      gasPrice: toBN("0"),
-    });
 
     await voting.submitVote(dao.address, proposalId, 1, {
       from: daoOwner,

@@ -64,76 +64,50 @@ contract ManagingContract is
      * @dev proposalId can not be reused.
      * @param dao The dao address.
      * @param proposalId The guild kick proposal id.
-     * @param adapterId The adapter id to replace, remove or add.
-     * @param adapterAddress The adapter address to add or replace. Use 0x0 if you want to remove the adapter.
-     * @param keys The configuration keys for the adapter.
-     * @param values The values to set for the adapter configuration.
-     * @param _flags The ACL for the new adapter, up to 2**128-1.
+     * @param proposal proposal details
      */
     function submitProposal(
         DaoRegistry dao,
         bytes32 proposalId,
-        bytes32 adapterId,
-        address adapterAddress,
-        bytes32[] calldata keys,
-        uint256[] calldata values,
-        uint256 _flags
+        ProposalInput memory proposal,
+        bytes32[] memory keys,
+        uint256[] memory values,
+        bytes memory data
     ) external override onlyMember(dao) reentrancyGuard(dao) {
         require(
             keys.length == values.length,
             "must be an equal number of config keys and values"
         );
 
-        require(_flags < type(uint128).max, "flags parameter overflow");
-        uint128 flags = uint128(_flags);
+        require(proposal.flags < type(uint128).max, "flags parameter overflow");
 
         require(
-            isNotReservedAddress(adapterAddress),
+            isNotReservedAddress(proposal.adapterAddress),
             "adapter address is reserved address"
         );
 
         dao.submitProposal(proposalId);
 
         proposals[address(dao)][proposalId] = ProposalDetails(
-            adapterId,
-            adapterAddress,
+            proposal.adapterId,
+            proposal.adapterAddress,
             keys,
             values,
-            flags
+            proposal.flags
         );
-    }
 
-    /**
-     * @notice Sponsor a proposal if the proposal id exists.
-     * @dev Only members are allowed to sponsor proposals.
-     * @param dao The dao address.
-     * @param proposalId The guild kick proposal id.
-     * @param data Additional data that can be used for offchain voting validation.
-     */
-    function sponsorProposal(
-        DaoRegistry dao,
-        bytes32 proposalId,
-        bytes calldata data
-    ) external override reentrancyGuard(dao) {
         IVoting votingContract = IVoting(dao.getAdapterAddress(VOTING));
-        address sponsoredBy =
+
+        dao.sponsorProposal(
+            proposalId,
             votingContract.getSenderAddress(
                 dao,
                 address(this),
                 data,
                 msg.sender
-            );
-        _sponsorProposal(dao, proposalId, data, sponsoredBy, votingContract);
-    }
-
-    function _sponsorProposal(
-        DaoRegistry dao,
-        bytes32 proposalId,
-        bytes memory data,
-        address sponsoredBy,
-        IVoting votingContract
-    ) internal {
-        dao.sponsorProposal(proposalId, sponsoredBy, address(votingContract));
+            ),
+            address(votingContract)
+        );
         votingContract.startNewVotingForProposal(dao, proposalId, data);
     }
 

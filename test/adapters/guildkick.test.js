@@ -635,22 +635,16 @@ describe("Adapter - GuildKick", () => {
     // Create Financing Request, the kicked member is the applicant and it is fine for now
     let requestedAmount = toBN(50000);
     let proposalId = getProposalCounter();
-    await financing.createFinancingRequest(
-      this.dao.address,
-      proposalId,
-      kickedMember,
-      ETH_TOKEN,
-      requestedAmount,
-      fromUtf8(""),
-      { gasPrice: toBN("0") }
-    );
-
-    // kicked member attemps to sponsor the financing proposal to get grant
     await expectRevert(
-      financing.sponsorProposal(this.dao.address, proposalId, [], {
-        from: kickedMember,
-        gasPrice: toBN("0"),
-      }),
+      financing.submitProposal(
+        this.dao.address,
+        proposalId,
+        kickedMember,
+        ETH_TOKEN,
+        requestedAmount,
+        [],
+        { from: kickedMember, gasPrice: toBN("0") }
+      ),
       "onlyMember"
     );
   });
@@ -710,11 +704,14 @@ describe("Adapter - GuildKick", () => {
       managing.submitProposal(
         this.dao.address,
         getProposalCounter(),
-        newAdapterId,
-        newAdapterAddress,
+        {
+          adapterId: newAdapterId,
+          adapterAddress: newAdapterAddress,
+          flags: 0,
+        },
         [],
         [],
-        0,
+        [],
         { from: kickedMember, gasPrice: toBN("0") }
       ),
       "onlyMember"
@@ -771,23 +768,20 @@ describe("Adapter - GuildKick", () => {
     //Submit a new Bank adapter proposal
     let newadapterId = sha3("onboarding");
     let newadapterAddress = accounts[3]; //TODO deploy some Banking test contract
-    await managing.submitProposal(
-      this.dao.address,
-      proposalId,
-      newadapterId,
-      newadapterAddress,
-      [],
-      [],
-      0,
-      { from: member, gasPrice: toBN("0") }
-    );
-
-    // kicked member attemps to sponsor a managing proposal
     await expectRevert(
-      managing.sponsorProposal(this.dao.address, proposalId, [], {
-        from: kickedMember,
-        gasPrice: toBN("0"),
-      }),
+      managing.submitProposal(
+        this.dao.address,
+        proposalId,
+        {
+          adapterId: newadapterId,
+          adapterAddress: newadapterAddress,
+          flags: 0,
+        },
+        [],
+        [],
+        [],
+        { from: kickedMember, gasPrice: toBN("0") }
+      ),
       "onlyMember"
     );
   });

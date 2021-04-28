@@ -69,22 +69,17 @@ describe("Adapter - Configuration", () => {
 
     const proposalId = getProposalCounter();
     //Submit a new configuration proposal
-    await configuration.submitConfigurationProposal(
+    await configuration.submitProposal(
       dao.address,
       proposalId,
       [key],
       [toBN("11")],
+      [],
       { from: owner, gasPrice: toBN("0") }
     );
 
     let value = await dao.getConfiguration(key);
     expect(value.toString()).equal("0");
-
-    //Sponsor the new proposal, vote and process it
-    await configuration.sponsorProposal(dao.address, proposalId, [], {
-      from: owner,
-      gasPrice: toBN("0"),
-    });
 
     value = await dao.getConfiguration(key);
     expect(value.toString()).equal("0");
@@ -113,11 +108,12 @@ describe("Adapter - Configuration", () => {
     let key2 = sha3("key2");
 
     //Submit a new configuration proposal
-    await configuration.submitConfigurationProposal(
+    await configuration.submitProposal(
       dao.address,
       "0x1",
       [key1, key2],
       [toBN("10"), toBN("15")],
+      [],
       { from: owner, gasPrice: toBN("0") }
     );
 
@@ -125,12 +121,6 @@ describe("Adapter - Configuration", () => {
     let value2 = await dao.getConfiguration(key2);
     expect(value1.toString()).equal("0");
     expect(value2.toString()).equal("0");
-
-    //Sponsor the new proposal, vote and process it
-    await configuration.sponsorProposal(dao.address, "0x1", [], {
-      from: owner,
-      gasPrice: toBN("0"),
-    });
 
     value1 = await dao.getConfiguration(key1);
     value2 = await dao.getConfiguration(key2);
@@ -160,7 +150,7 @@ describe("Adapter - Configuration", () => {
     let key = sha3("key");
 
     await expectRevert(
-      configuration.submitConfigurationProposal(dao.address, "0x1", [key], [], {
+      configuration.submitProposal(dao.address, "0x1", [key], [], [], {
         from: owner,
         gasPrice: toBN("0"),
       }),

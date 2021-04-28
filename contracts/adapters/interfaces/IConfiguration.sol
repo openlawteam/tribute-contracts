@@ -29,16 +29,11 @@ SOFTWARE.
  */
 
 interface IConfiguration {
-    function submitConfigurationProposal(
+    function submitProposal(
         DaoRegistry dao,
         bytes32 proposalId,
         bytes32[] calldata keys,
-        uint256[] calldata values
-    ) external;
-
-    function sponsorProposal(
-        DaoRegistry dao,
-        bytes32 proposalId,
+        uint256[] calldata values,
         bytes calldata data
     ) external;
 

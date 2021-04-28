@@ -64,7 +64,7 @@ contract GuildKickContract is IGuildKick, MemberGuard, AdapterGuard {
      * @param memberToKick The member address that should be kicked out of the DAO.
      * @param data Additional information related to the kick proposal.
      */
-    function submitKickProposal(
+    function submitProposal(
         DaoRegistry dao,
         bytes32 proposalId,
         address memberToKick,
