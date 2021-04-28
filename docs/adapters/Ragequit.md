@@ -105,7 +105,7 @@ There is no state tracking for this adapter.
     ) internal
 ```
 
-### function \_burnShares
+### function \_burnUnits
 
 ```solidity
     /**
@@ -114,15 +114,15 @@ There is no state tracking for this adapter.
      * @param memberAddr The member address that wants to burn the units and/or loot.
      * @param unitsToBurn The amount of units of the member that must be converted into funds.
      * @param lootToBurn The amount of loot of the member that must be converted into funds.
-     * @param initialTotalSharesAndLoot The sum of units and loot before internal transfers.
+     * @param initialTotalUnitsAndLoot The sum of units and loot before internal transfers.
      * @param tokens The array of tokens that the funds should be sent to.
      * @param bank The bank extension.
      */
-    function _burnShares(
+    function _burnUnits(
         address memberAddr,
         uint256 unitsToBurn,
         uint256 lootToBurn,
-        uint256 initialTotalSharesAndLoot,
+        uint256 initialTotalUnitsAndLoot,
         address[] memory tokens,
         BankExtension bank
     ) internal
@@ -139,7 +139,7 @@ There is no state tracking for this adapter.
      */
     event MemberRagequit(
         address memberAddr,
-        uint256 burnedShares,
+        uint256 burnedUnits,
         uint256 burnedLoot,
-        uint256 initialTotalSharesAndLoot)
+        uint256 initialTotalUnitsAndLoot)
 ```
