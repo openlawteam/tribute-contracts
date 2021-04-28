@@ -32,7 +32,7 @@ interface IDistribute {
     function submitProposal(
         DaoRegistry dao,
         bytes32 proposalId,
-        address unitsHolderAdrr,
+        address unitHolderAdrr,
         address token,
         uint256 amount,
         bytes calldata data
