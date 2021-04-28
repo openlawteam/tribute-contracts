@@ -35,13 +35,13 @@ SOFTWARE.
 
 contract RagequitContract is IRagequit, DaoConstants, AdapterGuard {
     /**
-     * @notice Event emitted when a member of the DAO executes a ragequit with all or parts of the member's shares/loot.
+     * @notice Event emitted when a member of the DAO executes a ragequit with all or parts of the member's units/loot.
      */
     event MemberRagequit(
         address memberAddr,
-        uint256 burnedShares,
+        uint256 burnedUnits,
         uint256 burnedLoot,
-        uint256 initialTotalSharesAndLoot
+        uint256 initialTotalUnitsAndLoot
     );
 
     /**
@@ -52,37 +52,37 @@ contract RagequitContract is IRagequit, DaoConstants, AdapterGuard {
     }
 
     /**
-     * @notice Allows a member or advisor of the DAO to opt out by burning the proportional amount of shares/loot of the member.
-     * @notice Anyone is allowed to call this function, but only members and advisors that have shares are able to execute the entire ragequit process.
+     * @notice Allows a member or advisor of the DAO to opt out by burning the proportional amount of units/loot of the member.
+     * @notice Anyone is allowed to call this function, but only members and advisors that have units are able to execute the entire ragequit process.
      * @notice The array of token needs to be sorted in ascending order before executing this call, otherwise the transaction will fail.
-     * @dev The sum of sharesToBurn and lootToBurn have to be greater than zero.
-     * @dev The member becomes an inactive member of the DAO once all the shares/loot are burned.
+     * @dev The sum of unitsToBurn and lootToBurn have to be greater than zero.
+     * @dev The member becomes an inactive member of the DAO once all the units/loot are burned.
      * @dev If the member provides an invalid/not allowed token, the entire processed is reverted.
      * @dev If no tokens are informed, the transaction is reverted.
      * @param dao The dao address that the member is part of.
-     * @param sharesToBurn The amount of shares of the member that must be converted into funds.
+     * @param unitsToBurn The amount of units of the member that must be converted into funds.
      * @param lootToBurn The amount of loot of the member that must be converted into funds.
      * @param tokens The array of tokens that the funds should be sent to.
      */
     function ragequit(
         DaoRegistry dao,
-        uint256 sharesToBurn,
+        uint256 unitsToBurn,
         uint256 lootToBurn,
         address[] calldata tokens
     ) external override reentrancyGuard(dao) {
         // At least one token needs to be provided
         require(tokens.length > 0, "missing tokens");
-        // Checks if the are enough shares and/or loot to burn
-        require(sharesToBurn + lootToBurn > 0, "insufficient shares/loot");
+        // Checks if the are enough units and/or loot to burn
+        require(unitsToBurn + lootToBurn > 0, "insufficient units/loot");
         // Gets the delegated address, otherwise returns the sender address.
         address memberAddr = dao.getAddressIfDelegated(msg.sender);
 
         // Instantiates the Bank extension to handle the internal balance checks and transfers.
         BankExtension bank = BankExtension(dao.getExtensionAddress(BANK));
-        // Check if member has enough shares to burn.
+        // Check if member has enough units to burn.
         require(
-            bank.balanceOf(memberAddr, SHARES) >= sharesToBurn,
-            "insufficient shares"
+            bank.balanceOf(memberAddr, UNITS) >= unitsToBurn,
+            "insufficient units"
         );
         // Check if the member has enough loot to burn.
         require(
@@ -91,66 +91,66 @@ contract RagequitContract is IRagequit, DaoConstants, AdapterGuard {
         );
 
         // Start the ragequit process by updating the member's internal account balances.
-        _prepareRagequit(memberAddr, sharesToBurn, lootToBurn, tokens, bank);
+        _prepareRagequit(memberAddr, unitsToBurn, lootToBurn, tokens, bank);
     }
 
     /**
-     * @notice Subtracts from the internal member's account the proportional shares and/or loot.
-     * @param memberAddr The member address that wants to burn the shares and/or loot.
-     * @param sharesToBurn The amount of shares of the member that must be converted into funds.
+     * @notice Subtracts from the internal member's account the proportional units and/or loot.
+     * @param memberAddr The member address that wants to burn the units and/or loot.
+     * @param unitsToBurn The amount of units of the member that must be converted into funds.
      * @param lootToBurn The amount of loot of the member that must be converted into funds.
      * @param tokens The array of tokens that the funds should be sent to.
      * @param bank The bank extension.
      */
     function _prepareRagequit(
         address memberAddr,
-        uint256 sharesToBurn,
+        uint256 unitsToBurn,
         uint256 lootToBurn,
         address[] memory tokens,
         BankExtension bank
     ) internal {
-        // Calculates the total shares, loot and locked loot before any internal transfers
+        // Calculates the total units, loot and locked loot before any internal transfers
         // it considers the locked loot to be able to calculate the fair amount to ragequit,
         // but locked loot can not be burned.
-        uint256 initialTotalSharesAndLoot =
-            bank.balanceOf(TOTAL, SHARES) + bank.balanceOf(TOTAL, LOOT);
+        uint256 initialTotalUnitsAndLoot =
+            bank.balanceOf(TOTAL, UNITS) + bank.balanceOf(TOTAL, LOOT);
 
-        // Burns / subtracts from member's balance the number of shares to burn.
-        bank.subtractFromBalance(memberAddr, SHARES, sharesToBurn);
+        // Burns / subtracts from member's balance the number of units to burn.
+        bank.subtractFromBalance(memberAddr, UNITS, unitsToBurn);
         // Burns / subtracts from member's balance the number of loot to burn.
         bank.subtractFromBalance(memberAddr, LOOT, lootToBurn);
 
         // Completes the ragequit process by updating the GUILD internal balance based on each provided token.
-        _burnShares(
+        _burnUnits(
             memberAddr,
-            sharesToBurn,
+            unitsToBurn,
             lootToBurn,
-            initialTotalSharesAndLoot,
+            initialTotalUnitsAndLoot,
             tokens,
             bank
         );
     }
 
     /**
-     * @notice Subtracts from the bank's account the proportional shares and/or loot,
+     * @notice Subtracts from the bank's account the proportional units and/or loot,
      * @notice and transfers the funds to the member's internal account based on the provided tokens.
-     * @param memberAddr The member address that wants to burn the shares and/or loot.
-     * @param sharesToBurn The amount of shares of the member that must be converted into funds.
+     * @param memberAddr The member address that wants to burn the units and/or loot.
+     * @param unitsToBurn The amount of units of the member that must be converted into funds.
      * @param lootToBurn The amount of loot of the member that must be converted into funds.
-     * @param initialTotalSharesAndLoot The sum of shares and loot before internal transfers.
+     * @param initialTotalUnitsAndLoot The sum of units and loot before internal transfers.
      * @param tokens The array of tokens that the funds should be sent to.
      * @param bank The bank extension.
      */
-    function _burnShares(
+    function _burnUnits(
         address memberAddr,
-        uint256 sharesToBurn,
+        uint256 unitsToBurn,
         uint256 lootToBurn,
-        uint256 initialTotalSharesAndLoot,
+        uint256 initialTotalUnitsAndLoot,
         address[] memory tokens,
         BankExtension bank
     ) internal {
-        // Calculates the total amount of shares and loot to burn
-        uint256 sharesAndLootToBurn = sharesToBurn + lootToBurn;
+        // Calculates the total amount of units and loot to burn
+        uint256 unitsAndLootToBurn = unitsToBurn + lootToBurn;
 
         // Transfers the funds from the internal Guild account to the internal member's account based on each token provided by the member.
         // The provided token must be supported/allowed by the Guild Bank, otherwise it reverts the entire transaction.
@@ -166,12 +166,12 @@ contract RagequitContract is IRagequit, DaoConstants, AdapterGuard {
             // Checks if the token is supported by the Guild Bank.
             require(bank.isTokenAllowed(currentToken), "token not allowed");
 
-            // Calculates the fair amount of funds to ragequit based on the token, shares and loot
+            // Calculates the fair amount of funds to ragequit based on the token, units and loot
             uint256 amountToRagequit =
                 FairShareHelper.calc(
                     bank.balanceOf(GUILD, currentToken),
-                    sharesAndLootToBurn,
-                    initialTotalSharesAndLoot
+                    unitsAndLootToBurn,
+                    initialTotalUnitsAndLoot
                 );
 
             // Ony execute the internal transfer if the user has enough funds to receive.
@@ -189,12 +189,12 @@ contract RagequitContract is IRagequit, DaoConstants, AdapterGuard {
             }
         }
 
-        // Once the shares and loot were burned, and the transfers completed, emit an event to indicate a successfull operation.
+        // Once the units and loot were burned, and the transfers completed, emit an event to indicate a successfull operation.
         emit MemberRagequit(
             memberAddr,
-            sharesToBurn,
+            unitsToBurn,
             lootToBurn,
-            initialTotalSharesAndLoot
+            initialTotalUnitsAndLoot
         );
     }
 }

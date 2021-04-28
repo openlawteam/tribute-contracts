@@ -31,8 +31,8 @@ SOFTWARE.
 const {
   toBN,
   fromUtf8,
-  sharePrice,
-  SHARES,
+  unitPrice,
+  UNITS,
   LOOT,
   GUILD,
   ETH_TOKEN,
@@ -51,7 +51,6 @@ const {
 } = require("../../utils/OZTestUtil.js");
 
 const {
-  sponsorNewMember,
   onboardingNewMember,
   submitNewMemberProposal,
   guildKickProposal,
@@ -93,17 +92,17 @@ describe("Adapter - GuildKick", () => {
       voting,
       newMember,
       owner,
-      sharePrice,
-      SHARES
+      unitPrice,
+      UNITS
     );
 
     //Check Guild Bank Balance
     const guildBalance = await bank.balanceOf(GUILD, ETH_TOKEN);
     expect(guildBalance.toString()).equal("1200000000000000000");
 
-    //Check Member Shares & Loot
-    let shares = await bank.balanceOf(newMember, SHARES);
-    expect(shares.toString()).equal("10000000000000000");
+    //Check Member Units & Loot
+    let units = await bank.balanceOf(newMember, UNITS);
+    expect(units.toString()).equal("10000000000000000");
     let loot = await bank.balanceOf(newMember, LOOT);
     expect(loot.toString()).equal("0");
 
@@ -130,9 +129,9 @@ describe("Adapter - GuildKick", () => {
       gasPrice: toBN("0"),
     });
 
-    // Check Member Shares & Loot, it should be 0 because both were subtracted from internal
-    shares = await bank.balanceOf(newMember, SHARES);
-    expect(shares.toString()).equal("0");
+    // Check Member Units & Loot, it should be 0 because both were subtracted from internal
+    units = await bank.balanceOf(newMember, UNITS);
+    expect(units.toString()).equal("0");
     loot = await bank.balanceOf(newMember, LOOT);
     expect(loot.toString()).equal("0");
   });
@@ -169,8 +168,8 @@ describe("Adapter - GuildKick", () => {
       voting,
       newMember,
       owner,
-      sharePrice,
-      SHARES
+      unitPrice,
+      UNITS
     );
 
     // Start a new kick poposal
@@ -230,8 +229,8 @@ describe("Adapter - GuildKick", () => {
       voting,
       newMemberA,
       owner,
-      sharePrice,
-      SHARES
+      unitPrice,
+      UNITS
     );
 
     // Start a new kick poposal
@@ -273,8 +272,8 @@ describe("Adapter - GuildKick", () => {
       voting,
       newMember,
       member,
-      sharePrice,
-      SHARES
+      unitPrice,
+      UNITS
     );
 
     // Start a new kick poposal
@@ -326,8 +325,8 @@ describe("Adapter - GuildKick", () => {
       voting,
       newMember,
       member,
-      sharePrice,
-      SHARES
+      unitPrice,
+      UNITS
     );
 
     // Start a new kick poposal
@@ -378,8 +377,8 @@ describe("Adapter - GuildKick", () => {
       voting,
       newMember,
       member,
-      sharePrice,
-      SHARES
+      unitPrice,
+      UNITS
     );
 
     // Start a new kick poposal
@@ -410,7 +409,7 @@ describe("Adapter - GuildKick", () => {
     );
   });
 
-  it("should not be possible to process a kick proposal if the member to kick does not have any shares nor loot", async () => {
+  it("should not be possible to process a kick proposal if the member to kick does not have any units nor loot", async () => {
     const member = owner;
     const advisor = accounts[3];
     const nonMember = accounts[4];
@@ -427,11 +426,11 @@ describe("Adapter - GuildKick", () => {
       voting,
       advisor,
       member,
-      sharePrice,
+      unitPrice,
       LOOT
     );
 
-    // The member attemps to process the kick proposal, but the Advisor does not have any SHARES, only LOOT
+    // The member attemps to process the kick proposal, but the Advisor does not have any UNITS, only LOOT
     await expectRevert(
       guildKickProposal(
         this.dao,
@@ -440,7 +439,7 @@ describe("Adapter - GuildKick", () => {
         member,
         getProposalCounter()
       ),
-      "no shares or loot"
+      "no units or loot"
     );
   });
 
@@ -459,8 +458,8 @@ describe("Adapter - GuildKick", () => {
       voting,
       newMember,
       member,
-      sharePrice,
-      SHARES
+      unitPrice,
+      UNITS
     );
 
     //SubGuildKick
@@ -498,15 +497,15 @@ describe("Adapter - GuildKick", () => {
       onboarding,
       this.dao,
       newMemberB,
-      sharePrice,
-      SHARES,
+      unitPrice,
+      UNITS,
       toBN(10)
     );
 
     // kicked member attemps to sponsor a new member
+    /*
     await expectRevert(
       sponsorNewMember(
-        onboarding,
         this.dao,
         onboardProposalId,
         kickedMember,
@@ -514,6 +513,7 @@ describe("Adapter - GuildKick", () => {
       ),
       "onlyMember"
     );
+    */
   });
 
   it("should not be possible for a kicked member to vote on in an onboarding proposal", async () => {
@@ -531,8 +531,8 @@ describe("Adapter - GuildKick", () => {
       voting,
       newMember,
       member,
-      sharePrice,
-      SHARES
+      unitPrice,
+      UNITS
     );
 
     // Submit guild kick proposal
@@ -571,16 +571,10 @@ describe("Adapter - GuildKick", () => {
       onboarding,
       this.dao,
       newMemberB,
-      sharePrice,
-      SHARES,
+      unitPrice,
+      UNITS,
       toBN(10)
     );
-
-    //Sponsor the new proposal to start the voting process
-    await onboarding.sponsorProposal(this.dao.address, onboardProposalId, [], {
-      from: member,
-      gasPrice: toBN("0"),
-    });
 
     // kicked member attemps to vote
     await expectRevert(
@@ -608,8 +602,8 @@ describe("Adapter - GuildKick", () => {
       voting,
       newMember,
       member,
-      sharePrice,
-      SHARES
+      unitPrice,
+      UNITS
     );
 
     //SubGuildKick
@@ -641,22 +635,16 @@ describe("Adapter - GuildKick", () => {
     // Create Financing Request, the kicked member is the applicant and it is fine for now
     let requestedAmount = toBN(50000);
     let proposalId = getProposalCounter();
-    await financing.createFinancingRequest(
-      this.dao.address,
-      proposalId,
-      kickedMember,
-      ETH_TOKEN,
-      requestedAmount,
-      fromUtf8(""),
-      { gasPrice: toBN("0") }
-    );
-
-    // kicked member attemps to sponsor the financing proposal to get grant
     await expectRevert(
-      financing.sponsorProposal(this.dao.address, proposalId, [], {
-        from: kickedMember,
-        gasPrice: toBN("0"),
-      }),
+      financing.submitProposal(
+        this.dao.address,
+        proposalId,
+        kickedMember,
+        ETH_TOKEN,
+        requestedAmount,
+        [],
+        { from: kickedMember, gasPrice: toBN("0") }
+      ),
       "onlyMember"
     );
   });
@@ -677,8 +665,8 @@ describe("Adapter - GuildKick", () => {
       voting,
       newMember,
       member,
-      sharePrice,
-      SHARES
+      unitPrice,
+      UNITS
     );
 
     //SubGuildKick
@@ -716,11 +704,14 @@ describe("Adapter - GuildKick", () => {
       managing.submitProposal(
         this.dao.address,
         getProposalCounter(),
-        newAdapterId,
-        newAdapterAddress,
+        {
+          adapterId: newAdapterId,
+          adapterAddress: newAdapterAddress,
+          flags: 0,
+        },
         [],
         [],
-        0,
+        [],
         { from: kickedMember, gasPrice: toBN("0") }
       ),
       "onlyMember"
@@ -743,8 +734,8 @@ describe("Adapter - GuildKick", () => {
       voting,
       newMember,
       member,
-      sharePrice,
-      SHARES
+      unitPrice,
+      UNITS
     );
 
     //SubGuildKick
@@ -777,23 +768,20 @@ describe("Adapter - GuildKick", () => {
     //Submit a new Bank adapter proposal
     let newadapterId = sha3("onboarding");
     let newadapterAddress = accounts[3]; //TODO deploy some Banking test contract
-    await managing.submitProposal(
-      this.dao.address,
-      proposalId,
-      newadapterId,
-      newadapterAddress,
-      [],
-      [],
-      0,
-      { from: member, gasPrice: toBN("0") }
-    );
-
-    // kicked member attemps to sponsor a managing proposal
     await expectRevert(
-      managing.sponsorProposal(this.dao.address, proposalId, [], {
-        from: kickedMember,
-        gasPrice: toBN("0"),
-      }),
+      managing.submitProposal(
+        this.dao.address,
+        proposalId,
+        {
+          adapterId: newadapterId,
+          adapterAddress: newadapterAddress,
+          flags: 0,
+        },
+        [],
+        [],
+        [],
+        { from: kickedMember, gasPrice: toBN("0") }
+      ),
       "onlyMember"
     );
   });
@@ -814,8 +802,8 @@ describe("Adapter - GuildKick", () => {
       voting,
       newMember,
       member,
-      sharePrice,
-      SHARES
+      unitPrice,
+      UNITS
     );
 
     // Submit GuildKick
@@ -842,11 +830,11 @@ describe("Adapter - GuildKick", () => {
       gasPrice: toBN("0"),
     });
 
-    // The kicked member should not have LOOT & SHARES anymore
+    // The kicked member should not have LOOT & UNITS anymore
     let memberLoot = await bank.balanceOf(memberToKick, LOOT);
     expect(memberLoot.toString()).equal("0");
-    let memberShares = await bank.balanceOf(memberToKick, SHARES);
-    expect(memberShares.toString()).equal("0");
+    let memberUnits = await bank.balanceOf(memberToKick, UNITS);
+    expect(memberUnits.toString()).equal("0");
 
     // The kicked member must receive the funds in ETH_TOKEN after the ragekick was triggered by a DAO member
     let memberEthToken = await bank.balanceOf(memberToKick, ETH_TOKEN);
@@ -868,8 +856,8 @@ describe("Adapter - GuildKick", () => {
       voting,
       newMember,
       member,
-      sharePrice,
-      SHARES
+      unitPrice,
+      UNITS
     );
 
     // Submit GuildKick
@@ -931,8 +919,8 @@ describe("Adapter - GuildKick", () => {
       voting,
       memberB,
       memberA,
-      sharePrice,
-      SHARES
+      unitPrice,
+      UNITS
     );
     await onboardingNewMember(
       getProposalCounter(),
@@ -941,8 +929,8 @@ describe("Adapter - GuildKick", () => {
       voting,
       memberC,
       memberA,
-      sharePrice,
-      SHARES
+      unitPrice,
+      UNITS
     );
 
     // Submit the first guild kick with proposalId 0x1

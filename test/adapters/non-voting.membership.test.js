@@ -27,7 +27,7 @@ SOFTWARE.
 const {
   toBN,
   GUILD,
-  sharePrice,
+  unitPrice,
   remaining,
   LOOT,
 } = require("../../utils/ContractUtil.js");
@@ -60,21 +60,22 @@ describe("Adapter - Non Voting Onboarding", () => {
     const onboarding = adapters.onboarding;
     const voting = adapters.voting;
 
-    // Total of ETH to be sent to the DAO in order to get the Loot shares
-    let ethAmount = sharePrice.mul(toBN(3)).add(remaining);
+    // Total of ETH to be sent to the DAO in order to get the Loot units
+    let ethAmount = unitPrice.mul(toBN(3)).add(remaining);
     let proposalId = "0x1";
     // Request to join the DAO as an Advisor (non-voting power), Send a tx with RAW ETH only and specify the nonVotingOnboarding
-    await onboarding.onboard(dao.address, proposalId, advisorAccount, LOOT, 0, {
-      from: daoOwner,
-      value: ethAmount,
-      gasPrice: toBN("0"),
-    });
-
-    // Sponsor the new proposal to allow the Advisor to join the DAO
-    await onboarding.sponsorProposal(dao.address, proposalId, [], {
-      from: daoOwner,
-      gasPrice: toBN("0"),
-    });
+    await onboarding.submitProposal(
+      dao.address,
+      proposalId,
+      advisorAccount,
+      LOOT,
+      ethAmount,
+      [],
+      {
+        from: daoOwner,
+        gasPrice: toBN("0"),
+      }
+    );
 
     // Vote on the new proposal to accept the new Advisor
     await voting.submitVote(dao.address, proposalId, 1, {
@@ -86,14 +87,15 @@ describe("Adapter - Non Voting Onboarding", () => {
     await advanceTime(10000);
     await onboarding.processProposal(dao.address, proposalId, {
       from: daoOwner,
+      value: ethAmount,
       gasPrice: toBN("0"),
     });
 
-    // Check the number of Loot (non-voting shares) issued to the new Avisor
+    // Check the number of Loot (non-voting units) issued to the new Avisor
     const advisorAccountLoot = await bank.balanceOf(advisorAccount, LOOT);
     expect(advisorAccountLoot.toString()).equal("3000000000000000");
 
-    // Guild balance must not change when Loot shares are issued
+    // Guild balance must not change when Loot units are issued
     const guildBalance = await bank.balanceOf(
       GUILD,
       "0x0000000000000000000000000000000000000000"
@@ -107,13 +109,13 @@ describe("Adapter - Non Voting Onboarding", () => {
     // Issue OpenLaw ERC20 Basic Token for tests
     const tokenSupply = 1000000;
     const oltContract = await OLToken.new(tokenSupply);
-    const lootSharePrice = 10;
-    const nbOfLootShares = 100000000;
+    const lootUnitPrice = 10;
+    const nbOfLootUnits = 100000000;
 
     const { dao, adapters, extensions } = await deployDefaultDao({
       owner: daoOwner,
-      unitPrice: lootSharePrice,
-      nbShares: nbOfLootShares,
+      unitPrice: lootUnitPrice,
+      nbUnits: nbOfLootUnits,
       tokenAddr: oltContract.address,
     });
 
@@ -128,19 +130,20 @@ describe("Adapter - Non Voting Onboarding", () => {
     );
     expect(advisorTokenBalance.toString()).equal("100");
 
-    // Total of OLT to be sent to the DAO in order to get the Loot shares
+    // Total of OLT to be sent to the DAO in order to get the Loot units
     const tokenAmount = 10;
 
     // Send a request to join the DAO as an Advisor (non-voting power),
     // the tx passes the OLT ERC20 token, the amount and the nonVotingOnboarding adapter that handles the proposal
     const proposalId = getProposalCounter();
     await expectRevert.unspecified(
-      onboarding.onboard(
+      onboarding.submitProposal(
         dao.address,
         proposalId,
         advisorAccount,
         LOOT,
         tokenAmount,
+        [],
         {
           from: advisorAccount,
           gasPrice: toBN("0"),
@@ -153,23 +156,18 @@ describe("Adapter - Non Voting Onboarding", () => {
       from: advisorAccount,
     });
 
-    await onboarding.onboard(
+    await onboarding.submitProposal(
       dao.address,
       proposalId,
       advisorAccount,
       LOOT,
       tokenAmount,
+      [],
       {
-        from: advisorAccount,
+        from: daoOwner,
         gasPrice: toBN("0"),
       }
     );
-
-    // Sponsor the new proposal to allow the Advisor to join the DAO
-    await onboarding.sponsorProposal(dao.address, proposalId, [], {
-      from: daoOwner,
-      gasPrice: toBN("0"),
-    });
 
     // Vote on the new proposal to accept the new Advisor
     await voting.submitVote(dao.address, proposalId, 1, {
@@ -180,15 +178,15 @@ describe("Adapter - Non Voting Onboarding", () => {
     // Process the new proposal
     await advanceTime(10000);
     await onboarding.processProposal(dao.address, proposalId, {
-      from: daoOwner,
+      from: advisorAccount,
       gasPrice: toBN("0"),
     });
 
-    // Check the number of Loot (non-voting shares) issued to the new Avisor
+    // Check the number of Loot (non-voting units) issued to the new Avisor
     const advisorAccountLoot = await bank.balanceOf(advisorAccount, LOOT);
     expect(advisorAccountLoot.toString()).equal("100000000");
 
-    // Guild balance must not change when Loot shares are issued
+    // Guild balance must not change when Loot units are issued
     const guildBalance = await bank.balanceOf(GUILD, oltContract.address);
     expect(guildBalance.toString()).equal("10");
   });

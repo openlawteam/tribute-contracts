@@ -89,12 +89,12 @@ contract KickBadReporterAdapter is DaoConstants, MemberGuard {
             votingState == IVoting.VotingState.NOT_PASS ||
             votingState == IVoting.VotingState.TIE
         ) {
-            (uint256 shares, address challengeAddress) =
+            (uint256 units, address challengeAddress) =
                 votingContract.getChallengeDetails(dao, proposalId);
             BankExtension bank = BankExtension(dao.getExtensionAddress(BANK));
 
-            bank.subtractFromBalance(challengeAddress, LOOT, shares);
-            bank.addToBalance(challengeAddress, SHARES, shares);
+            bank.subtractFromBalance(challengeAddress, LOOT, units);
+            bank.addToBalance(challengeAddress, UNITS, units);
         } else {
             revert("vote not finished yet");
         }

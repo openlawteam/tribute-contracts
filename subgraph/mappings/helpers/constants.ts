@@ -1,6 +1,6 @@
 import { Address } from "@graphprotocol/graph-ts";
 
-export let SHARES: Address = Address.fromString(
+export let UNITS: Address = Address.fromString(
   "0x00000000000000000000000000000000000Ff1CE"
 );
 export let GUILD: Address = Address.fromString(

@@ -27,8 +27,8 @@ SOFTWARE.
 const {
   toBN,
   fromUtf8,
-  sharePrice,
-  SHARES,
+  unitPrice,
+  UNITS,
   GUILD,
   ETH_TOKEN,
   LOOT,
@@ -83,24 +83,24 @@ describe("Adapter - Ragequit", () => {
       voting,
       newMember,
       owner,
-      sharePrice,
-      SHARES
+      unitPrice,
+      UNITS
     );
 
     //Check Guild Bank Balance
     const guildBalance = await bank.balanceOf(GUILD, ETH_TOKEN);
     expect(guildBalance.toString()).equal("1200000000000000000");
 
-    //Check Member Shares
-    const shares = await bank.balanceOf(newMember, SHARES);
-    expect(shares.toString()).equal("10000000000000000");
+    //Check Member Units
+    const units = await bank.balanceOf(newMember, UNITS);
+    expect(units.toString()).equal("10000000000000000");
 
     //Ragequit
     const nonMember = accounts[4];
     await expectRevert(
       this.adapters.ragequit.ragequit(
         this.dao.address,
-        toBN(shares),
+        toBN(units),
         toBN(0),
         [ETH_TOKEN],
         {
@@ -108,11 +108,11 @@ describe("Adapter - Ragequit", () => {
           gasPrice: toBN("0"),
         }
       ),
-      "insufficient shares"
+      "insufficient units"
     );
   });
 
-  it("should not be possible for a member to ragequit when the member does not have enough shares", async () => {
+  it("should not be possible for a member to ragequit when the member does not have enough units", async () => {
     const newMember = accounts[2];
     const bank = this.extensions.bank;
     const onboarding = this.adapters.onboarding;
@@ -126,17 +126,17 @@ describe("Adapter - Ragequit", () => {
       voting,
       newMember,
       owner,
-      sharePrice,
-      SHARES
+      unitPrice,
+      UNITS
     );
 
     //Check Guild Bank Balance
     const guildBalance = await bank.balanceOf(GUILD, ETH_TOKEN);
     expect(guildBalance.toString()).equal("1200000000000000000");
 
-    //Check Member Shares
-    const shares = await bank.balanceOf(newMember, SHARES);
-    expect(shares.toString()).equal("10000000000000000");
+    //Check Member Units
+    const units = await bank.balanceOf(newMember, UNITS);
+    expect(units.toString()).equal("10000000000000000");
 
     //Ragequit
     await expectRevert(
@@ -150,7 +150,7 @@ describe("Adapter - Ragequit", () => {
           gasPrice: toBN("0"),
         }
       ),
-      "insufficient shares"
+      "insufficient units"
     );
   });
 
@@ -168,22 +168,22 @@ describe("Adapter - Ragequit", () => {
       voting,
       newMember,
       owner,
-      sharePrice,
-      SHARES
+      unitPrice,
+      UNITS
     );
 
     //Check Guild Bank Balance
     const guildBalance = await bank.balanceOf(GUILD, ETH_TOKEN);
     expect(guildBalance.toString()).equal("1200000000000000000");
 
-    //Check New Member Shares
-    const shares = await bank.balanceOf(newMember, SHARES);
-    expect(shares.toString()).equal("10000000000000000");
+    //Check New Member Units
+    const units = await bank.balanceOf(newMember, UNITS);
+    expect(units.toString()).equal("10000000000000000");
 
-    //Ragequit - Burn all the new member shares
+    //Ragequit - Burn all the new member units
     await this.adapters.ragequit.ragequit(
       this.dao.address,
-      toBN(shares),
+      toBN(units),
       toBN(0),
       [ETH_TOKEN],
       {
@@ -213,35 +213,30 @@ describe("Adapter - Ragequit", () => {
       voting,
       newMember,
       owner,
-      sharePrice,
-      SHARES
+      unitPrice,
+      UNITS
     );
 
     //Check Guild Bank Balance
     const guildBalance = await bank.balanceOf(GUILD, ETH_TOKEN);
     expect(guildBalance.toString()).equal("1200000000000000000".toString());
 
-    //Check New Member Shares
-    const shares = await bank.balanceOf(newMember, SHARES);
-    expect(shares.toString()).equal("10000000000000000");
+    //Check New Member Units
+    const units = await bank.balanceOf(newMember, UNITS);
+    expect(units.toString()).equal("10000000000000000");
     const financingProposalId = getProposalCounter();
 
     //Create Financing Request
     const requestedAmount = toBN(50000);
-    await financing.createFinancingRequest(
+    await financing.submitProposal(
       this.dao.address,
       financingProposalId,
       applicant,
       ETH_TOKEN,
       requestedAmount,
-      fromUtf8("")
+      fromUtf8(""),
+      { from: owner }
     );
-
-    //Old Member sponsors the Financing proposal
-    await financing.sponsorProposal(this.dao.address, financingProposalId, [], {
-      from: owner,
-      gasPrice: toBN("0"),
-    });
 
     //New Member votes YES on the Financing proposal
     let vote = 1; //YES
@@ -253,7 +248,7 @@ describe("Adapter - Ragequit", () => {
     //Ragequit - New member ragequits after YES vote
     await this.adapters.ragequit.ragequit(
       this.dao.address,
-      toBN(shares),
+      toBN(units),
       toBN(0),
       [ETH_TOKEN],
       {
@@ -283,35 +278,30 @@ describe("Adapter - Ragequit", () => {
       voting,
       newMember,
       owner,
-      sharePrice,
-      SHARES
+      unitPrice,
+      UNITS
     );
 
     //Check Guild Bank Balance
     const guildBalance = await bank.balanceOf(GUILD, ETH_TOKEN);
     expect(guildBalance.toString()).equal("1200000000000000000");
 
-    //Check New Member Shares
-    const shares = await bank.balanceOf(newMember, SHARES);
-    expect(shares.toString()).equal("10000000000000000");
+    //Check New Member Units
+    const units = await bank.balanceOf(newMember, UNITS);
+    expect(units.toString()).equal("10000000000000000");
 
     const financingProposalId = getProposalCounter();
     //Create Financing Request
     const requestedAmount = toBN(50000);
-    await financing.createFinancingRequest(
+    await financing.submitProposal(
       this.dao.address,
       financingProposalId,
       applicant,
       ETH_TOKEN,
       requestedAmount,
-      fromUtf8("")
+      fromUtf8(""),
+      { from: owner }
     );
-
-    //Old Member sponsors the Financing proposal
-    await financing.sponsorProposal(this.dao.address, financingProposalId, [], {
-      from: owner,
-      gasPrice: toBN("0"),
-    });
 
     //New Member votes NO on the Financing proposal
     const vote = 2; //NO
@@ -323,7 +313,7 @@ describe("Adapter - Ragequit", () => {
     //Ragequit - New member ragequits after YES vote
     await this.adapters.ragequit.ragequit(
       this.dao.address,
-      toBN(shares),
+      toBN(units),
       toBN(0),
       [ETH_TOKEN],
       {
@@ -340,7 +330,7 @@ describe("Adapter - Ragequit", () => {
   it("should be possible for an Advisor to ragequit", async () => {
     const owner = accounts[1];
     const advisorAccount = accounts[2];
-    const lootSharePrice = 10;
+    const lootUnitPrice = 10;
     const chunkSize = 5;
 
     // Issue OpenLaw ERC20 Basic Token for tests
@@ -349,8 +339,8 @@ describe("Adapter - Ragequit", () => {
 
     const { dao, adapters, extensions } = await deployDefaultDao({
       owner: owner,
-      unitPrice: lootSharePrice,
-      nbShares: chunkSize,
+      unitPrice: lootUnitPrice,
+      nbUnits: chunkSize,
       tokenAddr: oltContract.address,
     });
 
@@ -365,11 +355,11 @@ describe("Adapter - Ragequit", () => {
     const onboarding = adapters.onboarding;
     const voting = adapters.voting;
 
-    // Guild balance must be 0 if no Loot shares are issued
+    // Guild balance must be 0 if no Loot units are issued
     let guildBalance = await bank.balanceOf(GUILD, ETH_TOKEN);
     expect(guildBalance.toString()).equal("0");
 
-    // Total of OLT to be sent to the DAO in order to get the Loot shares
+    // Total of OLT to be sent to the DAO in order to get the Loot units
     const tokenAmount = 10;
 
     // Pre-approve spender (DAO) to transfer applicant tokens
@@ -381,23 +371,18 @@ describe("Adapter - Ragequit", () => {
     // Send a request to join the DAO as an Advisor (non-voting power),
     // the tx passes the OLT ERC20 token, the amount and the nonVotingOnboarding adapter that handles the proposal
     const proposalId = getProposalCounter();
-    await onboarding.onboard(
+    await onboarding.submitProposal(
       dao.address,
       proposalId,
       advisorAccount,
       LOOT,
       tokenAmount,
+      [],
       {
-        from: advisorAccount,
+        from: owner,
         gasPrice: toBN("0"),
       }
     );
-
-    // Sponsor the new proposal to allow the Advisor to join the DAO
-    await onboarding.sponsorProposal(dao.address, proposalId, [], {
-      from: owner,
-      gasPrice: toBN("0"),
-    });
 
     // Vote on the new proposal to accept the new Advisor
     await voting.submitVote(dao.address, proposalId, 1, {
@@ -408,15 +393,16 @@ describe("Adapter - Ragequit", () => {
     // Process the new proposal
     await advanceTime(10000);
     await onboarding.processProposal(dao.address, proposalId, {
-      from: owner,
+      from: advisorAccount,
+      owner: tokenAmount,
       gasPrice: toBN("0"),
     });
 
-    // Check the number of Loot (non-voting shares) issued to the new Avisor
+    // Check the number of Loot (non-voting units) issued to the new Avisor
     const advisorAccountLoot = await bank.balanceOf(advisorAccount, LOOT);
     expect(advisorAccountLoot.toString()).equal("5");
 
-    // Guild balance must change when Loot shares are issued
+    // Guild balance must change when Loot units are issued
     guildBalance = await bank.balanceOf(GUILD, oltContract.address);
     expect(guildBalance.toString()).equal("10");
 
@@ -443,7 +429,7 @@ describe("Adapter - Ragequit", () => {
     const onboarding = this.adapters.onboarding;
     const voting = this.adapters.voting;
 
-    const proposalId = getProposalCounter();
+    let proposalId = getProposalCounter();
     await onboardingNewMember(
       proposalId,
       this.dao,
@@ -451,22 +437,22 @@ describe("Adapter - Ragequit", () => {
       voting,
       memberAddr,
       owner,
-      sharePrice,
-      SHARES
+      unitPrice,
+      UNITS
     );
 
     //Check Guild Bank Balance
     let guildBalance = await bank.balanceOf(GUILD, ETH_TOKEN);
     expect(guildBalance.toString()).equal("1200000000000000000");
 
-    //Check New Member Shares
-    let shares = await bank.balanceOf(memberAddr, SHARES);
-    expect(shares.toString()).equal("10000000000000000");
+    //Check New Member Units
+    let units = await bank.balanceOf(memberAddr, UNITS);
+    expect(units.toString()).equal("10000000000000000");
 
-    //Ragequit - Burn all the new member shares
+    //Ragequit - Burn all the new member units
     await this.adapters.ragequit.ragequit(
       this.dao.address,
-      toBN(shares),
+      toBN(units),
       toBN(0),
       [ETH_TOKEN],
       {
@@ -476,32 +462,43 @@ describe("Adapter - Ragequit", () => {
     );
 
     //Member attempts to sponsor a proposal after the ragequit
-    let res = onboarding.sponsorProposal(this.dao.address, proposalId, [], {
-      from: memberAddr,
-      gasPrice: toBN("0"),
-    });
-    await expectRevert(res, "onlyMember");
+    proposalId = getProposalCounter();
+    await expectRevert(
+      onboardingNewMember(
+        proposalId,
+        this.dao,
+        onboarding,
+        voting,
+        memberAddr,
+        memberAddr,
+        unitPrice,
+        UNITS
+      ),
+      "onlyMember"
+    );
 
-    res = voting.submitVote(this.dao.address, proposalId, 1, {
-      from: memberAddr,
-      gasPrice: toBN("0"),
-    });
-    await expectRevert(res, "onlyMember");
+    await expectRevert(
+      voting.submitVote(this.dao.address, proposalId, 1, {
+        from: memberAddr,
+        gasPrice: toBN("0"),
+      }),
+      "onlyMember"
+    );
   });
 
   it("should not be possible to ragequit if the member have provided an invalid token", async () => {
     const bank = this.extensions.bank;
 
-    // Check member shares
-    let shares = await bank.balanceOf(owner, SHARES);
-    expect(shares.toString()).equal("1");
+    // Check member units
+    let units = await bank.balanceOf(owner, UNITS);
+    expect(units.toString()).equal("1");
 
     //Ragequit - Attempts to ragequit using an invalid token to receive funds
     let invalidToken = accounts[7];
     await expectRevert(
       this.adapters.ragequit.ragequit(
         this.dao.address,
-        toBN(shares),
+        toBN(units),
         toBN(0),
         [invalidToken],
         {
@@ -527,22 +524,22 @@ describe("Adapter - Ragequit", () => {
       voting,
       newMember,
       owner,
-      sharePrice,
-      SHARES
+      unitPrice,
+      UNITS
     );
 
     //Check Guild Bank Balance
     let guildBalance = await bank.balanceOf(GUILD, ETH_TOKEN);
     expect(guildBalance.toString()).equal("1200000000000000000");
 
-    //Check New Member Shares
-    let shares = await bank.balanceOf(newMember, SHARES);
-    expect(shares.toString()).equal("10000000000000000");
+    //Check New Member Units
+    let units = await bank.balanceOf(newMember, UNITS);
+    expect(units.toString()).equal("10000000000000000");
 
     await expectRevert(
       this.adapters.ragequit.ragequit(
         this.dao.address,
-        toBN(shares),
+        toBN(units),
         toBN(0),
         [ETH_TOKEN, ETH_TOKEN], // token array with duplicates
         {
@@ -568,17 +565,17 @@ describe("Adapter - Ragequit", () => {
       voting,
       memberA,
       owner,
-      sharePrice,
-      SHARES
+      unitPrice,
+      UNITS
     );
 
-    const memberAShares = await bank.balanceOf(memberA, SHARES);
-    expect(memberAShares.toString()).equal("10000000000000000");
+    const memberAUnits = await bank.balanceOf(memberA, UNITS);
+    expect(memberAUnits.toString()).equal("10000000000000000");
 
     await expectRevert(
       this.adapters.ragequit.ragequit(
         this.dao.address,
-        toBN(memberAShares),
+        toBN(memberAUnits),
         toBN(0),
         [], //empty token array
         {

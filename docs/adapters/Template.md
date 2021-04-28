@@ -39,7 +39,7 @@ Examples:
      * @notice Creates a guild kick proposal, opens it for voting, and sponsors it.
      * @dev A member can not kick himself.
      * @dev Only one kick per DAO can be executed at time.
-     * @dev Only members that have shares can be kicked out.
+     * @dev Only members that have units can be kicked out.
      * @dev Proposal ids can not be reused.
      * @param dao The dao address.
      * @param proposalId The guild kick proposal id.

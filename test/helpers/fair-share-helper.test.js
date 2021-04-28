@@ -29,53 +29,45 @@ const {
 } = require("../../utils/OZTestUtil.js");
 
 describe("Helper - FairShareHelper", () => {
-  it("should calculate the fair share if the given parameters are valid", async () => {
+  it("should calculate the fair unit if the given parameters are valid", async () => {
     const fairShareCalc = await TestFairShareCalc.new();
     const balance = toWei("4.3", "ether");
-    const shares = toWei("100", "ether");
-    const totalShares = toWei("1000", "ether");
-    const fairShare = await fairShareCalc.calculate(
-      balance,
-      shares,
-      totalShares
-    );
-    // It should return 43% of the shares based on the balance
+    const units = toWei("100", "ether");
+    const totalUnits = toWei("1000", "ether");
+    const fairShare = await fairShareCalc.calculate(balance, units, totalUnits);
+    // It should return 43% of the units based on the balance
     expect(fairShare.toString() / 10 ** 18).equal(0.43);
   });
 
-  it("should revert when the totalShares parameter is.toEqual to zero", async () => {
+  it("should revert when the totalUnits parameter is.toEqual to zero", async () => {
     const fairShareCalc = await TestFairShareCalc.new();
     const balance = toWei("4.3", "ether");
-    const shares = toWei("100", "ether");
-    const totalShares = toWei("0", "ether");
+    const units = toWei("100", "ether");
+    const totalUnits = toWei("0", "ether");
     await expectRevert(
-      fairShareCalc.calculate(balance, shares, totalShares),
-      "revert totalShares must be greater than 0"
+      fairShareCalc.calculate(balance, units, totalUnits),
+      "revert totalUnits must be greater than 0"
     );
   });
 
-  it("should revert when the shares is greater than the totalShares", async () => {
+  it("should revert when the units is greater than the totalUnits", async () => {
     const fairShareCalc = await TestFairShareCalc.new();
     const balance = toWei("4.3", "ether");
-    const shares = toWei("100", "ether");
-    const totalShares = toWei("10", "ether");
+    const units = toWei("100", "ether");
+    const totalUnits = toWei("10", "ether");
     await expectRevert(
-      fairShareCalc.calculate(balance, shares, totalShares),
-      "revert shares must be less than or equal to totalShares"
+      fairShareCalc.calculate(balance, units, totalUnits),
+      "revert units must be less than or equal to totalUnits"
     );
   });
 
-  it("should return 100% of the shares if the member holds all the shares of the dao", async () => {
+  it("should return 100% of the units if the member holds all the units of the dao", async () => {
     const fairShareCalc = await TestFairShareCalc.new();
     const balance = toWei("1", "ether");
-    const shares = toWei("100", "ether");
-    const totalShares = toWei("100", "ether");
-    const fairShare = await fairShareCalc.calculate(
-      balance,
-      shares,
-      totalShares
-    );
-    // It should return 100% of the shares based on the balance
+    const units = toWei("100", "ether");
+    const totalUnits = toWei("100", "ether");
+    const fairShare = await fairShareCalc.calculate(balance, units, totalUnits);
+    // It should return 100% of the units based on the balance
     expect(fairShare.toString() / 10 ** 18).equal(1.0);
   });
 });

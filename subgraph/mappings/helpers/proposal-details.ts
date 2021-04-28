@@ -70,12 +70,11 @@ function onboarding(
   let proposal = Proposal.load(daoProposalId);
 
   if (proposal) {
-    proposal.tokenToMint = data.value1;
+    proposal.unitsToMint = data.value1;
     proposal.amount = data.value2;
-    proposal.sharesRequested = data.value3;
+    proposal.unitsRequested = data.value3;
     proposal.token = data.value4;
     proposal.applicant = data.value5;
-    proposal.proposer = data.value6;
 
     proposal.adapterAddress = adapterAdddress;
 
@@ -105,7 +104,7 @@ function distribute(
   if (proposal) {
     proposal.token = data.value0;
     proposal.amount = data.value1;
-    proposal.shareHolderAddr = data.value2;
+    proposal.unitHolderAddr = data.value2;
     proposal.status = data.value3.toString();
     proposal.currentIndex = data.value4;
     proposal.blockNumber = data.value5;
@@ -218,7 +217,6 @@ function financing(
     proposal.applicant = data.value0;
     proposal.amount = data.value1;
     proposal.token = data.value2;
-    proposal.details = data.value3;
 
     proposal.adapterAddress = adapterAdddress;
 

@@ -30,9 +30,9 @@ SOFTWARE.
 contract TestFairShareCalc {
     function calculate(
         uint256 balance,
-        uint256 shares,
-        uint256 totalShares
+        uint256 units,
+        uint256 totalUnits
     ) external pure returns (uint256) {
-        return FairShareHelper.calc(balance, shares, totalShares);
+        return FairShareHelper.calc(balance, units, totalUnits);
     }
 }

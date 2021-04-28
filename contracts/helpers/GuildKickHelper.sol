@@ -34,7 +34,7 @@ SOFTWARE.
 
 library GuildKickHelper {
     address internal constant TOTAL = address(0xbabe);
-    address internal constant SHARES = address(0xFF1CE);
+    address internal constant UNITS = address(0xFF1CE);
     address internal constant LOOT = address(0xB105F00D);
 
     bytes32 internal constant BANK = keccak256("bank");
@@ -53,26 +53,26 @@ library GuildKickHelper {
         // Get the bank extension
         BankExtension bank = BankExtension(dao.getExtensionAddress(BANK));
         uint256 nbTokens = bank.nbTokens();
-        // Calculates the total shares, loot and locked loot before any internal transfers
+        // Calculates the total units, loot and locked loot before any internal transfers
         // it considers the locked loot to be able to calculate the fair amount to ragequit,
         // but locked loot can not be burned.
-        uint256 initialTotalSharesAndLoot =
-            bank.balanceOf(TOTAL, SHARES) + bank.balanceOf(TOTAL, LOOT);
+        uint256 initialTotalUnitsAndLoot =
+            bank.balanceOf(TOTAL, UNITS) + bank.balanceOf(TOTAL, LOOT);
 
-        uint256 sharesToBurn = bank.balanceOf(kickedMember, SHARES);
+        uint256 unitsToBurn = bank.balanceOf(kickedMember, UNITS);
         uint256 lootToBurn = bank.balanceOf(kickedMember, LOOT);
-        uint256 sharesAndLootToBurn = sharesToBurn + lootToBurn;
+        uint256 unitsAndLootToBurn = unitsToBurn + lootToBurn;
 
         // Transfers the funds from the internal Guild account to the internal member's account.
         for (uint256 i = 0; i < nbTokens; i++) {
             address token = bank.getToken(i);
-            // Calculates the fair amount of funds to ragequit based on the token, shares and loot.
+            // Calculates the fair amount of funds to ragequit based on the token, units and loot.
             // It takes into account the historical guild balance when the kick proposal was created.
             uint256 amountToRagequit =
                 FairShareHelper.calc(
                     bank.balanceOf(GUILD, token),
-                    sharesAndLootToBurn,
-                    initialTotalSharesAndLoot
+                    unitsAndLootToBurn,
+                    initialTotalUnitsAndLoot
                 );
 
             // Ony execute the internal transfer if the user has enough funds to receive.
@@ -90,7 +90,7 @@ library GuildKickHelper {
             }
         }
 
-        bank.subtractFromBalance(kickedMember, SHARES, sharesToBurn);
+        bank.subtractFromBalance(kickedMember, UNITS, unitsToBurn);
         bank.subtractFromBalance(kickedMember, LOOT, lootToBurn);
     }
 }

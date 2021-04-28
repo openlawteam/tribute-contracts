@@ -2,7 +2,7 @@
 
 Guild Kick is the process in which the DAO members decide to kick a member out of the DAO for any given reason.
 
-In order to kick out a member of the DAO, the members must submit a proposal which needs to be voted on. If the proposal passes, then the member will be kicked out, and the kicked member will be able to withdraw his funds based on the number of shares and/or loot that the member was holding when the kick process was started.
+In order to kick out a member of the DAO, the members must submit a proposal which needs to be voted on. If the proposal passes, then the member will be kicked out, and the kicked member will be able to withdraw his funds based on the number of units and/or loot that the member was holding when the kick process was started.
 
 The main goal is to give the members the freedom to choose which individuals or organizations should really be part of the DAO.
 
@@ -22,7 +22,7 @@ The rage kick process is the only alternative for a kicked member to receive his
 
 Tokens that are provided by the member have to be allowed/supported by the DAO.
 
-The member needs to have enough shares and/or loot in order to convert it to funds.
+The member needs to have enough units and/or loot in order to convert it to funds.
 
 DAORegistry Access Flags: `SUBMIT_PROPOSAL`.
 
@@ -41,8 +41,8 @@ Bank Extension Access Flags: `WITHDRAW`, `INTERNAL_TRANSFER`, `SUB_FROM_BALANCE`
 - BankExtension
 
   - checks the kicked member's balance.
-  - subtracts the kicked member's shares.
-  - adds the burned shares to the kicked member's loot account.
+  - subtracts the kicked member's units.
+  - adds the burned units to the kicked member's loot account.
   - transfers the funds from the DAO account to the kicked member's account.
   - gets the available tokens.
   - gets the current balance of the guild account.
@@ -60,7 +60,7 @@ Bank Extension Access Flags: `WITHDRAW`, `INTERNAL_TRANSFER`, `SUB_FROM_BALANCE`
 
 - FairShareHelper
 
-  - to calculate the amount of funds to be returned to the member based on the provided numbers of shares and/or loot, taking into account the current balance of the GUILD and kicked member's accounts.
+  - to calculate the amount of funds to be returned to the member based on the provided numbers of units and/or loot, taking into account the current balance of the GUILD and kicked member's accounts.
 
 ## Functions description and assumptions / checks
 
@@ -73,30 +73,30 @@ Bank Extension Access Flags: `WITHDRAW`, `INTERNAL_TRANSFER`, `SUB_FROM_BALANCE`
     receive() external payable
 ```
 
-### function submitKickProposal
+### function submitProposal
 
 ```solidity
     /**
      * @notice Creates a guild kick proposal, opens it for voting, and sponsors it.
      * @dev A member can not kick himself.
-     * @dev Only members that have shares or loot can be kicked out.
+     * @dev Only members that have units or loot can be kicked out.
      * @dev Proposal ids can not be reused.
      * @param dao The dao address.
      * @param proposalId The guild kick proposal id.
      * @param memberToKick The member address that should be kicked out of the DAO.
      * @param data Additional information related to the kick proposal.
      */
-    function submitKickProposal(
+    function submitProposal(
         DaoRegistry dao,
         bytes32 proposalId,
         address memberToKick,
         bytes calldata data
-    ) external
+    ) external override
 ```
 
 ### function processProposal
 
-If the proposal has passed, sends the fair share of tokens from the guild bank to the member kicked.
+If the proposal has passed, sends the fair unit of tokens from the guild bank to the member kicked.
 
 ## Events
 

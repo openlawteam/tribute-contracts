@@ -50,7 +50,7 @@ Adapters implemented in the MolochV3 project:
 - [Onboarding](https://github.com/openlawteam/molochv3-contracts/blob/master/docs/adapters/Onboarding.md): triggers the process of minting internal tokens in exchange of a specific token at a fixed price.
 - [Ragequit](https://github.com/openlawteam/molochv3-contracts/blob/master/docs/adapters/Ragequit.md): gives the members the freedom to choose when it is the best time to exit the DAO for any given reason.
 - [Tribute](https://github.com/openlawteam/molochv3-contracts/blob/master/docs/adapters/Tribute.md): allows potential and existing DAO members to contribute any amount of ERC-20 tokens to the DAO in exchange for any amount of DAO internal tokens.
-- [TributeNFT](https://github.com/openlawteam/molochv3-contracts/blob/master/docs/adapters/TributeNFT.md): allows potential DAO members to contribute a registered ERC-721 asset to the DAO in exchange for any amount of DAO shares.
+- [TributeNFT](https://github.com/openlawteam/molochv3-contracts/blob/master/docs/adapters/TributeNFT.md): allows potential DAO members to contribute a registered ERC-721 asset to the DAO in exchange for any amount of DAO units.
 - [Voting](https://github.com/openlawteam/molochv3-contracts/blob/master/docs/adapters/Voting.md): adds the simple on chain voting governance process to the DAO.
 - [Withdraw](https://github.com/openlawteam/molochv3-contracts/blob/master/docs/adapters/Withdraw.md): allows the members to withdraw their funds from the DAO bank.
 

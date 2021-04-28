@@ -27,8 +27,8 @@ SOFTWARE.
 const {
   sha3,
   toBN,
-  SHARES,
-  sharePrice,
+  UNITS,
+  unitPrice,
   remaining,
 } = require("../../utils/ContractUtil.js");
 
@@ -137,22 +137,16 @@ describe("Adapter - BatchVoting", () => {
       chainId
     ).toString("hex");
 
-    await onboarding.onboard(
+    await onboarding.submitProposal(
       dao.address,
       proposalId,
       this.members[1].address,
-      SHARES,
-      sharePrice.mul(toBN(3)).add(remaining),
+      UNITS,
+      unitPrice.mul(toBN(3)).add(remaining),
+      prepareVoteProposalData(proposalData, web3),
       {
-        value: sharePrice.mul(toBN("3")).add(remaining),
         gasPrice: toBN("0"),
       }
-    );
-
-    await onboarding.sponsorProposal(
-      dao.address,
-      proposalId,
-      prepareVoteProposalData(proposalData, web3)
     );
 
     const voteEntries = [];
@@ -204,7 +198,9 @@ describe("Adapter - BatchVoting", () => {
 
     await advanceTime(10000);
 
-    await onboarding.processProposal(dao.address, proposalId);
+    await onboarding.processProposal(dao.address, proposalId, {
+      value: unitPrice.mul(toBN("3")).add(remaining),
+    });
   };
 
   it("should be possible to propose a new voting by signing the proposal hash", async () => {

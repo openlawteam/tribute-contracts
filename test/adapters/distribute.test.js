@@ -31,8 +31,8 @@ SOFTWARE.
 const {
   toBN,
   fromUtf8,
-  sharePrice,
-  SHARES,
+  unitPrice,
+  UNITS,
   GUILD,
   ETH_TOKEN,
   LOOT,
@@ -80,7 +80,7 @@ describe("Adapter - Distribute", () => {
     distributeContract,
     token,
     amount,
-    shareHolderArr,
+    unitHolderArr,
     sender,
     proposalId = null
   ) => {
@@ -88,7 +88,7 @@ describe("Adapter - Distribute", () => {
     await distributeContract.submitProposal(
       dao.address,
       newProposalId,
-      shareHolderArr,
+      unitHolderArr,
       token,
       amount,
       fromUtf8("paying dividends"),
@@ -116,17 +116,17 @@ describe("Adapter - Distribute", () => {
       voting,
       daoMember,
       daoOwner,
-      sharePrice,
-      SHARES
+      unitPrice,
+      UNITS
     );
 
     // Checks the Guild Bank Balance
     let guildBalance = await bank.balanceOf(GUILD, ETH_TOKEN);
     expect(toBN(guildBalance).toString()).equal("1200000000000000000");
 
-    // Checks the member shares (to make sure it was created)
-    let shares = await bank.balanceOf(daoMember, SHARES);
-    expect(shares.toString()).equal("10000000000000000");
+    // Checks the member units (to make sure it was created)
+    let units = await bank.balanceOf(daoMember, UNITS);
+    expect(units.toString()).equal("10000000000000000");
 
     // Submit distribute proposal
     const amountToDistribute = 10;
@@ -189,9 +189,9 @@ describe("Adapter - Distribute", () => {
       voting,
       daoMemberA,
       daoOwner,
-      sharePrice,
-      SHARES,
-      toBN(5) // asking for 5 shares
+      unitPrice,
+      UNITS,
+      toBN(5) // asking for 5 units
     );
 
     await onboardingNewMember(
@@ -201,20 +201,20 @@ describe("Adapter - Distribute", () => {
       voting,
       daoMemberB,
       daoOwner,
-      sharePrice,
-      SHARES
+      unitPrice,
+      UNITS
     );
 
     // Checks the Guild Bank Balance
     let guildBalance = await bank.balanceOf(GUILD, ETH_TOKEN);
     expect(toBN(guildBalance).toString()).equal("1800000000000000000");
 
-    // Checks the member shares (to make sure it was created)
-    let sharesMemberA = await bank.balanceOf(daoMemberA, SHARES);
-    expect(sharesMemberA.toString()).equal("5000000000000000");
-    // Checks the member shares (to make sure it was created)
-    let sharesMemberB = await bank.balanceOf(daoMemberB, SHARES);
-    expect(sharesMemberB.toString()).equal("10000000000000000");
+    // Checks the member units (to make sure it was created)
+    let unitsMemberA = await bank.balanceOf(daoMemberA, UNITS);
+    expect(unitsMemberA.toString()).equal("5000000000000000");
+    // Checks the member units (to make sure it was created)
+    let unitsMemberB = await bank.balanceOf(daoMemberB, UNITS);
+    expect(unitsMemberB.toString()).equal("10000000000000000");
 
     // Submit distribute proposal
     const amountToDistribute = 15;
@@ -339,7 +339,7 @@ describe("Adapter - Distribute", () => {
     );
   });
 
-  it("should not be possible to create a proposal if the target member does not have shares (advisor)", async () => {
+  it("should not be possible to create a proposal if the target member does not have units (advisor)", async () => {
     const advisor = accounts[3];
     const dao = this.dao;
     const onboarding = this.adapters.onboarding;
@@ -354,7 +354,7 @@ describe("Adapter - Distribute", () => {
       voting,
       advisor,
       daoOwner,
-      sharePrice,
+      unitPrice,
       LOOT
     );
 
@@ -372,7 +372,7 @@ describe("Adapter - Distribute", () => {
           gasPrice: toBN("0"),
         }
       ),
-      "not enough shares"
+      "not enough units"
     );
   });
 
@@ -395,7 +395,7 @@ describe("Adapter - Distribute", () => {
           gasPrice: toBN("0"),
         }
       ),
-      "not enough shares"
+      "not enough units"
     );
   });
 
@@ -413,8 +413,8 @@ describe("Adapter - Distribute", () => {
       voting,
       daoMember,
       daoOwner,
-      sharePrice,
-      SHARES
+      unitPrice,
+      UNITS
     );
 
     // Submit distribute proposal for the 1st time
@@ -459,8 +459,8 @@ describe("Adapter - Distribute", () => {
       voting,
       daoMemberA,
       daoOwner,
-      sharePrice,
-      SHARES
+      unitPrice,
+      UNITS
     );
 
     // Submit distribute proposal for the 1st time
@@ -497,8 +497,8 @@ describe("Adapter - Distribute", () => {
       voting,
       daoMemberA,
       daoOwner,
-      sharePrice,
-      SHARES
+      unitPrice,
+      UNITS
     );
 
     // Submit distribute proposal for the 1st time
@@ -555,8 +555,8 @@ describe("Adapter - Distribute", () => {
       voting,
       daoMemberA,
       daoOwner,
-      sharePrice,
-      SHARES
+      unitPrice,
+      UNITS
     );
 
     // Submit distribute proposal for the 1st time
@@ -612,8 +612,8 @@ describe("Adapter - Distribute", () => {
       voting,
       daoMemberA,
       daoOwner,
-      sharePrice,
-      SHARES
+      unitPrice,
+      UNITS
     );
 
     // Submit distribute proposal for the 1st time
@@ -663,8 +663,8 @@ describe("Adapter - Distribute", () => {
       voting,
       daoMemberA,
       daoOwner,
-      sharePrice,
-      SHARES
+      unitPrice,
+      UNITS
     );
 
     // Submit distribute proposal for the 1st time
@@ -731,8 +731,8 @@ describe("Adapter - Distribute", () => {
       voting,
       daoMemberA,
       daoOwner,
-      sharePrice,
-      SHARES
+      unitPrice,
+      UNITS
     );
 
     // Submit distribute proposal for the 1st time

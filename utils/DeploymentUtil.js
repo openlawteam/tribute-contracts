@@ -25,7 +25,7 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
  */
 
-const { SHARES, LOOT, ETH_TOKEN, sha3, toBN } = require("./ContractUtil");
+const { UNITS, LOOT, ETH_TOKEN, sha3, toBN } = require("./ContractUtil");
 
 const deployDao = async (options) => {
   const {
@@ -400,7 +400,7 @@ const configureDao = async ({
   tributeNFT,
   unitPrice,
   maxChunks,
-  nbShares,
+  nbUnits,
   tokenAddr,
   votingPeriod,
   gracePeriod,
@@ -470,7 +470,6 @@ const configureDao = async ({
     }),
     entryBank(onboarding, {
       ADD_TO_BALANCE: true,
-      SUB_FROM_BALANCE: true,
     }),
     entryBank(couponOnboarding, {
       ADD_TO_BALANCE: true,
@@ -502,9 +501,9 @@ const configureDao = async ({
 
   await onboarding.configureDao(
     dao.address,
-    SHARES,
+    UNITS,
     unitPrice,
-    nbShares,
+    nbUnits,
     maxChunks,
     tokenAddr
   );
@@ -513,18 +512,14 @@ const configureDao = async ({
     dao.address,
     LOOT,
     unitPrice,
-    nbShares,
+    nbUnits,
     maxChunks,
     tokenAddr
   );
-  await couponOnboarding.configureDao(
-    dao.address,
-    couponCreatorAddress,
-    SHARES
-  );
+  await couponOnboarding.configureDao(dao.address, couponCreatorAddress, UNITS);
 
   await voting.configureDao(dao.address, votingPeriod, gracePeriod);
-  await tribute.configureDao(dao.address, SHARES);
+  await tribute.configureDao(dao.address, UNITS);
   await tribute.configureDao(dao.address, LOOT);
   await tributeNFT.configureDao(dao.address);
 };

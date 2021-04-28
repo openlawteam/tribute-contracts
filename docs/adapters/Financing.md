@@ -14,7 +14,7 @@ The applicant address cannot be a reserved address, which means the address is a
 
 Tokens that are provided by the member have to be allowed/supported by the DAO.
 
-The member needs to have enough shares and/or loot in order to convert it to funds.
+The member needs to have enough units and/or loot in order to convert it to funds.
 
 DAORegistry Access Flags: `SUBMIT_PROPOSAL`.
 
@@ -27,7 +27,6 @@ Bank Extension Access Flags: `ADD_TO_BALANCE`, `SUB_FROM_BALANCE`.
   - `applicant`: the proposal applicant address, cannot be a reserved address.
   - `amount`: the amount requested for funding.
   - `token`: the token address in which the funding is made to the applicant, needs to be allowed/supported by the DAO Bank.
-  - `details`: additional details about the financing proposal.
 
 ## Dependencies and interactions (internal / external)
 
@@ -61,14 +60,15 @@ Bank Extension Access Flags: `ADD_TO_BALANCE`, `SUB_FROM_BALANCE`.
     receive() external payable
 ```
 
-### function createFinancingRequest
+### function submitProposal
 
 ```solidity
     /**
-     * @notice Creates a financing proposal.
+     * @notice Creates and sponsors a financing proposal.
      * @dev Applicant address must not be reserved.
      * @dev Token address must be allowed/supported by the DAO Bank.
      * @dev Requested amount must be greater than zero.
+     * @dev Only members of the DAO can sponsor a financing proposal.
      * @param dao The DAO Address.
      * @param proposalId The proposal id.
      * @param applicant The applicant address.
@@ -76,52 +76,14 @@ Bank Extension Access Flags: `ADD_TO_BALANCE`, `SUB_FROM_BALANCE`.
      * @param amount The desired amount.
      * @param details Additional detais about the financing proposal.
      */
-    function createFinancingRequest(
+    function submitProposal(
         DaoRegistry dao,
         bytes32 proposalId,
         address applicant,
         address token,
         uint256 amount,
-        bytes32 details
-    ) external override
-```
-
-### function sponsorProposal
-
-```solidity
-    /**
-     * @notice Sponsor a financing proposal to start the voting process.
-     * @dev Only members of the DAO can sponsor a financing proposal.
-     * @param dao The DAO Address.
-     * @param proposalId The proposal id.
-     * @param data Additional details about the sponsorship process.
-     */
-    function sponsorProposal(
-        DaoRegistry dao,
-        bytes32 proposalId,
         bytes memory data
     ) external override
-```
-
-### function \_sponsorProposal
-
-```solidity
-    /**
-     * @notice Sponsors a financing proposal to start the voting process.
-     * @dev Only members of the DAO can sponsor a financing proposal.
-     * @param dao The DAO Address.
-     * @param proposalId The proposal id.
-     * @param data Additional details about the sponsorship process.
-     * @param sponsoredBy The address of the sponsoring member.
-     * @param votingContract The voting contract used by the DAO.
-     */
-    function _sponsorProposal(
-        DaoRegistry dao,
-        bytes32 proposalId,
-        bytes memory data,
-        address sponsoredBy,
-        IVoting votingContract
-    ) internal
 ```
 
 ### function processProposal

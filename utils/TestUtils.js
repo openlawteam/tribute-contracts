@@ -1,7 +1,7 @@
 // Whole-script strict mode syntax
 "use strict";
 
-const { fromUtf8, toBN, SHARES, LOOT } = require("./ContractUtil.js");
+const { fromUtf8, toBN, UNITS, LOOT } = require("./ContractUtil.js");
 
 const { expect, advanceTime } = require("./OZTestUtil.js");
 
@@ -23,9 +23,9 @@ const checkBalance = async (bank, address, token, expectedBalance) => {
 };
 
 const isMember = async (bank, member) => {
-  const shares = await bank.balanceOf(member, SHARES);
+  const units = await bank.balanceOf(member, UNITS);
 
-  return shares > toBN("0");
+  return units > toBN("0");
 };
 
 const submitNewMemberProposal = async (
@@ -34,19 +34,19 @@ const submitNewMemberProposal = async (
   onboarding,
   dao,
   newMember,
-  sharePrice,
+  unitPrice,
   token,
-  desiredShares = toBN(10)
+  desiredUnits = toBN(10)
 ) => {
-  await onboarding.onboard(
+  await onboarding.submitProposal(
     dao.address,
     proposalId,
     newMember,
     token,
-    sharePrice.mul(desiredShares),
+    unitPrice.mul(desiredUnits),
+    [],
     {
       from: member,
-      value: sharePrice.mul(desiredShares),
       gasPrice: toBN("0"),
     }
   );
@@ -59,9 +59,9 @@ const onboardingNewMember = async (
   voting,
   newMember,
   sponsor,
-  sharePrice,
+  unitPrice,
   token,
-  desiredShares = toBN(10)
+  desiredUnits = toBN(10)
 ) => {
   await submitNewMemberProposal(
     proposalId,
@@ -69,35 +69,23 @@ const onboardingNewMember = async (
     onboarding,
     dao,
     newMember,
-    sharePrice,
+    unitPrice,
     token,
-    desiredShares
+    desiredUnits
   );
 
-  //Sponsor the new proposal, vote and process it
-  await sponsorNewMember(onboarding, dao, proposalId, sponsor, voting);
-  await onboarding.processProposal(dao.address, proposalId, {
-    from: sponsor,
-    gasPrice: toBN("0"),
-  });
-};
-
-const sponsorNewMember = async (
-  onboarding,
-  dao,
-  proposalId,
-  sponsor,
-  voting
-) => {
-  await onboarding.sponsorProposal(dao.address, proposalId, [], {
-    from: sponsor,
-    gasPrice: toBN("0"),
-  });
+  //vote and process it
   await voting.submitVote(dao.address, proposalId, 1, {
     from: sponsor,
     gasPrice: toBN("0"),
   });
   await advanceTime(10000);
+
+  await onboarding.processProposal(dao.address, proposalId, {
+    from: sponsor,
+    value: unitPrice.mul(desiredUnits),
+    gasPrice: toBN("0"),
+  });
 };
 
 const guildKickProposal = async (
@@ -107,11 +95,11 @@ const guildKickProposal = async (
   sender,
   proposalId
 ) => {
-  await guildkickContract.submitKickProposal(
+  await guildkickContract.submitProposal(
     dao.address,
     proposalId,
     memberToKick,
-    fromUtf8(""),
+    [],
     {
       from: sender,
       gasPrice: toBN("0"),
@@ -123,7 +111,6 @@ module.exports = {
   checkLastEvent,
   checkBalance,
   submitNewMemberProposal,
-  sponsorNewMember,
   onboardingNewMember,
   guildKickProposal,
   isMember,

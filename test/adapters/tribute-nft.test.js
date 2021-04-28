@@ -26,8 +26,8 @@ SOFTWARE.
  */
 const {
   toBN,
-  sharePrice,
-  SHARES,
+  unitPrice,
+  UNITS,
   GUILD,
   ETH_TOKEN,
   sha3,
@@ -190,8 +190,8 @@ describe("Adapter - TributeNFT", () => {
     });
 
     // test balance after proposal is processed
-    const applicantShares = await bank.balanceOf(nftOwner, SHARES);
-    expect(applicantShares.toString()).equal("10");
+    const applicantUnits = await bank.balanceOf(nftOwner, UNITS);
+    expect(applicantUnits.toString()).equal("10");
 
     // test active member status
     const applicantIsActiveMember = await isMember(bank, nftOwner);
@@ -261,8 +261,8 @@ describe("Adapter - TributeNFT", () => {
     });
 
     // test balance after proposal is processed
-    const applicantShares = await bank.balanceOf(nftOwner, SHARES);
-    expect(applicantShares.toString()).equal("0");
+    const applicantUnits = await bank.balanceOf(nftOwner, UNITS);
+    expect(applicantUnits.toString()).equal("0");
 
     // test active member status
     const applicantIsActiveMember = await isMember(bank, nftOwner);
@@ -291,8 +291,8 @@ describe("Adapter - TributeNFT", () => {
       this.adapters.voting,
       newMemberA,
       daoOwner,
-      sharePrice.mul(toBN(10)),
-      SHARES,
+      unitPrice.mul(toBN(10)),
+      UNITS,
       toBN("1")
     );
 
@@ -338,8 +338,8 @@ describe("Adapter - TributeNFT", () => {
     });
 
     // test balance after proposal is processed
-    const applicantShares = await bank.balanceOf(nftOwner, SHARES);
-    expect(applicantShares.toString()).equal("0");
+    const applicantUnits = await bank.balanceOf(nftOwner, UNITS);
+    expect(applicantUnits.toString()).equal("0");
 
     // test active member status
     const applicantIsActiveMember = await isMember(bank, nftOwner);
@@ -389,8 +389,8 @@ describe("Adapter - TributeNFT", () => {
     );
 
     // test balance after proposal is processed
-    const applicantShares = await bank.balanceOf(nftOwner, SHARES);
-    expect(applicantShares.toString()).equal("0");
+    const applicantUnits = await bank.balanceOf(nftOwner, UNITS);
+    expect(applicantUnits.toString()).equal("0");
 
     // test active member status
     const applicantIsActiveMember = await isMember(bank, nftOwner);
@@ -447,8 +447,6 @@ describe("Adapter - TributeNFT", () => {
       gasPrice: toBN("0"),
     });
 
-    // Proposal is processed, but due to the overflow error the transaction is
-    // reverted
     await expectRevert(
       tributeNFT.processProposal(dao.address, proposalId, {
         from: nftOwner,

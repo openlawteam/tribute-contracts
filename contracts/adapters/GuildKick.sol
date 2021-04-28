@@ -57,14 +57,14 @@ contract GuildKickContract is IGuildKick, MemberGuard, AdapterGuard {
      * @notice Creates a guild kick proposal, opens it for voting, and sponsors it.
      * @dev A member can not kick himself.
      * @dev Only one kick per DAO can be executed at time.
-     * @dev Only members that have shares or loot can be kicked out.
+     * @dev Only members that have units or loot can be kicked out.
      * @dev Proposal ids can not be reused.
      * @param dao The dao address.
      * @param proposalId The guild kick proposal id.
      * @param memberToKick The member address that should be kicked out of the DAO.
      * @param data Additional information related to the kick proposal.
      */
-    function submitKickProposal(
+    function submitProposal(
         DaoRegistry dao,
         bytes32 proposalId,
         address memberToKick,
@@ -85,8 +85,8 @@ contract GuildKickContract is IGuildKick, MemberGuard, AdapterGuard {
     }
 
     /**
-     * @notice Converts the shares into loot to remove the voting power, and sponsors the kick proposal.
-     * @dev Only members that have shares or loot can be kicked out.
+     * @notice Converts the units into loot to remove the voting power, and sponsors the kick proposal.
+     * @dev Only members that have units or loot can be kicked out.
      * @dev Proposal ids can not be reused.
      * @param dao The dao address.
      * @param proposalId The guild kick proposal id.
@@ -105,16 +105,16 @@ contract GuildKickContract is IGuildKick, MemberGuard, AdapterGuard {
         dao.submitProposal(proposalId);
 
         BankExtension bank = BankExtension(dao.getExtensionAddress(BANK));
-        // Gets the number of shares of the member
-        uint256 sharesToBurn = bank.balanceOf(memberToKick, SHARES);
+        // Gets the number of units of the member
+        uint256 unitsToBurn = bank.balanceOf(memberToKick, UNITS);
 
         // Gets the number of loot of the member
         uint256 lootToBurn = bank.balanceOf(memberToKick, LOOT);
 
-        // Checks if the member has enough shares to be converted to loot.
+        // Checks if the member has enough units to be converted to loot.
         // Overflow is not possible because max value for each var is 2^64
         // See bank._createNewAmountCheckpoint function
-        require(sharesToBurn + lootToBurn > 0, "no shares or loot");
+        require(unitsToBurn + lootToBurn > 0, "no units or loot");
 
         // Saves the state of the guild kick proposal.
         kicks[address(dao)][proposalId] = GuildKick(memberToKick);

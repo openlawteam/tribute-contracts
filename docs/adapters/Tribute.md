@@ -1,6 +1,6 @@
 ## Adapter description and scope
 
-The Tribute adapter allows potential and existing DAO members to contribute any amount of ERC-20 tokens to the DAO in exchange for any amount of DAO internal tokens (e.g., SHARE or LOOT tokens already registered with the DAO Bank). If the proposal passes, the requested internal tokens are minted to the applicant (which effectively makes the applicant a member of the DAO if not already one) and the tokens provided as tribute are transferred to the Bank extension.
+The Tribute adapter allows potential and existing DAO members to contribute any amount of ERC-20 tokens to the DAO in exchange for any amount of DAO internal tokens (e.g., UNITS or LOOT tokens already registered with the DAO Bank). If the proposal passes, the requested internal tokens are minted to the applicant (which effectively makes the applicant a member of the DAO if not already one) and the tokens provided as tribute are transferred to the Bank extension.
 
 The Tribute adapter is similar to the Onboarding adapter in that both allow for joining the DAO (or increasing a stake in the DAO) through the exchange of contributed assets for DAO internal tokens. However, there are key differences:
 
@@ -10,7 +10,7 @@ The Tribute adapter is similar to the Onboarding adapter in that both allow for 
 
 ## Adapter workflow
 
-A tribute is made by a member first submitting a proposal specifying (1) the applicant who wishes to join the DAO (or increase his stake in the DAO), (2) the amount and type of internal tokens the applicant desires (e.g., member SHARE tokens), and (3) the amount, type, and owner of ERC-20 tokens that will transfer to the DAO in exchange for those internal tokens. The applicant and actual owner of the ERC-20 tokens can be separate accounts (e.g., the token owner is providing tribute on behalf of the applicant). The internal token type requested must be already registered with the DAO Bank and will usually be pre-defined SHARE or LOOT tokens in the DAO. The proposal submission does not actually transfer the ERC-20 tokens from its owner. That occurs only after the proposal passes and is processed.
+A tribute is made by a member first submitting a proposal specifying (1) the applicant who wishes to join the DAO (or increase his stake in the DAO), (2) the amount and type of internal tokens the applicant desires (e.g., member UNITS), and (3) the amount, type, and owner of ERC-20 tokens that will transfer to the DAO in exchange for those internal tokens. The applicant and actual owner of the ERC-20 tokens can be separate accounts (e.g., the token owner is providing tribute on behalf of the applicant). The internal token type requested must be already registered with the DAO Bank and will usually be pre-defined UNITS or LOOT tokens in the DAO. The proposal submission does not actually transfer the ERC-20 tokens from its owner. That occurs only after the proposal passes and is processed.
 
 The proposal is also sponsored in the same transaction when it is submitted. When a DAO member sponsors the proposal, the voting period begins allowing members to vote for or against the proposal. Only a member can sponsor the proposal.
 

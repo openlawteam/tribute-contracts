@@ -2,7 +2,7 @@
 
 This extension manages the funds of the DAO. The funds can be ETH or any ERC-20 token.
 
-It also manages internal tokens such as shares and loot (but could be anything else).
+It also manages internal tokens such as units and loot (but could be anything else).
 
 On top of that, it implements balance checkpoints so it is possible to retrieve prior balance at a certain block number. The balance is managed for the member address (not the delegate key).
 
@@ -39,7 +39,7 @@ Checkpoint counts for each token / member.
 ### function initialize(DaoRegistry \_dao, address creator)
 
 This function can be called only once and only by the creator of the DAO.
-It registers the internal token SHARES, and gives 1 share to the creator.
+It registers the internal token UNITS, and gives 1 unit to the creator.
 
 ### function withdraw(address payable account, address tokenAddr, uint256 amount)
 

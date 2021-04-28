@@ -44,7 +44,6 @@ contract FinancingContract is
         address applicant; // the proposal applicant address, can not be a reserved address
         uint256 amount; // the amount requested for funding
         address token; // the token address in which the funding must be sent to
-        bytes32 details; // additional details about the financing proposal
     }
 
     // keeps track of all financing proposals handled by each dao
@@ -58,24 +57,25 @@ contract FinancingContract is
     }
 
     /**
-     * @notice Creates a financing proposal.
+     * @notice Creates and sponsors a financing proposal.
      * @dev Applicant address must not be reserved.
      * @dev Token address must be allowed/supported by the DAO Bank.
      * @dev Requested amount must be greater than zero.
+     * @dev Only members of the DAO can sponsor a financing proposal.
      * @param dao The DAO Address.
      * @param proposalId The proposal id.
      * @param applicant The applicant address.
      * @param token The token to receive the funds.
      * @param amount The desired amount.
-     * @param details Additional detais about the financing proposal.
+     * @param data Additional details about the financing proposal.
      */
-    function createFinancingRequest(
+    function submitProposal(
         DaoRegistry dao,
         bytes32 proposalId,
         address applicant,
         address token,
         uint256 amount,
-        bytes32 details
+        bytes memory data
     ) external override reentrancyGuard(dao) {
         require(amount > 0, "invalid requested amount");
         BankExtension bank = BankExtension(dao.getExtensionAddress(BANK));
@@ -89,22 +89,8 @@ contract FinancingContract is
         ProposalDetails storage proposal = proposals[address(dao)][proposalId];
         proposal.applicant = applicant;
         proposal.amount = amount;
-        proposal.details = details;
         proposal.token = token;
-    }
 
-    /**
-     * @notice Sponsor a financing proposal to start the voting process.
-     * @dev Only members of the DAO can sponsor a financing proposal.
-     * @param dao The DAO Address.
-     * @param proposalId The proposal id.
-     * @param data Additional details about the sponsorship process.
-     */
-    function sponsorProposal(
-        DaoRegistry dao,
-        bytes32 proposalId,
-        bytes memory data
-    ) external override reentrancyGuard(dao) {
         IVoting votingContract = IVoting(dao.getAdapterAddress(VOTING));
         address sponsoredBy =
             votingContract.getSenderAddress(
@@ -113,25 +99,7 @@ contract FinancingContract is
                 data,
                 msg.sender
             );
-        _sponsorProposal(dao, proposalId, data, sponsoredBy, votingContract);
-    }
 
-    /**
-     * @notice Sponsors a financing proposal to start the voting process.
-     * @dev Only members of the DAO can sponsor a financing proposal.
-     * @param dao The DAO Address.
-     * @param proposalId The proposal id.
-     * @param data Additional details about the sponsorship process.
-     * @param sponsoredBy The address of the sponsoring member.
-     * @param votingContract The voting contract used by the DAO.
-     */
-    function _sponsorProposal(
-        DaoRegistry dao,
-        bytes32 proposalId,
-        bytes memory data,
-        address sponsoredBy,
-        IVoting votingContract
-    ) internal {
         dao.sponsorProposal(proposalId, sponsoredBy, address(votingContract));
         votingContract.startNewVotingForProposal(dao, proposalId, data);
     }

@@ -12,7 +12,7 @@ import {
   Token,
   TokenBalance,
 } from "../../generated/schema";
-import { GUILD, SHARES, TOTAL } from "../helpers/constants";
+import { GUILD, UNITS, TOTAL } from "../helpers/constants";
 
 function internalTransfer(
   createdAt: string,
@@ -93,19 +93,19 @@ function internalTransfer(
     }
 
     /**
-     * get `balanceOf` for members SHARES
+     * get `balanceOf` for members UNITS
      */
 
-    // get balanceOf member shares
-    let balanceOfSHARES = registry.balanceOf(memberAddress, SHARES);
-    member.shares = balanceOfSHARES;
+    // get balanceOf member units
+    let balanceOfUNITS = registry.balanceOf(memberAddress, UNITS);
+    member.units = balanceOfUNITS;
 
     // omit the `TOTAL` & `GUILD` addresses from the ragequit check
     if (
       TOTAL.toHex() != memberAddress.toHex() &&
       GUILD.toHex() != memberAddress.toHex()
     ) {
-      let didFullyRagequit = balanceOfSHARES.equals(BigInt.fromI32(0));
+      let didFullyRagequit = balanceOfUNITS.equals(BigInt.fromI32(0));
 
       // fully raged quit
       member.didFullyRagequit = didFullyRagequit;
@@ -114,19 +114,19 @@ function internalTransfer(
     tokenBalance.token = tokenAddress.toHex();
     tokenBalance.member = memberAddress.toHex();
 
-    tokenBalance.tokenBalance = balanceOfSHARES;
+    tokenBalance.tokenBalance = balanceOfUNITS;
 
     member.save();
     token.save();
     tokenBalance.save();
   }
 
-  // get totalShares in the dao
-  let balanceOfTotalShares = registry.balanceOf(TOTAL, SHARES);
+  // get totalUnits in the dao
+  let balanceOfTotalUnits = registry.balanceOf(TOTAL, UNITS);
   let dao = TributeDao.load(daoAddress.toHexString());
 
   if (dao != null) {
-    dao.totalShares = balanceOfTotalShares.toString();
+    dao.totalUnits = balanceOfTotalUnits.toString();
 
     dao.save();
   }

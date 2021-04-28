@@ -27,7 +27,7 @@ SOFTWARE.
 const {
   sha3,
   toBN,
-  SHARES,
+  UNITS,
   GUILD,
   ETH_TOKEN,
 } = require("../../utils/ContractUtil.js");
@@ -116,7 +116,7 @@ describe("Adapter - Coupon Onboarding ", () => {
 
     expect(recAddr).equal(signer.address);
 
-    let balance = await bank.balanceOf(otherAccount, SHARES);
+    let balance = await bank.balanceOf(otherAccount, UNITS);
     expect(balance.toString()).equal("0");
 
     await couponOnboarding.redeemCoupon(
@@ -127,11 +127,11 @@ describe("Adapter - Coupon Onboarding ", () => {
       signature
     );
 
-    const daoOwnerShares = await bank.balanceOf(daoOwner, SHARES);
-    const otherAccountShares = await bank.balanceOf(otherAccount, SHARES);
+    const daoOwnerUnits = await bank.balanceOf(daoOwner, UNITS);
+    const otherAccountUnits = await bank.balanceOf(otherAccount, UNITS);
 
-    expect(daoOwnerShares.toString()).equal("1");
-    expect(otherAccountShares.toString()).equal("10");
+    expect(daoOwnerUnits.toString()).equal("1");
+    expect(otherAccountUnits.toString()).equal("10");
 
     await checkBalance(bank, GUILD, ETH_TOKEN, toBN("0"));
   });
@@ -176,7 +176,7 @@ describe("Adapter - Coupon Onboarding ", () => {
 
     expect(recAddr).equal(signer.address);
 
-    let balance = await bank.balanceOf(otherAccount, SHARES);
+    let balance = await bank.balanceOf(otherAccount, UNITS);
     expect(balance.toString()).equal("0");
 
     await expectRevert(
@@ -190,11 +190,11 @@ describe("Adapter - Coupon Onboarding ", () => {
       "invalid sig"
     );
 
-    const daoOwnerShares = await bank.balanceOf(daoOwner, SHARES);
-    const otherAccountShares = await bank.balanceOf(otherAccount, SHARES);
+    const daoOwnerUnits = await bank.balanceOf(daoOwner, UNITS);
+    const otherAccountUnits = await bank.balanceOf(otherAccount, UNITS);
 
-    expect(daoOwnerShares.toString()).equal("1");
-    expect(otherAccountShares.toString()).equal("0");
+    expect(daoOwnerUnits.toString()).equal("1");
+    expect(otherAccountUnits.toString()).equal("0");
 
     await checkBalance(bank, GUILD, ETH_TOKEN, toBN("0"));
   });
@@ -238,7 +238,7 @@ describe("Adapter - Coupon Onboarding ", () => {
     const recAddr = await couponOnboarding.recover(jsHash, signature);
 
     expect(recAddr).equal(signer.address);
-    let balance = await bank.balanceOf(otherAccount, SHARES);
+    let balance = await bank.balanceOf(otherAccount, UNITS);
     expect(balance.toString()).equal("0");
 
     await expectRevert(
@@ -246,11 +246,11 @@ describe("Adapter - Coupon Onboarding ", () => {
       "invalid sig"
     );
 
-    const daoOwnerShares = await bank.balanceOf(daoOwner, SHARES);
-    const otherAccountShares = await bank.balanceOf(otherAccount, SHARES);
+    const daoOwnerUnits = await bank.balanceOf(daoOwner, UNITS);
+    const otherAccountUnits = await bank.balanceOf(otherAccount, UNITS);
 
-    expect(daoOwnerShares.toString()).equal("1");
-    expect(otherAccountShares.toString()).equal("0");
+    expect(daoOwnerUnits.toString()).equal("1");
+    expect(otherAccountUnits.toString()).equal("0");
 
     await checkBalance(bank, GUILD, ETH_TOKEN, toBN("0"));
   });

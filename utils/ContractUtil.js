@@ -38,14 +38,14 @@ const toUtf8 = Web3Utils.toUtf8;
 const GUILD = "0x000000000000000000000000000000000000dead";
 const TOTAL = "0x000000000000000000000000000000000000babe";
 const ESCROW = "0x0000000000000000000000000000000000004bec";
-const SHARES = "0x00000000000000000000000000000000000FF1CE";
+const UNITS = "0x00000000000000000000000000000000000FF1CE";
 const LOOT = "0x00000000000000000000000000000000B105F00D";
 const ETH_TOKEN = "0x0000000000000000000000000000000000000000";
 const DAI_TOKEN = "0x95b58a6bff3d14b7db2f5cb5f0ad413dc2940658";
 
-const numberOfShares = toBN("1000000000000000");
-const sharePrice = toBN(toWei("120", "finney"));
-const remaining = sharePrice.sub(toBN("50000000000000"));
+const numberOfUnits = toBN("1000000000000000");
+const unitPrice = toBN(toWei("120", "finney"));
+const remaining = unitPrice.sub(toBN("50000000000000"));
 const maximumChunks = toBN("11");
 
 const contracts = {
@@ -105,14 +105,14 @@ module.exports = {
   fromAscii,
   toUtf8,
   maximumChunks,
-  numberOfShares,
-  sharePrice,
+  numberOfUnits,
+  unitPrice,
   remaining,
   GUILD,
   TOTAL,
   ESCROW,
   DAI_TOKEN,
-  SHARES,
+  UNITS,
   LOOT,
   ETH_TOKEN,
 };

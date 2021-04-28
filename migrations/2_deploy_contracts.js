@@ -3,8 +3,8 @@ const {
   toWei,
   ETH_TOKEN,
   maximumChunks,
-  sharePrice,
-  numberOfShares,
+  unitPrice,
+  numberOfUnits,
 } = require("../utils/ContractUtil.js");
 
 const { deployDao, getNetworkDetails } = require("../utils/DeploymentUtil.js");
@@ -42,8 +42,8 @@ async function deployTestDao(deployFunction, network) {
   let { dao } = await deployDao({
     ...truffleImports,
     deployFunction,
-    unitPrice: sharePrice,
-    nbShares: numberOfShares,
+    unitPrice: unitPrice,
+    nbUnits: numberOfUnits,
     tokenAddr: ETH_TOKEN,
     maxChunks: maximumChunks,
     votingPeriod: 10, // 10 secs
@@ -64,7 +64,7 @@ async function deployRinkebyDao(deployFunction, network) {
     ...truffleImports,
     deployFunction,
     unitPrice: toBN(toWei("100", "finney")),
-    nbShares: toBN("100000"),
+    nbUnits: toBN("100000"),
     tokenAddr: ETH_TOKEN,
     maxChunks: toBN("100000"),
     votingPeriod: 600, // 600 secs = 10 mins
@@ -85,7 +85,7 @@ async function deployGanacheDao(deployFunction, network) {
     ...truffleImports,
     deployFunction,
     unitPrice: toBN(toWei("100", "finney")),
-    nbShares: toBN("100000"),
+    nbUnits: toBN("100000"),
     tokenAddr: ETH_TOKEN,
     maxChunks: toBN("100000"),
     votingPeriod: 120, // 120 secs = 2 mins

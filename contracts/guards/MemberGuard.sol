@@ -54,7 +54,7 @@ abstract contract MemberGuard is DaoConstants {
         address bankAddress = dao.extensions(BANK);
         if (bankAddress != address(0x0)) {
             address memberAddr = dao.getAddressIfDelegated(_addr);
-            return BankExtension(bankAddress).balanceOf(memberAddr, SHARES) > 0;
+            return BankExtension(bankAddress).balanceOf(memberAddr, UNITS) > 0;
         }
 
         return dao.isMember(_addr);

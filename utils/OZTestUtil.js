@@ -34,11 +34,11 @@ const {
 
 const {
   contracts,
-  sharePrice,
-  numberOfShares,
+  unitPrice,
+  numberOfUnits,
   maximumChunks,
   ETH_TOKEN,
-  SHARES,
+  UNITS,
 } = require("./ContractUtil");
 
 const { deployDao, entryDao, entryBank, entry } = require("./DeploymentUtil");
@@ -70,8 +70,8 @@ function getContracts() {
 
 function getDefaultOptions(options) {
   let o = {
-    unitPrice: sharePrice,
-    nbShares: numberOfShares,
+    unitPrice: unitPrice,
+    nbUnits: numberOfUnits,
     votingPeriod: 10,
     gracePeriod: 1,
     tokenAddr: ETH_TOKEN,
@@ -133,7 +133,7 @@ const deployDaoWithOffchainVoting = async ({ owner, newMember }) => {
   await dao.potentialNewMember(newMember, {
     from: owner,
   });
-  await extensions.bank.addToBalance(newMember, SHARES, 1, {
+  await extensions.bank.addToBalance(newMember, UNITS, 1, {
     from: owner,
   });
 
@@ -164,7 +164,7 @@ const deployDaoWithBatchVoting = async ({ owner, newMember }) => {
     from: owner,
   });
 
-  await extensions.bank.addToBalance(newMember, SHARES, 1, {
+  await extensions.bank.addToBalance(newMember, UNITS, 1, {
     from: owner,
   });
 
