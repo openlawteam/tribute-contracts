@@ -73,7 +73,7 @@ Bank Extension Access Flags: `WITHDRAW`, `INTERNAL_TRANSFER`, `SUB_FROM_BALANCE`
     receive() external payable
 ```
 
-### function submitKickProposal
+### function submitProposal
 
 ```solidity
     /**
@@ -86,12 +86,12 @@ Bank Extension Access Flags: `WITHDRAW`, `INTERNAL_TRANSFER`, `SUB_FROM_BALANCE`
      * @param memberToKick The member address that should be kicked out of the DAO.
      * @param data Additional information related to the kick proposal.
      */
-    function submitKickProposal(
+    function submitProposal(
         DaoRegistry dao,
         bytes32 proposalId,
         address memberToKick,
         bytes calldata data
-    ) external
+    ) external override
 ```
 
 ### function processProposal
