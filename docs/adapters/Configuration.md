@@ -1,8 +1,8 @@
 ## Adapter description and scope
 
-The Configuration adapter manages storing and retrieving per-DAO settings required by unitd adapters.
+The Configuration adapter manages storing and retrieving per-DAO settings required by shared adapters.
 
-Some adapters have configurable settings which must be stored for each DAO instance that uses the unitd adapter.
+Some adapters have configurable settings which must be stored for each DAO instance that uses the shared adapter.
 
 ## Workflows
 
@@ -47,21 +47,14 @@ The array of values to set in the configuration.
 
 ## Functions description and assumptions / checks
 
-### function submitConfigurationProposal(DaoRegistry dao, bytes32 proposalId, bytes32[] calldata keys, uint256[] calldata values)
+### function submitProposal(DaoRegistry dao, bytes32 proposalId, bytes32[] calldata keys, uint256[] calldata values, bytes calldata data)
 
-Creates and submits a new configuration proposal on behalf of the member calling the function.
+Creates and sponsors a new configuration proposal on behalf of the member calling the function.
 
 **dao** is the DAO instance to be configured
 **proposalId** is the ID chosen for this configuration proposal, must be unique
 **keys** the configuration keys to set
 **values** the configuration values to set, must be same length as keys
-
-### function sponsorProposal(DaoRegistry dao, bytes32 proposalId, bytes memory data)
-
-Sponsors a proposal to apply a configuration change.
-
-**dao** is the DAO instance to be configured
-**proposalId** is the ID of a previously created configuration proposal which has not been sponsored
 **data**
 
 ### function processProposal(DaoRegistry dao, bytes32 proposalId)
