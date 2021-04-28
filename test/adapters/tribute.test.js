@@ -131,15 +131,12 @@ describe("Adapter - Tribute", () => {
     });
 
     // test balances after proposal is processed
-    const daoOwnerShares = await bank.balanceOf(daoOwner, UNITS);
-    expect(daoOwnerShares.toString()).equal("1");
-    const applicantShares = await bank.balanceOf(applicant, UNITS);
-    expect(applicantShares.toString()).equal(requestAmount.toString());
-    const nonMemberAccountShares = await bank.balanceOf(
-      nonMemberAccount,
-      UNITS
-    );
-    expect(nonMemberAccountShares.toString()).equal("0");
+    const daoOwnerUnits = await bank.balanceOf(daoOwner, UNITS);
+    expect(daoOwnerUnits.toString()).equal("1");
+    const applicantUnits = await bank.balanceOf(applicant, UNITS);
+    expect(applicantUnits.toString()).equal(requestAmount.toString());
+    const nonMemberAccountUnits = await bank.balanceOf(nonMemberAccount, UNITS);
+    expect(nonMemberAccountUnits.toString()).equal("0");
     await checkBalance(
       bank,
       GUILD,
@@ -221,10 +218,10 @@ describe("Adapter - Tribute", () => {
     expect(isProcessed).equal(true);
 
     // test balances after proposal is processed
-    const daoOwnerShares = await bank.balanceOf(daoOwner, UNITS);
-    expect(daoOwnerShares.toString()).equal("1");
-    const applicantShares = await bank.balanceOf(applicant, UNITS);
-    expect(applicantShares.toString()).equal("0");
+    const daoOwnerUnits = await bank.balanceOf(daoOwner, UNITS);
+    expect(daoOwnerUnits.toString()).equal("1");
+    const applicantUnits = await bank.balanceOf(applicant, UNITS);
+    expect(applicantUnits.toString()).equal("0");
     const guildBalance = await bank.balanceOf(GUILD, oltContract.address);
     expect(guildBalance.toString()).equal("0");
     const applicantBalance = await bank.balanceOf(
@@ -269,13 +266,13 @@ describe("Adapter - Tribute", () => {
     // defined in Bank._createNewAmountCheckpoint function (2**160-1).
     const supply = toBN("2").pow(toBN("180"));
     const oltContract = await OLToken.new(supply, { from: daoOwner });
-    const nbOfERC20Shares = 100000000;
+    const nbOfERC20Units = 100000000;
     const erc20SharePrice = toBN("10");
 
     const { dao, adapters } = await deployDefaultNFTDao({
       owner: daoOwner,
       unitPrice: erc20SharePrice,
-      nbShares: nbOfERC20Shares,
+      nbUnits: nbOfERC20Units,
       tokenAddr: oltContract.address,
     });
 

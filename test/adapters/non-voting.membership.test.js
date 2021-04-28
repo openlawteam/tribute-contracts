@@ -109,13 +109,13 @@ describe("Adapter - Non Voting Onboarding", () => {
     // Issue OpenLaw ERC20 Basic Token for tests
     const tokenSupply = 1000000;
     const oltContract = await OLToken.new(tokenSupply);
-    const lootSharePrice = 10;
-    const nbOfLootShares = 100000000;
+    const lootUnitPrice = 10;
+    const nbOfLootUnits = 100000000;
 
     const { dao, adapters, extensions } = await deployDefaultDao({
       owner: daoOwner,
-      unitPrice: lootSharePrice,
-      nbShares: nbOfLootShares,
+      unitPrice: lootUnitPrice,
+      nbUnits: nbOfLootUnits,
       tokenAddr: oltContract.address,
     });
 

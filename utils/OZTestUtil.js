@@ -35,7 +35,7 @@ const {
 const {
   contracts,
   unitPrice,
-  numberOfShares,
+  numberOfUnits,
   maximumChunks,
   ETH_TOKEN,
   UNITS,
@@ -71,7 +71,7 @@ function getContracts() {
 function getDefaultOptions(options) {
   let o = {
     unitPrice: unitPrice,
-    nbShares: numberOfShares,
+    nbUnits: numberOfUnits,
     votingPeriod: 10,
     gracePeriod: 1,
     tokenAddr: ETH_TOKEN,

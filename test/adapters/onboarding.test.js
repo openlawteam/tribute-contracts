@@ -31,7 +31,7 @@ const {
   GUILD,
   ETH_TOKEN,
   remaining,
-  numberOfShares,
+  numberOfUnits,
 } = require("../../utils/ContractUtil.js");
 
 const {
@@ -80,13 +80,13 @@ describe("Adapter - Onboarding", () => {
     // defined in Bank._createNewAmountCheckpoint function (2**160-1).
     const supply = toBN("2").pow(toBN("180")).toString();
     const oltContract = await OLToken.new(supply, { from: daoOwner });
-    const nbOfERC20Shares = 100000000;
-    const erc20SharePrice = toBN("10");
+    const nbOfERC20Units = 100000000;
+    const erc20UnitPrice = toBN("10");
 
     const { dao, adapters } = await deployDefaultDao({
       owner: daoOwner,
-      unitPrice: erc20SharePrice,
-      nbShares: nbOfERC20Shares,
+      unitPrice: erc20UnitPrice,
+      nbUnits: nbOfERC20Units,
       tokenAddr: oltContract.address,
     });
 
@@ -200,17 +200,14 @@ describe("Adapter - Onboarding", () => {
       toBN(myAccountInitialBalance).sub(ethAmount).add(remaining).toString()
     ).equal(myAccountBalance.toString());
 
-    const myAccountShares = await bank.balanceOf(daoOwner, UNITS);
-    const applicantShares = await bank.balanceOf(applicant, UNITS);
-    const nonMemberAccountShares = await bank.balanceOf(
-      nonMemberAccount,
-      UNITS
+    const myAccountUnits = await bank.balanceOf(daoOwner, UNITS);
+    const applicantUnits = await bank.balanceOf(applicant, UNITS);
+    const nonMemberAccountUnits = await bank.balanceOf(nonMemberAccount, UNITS);
+    expect(myAccountUnits.toString()).equal("1");
+    expect(applicantUnits.toString()).equal(
+      numberOfUnits.mul(toBN("3")).toString()
     );
-    expect(myAccountShares.toString()).equal("1");
-    expect(applicantShares.toString()).equal(
-      numberOfShares.mul(toBN("3")).toString()
-    );
-    expect(nonMemberAccountShares.toString()).equal("0");
+    expect(nonMemberAccountUnits.toString()).equal("0");
     await checkBalance(bank, GUILD, ETH_TOKEN, unitPrice.mul(toBN("3")));
 
     // test active member status
@@ -231,14 +228,14 @@ describe("Adapter - Onboarding", () => {
     const tokenSupply = 1000000;
     let oltContract = await OLToken.new(tokenSupply);
 
-    const nbOfERC20Shares = 100000000;
-    const erc20SharePrice = toBN("10");
-    const erc20Remaining = erc20SharePrice.sub(toBN("1"));
+    const nbOfERC20Units = 100000000;
+    const erc20UnitPrice = toBN("10");
+    const erc20Remaining = erc20UnitPrice.sub(toBN("1"));
 
     const { dao, adapters, extensions } = await deployDefaultDao({
       owner: daoOwner,
-      unitPrice: erc20SharePrice,
-      nbShares: nbOfERC20Shares,
+      unitPrice: erc20UnitPrice,
+      nbUnits: nbOfERC20Units,
       tokenAddr: oltContract.address,
     });
 
@@ -256,7 +253,7 @@ describe("Adapter - Onboarding", () => {
 
     // Total of OLTs to be sent to the DAO in order to get the units
     // (remaining amount to test sending back to proposer)
-    const tokenAmount = erc20SharePrice.add(toBN(erc20Remaining));
+    const tokenAmount = erc20UnitPrice.add(toBN(erc20Remaining));
 
     const proposalId = getProposalCounter();
 
@@ -313,15 +310,12 @@ describe("Adapter - Onboarding", () => {
       initialTokenBalance.sub(tokenAmount).add(erc20Remaining).toString()
     );
 
-    const myAccountShares = await bank.balanceOf(daoOwner, UNITS);
-    const applicantShares = await bank.balanceOf(applicant, UNITS);
-    const nonMemberAccountShares = await bank.balanceOf(
-      nonMemberAccount,
-      UNITS
-    );
-    expect(myAccountShares.toString()).equal("1");
-    expect(applicantShares.toString()).equal("100000000");
-    expect(nonMemberAccountShares.toString()).equal("0");
+    const myAccountUnits = await bank.balanceOf(daoOwner, UNITS);
+    const applicantUnits = await bank.balanceOf(applicant, UNITS);
+    const nonMemberAccountUnits = await bank.balanceOf(nonMemberAccount, UNITS);
+    expect(myAccountUnits.toString()).equal("1");
+    expect(applicantUnits.toString()).equal("100000000");
+    expect(nonMemberAccountUnits.toString()).equal("0");
     await checkBalance(bank, GUILD, oltContract.address, "10");
 
     // test active member status
@@ -401,10 +395,10 @@ describe("Adapter - Onboarding", () => {
       myAccountInitialBalance.toString()
     );
 
-    const myAccountShares = await bank.balanceOf(daoOwner, UNITS);
-    const applicantShares = await bank.balanceOf(applicant, UNITS);
-    expect(myAccountShares.toString()).equal("1");
-    expect(applicantShares.toString()).equal("0");
+    const myAccountUnits = await bank.balanceOf(daoOwner, UNITS);
+    const applicantUnits = await bank.balanceOf(applicant, UNITS);
+    expect(myAccountUnits.toString()).equal("1");
+    expect(applicantUnits.toString()).equal("0");
 
     const guildBalance = await bank.balanceOf(GUILD, ETH_TOKEN);
     expect(guildBalance.toString()).equal("0");

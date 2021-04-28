@@ -400,7 +400,7 @@ const configureDao = async ({
   tributeNFT,
   unitPrice,
   maxChunks,
-  nbShares,
+  nbUnits,
   tokenAddr,
   votingPeriod,
   gracePeriod,
@@ -503,7 +503,7 @@ const configureDao = async ({
     dao.address,
     UNITS,
     unitPrice,
-    nbShares,
+    nbUnits,
     maxChunks,
     tokenAddr
   );
@@ -512,7 +512,7 @@ const configureDao = async ({
     dao.address,
     LOOT,
     unitPrice,
-    nbShares,
+    nbUnits,
     maxChunks,
     tokenAddr
   );

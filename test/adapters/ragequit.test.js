@@ -91,7 +91,7 @@ describe("Adapter - Ragequit", () => {
     const guildBalance = await bank.balanceOf(GUILD, ETH_TOKEN);
     expect(guildBalance.toString()).equal("1200000000000000000");
 
-    //Check Member Shares
+    //Check Member Units
     const units = await bank.balanceOf(newMember, UNITS);
     expect(units.toString()).equal("10000000000000000");
 
@@ -134,7 +134,7 @@ describe("Adapter - Ragequit", () => {
     const guildBalance = await bank.balanceOf(GUILD, ETH_TOKEN);
     expect(guildBalance.toString()).equal("1200000000000000000");
 
-    //Check Member Shares
+    //Check Member Units
     const units = await bank.balanceOf(newMember, UNITS);
     expect(units.toString()).equal("10000000000000000");
 
@@ -176,7 +176,7 @@ describe("Adapter - Ragequit", () => {
     const guildBalance = await bank.balanceOf(GUILD, ETH_TOKEN);
     expect(guildBalance.toString()).equal("1200000000000000000");
 
-    //Check New Member Shares
+    //Check New Member Units
     const units = await bank.balanceOf(newMember, UNITS);
     expect(units.toString()).equal("10000000000000000");
 
@@ -221,7 +221,7 @@ describe("Adapter - Ragequit", () => {
     const guildBalance = await bank.balanceOf(GUILD, ETH_TOKEN);
     expect(guildBalance.toString()).equal("1200000000000000000".toString());
 
-    //Check New Member Shares
+    //Check New Member Units
     const units = await bank.balanceOf(newMember, UNITS);
     expect(units.toString()).equal("10000000000000000");
     const financingProposalId = getProposalCounter();
@@ -286,7 +286,7 @@ describe("Adapter - Ragequit", () => {
     const guildBalance = await bank.balanceOf(GUILD, ETH_TOKEN);
     expect(guildBalance.toString()).equal("1200000000000000000");
 
-    //Check New Member Shares
+    //Check New Member Units
     const units = await bank.balanceOf(newMember, UNITS);
     expect(units.toString()).equal("10000000000000000");
 
@@ -330,7 +330,7 @@ describe("Adapter - Ragequit", () => {
   it("should be possible for an Advisor to ragequit", async () => {
     const owner = accounts[1];
     const advisorAccount = accounts[2];
-    const lootSharePrice = 10;
+    const lootUnitPrice = 10;
     const chunkSize = 5;
 
     // Issue OpenLaw ERC20 Basic Token for tests
@@ -339,8 +339,8 @@ describe("Adapter - Ragequit", () => {
 
     const { dao, adapters, extensions } = await deployDefaultDao({
       owner: owner,
-      unitPrice: lootSharePrice,
-      nbShares: chunkSize,
+      unitPrice: lootUnitPrice,
+      nbUnits: chunkSize,
       tokenAddr: oltContract.address,
     });
 
@@ -445,7 +445,7 @@ describe("Adapter - Ragequit", () => {
     let guildBalance = await bank.balanceOf(GUILD, ETH_TOKEN);
     expect(guildBalance.toString()).equal("1200000000000000000");
 
-    //Check New Member Shares
+    //Check New Member Units
     let units = await bank.balanceOf(memberAddr, UNITS);
     expect(units.toString()).equal("10000000000000000");
 
@@ -532,7 +532,7 @@ describe("Adapter - Ragequit", () => {
     let guildBalance = await bank.balanceOf(GUILD, ETH_TOKEN);
     expect(guildBalance.toString()).equal("1200000000000000000");
 
-    //Check New Member Shares
+    //Check New Member Units
     let units = await bank.balanceOf(newMember, UNITS);
     expect(units.toString()).equal("10000000000000000");
 
@@ -569,13 +569,13 @@ describe("Adapter - Ragequit", () => {
       UNITS
     );
 
-    const memberAShares = await bank.balanceOf(memberA, UNITS);
-    expect(memberAShares.toString()).equal("10000000000000000");
+    const memberAUnits = await bank.balanceOf(memberA, UNITS);
+    expect(memberAUnits.toString()).equal("10000000000000000");
 
     await expectRevert(
       this.adapters.ragequit.ragequit(
         this.dao.address,
-        toBN(memberAShares),
+        toBN(memberAUnits),
         toBN(0),
         [], //empty token array
         {
