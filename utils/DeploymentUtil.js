@@ -470,7 +470,6 @@ const configureDao = async ({
     }),
     entryBank(onboarding, {
       ADD_TO_BALANCE: true,
-      SUB_FROM_BALANCE: true,
     }),
     entryBank(couponOnboarding, {
       ADD_TO_BALANCE: true,
