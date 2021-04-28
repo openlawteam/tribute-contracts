@@ -217,7 +217,6 @@ function financing(
     proposal.applicant = data.value0;
     proposal.amount = data.value1;
     proposal.token = data.value2;
-    proposal.details = data.value3;
 
     proposal.adapterAddress = adapterAdddress;
 
