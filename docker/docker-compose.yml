@@ -29,7 +29,7 @@ services:
     image: postgres
     ports:
       - "35432:5432"
-    command: ["postgres", "-cunitd_preload_libraries=pg_stat_statements"]
+    command: ["postgres", "-cshared_preload_libraries=pg_stat_statements"]
     environment:
       POSTGRES_USER: graph-node
       POSTGRES_PASSWORD: let-me-in
