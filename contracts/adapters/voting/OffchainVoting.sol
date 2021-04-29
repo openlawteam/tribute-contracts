@@ -470,6 +470,7 @@ contract OffchainVotingContract is
         (address adapterAddress, ) = dao.proposals(proposalId);
         require(resultRoot != bytes32(0), "no result available yet!");
         bytes32 hashCurrent = nodeHash(dao, adapterAddress, nodeCurrent);
+        //check that the step is indeed part of the result
         require(
             verify(resultRoot, hashCurrent, nodeCurrent.proof),
             "proof:bad"
@@ -494,8 +495,7 @@ contract OffchainVotingContract is
         //has voted outside of the voting time
         if (
             (vote.gracePeriodStartingTime > 0 &&
-                nodeCurrent.timestamp > vote.gracePeriodStartingTime) ||
-            nodeCurrent.timestamp < vote.startingTime
+                nodeCurrent.timestamp > vote.gracePeriodStartingTime)
         ) {
             return true;
         }
