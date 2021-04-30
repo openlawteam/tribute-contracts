@@ -270,7 +270,7 @@ const proposalIdGenerator = () => {
       idCounter++;
       const str = "" + idCounter;
 
-      return `0x${str.padStart(32,'0')}`;
+      return `0x${str.padStart(32, "0")}`;
     },
   };
 };
