@@ -14,6 +14,7 @@ import "./Voting.sol";
 import "./KickBadReporterAdapter.sol";
 import "./SnapshotProposalContract.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
+import "@openzeppelin/contracts/utils/cryptography/MerkleProof.sol";
 
 /**
 MIT License
@@ -51,6 +52,8 @@ contract OffchainVotingContract is
         address reporter;
         uint256 units;
     }
+
+    uint256 public constant NB_CHOICES = 2;
 
     SnapshotProposalContract private _snapshotContract;
     KickBadReporterAdapter private _handleBadReporterAdapter;
@@ -311,14 +314,14 @@ contract OffchainVotingContract is
     ) internal {
         (address adapterAddress, ) = dao.proposals(proposalId);
         address reporter =
-            recover(
+            ECDSA.recover(
                 hashResultRoot(dao, adapterAddress, resultRoot),
                 result.rootSig
             );
         address memberAddr = dao.getAddressIfDelegated(reporter);
         require(isActiveMember(dao, memberAddr), "not active member");
         require(
-            !_challengeBadNode(dao, proposalId, resultRoot, vote, result),
+            !_challengeBadNode(dao, proposalId, true, resultRoot, vote, result),
             "bad result"
         );
 
@@ -346,7 +349,7 @@ contract OffchainVotingContract is
         SnapshotProposalContract.ProposalMessage memory proposal =
             abi.decode(data, (SnapshotProposalContract.ProposalMessage));
         return
-            recover(
+            ECDSA.recover(
                 _snapshotContract.hashMessage(dao, actionId, proposal),
                 proposal.sig
             );
@@ -366,7 +369,7 @@ contract OffchainVotingContract is
 
         bytes32 proposalHash =
             _snapshotContract.hashMessage(dao, msg.sender, proposal);
-        address addr = recover(proposalHash, proposal.sig);
+        address addr = ECDSA.recover(proposalHash, proposal.sig);
 
         address memberAddr = dao.getAddressIfDelegated(addr);
         require(bank.balanceOf(memberAddr, UNITS) > 0, "noActiveMember");
@@ -450,6 +453,7 @@ contract OffchainVotingContract is
             _challengeBadNode(
                 dao,
                 proposalId,
+                false,
                 vote.resultRoot,
                 vote,
                 nodeCurrent
@@ -459,9 +463,14 @@ contract OffchainVotingContract is
         }
     }
 
+    function _isValidChoice(uint256 choice) internal pure returns (bool) {
+        return choice > 0 && choice < NB_CHOICES + 1;
+    }
+
     function _challengeBadNode(
         DaoRegistry dao,
         bytes32 proposalId,
+        bool submitNewVote,
         bytes32 resultRoot,
         Voting storage vote,
         VoteResultNode memory nodeCurrent
@@ -472,7 +481,7 @@ contract OffchainVotingContract is
         bytes32 hashCurrent = nodeHash(dao, adapterAddress, nodeCurrent);
         //check that the step is indeed part of the result
         require(
-            verify(resultRoot, hashCurrent, nodeCurrent.proof),
+            MerkleProof.verify(nodeCurrent.proof, resultRoot, hashCurrent),
             "proof:bad"
         );
 
@@ -483,7 +492,7 @@ contract OffchainVotingContract is
         (address actionId, ) = dao.proposals(proposalId);
 
         //invalid choice
-        if (nodeCurrent.choice > 2 || nodeCurrent.choice == 0) {
+        if (!_isValidChoice(nodeCurrent.choice)) {
             return true;
         }
 
@@ -494,22 +503,23 @@ contract OffchainVotingContract is
 
         //has voted outside of the voting time
         if (
-            (vote.gracePeriodStartingTime > 0 &&
-                nodeCurrent.timestamp > vote.gracePeriodStartingTime)
+            !submitNewVote &&
+            nodeCurrent.timestamp > vote.gracePeriodStartingTime
         ) {
             return true;
         }
 
         //bad signature
         if (
-            _hasVoted(
+            !_hasVoted(
                 dao,
                 actionId,
                 voter,
                 nodeCurrent.timestamp,
                 nodeCurrent.proposalHash,
+                nodeCurrent.choice,
                 nodeCurrent.sig
-            ) == 0
+            )
         ) {
             return true;
         }
@@ -531,11 +541,11 @@ contract OffchainVotingContract is
         bytes32 hashCurrent = nodeHash(dao, adapterAddress, nodeCurrent);
         bytes32 hashPrevious = nodeHash(dao, adapterAddress, nodePrevious);
         require(
-            verify(resultRoot, hashCurrent, nodeCurrent.proof),
+            MerkleProof.verify(nodeCurrent.proof, resultRoot, hashCurrent),
             "proof check for current invalid for current node"
         );
         require(
-            verify(resultRoot, hashPrevious, nodePrevious.proof),
+            MerkleProof.verify(nodePrevious.proof, resultRoot, hashPrevious),
             "proof check for previous invalid for previous node"
         );
 
@@ -580,12 +590,13 @@ contract OffchainVotingContract is
             bank.getPriorAmount(nodeCurrent.account, UNITS, vote.snapshot);
 
         if (
-            _hasVotedYes(
+            _hasVoted(
                 dao,
                 actionId,
                 voter,
                 nodeCurrent.timestamp,
                 nodeCurrent.proposalHash,
+                1,
                 nodeCurrent.sig
             )
         ) {
@@ -665,7 +676,7 @@ contract OffchainVotingContract is
         bytes32 proposalHash =
             keccak256(abi.encode(snapshotRoot, dao, proposalId));
         return
-            recover(
+            ECDSA.recover(
                 keccak256(
                     abi.encodePacked(
                         "\x19Ethereum Signed Message:\n32",
@@ -676,81 +687,29 @@ contract OffchainVotingContract is
             );
     }
 
-    function _hasVotedYes(
-        DaoRegistry dao,
-        address actionId,
-        address voter,
-        uint256 timestamp,
-        bytes32 proposalHash,
-        bytes memory sig
-    ) internal view returns (bool) {
-        uint256 result =
-            _hasVoted(dao, actionId, voter, timestamp, proposalHash, sig);
-        require(result != 0, "invalid sig");
-        return result == 1;
-    }
-
     function _hasVoted(
         DaoRegistry dao,
         address actionId,
         address voter,
         uint256 timestamp,
         bytes32 proposalHash,
+        uint256 choiceIdx,
         bytes memory sig
-    ) internal view returns (uint256) {
-        bytes32 voteHashYes =
+    ) internal view returns (bool) {
+        bytes32 voteHash =
             _snapshotContract.hashVote(
                 dao,
                 actionId,
                 SnapshotProposalContract.VoteMessage(
                     timestamp,
-                    SnapshotProposalContract.VotePayload(1, proposalHash)
+                    SnapshotProposalContract.VotePayload(
+                        choiceIdx,
+                        proposalHash
+                    )
                 )
             );
 
-        bytes32 voteHashNo =
-            _snapshotContract.hashVote(
-                dao,
-                actionId,
-                SnapshotProposalContract.VoteMessage(
-                    timestamp,
-                    SnapshotProposalContract.VotePayload(2, proposalHash)
-                )
-            );
-
-        if (recover(voteHashYes, sig) == voter) {
-            return 1;
-        } else if (recover(voteHashNo, sig) == voter) {
-            return 2;
-        } else {
-            return 0;
-        }
-    }
-
-    function verify(
-        bytes32 root,
-        bytes32 leaf,
-        bytes32[] memory proof
-    ) public pure returns (bool) {
-        bytes32 computedHash = leaf;
-
-        for (uint256 i = 0; i < proof.length; i++) {
-            bytes32 proofElement = proof[i];
-            if (computedHash < proofElement) {
-                // Hash(current computed hash + current element of the proof)
-                computedHash = keccak256(
-                    abi.encodePacked(computedHash, proofElement)
-                );
-            } else {
-                // Hash(current element of the proof + current computed hash)
-                computedHash = keccak256(
-                    abi.encodePacked(proofElement, computedHash)
-                );
-            }
-        }
-
-        // Check if the computed hash (root) is equal to the provided root
-        return computedHash == root;
+        return ECDSA.recover(voteHash, sig) == voter;
     }
 
     function _stringToUint(string memory s)

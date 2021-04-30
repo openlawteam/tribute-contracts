@@ -105,7 +105,7 @@ contract CouponOnboardingContract is DaoConstants, AdapterGuard, Signatures {
         Coupon memory coupon = Coupon(authorizedMember, amount, nonce);
         bytes32 hash = hashCouponMessage(dao, coupon);
 
-        address recoveredKey = recover(hash, signature);
+        address recoveredKey = ECDSA.recover(hash, signature);
 
         require(recoveredKey == signerAddress, "invalid sig");
 
