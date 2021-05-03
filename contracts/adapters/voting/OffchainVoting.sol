@@ -134,7 +134,6 @@ contract OffchainVotingContract is
 
     bytes32 constant VotingPeriod = keccak256("offchainvoting.votingPeriod");
     bytes32 constant GracePeriod = keccak256("offchainvoting.gracePeriod");
-    bytes32 constant StakingAmount = keccak256("offchainvoting.stakingAmount");
     bytes32 constant FallbackThreshold =
         keccak256("offchainvoting.fallbackThreshold");
 
@@ -384,6 +383,16 @@ contract OffchainVotingContract is
         votes[address(dao)][proposalId].proposalHash = proposalHash;
     }
 
+    function _fallbackVotingActivated(
+        DaoRegistry dao,
+        uint256 fallbackVotesCount
+    ) internal view returns (bool) {
+        return
+            fallbackVotesCount >
+            (dao.getNbMembers() * 100) /
+                dao.getConfiguration(FallbackThreshold);
+    }
+
     /**
     possible results here:
     0: has not started
@@ -405,6 +414,10 @@ contract OffchainVotingContract is
 
         if (vote.forceFailed) {
             return VotingState.NOT_PASS;
+        }
+
+        if (_fallbackVotingActivated(dao, vote.fallbackVotesCount)) {
+            return fallbackVoting.voteResult(dao, proposalId);
         }
 
         if (vote.isChallenged) {
@@ -573,6 +586,15 @@ contract OffchainVotingContract is
         );
         votes[address(dao)][proposalId].fallbackVotes[msg.sender] = true;
         votes[address(dao)][proposalId].fallbackVotesCount += 1;
+
+        if (
+            _fallbackVotingActivated(
+                dao,
+                votes[address(dao)][proposalId].fallbackVotesCount
+            )
+        ) {
+            fallbackVoting.startNewVotingForProposal(dao, proposalId, "");
+        }
     }
 
     function _checkStep(
