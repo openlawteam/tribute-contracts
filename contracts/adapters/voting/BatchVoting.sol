@@ -186,7 +186,7 @@ contract BatchVotingContract is
         bytes32 hashVote =
             _snapshotContract.hashVote(dao, actionId, entry.vote);
 
-        address addr = recover(hashVote, entry.sig);
+        address addr = ECDSA.recover(hashVote, entry.sig);
 
         address delegateKey =
             dao.getPriorDelegateKey(entry.memberAddress, snapshot);
@@ -232,7 +232,7 @@ contract BatchVotingContract is
             abi.decode(data, (SnapshotProposalContract.ProposalMessage));
 
         return
-            recover(
+            ECDSA.recover(
                 _snapshotContract.hashMessage(dao, actionId, proposal),
                 proposal.sig
             );
@@ -253,7 +253,7 @@ contract BatchVotingContract is
 
         bytes32 proposalHash =
             _snapshotContract.hashMessage(dao, msg.sender, proposal);
-        address addr = recover(proposalHash, proposal.sig);
+        address addr = ECDSA.recover(proposalHash, proposal.sig);
         address memberAddr = dao.getAddressIfDelegated(addr);
         require(bank.balanceOf(memberAddr, UNITS) > 0, "noActiveMember");
         require(

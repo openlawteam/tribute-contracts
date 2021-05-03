@@ -88,10 +88,10 @@ describe("Adapter - Tribute", () => {
     // Number of OLTs to be sent to the DAO in exchange for number of requested units
     const tributeAmount = 10;
     const requestAmount = 1000;
-
+    const proposalId = getProposalCounter();
     await tribute.submitProposal(
       dao.address,
-      getProposalCounter(),
+      proposalId,
       applicant,
       UNITS,
       requestAmount,
@@ -105,7 +105,7 @@ describe("Adapter - Tribute", () => {
       }
     );
 
-    await voting.submitVote(dao.address, "0x1", 1, {
+    await voting.submitVote(dao.address, proposalId, 1, {
       from: daoOwner,
       gasPrice: toBN("0"),
     });
@@ -113,7 +113,7 @@ describe("Adapter - Tribute", () => {
     await advanceTime(10000);
 
     await expectRevert(
-      tribute.processProposal(dao.address, "0x1", {
+      tribute.processProposal(dao.address, proposalId, {
         from: daoOwner,
         gasPrice: toBN("0"),
       }),
@@ -125,7 +125,7 @@ describe("Adapter - Tribute", () => {
       from: daoOwner,
     });
 
-    await tribute.processProposal(dao.address, "0x1", {
+    await tribute.processProposal(dao.address, proposalId, {
       from: daoOwner,
       gasPrice: toBN("0"),
     });

@@ -268,7 +268,9 @@ const proposalIdGenerator = () => {
   return {
     *generator() {
       idCounter++;
-      return `0x${idCounter}`;
+      const str = "" + idCounter;
+
+      return `0x${str.padStart(32, "0")}`;
     },
   };
 };

@@ -89,7 +89,8 @@ export function loadProposalAndSaveVoteResults(
           proposal.isChallenged = voteResults.value9;
           // @todo its a mapping, not generated in schema
           // proposal.fallbackVotes = voteResults.value10;
-          proposal.fallbackVotesCount = voteResults.value10;
+          proposal.forceFailed = voteResults.value10;
+          proposal.fallbackVotesCount = voteResults.value11;
 
           proposal.votingState = voteState.toString();
           proposal.votingResult = voteId;

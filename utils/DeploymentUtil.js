@@ -163,6 +163,7 @@ const configureOffchainVoting = async ({
   dao,
   daoFactory,
   chainId,
+  owner,
   votingAddress,
   bankAddress,
   votingPeriod,
@@ -181,6 +182,7 @@ const configureOffchainVoting = async ({
     votingAddress,
     snapshotProposalContract.address,
     handleBadReporterAdapter.address,
+    owner, //TODO: change that to admin that we can define separately
   ]);
 
   await daoFactory.updateAdapter(
