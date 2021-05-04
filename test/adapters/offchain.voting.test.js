@@ -256,13 +256,6 @@ describe("Adapter - Offchain Voting", () => {
       chainId
     );
 
-    const proposalHash = getMessageERC712Hash(
-      proposalData,
-      dao.address,
-      onboarding.address,
-      chainId
-    ).toString("hex");
-
     const proposalId = getProposalCounter();
     await onboarding.submitProposal(
       dao.address,
@@ -277,7 +270,7 @@ describe("Adapter - Offchain Voting", () => {
       }
     );
 
-    const voteEntry = await createVote(proposalHash, newMember.address, true);
+    const voteEntry = await createVote(proposalId, newMember.address, true);
     voteEntry.sig = signer(voteEntry, dao.address, onboarding.address, chainId);
     expect(
       validateMessage(
@@ -326,6 +319,7 @@ describe("Adapter - Offchain Voting", () => {
     const hashStruct =
       "0x" +
       TypedDataUtils.hashStruct("Message", result, types).toString("hex");
+
     const solidityHash = await voting.hashVotingResultNode(result);
     expect(hashStruct).equal(solidityHash);
 

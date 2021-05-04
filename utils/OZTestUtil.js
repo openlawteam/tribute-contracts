@@ -125,6 +125,7 @@ const deployDaoWithOffchainVoting = async ({ owner, newMember }) => {
     ...getDefaultOptions({ owner }),
     offchainVoting: true,
     deployTestTokens: true,
+    offchainAdmin: owner,
     finalize: false,
     ...ozContracts,
     deployFunction,
@@ -270,7 +271,7 @@ const proposalIdGenerator = () => {
       idCounter++;
       const str = "" + idCounter;
 
-      return `0x${str.padStart(32, "0")}`;
+      return `0x${str.padStart(64, "0")}`;
     },
   };
 };
