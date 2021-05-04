@@ -4,7 +4,7 @@ An [IERC721Receiver](https://docs.openzeppelin.com/contracts/3.x/api/token/erc72
 
 The extension adds to the DAO the capability of managing and curating a collection of standard NFTs. Applicants can join the DAO offering NFTs as tributes, and if their proposal is approved their tributes get stored in the guild NFT collection - which supports tokens in ERC721 standard.
 
-In order to join the DAO using a NFT as tribute, the DAO must have the [TributeNFT Adapter](https://github.com/openlawteam/molochv3-contracts/blob/master/docs/adapters/TributeNFT.md) pre-configured with the correct [Access Flags](#access-flags).
+In order to join the DAO using a NFT as tribute, the DAO must have the [TributeNFT Adapter](https://github.com/openlawteam/tribute-contracts/blob/master/docs/adapters/TributeNFT.md) pre-configured with the correct [Access Flags](#access-flags).
 
 ## Extension state
 

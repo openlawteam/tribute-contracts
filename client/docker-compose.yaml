@@ -1,24 +1,24 @@
 version: "3.7"
 services:
-  molochv3-snapshot-hub:
+  tribute-snapshot-hub:
     image: openlaw/snapshot-hub:erc-712
-    container_name: molochv3-snapshot-hub
+    container_name: tribute-snapshot-hub
     env_file:
       - .env.local
     environment:
       PORT: 8081
       DEV: "true"
       ALLOWED_DOMAINS: "http://localhost:8080"
-      JAWSDB_URL: postgres://admin:admin@molochv3-snapshot-postgres:5432/snapshot-db
+      JAWSDB_URL: postgres://admin:admin@tribute-snapshot-postgres:5432/snapshot-db
       TARGET_SNAPSHOT_HUB_API: https://snapshot-hub.dev.thelao.io/ # https://testnet.snapshot.page
     depends_on:
-      - molochv3-snapshot-postgres
+      - tribute-snapshot-postgres
     ports:
       - 8081:8081
 
-  molochv3-snapshot-postgres:
+  tribute-snapshot-postgres:
     image: bitnami/postgresql:13
-    container_name: molochv3-snapshot-postgres
+    container_name: tribute-snapshot-postgres
     environment:
       POSTGRESQL_USERNAME: admin
       POSTGRESQL_PASSWORD: "admin"
@@ -26,9 +26,9 @@ services:
     ports:
       - 5432:5432
 
-  molochv3-snapshot-pgadmin:
+  tribute-snapshot-pgadmin:
     image: dpage/pgadmin4
-    container_name: molochv3-snapshot-pgadmin
+    container_name: tribute-snapshot-pgadmin
     environment:
       PGADMIN_CONFIG_SERVER_MODE: "False"
       PGADMIN_CONFIG_UPGRADE_CHECK_ENABLED: "False"
@@ -40,8 +40,8 @@ services:
     ports:
       - 5050:80
     depends_on:
-      - molochv3-snapshot-postgres
+      - tribute-snapshot-postgres
 
 networks:
     default:
-      name: molochv3-snapshot-network
+      name: tribute-snapshot-network

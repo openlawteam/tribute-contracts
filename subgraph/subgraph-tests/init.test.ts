@@ -36,7 +36,7 @@ const { deployContract, deployMockContract } = waffle;
 
 // Subgraph Name
 const subgraphUser = "openlawteam";
-const subgraphName = "moloch-v3";
+const subgraphName = "tribute";
 
 // Yaml Creator
 import { getYAML } from "./helpers/YAML";

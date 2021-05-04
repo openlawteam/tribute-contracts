@@ -121,7 +121,7 @@ describe("Adapter - Offchain Voting", () => {
     const proposalData = {
       type: "proposal",
       timestamp: Math.floor(new Date().getTime() / 1000),
-      space: "molochv3",
+      space: "tribute",
       payload: proposalPayload,
       sig: "0x00",
     };
@@ -237,7 +237,7 @@ describe("Adapter - Offchain Voting", () => {
       snapshot: blockNumber.toString(),
     };
 
-    const space = "molochv3";
+    const space = "tribute";
 
     const proposalData = {
       type: "proposal",

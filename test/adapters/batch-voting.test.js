@@ -111,7 +111,7 @@ describe("Adapter - BatchVoting", () => {
       snapshot: blockNumber.toString(),
     };
 
-    const space = "molochv3";
+    const space = "tribute";
     const chainId = 1;
 
     const proposalData = {
