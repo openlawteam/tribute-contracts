@@ -74,7 +74,6 @@ contract OffchainVotingContract is
 
     struct Voting {
         uint256 snapshot;
-        bytes32 proposalHash;
         address reporter;
         bytes32 resultRoot;
         uint256 nbYes;
@@ -380,7 +379,6 @@ contract OffchainVotingContract is
 
         votes[address(dao)][proposalId].startingTime = block.timestamp;
         votes[address(dao)][proposalId].snapshot = blockNumber;
-        votes[address(dao)][proposalId].proposalHash = proposalHash;
     }
 
     function _fallbackVotingActivated(
@@ -486,39 +484,35 @@ contract OffchainVotingContract is
         bool submitNewVote,
         bytes32 resultRoot,
         Voting storage vote,
-        VoteResultNode memory nodeCurrent
+        VoteResultNode memory node
     ) internal view returns (bool) {
         uint256 blockNumber = vote.snapshot;
         (address adapterAddress, ) = dao.proposals(proposalId);
         require(resultRoot != bytes32(0), "no result available yet!");
-        bytes32 hashCurrent = nodeHash(dao, adapterAddress, nodeCurrent);
+        bytes32 hashCurrent = nodeHash(dao, adapterAddress, node);
         //check that the step is indeed part of the result
         require(
-            MerkleProof.verify(nodeCurrent.proof, resultRoot, hashCurrent),
+            MerkleProof.verify(node.proof, resultRoot, hashCurrent),
             "proof:bad"
         );
 
         //return 1 if yes, 2 if no and 0 if the vote is incorrect
-        address voter =
-            dao.getPriorDelegateKey(nodeCurrent.account, blockNumber);
+        address voter = dao.getPriorDelegateKey(node.account, blockNumber);
 
         (address actionId, ) = dao.proposals(proposalId);
 
         //invalid choice
-        if (!_isValidChoice(nodeCurrent.choice)) {
+        if (!_isValidChoice(node.choice)) {
             return true;
         }
 
         //invalid proposal hash
-        if (nodeCurrent.proposalHash != vote.proposalHash) {
+        if (node.proposalHash != proposalId) {
             return true;
         }
 
         //has voted outside of the voting time
-        if (
-            !submitNewVote &&
-            nodeCurrent.timestamp > vote.gracePeriodStartingTime
-        ) {
+        if (!submitNewVote && node.timestamp > vote.gracePeriodStartingTime) {
             return true;
         }
 
@@ -528,13 +522,17 @@ contract OffchainVotingContract is
                 dao,
                 actionId,
                 voter,
-                nodeCurrent.timestamp,
-                nodeCurrent.proposalHash,
-                nodeCurrent.choice,
-                nodeCurrent.sig
+                node.timestamp,
+                node.proposalHash,
+                node.choice,
+                node.sig
             )
         ) {
             return true;
+        }
+
+        if (node.index == 0) {
+            return node.nbNo > 0 || node.nbYes > 0;
         }
 
         return false;
