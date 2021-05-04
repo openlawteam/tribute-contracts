@@ -51,10 +51,14 @@ contract UnitTokenExtension {
 	}
 
 	function withdrawUnitToken(address payable member, uint256 amount) external returns(bool res)  {
-		return false;
+    return false;
 	}
 
 	function _internalTransferUnitToken(address from, address to, uint256 amount) internal returns(bool res) {
+    //require isMember 
+    //require member balanceOf > 0 
+    //update member votes by amount 
+    //bank.internalTrnasfer  or erc20transferFrom if allowed
     return false;
 	}
 	
