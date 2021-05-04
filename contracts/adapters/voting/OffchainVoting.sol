@@ -74,7 +74,6 @@ contract OffchainVotingContract is
 
     struct Voting {
         uint256 snapshot;
-        bytes32 proposalHash;
         address reporter;
         bytes32 resultRoot;
         uint256 nbYes;
@@ -380,7 +379,6 @@ contract OffchainVotingContract is
 
         votes[address(dao)][proposalId].startingTime = block.timestamp;
         votes[address(dao)][proposalId].snapshot = blockNumber;
-        votes[address(dao)][proposalId].proposalHash = proposalHash;
     }
 
     function _fallbackVotingActivated(
@@ -456,10 +454,34 @@ contract OffchainVotingContract is
         return VotingState.TIE;
     }
 
+    function challengeBadFirstNode(
+        DaoRegistry dao,
+        bytes32 proposalId,
+        VoteResultNode memory node
+    ) external {
+        Voting storage vote = votes[address(dao)][proposalId];
+        (address adapterAddress, ) = dao.proposals(proposalId);
+        require(vote.resultRoot != bytes32(0), "no result available yet!");
+        bytes32 hashCurrent = nodeHash(dao, adapterAddress, node);
+        //check that the step is indeed part of the result
+        require(
+            MerkleProof.verify(node.proof, vote.resultRoot, hashCurrent),
+            "proof:bad"
+        );
+
+        (address actionId, ) = dao.proposals(proposalId);
+
+        if (
+            node.index == 0 && _checkStep(dao, actionId, node, 0, 0, proposalId)
+        ) {
+            _challengeResult(dao, proposalId);
+        }
+    }
+
     function challengeBadNode(
         DaoRegistry dao,
         bytes32 proposalId,
-        VoteResultNode memory nodeCurrent
+        VoteResultNode memory node
     ) external {
         Voting storage vote = votes[address(dao)][proposalId];
         if (
@@ -469,7 +491,7 @@ contract OffchainVotingContract is
                 false,
                 vote.resultRoot,
                 vote,
-                nodeCurrent
+                node
             )
         ) {
             _challengeResult(dao, proposalId);
@@ -486,39 +508,35 @@ contract OffchainVotingContract is
         bool submitNewVote,
         bytes32 resultRoot,
         Voting storage vote,
-        VoteResultNode memory nodeCurrent
+        VoteResultNode memory node
     ) internal view returns (bool) {
         uint256 blockNumber = vote.snapshot;
         (address adapterAddress, ) = dao.proposals(proposalId);
         require(resultRoot != bytes32(0), "no result available yet!");
-        bytes32 hashCurrent = nodeHash(dao, adapterAddress, nodeCurrent);
+        bytes32 hashCurrent = nodeHash(dao, adapterAddress, node);
         //check that the step is indeed part of the result
         require(
-            MerkleProof.verify(nodeCurrent.proof, resultRoot, hashCurrent),
+            MerkleProof.verify(node.proof, resultRoot, hashCurrent),
             "proof:bad"
         );
 
         //return 1 if yes, 2 if no and 0 if the vote is incorrect
-        address voter =
-            dao.getPriorDelegateKey(nodeCurrent.account, blockNumber);
+        address voter = dao.getPriorDelegateKey(node.account, blockNumber);
 
         (address actionId, ) = dao.proposals(proposalId);
 
         //invalid choice
-        if (!_isValidChoice(nodeCurrent.choice)) {
+        if (!_isValidChoice(node.choice)) {
             return true;
         }
 
         //invalid proposal hash
-        if (nodeCurrent.proposalHash != vote.proposalHash) {
+        if (node.proposalHash != proposalId) {
             return true;
         }
 
         //has voted outside of the voting time
-        if (
-            !submitNewVote &&
-            nodeCurrent.timestamp > vote.gracePeriodStartingTime
-        ) {
+        if (!submitNewVote && node.timestamp > vote.gracePeriodStartingTime) {
             return true;
         }
 
@@ -528,10 +546,10 @@ contract OffchainVotingContract is
                 dao,
                 actionId,
                 voter,
-                nodeCurrent.timestamp,
-                nodeCurrent.proposalHash,
-                nodeCurrent.choice,
-                nodeCurrent.sig
+                node.timestamp,
+                node.proposalHash,
+                node.choice,
+                node.sig
             )
         ) {
             return true;
@@ -573,7 +591,18 @@ contract OffchainVotingContract is
         }
         (address actionId, ) = dao.proposals(proposalId);
 
-        _checkStep(dao, actionId, nodeCurrent, nodePrevious, proposalId);
+        if (
+            _checkStep(
+                dao,
+                actionId,
+                nodeCurrent,
+                nodePrevious.nbYes,
+                nodePrevious.nbNo,
+                proposalId
+            )
+        ) {
+            _challengeResult(dao, proposalId);
+        }
     }
 
     function requestFallback(DaoRegistry dao, bytes32 proposalId)
@@ -601,9 +630,10 @@ contract OffchainVotingContract is
         DaoRegistry dao,
         address actionId,
         VoteResultNode memory nodeCurrent,
-        VoteResultNode memory nodePrevious,
+        uint256 previousYes,
+        uint256 previousNo,
         bytes32 proposalId
-    ) internal {
+    ) internal view returns (bool) {
         Voting storage vote = votes[address(dao)][proposalId];
         address voter =
             dao.getPriorDelegateKey(nodeCurrent.account, vote.snapshot);
@@ -622,18 +652,19 @@ contract OffchainVotingContract is
                 nodeCurrent.sig
             )
         ) {
-            if (nodePrevious.nbYes + weight != nodeCurrent.nbYes) {
-                _challengeResult(dao, proposalId);
-            } else if (nodePrevious.nbNo != nodeCurrent.nbNo) {
-                _challengeResult(dao, proposalId);
+            if (previousYes + weight != nodeCurrent.nbYes) {
+                return true;
+            } else if (previousNo != nodeCurrent.nbNo) {
+                return true;
             }
         } else {
-            if (nodePrevious.nbYes != nodeCurrent.nbYes) {
-                _challengeResult(dao, proposalId);
-            } else if (nodePrevious.nbNo + weight != nodeCurrent.nbNo) {
-                _challengeResult(dao, proposalId);
+            if (previousYes != nodeCurrent.nbYes) {
+                return true;
+            } else if (previousNo + weight != nodeCurrent.nbNo) {
+                return true;
             }
         }
+        return false;
     }
 
     function sponsorChallengeProposal(

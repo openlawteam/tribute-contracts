@@ -54,6 +54,7 @@ async function deployTestDao(deployFunction, network) {
     finalize: false,
     maxExternalTokens: 100,
     couponCreatorAddress: "0x7D8cad0bbD68deb352C33e80fccd4D8e88b4aBb8",
+    offchainAdmin: "0xedC10CFA90A135C41538325DD57FDB4c7b88faf7",
     daoName: process.env.DAO_NAME,
   });
   return dao;
@@ -76,6 +77,7 @@ async function deployRinkebyDao(deployFunction, network) {
     maxExternalTokens: 100,
     couponCreatorAddress: process.env.COUPON_CREATOR_ADDR,
     daoName: process.env.DAO_NAME,
+    offchainAdmin: "0xedC10CFA90A135C41538325DD57FDB4c7b88faf7",
   });
   return dao;
 }
@@ -97,6 +99,7 @@ async function deployGanacheDao(deployFunction, network) {
     maxExternalTokens: 100,
     couponCreatorAddress: process.env.COUPON_CREATOR_ADDR,
     daoName: process.env.DAO_NAME,
+    offchainAdmin: "0xedC10CFA90A135C41538325DD57FDB4c7b88faf7",
   });
   return dao;
 }
