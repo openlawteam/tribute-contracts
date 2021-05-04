@@ -454,10 +454,31 @@ contract OffchainVotingContract is
         return VotingState.TIE;
     }
 
+    function challengeBadFirstNode(DaoRegistry dao,
+        bytes32 proposalId,
+        VoteResultNode memory node) external {
+
+        Voting storage vote = votes[address(dao)][proposalId];
+        (address adapterAddress, ) = dao.proposals(proposalId);
+        require(vote.resultRoot != bytes32(0), "no result available yet!");
+        bytes32 hashCurrent = nodeHash(dao, adapterAddress, node);
+        //check that the step is indeed part of the result
+        require(
+            MerkleProof.verify(node.proof, vote.resultRoot, hashCurrent),
+            "proof:bad"
+        );
+
+        (address actionId, ) = dao.proposals(proposalId);
+
+        if (node.index == 0 && _checkStep(dao, actionId, node, 0, 0, proposalId)) {
+            _challengeResult(dao, proposalId);
+        }
+    }
+
     function challengeBadNode(
         DaoRegistry dao,
         bytes32 proposalId,
-        VoteResultNode memory nodeCurrent
+        VoteResultNode memory node
     ) external {
         Voting storage vote = votes[address(dao)][proposalId];
         if (
@@ -467,7 +488,7 @@ contract OffchainVotingContract is
                 false,
                 vote.resultRoot,
                 vote,
-                nodeCurrent
+                node
             )
         ) {
             _challengeResult(dao, proposalId);
@@ -529,10 +550,6 @@ contract OffchainVotingContract is
             )
         ) {
             return true;
-        }
-
-        if (node.index == 0) {
-            _checkStep(dao, actionId, node, 0, 0, proposalId);
         }
 
         return false;
