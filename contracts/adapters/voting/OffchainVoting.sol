@@ -454,10 +454,11 @@ contract OffchainVotingContract is
         return VotingState.TIE;
     }
 
-    function challengeBadFirstNode(DaoRegistry dao,
+    function challengeBadFirstNode(
+        DaoRegistry dao,
         bytes32 proposalId,
-        VoteResultNode memory node) external {
-
+        VoteResultNode memory node
+    ) external {
         Voting storage vote = votes[address(dao)][proposalId];
         (address adapterAddress, ) = dao.proposals(proposalId);
         require(vote.resultRoot != bytes32(0), "no result available yet!");
@@ -470,7 +471,9 @@ contract OffchainVotingContract is
 
         (address actionId, ) = dao.proposals(proposalId);
 
-        if (node.index == 0 && _checkStep(dao, actionId, node, 0, 0, proposalId)) {
+        if (
+            node.index == 0 && _checkStep(dao, actionId, node, 0, 0, proposalId)
+        ) {
             _challengeResult(dao, proposalId);
         }
     }
