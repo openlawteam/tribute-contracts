@@ -532,7 +532,7 @@ contract OffchainVotingContract is
         }
 
         if (node.index == 0) {
-            _checkStep(dao, actionId, node, 0,0, proposalId);
+            _checkStep(dao, actionId, node, 0, 0, proposalId);
         }
 
         return false;
@@ -571,7 +571,16 @@ contract OffchainVotingContract is
         }
         (address actionId, ) = dao.proposals(proposalId);
 
-        if(_checkStep(dao, actionId, nodeCurrent, nodePrevious.nbYes, nodePrevious.nbNo, proposalId)) {
+        if (
+            _checkStep(
+                dao,
+                actionId,
+                nodeCurrent,
+                nodePrevious.nbYes,
+                nodePrevious.nbNo,
+                proposalId
+            )
+        ) {
             _challengeResult(dao, proposalId);
         }
     }
