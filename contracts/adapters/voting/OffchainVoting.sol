@@ -532,7 +532,7 @@ contract OffchainVotingContract is
         }
 
         if (node.index == 0) {
-            return node.nbNo > 0 || node.nbYes > 0;
+            _checkStep(dao, actionId, node, 0,0, proposalId);
         }
 
         return false;
@@ -571,7 +571,9 @@ contract OffchainVotingContract is
         }
         (address actionId, ) = dao.proposals(proposalId);
 
-        _checkStep(dao, actionId, nodeCurrent, nodePrevious, proposalId);
+        if(_checkStep(dao, actionId, nodeCurrent, nodePrevious.nbYes, nodePrevious.nbNo, proposalId)) {
+            _challengeResult(dao, proposalId);
+        }
     }
 
     function requestFallback(DaoRegistry dao, bytes32 proposalId)
@@ -599,9 +601,10 @@ contract OffchainVotingContract is
         DaoRegistry dao,
         address actionId,
         VoteResultNode memory nodeCurrent,
-        VoteResultNode memory nodePrevious,
+        uint256 previousYes,
+        uint256 previousNo,
         bytes32 proposalId
-    ) internal {
+    ) internal view returns (bool) {
         Voting storage vote = votes[address(dao)][proposalId];
         address voter =
             dao.getPriorDelegateKey(nodeCurrent.account, vote.snapshot);
@@ -620,18 +623,19 @@ contract OffchainVotingContract is
                 nodeCurrent.sig
             )
         ) {
-            if (nodePrevious.nbYes + weight != nodeCurrent.nbYes) {
-                _challengeResult(dao, proposalId);
-            } else if (nodePrevious.nbNo != nodeCurrent.nbNo) {
-                _challengeResult(dao, proposalId);
+            if (previousYes + weight != nodeCurrent.nbYes) {
+                return true;
+            } else if (previousNo != nodeCurrent.nbNo) {
+                return true;
             }
         } else {
-            if (nodePrevious.nbYes != nodeCurrent.nbYes) {
-                _challengeResult(dao, proposalId);
-            } else if (nodePrevious.nbNo + weight != nodeCurrent.nbNo) {
-                _challengeResult(dao, proposalId);
+            if (previousYes != nodeCurrent.nbYes) {
+                return true;
+            } else if (previousNo + weight != nodeCurrent.nbNo) {
+                return true;
             }
         }
+        return false;
     }
 
     function sponsorChallengeProposal(
