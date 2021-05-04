@@ -57,18 +57,18 @@ const deployFunction = async (contractInterface, args, from) => {
 const { expectRevert } = require("@openzeppelin/test-helpers");
 const { expect } = require("chai");
 
-function getContractFromOpenZepplin(c) {
+const getContractFromOpenZepplin = (c) => {
   return contract.fromArtifact(c.substring(c.lastIndexOf("/") + 1));
 }
 
-function getContracts() {
+const getContracts = () => {
   return Object.keys(contracts).reduce((previousValue, key) => {
     previousValue[key] = getContractFromOpenZepplin(contracts[key]);
     return previousValue;
   }, {});
 }
 
-function getDefaultOptions(options) {
+const getDefaultOptions = (options) => {
   let o = {
     unitPrice: unitPrice,
     nbUnits: numberOfUnits,
@@ -294,5 +294,6 @@ module.exports = {
   expect,
   expectRevert,
   deployFunction,
+  getContractFromOpenZepplin,
   ...ozContracts,
 };

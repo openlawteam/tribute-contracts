@@ -66,6 +66,7 @@ const contracts = {
   // Extensions
   NFTExtension: "./extensions/nft/NFTExtension",
   BankExtension: "./extensions/bank/BankExtension",
+  UnitTokenExtension: "./extensions/unit-token/UnitTokenExtension",
 
   // Config Adapters
   DaoRegistryAdapterContract: "./adapters/DaoRegistryAdapterContract",

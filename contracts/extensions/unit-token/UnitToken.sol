@@ -2,16 +2,16 @@ pragma solidity ^0.8.0;
 
 // SPDX-License-Identifier: MIT
 
-import "../core/DaoConstants.sol";
-import "../core/DaoRegistry.sol";
-import "../extensions/bank/Bank.sol";
-import "../guards/AdapterGuard.sol";
-import "./interfaces/IConfiguration.sol";
-import "../adapters/interfaces/IVoting.sol";
+// import "../core/DaoConstants.sol";
+// import "../core/DaoRegistry.sol";
+// import "../extensions/bank/Bank.sol";
+// import "../guards/AdapterGuard.sol";
+// import "./interfaces/IConfiguration.sol";
+// import "../adapters/interfaces/IVoting.sol";
 
-import "../../utils/IERC20.sol";
+import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
+import "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 import "@openzeppelin/contracts/utils/Address.sol";
-import "../../helpers/SafeERC20.sol";
 
 /**
 MIT License
@@ -45,20 +45,17 @@ SOFTWARE.
 
 
   */
-contract UnitTokenContract is DaoConstants, AdapterGuard {
-	
+contract UnitTokenExtension {
 
-	constructor(address unitToken) public {
-	    
+	constructor() public {
 	}
 
-	function withdrawUnitToken (address payable member, uint256 amount) returns(bool res) internal {
-		
+	function withdrawUnitToken(address payable member, uint256 amount) external returns(bool res)  {
+		return false;
 	}
-	
 
-	function internalTransferUnitToken (address from, address to, uint256 amount) returns(bool res) internal {
-		
+	function _internalTransferUnitToken(address from, address to, uint256 amount) internal returns(bool res) {
+    return false;
 	}
 	
 
