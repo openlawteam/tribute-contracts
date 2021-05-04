@@ -9,6 +9,10 @@ import "../guards/AdapterGuard.sol";
 import "./interfaces/IConfiguration.sol";
 import "../adapters/interfaces/IVoting.sol";
 
+import "../../utils/IERC20.sol";
+import "@openzeppelin/contracts/utils/Address.sol";
+import "../../helpers/SafeERC20.sol";
+
 /**
 MIT License
 
@@ -42,11 +46,24 @@ SOFTWARE.
 
   */
 contract UnitTokenContract is DaoConstants, AdapterGuard {
-  constructor() public {
-    
-  }
+	
+
+	constructor(address unitToken) public {
+	    
+	}
+
+	function withdrawUnitToken (address payable member, uint256 amount) returns(bool res) internal {
+		
+	}
+	
+
+	function internalTransferUnitToken (address from, address to, uint256 amount) returns(bool res) internal {
+		
+	}
+	
+
   //TESTS: 
-  
+
   //Get Member voting weight, 1 vote = 1 token
 
   //track the token from Bank, bank.balaceOf()
