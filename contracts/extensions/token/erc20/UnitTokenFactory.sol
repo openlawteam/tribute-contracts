@@ -1,5 +1,11 @@
-// Whole-script strict mode syntax
-"use strict";
+pragma solidity ^0.8.0;
+
+// SPDX-License-Identifier: MIT
+
+import "../../core/DaoConstants.sol";
+import "../../core/DaoRegistry.sol";
+import "../../core/CloneFactory.sol";
+import "./UnitToken.sol";
 
 /**
 MIT License
@@ -24,22 +30,23 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
  */
-const {
-  contract,
-  accounts,
-} = require("@openzeppelin/test-environment");
 
-const { expect } = require("chai");
+contract UnitTokenFactory is CloneFactory, DaoConstants {
+    address public identityAddress;
 
-describe("Extension - ERC20 UnitToken", () => {
-  const owner = accounts[0];
+    event UnitTokenCreated(address nftCollAddress);
 
-  const getContract = () =>
-   contract.fromArtifact("UnitTokenExtension")
+    constructor(address _identityAddress) {
+        identityAddress = _identityAddress;
+    }
 
-  it("should be possible to create a dao with a bank extension pre-configured", async () => {
-    const unitTokenExt = await getContract().new({ from: owner });
-    expect(unitTokenExt.address).to.not.be.null;
-  });
-
-});
+    /**
+     * @notice Create and initialize a new Unit Token Extension which is based on ERC20
+     */
+    function create(address dao, address bank) external {
+        UnitTokenExtension extension =
+            UnitTokenExtension(_createClone(identityAddress));
+        extension.initialize(dao, bank);
+        emit UnitTokenCreated(address(extension));
+    }
+}
