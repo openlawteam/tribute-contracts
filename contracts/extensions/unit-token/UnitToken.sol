@@ -40,46 +40,41 @@ SOFTWARE.
 
 /**
  * 
- The UnitTokenContract  is a contract to handle an erc20 token that 
+ The UnitTokenExtension  is a contract to handle an erc20 token that 
  mirrors the number of Units/voting weight held by DAO members. 
 
 
   */
-contract UnitTokenExtension {
+contract UnitTokenExtension is DaoConstants, Bank, AdapterGuard {
 
-	constructor() public {
+  //unitToken is the token address of the erc20 aligned with the reserverd address UNITS.
+  uint256 public unitToken; 
+  //Dao address
+  DaoRegistry public dao; 
+
+  //create event? 
+   
+   //todo -- change to initalize() for proxy pattern
+	constructor( DaoRegistry _dao, address _unitToken) public {
+    require(_dao.isMember(creator), "bank::not member");
+    unitToken = _unitToken; 
+    dao = _dao;
 	}
 
-	function withdrawUnitToken(address payable member, uint256 amount) external returns(bool res)  {
-    return false;
-	}
+	function _internalTransferUnitToken(address from, address to, uint256 amount) public returns(bool res) {
+    //require member receiving UnitToken to already be a member of the DAO 
+    require (DaoRegistry.isMember(to) = true, "receipient is not a member of the dao");
+    //balance of transferor must be > 0 UNITS
+    require (Bank.balanceOf(from, UNITS) > 0, "member must have greater than 0 UNITS");
+    //check UnitToken balance using Bank contract
+    require (Bank.balanceOf(from, unitToken) > 0, "member does not have any Unit Tokens to transfer");
+    //update member UNITS by amount 
+    Bank.internalTransfer(from, to, UNITS, amount);
 
-	function _internalTransferUnitToken(address from, address to, uint256 amount) internal returns(bool res) {
-    //require isMember 
-    //require member balanceOf > 0 
-    //update member votes by amount 
-    //bank.internalTrnasfer  or erc20transferFrom if allowed
-    return false;
-	}
-	
-
-  //TESTS: 
-
-  //Get Member voting weight, 1 vote = 1 token
-
-  //track the token from Bank, bank.balaceOf()
-
-  //Units of DAO should always match bank.balanceOf() 
-
-  //Units should match after bank.addToBalance()
-
-  //Units should match after bank.subtractFromBalance()
-
-  //Units should match after bank.withdraw() 
-
-  //Units should match bank.balanceOf() after internalTransfer()
-
-  //is token pausable?
-
-  // is token transferrable outside the DAO? can this be turned on and off?
-}
+    //use the Bank's internalTransfer() for unitToken OR
+    //IERC20.transferFrom(from, to, unitToken, amount)? 
+    Bank.internalTransfer(from, to, unitToken, amount);
+    //create an emit event?
+    return true;
+	} 
+} 
