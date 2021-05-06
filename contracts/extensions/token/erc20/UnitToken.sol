@@ -48,9 +48,6 @@ contract UnitTokenExtension is
     IExtension,
     IERC20
 {
-    //unitToken is the token address of the erc20 aligned with the reserverd address UNITS.
-    uint256 public unitToken;
-
     //Dao address
     DaoRegistry public dao;
 
@@ -88,7 +85,7 @@ contract UnitTokenExtension is
 
     /**
      * @dev Moves `amount` tokens from the caller's account to `recipient`.
-     *
+     * 
      * Returns a boolean value indicating whether the operation succeeded.
      *
      * Emits a {Transfer} event.
@@ -98,7 +95,7 @@ contract UnitTokenExtension is
         returns (bool)
     {
         //TODO check the amount to prevent overflows?
-        //require member receiving UnitToken to already be a member of the DAO
+        
         require(dao.isMember(recipient), "receipient is not a member");
         //balance of transferor must be > 0 UNITS
         BankExtension bank = BankExtension(dao.getExtensionAddress(BANK));
@@ -111,12 +108,11 @@ contract UnitTokenExtension is
             bank.balanceOf(TOTAL, UNITS) > 0,
             "bank does not have enough UNITS to transfer"
         );
+
         //update member UNITS by amount
         bank.internalTransfer(msg.sender, recipient, UNITS, amount);
 
-        //use the Bank's internalTransfer() for unitToken OR
-        //IERC20.transferFrom(from, to, unitToken, amount)?
-        // bank.internalTransfer(from, to, unitToken, amount);
+        //emit Transfer(msg.sender, recipient, amount);
     }
 
     /**
@@ -129,7 +125,7 @@ contract UnitTokenExtension is
     function allowance(address owner, address spender)
         external
         view
-        returns (uint256);
+        returns (uint256); 
 
     /**
      * @dev Sets `amount` as the allowance of `spender` over the caller's tokens.
@@ -145,13 +141,20 @@ contract UnitTokenExtension is
      *
      * Emits an {Approval} event.
      */
-    function approve(address spender, uint256 amount) external returns (bool);
+
+    function approve(address spender, uint256 amount) external returns (bool) {
+            require(bank.balanceOf(msg.sender, UNITS) > 0,"owner does not have UNITS to transfer");
+            //use IERC20 approve
+            IERC20 erc20 = IERC20(UNITS);
+            erc20.approve(spender, amount);
+            //emit Approval(msg.sender, spender, amount);
+    };
 
     /**
      * @dev Moves `amount` tokens from `sender` to `recipient` using the
      * allowance mechanism. `amount` is then deducted from the caller's
      * allowance.
-     *
+     *  Recipient must be a member of DAO 
      * Returns a boolean value indicating whether the operation succeeded.
      *
      * Emits a {Transfer} event.
@@ -160,7 +163,23 @@ contract UnitTokenExtension is
         address sender,
         address recipient,
         uint256 amount
-    ) external returns (bool);
+    ) external returns (bool){
+        //recipients must be a member of DAO
+        require (dao.isMember(recipient),"recipient is not a member" );
+        //get bank address
+        BankExtension bank = BankExtension(dao.getExtensionAddress(BANK));
+      
+        //check UnitToken balance using Bank contract
+        require(
+            bank.balanceOf(TOTAL, UNITS) > 0,
+            "bank does not have enough UNITS to transfer"
+        );
+        //TODO: do we need to add a function reduce the caller's allowance here before transfer?
+
+        // caller transfers UNITS from sender to recipient - use IERC20 transferFrom instead?
+        bank.internalTransfer(sender, recipient, UNITS, amount);
+        
+    };
 
     /**
      * @dev Emitted when `value` tokens are moved from one account (`from`) to
