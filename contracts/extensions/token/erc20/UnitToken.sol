@@ -9,12 +9,9 @@ import "../../bank/Bank.sol";
 import "../../../utils/IERC20.sol";
 import "../../../helpers/SafeERC20.sol";
 import "@openzeppelin/contracts/utils/Address.sol";
-
-
-//import "@openzeppelin/contracts/utils/Context.sol";
-
+//imports for erce20 & Pausable funcionality 
+import "@openzeppelin/contracts/utils/Context.sol";
 import "@openzeppelin/contracts/access/AccessControlEnumberable.sol";
-
 import "@openzeppelin/contracts/token/ERC20/extensions/ERC20Pausable.sol";
 
 
@@ -44,12 +41,12 @@ SOFTWARE.
 
 /**
  * 
- The UnitTokenExtension  is a contract to handle an erc20 token that 
- mirrors the number of Units/voting weight held by DAO members. 
-
+ The UnitTokenExtension is a contract to give erc20 functionality
+ to the internal token UNITS held by DAO members inside the DAO itself. 
 
   */
 contract UnitTokenExtension is
+    Context,
     DaoConstants,
     Bank,
     AdapterGuard,
@@ -74,6 +71,8 @@ contract UnitTokenExtension is
     function initialize(DaoRegistry _dao, address creator) external override {
         require(!initialized, "already initialized");
         require(_dao.isMember(creator), "not a member");
+        //TODO? - change _msgSender to creator?
+        _setupRole(DEFAULT_ADMIN_ROLE, _msgSender());
         _setupRole(PAUSER_ROLE, _msgSender()); 
         initialized = true;
         dao = _dao;
@@ -186,11 +185,19 @@ contract UnitTokenExtension is
             bank.balanceOf(TOTAL, UNITS) > 0,
             "bank does not have enough UNITS to transfer"
         );
-        //TODO: do we need to add a function reduce the caller's allowance here before transfer?
-
-        // caller transfers UNITS from sender to recipient - use IERC20 transferFrom instead?
+        //use Openzeppelin's erc20 _allowances mapping
+        uint256 currentAllowance = _allowances[sender][_msgSender()];
+        //approval check for sender
+        require(
+            currentAllowance >= amount,
+            "ERC20: transfer amount exceeds allowance"
+        );
+        //adjust allowance with erc20 _approve 
+        _approve(sender, _msgSender(), currentAllowance - amount);
+        // caller transfers UNITS from sender to recipient 
         bank.internalTransfer(sender, recipient, UNITS, amount);
         
+        return true; 
     };
 
 
