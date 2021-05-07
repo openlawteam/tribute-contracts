@@ -128,3 +128,5 @@ subgraph.yaml
 
 # Logs of the contract deployment
 *-deploy.log
+
+.vscode
