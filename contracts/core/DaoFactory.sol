@@ -2,7 +2,6 @@ pragma solidity ^0.8.0;
 pragma experimental ABIEncoderV2;
 
 // SPDX-License-Identifier: MIT
-
 import "./DaoConstants.sol";
 import "./DaoRegistry.sol";
 import "./CloneFactory.sol";
