@@ -102,7 +102,7 @@ Added the following environment variables to your local .env file:
 # The Infura API Key is used to communicate with the Ethereum blockchain
 INFURA_KEY=
 # The mnemonic that generates you account
-TRUFFLE_MNEMONIC=orange apple banana ... 
+TRUFFLE_MNEMONIC=orange apple banana ...
 # Debug the Ether Scan contract verification calls
 DEBUG_CONTRACT_VERIFICATION=false
 # The Ether Scan API Key to verify the contracts after the deployment
