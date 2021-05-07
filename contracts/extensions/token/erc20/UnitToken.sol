@@ -168,9 +168,7 @@ contract UnitTokenExtension is
         require (dao.isMember(recipient),"recipient is not a member" );
         //get bank address
         BankExtension bank = BankExtension(dao.getExtensionAddress(BANK));
-        
-        require (bank.balanceOf(sender, UNITS > 0), "sender does not have enough UNITS to transfer");
-        
+      
         //check UnitToken balance using Bank contract
         require(
             bank.balanceOf(TOTAL, UNITS) > 0,
@@ -182,8 +180,6 @@ contract UnitTokenExtension is
         bank.internalTransfer(sender, recipient, UNITS, amount);
         
     };
-
-    //TODO PAUSABLE 
 
     /**
      * @dev Emitted when `value` tokens are moved from one account (`from`) to
