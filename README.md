@@ -99,10 +99,16 @@ You can find more information about the purpose of each access flag at [DAO Regi
 Added the following environment variables to your local .env file:
 
 ```
-ETHERSCAN_API_KEY=
-TRUFFLE_MNEMONIC=. . . . . . . . . . . .
+# The Infura API Key is used to communicate with the Ethereum blockchain
 INFURA_KEY=
+# The mnemonic that generates you account
+TRUFFLE_MNEMONIC=orange apple banana ... 
+# Debug the Ether Scan contract verification calls
 DEBUG_CONTRACT_VERIFICATION=false
+# The Ether Scan API Key to verify the contracts after the deployment
+ETHERSCAN_API_KEY=
+# The public eth (0x...) address of the creator of the onboarding cupons
+COUPON_CREATOR_ADDR=
 ```
 
 ### Run Tests

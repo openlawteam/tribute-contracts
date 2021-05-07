@@ -44,7 +44,7 @@
     "deploy:ganache": "truffle deploy --network ganache --reset 2>&1 | tee ganache-deploy.log",
     "deploy:rinkeby": "truffle deploy --network rinkeby --reset 2>&1 | tee rinkeby-deploy.log",
     "deploy:mainnet": "truffle deploy --network mainnet --reset 2>&1 | tee mainnet-deploy.log",
-    "ganache": "ganache-cli --deterministic -p 8545 --networkId 1337",
+    "ganache": "ganache-cli --deterministic -p 7545 --networkId 1337",
     "lint": "prettier --list-different 'contracts/**/*.sol' '**/*.js' '**/*.md'",
     "lint:fix": "prettier --write 'contracts/**/*.sol' '**/*.js' '**/*.md'",
     "migrate": "truffle migrate --network",
