@@ -10,6 +10,14 @@ import "../../../utils/IERC20.sol";
 import "../../../helpers/SafeERC20.sol";
 import "@openzeppelin/contracts/utils/Address.sol";
 
+
+//import "@openzeppelin/contracts/utils/Context.sol";
+
+import "@openzeppelin/contracts/access/AccessControlEnumberable.sol";
+
+import "@openzeppelin/contracts/token/ERC20/extensions/ERC20Pausable.sol";
+
+
 /**
 MIT License
 
@@ -46,10 +54,14 @@ contract UnitTokenExtension is
     Bank,
     AdapterGuard,
     IExtension,
-    IERC20
+    IERC20,
+    AccessControlEnumerable,
+    ERC20Pausable
 {
     //Dao address
     DaoRegistry public dao;
+    //Pausable role to prevent transfers
+    bytes32 public constant PAUSER_ROLE = keccak256("PAUSER_ROLE");
 
     /// @notice Clonable contract must have an empty constructor
     constructor() {}
@@ -62,7 +74,7 @@ contract UnitTokenExtension is
     function initialize(DaoRegistry _dao, address creator) external override {
         require(!initialized, "already initialized");
         require(_dao.isMember(creator), "not a member");
-
+        _setupRole(PAUSER_ROLE, _msgSender()); 
         initialized = true;
         dao = _dao;
     }
@@ -180,6 +192,40 @@ contract UnitTokenExtension is
         bank.internalTransfer(sender, recipient, UNITS, amount);
         
     };
+
+
+    /**
+     * @dev Pauses all token transfers.
+     *
+     * See {ERC20Pausable} and {Pausable-_pause}.
+     *
+     * Requirements:
+     *
+     * - the caller must have the `PAUSER_ROLE`.
+     */
+    function pause() public virtual {
+        require(hasRole(PAUSER_ROLE, _msgSender()), "ERC20PresetMinterPauser: must have pauser role to pause");
+        _pause();
+    }
+
+    /**
+     * @dev Unpauses all token transfers.
+     *
+     * See {ERC20Pausable} and {Pausable-_unpause}.
+     *
+     * Requirements:
+     *
+     * - the caller must have the `PAUSER_ROLE`.
+     */
+    function unpause() public virtual {
+        require(hasRole(PAUSER_ROLE, _msgSender()), "ERC20PresetMinterPauser: must have pauser role to unpause");
+        _unpause();
+    }
+
+    function _beforeTokenTransfer(address from, address to, uint256 amount) internal virtual override(ERC20, ERC20Pausable) {
+        super._beforeTokenTransfer(from, to, amount);
+    }
+
 
     /**
      * @dev Emitted when `value` tokens are moved from one account (`from`) to
