@@ -6,17 +6,11 @@ import "../../../core/DaoConstants.sol";
 import "../../../guards/AdapterGuard.sol";
 import "../../IExtension.sol";
 import "../../bank/Bank.sol";
-
-//remove IERC20 and SafeERC20 imports, since erc20 imported from Openzeppelin. 
-//import "../../../utils/IERC20.sol";
-//import "../../../helpers/SafeERC20.sol";
-
-
 import "@openzeppelin/contracts/utils/Address.sol";
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
-import "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
-//imports for erce20 & Pausable funcionality 
 
+//import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
+import "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 
 import "@openzeppelin/contracts/utils/Context.sol";
 
@@ -58,20 +52,35 @@ SOFTWARE.
 contract UnitTokenExtension is
     Context,
     DaoConstants,
-    Bank,
     AdapterGuard,
     IExtension,
-    IERC20,
-    AccessControlEnumerable,
-    ERC20Pausable
+    //AccessControlEnumerable,
+    //ERC20
+    IERC20
 {
     //Dao address
     DaoRegistry public dao;
     //Pausable role to prevent transfers
     bytes32 public constant PAUSER_ROLE = keccak256("PAUSER_ROLE");
+    bool public initialized = false; 
 
+    mapping(address => mapping (address => uint256)) private _allowances;
+    
     /// @notice Clonable contract must have an empty constructor
     constructor() {}
+
+    //  modifier hasExtensionAccess(IExtension extension, AclFlag flag) {
+    //     require(
+    //         dao.state() == DaoRegistry.DaoState.CREATION ||
+    //             dao.hasAdapterAccessToExtension(
+    //                 msg.sender,
+    //                 address(extension),
+    //                 uint8(flag)
+    //             ),
+    //         "unitToken::accessDenied"
+    //     );
+    //     _;
+    // }
 
     /**
      * @notice Initializes the extension with the DAO and Bank address that it belongs to.
@@ -81,19 +90,48 @@ contract UnitTokenExtension is
     function initialize(DaoRegistry _dao, address creator) external override {
         require(!initialized, "already initialized");
         require(_dao.isMember(creator), "not a member");
-        //TODO? - change _msgSender to creator?
-        //default Admin role to manage roles
-        _setupRole(DEFAULT_ADMIN_ROLE, _msgSender());
-        //default Pauser Role
-        _setupRole(PAUSER_ROLE, _msgSender()); 
+        // TODO add access control layer
         initialized = true;
         dao = _dao;
     }
 
+/**
+     * @dev Returns the name of the token.
+     */
+    function name() public view virtual returns (string memory) {
+        return "Unit Token";
+    }
+
+    /**
+     * @dev Returns the symbol of the token, usually a shorter version of the
+     * name.
+     */
+    function symbol() public view virtual returns (string memory) {
+        return "UNIT";
+    }
+
+    /**
+     * @dev Returns the number of decimals used to get its user representation.
+     * For example, if `decimals` equals `2`, a balance of `505` tokens should
+     * be displayed to a user as `5,05` (`505 / 10 ** 2`).
+     *
+     * Tokens usually opt for a value of 18, imitating the relationship between
+     * Ether and Wei. This is the value {ERC20} uses, unless this function is
+     * overloaded;
+     *
+     * NOTE: This information is only used for _display_ purposes: it in
+     * no way affects any of the arithmetic of the contract, including
+     * {IERC20-balanceOf} and {IERC20-transfer}.
+     */
+    function decimals() public view virtual returns (uint8) {
+        return 18;
+    }
+
+
     /**
      * @dev Returns the amount of tokens in existence.
      */
-    function totalSupply() external view returns (uint256) {
+    function totalSupply() public override view returns (uint256) {
         BankExtension bank = BankExtension(dao.getExtensionAddress(BANK));
         return bank.balanceOf(TOTAL, UNITS);
     }
@@ -101,7 +139,7 @@ contract UnitTokenExtension is
     /**
      * @dev Returns the amount of tokens owned by `account`.
      */
-    function balanceOf(address account) external view returns (uint256) {
+    function balanceOf(address account) public override view returns (uint256) {
         BankExtension bank = BankExtension(dao.getExtensionAddress(BANK));
         return bank.balanceOf(account, UNITS);
     }
@@ -114,7 +152,7 @@ contract UnitTokenExtension is
      * Emits a {Transfer} event.
      */
     function transfer(address recipient, uint256 amount)
-        external
+        public override
         returns (bool)
     {
         //TODO check the amount to prevent overflows?
@@ -146,9 +184,12 @@ contract UnitTokenExtension is
      * This value changes when {approve} or {transferFrom} are called.
      */
     function allowance(address owner, address spender)
-        external
+        public
+        override
         view
-        returns (uint256); 
+        returns (uint256) {
+            return _allowances[owner][spender];
+        }
 
     /**
      * @dev Sets `amount` as the allowance of `spender` over the caller's tokens.
@@ -165,16 +206,13 @@ contract UnitTokenExtension is
      * Emits an {Approval} event.
      */
 
-    function approve(address spender, uint256 amount) external returns (bool) {
-            require(bank.balanceOf(msg.sender, UNITS) > 0,"owner does not have UNITS to transfer");
-            //use IERC20 approve
-            // IERC20 erc20 = IERC20(UNITS);
-            // erc20.approve(spender, amount);
-
-            //use erc20's internal _approve()
-            _approve(spender, amount);
-            //emit Approval(msg.sender, spender, amount);
+    function approve(address spender, uint256 amount) public override returns (bool) {
+        BankExtension bank = BankExtension(dao.getExtensionAddress(BANK));
+        require(bank.balanceOf(msg.sender, UNITS) > amount && amount > 0,"spender does not have UNITS to transfer");    
+        return true;
+        //emit Approval(msg.sender, spender, amount);
     }
+
 
     /**
      * @dev Moves `amount` tokens from `sender` to `recipient` using the
@@ -189,18 +227,19 @@ contract UnitTokenExtension is
         address sender,
         address recipient,
         uint256 amount
-    ) external overrides returns (bool){
+    ) public override returns (bool){
         //recipients must be a member of DAO
         require (dao.isMember(recipient),"recipient is not a member" );
         //get bank address
+
         BankExtension bank = BankExtension(dao.getExtensionAddress(BANK));
-      
         //check UnitToken balance using Bank contract
         require(
             bank.balanceOf(TOTAL, UNITS) > 0,
             "bank does not have enough UNITS to transfer"
         );
         //use Openzeppelin's erc20 _allowances mapping
+    
         uint256 currentAllowance = _allowances[sender][_msgSender()];
         //approval check for sender
         require(
@@ -208,7 +247,7 @@ contract UnitTokenExtension is
             "ERC20: transfer amount exceeds allowance"
         );
         //adjust allowance with erc20 _approve 
-        _approve(sender, _msgSender(), currentAllowance - amount);
+        //_approve(sender, _msgSender(), currentAllowance - amount);
         // caller transfers UNITS from sender to recipient insde the Bank
         bank.internalTransfer(sender, recipient, UNITS, amount);
         
@@ -216,58 +255,4 @@ contract UnitTokenExtension is
     }
 
 
-    //REMOVE Pause function since UnitToken inherits from ERC20Pausable: 
-
-    /**
-     * @dev Pauses all token transfers.
-     *
-     * See {ERC20Pausable} and {Pausable-_pause}.
-     *
-     * Requirements:
-     *
-     * - the caller must have the `PAUSER_ROLE`.
-     */
-
-    // function pause() public virtual {
-    //     require(hasRole(PAUSER_ROLE, _msgSender()), "ERC20PresetMinterPauser: must have pauser role to pause");
-    //     _pause();
-    // }
-
-    /**
-     * @dev Unpauses all token transfers.
-     *
-     * See {ERC20Pausable} and {Pausable-_unpause}.
-     *
-     * Requirements:
-     *
-     * - the caller must have the `PAUSER_ROLE`.
-     */
-
-    // function unpause() public virtual {
-    //     require(hasRole(PAUSER_ROLE, _msgSender()), "ERC20PresetMinterPauser: must have pauser role to unpause");
-    //     _unpause();
-    // }
-
-    // function _beforeTokenTransfer(address from, address to, uint256 amount) internal virtual override(ERC20, ERC20Pausable) {
-    //     super._beforeTokenTransfer(from, to, amount);
-    // }
-
-
-    /**
-     * @dev Emitted when `value` tokens are moved from one account (`from`) to
-     * another (`to`).
-     *
-     * Note that `value` may be zero.
-     */
-    event Transfer(address indexed from, address indexed to, uint256 value);
-
-    /**
-     * @dev Emitted when the allowance of a `spender` for an `owner` is set by
-     * a call to {approve}. `value` is the new allowance.
-     */
-    event Approval(
-        address indexed owner,
-        address indexed spender,
-        uint256 value
-    );
 }

@@ -43,10 +43,9 @@ contract UnitTokenFactory is CloneFactory, DaoConstants {
     /**
      * @notice Create and initialize a new Unit Token Extension which is based on ERC20
      */
-    function create(address dao, address bank) external {
-        UnitTokenExtension extension =
+    function create() external {
+        UnitTokenExtension ext =
             UnitTokenExtension(_createClone(identityAddress));
-        extension.initialize(dao, bank);
-        emit UnitTokenCreated(address(extension));
+        emit UnitTokenCreated(address(ext));
     }
 }
