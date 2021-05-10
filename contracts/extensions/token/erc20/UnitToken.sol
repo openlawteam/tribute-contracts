@@ -6,10 +6,15 @@ import "../../../core/DaoConstants.sol";
 import "../../../guards/AdapterGuard.sol";
 import "../../IExtension.sol";
 import "../../bank/Bank.sol";
-import "../../../utils/IERC20.sol";
-import "../../../helpers/SafeERC20.sol";
+
+//remove IERC20 and SafeERC20 imports, since erc20 imported from Openzeppelin. 
+//import "../../../utils/IERC20.sol";
+//import "../../../helpers/SafeERC20.sol";
+
 import "@openzeppelin/contracts/utils/Address.sol";
+
 //imports for erce20 & Pausable funcionality 
+import "@openzeppelin/contracts/token/ERC20.sol";
 import "@openzeppelin/contracts/utils/Context.sol";
 import "@openzeppelin/contracts/access/AccessControlEnumberable.sol";
 import "@openzeppelin/contracts/token/ERC20/extensions/ERC20Pausable.sol";
@@ -51,7 +56,7 @@ contract UnitTokenExtension is
     Bank,
     AdapterGuard,
     IExtension,
-    IERC20,
+    // IERC20,
     AccessControlEnumerable,
     ERC20Pausable
 {
@@ -72,7 +77,9 @@ contract UnitTokenExtension is
         require(!initialized, "already initialized");
         require(_dao.isMember(creator), "not a member");
         //TODO? - change _msgSender to creator?
+        //default Admin role to manage roles
         _setupRole(DEFAULT_ADMIN_ROLE, _msgSender());
+        //default Pauser Role
         _setupRole(PAUSER_ROLE, _msgSender()); 
         initialized = true;
         dao = _dao;
@@ -156,8 +163,11 @@ contract UnitTokenExtension is
     function approve(address spender, uint256 amount) external returns (bool) {
             require(bank.balanceOf(msg.sender, UNITS) > 0,"owner does not have UNITS to transfer");
             //use IERC20 approve
-            IERC20 erc20 = IERC20(UNITS);
-            erc20.approve(spender, amount);
+            // IERC20 erc20 = IERC20(UNITS);
+            // erc20.approve(spender, amount);
+
+            //use erc20's internal _approve()
+            _approve(spender, amount);
             //emit Approval(msg.sender, spender, amount);
     };
 
@@ -194,12 +204,14 @@ contract UnitTokenExtension is
         );
         //adjust allowance with erc20 _approve 
         _approve(sender, _msgSender(), currentAllowance - amount);
-        // caller transfers UNITS from sender to recipient 
+        // caller transfers UNITS from sender to recipient insde the Bank
         bank.internalTransfer(sender, recipient, UNITS, amount);
         
         return true; 
     };
 
+
+    //REMOVE Pause function since UnitToken inherits from ERC20Pausable: 
 
     /**
      * @dev Pauses all token transfers.
@@ -210,10 +222,11 @@ contract UnitTokenExtension is
      *
      * - the caller must have the `PAUSER_ROLE`.
      */
-    function pause() public virtual {
-        require(hasRole(PAUSER_ROLE, _msgSender()), "ERC20PresetMinterPauser: must have pauser role to pause");
-        _pause();
-    }
+
+    // function pause() public virtual {
+    //     require(hasRole(PAUSER_ROLE, _msgSender()), "ERC20PresetMinterPauser: must have pauser role to pause");
+    //     _pause();
+    // }
 
     /**
      * @dev Unpauses all token transfers.
@@ -224,14 +237,15 @@ contract UnitTokenExtension is
      *
      * - the caller must have the `PAUSER_ROLE`.
      */
-    function unpause() public virtual {
-        require(hasRole(PAUSER_ROLE, _msgSender()), "ERC20PresetMinterPauser: must have pauser role to unpause");
-        _unpause();
-    }
 
-    function _beforeTokenTransfer(address from, address to, uint256 amount) internal virtual override(ERC20, ERC20Pausable) {
-        super._beforeTokenTransfer(from, to, amount);
-    }
+    // function unpause() public virtual {
+    //     require(hasRole(PAUSER_ROLE, _msgSender()), "ERC20PresetMinterPauser: must have pauser role to unpause");
+    //     _unpause();
+    // }
+
+    // function _beforeTokenTransfer(address from, address to, uint256 amount) internal virtual override(ERC20, ERC20Pausable) {
+    //     super._beforeTokenTransfer(from, to, amount);
+    // }
 
 
     /**
