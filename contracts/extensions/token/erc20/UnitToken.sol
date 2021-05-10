@@ -11,12 +11,17 @@ import "../../bank/Bank.sol";
 //import "../../../utils/IERC20.sol";
 //import "../../../helpers/SafeERC20.sol";
 
-import "@openzeppelin/contracts/utils/Address.sol";
 
+import "@openzeppelin/contracts/utils/Address.sol";
+import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
+import "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 //imports for erce20 & Pausable funcionality 
-import "@openzeppelin/contracts/token/ERC20.sol";
+
+
 import "@openzeppelin/contracts/utils/Context.sol";
-import "@openzeppelin/contracts/access/AccessControlEnumberable.sol";
+
+import "@openzeppelin/contracts/access/AccessControlEnumerable.sol";
+
 import "@openzeppelin/contracts/token/ERC20/extensions/ERC20Pausable.sol";
 
 
@@ -56,7 +61,7 @@ contract UnitTokenExtension is
     Bank,
     AdapterGuard,
     IExtension,
-    // IERC20,
+    IERC20,
     AccessControlEnumerable,
     ERC20Pausable
 {
@@ -169,7 +174,7 @@ contract UnitTokenExtension is
             //use erc20's internal _approve()
             _approve(spender, amount);
             //emit Approval(msg.sender, spender, amount);
-    };
+    }
 
     /**
      * @dev Moves `amount` tokens from `sender` to `recipient` using the
@@ -184,7 +189,7 @@ contract UnitTokenExtension is
         address sender,
         address recipient,
         uint256 amount
-    ) external returns (bool){
+    ) external overrides returns (bool){
         //recipients must be a member of DAO
         require (dao.isMember(recipient),"recipient is not a member" );
         //get bank address
@@ -208,7 +213,7 @@ contract UnitTokenExtension is
         bank.internalTransfer(sender, recipient, UNITS, amount);
         
         return true; 
-    };
+    }
 
 
     //REMOVE Pause function since UnitToken inherits from ERC20Pausable: 
