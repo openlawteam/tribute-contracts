@@ -73,6 +73,7 @@ const contracts = {
   DaoRegistryAdapterContract: "./adapters/DaoRegistryAdapterContract",
   BankAdapterContract: "./adapters/BankAdapterContract",
   NFTAdapterContract: "./adapters/NFTAdapterContract",
+  UnitTokenAdapterContract: "./adapters/UnitTokenAdapterContract",
   ConfigurationContract: "./adapters/ConfigurationContract",
   ManagingContract: "./adapters/ManagingContract",
 

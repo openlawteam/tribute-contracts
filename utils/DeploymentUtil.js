@@ -39,8 +39,8 @@ const deployDao = async (options) => {
     BankFactory,
     NFTExtension,
     NFTCollectionFactory,
-    UnitTokenFactory,
     UnitTokenExtension,
+    UnitTokenFactory,
     TestToken1,
     TestToken2,
     Multicall,
@@ -48,7 +48,7 @@ const deployDao = async (options) => {
     OLToken,
   } = options;
   let identityDao = await deployFunction(DaoRegistry);
-  
+
   let identityBank = await deployFunction(BankExtension);
   let bankFactory = await deployFunction(BankFactory, [identityBank.address]);
 
@@ -98,7 +98,7 @@ const deployDao = async (options) => {
   await unitTokenExtFactory.create();
   pastEvent = undefined;
   while (pastEvent === undefined) {
-    let pastEvents = await nftFactory.getPastEvents();
+    let pastEvents = await unitTokenExtFactory.getPastEvents();
     pastEvent = pastEvents[0];
   }
   const { unitTokenAddress } = pastEvent.returnValues;
@@ -288,6 +288,7 @@ const prepareAdapters = async ({
   DaoRegistryAdapterContract,
   BankAdapterContract,
   NFTAdapterContract,
+  UnitTokenAdapterContract,
   CouponOnboardingContract,
 }) => {
   let voting,
@@ -300,6 +301,7 @@ const prepareAdapters = async ({
     daoRegistryAdapter,
     bankAdapter,
     nftAdapter,
+    unitTokenAdapter,
     couponOnboarding,
     tribute,
     distribute,
@@ -315,6 +317,7 @@ const prepareAdapters = async ({
   daoRegistryAdapter = await deployFunction(DaoRegistryAdapterContract);
   bankAdapter = await deployFunction(BankAdapterContract);
   nftAdapter = await deployFunction(NFTAdapterContract);
+  unitTokenAdapter = await deployFunction(UnitTokenAdapterContract);
   couponOnboarding = await deployFunction(CouponOnboardingContract, [1]);
   tribute = await deployFunction(TributeContract);
   distribute = await deployFunction(DistributeContract);
@@ -331,6 +334,7 @@ const prepareAdapters = async ({
     daoRegistryAdapter,
     bankAdapter,
     nftAdapter,
+    unitTokenAdapter,
     couponOnboarding,
     tribute,
     distribute,
@@ -359,6 +363,7 @@ const addDefaultAdapters = async ({ dao, options, daoFactory, nftAddr }) => {
     daoRegistryAdapter,
     bankAdapter,
     nftAdapter,
+    unitTokenAdapter,
     couponOnboarding,
     tribute,
     distribute,
@@ -388,6 +393,7 @@ const addDefaultAdapters = async ({ dao, options, daoFactory, nftAddr }) => {
     daoRegistryAdapter,
     bankAdapter,
     nftAdapter,
+    unitTokenAdapter,
     voting,
     configuration,
     couponOnboarding,
@@ -414,6 +420,7 @@ const addDefaultAdapters = async ({ dao, options, daoFactory, nftAddr }) => {
       daoRegistryAdapter,
       bankAdapter,
       nftAdapter,
+      unitTokenAdapter,
       couponOnboarding,
       tribute,
       distribute,
@@ -434,9 +441,10 @@ const configureDao = async ({
   daoRegistryAdapter,
   bankAdapter,
   bankExtension,
-  nftExtension,
-  unitTokenExtension,
   nftAdapter,
+  nftExtension,
+  unitTokenAdapter,
+  unitTokenExtension,
   voting,
   configuration,
   couponOnboarding,
@@ -484,8 +492,6 @@ const configureDao = async ({
       entryDao("daoRegistry", daoRegistryAdapter, {
         UPDATE_DELEGATE_KEY: true,
       }),
-      entryDao("nft", nftAdapter, {}),
-      entryDao("bank", bankAdapter, {}),
       entryDao("tribute", tribute, {
         SUBMIT_PROPOSAL: true,
         NEW_MEMBER: true,
@@ -497,10 +503,12 @@ const configureDao = async ({
       entryDao("distribute", distribute, {
         SUBMIT_PROPOSAL: true,
       }),
+      // Adapters to access the extensions directly
+      entryDao("nft", nftAdapter, {}),
+      entryDao("bank", bankAdapter, {}),
+      entryDao("unit-token", unitTokenAdapter, {}),
     ],
-    {
-      from: owner,
-    }
+    { from: owner }
   );
 
   await daoFactory.configureExtension(
@@ -542,13 +550,11 @@ const configureDao = async ({
       entryBank(tributeNFT, {
         ADD_TO_BALANCE: true,
       }),
-      entryBank(unitTokenExtension, {
+      entryBank(unitTokenAdapter, {
         INTERNAL_TRANSFER: true,
       }),
     ],
-    {
-      from: owner,
-    }
+    { from: owner }
   );
 
   await daoFactory.configureExtension(
@@ -565,6 +571,19 @@ const configureDao = async ({
     {
       from: owner,
     }
+  );
+
+  await daoFactory.configureExtension(
+    dao.address,
+    unitTokenExtension.address,
+    [
+      entryUnitToken(unitTokenAdapter, {
+        TRANSFER: true,
+        TRANSFER_FROM: true,
+        APPROVE: true,
+      }),
+    ],
+    { from: owner }
   );
 
   await onboarding.configureDao(
@@ -644,6 +663,18 @@ const entryNft = (contract, flags) => {
     flags.COLLECT_NFT,
     flags.INTERNAL_TRANSFER,
   ];
+
+  const acl = entry(values);
+
+  return {
+    id: sha3("n/a"),
+    addr: contract.address,
+    flags: acl,
+  };
+};
+
+const entryUnitToken = (contract, flags) => {
+  const values = [flags.TRANSFER, flags.TRANSFER_FROM, flags.APPROVE];
 
   const acl = entry(values);
 

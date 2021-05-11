@@ -44,13 +44,11 @@ SOFTWARE.
 
   */
 contract UnitTokenExtension is
-    Context,
     DaoConstants,
     AdapterGuard,
     IExtension,
-    //AccessControlEnumerable,
-    //ERC20
     IERC20
+    //AccessControlEnumerable,
 {
     //Dao address
     DaoRegistry public dao;
@@ -110,14 +108,6 @@ contract UnitTokenExtension is
      * @dev Returns the number of decimals used to get its user representation.
      * For example, if `decimals` equals `2`, a balance of `505` tokens should
      * be displayed to a user as `5,05` (`505 / 10 ** 2`).
-     *
-     * Tokens usually opt for a value of 18, imitating the relationship between
-     * Ether and Wei. This is the value {ERC20} uses, unless this function is
-     * overloaded;
-     *
-     * NOTE: This information is only used for _display_ purposes: it in
-     * no way affects any of the arithmetic of the contract, including
-     * {IERC20-balanceOf} and {IERC20-transfer}.
      */
     function decimals() public view virtual returns (uint8) {
         return 18;
@@ -156,6 +146,36 @@ contract UnitTokenExtension is
     }
 
     /**
+     * @dev Sets `amount` as the allowance of `spender` over the caller's tokens.
+     *
+     * Returns a boolean value indicating whether the operation succeeded.
+     *
+     * IMPORTANT: Beware that changing an allowance with this method brings the risk
+     * that someone may use both the old and the new allowance by unfortunate
+     * transaction ordering. One possible solution to mitigate this race
+     * condition is to first reduce the spender's allowance to 0 and set the
+     * desired value afterwards:
+     * https://github.com/ethereum/EIPs/issues/20#issuecomment-263524729
+     *
+     * Emits an {Approval} event.
+     */
+    function approve(address spender, uint256 amount)
+        public
+        override
+        hasExtensionAccess(this, AclFlag.APPROVE)
+        returns (bool)
+    {
+        BankExtension bank = BankExtension(dao.getExtensionAddress(BANK));
+        require(
+            bank.balanceOf(msg.sender, UNITS) > amount && amount > 0,
+            "spender does not have UNITS to transfer"
+        );
+        _allowances[msg.sender][spender] = amount;
+        emit Approval(msg.sender, spender, amount);
+        return true;
+    }
+
+    /**
      * @dev Moves `amount` tokens from the caller's account to `recipient`.
      *
      * Returns a boolean value indicating whether the operation succeeded.
@@ -165,10 +185,8 @@ contract UnitTokenExtension is
     function transfer(address recipient, uint256 amount)
         public
         override
-        returns (
-            // hasExtensionAccess(this, AclFlag.TRANSFER)
-            bool
-        )
+        hasExtensionAccess(this, AclFlag.TRANSFER)
+        returns (bool)
     {
         require(dao.isMember(recipient), "receipient is not a member");
         //balance of transferor must be > 0 UNITS
@@ -185,8 +203,7 @@ contract UnitTokenExtension is
 
         //update member UNITS by amount
         bank.internalTransfer(msg.sender, recipient, UNITS, amount);
-
-        //emit Transfer(msg.sender, recipient, amount);
+        emit Transfer(msg.sender, recipient, amount);
         return true;
     }
 
@@ -206,15 +223,13 @@ contract UnitTokenExtension is
     )
         public
         override
-        returns (
-            // hasExtensionAccess(this, AclFlag.TRANSFER_FROM)
-            bool
-        )
+        hasExtensionAccess(this, AclFlag.TRANSFER_FROM)
+        returns (bool)
     {
         //recipients must be a member of DAO
         require(dao.isMember(recipient), "recipient is not a member");
         // TODO check if the sender is the msg.sender, if so, allow, if not,
-        // check if the sender has approved to spend that amount
+        // then check if the sender has approved to spend that amount
 
         BankExtension bank = BankExtension(dao.getExtensionAddress(BANK));
         //check UnitToken balance using Bank contract
@@ -222,54 +237,19 @@ contract UnitTokenExtension is
             bank.balanceOf(TOTAL, UNITS) > 0,
             "bank does not have enough UNITS to transfer"
         );
-        //use Openzeppelin's erc20 _allowances mapping
 
-        uint256 currentAllowance = _allowances[sender][_msgSender()];
-        //approval check for sender
+        uint256 currentAllowance = _allowances[sender][msg.sender];
         require(
             currentAllowance >= amount,
             "ERC20: transfer amount exceeds allowance"
         );
-        //adjust allowance with erc20 _approve
+
+        //TODO adjust allowance with erc20 _approve
+        //  _allowances[sender][msg.sender] = currentAllowance - amount
         //_approve(sender, _msgSender(), currentAllowance - amount);
         // caller transfers UNITS from sender to recipient insde the Bank
         bank.internalTransfer(sender, recipient, UNITS, amount);
 
-        return true;
-    }
-
-    /**
-     * @dev Sets `amount` as the allowance of `spender` over the caller's tokens.
-     *
-     * Returns a boolean value indicating whether the operation succeeded.
-     *
-     * IMPORTANT: Beware that changing an allowance with this method brings the risk
-     * that someone may use both the old and the new allowance by unfortunate
-     * transaction ordering. One possible solution to mitigate this race
-     * condition is to first reduce the spender's allowance to 0 and set the
-     * desired value afterwards:
-     * https://github.com/ethereum/EIPs/issues/20#issuecomment-263524729
-     *
-     * Emits an {Approval} event.
-     */
-
-    function approve(address spender, uint256 amount)
-        public
-        view
-        override
-        returns (
-            // hasExtensionAccess(this, AclFlag.APPROVE)
-            bool
-        )
-    {
-        BankExtension bank = BankExtension(dao.getExtensionAddress(BANK));
-        require(
-            bank.balanceOf(msg.sender, UNITS) > amount && amount > 0,
-            "spender does not have UNITS to transfer"
-        );
-        // TODO save the state (sender approved the spender = amount)
-        // allowances[msg.sender][spender] = amount;
-        //emit Approval(msg.sender, spender, amount);
         return true;
     }
 }

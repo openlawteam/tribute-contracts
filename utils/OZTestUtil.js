@@ -57,14 +57,14 @@ const { expect } = require("chai");
 
 const getContractFromOpenZepplin = (c) => {
   return contract.fromArtifact(c.substring(c.lastIndexOf("/") + 1));
-}
+};
 
 const getContracts = () => {
   return Object.keys(contracts).reduce((previousValue, key) => {
     previousValue[key] = getContractFromOpenZepplin(contracts[key]);
     return previousValue;
   }, {});
-}
+};
 
 const getDefaultOptions = (options) => {
   let o = {
@@ -83,7 +83,7 @@ const getDefaultOptions = (options) => {
 
   o.finalize = options.finalize === undefined || !!options.finalize;
   return o;
-}
+};
 
 const deployDefaultDao = async (options) => {
   return await deployDao({

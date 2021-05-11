@@ -24,6 +24,8 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
  */
+const { toBN, GUILD } = require("../../utils/ContractUtil.js");
+
 const {
   takeChainSnapshot,
   revertChainSnapshot,
@@ -59,5 +61,13 @@ describe("Extension - ERC20 UnitToken", () => {
   it("should be possible to create a dao with a unit-token extension pre-configured", async () => {
     const unitTokenExt = this.extensions.unitToken;
     expect(unitTokenExt).to.not.be.null;
+  });
+
+  it("should be possible to transfer units from one member to another", async () => {
+    const dao = this.dao;
+    const unitTokenAdapter = this.adapters.unitTokenAdapter;
+    // unitTokenAdapter.transferFrom(dao.address, recipient, toBN("10"), {from: sender})
+    // TODO check if the sender had the balance decresead
+    // TODO check if the recipient had the balance increased
   });
 });
