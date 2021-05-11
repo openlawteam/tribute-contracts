@@ -66,8 +66,12 @@ describe("Extension - ERC20 UnitToken", () => {
   it("should be possible to transfer units from one member to another", async () => {
     const dao = this.dao;
     const unitTokenAdapter = this.adapters.unitTokenAdapter;
+    const unitTokenExt = this.extensions.unitToken; 
+    
     // unitTokenAdapter.transferFrom(dao.address, recipient, toBN("10"), {from: sender})
+    //unitTokenExt.transfer(recipient, toBN("10"), {from: sender});
     // TODO check if the sender had the balance decresead
+    //const senderTokenBalance = await unitTokenExt.balanceOf(sender); 
     // TODO check if the recipient had the balance increased
   });
 });

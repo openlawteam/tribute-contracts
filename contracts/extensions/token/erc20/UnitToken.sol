@@ -166,6 +166,10 @@ contract UnitTokenExtension is
         returns (bool)
     {
         BankExtension bank = BankExtension(dao.getExtensionAddress(BANK));
+        //mirror the _approve() in erc20 to prevent non-zero address
+        require(msg.sender != address(0), "ERC20: approve from the zero address");
+        require(spender != address(0), "ERC20: approve to the zero address");
+        //check balance 
         require(
             bank.balanceOf(msg.sender, UNITS) > amount && amount > 0,
             "spender does not have UNITS to transfer"
@@ -228,25 +232,22 @@ contract UnitTokenExtension is
     {
         //recipients must be a member of DAO
         require(dao.isMember(recipient), "recipient is not a member");
-        // TODO check if the sender is the msg.sender, if so, allow, if not,
-        // then check if the sender has approved to spend that amount
-
+    
         BankExtension bank = BankExtension(dao.getExtensionAddress(BANK));
-        //check UnitToken balance using Bank contract
+        //TODO - is this line needed - check UnitToken balance using Bank contract 
         require(
             bank.balanceOf(TOTAL, UNITS) > 0,
             "bank does not have enough UNITS to transfer"
         );
-
+        //get msg.sender's allowance from sender of Units
         uint256 currentAllowance = _allowances[sender][msg.sender];
+        //check if sender has approved msg.sender to spend amount
         require(
             currentAllowance >= amount,
             "ERC20: transfer amount exceeds allowance"
         );
-
-        //TODO adjust allowance with erc20 _approve
-        //  _allowances[sender][msg.sender] = currentAllowance - amount
-        //_approve(sender, _msgSender(), currentAllowance - amount);
+        // adjust allowance with erc20 _approve
+        _allowances[sender][msg.sender] = currentAllowance - amount;
         // caller transfers UNITS from sender to recipient insde the Bank
         bank.internalTransfer(sender, recipient, UNITS, amount);
 
