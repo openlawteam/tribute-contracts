@@ -39,19 +39,27 @@ const deployDao = async (options) => {
     BankFactory,
     NFTExtension,
     NFTCollectionFactory,
+    UnitTokenFactory,
+    UnitTokenExtension,
     TestToken1,
     TestToken2,
     Multicall,
     PixelNFT,
     OLToken,
   } = options;
-
   let identityDao = await deployFunction(DaoRegistry);
+  
   let identityBank = await deployFunction(BankExtension);
   let bankFactory = await deployFunction(BankFactory, [identityBank.address]);
+
   let identityNft = await deployFunction(NFTExtension);
   let nftFactory = await deployFunction(NFTCollectionFactory, [
     identityNft.address,
+  ]);
+
+  let identityUnitToken = await deployFunction(UnitTokenExtension);
+  let unitTokenExtFactory = await deployFunction(UnitTokenFactory, [
+    identityUnitToken.address,
   ]);
 
   const { dao, daoFactory } = await cloneDao({
@@ -60,33 +68,48 @@ const deployDao = async (options) => {
     name: options.daoName || "test-dao",
   });
 
+  // Start the BankExtension deployment and configuration
   await bankFactory.createBank(options.maxExternalTokens);
   let pastEvent;
   while (pastEvent === undefined) {
     let pastEvents = await bankFactory.getPastEvents();
     pastEvent = pastEvents[0];
   }
-
   const { bankAddress } = pastEvent.returnValues;
   const bankExtension = await BankExtension.at(bankAddress);
   await dao.addExtension(sha3("bank"), bankExtension.address, owner, {
     from: owner,
   });
 
+  // Start the NFTExtension deployment and configuration
   await nftFactory.createNFTCollection();
   pastEvent = undefined;
   while (pastEvent === undefined) {
     let pastEvents = await nftFactory.getPastEvents();
     pastEvent = pastEvents[0];
   }
-
   const { nftCollAddress } = pastEvent.returnValues;
   const nftExtension = await NFTExtension.at(nftCollAddress);
   await dao.addExtension(sha3("nft"), nftCollAddress, owner, {
     from: owner,
   });
 
-  const extensions = { bank: bankExtension, nft: nftExtension };
+  // Start the UnitTokenExtension deployment & configuration
+  await unitTokenExtFactory.create();
+  pastEvent = undefined;
+  while (pastEvent === undefined) {
+    let pastEvents = await nftFactory.getPastEvents();
+    pastEvent = pastEvents[0];
+  }
+  const { unitTokenAddress } = pastEvent.returnValues;
+  const unitTokenExtension = await UnitTokenExtension.at(unitTokenAddress);
+  await dao.addExtension(sha3("unit-token"), unitTokenAddress, creator);
+
+  const extensions = {
+    bank: bankExtension,
+    nft: nftExtension,
+    unitToken: unitTokenExtension,
+  };
 
   const { adapters } = await addDefaultAdapters({
     dao,
@@ -342,13 +365,16 @@ const addDefaultAdapters = async ({ dao, options, daoFactory, nftAddr }) => {
     tributeNFT,
   } = await prepareAdapters(options);
 
-  let { BankExtension, NFTExtension } = options;
+  let { BankExtension, NFTExtension, UnitTokenExtension } = options;
 
   const bankAddress = await dao.getExtensionAddress(sha3("bank"));
   const bankExtension = await BankExtension.at(bankAddress);
 
   const nftExtAddr = await dao.getExtensionAddress(sha3("nft"));
   const nftExtension = await NFTExtension.at(nftExtAddr);
+
+  const unitTokenExtAddr = await dao.getExtensionAddress(sha3("unit-token"));
+  const unitTokenExtension = await UnitTokenExtension.at(unitTokenExtAddr);
 
   await configureDao({
     owner: options.owner,
@@ -371,6 +397,7 @@ const addDefaultAdapters = async ({ dao, options, daoFactory, nftAddr }) => {
     nftAddr,
     bankExtension,
     nftExtension,
+    unitTokenExtension,
     ...options,
   });
 
@@ -408,6 +435,7 @@ const configureDao = async ({
   bankAdapter,
   bankExtension,
   nftExtension,
+  unitTokenExtension,
   nftAdapter,
   voting,
   configuration,
@@ -513,6 +541,9 @@ const configureDao = async ({
       }),
       entryBank(tributeNFT, {
         ADD_TO_BALANCE: true,
+      }),
+      entryBank(unitTokenExtension, {
+        INTERNAL_TRANSFER: true,
       }),
     ],
     {

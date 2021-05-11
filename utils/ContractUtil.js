@@ -61,6 +61,7 @@ const contracts = {
   DaoRegistry: "./core/DaoRegistry",
   NFTCollectionFactory: "./extensions/NFTCollectionFactory",
   BankFactory: "./extensions/bank/BankFactory",
+  UnitTokenFactory: "./extensions/token/erc20/UnitTokenFactory",
   Multicall: "./util/Multicall",
 
   // Extensions

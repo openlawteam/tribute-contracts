@@ -34,7 +34,7 @@ SOFTWARE.
 contract UnitTokenFactory is CloneFactory, DaoConstants {
     address public identityAddress;
 
-    event UnitTokenCreated(address nftCollAddress);
+    event UnitTokenCreated(address unitTokenAddress);
 
     constructor(address _identityAddress) {
         identityAddress = _identityAddress;

@@ -45,6 +45,7 @@ abstract contract DaoConstants {
     // Extensions
     bytes32 internal constant BANK = keccak256("bank");
     bytes32 internal constant NFT = keccak256("nft");
+    bytes32 internal constant UNIT_TOKEN = keccak256("unit-token");
 
     // Reserved Addresses
     address internal constant GUILD = address(0xdead);

@@ -43,8 +43,6 @@ const {
 
 const { deployDao, entryDao, entryBank, entry } = require("./DeploymentUtil");
 
-const ozContracts = getContracts();
-
 const deployFunction = async (contractInterface, args, from) => {
   const f = from ? from : accounts[0];
   if (args) {
@@ -275,6 +273,8 @@ const proposalIdGenerator = () => {
     },
   };
 };
+
+const ozContracts = getContracts();
 
 module.exports = {
   deployDefaultDao,

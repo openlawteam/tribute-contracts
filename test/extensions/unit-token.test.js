@@ -25,25 +25,39 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
  */
 const {
-  contract,
+  takeChainSnapshot,
+  revertChainSnapshot,
+  deployDefaultDao,
   accounts,
-} = require("@openzeppelin/test-environment");
-
-const { expect } = require("chai");
+  expect,
+} = require("../../utils/OZTestUtil.js");
 
 describe("Extension - ERC20 UnitToken", () => {
-  const owner = accounts[0];
+  const daoOwner = accounts[0];
 
-  const getContract = () =>
-   contract.fromArtifact("UnitTokenExtension")
-
-  it("should be possible to create a dao with a bank extension pre-configured", async () => {
-    const unitTokenExt = await getContract().new({ from: owner });
-    expect(unitTokenExt.address).to.not.be.null;
+  before("deploy dao", async () => {
+    const {
+      dao,
+      adapters,
+      extensions,
+      testContracts,
+    } = await deployDefaultDao({ owner: daoOwner });
+    this.dao = dao;
+    this.adapters = adapters;
+    this.extensions = extensions;
+    this.testContracts = testContracts;
   });
- 
-  
 
+  beforeEach(async () => {
+    this.snapshotId = await takeChainSnapshot();
+  });
 
+  afterEach(async () => {
+    await revertChainSnapshot(this.snapshotId);
+  });
 
+  it("should be possible to create a dao with a unit-token extension pre-configured", async () => {
+    const unitTokenExt = this.extensions.unitToken;
+    expect(unitTokenExt).to.not.be.null;
+  });
 });

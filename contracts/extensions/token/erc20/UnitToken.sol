@@ -8,16 +8,10 @@ import "../../IExtension.sol";
 import "../../bank/Bank.sol";
 import "@openzeppelin/contracts/utils/Address.sol";
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
-
-//import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 import "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
-
 import "@openzeppelin/contracts/utils/Context.sol";
-
 import "@openzeppelin/contracts/access/AccessControlEnumerable.sol";
-
 import "@openzeppelin/contracts/token/ERC20/extensions/ERC20Pausable.sol";
-
 
 /**
 MIT License
@@ -62,25 +56,27 @@ contract UnitTokenExtension is
     DaoRegistry public dao;
     //Pausable role to prevent transfers
     bytes32 public constant PAUSER_ROLE = keccak256("PAUSER_ROLE");
-    bool public initialized = false; 
+    bool public initialized = false;
 
-    mapping(address => mapping (address => uint256)) private _allowances;
-    
+    mapping(address => mapping(address => uint256)) private _allowances;
+
+    enum AclFlag {TRANSFER, APPROVE, TRANSFER_FROM}
+
     /// @notice Clonable contract must have an empty constructor
     constructor() {}
 
-    //  modifier hasExtensionAccess(IExtension extension, AclFlag flag) {
-    //     require(
-    //         dao.state() == DaoRegistry.DaoState.CREATION ||
-    //             dao.hasAdapterAccessToExtension(
-    //                 msg.sender,
-    //                 address(extension),
-    //                 uint8(flag)
-    //             ),
-    //         "unitToken::accessDenied"
-    //     );
-    //     _;
-    // }
+    modifier hasExtensionAccess(IExtension extension, AclFlag flag) {
+        require(
+            dao.state() == DaoRegistry.DaoState.CREATION ||
+                dao.hasAdapterAccessToExtension(
+                    msg.sender,
+                    address(extension),
+                    uint8(flag)
+                ),
+            "unitToken::accessDenied"
+        );
+        _;
+    }
 
     /**
      * @notice Initializes the extension with the DAO and Bank address that it belongs to.
@@ -95,7 +91,7 @@ contract UnitTokenExtension is
         dao = _dao;
     }
 
-/**
+    /**
      * @dev Returns the name of the token.
      */
     function name() public view virtual returns (string memory) {
@@ -127,11 +123,10 @@ contract UnitTokenExtension is
         return 18;
     }
 
-
     /**
      * @dev Returns the amount of tokens in existence.
      */
-    function totalSupply() public override view returns (uint256) {
+    function totalSupply() public view override returns (uint256) {
         BankExtension bank = BankExtension(dao.getExtensionAddress(BANK));
         return bank.balanceOf(TOTAL, UNITS);
     }
@@ -139,24 +134,42 @@ contract UnitTokenExtension is
     /**
      * @dev Returns the amount of tokens owned by `account`.
      */
-    function balanceOf(address account) public override view returns (uint256) {
+    function balanceOf(address account) public view override returns (uint256) {
         BankExtension bank = BankExtension(dao.getExtensionAddress(BANK));
         return bank.balanceOf(account, UNITS);
     }
 
     /**
+     * @dev Returns the remaining number of tokens that `spender` will be
+     * allowed to spend on behalf of `owner` through {transferFrom}. This is
+     * zero by default.
+     *
+     * This value changes when {approve} or {transferFrom} are called.
+     */
+    function allowance(address owner, address spender)
+        public
+        view
+        override
+        returns (uint256)
+    {
+        return _allowances[owner][spender];
+    }
+
+    /**
      * @dev Moves `amount` tokens from the caller's account to `recipient`.
-     * 
+     *
      * Returns a boolean value indicating whether the operation succeeded.
      *
      * Emits a {Transfer} event.
      */
     function transfer(address recipient, uint256 amount)
-        public override
-        returns (bool)
+        public
+        override
+        returns (
+            // hasExtensionAccess(this, AclFlag.TRANSFER)
+            bool
+        )
     {
-        //TODO check the amount to prevent overflows?
-        
         require(dao.isMember(recipient), "receipient is not a member");
         //balance of transferor must be > 0 UNITS
         BankExtension bank = BankExtension(dao.getExtensionAddress(BANK));
@@ -174,22 +187,56 @@ contract UnitTokenExtension is
         bank.internalTransfer(msg.sender, recipient, UNITS, amount);
 
         //emit Transfer(msg.sender, recipient, amount);
+        return true;
     }
 
     /**
-     * @dev Returns the remaining number of tokens that `spender` will be
-     * allowed to spend on behalf of `owner` through {transferFrom}. This is
-     * zero by default.
+     * @dev Moves `amount` tokens from `sender` to `recipient` using the
+     * allowance mechanism. `amount` is then deducted from the caller's
+     * allowance.
+     *  Recipient must be a member of DAO
+     * Returns a boolean value indicating whether the operation succeeded.
      *
-     * This value changes when {approve} or {transferFrom} are called.
+     * Emits a {Transfer} event.
      */
-    function allowance(address owner, address spender)
+    function transferFrom(
+        address sender,
+        address recipient,
+        uint256 amount
+    )
         public
         override
-        view
-        returns (uint256) {
-            return _allowances[owner][spender];
-        }
+        returns (
+            // hasExtensionAccess(this, AclFlag.TRANSFER_FROM)
+            bool
+        )
+    {
+        //recipients must be a member of DAO
+        require(dao.isMember(recipient), "recipient is not a member");
+        // TODO check if the sender is the msg.sender, if so, allow, if not,
+        // check if the sender has approved to spend that amount
+
+        BankExtension bank = BankExtension(dao.getExtensionAddress(BANK));
+        //check UnitToken balance using Bank contract
+        require(
+            bank.balanceOf(TOTAL, UNITS) > 0,
+            "bank does not have enough UNITS to transfer"
+        );
+        //use Openzeppelin's erc20 _allowances mapping
+
+        uint256 currentAllowance = _allowances[sender][_msgSender()];
+        //approval check for sender
+        require(
+            currentAllowance >= amount,
+            "ERC20: transfer amount exceeds allowance"
+        );
+        //adjust allowance with erc20 _approve
+        //_approve(sender, _msgSender(), currentAllowance - amount);
+        // caller transfers UNITS from sender to recipient insde the Bank
+        bank.internalTransfer(sender, recipient, UNITS, amount);
+
+        return true;
+    }
 
     /**
      * @dev Sets `amount` as the allowance of `spender` over the caller's tokens.
@@ -206,53 +253,23 @@ contract UnitTokenExtension is
      * Emits an {Approval} event.
      */
 
-    function approve(address spender, uint256 amount) public override returns (bool) {
+    function approve(address spender, uint256 amount)
+        public
+        view
+        override
+        returns (
+            // hasExtensionAccess(this, AclFlag.APPROVE)
+            bool
+        )
+    {
         BankExtension bank = BankExtension(dao.getExtensionAddress(BANK));
-        require(bank.balanceOf(msg.sender, UNITS) > amount && amount > 0,"spender does not have UNITS to transfer");    
-        return true;
+        require(
+            bank.balanceOf(msg.sender, UNITS) > amount && amount > 0,
+            "spender does not have UNITS to transfer"
+        );
+        // TODO save the state (sender approved the spender = amount)
+        // allowances[msg.sender][spender] = amount;
         //emit Approval(msg.sender, spender, amount);
+        return true;
     }
-
-
-    /**
-     * @dev Moves `amount` tokens from `sender` to `recipient` using the
-     * allowance mechanism. `amount` is then deducted from the caller's
-     * allowance.
-     *  Recipient must be a member of DAO 
-     * Returns a boolean value indicating whether the operation succeeded.
-     *
-     * Emits a {Transfer} event.
-     */
-    function transferFrom(
-        address sender,
-        address recipient,
-        uint256 amount
-    ) public override returns (bool){
-        //recipients must be a member of DAO
-        require (dao.isMember(recipient),"recipient is not a member" );
-        //get bank address
-
-        BankExtension bank = BankExtension(dao.getExtensionAddress(BANK));
-        //check UnitToken balance using Bank contract
-        require(
-            bank.balanceOf(TOTAL, UNITS) > 0,
-            "bank does not have enough UNITS to transfer"
-        );
-        //use Openzeppelin's erc20 _allowances mapping
-    
-        uint256 currentAllowance = _allowances[sender][_msgSender()];
-        //approval check for sender
-        require(
-            currentAllowance >= amount,
-            "ERC20: transfer amount exceeds allowance"
-        );
-        //adjust allowance with erc20 _approve 
-        //_approve(sender, _msgSender(), currentAllowance - amount);
-        // caller transfers UNITS from sender to recipient insde the Bank
-        bank.internalTransfer(sender, recipient, UNITS, amount);
-        
-        return true; 
-    }
-
-
 }
