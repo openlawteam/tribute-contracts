@@ -64,10 +64,87 @@ describe("Extension - ERC20 UnitToken", () => {
   });
 
   it("should be possible to transfer units from one member to another", async () => {
+    let spender = accounts[1];
     const dao = this.dao;
-    const unitTokenAdapter = this.adapters.unitTokenAdapter;
-    const unitTokenExt = this.extensions.unitToken; 
+
+    const applicant = accounts[2];
+    const nonMemberAccount = accounts[3];
+
+    const dao = this.dao;
+    const bank = this.extensions.bank;
+    const onboarding = this.adapters.onboarding;
+    const voting = this.adapters.voting;
+
+    const myAccountInitialBalance = await web3.eth.getBalance(daoOwner);
+    // remaining amount to test sending back to proposer
+    const ethAmount = unitPrice.mul(toBN(3)).add(remaining);
+
+    const proposalId = getProposalCounter();
+    await onboarding.submitProposal(
+      dao.address,
+      proposalId,
+      applicant,
+      UNITS,
+      ethAmount,
+      [],
+      {
+        from: daoOwner,
+        gasPrice: toBN("0"),
+      }
+    );
+
+    await voting.submitVote(dao.address, proposalId, 1, {
+      from: daoOwner,
+      gasPrice: toBN("0"),
+    });
+
+    // should not be able to process before the voting period has ended
+    await expectRevert(
+      onboarding.processProposal(dao.address, proposalId, {
+        from: daoOwner,
+        value: ethAmount,
+        gasPrice: toBN("0"),
+      }),
+      "proposal has not been voted on yet"
+    );
+
+    await advanceTime(10000);
+    await onboarding.processProposal(dao.address, proposalId, {
+      from: daoOwner,
+      value: ethAmount,
+      gasPrice: toBN("0"),
+    });
+
+    // test return of remaining amount in excess of multiple of unitsPerChunk
+    const myAccountBalance = await web3.eth.getBalance(daoOwner);
+    // daoOwner did not receive remaining amount in excess of multiple of unitsPerChunk
+    expect(
+      toBN(myAccountInitialBalance).sub(ethAmount).add(remaining).toString()
+    ).equal(myAccountBalance.toString());
+
+    const myAccountUnits = await bank.balanceOf(daoOwner, UNITS);
+    const applicantUnits = await bank.balanceOf(applicant, UNITS);
+    const nonMemberAccountUnits = await bank.balanceOf(nonMemberAccount, UNITS);
+    expect(myAccountUnits.toString()).equal("1");
+    expect(applicantUnits.toString()).equal(
+      numberOfUnits.mul(toBN("3")).toString()
+    );
+    expect(nonMemberAccountUnits.toString()).equal("0");
+    await checkBalance(bank, GUILD, ETH_TOKEN, unitPrice.mul(toBN("3")));
+
+    // test active member status
+    const applicantIsActiveMember = await isMember(bank, applicant);
+    expect(applicantIsActiveMember).equal(true);
+    const nonMemberAccountIsActiveMember = await isMember(
+      bank,
+      nonMemberAccount
+    );
+    expect(nonMemberAccountIsActiveMember).equal(false);
     
+    const unitTokenExt = this.extensions.unitToken; 
+    await unitTokenExt.approve(spender, toBN("1"), {from: daoOwner});
+    let amount = await unitTokenExt.allowance(daoOwner, spender);
+    expect(amount).to.be.equal(toBN("1"));
     // unitTokenAdapter.transferFrom(dao.address, recipient, toBN("10"), {from: sender})
     //unitTokenExt.transfer(recipient, toBN("10"), {from: sender});
     // TODO check if the sender had the balance decresead

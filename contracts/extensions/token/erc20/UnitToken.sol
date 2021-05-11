@@ -58,23 +58,8 @@ contract UnitTokenExtension is
 
     mapping(address => mapping(address => uint256)) private _allowances;
 
-    enum AclFlag {TRANSFER, APPROVE, TRANSFER_FROM}
-
     /// @notice Clonable contract must have an empty constructor
     constructor() {}
-
-    modifier hasExtensionAccess(IExtension extension, AclFlag flag) {
-        require(
-            dao.state() == DaoRegistry.DaoState.CREATION ||
-                dao.hasAdapterAccessToExtension(
-                    msg.sender,
-                    address(extension),
-                    uint8(flag)
-                ),
-            "unitToken::accessDenied"
-        );
-        _;
-    }
 
     /**
      * @notice Initializes the extension with the DAO and Bank address that it belongs to.
@@ -84,7 +69,6 @@ contract UnitTokenExtension is
     function initialize(DaoRegistry _dao, address creator) external override {
         require(!initialized, "already initialized");
         require(_dao.isMember(creator), "not a member");
-        // TODO add access control layer
         initialized = true;
         dao = _dao;
     }
@@ -162,20 +146,24 @@ contract UnitTokenExtension is
     function approve(address spender, uint256 amount)
         public
         override
-        hasExtensionAccess(this, AclFlag.APPROVE)
         returns (bool)
     {
-        BankExtension bank = BankExtension(dao.getExtensionAddress(BANK));
-        //mirror the _approve() in erc20 to prevent non-zero address
-        require(msg.sender != address(0), "ERC20: approve from the zero address");
-        require(spender != address(0), "ERC20: approve to the zero address");
-        //check balance 
+        address senderAddr = dao.getAddressIfDelegated(msg.sender);
         require(
-            bank.balanceOf(msg.sender, UNITS) > amount && amount > 0,
-            "spender does not have UNITS to transfer"
+            senderAddr != address(0),
+            "ERC20: approve from the zero address"
         );
-        _allowances[msg.sender][spender] = amount;
-        emit Approval(msg.sender, spender, amount);
+        require(spender != address(0), "ERC20: approve to the zero address");
+        require(dao.isMember(senderAddr), "sender is not a member");
+
+        BankExtension bank = BankExtension(dao.getExtensionAddress(BANK));
+        require(
+            bank.balanceOf(senderAddr, UNITS) > amount && amount > 0,
+            "sender does not have UNITS to transfer"
+        );
+
+        _allowances[senderAddr][spender] = amount;
+        emit Approval(senderAddr, spender, amount);
         return true;
     }
 
@@ -189,25 +177,20 @@ contract UnitTokenExtension is
     function transfer(address recipient, uint256 amount)
         public
         override
-        hasExtensionAccess(this, AclFlag.TRANSFER)
         returns (bool)
     {
+        address senderAddr = dao.getAddressIfDelegated(msg.sender);
+        require(dao.isMember(senderAddr), "sender is not a member");
         require(dao.isMember(recipient), "receipient is not a member");
-        //balance of transferor must be > 0 UNITS
+
         BankExtension bank = BankExtension(dao.getExtensionAddress(BANK));
         require(
-            bank.balanceOf(msg.sender, UNITS) > 0,
+            bank.balanceOf(senderAddr, UNITS) >= amount && amount > 0,
             "sender does not have UNITS to transfer"
         );
-        //check UnitToken balance using Bank contract
-        require(
-            bank.balanceOf(TOTAL, UNITS) > 0,
-            "bank does not have enough UNITS to transfer"
-        );
 
-        //update member UNITS by amount
-        bank.internalTransfer(msg.sender, recipient, UNITS, amount);
-        emit Transfer(msg.sender, recipient, amount);
+        bank.internalTransfer(senderAddr, recipient, UNITS, amount);
+        emit Transfer(senderAddr, recipient, amount);
         return true;
     }
 
@@ -227,30 +210,27 @@ contract UnitTokenExtension is
     )
         public
         override
-        hasExtensionAccess(this, AclFlag.TRANSFER_FROM)
         returns (bool)
     {
-        //recipients must be a member of DAO
+        address senderAddr = dao.getAddressIfDelegated(sender);
         require(dao.isMember(recipient), "recipient is not a member");
-    
+
         BankExtension bank = BankExtension(dao.getExtensionAddress(BANK));
-        //TODO - is this line needed - check UnitToken balance using Bank contract 
         require(
-            bank.balanceOf(TOTAL, UNITS) > 0,
+            bank.balanceOf(senderAddr, UNITS) >= amount && amount > 0,
             "bank does not have enough UNITS to transfer"
         );
-        //get msg.sender's allowance from sender of Units
-        uint256 currentAllowance = _allowances[sender][msg.sender];
+
+        uint256 currentAllowance = _allowances[senderAddr][recipient];
         //check if sender has approved msg.sender to spend amount
         require(
             currentAllowance >= amount,
             "ERC20: transfer amount exceeds allowance"
         );
-        // adjust allowance with erc20 _approve
-        _allowances[sender][msg.sender] = currentAllowance - amount;
-        // caller transfers UNITS from sender to recipient insde the Bank
-        bank.internalTransfer(sender, recipient, UNITS, amount);
 
+        _allowances[senderAddr][recipient] = currentAllowance - amount;
+        bank.internalTransfer(senderAddr, recipient, UNITS, amount);
+        emit Transfer(senderAddr, recipient, amount);
         return true;
     }
 }
