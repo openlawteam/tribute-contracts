@@ -156,7 +156,11 @@ describe("Extension - ERC20 UnitToken", () => {
     const unitTokenExt = this.extensions.unitToken; 
     //await unitTokenExt.approve(spender, toBN("1"), {from: applicant});
     
-    await unitTokenExt.transfer(applicant, toBN("1"), {from: daoOwner});
+    await unitTokenExt.transfer(daoOwner, numberOfUnits.mul(toBN("1")), {from: applicant});
+    let a = await unitTokenExt.balanceOf(applicant);
+    let b = await unitTokenExt.balanceOf(daoOwner);
+    expect(a.toString()).equal(numberOfUnits.mul(toBN("2")).toString());
+    expect(b.toString()).equal(numberOfUnits.mul(toBN("2")).toString());
 
     // let amount = await unitTokenExt.allowance(applicant, spender);
     // console.log(amount,"amount approved");
