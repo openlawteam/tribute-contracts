@@ -154,9 +154,13 @@ describe("Extension - ERC20 UnitToken", () => {
     expect(nonMemberAccountIsActiveMember).equal(false);
     
     const unitTokenExt = this.extensions.unitToken; 
-    await unitTokenExt.approve(spender, toBN("1"), {from: applicant});
-    let amount = await unitTokenExt.allowance(applicant, spender);
-    expect(amount).to.be.equal(toBN("1"));
+    //await unitTokenExt.approve(spender, toBN("1"), {from: applicant});
+    
+    await unitTokenExt.transfer(applicant, toBN("1"), {from: daoOwner});
+
+    // let amount = await unitTokenExt.allowance(applicant, spender);
+    // console.log(amount,"amount approved");
+    // expect(amount).to.be.equal(toBN("1"));
     // unitTokenAdapter.transferFrom(dao.address, recipient, toBN("10"), {from: sender})
     //unitTokenExt.transfer(recipient, toBN("10"), {from: sender});
     // TODO check if the sender had the balance decresead
