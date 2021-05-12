@@ -498,6 +498,10 @@ const configureDao = async ({
       // Adapters to access the extensions directly
       entryDao("nft", nftAdapter, {}),
       entryDao("bank", bankAdapter, {}),
+      // Declare the unit-token extension as an adapter to be able to call the bank extension
+      entryDao("unit-token", unitTokenExtension, {
+        INTERNAL_TRANSFER: true,
+      }),
     ],
     { from: owner }
   );
@@ -540,6 +544,10 @@ const configureDao = async ({
       }),
       entryBank(tributeNFT, {
         ADD_TO_BALANCE: true,
+      }),
+      // Let the unit-token extension to execute internal transfers in the bank as an adapter
+      entryBank(unitTokenExtension, {
+        INTERNAL_TRANSFER: true,
       }),
     ],
     { from: owner }
