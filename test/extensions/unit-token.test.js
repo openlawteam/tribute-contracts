@@ -24,15 +24,28 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
  */
-const { toBN, GUILD } = require("../../utils/ContractUtil.js");
+const { toBN, unitPrice, UNITS, 
+  remaining, ETH_TOKEN, numberOfUnits, GUILD } = require("../../utils/ContractUtil.js");
 
 const {
   takeChainSnapshot,
   revertChainSnapshot,
   deployDefaultDao,
+  proposalIdGenerator,
+  advanceTime,
   accounts,
+  expectRevert,
   expect,
+  web3
 } = require("../../utils/OZTestUtil.js");
+
+const { checkBalance, isMember } = require("../../utils/TestUtils.js");
+
+const proposalCounter = proposalIdGenerator().generator;
+
+function getProposalCounter() {
+  return proposalCounter().next().value;
+}
 
 describe("Extension - ERC20 UnitToken", () => {
   const daoOwner = accounts[0];
@@ -70,7 +83,6 @@ describe("Extension - ERC20 UnitToken", () => {
     const applicant = accounts[2];
     const nonMemberAccount = accounts[3];
 
-    const dao = this.dao;
     const bank = this.extensions.bank;
     const onboarding = this.adapters.onboarding;
     const voting = this.adapters.voting;
@@ -142,8 +154,8 @@ describe("Extension - ERC20 UnitToken", () => {
     expect(nonMemberAccountIsActiveMember).equal(false);
     
     const unitTokenExt = this.extensions.unitToken; 
-    await unitTokenExt.approve(spender, toBN("1"), {from: daoOwner});
-    let amount = await unitTokenExt.allowance(daoOwner, spender);
+    await unitTokenExt.approve(spender, toBN("1"), {from: applicant});
+    let amount = await unitTokenExt.allowance(applicant, spender);
     expect(amount).to.be.equal(toBN("1"));
     // unitTokenAdapter.transferFrom(dao.address, recipient, toBN("10"), {from: sender})
     //unitTokenExt.transfer(recipient, toBN("10"), {from: sender});

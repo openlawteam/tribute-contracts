@@ -221,14 +221,14 @@ contract UnitTokenExtension is
             "bank does not have enough UNITS to transfer"
         );
 
-        uint256 currentAllowance = _allowances[senderAddr][recipient];
+        uint256 currentAllowance = _allowances[senderAddr][msg.sender];
         //check if sender has approved msg.sender to spend amount
         require(
             currentAllowance >= amount,
             "ERC20: transfer amount exceeds allowance"
         );
 
-        _allowances[senderAddr][recipient] = currentAllowance - amount;
+        _allowances[senderAddr][msg.sender] = currentAllowance - amount;
         bank.internalTransfer(senderAddr, recipient, UNITS, amount);
         emit Transfer(senderAddr, recipient, amount);
         return true;
