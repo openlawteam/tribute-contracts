@@ -78,44 +78,53 @@ describe("Extension - ERC20 UnitToken", () => {
 
   it("should be possible to transfer units from one member to another", async () => {
     const dao = this.dao;
-    const applicant = accounts[2];
+    const applicantA = accounts[2];
+    const applicantB = accounts[3];
+    
     const bank = this.extensions.bank;
     const onboarding = this.adapters.onboarding;
     const voting = this.adapters.voting;
     const unitTokenExt = this.extensions.unitToken; 
 
-    const proposalId = getProposalCounter();
     await onboardingNewMember(
-      proposalId,
+      getProposalCounter(),
       dao,
       onboarding,
       voting,
-      applicant,
+      applicantA,
       daoOwner,
       unitPrice,
       UNITS,
       toBN("3")
     );
 
-    const myAccountUnits = await unitTokenExt.balanceOf(daoOwner);
-    expect(myAccountUnits.toString()).equal("1");
-    
-    let applicantUnits = await unitTokenExt.balanceOf(applicant);
-    expect(applicantUnits.toString()).equal(
-      numberOfUnits.mul(toBN("3")).toString()
+    let applicantAUnits = await unitTokenExt.balanceOf(applicantA);
+    expect(applicantAUnits.toString()).equal(numberOfUnits.mul(toBN("3")).toString());
+    expect(await isMember(bank, applicantA)).equal(true);
+
+    await onboardingNewMember(
+       getProposalCounter(),
+      dao,
+      onboarding,
+      voting,
+      applicantB,
+      daoOwner,
+      unitPrice,
+      UNITS,
+      toBN("3")
     );
 
-    // test active member status
-    const applicantIsActiveMember = await isMember(bank, applicant);
-    expect(applicantIsActiveMember).equal(true);
-    
-    await unitTokenExt.transfer(daoOwner, numberOfUnits.mul(toBN("1")), {from: applicant});
+    let applicantBUnits = await unitTokenExt.balanceOf(applicantB);
+    expect(applicantBUnits.toString()).equal(numberOfUnits.mul(toBN("3")).toString());
+    expect(await isMember(bank, applicantB)).equal(true);
+  
+    await unitTokenExt.transfer(applicantB, numberOfUnits.mul(toBN("1")), {from: applicantA});
 
-    applicantUnits = await unitTokenExt.balanceOf(applicant);
-    expect(applicantUnits.toString()).equal(numberOfUnits.mul(toBN("2")).toString());
+    applicantAUnits = await unitTokenExt.balanceOf(applicantA);
+    expect(applicantAUnits.toString()).equal(numberOfUnits.mul(toBN("2")).toString());
 
-    let daoOwnerUnits = await unitTokenExt.balanceOf(daoOwner);
-    expect(daoOwnerUnits.toString()).equal(numberOfUnits.mul(toBN("2")).toString());
+    applicantBUnits = await unitTokenExt.balanceOf(applicantB);
+    expect(applicantBUnits.toString()).equal(numberOfUnits.mul(toBN("4")).toString());
 
     // let amount = await unitTokenExt.allowance(applicant, spender);
     // console.log(amount,"amount approved");
