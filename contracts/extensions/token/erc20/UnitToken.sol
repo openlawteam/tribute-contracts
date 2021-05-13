@@ -43,6 +43,8 @@ SOFTWARE.
  to the internal token UNITS held by DAO members inside the DAO itself. 
 
   */
+
+//TODO rename it and add reentrancy guard for state modifications
 contract UnitTokenExtension is
     DaoConstants,
     AdapterGuard,
@@ -55,6 +57,10 @@ contract UnitTokenExtension is
     //Pausable role to prevent transfers
     bytes32 public constant PAUSER_ROLE = keccak256("PAUSER_ROLE");
     bool public initialized = false;
+
+    string public tokenName;
+    string public tokenSymbol;
+    uint8 public tokenDecimals;
 
     mapping(address => mapping(address => uint256)) private _allowances;
 
@@ -77,7 +83,12 @@ contract UnitTokenExtension is
      * @dev Returns the name of the token.
      */
     function name() public view virtual returns (string memory) {
-        return "Unit Token";
+        return tokenName;
+    }
+
+    function setName(string memory _name) external {
+        require(!initialized, "already initialized");
+        tokenName = _name;
     }
 
     /**
@@ -85,7 +96,12 @@ contract UnitTokenExtension is
      * name.
      */
     function symbol() public view virtual returns (string memory) {
-        return "UNIT";
+        return tokenSymbol;
+    }
+
+    function setSymbol(string memory _symbol) external {
+        require(!initialized, "already initialized");
+        tokenSymbol = _symbol;
     }
 
     /**
@@ -94,7 +110,12 @@ contract UnitTokenExtension is
      * be displayed to a user as `5,05` (`505 / 10 ** 2`).
      */
     function decimals() public view virtual returns (uint8) {
-        return 18;
+        return tokenDecimals;
+    }
+
+    function setDecimals(uint8 _decimals) external {
+        require(!initialized, "already initialized");
+        tokenDecimals = _decimals;
     }
 
     /**
@@ -150,16 +171,17 @@ contract UnitTokenExtension is
     {
         address senderAddr = dao.getAddressIfDelegated(msg.sender);
         require(
-            senderAddr != address(0),
+            isNotZeroAddress(senderAddr),
             "ERC20: approve from the zero address"
         );
-        require(spender != address(0), "ERC20: approve to the zero address");
-        require(dao.isMember(senderAddr), "sender is not a member");
-
-        BankExtension bank = BankExtension(dao.getExtensionAddress(BANK));
         require(
-            bank.balanceOf(senderAddr, UNITS) > amount && amount > 0,
-            "sender does not have UNITS to transfer"
+            isNotZeroAddress(spender),
+            "ERC20: approve to the zero address"
+        );
+        require(dao.isMember(senderAddr), "sender is not a member");
+        require(
+            isNotReservedAddress(spender),
+            "spender can not be a reserved address"
         );
 
         _allowances[senderAddr][spender] = amount;
@@ -174,15 +196,17 @@ contract UnitTokenExtension is
      *
      * Emits a {Transfer} event.
      */
-     // Is called by the adapter: always
+    // Is called by the adapter: always
     function transfer(address recipient, uint256 amount)
         public
         override
         returns (bool)
     {
         address senderAddr = dao.getAddressIfDelegated(msg.sender);
-        require(dao.isMember(senderAddr), "sender is not a member");
-        require(dao.isMember(recipient), "receipient is not a member");
+        require(
+            isNotZeroAddress(recipient),
+            "ERC20: transfer to the zero address"
+        );
 
         BankExtension bank = BankExtension(dao.getExtensionAddress(BANK));
         require(
@@ -190,9 +214,28 @@ contract UnitTokenExtension is
             "sender does not have UNITS to transfer"
         );
 
-        bank.internalTransfer(senderAddr, recipient, UNITS, amount);
-        emit Transfer(senderAddr, recipient, amount);
-        return true;
+        uint256 unitTransferType = dao.getConfiguration("unitTransferType");
+        if (unitTransferType == 0) {
+            // members only transfer
+            require(dao.isMember(recipient), "receipient is not a member");
+            bank.internalTransfer(senderAddr, recipient, UNITS, amount);
+            emit Transfer(senderAddr, recipient, amount);
+            return true;
+        } else if (unitTransferType == 1) {
+            // external transfer
+            require(
+                isNotReservedAddress(recipient),
+                "recipient address can not be reserved"
+            );
+            bank.internalTransfer(senderAddr, recipient, UNITS, amount);
+            dao.potentialNewMember(recipient);
+            emit Transfer(senderAddr, recipient, amount);
+            return true;
+        } else if (unitTransferType == 2) {
+            // closed/paused transfers
+            return false;
+        }
+        return false;
     }
 
     /**
@@ -208,13 +251,19 @@ contract UnitTokenExtension is
         address sender,
         address recipient,
         uint256 amount
-    )
-        public
-        override
-        returns (bool)
-    {
+    ) public override returns (bool) {
+        require(
+            isNotZeroAddress(recipient),
+            "ERC20: transferFrom recipient can not be zero address"
+        );
+
         address senderAddr = dao.getAddressIfDelegated(sender);
-        require(dao.isMember(recipient), "recipient is not a member");
+        uint256 currentAllowance = _allowances[senderAddr][msg.sender];
+        //check if sender has approved msg.sender to spend amount
+        require(
+            currentAllowance >= amount,
+            "ERC20: transfer amount exceeds allowance"
+        );
 
         BankExtension bank = BankExtension(dao.getExtensionAddress(BANK));
         require(
@@ -222,16 +271,33 @@ contract UnitTokenExtension is
             "bank does not have enough UNITS to transfer"
         );
 
-        uint256 currentAllowance = _allowances[senderAddr][recipient];
-        //check if sender has approved msg.sender to spend amount
-        require(
-            currentAllowance >= amount,
-            "ERC20: transfer amount exceeds allowance"
-        );
+        uint256 unitTransferType = dao.getConfiguration("unitTransferType");
+        if (unitTransferType == 0) {
+            // members only transfer
+            require(dao.isMember(recipient), "recipient is not a member");
 
-        _allowances[senderAddr][recipient] = currentAllowance - amount;
-        bank.internalTransfer(senderAddr, recipient, UNITS, amount);
-        emit Transfer(senderAddr, recipient, amount);
-        return true;
+            _allowances[senderAddr][recipient] = currentAllowance - amount;
+
+            bank.internalTransfer(senderAddr, recipient, UNITS, amount);
+            emit Transfer(senderAddr, recipient, amount);
+
+            return true;
+        } else if (unitTransferType == 1) {
+            // external transfer
+            _allowances[senderAddr][recipient] = currentAllowance - amount;
+            require(
+                isNotReservedAddress(recipient),
+                "recipient address can not be reserved"
+            );
+            bank.internalTransfer(senderAddr, recipient, UNITS, amount);
+            dao.potentialNewMember(recipient);
+            emit Transfer(senderAddr, recipient, amount);
+            return true;
+        } else if (unitTransferType == 2) {
+            // closed/paused transfers
+            return false;
+        }
+
+        return false;
     }
 }

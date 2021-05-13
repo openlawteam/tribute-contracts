@@ -135,4 +135,14 @@ describe("Extension - ERC20 UnitToken", () => {
     //const senderTokenBalance = await unitTokenExt.balanceOf(sender); 
     // TODO check if the recipient had the balance increased
   });
+
+  it("should be possible to pause the transfer", async () => {
+    // transfer
+  });
+
+  it("should be possible to transfer units from a member to an external account", async () => {
+    // transfer
+  });
+
+  // transferFrom
 });

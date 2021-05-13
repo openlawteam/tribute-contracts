@@ -95,7 +95,7 @@ const deployDao = async (options) => {
   });
 
   // Start the UnitTokenExtension deployment & configuration
-  await unitTokenExtFactory.create();
+  await unitTokenExtFactory.create("Unit Token", "UNIT", 18);
   pastEvent = undefined;
   while (pastEvent === undefined) {
     let pastEvents = await unitTokenExtFactory.getPastEvents();
@@ -501,6 +501,7 @@ const configureDao = async ({
       // Declare the unit-token extension as an adapter to be able to call the bank extension
       entryDao("unit-token", unitTokenExtension, {
         INTERNAL_TRANSFER: true,
+        NEW_MEMBER: true,
       }),
     ],
     { from: owner }

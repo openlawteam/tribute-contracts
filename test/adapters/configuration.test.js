@@ -104,15 +104,15 @@ describe("Adapter - Configuration", () => {
     const configuration = this.adapters.configuration;
     const voting = this.adapters.voting;
 
-    let key1 = sha3("key1");
-    let key2 = sha3("key2");
+    let key1 = sha3("allowUnitTransfersBetweenMembers");
+    let key2 = sha3("allowExternalUnitTransfers");
 
     //Submit a new configuration proposal
     await configuration.submitProposal(
       dao.address,
       "0x1",
       [key1, key2],
-      [toBN("10"), toBN("15")],
+      [1, 0],
       [],
       { from: owner, gasPrice: toBN("0") }
     );
@@ -157,4 +157,5 @@ describe("Adapter - Configuration", () => {
       "must be an equal number of config keys and values"
     );
   });
+
 });

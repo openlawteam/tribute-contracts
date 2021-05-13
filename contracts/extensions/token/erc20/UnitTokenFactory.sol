@@ -1,7 +1,6 @@
 pragma solidity ^0.8.0;
 
 // SPDX-License-Identifier: MIT
-
 import "../../../core/DaoConstants.sol";
 import "../../../core/DaoRegistry.sol";
 import "../../../core/CloneFactory.sol";
@@ -43,9 +42,17 @@ contract UnitTokenFactory is CloneFactory, DaoConstants {
     /**
      * @notice Create and initialize a new Unit Token Extension which is based on ERC20
      */
-    function create() external {
+    function create(
+        string calldata tokenName,
+        string calldata tokenSymbol,
+        uint8 decimals
+    ) external {
         UnitTokenExtension ext =
             UnitTokenExtension(_createClone(identityAddress));
+        ext.setName(tokenName);
+        ext.setSymbol(tokenSymbol);
+        ext.setDecimals(decimals);
+        // ext.initialize(dao, creator);
         emit UnitTokenCreated(address(ext));
     }
 }
