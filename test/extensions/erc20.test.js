@@ -25,7 +25,7 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
  */
 const { toBN, unitPrice, UNITS, 
-  remaining, ETH_TOKEN, numberOfUnits, GUILD } = require("../../utils/ContractUtil.js");
+   ETH_TOKEN, numberOfUnits  } = require("../../utils/ContractUtil.js");
 
 const {
   takeChainSnapshot,
@@ -47,7 +47,7 @@ function getProposalCounter() {
   return proposalCounter().next().value;
 }
 
-describe("Extension - ERC20 UnitToken", () => {
+describe("Extension - ERC20", () => {
   const daoOwner = accounts[0];
 
   before("deploy dao", async () => {
@@ -71,9 +71,9 @@ describe("Extension - ERC20 UnitToken", () => {
     await revertChainSnapshot(this.snapshotId);
   });
 
-  it("should be possible to create a dao with a unit-token extension pre-configured", async () => {
-    const unitTokenExt = this.extensions.unitToken;
-    expect(unitTokenExt).to.not.be.null;
+  it("should be possible to create a dao with a erc20 extension pre-configured", async () => {
+    const erc20Ext = this.extensions.erc20Ext;
+    expect(erc20Ext).to.not.be.null;
   });
 
   it("should be possible to transfer units from one member to another", async () => {
@@ -84,7 +84,7 @@ describe("Extension - ERC20 UnitToken", () => {
     const bank = this.extensions.bank;
     const onboarding = this.adapters.onboarding;
     const voting = this.adapters.voting;
-    const unitTokenExt = this.extensions.unitToken; 
+    const erc20Ext = this.extensions.erc20Ext; 
 
     await onboardingNewMember(
       getProposalCounter(),
@@ -98,7 +98,7 @@ describe("Extension - ERC20 UnitToken", () => {
       toBN("3")
     );
 
-    let applicantAUnits = await unitTokenExt.balanceOf(applicantA);
+    let applicantAUnits = await erc20Ext.balanceOf(applicantA);
     expect(applicantAUnits.toString()).equal(numberOfUnits.mul(toBN("3")).toString());
     expect(await isMember(bank, applicantA)).equal(true);
 
@@ -114,16 +114,16 @@ describe("Extension - ERC20 UnitToken", () => {
       toBN("3")
     );
 
-    let applicantBUnits = await unitTokenExt.balanceOf(applicantB);
+    let applicantBUnits = await erc20Ext.balanceOf(applicantB);
     expect(applicantBUnits.toString()).equal(numberOfUnits.mul(toBN("3")).toString());
     expect(await isMember(bank, applicantB)).equal(true);
   
-    await unitTokenExt.transfer(applicantB, numberOfUnits.mul(toBN("1")), {from: applicantA});
+    await erc20Ext.transfer(applicantB, numberOfUnits.mul(toBN("1")), {from: applicantA});
 
-    applicantAUnits = await unitTokenExt.balanceOf(applicantA);
+    applicantAUnits = await erc20Ext.balanceOf(applicantA);
     expect(applicantAUnits.toString()).equal(numberOfUnits.mul(toBN("2")).toString());
 
-    applicantBUnits = await unitTokenExt.balanceOf(applicantB);
+    applicantBUnits = await erc20Ext.balanceOf(applicantB);
     expect(applicantBUnits.toString()).equal(numberOfUnits.mul(toBN("4")).toString());
 
     // let amount = await unitTokenExt.allowance(applicant, spender);

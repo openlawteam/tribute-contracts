@@ -4,7 +4,7 @@ pragma solidity ^0.8.0;
 import "../../../core/DaoConstants.sol";
 import "../../../core/DaoRegistry.sol";
 import "../../../core/CloneFactory.sol";
-import "./UnitToken.sol";
+import "./ERC20TokenExtension.sol";
 
 /**
 MIT License
@@ -30,29 +30,27 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
  */
 
-contract UnitTokenFactory is CloneFactory, DaoConstants {
+contract ERC20TokenExtensionFactory is CloneFactory, DaoConstants {
     address public identityAddress;
 
-    event UnitTokenCreated(address unitTokenAddress);
+    event ERC20TokenExtensionCreated(address erc20ExtTokenAddress);
 
     constructor(address _identityAddress) {
         identityAddress = _identityAddress;
     }
 
     /**
-     * @notice Create and initialize a new Unit Token Extension which is based on ERC20
+     * @notice Creates a clone of the ERC20 Token Extension.
      */
     function create(
         string calldata tokenName,
         string calldata tokenSymbol,
         uint8 decimals
     ) external {
-        UnitTokenExtension ext =
-            UnitTokenExtension(_createClone(identityAddress));
+        ERC20Extension ext = ERC20Extension(_createClone(identityAddress));
         ext.setName(tokenName);
         ext.setSymbol(tokenSymbol);
         ext.setDecimals(decimals);
-        // ext.initialize(dao, creator);
-        emit UnitTokenCreated(address(ext));
+        emit ERC20TokenExtensionCreated(address(ext));
     }
 }

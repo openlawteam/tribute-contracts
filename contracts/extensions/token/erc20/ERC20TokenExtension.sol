@@ -38,14 +38,12 @@ SOFTWARE.
  */
 
 /**
- * 
- The UnitTokenExtension is a contract to give erc20 functionality
- to the internal token UNITS held by DAO members inside the DAO itself. 
+ *
+ * The ERC20Extension is a contract to give erc20 functionality
+ * to the internal token UNITS held by DAO members inside the DAO itself.
+ */
 
-  */
-
-//TODO rename it and add reentrancy guard for state modifications
-contract UnitTokenExtension is
+contract ERC20Extension is
     DaoConstants,
     AdapterGuard,
     IExtension,
