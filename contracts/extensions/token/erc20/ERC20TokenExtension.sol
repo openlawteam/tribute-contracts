@@ -54,7 +54,8 @@ contract ERC20Extension is
     DaoRegistry public dao;
     //Pausable role to prevent transfers
     bytes32 public constant PAUSER_ROLE = keccak256("PAUSER_ROLE");
-    bytes32 public constant ERC20_EXT_TRANSFER_TYPE = keccak256("erc20ExtTransferType");
+    bytes32 public constant ERC20_EXT_TRANSFER_TYPE =
+        keccak256("erc20ExtTransferType");
     bool public initialized = false;
 
     string public tokenName;
