@@ -102,7 +102,9 @@ const deployDao = async (options) => {
     pastEvent = pastEvents[0];
   }
   const { erc20ExtTokenAddress } = pastEvent.returnValues;
-  const erc20TokenExtension = await ERC20TokenExtension.at(erc20ExtTokenAddress);
+  const erc20TokenExtension = await ERC20TokenExtension.at(
+    erc20ExtTokenAddress
+  );
   await dao.addExtension(sha3("erc20-ext"), erc20ExtTokenAddress, creator);
 
   const extensions = {
@@ -499,7 +501,7 @@ const configureDao = async ({
     // Declare the unit-token extension as an adapter to be able to call the bank extension
     entryDao("unit-token", erc20TokenExtension, {
       INTERNAL_TRANSFER: true,
-      NEW_MEMBER: true
+      NEW_MEMBER: true,
     }),
   ], { from: owner });
 

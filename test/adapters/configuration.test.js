@@ -157,5 +157,4 @@ describe("Adapter - Configuration", () => {
       "must be an equal number of config keys and values"
     );
   });
-
 });
