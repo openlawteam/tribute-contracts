@@ -1,6 +1,7 @@
 // Whole-script strict mode syntax
 "use strict";
 
+const { sha3 } = require("web3-utils");
 /**
 MIT License
 
@@ -48,6 +49,7 @@ const {
   checkBalance,
   isMember,
   onboardingNewMember,
+  submitConfigProposal,
 } = require("../../utils/TestUtils.js");
 
 const proposalCounter = proposalIdGenerator().generator;
@@ -231,8 +233,29 @@ describe("Extension - ERC20", () => {
     );
   });
 
-  it("should be possible to pause the transfer", async () => {
-    // pause transfer
+  it("should be possible to pause the transfer when the unit", async () => {
+    const dao = this.dao;
+    //onboarded member A & B
+    const applicantA = accounts[2];
+    const applicantB = accounts[3];
+
+    const bank = this.extensions.bank;
+    const onboarding = this.adapters.onboarding;
+    const configuration = this.adapters.configuration;
+    const voting = this.adapters.voting;
+    const erc20Ext = this.extensions.erc20Ext;
+
+    await submitConfigProposal(
+      dao,
+      getProposalCounter(),
+      daoOwner,
+      configuration,
+      voting,
+      [sha3("erc20ExtTransferType")],
+      [1]
+    );
+    let transferType = await dao.getConfiguration(sha3("erc20ExtTransferType"));
+    expect(transferType.toString()).equal("1");
   });
 
   it("should be possible to transfer units from a member to an external account", async () => {

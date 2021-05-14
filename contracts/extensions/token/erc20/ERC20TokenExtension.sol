@@ -54,6 +54,7 @@ contract ERC20Extension is
     DaoRegistry public dao;
     //Pausable role to prevent transfers
     bytes32 public constant PAUSER_ROLE = keccak256("PAUSER_ROLE");
+    bytes32 public constant ERC20_EXT_TRANSFER_TYPE = keccak256("erc20ExtTransferType");
     bool public initialized = false;
 
     string public tokenName;
@@ -212,14 +213,14 @@ contract ERC20Extension is
             "sender does not have UNITS to transfer"
         );
 
-        uint256 unitTransferType = dao.getConfiguration("unitTransferType");
-        if (unitTransferType == 0) {
+        uint256 transferType = dao.getConfiguration(ERC20_EXT_TRANSFER_TYPE);
+        if (transferType == 0) {
             // members only transfer
             require(dao.isMember(recipient), "receipient is not a member");
             bank.internalTransfer(senderAddr, recipient, UNITS, amount);
             emit Transfer(senderAddr, recipient, amount);
             return true;
-        } else if (unitTransferType == 1) {
+        } else if (transferType == 1) {
             // external transfer
             require(
                 isNotReservedAddress(recipient),
@@ -269,8 +270,8 @@ contract ERC20Extension is
             "bank does not have enough UNITS to transfer"
         );
 
-        uint256 unitTransferType = dao.getConfiguration("unitTransferType");
-        if (unitTransferType == 0) {
+        uint256 transferType = dao.getConfiguration(ERC20_EXT_TRANSFER_TYPE);
+        if (transferType == 0) {
             // members only transfer
             require(dao.isMember(recipient), "recipient is not a member");
 
@@ -280,7 +281,7 @@ contract ERC20Extension is
             emit Transfer(senderAddr, recipient, amount);
 
             return true;
-        } else if (unitTransferType == 1) {
+        } else if (transferType == 1) {
             // external transfer
             _allowances[senderAddr][msg.sender] = currentAllowance - amount;
             require(
@@ -291,7 +292,7 @@ contract ERC20Extension is
             dao.potentialNewMember(recipient);
             emit Transfer(senderAddr, recipient, amount);
             return true;
-        } else if (unitTransferType == 2) {
+        } else if (transferType == 2) {
             // closed/paused transfers
             return false;
         }
