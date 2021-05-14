@@ -59,7 +59,7 @@ contract ERC20Extension is
     string public tokenName;
     string public tokenSymbol;
     uint8 public tokenDecimals;
-
+    //owner => spender => amount
     mapping(address => mapping(address => uint256)) private _allowances;
 
     /// @notice Clonable contract must have an empty constructor
@@ -274,7 +274,7 @@ contract ERC20Extension is
             // members only transfer
             require(dao.isMember(recipient), "recipient is not a member");
 
-            _allowances[senderAddr][recipient] = currentAllowance - amount;
+            _allowances[senderAddr][msg.sender] = currentAllowance - amount;
 
             bank.internalTransfer(senderAddr, recipient, UNITS, amount);
             emit Transfer(senderAddr, recipient, amount);
@@ -282,7 +282,7 @@ contract ERC20Extension is
             return true;
         } else if (unitTransferType == 1) {
             // external transfer
-            _allowances[senderAddr][recipient] = currentAllowance - amount;
+            _allowances[senderAddr][msg.sender] = currentAllowance - amount;
             require(
                 isNotReservedAddress(recipient),
                 "recipient address can not be reserved"
