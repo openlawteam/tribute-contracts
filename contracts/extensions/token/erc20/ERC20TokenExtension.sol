@@ -167,6 +167,7 @@ contract ERC20Extension is
     function approve(address spender, uint256 amount)
         public
         override
+        reentrancyGuard(dao)
         returns (bool)
     {
         address senderAddr = dao.getAddressIfDelegated(msg.sender);
@@ -200,6 +201,7 @@ contract ERC20Extension is
     function transfer(address recipient, uint256 amount)
         public
         override
+        reentrancyGuard(dao)
         returns (bool)
     {
         address senderAddr = dao.getAddressIfDelegated(msg.sender);
@@ -231,7 +233,7 @@ contract ERC20Extension is
             dao.potentialNewMember(recipient);
             emit Transfer(senderAddr, recipient, amount);
             return true;
-        } else if (unitTransferType == 2) {
+        } else if (transferType == 2) {
             // closed/paused transfers
             return false;
         }
@@ -251,7 +253,7 @@ contract ERC20Extension is
         address sender,
         address recipient,
         uint256 amount
-    ) public override returns (bool) {
+    ) public override reentrancyGuard(dao) returns (bool) {
         require(
             isNotZeroAddress(recipient),
             "ERC20: transferFrom recipient can not be zero address"
