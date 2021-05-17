@@ -104,7 +104,7 @@ describe("Core - Registry", () => {
     );
   });
 
-  it("should not be possible to a zero address be considered a member", async () => {
+  it("should not be possible for a zero address to be considered a member", async () => {
     let registry = await DaoRegistry.new();
     let isMember = await registry.isMember(
       "0x0000000000000000000000000000000000000000"
