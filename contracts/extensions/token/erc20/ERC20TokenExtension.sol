@@ -219,7 +219,7 @@ contract ERC20Extension is
         uint256 transferType = dao.getConfiguration(ERC20_EXT_TRANSFER_TYPE);
         if (transferType == 0) {
             // members only transfer
-            require(dao.isMember(recipient), "receipient is not a member");
+            require(dao.isMember(recipient), "recipient is not a member");
             bank.internalTransfer(senderAddr, recipient, UNITS, amount);
             emit Transfer(senderAddr, recipient, amount);
             return true;

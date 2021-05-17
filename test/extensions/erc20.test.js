@@ -290,9 +290,9 @@ describe("Extension - ERC20", () => {
       numberOfUnits.mul(toBN("0")).toString()
     );
     //attempt transfer to non-member External address A - should revert
-    await erc20Ext.transfer(externalAddressA, numberOfUnits.mul(toBN("1")), {
+    await expectRevert(erc20Ext.transfer(externalAddressA, numberOfUnits.mul(toBN("1")), {
       from: applicantA,
-    });
+    }), "recipient is not a member");
 
     //check balances of externalAddressA
     externalAddressAUnits = await erc20Ext.balanceOf(externalAddressA);
@@ -379,12 +379,12 @@ describe("Extension - ERC20", () => {
     expect(await isMember(bank, externalAddressB)).equal(false);
 
     //transferFrom Applicant A(member) to externalAddressB(non-member) by the spender(non-member externalAddressA) should fail
-    await erc20Ext.transferFrom(
+    await expectRevert(erc20Ext.transferFrom(
       applicantA,
       externalAddressB,
       numberOfUnits.mul(toBN("1")),
       { from: externalAddressA }
-    );
+    ), "receipient is not a member");
     //check new balances of applicantA & externalAddressB
     applicantAUnits = await erc20Ext.balanceOf(applicantA);
     expect(applicantAUnits.toString()).equal(
@@ -463,14 +463,11 @@ describe("Extension - ERC20", () => {
     expect(await isMember(bank, applicantB)).equal(true);
 
     //attempt transfer
-    try {
+  
       await erc20Ext.transfer(applicantB, numberOfUnits.mul(toBN("1")), {
         from: applicantA,
       });
-      assert(false);
-    } catch (error) {
-      assert(error);
-    }
+
     //applicantA should still have the same number of Units
     applicantAUnits = await erc20Ext.balanceOf(applicantA);
     expect(applicantAUnits.toString()).equal(
