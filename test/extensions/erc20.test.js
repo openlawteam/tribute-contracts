@@ -404,7 +404,7 @@ describe("Extension - ERC20", () => {
 
   it("should be possible to pause all transfers when erc20ExtTransferType = 2", async () => {
     const dao = this.dao;
-    //onboarded member A & B
+    //onboarded members A & B
     const applicantA = accounts[2];
     const applicantB = accounts[3];
 
