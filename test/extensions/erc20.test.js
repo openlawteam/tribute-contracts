@@ -30,7 +30,6 @@ const {
   toBN,
   unitPrice,
   UNITS,
-  ETH_TOKEN,
   numberOfUnits,
 } = require("../../utils/ContractUtil.js");
 
@@ -234,7 +233,7 @@ describe("Extension - ERC20", () => {
     );
   });
 
-  it("should not be possible to transfer units from a member to an external account when erc20ExtTransferType = 0", async () => {
+  it("should not be possible to transfer units from a member to an external account when the transfer type is member only (erc20ExtTransferType = 0)", async () => {
     // transferFrom to external
     // transfer to external
     const dao = this.dao;
@@ -301,7 +300,7 @@ describe("Extension - ERC20", () => {
     );
   });
 
-  it("should not be possible to approve a transferFrom units from a member to an external account when erc20ExtTransferType = 0", async () => {
+  it("should not be possible to approve a transferFrom units from a member to an external account when the transfer type is member only (erc20ExtTransferType = 0)", async () => {
     // transfer to external
     const dao = this.dao;
     //onboarded member A & B
@@ -384,7 +383,8 @@ describe("Extension - ERC20", () => {
       externalAddressB,
       numberOfUnits.mul(toBN("1")),
       { from: externalAddressA }
-    ), "receipient is not a member");
+    ), "recipient is not a member");
+
     //check new balances of applicantA & externalAddressB
     applicantAUnits = await erc20Ext.balanceOf(applicantA);
     expect(applicantAUnits.toString()).equal(
@@ -402,7 +402,7 @@ describe("Extension - ERC20", () => {
     );
   });
 
-  it("should be possible to pause all transfers when erc20ExtTransferType = 2", async () => {
+  it("should be possible to pause all transfers when are paused (erc20ExtTransferType = 2)", async () => {
     const dao = this.dao;
     //onboarded members A & B
     const applicantA = accounts[2];
