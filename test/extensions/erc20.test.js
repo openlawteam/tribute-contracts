@@ -87,15 +87,28 @@ describe("Extension - ERC20", () => {
     expect(erc20Ext).to.not.be.null;
   });
 
-  it("should be possible to transfer units from one member to another", async () => {
+  it("should be possible to transfer units from one member to another when erc20ExtTransferType = 0", async () => {
     const dao = this.dao;
     const applicantA = accounts[2];
     const applicantB = accounts[3];
-
+    const configuration = this.adapters.configuration;
     const bank = this.extensions.bank;
     const onboarding = this.adapters.onboarding;
     const voting = this.adapters.voting;
     const erc20Ext = this.extensions.erc20Ext;
+
+      //configure 
+      await submitConfigProposal(
+        dao,
+        getProposalCounter(),
+        daoOwner,
+        configuration,
+        voting,
+        [sha3("erc20ExtTransferType")],
+        [0]
+      );
+      let transferType = await dao.getConfiguration(sha3("erc20ExtTransferType"));
+      expect(transferType.toString()).equal("0");
 
     await onboardingNewMember(
       getProposalCounter(),
@@ -148,17 +161,31 @@ describe("Extension - ERC20", () => {
     );
   });
 
-  it("should be possible to approve and transferFrom units from a member to another member", async () => {
+  it("should be possible to approve and transferFrom units from a member to another member when erc20ExtTransferType = 0", async () => {
     const dao = this.dao;
     //onboarded member A & B
     const applicantA = accounts[2];
     const applicantB = accounts[3];
+    const configuration = this.adapters.configuration;
     //external address - not a member
     const externalAddressA = accounts[4];
     const bank = this.extensions.bank;
     const onboarding = this.adapters.onboarding;
     const voting = this.adapters.voting;
     const erc20Ext = this.extensions.erc20Ext;
+
+        //configure 
+        await submitConfigProposal(
+          dao,
+          getProposalCounter(),
+          daoOwner,
+          configuration,
+          voting,
+          [sha3("erc20ExtTransferType")],
+          [0]
+        );
+        let transferType = await dao.getConfiguration(sha3("erc20ExtTransferType"));
+        expect(transferType.toString()).equal("0");
 
     await onboardingNewMember(
       getProposalCounter(),
@@ -463,7 +490,6 @@ describe("Extension - ERC20", () => {
     expect(await isMember(bank, applicantB)).equal(true);
 
     //attempt transfer
-  
       await erc20Ext.transfer(applicantB, numberOfUnits.mul(toBN("1")), {
         from: applicantA,
       });
@@ -480,7 +506,176 @@ describe("Extension - ERC20", () => {
     );
   });
 
-  it("should be possible to transfer units from a member to an external account", async () => {
+  it("should be possible to transfer units from a member to an external account when erc20ExtTransferType = 1", async () => {
     // transfer to external
+    const dao = this.dao;
+    //members A
+    const applicantA = accounts[2];
+    //external address - not a member
+    const externalAddressA = accounts[4];
+
+    const bank = this.extensions.bank;
+    const onboarding = this.adapters.onboarding;
+    const configuration = this.adapters.configuration;
+    const voting = this.adapters.voting;
+    const erc20Ext = this.extensions.erc20Ext;
+    //configure to pause all transfers
+    await submitConfigProposal(
+      dao,
+      getProposalCounter(),
+      daoOwner,
+      configuration,
+      voting,
+      [sha3("erc20ExtTransferType")],
+      [1]
+    );
+    let transferType = await dao.getConfiguration(sha3("erc20ExtTransferType"));
+    expect(transferType.toString()).equal("1");
+    //onboard memberA
+    await onboardingNewMember(
+      getProposalCounter(),
+      dao,
+      onboarding,
+      voting,
+      applicantA,
+      daoOwner,
+      unitPrice,
+      UNITS,
+      toBN("3")
+    );
+      //member A units
+    let applicantAUnits = await erc20Ext.balanceOf(applicantA);
+    expect(applicantAUnits.toString()).equal(
+      numberOfUnits.mul(toBN("3")).toString()
+    );
+    expect(await isMember(bank, applicantA)).equal(true);
+
+    //externalAddressA 
+    expect(await isMember(bank, externalAddressA)).equal(false);
+
+    let externalAddressAUnits = await erc20Ext.balanceOf(externalAddressA);
+    expect(externalAddressAUnits.toString()).equal(
+      numberOfUnits.mul(toBN("0")).toString()
+    );
+    
+    //transfer from memberA to externalAddressA
+    await erc20Ext.transfer(externalAddressA, numberOfUnits.mul(toBN("1")), {
+      from: applicantA,
+    });
+    //externalAddressA should have +1 unit
+    externalAddressAUnits = await erc20Ext.balanceOf(externalAddressA);
+    expect(externalAddressAUnits.toString()).equal(
+      numberOfUnits.mul(toBN("1")).toString()
+    );
+      //applicantA should have -1 unit
+    applicantAUnits = await erc20Ext.balanceOf(applicantA);
+    expect(applicantAUnits.toString()).equal(
+      numberOfUnits.mul(toBN("2")).toString()
+    );
+
   });
+
+  it("should be possible to approve and transferFrom units from a member to an external account when erc20ExtTransferType = 1", async () => {
+    // transfer to external
+    const dao = this.dao;
+    //members A and B
+    const applicantA = accounts[2];
+    const applicantB = accounts[3];
+    //external address - not a member
+    const externalAddressA = accounts[4];
+    const externalAddressB = accounts[5];
+
+    const bank = this.extensions.bank;
+    const onboarding = this.adapters.onboarding;
+    const configuration = this.adapters.configuration;
+    const voting = this.adapters.voting;
+    const erc20Ext = this.extensions.erc20Ext;
+    //configure to pause all transfers
+    await submitConfigProposal(
+      dao,
+      getProposalCounter(),
+      daoOwner,
+      configuration,
+      voting,
+      [sha3("erc20ExtTransferType")],
+      [1]
+    );
+    let transferType = await dao.getConfiguration(sha3("erc20ExtTransferType"));
+    expect(transferType.toString()).equal("1");
+    //onboard memberA
+    await onboardingNewMember(
+      getProposalCounter(),
+      dao,
+      onboarding,
+      voting,
+      applicantA,
+      daoOwner,
+      unitPrice,
+      UNITS,
+      toBN("3")
+    );
+      //member A units
+    let applicantAUnits = await erc20Ext.balanceOf(applicantA);
+    expect(applicantAUnits.toString()).equal(
+      numberOfUnits.mul(toBN("3")).toString()
+    );
+    expect(await isMember(bank, applicantA)).equal(true);
+
+    await onboardingNewMember(
+      getProposalCounter(),
+      dao,
+      onboarding,
+      voting,
+      applicantB,
+      daoOwner,
+      unitPrice,
+      UNITS,
+      toBN("3")
+    );
+    //check B's balance
+    let applicantBUnits = await erc20Ext.balanceOf(applicantB);
+    expect(applicantBUnits.toString()).equal(
+      numberOfUnits.mul(toBN("3")).toString()
+    );
+    expect(await isMember(bank, applicantB)).equal(true);
+
+    //approve and check spender's allownance
+    await erc20Ext.approve(externalAddressA, numberOfUnits.mul(toBN("1")), {
+      from: applicantA,
+    });
+    let spenderAllowance = await erc20Ext.allowance(
+      applicantA,
+      externalAddressA
+    );
+    expect(spenderAllowance.toString()).equal(
+      numberOfUnits.mul(toBN("1")).toString()
+    );
+    //externallAddressB should not be a member
+    expect(await isMember(bank, externalAddressB)).equal(false);
+    //transferFrom the applicantA the amount spenderAllowance to externalAddressA
+    await (erc20Ext.transferFrom(
+      applicantA,
+      externalAddressB,
+      numberOfUnits.mul(toBN("1")),
+      { from: externalAddressA }
+    ));
+
+    //check new balances of applicantA & externalAddressB
+    applicantAUnits = await erc20Ext.balanceOf(applicantA);
+    expect(applicantAUnits.toString()).equal(
+      numberOfUnits.mul(toBN("2")).toString()
+    );
+    let externalAddressBUnits = await erc20Ext.balanceOf(externalAddressB);
+    expect(externalAddressBUnits.toString()).equal(
+      numberOfUnits.mul(toBN("1")).toString()
+    );
+
+    //check allowance of spender -
+    spenderAllowance = await erc20Ext.allowance(applicantA, externalAddressA);
+    expect(spenderAllowance.toString()).equal(
+      numberOfUnits.mul(toBN("0")).toString()
+    );
+ 
+  });
+
 });
