@@ -30,6 +30,8 @@ const {
   unitPrice,
   remaining,
   UNITS,
+  TOTAL,
+  MEMBER_COUNT,
 } = require("../../utils/ContractUtil.js");
 
 const {
@@ -47,32 +49,27 @@ const {
   createVote,
   getDomainDefinition,
   TypedDataUtils,
-  getMessageERC712Hash,
   prepareProposalPayload,
   prepareVoteProposalData,
   prepareProposalMessage,
   prepareVoteResult,
-  toStepNode,
-  getVoteStepDomainDefinition,
-  validateMessage,
   SigUtilSigner,
+  getVoteStepDomainDefinition,
 } = require("../../utils/offchain_voting.js");
 
-const members = [
-  {
-    address: "0x7D8cad0bbD68deb352C33e80fccd4D8e88b4aBb8",
-    privKey: "c150429d49e8799f119434acd3f816f299a5c7e3891455ee12269cb47a5f987c",
-  },
-  {
-    address: "0x9A60E6865b717f4DA53e0F3d53A30Ac3Dd2C743e",
-    privKey: "14ecc272f178289e8b119769b4a86ff9ec54457a39a611b20d1c92102aa9bf1b",
-  },
-  {
-    address: "0xc08964fd0cEBCAC1BF73D1457b10fFFD9Ed25d55",
-    privKey: "7aa9805ef135bf9b4d67b68ceccdaee8cc937c0784d92b51cf49e6911fc5f787",
-  },
-];
+const generateMembers = (amount) => {
+  let newAccounts = [];
+  for (let i = 0; i < amount; i++) {
+    const account = web3.eth.accounts.create();
+    newAccounts.push(account);
+  }
+  return newAccounts;
+};
 
+const members = generateMembers(10);
+const findMember = (addr) => {
+  members.find((member) => member.address === addr);
+};
 const daoOwner = accounts[0];
 const newMember = members[0];
 const proposalCounter = proposalIdGenerator().generator;
@@ -80,6 +77,114 @@ const proposalCounter = proposalIdGenerator().generator;
 function getProposalCounter() {
   return proposalCounter().next().value;
 }
+
+const onboardMember = async (dao, voting, onboarding, bank, index) => {
+  const blockNumber = await web3.eth.getBlockNumber();
+  const proposalId = getProposalCounter();
+
+  const proposalPayload = {
+    name: "some proposal",
+    body: "this is my proposal",
+    choices: ["yes", "no"],
+    start: Math.floor(new Date().getTime() / 1000),
+    end: Math.floor(new Date().getTime() / 1000) + 10000,
+    snapshot: blockNumber.toString(),
+  };
+
+  const space = "tribute";
+  const chainId = 1;
+  
+  const proposalData = {
+    type: "proposal",
+    timestamp: Math.floor(new Date().getTime() / 1000),
+    space,
+    payload: proposalPayload,
+  };
+
+  //signer for myAccount (its private key)
+  const signer = SigUtilSigner(members[0].privateKey);
+  proposalData.sig = await signer(
+    proposalData,
+    dao.address,
+    onboarding.address,
+    chainId
+  );
+
+  await onboarding.submitProposal(
+    dao.address,
+    proposalId,
+    members[index].address,
+    UNITS,
+    unitPrice.mul(toBN(3)).add(remaining),
+    prepareVoteProposalData(proposalData, web3),
+    {
+      gasPrice: toBN("0"),
+    }
+  );
+
+  const voteEntries = [];
+  const membersCount = await dao.getNbMembers();
+  for (let i = 0; i < parseInt(membersCount.toString()); i++) {
+    const memberAddress = await dao.getMemberAddress(i);
+    const member = findMember(memberAddress);
+    let voteEntry;
+    if (member) {
+      const voteSigner = SigUtilSigner(member.privateKey);
+      const weight = await bank.balanceOf(member.address, UNITS);
+      voteEntry = await createVote(proposalId, weight.toString(), true);
+
+      voteEntry.sig = voteSigner(
+        voteEntry,
+        dao.address,
+        onboarding.address,
+        chainId
+      );
+    } else {
+      voteEntry = await createVote(proposalId, 0, true);
+
+      voteEntry.sig = "0x";
+    }
+
+    voteEntry.member = memberAddress;
+
+    voteEntries.push(voteEntry);
+  }
+
+  await advanceTime(10000);
+  const { voteResultTree, result } = await prepareVoteResult(
+    voteEntries,
+    dao,
+    onboarding.address,
+    chainId
+  );
+
+  const rootSig = signer(
+    { root: voteResultTree.getHexRoot(), type: "result" },
+    dao.address,
+    onboarding.address,
+    chainId
+  );
+
+  const lastResult = result[result.length - 1];
+  let tx = await voting.submitVoteResult(
+    dao.address,
+    proposalId,
+    voteResultTree.getHexRoot(),
+    lastResult,
+    rootSig
+  );
+
+  console.log(
+    `gas used for ( ${proposalId} ) votes: ` +
+      new Intl.NumberFormat().format(tx.receipt.gasUsed)
+  );
+
+  await advanceTime(10000);
+
+  await onboarding.processProposal(dao.address, proposalId, {
+    value: unitPrice.mul(toBN("3")).add(remaining),
+  });
+};
 
 describe("Adapter - Offchain Voting", () => {
   before("deploy dao", async () => {
@@ -125,6 +230,7 @@ describe("Adapter - Offchain Voting", () => {
       payload: proposalPayload,
       sig: "0x00",
     };
+
     const chainId = 1;
     let { types, domain } = getDomainDefinition(
       proposalData,
@@ -132,6 +238,7 @@ describe("Adapter - Offchain Voting", () => {
       daoOwner,
       chainId
     );
+
     const snapshotContract = this.votingHelpers.snapshotProposalContract;
     //Checking proposal type
     const solProposalMsg = await snapshotContract.PROPOSAL_MESSAGE_TYPE();
@@ -181,25 +288,16 @@ describe("Adapter - Offchain Voting", () => {
         "hex"
       );
     expect(domainHash).equal(jsDomainHash);
-
-    //Checking the actual ERC-712 hash
-    const proposalHash = await snapshotContract.hashMessage(
-      dao.address,
-      daoOwner,
-      proposalData
-    );
-    expect(
-      getMessageERC712Hash(proposalData, dao.address, daoOwner, chainId)
-    ).equal(proposalHash);
   });
 
   it("should type & hash be consistent for votes between javascript and solidity", async () => {
     const chainId = 1;
     const dao = this.dao;
+    const offchainVoting = this.votingHelpers.offchainVoting;
     const snapshotContract = this.votingHelpers.snapshotProposalContract;
 
     const proposalHash = sha3("test");
-    const voteEntry = await createVote(proposalHash, daoOwner, true);
+    const voteEntry = await createVote(proposalHash, 1, true);
 
     const { types } = getDomainDefinition(
       voteEntry,
@@ -219,134 +317,28 @@ describe("Adapter - Offchain Voting", () => {
       TypedDataUtils.hashStruct("Message", voteEntry, types).toString("hex");
     const solidityHash = await snapshotContract.hashVoteInternal(voteEntry);
     expect(hashStruct).equal(solidityHash);
+
+    const nodeDef = getVoteStepDomainDefinition(dao.address, dao.address, chainId);
+
+    const solNodeDef = await offchainVoting.VOTE_RESULT_NODE_TYPE();
+    const jsNodeMsg = TypedDataUtils.encodeType("Message", nodeDef.types);
+    
+    expect(solNodeDef).equal(jsNodeMsg);
   });
 
   it("should be possible to propose a new voting by signing the proposal hash", async () => {
     const dao = this.dao;
-    const voting = this.votingHelpers.offchainVoting;
     const onboarding = this.adapters.onboarding;
     const bank = this.extensions.bank;
 
-    const blockNumber = await web3.eth.getBlockNumber();
-    const proposalPayload = {
-      name: "some proposal",
-      body: "this is my proposal",
-      choices: ["yes", "no"],
-      start: Math.floor(new Date().getTime() / 1000),
-      end: Math.floor(new Date().getTime() / 1000) + 10000,
-      snapshot: blockNumber.toString(),
-    };
-
-    const space = "tribute";
-
-    const proposalData = {
-      type: "proposal",
-      timestamp: Math.floor(new Date().getTime() / 1000),
-      space,
-      payload: proposalPayload,
-    };
-
-    const chainId = 1;
-    //signer for daoOwner (its private key)
-    const signer = SigUtilSigner(newMember.privKey);
-    proposalData.sig = await signer(
-      proposalData,
-      dao.address,
-      onboarding.address,
-      chainId
-    );
-
-    const proposalId = getProposalCounter();
-    await onboarding.submitProposal(
-      dao.address,
-      proposalId,
-      members[1].address,
-      UNITS,
-      unitPrice.mul(toBN(3)).add(remaining),
-      prepareVoteProposalData(proposalData, web3),
-      {
-        from: daoOwner,
-        gasPrice: toBN("0"),
-      }
-    );
-
-    const voteEntry = await createVote(proposalId, newMember.address, true);
-    voteEntry.sig = signer(voteEntry, dao.address, onboarding.address, chainId);
-    expect(
-      validateMessage(
-        voteEntry,
-        newMember.address,
-        dao.address,
-        onboarding.address,
-        chainId,
-        voteEntry.sig
-      )
-    ).equal(true);
-
-    const { voteResultTree, votes } = await prepareVoteResult(
-      [voteEntry],
-      dao,
-      bank,
-      onboarding.address,
-      chainId,
-      proposalPayload.snapshot
-    );
-    const result = toStepNode(
-      votes[0],
-      dao.address,
-      onboarding.address,
-      chainId,
-      voteResultTree
-    );
-
-    result.rootSig = signer(
-      { root: voteResultTree.getHexRoot(), type: "result" },
-      dao.address,
-      onboarding.address,
-      chainId
-    );
-
-    const { types } = getVoteStepDomainDefinition(
-      dao.address,
-      daoOwner,
-      chainId
-    );
-    //Checking vote result hash
-    const solVoteResultType = await voting.VOTE_RESULT_NODE_TYPE();
-    const jsVoteResultType = TypedDataUtils.encodeType("Message", types);
-    expect(jsVoteResultType).equal(solVoteResultType);
-
-    const hashStruct =
-      "0x" +
-      TypedDataUtils.hashStruct("Message", result, types).toString("hex");
-
-    const solidityHash = await voting.hashVotingResultNode(result);
-    expect(hashStruct).equal(solidityHash);
-
-    const solAddress = await dao.getPriorDelegateKey(
-      newMember.address,
-      blockNumber
-    );
-    expect(solAddress).equal(newMember.address);
-
-    await advanceTime(10000);
-
-    await voting.submitVoteResult(
-      dao.address,
-      proposalId,
-      voteResultTree.getHexRoot(),
-      result,
-      { from: daoOwner, gasPrice: toBN("0") }
-    );
-
-    await advanceTime(10000);
-
-    await onboarding.processProposal(dao.address, proposalId, {
-      from: daoOwner,
-      value: unitPrice.mul(toBN("3")).add(remaining),
-      gasPrice: toBN("0"),
-    });
-
-    //TODO check result?
+    for (var i = 1; i < members.length; i++) {
+      await onboardMember(
+        dao,
+        this.votingHelpers.offchainVoting,
+        onboarding,
+        bank,
+        i
+      );
+    }
   });
 });

@@ -38,13 +38,13 @@ contract SnapshotProposalContract {
     string public constant EIP712_DOMAIN =
         "EIP712Domain(string name,string version,uint256 chainId,address verifyingContract,address actionId)";
     string public constant PROPOSAL_MESSAGE_TYPE =
-        "Message(uint256 timestamp,bytes32 spaceHash,MessagePayload payload)MessagePayload(bytes32 nameHash,bytes32 bodyHash,string[] choices,uint256 start,uint256 end,string snapshot)";
+        "Message(uint64 timestamp,bytes32 spaceHash,MessagePayload payload)MessagePayload(bytes32 nameHash,bytes32 bodyHash,string[] choices,uint64 start,uint64 end,string snapshot)";
     string public constant PROPOSAL_PAYLOAD_TYPE =
-        "MessagePayload(bytes32 nameHash,bytes32 bodyHash,string[] choices,uint256 start,uint256 end,string snapshot)";
+        "MessagePayload(bytes32 nameHash,bytes32 bodyHash,string[] choices,uint64 start,uint64 end,string snapshot)";
     string public constant VOTE_MESSAGE_TYPE =
-        "Message(uint256 timestamp,MessagePayload payload)MessagePayload(uint256 choice,bytes32 proposalHash)";
+        "Message(uint64 timestamp,MessagePayload payload)MessagePayload(uint32 choice,bytes32 proposalId)";
     string public constant VOTE_PAYLOAD_TYPE =
-        "MessagePayload(uint256 choice,bytes32 proposalHash)";
+        "MessagePayload(uint32 choice,bytes32 proposalId)";
 
     bytes32 public constant EIP712_DOMAIN_TYPEHASH =
         keccak256(abi.encodePacked(EIP712_DOMAIN));
@@ -99,8 +99,8 @@ contract SnapshotProposalContract {
     }
 
     struct VotePayload {
-        uint256 choice;
-        bytes32 proposalHash;
+        uint32 choice;
+        bytes32 proposalId;
     }
 
     constructor(uint256 _chainId) {
@@ -197,7 +197,7 @@ contract SnapshotProposalContract {
                 abi.encode(
                     VOTE_PAYLOAD_TYPEHASH,
                     payload.choice,
-                    payload.proposalHash
+                    payload.proposalId
                 )
             );
     }

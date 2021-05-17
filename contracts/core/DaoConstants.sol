@@ -53,6 +53,7 @@ abstract contract DaoConstants {
     address internal constant UNITS = address(0xFF1CE);
     address internal constant LOOT = address(0xB105F00D);
     address internal constant ETH_TOKEN = address(0x0);
+    address internal constant MEMBER_COUNT = address(0xDECAFBAD);
 
     uint8 internal constant MAX_TOKENS_GUILD_BANK = 200;
 

@@ -89,12 +89,14 @@ contract BankExtension is DaoConstants, AdapterGuard, IExtension {
     // constructor() {
     // }
 
-    modifier hasExtensionAccess(IExtension extension, AclFlag flag) {
+    modifier hasExtensionAccess(AclFlag flag) {
         require(
-            dao.state() == DaoRegistry.DaoState.CREATION ||
+            address(this) == msg.sender ||
+                address(dao) == msg.sender ||
+                dao.state() == DaoRegistry.DaoState.CREATION ||
                 dao.hasAdapterAccessToExtension(
                     msg.sender,
-                    address(extension),
+                    address(this),
                     uint8(flag)
                 ),
             "bank::accessDenied"
@@ -111,21 +113,28 @@ contract BankExtension is DaoConstants, AdapterGuard, IExtension {
     function initialize(DaoRegistry _dao, address creator) external override {
         require(!initialized, "bank already initialized");
         require(_dao.isMember(creator), "bank::not member");
+        dao = _dao;
+        initialized = true;
+
         availableInternalTokens[UNITS] = true;
         internalTokens.push(UNITS);
 
+        availableInternalTokens[MEMBER_COUNT] = true;
+        internalTokens.push(MEMBER_COUNT);
+        uint256 nbMembers = _dao.getNbMembers();
+        for (uint256 i = 0; i < nbMembers; i++) {
+            addToBalance(_dao.getMemberAddress(i), MEMBER_COUNT, 1);
+        }
+
         _createNewAmountCheckpoint(creator, UNITS, 1);
         _createNewAmountCheckpoint(TOTAL, UNITS, 1);
-
-        initialized = true;
-        dao = _dao;
     }
 
     function withdraw(
         address payable member,
         address tokenAddr,
         uint256 amount
-    ) external hasExtensionAccess(this, AclFlag.WITHDRAW) {
+    ) external hasExtensionAccess(AclFlag.WITHDRAW) {
         require(
             balanceOf(member, tokenAddr) >= amount,
             "bank::withdraw::not enough funds"
@@ -181,7 +190,7 @@ contract BankExtension is DaoConstants, AdapterGuard, IExtension {
      */
     function registerPotentialNewToken(address token)
         external
-        hasExtensionAccess(this, AclFlag.REGISTER_NEW_TOKEN)
+        hasExtensionAccess(AclFlag.REGISTER_NEW_TOKEN)
     {
         require(isNotReservedAddress(token), "reservedToken");
         require(!availableInternalTokens[token], "internalToken");
@@ -203,7 +212,7 @@ contract BankExtension is DaoConstants, AdapterGuard, IExtension {
      */
     function registerPotentialNewInternalToken(address token)
         external
-        hasExtensionAccess(this, AclFlag.REGISTER_NEW_INTERNAL_TOKEN)
+        hasExtensionAccess(AclFlag.REGISTER_NEW_INTERNAL_TOKEN)
     {
         require(isNotReservedAddress(token), "reservedToken");
         require(!availableTokens[token], "availableToken");
@@ -216,7 +225,7 @@ contract BankExtension is DaoConstants, AdapterGuard, IExtension {
 
     function updateToken(address tokenAddr)
         external
-        hasExtensionAccess(this, AclFlag.UPDATE_TOKEN)
+        hasExtensionAccess(AclFlag.UPDATE_TOKEN)
     {
         require(isTokenAllowed(tokenAddr), "token not allowed");
         uint256 totalBalance = balanceOf(TOTAL, tokenAddr);
@@ -298,7 +307,7 @@ contract BankExtension is DaoConstants, AdapterGuard, IExtension {
         address member,
         address token,
         uint256 amount
-    ) public payable hasExtensionAccess(this, AclFlag.ADD_TO_BALANCE) {
+    ) public payable hasExtensionAccess(AclFlag.ADD_TO_BALANCE) {
         require(
             availableTokens[token] || availableInternalTokens[token],
             "unknown token address"
@@ -320,7 +329,7 @@ contract BankExtension is DaoConstants, AdapterGuard, IExtension {
         address member,
         address token,
         uint256 amount
-    ) public hasExtensionAccess(this, AclFlag.SUB_FROM_BALANCE) {
+    ) public hasExtensionAccess(AclFlag.SUB_FROM_BALANCE) {
         uint256 newAmount = balanceOf(member, token) - amount;
         uint256 newTotalAmount = balanceOf(TOTAL, token) - amount;
 
@@ -339,7 +348,7 @@ contract BankExtension is DaoConstants, AdapterGuard, IExtension {
         address to,
         address token,
         uint256 amount
-    ) public hasExtensionAccess(this, AclFlag.INTERNAL_TRANSFER) {
+    ) public hasExtensionAccess(AclFlag.INTERNAL_TRANSFER) {
         uint256 newAmount = balanceOf(from, token) - amount;
         uint256 newAmount2 = balanceOf(to, token) + amount;
 

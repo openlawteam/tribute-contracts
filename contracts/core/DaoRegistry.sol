@@ -213,17 +213,25 @@ contract DaoRegistry is MemberGuard, AdapterGuard {
     {
         Member storage member = members[memberAddress];
         if (!getFlag(member.flags, uint8(MemberFlag.EXISTS))) {
+            require(
+                memberAddressesByDelegatedKey[memberAddress] == address(0x0),
+                "member address already taken as delegated key"
+            );
             member.flags = setFlag(
                 member.flags,
                 uint8(MemberFlag.EXISTS),
                 true
             );
-            require(
-                memberAddressesByDelegatedKey[memberAddress] == address(0x0),
-                "member address already taken as delegated key"
-            );
             memberAddressesByDelegatedKey[memberAddress] = memberAddress;
             _members.push(memberAddress);
+        }
+
+        address bankAddress = extensions[BANK];
+        if (bankAddress != address(0x0)) {
+            BankExtension bank = BankExtension(bankAddress);
+            if (bank.balanceOf(memberAddress, MEMBER_COUNT) == 0) {
+                bank.addToBalance(memberAddress, MEMBER_COUNT, 1);
+            }
         }
     }
 

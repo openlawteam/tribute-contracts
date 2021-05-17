@@ -82,12 +82,12 @@ function getVoteDomainDefinition(verifyingContract, actionId, chainId) {
   // The named list of all type definitions
   const types = {
     Message: [
-      { name: "timestamp", type: "uint256" },
+      { name: "timestamp", type: "uint64" },
       { name: "payload", type: "MessagePayload" },
     ],
     MessagePayload: [
-      { name: "choice", type: "uint256" },
-      { name: "proposalHash", type: "bytes32" },
+      { name: "choice", type: "uint32" },
+      { name: "proposalId", type: "bytes32" },
     ],
     EIP712Domain: getDomainType(),
   };
@@ -101,13 +101,12 @@ function getVoteStepDomainDefinition(verifyingContract, actionId, chainId) {
   // The named list of all type definitions
   const types = {
     Message: [
-      { name: "account", type: "address" },
-      { name: "timestamp", type: "uint256" },
-      { name: "nbYes", type: "uint256" },
-      { name: "nbNo", type: "uint256" },
-      { name: "index", type: "uint256" },
-      { name: "choice", type: "uint256" },
-      { name: "proposalHash", type: "bytes32" },
+      { name: "timestamp", type: "uint64" },
+      { name: "nbYes", type: "uint88" },
+      { name: "nbNo", type: "uint88" },
+      { name: "index", type: "uint32" },
+      { name: "choice", type: "uint32" },
+      { name: "proposalId", type: "bytes32" },
     ],
     EIP712Domain: getDomainType(),
   };
@@ -120,7 +119,7 @@ function getProposalDomainDefinition(verifyingContract, actionId, chainId) {
 
   const types = {
     Message: [
-      { name: "timestamp", type: "uint256" },
+      { name: "timestamp", type: "uint64" },
       { name: "spaceHash", type: "bytes32" },
       { name: "payload", type: "MessagePayload" },
     ],
@@ -128,8 +127,8 @@ function getProposalDomainDefinition(verifyingContract, actionId, chainId) {
       { name: "nameHash", type: "bytes32" },
       { name: "bodyHash", type: "bytes32" },
       { name: "choices", type: "string[]" },
-      { name: "start", type: "uint256" },
-      { name: "end", type: "uint256" },
+      { name: "start", type: "uint64" },
+      { name: "end", type: "uint64" },
       { name: "snapshot", type: "string" },
     ],
     EIP712Domain: getDomainType(),
@@ -143,7 +142,7 @@ function getDraftDomainDefinition(verifyingContract, actionId, chainId) {
 
   const types = {
     Message: [
-      { name: "timestamp", type: "uint256" },
+      { name: "timestamp", type: "uint64" },
       { name: "spaceHash", type: "bytes32" },
       { name: "payload", type: "MessagePayload" },
     ],
@@ -327,7 +326,7 @@ function prepareVoteMessage(message) {
 
 function prepareVotePayload(payload) {
   return Object.assign(payload, {
-    proposalHash: payload.proposalHash,
+    proposalId: payload.proposalId,
     choice: payload.choice,
   });
 }
@@ -367,31 +366,35 @@ function prepareProposalPayload(payload) {
 
 function toStepNode(step, verifyingContract, actionId, chainId, merkleTree) {
   return {
-    account: step.account,
     nbNo: step.nbNo,
     nbYes: step.nbYes,
     index: step.index,
     choice: step.choice,
     sig: step.sig,
     timestamp: step.timestamp,
-    proposalHash: step.proposalHash,
+    proposalId: step.proposalId,
+    member: step.member,
     proof: merkleTree.getHexProof(
       buildVoteLeafHashForMerkleTree(step, verifyingContract, actionId, chainId)
     ),
   };
 }
 
-async function createVote(proposalHash, account, voteYes) {
+async function createVote(proposalId, weight, voteYes) {
   const payload = {
     choice: voteYes ? 1 : 2,
-    account,
-    proposalHash,
+    proposalId,
+    weight,
   };
   const vote = {
     type: "vote",
     timestamp: Math.floor(new Date().getTime() / 1000),
     payload,
   };
+
+  if (!weight) {
+    payload.choice = 0;
+  }
 
   return vote;
 }
@@ -416,61 +419,46 @@ function buildVoteLeafHashForMerkleTree(
   return "0x" + sigUtil.TypedDataUtils.sign(msgParams).toString("hex");
 }
 
-async function prepareVoteResult(
-  votes,
-  dao,
-  bank,
-  actionId,
-  chainId,
-  snapshot
-) {
-  const sortedVotes = votes.sort((a, b) => a.account > b.account);
-  const leaves = await Promise.all(
-    sortedVotes.map(async (vote) => {
-      const weight = await bank.getPriorAmount(
-        vote.payload.account,
-        UNITS,
-        snapshot
-      );
-      return Object.assign(vote, { weight });
-    })
-  );
-
-  leaves.forEach((leaf, idx) => {
-    leaf.nbYes = leaf.voteResult === 1 ? 1 : 0;
-    leaf.nbNo = leaf.voteResult !== 1 ? 1 : 0;
-    leaf.account = leaf.payload.account;
-    leaf.choice = leaf.payload.choice;
-    leaf.proposalHash = leaf.payload.proposalHash;
+async function prepareVoteResult(votes, dao, actionId, chainId) {
+  votes.forEach((vote, idx) => {
+    vote.choice = vote.choice || vote.payload.choice;
+    vote.nbYes = vote.choice === 1 ? vote.payload.weight : 0;
+    vote.nbNo = vote.choice !== 1 ? vote.payload.weight : 0;
+    vote.proposalId = vote.payload.proposalId;
     if (idx > 0) {
-      const previousLeaf = leaves[idx - 1];
-      leaf.nbYes = leaf.nbYes + previousLeaf.nbYes;
-      leaf.nbNo = leaf.nbNo + previousLeaf.nbNo;
+      const previousVote = votes[idx - 1];
+      vote.nbYes = vote.nbYes + previousVote.nbYes;
+      vote.nbNo = vote.nbNo + previousVote.nbNo;
     }
 
-    leaf.index = idx;
+    vote.index = idx;
   });
 
   const tree = new MerkleTree(
-    leaves.map((vote) =>
+    votes.map((vote) =>
       buildVoteLeafHashForMerkleTree(vote, dao.address, actionId, chainId)
     )
   );
-  return { voteResultTree: tree, votes: leaves };
+
+  const result = votes.map((vote) =>
+    toStepNode(vote, dao.address, actionId, chainId, tree)
+  );
+
+  return { voteResultTree: tree, result };
 }
 
 function prepareVoteProposalData(data, web3) {
   return web3.eth.abi.encodeParameter(
     {
       ProposalMessage: {
-        timestamp: "uint256",
+        timestamp: "uint64",
         spaceHash: "bytes32",
         payload: {
           nameHash: "bytes32",
           bodyHash: "bytes32",
           choices: "string[]",
-          start: "uint256",
-          end: "uint256",
+          start: "uint64",
+          end: "uint64",
           snapshot: "string",
         },
         sig: "bytes",
