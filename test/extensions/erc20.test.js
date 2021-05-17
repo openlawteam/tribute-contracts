@@ -1,6 +1,7 @@
 // Whole-script strict mode syntax
 "use strict";
 
+const { assert } = require("chai");
 const { sha3 } = require("web3-utils");
 /**
 MIT License
@@ -402,7 +403,7 @@ describe("Extension - ERC20", () => {
 
  
 
-  it("should be possible to pause the transfer when the unit", async () => {
+  it("should be possible to pause all transfers when erc20ExtTransferType = 2", async () => {
     const dao = this.dao;
     //onboarded member A & B
     const applicantA = accounts[2];
@@ -413,7 +414,7 @@ describe("Extension - ERC20", () => {
     const configuration = this.adapters.configuration;
     const voting = this.adapters.voting;
     const erc20Ext = this.extensions.erc20Ext;
-
+    //configure to pause all transfers
     await submitConfigProposal(
       dao,
       getProposalCounter(),
@@ -425,6 +426,64 @@ describe("Extension - ERC20", () => {
     );
     let transferType = await dao.getConfiguration(sha3("erc20ExtTransferType"));
     expect(transferType.toString()).equal("2");
+      //onboard A
+    await onboardingNewMember(
+      getProposalCounter(),
+      dao,
+      onboarding,
+      voting,
+      applicantA,
+      daoOwner,
+      unitPrice,
+      UNITS,
+      toBN("3")
+    );
+    //check A's balance
+    let applicantAUnits = await erc20Ext.balanceOf(applicantA);
+    expect(applicantAUnits.toString()).equal(
+      numberOfUnits.mul(toBN("3")).toString()
+    );
+    expect(await isMember(bank, applicantA)).equal(true);
+      //onboard B
+    await onboardingNewMember(
+      getProposalCounter(),
+      dao,
+      onboarding,
+      voting,
+      applicantB,
+      daoOwner,
+      unitPrice,
+      UNITS,
+      toBN("3")
+    );
+    //check B's balance
+    let applicantBUnits = await erc20Ext.balanceOf(applicantB);
+    expect(applicantBUnits.toString()).equal(
+      numberOfUnits.mul(toBN("3")).toString()
+    );
+    expect(await isMember(bank, applicantB)).equal(true);
+    
+      //attempt transfer 
+    try {
+      await erc20Ext.transfer(applicantB, numberOfUnits.mul(toBN("1")), {
+        from: applicantA,
+      });
+        assert(false);
+      } 
+      catch(error) {
+        assert(error);
+    }
+    //applicantA should still have the same number of Units
+    applicantAUnits = await erc20Ext.balanceOf(applicantA);
+    expect(applicantAUnits.toString()).equal(
+      numberOfUnits.mul(toBN("3")).toString()
+    );
+      //applicantB should still have the same number of Units
+    applicantBUnits = await erc20Ext.balanceOf(applicantB);
+    expect(applicantBUnits.toString()).equal(
+      numberOfUnits.mul(toBN("3")).toString()
+    );
+   
   });
 
   it("should be possible to transfer units from a member to an external account", async () => {
