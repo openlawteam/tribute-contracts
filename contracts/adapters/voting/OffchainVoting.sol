@@ -562,7 +562,8 @@ contract OffchainVotingContract is
         }
 
         //bad signature
-        if (node.sig.length > 2 && 
+        if (
+            node.sig.length > 2 &&
             !_hasVoted(
                 dao,
                 actionId,

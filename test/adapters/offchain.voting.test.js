@@ -93,7 +93,7 @@ const onboardMember = async (dao, voting, onboarding, bank, index) => {
 
   const space = "tribute";
   const chainId = 1;
-  
+
   const proposalData = {
     type: "proposal",
     timestamp: Math.floor(new Date().getTime() / 1000),
@@ -318,11 +318,15 @@ describe("Adapter - Offchain Voting", () => {
     const solidityHash = await snapshotContract.hashVoteInternal(voteEntry);
     expect(hashStruct).equal(solidityHash);
 
-    const nodeDef = getVoteStepDomainDefinition(dao.address, dao.address, chainId);
+    const nodeDef = getVoteStepDomainDefinition(
+      dao.address,
+      dao.address,
+      chainId
+    );
 
     const solNodeDef = await offchainVoting.VOTE_RESULT_NODE_TYPE();
     const jsNodeMsg = TypedDataUtils.encodeType("Message", nodeDef.types);
-    
+
     expect(solNodeDef).equal(jsNodeMsg);
   });
 
