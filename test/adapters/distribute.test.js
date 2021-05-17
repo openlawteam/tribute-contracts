@@ -53,6 +53,8 @@ const {
 const { onboardingNewMember } = require("../../utils/TestUtils.js");
 
 const daoOwner = accounts[2];
+const daoCreator = accounts[9];
+
 const proposalCounter = proposalIdGenerator().generator;
 
 function getProposalCounter() {
@@ -63,6 +65,7 @@ describe("Adapter - Distribute", () => {
   before("deploy dao", async () => {
     const { dao, adapters, extensions } = await deployDefaultDao({
       owner: daoOwner,
+      creator: daoCreator,
     });
     this.dao = dao;
     this.adapters = adapters;
