@@ -9,9 +9,9 @@ import "../extensions/bank/Bank.sol";
 import "../adapters/interfaces/IVoting.sol";
 import "../guards/MemberGuard.sol";
 import "../guards/AdapterGuard.sol";
-import "../utils/IERC20.sol";
 import "@openzeppelin/contracts/utils/Address.sol";
-import "../helpers/SafeERC20.sol";
+import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
+import "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 
 /**
 MIT License
