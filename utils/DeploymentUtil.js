@@ -31,7 +31,6 @@ const deployDao = async (options) => {
   const {
     deployFunction,
     owner,
-    creator,
     deployTestTokens,
     finalize,
     DaoRegistry,
@@ -105,7 +104,9 @@ const deployDao = async (options) => {
   const erc20TokenExtension = await ERC20TokenExtension.at(
     erc20ExtTokenAddress
   );
-  await dao.addExtension(sha3("erc20-ext"), erc20ExtTokenAddress, creator);
+  await dao.addExtension(sha3("erc20-ext"), erc20ExtTokenAddress, owner, {
+    from: owner,
+  });
 
   const extensions = {
     bank: bankExtension,
@@ -453,99 +454,108 @@ const configureDao = async ({
   gracePeriod,
   couponCreatorAddress,
 }) => {
-  await daoFactory.addAdapters(dao.address, [
-    entryDao("voting", voting, {}),
-    entryDao("configuration", configuration, {
-      SUBMIT_PROPOSAL: true,
-      SET_CONFIGURATION: true,
-    }),
-    entryDao("ragequit", ragequit, {}),
-    entryDao("guildkick", guildkick, {
-      SUBMIT_PROPOSAL: true,
-    }),
-    entryDao("managing", managing, {
-      SUBMIT_PROPOSAL: true,
-      REPLACE_ADAPTER: true,
-    }),
-    entryDao("financing", financing, {
-      SUBMIT_PROPOSAL: true,
-    }),
-    entryDao("onboarding", onboarding, {
-      SUBMIT_PROPOSAL: true,
-      UPDATE_DELEGATE_KEY: true,
-      NEW_MEMBER: true,
-    }),
-    entryDao("coupon-onboarding", couponOnboarding, {
-      SUBMIT_PROPOSAL: false,
-      ADD_TO_BALANCE: true,
-      UPDATE_DELEGATE_KEY: false,
-      NEW_MEMBER: true,
-    }),
-    entryDao("daoRegistry", daoRegistryAdapter, {
-      UPDATE_DELEGATE_KEY: true,
-    }),
-    entryDao("tribute", tribute, {
-      SUBMIT_PROPOSAL: true,
-      NEW_MEMBER: true,
-    }),
-    entryDao("tribute-nft", tributeNFT, {
-      SUBMIT_PROPOSAL: true,
-      NEW_MEMBER: true,
-    }),
-    entryDao("distribute", distribute, {
-      SUBMIT_PROPOSAL: true,
-    }),
-    // Adapters to access the extensions directly
-    entryDao("nft", nftAdapter, {}),
-    entryDao("bank", bankAdapter, {}),
-    // Declare the unit-token extension as an adapter to be able to call the bank extension
-    entryDao("unit-token", erc20TokenExtension, {
-      INTERNAL_TRANSFER: true,
-      NEW_MEMBER: true,
-    }),
-  ], { from: owner });
+  await daoFactory.addAdapters(
+    dao.address,
+    [
+      entryDao("voting", voting, {}),
+      entryDao("configuration", configuration, {
+        SUBMIT_PROPOSAL: true,
+        SET_CONFIGURATION: true,
+      }),
+      entryDao("ragequit", ragequit, {}),
+      entryDao("guildkick", guildkick, {
+        SUBMIT_PROPOSAL: true,
+      }),
+      entryDao("managing", managing, {
+        SUBMIT_PROPOSAL: true,
+        REPLACE_ADAPTER: true,
+      }),
+      entryDao("financing", financing, {
+        SUBMIT_PROPOSAL: true,
+      }),
+      entryDao("onboarding", onboarding, {
+        SUBMIT_PROPOSAL: true,
+        UPDATE_DELEGATE_KEY: true,
+        NEW_MEMBER: true,
+      }),
+      entryDao("coupon-onboarding", couponOnboarding, {
+        SUBMIT_PROPOSAL: false,
+        ADD_TO_BALANCE: true,
+        UPDATE_DELEGATE_KEY: false,
+        NEW_MEMBER: true,
+      }),
+      entryDao("daoRegistry", daoRegistryAdapter, {
+        UPDATE_DELEGATE_KEY: true,
+      }),
+      entryDao("tribute", tribute, {
+        SUBMIT_PROPOSAL: true,
+        NEW_MEMBER: true,
+      }),
+      entryDao("tribute-nft", tributeNFT, {
+        SUBMIT_PROPOSAL: true,
+        NEW_MEMBER: true,
+      }),
+      entryDao("distribute", distribute, {
+        SUBMIT_PROPOSAL: true,
+      }),
+      // Adapters to access the extensions directly
+      entryDao("nft", nftAdapter, {}),
+      entryDao("bank", bankAdapter, {}),
+      // Declare the unit-token extension as an adapter to be able to call the bank extension
+      entryDao("unit-token", erc20TokenExtension, {
+        INTERNAL_TRANSFER: true,
+        NEW_MEMBER: true,
+      }),
+    ],
+    { from: owner }
+  );
 
-  await daoFactory.configureExtension(dao.address, bankExtension.address, [
-    entryBank(ragequit, {
-      INTERNAL_TRANSFER: true,
-      SUB_FROM_BALANCE: true,
-      ADD_TO_BALANCE: true,
-    }),
-    entryBank(guildkick, {
-      INTERNAL_TRANSFER: true,
-      SUB_FROM_BALANCE: true,
-      ADD_TO_BALANCE: true,
-    }),
-    entryBank(bankAdapter, {
-      WITHDRAW: true,
-      SUB_FROM_BALANCE: true,
-      UPDATE_TOKEN: true,
-    }),
-    entryBank(onboarding, {
-      ADD_TO_BALANCE: true,
-    }),
-    entryBank(couponOnboarding, {
-      ADD_TO_BALANCE: true,
-    }),
-    entryBank(financing, {
-      ADD_TO_BALANCE: true,
-      SUB_FROM_BALANCE: true,
-    }),
-    entryBank(tribute, {
-      ADD_TO_BALANCE: true,
-      REGISTER_NEW_TOKEN: true,
-    }),
-    entryBank(distribute, {
-      INTERNAL_TRANSFER: true,
-    }),
-    entryBank(tributeNFT, {
-      ADD_TO_BALANCE: true,
-    }),
-    // Let the unit-token extension to execute internal transfers in the bank as an adapter
-    entryBank(erc20TokenExtension, {
-      INTERNAL_TRANSFER: true,
-    }),
-  ], { from: owner });
+  await daoFactory.configureExtension(
+    dao.address,
+    bankExtension.address,
+    [
+      entryBank(ragequit, {
+        INTERNAL_TRANSFER: true,
+        SUB_FROM_BALANCE: true,
+        ADD_TO_BALANCE: true,
+      }),
+      entryBank(guildkick, {
+        INTERNAL_TRANSFER: true,
+        SUB_FROM_BALANCE: true,
+        ADD_TO_BALANCE: true,
+      }),
+      entryBank(bankAdapter, {
+        WITHDRAW: true,
+        SUB_FROM_BALANCE: true,
+        UPDATE_TOKEN: true,
+      }),
+      entryBank(onboarding, {
+        ADD_TO_BALANCE: true,
+      }),
+      entryBank(couponOnboarding, {
+        ADD_TO_BALANCE: true,
+      }),
+      entryBank(financing, {
+        ADD_TO_BALANCE: true,
+        SUB_FROM_BALANCE: true,
+      }),
+      entryBank(tribute, {
+        ADD_TO_BALANCE: true,
+        REGISTER_NEW_TOKEN: true,
+      }),
+      entryBank(distribute, {
+        INTERNAL_TRANSFER: true,
+      }),
+      entryBank(tributeNFT, {
+        ADD_TO_BALANCE: true,
+      }),
+      // Let the unit-token extension to execute internal transfers in the bank as an adapter
+      entryBank(erc20TokenExtension, {
+        INTERNAL_TRANSFER: true,
+      }),
+    ],
+    { from: owner }
+  );
 
   await daoFactory.configureExtension(
     dao.address,

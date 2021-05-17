@@ -108,11 +108,12 @@ describe("Adapter - Configuration", () => {
     let key2 = sha3("allowExternalUnitTransfers");
 
     //Submit a new configuration proposal
+    const proposalId = getProposalCounter();
     await configuration.submitProposal(
       dao.address,
-      "0x1",
+      proposalId,
       [key1, key2],
-      [1, 0],
+      [1, 2],
       [],
       { from: owner, gasPrice: toBN("0") }
     );
@@ -122,26 +123,21 @@ describe("Adapter - Configuration", () => {
     expect(value1.toString()).equal("0");
     expect(value2.toString()).equal("0");
 
-    value1 = await dao.getConfiguration(key1);
-    value2 = await dao.getConfiguration(key2);
-    expect(value1.toString()).equal("0");
-    expect(value2.toString()).equal("0");
-
-    await voting.submitVote(dao.address, "0x1", 1, {
+    await voting.submitVote(dao.address, proposalId, 1, {
       from: owner,
       gasPrice: toBN("0"),
     });
 
     await advanceTime(10000);
-    await configuration.processProposal(dao.address, "0x1", {
+    await configuration.processProposal(dao.address, proposalId, {
       from: owner,
       gasPrice: toBN("0"),
     });
 
     value1 = await dao.getConfiguration(key1);
     value2 = await dao.getConfiguration(key2);
-    expect(value1.toString()).equal("10");
-    expect(value2.toString()).equal("15");
+    expect(value1.toString()).equal("1");
+    expect(value2.toString()).equal("2");
   });
 
   it("should not be possible to provide a different number of keys and values", async () => {
