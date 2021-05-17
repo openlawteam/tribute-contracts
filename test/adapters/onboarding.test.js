@@ -50,6 +50,8 @@ const {
 const { checkBalance, isMember } = require("../../utils/TestUtils.js");
 
 const daoOwner = accounts[0];
+const delegatedKey = accounts[9];
+
 const proposalCounter = proposalIdGenerator().generator;
 
 function getProposalCounter() {
@@ -60,6 +62,7 @@ describe("Adapter - Onboarding", () => {
   before("deploy dao", async () => {
     const { dao, adapters, extensions } = await deployDefaultDao({
       owner: daoOwner,
+      creator: delegatedKey,
     });
     this.dao = dao;
     this.adapters = adapters;
@@ -425,7 +428,7 @@ describe("Adapter - Onboarding", () => {
   });
 
   it("should be possible to update delegate key and the member continues as an active member", async () => {
-    const delegateKey = accounts[2];
+    const delegateKey = accounts[9];
     const dao = this.dao;
     const bank = this.extensions.bank;
     const daoRegistryAdapter = this.adapters.daoRegistryAdapter;
@@ -433,7 +436,7 @@ describe("Adapter - Onboarding", () => {
     expect(await isMember(bank, daoOwner)).equal(true);
     expect(await dao.isMember(delegateKey)).equal(true); // use the dao to check delegatedKeys
 
-    const newDelegatedKey = accounts[9];
+    const newDelegatedKey = accounts[5];
     await daoRegistryAdapter.updateDelegateKey(dao.address, newDelegatedKey, {
       from: daoOwner,
       gasPrice: toBN("0"),
@@ -517,5 +520,32 @@ describe("Adapter - Onboarding", () => {
       }),
       "address already taken as delegated key"
     );
+  });
+
+  it("should not be possible to onboard a member with a zero address", async () => {
+    const applicant = "0x0000000000000000000000000000000000000000";
+    const dao = this.dao;
+    const onboarding = this.adapters.onboarding;
+    const voting = this.adapters.voting;
+
+    const proposalId = getProposalCounter();
+    await expectRevert(
+      onboarding.submitProposal(
+        dao.address,
+        proposalId,
+        applicant,
+        UNITS,
+        unitPrice.mul(toBN(3)).add(remaining),
+        [],
+        {
+          from: daoOwner,
+          gasPrice: toBN("0"),
+        }
+      ),
+      "invalid member address."
+    );
+
+    let isMember = await dao.isMember(applicant);
+    expect(isMember).equal(false);
   });
 });

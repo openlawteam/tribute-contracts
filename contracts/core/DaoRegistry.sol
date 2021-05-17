@@ -211,6 +211,8 @@ contract DaoRegistry is MemberGuard, AdapterGuard {
         public
         hasAccess(this, AclFlag.NEW_MEMBER)
     {
+        require(memberAddress != address(0x0), "invalid member address");
+
         Member storage member = members[memberAddress];
         if (!getFlag(member.flags, uint8(MemberFlag.EXISTS))) {
             member.flags = setFlag(
@@ -539,8 +541,8 @@ contract DaoRegistry is MemberGuard, AdapterGuard {
      * @param addr The address to look up
      */
     function isMember(address addr) public view returns (bool) {
-        address memberAddr = memberAddressesByDelegatedKey[addr];
-        return getMemberFlag(memberAddr, MemberFlag.EXISTS);
+        address memberAddress = memberAddressesByDelegatedKey[addr];
+        return getMemberFlag(memberAddress, MemberFlag.EXISTS);
     }
 
     /**
