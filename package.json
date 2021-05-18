@@ -3,7 +3,15 @@
   "version": "1.0.0-rc2",
   "description": "A new modular DAO framework, inspired by the Moloch smart contracts",
   "main": "truffle-config.js",
-  "keywords": ["dao", "framework", "smart-contract", "solidity", "modular", "moloch", "ethereum"],
+  "keywords": [
+    "dao",
+    "framework",
+    "smart-contract",
+    "solidity",
+    "modular",
+    "moloch",
+    "ethereum"
+  ],
   "directories": {
     "test": "test"
   },

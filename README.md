@@ -99,6 +99,8 @@ You can find more information about the purpose of each access flag at [DAO Regi
 Added the following environment variables to your local .env file:
 
 ```
+# The DAO Owner ETH Address (0x...) in the target network
+DAO_OWNER_ADDR=
 # The Infura API Key is used to communicate with the Ethereum blockchain
 INFURA_KEY=
 # The mnemonic that generates you account

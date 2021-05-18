@@ -13,15 +13,15 @@ const truffleImports = require("../utils/TruffleUtil.js");
 
 require("dotenv").config();
 
-module.exports = async (deployer, network) => {
+module.exports = async (deployer, network, accounts) => {
   let dao;
   const deployFunction = truffleImports.deployFunctionFactory(deployer);
   if (network === "ganache") {
-    dao = await deployGanacheDao(deployFunction, network);
+    dao = await deployGanacheDao(deployFunction, network, accounts);
   } else if (network === "rinkeby") {
     dao = await deployRinkebyDao(deployFunction, network);
   } else if (network === "test" || network === "coverage") {
-    dao = await deployTestDao(deployFunction, network);
+    dao = await deployTestDao(deployFunction, network, accounts);
   }
 
   if (dao) {
@@ -38,7 +38,7 @@ module.exports = async (deployer, network) => {
   }
 };
 
-async function deployTestDao(deployFunction, network) {
+async function deployTestDao(deployFunction, network, accounts) {
   let { dao } = await deployDao({
     ...truffleImports,
     deployFunction,
@@ -56,6 +56,7 @@ async function deployTestDao(deployFunction, network) {
     couponCreatorAddress: "0x7D8cad0bbD68deb352C33e80fccd4D8e88b4aBb8",
     offchainAdmin: "0xedC10CFA90A135C41538325DD57FDB4c7b88faf7",
     daoName: process.env.DAO_NAME,
+    owner: accounts[0],
   });
   return dao;
 }
@@ -77,12 +78,13 @@ async function deployRinkebyDao(deployFunction, network) {
     maxExternalTokens: 100,
     couponCreatorAddress: process.env.COUPON_CREATOR_ADDR,
     daoName: process.env.DAO_NAME,
+    owner: process.env.DAO_OWNER_ADDR,
     offchainAdmin: "0xedC10CFA90A135C41538325DD57FDB4c7b88faf7",
   });
   return dao;
 }
 
-async function deployGanacheDao(deployFunction, network) {
+async function deployGanacheDao(deployFunction, network, accounts) {
   let { dao } = await deployDao({
     ...truffleImports,
     deployFunction,
@@ -99,6 +101,7 @@ async function deployGanacheDao(deployFunction, network) {
     maxExternalTokens: 100,
     couponCreatorAddress: process.env.COUPON_CREATOR_ADDR,
     daoName: process.env.DAO_NAME,
+    owner: accounts[0],
     offchainAdmin: "0xedC10CFA90A135C41538325DD57FDB4c7b88faf7",
   });
   return dao;

@@ -25,12 +25,13 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
  */
 
-const { UNITS, LOOT, ETH_TOKEN, sha3, toBN } = require("./ContractUtil");
+const { UNITS, LOOT, sha3, toBN } = require("./ContractUtil");
 
 const deployDao = async (options) => {
   const {
     deployFunction,
     owner,
+    creator,
     deployTestTokens,
     finalize,
     DaoRegistry,
@@ -68,8 +69,9 @@ const deployDao = async (options) => {
 
   const { bankAddress } = pastEvent.returnValues;
   const bankExtension = await BankExtension.at(bankAddress);
-  const creator = await dao.getMemberAddress(1);
-  await dao.addExtension(sha3("bank"), bankExtension.address, creator);
+  await dao.addExtension(sha3("bank"), bankExtension.address, owner, {
+    from: owner,
+  });
 
   await nftFactory.createNFTCollection();
   pastEvent = undefined;
@@ -80,7 +82,9 @@ const deployDao = async (options) => {
 
   const { nftCollAddress } = pastEvent.returnValues;
   const nftExtension = await NFTExtension.at(nftCollAddress);
-  await dao.addExtension(sha3("nft"), nftCollAddress, creator);
+  await dao.addExtension(sha3("nft"), nftCollAddress, owner, {
+    from: owner,
+  });
 
   const extensions = { bank: bankExtension, nft: nftExtension };
 
@@ -188,7 +192,8 @@ const configureOffchainVoting = async ({
 
   await daoFactory.updateAdapter(
     dao.address,
-    entryDao("voting", offchainVoting, {})
+    entryDao("voting", offchainVoting, {}),
+    { from: owner }
   );
 
   await dao.setAclToExtensionForAdapter(
@@ -198,9 +203,16 @@ const configureOffchainVoting = async ({
       ADD_TO_BALANCE: true,
       SUB_FROM_BALANCE: true,
       INTERNAL_TRANSFER: true,
-    }).flags
+    }).flags,
+    { from: owner }
   );
-  await offchainVoting.configureDao(dao.address, votingPeriod, gracePeriod, 10);
+  await offchainVoting.configureDao(
+    dao.address,
+    votingPeriod,
+    gracePeriod,
+    10,
+    { from: owner }
+  );
 
   return { offchainVoting, snapshotProposalContract, handleBadReporterAdapter };
 };
@@ -339,6 +351,7 @@ const addDefaultAdapters = async ({ dao, options, daoFactory, nftAddr }) => {
   const nftExtension = await NFTExtension.at(nftExtAddr);
 
   await configureDao({
+    owner: options.owner,
     daoFactory,
     dao,
     ragequit,
@@ -383,6 +396,7 @@ const addDefaultAdapters = async ({ dao, options, daoFactory, nftAddr }) => {
 };
 
 const configureDao = async ({
+  owner,
   daoFactory,
   dao,
   ragequit,
@@ -409,98 +423,118 @@ const configureDao = async ({
   gracePeriod,
   couponCreatorAddress,
 }) => {
-  await daoFactory.addAdapters(dao.address, [
-    entryDao("voting", voting, {}),
-    entryDao("configuration", configuration, {
-      SUBMIT_PROPOSAL: true,
-      SET_CONFIGURATION: true,
-    }),
-    entryDao("ragequit", ragequit, {}),
-    entryDao("guildkick", guildkick, {
-      SUBMIT_PROPOSAL: true,
-    }),
-    entryDao("managing", managing, {
-      SUBMIT_PROPOSAL: true,
-      REPLACE_ADAPTER: true,
-    }),
-    entryDao("financing", financing, {
-      SUBMIT_PROPOSAL: true,
-    }),
-    entryDao("onboarding", onboarding, {
-      SUBMIT_PROPOSAL: true,
-      UPDATE_DELEGATE_KEY: true,
-      NEW_MEMBER: true,
-    }),
-    entryDao("coupon-onboarding", couponOnboarding, {
-      SUBMIT_PROPOSAL: false,
-      ADD_TO_BALANCE: true,
-      UPDATE_DELEGATE_KEY: false,
-      NEW_MEMBER: true,
-    }),
-    entryDao("daoRegistry", daoRegistryAdapter, {
-      UPDATE_DELEGATE_KEY: true,
-    }),
-    entryDao("nft", nftAdapter, {}),
-    entryDao("bank", bankAdapter, {}),
-    entryDao("tribute", tribute, {
-      SUBMIT_PROPOSAL: true,
-      NEW_MEMBER: true,
-    }),
-    entryDao("tribute-nft", tributeNFT, {
-      SUBMIT_PROPOSAL: true,
-      NEW_MEMBER: true,
-    }),
-    entryDao("distribute", distribute, {
-      SUBMIT_PROPOSAL: true,
-    }),
-  ]);
+  await daoFactory.addAdapters(
+    dao.address,
+    [
+      entryDao("voting", voting, {}),
+      entryDao("configuration", configuration, {
+        SUBMIT_PROPOSAL: true,
+        SET_CONFIGURATION: true,
+      }),
+      entryDao("ragequit", ragequit, {}),
+      entryDao("guildkick", guildkick, {
+        SUBMIT_PROPOSAL: true,
+      }),
+      entryDao("managing", managing, {
+        SUBMIT_PROPOSAL: true,
+        REPLACE_ADAPTER: true,
+      }),
+      entryDao("financing", financing, {
+        SUBMIT_PROPOSAL: true,
+      }),
+      entryDao("onboarding", onboarding, {
+        SUBMIT_PROPOSAL: true,
+        UPDATE_DELEGATE_KEY: true,
+        NEW_MEMBER: true,
+      }),
+      entryDao("coupon-onboarding", couponOnboarding, {
+        SUBMIT_PROPOSAL: false,
+        ADD_TO_BALANCE: true,
+        UPDATE_DELEGATE_KEY: false,
+        NEW_MEMBER: true,
+      }),
+      entryDao("daoRegistry", daoRegistryAdapter, {
+        UPDATE_DELEGATE_KEY: true,
+      }),
+      entryDao("nft", nftAdapter, {}),
+      entryDao("bank", bankAdapter, {}),
+      entryDao("tribute", tribute, {
+        SUBMIT_PROPOSAL: true,
+        NEW_MEMBER: true,
+      }),
+      entryDao("tribute-nft", tributeNFT, {
+        SUBMIT_PROPOSAL: true,
+        NEW_MEMBER: true,
+      }),
+      entryDao("distribute", distribute, {
+        SUBMIT_PROPOSAL: true,
+      }),
+    ],
+    {
+      from: owner,
+    }
+  );
 
-  await daoFactory.configureExtension(dao.address, bankExtension.address, [
-    entryBank(ragequit, {
-      INTERNAL_TRANSFER: true,
-      SUB_FROM_BALANCE: true,
-      ADD_TO_BALANCE: true,
-    }),
-    entryBank(guildkick, {
-      INTERNAL_TRANSFER: true,
-      SUB_FROM_BALANCE: true,
-      ADD_TO_BALANCE: true,
-    }),
-    entryBank(bankAdapter, {
-      WITHDRAW: true,
-      SUB_FROM_BALANCE: true,
-      UPDATE_TOKEN: true,
-    }),
-    entryBank(onboarding, {
-      ADD_TO_BALANCE: true,
-    }),
-    entryBank(couponOnboarding, {
-      ADD_TO_BALANCE: true,
-    }),
-    entryBank(financing, {
-      ADD_TO_BALANCE: true,
-      SUB_FROM_BALANCE: true,
-    }),
-    entryBank(tribute, {
-      ADD_TO_BALANCE: true,
-      REGISTER_NEW_TOKEN: true,
-    }),
-    entryBank(distribute, {
-      INTERNAL_TRANSFER: true,
-    }),
-    entryBank(tributeNFT, {
-      ADD_TO_BALANCE: true,
-    }),
-  ]);
+  await daoFactory.configureExtension(
+    dao.address,
+    bankExtension.address,
+    [
+      entryBank(ragequit, {
+        INTERNAL_TRANSFER: true,
+        SUB_FROM_BALANCE: true,
+        ADD_TO_BALANCE: true,
+      }),
+      entryBank(guildkick, {
+        INTERNAL_TRANSFER: true,
+        SUB_FROM_BALANCE: true,
+        ADD_TO_BALANCE: true,
+      }),
+      entryBank(bankAdapter, {
+        WITHDRAW: true,
+        SUB_FROM_BALANCE: true,
+        UPDATE_TOKEN: true,
+      }),
+      entryBank(onboarding, {
+        ADD_TO_BALANCE: true,
+      }),
+      entryBank(couponOnboarding, {
+        ADD_TO_BALANCE: true,
+      }),
+      entryBank(financing, {
+        ADD_TO_BALANCE: true,
+        SUB_FROM_BALANCE: true,
+      }),
+      entryBank(tribute, {
+        ADD_TO_BALANCE: true,
+        REGISTER_NEW_TOKEN: true,
+      }),
+      entryBank(distribute, {
+        INTERNAL_TRANSFER: true,
+      }),
+      entryBank(tributeNFT, {
+        ADD_TO_BALANCE: true,
+      }),
+    ],
+    {
+      from: owner,
+    }
+  );
 
-  await daoFactory.configureExtension(dao.address, nftExtension.address, [
-    entryNft(tributeNFT, {
-      COLLECT_NFT: true,
-    }),
-    entryNft(nftAdapter, {
-      COLLECT_NFT: true,
-    }),
-  ]);
+  await daoFactory.configureExtension(
+    dao.address,
+    nftExtension.address,
+    [
+      entryNft(tributeNFT, {
+        COLLECT_NFT: true,
+      }),
+      entryNft(nftAdapter, {
+        COLLECT_NFT: true,
+      }),
+    ],
+    {
+      from: owner,
+    }
+  );
 
   await onboarding.configureDao(
     dao.address,
@@ -508,7 +542,10 @@ const configureDao = async ({
     unitPrice,
     nbUnits,
     maxChunks,
-    tokenAddr
+    tokenAddr,
+    {
+      from: owner,
+    }
   );
 
   await onboarding.configureDao(
@@ -517,19 +554,39 @@ const configureDao = async ({
     unitPrice,
     nbUnits,
     maxChunks,
-    tokenAddr
+    tokenAddr,
+    {
+      from: owner,
+    }
   );
-  await couponOnboarding.configureDao(dao.address, couponCreatorAddress, UNITS);
 
-  await voting.configureDao(dao.address, votingPeriod, gracePeriod);
-  await tribute.configureDao(dao.address, UNITS);
-  await tribute.configureDao(dao.address, LOOT);
-  await tributeNFT.configureDao(dao.address);
+  await couponOnboarding.configureDao(
+    dao.address,
+    couponCreatorAddress,
+    UNITS,
+    {
+      from: owner,
+    }
+  );
+
+  await voting.configureDao(dao.address, votingPeriod, gracePeriod, {
+    from: owner,
+  });
+  await tribute.configureDao(dao.address, UNITS, {
+    from: owner,
+  });
+  await tribute.configureDao(dao.address, LOOT, {
+    from: owner,
+  });
+  await tributeNFT.configureDao(dao.address, {
+    from: owner,
+  });
 };
 
 const cloneDao = async ({
   identityDao,
   owner,
+  creator,
   deployFunction,
   DaoRegistry,
   DaoFactory,
@@ -541,11 +598,7 @@ const cloneDao = async ({
     owner
   );
 
-  if (owner) {
-    await daoFactory.createDao(name, ETH_TOKEN, { from: owner });
-  } else {
-    await daoFactory.createDao(name, ETH_TOKEN);
-  }
+  await daoFactory.createDao(name, creator ? creator : owner, { from: owner });
 
   // checking the gas usaged to clone a contract
   let pastEvents = await daoFactory.getPastEvents();
