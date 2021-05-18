@@ -44,11 +44,13 @@ contract ERC20TokenExtensionFactory is CloneFactory, DaoConstants {
      */
     function create(
         string calldata tokenName,
+        address tokenAddress,
         string calldata tokenSymbol,
         uint8 decimals
     ) external {
         ERC20Extension ext = ERC20Extension(_createClone(identityAddress));
         ext.setName(tokenName);
+        ext.setToken(tokenAddress);
         ext.setSymbol(tokenSymbol);
         ext.setDecimals(decimals);
         emit ERC20TokenExtensionCreated(address(ext));

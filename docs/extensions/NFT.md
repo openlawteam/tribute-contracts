@@ -1,6 +1,6 @@
 ## Extension description and scope
 
-An [IERC721Receiver](https://docs.openzeppelin.com/contracts/3.x/api/token/erc721#IERC721Receiver) contract to safely manage the collection of standard NFTs (ERC721) collected by the DAO.
+An [IERC721Receiver](https://docs.openzeppelin.com/contracts/3.x/api/token/erc721#IERC721Receiver) contract safely manages the collection of standard NFTs (ERC721) collected by the DAO.
 
 The extension adds to the DAO the capability of managing and curating a collection of standard NFTs. Applicants can join the DAO offering NFTs as tributes, and if their proposal is approved their tributes get stored in the guild NFT collection - which supports tokens in ERC721 standard.
 

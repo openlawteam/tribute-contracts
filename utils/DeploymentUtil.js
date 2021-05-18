@@ -94,7 +94,7 @@ const deployDao = async (options) => {
   });
 
   // Start the Erc20TokenExtension deployment & configuration
-  await erc20TokenExtFactory.create("Unit Token", "UNIT", 18);
+  await erc20TokenExtFactory.create("Unit Token", UNITS, "UNIT", 18);
   pastEvent = undefined;
   while (pastEvent === undefined) {
     let pastEvents = await erc20TokenExtFactory.getPastEvents();

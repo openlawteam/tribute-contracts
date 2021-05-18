@@ -40,28 +40,40 @@ SOFTWARE.
 /**
  *
  * The ERC20Extension is a contract to give erc20 functionality
- * to the internal token UNITS held by DAO members inside the DAO itself.
+ * to the internal token units held by DAO members inside the DAO itself.
  */
-
 contract ERC20Extension is
     DaoConstants,
     AdapterGuard,
     IExtension,
     IERC20
-    //AccessControlEnumerable,
 {
-    //Dao address
+    // The DAO address that this extension belongs to
     DaoRegistry public dao;
-    //Pausable role to prevent transfers
-    bytes32 public constant PAUSER_ROLE = keccak256("PAUSER_ROLE");
+
+    // The custom configuration to set the transfer type, which can be one of the following values:
+    // (0: transfers are enabled only between dao members)
+    // (1: transfers are enabled between dao members and external accounts)
+    // (2: all transfers are paused)
     bytes32 public constant ERC20_EXT_TRANSFER_TYPE =
         keccak256("erc20ExtTransferType");
+
+    // Internally tracks deployment under eip-1167 proxy pattern
     bool public initialized = false;
 
+    // The token address managed by the DAO that tracks the internal transfers
+    address public tokenAddress;
+
+    // The name of the token managed by the DAO
     string public tokenName;
+
+    // The symbol of the token managed by the DAO
     string public tokenSymbol;
+
+    // The number of decimals of the token managed by the DAO
     uint8 public tokenDecimals;
-    //owner => spender => amount
+
+    // The mapping to track all the token allowances, similar to ERC20: owner => spender => amount
     mapping(address => mapping(address => uint256)) private _allowances;
 
     /// @notice Clonable contract must have an empty constructor
@@ -75,8 +87,30 @@ contract ERC20Extension is
     function initialize(DaoRegistry _dao, address creator) external override {
         require(!initialized, "already initialized");
         require(_dao.isMember(creator), "not a member");
+        require(tokenAddress != address(0x0), "missing token address");
+        require(bytes(tokenName).length != 0, "missing token name");
+        require(bytes(tokenSymbol).length != 0, "missing token symbol");
+        require(tokenDecimals != 0, "missing token decimals");
         initialized = true;
         dao = _dao;
+    }
+
+    /**
+     * @dev Returns the token address managed by the DAO that tracks the internal transfers.
+     */
+    function token() public view virtual returns (address) {
+        return tokenAddress;
+    }
+
+    /**
+     * @dev Sets the token address if the extension is not initialized, not reserved and not zero.
+     */
+    function setToken(address _tokenAddress) external {
+        require(!initialized, "already initialized");
+        require(_tokenAddress != address(0x0), "invalid token address");
+        require(isNotReservedAddress(_tokenAddress), "token address already in use");
+
+        tokenAddress = _tokenAddress;
     }
 
     /**
@@ -86,6 +120,9 @@ contract ERC20Extension is
         return tokenName;
     }
 
+    /**
+     * @dev Sets the name of the token if the extension is not initialized.
+     */
     function setName(string memory _name) external {
         require(!initialized, "already initialized");
         tokenName = _name;
@@ -99,6 +136,9 @@ contract ERC20Extension is
         return tokenSymbol;
     }
 
+    /**
+     * @dev Sets the token symbol if the extension is not initialized.
+     */
     function setSymbol(string memory _symbol) external {
         require(!initialized, "already initialized");
         tokenSymbol = _symbol;
@@ -113,6 +153,9 @@ contract ERC20Extension is
         return tokenDecimals;
     }
 
+    /**
+     * @dev Sets the token decimals if the extension is not initialized.
+     */
     function setDecimals(uint8 _decimals) external {
         require(!initialized, "already initialized");
         tokenDecimals = _decimals;
@@ -123,7 +166,7 @@ contract ERC20Extension is
      */
     function totalSupply() public view override returns (uint256) {
         BankExtension bank = BankExtension(dao.getExtensionAddress(BANK));
-        return bank.balanceOf(TOTAL, UNITS);
+        return bank.balanceOf(TOTAL, tokenAddress);
     }
 
     /**
@@ -131,7 +174,7 @@ contract ERC20Extension is
      */
     function balanceOf(address account) public view override returns (uint256) {
         BankExtension bank = BankExtension(dao.getExtensionAddress(BANK));
-        return bank.balanceOf(account, UNITS);
+        return bank.balanceOf(account, tokenAddress);
     }
 
     /**
@@ -212,15 +255,15 @@ contract ERC20Extension is
 
         BankExtension bank = BankExtension(dao.getExtensionAddress(BANK));
         require(
-            bank.balanceOf(senderAddr, UNITS) >= amount && amount > 0,
-            "sender does not have UNITS to transfer"
+            bank.balanceOf(senderAddr, tokenAddress) >= amount && amount > 0,
+            "sender does not have units to transfer"
         );
 
         uint256 transferType = dao.getConfiguration(ERC20_EXT_TRANSFER_TYPE);
         if (transferType == 0) {
             // members only transfer
             require(dao.isMember(recipient), "recipient is not a member");
-            bank.internalTransfer(senderAddr, recipient, UNITS, amount);
+            bank.internalTransfer(senderAddr, recipient, tokenAddress, amount);
             emit Transfer(senderAddr, recipient, amount);
             return true;
         } else if (transferType == 1) {
@@ -229,7 +272,7 @@ contract ERC20Extension is
                 isNotReservedAddress(recipient),
                 "recipient address can not be reserved"
             );
-            bank.internalTransfer(senderAddr, recipient, UNITS, amount);
+            bank.internalTransfer(senderAddr, recipient, tokenAddress, amount);
             dao.potentialNewMember(recipient);
             emit Transfer(senderAddr, recipient, amount);
             return true;
@@ -269,8 +312,8 @@ contract ERC20Extension is
 
         BankExtension bank = BankExtension(dao.getExtensionAddress(BANK));
         require(
-            bank.balanceOf(senderAddr, UNITS) >= amount && amount > 0,
-            "bank does not have enough UNITS to transfer"
+            bank.balanceOf(senderAddr, tokenAddress) >= amount && amount > 0,
+            "bank does not have enough units to transfer"
         );
 
         uint256 transferType = dao.getConfiguration(ERC20_EXT_TRANSFER_TYPE);
@@ -280,7 +323,7 @@ contract ERC20Extension is
 
             _allowances[senderAddr][msg.sender] = currentAllowance - amount;
 
-            bank.internalTransfer(senderAddr, recipient, UNITS, amount);
+            bank.internalTransfer(senderAddr, recipient, tokenAddress, amount);
             emit Transfer(senderAddr, recipient, amount);
 
             return true;
@@ -291,7 +334,7 @@ contract ERC20Extension is
                 isNotReservedAddress(recipient),
                 "recipient address can not be reserved"
             );
-            bank.internalTransfer(senderAddr, recipient, UNITS, amount);
+            bank.internalTransfer(senderAddr, recipient, tokenAddress, amount);
             dao.potentialNewMember(recipient);
             emit Transfer(senderAddr, recipient, amount);
             return true;
