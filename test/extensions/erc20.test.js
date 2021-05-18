@@ -675,7 +675,8 @@ describe("Extension - ERC20", () => {
     expect(spenderAllowance.toString()).equal(
       numberOfUnits.mul(toBN("0")).toString()
     );
- 
+    //externalAddressB is now a member after receiving unit
+    expect(await isMember(bank, externalAddressB)).equal(true);
   });
 
 });
