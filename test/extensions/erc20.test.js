@@ -1,7 +1,6 @@
 // Whole-script strict mode syntax
 "use strict";
 
-const { assert } = require("chai");
 const { sha3 } = require("web3-utils");
 /**
 MIT License
@@ -38,15 +37,12 @@ const {
   revertChainSnapshot,
   deployDefaultDao,
   proposalIdGenerator,
-  advanceTime,
   accounts,
   expectRevert,
   expect,
-  web3,
 } = require("../../utils/OZTestUtil.js");
 
 const {
-  checkBalance,
   isMember,
   onboardingNewMember,
   submitConfigProposal,
@@ -87,7 +83,7 @@ describe("Extension - ERC20", () => {
     expect(erc20Ext).to.not.be.null;
   });
 
-  it("should be possible to transfer units from one member to another when erc20ExtTransferType = 0", async () => {
+  it("should be possible to transfer units from one member to another when the transfer type is equals 0 (member transfer only)", async () => {
     const dao = this.dao;
     const applicantA = accounts[2];
     const applicantB = accounts[3];
@@ -161,7 +157,7 @@ describe("Extension - ERC20", () => {
     );
   });
 
-  it("should be possible to approve and transferFrom units from a member to another member when erc20ExtTransferType = 0", async () => {
+  it("should be possible to approve and transferFrom units from a member to another member when the transfer type is equals 0 (member transfer only)", async () => {
     const dao = this.dao;
     //onboarded member A & B
     const applicantA = accounts[2];
@@ -260,7 +256,7 @@ describe("Extension - ERC20", () => {
     );
   });
 
-  it("should not be possible to transfer units from a member to an external account when the transfer type is member only (erc20ExtTransferType = 0)", async () => {
+  it("should not be possible to transfer units from a member to an external account when the transfer type is equals 0 (member transfer only)", async () => {
     // transferFrom to external
     // transfer to external
     const dao = this.dao;
@@ -330,7 +326,7 @@ describe("Extension - ERC20", () => {
     );
   });
 
-  it("should not be possible to approve a transferFrom units from a member to an external account when the transfer type is member only (erc20ExtTransferType = 0)", async () => {
+  it("should not be possible to approve a transferFrom units from a member to an external account when the transfer type is equals 0 (member transfer only)", async () => {
     // transfer to external
     const dao = this.dao;
     //onboarded member A & B
@@ -435,7 +431,7 @@ describe("Extension - ERC20", () => {
     );
   });
 
-  it("should be possible to pause all transfers when are paused (erc20ExtTransferType = 2)", async () => {
+  it("should be possible to pause all transfers when the transfer type is equals 2 (paused all transfers)", async () => {
     const dao = this.dao;
     //onboarded members A & B
     const applicantA = accounts[2];
@@ -512,7 +508,7 @@ describe("Extension - ERC20", () => {
     );
   });
 
-  it("should be possible to transfer units from a member to an external account when erc20ExtTransferType = 1", async () => {
+  it("should be possible to transfer units from a member to an external account when the transfer type is equals 1 (external transfer)", async () => {
     // transfer to external
     const dao = this.dao;
     //members A
@@ -580,7 +576,7 @@ describe("Extension - ERC20", () => {
     );
   });
 
-  it("should be possible to approve and transferFrom units from a member to an external account when erc20ExtTransferType = 1", async () => {
+  it("should be possible to approve and transferFrom units from a member to an external account when the transfer type is equals 1 (external transfer)", async () => {
     // transfer to external
     const dao = this.dao;
     //members A and B
