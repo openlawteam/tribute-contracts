@@ -547,7 +547,10 @@ contract OffchainVotingContract is
         (address actionId, ) = dao.proposals(proposalId);
 
         //invalid choice
-        if (node.sig.length > 2 && !_isValidChoice(node.choice)) {
+        if (
+            (node.sig.length == 0 && node.choice == 0) ||
+            (node.sig.length > 0 && !_isValidChoice(node.choice))
+        ) {
             return true;
         }
 
@@ -563,7 +566,7 @@ contract OffchainVotingContract is
 
         //bad signature
         if (
-            node.sig.length > 2 &&
+            node.sig.length > 0 &&
             !_hasVoted(
                 dao,
                 actionId,
