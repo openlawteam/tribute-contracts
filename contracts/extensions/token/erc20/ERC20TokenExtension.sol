@@ -42,16 +42,11 @@ SOFTWARE.
  * The ERC20Extension is a contract to give erc20 functionality
  * to the internal token units held by DAO members inside the DAO itself.
  */
-contract ERC20Extension is
-    DaoConstants,
-    AdapterGuard,
-    IExtension,
-    IERC20
-{
+contract ERC20Extension is DaoConstants, AdapterGuard, IExtension, IERC20 {
     // The DAO address that this extension belongs to
     DaoRegistry public dao;
 
-    // The custom configuration to set the transfer type, which can be one of the following values:
+    // The custom configuration to set the transfer type, e.g:
     // (0: transfers are enabled only between dao members)
     // (1: transfers are enabled between dao members and external accounts)
     // (2: all transfers are paused)
@@ -73,14 +68,15 @@ contract ERC20Extension is
     // The number of decimals of the token managed by the DAO
     uint8 public tokenDecimals;
 
-    // The mapping to track all the token allowances, similar to ERC20: owner => spender => amount
+    // Tracks all the token allowances: owner => spender => amount
     mapping(address => mapping(address => uint256)) private _allowances;
 
     /// @notice Clonable contract must have an empty constructor
     constructor() {}
 
     /**
-     * @notice Initializes the extension with the DAO and Bank address that it belongs to.
+     * @notice Initializes the extension with the DAO that it belongs to,
+     * and checks if the parameters were set.
      * @param _dao The address of the DAO that owns the extension.
      * @param creator The owner of the DAO and Extension that is also a member of the DAO.
      */
@@ -96,19 +92,24 @@ contract ERC20Extension is
     }
 
     /**
-     * @dev Returns the token address managed by the DAO that tracks the internal transfers.
+     * @dev Returns the token address managed by the DAO that tracks the
+     * internal transfers.
      */
     function token() public view virtual returns (address) {
         return tokenAddress;
     }
 
     /**
-     * @dev Sets the token address if the extension is not initialized, not reserved and not zero.
+     * @dev Sets the token address if the extension is not initialized,
+     * not reserved and not zero.
      */
     function setToken(address _tokenAddress) external {
         require(!initialized, "already initialized");
         require(_tokenAddress != address(0x0), "invalid token address");
-        require(isNotReservedAddress(_tokenAddress), "token address already in use");
+        require(
+            isNotReservedAddress(_tokenAddress),
+            "token address already in use"
+        );
 
         tokenAddress = _tokenAddress;
     }
@@ -195,15 +196,9 @@ contract ERC20Extension is
 
     /**
      * @dev Sets `amount` as the allowance of `spender` over the caller's tokens.
-     *
-     * Returns a boolean value indicating whether the operation succeeded.
-     *
-     * IMPORTANT: Beware that changing an allowance with this method brings the risk
-     * that someone may use both the old and the new allowance by unfortunate
-     * transaction ordering. One possible solution to mitigate this race
-     * condition is to first reduce the spender's allowance to 0 and set the
-     * desired value afterwards:
-     * https://github.com/ethereum/EIPs/issues/20#issuecomment-263524729
+     * @param spender The address account that will have the units decremented.
+     * @param amount The amount to decrement from the spender account.
+     * @return a boolean value indicating whether the operation succeeded.
      *
      * Emits an {Approval} event.
      */
@@ -235,12 +230,14 @@ contract ERC20Extension is
 
     /**
      * @dev Moves `amount` tokens from the caller's account to `recipient`.
-     *
-     * Returns a boolean value indicating whether the operation succeeded.
+     * @dev The transfer operation follows the DAO configuration specified
+     * by the ERC20_EXT_TRANSFER_TYPE property.
+     * @param recipient The address account that will have the units incremented.
+     * @param amount The amount to increment in the recipient account.
+     * @return a boolean value indicating whether the operation succeeded.
      *
      * Emits a {Transfer} event.
      */
-    // Is called by the adapter: always
     function transfer(address recipient, uint256 amount)
         public
         override
@@ -287,8 +284,12 @@ contract ERC20Extension is
      * @dev Moves `amount` tokens from `sender` to `recipient` using the
      * allowance mechanism. `amount` is then deducted from the caller's
      * allowance.
-     *  Recipient must be a member of DAO
-     * Returns a boolean value indicating whether the operation succeeded.
+     * @dev The transfer operation follows the DAO configuration specified
+     * by the ERC20_EXT_TRANSFER_TYPE property.
+     * @param sender The address account that will have the units decremented.
+     * @param recipient The address account that will have the units incremented.
+     * @param amount The amount to decrement from the sender account.
+     * @return a boolean value indicating whether the operation succeeded.
      *
      * Emits a {Transfer} event.
      */

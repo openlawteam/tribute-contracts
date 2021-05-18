@@ -501,9 +501,8 @@ const configureDao = async ({
       // Adapters to access the extensions directly
       entryDao("nft", nftAdapter, {}),
       entryDao("bank", bankAdapter, {}),
-      // Declare the unit-token extension as an adapter to be able to call the bank extension
-      entryDao("unit-token", erc20TokenExtension, {
-        INTERNAL_TRANSFER: true,
+      // Declare the erc20 token extension as an adapter to be able to call the bank extension
+      entryDao("erc20-ext", erc20TokenExtension, {
         NEW_MEMBER: true,
       }),
     ],
