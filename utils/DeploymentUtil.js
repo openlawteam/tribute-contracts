@@ -47,8 +47,12 @@ const deployDao = async (options) => {
     OLToken,
   } = options;
 
-  let erc20TokenName = options.erc20TokenName ? options.erc20TokenName : "Unit Test Tokens";
-  let erc20TokenSymbol = options.erc20TokenSymbol ? options.erc20TokenSymbol : "UTT";
+  let erc20TokenName = options.erc20TokenName
+    ? options.erc20TokenName
+    : "Unit Test Tokens";
+  let erc20TokenSymbol = options.erc20TokenSymbol
+    ? options.erc20TokenSymbol
+    : "UTT";
 
   let identityDao = await deployFunction(DaoRegistry);
 
