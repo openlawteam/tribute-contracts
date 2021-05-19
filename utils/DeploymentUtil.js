@@ -38,13 +38,13 @@ const deployDao = async (options) => {
     BankFactory,
     NFTExtension,
     NFTCollectionFactory,
-    ERC20TokenExtension,
+    ERC20Extension,
     ERC20TokenExtensionFactory,
     TestToken1,
     TestToken2,
     Multicall,
     PixelNFT,
-    OLToken
+    OLToken,
   } = options;
 
   let erc20TokenName = options.erc20TokenName ? options.erc20TokenName : "Unit Test Tokens";
@@ -60,7 +60,7 @@ const deployDao = async (options) => {
     identityNft.address,
   ]);
 
-  let identityERC20Ext = await deployFunction(ERC20TokenExtension);
+  let identityERC20Ext = await deployFunction(ERC20Extension);
   let erc20TokenExtFactory = await deployFunction(ERC20TokenExtensionFactory, [
     identityERC20Ext.address,
   ]);
@@ -110,9 +110,7 @@ const deployDao = async (options) => {
     pastEvent = pastEvents[0];
   }
   const { erc20ExtTokenAddress } = pastEvent.returnValues;
-  const erc20TokenExtension = await ERC20TokenExtension.at(
-    erc20ExtTokenAddress
-  );
+  const erc20TokenExtension = await ERC20Extension.at(erc20ExtTokenAddress);
   await dao.addExtension(sha3("erc20-ext"), erc20ExtTokenAddress, owner, {
     from: owner,
   });
@@ -377,7 +375,7 @@ const addDefaultAdapters = async ({ dao, options, daoFactory, nftAddr }) => {
     tributeNFT,
   } = await prepareAdapters(options);
 
-  let { BankExtension, NFTExtension, ERC20TokenExtension } = options;
+  let { BankExtension, NFTExtension, ERC20Extension } = options;
 
   const bankAddress = await dao.getExtensionAddress(sha3("bank"));
   const bankExtension = await BankExtension.at(bankAddress);
@@ -386,7 +384,7 @@ const addDefaultAdapters = async ({ dao, options, daoFactory, nftAddr }) => {
   const nftExtension = await NFTExtension.at(nftExtAddr);
 
   const unitTokenExtAddr = await dao.getExtensionAddress(sha3("erc20-ext"));
-  const erc20TokenExtension = await ERC20TokenExtension.at(unitTokenExtAddr);
+  const erc20TokenExtension = await ERC20Extension.at(unitTokenExtAddr);
 
   await configureDao({
     owner: options.owner,
