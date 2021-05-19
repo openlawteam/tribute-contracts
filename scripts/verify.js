@@ -59,9 +59,11 @@ const main = async () => {
         )
     )
     .map((regex) => {
+      console.log(regex);
       let res = regex.exec(stdout);
-      if (res && res.length == 3)
+      if (res && res.length == 3) {
         return { contractName: res[1], contractAddress: res[2] };
+      }
       return null;
     })
     .reduce((p, c) => p.then(() => verify(c)), Promise.resolve());
