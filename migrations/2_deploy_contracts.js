@@ -17,11 +17,11 @@ module.exports = async (deployer, network, accounts) => {
   let dao;
   const deployFunction = truffleImports.deployFunctionFactory(deployer);
   if (network === "ganache") {
-    dao = await deployGanacheDao(deployFunction, network, accounts);
+    dao = await deployGanacheDao(deployFunction, network, accounts,tokenName, tokenSymbol);
   } else if (network === "rinkeby") {
-    dao = await deployRinkebyDao(deployFunction, network);
+    dao = await deployRinkebyDao(deployFunction, network,tokenName, tokenSymbol);
   } else if (network === "test" || network === "coverage") {
-    dao = await deployTestDao(deployFunction, network, accounts);
+    dao = await deployTestDao(deployFunction, network, accounts,tokenName, tokenSymbol);
   }
 
   if (dao) {
@@ -38,13 +38,15 @@ module.exports = async (deployer, network, accounts) => {
   }
 };
 
-async function deployTestDao(deployFunction, network, accounts) {
+async function deployTestDao(deployFunction, network, accounts, tokenName, tokenSymbol) {
   let { dao } = await deployDao({
     ...truffleImports,
     deployFunction,
     unitPrice: unitPrice,
     nbUnits: numberOfUnits,
     tokenAddr: ETH_TOKEN,
+    tokenName: tokenName,
+    tokenSymbol: tokenSymbol,
     maxChunks: maximumChunks,
     votingPeriod: 10, // 10 secs
     gracePeriod: 1, // 1 sec
@@ -61,13 +63,15 @@ async function deployTestDao(deployFunction, network, accounts) {
   return dao;
 }
 
-async function deployRinkebyDao(deployFunction, network) {
+async function deployRinkebyDao(deployFunction, network,tokenName, tokenSymbol) {
   let { dao } = await deployDao({
     ...truffleImports,
     deployFunction,
     unitPrice: toBN(toWei("100", "finney")),
     nbUnits: toBN("100000"),
     tokenAddr: ETH_TOKEN,
+    tokenName: tokenName,
+    tokenSymbol: tokenSymbol,
     maxChunks: toBN("100000"),
     votingPeriod: 600, // 600 secs = 10 mins
     gracePeriod: 600, // 600 secs = 10 mins
@@ -84,13 +88,15 @@ async function deployRinkebyDao(deployFunction, network) {
   return dao;
 }
 
-async function deployGanacheDao(deployFunction, network, accounts) {
+async function deployGanacheDao(deployFunction, network, accounts,tokenName, tokenSymbol) {
   let { dao } = await deployDao({
     ...truffleImports,
     deployFunction,
     unitPrice: toBN(toWei("100", "finney")),
     nbUnits: toBN("100000"),
     tokenAddr: ETH_TOKEN,
+    tokenName: tokenName,
+    tokenSymbol: tokenSymbol,
     maxChunks: toBN("100000"),
     votingPeriod: 120, // 120 secs = 2 mins
     gracePeriod: 60, // 60 secs = 1 min
