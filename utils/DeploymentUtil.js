@@ -98,7 +98,6 @@ const deployDao = async (options) => {
   });
 
   // Start the Erc20TokenExtension deployment & configuration
-  console.log("token info: " + erc20TokenName + " - " + erc20TokenSymbol);
   await erc20TokenExtFactory.create(
     erc20TokenName,
     UNITS,
