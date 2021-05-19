@@ -113,6 +113,10 @@ DEBUG_CONTRACT_VERIFICATION=false
 ETHERSCAN_API_KEY=
 # The public eth (0x...) address of the creator of the onboarding cupons
 COUPON_CREATOR_ADDR=
+# The ERC20 Token Name used by the ERC20 Token Extension
+ERC20_TOKEN_NAME=
+# The ERC20 Token Symbol used by the ERC20 Token Extension
+ERC20_TOKEN_SYMBOL=
 ```
 
 ### Run Tests

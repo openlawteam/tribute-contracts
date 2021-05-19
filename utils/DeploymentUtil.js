@@ -44,8 +44,12 @@ const deployDao = async (options) => {
     TestToken2,
     Multicall,
     PixelNFT,
-    OLToken,
+    OLToken
   } = options;
+
+  let erc20TokenName = options.erc20TokenName ? options.erc20TokenName : "Unit Test Tokens";
+  let erc20TokenSymbol = options.erc20TokenSymbol ? options.erc20TokenSymbol : "UTT";
+
   let identityDao = await deployFunction(DaoRegistry);
 
   let identityBank = await deployFunction(BankExtension);
@@ -94,7 +98,13 @@ const deployDao = async (options) => {
   });
 
   // Start the Erc20TokenExtension deployment & configuration
-  await erc20TokenExtFactory.create(tokenName, UNITS, tokenSymbol, 18);
+  console.log("token info: " + erc20TokenName + " - " + erc20TokenSymbol);
+  await erc20TokenExtFactory.create(
+    erc20TokenName,
+    UNITS,
+    erc20TokenSymbol,
+    18
+  );
   pastEvent = undefined;
   while (pastEvent === undefined) {
     let pastEvents = await erc20TokenExtFactory.getPastEvents();
