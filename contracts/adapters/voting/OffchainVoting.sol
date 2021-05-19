@@ -548,7 +548,7 @@ contract OffchainVotingContract is
 
         //invalid choice
         if (
-            (node.sig.length == 0 && node.choice == 0) ||
+            (node.sig.length == 0 && node.choice == 0) || // no vote
             (node.sig.length > 0 && !_isValidChoice(node.choice))
         ) {
             return true;
@@ -566,7 +566,7 @@ contract OffchainVotingContract is
 
         //bad signature
         if (
-            node.sig.length > 0 &&
+            node.sig.length > 0 && // a vote has happened
             !_hasVoted(
                 dao,
                 actionId,
@@ -651,6 +651,14 @@ contract OffchainVotingContract is
         BankExtension bank = BankExtension(dao.getExtensionAddress(BANK));
         uint256 weight = bank.getPriorAmount(account, UNITS, vote.snapshot);
 
+        if (node.choice == 0) {
+            if (params.previousYes != node.nbYes) {
+                return true;
+            } else if (params.previousNo != node.nbNo) {
+                return true;
+            }
+        }
+
         if (
             _hasVoted(
                 dao,
@@ -667,13 +675,25 @@ contract OffchainVotingContract is
             } else if (params.previousNo != node.nbNo) {
                 return true;
             }
-        } else {
+        }
+        if (
+            _hasVoted(
+                dao,
+                actionId,
+                voter,
+                node.timestamp,
+                node.proposalId,
+                2,
+                node.sig
+            )
+        ) {
             if (params.previousYes != node.nbYes) {
                 return true;
             } else if (params.previousNo + weight != node.nbNo) {
                 return true;
             }
         }
+
         return false;
     }
 
