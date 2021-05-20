@@ -117,6 +117,8 @@ COUPON_CREATOR_ADDR=
 ERC20_TOKEN_NAME=
 # The ERC20 Token Symbol used by the ERC20 Token Extension
 ERC20_TOKEN_SYMBOL=
+# The ERC20 Token Decimals to display in MetaMask
+ERC20_TOKEN_DECIMALS=
 ```
 
 ### Run Tests

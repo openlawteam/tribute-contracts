@@ -86,7 +86,6 @@ contract ERC20Extension is DaoConstants, AdapterGuard, IExtension, IERC20 {
         require(tokenAddress != address(0x0), "missing token address");
         require(bytes(tokenName).length != 0, "missing token name");
         require(bytes(tokenSymbol).length != 0, "missing token symbol");
-        require(tokenDecimals != 0, "missing token decimals");
         initialized = true;
         dao = _dao;
     }

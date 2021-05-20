@@ -47,27 +47,31 @@ const deployDao = async (options) => {
     OLToken,
   } = options;
 
-  let erc20TokenName = options.erc20TokenName
+  const erc20TokenName = options.erc20TokenName
     ? options.erc20TokenName
     : "Unit Test Tokens";
-  let erc20TokenSymbol = options.erc20TokenSymbol
+  const erc20TokenSymbol = options.erc20TokenSymbol
     ? options.erc20TokenSymbol
     : "UTT";
+  const erc20TokenDecimals = options.erc20TokenDecimals
+    ? parseInt(options.erc20TokenDecimals) || 0
+    : 0;
 
-  let identityDao = await deployFunction(DaoRegistry);
+  const identityDao = await deployFunction(DaoRegistry);
 
-  let identityBank = await deployFunction(BankExtension);
-  let bankFactory = await deployFunction(BankFactory, [identityBank.address]);
+  const identityBank = await deployFunction(BankExtension);
+  const bankFactory = await deployFunction(BankFactory, [identityBank.address]);
 
-  let identityNft = await deployFunction(NFTExtension);
-  let nftFactory = await deployFunction(NFTCollectionFactory, [
+  const identityNft = await deployFunction(NFTExtension);
+  const nftFactory = await deployFunction(NFTCollectionFactory, [
     identityNft.address,
   ]);
 
-  let identityERC20Ext = await deployFunction(ERC20Extension);
-  let erc20TokenExtFactory = await deployFunction(ERC20TokenExtensionFactory, [
-    identityERC20Ext.address,
-  ]);
+  const identityERC20Ext = await deployFunction(ERC20Extension);
+  const erc20TokenExtFactory = await deployFunction(
+    ERC20TokenExtensionFactory,
+    [identityERC20Ext.address]
+  );
 
   const { dao, daoFactory } = await cloneDao({
     ...options,
@@ -106,7 +110,7 @@ const deployDao = async (options) => {
     erc20TokenName,
     UNITS,
     erc20TokenSymbol,
-    18
+    erc20TokenDecimals
   );
   pastEvent = undefined;
   while (pastEvent === undefined) {
@@ -197,6 +201,7 @@ const deployDao = async (options) => {
     extensions: extensions,
     testContracts: testContracts,
     votingHelpers: votingHelpers,
+    factories: { daoFactory, bankFactory, nftFactory, erc20TokenExtFactory },
   };
 };
 
