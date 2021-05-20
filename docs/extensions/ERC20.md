@@ -38,7 +38,7 @@ The symbol of the token managed by the DAO
 
 ### uint8 public tokenDecimals;
 
-The number of decimals of the token managed by the DAO. The default number of decimals is 0 in `utils/DeploymentUtils.js.` It is set to 0, because then the number of Units issued by the Bank Extension is tracked on a 1:1 basis with the number of tokens. For example, in the DAO issues 1 Unit to a member, then the display in a wallet such as MetaMask will be equal "1" Token.  Otherwise, if the default was to the standard 18 decimals, then it would display in MetaMask as "0.000000000000000001" Token. 
+The number of decimals of the token managed by the DAO. The default number of decimals is 0 in `utils/DeploymentUtils.js.` It is set to 0, because then the number of Units issued by the Bank Extension is tracked on a 1:1 basis with the number of tokens. For example, in the DAO issues 1 Unit to a member, then the display in a wallet such as MetaMask will be equal "1" Token. Otherwise, if the default was to the standard 18 decimals, then it would display in MetaMask as "0.000000000000000001" Token.
 
 ### mapping(address => mapping(address => uint256)) private \_allowances;
 
