@@ -26,12 +26,17 @@ module.exports = async (deployer, network, accounts) => {
   let { dao, extensions } = res;
   if (dao) {
     await dao.finalizeDao();
-
     console.log("************************");
-    console.log(`DaoRegistry: ${dao.address}`);
-    console.log(`BankExtension: ${extensions.bank.address}`);
-    console.log(`NFTExtension: ${extensions.nft.address}`);
-    console.log(`ERC20Extension: ${extensions.erc20Ext.address}`);
+    console.log(`Cloned DaoRegistry: ${dao.address}`);
+    console.log(`Cloned BankExtension: ${extensions.bank.address}`);
+    console.log(
+      `Cloned NFTExtension: ${extensions.nft ? extensions.nft.address : ""}`
+    );
+    console.log(
+      `Cloned ERC20Extension: ${
+        extensions.erc20Ext ? extensions.erc20Ext.address : ""
+      }`
+    );
     console.log("************************");
   } else {
     console.log("************************");
