@@ -37,8 +37,6 @@ const verify = async (contract) => {
 
   if (stderr) console.error(stderr);
   if (stdout) console.log(stdout);
-
-  return { stderr, stdout };
 };
 
 const main = async () => {
@@ -46,23 +44,31 @@ const main = async () => {
   console.log(`Reading deployed contracts from ${deployLog}`);
 
   const { stdout } = await exec(
-    `cat ${deployLog} | grep -e Deploying -e "contract address:"`
+    `cat ${deployLog} | grep -e "Deploying" -e "contract address:" -e "Cloned"`
   );
 
   return Object.keys(contracts)
     .filter((c) => !skipContracts.includes(c))
-    .map(
-      (contractName) =>
-        new RegExp(
-          `Deploying\\s'\(${contractName}\)'\n.+contract address:\\s+(.+)\n`,
-          "g"
-        )
-    )
-    .map((regex) => {
-      let res = regex.exec(stdout);
-      if (res && res.length == 3) {
-        return { contractName: res[1], contractAddress: res[2] };
+    .map((contractName) => {
+      let matchDeployed = new RegExp(
+        `Deploying\\s'${contractName}'\n.+contract address:\\s+\(.+\)\n`,
+        "g"
+      ).exec(stdout);
+
+      let matchCloned = new RegExp(
+        `Cloned\\s${contractName}:\\s\(.+\)\n`,
+        "g"
+      ).exec(stdout);
+
+      if (matchCloned) {
+        return { contractName: contractName, contractAddress: matchCloned[1] };
+      } else if (matchDeployed) {
+        return {
+          contractName: contractName,
+          contractAddress: matchDeployed[1],
+        };
       }
+
       return null;
     })
     .reduce((p, c) => p.then(() => verify(c)), Promise.resolve());
