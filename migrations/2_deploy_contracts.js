@@ -14,22 +14,24 @@ const truffleImports = require("../utils/TruffleUtil.js");
 require("dotenv").config();
 
 module.exports = async (deployer, network, accounts) => {
-  let dao;
+  let res;
   const deployFunction = truffleImports.deployFunctionFactory(deployer);
   if (network === "ganache") {
-    dao = await deployGanacheDao(deployFunction, network, accounts);
+    res = await deployGanacheDao(deployFunction, network, accounts);
   } else if (network === "rinkeby") {
-    dao = await deployRinkebyDao(deployFunction, network);
+    res = await deployRinkebyDao(deployFunction, network);
   } else if (network === "test" || network === "coverage") {
-    dao = await deployTestDao(deployFunction, network, accounts);
+    res = await deployTestDao(deployFunction, network, accounts);
   }
-
+  let { dao, extensions } = res;
   if (dao) {
     await dao.finalizeDao();
 
     console.log("************************");
-    console.log("new DAO address:");
-    console.log(dao.address);
+    console.log(`DaoRegistry: ${dao.address}`);
+    console.log(`BankExtension: ${extensions.bank.address}`);
+    console.log(`NFTExtension: ${extensions.nft.address}`);
+    console.log(`ERC20Extension: ${extensions.erc20Ext.address}`);
     console.log("************************");
   } else {
     console.log("************************");
@@ -39,12 +41,23 @@ module.exports = async (deployer, network, accounts) => {
 };
 
 async function deployTestDao(deployFunction, network, accounts) {
-  let { dao } = await deployDao({
+  if (!process.env.DAO_NAME) throw Error("Missing env var: DAO_NAME");
+  if (!process.env.ERC20_TOKEN_NAME)
+    throw Error("Missing env var: ERC20_TOKEN_NAME");
+  if (!process.env.ERC20_TOKEN_SYMBOL)
+    throw Error("Missing env var: ERC20_TOKEN_SYMBOL");
+  if (!process.env.ERC20_TOKEN_DECIMALS)
+    throw Error("Missing env var: ERC20_TOKEN_DECIMALS");
+
+  return await deployDao({
     ...truffleImports,
     deployFunction,
     unitPrice: unitPrice,
     nbUnits: numberOfUnits,
     tokenAddr: ETH_TOKEN,
+    erc20TokenName: process.env.ERC20_TOKEN_NAME,
+    erc20TokenSymbol: process.env.ERC20_TOKEN_SYMBOL,
+    erc20TokenDecimals: process.env.ERC20_TOKEN_DECIMALS,
     maxChunks: maximumChunks,
     votingPeriod: 10, // 10 secs
     gracePeriod: 1, // 1 sec
@@ -58,16 +71,30 @@ async function deployTestDao(deployFunction, network, accounts) {
     daoName: process.env.DAO_NAME,
     owner: accounts[0],
   });
-  return dao;
 }
 
 async function deployRinkebyDao(deployFunction, network) {
-  let { dao } = await deployDao({
+  if (!process.env.DAO_NAME) throw Error("Missing env var: DAO_NAME");
+  if (!process.env.DAO_OWNER_ADDR)
+    throw Error("Missing env var: DAO_OWNER_ADDR");
+  if (!process.env.ERC20_TOKEN_NAME)
+    throw Error("Missing env var: ERC20_TOKEN_NAME");
+  if (!process.env.ERC20_TOKEN_SYMBOL)
+    throw Error("Missing env var: ERC20_TOKEN_SYMBOL");
+  if (!process.env.ERC20_TOKEN_DECIMALS)
+    throw Error("Missing env var: ERC20_TOKEN_DECIMALS");
+  if (!process.env.COUPON_CREATOR_ADDR)
+    throw Error("Missing env var: COUPON_CREATOR_ADDR");
+
+  return await deployDao({
     ...truffleImports,
     deployFunction,
     unitPrice: toBN(toWei("100", "finney")),
     nbUnits: toBN("100000"),
     tokenAddr: ETH_TOKEN,
+    erc20TokenName: process.env.ERC20_TOKEN_NAME,
+    erc20TokenSymbol: process.env.ERC20_TOKEN_SYMBOL,
+    erc20TokenDecimals: process.env.ERC20_TOKEN_DECIMALS,
     maxChunks: toBN("100000"),
     votingPeriod: 600, // 600 secs = 10 mins
     gracePeriod: 600, // 600 secs = 10 mins
@@ -81,16 +108,28 @@ async function deployRinkebyDao(deployFunction, network) {
     owner: process.env.DAO_OWNER_ADDR,
     offchainAdmin: "0xedC10CFA90A135C41538325DD57FDB4c7b88faf7",
   });
-  return dao;
 }
 
 async function deployGanacheDao(deployFunction, network, accounts) {
-  let { dao } = await deployDao({
+  if (!process.env.DAO_NAME) throw Error("Missing env var: DAO_NAME");
+  if (!process.env.COUPON_CREATOR_ADDR)
+    throw Error("Missing env var: COUPON_CREATOR_ADDR");
+  if (!process.env.ERC20_TOKEN_NAME)
+    throw Error("Missing env var: ERC20_TOKEN_NAME");
+  if (!process.env.ERC20_TOKEN_SYMBOL)
+    throw Error("Missing env var: ERC20_TOKEN_SYMBOL");
+  if (!process.env.ERC20_TOKEN_DECIMALS)
+    throw Error("Missing env var: ERC20_TOKEN_DECIMALS");
+
+  return await deployDao({
     ...truffleImports,
     deployFunction,
     unitPrice: toBN(toWei("100", "finney")),
     nbUnits: toBN("100000"),
     tokenAddr: ETH_TOKEN,
+    erc20TokenName: process.env.ERC20_TOKEN_NAME,
+    erc20TokenSymbol: process.env.ERC20_TOKEN_SYMBOL,
+    erc20TokenDecimals: process.env.ERC20_TOKEN_DECIMALS,
     maxChunks: toBN("100000"),
     votingPeriod: 120, // 120 secs = 2 mins
     gracePeriod: 60, // 60 secs = 1 min
@@ -104,5 +143,4 @@ async function deployGanacheDao(deployFunction, network, accounts) {
     owner: accounts[0],
     offchainAdmin: "0xedC10CFA90A135C41538325DD57FDB4c7b88faf7",
   });
-  return dao;
 }

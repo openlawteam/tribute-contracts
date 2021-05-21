@@ -69,6 +69,8 @@ Extensions are conceived to isolate the complexity of state changes from the DAO
 
 - [NFT](https://github.com/openlawteam/tribute-contracts/blob/master/docs/extensions/NFT.md): adds to the DAO the capability of managing and curate a collection of standard NFTs.
 
+- [ERC20](https://github.com/openlawteam/tribute-contracts/blob/master/docs/extensions/ERC20.md): adds to the DAO the capability of managing and transfer internal tokens between members and/or external accounts.
+
 #### Core Contracts
 
 A core contract is a contract that composes the DAO itself, and directly changes the DAO state without the need of going through an Adapter. Ideally a core contract shall never pull information directly from the external world. For that we use Adapters and Extensions, and the natural information flow is always from the external world to the core contracts.
@@ -111,6 +113,12 @@ DEBUG_CONTRACT_VERIFICATION=false
 ETHERSCAN_API_KEY=
 # The public eth (0x...) address of the creator of the onboarding cupons
 COUPON_CREATOR_ADDR=
+# The ERC20 Token Name used by the ERC20 Token Extension
+ERC20_TOKEN_NAME=
+# The ERC20 Token Symbol used by the ERC20 Token Extension
+ERC20_TOKEN_SYMBOL=
+# The ERC20 Token Decimals to display in MetaMask
+ERC20_TOKEN_DECIMALS=
 ```
 
 ### Run Tests

@@ -43,8 +43,6 @@ const {
 
 const { deployDao, entryDao, entryBank, entry } = require("./DeploymentUtil");
 
-const ozContracts = getContracts();
-
 const deployFunction = async (contractInterface, args, from) => {
   const f = from ? from : accounts[0];
   if (args) {
@@ -57,18 +55,18 @@ const deployFunction = async (contractInterface, args, from) => {
 const { expectRevert } = require("@openzeppelin/test-helpers");
 const { expect } = require("chai");
 
-function getContractFromOpenZepplin(c) {
+const getContractFromOpenZepplin = (c) => {
   return contract.fromArtifact(c.substring(c.lastIndexOf("/") + 1));
-}
+};
 
-function getContracts() {
+const getContracts = () => {
   return Object.keys(contracts).reduce((previousValue, key) => {
     previousValue[key] = getContractFromOpenZepplin(contracts[key]);
     return previousValue;
   }, {});
-}
+};
 
-function getDefaultOptions(options) {
+const getDefaultOptions = (options) => {
   let o = {
     unitPrice: unitPrice,
     nbUnits: numberOfUnits,
@@ -85,7 +83,7 @@ function getDefaultOptions(options) {
 
   o.finalize = options.finalize === undefined || !!options.finalize;
   return o;
-}
+};
 
 const deployDefaultDao = async (options) => {
   return await deployDao({
@@ -277,6 +275,8 @@ const proposalIdGenerator = () => {
   };
 };
 
+const ozContracts = getContracts();
+
 module.exports = {
   deployDefaultDao,
   deployDefaultNFTDao,
@@ -295,5 +295,6 @@ module.exports = {
   expect,
   expectRevert,
   deployFunction,
+  getContractFromOpenZepplin,
   ...ozContracts,
 };

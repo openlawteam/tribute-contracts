@@ -1,15 +1,15 @@
 [
   {
     "network": "rinkeby",
-    "daoFactoryAddress": "0x2C2E27aB232F5adC73022280313Fa3dA7dCaa545",
-    "daoFactoryStartBlock": 8527338,
+    "daoFactoryAddress": "0x44D3cf6D9CDe25c39eA19a1456C0492FCF50c59a",
+    "daoFactoryStartBlock": 8621375,
     "GITHUB_USERNAME": "openlawteam",
     "SUBGRAPH_NAME": "tribute-dev"
   },
   {
     "network": "rinkeby",
-    "daoFactoryAddress": "0x66394CE6DBe9F35F1301A8ccC1e05e9F8d9C5C01",
-    "daoFactoryStartBlock": 8527519,
+    "daoFactoryAddress": "0xa0258FfACd9481116De4b019aF0ea39DE37E5C3D",
+    "daoFactoryStartBlock": 8621902,
     "GITHUB_USERNAME": "openlawteam",
     "SUBGRAPH_NAME": "museo-dev"
   }

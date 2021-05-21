@@ -31,7 +31,6 @@ const deployDao = async (options) => {
   const {
     deployFunction,
     owner,
-    creator,
     deployTestTokens,
     finalize,
     DaoRegistry,
@@ -39,6 +38,8 @@ const deployDao = async (options) => {
     BankFactory,
     NFTExtension,
     NFTCollectionFactory,
+    ERC20Extension,
+    ERC20TokenExtensionFactory,
     TestToken1,
     TestToken2,
     Multicall,
@@ -46,13 +47,31 @@ const deployDao = async (options) => {
     OLToken,
   } = options;
 
-  let identityDao = await deployFunction(DaoRegistry);
-  let identityBank = await deployFunction(BankExtension);
-  let bankFactory = await deployFunction(BankFactory, [identityBank.address]);
-  let identityNft = await deployFunction(NFTExtension);
-  let nftFactory = await deployFunction(NFTCollectionFactory, [
+  const erc20TokenName = options.erc20TokenName
+    ? options.erc20TokenName
+    : "Unit Test Tokens";
+  const erc20TokenSymbol = options.erc20TokenSymbol
+    ? options.erc20TokenSymbol
+    : "UTT";
+  const erc20TokenDecimals = options.erc20TokenDecimals
+    ? parseInt(options.erc20TokenDecimals) || 0
+    : 0;
+
+  const identityDao = await deployFunction(DaoRegistry);
+
+  const identityBank = await deployFunction(BankExtension);
+  const bankFactory = await deployFunction(BankFactory, [identityBank.address]);
+
+  const identityNft = await deployFunction(NFTExtension);
+  const nftFactory = await deployFunction(NFTCollectionFactory, [
     identityNft.address,
   ]);
+
+  const identityERC20Ext = await deployFunction(ERC20Extension);
+  const erc20TokenExtFactory = await deployFunction(
+    ERC20TokenExtensionFactory,
+    [identityERC20Ext.address]
+  );
 
   const { dao, daoFactory } = await cloneDao({
     ...options,
@@ -60,33 +79,55 @@ const deployDao = async (options) => {
     name: options.daoName || "test-dao",
   });
 
+  // Start the BankExtension deployment and configuration
   await bankFactory.createBank(options.maxExternalTokens);
   let pastEvent;
   while (pastEvent === undefined) {
     let pastEvents = await bankFactory.getPastEvents();
     pastEvent = pastEvents[0];
   }
-
   const { bankAddress } = pastEvent.returnValues;
   const bankExtension = await BankExtension.at(bankAddress);
   await dao.addExtension(sha3("bank"), bankExtension.address, owner, {
     from: owner,
   });
 
+  // Start the NFTExtension deployment and configuration
   await nftFactory.createNFTCollection();
   pastEvent = undefined;
   while (pastEvent === undefined) {
     let pastEvents = await nftFactory.getPastEvents();
     pastEvent = pastEvents[0];
   }
-
   const { nftCollAddress } = pastEvent.returnValues;
   const nftExtension = await NFTExtension.at(nftCollAddress);
   await dao.addExtension(sha3("nft"), nftCollAddress, owner, {
     from: owner,
   });
 
-  const extensions = { bank: bankExtension, nft: nftExtension };
+  // Start the Erc20TokenExtension deployment & configuration
+  await erc20TokenExtFactory.create(
+    erc20TokenName,
+    UNITS,
+    erc20TokenSymbol,
+    erc20TokenDecimals
+  );
+  pastEvent = undefined;
+  while (pastEvent === undefined) {
+    let pastEvents = await erc20TokenExtFactory.getPastEvents();
+    pastEvent = pastEvents[0];
+  }
+  const { erc20ExtTokenAddress } = pastEvent.returnValues;
+  const erc20TokenExtension = await ERC20Extension.at(erc20ExtTokenAddress);
+  await dao.addExtension(sha3("erc20-ext"), erc20ExtTokenAddress, owner, {
+    from: owner,
+  });
+
+  const extensions = {
+    bank: bankExtension,
+    nft: nftExtension,
+    erc20Ext: erc20TokenExtension,
+  };
 
   const { adapters } = await addDefaultAdapters({
     dao,
@@ -160,6 +201,7 @@ const deployDao = async (options) => {
     extensions: extensions,
     testContracts: testContracts,
     votingHelpers: votingHelpers,
+    factories: { daoFactory, bankFactory, nftFactory, erc20TokenExtFactory },
   };
 };
 
@@ -342,13 +384,16 @@ const addDefaultAdapters = async ({ dao, options, daoFactory, nftAddr }) => {
     tributeNFT,
   } = await prepareAdapters(options);
 
-  let { BankExtension, NFTExtension } = options;
+  let { BankExtension, NFTExtension, ERC20Extension } = options;
 
   const bankAddress = await dao.getExtensionAddress(sha3("bank"));
   const bankExtension = await BankExtension.at(bankAddress);
 
   const nftExtAddr = await dao.getExtensionAddress(sha3("nft"));
   const nftExtension = await NFTExtension.at(nftExtAddr);
+
+  const unitTokenExtAddr = await dao.getExtensionAddress(sha3("erc20-ext"));
+  const erc20TokenExtension = await ERC20Extension.at(unitTokenExtAddr);
 
   await configureDao({
     owner: options.owner,
@@ -371,6 +416,7 @@ const addDefaultAdapters = async ({ dao, options, daoFactory, nftAddr }) => {
     nftAddr,
     bankExtension,
     nftExtension,
+    erc20TokenExtension,
     ...options,
   });
 
@@ -407,8 +453,9 @@ const configureDao = async ({
   daoRegistryAdapter,
   bankAdapter,
   bankExtension,
-  nftExtension,
   nftAdapter,
+  nftExtension,
+  erc20TokenExtension,
   voting,
   configuration,
   couponOnboarding,
@@ -456,8 +503,6 @@ const configureDao = async ({
       entryDao("daoRegistry", daoRegistryAdapter, {
         UPDATE_DELEGATE_KEY: true,
       }),
-      entryDao("nft", nftAdapter, {}),
-      entryDao("bank", bankAdapter, {}),
       entryDao("tribute", tribute, {
         SUBMIT_PROPOSAL: true,
         NEW_MEMBER: true,
@@ -469,10 +514,15 @@ const configureDao = async ({
       entryDao("distribute", distribute, {
         SUBMIT_PROPOSAL: true,
       }),
+      // Adapters to access the extensions directly
+      entryDao("nft", nftAdapter, {}),
+      entryDao("bank", bankAdapter, {}),
+      // Declare the erc20 token extension as an adapter to be able to call the bank extension
+      entryDao("erc20-ext", erc20TokenExtension, {
+        NEW_MEMBER: true,
+      }),
     ],
-    {
-      from: owner,
-    }
+    { from: owner }
   );
 
   await daoFactory.configureExtension(
@@ -514,10 +564,12 @@ const configureDao = async ({
       entryBank(tributeNFT, {
         ADD_TO_BALANCE: true,
       }),
+      // Let the unit-token extension to execute internal transfers in the bank as an adapter
+      entryBank(erc20TokenExtension, {
+        INTERNAL_TRANSFER: true,
+      }),
     ],
-    {
-      from: owner,
-    }
+    { from: owner }
   );
 
   await daoFactory.configureExtension(
@@ -534,6 +586,13 @@ const configureDao = async ({
     {
       from: owner,
     }
+  );
+
+  await daoFactory.configureExtension(
+    dao.address,
+    erc20TokenExtension.address,
+    [],
+    { from: owner }
   );
 
   await onboarding.configureDao(

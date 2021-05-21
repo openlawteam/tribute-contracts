@@ -45,6 +45,7 @@ abstract contract DaoConstants {
     // Extensions
     bytes32 internal constant BANK = keccak256("bank");
     bytes32 internal constant NFT = keccak256("nft");
+    bytes32 internal constant ERC20_EXT = keccak256("erc20-ext");
 
     // Reserved Addresses
     address internal constant GUILD = address(0xdead);
@@ -83,5 +84,12 @@ abstract contract DaoConstants {
      */
     function isNotReservedAddress(address addr) public pure returns (bool) {
         return addr != GUILD && addr != TOTAL && addr != ESCROW;
+    }
+
+    /**
+     * @notice Checks if a given address is zeroed.
+     */
+    function isNotZeroAddress(address addr) public pure returns (bool) {
+        return addr != address(0x0);
     }
 }
