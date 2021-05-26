@@ -548,7 +548,7 @@ contract OffchainVotingContract is
 
         //invalid choice
         if (
-            (node.sig.length == 0 && node.choice == 0) || // no vote
+            (node.sig.length == 0 && node.choice != 0) || // no vote
             (node.sig.length > 0 && !_isValidChoice(node.choice))
         ) {
             return true;
