@@ -8,6 +8,7 @@ import "../extensions/nft/NFT.sol";
 import "../adapters/interfaces/IVoting.sol";
 import "../guards/MemberGuard.sol";
 import "../guards/AdapterGuard.sol";
+import "../utils/PotentialNewMember.sol";
 import "@openzeppelin/contracts/utils/Address.sol";
 
 /**
@@ -34,7 +35,12 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
  */
 
-contract TributeNFTContract is DaoConstants, MemberGuard, AdapterGuard {
+contract TributeNFTContract is
+    DaoConstants,
+    MemberGuard,
+    AdapterGuard,
+    PotentialNewMember
+{
     using Address for address payable;
     struct ProposalDetails {
         // The proposal id.
@@ -110,7 +116,11 @@ contract TributeNFTContract is DaoConstants, MemberGuard, AdapterGuard {
                 msg.sender
             );
         dao.sponsorProposal(proposalId, sponsoredBy, address(votingContract));
-        dao.potentialNewMember(applicant);
+        potentialNewMember(
+            applicant,
+            dao,
+            BankExtension(dao.getExtensionAddress(BANK))
+        );
 
         votingContract.startNewVotingForProposal(dao, proposalId, data);
 

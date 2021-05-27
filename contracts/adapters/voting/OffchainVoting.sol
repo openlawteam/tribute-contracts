@@ -104,32 +104,6 @@ contract OffchainVotingContract is
         bytes32[] proof;
     }
 
-    struct ProposalMessage {
-        uint64 timestamp;
-        bytes32 spaceHash;
-        ProposalPayload payload;
-        bytes sig;
-    }
-
-    struct ProposalPayload {
-        bytes32 nameHash;
-        bytes32 bodyHash;
-        string[] choices;
-        uint64 start;
-        uint64 end;
-        string snapshot;
-    }
-
-    struct VoteMessage {
-        uint64 timestamp;
-        VotePayload payload;
-    }
-
-    struct VotePayload {
-        uint32 choice;
-        bytes32 proposalHash;
-    }
-
     modifier onlyBadReporterAdapter() {
         require(msg.sender == address(_handleBadReporterAdapter), "only:hbra");
         _;
