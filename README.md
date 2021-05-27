@@ -100,6 +100,7 @@ You can find more information about the purpose of each access flag at [DAO Regi
 
 Added the following environment variables to your local .env file:
 
+- `DAO_NAME`: The name of the DAO.
 - `DAO_OWNER_ADDR`: The DAO Owner ETH Address (0x...) in the target network.
 - `INFURA_KEY`: The Infura API Key is used to communicate with the Ethereum blockchain.
 - `TRUFFLE_MNEMONIC`: The truffle mnemonic string containing the 12 keywords.
