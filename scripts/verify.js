@@ -31,6 +31,8 @@ const verify = async (contract) => {
   if (!contract)
     return Promise.resolve({ stderr: "missing contract name and address" });
 
+  console.log(`Contract: ${contract.contractName}@${contract.contractAddress}`);
+
   const { stderr, stdout } = await exec(
     `${verifyCMD} ${network} ${contract.contractName}@${contract.contractAddress}`
   );
@@ -40,7 +42,7 @@ const verify = async (contract) => {
 };
 
 const main = async () => {
-  const deployLog = path.resolve(`${network.toLowerCase()}-deploy.log`);
+  const deployLog = path.resolve(`logs/${network.toLowerCase()}-deploy.log`);
   console.log(`Reading deployed contracts from ${deployLog}`);
 
   const { stdout } = await exec(
