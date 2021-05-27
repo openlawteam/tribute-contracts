@@ -105,7 +105,7 @@ Added the following environment variables to your local .env file:
 - `TRUFFLE_MNEMONIC`: The truffle mnemonic string containing the 12 keywords.
 - `ETHERSCAN_API_KEY`: The Ether Scan API Key to verify the contracts after the deployment.
 - `DEBUG_CONTRACT_VERIFICATION`: Debug the Ether Scan contract verification calls (`true`|`false`).
-- `COUPON_CREATOR_ADDR`: The public eth (0x...) address of the creator of the onboarding cupons.
+- `COUPON_CREATOR_ADDR`: The public eth (0x...) address of the creator of the onboarding coupons.
 - `ERC20_TOKEN_NAME`: The ERC20 Token Name used by the ERC20 Token Extension.
 - `ERC20_TOKEN_SYMBOL`: Token Symbol used by the ERC20 Token Extension.
 - `ERC20_TOKEN_DECIMALS`: The ERC20 Token Decimals to display in MetaMask.
