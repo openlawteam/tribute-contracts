@@ -31,8 +31,6 @@ contract DaoArtifacts {
 
     struct Artifact {
         bytes32 _id;
-        address _owner;
-        bytes32 _version;
         address _address;
     }
 
@@ -55,44 +53,32 @@ contract DaoArtifacts {
     /**
      * @notice Adds the adapter address to the storage
      * @param _id The id of the adapter (sha3).
-     * @param _owner The address of the owner of the adapter.
      * @param _version The version of the adapter.
      * @param _address The address of the adapter to be stored.
      */
     function addAdapter(
         bytes32 _id,
-        address _owner,
         bytes32 _version,
         address _address
     ) external {
-        adapters[_id][_owner][_version] = Artifact(
-            _id,
-            _owner,
-            _version,
-            _address
-        );
+        address _owner = msg.sender;
+        adapters[_id][_owner][_version] = Artifact(_id, _address);
         emit NewArtifact(_id, _owner, _version, _address, ArtifactType.ADAPTER);
     }
 
     /**
      * @notice Adds the extension factory address to the storage.
      * @param _id The id of the extension factory (sha3).
-     * @param _owner The address of the owner of the extension factory.
      * @param _version The version of the extension factory.
      * @param _address The address of the extension factory to be stored.
      */
     function addExtensionFactory(
         bytes32 _id,
-        address _owner,
         bytes32 _version,
         address _address
     ) external {
-        extensionsFactories[_id][_owner][_version] = Artifact(
-            _id,
-            _owner,
-            _version,
-            _address
-        );
+        address _owner = msg.sender;
+        extensionsFactories[_id][_owner][_version] = Artifact(_id, _address);
         emit NewArtifact(
             _id,
             _owner,

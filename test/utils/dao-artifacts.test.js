@@ -26,14 +26,9 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
  */
-const { ETH_TOKEN, sha3, fromUtf8 } = require("../../utils/ContractUtil.js");
+const { sha3 } = require("../../utils/ContractUtil.js");
 
-const {
-  accounts,
-  expectRevert,
-  expect,
-  DaoArtifacts,
-} = require("../../utils/OZTestUtil.js");
+const { accounts, expect, DaoArtifacts } = require("../../utils/OZTestUtil.js");
 
 describe("Utils - DaoArtifacts", () => {
   it("should be possible to create a dao artifacts contract", async () => {
@@ -50,9 +45,9 @@ describe("Utils - DaoArtifacts", () => {
     const adapterAddress = accounts[9];
     const res = await daoArtifacts.addAdapter(
       sha3("adapter1"),
-      owner,
       sha3("v1.0.0"),
-      adapterAddress
+      adapterAddress,
+      { from: owner }
     );
     expectEvent(res, "NewArtifact", {
       _id: sha3("adapter1"),
@@ -70,9 +65,9 @@ describe("Utils - DaoArtifacts", () => {
 
     await daoArtifacts.addAdapter(
       sha3("adapter1"),
-      owner,
       sha3("v1.0.0"),
-      adapterAddress
+      adapterAddress,
+      { from: owner }
     );
 
     const address = await daoArtifacts.getArtifactAddress(
@@ -90,9 +85,9 @@ describe("Utils - DaoArtifacts", () => {
     const extensionAddress = accounts[9];
     const res = await daoArtifacts.addExtensionFactory(
       sha3("extFactory1"),
-      owner,
       sha3("v1.0.0"),
-      extensionAddress
+      extensionAddress,
+      { from: owner }
     );
     expectEvent(res, "NewArtifact", {
       _id: sha3("extFactory1"),
@@ -109,9 +104,9 @@ describe("Utils - DaoArtifacts", () => {
     const extensionAddress = accounts[9];
     await daoArtifacts.addExtensionFactory(
       sha3("extFactory1"),
-      owner,
       sha3("v1.0.0"),
-      extensionAddress
+      extensionAddress,
+      { from: owner }
     );
 
     const address = await daoArtifacts.getArtifactAddress(
