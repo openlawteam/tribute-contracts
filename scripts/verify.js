@@ -28,8 +28,10 @@ const network = args[0] || "rinkeby";
 console.log(`Selected Network: ${network}`);
 
 const verify = async (contract) => {
-  if (!contract)
+  if (!contract || !contract.contractName || !contract.contractAddress)
     return Promise.resolve({ stderr: "missing contract name and address" });
+
+  console.log(`Contract: ${contract.contractName}@${contract.contractAddress}`);
 
   const { stderr, stdout } = await exec(
     `${verifyCMD} ${network} ${contract.contractName}@${contract.contractAddress}`
@@ -37,40 +39,45 @@ const verify = async (contract) => {
 
   if (stderr) console.error(stderr);
   if (stdout) console.log(stdout);
+
+  return Promise.resolve();
+};
+
+const matchAddress = (input, contractName, regex) => {
+  let matches = new RegExp(regex, "g").exec(input);
+
+  let output = {};
+  if (matches) {
+    output = {
+      contractName: contractName,
+      contractAddress: matches[1],
+    };
+  }
+  return output;
 };
 
 const main = async () => {
-  const deployLog = path.resolve(`${network.toLowerCase()}-deploy.log`);
+  const deployLog = path.resolve(`logs/${network.toLowerCase()}-deploy.log`);
   console.log(`Reading deployed contracts from ${deployLog}`);
 
   const { stdout } = await exec(
     `cat ${deployLog} | grep -e "Deploying" -e "contract address:" -e "Cloned"`
   );
+  const verifyContracts = Object.keys(contracts).filter(
+    (c) => !skipContracts.includes(c)
+  );
 
-  return Object.keys(contracts)
-    .filter((c) => !skipContracts.includes(c))
-    .map((contractName) => {
-      let matchDeployed = new RegExp(
-        `Deploying\\s'${contractName}'\n.+contract address:\\s+\(.+\)\n`,
-        "g"
-      ).exec(stdout);
-
-      let matchCloned = new RegExp(
-        `Cloned\\s${contractName}:\\s\(.+\)\n`,
-        "g"
-      ).exec(stdout);
-
-      if (matchCloned) {
-        return { contractName: contractName, contractAddress: matchCloned[1] };
-      } else if (matchDeployed) {
-        return {
-          contractName: contractName,
-          contractAddress: matchDeployed[1],
-        };
-      }
-
-      return null;
-    })
+  // Verify all the deployed addresses first (including the identity/proxy contracts)
+  // When the identity/proxy contracts are verified, the verification gets propagated
+  // to the cloned ones because they have the exact same code.
+  return verifyContracts
+    .map((contractName) =>
+      matchAddress(
+        stdout,
+        contractName,
+        `Deploying\\s'${contractName}'\n.+contract address:\\s+\(.+\)\n`
+      )
+    )
     .reduce((p, c) => p.then(() => verify(c)), Promise.resolve());
 };
 
