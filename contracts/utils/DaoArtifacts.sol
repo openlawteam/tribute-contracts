@@ -29,17 +29,12 @@ SOFTWARE.
 contract DaoArtifacts {
     enum ArtifactType {ADAPTER, EXTENSION}
 
-    struct Artifact {
-        bytes32 _id;
-        address _address;
-    }
-
-    // Mapping from Artifact Name to Owner Address and Adapters
-    mapping(bytes32 => mapping(address => mapping(bytes32 => Artifact)))
+    // Mapping from Artifact Name => (Owner Address => (Version => Adapters Address))
+    mapping(bytes32 => mapping(address => mapping(bytes32 => address)))
         public adapters;
 
-    // Mapping from Artifact Name to Owner Address and Extensions
-    mapping(bytes32 => mapping(address => mapping(bytes32 => Artifact)))
+    // Mapping from Artifact Name => (Owner Address => (Version => ExtensionsAddress))
+    mapping(bytes32 => mapping(address => mapping(bytes32 => address)))
         public extensionsFactories;
 
     event NewArtifact(
@@ -62,7 +57,7 @@ contract DaoArtifacts {
         address _address
     ) external {
         address _owner = msg.sender;
-        adapters[_id][_owner][_version] = Artifact(_id, _address);
+        adapters[_id][_owner][_version] = _address;
         emit NewArtifact(_id, _owner, _version, _address, ArtifactType.ADAPTER);
     }
 
@@ -78,7 +73,7 @@ contract DaoArtifacts {
         address _address
     ) external {
         address _owner = msg.sender;
-        extensionsFactories[_id][_owner][_version] = Artifact(_id, _address);
+        extensionsFactories[_id][_owner][_version] = _address;
         emit NewArtifact(
             _id,
             _owner,
@@ -103,10 +98,10 @@ contract DaoArtifacts {
         ArtifactType _type
     ) external view returns (address) {
         if (_type == ArtifactType.ADAPTER) {
-            return adapters[_id][_owner][_version]._address;
+            return adapters[_id][_owner][_version];
         }
         if (_type == ArtifactType.EXTENSION) {
-            return extensionsFactories[_id][_owner][_version]._address;
+            return extensionsFactories[_id][_owner][_version];
         }
         return address(0x0);
     }
