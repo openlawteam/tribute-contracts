@@ -55,7 +55,7 @@ contract CouponOnboardingContract is DaoConstants, AdapterGuard, Signatures {
     event CouponRedeemed(
         address daoAddress,
         uint256 nonce,
-        address memberAddress,
+        address authorizedMember,
         uint256 amount
     );
 
