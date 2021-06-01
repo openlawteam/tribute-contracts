@@ -123,7 +123,7 @@ const onboardMember = async (dao, voting, onboarding, bank, index) => {
   );
 
   const voteEntries = [];
-  const membersCount = await dao.getNbMembers();
+  const membersCount = (await dao.getNbMembers()) - 1;
   for (let i = 0; i < parseInt(membersCount.toString()); i++) {
     const memberAddress = await dao.getMemberAddress(i);
     const member = findMember(memberAddress);

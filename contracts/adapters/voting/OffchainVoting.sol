@@ -313,7 +313,7 @@ contract OffchainVotingContract is
         BankExtension bank = BankExtension(dao.getExtensionAddress(BANK));
         uint256 nbMembers =
             bank.getPriorAmount(TOTAL, MEMBER_COUNT, vote.snapshot);
-        require(nbMembers == result.index, "index:member_count mismatch");
+        require(nbMembers - 1 == result.index, "index:member_count mismatch");
         require(
             !_challengeBadNode(dao, proposalId, true, resultRoot, vote, result),
             "bad result"
