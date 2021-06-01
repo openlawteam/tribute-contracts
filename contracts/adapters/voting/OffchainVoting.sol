@@ -467,8 +467,8 @@ contract OffchainVotingContract is
         );
 
         (address actionId, ) = dao.proposals(proposalId);
-        VoteStepParams memory params = VoteStepParams(0, 0, proposalId);
-        if (node.index == 0 && _checkStep(dao, actionId, node, params)) {
+    
+        if (node.index == 0 && _checkStep(dao, actionId, node, VoteStepParams(0, 0, proposalId))) {
             _challengeResult(dao, proposalId);
         }
     }
@@ -714,42 +714,12 @@ contract OffchainVotingContract is
         bank.addToBalance(challengedReporter, LOOT, units);
     }
 
-    function getSignedHash(
-        bytes32 snapshotRoot,
-        address dao,
-        bytes32 proposalId
-    ) external pure returns (bytes32) {
-        bytes32 proposalHash =
-            keccak256(abi.encode(snapshotRoot, dao, proposalId));
-        return keccak256(abi.encode(proposalHash, 1));
-    }
-
-    function getSignedAddress(
-        bytes32 snapshotRoot,
-        address dao,
-        bytes32 proposalId,
-        bytes calldata sig
-    ) external pure returns (address) {
-        bytes32 proposalHash =
-            keccak256(abi.encode(snapshotRoot, dao, proposalId));
-        return
-            ECDSA.recover(
-                keccak256(
-                    abi.encodePacked(
-                        "\x19Ethereum Signed Message:\n32",
-                        keccak256(abi.encode(proposalHash, 1))
-                    )
-                ),
-                sig
-            );
-    }
-
     function _hasVoted(
         DaoRegistry dao,
         address actionId,
         address voter,
         uint64 timestamp,
-        bytes32 proposalHash,
+        bytes32 proposalId,
         uint32 choiceIdx,
         bytes memory sig
     ) internal view returns (bool) {
@@ -761,7 +731,7 @@ contract OffchainVotingContract is
                     timestamp,
                     SnapshotProposalContract.VotePayload(
                         choiceIdx,
-                        proposalHash
+                        proposalId
                     )
                 )
             );
