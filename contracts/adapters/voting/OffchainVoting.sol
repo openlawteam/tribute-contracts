@@ -68,9 +68,10 @@ contract OffchainVotingContract is
     bytes32 public constant VOTE_RESULT_ROOT_TYPEHASH =
         keccak256(abi.encodePacked(VOTE_RESULT_ROOT_TYPE));
 
-    VotingContract public fallbackVoting;
-
-    mapping(address => mapping(bytes32 => ProposalChallenge)) challengeProposals;
+    bytes32 constant VotingPeriod = keccak256("offchainvoting.votingPeriod");
+    bytes32 constant GracePeriod = keccak256("offchainvoting.gracePeriod");
+    bytes32 constant FallbackThreshold =
+        keccak256("offchainvoting.fallbackThreshold");
 
     struct VoteStepParams {
         uint256 previousYes;
@@ -109,11 +110,9 @@ contract OffchainVotingContract is
         _;
     }
 
-    bytes32 constant VotingPeriod = keccak256("offchainvoting.votingPeriod");
-    bytes32 constant GracePeriod = keccak256("offchainvoting.gracePeriod");
-    bytes32 constant FallbackThreshold =
-        keccak256("offchainvoting.fallbackThreshold");
+    VotingContract public fallbackVoting;
 
+    mapping(address => mapping(bytes32 => ProposalChallenge)) challengeProposals;
     mapping(address => mapping(bytes32 => Voting)) public votes;
 
     constructor(
