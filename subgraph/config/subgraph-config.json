@@ -19,5 +19,12 @@
     "daoFactoryStartBlock": 8655169,
     "GITHUB_USERNAME": "openlawteam",
     "SUBGRAPH_NAME": "alien-dev"
+  },
+  {
+    "network": "rinkeby",
+    "daoFactoryAddress": "0x81c9626A259b8A20bcCb347BeC0B594D59DF63C6",
+    "daoFactoryStartBlock": 8686987,
+    "GITHUB_USERNAME": "openlawteam",
+    "SUBGRAPH_NAME": "darkhorse-dev"
   }
 ]
