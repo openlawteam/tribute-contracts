@@ -456,6 +456,7 @@ contract OffchainVotingContract is
         bytes32 proposalId,
         VoteResultNode memory node
     ) external {
+        require(node.index == 0, "only first node");
         Voting storage vote = votes[address(dao)][proposalId];
         (address adapterAddress, ) = dao.proposals(proposalId);
         require(vote.resultRoot != bytes32(0), "no result available yet!");
@@ -467,8 +468,8 @@ contract OffchainVotingContract is
         );
 
         (address actionId, ) = dao.proposals(proposalId);
-    
-        if (node.index == 0 && _checkStep(dao, actionId, node, VoteStepParams(0, 0, proposalId))) {
+
+        if (_checkStep(dao, actionId, node, VoteStepParams(0, 0, proposalId))) {
             _challengeResult(dao, proposalId);
         }
     }
@@ -729,10 +730,7 @@ contract OffchainVotingContract is
                 actionId,
                 SnapshotProposalContract.VoteMessage(
                     timestamp,
-                    SnapshotProposalContract.VotePayload(
-                        choiceIdx,
-                        proposalId
-                    )
+                    SnapshotProposalContract.VotePayload(choiceIdx, proposalId)
                 )
             );
 
