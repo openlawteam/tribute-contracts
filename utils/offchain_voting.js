@@ -349,8 +349,7 @@ function prepareProposalPayload(payload) {
   });
 }
 /**
-     * {
-      member: undefined,
+     * {      
       nbNo: 1,
       nbYes: 0,
       weight: BN {
@@ -373,7 +372,6 @@ function toStepNode(step, verifyingContract, actionId, chainId, merkleTree) {
     sig: step.sig,
     timestamp: step.timestamp,
     proposalId: step.proposalId,
-    member: step.member,
     proof: merkleTree.getHexProof(
       buildVoteLeafHashForMerkleTree(step, verifyingContract, actionId, chainId)
     ),

@@ -85,7 +85,6 @@ contract OffchainVotingContract is
         bytes32 resultRoot;
         uint256 nbYes;
         uint256 nbNo;
-        uint256 index;
         uint256 startingTime;
         uint256 gracePeriodStartingTime;
         bool isChallenged;
@@ -243,25 +242,9 @@ contract OffchainVotingContract is
                 _readyToSubmitResult(dao, vote, result.nbYes, result.nbNo),
                 "vote:notReadyToSubmitResult"
             );
-            _submitVoteResult(
-                dao,
-                vote,
-                proposalId,
-                result,
-                resultRoot,
-                rootSig
-            );
-        } else {
-            require(result.index > vote.index, "vote:notEnoughSteps");
-            _submitVoteResult(
-                dao,
-                vote,
-                proposalId,
-                result,
-                resultRoot,
-                rootSig
-            );
         }
+
+        _submitVoteResult(dao, vote, proposalId, result, resultRoot, rootSig);
     }
 
     function _readyToSubmitResult(
@@ -273,7 +256,6 @@ contract OffchainVotingContract is
         if (vote.forceFailed) {
             return false;
         }
-
         BankExtension bank = BankExtension(dao.getExtensionAddress(BANK));
         uint256 totalWeight = bank.getPriorAmount(TOTAL, UNITS, vote.snapshot);
         uint256 unvotedWeights = totalWeight - nbYes - nbNo;
@@ -290,7 +272,6 @@ contract OffchainVotingContract is
         }
 
         uint256 votingPeriod = dao.getConfiguration(VotingPeriod);
-
         return vote.startingTime + votingPeriod <= block.timestamp;
     }
 
@@ -319,6 +300,11 @@ contract OffchainVotingContract is
             "bad result"
         );
 
+        require(
+            vote.nbYes + vote.nbNo < result.nbYes + result.nbNo,
+            "result weight too low"
+        );
+
         if (
             vote.gracePeriodStartingTime == 0 ||
             vote.nbNo > vote.nbYes != result.nbNo > result.nbYes
@@ -328,7 +314,6 @@ contract OffchainVotingContract is
 
         vote.nbNo = result.nbNo;
         vote.nbYes = result.nbYes;
-        vote.index = result.index;
         vote.resultRoot = resultRoot;
         vote.reporter = memberAddr;
         vote.isChallenged = false;

@@ -30,8 +30,6 @@ const {
   unitPrice,
   remaining,
   UNITS,
-  TOTAL,
-  MEMBER_COUNT,
 } = require("../../utils/ContractUtil.js");
 
 const {
@@ -67,9 +65,7 @@ const generateMembers = (amount) => {
 };
 
 const members = generateMembers(10);
-const findMember = (addr) => {
-  members.find((member) => member.address === addr);
-};
+const findMember = (addr) => members.find((member) => member.address === addr);
 const daoOwner = accounts[0];
 const newMember = members[0];
 const proposalCounter = proposalIdGenerator().generator;
@@ -123,15 +119,20 @@ const onboardMember = async (dao, voting, onboarding, bank, index) => {
   );
 
   const voteEntries = [];
-  const membersCount = (await dao.getNbMembers()) - 1;
-  for (let i = 0; i < parseInt(membersCount.toString()); i++) {
+  const membersCount = await dao.getNbMembers();
+
+  for (let i = 0; i < parseInt(membersCount.toString()) - 1; i++) {
     const memberAddress = await dao.getMemberAddress(i);
     const member = findMember(memberAddress);
     let voteEntry;
     if (member) {
       const voteSigner = SigUtilSigner(member.privateKey);
       const weight = await bank.balanceOf(member.address, UNITS);
-      voteEntry = await createVote(proposalId, weight.toString(), true);
+      voteEntry = await createVote(
+        proposalId,
+        parseInt(weight.toString()),
+        true
+      );
 
       voteEntry.sig = voteSigner(
         voteEntry,
@@ -145,12 +146,11 @@ const onboardMember = async (dao, voting, onboarding, bank, index) => {
       voteEntry.sig = "0x";
     }
 
-    voteEntry.member = memberAddress;
-
     voteEntries.push(voteEntry);
   }
 
   await advanceTime(10000);
+
   const { voteResultTree, result } = await prepareVoteResult(
     voteEntries,
     dao,
@@ -166,6 +166,7 @@ const onboardMember = async (dao, voting, onboarding, bank, index) => {
   );
 
   const lastResult = result[result.length - 1];
+
   let tx = await voting.submitVoteResult(
     dao.address,
     proposalId,
