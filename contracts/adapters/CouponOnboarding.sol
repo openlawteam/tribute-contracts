@@ -52,6 +52,13 @@ contract CouponOnboardingContract is DaoConstants, AdapterGuard, Signatures {
     uint256 chainId;
     mapping(address => mapping(uint256 => uint256)) flags;
 
+    event CouponRedeemed(
+        address daoAddress,
+        uint256 nonce,
+        address authorizedMember,
+        uint256 amount
+    );
+
     constructor(uint256 _chainId) {
         chainId = _chainId;
     }
@@ -126,5 +133,7 @@ contract CouponOnboardingContract is DaoConstants, AdapterGuard, Signatures {
         } catch {
             // do nothing
         }
+
+        emit CouponRedeemed(address(dao), nonce, authorizedMember, amount);
     }
 }
