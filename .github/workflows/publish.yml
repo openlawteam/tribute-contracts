@@ -7,7 +7,7 @@ on:
 jobs:
   publish:
     name: npm-publish
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-18.04
     steps:
       - name: Inject slug/short variables
         uses: rlespinasse/github-slug-action@v2.x
@@ -16,7 +16,7 @@ jobs:
       - name: Setup Node
         uses: actions/setup-node@v2
         with:
-          node-version: "12.22.x"
+          node-version: "12.22.1"
 
       - run: npm ci
       - run: npm run compile
