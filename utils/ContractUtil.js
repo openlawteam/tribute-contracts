@@ -96,6 +96,9 @@ const contracts = {
   CouponOnboardingContract: "./adapters/CouponOnboardingContract",
   TributeContract: "./adapters/TributeContract",
   TributeNFTContract: "./adapters/TributeNFTContract",
+
+  // Utils
+  DaoArtifacts: "./utils/DaoArtifacts",
 };
 
 module.exports = {
