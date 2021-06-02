@@ -128,11 +128,7 @@ const onboardMember = async (dao, voting, onboarding, bank, index) => {
     if (member) {
       const voteSigner = SigUtilSigner(member.privateKey);
       const weight = await bank.balanceOf(member.address, UNITS);
-      voteEntry = await createVote(
-        proposalId,
-        parseInt(weight.toString()),
-        true
-      );
+      voteEntry = await createVote(proposalId, weight, true);
 
       voteEntry.sig = voteSigner(
         voteEntry,

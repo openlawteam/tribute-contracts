@@ -25,7 +25,7 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
  */
 const { MerkleTree } = require("./merkleTree.js");
-const { UNITS, sha3 } = require("./ContractUtil.js");
+const { toBN, sha3 } = require("./ContractUtil.js");
 const sigUtil = require("eth-sig-util");
 
 function getMessageERC712Hash(m, verifyingContract, actionId, chainId) {
@@ -382,7 +382,7 @@ async function createVote(proposalId, weight, voteYes) {
   const payload = {
     choice: voteYes ? 1 : 2,
     proposalId,
-    weight,
+    weight: toBN(weight),
   };
   const vote = {
     type: "vote",
@@ -390,7 +390,7 @@ async function createVote(proposalId, weight, voteYes) {
     payload,
   };
 
-  if (!weight) {
+  if (toBN(weight).toString() === "0") {
     payload.choice = 0;
   }
 
@@ -420,13 +420,13 @@ function buildVoteLeafHashForMerkleTree(
 async function prepareVoteResult(votes, dao, actionId, chainId) {
   votes.forEach((vote, idx) => {
     vote.choice = vote.choice || vote.payload.choice;
-    vote.nbYes = vote.choice === 1 ? vote.payload.weight : 0;
-    vote.nbNo = vote.choice !== 1 ? vote.payload.weight : 0;
+    vote.nbYes = vote.choice === 1 ? vote.payload.weight : toBN(0);
+    vote.nbNo = vote.choice !== 1 ? vote.payload.weight : toBN(0);
     vote.proposalId = vote.payload.proposalId;
     if (idx > 0) {
       const previousVote = votes[idx - 1];
-      vote.nbYes = vote.nbYes + previousVote.nbYes;
-      vote.nbNo = vote.nbNo + previousVote.nbNo;
+      vote.nbYes = vote.nbYes.add(toBN(previousVote.nbYes)).toString();
+      vote.nbNo = vote.nbNo.add(toBN(previousVote.nbNo)).toString();
     }
 
     vote.index = idx;

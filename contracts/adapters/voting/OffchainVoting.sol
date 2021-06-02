@@ -307,7 +307,7 @@ contract OffchainVotingContract is
 
         if (
             vote.gracePeriodStartingTime == 0 ||
-            vote.nbNo > vote.nbYes != result.nbNo > result.nbYes
+            vote.nbNo > vote.nbYes != result.nbNo > result.nbYes // check whether the new result changes the outcome
         ) {
             vote.gracePeriodStartingTime = block.timestamp;
         }
