@@ -59,7 +59,7 @@ contract OffchainVotingContract is
     KickBadReporterAdapter private _handleBadReporterAdapter;
 
     string public constant VOTE_RESULT_NODE_TYPE =
-        "Message(address account,uint256 timestamp,uint256 nbYes,uint256 nbNo,uint256 index,uint256 choice,bytes32 proposalHash)";
+        "Message(uint64 timestamp,uint88 nbYes,uint88 nbNo,uint32 index,uint32 choice,bytes32 proposalId)";
 
     string public constant ADAPTER_NAME = "OffchainVotingContract";
     string public constant VOTE_RESULT_ROOT_TYPE = "Message(bytes32 root)";
@@ -68,9 +68,16 @@ contract OffchainVotingContract is
     bytes32 public constant VOTE_RESULT_ROOT_TYPEHASH =
         keccak256(abi.encodePacked(VOTE_RESULT_ROOT_TYPE));
 
-    VotingContract public fallbackVoting;
+    bytes32 constant VotingPeriod = keccak256("offchainvoting.votingPeriod");
+    bytes32 constant GracePeriod = keccak256("offchainvoting.gracePeriod");
+    bytes32 constant FallbackThreshold =
+        keccak256("offchainvoting.fallbackThreshold");
 
-    mapping(address => mapping(bytes32 => ProposalChallenge)) challengeProposals;
+    struct VoteStepParams {
+        uint256 previousYes;
+        uint256 previousNo;
+        bytes32 proposalId;
+    }
 
     struct Voting {
         uint256 snapshot;
@@ -78,7 +85,6 @@ contract OffchainVotingContract is
         bytes32 resultRoot;
         uint256 nbYes;
         uint256 nbNo;
-        uint256 index;
         uint256 startingTime;
         uint256 gracePeriodStartingTime;
         bool isChallenged;
@@ -88,42 +94,14 @@ contract OffchainVotingContract is
     }
 
     struct VoteResultNode {
-        address account;
-        uint256 timestamp;
-        uint256 nbNo;
-        uint256 nbYes;
+        uint32 choice;
+        uint64 index;
+        uint64 timestamp;
+        uint88 nbNo;
+        uint88 nbYes;
         bytes sig;
-        bytes rootSig;
-        uint256 index;
-        uint256 choice;
-        bytes32 proposalHash;
+        bytes32 proposalId;
         bytes32[] proof;
-    }
-
-    struct ProposalMessage {
-        uint256 timestamp;
-        bytes32 spaceHash;
-        ProposalPayload payload;
-        bytes sig;
-    }
-
-    struct ProposalPayload {
-        bytes32 nameHash;
-        bytes32 bodyHash;
-        string[] choices;
-        uint256 start;
-        uint256 end;
-        string snapshot;
-    }
-
-    struct VoteMessage {
-        uint256 timestamp;
-        VotePayload payload;
-    }
-
-    struct VotePayload {
-        uint256 choice;
-        bytes32 proposalHash;
     }
 
     modifier onlyBadReporterAdapter() {
@@ -131,11 +109,9 @@ contract OffchainVotingContract is
         _;
     }
 
-    bytes32 constant VotingPeriod = keccak256("offchainvoting.votingPeriod");
-    bytes32 constant GracePeriod = keccak256("offchainvoting.gracePeriod");
-    bytes32 constant FallbackThreshold =
-        keccak256("offchainvoting.fallbackThreshold");
+    VotingContract public fallbackVoting;
 
+    mapping(address => mapping(bytes32 => ProposalChallenge)) challengeProposals;
     mapping(address => mapping(bytes32 => Voting)) public votes;
 
     constructor(
@@ -202,13 +178,12 @@ contract OffchainVotingContract is
             keccak256(
                 abi.encode(
                     VOTE_RESULT_NODE_TYPEHASH,
-                    node.account,
                     node.timestamp,
                     node.nbYes,
                     node.nbNo,
                     node.index,
                     node.choice,
-                    node.proposalHash
+                    node.proposalId
                 )
             );
     }
@@ -256,7 +231,8 @@ contract OffchainVotingContract is
         DaoRegistry dao,
         bytes32 proposalId,
         bytes32 resultRoot,
-        VoteResultNode memory result
+        VoteResultNode memory result,
+        bytes memory rootSig
     ) external {
         Voting storage vote = votes[address(dao)][proposalId];
         require(vote.snapshot > 0, "vote:not started");
@@ -266,11 +242,9 @@ contract OffchainVotingContract is
                 _readyToSubmitResult(dao, vote, result.nbYes, result.nbNo),
                 "vote:notReadyToSubmitResult"
             );
-            _submitVoteResult(dao, vote, proposalId, result, resultRoot);
-        } else {
-            require(result.index > vote.index, "vote:notEnoughSteps");
-            _submitVoteResult(dao, vote, proposalId, result, resultRoot);
         }
+
+        _submitVoteResult(dao, vote, proposalId, result, resultRoot, rootSig);
     }
 
     function _readyToSubmitResult(
@@ -282,7 +256,6 @@ contract OffchainVotingContract is
         if (vote.forceFailed) {
             return false;
         }
-
         BankExtension bank = BankExtension(dao.getExtensionAddress(BANK));
         uint256 totalWeight = bank.getPriorAmount(TOTAL, UNITS, vote.snapshot);
         uint256 unvotedWeights = totalWeight - nbYes - nbNo;
@@ -299,7 +272,6 @@ contract OffchainVotingContract is
         }
 
         uint256 votingPeriod = dao.getConfiguration(VotingPeriod);
-
         return vote.startingTime + votingPeriod <= block.timestamp;
     }
 
@@ -308,31 +280,40 @@ contract OffchainVotingContract is
         Voting storage vote,
         bytes32 proposalId,
         VoteResultNode memory result,
-        bytes32 resultRoot
+        bytes32 resultRoot,
+        bytes memory rootSig
     ) internal {
         (address adapterAddress, ) = dao.proposals(proposalId);
         address reporter =
             ECDSA.recover(
                 hashResultRoot(dao, adapterAddress, resultRoot),
-                result.rootSig
+                rootSig
             );
         address memberAddr = dao.getAddressIfDelegated(reporter);
         require(isActiveMember(dao, memberAddr), "not active member");
+        BankExtension bank = BankExtension(dao.getExtensionAddress(BANK));
+        uint256 nbMembers =
+            bank.getPriorAmount(TOTAL, MEMBER_COUNT, vote.snapshot);
+        require(nbMembers - 1 == result.index, "index:member_count mismatch");
         require(
             !_challengeBadNode(dao, proposalId, true, resultRoot, vote, result),
             "bad result"
         );
 
+        require(
+            vote.nbYes + vote.nbNo < result.nbYes + result.nbNo,
+            "result weight too low"
+        );
+
         if (
             vote.gracePeriodStartingTime == 0 ||
-            vote.nbNo > vote.nbYes != result.nbNo > result.nbYes
+            vote.nbNo > vote.nbYes != result.nbNo > result.nbYes // check whether the new result changes the outcome
         ) {
             vote.gracePeriodStartingTime = block.timestamp;
         }
 
         vote.nbNo = result.nbNo;
         vote.nbYes = result.nbYes;
-        vote.index = result.index;
         vote.resultRoot = resultRoot;
         vote.reporter = memberAddr;
         vote.isChallenged = false;
@@ -459,6 +440,7 @@ contract OffchainVotingContract is
         bytes32 proposalId,
         VoteResultNode memory node
     ) external {
+        require(node.index == 0, "only first node");
         Voting storage vote = votes[address(dao)][proposalId];
         (address adapterAddress, ) = dao.proposals(proposalId);
         require(vote.resultRoot != bytes32(0), "no result available yet!");
@@ -471,9 +453,7 @@ contract OffchainVotingContract is
 
         (address actionId, ) = dao.proposals(proposalId);
 
-        if (
-            node.index == 0 && _checkStep(dao, actionId, node, 0, 0, proposalId)
-        ) {
+        if (_checkStep(dao, actionId, node, VoteStepParams(0, 0, proposalId))) {
             _challengeResult(dao, proposalId);
         }
     }
@@ -519,19 +499,22 @@ contract OffchainVotingContract is
             MerkleProof.verify(node.proof, resultRoot, hashCurrent),
             "proof:bad"
         );
-
+        address account = dao.getMemberAddress(node.index);
         //return 1 if yes, 2 if no and 0 if the vote is incorrect
-        address voter = dao.getPriorDelegateKey(node.account, blockNumber);
+        address voter = dao.getPriorDelegateKey(account, blockNumber);
 
         (address actionId, ) = dao.proposals(proposalId);
 
         //invalid choice
-        if (!_isValidChoice(node.choice)) {
+        if (
+            (node.sig.length == 0 && node.choice != 0) || // no vote
+            (node.sig.length > 0 && !_isValidChoice(node.choice))
+        ) {
             return true;
         }
 
         //invalid proposal hash
-        if (node.proposalHash != proposalId) {
+        if (node.proposalId != proposalId) {
             return true;
         }
 
@@ -542,12 +525,13 @@ contract OffchainVotingContract is
 
         //bad signature
         if (
+            node.sig.length > 0 && // a vote has happened
             !_hasVoted(
                 dao,
                 actionId,
                 voter,
                 node.timestamp,
-                node.proposalHash,
+                node.proposalId,
                 node.choice,
                 node.sig
             )
@@ -585,22 +569,10 @@ contract OffchainVotingContract is
             "those nodes are not consecutive"
         );
 
-        //voters not in order
-        if (nodeCurrent.account > nodePrevious.account) {
-            _challengeResult(dao, proposalId);
-        }
         (address actionId, ) = dao.proposals(proposalId);
-
-        if (
-            _checkStep(
-                dao,
-                actionId,
-                nodeCurrent,
-                nodePrevious.nbYes,
-                nodePrevious.nbNo,
-                proposalId
-            )
-        ) {
+        VoteStepParams memory params =
+            VoteStepParams(nodePrevious.nbYes, nodePrevious.nbNo, proposalId);
+        if (_checkStep(dao, actionId, nodeCurrent, params)) {
             _challengeResult(dao, proposalId);
         }
     }
@@ -629,41 +601,58 @@ contract OffchainVotingContract is
     function _checkStep(
         DaoRegistry dao,
         address actionId,
-        VoteResultNode memory nodeCurrent,
-        uint256 previousYes,
-        uint256 previousNo,
-        bytes32 proposalId
+        VoteResultNode memory node,
+        VoteStepParams memory params
     ) internal view returns (bool) {
-        Voting storage vote = votes[address(dao)][proposalId];
-        address voter =
-            dao.getPriorDelegateKey(nodeCurrent.account, vote.snapshot);
+        Voting storage vote = votes[address(dao)][params.proposalId];
+        address account = dao.getMemberAddress(node.index);
+        address voter = dao.getPriorDelegateKey(account, vote.snapshot);
         BankExtension bank = BankExtension(dao.getExtensionAddress(BANK));
-        uint256 weight =
-            bank.getPriorAmount(nodeCurrent.account, UNITS, vote.snapshot);
+        uint256 weight = bank.getPriorAmount(account, UNITS, vote.snapshot);
+
+        if (node.choice == 0) {
+            if (params.previousYes != node.nbYes) {
+                return true;
+            } else if (params.previousNo != node.nbNo) {
+                return true;
+            }
+        }
 
         if (
             _hasVoted(
                 dao,
                 actionId,
                 voter,
-                nodeCurrent.timestamp,
-                nodeCurrent.proposalHash,
+                node.timestamp,
+                node.proposalId,
                 1,
-                nodeCurrent.sig
+                node.sig
             )
         ) {
-            if (previousYes + weight != nodeCurrent.nbYes) {
+            if (params.previousYes + weight != node.nbYes) {
                 return true;
-            } else if (previousNo != nodeCurrent.nbNo) {
-                return true;
-            }
-        } else {
-            if (previousYes != nodeCurrent.nbYes) {
-                return true;
-            } else if (previousNo + weight != nodeCurrent.nbNo) {
+            } else if (params.previousNo != node.nbNo) {
                 return true;
             }
         }
+        if (
+            _hasVoted(
+                dao,
+                actionId,
+                voter,
+                node.timestamp,
+                node.proposalId,
+                2,
+                node.sig
+            )
+        ) {
+            if (params.previousYes != node.nbYes) {
+                return true;
+            } else if (params.previousNo + weight != node.nbNo) {
+                return true;
+            }
+        }
+
         return false;
     }
 
@@ -710,43 +699,13 @@ contract OffchainVotingContract is
         bank.addToBalance(challengedReporter, LOOT, units);
     }
 
-    function getSignedHash(
-        bytes32 snapshotRoot,
-        address dao,
-        bytes32 proposalId
-    ) external pure returns (bytes32) {
-        bytes32 proposalHash =
-            keccak256(abi.encode(snapshotRoot, dao, proposalId));
-        return keccak256(abi.encode(proposalHash, 1));
-    }
-
-    function getSignedAddress(
-        bytes32 snapshotRoot,
-        address dao,
-        bytes32 proposalId,
-        bytes calldata sig
-    ) external pure returns (address) {
-        bytes32 proposalHash =
-            keccak256(abi.encode(snapshotRoot, dao, proposalId));
-        return
-            ECDSA.recover(
-                keccak256(
-                    abi.encodePacked(
-                        "\x19Ethereum Signed Message:\n32",
-                        keccak256(abi.encode(proposalHash, 1))
-                    )
-                ),
-                sig
-            );
-    }
-
     function _hasVoted(
         DaoRegistry dao,
         address actionId,
         address voter,
-        uint256 timestamp,
-        bytes32 proposalHash,
-        uint256 choiceIdx,
+        uint64 timestamp,
+        bytes32 proposalId,
+        uint32 choiceIdx,
         bytes memory sig
     ) internal view returns (bool) {
         bytes32 voteHash =
@@ -755,10 +714,7 @@ contract OffchainVotingContract is
                 actionId,
                 SnapshotProposalContract.VoteMessage(
                     timestamp,
-                    SnapshotProposalContract.VotePayload(
-                        choiceIdx,
-                        proposalHash
-                    )
+                    SnapshotProposalContract.VotePayload(choiceIdx, proposalId)
                 )
             );
 

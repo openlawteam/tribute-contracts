@@ -7,6 +7,7 @@ import "../core/DaoRegistry.sol";
 import "../extensions/bank/Bank.sol";
 import "../guards/AdapterGuard.sol";
 import "../utils/Signatures.sol";
+import "../utils/PotentialNewMember.sol";
 
 /**
 MIT License
@@ -32,7 +33,12 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
  */
 
-contract CouponOnboardingContract is DaoConstants, AdapterGuard, Signatures {
+contract CouponOnboardingContract is
+    DaoConstants,
+    AdapterGuard,
+    Signatures,
+    PotentialNewMember
+{
     struct Coupon {
         address authorizedMember;
         uint256 amount;
@@ -126,14 +132,10 @@ contract CouponOnboardingContract is DaoConstants, AdapterGuard, Signatures {
             address(dao.getAddressConfiguration(TokenAddrToMint));
 
         BankExtension bank = BankExtension(dao.getExtensionAddress(BANK));
-        // Overflow risk may cause this to fail
-        try bank.addToBalance(authorizedMember, tokenAddrToMint, amount) {
-            // address needs to be added to the members mappings
-            dao.potentialNewMember(authorizedMember);
-        } catch {
-            // do nothing
-        }
 
+        bank.addToBalance(authorizedMember, tokenAddrToMint, amount);
+        // address needs to be added to the members mappings
+        potentialNewMember(authorizedMember, dao, bank);
         emit CouponRedeemed(address(dao), nonce, authorizedMember, amount);
     }
 }

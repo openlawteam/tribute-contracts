@@ -1,12 +1,7 @@
 pragma solidity ^0.8.0;
-pragma experimental ABIEncoderV2;
+import "../extensions/bank/Bank.sol";
 
 // SPDX-License-Identifier: MIT
-
-import "../../core/DaoConstants.sol";
-import "../../core/DaoRegistry.sol";
-import "../../core/CloneFactory.sol";
-import "./Bank.sol";
 
 /**
 MIT License
@@ -32,22 +27,20 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
  */
 
-contract BankFactory is CloneFactory, DaoConstants {
-    address public identityAddress;
+abstract contract PotentialNewMember {
+    address internal constant _MEMBER_COUNT = address(0xDECAFBAD);
 
-    event BankCreated(address bankAddress);
-
-    constructor(address _identityAddress) {
-        identityAddress = _identityAddress;
-    }
-
-    /**
-     * @notice Create and initialize a new BankExtension
-     * @param maxExternalTokens The maximum number of external tokens stored in the Bank
-     */
-    function createBank(uint8 maxExternalTokens) external {
-        BankExtension bank = BankExtension(_createClone(identityAddress));
-        bank.setMaxExternalTokens(maxExternalTokens);
-        emit BankCreated(address(bank));
+    function potentialNewMember(
+        address memberAddress,
+        DaoRegistry dao,
+        BankExtension bank
+    ) public {
+        dao.potentialNewMember(memberAddress);
+        require(memberAddress != address(0x0), "invalid member address");
+        if (address(bank) != address(0x0)) {
+            if (bank.balanceOf(memberAddress, _MEMBER_COUNT) == 0) {
+                bank.addToBalance(memberAddress, _MEMBER_COUNT, 1);
+            }
+        }
     }
 }

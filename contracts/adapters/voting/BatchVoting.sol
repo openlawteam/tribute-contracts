@@ -179,7 +179,7 @@ contract BatchVotingContract is
         BankExtension bank,
         address actionId,
         uint256 snapshot,
-        bytes32 proposalHash,
+        bytes32 proposalId,
         address previousAddress,
         VoteEntry memory entry
     ) public view returns (uint256) {
@@ -194,7 +194,7 @@ contract BatchVotingContract is
         require(entry.memberAddress > previousAddress, "unsorted members");
         require(addr == delegateKey, "signing key mismatch");
         require(
-            entry.vote.payload.proposalHash == proposalHash,
+            entry.vote.payload.proposalId == proposalId,
             "wrong proposal vote"
         );
 

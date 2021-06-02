@@ -4,6 +4,7 @@ pragma solidity ^0.8.0;
 
 import "../core/DaoConstants.sol";
 import "../core/DaoRegistry.sol";
+import "../utils/PotentialNewMember.sol";
 import "../extensions/bank/Bank.sol";
 import "../adapters/interfaces/IVoting.sol";
 import "../guards/MemberGuard.sol";
@@ -36,7 +37,12 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
  */
 
-contract TributeContract is DaoConstants, MemberGuard, AdapterGuard {
+contract TributeContract is
+    DaoConstants,
+    MemberGuard,
+    AdapterGuard,
+    PotentialNewMember
+{
     using Address for address;
     using SafeERC20 for IERC20;
 
@@ -127,7 +133,11 @@ contract TributeContract is DaoConstants, MemberGuard, AdapterGuard {
             );
 
         dao.sponsorProposal(proposalId, sponsoredBy, address(votingContract));
-        dao.potentialNewMember(applicant);
+        potentialNewMember(
+            applicant,
+            dao,
+            BankExtension(dao.getExtensionAddress(BANK))
+        );
 
         votingContract.startNewVotingForProposal(dao, proposalId, data);
 

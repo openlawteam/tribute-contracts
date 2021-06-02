@@ -132,6 +132,7 @@ const deployDaoWithOffchainVoting = async ({ owner, newMember }) => {
   await dao.potentialNewMember(newMember, {
     from: owner,
   });
+
   await extensions.bank.addToBalance(newMember, UNITS, 1, {
     from: owner,
   });

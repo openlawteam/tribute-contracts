@@ -526,7 +526,6 @@ describe("Adapter - Onboarding", () => {
     const applicant = "0x0000000000000000000000000000000000000000";
     const dao = this.dao;
     const onboarding = this.adapters.onboarding;
-    const voting = this.adapters.voting;
 
     const proposalId = getProposalCounter();
     await expectRevert(

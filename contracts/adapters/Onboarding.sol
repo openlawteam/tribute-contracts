@@ -5,6 +5,7 @@ pragma solidity ^0.8.0;
 import "./interfaces/IOnboarding.sol";
 import "../core/DaoConstants.sol";
 import "../core/DaoRegistry.sol";
+import "../utils/PotentialNewMember.sol";
 import "../extensions/bank/Bank.sol";
 import "../adapters/interfaces/IVoting.sol";
 import "../guards/MemberGuard.sol";
@@ -40,6 +41,7 @@ SOFTWARE.
 contract OnboardingContract is
     IOnboarding,
     DaoConstants,
+    PotentialNewMember,
     MemberGuard,
     AdapterGuard
 {
@@ -140,7 +142,11 @@ contract OnboardingContract is
             "applicant is reserved address"
         );
 
-        dao.potentialNewMember(applicant);
+        potentialNewMember(
+            applicant,
+            dao,
+            BankExtension(dao.getExtensionAddress(BANK))
+        );
 
         address tokenAddr =
             dao.getAddressConfiguration(configKey(tokenToMint, TokenAddr));

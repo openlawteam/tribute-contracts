@@ -4,6 +4,7 @@ pragma solidity ^0.8.0;
 import "../../../core/DaoRegistry.sol";
 import "../../../core/DaoConstants.sol";
 import "../../../guards/AdapterGuard.sol";
+import "../../../utils/PotentialNewMember.sol";
 import "../../IExtension.sol";
 import "../../bank/Bank.sol";
 import "@openzeppelin/contracts/utils/Address.sol";
@@ -42,7 +43,13 @@ SOFTWARE.
  * The ERC20Extension is a contract to give erc20 functionality
  * to the internal token units held by DAO members inside the DAO itself.
  */
-contract ERC20Extension is DaoConstants, AdapterGuard, IExtension, IERC20 {
+contract ERC20Extension is
+    DaoConstants,
+    AdapterGuard,
+    PotentialNewMember,
+    IExtension,
+    IERC20
+{
     // The DAO address that this extension belongs to
     DaoRegistry public dao;
 
@@ -269,7 +276,7 @@ contract ERC20Extension is DaoConstants, AdapterGuard, IExtension, IERC20 {
                 "recipient address can not be reserved"
             );
             bank.internalTransfer(senderAddr, recipient, tokenAddress, amount);
-            dao.potentialNewMember(recipient);
+            potentialNewMember(recipient, dao, bank);
             emit Transfer(senderAddr, recipient, amount);
             return true;
         } else if (transferType == 2) {
@@ -335,7 +342,7 @@ contract ERC20Extension is DaoConstants, AdapterGuard, IExtension, IERC20 {
                 "recipient address can not be reserved"
             );
             bank.internalTransfer(senderAddr, recipient, tokenAddress, amount);
-            dao.potentialNewMember(recipient);
+            potentialNewMember(recipient, dao, bank);
             emit Transfer(senderAddr, recipient, amount);
             return true;
         } else if (transferType == 2) {
