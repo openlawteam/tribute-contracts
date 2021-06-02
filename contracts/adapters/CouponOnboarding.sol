@@ -58,6 +58,13 @@ contract CouponOnboardingContract is
     uint256 chainId;
     mapping(address => mapping(uint256 => uint256)) flags;
 
+    event CouponRedeemed(
+        address daoAddress,
+        uint256 nonce,
+        address authorizedMember,
+        uint256 amount
+    );
+
     constructor(uint256 _chainId) {
         chainId = _chainId;
     }
@@ -125,9 +132,10 @@ contract CouponOnboardingContract is
             address(dao.getAddressConfiguration(TokenAddrToMint));
 
         BankExtension bank = BankExtension(dao.getExtensionAddress(BANK));
-        // Overflow risk may cause this to fail
+
         bank.addToBalance(authorizedMember, tokenAddrToMint, amount);
         // address needs to be added to the members mappings
         potentialNewMember(authorizedMember, dao, bank);
+        emit CouponRedeemed(address(dao), nonce, authorizedMember, amount);
     }
 }
