@@ -64,6 +64,8 @@ const contracts = {
   BankFactory: "./extensions/bank/BankFactory",
   ERC20TokenExtensionFactory:
     "./extensions/token/erc20/ERC20TokenExtensionFactory",
+  ExecutorExtensionFactory:
+    "./extensions/executor/ExecutorExtensionFactory",
   Multicall: "./util/Multicall",
 
   // Extensions

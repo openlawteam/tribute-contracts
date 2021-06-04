@@ -32,7 +32,7 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
  */
 
-contract ExecutorFactory is CloneFactory, DaoConstants {
+contract ExecutorExtensionFactory is CloneFactory, DaoConstants {
     address public identityAddress;
 
     event ExecutorCreated(address executorAddress);
@@ -44,7 +44,7 @@ contract ExecutorFactory is CloneFactory, DaoConstants {
     /**
      * @notice Create and initialize a new Executor Extension
      */
-    function createBank() external {
+    function create() external {
         ExecutorExtension exec =
             ExecutorExtension(_createClone(identityAddress));
         emit ExecutorCreated(address(exec));
