@@ -70,6 +70,7 @@ const contracts = {
   NFTExtension: "./extensions/nft/NFTExtension",
   BankExtension: "./extensions/bank/BankExtension",
   ERC20Extension: "./extensions/token/erc20/ERC20Extension",
+  ExecutorExtension: "./extensions/token/executor/ExecutorExtension",
 
   // Config Adapters
   DaoRegistryAdapterContract: "./adapters/DaoRegistryAdapterContract",

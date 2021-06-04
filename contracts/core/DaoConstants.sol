@@ -46,6 +46,7 @@ abstract contract DaoConstants {
     bytes32 internal constant BANK = keccak256("bank");
     bytes32 internal constant NFT = keccak256("nft");
     bytes32 internal constant ERC20_EXT = keccak256("erc20-ext");
+    bytes32 internal constant EXECUTOR_EXT = keccak256("executor-ext");
 
     // Reserved Addresses
     address internal constant GUILD = address(0xdead);
