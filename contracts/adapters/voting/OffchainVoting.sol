@@ -48,6 +48,14 @@ contract OffchainVotingContract is
     Signatures,
     Ownable
 {
+    enum BadNodeError {
+        OK,
+        WRONG_PROPOSAL_ID,
+        INVALID_CHOICE,
+        AFTER_VOTING_PERIOD,
+        BAD_SIGNATURE
+    }
+
     struct ProposalChallenge {
         address reporter;
         uint256 units;
@@ -244,7 +252,48 @@ contract OffchainVotingContract is
             );
         }
 
-        _submitVoteResult(dao, vote, proposalId, result, resultRoot, rootSig);
+        (address adapterAddress, ) = dao.proposals(proposalId);
+        address reporter =
+            ECDSA.recover(
+                hashResultRoot(dao, adapterAddress, resultRoot),
+                rootSig
+            );
+        address memberAddr = dao.getAddressIfDelegated(reporter);
+        require(isActiveMember(dao, memberAddr), "not active member");
+        BankExtension bank = BankExtension(dao.getExtensionAddress(BANK));
+        uint256 nbMembers =
+            bank.getPriorAmount(TOTAL, MEMBER_COUNT, vote.snapshot);
+        require(nbMembers - 1 == result.index, "index:member_count mismatch");
+        require(
+            getBadNodeError(
+                dao,
+                proposalId,
+                true,
+                resultRoot,
+                vote.snapshot,
+                vote.gracePeriodStartingTime,
+                result
+            ) == BadNodeError.OK,
+            "bad result"
+        );
+
+        require(
+            vote.nbYes + vote.nbNo < result.nbYes + result.nbNo,
+            "result weight too low"
+        );
+
+        if (
+            vote.gracePeriodStartingTime == 0 ||
+            vote.nbNo > vote.nbYes != result.nbNo > result.nbYes // check whether the new result changes the outcome
+        ) {
+            vote.gracePeriodStartingTime = block.timestamp;
+        }
+
+        vote.nbNo = result.nbNo;
+        vote.nbYes = result.nbYes;
+        vote.resultRoot = resultRoot;
+        vote.reporter = memberAddr;
+        vote.isChallenged = false;
     }
 
     function _readyToSubmitResult(
@@ -273,50 +322,6 @@ contract OffchainVotingContract is
 
         uint256 votingPeriod = dao.getConfiguration(VotingPeriod);
         return vote.startingTime + votingPeriod <= block.timestamp;
-    }
-
-    function _submitVoteResult(
-        DaoRegistry dao,
-        Voting storage vote,
-        bytes32 proposalId,
-        VoteResultNode memory result,
-        bytes32 resultRoot,
-        bytes memory rootSig
-    ) internal {
-        (address adapterAddress, ) = dao.proposals(proposalId);
-        address reporter =
-            ECDSA.recover(
-                hashResultRoot(dao, adapterAddress, resultRoot),
-                rootSig
-            );
-        address memberAddr = dao.getAddressIfDelegated(reporter);
-        require(isActiveMember(dao, memberAddr), "not active member");
-        BankExtension bank = BankExtension(dao.getExtensionAddress(BANK));
-        uint256 nbMembers =
-            bank.getPriorAmount(TOTAL, MEMBER_COUNT, vote.snapshot);
-        require(nbMembers - 1 == result.index, "index:member_count mismatch");
-        require(
-            !_challengeBadNode(dao, proposalId, true, resultRoot, vote, result),
-            "bad result"
-        );
-
-        require(
-            vote.nbYes + vote.nbNo < result.nbYes + result.nbNo,
-            "result weight too low"
-        );
-
-        if (
-            vote.gracePeriodStartingTime == 0 ||
-            vote.nbNo > vote.nbYes != result.nbNo > result.nbYes // check whether the new result changes the outcome
-        ) {
-            vote.gracePeriodStartingTime = block.timestamp;
-        }
-
-        vote.nbNo = result.nbNo;
-        vote.nbYes = result.nbYes;
-        vote.resultRoot = resultRoot;
-        vote.reporter = memberAddr;
-        vote.isChallenged = false;
     }
 
     function getSenderAddress(
@@ -465,14 +470,15 @@ contract OffchainVotingContract is
     ) external {
         Voting storage vote = votes[address(dao)][proposalId];
         if (
-            _challengeBadNode(
+            getBadNodeError(
                 dao,
                 proposalId,
                 false,
                 vote.resultRoot,
-                vote,
+                vote.snapshot,
+                vote.gracePeriodStartingTime,
                 node
-            )
+            ) != BadNodeError.OK
         ) {
             _challengeResult(dao, proposalId);
         }
@@ -482,15 +488,15 @@ contract OffchainVotingContract is
         return choice > 0 && choice < NB_CHOICES + 1;
     }
 
-    function _challengeBadNode(
+    function getBadNodeError(
         DaoRegistry dao,
         bytes32 proposalId,
         bool submitNewVote,
         bytes32 resultRoot,
-        Voting storage vote,
+        uint256 blockNumber,
+        uint256 gracePeriodStartingTime,
         VoteResultNode memory node
-    ) internal view returns (bool) {
-        uint256 blockNumber = vote.snapshot;
+    ) public view returns (BadNodeError) {
         (address adapterAddress, ) = dao.proposals(proposalId);
         require(resultRoot != bytes32(0), "no result available yet!");
         bytes32 hashCurrent = nodeHash(dao, adapterAddress, node);
@@ -510,17 +516,17 @@ contract OffchainVotingContract is
             (node.sig.length == 0 && node.choice != 0) || // no vote
             (node.sig.length > 0 && !_isValidChoice(node.choice))
         ) {
-            return true;
+            return BadNodeError.INVALID_CHOICE;
         }
 
         //invalid proposal hash
         if (node.proposalId != proposalId) {
-            return true;
+            return BadNodeError.WRONG_PROPOSAL_ID;
         }
 
         //has voted outside of the voting time
-        if (!submitNewVote && node.timestamp > vote.gracePeriodStartingTime) {
-            return true;
+        if (!submitNewVote && node.timestamp > gracePeriodStartingTime) {
+            return BadNodeError.AFTER_VOTING_PERIOD;
         }
 
         //bad signature
@@ -536,10 +542,10 @@ contract OffchainVotingContract is
                 node.sig
             )
         ) {
-            return true;
+            return BadNodeError.BAD_SIGNATURE;
         }
 
-        return false;
+        return BadNodeError.OK;
     }
 
     function challengeBadStep(
