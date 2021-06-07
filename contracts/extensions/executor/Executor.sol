@@ -80,6 +80,11 @@ contract ExecutorExtension is DaoConstants, AdapterGuard, IExtension {
         payable
         hasExtensionAccess(AclFlag.EXECUTE)
     {
+        require(
+            isNotZeroAddress(implementation) &&
+                isNotReservedAddress(implementation),
+            "invalid implementation address"
+        );
         // solhint-disable-next-line no-inline-assembly
         assembly {
             // Copy msg.data. We take full control of memory in this inline assembly
