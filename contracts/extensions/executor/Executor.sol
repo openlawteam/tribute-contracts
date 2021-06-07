@@ -70,21 +70,13 @@ contract ExecutorExtension is DaoConstants, AdapterGuard, IExtension {
         initialized = true;
     }
 
-    /**
-     * @notice Delegates the function call to the implementation address provided as function argument.
-     * @dev reference contract @openzeppelin/contracts/proxy/Proxy.sol
-     * @param implementation The address of the contract that will execute the delegated function call.
-     */
-    function delegate(address implementation)
+    
+    fallback()
         external
         payable
         hasExtensionAccess(AclFlag.EXECUTE)
     {
-        require(
-            isNotZeroAddress(implementation) &&
-                isNotReservedAddress(implementation),
-            "invalid implementation address"
-        );
+        address implementation = msg.sender;
         // solhint-disable-next-line no-inline-assembly
         assembly {
             // Copy msg.data. We take full control of memory in this inline assembly

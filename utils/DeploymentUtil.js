@@ -47,6 +47,8 @@ const deployDao = async (options) => {
     Multicall,
     PixelNFT,
     OLToken,
+    ProxToken,
+    ERC20Minter,
   } = options;
 
   const erc20TokenName = options.erc20TokenName
@@ -176,6 +178,7 @@ const deployDao = async (options) => {
     testToken2: null,
     multicall: null,
     pixelNFT: null,
+    proxToken: null,
   };
 
   if (deployTestTokens) {
@@ -186,6 +189,7 @@ const deployDao = async (options) => {
     testContracts.oltToken = await deployFunction(OLToken, [
       toBN("1000000000000000000000000"),
     ]);
+    testContracts.proxToken = await deployFunction(ProxToken);
   }
 
   if (finalize) {
@@ -420,6 +424,7 @@ const addDefaultAdapters = async ({ dao, options, daoFactory, nftAddr }) => {
     bankExtension,
     nftExtension,
     erc20TokenExtension,
+    erc20Minter,
     ...options,
   });
 
