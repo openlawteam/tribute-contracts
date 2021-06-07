@@ -181,10 +181,11 @@ const deployDao = async (options) => {
     pixelNFT: null,
   };
 
+  testContracts.multicall = await deployFunction(Multicall);
+
   if (deployTestTokens) {
     testContracts.testToken1 = await deployFunction(TestToken1, [1000000]);
     testContracts.testToken2 = await deployFunction(TestToken2, [1000000]);
-    testContracts.multicall = await deployFunction(Multicall);
     testContracts.pixelNFT = await deployFunction(PixelNFT, [100]);
     testContracts.oltToken = await deployFunction(OLToken, [
       toBN("1000000000000000000000000"),
