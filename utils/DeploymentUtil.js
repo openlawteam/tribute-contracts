@@ -293,6 +293,7 @@ const configureBatchVoting = async ({
 };
 
 const prepareAdapters = async ({
+  network,
   deployFunction,
   VotingContract,
   ConfigurationContract,
@@ -324,19 +325,21 @@ const prepareAdapters = async ({
     distribute,
     tributeNFT;
 
+  // FIXME disabled for mainnet muse0 deploy
+  // distribute = await deployFunction(DistributeContract);
+  // financing = await deployFunction(FinancingContract);
+  // onboarding = await deployFunction(OnboardingContract);
+  // tribute = await deployFunction(TributeContract);
+  // ragequit = await deployFunction(RagequitContract);
+
   voting = await deployFunction(VotingContract);
   configuration = await deployFunction(ConfigurationContract);
-  ragequit = await deployFunction(RagequitContract);
   managing = await deployFunction(ManagingContract);
-  financing = await deployFunction(FinancingContract);
-  onboarding = await deployFunction(OnboardingContract);
   guildkick = await deployFunction(GuildKickContract);
   daoRegistryAdapter = await deployFunction(DaoRegistryAdapterContract);
   bankAdapter = await deployFunction(BankAdapterContract);
   nftAdapter = await deployFunction(NFTAdapterContract);
   couponOnboarding = await deployFunction(CouponOnboardingContract, [1]);
-  tribute = await deployFunction(TributeContract);
-  distribute = await deployFunction(DistributeContract);
   tributeNFT = await deployFunction(TributeNFTContract);
 
   return {
@@ -473,26 +476,38 @@ const configureDao = async ({
   await daoFactory.addAdapters(
     dao.address,
     [
+      // FIXME disabled for mainnet muse0 deploy
+      // entryDao("ragequit", ragequit, {})
+      // FIXME disabled for mainnet muse0 deploy
+      // entryDao("financing", financing, {
+      //   SUBMIT_PROPOSAL: true,
+      // }),
+      // FIXME disabled for mainnet muse0 deploy
+      // entryDao("onboarding", onboarding, {
+      //   SUBMIT_PROPOSAL: true,
+      //   UPDATE_DELEGATE_KEY: true,
+      //   NEW_MEMBER: true,
+      // }),
+      // FIXME disabled for mainnet muse0 deploy
+      // entryDao("tribute", tribute, {
+      //   SUBMIT_PROPOSAL: true,
+      //   NEW_MEMBER: true,
+      // }),
+      // FIXME disabled for mainnet muse0 deploy
+      // entryDao("distribute", distribute, {
+      //   SUBMIT_PROPOSAL: true,
+      // }),
       entryDao("voting", voting, {}),
       entryDao("configuration", configuration, {
         SUBMIT_PROPOSAL: true,
         SET_CONFIGURATION: true,
       }),
-      entryDao("ragequit", ragequit, {}),
       entryDao("guildkick", guildkick, {
         SUBMIT_PROPOSAL: true,
       }),
       entryDao("managing", managing, {
         SUBMIT_PROPOSAL: true,
         REPLACE_ADAPTER: true,
-      }),
-      entryDao("financing", financing, {
-        SUBMIT_PROPOSAL: true,
-      }),
-      entryDao("onboarding", onboarding, {
-        SUBMIT_PROPOSAL: true,
-        UPDATE_DELEGATE_KEY: true,
-        NEW_MEMBER: true,
       }),
       entryDao("coupon-onboarding", couponOnboarding, {
         SUBMIT_PROPOSAL: false,
@@ -503,16 +518,10 @@ const configureDao = async ({
       entryDao("daoRegistry", daoRegistryAdapter, {
         UPDATE_DELEGATE_KEY: true,
       }),
-      entryDao("tribute", tribute, {
-        SUBMIT_PROPOSAL: true,
-        NEW_MEMBER: true,
-      }),
+
       entryDao("tribute-nft", tributeNFT, {
         SUBMIT_PROPOSAL: true,
         NEW_MEMBER: true,
-      }),
-      entryDao("distribute", distribute, {
-        SUBMIT_PROPOSAL: true,
       }),
       // Adapters to access the extensions directly
       entryDao("nft", nftAdapter, {}),
@@ -747,6 +756,10 @@ const networks = [
   },
   {
     name: "coverage",
+    chainId: 1,
+  },
+  {
+    name: "mainnet",
     chainId: 1,
   },
 ];

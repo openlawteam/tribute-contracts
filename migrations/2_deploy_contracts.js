@@ -16,13 +16,16 @@ require("dotenv").config();
 module.exports = async (deployer, network, accounts) => {
   let res;
   const deployFunction = truffleImports.deployFunctionFactory(deployer);
-  if (network === "ganache") {
+  if (network === "mainnet") {
+    res = await deployMainnetDao(deployFunction, network, accounts);
+  } else if (network === "ganache") {
     res = await deployGanacheDao(deployFunction, network, accounts);
   } else if (network === "rinkeby") {
     res = await deployRinkebyDao(deployFunction, network);
   } else if (network === "test" || network === "coverage") {
     res = await deployTestDao(deployFunction, network, accounts);
   }
+
   let { dao, extensions } = res;
   if (dao) {
     await dao.finalizeDao();
@@ -112,6 +115,49 @@ async function deployRinkebyDao(deployFunction, network) {
     daoName: process.env.DAO_NAME,
     owner: process.env.DAO_OWNER_ADDR,
     offchainAdmin: "0xedC10CFA90A135C41538325DD57FDB4c7b88faf7",
+  });
+}
+
+async function deployMainnetDao(deployFunction, network) {
+  if (!process.env.DAO_NAME) throw Error("Missing env var: DAO_NAME");
+  if (!process.env.DAO_OWNER_ADDR)
+    throw Error("Missing env var: DAO_OWNER_ADDR");
+  if (!process.env.ERC20_TOKEN_NAME)
+    throw Error("Missing env var: ERC20_TOKEN_NAME");
+  if (!process.env.ERC20_TOKEN_SYMBOL)
+    throw Error("Missing env var: ERC20_TOKEN_SYMBOL");
+  if (!process.env.ERC20_TOKEN_DECIMALS)
+    throw Error("Missing env var: ERC20_TOKEN_DECIMALS");
+  if (!process.env.COUPON_CREATOR_ADDR)
+    throw Error("Missing env var: COUPON_CREATOR_ADDR");
+  if (!process.env.OFFCHAIN_ADMIN_ADDR)
+    throw Error("Missing env var: OFFCHAIN_ADMIN_ADDR");
+  if (!process.env.VOTING_PERIOD_SECONDS)
+    throw Error("Missing env var: VOTING_PERIOD_SECONDS");
+  if (!process.env.GRACE_PERIOD_SECONDS)
+    throw Error("Missing env var: GRACE_PERIOD_SECONDS");
+
+  return await deployDao({
+    ...truffleImports,
+    deployFunction,
+    unitPrice: toBN(toWei("100", "finney")),
+    nbUnits: toBN("100000"),
+    tokenAddr: ETH_TOKEN,
+    erc20TokenName: process.env.ERC20_TOKEN_NAME,
+    erc20TokenSymbol: process.env.ERC20_TOKEN_SYMBOL,
+    erc20TokenDecimals: process.env.ERC20_TOKEN_DECIMALS,
+    maxChunks: toBN("100000"),
+    votingPeriod: parseInt(process.env.VOTING_PERIOD_SECONDS),
+    gracePeriod: parseInt(process.env.GRACE_PERIOD_SECONDS),
+    offchainVoting: true,
+    chainId: getNetworkDetails(network).chainId,
+    deployTestTokens: false,
+    finalize: false,
+    maxExternalTokens: 100,
+    couponCreatorAddress: process.env.COUPON_CREATOR_ADDR,
+    daoName: process.env.DAO_NAME,
+    owner: process.env.DAO_OWNER_ADDR,
+    offchainAdmin: process.env.OFFCHAIN_ADMIN_ADDR,
   });
 }
 

@@ -40,6 +40,17 @@ module.exports = {
       gasPrice: 10000000000,
       skipDryRun: true,
     },
+    mainnet: {
+      provider: function () {
+        let infuraKey = process.env.INFURA_KEY;
+        let HDWalletProvider = require("@truffle/hdwallet-provider");
+        let mnemonic = process.env.TRUFFLE_MNEMONIC;
+        let infuraUrl = "wss://mainnet.infura.io/ws/v3/" + infuraKey;
+        return new HDWalletProvider(mnemonic, infuraUrl);
+      },
+      network_id: 1,
+      skipDryRun: true,
+    },
     coverage: {
       host: "localhost",
       network_id: "*",
