@@ -150,7 +150,7 @@ const deployDao = async (options) => {
       dao,
       daoFactory,
       votingAddress,
-      bankAddress,
+      bankAddress: extensions.bank.address,
     });
     votingHelpers.offchainVoting = offchainVoting;
     votingHelpers.handleBadReporterAdapter = handleBadReporterAdapter;
