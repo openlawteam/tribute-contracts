@@ -56,8 +56,12 @@ const contracts = {
   TestToken2: "./test/TestToken2",
   TestFairShareCalc: "./test/TestFairShareCalc",
   PixelNFT: "./test/PixelNFT",
+<<<<<<< HEAD
   ProxToken: "./test/ProxTokenContract",
   ERC20Minter: "./test/ERC20MinterContract",
+=======
+  FakeChainlinkPriceFeed: "./test/FakeChainlinkPriceFeed",
+>>>>>>> 579e413... minor updates for price feed testing
 
   // DAO Contracts
   DaoFactory: "./core/DaoFactory",
@@ -100,7 +104,7 @@ const contracts = {
   CouponOnboardingContract: "./adapters/CouponOnboardingContract",
   TributeContract: "./adapters/TributeContract",
   TributeNFTContract: "./adapters/TributeNFTContract",
-  FinancingChainlink: "./adapters/FinancingChainlink", 
+  FinancingChainlinkContract: "./adapters/FinancingChainlinkContract", 
 
   // Utils
   DaoArtifacts: "./utils/DaoArtifacts",

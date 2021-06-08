@@ -35,7 +35,7 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
  */
 
-contract FinancingChainLinkContract is
+contract FinancingChainlinkContract is
     IFinancing,
     DaoConstants,
     MemberGuard,
@@ -51,10 +51,8 @@ contract FinancingChainLinkContract is
      * Mainnet Contract Address:  0x5f4eC3Df9cbd43714FE2740f5E3616155c5b8419
      */
 
-    constructor() {
-        _priceFeed = AggregatorV3Interface(
-            0x5f4eC3Df9cbd43714FE2740f5E3616155c5b8419
-        );
+    constructor(address feedAddress) {
+        _priceFeed = AggregatorV3Interface(feedAddress);
     }
 
     struct ProposalDetails {
@@ -149,7 +147,7 @@ contract FinancingChainLinkContract is
         BankExtension bank = BankExtension(dao.getExtensionAddress(BANK));
 
         //enter US Dollar = details.amount to convert it into ETH
-        uint256 amount = usdToEth(details.amount);
+        uint256 amount = _usdToEth(details.amount);
 
         bank.subtractFromBalance(GUILD, details.token, amount);
         bank.addToBalance(details.applicant, details.token, amount);
@@ -176,7 +174,7 @@ contract FinancingChainLinkContract is
         multipliers are needed in numerator (usd to wei) and denominator 
         (convert result from chainlink to wei) 
      */
-    function usdToEth(uint256 _amount) public view returns (uint256) {
+    function _usdToEth(uint256 _amount) internal view returns (uint256) {
         //convert int to uint
         uint256 denominator = uint256(getLatestPrice());
         //multipliers to ensure values calculated in wei

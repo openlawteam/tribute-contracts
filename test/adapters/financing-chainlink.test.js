@@ -39,6 +39,10 @@ const {
   revertChainSnapshot,
   proposalIdGenerator,
   advanceTime,
+  entryDao,
+  entryBank,
+  FinancingChainlinkContract,
+  FakeChainlinkPriceFeed,
   accounts,
   expect,
   web3,
@@ -417,12 +421,49 @@ describe("Adapter - Financing", () => {
   });
 
   it("us dollars should convert ETH in wei based on getLatestPrice conversion rate", async () => {
-    let amount = 1000;
-    usdToEthAmount =
-      await this.adapters.chain-financing.usdToEth(this.dao.address, amount, {
-        from: myAccount,
-        gasPrice: toBN("0"),
-      });
+    const { dao, factories, extensions } = await deployDefaultDao({
+      owner: myAccount,
+      finalize: false,
+    });
+
+    const priceFeed = await FakeChainlinkPriceFeed.new();
+
+    const financingChainlink = await FinancingChainlinkContract.new(
+      [priceFeed.address],
+      { from: myAccount }
+    );
+
+    await factories.daoFactory.addAdapters(
+      dao.address,
+      [
+        entryDao("financing-chainlink", financingChainlink, {
+          SUBMIT_PROPOSAL: true,
+        }),
+      ],
+      { from: myAccount }
+    );
+
+    await factories.daoFactory.configureExtension(
+      dao.address,
+      extensions.bank.address,
+      [
+        entryBank(financingChainlink, {
+          ADD_TO_BALANCE: true,
+          SUB_FROM_BALANCE: true,
+        }),
+      ],
+      { from: myAccount }
+    );
+
+    await dao.finalizeDao({ from: myAccount });
+
+    //TODO
+    // submit new proposal using financingChainlink.submitProposal
+    // process it financingChainlink.processProposal
+    // after the proposal is processed check:
+    // 1. check if bank balance for applicant and token
+    // 2. assert balance based on the price
+
     //1000 (usd) x const getLatestPrice = (200000000000) $2000 = 1 ETH;
     expect(usdToEthAmount.toString()).equal(500000000000000000); //.5 ETH
   });
