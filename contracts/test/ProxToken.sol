@@ -27,7 +27,6 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
  */
 contract ProxTokenContract is ERC20 {
-
     event MintedProxToken(address owner, uint256 amount);
 
     constructor() ERC20("ProxToken", "PRX") {
@@ -37,9 +36,12 @@ contract ProxTokenContract is ERC20 {
     /**
      * Public function open to anyone that wants to mint new tokens in this test contract.
      */
+    event Debug(uint256 i, address sender);
+
     function mint(uint256 amount) external {
         address owner = msg.sender;
-        emit MintedProxToken(owner, amount);
+        emit Debug(4, owner);
         _mint(owner, amount);
+        emit MintedProxToken(owner, amount);
     }
 }

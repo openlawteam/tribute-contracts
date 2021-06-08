@@ -99,15 +99,36 @@ describe("Extension - Executor", () => {
     const res = await erc20Minter.execute(
       dao.address,
       proxToken.address,
-      toBN("10000")
+      toBN("10000"),
+      { from: daoOwner }
     );
 
-    console.log(`Adapter Address: ${erc20Minter.address}`);
-    console.log(`Executor Address: ${executorExt.address}`);
-    console.log(res);
-    expectEvent(res.receipt, "MintedProxToken", {
-      owner: executorExt.address,
-      amount: "10000",
+    expectEvent(res.receipt, "Debug", {
+      sender: daoOwner,
+      i: toBN("1"),
     });
+    expectEvent(res.receipt, "Debug", {
+      sender: erc20Minter.address,
+      i: toBN("2"),
+    });
+    expectEvent(res.receipt, "Debug", {
+      sender: erc20Minter.address,
+      i: toBN("3"),
+    });
+    expectEvent(res.receipt, "Debug", {
+      sender: executorExt.address,
+      i: toBN("4"),
+    });
+    expectEvent(res.receipt, "Minted", {
+      owner: erc20Minter.address,
+      amount: toBN("10000"),
+    });
+
+    const pastEvents = await proxToken.getPastEvents();
+    const event = pastEvents[1];
+    const { owner, amount } = pastEvents[1].returnValues;
+    expect(event.event).to.be.equal("MintedProxToken");
+    expect(owner).to.be.equal(executorExt.address);
+    expect(amount).to.be.equal("10000");
   });
 });

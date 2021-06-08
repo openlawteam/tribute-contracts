@@ -47,11 +47,14 @@ contract ERC20MinterContract is DaoConstants, AdapterGuard {
         revert("fallback revert");
     }
 
+    event Debug(uint256 i, address sender);
+
     function execute(
         DaoRegistry dao,
         address token,
         uint256 amount
     ) external {
+        emit Debug(1, msg.sender);
         address proxyAddr = dao.getExtensionAddress(EXECUTOR_EXT);
         ERC20MinterContract executor = ERC20MinterContract(payable(proxyAddr));
         executor.mint(dao, token, amount);
@@ -62,6 +65,7 @@ contract ERC20MinterContract is DaoConstants, AdapterGuard {
         address token,
         uint256 amount
     ) external reentrancyGuard(dao) {
+        emit Debug(3, msg.sender);
         address sender = msg.sender;
         ProxTokenContract erc20Token = ProxTokenContract(token);
         erc20Token.mint(amount);

@@ -84,11 +84,13 @@ contract ExecutorExtension is DaoConstants, AdapterGuard, IExtension {
      *
      * This function does not return to its internall call site, it will return directly to the external caller.
      */
+     event Debug(uint i, address sender);
     function _delegate(address implementation)
         internal
         virtual
         hasExtensionAccess(AclFlag.EXECUTE)
     {
+        emit Debug(2, msg.sender);
         require(
             isNotZeroAddress(implementation),
             "implementation address can not be zero"
