@@ -261,9 +261,13 @@ contract OffchainVotingContract is
             );
         address memberAddr = dao.getAddressIfDelegated(reporter);
         require(isActiveMember(dao, memberAddr), "not active member");
-        
+
         uint256 nbMembers =
-            BankExtension(dao.getExtensionAddress(BANK)).getPriorAmount(TOTAL, MEMBER_COUNT, vote.snapshot);
+            BankExtension(dao.getExtensionAddress(BANK)).getPriorAmount(
+                TOTAL,
+                MEMBER_COUNT,
+                vote.snapshot
+            );
         require(nbMembers - 1 == result.index, "index:member_count mismatch");
         require(
             getBadNodeError(
@@ -510,7 +514,7 @@ contract OffchainVotingContract is
             MerkleProof.verify(node.proof, resultRoot, hashCurrent),
             "proof:bad"
         );
-        if(node.index >= nbMembers) {
+        if (node.index >= nbMembers) {
             return BadNodeError.INDEX_OUT_OF_BOUND;
         }
         address account = dao.getMemberAddress(node.index);
