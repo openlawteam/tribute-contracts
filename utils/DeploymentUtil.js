@@ -48,7 +48,6 @@ const deployDao = async (options) => {
     PixelNFT,
     OLToken,
     ProxToken,
-    ERC20Minter,
   } = options;
 
   const erc20TokenName = options.erc20TokenName
@@ -424,7 +423,6 @@ const addDefaultAdapters = async ({ dao, options, daoFactory, nftAddr }) => {
     bankExtension,
     nftExtension,
     erc20TokenExtension,
-    erc20Minter,
     ...options,
   });
 
@@ -876,5 +874,6 @@ module.exports = {
   entry,
   entryBank,
   entryDao,
+  entryExecutor,
   getNetworkDetails,
 };

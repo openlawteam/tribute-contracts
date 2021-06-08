@@ -31,6 +31,15 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
  */
 
+/**
+ * @dev Proxy contract which executes delegated calls to another contract using the EVM
+ * instruction `delegatecall`, the call is triggered via fallback function.
+ * The call is executed in the target contract identified by its address via `implementation` argument.
+ * The success and return data of the delegated call are be returned back to the caller of the proxy.
+ * Only contracts with the ACL Flag: EXECUTOR are allowed to use the proxy delegated call function.
+ * This contract was based on the OpenZeppelin Proxy contract:
+ * https://github.com/OpenZeppelin/openzeppelin-contracts/blob/master/contracts/proxy/Proxy.sol
+ */
 contract ExecutorExtension is DaoConstants, AdapterGuard, IExtension {
     using Address for address payable;
 
@@ -70,13 +79,25 @@ contract ExecutorExtension is DaoConstants, AdapterGuard, IExtension {
         initialized = true;
     }
 
-    
-    fallback()
-        external
-        payable
+    /**
+     * @dev Delegates the current call to `implementation`.
+     *
+     * This function does not return to its internall call site, it will return directly to the external caller.
+     */
+    function _delegate(address implementation)
+        internal
+        virtual
         hasExtensionAccess(AclFlag.EXECUTE)
     {
-        address implementation = msg.sender;
+        require(
+            isNotZeroAddress(implementation),
+            "implementation address can not be zero"
+        );
+        require(
+            isNotReservedAddress(implementation),
+            "implementation address can not be reserved"
+        );
+
         // solhint-disable-next-line no-inline-assembly
         assembly {
             // Copy msg.data. We take full control of memory in this inline assembly
@@ -107,5 +128,30 @@ contract ExecutorExtension is DaoConstants, AdapterGuard, IExtension {
                     return(0, returndatasize())
                 }
         }
+    }
+
+    /**
+     * @dev Delegates the current call to the sender address.
+     *
+     * This function does not return to its internall call site, it will return directly to the external caller.
+     */
+    function _fallback() internal virtual {
+        _delegate(msg.sender);
+    }
+
+    /**
+     * @dev Fallback function that delegates calls to the sender address. Will run if no other
+     * function in the contract matches the call data.
+     */
+    fallback() external payable virtual {
+        _fallback();
+    }
+
+    /**
+     * @dev Fallback function that delegates calls to the address returned by `_implementation()`. Will run if call data
+     * is empty.
+     */
+    receive() external payable virtual {
+        _fallback();
     }
 }

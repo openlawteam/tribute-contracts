@@ -1,6 +1,7 @@
 // Whole-script strict mode syntax
 "use strict";
 
+const expectEvent = require("@openzeppelin/test-helpers/src/expectEvent");
 /**
 MIT License
 
@@ -24,41 +25,89 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
  */
-const { ETH_TOKEN, sha3 } = require("../../utils/ContractUtil.js");
+const { sha3, toBN } = require("../../utils/ContractUtil.js");
 
 const {
   deployDefaultDao,
-  takeChainSnapshot,
-  revertChainSnapshot,
+  entryDao,
+  entryBank,
+  entryExecutor,
+  ERC20Minter,
+  ProxToken,
   accounts,
-  expectRevert,
   expect,
-  BankFactory,
 } = require("../../utils/OZTestUtil.js");
 
 describe("Extension - Executor", () => {
   const daoOwner = accounts[0];
 
-  before("deploy dao", async () => {
-    const { dao, adapters, extensions } = await deployDefaultDao({
+  it("should be possible to create a dao with an executor extension pre-configured", async () => {
+    const { dao } = await deployDefaultDao({
       owner: daoOwner,
     });
-    this.dao = dao;
-    this.adapters = adapters;
-    this.extensions = extensions;
-  });
-
-  beforeEach(async () => {
-    this.snapshotId = await takeChainSnapshot();
-  });
-
-  afterEach(async () => {
-    await revertChainSnapshot(this.snapshotId);
-  });
-
-  it("should be possible to create a dao with an executor extension pre-configured", async () => {
-    const dao = this.dao;
     const executorAddress = await dao.getExtensionAddress(sha3("executor-ext"));
     expect(executorAddress).to.not.be.null;
+  });
+
+  it("should be possible to mint tokens using a delegated call via executor extension", async () => {
+    const { dao, factories, extensions } = await deployDefaultDao({
+      owner: daoOwner,
+      finalize: false,
+    });
+
+    const erc20Minter = await ERC20Minter.new();
+    const executorExt = extensions.executorExt;
+
+    await factories.daoFactory.addAdapters(
+      dao.address,
+      [entryDao("erc20Minter", erc20Minter, {})],
+      { from: daoOwner }
+    );
+
+    await factories.daoFactory.configureExtension(
+      dao.address,
+      executorExt.address,
+      [
+        entryExecutor(erc20Minter, {
+          EXECUTE: true,
+        }),
+      ],
+      { from: daoOwner }
+    );
+
+    await dao.finalizeDao({ from: daoOwner });
+
+    // await factories.daoFactory.configureExtension(
+    //   dao.address,
+    //   extensions.bank.address,
+    //   [
+    //     entryBank(erc20Minter, {
+    //       INTERNAL_TRANSFER: true,
+    //       SUB_FROM_BALANCE: true,
+    //       ADD_TO_BALANCE: true,
+    //     }),
+    //   ],
+    //   { from: daoOwner }
+    // );
+
+    const minterAddress = await dao.getAdapterAddress(sha3("erc20Minter"));
+    expect(minterAddress).to.not.be.null;
+
+    const proxToken = await ProxToken.new();
+    expect(proxToken).to.not.be.null;
+
+    const res = await erc20Minter.execute(
+      dao.address,
+      proxToken.address,
+      toBN("10000")
+    );
+
+    console.log(`Adapter Address: ${erc20Minter.address}`);
+    console.log(`Executor Address: ${executorExt.address}`);
+
+    expectEvent(res.receipt, "Minted", {
+      owner: executorExt.address,
+      amount: "10000",
+    });
   });
 });

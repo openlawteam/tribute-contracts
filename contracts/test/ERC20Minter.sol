@@ -40,6 +40,8 @@ contract ERC20MinterContract is DaoConstants, AdapterGuard {
     using Address for address payable;
     using SafeERC20 for ProxToken;
 
+    event Minted(address owner, address token, uint256 amount);
+
     /**
      * @notice default fallback function to prevent from sending ether to the contract.
      */
@@ -49,18 +51,27 @@ contract ERC20MinterContract is DaoConstants, AdapterGuard {
 
     function execute(
         DaoRegistry dao,
-        address tokenAddr,
+        address token,
         uint256 amount
     ) external reentrancyGuard(dao) {
         address proxyAddr = dao.getExtensionAddress(EXECUTOR_EXT);
         ERC20MinterContract executor = ERC20MinterContract(payable(proxyAddr));
-        executor.mint(tokenAddr, amount);
+        executor.mint(dao, token, amount);
     }
 
-    function mint(address tokenAddr, uint256 amount) external {
+    function mint(
+        DaoRegistry dao,
+        address token,
+        uint256 amount
+    ) external  {
+        address sender = msg.sender;
+        address proxyAddr = dao.getExtensionAddress(EXECUTOR_EXT);
+        // require(sender == proxyAddr, "invalid caller");
+
         //double check function scope
-        ProxToken erc20Token = ProxToken(tokenAddr);
+        ProxToken erc20Token = ProxToken(token);
         erc20Token.mint(amount);
+        emit Minted(msg.sender, token, amount);
         //TODO send tokens to the bank
     }
 
