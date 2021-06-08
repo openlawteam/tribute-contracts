@@ -53,7 +53,8 @@ contract OffchainVotingContract is
         WRONG_PROPOSAL_ID,
         INVALID_CHOICE,
         AFTER_VOTING_PERIOD,
-        BAD_SIGNATURE
+        BAD_SIGNATURE,
+        INDEX_OUT_OF_BOUND
     }
 
     struct ProposalChallenge {
@@ -260,9 +261,9 @@ contract OffchainVotingContract is
             );
         address memberAddr = dao.getAddressIfDelegated(reporter);
         require(isActiveMember(dao, memberAddr), "not active member");
-        BankExtension bank = BankExtension(dao.getExtensionAddress(BANK));
+        
         uint256 nbMembers =
-            bank.getPriorAmount(TOTAL, MEMBER_COUNT, vote.snapshot);
+            BankExtension(dao.getExtensionAddress(BANK)).getPriorAmount(TOTAL, MEMBER_COUNT, vote.snapshot);
         require(nbMembers - 1 == result.index, "index:member_count mismatch");
         require(
             getBadNodeError(
@@ -272,6 +273,7 @@ contract OffchainVotingContract is
                 resultRoot,
                 vote.snapshot,
                 vote.gracePeriodStartingTime,
+                nbMembers,
                 result
             ) == BadNodeError.OK,
             "bad result"
@@ -469,6 +471,7 @@ contract OffchainVotingContract is
         VoteResultNode memory node
     ) external {
         Voting storage vote = votes[address(dao)][proposalId];
+        BankExtension bank = BankExtension(dao.getExtensionAddress(BANK));
         if (
             getBadNodeError(
                 dao,
@@ -477,6 +480,7 @@ contract OffchainVotingContract is
                 vote.resultRoot,
                 vote.snapshot,
                 vote.gracePeriodStartingTime,
+                bank.getPriorAmount(TOTAL, MEMBER_COUNT, vote.snapshot),
                 node
             ) != BadNodeError.OK
         ) {
@@ -495,6 +499,7 @@ contract OffchainVotingContract is
         bytes32 resultRoot,
         uint256 blockNumber,
         uint256 gracePeriodStartingTime,
+        uint256 nbMembers,
         VoteResultNode memory node
     ) public view returns (BadNodeError) {
         (address adapterAddress, ) = dao.proposals(proposalId);
@@ -505,6 +510,9 @@ contract OffchainVotingContract is
             MerkleProof.verify(node.proof, resultRoot, hashCurrent),
             "proof:bad"
         );
+        if(node.index >= nbMembers) {
+            return BadNodeError.INDEX_OUT_OF_BOUND;
+        }
         address account = dao.getMemberAddress(node.index);
         //return 1 if yes, 2 if no and 0 if the vote is incorrect
         address voter = dao.getPriorDelegateKey(account, blockNumber);
