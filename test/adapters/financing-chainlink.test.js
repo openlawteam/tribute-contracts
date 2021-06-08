@@ -45,13 +45,15 @@ const {
 } = require("../../utils/OZTestUtil.js");
 
 const { checkBalance } = require("../../utils/TestUtils.js");
-
+//use addAdapters
+const { addAdapters } = require("../../utils/DeploymentUtil.js");
 const remaining = unitPrice.sub(toBN("50000000000000"));
 const myAccount = accounts[1];
 const applicant = accounts[2];
 const newMember = accounts[3];
 const expectedGuildBalance = toBN("1200000000000000000");
 const proposalCounter = proposalIdGenerator().generator;
+const getLatestPrice = 200000000000; //substitute for Chainlink price 2000.00 usd = 1 ETH
 
 function getProposalCounter() {
   return proposalCounter().next().value;
@@ -412,5 +414,16 @@ describe("Adapter - Financing", () => {
     } catch (err) {
       expect(err.reason).equal("adapter not found");
     }
+  });
+
+  it("us dollars should convert ETH in wei based on getLatestPrice conversion rate", async () => {
+    let amount = 1000;
+    usdToEthAmount =
+      await this.adapters.chain-financing.usdToEth(this.dao.address, amount, {
+        from: myAccount,
+        gasPrice: toBN("0"),
+      });
+    //1000 (usd) x const getLatestPrice = (200000000000) $2000 = 1 ETH;
+    expect(usdToEthAmount.toString()).equal(500000000000000000); //.5 ETH
   });
 });
