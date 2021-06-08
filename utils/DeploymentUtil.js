@@ -610,7 +610,7 @@ const configureDao = async ({
     [],
     { from: owner }
   );
-
+  /*
   await onboarding.configureDao(
     dao.address,
     UNITS,
@@ -634,6 +634,7 @@ const configureDao = async ({
       from: owner,
     }
   );
+  */
 
   await couponOnboarding.configureDao(
     dao.address,
@@ -647,12 +648,16 @@ const configureDao = async ({
   await voting.configureDao(dao.address, votingPeriod, gracePeriod, {
     from: owner,
   });
+  
+  /*
   await tribute.configureDao(dao.address, UNITS, {
     from: owner,
   });
   await tribute.configureDao(dao.address, LOOT, {
     from: owner,
   });
+  */
+
   await tributeNFT.configureDao(dao.address, {
     from: owner,
   });
