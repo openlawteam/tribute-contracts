@@ -9,9 +9,9 @@ dataSources:
     name: DaoFactory
     network: mainnet
     source:
-      address: "0x6d92a8E4aB80adcBbFDA44ef69fe847f82def641"
+      address: "0xB03C34d55f1594fC9D75704Bf8A9d7116F7f83a4"
       abi: DaoFactory
-      # startBlock: 6
+      startBlock: 150
     mapping:
       kind: ethereum/events
       apiVersion: 0.0.4
@@ -46,20 +46,20 @@ templates:
       abis:
         - name: DaoRegistry
           file: ../build/contracts/DaoRegistry.json
-        - name: OnboardingContract
-          file: ../build/contracts/OnboardingContract.json
-        - name: DistributeContract
-          file: ../build/contracts/DistributeContract.json
-        - name: TributeContract
-          file: ../build/contracts/TributeContract.json
+        # - name: OnboardingContract
+        #   file: ../build/contracts/OnboardingContract.json
+        # - name: DistributeContract
+        #   file: ../build/contracts/DistributeContract.json
+        # - name: TributeContract
+        #   file: ../build/contracts/TributeContract.json
         - name: TributeNFTContract
           file: ../build/contracts/TributeNFTContract.json
         - name: ManagingContract
           file: ../build/contracts/ManagingContract.json
         - name: GuildKickContract
           file: ../build/contracts/GuildKickContract.json
-        - name: FinancingContract
-          file: ../build/contracts/FinancingContract.json
+        # - name: FinancingContract
+        #   file: ../build/contracts/FinancingContract.json
         - name: OffchainVotingContract
           file: ../build/contracts/OffchainVotingContract.json
         - name: VotingContract

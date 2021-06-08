@@ -1,10 +1,10 @@
 import { Address, Bytes, log } from "@graphprotocol/graph-ts";
 
-import { DistributeContract } from "../../generated/templates/DaoRegistry/DistributeContract";
-import { OnboardingContract } from "../../generated/templates/DaoRegistry/OnboardingContract";
-import { TributeContract } from "../../generated/templates/DaoRegistry/TributeContract";
+// import { DistributeContract } from "../../generated/templates/DaoRegistry/DistributeContract";
+// import { OnboardingContract } from "../../generated/templates/DaoRegistry/OnboardingContract";
+// import { TributeContract } from "../../generated/templates/DaoRegistry/TributeContract";
 import { ManagingContract } from "../../generated/templates/DaoRegistry/ManagingContract";
-import { FinancingContract } from "../../generated/templates/DaoRegistry/FinancingContract";
+// import { FinancingContract } from "../../generated/templates/DaoRegistry/FinancingContract";
 import { GuildKickContract } from "../../generated/templates/DaoRegistry/GuildKickContract";
 import { TributeNFTContract } from "../../generated/templates/DaoRegistry/TributeNFTContract";
 
@@ -28,19 +28,19 @@ export function getProposalDetails(
 ): void {
   if (ONBOARDING_ID.toString() == adapterId.toHexString()) {
     log.info("INFO ONBOARDING_ID, proposalId: {}", [proposalId.toHexString()]);
-    onboarding(adapterAdddress, daoAddress, proposalId);
+    // onboarding(adapterAdddress, daoAddress, proposalId);
   } else if (DISTRIBUTE_ID.toString() == adapterId.toHexString()) {
     log.info("INFO DISTRIBUTE_ID, proposalId: {}", [proposalId.toHexString()]);
-    distribute(adapterAdddress, daoAddress, proposalId);
+    // distribute(adapterAdddress, daoAddress, proposalId);
   } else if (TRIBUTE_ID.toString() == adapterId.toHexString()) {
     log.info("INFO TRIBUTE_ID, proposalId: {}", [proposalId.toHexString()]);
-    tribute(adapterAdddress, daoAddress, proposalId);
+    // tribute(adapterAdddress, daoAddress, proposalId);
   } else if (MANAGING_ID.toString() == adapterId.toHexString()) {
     log.info("INFO MANAGING_ID, proposalId: {}", [proposalId.toHexString()]);
     managing(adapterAdddress, daoAddress, proposalId);
   } else if (FINANCING_ID.toString() == adapterId.toHexString()) {
     log.info("INFO FINANCING_ID, proposalId: {}", [proposalId.toHexString()]);
-    financing(adapterAdddress, daoAddress, proposalId);
+    // financing(adapterAdddress, daoAddress, proposalId);
   } else if (GUILDKICK_ID.toString() == adapterId.toHexString()) {
     log.info("INFO GUILDKICK_ID, proposalId: {}", [proposalId.toHexString()]);
     guildkick(adapterAdddress, daoAddress, proposalId);
@@ -50,103 +50,103 @@ export function getProposalDetails(
   }
 }
 
-function onboarding(
-  adapterAdddress: Address,
-  daoAddress: Address,
-  proposalId: Bytes
-): void {
-  let onboarding = OnboardingContract.bind(adapterAdddress);
+// function onboarding(
+//   adapterAdddress: Address,
+//   daoAddress: Address,
+//   proposalId: Bytes
+// ): void {
+//   let onboarding = OnboardingContract.bind(adapterAdddress);
 
-  let data = onboarding.proposals(
-    Address.fromString(daoAddress.toHexString()),
-    proposalId
-  );
+//   let data = onboarding.proposals(
+//     Address.fromString(daoAddress.toHexString()),
+//     proposalId
+//   );
 
-  let daoProposalId = daoAddress
-    .toHex()
-    .concat("-proposal-")
-    .concat(proposalId.toHex());
+//   let daoProposalId = daoAddress
+//     .toHex()
+//     .concat("-proposal-")
+//     .concat(proposalId.toHex());
 
-  let proposal = Proposal.load(daoProposalId);
+//   let proposal = Proposal.load(daoProposalId);
 
-  if (proposal) {
-    proposal.unitsToMint = data.value1;
-    proposal.amount = data.value2;
-    proposal.unitsRequested = data.value3;
-    proposal.token = data.value4;
-    proposal.applicant = data.value5;
+//   if (proposal) {
+//     proposal.unitsToMint = data.value1;
+//     proposal.amount = data.value2;
+//     proposal.unitsRequested = data.value3;
+//     proposal.token = data.value4;
+//     proposal.applicant = data.value5;
 
-    proposal.adapterAddress = adapterAdddress;
+//     proposal.adapterAddress = adapterAdddress;
 
-    proposal.save();
-  }
-}
+//     proposal.save();
+//   }
+// }
 
-function distribute(
-  adapterAdddress: Address,
-  daoAddress: Address,
-  proposalId: Bytes
-): void {
-  let distribute = DistributeContract.bind(adapterAdddress);
+// function distribute(
+//   adapterAdddress: Address,
+//   daoAddress: Address,
+//   proposalId: Bytes
+// ): void {
+//   let distribute = DistributeContract.bind(adapterAdddress);
 
-  let data = distribute.distributions(
-    Address.fromString(daoAddress.toHexString()),
-    proposalId
-  );
+//   let data = distribute.distributions(
+//     Address.fromString(daoAddress.toHexString()),
+//     proposalId
+//   );
 
-  let daoProposalId = daoAddress
-    .toHex()
-    .concat("-proposal-")
-    .concat(proposalId.toHex());
+//   let daoProposalId = daoAddress
+//     .toHex()
+//     .concat("-proposal-")
+//     .concat(proposalId.toHex());
 
-  let proposal = Proposal.load(daoProposalId);
+//   let proposal = Proposal.load(daoProposalId);
 
-  if (proposal) {
-    proposal.token = data.value0;
-    proposal.amount = data.value1;
-    proposal.unitHolderAddr = data.value2;
-    proposal.status = data.value3.toString();
-    proposal.currentIndex = data.value4;
-    proposal.blockNumber = data.value5;
+//   if (proposal) {
+//     proposal.token = data.value0;
+//     proposal.amount = data.value1;
+//     proposal.unitHolderAddr = data.value2;
+//     proposal.status = data.value3.toString();
+//     proposal.currentIndex = data.value4;
+//     proposal.blockNumber = data.value5;
 
-    proposal.adapterAddress = adapterAdddress;
+//     proposal.adapterAddress = adapterAdddress;
 
-    proposal.save();
-  }
-}
+//     proposal.save();
+//   }
+// }
 
-function tribute(
-  adapterAdddress: Address,
-  daoAddress: Address,
-  proposalId: Bytes
-): void {
-  let tribute = TributeContract.bind(adapterAdddress);
+// function tribute(
+//   adapterAdddress: Address,
+//   daoAddress: Address,
+//   proposalId: Bytes
+// ): void {
+//   let tribute = TributeContract.bind(adapterAdddress);
 
-  let data = tribute.proposals(
-    Address.fromString(daoAddress.toHexString()),
-    proposalId
-  );
+//   let data = tribute.proposals(
+//     Address.fromString(daoAddress.toHexString()),
+//     proposalId
+//   );
 
-  let daoProposalId = daoAddress
-    .toHex()
-    .concat("-proposal-")
-    .concat(proposalId.toHex());
+//   let daoProposalId = daoAddress
+//     .toHex()
+//     .concat("-proposal-")
+//     .concat(proposalId.toHex());
 
-  let proposal = Proposal.load(daoProposalId);
+//   let proposal = Proposal.load(daoProposalId);
 
-  if (proposal) {
-    proposal.applicant = data.value1;
-    proposal.tokenToMint = data.value2;
-    proposal.requestAmount = data.value3;
-    proposal.token = data.value4;
-    proposal.tributeAmount = data.value5;
-    proposal.tributeTokenOwner = data.value6;
+//   if (proposal) {
+//     proposal.applicant = data.value1;
+//     proposal.tokenToMint = data.value2;
+//     proposal.requestAmount = data.value3;
+//     proposal.token = data.value4;
+//     proposal.tributeAmount = data.value5;
+//     proposal.tributeTokenOwner = data.value6;
 
-    proposal.adapterAddress = adapterAdddress;
+//     proposal.adapterAddress = adapterAdddress;
 
-    proposal.save();
-  }
-}
+//     proposal.save();
+//   }
+// }
 
 function managing(
   adapterAdddress: Address,
@@ -194,35 +194,35 @@ function managing(
   }
 }
 
-function financing(
-  adapterAdddress: Address,
-  daoAddress: Address,
-  proposalId: Bytes
-): void {
-  let financing = FinancingContract.bind(adapterAdddress);
+// function financing(
+//   adapterAdddress: Address,
+//   daoAddress: Address,
+//   proposalId: Bytes
+// ): void {
+//   let financing = FinancingContract.bind(adapterAdddress);
 
-  let data = financing.proposals(
-    Address.fromString(daoAddress.toHexString()),
-    proposalId
-  );
+//   let data = financing.proposals(
+//     Address.fromString(daoAddress.toHexString()),
+//     proposalId
+//   );
 
-  let daoProposalId = daoAddress
-    .toHex()
-    .concat("-proposal-")
-    .concat(proposalId.toHex());
+//   let daoProposalId = daoAddress
+//     .toHex()
+//     .concat("-proposal-")
+//     .concat(proposalId.toHex());
 
-  let proposal = Proposal.load(daoProposalId);
+//   let proposal = Proposal.load(daoProposalId);
 
-  if (proposal) {
-    proposal.applicant = data.value0;
-    proposal.amount = data.value1;
-    proposal.token = data.value2;
+//   if (proposal) {
+//     proposal.applicant = data.value0;
+//     proposal.amount = data.value1;
+//     proposal.token = data.value2;
 
-    proposal.adapterAddress = adapterAdddress;
+//     proposal.adapterAddress = adapterAdddress;
 
-    proposal.save();
-  }
-}
+//     proposal.save();
+//   }
+// }
 
 function guildkick(
   adapterAdddress: Address,
