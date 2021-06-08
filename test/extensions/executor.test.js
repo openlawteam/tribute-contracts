@@ -104,8 +104,8 @@ describe("Extension - Executor", () => {
 
     console.log(`Adapter Address: ${erc20Minter.address}`);
     console.log(`Executor Address: ${executorExt.address}`);
-
-    expectEvent(res.receipt, "Minted", {
+    console.log(res);
+    expectEvent(res.receipt, "MintedProxToken", {
       owner: executorExt.address,
       amount: "10000",
     });

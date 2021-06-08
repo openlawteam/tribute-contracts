@@ -56,7 +56,7 @@ const contracts = {
   TestToken2: "./test/TestToken2",
   TestFairShareCalc: "./test/TestFairShareCalc",
   PixelNFT: "./test/PixelNFT",
-  ProxToken: "./test/ProxToken",
+  ProxToken: "./test/ProxTokenContract",
   ERC20Minter: "./test/ERC20MinterContract",
 
   // DAO Contracts

@@ -10,7 +10,6 @@ import "../guards/AdapterGuard.sol";
 import "../adapters/interfaces/IConfiguration.sol";
 import "./ProxToken.sol";
 import "@openzeppelin/contracts/utils/Address.sol";
-import "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 
 /**
 MIT License
@@ -38,7 +37,6 @@ SOFTWARE.
 
 contract ERC20MinterContract is DaoConstants, AdapterGuard {
     using Address for address payable;
-    using SafeERC20 for ProxToken;
 
     event Minted(address owner, address token, uint256 amount);
 
@@ -65,14 +63,9 @@ contract ERC20MinterContract is DaoConstants, AdapterGuard {
         uint256 amount
     ) external  {
         address sender = msg.sender;
-        address proxyAddr = dao.getExtensionAddress(EXECUTOR_EXT);
-        // require(sender == proxyAddr, "invalid caller");
-
-        //double check function scope
-        ProxToken erc20Token = ProxToken(token);
+        ProxTokenContract erc20Token = ProxTokenContract(token);
         erc20Token.mint(amount);
-        emit Minted(msg.sender, token, amount);
-        //TODO send tokens to the bank
+        emit Minted(sender, token, amount);
     }
 
     function collect(DaoRegistry dao, address token)

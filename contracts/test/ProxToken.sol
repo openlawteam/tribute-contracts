@@ -26,7 +26,10 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
  */
-contract ProxToken is ERC20 {
+contract ProxTokenContract is ERC20 {
+
+    event MintedProxToken(address owner, uint256 amount);
+
     constructor() ERC20("ProxToken", "PRX") {
         _mint(msg.sender, 0);
     }
@@ -35,6 +38,8 @@ contract ProxToken is ERC20 {
      * Public function open to anyone that wants to mint new tokens in this test contract.
      */
     function mint(uint256 amount) external {
-        _mint(msg.sender, amount);
+        address owner = msg.sender;
+        emit MintedProxToken(owner, amount);
+        _mint(owner, amount);
     }
 }
