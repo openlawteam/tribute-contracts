@@ -539,11 +539,13 @@ const configureDao = async ({
     dao.address,
     bankExtension.address,
     [
+      /*
       entryBank(ragequit, {
         INTERNAL_TRANSFER: true,
         SUB_FROM_BALANCE: true,
         ADD_TO_BALANCE: true,
       }),
+      */
       entryBank(guildkick, {
         INTERNAL_TRANSFER: true,
         SUB_FROM_BALANCE: true,
@@ -554,12 +556,15 @@ const configureDao = async ({
         SUB_FROM_BALANCE: true,
         UPDATE_TOKEN: true,
       }),
+      /*
       entryBank(onboarding, {
         ADD_TO_BALANCE: true,
       }),
+      */
       entryBank(couponOnboarding, {
         ADD_TO_BALANCE: true,
       }),
+      /*
       entryBank(financing, {
         ADD_TO_BALANCE: true,
         SUB_FROM_BALANCE: true,
@@ -571,6 +576,7 @@ const configureDao = async ({
       entryBank(distribute, {
         INTERNAL_TRANSFER: true,
       }),
+      */
       entryBank(tributeNFT, {
         ADD_TO_BALANCE: true,
       }),
