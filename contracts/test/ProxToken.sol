@@ -36,11 +36,8 @@ contract ProxTokenContract is ERC20 {
     /**
      * Public function open to anyone that wants to mint new tokens in this test contract.
      */
-    event Debug(uint256 i, address sender);
-
     function mint(uint256 amount) external {
         address owner = msg.sender;
-        emit Debug(4, owner);
         _mint(owner, amount);
         emit MintedProxToken(owner, amount);
     }

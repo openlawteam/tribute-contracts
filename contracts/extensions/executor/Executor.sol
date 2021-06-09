@@ -84,13 +84,11 @@ contract ExecutorExtension is DaoConstants, AdapterGuard, IExtension {
      *
      * This function does not return to its internall call site, it will return directly to the external caller.
      */
-     event Debug(uint i, address sender);
     function _delegate(address implementation)
         internal
         virtual
         hasExtensionAccess(AclFlag.EXECUTE)
     {
-        emit Debug(2, msg.sender);
         require(
             isNotZeroAddress(implementation),
             "implementation address can not be zero"
@@ -145,7 +143,7 @@ contract ExecutorExtension is DaoConstants, AdapterGuard, IExtension {
      * @dev Fallback function that delegates calls to the sender address. Will run if no other
      * function in the contract matches the call data.
      */
-    fallback() external payable virtual {
+    fallback() external payable {
         _fallback();
     }
 
@@ -153,7 +151,7 @@ contract ExecutorExtension is DaoConstants, AdapterGuard, IExtension {
      * @dev Fallback function that delegates calls to the address returned by `_implementation()`. Will run if call data
      * is empty.
      */
-    receive() external payable virtual {
+    receive() external payable {
         _fallback();
     }
 }

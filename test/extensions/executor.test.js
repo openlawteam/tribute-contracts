@@ -102,28 +102,14 @@ describe("Extension - Executor", () => {
       toBN("10000"),
       { from: daoOwner }
     );
-
-    expectEvent(res.receipt, "Debug", {
-      sender: daoOwner,
-      i: toBN("1"),
-    });
-    expectEvent(res.receipt, "Debug", {
-      sender: erc20Minter.address,
-      i: toBN("2"),
-    });
-    expectEvent(res.receipt, "Debug", {
-      sender: erc20Minter.address,
-      i: toBN("3"),
-    });
-    expectEvent(res.receipt, "Debug", {
-      sender: executorExt.address,
-      i: toBN("4"),
-    });
+    // The adapter should call itself via proxy and mint the token
     expectEvent(res.receipt, "Minted", {
       owner: erc20Minter.address,
       amount: toBN("10000"),
     });
 
+    // The token mint call should be triggered from the adapter, but the
+    // sender is actually the proxy executor
     const pastEvents = await proxToken.getPastEvents();
     const event = pastEvents[1];
     const { owner, amount } = pastEvents[1].returnValues;
