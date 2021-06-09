@@ -1,8 +1,8 @@
 [
   {
     "network": "mainnet",
-    "daoFactoryAddress": "0x0000000000000000000000000000000000000000",
-    "daoFactoryStartBlock": 0,
+    "daoFactoryAddress": "0xf44e53e7474588494b3bec75898278050d99a8ce",
+    "daoFactoryStartBlock": 12599262,
     "GITHUB_USERNAME": "openlawteam",
     "SUBGRAPH_NAME": "museo"
   }
