@@ -77,19 +77,6 @@ describe("Extension - Executor", () => {
 
     await dao.finalizeDao({ from: daoOwner });
 
-    // await factories.daoFactory.configureExtension(
-    //   dao.address,
-    //   extensions.bank.address,
-    //   [
-    //     entryBank(erc20Minter, {
-    //       INTERNAL_TRANSFER: true,
-    //       SUB_FROM_BALANCE: true,
-    //       ADD_TO_BALANCE: true,
-    //     }),
-    //   ],
-    //   { from: daoOwner }
-    // );
-
     const minterAddress = await dao.getAdapterAddress(sha3("erc20Minter"));
     expect(minterAddress).to.not.be.null;
 
