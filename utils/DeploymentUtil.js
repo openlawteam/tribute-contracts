@@ -875,5 +875,5 @@ module.exports = {
   entryDao,
   entryExecutor,
   getNetworkDetails,
-  addAdapters,
+ 
 };
