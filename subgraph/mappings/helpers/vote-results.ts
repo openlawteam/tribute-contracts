@@ -67,8 +67,8 @@ export function loadProposalAndSaveVoteResults(
         );
 
         // assign voting data
-        vote.nbYes = voteResults.value4;
-        vote.nbNo = voteResults.value5;
+        vote.nbYes = voteResults.value3;
+        vote.nbNo = voteResults.value4;
 
         vote.adapterName = votingAdapterName;
         vote.adapterAddress = votingAdapterAddress;
