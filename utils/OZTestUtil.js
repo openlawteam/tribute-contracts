@@ -41,7 +41,13 @@ const {
   UNITS,
 } = require("./ContractUtil");
 
-const { deployDao, entryDao, entryBank, entry } = require("./DeploymentUtil");
+const {
+  deployDao,
+  entryDao,
+  entryBank,
+  entryExecutor,
+  entry,
+} = require("./DeploymentUtil");
 
 const deployFunction = async (contractInterface, args, from) => {
   const f = from ? from : accounts[0];
@@ -285,6 +291,7 @@ module.exports = {
   entry,
   entryBank,
   entryDao,
+  entryExecutor,
   takeChainSnapshot,
   revertChainSnapshot,
   proposalIdGenerator,
