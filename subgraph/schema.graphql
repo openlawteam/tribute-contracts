@@ -35,6 +35,8 @@ type TributeDao @entity {
   proposals: [Proposal]! @derivedFrom(field: "tributeDao")
   "List of nfts in the DAO"
   nftCollection: NFTCollection! @derivedFrom(field: "tributeDao")
+  "List of redeemed coupons"
+  coupons: [Coupon]! @derivedFrom(field: "tributeDao")
 }
 
 type Member @entity {
@@ -214,5 +216,16 @@ type Extension @entity {
   extensionAddress: Bytes!
   "Extension ID"
   extensionId: Bytes!
+  tributeDao: TributeDao
+}
+
+type Coupon @entity {
+  "Unique identifier and primary key of the `Coupon` entity"
+  id: ID! # Set to `${tribute.id}-coupon-${nonce}-${authorizedMember}`
+  redeemedAt: String!
+  "Authorized member address"
+  authorizedMember: Bytes!
+  amount: BigInt!
+  nonce: BigInt!
   tributeDao: TributeDao
 }
