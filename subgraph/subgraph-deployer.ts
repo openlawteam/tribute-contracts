@@ -15,6 +15,8 @@ type DeploySettings = {
 type YAMLSettings = {
   daoFactoryAddress: string;
   daoFactoryStartBlock: number;
+  couponOnboardingAddress?: string | undefined;
+  couponOnboardingStartBlock?: number | undefined;
   network: string;
 };
 
@@ -33,6 +35,8 @@ export const exec = (cmd: string) => {
 const getYAML = ({
   daoFactoryAddress,
   daoFactoryStartBlock,
+  couponOnboardingAddress,
+  couponOnboardingStartBlock,
   network,
 }: YAMLSettings): string => {
   return ` 
@@ -63,6 +67,12 @@ const getYAML = ({
           - event: DAOCreated(address,string)
             handler: handleDaoCreated
         file: ./mappings/dao-factory-mapping.ts
+
+${couponOnboardingYAML({
+  network,
+  couponOnboardingAddress,
+  couponOnboardingStartBlock,
+})}
 
   templates:
     # ====================================== DaoRegistry ====================================
@@ -180,6 +190,44 @@ const getYAML = ({
 `;
 };
 
+type CouponOnboardingYAML = {
+  network: string;
+  couponOnboardingAddress: string | undefined;
+  couponOnboardingStartBlock: number | undefined;
+};
+
+function couponOnboardingYAML({
+  network,
+  couponOnboardingAddress,
+  couponOnboardingStartBlock,
+}: CouponOnboardingYAML) {
+  if (!couponOnboardingAddress) return ``;
+
+  return `
+    # ====================================== Adapter: CouponOnboarding ====================================
+    - kind: ethereum/contract
+      name: CouponOnboarding
+      network: ${network}
+      source:
+        address: "${couponOnboardingAddress}"
+        abi: CouponOnboardingContract
+        startBlock: ${couponOnboardingStartBlock}
+      mapping:
+        kind: ethereum/events
+        apiVersion: 0.0.4
+        language: wasm/assemblyscript
+        entities:
+          - Coupon
+        abis:
+          - name: CouponOnboardingContract
+            file: ../build/contracts/CouponOnboardingContract.json
+        eventHandlers:
+          - event: CouponRedeemed(address,uint256,address,uint256)
+            handler: handleCouponRedeemed
+        file: ./mappings/adapters/coupon-onboarding-mapping.ts
+  `;
+}
+
 (function () {
   // Compile the solidity contracts
   console.log("📦 ### 1/3 Compiling the smart contracts...");
@@ -211,12 +259,19 @@ const getYAML = ({
     Start Block: ${subgraph.daoFactoryStartBlock}
     `);
 
+    subgraph.couponOnboardingAddress &&
+      console.log(
+        `CouponOnboarding: Address - ${subgraph.couponOnboardingAddress}, Start Block - ${subgraph.couponOnboardingStartBlock}`
+      );
+
     // Write YAML file
     fs.writeFileSync(
       "subgraph.yaml",
       getYAML({
         daoFactoryAddress: subgraph.daoFactoryAddress,
         daoFactoryStartBlock: subgraph.daoFactoryStartBlock,
+        couponOnboardingAddress: subgraph.couponOnboardingAddress,
+        couponOnboardingStartBlock: subgraph.couponOnboardingStartBlock,
         network: subgraph.network,
       })
     );
