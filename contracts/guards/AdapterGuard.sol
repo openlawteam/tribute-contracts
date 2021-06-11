@@ -48,6 +48,13 @@ abstract contract AdapterGuard {
         dao.unlockSession();
     }
 
+    modifier executorFunc(DaoRegistry dao) {
+        address executorAddr =
+            dao.getExtensionAddress(keccak256("executor-ext"));
+        require(address(this) == executorAddr, "only callable by the executor");
+        _;
+    }
+
     modifier hasAccess(DaoRegistry dao, DaoRegistry.AclFlag flag) {
         require(
             (dao.state() == DaoRegistry.DaoState.CREATION &&
