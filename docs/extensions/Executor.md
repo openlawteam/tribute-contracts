@@ -39,10 +39,7 @@ Internally tracks deployment under eip-1167 proxy pattern
 
 #### Access Flags
 
-- [Bank](https://github.com/openlawteam/tribute-contracts/blob/master/docs/extensions/Bank.md):
-  - `INTERNAL_TRANSFER: true`:
-- [DAO](https://github.com/openlawteam/tribute-contracts/blob/master/docs/core/DaoRegistry.md):
-  - `NEW_MEMBER: true`
+- None, it does not access the DAO Registry.
 
 Access Control Layer Flags - explicitly grant the extension permissions to change the bank and dao states.
 
