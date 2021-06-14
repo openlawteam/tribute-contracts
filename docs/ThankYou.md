@@ -19,7 +19,6 @@ Because of that, we want to say **THANK YOU** to **all** coders, designers, audi
 - [Lautaro Ezequiel Dragan](https://github.com/lautarodragan)
 - [Peter Grassberger](https://github.com/PeterTheOne)
 - [Burrrata](https://github.com/burrrata)
-- [Gabriel Shapiro](https://github.com/lex-node)
 
 **Thank you** to all Tribute DAO Framework contributors:
 
