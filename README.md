@@ -26,9 +26,9 @@ Last year, we helped evolve the initial MolochDAO smart contracts by helping to 
 
 The TributeDAO framework hopes to provide teams looking to deploy DAOs with several enhancements and improvements, including:
 
-- Simpler code - each module is responsible for only one function which reduces coupling and makes the system easier to understand.
-- Adaptability - each part of the DAO can be adapted to the needs of a particular DAO without the need to audit the entire code base every time.
-- Upgradability - modules can be easily upgraded as necessary. For example, as the voting process evolves over time the module responsible for managing the voting process can be upgraded without changing any other modules or the Core Contract. Modules can also be used by multiple DAOs without the need to be redeployed.
+* Simpler code - each module is responsible for only one function which reduces coupling and makes the system easier to understand.
+* Adaptability - each part of the DAO can be adapted to the needs of a particular DAO without the need to audit the entire code base every time.
+* Upgradability - modules can be easily upgraded as necessary. For example, as the voting process evolves over time the module responsible for managing the voting process can be upgraded without changing any other modules or the Core Contract. Modules can also be used by multiple DAOs without the need to be redeployed.
 
 Inspired by the [hexagonal architecture design pattern](<https://en.wikipedia.org/wiki/Hexagonal_architecture_(software)>) we believe that we can have additional layers of security, and break the main contract into smaller contracts. With that, we create loosely coupled modules/contracts, easier to audit, and can be easily connected to the DAO.
 
@@ -44,15 +44,13 @@ There are five main components in the Tribute architecture:
 
 The external world is essentially anything that interacts with the DAO. An example of that are RPC clients that are responsible for calling the Adapters public/external functions to pull/push data to the DAO Core Contracts and its Extensions.
 
-#### Adapters
+## Adapters and Extensions
 
-Adapters are well-defined, tested and extensible smart contracts that are created with a unique purpose. One Adapter is responsible for performing one or a set of tasks in a given context. With this approach we can develop adapters targeting specific use-cases, and update the DAO configurations to use these new adapters.
+###Adapters
 
-When a new adapter is created, one needs to submit a Managing proposal to add the new adapter to the DAO. Once the proposal passes, the new adapter is added and becomes available for use.
+TributeDAO adapters make it easy to assemble a DAO like lego blocks.  Adapters are well-defined, tested, and extensible smart contracts that are created with a unique purpose. Adapters make DAOs extensible, upgradeable, and also enable us to work together to build robust DAO tooling.  They can be added to a TributeDAO via a DAO vote.
 
-Each adapter needs to be configured with the [Access Flags](#access-control-layer) in order to access the [Core Contracts](#core-contracts), and/or [Extensions](#extensions). Otherwise the Adapter will not able to pull/push information to/from the DAO.
-
-Adapters implemented in the Tribute project:
+Adapters currently implemented in the Tribute DAO frameowkr are:
 
 - [Configuration](https://github.com/openlawteam/tribute-contracts/blob/master/docs/adapters/Configuration.md): manages storing and retrieving per-DAO settings required by shared adapters.
 - [Distribute](https://github.com/openlawteam/tribute-contracts/blob/master/docs/adapters/Distribute.md): allows the members to distribute funds to one or all members of the DAO.
@@ -67,6 +65,19 @@ Adapters implemented in the Tribute project:
 - [Voting](https://github.com/openlawteam/tribute-contracts/blob/master/docs/adapters/Voting.md): adds the simple on chain voting governance process to the DAO.
 - [Withdraw](https://github.com/openlawteam/tribute-contracts/blob/master/docs/adapters/Withdraw.md): allows the members to withdraw their funds from the DAO bank.
 
+However, the range of potential adapters is seemingly infinite and can include:
+
+* "Streams" to manage a DAO's treasury in a more agile way
+* Alternative voting structures to layer to improve DAO governance, including quadratic voting, one-member-one-vote, voting
+* Swaps of one token for another
+* Streaming payments
+* NFT-based onboarding
+* DAO-to-DAO voting
+* Creating a liquidity pool for a DAO's native asset
+* Staking or depositing assets into existing DeFi projects (like Aave, Compound, or Lido)
+
+Creating an adapter is straight forward and should save developers on engineering time.  Each adapter needs to be configured with the [Access Flags](#access-control-layer) in order to access the [Core Contracts](#core-contracts), and/or [Extensions](#extensions). Otherwise the Adapter will not able to pull/push information to/from the DAO.
+
 Considerations:
 
 - Adapters do not keep track of the state of the DAO. An adapter might use storage to control its own state, but ideally any DAO state change must be propagated to the DAORegistry Core Contract.
@@ -74,7 +85,7 @@ Considerations:
 - The adapter must follow the rules defined by the [Template Adapter](https://github.com/openlawteam/tribute-contracts/blob/master/docs/adapters/Template.md).
 - If you want to contribute and create an Adapter, please checkout this: [How to create an Adapter](https://github.com/openlawteam/tribute-contracts/blob/master/docs/adapters/HowToCreate.md).
 
-#### Extensions
+### Extensions
 
 Extensions are conceived to isolate the complexity of state changes from the DAORegistry contract, and to simplify the core logic. Essentially an Extension is similar to an Adapter, but the main difference is that it is used by several adapters and by the DAORegistry - which end up enhancing the DAO capabilities and the state management without cluttering the DAO core contract.
 
@@ -86,7 +97,7 @@ Extensions are conceived to isolate the complexity of state changes from the DAO
 
 - [Executor](https://github.com/openlawteam/tribute-contracts/blob/master/docs/extensions/Executor.md): adds to the DAO the capability of executing delegated calls to other contracts, including contracts that are not part of the DAO, using the EVM instruction `delegatecall`.
 
-#### Core Contracts
+## Core Contracts
 
 A core contract is a contract that composes the DAO itself, and directly changes the DAO state without the need of going through an Adapter. Ideally a core contract shall never pull information directly from the external world. For that we use Adapters and Extensions, and the natural information flow is always from the external world to the core contracts.
 
