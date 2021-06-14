@@ -427,12 +427,15 @@ describe("Adapter - Financing", () => {
     });
 
     const priceFeed = await FakeChainlinkPriceFeed.new();
-
+   const priceFeedAddress = priceFeed.address; 
+    console.log("pricefeed address..", priceFeed.address);
+   
     const financingChainlink = await FinancingChainlinkContract.new(
-      [priceFeed.address],
+      priceFeedAddress,
       { from: myAccount }
     );
-
+      //console.log("price feed address??", financingChainlink);
+   
     await factories.daoFactory.addAdapters(
       dao.address,
       [
