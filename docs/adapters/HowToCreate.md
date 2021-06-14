@@ -321,27 +321,27 @@ describe("Adapter - AdapterName2", () => {
       owner: owner,
       finalize: false,
     });
-    
+
     // Creating your adapter
     const myAdapter2Contract = await MyAdapter2Contract.new();
 
     // Once the dao is created, use the daoFactory contract
-    // to add the new adapter to the DAO with the correct 
+    // to add the new adapter to the DAO with the correct
     // ACL using the `addAdapters` function:
     await factories.daoFactory.addAdapters(
       dao.address,
-      // When you are creating an adapter that access the DAO 
-      // state, you need to provide the `entryDAO` ACL 
+      // When you are creating an adapter that access the DAO
+      // state, you need to provide the `entryDAO` ACL
       // from DeploymentUtil.entryDao
       [entryDao("myAdapter2", myAdapter2Contract, {
-        THE_ACL_FLAG_1: true // the name of the ACL flag, that needs to be enabled. 
+        THE_ACL_FLAG_1: true // the name of the ACL flag, that needs to be enabled.
         // for more info checkout:
-        // https://github.com/openlawteam/tribute-contracts/blob/master/docs/core/DaoRegistry.md#access-flags 
+        // https://github.com/openlawteam/tribute-contracts/blob/master/docs/core/DaoRegistry.md#access-flags
       })],
       { from: owner }
     );
 
-    // If your adapter needs to access a DAO Extension, 
+    // If your adapter needs to access a DAO Extension,
     // you can set up your adapter to access the extension
     // using the `daoFactory.configureExtension` function:
     await factories.daoFactory.configureExtension(
@@ -349,15 +349,15 @@ describe("Adapter - AdapterName2", () => {
       myAdapter2Contract.address,
       [
         entryExecutor(myAdapter2Contract, {
-          THE_ACL_FLAG_X: true,  // the name of the ACL flag, that needs to be enabled. 
-          // Checkout the extension documentation for more info: 
+          THE_ACL_FLAG_X: true,  // the name of the ACL flag, that needs to be enabled.
+          // Checkout the extension documentation for more info:
           // https://github.com/openlawteam/tribute-contracts/tree/master/docs/extensions
         }),
       ],
       { from: owner }
     );
 
-    // After the adapter was configured to access the DAO, 
+    // After the adapter was configured to access the DAO,
     // and/or an Extension, you can finalize the DAO creation.
     await dao.finalizeDao({ from: owner });
 
