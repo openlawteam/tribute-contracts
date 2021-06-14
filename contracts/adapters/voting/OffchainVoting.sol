@@ -82,6 +82,8 @@ contract OffchainVotingContract is
     bytes32 constant FallbackThreshold =
         keccak256("offchainvoting.fallbackThreshold");
 
+    mapping(address => mapping(bytes32 => mapping(uint256 => uint256))) flags;
+
     struct VoteStepParams {
         uint256 previousYes;
         uint256 previousNo;
@@ -97,6 +99,7 @@ contract OffchainVotingContract is
         uint256 startingTime;
         uint256 gracePeriodStartingTime;
         bool isChallenged;
+        uint256 stepRequested;
         bool forceFailed;
         mapping(address => bool) fallbackVotes;
         uint256 fallbackVotesCount;
@@ -112,6 +115,17 @@ contract OffchainVotingContract is
         bytes32 proposalId;
         bytes32[] proof;
     }
+
+    event NodeProvided(
+        uint32 choice,
+        uint64 index,
+        uint64 timestamp,
+        uint88 nbNo,
+        uint88 nbYes,
+        bytes sig,
+        bytes32 proposalId,
+        bytes32[] proof
+    );
 
     modifier onlyBadReporterAdapter() {
         require(msg.sender == address(_handleBadReporterAdapter), "only:hbra");
@@ -302,6 +316,59 @@ contract OffchainVotingContract is
         vote.isChallenged = false;
     }
 
+    function requestStep(
+        DaoRegistry dao,
+        bytes32 proposalId,
+        uint256 index
+    ) external {
+        address memberAddr = dao.getAddressIfDelegated(msg.sender);
+        require(isActiveMember(dao, memberAddr), "not active member");
+        uint256 currentFlag = flags[address(dao)][proposalId][index / 256];
+        require(
+            getFlag(currentFlag, index % 256) == false,
+            "step has already been requested"
+        );
+        Voting storage vote = votes[address(dao)][proposalId];
+        require(
+            vote.stepRequested == 0,
+            "another step has already been requested"
+        );
+        vote.stepRequested = index;
+        vote.gracePeriodStartingTime = block.timestamp;
+    }
+
+    function challengeMissingStep(DaoRegistry dao, bytes32 proposalId)
+        external
+    {
+        Voting storage vote = votes[address(dao)][proposalId];
+        uint256 gracePeriod = dao.getConfiguration(GracePeriod);
+        //if the vote has started but the voting period has not passed yet, it's in progress
+        require(vote.stepRequested > 0, "no step request");
+        require(
+            block.timestamp >= vote.gracePeriodStartingTime + gracePeriod,
+            "grace period"
+        );
+
+        _challengeResult(dao, proposalId);
+    }
+
+    function provideStep(
+        DaoRegistry dao,
+        address adapterAddress,
+        VoteResultNode memory node
+    ) external {
+        Voting storage vote = votes[address(dao)][node.proposalId];
+        require(vote.stepRequested == node.index, "wrong step provided");
+        bytes32 hashCurrent = nodeHash(dao, adapterAddress, node);
+        require(
+            MerkleProof.verify(node.proof, vote.resultRoot, hashCurrent),
+            "proof:bad"
+        );
+
+        vote.stepRequested = 0;
+        vote.gracePeriodStartingTime = block.timestamp;
+    }
+
     function _readyToSubmitResult(
         DaoRegistry dao,
         Voting storage vote,
@@ -411,6 +478,10 @@ contract OffchainVotingContract is
         }
 
         if (vote.isChallenged) {
+            return VotingState.IN_PROGRESS;
+        }
+
+        if (vote.stepRequested > 0) {
             return VotingState.IN_PROGRESS;
         }
 
