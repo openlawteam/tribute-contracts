@@ -232,6 +232,8 @@ There are several examples of tests that you can check to start building your ow
 
 The general idea is to create one test suite per adapter/contract. And try to cover all the happy paths first, and then add more complex test cases after that.
 
+You need to declare the new adapter contract to `ContractUtil.js`, so it can be accessed in the deploy/test environment.
+
 In order to speed up the test suites we usually don't create one DAO per test function, but we create the DAO during the suite initialization, and only reset the chain after each test function using the chain snapshot feature. For instance:
 
 ```javascript
@@ -308,7 +310,7 @@ describe("Adapter - AdapterName", () => {
 
 Another important step in the test phase is to configure the adapter permissions during the DAO creation in the [DAOFactory.js](https://github.com/openlawteam/tribute-contracts/blob/master/utils/DaoFactory.js#L140).
 
-If the adapter that you are using is not part of the default set of adapters, you can configure the Adapter access flags after the adapter is created in the test suite, but before the DAO is finalized. When the DAO is finalized it means that the DAO initialization has been completed, so any state changes must be done though a proposal, instead of doing it through the deployment phase. Here is a simple example of an adapter configurated after its creation, but before the DAO is finalized:
+If the adapter that you are using is not part of the default set of adapters, you need to import it from `ContractUtil.js`, and deploy it, then you can configure the Adapter access flags after the adapter is created in the test suite, but before the DAO is finalized. When the DAO is finalized it means that the DAO initialization has been completed, so any state changes must be done though a proposal, instead of doing it through the deployment phase. Here is a simple example of an adapter configurated after its creation, but before the DAO is finalized:
 
 ```javascript
 describe("Adapter - AdapterName2", () => {
