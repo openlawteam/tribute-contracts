@@ -664,7 +664,7 @@ const cloneDao = async ({
   );
 
   await daoFactory.createDao(name, creator ? creator : owner, { from: owner });
-  
+
   // checking the gas usaged to clone a contract
   let _address = await daoFactory.getDaoAddress(name);
   let newDao = await DaoRegistry.at(_address);
