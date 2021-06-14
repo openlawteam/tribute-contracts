@@ -27,6 +27,7 @@ Because of that, we want to say **THANK YOU** to **all** coders, designers, audi
 - [Dimitris Kyriazopoulos](https://github.com/DimitrK)
 
 **Thank you** to all auditors from:
+
 - [ConsenSys Diligence](https://consensys.net/diligence/)
 
 **Thank you** to all maintainers and supporters of the amazing Open Source tooling and development libraries for the Web3:
