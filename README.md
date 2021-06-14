@@ -7,11 +7,24 @@
 - [Contribute](#contribute)
 - [Subgraph](https://github.com/openlawteam/tribute-contracts/tree/master/subgraph/README.md)
 
-## Overview
+## Overview and Benefits
 
-At the LAO, we realized that even though Moloch is very useful and powerful, it has many features that are not necessary for all DAOs. There are also a few features that are missing and are difficult to add.
+TributeDAO is a new modular, low cost DAO framework.  The framework aims to improve DAOs by fixing the:
 
-This is why we would like to introduce a more modular approach to Moloch architecture, which will give us:
+* High costs of onchain voting;
+* Lack of modularity, which has created challenges both in terms of extending, managing, and upgrading DAOs;
+* Rigid voting and governance mechanisms of current DAOs; and 
+* Overreliance on single token DAO structures, which make it difficult to divide up economic and governance rights and create teams or sub-groups.
+
+The TributeDAO framework aims to make DAOs the dominant form of organization for the Internet.  As the growing number of participants in DAOs know, there is no “one size fits all” for managing any organization, let alone a DAO.  DAOs need components that can be assembled like lego blocks to fit the needs of the organization and its membership.
+
+### Proposed Evolution of MolochDAO Framework
+
+The TributeDAO framework is our team's tribute to the MolochDAO ecosysten.  As many know, MolochDAO brought new life to the DAO ecosystem.  Through an elegant smart contract design, MolochDAO helped rebirth DAOs from the fiery depths of “The DAO” towards the original vision of DAOs sketched out in the Ethereum Whitepaper.
+
+Last year, we helped evolve the initial MolochDAO smart contracts helping to build Moloch v2, enabling multiple token support, “guildkicks” to remove unwanted members, and “loot” to issue non-voting shares still entitled to financial distributions. This upgraded contract was built with “venture” and similar investment transactions in mind, allowing for more effective swaps and control over tokenized assets and membership.
+
+The TributeDAO framework hopes to provide teams looking to deploy DAOs with several enhancements, including:
 
 - Simpler code - each module is responsible for only one function which reduces coupling and makes the system easier to understand.
 - Adaptability - each part of the DAO can be adapted to the needs of a particular DAO without the need to audit the entire code base every time.
@@ -19,7 +32,7 @@ This is why we would like to introduce a more modular approach to Moloch archite
 
 Inspired by the [hexagonal architecture design pattern](<https://en.wikipedia.org/wiki/Hexagonal_architecture_(software)>) we believe that we can have additional layers of security, and break the main contract into smaller contracts. With that, we create loosely coupled modules/contracts, easier to audit, and can be easily connected to the DAO.
 
-### Architecture
+### Tribute DAO Architecture
 
 ![laoland_hexagon_architecture](https://user-images.githubusercontent.com/708579/107689684-e7300200-6c87-11eb-89c0-7bfe7eddaaaf.png)
 
