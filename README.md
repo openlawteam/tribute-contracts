@@ -71,6 +71,8 @@ Extensions are conceived to isolate the complexity of state changes from the DAO
 
 - [ERC20](https://github.com/openlawteam/tribute-contracts/blob/master/docs/extensions/ERC20.md): adds to the DAO the capability of managing and transfer internal tokens between members and/or external accounts.
 
+- [Executor](https://github.com/openlawteam/tribute-contracts/blob/master/docs/extensions/Executor.md): adds to the DAO the capability of executing delegated calls to other contracts, including contracts that are not part of the DAO, using the EVM instruction `delegatecall`.
+
 #### Core Contracts
 
 A core contract is a contract that composes the DAO itself, and directly changes the DAO state without the need of going through an Adapter. Ideally a core contract shall never pull information directly from the external world. For that we use Adapters and Extensions, and the natural information flow is always from the external world to the core contracts.
@@ -157,6 +159,10 @@ Then execute the following script:
 ## Contribute
 
 Tribute exists thanks to its contributors. There are many ways you can participate and help build high quality software. Check out the [contribution guide](CONTRIBUTING.md)!
+
+## Thank You
+
+**THANK YOU** to **all** coders, designers, auditors, and any individual who have contributed with ideas, resources, and energy to this and previous versions of this project. [Thank You Note](https://github.com/openlawteam/tribute-contracts/blob/master/docs/ThankYou.md).
 
 ## License
 
