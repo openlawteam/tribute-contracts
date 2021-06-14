@@ -20,11 +20,11 @@ The TributeDAO framework aims to make DAOs the dominant form of organization for
 
 ### Proposed Evolution of MolochDAO Framework
 
-The TributeDAO framework is our team's tribute to the MolochDAO ecosysten.  As many know, MolochDAO brought new life to the DAO ecosystem.  Through an elegant smart contract design, MolochDAO helped rebirth DAOs from the fiery depths of “The DAO” towards the original vision of DAOs sketched out in the Ethereum Whitepaper.
+The TributeDAO framework is our team's tribute to the MolochDAO ecosysten.  As many know, MolochDAO brought new life to the DAOs.  Through an elegant smart contract design, this smart contract framework brought DAOs back to life, helping us push beyond the fiery depths of “The DAO,” and helped push the Ethereum ecosystem back towards the original vision of DAOs sketched out in the Ethereum Whitepaper.
 
-Last year, we helped evolve the initial MolochDAO smart contracts helping to build Moloch v2, enabling multiple token support, “guildkicks” to remove unwanted members, and “loot” to issue non-voting shares still entitled to financial distributions. This upgraded contract was built with “venture” and similar investment transactions in mind, allowing for more effective swaps and control over tokenized assets and membership.
+Last year, we helped evolve the initial MolochDAO smart contracts by helping to build Moloch v2, which enabled multiple token support, “guildkicks” to remove unwanted members, and “loot” to issue non-voting shares still entitled to financial distributions. These upgraded contracts were built with “venture” and similar investment transactions in mind, allowing for more effective swaps and control over tokenized assets and membership.
 
-The TributeDAO framework hopes to provide teams looking to deploy DAOs with several enhancements, including:
+The TributeDAO framework hopes to provide teams looking to deploy DAOs with several enhancements and improvements, including:
 
 - Simpler code - each module is responsible for only one function which reduces coupling and makes the system easier to understand.
 - Adaptability - each part of the DAO can be adapted to the needs of a particular DAO without the need to audit the entire code base every time.
