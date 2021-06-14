@@ -27,7 +27,7 @@ The adapter must implement one or more of the available interfaces at [contracts
 
 There are two main types of adapters that serve different purposes:
 
-- Proposal: writes/reads to/from the DAO state based on a proposal, and the proposal needs to pass, otherwise the DAO state changes are not applied, e.g: [GuildKick.sol](https://github.com/openlawteam/tribute-contracts/blob/master/contracts/adapters/GuildKick.sol).
+- `Proposal`: writes/reads to/from the DAO state based on a proposal, and the proposal needs to pass, otherwise the DAO state changes are not applied, e.g: [GuildKick.sol](https://github.com/openlawteam/tribute-contracts/blob/master/contracts/adapters/GuildKick.sol).
 
   - **Example of a Proposal Adapter**
 
@@ -48,7 +48,7 @@ There are two main types of adapters that serve different purposes:
      * @param param2 Description of the parameter 2.
      * @param paramN Description of the parameter n.
      */
-    function submitXProposal(
+    function submitProposal(
       DaoRegistry dao,
       bytes32 proposalId,
       type1 param1,
@@ -79,7 +79,7 @@ There are two main types of adapters that serve different purposes:
      * @param param2 Description of the parameter 2.
      * @param paramN Description of the parameter n.
      */
-    function _submitXProposal(
+    function _submitProposal(
       DaoRegistry dao,
       bytes32 proposalId,
       type1 param1,
@@ -133,7 +133,7 @@ There are two main types of adapters that serve different purposes:
     }
     ```
 
-- Generic: writes/reads to/from the DAO state without a proposal, e.g: [Withdraw.sol](https://github.com/openlawteam/tribute-contracts/blob/master/contracts/adapters/Withdraw.sol).
+- `Generic`: writes/reads to/from the DAO state without a proposal, e.g: [Withdraw.sol](https://github.com/openlawteam/tribute-contracts/blob/master/contracts/adapters/Withdraw.sol).
 
   - **Example of a Generic Adapter**
 
@@ -176,6 +176,8 @@ We have adapters that are accessible only to members and/or advisors of the DAO 
 
 While creating the adapter try to identify which sort of users you want to grant access to. Remember that the adapters are the only way we have to alter the DAO state, so be careful with the access modifiers you use. We already have some of them implemented, take a look at the [docs/guards](https://github.com/openlawteam/tribute-contracts/blob/master/docs/guards), and feel free to suggest new ones if needed.
 
+In addition to that, every external function in the adapter must contain the modifier `reentrancyGuard(dao)` to prevent the reentrancy attack.
+
 ### Map out the proper Access Flags
 
 Another important point is to map out which sort of permissions your adapter needs in order to write/read data to/from the DAO. If your adapter requires an [Extension](https://github.com/openlawteam/tribute-contracts#extensions), you will also need to provide the correct [Access Flags](https://github.com/openlawteam/tribute-contracts#access-control-layer) to access that extension. Checkout which permission each flag grants: [Flag Helper](https://github.com/openlawteam/tribute-contracts/blob/master/docs/helpers/FlagHelper.md).
@@ -193,10 +195,12 @@ The key advantage of the adapters is to make them very small and suitable to a v
 - Function names (public)
 
   - For Adapter that is a Proposal type
-    - submitXProposal
+    - submitProposal
     - processProposal
 
 - Function names (private)
+
+  - \_myFunction
 
 - Revert as early as possible
 
@@ -226,7 +230,142 @@ In order to verify if the new adapter works properly, one needs to implement the
 
 There are several examples of tests that you can check to start building your own. Take a look at the [tests/adapters](https://github.com/openlawteam/tribute-contracts/tree/master/test/adapters).
 
+The general idea is to create one test suite per adapter/contract. And try to cover all the happy paths first, and then add more complex test cases after that.
+
+In order to speed up the test suites we usually don't create one DAO per test function, but we create the DAO during the suite initialization, and only reset the chain after each test function using the chain snapshot feature. For instance:
+
+```javascript
+describe("Adapter - AdapterName", () => {
+  /**
+   * Using the utility function `deployDefaultDao` * to create the DAO before all tests are
+   * executed.
+   * Once the DAO is created you can access the
+   * adapters, extensions, factories, testContracts
+   * and votingHelpers contracts. Use the test global scope
+   * to store them and access it later in the test functions.
+   */
+  before("deploy dao", async () => {
+    const {
+      dao,
+      adapters,
+      extensions,
+      factories,
+      testContracts,
+      votingHelpers,
+    } = await deployDefaultDao({ owner });
+    this.dao = dao;
+    this.adapters = adapters;
+    this.extensions = extensions;
+  });
+
+  /**
+   * Before each test funtion we take a chain snapshot, which
+   * contains the fresh DAO configurations with zero
+   * modifications.
+   */
+  beforeEach(async () => {
+    this.snapshotId = await takeChainSnapshot();
+  });
+
+  /**
+   * After the test function is executed we revert to the
+   * latest chain snapshot took when the DAO was fresh
+   * installed.
+   * With this approach we save time in the DAO creation,
+   * and the test suite runs 10x faster.
+   */
+  afterEach(async () => {
+    await revertChainSnapshot(this.snapshotId);
+  });
+
+  /**
+   * Add a descriptive name to your test function that
+   * covers the use case that you are testing.
+   */
+  it("should be possible to set a single configuration parameter", async () => {
+    // Access the global scope to read the contracts you may need.
+    const dao = this.dao;
+    const configuration = this.adapters.configuration;
+    const voting = this.adapters.voting;
+
+    // Use openzeppelin test-env to assert results, events,and failures, e.g:
+    expect(value1.toString()).equal("1");
+    expectEvent(tx.receipt, "EventName", {
+      eventArg1: value1,
+      eventArg2: toBN("2"), //value 2
+    });
+    await expectRevert(
+      // Calling the contract function that returns promise
+      configuration.submitProposal(dao.address, "0x1", [key], [], [], {
+        from: owner,
+        gasPrice: toBN("0"),
+      }),
+      "must be an equal number of config keys and values"
+    );
+  });
+});
+```
+
 Another important step in the test phase is to configure the adapter permissions during the DAO creation in the [DAOFactory.js](https://github.com/openlawteam/tribute-contracts/blob/master/utils/DaoFactory.js#L140).
+
+If the adapter that you are using is not part of the default set of adapters, you can configure the Adapter access flags after the adapter is created in the test suite, but before the DAO is finalized. When the DAO is finalized it means that the DAO initialization has been completed, so any state changes must be done though a proposal, instead of doing it through the deployment phase. Here is a simple example of an adapter configurated after its creation, but before the DAO is finalized:
+
+```javascript
+describe("Adapter - AdapterName2", () => {
+  it("should be possible to...", async () => {
+
+    // Creating the new DAO without finalizing it
+    // So you can add new adapters without going through
+    // a proposal process.
+    const { dao, factories, extensions } = await deployDefaultDao({
+      owner: owner,
+      finalize: false,
+    });
+    
+    // Creating your adapter
+    const myAdapter2Contract = await MyAdapter2Contract.new();
+
+    // Once the dao is created, use the daoFactory contract
+    // to add the new adapter to the DAO with the correct 
+    // ACL using the `addAdapters` function:
+    await factories.daoFactory.addAdapters(
+      dao.address,
+      // When you are creating an adapter that access the DAO 
+      // state, you need to provide the `entryDAO` ACL 
+      // from DeploymentUtil.entryDao
+      [entryDao("myAdapter2", myAdapter2Contract, {
+        THE_ACL_FLAG_1: true // the name of the ACL flag, that needs to be enabled. 
+        // for more info checkout:
+        // https://github.com/openlawteam/tribute-contracts/blob/master/docs/core/DaoRegistry.md#access-flags 
+      })],
+      { from: owner }
+    );
+
+    // If your adapter needs to access a DAO Extension, 
+    // you can set up your adapter to access the extension
+    // using the `daoFactory.configureExtension` function:
+    await factories.daoFactory.configureExtension(
+      dao.address,
+      myAdapter2Contract.address,
+      [
+        entryExecutor(myAdapter2Contract, {
+          THE_ACL_FLAG_X: true,  // the name of the ACL flag, that needs to be enabled. 
+          // Checkout the extension documentation for more info: 
+          // https://github.com/openlawteam/tribute-contracts/tree/master/docs/extensions
+        }),
+      ],
+      { from: owner }
+    );
+
+    // After the adapter was configured to access the DAO, 
+    // and/or an Extension, you can finalize the DAO creation.
+    await dao.finalizeDao({ from: owner });
+
+    // Start your test here
+    ...
+  });
+});
+```
 
 ### Adding documentation
 
