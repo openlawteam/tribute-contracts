@@ -57,7 +57,7 @@ const applicant = accounts[2];
 const newMember = accounts[3];
 const expectedGuildBalance = toBN("1200000000000000000");
 const proposalCounter = proposalIdGenerator().generator;
-const getLatestPrice = 200000000000; //substitute for Chainlink price 2000.00 usd = 1 ETH
+//const getLatestPrice = 200000000000; //substitute for Chainlink price 2000.00 usd = 1 ETH
 
 function getProposalCounter() {
   return proposalCounter().next().value;
@@ -427,14 +427,14 @@ describe("Adapter - Financing", () => {
     });
 
     const priceFeed = await FakeChainlinkPriceFeed.new();
-   const priceFeedAddress = priceFeed.address; 
-    console.log("pricefeed address..", priceFeed.address);
+    const priceFeedAddress = priceFeed.address; 
+    console.log("pricefeed address..", priceFeedAddress);
    
     const financingChainlink = await FinancingChainlinkContract.new(
       priceFeedAddress,
       { from: myAccount }
     );
-      //console.log("price feed address??", financingChainlink);
+ 
    
     await factories.daoFactory.addAdapters(
       dao.address,
@@ -462,6 +462,68 @@ describe("Adapter - Financing", () => {
 
     //TODO
     // submit new proposal using financingChainlink.submitProposal
+    const bank = this.extensions.bank;
+    const voting = this.adapters.voting;
+    //const financing = this.adapters.financing;
+    const onboarding = this.adapters.onboarding;
+    const bankAdapter = this.adapters.bankAdapter;
+
+    let proposalId = getProposalCounter();
+
+    //Add funds to the Guild Bank after sposoring a member to join the Guild
+    await onboarding.submitProposal(
+      this.dao.address,
+      proposalId,
+      newMember,
+      UNITS,
+      unitPrice.mul(toBN(10)).add(remaining),
+      [],
+      {
+        from: myAccount,
+        gasPrice: toBN("0"),
+      }
+    );
+  
+    await voting.submitVote(this.dao.address, proposalId, 1, {
+      from: myAccount,
+      gasPrice: toBN("0"),
+    });
+    //should not be able to process before the voting period has ended
+    try {
+      await onboarding.processProposal(this.dao.address, proposalId, {
+        from: myAccount,
+        value: unitPrice.mul(toBN(10)).add(remaining),
+        gasPrice: toBN("0"),
+      });
+    } catch (err) {
+      expect(err.reason).equal("proposal has not been voted on yet");
+    }
+
+    await advanceTime(10000);
+    await onboarding.processProposal(this.dao.address, proposalId, {
+      from: myAccount,
+      value: unitPrice.mul(toBN(10)).add(remaining),
+      gasPrice: toBN("0"),
+    });
+    //Check Guild Bank Balance
+    checkBalance(bank, GUILD, ETH_TOKEN, expectedGuildBalance);
+    
+    // 1.2 ETH / 1200000000000000000 wei
+   // console.log("guild..", expectedGuildBalance.toString());
+    
+    // Create Financing Request for $1000
+       let requestedAmount = 1000;
+       proposalId = getProposalCounter();
+       await financingChainlink.submitProposal(
+         this.dao.address,
+         proposalId,
+         applicant,
+         ETH_TOKEN,
+         requestedAmount,
+         fromUtf8(""),
+         { from: myAccount, gasPrice: toBN("0") }
+       );
+   
 
     //Check Guild Bank Balance
     // checkBalance(bank, GUILD, ETH_TOKEN, expectedGuildBalance);
