@@ -7,39 +7,58 @@
 - [Contribute](#contribute)
 - [Subgraph](https://github.com/openlawteam/tribute-contracts/tree/master/subgraph/README.md)
 
-## Overview
+## Overview and Benefits
 
-At the LAO, we realized that even though Moloch is very useful and powerful, it has many features that are not necessary for all DAOs. There are also a few features that are missing and are difficult to add.
+TributeDAO is a new modular, low cost DAO framework.  The framework aims to improve DAOs by fixing the:
 
-This is why we would like to introduce a more modular approach to Moloch architecture, which will give us:
+* __Lack of modularity__: which has created challenges both in terms of extending, managing, and upgrading DAOs;
+* __Rigid voting and governance mechanisms__: which limit the ability to experiment with additional forms of governance;  
+* __High costs__: especially for onchain voting;
+* __Single token DAO structures__: which make it difficult to divide up economic and governance rights and create teams or sub-groups; and
+* __Lack of NFT Support__: which makes it difficult for DAOs to be deployed for NFT projects.
 
-- Simpler code - each module is responsible for only one function which reduces coupling and makes the system easier to understand.
-- Adaptability - each part of the DAO can be adapted to the needs of a particular DAO without the need to audit the entire code base every time.
-- Upgradability - modules can be easily upgraded as necessary. For example, as the voting process evolves over time the module responsible for managing the voting process can be upgraded without changing any other modules or the Core Contract. Modules can also be used by multiple DAOs without the need to be redeployed.
+The TributeDAO framework aims to address these issues, as part of our quest to make DAOs the dominant form of organization.  As the growing number of participants in DAOs know, there is no “one size fits all” for managing any organization.  DAOs need low cost and easy to develop components that can be assembled like lego blocks to fit the needs of the organization and its membership.
+
+## Proposed Evolution of MolochDAO Framework
+
+The TributeDAO framework is our team's tribute to the MolochDAO ecosysten.  As many know, MolochDAO brought new life to DAOs.  Through an elegant smart contract design, this smart contract framework brought DAOs back to life, helping us push beyond the fiery depths of “The DAO.” 
+
+Last year, we worked to evolve the initial MolochDAO smart contracts by assisting with the creation of Moloch v2, which enabled multiple token support, “guildkicks” to remove unwanted members, and “loot” to issue non-voting shares still entitled to financial distributions. These upgraded contracts were built with “venture” and similar investment transactions in mind, allowing for more effective swaps and control over tokenized assets and membership.
+
+The TributeDAO framework hopes to provide teams looking to deploy DAOs with several enhancements and improvements, including:
+
+* __Simpler code__ - each module is responsible for only one function which reduces coupling and makes the system easier to understand.
+* __Adaptability__ - each part of the DAO can be adapted to the needs of a particular DAO without the need to audit the entire code base every time.
+* __Upgradability__ - modules can be easily upgraded as necessary. For example, as the voting process evolves over time the module responsible for managing the voting process can be upgraded without changing any other modules or the Core Contract. Modules can also be used by multiple DAOs without the need to be redeployed.
 
 Inspired by the [hexagonal architecture design pattern](<https://en.wikipedia.org/wiki/Hexagonal_architecture_(software)>) we believe that we can have additional layers of security, and break the main contract into smaller contracts. With that, we create loosely coupled modules/contracts, easier to audit, and can be easily connected to the DAO.
 
-### Architecture
+## Tribute DAO Architecture
 
 ![laoland_hexagon_architecture](https://user-images.githubusercontent.com/708579/107689684-e7300200-6c87-11eb-89c0-7bfe7eddaaaf.png)
 
 The main design goal is to limit access to the smart contracts according at layer boundaries. The External World (i.e. RPC clients) can access the core contracts only via Adapters, never directly. Every adapter contains all the necessary logic and data to update/change the state of the DAO in the DAORegistry Contract. The Core Contract tracks all the state changes of the DAO, and an Adapter tracks only the state changes in its own context. Extensions enhance the DAO capabilities and simplify the Core Contract code. The information always flows from the External World to the Core Contracts, never the other way around. If a Core Contract needs external info, it must be provided by an Adapter and/or an Extension instead of calling External World directly.
 
-There are five main components in the Tribute architecture:
+There are five main components in the Tribute architecture outlined further below.
 
-#### External World
+### Core Contracts
 
-The external world is essentially anything that interacts with the DAO. An example of that are RPC clients that are responsible for calling the Adapters public/external functions to pull/push data to the DAO Core Contracts and its Extensions.
+The core contracts serve as the spine for the Tribute DAO framework and act as a DAO registry, creating a digital version of "division of corporations."  These contracts compose the DAO itself, and make it cheaper and easier to deploy a DAO.  These contracts directly change the DAO state without the need of going through an adapter or extension (described further below). A core contract never pulls information directly from the external world. For that we use Adapters and Extensions, and the natural information flow is always from the external world to the core contracts.
+
+There are three core contracts as part of the Tribute DAO framework, including a:
+
+- [DaoRegistry](https://github.com/openlawteam/tribute-contracts/blob/master/docs/core/DaoRegistry.md): tracks the state changes of the DAO, only adapters with proper [Access Flags](#access-control-layer) can alter the DAO state.
+- CloneFactory: creates a clone of the DAO based on its address.
+- [DaoFactory](https://github.com/openlawteam/tribute-contracts/blob/master/docs/core/DaoFactory.md): creates, initializes, and adds adapter configurations to the new DAO, and uses the CloneFactory to reduce the DAO creation transaction costs.
+- DaoConstants: defines all the constants used by the DAO contracts, and implements some helper functions to manage the Access Flags.
+
+### Adapters and Extensions
+
+Once a DAO is created using the above core contracts, they can be extended and modified with adapters and extensions.  Adapters and extensions make it easy to assemble a DAO like lego blocks, by adding to a DAO narrowly-defined, tested, and extensible smart contracts created for specific purposes. Adapters and extensions make DAOs more modular, upgradeable, and also enable us to work together to build robust DAO tooling.  They can be added to a TributeDAO via a DAO vote.
 
 #### Adapters
 
-Adapters are well-defined, tested and extensible smart contracts that are created with a unique purpose. One Adapter is responsible for performing one or a set of tasks in a given context. With this approach we can develop adapters targeting specific use-cases, and update the DAO configurations to use these new adapters.
-
-When a new adapter is created, one needs to submit a Managing proposal to add the new adapter to the DAO. Once the proposal passes, the new adapter is added and becomes available for use.
-
-Each adapter needs to be configured with the [Access Flags](#access-control-layer) in order to access the [Core Contracts](#core-contracts), and/or [Extensions](#extensions). Otherwise the Adapter will not able to pull/push information to/from the DAO.
-
-Adapters implemented in the Tribute project:
+There are currently 12 adapters implemented in the Tribute DAO framework and these adapters make the Tribute DAO framework feature compatible with Moloch v2:
 
 - [Configuration](https://github.com/openlawteam/tribute-contracts/blob/master/docs/adapters/Configuration.md): manages storing and retrieving per-DAO settings required by shared adapters.
 - [Distribute](https://github.com/openlawteam/tribute-contracts/blob/master/docs/adapters/Distribute.md): allows the members to distribute funds to one or all members of the DAO.
@@ -54,31 +73,37 @@ Adapters implemented in the Tribute project:
 - [Voting](https://github.com/openlawteam/tribute-contracts/blob/master/docs/adapters/Voting.md): adds the simple on chain voting governance process to the DAO.
 - [Withdraw](https://github.com/openlawteam/tribute-contracts/blob/master/docs/adapters/Withdraw.md): allows the members to withdraw their funds from the DAO bank.
 
-Considerations:
+The range of potential adapters will expand over time and likely will include:
+
+* "Streams" to manage a DAO's treasury in a more agile way
+* Alternative voting structures to layer to improve DAO governance, including quadratic voting, one-member-one-vote voting
+* Swaps of one token for another
+* Streaming payments
+* NFT-based onboarding
+* DAO-to-DAO voting
+* Creating a liquidity pool for a DAO's native asset
+* Staking or depositing assets into existing DeFi projects (like Aave, Compound, or Lido)
+
+Creating an adapter is straight forward and should save developers engineering time.  Each adapter needs to be configured with the [Access Flags](#access-control-layer) in order to access the [Core Contracts](#core-contracts), and/or [Extensions](#extensions). Otherwise the Adapter will not able to pull/push information to/from the DAO.
+
+Please note:
 
 - Adapters do not keep track of the state of the DAO. An adapter might use storage to control its own state, but ideally any DAO state change must be propagated to the DAORegistry Core Contract.
 - Adapters just execute smart contract logic that changes the state of the DAO by calling the DAORegistry. They also can compose complex calls that interact with External World, other Adapters or even Extensions, to pull/push additional information.
 - The adapter must follow the rules defined by the [Template Adapter](https://github.com/openlawteam/tribute-contracts/blob/master/docs/adapters/Template.md).
 - If you want to contribute and create an Adapter, please checkout this: [How to create an Adapter](https://github.com/openlawteam/tribute-contracts/blob/master/docs/adapters/HowToCreate.md).
 
-#### Extensions
+### Extensions
 
 Extensions are conceived to isolate the complexity of state changes from the DAORegistry contract, and to simplify the core logic. Essentially an Extension is similar to an Adapter, but the main difference is that it is used by several adapters and by the DAORegistry - which end up enhancing the DAO capabilities and the state management without cluttering the DAO core contract.
 
 - [Bank](https://github.com/openlawteam/tribute-contracts/blob/master/docs/extensions/Bank.md): adds the banking capabilities to the DAO, and keeps track of the DAO accounts and internal token balances.
 
-- [NFT](https://github.com/openlawteam/tribute-contracts/blob/master/docs/extensions/NFT.md): adds to the DAO the capability of managing and curate a collection of standard NFTs.
+- [NFT](https://github.com/openlawteam/tribute-contracts/blob/master/docs/extensions/NFT.md): adds to the DAO the capability of managing and curating a collection of standard NFTs.
 
 - [ERC20](https://github.com/openlawteam/tribute-contracts/blob/master/docs/extensions/ERC20.md): adds to the DAO the capability of managing and transfer internal tokens between members and/or external accounts.
 
-#### Core Contracts
-
-A core contract is a contract that composes the DAO itself, and directly changes the DAO state without the need of going through an Adapter. Ideally a core contract shall never pull information directly from the external world. For that we use Adapters and Extensions, and the natural information flow is always from the external world to the core contracts.
-
-- [DaoRegistry](https://github.com/openlawteam/tribute-contracts/blob/master/docs/core/DaoRegistry.md): tracks the state changes of the DAO, only adapters with proper [Access Flags](#access-control-layer) can alter the DAO state.
-- CloneFactory: creates a clone of the DAO based on its address.
-- [DaoFactory](https://github.com/openlawteam/tribute-contracts/blob/master/docs/core/DaoFactory.md): creates, initializes, and adds adapter configurations to the new DAO, and uses the CloneFactory to reduce the DAO creation transaction costs.
-- DaoConstants: defines all the constants used by the DAO contracts, and implements some helper functions to manage the Access Flags.
+- [Executor](https://github.com/openlawteam/tribute-contracts/blob/master/docs/extensions/Executor.md): adds to the DAO the capability of executing delegated calls to other contracts, including contracts that are not part of the DAO, using the EVM instruction `delegatecall`.
 
 #### Access Control Layer
 
@@ -157,6 +182,10 @@ Then execute the following script:
 ## Contribute
 
 Tribute exists thanks to its contributors. There are many ways you can participate and help build high quality software. Check out the [contribution guide](CONTRIBUTING.md)!
+
+## Thank You
+
+**THANK YOU** to **all** coders, designers, auditors, and any individual who have contributed with ideas, resources, and energy to this and previous versions of this project. [Thank You Note](https://github.com/openlawteam/tribute-contracts/blob/master/docs/ThankYou.md).
 
 ## License
 
