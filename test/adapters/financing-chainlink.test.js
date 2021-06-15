@@ -31,8 +31,9 @@ const {
   UNITS,
   GUILD,
   ETH_TOKEN,
+  sha3,
 } = require("../../utils/ContractUtil.js");
-
+//const {sha3,} = require("../../utils/DeploymentUtil.js");
 const {
   deployDefaultDao,
   takeChainSnapshot,
@@ -50,7 +51,7 @@ const {
 
 const { checkBalance } = require("../../utils/TestUtils.js");
 //use addAdapters
-const { addAdapters } = require("../../utils/DeploymentUtil.js");
+//const { addAdapters } = require("../../utils/DeploymentUtil.js");
 const remaining = unitPrice.sub(toBN("50000000000000"));
 const myAccount = accounts[1];
 const applicant = accounts[2];
@@ -459,7 +460,9 @@ describe("Adapter - Financing", () => {
     );
 
     await dao.finalizeDao({ from: myAccount });
-
+    const adapterAddress = await dao.getAdapterAddress(sha3("financing-chainlink"));
+    console.log("adapterAddess...", adapterAddress); 
+    console.log("financing adderss...", financingChainlink.address);
     //TODO
     // submit new proposal using financingChainlink.submitProposal
     const bank = this.extensions.bank;
