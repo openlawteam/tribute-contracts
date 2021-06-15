@@ -9,20 +9,42 @@ const {
 
 const { deployDao, getNetworkDetails } = require("../utils/DeploymentUtil.js");
 
-const truffleImports = require("../utils/TruffleUtil.js");
-
 require("dotenv").config();
 
 module.exports = async (deployer, network, accounts) => {
   let res;
+
+  console.log(`Starting deployment to ${network}`);
+
+  const { contracts } = require(`../deployment/${network}.config`);
+  const truffleImports = require("../utils/TruffleUtil.js")(contracts);
   const deployFunction = truffleImports.deployFunctionFactory(deployer);
+
   if (network === "ganache") {
-    res = await deployGanacheDao(deployFunction, network, accounts);
+    res = await deployGanacheDao(
+      deployFunction,
+      network,
+      accounts,
+      contracts,
+      truffleImports
+    );
   } else if (network === "rinkeby") {
-    res = await deployRinkebyDao(deployFunction, network);
+    res = await deployRinkebyDao(
+      deployFunction,
+      network,
+      contracts,
+      truffleImports
+    );
   } else if (network === "test" || network === "coverage") {
-    res = await deployTestDao(deployFunction, network, accounts);
+    res = await deployTestDao(
+      deployFunction,
+      network,
+      accounts,
+      contracts,
+      truffleImports
+    );
   }
+
   let { dao, extensions } = res;
   if (dao) {
     await dao.finalizeDao();
@@ -45,7 +67,13 @@ module.exports = async (deployer, network, accounts) => {
   }
 };
 
-async function deployTestDao(deployFunction, network, accounts) {
+const deployTestDao = async (
+  deployFunction,
+  network,
+  accounts,
+  contracts,
+  truffleImports
+) => {
   if (!process.env.DAO_NAME) throw Error("Missing env var: DAO_NAME");
   if (!process.env.ERC20_TOKEN_NAME)
     throw Error("Missing env var: ERC20_TOKEN_NAME");
@@ -75,10 +103,16 @@ async function deployTestDao(deployFunction, network, accounts) {
     offchainAdmin: "0xedC10CFA90A135C41538325DD57FDB4c7b88faf7",
     daoName: process.env.DAO_NAME,
     owner: accounts[0],
+    contracts,
   });
-}
+};
 
-async function deployRinkebyDao(deployFunction, network) {
+const deployRinkebyDao = async (
+  deployFunction,
+  network,
+  contracts,
+  truffleImports
+) => {
   if (!process.env.DAO_NAME) throw Error("Missing env var: DAO_NAME");
   if (!process.env.DAO_OWNER_ADDR)
     throw Error("Missing env var: DAO_OWNER_ADDR");
@@ -112,10 +146,17 @@ async function deployRinkebyDao(deployFunction, network) {
     daoName: process.env.DAO_NAME,
     owner: process.env.DAO_OWNER_ADDR,
     offchainAdmin: "0xedC10CFA90A135C41538325DD57FDB4c7b88faf7",
+    contracts,
   });
-}
+};
 
-async function deployGanacheDao(deployFunction, network, accounts) {
+const deployGanacheDao = async (
+  deployFunction,
+  network,
+  accounts,
+  contracts,
+  truffleImports
+) => {
   if (!process.env.DAO_NAME) throw Error("Missing env var: DAO_NAME");
   if (!process.env.COUPON_CREATOR_ADDR)
     throw Error("Missing env var: COUPON_CREATOR_ADDR");
@@ -147,5 +188,6 @@ async function deployGanacheDao(deployFunction, network, accounts) {
     daoName: process.env.DAO_NAME,
     owner: accounts[0],
     offchainAdmin: "0xedC10CFA90A135C41538325DD57FDB4c7b88faf7",
+    contracts,
   });
-}
+};

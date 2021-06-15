@@ -25,37 +25,34 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
  */
 
-const { contracts } = require("./ContractUtil");
+const getContractFromTruffle = (c) => {
+  return artifacts.require(c);
+};
 
-const truffleContracts = getContracts();
+const getTruffleContracts = (contracts) => {
+  return contracts
+    .filter((c) => c.enabled)
+    .reduce((previousValue, contract) => {
+      previousValue[contract.name] = getContractFromTruffle(contract.path);
+      return previousValue;
+    }, {});
+};
 
 const deployFunctionFactory = (deployer) => {
   const deployFunction = async (contractInterface, args) => {
-    let result;
+    if (!contractInterface) return null;
     if (args) {
-      result = await deployer.deploy(contractInterface, ...args);
+      await deployer.deploy(contractInterface, ...args);
     } else {
-      result = await deployer.deploy(contractInterface);
+      await deployer.deploy(contractInterface);
     }
-    result = await contractInterface.deployed();
-    return result;
+    return await contractInterface.deployed();
   };
 
   return deployFunction;
 };
 
-function getContractFromTruffle(c) {
-  return artifacts.require(c);
-}
-
-function getContracts() {
-  return Object.keys(contracts).reduce((previousValue, key) => {
-    previousValue[key] = getContractFromTruffle(contracts[key]);
-    return previousValue;
-  }, {});
-}
-
-module.exports = {
-  ...truffleContracts,
-  deployFunctionFactory,
+module.exports = (contracts) => {
+  const truffleContracts = getTruffleContracts(contracts);
+  return { ...truffleContracts, deployFunctionFactory };
 };
