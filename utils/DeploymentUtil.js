@@ -674,10 +674,9 @@ const cloneDao = async ({
   await daoFactory.createDao(name, creator ? creator : owner, { from: owner });
 
   // checking the gas usaged to clone a contract
-  let pastEvents = await daoFactory.getPastEvents();
-  let { _address, _name } = pastEvents[0].returnValues;
+  let _address = await daoFactory.getDaoAddress(name);
   let newDao = await DaoRegistry.at(_address);
-  return { dao: newDao, daoFactory, daoName: _name };
+  return { dao: newDao, daoFactory, daoName: name };
 };
 
 const createBankExtension = async (
