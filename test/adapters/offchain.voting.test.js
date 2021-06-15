@@ -41,6 +41,7 @@ const {
   takeChainSnapshot,
   revertChainSnapshot,
   web3,
+  OffchainVotingHashContract,
 } = require("../../utils/OZTestUtil.js");
 
 const {
@@ -321,7 +322,10 @@ describe("Adapter - Offchain Voting", () => {
       chainId
     );
 
-    const solNodeDef = await offchainVoting.VOTE_RESULT_NODE_TYPE();
+    const ovHashAddr = await offchainVoting.ovHash();
+    const ovHash = await OffchainVotingHashContract.at(ovHashAddr);
+
+    const solNodeDef = await ovHash.VOTE_RESULT_NODE_TYPE();
     const jsNodeMsg = TypedDataUtils.encodeType("Message", nodeDef.types);
 
     expect(solNodeDef).equal(jsNodeMsg);

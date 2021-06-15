@@ -12,6 +12,7 @@ import "../../utils/Signatures.sol";
 import "../interfaces/IVoting.sol";
 import "./Voting.sol";
 import "./KickBadReporterAdapter.sol";
+import "./OffchainVotingHash.sol";
 import "./SnapshotProposalContract.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
 import "@openzeppelin/contracts/utils/cryptography/MerkleProof.sol";
@@ -63,20 +64,11 @@ contract OffchainVotingContract is
     }
 
     uint256 public constant NB_CHOICES = 2;
-
     SnapshotProposalContract private _snapshotContract;
+    OffchainVotingHashContract public ovHash;
     KickBadReporterAdapter private _handleBadReporterAdapter;
 
-    string public constant VOTE_RESULT_NODE_TYPE =
-        "Message(uint64 timestamp,uint88 nbYes,uint88 nbNo,uint32 index,uint32 choice,bytes32 proposalId)";
-
     string public constant ADAPTER_NAME = "OffchainVotingContract";
-    string public constant VOTE_RESULT_ROOT_TYPE = "Message(bytes32 root)";
-    bytes32 public constant VOTE_RESULT_NODE_TYPEHASH =
-        keccak256(abi.encodePacked(VOTE_RESULT_NODE_TYPE));
-    bytes32 public constant VOTE_RESULT_ROOT_TYPEHASH =
-        keccak256(abi.encodePacked(VOTE_RESULT_ROOT_TYPE));
-
     bytes32 constant VotingPeriod = keccak256("offchainvoting.votingPeriod");
     bytes32 constant GracePeriod = keccak256("offchainvoting.gracePeriod");
     bytes32 constant FallbackThreshold =
@@ -105,28 +97,6 @@ contract OffchainVotingContract is
         uint256 fallbackVotesCount;
     }
 
-    struct VoteResultNode {
-        uint32 choice;
-        uint64 index;
-        uint64 timestamp;
-        uint88 nbNo;
-        uint88 nbYes;
-        bytes sig;
-        bytes32 proposalId;
-        bytes32[] proof;
-    }
-
-    event NodeProvided(
-        uint32 choice,
-        uint64 index,
-        uint64 timestamp,
-        uint88 nbNo,
-        uint88 nbYes,
-        bytes sig,
-        bytes32 proposalId,
-        bytes32[] proof
-    );
-
     modifier onlyBadReporterAdapter() {
         require(msg.sender == address(_handleBadReporterAdapter), "only:hbra");
         _;
@@ -139,16 +109,22 @@ contract OffchainVotingContract is
 
     constructor(
         VotingContract _c,
+        OffchainVotingHashContract _ovhc,
         SnapshotProposalContract _spc,
         KickBadReporterAdapter _hbra,
         address _owner
     ) {
         require(address(_c) != address(0x0), "voting contract");
+        require(
+            address(_ovhc) != address(0x0),
+            "offchain voting hash proposal"
+        );
         require(address(_spc) != address(0x0), "snapshot proposal");
         require(address(_hbra) != address(0x0), "handle bad reporter");
         fallbackVoting = _c;
-        _snapshotContract = _spc;
+        ovHash = _ovhc;
         _handleBadReporterAdapter = _hbra;
+        _snapshotContract = _spc;
         Ownable(_owner);
     }
 
@@ -160,21 +136,6 @@ contract OffchainVotingContract is
         require(vote.startingTime > 0, "proposal has not started yet");
 
         vote.forceFailed = true;
-    }
-
-    function hashResultRoot(
-        DaoRegistry dao,
-        address actionId,
-        bytes32 resultRoot
-    ) public view returns (bytes32) {
-        return
-            keccak256(
-                abi.encodePacked(
-                    "\x19\x01",
-                    _snapshotContract.DOMAIN_SEPARATOR(dao, actionId),
-                    keccak256(abi.encode(VOTE_RESULT_ROOT_TYPEHASH, resultRoot))
-                )
-            );
     }
 
     function getAdapterName() external pure override returns (string memory) {
@@ -190,40 +151,6 @@ contract OffchainVotingContract is
             challengeProposals[address(dao)][proposalId].units,
             challengeProposals[address(dao)][proposalId].reporter
         );
-    }
-
-    function hashVotingResultNode(VoteResultNode memory node)
-        public
-        pure
-        returns (bytes32)
-    {
-        return
-            keccak256(
-                abi.encode(
-                    VOTE_RESULT_NODE_TYPEHASH,
-                    node.timestamp,
-                    node.nbYes,
-                    node.nbNo,
-                    node.index,
-                    node.choice,
-                    node.proposalId
-                )
-            );
-    }
-
-    function nodeHash(
-        DaoRegistry dao,
-        address actionId,
-        VoteResultNode memory node
-    ) public view returns (bytes32) {
-        return
-            keccak256(
-                abi.encodePacked(
-                    "\x19\x01",
-                    _snapshotContract.DOMAIN_SEPARATOR(dao, actionId),
-                    hashVotingResultNode(node)
-                )
-            );
     }
 
     function configureDao(
@@ -254,7 +181,7 @@ contract OffchainVotingContract is
         DaoRegistry dao,
         bytes32 proposalId,
         bytes32 resultRoot,
-        VoteResultNode memory result,
+        OffchainVotingHashContract.VoteResultNode memory result,
         bytes memory rootSig
     ) external {
         Voting storage vote = votes[address(dao)][proposalId];
@@ -268,11 +195,13 @@ contract OffchainVotingContract is
         }
 
         (address adapterAddress, ) = dao.proposals(proposalId);
+
         address reporter =
             ECDSA.recover(
-                hashResultRoot(dao, adapterAddress, resultRoot),
+                ovHash.hashResultRoot(dao, adapterAddress, resultRoot),
                 rootSig
             );
+
         address memberAddr = dao.getAddressIfDelegated(reporter);
         require(isActiveMember(dao, memberAddr), "not active member");
 
@@ -283,6 +212,7 @@ contract OffchainVotingContract is
                 vote.snapshot
             );
         require(nbMembers - 1 == result.index, "index:member_count mismatch");
+
         require(
             getBadNodeError(
                 dao,
@@ -355,11 +285,11 @@ contract OffchainVotingContract is
     function provideStep(
         DaoRegistry dao,
         address adapterAddress,
-        VoteResultNode memory node
+        OffchainVotingHashContract.VoteResultNode memory node
     ) external {
         Voting storage vote = votes[address(dao)][node.proposalId];
         require(vote.stepRequested == node.index, "wrong step provided");
-        bytes32 hashCurrent = nodeHash(dao, adapterAddress, node);
+        bytes32 hashCurrent = ovHash.nodeHash(dao, adapterAddress, node);
         require(
             MerkleProof.verify(node.proof, vote.resultRoot, hashCurrent),
             "proof:bad"
@@ -420,7 +350,7 @@ contract OffchainVotingContract is
         SnapshotProposalContract.ProposalMessage memory proposal =
             abi.decode(data, (SnapshotProposalContract.ProposalMessage));
         (bool success, uint256 blockNumber) =
-            _stringToUint(proposal.payload.snapshot);
+            ovHash.stringToUint(proposal.payload.snapshot);
         require(success, "snapshot conversion error");
         BankExtension bank = BankExtension(dao.getExtensionAddress(BANK));
 
@@ -520,13 +450,13 @@ contract OffchainVotingContract is
     function challengeBadFirstNode(
         DaoRegistry dao,
         bytes32 proposalId,
-        VoteResultNode memory node
+        OffchainVotingHashContract.VoteResultNode memory node
     ) external {
         require(node.index == 0, "only first node");
         Voting storage vote = votes[address(dao)][proposalId];
         (address adapterAddress, ) = dao.proposals(proposalId);
         require(vote.resultRoot != bytes32(0), "no result available yet!");
-        bytes32 hashCurrent = nodeHash(dao, adapterAddress, node);
+        bytes32 hashCurrent = ovHash.nodeHash(dao, adapterAddress, node);
         //check that the step is indeed part of the result
         require(
             MerkleProof.verify(node.proof, vote.resultRoot, hashCurrent),
@@ -543,7 +473,7 @@ contract OffchainVotingContract is
     function challengeBadNode(
         DaoRegistry dao,
         bytes32 proposalId,
-        VoteResultNode memory node
+        OffchainVotingHashContract.VoteResultNode memory node
     ) external {
         Voting storage vote = votes[address(dao)][proposalId];
         BankExtension bank = BankExtension(dao.getExtensionAddress(BANK));
@@ -575,11 +505,11 @@ contract OffchainVotingContract is
         uint256 blockNumber,
         uint256 gracePeriodStartingTime,
         uint256 nbMembers,
-        VoteResultNode memory node
+        OffchainVotingHashContract.VoteResultNode memory node
     ) public view returns (BadNodeError) {
         (address adapterAddress, ) = dao.proposals(proposalId);
         require(resultRoot != bytes32(0), "no result available yet!");
-        bytes32 hashCurrent = nodeHash(dao, adapterAddress, node);
+        bytes32 hashCurrent = ovHash.nodeHash(dao, adapterAddress, node);
         //check that the step is indeed part of the result
         require(
             MerkleProof.verify(node.proof, resultRoot, hashCurrent),
@@ -634,16 +564,17 @@ contract OffchainVotingContract is
     function challengeBadStep(
         DaoRegistry dao,
         bytes32 proposalId,
-        VoteResultNode memory nodePrevious,
-        VoteResultNode memory nodeCurrent
+        OffchainVotingHashContract.VoteResultNode memory nodePrevious,
+        OffchainVotingHashContract.VoteResultNode memory nodeCurrent
     ) external {
         Voting storage vote = votes[address(dao)][proposalId];
         bytes32 resultRoot = vote.resultRoot;
 
         (address adapterAddress, ) = dao.proposals(proposalId);
         require(resultRoot != bytes32(0), "no result available yet!");
-        bytes32 hashCurrent = nodeHash(dao, adapterAddress, nodeCurrent);
-        bytes32 hashPrevious = nodeHash(dao, adapterAddress, nodePrevious);
+        bytes32 hashCurrent = ovHash.nodeHash(dao, adapterAddress, nodeCurrent);
+        bytes32 hashPrevious =
+            ovHash.nodeHash(dao, adapterAddress, nodePrevious);
         require(
             MerkleProof.verify(nodeCurrent.proof, resultRoot, hashCurrent),
             "proof check for current invalid for current node"
@@ -690,7 +621,7 @@ contract OffchainVotingContract is
     function _checkStep(
         DaoRegistry dao,
         address actionId,
-        VoteResultNode memory node,
+        OffchainVotingHashContract.VoteResultNode memory node,
         VoteStepParams memory params
     ) internal view returns (bool) {
         Voting storage vote = votes[address(dao)][params.proposalId];
@@ -808,26 +739,5 @@ contract OffchainVotingContract is
             );
 
         return ECDSA.recover(voteHash, sig) == voter;
-    }
-
-    function _stringToUint(string memory s)
-        internal
-        pure
-        returns (bool success, uint256 result)
-    {
-        bytes memory b = bytes(s);
-        result = 0;
-        success = false;
-        for (uint256 i = 0; i < b.length; i++) {
-            if (uint8(b[i]) >= 48 && uint8(b[i]) <= 57) {
-                result = result * 10 + (uint8(b[i]) - 48);
-                success = true;
-            } else {
-                result = 0;
-                success = false;
-                break;
-            }
-        }
-        return (success, result);
     }
 }
