@@ -84,7 +84,7 @@ contract FinancingChainlinkContract is
      * @param amount The desired amount.
      * @param data Additional details about the financing proposal.
      */
-     event Debug(string a);
+
     function submitProposal(
         DaoRegistry dao,
         bytes32 proposalId,
@@ -100,8 +100,6 @@ contract FinancingChainlinkContract is
             isNotReservedAddress(applicant),
             "applicant using reserved address"
         );
-
-        emit Debug("1");
 
         dao.submitProposal(proposalId);
 
