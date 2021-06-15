@@ -17,7 +17,7 @@ TributeDAO is a new modular, low cost DAO framework.  The framework aims to impr
 * __Single token DAO structures__: which make it difficult to divide up economic and governance rights and create teams or sub-groups; and
 * __Lack of NFT Support__: which makes it difficult for DAOs to be deployed for NFT projects.
 
-The TributeDAO framework aims to address these issues, as part of our quest to make DAOs the dominant form of organization.  As the growing number of participants in DAOs know, there is no “one size fits all” for managing any organization, let alone a DAO.  DAOs need low cost and easy to develop components that can be assembled like lego blocks to fit the needs of the organization and its membership.
+The TributeDAO framework aims to address these issues, as part of our quest to make DAOs the dominant form of organization.  As the growing number of participants in DAOs know, there is no “one size fits all” for managing any organization.  DAOs need low cost and easy to develop components that can be assembled like lego blocks to fit the needs of the organization and its membership.
 
 ## Proposed Evolution of MolochDAO Framework
 
