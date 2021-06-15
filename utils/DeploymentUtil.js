@@ -875,5 +875,4 @@ module.exports = {
   entryDao,
   entryExecutor,
   getNetworkDetails,
- 
 };

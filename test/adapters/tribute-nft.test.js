@@ -30,7 +30,6 @@ const {
   UNITS,
   GUILD,
   ETH_TOKEN,
-  
 } = require("../../utils/ContractUtil.js");
 
 const {
@@ -43,7 +42,7 @@ const {
   expectRevert,
   expect,
 } = require("../../utils/OZTestUtil.js");
-const {sha3,} = require("../../utils/DeploymentUtil.js");
+const { sha3 } = require("../../utils/DeploymentUtil.js");
 const { onboardingNewMember, isMember } = require("../../utils/TestUtils.js");
 
 describe("Adapter - TributeNFT", () => {

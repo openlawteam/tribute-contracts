@@ -84,7 +84,6 @@ contract FinancingChainlinkContract is
      * @param amount The desired amount.
      * @param data Additional details about the financing proposal.
      */
-
     function submitProposal(
         DaoRegistry dao,
         bytes32 proposalId,

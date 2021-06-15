@@ -101,7 +101,7 @@ const contracts = {
   CouponOnboardingContract: "./adapters/CouponOnboardingContract",
   TributeContract: "./adapters/TributeContract",
   TributeNFTContract: "./adapters/TributeNFTContract",
-  FinancingChainlinkContract: "./adapters/FinancingChainlinkContract", 
+  FinancingChainlinkContract: "./adapters/FinancingChainlinkContract",
 
   // Utils
   DaoArtifacts: "./utils/DaoArtifacts",
