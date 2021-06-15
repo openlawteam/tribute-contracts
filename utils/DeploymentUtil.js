@@ -48,6 +48,7 @@ const deployDao = async (options) => {
     PixelNFT,
     OLToken,
     ProxToken,
+    contracts,
   } = options;
 
   const erc20TokenName = options.erc20TokenName
@@ -61,7 +62,6 @@ const deployDao = async (options) => {
     : 0;
 
   const identityDao = await deployFunction(DaoRegistry);
-
   const identityBank = await deployFunction(BankExtension);
   const bankFactory = await deployFunction(BankFactory, [identityBank.address]);
 
