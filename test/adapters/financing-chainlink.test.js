@@ -422,7 +422,7 @@ describe("Adapter - Financing", () => {
   });
 
   it("us dollars should convert ETH in wei based on getLatestPrice conversion rate", async () => {
-    const { dao, factories, extensions } = await deployDefaultDao({
+    const { dao, factories, extensions, adapters } = await deployDefaultDao({
       owner: myAccount,
       finalize: false,
     });
@@ -467,17 +467,15 @@ describe("Adapter - Financing", () => {
     console.log("financing adderss...", financingChainlink.address);
     //TODO
     // submit new proposal using financingChainlink.submitProposal
-    const bank = this.extensions.bank;
-    const voting = this.adapters.voting;
-    //const financing = this.adapters.financing;
-    const onboarding = this.adapters.onboarding;
-    const bankAdapter = this.adapters.bankAdapter;
+    const bank = extensions.bank;
+    const voting = adapters.voting;
+    const onboarding = adapters.onboarding;
 
     let proposalId = getProposalCounter();
 
     //Add funds to the Guild Bank after sposoring a member to join the Guild
     await onboarding.submitProposal(
-      this.dao.address,
+      dao.address,
       proposalId,
       newMember,
       UNITS,
@@ -489,14 +487,14 @@ describe("Adapter - Financing", () => {
       }
     );
 
-    await voting.submitVote(this.dao.address, proposalId, 1, {
+    await voting.submitVote(dao.address, proposalId, 1, {
       from: myAccount,
       gasPrice: toBN("0"),
     });
 
     await advanceTime(10000);
 
-    await onboarding.processProposal(this.dao.address, proposalId, {
+    await onboarding.processProposal(dao.address, proposalId, {
       from: myAccount,
       value: unitPrice.mul(toBN(10)).add(remaining),
       gasPrice: toBN("0"),
@@ -511,8 +509,16 @@ describe("Adapter - Financing", () => {
     // Create Financing Request for $1000
     let requestedAmount = 1000;
     proposalId = getProposalCounter();
+    let r = await dao.hasAdapterAccess(adapterAddress, 2);
+    console.log(
+      `Has ACL SUBMIT_PROPOSAL: ${await dao.hasAdapterAccess(
+        adapterAddress,
+        1
+      )}`
+    );
+    
     await financingChainlink.submitProposal(
-      this.dao.address,
+      dao.address,
       proposalId,
       applicant,
       ETH_TOKEN,
