@@ -40,11 +40,14 @@ const deployDao = async (options) => {
     NFTCollectionFactory,
     ERC20Extension,
     ERC20TokenExtensionFactory,
+    ExecutorExtension,
+    ExecutorExtensionFactory,
     TestToken1,
     TestToken2,
     Multicall,
     PixelNFT,
     OLToken,
+    ProxToken,
   } = options;
 
   const erc20TokenName = options.erc20TokenName
@@ -73,60 +76,55 @@ const deployDao = async (options) => {
     [identityERC20Ext.address]
   );
 
+  const identityExecutorExt = await deployFunction(ExecutorExtension);
+  const executorExtensionFactory = await deployFunction(
+    ExecutorExtensionFactory,
+    [identityExecutorExt.address]
+  );
+
   const { dao, daoFactory } = await cloneDao({
     ...options,
     identityDao,
     name: options.daoName || "test-dao",
   });
 
-  // Start the BankExtension deployment and configuration
-  await bankFactory.createBank(options.maxExternalTokens);
-  let pastEvent;
-  while (pastEvent === undefined) {
-    let pastEvents = await bankFactory.getPastEvents();
-    pastEvent = pastEvents[0];
-  }
-  const { bankAddress } = pastEvent.returnValues;
-  const bankExtension = await BankExtension.at(bankAddress);
-  await dao.addExtension(sha3("bank"), bankExtension.address, owner, {
-    from: owner,
-  });
-
-  // Start the NFTExtension deployment and configuration
-  await nftFactory.createNFTCollection();
-  pastEvent = undefined;
-  while (pastEvent === undefined) {
-    let pastEvents = await nftFactory.getPastEvents();
-    pastEvent = pastEvents[0];
-  }
-  const { nftCollAddress } = pastEvent.returnValues;
-  const nftExtension = await NFTExtension.at(nftCollAddress);
-  await dao.addExtension(sha3("nft"), nftCollAddress, owner, {
-    from: owner,
-  });
-
-  // Start the Erc20TokenExtension deployment & configuration
-  await erc20TokenExtFactory.create(
-    erc20TokenName,
-    UNITS,
-    erc20TokenSymbol,
-    erc20TokenDecimals
+  const bankExtension = await createBankExtension(
+    dao,
+    owner,
+    bankFactory,
+    BankExtension,
+    options.maxExternalTokens
   );
-  pastEvent = undefined;
-  while (pastEvent === undefined) {
-    let pastEvents = await erc20TokenExtFactory.getPastEvents();
-    pastEvent = pastEvents[0];
-  }
-  const { erc20ExtTokenAddress } = pastEvent.returnValues;
-  const erc20TokenExtension = await ERC20Extension.at(erc20ExtTokenAddress);
-  await dao.addExtension(sha3("erc20-ext"), erc20ExtTokenAddress, owner, {
-    from: owner,
-  });
+
+  const nftExtension = await createNFTExtension(
+    dao,
+    owner,
+    nftFactory,
+    NFTExtension
+  );
+
+  const erc20TokenExtension = await createERC20Extension(
+    dao,
+    owner,
+    erc20TokenExtFactory,
+    erc20TokenName,
+    erc20TokenSymbol,
+    erc20TokenDecimals,
+    ERC20Extension
+  );
+
+  const executorExtension = await createExecutorExtension(
+    dao,
+    owner,
+    executorExtensionFactory,
+    ExecutorExtension
+  );
 
   const extensions = {
     bank: bankExtension,
     nft: nftExtension,
     erc20Ext: erc20TokenExtension,
+    executorExt: executorExtension,
   };
 
   const { adapters } = await addDefaultAdapters({
@@ -153,7 +151,7 @@ const deployDao = async (options) => {
       dao,
       daoFactory,
       votingAddress,
-      bankAddress,
+      bankAddress: extensions.bank.address,
     });
     votingHelpers.offchainVoting = offchainVoting;
     votingHelpers.handleBadReporterAdapter = handleBadReporterAdapter;
@@ -179,6 +177,7 @@ const deployDao = async (options) => {
     testToken2: null,
     multicall: null,
     pixelNFT: null,
+    proxToken: null,
   };
 
   testContracts.multicall = await deployFunction(Multicall);
@@ -190,6 +189,7 @@ const deployDao = async (options) => {
     testContracts.oltToken = await deployFunction(OLToken, [
       toBN("1000000000000000000000000"),
     ]);
+    testContracts.proxToken = await deployFunction(ProxToken);
   }
 
   if (finalize) {
@@ -202,7 +202,13 @@ const deployDao = async (options) => {
     extensions: extensions,
     testContracts: testContracts,
     votingHelpers: votingHelpers,
-    factories: { daoFactory, bankFactory, nftFactory, erc20TokenExtFactory },
+    factories: {
+      daoFactory,
+      bankFactory,
+      nftFactory,
+      erc20TokenExtFactory,
+      executorExtensionFactory,
+    },
   };
 };
 
@@ -388,7 +394,7 @@ const addDefaultAdapters = async ({ dao, options, daoFactory, nftAddr }) => {
     tributeNFT,
   } = await prepareAdapters(options);
 
-  let { BankExtension, NFTExtension, ERC20Extension } = options;
+  const { BankExtension, NFTExtension, ERC20Extension } = options;
 
   const bankAddress = await dao.getExtensionAddress(sha3("bank"));
   const bankExtension = await BankExtension.at(bankAddress);
@@ -686,6 +692,98 @@ const cloneDao = async ({
   return { dao: newDao, daoFactory, daoName: name };
 };
 
+const createBankExtension = async (
+  dao,
+  owner,
+  bankFactory,
+  BankExtension,
+  maxExternalTokens
+) => {
+  await bankFactory.createBank(maxExternalTokens);
+  let pastEvent;
+  while (pastEvent === undefined) {
+    let pastEvents = await bankFactory.getPastEvents();
+    pastEvent = pastEvents[0];
+  }
+  const { bankAddress } = pastEvent.returnValues;
+  const bankExtension = await BankExtension.at(bankAddress);
+
+  // Adds the new extension to the DAO
+  await dao.addExtension(sha3("bank"), bankExtension.address, owner, {
+    from: owner,
+  });
+  return bankExtension;
+};
+
+const createNFTExtension = async (dao, owner, nftFactory, NFTExtension) => {
+  await nftFactory.createNFTCollection();
+  let pastEvent;
+  while (pastEvent === undefined) {
+    let pastEvents = await nftFactory.getPastEvents();
+    pastEvent = pastEvents[0];
+  }
+  const { nftCollAddress } = pastEvent.returnValues;
+  const nftExtension = await NFTExtension.at(nftCollAddress);
+
+  // Adds the new extension to the DAO
+  await dao.addExtension(sha3("nft"), nftCollAddress, owner, {
+    from: owner,
+  });
+  return nftExtension;
+};
+
+const createERC20Extension = async (
+  dao,
+  owner,
+  erc20TokenExtFactory,
+  erc20TokenName,
+  erc20TokenSymbol,
+  erc20TokenDecimals,
+  ERC20Extension
+) => {
+  await erc20TokenExtFactory.create(
+    erc20TokenName,
+    UNITS,
+    erc20TokenSymbol,
+    erc20TokenDecimals
+  );
+  let pastEvent;
+  while (pastEvent === undefined) {
+    let pastEvents = await erc20TokenExtFactory.getPastEvents();
+    pastEvent = pastEvents[0];
+  }
+  const { erc20ExtTokenAddress } = pastEvent.returnValues;
+  const erc20TokenExtension = await ERC20Extension.at(erc20ExtTokenAddress);
+
+  // Adds the new extension to the DAO
+  await dao.addExtension(sha3("erc20-ext"), erc20ExtTokenAddress, owner, {
+    from: owner,
+  });
+  return erc20TokenExtension;
+};
+
+const createExecutorExtension = async (
+  dao,
+  owner,
+  executorExtensionFactory,
+  ExecutorExtension
+) => {
+  await executorExtensionFactory.create();
+  let pastEvent;
+  while (pastEvent === undefined) {
+    let pastEvents = await executorExtensionFactory.getPastEvents();
+    pastEvent = pastEvents[0];
+  }
+  const { executorAddress } = pastEvent.returnValues;
+  const executorExtension = await ExecutorExtension.at(executorAddress);
+
+  // Adds the new extension to the DAO
+  await dao.addExtension(sha3("executor-ext"), executorAddress, owner, {
+    from: owner,
+  });
+  return executorExtension;
+};
+
 const entryNft = (contract, flags) => {
   const values = [
     flags.WITHDRAW_NFT,
@@ -712,6 +810,18 @@ const entryBank = (contract, flags) => {
     flags.REGISTER_NEW_TOKEN,
     flags.REGISTER_NEW_INTERNAL_TOKEN,
   ];
+
+  const acl = entry(values);
+
+  return {
+    id: sha3("n/a"),
+    addr: contract.address,
+    flags: acl,
+  };
+};
+
+const entryExecutor = (contract, flags) => {
+  const values = [flags.EXECUTE];
 
   const acl = entry(values);
 
@@ -788,5 +898,6 @@ module.exports = {
   entry,
   entryBank,
   entryDao,
+  entryExecutor,
   getNetworkDetails,
 };
