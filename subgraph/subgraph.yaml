@@ -27,6 +27,30 @@
             handler: handleDaoCreated
         file: ./mappings/dao-factory-mapping.ts
 
+
+    # ====================================== Adapter: CouponOnboarding ====================================
+    - kind: ethereum/contract
+      name: CouponOnboarding
+      network: mainnet
+      source:
+        address: "0xC3718BAAA733dA19645c358930f06e3f8fD4e2b3"
+        abi: CouponOnboardingContract
+        startBlock: 12605947
+      mapping:
+        kind: ethereum/events
+        apiVersion: 0.0.4
+        language: wasm/assemblyscript
+        entities:
+          - Coupon
+        abis:
+          - name: CouponOnboardingContract
+            file: ../build/contracts/CouponOnboardingContract.json
+        eventHandlers:
+          - event: CouponRedeemed(address,uint256,address,uint256)
+            handler: handleCouponRedeemed
+        file: ./mappings/adapters/coupon-onboarding-mapping.ts
+  
+
   templates:
     # ====================================== DaoRegistry ====================================
     - kind: ethereum/contract
