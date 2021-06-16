@@ -504,7 +504,7 @@ describe("Adapter - Financing", () => {
     checkBalance(bank, GUILD, ETH_TOKEN, expectedGuildBalance);
 
     // 1.2 ETH / 1200000000000000000 wei
-    // console.log("guild..", expectedGuildBalance.toString());
+     console.log("guild balance.", expectedGuildBalance.toString());
 
     // Create Financing Request for $1000
     let requestedAmount = 1000;
@@ -526,8 +526,26 @@ describe("Adapter - Financing", () => {
       fromUtf8(""),
       { from: myAccount, gasPrice: toBN("0") }
     );
-
+    console.log("guild balance after submit proposal:", expectedGuildBalance.toString());
     //Check Guild Bank Balance
+    checkBalance(bank, GUILD, ETH_TOKEN, expectedGuildBalance);
+    //Member votes on the Financing proposal
+    await voting.submitVote(dao.address, proposalId, 1, {
+      from: myAccount,
+      gasPrice: toBN("0"),
+    });
+
+     //Check applicant balance before Financing proposal is processed
+     checkBalance(bank, applicant, ETH_TOKEN, "0");
+
+    //Process Financing proposal after voting
+    await advanceTime(10000);
+    await financingChainlink.processProposal(dao.address, proposalId, {
+      from: myAccount,
+      gasPrice: toBN("0"),
+    });
+
+
     // checkBalance(bank, GUILD, ETH_TOKEN, expectedGuildBalance);
     // process it financingChainlink.processProposal
     // after the proposal is processed check:
