@@ -648,7 +648,7 @@ const configureDao = async ({
   await voting.configureDao(dao.address, votingPeriod, gracePeriod, {
     from: owner,
   });
-  
+
   /*
   await tribute.configureDao(dao.address, UNITS, {
     from: owner,
