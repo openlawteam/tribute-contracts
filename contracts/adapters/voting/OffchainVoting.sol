@@ -16,6 +16,7 @@ import "./OffchainVotingHash.sol";
 import "./SnapshotProposalContract.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
 import "@openzeppelin/contracts/utils/cryptography/MerkleProof.sol";
+import "@openzeppelin/contracts/utils/cryptography/SignatureChecker.sol";
 
 /**
 MIT License
@@ -75,12 +76,6 @@ contract OffchainVotingContract is
         keccak256("offchainvoting.fallbackThreshold");
 
     mapping(address => mapping(bytes32 => mapping(uint256 => uint256))) flags;
-
-    struct VoteStepParams {
-        uint256 previousYes;
-        uint256 previousNo;
-        bytes32 proposalId;
-    }
 
     struct Voting {
         uint256 snapshot;
@@ -181,6 +176,7 @@ contract OffchainVotingContract is
         DaoRegistry dao,
         bytes32 proposalId,
         bytes32 resultRoot,
+        address reporter,
         OffchainVotingHashContract.VoteResultNode memory result,
         bytes memory rootSig
     ) external {
@@ -196,11 +192,14 @@ contract OffchainVotingContract is
 
         (address adapterAddress, ) = dao.proposals(proposalId);
 
-        address reporter =
-            ECDSA.recover(
+        require(
+            SignatureChecker.isValidSignatureNow(
+                reporter,
                 ovHash.hashResultRoot(dao, adapterAddress, resultRoot),
                 rootSig
-            );
+            ),
+            "invalid sig"
+        );
 
         address memberAddr = dao.getAddressIfDelegated(reporter);
         require(isActiveMember(dao, memberAddr), "not active member");
@@ -335,11 +334,16 @@ contract OffchainVotingContract is
     ) external view override returns (address) {
         SnapshotProposalContract.ProposalMessage memory proposal =
             abi.decode(data, (SnapshotProposalContract.ProposalMessage));
-        return
-            ECDSA.recover(
+        require(
+            SignatureChecker.isValidSignatureNow(
+                proposal.submitter,
                 _snapshotContract.hashMessage(dao, actionId, proposal),
                 proposal.sig
-            );
+            ),
+            "invalid sig"
+        );
+
+        return proposal.submitter;
     }
 
     function startNewVotingForProposal(
@@ -354,12 +358,20 @@ contract OffchainVotingContract is
         require(success, "snapshot conversion error");
         BankExtension bank = BankExtension(dao.getExtensionAddress(BANK));
 
+        address memberAddr = dao.getAddressIfDelegated(proposal.submitter);
+        require(bank.balanceOf(memberAddr, UNITS) > 0, "noActiveMember");
+
         bytes32 proposalHash =
             _snapshotContract.hashMessage(dao, msg.sender, proposal);
-        address addr = ECDSA.recover(proposalHash, proposal.sig);
+        require(
+            SignatureChecker.isValidSignatureNow(
+                proposal.submitter,
+                proposalHash,
+                proposal.sig
+            ),
+            "invalid sig"
+        );
 
-        address memberAddr = dao.getAddressIfDelegated(addr);
-        require(bank.balanceOf(memberAddr, UNITS) > 0, "noActiveMember");
         require(
             blockNumber <= block.number,
             "snapshot block number should not be in the future"
@@ -465,7 +477,15 @@ contract OffchainVotingContract is
 
         (address actionId, ) = dao.proposals(proposalId);
 
-        if (_checkStep(dao, actionId, node, VoteStepParams(0, 0, proposalId))) {
+        if (
+            ovHash.checkStep(
+                dao,
+                actionId,
+                node,
+                vote.snapshot,
+                OffchainVotingHashContract.VoteStepParams(0, 0, proposalId)
+            )
+        ) {
             _challengeResult(dao, proposalId);
         }
     }
@@ -545,7 +565,7 @@ contract OffchainVotingContract is
         //bad signature
         if (
             node.sig.length > 0 && // a vote has happened
-            !_hasVoted(
+            !ovHash.hasVoted(
                 dao,
                 actionId,
                 voter,
@@ -590,9 +610,15 @@ contract OffchainVotingContract is
         );
 
         (address actionId, ) = dao.proposals(proposalId);
-        VoteStepParams memory params =
-            VoteStepParams(nodePrevious.nbYes, nodePrevious.nbNo, proposalId);
-        if (_checkStep(dao, actionId, nodeCurrent, params)) {
+        OffchainVotingHashContract.VoteStepParams memory params =
+            OffchainVotingHashContract.VoteStepParams(
+                nodePrevious.nbYes,
+                nodePrevious.nbNo,
+                proposalId
+            );
+        if (
+            ovHash.checkStep(dao, actionId, nodeCurrent, vote.snapshot, params)
+        ) {
             _challengeResult(dao, proposalId);
         }
     }
@@ -616,64 +642,6 @@ contract OffchainVotingContract is
         ) {
             fallbackVoting.startNewVotingForProposal(dao, proposalId, "");
         }
-    }
-
-    function _checkStep(
-        DaoRegistry dao,
-        address actionId,
-        OffchainVotingHashContract.VoteResultNode memory node,
-        VoteStepParams memory params
-    ) internal view returns (bool) {
-        Voting storage vote = votes[address(dao)][params.proposalId];
-        address account = dao.getMemberAddress(node.index);
-        address voter = dao.getPriorDelegateKey(account, vote.snapshot);
-        BankExtension bank = BankExtension(dao.getExtensionAddress(BANK));
-        uint256 weight = bank.getPriorAmount(account, UNITS, vote.snapshot);
-
-        if (node.choice == 0) {
-            if (params.previousYes != node.nbYes) {
-                return true;
-            } else if (params.previousNo != node.nbNo) {
-                return true;
-            }
-        }
-
-        if (
-            _hasVoted(
-                dao,
-                actionId,
-                voter,
-                node.timestamp,
-                node.proposalId,
-                1,
-                node.sig
-            )
-        ) {
-            if (params.previousYes + weight != node.nbYes) {
-                return true;
-            } else if (params.previousNo != node.nbNo) {
-                return true;
-            }
-        }
-        if (
-            _hasVoted(
-                dao,
-                actionId,
-                voter,
-                node.timestamp,
-                node.proposalId,
-                2,
-                node.sig
-            )
-        ) {
-            if (params.previousYes != node.nbYes) {
-                return true;
-            } else if (params.previousNo + weight != node.nbNo) {
-                return true;
-            }
-        }
-
-        return false;
     }
 
     function sponsorChallengeProposal(
@@ -717,27 +685,5 @@ contract OffchainVotingContract is
         // Burns / subtracts from member's balance the number of loot to burn.
         // bank.subtractFromBalance(memberToKick, LOOT, kick.lootToBurn);
         bank.addToBalance(challengedReporter, LOOT, units);
-    }
-
-    function _hasVoted(
-        DaoRegistry dao,
-        address actionId,
-        address voter,
-        uint64 timestamp,
-        bytes32 proposalId,
-        uint32 choiceIdx,
-        bytes memory sig
-    ) internal view returns (bool) {
-        bytes32 voteHash =
-            _snapshotContract.hashVote(
-                dao,
-                actionId,
-                SnapshotProposalContract.VoteMessage(
-                    timestamp,
-                    SnapshotProposalContract.VotePayload(choiceIdx, proposalId)
-                )
-            );
-
-        return ECDSA.recover(voteHash, sig) == voter;
     }
 }

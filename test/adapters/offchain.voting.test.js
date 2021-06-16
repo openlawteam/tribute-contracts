@@ -96,6 +96,7 @@ const onboardMember = async (dao, voting, onboarding, bank, index) => {
     timestamp: Math.floor(new Date().getTime() / 1000),
     space,
     payload: proposalPayload,
+    submitter: members[0].address,
   };
 
   //signer for myAccount (its private key)
@@ -168,6 +169,7 @@ const onboardMember = async (dao, voting, onboarding, bank, index) => {
     dao.address,
     proposalId,
     voteResultTree.getHexRoot(),
+    members[0].address,
     lastResult,
     rootSig
   );
@@ -226,6 +228,7 @@ describe("Adapter - Offchain Voting", () => {
       timestamp: Math.floor(new Date().getTime() / 1000),
       space: "tribute",
       payload: proposalPayload,
+      submitter: members[0].address,
       sig: "0x00",
     };
 

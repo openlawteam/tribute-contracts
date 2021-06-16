@@ -15,6 +15,7 @@ import "./KickBadReporterAdapter.sol";
 import "./SnapshotProposalContract.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
 import "@openzeppelin/contracts/utils/cryptography/MerkleProof.sol";
+import "@openzeppelin/contracts/utils/cryptography/SignatureChecker.sol";
 
 /**
 MIT License
@@ -40,7 +41,7 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
  */
 
-contract OffchainVotingHashContract {
+contract OffchainVotingHashContract is DaoConstants {
     string public constant VOTE_RESULT_NODE_TYPE =
         "Message(uint64 timestamp,uint88 nbYes,uint88 nbNo,uint32 index,uint32 choice,bytes32 proposalId)";
     string public constant VOTE_RESULT_ROOT_TYPE = "Message(bytes32 root)";
@@ -148,7 +149,7 @@ contract OffchainVotingHashContract {
                 )
             );
 
-        return ECDSA.recover(voteHash, sig) == voter;
+        return SignatureChecker.isValidSignatureNow(voter, voteHash, sig);
     }
 
     function stringToUint(string memory s)
@@ -170,5 +171,63 @@ contract OffchainVotingHashContract {
             }
         }
         return (success, result);
+    }
+
+    function checkStep(
+        DaoRegistry dao,
+        address actionId,
+        OffchainVotingHashContract.VoteResultNode memory node,
+        uint256 snapshot,
+        VoteStepParams memory params
+    ) public view returns (bool) {
+        address account = dao.getMemberAddress(node.index);
+        address voter = dao.getPriorDelegateKey(account, snapshot);
+        BankExtension bank = BankExtension(dao.getExtensionAddress(BANK));
+        uint256 weight = bank.getPriorAmount(account, UNITS, snapshot);
+
+        if (node.choice == 0) {
+            if (params.previousYes != node.nbYes) {
+                return true;
+            } else if (params.previousNo != node.nbNo) {
+                return true;
+            }
+        }
+
+        if (
+            hasVoted(
+                dao,
+                actionId,
+                voter,
+                node.timestamp,
+                node.proposalId,
+                1,
+                node.sig
+            )
+        ) {
+            if (params.previousYes + weight != node.nbYes) {
+                return true;
+            } else if (params.previousNo != node.nbNo) {
+                return true;
+            }
+        }
+        if (
+            hasVoted(
+                dao,
+                actionId,
+                voter,
+                node.timestamp,
+                node.proposalId,
+                2,
+                node.sig
+            )
+        ) {
+            if (params.previousYes != node.nbYes) {
+                return true;
+            } else if (params.previousNo + weight != node.nbNo) {
+                return true;
+            }
+        }
+
+        return false;
     }
 }
