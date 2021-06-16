@@ -57,7 +57,6 @@ const applicant = accounts[2];
 const newMember = accounts[3];
 const expectedGuildBalance = toBN("1200000000000000000");
 const proposalCounter = proposalIdGenerator().generator;
-//const getLatestPrice = 200000000000; //substitute for Chainlink price 2000.00 usd = 1 ETH
 
 function getProposalCounter() {
   return proposalCounter().next().value;
@@ -425,7 +424,7 @@ describe("Adapter - Financing", () => {
       owner: myAccount,
       finalize: false,
     });
-
+    //import FakeChainlinkPriceFeed
     const priceFeed = await FakeChainlinkPriceFeed.new();
     const priceFeedAddress = priceFeed.address;
 
@@ -433,7 +432,7 @@ describe("Adapter - Financing", () => {
       priceFeedAddress,
       { from: myAccount }
     );
-
+    //addAdapter financingChainlink
     await factories.daoFactory.addAdapters(
       dao.address,
       [
@@ -443,7 +442,7 @@ describe("Adapter - Financing", () => {
       ],
       { from: myAccount }
     );
-
+    //configure Bank Extension
     await factories.daoFactory.configureExtension(
       dao.address,
       extensions.bank.address,
@@ -457,7 +456,7 @@ describe("Adapter - Financing", () => {
       ],
       { from: myAccount }
     );
-
+    //finalize Dao
     await dao.finalizeDao({ from: myAccount });
 
     const adapterAddress = await dao.getAdapterAddress(
@@ -465,13 +464,13 @@ describe("Adapter - Financing", () => {
     );
     console.log("adapterAddess...", adapterAddress);
     console.log("financing adderss...", financingChainlink.address);
-   
+
     // submit new proposal using financingChainlink.submitProposal
     const bank = extensions.bank;
     const voting = adapters.voting;
     const onboarding = adapters.onboarding;
-    //is bankAdapter needed?
-    const bankAdapter = this.adapters.bankAdapter;
+    //is bankAdapter needed to withdraw?
+    const bankAdapter = adapters.bankAdapter;
 
     let proposalId = getProposalCounter();
 
@@ -502,11 +501,8 @@ describe("Adapter - Financing", () => {
       gasPrice: toBN("0"),
     });
 
-    //Check Guild Bank Balance
+    //Check Guild Bank Balance after funding = 1.2 ETH / 1200000000000000000 wei
     checkBalance(bank, GUILD, ETH_TOKEN, expectedGuildBalance);
-
-    // 1.2 ETH / 1200000000000000000 wei
-     console.log("guild balance.", expectedGuildBalance.toString());
 
     // Create Financing Request for $1000
     let requestedAmount = 1000;
@@ -518,7 +514,7 @@ describe("Adapter - Financing", () => {
         1
       )}`
     );
-    
+    //Financing proposal from Applicant in reqeustedAmount of $1000 worth of ETH
     await financingChainlink.submitProposal(
       dao.address,
       proposalId,
@@ -528,7 +524,10 @@ describe("Adapter - Financing", () => {
       fromUtf8(""),
       { from: myAccount, gasPrice: toBN("0") }
     );
-    console.log("guild balance after submit proposal:", expectedGuildBalance.toString());
+    console.log(
+      "guild balance after submit proposal:",
+      expectedGuildBalance.toString()
+    );
     //Check Guild Bank Balance
     checkBalance(bank, GUILD, ETH_TOKEN, expectedGuildBalance);
     //Member votes on the Financing proposal
@@ -537,8 +536,8 @@ describe("Adapter - Financing", () => {
       gasPrice: toBN("0"),
     });
 
-     //Check applicant balance before Financing proposal is processed
-     checkBalance(bank, applicant, ETH_TOKEN, "0");
+    //Check applicant balance before Financing proposal is processed
+    checkBalance(bank, applicant, ETH_TOKEN, "0");
 
     //Process Financing proposal after voting
     await advanceTime(10000);
@@ -547,10 +546,10 @@ describe("Adapter - Financing", () => {
       gasPrice: toBN("0"),
     });
 
-    //Check Guild Bank balance to make sure the transfer has happened 
+    //Check Guild Bank balance to make sure the transfer has happened
     //-note: $1000 USD = requestedAmount @$2000/ETH, so ethRequestedAmount = .5 ETH
     let ethRequestedAmount = toBN("500000000000000000");
-   
+
     checkBalance(
       bank,
       GUILD,
@@ -558,29 +557,24 @@ describe("Adapter - Financing", () => {
       expectedGuildBalance.sub(ethRequestedAmount)
     );
 
-     //Check the applicant token balance to make sure the funds are available in the bank for the applicant account
-     checkBalance(bank, applicant, ETH_TOKEN, ethRequestedAmount);
-    // checkBalance(bank, GUILD, ETH_TOKEN, expectedGuildBalance);
-    // process it financingChainlink.processProposal
-    // after the proposal is processed check:
-    // 1. check if bank balance for applicant and token
-    // 2. assert balance based on the price
-    const ethBalance = await web3.eth.getBalance(applicant);
-    
-    //revert bank::accessDenied --Same for either bank or bankAdapter?
+    //Check the applicant token balance to make sure the funds are available in the bank for the applicant account
+    checkBalance(bank, applicant, ETH_TOKEN, ethRequestedAmount);
+
+    // assert balance based on the price
+    const ethApplicantBalance = await web3.eth.getBalance(applicant);
+    //applicant withdraws 0.5 ETH from bank
     await bankAdapter.withdraw(dao.address, applicant, ETH_TOKEN, {
       from: myAccount,
       gasPrice: toBN("0"),
     });
-    
-    //applicant should not have funds left after withdraw
-    // checkBalance(bank, applicant, ETH_TOKEN, 0);
-    
-    // const ethBalance2 = await web3.eth.getBalance(applicant);
-   
-    // expect(toBN(ethBalance).add(ethRequestedAmount).toString()).equal(
-    //   ethBalance2.toString()
-    // );
 
+    // applicant should not have funds left after withdraw
+    checkBalance(bank, applicant, ETH_TOKEN, 0);
+
+    const ethApplicantBalance2 = await web3.eth.getBalance(applicant);
+
+    expect(toBN(ethApplicantBalance).add(ethRequestedAmount).toString()).equal(
+      ethApplicantBalance2.toString()
+    );
   });
 });
