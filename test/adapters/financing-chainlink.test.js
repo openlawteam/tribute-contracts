@@ -50,8 +50,7 @@ const {
 } = require("../../utils/OZTestUtil.js");
 
 const { checkBalance } = require("../../utils/TestUtils.js");
-//use addAdapters
-//const { addAdapters } = require("../../utils/DeploymentUtil.js");
+
 const remaining = unitPrice.sub(toBN("50000000000000"));
 const myAccount = accounts[1];
 const applicant = accounts[2];
@@ -429,7 +428,6 @@ describe("Adapter - Financing", () => {
 
     const priceFeed = await FakeChainlinkPriceFeed.new();
     const priceFeedAddress = priceFeed.address;
-    console.log("pricefeed address..", priceFeedAddress);
 
     const financingChainlink = await FinancingChainlinkContract.new(
       priceFeedAddress,
@@ -453,6 +451,8 @@ describe("Adapter - Financing", () => {
         entryBank(financingChainlink, {
           ADD_TO_BALANCE: true,
           SUB_FROM_BALANCE: true,
+          INTERNAL_TRANSFER: true, //need this?
+          WITHDRAW: true, //need this?
         }),
       ],
       { from: myAccount }
@@ -465,11 +465,13 @@ describe("Adapter - Financing", () => {
     );
     console.log("adapterAddess...", adapterAddress);
     console.log("financing adderss...", financingChainlink.address);
-    //TODO
+   
     // submit new proposal using financingChainlink.submitProposal
     const bank = extensions.bank;
     const voting = adapters.voting;
     const onboarding = adapters.onboarding;
+    //is bankAdapter needed?
+    const bankAdapter = this.adapters.bankAdapter;
 
     let proposalId = getProposalCounter();
 
@@ -546,8 +548,9 @@ describe("Adapter - Financing", () => {
     });
 
     //Check Guild Bank balance to make sure the transfer has happened 
-    //-note: have to use ETH, b/c requestedAmount in dollar
+    //-note: $1000 USD = requestedAmount @$2000/ETH, so ethRequestedAmount = .5 ETH
     let ethRequestedAmount = toBN("500000000000000000");
+   
     checkBalance(
       bank,
       GUILD,
@@ -562,8 +565,22 @@ describe("Adapter - Financing", () => {
     // after the proposal is processed check:
     // 1. check if bank balance for applicant and token
     // 2. assert balance based on the price
+    const ethBalance = await web3.eth.getBalance(applicant);
+    
+    //revert bank::accessDenied --Same for either bank or bankAdapter?
+    await bankAdapter.withdraw(dao.address, applicant, ETH_TOKEN, {
+      from: myAccount,
+      gasPrice: toBN("0"),
+    });
+    
+    //applicant should not have funds left after withdraw
+    // checkBalance(bank, applicant, ETH_TOKEN, 0);
+    
+    // const ethBalance2 = await web3.eth.getBalance(applicant);
+   
+    // expect(toBN(ethBalance).add(ethRequestedAmount).toString()).equal(
+    //   ethBalance2.toString()
+    // );
 
-    //1000 (usd) x const getLatestPrice = (200000000000) $2000 = 1 ETH;
-    // expect(usdToEthAmount.toString()).equal(500000000000000000); //.5 ETH
   });
 });
