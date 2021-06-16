@@ -1,0 +1,1084 @@
+
+<!doctype html>
+<html lang="en" class="no-js">
+  <head>
+    
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width,initial-scale=1">
+      
+      
+      
+      
+        <link rel="canonical" href="https://openlawteam.github.io/tribute-contracts/adapters/BatchVoting/">
+      
+      <link rel="icon" href="../../assets/images/favicon.png">
+      <meta name="generator" content="mkdocs-1.2.1, mkdocs-material-7.1.8">
+    
+    
+      
+        <title>BatchVoting - Tribute DAO Framework</title>
+      
+    
+    
+      <link rel="stylesheet" href="../../assets/stylesheets/main.ca7ac06f.min.css">
+      
+        
+        <link rel="stylesheet" href="../../assets/stylesheets/palette.f1a3b89f.min.css">
+        
+      
+    
+    
+    
+      
+        
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,400,400i,700%7CRoboto+Mono&display=fallback">
+        <style>:root{--md-text-font-family:"Roboto";--md-code-font-family:"Roboto Mono"}</style>
+      
+    
+    
+    
+    
+      
+
+
+    
+    
+  </head>
+  
+  
+    
+    
+    
+    
+    
+    <body dir="ltr" data-md-color-scheme="" data-md-color-primary="none" data-md-color-accent="none">
+  
+    
+    <script>function __prefix(e){return new URL("../..",location).pathname+"."+e}function __get(e,t=localStorage){return JSON.parse(t.getItem(__prefix(e)))}</script>
+    
+    <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
+    <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
+    <label class="md-overlay" for="__drawer"></label>
+    <div data-md-component="skip">
+      
+        
+        <a href="#batchvoting-description-and-scope" class="md-skip">
+          Skip to content
+        </a>
+      
+    </div>
+    <div data-md-component="announce">
+      
+    </div>
+    
+      <header class="md-header" data-md-component="header">
+  <nav class="md-header__inner md-grid" aria-label="Header">
+    <a href="../.." title="Tribute DAO Framework" class="md-header__button md-logo" aria-label="Tribute DAO Framework" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54z"/></svg>
+
+    </a>
+    <label class="md-header__button md-icon" for="__drawer">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3 6h18v2H3V6m0 5h18v2H3v-2m0 5h18v2H3v-2z"/></svg>
+    </label>
+    <div class="md-header__title" data-md-component="header-title">
+      <div class="md-header__ellipsis">
+        <div class="md-header__topic">
+          <span class="md-ellipsis">
+            Tribute DAO Framework
+          </span>
+        </div>
+        <div class="md-header__topic" data-md-component="header-topic">
+          <span class="md-ellipsis">
+            
+              BatchVoting
+            
+          </span>
+        </div>
+      </div>
+    </div>
+    
+    
+    
+      <label class="md-header__button md-icon" for="__search">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.516 6.516 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5z"/></svg>
+      </label>
+      
+<div class="md-search" data-md-component="search" role="dialog">
+  <label class="md-search__overlay" for="__search"></label>
+  <div class="md-search__inner" role="search">
+    <form class="md-search__form" name="search">
+      <input type="text" class="md-search__input" name="query" aria-label="Search" placeholder="Search" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" data-md-component="search-query" data-md-state="active" required>
+      <label class="md-search__icon md-icon" for="__search">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.516 6.516 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5z"/></svg>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11h12z"/></svg>
+      </label>
+      <button type="reset" class="md-search__icon md-icon" aria-label="Clear" tabindex="-1">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12 19 6.41z"/></svg>
+      </button>
+    </form>
+    <div class="md-search__output">
+      <div class="md-search__scrollwrap" data-md-scrollfix>
+        <div class="md-search-result" data-md-component="search-result">
+          <div class="md-search-result__meta">
+            Initializing search
+          </div>
+          <ol class="md-search-result__list"></ol>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+    
+    
+  </nav>
+</header>
+    
+    <div class="md-container" data-md-component="container">
+      
+      
+        
+      
+      <main class="md-main" data-md-component="main">
+        <div class="md-main__inner md-grid">
+          
+            
+              
+              <div class="md-sidebar md-sidebar--primary" data-md-component="sidebar" data-md-type="navigation" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+
+<nav class="md-nav md-nav--primary" aria-label="Navigation" data-md-level="0">
+  <label class="md-nav__title" for="__drawer">
+    <a href="../.." title="Tribute DAO Framework" class="md-nav__button md-logo" aria-label="Tribute DAO Framework" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54z"/></svg>
+
+    </a>
+    Tribute DAO Framework
+  </label>
+  
+  <ul class="md-nav__list" data-md-scrollfix>
+    
+      
+      
+      
+
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../ThankYou/" class="md-nav__link">
+        ThankYou
+      </a>
+    </li>
+  
+
+    
+      
+      
+      
+
+  
+  
+    
+  
+  
+    
+    <li class="md-nav__item md-nav__item--active md-nav__item--nested">
+      
+      
+        <input class="md-nav__toggle md-toggle" data-md-toggle="__nav_2" type="checkbox" id="__nav_2" checked>
+      
+      <label class="md-nav__link" for="__nav_2">
+        Adapters
+        <span class="md-nav__icon md-icon"></span>
+      </label>
+      <nav class="md-nav" aria-label="Adapters" data-md-level="1">
+        <label class="md-nav__title" for="__nav_2">
+          <span class="md-nav__icon md-icon"></span>
+          Adapters
+        </label>
+        <ul class="md-nav__list" data-md-scrollfix>
+          
+            
+  
+  
+    
+  
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" data-md-toggle="toc" type="checkbox" id="__toc">
+      
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          BatchVoting
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="./" class="md-nav__link md-nav__link--active">
+        BatchVoting
+      </a>
+      
+        
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#batchvoting-description-and-scope" class="md-nav__link">
+    BatchVoting description and scope
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#adapter-workflow" class="md-nav__link">
+    Adapter workflow
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#adapter-configuration" class="md-nav__link">
+    Adapter configuration
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#adapter-state" class="md-nav__link">
+    Adapter state
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#dependencies-and-interactions-internal-external" class="md-nav__link">
+    Dependencies and interactions (internal / external)
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#functions-description-and-assumptions-checks" class="md-nav__link">
+    Functions description and assumptions / checks
+  </a>
+  
+    <nav class="md-nav" aria-label="Functions description and assumptions / checks">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#function-submitvoteresultdaoregistry-dao-bytes32-proposalid-voteentry-memory-votes" class="md-nav__link">
+    function submitVoteResult(DaoRegistry dao, bytes32 proposalId, VoteEntry[] memory votes)
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#function-getadaptername" class="md-nav__link">
+    function getAdapterName()
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#function-processvotesdaoregistry-dao-bytes32-proposalid-voteentry-memory-entries" class="md-nav__link">
+    function processVotes(DaoRegistry dao, bytes32 proposalId, VoteEntry[] memory entries)
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#function-validatevotedaoregistry-dao-bankextension-bank-address-actionid-uint256-snapshot-bytes32-proposalhash-address-previousaddress-voteentry-memory-entry" class="md-nav__link">
+    function validateVote(DaoRegistry dao, BankExtension bank, address actionId, uint256 snapshot, bytes32 proposalHash, address previousAddress, VoteEntry memory entry)
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#function-getsenderaddressdaoregistry-dao-address-actionid-bytes-memory-dataaddress" class="md-nav__link">
+    function getSenderAddress(DaoRegistry dao, address actionId, bytes memory data,address)
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#function-startnewvotingforproposaldaoregistry-dao-bytes32-proposalid-bytes-memory-data" class="md-nav__link">
+    function startNewVotingForProposal(DaoRegistry dao, bytes32 proposalId, bytes memory data)
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#function-voteresultdaoregistry-dao-bytes32-proposalid" class="md-nav__link">
+    function voteResult(DaoRegistry dao, bytes32 proposalId)
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#events" class="md-nav__link">
+    Events
+  </a>
+  
+    <nav class="md-nav" aria-label="Events">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#newvoteresultaddress-dao-address-actionid-uint256-nbyes-uint256-nbno" class="md-nav__link">
+    NewVoteResult(address dao, address actionId, uint256 nbYes, uint256 nbNo)
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
+    </li>
+  
+
+          
+            
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../Configuration/" class="md-nav__link">
+        Configuration
+      </a>
+    </li>
+  
+
+          
+            
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../CouponOnboarding/" class="md-nav__link">
+        CouponOnboarding
+      </a>
+    </li>
+  
+
+          
+            
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../Distribute/" class="md-nav__link">
+        Distribute
+      </a>
+    </li>
+  
+
+          
+            
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../Financing/" class="md-nav__link">
+        Financing
+      </a>
+    </li>
+  
+
+          
+            
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../GuildKick/" class="md-nav__link">
+        GuildKick
+      </a>
+    </li>
+  
+
+          
+            
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../HowToCreate/" class="md-nav__link">
+        How to create an Adapter
+      </a>
+    </li>
+  
+
+          
+            
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../Managing/" class="md-nav__link">
+        Managing
+      </a>
+    </li>
+  
+
+          
+            
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../OffchainVoting/" class="md-nav__link">
+        OffchainVoting
+      </a>
+    </li>
+  
+
+          
+            
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../Onboarding/" class="md-nav__link">
+        Onboarding
+      </a>
+    </li>
+  
+
+          
+            
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../Ragequit/" class="md-nav__link">
+        Ragequit
+      </a>
+    </li>
+  
+
+          
+            
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../Template/" class="md-nav__link">
+        Template
+      </a>
+    </li>
+  
+
+          
+            
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../Tribute/" class="md-nav__link">
+        Tribute
+      </a>
+    </li>
+  
+
+          
+            
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../TributeNFT/" class="md-nav__link">
+        TributeNFT
+      </a>
+    </li>
+  
+
+          
+            
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../Voting/" class="md-nav__link">
+        Voting
+      </a>
+    </li>
+  
+
+          
+            
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../Withdraw/" class="md-nav__link">
+        Withdraw
+      </a>
+    </li>
+  
+
+          
+        </ul>
+      </nav>
+    </li>
+  
+
+    
+      
+      
+      
+
+  
+  
+  
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+      
+        <input class="md-nav__toggle md-toggle" data-md-toggle="__nav_3" type="checkbox" id="__nav_3" >
+      
+      <label class="md-nav__link" for="__nav_3">
+        Core
+        <span class="md-nav__icon md-icon"></span>
+      </label>
+      <nav class="md-nav" aria-label="Core" data-md-level="1">
+        <label class="md-nav__title" for="__nav_3">
+          <span class="md-nav__icon md-icon"></span>
+          Core
+        </label>
+        <ul class="md-nav__list" data-md-scrollfix>
+          
+            
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../core/DaoFactory/" class="md-nav__link">
+        DaoFactory
+      </a>
+    </li>
+  
+
+          
+            
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../core/DaoRegistry/" class="md-nav__link">
+        DaoRegistry
+      </a>
+    </li>
+  
+
+          
+        </ul>
+      </nav>
+    </li>
+  
+
+    
+      
+      
+      
+
+  
+  
+  
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+      
+        <input class="md-nav__toggle md-toggle" data-md-toggle="__nav_4" type="checkbox" id="__nav_4" >
+      
+      <label class="md-nav__link" for="__nav_4">
+        Extensions
+        <span class="md-nav__icon md-icon"></span>
+      </label>
+      <nav class="md-nav" aria-label="Extensions" data-md-level="1">
+        <label class="md-nav__title" for="__nav_4">
+          <span class="md-nav__icon md-icon"></span>
+          Extensions
+        </label>
+        <ul class="md-nav__list" data-md-scrollfix>
+          
+            
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../extensions/Bank/" class="md-nav__link">
+        Bank
+      </a>
+    </li>
+  
+
+          
+            
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../extensions/ERC20/" class="md-nav__link">
+        ERC20
+      </a>
+    </li>
+  
+
+          
+            
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../extensions/Executor/" class="md-nav__link">
+        Executor
+      </a>
+    </li>
+  
+
+          
+            
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../extensions/NFT/" class="md-nav__link">
+        NFT
+      </a>
+    </li>
+  
+
+          
+        </ul>
+      </nav>
+    </li>
+  
+
+    
+      
+      
+      
+
+  
+  
+  
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+      
+        <input class="md-nav__toggle md-toggle" data-md-toggle="__nav_5" type="checkbox" id="__nav_5" >
+      
+      <label class="md-nav__link" for="__nav_5">
+        Guards
+        <span class="md-nav__icon md-icon"></span>
+      </label>
+      <nav class="md-nav" aria-label="Guards" data-md-level="1">
+        <label class="md-nav__title" for="__nav_5">
+          <span class="md-nav__icon md-icon"></span>
+          Guards
+        </label>
+        <ul class="md-nav__list" data-md-scrollfix>
+          
+            
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../guards/AdapterGuard/" class="md-nav__link">
+        AdapterGuard
+      </a>
+    </li>
+  
+
+          
+            
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../guards/MemberGuard/" class="md-nav__link">
+        MemberGuard
+      </a>
+    </li>
+  
+
+          
+        </ul>
+      </nav>
+    </li>
+  
+
+    
+      
+      
+      
+
+  
+  
+  
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+      
+        <input class="md-nav__toggle md-toggle" data-md-toggle="__nav_6" type="checkbox" id="__nav_6" >
+      
+      <label class="md-nav__link" for="__nav_6">
+        Helpers
+        <span class="md-nav__icon md-icon"></span>
+      </label>
+      <nav class="md-nav" aria-label="Helpers" data-md-level="1">
+        <label class="md-nav__title" for="__nav_6">
+          <span class="md-nav__icon md-icon"></span>
+          Helpers
+        </label>
+        <ul class="md-nav__list" data-md-scrollfix>
+          
+            
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../helpers/FairShareHelper/" class="md-nav__link">
+        FairShareHelper
+      </a>
+    </li>
+  
+
+          
+        </ul>
+      </nav>
+    </li>
+  
+
+    
+  </ul>
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+            
+              
+              <div class="md-sidebar md-sidebar--secondary" data-md-component="sidebar" data-md-type="toc" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#batchvoting-description-and-scope" class="md-nav__link">
+    BatchVoting description and scope
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#adapter-workflow" class="md-nav__link">
+    Adapter workflow
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#adapter-configuration" class="md-nav__link">
+    Adapter configuration
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#adapter-state" class="md-nav__link">
+    Adapter state
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#dependencies-and-interactions-internal-external" class="md-nav__link">
+    Dependencies and interactions (internal / external)
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#functions-description-and-assumptions-checks" class="md-nav__link">
+    Functions description and assumptions / checks
+  </a>
+  
+    <nav class="md-nav" aria-label="Functions description and assumptions / checks">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#function-submitvoteresultdaoregistry-dao-bytes32-proposalid-voteentry-memory-votes" class="md-nav__link">
+    function submitVoteResult(DaoRegistry dao, bytes32 proposalId, VoteEntry[] memory votes)
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#function-getadaptername" class="md-nav__link">
+    function getAdapterName()
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#function-processvotesdaoregistry-dao-bytes32-proposalid-voteentry-memory-entries" class="md-nav__link">
+    function processVotes(DaoRegistry dao, bytes32 proposalId, VoteEntry[] memory entries)
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#function-validatevotedaoregistry-dao-bankextension-bank-address-actionid-uint256-snapshot-bytes32-proposalhash-address-previousaddress-voteentry-memory-entry" class="md-nav__link">
+    function validateVote(DaoRegistry dao, BankExtension bank, address actionId, uint256 snapshot, bytes32 proposalHash, address previousAddress, VoteEntry memory entry)
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#function-getsenderaddressdaoregistry-dao-address-actionid-bytes-memory-dataaddress" class="md-nav__link">
+    function getSenderAddress(DaoRegistry dao, address actionId, bytes memory data,address)
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#function-startnewvotingforproposaldaoregistry-dao-bytes32-proposalid-bytes-memory-data" class="md-nav__link">
+    function startNewVotingForProposal(DaoRegistry dao, bytes32 proposalId, bytes memory data)
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#function-voteresultdaoregistry-dao-bytes32-proposalid" class="md-nav__link">
+    function voteResult(DaoRegistry dao, bytes32 proposalId)
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#events" class="md-nav__link">
+    Events
+  </a>
+  
+    <nav class="md-nav" aria-label="Events">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#newvoteresultaddress-dao-address-actionid-uint256-nbyes-uint256-nbno" class="md-nav__link">
+    NewVoteResult(address dao, address actionId, uint256 nbYes, uint256 nbNo)
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+          
+          <div class="md-content" data-md-component="content">
+            <article class="md-content__inner md-typeset">
+              
+                
+                
+                  <h1>BatchVoting</h1>
+                
+                <h2 id="batchvoting-description-and-scope">BatchVoting description and scope</h2>
+<p>This is another voting adapter that uses the same format used in OffchainVoting but instead of computing the result offchain is doing all the work on chain.</p>
+<p>This means that the gas cost is O(nb votes) but does not need any challenge mechanism.</p>
+<h2 id="adapter-workflow">Adapter workflow</h2>
+<p>The workflow is the same as for Offchain voting minus the challenge part.</p>
+<p>startNewVotingForProposal starts a voting session
+Then all the votes happen offchain in snapshot
+Once the votes are done, the client prepares a list of all the votes and sends it to submitVoteResult</p>
+<p>While processing the votes we check that:</p>
+<ul>
+<li>the signature is correct</li>
+<li>the vote was for this particular proposal</li>
+<li>the member addresses are in order and with no duplicate</li>
+</ul>
+<p>From there, the vote enters grace period if potential new votes could change the result and just resolves the vote otherwise.</p>
+<h2 id="adapter-configuration">Adapter configuration</h2>
+<p>the two configurations for BatchVoting are <code>Voting period</code> &amp; <code>Grace period</code></p>
+<h2 id="adapter-state">Adapter state</h2>
+<p>The adapter keeps track of each vote "session" for each dao &amp; proposalId.
+The session has the following properties:
+<code>uint256 snapshot</code> what snapshot (block number) is used for this vote
+<code>uint256 nbYes</code> how many yes votes have been reported
+<code>uint256 nbNo</code> how many no votes have been reported
+<code>address actionId</code> which actionId (adapter address) has created the vote session
+<code>bytes32 proposalHash</code> the proposal hash
+<code>uint256 startingTime</code> when did the vote start
+<code>uint256 gracePeriodStartingTime</code> when did we enter the grace period</p>
+<h2 id="dependencies-and-interactions-internal-external">Dependencies and interactions (internal / external)</h2>
+<p>BatchVoting interacts with Bank extension and DaoRegistry to get information about the member voting.
+The info is:</p>
+<ul>
+<li>its delegate key at the time of voting</li>
+<li>how many units does the member have</li>
+</ul>
+<h2 id="functions-description-and-assumptions-checks">Functions description and assumptions / checks</h2>
+<p>Describe the public and private functions signatures with proper documentation and clearly explain what each function does. Specify what are expected the arguments and pre-conditions to execute the functions. Also, provide what is the expected outcome.</p>
+<p>Examples:</p>
+<h3 id="function-submitvoteresultdaoregistry-dao-bytes32-proposalid-voteentry-memory-votes">function submitVoteResult(DaoRegistry dao, bytes32 proposalId, VoteEntry[] memory votes)</h3>
+<p>this function submits a vote result for a certain proposal.</p>
+<ul>
+<li>It first processes the votes</li>
+<li>If the result has more weight than the previous one and the vote is still going on, update the result</li>
+<li>If the result has changed from before (pass -&gt; fail or fail -&gt; pass), update the start of grace period to now</li>
+</ul>
+<h3 id="function-getadaptername">function getAdapterName()</h3>
+<p>returns the voting adapter name "BatchVotingContract"</p>
+<h3 id="function-processvotesdaoregistry-dao-bytes32-proposalid-voteentry-memory-entries">function processVotes(DaoRegistry dao, bytes32 proposalId, VoteEntry[] memory entries)</h3>
+<p>Process all the votes.</p>
+<p>For each entry, it validates the vote and then computes the result.</p>
+<h3 id="function-validatevotedaoregistry-dao-bankextension-bank-address-actionid-uint256-snapshot-bytes32-proposalhash-address-previousaddress-voteentry-memory-entry">function validateVote(DaoRegistry dao, BankExtension bank, address actionId, uint256 snapshot, bytes32 proposalHash, address previousAddress, VoteEntry memory entry)</h3>
+<p>It validates the vote entry.
+It does the following checks:</p>
+<ul>
+<li>checks that the memberAddress is the one who signed the vote (or its delegate key)</li>
+<li>checks that the previous member address is "before" (hex order) the current one</li>
+<li>checks that the vote is actually for this proposal</li>
+</ul>
+<p>If it is all good, returns the amount of units the member has at that point in time</p>
+<h3 id="function-getsenderaddressdaoregistry-dao-address-actionid-bytes-memory-dataaddress">function getSenderAddress(DaoRegistry dao, address actionId, bytes memory data,address)</h3>
+<p>returns the address that has signed the proposal hash</p>
+<h3 id="function-startnewvotingforproposaldaoregistry-dao-bytes32-proposalid-bytes-memory-data">function startNewVotingForProposal(DaoRegistry dao, bytes32 proposalId, bytes memory data)</h3>
+<p>Starts a new voting session.
+It first decode the proposal data, then builds the proposal hash.
+From there, it checks that the signature is for this hash and from an active member.
+It also checks that the block number is not 0 and is not in the future</p>
+<p>if all checks out, we write the actionId (msg.sender), startingTime (block.timestamp), snapshot and proposal hash into the voting session struct</p>
+<h3 id="function-voteresultdaoregistry-dao-bytes32-proposalid">function voteResult(DaoRegistry dao, bytes32 proposalId)</h3>
+<p>returns the vote status.</p>
+<h2 id="events">Events</h2>
+<h3 id="newvoteresultaddress-dao-address-actionid-uint256-nbyes-uint256-nbno">NewVoteResult(address dao, address actionId, uint256 nbYes, uint256 nbNo)</h3>
+<p>is emitted when a new vote result has been submitted</p>
+                
+              
+              
+                
+
+
+              
+            </article>
+          </div>
+        </div>
+        
+      </main>
+      
+        
+<footer class="md-footer">
+  
+    <nav class="md-footer__inner md-grid" aria-label="Footer">
+      
+        
+        <a href="../../ThankYou/" class="md-footer__link md-footer__link--prev" aria-label="Previous: ThankYou" rel="prev">
+          <div class="md-footer__button md-icon">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11h12z"/></svg>
+          </div>
+          <div class="md-footer__title">
+            <div class="md-ellipsis">
+              <span class="md-footer__direction">
+                Previous
+              </span>
+              ThankYou
+            </div>
+          </div>
+        </a>
+      
+      
+        
+        <a href="../Configuration/" class="md-footer__link md-footer__link--next" aria-label="Next: Configuration" rel="next">
+          <div class="md-footer__title">
+            <div class="md-ellipsis">
+              <span class="md-footer__direction">
+                Next
+              </span>
+              Configuration
+            </div>
+          </div>
+          <div class="md-footer__button md-icon">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M4 11v2h12l-5.5 5.5 1.42 1.42L19.84 12l-7.92-7.92L10.5 5.5 16 11H4z"/></svg>
+          </div>
+        </a>
+      
+    </nav>
+  
+  <div class="md-footer-meta md-typeset">
+    <div class="md-footer-meta__inner md-grid">
+      <div class="md-footer-copyright">
+        
+        Made with
+        <a href="https://squidfunk.github.io/mkdocs-material/" target="_blank" rel="noopener">
+          Material for MkDocs
+        </a>
+        
+      </div>
+      
+    </div>
+  </div>
+</footer>
+      
+    </div>
+    <div class="md-dialog" data-md-component="dialog">
+      <div class="md-dialog__inner md-typeset"></div>
+    </div>
+    <script id="__config" type="application/json">{"base": "../..", "features": [], "translations": {"clipboard.copy": "Copy to clipboard", "clipboard.copied": "Copied to clipboard", "search.config.lang": "en", "search.config.pipeline": "trimmer, stopWordFilter", "search.config.separator": "[\\s\\-]+", "search.placeholder": "Search", "search.result.placeholder": "Type to start searching", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.term.missing": "Missing", "select.version.title": "Select version"}, "search": "../../assets/javascripts/workers/search.b0710199.min.js", "version": null}</script>
+    
+    
+      <script src="../../assets/javascripts/bundle.76f349be.min.js"></script>
+      
+    
+  </body>
+</html>

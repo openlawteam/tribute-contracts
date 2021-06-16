@@ -1,0 +1,1073 @@
+
+<!doctype html>
+<html lang="en" class="no-js">
+  <head>
+    
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width,initial-scale=1">
+      
+      
+      
+      
+        <link rel="canonical" href="https://openlawteam.github.io/tribute-contracts/adapters/TributeNFT/">
+      
+      <link rel="icon" href="../../assets/images/favicon.png">
+      <meta name="generator" content="mkdocs-1.2.1, mkdocs-material-7.1.8">
+    
+    
+      
+        <title>TributeNFT - Tribute DAO Framework</title>
+      
+    
+    
+      <link rel="stylesheet" href="../../assets/stylesheets/main.ca7ac06f.min.css">
+      
+        
+        <link rel="stylesheet" href="../../assets/stylesheets/palette.f1a3b89f.min.css">
+        
+      
+    
+    
+    
+      
+        
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,400,400i,700%7CRoboto+Mono&display=fallback">
+        <style>:root{--md-text-font-family:"Roboto";--md-code-font-family:"Roboto Mono"}</style>
+      
+    
+    
+    
+    
+      
+
+
+    
+    
+  </head>
+  
+  
+    
+    
+    
+    
+    
+    <body dir="ltr" data-md-color-scheme="" data-md-color-primary="none" data-md-color-accent="none">
+  
+    
+    <script>function __prefix(e){return new URL("../..",location).pathname+"."+e}function __get(e,t=localStorage){return JSON.parse(t.getItem(__prefix(e)))}</script>
+    
+    <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
+    <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
+    <label class="md-overlay" for="__drawer"></label>
+    <div data-md-component="skip">
+      
+        
+        <a href="#adapter-description-and-scope" class="md-skip">
+          Skip to content
+        </a>
+      
+    </div>
+    <div data-md-component="announce">
+      
+    </div>
+    
+      <header class="md-header" data-md-component="header">
+  <nav class="md-header__inner md-grid" aria-label="Header">
+    <a href="../.." title="Tribute DAO Framework" class="md-header__button md-logo" aria-label="Tribute DAO Framework" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54z"/></svg>
+
+    </a>
+    <label class="md-header__button md-icon" for="__drawer">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3 6h18v2H3V6m0 5h18v2H3v-2m0 5h18v2H3v-2z"/></svg>
+    </label>
+    <div class="md-header__title" data-md-component="header-title">
+      <div class="md-header__ellipsis">
+        <div class="md-header__topic">
+          <span class="md-ellipsis">
+            Tribute DAO Framework
+          </span>
+        </div>
+        <div class="md-header__topic" data-md-component="header-topic">
+          <span class="md-ellipsis">
+            
+              TributeNFT
+            
+          </span>
+        </div>
+      </div>
+    </div>
+    
+    
+    
+      <label class="md-header__button md-icon" for="__search">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.516 6.516 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5z"/></svg>
+      </label>
+      
+<div class="md-search" data-md-component="search" role="dialog">
+  <label class="md-search__overlay" for="__search"></label>
+  <div class="md-search__inner" role="search">
+    <form class="md-search__form" name="search">
+      <input type="text" class="md-search__input" name="query" aria-label="Search" placeholder="Search" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" data-md-component="search-query" data-md-state="active" required>
+      <label class="md-search__icon md-icon" for="__search">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.516 6.516 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5z"/></svg>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11h12z"/></svg>
+      </label>
+      <button type="reset" class="md-search__icon md-icon" aria-label="Clear" tabindex="-1">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12 19 6.41z"/></svg>
+      </button>
+    </form>
+    <div class="md-search__output">
+      <div class="md-search__scrollwrap" data-md-scrollfix>
+        <div class="md-search-result" data-md-component="search-result">
+          <div class="md-search-result__meta">
+            Initializing search
+          </div>
+          <ol class="md-search-result__list"></ol>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+    
+    
+  </nav>
+</header>
+    
+    <div class="md-container" data-md-component="container">
+      
+      
+        
+      
+      <main class="md-main" data-md-component="main">
+        <div class="md-main__inner md-grid">
+          
+            
+              
+              <div class="md-sidebar md-sidebar--primary" data-md-component="sidebar" data-md-type="navigation" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+
+<nav class="md-nav md-nav--primary" aria-label="Navigation" data-md-level="0">
+  <label class="md-nav__title" for="__drawer">
+    <a href="../.." title="Tribute DAO Framework" class="md-nav__button md-logo" aria-label="Tribute DAO Framework" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54z"/></svg>
+
+    </a>
+    Tribute DAO Framework
+  </label>
+  
+  <ul class="md-nav__list" data-md-scrollfix>
+    
+      
+      
+      
+
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../ThankYou/" class="md-nav__link">
+        ThankYou
+      </a>
+    </li>
+  
+
+    
+      
+      
+      
+
+  
+  
+    
+  
+  
+    
+    <li class="md-nav__item md-nav__item--active md-nav__item--nested">
+      
+      
+        <input class="md-nav__toggle md-toggle" data-md-toggle="__nav_2" type="checkbox" id="__nav_2" checked>
+      
+      <label class="md-nav__link" for="__nav_2">
+        Adapters
+        <span class="md-nav__icon md-icon"></span>
+      </label>
+      <nav class="md-nav" aria-label="Adapters" data-md-level="1">
+        <label class="md-nav__title" for="__nav_2">
+          <span class="md-nav__icon md-icon"></span>
+          Adapters
+        </label>
+        <ul class="md-nav__list" data-md-scrollfix>
+          
+            
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../BatchVoting/" class="md-nav__link">
+        BatchVoting
+      </a>
+    </li>
+  
+
+          
+            
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../Configuration/" class="md-nav__link">
+        Configuration
+      </a>
+    </li>
+  
+
+          
+            
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../CouponOnboarding/" class="md-nav__link">
+        CouponOnboarding
+      </a>
+    </li>
+  
+
+          
+            
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../Distribute/" class="md-nav__link">
+        Distribute
+      </a>
+    </li>
+  
+
+          
+            
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../Financing/" class="md-nav__link">
+        Financing
+      </a>
+    </li>
+  
+
+          
+            
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../GuildKick/" class="md-nav__link">
+        GuildKick
+      </a>
+    </li>
+  
+
+          
+            
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../HowToCreate/" class="md-nav__link">
+        How to create an Adapter
+      </a>
+    </li>
+  
+
+          
+            
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../Managing/" class="md-nav__link">
+        Managing
+      </a>
+    </li>
+  
+
+          
+            
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../OffchainVoting/" class="md-nav__link">
+        OffchainVoting
+      </a>
+    </li>
+  
+
+          
+            
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../Onboarding/" class="md-nav__link">
+        Onboarding
+      </a>
+    </li>
+  
+
+          
+            
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../Ragequit/" class="md-nav__link">
+        Ragequit
+      </a>
+    </li>
+  
+
+          
+            
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../Template/" class="md-nav__link">
+        Template
+      </a>
+    </li>
+  
+
+          
+            
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../Tribute/" class="md-nav__link">
+        Tribute
+      </a>
+    </li>
+  
+
+          
+            
+  
+  
+    
+  
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" data-md-toggle="toc" type="checkbox" id="__toc">
+      
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          TributeNFT
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="./" class="md-nav__link md-nav__link--active">
+        TributeNFT
+      </a>
+      
+        
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#adapter-description-and-scope" class="md-nav__link">
+    Adapter description and scope
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#adapter-workflow" class="md-nav__link">
+    Adapter workflow
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#adapter-configuration" class="md-nav__link">
+    Adapter configuration
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#adapter-state" class="md-nav__link">
+    Adapter state
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#dependencies-and-interactions-internal-external" class="md-nav__link">
+    Dependencies and interactions (internal / external)
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#functions-description-and-assumptions-checks" class="md-nav__link">
+    Functions description and assumptions / checks
+  </a>
+  
+    <nav class="md-nav" aria-label="Functions description and assumptions / checks">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#receive-external-payable" class="md-nav__link">
+    receive() external payable
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#function-configuredao" class="md-nav__link">
+    function configureDao
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#function-submitproposal" class="md-nav__link">
+    function submitProposal
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#function-processproposal" class="md-nav__link">
+    function processProposal
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#events" class="md-nav__link">
+    Events
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
+    </li>
+  
+
+          
+            
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../Voting/" class="md-nav__link">
+        Voting
+      </a>
+    </li>
+  
+
+          
+            
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../Withdraw/" class="md-nav__link">
+        Withdraw
+      </a>
+    </li>
+  
+
+          
+        </ul>
+      </nav>
+    </li>
+  
+
+    
+      
+      
+      
+
+  
+  
+  
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+      
+        <input class="md-nav__toggle md-toggle" data-md-toggle="__nav_3" type="checkbox" id="__nav_3" >
+      
+      <label class="md-nav__link" for="__nav_3">
+        Core
+        <span class="md-nav__icon md-icon"></span>
+      </label>
+      <nav class="md-nav" aria-label="Core" data-md-level="1">
+        <label class="md-nav__title" for="__nav_3">
+          <span class="md-nav__icon md-icon"></span>
+          Core
+        </label>
+        <ul class="md-nav__list" data-md-scrollfix>
+          
+            
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../core/DaoFactory/" class="md-nav__link">
+        DaoFactory
+      </a>
+    </li>
+  
+
+          
+            
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../core/DaoRegistry/" class="md-nav__link">
+        DaoRegistry
+      </a>
+    </li>
+  
+
+          
+        </ul>
+      </nav>
+    </li>
+  
+
+    
+      
+      
+      
+
+  
+  
+  
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+      
+        <input class="md-nav__toggle md-toggle" data-md-toggle="__nav_4" type="checkbox" id="__nav_4" >
+      
+      <label class="md-nav__link" for="__nav_4">
+        Extensions
+        <span class="md-nav__icon md-icon"></span>
+      </label>
+      <nav class="md-nav" aria-label="Extensions" data-md-level="1">
+        <label class="md-nav__title" for="__nav_4">
+          <span class="md-nav__icon md-icon"></span>
+          Extensions
+        </label>
+        <ul class="md-nav__list" data-md-scrollfix>
+          
+            
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../extensions/Bank/" class="md-nav__link">
+        Bank
+      </a>
+    </li>
+  
+
+          
+            
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../extensions/ERC20/" class="md-nav__link">
+        ERC20
+      </a>
+    </li>
+  
+
+          
+            
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../extensions/Executor/" class="md-nav__link">
+        Executor
+      </a>
+    </li>
+  
+
+          
+            
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../extensions/NFT/" class="md-nav__link">
+        NFT
+      </a>
+    </li>
+  
+
+          
+        </ul>
+      </nav>
+    </li>
+  
+
+    
+      
+      
+      
+
+  
+  
+  
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+      
+        <input class="md-nav__toggle md-toggle" data-md-toggle="__nav_5" type="checkbox" id="__nav_5" >
+      
+      <label class="md-nav__link" for="__nav_5">
+        Guards
+        <span class="md-nav__icon md-icon"></span>
+      </label>
+      <nav class="md-nav" aria-label="Guards" data-md-level="1">
+        <label class="md-nav__title" for="__nav_5">
+          <span class="md-nav__icon md-icon"></span>
+          Guards
+        </label>
+        <ul class="md-nav__list" data-md-scrollfix>
+          
+            
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../guards/AdapterGuard/" class="md-nav__link">
+        AdapterGuard
+      </a>
+    </li>
+  
+
+          
+            
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../guards/MemberGuard/" class="md-nav__link">
+        MemberGuard
+      </a>
+    </li>
+  
+
+          
+        </ul>
+      </nav>
+    </li>
+  
+
+    
+      
+      
+      
+
+  
+  
+  
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+      
+        <input class="md-nav__toggle md-toggle" data-md-toggle="__nav_6" type="checkbox" id="__nav_6" >
+      
+      <label class="md-nav__link" for="__nav_6">
+        Helpers
+        <span class="md-nav__icon md-icon"></span>
+      </label>
+      <nav class="md-nav" aria-label="Helpers" data-md-level="1">
+        <label class="md-nav__title" for="__nav_6">
+          <span class="md-nav__icon md-icon"></span>
+          Helpers
+        </label>
+        <ul class="md-nav__list" data-md-scrollfix>
+          
+            
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../helpers/FairShareHelper/" class="md-nav__link">
+        FairShareHelper
+      </a>
+    </li>
+  
+
+          
+        </ul>
+      </nav>
+    </li>
+  
+
+    
+  </ul>
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+            
+              
+              <div class="md-sidebar md-sidebar--secondary" data-md-component="sidebar" data-md-type="toc" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#adapter-description-and-scope" class="md-nav__link">
+    Adapter description and scope
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#adapter-workflow" class="md-nav__link">
+    Adapter workflow
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#adapter-configuration" class="md-nav__link">
+    Adapter configuration
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#adapter-state" class="md-nav__link">
+    Adapter state
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#dependencies-and-interactions-internal-external" class="md-nav__link">
+    Dependencies and interactions (internal / external)
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#functions-description-and-assumptions-checks" class="md-nav__link">
+    Functions description and assumptions / checks
+  </a>
+  
+    <nav class="md-nav" aria-label="Functions description and assumptions / checks">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#receive-external-payable" class="md-nav__link">
+    receive() external payable
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#function-configuredao" class="md-nav__link">
+    function configureDao
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#function-submitproposal" class="md-nav__link">
+    function submitProposal
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#function-processproposal" class="md-nav__link">
+    function processProposal
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#events" class="md-nav__link">
+    Events
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+          
+          <div class="md-content" data-md-component="content">
+            <article class="md-content__inner md-typeset">
+              
+                
+                
+                  <h1>TributeNFT</h1>
+                
+                <h2 id="adapter-description-and-scope">Adapter description and scope</h2>
+<p>The Tribute NFT adapter allows potential and existing DAO members to contribute any ERC-721 tokens to the DAO in exchange for any amount of DAO internal tokens (in this case it mints UNITS always). If the proposal passes, the requested internal tokens are minted to the applicant (which effectively makes the applicant a member of the DAO if not already one) and the ERC-721 asset provided as tribute is transferred to the NFT extension.</p>
+<p>The Tribute NFT adapter is similar to the Onboarding adapter in that both allow for joining the DAO (or increasing a stake in the DAO) through the exchange of contributed assets for DAO internal tokens. However, there are key differences:</p>
+<ul>
+<li>
+<p>The Onboarding adapter allows both Ether and ERC-20 tokens to be contributed. The Tribute NFT adapter accepts only ERC-721 tokens.</p>
+</li>
+<li>
+<p>The Onboarding adapter mints a fixed amount of internal tokens to the applicant based on the amount of assets contributed. In other words, an onboarding proposal does not specify the amount of internal tokens requested. That is calculated from the DAO's configurations and the amount of assets contributed. The Tribute NFT adapter has more open-ended proposal parameters. The proposer can request any amount of internal tokens to be minted in exchange for an ERC-721 token contributed. The worthiness of that transfer proposal for the DAO is left to the vote of its members.</p>
+</li>
+</ul>
+<h2 id="adapter-workflow">Adapter workflow</h2>
+<p>A tribute is made by a member first submitting a proposal specifying (1) the applicant who wishes to join the DAO (or increase his stake in the DAO), (2) the amount of internal tokens (UNITS) the applicant desires, and (3) the ERC-721 address and token id of the NFT that will transfer to the DAO in exchange for those internal tokens. The applicant and actual owner of the NFT can be separate accounts (e.g., the NFT owner is providing tribute on behalf of the applicant). The proposal submission does not actually transfer the ERC-721 token from its owner. That occurs only after the proposal passes and is processed.</p>
+<p>The proposal is also sponsored in the same transaction when it is submitted. When a DAO member sponsors the proposal, the voting period begins allowing members to vote for or against the proposal. Only a member can sponsor the proposal.</p>
+<p>After the voting period is done along with its subsequent grace period, the proposal can be processed. Any account can process the proposal. However, prior to processing a passed proposal, the ERC-721 token owner must first separately <code>approve</code> the NFT extension as spender of the token provided as tribute. Upon processing, if the vote has passed, the requested internal tokens are minted to the applicant (which effectively makes the applicant a member of the DAO if not already one). The tribute token is transferred from the token owner to the NFT extension.</p>
+<p>Upon processing, if the vote has failed (i.e., more NO votes then YES votes or a tie), no further action is taken (the ERC-721 token owner still retains ownership of the token).</p>
+<h2 id="adapter-configuration">Adapter configuration</h2>
+<p>A DAO NFT extension and a DAO Bank extension must exist and be configured with proper access for this adapter.</p>
+<p>The DAO internal tokens (in this case UNITS) to be minted to the applicant must be registered with the DAO Bank.</p>
+<p>DAORegistry Access Flags: <code>SUBMIT_PROPOSAL</code>, <code>NEW_MEMBER</code>.</p>
+<p>NFT Extension Access Flags: <code>COLLECT_NFT</code>.</p>
+<p>Bank Extension Access Flags: <code>ADD_TO_BALANCE</code>.</p>
+<h2 id="adapter-state">Adapter state</h2>
+<ul>
+<li><code>proposals</code>: All tribute NFT proposals handled by each DAO.</li>
+<li><code>ProposalDetails</code>:</li>
+<li><code>id</code>: The proposal id.</li>
+<li><code>applicant</code>: The applicant address (who will receive the DAO internal tokens and become a member; this address may be different than the actual owner of the ERC-721 token being provided as tribute).</li>
+<li><code>nftAddr</code>: The address of the ERC-721 token that will be transferred to the DAO in exchange for DAO internal tokens.</li>
+<li><code>nftTokenId</code>: The NFT token identifier.</li>
+<li><code>requestAmount</code>: The amount requested of DAO internal tokens (UNITS).</li>
+</ul>
+<h2 id="dependencies-and-interactions-internal-external">Dependencies and interactions (internal / external)</h2>
+<ul>
+<li>
+<p>BankExtension</p>
+</li>
+<li>
+<p>Registers DAO internal token (in this case UNITS) to be minted to the applicant in adapter configuration.</p>
+</li>
+<li>
+<p>Adds to the applicant balance the amount of requested DAO internal tokens.</p>
+</li>
+<li>
+<p>NFTExtension</p>
+</li>
+<li>
+<p>Transfers the NFT asset from the owner to the NFT extension collection.</p>
+</li>
+<li>
+<p>DaoRegistry</p>
+</li>
+<li>
+<p>Gets Bank extension address.</p>
+</li>
+<li>Checks if applicant address is not reserved.</li>
+<li>Gets Voting adapter address.</li>
+<li>Submits/sponsors/processes the tribute proposal.</li>
+<li>Checks if proposal flag is <code>SPONSORED</code>, <code>PROCESSED</code>.</li>
+<li>
+<p>Creates a new member entry (if applicant is not already a member).</p>
+</li>
+<li>
+<p>Voting</p>
+</li>
+<li>
+<p>Gets address that sent the sponsorProposal transaction.</p>
+</li>
+<li>Starts new voting for the tribute proposal.</li>
+<li>Checks the voting results.</li>
+</ul>
+<h2 id="functions-description-and-assumptions-checks">Functions description and assumptions / checks</h2>
+<h3 id="receive-external-payable">receive() external payable</h3>
+<pre><code class="language-solidity">    /**
+     * @notice default fallback function to prevent from sending ether to the contract.
+     */
+    receive() external payable
+</code></pre>
+<h3 id="function-configuredao">function configureDao</h3>
+<pre><code class="language-solidity">    /**
+     * @notice Configures the adapter for a particular DAO.
+     * @notice Registers the DAO internal token UNITS with the DAO Bank.
+     * @dev Only adapters registered to the DAO can execute the function call (or if the DAO is in creation mode).
+     * @dev A DAO Bank extension must exist and be configured with proper access for this adapter.
+     * @param dao The DAO address.
+     */
+    function configureDao(DaoRegistry dao)
+        external
+        onlyAdapter(dao)
+</code></pre>
+<h3 id="function-submitproposal">function submitProposal</h3>
+<pre><code class="language-solidity">   /**
+     * @notice Creates and sponsors a tribute proposal to start the voting process.
+     * @dev Applicant address must not be reserved.
+     * @dev Only members of the DAO can sponsor a tribute proposal.
+     * @param dao The DAO address.
+     * @param proposalId The proposal id (managed by the client).
+     * @param applicant The applicant address (who will receive the DAO internal tokens and become a member).
+     * @param nftAddr The address of the ERC-721 token that will be transferred to the DAO in exchange for DAO internal tokens.
+     * @param nftTokenId The NFT token id.
+     * @param requestAmount The amount requested of DAO internal tokens (UNITS).
+     * @param data Additional information related to the tribute proposal.
+     */
+    function submitProposal(
+        DaoRegistry dao,
+        bytes32 proposalId,
+        address applicant,
+        address nftAddr,
+        uint256 nftTokenId,
+        uint256 requestAmount
+        bytes memory data
+    ) external reentrancyGuard(dao)
+</code></pre>
+<h3 id="function-processproposal">function processProposal</h3>
+<pre><code class="language-solidity">   /**
+     * @notice Processes the proposal to handle minting and exchange of DAO internal tokens for tribute token (passed vote).
+     * @dev Proposal id must exist.
+     * @dev Only proposals that have not already been processed are accepted.
+     * @dev Only sponsored proposals with completed voting are accepted.
+     * @dev The owner of the ERC-721 token provided as tribute must first separately `approve` the NFT extension as spender of that token (so the NFT can be transferred for a passed vote).
+     * @param dao The DAO address.
+     * @param proposalId The proposal id.
+     */
+    function processProposal(DaoRegistry dao, bytes32 proposalId)
+        external reentrancyGuard(dao)
+</code></pre>
+<h2 id="events">Events</h2>
+<p>No events are emitted from this adapter.</p>
+                
+              
+              
+                
+
+
+              
+            </article>
+          </div>
+        </div>
+        
+      </main>
+      
+        
+<footer class="md-footer">
+  
+    <nav class="md-footer__inner md-grid" aria-label="Footer">
+      
+        
+        <a href="../Tribute/" class="md-footer__link md-footer__link--prev" aria-label="Previous: Tribute" rel="prev">
+          <div class="md-footer__button md-icon">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11h12z"/></svg>
+          </div>
+          <div class="md-footer__title">
+            <div class="md-ellipsis">
+              <span class="md-footer__direction">
+                Previous
+              </span>
+              Tribute
+            </div>
+          </div>
+        </a>
+      
+      
+        
+        <a href="../Voting/" class="md-footer__link md-footer__link--next" aria-label="Next: Voting" rel="next">
+          <div class="md-footer__title">
+            <div class="md-ellipsis">
+              <span class="md-footer__direction">
+                Next
+              </span>
+              Voting
+            </div>
+          </div>
+          <div class="md-footer__button md-icon">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M4 11v2h12l-5.5 5.5 1.42 1.42L19.84 12l-7.92-7.92L10.5 5.5 16 11H4z"/></svg>
+          </div>
+        </a>
+      
+    </nav>
+  
+  <div class="md-footer-meta md-typeset">
+    <div class="md-footer-meta__inner md-grid">
+      <div class="md-footer-copyright">
+        
+        Made with
+        <a href="https://squidfunk.github.io/mkdocs-material/" target="_blank" rel="noopener">
+          Material for MkDocs
+        </a>
+        
+      </div>
+      
+    </div>
+  </div>
+</footer>
+      
+    </div>
+    <div class="md-dialog" data-md-component="dialog">
+      <div class="md-dialog__inner md-typeset"></div>
+    </div>
+    <script id="__config" type="application/json">{"base": "../..", "features": [], "translations": {"clipboard.copy": "Copy to clipboard", "clipboard.copied": "Copied to clipboard", "search.config.lang": "en", "search.config.pipeline": "trimmer, stopWordFilter", "search.config.separator": "[\\s\\-]+", "search.placeholder": "Search", "search.result.placeholder": "Type to start searching", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.term.missing": "Missing", "select.version.title": "Select version"}, "search": "../../assets/javascripts/workers/search.b0710199.min.js", "version": null}</script>
+    
+    
+      <script src="../../assets/javascripts/bundle.76f349be.min.js"></script>
+      
+    
+  </body>
+</html>

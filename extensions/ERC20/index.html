@@ -1,0 +1,1387 @@
+
+<!doctype html>
+<html lang="en" class="no-js">
+  <head>
+    
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width,initial-scale=1">
+      
+      
+      
+      
+        <link rel="canonical" href="https://openlawteam.github.io/tribute-contracts/extensions/ERC20/">
+      
+      <link rel="icon" href="../../assets/images/favicon.png">
+      <meta name="generator" content="mkdocs-1.2.1, mkdocs-material-7.1.8">
+    
+    
+      
+        <title>ERC20 - Tribute DAO Framework</title>
+      
+    
+    
+      <link rel="stylesheet" href="../../assets/stylesheets/main.ca7ac06f.min.css">
+      
+        
+        <link rel="stylesheet" href="../../assets/stylesheets/palette.f1a3b89f.min.css">
+        
+      
+    
+    
+    
+      
+        
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,400,400i,700%7CRoboto+Mono&display=fallback">
+        <style>:root{--md-text-font-family:"Roboto";--md-code-font-family:"Roboto Mono"}</style>
+      
+    
+    
+    
+    
+      
+
+
+    
+    
+  </head>
+  
+  
+    
+    
+    
+    
+    
+    <body dir="ltr" data-md-color-scheme="" data-md-color-primary="none" data-md-color-accent="none">
+  
+    
+    <script>function __prefix(e){return new URL("../..",location).pathname+"."+e}function __get(e,t=localStorage){return JSON.parse(t.getItem(__prefix(e)))}</script>
+    
+    <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
+    <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
+    <label class="md-overlay" for="__drawer"></label>
+    <div data-md-component="skip">
+      
+        
+        <a href="#extension-description-and-scope" class="md-skip">
+          Skip to content
+        </a>
+      
+    </div>
+    <div data-md-component="announce">
+      
+    </div>
+    
+      <header class="md-header" data-md-component="header">
+  <nav class="md-header__inner md-grid" aria-label="Header">
+    <a href="../.." title="Tribute DAO Framework" class="md-header__button md-logo" aria-label="Tribute DAO Framework" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54z"/></svg>
+
+    </a>
+    <label class="md-header__button md-icon" for="__drawer">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3 6h18v2H3V6m0 5h18v2H3v-2m0 5h18v2H3v-2z"/></svg>
+    </label>
+    <div class="md-header__title" data-md-component="header-title">
+      <div class="md-header__ellipsis">
+        <div class="md-header__topic">
+          <span class="md-ellipsis">
+            Tribute DAO Framework
+          </span>
+        </div>
+        <div class="md-header__topic" data-md-component="header-topic">
+          <span class="md-ellipsis">
+            
+              ERC20
+            
+          </span>
+        </div>
+      </div>
+    </div>
+    
+    
+    
+      <label class="md-header__button md-icon" for="__search">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.516 6.516 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5z"/></svg>
+      </label>
+      
+<div class="md-search" data-md-component="search" role="dialog">
+  <label class="md-search__overlay" for="__search"></label>
+  <div class="md-search__inner" role="search">
+    <form class="md-search__form" name="search">
+      <input type="text" class="md-search__input" name="query" aria-label="Search" placeholder="Search" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" data-md-component="search-query" data-md-state="active" required>
+      <label class="md-search__icon md-icon" for="__search">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.516 6.516 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5z"/></svg>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11h12z"/></svg>
+      </label>
+      <button type="reset" class="md-search__icon md-icon" aria-label="Clear" tabindex="-1">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12 19 6.41z"/></svg>
+      </button>
+    </form>
+    <div class="md-search__output">
+      <div class="md-search__scrollwrap" data-md-scrollfix>
+        <div class="md-search-result" data-md-component="search-result">
+          <div class="md-search-result__meta">
+            Initializing search
+          </div>
+          <ol class="md-search-result__list"></ol>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+    
+    
+  </nav>
+</header>
+    
+    <div class="md-container" data-md-component="container">
+      
+      
+        
+      
+      <main class="md-main" data-md-component="main">
+        <div class="md-main__inner md-grid">
+          
+            
+              
+              <div class="md-sidebar md-sidebar--primary" data-md-component="sidebar" data-md-type="navigation" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+
+<nav class="md-nav md-nav--primary" aria-label="Navigation" data-md-level="0">
+  <label class="md-nav__title" for="__drawer">
+    <a href="../.." title="Tribute DAO Framework" class="md-nav__button md-logo" aria-label="Tribute DAO Framework" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54z"/></svg>
+
+    </a>
+    Tribute DAO Framework
+  </label>
+  
+  <ul class="md-nav__list" data-md-scrollfix>
+    
+      
+      
+      
+
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../ThankYou/" class="md-nav__link">
+        ThankYou
+      </a>
+    </li>
+  
+
+    
+      
+      
+      
+
+  
+  
+  
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+      
+        <input class="md-nav__toggle md-toggle" data-md-toggle="__nav_2" type="checkbox" id="__nav_2" >
+      
+      <label class="md-nav__link" for="__nav_2">
+        Adapters
+        <span class="md-nav__icon md-icon"></span>
+      </label>
+      <nav class="md-nav" aria-label="Adapters" data-md-level="1">
+        <label class="md-nav__title" for="__nav_2">
+          <span class="md-nav__icon md-icon"></span>
+          Adapters
+        </label>
+        <ul class="md-nav__list" data-md-scrollfix>
+          
+            
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../adapters/BatchVoting/" class="md-nav__link">
+        BatchVoting
+      </a>
+    </li>
+  
+
+          
+            
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../adapters/Configuration/" class="md-nav__link">
+        Configuration
+      </a>
+    </li>
+  
+
+          
+            
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../adapters/CouponOnboarding/" class="md-nav__link">
+        CouponOnboarding
+      </a>
+    </li>
+  
+
+          
+            
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../adapters/Distribute/" class="md-nav__link">
+        Distribute
+      </a>
+    </li>
+  
+
+          
+            
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../adapters/Financing/" class="md-nav__link">
+        Financing
+      </a>
+    </li>
+  
+
+          
+            
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../adapters/GuildKick/" class="md-nav__link">
+        GuildKick
+      </a>
+    </li>
+  
+
+          
+            
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../adapters/HowToCreate/" class="md-nav__link">
+        How to create an Adapter
+      </a>
+    </li>
+  
+
+          
+            
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../adapters/Managing/" class="md-nav__link">
+        Managing
+      </a>
+    </li>
+  
+
+          
+            
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../adapters/OffchainVoting/" class="md-nav__link">
+        OffchainVoting
+      </a>
+    </li>
+  
+
+          
+            
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../adapters/Onboarding/" class="md-nav__link">
+        Onboarding
+      </a>
+    </li>
+  
+
+          
+            
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../adapters/Ragequit/" class="md-nav__link">
+        Ragequit
+      </a>
+    </li>
+  
+
+          
+            
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../adapters/Template/" class="md-nav__link">
+        Template
+      </a>
+    </li>
+  
+
+          
+            
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../adapters/Tribute/" class="md-nav__link">
+        Tribute
+      </a>
+    </li>
+  
+
+          
+            
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../adapters/TributeNFT/" class="md-nav__link">
+        TributeNFT
+      </a>
+    </li>
+  
+
+          
+            
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../adapters/Voting/" class="md-nav__link">
+        Voting
+      </a>
+    </li>
+  
+
+          
+            
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../adapters/Withdraw/" class="md-nav__link">
+        Withdraw
+      </a>
+    </li>
+  
+
+          
+        </ul>
+      </nav>
+    </li>
+  
+
+    
+      
+      
+      
+
+  
+  
+  
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+      
+        <input class="md-nav__toggle md-toggle" data-md-toggle="__nav_3" type="checkbox" id="__nav_3" >
+      
+      <label class="md-nav__link" for="__nav_3">
+        Core
+        <span class="md-nav__icon md-icon"></span>
+      </label>
+      <nav class="md-nav" aria-label="Core" data-md-level="1">
+        <label class="md-nav__title" for="__nav_3">
+          <span class="md-nav__icon md-icon"></span>
+          Core
+        </label>
+        <ul class="md-nav__list" data-md-scrollfix>
+          
+            
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../core/DaoFactory/" class="md-nav__link">
+        DaoFactory
+      </a>
+    </li>
+  
+
+          
+            
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../core/DaoRegistry/" class="md-nav__link">
+        DaoRegistry
+      </a>
+    </li>
+  
+
+          
+        </ul>
+      </nav>
+    </li>
+  
+
+    
+      
+      
+      
+
+  
+  
+    
+  
+  
+    
+    <li class="md-nav__item md-nav__item--active md-nav__item--nested">
+      
+      
+        <input class="md-nav__toggle md-toggle" data-md-toggle="__nav_4" type="checkbox" id="__nav_4" checked>
+      
+      <label class="md-nav__link" for="__nav_4">
+        Extensions
+        <span class="md-nav__icon md-icon"></span>
+      </label>
+      <nav class="md-nav" aria-label="Extensions" data-md-level="1">
+        <label class="md-nav__title" for="__nav_4">
+          <span class="md-nav__icon md-icon"></span>
+          Extensions
+        </label>
+        <ul class="md-nav__list" data-md-scrollfix>
+          
+            
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../Bank/" class="md-nav__link">
+        Bank
+      </a>
+    </li>
+  
+
+          
+            
+  
+  
+    
+  
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" data-md-toggle="toc" type="checkbox" id="__toc">
+      
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          ERC20
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="./" class="md-nav__link md-nav__link--active">
+        ERC20
+      </a>
+      
+        
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#extension-description-and-scope" class="md-nav__link">
+    Extension description and scope
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#extension-state" class="md-nav__link">
+    Extension state
+  </a>
+  
+    <nav class="md-nav" aria-label="Extension state">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#daoregistry-public-dao" class="md-nav__link">
+    DaoRegistry public dao;
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#bytes32-public-constant-erc20_ext_transfer_type-keccak256erc20exttransfertype" class="md-nav__link">
+    bytes32 public constant ERC20_EXT_TRANSFER_TYPE = keccak256("erc20ExtTransferType");
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#bool-public-initialized-false" class="md-nav__link">
+    bool public initialized = false;
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#address-public-tokenaddress" class="md-nav__link">
+    address public tokenAddress;
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#string-public-tokenname" class="md-nav__link">
+    string public tokenName;
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#string-public-tokensymbol" class="md-nav__link">
+    string public tokenSymbol;
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#uint8-public-tokendecimals" class="md-nav__link">
+    uint8 public tokenDecimals;
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#mappingaddress-mappingaddress-uint256-private-_allowances" class="md-nav__link">
+    mapping(address =&gt; mapping(address =&gt; uint256)) private _allowances;
+  </a>
+  
+    <nav class="md-nav" aria-label="mapping(address =&gt; mapping(address =&gt; uint256)) private _allowances;">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#access-flags" class="md-nav__link">
+    Access Flags
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#extension-functions" class="md-nav__link">
+    Extension functions
+  </a>
+  
+    <nav class="md-nav" aria-label="Extension functions">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#function-initialize" class="md-nav__link">
+    function initialize
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#function-token" class="md-nav__link">
+    function token
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#function-settoken" class="md-nav__link">
+    function setToken
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#function-name" class="md-nav__link">
+    function name
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#function-setname" class="md-nav__link">
+    function setName
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#function-symbol" class="md-nav__link">
+    function symbol
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#function-setsymbol" class="md-nav__link">
+    function setSymbol
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#function-decimals" class="md-nav__link">
+    function decimals
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#function-setdecimals" class="md-nav__link">
+    function setDecimals
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#function-totalsupply" class="md-nav__link">
+    function totalSupply
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#function-balanceof" class="md-nav__link">
+    function balanceOf
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#function-allowance" class="md-nav__link">
+    function allowance
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#function-approve" class="md-nav__link">
+    function approve
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#function-transfer" class="md-nav__link">
+    function transfer
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#function-transferfrom" class="md-nav__link">
+    function transferFrom
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#events" class="md-nav__link">
+    Events
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
+    </li>
+  
+
+          
+            
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../Executor/" class="md-nav__link">
+        Executor
+      </a>
+    </li>
+  
+
+          
+            
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../NFT/" class="md-nav__link">
+        NFT
+      </a>
+    </li>
+  
+
+          
+        </ul>
+      </nav>
+    </li>
+  
+
+    
+      
+      
+      
+
+  
+  
+  
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+      
+        <input class="md-nav__toggle md-toggle" data-md-toggle="__nav_5" type="checkbox" id="__nav_5" >
+      
+      <label class="md-nav__link" for="__nav_5">
+        Guards
+        <span class="md-nav__icon md-icon"></span>
+      </label>
+      <nav class="md-nav" aria-label="Guards" data-md-level="1">
+        <label class="md-nav__title" for="__nav_5">
+          <span class="md-nav__icon md-icon"></span>
+          Guards
+        </label>
+        <ul class="md-nav__list" data-md-scrollfix>
+          
+            
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../guards/AdapterGuard/" class="md-nav__link">
+        AdapterGuard
+      </a>
+    </li>
+  
+
+          
+            
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../guards/MemberGuard/" class="md-nav__link">
+        MemberGuard
+      </a>
+    </li>
+  
+
+          
+        </ul>
+      </nav>
+    </li>
+  
+
+    
+      
+      
+      
+
+  
+  
+  
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+      
+        <input class="md-nav__toggle md-toggle" data-md-toggle="__nav_6" type="checkbox" id="__nav_6" >
+      
+      <label class="md-nav__link" for="__nav_6">
+        Helpers
+        <span class="md-nav__icon md-icon"></span>
+      </label>
+      <nav class="md-nav" aria-label="Helpers" data-md-level="1">
+        <label class="md-nav__title" for="__nav_6">
+          <span class="md-nav__icon md-icon"></span>
+          Helpers
+        </label>
+        <ul class="md-nav__list" data-md-scrollfix>
+          
+            
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../helpers/FairShareHelper/" class="md-nav__link">
+        FairShareHelper
+      </a>
+    </li>
+  
+
+          
+        </ul>
+      </nav>
+    </li>
+  
+
+    
+  </ul>
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+            
+              
+              <div class="md-sidebar md-sidebar--secondary" data-md-component="sidebar" data-md-type="toc" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#extension-description-and-scope" class="md-nav__link">
+    Extension description and scope
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#extension-state" class="md-nav__link">
+    Extension state
+  </a>
+  
+    <nav class="md-nav" aria-label="Extension state">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#daoregistry-public-dao" class="md-nav__link">
+    DaoRegistry public dao;
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#bytes32-public-constant-erc20_ext_transfer_type-keccak256erc20exttransfertype" class="md-nav__link">
+    bytes32 public constant ERC20_EXT_TRANSFER_TYPE = keccak256("erc20ExtTransferType");
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#bool-public-initialized-false" class="md-nav__link">
+    bool public initialized = false;
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#address-public-tokenaddress" class="md-nav__link">
+    address public tokenAddress;
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#string-public-tokenname" class="md-nav__link">
+    string public tokenName;
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#string-public-tokensymbol" class="md-nav__link">
+    string public tokenSymbol;
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#uint8-public-tokendecimals" class="md-nav__link">
+    uint8 public tokenDecimals;
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#mappingaddress-mappingaddress-uint256-private-_allowances" class="md-nav__link">
+    mapping(address =&gt; mapping(address =&gt; uint256)) private _allowances;
+  </a>
+  
+    <nav class="md-nav" aria-label="mapping(address =&gt; mapping(address =&gt; uint256)) private _allowances;">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#access-flags" class="md-nav__link">
+    Access Flags
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#extension-functions" class="md-nav__link">
+    Extension functions
+  </a>
+  
+    <nav class="md-nav" aria-label="Extension functions">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#function-initialize" class="md-nav__link">
+    function initialize
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#function-token" class="md-nav__link">
+    function token
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#function-settoken" class="md-nav__link">
+    function setToken
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#function-name" class="md-nav__link">
+    function name
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#function-setname" class="md-nav__link">
+    function setName
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#function-symbol" class="md-nav__link">
+    function symbol
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#function-setsymbol" class="md-nav__link">
+    function setSymbol
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#function-decimals" class="md-nav__link">
+    function decimals
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#function-setdecimals" class="md-nav__link">
+    function setDecimals
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#function-totalsupply" class="md-nav__link">
+    function totalSupply
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#function-balanceof" class="md-nav__link">
+    function balanceOf
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#function-allowance" class="md-nav__link">
+    function allowance
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#function-approve" class="md-nav__link">
+    function approve
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#function-transfer" class="md-nav__link">
+    function transfer
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#function-transferfrom" class="md-nav__link">
+    function transferFrom
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#events" class="md-nav__link">
+    Events
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+          
+          <div class="md-content" data-md-component="content">
+            <article class="md-content__inner md-typeset">
+              
+                
+                
+                  <h1>ERC20</h1>
+                
+                <h2 id="extension-description-and-scope">Extension description and scope</h2>
+<p>An <a href="https://docs.openzeppelin.com/contracts/3.x/api/token/erc20">ERC20</a> contract safely manages the transfers of tokens that represent the voting power of each member of the DAO.</p>
+<p>The extension adds to the DAO the capability of managing the voting power of members and external individuals in the DAO. It does that by tracking the token transfers between DAO members, or even, transfer from members to external accounts. That enhances the DAO features by allowing individuals that are not part of the DAO receive voting rights.</p>
+<h2 id="extension-state">Extension state</h2>
+<h3 id="daoregistry-public-dao">DaoRegistry public dao;</h3>
+<p>The DAO address that this extension belongs to</p>
+<h3 id="bytes32-public-constant-erc20_ext_transfer_type-keccak256erc20exttransfertype">bytes32 public constant ERC20_EXT_TRANSFER_TYPE = keccak256("erc20ExtTransferType");</h3>
+<p>The custom configuration to set the transfer type, e.g:</p>
+<ul>
+<li>0: transfers are enabled only between dao members</li>
+<li>1: transfers are enabled between dao members and external accounts</li>
+<li>2: all transfers are paused</li>
+</ul>
+<p>It needs to be set via a <a href="https://github.com/openlawteam/tribute-contracts/blob/master/docs/adapters/Configuration.md">Configuration proposal</a>, if the proposal pass, the new configuration gets stored in the DAO. By default, only transfers between members are allowed.</p>
+<h3 id="bool-public-initialized-false">bool public initialized = false;</h3>
+<p>Internally tracks deployment under eip-1167 proxy pattern</p>
+<h3 id="address-public-tokenaddress">address public tokenAddress;</h3>
+<p>The token address managed by the DAO that tracks the internal transfers</p>
+<h3 id="string-public-tokenname">string public tokenName;</h3>
+<p>The name of the token managed by the DAO</p>
+<h3 id="string-public-tokensymbol">string public tokenSymbol;</h3>
+<p>The symbol of the token managed by the DAO</p>
+<h3 id="uint8-public-tokendecimals">uint8 public tokenDecimals;</h3>
+<p>The number of decimals of the token managed by the DAO. The default number of decimals is 0 in <code>utils/DeploymentUtils.js.</code> It is set to 0, because then the number of Units issued by the Bank Extension is tracked on a 1:1 basis with the number of tokens. For example, in the DAO issues 1 Unit to a member, then the display in a wallet such as MetaMask will be equal "1" Token. Otherwise, if the default was to the standard 18 decimals, then it would display in MetaMask as "0.000000000000000001" Token.</p>
+<h3 id="mappingaddress-mappingaddress-uint256-private-_allowances">mapping(address =&gt; mapping(address =&gt; uint256)) private _allowances;</h3>
+<p>Tracks all the token allowances: owner =&gt; spender =&gt; amount</p>
+<h4 id="access-flags">Access Flags</h4>
+<ul>
+<li><a href="https://github.com/openlawteam/tribute-contracts/blob/master/docs/extensions/Bank.md">Bank</a>:</li>
+<li><code>INTERNAL_TRANSFER: true</code>:</li>
+<li><a href="https://github.com/openlawteam/tribute-contracts/blob/master/docs/core/DaoRegistry.md">DAO</a>:</li>
+<li><code>NEW_MEMBER: true</code></li>
+</ul>
+<p>Access Control Layer Flags - explicitly grant the extension permissions to change the bank and dao states.</p>
+<h2 id="extension-functions">Extension functions</h2>
+<h3 id="function-initialize">function initialize</h3>
+<pre><code class="language-solidity">/**
+  * @notice Initializes the extension with the DAO that it belongs to,
+  * and checks if the parameters were set.
+  * @param _dao The address of the DAO that owns the extension.
+  * @param creator The owner of the DAO and Extension that is also a member of the DAO.
+  */
+function initialize(DaoRegistry _dao, address creator) external override
+</code></pre>
+<h3 id="function-token">function token</h3>
+<pre><code class="language-solidity">/**
+  * @dev Returns the token address managed by the DAO that tracks the
+  * internal transfers.
+  */
+function token() public view virtual returns (address)
+</code></pre>
+<h3 id="function-settoken">function setToken</h3>
+<pre><code class="language-solidity">/**
+  * @dev Sets the token address if the extension is not initialized,
+  * not reserved and not zero.
+  */
+function setToken(address _tokenAddress) external
+</code></pre>
+<h3 id="function-name">function name</h3>
+<pre><code class="language-solidity">/**
+  * @dev Returns the name of the token.
+  */
+function name() public view virtual returns (string memory)
+</code></pre>
+<h3 id="function-setname">function setName</h3>
+<pre><code class="language-solidity">/**
+  * @dev Sets the name of the token if the extension is not initialized.
+  */
+function setName(string memory _name) external
+</code></pre>
+<h3 id="function-symbol">function symbol</h3>
+<pre><code class="language-solidity">/**
+  * @dev Returns the symbol of the token, usually a shorter version of the
+  * name.
+  */
+function symbol() public view virtual returns (string memory)
+</code></pre>
+<h3 id="function-setsymbol">function setSymbol</h3>
+<pre><code class="language-solidity">/**
+  * @dev Sets the token symbol if the extension is not initialized.
+  */
+function setSymbol(string memory _symbol) external
+</code></pre>
+<h3 id="function-decimals">function decimals</h3>
+<pre><code class="language-solidity">/**
+  * @dev Returns the number of decimals used to get its user representation.
+  * For example, if `decimals` equals `2`, a balance of `505` tokens should
+  * be displayed to a user as `5,05` (`505 / 10 ** 2`).
+  */
+function decimals() public view virtual returns (uint8)
+</code></pre>
+<h3 id="function-setdecimals">function setDecimals</h3>
+<pre><code class="language-solidity">/**
+  * @dev Sets the token decimals if the extension is not initialized.
+  */
+function setDecimals(uint8 _decimals) external
+</code></pre>
+<h3 id="function-totalsupply">function totalSupply</h3>
+<pre><code class="language-solidity">/**
+  * @dev Returns the amount of tokens in existence.
+  */
+function totalSupply() public view override returns (uint256)
+</code></pre>
+<h3 id="function-balanceof">function balanceOf</h3>
+<pre><code class="language-solidity">/**
+  * @dev Returns the amount of tokens owned by `account`.
+  */
+function balanceOf(address account) public view override returns (uint256)
+</code></pre>
+<h3 id="function-allowance">function allowance</h3>
+<pre><code class="language-solidity">/**
+  * @dev Returns the remaining number of tokens that `spender` will be
+  * allowed to spend on behalf of `owner` through {transferFrom}. This is
+  * zero by default.
+  *
+  * This value changes when {approve} or {transferFrom} are called.
+  */
+function allowance(address owner, address spender)
+    public
+    view
+    override
+    returns (uint256)
+</code></pre>
+<h3 id="function-approve">function approve</h3>
+<pre><code class="language-solidity">/**
+  * @dev Sets `amount` as the allowance of `spender` over the caller's tokens.
+  * @param spender The address account that will have the units decremented.
+  * @param amount The amount to decrement from the spender account.
+  * @return a boolean value indicating whether the operation succeeded.
+  *
+  * Emits an {Approval} event.
+  */
+function approve(address spender, uint256 amount)
+    public
+    override
+    reentrancyGuard(dao)
+    returns (bool)
+</code></pre>
+<h3 id="function-transfer">function transfer</h3>
+<pre><code class="language-solidity">/**
+  * @dev Moves `amount` tokens from the caller's account to `recipient`.
+  * @dev The transfer operation follows the DAO configuration specified
+  * by the ERC20_EXT_TRANSFER_TYPE property.
+  * @param recipient The address account that will have the units incremented.
+  * @param amount The amount to increment in the recipient account.
+  * @return a boolean value indicating whether the operation succeeded.
+  *
+  * Emits a {Transfer} event.
+  */
+function transfer(address recipient, uint256 amount)
+    public
+    override
+    reentrancyGuard(dao)
+    returns (bool)
+</code></pre>
+<h3 id="function-transferfrom">function transferFrom</h3>
+<pre><code class="language-solidity">/**
+  * @dev Moves `amount` tokens from `sender` to `recipient` using the
+  * allowance mechanism. `amount` is then deducted from the caller's
+  * allowance.
+  * @dev The transfer operation follows the DAO configuration specified
+  * by the ERC20_EXT_TRANSFER_TYPE property.
+  * @param sender The address account that will have the units decremented.
+  * @param recipient The address account that will have the units incremented.
+  * @param amount The amount to decrement from the sender account.
+  * @return a boolean value indicating whether the operation succeeded.
+  *
+  * Emits a {Transfer} event.
+  */
+function transferFrom(
+    address sender,
+    address recipient,
+    uint256 amount
+) public override reentrancyGuard(dao) returns (bool)
+</code></pre>
+<h2 id="events">Events</h2>
+<ul>
+<li><code>Approval</code>: when the sender approves a spender to transfer a certain amount.</li>
+<li><code>Transfer</code>: when the transfer happens between DAO members and/or external accounts.</li>
+</ul>
+                
+              
+              
+                
+
+
+              
+            </article>
+          </div>
+        </div>
+        
+      </main>
+      
+        
+<footer class="md-footer">
+  
+    <nav class="md-footer__inner md-grid" aria-label="Footer">
+      
+        
+        <a href="../Bank/" class="md-footer__link md-footer__link--prev" aria-label="Previous: Bank" rel="prev">
+          <div class="md-footer__button md-icon">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11h12z"/></svg>
+          </div>
+          <div class="md-footer__title">
+            <div class="md-ellipsis">
+              <span class="md-footer__direction">
+                Previous
+              </span>
+              Bank
+            </div>
+          </div>
+        </a>
+      
+      
+        
+        <a href="../Executor/" class="md-footer__link md-footer__link--next" aria-label="Next: Executor" rel="next">
+          <div class="md-footer__title">
+            <div class="md-ellipsis">
+              <span class="md-footer__direction">
+                Next
+              </span>
+              Executor
+            </div>
+          </div>
+          <div class="md-footer__button md-icon">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M4 11v2h12l-5.5 5.5 1.42 1.42L19.84 12l-7.92-7.92L10.5 5.5 16 11H4z"/></svg>
+          </div>
+        </a>
+      
+    </nav>
+  
+  <div class="md-footer-meta md-typeset">
+    <div class="md-footer-meta__inner md-grid">
+      <div class="md-footer-copyright">
+        
+        Made with
+        <a href="https://squidfunk.github.io/mkdocs-material/" target="_blank" rel="noopener">
+          Material for MkDocs
+        </a>
+        
+      </div>
+      
+    </div>
+  </div>
+</footer>
+      
+    </div>
+    <div class="md-dialog" data-md-component="dialog">
+      <div class="md-dialog__inner md-typeset"></div>
+    </div>
+    <script id="__config" type="application/json">{"base": "../..", "features": [], "translations": {"clipboard.copy": "Copy to clipboard", "clipboard.copied": "Copied to clipboard", "search.config.lang": "en", "search.config.pipeline": "trimmer, stopWordFilter", "search.config.separator": "[\\s\\-]+", "search.placeholder": "Search", "search.result.placeholder": "Type to start searching", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.term.missing": "Missing", "select.version.title": "Select version"}, "search": "../../assets/javascripts/workers/search.b0710199.min.js", "version": null}</script>
+    
+    
+      <script src="../../assets/javascripts/bundle.76f349be.min.js"></script>
+      
+    
+  </body>
+</html>

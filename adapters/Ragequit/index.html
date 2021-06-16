@@ -1,0 +1,1092 @@
+
+<!doctype html>
+<html lang="en" class="no-js">
+  <head>
+    
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width,initial-scale=1">
+      
+      
+      
+      
+        <link rel="canonical" href="https://openlawteam.github.io/tribute-contracts/adapters/Ragequit/">
+      
+      <link rel="icon" href="../../assets/images/favicon.png">
+      <meta name="generator" content="mkdocs-1.2.1, mkdocs-material-7.1.8">
+    
+    
+      
+        <title>Ragequit - Tribute DAO Framework</title>
+      
+    
+    
+      <link rel="stylesheet" href="../../assets/stylesheets/main.ca7ac06f.min.css">
+      
+        
+        <link rel="stylesheet" href="../../assets/stylesheets/palette.f1a3b89f.min.css">
+        
+      
+    
+    
+    
+      
+        
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,400,400i,700%7CRoboto+Mono&display=fallback">
+        <style>:root{--md-text-font-family:"Roboto";--md-code-font-family:"Roboto Mono"}</style>
+      
+    
+    
+    
+    
+      
+
+
+    
+    
+  </head>
+  
+  
+    
+    
+    
+    
+    
+    <body dir="ltr" data-md-color-scheme="" data-md-color-primary="none" data-md-color-accent="none">
+  
+    
+    <script>function __prefix(e){return new URL("../..",location).pathname+"."+e}function __get(e,t=localStorage){return JSON.parse(t.getItem(__prefix(e)))}</script>
+    
+    <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
+    <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
+    <label class="md-overlay" for="__drawer"></label>
+    <div data-md-component="skip">
+      
+        
+        <a href="#adapter-description-and-scope" class="md-skip">
+          Skip to content
+        </a>
+      
+    </div>
+    <div data-md-component="announce">
+      
+    </div>
+    
+      <header class="md-header" data-md-component="header">
+  <nav class="md-header__inner md-grid" aria-label="Header">
+    <a href="../.." title="Tribute DAO Framework" class="md-header__button md-logo" aria-label="Tribute DAO Framework" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54z"/></svg>
+
+    </a>
+    <label class="md-header__button md-icon" for="__drawer">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3 6h18v2H3V6m0 5h18v2H3v-2m0 5h18v2H3v-2z"/></svg>
+    </label>
+    <div class="md-header__title" data-md-component="header-title">
+      <div class="md-header__ellipsis">
+        <div class="md-header__topic">
+          <span class="md-ellipsis">
+            Tribute DAO Framework
+          </span>
+        </div>
+        <div class="md-header__topic" data-md-component="header-topic">
+          <span class="md-ellipsis">
+            
+              Ragequit
+            
+          </span>
+        </div>
+      </div>
+    </div>
+    
+    
+    
+      <label class="md-header__button md-icon" for="__search">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.516 6.516 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5z"/></svg>
+      </label>
+      
+<div class="md-search" data-md-component="search" role="dialog">
+  <label class="md-search__overlay" for="__search"></label>
+  <div class="md-search__inner" role="search">
+    <form class="md-search__form" name="search">
+      <input type="text" class="md-search__input" name="query" aria-label="Search" placeholder="Search" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" data-md-component="search-query" data-md-state="active" required>
+      <label class="md-search__icon md-icon" for="__search">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.516 6.516 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5z"/></svg>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11h12z"/></svg>
+      </label>
+      <button type="reset" class="md-search__icon md-icon" aria-label="Clear" tabindex="-1">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12 19 6.41z"/></svg>
+      </button>
+    </form>
+    <div class="md-search__output">
+      <div class="md-search__scrollwrap" data-md-scrollfix>
+        <div class="md-search-result" data-md-component="search-result">
+          <div class="md-search-result__meta">
+            Initializing search
+          </div>
+          <ol class="md-search-result__list"></ol>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+    
+    
+  </nav>
+</header>
+    
+    <div class="md-container" data-md-component="container">
+      
+      
+        
+      
+      <main class="md-main" data-md-component="main">
+        <div class="md-main__inner md-grid">
+          
+            
+              
+              <div class="md-sidebar md-sidebar--primary" data-md-component="sidebar" data-md-type="navigation" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+
+<nav class="md-nav md-nav--primary" aria-label="Navigation" data-md-level="0">
+  <label class="md-nav__title" for="__drawer">
+    <a href="../.." title="Tribute DAO Framework" class="md-nav__button md-logo" aria-label="Tribute DAO Framework" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54z"/></svg>
+
+    </a>
+    Tribute DAO Framework
+  </label>
+  
+  <ul class="md-nav__list" data-md-scrollfix>
+    
+      
+      
+      
+
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../ThankYou/" class="md-nav__link">
+        ThankYou
+      </a>
+    </li>
+  
+
+    
+      
+      
+      
+
+  
+  
+    
+  
+  
+    
+    <li class="md-nav__item md-nav__item--active md-nav__item--nested">
+      
+      
+        <input class="md-nav__toggle md-toggle" data-md-toggle="__nav_2" type="checkbox" id="__nav_2" checked>
+      
+      <label class="md-nav__link" for="__nav_2">
+        Adapters
+        <span class="md-nav__icon md-icon"></span>
+      </label>
+      <nav class="md-nav" aria-label="Adapters" data-md-level="1">
+        <label class="md-nav__title" for="__nav_2">
+          <span class="md-nav__icon md-icon"></span>
+          Adapters
+        </label>
+        <ul class="md-nav__list" data-md-scrollfix>
+          
+            
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../BatchVoting/" class="md-nav__link">
+        BatchVoting
+      </a>
+    </li>
+  
+
+          
+            
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../Configuration/" class="md-nav__link">
+        Configuration
+      </a>
+    </li>
+  
+
+          
+            
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../CouponOnboarding/" class="md-nav__link">
+        CouponOnboarding
+      </a>
+    </li>
+  
+
+          
+            
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../Distribute/" class="md-nav__link">
+        Distribute
+      </a>
+    </li>
+  
+
+          
+            
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../Financing/" class="md-nav__link">
+        Financing
+      </a>
+    </li>
+  
+
+          
+            
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../GuildKick/" class="md-nav__link">
+        GuildKick
+      </a>
+    </li>
+  
+
+          
+            
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../HowToCreate/" class="md-nav__link">
+        How to create an Adapter
+      </a>
+    </li>
+  
+
+          
+            
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../Managing/" class="md-nav__link">
+        Managing
+      </a>
+    </li>
+  
+
+          
+            
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../OffchainVoting/" class="md-nav__link">
+        OffchainVoting
+      </a>
+    </li>
+  
+
+          
+            
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../Onboarding/" class="md-nav__link">
+        Onboarding
+      </a>
+    </li>
+  
+
+          
+            
+  
+  
+    
+  
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" data-md-toggle="toc" type="checkbox" id="__toc">
+      
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          Ragequit
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="./" class="md-nav__link md-nav__link--active">
+        Ragequit
+      </a>
+      
+        
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#adapter-description-and-scope" class="md-nav__link">
+    Adapter description and scope
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#adapter-workflow" class="md-nav__link">
+    Adapter workflow
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#adapter-configuration" class="md-nav__link">
+    Adapter configuration
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#adapter-state" class="md-nav__link">
+    Adapter state
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#dependencies-and-interactions-internal-external" class="md-nav__link">
+    Dependencies and interactions (internal / external)
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#functions-description-and-assumptions-checks" class="md-nav__link">
+    Functions description and assumptions / checks
+  </a>
+  
+    <nav class="md-nav" aria-label="Functions description and assumptions / checks">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#receive-external-payable" class="md-nav__link">
+    receive() external payable
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#function-ragequit" class="md-nav__link">
+    function ragequit
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#function-_prepareragequit" class="md-nav__link">
+    function _prepareRagequit
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#function-_burnunits" class="md-nav__link">
+    function _burnUnits
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#events" class="md-nav__link">
+    Events
+  </a>
+  
+    <nav class="md-nav" aria-label="Events">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#event-memberragequit" class="md-nav__link">
+    event MemberRagequit
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
+    </li>
+  
+
+          
+            
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../Template/" class="md-nav__link">
+        Template
+      </a>
+    </li>
+  
+
+          
+            
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../Tribute/" class="md-nav__link">
+        Tribute
+      </a>
+    </li>
+  
+
+          
+            
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../TributeNFT/" class="md-nav__link">
+        TributeNFT
+      </a>
+    </li>
+  
+
+          
+            
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../Voting/" class="md-nav__link">
+        Voting
+      </a>
+    </li>
+  
+
+          
+            
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../Withdraw/" class="md-nav__link">
+        Withdraw
+      </a>
+    </li>
+  
+
+          
+        </ul>
+      </nav>
+    </li>
+  
+
+    
+      
+      
+      
+
+  
+  
+  
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+      
+        <input class="md-nav__toggle md-toggle" data-md-toggle="__nav_3" type="checkbox" id="__nav_3" >
+      
+      <label class="md-nav__link" for="__nav_3">
+        Core
+        <span class="md-nav__icon md-icon"></span>
+      </label>
+      <nav class="md-nav" aria-label="Core" data-md-level="1">
+        <label class="md-nav__title" for="__nav_3">
+          <span class="md-nav__icon md-icon"></span>
+          Core
+        </label>
+        <ul class="md-nav__list" data-md-scrollfix>
+          
+            
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../core/DaoFactory/" class="md-nav__link">
+        DaoFactory
+      </a>
+    </li>
+  
+
+          
+            
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../core/DaoRegistry/" class="md-nav__link">
+        DaoRegistry
+      </a>
+    </li>
+  
+
+          
+        </ul>
+      </nav>
+    </li>
+  
+
+    
+      
+      
+      
+
+  
+  
+  
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+      
+        <input class="md-nav__toggle md-toggle" data-md-toggle="__nav_4" type="checkbox" id="__nav_4" >
+      
+      <label class="md-nav__link" for="__nav_4">
+        Extensions
+        <span class="md-nav__icon md-icon"></span>
+      </label>
+      <nav class="md-nav" aria-label="Extensions" data-md-level="1">
+        <label class="md-nav__title" for="__nav_4">
+          <span class="md-nav__icon md-icon"></span>
+          Extensions
+        </label>
+        <ul class="md-nav__list" data-md-scrollfix>
+          
+            
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../extensions/Bank/" class="md-nav__link">
+        Bank
+      </a>
+    </li>
+  
+
+          
+            
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../extensions/ERC20/" class="md-nav__link">
+        ERC20
+      </a>
+    </li>
+  
+
+          
+            
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../extensions/Executor/" class="md-nav__link">
+        Executor
+      </a>
+    </li>
+  
+
+          
+            
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../extensions/NFT/" class="md-nav__link">
+        NFT
+      </a>
+    </li>
+  
+
+          
+        </ul>
+      </nav>
+    </li>
+  
+
+    
+      
+      
+      
+
+  
+  
+  
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+      
+        <input class="md-nav__toggle md-toggle" data-md-toggle="__nav_5" type="checkbox" id="__nav_5" >
+      
+      <label class="md-nav__link" for="__nav_5">
+        Guards
+        <span class="md-nav__icon md-icon"></span>
+      </label>
+      <nav class="md-nav" aria-label="Guards" data-md-level="1">
+        <label class="md-nav__title" for="__nav_5">
+          <span class="md-nav__icon md-icon"></span>
+          Guards
+        </label>
+        <ul class="md-nav__list" data-md-scrollfix>
+          
+            
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../guards/AdapterGuard/" class="md-nav__link">
+        AdapterGuard
+      </a>
+    </li>
+  
+
+          
+            
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../guards/MemberGuard/" class="md-nav__link">
+        MemberGuard
+      </a>
+    </li>
+  
+
+          
+        </ul>
+      </nav>
+    </li>
+  
+
+    
+      
+      
+      
+
+  
+  
+  
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+      
+        <input class="md-nav__toggle md-toggle" data-md-toggle="__nav_6" type="checkbox" id="__nav_6" >
+      
+      <label class="md-nav__link" for="__nav_6">
+        Helpers
+        <span class="md-nav__icon md-icon"></span>
+      </label>
+      <nav class="md-nav" aria-label="Helpers" data-md-level="1">
+        <label class="md-nav__title" for="__nav_6">
+          <span class="md-nav__icon md-icon"></span>
+          Helpers
+        </label>
+        <ul class="md-nav__list" data-md-scrollfix>
+          
+            
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../helpers/FairShareHelper/" class="md-nav__link">
+        FairShareHelper
+      </a>
+    </li>
+  
+
+          
+        </ul>
+      </nav>
+    </li>
+  
+
+    
+  </ul>
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+            
+              
+              <div class="md-sidebar md-sidebar--secondary" data-md-component="sidebar" data-md-type="toc" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#adapter-description-and-scope" class="md-nav__link">
+    Adapter description and scope
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#adapter-workflow" class="md-nav__link">
+    Adapter workflow
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#adapter-configuration" class="md-nav__link">
+    Adapter configuration
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#adapter-state" class="md-nav__link">
+    Adapter state
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#dependencies-and-interactions-internal-external" class="md-nav__link">
+    Dependencies and interactions (internal / external)
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#functions-description-and-assumptions-checks" class="md-nav__link">
+    Functions description and assumptions / checks
+  </a>
+  
+    <nav class="md-nav" aria-label="Functions description and assumptions / checks">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#receive-external-payable" class="md-nav__link">
+    receive() external payable
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#function-ragequit" class="md-nav__link">
+    function ragequit
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#function-_prepareragequit" class="md-nav__link">
+    function _prepareRagequit
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#function-_burnunits" class="md-nav__link">
+    function _burnUnits
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#events" class="md-nav__link">
+    Events
+  </a>
+  
+    <nav class="md-nav" aria-label="Events">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#event-memberragequit" class="md-nav__link">
+    event MemberRagequit
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+          
+          <div class="md-content" data-md-component="content">
+            <article class="md-content__inner md-typeset">
+              
+                
+                
+                  <h1>Ragequit</h1>
+                
+                <h2 id="adapter-description-and-scope">Adapter description and scope</h2>
+<p>Ragequit is the process in which a member of the DAO decides to opt out of the DAO for any given reason.</p>
+<p>This implementation of ragequit adapter does not cover the case in which the member is put in jail before updating the internal balance - as it happens in Moloch V2 to disincentivize the behavior in which members vote Yes on proposals that are essentially bad for the future of the DAO, and right after that they quit with their funds.</p>
+<p>It also does not check if the member has voted Yes on a proposal that is not processed yet, and does not keep track of the latest proposal that was voted Yes on.</p>
+<p>The main goal is to give the members the freedom to choose when it is the best time to withdraw their funds without any additional preconditions, except for the fact that they need to have enough units to be converted to funds. Members do not need to convert all their units/loot at once.</p>
+<h2 id="adapter-workflow">Adapter workflow</h2>
+<p>In order to opt out of the DAO, the member needs to indicate the amount of units and/or loots that the member has decided to burn (to convert back into a token value).</p>
+<p>The proportional units and/or loots are burned when the member provides the tokens in which one expects to receive the funds. The funds are deducted from the internal DAO bank balance, and added to the member's internal balance.</p>
+<p>If the member provides at least one invalid token, e.g: a token that is not supported/allowed by the DAO, the entire ragequit process is canceled/reverted. By default the adapter expects that the token array is sorted in ascending order. This is done to test for duplicates, and each token needs to be smaller than the next one, otherwise the transaction is reverted.
+In addition to that, if the member provides a long list of tokens that may cause issues due to the block size limit, it is expected that the transaction returns a failure, so it can be retried in another run with a fewer tokens.</p>
+<p>Once the ragequit process is completed, the funds are deducted from the bank, added to the member's internal balance, and an event called <code>MemberRagequit</code> is emitted.</p>
+<h2 id="adapter-configuration">Adapter configuration</h2>
+<p>Tokens that are provided by the member have to be allowed/supported by the DAO.</p>
+<p>The member/advisor needs to have enough units and/or loot in order to convert it to funds.</p>
+<p>DAORegistry Access Flags:</p>
+<p>Bank Extension Access Flags: <code>WITHDRAW</code>, <code>INTERNAL_TRANSFER</code>, <code>SUB_FROM_BALANCE</code>, <code>ADD_TO_BALANCE</code>.</p>
+<h2 id="adapter-state">Adapter state</h2>
+<p>There is no state tracking for this adapter.</p>
+<h2 id="dependencies-and-interactions-internal-external">Dependencies and interactions (internal / external)</h2>
+<ul>
+<li>
+<p>BankExtension</p>
+</li>
+<li>
+<p>checks the member's balance.</p>
+</li>
+<li>subtracts the member's balance.</li>
+<li>transfers the funds from the DAO account to the member's account taking into consideration the provided tokens.</li>
+<li>
+<p>checks if the provided token is supported/allowed by the DAO.</p>
+</li>
+<li>
+<p>DaoRegistry</p>
+</li>
+<li>
+<p>checks if the message sender is actually a member or an advisor of the DAO.</p>
+</li>
+<li>
+<p>FairShareHelper</p>
+</li>
+<li>
+<p>calculates the amount of funds to be returned to the member based on the provided numbers of units and/or loot, and current balance of the Guild.</p>
+</li>
+</ul>
+<h2 id="functions-description-and-assumptions-checks">Functions description and assumptions / checks</h2>
+<h3 id="receive-external-payable">receive() external payable</h3>
+<pre><code class="language-solidity">    /**
+     * @notice default fallback function to prevent from sending ether to the contract.
+     */
+    receive() external payable
+</code></pre>
+<h3 id="function-ragequit">function ragequit</h3>
+<pre><code class="language-solidity">    /**
+     * @notice Allows a member or advisor of the DAO to opt out by burning the proportional amount of units/loot of the member.
+     * @notice Anyone is allowed to call this function, but only members and advisors that have units are able to execute the entire ragequit process.
+     * @notice The array of token needs to be sorted in ascending order before executing this call, otherwise the transaction will fail.
+     * @dev The sum of unitsToBurn and lootToBurn have to be greater than zero.
+     * @dev The member becomes an inactive member of the DAO once all the units/loot are burned.
+     * @dev If the member provides an invalid/not allowed token, the entire processed is reverted.
+     * @dev If no tokens are informed, the transaction is reverted.
+     * @param dao The dao address that the member is part of.
+     * @param unitsToBurn The amount of units of the member that must be converted into funds.
+     * @param lootToBurn The amount of loot of the member that must be converted into funds.
+     * @param tokens The array of tokens that the funds should be sent to.
+     */
+    function ragequit(
+        DaoRegistry dao,
+        uint256 unitsToBurn,
+        uint256 lootToBurn,
+        address[] memory tokens
+    ) external
+</code></pre>
+<h3 id="function-_prepareragequit">function _prepareRagequit</h3>
+<pre><code class="language-solidity">    /**
+     * @notice Subtracts from the internal member's account the proportional units and/or loot.
+     * @param memberAddr The member address that wants to burn the units and/or loot.
+     * @param unitsToBurn The amount of units of the member that must be converted into funds.
+     * @param lootToBurn The amount of loot of the member that must be converted into funds.
+     * @param tokens The array of tokens that the funds should be sent to.
+     * @param bank The bank extension.
+     */
+    function _prepareRagequit(
+        address memberAddr,
+        uint256 unitsToBurn,
+        uint256 lootToBurn,
+        address[] calldata tokens,
+        BankExtension bank
+    ) internal
+</code></pre>
+<h3 id="function-_burnunits">function _burnUnits</h3>
+<pre><code class="language-solidity">    /**
+     * @notice Subtracts from the bank's account the proportional units and/or loot,
+     * @notice and transfers the funds to the member's internal account based on the provided tokens.
+     * @param memberAddr The member address that wants to burn the units and/or loot.
+     * @param unitsToBurn The amount of units of the member that must be converted into funds.
+     * @param lootToBurn The amount of loot of the member that must be converted into funds.
+     * @param initialTotalUnitsAndLoot The sum of units and loot before internal transfers.
+     * @param tokens The array of tokens that the funds should be sent to.
+     * @param bank The bank extension.
+     */
+    function _burnUnits(
+        address memberAddr,
+        uint256 unitsToBurn,
+        uint256 lootToBurn,
+        uint256 initialTotalUnitsAndLoot,
+        address[] memory tokens,
+        BankExtension bank
+    ) internal
+</code></pre>
+<h2 id="events">Events</h2>
+<h3 id="event-memberragequit">event MemberRagequit</h3>
+<pre><code class="language-solidity">    /**
+     * @notice Event emitted when a member of the DAO executes a ragequit
+     * with all or parts of the member's units/loot.
+     */
+    event MemberRagequit(
+        address memberAddr,
+        uint256 burnedUnits,
+        uint256 burnedLoot,
+        uint256 initialTotalUnitsAndLoot)
+</code></pre>
+                
+              
+              
+                
+
+
+              
+            </article>
+          </div>
+        </div>
+        
+      </main>
+      
+        
+<footer class="md-footer">
+  
+    <nav class="md-footer__inner md-grid" aria-label="Footer">
+      
+        
+        <a href="../Onboarding/" class="md-footer__link md-footer__link--prev" aria-label="Previous: Onboarding" rel="prev">
+          <div class="md-footer__button md-icon">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11h12z"/></svg>
+          </div>
+          <div class="md-footer__title">
+            <div class="md-ellipsis">
+              <span class="md-footer__direction">
+                Previous
+              </span>
+              Onboarding
+            </div>
+          </div>
+        </a>
+      
+      
+        
+        <a href="../Template/" class="md-footer__link md-footer__link--next" aria-label="Next: Template" rel="next">
+          <div class="md-footer__title">
+            <div class="md-ellipsis">
+              <span class="md-footer__direction">
+                Next
+              </span>
+              Template
+            </div>
+          </div>
+          <div class="md-footer__button md-icon">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M4 11v2h12l-5.5 5.5 1.42 1.42L19.84 12l-7.92-7.92L10.5 5.5 16 11H4z"/></svg>
+          </div>
+        </a>
+      
+    </nav>
+  
+  <div class="md-footer-meta md-typeset">
+    <div class="md-footer-meta__inner md-grid">
+      <div class="md-footer-copyright">
+        
+        Made with
+        <a href="https://squidfunk.github.io/mkdocs-material/" target="_blank" rel="noopener">
+          Material for MkDocs
+        </a>
+        
+      </div>
+      
+    </div>
+  </div>
+</footer>
+      
+    </div>
+    <div class="md-dialog" data-md-component="dialog">
+      <div class="md-dialog__inner md-typeset"></div>
+    </div>
+    <script id="__config" type="application/json">{"base": "../..", "features": [], "translations": {"clipboard.copy": "Copy to clipboard", "clipboard.copied": "Copied to clipboard", "search.config.lang": "en", "search.config.pipeline": "trimmer, stopWordFilter", "search.config.separator": "[\\s\\-]+", "search.placeholder": "Search", "search.result.placeholder": "Type to start searching", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.term.missing": "Missing", "select.version.title": "Select version"}, "search": "../../assets/javascripts/workers/search.b0710199.min.js", "version": null}</script>
+    
+    
+      <script src="../../assets/javascripts/bundle.76f349be.min.js"></script>
+      
+    
+  </body>
+</html>
