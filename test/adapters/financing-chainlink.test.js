@@ -545,7 +545,18 @@ describe("Adapter - Financing", () => {
       gasPrice: toBN("0"),
     });
 
+    //Check Guild Bank balance to make sure the transfer has happened 
+    //-note: have to use ETH, b/c requestedAmount in dollar
+    let ethRequestedAmount = toBN("500000000000000000");
+    checkBalance(
+      bank,
+      GUILD,
+      ETH_TOKEN,
+      expectedGuildBalance.sub(ethRequestedAmount)
+    );
 
+     //Check the applicant token balance to make sure the funds are available in the bank for the applicant account
+     checkBalance(bank, applicant, ETH_TOKEN, ethRequestedAmount);
     // checkBalance(bank, GUILD, ETH_TOKEN, expectedGuildBalance);
     // process it financingChainlink.processProposal
     // after the proposal is processed check:
