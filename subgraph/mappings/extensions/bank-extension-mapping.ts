@@ -150,10 +150,10 @@ function internalERC20Balance(
       tokenHolder = new TokenHolder(tokenHolderId);
 
       tokenHolder.member = memberAddress.toHex();
-      tokenHolder.balance = balance;
-
       tokenHolder.token = tokenId;
     }
+
+    tokenHolder.balance = balance;
 
     tokenHolder.save();
   }
