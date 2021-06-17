@@ -18,15 +18,17 @@ export function loadOrCreateExtensionEntity(
       extensionId.toHexString(),
     ]);
 
-    bank(daoAddress, extensionAddress);
     BankExtensionTemplate.create(extensionAddress);
+
+    bank(daoAddress, extensionAddress);
   } else if (NFT_EXTENSION_ID.toString() == extensionId.toHexString()) {
     log.info("INFO NFT_EXTENSION_ID, extensionId: {}", [
       extensionId.toHexString(),
     ]);
 
-    nft(daoAddress, extensionAddress);
     NFTExtensionTemplate.create(extensionAddress);
+
+    nft(daoAddress, extensionAddress);
   }
 }
 
