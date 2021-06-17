@@ -64,13 +64,55 @@ function getProposalCounter() {
 
 describe("Adapter - Financing", () => {
   before("deploy dao", async () => {
-    const { dao, adapters, extensions } = await deployDefaultDao({
+    const { dao, adapters, factories, extensions } = await deployDefaultDao({
       owner: myAccount,
+      finalize: false,
     });
     this.dao = dao;
     this.adapters = adapters;
     this.extensions = extensions;
     this.snapshotId = await takeChainSnapshot();
+
+     //import FakeChainlinkPriceFeed
+     const priceFeed = await FakeChainlinkPriceFeed.new();
+     const priceFeedAddress = priceFeed.address;
+ 
+     const financingChainlink = await FinancingChainlinkContract.new(
+       priceFeedAddress,
+       { from: myAccount }
+     );
+     //addAdapter financingChainlink
+     await factories.daoFactory.addAdapters(
+       dao.address,
+       [
+         entryDao("financing-chainlink", financingChainlink, {
+           SUBMIT_PROPOSAL: true,
+         }),
+       ],
+       { from: myAccount }
+     );
+     //configure Bank Extension
+     await factories.daoFactory.configureExtension(
+       dao.address,
+       extensions.bank.address,
+       [
+         entryBank(financingChainlink, {
+           ADD_TO_BALANCE: true,
+           SUB_FROM_BALANCE: true,
+           INTERNAL_TRANSFER: true, //need this?
+           WITHDRAW: true, //need this?
+         }),
+       ],
+       { from: myAccount }
+     );
+     //finalize Dao
+     await dao.finalizeDao({ from: myAccount });
+     //
+     const adapterAddress = await dao.getAdapterAddress(
+      sha3("financing-chainlink")
+    );
+    console.log("adapterAddess...", adapterAddress);
+    console.log("financing adderss...", financingChainlink.address);
   });
 
   beforeEach(async () => {
@@ -178,9 +220,10 @@ describe("Adapter - Financing", () => {
 
   it("should not be possible to get the money if the proposal fails", async () => {
     const voting = this.adapters.voting;
-    const financing = this.adapters.financing;
+    //const financing = this.adapters.financing;
     const onboarding = this.adapters.onboarding;
-
+    const financingChainlink = this.adapters.financingChainlink;
+    console.log("chainlink in this test...", financingChainlink);
     //Add funds to the Guild Bank after sposoring a member to join the Guild
     let proposalId = getProposalCounter();
     await onboarding.submitProposal(
@@ -209,9 +252,10 @@ describe("Adapter - Financing", () => {
     });
 
     //Create Financing Request
-    let requestedAmount = toBN(50000);
+    let requestedAmount = toBN(1000);
     proposalId = "0x2";
-    await financing.submitProposal(
+    // proposalId = getProposalCounter();
+    await financingChainlink.submitProposal(
       this.dao.address,
       proposalId,
       applicant,
@@ -233,7 +277,7 @@ describe("Adapter - Financing", () => {
     //Process Financing proposal after voting
     await advanceTime(10000);
     try {
-      await financing.processProposal(this.dao.address, proposalId, {
+      await financingChainlink.processProposal(this.dao.address, proposalId, {
         from: myAccount,
         gasPrice: toBN("0"),
       });
@@ -462,8 +506,8 @@ describe("Adapter - Financing", () => {
     const adapterAddress = await dao.getAdapterAddress(
       sha3("financing-chainlink")
     );
-    console.log("adapterAddess...", adapterAddress);
-    console.log("financing adderss...", financingChainlink.address);
+    // console.log("adapterAddess...", adapterAddress);
+    // console.log("financing adderss...", financingChainlink.address);
 
     // submit new proposal using financingChainlink.submitProposal
     const bank = extensions.bank;
@@ -559,7 +603,7 @@ describe("Adapter - Financing", () => {
 
     //Check the applicant token balance to make sure the funds are available in the bank for the applicant account
     checkBalance(bank, applicant, ETH_TOKEN, ethRequestedAmount);
-
+  
     // assert balance based on the price
     const ethApplicantBalance = await web3.eth.getBalance(applicant);
     //applicant withdraws 0.5 ETH from bank
