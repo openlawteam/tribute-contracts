@@ -40,10 +40,10 @@ function internalTransfer(
   let tributeDaos: string[] = [];
 
   if (
-    TOTAL.toHex() != tokenAddress.toHex() ||
-    GUILD.toHex() != tokenAddress.toHex() ||
-    UNITS.toHex() != tokenAddress.toHex() ||
-    MEMBER_COUNT.toHex() != tokenAddress.toHex()
+    TOTAL.toHex() != memberAddress.toHex() &&
+    GUILD.toHex() != memberAddress.toHex() &&
+    UNITS.toHex() != memberAddress.toHex() &&
+    MEMBER_COUNT.toHex() != memberAddress.toHex()
   ) {
     let member = Member.load(memberAddress.toHex());
 
