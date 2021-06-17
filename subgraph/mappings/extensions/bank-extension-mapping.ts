@@ -11,7 +11,6 @@ import {
   TributeDao,
   Token,
   TokenHolder,
-  // TokenBalance,
   Extension,
 } from "../../generated/schema";
 import {
