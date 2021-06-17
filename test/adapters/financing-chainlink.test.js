@@ -108,11 +108,12 @@ describe("Adapter - Financing", () => {
      //finalize Dao
      await dao.finalizeDao({ from: myAccount });
      //
-     const adapterAddress = await dao.getAdapterAddress(
-      sha3("financing-chainlink")
-    );
-    console.log("adapterAddess...", adapterAddress);
-    console.log("financing adderss...", financingChainlink.address);
+     this.financingChainlink = financingChainlink;
+    //  const adapterAddress = await dao.getAdapterAddress(
+    //   sha3("financing-chainlink")
+    // );
+    // console.log("adapterAddess...", adapterAddress);
+    // console.log("financing adderss...", financingChainlink.address);
   });
 
   beforeEach(async () => {
@@ -220,10 +221,10 @@ describe("Adapter - Financing", () => {
 
   it("should not be possible to get the money if the proposal fails", async () => {
     const voting = this.adapters.voting;
-    //const financing = this.adapters.financing;
     const onboarding = this.adapters.onboarding;
-    const financingChainlink = this.adapters.financingChainlink;
-    console.log("chainlink in this test...", financingChainlink);
+    //const financingChainlink = this.adapters.financingChainlink;
+    const financingChainlink = this.financingChainlink;
+  
     //Add funds to the Guild Bank after sposoring a member to join the Guild
     let proposalId = getProposalCounter();
     await onboarding.submitProposal(
@@ -250,9 +251,12 @@ describe("Adapter - Financing", () => {
       value: unitPrice.mul(toBN(10)).add(remaining),
       gasPrice: toBN("0"),
     });
+    
+    const DAO = this.dao.address;
+    console.log("dao addrress....", DAO);
 
     //Create Financing Request
-    let requestedAmount = toBN(1000);
+    let requestedAmount = 1000;
     proposalId = "0x2";
     // proposalId = getProposalCounter();
     await financingChainlink.submitProposal(
