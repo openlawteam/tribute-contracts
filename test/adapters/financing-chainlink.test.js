@@ -49,7 +49,10 @@ const {
   web3,
 } = require("../../utils/OZTestUtil.js");
 
-const { checkBalance } = require("../../utils/TestUtils.js");
+const {
+  checkBalance,
+  onboardingNewMember,
+} = require("../../utils/TestUtils.js");
 
 const remaining = unitPrice.sub(toBN("50000000000000"));
 const myAccount = accounts[1];
@@ -71,49 +74,45 @@ describe("Adapter - Financing", () => {
     this.dao = dao;
     this.adapters = adapters;
     this.extensions = extensions;
-    this.snapshotId = await takeChainSnapshot();
 
-     //import FakeChainlinkPriceFeed
-     const priceFeed = await FakeChainlinkPriceFeed.new();
-     const priceFeedAddress = priceFeed.address;
- 
-     const financingChainlink = await FinancingChainlinkContract.new(
-       priceFeedAddress,
-       { from: myAccount }
-     );
-     //addAdapter financingChainlink
-     await factories.daoFactory.addAdapters(
-       dao.address,
-       [
-         entryDao("financing-chainlink", financingChainlink, {
-           SUBMIT_PROPOSAL: true,
-         }),
-       ],
-       { from: myAccount }
-     );
-     //configure Bank Extension
-     await factories.daoFactory.configureExtension(
-       dao.address,
-       extensions.bank.address,
-       [
-         entryBank(financingChainlink, {
-           ADD_TO_BALANCE: true,
-           SUB_FROM_BALANCE: true,
-           INTERNAL_TRANSFER: true, //need this?
-           WITHDRAW: true, //need this?
-         }),
-       ],
-       { from: myAccount }
-     );
-     //finalize Dao
-     await dao.finalizeDao({ from: myAccount });
-     //
-     this.financingChainlink = financingChainlink;
-    //  const adapterAddress = await dao.getAdapterAddress(
-    //   sha3("financing-chainlink")
-    // );
-    // console.log("adapterAddess...", adapterAddress);
-    // console.log("financing adderss...", financingChainlink.address);
+    //import FakeChainlinkPriceFeed
+    const priceFeed = await FakeChainlinkPriceFeed.new();
+    const priceFeedAddress = priceFeed.address;
+
+    const financingChainlink = await FinancingChainlinkContract.new(
+      priceFeedAddress,
+      { from: myAccount }
+    );
+    //addAdapter financingChainlink
+    await factories.daoFactory.addAdapters(
+      dao.address,
+      [
+        entryDao("financing-chainlink", financingChainlink, {
+          SUBMIT_PROPOSAL: true,
+        }),
+      ],
+      { from: myAccount }
+    );
+    //configure Bank Extension
+    await factories.daoFactory.configureExtension(
+      dao.address,
+      extensions.bank.address,
+      [
+        entryBank(financingChainlink, {
+          ADD_TO_BALANCE: true,
+          SUB_FROM_BALANCE: true,
+          INTERNAL_TRANSFER: true, //need this?
+          WITHDRAW: true, //need this?
+        }),
+      ],
+      { from: myAccount }
+    );
+    //finalize Dao
+    await dao.finalizeDao({ from: myAccount });
+
+    this.financingChainlink = financingChainlink;
+
+    this.snapshotId = await takeChainSnapshot();
   });
 
   beforeEach(async () => {
@@ -124,9 +123,9 @@ describe("Adapter - Financing", () => {
   it("should be possible to create a financing proposal and get the funds when the proposal pass", async () => {
     const bank = this.extensions.bank;
     const voting = this.adapters.voting;
-    const financing = this.adapters.financing;
     const onboarding = this.adapters.onboarding;
     const bankAdapter = this.adapters.bankAdapter;
+    const financingChainlink = this.financingChainlink;
 
     let proposalId = getProposalCounter();
 
@@ -148,16 +147,6 @@ describe("Adapter - Financing", () => {
       from: myAccount,
       gasPrice: toBN("0"),
     });
-    //should not be able to process before the voting period has ended
-    try {
-      await onboarding.processProposal(this.dao.address, proposalId, {
-        from: myAccount,
-        value: unitPrice.mul(toBN(10)).add(remaining),
-        gasPrice: toBN("0"),
-      });
-    } catch (err) {
-      expect(err.reason).equal("proposal has not been voted on yet");
-    }
 
     await advanceTime(10000);
     await onboarding.processProposal(this.dao.address, proposalId, {
@@ -169,16 +158,19 @@ describe("Adapter - Financing", () => {
     checkBalance(bank, GUILD, ETH_TOKEN, expectedGuildBalance);
 
     //Create Financing Request
-    let requestedAmount = toBN(50000);
+    let requestedAmount = 50000;
     proposalId = getProposalCounter();
-    await financing.submitProposal(
+    await financingChainlink.submitProposal(
       this.dao.address,
       proposalId,
       applicant,
       ETH_TOKEN,
       requestedAmount,
       fromUtf8(""),
-      { from: myAccount, gasPrice: toBN("0") }
+      {
+        from: myAccount,
+        gasPrice: toBN("0"),
+      }
     );
 
     //Member votes on the Financing proposal
@@ -186,13 +178,13 @@ describe("Adapter - Financing", () => {
       from: myAccount,
       gasPrice: toBN("0"),
     });
+    await advanceTime(10000);
 
     //Check applicant balance before Financing proposal is processed
     checkBalance(bank, applicant, ETH_TOKEN, "0");
 
     //Process Financing proposal after voting
-    await advanceTime(10000);
-    await financing.processProposal(this.dao.address, proposalId, {
+    await financingChainlink.processProposal(this.dao.address, proposalId, {
       from: myAccount,
       gasPrice: toBN("0"),
     });
@@ -222,9 +214,8 @@ describe("Adapter - Financing", () => {
   it("should not be possible to get the money if the proposal fails", async () => {
     const voting = this.adapters.voting;
     const onboarding = this.adapters.onboarding;
-    //const financingChainlink = this.adapters.financingChainlink;
     const financingChainlink = this.financingChainlink;
-  
+
     //Add funds to the Guild Bank after sposoring a member to join the Guild
     let proposalId = getProposalCounter();
     await onboarding.submitProposal(
@@ -251,17 +242,13 @@ describe("Adapter - Financing", () => {
       value: unitPrice.mul(toBN(10)).add(remaining),
       gasPrice: toBN("0"),
     });
-    
-    const DAO = this.dao.address;
-    console.log("dao addrress....", DAO);
 
     //Create Financing Request
     let requestedAmount = 1000;
-    proposalId = "0x2";
-    // proposalId = getProposalCounter();
+    let financingProposalId = getProposalCounter();
     await financingChainlink.submitProposal(
       this.dao.address,
-      proposalId,
+      financingProposalId,
       applicant,
       ETH_TOKEN,
       requestedAmount,
@@ -273,7 +260,7 @@ describe("Adapter - Financing", () => {
     );
 
     //Member votes on the Financing proposal
-    await voting.submitVote(this.dao.address, proposalId, 2, {
+    await voting.submitVote(this.dao.address, financingProposalId, 2, {
       from: myAccount,
       gasPrice: toBN("0"),
     });
@@ -281,10 +268,14 @@ describe("Adapter - Financing", () => {
     //Process Financing proposal after voting
     await advanceTime(10000);
     try {
-      await financingChainlink.processProposal(this.dao.address, proposalId, {
-        from: myAccount,
-        gasPrice: toBN("0"),
-      });
+      await financingChainlink.processProposal(
+        this.dao.address,
+        financingProposalId,
+        {
+          from: myAccount,
+          gasPrice: toBN("0"),
+        }
+      );
     } catch (err) {
       expect(err.reason).equal("proposal needs to pass");
     }
@@ -292,7 +283,6 @@ describe("Adapter - Financing", () => {
 
   it("should not be possible to submit a proposal with a token that is not allowed", async () => {
     const voting = this.adapters.voting;
-    const financing = this.adapters.financing;
     const onboarding = this.adapters.onboarding;
 
     let proposalId = getProposalCounter();
@@ -327,7 +317,7 @@ describe("Adapter - Financing", () => {
       const invalidToken = "0x6941a80e1a034f57ed3b1d642fc58ddcb91e2596";
       //Create Financing Request with a token that is not allowed
       let requestedAmount = toBN(50000);
-      await financing.submitProposal(
+      await this.financingChainlink.submitProposal(
         this.dao.address,
         proposalId,
         applicant,
@@ -345,7 +335,6 @@ describe("Adapter - Financing", () => {
 
   it("should not be possible to submit a proposal to request funding with an amount.toEqual to zero", async () => {
     const voting = this.adapters.voting;
-    const financing = this.adapters.financing;
     const onboarding = this.adapters.onboarding;
 
     let proposalId = getProposalCounter();
@@ -379,7 +368,7 @@ describe("Adapter - Financing", () => {
       proposalId = getProposalCounter();
       // Create Financing Request with amount = 0
       let requestedAmount = toBN(0);
-      await financing.submitProposal(
+      await this.financingChainlink.submitProposal(
         this.dao.address,
         proposalId,
         applicant,
@@ -396,7 +385,7 @@ describe("Adapter - Financing", () => {
   });
 
   it("should not be possible to request funding with an invalid proposal id", async () => {
-    const financing = this.adapters.financing;
+    const financing = this.financingChainlink;
 
     try {
       let invalidProposalId = "0x0";
@@ -415,7 +404,7 @@ describe("Adapter - Financing", () => {
   });
 
   it("should not be possible to reuse a proposalId", async () => {
-    const financing = this.adapters.financing;
+    const financing = this.financingChainlink;
     const onboarding = this.adapters.onboarding;
 
     let proposalId = getProposalCounter();
@@ -453,7 +442,7 @@ describe("Adapter - Financing", () => {
   it("should not be possible to process a proposal that does not exist", async () => {
     try {
       let proposalId = getProposalCounter();
-      await this.adapters.financing.processProposal(
+      await this.financingChainlink.processProposal(
         this.dao.address,
         proposalId,
         {
@@ -468,61 +457,15 @@ describe("Adapter - Financing", () => {
   });
 
   it("us dollars should convert ETH in wei based on getLatestPrice conversion rate", async () => {
-    const { dao, factories, extensions, adapters } = await deployDefaultDao({
-      owner: myAccount,
-      finalize: false,
-    });
-    //import FakeChainlinkPriceFeed
-    const priceFeed = await FakeChainlinkPriceFeed.new();
-    const priceFeedAddress = priceFeed.address;
-
-    const financingChainlink = await FinancingChainlinkContract.new(
-      priceFeedAddress,
-      { from: myAccount }
-    );
-    //addAdapter financingChainlink
-    await factories.daoFactory.addAdapters(
-      dao.address,
-      [
-        entryDao("financing-chainlink", financingChainlink, {
-          SUBMIT_PROPOSAL: true,
-        }),
-      ],
-      { from: myAccount }
-    );
-    //configure Bank Extension
-    await factories.daoFactory.configureExtension(
-      dao.address,
-      extensions.bank.address,
-      [
-        entryBank(financingChainlink, {
-          ADD_TO_BALANCE: true,
-          SUB_FROM_BALANCE: true,
-          INTERNAL_TRANSFER: true, //need this?
-          WITHDRAW: true, //need this?
-        }),
-      ],
-      { from: myAccount }
-    );
-    //finalize Dao
-    await dao.finalizeDao({ from: myAccount });
-
-    const adapterAddress = await dao.getAdapterAddress(
-      sha3("financing-chainlink")
-    );
-    // console.log("adapterAddess...", adapterAddress);
-    // console.log("financing adderss...", financingChainlink.address);
-
-    // submit new proposal using financingChainlink.submitProposal
-    const bank = extensions.bank;
-    const voting = adapters.voting;
-    const onboarding = adapters.onboarding;
+    const dao = this.dao;
+    const bank = this.extensions.bank;
+    const voting = this.adapters.voting;
+    const onboarding = this.adapters.onboarding;
     //is bankAdapter needed to withdraw?
-    const bankAdapter = adapters.bankAdapter;
+    const bankAdapter = this.adapters.bankAdapter;
 
     let proposalId = getProposalCounter();
 
-    //Add funds to the Guild Bank after sposoring a member to join the Guild
     await onboarding.submitProposal(
       dao.address,
       proposalId,
@@ -555,15 +498,9 @@ describe("Adapter - Financing", () => {
     // Create Financing Request for $1000
     let requestedAmount = 1000;
     proposalId = getProposalCounter();
-    let r = await dao.hasAdapterAccess(adapterAddress, 2);
-    console.log(
-      `Has ACL SUBMIT_PROPOSAL: ${await dao.hasAdapterAccess(
-        adapterAddress,
-        1
-      )}`
-    );
+
     //Financing proposal from Applicant in reqeustedAmount of $1000 worth of ETH
-    await financingChainlink.submitProposal(
+    await this.financingChainlink.submitProposal(
       dao.address,
       proposalId,
       applicant,
@@ -572,10 +509,7 @@ describe("Adapter - Financing", () => {
       fromUtf8(""),
       { from: myAccount, gasPrice: toBN("0") }
     );
-    console.log(
-      "guild balance after submit proposal:",
-      expectedGuildBalance.toString()
-    );
+
     //Check Guild Bank Balance
     checkBalance(bank, GUILD, ETH_TOKEN, expectedGuildBalance);
     //Member votes on the Financing proposal
@@ -589,7 +523,7 @@ describe("Adapter - Financing", () => {
 
     //Process Financing proposal after voting
     await advanceTime(10000);
-    await financingChainlink.processProposal(dao.address, proposalId, {
+    await this.financingChainlink.processProposal(dao.address, proposalId, {
       from: myAccount,
       gasPrice: toBN("0"),
     });
@@ -607,7 +541,7 @@ describe("Adapter - Financing", () => {
 
     //Check the applicant token balance to make sure the funds are available in the bank for the applicant account
     checkBalance(bank, applicant, ETH_TOKEN, ethRequestedAmount);
-  
+
     // assert balance based on the price
     const ethApplicantBalance = await web3.eth.getBalance(applicant);
     //applicant withdraws 0.5 ETH from bank
