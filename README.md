@@ -9,27 +9,27 @@
 
 ## Overview and Benefits
 
-TributeDAO is a new modular, low cost DAO framework.  The framework aims to improve DAOs by fixing the:
+TributeDAO is a new modular, low cost DAO framework. The framework aims to improve DAOs by fixing the:
 
-* __Lack of modularity__: which has created challenges both in terms of extending, managing, and upgrading DAOs;
-* __Rigid voting and governance mechanisms__: which limit the ability to experiment with additional forms of governance;  
-* __High costs__: especially for onchain voting;
-* __Single token DAO structures__: which make it difficult to divide up economic and governance rights and create teams or sub-groups; and
-* __Lack of NFT Support__: which makes it difficult for DAOs to be deployed for NFT projects.
+- **Lack of modularity**: which has created challenges both in terms of extending, managing, and upgrading DAOs;
+- **Rigid voting and governance mechanisms**: which limit the ability to experiment with additional forms of governance;
+- **High costs**: especially for onchain voting;
+- **Single token DAO structures**: which make it difficult to divide up economic and governance rights and create teams or sub-groups; and
+- **Lack of NFT Support**: which makes it difficult for DAOs to be deployed for NFT projects.
 
-The TributeDAO framework aims to address these issues, as part of our quest to make DAOs the dominant form of organization.  As the growing number of participants in DAOs know, there is no “one size fits all” for managing any organization.  DAOs need low cost and easy to develop components that can be assembled like lego blocks to fit the needs of the organization and its membership.
+The TributeDAO framework aims to address these issues, as part of our quest to make DAOs the dominant form of organization. As the growing number of participants in DAOs know, there is no “one size fits all” for managing any organization. DAOs need low cost and easy to develop components that can be assembled like lego blocks to fit the needs of the organization and its membership.
 
 ## Proposed Evolution of MolochDAO Framework
 
-The TributeDAO framework is our team's tribute to the MolochDAO ecosysten.  As many know, MolochDAO brought new life to DAOs.  Through an elegant smart contract design, this smart contract framework brought DAOs back to life, helping us push beyond the fiery depths of “The DAO.” 
+The TributeDAO framework is our team's tribute to the MolochDAO ecosysten. As many know, MolochDAO brought new life to DAOs. Through an elegant smart contract design, this smart contract framework brought DAOs back to life, helping us push beyond the fiery depths of “The DAO.”
 
 Last year, we worked to evolve the initial MolochDAO smart contracts by assisting with the creation of Moloch v2, which enabled multiple token support, “guildkicks” to remove unwanted members, and “loot” to issue non-voting shares still entitled to financial distributions. These upgraded contracts were built with “venture” and similar investment transactions in mind, allowing for more effective swaps and control over tokenized assets and membership.
 
 The TributeDAO framework hopes to provide teams looking to deploy DAOs with several enhancements and improvements, including:
 
-* __Simpler code__ - each module is responsible for only one function which reduces coupling and makes the system easier to understand.
-* __Adaptability__ - each part of the DAO can be adapted to the needs of a particular DAO without the need to audit the entire code base every time.
-* __Upgradability__ - modules can be easily upgraded as necessary. For example, as the voting process evolves over time the module responsible for managing the voting process can be upgraded without changing any other modules or the Core Contract. Modules can also be used by multiple DAOs without the need to be redeployed.
+- **Simpler code** - each module is responsible for only one function which reduces coupling and makes the system easier to understand.
+- **Adaptability** - each part of the DAO can be adapted to the needs of a particular DAO without the need to audit the entire code base every time.
+- **Upgradability** - modules can be easily upgraded as necessary. For example, as the voting process evolves over time the module responsible for managing the voting process can be upgraded without changing any other modules or the Core Contract. Modules can also be used by multiple DAOs without the need to be redeployed.
 
 Inspired by the [hexagonal architecture design pattern](<https://en.wikipedia.org/wiki/Hexagonal_architecture_(software)>) we believe that we can have additional layers of security, and break the main contract into smaller contracts. With that, we create loosely coupled modules/contracts, easier to audit, and can be easily connected to the DAO.
 
@@ -43,7 +43,7 @@ There are five main components in the Tribute architecture outlined further belo
 
 ### Core Contracts
 
-The core contracts serve as the spine for the Tribute DAO framework and act as a DAO registry, creating a digital version of "division of corporations."  These contracts compose the DAO itself, and make it cheaper and easier to deploy a DAO.  These contracts directly change the DAO state without the need of going through an adapter or extension (described further below). A core contract never pulls information directly from the external world. For that we use Adapters and Extensions, and the natural information flow is always from the external world to the core contracts.
+The core contracts serve as the spine for the Tribute DAO framework and act as a DAO registry, creating a digital version of "division of corporations." These contracts compose the DAO itself, and make it cheaper and easier to deploy a DAO. These contracts directly change the DAO state without the need of going through an adapter or extension (described further below). A core contract never pulls information directly from the external world. For that we use Adapters and Extensions, and the natural information flow is always from the external world to the core contracts.
 
 There are three core contracts as part of the Tribute DAO framework, including a:
 
@@ -54,7 +54,7 @@ There are three core contracts as part of the Tribute DAO framework, including a
 
 ### Adapters and Extensions
 
-Once a DAO is created using the above core contracts, they can be extended and modified with adapters and extensions.  Adapters and extensions make it easy to assemble a DAO like lego blocks, by adding to a DAO narrowly-defined, tested, and extensible smart contracts created for specific purposes. Adapters and extensions make DAOs more modular, upgradeable, and also enable us to work together to build robust DAO tooling.  They can be added to a TributeDAO via a DAO vote.
+Once a DAO is created using the above core contracts, they can be extended and modified with adapters and extensions. Adapters and extensions make it easy to assemble a DAO like lego blocks, by adding to a DAO narrowly-defined, tested, and extensible smart contracts created for specific purposes. Adapters and extensions make DAOs more modular, upgradeable, and also enable us to work together to build robust DAO tooling. They can be added to a TributeDAO via a DAO vote.
 
 #### Adapters
 
@@ -75,16 +75,16 @@ There are currently 12 adapters implemented in the Tribute DAO framework and the
 
 The range of potential adapters will expand over time and likely will include:
 
-* "Streams" to manage a DAO's treasury in a more agile way
-* Alternative voting structures to layer to improve DAO governance, including quadratic voting, one-member-one-vote voting
-* Swaps of one token for another
-* Streaming payments
-* NFT-based onboarding
-* DAO-to-DAO voting
-* Creating a liquidity pool for a DAO's native asset
-* Staking or depositing assets into existing DeFi projects (like Aave, Compound, or Lido)
+- "Streams" to manage a DAO's treasury in a more agile way
+- Alternative voting structures to layer to improve DAO governance, including quadratic voting, one-member-one-vote voting
+- Swaps of one token for another
+- Streaming payments
+- NFT-based onboarding
+- DAO-to-DAO voting
+- Creating a liquidity pool for a DAO's native asset
+- Staking or depositing assets into existing DeFi projects (like Aave, Compound, or Lido)
 
-Creating an adapter is straight forward and should save developers engineering time.  Each adapter needs to be configured with the [Access Flags](#access-control-layer) in order to access the [Core Contracts](#core-contracts), and/or [Extensions](#extensions). Otherwise the Adapter will not able to pull/push information to/from the DAO.
+Creating an adapter is straight forward and should save developers engineering time. Each adapter needs to be configured with the [Access Flags](#access-control-layer) in order to access the [Core Contracts](#core-contracts), and/or [Extensions](#extensions). Otherwise the Adapter will not able to pull/push information to/from the DAO.
 
 Please note:
 
