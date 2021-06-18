@@ -33,7 +33,7 @@ const {
   ETH_TOKEN,
   sha3,
 } = require("../../utils/ContractUtil.js");
-//const {sha3,} = require("../../utils/DeploymentUtil.js");
+
 const {
   deployDefaultDao,
   takeChainSnapshot,
@@ -83,7 +83,7 @@ describe("Adapter - Financing", () => {
       priceFeedAddress,
       { from: myAccount }
     );
-    //addAdapter financingChainlink
+    //use addAdapter financingChainlink since it is not part of defaultDao
     await factories.daoFactory.addAdapters(
       dao.address,
       [
@@ -109,9 +109,9 @@ describe("Adapter - Financing", () => {
     );
     //finalize Dao
     await dao.finalizeDao({ from: myAccount });
-
+    //global access to financingChainlink
     this.financingChainlink = financingChainlink;
-
+    //snapshot of Dao and configs after finalizeDao
     this.snapshotId = await takeChainSnapshot();
   });
 
@@ -120,18 +120,17 @@ describe("Adapter - Financing", () => {
     this.snapshotId = await takeChainSnapshot();
   });
 
-  it("should be possible to create a financing proposal and get the funds when the proposal pass", async () => {
+  it("should be possible create a financing proposal in us dollars and get the funds converted to ETH in wei based on getLatestPrice conversion rate", async () => {
+    const dao = this.dao;
     const bank = this.extensions.bank;
     const voting = this.adapters.voting;
     const onboarding = this.adapters.onboarding;
     const bankAdapter = this.adapters.bankAdapter;
-    const financingChainlink = this.financingChainlink;
 
     let proposalId = getProposalCounter();
 
-    //Add funds to the Guild Bank after sposoring a member to join the Guild
     await onboarding.submitProposal(
-      this.dao.address,
+      dao.address,
       proposalId,
       newMember,
       UNITS,
@@ -143,71 +142,84 @@ describe("Adapter - Financing", () => {
       }
     );
 
-    await voting.submitVote(this.dao.address, proposalId, 1, {
+    await voting.submitVote(dao.address, proposalId, 1, {
       from: myAccount,
       gasPrice: toBN("0"),
     });
 
     await advanceTime(10000);
-    await onboarding.processProposal(this.dao.address, proposalId, {
+
+    await onboarding.processProposal(dao.address, proposalId, {
       from: myAccount,
       value: unitPrice.mul(toBN(10)).add(remaining),
       gasPrice: toBN("0"),
     });
-    //Check Guild Bank Balance
+
+    //Check Guild Bank Balance after funding = 1.2 ETH / 1200000000000000000 wei
     checkBalance(bank, GUILD, ETH_TOKEN, expectedGuildBalance);
 
-    //Create Financing Request
-    let requestedAmount = 50000;
+    // Create Financing Request for $1000 - amount in whole USD numbers
+    let requestedAmount = 1000;
     proposalId = getProposalCounter();
-    await financingChainlink.submitProposal(
-      this.dao.address,
+
+    //Financing proposal from Applicant in reqeustedAmount of $1000 worth of ETH
+    await this.financingChainlink.submitProposal(
+      dao.address,
       proposalId,
       applicant,
       ETH_TOKEN,
-      requestedAmount,
+      toBN(requestedAmount),
       fromUtf8(""),
-      {
-        from: myAccount,
-        gasPrice: toBN("0"),
-      }
+      { from: myAccount, gasPrice: toBN("0") }
     );
 
+    //Check Guild Bank Balance before financing proposal
+    checkBalance(bank, GUILD, ETH_TOKEN, expectedGuildBalance);
     //Member votes on the Financing proposal
-    await voting.submitVote(this.dao.address, proposalId, 1, {
+    await voting.submitVote(dao.address, proposalId, 1, {
       from: myAccount,
       gasPrice: toBN("0"),
     });
-    await advanceTime(10000);
 
     //Check applicant balance before Financing proposal is processed
     checkBalance(bank, applicant, ETH_TOKEN, "0");
 
     //Process Financing proposal after voting
-    await financingChainlink.processProposal(this.dao.address, proposalId, {
+    await advanceTime(10000);
+    await this.financingChainlink.processProposal(dao.address, proposalId, {
       from: myAccount,
       gasPrice: toBN("0"),
     });
 
     //Check Guild Bank balance to make sure the transfer has happened
+    //-note: $1000 USD = requestedAmount @$2000/ETH, so ethRequestedAmount = .5 ETH
+    let ethRequestedAmount = toBN("500000000000000000");
+
     checkBalance(
       bank,
       GUILD,
       ETH_TOKEN,
-      expectedGuildBalance.sub(requestedAmount)
+      expectedGuildBalance.sub(ethRequestedAmount)
     );
-    //Check the applicant token balance to make sure the funds are available in the bank for the applicant account
-    checkBalance(bank, applicant, ETH_TOKEN, requestedAmount);
 
-    const ethBalance = await web3.eth.getBalance(applicant);
-    await bankAdapter.withdraw(this.dao.address, applicant, ETH_TOKEN, {
+    //Check the applicant token balance to make sure the funds are available in the bank for the applicant account
+    checkBalance(bank, applicant, ETH_TOKEN, ethRequestedAmount);
+
+    // assert balance based on the price
+    const ethApplicantBalance = await web3.eth.getBalance(applicant);
+    //applicant withdraws 0.5 ETH from bank
+    await bankAdapter.withdraw(dao.address, applicant, ETH_TOKEN, {
       from: myAccount,
       gasPrice: toBN("0"),
     });
+
+    // applicant should not have funds left after withdraw
     checkBalance(bank, applicant, ETH_TOKEN, 0);
-    const ethBalance2 = await web3.eth.getBalance(applicant);
-    expect(toBN(ethBalance).add(requestedAmount).toString()).equal(
-      ethBalance2.toString()
+
+    const ethApplicantBalance2 = await web3.eth.getBalance(applicant);
+    //balance of applicant before withdraw + ethRequestedAmount = balance of applicant after withdraw
+    expect(toBN(ethApplicantBalance).add(ethRequestedAmount).toString()).equal(
+      ethApplicantBalance2.toString()
     );
   });
 
@@ -454,109 +466,5 @@ describe("Adapter - Financing", () => {
     } catch (err) {
       expect(err.reason).equal("adapter not found");
     }
-  });
-
-  it("us dollars should convert ETH in wei based on getLatestPrice conversion rate", async () => {
-    const dao = this.dao;
-    const bank = this.extensions.bank;
-    const voting = this.adapters.voting;
-    const onboarding = this.adapters.onboarding;
-    //is bankAdapter needed to withdraw?
-    const bankAdapter = this.adapters.bankAdapter;
-
-    let proposalId = getProposalCounter();
-
-    await onboarding.submitProposal(
-      dao.address,
-      proposalId,
-      newMember,
-      UNITS,
-      unitPrice.mul(toBN(10)).add(remaining),
-      [],
-      {
-        from: myAccount,
-        gasPrice: toBN("0"),
-      }
-    );
-
-    await voting.submitVote(dao.address, proposalId, 1, {
-      from: myAccount,
-      gasPrice: toBN("0"),
-    });
-
-    await advanceTime(10000);
-
-    await onboarding.processProposal(dao.address, proposalId, {
-      from: myAccount,
-      value: unitPrice.mul(toBN(10)).add(remaining),
-      gasPrice: toBN("0"),
-    });
-
-    //Check Guild Bank Balance after funding = 1.2 ETH / 1200000000000000000 wei
-    checkBalance(bank, GUILD, ETH_TOKEN, expectedGuildBalance);
-
-    // Create Financing Request for $1000
-    let requestedAmount = 1000;
-    proposalId = getProposalCounter();
-
-    //Financing proposal from Applicant in reqeustedAmount of $1000 worth of ETH
-    await this.financingChainlink.submitProposal(
-      dao.address,
-      proposalId,
-      applicant,
-      ETH_TOKEN,
-      toBN(requestedAmount),
-      fromUtf8(""),
-      { from: myAccount, gasPrice: toBN("0") }
-    );
-
-    //Check Guild Bank Balance
-    checkBalance(bank, GUILD, ETH_TOKEN, expectedGuildBalance);
-    //Member votes on the Financing proposal
-    await voting.submitVote(dao.address, proposalId, 1, {
-      from: myAccount,
-      gasPrice: toBN("0"),
-    });
-
-    //Check applicant balance before Financing proposal is processed
-    checkBalance(bank, applicant, ETH_TOKEN, "0");
-
-    //Process Financing proposal after voting
-    await advanceTime(10000);
-    await this.financingChainlink.processProposal(dao.address, proposalId, {
-      from: myAccount,
-      gasPrice: toBN("0"),
-    });
-
-    //Check Guild Bank balance to make sure the transfer has happened
-    //-note: $1000 USD = requestedAmount @$2000/ETH, so ethRequestedAmount = .5 ETH
-    let ethRequestedAmount = toBN("500000000000000000");
-
-    checkBalance(
-      bank,
-      GUILD,
-      ETH_TOKEN,
-      expectedGuildBalance.sub(ethRequestedAmount)
-    );
-
-    //Check the applicant token balance to make sure the funds are available in the bank for the applicant account
-    checkBalance(bank, applicant, ETH_TOKEN, ethRequestedAmount);
-
-    // assert balance based on the price
-    const ethApplicantBalance = await web3.eth.getBalance(applicant);
-    //applicant withdraws 0.5 ETH from bank
-    await bankAdapter.withdraw(dao.address, applicant, ETH_TOKEN, {
-      from: myAccount,
-      gasPrice: toBN("0"),
-    });
-
-    // applicant should not have funds left after withdraw
-    checkBalance(bank, applicant, ETH_TOKEN, 0);
-
-    const ethApplicantBalance2 = await web3.eth.getBalance(applicant);
-
-    expect(toBN(ethApplicantBalance).add(ethRequestedAmount).toString()).equal(
-      ethApplicantBalance2.toString()
-    );
   });
 });
