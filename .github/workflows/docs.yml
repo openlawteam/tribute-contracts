@@ -1,0 +1,45 @@
+name: documentation
+
+on:
+  push:
+    branches: [docs]
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout 🛎️
+        uses: actions/checkout@v2.3.1
+      - uses: actions/setup-node@v1
+        with:
+          node-version: '12.x'
+      - name: Install and Build 🔧 
+        run: |
+          cd website
+          if [ -e yarn.lock ]; then
+          yarn install --frozen-lockfile
+          elif [ -e package-lock.json ]; then
+          npm ci
+          else
+          npm i
+          fi
+          npm run build
+
+      - name: Deploy 🚀
+        uses: JamesIves/github-pages-deploy-action@4.1.4
+        with:
+          branch: gh-pages # The branch the action should deploy to.
+          folder: website/build # The folder the action should deploy.
+
+        # run: |
+        #   cd website
+        #   git config --global user.email "actions@github.com"
+        #   git config --global user.name "gh-actions"
+        #   if [ -e yarn.lock ]; then
+        #   yarn install --frozen-lockfile
+        #   elif [ -e package-lock.json ]; then
+        #   npm ci
+        #   else
+        #   npm i
+        #   fi
+        #   npm run deploy

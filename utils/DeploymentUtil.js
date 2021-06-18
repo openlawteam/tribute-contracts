@@ -501,9 +501,6 @@ const configureDao = async ({
         NEW_MEMBER: true,
       }),
       entryDao("coupon-onboarding", couponOnboarding, {
-        SUBMIT_PROPOSAL: false,
-        ADD_TO_BALANCE: true,
-        UPDATE_DELEGATE_KEY: false,
         NEW_MEMBER: true,
       }),
       entryDao("daoRegistry", daoRegistryAdapter, {
