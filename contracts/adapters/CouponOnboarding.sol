@@ -72,13 +72,18 @@ contract CouponOnboardingContract is
     function configureDao(
         DaoRegistry dao,
         address signerAddress,
-        address tokenAddrToMint
+        address tokenAddrToMint,
+        uint88 maxAmount
     ) external onlyAdapter(dao) {
         dao.setAddressConfiguration(SignerAddressConfig, signerAddress);
         dao.setAddressConfiguration(TokenAddrToMint, tokenAddrToMint);
 
         BankExtension bank = BankExtension(dao.getExtensionAddress(BANK));
         bank.registerPotentialNewInternalToken(tokenAddrToMint);
+        uint160 currentBalance = bank.balanceOf(TOTAL, tokenAddrToMint);
+        if(currentBalance < maxAmount) {
+            bank.addToBalance(GUILD, tokenAddrToMint, maxAmount - currentBalance);
+        }
     }
 
     function hashCouponMessage(DaoRegistry dao, Coupon memory coupon)
@@ -133,7 +138,7 @@ contract CouponOnboardingContract is
 
         BankExtension bank = BankExtension(dao.getExtensionAddress(BANK));
 
-        bank.addToBalance(authorizedMember, tokenAddrToMint, amount);
+        bank.internalTransfer(GUILD, authorizedMember, tokenAddrToMint, amount);
         // address needs to be added to the members mappings
         potentialNewMember(authorizedMember, dao, bank);
         emit CouponRedeemed(address(dao), nonce, authorizedMember, amount);

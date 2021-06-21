@@ -53,13 +53,6 @@ contract ERC20Extension is
     // The DAO address that this extension belongs to
     DaoRegistry public dao;
 
-    // The custom configuration to set the transfer type, e.g:
-    // (0: transfers are enabled only between dao members)
-    // (1: transfers are enabled between dao members and external accounts)
-    // (2: all transfers are paused)
-    bytes32 public constant ERC20_EXT_TRANSFER_TYPE =
-        keccak256("erc20ExtTransferType");
-
     // Internally tracks deployment under eip-1167 proxy pattern
     bool public initialized = false;
 
