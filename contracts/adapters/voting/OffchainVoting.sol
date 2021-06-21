@@ -75,7 +75,7 @@ contract OffchainVotingContract is
     bytes32 constant FallbackThreshold =
         keccak256("offchainvoting.fallbackThreshold");
 
-    mapping(address => mapping(bytes32 => mapping(uint256 => uint256))) flags;
+    mapping(bytes32 => mapping(uint256 => uint256)) retrievedStepsFlags;
 
     struct Voting {
         uint256 snapshot;
@@ -251,13 +251,13 @@ contract OffchainVotingContract is
         uint256 index
     ) external {
         address memberAddr = dao.getAddressIfDelegated(msg.sender);
+        Voting storage vote = votes[address(dao)][proposalId];
         require(isActiveMember(dao, memberAddr), "not active member");
-        uint256 currentFlag = flags[address(dao)][proposalId][index / 256];
+        uint256 currentFlag = retrievedStepsFlags[vote.resultRoot][index / 256];
         require(
             getFlag(currentFlag, index % 256) == false,
             "step has already been requested"
         );
-        Voting storage vote = votes[address(dao)][proposalId];
         require(
             vote.stepRequested == 0,
             "another step has already been requested"
