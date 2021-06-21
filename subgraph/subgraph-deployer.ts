@@ -147,7 +147,7 @@ ${couponOnboardingYAML({
         apiVersion: 0.0.4
         language: wasm/assemblyscript
         entities:
-          - TokenBalance
+          - TokenHolder
           - Token
           - Member
         abis:
@@ -155,6 +155,8 @@ ${couponOnboardingYAML({
             file: ../build/contracts/BankExtension.json
           - name: ERC20
             file: ../build/contracts/ERC20.json
+          - name: ERC20Extension
+            file: ../build/contracts/ERC20Extension.json
         eventHandlers:
           - event: NewBalance(address,address,uint160)
             handler: handleNewBalance
