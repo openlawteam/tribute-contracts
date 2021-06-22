@@ -200,12 +200,6 @@ export function handleExtensionAdded(event: ExtensionAdded): void {
 
   let extension = Extension.load(daoExtensionId);
 
-  loadOrCreateExtensionEntity(
-    event.address,
-    event.params.extensionId,
-    event.params.extensionAddress
-  );
-
   if (extension == null) {
     extension = new Extension(daoExtensionId);
   }
@@ -216,6 +210,13 @@ export function handleExtensionAdded(event: ExtensionAdded): void {
   // create 1-1 relationship with extensions and its dao
   extension.tributeDao = daoAddress;
   extension.save();
+
+  loadOrCreateExtensionEntity(
+    event.address,
+    event.params.extensionId,
+    event.params.extensionAddress,
+    event.transaction.from
+  );
 }
 
 export function handleExtensionRemoved(event: ExtensionRemoved): void {

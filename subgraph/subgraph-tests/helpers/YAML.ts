@@ -72,6 +72,8 @@ export const getYAML = ({ daoFactoryAddress }: GetYAMLType): string => {
             file: ../build/contracts/VotingContract.json
           - name: IVoting
             file: ../build/contracts/IVoting.json
+          - name: ERC20Extension
+            file: ../build/contracts/ERC20Extension.json
         eventHandlers:
           - event: SubmittedProposal(bytes32,uint256)
             handler: handleSubmittedProposal

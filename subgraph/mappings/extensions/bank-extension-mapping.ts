@@ -96,7 +96,7 @@ function internalTransfer(
   }
 }
 
-function internalERC20Balance(
+export function internalERC20Balance(
   daoAddress: Address,
   memberAddress: Address
 ): void {
@@ -112,10 +112,10 @@ function internalERC20Balance(
       Address.fromString(erc20Extension.extensionAddress.toHexString())
     );
 
-    // erc20 symbol
+    // erc20 token details
+    let name = erc20ExtensionRegistry.name();
     let symbol = erc20ExtensionRegistry.symbol();
     let totalSupply = erc20ExtensionRegistry.totalSupply();
-    let name = erc20ExtensionRegistry.name();
 
     let balance = erc20ExtensionRegistry.balanceOf(memberAddress);
 
