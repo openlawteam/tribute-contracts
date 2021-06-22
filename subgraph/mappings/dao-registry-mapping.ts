@@ -119,17 +119,6 @@ export function handleProcessedProposal(event: ProcessedProposal): void {
 }
 
 export function handleUpdateDelegateKey(event: UpdateDelegateKey): void {
-  let daoAddress = event.address.toHexString();
-  let delegateKey = event.params.newDelegateKey;
-  let memberId = daoAddress
-    .concat("-member-")
-    .concat(event.params.memberAddress.toHex());
-
-  let member = Member.load(memberId);
-  member.delegateKey = delegateKey;
-  member.isDelegated =
-    event.params.memberAddress != event.params.newDelegateKey;
-
   log.info(
     "=============== UpdateDelegateKey event fired. memberAddress {}, newDelegateKey {}",
     [
@@ -138,7 +127,18 @@ export function handleUpdateDelegateKey(event: UpdateDelegateKey): void {
     ]
   );
 
-  member.save();
+  let delegateKey = event.params.newDelegateKey;
+  let memberId = event.params.memberAddress.toHex();
+
+  let member = Member.load(memberId);
+
+  if (member) {
+    member.delegateKey = delegateKey;
+    member.isDelegated =
+      event.params.memberAddress != event.params.newDelegateKey;
+  
+    member.save();
+  }
 }
 
 export function handleAdapterAdded(event: AdapterAdded): void {
