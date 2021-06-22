@@ -1,5 +1,6 @@
 import { Address } from "@graphprotocol/graph-ts";
 
+// Reserved Internal Addresses
 export let UNITS: Address = Address.fromString(
   "0x00000000000000000000000000000000000Ff1CE"
 );
@@ -8,6 +9,9 @@ export let GUILD: Address = Address.fromString(
 );
 export let TOTAL: Address = Address.fromString(
   "0x000000000000000000000000000000000000babe"
+);
+export let MEMBER_COUNT: Address = Address.fromString(
+  "0x00000000000000000000000000000000decafbad"
 );
 
 // adapter/extension names hashed (lowercase)
@@ -40,3 +44,6 @@ export let VOTING_ID: string =
 
 export let NFT_EXTENSION_ID: string =
   "0x7dd481eb4b63b94bb55e6b98aabb06c3b8484f82a4d656d6bca0b0cf9b446be0";
+
+export let ERC20_EXTENSION_ID: string =
+  "0x77d63af07d7aad7f422b79cf9d7285aec3f3e6f32e6e4391f1ce842d752663fd";
