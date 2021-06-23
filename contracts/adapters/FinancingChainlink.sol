@@ -155,7 +155,7 @@ contract FinancingChainlinkContract is
 
     /**
      *  Returns the latest price from AggregatorV3Interface.sol
-        Chainlink returns the latest price to 5 decimials 
+        Chainlink returns the latest price to 8 decimials 
         e.g. 176471000000 = $1,764.71
      */
     function getLatestPrice() public view returns (int256) {
