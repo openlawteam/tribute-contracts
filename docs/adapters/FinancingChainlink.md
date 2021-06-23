@@ -1,6 +1,6 @@
 ## Adapter description and scope
 
-Financing is the process in which an applicant, member or a non-member of the DAO, submits a proposal asking for funds in whole U.S. Dollar amounts. If the proposal passes, the funds are released to the applicant in Ether to the nearest Wei value. The conversion rate from U.S. Dollars to ETH or another ERC20 token is based on the latest price received from the oracles provided by Chainlink. 
+Financing is the process in which an applicant, member or a non-member of the DAO, submits a proposal asking for funds in whole U.S. Dollar amounts. If the proposal passes, the funds are released to the applicant in Ether to the nearest Wei value. The conversion rate from U.S. Dollars to ETH or another ERC20 token is based on the latest price received from the oracles provided by Chainlink.
 
 The main goal is to allow individuals and/or organizations to request funds in a U.S. Dollar amount and receive funding for their projects in an ERC20 token based at a trusted exchange rate from an oracle provided by Chainlink. Similar to the standard Financing Adapter the members of the DAO have the power to vote and decide which projects should be funded.
 
@@ -90,7 +90,7 @@ Bank Extension Access Flags: `ADD_TO_BALANCE`, `SUB_FROM_BALANCE`.
 
 ```solidity
     /**
-     * @notice Processing a financing proposal to grant the requested funds based on an exchange rate provided by Chainlink. 
+     * @notice Processing a financing proposal to grant the requested funds based on an exchange rate provided by Chainlink.
      * @dev Only proposals that were not processed are accepted.
      * @dev Only proposals that were sponsored are accepted.
      * @dev Only proposals that passed can get processed and have the funds released.
