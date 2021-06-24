@@ -82,6 +82,38 @@ const allGuardContracts = {
   items: [],
 };
 
+/**
+ * Subgraph Section
+ */
+
+const subgraphSetup = {
+  type: "category",
+  label: "Setup",
+  collapsed: false,
+  items: ["subgraph/setup/installation", "subgraph/setup/local-development"],
+};
+
+const subgraphStructure = {
+  type: "category",
+  label: "Structure",
+  collapsed: false,
+  items: [
+    "subgraph/structure/subgraph",
+    "subgraph/structure/schema",
+    "subgraph/structure/mappings",
+  ],
+};
+
+const subgraphDeployment = {
+  type: "category",
+  label: "Deployment",
+  collapsed: false,
+  items: [
+    "subgraph/deployment/configuration",
+    "subgraph/deployment/deployment",
+  ],
+};
+
 module.exports = {
   docs: [
     {
@@ -126,7 +158,7 @@ module.exports = {
       type: "category",
       label: "Subgraph",
       collapsed: true,
-      items: ["subgraph/introduction"],
+      items: [subgraphSetup, subgraphStructure, subgraphDeployment],
     },
     {
       type: "category",
