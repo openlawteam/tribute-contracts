@@ -49,8 +49,8 @@ contract ExecutorExtension is DaoConstants, AdapterGuard, IExtension {
     enum AclFlag {EXECUTE}
 
     /// @notice Clonable contract must have an empty constructor
-    // constructor() {
-    // }
+    constructor() {
+    }
 
     modifier hasExtensionAccess(AclFlag flag) {
         require(

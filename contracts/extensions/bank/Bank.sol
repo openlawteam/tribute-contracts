@@ -48,7 +48,6 @@ contract BankExtension is DaoConstants, AdapterGuard, IExtension {
         SUB_FROM_BALANCE,
         INTERNAL_TRANSFER,
         WITHDRAW,
-        EXECUTE,
         REGISTER_NEW_TOKEN,
         REGISTER_NEW_INTERNAL_TOKEN,
         UPDATE_TOKEN
@@ -86,8 +85,8 @@ contract BankExtension is DaoConstants, AdapterGuard, IExtension {
     mapping(address => mapping(address => uint32)) public numCheckpoints;
 
     /// @notice Clonable contract must have an empty constructor
-    // constructor() {
-    // }
+    constructor() {
+    }
 
     modifier hasExtensionAccess(AclFlag flag) {
         require(
