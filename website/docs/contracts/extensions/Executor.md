@@ -20,7 +20,7 @@ However, when you execute the function call through the Executor Extension, sudd
 
 There are some restrictions and conventions that need to be respected to make sure the calls are executed safelly:
 
-- The caller contract, usually an Adapter, must have permission to use the extension. The permission is set through the ACL Flag: `EXECUTOR` during the Adapter configuration phase.
+- The caller contract, usually an Adapter, must have permission to use the extension. The permission is set through the ACL Flag: `EXECUTE` during the Adapter configuration phase.
 - The caller contract must implement the function that will be triggered by the Executor, and it needs to be restricted to the Executor address only. It can be done by adding the access guard: `executorFunc(dao)` from `AdapterGuard`.
 - The caller contract can not change/upgrade it's own state/storage in the logic function (i.e: the function that will be called by the Executor). The reason for that is to prevent storage collisions with the Executor storage. Any state change must be stored in a third contract, the contract that actually manages the state changes, and that will be associated to the Executor address though an internal transaction.
 
