@@ -11,7 +11,7 @@ import {
   BANK_EXTENSION_ID,
   NFT_EXTENSION_ID,
   ERC20_EXTENSION_ID,
-} from "./constants";
+} from "../core/dao-constants";
 
 export function loadOrCreateExtensionEntity(
   daoAddress: Address,
