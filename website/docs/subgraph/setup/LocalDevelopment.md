@@ -33,7 +33,9 @@ can access these via:
 - Postgres:
   - `postgresql://graph-node:let-me-in@localhost:5432/graph-node`
 
-Once this is up and running, you can create and deploy your subgraph to the running Graph Node. To do this, in another terminal window from the project root directory, `truffle compile` to build the contracts, if they aren't already built.
+**Terminal 3**
+
+Once this is up and running, you can create and deploy your subgraph to the running Graph Node. To do this, from the project root directory, `truffle compile` to build the contracts, if they aren't already built.
 
 Then from the `subgraph` directory:
 
