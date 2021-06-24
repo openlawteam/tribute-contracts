@@ -90,7 +90,7 @@ const subgraphSetup = {
   type: "category",
   label: "Setup",
   collapsed: false,
-  items: ["subgraph/setup/installation", "subgraph/setup/local-development"],
+  items: ["subgraph/setup/local-development"],
 };
 
 const subgraphStructure = {
@@ -101,16 +101,6 @@ const subgraphStructure = {
     "subgraph/structure/subgraph",
     "subgraph/structure/schema",
     "subgraph/structure/mappings",
-  ],
-};
-
-const subgraphDeployment = {
-  type: "category",
-  label: "Deployment",
-  collapsed: false,
-  items: [
-    "subgraph/deployment/configuration",
-    "subgraph/deployment/deployment",
   ],
 };
 
@@ -158,7 +148,12 @@ module.exports = {
       type: "category",
       label: "Subgraph",
       collapsed: true,
-      items: [subgraphSetup, subgraphStructure, subgraphDeployment],
+      items: [
+        "subgraph/definition",
+        subgraphSetup,
+        subgraphStructure,
+        "subgraph/deployment",
+      ],
     },
     {
       type: "category",
