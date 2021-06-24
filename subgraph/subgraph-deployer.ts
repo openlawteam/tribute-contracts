@@ -66,7 +66,7 @@ const getYAML = ({
         eventHandlers:
           - event: DAOCreated(address,string)
             handler: handleDaoCreated
-        file: ./mappings/dao-factory-mapping.ts
+        file: ./mappings/core/dao-factory-mapping.ts
 
 ${couponOnboardingYAML({
   network,
@@ -137,7 +137,7 @@ ${couponOnboardingYAML({
             handler: handleConfigurationUpdated
           - event: AddressConfigurationUpdated(bytes32,address)
             handler: handleAddressConfigurationUpdated
-        file: ./mappings/dao-registry-mapping.ts
+        file: ./mappings/core/dao-registry-mapping.ts
     # ====================================== BankExtension ====================================
     - kind: ethereum/contract
       name: BankExtension
