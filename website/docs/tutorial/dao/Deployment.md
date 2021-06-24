@@ -9,7 +9,7 @@ title: Deployment
 
 - ⚙️ All the environment variables must be set in the _.env_ file as indicated in the previous section.
 
-- 💲  Make sure you have enough ETH.
+- 💲 Make sure you have enough ETH.
 
 ## Deploying your DAO
 

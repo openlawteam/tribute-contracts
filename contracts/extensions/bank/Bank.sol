@@ -85,8 +85,7 @@ contract BankExtension is DaoConstants, AdapterGuard, IExtension {
     mapping(address => mapping(address => uint32)) public numCheckpoints;
 
     /// @notice Clonable contract must have an empty constructor
-    constructor() {
-    }
+    constructor() {}
 
     modifier hasExtensionAccess(AclFlag flag) {
         require(
