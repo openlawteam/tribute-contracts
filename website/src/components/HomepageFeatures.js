@@ -8,9 +8,8 @@ const FeatureList = [
     Svg: require("../../static/img/undraw_docusaurus_mountain.svg").default,
     description: (
       <>
-        TributeDAO Framework is designed to easily assemble a DAO like lego
-        blocks, by using a narrowly-defined, tested, and extensible smart
-        contracts.
+        Designed to make DAO's easy to assemble, like lego blocks, utilizing a
+        narrowly-defined, tested, and extensible set smart contracts.
       </>
     ),
   },
@@ -29,9 +28,8 @@ const FeatureList = [
     Svg: require("../../static/img/undraw_docusaurus_react.svg").default,
     description: (
       <>
-        TributeDAO Framework enables the creation of custom extensions to
-        isolate the complexity of DAO core contract, and enhance it with new
-        features.
+        Custom extensions isolate the complexity of DAO core contracts and
+        enable enhancements of it with new features.
       </>
     ),
   },

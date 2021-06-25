@@ -1,7 +1,7 @@
 require("dotenv").config();
 
 module.exports = {
-  title: "TributeDAO Framework Docs",
+  title: "TributeDAO Framework",
   tagline:
     "A new modular DAO framework inspired by the Moloch smart contracts.",
   url: "https://github.com/openlawteam/tribute-contracts",
@@ -79,16 +79,20 @@ module.exports = {
           title: "Docs",
           items: [
             {
+              label: "Introduction",
+              to: "/docs/intro/overview-and-benefits",
+            },
+            {
               label: "Tutorial",
-              to: "docs/getting-started/introduction",
+              to: "/docs/tutorial/dao/installation",
             },
             {
               label: "Contracts",
-              to: "docs/contracts/core/dao-registry",
+              to: "/docs/contracts/core/dao-registry",
             },
             {
               label: "Subgraph",
-              to: "docs/subgraph/definition",
+              to: "/docs/subgraph/definition",
             },
           ],
         },
@@ -131,7 +135,8 @@ module.exports = {
             },
             {
               label: "Code of Conduct",
-              href: "#",
+              href:
+                "https://github.com/openlawteam/tribute-contracts/blob/master/CODE_OF_CONDUCT.md",
             },
           ],
         },

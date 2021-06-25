@@ -17,7 +17,7 @@ function HomepageHeader() {
           <Link
             className="button button--lg"
             to="/docs/intro/overview-and-benefits"
-            style={{ marginRight: 5 }}
+            style={{ marginTop: 15, marginBottom: 20, border: "none", fontWeight: "2em" }}
           >
             Get Started
           </Link>
@@ -25,8 +25,9 @@ function HomepageHeader() {
           <Link
             className="button button--secondary button--lg"
             to="/docs/tutorial/dao/installation"
+            style={{ backgroundColor: "white", color: "#3c6b7e" }}
           >
-            Launch your DAO Tutorial - 5min ⏱️
+            Launch your DAO Tutorial
           </Link>
         </div>
       </div>
