@@ -1,6 +1,6 @@
 ---
 id: local-development
-title: Local Development & Installation
+title: Development
 ---
 
 > The Graph preconfigured Docker image for running a Graph Node.

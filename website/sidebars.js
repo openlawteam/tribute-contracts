@@ -91,7 +91,7 @@ const allGuardContracts = {
 
 const subgraphSetup = {
   type: "category",
-  label: "Setup",
+  label: "Installation",
   collapsed: false,
   items: ["subgraph/setup/local-development"],
 };
@@ -104,7 +104,7 @@ const subgraphStructure = {
     "subgraph/structure/subgraph",
     subgraphSchemaSideBar,
     // "subgraph/structure/schema",
-    "subgraph/structure/mappings",
+    // "subgraph/structure/mappings",
   ],
 };
 
