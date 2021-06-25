@@ -82,3 +82,21 @@ body {
 .pagination-nav__label {
   font-weight: normal;
 }
+
+.footer__logo {
+  max-width: 2rem;
+}
+/* 
+.buttons_src-pages- a {
+  letter-spacing: 1px;
+  text-align: center;
+  color: #3c6b7e;
+  background-color: #fff;
+  border-radius: 15px;
+  border: 1px solid #c3d6dc;
+  font-family: "Share Tech Mono", monospace;
+  text-transform: lowercase;
+  font-size: 1.5rem;
+  padding: 1rem 4rem;
+  margin: 2.5rem 0 1rem;
+} */

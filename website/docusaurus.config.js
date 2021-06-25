@@ -63,7 +63,7 @@ module.exports = {
       // style: "light",
       logo: {
         alt: "TributeDAO Logo",
-        src: "img/oss_logo.png",
+        src: "img/logo.svg",
         href: "https://tributedao.com",
       },
       links: [
