@@ -1,0 +1,49 @@
+---
+id: token
+title: Token
+---
+
+No description
+
+```graphql
+type Token {
+  id: ID!
+  name: String
+  symbol: String
+  tokenAddress: Bytes!
+  totalSupply: BigInt
+  holders(
+    skip: Int = 0
+    first: Int = 100
+    orderBy: TokenHolder_orderBy
+    orderDirection: OrderDirection
+    where: TokenHolder_filter
+  ): [TokenHolder!]
+}
+```
+
+### Fields
+
+#### `id` ([`ID!`](/schema/scalars/id))
+
+Unique identifier and primary key of the `Token` entity
+
+#### `name` ([`String`](/schema/scalars/string))
+
+#### `symbol` ([`String`](/schema/scalars/string))
+
+#### `tokenAddress` ([`Bytes!`](/schema/scalars/bytes))
+
+#### `totalSupply` ([`BigInt`](/schema/scalars/big-int))
+
+#### `holders` ([`[TokenHolder!]`](/schema/objects/token-holder))
+
+- ##### `skip` ([`Int`](/schema/scalars/int))
+
+- ##### `first` ([`Int`](/schema/scalars/int))
+
+- ##### `orderBy` ([`TokenHolder_orderBy`](/schema/enums/token-holder-order-by))
+
+- ##### `orderDirection` ([`OrderDirection`](/schema/enums/order-direction))
+
+- ##### `where` ([`TokenHolder_filter`](/schema/inputs/token-holder-filter))

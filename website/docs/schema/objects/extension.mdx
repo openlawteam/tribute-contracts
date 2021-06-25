@@ -1,0 +1,31 @@
+---
+id: extension
+title: Extension
+---
+
+No description
+
+```graphql
+type Extension {
+  id: ID!
+  extensionAddress: Bytes!
+  extensionId: Bytes!
+  tributeDao: TributeDao
+}
+```
+
+### Fields
+
+#### `id` ([`ID!`](/schema/scalars/id))
+
+Unique identifier and primary key of the `Extension` entity
+
+#### `extensionAddress` ([`Bytes!`](/schema/scalars/bytes))
+
+Extension contract address
+
+#### `extensionId` ([`Bytes!`](/schema/scalars/bytes))
+
+Extension ID
+
+#### `tributeDao` ([`TributeDao`](/schema/objects/tribute-dao))

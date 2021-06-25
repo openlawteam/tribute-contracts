@@ -1,0 +1,38 @@
+---
+id: adapters
+title: adapters
+---
+
+No description
+
+```graphql
+adapters(
+  skip: Int = 0
+  first: Int = 100
+  orderBy: Adapter_orderBy
+  orderDirection: OrderDirection
+  where: Adapter_filter
+  block: Block_height
+): [Adapter!]!
+
+```
+
+### Arguments
+
+#### `skip` ([`Int`](/schema/scalars/int))
+
+#### `first` ([`Int`](/schema/scalars/int))
+
+#### `orderBy` ([`Adapter_orderBy`](/schema/enums/adapter-order-by))
+
+#### `orderDirection` ([`OrderDirection`](/schema/enums/order-direction))
+
+#### `where` ([`Adapter_filter`](/schema/inputs/adapter-filter))
+
+#### `block` ([`Block_height`](/schema/inputs/block-height))
+
+The block at which the query should be executed. Can either be an `{ number: Int }` containing the block number or a `{ hash: Bytes }` value containing a block hash. Defaults to the latest block when omitted.
+
+### Type
+
+#### [`Adapter`](/schema/objects/adapter)

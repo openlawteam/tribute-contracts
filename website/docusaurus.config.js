@@ -24,7 +24,7 @@ module.exports = {
       respectPrefersColorScheme: true,
     },
     navbar: {
-      title: "TributeDAO Framework Docs",
+      title: "TRIBUTE",
       logo: {
         alt: "TributeDAO Framework Logo",
         src: "img/logo.svg",
@@ -33,31 +33,31 @@ module.exports = {
         {
           type: "doc",
           docId: "intro/overview-and-benefits",
-          position: "left",
-          label: "Getting Started",
+          position: "right",
+          label: "Get Started",
         },
         {
           type: "doc",
           docId: "intro/design/core/introduction",
-          position: "left",
+          position: "right",
           label: "Core",
         },
         {
           type: "doc",
           docId: "intro/design/extensions/introduction",
-          position: "left",
+          position: "right",
           label: "Extensions",
         },
         {
           type: "doc",
           docId: "intro/design/adapters/introduction",
-          position: "left",
+          position: "right",
           label: "Adapters",
         },
         {
           type: "doc",
           docId: "thanks",
-          position: "left",
+          position: "right",
           label: "Thank You",
         },
         {
@@ -68,17 +68,30 @@ module.exports = {
       ],
     },
     footer: {
-      style: "dark",
+      // style: "light",
+      logo: {
+        alt: "TributeDAO Logo",
+        src: "img/logo.svg",
+        href: "https://tributedao.com",
+      },
       links: [
-        // {
-        //   title: "Docs",
-        //   items: [
-        //     {
-        //       label: "Tutorial",
-        //       to: "docs/getting-started/introduction",
-        //     },
-        //   ],
-        // },
+        {
+          title: "Docs",
+          items: [
+            {
+              label: "Tutorial",
+              to: "docs/getting-started/introduction",
+            },
+            {
+              label: "Contracts",
+              to: "docs/contracts/core/dao-registry",
+            },
+            {
+              label: "Subgraph",
+              to: "docs/subgraph/definition",
+            },
+          ],
+        },
         {
           title: "Community",
           items: [
@@ -90,11 +103,24 @@ module.exports = {
               label: "Twitter",
               href: "https://twitter.com/OpenLawOfficial",
             },
+            {
+              label: "Github",
+              href:
+                "https://github.com/search?q=org%3Aopenlawteam+tribute-ui+OR+tribute-contracts+in%3Aname&type=repositories",
+            },
+            {
+              label: "Medium",
+              href: "#",
+            },
           ],
         },
         {
           title: "More",
           items: [
+            {
+              label: "TributeDAO",
+              href: "https://tributedao.com",
+            },
             {
               label: "TributeDAO UI",
               href: "https://github.com/openlawteam/tribute-ui",
@@ -102,6 +128,10 @@ module.exports = {
             {
               label: "TributeDAO Contracts",
               href: "https://github.com/openlawteam/tribute-contracts",
+            },
+            {
+              label: "Code of Conduct",
+              href: "#",
             },
           ],
         },
@@ -121,6 +151,16 @@ module.exports = {
         theme: {
           customCss: require.resolve("./src/css/custom.css"),
         },
+      },
+    ],
+  ],
+  plugins: [
+    [
+      require.resolve("@edno/docusaurus2-graphql-doc-generator"),
+      {
+        schema: "http://127.0.0.1:8000/subgraphs/name/openlawteam/tribute",
+        rootPath: "./docs",
+        homepage: "./docs/subgraph/structure/Schema.md",
       },
     ],
   ],

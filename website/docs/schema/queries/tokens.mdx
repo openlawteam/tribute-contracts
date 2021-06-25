@@ -1,0 +1,38 @@
+---
+id: tokens
+title: tokens
+---
+
+No description
+
+```graphql
+tokens(
+  skip: Int = 0
+  first: Int = 100
+  orderBy: Token_orderBy
+  orderDirection: OrderDirection
+  where: Token_filter
+  block: Block_height
+): [Token!]!
+
+```
+
+### Arguments
+
+#### `skip` ([`Int`](/schema/scalars/int))
+
+#### `first` ([`Int`](/schema/scalars/int))
+
+#### `orderBy` ([`Token_orderBy`](/schema/enums/token-order-by))
+
+#### `orderDirection` ([`OrderDirection`](/schema/enums/order-direction))
+
+#### `where` ([`Token_filter`](/schema/inputs/token-filter))
+
+#### `block` ([`Block_height`](/schema/inputs/block-height))
+
+The block at which the query should be executed. Can either be an `{ number: Int }` containing the block number or a `{ hash: Bytes }` value containing a block hash. Defaults to the latest block when omitted.
+
+### Type
+
+#### [`Token`](/schema/objects/token)

@@ -1,0 +1,194 @@
+---
+id: proposal
+title: Proposal
+---
+
+No description
+
+```graphql
+type Proposal {
+  id: ID!
+  proposalId: Bytes!
+  flags: BigInt!
+  submittedBy: Bytes
+  sponsored: Boolean
+  sponsoredAt: String
+  sponsoredBy: Bytes
+  processed: Boolean
+  processedAt: String
+  processedBy: Bytes
+  member: Member
+  tributeDao: TributeDao
+  adapterId: Bytes
+  adapterAddress: Bytes
+  votingAdapter: Bytes
+  unitsToMint: Bytes
+  amount: BigInt
+  unitsRequested: BigInt
+  token: Bytes
+  applicant: Bytes
+  unitHolderAddr: Bytes
+  status: String
+  currentIndex: BigInt
+  blockNumber: BigInt
+  tokenToMint: Bytes
+  requestAmount: BigInt
+  tributeAmount: BigInt
+  tributeTokenOwner: Bytes
+  nftAddr: Bytes
+  nftTokenId: BigInt
+  memberToKick: Bytes
+  details: Bytes
+  keys: [Bytes!]
+  values: [BigInt!]
+  snapshot: BigInt
+  proposalHash: Bytes
+  reporter: Bytes
+  resultRoot: Bytes
+  nbNo: BigInt
+  nbYes: BigInt
+  index: BigInt
+  startingTime: BigInt
+  gracePeriodStartingTime: BigInt
+  isChallenged: Boolean
+  forceFailed: Boolean
+  fallbackVotesCount: BigInt
+  votes: BigInt
+  votingState: String
+  votingResult: Vote
+}
+```
+
+### Fields
+
+#### `id` ([`ID!`](/schema/scalars/id))
+
+Unique identifier and primary key of the `Proposal` entity
+
+#### `proposalId` ([`Bytes!`](/schema/scalars/bytes))
+
+#### `flags` ([`BigInt!`](/schema/scalars/big-int))
+
+#### `submittedBy` ([`Bytes`](/schema/scalars/bytes))
+
+#### `sponsored` ([`Boolean`](/schema/scalars/boolean))
+
+#### `sponsoredAt` ([`String`](/schema/scalars/string))
+
+#### `sponsoredBy` ([`Bytes`](/schema/scalars/bytes))
+
+#### `processed` ([`Boolean`](/schema/scalars/boolean))
+
+#### `processedAt` ([`String`](/schema/scalars/string))
+
+#### `processedBy` ([`Bytes`](/schema/scalars/bytes))
+
+#### `member` ([`Member`](/schema/objects/member))
+
+#### `tributeDao` ([`TributeDao`](/schema/objects/tribute-dao))
+
+#### `adapterId` ([`Bytes`](/schema/scalars/bytes))
+
+Adapter ID of the proposal
+
+#### `adapterAddress` ([`Bytes`](/schema/scalars/bytes))
+
+Adapter contract address of the proposal
+
+#### `votingAdapter` ([`Bytes`](/schema/scalars/bytes))
+
+Voting adapter address
+
+#### `unitsToMint` ([`Bytes`](/schema/scalars/bytes))
+
+#### `amount` ([`BigInt`](/schema/scalars/big-int))
+
+#### `unitsRequested` ([`BigInt`](/schema/scalars/big-int))
+
+#### `token` ([`Bytes`](/schema/scalars/bytes))
+
+#### `applicant` ([`Bytes`](/schema/scalars/bytes))
+
+#### `unitHolderAddr` ([`Bytes`](/schema/scalars/bytes))
+
+The unit holder address that will receive the funds. If 0x0, the funds will be distributed to all members of the DAO
+
+#### `status` ([`String`](/schema/scalars/string))
+
+The distribution status or the kick status
+
+#### `currentIndex` ([`BigInt`](/schema/scalars/big-int))
+
+Current iteration index to control the cached for-loop
+
+#### `blockNumber` ([`BigInt`](/schema/scalars/big-int))
+
+The block number in which the proposal/or vote results has been created
+
+#### `tokenToMint` ([`Bytes`](/schema/scalars/bytes))
+
+The address of the DAO internal token to be minted to the applicant.
+
+#### `requestAmount` ([`BigInt`](/schema/scalars/big-int))
+
+The amount requested of DAO internal tokens
+
+#### `tributeAmount` ([`BigInt`](/schema/scalars/big-int))
+
+The amount of tribute tokens.
+
+#### `tributeTokenOwner` ([`Bytes`](/schema/scalars/bytes))
+
+The owner of the ERC-20 tokens being provided as tribute.
+
+#### `nftAddr` ([`Bytes`](/schema/scalars/bytes))
+
+The address of the ERC-721 token that will be transferred to the DAO in exchange for DAO internal tokens.
+
+#### `nftTokenId` ([`BigInt`](/schema/scalars/big-int))
+
+The nft token identifier.
+
+#### `memberToKick` ([`Bytes`](/schema/scalars/bytes))
+
+The address of the member to kick out of the DAO.
+
+#### `details` ([`Bytes`](/schema/scalars/bytes))
+
+Additional details for the financing proposal
+
+#### `keys` ([`[Bytes!]`](/schema/scalars/bytes))
+
+Additional details for the managing proposal
+
+#### `values` ([`[BigInt!]`](/schema/scalars/big-int))
+
+#### `snapshot` ([`BigInt`](/schema/scalars/big-int))
+
+#### `proposalHash` ([`Bytes`](/schema/scalars/bytes))
+
+#### `reporter` ([`Bytes`](/schema/scalars/bytes))
+
+#### `resultRoot` ([`Bytes`](/schema/scalars/bytes))
+
+#### `nbNo` ([`BigInt`](/schema/scalars/big-int))
+
+#### `nbYes` ([`BigInt`](/schema/scalars/big-int))
+
+#### `index` ([`BigInt`](/schema/scalars/big-int))
+
+#### `startingTime` ([`BigInt`](/schema/scalars/big-int))
+
+#### `gracePeriodStartingTime` ([`BigInt`](/schema/scalars/big-int))
+
+#### `isChallenged` ([`Boolean`](/schema/scalars/boolean))
+
+#### `forceFailed` ([`Boolean`](/schema/scalars/boolean))
+
+#### `fallbackVotesCount` ([`BigInt`](/schema/scalars/big-int))
+
+#### `votes` ([`BigInt`](/schema/scalars/big-int))
+
+#### `votingState` ([`String`](/schema/scalars/string))
+
+#### `votingResult` ([`Vote`](/schema/objects/vote))
