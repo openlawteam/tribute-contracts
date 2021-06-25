@@ -7,7 +7,7 @@ Managing different network deployments for the contracts, is currently setup usi
 
 For example:
 
-```
+```json
 [
   {
    "network": "rinkeby",

@@ -5,19 +5,44 @@ title: Development
 
 > The Graph preconfigured Docker image for running a Graph Node.
 
-**Terminal 1**
+## Terminal 1
 
-Start ganache with `ganache-cli --host 0.0.0.0 --port 7545 --networkId 1337 --blockTime 10 --mnemonic "twelve words including quotes"` in one terminal window.
+Start ganache with in one terminal window:
 
-> Note that -h 0.0.0.0 is necessary for Ganache to be accessible from within Docker and from other machines. By default, Ganache only binds to 127.0.0.1, which can only be accessed from the host machine that Ganache runs on. [The Graph]
+```bash
+ganache-cli --host 0.0.0.0 \
+  --port 7545 \
+  --networkId 1337 \
+  --blockTime 10 \
+  --mnemonic "twelve words including quotes"
+```
+
+:::info
+Note that -h 0.0.0.0 is necessary for Ganache to be accessible from within Docker and from other machines. By default, Ganache only binds to 127.0.0.1, which can only be accessed from the host machine that Ganache runs on. [The Graph].
+:::
 
 [the graph]: https://thegraph.com/docs/quick-start#1.-set-up-ganache-cli
 
-**Terminal 2**
+## Terminal 2
 
-In the new terminal window, `npm run deploy:ganache` and copy the `DaoFactory` contract address and block number into the respective `address` and `startBlock` (**important:** make sure the block number starts from 1 previous block, for example, if the block number is 19 add 18 as the `startBlock`) for the `DaoFactory` source in `subgraph/subgraph.yaml`.
+In the new terminal window run:
 
-Then, `cd docker/` and `docker-compose up`.
+```bash
+npm run deploy:ganache
+```
+
+and copy the **DaoFactory** contract address and block number into the respective `address` and `startBlock`.
+
+:::caution
+Make sure the block number starts from 1 previous block, for example, if the block number is 19 add 18 as the **startBlock** for the **DaoFactory** source in `subgraph/subgraph.yaml`
+:::
+
+Then execute:
+
+```bash
+cd docker/
+docker-compose up
+```
 
 This will start IPFS, Postgres and Graph Node in Docker and create persistent
 data directories for IPFS and Postgres in `./data/ipfs` and `./data/postgres`. You
@@ -33,7 +58,7 @@ can access these via:
 - Postgres:
   - `postgresql://graph-node:let-me-in@localhost:5432/graph-node`
 
-**Terminal 3**
+## Terminal 3
 
 Once this is up and running, you can create and deploy your subgraph to the running Graph Node. To do this, from the project root directory, `truffle compile` to build the contracts, if they aren't already built.
 

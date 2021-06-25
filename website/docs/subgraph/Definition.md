@@ -1,6 +1,6 @@
 ---
 id: definition
-title: Subgraph Definition
+title: Definition
 ---
 
 The TributeDAO framework harnesses the power of **[The Graph](https://thegraph.com)** definition, which enables the Tribute UI to take advantage of the capabilities of a subgraph API.

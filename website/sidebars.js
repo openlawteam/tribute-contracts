@@ -150,7 +150,7 @@ module.exports = {
       items: [
         "subgraph/definition",
         subgraphSetup,
-        subgraphStructure,
+        // subgraphStructure,
         "subgraph/deployment",
       ],
     },
