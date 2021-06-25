@@ -3,7 +3,7 @@ id: subgraph
 title: The Subgraph Manifest
 ---
 
-Here is an example of the TributeDAO subgraph manifest:
+Here is an example of the TributeDAO subgraph manifest, for more details on how to define a subgraph manifest check out **[The Graph](https://thegraph.com/docs/define-a-subgraph#the-subgraph-manifest)**:
 
 ```
 specVersion: 0.0.2
