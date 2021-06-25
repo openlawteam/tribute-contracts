@@ -1,0 +1,32 @@
+---
+id: adapter
+title: Adapter
+---
+
+No description
+
+```graphql
+type Adapter {
+  id: ID!
+  adapterId: Bytes!
+  adapterAddress: Bytes!
+  acl: BigInt!
+  tributeDao: TributeDao
+}
+```
+
+### Fields
+
+#### `id` ([`ID!`](/schema/scalars/id))
+
+Unique identifier and primary key of the `Adapter` entity
+
+#### `adapterId` ([`Bytes!`](/schema/scalars/bytes))
+
+#### `adapterAddress` ([`Bytes!`](/schema/scalars/bytes))
+
+#### `acl` ([`BigInt!`](/schema/scalars/big-int))
+
+Adapter acl (access control layer)
+
+#### `tributeDao` ([`TributeDao`](/schema/objects/tribute-dao))

@@ -1,0 +1,33 @@
+---
+id: vote
+title: Vote
+---
+
+No description
+
+```graphql
+type Vote {
+  id: ID!
+  nbNo: BigInt!
+  nbYes: BigInt!
+  adapterName: VotingAdapterName!
+  adapterAddress: Bytes!
+  proposal: Proposal
+}
+```
+
+### Fields
+
+#### `id` ([`ID!`](/schema/scalars/id))
+
+Unique identifier and primary key of the `Vote` entity
+
+#### `nbNo` ([`BigInt!`](/schema/scalars/big-int))
+
+#### `nbYes` ([`BigInt!`](/schema/scalars/big-int))
+
+#### `adapterName` ([`VotingAdapterName!`](/schema/enums/voting-adapter-name))
+
+#### `adapterAddress` ([`Bytes!`](/schema/scalars/bytes))
+
+#### `proposal` ([`Proposal`](/schema/objects/proposal))

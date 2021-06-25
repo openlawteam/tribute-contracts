@@ -1,0 +1,154 @@
+---
+id: tribute-dao
+title: TributeDao
+---
+
+No description
+
+```graphql
+type TributeDao {
+  id: ID!
+  daoAddress: Bytes
+  name: String
+  creator: Bytes
+  createdAt: String
+  totalUnits: String
+  bank: Bank!
+  adapters(
+    skip: Int = 0
+    first: Int = 100
+    orderBy: Adapter_orderBy
+    orderDirection: OrderDirection
+    where: Adapter_filter
+  ): [Adapter!]!
+  extensions(
+    skip: Int = 0
+    first: Int = 100
+    orderBy: Extension_orderBy
+    orderDirection: OrderDirection
+    where: Extension_filter
+  ): [Extension!]!
+  members(
+    skip: Int = 0
+    first: Int = 100
+    orderBy: Member_orderBy
+    orderDirection: OrderDirection
+    where: Member_filter
+  ): [Member]!
+  proposals(
+    skip: Int = 0
+    first: Int = 100
+    orderBy: Proposal_orderBy
+    orderDirection: OrderDirection
+    where: Proposal_filter
+  ): [Proposal]!
+  nftCollection: NFTCollection!
+  coupons(
+    skip: Int = 0
+    first: Int = 100
+    orderBy: Coupon_orderBy
+    orderDirection: OrderDirection
+    where: Coupon_filter
+  ): [Coupon]!
+}
+```
+
+### Fields
+
+#### `id` ([`ID!`](/schema/scalars/id))
+
+Unique identifier and primary key of the `TributeDao` entity
+
+#### `daoAddress` ([`Bytes`](/schema/scalars/bytes))
+
+The DAO address
+
+#### `name` ([`String`](/schema/scalars/string))
+
+The name of the DAO
+
+#### `creator` ([`Bytes`](/schema/scalars/bytes))
+
+The DAO creator address
+
+#### `createdAt` ([`String`](/schema/scalars/string))
+
+#### `totalUnits` ([`String`](/schema/scalars/string))
+
+#### `bank` ([`Bank!`](/schema/objects/bank))
+
+The bank of the DAO
+
+#### `adapters` ([`[Adapter!]!`](/schema/objects/adapter))
+
+List of registered adapters
+
+- ##### `skip` ([`Int`](/schema/scalars/int))
+
+- ##### `first` ([`Int`](/schema/scalars/int))
+
+- ##### `orderBy` ([`Adapter_orderBy`](/schema/enums/adapter-order-by))
+
+- ##### `orderDirection` ([`OrderDirection`](/schema/enums/order-direction))
+
+- ##### `where` ([`Adapter_filter`](/schema/inputs/adapter-filter))
+
+#### `extensions` ([`[Extension!]!`](/schema/objects/extension))
+
+List of registered extensions
+
+- ##### `skip` ([`Int`](/schema/scalars/int))
+
+- ##### `first` ([`Int`](/schema/scalars/int))
+
+- ##### `orderBy` ([`Extension_orderBy`](/schema/enums/extension-order-by))
+
+- ##### `orderDirection` ([`OrderDirection`](/schema/enums/order-direction))
+
+- ##### `where` ([`Extension_filter`](/schema/inputs/extension-filter))
+
+#### `members` ([`[Member]!`](/schema/objects/member))
+
+List of members in the DAO
+
+- ##### `skip` ([`Int`](/schema/scalars/int))
+
+- ##### `first` ([`Int`](/schema/scalars/int))
+
+- ##### `orderBy` ([`Member_orderBy`](/schema/enums/member-order-by))
+
+- ##### `orderDirection` ([`OrderDirection`](/schema/enums/order-direction))
+
+- ##### `where` ([`Member_filter`](/schema/inputs/member-filter))
+
+#### `proposals` ([`[Proposal]!`](/schema/objects/proposal))
+
+List of proposals in the DAO
+
+- ##### `skip` ([`Int`](/schema/scalars/int))
+
+- ##### `first` ([`Int`](/schema/scalars/int))
+
+- ##### `orderBy` ([`Proposal_orderBy`](/schema/enums/proposal-order-by))
+
+- ##### `orderDirection` ([`OrderDirection`](/schema/enums/order-direction))
+
+- ##### `where` ([`Proposal_filter`](/schema/inputs/proposal-filter))
+
+#### `nftCollection` ([`NFTCollection!`](/schema/objects/nft-collection))
+
+List of nfts in the DAO
+
+#### `coupons` ([`[Coupon]!`](/schema/objects/coupon))
+
+List of redeemed coupons
+
+- ##### `skip` ([`Int`](/schema/scalars/int))
+
+- ##### `first` ([`Int`](/schema/scalars/int))
+
+- ##### `orderBy` ([`Coupon_orderBy`](/schema/enums/coupon-order-by))
+
+- ##### `orderDirection` ([`OrderDirection`](/schema/enums/order-direction))
+
+- ##### `where` ([`Coupon_filter`](/schema/inputs/coupon-filter))

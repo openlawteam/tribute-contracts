@@ -25,31 +25,31 @@ module.exports = {
         {
           type: "doc",
           docId: "intro/overview-and-benefits",
-          position: "left",
-          label: "Getting Started",
+          position: "right",
+          label: "Get Started",
         },
         {
           type: "doc",
           docId: "intro/design/core/introduction",
-          position: "left",
+          position: "right",
           label: "Core",
         },
         {
           type: "doc",
           docId: "intro/design/extensions/introduction",
-          position: "left",
+          position: "right",
           label: "Extensions",
         },
         {
           type: "doc",
           docId: "intro/design/adapters/introduction",
-          position: "left",
+          position: "right",
           label: "Adapters",
         },
         {
           type: "doc",
           docId: "thanks",
-          position: "left",
+          position: "right",
           label: "Thank You",
         },
         {
@@ -113,6 +113,16 @@ module.exports = {
         theme: {
           customCss: require.resolve("./src/css/custom.css"),
         },
+      },
+    ],
+  ],
+  plugins: [
+    [
+      require.resolve("@edno/docusaurus2-graphql-doc-generator"),
+      {
+        schema: "http://127.0.0.1:8000/subgraphs/name/openlawteam/tribute",
+        rootPath: "./docs",
+        homepage: "./docs/subgraph/structure/Schema.md",
       },
     ],
   ],

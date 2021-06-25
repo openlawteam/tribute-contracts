@@ -1,0 +1,1129 @@
+---
+id: proposal-filter
+title: Proposal_filter
+---
+
+No description
+
+```graphql
+type Proposal_filter {
+  id: ID
+  id_not: ID
+  id_gt: ID
+  id_lt: ID
+  id_gte: ID
+  id_lte: ID
+  id_in: [ID!]
+  id_not_in: [ID!]
+  proposalId: Bytes
+  proposalId_not: Bytes
+  proposalId_in: [Bytes!]
+  proposalId_not_in: [Bytes!]
+  proposalId_contains: Bytes
+  proposalId_not_contains: Bytes
+  flags: BigInt
+  flags_not: BigInt
+  flags_gt: BigInt
+  flags_lt: BigInt
+  flags_gte: BigInt
+  flags_lte: BigInt
+  flags_in: [BigInt!]
+  flags_not_in: [BigInt!]
+  submittedBy: Bytes
+  submittedBy_not: Bytes
+  submittedBy_in: [Bytes!]
+  submittedBy_not_in: [Bytes!]
+  submittedBy_contains: Bytes
+  submittedBy_not_contains: Bytes
+  sponsored: Boolean
+  sponsored_not: Boolean
+  sponsored_in: [Boolean!]
+  sponsored_not_in: [Boolean!]
+  sponsoredAt: String
+  sponsoredAt_not: String
+  sponsoredAt_gt: String
+  sponsoredAt_lt: String
+  sponsoredAt_gte: String
+  sponsoredAt_lte: String
+  sponsoredAt_in: [String!]
+  sponsoredAt_not_in: [String!]
+  sponsoredAt_contains: String
+  sponsoredAt_not_contains: String
+  sponsoredAt_starts_with: String
+  sponsoredAt_not_starts_with: String
+  sponsoredAt_ends_with: String
+  sponsoredAt_not_ends_with: String
+  sponsoredBy: Bytes
+  sponsoredBy_not: Bytes
+  sponsoredBy_in: [Bytes!]
+  sponsoredBy_not_in: [Bytes!]
+  sponsoredBy_contains: Bytes
+  sponsoredBy_not_contains: Bytes
+  processed: Boolean
+  processed_not: Boolean
+  processed_in: [Boolean!]
+  processed_not_in: [Boolean!]
+  processedAt: String
+  processedAt_not: String
+  processedAt_gt: String
+  processedAt_lt: String
+  processedAt_gte: String
+  processedAt_lte: String
+  processedAt_in: [String!]
+  processedAt_not_in: [String!]
+  processedAt_contains: String
+  processedAt_not_contains: String
+  processedAt_starts_with: String
+  processedAt_not_starts_with: String
+  processedAt_ends_with: String
+  processedAt_not_ends_with: String
+  processedBy: Bytes
+  processedBy_not: Bytes
+  processedBy_in: [Bytes!]
+  processedBy_not_in: [Bytes!]
+  processedBy_contains: Bytes
+  processedBy_not_contains: Bytes
+  member: String
+  member_not: String
+  member_gt: String
+  member_lt: String
+  member_gte: String
+  member_lte: String
+  member_in: [String!]
+  member_not_in: [String!]
+  member_contains: String
+  member_not_contains: String
+  member_starts_with: String
+  member_not_starts_with: String
+  member_ends_with: String
+  member_not_ends_with: String
+  tributeDao: String
+  tributeDao_not: String
+  tributeDao_gt: String
+  tributeDao_lt: String
+  tributeDao_gte: String
+  tributeDao_lte: String
+  tributeDao_in: [String!]
+  tributeDao_not_in: [String!]
+  tributeDao_contains: String
+  tributeDao_not_contains: String
+  tributeDao_starts_with: String
+  tributeDao_not_starts_with: String
+  tributeDao_ends_with: String
+  tributeDao_not_ends_with: String
+  adapterId: Bytes
+  adapterId_not: Bytes
+  adapterId_in: [Bytes!]
+  adapterId_not_in: [Bytes!]
+  adapterId_contains: Bytes
+  adapterId_not_contains: Bytes
+  adapterAddress: Bytes
+  adapterAddress_not: Bytes
+  adapterAddress_in: [Bytes!]
+  adapterAddress_not_in: [Bytes!]
+  adapterAddress_contains: Bytes
+  adapterAddress_not_contains: Bytes
+  votingAdapter: Bytes
+  votingAdapter_not: Bytes
+  votingAdapter_in: [Bytes!]
+  votingAdapter_not_in: [Bytes!]
+  votingAdapter_contains: Bytes
+  votingAdapter_not_contains: Bytes
+  unitsToMint: Bytes
+  unitsToMint_not: Bytes
+  unitsToMint_in: [Bytes!]
+  unitsToMint_not_in: [Bytes!]
+  unitsToMint_contains: Bytes
+  unitsToMint_not_contains: Bytes
+  amount: BigInt
+  amount_not: BigInt
+  amount_gt: BigInt
+  amount_lt: BigInt
+  amount_gte: BigInt
+  amount_lte: BigInt
+  amount_in: [BigInt!]
+  amount_not_in: [BigInt!]
+  unitsRequested: BigInt
+  unitsRequested_not: BigInt
+  unitsRequested_gt: BigInt
+  unitsRequested_lt: BigInt
+  unitsRequested_gte: BigInt
+  unitsRequested_lte: BigInt
+  unitsRequested_in: [BigInt!]
+  unitsRequested_not_in: [BigInt!]
+  token: Bytes
+  token_not: Bytes
+  token_in: [Bytes!]
+  token_not_in: [Bytes!]
+  token_contains: Bytes
+  token_not_contains: Bytes
+  applicant: Bytes
+  applicant_not: Bytes
+  applicant_in: [Bytes!]
+  applicant_not_in: [Bytes!]
+  applicant_contains: Bytes
+  applicant_not_contains: Bytes
+  unitHolderAddr: Bytes
+  unitHolderAddr_not: Bytes
+  unitHolderAddr_in: [Bytes!]
+  unitHolderAddr_not_in: [Bytes!]
+  unitHolderAddr_contains: Bytes
+  unitHolderAddr_not_contains: Bytes
+  status: String
+  status_not: String
+  status_gt: String
+  status_lt: String
+  status_gte: String
+  status_lte: String
+  status_in: [String!]
+  status_not_in: [String!]
+  status_contains: String
+  status_not_contains: String
+  status_starts_with: String
+  status_not_starts_with: String
+  status_ends_with: String
+  status_not_ends_with: String
+  currentIndex: BigInt
+  currentIndex_not: BigInt
+  currentIndex_gt: BigInt
+  currentIndex_lt: BigInt
+  currentIndex_gte: BigInt
+  currentIndex_lte: BigInt
+  currentIndex_in: [BigInt!]
+  currentIndex_not_in: [BigInt!]
+  blockNumber: BigInt
+  blockNumber_not: BigInt
+  blockNumber_gt: BigInt
+  blockNumber_lt: BigInt
+  blockNumber_gte: BigInt
+  blockNumber_lte: BigInt
+  blockNumber_in: [BigInt!]
+  blockNumber_not_in: [BigInt!]
+  tokenToMint: Bytes
+  tokenToMint_not: Bytes
+  tokenToMint_in: [Bytes!]
+  tokenToMint_not_in: [Bytes!]
+  tokenToMint_contains: Bytes
+  tokenToMint_not_contains: Bytes
+  requestAmount: BigInt
+  requestAmount_not: BigInt
+  requestAmount_gt: BigInt
+  requestAmount_lt: BigInt
+  requestAmount_gte: BigInt
+  requestAmount_lte: BigInt
+  requestAmount_in: [BigInt!]
+  requestAmount_not_in: [BigInt!]
+  tributeAmount: BigInt
+  tributeAmount_not: BigInt
+  tributeAmount_gt: BigInt
+  tributeAmount_lt: BigInt
+  tributeAmount_gte: BigInt
+  tributeAmount_lte: BigInt
+  tributeAmount_in: [BigInt!]
+  tributeAmount_not_in: [BigInt!]
+  tributeTokenOwner: Bytes
+  tributeTokenOwner_not: Bytes
+  tributeTokenOwner_in: [Bytes!]
+  tributeTokenOwner_not_in: [Bytes!]
+  tributeTokenOwner_contains: Bytes
+  tributeTokenOwner_not_contains: Bytes
+  nftAddr: Bytes
+  nftAddr_not: Bytes
+  nftAddr_in: [Bytes!]
+  nftAddr_not_in: [Bytes!]
+  nftAddr_contains: Bytes
+  nftAddr_not_contains: Bytes
+  nftTokenId: BigInt
+  nftTokenId_not: BigInt
+  nftTokenId_gt: BigInt
+  nftTokenId_lt: BigInt
+  nftTokenId_gte: BigInt
+  nftTokenId_lte: BigInt
+  nftTokenId_in: [BigInt!]
+  nftTokenId_not_in: [BigInt!]
+  memberToKick: Bytes
+  memberToKick_not: Bytes
+  memberToKick_in: [Bytes!]
+  memberToKick_not_in: [Bytes!]
+  memberToKick_contains: Bytes
+  memberToKick_not_contains: Bytes
+  details: Bytes
+  details_not: Bytes
+  details_in: [Bytes!]
+  details_not_in: [Bytes!]
+  details_contains: Bytes
+  details_not_contains: Bytes
+  keys: [Bytes!]
+  keys_not: [Bytes!]
+  keys_contains: [Bytes!]
+  keys_not_contains: [Bytes!]
+  values: [BigInt!]
+  values_not: [BigInt!]
+  values_contains: [BigInt!]
+  values_not_contains: [BigInt!]
+  snapshot: BigInt
+  snapshot_not: BigInt
+  snapshot_gt: BigInt
+  snapshot_lt: BigInt
+  snapshot_gte: BigInt
+  snapshot_lte: BigInt
+  snapshot_in: [BigInt!]
+  snapshot_not_in: [BigInt!]
+  proposalHash: Bytes
+  proposalHash_not: Bytes
+  proposalHash_in: [Bytes!]
+  proposalHash_not_in: [Bytes!]
+  proposalHash_contains: Bytes
+  proposalHash_not_contains: Bytes
+  reporter: Bytes
+  reporter_not: Bytes
+  reporter_in: [Bytes!]
+  reporter_not_in: [Bytes!]
+  reporter_contains: Bytes
+  reporter_not_contains: Bytes
+  resultRoot: Bytes
+  resultRoot_not: Bytes
+  resultRoot_in: [Bytes!]
+  resultRoot_not_in: [Bytes!]
+  resultRoot_contains: Bytes
+  resultRoot_not_contains: Bytes
+  nbNo: BigInt
+  nbNo_not: BigInt
+  nbNo_gt: BigInt
+  nbNo_lt: BigInt
+  nbNo_gte: BigInt
+  nbNo_lte: BigInt
+  nbNo_in: [BigInt!]
+  nbNo_not_in: [BigInt!]
+  nbYes: BigInt
+  nbYes_not: BigInt
+  nbYes_gt: BigInt
+  nbYes_lt: BigInt
+  nbYes_gte: BigInt
+  nbYes_lte: BigInt
+  nbYes_in: [BigInt!]
+  nbYes_not_in: [BigInt!]
+  index: BigInt
+  index_not: BigInt
+  index_gt: BigInt
+  index_lt: BigInt
+  index_gte: BigInt
+  index_lte: BigInt
+  index_in: [BigInt!]
+  index_not_in: [BigInt!]
+  startingTime: BigInt
+  startingTime_not: BigInt
+  startingTime_gt: BigInt
+  startingTime_lt: BigInt
+  startingTime_gte: BigInt
+  startingTime_lte: BigInt
+  startingTime_in: [BigInt!]
+  startingTime_not_in: [BigInt!]
+  gracePeriodStartingTime: BigInt
+  gracePeriodStartingTime_not: BigInt
+  gracePeriodStartingTime_gt: BigInt
+  gracePeriodStartingTime_lt: BigInt
+  gracePeriodStartingTime_gte: BigInt
+  gracePeriodStartingTime_lte: BigInt
+  gracePeriodStartingTime_in: [BigInt!]
+  gracePeriodStartingTime_not_in: [BigInt!]
+  isChallenged: Boolean
+  isChallenged_not: Boolean
+  isChallenged_in: [Boolean!]
+  isChallenged_not_in: [Boolean!]
+  forceFailed: Boolean
+  forceFailed_not: Boolean
+  forceFailed_in: [Boolean!]
+  forceFailed_not_in: [Boolean!]
+  fallbackVotesCount: BigInt
+  fallbackVotesCount_not: BigInt
+  fallbackVotesCount_gt: BigInt
+  fallbackVotesCount_lt: BigInt
+  fallbackVotesCount_gte: BigInt
+  fallbackVotesCount_lte: BigInt
+  fallbackVotesCount_in: [BigInt!]
+  fallbackVotesCount_not_in: [BigInt!]
+  votes: BigInt
+  votes_not: BigInt
+  votes_gt: BigInt
+  votes_lt: BigInt
+  votes_gte: BigInt
+  votes_lte: BigInt
+  votes_in: [BigInt!]
+  votes_not_in: [BigInt!]
+  votingState: String
+  votingState_not: String
+  votingState_gt: String
+  votingState_lt: String
+  votingState_gte: String
+  votingState_lte: String
+  votingState_in: [String!]
+  votingState_not_in: [String!]
+  votingState_contains: String
+  votingState_not_contains: String
+  votingState_starts_with: String
+  votingState_not_starts_with: String
+  votingState_ends_with: String
+  votingState_not_ends_with: String
+  votingResult: String
+  votingResult_not: String
+  votingResult_gt: String
+  votingResult_lt: String
+  votingResult_gte: String
+  votingResult_lte: String
+  votingResult_in: [String!]
+  votingResult_not_in: [String!]
+  votingResult_contains: String
+  votingResult_not_contains: String
+  votingResult_starts_with: String
+  votingResult_not_starts_with: String
+  votingResult_ends_with: String
+  votingResult_not_ends_with: String
+}
+```
+
+### Fields
+
+#### `id` ([`ID`](/schema/scalars/id))
+
+#### `id_not` ([`ID`](/schema/scalars/id))
+
+#### `id_gt` ([`ID`](/schema/scalars/id))
+
+#### `id_lt` ([`ID`](/schema/scalars/id))
+
+#### `id_gte` ([`ID`](/schema/scalars/id))
+
+#### `id_lte` ([`ID`](/schema/scalars/id))
+
+#### `id_in` ([`[ID!]`](/schema/scalars/id))
+
+#### `id_not_in` ([`[ID!]`](/schema/scalars/id))
+
+#### `proposalId` ([`Bytes`](/schema/scalars/bytes))
+
+#### `proposalId_not` ([`Bytes`](/schema/scalars/bytes))
+
+#### `proposalId_in` ([`[Bytes!]`](/schema/scalars/bytes))
+
+#### `proposalId_not_in` ([`[Bytes!]`](/schema/scalars/bytes))
+
+#### `proposalId_contains` ([`Bytes`](/schema/scalars/bytes))
+
+#### `proposalId_not_contains` ([`Bytes`](/schema/scalars/bytes))
+
+#### `flags` ([`BigInt`](/schema/scalars/big-int))
+
+#### `flags_not` ([`BigInt`](/schema/scalars/big-int))
+
+#### `flags_gt` ([`BigInt`](/schema/scalars/big-int))
+
+#### `flags_lt` ([`BigInt`](/schema/scalars/big-int))
+
+#### `flags_gte` ([`BigInt`](/schema/scalars/big-int))
+
+#### `flags_lte` ([`BigInt`](/schema/scalars/big-int))
+
+#### `flags_in` ([`[BigInt!]`](/schema/scalars/big-int))
+
+#### `flags_not_in` ([`[BigInt!]`](/schema/scalars/big-int))
+
+#### `submittedBy` ([`Bytes`](/schema/scalars/bytes))
+
+#### `submittedBy_not` ([`Bytes`](/schema/scalars/bytes))
+
+#### `submittedBy_in` ([`[Bytes!]`](/schema/scalars/bytes))
+
+#### `submittedBy_not_in` ([`[Bytes!]`](/schema/scalars/bytes))
+
+#### `submittedBy_contains` ([`Bytes`](/schema/scalars/bytes))
+
+#### `submittedBy_not_contains` ([`Bytes`](/schema/scalars/bytes))
+
+#### `sponsored` ([`Boolean`](/schema/scalars/boolean))
+
+#### `sponsored_not` ([`Boolean`](/schema/scalars/boolean))
+
+#### `sponsored_in` ([`[Boolean!]`](/schema/scalars/boolean))
+
+#### `sponsored_not_in` ([`[Boolean!]`](/schema/scalars/boolean))
+
+#### `sponsoredAt` ([`String`](/schema/scalars/string))
+
+#### `sponsoredAt_not` ([`String`](/schema/scalars/string))
+
+#### `sponsoredAt_gt` ([`String`](/schema/scalars/string))
+
+#### `sponsoredAt_lt` ([`String`](/schema/scalars/string))
+
+#### `sponsoredAt_gte` ([`String`](/schema/scalars/string))
+
+#### `sponsoredAt_lte` ([`String`](/schema/scalars/string))
+
+#### `sponsoredAt_in` ([`[String!]`](/schema/scalars/string))
+
+#### `sponsoredAt_not_in` ([`[String!]`](/schema/scalars/string))
+
+#### `sponsoredAt_contains` ([`String`](/schema/scalars/string))
+
+#### `sponsoredAt_not_contains` ([`String`](/schema/scalars/string))
+
+#### `sponsoredAt_starts_with` ([`String`](/schema/scalars/string))
+
+#### `sponsoredAt_not_starts_with` ([`String`](/schema/scalars/string))
+
+#### `sponsoredAt_ends_with` ([`String`](/schema/scalars/string))
+
+#### `sponsoredAt_not_ends_with` ([`String`](/schema/scalars/string))
+
+#### `sponsoredBy` ([`Bytes`](/schema/scalars/bytes))
+
+#### `sponsoredBy_not` ([`Bytes`](/schema/scalars/bytes))
+
+#### `sponsoredBy_in` ([`[Bytes!]`](/schema/scalars/bytes))
+
+#### `sponsoredBy_not_in` ([`[Bytes!]`](/schema/scalars/bytes))
+
+#### `sponsoredBy_contains` ([`Bytes`](/schema/scalars/bytes))
+
+#### `sponsoredBy_not_contains` ([`Bytes`](/schema/scalars/bytes))
+
+#### `processed` ([`Boolean`](/schema/scalars/boolean))
+
+#### `processed_not` ([`Boolean`](/schema/scalars/boolean))
+
+#### `processed_in` ([`[Boolean!]`](/schema/scalars/boolean))
+
+#### `processed_not_in` ([`[Boolean!]`](/schema/scalars/boolean))
+
+#### `processedAt` ([`String`](/schema/scalars/string))
+
+#### `processedAt_not` ([`String`](/schema/scalars/string))
+
+#### `processedAt_gt` ([`String`](/schema/scalars/string))
+
+#### `processedAt_lt` ([`String`](/schema/scalars/string))
+
+#### `processedAt_gte` ([`String`](/schema/scalars/string))
+
+#### `processedAt_lte` ([`String`](/schema/scalars/string))
+
+#### `processedAt_in` ([`[String!]`](/schema/scalars/string))
+
+#### `processedAt_not_in` ([`[String!]`](/schema/scalars/string))
+
+#### `processedAt_contains` ([`String`](/schema/scalars/string))
+
+#### `processedAt_not_contains` ([`String`](/schema/scalars/string))
+
+#### `processedAt_starts_with` ([`String`](/schema/scalars/string))
+
+#### `processedAt_not_starts_with` ([`String`](/schema/scalars/string))
+
+#### `processedAt_ends_with` ([`String`](/schema/scalars/string))
+
+#### `processedAt_not_ends_with` ([`String`](/schema/scalars/string))
+
+#### `processedBy` ([`Bytes`](/schema/scalars/bytes))
+
+#### `processedBy_not` ([`Bytes`](/schema/scalars/bytes))
+
+#### `processedBy_in` ([`[Bytes!]`](/schema/scalars/bytes))
+
+#### `processedBy_not_in` ([`[Bytes!]`](/schema/scalars/bytes))
+
+#### `processedBy_contains` ([`Bytes`](/schema/scalars/bytes))
+
+#### `processedBy_not_contains` ([`Bytes`](/schema/scalars/bytes))
+
+#### `member` ([`String`](/schema/scalars/string))
+
+#### `member_not` ([`String`](/schema/scalars/string))
+
+#### `member_gt` ([`String`](/schema/scalars/string))
+
+#### `member_lt` ([`String`](/schema/scalars/string))
+
+#### `member_gte` ([`String`](/schema/scalars/string))
+
+#### `member_lte` ([`String`](/schema/scalars/string))
+
+#### `member_in` ([`[String!]`](/schema/scalars/string))
+
+#### `member_not_in` ([`[String!]`](/schema/scalars/string))
+
+#### `member_contains` ([`String`](/schema/scalars/string))
+
+#### `member_not_contains` ([`String`](/schema/scalars/string))
+
+#### `member_starts_with` ([`String`](/schema/scalars/string))
+
+#### `member_not_starts_with` ([`String`](/schema/scalars/string))
+
+#### `member_ends_with` ([`String`](/schema/scalars/string))
+
+#### `member_not_ends_with` ([`String`](/schema/scalars/string))
+
+#### `tributeDao` ([`String`](/schema/scalars/string))
+
+#### `tributeDao_not` ([`String`](/schema/scalars/string))
+
+#### `tributeDao_gt` ([`String`](/schema/scalars/string))
+
+#### `tributeDao_lt` ([`String`](/schema/scalars/string))
+
+#### `tributeDao_gte` ([`String`](/schema/scalars/string))
+
+#### `tributeDao_lte` ([`String`](/schema/scalars/string))
+
+#### `tributeDao_in` ([`[String!]`](/schema/scalars/string))
+
+#### `tributeDao_not_in` ([`[String!]`](/schema/scalars/string))
+
+#### `tributeDao_contains` ([`String`](/schema/scalars/string))
+
+#### `tributeDao_not_contains` ([`String`](/schema/scalars/string))
+
+#### `tributeDao_starts_with` ([`String`](/schema/scalars/string))
+
+#### `tributeDao_not_starts_with` ([`String`](/schema/scalars/string))
+
+#### `tributeDao_ends_with` ([`String`](/schema/scalars/string))
+
+#### `tributeDao_not_ends_with` ([`String`](/schema/scalars/string))
+
+#### `adapterId` ([`Bytes`](/schema/scalars/bytes))
+
+#### `adapterId_not` ([`Bytes`](/schema/scalars/bytes))
+
+#### `adapterId_in` ([`[Bytes!]`](/schema/scalars/bytes))
+
+#### `adapterId_not_in` ([`[Bytes!]`](/schema/scalars/bytes))
+
+#### `adapterId_contains` ([`Bytes`](/schema/scalars/bytes))
+
+#### `adapterId_not_contains` ([`Bytes`](/schema/scalars/bytes))
+
+#### `adapterAddress` ([`Bytes`](/schema/scalars/bytes))
+
+#### `adapterAddress_not` ([`Bytes`](/schema/scalars/bytes))
+
+#### `adapterAddress_in` ([`[Bytes!]`](/schema/scalars/bytes))
+
+#### `adapterAddress_not_in` ([`[Bytes!]`](/schema/scalars/bytes))
+
+#### `adapterAddress_contains` ([`Bytes`](/schema/scalars/bytes))
+
+#### `adapterAddress_not_contains` ([`Bytes`](/schema/scalars/bytes))
+
+#### `votingAdapter` ([`Bytes`](/schema/scalars/bytes))
+
+#### `votingAdapter_not` ([`Bytes`](/schema/scalars/bytes))
+
+#### `votingAdapter_in` ([`[Bytes!]`](/schema/scalars/bytes))
+
+#### `votingAdapter_not_in` ([`[Bytes!]`](/schema/scalars/bytes))
+
+#### `votingAdapter_contains` ([`Bytes`](/schema/scalars/bytes))
+
+#### `votingAdapter_not_contains` ([`Bytes`](/schema/scalars/bytes))
+
+#### `unitsToMint` ([`Bytes`](/schema/scalars/bytes))
+
+#### `unitsToMint_not` ([`Bytes`](/schema/scalars/bytes))
+
+#### `unitsToMint_in` ([`[Bytes!]`](/schema/scalars/bytes))
+
+#### `unitsToMint_not_in` ([`[Bytes!]`](/schema/scalars/bytes))
+
+#### `unitsToMint_contains` ([`Bytes`](/schema/scalars/bytes))
+
+#### `unitsToMint_not_contains` ([`Bytes`](/schema/scalars/bytes))
+
+#### `amount` ([`BigInt`](/schema/scalars/big-int))
+
+#### `amount_not` ([`BigInt`](/schema/scalars/big-int))
+
+#### `amount_gt` ([`BigInt`](/schema/scalars/big-int))
+
+#### `amount_lt` ([`BigInt`](/schema/scalars/big-int))
+
+#### `amount_gte` ([`BigInt`](/schema/scalars/big-int))
+
+#### `amount_lte` ([`BigInt`](/schema/scalars/big-int))
+
+#### `amount_in` ([`[BigInt!]`](/schema/scalars/big-int))
+
+#### `amount_not_in` ([`[BigInt!]`](/schema/scalars/big-int))
+
+#### `unitsRequested` ([`BigInt`](/schema/scalars/big-int))
+
+#### `unitsRequested_not` ([`BigInt`](/schema/scalars/big-int))
+
+#### `unitsRequested_gt` ([`BigInt`](/schema/scalars/big-int))
+
+#### `unitsRequested_lt` ([`BigInt`](/schema/scalars/big-int))
+
+#### `unitsRequested_gte` ([`BigInt`](/schema/scalars/big-int))
+
+#### `unitsRequested_lte` ([`BigInt`](/schema/scalars/big-int))
+
+#### `unitsRequested_in` ([`[BigInt!]`](/schema/scalars/big-int))
+
+#### `unitsRequested_not_in` ([`[BigInt!]`](/schema/scalars/big-int))
+
+#### `token` ([`Bytes`](/schema/scalars/bytes))
+
+#### `token_not` ([`Bytes`](/schema/scalars/bytes))
+
+#### `token_in` ([`[Bytes!]`](/schema/scalars/bytes))
+
+#### `token_not_in` ([`[Bytes!]`](/schema/scalars/bytes))
+
+#### `token_contains` ([`Bytes`](/schema/scalars/bytes))
+
+#### `token_not_contains` ([`Bytes`](/schema/scalars/bytes))
+
+#### `applicant` ([`Bytes`](/schema/scalars/bytes))
+
+#### `applicant_not` ([`Bytes`](/schema/scalars/bytes))
+
+#### `applicant_in` ([`[Bytes!]`](/schema/scalars/bytes))
+
+#### `applicant_not_in` ([`[Bytes!]`](/schema/scalars/bytes))
+
+#### `applicant_contains` ([`Bytes`](/schema/scalars/bytes))
+
+#### `applicant_not_contains` ([`Bytes`](/schema/scalars/bytes))
+
+#### `unitHolderAddr` ([`Bytes`](/schema/scalars/bytes))
+
+#### `unitHolderAddr_not` ([`Bytes`](/schema/scalars/bytes))
+
+#### `unitHolderAddr_in` ([`[Bytes!]`](/schema/scalars/bytes))
+
+#### `unitHolderAddr_not_in` ([`[Bytes!]`](/schema/scalars/bytes))
+
+#### `unitHolderAddr_contains` ([`Bytes`](/schema/scalars/bytes))
+
+#### `unitHolderAddr_not_contains` ([`Bytes`](/schema/scalars/bytes))
+
+#### `status` ([`String`](/schema/scalars/string))
+
+#### `status_not` ([`String`](/schema/scalars/string))
+
+#### `status_gt` ([`String`](/schema/scalars/string))
+
+#### `status_lt` ([`String`](/schema/scalars/string))
+
+#### `status_gte` ([`String`](/schema/scalars/string))
+
+#### `status_lte` ([`String`](/schema/scalars/string))
+
+#### `status_in` ([`[String!]`](/schema/scalars/string))
+
+#### `status_not_in` ([`[String!]`](/schema/scalars/string))
+
+#### `status_contains` ([`String`](/schema/scalars/string))
+
+#### `status_not_contains` ([`String`](/schema/scalars/string))
+
+#### `status_starts_with` ([`String`](/schema/scalars/string))
+
+#### `status_not_starts_with` ([`String`](/schema/scalars/string))
+
+#### `status_ends_with` ([`String`](/schema/scalars/string))
+
+#### `status_not_ends_with` ([`String`](/schema/scalars/string))
+
+#### `currentIndex` ([`BigInt`](/schema/scalars/big-int))
+
+#### `currentIndex_not` ([`BigInt`](/schema/scalars/big-int))
+
+#### `currentIndex_gt` ([`BigInt`](/schema/scalars/big-int))
+
+#### `currentIndex_lt` ([`BigInt`](/schema/scalars/big-int))
+
+#### `currentIndex_gte` ([`BigInt`](/schema/scalars/big-int))
+
+#### `currentIndex_lte` ([`BigInt`](/schema/scalars/big-int))
+
+#### `currentIndex_in` ([`[BigInt!]`](/schema/scalars/big-int))
+
+#### `currentIndex_not_in` ([`[BigInt!]`](/schema/scalars/big-int))
+
+#### `blockNumber` ([`BigInt`](/schema/scalars/big-int))
+
+#### `blockNumber_not` ([`BigInt`](/schema/scalars/big-int))
+
+#### `blockNumber_gt` ([`BigInt`](/schema/scalars/big-int))
+
+#### `blockNumber_lt` ([`BigInt`](/schema/scalars/big-int))
+
+#### `blockNumber_gte` ([`BigInt`](/schema/scalars/big-int))
+
+#### `blockNumber_lte` ([`BigInt`](/schema/scalars/big-int))
+
+#### `blockNumber_in` ([`[BigInt!]`](/schema/scalars/big-int))
+
+#### `blockNumber_not_in` ([`[BigInt!]`](/schema/scalars/big-int))
+
+#### `tokenToMint` ([`Bytes`](/schema/scalars/bytes))
+
+#### `tokenToMint_not` ([`Bytes`](/schema/scalars/bytes))
+
+#### `tokenToMint_in` ([`[Bytes!]`](/schema/scalars/bytes))
+
+#### `tokenToMint_not_in` ([`[Bytes!]`](/schema/scalars/bytes))
+
+#### `tokenToMint_contains` ([`Bytes`](/schema/scalars/bytes))
+
+#### `tokenToMint_not_contains` ([`Bytes`](/schema/scalars/bytes))
+
+#### `requestAmount` ([`BigInt`](/schema/scalars/big-int))
+
+#### `requestAmount_not` ([`BigInt`](/schema/scalars/big-int))
+
+#### `requestAmount_gt` ([`BigInt`](/schema/scalars/big-int))
+
+#### `requestAmount_lt` ([`BigInt`](/schema/scalars/big-int))
+
+#### `requestAmount_gte` ([`BigInt`](/schema/scalars/big-int))
+
+#### `requestAmount_lte` ([`BigInt`](/schema/scalars/big-int))
+
+#### `requestAmount_in` ([`[BigInt!]`](/schema/scalars/big-int))
+
+#### `requestAmount_not_in` ([`[BigInt!]`](/schema/scalars/big-int))
+
+#### `tributeAmount` ([`BigInt`](/schema/scalars/big-int))
+
+#### `tributeAmount_not` ([`BigInt`](/schema/scalars/big-int))
+
+#### `tributeAmount_gt` ([`BigInt`](/schema/scalars/big-int))
+
+#### `tributeAmount_lt` ([`BigInt`](/schema/scalars/big-int))
+
+#### `tributeAmount_gte` ([`BigInt`](/schema/scalars/big-int))
+
+#### `tributeAmount_lte` ([`BigInt`](/schema/scalars/big-int))
+
+#### `tributeAmount_in` ([`[BigInt!]`](/schema/scalars/big-int))
+
+#### `tributeAmount_not_in` ([`[BigInt!]`](/schema/scalars/big-int))
+
+#### `tributeTokenOwner` ([`Bytes`](/schema/scalars/bytes))
+
+#### `tributeTokenOwner_not` ([`Bytes`](/schema/scalars/bytes))
+
+#### `tributeTokenOwner_in` ([`[Bytes!]`](/schema/scalars/bytes))
+
+#### `tributeTokenOwner_not_in` ([`[Bytes!]`](/schema/scalars/bytes))
+
+#### `tributeTokenOwner_contains` ([`Bytes`](/schema/scalars/bytes))
+
+#### `tributeTokenOwner_not_contains` ([`Bytes`](/schema/scalars/bytes))
+
+#### `nftAddr` ([`Bytes`](/schema/scalars/bytes))
+
+#### `nftAddr_not` ([`Bytes`](/schema/scalars/bytes))
+
+#### `nftAddr_in` ([`[Bytes!]`](/schema/scalars/bytes))
+
+#### `nftAddr_not_in` ([`[Bytes!]`](/schema/scalars/bytes))
+
+#### `nftAddr_contains` ([`Bytes`](/schema/scalars/bytes))
+
+#### `nftAddr_not_contains` ([`Bytes`](/schema/scalars/bytes))
+
+#### `nftTokenId` ([`BigInt`](/schema/scalars/big-int))
+
+#### `nftTokenId_not` ([`BigInt`](/schema/scalars/big-int))
+
+#### `nftTokenId_gt` ([`BigInt`](/schema/scalars/big-int))
+
+#### `nftTokenId_lt` ([`BigInt`](/schema/scalars/big-int))
+
+#### `nftTokenId_gte` ([`BigInt`](/schema/scalars/big-int))
+
+#### `nftTokenId_lte` ([`BigInt`](/schema/scalars/big-int))
+
+#### `nftTokenId_in` ([`[BigInt!]`](/schema/scalars/big-int))
+
+#### `nftTokenId_not_in` ([`[BigInt!]`](/schema/scalars/big-int))
+
+#### `memberToKick` ([`Bytes`](/schema/scalars/bytes))
+
+#### `memberToKick_not` ([`Bytes`](/schema/scalars/bytes))
+
+#### `memberToKick_in` ([`[Bytes!]`](/schema/scalars/bytes))
+
+#### `memberToKick_not_in` ([`[Bytes!]`](/schema/scalars/bytes))
+
+#### `memberToKick_contains` ([`Bytes`](/schema/scalars/bytes))
+
+#### `memberToKick_not_contains` ([`Bytes`](/schema/scalars/bytes))
+
+#### `details` ([`Bytes`](/schema/scalars/bytes))
+
+#### `details_not` ([`Bytes`](/schema/scalars/bytes))
+
+#### `details_in` ([`[Bytes!]`](/schema/scalars/bytes))
+
+#### `details_not_in` ([`[Bytes!]`](/schema/scalars/bytes))
+
+#### `details_contains` ([`Bytes`](/schema/scalars/bytes))
+
+#### `details_not_contains` ([`Bytes`](/schema/scalars/bytes))
+
+#### `keys` ([`[Bytes!]`](/schema/scalars/bytes))
+
+#### `keys_not` ([`[Bytes!]`](/schema/scalars/bytes))
+
+#### `keys_contains` ([`[Bytes!]`](/schema/scalars/bytes))
+
+#### `keys_not_contains` ([`[Bytes!]`](/schema/scalars/bytes))
+
+#### `values` ([`[BigInt!]`](/schema/scalars/big-int))
+
+#### `values_not` ([`[BigInt!]`](/schema/scalars/big-int))
+
+#### `values_contains` ([`[BigInt!]`](/schema/scalars/big-int))
+
+#### `values_not_contains` ([`[BigInt!]`](/schema/scalars/big-int))
+
+#### `snapshot` ([`BigInt`](/schema/scalars/big-int))
+
+#### `snapshot_not` ([`BigInt`](/schema/scalars/big-int))
+
+#### `snapshot_gt` ([`BigInt`](/schema/scalars/big-int))
+
+#### `snapshot_lt` ([`BigInt`](/schema/scalars/big-int))
+
+#### `snapshot_gte` ([`BigInt`](/schema/scalars/big-int))
+
+#### `snapshot_lte` ([`BigInt`](/schema/scalars/big-int))
+
+#### `snapshot_in` ([`[BigInt!]`](/schema/scalars/big-int))
+
+#### `snapshot_not_in` ([`[BigInt!]`](/schema/scalars/big-int))
+
+#### `proposalHash` ([`Bytes`](/schema/scalars/bytes))
+
+#### `proposalHash_not` ([`Bytes`](/schema/scalars/bytes))
+
+#### `proposalHash_in` ([`[Bytes!]`](/schema/scalars/bytes))
+
+#### `proposalHash_not_in` ([`[Bytes!]`](/schema/scalars/bytes))
+
+#### `proposalHash_contains` ([`Bytes`](/schema/scalars/bytes))
+
+#### `proposalHash_not_contains` ([`Bytes`](/schema/scalars/bytes))
+
+#### `reporter` ([`Bytes`](/schema/scalars/bytes))
+
+#### `reporter_not` ([`Bytes`](/schema/scalars/bytes))
+
+#### `reporter_in` ([`[Bytes!]`](/schema/scalars/bytes))
+
+#### `reporter_not_in` ([`[Bytes!]`](/schema/scalars/bytes))
+
+#### `reporter_contains` ([`Bytes`](/schema/scalars/bytes))
+
+#### `reporter_not_contains` ([`Bytes`](/schema/scalars/bytes))
+
+#### `resultRoot` ([`Bytes`](/schema/scalars/bytes))
+
+#### `resultRoot_not` ([`Bytes`](/schema/scalars/bytes))
+
+#### `resultRoot_in` ([`[Bytes!]`](/schema/scalars/bytes))
+
+#### `resultRoot_not_in` ([`[Bytes!]`](/schema/scalars/bytes))
+
+#### `resultRoot_contains` ([`Bytes`](/schema/scalars/bytes))
+
+#### `resultRoot_not_contains` ([`Bytes`](/schema/scalars/bytes))
+
+#### `nbNo` ([`BigInt`](/schema/scalars/big-int))
+
+#### `nbNo_not` ([`BigInt`](/schema/scalars/big-int))
+
+#### `nbNo_gt` ([`BigInt`](/schema/scalars/big-int))
+
+#### `nbNo_lt` ([`BigInt`](/schema/scalars/big-int))
+
+#### `nbNo_gte` ([`BigInt`](/schema/scalars/big-int))
+
+#### `nbNo_lte` ([`BigInt`](/schema/scalars/big-int))
+
+#### `nbNo_in` ([`[BigInt!]`](/schema/scalars/big-int))
+
+#### `nbNo_not_in` ([`[BigInt!]`](/schema/scalars/big-int))
+
+#### `nbYes` ([`BigInt`](/schema/scalars/big-int))
+
+#### `nbYes_not` ([`BigInt`](/schema/scalars/big-int))
+
+#### `nbYes_gt` ([`BigInt`](/schema/scalars/big-int))
+
+#### `nbYes_lt` ([`BigInt`](/schema/scalars/big-int))
+
+#### `nbYes_gte` ([`BigInt`](/schema/scalars/big-int))
+
+#### `nbYes_lte` ([`BigInt`](/schema/scalars/big-int))
+
+#### `nbYes_in` ([`[BigInt!]`](/schema/scalars/big-int))
+
+#### `nbYes_not_in` ([`[BigInt!]`](/schema/scalars/big-int))
+
+#### `index` ([`BigInt`](/schema/scalars/big-int))
+
+#### `index_not` ([`BigInt`](/schema/scalars/big-int))
+
+#### `index_gt` ([`BigInt`](/schema/scalars/big-int))
+
+#### `index_lt` ([`BigInt`](/schema/scalars/big-int))
+
+#### `index_gte` ([`BigInt`](/schema/scalars/big-int))
+
+#### `index_lte` ([`BigInt`](/schema/scalars/big-int))
+
+#### `index_in` ([`[BigInt!]`](/schema/scalars/big-int))
+
+#### `index_not_in` ([`[BigInt!]`](/schema/scalars/big-int))
+
+#### `startingTime` ([`BigInt`](/schema/scalars/big-int))
+
+#### `startingTime_not` ([`BigInt`](/schema/scalars/big-int))
+
+#### `startingTime_gt` ([`BigInt`](/schema/scalars/big-int))
+
+#### `startingTime_lt` ([`BigInt`](/schema/scalars/big-int))
+
+#### `startingTime_gte` ([`BigInt`](/schema/scalars/big-int))
+
+#### `startingTime_lte` ([`BigInt`](/schema/scalars/big-int))
+
+#### `startingTime_in` ([`[BigInt!]`](/schema/scalars/big-int))
+
+#### `startingTime_not_in` ([`[BigInt!]`](/schema/scalars/big-int))
+
+#### `gracePeriodStartingTime` ([`BigInt`](/schema/scalars/big-int))
+
+#### `gracePeriodStartingTime_not` ([`BigInt`](/schema/scalars/big-int))
+
+#### `gracePeriodStartingTime_gt` ([`BigInt`](/schema/scalars/big-int))
+
+#### `gracePeriodStartingTime_lt` ([`BigInt`](/schema/scalars/big-int))
+
+#### `gracePeriodStartingTime_gte` ([`BigInt`](/schema/scalars/big-int))
+
+#### `gracePeriodStartingTime_lte` ([`BigInt`](/schema/scalars/big-int))
+
+#### `gracePeriodStartingTime_in` ([`[BigInt!]`](/schema/scalars/big-int))
+
+#### `gracePeriodStartingTime_not_in` ([`[BigInt!]`](/schema/scalars/big-int))
+
+#### `isChallenged` ([`Boolean`](/schema/scalars/boolean))
+
+#### `isChallenged_not` ([`Boolean`](/schema/scalars/boolean))
+
+#### `isChallenged_in` ([`[Boolean!]`](/schema/scalars/boolean))
+
+#### `isChallenged_not_in` ([`[Boolean!]`](/schema/scalars/boolean))
+
+#### `forceFailed` ([`Boolean`](/schema/scalars/boolean))
+
+#### `forceFailed_not` ([`Boolean`](/schema/scalars/boolean))
+
+#### `forceFailed_in` ([`[Boolean!]`](/schema/scalars/boolean))
+
+#### `forceFailed_not_in` ([`[Boolean!]`](/schema/scalars/boolean))
+
+#### `fallbackVotesCount` ([`BigInt`](/schema/scalars/big-int))
+
+#### `fallbackVotesCount_not` ([`BigInt`](/schema/scalars/big-int))
+
+#### `fallbackVotesCount_gt` ([`BigInt`](/schema/scalars/big-int))
+
+#### `fallbackVotesCount_lt` ([`BigInt`](/schema/scalars/big-int))
+
+#### `fallbackVotesCount_gte` ([`BigInt`](/schema/scalars/big-int))
+
+#### `fallbackVotesCount_lte` ([`BigInt`](/schema/scalars/big-int))
+
+#### `fallbackVotesCount_in` ([`[BigInt!]`](/schema/scalars/big-int))
+
+#### `fallbackVotesCount_not_in` ([`[BigInt!]`](/schema/scalars/big-int))
+
+#### `votes` ([`BigInt`](/schema/scalars/big-int))
+
+#### `votes_not` ([`BigInt`](/schema/scalars/big-int))
+
+#### `votes_gt` ([`BigInt`](/schema/scalars/big-int))
+
+#### `votes_lt` ([`BigInt`](/schema/scalars/big-int))
+
+#### `votes_gte` ([`BigInt`](/schema/scalars/big-int))
+
+#### `votes_lte` ([`BigInt`](/schema/scalars/big-int))
+
+#### `votes_in` ([`[BigInt!]`](/schema/scalars/big-int))
+
+#### `votes_not_in` ([`[BigInt!]`](/schema/scalars/big-int))
+
+#### `votingState` ([`String`](/schema/scalars/string))
+
+#### `votingState_not` ([`String`](/schema/scalars/string))
+
+#### `votingState_gt` ([`String`](/schema/scalars/string))
+
+#### `votingState_lt` ([`String`](/schema/scalars/string))
+
+#### `votingState_gte` ([`String`](/schema/scalars/string))
+
+#### `votingState_lte` ([`String`](/schema/scalars/string))
+
+#### `votingState_in` ([`[String!]`](/schema/scalars/string))
+
+#### `votingState_not_in` ([`[String!]`](/schema/scalars/string))
+
+#### `votingState_contains` ([`String`](/schema/scalars/string))
+
+#### `votingState_not_contains` ([`String`](/schema/scalars/string))
+
+#### `votingState_starts_with` ([`String`](/schema/scalars/string))
+
+#### `votingState_not_starts_with` ([`String`](/schema/scalars/string))
+
+#### `votingState_ends_with` ([`String`](/schema/scalars/string))
+
+#### `votingState_not_ends_with` ([`String`](/schema/scalars/string))
+
+#### `votingResult` ([`String`](/schema/scalars/string))
+
+#### `votingResult_not` ([`String`](/schema/scalars/string))
+
+#### `votingResult_gt` ([`String`](/schema/scalars/string))
+
+#### `votingResult_lt` ([`String`](/schema/scalars/string))
+
+#### `votingResult_gte` ([`String`](/schema/scalars/string))
+
+#### `votingResult_lte` ([`String`](/schema/scalars/string))
+
+#### `votingResult_in` ([`[String!]`](/schema/scalars/string))
+
+#### `votingResult_not_in` ([`[String!]`](/schema/scalars/string))
+
+#### `votingResult_contains` ([`String`](/schema/scalars/string))
+
+#### `votingResult_not_contains` ([`String`](/schema/scalars/string))
+
+#### `votingResult_starts_with` ([`String`](/schema/scalars/string))
+
+#### `votingResult_not_starts_with` ([`String`](/schema/scalars/string))
+
+#### `votingResult_ends_with` ([`String`](/schema/scalars/string))
+
+#### `votingResult_not_ends_with` ([`String`](/schema/scalars/string))

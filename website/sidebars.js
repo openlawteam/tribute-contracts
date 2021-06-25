@@ -8,6 +8,9 @@
 
  Create as many sidebars as you want.
  */
+
+const subgraphSchemaSideBar = require("./docs/schema/sidebar-schema");
+
 const allCoreContracts = {
   type: "category",
   label: "Core",
@@ -99,7 +102,8 @@ const subgraphStructure = {
   collapsed: false,
   items: [
     "subgraph/structure/subgraph",
-    "subgraph/structure/schema",
+    subgraphSchemaSideBar,
+    // "subgraph/structure/schema",
     "subgraph/structure/mappings",
   ],
 };

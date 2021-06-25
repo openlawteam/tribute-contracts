@@ -1,0 +1,26 @@
+---
+id: bank
+title: Bank
+---
+
+No description
+
+```graphql
+type Bank {
+  id: ID!
+  bankAddress: Bytes!
+  tributeDao: TributeDao!
+}
+```
+
+### Fields
+
+#### `id` ([`ID!`](/schema/scalars/id))
+
+Unique identifier and primary key of the `Bank` entity
+
+#### `bankAddress` ([`Bytes!`](/schema/scalars/bytes))
+
+The bank of the DAO
+
+#### `tributeDao` ([`TributeDao!`](/schema/objects/tribute-dao))

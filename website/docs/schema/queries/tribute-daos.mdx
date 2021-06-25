@@ -1,0 +1,38 @@
+---
+id: tribute-daos
+title: tributeDaos
+---
+
+No description
+
+```graphql
+tributeDaos(
+  skip: Int = 0
+  first: Int = 100
+  orderBy: TributeDao_orderBy
+  orderDirection: OrderDirection
+  where: TributeDao_filter
+  block: Block_height
+): [TributeDao!]!
+
+```
+
+### Arguments
+
+#### `skip` ([`Int`](/schema/scalars/int))
+
+#### `first` ([`Int`](/schema/scalars/int))
+
+#### `orderBy` ([`TributeDao_orderBy`](/schema/enums/tribute-dao-order-by))
+
+#### `orderDirection` ([`OrderDirection`](/schema/enums/order-direction))
+
+#### `where` ([`TributeDao_filter`](/schema/inputs/tribute-dao-filter))
+
+#### `block` ([`Block_height`](/schema/inputs/block-height))
+
+The block at which the query should be executed. Can either be an `{ number: Int }` containing the block number or a `{ hash: Bytes }` value containing a block hash. Defaults to the latest block when omitted.
+
+### Type
+
+#### [`TributeDao`](/schema/objects/tribute-dao)

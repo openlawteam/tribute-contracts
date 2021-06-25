@@ -1,0 +1,33 @@
+---
+id: nft
+title: NFT
+---
+
+No description
+
+```graphql
+type NFT {
+  id: ID!
+  nftAddress: Bytes!
+  tokenId: BigInt!
+  from: Bytes
+  to: Bytes
+  nftCollection: NFTCollection
+}
+```
+
+### Fields
+
+#### `id` ([`ID!`](/schema/scalars/id))
+
+Unique identifier and primary key of the `NFT` entity
+
+#### `nftAddress` ([`Bytes!`](/schema/scalars/bytes))
+
+#### `tokenId` ([`BigInt!`](/schema/scalars/big-int))
+
+#### `from` ([`Bytes`](/schema/scalars/bytes))
+
+#### `to` ([`Bytes`](/schema/scalars/bytes))
+
+#### `nftCollection` ([`NFTCollection`](/schema/objects/nft-collection))
