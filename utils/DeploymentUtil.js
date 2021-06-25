@@ -782,9 +782,9 @@ const entryBank = (contract, flags) => {
     flags.SUB_FROM_BALANCE,
     flags.INTERNAL_TRANSFER,
     flags.WITHDRAW,
-    flags.EXECUTE,
     flags.REGISTER_NEW_TOKEN,
     flags.REGISTER_NEW_INTERNAL_TOKEN,
+    flags.UPDATE_TOKEN,
   ];
 
   const acl = entry(values);

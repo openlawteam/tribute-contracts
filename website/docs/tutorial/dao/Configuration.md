@@ -3,82 +3,65 @@ id: configuration
 title: Configuration
 ---
 
-Docusaurus is essentially a set of npm [packages](https://github.com/facebook/docusaurus/tree/master/packages).
+⚡️ **[TributeDAO Framework](https://github.com/openlawteam/tribute-contracts)** provides you a set of modular and extensible smart contracts to launch your DAO with minimal costs.
 
-:::tip
+## Requirements
 
-Use the **[Fast Track]** to understand Docusaurus in **5 minutes ⏱**!
+- **[Infura Ethereum API KEY](https://infura.io/product/ethereum)** sign up for free, verify your email, create an ethereum project to get your API Key (also known as `Project Id`). We will use that to deploy the contracts to the Rinkeby network. Checkout this **[Infura Blog Post](https://blog.infura.io/getting-started-with-infura-28e41844cc89/)** for more info on that.
 
-Use **[new.docusaurus.io](https://new.docusaurus.io)** to test Docusaurus immediately in your browser!
+## Configuring the project
 
-:::
-
-## Requirements {#requirements}
-
-## Usage
+⚙️ Now that you have the tribute-contracts project prepared in your local environment, it is time to set up the DAO configs. The configs are a set of environment variables that will provide to the deployment script all the essential information to deploy the smart contracts to the correct network. In this tutorial we will be covering the deploying of the DAO using **[Rinkeby](https://rinkeby.etherscan.io/)** test network.
 
 ### Environment Variables
 
-Added the following environment variables to your local .env file:
+The first step is to create a `.env` file in the root of the project directory:
 
-- `DAO_NAME`: The name of the DAO.
-- `DAO_OWNER_ADDR`: The DAO Owner ETH Address (0x...) in the target network.
-- `INFURA_KEY`: The Infura API Key is used to communicate with the Ethereum blockchain.
-- `TRUFFLE_MNEMONIC`: The truffle mnemonic string containing the 12 keywords.
-- `ETHERSCAN_API_KEY`: The Ether Scan API Key to verify the contracts after the deployment.
-- `DEBUG_CONTRACT_VERIFICATION`: Debug the Ether Scan contract verification calls (`true`|`false`).
-- `COUPON_CREATOR_ADDR`: The public eth (0x...) address of the creator of the onboarding coupons.
-- `ERC20_TOKEN_NAME`: The ERC20 Token Name used by the ERC20 Token Extension.
-- `ERC20_TOKEN_SYMBOL`: Token Symbol used by the ERC20 Token Extension.
-- `ERC20_TOKEN_DECIMALS`: The ERC20 Token Decimals to display in MetaMask.
+```bash
+touch .env
+```
 
-Checkout the [sample .env file](https://github.com/openlawteam/tribute-contracts/.sample.env).
+Then set the following content to the `.env` file, and fill out each environment variable with the values as indicated in the comments below:
 
-**Required env vars per deployment type**
+```bash
+# The name of the DAO.
+DAO_NAME=My First DAO
 
-- Ganache deployment: `DAO_NAME`, `ERC20_TOKEN_NAME`, `ERC20_TOKEN_SYMBOL`, `ERC20_TOKEN_DECIMALS`, `COUPON_CREATOR_ADDR`.
+# The public ethereum address that belongs to the Owner of the DAO,
+# in this case, it is your public ethereum address on Rinkeby network.
+# Make sure you have some ETH, otherwise the deployment will fail.
+DAO_OWNER_ADDR=0x...
 
-- Rinkeby deployment: `DAO_NAME`, `DAO_OWNER_ADDR`, `ERC20_TOKEN_NAME`, `ERC20_TOKEN_SYMBOL`, `ERC20_TOKEN_DECIMALS`, `COUPON_CREATOR_ADDR`.
+# The name of the ERC20 token of your DAO.
+ERC20_TOKEN_NAME=My First DAO Token
 
-- Test deployment: `DAO_NAME`, `ERC20_TOKEN_NAME`, `ERC20_TOKEN_SYMBOL`, `ERC20_TOKEN_DECIMALS`.
+# The symbol of your ERC20 Token that will be used to control the
+# DAO units that each member holds.
+ERC20_TOKEN_SYMBOL=FDAO
 
-### Run Tests
+# Number of decimals to display the token units in MM. We usually
+# set 0 because the DAO units are managed in WEI, and to be able
+# to see that in the MM wallet you need to remove the precision.
+ERC20_TOKEN_DECIMALS=0
 
-This project uses truffle. To run the tests, simply run:
+# The Infura Key to connect to Rinkeby network. You can follow
+# these steps to get your ProjectId/API Key from Infura:
+# https://blog.infura.io/getting-started-with-infura-28e41844cc89/
+INFURA_KEY=
 
-> npm run test
+# The Truffle mnemonic is a 12 word string which is used to create
+# the HD Wallet, and sign transactions on your behalf. Remember that
+# the DAO_OWNER_ADDR that you set above need to be the public address
+# derived from this 12 word mnemonic.
+TRUFFLE_MNEMONIC=...
+```
 
-### Code Format
+:::caution
+The **DAO_OWNER_ADDR** env var needs to match the ethereum address derived from your **TRUFFLE_MNEMONIC**.
+:::
 
-To fix the Solidity code and documentation with the linter hints, simply run:
+⚡️ Alright! You have configured the project to deploy the contracts to **[Rinkeby](https://rinkeby.etherscan.io/)** test network. Let's move the next section to finally publish your DAO to the world 🌎!
 
-> npm run lint:fix
+## Problems?
 
-### Running with Ganache
-
-...
-
-> npm run ganache
-
-### Deploying the contracts
-
-> npm run deploy:ganache
-
-or
-
-> npm run deploy:rinkeby
-
-### Verifying Contracts
-
-To verify the contract using Etherscan you need to create an API key and update the .env file with your API key.
-Then execute the following script:
-
-> npm run verify rinkeby
-
-## Contribute
-
-Tribute exists thanks to its contributors. There are many ways you can participate and help build high quality software. Check out the [contribution guide]!
-
-## Problems? {#problems}
-
-Ask for help on [Stack Overflow](https://stackoverflow.com/questions/tagged/docusaurus), on our [GitHub repository](https://github.com/facebook/docusaurus) or [Twitter](https://twitter.com/docusaurus).
+Ask for help on **[Discord](https://discord.gg/xXMA2DYqNf)** or on **[GitHub Discussions](https://github.com/openlawteam/tribute-contracts/discussions/new)**.

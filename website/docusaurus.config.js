@@ -1,3 +1,5 @@
+require("dotenv").config();
+
 module.exports = {
   title: "TributeDAO Framework Docs",
   tagline:
@@ -10,6 +12,12 @@ module.exports = {
   organizationName: "openlawteam",
   projectName: "tribute-contracts",
   themeConfig: {
+    algolia: {
+      appId: process.env.ALGOLIA_APP_ID,
+      apiKey: process.env.ALGOLIA_SEARCH_API_KEY,
+      indexName: "docs_tribute_contracts",
+      contextualSearch: true,
+    },
     colorMode: {
       defaultMode: "light",
       disableSwitch: true,

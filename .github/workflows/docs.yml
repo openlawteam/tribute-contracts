@@ -4,6 +4,10 @@ on:
   push:
     branches: [docs]
 
+env:
+  ALGOLIA_APP_ID: ${{ secrets.ALGOLIA_APP_ID }}
+  ALGOLIA_SEARCH_API_KEY: ${{ secrets.ALGOLIA_SEARCH_API_KEY }}
+
 jobs:
   build-and-deploy:
     runs-on: ubuntu-latest

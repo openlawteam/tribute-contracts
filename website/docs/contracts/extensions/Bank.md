@@ -17,7 +17,6 @@ The `availableTokens` and `availableInteralTokens`, are tokens that have been wh
 - `SUB_FROM_BALANCE`: right to subtract balance from the bank.
 - `INTERNAL_TRANSFER`: right to internally move the funds from one account to another.
 - `WITHDRAW`: right to withdraw the funds to an external wallet.
-- `EXECUTE`: right to ?
 - `REGISTER_NEW_TOKEN`: right to register a new external token.
 - `REGISTER_NEW_INTERNAL_TOKEN`: right to register a new internal token.
 - `UPDATE_TOKEN`: right to update the extenal token balance.
