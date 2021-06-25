@@ -19,6 +19,7 @@
   --ifm-code-font-size: 95%;
   --ifm-navbar-link-color: #3c6b7e;
   --ifm-navbar-link-hover-color: #2498bd;
+  --ifm-footer-background-color: #f8fafd;
 }
 
 .docusaurus-highlight-code-line {
@@ -34,10 +35,6 @@ body {
   font-weight: 400;
   font-family: "Roboto", sans-serif;
 }
-
-/* #__docusaurus .navbar {
-  height: var(--ifm-navbar-height);
-} */
 
 .navbar {
   background-color: #f8fafd;
@@ -70,4 +67,18 @@ body {
   letter-spacing: 2px;
   text-transform: lowercase;
   font-weight: 400;
+}
+
+.pagination-nav__link {
+  background: white;
+  background-color: #fff;
+  border-radius: 15px;
+  border: 1px solid #c3d6dc;
+  font-family: "Share Tech Mono", monospace;
+  text-transform: lowercase;
+  font-size: 1.25rem;
+}
+
+.pagination-nav__label {
+  font-weight: normal;
 }

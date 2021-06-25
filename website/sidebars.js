@@ -100,12 +100,7 @@ const subgraphStructure = {
   type: "category",
   label: "Structure",
   collapsed: false,
-  items: [
-    "subgraph/structure/subgraph",
-    subgraphSchemaSideBar,
-    // "subgraph/structure/schema",
-    // "subgraph/structure/mappings",
-  ],
+  items: ["subgraph/structure/manifest", subgraphSchemaSideBar],
 };
 
 module.exports = {

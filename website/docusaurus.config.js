@@ -60,17 +60,30 @@ module.exports = {
       ],
     },
     footer: {
-      style: "dark",
+      // style: "light",
+      logo: {
+        alt: "TributeDAO Logo",
+        src: "img/oss_logo.png",
+        href: "https://tributedao.com",
+      },
       links: [
-        // {
-        //   title: "Docs",
-        //   items: [
-        //     {
-        //       label: "Tutorial",
-        //       to: "docs/getting-started/introduction",
-        //     },
-        //   ],
-        // },
+        {
+          title: "Docs",
+          items: [
+            {
+              label: "Tutorial",
+              to: "docs/getting-started/introduction",
+            },
+            {
+              label: "Contracts",
+              to: "docs/contracts/core/dao-registry",
+            },
+            {
+              label: "Subgraph",
+              to: "docs/subgraph/definition",
+            },
+          ],
+        },
         {
           title: "Community",
           items: [
@@ -82,11 +95,24 @@ module.exports = {
               label: "Twitter",
               href: "https://twitter.com/OpenLawOfficial",
             },
+            {
+              label: "Github",
+              href:
+                "https://github.com/search?q=org%3Aopenlawteam+tribute-ui+OR+tribute-contracts+in%3Aname&type=repositories",
+            },
+            {
+              label: "Medium",
+              href: "#",
+            },
           ],
         },
         {
           title: "More",
           items: [
+            {
+              label: "TributeDAO",
+              href: "https://tributedao.com",
+            },
             {
               label: "TributeDAO UI",
               href: "https://github.com/openlawteam/tribute-ui",
@@ -94,6 +120,10 @@ module.exports = {
             {
               label: "TributeDAO Contracts",
               href: "https://github.com/openlawteam/tribute-contracts",
+            },
+            {
+              label: "Code of Conduct",
+              href: "#",
             },
           ],
         },

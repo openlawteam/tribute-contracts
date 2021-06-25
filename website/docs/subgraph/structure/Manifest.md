@@ -1,9 +1,9 @@
 ---
-id: subgraph
+id: manifest
 title: The Subgraph Manifest
 ---
 
-Here is an example of the TributeDAO subgraph manifest, for more details on how to define a subgraph manifest check out **[The Graph](https://thegraph.com/docs/define-a-subgraph#the-subgraph-manifest)**:
+Here is an example of the TributeDAO subgraph manifest. For more details on how to define a subgraph manifest check out **[The Graph](https://thegraph.com/docs/define-a-subgraph#the-subgraph-manifest)** documentation:
 
 ```
 specVersion: 0.0.2
