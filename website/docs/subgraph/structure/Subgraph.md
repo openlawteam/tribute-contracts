@@ -1,4 +1,4 @@
 ---
 id: subgraph
-title: subgraph.yaml
+title: The Subgraph Manifest
 ---

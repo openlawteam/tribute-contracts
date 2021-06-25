@@ -16,7 +16,7 @@ module.exports = {
       respectPrefersColorScheme: true,
     },
     navbar: {
-      title: "TributeDAO Framework Docs",
+      title: "TRIBUTE",
       logo: {
         alt: "TributeDAO Framework Logo",
         src: "img/logo.svg",
