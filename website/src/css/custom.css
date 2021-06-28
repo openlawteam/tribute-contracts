@@ -96,6 +96,11 @@ body {
   font-family: "Share Tech Mono", monospace;
 }
 
+.footer__link-item:hover {
+  color: var(--ifm-navbar-link-hover-color);
+  text-decoration: none;
+}
+
 .footer__logo {
   max-width: 2rem;
 }
