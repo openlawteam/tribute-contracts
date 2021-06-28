@@ -41,7 +41,10 @@ contract FinancingChainlinkContract is
     MemberGuard,
     AdapterGuard
 {
-    AggregatorV3Interface internal _priceFeed;
+    //move from internal to public
+    AggregatorV3Interface public priceFeed;
+    //decimals from Chainlink priceFeed.decimals();
+    uint8 public decimalsChainlink;
 
     /**
      * 	@notice choose a priceFeed contract, see https://docs.chain.link/docs/ethereum-addresses
@@ -51,8 +54,17 @@ contract FinancingChainlinkContract is
      * Mainnet Contract Address:  0x5f4eC3Df9cbd43714FE2740f5E3616155c5b8419
      */
 
-    constructor(address feedAddress) {
-        _priceFeed = AggregatorV3Interface(feedAddress);
+    // constructor(address feedAddress) {
+    //     _priceFeed = AggregatorV3Interface(feedAddress);
+    // }
+
+    function configureDao(DaoRegistry dao, address _priceFeed)
+        external
+        onlyAdapter(dao)
+    {
+        priceFeed = AggregatorV3Interface(_priceFeed);
+        decimalsChainlink = priceFeed.decimals();
+        //add require here in case chainlink issues a pricefeed does not have 8 or 18 decimals?
     }
 
     struct ProposalDetails {
@@ -146,11 +158,27 @@ contract FinancingChainlinkContract is
         dao.processProposal(proposalId);
         BankExtension bank = BankExtension(dao.getExtensionAddress(BANK));
 
-        //enter US Dollar = details.amount to convert it into ETH
-        uint256 amount = _usdToEth(details.amount);
+        //if - elif - else block to check chainlink pricefeeds
 
-        bank.subtractFromBalance(GUILD, details.token, amount);
-        bank.addToBalance(details.applicant, details.token, amount);
+        //if decimalsChainlink = 8 decimals, than use conversion
+        if (decimalsChainlink == 8) {
+            //enter US Dollar = details.amount to convert with _usdToETh
+            uint256 amount = _usdToEth(details.amount);
+            bank.subtractFromBalance(GUILD, details.token, amount);
+            bank.addToBalance(details.applicant, details.token, amount);
+        }
+        //else if decimalsChainlink = 18, then use the standard financing
+        else if (decimalsChainlink == 18) {
+            uint256 amount = details.amount;
+            bank.subtractFromBalance(GUILD, details.token, amount);
+            bank.addToBalance(details.applicant, details.token, amount);
+        }
+        //if decimalsChainlink does equal 8 or 18, then revert
+        else {
+            revert(
+                "chainlink pricefeed is not compatible, must be 8 or 18 decimals"
+            );
+        }
     }
 
     /**
@@ -165,7 +193,7 @@ contract FinancingChainlinkContract is
             uint256 startedAt,
             uint256 updatedAt,
             uint80 answeredInRound
-        ) = _priceFeed.latestRoundData();
+        ) = priceFeed.latestRoundData();
         return answer;
     }
 
