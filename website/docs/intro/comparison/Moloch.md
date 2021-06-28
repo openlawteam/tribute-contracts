@@ -29,7 +29,7 @@ title: Moloch
 |                         **Upgradable** |        :x:         |        :x:         | :heavy_check_mark: |
 |                     **Voting - batch** |        :x:         |        :x:         | :heavy_check_mark: |
 | **Voting - no quorum simple majority** | :heavy_check_mark: | :heavy_check_mark: | :heavy_check_mark: |
-|                  **Lower cost - offchain voting** |        :x:         |        :x:         | :heavy_check_mark: |
+|                  **Lower cost offchain voting** |        :x:         |        :x:         | :heavy_check_mark: |
 |                   **Whitelist Tokens** |        :x:         | :heavy_check_mark: | :heavy_check_mark: |
 |                           **Withdraw** |        :x:         | :heavy_check_mark: | :heavy_check_mark: |
 
