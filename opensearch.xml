@@ -4,8 +4,8 @@
   <ShortName>TributeDAO Framework</ShortName>
   <Description>Search TributeDAO Framework</Description>
   <InputEncoding>UTF-8</InputEncoding>
-  <Image width="16" height="16" type="image/x-icon">https://github.com/openlawteam/tribute-contracts/img/favicon.ico</Image>
-  <Url type="text/html" method="get" template="https://github.com/openlawteam/tribute-contracts/search?q={searchTerms}"/>
-  <Url type="application/opensearchdescription+xml" rel="self" template="https://github.com/openlawteam/tribute-contracts/opensearch.xml" />
-  <moz:SearchForm>https://github.com/openlawteam/tribute-contracts/</moz:SearchForm>
+  <Image width="16" height="16" type="image/x-icon">https://github.com/openlawteam/tribute-contracts/tribute-contracts/img/favicon.ico</Image>
+  <Url type="text/html" method="get" template="https://github.com/openlawteam/tribute-contracts/tribute-contracts/search?q={searchTerms}"/>
+  <Url type="application/opensearchdescription+xml" rel="self" template="https://github.com/openlawteam/tribute-contracts/tribute-contracts/opensearch.xml" />
+  <moz:SearchForm>https://github.com/openlawteam/tribute-contracts/tribute-contracts/</moz:SearchForm>
 </OpenSearchDescription>
