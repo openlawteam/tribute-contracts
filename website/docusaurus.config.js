@@ -5,7 +5,7 @@ module.exports = {
   tagline:
     "A new modular DAO framework inspired by the Moloch smart contracts.",
   url: "https://github.com/openlawteam/tribute-contracts",
-  baseUrl: "/tribute-contracts/",
+  baseUrl: "/",
   onBrokenLinks: "throw",
   onBrokenMarkdownLinks: "warn",
   favicon: "img/favicon.ico",
