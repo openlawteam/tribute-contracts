@@ -133,6 +133,26 @@ module.exports = {
     },
     {
       type: "category",
+      label: "Tutorials",
+      collapsed: true,
+      items: [
+        {
+          type: "category",
+          label: "Launching your DAO",
+          collapsed: true,
+          items: [
+            "tutorial/dao/installation",
+            "tutorial/dao/configuration",
+            "tutorial/dao/deployment",
+            "tutorial/dao/interacting",
+          ],
+        },
+        "tutorial/adapters/creating-an-adapter",
+        "tutorial/extensions/creating-an-extension",
+      ],
+    },
+    {
+      type: "category",
       label: "Contracts",
       collapsed: true,
       items: [allCoreContracts, allExtensions, allAdapters, allGuardContracts],
@@ -152,26 +172,6 @@ module.exports = {
         subgraphSetup,
         // subgraphStructure,
         "subgraph/deployment",
-      ],
-    },
-    {
-      type: "category",
-      label: "Tutorials",
-      collapsed: true,
-      items: [
-        {
-          type: "category",
-          label: "Launching your DAO",
-          collapsed: true,
-          items: [
-            "tutorial/dao/installation",
-            "tutorial/dao/configuration",
-            "tutorial/dao/deployment",
-            "tutorial/dao/interacting",
-          ],
-        },
-        "tutorial/adapters/creating-an-adapter",
-        "tutorial/extensions/creating-an-extension",
       ],
     },
   ],

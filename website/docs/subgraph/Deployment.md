@@ -10,7 +10,7 @@ For example:
 ```json
 [
   {
-   "network": "rinkeby",
+    "network": "rinkeby",
     "daoFactoryAddress": "0x10a14A1665DE72faeDb866Fc75c57036813E2Eb2",
     "daoFactoryStartBlock": 6204221,
     "couponOnboardingAddress": "0x20a14A1665DE72faeDb866Fc75c57036813E2Eb3",
@@ -19,7 +19,7 @@ For example:
     "SUBGRAPH_NAME": "tribute-dev"
   },
   {
-   "network": "mainnet",
+    "network": "mainnet",
     "daoFactoryAddress": "0xac665be1e44cc4eec388e34c3899c271fee847f4",
     "daoFactoryStartBlock": 8332211,
     "GITHUB_USERNAME": "openlawteam",

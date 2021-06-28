@@ -17,7 +17,12 @@ function HomepageHeader() {
           <Link
             className="button button--lg"
             to="/docs/intro/overview-and-benefits"
-            style={{ marginTop: 15, marginBottom: 20, border: "none", fontWeight: "2em" }}
+            style={{
+              marginTop: 15,
+              marginBottom: 20,
+              border: "none",
+              fontWeight: "2em",
+            }}
           >
             Get Started
           </Link>
