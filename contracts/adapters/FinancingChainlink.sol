@@ -41,7 +41,7 @@ contract FinancingChainlinkContract is
     MemberGuard,
     AdapterGuard
 {
-    //move from internal to public
+    
     bytes32 internal constant _PRICE_FEED_ADDRESS_CONFIG =
         keccak256("finance-chainlink:price-feed:address");
 
@@ -49,10 +49,11 @@ contract FinancingChainlinkContract is
 
     /**
      * 	@notice choose a priceFeed contract, see https://docs.chain.link/docs/ethereum-addresses
-     * Aggregator: ETH/USD
+     * Aggregator: ETH/USD - 8 decimals
      *	contract address of the price feed from Chainlink
      * Rinkeby Contract Address: 0x8A753747A1Fa494EC906cE90E9f37563A8AF630e
      * Mainnet Contract Address:  0x5f4eC3Df9cbd43714FE2740f5E3616155c5b8419
+     * Mainnet Contract USDC/ETH - 18 decimals: 0x986b5E1e1755e3C2440e960477f25201B0a8bbD4
      */
 
     // constructor(address feedAddress) {
@@ -165,15 +166,16 @@ contract FinancingChainlinkContract is
 
         dao.processProposal(proposalId);
         BankExtension bank = BankExtension(dao.getExtensionAddress(BANK));
-
+        //Chainlink feed instance
         AggregatorV3Interface priceFeed = AggregatorV3Interface(priceFeedAddr);
+        //check decimals to see if 8 or 18
         uint8 decimalsChainlink = priceFeed.decimals();
         uint256 amount = details.amount;
         address token = details.token;
         address applicant = details.applicant;
         if (decimalsChainlink == 8) {
-            //enter US Dollar = details.amount to convert with _usdToETh
-            uint256 convertedAmount = _usdToEth(amount, priceFeed);
+            //enter US Dollar = details.amount and convert with _convertToWeiValue
+            uint256 convertedAmount = _convertToWeiValue(amount, priceFeed);
             bank.subtractFromBalance(GUILD, token, convertedAmount);
             bank.addToBalance(applicant, token, convertedAmount);
         } else {
@@ -187,7 +189,7 @@ contract FinancingChainlinkContract is
         multipliers are needed in numerator (usd to wei) and denominator 
         (convert result from chainlink to wei) 
      */
-    function _usdToEth(uint256 amount, AggregatorV3Interface priceFeed)
+    function _convertToWeiValue(uint256 amount, AggregatorV3Interface priceFeed)
         internal
         view
         returns (uint256)
