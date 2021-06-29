@@ -6,27 +6,41 @@ import {
 } from "../../generated/templates";
 import { Bank, NFTCollection } from "../../generated/schema";
 
-import { BANK_EXTENSION_ID, NFT_EXTENSION_ID } from "./constants";
+import { internalERC20Balance } from "../extensions/bank-extension-mapping";
+import {
+  BANK_EXTENSION_ID,
+  NFT_EXTENSION_ID,
+  ERC20_EXTENSION_ID,
+} from "../core/dao-constants";
 
 export function loadOrCreateExtensionEntity(
   daoAddress: Address,
   extensionId: Bytes,
-  extensionAddress: Address
+  extensionAddress: Address,
+  transactionFrom: Address
 ): void {
   if (BANK_EXTENSION_ID.toString() == extensionId.toHexString()) {
     log.info("INFO BANK_EXTENSION_ID, extensionId: {}", [
       extensionId.toHexString(),
     ]);
 
-    bank(daoAddress, extensionAddress);
     BankExtensionTemplate.create(extensionAddress);
+
+    bank(daoAddress, extensionAddress);
   } else if (NFT_EXTENSION_ID.toString() == extensionId.toHexString()) {
     log.info("INFO NFT_EXTENSION_ID, extensionId: {}", [
       extensionId.toHexString(),
     ]);
 
-    nft(daoAddress, extensionAddress);
     NFTExtensionTemplate.create(extensionAddress);
+
+    nft(daoAddress, extensionAddress);
+  } else if (ERC20_EXTENSION_ID.toString() == extensionId.toHexString()) {
+    log.info("INFO ERC20_EXTENSION_ID, extensionId: {}", [
+      extensionId.toHexString(),
+    ]);
+
+    erc20(daoAddress, transactionFrom);
   }
 }
 
@@ -62,4 +76,10 @@ function nft(daoAddress: Address, extensionAddress: Address): void {
 
     nftCollection.save();
   }
+}
+
+// if extension is an `erc20` assign to its dao, add creator with balance
+function erc20(daoAddress: Address, transactionFrom: Address): void {
+  // add creator to token holder entity with initial balance
+  internalERC20Balance(daoAddress, transactionFrom);
 }

@@ -66,7 +66,7 @@ const getYAML = ({
         eventHandlers:
           - event: DAOCreated(address,string)
             handler: handleDaoCreated
-        file: ./mappings/dao-factory-mapping.ts
+        file: ./mappings/core/dao-factory-mapping.ts
 
 ${couponOnboardingYAML({
   network,
@@ -114,6 +114,8 @@ ${couponOnboardingYAML({
             file: ../build/contracts/VotingContract.json
           - name: IVoting
             file: ../build/contracts/IVoting.json
+          - name: ERC20Extension
+            file: ../build/contracts/ERC20Extension.json
         eventHandlers:
           - event: SubmittedProposal(bytes32,uint256)
             handler: handleSubmittedProposal
@@ -135,7 +137,7 @@ ${couponOnboardingYAML({
             handler: handleConfigurationUpdated
           - event: AddressConfigurationUpdated(bytes32,address)
             handler: handleAddressConfigurationUpdated
-        file: ./mappings/dao-registry-mapping.ts
+        file: ./mappings/core/dao-registry-mapping.ts
     # ====================================== BankExtension ====================================
     - kind: ethereum/contract
       name: BankExtension
@@ -147,7 +149,7 @@ ${couponOnboardingYAML({
         apiVersion: 0.0.4
         language: wasm/assemblyscript
         entities:
-          - TokenBalance
+          - TokenHolder
           - Token
           - Member
         abis:
@@ -155,6 +157,8 @@ ${couponOnboardingYAML({
             file: ../build/contracts/BankExtension.json
           - name: ERC20
             file: ../build/contracts/ERC20.json
+          - name: ERC20Extension
+            file: ../build/contracts/ERC20Extension.json
         eventHandlers:
           - event: NewBalance(address,address,uint160)
             handler: handleNewBalance

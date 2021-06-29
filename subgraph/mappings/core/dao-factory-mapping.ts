@@ -1,8 +1,8 @@
 import { BigInt, log } from "@graphprotocol/graph-ts";
 
-import { DaoRegistry as DaoRegistryTemplate } from "../generated/templates";
-import { DAOCreated } from "../generated/DaoFactory/DaoFactory";
-import { TributeDao } from "../generated/schema";
+import { DaoRegistry as DaoRegistryTemplate } from "../../generated/templates";
+import { DAOCreated } from "../../generated/DaoFactory/DaoFactory";
+import { TributeDao } from "../../generated/schema";
 
 function loadOrCreateDao(daoAddress: string): TributeDao {
   let dao = TributeDao.load(daoAddress);

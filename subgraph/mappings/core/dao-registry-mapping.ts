@@ -12,12 +12,12 @@ import {
   ConfigurationUpdated,
   AddressConfigurationUpdated,
   DaoRegistry,
-} from "../generated/templates/DaoRegistry/DaoRegistry";
-import { Adapter, Extension, Proposal, Member } from "../generated/schema";
+} from "../../generated/templates/DaoRegistry/DaoRegistry";
+import { Adapter, Extension, Proposal, Member } from "../../generated/schema";
 
-import { getProposalDetails } from "./helpers/proposal-details";
-import { loadOrCreateExtensionEntity } from "./helpers/extension-entities";
-import { loadProposalAndSaveVoteResults } from "./helpers/vote-results";
+import { getProposalDetails } from "../helpers/proposal-details";
+import { loadOrCreateExtensionEntity } from "../helpers/extension-entities";
+import { loadProposalAndSaveVoteResults } from "../helpers/vote-results";
 
 export function handleSubmittedProposal(event: SubmittedProposal): void {
   let submittedBy = event.transaction.from;
@@ -119,17 +119,6 @@ export function handleProcessedProposal(event: ProcessedProposal): void {
 }
 
 export function handleUpdateDelegateKey(event: UpdateDelegateKey): void {
-  let daoAddress = event.address.toHexString();
-  let delegateKey = event.params.newDelegateKey;
-  let memberId = daoAddress
-    .concat("-member-")
-    .concat(event.params.memberAddress.toHex());
-
-  let member = Member.load(memberId);
-  member.delegateKey = delegateKey;
-  member.isDelegated =
-    event.params.memberAddress != event.params.newDelegateKey;
-
   log.info(
     "=============== UpdateDelegateKey event fired. memberAddress {}, newDelegateKey {}",
     [
@@ -138,7 +127,18 @@ export function handleUpdateDelegateKey(event: UpdateDelegateKey): void {
     ]
   );
 
-  member.save();
+  let delegateKey = event.params.newDelegateKey;
+  let memberId = event.params.memberAddress.toHex();
+
+  let member = Member.load(memberId);
+
+  if (member) {
+    member.delegateKey = delegateKey;
+    member.isDelegated =
+      event.params.memberAddress != event.params.newDelegateKey;
+
+    member.save();
+  }
 }
 
 export function handleAdapterAdded(event: AdapterAdded): void {
@@ -200,12 +200,6 @@ export function handleExtensionAdded(event: ExtensionAdded): void {
 
   let extension = Extension.load(daoExtensionId);
 
-  loadOrCreateExtensionEntity(
-    event.address,
-    event.params.extensionId,
-    event.params.extensionAddress
-  );
-
   if (extension == null) {
     extension = new Extension(daoExtensionId);
   }
@@ -216,6 +210,13 @@ export function handleExtensionAdded(event: ExtensionAdded): void {
   // create 1-1 relationship with extensions and its dao
   extension.tributeDao = daoAddress;
   extension.save();
+
+  loadOrCreateExtensionEntity(
+    event.address,
+    event.params.extensionId,
+    event.params.extensionAddress,
+    event.transaction.from
+  );
 }
 
 export function handleExtensionRemoved(event: ExtensionRemoved): void {
