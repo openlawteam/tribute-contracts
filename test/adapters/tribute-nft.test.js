@@ -29,8 +29,6 @@ const {
   unitPrice,
   UNITS,
   GUILD,
-  ETH_TOKEN,
-  sha3,
 } = require("../../utils/ContractUtil.js");
 
 const {

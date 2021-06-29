@@ -57,7 +57,10 @@ library GuildKickHelper {
         // it considers the locked loot to be able to calculate the fair amount to ragequit,
         // but locked loot can not be burned.
         uint256 initialTotalUnitsAndLoot =
-            bank.balanceOf(TOTAL, UNITS) + bank.balanceOf(TOTAL, LOOT);
+            bank.balanceOf(TOTAL, UNITS) +
+                bank.balanceOf(TOTAL, LOOT) -
+                bank.balanceOf(GUILD, UNITS) -
+                bank.balanceOf(GUILD, LOOT);
 
         uint256 unitsToBurn = bank.balanceOf(kickedMember, UNITS);
         uint256 lootToBurn = bank.balanceOf(kickedMember, LOOT);

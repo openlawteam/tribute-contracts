@@ -5,6 +5,7 @@ const {
   maximumChunks,
   unitPrice,
   numberOfUnits,
+  maxAmount,
 } = require("../utils/ContractUtil.js");
 
 const { deployDao, getNetworkDetails } = require("../utils/DeploymentUtil.js");
@@ -58,6 +59,7 @@ async function deployTestDao(deployFunction, network, accounts) {
     ...truffleImports,
     deployFunction,
     unitPrice: unitPrice,
+    maxAmount,
     nbUnits: numberOfUnits,
     tokenAddr: ETH_TOKEN,
     erc20TokenName: process.env.ERC20_TOKEN_NAME,

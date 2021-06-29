@@ -30,7 +30,6 @@ SOFTWARE.
 
 const {
   toBN,
-  fromUtf8,
   unitPrice,
   UNITS,
   LOOT,

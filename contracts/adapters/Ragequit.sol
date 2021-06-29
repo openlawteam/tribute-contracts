@@ -113,7 +113,10 @@ contract RagequitContract is IRagequit, DaoConstants, AdapterGuard {
         // it considers the locked loot to be able to calculate the fair amount to ragequit,
         // but locked loot can not be burned.
         uint256 initialTotalUnitsAndLoot =
-            bank.balanceOf(TOTAL, UNITS) + bank.balanceOf(TOTAL, LOOT);
+            bank.balanceOf(TOTAL, UNITS) +
+                bank.balanceOf(TOTAL, LOOT) -
+                bank.balanceOf(GUILD, UNITS) +
+                bank.balanceOf(GUILD, LOOT);
 
         // Burns / subtracts from member's balance the number of units to burn.
         bank.subtractFromBalance(memberAddr, UNITS, unitsToBurn);

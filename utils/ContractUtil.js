@@ -48,6 +48,7 @@ const numberOfUnits = toBN("1000000000000000");
 const unitPrice = toBN(toWei("120", "finney"));
 const remaining = unitPrice.sub(toBN("50000000000000"));
 const maximumChunks = toBN("11");
+const maxAmount = toBN("10000000000000000000");
 
 const contracts = {
   // Test Util Contracts
@@ -58,6 +59,7 @@ const contracts = {
   PixelNFT: "./test/PixelNFT",
   ProxToken: "./test/ProxTokenContract",
   ERC20Minter: "./test/ERC20MinterContract",
+  MockDao: "./test/MockDao",
 
   // DAO Contracts
   DaoFactory: "./core/DaoFactory",
@@ -67,12 +69,17 @@ const contracts = {
   ERC20TokenExtensionFactory:
     "./extensions/token/erc20/ERC20TokenExtensionFactory",
   ExecutorExtensionFactory: "./extensions/executor/ExecutorExtensionFactory",
+  InternalTokenVestingExtensionFactory:
+    "./extensions/token/erc20/InternalTokenVestingExtensionFactory",
   Multicall: "./util/Multicall",
 
   // Extensions
   NFTExtension: "./extensions/nft/NFTExtension",
   BankExtension: "./extensions/bank/BankExtension",
   ERC20Extension: "./extensions/token/erc20/ERC20Extension",
+  ERC20TransferStrategy: "./extensions/token/erc20/ERC20TransferStrategy",
+  InternalTokenVestingExtension:
+    "./extensions/token/erc20/InternalTokenVestingExtension",
   ExecutorExtension: "./extensions/token/executor/ExecutorExtension",
 
   // Config Adapters
@@ -100,6 +107,7 @@ const contracts = {
   CouponOnboardingContract: "./adapters/CouponOnboardingContract",
   TributeContract: "./adapters/TributeContract",
   TributeNFTContract: "./adapters/TributeNFTContract",
+  LendNFTContract: "./adapters/LendNFTContract",
 
   // Utils
   DaoArtifacts: "./utils/DaoArtifacts",
@@ -116,6 +124,7 @@ module.exports = {
   fromAscii,
   toUtf8,
   maximumChunks,
+  maxAmount,
   numberOfUnits,
   unitPrice,
   remaining,

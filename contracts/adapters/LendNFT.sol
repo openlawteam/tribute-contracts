@@ -206,9 +206,13 @@ contract LendNFTContract is
         ProposalDetails storage proposal = proposals[address(dao)][proposalId];
         require(proposal.lendingStart > 0, "lending not started");
         require(!proposal.sentBack, "already sent back");
-        
+
         NFTExtension nftExt = NFTExtension(dao.getExtensionAddress(NFT));
-        nftExt.withdrawNFT(proposal.previousOwner, proposal.nftAddr, proposal.nftTokenId);
+        nftExt.withdrawNFT(
+            proposal.previousOwner,
+            proposal.nftAddr,
+            proposal.nftTokenId
+        );
         proposal.sentBack = true;
     }
 }

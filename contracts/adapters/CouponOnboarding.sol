@@ -81,8 +81,12 @@ contract CouponOnboardingContract is
         BankExtension bank = BankExtension(dao.getExtensionAddress(BANK));
         bank.registerPotentialNewInternalToken(tokenAddrToMint);
         uint160 currentBalance = bank.balanceOf(TOTAL, tokenAddrToMint);
-        if(currentBalance < maxAmount) {
-            bank.addToBalance(GUILD, tokenAddrToMint, maxAmount - currentBalance);
+        if (currentBalance < maxAmount) {
+            bank.addToBalance(
+                GUILD,
+                tokenAddrToMint,
+                maxAmount - currentBalance
+            );
         }
     }
 

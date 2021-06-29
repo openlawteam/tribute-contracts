@@ -37,6 +37,7 @@ const {
   unitPrice,
   numberOfUnits,
   maximumChunks,
+  maxAmount,
   ETH_TOKEN,
   UNITS,
 } = require("./ContractUtil");
@@ -80,6 +81,7 @@ const getDefaultOptions = (options) => {
     gracePeriod: 1,
     tokenAddr: ETH_TOKEN,
     maxChunks: maximumChunks,
+    maxAmount,
     chainId: 1,
     maxExternalTokens: 100,
     couponCreatorAddress: "0x7D8cad0bbD68deb352C33e80fccd4D8e88b4aBb8",

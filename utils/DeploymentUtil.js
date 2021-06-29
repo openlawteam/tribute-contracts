@@ -42,6 +42,8 @@ const deployDao = async (options) => {
     ERC20TokenExtensionFactory,
     ExecutorExtension,
     ExecutorExtensionFactory,
+    InternalTokenVestingExtensionFactory,
+    InternalTokenVestingExtension,
     TestToken1,
     TestToken2,
     Multicall,
@@ -120,11 +122,24 @@ const deployDao = async (options) => {
     ExecutorExtension
   );
 
+  const identityVesting = await deployFunction(InternalTokenVestingExtension);
+  const internalTokenVestingExtensionFactory = await deployFunction(
+    InternalTokenVestingExtensionFactory,
+    [identityVesting.address]
+  );
+  const internalTokenVestingExtension = await createInternalTokenVestingExtension(
+    dao,
+    owner,
+    internalTokenVestingExtensionFactory,
+    InternalTokenVestingExtension
+  );
+
   const extensions = {
     bank: bankExtension,
     nft: nftExtension,
     erc20Ext: erc20TokenExtension,
     executorExt: executorExtension,
+    vestingExtension: internalTokenVestingExtension,
   };
 
   const { adapters } = await addDefaultAdapters({
@@ -304,6 +319,9 @@ const prepareAdapters = async ({
   ConfigurationContract,
   TributeContract,
   TributeNFTContract,
+  LendNFTContract,
+  ERC20TransferStrategy,
+  InternalTokenVestingExtension,
   DistributeContract,
   RagequitContract,
   ManagingContract,
@@ -328,6 +346,8 @@ const prepareAdapters = async ({
     couponOnboarding,
     tribute,
     distribute,
+    lendNFT,
+    erc20TransferStrategy,
     tributeNFT;
 
   voting = await deployFunction(VotingContract);
@@ -344,6 +364,8 @@ const prepareAdapters = async ({
   tribute = await deployFunction(TributeContract);
   distribute = await deployFunction(DistributeContract);
   tributeNFT = await deployFunction(TributeNFTContract);
+  lendNFT = await deployFunction(LendNFTContract);
+  erc20TransferStrategy = await deployFunction(ERC20TransferStrategy);
 
   return {
     voting,
@@ -360,6 +382,8 @@ const prepareAdapters = async ({
     tribute,
     distribute,
     tributeNFT,
+    lendNFT,
+    erc20TransferStrategy,
   };
 };
 
@@ -388,6 +412,8 @@ const addDefaultAdapters = async ({ dao, options, daoFactory, nftAddr }) => {
     tribute,
     distribute,
     tributeNFT,
+    lendNFT,
+    erc20TransferStrategy,
   } = await prepareAdapters(options);
 
   const { BankExtension, NFTExtension, ERC20Extension } = options;
@@ -420,6 +446,7 @@ const addDefaultAdapters = async ({ dao, options, daoFactory, nftAddr }) => {
     distribute,
     tributeNFT,
     nftAddr,
+    erc20TransferStrategy,
     bankExtension,
     nftExtension,
     erc20TokenExtension,
@@ -443,6 +470,7 @@ const addDefaultAdapters = async ({ dao, options, daoFactory, nftAddr }) => {
       tribute,
       distribute,
       tributeNFT,
+      erc20TransferStrategy,
     },
   };
 };
@@ -467,6 +495,7 @@ const configureDao = async ({
   couponOnboarding,
   tribute,
   distribute,
+  erc20TransferStrategy,
   tributeNFT,
   unitPrice,
   maxChunks,
@@ -474,11 +503,13 @@ const configureDao = async ({
   tokenAddr,
   votingPeriod,
   gracePeriod,
+  maxAmount,
   couponCreatorAddress,
 }) => {
   await daoFactory.addAdapters(
     dao.address,
     [
+      entryDao("erc20-transfer-strategy", erc20TransferStrategy, {}),
       entryDao("voting", voting, {}),
       entryDao("configuration", configuration, {
         SUBMIT_PROPOSAL: true,
@@ -502,7 +533,6 @@ const configureDao = async ({
       }),
       entryDao("coupon-onboarding", couponOnboarding, {
         SUBMIT_PROPOSAL: false,
-        ADD_TO_BALANCE: true,
         UPDATE_DELEGATE_KEY: false,
         NEW_MEMBER: true,
       }),
@@ -555,6 +585,7 @@ const configureDao = async ({
       }),
       entryBank(couponOnboarding, {
         ADD_TO_BALANCE: true,
+        INTERNAL_TRANSFER: true,
       }),
       entryBank(financing, {
         ADD_TO_BALANCE: true,
@@ -629,6 +660,7 @@ const configureDao = async ({
     dao.address,
     couponCreatorAddress,
     UNITS,
+    maxAmount,
     {
       from: owner,
     }
@@ -761,6 +793,34 @@ const createExecutorExtension = async (
     from: owner,
   });
   return executorExtension;
+};
+
+const createInternalTokenVestingExtension = async (
+  dao,
+  owner,
+  factory,
+  contract
+) => {
+  await factory.create();
+  let pastEvent;
+  while (pastEvent === undefined) {
+    let pastEvents = await factory.getPastEvents();
+    pastEvent = pastEvents[0];
+  }
+  const { addr } = pastEvent.returnValues;
+  const extension = await contract.at(addr);
+
+  // Adds the new extension to the DAO
+  await dao.addExtension(
+    sha3("internal-token-vesting-extension"),
+    extension.address,
+    owner,
+    {
+      from: owner,
+    }
+  );
+
+  return extension;
 };
 
 const entryNft = (contract, flags) => {

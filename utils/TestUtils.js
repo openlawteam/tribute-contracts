@@ -1,7 +1,7 @@
 // Whole-script strict mode syntax
 "use strict";
 
-const { toBN, UNITS, LOOT } = require("./ContractUtil.js");
+const { toBN, UNITS } = require("./ContractUtil.js");
 
 const { expect, advanceTime } = require("./OZTestUtil.js");
 

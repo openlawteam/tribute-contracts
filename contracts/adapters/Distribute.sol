@@ -320,7 +320,7 @@ contract DistributeContract is
         address token,
         uint256 amount
     ) internal {
-        uint256 totalUnits = bank.getPriorAmount(TOTAL, UNITS, blockNumber);
+        uint256 totalUnits = bank.getPriorAmount(TOTAL, UNITS, blockNumber) - bank.getPriorAmount(GUILD, UNITS, blockNumber);
         // Distributes the funds to all unit holders of the DAO and ignores non-active members.
         for (uint256 i = currentIndex; i < maxIndex; i++) {
             address memberAddr = dao.getMemberAddress(i);
