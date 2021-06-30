@@ -18,7 +18,7 @@ import {
   FINANCING_ID,
   GUILDKICK_ID,
   TRIBUTE_NFT_ID,
-} from "./constants";
+} from "../core/dao-constants";
 
 export function getProposalDetails(
   adapterId: Bytes,

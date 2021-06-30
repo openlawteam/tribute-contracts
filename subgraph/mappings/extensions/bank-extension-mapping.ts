@@ -19,7 +19,7 @@ import {
   TOTAL,
   MEMBER_COUNT,
   ERC20_EXTENSION_ID,
-} from "../helpers/constants";
+} from "../core/dao-constants";
 
 function internalTransfer(
   createdAt: string,
@@ -29,22 +29,22 @@ function internalTransfer(
 ): void {
   // get bank extension bindings
   let bankRegistry = BankExtension.bind(extensionAddress);
-
+  // get dao address
   let daoAddress = bankRegistry.dao();
-
-  // check if the DAO has an ERC20 extension and assign members balance
-  if (memberAddress.toHex() != TOTAL.toHex()) {
-    internalERC20Balance(daoAddress, memberAddress);
-  }
-
+  // initialize an array
   let tributeDaos: string[] = [];
 
   if (
     TOTAL.toHex() != memberAddress.toHex() &&
     GUILD.toHex() != memberAddress.toHex() &&
-    UNITS.toHex() != memberAddress.toHex() &&
-    MEMBER_COUNT.toHex() != memberAddress.toHex()
+    MEMBER_COUNT.toHex() != memberAddress.toHex() &&
+    TOTAL.toHex() != tokenAddress.toHex() &&
+    GUILD.toHex() != tokenAddress.toHex() &&
+    MEMBER_COUNT.toHex() != tokenAddress.toHex()
   ) {
+    // check if the DAO has an ERC20 extension and assign members balance
+    internalERC20Balance(daoAddress, memberAddress);
+
     let member = Member.load(memberAddress.toHex());
 
     if (member == null) {
@@ -168,8 +168,6 @@ export function handleNewBalance(event: NewBalance): void {
       event.params.amount.toString(),
     ]
   );
-
-  log.info("event.address, {}", [event.address.toHex()]);
 
   internalTransfer(
     event.block.timestamp.toString(),

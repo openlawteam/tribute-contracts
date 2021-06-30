@@ -12,12 +12,12 @@ import {
   ConfigurationUpdated,
   AddressConfigurationUpdated,
   DaoRegistry,
-} from "../generated/templates/DaoRegistry/DaoRegistry";
-import { Adapter, Extension, Proposal, Member } from "../generated/schema";
+} from "../../generated/templates/DaoRegistry/DaoRegistry";
+import { Adapter, Extension, Proposal, Member } from "../../generated/schema";
 
-import { getProposalDetails } from "./helpers/proposal-details";
-import { loadOrCreateExtensionEntity } from "./helpers/extension-entities";
-import { loadProposalAndSaveVoteResults } from "./helpers/vote-results";
+import { getProposalDetails } from "../helpers/proposal-details";
+import { loadOrCreateExtensionEntity } from "../helpers/extension-entities";
+import { loadProposalAndSaveVoteResults } from "../helpers/vote-results";
 
 export function handleSubmittedProposal(event: SubmittedProposal): void {
   let submittedBy = event.transaction.from;
@@ -136,7 +136,7 @@ export function handleUpdateDelegateKey(event: UpdateDelegateKey): void {
     member.delegateKey = delegateKey;
     member.isDelegated =
       event.params.memberAddress != event.params.newDelegateKey;
-  
+
     member.save();
   }
 }
