@@ -23,11 +23,16 @@ module.exports = async (deployer, network, accounts) => {
   } else if (network === "test" || network === "coverage") {
     res = await deployTestDao(deployFunction, network, accounts);
   }
-  let { dao, extensions } = res;
+  let { dao, extensions, testContracts } = res;
   if (dao) {
     await dao.finalizeDao();
     console.log("************************");
     console.log(`DaoRegistry: ${dao.address}`);
+    console.log(
+      `Multicall: ${
+        testContracts.multicall ? testContracts.multicall.address : ""
+      }`
+    );
     console.log(`BankExtension: ${extensions.bank.address}`);
     console.log(
       `NFTExtension: ${extensions.nft ? extensions.nft.address : ""}`

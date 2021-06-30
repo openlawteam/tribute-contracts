@@ -7,7 +7,8 @@ title: Configuration
 
 ## Requirements
 
-- **[Infura Ethereum API KEY](https://infura.io/product/ethereum)** sign up for free, verify your email, create an ethereum project to get your API Key (also known as `Project Id`). We will use that to deploy the contracts to the Rinkeby network. Checkout this **[Infura Blog Post](https://blog.infura.io/getting-started-with-infura-28e41844cc89/)** for more info on that.
+- **[Infura Ethereum API KEY](https://infura.io/product/ethereum)**: sign up for free, verify your email, create an ethereum project to get your API Key (also known as `Project Id`). We will use that to deploy the contracts to the Rinkeby network. Checkout this **[Infura Blog Post](https://blog.infura.io/getting-started-with-infura-28e41844cc89/)** for more info on that.
+- **[The Graph API Access Token](https://thegraph.com/)**: sign up to https://thegraph.com with your Github account, access the **[dashboard](https://thegraph.com/explorer/dashboard)**, and copy the **Access Token**. We will use that to deploy the **[Tribute DAO Subgraph](/docs/subgraph/definition)** to thegraph.com. Then click on "Add Subgraph" and type: _Tribute DAO Tutorial_, give it any subtitle, and hit _Create subgraph_.
 
 ## Configuring the project
 
@@ -54,6 +55,9 @@ INFURA_KEY=
 # the DAO_OWNER_ADDR that you set above need to be the public address
 # derived from this 12 word mnemonic.
 TRUFFLE_MNEMONIC=...
+
+# The Graph API Access Token that will be used to deploy the Subgraph.
+GRAPH_ACCESS_TOKEN=...
 ```
 
 :::caution
