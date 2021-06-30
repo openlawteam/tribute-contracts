@@ -64,6 +64,15 @@ contract OffchainVotingContract is
         uint256 units;
     }
 
+    event VoteResultSubmitted(
+        bytes32 proposalId,
+        uint256 nbNo,
+        uint256 nbYes,
+        bytes32 resultRoot,
+        address memberAddr
+    );
+    event ResultChallenged(bytes32 proposalId, bytes32 resultRoot);
+
     uint256 public constant NB_CHOICES = 2;
     SnapshotProposalContract private _snapshotContract;
     OffchainVotingHashContract public ovHash;
@@ -243,6 +252,14 @@ contract OffchainVotingContract is
         vote.resultRoot = resultRoot;
         vote.reporter = memberAddr;
         vote.isChallenged = false;
+
+        emit VoteResultSubmitted(
+            proposalId,
+            result.nbNo,
+            result.nbYes,
+            resultRoot,
+            memberAddr
+        );
     }
 
     function requestStep(
@@ -256,12 +273,9 @@ contract OffchainVotingContract is
         uint256 currentFlag = retrievedStepsFlags[vote.resultRoot][index / 256];
         require(
             getFlag(currentFlag, index % 256) == false,
-            "step has already been requested"
+            "step already requested"
         );
-        require(
-            vote.stepRequested == 0,
-            "another step has already been requested"
-        );
+        require(vote.stepRequested == 0, "other step already requested");
         vote.stepRequested = index;
         vote.gracePeriodStartingTime = block.timestamp;
     }
@@ -372,10 +386,7 @@ contract OffchainVotingContract is
             "invalid sig"
         );
 
-        require(
-            blockNumber <= block.number,
-            "snapshot block number should not be in the future"
-        );
+        require(blockNumber <= block.number, "snapshot block in future");
         require(blockNumber > 0, "block number cannot be 0");
 
         votes[address(dao)][proposalId].startingTime = block.timestamp;
@@ -591,23 +602,20 @@ contract OffchainVotingContract is
         bytes32 resultRoot = vote.resultRoot;
 
         (address adapterAddress, ) = dao.proposals(proposalId);
-        require(resultRoot != bytes32(0), "no result available yet!");
+        require(resultRoot != bytes32(0), "no result!");
         bytes32 hashCurrent = ovHash.nodeHash(dao, adapterAddress, nodeCurrent);
         bytes32 hashPrevious =
             ovHash.nodeHash(dao, adapterAddress, nodePrevious);
         require(
             MerkleProof.verify(nodeCurrent.proof, resultRoot, hashCurrent),
-            "proof check for current invalid for current node"
+            "proof invalid for current"
         );
         require(
             MerkleProof.verify(nodePrevious.proof, resultRoot, hashPrevious),
-            "proof check for previous invalid for previous node"
+            "proof invalid for previous"
         );
 
-        require(
-            nodeCurrent.index == nodePrevious.index + 1,
-            "those nodes are not consecutive"
-        );
+        require(nodeCurrent.index == nodePrevious.index + 1, "not consecutive");
 
         (address actionId, ) = dao.proposals(proposalId);
         OffchainVotingHashContract.VoteStepParams memory params =
@@ -629,7 +637,7 @@ contract OffchainVotingContract is
     {
         require(
             votes[address(dao)][proposalId].fallbackVotes[msg.sender] == false,
-            "the member has already voted for this vote to fallback"
+            "fallback vote duplicate"
         );
         votes[address(dao)][proposalId].fallbackVotes[msg.sender] = true;
         votes[address(dao)][proposalId].fallbackVotesCount += 1;
@@ -685,5 +693,10 @@ contract OffchainVotingContract is
         // Burns / subtracts from member's balance the number of loot to burn.
         // bank.subtractFromBalance(memberToKick, LOOT, kick.lootToBurn);
         bank.addToBalance(challengedReporter, LOOT, units);
+
+        emit ResultChallenged(
+            proposalId,
+            votes[address(dao)][proposalId].resultRoot
+        );
     }
 }
