@@ -4,7 +4,7 @@ import "../adapters/interfaces/chainlink/AggregatorV3Interface.sol";
 
 contract FakeChainlinkPriceFeed is AggregatorV3Interface {
     function decimals() external view virtual override returns (uint8) {
-        return(8);
+        return (8);
     }
 
     string public override description;

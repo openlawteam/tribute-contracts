@@ -41,7 +41,6 @@ contract FinancingChainlinkContract is
     MemberGuard,
     AdapterGuard
 {
-    
     bytes32 internal constant _PRICE_FEED_ADDRESS_CONFIG =
         keccak256("finance-chainlink:price-feed:address");
 
