@@ -467,4 +467,9 @@ describe("Adapter - Financing", () => {
       expect(err.reason).equal("adapter not found");
     }
   });
+
+  it("should not be possible to import a priceFeed from Chainlink that is not 8 or 18 decimals", async () => {
+    console.log("write test for price feed decimals");
+  });
+
 });

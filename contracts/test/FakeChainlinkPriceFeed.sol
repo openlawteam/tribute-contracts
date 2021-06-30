@@ -3,7 +3,9 @@ pragma solidity ^0.8.0;
 import "../adapters/interfaces/chainlink/AggregatorV3Interface.sol";
 
 contract FakeChainlinkPriceFeed is AggregatorV3Interface {
-    uint8 public override decimals;
+    function decimals() external view virtual override returns (uint8) {
+        return (8);
+    }
 
     string public override description;
 

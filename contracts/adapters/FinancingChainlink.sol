@@ -41,20 +41,23 @@ contract FinancingChainlinkContract is
     MemberGuard,
     AdapterGuard
 {
-    AggregatorV3Interface internal _priceFeed;
+    bytes32 internal constant _PRICE_FEED_ADDRESS_CONFIG =
+        keccak256("finance-chainlink:price-feed:address");
+
+    //decimals from Chainlink priceFeed.decimals();
 
     /**
      * 	@notice choose a priceFeed contract, see https://docs.chain.link/docs/ethereum-addresses
-     * Aggregator: ETH/USD
+     * Aggregator: ETH/USD - 8 decimals
      *	contract address of the price feed from Chainlink
      * Rinkeby Contract Address: 0x8A753747A1Fa494EC906cE90E9f37563A8AF630e
      * Mainnet Contract Address:  0x5f4eC3Df9cbd43714FE2740f5E3616155c5b8419
+     * Mainnet Contract USDC/ETH - 18 decimals: 0x986b5E1e1755e3C2440e960477f25201B0a8bbD4
      */
 
-    constructor(address feedAddress) {
-        _priceFeed = AggregatorV3Interface(feedAddress);
-    }
-
+    // constructor(address feedAddress) {
+    //     _priceFeed = AggregatorV3Interface(feedAddress);
+    // }
     struct ProposalDetails {
         address applicant; // the proposal applicant address, can not be a reserved address
         uint256 amount; // the amount requested for funding
@@ -69,6 +72,19 @@ contract FinancingChainlinkContract is
      */
     receive() external payable {
         revert("fallback revert");
+    }
+
+    function configureDao(DaoRegistry dao, address priceFeedAddr)
+        external
+        onlyAdapter(dao)
+    {
+        AggregatorV3Interface priceFeed = AggregatorV3Interface(priceFeedAddr);
+        uint8 decimalsChainlink = priceFeed.decimals();
+        require(
+            decimalsChainlink != 8 && decimalsChainlink != 18,
+            "chainlink pricefeed is not compatible, must be 8 or 18 decimals"
+        );
+        dao.setAddressConfiguration(_PRICE_FEED_ADDRESS_CONFIG, priceFeedAddr);
     }
 
     /**
@@ -143,30 +159,28 @@ contract FinancingChainlinkContract is
                 IVoting.VotingState.PASS,
             "proposal needs to pass"
         );
+
+        address priceFeedAddr =
+            dao.getAddressConfiguration(_PRICE_FEED_ADDRESS_CONFIG);
+
         dao.processProposal(proposalId);
         BankExtension bank = BankExtension(dao.getExtensionAddress(BANK));
-
-        //enter US Dollar = details.amount to convert it into ETH
-        uint256 amount = _usdToEth(details.amount);
-
-        bank.subtractFromBalance(GUILD, details.token, amount);
-        bank.addToBalance(details.applicant, details.token, amount);
-    }
-
-    /**
-     *  Returns the latest price from AggregatorV3Interface.sol
-        Chainlink returns the latest price to 8 decimials 
-        e.g. 176471000000 = $1,764.71
-     */
-    function getLatestPrice() public view returns (int256) {
-        (
-            uint80 roundId,
-            int256 answer,
-            uint256 startedAt,
-            uint256 updatedAt,
-            uint80 answeredInRound
-        ) = _priceFeed.latestRoundData();
-        return answer;
+        //Chainlink feed instance
+        AggregatorV3Interface priceFeed = AggregatorV3Interface(priceFeedAddr);
+        //check decimals to see if 8 or 18
+        uint8 decimalsChainlink = priceFeed.decimals();
+        uint256 amount = details.amount;
+        address token = details.token;
+        address applicant = details.applicant;
+        if (decimalsChainlink == 8) {
+            //enter US Dollar = details.amount and convert with _convertToWeiValue
+            uint256 convertedAmount = _convertToWeiValue(amount, priceFeed);
+            bank.subtractFromBalance(GUILD, token, convertedAmount);
+            bank.addToBalance(applicant, token, convertedAmount);
+        } else {
+            bank.subtractFromBalance(GUILD, token, amount);
+            bank.addToBalance(applicant, token, amount);
+        }
     }
 
     /* 
@@ -174,12 +188,24 @@ contract FinancingChainlinkContract is
         multipliers are needed in numerator (usd to wei) and denominator 
         (convert result from chainlink to wei) 
      */
-    function _usdToEth(uint256 _amount) internal view returns (uint256) {
+    function _convertToWeiValue(uint256 amount, AggregatorV3Interface priceFeed)
+        internal
+        view
+        returns (uint256)
+    {
+        (
+            uint80 roundId,
+            int256 answer,
+            uint256 startedAt,
+            uint256 updatedAt,
+            uint80 answeredInRound
+        ) = priceFeed.latestRoundData();
+
         //convert int to uint
-        uint256 denominator = uint256(getLatestPrice());
+        uint256 denominator = uint256(answer);
         //multipliers to ensure values calculated in wei
         uint256 ethInUsdAmount =
-            ((_amount * 1000000000000000000000) / denominator) * 100000;
+            ((amount * 1000000000000000000000) / denominator) * 100000;
         return ethInUsdAmount;
     }
 }
