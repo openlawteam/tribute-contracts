@@ -1,0 +1,78 @@
+@import "./variables";
+@import "./mixins";
+
+.checkbox-input {
+  @include assistive-hidden;
+
+  &:checked + .checkbox-label .checkbox-box {
+    text-align: center;
+
+    // checkmark
+    &:after {
+      content: "\2713";
+      padding: 0rem;
+      line-height: 1.2;
+    }
+  }
+
+  &:checked + .checkbox-label-words {
+    font-weight: 500;
+  }
+
+  &:disabled + .checkbox-label span.checkbox-box {
+    cursor: not-allowed;
+    opacity: 0.7;
+  }
+}
+
+.checkbox-label {
+  align-items: center;
+  display: flex;
+}
+
+.checkbox-text {
+  opacity: 0.7;
+}
+
+.checkbox-box {
+  background-color: white;
+  border-radius: 3px;
+  cursor: pointer;
+  display: inline-block;
+  flex-shrink: 0;
+  border: 1px solid;
+
+  &.small {
+    height: 1.2rem;
+    margin-right: 1rem;
+    width: 1.2rem;
+    font-size: 1rem;
+  }
+
+  &.large {
+    height: 2rem;
+    margin-right: 2rem;
+    width: 2rem;
+    font-size: 1.7rem;
+  }
+}
+
+.checkbox-label-words {
+  border: 3px solid white;
+  border-radius: 6px;
+  color: white;
+  cursor: pointer;
+  display: block;
+  font-size: 1rem;
+  line-height: 1.5;
+  margin-top: 1.75rem;
+  padding: 1rem 1.75rem;
+
+  &:first-of-type {
+    margin-top: 0.75rem;
+  }
+
+  &:hover {
+    border-color: $color-babyblue;
+  }
+}

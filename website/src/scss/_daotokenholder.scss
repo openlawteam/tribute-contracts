@@ -1,0 +1,45 @@
+@use "./variables" as *; /* load without namespace for convenience */
+@use "./functions" as *; /* load without namespace for convenience */
+@use "./mixins" as *; /* load without namespace for convenience */
+
+.daotokenholder__button {
+  border: none;
+  border-radius: 6px;
+  padding: 0.6rem 1rem;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  border-radius: 8px;
+  box-shadow: 0 2px 2px 0 $color-shadow-primary;
+
+  font-family: $font-mono;
+
+  margin-right: 2rem;
+  cursor: pointer;
+
+  .daotokenholder__balance {
+    margin-right: 0.5rem;
+  }
+
+  span {
+    font-size: 1rem;
+  }
+
+  img {
+    margin-left: 0.5rem;
+    width: 24px;
+  }
+
+  &:hover {
+    opacity: 0.85;
+    transition: opacity 0.25s ease-in-out;
+  }
+}
+
+@media only screen and (max-width: em($bp-sm)) {
+  .daotokenholder__button {
+    display: none;
+  }
+}

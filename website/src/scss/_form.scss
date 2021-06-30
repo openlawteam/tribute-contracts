@@ -1,0 +1,163 @@
+@use "./variables" as *; /* load without namespace for convenience */
+@use "./functions" as *; /* load without namespace for convenience */
+
+%row {
+  display: flex;
+  justify-content: flex-start;
+  margin: 1rem 0;
+
+  @media only screen and (min-width: em($bp-md)) {
+    align-items: baseline;
+  }
+}
+
+.form-wrapper {
+  padding: 0 1rem 1.5rem;
+  margin: 0 auto 2rem;
+  max-width: 70rem;
+  box-sizing: border-box;
+  display: flex;
+  align-items: center;
+  flex-direction: column;
+}
+
+.form__description {
+  max-width: 51rem;
+
+  p:first-child {
+    margin-top: 0;
+  }
+}
+
+.form__description--unauthorized {
+  @extend .form__description;
+
+  text-align: center;
+  color: $color-brightsalmon;
+}
+
+.form {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  max-width: 51rem;
+  width: 100%;
+  margin-top: 0.5rem;
+}
+
+.form .error-message {
+  font-size: 1.125rem;
+  margin: 0.5rem 0 0;
+  word-break: normal;
+}
+
+.form__input-row {
+  @extend %row;
+}
+
+.form__textarea-row {
+  @extend %row;
+
+  align-items: flex-start;
+
+  .form__input-row-label {
+    margin-top: 1rem;
+  }
+}
+
+.form__input-row-label {
+  flex: 0 0 26%;
+  text-align: left;
+  font-size: 1.125rem;
+  line-height: 1.3;
+
+  @media only screen and (min-width: em($bp-md)) {
+    margin-right: 0.5rem;
+    max-width: 12rem;
+  }
+}
+
+.form__input-row-fieldwrap {
+  flex: 0 0 calc(74% - 0.5rem);
+  width: 100%;
+}
+
+.form__input-row-fieldwrap--narrow {
+  @extend .form__input-row-fieldwrap;
+
+  flex: 0 0 calc(50% - 0.5rem);
+}
+
+.form button[type="submit"] {
+  min-width: 7.1rem;
+  margin: 2rem auto 1.125rem;
+}
+
+.form__submit-error-container {
+  text-align: center;
+}
+
+.form__submit-status-container {
+  text-align: center;
+  height: 3rem;
+  max-width: 25rem;
+  margin: 0 auto;
+}
+
+.form__input-addon {
+  font-size: 1.125rem;
+  margin-left: 2rem;
+}
+
+.form__input-description {
+  font-size: 0.85rem;
+  line-height: 1.4;
+  margin-top: 1rem;
+}
+
+/* @MEDIA QUERIES */
+
+@media only screen and (max-width: em($bp-md)) {
+  .form {
+    margin-top: 0;
+  }
+
+  .form__input-row,
+  .form__textarea-row {
+    flex-direction: column;
+  }
+
+  .form__input-row-label {
+    margin-bottom: 0.5rem;
+  }
+
+  .form__textarea-row .form__input-row-label {
+    margin-top: 0;
+  }
+
+  .form__input-row-fieldwrap {
+    flex-basis: auto;
+    width: 100%;
+  }
+
+  .form__input-addon {
+    margin: 0.5rem 0 0;
+  }
+}
+
+@media only screen and (max-width: em($bp-sm)) {
+  .form-wrapper {
+    padding: 0 0.5rem 1rem;
+  }
+
+  .form__description p,
+  .form__input-row-label,
+  .form .error-message,
+  .form__input-addon {
+    font-size: 1rem;
+  }
+
+  .form__input-description {
+    font-size: 0.8rem;
+  }
+}

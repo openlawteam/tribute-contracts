@@ -1,0 +1,57 @@
+@use "./variables" as *; /* load without namespace for convenience */
+@use "./functions" as *; /* load without namespace for convenience */
+@use "./mixins" as *; /* load without namespace for convenience */
+
+.daotoken__button {
+  padding: 0;
+  outline: none;
+  background: none;
+  border: none;
+  color: inherit;
+  margin-left: 12px;
+  transform: translateY(4px);
+  cursor: pointer;
+
+  svg {
+    height: 20px;
+    width: 20px;
+  }
+}
+
+.daotoken__tooltip {
+  position: relative;
+  display: inline-block;
+}
+
+.daotoken__tooltip .daotoken__tooltiptext {
+  visibility: hidden;
+  width: 100px;
+  background-color: #555;
+  color: #fff;
+  text-align: center;
+  border-radius: 6px;
+  padding: 5px;
+  position: absolute;
+  z-index: 1;
+  bottom: 130%;
+  left: 50%;
+  margin-left: -55px;
+  opacity: 0;
+  transition: opacity 0.3s;
+}
+
+.daotoken__tooltip .daotoken__tooltiptext::after {
+  content: "";
+  position: absolute;
+  top: 100%;
+  left: 50%;
+  margin-left: -5px;
+  border-width: 5px;
+  border-style: solid;
+  border-color: #555 transparent transparent transparent;
+}
+
+.daotoken__tooltip:hover .daotoken__tooltiptext {
+  visibility: visible;
+  opacity: 1;
+}

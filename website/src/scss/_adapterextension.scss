@@ -1,0 +1,163 @@
+@use "./variables" as *; /* load without namespace for convenience */
+@use "./mixins" as *; /* load without namespace for convenience */
+@use "./functions" as *; /* load without namespace for convenience */
+@use "./button";
+
+.adaptermanager {
+  padding: 0 1rem 1.5rem;
+  margin: 0 auto 2rem;
+  max-width: 51rem;
+  box-sizing: border-box;
+
+  @media only screen and (max-width: em($bp-sm)) {
+    padding: 0 0.5rem 1rem;
+  }
+}
+
+.adapter-extension-configure-modal,
+.adapter-extension-finalize-modal {
+  max-width: 48.5rem;
+
+  h1 {
+    font-family: $font-mono;
+  }
+
+  .form__input-row {
+    margin: 1rem 0;
+
+    .error-message {
+      text-align: left;
+    }
+  }
+}
+
+.adapter-extension__grid {
+  display: flex;
+  flex-direction: row;
+  margin-bottom: 2rem;
+
+  @media only screen and (max-width: em($bp-sm)) {
+    flex-direction: column;
+  }
+
+  .button--secondary {
+    font-family: $font-mono;
+  }
+}
+
+.adapter-extension__selection {
+  border-bottom: 2px solid #e4e4e4;
+  display: flex;
+  flex-direction: row;
+  margin: 2rem 0;
+  padding-bottom: 1.5rem;
+
+  div:first-child {
+    flex: 1;
+  }
+
+  > div {
+    display: inline-flex;
+    align-self: center;
+    text-align: center;
+  }
+}
+
+.registered {
+  .adapter-extension__info {
+    flex: 75%;
+  }
+  .adapter-extension__configure {
+    flex: 25%;
+  }
+}
+
+// includes room for the checkbox
+.unregistered {
+  .adapter-extension__checkbox {
+    flex: 10%;
+  }
+  .adapter-extension__info {
+    flex: 90%;
+  }
+  .adapter-extension__add {
+    flex: 25%;
+  }
+  .adapter-extension__inner-wrapper {
+    flex: 75% 1;
+    display: flex;
+    flex-direction: row;
+  }
+}
+
+.adapter-extension__info {
+  .adapter-extension__name,
+  .adapter-extension__desc {
+    display: flex;
+    flex: 100%;
+  }
+
+  .adapter-extension__desc {
+    line-height: 2;
+  }
+}
+
+.adapter-extension__add,
+.adapter-extension__configure {
+  align-self: center;
+  text-align: center;
+
+  @media only screen and (max-width: em($bp-sm)) {
+    margin-top: 1rem;
+  }
+}
+.adapter-extension__remove {
+  border-top: 2px solid #eaeaea;
+  margin-bottom: 2rem;
+  margin-top: 2rem;
+
+  button {
+    background-color: #ffcbcb;
+    color: red;
+    font-family: $font-mono;
+    text-transform: lowercase;
+  }
+
+  p {
+    margin: 2rem;
+  }
+}
+
+.adapter-extension__name {
+  text-transform: uppercase;
+}
+
+.adapter-adapter-extension__finalize {
+  border-top: 2px solid #e4e4e4;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  margin: 3rem 0;
+  padding-bottom: 1.5rem;
+
+  .button--secondary {
+    background-color: #dce7f2;
+    color: #547ac4;
+  }
+
+  .finalize {
+    margin-bottom: 1rem;
+  }
+}
+
+.adapter-extension__loader {
+  display: inline-block;
+  margin: 1rem 0;
+}
+
+.adapter-extension__unauthorized-message {
+  max-width: 51rem;
+  text-align: center;
+  color: $color-brightsalmon;
+  margin: 0 auto;
+}

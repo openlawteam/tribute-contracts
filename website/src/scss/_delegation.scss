@@ -1,0 +1,80 @@
+@use "./variables" as *; /* load without namespace for convenience */
+@use "./mixins" as *; /* load without namespace for convenience */
+@use "./functions" as *; /* load without namespace for convenience */
+
+.delegation__delegate-address-text {
+  background-color: rgba(214, 216, 218, 0.2);
+  color: $color-primary;
+  margin: 1rem 0;
+  padding: 3px;
+  font-family: $font-mono;
+}
+
+.delegation-modal {
+  p {
+    @include fluid-type(
+      $bp-sm,
+      $bp-xl,
+      16px,
+      18px
+    ); /* min font-size 1rem, max 1.125rem */
+    margin: 0;
+  }
+
+  button.button {
+    min-width: 7.1rem;
+    margin: 1.25rem auto 1.125rem;
+  }
+
+  .form__input-row:first-child {
+    margin-top: 0.5rem;
+  }
+
+  .form__input-row-fieldwrap {
+    flex-basis: initial;
+
+    .error-message {
+      text-align: initial;
+    }
+  }
+
+  .checkbox-text {
+    opacity: initial;
+    @include fluid-type(
+      $bp-sm,
+      $bp-xl,
+      14px,
+      16px
+    ); /* min font-size 0.875rem, max 1rem */
+    text-align: initial;
+  }
+
+  svg[data-icon="user"] {
+    margin-right: 1rem;
+    height: 24px;
+
+    @media only screen and (max-width: em($bp-sm)) {
+      height: 20px;
+    }
+  }
+}
+
+.delegation-modal__arrow-down {
+  @include fluid-type(
+    $bp-sm,
+    $bp-xl,
+    24px,
+    32px
+  ); /* min font-size 1.5rem, max 2rem */
+  margin: 0.5rem 0;
+}
+
+.delegation-modal__text {
+  @include fluid-type(
+    $bp-sm,
+    $bp-xl,
+    14px,
+    16px
+  ); /* min font-size 0.875rem, max 1rem */
+  margin: 1rem;
+}

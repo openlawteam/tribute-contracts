@@ -1,0 +1,80 @@
+@use "./variables" as *; /* load without namespace for convenience */
+
+@-webkit-keyframes spin {
+  0% {
+    -webkit-transform: rotate(0deg);
+  }
+  100% {
+    -webkit-transform: rotate(360deg);
+  }
+}
+
+@keyframes spin {
+  0% {
+    transform: rotate(0deg);
+  }
+  100% {
+    transform: rotate(360deg);
+  }
+}
+
+.loader-container {
+  align-items: center;
+  display: flex;
+}
+
+.loader {
+  border-radius: 50%;
+  border: 5px solid rgba(60, 107, 126, 0.2);
+  border-top: 5px solid white; /* must be after border */
+  height: 13px;
+  margin: 0 auto;
+  width: 13px;
+  -webkit-animation: spin 1s linear infinite; /* Safari */
+  animation: spin 1s linear infinite;
+}
+
+.loader__text {
+  color: $color-primary;
+  font-family: $font-body;
+  font-size: 0.9rem;
+  margin-left: 0.5rem;
+  text-transform: initial;
+  text-align: left;
+}
+
+.loader--large {
+  @extend .loader;
+
+  height: 25px;
+  width: 25px;
+}
+
+.loader--large-container {
+  width: 3rem;
+  margin: 1rem auto;
+}
+
+.loader--emoji {
+  font-size: 3rem;
+  animation: rotateScaleEffect 1s ease infinite;
+  margin: 1rem 0;
+}
+@keyframes rotateScaleEffect {
+  30% {
+    transform: scale(1.2);
+  }
+  40%,
+  60% {
+    transform: rotate(-20deg) scale(1.2);
+  }
+  50% {
+    transform: rotate(20deg) scale(1.2);
+  }
+  70% {
+    transform: rotate(0deg) scale(1.2);
+  }
+  100% {
+    transform: scale(1);
+  }
+}

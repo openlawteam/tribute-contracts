@@ -1,0 +1,188 @@
+@use "./functions" as *; /* load without namespace for convenience */
+
+/**
+ * MIXINS
+ */
+
+@mixin font-size($sizeValue: 1) {
+  font-size: $sizeValue * 1rem;
+}
+
+@mixin font-size-em($sizeValue: 16) {
+  font-size: em($sizeValue);
+}
+
+/**
+ * @see https://css-tricks.com/snippets/css/fluid-typography/
+ */
+@mixin fluid-type($min-vw, $max-vw, $min-font-size, $max-font-size) {
+  $u1: unit($min-vw);
+  $u2: unit($max-vw);
+  $u3: unit($min-font-size);
+  $u4: unit($max-font-size);
+
+  @if $u1 == $u2 and $u1 == $u3 and $u1 == $u4 {
+    & {
+      font-size: $min-font-size;
+      @media screen and (min-width: $min-vw) {
+        font-size: calc(
+          #{$min-font-size} + #{strip-unit($max-font-size - $min-font-size)} *
+            ((100vw - #{$min-vw}) / #{strip-unit($max-vw - $min-vw)})
+        );
+      }
+
+      @media screen and (min-width: $max-vw) {
+        font-size: $max-font-size;
+      }
+    }
+  }
+}
+
+// Box Shadow
+@mixin box-shadow($params) {
+  -webkit-box-shadow: $params;
+  -moz-box-shadow: $params;
+  box-shadow: $params;
+}
+
+// Aspect Ratio
+@mixin aspect-ratio($width, $height) {
+  position: relative;
+  &:before {
+    display: block;
+    content: "";
+    width: 100%;
+    padding-top: ($height / $width) * 100%;
+  }
+  > .content {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+  }
+}
+
+// Border Radius
+@mixin border-radius($radius: 0.5em, $important: false) {
+  @if $important {
+    -webkit-border-radius: $radius !important;
+    -moz-border-radius: $radius !important;
+    border-radius: $radius !important;
+  } @else {
+    -webkit-border-radius: $radius;
+    -moz-border-radius: $radius;
+    border-radius: $radius;
+  }
+}
+
+// Clearfix (::after)
+@mixin cf {
+  &::after {
+    content: "";
+    display: table;
+    clear: both;
+  }
+}
+
+// Generic Transform
+@mixin transform($transforms) {
+  -moz-transform: $transforms;
+  -o-transform: $transforms;
+  -ms-transform: $transforms;
+  -webkit-transform: $transforms;
+  transform: $transforms;
+}
+
+// Transition
+@mixin transition($args) {
+  -webkit-transition: $args;
+  -moz-transition: $args;
+  -ms-transition: $args;
+  -o-transition: $args;
+  transition: $args;
+}
+
+// Filters
+@mixin blur($amount) {
+  filter: blur($amount);
+  -webkit-filter: blur($amount);
+}
+
+@mixin greyscale($amount) {
+  filter: grayscale($amount);
+  -webkit-filter: grayscale($amount);
+}
+
+// Rotate
+@mixin rotate($deg) {
+  @include transform(rotate(#{$deg}deg));
+}
+
+// Opacity
+@mixin opacity($opacity) {
+  opacity: $opacity;
+  $opacity-ie: $opacity * 100;
+  filter: alpha(opacity=$opacity-ie); //IE8
+}
+
+// Truncate
+@mixin text-truncate {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+// Hide
+@mixin assistive-hidden {
+  position: absolute !important;
+  height: 1px;
+  width: 1px;
+  overflow: hidden;
+  clip: rect(1px 1px 1px 1px); /* IE6, IE7 */
+  clip: rect(1px, 1px, 1px, 1px);
+}
+
+@mixin hidden {
+  display: none;
+}
+
+// Pseudo Content
+@mixin pseudo($display: block, $pos: absolute, $content: "") {
+  content: $content;
+  display: $display;
+  position: $pos;
+}
+
+// Based Off Foundation BreakPoints
+
+// Mobile portrait size
+@mixin size-medium-down {
+  @media only screen and (max-width: 64em) {
+    @content;
+  }
+}
+
+@mixin size-large-up {
+  @media only screen and (min-width: 64em) {
+    @content;
+  }
+}
+
+@mixin size-medium-up {
+  @media only screen and (min-width: 40em) {
+    @content;
+  }
+}
+
+@mixin size-tablet-down {
+  @media only screen and (max-width: 39.9375em) {
+    @content;
+  }
+}
+
+@mixin size-down-down {
+  @media only screen and (max-width: 30em) {
+    @content;
+  }
+}
