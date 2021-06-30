@@ -157,12 +157,7 @@ module.exports = {
       collapsed: true,
       items: [allCoreContracts, allExtensions, allAdapters, allGuardContracts],
     },
-    {
-      type: "category",
-      label: "TributeDAO UI",
-      collapsed: true,
-      items: ["dapps/introduction"],
-    },
+    "tutorial/dao/interacting",
     {
       type: "category",
       label: "Subgraph",
