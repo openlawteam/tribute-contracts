@@ -99,7 +99,7 @@ describe("Extension - Vesting", () => {
     await vesting.createNewVesting(
       accounts[0],
       UNITS,
-      1000,
+      100,
       Math.floor(now.getTime() / 1000)
     );
 
@@ -107,7 +107,7 @@ describe("Extension - Vesting", () => {
     let diff = v.endDate.sub(v.startDate);
 
     minBalance = await vesting.getMinimumBalance(accounts[0], UNITS);
-    expect(minBalance.toString()).equal("1000");
+    expect(minBalance.toString()).equal("100");
 
     let halfWay = diff.div(toBN("2"));
 
@@ -118,7 +118,7 @@ describe("Extension - Vesting", () => {
     await vesting.createNewVesting(
       accounts[0],
       UNITS,
-      1000,
+      100,
       Math.floor(now.getTime() / 1000)
     );
 
@@ -127,12 +127,12 @@ describe("Extension - Vesting", () => {
     halfWay = diff.div(toBN("2"));
 
     minBalance = await vesting.getMinimumBalance(accounts[0], UNITS);
-    expect(minBalance.toString()).equal("1500");
+    expect(minBalance.toString()).equal("150");
 
     await advanceTime(halfWay.toNumber());
 
     minBalance = await vesting.getMinimumBalance(accounts[0], UNITS);
-    expect(minBalance.toString()).equal("750");
+    expect(minBalance.toString()).equal("75");
 
     await advanceTime(diff.toNumber());
 
@@ -152,7 +152,7 @@ describe("Extension - Vesting", () => {
     await vesting.createNewVesting(
       accounts[0],
       UNITS,
-      1000,
+      100,
       Math.floor(now.getTime() / 1000)
     );
 
@@ -160,7 +160,7 @@ describe("Extension - Vesting", () => {
     let diff = v.endDate.sub(v.startDate);
 
     minBalance = await vesting.getMinimumBalance(accounts[0], UNITS);
-    expect(minBalance.toString()).equal("1000");
+    expect(minBalance.toString()).equal("100");
 
     let halfWay = diff.div(toBN("2"));
 
@@ -171,7 +171,7 @@ describe("Extension - Vesting", () => {
     await vesting.createNewVesting(
       accounts[0],
       UNITS,
-      1000,
+      100,
       Math.floor(now.getTime() / 1000)
     );
 
@@ -180,22 +180,16 @@ describe("Extension - Vesting", () => {
     halfWay = diff.div(toBN("2"));
 
     minBalance = await vesting.getMinimumBalance(accounts[0], UNITS);
-    expect(minBalance.toString()).equal("1500");
+    expect(minBalance.toString()).equal("150");
 
     await advanceTime(halfWay.toNumber());
 
     minBalance = await vesting.getMinimumBalance(accounts[0], UNITS);
-    expect(minBalance.toString()).equal("750");
+    expect(minBalance.toString()).equal("75");
 
-    await vesting.removeVesting(
-      accounts[0],
-      UNITS,
-      500,
-      v.startDate,
-      v.endDate
-    );
+    await vesting.removeVesting(accounts[0], UNITS, 50);
 
     minBalance = await vesting.getMinimumBalance(accounts[0], UNITS);
-    expect(minBalance.toString()).equal("625");
+    expect(minBalance.toString()).equal("50");
   });
 });

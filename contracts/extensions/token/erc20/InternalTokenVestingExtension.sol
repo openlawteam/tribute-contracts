@@ -94,8 +94,7 @@ contract InternalTokenVestingExtension is DaoConstants, IExtension {
         address internalToken,
         uint88 amountToRemove
     ) public hasExtensionAccess(AclFlag.REMOVE_VESTING) {
-        VestingSchedule storage schedule = vesting[member][internalToken];
-        schedule.blockedAmount -= amountToRemove;
+        vesting[member][internalToken].blockedAmount -= amountToRemove;
     }
 
     function getMinimumBalance(address member, address internalToken)
