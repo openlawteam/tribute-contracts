@@ -1,5 +1,6 @@
 import React, { memo, useEffect } from "react";
-import { NavLink, useHistory } from "react-router-dom";
+import { useHistory } from "react-router-dom";
+import Link from "@docusaurus/Link";
 import AOS from "aos";
 import "../../node_modules/aos/dist/aos.css";
 
@@ -28,24 +29,24 @@ function HomepageNavigation() {
     <nav role="navigation" id="navigation">
       <ul className="nav__list" data-testid="nav__list">
         <li tabIndex={0}>
-          <NavLink to="./docs/tutorial/dao/installation">
+          <Link to="/docs/tutorial/dao/installation">
             <span>Get Started</span>
-          </NavLink>
+          </Link>
         </li>
         <li tabIndex={0}>
-          <NavLink to="./docs/intro/design/core/introduction">
+          <Link to="/docs/intro/design/core/introduction">
             <span>Core</span>
-          </NavLink>
+          </Link>
         </li>
         <li tabIndex={0}>
-          <NavLink to="./docs/intro/design/extensions/introduction">
+          <Link to="/docs/intro/design/extensions/introduction">
             <span>Extensions</span>
-          </NavLink>
+          </Link>
         </li>
         <li tabIndex={0}>
-          <NavLink to="./docs/intro/design/adapters/introduction">
+          <Link to="/docs/intro/design/adapters/introduction">
             <span>Adapters</span>
-          </NavLink>
+          </Link>
         </li>
       </ul>
     </nav>
@@ -54,7 +55,7 @@ function HomepageNavigation() {
 
 function GetStartedHeader() {
   return (
-    <div className="landing__headerx nav-header__menu-container">
+    <div className="landing__header nav-header__menu-container">
       <HomepageNavigation />
       <SocialMedia />
     </div>
@@ -109,6 +110,7 @@ export default function HomepageHero() {
                 }}
               >
                 get started
+                {/* launch your DAO Tutorial - 5 mins */}
               </button>
             </div>
           </div>

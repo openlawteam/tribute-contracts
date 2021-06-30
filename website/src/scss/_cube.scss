@@ -2,8 +2,8 @@
 
 @use "./mixins" as *; /* load without namespace for convenience */
 
-$cubeHeight: 258px;
-$cubeWidth: 222px;
+$cubeHeight: 298px;
+$cubeWidth: 262px;
 $faceSize: math.div($cubeWidth, 2);
 
 %cube-background {
@@ -48,8 +48,8 @@ $faceSize: math.div($cubeWidth, 2);
 }
 
 .cube__segment--top {
-  $left: 64px;
-  $top: 15px;
+  $left: 65px;
+  $top: 11px;
 
   -webkit-transform: skew(60deg, -30deg) scale(1, -0.575);
   -moz-transform: skew(60deg, -30deg) scale(1, -0.575);
@@ -67,10 +67,10 @@ $faceSize: math.div($cubeWidth, 2);
 }
 
 .cube__segment--left {
-  $left: 8px;
-  $top: 103px;
-  $width: 110px;
-  $height: 126px;
+  $left: 0;
+  $top: 115px;
+  $width: 130px;
+  $height: 146px;
 
   -webkit-transform: skew(0deg, 30deg);
   -moz-transform: skew(0deg, 30deg);
@@ -91,10 +91,10 @@ $faceSize: math.div($cubeWidth, 2);
 }
 
 .cube__segment--right {
-  $left: 119px;
-  $top: 104px;
-  $width: 111px;
-  $height: 125px;
+  $left: 131px;
+  $top: 115px;
+  $width: 130px;
+  $height: 146px;
 
   -webkit-transform: skew(0deg, -30deg);
   -moz-transform: skew(0deg, -30deg);

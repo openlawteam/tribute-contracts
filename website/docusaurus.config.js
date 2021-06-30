@@ -141,7 +141,7 @@ module.exports = {
       //     ],
       //   },
       // ],
-      copyright: `<p>&copy; TributeDAO Framework Docs. Built with Docusaurus.</p>`,
+      copyright: `<p>&copy; TributeDAO Framework.</p>`,
     },
   },
   presets: [

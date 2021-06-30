@@ -10,6 +10,12 @@
 
 .navbar {
   background-color: $color-background-page;
+  height: auto;
+  padding: 1.5rem;
+}
+
+.navbar__title {
+  font-size: 40px;
 }
 
 .navbar__brand {

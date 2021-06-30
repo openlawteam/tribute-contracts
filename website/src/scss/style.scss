@@ -96,6 +96,16 @@ a {
   color: $color-primary;
 }
 
+.menu__list-item {
+  &:hover {
+    color: $color-primary-hover;
+  }
+}
+
+.menu__link--active {
+  color: $color-primary-hover;
+}
+
 /* react mount point */
 
 #root {
