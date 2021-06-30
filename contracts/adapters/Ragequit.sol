@@ -119,9 +119,9 @@ contract RagequitContract is IRagequit, DaoConstants, AdapterGuard {
                 bank.balanceOf(GUILD, LOOT);
 
         // Burns / subtracts from member's balance the number of units to burn.
-        bank.subtractFromBalance(memberAddr, UNITS, unitsToBurn);
+        bank.internalTransfer(memberAddr, GUILD, UNITS, unitsToBurn);
         // Burns / subtracts from member's balance the number of loot to burn.
-        bank.subtractFromBalance(memberAddr, LOOT, lootToBurn);
+        bank.internalTransfer(memberAddr, GUILD, LOOT, lootToBurn);
 
         // Completes the ragequit process by updating the GUILD internal balance based on each provided token.
         _burnUnits(

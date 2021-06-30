@@ -45,6 +45,8 @@ contract CouponOnboardingContract is
         uint256 nonce;
     }
 
+    using SafeERC20 for IERC20;
+
     string public constant COUPON_MESSAGE_TYPE =
         "Message(address authorizedMember,uint256 amount,uint256 nonce)";
     bytes32 public constant COUPON_MESSAGE_TYPEHASH =
@@ -54,6 +56,9 @@ contract CouponOnboardingContract is
         keccak256("coupon-onboarding.signerAddress");
     bytes32 constant TokenAddrToMint =
         keccak256("coupon-onboarding.tokenAddrToMint");
+
+    bytes32 constant ERC20InternalTokenAddr =
+        keccak256("coupon-onboarding.erc20.internal.token.address");
 
     uint256 chainId;
     mapping(address => mapping(uint256 => uint256)) flags;
@@ -72,10 +77,12 @@ contract CouponOnboardingContract is
     function configureDao(
         DaoRegistry dao,
         address signerAddress,
+        address erc20,
         address tokenAddrToMint,
         uint88 maxAmount
     ) external onlyAdapter(dao) {
         dao.setAddressConfiguration(SignerAddressConfig, signerAddress);
+        dao.setAddressConfiguration(ERC20InternalTokenAddr, erc20);
         dao.setAddressConfiguration(TokenAddrToMint, tokenAddrToMint);
 
         BankExtension bank = BankExtension(dao.getExtensionAddress(BANK));
@@ -118,18 +125,17 @@ contract CouponOnboardingContract is
         uint256 currentFlag = flags[address(dao)][nonce / 256];
         require(
             getFlag(currentFlag, nonce % 256) == false,
-            "coupon has already been redeemed"
+            "coupon already redeemed"
         );
-
-        address signerAddress =
-            dao.getAddressConfiguration(SignerAddressConfig);
 
         Coupon memory coupon = Coupon(authorizedMember, amount, nonce);
         bytes32 hash = hashCouponMessage(dao, coupon);
 
-        address recoveredKey = ECDSA.recover(hash, signature);
-
-        require(recoveredKey == signerAddress, "invalid sig");
+        require(
+            ECDSA.recover(hash, signature) ==
+                dao.getAddressConfiguration(SignerAddressConfig),
+            "invalid sig"
+        );
 
         flags[address(dao)][nonce / 256] = setFlag(
             currentFlag,
@@ -137,12 +143,22 @@ contract CouponOnboardingContract is
             true
         );
 
-        address tokenAddrToMint =
-            address(dao.getAddressConfiguration(TokenAddrToMint));
-
+        IERC20 erc20 =
+            IERC20(dao.getAddressConfiguration(ERC20InternalTokenAddr));
         BankExtension bank = BankExtension(dao.getExtensionAddress(BANK));
+        if (address(erc20) == address(0x0)) {
+            address tokenAddressToMint =
+                dao.getAddressConfiguration(TokenAddrToMint);
+            bank.internalTransfer(
+                GUILD,
+                authorizedMember,
+                tokenAddressToMint,
+                amount
+            );
+        } else {
+            erc20.safeTransferFrom(GUILD, authorizedMember, amount);
+        }
 
-        bank.internalTransfer(GUILD, authorizedMember, tokenAddrToMint, amount);
         // address needs to be added to the members mappings
         potentialNewMember(authorizedMember, dao, bank);
         emit CouponRedeemed(address(dao), nonce, authorizedMember, amount);

@@ -239,7 +239,12 @@ contract ERC20Extension is
         override
         returns (bool)
     {
-        return transferFrom(msg.sender, recipient, amount);
+        return
+            transferFrom(
+                dao.getAddressIfDelegated(msg.sender),
+                recipient,
+                amount
+            );
     }
 
     function _transferInternal(
@@ -250,6 +255,7 @@ contract ERC20Extension is
     ) internal {
         potentialNewMember(recipient, dao, bank);
         bank.internalTransfer(senderAddr, recipient, tokenAddress, amount);
+
         emit Transfer(senderAddr, recipient, amount);
     }
 
@@ -270,8 +276,7 @@ contract ERC20Extension is
         address sender,
         address recipient,
         uint256 amount
-    ) public override reentrancyGuard(dao) returns (bool) {
-        address senderAddr = dao.getAddressIfDelegated(sender);
+    ) public override returns (bool) {
         require(
             isNotZeroAddress(recipient),
             "ERC20: transfer to the zero address"
@@ -286,7 +291,7 @@ contract ERC20Extension is
             strategy.evaluateTransfer(
                 dao,
                 tokenAddress,
-                senderAddr,
+                sender,
                 recipient,
                 amount,
                 msg.sender
@@ -299,12 +304,12 @@ contract ERC20Extension is
         }
 
         if (approvalType == IERC20TransferStrategy.ApprovalType.SPECIAL) {
-            _transferInternal(senderAddr, recipient, amount, bank);
+            _transferInternal(sender, recipient, amount, bank);
             return true;
         }
 
         if (sender != msg.sender) {
-            uint256 currentAllowance = _allowances[senderAddr][msg.sender];
+            uint256 currentAllowance = _allowances[sender][msg.sender];
             //check if sender has approved msg.sender to spend amount
             require(
                 currentAllowance >= amount,
@@ -312,12 +317,12 @@ contract ERC20Extension is
             );
 
             if (allowedAmount >= amount) {
-                _allowances[senderAddr][msg.sender] = currentAllowance - amount;
+                _allowances[sender][msg.sender] = currentAllowance - amount;
             }
         }
 
         if (allowedAmount >= amount) {
-            _transferInternal(senderAddr, recipient, amount, bank);
+            _transferInternal(sender, recipient, amount, bank);
             return true;
         }
 

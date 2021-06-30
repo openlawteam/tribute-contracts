@@ -93,7 +93,7 @@ library GuildKickHelper {
             }
         }
 
-        bank.subtractFromBalance(kickedMember, UNITS, unitsToBurn);
-        bank.subtractFromBalance(kickedMember, LOOT, lootToBurn);
+        bank.internalTransfer(kickedMember, GUILD, UNITS, unitsToBurn);
+        bank.internalTransfer(kickedMember, GUILD, LOOT, lootToBurn);
     }
 }

@@ -412,7 +412,6 @@ const addDefaultAdapters = async ({ dao, options, daoFactory, nftAddr }) => {
     tribute,
     distribute,
     tributeNFT,
-    lendNFT,
     erc20TransferStrategy,
   } = await prepareAdapters(options);
 
@@ -659,6 +658,7 @@ const configureDao = async ({
   await couponOnboarding.configureDao(
     dao.address,
     couponCreatorAddress,
+    erc20TokenExtension.address,
     UNITS,
     maxAmount,
     {

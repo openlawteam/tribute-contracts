@@ -39,6 +39,7 @@ const {
   accounts,
   expectRevert,
   expect,
+  ERC20Extension,
 } = require("../../utils/OZTestUtil.js");
 
 const { checkBalance } = require("../../utils/TestUtils.js");
