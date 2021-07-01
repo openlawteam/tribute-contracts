@@ -1,0 +1,50 @@
+@use "./variables" as *; /* load without namespace for convenience */
+@use "./mixins" as *; /* load without namespace for convenience */
+
+.landing__header {
+  z-index: 9;
+  position: relative;
+  align-items: center;
+  display: flex;
+  justify-content: flex-end;
+  padding: 1rem 0 0;
+}
+
+.landing {
+  align-items: center;
+  display: flex;
+  flex-direction: column;
+  font-family: $font-body;
+  margin: 0 2rem;
+}
+
+.landing__subtitle {
+  font-size: 1.2rem;
+  text-align: center;
+  letter-spacing: 2px;
+  line-height: 1.5;
+  margin-top: 0.2rem;
+
+  @include size-medium-down {
+    font-size: 1.15rem;
+  }
+}
+
+.landing__img {
+  margin-top: 2rem;
+}
+
+.landing__button {
+  > button {
+    font-size: 1.5rem;
+    // font-size: 1.25rem;
+    padding: 1rem 4rem;
+    margin: 2.5rem 0 1rem;
+    font-weight: normal;
+
+    &:active,
+    &:hover {
+      color: inherit;
+    }
+  }
+}

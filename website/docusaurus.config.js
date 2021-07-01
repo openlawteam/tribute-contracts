@@ -33,115 +33,115 @@ module.exports = {
         {
           type: "doc",
           docId: "intro/overview-and-benefits",
-          position: "right",
+          position: "left",
           label: "Get Started",
         },
         {
           type: "doc",
           docId: "intro/design/core/introduction",
-          position: "right",
+          position: "left",
           label: "Core",
         },
         {
           type: "doc",
           docId: "intro/design/extensions/introduction",
-          position: "right",
+          position: "left",
           label: "Extensions",
         },
         {
           type: "doc",
           docId: "intro/design/adapters/introduction",
-          position: "right",
+          position: "left",
           label: "Adapters",
         },
         {
           type: "doc",
           docId: "thanks",
-          position: "right",
+          position: "left",
           label: "Thank You",
         },
         {
           href: "https://github.com/openlawteam/tribute-contracts",
           label: "GitHub",
-          position: "right",
+          position: "left",
         },
       ],
     },
     footer: {
       // style: "light",
-      logo: {
-        alt: "TributeDAO Logo",
-        src: "img/logo.svg",
-        href: "https://tributedao.com",
-      },
-      links: [
-        {
-          title: "Docs",
-          items: [
-            {
-              label: "Introduction",
-              to: "/docs/intro/overview-and-benefits",
-            },
-            {
-              label: "Tutorial",
-              to: "/docs/tutorial/dao/installation",
-            },
-            {
-              label: "Contracts",
-              to: "/docs/contracts/core/dao-registry",
-            },
-            {
-              label: "Subgraph",
-              to: "/docs/subgraph/definition",
-            },
-          ],
-        },
-        {
-          title: "Community",
-          items: [
-            {
-              label: "Discord",
-              href: "https://discord.gg/xXMA2DYqNf",
-            },
-            {
-              label: "Twitter",
-              href: "https://twitter.com/OpenLawOfficial",
-            },
-            {
-              label: "Github",
-              href:
-                "https://github.com/search?q=org%3Aopenlawteam+tribute-ui+OR+tribute-contracts+in%3Aname&type=repositories",
-            },
-            {
-              label: "Medium",
-              href: "#",
-            },
-          ],
-        },
-        {
-          title: "More",
-          items: [
-            {
-              label: "TributeDAO",
-              href: "https://tributedao.com",
-            },
-            {
-              label: "TributeDAO UI",
-              href: "https://github.com/openlawteam/tribute-ui",
-            },
-            {
-              label: "TributeDAO Contracts",
-              href: "https://github.com/openlawteam/tribute-contracts",
-            },
-            {
-              label: "Code of Conduct",
-              href:
-                "https://github.com/openlawteam/tribute-contracts/blob/master/CODE_OF_CONDUCT.md",
-            },
-          ],
-        },
-      ],
-      copyright: `TributeDAO Framework Docs. Built with Docusaurus.`,
+      // logo: {
+      //   alt: "TributeDAO Logo",
+      //   src: "img/logo.svg",
+      //   href: "https://tributedao.com",
+      // },
+      // links: [
+      //   {
+      //     title: "Docs",
+      //     items: [
+      //       {
+      //         label: "Introduction",
+      //         to: "/docs/intro/overview-and-benefits",
+      //       },
+      //       {
+      //         label: "Tutorial",
+      //         to: "/docs/tutorial/dao/installation",
+      //       },
+      //       {
+      //         label: "Contracts",
+      //         to: "/docs/contracts/core/dao-registry",
+      //       },
+      //       {
+      //         label: "Subgraph",
+      //         to: "/docs/subgraph/definition",
+      //       },
+      //     ],
+      //   },
+      //   {
+      //     title: "Community",
+      //     items: [
+      //       {
+      //         label: "Discord",
+      //         href: "https://discord.gg/xXMA2DYqNf",
+      //       },
+      //       {
+      //         label: "Twitter",
+      //         href: "https://twitter.com/OpenLawOfficial",
+      //       },
+      //       {
+      //         label: "Github",
+      //         href:
+      //           "https://github.com/search?q=org%3Aopenlawteam+tribute-ui+OR+tribute-contracts+in%3Aname&type=repositories",
+      //       },
+      //       {
+      //         label: "Medium",
+      //         href: "#",
+      //       },
+      //     ],
+      //   },
+      //   {
+      //     title: "More",
+      //     items: [
+      //       {
+      //         label: "TributeDAO",
+      //         href: "https://tributedao.com",
+      //       },
+      //       {
+      //         label: "TributeDAO UI",
+      //         href: "https://github.com/openlawteam/tribute-ui",
+      //       },
+      //       {
+      //         label: "TributeDAO Contracts",
+      //         href: "https://github.com/openlawteam/tribute-contracts",
+      //       },
+      //       {
+      //         label: "Code of Conduct",
+      //         href:
+      //           "https://github.com/openlawteam/tribute-contracts/blob/master/CODE_OF_CONDUCT.md",
+      //       },
+      //     ],
+      //   },
+      // ],
+      copyright: `<p>&copy; TributeDAO Framework.</p>`,
     },
   },
   presets: [
@@ -154,7 +154,7 @@ module.exports = {
             "https://github.com/openlawteam/tribute-contracts/edit/docs/website/",
         },
         theme: {
-          customCss: require.resolve("./src/css/custom.css"),
+          customCss: require.resolve("./src/scss/style.scss"),
         },
       },
     ],
@@ -168,5 +168,6 @@ module.exports = {
         homepage: "./docs/subgraph/structure/Schema.md",
       },
     ],
+    "docusaurus-plugin-sass",
   ],
 };

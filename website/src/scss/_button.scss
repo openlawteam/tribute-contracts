@@ -1,0 +1,79 @@
+@use "./variables" as *; /* load without namespace for convenience */
+@use "./functions" as *; /* load without namespace for convenience */
+
+// Reset button to sensible defaults
+%button-base {
+  background: none;
+  outline: none;
+  position: relative;
+  box-sizing: border-box;
+  cursor: pointer;
+  border: none;
+  color: $color-primary;
+
+  &:disabled {
+    cursor: not-allowed;
+    opacity: 0.6;
+  }
+}
+
+%button {
+  @extend %button-base;
+
+  letter-spacing: 1px;
+  text-align: center;
+  padding: 0.6rem 1.25rem;
+}
+
+.button {
+  @extend %button;
+
+  background-color: $color-background-primary;
+  border-radius: 15px;
+  border: 1px solid $color-border-primary;
+  font-family: $font-accent;
+  text-transform: lowercase;
+  font-size: 1.25rem;
+}
+
+.button--secondary {
+  @extend %button;
+
+  background-color: $color-background-secondary;
+  border: none;
+  border-radius: 12px;
+  font-family: $font-body;
+  text-transform: uppercase;
+  font-size: 1.125rem;
+  font-weight: 500;
+}
+
+.button--help {
+  @extend %button-base;
+
+  border-bottom: 1px dashed;
+  font-family: $font-accent;
+  font-size: 1rem;
+  text-transform: lowercase;
+}
+
+.button--help-centered {
+  @extend .button--help;
+
+  display: block;
+  margin: 0 auto;
+}
+
+@media only screen and (max-width: em($bp-sm)) {
+  .button {
+    font-size: 1.125rem;
+  }
+
+  .button--secondary {
+    font-size: 1rem;
+  }
+
+  .button--help {
+    font-size: 0.85rem;
+  }
+}

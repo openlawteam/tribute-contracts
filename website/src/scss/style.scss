@@ -1,0 +1,215 @@
+@use "./variables" as *; /* load without namespace for convenience */
+@use "./mixins";
+@use "./fonts";
+@use "./functions" as *; /* load without namespace for convenience */
+
+@use "./logo"; /* logo styles */
+@use "./header"; /* header styles */
+@use "./nav"; /* nav styles */
+// @use "./modal"; /* modal styles */
+// @use "./loader"; /* loader styles */
+// @use "./walletconnect"; /* wallet connect styles */
+@use "./button"; /* button styles */
+// @use "./form"; /* form styles */
+// @use "./input"; /* input styles */
+@use "./grid"; /* grid styles */
+// @use "./proposalcard"; /* proposal card styles */
+// @use "./voting"; /* voting styles */
+// @use "./proposaldetails"; /* proposal details styles */
+// @use "./membercard"; /* member card styles */
+// @use "./memberprofile"; /* member profile styles */
+@use "./landing"; /* landing styles */
+// @use "./adapterextension"; /* adapter/extension manager styles */
+// @use "./checkbox"; /* checkbox styles */
+@use "./cube"; /* Tribute cube styles */
+// @use "./radiolist"; /* radiolist styles */
+@use "./socialmedia"; /* social media styles */
+@use "./footer"; /* footer styles */
+// @use "./fireworks"; /* firework styles http://jsfiddle.net/elin/7m3bL/ */
+// @use "./redeemcard"; /* redeem card styles */
+// @use "./daotoken"; /* DAO token widget styles */
+// @use "./daotokenholder"; /* DAO token holder widget styles */
+// @use "./delegation"; /* delegation styles */
+
+html {
+  height: 100%;
+  font-size: 100%; /* 16px by default; px value overrides user's browser settings */
+}
+
+html,
+body {
+  color: $color-primary;
+  background-color: $color-background-page;
+  font-weight: normal;
+  font-family: $font-body;
+}
+
+body {
+  margin: 0;
+}
+
+/* color */
+
+@each $name, $color in $colors {
+  .color-#{$name} {
+    color: #{$color};
+  }
+}
+
+/* alignment */
+
+.text-center {
+  text-align: center;
+}
+
+/* font decoration */
+
+.text-underline {
+  text-decoration: underline;
+}
+
+/* headings */
+
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
+  font-family: $font-header;
+  font-weight: bold;
+  letter-spacing: 1px;
+}
+
+/* common text */
+
+p {
+  font-size: rem(18);
+  line-height: 1.75;
+
+  @media only screen and (max-width: em($bp-sm)) {
+    line-height: 1.5;
+  }
+}
+
+a {
+  color: $color-primary;
+}
+
+.table-of-contents__link:hover,
+.table-of-contents__link--active,
+.menu__link--active {
+  color: $color-primary-hover;
+
+  &:hover {
+    color: $color-primary-hover;
+  }
+}
+
+.pagination-nav__link:hover {
+  color: $color-primary-hover;
+  border-color: $color-primary-hover;
+}
+
+/* react mount point */
+
+#root {
+  /* sticky footer */
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+  /* end sticky footer */
+}
+
+/* main */
+
+main {
+  flex: 1; /* sticky footer */
+  z-index: 0; /* header nav needs to appear on top of <main> */
+}
+
+.section-wrapper {
+  flex: 1 1;
+  margin: 0 auto 4rem;
+  max-width: 75rem; // 1200px
+
+  @media only screen and (max-width: calc(75rem + 4rem)) {
+    margin: 0 2rem 4rem;
+  }
+
+  @media only screen and (max-width: $bp-sm) {
+    margin: 0 1rem 4rem;
+  }
+}
+
+/* page header */
+
+.titlebar {
+  display: block;
+  text-align: center;
+  width: 100%;
+}
+
+.titlebar__title {
+  @include mixins.fluid-type(
+    $bp-sm,
+    $bp-xl,
+    18px,
+    24px
+  ); /* min font-size 1.125rem, max 1.5rem */
+  display: inline-block;
+  letter-spacing: 2px;
+  margin: 2rem 0;
+  position: relative;
+  text-align: center;
+
+  @media only screen and (min-width: em($bp-lg)) {
+    max-width: 50%;
+  }
+
+  @media only screen and (max-width: em($bp-sm)) {
+    margin: 1.5rem 0;
+  }
+}
+
+.titlebar__action {
+  @extend .button;
+
+  @include mixins.fluid-type(
+    $bp-sm,
+    $bp-xl,
+    14px,
+    16px
+  ); /* min font-size 0.875rem, max 1rem */
+  display: block;
+  margin: 0 auto 1rem;
+  padding: 0.5rem 1rem;
+
+  @media only screen and (min-width: em($bp-xl)) {
+    position: absolute;
+    right: 0;
+    top: 80px;
+  }
+}
+
+/* errors */
+
+.error-message {
+  color: $color-brightsalmon;
+  // the text needs to wrap as the JSON errors can be long
+  word-break: break-word;
+}
+
+/* effects */
+
+.pulse {
+  animation: pulse 0.9s infinite ease-in-out alternate;
+}
+@keyframes pulse {
+  from {
+    transform: scale(0.8);
+  }
+  to {
+    transform: scale(1.2);
+  }
+}
