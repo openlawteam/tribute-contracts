@@ -61,7 +61,8 @@ module.exports = {
           label: "Thank You",
         },
         {
-          href: "https://github.com/openlawteam/tribute-contracts",
+          href:
+            "https://github.com/search?q=org%3Aopenlawteam+tribute-ui+OR+tribute-contracts+in%3Aname&type=repositories",
           label: "GitHub",
           position: "left",
         },

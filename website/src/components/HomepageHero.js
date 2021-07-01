@@ -48,6 +48,11 @@ function HomepageNavigation() {
             <span>Adapters</span>
           </Link>
         </li>
+        <li tabIndex={0}>
+          <Link to="https://demo.tributedao.com">
+            <span>Demo</span>
+          </Link>
+        </li>
       </ul>
     </nav>
   );
