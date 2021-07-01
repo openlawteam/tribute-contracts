@@ -3,6 +3,10 @@ id: offchain-voting-adapter
 title: Offchain
 ---
 
+:::caution
+The Offchain adapter is under development, this documentation is not up to date.
+:::
+
 The Offchain Voting Adapter manages offchain voting using a merkle tree to commit to a result that can be challenge during the grace period if necessary.
 
 There are also two fallback solutions implemented:
@@ -26,7 +30,7 @@ Available configurations:
 
 ### BankExtension
 
-- `ADD_TO_BALANCE`,
+- `ADD_TO_BALANCE`
 - `SUB_FROM_BALANCE`
 - `INTERNAL_TRANSFER`
 

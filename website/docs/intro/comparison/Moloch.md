@@ -33,6 +33,6 @@ title: Moloch
 |                   **Whitelist Tokens** |        :x:         | :heavy_check_mark: | :heavy_check_mark: |
 |                           **Withdraw** |        :x:         | :heavy_check_mark: | :heavy_check_mark: |
 
-## Deployment Costs
+<!-- ## Deployment Costs
 
-//TODO
+//TODO -->

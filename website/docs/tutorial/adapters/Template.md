@@ -17,37 +17,53 @@ Specify which additional configurations are required to make this adapter work. 
 
 ### DAORegistry
 
-- `SUBMIT_PROPOSAL`, ....
+- `SUBMIT_PROPOSAL`
+- `x`,
+- `y`,
+- ...
 
 ### Bank Extension
 
-- `WITHDRAW`, `INTERNAL_TRANSFER`, ....
+- `WITHDRAW`
+- `INTERNAL_TRANSFER`
+
+## Dependencies
+
+### DaoRegistry
+
+### BankExtension
+
+### Voting
+
+## Structs
+
+### MyStructX
+
+- `fieldA`: the ...
+- `fieldB`: the ...
+- `...`: the ...
 
 ## Storage
 
-Describe each variable public and private of the adapter and what is the purpose of that variable.
+Describe each variable public and private of the adapter and what is the purpose of that variable. Start with the public variables, and let the private ones to the end.
 
-### public varA
+### varA
 
 Keeps track of...
 
-### private \_records
+### \_varN
 
-Tracks all records ...
-
-## Dependencies & Interactions
-
-Add the information about all the internal/external interactions that are triggered by this Adapter, which contracts it depends on, and which functions it calls, which extensions it needs to access, etc.
+Tracks ...
 
 ## Functions
 
-Describe the public and private functions signatures with proper documentation and clearly explain what each function does. Specify what are expected the arguments and pre-conditions to execute the functions. Also, provide what is the expected outcome.
+Describe the public and private functions signatures with proper documentation and clearly explain what each function does. Specify what are expected the arguments and pre-conditions to execute the functions. Also, provide what is the expected outcome, and start with the public functions.
 
 ### receive
 
 Receives eth. Reverts when ...
 
-### submitKickProposal
+### submitProposal
 
 ```solidity
     /**
@@ -71,8 +87,10 @@ Receives eth. Reverts when ...
 
 ## Events
 
-### Proposals
+- No events are emitted or
 
-A kick proposal was processed with success:
+### KickedMember
+
+When the kick proposal was processed with success.
 
 - `event KickedMember(bytes32 proposalId, address member);`
