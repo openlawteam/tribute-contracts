@@ -96,14 +96,19 @@ a {
   color: $color-primary;
 }
 
-.menu__list-item {
+.table-of-contents__link:hover,
+.table-of-contents__link--active,
+.menu__link--active {
+  color: $color-primary-hover;
+
   &:hover {
     color: $color-primary-hover;
   }
 }
 
-.menu__link--active {
+.pagination-nav__link:hover {
   color: $color-primary-hover;
+  border-color: $color-primary-hover;
 }
 
 /* react mount point */

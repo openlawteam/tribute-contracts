@@ -16,7 +16,7 @@ const SocialMediaLinks = {
 export default function SocialMedia() {
   return (
     <div className="socialmedia">
-      <a
+      {/* <a
         href={SocialMediaLinks.MEDIUM}
         target="_blank"
         rel="noopener noreferrer"
@@ -29,7 +29,7 @@ export default function SocialMedia() {
         rel="noopener noreferrer"
       >
         <DiscordSVG />
-      </a>
+      </a> */}
       <a
         href={SocialMediaLinks.GITHUB}
         target="_blank"
