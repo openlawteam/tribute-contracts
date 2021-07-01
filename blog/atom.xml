@@ -1,10 +1,10 @@
 <?xml version="1.0" encoding="utf-8"?>
 <feed xmlns="http://www.w3.org/2005/Atom">
-    <id>https://github.com/openlawteam/tribute-contracts/blog</id>
+    <id>https://tributedao.com/blog</id>
     <title>TributeDAO Framework Blog</title>
     <updated>2015-10-25T23:29:00.000Z</updated>
     <generator>https://github.com/jpmonette/feed</generator>
-    <link rel="alternate" href="https://github.com/openlawteam/tribute-contracts/blog"/>
+    <link rel="alternate" href="https://tributedao.com/blog"/>
     <subtitle>TributeDAO Framework Blog</subtitle>
-    <icon>https://github.com/openlawteam/tribute-contracts/img/favicon.ico</icon>
+    <icon>https://tributedao.com/img/favicon.ico</icon>
 </feed>
