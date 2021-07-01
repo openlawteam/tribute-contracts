@@ -36,15 +36,43 @@
 
 .landing__button {
   > button {
-    font-size: 1.5rem;
-    // font-size: 1.25rem;
+    font-size: 1.25rem;
     padding: 1rem 4rem;
-    margin: 2.5rem 0 1rem;
+    margin: 2rem 0 1rem;
     font-weight: normal;
 
     &:active,
     &:hover {
       color: inherit;
     }
+
+    @include size-medium-down {
+      padding: 1rem 2rem;
+    }
+  }
+}
+
+.landing-features {
+  display: flex;
+  align-items: center;
+  padding: 0 0 2rem 0;
+  width: 100%;
+
+  @include size-medium-down {
+    h3 {
+      font-size: 1.15rem;
+    }
+    p {
+      font-size: 1rem;
+    }
+  }
+}
+
+.landing-features__img {
+  height: 4em;
+  margin: 0 2rem 1.5rem 2rem;
+
+  @include size-medium-down {
+    height: 3em;
   }
 }

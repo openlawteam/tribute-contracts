@@ -50,7 +50,7 @@
 
   nav {
     padding: 0 2rem;
-    margin-right: auto;
+    margin-left: auto;
   }
 
   @media only screen and (max-width: 1179px) {
@@ -80,7 +80,7 @@
     }
 
     @media only screen and (min-width: em($bp-lg)) {
-      margin: 0.6rem 3rem 0.6rem 0;
+      margin: 0.6rem 0 0.6rem 3rem;
     }
   }
 }

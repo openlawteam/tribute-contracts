@@ -95,7 +95,7 @@ export default function HomepageHero() {
   return (
     <>
       <GetStartedHeader />
-      <Wrap className="section-wrapper">
+      <Wrap className="section-wrapper" style={{ marginBottom: "2rem" }}>
         <FadeIn>
           <CenterLogo />
           <div className="landing">

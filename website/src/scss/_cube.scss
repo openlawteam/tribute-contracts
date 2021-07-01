@@ -2,8 +2,8 @@
 
 @use "./mixins" as *; /* load without namespace for convenience */
 
-$cubeHeight: 298px;
-$cubeWidth: 262px;
+$cubeHeight: 220px;
+$cubeWidth: 202px;
 $faceSize: math.div($cubeWidth, 2);
 
 %cube-background {
@@ -48,8 +48,11 @@ $faceSize: math.div($cubeWidth, 2);
 }
 
 .cube__segment--top {
-  $left: 65px;
-  $top: 11px;
+  // $left: 65px;
+  // $top: 11px;
+
+  $left: 50px;
+  $top: 8px;
 
   -webkit-transform: skew(60deg, -30deg) scale(1, -0.575);
   -moz-transform: skew(60deg, -30deg) scale(1, -0.575);
@@ -67,10 +70,11 @@ $faceSize: math.div($cubeWidth, 2);
 }
 
 .cube__segment--left {
-  $left: 0;
-  $top: 115px;
-  $width: 130px;
-  $height: 146px;
+  $left: -1px; // 0px;
+  $top: 88px; //115px;
+
+  // $width: 130px;
+  // $height: 146px;
 
   -webkit-transform: skew(0deg, 30deg);
   -moz-transform: skew(0deg, 30deg);
@@ -80,21 +84,23 @@ $faceSize: math.div($cubeWidth, 2);
 
   left: $left;
   top: $top;
-  width: $width;
-  height: $height;
+  // width: $width;
+  // height: $height;
 
   @include size-medium-down {
     top: math.div($top, 2);
-    width: math.div($width, 2);
-    height: math.div($height, 2);
+    // width: math.div($width, 2);
+    // height: math.div($height, 2);
   }
 }
 
 .cube__segment--right {
-  $left: 131px;
-  $top: 115px;
-  $width: 130px;
-  $height: 146px;
+  // $left: 131px;
+  // $top: 115px;
+  $left: 101px;
+  $top: 88px;
+  // $width: 130px;
+  // $height: 146px;
 
   -webkit-transform: skew(0deg, -30deg);
   -moz-transform: skew(0deg, -30deg);
@@ -104,13 +110,13 @@ $faceSize: math.div($cubeWidth, 2);
 
   left: $left;
   top: $top;
-  width: $width;
-  height: $height;
+  // width: $width;
+  // height: $height;
 
   @include size-medium-down {
     left: math.div($left, 2);
     top: math.div($top, 2);
-    width: math.div($width, 2);
-    height: math.div($height, 2);
+    // width: math.div($width, 2);
+    // height: math.div($height, 2);
   }
 }
