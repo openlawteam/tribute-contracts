@@ -9,4 +9,4 @@ The main design goal is to limit access to the smart contracts according at laye
 
 A key concept here is to ensure the information always flows from the External World to the Core Contracts, never the other way around. If a Core Contract needs external info, it must be provided by an Adapter and/or an Extension instead of calling External World directly. In addition to that, only Adapters and/or Extensions that have access rights can push/pull information to/from the **[DAO Registry Contract](/docs/contracts/core/dao-registry)**.
 
-![tributedao_hexagon_architecture](https://user-images.githubusercontent.com/708579/107689684-e7300200-6c87-11eb-89c0-7bfe7eddaaaf.png)
+![tributedao_hexagon_architecture](/img/tribute-framework-architecture.png)
