@@ -4,7 +4,7 @@ import Link from "@docusaurus/Link";
 import AOS from "aos";
 import "../../node_modules/aos/dist/aos.css";
 
-import { CenterLogo } from "../components/logo";
+import { CenterLogo } from "../components/Logo";
 import FadeIn from "../components/common/FadeIn";
 import SocialMedia from "../components/common/SocialMedia";
 import Wrap from "../components/common/Wrap";
