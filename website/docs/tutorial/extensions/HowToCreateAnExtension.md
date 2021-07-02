@@ -5,7 +5,7 @@ title: How to create an Extension
 
 [Extensions](/docs/intro/design/extensions/introduction) are reusable smart contracts that add additional capabilities to the DAO without cluttering the core contracts with complex logic.
 
-The key different between an **[Adapter](/docs/tutorial/adapters/creating-an-adapter)** and an **Extension**, is that adapters are not tied to a specific DAO address, so you can use the exact same Adapter to perform actions in different DAOs. While the **Extensions** are instantiate and associated to a particular DAO, because an extension can track additional state information of that DAO, and is used as an extension of the DAO core features. It means that a Core contract is allowed to execute calls to an Extension, but not to an Adapter.
+The key difference between an **[Adapter](/docs/tutorial/adapters/creating-an-adapter)** and an **Extension**, is that adapters are not tied to a specific DAO address, so you can use the exact same Adapter to perform actions in different DAOs. While the **Extensions** are instantiate and associated to a particular DAO, because an extension can track additional state information of that DAO, and is used as an extension of the DAO core features. It means that a Core contract is allowed to execute calls to an Extension, but not to an Adapter.
 
 Each extension needs to be configured with the DaoRegistry **[Access Flags](/docs/contracts/core/dao-registry#access-flags)** in order to access the **[Core Contracts](/docs/intro/design/core/introduction)**, but it also can define its own Access Flags that will be required if an Adapter interacts with it.
 
