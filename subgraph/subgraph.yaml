@@ -9,9 +9,9 @@ dataSources:
     name: DaoFactory
     network: mainnet
     source:
-      address: "0x6d92a8E4aB80adcBbFDA44ef69fe847f82def641"
+      address: "0xfa6186d6058f619d2B81d4F33aE89AB9b8988026"
       abi: DaoFactory
-      # startBlock: 6
+      startBlock: 17
     mapping:
       kind: ethereum/events
       apiVersion: 0.0.4
@@ -66,6 +66,8 @@ templates:
           file: ../build/contracts/VotingContract.json
         - name: IVoting
           file: ../build/contracts/IVoting.json
+        - name: ERC20Extension
+          file: ../build/contracts/ERC20Extension.json
       eventHandlers:
         - event: SubmittedProposal(bytes32,uint256)
           handler: handleSubmittedProposal
@@ -99,7 +101,7 @@ templates:
       apiVersion: 0.0.4
       language: wasm/assemblyscript
       entities:
-        - TokenBalance
+        - TokenHolder
         - Token
         - Member
       abis:
@@ -107,6 +109,8 @@ templates:
           file: ../build/contracts/BankExtension.json
         - name: ERC20
           file: ../build/contracts/ERC20.json
+        - name: ERC20Extension
+          file: ../build/contracts/ERC20Extension.json
       eventHandlers:
         - event: NewBalance(address,address,uint160)
           handler: handleNewBalance
