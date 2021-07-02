@@ -27,6 +27,7 @@ SOFTWARE.
 
 const Web3Utils = require("web3-utils");
 const sha3 = Web3Utils.sha3;
+const soliditySha3 = Web3Utils.soliditySha3;
 const toBN = Web3Utils.toBN;
 const toWei = Web3Utils.toWei;
 const fromUtf8 = Web3Utils.fromUtf8;
@@ -67,11 +68,13 @@ const contracts = {
   ERC20TokenExtensionFactory:
     "./extensions/token/erc20/ERC20TokenExtensionFactory",
   ExecutorExtensionFactory: "./extensions/executor/ExecutorExtensionFactory",
+  ERC1271ExtensionFactory: "./extensions/erc1271/ERC1271ExtensionFactory",
   Multicall: "./util/Multicall",
 
   // Extensions
   NFTExtension: "./extensions/nft/NFTExtension",
   BankExtension: "./extensions/bank/BankExtension",
+  ERC1271Extension: "./extensions/erc1271/ERC1271Extension",
   ERC20Extension: "./extensions/token/erc20/ERC20Extension",
   ExecutorExtension: "./extensions/token/executor/ExecutorExtension",
 
@@ -108,6 +111,7 @@ const contracts = {
 module.exports = {
   contracts,
   sha3,
+  soliditySha3,
   toBN,
   toWei,
   hexToBytes,

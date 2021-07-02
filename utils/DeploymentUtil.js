@@ -36,6 +36,8 @@ const deployDao = async (options) => {
     DaoRegistry,
     BankExtension,
     BankFactory,
+    ERC1271Extension,
+    ERC1271ExtensionFactory,
     NFTExtension,
     NFTCollectionFactory,
     ERC20Extension,
@@ -64,6 +66,9 @@ const deployDao = async (options) => {
 
   const identityBank = await deployFunction(BankExtension);
   const bankFactory = await deployFunction(BankFactory, [identityBank.address]);
+
+  const identityERC1271 = await deployFunction(ERC1271Extension);
+  const erc1271Factory = await deployFunction(ERC1271ExtensionFactory, [identityERC1271.address]);
 
   const identityNft = await deployFunction(NFTExtension);
   const nftFactory = await deployFunction(NFTCollectionFactory, [
@@ -96,6 +101,13 @@ const deployDao = async (options) => {
     options.maxExternalTokens
   );
 
+  const erc1271Extension = await createERC1271Extension(
+    dao,
+    owner,
+    erc1271Factory,
+    ERC1271Extension,
+  );
+
   const nftExtension = await createNFTExtension(
     dao,
     owner,
@@ -122,6 +134,7 @@ const deployDao = async (options) => {
 
   const extensions = {
     bank: bankExtension,
+    erc1271: erc1271Extension,
     nft: nftExtension,
     erc20Ext: erc20TokenExtension,
     executorExt: executorExtension,
@@ -204,6 +217,7 @@ const deployDao = async (options) => {
     factories: {
       daoFactory,
       bankFactory,
+      erc1271Factory,
       nftFactory,
       erc20TokenExtFactory,
       executorExtensionFactory,
@@ -692,6 +706,28 @@ const createBankExtension = async (
     from: owner,
   });
   return bankExtension;
+};
+
+const createERC1271Extension = async (
+  dao,
+  owner,
+  erc1271Factory,
+  ERC1271Extension
+) => {
+  await erc1271Factory.create();
+  let pastEvent;
+  while (pastEvent === undefined) {
+    let pastEvents = await erc1271Factory.getPastEvents();
+    pastEvent = pastEvents[0];
+  }
+  const { erc1271Address } = pastEvent.returnValues;
+  const erc1271Extension = await ERC1271Extension.at(erc1271Address);
+
+  // Adds the new extension to the DAO
+  await dao.addExtension(sha3("erc1271"), erc1271Extension.address, owner, {
+    from: owner,
+  });
+  return erc1271Extension;
 };
 
 const createNFTExtension = async (dao, owner, nftFactory, NFTExtension) => {

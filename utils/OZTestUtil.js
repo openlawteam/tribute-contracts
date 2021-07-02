@@ -45,6 +45,7 @@ const {
   deployDao,
   entryDao,
   entryBank,
+  entryErc1271,
   entryExecutor,
   entry,
 } = require("./DeploymentUtil");
@@ -290,6 +291,7 @@ module.exports = {
   deployDaoWithOffchainVoting,
   entry,
   entryBank,
+  entryErc1271,
   entryDao,
   entryExecutor,
   takeChainSnapshot,
