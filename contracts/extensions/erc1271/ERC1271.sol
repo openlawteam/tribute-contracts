@@ -39,13 +39,7 @@ SOFTWARE.
  */
 
 /**
- * @dev Proxy contract which executes delegated calls to another contract using the EVM
- * instruction `delegatecall`, the call is triggered via fallback function.
- * The call is executed in the target contract identified by its address via `implementation` argument.
- * The success and return data of the delegated call are be returned back to the caller of the proxy.
- * Only contracts with the ACL Flag: EXECUTOR are allowed to use the proxy delegated call function.
- * This contract was based on the OpenZeppelin Proxy contract:
- * https://github.com/OpenZeppelin/openzeppelin-contracts/blob/master/contracts/proxy/Proxy.sol
+ * @dev Signs arbitrary messages and exposes ERC1271 interface
  */
 contract ERC1271Extension is DaoConstants, AdapterGuard, IExtension, IERC1271 {
     using Address for address payable;

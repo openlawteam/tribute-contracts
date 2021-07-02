@@ -45,8 +45,8 @@ contract ERC1271ExtensionFactory is CloneFactory, DaoConstants {
      * @notice Create and initialize a new Executor Extension
      */
     function create() external {
-        ERC1271Extension exec =
+        ERC1271Extension erc1271 =
             ERC1271Extension(_createClone(identityAddress));
-        emit ERC1271Created(address(exec));
+        emit ERC1271Created(address(erc1271));
     }
 }
