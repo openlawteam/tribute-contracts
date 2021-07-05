@@ -1,14 +1,6 @@
 const contracts = require("./contracts.config");
 
-const disabled = [
-  "OLToken",
-  "TestToken1",
-  "TestToken2",
-  "TestFairShareCalc",
-  "PixelNFT",
-  "ProxToken",
-  "ERC20Minter",
-];
+const disabled = [];
 
 const testContracts = contracts.map((c) => {
   if (disabled.find((e) => e === c.name)) {
