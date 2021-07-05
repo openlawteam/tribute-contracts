@@ -32,4 +32,3 @@ title: Moloch
 |         **Lower cost offchain voting** |        :x:         |        :x:         | :heavy_check_mark: |
 |                   **Whitelist Tokens** |        :x:         | :heavy_check_mark: | :heavy_check_mark: |
 |                           **Withdraw** |        :x:         | :heavy_check_mark: | :heavy_check_mark: |
-
