@@ -1,0 +1,31 @@
+---
+id: meta
+title: _Meta_
+---
+
+The type for the top-level \_meta field
+
+```graphql
+type _Meta_ {
+  block: _Block_!
+  deployment: String!
+  hasIndexingErrors: Boolean!
+}
+```
+
+### Fields
+
+#### `block` ([`_Block_!`]
+
+Information about a specific subgraph block. The hash of the block
+will be null if the \_meta field has a block constraint that asks for
+a block number. It will be filled if the \_meta field has no block constraint
+and therefore asks for the latest block
+
+#### `deployment` 
+
+The deployment ID
+
+#### `hasIndexingErrors` 
+
+If `true`, the subgraph encountered indexing errors at some past block

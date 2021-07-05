@@ -1,0 +1,26 @@
+---
+id: extension
+title: extension
+---
+
+No description
+
+```graphql
+extension(
+  id: ID!
+  block: Block_height
+): Extension
+
+```
+
+### Arguments
+
+#### `id` 
+
+#### `block` ([`Block_height`]
+
+The block at which the query should be executed. Can either be an `{ number: Int }` containing the block number or a `{ hash: Bytes }` value containing a block hash. Defaults to the latest block when omitted.
+
+### Type
+
+#### [`Extension`]

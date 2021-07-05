@@ -1,0 +1,1129 @@
+---
+id: proposal-filter
+title: Proposal_filter
+---
+
+No description
+
+```graphql
+type Proposal_filter {
+  id: ID
+  id_not: ID
+  id_gt: ID
+  id_lt: ID
+  id_gte: ID
+  id_lte: ID
+  id_in: [ID!]
+  id_not_in: [ID!]
+  proposalId: Bytes
+  proposalId_not: Bytes
+  proposalId_in: [Bytes!]
+  proposalId_not_in: [Bytes!]
+  proposalId_contains: Bytes
+  proposalId_not_contains: Bytes
+  flags: BigInt
+  flags_not: BigInt
+  flags_gt: BigInt
+  flags_lt: BigInt
+  flags_gte: BigInt
+  flags_lte: BigInt
+  flags_in: [BigInt!]
+  flags_not_in: [BigInt!]
+  submittedBy: Bytes
+  submittedBy_not: Bytes
+  submittedBy_in: [Bytes!]
+  submittedBy_not_in: [Bytes!]
+  submittedBy_contains: Bytes
+  submittedBy_not_contains: Bytes
+  sponsored: Boolean
+  sponsored_not: Boolean
+  sponsored_in: [Boolean!]
+  sponsored_not_in: [Boolean!]
+  sponsoredAt: String
+  sponsoredAt_not: String
+  sponsoredAt_gt: String
+  sponsoredAt_lt: String
+  sponsoredAt_gte: String
+  sponsoredAt_lte: String
+  sponsoredAt_in: [String!]
+  sponsoredAt_not_in: [String!]
+  sponsoredAt_contains: String
+  sponsoredAt_not_contains: String
+  sponsoredAt_starts_with: String
+  sponsoredAt_not_starts_with: String
+  sponsoredAt_ends_with: String
+  sponsoredAt_not_ends_with: String
+  sponsoredBy: Bytes
+  sponsoredBy_not: Bytes
+  sponsoredBy_in: [Bytes!]
+  sponsoredBy_not_in: [Bytes!]
+  sponsoredBy_contains: Bytes
+  sponsoredBy_not_contains: Bytes
+  processed: Boolean
+  processed_not: Boolean
+  processed_in: [Boolean!]
+  processed_not_in: [Boolean!]
+  processedAt: String
+  processedAt_not: String
+  processedAt_gt: String
+  processedAt_lt: String
+  processedAt_gte: String
+  processedAt_lte: String
+  processedAt_in: [String!]
+  processedAt_not_in: [String!]
+  processedAt_contains: String
+  processedAt_not_contains: String
+  processedAt_starts_with: String
+  processedAt_not_starts_with: String
+  processedAt_ends_with: String
+  processedAt_not_ends_with: String
+  processedBy: Bytes
+  processedBy_not: Bytes
+  processedBy_in: [Bytes!]
+  processedBy_not_in: [Bytes!]
+  processedBy_contains: Bytes
+  processedBy_not_contains: Bytes
+  member: String
+  member_not: String
+  member_gt: String
+  member_lt: String
+  member_gte: String
+  member_lte: String
+  member_in: [String!]
+  member_not_in: [String!]
+  member_contains: String
+  member_not_contains: String
+  member_starts_with: String
+  member_not_starts_with: String
+  member_ends_with: String
+  member_not_ends_with: String
+  tributeDao: String
+  tributeDao_not: String
+  tributeDao_gt: String
+  tributeDao_lt: String
+  tributeDao_gte: String
+  tributeDao_lte: String
+  tributeDao_in: [String!]
+  tributeDao_not_in: [String!]
+  tributeDao_contains: String
+  tributeDao_not_contains: String
+  tributeDao_starts_with: String
+  tributeDao_not_starts_with: String
+  tributeDao_ends_with: String
+  tributeDao_not_ends_with: String
+  adapterId: Bytes
+  adapterId_not: Bytes
+  adapterId_in: [Bytes!]
+  adapterId_not_in: [Bytes!]
+  adapterId_contains: Bytes
+  adapterId_not_contains: Bytes
+  adapterAddress: Bytes
+  adapterAddress_not: Bytes
+  adapterAddress_in: [Bytes!]
+  adapterAddress_not_in: [Bytes!]
+  adapterAddress_contains: Bytes
+  adapterAddress_not_contains: Bytes
+  votingAdapter: Bytes
+  votingAdapter_not: Bytes
+  votingAdapter_in: [Bytes!]
+  votingAdapter_not_in: [Bytes!]
+  votingAdapter_contains: Bytes
+  votingAdapter_not_contains: Bytes
+  unitsToMint: Bytes
+  unitsToMint_not: Bytes
+  unitsToMint_in: [Bytes!]
+  unitsToMint_not_in: [Bytes!]
+  unitsToMint_contains: Bytes
+  unitsToMint_not_contains: Bytes
+  amount: BigInt
+  amount_not: BigInt
+  amount_gt: BigInt
+  amount_lt: BigInt
+  amount_gte: BigInt
+  amount_lte: BigInt
+  amount_in: [BigInt!]
+  amount_not_in: [BigInt!]
+  unitsRequested: BigInt
+  unitsRequested_not: BigInt
+  unitsRequested_gt: BigInt
+  unitsRequested_lt: BigInt
+  unitsRequested_gte: BigInt
+  unitsRequested_lte: BigInt
+  unitsRequested_in: [BigInt!]
+  unitsRequested_not_in: [BigInt!]
+  token: Bytes
+  token_not: Bytes
+  token_in: [Bytes!]
+  token_not_in: [Bytes!]
+  token_contains: Bytes
+  token_not_contains: Bytes
+  applicant: Bytes
+  applicant_not: Bytes
+  applicant_in: [Bytes!]
+  applicant_not_in: [Bytes!]
+  applicant_contains: Bytes
+  applicant_not_contains: Bytes
+  unitHolderAddr: Bytes
+  unitHolderAddr_not: Bytes
+  unitHolderAddr_in: [Bytes!]
+  unitHolderAddr_not_in: [Bytes!]
+  unitHolderAddr_contains: Bytes
+  unitHolderAddr_not_contains: Bytes
+  status: String
+  status_not: String
+  status_gt: String
+  status_lt: String
+  status_gte: String
+  status_lte: String
+  status_in: [String!]
+  status_not_in: [String!]
+  status_contains: String
+  status_not_contains: String
+  status_starts_with: String
+  status_not_starts_with: String
+  status_ends_with: String
+  status_not_ends_with: String
+  currentIndex: BigInt
+  currentIndex_not: BigInt
+  currentIndex_gt: BigInt
+  currentIndex_lt: BigInt
+  currentIndex_gte: BigInt
+  currentIndex_lte: BigInt
+  currentIndex_in: [BigInt!]
+  currentIndex_not_in: [BigInt!]
+  blockNumber: BigInt
+  blockNumber_not: BigInt
+  blockNumber_gt: BigInt
+  blockNumber_lt: BigInt
+  blockNumber_gte: BigInt
+  blockNumber_lte: BigInt
+  blockNumber_in: [BigInt!]
+  blockNumber_not_in: [BigInt!]
+  tokenToMint: Bytes
+  tokenToMint_not: Bytes
+  tokenToMint_in: [Bytes!]
+  tokenToMint_not_in: [Bytes!]
+  tokenToMint_contains: Bytes
+  tokenToMint_not_contains: Bytes
+  requestAmount: BigInt
+  requestAmount_not: BigInt
+  requestAmount_gt: BigInt
+  requestAmount_lt: BigInt
+  requestAmount_gte: BigInt
+  requestAmount_lte: BigInt
+  requestAmount_in: [BigInt!]
+  requestAmount_not_in: [BigInt!]
+  tributeAmount: BigInt
+  tributeAmount_not: BigInt
+  tributeAmount_gt: BigInt
+  tributeAmount_lt: BigInt
+  tributeAmount_gte: BigInt
+  tributeAmount_lte: BigInt
+  tributeAmount_in: [BigInt!]
+  tributeAmount_not_in: [BigInt!]
+  tributeTokenOwner: Bytes
+  tributeTokenOwner_not: Bytes
+  tributeTokenOwner_in: [Bytes!]
+  tributeTokenOwner_not_in: [Bytes!]
+  tributeTokenOwner_contains: Bytes
+  tributeTokenOwner_not_contains: Bytes
+  nftAddr: Bytes
+  nftAddr_not: Bytes
+  nftAddr_in: [Bytes!]
+  nftAddr_not_in: [Bytes!]
+  nftAddr_contains: Bytes
+  nftAddr_not_contains: Bytes
+  nftTokenId: BigInt
+  nftTokenId_not: BigInt
+  nftTokenId_gt: BigInt
+  nftTokenId_lt: BigInt
+  nftTokenId_gte: BigInt
+  nftTokenId_lte: BigInt
+  nftTokenId_in: [BigInt!]
+  nftTokenId_not_in: [BigInt!]
+  memberToKick: Bytes
+  memberToKick_not: Bytes
+  memberToKick_in: [Bytes!]
+  memberToKick_not_in: [Bytes!]
+  memberToKick_contains: Bytes
+  memberToKick_not_contains: Bytes
+  details: Bytes
+  details_not: Bytes
+  details_in: [Bytes!]
+  details_not_in: [Bytes!]
+  details_contains: Bytes
+  details_not_contains: Bytes
+  keys: [Bytes!]
+  keys_not: [Bytes!]
+  keys_contains: [Bytes!]
+  keys_not_contains: [Bytes!]
+  values: [BigInt!]
+  values_not: [BigInt!]
+  values_contains: [BigInt!]
+  values_not_contains: [BigInt!]
+  snapshot: BigInt
+  snapshot_not: BigInt
+  snapshot_gt: BigInt
+  snapshot_lt: BigInt
+  snapshot_gte: BigInt
+  snapshot_lte: BigInt
+  snapshot_in: [BigInt!]
+  snapshot_not_in: [BigInt!]
+  proposalHash: Bytes
+  proposalHash_not: Bytes
+  proposalHash_in: [Bytes!]
+  proposalHash_not_in: [Bytes!]
+  proposalHash_contains: Bytes
+  proposalHash_not_contains: Bytes
+  reporter: Bytes
+  reporter_not: Bytes
+  reporter_in: [Bytes!]
+  reporter_not_in: [Bytes!]
+  reporter_contains: Bytes
+  reporter_not_contains: Bytes
+  resultRoot: Bytes
+  resultRoot_not: Bytes
+  resultRoot_in: [Bytes!]
+  resultRoot_not_in: [Bytes!]
+  resultRoot_contains: Bytes
+  resultRoot_not_contains: Bytes
+  nbNo: BigInt
+  nbNo_not: BigInt
+  nbNo_gt: BigInt
+  nbNo_lt: BigInt
+  nbNo_gte: BigInt
+  nbNo_lte: BigInt
+  nbNo_in: [BigInt!]
+  nbNo_not_in: [BigInt!]
+  nbYes: BigInt
+  nbYes_not: BigInt
+  nbYes_gt: BigInt
+  nbYes_lt: BigInt
+  nbYes_gte: BigInt
+  nbYes_lte: BigInt
+  nbYes_in: [BigInt!]
+  nbYes_not_in: [BigInt!]
+  index: BigInt
+  index_not: BigInt
+  index_gt: BigInt
+  index_lt: BigInt
+  index_gte: BigInt
+  index_lte: BigInt
+  index_in: [BigInt!]
+  index_not_in: [BigInt!]
+  startingTime: BigInt
+  startingTime_not: BigInt
+  startingTime_gt: BigInt
+  startingTime_lt: BigInt
+  startingTime_gte: BigInt
+  startingTime_lte: BigInt
+  startingTime_in: [BigInt!]
+  startingTime_not_in: [BigInt!]
+  gracePeriodStartingTime: BigInt
+  gracePeriodStartingTime_not: BigInt
+  gracePeriodStartingTime_gt: BigInt
+  gracePeriodStartingTime_lt: BigInt
+  gracePeriodStartingTime_gte: BigInt
+  gracePeriodStartingTime_lte: BigInt
+  gracePeriodStartingTime_in: [BigInt!]
+  gracePeriodStartingTime_not_in: [BigInt!]
+  isChallenged: Boolean
+  isChallenged_not: Boolean
+  isChallenged_in: [Boolean!]
+  isChallenged_not_in: [Boolean!]
+  forceFailed: Boolean
+  forceFailed_not: Boolean
+  forceFailed_in: [Boolean!]
+  forceFailed_not_in: [Boolean!]
+  fallbackVotesCount: BigInt
+  fallbackVotesCount_not: BigInt
+  fallbackVotesCount_gt: BigInt
+  fallbackVotesCount_lt: BigInt
+  fallbackVotesCount_gte: BigInt
+  fallbackVotesCount_lte: BigInt
+  fallbackVotesCount_in: [BigInt!]
+  fallbackVotesCount_not_in: [BigInt!]
+  votes: BigInt
+  votes_not: BigInt
+  votes_gt: BigInt
+  votes_lt: BigInt
+  votes_gte: BigInt
+  votes_lte: BigInt
+  votes_in: [BigInt!]
+  votes_not_in: [BigInt!]
+  votingState: String
+  votingState_not: String
+  votingState_gt: String
+  votingState_lt: String
+  votingState_gte: String
+  votingState_lte: String
+  votingState_in: [String!]
+  votingState_not_in: [String!]
+  votingState_contains: String
+  votingState_not_contains: String
+  votingState_starts_with: String
+  votingState_not_starts_with: String
+  votingState_ends_with: String
+  votingState_not_ends_with: String
+  votingResult: String
+  votingResult_not: String
+  votingResult_gt: String
+  votingResult_lt: String
+  votingResult_gte: String
+  votingResult_lte: String
+  votingResult_in: [String!]
+  votingResult_not_in: [String!]
+  votingResult_contains: String
+  votingResult_not_contains: String
+  votingResult_starts_with: String
+  votingResult_not_starts_with: String
+  votingResult_ends_with: String
+  votingResult_not_ends_with: String
+}
+```
+
+### Fields
+
+#### `id` 
+
+#### `id_not` 
+
+#### `id_gt` 
+
+#### `id_lt` 
+
+#### `id_gte` 
+
+#### `id_lte` 
+
+#### `id_in` 
+
+#### `id_not_in` 
+
+#### `proposalId` 
+
+#### `proposalId_not` 
+
+#### `proposalId_in` 
+
+#### `proposalId_not_in` 
+
+#### `proposalId_contains` 
+
+#### `proposalId_not_contains` 
+
+#### `flags` 
+
+#### `flags_not` 
+
+#### `flags_gt` 
+
+#### `flags_lt` 
+
+#### `flags_gte` 
+
+#### `flags_lte` 
+
+#### `flags_in` 
+
+#### `flags_not_in` 
+
+#### `submittedBy` 
+
+#### `submittedBy_not` 
+
+#### `submittedBy_in` 
+
+#### `submittedBy_not_in` 
+
+#### `submittedBy_contains` 
+
+#### `submittedBy_not_contains` 
+
+#### `sponsored` 
+
+#### `sponsored_not` 
+
+#### `sponsored_in` 
+
+#### `sponsored_not_in` 
+
+#### `sponsoredAt` 
+
+#### `sponsoredAt_not` 
+
+#### `sponsoredAt_gt` 
+
+#### `sponsoredAt_lt` 
+
+#### `sponsoredAt_gte` 
+
+#### `sponsoredAt_lte` 
+
+#### `sponsoredAt_in` 
+
+#### `sponsoredAt_not_in` 
+
+#### `sponsoredAt_contains` 
+
+#### `sponsoredAt_not_contains` 
+
+#### `sponsoredAt_starts_with` 
+
+#### `sponsoredAt_not_starts_with` 
+
+#### `sponsoredAt_ends_with` 
+
+#### `sponsoredAt_not_ends_with` 
+
+#### `sponsoredBy` 
+
+#### `sponsoredBy_not` 
+
+#### `sponsoredBy_in` 
+
+#### `sponsoredBy_not_in` 
+
+#### `sponsoredBy_contains` 
+
+#### `sponsoredBy_not_contains` 
+
+#### `processed` 
+
+#### `processed_not` 
+
+#### `processed_in` 
+
+#### `processed_not_in` 
+
+#### `processedAt` 
+
+#### `processedAt_not` 
+
+#### `processedAt_gt` 
+
+#### `processedAt_lt` 
+
+#### `processedAt_gte` 
+
+#### `processedAt_lte` 
+
+#### `processedAt_in` 
+
+#### `processedAt_not_in` 
+
+#### `processedAt_contains` 
+
+#### `processedAt_not_contains` 
+
+#### `processedAt_starts_with` 
+
+#### `processedAt_not_starts_with` 
+
+#### `processedAt_ends_with` 
+
+#### `processedAt_not_ends_with` 
+
+#### `processedBy` 
+
+#### `processedBy_not` 
+
+#### `processedBy_in` 
+
+#### `processedBy_not_in` 
+
+#### `processedBy_contains` 
+
+#### `processedBy_not_contains` 
+
+#### `member` 
+
+#### `member_not` 
+
+#### `member_gt` 
+
+#### `member_lt` 
+
+#### `member_gte` 
+
+#### `member_lte` 
+
+#### `member_in` 
+
+#### `member_not_in` 
+
+#### `member_contains` 
+
+#### `member_not_contains` 
+
+#### `member_starts_with` 
+
+#### `member_not_starts_with` 
+
+#### `member_ends_with` 
+
+#### `member_not_ends_with` 
+
+#### `tributeDao` 
+
+#### `tributeDao_not` 
+
+#### `tributeDao_gt` 
+
+#### `tributeDao_lt` 
+
+#### `tributeDao_gte` 
+
+#### `tributeDao_lte` 
+
+#### `tributeDao_in` 
+
+#### `tributeDao_not_in` 
+
+#### `tributeDao_contains` 
+
+#### `tributeDao_not_contains` 
+
+#### `tributeDao_starts_with` 
+
+#### `tributeDao_not_starts_with` 
+
+#### `tributeDao_ends_with` 
+
+#### `tributeDao_not_ends_with` 
+
+#### `adapterId` 
+
+#### `adapterId_not` 
+
+#### `adapterId_in` 
+
+#### `adapterId_not_in` 
+
+#### `adapterId_contains` 
+
+#### `adapterId_not_contains` 
+
+#### `adapterAddress` 
+
+#### `adapterAddress_not` 
+
+#### `adapterAddress_in` 
+
+#### `adapterAddress_not_in` 
+
+#### `adapterAddress_contains` 
+
+#### `adapterAddress_not_contains` 
+
+#### `votingAdapter` 
+
+#### `votingAdapter_not` 
+
+#### `votingAdapter_in` 
+
+#### `votingAdapter_not_in` 
+
+#### `votingAdapter_contains` 
+
+#### `votingAdapter_not_contains` 
+
+#### `unitsToMint` 
+
+#### `unitsToMint_not` 
+
+#### `unitsToMint_in` 
+
+#### `unitsToMint_not_in` 
+
+#### `unitsToMint_contains` 
+
+#### `unitsToMint_not_contains` 
+
+#### `amount` 
+
+#### `amount_not` 
+
+#### `amount_gt` 
+
+#### `amount_lt` 
+
+#### `amount_gte` 
+
+#### `amount_lte` 
+
+#### `amount_in` 
+
+#### `amount_not_in` 
+
+#### `unitsRequested` 
+
+#### `unitsRequested_not` 
+
+#### `unitsRequested_gt` 
+
+#### `unitsRequested_lt` 
+
+#### `unitsRequested_gte` 
+
+#### `unitsRequested_lte` 
+
+#### `unitsRequested_in` 
+
+#### `unitsRequested_not_in` 
+
+#### `token` 
+
+#### `token_not` 
+
+#### `token_in` 
+
+#### `token_not_in` 
+
+#### `token_contains` 
+
+#### `token_not_contains` 
+
+#### `applicant` 
+
+#### `applicant_not` 
+
+#### `applicant_in` 
+
+#### `applicant_not_in` 
+
+#### `applicant_contains` 
+
+#### `applicant_not_contains` 
+
+#### `unitHolderAddr` 
+
+#### `unitHolderAddr_not` 
+
+#### `unitHolderAddr_in` 
+
+#### `unitHolderAddr_not_in` 
+
+#### `unitHolderAddr_contains` 
+
+#### `unitHolderAddr_not_contains` 
+
+#### `status` 
+
+#### `status_not` 
+
+#### `status_gt` 
+
+#### `status_lt` 
+
+#### `status_gte` 
+
+#### `status_lte` 
+
+#### `status_in` 
+
+#### `status_not_in` 
+
+#### `status_contains` 
+
+#### `status_not_contains` 
+
+#### `status_starts_with` 
+
+#### `status_not_starts_with` 
+
+#### `status_ends_with` 
+
+#### `status_not_ends_with` 
+
+#### `currentIndex` 
+
+#### `currentIndex_not` 
+
+#### `currentIndex_gt` 
+
+#### `currentIndex_lt` 
+
+#### `currentIndex_gte` 
+
+#### `currentIndex_lte` 
+
+#### `currentIndex_in` 
+
+#### `currentIndex_not_in` 
+
+#### `blockNumber` 
+
+#### `blockNumber_not` 
+
+#### `blockNumber_gt` 
+
+#### `blockNumber_lt` 
+
+#### `blockNumber_gte` 
+
+#### `blockNumber_lte` 
+
+#### `blockNumber_in` 
+
+#### `blockNumber_not_in` 
+
+#### `tokenToMint` 
+
+#### `tokenToMint_not` 
+
+#### `tokenToMint_in` 
+
+#### `tokenToMint_not_in` 
+
+#### `tokenToMint_contains` 
+
+#### `tokenToMint_not_contains` 
+
+#### `requestAmount` 
+
+#### `requestAmount_not` 
+
+#### `requestAmount_gt` 
+
+#### `requestAmount_lt` 
+
+#### `requestAmount_gte` 
+
+#### `requestAmount_lte` 
+
+#### `requestAmount_in` 
+
+#### `requestAmount_not_in` 
+
+#### `tributeAmount` 
+
+#### `tributeAmount_not` 
+
+#### `tributeAmount_gt` 
+
+#### `tributeAmount_lt` 
+
+#### `tributeAmount_gte` 
+
+#### `tributeAmount_lte` 
+
+#### `tributeAmount_in` 
+
+#### `tributeAmount_not_in` 
+
+#### `tributeTokenOwner` 
+
+#### `tributeTokenOwner_not` 
+
+#### `tributeTokenOwner_in` 
+
+#### `tributeTokenOwner_not_in` 
+
+#### `tributeTokenOwner_contains` 
+
+#### `tributeTokenOwner_not_contains` 
+
+#### `nftAddr` 
+
+#### `nftAddr_not` 
+
+#### `nftAddr_in` 
+
+#### `nftAddr_not_in` 
+
+#### `nftAddr_contains` 
+
+#### `nftAddr_not_contains` 
+
+#### `nftTokenId` 
+
+#### `nftTokenId_not` 
+
+#### `nftTokenId_gt` 
+
+#### `nftTokenId_lt` 
+
+#### `nftTokenId_gte` 
+
+#### `nftTokenId_lte` 
+
+#### `nftTokenId_in` 
+
+#### `nftTokenId_not_in` 
+
+#### `memberToKick` 
+
+#### `memberToKick_not` 
+
+#### `memberToKick_in` 
+
+#### `memberToKick_not_in` 
+
+#### `memberToKick_contains` 
+
+#### `memberToKick_not_contains` 
+
+#### `details` 
+
+#### `details_not` 
+
+#### `details_in` 
+
+#### `details_not_in` 
+
+#### `details_contains` 
+
+#### `details_not_contains` 
+
+#### `keys` 
+
+#### `keys_not` 
+
+#### `keys_contains` 
+
+#### `keys_not_contains` 
+
+#### `values` 
+
+#### `values_not` 
+
+#### `values_contains` 
+
+#### `values_not_contains` 
+
+#### `snapshot` 
+
+#### `snapshot_not` 
+
+#### `snapshot_gt` 
+
+#### `snapshot_lt` 
+
+#### `snapshot_gte` 
+
+#### `snapshot_lte` 
+
+#### `snapshot_in` 
+
+#### `snapshot_not_in` 
+
+#### `proposalHash` 
+
+#### `proposalHash_not` 
+
+#### `proposalHash_in` 
+
+#### `proposalHash_not_in` 
+
+#### `proposalHash_contains` 
+
+#### `proposalHash_not_contains` 
+
+#### `reporter` 
+
+#### `reporter_not` 
+
+#### `reporter_in` 
+
+#### `reporter_not_in` 
+
+#### `reporter_contains` 
+
+#### `reporter_not_contains` 
+
+#### `resultRoot` 
+
+#### `resultRoot_not` 
+
+#### `resultRoot_in` 
+
+#### `resultRoot_not_in` 
+
+#### `resultRoot_contains` 
+
+#### `resultRoot_not_contains` 
+
+#### `nbNo` 
+
+#### `nbNo_not` 
+
+#### `nbNo_gt` 
+
+#### `nbNo_lt` 
+
+#### `nbNo_gte` 
+
+#### `nbNo_lte` 
+
+#### `nbNo_in` 
+
+#### `nbNo_not_in` 
+
+#### `nbYes` 
+
+#### `nbYes_not` 
+
+#### `nbYes_gt` 
+
+#### `nbYes_lt` 
+
+#### `nbYes_gte` 
+
+#### `nbYes_lte` 
+
+#### `nbYes_in` 
+
+#### `nbYes_not_in` 
+
+#### `index` 
+
+#### `index_not` 
+
+#### `index_gt` 
+
+#### `index_lt` 
+
+#### `index_gte` 
+
+#### `index_lte` 
+
+#### `index_in` 
+
+#### `index_not_in` 
+
+#### `startingTime` 
+
+#### `startingTime_not` 
+
+#### `startingTime_gt` 
+
+#### `startingTime_lt` 
+
+#### `startingTime_gte` 
+
+#### `startingTime_lte` 
+
+#### `startingTime_in` 
+
+#### `startingTime_not_in` 
+
+#### `gracePeriodStartingTime` 
+
+#### `gracePeriodStartingTime_not` 
+
+#### `gracePeriodStartingTime_gt` 
+
+#### `gracePeriodStartingTime_lt` 
+
+#### `gracePeriodStartingTime_gte` 
+
+#### `gracePeriodStartingTime_lte` 
+
+#### `gracePeriodStartingTime_in` 
+
+#### `gracePeriodStartingTime_not_in` 
+
+#### `isChallenged` 
+
+#### `isChallenged_not` 
+
+#### `isChallenged_in` 
+
+#### `isChallenged_not_in` 
+
+#### `forceFailed` 
+
+#### `forceFailed_not` 
+
+#### `forceFailed_in` 
+
+#### `forceFailed_not_in` 
+
+#### `fallbackVotesCount` 
+
+#### `fallbackVotesCount_not` 
+
+#### `fallbackVotesCount_gt` 
+
+#### `fallbackVotesCount_lt` 
+
+#### `fallbackVotesCount_gte` 
+
+#### `fallbackVotesCount_lte` 
+
+#### `fallbackVotesCount_in` 
+
+#### `fallbackVotesCount_not_in` 
+
+#### `votes` 
+
+#### `votes_not` 
+
+#### `votes_gt` 
+
+#### `votes_lt` 
+
+#### `votes_gte` 
+
+#### `votes_lte` 
+
+#### `votes_in` 
+
+#### `votes_not_in` 
+
+#### `votingState` 
+
+#### `votingState_not` 
+
+#### `votingState_gt` 
+
+#### `votingState_lt` 
+
+#### `votingState_gte` 
+
+#### `votingState_lte` 
+
+#### `votingState_in` 
+
+#### `votingState_not_in` 
+
+#### `votingState_contains` 
+
+#### `votingState_not_contains` 
+
+#### `votingState_starts_with` 
+
+#### `votingState_not_starts_with` 
+
+#### `votingState_ends_with` 
+
+#### `votingState_not_ends_with` 
+
+#### `votingResult` 
+
+#### `votingResult_not` 
+
+#### `votingResult_gt` 
+
+#### `votingResult_lt` 
+
+#### `votingResult_gte` 
+
+#### `votingResult_lte` 
+
+#### `votingResult_in` 
+
+#### `votingResult_not_in` 
+
+#### `votingResult_contains` 
+
+#### `votingResult_not_contains` 
+
+#### `votingResult_starts_with` 
+
+#### `votingResult_not_starts_with` 
+
+#### `votingResult_ends_with` 
+
+#### `votingResult_not_ends_with` 

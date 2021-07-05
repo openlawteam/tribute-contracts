@@ -1,0 +1,44 @@
+@use "./variables" as *; /* load without namespace for convenience */
+@use "./functions" as *; /* load without namespace for convenience */
+
+.socialmedia {
+  $length: 1.4rem;
+
+  display: flex;
+  align-items: center;
+  margin-right: 2rem;
+
+  a {
+    text-decoration: none;
+    transition: color 0.25s ease-in-out;
+    height: $length;
+
+    &:not(:last-child) {
+      margin-right: 1rem;
+    }
+
+    &:hover {
+      color: $color-primary-hover;
+    }
+  }
+
+  svg {
+    width: $length;
+    height: $length;
+  }
+}
+
+@media only screen and (max-width: em($bp-sm)) {
+  .socialmedia {
+    $length: 1.25rem;
+
+    a {
+      height: $length;
+    }
+
+    svg {
+      width: $length;
+      height: $length;
+    }
+  }
+}

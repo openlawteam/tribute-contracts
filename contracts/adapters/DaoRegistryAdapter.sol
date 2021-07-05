@@ -7,7 +7,6 @@ import "../core/DaoRegistry.sol";
 import "../extensions/bank/Bank.sol";
 import "../guards/MemberGuard.sol";
 import "../guards/AdapterGuard.sol";
-import "./interfaces/IConfiguration.sol";
 import "../adapters/interfaces/IVoting.sol";
 
 /**

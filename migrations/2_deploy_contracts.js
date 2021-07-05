@@ -23,11 +23,16 @@ module.exports = async (deployer, network, accounts) => {
   } else if (network === "test" || network === "coverage") {
     res = await deployTestDao(deployFunction, network, accounts);
   }
-  let { dao, extensions } = res;
+  let { dao, extensions, testContracts } = res;
   if (dao) {
     await dao.finalizeDao();
     console.log("************************");
     console.log(`DaoRegistry: ${dao.address}`);
+    console.log(
+      `Multicall: ${
+        testContracts.multicall ? testContracts.multicall.address : ""
+      }`
+    );
     console.log(`BankExtension: ${extensions.bank.address}`);
     console.log(
       `NFTExtension: ${extensions.nft ? extensions.nft.address : ""}`
@@ -88,8 +93,6 @@ async function deployRinkebyDao(deployFunction, network) {
     throw Error("Missing env var: ERC20_TOKEN_SYMBOL");
   if (!process.env.ERC20_TOKEN_DECIMALS)
     throw Error("Missing env var: ERC20_TOKEN_DECIMALS");
-  if (!process.env.COUPON_CREATOR_ADDR)
-    throw Error("Missing env var: COUPON_CREATOR_ADDR");
 
   return await deployDao({
     ...truffleImports,
@@ -108,7 +111,9 @@ async function deployRinkebyDao(deployFunction, network) {
     deployTestTokens: true,
     finalize: false,
     maxExternalTokens: 100,
-    couponCreatorAddress: process.env.COUPON_CREATOR_ADDR,
+    couponCreatorAddress: process.env.COUPON_CREATOR_ADDR
+      ? process.env.COUPON_CREATOR_ADDR
+      : process.env.DAO_OWNER_ADDR,
     daoName: process.env.DAO_NAME,
     owner: process.env.DAO_OWNER_ADDR,
     offchainAdmin: "0xedC10CFA90A135C41538325DD57FDB4c7b88faf7",
@@ -117,8 +122,6 @@ async function deployRinkebyDao(deployFunction, network) {
 
 async function deployGanacheDao(deployFunction, network, accounts) {
   if (!process.env.DAO_NAME) throw Error("Missing env var: DAO_NAME");
-  if (!process.env.COUPON_CREATOR_ADDR)
-    throw Error("Missing env var: COUPON_CREATOR_ADDR");
   if (!process.env.ERC20_TOKEN_NAME)
     throw Error("Missing env var: ERC20_TOKEN_NAME");
   if (!process.env.ERC20_TOKEN_SYMBOL)
@@ -143,7 +146,9 @@ async function deployGanacheDao(deployFunction, network, accounts) {
     deployTestTokens: true,
     finalize: false,
     maxExternalTokens: 100,
-    couponCreatorAddress: process.env.COUPON_CREATOR_ADDR,
+    couponCreatorAddress: process.env.COUPON_CREATOR_ADDR
+      ? process.env.COUPON_CREATOR_ADDR
+      : accounts[0],
     daoName: process.env.DAO_NAME,
     owner: accounts[0],
     offchainAdmin: "0xedC10CFA90A135C41538325DD57FDB4c7b88faf7",
