@@ -1,0 +1,26 @@
+---
+id: adapter
+title: adapter
+---
+
+No description
+
+```graphql
+adapter(
+  id: ID!
+  block: Block_height
+): Adapter
+
+```
+
+### Arguments
+
+#### `id` 
+
+#### `block` ([`Block_height`]
+
+The block at which the query should be executed. Can either be an `{ number: Int }` containing the block number or a `{ hash: Bytes }` value containing a block hash. Defaults to the latest block when omitted.
+
+### Type
+
+#### [`Adapter`]

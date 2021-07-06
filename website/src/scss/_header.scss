@@ -1,0 +1,24 @@
+@use "./variables" as *; /* load without namespace for convenience */
+
+.header {
+  z-index: 9;
+  position: relative;
+  align-items: center;
+  display: flex;
+  padding: 1.5rem 0;
+
+  a {
+    text-decoration: none;
+  }
+}
+
+.header__nav-container {
+  flex: 70%;
+  padding: 0 2rem;
+  position: relative;
+  z-index: 2;
+
+  @media only screen and (max-width: 1179px) {
+    padding-right: 0;
+  }
+}

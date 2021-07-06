@@ -1,0 +1,63 @@
+@use "sass:math";
+
+/**
+ * Translate pixel values to em's
+ * 
+ * $pixels (int): e.g. 1, 1px;
+ * $context: root value; default is 16 for all modern browsers
+ */
+@function em($pixels, $context: 16) {
+  @if (unitless($pixels)) {
+    $pixels: $pixels * 1px;
+  }
+
+  @if (unitless($context)) {
+    $context: $context * 1px;
+  }
+
+  @return math.div($pixels, $context) * 1em;
+}
+
+/**
+ * Translate pixel values to relative em's (rem)
+ * 
+ * $pixels (int): e.g. 1, 1px;
+ * $context: root value; default is 16 for all modern browsers
+ */
+@function rem($pixels, $context: 16) {
+  @if (unitless($pixels)) {
+    $pixels: $pixels * 1px;
+  }
+
+  @if (unitless($context)) {
+    $context: $context * 1px;
+  }
+
+  @return math.div($pixels, $context) * 1rem;
+}
+
+@function strip-unit($value) {
+  @return math.div($value, $value * 0 + 1);
+}
+
+/**
+ * Replace `$search` with `$replace` in `$string`
+ * 
+ * $string: initial string
+ * $search: Substring to replace
+ * $replace: new value
+ */
+@function str-replace($string, $search, $replace: "") {
+  $index: str-index($string, $search);
+
+  @if $index {
+    @return str-slice($string, 1, $index - 1) + $replace +
+      str-replace(
+        str-slice($string, $index + str-length($search)),
+        $search,
+        $replace
+      );
+  }
+
+  @return $string;
+}

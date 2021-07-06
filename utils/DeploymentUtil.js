@@ -509,9 +509,6 @@ const configureDao = async ({
         NEW_MEMBER: true,
       }),
       entryDao("coupon-onboarding", couponOnboarding, {
-        SUBMIT_PROPOSAL: false,
-        ADD_TO_BALANCE: true,
-        UPDATE_DELEGATE_KEY: false,
         NEW_MEMBER: true,
       }),
       entryDao("daoRegistry", daoRegistryAdapter, {
@@ -793,9 +790,9 @@ const entryBank = (contract, flags) => {
     flags.SUB_FROM_BALANCE,
     flags.INTERNAL_TRANSFER,
     flags.WITHDRAW,
-    flags.EXECUTE,
     flags.REGISTER_NEW_TOKEN,
     flags.REGISTER_NEW_INTERNAL_TOKEN,
+    flags.UPDATE_TOKEN,
   ];
 
   const acl = entry(values);

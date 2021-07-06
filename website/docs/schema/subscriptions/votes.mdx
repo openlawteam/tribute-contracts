@@ -1,0 +1,38 @@
+---
+id: votes
+title: votes
+---
+
+No description
+
+```graphql
+votes(
+  skip: Int = 0
+  first: Int = 100
+  orderBy: Vote_orderBy
+  orderDirection: OrderDirection
+  where: Vote_filter
+  block: Block_height
+): [Vote!]!
+
+```
+
+### Arguments
+
+#### `skip` 
+
+#### `first` 
+
+#### `orderBy` ([`Vote_orderBy`]
+
+#### `orderDirection` ([`OrderDirection`]
+
+#### `where` ([`Vote_filter`]
+
+#### `block` ([`Block_height`]
+
+The block at which the query should be executed. Can either be an `{ number: Int }` containing the block number or a `{ hash: Bytes }` value containing a block hash. Defaults to the latest block when omitted.
+
+### Type
+
+#### [`Vote`]

@@ -77,14 +77,15 @@ contract OnboardingContract is
     mapping(address => mapping(address => mapping(address => uint88)))
         public units;
 
-    function configKey(address tokenAddrToMint, bytes32 key)
-        internal
-        pure
-        returns (bytes32)
-    {
-        return keccak256(abi.encode(tokenAddrToMint, key));
-    }
-
+    /**
+     * @notice Updates the DAO registry with the new configurations if valid.
+     * @notice Updated the Bank extension with the new potential tokens if valid.
+     * @param unitsToMint Which token needs to be minted if the proposal passes.
+     * @param chunkSize How many tokens need to be minted per chunk bought.
+     * @param unitsPerChunk How many units (tokens from tokenAddr) are being minted per chunk.
+     * @param maximumChunks How many chunks can someone buy max. This helps force decentralization of token holders.
+     * @param tokenAddr In which currency (tokenAddr) should the onboarding take place.
+     */
     function configureDao(
         DaoRegistry dao,
         address unitsToMint,
@@ -111,16 +112,16 @@ contract OnboardingContract is
         );
 
         dao.setConfiguration(
-            configKey(unitsToMint, MaximumChunks),
+            _configKey(unitsToMint, MaximumChunks),
             maximumChunks
         );
-        dao.setConfiguration(configKey(unitsToMint, ChunkSize), chunkSize);
+        dao.setConfiguration(_configKey(unitsToMint, ChunkSize), chunkSize);
         dao.setConfiguration(
-            configKey(unitsToMint, UnitsPerChunk),
+            _configKey(unitsToMint, UnitsPerChunk),
             unitsPerChunk
         );
         dao.setAddressConfiguration(
-            configKey(unitsToMint, TokenAddr),
+            _configKey(unitsToMint, TokenAddr),
             tokenAddr
         );
 
@@ -129,6 +130,14 @@ contract OnboardingContract is
         bank.registerPotentialNewToken(tokenAddr);
     }
 
+    /**
+     * @notice Submits and sponsors the proposal. Only members can call this function.
+     * @param proposalId The proposal id to submit to the DAO Registry.
+     * @param applicant The applicant address.
+     * @param tokenToMint The token to be minted if the proposal pass.
+     * @param tokenAmount The amount of token to mint.
+     * @param data Additional proposal information.
+     */
     function submitProposal(
         DaoRegistry dao,
         bytes32 proposalId,
@@ -149,7 +158,7 @@ contract OnboardingContract is
         );
 
         address tokenAddr =
-            dao.getAddressConfiguration(configKey(tokenToMint, TokenAddr));
+            dao.getAddressConfiguration(_configKey(tokenToMint, TokenAddr));
 
         _submitMembershipProposal(
             dao,
@@ -163,23 +172,10 @@ contract OnboardingContract is
         _sponsorProposal(dao, proposalId, data);
     }
 
-    function _sponsorProposal(
-        DaoRegistry dao,
-        bytes32 proposalId,
-        bytes memory data
-    ) internal {
-        IVoting votingContract = IVoting(dao.getAdapterAddress(VOTING));
-        address sponsoredBy =
-            votingContract.getSenderAddress(
-                dao,
-                address(this),
-                data,
-                msg.sender
-            );
-        dao.sponsorProposal(proposalId, sponsoredBy, address(votingContract));
-        votingContract.startNewVotingForProposal(dao, proposalId, data);
-    }
-
+    /**
+     * @notice Once the vote on a proposal is finished, it is time to process it. Anybody can call this function.
+     * @param proposalId The proposal id to be processed. It needs to exist in the DAO Registry.
+     */
     function processProposal(DaoRegistry dao, bytes32 proposalId)
         external
         payable
@@ -247,6 +243,31 @@ contract OnboardingContract is
         }
     }
 
+    /**
+     * @notice Starts a vote on the proposal to onboard a new member.
+     * @param proposalId The proposal id to be processed. It needs to exist in the DAO Registry.
+     */
+    function _sponsorProposal(
+        DaoRegistry dao,
+        bytes32 proposalId,
+        bytes memory data
+    ) internal {
+        IVoting votingContract = IVoting(dao.getAdapterAddress(VOTING));
+        address sponsoredBy =
+            votingContract.getSenderAddress(
+                dao,
+                address(this),
+                data,
+                msg.sender
+            );
+        dao.sponsorProposal(proposalId, sponsoredBy, address(votingContract));
+        votingContract.startNewVotingForProposal(dao, proposalId, data);
+    }
+
+    /**
+     * @notice Marks the proposalId as submitted in the DAO and saves the information in the internal adapter state.
+     * @notice Updates the total of units issued in the DAO, and checks if it is within the limits.
+     */
     function _submitMembershipProposal(
         DaoRegistry dao,
         bytes32 proposalId,
@@ -257,7 +278,7 @@ contract OnboardingContract is
     ) internal returns (uint160) {
         OnboardingDetails memory details;
         details.chunkSize = uint88(
-            dao.getConfiguration(configKey(tokenToMint, ChunkSize))
+            dao.getConfiguration(_configKey(tokenToMint, ChunkSize))
         );
         require(details.chunkSize > 0, "config chunkSize missing");
 
@@ -265,7 +286,7 @@ contract OnboardingContract is
         require(details.numberOfChunks > 0, "not sufficient funds");
 
         details.unitsPerChunk = uint88(
-            dao.getConfiguration(configKey(tokenToMint, UnitsPerChunk))
+            dao.getConfiguration(_configKey(tokenToMint, UnitsPerChunk))
         );
 
         require(details.unitsPerChunk > 0, "config unitsPerChunk missing");
@@ -278,7 +299,7 @@ contract OnboardingContract is
 
         require(
             details.totalUnits / details.unitsPerChunk <
-                dao.getConfiguration(configKey(tokenToMint, MaximumChunks)),
+                dao.getConfiguration(_configKey(tokenToMint, MaximumChunks)),
             "total units for this member must be lower than the maximum"
         );
 
@@ -295,11 +316,30 @@ contract OnboardingContract is
         return details.amount;
     }
 
+    /**
+     * @notice Gets the current number of units.
+     * @param daoAddress The DAO Address that contains the units.
+     * @param token The Token Address in which the Unit were minted.
+     * @param applicant The Applicant Address which holds the units.
+     */
     function _getUnits(
         address daoAddress,
         address token,
         address applicant
     ) internal view returns (uint88) {
         return units[daoAddress][token][applicant];
+    }
+
+    /**
+     * @notice Builds the configuration key by encoding an address with a string key.
+     * @param tokenAddrToMint The address to encode.
+     * @param key The key to encode.
+     */
+    function _configKey(address tokenAddrToMint, bytes32 key)
+        internal
+        pure
+        returns (bytes32)
+    {
+        return keccak256(abi.encode(tokenAddrToMint, key));
     }
 }

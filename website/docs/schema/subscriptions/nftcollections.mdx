@@ -1,0 +1,38 @@
+---
+id: nftcollections
+title: nftcollections
+---
+
+No description
+
+```graphql
+nftcollections(
+  skip: Int = 0
+  first: Int = 100
+  orderBy: NFTCollection_orderBy
+  orderDirection: OrderDirection
+  where: NFTCollection_filter
+  block: Block_height
+): [NFTCollection!]!
+
+```
+
+### Arguments
+
+#### `skip` 
+
+#### `first` 
+
+#### `orderBy` ([`NFTCollection_orderBy`]
+
+#### `orderDirection` ([`OrderDirection`]
+
+#### `where` ([`NFTCollection_filter`]
+
+#### `block` ([`Block_height`]
+
+The block at which the query should be executed. Can either be an `{ number: Int }` containing the block number or a `{ hash: Bytes }` value containing a block hash. Defaults to the latest block when omitted.
+
+### Type
+
+#### [`NFTCollection`]

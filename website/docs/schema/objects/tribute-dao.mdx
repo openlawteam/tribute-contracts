@@ -1,0 +1,154 @@
+---
+id: tribute-dao
+title: TributeDao
+---
+
+No description
+
+```graphql
+type TributeDao {
+  id: ID!
+  daoAddress: Bytes
+  name: String
+  creator: Bytes
+  createdAt: String
+  totalUnits: String
+  bank: Bank!
+  adapters(
+    skip: Int = 0
+    first: Int = 100
+    orderBy: Adapter_orderBy
+    orderDirection: OrderDirection
+    where: Adapter_filter
+  ): [Adapter!]!
+  extensions(
+    skip: Int = 0
+    first: Int = 100
+    orderBy: Extension_orderBy
+    orderDirection: OrderDirection
+    where: Extension_filter
+  ): [Extension!]!
+  members(
+    skip: Int = 0
+    first: Int = 100
+    orderBy: Member_orderBy
+    orderDirection: OrderDirection
+    where: Member_filter
+  ): [Member]!
+  proposals(
+    skip: Int = 0
+    first: Int = 100
+    orderBy: Proposal_orderBy
+    orderDirection: OrderDirection
+    where: Proposal_filter
+  ): [Proposal]!
+  nftCollection: NFTCollection!
+  coupons(
+    skip: Int = 0
+    first: Int = 100
+    orderBy: Coupon_orderBy
+    orderDirection: OrderDirection
+    where: Coupon_filter
+  ): [Coupon]!
+}
+```
+
+### Fields
+
+#### `id` 
+
+Unique identifier and primary key of the `TributeDao` entity
+
+#### `daoAddress` 
+
+The DAO address
+
+#### `name` 
+
+The name of the DAO
+
+#### `creator` 
+
+The DAO creator address
+
+#### `createdAt` 
+
+#### `totalUnits` 
+
+#### `bank` ([`Bank!`]
+
+The bank of the DAO
+
+#### `adapters` ([`[Adapter!]!`]
+
+List of registered adapters
+
+- ##### `skip` 
+
+- ##### `first` 
+
+- ##### `orderBy` ([`Adapter_orderBy`]
+
+- ##### `orderDirection` ([`OrderDirection`]
+
+- ##### `where` ([`Adapter_filter`]
+
+#### `extensions` ([`[Extension!]!`]
+
+List of registered extensions
+
+- ##### `skip` 
+
+- ##### `first` 
+
+- ##### `orderBy` ([`Extension_orderBy`]
+
+- ##### `orderDirection` ([`OrderDirection`]
+
+- ##### `where` ([`Extension_filter`]
+
+#### `members` ([`[Member]!`]
+
+List of members in the DAO
+
+- ##### `skip` 
+
+- ##### `first` 
+
+- ##### `orderBy` ([`Member_orderBy`]
+
+- ##### `orderDirection` ([`OrderDirection`]
+
+- ##### `where` ([`Member_filter`]
+
+#### `proposals` ([`[Proposal]!`]
+
+List of proposals in the DAO
+
+- ##### `skip` 
+
+- ##### `first` 
+
+- ##### `orderBy` ([`Proposal_orderBy`]
+
+- ##### `orderDirection` ([`OrderDirection`]
+
+- ##### `where` ([`Proposal_filter`]
+
+#### `nftCollection` ([`NFTCollection!`]
+
+List of nfts in the DAO
+
+#### `coupons` ([`[Coupon]!`]
+
+List of redeemed coupons
+
+- ##### `skip` 
+
+- ##### `first` 
+
+- ##### `orderBy` ([`Coupon_orderBy`]
+
+- ##### `orderDirection` ([`OrderDirection`]
+
+- ##### `where` ([`Coupon_filter`]
