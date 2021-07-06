@@ -8,7 +8,6 @@ import "../../extensions/bank/Bank.sol";
 import "../../core/DaoConstants.sol";
 import "../../guards/MemberGuard.sol";
 import "../../guards/AdapterGuard.sol";
-import "../../utils/Signatures.sol";
 import "../interfaces/IVoting.sol";
 import "./Voting.sol";
 import "./KickBadReporterAdapter.sol";
@@ -47,7 +46,6 @@ contract OffchainVotingContract is
     DaoConstants,
     MemberGuard,
     AdapterGuard,
-    Signatures,
     Ownable
 {
     enum BadNodeError {
@@ -276,6 +274,10 @@ contract OffchainVotingContract is
             "step already requested"
         );
         require(vote.stepRequested == 0, "other step already requested");
+        require(
+            voteResult(dao, proposalId) == VotingState.GRACE_PERIOD,
+            "should be grace period"
+        );
         vote.stepRequested = index;
         vote.gracePeriodStartingTime = block.timestamp;
     }
@@ -412,7 +414,7 @@ contract OffchainVotingContract is
     4: in progress
      */
     function voteResult(DaoRegistry dao, bytes32 proposalId)
-        external
+        public
         view
         override
         returns (VotingState state)
