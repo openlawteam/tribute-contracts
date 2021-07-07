@@ -273,6 +273,12 @@ contract OffchainVotingContract is
             getFlag(currentFlag, index % 256) == false,
             "step already requested"
         );
+
+        retrievedStepsFlags[vote.resultRoot][index / 256] = setFlag(
+            currentFlag,
+            index % 256,
+            true
+        );
         require(vote.stepRequested == 0, "other step already requested");
         require(
             voteResult(dao, proposalId) == VotingState.GRACE_PERIOD,
