@@ -1,0 +1,12 @@
+@use "./variables" as *;
+
+.footer {
+  background-color: $color-background-page;
+  z-index: 9;
+  position: relative;
+  align-items: center;
+  display: flex;
+  // justify-content: flex-end;
+  justify-content: center;
+  padding: 1rem 0;
+}

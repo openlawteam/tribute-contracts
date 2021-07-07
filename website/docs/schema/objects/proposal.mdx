@@ -1,0 +1,194 @@
+---
+id: proposal
+title: Proposal
+---
+
+No description
+
+```graphql
+type Proposal {
+  id: ID!
+  proposalId: Bytes!
+  flags: BigInt!
+  submittedBy: Bytes
+  sponsored: Boolean
+  sponsoredAt: String
+  sponsoredBy: Bytes
+  processed: Boolean
+  processedAt: String
+  processedBy: Bytes
+  member: Member
+  tributeDao: TributeDao
+  adapterId: Bytes
+  adapterAddress: Bytes
+  votingAdapter: Bytes
+  unitsToMint: Bytes
+  amount: BigInt
+  unitsRequested: BigInt
+  token: Bytes
+  applicant: Bytes
+  unitHolderAddr: Bytes
+  status: String
+  currentIndex: BigInt
+  blockNumber: BigInt
+  tokenToMint: Bytes
+  requestAmount: BigInt
+  tributeAmount: BigInt
+  tributeTokenOwner: Bytes
+  nftAddr: Bytes
+  nftTokenId: BigInt
+  memberToKick: Bytes
+  details: Bytes
+  keys: [Bytes!]
+  values: [BigInt!]
+  snapshot: BigInt
+  proposalHash: Bytes
+  reporter: Bytes
+  resultRoot: Bytes
+  nbNo: BigInt
+  nbYes: BigInt
+  index: BigInt
+  startingTime: BigInt
+  gracePeriodStartingTime: BigInt
+  isChallenged: Boolean
+  forceFailed: Boolean
+  fallbackVotesCount: BigInt
+  votes: BigInt
+  votingState: String
+  votingResult: Vote
+}
+```
+
+### Fields
+
+#### `id` 
+
+Unique identifier and primary key of the `Proposal` entity
+
+#### `proposalId` 
+
+#### `flags` 
+
+#### `submittedBy` 
+
+#### `sponsored` 
+
+#### `sponsoredAt` 
+
+#### `sponsoredBy` 
+
+#### `processed` 
+
+#### `processedAt` 
+
+#### `processedBy` 
+
+#### `member` ([`Member`]
+
+#### `tributeDao` ([`TributeDao`]
+
+#### `adapterId` 
+
+Adapter ID of the proposal
+
+#### `adapterAddress` 
+
+Adapter contract address of the proposal
+
+#### `votingAdapter` 
+
+Voting adapter address
+
+#### `unitsToMint` 
+
+#### `amount` 
+
+#### `unitsRequested` 
+
+#### `token` 
+
+#### `applicant` 
+
+#### `unitHolderAddr` 
+
+The unit holder address that will receive the funds. If 0x0, the funds will be distributed to all members of the DAO
+
+#### `status` 
+
+The distribution status or the kick status
+
+#### `currentIndex` 
+
+Current iteration index to control the cached for-loop
+
+#### `blockNumber` 
+
+The block number in which the proposal/or vote results has been created
+
+#### `tokenToMint` 
+
+The address of the DAO internal token to be minted to the applicant.
+
+#### `requestAmount` 
+
+The amount requested of DAO internal tokens
+
+#### `tributeAmount` 
+
+The amount of tribute tokens.
+
+#### `tributeTokenOwner` 
+
+The owner of the ERC-20 tokens being provided as tribute.
+
+#### `nftAddr` 
+
+The address of the ERC-721 token that will be transferred to the DAO in exchange for DAO internal tokens.
+
+#### `nftTokenId` 
+
+The nft token identifier.
+
+#### `memberToKick` 
+
+The address of the member to kick out of the DAO.
+
+#### `details` 
+
+Additional details for the financing proposal
+
+#### `keys` 
+
+Additional details for the managing proposal
+
+#### `values` 
+
+#### `snapshot` 
+
+#### `proposalHash` 
+
+#### `reporter` 
+
+#### `resultRoot` 
+
+#### `nbNo` 
+
+#### `nbYes` 
+
+#### `index` 
+
+#### `startingTime` 
+
+#### `gracePeriodStartingTime` 
+
+#### `isChallenged` 
+
+#### `forceFailed` 
+
+#### `fallbackVotesCount` 
+
+#### `votes` 
+
+#### `votingState` 
+
+#### `votingResult` ([`Vote`]
