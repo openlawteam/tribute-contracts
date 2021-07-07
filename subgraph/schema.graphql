@@ -140,7 +140,8 @@ type Proposal @entity {
   # ONCHAIN VOTES: additional info
   votes: BigInt
 
-  votingState: String
+  # GENERAL
+  votingState: VotingState
   votingResult: Vote
 }
 

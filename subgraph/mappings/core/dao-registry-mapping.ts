@@ -1,4 +1,4 @@
-import { log, store } from "@graphprotocol/graph-ts";
+import { ethereum, log, store } from "@graphprotocol/graph-ts";
 
 import {
   ProcessedProposal,
@@ -17,7 +17,10 @@ import { Adapter, Extension, Proposal, Member } from "../../generated/schema";
 
 import { getProposalDetails } from "../helpers/proposal-details";
 import { loadOrCreateExtensionEntity } from "../helpers/extension-entities";
-import { loadProposalAndSaveVoteResults } from "../helpers/vote-results";
+import {
+  loadProposalAndSaveVoteResults,
+  updateVotingState,
+} from "../helpers/vote-results";
 
 export function handleSubmittedProposal(event: SubmittedProposal): void {
   let submittedBy = event.transaction.from;
@@ -73,6 +76,8 @@ export function handleSubmittedProposal(event: SubmittedProposal): void {
     daoAddress,
     proposalId
   );
+
+  updateVotingState(daoAddress, proposalId);
 }
 
 export function handleSponsoredProposal(event: SponsoredProposal): void {
@@ -94,6 +99,8 @@ export function handleSponsoredProposal(event: SponsoredProposal): void {
   proposal.votingAdapter = event.params.votingAdapter;
 
   proposal.save();
+
+  updateVotingState(event.address, event.params.proposalId);
 }
 
 export function handleProcessedProposal(event: ProcessedProposal): void {
@@ -226,9 +233,10 @@ export function handleExtensionRemoved(event: ExtensionRemoved): void {
     .concat("-extension-")
     .concat(extensionId.toHex());
 
-  log.info("=============== ExtensionRemoved event fired. extensionId {}", [
+  log.debug("=============== ExtensionRemoved event fired. extensionId {}", [
     event.params.extensionId.toHexString(),
   ]);
+
   let extension = Extension.load(daoExtensionId);
 
   if (extension != null) {
@@ -237,7 +245,7 @@ export function handleExtensionRemoved(event: ExtensionRemoved): void {
 }
 
 export function handleConfigurationUpdated(event: ConfigurationUpdated): void {
-  log.info(
+  log.debug(
     "=============== ConfigurationUpdated event fired. key {}, value {}",
     [event.params.key.toHexString(), event.params.value.toHexString()]
   );
@@ -246,8 +254,12 @@ export function handleConfigurationUpdated(event: ConfigurationUpdated): void {
 export function handleAddressConfigurationUpdated(
   event: AddressConfigurationUpdated
 ): void {
-  log.info(
+  log.debug(
     "=============== AddressConfigurationUpdated event fired. key {}, value {}",
     [event.params.key.toHexString(), event.params.value.toHexString()]
   );
+}
+
+export function handleBlock(block: ethereum.Block): void {
+  log.debug("=============== handleBlock {}", [block.number.toString()]);
 }

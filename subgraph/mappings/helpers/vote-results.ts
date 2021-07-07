@@ -1,10 +1,35 @@
-import { Address, Bytes, log } from "@graphprotocol/graph-ts";
+import { Address, Bytes } from "@graphprotocol/graph-ts";
 
 import { OffchainVotingContract } from "../../generated/templates/DaoRegistry/OffchainVotingContract";
 import { VotingContract } from "../../generated/templates/DaoRegistry/VotingContract";
 import { IVoting } from "../../generated/templates/DaoRegistry/IVoting";
 
 import { Proposal, Vote } from "../../generated/schema";
+
+enum VotingState {
+  NOT_STARTED,
+  TIE,
+  PASS,
+  NOT_PASS,
+  IN_PROGRESS,
+  GRACE_PERIOD,
+}
+
+function getVotingContract(
+  votingAdapterName: string,
+  votingAdapterAddress: Bytes
+) {
+  // VotingContract | OffchainVotingContract
+  if (votingAdapterName == "VotingContract") {
+    return VotingContract.bind(
+      Address.fromString(votingAdapterAddress.toHex()) as Address
+    ) as VotingContract;
+  } else if (votingAdapterName == "OffchainVotingContract") {
+    return OffchainVotingContract.bind(
+      Address.fromString(votingAdapterAddress.toHex()) as Address
+    ) as OffchainVotingContract;
+  }
+}
 
 export function loadProposalAndSaveVoteResults(
   daoAddress: Address,
@@ -31,9 +56,15 @@ export function loadProposalAndSaveVoteResults(
       let votingAdapterName = votingIContract.getAdapterName();
 
       if (votingAdapterName == "VotingContract") {
-        let votingContract = VotingContract.bind(
-          Address.fromString(votingAdapterAddress.toHex()) as Address
-        );
+        let votingContract = getVotingContract(
+          votingAdapterName,
+          votingAdapterAddress
+        ) as VotingContract;
+
+        // let votingContract = VotingContract.bind(
+        //   Address.fromString(votingAdapterAddress.toHex()) as Address
+        // );
+
         // get vote results and voting state
         let voteResults = votingContract.votes(daoAddress, proposalId);
         let voteState = votingContract.voteResult(daoAddress, proposalId);
@@ -52,13 +83,19 @@ export function loadProposalAndSaveVoteResults(
           proposal.startingTime = voteResults.value2;
           proposal.blockNumber = voteResults.value3;
 
-          proposal.votingState = voteState.toString();
+          proposal.votingState = setVotingState(voteState.toString());
           proposal.votingResult = voteId;
         }
       } else if (votingAdapterName == "OffchainVotingContract") {
-        let offchainVotingContract = OffchainVotingContract.bind(
-          Address.fromString(votingAdapterAddress.toHex()) as Address
-        );
+        let offchainVotingContract = getVotingContract(
+          votingAdapterName,
+          votingAdapterAddress
+        ) as OffchainVotingContract;
+
+        //  let offchainVotingContract = OffchainVotingContract.bind(
+        //   Address.fromString(votingAdapterAddress.toHex()) as Address
+        // );
+
         // get vote results and state
         let voteResults = offchainVotingContract.votes(daoAddress, proposalId);
         let voteState = offchainVotingContract.voteResult(
@@ -85,12 +122,12 @@ export function loadProposalAndSaveVoteResults(
           proposal.startingTime = voteResults.value5;
           proposal.gracePeriodStartingTime = voteResults.value6;
           proposal.isChallenged = voteResults.value7;
-          // @todo its a mapping, not generated in schema
-          // proposal.fallbackVotes = voteResults.value10;
           proposal.forceFailed = voteResults.value8;
           proposal.fallbackVotesCount = voteResults.value9;
+          // @todo its a mapping, not generated in schema
+          // proposal.fallbackVotes = voteResults.value10;
 
-          proposal.votingState = voteState.toString();
+          proposal.votingState = setVotingState(voteState.toString());
           proposal.votingResult = voteId;
         }
       }
@@ -100,4 +137,81 @@ export function loadProposalAndSaveVoteResults(
   }
 
   return proposal;
+}
+
+export function updateVotingState(
+  daoAddress: Address,
+  proposalId: Bytes
+): void {
+  // load the existing proposal
+  let maybeProposalId = daoAddress
+    .toHex()
+    .concat("-proposal-")
+    .concat(proposalId.toHex());
+
+  let proposal = Proposal.load(maybeProposalId);
+
+  if (proposal != null) {
+    // get the voting adapter address from the proposal
+    let votingAdapterAddress: Bytes = proposal.votingAdapter as Bytes;
+
+    if (!votingAdapterAddress) {
+      proposal.votingState = "NOT_STARTED";
+
+      proposal.save();
+
+      return;
+    }
+
+    let votingIContract = IVoting.bind(
+      Address.fromString(votingAdapterAddress.toHex()) as Address
+    );
+
+    let votingAdapterName = votingIContract.getAdapterName();
+
+    let votingContract = getVotingContract(
+      votingAdapterName,
+      votingAdapterAddress
+    ); // <OffchainVotingContract | VotingContract>
+
+    let voteState = votingContract.voteResult(daoAddress, proposalId);
+
+    proposal.votingState = setVotingState(voteState.toString());
+
+    // if (votingAdapterName == "VotingContract") {
+    //   let votingContract = VotingContract.bind(
+    //     Address.fromString(votingAdapterAddress.toHex()) as Address
+    //   );
+    //   // get onchain voting state
+    //   let voteState = votingContract.voteResult(daoAddress, proposalId);
+
+    //   proposal.votingState = setVotingState(voteState.toString());
+    // } else if (votingAdapterName == "OffchainVotingContract") {
+    //   let offchainVotingContract = OffchainVotingContract.bind(
+    //     Address.fromString(votingAdapterAddress.toHex()) as Address
+    //   );
+    //   // get offchain voting state
+    //   let voteState = offchainVotingContract.voteResult(daoAddress, proposalId);
+
+    //   proposal.votingState = setVotingState(voteState.toString());
+    // }
+
+    proposal.save();
+  }
+}
+
+function setVotingState(state: string): string {
+  if (state.toString() == "1") {
+    return "TIE";
+  } else if (state.toString() == "2") {
+    return "PASS";
+  } else if (state.toString() == "3") {
+    return "NOT_PASS";
+  } else if (state.toString() == "4") {
+    return "IN_PROGRESS";
+  } else if (state.toString() == "5") {
+    return "GRACE_PERIOD";
+  } else {
+    return "NOT_STARTED";
+  }
 }

@@ -1,9 +1,5 @@
 import React from "react";
 
-// interface LogoProps {
-//   size?: "small" | "medium" | "large" | "";
-// }
-
 export default function Logo(props) {
   // LogoProps
   return (

@@ -9,9 +9,9 @@ dataSources:
     name: DaoFactory
     network: mainnet
     source:
-      address: "0x7f51bAf0159De2951aA0C48b55169aE4Deba89d6"
+      address: "0x45fa35129a3F0F73aFFB085a7e63e3b9434Cf0a0"
       abi: DaoFactory
-      startBlock: 13
+      startBlock: 14
     mapping:
       kind: ethereum/events
       apiVersion: 0.0.4
