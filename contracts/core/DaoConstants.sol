@@ -40,7 +40,7 @@ abstract contract DaoConstants {
     bytes32 internal constant CONFIGURATION = keccak256("configuration");
     bytes32 internal constant DISTRIBUTE = keccak256("distribute");
     bytes32 internal constant TRIBUTE_NFT = keccak256("tribute-nft");
-    bytes32 internal constant ERC1155-ADAPT = keccak256("erc1155-adpt");
+    bytes32 internal constant ERC1155_ADAPT = keccak256("erc1155-adpt");
 
     // Extensions
     bytes32 internal constant BANK = keccak256("bank");
