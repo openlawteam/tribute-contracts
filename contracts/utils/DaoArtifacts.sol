@@ -27,13 +27,7 @@ SOFTWARE.
  */
 
 contract DaoArtifacts {
-    enum ArtifactType {
-        CORE,
-        FACTORY,
-        EXTENSION,
-        ADAPTER,
-        UTIL
-    }
+    enum ArtifactType {CORE, FACTORY, EXTENSION, ADAPTER, UTIL}
 
     // Mapping from Artifact Name => (Owner Address => (Type => (Version => Adapters Address)))
     mapping(bytes32 => mapping(address => mapping(ArtifactType => mapping(bytes32 => address))))
