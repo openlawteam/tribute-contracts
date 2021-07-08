@@ -27,15 +27,17 @@ SOFTWARE.
  */
 
 contract DaoArtifacts {
-    enum ArtifactType {ADAPTER, EXTENSION}
+    enum ArtifactType {
+        CORE,
+        FACTORY,
+        EXTENSION,
+        ADAPTER,
+        UTIL
+    }
 
-    // Mapping from Artifact Name => (Owner Address => (Version => Adapters Address))
-    mapping(bytes32 => mapping(address => mapping(bytes32 => address)))
-        public adapters;
-
-    // Mapping from Artifact Name => (Owner Address => (Version => ExtensionsAddress))
-    mapping(bytes32 => mapping(address => mapping(bytes32 => address)))
-        public extensionsFactories;
+    // Mapping from Artifact Name => (Owner Address => (Type => (Version => Adapters Address)))
+    mapping(bytes32 => mapping(address => mapping(ArtifactType => mapping(bytes32 => address))))
+        public artifacts;
 
     event NewArtifact(
         bytes32 _id,
@@ -50,37 +52,17 @@ contract DaoArtifacts {
      * @param _id The id of the adapter (sha3).
      * @param _version The version of the adapter.
      * @param _address The address of the adapter to be stored.
+     * @param _type The artifact type:  0 = Core, 1 = Factory, 2 = Extension, 3 = Adapter, 4 = Util.
      */
-    function addAdapter(
+    function addArtifact(
         bytes32 _id,
         bytes32 _version,
-        address _address
+        address _address,
+        ArtifactType _type
     ) external {
         address _owner = msg.sender;
-        adapters[_id][_owner][_version] = _address;
-        emit NewArtifact(_id, _owner, _version, _address, ArtifactType.ADAPTER);
-    }
-
-    /**
-     * @notice Adds the extension factory address to the storage.
-     * @param _id The id of the extension factory (sha3).
-     * @param _version The version of the extension factory.
-     * @param _address The address of the extension factory to be stored.
-     */
-    function addExtensionFactory(
-        bytes32 _id,
-        bytes32 _version,
-        address _address
-    ) external {
-        address _owner = msg.sender;
-        extensionsFactories[_id][_owner][_version] = _address;
-        emit NewArtifact(
-            _id,
-            _owner,
-            _version,
-            _address,
-            ArtifactType.EXTENSION
-        );
+        artifacts[_id][_owner][_type][_version] = _address;
+        emit NewArtifact(_id, _owner, _version, _address, _type);
     }
 
     /**
@@ -88,7 +70,7 @@ contract DaoArtifacts {
      * @param _id The id of the adapter/extension factory (sha3).
      * @param _owner The address of the owner of the adapter/extension factory.
      * @param _version The version of the adapter/extension factory.
-     * @param _type The type of the artifact, 0 = Adapter, 1 = Extension Factory.
+     * @param _type The type of the artifact: 0 = Core, 1 = Factory, 2 = Extension, 3 = Adapter, 4 = Util.
      * @return The address of the adapter/extension factory if any.
      */
     function getArtifactAddress(
@@ -98,10 +80,7 @@ contract DaoArtifacts {
         ArtifactType _type
     ) external view returns (address) {
         if (_type == ArtifactType.ADAPTER) {
-            return adapters[_id][_owner][_version];
-        }
-        if (_type == ArtifactType.EXTENSION) {
-            return extensionsFactories[_id][_owner][_version];
+            return artifacts[_id][_owner][_type][_version];
         }
         return address(0x0);
     }

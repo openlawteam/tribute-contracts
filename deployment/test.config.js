@@ -1,4 +1,4 @@
-const contracts = require("./contracts.config");
+const { contracts } = require("./contracts.config");
 
 const disabled = [];
 

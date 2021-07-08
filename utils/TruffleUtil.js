@@ -25,6 +25,10 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
  */
 
+const { sha3 } = require("./ContractUtil");
+
+const { ContractType } = require("../deployment/contracts.config");
+
 const getContractFromTruffle = (c) => {
   return artifacts.require(c);
 };
@@ -32,14 +36,15 @@ const getContractFromTruffle = (c) => {
 const getTruffleContracts = (contracts) => {
   return contracts
     .filter((c) => c.enabled)
-    .reduce((previousValue, contract) => {
-      previousValue[contract.name] = getContractFromTruffle(contract.path);
-      return previousValue;
-    }, {});
+    .map((c) => {
+      c.interface = getContractFromTruffle(c.path);
+      return c;
+    });
 };
 
-const deployFunctionFactory = (deployer) => {
-  const deployFunction = async (contractInterface, args) => {
+const deployFunctionFactory = (deployer, allContracts) => {
+  const deploy = async (contractInterface, args) => {
+    console.log("Deploy new contract");
     if (!contractInterface) return null;
     if (args) {
       await deployer.deploy(contractInterface, ...args);
@@ -49,10 +54,46 @@ const deployFunctionFactory = (deployer) => {
     return await contractInterface.deployed();
   };
 
-  return deployFunction;
+  const loadOrDeploy = async (contractInterface, args) => {
+    const contractConfig = allContracts.find(
+      (c) => c.interface === contractInterface
+    );
+    console.log(`Contract found: ${contractConfig.name}`);
+    if (contractConfig.type === ContractType.Test) {
+      return deploy(contractConfig, contractInterface, args);
+    }
+
+    const daoArtifacts = await DaoArtifacts.at(
+      process.env.DAO_ARTIFACTS_CONTRACT_ADDR
+    );
+    const address = await daoArtifacts.getArtifactAddress(
+      sha3(contractConfig.name),
+      process.env.ARTIFACT_OWNER_ADDR,
+      contractConfig.version,
+      contractConfig.type
+    );
+    let contract;
+    if (address) {
+      contract = await contractInterface.at(address);
+    }
+    if (contract) return contract;
+    return deploy(contractConfig, contractInterface, args);
+  };
+
+  return loadOrDeploy;
 };
 
 module.exports = (contracts) => {
-  const truffleContracts = getTruffleContracts(contracts);
-  return { ...truffleContracts, deployFunctionFactory };
+  const allContracts = getTruffleContracts(contracts);
+  const truffleInterfaces = allContracts.reduce((previousValue, contract) => {
+    previousValue[contract.name] = getContractFromTruffle(contract.path);
+    return previousValue;
+  }, {});
+
+  return {
+    ...truffleInterfaces,
+    deployFunctionFactory: (deployer) => {
+      deployFunctionFactory(deployer, allContracts);
+    },
+  };
 };
