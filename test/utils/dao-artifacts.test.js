@@ -30,6 +30,8 @@ const { sha3 } = require("../../utils/ContractUtil.js");
 
 const { accounts, expect, DaoArtifacts } = require("../../utils/OZTestUtil.js");
 
+const { ContractType } = require("../../deployment/contracts.config");
+
 describe("Utils - DaoArtifacts", () => {
   it("should be possible to create a dao artifacts contract", async () => {
     const daoArtifacts = await DaoArtifacts.new();
@@ -43,10 +45,11 @@ describe("Utils - DaoArtifacts", () => {
     const daoArtifacts = await DaoArtifacts.new();
     const owner = accounts[2];
     const adapterAddress = accounts[9];
-    const res = await daoArtifacts.addAdapter(
+    const res = await daoArtifacts.addArtifact(
       sha3("adapter1"),
       sha3("v1.0.0"),
       adapterAddress,
+      ContractType.Adapter,
       { from: owner }
     );
     expectEvent(res, "NewArtifact", {
@@ -54,7 +57,7 @@ describe("Utils - DaoArtifacts", () => {
       _owner: owner,
       _version: sha3("v1.0.0"),
       _address: adapterAddress,
-      _type: toBN("0"),
+      _type: toBN("3"),
     });
   });
 
@@ -63,10 +66,11 @@ describe("Utils - DaoArtifacts", () => {
     const owner = accounts[2];
     const adapterAddress = accounts[9];
 
-    await daoArtifacts.addAdapter(
+    await daoArtifacts.addArtifact(
       sha3("adapter1"),
       sha3("v1.0.0"),
       adapterAddress,
+      ContractType.Adapter,
       { from: owner }
     );
 
@@ -74,7 +78,7 @@ describe("Utils - DaoArtifacts", () => {
       sha3("adapter1"),
       owner,
       sha3("v1.0.0"),
-      toBN("0") //Type = adapter
+      ContractType.Adapter
     );
     expect(address).to.be.equal(adapterAddress);
   });
@@ -83,10 +87,11 @@ describe("Utils - DaoArtifacts", () => {
     const daoArtifacts = await DaoArtifacts.new();
     const owner = accounts[2];
     const extensionAddress = accounts[9];
-    const res = await daoArtifacts.addExtensionFactory(
+    const res = await daoArtifacts.addArtifact(
       sha3("extFactory1"),
       sha3("v1.0.0"),
       extensionAddress,
+      ContractType.Extension,
       { from: owner }
     );
     expectEvent(res, "NewArtifact", {
@@ -94,7 +99,7 @@ describe("Utils - DaoArtifacts", () => {
       _owner: owner,
       _version: sha3("v1.0.0"),
       _address: extensionAddress,
-      _type: toBN("1"),
+      _type: toBN("2"),
     });
   });
 
@@ -102,18 +107,19 @@ describe("Utils - DaoArtifacts", () => {
     const daoArtifacts = await DaoArtifacts.new();
     const owner = accounts[2];
     const extensionAddress = accounts[9];
-    await daoArtifacts.addExtensionFactory(
-      sha3("extFactory1"),
+    await daoArtifacts.addArtifact(
+      sha3("extFactory2"),
       sha3("v1.0.0"),
       extensionAddress,
+      ContractType.Extension,
       { from: owner }
     );
 
     const address = await daoArtifacts.getArtifactAddress(
-      sha3("extFactory1"),
+      sha3("extFactory2"),
       owner,
       sha3("v1.0.0"),
-      toBN("1") //Type = adapter
+      ContractType.Extension
     );
     expect(address).to.be.equal(extensionAddress);
   });

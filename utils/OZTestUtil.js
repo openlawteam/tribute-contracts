@@ -61,13 +61,6 @@ const deployFunction = async (contractInterface, args, from) => {
   }
 };
 
-const loadFunction = async (contractConfig, contractInterface, args, from) => {
-  if (!contractConfig || !contractInterface) return null;
-  const f = from ? from : accounts[0];
-
-  return await contractInterface.at(...args, { from: f });
-};
-
 const getContractFromOpenZeppelin = (c) => {
   return contract.fromArtifact(c.substring(c.lastIndexOf("/") + 1));
 };
@@ -75,10 +68,10 @@ const getContractFromOpenZeppelin = (c) => {
 const getOpenZeppelinContracts = (contracts) => {
   return contracts
     .filter((c) => c.enabled)
-    .map((c) => {
-      c.interface = getContractFromOpenZeppelin(c.path);
-      return c;
-    });
+    .reduce((previousValue, contract) => {
+      previousValue[contract.name] = getContractFromOpenZeppelin(contract.path);
+      return previousValue;
+    }, {});
 };
 
 const getDefaultOptions = (options) => {
@@ -189,31 +182,13 @@ const proposalIdGenerator = () => {
 
 module.exports = (() => {
   const { contracts } = require("../deployment/test.config");
-  const allContracts = getOpenZeppelinContracts(contracts);
-  const ozInterfaces = allContracts.reduce((previousValue, contract) => {
-    previousValue[contract.name] = contract.interface;
-    return previousValue;
-  }, {});
-
-  const loadOrDeploy = async (contractInterface, args, from) => {
-    const contractConfig = allContracts.find(
-      (c) => c.interface === contractInterface
-    );
-    console.log(`Contract found: ${contractConfig.name}`);
-    if (contractConfig) {
-      console.log("Try to load from DaoArtifacts");
-      return loadFunction(contractConfig, contractInterface, args, from);
-    } else {
-      console.log("Deploy new contract");
-      return deployFunction(contractInterface, args, from);
-    }
-  };
+  const ozContracts = getOpenZeppelinContracts(contracts);
 
   const deployDefaultDao = async (options) => {
     return await deployDao({
       ...getDefaultOptions(options),
-      ...ozInterfaces,
-      deployFunction: loadOrDeploy,
+      ...ozContracts,
+      deployFunction,
     });
   };
 
@@ -222,8 +197,8 @@ module.exports = (() => {
       ...getDefaultOptions({ owner }),
       deployTestTokens: true,
       finalize: false,
-      ...ozInterfaces,
-      deployFunction: loadOrDeploy,
+      ...ozContracts,
+      deployFunction,
     });
 
     await dao.finalizeDao({ from: owner });
@@ -249,8 +224,8 @@ module.exports = (() => {
       deployTestTokens: true,
       offchainAdmin: owner,
       finalize: false,
-      ...ozInterfaces,
-      deployFunction: loadOrDeploy,
+      ...ozContracts,
+      deployFunction,
     });
 
     await dao.potentialNewMember(newMember, {
@@ -277,11 +252,11 @@ module.exports = (() => {
   const deployDaoWithBatchVoting = async ({ owner, newMember }) => {
     const { dao, adapters, extensions, votingHelpers } = await deployDao({
       ...getDefaultOptions({ owner }),
-      ...ozInterfaces,
+      ...ozContracts,
       deployTestTokens: false,
       batchVoting: true,
       finalize: false,
-      deployFunction: loadOrDeploy,
+      deployFunction,
     });
 
     await dao.potentialNewMember(newMember, {
@@ -322,8 +297,8 @@ module.exports = (() => {
     accounts,
     expect,
     expectRevert,
-    deployFunction: loadOrDeploy,
+    deployFunction,
     getContractFromOpenZeppelin,
-    ...ozInterfaces,
+    ...ozContracts,
   };
 })();

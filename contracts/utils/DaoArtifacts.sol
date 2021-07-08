@@ -52,7 +52,7 @@ contract DaoArtifacts {
      * @param _id The id of the adapter (sha3).
      * @param _version The version of the adapter.
      * @param _address The address of the adapter to be stored.
-     * @param _type The artifact type:  0 = Core, 1 = Factory, 2 = Extension, 3 = Adapter, 4 = Util.
+     * @param _type The artifact type: 0 = Core, 1 = Factory, 2 = Extension, 3 = Adapter, 4 = Util.
      */
     function addArtifact(
         bytes32 _id,
@@ -79,9 +79,6 @@ contract DaoArtifacts {
         bytes32 _version,
         ArtifactType _type
     ) external view returns (address) {
-        if (_type == ArtifactType.ADAPTER) {
-            return artifacts[_id][_owner][_type][_version];
-        }
-        return address(0x0);
+        return artifacts[_id][_owner][_type][_version];
     }
 }
