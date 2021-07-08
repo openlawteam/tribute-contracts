@@ -296,14 +296,17 @@ contract ERC1155TokenExtension is
         _nftAddresses.add(nftAddr);
     }
 
-     /**
+    /**
      * @dev xref:ROOT:erc1155.adoc#batch-operations[Batched] version of {balanceOf}.
      *
      * Requirements:
      *
      * - `accounts` and `ids` must have the same length.
      */
-    function balanceOfBatch(address[] calldata accounts, uint256[] calldata ids) external view returns (uint256[] memory);
+    function balanceOfBatch(address[] calldata accounts, uint256[] calldata ids)
+        public
+        virtual
+        returns (uint256[] memory);
 
     /**
      * @dev Grants or revokes permission to `operator` to transfer the caller's tokens, according to `approved`,
@@ -314,16 +317,17 @@ contract ERC1155TokenExtension is
      *
      * - `operator` cannot be the caller.
      */
-    function setApprovalForAll(address operator, bool approved) external;
+    function setApprovalForAll(address operator, bool approved) public virtual;
 
     /**
      * @dev Returns true if `operator` is approved to transfer ``account``'s tokens.
      *
      * See {setApprovalForAll}.
      */
-    function isApprovedForAll(address account, address operator) external view returns (bool);
-
-
+    function isApprovedForAll(address account, address operator)
+        public
+        virtual
+        returns (bool);
 
     /**
      * @dev xref:ROOT:erc1155.adoc#batch-operations[Batched] version of {safeTransferFrom}.
@@ -336,11 +340,21 @@ contract ERC1155TokenExtension is
      * - If `to` refers to a smart contract, it must implement {IERC1155Receiver-onERC1155BatchReceived} and return the
      * acceptance magic value.
      */
-    function safeBatchTransferFrom(address from, address to, uint256[] calldata ids, uint256[] calldata amounts, bytes calldata data) external;
-}
+    function safeBatchTransferFrom(
+        address from,
+        address to,
+        uint256[] calldata ids,
+        uint256[] calldata amounts,
+        bytes calldata data
+    ) public virtual;
 
-    function onERC1155Received(operator, from, id, value, data);
+    function onERC1155BatchReceived(
+        address operator,
+        address from,
+        uint256 ids,
+        uint256 values,
+        bytes calldata data
+    ) public virtual;
 
-    function onERC1155BatchReceived(operator, from, ids, values, data);
-
+    //function onERC1155Received(address operator, address from, uint256 id, uint256 value, bytes calldata data) public virtual;
 }
