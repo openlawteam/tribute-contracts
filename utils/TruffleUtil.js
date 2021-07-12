@@ -66,6 +66,7 @@ const deployFunction = (deployer, daoArtifacts, allContracts) => {
     if (
       // Always deploy core and test contracts
       contractConfig.type === ContractType.Core ||
+      contractConfig.type === ContractType.Extension ||
       contractConfig.type === ContractType.Test
     ) {
       return deploy(contractInterface, args);
@@ -93,9 +94,8 @@ const deployFunction = (deployer, daoArtifacts, allContracts) => {
     const deployedContract = await deploy(contractInterface, args);
 
     if (
-      // Add the new contract to DaoArtifacts, should not store Core & Test contracts
+      // Add the new contract to DaoArtifacts, should not store Core, Extension & Test contracts
       contractConfig.type === ContractType.Factory ||
-      contractConfig.type === ContractType.Extension ||
       contractConfig.type === ContractType.Adapter ||
       contractConfig.type === ContractType.Util
     ) {
