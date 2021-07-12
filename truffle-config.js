@@ -42,11 +42,19 @@ module.exports = {
         } else {
           url = `wss://rinkeby.infura.io/ws/v3/${infuraKey}`;
         }
-        return new HDWalletProvider(mnemonic, url);
+        return new HDWalletProvider({
+          mnemonic: {
+            phrase: mnemonic,
+          },
+          providerOrUrl: url,
+          pollingInterval: 10000,
+        });
       },
       network_id: 4,
       gasPrice: 10000000000,
       skipDryRun: true,
+      networkCheckTimeout: 10000,
+      deploymentPollingInterval: 10000,
     },
     coverage: {
       host: "localhost",
