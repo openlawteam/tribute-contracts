@@ -33,6 +33,7 @@ const hexToBytes = Web3Utils.hexToBytes;
 const toAscii = Web3Utils.toAscii;
 const fromAscii = Web3Utils.fromAscii;
 const toUtf8 = Web3Utils.toUtf8;
+const toHex = Web3Utils.toHex;
 
 const GUILD = "0x000000000000000000000000000000000000dead";
 const TOTAL = "0x000000000000000000000000000000000000babe";
@@ -42,6 +43,7 @@ const UNITS = "0x00000000000000000000000000000000000FF1CE";
 const LOOT = "0x00000000000000000000000000000000B105F00D";
 const ETH_TOKEN = "0x0000000000000000000000000000000000000000";
 const DAI_TOKEN = "0x95b58a6bff3d14b7db2f5cb5f0ad413dc2940658";
+const ZERO_ADDRESS = "0x0000000000000000000000000000000000000000";
 
 const numberOfUnits = toBN("1000000000000000");
 const unitPrice = toBN(toWei("120", "finney"));
@@ -57,6 +59,7 @@ module.exports = {
   toAscii,
   fromAscii,
   toUtf8,
+  toHex,
   maximumChunks,
   numberOfUnits,
   unitPrice,
@@ -69,4 +72,5 @@ module.exports = {
   MEMBER_COUNT,
   LOOT,
   ETH_TOKEN,
+  ZERO_ADDRESS,
 };

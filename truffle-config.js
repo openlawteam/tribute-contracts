@@ -31,10 +31,17 @@ module.exports = {
     rinkeby: {
       provider: function () {
         let infuraKey = process.env.INFURA_KEY;
+        let alchemyKey = process.env.ALCHEMY_KEY;
+
         let HDWalletProvider = require("@truffle/hdwallet-provider");
         let mnemonic = process.env.TRUFFLE_MNEMONIC;
-        let infuraUrl = "wss://rinkeby.infura.io/ws/v3/" + infuraKey;
-        return new HDWalletProvider(mnemonic, infuraUrl);
+        let url;
+        if (alchemyKey) {
+          url = `wss://eth-rinkeby.ws.alchemyapi.io/v2/${alchemyKey}`;
+        } else {
+          url = `wss://rinkeby.infura.io/ws/v3/${infuraKey}`;
+        }
+        return new HDWalletProvider(mnemonic, url);
       },
       network_id: 4,
       gasPrice: 10000000000,

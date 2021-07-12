@@ -14,23 +14,24 @@ require("dotenv").config();
 module.exports = async (deployer, network, accounts) => {
   let res;
 
-  console.log(`Starting deployment to ${network}`);
+  console.log(`Deploying tribute-contracts to ${network} network`);
 
   const { contracts } = require(`../deployment/${network}.config`);
   const truffleImports = require("../utils/TruffleUtil.js")(contracts);
+  const DaoArtifacts = truffleImports.DaoArtifacts;
 
-  var daoArtifacts = truffleImports.DaoArtifacts;
+  let daoArtifacts;
   if (process.env.DAO_ARTIFACTS_CONTRACT_ADDR) {
-    console.log(
-      `Attach to existing DaoArtifacts contract: ${process.env.DAO_ARTIFACTS_CONTRACT_ADDR}`
-    );
-    daoArtifacts = await truffleImports.DaoArtifacts.at(
+    console.log(`Attach to existing DaoArtifacts contract`);
+    daoArtifacts = await DaoArtifacts.at(
       process.env.DAO_ARTIFACTS_CONTRACT_ADDR
     );
   } else {
-    daoArtifacts = await deployer.deploy(truffleImports.DaoArtifacts);
-    console.log(`Deployed new DaoArtifacts contract: ${daoArtifacts.address}`);
+    console.log(`Creating new DaoArtifacts contract`);
+    await deployer.deploy(DaoArtifacts);
+    daoArtifacts = await DaoArtifacts.deployed();
   }
+  console.log(`DaoArtifacts: ${daoArtifacts.address}`);
 
   const deployFunction = truffleImports.deployFunctionFactory(
     deployer,
