@@ -18,7 +18,24 @@ module.exports = async (deployer, network, accounts) => {
 
   const { contracts } = require(`../deployment/${network}.config`);
   const truffleImports = require("../utils/TruffleUtil.js")(contracts);
-  const deployFunction = truffleImports.deployFunctionFactory(deployer);
+
+  var daoArtifacts = truffleImports.DaoArtifacts;
+  if (process.env.DAO_ARTIFACTS_CONTRACT_ADDR) {
+    console.log(
+      `Attach to existing DaoArtifacts contract: ${process.env.DAO_ARTIFACTS_CONTRACT_ADDR}`
+    );
+    daoArtifacts = await truffleImports.DaoArtifacts.at(
+      process.env.DAO_ARTIFACTS_CONTRACT_ADDR
+    );
+  } else {
+    daoArtifacts = await deployer.deploy(truffleImports.DaoArtifacts);
+    console.log(`Deployed new DaoArtifacts contract: ${daoArtifacts.address}`);
+  }
+
+  const deployFunction = truffleImports.deployFunctionFactory(
+    deployer,
+    daoArtifacts
+  );
 
   if (network === "ganache") {
     res = await deployGanacheDao(

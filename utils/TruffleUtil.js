@@ -42,7 +42,7 @@ const getTruffleContracts = (contracts) => {
     });
 };
 
-const deployFunctionFactory = (deployer, allContracts) => {
+const deployFunctionFactory = (deployer, daoArtifacts, allContracts) => {
   const deploy = async (contractInterface, args) => {
     console.log("Deploy new contract");
     if (!contractInterface) return null;
@@ -63,9 +63,6 @@ const deployFunctionFactory = (deployer, allContracts) => {
       return deploy(contractConfig, contractInterface, args);
     }
 
-    const daoArtifacts = await DaoArtifacts.at(
-      process.env.DAO_ARTIFACTS_CONTRACT_ADDR
-    );
     const address = await daoArtifacts.getArtifactAddress(
       sha3(contractConfig.name),
       process.env.ARTIFACT_OWNER_ADDR,
@@ -92,8 +89,8 @@ module.exports = (contracts) => {
 
   return {
     ...truffleInterfaces,
-    deployFunctionFactory: (deployer) => {
-      deployFunctionFactory(deployer, allContracts);
+    deployFunctionFactory: (deployer, daoArtifacts) => {
+      deployFunctionFactory(deployer, daoArtifacts, allContracts);
     },
   };
 };
