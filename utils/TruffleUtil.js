@@ -64,7 +64,7 @@ const deployFunction = (deployer, daoArtifacts, allContracts) => {
       );
 
     if (
-      // Always deploy core and test contracts
+      // Always deploy core, extension and test contracts
       contractConfig.type === ContractType.Core ||
       contractConfig.type === ContractType.Extension ||
       contractConfig.type === ContractType.Test

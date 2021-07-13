@@ -168,7 +168,6 @@ const deployRinkebyDao = async (
     daoName: process.env.DAO_NAME,
     owner: process.env.DAO_OWNER_ADDR,
     offchainAdmin: "0xedC10CFA90A135C41538325DD57FDB4c7b88faf7",
-    contracts,
   });
 };
 
