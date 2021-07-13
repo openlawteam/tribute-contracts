@@ -25,6 +25,7 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
  */
 const expectEvent = require("@openzeppelin/test-helpers/src/expectEvent");
+const expectRevert = require("@openzeppelin/test-helpers/src/expectRevert");
 const { sha3 } = require("../../utils/ContractUtil.js");
 const { toBN } = require("web3-utils");
 const { accounts, expect, DaoArtifacts } = require("../../utils/OZTestUtil.js");
@@ -89,7 +90,7 @@ describe("Utils - DaoArtifacts", () => {
       sha3("extFactory1"),
       sha3("v1.0.0"),
       extensionAddress,
-      ContractType.Extension,
+      ContractType.Factory,
       { from: owner }
     );
     expectEvent(res, "NewArtifact", {
@@ -97,7 +98,7 @@ describe("Utils - DaoArtifacts", () => {
       _owner: owner,
       _version: sha3("v1.0.0"),
       _address: extensionAddress,
-      _type: toBN("2"),
+      _type: toBN("1"),
     });
   });
 
@@ -109,7 +110,7 @@ describe("Utils - DaoArtifacts", () => {
       sha3("extFactory2"),
       sha3("v1.0.0"),
       extensionAddress,
-      ContractType.Extension,
+      ContractType.Factory,
       { from: owner }
     );
 
@@ -117,8 +118,115 @@ describe("Utils - DaoArtifacts", () => {
       sha3("extFactory2"),
       owner,
       sha3("v1.0.0"),
-      ContractType.Extension
+      ContractType.Factory
     );
     expect(address).to.be.equal(extensionAddress);
+  });
+
+  it("should be possible to execute a batch update", async () => {
+    const owner = accounts[2];
+    const daoArtifacts = await DaoArtifacts.new({ from: owner });
+    await daoArtifacts.updateArtifacts(
+      [
+        {
+          _id: sha3("adapter1"),
+          _owner: owner,
+          _version: sha3("v1.0.0"),
+          _address: accounts[4],
+          _type: ContractType.Adapter,
+        },
+        {
+          _id: sha3("extFactory2"),
+          _owner: owner,
+          _version: sha3("v1.0.0"),
+          _address: accounts[5],
+          _type: ContractType.Factory,
+        },
+      ],
+      { from: owner }
+    );
+
+    expect(
+      await daoArtifacts.getArtifactAddress(
+        sha3("adapter1"),
+        owner,
+        sha3("v1.0.0"),
+        ContractType.Adapter
+      )
+    ).to.be.equal(accounts[4]);
+
+    expect(
+      await daoArtifacts.getArtifactAddress(
+        sha3("extFactory2"),
+        owner,
+        sha3("v1.0.0"),
+        ContractType.Factory
+      )
+    ).to.be.equal(accounts[5]);
+  });
+
+  it("should not be possible to execute a batch update if you are not the owner", async () => {
+    const owner = accounts[2];
+    const anotherUser = accounts[3];
+    const daoArtifacts = await DaoArtifacts.new({ from: owner });
+    await expectRevert(
+      daoArtifacts.updateArtifacts(
+        [
+          {
+            _id: sha3("adapter1"),
+            _owner: owner,
+            _version: sha3("v1.0.0"),
+            _address: accounts[4],
+            _type: ContractType.Adapter,
+          },
+          {
+            _id: sha3("extFactory2"),
+            _owner: owner,
+            _version: sha3("v1.0.0"),
+            _address: accounts[5],
+            _type: ContractType.Factory,
+          },
+        ],
+        { from: anotherUser }
+      ),
+      "Ownable: caller is not the owner."
+    );
+  });
+
+  it("should be possible to execute a batch update with up to 20 artifacts", async () => {
+    const owner = accounts[2];
+    const daoArtifacts = await DaoArtifacts.new({ from: owner });
+    let artifacts = [];
+    for (let i = 0; i < 20; i++) {
+      artifacts.push({
+        _id: sha3(`adapter:${i + 1}`),
+        _owner: owner,
+        _version: sha3("v1.0.0"),
+        _address: owner,
+        _type: ContractType.Adapter,
+      });
+    }
+
+    daoArtifacts.updateArtifacts(artifacts, { from: owner });
+  });
+
+  it("should not be possible to execute a batch update with more than 20 artifacts", async () => {
+    const owner = accounts[2];
+    const daoArtifacts = await DaoArtifacts.new({ from: owner });
+    let artifacts = [];
+    for (let i = 0; i < 21; i++) {
+      artifacts.push({
+        _id: sha3(`adapter:${i + 1}`),
+        _owner: owner,
+        _version: sha3("v1.0.0"),
+        _address: owner,
+        _type: ContractType.Adapter,
+      });
+    }
+
+    await expectRevert(
+      daoArtifacts.updateArtifacts(artifacts, { from: owner }),
+      "Maximum artifacts limit exceeded"
+    );
   });
 });
