@@ -1,7 +1,14 @@
 const { contracts } = require("./contracts.config");
 
 const disabled = [
-  // "ERC20Minter",
+  // Utility & Test Contracts disabled by default
+  "OLToken",
+  "TestToken1",
+  "TestToken2",
+  "TestFairShareCalc",
+  "PixelNFT",
+  "ProxToken",
+  "ERC20Minter",
 ];
 
 const ganacheContracts = contracts.map((c) => {

@@ -53,7 +53,7 @@ const deployFunction = (deployer, daoArtifacts, allContracts) => {
   };
 
   const loadOrDeploy = async (contractInterface, args) => {
-    if (!contractInterface) throw Error("Invalid contract interface");
+    if (!contractInterface) return null; //throw Error("Invalid contract interface");
 
     const contractConfig = allContracts.find(
       (c) => c.name === contractInterface.contractName
@@ -106,7 +106,7 @@ const deployFunction = (deployer, daoArtifacts, allContracts) => {
         contractConfig.type
       );
       console.log(
-        `${contractConfig.type}:${contractConfig.name}:${contractConfig.version}:${deployedContract.address} added to DaoArtifacts`
+        `${contractConfig.name}:${contractConfig.type}:${contractConfig.version}:${deployedContract.address} added to DaoArtifacts`
       );
     }
 

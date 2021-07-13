@@ -29,12 +29,11 @@ module.exports = {
       network_id: "1337", // Any network (default: none)
     },
     rinkeby: {
-      provider: function () {
-        let HDWalletProvider = require("@truffle/hdwallet-provider");
-
-        let infuraKey = process.env.INFURA_KEY;
-        let alchemyKey = process.env.ALCHEMY_KEY;
-        let mnemonic = process.env.TRUFFLE_MNEMONIC;
+      provider: () => {
+        const HDWalletProvider = require("@truffle/hdwallet-provider");
+        const infuraKey = process.env.INFURA_KEY;
+        const alchemyKey = process.env.ALCHEMY_KEY;
+        const mnemonic = process.env.TRUFFLE_MNEMONIC;
 
         let url;
         if (alchemyKey) {
@@ -51,10 +50,32 @@ module.exports = {
         });
       },
       network_id: 4,
-      gasPrice: 10000000000,
       skipDryRun: true,
       networkCheckTimeout: 10000,
       deploymentPollingInterval: 10000,
+    },
+    mainnet: {
+      provider: () => {
+        const HDWalletProvider = require("@truffle/hdwallet-provider");
+        const infuraKey = process.env.INFURA_KEY;
+        const alchemyKey = process.env.ALCHEMY_KEY;
+        const mnemonic = process.env.TRUFFLE_MNEMONIC;
+
+        let url;
+        if (alchemyKey) {
+          url = `wss://eth-mainnet.ws.alchemyapi.io/v2/${alchemyKey}`;
+        } else {
+          url = `wss://mainnet.infura.io/ws/v3/${infuraKey}`;
+        }
+        return new HDWalletProvider({
+          mnemonic: {
+            phrase: mnemonic,
+          },
+          providerOrUrl: url,
+        });
+      },
+      network_id: 1,
+      skipDryRun: true,
     },
     coverage: {
       host: "localhost",
