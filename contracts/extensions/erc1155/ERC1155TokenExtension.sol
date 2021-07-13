@@ -58,7 +58,7 @@ contract ERC1155TokenExtension is
         address oldOwner,
         address newOwner
     );
-    event WithdrawnNFT(address nftAddr, uint256 nftTokenId, address toAddress);
+    event WithdrawnNFT(address nftAddr, uint256 nftTokenId, uint amount, address toAddress);
 
     //MAPPINGS
 
@@ -67,6 +67,10 @@ contract ERC1155TokenExtension is
 
     // The internal owner of record of an NFT that has been transferred to the extension
     mapping(bytes32 => address) private _ownership;
+
+    //the number amount of Token IDs that belong to an NFT address stored in the Guild for a specific Token ID
+    // address of token => tokenId => amount of that tokenId
+    mapping(address => mapping(uint => EnumerableSet.UintSet)) private _nftAmount; 
 
     //All the NFT addresses collected and stored in the GUILD collection
     EnumerableSet.AddressSet private _nftAddresses;
@@ -107,20 +111,22 @@ contract ERC1155TokenExtension is
      * @dev Reverts if the NFT is not in ERC1155 standard.
      * @param nftAddr The NFT contract address.
      * @param nftTokenId The NFT token id.
+     * @param amount The amount of NFT with nftTokenId to be collected.
      */
-    function collect(address nftAddr, uint256 nftTokenId)
+    function collect(address nftAddr, uint256 nftTokenId, uint256 amount)
         external
         hasExtensionAccess(this, AclFlag.COLLECT_NFT)
+    
     {
         IERC1155 erc1155 = IERC1155(nftAddr);
         // Move the NFT to the contract address - unlike 721 no 'ownerOf'
-        uint256 ownerTokenIdBalance = erc1155.balanceOf(msg.sender, nftTokenId);
+        uint256 ownerTokenIdBalance = erc1155.balanceOf(address(this), nftTokenId);
         //address currentOwner = erc1155.ownerOf(address(this), nftTokenId);
 
         //If the NFT is already in the NFTExtension, update the ownership if not set already
         if (ownerTokenIdBalance > 0) {
-            if (_ownership[getNFTId(nftAddr, nftTokenId)] == address(0x0)) {
-                _saveNft(nftAddr, nftTokenId, GUILD);
+            if (_ownership[getNFTId(nftAddr, nftTokenId)]== address(0x0)) {
+                _saveNft(nftAddr, nftTokenId, GUILD,amount);
 
                 emit CollectedNFT(nftAddr, nftTokenId);
             }
@@ -130,10 +136,10 @@ contract ERC1155TokenExtension is
                 msg.sender,
                 address(this),
                 nftTokenId,
-                1,
+                amount,
                 "0x0"
             );
-            _saveNft(nftAddr, nftTokenId, GUILD);
+            _saveNft(nftAddr, nftTokenId, GUILD, amount);
 
             emit CollectedNFT(nftAddr, nftTokenId);
         }
@@ -151,13 +157,17 @@ contract ERC1155TokenExtension is
     function withdrawNFT(
         address newOwner,
         address nftAddr,
-        uint256 nftTokenId
+        uint256 nftTokenId,
+        uint256 amount
     ) public hasExtensionAccess(this, AclFlag.WITHDRAW_NFT) {
         // Remove the NFT from the contract address to the actual owner
         IERC1155 erc1155 = IERC1155(nftAddr);
-        erc1155.safeTransferFrom(address(this), newOwner, nftTokenId, 1, "0x0");
+        erc1155.safeTransferFrom(address(this), newOwner, nftTokenId, amount, "0x0");
+        //Todo - Add an if/else condition based on whether the amount of the TokenId = 0 after transfer, or > 0
         // Remove the asset from the extension
         _nfts[nftAddr].remove(nftTokenId);
+        //remove the tokenID amount
+        _nftAmount[nftAddr][nftTokenId].remove(amount);
         delete _ownership[getNFTId(nftAddr, nftTokenId)];
 
         // If we dont hold asset from this address anymore, we can remove it
@@ -165,7 +175,7 @@ contract ERC1155TokenExtension is
             _nftAddresses.remove(nftAddr);
         }
 
-        emit WithdrawnNFT(nftAddr, nftTokenId, newOwner);
+        emit WithdrawnNFT(nftAddr, nftTokenId, amount,newOwner);
     }
 
     /**
@@ -179,6 +189,7 @@ contract ERC1155TokenExtension is
     function internalTransfer(
         address nftAddr,
         uint256 nftTokenId,
+        
         address newOwner
     ) public hasExtensionAccess(this, AclFlag.INTERNAL_TRANSFER) {
         require(newOwner != address(0x0), "new owner is 0");
@@ -275,7 +286,7 @@ contract ERC1155TokenExtension is
         return this.onERC1155Received.selector; // unclear if .selector is correct IERC1155Receiver?
     }
 
-    // TODO onERC1155BatchReceived
+
 
     /**
      * @notice Helper function to update the extension states for an NFT collected by the extension.
@@ -286,7 +297,8 @@ contract ERC1155TokenExtension is
     function _saveNft(
         address nftAddr,
         uint256 nftTokenId,
-        address owner
+        address owner, 
+        uint256 amount
     ) private {
         // Save the asset
         _nfts[nftAddr].add(nftTokenId);
@@ -294,6 +306,8 @@ contract ERC1155TokenExtension is
         _ownership[getNFTId(nftAddr, nftTokenId)] = owner;
         // Keep track of the collected assets
         _nftAddresses.add(nftAddr);
+        //update the amount of a particular Token ID in the GUILD
+        _nftAmount[nftAddr][nftTokenId].add(amount);
     }
 
     /**
@@ -304,6 +318,7 @@ contract ERC1155TokenExtension is
      * - `accounts` and `ids` must have the same length.
      */
     function balanceOfBatch(address[] calldata accounts, uint256[] calldata ids)
+      
         public
         virtual
         returns (uint256[] memory);
@@ -325,6 +340,7 @@ contract ERC1155TokenExtension is
      * See {setApprovalForAll}.
      */
     function isApprovedForAll(address account, address operator)
+        
         public
         virtual
         returns (bool);
@@ -346,7 +362,7 @@ contract ERC1155TokenExtension is
         uint256[] calldata ids,
         uint256[] calldata amounts,
         bytes calldata data
-    ) public virtual;
+    )  public virtual;
 
     function onERC1155BatchReceived(
         address operator,
@@ -356,5 +372,4 @@ contract ERC1155TokenExtension is
         bytes calldata data
     ) public virtual;
 
-    //function onERC1155Received(address operator, address from, uint256 id, uint256 value, bytes calldata data) public virtual;
 }
