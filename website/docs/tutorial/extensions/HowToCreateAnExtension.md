@@ -257,7 +257,30 @@ There are several examples of tests that you can check to start building your ow
 
 The general idea is to create one test suite per extension/contract. And try to cover all the happy paths first, and then add more complex and negative test cases after that.
 
-You need to declare the new extension contract to **[ContractUtil.js](https://github.com/openlawteam/tribute-contracts/blob/master/utils/ContractUtil.js)**, so it can be accessed in the deploy/test environment.
+You need to declare the new extension and factory contracts in `deployment/contracts.config.js` file, so both contracts can be accessed in the deploy/test environment. Make sure you use following the structure:
+
+```json
+ {
+    name: "MyExtension",
+    path: "../contracts/path/MyExtension",
+    enabled: true,
+    version: "1.0.0",
+    type: ContractType.Extension,
+  },
+   {
+    name: "MyExtensionFactory",
+    path: "../contracts/path/MyExtensionFactory",
+    enabled: true,
+    version: "1.0.0",
+    type: ContractType.Factory,
+  },
+```
+
+- `name`: the name of the contract declared in the .sol file;
+- `path`: the path of the contract in the `contracts` folder;
+- `enabled`: the flag indicating if that contract must be deployed/enabled;
+- `version`: the version of the contract that will be used to write/read to/from the `DaoArtifacts` contract;
+- `type`: the type of the contract (Core = 0, Factory = 1, Extension = 2, Adapter = 3, Util = 4, Test = 5).
 
 In order to speed up the test suites we usually don't create one DAO per test function, but we create the DAO during the suite initialization, and only reset the chain after each test function using the chain snapshot feature. For instance:
 
