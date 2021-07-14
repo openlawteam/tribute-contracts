@@ -356,11 +356,11 @@ describe("Extension - ExtensionName", () => {
 });
 ```
 
-Considering the extension that you are creating is not part of the default set of extensions, you need to declare import it, and the Factory from **[ContractUtil.js](https://github.com/openlawteam/tribute-contracts/blob/master/utils/ContractUtil.js)**, then deploy both to be able to configure the extension access flags after it is used in the test suite, but it needs to happen _before_ the DAO is finalized. When the DAO is finalized it means that the DAO initialization has been completed, so any state changes must be done though a proposal, instead of doing it through the deployment phase. Here is a simple example of an extension configurated after its creation, but before the DAO creation is finalized:
+Considering the extension that you are creating is not part of the default set of extensions, you need to declare import it, and the Factory from **[utils/OZTestUtil.js](https://github.com/openlawteam/tribute-contracts/blob/master/utils/OZTestUtil.js)**, then deploy both to be able to configure the extension access flags after it is used in the test suite, but it needs to happen _before_ the DAO is finalized. When the DAO is finalized it means that the DAO initialization has been completed, so any state changes must be done though a proposal, instead of doing it through the deployment phase. Here is a simple example of an extension configurated after its creation, but before the DAO creation is finalized:
 
 ```javascript
 
-import { MyExtensionContract, MyExtensionFactory } from 'ContractUtil';
+import { MyExtensionContract, MyExtensionFactory } from "../../utils/OZTestUtil";
 
 import { entry } from 'DeploymentUtil';
 
