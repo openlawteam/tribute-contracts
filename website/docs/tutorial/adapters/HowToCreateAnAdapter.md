@@ -247,7 +247,23 @@ There are several examples of tests that you can check to start building your ow
 
 The general idea is to create one test suite per adapter/contract. And try to cover all the happy paths first, and then add more complex test cases after that.
 
-You need to declare the new adapter contract to `ContractUtil.js`, so it can be accessed in the deploy/test environment.
+You need to declare the new adapter contract in `deployment/contracts.config.js` file, so it can be accessed in the deploy/test environment. Make sure you use following the structure:
+
+```json
+{
+    name: "Sample2Contract",
+    path: "../contracts/path/Sample2Contract",
+    enabled: true,
+    version: "1.0.0",
+    type: ContractType.Adapter,
+  },
+```
+
+- `name`: the name of the contract declared in the .sol file;
+- `path`: the path of the contract in the `contracts` folder;
+- `enabled`: the flag indicating if that contract must be deployed/enabled;
+- `version`: the version of the contract that will be used to write/read to/from the `DaoArtifacts` contract;
+- `type`: the type of the contract (Core = 0, Factory = 1, Extension = 2, Adapter = 3, Util = 4, Test = 5).
 
 In order to speed up the test suites we usually don't create one DAO per test function, but we create the DAO during the suite initialization, and only reset the chain after each test function using the chain snapshot feature. For instance:
 
