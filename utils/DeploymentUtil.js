@@ -287,39 +287,6 @@ const configureOffchainVoting = async ({
   return { offchainVoting, snapshotProposalContract, handleBadReporterAdapter };
 };
 
-const configureBatchVoting = async ({
-  owner,
-  dao,
-  daoFactory,
-  chainId,
-  votingPeriod,
-  gracePeriod,
-  SnapshotProposalContract,
-  BatchVotingContract,
-  deployFunction,
-}) => {
-  let snapshotProposalContract, batchVoting;
-
-  snapshotProposalContract = await deployFunction(SnapshotProposalContract, [
-    chainId,
-  ]);
-  batchVoting = await deployFunction(BatchVotingContract, [
-    snapshotProposalContract.address,
-  ]);
-
-  await daoFactory.updateAdapter(
-    dao.address,
-    entryDao("voting", batchVoting, {}),
-    { from: owner }
-  );
-
-  await batchVoting.configureDao(dao.address, votingPeriod, gracePeriod, {
-    from: owner,
-  });
-
-  return { batchVoting, snapshotProposalContract };
-};
-
 const prepareAdapters = async ({
   deployFunction,
   VotingContract,
@@ -328,7 +295,6 @@ const prepareAdapters = async ({
   TributeNFTContract,
   LendNFTContract,
   ERC20TransferStrategy,
-  InternalTokenVestingExtension,
   DistributeContract,
   RagequitContract,
   ManagingContract,

@@ -229,13 +229,6 @@ const contracts = [
     version: "1.0.0",
     type: ContractType.Adapter,
   },
-  {
-    name: "BatchVotingContract",
-    path: "../contracts/adapters/voting/BatchVotingContract",
-    enabled: true,
-    version: "1.0.0",
-    type: ContractType.Adapter,
-  },
 
   // Withdraw / Kick Adapters
   {
