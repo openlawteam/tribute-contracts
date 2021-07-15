@@ -297,6 +297,10 @@ contract DistributeContract is
         }
     }
 
+    /**
+     * @notice Updates the holder account with the amount based on the token parameter.
+     * @notice It is an internal transfer only that happens in the Bank extension.
+     */
     function _distributeOne(
         BankExtension bank,
         address unitHolderAddr,
@@ -311,6 +315,10 @@ contract DistributeContract is
         bank.internalTransfer(ESCROW, unitHolderAddr, token, amount);
     }
 
+    /**
+     * @notice Updates all the holder accounts with the amount based on the token parameter.
+     * @notice It is an internal transfer only that happens in the Bank extension.
+     */
     function _distributeAll(
         DaoRegistry dao,
         BankExtension bank,

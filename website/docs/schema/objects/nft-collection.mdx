@@ -1,0 +1,40 @@
+---
+id: nft-collection
+title: NFTCollection
+---
+
+No description
+
+```graphql
+type NFTCollection {
+  id: ID!
+  nfts(
+    skip: Int = 0
+    first: Int = 100
+    orderBy: NFT_orderBy
+    orderDirection: OrderDirection
+    where: NFT_filter
+  ): [NFT!]
+  tributeDao: TributeDao!
+}
+```
+
+### Fields
+
+#### `id` 
+
+Unique identifier and primary key of the `NFTCollection` entity
+
+#### `nfts` ([`[NFT!]`]
+
+- ##### `skip` 
+
+- ##### `first` 
+
+- ##### `orderBy` ([`NFT_orderBy`]
+
+- ##### `orderDirection` ([`OrderDirection`]
+
+- ##### `where` ([`NFT_filter`]
+
+#### `tributeDao` ([`TributeDao!`]

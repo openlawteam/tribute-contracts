@@ -54,6 +54,14 @@ contract ConfigurationContract is
         revert("fallback revert");
     }
 
+    /**
+     * @notice Creates and sponsors a configuration proposal.
+     * @param dao The DAO Address.
+     * @param proposalId The proposal id.
+     * @param keys The applicant address.
+     * @param values The token to receive the funds.
+     * @param data Additional details about the financing proposal.
+     */
     function submitProposal(
         DaoRegistry dao,
         bytes32 proposalId,
@@ -82,6 +90,11 @@ contract ConfigurationContract is
         votingContract.startNewVotingForProposal(dao, proposalId, data);
     }
 
+    /**
+     * @notice Processing a configuration proposal to update the DAO state.
+     * @param dao The DAO Address.
+     * @param proposalId The proposal id.
+     */
     function processProposal(DaoRegistry dao, bytes32 proposalId)
         external
         override

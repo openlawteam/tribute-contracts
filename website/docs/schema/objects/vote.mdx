@@ -1,0 +1,33 @@
+---
+id: vote
+title: Vote
+---
+
+No description
+
+```graphql
+type Vote {
+  id: ID!
+  nbNo: BigInt!
+  nbYes: BigInt!
+  adapterName: VotingAdapterName!
+  adapterAddress: Bytes!
+  proposal: Proposal
+}
+```
+
+### Fields
+
+#### `id` 
+
+Unique identifier and primary key of the `Vote` entity
+
+#### `nbNo` 
+
+#### `nbYes` 
+
+#### `adapterName` ([`VotingAdapterName!`]
+
+#### `adapterAddress` 
+
+#### `proposal` ([`Proposal`]

@@ -41,6 +41,7 @@ const {
   takeChainSnapshot,
   revertChainSnapshot,
   web3,
+  OffchainVotingHashContract,
 } = require("../../utils/OZTestUtil.js");
 
 const {
@@ -95,6 +96,7 @@ const onboardMember = async (dao, voting, onboarding, bank, index) => {
     timestamp: Math.floor(new Date().getTime() / 1000),
     space,
     payload: proposalPayload,
+    submitter: members[0].address,
   };
 
   //signer for myAccount (its private key)
@@ -167,6 +169,7 @@ const onboardMember = async (dao, voting, onboarding, bank, index) => {
     dao.address,
     proposalId,
     voteResultTree.getHexRoot(),
+    members[0].address,
     lastResult,
     rootSig
   );
@@ -225,6 +228,7 @@ describe("Adapter - Offchain Voting", () => {
       timestamp: Math.floor(new Date().getTime() / 1000),
       space: "tribute",
       payload: proposalPayload,
+      submitter: members[0].address,
       sig: "0x00",
     };
 
@@ -321,7 +325,10 @@ describe("Adapter - Offchain Voting", () => {
       chainId
     );
 
-    const solNodeDef = await offchainVoting.VOTE_RESULT_NODE_TYPE();
+    const ovHashAddr = await offchainVoting.ovHash();
+    const ovHash = await OffchainVotingHashContract.at(ovHashAddr);
+
+    const solNodeDef = await ovHash.VOTE_RESULT_NODE_TYPE();
     const jsNodeMsg = TypedDataUtils.encodeType("Message", nodeDef.types);
 
     expect(solNodeDef).equal(jsNodeMsg);

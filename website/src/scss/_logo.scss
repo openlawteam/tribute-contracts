@@ -1,0 +1,60 @@
+@use "./variables" as *; /* load without namespace for convenience */
+@use "./mixins" as *; /* load without namespace for convenience */
+
+.logo-container {
+  padding: 1rem 3rem;
+  width: 100%;
+  z-index: 0;
+
+  &--header {
+    padding: 0 2rem;
+  }
+
+  &--center {
+    margin: 0 auto;
+    padding: 3rem 0 0 0;
+    text-align: center;
+  }
+}
+
+.logo {
+  @include fluid-type(
+    $bp-sm,
+    $bp-xl,
+    64px,
+    96px
+  ); /* min font-size 4rem, max 6rem */
+
+  color: $color-primary;
+  font-family: $font-accent;
+  font-size: 6em;
+  font-weight: bold;
+  letter-spacing: 6px;
+
+  &--small {
+    @include fluid-type(
+      $bp-sm,
+      $bp-xl,
+      24px,
+      30px
+    ); /* min font-size 1.5rem, max 1.875rem */
+  }
+
+  &--medium {
+    @include fluid-type(
+      $bp-sm,
+      $bp-xl,
+      24px,
+      40px
+    ); /* min font-size 1.5rem, max 2.5rem */
+  }
+
+  &--large {
+    @include fluid-type(
+      $bp-sm,
+      $bp-xl,
+      43px,
+      76px
+    ); /* min font-size 2.6875rem, max 4.75rem */
+  }
+}

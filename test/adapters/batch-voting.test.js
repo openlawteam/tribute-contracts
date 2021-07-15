@@ -119,6 +119,7 @@ describe("Adapter - BatchVoting", () => {
       timestamp: Math.floor(new Date().getTime() / 1000),
       space,
       payload: proposalPayload,
+      submitter: this.members[0].address,
     };
 
     //signer for myAccount (its private key)

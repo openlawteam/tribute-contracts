@@ -5,7 +5,7 @@ import { config as dotenvConfig } from "dotenv";
 
 import subgraphConfig from "./config/subgraph-config.json";
 
-dotenvConfig({ path: resolve(__dirname, "./.env") });
+dotenvConfig({ path: resolve(__dirname, "../.env") });
 
 type DeploySettings = {
   GITHUB_USERNAME: string;

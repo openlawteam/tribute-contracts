@@ -30,7 +30,6 @@ const { sha3, toBN } = require("../../utils/ContractUtil.js");
 const {
   deployDefaultDao,
   entryDao,
-  entryBank,
   entryExecutor,
   ERC20Minter,
   ProxToken,

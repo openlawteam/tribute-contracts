@@ -1,0 +1,49 @@
+---
+id: token
+title: Token
+---
+
+No description
+
+```graphql
+type Token {
+  id: ID!
+  name: String
+  symbol: String
+  tokenAddress: Bytes!
+  totalSupply: BigInt
+  holders(
+    skip: Int = 0
+    first: Int = 100
+    orderBy: TokenHolder_orderBy
+    orderDirection: OrderDirection
+    where: TokenHolder_filter
+  ): [TokenHolder!]
+}
+```
+
+### Fields
+
+#### `id` 
+
+Unique identifier and primary key of the `Token` entity
+
+#### `name` 
+
+#### `symbol` 
+
+#### `tokenAddress` 
+
+#### `totalSupply` 
+
+#### `holders` ([`[TokenHolder!]`]
+
+- ##### `skip` 
+
+- ##### `first` 
+
+- ##### `orderBy` ([`TokenHolder_orderBy`]
+
+- ##### `orderDirection` ([`OrderDirection`]
+
+- ##### `where` ([`TokenHolder_filter`]

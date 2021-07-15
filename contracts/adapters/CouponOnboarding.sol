@@ -60,8 +60,9 @@ contract CouponOnboardingContract is
     bytes32 constant ERC20InternalTokenAddr =
         keccak256("coupon-onboarding.erc20.internal.token.address");
 
-    uint256 chainId;
-    mapping(address => mapping(uint256 => uint256)) flags;
+    uint256 private _chainId;
+
+    mapping(address => mapping(uint256 => uint256)) private _flags;
 
     event CouponRedeemed(
         address daoAddress,
@@ -70,10 +71,22 @@ contract CouponOnboardingContract is
         uint256 amount
     );
 
-    constructor(uint256 _chainId) {
-        chainId = _chainId;
+    constructor(uint256 chainId) {
+        _chainId = chainId;
     }
 
+    /**
+     * @notice default fallback function to prevent from sending ether to the contract
+     */
+    receive() external payable {
+        revert("fallback revert");
+    }
+
+    /**
+     * @notice Configures the Adapter with the coupon signer address and token to mint.
+     * @param signerAddress is the DAO instance to be configured
+     * @param tokenAddrToMint is the coupon to hash
+     */
     function configureDao(
         DaoRegistry dao,
         address signerAddress,
@@ -97,6 +110,11 @@ contract CouponOnboardingContract is
         }
     }
 
+    /**
+     * @notice Hashes the provided coupon as an ERC712 hash.
+     * @param dao is the DAO instance to be configured
+     * @param coupon is the coupon to hash
+     */
     function hashCouponMessage(DaoRegistry dao, Coupon memory coupon)
         public
         view
@@ -112,9 +130,17 @@ contract CouponOnboardingContract is
                 )
             );
 
-        return hashMessage(dao, chainId, address(this), message);
+        return hashMessage(dao, _chainId, address(this), message);
     }
 
+    /**
+     * @notice Redeems a coupon to add a new member.
+     * @param dao is the DAO instance to be configured
+     * @param authorizedMember is the address that this coupon authorized to become a new member
+     * @param amount is the amount of units that this member will receive
+     * @param nonce is a unique identifier for this coupon request
+     * @param signature is message signature for verification
+     */
     function redeemCoupon(
         DaoRegistry dao,
         address authorizedMember,
@@ -122,7 +148,7 @@ contract CouponOnboardingContract is
         uint256 nonce,
         bytes memory signature
     ) external reentrancyGuard(dao) {
-        uint256 currentFlag = flags[address(dao)][nonce / 256];
+        uint256 currentFlag = _flags[address(dao)][nonce / 256];
         require(
             getFlag(currentFlag, nonce % 256) == false,
             "coupon already redeemed"
@@ -137,7 +163,7 @@ contract CouponOnboardingContract is
             "invalid sig"
         );
 
-        flags[address(dao)][nonce / 256] = setFlag(
+        _flags[address(dao)][nonce / 256] = setFlag(
             currentFlag,
             nonce % 256,
             true

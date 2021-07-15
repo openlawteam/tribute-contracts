@@ -69,7 +69,7 @@ contract ERC20Extension is
     mapping(address => mapping(address => uint256)) private _allowances;
 
     /// @notice Clonable contract must have an empty constructor
-    // constructor() {}
+    constructor() {}
 
     /**
      * @notice Initializes the extension with the DAO that it belongs to,

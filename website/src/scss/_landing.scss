@@ -1,0 +1,78 @@
+@use "./variables" as *; /* load without namespace for convenience */
+@use "./mixins" as *; /* load without namespace for convenience */
+
+.landing__header {
+  z-index: 9;
+  position: relative;
+  align-items: center;
+  display: flex;
+  justify-content: flex-end;
+  padding: 1rem 0 0;
+}
+
+.landing {
+  align-items: center;
+  display: flex;
+  flex-direction: column;
+  font-family: $font-body;
+  margin: 0 2rem;
+}
+
+.landing__subtitle {
+  font-size: 1.2rem;
+  text-align: center;
+  letter-spacing: 2px;
+  line-height: 1.5;
+  margin-top: 0.2rem;
+
+  @include size-medium-down {
+    font-size: 1.15rem;
+  }
+}
+
+.landing__img {
+  margin-top: 2rem;
+}
+
+.landing__button {
+  > button {
+    font-size: 1.25rem;
+    padding: 1rem 4rem;
+    margin: 2rem 0 1rem;
+    font-weight: normal;
+
+    &:active,
+    &:hover {
+      color: inherit;
+    }
+
+    @include size-medium-down {
+      padding: 1rem 2rem;
+    }
+  }
+}
+
+.landing-features {
+  display: flex;
+  align-items: center;
+  padding: 0 0 2rem 0;
+  width: 100%;
+
+  @include size-medium-down {
+    h3 {
+      font-size: 1.15rem;
+    }
+    p {
+      font-size: 1rem;
+    }
+  }
+}
+
+.landing-features__img {
+  height: 4em;
+  margin: 0 2rem 1.5rem 2rem;
+
+  @include size-medium-down {
+    height: 3em;
+  }
+}
