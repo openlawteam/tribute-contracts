@@ -53,7 +53,7 @@ const { expectRevert } = require("@openzeppelin/test-helpers");
 const { expect } = require("chai");
 
 const deployFunction = async (contractInterface, args, from) => {
-  if (!contractInterface) throw Error("Invalid contract interface");
+  if (!contractInterface) throw Error("undefined contract interface");
   const f = from ? from : accounts[0];
   if (args) {
     return await contractInterface.new(...args, { from: f });

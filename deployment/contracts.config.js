@@ -18,6 +18,13 @@ const contracts = [
     type: ContractType.Test,
   },
   {
+    name: "MockDao",
+    path: "../contracts/test/MockDao",
+    enabled: true,
+    version: "1.0.0",
+    type: ContractType.Test,
+  },
+  {
     name: "TestToken1",
     path: "../contracts/test/TestToken1",
     enabled: true,
@@ -97,6 +104,14 @@ const contracts = [
     type: ContractType.Factory,
   },
   {
+    name: "InternalTokenVestingExtensionFactory",
+    path:
+      "../contracts/extensions/token/erc20/InternalTokenVestingExtensionFactory",
+    enabled: true,
+    version: "1.0.0",
+    type: ContractType.Factory,
+  },
+  {
     name: "ExecutorExtensionFactory",
     path: "../contracts/extensions/executor/ExecutorExtensionFactory",
     enabled: true,
@@ -122,6 +137,13 @@ const contracts = [
   {
     name: "ERC20Extension",
     path: "../contracts/extensions/token/erc20/ERC20Extension",
+    enabled: true,
+    version: "1.0.0",
+    type: ContractType.Extension,
+  },
+  {
+    name: "InternalTokenVestingExtension",
+    path: "../contracts/extensions/token/erc20/InternalTokenVestingExtension",
     enabled: true,
     version: "1.0.0",
     type: ContractType.Extension,
@@ -270,6 +292,21 @@ const contracts = [
   {
     name: "TributeNFTContract",
     path: "../contracts/adapters/TributeNFTContract",
+    enabled: true,
+    version: "1.0.0",
+    type: ContractType.Adapter,
+  },
+  {
+    name: "LendNFTContract",
+    path: "../contracts/adapters/LendNFTContract",
+    enabled: true,
+    version: "1.0.0",
+    type: ContractType.Adapter,
+  },
+  // ERC20 Util
+  {
+    name: "ERC20TransferStrategy",
+    path: "../contracts/extensions/token/erc20/ERC20TransferStrategy",
     enabled: true,
     version: "1.0.0",
     type: ContractType.Adapter,

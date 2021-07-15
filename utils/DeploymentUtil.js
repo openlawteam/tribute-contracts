@@ -599,12 +599,17 @@ const configureDao = async ({
   if (bankAdapter) adapters.push(entryDao("bank", bankAdapter, {}));
 
   // Declare the erc20 token extension as an adapter to be able to call the bank extension
-  if (erc20TokenExtension)
+  if (erc20TokenExtension) {
     adapters.push(
       entryDao("erc20-ext", erc20TokenExtension, {
         NEW_MEMBER: true,
       })
     );
+
+    adapters.push(
+      entryDao("erc20-transfer-strategy", erc20TransferStrategy, {})
+    );
+  }
 
   await daoFactory.addAdapters(dao.address, adapters, { from: owner });
 
@@ -641,6 +646,7 @@ const configureDao = async ({
     adaptersWithBankAccess.push(
       entryBank(onboarding, {
         ADD_TO_BALANCE: true,
+        INTERNAL_TRANSFER: true,
       })
     );
 
@@ -648,6 +654,7 @@ const configureDao = async ({
     adaptersWithBankAccess.push(
       entryBank(couponOnboarding, {
         ADD_TO_BALANCE: true,
+        INTERNAL_TRANSFER: true,
       })
     );
 
@@ -656,6 +663,7 @@ const configureDao = async ({
       entryBank(financing, {
         ADD_TO_BALANCE: true,
         SUB_FROM_BALANCE: true,
+        INTERNAL_TRANSFER: true,
       })
     );
 
@@ -756,7 +764,9 @@ const configureDao = async ({
     await couponOnboarding.configureDao(
       dao.address,
       couponCreatorAddress,
+      erc20TokenExtension.address,
       UNITS,
+      maxAmount,
       {
         from: owner,
       }

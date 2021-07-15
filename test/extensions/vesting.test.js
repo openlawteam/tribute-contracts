@@ -35,7 +35,6 @@ const {
   deployFunction,
   advanceTime,
   accounts,
-  expectRevert,
   expect,
 } = require("../../utils/OZTestUtil.js");
 
@@ -180,7 +179,9 @@ describe("Extension - Vesting", () => {
     halfWay = diff.div(toBN("2"));
 
     minBalance = await vesting.getMinimumBalance(accounts[0], UNITS);
-    expect(minBalance.toString()).equal("150");
+    const minBalanceStr = minBalance.toString();
+    //to manage rounding error
+    expect(minBalanceStr === "150" || minBalanceStr === "151").equal(true);
 
     await advanceTime(halfWay.toNumber());
 

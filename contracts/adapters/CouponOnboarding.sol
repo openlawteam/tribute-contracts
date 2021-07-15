@@ -158,8 +158,11 @@ contract CouponOnboardingContract is
         bytes32 hash = hashCouponMessage(dao, coupon);
 
         require(
-            ECDSA.recover(hash, signature) ==
+            SignatureChecker.isValidSignatureNow(
                 dao.getAddressConfiguration(SignerAddressConfig),
+                hash,
+                signature
+            ),
             "invalid sig"
         );
 
@@ -181,12 +184,12 @@ contract CouponOnboardingContract is
                 tokenAddressToMint,
                 amount
             );
+            // address needs to be added to the members mappings. ERC20 is doing it for us so no need to do it twice
+            potentialNewMember(authorizedMember, dao, bank);
         } else {
             erc20.safeTransferFrom(GUILD, authorizedMember, amount);
         }
 
-        // address needs to be added to the members mappings
-        potentialNewMember(authorizedMember, dao, bank);
         emit CouponRedeemed(address(dao), nonce, authorizedMember, amount);
     }
 }

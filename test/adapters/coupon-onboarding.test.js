@@ -113,9 +113,13 @@ describe("Adapter - Coupon Onboarding ", () => {
       1
     );
 
-    const recAddr = await couponOnboarding.recover(jsHash, signature);
+    const isValid = await couponOnboarding.isValidSignature(
+      signer.address,
+      jsHash,
+      signature
+    );
 
-    expect(recAddr).equal(signer.address);
+    expect(isValid).equal(true);
 
     let balance = await bank.balanceOf(otherAccount, UNITS);
     expect(balance.toString()).equal("0");
@@ -173,9 +177,13 @@ describe("Adapter - Coupon Onboarding ", () => {
       1
     );
 
-    const recAddr = await couponOnboarding.recover(jsHash, signature);
+    const isValid = await couponOnboarding.isValidSignature(
+      signer.address,
+      jsHash,
+      signature
+    );
 
-    expect(recAddr).equal(signer.address);
+    expect(isValid).equal(true);
 
     let balance = await bank.balanceOf(otherAccount, UNITS);
     expect(balance.toString()).equal("0");
@@ -236,9 +244,13 @@ describe("Adapter - Coupon Onboarding ", () => {
       1
     );
 
-    const recAddr = await couponOnboarding.recover(jsHash, signature);
+    const isValid = await couponOnboarding.isValidSignature(
+      signer.address,
+      jsHash,
+      signature
+    );
 
-    expect(recAddr).equal(signer.address);
+    expect(isValid).equal(true);
     let balance = await bank.balanceOf(otherAccount, UNITS);
     expect(balance.toString()).equal("0");
 
