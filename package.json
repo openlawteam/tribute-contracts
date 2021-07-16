@@ -16,6 +16,7 @@
     "test": "test"
   },
   "dependencies": {
+    "@openlaw/snapshot-js-erc712": "^1.1.2",
     "@openzeppelin/contracts": "^4.1.0",
     "@truffle/contract": "^4.3.13",
     "@truffle/hdwallet-provider": "1.2.2",
@@ -32,6 +33,7 @@
     "@openzeppelin/test-helpers": "^0.5.10",
     "@smartdec/smartcheck": "^2.0.1",
     "chai": "^4.3.4",
+    "commander": "^8.0.0",
     "dotenv": "^8.2.0",
     "eth-gas-reporter": "^0.2.22",
     "install": "^0.13.0",

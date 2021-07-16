@@ -329,7 +329,7 @@ describe("Adapter - Managing", () => {
     const newManaging = await ManagingContract.new();
     const newAdapterId = sha3("managing");
     const proposalId = getProposalCounter();
-    const { flags } = entryDao("managing", newManaging, {
+    const { flags } = entryDao("managing", newManaging.address, {
       SUBMIT_PROPOSAL: true,
       REPLACE_ADAPTER: true,
     });

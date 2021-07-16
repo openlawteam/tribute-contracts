@@ -32,9 +32,11 @@ const toWei = Web3Utils.toWei;
 const fromUtf8 = Web3Utils.fromUtf8;
 const hexToBytes = Web3Utils.hexToBytes;
 const toAscii = Web3Utils.toAscii;
+const asciiToHex = Web3Utils.asciiToHex;
 const fromAscii = Web3Utils.fromAscii;
 const toUtf8 = Web3Utils.toUtf8;
 const toHex = Web3Utils.toHex;
+const toProposalId = (id) => `0x${id.padStart(64, "0")}`;
 
 const GUILD = "0x000000000000000000000000000000000000dead";
 const TOTAL = "0x000000000000000000000000000000000000babe";
@@ -59,9 +61,11 @@ module.exports = {
   hexToBytes,
   fromUtf8,
   toAscii,
+  asciiToHex,
   fromAscii,
   toUtf8,
   toHex,
+  toProposalId,
   maximumChunks,
   numberOfUnits,
   unitPrice,
