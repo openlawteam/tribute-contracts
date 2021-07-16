@@ -51,14 +51,20 @@ contract ERC1155TokenExtension is
     enum AclFlag {WITHDRAW_NFT, COLLECT_NFT, INTERNAL_TRANSFER}
 
     //EVENTS
-    event CollectedNFT(address nftAddr, uint256 nftTokenId);
+    event CollectedNFT(address nftAddr, uint256 nftTokenId, uint256 amount);
     event TransferredNFT(
         address nftAddr,
         uint256 nftTokenId,
+        uint256 amount,
         address oldOwner,
         address newOwner
     );
-    event WithdrawnNFT(address nftAddr, uint256 nftTokenId, uint amount, address toAddress);
+    event WithdrawnNFT(
+        address nftAddr,
+        uint256 nftTokenId,
+        uint256 amount,
+        address toAddress
+    );
 
     //MAPPINGS
 
@@ -68,10 +74,13 @@ contract ERC1155TokenExtension is
     // The internal owner of record of an NFT that has been transferred to the extension
     mapping(bytes32 => address) private _ownership;
 
-    //the number amount of Token IDs that belong to an NFT address stored in the Guild for a specific Token ID
     // address of token => tokenId => amount of that tokenId
-    mapping(address => mapping(uint => EnumerableSet.UintSet)) private _nftAmount; 
+    //mapping(address => mapping(uint => EnumerableSet.UintSet)) private _nftAmount;
 
+    //the number amount of Token IDs that belong to an NFT address stored in the Guild for a specific Token ID
+    // owner => tokenAddress => tokenId => tokenAmount
+    mapping(address => mapping(address => mapping(uint256 => EnumerableSet.UintSet)))
+        private _nftTracker;
     //All the NFT addresses collected and stored in the GUILD collection
     EnumerableSet.AddressSet private _nftAddresses;
 
@@ -113,22 +122,22 @@ contract ERC1155TokenExtension is
      * @param nftTokenId The NFT token id.
      * @param amount The amount of NFT with nftTokenId to be collected.
      */
-    function collect(address nftAddr, uint256 nftTokenId, uint256 amount)
-        external
-        hasExtensionAccess(this, AclFlag.COLLECT_NFT)
-    
-    {
+    function collect(
+        address nftAddr,
+        uint256 nftTokenId,
+        uint256 amount
+    ) external hasExtensionAccess(this, AclFlag.COLLECT_NFT) {
         IERC1155 erc1155 = IERC1155(nftAddr);
-        // Move the NFT to the contract address - unlike 721 no 'ownerOf'
-        uint256 ownerTokenIdBalance = erc1155.balanceOf(address(this), nftTokenId);
-        //address currentOwner = erc1155.ownerOf(address(this), nftTokenId);
+        // check balance of the NFT to the contract address - unlike 721 no 'ownerOf'
+        uint256 ownerTokenIdBalance =
+            erc1155.balanceOf(address(this), nftTokenId);
 
         //If the NFT is already in the NFTExtension, update the ownership if not set already
         if (ownerTokenIdBalance > 0) {
-            if (_ownership[getNFTId(nftAddr, nftTokenId)]== address(0x0)) {
-                _saveNft(nftAddr, nftTokenId, GUILD,amount);
+            if (_ownership[getNFTId(nftAddr, nftTokenId)] == address(0x0)) {
+                _saveNft(nftAddr, nftTokenId, GUILD, amount);
 
-                emit CollectedNFT(nftAddr, nftTokenId);
+                emit CollectedNFT(nftAddr, nftTokenId, amount);
             }
             //If the NFT is not in the NFTExtension, we try to transfer from the current owner of the NFT to the extension
         } else {
@@ -141,7 +150,7 @@ contract ERC1155TokenExtension is
             );
             _saveNft(nftAddr, nftTokenId, GUILD, amount);
 
-            emit CollectedNFT(nftAddr, nftTokenId);
+            emit CollectedNFT(nftAddr, nftTokenId, amount);
         }
     }
 
@@ -160,22 +169,28 @@ contract ERC1155TokenExtension is
         uint256 nftTokenId,
         uint256 amount
     ) public hasExtensionAccess(this, AclFlag.WITHDRAW_NFT) {
-        // Remove the NFT from the contract address to the actual owner
+        // instance of 1155
         IERC1155 erc1155 = IERC1155(nftAddr);
-        erc1155.safeTransferFrom(address(this), newOwner, nftTokenId, amount, "0x0");
-        //Todo - Add an if/else condition based on whether the amount of the TokenId = 0 after transfer, or > 0
-        // Remove the asset from the extension
-        _nfts[nftAddr].remove(nftTokenId);
-        //remove the tokenID amount
-        _nftAmount[nftAddr][nftTokenId].remove(amount);
-        delete _ownership[getNFTId(nftAddr, nftTokenId)];
+
+        //remove / update the tokenID amount from the extension
+        _nftTracker[address(this)][nftAddr][nftTokenId].remove(amount);
+        // Remove the NFT from the contract address to the actual owner
+        erc1155.safeTransferFrom(
+            address(this),
+            newOwner,
+            nftTokenId,
+            amount,
+            "0x0"
+        );
+
+        //delete _ownership[getNFTId(nftAddr, nftTokenId)];
 
         // If we dont hold asset from this address anymore, we can remove it
-        if (_nfts[nftAddr].length() == 0) {
+        if (_nftTracker[address(this)][nftAddr][nftTokenId].length() == 0) {
             _nftAddresses.remove(nftAddr);
         }
 
-        emit WithdrawnNFT(nftAddr, nftTokenId, amount,newOwner);
+        emit WithdrawnNFT(nftAddr, nftTokenId, amount, newOwner);
     }
 
     /**
@@ -184,12 +199,13 @@ contract ERC1155TokenExtension is
      * @dev Reverts if the NFT is not already internally owned in the extension.
      * @param nftAddr The NFT address.
      * @param nftTokenId The NFT token id.
+     * @param amount the number of a partricular NFT token id.
      * @param newOwner The address of the new owner.
      */
     function internalTransfer(
         address nftAddr,
         uint256 nftTokenId,
-        
+        uint256 amount,
         address newOwner
     ) public hasExtensionAccess(this, AclFlag.INTERNAL_TRANSFER) {
         require(newOwner != address(0x0), "new owner is 0");
@@ -198,7 +214,17 @@ contract ERC1155TokenExtension is
 
         _ownership[getNFTId(nftAddr, nftTokenId)] = newOwner;
 
-        emit TransferredNFT(nftAddr, nftTokenId, currentOwner, newOwner);
+        //update the amount of an NFT TokenId for currentOwner an newOwner
+        _nftTracker[currentOwner][nftAddr][nftTokenId].remove(amount);
+        _nftTracker[newOwner][nftAddr][nftTokenId].add(amount);
+
+        emit TransferredNFT(
+            nftAddr,
+            nftTokenId,
+            amount,
+            currentOwner,
+            newOwner
+        );
     }
 
     /**
@@ -286,8 +312,6 @@ contract ERC1155TokenExtension is
         return this.onERC1155Received.selector; // unclear if .selector is correct IERC1155Receiver?
     }
 
-
-
     /**
      * @notice Helper function to update the extension states for an NFT collected by the extension.
      * @param nftAddr The NFT address.
@@ -297,7 +321,7 @@ contract ERC1155TokenExtension is
     function _saveNft(
         address nftAddr,
         uint256 nftTokenId,
-        address owner, 
+        address owner,
         uint256 amount
     ) private {
         // Save the asset
@@ -307,9 +331,11 @@ contract ERC1155TokenExtension is
         // Keep track of the collected assets
         _nftAddresses.add(nftAddr);
         //update the amount of a particular Token ID in the GUILD
-        _nftAmount[nftAddr][nftTokenId].add(amount);
+        //_nftAmount[nftAddr][nftTokenId].add(amount);
+        _nftTracker[owner][nftAddr][nftTokenId].add(amount);
     }
 
+    // TODO BATCH FUNCTIONS TO implement?
     /**
      * @dev xref:ROOT:erc1155.adoc#batch-operations[Batched] version of {balanceOf}.
      *
@@ -318,7 +344,6 @@ contract ERC1155TokenExtension is
      * - `accounts` and `ids` must have the same length.
      */
     function balanceOfBatch(address[] calldata accounts, uint256[] calldata ids)
-      
         public
         virtual
         returns (uint256[] memory);
@@ -340,7 +365,6 @@ contract ERC1155TokenExtension is
      * See {setApprovalForAll}.
      */
     function isApprovedForAll(address account, address operator)
-        
         public
         virtual
         returns (bool);
@@ -362,7 +386,7 @@ contract ERC1155TokenExtension is
         uint256[] calldata ids,
         uint256[] calldata amounts,
         bytes calldata data
-    )  public virtual;
+    ) public virtual;
 
     function onERC1155BatchReceived(
         address operator,
@@ -371,5 +395,4 @@ contract ERC1155TokenExtension is
         uint256 values,
         bytes calldata data
     ) public virtual;
-
 }
