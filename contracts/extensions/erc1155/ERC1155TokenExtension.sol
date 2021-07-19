@@ -355,7 +355,7 @@ contract ERC1155TokenExtension is
      * See {setApprovalForAll}.
      */
     function isApprovedForAll(address account, address operator)
-        public
+        external
         virtual
         returns (bool);
 
@@ -376,13 +376,17 @@ contract ERC1155TokenExtension is
         uint256[] calldata ids,
         uint256[] calldata amounts,
         bytes calldata data
-    ) public virtual;
+    ) external  virtual;
 
-    function onERC1155BatchReceived(
+      function onERC1155BatchReceived(
         address operator,
         address from,
-        uint256 ids,
-        uint256 values,
+        uint256[] calldata ids,
+        uint256[] calldata values,
         bytes calldata data
-    ) public virtual;
+    )
+        external
+        override
+        virtual
+        returns(bytes4);
 }
