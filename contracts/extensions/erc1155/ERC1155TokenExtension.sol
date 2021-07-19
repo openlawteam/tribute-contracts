@@ -47,11 +47,7 @@ contract ERC1155TokenExtension is
     bool public initialized = false; //internally tracks deployment under eip-1167 proxy pattern
     DaoRegistry public dao;
 
-    enum AclFlag {
-        WITHDRAW_NFT,
-        COLLECT_NFT,
-        INTERNAL_TRANSFER
-    }
+    enum AclFlag {WITHDRAW_NFT, COLLECT_NFT, INTERNAL_TRANSFER}
 
     //EVENTS
     event CollectedNFT(address nftAddr, uint256 nftTokenId, uint256 amount);
@@ -130,10 +126,8 @@ contract ERC1155TokenExtension is
     ) external hasExtensionAccess(this, AclFlag.COLLECT_NFT) {
         IERC1155 erc1155 = IERC1155(nftAddr);
         // check balance of the NFT to the contract address - unlike 721 no 'ownerOf'
-        uint256 ownerTokenIdBalance = erc1155.balanceOf(
-            address(this),
-            nftTokenId
-        );
+        uint256 ownerTokenIdBalance =
+            erc1155.balanceOf(address(this), nftTokenId);
 
         //If the NFT is already in the NFTExtension, update the ownership if not set already
         if (ownerTokenIdBalance > 0) {
@@ -173,7 +167,10 @@ contract ERC1155TokenExtension is
         uint256 amount
     ) public hasExtensionAccess(this, AclFlag.WITHDRAW_NFT) {
         IERC1155 erc1155 = IERC1155(nftAddr);
-        require(erc1155.balanceOf(address(this), nftTokenId) > 0, "no amount to withdraw");
+        require(
+            erc1155.balanceOf(address(this), nftTokenId) > 0,
+            "no amount to withdraw"
+        );
 
         // remove / update the tokenID amount from the extension
         _nftTracker[GUILD][nftAddr][nftTokenId].remove(amount);
@@ -187,10 +184,8 @@ contract ERC1155TokenExtension is
             "0x0"
         );
 
-        uint256 ownerTokenIdBalance = erc1155.balanceOf(
-            address(this),
-            nftTokenId
-        );
+        uint256 ownerTokenIdBalance =
+            erc1155.balanceOf(address(this), nftTokenId);
         if (ownerTokenIdBalance == 0) {
             delete _ownership[getNFTId(nftAddr, nftTokenId)];
             delete _nftTracker[GUILD][nftAddr][nftTokenId];
