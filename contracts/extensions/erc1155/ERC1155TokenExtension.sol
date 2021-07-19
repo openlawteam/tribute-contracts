@@ -7,7 +7,6 @@ import "../IExtension.sol";
 import "@openzeppelin/contracts/utils/Address.sol";
 import "@openzeppelin/contracts/token/ERC1155/IERC1155.sol";
 import "@openzeppelin/contracts/token/ERC1155/IERC1155Receiver.sol";
-
 import "@openzeppelin/contracts/utils/structs/EnumerableSet.sol";
 
 /**
@@ -48,7 +47,11 @@ contract ERC1155TokenExtension is
     bool public initialized = false; //internally tracks deployment under eip-1167 proxy pattern
     DaoRegistry public dao;
 
-    enum AclFlag {WITHDRAW_NFT, COLLECT_NFT, INTERNAL_TRANSFER}
+    enum AclFlag {
+        WITHDRAW_NFT,
+        COLLECT_NFT,
+        INTERNAL_TRANSFER
+    }
 
     //EVENTS
     event CollectedNFT(address nftAddr, uint256 nftTokenId, uint256 amount);
@@ -74,13 +77,11 @@ contract ERC1155TokenExtension is
     // The internal owner of record of an NFT that has been transferred to the extension
     mapping(bytes32 => address) private _ownership;
 
-    // address of token => tokenId => amount of that tokenId
-    //mapping(address => mapping(uint => EnumerableSet.UintSet)) private _nftAmount;
-
     //the number amount of Token IDs that belong to an NFT address stored in the Guild for a specific Token ID
     // owner => tokenAddress => tokenId => tokenAmount
     mapping(address => mapping(address => mapping(uint256 => EnumerableSet.UintSet)))
         private _nftTracker;
+
     //All the NFT addresses collected and stored in the GUILD collection
     EnumerableSet.AddressSet private _nftAddresses;
 
@@ -129,8 +130,10 @@ contract ERC1155TokenExtension is
     ) external hasExtensionAccess(this, AclFlag.COLLECT_NFT) {
         IERC1155 erc1155 = IERC1155(nftAddr);
         // check balance of the NFT to the contract address - unlike 721 no 'ownerOf'
-        uint256 ownerTokenIdBalance =
-            erc1155.balanceOf(address(this), nftTokenId);
+        uint256 ownerTokenIdBalance = erc1155.balanceOf(
+            address(this),
+            nftTokenId
+        );
 
         //If the NFT is already in the NFTExtension, update the ownership if not set already
         if (ownerTokenIdBalance > 0) {
@@ -169,11 +172,12 @@ contract ERC1155TokenExtension is
         uint256 nftTokenId,
         uint256 amount
     ) public hasExtensionAccess(this, AclFlag.WITHDRAW_NFT) {
-        // instance of 1155
         IERC1155 erc1155 = IERC1155(nftAddr);
+        require(erc1155.balanceOf(address(this), nftTokenId) > 0, "no amount to withdraw");
 
-        //remove / update the tokenID amount from the extension
-        _nftTracker[address(this)][nftAddr][nftTokenId].remove(amount);
+        // remove / update the tokenID amount from the extension
+        _nftTracker[GUILD][nftAddr][nftTokenId].remove(amount);
+
         // Remove the NFT from the contract address to the actual owner
         erc1155.safeTransferFrom(
             address(this),
@@ -183,11 +187,17 @@ contract ERC1155TokenExtension is
             "0x0"
         );
 
-        //delete _ownership[getNFTId(nftAddr, nftTokenId)];
-
-        // If we dont hold asset from this address anymore, we can remove it
-        if (_nftTracker[address(this)][nftAddr][nftTokenId].length() == 0) {
-            _nftAddresses.remove(nftAddr);
+        uint256 ownerTokenIdBalance = erc1155.balanceOf(
+            address(this),
+            nftTokenId
+        );
+        if (ownerTokenIdBalance == 0) {
+            delete _ownership[getNFTId(nftAddr, nftTokenId)];
+            delete _nftTracker[GUILD][nftAddr][nftTokenId];
+            _nfts[nftAddr].remove(nftTokenId);
+            if (_nfts[nftAddr].length() == 0) {
+                _nftAddresses.remove(nftAddr);
+            }
         }
 
         emit WithdrawnNFT(nftAddr, nftTokenId, amount, newOwner);
@@ -290,19 +300,6 @@ contract ERC1155TokenExtension is
     }
 
     /**
-        @notice required function from IERC1155 standard to be able to to receive tokens
-    */
-    function onERC1155Received(
-        address,
-        address,
-        uint256,
-        uint256,
-        bytes calldata
-    ) external pure override returns (bytes4) {
-        return this.onERC1155Received.selector; // unclear if .selector is correct IERC1155Receiver?
-    }
-
-    /**
      * @notice Helper function to update the extension states for an NFT collected by the extension.
      * @param nftAddr The NFT address.
      * @param nftTokenId The token id.
@@ -321,72 +318,39 @@ contract ERC1155TokenExtension is
         // Keep track of the collected assets
         _nftAddresses.add(nftAddr);
         //update the amount of a particular Token ID in the GUILD
-        //_nftAmount[nftAddr][nftTokenId].add(amount);
         _nftTracker[owner][nftAddr][nftTokenId].add(amount);
     }
 
-    // TODO BATCH FUNCTIONS TO implement?
     /**
-     * @dev xref:ROOT:erc1155.adoc#batch-operations[Batched] version of {balanceOf}.
-     *
-     * Requirements:
-     *
-     * - `accounts` and `ids` must have the same length.
+     *  @notice required function from IERC1155 standard to be able to to receive tokens
      */
-    function balanceOfBatch(address[] calldata accounts, uint256[] calldata ids)
-        public
-        virtual
-        returns (uint256[] memory);
+    function onERC1155Received(
+        address,
+        address,
+        uint256,
+        uint256,
+        bytes calldata
+    ) external pure override returns (bytes4) {
+        return this.onERC1155Received.selector;
+    }
 
-    /**
-     * @dev Grants or revokes permission to `operator` to transfer the caller's tokens, according to `approved`,
-     *
-     * Emits an {ApprovalForAll} event.
-     *
-     * Requirements:
-     *
-     * - `operator` cannot be the caller.
-     */
-    function setApprovalForAll(address operator, bool approved) public virtual;
-
-    /**
-     * @dev Returns true if `operator` is approved to transfer ``account``'s tokens.
-     *
-     * See {setApprovalForAll}.
-     */
-    function isApprovedForAll(address account, address operator)
-        external
-        virtual
-        returns (bool);
-
-    /**
-     * @dev xref:ROOT:erc1155.adoc#batch-operations[Batched] version of {safeTransferFrom}.
-     *
-     * Emits a {TransferBatch} event.
-     *
-     * Requirements:
-     *
-     * - `ids` and `amounts` must have the same length.
-     * - If `to` refers to a smart contract, it must implement {IERC1155Receiver-onERC1155BatchReceived} and return the
-     * acceptance magic value.
-     */
-    function safeBatchTransferFrom(
-        address from,
-        address to,
-        uint256[] calldata ids,
-        uint256[] calldata amounts,
-        bytes calldata data
-    ) external  virtual;
-
-      function onERC1155BatchReceived(
+    function onERC1155BatchReceived(
         address operator,
         address from,
         uint256[] calldata ids,
         uint256[] calldata values,
         bytes calldata data
-    )
+    ) external override returns (bytes4) {
+        this.onERC1155BatchReceived.selector;
+    }
+
+    // TODO double check which type/interfaceIds it will support
+    function supportsInterface(bytes4 interfaceID)
         external
+        view
         override
-        virtual
-        returns(bytes4);
+        returns (bool)
+    {
+        return true; // supportedInterfaces[interfaceID];
+    }
 }
