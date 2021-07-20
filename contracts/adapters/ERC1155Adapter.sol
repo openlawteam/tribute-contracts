@@ -31,3 +31,30 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
  */
+
+contract ERC1155AdapterContract is DaoConstants, MemberGuard, AdapterGuard {
+    /**
+     * @notice default fallback function to prevent from sending ether to the contract.
+     */
+    receive() external payable {
+        revert("fallback revert");
+    }
+
+    /**
+     * @notice Collects the NFT from the owner and moves to the ERC1155 Token extension address
+     * @param dao The DAO address.
+     * @param nftAddr The NFT smart contract address.
+     * @param nftTokenId The NFT token id.
+     * @param amount of the nftTokenId
+     */
+    function collect(
+        DaoRegistry dao,
+        address nftAddr,
+        uint256 nftTokenId,
+        uint256 amount
+    ) external reentrancyGuard(dao) {
+        ERC1155TokenExtension erc1155 =
+            ERC1155TokenExtension(dao.getExtensionAddress(NFT));
+        erc1155.collect(nftAddr, nftTokenId, amount);
+    }
+}
