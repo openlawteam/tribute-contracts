@@ -28,3 +28,22 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
  */
+
+contract ERC1155CollectionFactory is CloneFactory, DaoConstants {
+    address public identityAddress;
+
+    event ERC1155CollectionCreated(address nftCollAddress);
+
+    constructor(address _identityAddress) {
+        identityAddress = _identityAddress;
+    }
+
+    /**
+     * @notice Create and initialize a new Standard NFT Extension which is based on ERC1155
+     */
+    function createERC1155Collection() external {
+        ERC1155TokenExtension extension =
+            ERC1155TokenExtension(_createClone(identityAddress));
+        emit ERC1155CollectionCreated(address(extension));
+    }
+}
