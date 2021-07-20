@@ -59,6 +59,13 @@ const contracts = [
     version: "1.0.0",
     type: ContractType.Test,
   },
+  {
+    name: "ERC1155TestToken",
+    path: "../contract/test/ERC1155TestToken.sol",
+    enabled: true,
+    version: "1.0.0",
+    type: ContractType.Test,
+  },
 
   // DAO Factories Contracts
   {
@@ -103,6 +110,13 @@ const contracts = [
     version: "1.0.0",
     type: ContractType.Factory,
   },
+  {
+    name: "ERC1155TokenExtensionFactory",
+    path: "../contracts/extensions/erc1155/ERC1155TokenExtensionFactory",
+    enabled: true,
+    version: "1.0.0",
+    type: ContractType.Factory,
+  },
 
   // Extensions
   {
@@ -129,6 +143,13 @@ const contracts = [
   {
     name: "ExecutorExtension",
     path: "../contracts/extensions/executor/ExecutorExtension",
+    enabled: true,
+    version: "1.0.0",
+    type: ContractType.Extension,
+  },
+  {
+    name: "ERC1155TokenExtension",
+    path: "../contracts/extensions/erc1155/ERC1155TokenExtension",
     enabled: true,
     version: "1.0.0",
     type: ContractType.Extension,
@@ -166,6 +187,13 @@ const contracts = [
   {
     name: "ManagingContract",
     path: "../contracts/adapters/ManagingContract",
+    enabled: true,
+    version: "1.0.0",
+    type: ContractType.Adapter,
+  },
+  {
+    name: "ERC1155AdapterContract",
+    path: "../contracts/adapters/ERC1155AdapterContract",
     enabled: true,
     version: "1.0.0",
     type: ContractType.Adapter,
