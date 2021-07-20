@@ -1,0 +1,35 @@
+---
+id: coupon
+title: Coupon
+---
+
+No description
+
+```graphql
+type Coupon {
+  id: ID!
+  redeemedAt: String!
+  authorizedMember: Bytes!
+  amount: BigInt!
+  nonce: BigInt!
+  tributeDao: TributeDao
+}
+```
+
+### Fields
+
+#### `id` 
+
+Unique identifier and primary key of the `Coupon` entity
+
+#### `redeemedAt` 
+
+#### `authorizedMember` 
+
+Authorized member address
+
+#### `amount` 
+
+#### `nonce` 
+
+#### `tributeDao` ([`TributeDao`]

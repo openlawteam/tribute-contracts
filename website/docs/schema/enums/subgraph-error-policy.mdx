@@ -1,0 +1,23 @@
+---
+id: subgraph-error-policy
+title: _SubgraphErrorPolicy_
+---
+
+No description
+
+```graphql
+enum _SubgraphErrorPolicy_ {
+  allow
+  deny
+}
+```
+
+### Values
+
+#### `allow`
+
+Data will be returned even if the subgraph has indexing errors
+
+#### `deny`
+
+If the subgraph has indexing errors, data will be omitted. The default.

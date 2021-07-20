@@ -1,0 +1,184 @@
+@use "./variables" as *; /* load without namespace for convenience */
+@use "./mixins" as *; /* load without namespace for convenience */
+@use "./functions" as *; /* load without namespace for convenience */
+
+.nav-header {
+  align-items: flex-end;
+  flex-direction: column;
+  display: flex;
+}
+
+.navbar {
+  background-color: $color-background-page;
+  height: auto;
+  padding: 1.5rem;
+}
+
+.navbar__title {
+  font-size: 40px;
+}
+
+.navbar__brand {
+  color: $color-primary;
+  font-family: $font-accent;
+  font-weight: bold;
+  letter-spacing: 4px;
+}
+
+.navbar__item {
+  font-family: $font-body;
+  transition: color 0.25s ease-in-out;
+  font-size: 1.125rem;
+  letter-spacing: 2px;
+  text-transform: lowercase;
+  color: $color-primary;
+  font-weight: normal;
+
+  &.active,
+  &:hover {
+    color: $color-primary-hover;
+  }
+}
+
+.nav-header__menu-container {
+  align-items: center;
+  display: flex;
+  justify-content: flex-end;
+  opacity: 1;
+  transition: opacity 0.25s ease-in-out;
+  width: 100%;
+
+  nav {
+    padding: 0 2rem;
+    margin-left: auto;
+  }
+
+  @media only screen and (max-width: 1179px) {
+    nav,
+    .nav-header__walletconnect-button-container {
+      @include assistive-hidden;
+    }
+  }
+
+  li {
+    display: inline-flex;
+
+    a {
+      font-size: 1.125rem;
+      letter-spacing: 2px;
+      text-decoration: none;
+      text-transform: lowercase;
+
+      &.active,
+      &:hover {
+        color: $color-primary-hover;
+      }
+    }
+
+    span {
+      transition: color 0.25s ease-in-out;
+    }
+
+    @media only screen and (min-width: em($bp-lg)) {
+      margin: 0.6rem 0 0.6rem 3rem;
+    }
+  }
+}
+
+.nav__list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.nav__hamburger-wrapper {
+  outline: none;
+
+  &:focus {
+    outline: none;
+  }
+}
+
+.nav__hamburger {
+  display: inline-block;
+  margin-right: 2rem;
+  outline: none;
+  width: 1.8rem;
+
+  &:hover {
+    cursor: pointer;
+    color: $color-primary-hover;
+  }
+}
+
+.nav-modal-container {
+  height: calc(100%);
+  margin: auto;
+  max-width: 32.5rem;
+  outline: none;
+}
+
+.nav-modal-overlay {
+  background: rgba(248, 250, 253, 0.8);
+  border: none;
+  left: 0;
+  margin: 0;
+  min-height: 100%;
+  padding: 0;
+  position: fixed;
+  right: 0;
+  top: 0;
+  z-index: 10;
+  transition: opacity 100ms ease-in-out;
+}
+
+.nav-modal {
+  background-color: $color-background-page;
+  height: 100%;
+  position: fixed;
+  top: 0;
+  right: 0;
+  overflow-x: hidden;
+  width: 300px;
+  border-left: 2px solid #dedede;
+
+  li {
+    display: flex;
+    margin: 1rem 0 0 3rem;
+
+    a {
+      font-size: 1.125rem;
+      letter-spacing: 2px;
+      text-decoration: none;
+      text-transform: uppercase;
+
+      &.active,
+      &:hover {
+        color: $color-primary-hover;
+      }
+    }
+
+    span {
+      transition: color 0.25s ease-in-out;
+    }
+  }
+}
+
+.nav-modal .logo-container {
+  margin-top: 4rem;
+}
+
+.nav-modal__walletconnect-button-container {
+  border-bottom: 2px solid #e4e4e4;
+  padding-bottom: 1.5rem;
+  margin: 2rem;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+
+  & > button {
+    width: 13rem;
+    margin: 0 auto 1rem;
+    border-radius: 12px;
+  }
+}

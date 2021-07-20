@@ -80,6 +80,7 @@ contract SnapshotProposalContract {
     struct ProposalMessage {
         uint256 timestamp;
         bytes32 spaceHash;
+        address submitter;
         ProposalPayload payload;
         bytes sig;
     }

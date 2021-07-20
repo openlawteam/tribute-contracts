@@ -49,10 +49,18 @@ contract VotingContract is IVoting, DaoConstants, MemberGuard, AdapterGuard {
 
     string public constant ADAPTER_NAME = "VotingContract";
 
+    /**
+     * @notice returns the adapter name. Useful to identify wich voting adapter is actually configurated in the DAO.
+     */
     function getAdapterName() external pure override returns (string memory) {
         return ADAPTER_NAME;
     }
 
+    /**
+     * @notice Configures the DAO with the Voting and Gracing periods.
+     * @param votingPeriod The voting period in seconds.
+     * @param gracePeriod The grace period in seconds.
+     */
     function configureDao(
         DaoRegistry dao,
         uint256 votingPeriod,
@@ -62,20 +70,26 @@ contract VotingContract is IVoting, DaoConstants, MemberGuard, AdapterGuard {
         dao.setConfiguration(GracePeriod, gracePeriod);
     }
 
-    //voting  data is not used for pure onchain voting
+    /**
+     * @notice Stats a new voting proposal considering the block time and number.
+     * @notice This function is called from an Adapter to compute the voting starting period for a proposal.
+     * @param proposalId The proposal id that is being started.
+     */
     function startNewVotingForProposal(
         DaoRegistry dao,
         bytes32 proposalId,
         bytes calldata
     ) external override onlyAdapter(dao) {
-        //it is called from Registry
-        // compute startingPeriod for proposal
-
         Voting storage vote = votes[address(dao)][proposalId];
         vote.startingTime = block.timestamp;
         vote.blockNumber = block.number;
     }
 
+    /**
+     * @notice Returns the sender address.
+     * @notice This funcion is required by the IVoting, usually offchain voting have different rules to identify the sender, but it is not the case here, so we just return the fallback argument: sender.
+     * @param sender The fallback sender address that should be return in case no other is found.
+     */
     function getSenderAddress(
         DaoRegistry,
         address,
@@ -85,6 +99,15 @@ contract VotingContract is IVoting, DaoConstants, MemberGuard, AdapterGuard {
         return sender;
     }
 
+    /**
+     * @notice Submits a vote to the DAO Registry.
+     * @notice Vote has to be submitted after the starting time defined in startNewVotingForProposal.
+     * @notice The vote needs to be submitted within the voting period.
+     * @notice A member can not vote twice or more.
+     * @param dao The DAO address.
+     * @param proposalId The proposal needs to be sponsored, and not processed.
+     * @param voteValue Only Yes (1) and No (2) votes are allowed.
+     */
     function submitVote(
         DaoRegistry dao,
         bytes32 proposalId,
@@ -136,14 +159,17 @@ contract VotingContract is IVoting, DaoConstants, MemberGuard, AdapterGuard {
         }
     }
 
-    //Public Functions
     /**
-    possible results here:
-    0: has not started
-    1: tie
-    2: pass
-    3: not pass
-    4: in progress
+     * @notice Computes the voting result based on a proposal.
+     * @param dao The DAO address.
+     * @param proposalId The proposal that needs to have the votes computed.
+     * @return state
+     * The possible results are:
+     * 0: has not started
+     * 1: tie
+     * 2: pass
+     * 3: not pass
+     * 4: in progress
      */
     function voteResult(DaoRegistry dao, bytes32 proposalId)
         external
