@@ -245,6 +245,16 @@ contract ERC1155TokenExtension is
         return keccak256(abi.encodePacked(nftAddress, tokenId));
     }
 
+    //return amount of owner -> nft address - tokenID -amount
+    function getNFTIdAmount(
+        address _owner,
+        address tokenAddr,
+        uint256 index,
+        uint256 amount
+    ) public view returns (uint256) {
+        return _nftTracker[_owner][tokenAddr][index].at(amount);
+    }
+
     /**
      * @notice Returns the total amount of token ids collected for an NFT address.
      * @param tokenAddr The NFT address.

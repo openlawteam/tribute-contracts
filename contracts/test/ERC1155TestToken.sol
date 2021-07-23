@@ -31,21 +31,13 @@ SOFTWARE.
  */
 contract ERC1155TestToken is Context, AccessControlEnumerable, ERC1155 {
     bytes32 public constant MINTER_ROLE = keccak256("MINTER_ROLE");
-  
-    uint256 public constant CREATOR = 0;
-    uint256 public constant OWNER = 1;
-    uint256 public constant FAN = 2;
-    
+
     /**
      * @dev Grants `DEFAULT_ADMIN_ROLE`, `MINTER_ROLE`, and `PAUSER_ROLE` to the _creator address
      */
-    constructor( uint256 _creatorTokens, uint256 _ownerTokens, uint256 _fanTokens, string memory uri) public ERC1155(uri) {
-        _setupRole(DEFAULT_ADMIN_ROLE, _msgSender()); // _creator can assign K roles
-        _setupRole(MINTER_ROLE, _msgSender()); // _creator can mint
-     
-        _mint(_msgSender(), CREATOR, _creatorTokens, "0x1"); // creator
-        _mint(_msgSender(), OWNER, _ownerTokens, "0x2"); // fractional owner
-        _mint(_msgSender(), FAN, _fanTokens, "0x3"); // fan 10^9 = 1 BILLION 
+    constructor(string memory uri) public ERC1155(uri) {
+        _setupRole(DEFAULT_ADMIN_ROLE, _msgSender());
+        _setupRole(MINTER_ROLE, _msgSender());
     }
 
     /**
@@ -57,8 +49,16 @@ contract ERC1155TestToken is Context, AccessControlEnumerable, ERC1155 {
      *
      * - the caller must have the `MINTER_ROLE`.
      */
-    function mint(address to, uint256 id, uint256 amount, bytes memory data) public virtual {
-        require(hasRole(MINTER_ROLE, _msgSender()), "ERC1155License: must have minter role to mint");
+    function mint(
+        address to,
+        uint256 id,
+        uint256 amount,
+        bytes memory data
+    ) public virtual {
+        require(
+            hasRole(MINTER_ROLE, _msgSender()),
+            "ERC1155License: must have minter role to mint"
+        );
 
         _mint(to, id, amount, data);
     }
@@ -66,13 +66,21 @@ contract ERC1155TestToken is Context, AccessControlEnumerable, ERC1155 {
     /**
      * @dev xref:ROOT:erc1155.adoc#batch-operations[Batched] variant of {mint}.
      */
-    function mintBatch(address to, uint256[] memory ids, uint256[] memory amounts, bytes memory data) public virtual {
-        require(hasRole(MINTER_ROLE, _msgSender()), "ERC1155License: must have minter role to mint");
+    function mintBatch(
+        address to,
+        uint256[] memory ids,
+        uint256[] memory amounts,
+        bytes memory data
+    ) public virtual {
+        require(
+            hasRole(MINTER_ROLE, _msgSender()),
+            "ERC1155License: must have minter role to mint"
+        );
 
         _mintBatch(to, ids, amounts, data);
     }
 
-        /**
+    /**
      * @dev See {IERC165-supportsInterface}.
      */
     function supportsInterface(bytes4 interfaceId)
@@ -92,9 +100,7 @@ contract ERC1155TestToken is Context, AccessControlEnumerable, ERC1155 {
         uint256[] memory ids,
         uint256[] memory amounts,
         bytes memory data
-    )
-        internal virtual override(ERC1155)
-    {
+    ) internal virtual override(ERC1155) {
         super._beforeTokenTransfer(operator, from, to, ids, amounts, data);
     }
 }
