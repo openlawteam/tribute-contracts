@@ -345,14 +345,14 @@ contract ERC1155TokenExtension is
         uint256[] calldata ids,
         uint256[] calldata values,
         bytes calldata data
-    ) external override returns (bytes4) {
+    ) external pure override returns (bytes4) {
         this.onERC1155BatchReceived.selector;
     }
 
     // TODO double check which type/interfaceIds it will support
     function supportsInterface(bytes4 interfaceID)
         external
-        view
+        pure
         override
         returns (bool)
     {

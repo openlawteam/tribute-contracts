@@ -152,12 +152,12 @@ describe("Extension - ERC1155", () => {
     expect(nftAddr).equal(erc1155TestToken.address);
     const nftId = await erc1155TokenExtension.getNFT(nftAddr, 0);
     expect(nftId.toString()).equal(tokenId.toString());
-    //check token balance of nftOwner after collection
+    //check token balance of nftOwner after collection = -2
     const balanceOfnftOwner = erc1155TokenExtension.balanceOf(nftOwner, 1);
-    expect(balanceOfnftOwner).equal("8");
-    //check token balance of the erc1155TokenExtension.
+    expect(balanceOfnftOwner.toString()).equal("8");
+    //check token balance of the GUILD = +2 
     const newGuildBlance = erc1155TokenExtension.balanceOf(GUILD, 8);
-    expect(newGuildBlance).equal("2");
+    expect(newGuildBlance.toString()).equal("2");
 
     const newOwner = await erc1155TokenExtension.getNFTOwner(nftAddr, tokenId);
     expect(newOwner.toLowerCase()).equal(GUILD.toLowerCase());
