@@ -112,14 +112,13 @@ describe("Extension - ERC1155", () => {
     await erc1155TestToken.mint(nftOwner, 1, 10,"0x0");
 
     const pastEvents = await erc1155TestToken.getPastEvents();
-    //
-    const { owner, tokenId, uri, metadata } = pastEvents[1].returnValues;
+    
+    const { operator, from, to, tokenId, amount } = pastEvents[1].returnValues;
 
-    expect(tokenId).equal("1");
-    expect(uri).equal("https://www.openlaw.io/nfts/pix/1");
-    expect(metadata).equal("pixel: 1,1");
-    expect(owner).equal(nftOwner);
-    //
+     expect(tokenId).equal("1");
+     expect(amount).equal("10");
+    // expect(owner).equal(nftOwner);
+    
     const erc1155TokenExtension = this.extensions.ERC1155TokenExtension;
     //set approval where Extension is the "operator" all of nftOwners
     await erc1155TestToken.setApprovalForAll(erc1155TokenExtension.address, true, {
@@ -128,7 +127,8 @@ describe("Extension - ERC1155", () => {
     });
 
     const erc1155Adapter = this.adapters.erc1155Adapter;
-    await erc1155Adapter.collect(this.dao.address, erc1155TestToken.address, tokenId,1, {
+    //collect 2 tokens of tokenId
+    await erc1155Adapter.collect(this.dao.address, erc1155TestToken.address, tokenId,2, {
       from: nftOwner,
       gasPrice: toBN("0"),
     });
@@ -138,8 +138,17 @@ describe("Extension - ERC1155", () => {
     expect(nftAddr).equal(erc1155TestToken.address);
     const nftId = await erc1155TokenExtension.getNFT(nftAddr, 0);
     expect(nftId.toString()).equal(tokenId.toString());
+    //check token balance of nftOwner after collection 
+    const balanceOfnftOwner =  erc1155TokenExtension.balanceOf(nftOwner,1);
+    expect(balanceOfnftOwner).equal("8");
+    //check token balance of the erc1155TokenExtension. 
+    const newGuildBlance = erc1155TokenExtension.balanceOf(GUILD,8);
+    expect(newGuildBlance).equal("2");
+
     const newOwner = await erc1155TokenExtension.getNFTOwner(nftAddr, tokenId);
     expect(newOwner.toLowerCase()).equal(GUILD.toLowerCase());
+    //Felipe -  test the withdrawal?
+
   });
 
 });
