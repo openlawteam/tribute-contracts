@@ -47,10 +47,7 @@ contract ERC1155TokenExtension is
     bool public initialized = false; //internally tracks deployment under eip-1167 proxy pattern
     DaoRegistry public dao;
 
-    enum AclFlag {
-        WITHDRAW_NFT,
-        INTERNAL_TRANSFER
-    }
+    enum AclFlag {WITHDRAW_NFT, INTERNAL_TRANSFER}
 
     //EVENTS
     event CollectedNFT(address nftAddr, uint256 nftTokenId, uint256 amount);
@@ -177,10 +174,8 @@ contract ERC1155TokenExtension is
             "0x0"
         );
 
-        uint256 ownerTokenIdBalance = erc1155.balanceOf(
-            address(this),
-            nftTokenId
-        );
+        uint256 ownerTokenIdBalance =
+            erc1155.balanceOf(address(this), nftTokenId);
         if (ownerTokenIdBalance == 0) {
             delete _ownership[getNFTId(nftAddr, nftTokenId)];
             delete _nftTracker[GUILD][nftAddr][nftTokenId];
@@ -215,9 +210,8 @@ contract ERC1155TokenExtension is
         require(fromOwner != address(0x0), "invalid fromOwner arg");
         require(toOwner != address(0x0), "invalid toOwner arg");
 
-        bool holdsNFT = _ownership[getNFTId(nftAddr, nftTokenId)].contains(
-            fromOwner
-        );
+        bool holdsNFT =
+            _ownership[getNFTId(nftAddr, nftTokenId)].contains(fromOwner);
         require(holdsNFT, "nft not found");
 
         uint256 currentAmount = _nftTracker[fromOwner][nftAddr][nftTokenId];
