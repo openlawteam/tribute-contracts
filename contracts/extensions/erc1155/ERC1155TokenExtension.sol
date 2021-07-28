@@ -47,7 +47,7 @@ contract ERC1155TokenExtension is
     bool public initialized = false; //internally tracks deployment under eip-1167 proxy pattern
     DaoRegistry public dao;
 
-    enum AclFlag {WITHDRAW_NFT, INTERNAL_TRANSFER}
+    enum AclFlag {WITHDRAW_NFT, COLLECT_NFT, INTERNAL_TRANSFER}
 
     //EVENTS
     event CollectedNFT(address nftAddr, uint256 nftTokenId, uint256 amount);
@@ -120,13 +120,14 @@ contract ERC1155TokenExtension is
      * @param amount The amount of NFT with nftTokenId to be collected.
      */
     function collect(
+        address owner,
         address nftAddr,
         uint256 nftTokenId,
         uint256 amount
-    ) external {
+    ) external hasExtensionAccess(this, AclFlag.COLLECT_NFT) {
         IERC1155 erc1155 = IERC1155(nftAddr);
         erc1155.safeTransferFrom(
-            msg.sender,
+            owner,
             address(this),
             nftTokenId,
             amount,
