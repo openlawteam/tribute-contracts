@@ -155,7 +155,7 @@ describe("Extension - ERC1155", () => {
     //check token balance of nftOwner after collection = -2
     const balanceOfnftOwner = erc1155TokenExtension.balanceOf(nftOwner, 1);
     expect(balanceOfnftOwner.toString()).equal("8");
-    //check token balance of the GUILD = +2 
+    //check token balance of the GUILD = +2
     const newGuildBlance = erc1155TokenExtension.balanceOf(GUILD, 8);
     expect(newGuildBlance.toString()).equal("2");
 

@@ -25,57 +25,55 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
  */
 const {
-    toBN,
-    unitPrice,
-    UNITS,
-    GUILD,
-    ETH_TOKEN,
-    sha3,
-  } = require("../../utils/ContractUtil.js");
+  toBN,
+  unitPrice,
+  UNITS,
+  GUILD,
+  ETH_TOKEN,
+  sha3,
+} = require("../../utils/ContractUtil.js");
 
-  const {
-    deployDefaultNFTDao,
-    takeChainSnapshot,
-    revertChainSnapshot,
-    proposalIdGenerator,
-    advanceTime,
-    accounts,
-    expectRevert,
-    expect,
-  } = require("../../utils/OZTestUtil.js");
-  
-  const { onboardingNewMember, isMember } = require("../../utils/TestUtils.js");
+const {
+  deployDefaultNFTDao,
+  takeChainSnapshot,
+  revertChainSnapshot,
+  proposalIdGenerator,
+  advanceTime,
+  accounts,
+  expectRevert,
+  expect,
+} = require("../../utils/OZTestUtil.js");
 
-  describe("Adapter - TributeERC1155", () => {
-    const proposalCounter = proposalIdGenerator().generator;
-    const daoOwner = accounts[1];
-  
-    const getProposalCounter = () => {
-      return proposalCounter().next().value;
-    };
+const { onboardingNewMember, isMember } = require("../../utils/TestUtils.js");
 
-    before("deploy dao", async () => {
-        const {
-          dao,
-          adapters,
-          extensions,
-          testContracts,
-        } = await deployDefaultNFTDao({ owner: daoOwner });
-        this.dao = dao;
-        this.adapters = adapters;
-        this.extensions = extensions;
-        this.testContracts = testContracts;
-        this.snapshotId = await takeChainSnapshot();
-      });
+describe("Adapter - TributeERC1155", () => {
+  const proposalCounter = proposalIdGenerator().generator;
+  const daoOwner = accounts[1];
 
-      it("happy path- should be possible to submit, sponsor, and process erc1155 proposal", async()=>{
-        console.log("1155 happy path");
-      });
+  const getProposalCounter = () => {
+    return proposalCounter().next().value;
+  };
 
-      beforeEach(async () => {
-        await revertChainSnapshot(this.snapshotId);
-        this.snapshotId = await takeChainSnapshot();
-      });
-
-
+  before("deploy dao", async () => {
+    const {
+      dao,
+      adapters,
+      extensions,
+      testContracts,
+    } = await deployDefaultNFTDao({ owner: daoOwner });
+    this.dao = dao;
+    this.adapters = adapters;
+    this.extensions = extensions;
+    this.testContracts = testContracts;
+    this.snapshotId = await takeChainSnapshot();
   });
+
+  it("happy path- should be possible to submit, sponsor, and process erc1155 proposal", async () => {
+    console.log("1155 happy path");
+  });
+
+  beforeEach(async () => {
+    await revertChainSnapshot(this.snapshotId);
+    this.snapshotId = await takeChainSnapshot();
+  });
+});
