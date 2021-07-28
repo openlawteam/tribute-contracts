@@ -49,18 +49,17 @@ contract ERC1155TokenExtension is
 
     enum AclFlag {
         WITHDRAW_NFT,
-        COLLECT_NFT,
         INTERNAL_TRANSFER
     }
 
     //EVENTS
     event CollectedNFT(address nftAddr, uint256 nftTokenId, uint256 amount);
     event TransferredNFT(
+        address oldOwner,
+        address newOwner,
         address nftAddr,
         uint256 nftTokenId,
-        uint256 amount,
-        address oldOwner,
-        address newOwner
+        uint256 amount
     );
     event WithdrawnNFT(
         address nftAddr,
@@ -75,7 +74,7 @@ contract ERC1155TokenExtension is
     mapping(address => EnumerableSet.UintSet) private _nfts;
 
     // The internal owner of record of an NFT that has been transferred to the extension
-    mapping(bytes32 => address) private _ownership;
+    mapping(bytes32 => EnumerableSet.AddressSet) private _ownership;
 
     //the number amount of Token IDs that belong to an NFT address stored in the Guild for a specific Token ID
     // owner => tokenAddress => tokenId => tokenAmount
@@ -127,34 +126,17 @@ contract ERC1155TokenExtension is
         address nftAddr,
         uint256 nftTokenId,
         uint256 amount
-    ) external hasExtensionAccess(this, AclFlag.COLLECT_NFT) {
+    ) external {
         IERC1155 erc1155 = IERC1155(nftAddr);
-        // check balance of the NFT to the contract address - unlike 721 no 'ownerOf'
-        uint256 ownerTokenIdBalance = erc1155.balanceOf(
+        erc1155.safeTransferFrom(
+            msg.sender,
             address(this),
-            nftTokenId
+            nftTokenId,
+            amount,
+            "0x0"
         );
-
-        //If the NFT is already in the NFTExtension, update the ownership if not set already
-        if (ownerTokenIdBalance > 0) {
-            if (_ownership[getNFTId(nftAddr, nftTokenId)] == address(0x0)) {
-                _saveNft(nftAddr, nftTokenId, GUILD, amount);
-
-                emit CollectedNFT(nftAddr, nftTokenId, amount);
-            }
-            //If the NFT is not in the NFTExtension, we try to transfer from the current owner of the NFT to the extension
-        } else {
-            erc1155.safeTransferFrom(
-                msg.sender,
-                address(this),
-                nftTokenId,
-                amount,
-                "0x0"
-            );
-            _saveNft(nftAddr, nftTokenId, GUILD, amount);
-
-            emit CollectedNFT(nftAddr, nftTokenId, amount);
-        }
+        _saveNft(nftAddr, nftTokenId, GUILD, amount);
+        emit CollectedNFT(nftAddr, nftTokenId, amount);
     }
 
     /**
@@ -171,7 +153,7 @@ contract ERC1155TokenExtension is
         address nftAddr,
         uint256 nftTokenId,
         uint256 amount
-    ) public hasExtensionAccess(this, AclFlag.WITHDRAW_NFT) {
+    ) external hasExtensionAccess(this, AclFlag.WITHDRAW_NFT) {
         IERC1155 erc1155 = IERC1155(nftAddr);
         uint256 balance = erc1155.balanceOf(address(this), nftTokenId);
         require(
@@ -215,39 +197,38 @@ contract ERC1155TokenExtension is
      * @notice Updates internally the ownership of the NFT.
      * @notice The caller must have the ACL Flag: INTERNAL_TRANSFER
      * @dev Reverts if the NFT is not already internally owned in the extension.
+     * @param fromOwner The address of the current owner.
+     * @param toOwner The address of the new owner.
      * @param nftAddr The NFT address.
      * @param nftTokenId The NFT token id.
      * @param amount the number of a partricular NFT token id.
-     * @param newOwner The address of the new owner.
      */
     function internalTransfer(
+        address fromOwner,
+        address toOwner,
         address nftAddr,
         uint256 nftTokenId,
-        uint256 amount,
-        address newOwner
+        uint256 amount
     ) public hasExtensionAccess(this, AclFlag.INTERNAL_TRANSFER) {
         // TODO should the `newOwner` be a member address?
 
-        require(newOwner != address(0x0), "new owner can not be 0x0");
+        require(fromOwner != address(0x0), "invalid fromOwner arg");
+        require(toOwner != address(0x0), "invalid toOwner arg");
 
-        address currentOwner = _ownership[getNFTId(nftAddr, nftTokenId)];
-        require(currentOwner != address(0x0), "nft not found");
+        bool holdsNFT = _ownership[getNFTId(nftAddr, nftTokenId)].contains(
+            fromOwner
+        );
+        require(holdsNFT, "nft not found");
 
-        uint256 currentAmount = _nftTracker[currentOwner][nftAddr][nftTokenId];
+        uint256 currentAmount = _nftTracker[fromOwner][nftAddr][nftTokenId];
         uint256 newAmount = currentAmount - amount;
         require(newAmount >= 0, "nothing to transfer");
 
-        uint256 newOwnerBalance = _nftTracker[newOwner][nftAddr][nftTokenId];
-        _nftTracker[newOwner][nftAddr][nftTokenId] = newOwnerBalance + amount;
-        _nftTracker[currentOwner][nftAddr][nftTokenId] = newAmount;
+        uint256 newOwnerBalance = _nftTracker[toOwner][nftAddr][nftTokenId];
+        _nftTracker[toOwner][nftAddr][nftTokenId] = newOwnerBalance + amount;
+        _nftTracker[fromOwner][nftAddr][nftTokenId] = newAmount;
 
-        emit TransferredNFT(
-            nftAddr,
-            nftTokenId,
-            amount,
-            currentOwner,
-            newOwner
-        );
+        emit TransferredNFT(fromOwner, toOwner, nftAddr, nftTokenId, amount);
     }
 
     /**
@@ -313,12 +294,23 @@ contract ERC1155TokenExtension is
      * @param nftAddress The NFT address.
      * @param tokenId The NFT token id.
      */
-    function getNFTOwner(address nftAddress, uint256 tokenId)
-        public
+    function getNFTOwner(
+        address nftAddress,
+        uint256 tokenId,
+        uint256 index
+    ) public view returns (address) {
+        return _ownership[getNFTId(nftAddress, tokenId)].at(index);
+    }
+
+    /**
+     * @notice Returns the total number of owners of an NFT addresses and token id collected.
+     */
+    function nbNFTOwners(address nftAddress, uint256 tokenId)
+        external
         view
-        returns (address)
+        returns (uint256)
     {
-        return _ownership[getNFTId(nftAddress, tokenId)];
+        return _ownership[getNFTId(nftAddress, tokenId)].length();
     }
 
     /**
@@ -336,7 +328,7 @@ contract ERC1155TokenExtension is
         // Save the asset
         _nfts[nftAddr].add(nftTokenId);
         // set ownership to the GUILD
-        _ownership[getNFTId(nftAddr, nftTokenId)] = owner;
+        _ownership[getNFTId(nftAddr, nftTokenId)].add(owner);
         // Keep track of the collected assets
         _nftAddresses.add(nftAddr);
         //update the amount of a particular Token ID in the GUILD
@@ -368,12 +360,7 @@ contract ERC1155TokenExtension is
     }
 
     // TODO double check which type/interfaceIds it will support
-    function supportsInterface(bytes4)
-        external
-        pure
-        override
-        returns (bool)
-    {
+    function supportsInterface(bytes4) external pure override returns (bool) {
         return true; // supportedInterfaces[interfaceID];
     }
 }
