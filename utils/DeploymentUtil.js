@@ -47,7 +47,7 @@ const deployDao = async (options) => {
     Multicall,
     PixelNFT,
     OLToken,
-    ProxToken,
+    ProxToken
   } = options;
 
   const erc20TokenName = options.erc20TokenName
