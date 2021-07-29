@@ -61,7 +61,7 @@ const contracts = [
   },
   {
     name: "ERC1155TestToken",
-    path: "../contract/test/ERC1155TestToken.sol",
+    path: "../contracts/test/ERC1155TestToken",
     enabled: true,
     version: "1.0.0",
     type: ContractType.Test,
@@ -119,7 +119,7 @@ const contracts = [
   },
   {
     name: "ERC1155TokenExtensionFactory",
-    path: "../contracts/extensions/erc1155/ERC1155TokenExtensionFactory",
+    path: "../contracts/extensions/erc1155/ERC1155CollectionFactory",
     enabled: true,
     version: "1.0.0",
     type: ContractType.Factory,
