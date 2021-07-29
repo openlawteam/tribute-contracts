@@ -141,9 +141,9 @@ contract ERC1155TokenExtension is
      * @notice Transfers the NFT token from the extension address to the new owner.
      * @notice It also updates the internal state to keep track of the all the NFTs collected by the extension.
      * @notice The caller must have the ACL Flag: WITHDRAW_NFT
-     * @dev Reverts if the NFT is not in ERC721 standard.
+     * @dev Reverts if the NFT is not in ERC1155 standard.
      * @param newOwner The address of the new owner.
-     * @param nftAddr The NFT address that must be in ERC721 standard.
+     * @param nftAddr The NFT address that must be in ERC1155 standard.
      * @param nftTokenId The NFT token id.
      */
     function withdrawNFT(
@@ -161,7 +161,7 @@ contract ERC1155TokenExtension is
 
         uint256 currentAmount = _nftTracker[GUILD][nftAddr][nftTokenId];
         uint256 newAmount = currentAmount - amount;
-        require(newAmount >= 0, "nothing to withdraw");
+        require(newAmount >= 0, "nothing to withdraw or insufficient funds");
 
         // remove / update the tokenID amount from the extension
         _nftTracker[GUILD][nftAddr][nftTokenId] = newAmount;
@@ -174,13 +174,14 @@ contract ERC1155TokenExtension is
             amount,
             "0x0"
         );
-
+        //update/delete mappings if the amount of tokenId in Guild = 0
         uint256 ownerTokenIdBalance =
             erc1155.balanceOf(address(this), nftTokenId);
         if (ownerTokenIdBalance == 0) {
             delete _ownership[getNFTId(nftAddr, nftTokenId)];
             delete _nftTracker[GUILD][nftAddr][nftTokenId];
             _nfts[nftAddr].remove(nftTokenId);
+        //if there are 0 tokenIds for the NFT address, remove the NFT from mapping
             if (_nfts[nftAddr].length() == 0) {
                 _nftAddresses.remove(nftAddr);
             }
@@ -210,16 +211,18 @@ contract ERC1155TokenExtension is
 
         require(fromOwner != address(0x0), "invalid fromOwner arg");
         require(toOwner != address(0x0), "invalid toOwner arg");
-
+        //check if fromOwner exists
         bool holdsNFT =
             _ownership[getNFTId(nftAddr, nftTokenId)].contains(fromOwner);
         require(holdsNFT, "nft not found");
-
+        //update amount for fromOwner to newAmount
         uint256 currentAmount = _nftTracker[fromOwner][nftAddr][nftTokenId];
         uint256 newAmount = currentAmount - amount;
-        require(newAmount >= 0, "nothing to transfer");
-
+        //check to see if internalTransfer overdraws fromOwner's account
+        require(newAmount >= 0, "nothing to transfer or insufficient funds");
+        //retrieve  or create toOwner account for tokenId
         uint256 newOwnerBalance = _nftTracker[toOwner][nftAddr][nftTokenId];
+        //update amounts for toOwner and fromOwner
         _nftTracker[toOwner][nftAddr][nftTokenId] = newOwnerBalance + amount;
         _nftTracker[fromOwner][nftAddr][nftTokenId] = newAmount;
 
@@ -313,6 +316,7 @@ contract ERC1155TokenExtension is
      * @param nftAddr The NFT address.
      * @param nftTokenId The token id.
      * @param owner The address of the owner.
+     * @param amount of the tokenID 
      */
     function _saveNft(
         address nftAddr,
@@ -320,6 +324,7 @@ contract ERC1155TokenExtension is
         address owner,
         uint256 amount
     ) private {
+        //TODO - check if/else conditional needed in case the tokenId/owner or nft address is already in the mappings?
         // Save the asset
         _nfts[nftAddr].add(nftTokenId);
         // set ownership to the GUILD
