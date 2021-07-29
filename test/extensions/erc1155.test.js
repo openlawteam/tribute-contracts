@@ -135,7 +135,7 @@ describe("Extension - ERC1155", () => {
     );
 
     const erc1155Adapter = this.adapters.erc1155Adapter;
-    //collect 2 tokens of tokenId
+    //collect 2 tokens of tokenId 1
     await erc1155Adapter.collect(
       this.dao.address,
       erc1155TestToken.address,
@@ -153,14 +153,19 @@ describe("Extension - ERC1155", () => {
     const nftId = await erc1155TokenExtension.getNFT(nftAddr, 0);
     expect(nftId.toString()).equal(tokenId.toString());
     //check token balance of nftOwner after collection = -2
-    const balanceOfnftOwner = erc1155TokenExtension.balanceOf(nftOwner, 1);
+    const balanceOfnftOwner = erc1155TokenExtension.getNFTIdAmount(
+      nftOwner,
+      erc1155TestToken.address,
+      1
+    );
     expect(balanceOfnftOwner.toString()).equal("8");
     //check token balance of the GUILD = +2
-    const newGuildBlance = erc1155TokenExtension.balanceOf(GUILD, 8);
+    const newGuildBlance = erc1155TokenExtension.getNFTIdAmount(
+      GUILD,
+      erc1155TestToken.address,
+      1
+    );
     expect(newGuildBlance.toString()).equal("2");
-
-    const newOwner = await erc1155TokenExtension.getNFTOwner(nftAddr, tokenId);
-    expect(newOwner.toLowerCase()).equal(GUILD.toLowerCase());
     //Felipe -  test the withdrawal?
   });
 });
