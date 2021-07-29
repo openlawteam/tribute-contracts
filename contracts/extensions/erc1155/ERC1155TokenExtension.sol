@@ -181,7 +181,7 @@ contract ERC1155TokenExtension is
             delete _ownership[getNFTId(nftAddr, nftTokenId)];
             delete _nftTracker[GUILD][nftAddr][nftTokenId];
             _nfts[nftAddr].remove(nftTokenId);
-        //if there are 0 tokenIds for the NFT address, remove the NFT from mapping
+            //if there are 0 tokenIds for the NFT address, remove the NFT from mapping
             if (_nfts[nftAddr].length() == 0) {
                 _nftAddresses.remove(nftAddr);
             }
@@ -316,7 +316,7 @@ contract ERC1155TokenExtension is
      * @param nftAddr The NFT address.
      * @param nftTokenId The token id.
      * @param owner The address of the owner.
-     * @param amount of the tokenID 
+     * @param amount of the tokenID
      */
     function _saveNft(
         address nftAddr,
