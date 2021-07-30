@@ -44,6 +44,9 @@ const deployDao = async (options) => {
     ERC20TokenExtensionFactory,
     ExecutorExtension,
     ExecutorExtensionFactory,
+    ERC1155TokenExtension,
+    ERC1155TokenExtensionFactory,
+    ERC1155TestToken,
     TestToken1,
     TestToken2,
     Multicall,
@@ -87,6 +90,11 @@ const deployDao = async (options) => {
     ExecutorExtensionFactory,
     [identityExecutorExt.address]
   );
+
+  const identityERC1155Ext = await deployFunction(ERC1155TokenExtension);
+  const erc1155TokenExtFactory = await deployFunction(ERC1155TokenExtensionFactory, [
+    identityERC1155Ext.address
+  ]);
 
   const { dao, daoFactory } = await cloneDao({
     ...options,
@@ -133,12 +141,21 @@ const deployDao = async (options) => {
     ExecutorExtension
   );
 
+  const erc1155TokenExtension = await createERC1155Extension(
+    dao,
+    owner,
+    erc1155TokenExtFactory,
+    erc1155TokenExtension
+  );
+  
+  
   const extensions = {
     bank: bankExtension,
     erc1271: erc1271Extension,
     nft: nftExtension,
     erc20Ext: erc20TokenExtension,
     executorExt: executorExtension,
+    erc1155Ext: erc1155TokenExtension,
   };
 
   const { adapters } = await addDefaultAdapters({
@@ -192,6 +209,8 @@ const deployDao = async (options) => {
     multicall: null,
     pixelNFT: null,
     proxToken: null,
+    erc1155Token: null,
+
   };
 
   if (deployTestTokens) {
@@ -203,6 +222,7 @@ const deployDao = async (options) => {
       toBN("1000000000000000000000000"),
     ]);
     testContracts.proxToken = await deployFunction(ProxToken);
+    testContracts.erc1155Token = await deployFunction(ERC1155TestToken,"1155 test token");
   }
 
   if (finalize) {
@@ -222,6 +242,7 @@ const deployDao = async (options) => {
       nftFactory,
       erc20TokenExtFactory,
       executorExtensionFactory,
+      erc1155TokenExtFactory,
     },
   };
 };
@@ -338,6 +359,7 @@ const prepareAdapters = async ({
   SignaturesContract,
   NFTAdapterContract,
   CouponOnboardingContract,
+  ERC1155AdapterContract,
 }) => {
   let voting,
     configuration,
@@ -370,7 +392,7 @@ const prepareAdapters = async ({
   tribute = await deployFunction(TributeContract);
   distribute = await deployFunction(DistributeContract);
   tributeNFT = await deployFunction(TributeNFTContract);
-
+  erc1155Adapter = await deployFunction(ERC1155AdapterContract);
   return {
     voting,
     configuration,
@@ -387,6 +409,7 @@ const prepareAdapters = async ({
     tribute,
     distribute,
     tributeNFT,
+    erc1155Adapter,
   };
 };
 
@@ -416,6 +439,7 @@ const addDefaultAdapters = async ({ dao, options, daoFactory, nftAddr }) => {
     tribute,
     distribute,
     tributeNFT,
+    erc1155Adapter,
   } = await prepareAdapters(options);
 
   const {
@@ -423,6 +447,7 @@ const addDefaultAdapters = async ({ dao, options, daoFactory, nftAddr }) => {
     NFTExtension,
     ERC20Extension,
     ERC1271Extension,
+    ERC1155TokenExtension,
   } = options;
 
   const bankAddress = await dao.getExtensionAddress(sha3("bank"));
@@ -437,6 +462,9 @@ const addDefaultAdapters = async ({ dao, options, daoFactory, nftAddr }) => {
   const unitTokenExtAddr = await dao.getExtensionAddress(sha3("erc20-ext"));
   const erc20TokenExtension = await ERC20Extension.at(unitTokenExtAddr);
 
+  const erc1155TokenExtAddr = await dao.getExtensionAddressAddress(sha3("erc1155-ext"));
+  const erc1155TokenExtension = await ERC1155TokenExtension.at(erc1155TokenExtAddr);
+
   await configureDao({
     owner: options.owner,
     daoFactory,
@@ -449,6 +477,7 @@ const addDefaultAdapters = async ({ dao, options, daoFactory, nftAddr }) => {
     daoRegistryAdapter,
     bankAdapter,
     nftAdapter,
+    erc1155Adapter,
     voting,
     configuration,
     couponOnboarding,
@@ -461,6 +490,7 @@ const addDefaultAdapters = async ({ dao, options, daoFactory, nftAddr }) => {
     nftExtension,
     erc1271Extension,
     erc20TokenExtension,
+    erc1155TokenExtension,
     ...options,
   });
 
@@ -482,10 +512,11 @@ const addDefaultAdapters = async ({ dao, options, daoFactory, nftAddr }) => {
       tribute,
       distribute,
       tributeNFT,
+      erc1155Adapter,
     },
   };
 };
-
+// TODO: add erc1155 adapater, extentions, etc. to configure
 const configureDao = async ({
   owner,
   daoFactory,
@@ -502,6 +533,8 @@ const configureDao = async ({
   nftAdapter,
   nftExtension,
   erc20TokenExtension,
+  erc1155Adapter,
+  erc1155TokenExtension,
   voting,
   configuration,
   couponOnboarding,
