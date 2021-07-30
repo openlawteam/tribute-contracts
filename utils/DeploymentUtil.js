@@ -52,7 +52,7 @@ const deployDao = async (options) => {
     Multicall,
     PixelNFT,
     OLToken,
-    ProxToken
+    ProxToken,
   } = options;
 
   const erc20TokenName = options.erc20TokenName
@@ -92,9 +92,10 @@ const deployDao = async (options) => {
   );
 
   const identityERC1155Ext = await deployFunction(ERC1155TokenExtension);
-  const erc1155TokenExtFactory = await deployFunction(ERC1155TokenExtensionFactory, [
-    identityERC1155Ext.address
-  ]);
+  const erc1155TokenExtFactory = await deployFunction(
+    ERC1155TokenExtensionFactory,
+    [identityERC1155Ext.address]
+  );
 
   const { dao, daoFactory } = await cloneDao({
     ...options,
@@ -147,8 +148,7 @@ const deployDao = async (options) => {
     erc1155TokenExtFactory,
     erc1155TokenExtension
   );
-  
-  
+
   const extensions = {
     bank: bankExtension,
     erc1271: erc1271Extension,
@@ -210,7 +210,6 @@ const deployDao = async (options) => {
     pixelNFT: null,
     proxToken: null,
     erc1155Token: null,
-
   };
 
   if (deployTestTokens) {
@@ -222,7 +221,10 @@ const deployDao = async (options) => {
       toBN("1000000000000000000000000"),
     ]);
     testContracts.proxToken = await deployFunction(ProxToken);
-    testContracts.erc1155Token = await deployFunction(ERC1155TestToken,"1155 test token");
+    testContracts.erc1155Token = await deployFunction(
+      ERC1155TestToken,
+      "1155 test token"
+    );
   }
 
   if (finalize) {
@@ -462,8 +464,12 @@ const addDefaultAdapters = async ({ dao, options, daoFactory, nftAddr }) => {
   const unitTokenExtAddr = await dao.getExtensionAddress(sha3("erc20-ext"));
   const erc20TokenExtension = await ERC20Extension.at(unitTokenExtAddr);
 
-  const erc1155TokenExtAddr = await dao.getExtensionAddressAddress(sha3("erc1155-ext"));
-  const erc1155TokenExtension = await ERC1155TokenExtension.at(erc1155TokenExtAddr);
+  const erc1155TokenExtAddr = await dao.getExtensionAddressAddress(
+    sha3("erc1155-ext")
+  );
+  const erc1155TokenExtension = await ERC1155TokenExtension.at(
+    erc1155TokenExtAddr
+  );
 
   await configureDao({
     owner: options.owner,
