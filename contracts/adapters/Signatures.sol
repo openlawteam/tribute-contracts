@@ -46,7 +46,7 @@ contract SignaturesContract is
         bytes4 magicValue;
     }
 
-    // keeps track of all financing proposals handled by each dao
+    // keeps track of all signature proposals handled by each dao
     mapping(address => mapping(bytes32 => ProposalDetails)) public proposals;
 
     /**
@@ -57,14 +57,14 @@ contract SignaturesContract is
     }
 
     /**
-     * @notice Creates and sponsors a financing proposal.
+     * @notice Creates and sponsors a signature proposal.
      * @dev Only members of the DAO can sponsor a signature proposal.
      * @param dao The DAO Address.
      * @param proposalId The proposal id.
      * @param permissionHash The hash of the data to be signed
      * @param signatureHash The hash of the signature to be marked as valid
      * @param magicValue The value to return when a signature is valid
-     * @param data Additional details about the financing proposal.
+     * @param data Additional details about the signature proposal.
      */
     function submitProposal(
         DaoRegistry dao,
