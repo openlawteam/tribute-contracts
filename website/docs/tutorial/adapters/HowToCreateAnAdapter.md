@@ -247,7 +247,23 @@ There are several examples of tests that you can check to start building your ow
 
 The general idea is to create one test suite per adapter/contract. And try to cover all the happy paths first, and then add more complex test cases after that.
 
-You need to declare the new adapter contract to `ContractUtil.js`, so it can be accessed in the deploy/test environment.
+You need to declare the new adapter contract in `deployment/contracts.config.js` file, so it can be accessed in the deploy/test environment. Make sure you use following the structure:
+
+```json
+{
+    name: "Sample2Contract",
+    path: "../contracts/path/Sample2Contract",
+    enabled: true,
+    version: "1.0.0",
+    type: ContractType.Adapter,
+  },
+```
+
+- `name`: the name of the contract declared in the .sol file;
+- `path`: the path of the contract in the `contracts` folder;
+- `enabled`: the flag indicating if that contract must be deployed/enabled;
+- `version`: the version of the contract that will be used to write/read to/from the `DaoArtifacts` contract;
+- `type`: the type of the contract (Core = 0, Factory = 1, Extension = 2, Adapter = 3, Util = 4, Test = 5).
 
 In order to speed up the test suites we usually don't create one DAO per test function, but we create the DAO during the suite initialization, and only reset the chain after each test function using the chain snapshot feature. For instance:
 
@@ -323,11 +339,11 @@ describe("Adapter - AdapterName", () => {
 });
 ```
 
-Considering the adapter that you are creating is not part of the default set of adapters, you need to import it from **[ContractUtil.js](https://github.com/openlawteam/tribute-contracts/blob/master/utils/ContractUtil.js)**, and deploy it, then you can configure the Adapter access flags after the adapter is created in the test suite, but before the DAO is finalized. When the DAO is finalized it means that the DAO initialization has been completed, so any state changes must be done though a proposal, instead of doing it through the deployment phase. Here is a simple example of an adapter configurated after its creation, but before the DAO creation is finalized:
+Considering the adapter that you are creating is not part of the default set of adapters, you need to import it from **[utils/OZTestUtil.js](https://github.com/openlawteam/tribute-contracts/blob/master/utils/OZTestUtil.js)**, and deploy it, then you can configure the Adapter access flags after the adapter is created in the test suite, but before the DAO is finalized. When the DAO is finalized it means that the DAO initialization has been completed, so any state changes must be done though a proposal, instead of doing it through the deployment phase. Here is a simple example of an adapter configurated after its creation, but before the DAO creation is finalized:
 
 ```javascript
 
-import { MyAdapter2Contract } from 'ContractUtil';
+import { MyAdapter2Contract } from "../../utils/OZTestUtil";
 
 
 describe("Adapter - AdapterName2", () => {
