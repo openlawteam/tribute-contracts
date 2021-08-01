@@ -54,7 +54,7 @@ function getProposalCounter() {
   return proposalCounter().next().value;
 }
 
-describe("Adapter - Signatures", () => {
+describe.only("Adapter - Signatures", () => {
   before("deploy dao", async () => {
     const { dao, adapters, extensions } = await deployDefaultDao({
       owner: myAccount,
@@ -113,7 +113,7 @@ describe("Adapter - Signatures", () => {
     });
     // query erc1271 interface
     //Check Guild Bank Balance
-    checkSignature(erc1271, arbitraryMsgHash, arbitrarySignature, magicValue);
+    await checkSignature(erc1271, arbitraryMsgHash, arbitrarySignature, magicValue);
   });
 
   it("should not be possible to get a valid signature if the proposal fails", async () => {
