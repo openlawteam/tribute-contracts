@@ -5,7 +5,6 @@ import { OnboardingContract } from "../../generated/templates/DaoRegistry/Onboar
 import { TributeContract } from "../../generated/templates/DaoRegistry/TributeContract";
 import { ManagingContract } from "../../generated/templates/DaoRegistry/ManagingContract";
 import { FinancingContract } from "../../generated/templates/DaoRegistry/FinancingContract";
-// import { SignaturesContract } from "../../generated/templates/DaoRegistry/SignaturesContract";
 import { GuildKickContract } from "../../generated/templates/DaoRegistry/GuildKickContract";
 import { TributeNFTContract } from "../../generated/templates/DaoRegistry/TributeNFTContract";
 
