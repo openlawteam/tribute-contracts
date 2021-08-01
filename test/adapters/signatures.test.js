@@ -112,7 +112,6 @@ describe.only("Adapter - Signatures", () => {
       gasPrice: toBN("0"),
     });
     // query erc1271 interface
-    //Check Guild Bank Balance
     await checkSignature(erc1271, arbitraryMsgHash, arbitrarySignature, magicValue);
   });
 
