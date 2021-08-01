@@ -333,6 +333,7 @@ const prepareAdapters = async ({
   GuildKickContract,
   DaoRegistryAdapterContract,
   BankAdapterContract,
+  SignaturesContract,
   NFTAdapterContract,
   CouponOnboardingContract,
 }) => {
@@ -345,6 +346,7 @@ const prepareAdapters = async ({
     guildkick,
     daoRegistryAdapter,
     bankAdapter,
+    signatures,
     nftAdapter,
     couponOnboarding,
     tribute,
@@ -360,6 +362,7 @@ const prepareAdapters = async ({
   guildkick = await deployFunction(GuildKickContract);
   daoRegistryAdapter = await deployFunction(DaoRegistryAdapterContract);
   bankAdapter = await deployFunction(BankAdapterContract);
+  signatures = await deployFunction(SignaturesContract);
   nftAdapter = await deployFunction(NFTAdapterContract);
   couponOnboarding = await deployFunction(CouponOnboardingContract, [1]);
   tribute = await deployFunction(TributeContract);
@@ -376,6 +379,7 @@ const prepareAdapters = async ({
     onboarding,
     daoRegistryAdapter,
     bankAdapter,
+    signatures,
     nftAdapter,
     couponOnboarding,
     tribute,
@@ -393,7 +397,7 @@ const createIdentityDao = async (options) => {
   });
 };
 
-const addDefaultAdapters = async ({ dao, options, daoFactory, nftAddr }) => {
+const addDefaultAdapters = async ({ dao, options, daoFactory, nftAddr}) => {
   const {
     voting,
     configuration,
@@ -406,18 +410,22 @@ const addDefaultAdapters = async ({ dao, options, daoFactory, nftAddr }) => {
     bankAdapter,
     nftAdapter,
     couponOnboarding,
+    signatures,
     tribute,
     distribute,
     tributeNFT,
   } = await prepareAdapters(options);
 
-  const { BankExtension, NFTExtension, ERC20Extension } = options;
+  const { BankExtension, NFTExtension, ERC20Extension, ERC1271Extension } = options;
 
   const bankAddress = await dao.getExtensionAddress(sha3("bank"));
   const bankExtension = await BankExtension.at(bankAddress);
 
   const nftExtAddr = await dao.getExtensionAddress(sha3("nft"));
   const nftExtension = await NFTExtension.at(nftExtAddr);
+
+  const erc1271ExtAddr = await dao.getExtensionAddress(sha3("erc1271"));
+  const erc1271Extension = await ERC1271Extension.at(erc1271ExtAddr);
 
   const unitTokenExtAddr = await dao.getExtensionAddress(sha3("erc20-ext"));
   const erc20TokenExtension = await ERC20Extension.at(unitTokenExtAddr);
@@ -437,12 +445,14 @@ const addDefaultAdapters = async ({ dao, options, daoFactory, nftAddr }) => {
     voting,
     configuration,
     couponOnboarding,
+    signatures,
     tribute,
     distribute,
     tributeNFT,
     nftAddr,
     bankExtension,
     nftExtension,
+    erc1271Extension,
     erc20TokenExtension,
     ...options,
   });
@@ -461,6 +471,7 @@ const addDefaultAdapters = async ({ dao, options, daoFactory, nftAddr }) => {
       bankAdapter,
       nftAdapter,
       couponOnboarding,
+      signatures,
       tribute,
       distribute,
       tributeNFT,
@@ -480,12 +491,14 @@ const configureDao = async ({
   daoRegistryAdapter,
   bankAdapter,
   bankExtension,
+  erc1271Extension,
   nftAdapter,
   nftExtension,
   erc20TokenExtension,
   voting,
   configuration,
   couponOnboarding,
+  signatures,
   tribute,
   distribute,
   tributeNFT,
@@ -528,6 +541,13 @@ const configureDao = async ({
   if (financing)
     adapters.push(
       entryDao("financing", financing, {
+        SUBMIT_PROPOSAL: true,
+      })
+    );
+
+  if (signatures)
+    adapters.push(
+      entryDao("signatures", signatures, {
         SUBMIT_PROPOSAL: true,
       })
     );
@@ -592,6 +612,21 @@ const configureDao = async ({
     );
 
   await daoFactory.addAdapters(dao.address, adapters, { from: owner });
+  
+  const adaptersWithSignatureAccess = [];
+  
+  if (signatures) adaptersWithSignatureAccess.push(
+    entryERC1271(signatures, {
+      SIGN: true
+    })
+  )
+
+  await daoFactory.configureExtension(
+    dao.address,
+    erc1271Extension.address,
+    adaptersWithSignatureAccess,
+    { from: owner }
+  );
 
   const adaptersWithBankAccess = [];
 
@@ -940,6 +975,20 @@ const entryBank = (contract, flags) => {
   };
 };
 
+const entryERC1271 = (contract, flags) => {
+  const values = [
+    flags.SIGN,
+  ];
+
+  const acl = entry(values);
+
+  return {
+    id: sha3("n/a"),
+    addr: contract.address,
+    flags: acl,
+  };
+};
+
 const entryExecutor = (contract, flags) => {
   const values = [flags.EXECUTE];
 
@@ -1017,6 +1066,7 @@ module.exports = {
   addDefaultAdapters,
   entry,
   entryBank,
+  entryERC1271,
   entryDao,
   entryExecutor,
   getNetworkDetails,

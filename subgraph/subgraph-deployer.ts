@@ -108,6 +108,8 @@ ${couponOnboardingYAML({
             file: ../build/contracts/GuildKickContract.json
           - name: FinancingContract
             file: ../build/contracts/FinancingContract.json
+          - name: SignaturesContract
+            file: ../build/contracts/SignaturesContract.json
           - name: OffchainVotingContract
             file: ../build/contracts/OffchainVotingContract.json
           - name: VotingContract

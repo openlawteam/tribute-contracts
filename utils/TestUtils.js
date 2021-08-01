@@ -22,6 +22,12 @@ const checkBalance = async (bank, address, token, expectedBalance) => {
   expect(balance.toString()).equal(expectedBalance.toString());
 };
 
+const checkSignature = async (signatureExtension, permissionHash, signature, magicValue) => {
+  const returnedValue = await signatureExtension.isValidSignature(permissionHash, signature);
+
+  expect(returnedValue).equal(magicValue);
+};
+
 const isMember = async (bank, member) => {
   const units = await bank.balanceOf(member, UNITS);
 
@@ -141,6 +147,7 @@ const submitConfigProposal = async (
 module.exports = {
   checkLastEvent,
   checkBalance,
+  checkSignature,
   submitNewMemberProposal,
   onboardingNewMember,
   guildKickProposal,

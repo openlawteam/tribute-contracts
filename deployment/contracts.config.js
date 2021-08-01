@@ -184,6 +184,14 @@ const contracts = [
     version: "1.0.0",
     type: ContractType.Adapter,
   },
+  // Signature Adapters
+  {
+    name: "SignaturesContract",
+    path: "../contracts/adapters/SignaturesContract",
+    enabled: true,
+    version: "1.0.0",
+    type: ContractType.Adapter,
+  },
 
   // Voting Adapters
   {

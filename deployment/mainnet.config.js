@@ -11,7 +11,7 @@ const disabled = [
   "ERC20Minter",
   // Adapters disabled for Muse0 DAO Deployment
   "RagequitContract",
-  "FinancingContract",
+  "",
   "OnboardingContract",
   "TributeContract",
   "DistributeContract",
