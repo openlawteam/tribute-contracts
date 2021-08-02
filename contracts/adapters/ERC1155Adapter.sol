@@ -47,7 +47,7 @@ contract ERC1155AdapterContract is DaoConstants, MemberGuard, AdapterGuard {
      * @param nftTokenId The NFT token id.
      * @param amount of the nftTokenId
      */
-     
+
     // function collect(
     //     DaoRegistry dao,
     //     address nftAddr,
