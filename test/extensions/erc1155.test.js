@@ -61,19 +61,19 @@ describe("Extension - ERC1155", () => {
   });
 
   it("should be possible to create a dao with a nft extension pre-configured", async () => {
-    const erc1155TokenExtension = this.extensions.erc1155TokenExtension;
+    const erc1155TokenExtension = this.extensions.erc1155Ext;
     expect(erc1155TokenExtension).to.not.be.null;
   });
 
   it("should be possible check how many NFTs are in the collection", async () => {
-    const erc1155TokenExtension = this.extensions.erc1155TokenExtension;
+    const erc1155TokenExtension = this.extensions.erc1155Ext;
     const erc1155TestToken = this.testContracts.erc1155TestToken;
     const total = await erc1155TokenExtension.nbNFTs(erc1155TestToken.address);
     expect(total.toString()).equal("0");
   });
 
   it("should not be possible get an NFT in the collection if it is empty", async () => {
-    const erc1155TokenExtension = this.extensions.erc1155TokenExtension;
+    const erc1155TokenExtension = this.extensions.erc1155Ext;
     const erc1155TestToken = this.testContracts.erc1155TestToken;
     await expectRevert(
       erc1155TokenExtension.getNFT(erc1155TestToken.address, 0),
@@ -82,26 +82,27 @@ describe("Extension - ERC1155", () => {
   });
 
   it("should not be possible to return a NFT without the RETURN permission", async () => {
-    const erc1155TokenExtension = this.extensions.erc1155TokenExtension;
+    const erc1155TokenExtension = this.extensions.erc1155Ext;
     const erc1155TestToken = this.testContracts.erc1155TestToken;
     await expectRevert(
       erc1155TokenExtension.withdrawNFT(
         accounts[1],
         erc1155TestToken.address,
-        1
+        1, //tokenId
+        1 //amount
       ),
-      "nft::accessDenied"
+      "erc1155Ext::accessDenied"
     );
   });
 
   it("should be possible check how many NFTs are in the collection", async () => {
-    const erc1155TokenExtension = this.extensions.erc1155TokenExtension;
+    const erc1155TokenExtension = this.extensions.erc1155Ext;
     const total = await erc1155TokenExtension.nbNFTAddresses();
     expect(total.toString()).equal("0");
   });
 
   it("should not be possible to initialize the extension if it was already initialized", async () => {
-    const erc1155TokenExtension = this.extensions.erc1155TokenExtension;
+    const erc1155TokenExtension = this.extensions.erc1155Ext;
     await expectRevert(
       erc1155TokenExtension.initialize(this.dao.address, accounts[0]),
       "already initialized"
@@ -123,7 +124,7 @@ describe("Extension - ERC1155", () => {
     expect(amount).equal("10");
     // expect(owner).equal(nftOwner);
 
-    const erc1155TokenExtension = this.extensions.erc1155TokenExtension;
+    const erc1155TokenExtension = this.extensions.erc1155Ext;
     //set approval where Extension is the "operator" all of nftOwners
     await erc1155TestToken.setApprovalForAll(
       erc1155TokenExtension.address,

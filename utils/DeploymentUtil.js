@@ -132,7 +132,7 @@ const deployDao = async (options) => {
     dao,
     owner,
     erc1155TokenExtFactory,
-    erc1155TokenExtension
+    ERC1155TokenExtension
   );
 
   const extensions = {
@@ -194,7 +194,7 @@ const deployDao = async (options) => {
     multicall: null,
     pixelNFT: null,
     proxToken: null,
-    erc1155Token: null,
+    erc1155TestToken: null,
   };
 
   if (deployTestTokens) {
@@ -206,10 +206,9 @@ const deployDao = async (options) => {
       toBN("1000000000000000000000000"),
     ]);
     testContracts.proxToken = await deployFunction(ProxToken);
-    testContracts.erc1155Token = await deployFunction(
-      ERC1155TestToken,
-      "1155 test token"
-    );
+    testContracts.erc1155TestToken = await deployFunction(ERC1155TestToken, [
+      "1155 test token",
+    ]);
   }
 
   if (finalize) {
@@ -440,7 +439,7 @@ const addDefaultAdapters = async ({ dao, options, daoFactory, nftAddr }) => {
   const unitTokenExtAddr = await dao.getExtensionAddress(sha3("erc20-ext"));
   const erc20TokenExtension = await ERC20Extension.at(unitTokenExtAddr);
 
-  const erc1155TokenExtAddr = await dao.getExtensionAddressAddress(
+  const erc1155TokenExtAddr = await dao.getExtensionAddress(
     sha3("erc1155-ext")
   );
   const erc1155TokenExtension = await ERC1155TokenExtension.at(
@@ -707,14 +706,6 @@ const configureDao = async ({
       })
     );
 
-  if (erc1155TokenExtension)
-    adaptersWithNFTAccess.push(
-      entryBank(erc1155TokenExtension, {
-        INTERNAL_TRANSFER: true,
-        COLLECT_NFT: true,
-      })
-    );
-
   await daoFactory.configureExtension(
     dao.address,
     bankExtension.address,
@@ -753,11 +744,14 @@ const configureDao = async ({
       from: owner,
     }
   );
-  //does erc1155 need to be here?
+
   await daoFactory.configureExtension(
     dao.address,
     erc1155TokenExtension.address,
-    []
+    [],
+    {
+      from: owner,
+    }
   );
 
   await daoFactory.configureExtension(
@@ -950,13 +944,11 @@ const createERC1155Extension = async (
     let pastEvents = await erc1155TokenExtFactory.getPastEvents();
     pastEvent = pastEvents[0];
   }
-  const { erc1155CollAddress } = pastEvent.returnValues;
-  const erc1155TokenExtension = await ERC1155TokenExtension.at(
-    erc1155CollAddress
-  );
+  const { nftCollAddress } = pastEvent.returnValues;
+  const erc1155TokenExtension = await ERC1155TokenExtension.at(nftCollAddress);
 
   // Adds the new extension to the DAO
-  await dao.addExtension(sha3("erc1155-ext"), erc1155CollAddress, owner, {
+  await dao.addExtension(sha3("erc1155-ext"), nftCollAddress, owner, {
     from: owner,
   });
   return erc1155TokenExtension;

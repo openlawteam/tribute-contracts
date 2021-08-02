@@ -90,7 +90,7 @@ contract ERC1155TokenExtension is
                     address(extension),
                     uint8(flag)
                 ),
-            "1155TokenExtension::accessDenied"
+            "erc1155Ext::accessDenied"
         );
         _;
     }
