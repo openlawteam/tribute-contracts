@@ -27,7 +27,7 @@ SOFTWARE.
 const {
   toBN,
   unitPrice,
-  soliditySha3
+  soliditySha3,
 } = require("../../utils/ContractUtil.js");
 
 const {
@@ -38,6 +38,7 @@ const {
   advanceTime,
   accounts,
   expect,
+  expectRevert,
 } = require("../../utils/OZTestUtil.js");
 
 const { checkSignature } = require("../../utils/TestUtils.js");
@@ -45,16 +46,21 @@ const { checkSignature } = require("../../utils/TestUtils.js");
 const myAccount = accounts[1];
 const proposalCounter = proposalIdGenerator().generator;
 
-const arbitrarySignature = '0xc531a1d9046945d3732c73d049da2810470c3b0663788dca9e9f329a35c8a0d56add77ed5ea610b36140641860d13849abab295ca46c350f50731843c6517eee1c';
-const arbitrarySignatureHash = soliditySha3({t: 'bytes', v: arbitrarySignature})
-const arbitraryMsgHash = '0xec4870a1ebdcfbc1cc84b0f5a30aac48ed8f17973e0189abdb939502e1948238'
-const magicValue = '0x1626ba7e'
+const arbitrarySignature =
+  "0xc531a1d9046945d3732c73d049da2810470c3b0663788dca9e9f329a35c8a0d56add77ed5ea610b36140641860d13849abab295ca46c350f50731843c6517eee1c";
+const arbitrarySignatureHash = soliditySha3({
+  t: "bytes",
+  v: arbitrarySignature,
+});
+const arbitraryMsgHash =
+  "0xec4870a1ebdcfbc1cc84b0f5a30aac48ed8f17973e0189abdb939502e1948238";
+const magicValue = "0x1626ba7e";
 
 function getProposalCounter() {
   return proposalCounter().next().value;
 }
 
-describe.only("Adapter - Signatures", () => {
+describe("Adapter - Signatures", () => {
   before("deploy dao", async () => {
     const { dao, adapters, extensions } = await deployDefaultDao({
       owner: myAccount,
@@ -112,15 +118,21 @@ describe.only("Adapter - Signatures", () => {
       gasPrice: toBN("0"),
     });
     // query erc1271 interface
-    await checkSignature(erc1271, arbitraryMsgHash, arbitrarySignature, magicValue);
+    await checkSignature(
+      erc1271,
+      arbitraryMsgHash,
+      arbitrarySignature,
+      magicValue
+    );
   });
 
   it("should not be possible to get a valid signature if the proposal fails", async () => {
     const voting = this.adapters.voting;
     const signatures = this.adapters.signatures;
+    const erc1271 = this.extensions.erc1271;
 
     let proposalId = getProposalCounter();
-    
+
     //submit a sig
     await signatures.submitProposal(
       this.dao.address,
@@ -151,6 +163,10 @@ describe.only("Adapter - Signatures", () => {
     } catch (err) {
       expect(err.reason).equal("proposal needs to pass");
     }
-  });
 
+    await expectRevert(
+      erc1271.isValidSignature(arbitraryMsgHash, arbitrarySignature),
+      "erc1271::invalid signature"
+    );
+  });
 });
