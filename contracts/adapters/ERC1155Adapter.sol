@@ -47,16 +47,17 @@ contract ERC1155AdapterContract is DaoConstants, MemberGuard, AdapterGuard {
      * @param nftTokenId The NFT token id.
      * @param amount of the nftTokenId
      */
-    function collect(
-        DaoRegistry dao,
-        address nftAddr,
-        uint256 nftTokenId,
-        uint256 amount
-    ) external reentrancyGuard(dao) {
-        ERC1155TokenExtension erc1155 =
-            ERC1155TokenExtension(dao.getExtensionAddress(ERC1155_EXT));
-        erc1155.collect(msg.sender, nftAddr, nftTokenId, amount);
-    }
+     
+    // function collect(
+    //     DaoRegistry dao,
+    //     address nftAddr,
+    //     uint256 nftTokenId,
+    //     uint256 amount
+    // ) external reentrancyGuard(dao) {
+    //     ERC1155TokenExtension erc1155 =
+    //         ERC1155TokenExtension(dao.getExtensionAddress(ERC1155_EXT));
+    //     erc1155.collect(msg.sender, nftAddr, nftTokenId, amount);
+    // }
 
     function withdrawNFT(
         DaoRegistry dao,
