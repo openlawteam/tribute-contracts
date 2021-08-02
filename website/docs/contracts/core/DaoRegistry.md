@@ -89,7 +89,7 @@ Mapping of the member address by delegate key (think inverted mapping from membe
 
 ### checkpoints
 
-Delegate key checkpoints. This is useful to know what the delegate key is at a certain point in time.
+Delegate key checkpoints. This is useful to know what the delegate key is at a certain point in time. A checkpoint is a data structure that allows storing data on a per-block basis and is originally inspired by the Compound contracts.
 
 ### numCheckpoints
 
@@ -273,7 +273,7 @@ Returns the member address if the address is used as a delegate key or the addre
 
 ### getCurrentDelegateKey(address memberAddr)
 
-Returns the current delegate key for a member address.
+Returns the current delegate key for a member address. The member's delegate key is an alternative address to their original membership address that they have specified for interacting with the DAO. This delegation can be used for a number of different reasons (attack, reorg, technical issues, tax).
 
 ### getPreviousDelegateKey
 

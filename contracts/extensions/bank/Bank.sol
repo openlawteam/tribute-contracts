@@ -183,7 +183,7 @@ contract BankExtension is DaoConstants, AdapterGuard, IExtension {
 
     /**
      * @notice Registers a potential new token in the bank
-     * @dev Can not be a reserved token or an available internal token
+     * @dev Cannot be a reserved token or an available internal token
      * @param token The address of the token
      */
     function registerPotentialNewToken(address token)
