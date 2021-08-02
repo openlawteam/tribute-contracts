@@ -11,7 +11,6 @@ The main goal is to enable DAOs to interact with applications that rely on signa
 
 In order for the DAO to sign a message, a member must calculate the signature data externally then submit the permission hash, signature hash, and magic value to the DAO for a proposal.
 
-
 ## Access Flags
 
 ### DaoRegistry

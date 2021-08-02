@@ -22,8 +22,16 @@ const checkBalance = async (bank, address, token, expectedBalance) => {
   expect(balance.toString()).equal(expectedBalance.toString());
 };
 
-const checkSignature = async (signatureExtension, permissionHash, signature, magicValue) => {
-  const returnedValue = await signatureExtension.isValidSignature(permissionHash, signature);
+const checkSignature = async (
+  signatureExtension,
+  permissionHash,
+  signature,
+  magicValue
+) => {
+  const returnedValue = await signatureExtension.isValidSignature(
+    permissionHash,
+    signature
+  );
 
   expect(returnedValue).equal(magicValue);
 };

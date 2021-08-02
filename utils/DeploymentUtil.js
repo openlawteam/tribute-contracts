@@ -67,7 +67,9 @@ const deployDao = async (options) => {
   const bankFactory = await deployFunction(BankFactory, [identityBank.address]);
 
   const identityERC1271 = await deployFunction(ERC1271Extension);
-  const erc1271Factory = await deployFunction(ERC1271ExtensionFactory, [identityERC1271.address]);
+  const erc1271Factory = await deployFunction(ERC1271ExtensionFactory, [
+    identityERC1271.address,
+  ]);
 
   const identityNft = await deployFunction(NFTExtension);
   const nftFactory = await deployFunction(NFTCollectionFactory, [
@@ -104,7 +106,7 @@ const deployDao = async (options) => {
     dao,
     owner,
     erc1271Factory,
-    ERC1271Extension,
+    ERC1271Extension
   );
 
   const nftExtension = await createNFTExtension(
@@ -397,7 +399,7 @@ const createIdentityDao = async (options) => {
   });
 };
 
-const addDefaultAdapters = async ({ dao, options, daoFactory, nftAddr}) => {
+const addDefaultAdapters = async ({ dao, options, daoFactory, nftAddr }) => {
   const {
     voting,
     configuration,
@@ -416,7 +418,12 @@ const addDefaultAdapters = async ({ dao, options, daoFactory, nftAddr}) => {
     tributeNFT,
   } = await prepareAdapters(options);
 
-  const { BankExtension, NFTExtension, ERC20Extension, ERC1271Extension } = options;
+  const {
+    BankExtension,
+    NFTExtension,
+    ERC20Extension,
+    ERC1271Extension,
+  } = options;
 
   const bankAddress = await dao.getExtensionAddress(sha3("bank"));
   const bankExtension = await BankExtension.at(bankAddress);
@@ -612,14 +619,15 @@ const configureDao = async ({
     );
 
   await daoFactory.addAdapters(dao.address, adapters, { from: owner });
-  
+
   const adaptersWithSignatureAccess = [];
-  
-  if (signatures) adaptersWithSignatureAccess.push(
-    entryERC1271(signatures, {
-      SIGN: true
-    })
-  )
+
+  if (signatures)
+    adaptersWithSignatureAccess.push(
+      entryERC1271(signatures, {
+        SIGN: true,
+      })
+    );
 
   await daoFactory.configureExtension(
     dao.address,
@@ -976,9 +984,7 @@ const entryBank = (contract, flags) => {
 };
 
 const entryERC1271 = (contract, flags) => {
-  const values = [
-    flags.SIGN,
-  ];
+  const values = [flags.SIGN];
 
   const acl = entry(values);
 

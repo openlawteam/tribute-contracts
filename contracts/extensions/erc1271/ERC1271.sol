@@ -47,9 +47,7 @@ contract ERC1271Extension is DaoConstants, AdapterGuard, IExtension, IERC1271 {
     bool public initialized = false; // internally tracks deployment under eip-1167 proxy pattern
     DaoRegistry public dao;
 
-    enum AclFlag {
-        SIGN
-    }
+    enum AclFlag {SIGN}
 
     struct DAOSignature {
         bytes32 signatureHash;
@@ -100,7 +98,7 @@ contract ERC1271Extension is DaoConstants, AdapterGuard, IExtension, IERC1271 {
         returns (bytes4)
     {
         DAOSignature memory daoSignature = signatures[permissionHash];
-        require(daoSignature.magicValue != 0, 'erc1271::invalid signature');
+        require(daoSignature.magicValue != 0, "erc1271::invalid signature");
         require(
             daoSignature.signatureHash ==
                 keccak256(abi.encodePacked(signature)),

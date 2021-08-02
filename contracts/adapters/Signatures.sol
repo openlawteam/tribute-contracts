@@ -118,8 +118,13 @@ contract SignaturesContract is
             "proposal needs to pass"
         );
         dao.processProposal(proposalId);
-        ERC1271Extension erc1271 = ERC1271Extension(dao.getExtensionAddress(ERC1271));
-        
-        erc1271.sign(details.permissionHash, details.signatureHash, details.magicValue);
+        ERC1271Extension erc1271 =
+            ERC1271Extension(dao.getExtensionAddress(ERC1271));
+
+        erc1271.sign(
+            details.permissionHash,
+            details.signatureHash,
+            details.magicValue
+        );
     }
 }
