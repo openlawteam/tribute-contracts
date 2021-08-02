@@ -145,7 +145,7 @@ Checkout the [sample .env file](https://github.com/openlawteam/tribute-contracts
 
 **Required env vars per deployment type**
 
-- Ganache deployment: `DAO_NAME`, `ERC20_TOKEN_NAME`, `ERC20_TOKEN_SYMBOL`, `ERC20_TOKEN_DECIMALS`, `COUPON_CREATOR_ADDR`.
+- Ganache deployment: `DAO_NAME`, `DAO_OWNER_ADDR`, `ERC20_TOKEN_NAME`, `ERC20_TOKEN_SYMBOL`, `ERC20_TOKEN_DECIMALS`, `COUPON_CREATOR_ADDR`.
 
 - Test deployment: `DAO_NAME`, `ERC20_TOKEN_NAME`, `ERC20_TOKEN_SYMBOL`, `ERC20_TOKEN_DECIMALS`.
 
