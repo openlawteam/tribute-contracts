@@ -155,7 +155,13 @@ Checkout the [sample .env file](https://github.com/openlawteam/tribute-contracts
 
 ### Run Tests
 
-This project uses truffle. To run the tests, simply run:
+This project uses truffle. To compile the contracts, run:
+
+> npm run compile
+
+### Run Tests
+
+This project uses truffle and you'll need to compile the contracts prior to running tests. To run the tests, simply run:
 
 > npm run test
 
