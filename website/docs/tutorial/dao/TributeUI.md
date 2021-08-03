@@ -92,7 +92,7 @@ Then open the config file: _subgraph/config/subgraph-config.json_, remove all th
     "daoFactoryAddress": "0x...",
     "daoFactoryStartBlock": ...,
     "GITHUB_USERNAME": "<YOUR_GITHUB_USERNAME>",
-    "SUBGRAPH_NAME": "tribute-dao-tutorial"
+    "SUBGRAPH_NAME_OR_SLUG": "tribute-dao-tutorial"
   }
 ]
 ```
