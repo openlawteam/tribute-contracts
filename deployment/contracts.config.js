@@ -97,6 +97,13 @@ const contracts = [
     type: ContractType.Factory,
   },
   {
+    name: "ERC1271ExtensionFactory",
+    path: "../contracts/extensions/erc1271/ERC1271ExtensionFactory",
+    enabled: true,
+    version: "1.0.0",
+    type: ContractType.Factory,
+  },
+  {
     name: "ExecutorExtensionFactory",
     path: "../contracts/extensions/executor/ExecutorExtensionFactory",
     enabled: true,
@@ -122,6 +129,13 @@ const contracts = [
   {
     name: "ERC20Extension",
     path: "../contracts/extensions/token/erc20/ERC20Extension",
+    enabled: true,
+    version: "1.0.0",
+    type: ContractType.Extension,
+  },
+  {
+    name: "ERC1271Extension",
+    path: "../contracts/extensions/erc1271/ERC1271Extension",
     enabled: true,
     version: "1.0.0",
     type: ContractType.Extension,
@@ -166,6 +180,14 @@ const contracts = [
   {
     name: "ManagingContract",
     path: "../contracts/adapters/ManagingContract",
+    enabled: true,
+    version: "1.0.0",
+    type: ContractType.Adapter,
+  },
+  // Signature Adapters
+  {
+    name: "SignaturesContract",
+    path: "../contracts/adapters/SignaturesContract",
     enabled: true,
     version: "1.0.0",
     type: ContractType.Adapter,
