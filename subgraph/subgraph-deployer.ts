@@ -8,7 +8,7 @@ import subgraphConfig from "./config/subgraph-config.json";
 dotenvConfig({ path: resolve(__dirname, "../.env") });
 
 type DeploySettings = {
-  GITHUB_USERNAME: string;
+  GITHUB_USERNAME?: string;
   SUBGRAPH_NAME_OR_SLUG: string;
 };
 
