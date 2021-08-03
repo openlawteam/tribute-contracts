@@ -26,6 +26,7 @@ SOFTWARE.
  */
 const Web3Utils = require("web3-utils");
 const sha3 = Web3Utils.sha3;
+const soliditySha3 = Web3Utils.soliditySha3;
 const toBN = Web3Utils.toBN;
 const toWei = Web3Utils.toWei;
 const fromUtf8 = Web3Utils.fromUtf8;
@@ -53,6 +54,7 @@ const maxAmount = toBN("10000000000000000000");
 
 module.exports = {
   sha3,
+  soliditySha3,
   toBN,
   toWei,
   hexToBytes,
