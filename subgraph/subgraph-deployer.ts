@@ -235,7 +235,7 @@ function couponOnboardingYAML({
 (function () {
   // Compile the solidity contracts
   console.log("📦 ### 1/3 Compiling the smart contracts...");
-  exec(`cd .. && truffle compile`);
+  exec(`cd .. && hardhat compile`);
 
   // Create the graph code generation files
   console.log("📦 ### 2/3 Creating the graph scheme...");
@@ -262,7 +262,7 @@ function couponOnboardingYAML({
 
     console.log("🛠 ### Preparing subgraph template for...");
     console.log(`
-    GITHUB_USERNAME: ${subgraph.GITHUB_USERNAME}
+    GITHUB_USERNAME: ${subgraph.GITHUB_USERNAME || "n/a"}
     SUBGRAPH_NAME: ${subgraph.SUBGRAPH_NAME_OR_SLUG}
     Network: ${subgraph.network}
     Address: ${subgraph.daoFactoryAddress}
