@@ -9,7 +9,7 @@ dotenvConfig({ path: resolve(__dirname, "../.env") });
 
 type DeploySettings = {
   GITHUB_USERNAME: string;
-  SUBGRAPH_NAME: string;
+  SUBGRAPH_NAME_OR_SLUG: string;
 };
 
 type YAMLSettings = {
@@ -249,6 +249,12 @@ function couponOnboardingYAML({
 
   let executedDeployments: number = 0;
 
+  console.log(
+    `==== READY TO DEPLOY ${subgraphConfig.length} SUBGRAPHS... ====
+    
+    `
+  );
+
   subgraphConfig.forEach((subgraph: SubgraphSettings, index: number) => {
     console.log(`📦 ### DEPLOYMENT ${index + 1}/${subgraphConfig.length}...
     
@@ -257,7 +263,7 @@ function couponOnboardingYAML({
     console.log("🛠 ### Preparing subgraph template for...");
     console.log(`
     GITHUB_USERNAME: ${subgraph.GITHUB_USERNAME}
-    SUBGRAPH_NAME: ${subgraph.SUBGRAPH_NAME}
+    SUBGRAPH_NAME: ${subgraph.SUBGRAPH_NAME_OR_SLUG}
     Network: ${subgraph.network}
     Address: ${subgraph.daoFactoryAddress}
     Start Block: ${subgraph.daoFactoryStartBlock}
@@ -280,11 +286,17 @@ function couponOnboardingYAML({
       })
     );
 
-    // Deploy subgraph <GITHUB_USERNAME/SUBGRAPH_NAME>
+    // Deploy subgraph <GITHUB_USERNAME/SUBGRAPH_NAME_OR_SLUG>
     console.log("🚗 ### Deploying subgraph...");
-    exec(
-      `graph deploy --access-token ${process.env.GRAPH_ACCESS_TOKEN} --node https://api.thegraph.com/deploy/ --ipfs https://api.thegraph.com/ipfs/ ${subgraph.GITHUB_USERNAME}/${subgraph.SUBGRAPH_NAME}`
-    );
+
+    if (subgraph.network === "mainnet") {
+      exec(`graph auth --studio ${process.env.GRAPH_DEPLOYMENT_KEY}`);
+      exec(`graph deploy --studio ${subgraph.SUBGRAPH_NAME_OR_SLUG}`);
+    } else {
+      exec(
+        `graph deploy --access-token ${process.env.GRAPH_ACCESS_TOKEN} --node https://api.thegraph.com/deploy/ --ipfs https://api.thegraph.com/ipfs/ ${subgraph.GITHUB_USERNAME}/${subgraph.SUBGRAPH_NAME_OR_SLUG}`
+      );
+    }
 
     console.log("👏 ### Done.");
 
