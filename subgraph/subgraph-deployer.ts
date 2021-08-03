@@ -8,7 +8,7 @@ import subgraphConfig from "./config/subgraph-config.json";
 dotenvConfig({ path: resolve(__dirname, "../.env") });
 
 type DeploySettings = {
-  GITHUB_USERNAME: string;
+  GITHUB_USERNAME?: string;
   SUBGRAPH_NAME_OR_SLUG: string;
 };
 
@@ -262,8 +262,8 @@ function couponOnboardingYAML({
 
     console.log("🛠 ### Preparing subgraph template for...");
     console.log(`
-    GITHUB_USERNAME: ${subgraph.GITHUB_USERNAME}
-    SUBGRAPH_NAME: ${subgraph.SUBGRAPH_NAME_OR_SLUG}
+    GITHUB_USERNAME: ${subgraph.GITHUB_USERNAME || "n/a"}
+    SUBGRAPH_NAME_OR_SLUG: ${subgraph.SUBGRAPH_NAME_OR_SLUG}
     Network: ${subgraph.network}
     Address: ${subgraph.daoFactoryAddress}
     Start Block: ${subgraph.daoFactoryStartBlock}

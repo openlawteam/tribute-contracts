@@ -63,6 +63,8 @@ Then from the `subgraph` directory, simply run the following command to deploy t
 npx ts-node subgraph-deployer.ts
 ```
 
-_IMPORTANT_: If deploying to mainnet the command line will prompt for an input for the `✔ Version Label (e.g. v0.0.1)`, enter the version and the deployment will resume.
+:::warning
+If deploying to mainnet the command line will prompt for an input for the `✔ Version Label (e.g. v0.0.1)`, enter the version and the deployment will resume.
+:::
 
 See [here](https://thegraph.com/docs/deploy-a-subgraph#redeploying-a-subgraph) for more information
