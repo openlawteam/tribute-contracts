@@ -70,8 +70,6 @@ _IMPORTANT_: If deploying to mainnet the command line will prompt for an input f
 
 See [here](https://thegraph.com/docs/deploy-a-subgraph#redeploying-a-subgraph) for more information.
 
-See [here](https://thegraph.com/docs/deploy-a-subgraph#redeploying-a-subgraph) for more information
-
 ### Local Development Graph Setup
 
 Check out the setup guide [here](https://github.com/openlawteam/tribute-contracts/blob/master/docker/README.md)
