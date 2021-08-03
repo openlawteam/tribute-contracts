@@ -1,0 +1,95 @@
+---
+id: member
+title: Member
+---
+
+No description
+
+```graphql
+type Member {
+  id: ID!
+  memberAddress: Bytes
+  createdAt: String
+  delegateKey: Bytes
+  units: BigInt!
+  tokenHoldings(
+    skip: Int = 0
+    first: Int = 100
+    orderBy: TokenHolder_orderBy
+    orderDirection: OrderDirection
+    where: TokenHolder_filter
+  ): [TokenHolder!]
+  proposals(
+    skip: Int = 0
+    first: Int = 100
+    orderBy: Proposal_orderBy
+    orderDirection: OrderDirection
+    where: Proposal_filter
+  ): [Proposal!]
+  didFullyRagequit: Boolean
+  isDelegated: Boolean
+  tributeDaos(
+    skip: Int = 0
+    first: Int = 100
+    orderBy: TributeDao_orderBy
+    orderDirection: OrderDirection
+    where: TributeDao_filter
+  ): [TributeDao!]!
+}
+```
+
+### Fields
+
+#### `id` 
+
+Unique identifier and primary key of the `Member` entity
+
+#### `memberAddress` 
+
+#### `createdAt` 
+
+#### `delegateKey` 
+
+#### `units` 
+
+#### `tokenHoldings` ([`[TokenHolder!]`]
+
+- ##### `skip` 
+
+- ##### `first` 
+
+- ##### `orderBy` ([`TokenHolder_orderBy`]
+
+- ##### `orderDirection` ([`OrderDirection`]
+
+- ##### `where` ([`TokenHolder_filter`]
+
+#### `proposals` ([`[Proposal!]`]
+
+- ##### `skip` 
+
+- ##### `first` 
+
+- ##### `orderBy` ([`Proposal_orderBy`]
+
+- ##### `orderDirection` ([`OrderDirection`]
+
+- ##### `where` ([`Proposal_filter`]
+
+#### `didFullyRagequit` 
+
+#### `isDelegated` 
+
+#### `tributeDaos` ([`[TributeDao!]!`]
+
+List of DAOs the member belongs to
+
+- ##### `skip` 
+
+- ##### `first` 
+
+- ##### `orderBy` ([`TributeDao_orderBy`]
+
+- ##### `orderDirection` ([`OrderDirection`]
+
+- ##### `where` ([`TributeDao_filter`]

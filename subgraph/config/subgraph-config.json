@@ -5,7 +5,6 @@
     "daoFactoryStartBlock": 12599262,
     "couponOnboardingAddress": "0xC3718BAAA733dA19645c358930f06e3f8fD4e2b3",
     "couponOnboardingStartBlock": 12605947,
-    "GITHUB_USERNAME": "openlawteam",
-    "SUBGRAPH_NAME": "museo"
+    "SUBGRAPH_NAME_OR_SLUG": "tributedao"
   }
 ]

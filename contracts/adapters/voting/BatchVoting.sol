@@ -79,6 +79,18 @@ contract BatchVotingContract is
         _snapshotContract = _spc;
     }
 
+    /**
+     * @notice returns the adapter name. Useful to identify wich voting adapter is actually configurated in the DAO.
+     */
+    function getAdapterName() external pure override returns (string memory) {
+        return ADAPTER_NAME;
+    }
+
+    /**
+     * @notice Configures the DAO with the Voting and Gracing periods.
+     * @param votingPeriod The voting period in seconds.
+     * @param gracePeriod The grace period in seconds.
+     */
     function configureDao(
         DaoRegistry dao,
         uint256 votingPeriod,
@@ -88,19 +100,78 @@ contract BatchVotingContract is
         dao.setConfiguration(_GRACE_PERIOD, gracePeriod);
     }
 
-    /** 
-        What needs to be checked before submitting a vote result
-        - if the grace period has ended, do nothing
-        - if it's the first result, is this a right time to submit it?
-             * is the diff between nbYes and nbNo +50% of the votes ?
-             * is this after the voting period ?
-        - if we already have a result that has been challenged
-            * same as if there were no result yet
+    /**
+     * @notice Stats a new voting proposal considering the block time and number.
+     * @notice This function is called from an Adapter to compute the voting starting period for a proposal.
+     * @param proposalId The proposal id that is being started.
+     * @param data The proposal signed payload.
+     */
+    function startNewVotingForProposal(
+        DaoRegistry dao,
+        bytes32 proposalId,
+        bytes memory data
+    ) public override onlyAdapter(dao) {
+        SnapshotProposalContract.ProposalMessage memory proposal =
+            abi.decode(data, (SnapshotProposalContract.ProposalMessage));
+        BankExtension bank = BankExtension(dao.getExtensionAddress(BANK));
 
-        - if we already have a result that has not been challenged
-            * is the new one heavier than the previous one ?
-    **/
+        (bool success, uint256 blockNumber) =
+            _stringToUint(proposal.payload.snapshot);
+        require(success, "snapshot conversion error");
 
+        bytes32 proposalHash =
+            _snapshotContract.hashMessage(dao, msg.sender, proposal);
+        address addr = ECDSA.recover(proposalHash, proposal.sig);
+        address memberAddr = dao.getAddressIfDelegated(addr);
+        require(bank.balanceOf(memberAddr, UNITS) > 0, "noActiveMember");
+        require(
+            blockNumber < block.number,
+            "snapshot block number should not be in the future"
+        );
+        require(blockNumber > 0, "block number cannot be 0");
+
+        votingSessions[address(dao)][proposalId].actionId = msg.sender;
+        votingSessions[address(dao)][proposalId].startingTime = block.timestamp;
+        votingSessions[address(dao)][proposalId].snapshot = blockNumber;
+        votingSessions[address(dao)][proposalId].proposalHash = proposalHash;
+    }
+
+    /**
+     * @notice Returns the sender address based on the signed proposal data.
+     * @param actionId The address of the msg.sender.
+     * @param data Proposal signed data.
+     */
+    function getSenderAddress(
+        DaoRegistry dao,
+        address actionId,
+        bytes memory data,
+        address
+    ) external view override returns (address) {
+        SnapshotProposalContract.ProposalMessage memory proposal =
+            abi.decode(data, (SnapshotProposalContract.ProposalMessage));
+
+        return
+            ECDSA.recover(
+                _snapshotContract.hashMessage(dao, actionId, proposal),
+                proposal.sig
+            );
+    }
+
+    /**
+     * @notice Since the voting happens offchain, the results must be submitted through this function.
+     * @param dao The DAO address.
+     * @param proposalId The proposal needs to be sponsored, and not processed.
+     * @param votes The vote results computed offchain.
+     * What needs to be checked before submitting a vote result
+     * - if the grace period has ended, do nothing
+     * - if it's the first result, is this a right time to submit it?
+     *  * is the diff between nbYes and nbNo +50% of the votes ?
+     *  * is this after the voting period ?
+     * - if we already have a result that has been challenged
+     *  * same as if there were no result yet
+     * - if we already have a result that has not been challenged
+     *  * is the new one heavier than the previous one ?
+     */
     function submitVoteResult(
         DaoRegistry dao,
         bytes32 proposalId,
@@ -134,10 +205,13 @@ contract BatchVotingContract is
         }
     }
 
-    function getAdapterName() external pure override returns (string memory) {
-        return ADAPTER_NAME;
-    }
-
+    /**
+     * @notice Computes the votes based on the proposal.
+     * @param proposalId The proposal id.
+     * @param entries The votes.
+     * @return nbYes Total of YES votes.
+     * @return nbNo Total of NO votes.
+     */
     function processVotes(
         DaoRegistry dao,
         bytes32 proposalId,
@@ -174,6 +248,17 @@ contract BatchVotingContract is
         }
     }
 
+    /**
+     * @notice Validates the votes based on the sender, proposal, and snapshot data.
+     * @notice Checks that the memberAddress is the one who signed the vote (or its delegate key).
+     * @notice Checks that the previous member address is "before" (hex order) the current one.
+     * @notice Checks that the vote is actually for this proposal.
+     * @param actionId The msg.sender.
+     * @param snapshot The snapshot id.
+     * @param proposalId The proposal id.
+     * @param previousAddress The previous member address that has voted on.
+     * @return number of units of the member when the snapshot was taken.
+     */
     function validateVote(
         DaoRegistry dao,
         BankExtension bank,
@@ -201,80 +286,21 @@ contract BatchVotingContract is
         return bank.getPriorAmount(entry.memberAddress, UNITS, snapshot);
     }
 
-    function _stringToUint(string memory s)
-        internal
-        pure
-        returns (bool success, uint256 result)
-    {
-        bytes memory b = bytes(s);
-        result = 0;
-        success = false;
-        for (uint256 i = 0; i < b.length; i++) {
-            if (uint8(b[i]) >= 48 && uint8(b[i]) <= 57) {
-                result = result * 10 + (uint8(b[i]) - 48);
-                success = true;
-            } else {
-                result = 0;
-                success = false;
-                break;
-            }
-        }
-        return (success, result);
-    }
-
-    function getSenderAddress(
-        DaoRegistry dao,
-        address actionId,
-        bytes memory data,
-        address
-    ) external view override returns (address) {
-        SnapshotProposalContract.ProposalMessage memory proposal =
-            abi.decode(data, (SnapshotProposalContract.ProposalMessage));
-
-        return
-            ECDSA.recover(
-                _snapshotContract.hashMessage(dao, actionId, proposal),
-                proposal.sig
-            );
-    }
-
-    function startNewVotingForProposal(
-        DaoRegistry dao,
-        bytes32 proposalId,
-        bytes memory data
-    ) public override onlyAdapter(dao) {
-        SnapshotProposalContract.ProposalMessage memory proposal =
-            abi.decode(data, (SnapshotProposalContract.ProposalMessage));
-        BankExtension bank = BankExtension(dao.getExtensionAddress(BANK));
-
-        (bool success, uint256 blockNumber) =
-            _stringToUint(proposal.payload.snapshot);
-        require(success, "snapshot conversion error");
-
-        bytes32 proposalHash =
-            _snapshotContract.hashMessage(dao, msg.sender, proposal);
-        address addr = ECDSA.recover(proposalHash, proposal.sig);
-        address memberAddr = dao.getAddressIfDelegated(addr);
-        require(bank.balanceOf(memberAddr, UNITS) > 0, "noActiveMember");
-        require(
-            blockNumber < block.number,
-            "snapshot block number should not be in the future"
-        );
-        require(blockNumber > 0, "block number cannot be 0");
-
-        votingSessions[address(dao)][proposalId].actionId = msg.sender;
-        votingSessions[address(dao)][proposalId].startingTime = block.timestamp;
-        votingSessions[address(dao)][proposalId].snapshot = blockNumber;
-        votingSessions[address(dao)][proposalId].proposalHash = proposalHash;
-    }
-
     /**
     possible results here:
-    0: has not started
-    1: tie
-    2: pass
-    3: not pass
-    4: in progress
+    
+     */
+
+    /**
+     * @notice Computes the votes results of a proposal.
+     * @notice Checks that the vote is actually for this proposal.
+     * @param proposalId The proposal id.
+     * @return state The voting state:
+     * 0: has not started
+     * 1: tie
+     * 2: pass
+     * 3: not pass
+     * 4: in progress
      */
     function voteResult(DaoRegistry dao, bytes32 proposalId)
         external
@@ -309,5 +335,31 @@ contract BatchVotingContract is
         }
 
         return VotingState.TIE;
+    }
+
+    /**
+     * @notice Convents a string value into a unit256.
+     * @return success The boolean indicating if the conversion succeeded.
+     * @return result The unit256 result if converted, otherwise 0.
+     */
+    function _stringToUint(string memory s)
+        internal
+        pure
+        returns (bool success, uint256 result)
+    {
+        bytes memory b = bytes(s);
+        result = 0;
+        success = false;
+        for (uint256 i = 0; i < b.length; i++) {
+            if (uint8(b[i]) >= 48 && uint8(b[i]) <= 57) {
+                result = result * 10 + (uint8(b[i]) - 48);
+                success = true;
+            } else {
+                result = 0;
+                success = false;
+                break;
+            }
+        }
+        return (success, result);
     }
 }

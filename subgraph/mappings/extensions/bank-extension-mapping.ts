@@ -19,7 +19,7 @@ import {
   TOTAL,
   MEMBER_COUNT,
   ERC20_EXTENSION_ID,
-} from "../helpers/constants";
+} from "../core/dao-constants";
 
 function internalTransfer(
   createdAt: string,

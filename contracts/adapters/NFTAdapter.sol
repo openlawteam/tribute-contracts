@@ -7,8 +7,6 @@ import "../core/DaoRegistry.sol";
 import "../extensions/nft/NFT.sol";
 import "../guards/MemberGuard.sol";
 import "../guards/AdapterGuard.sol";
-import "./interfaces/IConfiguration.sol";
-import "../adapters/interfaces/IVoting.sol";
 
 /**
 MIT License

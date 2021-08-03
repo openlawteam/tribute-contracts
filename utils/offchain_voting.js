@@ -336,6 +336,7 @@ function prepareProposalMessage(message) {
     timestamp: message.timestamp,
     spaceHash: sha3(message.space),
     payload: prepareProposalPayload(message.payload),
+    submitter: message.submitter,
   });
 }
 
@@ -445,12 +446,23 @@ async function prepareVoteResult(votes, dao, actionId, chainId) {
   return { voteResultTree: tree, result };
 }
 
+/**
+ * 
+ struct ProposalMessage {
+        uint256 timestamp;
+        bytes32 spaceHash;
+        address submitter;
+        ProposalPayload payload;
+        bytes sig;
+    }
+ */
 function prepareVoteProposalData(data, web3) {
   return web3.eth.abi.encodeParameter(
     {
       ProposalMessage: {
         timestamp: "uint64",
         spaceHash: "bytes32",
+        submitter: "address",
         payload: {
           nameHash: "bytes32",
           bodyHash: "bytes32",
@@ -467,6 +479,7 @@ function prepareVoteProposalData(data, web3) {
       spaceHash: sha3(data.space),
       payload: prepareVoteProposalPayload(data.payload),
       sig: data.sig || "0x",
+      submitter: data.submitter,
     }
   );
 }

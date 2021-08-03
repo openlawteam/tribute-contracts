@@ -1,0 +1,26 @@
+---
+id: bank
+title: bank
+---
+
+No description
+
+```graphql
+bank(
+  id: ID!
+  block: Block_height
+): Bank
+
+```
+
+### Arguments
+
+#### `id` 
+
+#### `block` ([`Block_height`]
+
+The block at which the query should be executed. Can either be an `{ number: Int }` containing the block number or a `{ hash: Bytes }` value containing a block hash. Defaults to the latest block when omitted.
+
+### Type
+
+#### [`Bank`]
