@@ -522,7 +522,7 @@ const addDefaultAdapters = async ({ dao, options, daoFactory, nftAddr }) => {
     },
   };
 };
-// TODO: add erc1155 adapater, extentions, etc. to configure
+
 const configureDao = async ({
   owner,
   daoFactory,
@@ -786,6 +786,7 @@ const configureDao = async ({
       entryNft(erc1155Adapter, {
         WITHDRAW_NFT: true,
         INTERNAL_TRANSFER: true,
+        COLLECT_NFT: true,
       })
     );
 
@@ -801,7 +802,8 @@ const configureDao = async ({
   await daoFactory.configureExtension(
     dao.address,
     erc1155TokenExtension.address,
-    [],
+    adaptersWithNFTAccess,
+    //[],
     {
       from: owner,
     }
