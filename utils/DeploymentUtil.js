@@ -785,8 +785,8 @@ const configureDao = async ({
     adaptersWithNFTAccess.push(
       entryNft(erc1155Adapter, {
         WITHDRAW_NFT: true,
-        INTERNAL_TRANSFER: true,
         COLLECT_NFT: true,
+        INTERNAL_TRANSFER: true,
       })
     );
 

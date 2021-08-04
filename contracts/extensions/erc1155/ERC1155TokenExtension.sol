@@ -3,6 +3,9 @@ pragma solidity ^0.8.0;
 import "../../core/DaoConstants.sol";
 import "../../core/DaoRegistry.sol";
 import "../../guards/AdapterGuard.sol";
+
+import "../../guards/MemberGuard.sol";
+
 import "../IExtension.sol";
 import "@openzeppelin/contracts/utils/Address.sol";
 import "@openzeppelin/contracts/token/ERC1155/IERC1155.sol";
@@ -36,6 +39,7 @@ SOFTWARE.
 contract ERC1155TokenExtension is
     DaoConstants,
     AdapterGuard,
+    MemberGuard,
     IExtension,
     IERC1155Receiver
 {
@@ -198,7 +202,7 @@ contract ERC1155TokenExtension is
      * @param toOwner The address of the new owner.
      * @param nftAddr The NFT address.
      * @param nftTokenId The NFT token id.
-     * @param amount the number of a partricular NFT token id.
+     * @param amount the number of a particular NFT token id.
      */
     function internalTransfer(
         address fromOwner,
@@ -207,10 +211,9 @@ contract ERC1155TokenExtension is
         uint256 nftTokenId,
         uint256 amount
     ) public hasExtensionAccess(this, AclFlag.INTERNAL_TRANSFER) {
-        // TODO should the `newOwner` be a member address?
+        require(isActiveMember(dao, fromOwner), "fromOwner is not a member");
+        require(isActiveMember(dao, toOwner), "toOwner is not a member");
 
-        require(fromOwner != address(0x0), "invalid fromOwner arg");
-        require(toOwner != address(0x0), "invalid toOwner arg");
         //check if fromOwner exists
         bool holdsNFT =
             _ownership[getNFTId(nftAddr, nftTokenId)].contains(fromOwner);
@@ -359,8 +362,17 @@ contract ERC1155TokenExtension is
         revert("not supported");
     }
 
-    // TODO double check which type/interfaceIds it will support
-    function supportsInterface(bytes4) external pure override returns (bool) {
-        return true; // supportedInterfaces[interfaceID];
+    /**
+     * @dev https://github.com/ethereum/EIPs/blob/master/EIPS/eip-1155.md
+     */
+    function supportsInterface(bytes4 interfaceID)
+        external
+        pure
+        override
+        returns (bool)
+    {
+        return
+            interfaceID == 0x01ffc9a7 || // ERC-165 support (i.e. `bytes4(keccak256('supportsInterface(bytes4)'))`).
+            interfaceID == 0x4e2312e0; // ERC-1155 `ERC1155TokenReceiver` support (i.e. `bytes4(keccak256("onERC1155Received(address,address,uint256,uint256,bytes)")) ^ bytes4(keccak256("onERC1155BatchReceived(address,address,uint256[],uint256[],bytes)"))`).
     }
 }
