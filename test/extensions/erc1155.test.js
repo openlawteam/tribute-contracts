@@ -65,10 +65,16 @@ describe("Extension - ERC1155", () => {
     expect(erc1155TokenExtension).to.not.be.null;
   });
 
-  it("should be possible check how many NFTs are in the collection", async () => {
+  it("should be possible check how many token ids are collected for a specific NFT address", async () => {
     const erc1155TokenExtension = this.extensions.erc1155Ext;
     const erc1155TestToken = this.testContracts.erc1155TestToken;
     const total = await erc1155TokenExtension.nbNFTs(erc1155TestToken.address);
+    expect(total.toString()).equal("0");
+  });
+
+  it("should be possible check how many NFTs are in the collection", async () => {
+    const erc1155TokenExtension = this.extensions.erc1155Ext;
+    const total = await erc1155TokenExtension.nbNFTAddresses();
     expect(total.toString()).equal("0");
   });
 
@@ -81,7 +87,7 @@ describe("Extension - ERC1155", () => {
     );
   });
 
-  it("should not be possible to return a NFT without the RETURN permission", async () => {
+  it("should not be possible to withdraw a NFT without the WITHDRAW_NFT permission", async () => {
     const erc1155TokenExtension = this.extensions.erc1155Ext;
     const erc1155TestToken = this.testContracts.erc1155TestToken;
     await expectRevert(
@@ -95,12 +101,6 @@ describe("Extension - ERC1155", () => {
     );
   });
 
-  it("should be possible check how many NFTs are in the collection", async () => {
-    const erc1155TokenExtension = this.extensions.erc1155Ext;
-    const total = await erc1155TokenExtension.nbNFTAddresses();
-    expect(total.toString()).equal("0");
-  });
-
   it("should not be possible to initialize the extension if it was already initialized", async () => {
     const erc1155TokenExtension = this.extensions.erc1155Ext;
     await expectRevert(
@@ -109,7 +109,7 @@ describe("Extension - ERC1155", () => {
     );
   });
 
-  it("should be possible to collect a NFT that is allowed", async () => {
+  it("should be possible to collect a NFT if that is allowed", async () => {
     const erc1155TestToken = this.testContracts.erc1155TestToken;
     const erc1155TestTokenAddress = erc1155TestToken.address;
 
@@ -122,10 +122,9 @@ describe("Extension - ERC1155", () => {
 
     const pastEvents = await erc1155TestToken.getPastEvents();
 
-    const { operator, from, to, id, value } = pastEvents[0].returnValues;
+    const { id, value } = pastEvents[0].returnValues;
     expect(id).equal("1");
     expect(value).equal("10");
-    // expect(owner).equal(nftOwner);
 
     //instances for Extension and Adapter
     const erc1155TokenExtension = this.extensions.erc1155Ext;
@@ -178,4 +177,12 @@ describe("Extension - ERC1155", () => {
 
     expect(newGuildBlance.toString()).equal("2");
   });
+
+  // should be possible to withdraw an NFT token when you are the owner
+
+  // should be possible to do an internal transfer of an NFT from member to another member
+
+  // should not be possible to transfer the NFT when you are not a member
+
+  // should not be possible to transfer the NFT when you are not the owner
 });
