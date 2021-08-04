@@ -111,26 +111,26 @@ describe("Extension - ERC1155", () => {
 
   it("should be possible to collect a NFT that is allowed", async () => {
     const erc1155TestToken = this.testContracts.erc1155TestToken;
-    const erc1155TestTokenAddress = erc1155TestToken.address; 
-    //console.log("token address..", erc1155TestTokenAddress);
+    const erc1155TestTokenAddress = erc1155TestToken.address;
 
     const nftOwner = accounts[1];
-    //console.log("nftOwenr..", nftOwner);
-    await erc1155TestToken.mint(nftOwner, 1, 10, "0x0",   {
+    //create a test 1155 token
+    await erc1155TestToken.mint(nftOwner, 1, 10, "0x0", {
       from: daoOwner,
       gasPrice: toBN("0"),
     });
 
     const pastEvents = await erc1155TestToken.getPastEvents();
-    //console.log("past events..", pastEvents);
 
     const { operator, from, to, id, value } = pastEvents[0].returnValues;
     expect(id).equal("1");
     expect(value).equal("10");
     // expect(owner).equal(nftOwner);
-    
+
+    //instances for Extension and Adapter
     const erc1155TokenExtension = this.extensions.erc1155Ext;
-    
+    const erc1155Adapter = this.adapters.erc1155Adapter;
+
     //set approval where Extension is the "operator" all of nftOwners
     await erc1155TestToken.setApprovalForAll(
       erc1155TokenExtension.address,
@@ -140,37 +140,42 @@ describe("Extension - ERC1155", () => {
         gasPrice: toBN("0"),
       }
     );
-    const approved = await erc1155TestToken.isApprovedForAll(nftOwner, erc1155TokenExtension.address);
+    //check if Extension address is approved
+    const approved = await erc1155TestToken.isApprovedForAll(
+      nftOwner,
+      erc1155TokenExtension.address
+    );
     expect(approved).equal(true);
-    //const erc1155Adapter = this.adapters.erc1155Adapter;
+
     //collect 2 tokens of tokenId 1
-    await erc1155TokenExtension.collect(
+    await erc1155Adapter.collect(
       this.dao.address,
       erc1155TestTokenAddress,
       id,
       2,
-   
+      {
+        from: nftOwner,
+        gasPrice: toBN("0"),
+      }
     );
 
     // Make sure it was collected
     const nftAddr = await erc1155TokenExtension.getNFTAddress(0);
     expect(nftAddr).equal(erc1155TestToken.address);
     const nftId = await erc1155TokenExtension.getNFT(nftAddr, 0);
-    expect(nftId.toString()).equal(tokenId.toString());
+    expect(nftId.toString()).equal(id.toString());
+
     //check token balance of nftOwner after collection = -2
-    const balanceOfnftOwner = erc1155TokenExtension.getNFTIdAmount(
-      nftOwner,
-      erc1155TestToken.address,
-      1
-    );
+    const balanceOfnftOwner = await erc1155TestToken.balanceOf(nftOwner, 1);
     expect(balanceOfnftOwner.toString()).equal("8");
+
     //check token balance of the GUILD = +2
-    const newGuildBlance = erc1155TokenExtension.getNFTIdAmount(
+    const newGuildBlance = await erc1155TokenExtension.getNFTIdAmount(
       GUILD,
       erc1155TestToken.address,
       1
     );
+
     expect(newGuildBlance.toString()).equal("2");
-    //Felipe -  test the withdrawal?
   });
 });
