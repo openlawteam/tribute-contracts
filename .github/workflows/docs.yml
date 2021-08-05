@@ -3,6 +3,9 @@ name: documentation
 on:
   push:
     branches: [master]
+    paths:
+      # Build docs only if there are any changes in the website folder
+      - "website/**"
 
 env:
   ALGOLIA_APP_ID: ${{ secrets.ALGOLIA_APP_ID }}
