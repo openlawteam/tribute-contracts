@@ -5,12 +5,12 @@ on:
     branches:
       # long-lived branches
       - master
-  pull_request:
+  pull_request_target:
     branches:
       - "*"
 
 jobs:
-  lint:
+  lint_subgraph:
     runs-on: ubuntu-18.04
     steps:
       - name: Checkout code
