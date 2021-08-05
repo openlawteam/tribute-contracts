@@ -97,7 +97,7 @@ contract DaoRegistry is MemberGuard, AdapterGuard {
     }
 
     struct DelegateCheckpoint {
-        // A checkpoint for marking number of votes from a given block
+        // A checkpoint for marking the delegate key for a member from a given block
         uint96 fromBlock;
         address delegateKey;
     }
