@@ -211,7 +211,10 @@ contract ERC1155TokenExtension is
         uint256 nftTokenId,
         uint256 amount
     ) public hasExtensionAccess(this, AclFlag.INTERNAL_TRANSFER) {
-        //require(isActiveMember(dao, fromOwner) == true, "fromOwner is not a member");
+        require(
+            isActiveMember(dao, fromOwner) == true,
+            "fromOwner is not a member"
+        );
         require(
             isActiveMember(dao, toOwner) == true,
             "toOwner is not a member"
