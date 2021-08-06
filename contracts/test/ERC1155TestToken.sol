@@ -35,7 +35,7 @@ contract ERC1155TestToken is Context, AccessControlEnumerable, ERC1155 {
     /**
      * @dev Grants `DEFAULT_ADMIN_ROLE`, `MINTER_ROLE`, and `PAUSER_ROLE` to the _creator address
      */
-    constructor(string memory uri) public ERC1155(uri) {
+    constructor(string memory uri) ERC1155(uri) {
         _setupRole(DEFAULT_ADMIN_ROLE, _msgSender());
         _setupRole(MINTER_ROLE, _msgSender());
     }
