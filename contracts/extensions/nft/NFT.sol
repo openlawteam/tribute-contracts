@@ -132,6 +132,7 @@ contract NFTExtension is
      * @notice Transfers the NFT token from the extension address to the new owner.
      * @notice It also updates the internal state to keep track of the all the NFTs collected by the extension.
      * @notice The caller must have the ACL Flag: WITHDRAW_NFT
+     * @notice TODO This function needs to be called from a new adapter (RagequitNFT) that will manage the Bank balances, and will return the NFT to the owner.
      * @dev Reverts if the NFT is not in ERC721 standard.
      * @param newOwner The address of the new owner.
      * @param nftAddr The NFT address that must be in ERC721 standard.

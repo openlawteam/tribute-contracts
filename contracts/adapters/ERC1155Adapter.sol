@@ -5,6 +5,7 @@ import "../core/DaoConstants.sol";
 import "../core/DaoRegistry.sol";
 import "../extensions/erc1155/ERC1155TokenExtension.sol";
 import "../guards/AdapterGuard.sol";
+import "../guards/MemberGuard.sol";
 import "./interfaces/IConfiguration.sol";
 import "../adapters/interfaces/IVoting.sol";
 
@@ -53,35 +54,19 @@ contract ERC1155AdapterContract is DaoConstants, AdapterGuard {
         uint256 nftTokenId,
         uint256 amount
     ) external reentrancyGuard(dao) {
-        ERC1155TokenExtension erc1155 =
-            ERC1155TokenExtension(dao.getExtensionAddress(ERC1155_EXT));
+        ERC1155TokenExtension erc1155 = ERC1155TokenExtension(
+            dao.getExtensionAddress(ERC1155_EXT)
+        );
         erc1155.collect(msg.sender, nftAddr, nftTokenId, amount);
     }
 
-    /**
-     * @notice Withdraws the NFT from the ERC1155 Token extension to the msg.sender address.
-     * @param dao The DAO address.
-     * @param nftAddr The NFT smart contract address.
-     * @param nftTokenId The NFT token id.
-     * @param amount of the nftTokenId.
-     */
-    function withdrawNFT(
-        DaoRegistry dao,
-        address nftAddr,
-        uint256 nftTokenId,
-        uint256 amount
-    ) external reentrancyGuard(dao) {
-        ERC1155TokenExtension erc1155 =
-            ERC1155TokenExtension(dao.getExtensionAddress(ERC1155_EXT));
-        erc1155.withdrawNFT(msg.sender, nftAddr, nftTokenId, amount);
-    }
+   
 
     /**
      * @notice Internally transfers the NFT from one owner to a new owner as long as both are active members.
      * @notice Reverts if the addresses of the owners are not members.
      * @notice Reverts if the fromOwner does not hold the NFT.
      * @param dao The DAO address.
-     * @param fromOwner The current owner address of the NFT.
      * @param toOwner The new owner address of the NFT.
      * @param nftAddr The NFT smart contract address.
      * @param nftTokenId The NFT token id.
@@ -89,16 +74,16 @@ contract ERC1155AdapterContract is DaoConstants, AdapterGuard {
      */
     function internalTransfer(
         DaoRegistry dao,
-        address fromOwner,
         address toOwner,
         address nftAddr,
         uint256 nftTokenId,
         uint256 amount
     ) external reentrancyGuard(dao) {
-        ERC1155TokenExtension erc1155 =
-            ERC1155TokenExtension(dao.getExtensionAddress(ERC1155_EXT));
+        ERC1155TokenExtension erc1155 = ERC1155TokenExtension(
+            dao.getExtensionAddress(ERC1155_EXT)
+        );
         erc1155.internalTransfer(
-            fromOwner,
+            msg.sender,
             toOwner,
             nftAddr,
             nftTokenId,
