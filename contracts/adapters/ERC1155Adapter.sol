@@ -54,13 +54,10 @@ contract ERC1155AdapterContract is DaoConstants, AdapterGuard {
         uint256 nftTokenId,
         uint256 amount
     ) external reentrancyGuard(dao) {
-        ERC1155TokenExtension erc1155 = ERC1155TokenExtension(
-            dao.getExtensionAddress(ERC1155_EXT)
-        );
+        ERC1155TokenExtension erc1155 =
+            ERC1155TokenExtension(dao.getExtensionAddress(ERC1155_EXT));
         erc1155.collect(msg.sender, nftAddr, nftTokenId, amount);
     }
-
-   
 
     /**
      * @notice Internally transfers the NFT from one owner to a new owner as long as both are active members.
@@ -79,9 +76,8 @@ contract ERC1155AdapterContract is DaoConstants, AdapterGuard {
         uint256 nftTokenId,
         uint256 amount
     ) external reentrancyGuard(dao) {
-        ERC1155TokenExtension erc1155 = ERC1155TokenExtension(
-            dao.getExtensionAddress(ERC1155_EXT)
-        );
+        ERC1155TokenExtension erc1155 =
+            ERC1155TokenExtension(dao.getExtensionAddress(ERC1155_EXT));
         erc1155.internalTransfer(
             msg.sender,
             toOwner,

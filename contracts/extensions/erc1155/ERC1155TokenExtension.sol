@@ -49,11 +49,7 @@ contract ERC1155TokenExtension is
     bool public initialized = false; //internally tracks deployment under eip-1167 proxy pattern
     DaoRegistry public dao;
 
-    enum AclFlag {
-        WITHDRAW_NFT,
-        COLLECT_NFT,
-        INTERNAL_TRANSFER
-    }
+    enum AclFlag {WITHDRAW_NFT, COLLECT_NFT, INTERNAL_TRANSFER}
 
     //EVENTS
     event CollectedNFT(address nftAddr, uint256 nftTokenId, uint256 amount);
@@ -184,10 +180,8 @@ contract ERC1155TokenExtension is
             "0x0"
         );
 
-        uint256 ownerTokenIdBalance = erc1155.balanceOf(
-            address(this),
-            nftTokenId
-        );
+        uint256 ownerTokenIdBalance =
+            erc1155.balanceOf(address(this), nftTokenId);
 
         // Updates the mappings if the amount of tokenId in the Extension is 0
         // It means the GUILD/Extension does not hold that token id anymore.
@@ -221,10 +215,7 @@ contract ERC1155TokenExtension is
         address nftAddr,
         uint256 nftTokenId,
         uint256 amount
-    )
-        external
-        hasExtensionAccess(this, AclFlag.INTERNAL_TRANSFER)
-    {
+    ) external hasExtensionAccess(this, AclFlag.INTERNAL_TRANSFER) {
         require(isActiveMember(dao, fromOwner), "fromOwner is not a member");
         require(isActiveMember(dao, toOwner), "toOwner is not a member");
 
@@ -241,11 +232,8 @@ contract ERC1155TokenExtension is
         );
 
         // Updates the internal records for toOwner with the current balance + the transferred amount
-        uint256 toOwnerNewAmount = _getTokenAmount(
-            toOwner,
-            nftAddr,
-            nftTokenId
-        ) + amount;
+        uint256 toOwnerNewAmount =
+            _getTokenAmount(toOwner, nftAddr, nftTokenId) + amount;
         _updateTokenAmount(toOwner, nftAddr, nftTokenId, toOwnerNewAmount);
         // Updates the internal records for fromOwner with the remaning amount
         _updateTokenAmount(fromOwner, nftAddr, nftTokenId, remainingAmount);
