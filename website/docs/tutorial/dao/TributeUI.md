@@ -24,6 +24,10 @@ Clone and access the Github repo:
 git clone git@github.com:openlawteam/tribute-ui.git
 ```
 
+:::caution
+
+:::
+
 ## Configure the environment
 
 After you cloned the Tribute UI repo, let's set up the environment variables, and deploy the subgraph.
