@@ -59,7 +59,7 @@
     "migrate": "truffle migrate --network",
     "test": "mocha --timeout 2000000 --exit --recursive",
     "verify": "scripts/verify.js",
-    "release": "np --no-publish --no-yarn"
+    "release": "npm run lint:fix && np --no-publish --no-yarn"
   },
   "repository": {
     "type": "git",
