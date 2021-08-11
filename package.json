@@ -37,7 +37,6 @@
     "install": "^0.13.0",
     "mocha": "^8.3.2",
     "np": "^7.5.0",
-    "npm": "^7.10.0",
     "prettier": "^2.2.1",
     "prettier-plugin-solidity": "^1.0.0-beta.3",
     "solhint": "^3.3.2",
