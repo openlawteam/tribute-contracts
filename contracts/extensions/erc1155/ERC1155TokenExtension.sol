@@ -255,6 +255,12 @@ contract ERC1155TokenExtension is
     }
 
     //return amount of owner -> nft address - tokenID -amount
+
+    /*  @notice gets owner's amount of a TokenId for an NFT address.
+        @param _owner eth address
+        @param _tokenAddr the NFT address.
+        @param tokenId The NFT token id.  
+    */
     function getNFTIdAmount(
         address _owner,
         address tokenAddr,
@@ -360,6 +366,10 @@ contract ERC1155TokenExtension is
         return this.onERC1155Received.selector;
     }
 
+    /**
+     *  @notice required function from IERC1155 standard to be able to to batch receive tokens
+     *  @dev this function is currently not supported in this extension and will revert
+     */
     function onERC1155BatchReceived(
         address,
         address,
@@ -384,6 +394,10 @@ contract ERC1155TokenExtension is
             interfaceID == 0x4e2312e0; // ERC-1155 `ERC1155TokenReceiver` support (i.e. `bytes4(keccak256("onERC1155Received(address,address,uint256,uint256,bytes)")) ^ bytes4(keccak256("onERC1155BatchReceived(address,address,uint256[],uint256[],bytes)"))`).
     }
 
+    /**
+     *  @notice internal function to update the amount of a tokenID for an NFT an owner has
+     *
+     */
     function _updateTokenAmount(
         address owner,
         address nft,
@@ -393,6 +407,10 @@ contract ERC1155TokenExtension is
         _nftTracker[owner][nft][tokenId] = amount;
     }
 
+    /**
+     *  @notice internal function to get the amount of a tokenID for an NFT an owner has
+     *
+     */
     function _getTokenAmount(
         address owner,
         address nft,
