@@ -302,6 +302,13 @@ const contracts = [
     version: "1.0.0",
     type: ContractType.Adapter,
   },
+  {
+    name: "Tribute1155NFTContract",
+    path: "../contracts/adapters/Tribute1155NFTContract",
+    enabled: true,
+    version: "1.0.0",
+    type: ContractType.Adapter,
+  },
 
   // Utils
   {
