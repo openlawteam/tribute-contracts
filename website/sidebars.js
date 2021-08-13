@@ -28,6 +28,7 @@ const allExtensions = {
     "contracts/extensions/nft-extension",
     "contracts/extensions/executor-extension",
     "contracts/extensions/erc1271-extension",
+    "contracts/extensions/erc1155-extension",
   ],
 };
 

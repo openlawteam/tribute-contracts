@@ -25,6 +25,10 @@ We currently have some extensions in place that can help you to launch your DAO:
 
 - **[Executor](/docs/contracts/extensions/executor-extension)**: adds to the DAO the capability of executing delegated calls to other contracts, including contracts that are not part of the DAO, using the EVM instruction `delegatecall`.
 
+- **[ERC1271](/docs/contracts/extensions/erc1271-extension)**: adds to the DAO the capability of collectively sign messages and typed data through signatures.
+
+- **[ERC1155](/docs/contracts/extensions/erc1155-extension)**: adds to the DAO the capability of managing and curating tokens in ERC-1155 Multi Token Standard.
+
 ## Creating an Extension
 
 You can also create custom extensions to enhance the DAO capabilities. Checkout the tutorial: **[How to create an Extensions](/docs/tutorial/extensions/creating-an-extension)**.

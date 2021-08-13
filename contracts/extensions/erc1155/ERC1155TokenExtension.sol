@@ -144,7 +144,7 @@ contract ERC1155TokenExtension is
      * @notice Transfers the NFT token from the extension address to the new owner.
      * @notice It also updates the internal state to keep track of the all the NFTs collected by the extension.
      * @notice The caller must have the ACL Flag: WITHDRAW_NFT
-     * @notice TODO This function needs to be called from a new adapter (RagequitNFT) that will manage the Bank balances, and will return the NFT to the owner.
+     * @notice This function needs to be called from a new adapter (RagequitNFT) that will manage the Bank balances, and will return the NFT to the owner.
      * @dev Reverts if the NFT is not in ERC1155 standard.
      * @param newOwner The address of the new owner that will receive the NFT.
      * @param nftAddr The NFT address that must be in ERC1155 standard.
@@ -254,19 +254,18 @@ contract ERC1155TokenExtension is
         return keccak256(abi.encodePacked(nftAddress, tokenId));
     }
 
-    //return amount of owner -> nft address - tokenID -amount
-
-    /*  @notice gets owner's amount of a TokenId for an NFT address.
-        @param _owner eth address
-        @param _tokenAddr the NFT address.
-        @param tokenId The NFT token id.  
-    */
+    /**
+     * @notice gets owner's amount of a TokenId for an NFT address.
+     * @param owner eth address
+     * @param tokenAddr the NFT address.
+     * @param tokenId The NFT token id.
+     */
     function getNFTIdAmount(
-        address _owner,
+        address owner,
         address tokenAddr,
         uint256 tokenId
     ) public view returns (uint256) {
-        return _nftTracker[_owner][tokenAddr][tokenId];
+        return _nftTracker[owner][tokenAddr][tokenId];
     }
 
     /**
@@ -381,6 +380,7 @@ contract ERC1155TokenExtension is
     }
 
     /**
+     * @notice Supports ERC-165 & ERC-1155 interfaces only.
      * @dev https://github.com/ethereum/EIPs/blob/master/EIPS/eip-1155.md
      */
     function supportsInterface(bytes4 interfaceID)
@@ -396,7 +396,6 @@ contract ERC1155TokenExtension is
 
     /**
      *  @notice internal function to update the amount of a tokenID for an NFT an owner has
-     *
      */
     function _updateTokenAmount(
         address owner,
@@ -409,7 +408,6 @@ contract ERC1155TokenExtension is
 
     /**
      *  @notice internal function to get the amount of a tokenID for an NFT an owner has
-     *
      */
     function _getTokenAmount(
         address owner,
