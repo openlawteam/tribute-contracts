@@ -53,6 +53,7 @@ function getProposalCounter() {
 }
 
 describe("Adapter - TributeERC1155", () => {
+ 
   const daoOwner = accounts[0];
 
   before("deploy dao", async () => {
@@ -72,7 +73,7 @@ describe("Adapter - TributeERC1155", () => {
   beforeEach(async () => {
     this.snapshotId = await takeChainSnapshot();
   });
-
+  
   afterEach(async () => {
     await revertChainSnapshot(this.snapshotId);
   });
