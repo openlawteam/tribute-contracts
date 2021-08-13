@@ -46,15 +46,13 @@ const {
 
 const { onboardingNewMember, isMember } = require("../../utils/TestUtils.js");
 
-const proposalCounter = proposalIdGenerator().generator;
-
-function getProposalCounter() {
-  return proposalCounter().next().value;
-}
-
 describe("Adapter - TributeERC1155", () => {
- 
-  const daoOwner = accounts[0];
+  const proposalCounter = proposalIdGenerator().generator;
+  const daoOwner = accounts[1];
+
+  const getProposalCounter = () => {
+    return proposalCounter().next().value;
+  };
 
   before("deploy dao", async () => {
     const {
@@ -70,18 +68,12 @@ describe("Adapter - TributeERC1155", () => {
     this.snapshotId = await takeChainSnapshot();
   });
 
-  beforeEach(async () => {
-    this.snapshotId = await takeChainSnapshot();
-  });
-  
-  afterEach(async () => {
-    await revertChainSnapshot(this.snapshotId);
+  it("happy path- should be possible to submit, sponsor, and process erc1155 proposal", async () => {
+    console.log("1155 happy path");
   });
 
-  it("happy path- should be possible to submit, sponsor, and process erc1155 proposal", async () => {
-    const nftOwner = accounts[1];
-    const dao = this.dao;
-    const erc1155TestToken = this.testContracts.erc1155TestToken;
-    const tribute1155NFT = this.adapters.tribute1155NFT;
+  beforeEach(async () => {
+    await revertChainSnapshot(this.snapshotId);
+    this.snapshotId = await takeChainSnapshot();
   });
 });
