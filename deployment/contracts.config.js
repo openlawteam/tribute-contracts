@@ -212,7 +212,7 @@ const contracts = [
     version: "1.0.0",
     type: ContractType.Adapter,
   },
-  
+
   // Signature Adapters
   {
     name: "SignaturesContract",
@@ -221,7 +221,6 @@ const contracts = [
     version: "1.0.0",
     type: ContractType.Adapter,
   },
-  
 
   // Voting Adapters
   {
