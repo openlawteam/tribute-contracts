@@ -5,6 +5,7 @@ pragma solidity ^0.8.0;
 import "../core/DaoConstants.sol";
 import "../core/DaoRegistry.sol";
 import "../extensions/nft/NFT.sol";
+import "../extensions/erc1155/ERC1155TokenExtension.sol";
 import "../extensions/bank/Bank.sol";
 import "../adapters/interfaces/IVoting.sol";
 import "../guards/MemberGuard.sol";
@@ -56,6 +57,8 @@ contract TributeNFTContract is
         address nftAddr;
         // The nft token identifier.
         uint256 nftTokenId;
+        //amount of tokenId for tribute
+        uint256 tributeAmount;
         // The amount requested of DAO internal tokens (UNITS).
         uint256 requestAmount;
     }
@@ -91,6 +94,7 @@ contract TributeNFTContract is
      * @param applicant The applicant address (who will receive the DAO internal tokens and become a member).
      * @param nftAddr The address of the ERC-721 token that will be transferred to the DAO in exchange for DAO internal tokens.
      * @param nftTokenId The NFT token id.
+     * @param tributeAmount - the amount of the nftTokenId - erc721 tokens this amount = 0, erc1155 tokens this amount > 0.
      * @param requestAmount The amount requested of DAO internal tokens (UNITS).
      * @param data Additional information related to the tribute proposal.
      */
@@ -100,6 +104,7 @@ contract TributeNFTContract is
         address applicant,
         address nftAddr,
         uint256 nftTokenId,
+        uint256 tributeAmount, // if > 0, then this is erc1155
         uint256 requestAmount,
         bytes memory data
     ) external reentrancyGuard(dao) {
@@ -131,6 +136,7 @@ contract TributeNFTContract is
             applicant,
             nftAddr,
             nftTokenId,
+            tributeAmount,
             requestAmount
         );
     }
@@ -140,7 +146,7 @@ contract TributeNFTContract is
      * @dev Proposal id must exist.
      * @dev Only proposals that have not already been processed are accepted.
      * @dev Only sponsored proposals with completed voting are accepted.
-     * @dev The owner of the ERC-721 token provided as tribute must first separately `approve` the NFT extension as spender of that token (so the NFT can be transferred for a passed vote).
+     * @dev The owner of the ERC-721 or ERC-1155 token provided as tribute must first separately `approve` the NFT extension as spender of that token (so the NFT can be transferred for a passed vote).
      * @param dao The DAO address.
      * @param proposalId The proposal id.
      */
@@ -165,8 +171,11 @@ contract TributeNFTContract is
             votingContract.voteResult(dao, proposalId);
 
         dao.processProposal(proposalId);
-
-        if (voteResult == IVoting.VotingState.PASS) {
+        //if proposal passes and its an erc721 token - use NFT Extension
+        if (
+            voteResult == IVoting.VotingState.PASS &&
+            proposal.tributeAmount == 0
+        ) {
             NFTExtension nftExt = NFTExtension(dao.getExtensionAddress(NFT));
             BankExtension bank = BankExtension(dao.getExtensionAddress(BANK));
             require(
@@ -175,6 +184,30 @@ contract TributeNFTContract is
             );
 
             nftExt.collect(proposal.nftAddr, proposal.nftTokenId);
+            bank.addToBalance(
+                proposal.applicant,
+                UNITS,
+                proposal.requestAmount
+            );
+        }
+        //if proposal passes and its an erc1155 token - use ERC1155TokenExtension
+        else if (
+            voteResult == IVoting.VotingState.PASS && proposal.tributeAmount > 0
+        ) {
+            ERC1155TokenExtension erc1155Ext =
+                ERC1155TokenExtension(dao.getExtensionAddress(ERC1155_EXT));
+            BankExtension bank = BankExtension(dao.getExtensionAddress(BANK));
+            require(
+                bank.isInternalToken(UNITS),
+                "UNITS token is not an internal token"
+            );
+
+            erc1155Ext.collect(
+                proposal.applicant,
+                proposal.nftAddr,
+                proposal.nftTokenId,
+                proposal.tributeAmount
+            );
             bank.addToBalance(
                 proposal.applicant,
                 UNITS,
