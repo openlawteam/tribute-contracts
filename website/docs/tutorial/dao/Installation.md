@@ -23,11 +23,11 @@ git clone git@github.com:openlawteam/tribute-contracts.git && cd tribute-contrac
 ```
 
 :::caution
-Make sure you checkout the tag [v1.1.0](https://github.com/openlawteam/tribute-contracts/releases/tag/v1.1.0) which is the version integrated with [TributeUI](https://github.com/openlawteam/tribute-ui).
+Make sure you checkout the tag [v1.0.0](https://github.com/openlawteam/tribute-contracts/releases/tag/v1.0.0) which is the version that contains the contracts that work with [TributeUI](https://github.com/openlawteam/tribute-ui).
 :::
 
 ```bash
-git checkout tags/v1.1.0 -b branch-v1.1.0
+git checkout tags/v1.0.0 -b branch-v1.0.0
 ```
 
 Install all the project dependencies and compile the smart contracts:
