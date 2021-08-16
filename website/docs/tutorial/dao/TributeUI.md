@@ -78,7 +78,7 @@ Then set your Github username to _<GITHUB_USERNAME>_ in **REACT_APP_GRAPH_API_UR
 ## Deploy the Subgraph
 
 :::caution
-Make sure you checkout the tag [v1.1.0](https://github.com/openlawteam/tribute-contracts/releases/tag/v1.1.0) which is the version that contains the subgraph that works [TributeUI](https://github.com/openlawteam/tribute-ui).
+Make sure you checkout the tag [v1.1.0](https://github.com/openlawteam/tribute-contracts/releases/tag/v1.1.0) which is the version that contains the subgraph that works with [TributeUI](https://github.com/openlawteam/tribute-ui).
 :::
 
 ```bash
