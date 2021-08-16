@@ -24,10 +24,6 @@ Clone and access the Github repo:
 git clone git@github.com:openlawteam/tribute-ui.git
 ```
 
-:::caution
-
-:::
-
 ## Configure the environment
 
 After you cloned the Tribute UI repo, let's set up the environment variables, and deploy the subgraph.
@@ -80,6 +76,14 @@ These are the address of the contracts you have deployed to Rinkeby. Just copy t
 Then set your Github username to _<GITHUB_USERNAME>_ in **REACT_APP_GRAPH_API_URL**, that will indicate where your subgraph needs to be created.
 
 ## Deploy the Subgraph
+
+:::caution
+Make sure you checkout the tag [v1.1.0](https://github.com/openlawteam/tribute-contracts/releases/tag/v1.1.0) which is the version that contains the subgraph that works [TributeUI](https://github.com/openlawteam/tribute-ui).
+:::
+
+```bash
+git checkout tags/v1.1.0 -b branch-v1.1.0
+```
 
 Access the subgraph folder in tribute-contracts:
 
