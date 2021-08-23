@@ -111,7 +111,7 @@ Then open the config file: _subgraph/config/subgraph-config.json_, remove all th
 ]
 ```
 
-In the rinkeby deployment logs at _tribute-contracts/logs/rinkeby-deploy.log_ search by **DaoFactory** and copy the **contract address** and **block number**, set the values to **daoFactoryAddress** and **daoFactoryStartBlock** respectivelly. 
+In the rinkeby deployment logs at _tribute-contracts/logs/rinkeby-deploy.log_ search by **DaoFactory** and copy the **contract address** and **block number**, set the values to **daoFactoryAddress** and **daoFactoryStartBlock** respectively. 
 
 Finally, set your Github username to **GITHUB_USERNAME**, it must be the same Github account that you used to connect to thegraph.com.
 
