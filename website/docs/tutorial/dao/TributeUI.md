@@ -85,10 +85,16 @@ Make sure you checkout the tag [v1.1.0](https://github.com/openlawteam/tribute-c
 git checkout tags/v1.1.0 -b branch-v1.1.0
 ```
 
+Then install the project dependencies:
+
+```bash
+npm ci
+```
+
 Access the subgraph folder in tribute-contracts:
 
 ```bash
-cd tribute-contracts/subgraph
+cd subgraph
 ```
 
 Then open the config file: _subgraph/config/subgraph-config.json_, remove all the entries and add your subgraph config:
@@ -100,17 +106,23 @@ Then open the config file: _subgraph/config/subgraph-config.json_, remove all th
     "daoFactoryAddress": "0x...",
     "daoFactoryStartBlock": ...,
     "GITHUB_USERNAME": "<YOUR_GITHUB_USERNAME>",
-    "SUBGRAPH_NAME_OR_SLUG": "tribute-dao-tutorial"
-  }
+    "SUBGRAPH_NAME": "tribute-dao-tutorial"
+  },
 ]
 ```
 
-In the rinkeby deployment logs at _tribute-contracts/logs/rinkeby-deploy.log_ search by **DaoFactory** and copy the **contract address** and **block number**, set the values to **daoFactoryAddress** and **daoFactoryStartBlock** respectivelly. Finally, set your Github username to **GITHUB_USERNAME**, it must be the same Github account that you used to connect to thegraph.com.
+In the rinkeby deployment logs at _tribute-contracts/logs/rinkeby-deploy.log_ search by **DaoFactory** and copy the **contract address** and **block number**, set the values to **daoFactoryAddress** and **daoFactoryStartBlock** respectively. 
 
-Then install the subgraph dependencies:
+Finally, set your Github username to **GITHUB_USERNAME**, it must be the same Github account that you used to connect to thegraph.com.
+
+:::caution
+The **SUBGRAPH_NAME** should be lowercase and any spaces should be hyphenated, it needs to match the subgraph name you picked when you created the subgraph in thegraph.com. 
+:::
+
+
+From the `subgraph` folder, install the dependencies:
 
 ```bash
-cd tribute-contracts/subgraph
 npm ci
 ```
 
