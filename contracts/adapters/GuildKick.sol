@@ -123,6 +123,11 @@ contract GuildKickContract is IGuildKick, MemberGuard, AdapterGuard {
         IVoting votingContract = IVoting(dao.getAdapterAddress(VOTING));
         votingContract.startNewVotingForProposal(dao, proposalId, data);
 
+        GuildKickHelper.prepareRageKick(
+            dao,
+            kicks[address(dao)][proposalId].memberToKick
+        );
+
         // Sponsors the guild kick proposal.
         dao.sponsorProposal(proposalId, submittedBy, address(votingContract));
     }
@@ -143,16 +148,23 @@ contract GuildKickContract is IGuildKick, MemberGuard, AdapterGuard {
         // Checks if the proposal has passed.
         IVoting votingContract = IVoting(dao.votingAdapter(proposalId));
         require(address(votingContract) != address(0), "adapter not found");
-
-        require(
-            votingContract.voteResult(dao, proposalId) ==
-                IVoting.VotingState.PASS,
-            "proposal did not pass"
-        );
-
-        GuildKickHelper.rageKick(
-            dao,
-            kicks[address(dao)][proposalId].memberToKick
-        );
+        IVoting.VotingState votingState =
+            votingContract.voteResult(dao, proposalId);
+        if (votingState == IVoting.VotingState.PASS) {
+            GuildKickHelper.rageKick(
+                dao,
+                kicks[address(dao)][proposalId].memberToKick
+            );
+        } else if (
+            votingState == IVoting.VotingState.NOT_PASS ||
+            votingState == IVoting.VotingState.TIE
+        ) {
+            GuildKickHelper.unkickMember(
+                dao,
+                kicks[address(dao)][proposalId].memberToKick
+            );
+        } else {
+            revert("voting is still in progress");
+        }
     }
 }
