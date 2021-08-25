@@ -48,7 +48,7 @@ contract DistributeContract is
     // The distribution status
     enum DistributionStatus {NOT_STARTED, IN_PROGRESS, DONE, FAILED}
 
-    // State of the guild kick proposal
+    // State of the distribution proposal
     struct Distribution {
         // The distribution token in which the members should receive the funds. Must be supported by the DAO.
         address token;
@@ -84,7 +84,7 @@ contract DistributeContract is
      * @dev Proposal ids can not be reused.
      * @dev The amount must be greater than zero.
      * @param dao The dao address.
-     * @param proposalId The guild kick proposal id.
+     * @param proposalId The distribution proposal id.
      * @param unitHolderAddr The member address that should receive the funds, if 0x0, the funds will be distributed to all members of the DAO.
      * @param token The distribution token in which the members should receive the funds. Must be supported by the DAO.
      * @param amount The amount to distribute.

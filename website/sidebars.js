@@ -27,6 +27,8 @@ const allExtensions = {
     "contracts/extensions/erc20-extension",
     "contracts/extensions/nft-extension",
     "contracts/extensions/executor-extension",
+    "contracts/extensions/erc1271-extension",
+    "contracts/extensions/erc1155-extension",
   ],
 };
 
@@ -73,6 +75,7 @@ const allAdapters = {
         "contracts/adapters/utils/bank-adapter",
         "contracts/adapters/utils/nft-adapter",
         "contracts/adapters/utils/dao-registry-adapter",
+        "contracts/adapters/utils/signature-adapter",
       ],
     },
   ],

@@ -1,6 +1,6 @@
 {
   "name": "tribute-contracts",
-  "version": "1.0.0-rc2",
+  "version": "2.0.2",
   "description": "A new modular DAO framework, inspired by the Moloch smart contracts",
   "main": "truffle-config.js",
   "keywords": [
@@ -36,7 +36,7 @@
     "eth-gas-reporter": "^0.2.22",
     "install": "^0.13.0",
     "mocha": "^8.3.2",
-    "npm": "^7.10.0",
+    "np": "^7.5.0",
     "prettier": "^2.2.1",
     "prettier-plugin-solidity": "^1.0.0-beta.3",
     "solhint": "^3.3.2",
@@ -58,14 +58,15 @@
     "lint:fix": "prettier --write 'contracts/**/*.sol' '**/*.js' '**/*.md'",
     "migrate": "truffle migrate --network",
     "test": "mocha --timeout 2000000 --exit --recursive",
-    "verify": "scripts/verify.js"
+    "verify": "scripts/verify.js",
+    "release": "npm run lint:fix && np --no-publish --no-yarn"
   },
   "repository": {
     "type": "git",
     "url": "git+https://github.com/openlawteam/tribute-contracts.git"
   },
-  "author": "",
-  "license": "ISC",
+  "author": "dev@openlaw.io",
+  "license": "MIT",
   "bugs": {
     "url": "https://github.com/openlawteam/tribute-contracts/issues"
   },

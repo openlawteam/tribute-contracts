@@ -30,8 +30,7 @@ abstract contract DaoConstants {
     // Adapters
     bytes32 internal constant VOTING = keccak256("voting");
     bytes32 internal constant ONBOARDING = keccak256("onboarding");
-    bytes32 internal constant NONVOTING_ONBOARDING =
-        keccak256("nonvoting-onboarding");
+    bytes32 internal constant NONVOTING_ONBOARDING = keccak256("nonvoting-onboarding");
     bytes32 internal constant TRIBUTE = keccak256("tribute");
     bytes32 internal constant FINANCING = keccak256("financing");
     bytes32 internal constant MANAGING = keccak256("managing");
@@ -40,16 +39,16 @@ abstract contract DaoConstants {
     bytes32 internal constant CONFIGURATION = keccak256("configuration");
     bytes32 internal constant DISTRIBUTE = keccak256("distribute");
     bytes32 internal constant TRIBUTE_NFT = keccak256("tribute-nft");
-    bytes32 internal constant TRANSFER_STRATEGY =
-        keccak256("erc20-transfer-strategy");
+    bytes32 internal constant TRANSFER_STRATEGY = keccak256("erc20-transfer-strategy");
+    bytes32 internal constant ERC1155_ADAPT = keccak256("erc1155-adpt");
 
     // Extensions
     bytes32 internal constant BANK = keccak256("bank");
     bytes32 internal constant ERC1271 = keccak256("erc1271");
     bytes32 internal constant NFT = keccak256("nft");
     bytes32 internal constant EXECUTOR_EXT = keccak256("executor-ext");
-    bytes32 internal constant INTERNAL_TOKEN_VESTING_EXT =
-        keccak256("internal-token-vesting-extension");
+    bytes32 internal constant INTERNAL_TOKEN_VESTING_EXT = keccak256("internal-token-vesting-extension");
+    bytes32 internal constant ERC1155_EXT = keccak256("erc1155-ext");
 
     // Reserved Addresses
     address internal constant GUILD = address(0xdead);

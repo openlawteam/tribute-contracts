@@ -57,8 +57,7 @@ contract ERC1271Extension is DaoConstants, AdapterGuard, IExtension, IERC1271 {
     mapping(bytes32 => DAOSignature) public signatures; // msgHash => Signature
 
     /// @notice Clonable contract must have an empty constructor
-    // constructor() {
-    // }
+    constructor() {}
 
     modifier hasExtensionAccess(AclFlag flag) {
         require(
@@ -88,8 +87,10 @@ contract ERC1271Extension is DaoConstants, AdapterGuard, IExtension, IERC1271 {
     }
 
     /**
-     * @dev exposes standard ERC1271 isValidSignature interface
-     *
+     * @notice Verifies if exists a signature based on the permissionHash, and checks if the provided signature matches the expected signatureHash.
+     * @param permissionHash The digest of the data to be signed.
+     * @param signature The signature in bytes to be encoded, hashed and verified.
+     * @return The magic number in bytes4 in case the signature is valid, otherwise it reverts.
      */
     function isValidSignature(bytes32 permissionHash, bytes memory signature)
         public
@@ -108,9 +109,11 @@ contract ERC1271Extension is DaoConstants, AdapterGuard, IExtension, IERC1271 {
     }
 
     /**
-     * @dev Delegates the current call to `implementation`.
-     *
-     * This function does not return to its internall call site, it will return directly to the external caller.
+     * @notice Registers a valid signature in the extension.
+     * @dev Only adapters/extensions with `SIGN` ACL can call this function.
+     * @param permissionHash The digest of the data to be signed.
+     * @param signatureHash The hash of the signature.
+     * @param magicValue The value to be returned by the ERC1271 interface upon success.
      */
     function sign(
         bytes32 permissionHash,

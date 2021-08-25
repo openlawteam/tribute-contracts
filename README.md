@@ -145,7 +145,7 @@ Checkout the [sample .env file](https://github.com/openlawteam/tribute-contracts
 
 **Required env vars per deployment type**
 
-- Ganache deployment: `DAO_NAME`, `ERC20_TOKEN_NAME`, `ERC20_TOKEN_SYMBOL`, `ERC20_TOKEN_DECIMALS`, `COUPON_CREATOR_ADDR`.
+- Ganache deployment: `DAO_NAME`, `DAO_OWNER_ADDR`, `ERC20_TOKEN_NAME`, `ERC20_TOKEN_SYMBOL`, `ERC20_TOKEN_DECIMALS`, `COUPON_CREATOR_ADDR`.
 
 - Test deployment: `DAO_NAME`, `ERC20_TOKEN_NAME`, `ERC20_TOKEN_SYMBOL`, `ERC20_TOKEN_DECIMALS`.
 
@@ -155,7 +155,13 @@ Checkout the [sample .env file](https://github.com/openlawteam/tribute-contracts
 
 ### Run Tests
 
-This project uses truffle. To run the tests, simply run:
+This project uses truffle. To compile the contracts, run:
+
+> npm run compile
+
+### Run Tests
+
+This project uses truffle and you'll need to compile the contracts prior to running tests. To run the tests, simply run:
 
 > npm run test
 
@@ -185,6 +191,19 @@ To verify the contract using Etherscan you need to create an API key and update 
 Then execute the following script:
 
 > npm run verify rinkeby
+
+### Release
+
+1. Checkout `master` and pull the latest
+2. Locally run `npm run release`
+3. Choose a new semver version number
+4. **In the background the following will now happen**:
+   1. the `package.json` version will be bumped
+   2. a new Git tag created
+   3. version bump and tag pushed to `master`
+   4. GitHub Release page will open, set the release name, edit the changelog if needed, and publish
+   5. `publish.yaml` will execute (due to the new release tag) to publish the new package version to the NPM registry.
+5. Done!
 
 ## Contribute
 
