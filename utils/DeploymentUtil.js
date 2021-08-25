@@ -44,14 +44,11 @@ const deployDao = async (options) => {
     ERC20TokenExtensionFactory,
     ExecutorExtension,
     ExecutorExtensionFactory,
-<<<<<<< HEAD
     InternalTokenVestingExtensionFactory,
     InternalTokenVestingExtension,
-=======
     ERC1155TokenExtension,
     ERC1155TokenExtensionFactory,
     ERC1155TestToken,
->>>>>>> master
     TestToken1,
     TestToken2,
     Multicall,
@@ -147,7 +144,6 @@ const deployDao = async (options) => {
     ExecutorExtension
   );
 
-<<<<<<< HEAD
   const identityVesting = await deployFunction(InternalTokenVestingExtension);
   const internalTokenVestingExtensionFactory = await deployFunction(
     InternalTokenVestingExtensionFactory,
@@ -157,14 +153,13 @@ const deployDao = async (options) => {
     dao,
     owner,
     internalTokenVestingExtensionFactory,
-    InternalTokenVestingExtension
-=======
+    InternalTokenVestingExtension);
+
   const erc1155TokenExtension = await createERC1155Extension(
     dao,
     owner,
     erc1155TokenExtFactory,
     ERC1155TokenExtension
->>>>>>> master
   );
 
   const extensions = {
@@ -173,11 +168,8 @@ const deployDao = async (options) => {
     nft: nftExtension,
     erc20Ext: erc20TokenExtension,
     executorExt: executorExtension,
-<<<<<<< HEAD
     vestingExtension: internalTokenVestingExtension,
-=======
     erc1155Ext: erc1155TokenExtension,
->>>>>>> master
   };
 
   const { adapters } = await addDefaultAdapters({
@@ -387,13 +379,11 @@ const prepareAdapters = async ({
   tribute = await deployFunction(TributeContract);
   distribute = await deployFunction(DistributeContract);
   tributeNFT = await deployFunction(TributeNFTContract);
-<<<<<<< HEAD
+
   lendNFT = await deployFunction(LendNFTContract);
   erc20TransferStrategy = await deployFunction(ERC20TransferStrategy);
-
-=======
   erc1155Adapter = await deployFunction(ERC1155AdapterContract);
->>>>>>> master
+
   return {
     voting,
     configuration,
@@ -410,12 +400,9 @@ const prepareAdapters = async ({
     tribute,
     distribute,
     tributeNFT,
-<<<<<<< HEAD
     lendNFT,
     erc20TransferStrategy,
-=======
     erc1155Adapter,
->>>>>>> master
   };
 };
 
@@ -445,11 +432,8 @@ const addDefaultAdapters = async ({ dao, options, daoFactory, nftAddr }) => {
     tribute,
     distribute,
     tributeNFT,
-<<<<<<< HEAD
     erc20TransferStrategy,
-=======
     erc1155Adapter,
->>>>>>> master
   } = await prepareAdapters(options);
 
   const {
@@ -527,11 +511,8 @@ const addDefaultAdapters = async ({ dao, options, daoFactory, nftAddr }) => {
       tribute,
       distribute,
       tributeNFT,
-<<<<<<< HEAD
       erc20TransferStrategy,
-=======
       erc1155Adapter,
->>>>>>> master
     },
   };
 };
@@ -1033,7 +1014,6 @@ const createExecutorExtension = async (
   return executorExtension;
 };
 
-<<<<<<< HEAD
 const createInternalTokenVestingExtension = async (
   dao,
   owner,
@@ -1062,7 +1042,6 @@ const createInternalTokenVestingExtension = async (
   return extension;
 };
 
-=======
 //
 const createERC1155Extension = async (
   dao,
@@ -1085,8 +1064,7 @@ const createERC1155Extension = async (
   });
   return erc1155TokenExtension;
 };
-//
->>>>>>> master
+
 const entryNft = (contract, flags) => {
   const values = [
     flags.WITHDRAW_NFT,
