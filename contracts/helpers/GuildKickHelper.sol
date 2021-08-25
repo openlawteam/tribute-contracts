@@ -42,7 +42,7 @@ library GuildKickHelper {
     bytes32 internal constant BANK = keccak256("bank");
     address internal constant GUILD = address(0xdead);
 
-    function prepareRageKick(DaoRegistry dao, address potentialKickedMember)
+    function lockMemberTokens(DaoRegistry dao, address potentialKickedMember)
         internal
     {
         // Get the bank extension
@@ -64,7 +64,7 @@ library GuildKickHelper {
         bank.subtractFromBalance(potentialKickedMember, LOOT, lootToBurn);
     }
 
-    function unkickMember(DaoRegistry dao, address kickedMember) internal {
+    function unlockMemberTokens(DaoRegistry dao, address kickedMember) internal {
         BankExtension bank = BankExtension(dao.getExtensionAddress(BANK));
 
         uint256 unitsToReturn = bank.balanceOf(kickedMember, LOCKED_UNITS);

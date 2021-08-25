@@ -123,7 +123,7 @@ contract GuildKickContract is IGuildKick, MemberGuard, AdapterGuard {
         IVoting votingContract = IVoting(dao.getAdapterAddress(VOTING));
         votingContract.startNewVotingForProposal(dao, proposalId, data);
 
-        GuildKickHelper.prepareRageKick(
+        GuildKickHelper.lockMemberTokens(
             dao,
             kicks[address(dao)][proposalId].memberToKick
         );
@@ -159,7 +159,7 @@ contract GuildKickContract is IGuildKick, MemberGuard, AdapterGuard {
             votingState == IVoting.VotingState.NOT_PASS ||
             votingState == IVoting.VotingState.TIE
         ) {
-            GuildKickHelper.unkickMember(
+            GuildKickHelper.unlockMemberTokens(
                 dao,
                 kicks[address(dao)][proposalId].memberToKick
             );

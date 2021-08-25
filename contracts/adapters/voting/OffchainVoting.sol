@@ -694,7 +694,7 @@ contract OffchainVotingContract is IVoting, MemberGuard, AdapterGuard, Ownable {
             challengeProposalId
         ] = ProposalChallenge(challengedReporter, units);
 
-        GuildKickHelper.prepareRageKick(dao, challengedReporter);
+        GuildKickHelper.lockMemberTokens(dao, challengedReporter);
 
         emit ResultChallenged(
             proposalId,
