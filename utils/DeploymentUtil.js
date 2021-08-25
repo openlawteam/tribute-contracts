@@ -695,6 +695,7 @@ const configureDao = async ({
         INTERNAL_TRANSFER: true,
         SUB_FROM_BALANCE: true,
         ADD_TO_BALANCE: true,
+        REGISTER_NEW_TOKEN: true,
       })
     );
 
