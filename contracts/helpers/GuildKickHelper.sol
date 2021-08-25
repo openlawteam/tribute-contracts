@@ -64,7 +64,9 @@ library GuildKickHelper {
         bank.subtractFromBalance(potentialKickedMember, LOOT, lootToBurn);
     }
 
-    function unlockMemberTokens(DaoRegistry dao, address kickedMember) internal {
+    function unlockMemberTokens(DaoRegistry dao, address kickedMember)
+        internal
+    {
         BankExtension bank = BankExtension(dao.getExtensionAddress(BANK));
 
         uint256 unitsToReturn = bank.balanceOf(kickedMember, LOCKED_UNITS);
