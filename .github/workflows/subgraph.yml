@@ -9,7 +9,8 @@ on:
     branches:
       - "*"
     paths:
-      # Lint only if there are any changes in the subgraph folder
+      # Lint only if there are any changes in:
+      - "contracts/**"
       - "subgraph/**"
 
 jobs:
