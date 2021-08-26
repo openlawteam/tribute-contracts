@@ -66,20 +66,20 @@ contract OffchainVotingContract is IVoting, MemberGuard, AdapterGuard, Ownable {
     );
     event ResultChallenged(bytes32 proposalId, bytes32 resultRoot);
 
-    uint256 private constant NB_CHOICES = 2;
+    uint256 public constant NB_CHOICES = 2;
     SnapshotProposalContract private _snapshotContract;
     OffchainVotingHashContract public ovHash;
     KickBadReporterAdapter private _handleBadReporterAdapter;
 
-    string private constant ADAPTER_NAME = "OffchainVotingContract";
-    bytes32 private constant VotingPeriod =
+    string public constant ADAPTER_NAME = "OffchainVotingContract";
+    bytes32 constant VotingPeriod =
         keccak256("offchainvoting.votingPeriod");
-    bytes32 private constant GracePeriod =
+    bytes32 constant GracePeriod =
         keccak256("offchainvoting.gracePeriod");
-    bytes32 private constant FallbackThreshold =
+    bytes32 constant FallbackThreshold =
         keccak256("offchainvoting.fallbackThreshold");
 
-    mapping(bytes32 => mapping(uint256 => uint256)) private retrievedStepsFlags;
+    mapping(bytes32 => mapping(uint256 => uint256)) retrievedStepsFlags;
 
     struct Voting {
         uint256 snapshot;
@@ -101,10 +101,9 @@ contract OffchainVotingContract is IVoting, MemberGuard, AdapterGuard, Ownable {
         _;
     }
 
-    VotingContract private fallbackVoting;
+    VotingContract public fallbackVoting;
 
-    mapping(address => mapping(bytes32 => ProposalChallenge))
-        private challengeProposals;
+    mapping(address => mapping(bytes32 => ProposalChallenge)) challengeProposals;
     mapping(address => mapping(bytes32 => Voting)) public votes;
 
     constructor(
