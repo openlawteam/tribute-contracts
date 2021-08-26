@@ -40,7 +40,7 @@ Make sure the block number starts from 1 previous block, for example, if the blo
 Then execute:
 
 ```bash
-cd docker/
+cd subgraph/docker/
 docker-compose up
 ```
 
