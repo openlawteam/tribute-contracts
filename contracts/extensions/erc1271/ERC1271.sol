@@ -6,13 +6,7 @@ import "../../core/DaoConstants.sol";
 import "../../core/DaoRegistry.sol";
 import "../IExtension.sol";
 import "../../guards/AdapterGuard.sol";
-
-interface IERC1271 {
-    function isValidSignature(bytes32 _messageHash, bytes memory _signature)
-        external
-        view
-        returns (bytes4 magicValue);
-}
+import "@openzeppelin/contracts/interfaces/IERC1271.sol";
 
 /**
 MIT License
