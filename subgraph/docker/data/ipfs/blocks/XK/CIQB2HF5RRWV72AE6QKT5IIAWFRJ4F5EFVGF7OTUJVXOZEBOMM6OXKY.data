@@ -1,0 +1,151 @@
+
+ð%è%dataSources:
+  - kind: ethereum/contract
+    mapping:
+      abis:
+        - file:
+            /: /ipfs/QmPF3dPtwyYFagXsKxMD3RC4r3raxCznomE4coE5sBSzqi
+          name: DaoFactory
+      apiVersion: 0.0.4
+      entities:
+        - Molochv3
+      eventHandlers:
+        - event: 'DAOCreated(address,string)'
+          handler: handleDaoCreated
+      file:
+        /: /ipfs/QmTPfnmXLR181cyTG4CJ7LrFRmrpKDVqMKfXbZVFVfth1M
+      kind: ethereum/events
+      language: wasm/assemblyscript
+    name: DaoFactory
+    network: mainnet
+    source:
+      abi: DaoFactory
+      address: '0xFCc30f42843d0848Dc91B1187A1cB1357D671366'
+      startBlock: 21
+  - kind: ethereum/contract
+    mapping:
+      abis:
+        - file:
+            /: /ipfs/QmaRQrTfRVvXn6mei8bUReDcWXqaJL66Eqwoah4yJ58Go2
+          name: BankFactory
+      apiVersion: 0.0.4
+      entities:
+        - Bank
+      eventHandlers:
+        - event: BankCreated(address)
+          handler: handleBankCreated
+      file:
+        /: /ipfs/QmNmHjVd2caqfN86nqdVFPTsUaYs6cbeKHj5LBqh5tzrzi
+      kind: ethereum/events
+      language: wasm/assemblyscript
+    name: BankFactory
+    network: mainnet
+    source:
+      abi: BankFactory
+      address: '0x439A479e8A567A83392961bC6d026Ea99368cD8F'
+      startBlock: 24
+description: Molochv3 Subgraph
+repository: 'https://github.com/openlawteam/molochv3-contracts'
+schema:
+  file:
+    /: /ipfs/QmRcna5w3zoLpDJ2tDqYm3zM6aL8P5RoFMAc6j8qkYsiyF
+specVersion: 0.0.2
+templates:
+  - kind: ethereum/contract
+    mapping:
+      abis:
+        - file:
+            /: /ipfs/QmQqviF6Jsv8k6bgqkPi6WGJ2gQCmiG79QVg1HGc9Xvmhi
+          name: DaoRegistry
+        - file:
+            /: /ipfs/QmRxUhAHHdYUxB3c87LpGct4owiTUomzJ8wZr39sCR8fSy
+          name: OnboardingContract
+        - file:
+            /: /ipfs/QmUtef1UzK1Zx5NdAiwREJYPWCG1LmWYTpHg3zCuj8tv97
+          name: DistributeContract
+        - file:
+            /: /ipfs/QmQPoiJPaPFRDDEMWekusCXZm86duRGtaHPDcJt8xh8BDB
+          name: TributeContract
+        - file:
+            /: /ipfs/QmPkfzK7htHevkMVFRrozMtTRa91x6TRP2qwJXKcU7Wq2P
+          name: ManagingContract
+        - file:
+            /: /ipfs/QmbxMKPyP4ASnKiknUHoZLSZQJMdnku6k5jq7DN1HxZpaT
+          name: GuildKickContract
+        - file:
+            /: /ipfs/QmeCoqAeyAh6RJQqGYFssQVrwt3JxCU84m2dzrxZon9xiV
+          name: FinancingContract
+        - file:
+            /: /ipfs/QmPiNkNC7UnYKg59Ned6epiUzcPayGg1V83Vnv12TxooKb
+          name: OffchainVotingContract
+        - file:
+            /: /ipfs/QmcFuJvUDJYjgR1NHYU8tRiPhyRrQpTrz22y9fPTQzTh3m
+          name: VotingContract
+        - file:
+            /: /ipfs/QmTZ3zTAko5VfGJL4GAtinrJtnm6cCdSmWt5wjjvdGLQEB
+          name: IVoting
+      apiVersion: 0.0.4
+      entities:
+        - Adapter
+        - Extension
+        - Proposal
+        - Member
+        - Vote
+      eventHandlers:
+        - event: 'SubmittedProposal(bytes32,uint256)'
+          handler: handleSubmittedProposal
+        - event: 'SponsoredProposal(bytes32,uint256)'
+          handler: handleSponsoredProposal
+        - event: 'ProcessedProposal(bytes32,uint256)'
+          handler: handleProcessedProposal
+        - event: 'AdapterAdded(bytes32,address,uint256)'
+          handler: handleAdapterAdded
+        - event: AdapterRemoved(bytes32)
+          handler: handleAdapterRemoved
+        - event: 'ExtensionAdded(bytes32,address)'
+          handler: handleExtensionAdded
+        - event: ExtensionRemoved(bytes32)
+          handler: handleExtensionRemoved
+        - event: 'UpdateDelegateKey(address,address)'
+          handler: handleUpdateDelegateKey
+        - event: MemberJailed(address)
+          handler: handleMemberJailed
+        - event: MemberUnjailed(address)
+          handler: handleMemberUnjailed
+        - event: 'ConfigurationUpdated(bytes32,uint256)'
+          handler: handleConfigurationUpdated
+        - event: 'AddressConfigurationUpdated(bytes32,address)'
+          handler: handleAddressConfigurationUpdated
+      file:
+        /: /ipfs/QmRmjs4L7DV1meBuNDtM2A16tRfLyvAzyx3DDerWAyDy2p
+      kind: ethereum/events
+      language: wasm/assemblyscript
+    name: DaoRegistry
+    network: mainnet
+    source:
+      abi: DaoRegistry
+  - kind: ethereum/contract
+    mapping:
+      abis:
+        - file:
+            /: /ipfs/QmQqVB1pWoMDvKGccGWqKR5hRPgrqVRURSZHGCSS35XhZS
+          name: BankExtension
+      apiVersion: 0.0.4
+      entities:
+        - TokenBalance
+        - Token
+        - Member
+      eventHandlers:
+        - event: 'NewBalance(address,address,uint256)'
+          handler: handleNewBalance
+        - event: 'Withdraw(address,address,uint256)'
+          handler: handleWithdraw
+      file:
+        /: /ipfs/QmYYFLWiH63cjx5xtUr5Yh4yuzqHB8uNvgxpGpBveAPwqQ
+      kind: ethereum/events
+      language: wasm/assemblyscript
+    name: BankExtension
+    network: mainnet
+    source:
+      abi: BankExtension
+è%

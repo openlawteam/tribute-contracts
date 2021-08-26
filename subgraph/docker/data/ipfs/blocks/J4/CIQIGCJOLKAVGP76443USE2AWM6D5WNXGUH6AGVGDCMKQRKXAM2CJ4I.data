@@ -1,0 +1,218 @@
+
+¼,´,enum VotingAdapterName {
+  OffchainVotingContract
+  VotingContract
+}
+
+interface ITransfer {
+  id: ID!
+  from: Bytes! # Member!
+  to: Bytes # Member!
+  transferAt: BigInt!
+  transaction: Bytes! #Transaction!
+}
+
+type TributeDao @entity {
+  "Unique identifier and primary key of the `TributeDao` entity"
+  id: ID! # Set to `${tribute.id}
+  "The DAO address"
+  daoAddress: Bytes
+  "The name of the DAO"
+  name: String
+  "The DAO creator address"
+  creator: Bytes
+  createdAt: String
+  totalShares: String
+  "The bank of the DAO"
+  bank: Bank! @derivedFrom(field: "tributeDao")
+  "List of registered adapters"
+  adapters: [Adapter!]! @derivedFrom(field: "tributeDao")
+  "List of registered extensions"
+  extensions: [Extension!]! @derivedFrom(field: "tributeDao")
+  "List of members in the DAO"
+  members: [Member]! @derivedFrom(field: "tributeDaos")
+  "List of proposals in the DAO"
+  proposals: [Proposal]! @derivedFrom(field: "tributeDao")
+  "List of nfts in the DAO"
+  nftCollection: NFTCollection! @derivedFrom(field: "tributeDao")
+}
+
+type Member @entity {
+  "Unique identifier and primary key of the `Member` entity"
+  id: ID! # Set to `${member.id}`
+  memberAddress: Bytes
+  createdAt: String
+  delegateKey: Bytes
+  shares: BigInt!
+  tokenBalances: [TokenBalance!] @derivedFrom(field: "member")
+  proposals: [Proposal!] @derivedFrom(field: "member")
+  didFullyRagequit: Boolean
+  isDelegated: Boolean
+  "List of DAOs the member belongs to"
+  tributeDaos: [TributeDao!]!
+}
+
+type Proposal @entity {
+  "Unique identifier and primary key of the `Proposal` entity"
+  id: ID! # Set to `${tribute.id}-proposal-${proposal.id}`
+  proposalId: Bytes!
+  flags: BigInt!
+  submittedBy: Bytes
+  sponsored: Boolean
+  sponsoredAt: String
+  sponsoredBy: Bytes
+  processed: Boolean
+  processedAt: String
+  processedBy: Bytes
+  member: Member
+  tributeDao: TributeDao
+
+  "Adapter ID of the proposal"
+  adapterId: Bytes
+  "Adapter contract address of the proposal"
+  adapterAddress: Bytes
+  "Voting adapter address"
+  votingAdapter: Bytes
+
+  # onboarding; proposal details
+  tokenToMint: Bytes
+  amount: BigInt
+  sharesRequested: BigInt
+  token: Bytes
+  applicant: Bytes
+  proposer: Bytes
+
+  # distribute; proposal details
+  "The share holder address that will receive the funds. If 0x0, the funds will be distributed to all members of the DAO"
+  shareHolderAddr: Bytes
+  "The distribution status or the kick status"
+  status: String
+  "Current iteration index to control the cached for-loop"
+  currentIndex: BigInt
+  "The block number in which the proposal/or vote results has been created"
+  blockNumber: BigInt
+
+  # tribute; proposal details
+  "The amount requested of DAO internal tokens"
+  requestAmount: BigInt
+  "The amount of tribute tokens."
+  tributeAmount: BigInt
+
+  # guildkick; proposal details
+  "The address of the member to kick out of the DAO."
+  memberToKick: Bytes
+
+  # financing; proposal details
+  "Additional details for the financing proposal"
+  details: Bytes
+
+  # managing; proposal details
+  "Additional details for the managing proposal"
+  keys: [Bytes!]
+  values: [BigInt!]
+
+  # offchain votes
+  snapshot: BigInt
+  proposalHash: Bytes
+  reporter: Bytes
+  resultRoot: Bytes
+  nbVoters: BigInt
+  nbNo: BigInt
+  nbYes: BigInt
+  index: BigInt
+  startingTime: BigInt
+  gracePeriodStartingTime: BigInt
+  isChallenged: Boolean
+  fallbackVotes: Boolean
+  fallbackVotesCount: BigInt
+
+  # onchain votes
+  votes: BigInt
+
+  voteResult: Vote
+}
+
+type Vote @entity {
+  "Unique identifier and primary key of the `Vote` entity"
+  id: ID! # Set to `${tribute.id}-vote-${proposal.id}`
+  nbNo: BigInt!
+  nbYes: BigInt!
+  nbVoters: BigInt!
+  adapterName: VotingAdapterName!
+  adapterAddress: Bytes!
+  proposal: Proposal
+}
+
+type Bank @entity {
+  "Unique identifier and primary key of the `Bank` entity"
+  id: ID! # Set to `${tribute.id}-bank-${bank.id}`
+  "The bank of the DAO"
+  bankAddress: Bytes!
+  tokenBalances: [TokenBalance!] @derivedFrom(field: "bank")
+  tributeDao: TributeDao!
+}
+
+type Token @entity {
+  "Unique identifier and primary key of the `Token` entity"
+  id: ID! # Set to `${tribute.id}-token-${token.id}`
+  name: String
+  symbol: String
+  tokenAddress: Bytes!
+  balance: BigInt
+}
+
+type TokenBalance @entity {
+  "Unique identifier and primary key of the `TokenBalance` entity"
+  id: ID! # Set to `${tribute.id}-tokenbalance-${tokenBalance.id}`
+  token: Token! #[Token!]
+  tokenBalance: BigInt!
+  member: Member
+  bank: Bank
+  tributeDao: TributeDao
+}
+
+type NFT @entity {
+  "Unique identifier and primary key of the `NFT` entity"
+  id: ID! # Set to `${tribute.id}-nft-${nftAddress.id}-$tokenId}`
+  nftAddress: Bytes!
+  owner: Bytes! # or Member!
+  name: String!
+  symbol: String!
+  tokenId: BigInt!
+  tokenUri: String!
+  # createdAt: BigInt!
+  nftCollection: NFTCollection
+
+  # from: Bytes! # Member!
+  # to: Bytes # Member!
+  # transferAt: BigInt!
+  # transaction: Bytes! #Transaction!
+}
+
+type NFTCollection @entity {
+  "Unique identifier and primary key of the `NFTCollection` entity"
+  id: ID! # Set to `${tribute.id}-nftcollection-${extensionAddress}`
+  nfts: [NFT!] @derivedFrom(field: "nftCollection")
+  tributeDao: TributeDao!
+}
+
+type Adapter @entity {
+  "Unique identifier and primary key of the `Adapter` entity"
+  id: ID! # Set to `${tribute.id}-adapter-${adapter.id}`
+  adapterId: Bytes!
+  adapterAddress: Bytes!
+  "Adapter acl (access control layer)"
+  acl: BigInt!
+  tributeDao: TributeDao
+}
+
+type Extension @entity {
+  "Unique identifier and primary key of the `Extension` entity"
+  id: ID! # Set to `${tribute.id}-extension-${extension.id}`
+  "Extension contract address"
+  extensionAddress: Bytes!
+  "Extension ID"
+  extensionId: Bytes!
+  tributeDao: TributeDao
+}
+´,

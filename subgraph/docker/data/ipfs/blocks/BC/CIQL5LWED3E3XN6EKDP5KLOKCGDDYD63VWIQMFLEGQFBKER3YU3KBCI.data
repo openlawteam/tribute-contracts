@@ -1,0 +1,126 @@
+
+òêtype Moloch @entity {
+  id: ID!
+  summoningTime: BigInt!
+  periodDuration: BigInt!
+  votingPeriodLength: BigInt!
+  gracePeriodLength: BigInt!
+  processingReward: BigInt!
+  proposalDeposit: BigInt!
+  depositToken: Token!
+  approvedTokens: [Token!]!
+  guildTokenBalance: [Token!]!
+  escrowTokenBalance: [Token!]!
+  members: [Member!]
+  proposals: [Proposal!]
+  tokenBalances: [TokenBalance!]
+  totalShares: BigInt!
+  totalLoot: BigInt!
+}
+
+type Proposal @entity {
+  id: ID!
+  proposalIndex: BigInt
+  proposalId: BigInt!
+  moloch: Moloch!
+  molochAddress: Bytes
+  createdAt: String!
+  sponsoredAt: String!
+  sponsoredBy: Bytes!
+  processedAt: String!
+  processedBy: Bytes!
+  investment: Investment!
+  contributor: Contributor!
+  member: Member!
+  memberAddress: Bytes!
+  delegateKey: Bytes!
+  applicant: Bytes!
+  proposer: Bytes!
+  sponsor: Bytes!
+  sharesRequested: BigInt!
+  lootRequested: BigInt!
+  tributeOffered: BigInt!
+  tributeToken: Bytes!
+  paymentRequested: BigInt!
+  paymentToken: Bytes!
+  startingPeriod: BigInt!
+  endingPeriod: BigInt!
+  yesVotes: BigInt!
+  noVotes: BigInt!
+  sponsored: Boolean!
+  processed: Boolean!
+  didPass: Boolean!
+  cancelled: Boolean!
+  whitelist: Boolean!
+  guildkick: Boolean!
+  newMember: Boolean!
+  details: String
+  votes: [Vote!]
+  yesShares: BigInt!
+  noShares: BigInt!
+}
+
+type Member @entity {
+  id: ID!
+  moloch: Moloch!
+  molochAddress: Bytes
+  memberAddress: Bytes!
+  createdAt: String!
+  delegateKey: Bytes!
+  shares: BigInt!
+  loot: BigInt!
+  exists: Boolean!
+  tokenTribute: BigInt!
+  didRagequit: Boolean!
+  votes: [Vote!]
+  tokenBalances: [TokenBalance!]
+  isKicked: Boolean!
+  isJailed: Boolean!
+  isDelegated: Boolean!
+}
+
+type Contributor @entity {
+  id: ID!
+  moloch: Moloch!
+  molochAddress: Bytes
+  proposals: [Proposal!] @derivedFrom(field: "contributor")
+  applicant: Bytes!
+  didRagequit: Boolean!
+  createdAt: String!
+  shares: BigInt!
+  loot: BigInt!
+  exists: Boolean!
+}
+
+type Investment @entity {
+  id: ID!
+  moloch: Moloch!
+  molochAddress: Bytes
+  investmentAddress: Bytes!
+  createdAt: String!
+  proposals: [Proposal!]
+}
+
+type Vote @entity {
+  id: ID!
+  proposal: Proposal!
+  member: Member!
+  vote: Int!
+}
+
+type Token @entity {
+  id: ID!
+  moloch: Moloch!
+  tokenAddress: Bytes!
+  whitelisted: Boolean!
+  approved: Proposal
+}
+
+type TokenBalance @entity {
+  id: ID!
+  moloch: Moloch!
+  token: Token!
+  tokenBalance: BigInt!
+  member: Member
+}
+ê
