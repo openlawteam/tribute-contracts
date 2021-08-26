@@ -68,7 +68,7 @@ contract OffchainVotingContract is IVoting, MemberGuard, AdapterGuard, Ownable {
 
     uint256 private constant NB_CHOICES = 2;
     SnapshotProposalContract private _snapshotContract;
-    OffchainVotingHashContract private ovHash;
+    OffchainVotingHashContract public ovHash;
     KickBadReporterAdapter private _handleBadReporterAdapter;
 
     string private constant ADAPTER_NAME = "OffchainVotingContract";
@@ -105,7 +105,7 @@ contract OffchainVotingContract is IVoting, MemberGuard, AdapterGuard, Ownable {
 
     mapping(address => mapping(bytes32 => ProposalChallenge))
         private challengeProposals;
-    mapping(address => mapping(bytes32 => Voting)) private votes;
+    mapping(address => mapping(bytes32 => Voting)) public votes;
 
     constructor(
         VotingContract _c,

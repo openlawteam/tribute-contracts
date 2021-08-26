@@ -6,6 +6,7 @@ import "../core/DaoRegistry.sol";
 import "../guards/MemberGuard.sol";
 import "../adapters/interfaces/IVoting.sol";
 import "../helpers/FairShareHelper.sol";
+import "../helpers/DaoHelper.sol";
 import "../extensions/bank/Bank.sol";
 
 /**
@@ -95,11 +96,7 @@ library GuildKickHelper {
         // Calculates the total units, loot and locked loot before any internal transfers
         // it considers the locked loot to be able to calculate the fair amount to ragequit,
         // but locked loot can not be burned.
-        uint256 initialTotalUnitsAndLoot =
-            bank.balanceOf(TOTAL, UNITS) +
-                bank.balanceOf(TOTAL, LOOT) +
-                bank.balanceOf(TOTAL, LOCKED_UNITS) +
-                bank.balanceOf(TOTAL, LOCKED_LOOT);
+        uint256 initialTotalTokens = DaoHelper.totalTokens(bank);
 
         uint256 unitsToBurn = bank.balanceOf(kickedMember, LOCKED_UNITS);
         uint256 lootToBurn = bank.balanceOf(kickedMember, LOCKED_LOOT);
@@ -114,7 +111,7 @@ library GuildKickHelper {
                 FairShareHelper.calc(
                     bank.balanceOf(GUILD, token),
                     unitsAndLootToBurn,
-                    initialTotalUnitsAndLoot
+                    initialTotalTokens
                 );
 
             // Ony execute the internal transfer if the user has enough funds to receive.
