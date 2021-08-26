@@ -116,7 +116,7 @@ coverageEnv
 
 .env
 
-docker/data
+subgraph/docker/data
 artifacts
 cache
 typechain
