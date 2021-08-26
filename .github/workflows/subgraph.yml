@@ -8,10 +8,6 @@ on:
   pull_request_target:
     branches:
       - "*"
-    paths:
-      # Lint only if there are any changes in:
-      - "contracts/**"
-      - "subgraph/**"
 
 jobs:
   lint_subgraph:
@@ -34,7 +30,7 @@ jobs:
         run: npm ci
 
       - name: Run Truffle Compile
-        run: npm run compile
+        run: npm run compile-abi
 
       ### Subgraph Lint ###
 
