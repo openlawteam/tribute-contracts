@@ -72,7 +72,7 @@ See [here](https://thegraph.com/docs/deploy-a-subgraph#redeploying-a-subgraph) f
 
 ### Local Development Graph Setup
 
-Check out the setup guide [here](https://github.com/openlawteam/tribute-contracts/blob/master/docker/README.md)
+Check out the setup guide [here](https://github.com/openlawteam/tribute-contracts/blob/master/subgraph/docker/README.md)
 
 ## Subgraph Tests
 
