@@ -3,19 +3,14 @@ name: Subgraph
 on:
   push:
     branches:
-      # long-lived branches
       - master
   pull_request_target:
     branches:
       - "*"
-    paths:
-      # Lint only if there are any changes in:
-      - "contracts/**"
-      - "subgraph/**"
 
 jobs:
   lint_subgraph:
-    runs-on: ubuntu-18.04
+    runs-on: ubuntu-20.04
     steps:
       - name: Checkout code
         uses: actions/checkout@v2
@@ -23,7 +18,7 @@ jobs:
       - name: Setup node
         uses: actions/setup-node@v2
         with:
-          node-version: "12.22.1"
+          node-version: "14.17.0"
 
       - name: Setup SSH to install dependencies
         uses: webfactory/ssh-agent@v0.5.0
@@ -34,7 +29,7 @@ jobs:
         run: npm ci
 
       - name: Run Truffle Compile
-        run: npm run compile
+        run: npm run compile-abi
 
       ### Subgraph Lint ###
 
@@ -47,5 +42,7 @@ jobs:
         working-directory: subgraph
 
       - name: Build subgraph
-        run: npm run build
+        run: |
+          ls -lotr
+          npm run build
         working-directory: subgraph
