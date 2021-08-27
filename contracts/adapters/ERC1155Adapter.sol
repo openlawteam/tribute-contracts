@@ -8,6 +8,7 @@ import "../guards/AdapterGuard.sol";
 import "../guards/MemberGuard.sol";
 import "./interfaces/IConfiguration.sol";
 import "../adapters/interfaces/IVoting.sol";
+import "../helpers/DaoHelper.sol";
 
 /**
 MIT License
@@ -55,7 +56,7 @@ contract ERC1155AdapterContract is DaoConstants, AdapterGuard {
         uint256 amount
     ) external reentrancyGuard(dao) {
         ERC1155TokenExtension erc1155 =
-            ERC1155TokenExtension(dao.getExtensionAddress(ERC1155_EXT));
+            ERC1155TokenExtension(dao.getExtensionAddress(DaoHelper.ERC1155_EXT));
         erc1155.collect(msg.sender, nftAddr, nftTokenId, amount);
     }
 
@@ -77,7 +78,7 @@ contract ERC1155AdapterContract is DaoConstants, AdapterGuard {
         uint256 amount
     ) external reentrancyGuard(dao) {
         ERC1155TokenExtension erc1155 =
-            ERC1155TokenExtension(dao.getExtensionAddress(ERC1155_EXT));
+            ERC1155TokenExtension(dao.getExtensionAddress(DaoHelper.ERC1155_EXT));
         erc1155.internalTransfer(
             msg.sender,
             toOwner,

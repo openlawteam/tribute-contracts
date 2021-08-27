@@ -7,6 +7,7 @@ import "../core/DaoRegistry.sol";
 import "../extensions/nft/NFT.sol";
 import "../guards/MemberGuard.sol";
 import "../guards/AdapterGuard.sol";
+import "../helpers/DaoHelper.sol";
 
 /**
 MIT License
@@ -51,7 +52,7 @@ contract NFTAdapterContract is DaoConstants, MemberGuard, AdapterGuard {
         address nftAddr,
         uint256 nftTokenId
     ) external reentrancyGuard(dao) {
-        NFTExtension nft = NFTExtension(dao.getExtensionAddress(NFT));
+        NFTExtension nft = NFTExtension(dao.getExtensionAddress(DaoHelper.NFT));
         nft.collect(nftAddr, nftTokenId);
     }
 }

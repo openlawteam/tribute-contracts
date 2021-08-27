@@ -6,6 +6,7 @@ import "../../core/DaoConstants.sol";
 import "../../core/DaoRegistry.sol";
 import "../IExtension.sol";
 import "../../guards/AdapterGuard.sol";
+import "../../helpers/DaoHelper.sol";
 import "@openzeppelin/contracts/utils/Address.sol";
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
@@ -114,18 +115,18 @@ contract BankExtension is DaoConstants, AdapterGuard, IExtension {
         dao = _dao;
         initialized = true;
 
-        availableInternalTokens[UNITS] = true;
-        internalTokens.push(UNITS);
+        availableInternalTokens[DaoHelper.UNITS] = true;
+        internalTokens.push(DaoHelper.UNITS);
 
-        availableInternalTokens[MEMBER_COUNT] = true;
-        internalTokens.push(MEMBER_COUNT);
+        availableInternalTokens[DaoHelper.MEMBER_COUNT] = true;
+        internalTokens.push(DaoHelper.MEMBER_COUNT);
         uint256 nbMembers = _dao.getNbMembers();
         for (uint256 i = 0; i < nbMembers; i++) {
-            addToBalance(_dao.getMemberAddress(i), MEMBER_COUNT, 1);
+            addToBalance(_dao.getMemberAddress(i), DaoHelper.MEMBER_COUNT, 1);
         }
 
-        _createNewAmountCheckpoint(creator, UNITS, 1);
-        _createNewAmountCheckpoint(TOTAL, UNITS, 1);
+        _createNewAmountCheckpoint(creator, DaoHelper.UNITS, 1);
+        _createNewAmountCheckpoint(TOTAL, DaoHelper.UNITS, 1);
     }
 
     function withdraw(
@@ -138,7 +139,7 @@ contract BankExtension is DaoConstants, AdapterGuard, IExtension {
             "bank::withdraw::not enough funds"
         );
         subtractFromBalance(member, tokenAddr, amount);
-        if (tokenAddr == ETH_TOKEN) {
+        if (tokenAddr == DaoHelper.ETH_TOKEN) {
             member.sendValue(amount);
         } else {
             IERC20 erc20 = IERC20(tokenAddr);
@@ -171,7 +172,7 @@ contract BankExtension is DaoConstants, AdapterGuard, IExtension {
     function setMaxExternalTokens(uint8 maxTokens) external {
         require(!initialized, "bank already initialized");
         require(
-            maxTokens > 0 && maxTokens <= MAX_TOKENS_GUILD_BANK,
+            maxTokens > 0 && maxTokens <= DaoHelper.MAX_TOKENS_GUILD_BANK,
             "max number of external tokens should be (0,200)"
         );
         maxExternalTokens = maxTokens;
@@ -230,7 +231,7 @@ contract BankExtension is DaoConstants, AdapterGuard, IExtension {
 
         uint256 realBalance;
 
-        if (tokenAddr == ETH_TOKEN) {
+        if (tokenAddr == DaoHelper.ETH_TOKEN) {
             realBalance = address(this).balance;
         } else {
             IERC20 erc20 = IERC20(tokenAddr);

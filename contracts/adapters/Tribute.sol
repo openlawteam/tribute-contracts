@@ -89,7 +89,7 @@ contract TributeContract is
         external
         onlyAdapter(dao)
     {
-        BankExtension bank = BankExtension(dao.getExtensionAddress(BANK));
+        BankExtension bank = BankExtension(dao.getExtensionAddress(DaoHelper.BANK));
         bank.registerPotentialNewInternalToken(tokenAddrToMint);
     }
 
@@ -137,7 +137,7 @@ contract TributeContract is
         potentialNewMember(
             applicant,
             dao,
-            BankExtension(dao.getExtensionAddress(BANK))
+            BankExtension(dao.getExtensionAddress(DaoHelper.BANK))
         );
 
         votingContract.startNewVotingForProposal(dao, proposalId, data);
@@ -186,7 +186,7 @@ contract TributeContract is
         dao.processProposal(proposalId);
 
         if (voteResult == IVoting.VotingState.PASS) {
-            BankExtension bank = BankExtension(dao.getExtensionAddress(BANK));
+            BankExtension bank = BankExtension(dao.getExtensionAddress(DaoHelper.BANK));
             address tokenToMint = proposal.tokenToMint;
             address applicant = proposal.applicant;
             uint256 tributeAmount = proposal.tributeAmount;

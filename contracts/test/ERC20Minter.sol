@@ -6,6 +6,7 @@ import "../core/DaoConstants.sol";
 import "../core/DaoRegistry.sol";
 import "../extensions/bank/Bank.sol";
 import "../extensions/executor/Executor.sol";
+import "../helpers/DaoHelper.sol";
 import "../guards/AdapterGuard.sol";
 import "../adapters/interfaces/IConfiguration.sol";
 import "./ProxToken.sol";
@@ -52,7 +53,7 @@ contract ERC20MinterContract is DaoConstants, AdapterGuard {
         address token,
         uint256 amount
     ) external reentrancyGuard(dao) {
-        address proxyAddr = dao.getExtensionAddress(EXECUTOR_EXT);
+        address proxyAddr = dao.getExtensionAddress(DaoHelper.EXECUTOR_EXT);
         ERC20MinterContract executor = ERC20MinterContract(payable(proxyAddr));
         executor.mint(dao, token, amount);
     }

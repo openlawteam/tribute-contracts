@@ -126,7 +126,7 @@ contract OnboardingContract is
             tokenAddr
         );
 
-        BankExtension bank = BankExtension(dao.getExtensionAddress(BANK));
+        BankExtension bank = BankExtension(dao.getExtensionAddress(DaoHelper.BANK));
         bank.registerPotentialNewInternalToken(unitsToMint);
         bank.registerPotentialNewToken(tokenAddr);
     }
@@ -155,7 +155,7 @@ contract OnboardingContract is
         potentialNewMember(
             applicant,
             dao,
-            BankExtension(dao.getExtensionAddress(BANK))
+            BankExtension(dao.getExtensionAddress(DaoHelper.BANK))
         );
 
         address tokenAddr =
@@ -207,7 +207,7 @@ contract OnboardingContract is
             address unitsToMint = proposal.unitsToMint;
             uint256 unitsRequested = proposal.unitsRequested;
             address applicant = proposal.applicant;
-            BankExtension bank = BankExtension(dao.getExtensionAddress(BANK));
+            BankExtension bank = BankExtension(dao.getExtensionAddress(DaoHelper.BANK));
             require(
                 bank.isInternalToken(unitsToMint),
                 "it can only mint units"
@@ -216,7 +216,7 @@ contract OnboardingContract is
             bank.addToBalance(applicant, unitsToMint, unitsRequested);
 
             address daoAddress = address(dao);
-            if (token == ETH_TOKEN) {
+            if (token == DaoHelper.ETH_TOKEN) {
                 bank.addToBalance{value: amount}(GUILD, token, amount);
                 if (msg.value > amount) {
                     payable(msg.sender).sendValue(msg.value - amount);

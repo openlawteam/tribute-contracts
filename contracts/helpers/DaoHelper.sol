@@ -74,7 +74,7 @@ library DaoHelper {
         view
         returns (uint256)
     {
-        return priorMemberTokens(bank, TOTAL, at);
+        return priorMemberTokens(bank, TOTAL, at) - priorMemberTokens(bank, GUILD, at);
     }
 
     function memberTokens(BankExtension bank, address member)
@@ -102,5 +102,40 @@ library DaoHelper {
             bank.getPriorAmount(member, LOCKED_UNITS, at) +
             bank.getPriorAmount(member, LOOT, at) +
             bank.getPriorAmount(member, LOCKED_LOOT, at);
+    }
+
+    //helper
+    function getFlag(uint256 flags, uint256 flag) public pure returns (bool) {
+        return (flags >> uint8(flag)) % 2 == 1;
+    }
+
+    function setFlag(
+        uint256 flags,
+        uint256 flag,
+        bool value
+    ) public pure returns (uint256) {
+        if (getFlag(flags, flag) != value) {
+            if (value) {
+                return flags + 2**flag;
+            } else {
+                return flags - 2**flag;
+            }
+        } else {
+            return flags;
+        }
+    }
+
+    /**
+     * @notice Checks if a given address is reserved.
+     */
+    function isNotReservedAddress(address addr) public pure returns (bool) {
+        return addr != GUILD && addr != TOTAL && addr != ESCROW;
+    }
+
+    /**
+     * @notice Checks if a given address is zeroed.
+     */
+    function isNotZeroAddress(address addr) public pure returns (bool) {
+        return addr != address(0x0);
     }
 }

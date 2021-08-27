@@ -7,6 +7,7 @@ import "../core/DaoRegistry.sol";
 import "../extensions/bank/Bank.sol";
 import "../guards/AdapterGuard.sol";
 import "../adapters/interfaces/IVoting.sol";
+import "../helpers/DaoHelper.sol";
 
 /**
 MIT License
@@ -57,7 +58,7 @@ contract BankAdapterContract is DaoConstants, AdapterGuard {
 
         // We do not need to check if the token is supported by the bank,
         // because if it is not, the balance will always be zero.
-        BankExtension bank = BankExtension(dao.getExtensionAddress(BANK));
+        BankExtension bank = BankExtension(dao.getExtensionAddress(DaoHelper.BANK));
         uint256 balance = bank.balanceOf(account, token);
         require(balance > 0, "nothing to withdraw");
 
@@ -76,7 +77,7 @@ contract BankAdapterContract is DaoConstants, AdapterGuard {
     {
         // We do not need to check if the token is supported by the bank,
         // because if it is not, the balance will always be zero.
-        BankExtension bank = BankExtension(dao.getExtensionAddress(BANK));
+        BankExtension bank = BankExtension(dao.getExtensionAddress(DaoHelper.BANK));
         bank.updateToken(token);
     }
 }

@@ -17,6 +17,7 @@ import "@openzeppelin/contracts/access/Ownable.sol";
 import "@openzeppelin/contracts/utils/cryptography/MerkleProof.sol";
 import "@openzeppelin/contracts/utils/cryptography/SignatureChecker.sol";
 import "../../helpers/GuildKickHelper.sol";
+import "../../helpers/DaoHelper.sol";
 
 /**
 MIT License
@@ -210,9 +211,9 @@ contract OffchainVotingContract is IVoting, MemberGuard, AdapterGuard, Ownable {
         require(isActiveMember(dao, memberAddr), "not active member");
 
         uint256 nbMembers =
-            BankExtension(dao.getExtensionAddress(BANK)).getPriorAmount(
-                TOTAL,
-                MEMBER_COUNT,
+            BankExtension(dao.getExtensionAddress(DaoHelper.BANK)).getPriorAmount(
+                DaoHelper.TOTAL,
+                DaoHelper.MEMBER_COUNT,
                 vote.snapshot
             );
         require(nbMembers - 1 == result.index, "index:member_count mismatch");
@@ -327,8 +328,8 @@ contract OffchainVotingContract is IVoting, MemberGuard, AdapterGuard, Ownable {
         if (vote.forceFailed) {
             return false;
         }
-        BankExtension bank = BankExtension(dao.getExtensionAddress(BANK));
-        uint256 totalWeight = bank.getPriorAmount(TOTAL, UNITS, vote.snapshot);
+        BankExtension bank = BankExtension(dao.getExtensionAddress(DaoHelper.BANK));
+        uint256 totalWeight = bank.getPriorAmount(DaoHelper.TOTAL, DaoHelper.UNITS, vote.snapshot);
         uint256 unvotedWeights = totalWeight - nbYes - nbNo;
 
         uint256 diff;
@@ -376,10 +377,10 @@ contract OffchainVotingContract is IVoting, MemberGuard, AdapterGuard, Ownable {
         (bool success, uint256 blockNumber) =
             ovHash.stringToUint(proposal.payload.snapshot);
         require(success, "snapshot conversion error");
-        BankExtension bank = BankExtension(dao.getExtensionAddress(BANK));
+        BankExtension bank = BankExtension(dao.getExtensionAddress(DaoHelper.BANK));
 
         address memberAddr = dao.getAddressIfDelegated(proposal.submitter);
-        require(bank.balanceOf(memberAddr, UNITS) > 0, "noActiveMember");
+        require(bank.balanceOf(memberAddr, DaoHelper.UNITS) > 0, "noActiveMember");
 
         bytes32 proposalHash =
             _snapshotContract.hashMessage(dao, msg.sender, proposal);
@@ -513,7 +514,7 @@ contract OffchainVotingContract is IVoting, MemberGuard, AdapterGuard, Ownable {
         OffchainVotingHashContract.VoteResultNode memory node
     ) external {
         Voting storage vote = votes[address(dao)][proposalId];
-        BankExtension bank = BankExtension(dao.getExtensionAddress(BANK));
+        BankExtension bank = BankExtension(dao.getExtensionAddress(DaoHelper.BANK));
         if (
             getBadNodeError(
                 dao,
@@ -522,7 +523,7 @@ contract OffchainVotingContract is IVoting, MemberGuard, AdapterGuard, Ownable {
                 vote.resultRoot,
                 vote.snapshot,
                 vote.gracePeriodStartingTime,
-                bank.getPriorAmount(TOTAL, MEMBER_COUNT, vote.snapshot),
+                bank.getPriorAmount(DaoHelper.TOTAL, DaoHelper.MEMBER_COUNT, vote.snapshot),
                 node
             ) != BadNodeError.OK
         ) {
@@ -674,7 +675,7 @@ contract OffchainVotingContract is IVoting, MemberGuard, AdapterGuard, Ownable {
     }
 
     function _challengeResult(DaoRegistry dao, bytes32 proposalId) internal {
-        BankExtension bank = BankExtension(dao.getExtensionAddress(BANK));
+        BankExtension bank = BankExtension(dao.getExtensionAddress(DaoHelper.BANK));
 
         votes[address(dao)][proposalId].isChallenged = true;
         address challengedReporter = votes[address(dao)][proposalId].reporter;
@@ -688,7 +689,7 @@ contract OffchainVotingContract is IVoting, MemberGuard, AdapterGuard, Ownable {
 
         dao.submitProposal(challengeProposalId);
 
-        uint256 units = bank.balanceOf(challengedReporter, UNITS);
+        uint256 units = bank.balanceOf(challengedReporter, DaoHelper.UNITS);
 
         challengeProposals[address(dao)][
             challengeProposalId

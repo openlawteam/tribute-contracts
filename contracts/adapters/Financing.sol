@@ -79,7 +79,7 @@ contract FinancingContract is
         bytes memory data
     ) external override reentrancyGuard(dao) {
         require(amount > 0, "invalid requested amount");
-        BankExtension bank = BankExtension(dao.getExtensionAddress(BANK));
+        BankExtension bank = BankExtension(dao.getExtensionAddress(DaoHelper.BANK));
         require(bank.isTokenAllowed(token), "token not allowed");
         require(
             isNotReservedAddress(applicant),
@@ -129,7 +129,7 @@ contract FinancingContract is
             "proposal needs to pass"
         );
         dao.processProposal(proposalId);
-        BankExtension bank = BankExtension(dao.getExtensionAddress(BANK));
+        BankExtension bank = BankExtension(dao.getExtensionAddress(DaoHelper.BANK));
 
         bank.subtractFromBalance(GUILD, details.token, details.amount);
         bank.addToBalance(details.applicant, details.token, details.amount);

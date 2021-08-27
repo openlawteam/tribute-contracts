@@ -79,15 +79,15 @@ contract RagequitContract is IRagequit, DaoConstants, AdapterGuard {
         address memberAddr = dao.getAddressIfDelegated(msg.sender);
 
         // Instantiates the Bank extension to handle the internal balance checks and transfers.
-        BankExtension bank = BankExtension(dao.getExtensionAddress(BANK));
+        BankExtension bank = BankExtension(dao.getExtensionAddress(DaoHelper.BANK));
         // Check if member has enough units to burn.
         require(
-            bank.balanceOf(memberAddr, UNITS) >= unitsToBurn,
+            bank.balanceOf(memberAddr, DaoHelper.UNITS) >= unitsToBurn,
             "insufficient units"
         );
         // Check if the member has enough loot to burn.
         require(
-            bank.balanceOf(memberAddr, LOOT) >= lootToBurn,
+            bank.balanceOf(memberAddr, DaoHelper.LOOT) >= lootToBurn,
             "insufficient loot"
         );
 
@@ -116,9 +116,9 @@ contract RagequitContract is IRagequit, DaoConstants, AdapterGuard {
         uint256 totalTokens = DaoHelper.totalTokens(bank);
 
         // Burns / subtracts from member's balance the number of units to burn.
-        bank.internalTransfer(memberAddr, GUILD, UNITS, unitsToBurn);
+        bank.internalTransfer(memberAddr, GUILD, DaoHelper.UNITS, unitsToBurn);
         // Burns / subtracts from member's balance the number of loot to burn.
-        bank.internalTransfer(memberAddr, GUILD, LOOT, lootToBurn);
+        bank.internalTransfer(memberAddr, GUILD, DaoHelper.LOOT, lootToBurn);
 
         // Completes the ragequit process by updating the GUILD internal balance based on each provided token.
         _burnUnits(

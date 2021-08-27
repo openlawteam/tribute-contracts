@@ -3,6 +3,7 @@ pragma solidity ^0.8.0;
 // SPDX-License-Identifier: MIT
 import "../../../core/DaoRegistry.sol";
 import "../../../core/DaoConstants.sol";
+import "../../../helpers/DaoHelper.sol";
 import "../../../guards/AdapterGuard.sol";
 import "../../../utils/PotentialNewMember.sol";
 import "../../IExtension.sol";
@@ -162,7 +163,7 @@ contract ERC20Extension is
      * @dev Returns the amount of tokens in existence.
      */
     function totalSupply() public view override returns (uint256) {
-        BankExtension bank = BankExtension(dao.getExtensionAddress(BANK));
+        BankExtension bank = BankExtension(dao.getExtensionAddress(DaoHelper.BANK));
         return bank.balanceOf(TOTAL, tokenAddress);
     }
 
@@ -170,7 +171,7 @@ contract ERC20Extension is
      * @dev Returns the amount of tokens owned by `account`.
      */
     function balanceOf(address account) public view override returns (uint256) {
-        BankExtension bank = BankExtension(dao.getExtensionAddress(BANK));
+        BankExtension bank = BankExtension(dao.getExtensionAddress(DaoHelper.BANK));
         return bank.balanceOf(account, tokenAddress);
     }
 
@@ -283,7 +284,7 @@ contract ERC20Extension is
         );
 
         IERC20TransferStrategy strategy =
-            IERC20TransferStrategy(dao.getAdapterAddress(TRANSFER_STRATEGY));
+            IERC20TransferStrategy(dao.getAdapterAddress(DaoHelper.TRANSFER_STRATEGY));
         (
             IERC20TransferStrategy.ApprovalType approvalType,
             uint256 allowedAmount
@@ -297,7 +298,7 @@ contract ERC20Extension is
                 msg.sender
             );
 
-        BankExtension bank = BankExtension(dao.getExtensionAddress(BANK));
+        BankExtension bank = BankExtension(dao.getExtensionAddress(DaoHelper.BANK));
 
         if (approvalType == IERC20TransferStrategy.ApprovalType.NONE) {
             revert("transfer not allowed");

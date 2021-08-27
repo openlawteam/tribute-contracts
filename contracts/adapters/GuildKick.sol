@@ -104,12 +104,12 @@ contract GuildKickContract is IGuildKick, MemberGuard, AdapterGuard {
         // Creates a guild kick proposal.
         dao.submitProposal(proposalId);
 
-        BankExtension bank = BankExtension(dao.getExtensionAddress(BANK));
+        BankExtension bank = BankExtension(dao.getExtensionAddress(DaoHelper.BANK));
         // Gets the number of units of the member
-        uint256 unitsToBurn = bank.balanceOf(memberToKick, UNITS);
+        uint256 unitsToBurn = bank.balanceOf(memberToKick, DaoHelper.UNITS);
 
         // Gets the number of loot of the member
-        uint256 lootToBurn = bank.balanceOf(memberToKick, LOOT);
+        uint256 lootToBurn = bank.balanceOf(memberToKick, DaoHelper.LOOT);
 
         // Checks if the member has enough units to be converted to loot.
         // Overflow is not possible because max value for each var is 2^64

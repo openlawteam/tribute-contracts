@@ -6,7 +6,7 @@ import "./DaoConstants.sol";
 import "../guards/AdapterGuard.sol";
 import "../guards/MemberGuard.sol";
 import "../extensions/IExtension.sol";
-
+import "../helpers/DaoHelper.sol";
 /**
 MIT License
 
@@ -228,11 +228,11 @@ contract DaoRegistry is MemberGuard, AdapterGuard {
             _members.push(memberAddress);
         }
 
-        address bankAddress = extensions[BANK];
+        address bankAddress = extensions[DaoHelper.BANK];
         if (bankAddress != address(0x0)) {
             BankExtension bank = BankExtension(bankAddress);
-            if (bank.balanceOf(memberAddress, MEMBER_COUNT) == 0) {
-                bank.addToBalance(memberAddress, MEMBER_COUNT, 1);
+            if (bank.balanceOf(memberAddress, DaoHelper.MEMBER_COUNT) == 0) {
+                bank.addToBalance(memberAddress, DaoHelper.MEMBER_COUNT, 1);
             }
         }
     }

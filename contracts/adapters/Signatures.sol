@@ -119,7 +119,7 @@ contract SignaturesContract is
         );
         dao.processProposal(proposalId);
         ERC1271Extension erc1271 =
-            ERC1271Extension(dao.getExtensionAddress(ERC1271));
+            ERC1271Extension(dao.getExtensionAddress(DaoHelper.ERC1271));
 
         erc1271.sign(
             details.permissionHash,

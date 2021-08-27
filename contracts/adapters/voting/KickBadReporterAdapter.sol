@@ -91,10 +91,10 @@ contract KickBadReporterAdapter is DaoConstants, MemberGuard {
         ) {
             (uint256 units, address challengeAddress) =
                 votingContract.getChallengeDetails(dao, proposalId);
-            BankExtension bank = BankExtension(dao.getExtensionAddress(BANK));
+            BankExtension bank = BankExtension(dao.getExtensionAddress(DaoHelper.BANK));
 
-            bank.subtractFromBalance(challengeAddress, LOOT, units);
-            bank.addToBalance(challengeAddress, UNITS, units);
+            bank.subtractFromBalance(challengeAddress, DaoHelper.LOOT, units);
+            bank.addToBalance(challengeAddress, DaoHelper.UNITS, units);
         } else {
             revert("vote not finished yet");
         }

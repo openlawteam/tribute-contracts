@@ -81,8 +81,8 @@ contract LendNFTContract is
      * @param dao The DAO address.
      */
     function configureDao(DaoRegistry dao) external onlyAdapter(dao) {
-        BankExtension bank = BankExtension(dao.getExtensionAddress(BANK));
-        bank.registerPotentialNewInternalToken(UNITS);
+        BankExtension bank = BankExtension(dao.getExtensionAddress(DaoHelper.BANK));
+        bank.registerPotentialNewInternalToken(DaoHelper.UNITS);
     }
 
     /**
@@ -125,7 +125,7 @@ contract LendNFTContract is
         potentialNewMember(
             applicant,
             dao,
-            BankExtension(dao.getExtensionAddress(BANK))
+            BankExtension(dao.getExtensionAddress(DaoHelper.BANK))
         );
 
         votingContract.startNewVotingForProposal(dao, proposalId, data);
@@ -175,10 +175,10 @@ contract LendNFTContract is
         dao.processProposal(proposalId);
 
         if (voteResult == IVoting.VotingState.PASS) {
-            NFTExtension nftExt = NFTExtension(dao.getExtensionAddress(NFT));
-            BankExtension bank = BankExtension(dao.getExtensionAddress(BANK));
+            NFTExtension nftExt = NFTExtension(dao.getExtensionAddress(DaoHelper.NFT));
+            BankExtension bank = BankExtension(dao.getExtensionAddress(DaoHelper.BANK));
             require(
-                bank.isInternalToken(UNITS),
+                bank.isInternalToken(DaoHelper.UNITS),
                 "UNITS token is not an internal token"
             );
 
@@ -189,7 +189,7 @@ contract LendNFTContract is
 
             bank.addToBalance(
                 proposal.applicant,
-                UNITS,
+                DaoHelper.UNITS,
                 proposal.requestAmount
             );
             proposals[address(dao)][proposalId].lendingStart = block.timestamp;
@@ -208,7 +208,7 @@ contract LendNFTContract is
         require(proposal.lendingStart > 0, "lending not started");
         require(!proposal.sentBack, "already sent back");
 
-        NFTExtension nftExt = NFTExtension(dao.getExtensionAddress(NFT));
+        NFTExtension nftExt = NFTExtension(dao.getExtensionAddress(DaoHelper.NFT));
         nftExt.withdrawNFT(
             proposal.previousOwner,
             proposal.nftAddr,

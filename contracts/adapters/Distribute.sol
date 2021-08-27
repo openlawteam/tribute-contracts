@@ -137,13 +137,13 @@ contract DistributeContract is
         // Creates the distribution proposal.
         dao.submitProposal(proposalId);
 
-        BankExtension bank = BankExtension(dao.getExtensionAddress(BANK));
+        BankExtension bank = BankExtension(dao.getExtensionAddress(DaoHelper.BANK));
         require(bank.isTokenAllowed(token), "token not allowed");
 
         // Only check the number of units if there is a valid unit holder address.
         if (unitHolderAddr != address(0x0)) {
             // Gets the number of units of the member
-            uint256 units = bank.balanceOf(unitHolderAddr, UNITS);
+            uint256 units = bank.balanceOf(unitHolderAddr, DaoHelper.UNITS);
             // Checks if the member has enough units to reveice the funds.
             require(units > 0, "not enough units");
         }
@@ -210,7 +210,7 @@ contract DistributeContract is
             distribution.blockNumber = block.number;
             ongoingDistributions[address(dao)] = proposalId;
 
-            BankExtension bank = BankExtension(dao.getExtensionAddress(BANK));
+            BankExtension bank = BankExtension(dao.getExtensionAddress(DaoHelper.BANK));
             uint256 balance = bank.balanceOf(GUILD, distribution.token);
             require(
                 balance - distribution.amount >= 0,
@@ -265,7 +265,7 @@ contract DistributeContract is
         uint256 amount = distribution.amount;
 
         // Get the total number of units when the proposal was processed.
-        BankExtension bank = BankExtension(dao.getExtensionAddress(BANK));
+        BankExtension bank = BankExtension(dao.getExtensionAddress(DaoHelper.BANK));
 
         address unitHolderAddr = distribution.unitHolderAddr;
         if (unitHolderAddr != address(0x0)) {
@@ -311,7 +311,7 @@ contract DistributeContract is
     ) internal {
         uint256 memberTokens =
             DaoHelper.priorMemberTokens(bank, unitHolderAddr, blockNumber);
-        bank.getPriorAmount(unitHolderAddr, UNITS, blockNumber);
+        bank.getPriorAmount(unitHolderAddr, DaoHelper.UNITS, blockNumber);
         require(memberTokens != 0, "not enough tokens");
         // Distributes the funds to 1 unit holder only
         bank.internalTransfer(ESCROW, unitHolderAddr, token, amount);
@@ -335,7 +335,7 @@ contract DistributeContract is
         for (uint256 i = currentIndex; i < maxIndex; i++) {
             address memberAddr = dao.getMemberAddress(i);
             uint256 memberUnits =
-                bank.getPriorAmount(memberAddr, UNITS, blockNumber);
+                bank.getPriorAmount(memberAddr, DaoHelper.UNITS, blockNumber);
             if (memberUnits > 0) {
                 uint256 amountToDistribute =
                     FairShareHelper.calc(amount, memberUnits, totalUnits);

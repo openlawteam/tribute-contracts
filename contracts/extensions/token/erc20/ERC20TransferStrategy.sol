@@ -3,6 +3,7 @@ pragma solidity ^0.8.0;
 // SPDX-License-Identifier: MIT
 import "../../../core/DaoRegistry.sol";
 import "../../../core/DaoConstants.sol";
+import "../../../helpers/DaoHelper.sol";
 import "../../bank/Bank.sol";
 import "./IERC20TransferStrategy.sol";
 import "./InternalTokenVestingExtension.sol";
@@ -51,7 +52,7 @@ contract ERC20TransferStrategy is DaoConstants, IERC20TransferStrategy {
         return
             dao.hasAdapterAccessToExtension(
                 caller,
-                dao.getExtensionAddress(BANK),
+                dao.getExtensionAddress(DaoHelper.BANK),
                 uint8(BankExtension.AclFlag.INTERNAL_TRANSFER)
             );
     }
@@ -97,9 +98,9 @@ contract ERC20TransferStrategy is DaoConstants, IERC20TransferStrategy {
     ) public view returns (uint160) {
         InternalTokenVestingExtension vesting =
             InternalTokenVestingExtension(
-                dao.getExtensionAddress(INTERNAL_TOKEN_VESTING_EXT)
+                dao.getExtensionAddress(DaoHelper.INTERNAL_TOKEN_VESTING_EXT)
             );
-        BankExtension bank = BankExtension(dao.getExtensionAddress(BANK));
+        BankExtension bank = BankExtension(dao.getExtensionAddress(DaoHelper.BANK));
 
         uint88 minBalance = vesting.getMinimumBalance(from, tokenAddr);
         uint160 balance = bank.balanceOf(from, tokenAddr);

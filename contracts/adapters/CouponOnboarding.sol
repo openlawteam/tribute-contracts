@@ -8,7 +8,7 @@ import "../extensions/bank/Bank.sol";
 import "../guards/AdapterGuard.sol";
 import "../utils/Signatures.sol";
 import "../utils/PotentialNewMember.sol";
-
+import "../helpers/DaoHelper.sol";
 /**
 MIT License
 
@@ -98,7 +98,7 @@ contract CouponOnboardingContract is
         dao.setAddressConfiguration(ERC20InternalTokenAddr, erc20);
         dao.setAddressConfiguration(TokenAddrToMint, tokenAddrToMint);
 
-        BankExtension bank = BankExtension(dao.getExtensionAddress(BANK));
+        BankExtension bank = BankExtension(dao.getExtensionAddress(DaoHelper.BANK));
         bank.registerPotentialNewInternalToken(tokenAddrToMint);
         uint160 currentBalance = bank.balanceOf(TOTAL, tokenAddrToMint);
         if (currentBalance < maxAmount) {
@@ -174,7 +174,7 @@ contract CouponOnboardingContract is
 
         IERC20 erc20 =
             IERC20(dao.getAddressConfiguration(ERC20InternalTokenAddr));
-        BankExtension bank = BankExtension(dao.getExtensionAddress(BANK));
+        BankExtension bank = BankExtension(dao.getExtensionAddress(DaoHelper.BANK));
         if (address(erc20) == address(0x0)) {
             address tokenAddressToMint =
                 dao.getAddressConfiguration(TokenAddrToMint);

@@ -79,8 +79,8 @@ contract TributeNFTContract is
      * @param dao The DAO address.
      */
     function configureDao(DaoRegistry dao) external onlyAdapter(dao) {
-        BankExtension bank = BankExtension(dao.getExtensionAddress(BANK));
-        bank.registerPotentialNewInternalToken(UNITS);
+        BankExtension bank = BankExtension(dao.getExtensionAddress(DaoHelper.BANK));
+        bank.registerPotentialNewInternalToken(DaoHelper.UNITS);
     }
 
     /**
@@ -122,7 +122,7 @@ contract TributeNFTContract is
         potentialNewMember(
             applicant,
             dao,
-            BankExtension(dao.getExtensionAddress(BANK))
+            BankExtension(dao.getExtensionAddress(DaoHelper.BANK))
         );
 
         votingContract.startNewVotingForProposal(dao, proposalId, data);
@@ -168,17 +168,17 @@ contract TributeNFTContract is
         dao.processProposal(proposalId);
 
         if (voteResult == IVoting.VotingState.PASS) {
-            NFTExtension nftExt = NFTExtension(dao.getExtensionAddress(NFT));
-            BankExtension bank = BankExtension(dao.getExtensionAddress(BANK));
+            NFTExtension nftExt = NFTExtension(dao.getExtensionAddress(DaoHelper.NFT));
+            BankExtension bank = BankExtension(dao.getExtensionAddress(DaoHelper.BANK));
             require(
-                bank.isInternalToken(UNITS),
+                bank.isInternalToken(DaoHelper.UNITS),
                 "UNITS token is not an internal token"
             );
 
             nftExt.collect(proposal.nftAddr, proposal.nftTokenId);
             bank.addToBalance(
                 proposal.applicant,
-                UNITS,
+                DaoHelper.UNITS,
                 proposal.requestAmount
             );
         } else if (
