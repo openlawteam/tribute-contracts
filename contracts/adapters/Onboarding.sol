@@ -13,6 +13,7 @@ import "../guards/AdapterGuard.sol";
 import "@openzeppelin/contracts/utils/Address.sol";
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
+import "../helpers/DaoHelper.sol";
 
 /**
 MIT License
@@ -252,7 +253,7 @@ contract OnboardingContract is
         bytes32 proposalId,
         bytes memory data
     ) internal {
-        IVoting votingContract = IVoting(dao.getAdapterAddress(VOTING));
+        IVoting votingContract = IVoting(dao.getAdapterAddress(DaoHelper.VOTING));
         address sponsoredBy =
             votingContract.getSenderAddress(
                 dao,

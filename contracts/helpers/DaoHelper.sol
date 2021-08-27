@@ -1,11 +1,12 @@
 pragma solidity ^0.8.0;
+import "../extensions/bank/Bank.sol";
 
 // SPDX-License-Identifier: MIT
 
 /**
 MIT License
 
-Copyright (c) 2020 Openlaw
+Copyright (c) 2021 Openlaw
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -25,10 +26,9 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
  */
-
-abstract contract DaoConstants {
+library DaoHelper {
     // Adapters
-    //bytes32 internal constant VOTING = keccak256("voting");
+    bytes32 internal constant VOTING = keccak256("voting");
     bytes32 internal constant ONBOARDING = keccak256("onboarding");
     bytes32 internal constant NONVOTING_ONBOARDING = keccak256("nonvoting-onboarding");
     bytes32 internal constant TRIBUTE = keccak256("tribute");
@@ -62,38 +62,45 @@ abstract contract DaoConstants {
     address internal constant MEMBER_COUNT = address(0xDECAFBAD);
     uint8 internal constant MAX_TOKENS_GUILD_BANK = 200;
 
-    //helper
-    function getFlag(uint256 flags, uint256 flag) public pure returns (bool) {
-        return (flags >> uint8(flag)) % 2 == 1;
-    }
-
-    function setFlag(
-        uint256 flags,
-        uint256 flag,
-        bool value
-    ) public pure returns (uint256) {
-        if (getFlag(flags, flag) != value) {
-            if (value) {
-                return flags + 2**flag;
-            } else {
-                return flags - 2**flag;
-            }
-        } else {
-            return flags;
-        }
+    function totalTokens(BankExtension bank) internal view returns (uint256) {
+        return memberTokens(bank, TOTAL) - memberTokens(bank, GUILD); //GUILD is accounted for twice otherwise
     }
 
     /**
-     * @notice Checks if a given address is reserved.
+     * @notice calculates the total number of units.
      */
-    function isNotReservedAddress(address addr) public pure returns (bool) {
-        return addr != GUILD && addr != TOTAL && addr != ESCROW;
+    function priorTotalTokens(BankExtension bank, uint256 at)
+        internal
+        view
+        returns (uint256)
+    {
+        return priorMemberTokens(bank, TOTAL, at);
+    }
+
+    function memberTokens(BankExtension bank, address member)
+        internal
+        view
+        returns (uint256)
+    {
+        return
+            bank.balanceOf(member, UNITS) +
+            bank.balanceOf(member, LOCKED_UNITS) +
+            bank.balanceOf(member, LOOT) +
+            bank.balanceOf(member, LOCKED_LOOT);
     }
 
     /**
-     * @notice Checks if a given address is zeroed.
+     * @notice calculates the total number of units.
      */
-    function isNotZeroAddress(address addr) public pure returns (bool) {
-        return addr != address(0x0);
+    function priorMemberTokens(
+        BankExtension bank,
+        address member,
+        uint256 at
+    ) internal view returns (uint256) {
+        return
+            bank.getPriorAmount(member, UNITS, at) +
+            bank.getPriorAmount(member, LOCKED_UNITS, at) +
+            bank.getPriorAmount(member, LOOT, at) +
+            bank.getPriorAmount(member, LOCKED_LOOT, at);
     }
 }

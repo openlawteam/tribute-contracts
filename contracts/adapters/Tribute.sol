@@ -6,6 +6,7 @@ import "../core/DaoConstants.sol";
 import "../core/DaoRegistry.sol";
 import "../utils/PotentialNewMember.sol";
 import "../extensions/bank/Bank.sol";
+import "../helpers/DaoHelper.sol";
 import "../adapters/interfaces/IVoting.sol";
 import "../guards/MemberGuard.sol";
 import "../guards/AdapterGuard.sol";
@@ -123,7 +124,7 @@ contract TributeContract is
         );
 
         dao.submitProposal(proposalId);
-        IVoting votingContract = IVoting(dao.getAdapterAddress(VOTING));
+        IVoting votingContract = IVoting(dao.getAdapterAddress(DaoHelper.VOTING));
         address sponsoredBy =
             votingContract.getSenderAddress(
                 dao,

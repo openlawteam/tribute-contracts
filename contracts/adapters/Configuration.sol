@@ -8,6 +8,7 @@ import "../guards/MemberGuard.sol";
 import "../guards/AdapterGuard.sol";
 import "./interfaces/IConfiguration.sol";
 import "../adapters/interfaces/IVoting.sol";
+import "../helpers/DaoHelper.sol";
 
 /**
 MIT License
@@ -77,7 +78,7 @@ contract ConfigurationContract is
         dao.submitProposal(proposalId);
         _configurations[address(dao)][proposalId] = Configuration(keys, values);
 
-        IVoting votingContract = IVoting(dao.getAdapterAddress(VOTING));
+        IVoting votingContract = IVoting(dao.getAdapterAddress(DaoHelper.VOTING));
         address sponsoredBy =
             votingContract.getSenderAddress(
                 dao,

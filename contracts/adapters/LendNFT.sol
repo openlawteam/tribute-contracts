@@ -6,6 +6,7 @@ import "../core/DaoConstants.sol";
 import "../core/DaoRegistry.sol";
 import "../extensions/nft/NFT.sol";
 import "../adapters/interfaces/IVoting.sol";
+import "../helpers/DaoHelper.sol";
 import "../guards/MemberGuard.sol";
 import "../guards/AdapterGuard.sol";
 import "../utils/PotentialNewMember.sol";
@@ -112,7 +113,7 @@ contract LendNFTContract is
         );
 
         dao.submitProposal(proposalId);
-        IVoting votingContract = IVoting(dao.getAdapterAddress(VOTING));
+        IVoting votingContract = IVoting(dao.getAdapterAddress(DaoHelper.VOTING));
         address sponsoredBy =
             votingContract.getSenderAddress(
                 dao,

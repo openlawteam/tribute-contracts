@@ -12,7 +12,7 @@ Start ganache with `ganache-cli --host 0.0.0.0 --port 7545 --networkId 1337 --bl
 
 In a new terminal window, `npm run deploy:ganache` and copy the `DaoFactory` contract address and block number into the respective `address` and `startBlock` (important: make sure the block number starts from 1 previous block, for example, if the block number is 19 add 18 as the `startBlock`) for the `DaoFactory` source in `subgraph/subgraph.yaml`.
 
-Then, `cd docker/` and `docker-compose up`.
+Then, `cd subgraph/docker/` and `docker-compose up`.
 
 This will start IPFS, Postgres and Graph Node in Docker and create persistent
 data directories for IPFS and Postgres in `./data/ipfs` and `./data/postgres`. You

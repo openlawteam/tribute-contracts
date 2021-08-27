@@ -7,6 +7,7 @@ import "../core/DaoRegistry.sol";
 import "../extensions/bank/Bank.sol";
 import "./interfaces/IRagequit.sol";
 import "../helpers/FairShareHelper.sol";
+import "../helpers/DaoHelper.sol";
 import "../guards/AdapterGuard.sol";
 
 /**
@@ -112,11 +113,7 @@ contract RagequitContract is IRagequit, DaoConstants, AdapterGuard {
         // Calculates the total units, loot and locked loot before any internal transfers
         // it considers the locked loot to be able to calculate the fair amount to ragequit,
         // but locked loot can not be burned.
-        uint256 initialTotalUnitsAndLoot =
-            bank.balanceOf(TOTAL, UNITS) +
-                bank.balanceOf(TOTAL, LOOT) -
-                bank.balanceOf(GUILD, UNITS) +
-                bank.balanceOf(GUILD, LOOT);
+        uint256 totalTokens = DaoHelper.totalTokens(bank);
 
         // Burns / subtracts from member's balance the number of units to burn.
         bank.internalTransfer(memberAddr, GUILD, UNITS, unitsToBurn);
@@ -128,7 +125,7 @@ contract RagequitContract is IRagequit, DaoConstants, AdapterGuard {
             memberAddr,
             unitsToBurn,
             lootToBurn,
-            initialTotalUnitsAndLoot,
+            totalTokens,
             tokens,
             bank
         );

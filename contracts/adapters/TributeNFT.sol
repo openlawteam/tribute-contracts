@@ -10,6 +10,7 @@ import "../adapters/interfaces/IVoting.sol";
 import "../guards/MemberGuard.sol";
 import "../guards/AdapterGuard.sol";
 import "../utils/PotentialNewMember.sol";
+import "../helpers/DaoHelper.sol";
 
 import "@openzeppelin/contracts/utils/Address.sol";
 
@@ -109,7 +110,7 @@ contract TributeNFTContract is
         );
 
         dao.submitProposal(proposalId);
-        IVoting votingContract = IVoting(dao.getAdapterAddress(VOTING));
+        IVoting votingContract = IVoting(dao.getAdapterAddress(DaoHelper.VOTING));
         address sponsoredBy =
             votingContract.getSenderAddress(
                 dao,

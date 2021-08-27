@@ -9,7 +9,7 @@ import "../extensions/erc1271/ERC1271.sol";
 import "../adapters/interfaces/IVoting.sol";
 import "../guards/MemberGuard.sol";
 import "../guards/AdapterGuard.sol";
-
+import "../helpers/DaoHelper.sol";
 /**
 MIT License
 
@@ -81,7 +81,7 @@ contract SignaturesContract is
         proposal.signatureHash = signatureHash;
         proposal.magicValue = magicValue;
 
-        IVoting votingContract = IVoting(dao.getAdapterAddress(VOTING));
+        IVoting votingContract = IVoting(dao.getAdapterAddress(DaoHelper.VOTING));
         address sponsoredBy =
             votingContract.getSenderAddress(
                 dao,

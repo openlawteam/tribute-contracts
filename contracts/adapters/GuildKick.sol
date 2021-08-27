@@ -70,7 +70,7 @@ contract GuildKickContract is IGuildKick, MemberGuard, AdapterGuard {
         address memberToKick,
         bytes calldata data
     ) external override reentrancyGuard(dao) {
-        IVoting votingContract = IVoting(dao.getAdapterAddress(VOTING));
+        IVoting votingContract = IVoting(dao.getAdapterAddress(DaoHelper.VOTING));
         address submittedBy =
             votingContract.getSenderAddress(
                 dao,
@@ -120,8 +120,13 @@ contract GuildKickContract is IGuildKick, MemberGuard, AdapterGuard {
         kicks[address(dao)][proposalId] = GuildKick(memberToKick);
 
         // Starts the voting process for the guild kick proposal.
-        IVoting votingContract = IVoting(dao.getAdapterAddress(VOTING));
+        IVoting votingContract = IVoting(dao.getAdapterAddress(DaoHelper.VOTING));
         votingContract.startNewVotingForProposal(dao, proposalId, data);
+
+        GuildKickHelper.lockMemberTokens(
+            dao,
+            kicks[address(dao)][proposalId].memberToKick
+        );
 
         // Sponsors the guild kick proposal.
         dao.sponsorProposal(proposalId, submittedBy, address(votingContract));
@@ -143,16 +148,23 @@ contract GuildKickContract is IGuildKick, MemberGuard, AdapterGuard {
         // Checks if the proposal has passed.
         IVoting votingContract = IVoting(dao.votingAdapter(proposalId));
         require(address(votingContract) != address(0), "adapter not found");
-
-        require(
-            votingContract.voteResult(dao, proposalId) ==
-                IVoting.VotingState.PASS,
-            "proposal did not pass"
-        );
-
-        GuildKickHelper.rageKick(
-            dao,
-            kicks[address(dao)][proposalId].memberToKick
-        );
+        IVoting.VotingState votingState =
+            votingContract.voteResult(dao, proposalId);
+        if (votingState == IVoting.VotingState.PASS) {
+            GuildKickHelper.rageKick(
+                dao,
+                kicks[address(dao)][proposalId].memberToKick
+            );
+        } else if (
+            votingState == IVoting.VotingState.NOT_PASS ||
+            votingState == IVoting.VotingState.TIE
+        ) {
+            GuildKickHelper.unlockMemberTokens(
+                dao,
+                kicks[address(dao)][proposalId].memberToKick
+            );
+        } else {
+            revert("voting is still in progress");
+        }
     }
 }

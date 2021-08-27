@@ -16,6 +16,7 @@ import "./SnapshotProposalContract.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
 import "@openzeppelin/contracts/utils/cryptography/MerkleProof.sol";
 import "@openzeppelin/contracts/utils/cryptography/SignatureChecker.sol";
+import "../../helpers/GuildKickHelper.sol";
 
 /**
 MIT License
@@ -41,13 +42,7 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
  */
 
-contract OffchainVotingContract is
-    IVoting,
-    DaoConstants,
-    MemberGuard,
-    AdapterGuard,
-    Ownable
-{
+contract OffchainVotingContract is IVoting, MemberGuard, AdapterGuard, Ownable {
     enum BadNodeError {
         OK,
         WRONG_PROPOSAL_ID,
@@ -71,18 +66,20 @@ contract OffchainVotingContract is
     );
     event ResultChallenged(bytes32 proposalId, bytes32 resultRoot);
 
-    uint256 public constant NB_CHOICES = 2;
+    uint256 private constant NB_CHOICES = 2;
     SnapshotProposalContract private _snapshotContract;
     OffchainVotingHashContract public ovHash;
     KickBadReporterAdapter private _handleBadReporterAdapter;
 
-    string public constant ADAPTER_NAME = "OffchainVotingContract";
-    bytes32 constant VotingPeriod = keccak256("offchainvoting.votingPeriod");
-    bytes32 constant GracePeriod = keccak256("offchainvoting.gracePeriod");
-    bytes32 constant FallbackThreshold =
+    string private constant ADAPTER_NAME = "OffchainVotingContract";
+    bytes32 private constant VotingPeriod =
+        keccak256("offchainvoting.votingPeriod");
+    bytes32 private constant GracePeriod =
+        keccak256("offchainvoting.gracePeriod");
+    bytes32 private constant FallbackThreshold =
         keccak256("offchainvoting.fallbackThreshold");
 
-    mapping(bytes32 => mapping(uint256 => uint256)) retrievedStepsFlags;
+    mapping(bytes32 => mapping(uint256 => uint256)) private retrievedStepsFlags;
 
     struct Voting {
         uint256 snapshot;
@@ -104,9 +101,10 @@ contract OffchainVotingContract is
         _;
     }
 
-    VotingContract public fallbackVoting;
+    VotingContract private fallbackVoting;
 
-    mapping(address => mapping(bytes32 => ProposalChallenge)) challengeProposals;
+    mapping(address => mapping(bytes32 => ProposalChallenge))
+        private challengeProposals;
     mapping(address => mapping(bytes32 => Voting)) public votes;
 
     constructor(
@@ -605,7 +603,7 @@ contract OffchainVotingContract is
         bytes32 proposalId,
         OffchainVotingHashContract.VoteResultNode memory nodePrevious,
         OffchainVotingHashContract.VoteResultNode memory nodeCurrent
-    ) external {
+    ) public {
         Voting storage vote = votes[address(dao)][proposalId];
         bytes32 resultRoot = vote.resultRoot;
 
@@ -696,11 +694,7 @@ contract OffchainVotingContract is
             challengeProposalId
         ] = ProposalChallenge(challengedReporter, units);
 
-        // Burns / subtracts from member's balance the number of units to burn.
-        bank.subtractFromBalance(challengedReporter, UNITS, units);
-        // Burns / subtracts from member's balance the number of loot to burn.
-        // bank.subtractFromBalance(memberToKick, LOOT, kick.lootToBurn);
-        bank.addToBalance(challengedReporter, LOOT, units);
+        GuildKickHelper.lockMemberTokens(dao, challengedReporter);
 
         emit ResultChallenged(
             proposalId,

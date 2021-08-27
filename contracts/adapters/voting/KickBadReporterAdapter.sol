@@ -50,7 +50,7 @@ contract KickBadReporterAdapter is DaoConstants, MemberGuard {
         bytes calldata data
     ) external {
         OffchainVotingContract votingContract =
-            OffchainVotingContract(dao.getAdapterAddress(VOTING));
+            OffchainVotingContract(dao.getAdapterAddress(DaoHelper.VOTING));
         address sponsoredBy =
             votingContract.getSenderAddress(
                 dao,
@@ -74,7 +74,7 @@ contract KickBadReporterAdapter is DaoConstants, MemberGuard {
 
     function processProposal(DaoRegistry dao, bytes32 proposalId) external {
         OffchainVotingContract votingContract =
-            OffchainVotingContract(dao.getAdapterAddress(VOTING));
+            OffchainVotingContract(dao.getAdapterAddress(DaoHelper.VOTING));
 
         votingContract.processChallengeProposal(dao, proposalId);
 

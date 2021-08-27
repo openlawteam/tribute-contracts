@@ -9,6 +9,7 @@ import "../extensions/bank/Bank.sol";
 import "../adapters/interfaces/IVoting.sol";
 import "../guards/MemberGuard.sol";
 import "../guards/AdapterGuard.sol";
+import "../helpers/DaoHelper.sol";
 
 /**
 MIT License
@@ -91,7 +92,7 @@ contract FinancingContract is
         proposal.amount = amount;
         proposal.token = token;
 
-        IVoting votingContract = IVoting(dao.getAdapterAddress(VOTING));
+        IVoting votingContract = IVoting(dao.getAdapterAddress(DaoHelper.VOTING));
         address sponsoredBy =
             votingContract.getSenderAddress(
                 dao,
