@@ -2,11 +2,11 @@ pragma solidity ^0.8.0;
 
 // SPDX-License-Identifier: MIT
 
-import "./DaoConstants.sol";
 import "../guards/AdapterGuard.sol";
 import "../guards/MemberGuard.sol";
 import "../extensions/IExtension.sol";
 import "../helpers/DaoHelper.sol";
+
 /**
 MIT License
 
@@ -214,12 +214,12 @@ contract DaoRegistry is MemberGuard, AdapterGuard {
         require(memberAddress != address(0x0), "invalid member address");
 
         Member storage member = members[memberAddress];
-        if (!getFlag(member.flags, uint8(MemberFlag.EXISTS))) {
+        if (!DaoHelper.getFlag(member.flags, uint8(MemberFlag.EXISTS))) {
             require(
                 memberAddressesByDelegatedKey[memberAddress] == address(0x0),
                 "member address already taken as delegated key"
             );
-            member.flags = setFlag(
+            member.flags = DaoHelper.setFlag(
                 member.flags,
                 uint8(MemberFlag.EXISTS),
                 true
@@ -397,7 +397,8 @@ contract DaoRegistry is MemberGuard, AdapterGuard {
         view
         returns (bool)
     {
-        return getFlag(inverseAdapters[adapterAddress].acl, uint8(flag));
+        return
+            DaoHelper.getFlag(inverseAdapters[adapterAddress].acl, uint8(flag));
     }
 
     /**
@@ -413,7 +414,7 @@ contract DaoRegistry is MemberGuard, AdapterGuard {
     ) public view returns (bool) {
         return
             isAdapter(adapterAddress) &&
-            getFlag(
+            DaoHelper.getFlag(
                 inverseExtensions[extensionAddress].acl[adapterAddress],
                 uint8(flag)
             );
@@ -487,7 +488,7 @@ contract DaoRegistry is MemberGuard, AdapterGuard {
         );
 
         require(
-            !getFlag(flags, uint8(ProposalFlag.PROCESSED)),
+            !DaoHelper.getFlag(flags, uint8(ProposalFlag.PROCESSED)),
             "proposal already processed"
         );
         votingAdapter[proposalId] = votingAdapterAddr;
@@ -522,7 +523,7 @@ contract DaoRegistry is MemberGuard, AdapterGuard {
 
         uint256 flags = proposal.flags;
         require(
-            getFlag(flags, uint8(ProposalFlag.EXISTS)),
+            DaoHelper.getFlag(flags, uint8(ProposalFlag.EXISTS)),
             "proposal does not exist for this dao"
         );
 
@@ -531,9 +532,9 @@ contract DaoRegistry is MemberGuard, AdapterGuard {
             "only the adapter that submitted the proposal can set its flag"
         );
 
-        require(!getFlag(flags, uint8(flag)), "flag already set");
+        require(!DaoHelper.getFlag(flags, uint8(flag)), "flag already set");
 
-        flags = setFlag(flags, uint8(flag), true);
+        flags = DaoHelper.setFlag(flags, uint8(flag), true);
         proposals[proposalId].flags = flags;
 
         return proposals[proposalId];
@@ -563,7 +564,7 @@ contract DaoRegistry is MemberGuard, AdapterGuard {
         view
         returns (bool)
     {
-        return getFlag(proposals[proposalId].flags, uint8(flag));
+        return DaoHelper.getFlag(proposals[proposalId].flags, uint8(flag));
     }
 
     /**
@@ -576,7 +577,7 @@ contract DaoRegistry is MemberGuard, AdapterGuard {
         view
         returns (bool)
     {
-        return getFlag(members[memberAddress].flags, uint8(flag));
+        return DaoHelper.getFlag(members[memberAddress].flags, uint8(flag));
     }
 
     function getNbMembers() public view returns (uint256) {
@@ -593,7 +594,7 @@ contract DaoRegistry is MemberGuard, AdapterGuard {
      * @param newDelegateKey The member who is being delegated to
      */
     function updateDelegateKey(address memberAddr, address newDelegateKey)
-        external
+        public
         hasAccess(this, AclFlag.UPDATE_DELEGATE_KEY)
     {
         require(newDelegateKey != address(0x0), "newDelegateKey cannot be 0");
@@ -614,7 +615,7 @@ contract DaoRegistry is MemberGuard, AdapterGuard {
 
         Member storage member = members[memberAddr];
         require(
-            getFlag(member.flags, uint8(MemberFlag.EXISTS)),
+            DaoHelper.getFlag(member.flags, uint8(MemberFlag.EXISTS)),
             "member does not exist"
         );
 

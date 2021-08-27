@@ -2,13 +2,12 @@ pragma solidity ^0.8.0;
 
 // SPDX-License-Identifier: MIT
 
-import "../core/DaoConstants.sol";
 import "../core/DaoRegistry.sol";
 import "../extensions/bank/Bank.sol";
 import "../guards/AdapterGuard.sol";
 import "../utils/Signatures.sol";
-import "../utils/PotentialNewMember.sol";
 import "../helpers/DaoHelper.sol";
+
 /**
 MIT License
 
@@ -33,12 +32,7 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
  */
 
-contract CouponOnboardingContract is
-    DaoConstants,
-    AdapterGuard,
-    Signatures,
-    PotentialNewMember
-{
+contract CouponOnboardingContract is AdapterGuard, Signatures {
     struct Coupon {
         address authorizedMember;
         uint256 amount;
@@ -98,12 +92,14 @@ contract CouponOnboardingContract is
         dao.setAddressConfiguration(ERC20InternalTokenAddr, erc20);
         dao.setAddressConfiguration(TokenAddrToMint, tokenAddrToMint);
 
-        BankExtension bank = BankExtension(dao.getExtensionAddress(DaoHelper.BANK));
+        BankExtension bank =
+            BankExtension(dao.getExtensionAddress(DaoHelper.BANK));
         bank.registerPotentialNewInternalToken(tokenAddrToMint);
-        uint160 currentBalance = bank.balanceOf(TOTAL, tokenAddrToMint);
+        uint160 currentBalance =
+            bank.balanceOf(DaoHelper.TOTAL, tokenAddrToMint);
         if (currentBalance < maxAmount) {
             bank.addToBalance(
-                GUILD,
+                DaoHelper.GUILD,
                 tokenAddrToMint,
                 maxAmount - currentBalance
             );
@@ -150,7 +146,7 @@ contract CouponOnboardingContract is
     ) external reentrancyGuard(dao) {
         uint256 currentFlag = _flags[address(dao)][nonce / 256];
         require(
-            getFlag(currentFlag, nonce % 256) == false,
+            DaoHelper.getFlag(currentFlag, nonce % 256) == false,
             "coupon already redeemed"
         );
 
@@ -166,7 +162,7 @@ contract CouponOnboardingContract is
             "invalid sig"
         );
 
-        _flags[address(dao)][nonce / 256] = setFlag(
+        _flags[address(dao)][nonce / 256] = DaoHelper.setFlag(
             currentFlag,
             nonce % 256,
             true
@@ -174,20 +170,21 @@ contract CouponOnboardingContract is
 
         IERC20 erc20 =
             IERC20(dao.getAddressConfiguration(ERC20InternalTokenAddr));
-        BankExtension bank = BankExtension(dao.getExtensionAddress(DaoHelper.BANK));
+        BankExtension bank =
+            BankExtension(dao.getExtensionAddress(DaoHelper.BANK));
         if (address(erc20) == address(0x0)) {
             address tokenAddressToMint =
                 dao.getAddressConfiguration(TokenAddrToMint);
             bank.internalTransfer(
-                GUILD,
+                DaoHelper.GUILD,
                 authorizedMember,
                 tokenAddressToMint,
                 amount
             );
             // address needs to be added to the members mappings. ERC20 is doing it for us so no need to do it twice
-            potentialNewMember(authorizedMember, dao, bank);
+            DaoHelper.potentialNewMember(authorizedMember, dao, bank);
         } else {
-            erc20.safeTransferFrom(GUILD, authorizedMember, amount);
+            erc20.safeTransferFrom(DaoHelper.GUILD, authorizedMember, amount);
         }
 
         emit CouponRedeemed(address(dao), nonce, authorizedMember, amount);

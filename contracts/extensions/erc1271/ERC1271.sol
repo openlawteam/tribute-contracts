@@ -2,7 +2,6 @@ pragma solidity ^0.8.0;
 
 // SPDX-License-Identifier: MIT
 
-import "../../core/DaoConstants.sol";
 import "../../core/DaoRegistry.sol";
 import "../IExtension.sol";
 import "../../guards/AdapterGuard.sol";
@@ -35,7 +34,7 @@ SOFTWARE.
 /**
  * @dev Signs arbitrary messages and exposes ERC1271 interface
  */
-contract ERC1271Extension is DaoConstants, AdapterGuard, IExtension, IERC1271 {
+contract ERC1271Extension is AdapterGuard, IExtension, IERC1271 {
     using Address for address payable;
 
     bool public initialized = false; // internally tracks deployment under eip-1167 proxy pattern

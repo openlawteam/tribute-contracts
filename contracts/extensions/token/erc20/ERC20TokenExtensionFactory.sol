@@ -1,7 +1,6 @@
 pragma solidity ^0.8.0;
 
 // SPDX-License-Identifier: MIT
-import "../../../core/DaoConstants.sol";
 import "../../../core/DaoRegistry.sol";
 import "../../../core/CloneFactory.sol";
 import "./ERC20TokenExtension.sol";
@@ -30,7 +29,7 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
  */
 
-contract ERC20TokenExtensionFactory is CloneFactory, DaoConstants {
+contract ERC20TokenExtensionFactory is CloneFactory {
     address public identityAddress;
 
     event ERC20TokenExtensionCreated(address erc20ExtTokenAddress);

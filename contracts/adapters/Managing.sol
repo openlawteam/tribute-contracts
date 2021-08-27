@@ -3,7 +3,6 @@ pragma solidity ^0.8.0;
 // SPDX-License-Identifier: MIT
 
 import "./interfaces/IManaging.sol";
-import "../core/DaoConstants.sol";
 import "../core/DaoRegistry.sol";
 import "../adapters/interfaces/IVoting.sol";
 import "../guards/MemberGuard.sol";
@@ -34,12 +33,7 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
  */
 
-contract ManagingContract is
-    IManaging,
-    DaoConstants,
-    MemberGuard,
-    AdapterGuard
-{
+contract ManagingContract is IManaging, MemberGuard, AdapterGuard {
     struct ProposalDetails {
         bytes32 adapterId;
         address adapterAddress;
@@ -83,7 +77,7 @@ contract ManagingContract is
         require(proposal.flags < type(uint128).max, "flags parameter overflow");
 
         require(
-            isNotReservedAddress(proposal.adapterAddress),
+            DaoHelper.isNotReservedAddress(proposal.adapterAddress),
             "adapter address is reserved address"
         );
 
@@ -97,7 +91,8 @@ contract ManagingContract is
             proposal.flags
         );
 
-        IVoting votingContract = IVoting(dao.getAdapterAddress(DaoHelper.VOTING));
+        IVoting votingContract =
+            IVoting(dao.getAdapterAddress(DaoHelper.VOTING));
 
         dao.sponsorProposal(
             proposalId,

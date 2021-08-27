@@ -2,7 +2,6 @@ pragma solidity ^0.8.0;
 
 // SPDX-License-Identifier: MIT
 import "../../../core/DaoRegistry.sol";
-import "../../../core/DaoConstants.sol";
 import "../../../helpers/DaoHelper.sol";
 import "../../bank/Bank.sol";
 import "./IERC20TransferStrategy.sol";
@@ -37,7 +36,7 @@ SOFTWARE.
  * The ERC20Extension is a contract to give erc20 functionality
  * to the internal token units held by DAO members inside the DAO itself.
  */
-contract ERC20TransferStrategy is DaoConstants, IERC20TransferStrategy {
+contract ERC20TransferStrategy is IERC20TransferStrategy {
     bytes32 public constant ERC20_EXT_TRANSFER_TYPE =
         keccak256("erc20.transfer.type");
 
@@ -100,7 +99,8 @@ contract ERC20TransferStrategy is DaoConstants, IERC20TransferStrategy {
             InternalTokenVestingExtension(
                 dao.getExtensionAddress(DaoHelper.INTERNAL_TOKEN_VESTING_EXT)
             );
-        BankExtension bank = BankExtension(dao.getExtensionAddress(DaoHelper.BANK));
+        BankExtension bank =
+            BankExtension(dao.getExtensionAddress(DaoHelper.BANK));
 
         uint88 minBalance = vesting.getMinimumBalance(from, tokenAddr);
         uint160 balance = bank.balanceOf(from, tokenAddr);

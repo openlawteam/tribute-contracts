@@ -2,7 +2,6 @@ pragma solidity ^0.8.0;
 
 // SPDX-License-Identifier: MIT
 
-import "../../core/DaoConstants.sol";
 import "../../core/DaoRegistry.sol";
 import "../IExtension.sol";
 import "../../guards/AdapterGuard.sol";
@@ -40,7 +39,7 @@ SOFTWARE.
  * This contract was based on the OpenZeppelin Proxy contract:
  * https://github.com/OpenZeppelin/openzeppelin-contracts/blob/master/contracts/proxy/Proxy.sol
  */
-contract ExecutorExtension is DaoConstants, AdapterGuard, IExtension {
+contract ExecutorExtension is AdapterGuard, IExtension {
     using Address for address payable;
 
     bool public initialized = false; // internally tracks deployment under eip-1167 proxy pattern
@@ -89,11 +88,11 @@ contract ExecutorExtension is DaoConstants, AdapterGuard, IExtension {
         hasExtensionAccess(AclFlag.EXECUTE)
     {
         require(
-            isNotZeroAddress(implementation),
+            DaoHelper.isNotZeroAddress(implementation),
             "implementation address can not be zero"
         );
         require(
-            isNotReservedAddress(implementation),
+            DaoHelper.isNotReservedAddress(implementation),
             "implementation address can not be reserved"
         );
 

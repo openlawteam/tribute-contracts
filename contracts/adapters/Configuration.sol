@@ -2,7 +2,6 @@ pragma solidity ^0.8.0;
 
 // SPDX-License-Identifier: MIT
 
-import "../core/DaoConstants.sol";
 import "../core/DaoRegistry.sol";
 import "../guards/MemberGuard.sol";
 import "../guards/AdapterGuard.sol";
@@ -34,12 +33,7 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
  */
 
-contract ConfigurationContract is
-    IConfiguration,
-    DaoConstants,
-    MemberGuard,
-    AdapterGuard
-{
+contract ConfigurationContract is IConfiguration, MemberGuard, AdapterGuard {
     struct Configuration {
         bytes32[] keys;
         uint256[] values;
@@ -78,7 +72,8 @@ contract ConfigurationContract is
         dao.submitProposal(proposalId);
         _configurations[address(dao)][proposalId] = Configuration(keys, values);
 
-        IVoting votingContract = IVoting(dao.getAdapterAddress(DaoHelper.VOTING));
+        IVoting votingContract =
+            IVoting(dao.getAdapterAddress(DaoHelper.VOTING));
         address sponsoredBy =
             votingContract.getSenderAddress(
                 dao,

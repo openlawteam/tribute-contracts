@@ -5,7 +5,6 @@ pragma experimental ABIEncoderV2;
 
 import "../../core/DaoRegistry.sol";
 import "../../extensions/bank/Bank.sol";
-import "../../core/DaoConstants.sol";
 import "../../guards/MemberGuard.sol";
 import "../../guards/AdapterGuard.sol";
 import "../interfaces/IVoting.sol";
@@ -211,7 +210,8 @@ contract OffchainVotingContract is IVoting, MemberGuard, AdapterGuard, Ownable {
         require(isActiveMember(dao, memberAddr), "not active member");
 
         uint256 nbMembers =
-            BankExtension(dao.getExtensionAddress(DaoHelper.BANK)).getPriorAmount(
+            BankExtension(dao.getExtensionAddress(DaoHelper.BANK))
+                .getPriorAmount(
                 DaoHelper.TOTAL,
                 DaoHelper.MEMBER_COUNT,
                 vote.snapshot
@@ -269,11 +269,11 @@ contract OffchainVotingContract is IVoting, MemberGuard, AdapterGuard, Ownable {
         require(isActiveMember(dao, memberAddr), "not active member");
         uint256 currentFlag = retrievedStepsFlags[vote.resultRoot][index / 256];
         require(
-            getFlag(currentFlag, index % 256) == false,
+            DaoHelper.getFlag(currentFlag, index % 256) == false,
             "step already requested"
         );
 
-        retrievedStepsFlags[vote.resultRoot][index / 256] = setFlag(
+        retrievedStepsFlags[vote.resultRoot][index / 256] = DaoHelper.setFlag(
             currentFlag,
             index % 256,
             true
@@ -328,8 +328,14 @@ contract OffchainVotingContract is IVoting, MemberGuard, AdapterGuard, Ownable {
         if (vote.forceFailed) {
             return false;
         }
-        BankExtension bank = BankExtension(dao.getExtensionAddress(DaoHelper.BANK));
-        uint256 totalWeight = bank.getPriorAmount(DaoHelper.TOTAL, DaoHelper.UNITS, vote.snapshot);
+        BankExtension bank =
+            BankExtension(dao.getExtensionAddress(DaoHelper.BANK));
+        uint256 totalWeight =
+            bank.getPriorAmount(
+                DaoHelper.TOTAL,
+                DaoHelper.UNITS,
+                vote.snapshot
+            );
         uint256 unvotedWeights = totalWeight - nbYes - nbNo;
 
         uint256 diff;
@@ -377,10 +383,14 @@ contract OffchainVotingContract is IVoting, MemberGuard, AdapterGuard, Ownable {
         (bool success, uint256 blockNumber) =
             ovHash.stringToUint(proposal.payload.snapshot);
         require(success, "snapshot conversion error");
-        BankExtension bank = BankExtension(dao.getExtensionAddress(DaoHelper.BANK));
+        BankExtension bank =
+            BankExtension(dao.getExtensionAddress(DaoHelper.BANK));
 
         address memberAddr = dao.getAddressIfDelegated(proposal.submitter);
-        require(bank.balanceOf(memberAddr, DaoHelper.UNITS) > 0, "noActiveMember");
+        require(
+            bank.balanceOf(memberAddr, DaoHelper.UNITS) > 0,
+            "noActiveMember"
+        );
 
         bytes32 proposalHash =
             _snapshotContract.hashMessage(dao, msg.sender, proposal);
@@ -514,7 +524,8 @@ contract OffchainVotingContract is IVoting, MemberGuard, AdapterGuard, Ownable {
         OffchainVotingHashContract.VoteResultNode memory node
     ) external {
         Voting storage vote = votes[address(dao)][proposalId];
-        BankExtension bank = BankExtension(dao.getExtensionAddress(DaoHelper.BANK));
+        BankExtension bank =
+            BankExtension(dao.getExtensionAddress(DaoHelper.BANK));
         if (
             getBadNodeError(
                 dao,
@@ -523,7 +534,11 @@ contract OffchainVotingContract is IVoting, MemberGuard, AdapterGuard, Ownable {
                 vote.resultRoot,
                 vote.snapshot,
                 vote.gracePeriodStartingTime,
-                bank.getPriorAmount(DaoHelper.TOTAL, DaoHelper.MEMBER_COUNT, vote.snapshot),
+                bank.getPriorAmount(
+                    DaoHelper.TOTAL,
+                    DaoHelper.MEMBER_COUNT,
+                    vote.snapshot
+                ),
                 node
             ) != BadNodeError.OK
         ) {
@@ -675,7 +690,8 @@ contract OffchainVotingContract is IVoting, MemberGuard, AdapterGuard, Ownable {
     }
 
     function _challengeResult(DaoRegistry dao, bytes32 proposalId) internal {
-        BankExtension bank = BankExtension(dao.getExtensionAddress(DaoHelper.BANK));
+        BankExtension bank =
+            BankExtension(dao.getExtensionAddress(DaoHelper.BANK));
 
         votes[address(dao)][proposalId].isChallenged = true;
         address challengedReporter = votes[address(dao)][proposalId].reporter;

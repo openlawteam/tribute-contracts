@@ -1,5 +1,6 @@
 pragma solidity ^0.8.0;
 import "../extensions/bank/Bank.sol";
+import "../core/DaoRegistry.sol";
 
 // SPDX-License-Identifier: MIT
 
@@ -30,7 +31,8 @@ library DaoHelper {
     // Adapters
     bytes32 internal constant VOTING = keccak256("voting");
     bytes32 internal constant ONBOARDING = keccak256("onboarding");
-    bytes32 internal constant NONVOTING_ONBOARDING = keccak256("nonvoting-onboarding");
+    bytes32 internal constant NONVOTING_ONBOARDING =
+        keccak256("nonvoting-onboarding");
     bytes32 internal constant TRIBUTE = keccak256("tribute");
     bytes32 internal constant FINANCING = keccak256("financing");
     bytes32 internal constant MANAGING = keccak256("managing");
@@ -39,7 +41,8 @@ library DaoHelper {
     bytes32 internal constant CONFIGURATION = keccak256("configuration");
     bytes32 internal constant DISTRIBUTE = keccak256("distribute");
     bytes32 internal constant TRIBUTE_NFT = keccak256("tribute-nft");
-    bytes32 internal constant TRANSFER_STRATEGY = keccak256("erc20-transfer-strategy");
+    bytes32 internal constant TRANSFER_STRATEGY =
+        keccak256("erc20-transfer-strategy");
     bytes32 internal constant ERC1155_ADAPT = keccak256("erc1155-adpt");
 
     // Extensions
@@ -47,7 +50,8 @@ library DaoHelper {
     bytes32 internal constant ERC1271 = keccak256("erc1271");
     bytes32 internal constant NFT = keccak256("nft");
     bytes32 internal constant EXECUTOR_EXT = keccak256("executor-ext");
-    bytes32 internal constant INTERNAL_TOKEN_VESTING_EXT = keccak256("internal-token-vesting-extension");
+    bytes32 internal constant INTERNAL_TOKEN_VESTING_EXT =
+        keccak256("internal-token-vesting-extension");
     bytes32 internal constant ERC1155_EXT = keccak256("erc1155-ext");
 
     // Reserved Addresses
@@ -60,6 +64,7 @@ library DaoHelper {
     address internal constant LOCKED_LOOT = address(0xBB105F00D);
     address internal constant ETH_TOKEN = address(0x0);
     address internal constant MEMBER_COUNT = address(0xDECAFBAD);
+
     uint8 internal constant MAX_TOKENS_GUILD_BANK = 200;
 
     function totalTokens(BankExtension bank) internal view returns (uint256) {
@@ -74,7 +79,9 @@ library DaoHelper {
         view
         returns (uint256)
     {
-        return priorMemberTokens(bank, TOTAL, at) - priorMemberTokens(bank, GUILD, at);
+        return
+            priorMemberTokens(bank, TOTAL, at) -
+            priorMemberTokens(bank, GUILD, at);
     }
 
     function memberTokens(BankExtension bank, address member)
@@ -105,7 +112,7 @@ library DaoHelper {
     }
 
     //helper
-    function getFlag(uint256 flags, uint256 flag) public pure returns (bool) {
+    function getFlag(uint256 flags, uint256 flag) internal pure returns (bool) {
         return (flags >> uint8(flag)) % 2 == 1;
     }
 
@@ -113,7 +120,7 @@ library DaoHelper {
         uint256 flags,
         uint256 flag,
         bool value
-    ) public pure returns (uint256) {
+    ) internal pure returns (uint256) {
         if (getFlag(flags, flag) != value) {
             if (value) {
                 return flags + 2**flag;
@@ -128,14 +135,28 @@ library DaoHelper {
     /**
      * @notice Checks if a given address is reserved.
      */
-    function isNotReservedAddress(address addr) public pure returns (bool) {
+    function isNotReservedAddress(address addr) internal pure returns (bool) {
         return addr != GUILD && addr != TOTAL && addr != ESCROW;
     }
 
     /**
      * @notice Checks if a given address is zeroed.
      */
-    function isNotZeroAddress(address addr) public pure returns (bool) {
+    function isNotZeroAddress(address addr) internal pure returns (bool) {
         return addr != address(0x0);
+    }
+
+    function potentialNewMember(
+        address memberAddress,
+        DaoRegistry dao,
+        BankExtension bank
+    ) internal {
+        dao.potentialNewMember(memberAddress);
+        require(memberAddress != address(0x0), "invalid member address");
+        if (address(bank) != address(0x0)) {
+            if (bank.balanceOf(memberAddress, MEMBER_COUNT) == 0) {
+                bank.addToBalance(memberAddress, MEMBER_COUNT, 1);
+            }
+        }
     }
 }

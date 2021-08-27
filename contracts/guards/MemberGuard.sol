@@ -29,7 +29,7 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
  */
-abstract contract MemberGuard is DaoConstants {
+abstract contract MemberGuard {
     /**
      * @dev Only members of the DAO are allowed to execute the function call.
      */
@@ -55,7 +55,11 @@ abstract contract MemberGuard is DaoConstants {
         address bankAddress = dao.extensions(DaoHelper.BANK);
         if (bankAddress != address(0x0)) {
             address memberAddr = dao.getAddressIfDelegated(_addr);
-            return BankExtension(bankAddress).balanceOf(memberAddr, DaoHelper.UNITS) > 0;
+            return
+                BankExtension(bankAddress).balanceOf(
+                    memberAddr,
+                    DaoHelper.UNITS
+                ) > 0;
         }
 
         return dao.isMember(_addr);

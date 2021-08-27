@@ -2,7 +2,6 @@ pragma solidity ^0.8.0;
 
 // SPDX-License-Identifier: MIT
 
-import "../core/DaoConstants.sol";
 import "../core/DaoRegistry.sol";
 import "../extensions/bank/Bank.sol";
 import "../guards/AdapterGuard.sol";
@@ -33,7 +32,7 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
  */
 
-contract BankAdapterContract is DaoConstants, AdapterGuard {
+contract BankAdapterContract is AdapterGuard {
     /**
      * @notice default fallback function to prevent from sending ether to the contract.
      */
@@ -54,11 +53,15 @@ contract BankAdapterContract is DaoConstants, AdapterGuard {
         address payable account,
         address token
     ) external reentrancyGuard(dao) {
-        require(isNotReservedAddress(account), "withdraw::reserved address");
+        require(
+            DaoHelper.isNotReservedAddress(account),
+            "withdraw::reserved address"
+        );
 
         // We do not need to check if the token is supported by the bank,
         // because if it is not, the balance will always be zero.
-        BankExtension bank = BankExtension(dao.getExtensionAddress(DaoHelper.BANK));
+        BankExtension bank =
+            BankExtension(dao.getExtensionAddress(DaoHelper.BANK));
         uint256 balance = bank.balanceOf(account, token);
         require(balance > 0, "nothing to withdraw");
 
@@ -77,7 +80,8 @@ contract BankAdapterContract is DaoConstants, AdapterGuard {
     {
         // We do not need to check if the token is supported by the bank,
         // because if it is not, the balance will always be zero.
-        BankExtension bank = BankExtension(dao.getExtensionAddress(DaoHelper.BANK));
+        BankExtension bank =
+            BankExtension(dao.getExtensionAddress(DaoHelper.BANK));
         bank.updateToken(token);
     }
 }

@@ -2,7 +2,6 @@ pragma solidity ^0.8.0;
 pragma experimental ABIEncoderV2;
 
 // SPDX-License-Identifier: MIT
-import "./DaoConstants.sol";
 import "./DaoRegistry.sol";
 import "./CloneFactory.sol";
 
@@ -30,7 +29,7 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
  */
 
-contract DaoFactory is CloneFactory, DaoConstants {
+contract DaoFactory is CloneFactory {
     struct Adapter {
         bytes32 id;
         address addr;

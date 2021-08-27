@@ -2,10 +2,8 @@ pragma solidity ^0.8.0;
 
 // SPDX-License-Identifier: MIT
 import "../../../core/DaoRegistry.sol";
-import "../../../core/DaoConstants.sol";
 import "../../../helpers/DaoHelper.sol";
 import "../../../guards/AdapterGuard.sol";
-import "../../../utils/PotentialNewMember.sol";
 import "../../IExtension.sol";
 import "../../bank/Bank.sol";
 import "./IERC20TransferStrategy.sol";
@@ -41,13 +39,7 @@ SOFTWARE.
  * The ERC20Extension is a contract to give erc20 functionality
  * to the internal token units held by DAO members inside the DAO itself.
  */
-contract ERC20Extension is
-    DaoConstants,
-    AdapterGuard,
-    PotentialNewMember,
-    IExtension,
-    IERC20
-{
+contract ERC20Extension is AdapterGuard, IExtension, IERC20 {
     // The DAO address that this extension belongs to
     DaoRegistry public dao;
 
@@ -104,7 +96,7 @@ contract ERC20Extension is
         require(!initialized, "already initialized");
         require(_tokenAddress != address(0x0), "invalid token address");
         require(
-            isNotReservedAddress(_tokenAddress),
+            DaoHelper.isNotReservedAddress(_tokenAddress),
             "token address already in use"
         );
 
@@ -163,15 +155,17 @@ contract ERC20Extension is
      * @dev Returns the amount of tokens in existence.
      */
     function totalSupply() public view override returns (uint256) {
-        BankExtension bank = BankExtension(dao.getExtensionAddress(DaoHelper.BANK));
-        return bank.balanceOf(TOTAL, tokenAddress);
+        BankExtension bank =
+            BankExtension(dao.getExtensionAddress(DaoHelper.BANK));
+        return bank.balanceOf(DaoHelper.TOTAL, tokenAddress);
     }
 
     /**
      * @dev Returns the amount of tokens owned by `account`.
      */
     function balanceOf(address account) public view override returns (uint256) {
-        BankExtension bank = BankExtension(dao.getExtensionAddress(DaoHelper.BANK));
+        BankExtension bank =
+            BankExtension(dao.getExtensionAddress(DaoHelper.BANK));
         return bank.balanceOf(account, tokenAddress);
     }
 
@@ -207,16 +201,16 @@ contract ERC20Extension is
     {
         address senderAddr = dao.getAddressIfDelegated(msg.sender);
         require(
-            isNotZeroAddress(senderAddr),
+            DaoHelper.isNotZeroAddress(senderAddr),
             "ERC20: approve from the zero address"
         );
         require(
-            isNotZeroAddress(spender),
+            DaoHelper.isNotZeroAddress(spender),
             "ERC20: approve to the zero address"
         );
         require(dao.isMember(senderAddr), "sender is not a member");
         require(
-            isNotReservedAddress(spender),
+            DaoHelper.isNotReservedAddress(spender),
             "spender can not be a reserved address"
         );
 
@@ -254,7 +248,7 @@ contract ERC20Extension is
         uint256 amount,
         BankExtension bank
     ) internal {
-        potentialNewMember(recipient, dao, bank);
+        DaoHelper.potentialNewMember(recipient, dao, bank);
         bank.internalTransfer(senderAddr, recipient, tokenAddress, amount);
 
         emit Transfer(senderAddr, recipient, amount);
@@ -279,12 +273,14 @@ contract ERC20Extension is
         uint256 amount
     ) public override returns (bool) {
         require(
-            isNotZeroAddress(recipient),
+            DaoHelper.isNotZeroAddress(recipient),
             "ERC20: transfer to the zero address"
         );
 
         IERC20TransferStrategy strategy =
-            IERC20TransferStrategy(dao.getAdapterAddress(DaoHelper.TRANSFER_STRATEGY));
+            IERC20TransferStrategy(
+                dao.getAdapterAddress(DaoHelper.TRANSFER_STRATEGY)
+            );
         (
             IERC20TransferStrategy.ApprovalType approvalType,
             uint256 allowedAmount
@@ -298,7 +294,8 @@ contract ERC20Extension is
                 msg.sender
             );
 
-        BankExtension bank = BankExtension(dao.getExtensionAddress(DaoHelper.BANK));
+        BankExtension bank =
+            BankExtension(dao.getExtensionAddress(DaoHelper.BANK));
 
         if (approvalType == IERC20TransferStrategy.ApprovalType.NONE) {
             revert("transfer not allowed");

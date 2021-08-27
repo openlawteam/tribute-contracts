@@ -1,6 +1,5 @@
 pragma solidity ^0.8.0;
 // SPDX-License-Identifier: MIT
-import "../../core/DaoConstants.sol";
 import "../../core/DaoRegistry.sol";
 import "../../guards/AdapterGuard.sol";
 import "../../guards/MemberGuard.sol";
@@ -35,7 +34,6 @@ SOFTWARE.
  */
 
 contract ERC1155TokenExtension is
-    DaoConstants,
     AdapterGuard,
     MemberGuard,
     IExtension,

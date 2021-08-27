@@ -2,7 +2,6 @@ pragma solidity ^0.8.0;
 
 // SPDX-License-Identifier: MIT
 
-import "../core/DaoConstants.sol";
 import "../core/DaoRegistry.sol";
 import "../extensions/bank/Bank.sol";
 import "../extensions/executor/Executor.sol";
@@ -36,7 +35,7 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
  */
 
-contract ERC20MinterContract is DaoConstants, AdapterGuard {
+contract ERC20MinterContract is AdapterGuard {
     using Address for address payable;
 
     event Minted(address owner, address token, uint256 amount);

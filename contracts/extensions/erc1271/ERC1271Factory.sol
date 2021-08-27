@@ -3,7 +3,6 @@ pragma experimental ABIEncoderV2;
 
 // SPDX-License-Identifier: MIT
 
-import "../../core/DaoConstants.sol";
 import "../../core/DaoRegistry.sol";
 import "../../core/CloneFactory.sol";
 import "./ERC1271.sol";
@@ -32,7 +31,7 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
  */
 
-contract ERC1271ExtensionFactory is CloneFactory, DaoConstants {
+contract ERC1271ExtensionFactory is CloneFactory {
     address public identityAddress;
 
     event ERC1271Created(address erc1271Address);

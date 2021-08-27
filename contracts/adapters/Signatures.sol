@@ -3,13 +3,13 @@ pragma solidity ^0.8.0;
 // SPDX-License-Identifier: MIT
 
 import "./interfaces/ISignatures.sol";
-import "../core/DaoConstants.sol";
 import "../core/DaoRegistry.sol";
 import "../extensions/erc1271/ERC1271.sol";
 import "../adapters/interfaces/IVoting.sol";
 import "../guards/MemberGuard.sol";
 import "../guards/AdapterGuard.sol";
 import "../helpers/DaoHelper.sol";
+
 /**
 MIT License
 
@@ -34,12 +34,7 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
  */
 
-contract SignaturesContract is
-    ISignatures,
-    DaoConstants,
-    MemberGuard,
-    AdapterGuard
-{
+contract SignaturesContract is ISignatures, MemberGuard, AdapterGuard {
     struct ProposalDetails {
         bytes32 permissionHash;
         bytes32 signatureHash;
@@ -81,7 +76,8 @@ contract SignaturesContract is
         proposal.signatureHash = signatureHash;
         proposal.magicValue = magicValue;
 
-        IVoting votingContract = IVoting(dao.getAdapterAddress(DaoHelper.VOTING));
+        IVoting votingContract =
+            IVoting(dao.getAdapterAddress(DaoHelper.VOTING));
         address sponsoredBy =
             votingContract.getSenderAddress(
                 dao,

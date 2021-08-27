@@ -1,7 +1,6 @@
 pragma solidity ^0.8.0;
 
 // SPDX-License-Identifier: MIT
-import "../core/DaoConstants.sol";
 import "../core/DaoRegistry.sol";
 import "../extensions/erc1155/ERC1155TokenExtension.sol";
 import "../guards/AdapterGuard.sol";
@@ -34,7 +33,7 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
  */
 
-contract ERC1155AdapterContract is DaoConstants, AdapterGuard {
+contract ERC1155AdapterContract is AdapterGuard {
     /**
      * @notice default fallback function to prevent from sending ether to the contract.
      */
@@ -56,7 +55,9 @@ contract ERC1155AdapterContract is DaoConstants, AdapterGuard {
         uint256 amount
     ) external reentrancyGuard(dao) {
         ERC1155TokenExtension erc1155 =
-            ERC1155TokenExtension(dao.getExtensionAddress(DaoHelper.ERC1155_EXT));
+            ERC1155TokenExtension(
+                dao.getExtensionAddress(DaoHelper.ERC1155_EXT)
+            );
         erc1155.collect(msg.sender, nftAddr, nftTokenId, amount);
     }
 
@@ -78,7 +79,9 @@ contract ERC1155AdapterContract is DaoConstants, AdapterGuard {
         uint256 amount
     ) external reentrancyGuard(dao) {
         ERC1155TokenExtension erc1155 =
-            ERC1155TokenExtension(dao.getExtensionAddress(DaoHelper.ERC1155_EXT));
+            ERC1155TokenExtension(
+                dao.getExtensionAddress(DaoHelper.ERC1155_EXT)
+            );
         erc1155.internalTransfer(
             msg.sender,
             toOwner,

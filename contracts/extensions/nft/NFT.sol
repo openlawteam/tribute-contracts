@@ -2,7 +2,6 @@ pragma solidity ^0.8.0;
 
 // SPDX-License-Identifier: MIT
 
-import "../../core/DaoConstants.sol";
 import "../../core/DaoRegistry.sol";
 import "../../guards/AdapterGuard.sol";
 import "../IExtension.sol";
@@ -35,12 +34,7 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
  */
 
-contract NFTExtension is
-    DaoConstants,
-    AdapterGuard,
-    IExtension,
-    IERC721Receiver
-{
+contract NFTExtension is AdapterGuard, IExtension, IERC721Receiver {
     using Address for address payable;
     // Add the library methods
     using EnumerableSet for EnumerableSet.UintSet;
@@ -115,14 +109,14 @@ contract NFTExtension is
         //If the NFT is already in the NFTExtension, update the ownership if not set already
         if (currentOwner == address(this)) {
             if (_ownership[getNFTId(nftAddr, nftTokenId)] == address(0x0)) {
-                _saveNft(nftAddr, nftTokenId, GUILD);
+                _saveNft(nftAddr, nftTokenId, DaoHelper.GUILD);
 
                 emit CollectedNFT(nftAddr, nftTokenId);
             }
             //If the NFT is not in the NFTExtension, we try to transfer from the current owner of the NFT to the extension
         } else {
             erc721.safeTransferFrom(currentOwner, address(this), nftTokenId);
-            _saveNft(nftAddr, nftTokenId, GUILD);
+            _saveNft(nftAddr, nftTokenId, DaoHelper.GUILD);
 
             emit CollectedNFT(nftAddr, nftTokenId);
         }

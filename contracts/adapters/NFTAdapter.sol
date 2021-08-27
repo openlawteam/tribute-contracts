@@ -2,7 +2,6 @@ pragma solidity ^0.8.0;
 
 // SPDX-License-Identifier: MIT
 
-import "../core/DaoConstants.sol";
 import "../core/DaoRegistry.sol";
 import "../extensions/nft/NFT.sol";
 import "../guards/MemberGuard.sol";
@@ -33,7 +32,7 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
  */
 
-contract NFTAdapterContract is DaoConstants, MemberGuard, AdapterGuard {
+contract NFTAdapterContract is MemberGuard, AdapterGuard {
     /**
      * @notice default fallback function to prevent from sending ether to the contract.
      */

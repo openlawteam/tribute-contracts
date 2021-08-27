@@ -2,7 +2,6 @@ pragma solidity ^0.8.0;
 
 // SPDX-License-Identifier: MIT
 
-import "../core/DaoConstants.sol";
 import "../core/DaoRegistry.sol";
 import "../guards/MemberGuard.sol";
 import "../guards/AdapterGuard.sol";
@@ -70,7 +69,8 @@ contract GuildKickContract is IGuildKick, MemberGuard, AdapterGuard {
         address memberToKick,
         bytes calldata data
     ) external override reentrancyGuard(dao) {
-        IVoting votingContract = IVoting(dao.getAdapterAddress(DaoHelper.VOTING));
+        IVoting votingContract =
+            IVoting(dao.getAdapterAddress(DaoHelper.VOTING));
         address submittedBy =
             votingContract.getSenderAddress(
                 dao,
@@ -104,7 +104,8 @@ contract GuildKickContract is IGuildKick, MemberGuard, AdapterGuard {
         // Creates a guild kick proposal.
         dao.submitProposal(proposalId);
 
-        BankExtension bank = BankExtension(dao.getExtensionAddress(DaoHelper.BANK));
+        BankExtension bank =
+            BankExtension(dao.getExtensionAddress(DaoHelper.BANK));
         // Gets the number of units of the member
         uint256 unitsToBurn = bank.balanceOf(memberToKick, DaoHelper.UNITS);
 
@@ -120,7 +121,8 @@ contract GuildKickContract is IGuildKick, MemberGuard, AdapterGuard {
         kicks[address(dao)][proposalId] = GuildKick(memberToKick);
 
         // Starts the voting process for the guild kick proposal.
-        IVoting votingContract = IVoting(dao.getAdapterAddress(DaoHelper.VOTING));
+        IVoting votingContract =
+            IVoting(dao.getAdapterAddress(DaoHelper.VOTING));
         votingContract.startNewVotingForProposal(dao, proposalId, data);
 
         GuildKickHelper.lockMemberTokens(

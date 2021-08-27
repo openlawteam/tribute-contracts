@@ -2,7 +2,6 @@ pragma solidity ^0.8.0;
 
 // SPDX-License-Identifier: MIT
 
-import "../core/DaoConstants.sol";
 import "../core/DaoRegistry.sol";
 import "../guards/MemberGuard.sol";
 import "../guards/AdapterGuard.sol";
@@ -36,12 +35,7 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
  */
 
-contract DistributeContract is
-    IDistribute,
-    DaoConstants,
-    MemberGuard,
-    AdapterGuard
-{
+contract DistributeContract is IDistribute, MemberGuard, AdapterGuard {
     // Event to indicate the distribution process has been completed
     // if the unitHolder address is 0x0, then the amount were distributed to all members of the DAO.
     event Distributed(address token, uint256 amount, address unitHolder);
@@ -99,7 +93,8 @@ contract DistributeContract is
         uint256 amount,
         bytes calldata data
     ) external override reentrancyGuard(dao) {
-        IVoting votingContract = IVoting(dao.getAdapterAddress(DaoHelper.VOTING));
+        IVoting votingContract =
+            IVoting(dao.getAdapterAddress(DaoHelper.VOTING));
         address submittedBy =
             votingContract.getSenderAddress(
                 dao,
@@ -137,7 +132,8 @@ contract DistributeContract is
         // Creates the distribution proposal.
         dao.submitProposal(proposalId);
 
-        BankExtension bank = BankExtension(dao.getExtensionAddress(DaoHelper.BANK));
+        BankExtension bank =
+            BankExtension(dao.getExtensionAddress(DaoHelper.BANK));
         require(bank.isTokenAllowed(token), "token not allowed");
 
         // Only check the number of units if there is a valid unit holder address.
@@ -159,7 +155,8 @@ contract DistributeContract is
         );
 
         // Starts the voting process for the proposal.
-        IVoting votingContract = IVoting(dao.getAdapterAddress(DaoHelper.VOTING));
+        IVoting votingContract =
+            IVoting(dao.getAdapterAddress(DaoHelper.VOTING));
         votingContract.startNewVotingForProposal(dao, proposalId, data);
 
         // Sponsors the proposal.
@@ -210,16 +207,18 @@ contract DistributeContract is
             distribution.blockNumber = block.number;
             ongoingDistributions[address(dao)] = proposalId;
 
-            BankExtension bank = BankExtension(dao.getExtensionAddress(DaoHelper.BANK));
-            uint256 balance = bank.balanceOf(GUILD, distribution.token);
+            BankExtension bank =
+                BankExtension(dao.getExtensionAddress(DaoHelper.BANK));
+            uint256 balance =
+                bank.balanceOf(DaoHelper.GUILD, distribution.token);
             require(
                 balance - distribution.amount >= 0,
                 "not enough funds for the given token"
             );
 
             bank.internalTransfer(
-                GUILD,
-                ESCROW,
+                DaoHelper.GUILD,
+                DaoHelper.ESCROW,
                 distribution.token,
                 distribution.amount
             );
@@ -265,7 +264,8 @@ contract DistributeContract is
         uint256 amount = distribution.amount;
 
         // Get the total number of units when the proposal was processed.
-        BankExtension bank = BankExtension(dao.getExtensionAddress(DaoHelper.BANK));
+        BankExtension bank =
+            BankExtension(dao.getExtensionAddress(DaoHelper.BANK));
 
         address unitHolderAddr = distribution.unitHolderAddr;
         if (unitHolderAddr != address(0x0)) {
@@ -314,7 +314,7 @@ contract DistributeContract is
         bank.getPriorAmount(unitHolderAddr, DaoHelper.UNITS, blockNumber);
         require(memberTokens != 0, "not enough tokens");
         // Distributes the funds to 1 unit holder only
-        bank.internalTransfer(ESCROW, unitHolderAddr, token, amount);
+        bank.internalTransfer(DaoHelper.ESCROW, unitHolderAddr, token, amount);
     }
 
     /**
@@ -342,7 +342,7 @@ contract DistributeContract is
 
                 if (amountToDistribute > 0) {
                     bank.internalTransfer(
-                        ESCROW,
+                        DaoHelper.ESCROW,
                         memberAddr,
                         token,
                         amountToDistribute

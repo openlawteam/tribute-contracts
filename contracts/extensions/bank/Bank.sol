@@ -2,7 +2,6 @@ pragma solidity ^0.8.0;
 
 // SPDX-License-Identifier: MIT
 
-import "../../core/DaoConstants.sol";
 import "../../core/DaoRegistry.sol";
 import "../IExtension.sol";
 import "../../guards/AdapterGuard.sol";
@@ -35,7 +34,7 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
  */
 
-contract BankExtension is DaoConstants, AdapterGuard, IExtension {
+contract BankExtension is AdapterGuard, IExtension {
     using Address for address payable;
     using SafeERC20 for IERC20;
 
@@ -126,7 +125,7 @@ contract BankExtension is DaoConstants, AdapterGuard, IExtension {
         }
 
         _createNewAmountCheckpoint(creator, DaoHelper.UNITS, 1);
-        _createNewAmountCheckpoint(TOTAL, DaoHelper.UNITS, 1);
+        _createNewAmountCheckpoint(DaoHelper.TOTAL, DaoHelper.UNITS, 1);
     }
 
     function withdraw(
@@ -191,7 +190,7 @@ contract BankExtension is DaoConstants, AdapterGuard, IExtension {
         external
         hasExtensionAccess(AclFlag.REGISTER_NEW_TOKEN)
     {
-        require(isNotReservedAddress(token), "reservedToken");
+        require(DaoHelper.isNotReservedAddress(token), "reservedToken");
         require(!availableInternalTokens[token], "internalToken");
         require(
             tokens.length <= maxExternalTokens,
@@ -213,7 +212,7 @@ contract BankExtension is DaoConstants, AdapterGuard, IExtension {
         external
         hasExtensionAccess(AclFlag.REGISTER_NEW_INTERNAL_TOKEN)
     {
-        require(isNotReservedAddress(token), "reservedToken");
+        require(DaoHelper.isNotReservedAddress(token), "reservedToken");
         require(!availableTokens[token], "availableToken");
 
         if (!availableInternalTokens[token]) {
@@ -227,7 +226,7 @@ contract BankExtension is DaoConstants, AdapterGuard, IExtension {
         hasExtensionAccess(AclFlag.UPDATE_TOKEN)
     {
         require(isTokenAllowed(tokenAddr), "token not allowed");
-        uint256 totalBalance = balanceOf(TOTAL, tokenAddr);
+        uint256 totalBalance = balanceOf(DaoHelper.TOTAL, tokenAddr);
 
         uint256 realBalance;
 
@@ -239,14 +238,18 @@ contract BankExtension is DaoConstants, AdapterGuard, IExtension {
         }
 
         if (totalBalance < realBalance) {
-            addToBalance(GUILD, tokenAddr, realBalance - totalBalance);
+            addToBalance(
+                DaoHelper.GUILD,
+                tokenAddr,
+                realBalance - totalBalance
+            );
         } else if (totalBalance > realBalance) {
             uint256 tokensToRemove = totalBalance - realBalance;
-            uint256 guildBalance = balanceOf(GUILD, tokenAddr);
+            uint256 guildBalance = balanceOf(DaoHelper.GUILD, tokenAddr);
             if (guildBalance > tokensToRemove) {
-                subtractFromBalance(GUILD, tokenAddr, tokensToRemove);
+                subtractFromBalance(DaoHelper.GUILD, tokenAddr, tokensToRemove);
             } else {
-                subtractFromBalance(GUILD, tokenAddr, guildBalance);
+                subtractFromBalance(DaoHelper.GUILD, tokenAddr, guildBalance);
             }
         }
     }
@@ -312,10 +315,10 @@ contract BankExtension is DaoConstants, AdapterGuard, IExtension {
             "unknown token address"
         );
         uint256 newAmount = balanceOf(member, token) + amount;
-        uint256 newTotalAmount = balanceOf(TOTAL, token) + amount;
+        uint256 newTotalAmount = balanceOf(DaoHelper.TOTAL, token) + amount;
 
         _createNewAmountCheckpoint(member, token, newAmount);
-        _createNewAmountCheckpoint(TOTAL, token, newTotalAmount);
+        _createNewAmountCheckpoint(DaoHelper.TOTAL, token, newTotalAmount);
     }
 
     /**
@@ -330,10 +333,10 @@ contract BankExtension is DaoConstants, AdapterGuard, IExtension {
         uint256 amount
     ) public hasExtensionAccess(AclFlag.SUB_FROM_BALANCE) {
         uint256 newAmount = balanceOf(member, token) - amount;
-        uint256 newTotalAmount = balanceOf(TOTAL, token) - amount;
+        uint256 newTotalAmount = balanceOf(DaoHelper.TOTAL, token) - amount;
 
         _createNewAmountCheckpoint(member, token, newAmount);
-        _createNewAmountCheckpoint(TOTAL, token, newTotalAmount);
+        _createNewAmountCheckpoint(DaoHelper.TOTAL, token, newTotalAmount);
     }
 
     /**

@@ -4,7 +4,6 @@ pragma solidity ^0.8.0;
 
 import "../../core/DaoRegistry.sol";
 import "../../extensions/bank/Bank.sol";
-import "../../core/DaoConstants.sol";
 import "../../helpers/GuildKickHelper.sol";
 import "../../guards/MemberGuard.sol";
 import "../../guards/AdapterGuard.sol";
@@ -36,7 +35,7 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
  */
 
-contract KickBadReporterAdapter is DaoConstants, MemberGuard {
+contract KickBadReporterAdapter is MemberGuard {
     /*
      * default fallback function to prevent from sending ether to the contract
      */
@@ -91,7 +90,8 @@ contract KickBadReporterAdapter is DaoConstants, MemberGuard {
         ) {
             (uint256 units, address challengeAddress) =
                 votingContract.getChallengeDetails(dao, proposalId);
-            BankExtension bank = BankExtension(dao.getExtensionAddress(DaoHelper.BANK));
+            BankExtension bank =
+                BankExtension(dao.getExtensionAddress(DaoHelper.BANK));
 
             bank.subtractFromBalance(challengeAddress, DaoHelper.LOOT, units);
             bank.addToBalance(challengeAddress, DaoHelper.UNITS, units);

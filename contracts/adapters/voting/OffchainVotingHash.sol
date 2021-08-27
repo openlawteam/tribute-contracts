@@ -5,7 +5,6 @@ pragma experimental ABIEncoderV2;
 
 import "../../core/DaoRegistry.sol";
 import "../../extensions/bank/Bank.sol";
-import "../../core/DaoConstants.sol";
 import "../../guards/MemberGuard.sol";
 import "../../guards/AdapterGuard.sol";
 import "../../utils/Signatures.sol";
@@ -42,7 +41,7 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
  */
 
-contract OffchainVotingHashContract is DaoConstants {
+contract OffchainVotingHashContract {
     string public constant VOTE_RESULT_NODE_TYPE =
         "Message(uint64 timestamp,uint88 nbYes,uint88 nbNo,uint32 index,uint32 choice,bytes32 proposalId)";
     string public constant VOTE_RESULT_ROOT_TYPE = "Message(bytes32 root)";
@@ -183,8 +182,10 @@ contract OffchainVotingHashContract is DaoConstants {
     ) public view returns (bool) {
         address account = dao.getMemberAddress(node.index);
         address voter = dao.getPriorDelegateKey(account, snapshot);
-        BankExtension bank = BankExtension(dao.getExtensionAddress(DaoHelper.BANK));
-        uint256 weight = bank.getPriorAmount(account, DaoHelper.UNITS, snapshot);
+        BankExtension bank =
+            BankExtension(dao.getExtensionAddress(DaoHelper.BANK));
+        uint256 weight =
+            bank.getPriorAmount(account, DaoHelper.UNITS, snapshot);
 
         if (node.choice == 0) {
             if (params.previousYes != node.nbYes) {

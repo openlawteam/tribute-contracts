@@ -153,7 +153,8 @@ const deployDao = async (options) => {
     dao,
     owner,
     internalTokenVestingExtensionFactory,
-    InternalTokenVestingExtension);
+    InternalTokenVestingExtension
+  );
 
   const erc1155TokenExtension = await createERC1155Extension(
     dao,

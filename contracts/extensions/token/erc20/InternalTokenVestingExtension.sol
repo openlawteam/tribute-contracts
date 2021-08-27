@@ -1,7 +1,6 @@
 pragma solidity ^0.8.0;
 
 // SPDX-License-Identifier: MIT
-import "../../../core/DaoConstants.sol";
 import "../../../core/DaoRegistry.sol";
 import "../../../extensions/IExtension.sol";
 
@@ -34,7 +33,7 @@ SOFTWARE.
  * The ERC20Extension is a contract to give erc20 functionality
  * to the internal token units held by DAO members inside the DAO itself.
  */
-contract InternalTokenVestingExtension is DaoConstants, IExtension {
+contract InternalTokenVestingExtension is IExtension {
     enum AclFlag {NEW_VESTING, REMOVE_VESTING}
 
     bool private _initialized;

@@ -3,9 +3,7 @@ pragma solidity ^0.8.0;
 // SPDX-License-Identifier: MIT
 
 import "./interfaces/IOnboarding.sol";
-import "../core/DaoConstants.sol";
 import "../core/DaoRegistry.sol";
-import "../utils/PotentialNewMember.sol";
 import "../extensions/bank/Bank.sol";
 import "../adapters/interfaces/IVoting.sol";
 import "../guards/MemberGuard.sol";
@@ -39,13 +37,7 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
  */
 
-contract OnboardingContract is
-    IOnboarding,
-    DaoConstants,
-    PotentialNewMember,
-    MemberGuard,
-    AdapterGuard
-{
+contract OnboardingContract is IOnboarding, MemberGuard, AdapterGuard {
     using Address for address payable;
     using SafeERC20 for IERC20;
 
@@ -126,7 +118,8 @@ contract OnboardingContract is
             tokenAddr
         );
 
-        BankExtension bank = BankExtension(dao.getExtensionAddress(DaoHelper.BANK));
+        BankExtension bank =
+            BankExtension(dao.getExtensionAddress(DaoHelper.BANK));
         bank.registerPotentialNewInternalToken(unitsToMint);
         bank.registerPotentialNewToken(tokenAddr);
     }
@@ -148,11 +141,11 @@ contract OnboardingContract is
         bytes memory data
     ) public override reentrancyGuard(dao) {
         require(
-            isNotReservedAddress(applicant),
+            DaoHelper.isNotReservedAddress(applicant),
             "applicant is reserved address"
         );
 
-        potentialNewMember(
+        DaoHelper.potentialNewMember(
             applicant,
             dao,
             BankExtension(dao.getExtensionAddress(DaoHelper.BANK))
@@ -207,7 +200,8 @@ contract OnboardingContract is
             address unitsToMint = proposal.unitsToMint;
             uint256 unitsRequested = proposal.unitsRequested;
             address applicant = proposal.applicant;
-            BankExtension bank = BankExtension(dao.getExtensionAddress(DaoHelper.BANK));
+            BankExtension bank =
+                BankExtension(dao.getExtensionAddress(DaoHelper.BANK));
             require(
                 bank.isInternalToken(unitsToMint),
                 "it can only mint units"
@@ -217,12 +211,16 @@ contract OnboardingContract is
 
             address daoAddress = address(dao);
             if (token == DaoHelper.ETH_TOKEN) {
-                bank.addToBalance{value: amount}(GUILD, token, amount);
+                bank.addToBalance{value: amount}(
+                    DaoHelper.GUILD,
+                    token,
+                    amount
+                );
                 if (msg.value > amount) {
                     payable(msg.sender).sendValue(msg.value - amount);
                 }
             } else {
-                bank.addToBalance(GUILD, token, amount);
+                bank.addToBalance(DaoHelper.GUILD, token, amount);
                 IERC20 erc20 = IERC20(token);
                 erc20.safeTransferFrom(msg.sender, address(bank), amount);
             }
@@ -253,7 +251,8 @@ contract OnboardingContract is
         bytes32 proposalId,
         bytes memory data
     ) internal {
-        IVoting votingContract = IVoting(dao.getAdapterAddress(DaoHelper.VOTING));
+        IVoting votingContract =
+            IVoting(dao.getAdapterAddress(DaoHelper.VOTING));
         address sponsoredBy =
             votingContract.getSenderAddress(
                 dao,

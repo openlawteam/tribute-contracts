@@ -50,7 +50,6 @@ There are three core contracts as part of the Tribute DAO framework, including a
 - [DaoRegistry](https://tributedao.com/docs/contracts/core/dao-registry): tracks the state changes of the DAO, only adapters with proper [Access Flags](#access-control-layer) can alter the DAO state.
 - CloneFactory: creates a clone of the DAO based on its address.
 - [DaoFactory](https://tributedao.com/docs/contracts/core/dao-factory): creates, initializes, and adds adapter configurations to the new DAO, and uses the CloneFactory to reduce the DAO creation transaction costs.
-- DaoConstants: defines all the constants used by the DAO contracts, and implements some helper functions to manage the Access Flags.
 
 ### Adapters and Extensions
 

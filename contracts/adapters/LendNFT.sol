@@ -2,14 +2,12 @@ pragma solidity ^0.8.0;
 
 // SPDX-License-Identifier: MIT
 
-import "../core/DaoConstants.sol";
 import "../core/DaoRegistry.sol";
 import "../extensions/nft/NFT.sol";
 import "../adapters/interfaces/IVoting.sol";
 import "../helpers/DaoHelper.sol";
 import "../guards/MemberGuard.sol";
 import "../guards/AdapterGuard.sol";
-import "../utils/PotentialNewMember.sol";
 import "@openzeppelin/contracts/utils/Address.sol";
 
 /**
@@ -36,12 +34,7 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
  */
 
-contract LendNFTContract is
-    DaoConstants,
-    MemberGuard,
-    AdapterGuard,
-    PotentialNewMember
-{
+contract LendNFTContract is MemberGuard, AdapterGuard {
     using Address for address payable;
     struct ProposalDetails {
         // The proposal id.
@@ -81,7 +74,8 @@ contract LendNFTContract is
      * @param dao The DAO address.
      */
     function configureDao(DaoRegistry dao) external onlyAdapter(dao) {
-        BankExtension bank = BankExtension(dao.getExtensionAddress(DaoHelper.BANK));
+        BankExtension bank =
+            BankExtension(dao.getExtensionAddress(DaoHelper.BANK));
         bank.registerPotentialNewInternalToken(DaoHelper.UNITS);
     }
 
@@ -108,12 +102,13 @@ contract LendNFTContract is
         bytes memory data
     ) external reentrancyGuard(dao) {
         require(
-            isNotReservedAddress(applicant),
+            DaoHelper.isNotReservedAddress(applicant),
             "applicant is reserved address"
         );
 
         dao.submitProposal(proposalId);
-        IVoting votingContract = IVoting(dao.getAdapterAddress(DaoHelper.VOTING));
+        IVoting votingContract =
+            IVoting(dao.getAdapterAddress(DaoHelper.VOTING));
         address sponsoredBy =
             votingContract.getSenderAddress(
                 dao,
@@ -122,7 +117,7 @@ contract LendNFTContract is
                 msg.sender
             );
         dao.sponsorProposal(proposalId, sponsoredBy, address(votingContract));
-        potentialNewMember(
+        DaoHelper.potentialNewMember(
             applicant,
             dao,
             BankExtension(dao.getExtensionAddress(DaoHelper.BANK))
@@ -175,8 +170,10 @@ contract LendNFTContract is
         dao.processProposal(proposalId);
 
         if (voteResult == IVoting.VotingState.PASS) {
-            NFTExtension nftExt = NFTExtension(dao.getExtensionAddress(DaoHelper.NFT));
-            BankExtension bank = BankExtension(dao.getExtensionAddress(DaoHelper.BANK));
+            NFTExtension nftExt =
+                NFTExtension(dao.getExtensionAddress(DaoHelper.NFT));
+            BankExtension bank =
+                BankExtension(dao.getExtensionAddress(DaoHelper.BANK));
             require(
                 bank.isInternalToken(DaoHelper.UNITS),
                 "UNITS token is not an internal token"
@@ -208,7 +205,8 @@ contract LendNFTContract is
         require(proposal.lendingStart > 0, "lending not started");
         require(!proposal.sentBack, "already sent back");
 
-        NFTExtension nftExt = NFTExtension(dao.getExtensionAddress(DaoHelper.NFT));
+        NFTExtension nftExt =
+            NFTExtension(dao.getExtensionAddress(DaoHelper.NFT));
         nftExt.withdrawNFT(
             proposal.previousOwner,
             proposal.nftAddr,
