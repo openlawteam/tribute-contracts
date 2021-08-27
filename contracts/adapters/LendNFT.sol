@@ -200,7 +200,10 @@ contract LendNFTContract is MemberGuard, AdapterGuard {
         }
     }
 
-    function sendNFTBack(DaoRegistry dao, bytes32 proposalId) public {
+    function sendNFTBack(DaoRegistry dao, bytes32 proposalId)
+        public
+        reentrancyGuard(dao)
+    {
         ProposalDetails storage proposal = proposals[address(dao)][proposalId];
         require(proposal.lendingStart > 0, "lending not started");
         require(!proposal.sentBack, "already sent back");

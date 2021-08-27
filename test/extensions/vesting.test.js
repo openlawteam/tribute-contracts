@@ -126,12 +126,16 @@ describe("Extension - Vesting", () => {
     halfWay = diff.div(toBN("2"));
 
     minBalance = await vesting.getMinimumBalance(accounts[0], UNITS);
-    expect(minBalance.toString() === "150" ||  minBalance.toString() === "151").equal(true);
+    expect(
+      minBalance.toString() === "150" || minBalance.toString() === "151"
+    ).equal(true);
 
     await advanceTime(halfWay.toNumber());
 
     minBalance = await vesting.getMinimumBalance(accounts[0], UNITS);
-    expect(minBalance.toString() === "75" ||  minBalance.toString() === "76").equal(true);
+    expect(
+      minBalance.toString() === "75" || minBalance.toString() === "76"
+    ).equal(true);
 
     await advanceTime(diff.toNumber());
 
@@ -186,7 +190,9 @@ describe("Extension - Vesting", () => {
     await advanceTime(halfWay.toNumber());
 
     minBalance = await vesting.getMinimumBalance(accounts[0], UNITS);
-    expect(minBalance.toString() === "75" ||  minBalance.toString() === "76").equal(true);
+    expect(
+      minBalance.toString() === "75" || minBalance.toString() === "76"
+    ).equal(true);
 
     await vesting.removeVesting(accounts[0], UNITS, 50);
 
