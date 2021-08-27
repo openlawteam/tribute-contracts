@@ -47,9 +47,9 @@ The core contracts serve as the spine for the Tribute DAO framework and act as a
 
 There are three core contracts as part of the Tribute DAO framework, including a:
 
-- [DaoRegistry](https://github.com/openlawteam/tribute-contracts/blob/master/docs/core/DaoRegistry.md): tracks the state changes of the DAO, only adapters with proper [Access Flags](#access-control-layer) can alter the DAO state.
+- [DaoRegistry](https://tributedao.com/docs/contracts/core/dao-registry): tracks the state changes of the DAO, only adapters with proper [Access Flags](#access-control-layer) can alter the DAO state.
 - CloneFactory: creates a clone of the DAO based on its address.
-- [DaoFactory](https://github.com/openlawteam/tribute-contracts/blob/master/docs/core/DaoFactory.md): creates, initializes, and adds adapter configurations to the new DAO, and uses the CloneFactory to reduce the DAO creation transaction costs.
+- [DaoFactory](https://tributedao.com/docs/contracts/core/dao-factory): creates, initializes, and adds adapter configurations to the new DAO, and uses the CloneFactory to reduce the DAO creation transaction costs.
 - DaoConstants: defines all the constants used by the DAO contracts, and implements some helper functions to manage the Access Flags.
 
 ### Adapters and Extensions
@@ -60,18 +60,18 @@ Once a DAO is created using the above core contracts, they can be extended and m
 
 There are currently 12 adapters implemented in the Tribute DAO framework and these adapters make the Tribute DAO framework feature compatible with Moloch v2:
 
-- [Configuration](https://github.com/openlawteam/tribute-contracts/blob/master/docs/adapters/Configuration.md): manages storing and retrieving per-DAO settings required by shared adapters.
-- [Distribute](https://github.com/openlawteam/tribute-contracts/blob/master/docs/adapters/Distribute.md): allows the members to distribute funds to one or all members of the DAO.
-- [Financing](https://github.com/openlawteam/tribute-contracts/blob/master/docs/adapters/Financing.md): allows individuals and/or organizations to request funds to finance their projects, and the members of the DAO have the power to vote and decide which projects should be funded.
-- [GuildKick](https://github.com/openlawteam/tribute-contracts/blob/master/docs/adapters/GuildKick.md): gives the members the freedom to choose which individuals or organizations should really be part of the DAO.
-- [Managing](https://github.com/openlawteam/tribute-contracts/blob/master/docs/adapters/Managing.md): enhances the DAO capabilities by adding/updating the DAO Adapters through a voting process.
-- [OffchainVoting](https://github.com/openlawteam/tribute-contracts/blob/master/docs/adapters/OffchainVoting.md): adds the offchain voting governance process to the DAO to support gasless voting.
-- [Onboarding](https://github.com/openlawteam/tribute-contracts/blob/master/docs/adapters/Onboarding.md): triggers the process of minting internal tokens in exchange of a specific token at a fixed price.
-- [Ragequit](https://github.com/openlawteam/tribute-contracts/blob/master/docs/adapters/Ragequit.md): gives the members the freedom to choose when it is the best time to exit the DAO for any given reason.
-- [Tribute](https://github.com/openlawteam/tribute-contracts/blob/master/docs/adapters/Tribute.md): allows potential and existing DAO members to contribute any amount of ERC-20 tokens to the DAO in exchange for any amount of DAO internal tokens.
-- [TributeNFT](https://github.com/openlawteam/tribute-contracts/blob/master/docs/adapters/TributeNFT.md): allows potential DAO members to contribute a registered ERC-721 asset to the DAO in exchange for any amount of DAO units.
-- [Voting](https://github.com/openlawteam/tribute-contracts/blob/master/docs/adapters/Voting.md): adds the simple on chain voting governance process to the DAO.
-- [Withdraw](https://github.com/openlawteam/tribute-contracts/blob/master/docs/adapters/Withdraw.md): allows the members to withdraw their funds from the DAO bank.
+- [Configuration](https://tributedao.com/docs/contracts/adapters/configuration/configuration-adapter): manages storing and retrieving per-DAO settings required by shared adapters.
+- [Distribute](https://tributedao.com/docs/contracts/adapters/distribution/distribute-adapter): allows the members to distribute funds to one or all members of the DAO.
+- [Financing](https://tributedao.com/docs/contracts/adapters/funding/financing-adapter): allows individuals and/or organizations to request funds to finance their projects, and the members of the DAO have the power to vote and decide which projects should be funded.
+- [GuildKick](https://tributedao.com/docs/contracts/adapters/exiting/guild-kick-adapter): gives the members the freedom to choose which individuals or organizations should really be part of the DAO.
+- [Managing](https://tributedao.com/docs/contracts/adapters/configuration/managing-adapter): enhances the DAO capabilities by adding/updating the DAO Adapters through a voting process.
+- [OffchainVoting](https://tributedao.com/docs/contracts/adapters/voting/offchain-voting-adapter): adds the offchain voting governance process to the DAO to support gasless voting.
+- [Onboarding](https://tributedao.com/docs/contracts/adapters/onboarding/onboarding-adapter): triggers the process of minting internal tokens in exchange of a specific token at a fixed price.
+- [Ragequit](https://tributedao.com/docs/contracts/adapters/exiting/rage-quit-adapter): gives the members the freedom to choose when it is the best time to exit the DAO for any given reason.
+- [Tribute](https://tributedao.com/docs/contracts/adapters/onboarding/tribute-adapter): allows potential and existing DAO members to contribute any amount of ERC-20 tokens to the DAO in exchange for any amount of DAO internal tokens.
+- [TributeNFT](https://tributedao.com/docs/contracts/adapters/onboarding/tribute-nft-adapter): allows potential DAO members to contribute a registered ERC-721 asset to the DAO in exchange for any amount of DAO units.
+- [Voting](https://tributedao.com/docs/contracts/adapters/voting/basic-voting-adapter): adds the simple on chain voting governance process to the DAO.
+- [Withdraw](https://tributedao.com/docs/contracts/adapters/utils/bank-adapter#withdraw): allows the members to withdraw their funds from the DAO bank.
 
 The range of potential adapters will expand over time and likely will include:
 
@@ -90,24 +90,24 @@ Please note:
 
 - Adapters do not keep track of the state of the DAO. An adapter might use storage to control its own state, but ideally any DAO state change must be propagated to the DAORegistry Core Contract.
 - Adapters just execute smart contract logic that changes the state of the DAO by calling the DAORegistry. They also can compose complex calls that interact with External World, other Adapters or even Extensions, to pull/push additional information.
-- The adapter must follow the rules defined by the [Template Adapter](https://github.com/openlawteam/tribute-contracts/blob/master/docs/adapters/Template.md).
-- If you want to contribute and create an Adapter, please checkout this: [How to create an Adapter](https://github.com/openlawteam/tribute-contracts/blob/master/docs/adapters/HowToCreate.md).
+- The adapter must follow the rules defined by the [Template Adapter](https://tributedao.com/docs/tutorial/adapters/adapter-template).
+- If you want to contribute and create an Adapter, please checkout this: [How to create an Adapter](https://tributedao.com/docs/tutorial/adapters/creating-an-adapter).
 
 ### Extensions
 
 Extensions are conceived to isolate the complexity of state changes from the DAORegistry contract, and to simplify the core logic. Essentially an Extension is similar to an Adapter, but the main difference is that it is used by several adapters and by the DAORegistry - which end up enhancing the DAO capabilities and the state management without cluttering the DAO core contract.
 
-- [Bank](https://github.com/openlawteam/tribute-contracts/blob/master/docs/extensions/Bank.md): adds the banking capabilities to the DAO, and keeps track of the DAO accounts and internal token balances.
+- [Bank](https://tributedao.com/docs/contracts/extensions/bank-extension): adds the banking capabilities to the DAO, and keeps track of the DAO accounts and internal token balances.
 
-- [NFT](https://github.com/openlawteam/tribute-contracts/blob/master/docs/extensions/NFT.md): adds to the DAO the capability of managing and curating a collection of standard NFTs.
+- [NFT](https://tributedao.com/docs/contracts/extensions/nft-extension): adds to the DAO the capability of managing and curating a collection of standard NFTs.
 
-- [ERC20](https://github.com/openlawteam/tribute-contracts/blob/master/docs/extensions/ERC20.md): adds to the DAO the capability of managing and transfer internal tokens between members and/or external accounts.
+- [ERC20](https://tributedao.com/docs/contracts/extensions/erc20-extension): adds to the DAO the capability of managing and transfer internal tokens between members and/or external accounts.
 
-- [Executor](https://github.com/openlawteam/tribute-contracts/blob/master/docs/extensions/Executor.md): adds to the DAO the capability of executing delegated calls to other contracts, including contracts that are not part of the DAO, using the EVM instruction `delegatecall`.
+- [Executor](https://tributedao.com/docs/contracts/extensions/executor-extension): adds to the DAO the capability of executing delegated calls to other contracts, including contracts that are not part of the DAO, using the EVM instruction `delegatecall`.
 
 #### Access Control Layer
 
-The Access Control Layer (ACL) is implemented using Access Flags to indicate which permissions an adapter must have in order to access and modify the DAO state. The are 3 main categories of [Access Flags](https://github.com/openlawteam/tribute-contracts/blob/master/docs/core/DaoRegistry.md#access-flags):
+The Access Control Layer (ACL) is implemented using Access Flags to indicate which permissions an adapter must have in order to access and modify the DAO state. The are 3 main categories of [Access Flags](https://tributedao.com/docs/intro/design/access-control):
 
 - MemberFlag: `EXISTS`.
 - ProposalFlag: `EXISTS`, `SPONSORED`, `PROCESSED`.
@@ -117,7 +117,7 @@ The Access Flags of each adapter must be provided to the DAOFactory when the `da
 
 The Access Flags are defined in the DAORegistry using the modifier `hasAccess`. For example, a function with the modifier `hasAccess(this, AclFlag.REPLACE_ADAPTER)` means the adapter calling this function needs to have the Access Flag `REPLACE_ADAPTER` enabled, otherwise the call will revert. In order to create an Adapter with the proper Access Flags one needs to first map out all the functions that the Adapter will be calling in the DAORegistry and Extensions, and provide these Access Flags using the DAO Factory as described above.
 
-You can find more information about the purpose of each access flag at [DAO Registry - Access Flags](https://github.com/openlawteam/tribute-contracts/blob/master/docs/core/DaoRegistry.md#access-flags).
+You can find more information about the purpose of each access flag at [DAO Registry - Access Flags](https://tributedao.com/docs/contracts/core/dao-registry#access-flags).
 
 ## Usage
 
@@ -141,7 +141,7 @@ Added the following environment variables to your local .env file:
 - `DAO_ARTIFACTS_OWNER_ADDR`: The owner address of the artifacts deployed. Leave it empty to if you want to use the `DAO_OWNER_ADDR` as the artifacts owner.
 - `DAO_ARTIFACTS_CONTRACT_ADDR`: The `DaoArtifacts` contract address that will be used in the deployment script to fetch Adapters and Factories during the deployment to save gas costs.
 
-Checkout the [sample .env file](https://github.com/openlawteam/tribute-contracts/.sample.env).
+Checkout the [sample .env file](https://github.com/openlawteam/tribute-contracts/blob/master/.sample.env).
 
 **Required env vars per deployment type**
 
@@ -211,7 +211,7 @@ Tribute exists thanks to its contributors. There are many ways you can participa
 
 ## Thank You
 
-**THANK YOU** to **all** coders, designers, auditors, and any individual who have contributed with ideas, resources, and energy to this and previous versions of this project. [Thank You Note](https://github.com/openlawteam/tribute-contracts/blob/master/docs/ThankYou.md).
+**THANK YOU** to **all** coders, designers, auditors, and any individual who have contributed with ideas, resources, and energy to this and previous versions of this project. [Thank You Note](https://tributedao.com/docs/thanks).
 
 ## License
 

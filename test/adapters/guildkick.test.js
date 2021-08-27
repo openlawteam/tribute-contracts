@@ -30,7 +30,6 @@ SOFTWARE.
 
 const {
   toBN,
-  fromUtf8,
   unitPrice,
   UNITS,
   LOOT,
@@ -381,6 +380,7 @@ describe("Adapter - GuildKick", () => {
       UNITS
     );
 
+    const bank = this.extensions.bank;
     // Start a new kick poposal
     let memberToKick = newMember;
     let kickProposalId = getProposalCounter();
@@ -398,15 +398,15 @@ describe("Adapter - GuildKick", () => {
       gasPrice: toBN("0"),
     });
     await advanceTime(10000);
+    await guildkickContract.processProposal(this.dao.address, kickProposalId, {
+      from: member,
+      gasPrice: toBN("0"),
+    });
 
-    // The member attemps to process the kick proposal that did not pass
-    await expectRevert(
-      guildkickContract.processProposal(this.dao.address, kickProposalId, {
-        from: member,
-        gasPrice: toBN("0"),
-      }),
-      "proposal did not pass"
-    );
+    let memberLoot = await bank.balanceOf(memberToKick, LOOT);
+    expect(memberLoot.toString()).equal("0");
+    let memberUnits = await bank.balanceOf(memberToKick, UNITS);
+    expect(memberUnits.toString()).equal("10000000000000000");
   });
 
   it("should not be possible to process a kick proposal if the member to kick does not have any units nor loot", async () => {
@@ -501,19 +501,6 @@ describe("Adapter - GuildKick", () => {
       UNITS,
       toBN(10)
     );
-
-    // kicked member attemps to sponsor a new member
-    /*
-    await expectRevert(
-      sponsorNewMember(
-        this.dao,
-        onboardProposalId,
-        kickedMember,
-        voting
-      ),
-      "onlyMember"
-    );
-    */
   });
 
   it("should not be possible for a kicked member to vote on in an onboarding proposal", async () => {

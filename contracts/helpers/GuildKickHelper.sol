@@ -6,6 +6,7 @@ import "../core/DaoRegistry.sol";
 import "../guards/MemberGuard.sol";
 import "../adapters/interfaces/IVoting.sol";
 import "../helpers/FairShareHelper.sol";
+import "../helpers/DaoHelper.sol";
 import "../extensions/bank/Bank.sol";
 
 /**
@@ -35,10 +36,49 @@ SOFTWARE.
 library GuildKickHelper {
     address internal constant TOTAL = address(0xbabe);
     address internal constant UNITS = address(0xFF1CE);
+    address internal constant LOCKED_UNITS = address(0xFFF1CE);
     address internal constant LOOT = address(0xB105F00D);
+    address internal constant LOCKED_LOOT = address(0xBB105F00D);
 
     bytes32 internal constant BANK = keccak256("bank");
     address internal constant GUILD = address(0xdead);
+
+    function lockMemberTokens(DaoRegistry dao, address potentialKickedMember)
+        internal
+    {
+        // Get the bank extension
+        BankExtension bank = BankExtension(dao.getExtensionAddress(BANK));
+        // Calculates the total units, loot and locked loot before any internal transfers
+        // it considers the locked loot to be able to calculate the fair amount to ragequit,
+        // but locked loot can not be burned.
+
+        uint256 unitsToBurn = bank.balanceOf(potentialKickedMember, UNITS);
+        uint256 lootToBurn = bank.balanceOf(potentialKickedMember, LOOT);
+
+        bank.registerPotentialNewToken(LOCKED_UNITS);
+        bank.registerPotentialNewToken(LOCKED_LOOT);
+
+        bank.addToBalance(potentialKickedMember, LOCKED_UNITS, unitsToBurn);
+        bank.subtractFromBalance(potentialKickedMember, UNITS, unitsToBurn);
+
+        bank.addToBalance(potentialKickedMember, LOCKED_LOOT, lootToBurn);
+        bank.subtractFromBalance(potentialKickedMember, LOOT, lootToBurn);
+    }
+
+    function unlockMemberTokens(DaoRegistry dao, address kickedMember)
+        internal
+    {
+        BankExtension bank = BankExtension(dao.getExtensionAddress(BANK));
+
+        uint256 unitsToReturn = bank.balanceOf(kickedMember, LOCKED_UNITS);
+        uint256 lootToReturn = bank.balanceOf(kickedMember, LOCKED_LOOT);
+
+        bank.addToBalance(kickedMember, UNITS, unitsToReturn);
+        bank.subtractFromBalance(kickedMember, LOCKED_UNITS, unitsToReturn);
+
+        bank.addToBalance(kickedMember, LOOT, lootToReturn);
+        bank.subtractFromBalance(kickedMember, LOCKED_LOOT, lootToReturn);
+    }
 
     /**
      * @notice Transfers the funds from the Guild account to the kicked member account based on the current kick proposal id.
@@ -56,11 +96,10 @@ library GuildKickHelper {
         // Calculates the total units, loot and locked loot before any internal transfers
         // it considers the locked loot to be able to calculate the fair amount to ragequit,
         // but locked loot can not be burned.
-        uint256 initialTotalUnitsAndLoot =
-            bank.balanceOf(TOTAL, UNITS) + bank.balanceOf(TOTAL, LOOT);
+        uint256 initialTotalTokens = DaoHelper.totalTokens(bank);
 
-        uint256 unitsToBurn = bank.balanceOf(kickedMember, UNITS);
-        uint256 lootToBurn = bank.balanceOf(kickedMember, LOOT);
+        uint256 unitsToBurn = bank.balanceOf(kickedMember, LOCKED_UNITS);
+        uint256 lootToBurn = bank.balanceOf(kickedMember, LOCKED_LOOT);
         uint256 unitsAndLootToBurn = unitsToBurn + lootToBurn;
 
         // Transfers the funds from the internal Guild account to the internal member's account.
@@ -72,7 +111,7 @@ library GuildKickHelper {
                 FairShareHelper.calc(
                     bank.balanceOf(GUILD, token),
                     unitsAndLootToBurn,
-                    initialTotalUnitsAndLoot
+                    initialTotalTokens
                 );
 
             // Ony execute the internal transfer if the user has enough funds to receive.
@@ -90,7 +129,7 @@ library GuildKickHelper {
             }
         }
 
-        bank.subtractFromBalance(kickedMember, UNITS, unitsToBurn);
-        bank.subtractFromBalance(kickedMember, LOOT, lootToBurn);
+        bank.subtractFromBalance(kickedMember, LOCKED_UNITS, unitsToBurn);
+        bank.subtractFromBalance(kickedMember, LOCKED_LOOT, lootToBurn);
     }
 }
