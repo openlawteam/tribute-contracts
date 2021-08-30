@@ -1,0 +1,111 @@
+version: "3.7"
+services:
+
+  # Snapshot hub
+  trib-snapshot-hub:
+    image: openlaw/snapshot-hub:v5.0.1-erc712
+    container_name: trib-snapshot-hub
+    env_file:
+      - .env
+    environment:
+      ENV: "local"
+      PORT: 8080
+      RELAYER_PK: "0xb80a5165a59af8ce566266fcd0e919e13ed4ecbd57ae952e73ae2cddc08b84c6"
+      JAWSDB_URL: "postgres://snap:pwd123@trib-snapshot-db:5432/snapshot-db"
+      IGNORE_VOTE_END_CONSTRAINT: "true"
+      ALLOWED_DOMAINS: "http://localhost:3000"
+    depends_on:
+      - trib-snapshot-db
+    ports:
+      - 8081:8080
+
+  # Snapshot Postgres Database to store the Snapshot messages
+  trib-snapshot-db:
+    image: bitnami/postgresql:13
+    container_name: trib-snapshot-db
+    environment:
+      POSTGRESQL_USERNAME: snap
+      POSTGRESQL_PASSWORD: "pwd123"
+      POSTGRESQL_DATABASE: snapshot-db
+    ports:
+      - 5432:5432
+
+  # Graph node to host the Subgraph
+  trib-graph-node:
+    image: graphprotocol/graph-node
+    container_name: trib-graph-node
+    ports:
+      - "8000:8000"
+      - "8001:8001"
+      - "8020:8020"
+      - "8030:8030"
+      - "8040:8040"
+    depends_on:
+      - trib-graph-ipfs
+      - trib-graph-db
+    environment:
+      postgres_host: postgres
+      postgres_user: graph
+      postgres_pass: pwd123
+      postgres_db: graph-db
+      ipfs: "http://trib-graph-ipfs:5001"
+      ethereum: "rinkeby:http://rinkeby.openlaw.io:8545"
+      RUST_LOG: info
+
+  # The IPFS instance to pin subgraph data
+  trib-graph-ipfs:
+    image: ipfs/go-ipfs:v0.4.23
+    container_name: trib-graph-ipfs
+    environment:
+      IPFS_PROFILE: server
+    ports:
+      - "5001:5001"
+    volumes:
+      - ./build/data/ipfs:/data/ipfs
+
+  # The Database to store the subgraph events
+  trib-graph-db:
+    image: postgres
+    container_name: trib-graph-db
+    ports:
+      - "35432:5432"
+    command: ["postgres", "-cshared_preload_libraries=pg_stat_statements"]
+    environment:
+      POSTGRES_USER: graph
+      POSTGRES_PASSWORD: pwd123
+      POSTGRESQL_DATABASE: graph-db
+
+  # The Tribute UI React App
+  trib-graph-db:
+    image: openlaw/tribute-ui:dev-1
+    container_name: tribute-ui
+    ports:
+      - "3000:3000"
+    command: ["npm", "run"]
+    environment:
+      # It can be the same value you used for the Tribute DAO deployment.
+      REACT_APP_INFURA_PROJECT_ID_DEV: ""
+
+      # The address of the DaoRegistry smart contract deployed to the Rinkeby network.
+      REACT_APP_DAO_REGISTRY_CONTRACT_ADDRESS: ""
+
+      # The address of the Multicall smart contract deployed to the Rinkeby network.
+      REACT_APP_MULTICALL_CONTRACT_ADDRESS: ""
+
+      # The url of the subgraph running locally in a container.
+      REACT_APP_GRAPH_API_URL: http://trib-graph-node/subgraphs/name/openlawteam/tribute-dao-tutorial
+
+      # The url of snaphot-hub running locally in a container.
+      # Do not change it.
+      REACT_APP_SNAPSHOT_HUB_API_URL: "http://snapshot-hub:8081"
+
+      # Do not change it.
+      REACT_APP_ENVIRONMENT: "development"
+
+      # Do not change it.
+      # The unique name registered in Snapshot Hub under which proposals, votes, etc. will be stored.
+      REACT_APP_SNAPSHOT_SPACE: "tribute"
+
+networks:
+  default:
+    name: trib-network
