@@ -195,6 +195,9 @@ contract OffchainVotingContract is IVoting, MemberGuard, AdapterGuard, Ownable {
             );
         }
 
+        address memberAddr = dao.getAddressIfDelegated(reporter);
+        require(isActiveMember(dao, memberAddr), "not active member");
+
         (address adapterAddress, ) = dao.proposals(proposalId);
 
         require(
@@ -206,30 +209,25 @@ contract OffchainVotingContract is IVoting, MemberGuard, AdapterGuard, Ownable {
             "invalid sig"
         );
 
-        address memberAddr = dao.getAddressIfDelegated(reporter);
-        require(isActiveMember(dao, memberAddr), "not active member");
+        require(
+            MerkleProof.verify(
+                result.proof,
+                resultRoot,
+                ovHash.nodeHash(dao, adapterAddress, result)
+            ),
+            "proof:bad"
+        );
 
-        uint256 nbMembers =
+        require(
             BankExtension(dao.getExtensionAddress(DaoHelper.BANK))
                 .getPriorAmount(
                 DaoHelper.TOTAL,
                 DaoHelper.MEMBER_COUNT,
                 vote.snapshot
-            );
-        require(nbMembers - 1 == result.index, "index:member_count mismatch");
-
-        require(
-            getBadNodeError(
-                dao,
-                proposalId,
-                true,
-                resultRoot,
-                vote.snapshot,
-                vote.gracePeriodStartingTime,
-                nbMembers,
-                result
-            ) == BadNodeError.OK,
-            "bad result"
+            ) -
+                1 ==
+                result.index,
+            "index:member_count mismatch"
         );
 
         require(
