@@ -21,6 +21,26 @@
 require("dotenv").config();
 require("solidity-coverage");
 
+const newHDProvider = (network) => {
+  const HDWalletProvider = require("@truffle/hdwallet-provider");
+  const infuraKey = process.env.INFURA_KEY;
+  const alchemyKey = process.env.ALCHEMY_KEY;
+  const mnemonic = process.env.TRUFFLE_MNEMONIC;
+
+  let url;
+  if (alchemyKey) {
+    url = `wss://eth-${network}.ws.alchemyapi.io/v2/${alchemyKey}`;
+  } else {
+    url = `wss://${network}.infura.io/ws/v3/${infuraKey}`;
+  }
+  return new HDWalletProvider({
+    mnemonic: {
+      phrase: mnemonic,
+    },
+    providerOrUrl: url,
+  });
+};
+
 module.exports = {
   networks: {
     ganache: {
@@ -29,60 +49,16 @@ module.exports = {
       network_id: "1337", // Any network (default: none)
     },
     rinkeby: {
-      provider: () => {
-        const HDWalletProvider = require("@truffle/hdwallet-provider");
-        const infuraKey = process.env.INFURA_KEY;
-        const alchemyKey = process.env.ALCHEMY_KEY;
-        const mnemonic = process.env.TRUFFLE_MNEMONIC;
-
-        let url;
-        if (alchemyKey) {
-          url = `wss://eth-rinkeby.ws.alchemyapi.io/v2/${alchemyKey}`;
-        } else {
-          url = `wss://rinkeby.infura.io/ws/v3/${infuraKey}`;
-        }
-        return new HDWalletProvider({
-          mnemonic: {
-            phrase: mnemonic,
-          },
-          providerOrUrl: url,
-          pollingInterval: 10000,
-        });
-      },
+      provider: () => newHDProvider("rinkeby"),
       network_id: 4,
       skipDryRun: true,
       networkCheckTimeout: 10000,
       deploymentPollingInterval: 10000,
     },
     mainnet: {
-      provider: () => {
-        const HDWalletProvider = require("@truffle/hdwallet-provider");
-        const infuraKey = process.env.INFURA_KEY;
-        const alchemyKey = process.env.ALCHEMY_KEY;
-        const mnemonic = process.env.TRUFFLE_MNEMONIC;
-
-        let url;
-        if (alchemyKey) {
-          url = `wss://eth-mainnet.ws.alchemyapi.io/v2/${alchemyKey}`;
-        } else {
-          url = `wss://mainnet.infura.io/ws/v3/${infuraKey}`;
-        }
-        return new HDWalletProvider({
-          mnemonic: {
-            phrase: mnemonic,
-          },
-          providerOrUrl: url,
-        });
-      },
+      provider: () => newHDProvider("mainnet"),
       network_id: 1,
       skipDryRun: true,
-    },
-    coverage: {
-      host: "localhost",
-      network_id: "*",
-      port: 8555,
-      gas: 0xfffffffffff,
-      gasPrice: 0x01,
     },
   },
 
@@ -94,7 +70,7 @@ module.exports = {
       settings: {
         // See the solidity docs for advice about optimization and evmVersion
         optimizer: {
-          enabled: true,
+          enabled: process.env.ENABLE_SOLC_OPTIMIZER == "true",
           runs: 10000,
         },
         //  evmVersion: "byzantium"

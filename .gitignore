@@ -111,6 +111,7 @@ generated/
 coverage
 coverage.json
 coverageEnv
+contracts-backup
 .coverage_artifacts
 .coverage_contracts
 
