@@ -226,6 +226,9 @@ contract TributeNFTContract is
         }
     }
 
+    /**
+     * @notice Validates the balance of the ERC1155 token
+     */
     function _hasERC1155TokenBalance(
         address owner,
         address token,
@@ -238,6 +241,9 @@ contract TributeNFTContract is
         return currentBalance > 0 && currentBalance >= balance;
     }
 
+    /**
+     * @notice Validates the owner of the ERC721 token
+     */
     function _hasERC721Token(
         address owner,
         address token,
