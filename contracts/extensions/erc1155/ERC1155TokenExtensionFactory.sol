@@ -29,7 +29,7 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
  */
 
-contract ERC1155CollectionFactory is CloneFactory, DaoConstants {
+contract ERC1155TokenExtensionFactory is CloneFactory, DaoConstants {
     address public identityAddress;
 
     event ERC1155CollectionCreated(address nftCollAddress);
