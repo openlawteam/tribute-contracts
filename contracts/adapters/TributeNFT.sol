@@ -11,7 +11,8 @@ import "../adapters/interfaces/IVoting.sol";
 import "../guards/MemberGuard.sol";
 import "../guards/AdapterGuard.sol";
 import "../utils/PotentialNewMember.sol";
-
+import "@openzeppelin/contracts/token/ERC1155/IERC1155.sol";
+import "@openzeppelin/contracts/token/ERC721/IERC721.sol";
 import "@openzeppelin/contracts/utils/Address.sol";
 
 /**
@@ -94,7 +95,7 @@ contract TributeNFTContract is
      * @param applicant The applicant address (who will receive the DAO internal tokens and become a member).
      * @param nftAddr The address of the ERC-721 or ERC 1155 token that will be transferred to the DAO in exchange for DAO internal tokens.
      * @param nftTokenId The NFT token id.
-     * @param tributeAmount - the amount of nftTokenId for ERC1155 tokens
+     * @param tributeAmount The amount of nftTokenId for ERC1155 tokens, if 0, it is an ERC721
      * @param requestAmount The amount requested of DAO internal tokens (UNITS).
      * @param data Additional information related to the tribute proposal.
      */
@@ -104,7 +105,7 @@ contract TributeNFTContract is
         address applicant,
         address nftAddr,
         uint256 nftTokenId,
-        uint256 tributeAmount, // if > 0, then this is erc1155
+        uint256 tributeAmount,
         uint256 requestAmount,
         bytes memory data
     ) external reentrancyGuard(dao) {
@@ -112,6 +113,22 @@ contract TributeNFTContract is
             isNotReservedAddress(applicant),
             "applicant is reserved address"
         );
+        if (tributeAmount > 0) {
+            require(
+                _hasERC1155TokenBalance(
+                    applicant,
+                    nftAddr,
+                    nftTokenId,
+                    tributeAmount
+                ),
+                "erc1155: invalid token balance"
+            );
+        } else {
+            require(
+                _hasERC721Token(applicant, nftAddr, nftTokenId),
+                "erc721: invalid owner"
+            );
+        }
 
         dao.submitProposal(proposalId);
         IVoting votingContract = IVoting(dao.getAdapterAddress(VOTING));
@@ -172,42 +189,28 @@ contract TributeNFTContract is
 
         dao.processProposal(proposalId);
         //if proposal passes and its an erc721 token - use NFT Extension
-        if (
-            voteResult == IVoting.VotingState.PASS &&
-            proposal.tributeAmount == 0
-        ) {
-            NFTExtension nftExt = NFTExtension(dao.getExtensionAddress(NFT));
+        if (voteResult == IVoting.VotingState.PASS) {
             BankExtension bank = BankExtension(dao.getExtensionAddress(BANK));
             require(
                 bank.isInternalToken(UNITS),
                 "UNITS token is not an internal token"
             );
 
-            nftExt.collect(proposal.nftAddr, proposal.nftTokenId);
-            bank.addToBalance(
-                proposal.applicant,
-                UNITS,
-                proposal.requestAmount
-            );
-        }
-        //if proposal passes and its an erc1155 token - use ERC1155TokenExtension
-        else if (
-            voteResult == IVoting.VotingState.PASS && proposal.tributeAmount > 0
-        ) {
-            ERC1155TokenExtension erc1155Ext =
-                ERC1155TokenExtension(dao.getExtensionAddress(ERC1155_EXT));
-            BankExtension bank = BankExtension(dao.getExtensionAddress(BANK));
-            require(
-                bank.isInternalToken(UNITS),
-                "UNITS token is not an internal token"
-            );
+            if (proposal.tributeAmount > 0) {
+                ERC1155TokenExtension erc1155Ext =
+                    ERC1155TokenExtension(dao.getExtensionAddress(ERC1155_EXT));
+                erc1155Ext.collect(
+                    proposal.applicant,
+                    proposal.nftAddr,
+                    proposal.nftTokenId,
+                    proposal.tributeAmount
+                );
+            } else {
+                NFTExtension nftExt =
+                    NFTExtension(dao.getExtensionAddress(NFT));
+                nftExt.collect(proposal.nftAddr, proposal.nftTokenId);
+            }
 
-            erc1155Ext.collect(
-                proposal.applicant,
-                proposal.nftAddr,
-                proposal.nftTokenId,
-                proposal.tributeAmount
-            );
             bank.addToBalance(
                 proposal.applicant,
                 UNITS,
@@ -221,5 +224,27 @@ contract TributeNFTContract is
         } else {
             revert("proposal has not been voted on yet");
         }
+    }
+
+    function _hasERC1155TokenBalance(
+        address owner,
+        address token,
+        uint256 tokenId,
+        uint256 balance
+    ) internal view returns (bool) {
+        // If the token is not an ERC1155, it will revert
+        IERC1155 erc1155 = IERC1155(token);
+        uint256 currentBalance = erc1155.balanceOf(owner, tokenId);
+        return currentBalance > 0 && currentBalance >= balance;
+    }
+
+    function _hasERC721Token(
+        address owner,
+        address token,
+        uint256 tokenId
+    ) internal view returns (bool) {
+        // If the token is not an ERC721, it will revert
+        IERC721 erc721 = IERC721(token);
+        return erc721.ownerOf(tokenId) == owner;
     }
 }
