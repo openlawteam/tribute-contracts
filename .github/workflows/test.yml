@@ -1,10 +1,6 @@
 name: Test
 
 on:
-  push:
-    branches:
-      # long-lived branches
-      - master
   pull_request_target:
     branches:
       - "*"
@@ -35,5 +31,5 @@ jobs:
       - name: Compile Solidity Contracts
         run: npm run compile
 
-      - name: Run Tests
-        run: npm test
+      - name: Run Tests and generate coverage report
+        run: npm run coverage
