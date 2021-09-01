@@ -28,8 +28,8 @@ jobs:
       - name: Run Linter
         run: npm run lint
 
-      - name: Compile Solidity Contracts
-        run: npm run compile
-
-      - name: Run Tests and generate coverage report
+      - name: Compile Contracts, Run Tests and Check Coverage
         run: npm run coverage
+
+      - name: Publish to Codecov.io
+        run: bash <(curl -s https://codecov.io/bash) -t ${{ secrets.CODECOV_TOKEN }}
