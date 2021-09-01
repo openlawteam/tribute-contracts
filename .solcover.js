@@ -1,12 +1,17 @@
 module.exports = {
   norpc: true,
-  testCommand: "npm test",
+  measureStatementCoverage: true,
+  measureFunctionCoverage: true,
+  testCommand: "npm run test",
   compileCommand: "npm run compile",
   providerOptions: {
     default_balance_ether: "10000000000000000000000000",
+    allowUnlimetedContractSize: true,
+    gasLimit: 0xfffffffffff,
+    gasPrice: 0x0,
   },
   mocha: {
-    fgrep: "[skip-on-coverage]", // tag to skip tests
-    invert: true,
+    timeout: 2000000,
+    useColors: true,
   },
 };
