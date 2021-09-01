@@ -21,6 +21,7 @@ const skipFiles = [
   "test/TestFairShareCalc.sol",
   "test/TestToken1.sol",
   "test/TestToken2.sol",
+  "utils/Multicall.sol",
 ];
 
 const main = async () => {
