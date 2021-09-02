@@ -28,7 +28,7 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
  */
 
-contract ERC1155CollectionFactory is CloneFactory {
+contract ERC1155TokenCollectionFactory is CloneFactory {
     address public identityAddress;
 
     event ERC1155CollectionCreated(address nftCollAddress);

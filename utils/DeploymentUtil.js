@@ -47,7 +47,7 @@ const deployDao = async (options) => {
     InternalTokenVestingExtensionFactory,
     InternalTokenVestingExtension,
     ERC1155TokenExtension,
-    ERC1155TokenExtensionFactory,
+    ERC1155TokenCollectionFactory,
     ERC1155TestToken,
     TestToken1,
     TestToken2,
@@ -95,7 +95,7 @@ const deployDao = async (options) => {
 
   const identityERC1155Ext = await deployFunction(ERC1155TokenExtension);
   const erc1155TokenExtFactory = await deployFunction(
-    ERC1155TokenExtensionFactory,
+    ERC1155TokenCollectionFactory,
     [identityERC1155Ext.address]
   );
 

@@ -133,8 +133,8 @@ const contracts = [
     type: ContractType.Factory,
   },
   {
-    name: "ERC1155TokenExtensionFactory",
-    path: "../contracts/extensions/erc1155/ERC1155TokenExtensionFactory",
+    name: "ERC1155TokenCollectionFactory",
+    path: "../contracts/extensions/erc1155/ERC1155TokenCollectionFactory",
     enabled: true,
     version: "1.0.0",
     type: ContractType.Factory,
