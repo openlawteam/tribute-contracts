@@ -46,7 +46,7 @@ const { onboardingNewMember, isMember } = require("../../utils/TestUtils.js");
 
 describe("Adapter - TributeNFT", () => {
   const proposalCounter = proposalIdGenerator().generator;
-  const daoOwner = accounts[1];
+  const daoOwner = accounts[0];
 
   const getProposalCounter = () => {
     return proposalCounter().next().value;
@@ -71,7 +71,7 @@ describe("Adapter - TributeNFT", () => {
     this.snapshotId = await takeChainSnapshot();
   });
 
-  it("should be possible to submit and sponsor a nft tribute proposal", async () => {
+  it("should be possible to submit and sponsor a erc721 nft tribute proposal", async () => {
     const nftOwner = accounts[2];
     const dao = this.dao;
     const pixelNFT = this.testContracts.pixelNFT;
@@ -87,7 +87,8 @@ describe("Adapter - TributeNFT", () => {
       nftOwner,
       pixelNFT.address,
       tokenId,
-      10,
+      0, // tribute amount (erc721 = 0)
+      10, // requested units
       [],
       { from: daoOwner, gasPrice: toBN("0") }
     );
@@ -110,7 +111,8 @@ describe("Adapter - TributeNFT", () => {
         GUILD, // using GUILD address (reserved)
         pixelNFT.address,
         tokenId,
-        10,
+        0, // tribute amount (erc721 = 0)
+        10, // requested units
         [],
         { from: daoOwner }
       ),
@@ -135,7 +137,8 @@ describe("Adapter - TributeNFT", () => {
       nftOwner,
       pixelNFT.address,
       tokenId,
-      10,
+      0, // tribute amount (erc721 = 0)
+      10, // requested units
       [],
       { from: nftOwner, gasPrice: toBN("0") }
     );
@@ -163,7 +166,8 @@ describe("Adapter - TributeNFT", () => {
       nftOwner,
       pixelNFT.address,
       tokenId,
-      10,
+      0, // tribute amount (erc721 = 0)
+      10, // requested units
       [],
       { from: daoOwner, gasPrice: toBN("0") }
     );
@@ -234,7 +238,8 @@ describe("Adapter - TributeNFT", () => {
       nftOwner,
       pixelNFT.address,
       tokenId,
-      10,
+      0, // tribute amount (erc721 = 0)
+      10, // requested units
       [],
       { from: daoOwner, gasPrice: toBN("0") }
     );
@@ -304,7 +309,8 @@ describe("Adapter - TributeNFT", () => {
       nftOwner,
       pixelNFT.address,
       tokenId,
-      10,
+      0, // tribute amount (erc721 = 0)
+      10, // requested units
       [],
       { from: daoOwner, gasPrice: toBN("0") }
     );
@@ -367,6 +373,7 @@ describe("Adapter - TributeNFT", () => {
       nftOwner,
       pixelNFT.address,
       tokenId,
+      0, // tribute amount (erc721 = 0)
       10,
       [],
       { from: daoOwner, gasPrice: toBN("0") }
@@ -403,7 +410,6 @@ describe("Adapter - TributeNFT", () => {
     const nftOwner = accounts[2];
     const proposalId = getProposalCounter();
     const dao = this.dao;
-    const bank = this.extensions.bank;
     const nftExt = this.extensions.nft;
     const pixelNFT = this.testContracts.pixelNFT;
     const tributeNFT = this.adapters.tributeNFT;
@@ -423,7 +429,8 @@ describe("Adapter - TributeNFT", () => {
       nftOwner,
       pixelNFT.address,
       tokenId,
-      requestAmount,
+      0, // tribute amount (erc721 = 0)
+      requestAmount, // requested units
       [],
       {
         from: daoOwner,
@@ -451,6 +458,138 @@ describe("Adapter - TributeNFT", () => {
         gasPrice: toBN("0"),
       }),
       "token amount exceeds the maximum limit for internal tokens."
+    );
+  });
+
+  it("should be possible to onboard a member with erc1155 tribute", async () => {
+    const nftOwner = accounts[2];
+    const dao = this.dao;
+    const erc1155Token = this.testContracts.erc1155TestToken;
+    const tributeNFT = this.adapters.tributeNFT;
+    const erc1155Ext = this.extensions.erc1155Ext;
+    const bank = this.extensions.bank;
+    const voting = this.adapters.voting;
+    const proposalId = getProposalCounter();
+
+    await erc1155Token.mint(nftOwner, 1, 10, "0x0", {
+      from: daoOwner,
+      gasPrice: toBN("0"),
+    });
+
+    const pastEvents = await erc1155Token.getPastEvents();
+
+    const { id } = pastEvents[0].returnValues;
+
+    await tributeNFT.submitProposal(
+      dao.address,
+      proposalId,
+      nftOwner,
+      erc1155Token.address,
+      id,
+      3, // tribute amount (erc1155 should provide > 0)
+      10, // requested units
+      [],
+      { from: daoOwner, gasPrice: toBN("0") }
+    );
+
+    const vote = 1; //YES
+    await voting.submitVote(dao.address, proposalId, vote, {
+      from: daoOwner,
+      gasPrice: toBN("0"),
+    });
+
+    await advanceTime(10000);
+
+    // Pre-approve spender (NFT extension) to transfer proposed NFT
+    await erc1155Token.setApprovalForAll(erc1155Ext.address, true, {
+      from: nftOwner,
+      gasPrice: toBN("0"),
+    });
+
+    await tributeNFT.processProposal(dao.address, proposalId, {
+      from: nftOwner,
+      gasPrice: toBN("0"),
+    });
+
+    // test balance after proposal is processed
+    const applicantUnits = await bank.balanceOf(nftOwner, UNITS);
+    expect(applicantUnits.toString()).equal("10");
+
+    // test active member status
+    const applicantIsActiveMember = await isMember(bank, nftOwner);
+    expect(applicantIsActiveMember).equal(true);
+
+    // Check if asset was transfered to the NFT Extension account
+    const extBalance = await erc1155Token.balanceOf(erc1155Ext.address, id);
+    expect(extBalance.toString()).equal("3");
+
+    // Check if asset was transfered to from the owner account
+    const ownerBalance = await erc1155Token.balanceOf(nftOwner, id);
+    expect(ownerBalance.toString()).equal("7");
+  });
+
+  it("should not be possible onboard a member with erc1155 if the tribute amount is 0", async () => {
+    const nftOwner = accounts[2];
+    const dao = this.dao;
+    const erc1155Token = this.testContracts.erc1155TestToken;
+    const tributeNFT = this.adapters.tributeNFT;
+    const erc1155Ext = this.extensions.erc1155Ext;
+    const bank = this.extensions.bank;
+    const voting = this.adapters.voting;
+    const proposalId = getProposalCounter();
+
+    await erc1155Token.mint(nftOwner, 1, 10, "0x0", {
+      from: daoOwner,
+      gasPrice: toBN("0"),
+    });
+
+    const pastEvents = await erc1155Token.getPastEvents();
+
+    const { id } = pastEvents[0].returnValues;
+
+    await expectRevert(
+      tributeNFT.submitProposal(
+        dao.address,
+        proposalId,
+        nftOwner,
+        erc1155Token.address,
+        id,
+        0, // invalid tribute amount (erc1155 > 0)
+        10, // requested units
+        [],
+        { from: daoOwner, gasPrice: toBN("0") }
+      ),
+      "revert"
+    );
+  });
+
+  it("should not be possible onboard a member with erc721 if the tribute amount is > 0", async () => {
+    const nftOwner = accounts[2];
+    const proposalId = getProposalCounter();
+    const dao = this.dao;
+    const pixelNFT = this.testContracts.pixelNFT;
+    const tributeNFT = this.adapters.tributeNFT;
+
+    await pixelNFT.mintPixel(nftOwner, 1, 1, { from: daoOwner });
+    let pastEvents = await pixelNFT.getPastEvents();
+    let { tokenId } = pastEvents[1].returnValues;
+
+    await expectRevert(
+      tributeNFT.submitProposal(
+        dao.address,
+        proposalId,
+        nftOwner,
+        pixelNFT.address,
+        tokenId,
+        3, // invalid tribute amount (erc721 should provide 0)
+        10, // requested units
+        [],
+        {
+          from: daoOwner,
+          gasPrice: toBN("0"),
+        }
+      ),
+      "revert"
     );
   });
 });
