@@ -25,13 +25,7 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
  */
 
-const {
-  toBN,
-  unitPrice,
-  UNITS,
-  numberOfUnits,
-  GUILD,
-} = require("../../utils/ContractUtil.js");
+const { toBN, unitPrice, UNITS } = require("../../utils/ContractUtil.js");
 
 const {
   takeChainSnapshot,
@@ -43,11 +37,7 @@ const {
   expect,
 } = require("../../utils/OZTestUtil.js");
 
-const {
-  isMember,
-  onboardingNewMember,
-  // submitConfigProposal,
-} = require("../../utils/TestUtils.js");
+const { isMember, onboardingNewMember } = require("../../utils/TestUtils.js");
 
 const proposalCounter = proposalIdGenerator().generator;
 
