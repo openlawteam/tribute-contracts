@@ -49,7 +49,7 @@
   "scripts": {
     "compile": "truffle compile",
     "compile-abi": "truffle compile && truffle-abi",
-    "coverage": "ENABLE_SOLC_OPTIMIZER=false scripts/coverage.js",
+    "coverage": "DISABLE_SOLC_OPTIMIZER=true scripts/coverage.js",
     "deploy:ganache": "truffle deploy --network ganache --reset 2>&1 | tee logs/ganache-deploy.log",
     "deploy:rinkeby": "truffle deploy --network rinkeby --reset 2>&1 | tee logs/rinkeby-deploy.log",
     "deploy:mainnet": "truffle deploy --network mainnet --reset 2>&1 | tee logs/mainnet-deploy.log",
