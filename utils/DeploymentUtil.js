@@ -433,6 +433,7 @@ const addDefaultAdapters = async ({ dao, options, daoFactory, nftAddr }) => {
     tribute,
     distribute,
     tributeNFT,
+    lendNFT,
     erc20TransferStrategy,
     erc1155Adapter,
   } = await prepareAdapters(options);
@@ -484,6 +485,7 @@ const addDefaultAdapters = async ({ dao, options, daoFactory, nftAddr }) => {
     tribute,
     distribute,
     tributeNFT,
+    lendNFT,
     nftAddr,
     erc20TransferStrategy,
     bankExtension,
@@ -497,6 +499,7 @@ const addDefaultAdapters = async ({ dao, options, daoFactory, nftAddr }) => {
   return {
     dao,
     adapters: {
+      lendNFT,
       voting,
       configuration,
       ragequit,
@@ -544,6 +547,7 @@ const configureDao = async ({
   distribute,
   erc20TransferStrategy,
   tributeNFT,
+  lendNFT,
   unitPrice,
   maxChunks,
   nbUnits,
@@ -629,6 +633,14 @@ const configureDao = async ({
   if (tributeNFT)
     adapters.push(
       entryDao("tribute-nft", tributeNFT, {
+        SUBMIT_PROPOSAL: true,
+        NEW_MEMBER: true,
+      })
+    );
+
+  if (lendNFT)
+    adapters.push(
+      entryDao("lend-nft", lendNFT, {
         SUBMIT_PROPOSAL: true,
         NEW_MEMBER: true,
       })
@@ -757,6 +769,13 @@ const configureDao = async ({
       })
     );
 
+  if (lendNFT)
+    adaptersWithBankAccess.push(
+      entryBank(lendNFT, {
+        ADD_TO_BALANCE: true,
+      })
+    );
+
   if (erc20TokenExtension)
     // Let the unit-token extension to execute internal transfers in the bank as an adapter
     adaptersWithBankAccess.push(
@@ -776,6 +795,13 @@ const configureDao = async ({
   if (tributeNFT)
     adaptersWithNFTAccess.push(
       entryNft(tributeNFT, {
+        COLLECT_NFT: true,
+      })
+    );
+
+  if (lendNFT)
+    adaptersWithNFTAccess.push(
+      entryNft(lendNFT, {
         COLLECT_NFT: true,
       })
     );

@@ -25,10 +25,7 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
  */
 const {
-  toBN,
-  unitPrice,
-  UNITS,
-  GUILD,
+  toBN, NFT
 } = require("../../utils/ContractUtil.js");
 
 const {
@@ -71,5 +68,40 @@ describe("Adapter - LendNFT", () => {
     this.snapshotId = await takeChainSnapshot();
   });
 
-  it("", async () => {});
+  it("should be able to lend an NFT", async () => {
+    const pixelNFT = this.testContracts.pixelNFT;
+    const nftOwner = accounts[2];
+    const lendNFT = this.adapters.lendNFT;
+    await pixelNFT.mintPixel(nftOwner, 1, 1, { from: daoOwner });
+
+    let pastEvents = await pixelNFT.getPastEvents();
+    let { tokenId } = pastEvents[1].returnValues;
+    const dao = this.dao;
+    const proposalId = getProposalCounter();
+    await lendNFT.submitProposal(
+      dao.address,
+      proposalId,
+      nftOwner,
+      pixelNFT.address,
+      tokenId,
+      0, // tribute amount (erc721 = 0)
+      10, // requested units
+      [],
+      { from: daoOwner, gasPrice: toBN("0") }
+    );
+
+    const voting = this.adapters.voting;
+
+    await voting.submitVote(dao.address, proposalId, 1, {from: daoOwner});
+    const nftExtension = await dao.getExtensionAddress(NFT);
+    await advanceTime(10000);
+    await pixelNFT.approve(nftExtension, tokenId, {from: nftOwner});
+    await lendNFT.processProposal(dao.address, proposalId, {from: daoOwner});
+    const newOwner = await pixelNFT.ownerOf(tokenId);
+    
+    expect(newOwner).equal(nftExtension);
+
+    
+
+  });
 });
