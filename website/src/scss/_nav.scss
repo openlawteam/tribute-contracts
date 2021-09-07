@@ -182,3 +182,30 @@
     border-radius: 12px;
   }
 }
+
+.header-discord-link {
+  background: transparent url(../../static/img/discord_icon.svg) no-repeat 0 0;
+  color: #3c6b7e;
+  width: 1.5rem;
+  display: block;
+  height: 1.5rem;
+  margin: 0 0.5rem;
+}
+
+.header-github-link {
+  background: transparent url(../../static/img/github_icon.svg) no-repeat 0 0;
+  color: #3c6b7e;
+  width: 1.5rem;
+  display: block;
+  height: 1.5rem;
+  margin: 0 0.5rem;
+}
+
+.navbar-sidebar__items .header-discord-link,
+.navbar-sidebar__items .header-github-link {
+  display: none;
+}
+
+.navbar-sidebar__items .menu__link {
+  color: #3c6b7e;
+}

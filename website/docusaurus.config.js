@@ -63,8 +63,16 @@ module.exports = {
         {
           href:
             "https://github.com/search?q=org%3Aopenlawteam+tribute-ui+OR+tribute-contracts+in%3Aname&type=repositories",
-          label: "GitHub",
           position: "right",
+          className: "header-discord-link",
+          "aria-label": "Tribute Discord",
+        },
+        {
+          href:
+            "https://github.com/search?q=org%3Aopenlawteam+tribute-ui+OR+tribute-contracts+in%3Aname&type=repositories",
+          position: "right",
+          className: "header-github-link",
+          "aria-label": "Tribute GitHub",
         },
       ],
     },
