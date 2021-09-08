@@ -98,9 +98,11 @@ describe("Adapter - Managing", () => {
           adapterId: newAdapterId,
           adapterAddress: GUILD,
           flags: 0,
+          keys: ["0x0000000000000000000000000000000000000000000000000000000000000001", "0x0000000000000000000000000000000000000000000000000000000000000002", "0x0000000000000000000000000000000000000000000000000000000000000004"], // 3 keys
+          values: [], // 0 values
+          extensionAddresses:[],
+          extensionAcl:[],
         },
-        ["0x1", "0x2", "0x3"], // 3 keys
-        [], // 0 values
         [],
         { from: daoOwner, gasPrice: toBN("0") }
       ),
@@ -120,9 +122,11 @@ describe("Adapter - Managing", () => {
           adapterId: newAdapterId,
           adapterAddress: GUILD,
           flags: 0,
+          keys: [], // 0 keys
+          values: [1, 2, 3], // 3 values
+          extensionAddresses: [],
+          extensionAcl: []
         },
-        [], // 0 keys
-        [1, 2, 3], // 3 values
         [],
         { from: daoOwner, gasPrice: toBN("0") }
       ),
@@ -142,9 +146,11 @@ describe("Adapter - Managing", () => {
           adapterId: newAdapterId,
           adapterAddress: GUILD,
           flags: 0,
+          keys: [], // 0 keys
+          values: [], // 3 values
+          extensionAddresses: [],
+          extensionAcl: []
         },
-        [],
-        [],
         [],
         { from: daoOwner, gasPrice: toBN("0") }
       ),
@@ -159,9 +165,11 @@ describe("Adapter - Managing", () => {
           adapterId: newAdapterId,
           adapterAddress: TOTAL,
           flags: 0,
+          keys: [], // 0 keys
+          values: [], // 3 values
+          extensionAddresses: [],
+          extensionAcl: []
         },
-        [],
-        [],
         [],
         { from: daoOwner, gasPrice: toBN("0") }
       ),
@@ -183,9 +191,11 @@ describe("Adapter - Managing", () => {
         adapterId: adapterIdToRemove,
         adapterAddress: "0x0000000000000000000000000000000000000000",
         flags: 0,
+        keys: [], // 0 keys
+        values: [], // 3 values
+        extensionAddresses: [],
+        extensionAcl: []
       },
-      [],
-      [],
       [],
       {
         from: daoOwner,
@@ -230,9 +240,11 @@ describe("Adapter - Managing", () => {
         adapterId: newAdapterId,
         adapterAddress: newAdapterAddress,
         flags: 0,
+        keys: [], // 0 keys
+        values: [], // 3 values
+        extensionAddresses: [],
+        extensionAcl: []
       },
-      [],
-      [],
       [],
       { from: daoOwner, gasPrice: toBN("0") }
     );
@@ -291,9 +303,11 @@ describe("Adapter - Managing", () => {
         adapterId: newAdapterId,
         adapterAddress: newManaging.address,
         flags: 0,
+        keys: [], 
+        values: [],
+        extensionAddresses: [],
+        extensionAcl: []
       },
-      [],
-      [],
       [],
       {
         from: daoOwner,
@@ -309,9 +323,11 @@ describe("Adapter - Managing", () => {
           adapterId: newAdapterId,
           adapterAddress: newManaging.address,
           flags: 0,
+          keys: [],
+          values: [], 
+          extensionAddresses: [],
+          extensionAcl: []
         },
-        [],
-        [],
         [],
         {
           from: daoOwner,
@@ -340,9 +356,11 @@ describe("Adapter - Managing", () => {
         adapterId: newAdapterId,
         adapterAddress: newManaging.address,
         flags,
+        keys: [],
+        values: [], 
+        extensionAddresses: [],
+        extensionAcl: []
       },
-      [],
-      [],
       [],
       {
         from: daoOwner,
@@ -382,9 +400,11 @@ describe("Adapter - Managing", () => {
         adapterId: sha3("financing"),
         adapterAddress: "0x0000000000000000000000000000000000000000",
         flags: 0,
+        keys: [],
+        values: [], 
+        extensionAddresses: [],
+        extensionAcl: []
       },
-      [],
-      [],
       [],
       {
         from: daoOwner,
@@ -430,9 +450,11 @@ describe("Adapter - Managing", () => {
         adapterId: newAdapterId,
         adapterAddress: newManaging.address,
         flags: entryDao("managing", newManaging, {}).flags, // no permissions were set
+        keys: [],
+        values: [], 
+        extensionAddresses: [],
+        extensionAcl: []
       },
-      [],
-      [],
       [],
       {
         from: daoOwner,
@@ -461,9 +483,11 @@ describe("Adapter - Managing", () => {
           adapterId: sha3("voting"),
           adapterAddress: voting.address,
           flags: 0,
+          keys: [],
+          values: [], 
+          extensionAddresses: [],
+          extensionAcl: []
         },
-        [],
-        [],
         [],
         {
           from: daoOwner,
@@ -490,9 +514,11 @@ describe("Adapter - Managing", () => {
           adapterId: newAdapterId,
           adapterAddress: newAdapterAddress,
           flags: 0,
+          keys: [],
+          values: [], 
+          extensionAddresses: [],
+          extensionAcl: []
         },
-        [],
-        [],
         [],
         { from: nonMember, gasPrice: toBN("0") }
       ),
@@ -516,9 +542,11 @@ describe("Adapter - Managing", () => {
           adapterId: newAdapterId,
           adapterAddress: newVoting.address,
           flags: 0,
+          keys: [],
+          values: [], 
+          extensionAddresses: [],
+          extensionAcl: []
         },
-        [],
-        [],
         [],
         {
           from: nonMemberAddress,
@@ -544,9 +572,11 @@ describe("Adapter - Managing", () => {
         adapterId: newAdapterId,
         adapterAddress: accounts[6], //any sample address
         flags: 0,
+        keys: [],
+        values: [], 
+        extensionAddresses: [],
+        extensionAcl: []
       },
-      [],
-      [],
       [],
       {
         from: daoOwner,
@@ -580,9 +610,11 @@ describe("Adapter - Managing", () => {
         adapterId: newAdapterId,
         adapterAddress: accounts[6], //any sample address
         flags: 0,
+        keys: [],
+        values: [], 
+        extensionAddresses: [],
+        extensionAcl: []
       },
-      [],
-      [],
       [],
       {
         from: daoOwner,
@@ -619,9 +651,11 @@ describe("Adapter - Managing", () => {
         adapterId: newAdapterId,
         adapterAddress: "0x0000000000000000000000000000000000000000", // 0ed address to indicate a removal operation
         flags: 0,
+        keys: [],
+        values: [], 
+        extensionAddresses: [],
+        extensionAcl: []
       },
-      [],
-      [],
       [],
       {
         from: daoOwner,
@@ -655,9 +689,11 @@ describe("Adapter - Managing", () => {
         adapterId: newAdapterId,
         adapterAddress: voting.address, // using the voting.address as the new financing adapter address
         flags: 0,
+        keys: [],
+        values: [], 
+        extensionAddresses: [],
+        extensionAcl: []
       },
-      [],
-      [],
       [],
       {
         from: daoOwner,

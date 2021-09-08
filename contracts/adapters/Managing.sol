@@ -39,16 +39,8 @@ contract ManagingContract is
     MemberGuard,
     AdapterGuard
 {
-    struct ProposalDetails {
-        bytes32 adapterId;
-        address adapterAddress;
-        bytes32[] keys;
-        uint256[] values;
-        uint128 flags;
-    }
-
     mapping(address => mapping(bytes32 => ProposalDetails)) public proposals;
-
+    
     /*
      * default fallback function to prevent from sending ether to the contract
      */
@@ -63,23 +55,28 @@ contract ManagingContract is
      * @dev keys and value must have the same length.
      * @dev proposalId can not be reused.
      * @param dao The dao address.
-     * @param proposalId The guild kick proposal id.
+     * @param proposal proposal details
+     * @param proposal proposal details
+     * @param proposal proposal details
      * @param proposal proposal details
      */
     function submitProposal(
         DaoRegistry dao,
         bytes32 proposalId,
-        ProposalInput memory proposal,
-        bytes32[] memory keys,
-        uint256[] memory values,
-        bytes memory data
+        ProposalInput calldata proposal,
+        bytes calldata data
     ) external override onlyMember(dao) reentrancyGuard(dao) {
         require(
-            keys.length == values.length,
+            proposal.keys.length == proposal.values.length,
             "must be an equal number of config keys and values"
         );
 
-        require(proposal.flags < type(uint128).max, "flags parameter overflow");
+        require(
+            proposal.extensionAddresses.length == proposal.extensionAcl.length,
+            "must be an equal number of extension addresses and acl"
+        );
+
+        require(proposal.flags < type(uint128).max, "proposal flags overflow");
 
         require(
             isNotReservedAddress(proposal.adapterAddress),
@@ -88,24 +85,20 @@ contract ManagingContract is
 
         dao.submitProposal(proposalId);
 
-        proposals[address(dao)][proposalId] = ProposalDetails(
-            proposal.adapterId,
-            proposal.adapterAddress,
-            keys,
-            values,
-            proposal.flags
-        );
-
+        proposals[address(dao)][proposalId] = ProposalDetails(proposal.adapterId, proposal.adapterAddress, proposal.flags, proposal.keys, proposal.values, proposal.extensionAddresses, proposal.extensionAcl);
+        
         IVoting votingContract = IVoting(dao.getAdapterAddress(VOTING));
+
+        address senderAddress = votingContract.getSenderAddress(
+            dao,
+            address(this),
+            data,
+            msg.sender
+        );
 
         dao.sponsorProposal(
             proposalId,
-            votingContract.getSenderAddress(
-                dao,
-                address(this),
-                data,
-                msg.sender
-            ),
+            senderAddress,
             address(votingContract)
         );
         votingContract.startNewVotingForProposal(dao, proposalId, data);
@@ -143,5 +136,8 @@ contract ManagingContract is
             proposal.keys,
             proposal.values
         );
+        for(uint256 i = 0; i < proposal.extensionAcl.length; i++) {
+            dao.setAclToExtensionForAdapter(proposal.extensionAddresses[i], proposal.adapterAddress, proposal.extensionAcl[i]);
+        }
     }
 }

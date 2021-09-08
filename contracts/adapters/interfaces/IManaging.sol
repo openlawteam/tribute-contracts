@@ -29,19 +29,32 @@ SOFTWARE.
  */
 
 interface IManaging {
+
     struct ProposalInput {
         bytes32 adapterId;
         address adapterAddress;
         uint128 flags;
+        bytes32[] keys;
+        uint256[] values;
+        address[] extensionAddresses;
+        uint256[] extensionAcl;
+    }
+
+    struct ProposalDetails {
+        bytes32 adapterId;
+        address adapterAddress;
+        uint128 flags;
+        bytes32[] keys;
+        uint256[] values;
+        address[] extensionAddresses;
+        uint256[] extensionAcl;
     }
 
     function submitProposal(
         DaoRegistry dao,
         bytes32 proposalId,
-        ProposalInput memory proposal,
-        bytes32[] memory keys,
-        uint256[] memory values,
-        bytes memory data
+        ProposalInput calldata proposal,
+        bytes calldata data
     ) external;
 
     function processProposal(DaoRegistry dao, bytes32 proposalId) external;
