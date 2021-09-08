@@ -95,13 +95,18 @@ describe("Adapter - Managing", () => {
         dao.address,
         "0x1",
         {
-          adapterId: newAdapterId,
-          adapterAddress: GUILD,
+          id: newAdapterId,
+          addr: GUILD,
+          updateType: 1,
           flags: 0,
-          keys: ["0x0000000000000000000000000000000000000000000000000000000000000001", "0x0000000000000000000000000000000000000000000000000000000000000002", "0x0000000000000000000000000000000000000000000000000000000000000004"], // 3 keys
+          keys: [
+            "0x0000000000000000000000000000000000000000000000000000000000000001",
+            "0x0000000000000000000000000000000000000000000000000000000000000002",
+            "0x0000000000000000000000000000000000000000000000000000000000000004",
+          ], // 3 keys
           values: [], // 0 values
-          extensionAddresses:[],
-          extensionAcl:[],
+          extensionAddresses: [],
+          extensionAcl: [],
         },
         [],
         { from: daoOwner, gasPrice: toBN("0") }
@@ -119,13 +124,14 @@ describe("Adapter - Managing", () => {
         dao.address,
         "0x1",
         {
-          adapterId: newAdapterId,
-          adapterAddress: GUILD,
+          id: newAdapterId,
+          addr: GUILD,
+          updateType: 1,
           flags: 0,
           keys: [], // 0 keys
           values: [1, 2, 3], // 3 values
           extensionAddresses: [],
-          extensionAcl: []
+          extensionAcl: [],
         },
         [],
         { from: daoOwner, gasPrice: toBN("0") }
@@ -143,18 +149,19 @@ describe("Adapter - Managing", () => {
         dao.address,
         "0x1",
         {
-          adapterId: newAdapterId,
-          adapterAddress: GUILD,
+          id: newAdapterId,
+          addr: GUILD,
+          updateType: 1,
           flags: 0,
           keys: [], // 0 keys
           values: [], // 3 values
           extensionAddresses: [],
-          extensionAcl: []
+          extensionAcl: [],
         },
         [],
         { from: daoOwner, gasPrice: toBN("0") }
       ),
-      "adapter address is reserved address"
+      "address is reserved"
     );
 
     await expectRevert(
@@ -162,18 +169,19 @@ describe("Adapter - Managing", () => {
         dao.address,
         "0x0",
         {
-          adapterId: newAdapterId,
-          adapterAddress: TOTAL,
+          id: newAdapterId,
+          addr: TOTAL,
+          updateType: 1,
           flags: 0,
           keys: [], // 0 keys
           values: [], // 3 values
           extensionAddresses: [],
-          extensionAcl: []
+          extensionAcl: [],
         },
         [],
         { from: daoOwner, gasPrice: toBN("0") }
       ),
-      "adapter address is reserved address"
+      "address is reserved"
     );
   });
 
@@ -188,13 +196,14 @@ describe("Adapter - Managing", () => {
       dao.address,
       proposalId,
       {
-        adapterId: adapterIdToRemove,
-        adapterAddress: "0x0000000000000000000000000000000000000000",
+        id: adapterIdToRemove,
+        addr: "0x0000000000000000000000000000000000000000",
+        updateType: 1,
         flags: 0,
         keys: [], // 0 keys
         values: [], // 3 values
         extensionAddresses: [],
-        extensionAcl: []
+        extensionAcl: [],
       },
       [],
       {
@@ -237,13 +246,14 @@ describe("Adapter - Managing", () => {
       dao.address,
       proposalId,
       {
-        adapterId: newAdapterId,
-        adapterAddress: newAdapterAddress,
+        id: newAdapterId,
+        addr: newAdapterAddress,
+        updateType: 1,
         flags: 0,
         keys: [], // 0 keys
         values: [], // 3 values
         extensionAddresses: [],
-        extensionAcl: []
+        extensionAcl: [],
       },
       [],
       { from: daoOwner, gasPrice: toBN("0") }
@@ -300,13 +310,14 @@ describe("Adapter - Managing", () => {
       dao.address,
       proposalId,
       {
-        adapterId: newAdapterId,
-        adapterAddress: newManaging.address,
+        id: newAdapterId,
+        addr: newManaging.address,
+        updateType: 1,
         flags: 0,
-        keys: [], 
+        keys: [],
         values: [],
         extensionAddresses: [],
-        extensionAcl: []
+        extensionAcl: [],
       },
       [],
       {
@@ -320,13 +331,14 @@ describe("Adapter - Managing", () => {
         dao.address,
         proposalId,
         {
-          adapterId: newAdapterId,
-          adapterAddress: newManaging.address,
+          id: newAdapterId,
+          addr: newManaging.address,
+          updateType: 1,
           flags: 0,
           keys: [],
-          values: [], 
+          values: [],
           extensionAddresses: [],
-          extensionAcl: []
+          extensionAcl: [],
         },
         [],
         {
@@ -353,13 +365,14 @@ describe("Adapter - Managing", () => {
       dao.address,
       proposalId,
       {
-        adapterId: newAdapterId,
-        adapterAddress: newManaging.address,
+        id: newAdapterId,
+        addr: newManaging.address,
+        updateType: 1,
         flags,
         keys: [],
-        values: [], 
+        values: [],
         extensionAddresses: [],
-        extensionAcl: []
+        extensionAcl: [],
       },
       [],
       {
@@ -397,13 +410,14 @@ describe("Adapter - Managing", () => {
       dao.address,
       newProposalId,
       {
-        adapterId: sha3("financing"),
-        adapterAddress: "0x0000000000000000000000000000000000000000",
+        id: sha3("financing"),
+        addr: "0x0000000000000000000000000000000000000000",
+        updateType: 1,
         flags: 0,
         keys: [],
-        values: [], 
+        values: [],
         extensionAddresses: [],
-        extensionAcl: []
+        extensionAcl: [],
       },
       [],
       {
@@ -447,13 +461,14 @@ describe("Adapter - Managing", () => {
       dao.address,
       proposalId,
       {
-        adapterId: newAdapterId,
-        adapterAddress: newManaging.address,
+        id: newAdapterId,
+        addr: newManaging.address,
+        updateType: 1,
         flags: entryDao("managing", newManaging, {}).flags, // no permissions were set
         keys: [],
-        values: [], 
+        values: [],
         extensionAddresses: [],
-        extensionAcl: []
+        extensionAcl: [],
       },
       [],
       {
@@ -480,13 +495,14 @@ describe("Adapter - Managing", () => {
         dao.address,
         newProposalId,
         {
-          adapterId: sha3("voting"),
-          adapterAddress: voting.address,
+          id: sha3("voting"),
+          addr: voting.address,
+          updateType: 1,
           flags: 0,
           keys: [],
-          values: [], 
+          values: [],
           extensionAddresses: [],
-          extensionAcl: []
+          extensionAcl: [],
         },
         [],
         {
@@ -511,13 +527,14 @@ describe("Adapter - Managing", () => {
         dao.address,
         proposalId,
         {
-          adapterId: newAdapterId,
-          adapterAddress: newAdapterAddress,
+          id: newAdapterId,
+          addr: newAdapterAddress,
+          updateType: 1,
           flags: 0,
           keys: [],
-          values: [], 
+          values: [],
           extensionAddresses: [],
-          extensionAcl: []
+          extensionAcl: [],
         },
         [],
         { from: nonMember, gasPrice: toBN("0") }
@@ -539,13 +556,14 @@ describe("Adapter - Managing", () => {
         dao.address,
         proposalId,
         {
-          adapterId: newAdapterId,
-          adapterAddress: newVoting.address,
+          id: newAdapterId,
+          addr: newVoting.address,
+          updateType: 1,
           flags: 0,
           keys: [],
-          values: [], 
+          values: [],
           extensionAddresses: [],
-          extensionAcl: []
+          extensionAcl: [],
         },
         [],
         {
@@ -569,13 +587,14 @@ describe("Adapter - Managing", () => {
       dao.address,
       proposalId,
       {
-        adapterId: newAdapterId,
-        adapterAddress: accounts[6], //any sample address
+        id: newAdapterId,
+        addr: accounts[6], //any sample address
+        updateType: 1,
         flags: 0,
         keys: [],
-        values: [], 
+        values: [],
         extensionAddresses: [],
-        extensionAcl: []
+        extensionAcl: [],
       },
       [],
       {
@@ -607,13 +626,14 @@ describe("Adapter - Managing", () => {
       dao.address,
       proposalId,
       {
-        adapterId: newAdapterId,
-        adapterAddress: accounts[6], //any sample address
+        id: newAdapterId,
+        addr: accounts[6], //any sample address
+        updateType: 1,
         flags: 0,
         keys: [],
-        values: [], 
+        values: [],
         extensionAddresses: [],
-        extensionAcl: []
+        extensionAcl: [],
       },
       [],
       {
@@ -648,13 +668,14 @@ describe("Adapter - Managing", () => {
       dao.address,
       proposalId,
       {
-        adapterId: newAdapterId,
-        adapterAddress: "0x0000000000000000000000000000000000000000", // 0ed address to indicate a removal operation
+        id: newAdapterId,
+        addr: "0x0000000000000000000000000000000000000000", // 0ed address to indicate a removal operation
+        updateType: 1,
         flags: 0,
         keys: [],
-        values: [], 
+        values: [],
         extensionAddresses: [],
-        extensionAcl: []
+        extensionAcl: [],
       },
       [],
       {
@@ -686,13 +707,14 @@ describe("Adapter - Managing", () => {
       dao.address,
       proposalId,
       {
-        adapterId: newAdapterId,
-        adapterAddress: voting.address, // using the voting.address as the new financing adapter address
+        id: newAdapterId,
+        addr: voting.address, // using the voting.address as the new financing adapter address
+        updateType: 1,
         flags: 0,
         keys: [],
-        values: [], 
+        values: [],
         extensionAddresses: [],
-        extensionAcl: []
+        extensionAcl: [],
       },
       [],
       {

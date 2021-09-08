@@ -40,7 +40,7 @@ contract ManagingContract is
     AdapterGuard
 {
     mapping(address => mapping(bytes32 => ProposalDetails)) public proposals;
-    
+
     /*
      * default fallback function to prevent from sending ether to the contract
      */
@@ -78,29 +78,32 @@ contract ManagingContract is
 
         require(proposal.flags < type(uint128).max, "proposal flags overflow");
 
-        require(
-            isNotReservedAddress(proposal.adapterAddress),
-            "adapter address is reserved address"
-        );
+        require(isNotReservedAddress(proposal.addr), "address is reserved");
 
         dao.submitProposal(proposalId);
 
-        proposals[address(dao)][proposalId] = ProposalDetails(proposal.adapterId, proposal.adapterAddress, proposal.flags, proposal.keys, proposal.values, proposal.extensionAddresses, proposal.extensionAcl);
-        
+        proposals[address(dao)][proposalId] = ProposalDetails(
+            proposal.id,
+            proposal.addr,
+            proposal.updateType,
+            proposal.flags,
+            proposal.keys,
+            proposal.values,
+            proposal.extensionAddresses,
+            proposal.extensionAcl
+        );
+
         IVoting votingContract = IVoting(dao.getAdapterAddress(VOTING));
 
-        address senderAddress = votingContract.getSenderAddress(
-            dao,
-            address(this),
-            data,
-            msg.sender
-        );
+        address senderAddress =
+            votingContract.getSenderAddress(
+                dao,
+                address(this),
+                data,
+                msg.sender
+            );
 
-        dao.sponsorProposal(
-            proposalId,
-            senderAddress,
-            address(votingContract)
-        );
+        dao.sponsorProposal(proposalId, senderAddress, address(votingContract));
         votingContract.startNewVotingForProposal(dao, proposalId, data);
     }
 
@@ -129,15 +132,36 @@ contract ManagingContract is
         );
 
         dao.processProposal(proposalId);
-        dao.replaceAdapter(
-            proposal.adapterId,
-            proposal.adapterAddress,
-            proposal.flags,
-            proposal.keys,
-            proposal.values
-        );
-        for(uint256 i = 0; i < proposal.extensionAcl.length; i++) {
-            dao.setAclToExtensionForAdapter(proposal.extensionAddresses[i], proposal.adapterAddress, proposal.extensionAcl[i]);
+        if (proposal.updateType == UpdateType.ADAPTER) {
+            dao.replaceAdapter(
+                proposal.id,
+                proposal.addr,
+                proposal.flags,
+                proposal.keys,
+                proposal.values
+            );
+        } else if (proposal.updateType == UpdateType.EXTENSION) {
+            if (dao.extensions(proposal.id) != address(0x0)) {
+                dao.removeExtension(proposal.id);
+            }
+
+            if (proposal.addr != address(0x0)) {
+                dao.addExtension(
+                    proposal.id,
+                    IExtension(proposal.addr),
+                    address(dao)
+                );
+            }
+        } else {
+            revert("unknown update type");
+        }
+
+        for (uint256 i = 0; i < proposal.extensionAcl.length; i++) {
+            dao.setAclToExtensionForAdapter(
+                proposal.extensionAddresses[i],
+                proposal.addr,
+                proposal.extensionAcl[i]
+            );
         }
     }
 }

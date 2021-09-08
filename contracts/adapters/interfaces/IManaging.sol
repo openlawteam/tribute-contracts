@@ -29,10 +29,12 @@ SOFTWARE.
  */
 
 interface IManaging {
+    enum UpdateType {UNKNOWN, ADAPTER, EXTENSION}
 
     struct ProposalInput {
-        bytes32 adapterId;
-        address adapterAddress;
+        bytes32 id;
+        address addr;
+        UpdateType updateType;
         uint128 flags;
         bytes32[] keys;
         uint256[] values;
@@ -41,8 +43,9 @@ interface IManaging {
     }
 
     struct ProposalDetails {
-        bytes32 adapterId;
-        address adapterAddress;
+        bytes32 id;
+        address addr;
+        UpdateType updateType;
         uint128 flags;
         bytes32[] keys;
         uint256[] values;
