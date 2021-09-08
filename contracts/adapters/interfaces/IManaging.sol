@@ -31,32 +31,21 @@ SOFTWARE.
 interface IManaging {
     enum UpdateType {UNKNOWN, ADAPTER, EXTENSION}
 
-    struct ProposalInput {
-        bytes32 id;
-        address addr;
-        UpdateType updateType;
-        uint128 flags;
-        bytes32[] keys;
-        uint256[] values;
-        address[] extensionAddresses;
-        uint256[] extensionAcl;
-    }
-
     struct ProposalDetails {
-        bytes32 id;
-        address addr;
+        bytes32 adapterOrExtensionId;
+        address adapterOrExtensionAddr;
         UpdateType updateType;
         uint128 flags;
         bytes32[] keys;
         uint256[] values;
         address[] extensionAddresses;
-        uint256[] extensionAcl;
+        uint128[] extensionAclFlags;
     }
 
     function submitProposal(
         DaoRegistry dao,
         bytes32 proposalId,
-        ProposalInput calldata proposal,
+        ProposalDetails calldata proposal,
         bytes calldata data
     ) external;
 

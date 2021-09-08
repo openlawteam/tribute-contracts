@@ -55,15 +55,14 @@ contract ManagingContract is
      * @dev keys and value must have the same length.
      * @dev proposalId can not be reused.
      * @param dao The dao address.
-     * @param proposal proposal details
-     * @param proposal proposal details
-     * @param proposal proposal details
-     * @param proposal proposal details
+     * @param proposalId Tproposal details
+     * @param proposal The proposal details
+     * @param data Additional data to pass to the voting contract and identify the submitter
      */
     function submitProposal(
         DaoRegistry dao,
         bytes32 proposalId,
-        ProposalInput calldata proposal,
+        ProposalDetails calldata proposal,
         bytes calldata data
     ) external override onlyMember(dao) reentrancyGuard(dao) {
         require(
@@ -72,26 +71,21 @@ contract ManagingContract is
         );
 
         require(
-            proposal.extensionAddresses.length == proposal.extensionAcl.length,
+            proposal.extensionAddresses.length ==
+                proposal.extensionAclFlags.length,
             "must be an equal number of extension addresses and acl"
         );
 
         require(proposal.flags < type(uint128).max, "proposal flags overflow");
 
-        require(isNotReservedAddress(proposal.addr), "address is reserved");
+        require(
+            isNotReservedAddress(proposal.adapterOrExtensionAddr),
+            "address is reserved"
+        );
 
         dao.submitProposal(proposalId);
 
-        proposals[address(dao)][proposalId] = ProposalDetails(
-            proposal.id,
-            proposal.addr,
-            proposal.updateType,
-            proposal.flags,
-            proposal.keys,
-            proposal.values,
-            proposal.extensionAddresses,
-            proposal.extensionAcl
-        );
+        proposals[address(dao)][proposalId] = proposal;
 
         IVoting votingContract = IVoting(dao.getAdapterAddress(VOTING));
 
@@ -134,33 +128,33 @@ contract ManagingContract is
         dao.processProposal(proposalId);
         if (proposal.updateType == UpdateType.ADAPTER) {
             dao.replaceAdapter(
-                proposal.id,
-                proposal.addr,
+                proposal.adapterOrExtensionId,
+                proposal.adapterOrExtensionAddr,
                 proposal.flags,
                 proposal.keys,
                 proposal.values
             );
         } else if (proposal.updateType == UpdateType.EXTENSION) {
-            if (dao.extensions(proposal.id) != address(0x0)) {
-                dao.removeExtension(proposal.id);
+            if (dao.extensions(proposal.adapterOrExtensionId) != address(0x0)) {
+                dao.removeExtension(proposal.adapterOrExtensionId);
             }
 
-            if (proposal.addr != address(0x0)) {
+            if (proposal.adapterOrExtensionAddr != address(0x0)) {
                 dao.addExtension(
-                    proposal.id,
-                    IExtension(proposal.addr),
-                    address(dao)
+                    proposal.adapterOrExtensionId,
+                    IExtension(proposal.adapterOrExtensionAddr),
+                    msg.sender
                 );
             }
         } else {
             revert("unknown update type");
         }
 
-        for (uint256 i = 0; i < proposal.extensionAcl.length; i++) {
+        for (uint128 i = 0; i < proposal.extensionAclFlags.length; i++) {
             dao.setAclToExtensionForAdapter(
                 proposal.extensionAddresses[i],
-                proposal.addr,
-                proposal.extensionAcl[i]
+                proposal.adapterOrExtensionAddr,
+                proposal.extensionAclFlags[i]
             );
         }
     }
