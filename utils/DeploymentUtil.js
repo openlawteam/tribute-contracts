@@ -485,6 +485,8 @@ const configureDao = async ({
       entryDao("managing", managing, {
         SUBMIT_PROPOSAL: true,
         REPLACE_ADAPTER: true,
+        ADD_EXTENSION: true,
+        REMOVE_EXTENSION: true,
       }),
       entryDao("financing", financing, {
         SUBMIT_PROPOSAL: true,
