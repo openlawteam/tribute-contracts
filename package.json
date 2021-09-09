@@ -1,6 +1,6 @@
 {
   "name": "tribute-contracts",
-  "version": "2.1.0",
+  "version": "2.1.1",
   "description": "A new modular DAO framework, inspired by the Moloch smart contracts",
   "main": "truffle-config.js",
   "keywords": [
