@@ -5,7 +5,7 @@ import MediumSVG from "../svg/MediumSVG";
 
 // @todo Add missing URLs when available
 const SocialMediaLinks = {
-  DISCORD: "#",
+  DISCORD: "https://discord.gg/tEfP68xnTd",
   // query params search sepcifically for openlawteam/tribute-ui and
   // openlawteam/tribute-contracts
   GITHUB:
@@ -22,14 +22,14 @@ export default function SocialMedia() {
         rel="noopener noreferrer"
       >
         <MediumSVG />
-      </a>
+      </a> */}
       <a
         href={SocialMediaLinks.DISCORD}
         target="_blank"
         rel="noopener noreferrer"
       >
         <DiscordSVG />
-      </a> */}
+      </a>
       <a
         href={SocialMediaLinks.GITHUB}
         target="_blank"
