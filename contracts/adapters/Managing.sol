@@ -39,14 +39,6 @@ contract ManagingContract is
     MemberGuard,
     AdapterGuard
 {
-    struct ProposalDetails {
-        bytes32 adapterId;
-        address adapterAddress;
-        bytes32[] keys;
-        uint256[] values;
-        uint128 flags;
-    }
-
     mapping(address => mapping(bytes32 => ProposalDetails)) public proposals;
 
     /*
@@ -63,51 +55,49 @@ contract ManagingContract is
      * @dev keys and value must have the same length.
      * @dev proposalId can not be reused.
      * @param dao The dao address.
-     * @param proposalId The guild kick proposal id.
-     * @param proposal proposal details
+     * @param proposalId Tproposal details
+     * @param proposal The proposal details
+     * @param data Additional data to pass to the voting contract and identify the submitter
      */
     function submitProposal(
         DaoRegistry dao,
         bytes32 proposalId,
-        ProposalInput memory proposal,
-        bytes32[] memory keys,
-        uint256[] memory values,
-        bytes memory data
+        ProposalDetails calldata proposal,
+        bytes calldata data
     ) external override onlyMember(dao) reentrancyGuard(dao) {
         require(
-            keys.length == values.length,
+            proposal.keys.length == proposal.values.length,
             "must be an equal number of config keys and values"
         );
 
-        require(proposal.flags < type(uint128).max, "flags parameter overflow");
+        require(
+            proposal.extensionAddresses.length ==
+                proposal.extensionAclFlags.length,
+            "must be an equal number of extension addresses and acl"
+        );
+
+        require(proposal.flags < type(uint128).max, "proposal flags overflow");
 
         require(
-            isNotReservedAddress(proposal.adapterAddress),
-            "adapter address is reserved address"
+            isNotReservedAddress(proposal.adapterOrExtensionAddr),
+            "address is reserved"
         );
 
         dao.submitProposal(proposalId);
 
-        proposals[address(dao)][proposalId] = ProposalDetails(
-            proposal.adapterId,
-            proposal.adapterAddress,
-            keys,
-            values,
-            proposal.flags
-        );
+        proposals[address(dao)][proposalId] = proposal;
 
         IVoting votingContract = IVoting(dao.getAdapterAddress(VOTING));
 
-        dao.sponsorProposal(
-            proposalId,
+        address senderAddress =
             votingContract.getSenderAddress(
                 dao,
                 address(this),
                 data,
                 msg.sender
-            ),
-            address(votingContract)
-        );
+            );
+
+        dao.sponsorProposal(proposalId, senderAddress, address(votingContract));
         votingContract.startNewVotingForProposal(dao, proposalId, data);
     }
 
@@ -136,12 +126,36 @@ contract ManagingContract is
         );
 
         dao.processProposal(proposalId);
-        dao.replaceAdapter(
-            proposal.adapterId,
-            proposal.adapterAddress,
-            proposal.flags,
-            proposal.keys,
-            proposal.values
-        );
+        if (proposal.updateType == UpdateType.ADAPTER) {
+            dao.replaceAdapter(
+                proposal.adapterOrExtensionId,
+                proposal.adapterOrExtensionAddr,
+                proposal.flags,
+                proposal.keys,
+                proposal.values
+            );
+        } else if (proposal.updateType == UpdateType.EXTENSION) {
+            if (dao.extensions(proposal.adapterOrExtensionId) != address(0x0)) {
+                dao.removeExtension(proposal.adapterOrExtensionId);
+            }
+
+            if (proposal.adapterOrExtensionAddr != address(0x0)) {
+                dao.addExtension(
+                    proposal.adapterOrExtensionId,
+                    IExtension(proposal.adapterOrExtensionAddr),
+                    dao.getMemberAddress(0)
+                );
+            }
+        } else {
+            revert("unknown update type");
+        }
+
+        for (uint128 i = 0; i < proposal.extensionAclFlags.length; i++) {
+            dao.setAclToExtensionForAdapter(
+                proposal.extensionAddresses[i],
+                proposal.adapterOrExtensionAddr,
+                proposal.extensionAclFlags[i]
+            );
+        }
     }
 }
