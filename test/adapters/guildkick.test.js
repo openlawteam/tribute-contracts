@@ -705,12 +705,15 @@ describe("Adapter - GuildKick", () => {
         this.dao.address,
         getProposalCounter(),
         {
-          adapterId: newAdapterId,
-          adapterAddress: newAdapterAddress,
+          adapterOrExtensionId: newAdapterId,
+          adapterOrExtensionAddr: newAdapterAddress,
           flags: 0,
+          updateType: 1,
+          keys: [],
+          values: [],
+          extensionAddresses: [],
+          extensionAclFlags: [],
         },
-        [],
-        [],
         [],
         { from: kickedMember, gasPrice: toBN("0") }
       ),
@@ -766,19 +769,22 @@ describe("Adapter - GuildKick", () => {
 
     const proposalId = getProposalCounter();
     //Submit a new Bank adapter proposal
-    let newadapterId = sha3("onboarding");
-    let newadapterAddress = accounts[3]; //TODO deploy some Banking test contract
+    let newAdapterId = sha3("onboarding");
+    let newAdapterAddress = accounts[3]; //TODO deploy some Banking test contract
     await expectRevert(
       managing.submitProposal(
         this.dao.address,
         proposalId,
         {
-          adapterId: newadapterId,
-          adapterAddress: newadapterAddress,
+          adapterOrExtensionId: newAdapterId,
+          adapterOrExtensionAddr: newAdapterAddress,
           flags: 0,
+          updateType: 1,
+          keys: [],
+          values: [],
+          extensionAddresses: [],
+          extensionAclFlags: [],
         },
-        [],
-        [],
         [],
         { from: kickedMember, gasPrice: toBN("0") }
       ),
