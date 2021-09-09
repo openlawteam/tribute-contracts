@@ -24,9 +24,7 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
  */
-const {
-  toBN, NFT
-} = require("../../utils/ContractUtil.js");
+const { toBN, NFT, UNITS } = require("../../utils/ContractUtil.js");
 
 const {
   deployDefaultNFTDao,
@@ -38,8 +36,6 @@ const {
   expectRevert,
   expect,
 } = require("../../utils/OZTestUtil.js");
-
-const { onboardingNewMember, isMember } = require("../../utils/TestUtils.js");
 
 describe("Adapter - LendNFT", () => {
   const proposalCounter = proposalIdGenerator().generator;
@@ -84,24 +80,41 @@ describe("Adapter - LendNFT", () => {
       nftOwner,
       pixelNFT.address,
       tokenId,
-      0, // tribute amount (erc721 = 0)
-      10, // requested units
+      10000,
+      10000, // requested units
       [],
       { from: daoOwner, gasPrice: toBN("0") }
     );
 
     const voting = this.adapters.voting;
+    const bank = this.extensions.bank;
 
-    await voting.submitVote(dao.address, proposalId, 1, {from: daoOwner});
+    await voting.submitVote(dao.address, proposalId, 1, { from: daoOwner });
     const nftExtension = await dao.getExtensionAddress(NFT);
     await advanceTime(10000);
-    await pixelNFT.approve(nftExtension, tokenId, {from: nftOwner});
-    await lendNFT.processProposal(dao.address, proposalId, {from: daoOwner});
-    const newOwner = await pixelNFT.ownerOf(tokenId);
-    
+    await pixelNFT.approve(nftExtension, tokenId, { from: nftOwner });
+    await lendNFT.processProposal(dao.address, proposalId, { from: daoOwner });
+    let newOwner = await pixelNFT.ownerOf(tokenId);
+
     expect(newOwner).equal(nftExtension);
 
-    
+    let unitBalance = await bank.balanceOf(nftOwner, UNITS);
+    expect(unitBalance.toString()).equal("10000");
 
+    await advanceTime(100);
+
+    await expectRevert(
+      lendNFT.sendNFTBack(dao.address, proposalId),
+      "only the previous owner can withdraw the NFT"
+    );
+
+    await lendNFT.sendNFTBack(dao.address, proposalId, { from: nftOwner });
+
+    newOwner = await pixelNFT.ownerOf(tokenId);
+
+    expect(newOwner).equal(nftOwner);
+
+    unitBalance = await bank.balanceOf(nftOwner, UNITS);
+    expect(unitBalance.toString()).equal("100");
   });
 });

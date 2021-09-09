@@ -4,6 +4,7 @@ pragma solidity ^0.8.0;
 
 import "../core/DaoRegistry.sol";
 import "../extensions/nft/NFT.sol";
+import "../extensions/token/erc20/InternalTokenVestingExtension.sol";
 import "../adapters/interfaces/IVoting.sol";
 import "../helpers/DaoHelper.sol";
 import "../guards/MemberGuard.sol";
@@ -52,7 +53,7 @@ contract LendNFTContract is MemberGuard, AdapterGuard {
         uint88 requestAmount;
         uint64 lendingPeriod;
         bool sentBack;
-        uint256 lendingStart;
+        uint64 lendingStart;
         address previousOwner;
     }
 
@@ -174,6 +175,14 @@ contract LendNFTContract is MemberGuard, AdapterGuard {
                 NFTExtension(dao.getExtensionAddress(DaoHelper.NFT));
             BankExtension bank =
                 BankExtension(dao.getExtensionAddress(DaoHelper.BANK));
+
+            InternalTokenVestingExtension vesting =
+                InternalTokenVestingExtension(
+                    dao.getExtensionAddress(
+                        DaoHelper.INTERNAL_TOKEN_VESTING_EXT
+                    )
+                );
+
             require(
                 bank.isInternalToken(DaoHelper.UNITS),
                 "UNITS token is not an internal token"
@@ -182,6 +191,7 @@ contract LendNFTContract is MemberGuard, AdapterGuard {
             IERC721 erc721 = IERC721(proposal.nftAddr);
 
             proposal.previousOwner = erc721.ownerOf(proposal.nftTokenId);
+            proposal.lendingStart = uint64(block.timestamp);
             nftExt.collect(proposal.nftAddr, proposal.nftTokenId);
 
             bank.addToBalance(
@@ -189,7 +199,17 @@ contract LendNFTContract is MemberGuard, AdapterGuard {
                 DaoHelper.UNITS,
                 proposal.requestAmount
             );
-            proposals[address(dao)][proposalId].lendingStart = block.timestamp;
+
+            //add vesting here
+            vesting.createNewVesting(
+                proposal.applicant,
+                DaoHelper.UNITS,
+                proposal.requestAmount,
+                proposal.lendingStart + proposal.lendingPeriod
+            );
+            proposals[address(dao)][proposalId].lendingStart = uint64(
+                block.timestamp
+            );
         } else if (
             voteResult == IVoting.VotingState.NOT_PASS ||
             voteResult == IVoting.VotingState.TIE
@@ -207,14 +227,47 @@ contract LendNFTContract is MemberGuard, AdapterGuard {
         ProposalDetails storage proposal = proposals[address(dao)][proposalId];
         require(proposal.lendingStart > 0, "lending not started");
         require(!proposal.sentBack, "already sent back");
-
+        require(
+            msg.sender == proposal.previousOwner,
+            "only the previous owner can withdraw the NFT"
+        );
         NFTExtension nftExt =
             NFTExtension(dao.getExtensionAddress(DaoHelper.NFT));
+        BankExtension bank =
+            BankExtension(dao.getExtensionAddress(DaoHelper.BANK));
+
         nftExt.withdrawNFT(
             proposal.previousOwner,
             proposal.nftAddr,
             proposal.nftTokenId
         );
+
+        InternalTokenVestingExtension vesting =
+            InternalTokenVestingExtension(
+                dao.getExtensionAddress(DaoHelper.INTERNAL_TOKEN_VESTING_EXT)
+            );
+
+        uint256 elapsedTime = block.timestamp - proposal.lendingStart;
+
+        if (elapsedTime < proposal.lendingPeriod) {
+            uint256 blockedAmount =
+                vesting.getMinimumBalanceInternal(
+                    proposal.lendingStart,
+                    proposal.lendingStart + proposal.lendingPeriod,
+                    proposal.requestAmount
+                );
+            bank.subtractFromBalance(
+                proposal.applicant,
+                DaoHelper.UNITS,
+                blockedAmount
+            );
+            vesting.removeVesting(
+                proposal.applicant,
+                DaoHelper.UNITS,
+                uint64(proposal.lendingPeriod - elapsedTime)
+            );
+        }
+
         proposal.sentBack = true;
     }
 }

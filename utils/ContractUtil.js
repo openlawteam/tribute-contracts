@@ -83,5 +83,5 @@ module.exports = {
   ZERO_ADDRESS,
   BANK,
   NFT,
-  ERC1271
+  ERC1271,
 };

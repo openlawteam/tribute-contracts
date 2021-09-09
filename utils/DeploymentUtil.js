@@ -773,6 +773,7 @@ const configureDao = async ({
     adaptersWithBankAccess.push(
       entryBank(lendNFT, {
         ADD_TO_BALANCE: true,
+        SUB_FROM_BALANCE: true,
       })
     );
 
@@ -803,6 +804,7 @@ const configureDao = async ({
     adaptersWithNFTAccess.push(
       entryNft(lendNFT, {
         COLLECT_NFT: true,
+        WITHDRAW_NFT: true,
       })
     );
 
