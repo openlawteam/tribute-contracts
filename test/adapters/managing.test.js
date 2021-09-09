@@ -798,28 +798,71 @@ describe("Adapter - Managing", () => {
     // At this point the adapter should be able access the Bank Extension
     // We check that by verifying if the ACL flag in the DAO matches the one
     // submitted in the proposal.
+
+    /**
+     * Bank flags
+     * 0: ADD_TO_BALANCE
+     * 1: SUB_FROM_BALANCE
+     * 2: INTERNAL_TRANSFER
+     * 3: WITHDRAW
+     * 4: REGISTER_NEW_TOKEN
+     * 5: REGISTER_NEW_INTERNAL_TOKEN
+     * 6: UPDATE_TOKEN
+     */
     expect(await dao.getAdapterAddress(newAdapterId)).equal(newAdapterAddress);
     expect(
       await dao.hasAdapterAccessToExtension(
         newAdapterAddress,
         bankExt.address,
-        entryBank(financing, { ADD_TO_BALANCE: true }).flags
+        0 //ADD_TO_BALANCE
       )
     ).equal(true);
     expect(
       await dao.hasAdapterAccessToExtension(
         newAdapterAddress,
         bankExt.address,
-        entryBank(financing, { SUB_FROM_BALANCE: true }).flags
+        1 // SUB_FROM_BALANCE
       )
     ).equal(true);
     expect(
       await dao.hasAdapterAccessToExtension(
         newAdapterAddress,
         bankExt.address,
-        entryBank(financing, { INTERNAL_TRANSFER: true }).flags
+        2 // INTERNAL_TRANSFER
       )
     ).equal(true);
+
+    expect(
+      await dao.hasAdapterAccessToExtension(
+        newAdapterAddress,
+        bankExt.address,
+        3 // WITHDRAW
+      )
+    ).equal(false);
+
+    expect(
+      await dao.hasAdapterAccessToExtension(
+        newAdapterAddress,
+        bankExt.address,
+        4 // REGISTER_NEW_TOKEN
+      )
+    ).equal(false);
+
+    expect(
+      await dao.hasAdapterAccessToExtension(
+        newAdapterAddress,
+        bankExt.address,
+        5 // REGISTER_NEW_INTERNAL_TOKEN
+      )
+    ).equal(false);
+
+    expect(
+      await dao.hasAdapterAccessToExtension(
+        newAdapterAddress,
+        bankExt.address,
+        6 // UPDATE_TOKEN
+      )
+    ).equal(false);
   });
 
   it("should be possible to add a new extension", async () => {

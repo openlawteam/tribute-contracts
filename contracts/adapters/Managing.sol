@@ -143,7 +143,7 @@ contract ManagingContract is
                 dao.addExtension(
                     proposal.adapterOrExtensionId,
                     IExtension(proposal.adapterOrExtensionAddr),
-                    msg.sender
+                    dao.getMemberAddress(0)
                 );
             }
         } else {
