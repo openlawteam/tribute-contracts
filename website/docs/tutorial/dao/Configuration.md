@@ -55,7 +55,7 @@ INFURA_KEY=
 
 # The 12 word "secret recovery phrase" for the ethereum address
 # referenced in DAO_OWNER_ADDR above. This can be found in your wallet.
-# It will be used to create the HD wallet and sign transactions on your behalf. 
+# It will be used to create the HD wallet and sign transactions on your behalf.
 TRUFFLE_MNEMONIC=...
 
 # The Graph API Access Token that will be used to deploy the Subgraph.
