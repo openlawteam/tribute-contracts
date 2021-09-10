@@ -53,10 +53,9 @@ ERC20_TOKEN_DECIMALS=0
 # https://blog.infura.io/getting-started-with-infura-28e41844cc89/
 INFURA_KEY=
 
-# The Truffle mnemonic is a 12 word string which is used to create
-# the HD Wallet, and sign transactions on your behalf. Remember that
-# the DAO_OWNER_ADDR that you set above need to be the public address
-# derived from this 12 word mnemonic.
+# The 12 word "secret recovery phrase" for the ethereum address
+# referenced in DAO_OWNER_ADDR above. This can be found in your wallet.
+# It will be used to create the HD wallet and sign transactions on your behalf. 
 TRUFFLE_MNEMONIC=...
 
 # The Graph API Access Token that will be used to deploy the Subgraph.
