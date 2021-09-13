@@ -4,12 +4,14 @@ pragma solidity ^0.8.0;
 
 import "../core/DaoRegistry.sol";
 import "../extensions/nft/NFT.sol";
+import "../extensions/erc1155/ERC1155TokenExtension.sol";
 import "../extensions/token/erc20/InternalTokenVestingExtension.sol";
 import "../adapters/interfaces/IVoting.sol";
 import "../helpers/DaoHelper.sol";
 import "../guards/MemberGuard.sol";
 import "../guards/AdapterGuard.sol";
 import "@openzeppelin/contracts/utils/Address.sol";
+import "@openzeppelin/contracts/token/ERC1155/IERC1155.sol";
 
 /**
 MIT License
@@ -49,6 +51,7 @@ contract LendNFTContract is MemberGuard, AdapterGuard {
         address nftAddr;
         // The nft token identifier.
         uint256 nftTokenId;
+        uint256 tributeAmount;
         // The amount requested of DAO internal tokens (UNITS).
         uint88 requestAmount;
         uint64 lendingPeriod;
@@ -89,6 +92,8 @@ contract LendNFTContract is MemberGuard, AdapterGuard {
      * @param applicant The applicant address (who will receive the DAO internal tokens and become a member).
      * @param nftAddr The address of the ERC-721 token that will be transferred to the DAO in exchange for DAO internal tokens.
      * @param nftTokenId The NFT token id.
+     * @param tributeAmount used to send an ERC-1155 (0 means ERC-721)
+     * @param owner the expected owner of the NFT
      * @param requestAmount The amount requested of DAO internal tokens (UNITS).
      * @param data Additional information related to the tribute proposal.
      */
@@ -98,6 +103,8 @@ contract LendNFTContract is MemberGuard, AdapterGuard {
         address applicant,
         address nftAddr,
         uint256 nftTokenId,
+        uint256 tributeAmount,
+        address owner,
         uint88 requestAmount,
         uint64 lendingPeriod,
         bytes memory data
@@ -131,11 +138,12 @@ contract LendNFTContract is MemberGuard, AdapterGuard {
             applicant,
             nftAddr,
             nftTokenId,
+            tributeAmount,
             requestAmount,
             lendingPeriod,
             false,
             0,
-            address(0x0)
+            owner
         );
     }
 
@@ -171,10 +179,35 @@ contract LendNFTContract is MemberGuard, AdapterGuard {
         dao.processProposal(proposalId);
 
         if (voteResult == IVoting.VotingState.PASS) {
-            NFTExtension nftExt =
-                NFTExtension(dao.getExtensionAddress(DaoHelper.NFT));
             BankExtension bank =
                 BankExtension(dao.getExtensionAddress(DaoHelper.BANK));
+
+            uint256 tributeAmount = proposal.tributeAmount;
+            
+            if (tributeAmount > 0) {
+
+                IERC1155 erc1155 = IERC1155(proposal.nftAddr);
+                require(erc1155.balanceOf(proposal.previousOwner, proposal.nftTokenId) > 0, "previous owner not owner");
+
+                ERC1155TokenExtension erc1155Ext =
+                    ERC1155TokenExtension(
+                        dao.getExtensionAddress(DaoHelper.ERC1155_EXT)
+                    );
+                erc1155Ext.collect(
+                    proposal.applicant,
+                    proposal.nftAddr,
+                    proposal.nftTokenId,
+                    proposal.tributeAmount
+                );
+            } else {
+
+                IERC721 erc721 = IERC721(proposal.nftAddr);
+                require(proposal.previousOwner == erc721.ownerOf(proposal.nftTokenId), "wrong owner");
+
+                NFTExtension nftExt =
+                    NFTExtension(dao.getExtensionAddress(DaoHelper.NFT));
+                nftExt.collect(proposal.nftAddr, proposal.nftTokenId);
+            }
 
             InternalTokenVestingExtension vesting =
                 InternalTokenVestingExtension(
@@ -188,11 +221,7 @@ contract LendNFTContract is MemberGuard, AdapterGuard {
                 "UNITS token is not an internal token"
             );
 
-            IERC721 erc721 = IERC721(proposal.nftAddr);
-
-            proposal.previousOwner = erc721.ownerOf(proposal.nftTokenId);
             proposal.lendingStart = uint64(block.timestamp);
-            nftExt.collect(proposal.nftAddr, proposal.nftTokenId);
 
             bank.addToBalance(
                 proposal.applicant,
@@ -207,9 +236,7 @@ contract LendNFTContract is MemberGuard, AdapterGuard {
                 proposal.requestAmount,
                 proposal.lendingStart + proposal.lendingPeriod
             );
-            proposals[address(dao)][proposalId].lendingStart = uint64(
-                block.timestamp
-            );
+            proposals[address(dao)][proposalId].lendingStart = uint64(block.timestamp);            
         } else if (
             voteResult == IVoting.VotingState.NOT_PASS ||
             voteResult == IVoting.VotingState.TIE

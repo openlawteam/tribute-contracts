@@ -66,6 +66,7 @@ describe("Adapter - LendNFT", () => {
 
   it("should be able to lend an NFT", async () => {
     const pixelNFT = this.testContracts.pixelNFT;
+    const erc1155Token = this.testContracts.erc1155TestToken;
     const nftOwner = accounts[2];
     const lendNFT = this.adapters.lendNFT;
     const dao = this.dao;
@@ -80,12 +81,9 @@ describe("Adapter - LendNFT", () => {
 
     let pastEvents = await pixelNFT.getPastEvents();
     let { tokenId } = pastEvents[1].returnValues;
+    let tokenId2 = 10;
+    await erc1155Token.mint(nftOwner, tokenId2, 1, [], { from: daoOwner });
 
-    await pixelNFT.mintPixel(nftOwner, 2, 2, { from: daoOwner });
-
-    let pastEvents2 = await pixelNFT.getPastEvents();
-    let result = pastEvents2[1].returnValues;
-    let tokenId2 = result.tokenId;
     //create 2 proposals, one for each NFT
     await lendNFT.submitProposal(
       dao.address,
@@ -93,6 +91,8 @@ describe("Adapter - LendNFT", () => {
       nftOwner,
       pixelNFT.address,
       tokenId,
+      0,
+      nftOwner,
       10000,
       10000, // requested units
       [],
@@ -105,6 +105,8 @@ describe("Adapter - LendNFT", () => {
       nftOwner,
       pixelNFT.address,
       tokenId2,
+      1,
+      nftOwner,
       10000,
       10000, // requested units
       [],
@@ -114,7 +116,7 @@ describe("Adapter - LendNFT", () => {
     //approve each NFT to the NFT extension
 
     await pixelNFT.approve(nftExtension.address, tokenId, { from: nftOwner });
-    await pixelNFT.approve(nftExtension.address, tokenId2, { from: nftOwner });
+    await erc1155Token.setApprovalForAll(nftExtension.address, tokenId2, true, { from: nftOwner });
 
     //vote them in
 
