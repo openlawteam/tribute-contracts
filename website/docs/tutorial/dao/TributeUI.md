@@ -7,8 +7,8 @@ title: Tribute UI
 
 ## Requirements
 
-- **[Infura Ethereum API KEY](https://infura.io/product/ethereum)**, you can use the same key you created in the **[first step](/docs/tutorial/dao/configuration#requirements)** of the tutorial.
-- **[The Graph API Access Token](https://thegraph.com/)**, you need to use the Access Token created in the **[first step](/docs/tutorial/dao/configuration#requirements)** of the tutorial.
+- **[Infura Ethereum API KEY](https://infura.io/product/ethereum)**, you can use the same key you created in the **[Configuration step](/docs/tutorial/dao/configuration#requirements)** of the tutorial.
+- **[The Graph API Access Token](https://thegraph.com/)**, you need to use the Access Token created in the **[Configuration step](/docs/tutorial/dao/configuration#requirements)** of the tutorial.
 - **[Snapshot Hub ERC712 Service](https://github.com/openlawteam/snapshot-hub/tree/erc-712)** to manage the offchain voting.
 - **[Alchemy API Access Token](https://www.alchemy.com/)** you can sign up to https://www.alchemy.com, create an App called _Tribute DAO Tutorial_, select _Rinkeby_ as default network, and finsh the creation process to get the integration URL.
 - **[Docker Compose](https://docs.docker.com/compose/install/)** install Docker Compose (https://docs.docker.com/compose/install/). This will be used in this tutorial to launch the snapshot-hub service.
