@@ -115,7 +115,7 @@ In the rinkeby deployment logs at _tribute-contracts/logs/rinkeby-deploy.log_ se
 Finally, set your Github username to **GITHUB_USERNAME**, it must be the same Github account that you used to connect to thegraph.com.
 
 :::caution
-The **SUBGRAPH_NAME** should be lowercase and any spaces should be hyphenated, it needs to match the subgraph slug you picked when you created the subgraph in thegraph.com. If you're not sure, go to the [Subgraph Studio](https://thegraph.com/studio/subgraph), navigate to your subgraph, and look for "subgraph slug."
+The **SUBGRAPH_NAME** should be lowercase and any spaces should be hyphenated, it needs to match the subgraph name you picked when you created the subgraph in thegraph.com.
 :::
 
 From the `subgraph` folder, install the dependencies:
