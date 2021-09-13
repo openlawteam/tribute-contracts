@@ -12,6 +12,7 @@ import "../guards/MemberGuard.sol";
 import "../guards/AdapterGuard.sol";
 import "../utils/PotentialNewMember.sol";
 import "@openzeppelin/contracts/token/ERC1155/IERC1155.sol";
+import "@openzeppelin/contracts/token/ERC1155/IERC1155Receiver.sol";
 import "@openzeppelin/contracts/token/ERC721/IERC721.sol";
 import "@openzeppelin/contracts/utils/Address.sol";
 
@@ -43,9 +44,16 @@ contract TributeNFTContract is
     DaoConstants,
     MemberGuard,
     AdapterGuard,
+    IERC1155Receiver,
     PotentialNewMember
 {
     using Address for address payable;
+
+    struct ProcessProposal {
+        DaoRegistry dao;
+        bytes32 proposalId;
+    }
+
     struct ProposalDetails {
         // The proposal id.
         bytes32 id;
@@ -58,8 +66,6 @@ contract TributeNFTContract is
         address nftAddr;
         // The nft token identifier.
         uint256 nftTokenId;
-        //amount of nftTokenId offered for tribute
-        uint256 tributeAmount;
         // The amount requested of DAO internal tokens (UNITS).
         uint256 requestAmount;
     }
@@ -95,7 +101,6 @@ contract TributeNFTContract is
      * @param applicant The applicant address (who will receive the DAO internal tokens and become a member).
      * @param nftAddr The address of the ERC-721 or ERC 1155 token that will be transferred to the DAO in exchange for DAO internal tokens.
      * @param nftTokenId The NFT token id.
-     * @param tributeAmount The amount of nftTokenId for ERC1155 tokens, if 0, it is an ERC721
      * @param requestAmount The amount requested of DAO internal tokens (UNITS).
      * @param data Additional information related to the tribute proposal.
      */
@@ -105,7 +110,6 @@ contract TributeNFTContract is
         address applicant,
         address nftAddr,
         uint256 nftTokenId,
-        uint256 tributeAmount,
         uint256 requestAmount,
         bytes memory data
     ) external reentrancyGuard(dao) {
@@ -113,23 +117,6 @@ contract TributeNFTContract is
             isNotReservedAddress(applicant),
             "applicant is reserved address"
         );
-        if (tributeAmount > 0) {
-            require(
-                _hasERC1155TokenBalance(
-                    applicant,
-                    nftAddr,
-                    nftTokenId,
-                    tributeAmount
-                ),
-                "erc1155: invalid token balance"
-            );
-        } else {
-            require(
-                _hasERC721Token(applicant, nftAddr, nftTokenId),
-                "erc721: invalid owner"
-            );
-        }
-
         dao.submitProposal(proposalId);
         IVoting votingContract = IVoting(dao.getAdapterAddress(VOTING));
         address sponsoredBy =
@@ -153,9 +140,44 @@ contract TributeNFTContract is
             applicant,
             nftAddr,
             nftTokenId,
-            tributeAmount,
             requestAmount
         );
+    }
+
+    function _processProposal(DaoRegistry dao, bytes32 proposalId)
+        internal
+        returns (
+            ProposalDetails storage proposal,
+            IVoting.VotingState voteResult
+        )
+    {
+        proposal = proposals[address(dao)][proposalId];
+        require(proposal.id == proposalId, "proposal does not exist");
+        require(
+            !dao.getProposalFlag(
+                proposalId,
+                DaoRegistry.ProposalFlag.PROCESSED
+            ),
+            "proposal already processed"
+        );
+
+        IVoting votingContract = IVoting(dao.votingAdapter(proposalId));
+        require(address(votingContract) != address(0), "adapter not found");
+
+        voteResult = votingContract.voteResult(dao, proposalId);
+
+        dao.processProposal(proposalId);
+        //if proposal passes and its an erc721 token - use NFT Extension
+        if (voteResult == IVoting.VotingState.PASS) {
+            return (proposal, voteResult);
+        } else if (
+            voteResult == IVoting.VotingState.NOT_PASS ||
+            voteResult == IVoting.VotingState.TIE
+        ) {
+            return (proposal, voteResult);
+        } else {
+            revert("proposal has not been voted on yet");
+        }
     }
 
     /**
@@ -171,23 +193,8 @@ contract TributeNFTContract is
         external
         reentrancyGuard(dao)
     {
-        ProposalDetails storage proposal = proposals[address(dao)][proposalId];
-        require(proposal.id == proposalId, "proposal does not exist");
-        require(
-            !dao.getProposalFlag(
-                proposalId,
-                DaoRegistry.ProposalFlag.PROCESSED
-            ),
-            "proposal already processed"
-        );
-
-        IVoting votingContract = IVoting(dao.votingAdapter(proposalId));
-        require(address(votingContract) != address(0), "adapter not found");
-
-        IVoting.VotingState voteResult =
-            votingContract.voteResult(dao, proposalId);
-
-        dao.processProposal(proposalId);
+        (ProposalDetails storage proposal, IVoting.VotingState voteResult) =
+            _processProposal(dao, proposalId);
         //if proposal passes and its an erc721 token - use NFT Extension
         if (voteResult == IVoting.VotingState.PASS) {
             BankExtension bank = BankExtension(dao.getExtensionAddress(BANK));
@@ -196,34 +203,85 @@ contract TributeNFTContract is
                 "UNITS token is not an internal token"
             );
 
-            if (proposal.tributeAmount > 0) {
-                ERC1155TokenExtension erc1155Ext =
-                    ERC1155TokenExtension(dao.getExtensionAddress(ERC1155_EXT));
-                erc1155Ext.collect(
-                    proposal.applicant,
-                    proposal.nftAddr,
-                    proposal.nftTokenId,
-                    proposal.tributeAmount
-                );
-            } else {
-                NFTExtension nftExt =
-                    NFTExtension(dao.getExtensionAddress(NFT));
-                nftExt.collect(proposal.nftAddr, proposal.nftTokenId);
-            }
+            NFTExtension nftExt = NFTExtension(dao.getExtensionAddress(NFT));
+            nftExt.collect(proposal.nftAddr, proposal.nftTokenId);
 
             bank.addToBalance(
                 proposal.applicant,
                 UNITS,
                 proposal.requestAmount
             );
-        } else if (
-            voteResult == IVoting.VotingState.NOT_PASS ||
-            voteResult == IVoting.VotingState.TIE
-        ) {
-            // do nothing
-        } else {
-            revert("proposal has not been voted on yet");
         }
+    }
+
+    /**
+     *  @notice required function from IERC1155 standard to be able to to receive tokens
+     */
+    function onERC1155Received(
+        address,
+        address from,
+        uint256 id,
+        uint256 value,
+        bytes calldata data
+    ) external override returns (bytes4) {
+        ProcessProposal memory ppS = abi.decode(data, (ProcessProposal));
+        require(ppS.dao.lockedAt() != block.number, "reentrancy guard");
+        ppS.dao.lockSession();
+        (ProposalDetails storage proposal, IVoting.VotingState voteResult) =
+            _processProposal(ppS.dao, ppS.proposalId);
+        BankExtension bank = BankExtension(ppS.dao.getExtensionAddress(BANK));
+        if (voteResult == IVoting.VotingState.PASS) {
+            address erc1155ExtAddr = ppS.dao.getExtensionAddress(ERC1155_EXT);
+
+            IERC1155 erc1155 = IERC1155(msg.sender);
+            erc1155.safeTransferFrom(
+                address(this),
+                erc1155ExtAddr,
+                id,
+                value,
+                ""
+            );
+
+            bank.addToBalance(
+                proposal.applicant,
+                UNITS,
+                proposal.requestAmount
+            );
+        } else {
+            IERC1155 erc1155 = IERC1155(msg.sender);
+            erc1155.safeTransferFrom(address(this), from, id, value, "");
+        }
+
+        ppS.dao.unlockSession();
+        return this.onERC1155Received.selector;
+    }
+
+    /**
+     *  @notice required function from IERC1155 standard to be able to to batch receive tokens
+     */
+    function onERC1155BatchReceived(
+        address,
+        address,
+        uint256[] calldata,
+        uint256[] calldata,
+        bytes calldata
+    ) external pure override returns (bytes4) {
+        revert("not supported");
+    }
+
+    /**
+     * @notice Supports ERC-165 & ERC-1155 interfaces only.
+     * @dev https://github.com/ethereum/EIPs/blob/master/EIPS/eip-1155.md
+     */
+    function supportsInterface(bytes4 interfaceID)
+        external
+        pure
+        override
+        returns (bool)
+    {
+        return
+            interfaceID == 0x01ffc9a7 || // ERC-165 support (i.e. `bytes4(keccak256('supportsInterface(bytes4)'))`).
+            interfaceID == 0x4e2312e0; // ERC-1155 `ERC1155TokenReceiver` support (i.e. `bytes4(keccak256("onERC1155Received(address,address,uint256,uint256,bytes)")) ^ bytes4(keccak256("onERC1155BatchReceived(address,address,uint256[],uint256[],bytes)"))`).
     }
 
     /**
