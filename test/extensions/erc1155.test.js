@@ -25,7 +25,12 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
  */
 
-const { toBN, unitPrice, UNITS } = require("../../utils/ContractUtil.js");
+const {
+  toBN,
+  unitPrice,
+  UNITS,
+  GUILD,
+} = require("../../utils/ContractUtil.js");
 
 const {
   takeChainSnapshot,
@@ -120,8 +125,6 @@ describe("Extension - ERC1155", () => {
 
   it("should be possible to collect a NFT if that is allowed", async () => {
     const erc1155TestToken = this.testContracts.erc1155TestToken;
-    const erc1155TestTokenAddress = erc1155TestToken.address;
-
     const nftOwner = accounts[1];
     //create a test 1155 token
     await erc1155TestToken.mint(nftOwner, 1, 10, "0x0", {
@@ -137,30 +140,14 @@ describe("Extension - ERC1155", () => {
 
     //instances for Extension and Adapter
     const erc1155TokenExtension = this.extensions.erc1155Ext;
-    const erc1155Adapter = this.adapters.erc1155Adapter;
 
     //set approval where Extension is the "operator" all of nftOwners
-    await erc1155TestToken.setApprovalForAll(
-      erc1155TokenExtension.address,
-      true,
-      {
-        from: nftOwner,
-        gasPrice: toBN("0"),
-      }
-    );
-    //check if Extension address is approved
-    const approved = await erc1155TestToken.isApprovedForAll(
+    await erc1155TestToken.safeTransferFrom(
       nftOwner,
-      erc1155TokenExtension.address
-    );
-    expect(approved).equal(true);
-
-    //collect 2 tokens of tokenId 1
-    await erc1155Adapter.collect(
-      this.dao.address,
-      erc1155TestTokenAddress,
-      id,
+      erc1155TokenExtension.address,
+      1,
       2,
+      [],
       {
         from: nftOwner,
         gasPrice: toBN("0"),
@@ -179,145 +166,12 @@ describe("Extension - ERC1155", () => {
 
     //check token balance of the owner = +2 within the extension
     const newGuildBlance = await erc1155TokenExtension.getNFTIdAmount(
-      nftOwner,
+      GUILD,
       erc1155TestToken.address,
       1
     );
 
     expect(newGuildBlance.toString()).equal("2");
-  });
-
-  it("should be possible to do an internal transfer of an NFT from member to another member", async () => {
-    const erc1155TestToken = this.testContracts.erc1155TestToken;
-    const erc1155TestTokenAddress = erc1155TestToken.address;
-
-    const nftOwner = accounts[1];
-    //create a test 1155 token
-    await erc1155TestToken.mint(nftOwner, 1, 10, "0x0", {
-      from: daoOwner,
-      gasPrice: toBN("0"),
-    });
-
-    const pastEvents = await erc1155TestToken.getPastEvents();
-
-    const { id, value } = pastEvents[0].returnValues;
-    expect(id).equal("1");
-    expect(value).equal("10");
-
-    //instances for Extension and Adapter
-    const erc1155TokenExtension = this.extensions.erc1155Ext;
-    const erc1155Adapter = this.adapters.erc1155Adapter;
-
-    //set approval where Extension is the "operator" all of nftOwners
-    await erc1155TestToken.setApprovalForAll(
-      erc1155TokenExtension.address,
-      true,
-      {
-        from: nftOwner,
-        gasPrice: toBN("0"),
-      }
-    );
-    //check if Extension address is approved
-    const approved = await erc1155TestToken.isApprovedForAll(
-      nftOwner,
-      erc1155TokenExtension.address
-    );
-    expect(approved).equal(true);
-
-    //Onboard members
-    const bank = this.extensions.bank;
-    const onboarding = this.adapters.onboarding;
-    const voting = this.adapters.voting;
-    //onboard applicant A
-    const applicantA = accounts[2];
-    await onboardingNewMember(
-      getProposalCounter(),
-      this.dao,
-      onboarding,
-      voting,
-      applicantA,
-      daoOwner,
-      unitPrice,
-      UNITS,
-      toBN("3")
-    );
-    //check if Applicant A is a member
-    expect(await isMember(bank, applicantA)).equal(true);
-
-    //onboard nftOwner
-    await onboardingNewMember(
-      getProposalCounter(),
-      this.dao,
-      onboarding,
-      voting,
-      nftOwner,
-      daoOwner,
-      unitPrice,
-      UNITS,
-      toBN("3")
-    );
-    //check if nftOwner is a member
-    expect(await isMember(bank, nftOwner)).equal(true);
-
-    //collect 2 tokens of tokenId 1
-    await erc1155Adapter.collect(
-      this.dao.address,
-      erc1155TestTokenAddress,
-      id,
-      2,
-      {
-        from: nftOwner,
-        gasPrice: toBN("0"),
-      }
-    );
-
-    // Make sure it was collected
-    const nftAddr = await erc1155TokenExtension.getNFTAddress(0);
-    expect(nftAddr).equal(erc1155TestToken.address);
-    const nftId = await erc1155TokenExtension.getNFT(nftAddr, 0);
-    expect(nftId.toString()).equal(id.toString());
-
-    //check token balance of nftOwner account after collection = -2
-    const balanceOfnftOwner = await erc1155TestToken.balanceOf(nftOwner, 1);
-    expect(balanceOfnftOwner.toString()).equal("8");
-
-    //check token balance of nftOwner inside the nftTracker mapping in the Extension = +2
-    const ownerGuildBlance = await erc1155TokenExtension.getNFTIdAmount(
-      nftOwner,
-      erc1155TestToken.address,
-      1
-    );
-
-    expect(ownerGuildBlance.toString()).equal("2");
-
-    //internal transfer from nftOwner to Applicant A of 1 tokenId
-    await erc1155Adapter.internalTransfer(
-      this.dao.address,
-      applicantA,
-      erc1155TestTokenAddress,
-      id,
-      1,
-      {
-        from: nftOwner,
-        gasPrice: toBN("0"),
-      }
-    );
-
-    //balance check of nftOwner inside the Extension after transfer 2-1 = 1
-    const ownerGuildBalanceAfterInternalTransfer = await erc1155TokenExtension.getNFTIdAmount(
-      nftOwner,
-      erc1155TestToken.address,
-      1
-    );
-    expect(ownerGuildBalanceAfterInternalTransfer.toString()).equal("1");
-
-    //balance check of Applicant A after internal transfer 0 + 1 = 1
-    const applicantABalance = await erc1155TokenExtension.getNFTIdAmount(
-      applicantA,
-      erc1155TestToken.address,
-      1
-    );
-    expect(applicantABalance.toString()).equal("1");
   });
 
   it("should not be possible to do an internal transfer of the NFT to a non member", async () => {
@@ -342,27 +196,12 @@ describe("Extension - ERC1155", () => {
     const erc1155Adapter = this.adapters.erc1155Adapter;
 
     //set approval where Extension is the "operator" all of nftOwners
-    await erc1155TestToken.setApprovalForAll(
-      erc1155TokenExtension.address,
-      true,
-      {
-        from: nftOwner,
-        gasPrice: toBN("0"),
-      }
-    );
-    //check if Extension address is approved
-    const approved = await erc1155TestToken.isApprovedForAll(
+    await erc1155TestToken.safeTransferFrom(
       nftOwner,
-      erc1155TokenExtension.address
-    );
-    expect(approved).equal(true);
-
-    //collect 2 tokens of tokenId 1
-    await erc1155Adapter.collect(
-      this.dao.address,
-      erc1155TestTokenAddress,
+      erc1155TokenExtension.address,
       id,
       2,
+      [],
       {
         from: nftOwner,
         gasPrice: toBN("0"),
@@ -381,7 +220,7 @@ describe("Extension - ERC1155", () => {
 
     //check token balance of the nftOwner inside the Extension = +2
     const nftOwnerGuildBlance = await erc1155TokenExtension.getNFTIdAmount(
-      nftOwner,
+      GUILD,
       erc1155TestToken.address,
       1
     );
@@ -441,28 +280,12 @@ describe("Extension - ERC1155", () => {
     const erc1155TokenExtension = this.extensions.erc1155Ext;
     const erc1155Adapter = this.adapters.erc1155Adapter;
 
-    //set approval where Extension is the "operator" all of nftOwners
-    await erc1155TestToken.setApprovalForAll(
-      erc1155TokenExtension.address,
-      true,
-      {
-        from: nftOwner,
-        gasPrice: toBN("0"),
-      }
-    );
-    //check if Extension address is approved
-    const approved = await erc1155TestToken.isApprovedForAll(
+    await erc1155TestToken.safeTransferFrom(
       nftOwner,
-      erc1155TokenExtension.address
-    );
-    expect(approved).equal(true);
-
-    //collect 2 tokens of tokenId 1
-    await erc1155Adapter.collect(
-      this.dao.address,
-      erc1155TestTokenAddress,
+      erc1155TokenExtension.address,
       id,
       2,
+      [],
       {
         from: nftOwner,
         gasPrice: toBN("0"),
@@ -481,7 +304,7 @@ describe("Extension - ERC1155", () => {
 
     //check token balance of the nftOwner inside the Extension = +2
     const nftOwnerGuildBlance = await erc1155TokenExtension.getNFTIdAmount(
-      nftOwner,
+      GUILD,
       erc1155TestToken.address,
       1
     );
