@@ -52,7 +52,6 @@ contract ERC1155TokenExtension is
     enum AclFlag {WITHDRAW_NFT, COLLECT_NFT, INTERNAL_TRANSFER}
 
     //EVENTS
-    event CollectedNFT(address nftAddr, uint256 nftTokenId, uint256 amount);
     event TransferredNFT(
         address oldOwner,
         address newOwner,
@@ -80,7 +79,7 @@ contract ERC1155TokenExtension is
     // The (NFT Addr + Token Id) key reverse mapping to track all the tokens collected and actual owners.
     mapping(bytes32 => EnumerableSet.AddressSet) private _ownership;
 
-    // All the NFT addresses collected and stored in the GUILD/Extension collection
+    // All the NFT addresses stored in the Extension collection
     EnumerableSet.AddressSet private _nftAddresses;
 
     //MODIFIERS
@@ -111,33 +110,6 @@ contract ERC1155TokenExtension is
 
         initialized = true;
         dao = _dao;
-    }
-
-    /**
-     * @notice Collects the NFT from the owner and moves it to the NFT extension.
-     * @notice It must be have been allowed to move this token by either {approve} or {setApprovalForAll}.
-     * @dev Reverts if the NFT is not in ERC1155 standard.
-     * @param owner The actual owner of the NFT that will get collected.
-     * @param nftAddr The NFT contract address.
-     * @param nftTokenId The NFT token id.
-     * @param amount The amount of NFT with nftTokenId to be collected.
-     */
-    function collect(
-        address owner,
-        address nftAddr,
-        uint256 nftTokenId,
-        uint256 amount
-    ) external hasExtensionAccess(this, AclFlag.COLLECT_NFT) {
-        IERC1155 erc1155 = IERC1155(nftAddr);
-        erc1155.safeTransferFrom(
-            owner,
-            address(this),
-            nftTokenId,
-            amount,
-            "0x0"
-        );
-        _saveNft(nftAddr, nftTokenId, owner, amount);
-        emit CollectedNFT(nftAddr, nftTokenId, amount);
     }
 
     /**
@@ -358,25 +330,30 @@ contract ERC1155TokenExtension is
     function onERC1155Received(
         address,
         address,
-        uint256,
-        uint256,
+        uint256 id,
+        uint256 value,
         bytes calldata
-    ) external pure override returns (bytes4) {
+    ) external override returns (bytes4) {
+        _saveNft(msg.sender, id, GUILD, value);
         return this.onERC1155Received.selector;
     }
 
     /**
      *  @notice required function from IERC1155 standard to be able to to batch receive tokens
-     *  @dev this function is currently not supported in this extension and will revert
      */
     function onERC1155BatchReceived(
         address,
         address,
-        uint256[] calldata,
-        uint256[] calldata,
+        uint256[] calldata ids,
+        uint256[] calldata values,
         bytes calldata
-    ) external pure override returns (bytes4) {
-        revert("not supported");
+    ) external override returns (bytes4) {
+        require(ids.length == values.length, "ids values length mismatch");
+        for (uint256 i = 0; i < ids.length; i++) {
+            _saveNft(msg.sender, ids[i], GUILD, values[i]);
+        }
+
+        return this.onERC1155Received.selector;
     }
 
     /**
