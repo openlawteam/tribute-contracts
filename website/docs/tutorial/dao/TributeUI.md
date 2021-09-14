@@ -7,8 +7,8 @@ title: Tribute UI
 
 ## Requirements
 
-- **[Infura Ethereum API KEY](https://infura.io/product/ethereum)**, you can use the same key you created in the **[first step](/docs/tutorial/dao/configuration#requirements)** of the tutorial.
-- **[The Graph API Access Token](https://thegraph.com/)**, you need to use the Access Token created in the **[first step](/docs/tutorial/dao/configuration#requirements)** of the tutorial.
+- **[Infura Ethereum API KEY](https://infura.io/product/ethereum)**, you can use the same key you created in the **[Configuration step](/docs/tutorial/dao/configuration#requirements)** of the tutorial.
+- **[The Graph API Access Token](https://thegraph.com/)**, you need to use the Access Token created in the **[Configuration step](/docs/tutorial/dao/configuration#requirements)** of the tutorial.
 - **[Snapshot Hub ERC712 Service](https://github.com/openlawteam/snapshot-hub/tree/erc-712)** to manage the offchain voting.
 - **[Alchemy API Access Token](https://www.alchemy.com/)** you can sign up to https://www.alchemy.com, create an App called _Tribute DAO Tutorial_, select _Rinkeby_ as default network, and finsh the creation process to get the integration URL.
 - **[Docker Compose](https://docs.docker.com/compose/install/)** install Docker Compose (https://docs.docker.com/compose/install/). This will be used in this tutorial to launch the snapshot-hub service.
@@ -150,6 +150,7 @@ Subscriptions (WS): wss://api.thegraph.com/subgraphs/name/<your-github-username>
 ## Launch the Snapshot Hub ERC712 service
 
 Use the command line tool to clone the Github repository and launch the docker container.
+This can be done in any directory.
 
 Clone and access the Github repo:
 
@@ -173,6 +174,7 @@ NETWORK=testnet
 # The flag to indicate if the snapshot-hub should use IPFS to store data.
 USE_IPFS=false
 # The 64 digits private key of the hd wallet that will be used to sign messages.
+# Feel free to generate a new random 64 digit hexadecimal number for this.
 RELAYER_PK=0x..
 # The allow list of domain that will be using the service.
 ALLOWED_DOMAINS=http://localhost:3000
