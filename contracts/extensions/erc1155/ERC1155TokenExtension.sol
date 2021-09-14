@@ -52,7 +52,6 @@ contract ERC1155TokenExtension is
     enum AclFlag {WITHDRAW_NFT, COLLECT_NFT, INTERNAL_TRANSFER}
 
     //EVENTS
-    event CollectedNFT(address nftAddr, uint256 nftTokenId, uint256 amount);
     event TransferredNFT(
         address oldOwner,
         address newOwner,
@@ -80,7 +79,7 @@ contract ERC1155TokenExtension is
     // The (NFT Addr + Token Id) key reverse mapping to track all the tokens collected and actual owners.
     mapping(bytes32 => EnumerableSet.AddressSet) private _ownership;
 
-    // All the NFT addresses collected and stored in the GUILD/Extension collection
+    // All the NFT addresses stored in the Extension collection
     EnumerableSet.AddressSet private _nftAddresses;
 
     //MODIFIERS
