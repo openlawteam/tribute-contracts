@@ -13,6 +13,7 @@ import "../guards/AdapterGuard.sol";
 import "../utils/PotentialNewMember.sol";
 import "@openzeppelin/contracts/token/ERC1155/IERC1155.sol";
 import "@openzeppelin/contracts/token/ERC1155/IERC1155Receiver.sol";
+import "@openzeppelin/contracts/token/ERC721/IERC721Receiver.sol";
 import "@openzeppelin/contracts/token/ERC721/IERC721.sol";
 import "@openzeppelin/contracts/utils/Address.sol";
 
@@ -45,6 +46,7 @@ contract TributeNFTContract is
     MemberGuard,
     AdapterGuard,
     IERC1155Receiver,
+    IERC721Receiver,
     PotentialNewMember
 {
     using Address for address payable;
@@ -181,40 +183,6 @@ contract TributeNFTContract is
     }
 
     /**
-     * @notice Processes the proposal to handle minting and exchange of DAO internal tokens for tribute token (passed vote).
-     * @dev Proposal id must exist.
-     * @dev Only proposals that have not already been processed are accepted.
-     * @dev Only sponsored proposals with completed voting are accepted.
-     * @dev The owner of the ERC-721 or ERC-1155 token provided as tribute must first separately `approve` the NFT extension as spender of that token (so the NFT can be transferred for a passed vote).
-     * @param dao The DAO address.
-     * @param proposalId The proposal id.
-     */
-    function processProposal(DaoRegistry dao, bytes32 proposalId)
-        external
-        reentrancyGuard(dao)
-    {
-        (ProposalDetails storage proposal, IVoting.VotingState voteResult) =
-            _processProposal(dao, proposalId);
-        //if proposal passes and its an erc721 token - use NFT Extension
-        if (voteResult == IVoting.VotingState.PASS) {
-            BankExtension bank = BankExtension(dao.getExtensionAddress(BANK));
-            require(
-                bank.isInternalToken(UNITS),
-                "UNITS token is not an internal token"
-            );
-
-            NFTExtension nftExt = NFTExtension(dao.getExtensionAddress(NFT));
-            nftExt.collect(proposal.nftAddr, proposal.nftTokenId);
-
-            bank.addToBalance(
-                proposal.applicant,
-                UNITS,
-                proposal.requestAmount
-            );
-        }
-    }
-
-    /**
      *  @notice required function from IERC1155 standard to be able to to receive tokens
      */
     function onERC1155Received(
@@ -229,6 +197,9 @@ contract TributeNFTContract is
         ppS.dao.lockSession();
         (ProposalDetails storage proposal, IVoting.VotingState voteResult) =
             _processProposal(ppS.dao, ppS.proposalId);
+
+        require(proposal.nftTokenId == id, "wrong NFT");
+
         BankExtension bank = BankExtension(ppS.dao.getExtensionAddress(BANK));
         if (voteResult == IVoting.VotingState.PASS) {
             address erc1155ExtAddr = ppS.dao.getExtensionAddress(ERC1155_EXT);
@@ -280,8 +251,54 @@ contract TributeNFTContract is
         returns (bool)
     {
         return
-            interfaceID == 0x01ffc9a7 || // ERC-165 support (i.e. `bytes4(keccak256('supportsInterface(bytes4)'))`).
-            interfaceID == 0x4e2312e0; // ERC-1155 `ERC1155TokenReceiver` support (i.e. `bytes4(keccak256("onERC1155Received(address,address,uint256,uint256,bytes)")) ^ bytes4(keccak256("onERC1155BatchReceived(address,address,uint256[],uint256[],bytes)"))`).
+            interfaceID == this.supportsInterface.selector ||
+            interfaceID == this.onERC1155Received.selector ||
+            interfaceID == this.onERC721Received.selector;
+    }
+
+    function onERC721Received(
+        address,
+        address from,
+        uint256 tokenId,
+        bytes calldata data
+    ) external override returns (bytes4) {
+        ProcessProposal memory ppS = abi.decode(data, (ProcessProposal));
+
+        require(ppS.dao.lockedAt() != block.number, "reentrancy guard");
+        ppS.dao.lockSession();
+
+        (ProposalDetails storage proposal, IVoting.VotingState voteResult) =
+            _processProposal(ppS.dao, ppS.proposalId);
+
+        require(proposal.nftTokenId == tokenId, "wrong NFT");
+        require(proposal.nftAddr == msg.sender, "wrong NFT addr");
+        IERC721 erc721 = IERC721(msg.sender);
+        //if proposal passes and its an erc721 token - use NFT Extension
+        if (voteResult == IVoting.VotingState.PASS) {
+            BankExtension bank =
+                BankExtension(ppS.dao.getExtensionAddress(BANK));
+            require(
+                bank.isInternalToken(UNITS),
+                "UNITS token is not an internal token"
+            );
+
+            NFTExtension nftExt =
+                NFTExtension(ppS.dao.getExtensionAddress(NFT));
+            erc721.approve(address(nftExt), proposal.nftTokenId);
+
+            nftExt.collect(proposal.nftAddr, proposal.nftTokenId);
+
+            bank.addToBalance(
+                proposal.applicant,
+                UNITS,
+                proposal.requestAmount
+            );
+        } else {
+            erc721.safeTransferFrom(address(this), from, tokenId);
+        }
+
+        ppS.dao.unlockSession();
+        return this.onERC721Received.selector;
     }
 
     /**

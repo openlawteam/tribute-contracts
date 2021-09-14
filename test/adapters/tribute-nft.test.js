@@ -45,6 +45,20 @@ const {
 
 const { onboardingNewMember, isMember } = require("../../utils/TestUtils.js");
 
+const processProposal = (dao, proposalId) =>
+  web3.eth.abi.encodeParameter(
+    {
+      ProcessProposal: {
+        dao: "address",
+        proposalId: "bytes32",
+      },
+    },
+    {
+      dao: dao.address,
+      proposalId,
+    }
+  );
+
 describe("Adapter - TributeNFT", () => {
   const proposalCounter = proposalIdGenerator().generator;
   const daoOwner = accounts[0];
@@ -177,16 +191,16 @@ describe("Adapter - TributeNFT", () => {
 
     await advanceTime(10000);
 
-    // Pre-approve spender (NFT extension) to transfer proposed NFT
-    await pixelNFT.approve(nftExt.address, tokenId, {
-      from: nftOwner,
-      gasPrice: toBN("0"),
-    });
-
-    await tributeNFT.processProposal(dao.address, proposalId, {
-      from: nftOwner,
-      gasPrice: toBN("0"),
-    });
+    await pixelNFT.methods["safeTransferFrom(address,address,uint256,bytes)"](
+      nftOwner,
+      tributeNFT.address,
+      tokenId,
+      processProposal(dao, proposalId),
+      {
+        from: nftOwner,
+        gasPrice: toBN("0"),
+      }
+    );
 
     // test balance after proposal is processed
     const applicantUnits = await bank.balanceOf(nftOwner, UNITS);
@@ -203,14 +217,26 @@ describe("Adapter - TributeNFT", () => {
 
   it("should not be possible to process a nft tribute proposal if it does not exist", async () => {
     const proposalId = getProposalCounter();
+    const nftOwner = accounts[2];
     const dao = this.dao;
     const tributeNFT = this.adapters.tributeNFT;
+    const pixelNFT = this.testContracts.pixelNFT;
+
+    await pixelNFT.mintPixel(nftOwner, 1, 1, { from: daoOwner });
+    let pastEvents = await pixelNFT.getPastEvents();
+    let { tokenId } = pastEvents[1].returnValues;
 
     await expectRevert(
-      tributeNFT.processProposal(dao.address, proposalId, {
-        from: daoOwner,
-        gasPrice: toBN("0"),
-      }),
+      pixelNFT.methods["safeTransferFrom(address,address,uint256,bytes)"](
+        nftOwner,
+        tributeNFT.address,
+        tokenId,
+        processProposal(dao, proposalId),
+        {
+          from: nftOwner,
+          gasPrice: toBN("0"),
+        }
+      ),
       "proposal does not exist"
     );
   });
@@ -248,16 +274,16 @@ describe("Adapter - TributeNFT", () => {
 
     await advanceTime(10000);
 
-    // Pre-approve spender (NFT extension) to transfer proposed NFT
-    await pixelNFT.approve(nftExt.address, tokenId, {
-      from: nftOwner,
-      gasPrice: toBN("0"),
-    });
-
-    await tributeNFT.processProposal(dao.address, proposalId, {
-      from: nftOwner,
-      gasPrice: toBN("0"),
-    });
+    await pixelNFT.methods["safeTransferFrom(address,address,uint256,bytes)"](
+      nftOwner,
+      tributeNFT.address,
+      tokenId,
+      processProposal(dao, proposalId),
+      {
+        from: nftOwner,
+        gasPrice: toBN("0"),
+      }
+    );
 
     // test balance after proposal is processed
     const applicantUnits = await bank.balanceOf(nftOwner, UNITS);
@@ -325,16 +351,16 @@ describe("Adapter - TributeNFT", () => {
 
     await advanceTime(10000);
 
-    // Pre-approve spender (NFT extension) to transfer proposed NFT
-    await pixelNFT.approve(nftExt.address, tokenId, {
-      from: nftOwner,
-      gasPrice: toBN("0"),
-    });
-
-    await tributeNFT.processProposal(dao.address, proposalId, {
-      from: nftOwner,
-      gasPrice: toBN("0"),
-    });
+    await pixelNFT.methods["safeTransferFrom(address,address,uint256,bytes)"](
+      nftOwner,
+      tributeNFT.address,
+      tokenId,
+      processProposal(dao, proposalId),
+      {
+        from: nftOwner,
+        gasPrice: toBN("0"),
+      }
+    );
 
     // test balance after proposal is processed
     const applicantUnits = await bank.balanceOf(nftOwner, UNITS);
@@ -373,17 +399,17 @@ describe("Adapter - TributeNFT", () => {
       { from: daoOwner, gasPrice: toBN("0") }
     );
 
-    // Pre-approve spender (NFT extension) to transfer proposed NFT
-    await pixelNFT.approve(nftExt.address, tokenId, {
-      from: nftOwner,
-      gasPrice: toBN("0"),
-    });
-
     await expectRevert(
-      tributeNFT.processProposal(dao.address, proposalId, {
-        from: nftOwner,
-        gasPrice: toBN("0"),
-      }),
+      pixelNFT.methods["safeTransferFrom(address,address,uint256,bytes)"](
+        nftOwner,
+        tributeNFT.address,
+        tokenId,
+        processProposal(dao, proposalId),
+        {
+          from: nftOwner,
+          gasPrice: toBN("0"),
+        }
+      ),
       "proposal has not been voted on"
     );
 
@@ -439,18 +465,18 @@ describe("Adapter - TributeNFT", () => {
 
     await advanceTime(10000);
 
-    // Pre-approve spender (NFT extension) to transfer proposed NFT
-    await pixelNFT.approve(nftExt.address, tokenId, {
-      from: nftOwner,
-      gasPrice: toBN("0"),
-    });
-
     await expectRevert(
-      tributeNFT.processProposal(dao.address, proposalId, {
-        from: nftOwner,
-        gasPrice: toBN("0"),
-      }),
-      "token amount exceeds the maximum limit for internal tokens."
+      pixelNFT.methods["safeTransferFrom(address,address,uint256,bytes)"](
+        nftOwner,
+        tributeNFT.address,
+        tokenId,
+        processProposal(dao, proposalId),
+        {
+          from: nftOwner,
+          gasPrice: toBN("0"),
+        }
+      ),
+      "token amount exceeds the maximum limit for internal tokens"
     );
   });
 
@@ -491,26 +517,13 @@ describe("Adapter - TributeNFT", () => {
     });
 
     await advanceTime(10000);
-    const processProposal = web3.eth.abi.encodeParameter(
-      {
-        ProcessProposal: {
-          dao: "address",
-          proposalId: "bytes32",
-        },
-      },
-      {
-        dao: dao.address,
-        proposalId,
-      }
-    );
 
-    // Pre-approve spender (NFT extension) to transfer proposed NFT
     await erc1155Token.safeTransferFrom(
       nftOwner,
       tributeNFT.address,
       id,
       3,
-      processProposal,
+      processProposal(dao, proposalId),
       { from: nftOwner }
     );
 
@@ -568,26 +581,13 @@ describe("Adapter - TributeNFT", () => {
     });
 
     await advanceTime(10000);
-    const processProposal = web3.eth.abi.encodeParameter(
-      {
-        ProcessProposal: {
-          dao: "address",
-          proposalId: "bytes32",
-        },
-      },
-      {
-        dao: dao.address,
-        proposalId,
-      }
-    );
 
-    // Pre-approve spender (NFT extension) to transfer proposed NFT
     await erc1155Token.safeTransferFrom(
       nftOwner,
       tributeNFT.address,
       id,
       3,
-      processProposal,
+      processProposal(dao, proposalId),
       { from: nftOwner }
     );
 
