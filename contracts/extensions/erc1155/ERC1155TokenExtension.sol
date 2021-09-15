@@ -124,6 +124,7 @@ contract ERC1155TokenExtension is
      * @param amount The NFT token id amount to withdraw.
      */
     function withdrawNFT(
+        address from,
         address newOwner,
         address nftAddr,
         uint256 nftTokenId,
@@ -136,12 +137,12 @@ contract ERC1155TokenExtension is
             "not enough funds or invalid amount"
         );
 
-        uint256 currentAmount = _getTokenAmount(newOwner, nftAddr, nftTokenId);
+        uint256 currentAmount = _getTokenAmount(from, nftAddr, nftTokenId);
+        require(currentAmount >= amount, "insufficient funds");
         uint256 remainingAmount = currentAmount - amount;
-        require(remainingAmount >= 0, "insufficient funds");
 
         // Updates the tokenID amount to keep the records consistent
-        _updateTokenAmount(newOwner, nftAddr, nftTokenId, remainingAmount);
+        _updateTokenAmount(from, nftAddr, nftTokenId, remainingAmount);
 
         // Transfer the NFT, TokenId and amount from the contract address to the new owner
         erc1155.safeTransferFrom(
@@ -149,7 +150,7 @@ contract ERC1155TokenExtension is
             newOwner,
             nftTokenId,
             amount,
-            "0x0"
+            ""
         );
 
         uint256 ownerTokenIdBalance =
