@@ -282,12 +282,27 @@ module.exports = (() => {
     };
   };
 
+  const processProposal = (dao, proposalId) =>
+    web3.eth.abi.encodeParameter(
+      {
+        ProcessProposal: {
+          dao: "address",
+          proposalId: "bytes32",
+        },
+      },
+      {
+        dao: dao.address,
+        proposalId,
+      }
+    );
+
   return {
     deployDefaultDao,
     deployDefaultNFTDao,
     deployDaoWithBatchVoting,
     deployDaoWithOffchainVoting,
     entry,
+    processProposal,
     entryErc1271,
     entryBank,
     entryDao,

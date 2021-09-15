@@ -49,6 +49,7 @@ const ZERO_ADDRESS = "0x0000000000000000000000000000000000000000";
 const BANK = sha3("bank");
 const ERC1271 = sha3("erc1271");
 const NFT = sha3("nft");
+const ERC1155 = sha3("erc1155-ext");
 
 const numberOfUnits = toBN("1000000000000000");
 const unitPrice = toBN(toWei("120", "finney"));
@@ -84,4 +85,5 @@ module.exports = {
   BANK,
   NFT,
   ERC1271,
+  ERC1155,
 };

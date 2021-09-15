@@ -7,11 +7,11 @@ title: Tribute UI
 
 ## Requirements
 
-- **[Infura Ethereum API KEY](https://infura.io/product/ethereum)**, you can use the same key you created in the **[first step](/docs/tutorial/dao/configuration#requirements)** of the tutorial.
-- **[The Graph API Access Token](https://thegraph.com/)**, you need to use the Access Token created in the **[first step](/docs/tutorial/dao/configuration#requirements)** of the tutorial.
+- **[Infura Ethereum API KEY](https://infura.io/product/ethereum)**, you can use the same key you created in the **[Configuration step](/docs/tutorial/dao/configuration#requirements)** of the tutorial.
+- **[The Graph API Access Token](https://thegraph.com/)**, you need to use the Access Token created in the **[Configuration step](/docs/tutorial/dao/configuration#requirements)** of the tutorial.
 - **[Snapshot Hub ERC712 Service](https://github.com/openlawteam/snapshot-hub/tree/erc-712)** to manage the offchain voting.
 - **[Alchemy API Access Token](https://www.alchemy.com/)** you can sign up to https://www.alchemy.com, create an App called _Tribute DAO Tutorial_, select _Rinkeby_ as default network, and finsh the creation process to get the integration URL.
-- **[Docker Compose](https://docs.docker.com/compose/install/)** install the docker compose (https://docs.docker.com/compose/install/) to launch the snapshot-hub service.
+- **[Docker Compose](https://docs.docker.com/compose/install/)** install Docker Compose (https://docs.docker.com/compose/install/). This will be used in this tutorial to launch the snapshot-hub service.
 - **[MetaMask](https://metamask.io/download.html)** download and install MetaMask from https://metamask.io/download.html into your browser to access the DAO dApp.
 
 ## Install the project
@@ -77,11 +77,10 @@ Then set your Github username to _<GITHUB_USERNAME>_ in **REACT_APP_GRAPH_API_UR
 
 ## Deploy the Subgraph
 
-:::caution
-Make sure you checkout the tag [v1.1.0](https://github.com/openlawteam/tribute-contracts/releases/tag/v1.1.0) which is the version that contains the subgraph that works with [TributeUI](https://github.com/openlawteam/tribute-ui).
-:::
+Go to the `tribute-contracts` root directory and check out the the tag [v1.1.0](https://github.com/openlawteam/tribute-contracts/releases/tag/v1.1.0) which is the version that contains the subgraph that works with [TributeUI](https://github.com/openlawteam/tribute-ui):
 
 ```bash
+cd ../tribute-contracts
 git checkout tags/v1.1.0 -b branch-v1.1.0
 ```
 
@@ -91,7 +90,7 @@ Then install the project dependencies:
 npm ci
 ```
 
-Access the subgraph folder in tribute-contracts:
+Access the `subgraph` folder in `tribute-contracts`:
 
 ```bash
 cd subgraph
@@ -107,7 +106,7 @@ Then open the config file: _subgraph/config/subgraph-config.json_, remove all th
     "daoFactoryStartBlock": ...,
     "GITHUB_USERNAME": "<YOUR_GITHUB_USERNAME>",
     "SUBGRAPH_NAME": "tribute-dao-tutorial"
-  },
+  }
 ]
 ```
 
@@ -116,7 +115,7 @@ In the rinkeby deployment logs at _tribute-contracts/logs/rinkeby-deploy.log_ se
 Finally, set your Github username to **GITHUB_USERNAME**, it must be the same Github account that you used to connect to thegraph.com.
 
 :::caution
-The **SUBGRAPH_NAME** should be lowercase and any spaces should be hyphenated, it needs to match the subgraph name you picked when you created the subgraph in thegraph.com.
+The **SUBGRAPH_NAME** should be lowercase and any spaces should be hyphenated, it needs to match the subgraph slug you picked when you created the subgraph in thegraph.com. If you're not sure, go to the [Subgraph Studio](https://thegraph.com/studio/subgraph), navigate to your subgraph, and look for "subgraph slug."
 :::
 
 From the `subgraph` folder, install the dependencies:
@@ -151,6 +150,7 @@ Subscriptions (WS): wss://api.thegraph.com/subgraphs/name/<your-github-username>
 ## Launch the Snapshot Hub ERC712 service
 
 Use the command line tool to clone the Github repository and launch the docker container.
+This can be done in any directory.
 
 Clone and access the Github repo:
 
@@ -174,6 +174,7 @@ NETWORK=testnet
 # The flag to indicate if the snapshot-hub should use IPFS to store data.
 USE_IPFS=false
 # The 64 digits private key of the hd wallet that will be used to sign messages.
+# Feel free to generate a new random 64 digit hexadecimal number for this.
 RELAYER_PK=0x..
 # The allow list of domain that will be using the service.
 ALLOWED_DOMAINS=http://localhost:3000

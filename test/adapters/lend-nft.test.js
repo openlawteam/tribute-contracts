@@ -24,7 +24,7 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
  */
-const { toBN, NFT, UNITS } = require("../../utils/ContractUtil.js");
+const { toBN, ERC1155, UNITS } = require("../../utils/ContractUtil.js");
 
 const {
   deployDefaultNFTDao,
@@ -33,6 +33,7 @@ const {
   proposalIdGenerator,
   advanceTime,
   accounts,
+  processProposal,
   expectRevert,
   expect,
 } = require("../../utils/OZTestUtil.js");
@@ -91,8 +92,6 @@ describe("Adapter - LendNFT", () => {
       nftOwner,
       pixelNFT.address,
       tokenId,
-      0,
-      nftOwner,
       10000,
       10000, // requested units
       [],
@@ -103,20 +102,13 @@ describe("Adapter - LendNFT", () => {
       dao.address,
       proposalId2,
       nftOwner,
-      pixelNFT.address,
+      erc1155Token.address,
       tokenId2,
-      1,
-      nftOwner,
       10000,
       10000, // requested units
       [],
       { from: daoOwner, gasPrice: toBN("0") }
     );
-
-    //approve each NFT to the NFT extension
-
-    await pixelNFT.approve(nftExtension.address, tokenId, { from: nftOwner });
-    await erc1155Token.setApprovalForAll(nftExtension.address, tokenId2, true, { from: nftOwner });
 
     //vote them in
 
@@ -125,12 +117,19 @@ describe("Adapter - LendNFT", () => {
 
     await advanceTime(10000);
 
-    //process the first proposal
-    await lendNFT.processProposal(dao.address, proposalId, { from: daoOwner });
+    //approve each NFT to the NFT extension
+    await pixelNFT.methods[
+      "safeTransferFrom(address,address,uint256,bytes)"
+    ](nftOwner, lendNFT.address, tokenId, processProposal(dao, proposalId), {
+      from: nftOwner,
+    });
 
     //we see that we have 10K units
     let unitBalance = await bank.balanceOf(nftOwner, UNITS);
     expect(unitBalance.toString()).equal("10000");
+
+    let currentNftOwner = await pixelNFT.ownerOf(tokenId);
+    expect(currentNftOwner).equal(nftExtension.address);
 
     await advanceTime(100);
     // after 100 seconds, we take the NFT back
@@ -141,20 +140,40 @@ describe("Adapter - LendNFT", () => {
     await lendNFT.sendNFTBack(dao.address, proposalId, { from: nftOwner });
 
     unitBalance = await bank.balanceOf(nftOwner, UNITS);
-    expect(unitBalance.toString()).equal("100");
+    expect(
+      unitBalance.toString() == "100" || unitBalance.toString() == "101"
+    ).equal(true);
 
     await advanceTime(10000);
     //process the second proposal
-    await lendNFT.processProposal(dao.address, proposalId2, { from: daoOwner });
+    await erc1155Token.safeTransferFrom(
+      nftOwner,
+      lendNFT.address,
+      tokenId2,
+      1,
+      processProposal(dao, proposalId2),
+      { from: nftOwner }
+    );
+
+    const erc1155ExtAddr = await dao.getExtensionAddress(ERC1155);
+    const balanceOf = await erc1155Token.balanceOf(erc1155ExtAddr, tokenId2);
+    expect(balanceOf.toString()).equal("1");
 
     unitBalance = await bank.balanceOf(nftOwner, UNITS);
-    expect(unitBalance.toString()).equal("10100");
+    expect(
+      unitBalance.toString() == "10100" || unitBalance.toString() == "10101"
+    ).equal(true);
 
     await advanceTime(100);
 
     //after 100 seconds, get the second NFT back
     await lendNFT.sendNFTBack(dao.address, proposalId2, { from: nftOwner });
     unitBalance = await bank.balanceOf(nftOwner, UNITS);
-    expect(unitBalance.toString()).equal("200");
+    expect(
+      unitBalance.toString() === "200" || unitBalance.toString() === "201"
+    ).equal(true);
+
+    const balance = await erc1155Token.balanceOf(nftOwner, tokenId2);
+    expect(balance.toString()).equal("1");
   });
 });

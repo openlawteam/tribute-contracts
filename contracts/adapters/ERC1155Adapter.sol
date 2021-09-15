@@ -42,26 +42,6 @@ contract ERC1155AdapterContract is AdapterGuard {
     }
 
     /**
-     * @notice Collects the NFT from the owner and moves to the ERC1155 Token extension address.
-     * @param dao The DAO address.
-     * @param nftAddr The NFT smart contract address.
-     * @param nftTokenId The NFT token id.
-     * @param amount of the nftTokenId.
-     */
-    function collect(
-        DaoRegistry dao,
-        address nftAddr,
-        uint256 nftTokenId,
-        uint256 amount
-    ) external reentrancyGuard(dao) {
-        ERC1155TokenExtension erc1155 =
-            ERC1155TokenExtension(
-                dao.getExtensionAddress(DaoHelper.ERC1155_EXT)
-            );
-        erc1155.collect(msg.sender, nftAddr, nftTokenId, amount);
-    }
-
-    /**
      * @notice Internally transfers the NFT from one owner to a new owner as long as both are active members.
      * @notice Reverts if the addresses of the owners are not members.
      * @notice Reverts if the fromOwner does not hold the NFT.

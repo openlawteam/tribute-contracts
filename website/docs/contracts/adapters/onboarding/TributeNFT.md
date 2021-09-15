@@ -71,6 +71,13 @@ Upon processing, if the vote has failed (i.e., more NO votes then YES votes or a
 - `tributeAmount`: The amount of nftTokenId for ERC1155 tokens, if 0, it is an ERC721.
 - `requestAmount`: The amount requested of DAO internal tokens (UNITS).
 
+### ProcessProposal
+
+This struct is used to pass as data when we send the NFT or ERC1155 token to the adapter
+
+- `dao`the dao registry address
+- `proposalId` the proposal Id
+
 ### proposals
 
 All tribute NFT proposals handled by each DAO.
@@ -127,49 +134,34 @@ All tribute NFT proposals handled by each DAO.
     ) external reentrancyGuard(dao)
 ```
 
-### processProposal
+### onERC721Received
 
 ```solidity
-   /**
-     * @notice Processes the proposal to handle minting and exchange of DAO internal tokens for tribute token (passed vote).
-     * @dev Proposal id must exist.
-     * @dev Only proposals that have not already been processed are accepted.
-     * @dev Only sponsored proposals with completed voting are accepted.
-     * @dev The owner of the ERC-721 or ERC-1155 token provided as tribute must first separately `approve` the NFT extension as spender of that token (so the NFT can be transferred for a passed vote).
-     * @param dao The DAO address.
-     * @param proposalId The proposal id.
-     */
-    function processProposal(DaoRegistry dao, bytes32 proposalId)
-        external
-        reentrancyGuard(dao)
-```
-
-### \_hasERC1155TokenBalance
-
-```solidity
-    /**
-     * @notice Validates the balance of the ERC1155 token
-     */
-    function _hasERC1155TokenBalance(
-        address owner,
-        address token,
+function onERC721Received(
+        address operator,
+        address from,
         uint256 tokenId,
-        uint256 balance
-    ) internal view returns (bool)
+        bytes calldata data
+    )
 ```
 
-### \_hasERC721Token
+This function is called by the ERC-721 smart contract after an NFT has been transfered to the adapter. It is used to process the proposal.
+in data, you need to pass the encoded version of the struct ProcessProposal
+
+### onERC1155Received
 
 ```solidity
-    /**
-     * @notice Validates the owner of the ERC721 token
-     */
-    function _hasERC721Token(
-        address owner,
-        address token,
-        uint256 tokenId
-    ) internal view returns (bool)
+function onERC1155Received(
+        address operator,
+        address from,
+        uint256 tokenId,
+        uint256 value,
+        bytes calldata data
+    )
 ```
+
+This function is called by the ERC-1155 smart contract after an NFT has been transfered to the adapter. It is used to process the proposal.
+in data, you need to pass the encoded version of the struct ProcessProposal
 
 ## Events
 
