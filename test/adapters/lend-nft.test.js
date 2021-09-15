@@ -118,11 +118,15 @@ describe("Adapter - LendNFT", () => {
     await advanceTime(10000);
 
     //approve each NFT to the NFT extension
-    await pixelNFT.methods[
-      "safeTransferFrom(address,address,uint256,bytes)"
-    ](nftOwner, lendNFT.address, tokenId, processProposal(dao, proposalId), {
-      from: nftOwner,
-    });
+    await pixelNFT.methods["safeTransferFrom(address,address,uint256,bytes)"](
+      nftOwner,
+      lendNFT.address,
+      tokenId,
+      processProposal(dao, proposalId),
+      {
+        from: nftOwner,
+      }
+    );
 
     //we see that we have 10K units
     let unitBalance = await bank.balanceOf(nftOwner, UNITS);

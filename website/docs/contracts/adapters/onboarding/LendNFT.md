@@ -1,19 +1,15 @@
 ---
-id: tribute-nft-adapter
-title: ERC721/1155 Tribute
+id: lend-nft-adapter
+title: ERC721/1155 Lending / Staking
 ---
 
-The Tribute NFT adapter allows potential and existing DAO members to contribute any ERC-721 and ERC-1155 tokens to the DAO in exchange for any amount of DAO internal tokens (in this case it mints UNITS always). If the proposal passes, the requested internal tokens are minted to the applicant (which effectively makes the applicant a member of the DAO if not already one) and the ERC-721/1155 asset provided as tribute is transferred to the NFT extension.
+The Lend NFT adapter allows potential and existing DAO members to stake any ERC-721 and ERC-1155 tokens to the DAO in exchange for any amount of DAO internal tokens (in this case it mints UNITS always). If the proposal passes, the requested internal tokens are minted to the applicant (which effectively makes the applicant a member of the DAO if not already one) and the ERC-721/1155 asset provided as tribute is transferred to the NFT extension. The tokens are then vested. If the new member takes the NFT back before the vesting period, the tokens are being burnt. The vesting works as follows, all the tokens are in the balance right away (used in voting power) but the member can only transfer the vested amount (ERC-20).
 
-The Tribute NFT adapter is similar to the Onboarding adapter in that both allow for joining the DAO (or increasing a stake in the DAO) through the exchange of contributed assets for DAO internal tokens. However, there are key differences:
-
-- The Onboarding adapter allows both Ether and ERC-20 tokens to be contributed. The Tribute NFT adapter accepts only ERC-721 and/or ERC-1155 tokens.
-
-- The Onboarding adapter mints a fixed amount of internal tokens to the applicant based on the amount of assets contributed. In other words, an onboarding proposal does not specify the amount of internal tokens requested. That is calculated from the DAO's configurations and the amount of assets contributed. The Tribute NFT adapter has more open-ended proposal parameters. The proposer can request any amount of internal tokens to be minted in exchange for an ERC-721/1155 token contributed. The worthiness of that transfer proposal for the DAO is left to the vote of its members.
+The Lend NFT adapter is similar to the TributeNFT in that both allow for joining the DAO (or increasing a stake in the DAO) through the exchange of contributed assets for DAO internal tokens. The key difference is that the NFT is merely lended, not given to the DAO.
 
 ## Workflow
 
-A tribute is made by a member first submitting a proposal specifying (1) the applicant who wishes to join the DAO (or increase his stake in the DAO), (2) the amount of internal tokens (UNITS) the applicant desires, and (3) the ERC-721/1155 address and token id of the NFT that will transfer to the DAO in exchange for those internal tokens.
+A lending is made by a member first submitting a proposal specifying (1) the applicant who wishes to join the DAO (or increase his stake in the DAO), (2) the amount of internal tokens (UNITS) the applicant desires, and (3) the ERC-721/1155 address and token id of the NFT that will transfer to the DAO in exchange for those internal tokens.
 
 The proposal submission does not actually transfer the ERC-721/1155 token from its owner. That occurs only after the proposal passes and is processed.
 
@@ -21,7 +17,7 @@ The proposal is also sponsored in the same transaction when it is submitted. Whe
 
 After the voting period is done along with its subsequent grace period, the proposal can be processed. Any account can process the proposal. In order to process the proposal, the applicant needs to send the NFT directly to the adapter. In addition, the applicant needs to encode a ProcessProposal struct and pass it as data in "safeTransferFrom".
 
-Upon processing, if the vote has passed, the requested internal tokens are minted to the applicant (which effectively makes the applicant a member of the DAO if not already one). The tribute NFT is transferred from the adapter to the NFT extension.
+Upon processing, if the vote has passed, the requested internal tokens are minted to the applicant (which effectively makes the applicant a member of the DAO if not already one). The tribute NFT is transferred from the adapter to the NFT extension. The vesting period starts right away.
 
 Upon processing, if the vote has failed (i.e., more NO votes then YES votes or a tie), the NFT is simply sent back.
 
@@ -35,6 +31,7 @@ Upon processing, if the vote has failed (i.e., more NO votes then YES votes or a
 ### NFTExtension
 
 - `COLLECT_NFT`
+- `WITHDRAW_NFT`
 
 ### BankExtension
 
@@ -54,8 +51,6 @@ Upon processing, if the vote has failed (i.e., more NO votes then YES votes or a
 
 ### Voting
 
-### PotentialNewMember
-
 ### IERC721
 
 ### IERC1155
@@ -70,7 +65,12 @@ Upon processing, if the vote has failed (i.e., more NO votes then YES votes or a
 - `applicant`: The applicant address (who will receive the DAO internal tokens and become a member; this address may be different than the actual owner of the ERC-721 token being provided as tribute).
 - `nftAddr`: The address of the ERC-721 token that will be transferred to the DAO in exchange for DAO internal tokens.
 - `nftTokenId`: The NFT token identifier.
+- `tributeAmount`: The amount of nftTokenId for ERC1155 tokens, if 0, it is an ERC721.
 - `requestAmount`: The amount requested of DAO internal tokens (UNITS).
+- `lendingPeriod` : what is the lending period for this proposal (vesting period)
+- `sentBack`: was the NFT sent back already ?
+- `lendingStart`: when did the lending started (for vesting)
+- `previousOwner`: who owned the NFT previously
 
 ### ProcessProposal
 

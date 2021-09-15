@@ -67,7 +67,6 @@ contract LendNFTContract is
         uint88 requestAmount;
         uint64 lendingPeriod;
         bool sentBack;
-        bool isERC721;
         uint64 lendingStart;
         address previousOwner;
     }
@@ -149,7 +148,6 @@ contract LendNFTContract is
             0,
             requestAmount,
             lendingPeriod,
-            false,
             false,
             0,
             address(0x0)
@@ -242,7 +240,7 @@ contract LendNFTContract is
             msg.sender == proposal.previousOwner,
             "only the previous owner can withdraw the NFT"
         );
-        if (proposal.isERC721) {
+        if (proposal.tributeAmount == 0) {
             NFTExtension nftExt =
                 NFTExtension(dao.getExtensionAddress(DaoHelper.NFT));
 
@@ -315,7 +313,6 @@ contract LendNFTContract is
 
         require(proposal.nftTokenId == id, "wrong NFT");
         require(proposal.nftAddr == msg.sender, "wrong NFT addr");
-        proposal.isERC721 = false;
         proposal.tributeAmount = value;
         proposal.previousOwner = from;
 
@@ -369,7 +366,7 @@ contract LendNFTContract is
 
         require(proposal.nftTokenId == tokenId, "wrong NFT");
         require(proposal.nftAddr == msg.sender, "wrong NFT addr");
-        proposal.isERC721 = true;
+        proposal.tributeAmount = 0;
         proposal.previousOwner = from;
         IERC721 erc721 = IERC721(msg.sender);
 
