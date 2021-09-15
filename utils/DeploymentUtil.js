@@ -1011,7 +1011,6 @@ const createExecutorExtension = async (
   return executorExtension;
 };
 
-//
 const createERC1155Extension = async (
   dao,
   owner,
@@ -1033,7 +1032,7 @@ const createERC1155Extension = async (
   });
   return erc1155TokenExtension;
 };
-//
+
 const entryNft = (contract, flags) => {
   const values = [
     flags.WITHDRAW_NFT,
@@ -1159,6 +1158,7 @@ module.exports = {
   addDefaultAdapters,
   entry,
   entryBank,
+  entryNft,
   entryERC1271,
   entryDao,
   entryExecutor,
