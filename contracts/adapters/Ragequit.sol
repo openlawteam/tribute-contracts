@@ -38,6 +38,7 @@ contract RagequitContract is IRagequit, AdapterGuard {
      * @notice Event emitted when a member of the DAO executes a ragequit with all or parts of the member's units/loot.
      */
     event MemberRagequit(
+        address daoAddress,
         address memberAddr,
         uint256 burnedUnits,
         uint256 burnedLoot,
@@ -92,7 +93,14 @@ contract RagequitContract is IRagequit, AdapterGuard {
         );
 
         // Start the ragequit process by updating the member's internal account balances.
-        _prepareRagequit(memberAddr, unitsToBurn, lootToBurn, tokens, bank);
+        _prepareRagequit(
+            dao,
+            memberAddr,
+            unitsToBurn,
+            lootToBurn,
+            tokens,
+            bank
+        );
     }
 
     /**
@@ -104,6 +112,7 @@ contract RagequitContract is IRagequit, AdapterGuard {
      * @param bank The bank extension.
      */
     function _prepareRagequit(
+        DaoRegistry dao,
         address memberAddr,
         uint256 unitsToBurn,
         uint256 lootToBurn,
@@ -132,6 +141,7 @@ contract RagequitContract is IRagequit, AdapterGuard {
 
         // Completes the ragequit process by updating the GUILD internal balance based on each provided token.
         _burnUnits(
+            address(dao),
             memberAddr,
             unitsToBurn,
             lootToBurn,
@@ -152,6 +162,7 @@ contract RagequitContract is IRagequit, AdapterGuard {
      * @param bank The bank extension.
      */
     function _burnUnits(
+        address daoAddress,
         address memberAddr,
         uint256 unitsToBurn,
         uint256 lootToBurn,
@@ -201,6 +212,7 @@ contract RagequitContract is IRagequit, AdapterGuard {
 
         // Once the units and loot were burned, and the transfers completed, emit an event to indicate a successfull operation.
         emit MemberRagequit(
+            daoAddress,
             memberAddr,
             unitsToBurn,
             lootToBurn,

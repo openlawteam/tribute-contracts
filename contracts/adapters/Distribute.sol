@@ -38,7 +38,12 @@ SOFTWARE.
 contract DistributeContract is IDistribute, MemberGuard, AdapterGuard {
     // Event to indicate the distribution process has been completed
     // if the unitHolder address is 0x0, then the amount were distributed to all members of the DAO.
-    event Distributed(address token, uint256 amount, address unitHolder);
+    event Distributed(
+        address daoAddress,
+        address token,
+        uint256 amount,
+        address unitHolder
+    );
 
     // The distribution status
     enum DistributionStatus {NOT_STARTED, IN_PROGRESS, DONE, FAILED}
@@ -271,7 +276,7 @@ contract DistributeContract is IDistribute, MemberGuard, AdapterGuard {
         if (unitHolderAddr != address(0x0)) {
             _distributeOne(bank, unitHolderAddr, blockNumber, token, amount);
             distribution.status = DistributionStatus.DONE;
-            emit Distributed(token, amount, unitHolderAddr);
+            emit Distributed(address(dao), token, amount, unitHolderAddr);
         } else {
             // Set the max index supported which is based on the number of members
             uint256 nbMembers = dao.getNbMembers();
@@ -293,7 +298,7 @@ contract DistributeContract is IDistribute, MemberGuard, AdapterGuard {
             distribution.currentIndex = maxIndex;
             if (maxIndex == nbMembers) {
                 distribution.status = DistributionStatus.DONE;
-                emit Distributed(token, amount, unitHolderAddr);
+                emit Distributed(address(dao), token, amount, unitHolderAddr);
             }
         }
     }

@@ -58,13 +58,18 @@ contract OffchainVotingContract is IVoting, MemberGuard, AdapterGuard, Ownable {
     }
 
     event VoteResultSubmitted(
+        address daoAddress,
         bytes32 proposalId,
         uint256 nbNo,
         uint256 nbYes,
         bytes32 resultRoot,
         address memberAddr
     );
-    event ResultChallenged(bytes32 proposalId, bytes32 resultRoot);
+    event ResultChallenged(
+        address daoAddress,
+        bytes32 proposalId,
+        bytes32 resultRoot
+    );
 
     uint256 private constant NB_CHOICES = 2;
     SnapshotProposalContract private _snapshotContract;
@@ -249,6 +254,7 @@ contract OffchainVotingContract is IVoting, MemberGuard, AdapterGuard, Ownable {
         vote.isChallenged = false;
 
         emit VoteResultSubmitted(
+            address(dao),
             proposalId,
             result.nbNo,
             result.nbYes,
@@ -712,6 +718,7 @@ contract OffchainVotingContract is IVoting, MemberGuard, AdapterGuard, Ownable {
         GuildKickHelper.lockMemberTokens(dao, challengedReporter);
 
         emit ResultChallenged(
+            address(dao),
             proposalId,
             votes[address(dao)][proposalId].resultRoot
         );
