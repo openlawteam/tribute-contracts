@@ -71,7 +71,7 @@ module.exports = {
         // See the solidity docs for advice about optimization and evmVersion
         optimizer: {
           enabled: !(process.env.DISABLE_SOLC_OPTIMIZER == "true"),
-          runs: 10000,
+          runs: 200,
         },
         //  evmVersion: "byzantium"
       },
@@ -80,5 +80,9 @@ module.exports = {
   api_keys: {
     etherscan: process.env.ETHERSCAN_API_KEY, // Obtain one at https://etherscan.io/myapikey
   },
-  plugins: ["solidity-coverage", "truffle-plugin-verify"],
+  plugins: [
+    "solidity-coverage",
+    "truffle-plugin-verify",
+    "truffle-contract-size",
+  ],
 };
