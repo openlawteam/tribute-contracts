@@ -1222,6 +1222,7 @@ module.exports = {
   addDefaultAdapters,
   entry,
   entryBank,
+  entryNft,
   entryERC1271,
   entryDao,
   entryExecutor,
