@@ -153,7 +153,7 @@ Checkout the [sample .env file](https://github.com/openlawteam/tribute-contracts
 
 - Mainnet deployment: `DAO_NAME`, `DAO_OWNER_ADDR`, `ERC20_TOKEN_NAME`, `ERC20_TOKEN_SYMBOL`, `ERC20_TOKEN_DECIMALS`, `COUPON_CREATOR_ADDR`, `OFFCHAIN_ADMIN_ADDR`, `VOTING_PERIOD_SECONDS`, `GRACE_PERIOD_SECONDS`.
 
-### Run Tests
+### Compile Contracts
 
 This project uses truffle. To compile the contracts, run:
 
