@@ -360,6 +360,7 @@ const prepareAdapters = async ({
   SignaturesContract,
   NFTAdapterContract,
   CouponOnboardingContract,
+  KycOnboardingContract,
   ERC1155AdapterContract,
 }) => {
   let voting,
@@ -375,6 +376,7 @@ const prepareAdapters = async ({
     nftAdapter,
     erc1155Adapter,
     couponOnboarding,
+    kycOnboarding,
     tribute,
     distribute,
     tributeNFT;
@@ -391,6 +393,7 @@ const prepareAdapters = async ({
   signatures = await deployFunction(SignaturesContract);
   nftAdapter = await deployFunction(NFTAdapterContract);
   couponOnboarding = await deployFunction(CouponOnboardingContract, [1]);
+  kycOnboarding = await deployFunction(KycOnboardingContract, [1]);
   tribute = await deployFunction(TributeContract);
   distribute = await deployFunction(DistributeContract);
   tributeNFT = await deployFunction(TributeNFTContract);
@@ -408,6 +411,7 @@ const prepareAdapters = async ({
     signatures,
     nftAdapter,
     couponOnboarding,
+    kycOnboarding,
     tribute,
     distribute,
     tributeNFT,
@@ -437,6 +441,7 @@ const addDefaultAdapters = async ({ dao, options, daoFactory, nftAddr }) => {
     bankAdapter,
     nftAdapter,
     couponOnboarding,
+    kycOnboarding,
     signatures,
     tribute,
     distribute,
@@ -487,6 +492,7 @@ const addDefaultAdapters = async ({ dao, options, daoFactory, nftAddr }) => {
     voting,
     configuration,
     couponOnboarding,
+    kycOnboarding,
     signatures,
     tribute,
     distribute,
@@ -514,6 +520,7 @@ const addDefaultAdapters = async ({ dao, options, daoFactory, nftAddr }) => {
       bankAdapter,
       nftAdapter,
       couponOnboarding,
+      kycOnboarding,
       signatures,
       tribute,
       distribute,
@@ -544,6 +551,7 @@ const configureDao = async ({
   voting,
   configuration,
   couponOnboarding,
+  kycOnboarding,
   signatures,
   tribute,
   distribute,
@@ -612,6 +620,13 @@ const configureDao = async ({
   if (couponOnboarding)
     adapters.push(
       entryDao("coupon-onboarding", couponOnboarding, {
+        NEW_MEMBER: true,
+      })
+    );
+
+  if (kycOnboarding)
+    adapters.push(
+      entryDao("kyc-onboarding", kycOnboarding, {
         NEW_MEMBER: true,
       })
     );
@@ -720,6 +735,13 @@ const configureDao = async ({
   if (couponOnboarding)
     adaptersWithBankAccess.push(
       entryBank(couponOnboarding, {
+        ADD_TO_BALANCE: true,
+      })
+    );
+
+  if (kycOnboarding)
+    adaptersWithBankAccess.push(
+      entryBank(kycOnboarding, {
         ADD_TO_BALANCE: true,
       })
     );
@@ -849,6 +871,18 @@ const configureDao = async ({
       dao.address,
       couponCreatorAddress,
       UNITS,
+      {
+        from: owner,
+      }
+    );
+
+  if (kycOnboarding)
+    await kycOnboarding.configureDao(
+      dao.address,
+      couponCreatorAddress,
+      unitPrice,
+      nbUnits,
+      maxChunks,
       {
         from: owner,
       }

@@ -312,6 +312,13 @@ const contracts = [
     type: ContractType.Adapter,
   },
   {
+    name: "KycOnboardingContract",
+    path: "../contracts/adapters/KycOnboardingContract",
+    enabled: true,
+    version: "1.0.0",
+    type: ContractType.Adapter,
+  },
+  {
     name: "TributeContract",
     path: "../contracts/adapters/TributeContract",
     enabled: true,

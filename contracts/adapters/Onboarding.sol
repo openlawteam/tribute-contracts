@@ -80,6 +80,7 @@ contract OnboardingContract is
     /**
      * @notice Updates the DAO registry with the new configurations if valid.
      * @notice Updated the Bank extension with the new potential tokens if valid.
+     * @param dao the DAO to configure.
      * @param unitsToMint Which token needs to be minted if the proposal passes.
      * @param chunkSize How many tokens need to be minted per chunk bought.
      * @param unitsPerChunk How many units (tokens from tokenAddr) are being minted per chunk.
