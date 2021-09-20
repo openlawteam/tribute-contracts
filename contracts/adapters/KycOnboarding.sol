@@ -185,7 +185,7 @@ contract KycOnboardingContract is
         bank.addToBalance(
             kycedMember,
             UNITS,
-            details.numberOfChunks * details.unitsPerChunk
+            details.unitsRequested
         );
 
         if (msg.value > details.amount) {
@@ -206,16 +206,15 @@ contract KycOnboardingContract is
 
         details.numberOfChunks = uint88(msg.value / details.chunkSize);
         require(details.numberOfChunks > 0, "insufficient funds");
+        require(
+            details.numberOfChunks <= dao.getConfiguration(MaximumChunks),
+            "total units for this member must be lower than the maximum"
+        );
 
         details.unitsPerChunk = uint88(dao.getConfiguration(UnitsPerChunk));
 
         require(details.unitsPerChunk > 0, "config unitsPerChunk missing");
         details.amount = details.numberOfChunks * details.chunkSize;
         details.unitsRequested = details.numberOfChunks * details.unitsPerChunk;
-
-        require(
-            details.numberOfChunks <= dao.getConfiguration(MaximumChunks),
-            "total units for this member must be lower than the maximum"
-        );
     }
 }
