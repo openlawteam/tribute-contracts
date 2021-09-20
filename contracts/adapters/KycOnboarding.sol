@@ -41,6 +41,8 @@ contract KycOnboardingContract is
 {
     using Address for address payable;
 
+    event Onboarded(DaoRegistry dao, address member, uint256 units);
+
     struct Coupon {
         address kycedMember;
     }
@@ -182,15 +184,13 @@ contract KycOnboardingContract is
             details.amount
         );
 
-        bank.addToBalance(
-            kycedMember,
-            UNITS,
-            details.unitsRequested
-        );
+        bank.addToBalance(kycedMember, UNITS, details.unitsRequested);
 
         if (msg.value > details.amount) {
             payable(msg.sender).sendValue(msg.value - details.amount);
         }
+
+        emit Onboarded(dao, kycedMember, details.unitsRequested);
     }
 
     /**
