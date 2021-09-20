@@ -344,7 +344,7 @@ const prepareAdapters = async ({
   //nftAdapter = await deployFunction(NFTAdapterContract);
   //couponOnboarding = await deployFunction(CouponOnboardingContract, [1]);
   //tribute = await deployFunction(TributeContract);
-  distribute = await deployFunction(DistributeContract);
+  //distribute = await deployFunction(DistributeContract);
   //tributeNFT = await deployFunction(TributeNFTContract);
 
   return {
@@ -361,7 +361,7 @@ const prepareAdapters = async ({
     //nftAdapter,
     //couponOnboarding,
     //tribute,
-    distribute,
+    //distribute,
     //tributeNFT,
   };
 };
@@ -390,7 +390,7 @@ const addDefaultAdapters = async ({ dao, options, daoFactory, nftAddr }) => {
     //nftAdapter,
     //couponOnboarding,
     //tribute,
-    distribute,
+    //distribute,
     //tributeNFT,
   } = await prepareAdapters(options);
 
@@ -422,7 +422,7 @@ const addDefaultAdapters = async ({ dao, options, daoFactory, nftAddr }) => {
     configuration,
     //couponOnboarding,
     //tribute,
-    distribute,
+    //distribute,
     //tributeNFT,
     //nftAddr,
     bankExtension,
