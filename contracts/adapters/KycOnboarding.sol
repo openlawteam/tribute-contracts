@@ -208,7 +208,7 @@ contract KycOnboardingContract is
         require(details.numberOfChunks > 0, "insufficient funds");
         require(
             details.numberOfChunks <= dao.getConfiguration(MaximumChunks),
-            "total units for this member must be lower than the maximum"
+            "too much funds"
         );
 
         details.unitsPerChunk = uint88(dao.getConfiguration(UnitsPerChunk));

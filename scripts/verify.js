@@ -10,6 +10,7 @@ const verifyCMD = `./node_modules/.bin/truffle run verify ${
 }`;
 
 const skipContracts = [
+  "NFTExtension",
   // Test Contracts
   "OLToken",
   "TestToken1",
