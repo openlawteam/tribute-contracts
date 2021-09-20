@@ -16,10 +16,39 @@ sidebar_position: 2
 
 The easiest way to start with TributeDAO Framework is to use the command line tool to clone the Github repository and install all the project dependencies.
 
-Clone and access the Github repo:
+We will use several projects to build and run the TributeDAO in your local environment, so please try to keep the following folder structure:
+
+```
+tribute-tutorial
+│
+└───tribute-contracts (branch v1.0.0)
+│   │   .env
+│   │   ...
+|   |
+│   └───subgraph (branch v1.1.0)
+│       │   .env
+│       │   ...
+│
+└───tribute-ui (branch )
+│     │   .env
+│     │   ...
+│
+└───snapshot-hub (branch )
+    │   .env
+    │   docker-compose.yml
+    │   ...
+```
+
+Create and access the tutorial folder:
 
 ```bash
-git clone git@github.com:openlawteam/tribute-contracts.git && cd tribute-contracts
+mkdir tribute-tutorial && cd tribute-tutorial
+```
+
+Clone and access the _tribute-contracts_ Github repo:
+
+```bash
+git clone https://github.com/openlawteam/tribute-contracts.git && cd tribute-contracts
 ```
 
 :::caution
