@@ -61,6 +61,8 @@ function getDomainDefinition(message, verifyingContract, actionId, chainId) {
       );
     case "coupon":
       return getCouponDomainDefinition(verifyingContract, actionId, chainId);
+    case "coupon-kyc":
+      return getCouponKycDomainDefinition(verifyingContract, actionId, chainId);
     default:
       throw new Error("unknown type '" + message.type + "'");
   }
@@ -181,6 +183,17 @@ function getCouponDomainDefinition(verifyingContract, actionId, chainId) {
       { name: "amount", type: "uint256" },
       { name: "nonce", type: "uint256" },
     ],
+    EIP712Domain: getDomainType(),
+  };
+
+  return { domain, types };
+}
+
+function getCouponKycDomainDefinition(verifyingContract, actionId, chainId) {
+  const domain = getMessageDomainType(chainId, verifyingContract, actionId);
+
+  const types = {
+    Message: [{ name: "kycedMember", type: "address" }],
     EIP712Domain: getDomainType(),
   };
 
@@ -311,6 +324,8 @@ function prepareMessage(message) {
     case "result":
       return message;
     case "coupon":
+      return message;
+    case "coupon-kyc":
       return message;
     default:
       throw new Error("unknown type " + message.type);

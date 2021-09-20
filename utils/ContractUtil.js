@@ -93,6 +93,7 @@ const contracts = {
   // Funding/Onboarding Adapters
   FinancingContract: "./adapters/FinancingContract",
   OnboardingContract: "./adapters/OnboardingContract",
+  KycOnboardingContract: "./adapters/KycOnboardingContract",
   CouponOnboardingContract: "./adapters/CouponOnboardingContract",
   TributeContract: "./adapters/TributeContract",
   TributeNFTContract: "./adapters/TributeNFTContract",

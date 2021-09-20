@@ -303,6 +303,7 @@ const prepareAdapters = async ({
   ManagingContract,
   FinancingContract,
   OnboardingContract,
+  KycOnboardingContract,
   GuildKickContract,
   DaoRegistryAdapterContract,
   BankAdapterContract,
@@ -315,6 +316,7 @@ const prepareAdapters = async ({
     managing,
     financing,
     onboarding,
+    kycOnboarding,
     guildkick,
     daoRegistryAdapter,
     bankAdapter,
@@ -330,6 +332,7 @@ const prepareAdapters = async ({
   managing = await deployFunction(ManagingContract);
   financing = await deployFunction(FinancingContract);
   onboarding = await deployFunction(OnboardingContract);
+  kycOnboarding = await deployFunction(KycOnboardingContract, [1]);
   guildkick = await deployFunction(GuildKickContract);
   daoRegistryAdapter = await deployFunction(DaoRegistryAdapterContract);
   bankAdapter = await deployFunction(BankAdapterContract);
@@ -347,6 +350,7 @@ const prepareAdapters = async ({
     managing,
     financing,
     onboarding,
+    kycOnboarding,
     daoRegistryAdapter,
     bankAdapter,
     nftAdapter,
@@ -375,6 +379,7 @@ const addDefaultAdapters = async ({ dao, options, daoFactory, nftAddr }) => {
     managing,
     financing,
     onboarding,
+    kycOnboarding,
     daoRegistryAdapter,
     bankAdapter,
     nftAdapter,
@@ -404,6 +409,7 @@ const addDefaultAdapters = async ({ dao, options, daoFactory, nftAddr }) => {
     managing,
     financing,
     onboarding,
+    kycOnboarding,
     daoRegistryAdapter,
     bankAdapter,
     nftAdapter,
@@ -430,6 +436,7 @@ const addDefaultAdapters = async ({ dao, options, daoFactory, nftAddr }) => {
       managing,
       financing,
       onboarding,
+      kycOnboarding,
       daoRegistryAdapter,
       bankAdapter,
       nftAdapter,
@@ -450,6 +457,7 @@ const configureDao = async ({
   managing,
   financing,
   onboarding,
+  kycOnboarding,
   daoRegistryAdapter,
   bankAdapter,
   bankExtension,
@@ -492,6 +500,9 @@ const configureDao = async ({
       entryDao("onboarding", onboarding, {
         SUBMIT_PROPOSAL: true,
         UPDATE_DELEGATE_KEY: true,
+        NEW_MEMBER: true,
+      }),
+      entryDao("kyc-onboarding", kycOnboarding, {
         NEW_MEMBER: true,
       }),
       entryDao("coupon-onboarding", couponOnboarding, {
@@ -545,6 +556,9 @@ const configureDao = async ({
         UPDATE_TOKEN: true,
       }),
       entryBank(onboarding, {
+        ADD_TO_BALANCE: true,
+      }),
+      entryBank(kycOnboarding, {
         ADD_TO_BALANCE: true,
       }),
       entryBank(couponOnboarding, {
@@ -602,6 +616,17 @@ const configureDao = async ({
     nbUnits,
     maxChunks,
     tokenAddr,
+    {
+      from: owner,
+    }
+  );
+  
+  await kycOnboarding.configureDao(
+    dao.address,
+    couponCreatorAddress,
+    unitPrice,
+    nbUnits,
+    maxChunks,
     {
       from: owner,
     }
