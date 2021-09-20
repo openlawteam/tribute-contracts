@@ -57,6 +57,9 @@ contract KycOnboardingContract is
     bytes32 constant ChunkSize = keccak256("kyc-onboarding.chunkSize");
     bytes32 constant UnitsPerChunk = keccak256("kyc-onboarding.unitsPerChunk");
     bytes32 constant MaximumChunks = keccak256("kyc-onboarding.maximumChunks");
+    bytes32 constant MaxMembers = keccak256("kyc-onboarding.maxMembers");
+    bytes32 constant FundTargetAddress =
+        keccak256("kyc-onboarding.fundTargetAddress");
 
     uint256 private _chainId;
 
@@ -101,11 +104,17 @@ contract KycOnboardingContract is
         address signerAddress,
         uint256 chunkSize,
         uint256 unitsPerChunk,
-        uint256 maximumChunks
+        uint256 maximumChunks,
+        uint256 maxMembers,
+        address fundTargetAddress
     ) external onlyAdapter(dao) {
         require(
             chunkSize > 0 && chunkSize < type(uint88).max,
             "chunkSize::invalid"
+        );
+        require(
+            maxMembers > 0 && maxMembers < type(uint88).max,
+            "maxMembers::invalid"
         );
         require(
             maximumChunks > 0 && maximumChunks < type(uint88).max,
@@ -121,9 +130,11 @@ contract KycOnboardingContract is
         );
 
         dao.setAddressConfiguration(SignerAddressConfig, signerAddress);
+        dao.setAddressConfiguration(FundTargetAddress, fundTargetAddress);
         dao.setConfiguration(ChunkSize, chunkSize);
         dao.setConfiguration(UnitsPerChunk, unitsPerChunk);
         dao.setConfiguration(MaximumChunks, maximumChunks);
+        dao.setConfiguration(MaxMembers, maxMembers);
 
         BankExtension bank = BankExtension(dao.getExtensionAddress(BANK));
         bank.registerPotentialNewInternalToken(UNITS);
@@ -172,17 +183,27 @@ contract KycOnboardingContract is
         bytes memory signature
     ) external payable reentrancyGuard(dao) {
         require(!dao.isActiveMember(dao, kycedMember), "already member");
+        require(
+            dao.getNbMembers() < dao.getConfiguration(MaxMembers),
+            "the DAO is full"
+        );
         _checkKycCoupon(dao, kycedMember, signature);
         OnboardingDetails memory details = _checkData(dao);
 
         BankExtension bank = BankExtension(dao.getExtensionAddress(BANK));
         potentialNewMember(kycedMember, dao, bank);
 
-        bank.addToBalance{value: details.amount}(
-            GUILD,
-            ETH_TOKEN,
-            details.amount
-        );
+        address payable multisigAddress =
+            payable(dao.getAddressConfiguration(FundTargetAddress));
+        if (multisigAddress == address(0x0)) {
+            bank.addToBalance{value: details.amount}(
+                GUILD,
+                ETH_TOKEN,
+                details.amount
+            );
+        } else {
+            multisigAddress.sendValue(details.amount);
+        }
 
         bank.addToBalance(kycedMember, UNITS, details.unitsRequested);
 
@@ -193,9 +214,6 @@ contract KycOnboardingContract is
         emit Onboarded(dao, kycedMember, details.unitsRequested);
     }
 
-    /**
-    
-     */
     function _checkData(DaoRegistry dao)
         internal
         view

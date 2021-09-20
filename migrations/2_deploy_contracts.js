@@ -72,6 +72,7 @@ async function deployTestDao(deployFunction, network, accounts) {
     finalize: false,
     maxExternalTokens: 100,
     couponCreatorAddress: "0x7D8cad0bbD68deb352C33e80fccd4D8e88b4aBb8",
+    fundTargetAddress: "0xcFc2206eAbFDc5f3d9e7fA54f855A8C15D196c05",
     offchainAdmin: "0xedC10CFA90A135C41538325DD57FDB4c7b88faf7",
     daoName: process.env.DAO_NAME,
     owner: accounts[0],
@@ -90,6 +91,8 @@ async function deployRinkebyDao(deployFunction, network) {
     throw Error("Missing env var: ERC20_TOKEN_DECIMALS");
   if (!process.env.COUPON_CREATOR_ADDR)
     throw Error("Missing env var: COUPON_CREATOR_ADDR");
+  if (!process.env.FUND_TARGET_ADDR)
+    throw Error("Missing env var: FUND_TARGET_ADDR");
 
   return await deployDao({
     ...truffleImports,
@@ -109,6 +112,7 @@ async function deployRinkebyDao(deployFunction, network) {
     finalize: false,
     maxExternalTokens: 100,
     couponCreatorAddress: process.env.COUPON_CREATOR_ADDR,
+    fundTargetAddress: process.env.FUND_TARGET_ADDR,
     daoName: process.env.DAO_NAME,
     owner: process.env.DAO_OWNER_ADDR,
     offchainAdmin: "0xedC10CFA90A135C41538325DD57FDB4c7b88faf7",
@@ -144,6 +148,7 @@ async function deployGanacheDao(deployFunction, network, accounts) {
     finalize: false,
     maxExternalTokens: 100,
     couponCreatorAddress: process.env.COUPON_CREATOR_ADDR,
+    fundTargetAddress: process.env.FUND_TARGET_ADDR,
     daoName: process.env.DAO_NAME,
     owner: accounts[0],
     offchainAdmin: "0xedC10CFA90A135C41538325DD57FDB4c7b88faf7",

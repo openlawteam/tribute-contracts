@@ -482,6 +482,7 @@ const configureDao = async ({
   votingPeriod,
   gracePeriod,
   couponCreatorAddress,
+  fundTargetAddress,
 }) => {
   await daoFactory.addAdapters(
     dao.address,
@@ -648,6 +649,8 @@ const configureDao = async ({
     unitPrice,
     nbUnits,
     maxChunks,
+    100,
+    fundTargetAddress,
     {
       from: owner,
     }
