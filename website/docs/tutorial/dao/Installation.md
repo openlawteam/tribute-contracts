@@ -29,11 +29,11 @@ tribute-tutorial
 │       │   .env
 │       │   ...
 │
-└───tribute-ui (branch )
+└───tribute-ui
 │     │   .env
 │     │   ...
 │
-└───snapshot-hub (branch )
+└───snapshot-hub (branch erc-712)
     │   .env
     │   docker-compose.yml
     │   ...
