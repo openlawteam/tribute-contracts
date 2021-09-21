@@ -100,6 +100,7 @@ const contracts = {
 
   // Utils
   DaoArtifacts: "./utils/DaoArtifacts",
+  WETH: "./helpers/WETH",
 };
 
 module.exports = {
