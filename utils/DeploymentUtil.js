@@ -28,23 +28,17 @@ SOFTWARE.
 const { UNITS, LOOT, sha3, toBN } = require("./ContractUtil");
 
 const deployDao = async (options) => {
-  const {
+  let {
     deployFunction,
     owner,
-    deployTestTokens,
     finalize,
     DaoRegistry,
     BankExtension,
     BankFactory,
-    NFTExtension,
-    NFTCollectionFactory,
     ERC20Extension,
     ERC20TokenExtensionFactory,
-    TestToken1,
-    TestToken2,
-    Multicall,
-    PixelNFT,
-    OLToken,
+    WETH,
+    wethAddress,
   } = options;
 
   const erc20TokenName = options.erc20TokenName
@@ -57,17 +51,15 @@ const deployDao = async (options) => {
     ? parseInt(options.erc20TokenDecimals) || 0
     : 0;
 
+  if (!wethAddress) {
+    const weth = await deployFunction(WETH);
+    wethAddress = weth.address;
+    options.wethAddress = wethAddress;
+  }
   const identityDao = await deployFunction(DaoRegistry);
 
   const identityBank = await deployFunction(BankExtension);
   const bankFactory = await deployFunction(BankFactory, [identityBank.address]);
-
-  /*
-  const identityNft = await deployFunction(NFTExtension);
-  const nftFactory = await deployFunction(NFTCollectionFactory, [
-    identityNft.address,
-  ]);
-  */
 
   const identityERC20Ext = await deployFunction(ERC20Extension);
   const erc20TokenExtFactory = await deployFunction(
@@ -94,20 +86,6 @@ const deployDao = async (options) => {
     from: owner,
   });
 
-  // Start the NFTExtension deployment and configuration
-  /*
-  await nftFactory.createNFTCollection();
-  pastEvent = undefined;
-  while (pastEvent === undefined) {
-    let pastEvents = await nftFactory.getPastEvents();
-    pastEvent = pastEvents[0];
-  }
-  const { nftCollAddress } = pastEvent.returnValues;
-  const nftExtension = await NFTExtension.at(nftCollAddress);
-  await dao.addExtension(sha3("nft"), nftCollAddress, owner, {
-    from: owner,
-  });
-*/
   // Start the Erc20TokenExtension deployment & configuration
   await erc20TokenExtFactory.create(
     erc20TokenName,
@@ -128,7 +106,6 @@ const deployDao = async (options) => {
 
   const extensions = {
     bank: bankExtension,
-    //nft: nftExtension,
     erc20Ext: erc20TokenExtension,
   };
 
@@ -301,51 +278,31 @@ const prepareAdapters = async ({
   deployFunction,
   VotingContract,
   ConfigurationContract,
-  TributeContract,
-  TributeNFTContract,
-  DistributeContract,
   RagequitContract,
   ManagingContract,
-  FinancingContract,
-  OnboardingContract,
   KycOnboardingContract,
   GuildKickContract,
   DaoRegistryAdapterContract,
   BankAdapterContract,
-  NFTAdapterContract,
-  CouponOnboardingContract,
+  wethAddress,
 }) => {
   let voting,
     configuration,
     ragequit,
     managing,
-    financing,
-    onboarding,
     kycOnboarding,
     guildkick,
     daoRegistryAdapter,
-    bankAdapter,
-    nftAdapter,
-    couponOnboarding,
-    tribute,
-    distribute,
-    tributeNFT;
+    bankAdapter;
 
   voting = await deployFunction(VotingContract);
   configuration = await deployFunction(ConfigurationContract);
   ragequit = await deployFunction(RagequitContract);
   managing = await deployFunction(ManagingContract);
-  financing = await deployFunction(FinancingContract);
-  //onboarding = await deployFunction(OnboardingContract);
-  kycOnboarding = await deployFunction(KycOnboardingContract, [1]);
+  kycOnboarding = await deployFunction(KycOnboardingContract, [1, wethAddress]);
   guildkick = await deployFunction(GuildKickContract);
   daoRegistryAdapter = await deployFunction(DaoRegistryAdapterContract);
   bankAdapter = await deployFunction(BankAdapterContract);
-  //nftAdapter = await deployFunction(NFTAdapterContract);
-  //couponOnboarding = await deployFunction(CouponOnboardingContract, [1]);
-  //tribute = await deployFunction(TributeContract);
-  //distribute = await deployFunction(DistributeContract);
-  //tributeNFT = await deployFunction(TributeNFTContract);
 
   return {
     voting,
@@ -353,16 +310,9 @@ const prepareAdapters = async ({
     ragequit,
     guildkick,
     managing,
-    financing,
-    //onboarding,
     kycOnboarding,
     daoRegistryAdapter,
     bankAdapter,
-    //nftAdapter,
-    //couponOnboarding,
-    //tribute,
-    //distribute,
-    //tributeNFT,
   };
 };
 
@@ -375,14 +325,13 @@ const createIdentityDao = async (options) => {
   });
 };
 
-const addDefaultAdapters = async ({ dao, options, daoFactory, nftAddr }) => {
+const addDefaultAdapters = async ({ dao, options, daoFactory }) => {
   const {
     voting,
     configuration,
     ragequit,
     guildkick,
     managing,
-    financing,
     //onboarding,
     kycOnboarding,
     daoRegistryAdapter,
@@ -394,13 +343,10 @@ const addDefaultAdapters = async ({ dao, options, daoFactory, nftAddr }) => {
     //tributeNFT,
   } = await prepareAdapters(options);
 
-  let { BankExtension, NFTExtension, ERC20Extension } = options;
+  let { BankExtension, ERC20Extension } = options;
 
   const bankAddress = await dao.getExtensionAddress(sha3("bank"));
   const bankExtension = await BankExtension.at(bankAddress);
-
-  //const nftExtAddr = await dao.getExtensionAddress(sha3("nft"));
-  //const nftExtension = await NFTExtension.at(nftExtAddr);
 
   const unitTokenExtAddr = await dao.getExtensionAddress(sha3("erc20-ext"));
   const erc20TokenExtension = await ERC20Extension.at(unitTokenExtAddr);
@@ -412,21 +358,12 @@ const addDefaultAdapters = async ({ dao, options, daoFactory, nftAddr }) => {
     ragequit,
     guildkick,
     managing,
-    financing,
-    //onboarding,
     kycOnboarding,
     daoRegistryAdapter,
     bankAdapter,
-    //nftAdapter,
     voting,
     configuration,
-    //couponOnboarding,
-    //tribute,
-    //distribute,
-    //tributeNFT,
-    //nftAddr,
     bankExtension,
-    //nftExtension,
     erc20TokenExtension,
     ...options,
   });
@@ -439,16 +376,9 @@ const addDefaultAdapters = async ({ dao, options, daoFactory, nftAddr }) => {
       ragequit,
       guildkick,
       managing,
-      financing,
-      //onboarding,
       kycOnboarding,
       daoRegistryAdapter,
       bankAdapter,
-      //nftAdapter,
-      //couponOnboarding,
-      //tribute,
-      //distribute,
-      //tributeNFT,
     },
   };
 };
@@ -460,25 +390,16 @@ const configureDao = async ({
   ragequit,
   guildkick,
   managing,
-  financing,
-  //onboarding,
   kycOnboarding,
   daoRegistryAdapter,
   bankAdapter,
   bankExtension,
-  //nftAdapter,
-  //nftExtension,
   erc20TokenExtension,
   voting,
   configuration,
-  //couponOnboarding,
-  //tribute,
-  //distribute,
-  //tributeNFT,
   unitPrice,
   maxChunks,
   nbUnits,
-  tokenAddr,
   votingPeriod,
   gracePeriod,
   couponCreatorAddress,
@@ -500,45 +421,12 @@ const configureDao = async ({
         SUBMIT_PROPOSAL: true,
         REPLACE_ADAPTER: true,
       }),
-      entryDao("financing", financing, {
-        SUBMIT_PROPOSAL: true,
-      }),
-      /*
-      entryDao("onboarding", onboarding, {
-        SUBMIT_PROPOSAL: true,
-        UPDATE_DELEGATE_KEY: true,
-        NEW_MEMBER: true,
-      }),
-      */
       entryDao("kyc-onboarding", kycOnboarding, {
         NEW_MEMBER: true,
       }),
-      /*
-      entryDao("coupon-onboarding", couponOnboarding, {
-        SUBMIT_PROPOSAL: false,
-        ADD_TO_BALANCE: true,
-        UPDATE_DELEGATE_KEY: false,
-        NEW_MEMBER: true,
-      }),
-      */
       entryDao("daoRegistry", daoRegistryAdapter, {
         UPDATE_DELEGATE_KEY: true,
       }),
-      /*
-      entryDao("tribute", tribute, {
-        SUBMIT_PROPOSAL: true,
-        NEW_MEMBER: true,
-      }),
-      entryDao("tribute-nft", tributeNFT, {
-        SUBMIT_PROPOSAL: true,
-        NEW_MEMBER: true,
-      }),
-      entryDao("distribute", distribute, {
-        SUBMIT_PROPOSAL: true,
-      }),
-      */
-      // Adapters to access the extensions directly
-      //entryDao("nft", nftAdapter, {}),
       entryDao("bank", bankAdapter, {}),
       // Declare the erc20 token extension as an adapter to be able to call the bank extension
       entryDao("erc20-ext", erc20TokenExtension, {
@@ -567,35 +455,9 @@ const configureDao = async ({
         SUB_FROM_BALANCE: true,
         UPDATE_TOKEN: true,
       }),
-      /*
-      entryBank(onboarding, {
-        ADD_TO_BALANCE: true,
-      }),
-      */
       entryBank(kycOnboarding, {
         ADD_TO_BALANCE: true,
       }),
-      /*
-      entryBank(couponOnboarding, {
-        ADD_TO_BALANCE: true,
-      }),
-      */
-      entryBank(financing, {
-        ADD_TO_BALANCE: true,
-        SUB_FROM_BALANCE: true,
-      }),
-      /*
-      entryBank(tribute, {
-        ADD_TO_BALANCE: true,
-        REGISTER_NEW_TOKEN: true,
-      }),
-      entryBank(distribute, {
-        INTERNAL_TRANSFER: true,
-      }),
-      entryBank(tributeNFT, {
-        ADD_TO_BALANCE: true,
-      }),
-      */
       // Let the unit-token extension to execute internal transfers in the bank as an adapter
       entryBank(erc20TokenExtension, {
         INTERNAL_TRANSFER: true,
@@ -604,44 +466,12 @@ const configureDao = async ({
     { from: owner }
   );
 
-  /*
-  await daoFactory.configureExtension(
-    dao.address,
-    nftExtension.address,
-    [
-      entryNft(tributeNFT, {
-        COLLECT_NFT: true,
-      }),
-      entryNft(nftAdapter, {
-        COLLECT_NFT: true,
-      }),
-    ],
-    {
-      from: owner,
-    }
-  );
-  */
-
   await daoFactory.configureExtension(
     dao.address,
     erc20TokenExtension.address,
     [],
     { from: owner }
   );
-
-  /*
-  await onboarding.configureDao(
-    dao.address,
-    UNITS,
-    unitPrice,
-    nbUnits,
-    maxChunks,
-    tokenAddr,
-    {
-      from: owner,
-    }
-  );
-  */
 
   await kycOnboarding.configureDao(
     dao.address,
@@ -656,43 +486,9 @@ const configureDao = async ({
     }
   );
 
-  /*
-  await onboarding.configureDao(
-    dao.address,
-    LOOT,
-    unitPrice,
-    nbUnits,
-    maxChunks,
-    tokenAddr,
-    {
-      from: owner,
-    }
-  );
-
-  await couponOnboarding.configureDao(
-    dao.address,
-    couponCreatorAddress,
-    UNITS,
-    {
-      from: owner,
-    }
-  );
-  */
-
   await voting.configureDao(dao.address, votingPeriod, gracePeriod, {
     from: owner,
   });
-  /*
-  await tribute.configureDao(dao.address, UNITS, {
-    from: owner,
-  });
-  await tribute.configureDao(dao.address, LOOT, {
-    from: owner,
-  });
-  await tributeNFT.configureDao(dao.address, {
-    from: owner,
-  });
-  */
 };
 
 const cloneDao = async ({

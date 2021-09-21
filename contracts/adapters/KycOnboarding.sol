@@ -8,6 +8,10 @@ import "../extensions/bank/Bank.sol";
 import "../guards/AdapterGuard.sol";
 import "../utils/Signatures.sol";
 import "../utils/PotentialNewMember.sol";
+import "../helpers/WETH.sol";
+
+import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
+import "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 
 /**
 MIT License
@@ -40,6 +44,7 @@ contract KycOnboardingContract is
     PotentialNewMember
 {
     using Address for address payable;
+    using SafeERC20 for IERC20;
 
     event Onboarded(DaoRegistry dao, address member, uint256 units);
 
@@ -62,8 +67,8 @@ contract KycOnboardingContract is
         keccak256("kyc-onboarding.fundTargetAddress");
 
     uint256 private _chainId;
-
-    mapping(address => mapping(uint256 => uint256)) private _flags;
+    WETH private _weth;
+    IERC20 private _weth20;
 
     event CouponRedeemed(
         address daoAddress,
@@ -80,8 +85,10 @@ contract KycOnboardingContract is
         uint160 amount;
     }
 
-    constructor(uint256 chainId) {
+    constructor(uint256 chainId, address payable weth) {
         _chainId = chainId;
+        _weth = WETH(weth);
+        _weth20 = IERC20(weth);
     }
 
     /**
@@ -129,6 +136,8 @@ contract KycOnboardingContract is
             "potential overflow"
         );
 
+        require(signerAddress != address(0x0), "signer address is nil!");
+
         dao.setAddressConfiguration(SignerAddressConfig, signerAddress);
         dao.setAddressConfiguration(FundTargetAddress, fundTargetAddress);
         dao.setConfiguration(ChunkSize, chunkSize);
@@ -161,14 +170,13 @@ contract KycOnboardingContract is
         address kycedMember,
         bytes memory signature
     ) internal view {
-        address signerAddress =
-            dao.getAddressConfiguration(SignerAddressConfig);
-
-        bytes32 hash = hashCouponMessage(dao, Coupon(kycedMember));
-
-        address recoveredKey = ECDSA.recover(hash, signature);
-
-        require(recoveredKey == signerAddress, "invalid sig");
+        require(
+            ECDSA.recover(
+                hashCouponMessage(dao, Coupon(kycedMember)),
+                signature
+            ) == dao.getAddressConfiguration(SignerAddressConfig),
+            "invalid sig"
+        );
     }
 
     /**
@@ -202,7 +210,12 @@ contract KycOnboardingContract is
                 details.amount
             );
         } else {
-            multisigAddress.sendValue(details.amount);
+            _weth.deposit{value: details.amount}();
+            _weth20.safeTransferFrom(
+                address(this),
+                multisigAddress,
+                details.amount
+            );
         }
 
         bank.addToBalance(kycedMember, UNITS, details.unitsRequested);
