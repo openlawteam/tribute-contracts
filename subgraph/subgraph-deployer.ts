@@ -223,9 +223,21 @@ const getYAML = ({
 
     // Deploy subgraph <GITHUB_USERNAME/SUBGRAPH_NAME>
     console.log("🚗 ### Deploying subgraph...");
-    exec(
-      `graph deploy --access-token ${process.env.GRAPH_ACCESS_TOKEN} --node https://api.thegraph.com/deploy/ --ipfs https://api.thegraph.com/ipfs/ ${subgraph.GITHUB_USERNAME}/${subgraph.SUBGRAPH_NAME}`
-    );
+    if (process.env.REMOTE_GRAPH_NODE) {
+      console.log("remote graph node deployment...");
+      exec(
+        `graph deploy --access-token ${process.env.GRAPH_ACCESS_TOKEN} --node https://api.thegraph.com/deploy/ --ipfs https://api.thegraph.com/ipfs/ ${subgraph.GITHUB_USERNAME}/${subgraph.SUBGRAPH_NAME}`
+      );
+    } else {
+      console.log("local graph node deployment...");
+      exec(
+        `graph create ${subgraph.GITHUB_USERNAME}/${subgraph.SUBGRAPH_NAME} --node http://localhost:8020`
+      );
+
+      exec(
+        `graph deploy ${subgraph.GITHUB_USERNAME}/${subgraph.SUBGRAPH_NAME} --ipfs http://localhost:5001 --node http://localhost:8020`
+      );
+    }
 
     console.log("👏 ### Done.");
 
