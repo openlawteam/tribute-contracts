@@ -4,7 +4,6 @@ pragma solidity ^0.8.0;
 import "../core/DaoRegistry.sol";
 import "../extensions/erc1155/ERC1155TokenExtension.sol";
 import "../guards/AdapterGuard.sol";
-import "../guards/MemberGuard.sol";
 import "./interfaces/IConfiguration.sol";
 import "../adapters/interfaces/IVoting.sol";
 import "../helpers/DaoHelper.sol";

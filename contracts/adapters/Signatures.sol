@@ -6,7 +6,6 @@ import "./interfaces/ISignatures.sol";
 import "../core/DaoRegistry.sol";
 import "../extensions/erc1271/ERC1271.sol";
 import "../adapters/interfaces/IVoting.sol";
-import "../guards/MemberGuard.sol";
 import "../guards/AdapterGuard.sol";
 import "../helpers/DaoHelper.sol";
 
@@ -34,7 +33,7 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
  */
 
-contract SignaturesContract is ISignatures, MemberGuard, AdapterGuard {
+contract SignaturesContract is ISignatures, AdapterGuard {
     struct ProposalDetails {
         bytes32 permissionHash;
         bytes32 signatureHash;

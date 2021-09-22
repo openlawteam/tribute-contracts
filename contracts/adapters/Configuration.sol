@@ -3,7 +3,6 @@ pragma solidity ^0.8.0;
 // SPDX-License-Identifier: MIT
 
 import "../core/DaoRegistry.sol";
-import "../guards/MemberGuard.sol";
 import "../guards/AdapterGuard.sol";
 import "./interfaces/IConfiguration.sol";
 import "../adapters/interfaces/IVoting.sol";
@@ -33,7 +32,7 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
  */
 
-contract ConfigurationContract is IConfiguration, MemberGuard, AdapterGuard {
+contract ConfigurationContract is IConfiguration, AdapterGuard {
     struct Configuration {
         bytes32[] keys;
         uint256[] values;
@@ -63,15 +62,11 @@ contract ConfigurationContract is IConfiguration, MemberGuard, AdapterGuard {
         bytes32[] calldata keys,
         uint256[] calldata values,
         bytes calldata data
-    ) external override onlyMember(dao) reentrancyGuard(dao) {
+    ) external override reentrancyGuard(dao) {
         require(
             keys.length == values.length,
             "must be an equal number of config keys and values"
         );
-
-        dao.submitProposal(proposalId);
-        _configurations[address(dao)][proposalId] = Configuration(keys, values);
-
         IVoting votingContract =
             IVoting(dao.getAdapterAddress(DaoHelper.VOTING));
         address sponsoredBy =
@@ -82,6 +77,8 @@ contract ConfigurationContract is IConfiguration, MemberGuard, AdapterGuard {
                 msg.sender
             );
 
+        dao.submitProposal(proposalId);
+        _configurations[address(dao)][proposalId] = Configuration(keys, values);
         dao.sponsorProposal(proposalId, sponsoredBy, address(votingContract));
         votingContract.startNewVotingForProposal(dao, proposalId, data);
     }

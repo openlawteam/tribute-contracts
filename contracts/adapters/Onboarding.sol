@@ -6,7 +6,6 @@ import "./interfaces/IOnboarding.sol";
 import "../core/DaoRegistry.sol";
 import "../extensions/bank/Bank.sol";
 import "../adapters/interfaces/IVoting.sol";
-import "../guards/MemberGuard.sol";
 import "../guards/AdapterGuard.sol";
 import "@openzeppelin/contracts/utils/Address.sol";
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
@@ -37,7 +36,7 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
  */
 
-contract OnboardingContract is IOnboarding, MemberGuard, AdapterGuard {
+contract OnboardingContract is IOnboarding, AdapterGuard {
     using Address for address payable;
     using SafeERC20 for IERC20;
 

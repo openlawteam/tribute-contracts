@@ -6,7 +6,6 @@ import "./interfaces/IFinancing.sol";
 import "../core/DaoRegistry.sol";
 import "../extensions/bank/Bank.sol";
 import "../adapters/interfaces/IVoting.sol";
-import "../guards/MemberGuard.sol";
 import "../guards/AdapterGuard.sol";
 import "../helpers/DaoHelper.sol";
 
@@ -34,7 +33,7 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
  */
 
-contract FinancingContract is IFinancing, MemberGuard, AdapterGuard {
+contract FinancingContract is IFinancing, AdapterGuard {
     struct ProposalDetails {
         address applicant; // the proposal applicant address, can not be a reserved address
         uint256 amount; // the amount requested for funding

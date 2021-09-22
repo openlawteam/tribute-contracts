@@ -7,7 +7,6 @@ import "../extensions/nft/NFT.sol";
 import "../extensions/erc1155/ERC1155TokenExtension.sol";
 import "../extensions/bank/Bank.sol";
 import "../adapters/interfaces/IVoting.sol";
-import "../guards/MemberGuard.sol";
 import "../guards/AdapterGuard.sol";
 
 import "../helpers/DaoHelper.sol";
@@ -41,12 +40,7 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
  */
 
-contract TributeNFTContract is
-    MemberGuard,
-    AdapterGuard,
-    IERC1155Receiver,
-    IERC721Receiver
-{
+contract TributeNFTContract is AdapterGuard, IERC1155Receiver, IERC721Receiver {
     using Address for address payable;
 
     struct ProcessProposal {

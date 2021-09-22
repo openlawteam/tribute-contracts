@@ -8,7 +8,6 @@ import "../extensions/erc1155/ERC1155TokenExtension.sol";
 import "../extensions/token/erc20/InternalTokenVestingExtension.sol";
 import "../adapters/interfaces/IVoting.sol";
 import "../helpers/DaoHelper.sol";
-import "../guards/MemberGuard.sol";
 import "../guards/AdapterGuard.sol";
 import "@openzeppelin/contracts/utils/Address.sol";
 import "@openzeppelin/contracts/token/ERC1155/IERC1155.sol";
@@ -37,12 +36,7 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
  */
 
-contract LendNFTContract is
-    MemberGuard,
-    AdapterGuard,
-    IERC1155Receiver,
-    IERC721Receiver
-{
+contract LendNFTContract is AdapterGuard, IERC1155Receiver, IERC721Receiver {
     using Address for address payable;
 
     struct ProcessProposal {

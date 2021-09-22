@@ -4,7 +4,6 @@ pragma solidity ^0.8.0;
 
 import "../core/DaoRegistry.sol";
 import "../extensions/nft/NFT.sol";
-import "../guards/MemberGuard.sol";
 import "../guards/AdapterGuard.sol";
 import "../helpers/DaoHelper.sol";
 
@@ -32,7 +31,7 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
  */
 
-contract NFTAdapterContract is MemberGuard, AdapterGuard {
+contract NFTAdapterContract is AdapterGuard {
     /**
      * @notice default fallback function to prevent from sending ether to the contract.
      */

@@ -6,7 +6,6 @@ import "../core/DaoRegistry.sol";
 import "../extensions/bank/Bank.sol";
 import "../helpers/DaoHelper.sol";
 import "../adapters/interfaces/IVoting.sol";
-import "../guards/MemberGuard.sol";
 import "../guards/AdapterGuard.sol";
 import "@openzeppelin/contracts/utils/Address.sol";
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
@@ -36,7 +35,7 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
  */
 
-contract TributeContract is MemberGuard, AdapterGuard {
+contract TributeContract is AdapterGuard {
     using Address for address;
     using SafeERC20 for IERC20;
 

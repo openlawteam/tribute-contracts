@@ -3,7 +3,6 @@ pragma solidity ^0.8.0;
 // SPDX-License-Identifier: MIT
 
 import "../core/DaoRegistry.sol";
-import "../guards/MemberGuard.sol";
 import "../guards/AdapterGuard.sol";
 import "../adapters/interfaces/IVoting.sol";
 import "../adapters/interfaces/IDistribute.sol";
@@ -35,7 +34,7 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
  */
 
-contract DistributeContract is IDistribute, MemberGuard, AdapterGuard {
+contract DistributeContract is IDistribute, AdapterGuard {
     // Event to indicate the distribution process has been completed
     // if the unitHolder address is 0x0, then the amount were distributed to all members of the DAO.
     event Distributed(
@@ -110,30 +109,6 @@ contract DistributeContract is IDistribute, MemberGuard, AdapterGuard {
 
         require(amount > 0, "invalid amount");
 
-        _submitProposal(
-            dao,
-            proposalId,
-            unitHolderAddr,
-            token,
-            amount,
-            data,
-            submittedBy
-        );
-    }
-
-    /**
-     * @notice Creates the proposal, starts the voting process and sponsors the proposal.
-     * @dev If the unit holder address was provided in the params, the unit holder must have enough units to receive the funds.
-     */
-    function _submitProposal(
-        DaoRegistry dao,
-        bytes32 proposalId,
-        address unitHolderAddr,
-        address token,
-        uint256 amount,
-        bytes calldata data,
-        address submittedBy
-    ) internal onlyMember2(dao, submittedBy) {
         // Creates the distribution proposal.
         dao.submitProposal(proposalId);
 
@@ -160,8 +135,6 @@ contract DistributeContract is IDistribute, MemberGuard, AdapterGuard {
         );
 
         // Starts the voting process for the proposal.
-        IVoting votingContract =
-            IVoting(dao.getAdapterAddress(DaoHelper.VOTING));
         votingContract.startNewVotingForProposal(dao, proposalId, data);
 
         // Sponsors the proposal.

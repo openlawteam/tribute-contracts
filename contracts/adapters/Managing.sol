@@ -5,7 +5,6 @@ pragma solidity ^0.8.0;
 import "./interfaces/IManaging.sol";
 import "../core/DaoRegistry.sol";
 import "../adapters/interfaces/IVoting.sol";
-import "../guards/MemberGuard.sol";
 import "../guards/AdapterGuard.sol";
 import "../helpers/DaoHelper.sol";
 
@@ -33,7 +32,7 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
  */
 
-contract ManagingContract is IManaging, MemberGuard, AdapterGuard {
+contract ManagingContract is IManaging, AdapterGuard {
     mapping(address => mapping(bytes32 => ProposalDetails)) public proposals;
 
     /*
@@ -59,7 +58,7 @@ contract ManagingContract is IManaging, MemberGuard, AdapterGuard {
         bytes32 proposalId,
         ProposalDetails calldata proposal,
         bytes calldata data
-    ) external override onlyMember(dao) reentrancyGuard(dao) {
+    ) external override reentrancyGuard(dao) {
         require(
             proposal.keys.length == proposal.values.length,
             "must be an equal number of config keys and values"
