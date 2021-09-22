@@ -207,7 +207,7 @@ ALCHEMY_API_URL=https://eth-rinkeby.alchemyapi.io/v2/<ACCESS_TOKEN>
 
 Add your Alchemy API access token to `ALCHEMY_API_URL` in `.env.local`
 
-Next add a 64 digit hexadecimal number to `RELAYER_PK` in `env.local`.
+Next add a 64 digit hexadecimal number to `RELAYER_PK` in `.env.local`.
 A hexadecimal creator can be found here: https://numbergenerator.org/random-64-digit-hex-codes-generator
 
 From the `snapshot-hub` root folder install the dependencies:
