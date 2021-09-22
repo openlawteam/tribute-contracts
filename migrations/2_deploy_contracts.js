@@ -80,49 +80,51 @@ async function deployTestDao(deployFunction, network, accounts) {
 }
 
 async function deployRinkebyDao(deployFunction, network) {
-  if (!process.env.DAO_NAME) throw Error("Missing env var: DAO_NAME");
-  if (!process.env.DAO_OWNER_ADDR)
-    throw Error("Missing env var: DAO_OWNER_ADDR");
-  if (!process.env.ERC20_TOKEN_NAME)
-    throw Error("Missing env var: ERC20_TOKEN_NAME");
-  if (!process.env.ERC20_TOKEN_SYMBOL)
-    throw Error("Missing env var: ERC20_TOKEN_SYMBOL");
-  if (!process.env.ERC20_TOKEN_DECIMALS)
-    throw Error("Missing env var: ERC20_TOKEN_DECIMALS");
-  if (!process.env.COUPON_CREATOR_ADDR)
-    throw Error("Missing env var: COUPON_CREATOR_ADDR");
-  if (!process.env.FUND_TARGET_ADDR)
-    throw Error("Missing env var: FUND_TARGET_ADDR");
-
+  const envVariables = checkEnvVariable(
+    "DAO_NAME",
+    "DAO_OWNER_ADDR",
+    "ERC20_TOKEN_NAME",
+    "ERC20_TOKEN_SYMBOL",
+    "ERC20_TOKEN_DECIMALS",
+    "COUPON_CREATOR_ADDR",
+    "FUND_TARGET_ADDR",
+    "VOTING_PERIOD_SECONDS",
+    "GRACE_PERIOD_SECONDS",
+    "OFFCHAIN_ADMIN_ADDR",
+    "CHUNK_PRICE",
+    "UNITS_PER_CHUNK",
+    "MAX_CHUNKS"
+  );
+  
   return await deployDao({
     ...truffleImports,
     deployFunction,
-    unitPrice: toBN(toWei("100", "finney")),
-    nbUnits: toBN("100000"),
+    unitPrice: envVariables.CHUNK_PRICE,
+    nbUnits: envVariables.UNITS_PER_CHUNK,
     tokenAddr: ETH_TOKEN,
-    erc20TokenName: process.env.ERC20_TOKEN_NAME,
-    erc20TokenSymbol: process.env.ERC20_TOKEN_SYMBOL,
-    erc20TokenDecimals: process.env.ERC20_TOKEN_DECIMALS,
-    maxChunks: toBN("100000"),
-    votingPeriod: 600, // 600 secs = 10 mins
-    gracePeriod: 600, // 600 secs = 10 mins
+    erc20TokenName: envVariables.ERC20_TOKEN_NAME,
+    erc20TokenSymbol: envVariables.ERC20_TOKEN_SYMBOL,
+    erc20TokenDecimals: envVariables.ERC20_TOKEN_DECIMALS,
+    maxChunks: envVariables.MAX_CHUNKS,
+    votingPeriod: envVariables.VOTING_PERIOD_SECONDS, // 600 secs = 10 mins
+    gracePeriod: envVariables.GRACE_PERIOD_SECONDS, // 600 secs = 10 mins
     offchainVoting: true,
     chainId: getNetworkDetails(network).chainId,
     deployTestTokens: true,
     finalize: false,
     maxExternalTokens: 100,
-    couponCreatorAddress: process.env.COUPON_CREATOR_ADDR,
-    fundTargetAddress: process.env.FUND_TARGET_ADDR,
-    daoName: process.env.DAO_NAME,
-    owner: process.env.DAO_OWNER_ADDR,
-    offchainAdmin: "0xedC10CFA90A135C41538325DD57FDB4c7b88faf7",
+    couponCreatorAddress: envVariables.COUPON_CREATOR_ADDR,
+    fundTargetAddress: envVariables.FUND_TARGET_ADDR,
+    daoName: envVariables.DAO_NAME,
+    owner: envVariables.DAO_OWNER_ADDR,
+    offchainAdmin: envVariables.OFFCHAIN_ADMIN_ADDR,
     wethAddress: "0xc778417e063141139fce010982780140aa0cd5ab",
   });
 }
 
 function checkEnvVariable(...names) {
   let envVariables = {};
-  names.forEach((name) => {
+  Array.from(names).forEach((name) => {
     if (!process.env[name]) throw Error("Missing env var: " + name);
     envVariables[name] = process.env[name];
   });
