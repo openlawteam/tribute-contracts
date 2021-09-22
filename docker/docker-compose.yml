@@ -20,14 +20,15 @@ services:
 
   # Snapshot Postgres Database to store the Snapshot messages
   trib-snapshot-db:
-    image: bitnami/postgresql:13
+    image: postgres:9.6
     container_name: trib-snapshot-db
-    environment:
-      POSTGRESQL_USERNAME: snap
-      POSTGRESQL_PASSWORD: "pwd123"
-      POSTGRESQL_DATABASE: snapshot-db
     ports:
-      - 5432:5432
+      - "5432:5432"
+    command: ["postgres", "-p 5432"]
+    environment:
+      POSTGRES_USER: snap
+      POSTGRES_PASSWORD: pwd123
+      POSTGRES_DB: snapshot-db
 
   # Graph node to host the Subgraph
   trib-graph-node:
@@ -46,18 +47,18 @@ services:
       node_id: "default"
       node_role: "combined-node"
       postgres_host: "trib-graph-db"
-      postgres_port: 5433
-      postgres_user: graph
-      postgres_pass: pwd123
-      postgres_db: graph-db
+      postgres_port: "5433"
+      postgres_user: "graph"
+      postgres_pass: "pwd123"
+      postgres_db: "graph-db"
       ipfs: "http://trib-graph-ipfs:5001"
       ethereum: "rinkeby:http://rinkeby.openlaw.io:8545"
-      RUST_LOG: info
-      GRAPH_LOG: info
+      RUST_LOG: "info"
+      GRAPH_LOG: "info"
 
   # The IPFS instance to pin subgraph data
   trib-graph-ipfs:
-    image: ipfs/go-ipfs:v0.4.23
+    image: ipfs/go-ipfs:v0.9.1
     container_name: trib-graph-ipfs
     environment:
       IPFS_PROFILE: "server"
@@ -71,7 +72,7 @@ services:
 
   # The Database to store the subgraph events
   trib-graph-db:
-    image: postgres
+    image: postgres:9.6
     container_name: trib-graph-db
     ports:
       - "5433:5433"
