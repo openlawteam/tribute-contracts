@@ -205,6 +205,11 @@ ALLOWED_DOMAINS=http://localhost:3000
 ALCHEMY_API_URL=https://eth-rinkeby.alchemyapi.io/v2/<ACCESS_TOKEN>
 ```
 
+Add your Alchemy API access token to `ALCHEMY_API_URL` in `.env.local`
+
+Next add a 64 digit hexadecimal number to `RELAYER_PK` in `.env.local`.
+A hexadecimal creator can be found here: https://numbergenerator.org/random-64-digit-hex-codes-generator
+
 From the `snapshot-hub` root folder install the dependencies:
 
 ```bash
@@ -216,6 +221,10 @@ Finally, start the snapshot-hub erc712 service:
 ```bash
 docker-compose up
 ```
+
+You should see this in the terminal:
+
+![image](https://user-images.githubusercontent.com/6320310/134381117-80075a7d-db3a-46b8-a1d8-55f187d89c0e.png)
 
 ## Running the Tribute UI dApp
 
@@ -234,6 +243,9 @@ Start the dApp:
 ```bash
 npm start
 ```
+
+You should see this in your terminal:
+![image](https://user-images.githubusercontent.com/6320310/134383377-77226885-20b9-4042-bc33-9364cc878852.png)
 
 ## Interacting with the DAO
 
