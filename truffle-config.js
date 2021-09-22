@@ -21,6 +21,12 @@
 require("dotenv").config();
 require("solidity-coverage");
 
+const getNetworkProvider = () => {
+  let HDWalletProvider = require("@truffle/hdwallet-provider");
+  let mnemonic = process.env.TRUFFLE_MNEMONIC;
+  return new HDWalletProvider(mnemonic, process.env.ETH_NODE_URL);
+};
+
 module.exports = {
   networks: {
     ganache: {
@@ -29,16 +35,14 @@ module.exports = {
       network_id: "1337", // Any network (default: none)
     },
     rinkeby: {
-      provider: function () {
-        let infuraKey = process.env.INFURA_KEY;
-        let HDWalletProvider = require("@truffle/hdwallet-provider");
-        let mnemonic = process.env.TRUFFLE_MNEMONIC;
-        let infuraUrl = "wss://rinkeby.infura.io/ws/v3/" + infuraKey;
-        return new HDWalletProvider(mnemonic, infuraUrl);
-      },
+      provider: getNetworkProvider,
       network_id: 4,
       gasPrice: 10000000000,
       skipDryRun: true,
+    },
+    mainnet: {
+      provider: getNetworkProvider,
+      network_id: 1,
     },
     coverage: {
       host: "localhost",
