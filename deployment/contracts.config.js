@@ -298,6 +298,13 @@ const contracts = [
     type: ContractType.Adapter,
   },
   {
+    name: "ReimbursementContract",
+    path: "../contracts/adapters/ReimbursementContract",
+    enabled: true,
+    version: "1.0.0",
+    type: ContractType.Adapter,
+  },
+  {
     name: "OnboardingContract",
     path: "../contracts/adapters/OnboardingContract",
     enabled: true,

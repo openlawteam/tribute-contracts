@@ -280,12 +280,22 @@ module.exports = (() => {
     };
   };
 
+  const generateMembers = (amount) => {
+    let newAccounts = [];
+    for (let i = 0; i < amount; i++) {
+      const account = web3.eth.accounts.create();
+      newAccounts.push(account);
+    }
+    return newAccounts;
+  };
+
   return {
     deployDefaultDao,
     deployDefaultNFTDao,
     deployDaoWithBatchVoting,
     deployDaoWithOffchainVoting,
     entry,
+    generateMembers,
     entryErc1271,
     entryBank,
     entryDao,

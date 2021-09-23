@@ -354,6 +354,7 @@ const prepareAdapters = async ({
   ManagingContract,
   FinancingContract,
   OnboardingContract,
+  ReimbursementContract,
   GuildKickContract,
   DaoRegistryAdapterContract,
   BankAdapterContract,
@@ -368,6 +369,7 @@ const prepareAdapters = async ({
     managing,
     financing,
     onboarding,
+    reimbursement,
     guildkick,
     daoRegistryAdapter,
     bankAdapter,
@@ -385,6 +387,7 @@ const prepareAdapters = async ({
   managing = await deployFunction(ManagingContract);
   financing = await deployFunction(FinancingContract);
   onboarding = await deployFunction(OnboardingContract);
+  reimbursement = await deployFunction(ReimbursementContract);
   guildkick = await deployFunction(GuildKickContract);
   daoRegistryAdapter = await deployFunction(DaoRegistryAdapterContract);
   bankAdapter = await deployFunction(BankAdapterContract);
@@ -403,6 +406,7 @@ const prepareAdapters = async ({
     managing,
     financing,
     onboarding,
+    reimbursement,
     daoRegistryAdapter,
     bankAdapter,
     signatures,
@@ -433,6 +437,7 @@ const addDefaultAdapters = async ({ dao, options, daoFactory, nftAddr }) => {
     managing,
     financing,
     onboarding,
+    reimbursement,
     daoRegistryAdapter,
     bankAdapter,
     nftAdapter,
@@ -480,6 +485,7 @@ const addDefaultAdapters = async ({ dao, options, daoFactory, nftAddr }) => {
     managing,
     financing,
     onboarding,
+    reimbursement,
     daoRegistryAdapter,
     bankAdapter,
     nftAdapter,
@@ -509,6 +515,7 @@ const addDefaultAdapters = async ({ dao, options, daoFactory, nftAddr }) => {
       guildkick,
       managing,
       financing,
+      reimbursement,
       onboarding,
       daoRegistryAdapter,
       bankAdapter,
@@ -532,6 +539,7 @@ const configureDao = async ({
   managing,
   financing,
   onboarding,
+  reimbursement,
   daoRegistryAdapter,
   bankAdapter,
   bankExtension,
@@ -607,6 +615,11 @@ const configureDao = async ({
         UPDATE_DELEGATE_KEY: true,
         NEW_MEMBER: true,
       })
+    );
+
+  if (reimbursement)
+    adapters.push(
+      entryDao("reimbursement", reimbursement, {})
     );
 
   if (couponOnboarding)
@@ -717,6 +730,19 @@ const configureDao = async ({
       })
     );
 
+  if (reimbursement){
+    console.log('setting up reimbursement for bank');
+    adaptersWithBankAccess.push(
+      entryBank(reimbursement, {
+        INTERNAL_TRANSFER: true,
+        SUB_FROM_BALANCE: true,
+        WITHDRAW: true
+      })
+    );
+  } else {
+    console.log('reimbursement missing for bank');
+  }
+    
   if (couponOnboarding)
     adaptersWithBankAccess.push(
       entryBank(couponOnboarding, {
@@ -844,6 +870,11 @@ const configureDao = async ({
       }
     );
   }
+
+  if(reimbursement) {
+    //reimbursement.configureDao(dao.address);
+  }
+
   if (couponOnboarding)
     await couponOnboarding.configureDao(
       dao.address,
@@ -1050,6 +1081,7 @@ const entryNft = (contract, flags) => {
 };
 
 const entryBank = (contract, flags) => {
+  
   const values = [
     flags.ADD_TO_BALANCE,
     flags.SUB_FROM_BALANCE,

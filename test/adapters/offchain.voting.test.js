@@ -41,6 +41,7 @@ const {
   takeChainSnapshot,
   revertChainSnapshot,
   web3,
+  generateMembers,
   OffchainVotingHashContract,
 } = require("../../utils/OZTestUtil.js");
 
@@ -55,15 +56,6 @@ const {
   SigUtilSigner,
   getVoteStepDomainDefinition,
 } = require("../../utils/offchain_voting.js");
-
-const generateMembers = (amount) => {
-  let newAccounts = [];
-  for (let i = 0; i < amount; i++) {
-    const account = web3.eth.accounts.create();
-    newAccounts.push(account);
-  }
-  return newAccounts;
-};
 
 const members = generateMembers(10);
 const findMember = (addr) => members.find((member) => member.address === addr);

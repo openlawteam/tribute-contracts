@@ -97,9 +97,29 @@ contract BankExtension is DaoConstants, AdapterGuard, IExtension {
                     address(this),
                     uint8(flag)
                 ),
-            "bank::accessDenied"
+            string(abi.encodePacked("bank::accessDenied:", toString(flag)))
         );
         _;
+    }
+
+    function toString(AclFlag flag) internal pure returns(string memory){
+        if(flag == AclFlag.ADD_TO_BALANCE) {
+            return "add to balance";
+        }
+
+        if(flag == AclFlag.SUB_FROM_BALANCE) {
+            return "sub from balance";
+        }
+
+        if(flag == AclFlag.INTERNAL_TRANSFER) {
+            return "internal transfer";
+        }
+
+        if(flag == AclFlag.WITHDRAW) {
+            return "withdraw";
+        }
+
+        return "other";
     }
 
     /**
@@ -141,8 +161,7 @@ contract BankExtension is DaoConstants, AdapterGuard, IExtension {
         if (tokenAddr == ETH_TOKEN) {
             member.sendValue(amount);
         } else {
-            IERC20 erc20 = IERC20(tokenAddr);
-            erc20.safeTransfer(member, amount);
+            IERC20(tokenAddr).safeTransfer(member, amount);
         }
 
         emit Withdraw(member, tokenAddr, uint160(amount));

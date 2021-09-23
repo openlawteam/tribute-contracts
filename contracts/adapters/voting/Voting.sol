@@ -8,6 +8,8 @@ import "../../extensions/bank/Bank.sol";
 import "../../guards/MemberGuard.sol";
 import "../../guards/AdapterGuard.sol";
 import "../interfaces/IVoting.sol";
+import "@openzeppelin/contracts/utils/cryptography/SignatureChecker.sol";
+import "@openzeppelin/contracts/utils/cryptography/ECDSA.sol";
 
 /**
 MIT License
@@ -34,12 +36,22 @@ SOFTWARE.
  */
 
 contract VotingContract is IVoting, DaoConstants, MemberGuard, AdapterGuard {
+
+    using ECDSA for bytes32;
+
     struct Voting {
         uint256 nbYes;
         uint256 nbNo;
         uint256 startingTime;
         uint256 blockNumber;
         mapping(address => uint256) votes;
+    }
+
+    struct PermitVote {
+        bytes32 proposalId;
+        uint256 choice;
+        address submitter;
+        bytes signature; 
     }
 
     bytes32 constant VotingPeriod = keccak256("voting.votingPeriod");
@@ -91,12 +103,32 @@ contract VotingContract is IVoting, DaoConstants, MemberGuard, AdapterGuard {
      * @param sender The fallback sender address that should be return in case no other is found.
      */
     function getSenderAddress(
-        DaoRegistry,
-        address,
-        bytes memory,
+        DaoRegistry dao,
+        address actionId,
+        bytes memory data,
         address sender
-    ) external pure override returns (address) {
-        return sender;
+    ) public view override returns (address) {
+        if(data.length == 0) {
+            return sender;    
+        }
+        PermitVote memory permitVote = abi.decode(data, (PermitVote));
+        bytes32 hash = keccak256(abi.encode(address(dao), actionId, permitVote.proposalId, permitVote.choice));
+
+        require(SignatureChecker.isValidSignatureNow(
+            permitVote.submitter,
+            hash.toEthSignedMessageHash(),
+            permitVote.signature
+        ), "invalid sig");
+
+        return permitVote.submitter;
+    }
+
+    function submitVote(
+        DaoRegistry dao,
+        bytes32 proposalId,
+        uint256 voteValue
+    ) public {
+        submitVotePermit(dao, proposalId, voteValue, new bytes(0));
     }
 
     /**
@@ -108,11 +140,15 @@ contract VotingContract is IVoting, DaoConstants, MemberGuard, AdapterGuard {
      * @param proposalId The proposal needs to be sponsored, and not processed.
      * @param voteValue Only Yes (1) and No (2) votes are allowed.
      */
-    function submitVote(
+    function submitVotePermit(
         DaoRegistry dao,
         bytes32 proposalId,
-        uint256 voteValue
-    ) external onlyMember(dao) {
+        uint256 voteValue,
+        bytes memory data
+    ) public {
+        (address adapterAddress,) = dao.proposals(proposalId);
+        address sender = getSenderAddress(dao, adapterAddress, data, msg.sender);
+
         require(
             dao.getProposalFlag(proposalId, DaoRegistry.ProposalFlag.SPONSORED),
             "the proposal has not been sponsored yet"
@@ -128,14 +164,14 @@ contract VotingContract is IVoting, DaoConstants, MemberGuard, AdapterGuard {
 
         require(
             voteValue < 3 && voteValue > 0,
-            "only yes (1) and no (2) are possible values"
+            "only yes(1) & no(2) allowed"
         );
 
         Voting storage vote = votes[address(dao)][proposalId];
 
         require(
             vote.startingTime > 0,
-            "this proposalId has no vote going on at the moment"
+            "voting has not started yet"
         );
         require(
             block.timestamp <
@@ -143,14 +179,16 @@ contract VotingContract is IVoting, DaoConstants, MemberGuard, AdapterGuard {
             "vote has already ended"
         );
 
-        address memberAddr = dao.getAddressIfDelegated(msg.sender);
-
+        address memberAddr = dao.getAddressIfDelegated(sender);
+        require(isActiveMember(dao, memberAddr), "not active member");
         require(vote.votes[memberAddr] == 0, "member has already voted");
         BankExtension bank = BankExtension(dao.getExtensionAddress(BANK));
         uint256 correctWeight =
             bank.getPriorAmount(memberAddr, UNITS, vote.blockNumber);
 
         vote.votes[memberAddr] = voteValue;
+
+        require(correctWeight > 0 , "no weight power!");
 
         if (voteValue == 1) {
             vote.nbYes = vote.nbYes + correctWeight;
