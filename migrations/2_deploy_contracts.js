@@ -44,7 +44,7 @@ module.exports = async (deployer, network, accounts) => {
     console.log("no migration for network " + network);
     console.log("************************");
   }
-   console.log(`### Deployment completed at: ${new Date().toISOString()}`);
+  console.log(`### Deployment completed at: ${new Date().toISOString()}`);
 };
 
 async function deployTestDao(deployFunction, network, accounts) {
