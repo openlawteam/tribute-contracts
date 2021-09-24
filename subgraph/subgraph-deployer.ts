@@ -5,7 +5,7 @@ import { config as dotenvConfig } from "dotenv";
 
 import subgraphConfig from "./config/subgraph-config.json";
 
-dotenvConfig({ path: resolve(__dirname, "./.env") });
+dotenvConfig({ path: resolve(__dirname, "../.env") });
 
 type DeploySettings = {
   GITHUB_USERNAME: string;
@@ -281,11 +281,21 @@ function couponOnboardingYAML({
     );
 
     // Deploy subgraph <GITHUB_USERNAME/SUBGRAPH_NAME>
-    console.log("🚗 ### Deploying subgraph...");
-    exec(
-      `graph deploy --access-token ${process.env.GRAPH_ACCESS_TOKEN} --node https://api.thegraph.com/deploy/ --ipfs https://api.thegraph.com/ipfs/ ${subgraph.GITHUB_USERNAME}/${subgraph.SUBGRAPH_NAME}`
-    );
+    if (process.env.REMOTE_GRAPH_NODE === "true") {
+      console.log("🚗 ### Deploying subgraph to remote graph node...");
+      exec(
+        `graph deploy --access-token ${process.env.GRAPH_ACCESS_TOKEN} --node https://api.thegraph.com/deploy/ --ipfs https://api.thegraph.com/ipfs/ ${subgraph.GITHUB_USERNAME}/${subgraph.SUBGRAPH_NAME}`
+      );
+    } else {
+      console.log("🚗 ### Deploying subgraph to local graph node...");
+      exec(
+        `graph create ${subgraph.GITHUB_USERNAME}/${subgraph.SUBGRAPH_NAME} --node http://localhost:8020`
+      );
 
+      exec(
+        `graph deploy ${subgraph.GITHUB_USERNAME}/${subgraph.SUBGRAPH_NAME} --ipfs http://localhost:5001 --node http://localhost:8020`
+      );
+    }
     console.log("👏 ### Done.");
 
     // Increment deployment counter

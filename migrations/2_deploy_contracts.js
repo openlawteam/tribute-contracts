@@ -14,6 +14,7 @@ const truffleImports = require("../utils/TruffleUtil.js");
 require("dotenv").config();
 
 module.exports = async (deployer, network, accounts) => {
+  console.log(`### Deployment start at: ${new Date().toISOString()}`);
   let res;
   const deployFunction = truffleImports.deployFunctionFactory(deployer);
   if (network === "ganache") {
@@ -43,6 +44,7 @@ module.exports = async (deployer, network, accounts) => {
     console.log("no migration for network " + network);
     console.log("************************");
   }
+   console.log(`### Deployment completed at: ${new Date().toISOString()}`);
 };
 
 async function deployTestDao(deployFunction, network, accounts) {
