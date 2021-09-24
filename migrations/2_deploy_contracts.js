@@ -14,6 +14,7 @@ require("dotenv").config();
 module.exports = async (deployer, network, accounts) => {
   let res;
 
+  console.log(`Deployment started at: ${new Date().toISOString()}`);
   console.log(`Deploying tribute-contracts to ${network} network`);
 
   const { contracts } = require(`../deployment/${network}.config`);
@@ -82,6 +83,7 @@ module.exports = async (deployer, network, accounts) => {
     console.log("no migration for network " + network);
     console.log("************************");
   }
+  console.log(`Deployment completed at: ${new Date().toISOString()}`);
 };
 
 const deployRinkebyDao = async (deployFunction, network, truffleImports) => {
