@@ -34,7 +34,7 @@ abstract contract PotentialNewMember {
         address memberAddress,
         DaoRegistry dao,
         BankExtension bank
-    ) public {
+    ) internal {
         dao.potentialNewMember(memberAddress);
         require(memberAddress != address(0x0), "invalid member address");
         if (address(bank) != address(0x0)) {
