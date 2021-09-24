@@ -57,16 +57,6 @@ contract KickBadReporterAdapter is MemberGuard {
                 data,
                 msg.sender
             );
-        _sponsorProposal(dao, proposalId, data, sponsoredBy, votingContract);
-    }
-
-    function _sponsorProposal(
-        DaoRegistry dao,
-        bytes32 proposalId,
-        bytes memory data,
-        address sponsoredBy,
-        OffchainVotingContract votingContract
-    ) internal onlyMember2(dao, sponsoredBy) {
         votingContract.sponsorChallengeProposal(dao, proposalId, sponsoredBy);
         votingContract.startNewVotingForProposal(dao, proposalId, data);
     }

@@ -300,10 +300,12 @@ contract LendNFTContract is AdapterGuard, IERC1155Receiver, IERC721Receiver {
         bytes calldata data
     ) external override returns (bytes4) {
         ProcessProposal memory ppS = abi.decode(data, (ProcessProposal));
-        require(ppS.dao.lockedAt() != block.number, "reentrancy guard");
-        ppS.dao.lockSession();
+        return _onERC1155Received(ppS.dao, ppS.proposalId, from, id, value);
+    }
+
+    function _onERC1155Received(DaoRegistry dao, bytes32 proposalId, address from, uint256 id, uint256 value) internal reentrancyGuard(dao) returns (bytes4){
         (ProposalDetails storage proposal, IVoting.VotingState voteResult) =
-            _processProposal(ppS.dao, ppS.proposalId);
+            _processProposal(dao, proposalId);
 
         require(proposal.nftTokenId == id, "wrong NFT");
         require(proposal.nftAddr == msg.sender, "wrong NFT addr");
@@ -312,7 +314,7 @@ contract LendNFTContract is AdapterGuard, IERC1155Receiver, IERC721Receiver {
 
         if (voteResult == IVoting.VotingState.PASS) {
             address erc1155ExtAddr =
-                ppS.dao.getExtensionAddress(DaoHelper.ERC1155_EXT);
+                dao.getExtensionAddress(DaoHelper.ERC1155_EXT);
 
             IERC1155 erc1155 = IERC1155(msg.sender);
             erc1155.safeTransferFrom(
@@ -326,8 +328,6 @@ contract LendNFTContract is AdapterGuard, IERC1155Receiver, IERC721Receiver {
             IERC1155 erc1155 = IERC1155(msg.sender);
             erc1155.safeTransferFrom(address(this), from, id, value, "");
         }
-
-        ppS.dao.unlockSession();
         return this.onERC1155Received.selector;
     }
 
@@ -351,13 +351,13 @@ contract LendNFTContract is AdapterGuard, IERC1155Receiver, IERC721Receiver {
         bytes calldata data
     ) external override returns (bytes4) {
         ProcessProposal memory ppS = abi.decode(data, (ProcessProposal));
+        return _onERC721Received(ppS.dao, ppS.proposalId, from, tokenId);
+    }
 
-        require(ppS.dao.lockedAt() != block.number, "reentrancy guard");
-        ppS.dao.lockSession();
-
+    function _onERC721Received(DaoRegistry dao, bytes32 proposalId, address from, uint256 tokenId) internal reentrancyGuard(dao) returns (bytes4) {
+        
         (ProposalDetails storage proposal, IVoting.VotingState voteResult) =
-            _processProposal(ppS.dao, ppS.proposalId);
-
+            _processProposal(dao, proposalId);
         require(proposal.nftTokenId == tokenId, "wrong NFT");
         require(proposal.nftAddr == msg.sender, "wrong NFT addr");
         proposal.tributeAmount = 0;
@@ -367,15 +367,13 @@ contract LendNFTContract is AdapterGuard, IERC1155Receiver, IERC721Receiver {
         //if proposal passes and its an erc721 token - use NFT Extension
         if (voteResult == IVoting.VotingState.PASS) {
             NFTExtension nftExt =
-                NFTExtension(ppS.dao.getExtensionAddress(DaoHelper.NFT));
+                NFTExtension(dao.getExtensionAddress(DaoHelper.NFT));
             erc721.approve(address(nftExt), proposal.nftTokenId);
-
             nftExt.collect(proposal.nftAddr, proposal.nftTokenId);
         } else {
             erc721.safeTransferFrom(address(this), from, tokenId);
         }
 
-        ppS.dao.unlockSession();
         return this.onERC721Received.selector;
     }
 
