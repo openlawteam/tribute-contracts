@@ -43,6 +43,7 @@ module.exports = {
     mainnet: {
       provider: getNetworkProvider,
       network_id: 1,
+      skipDryRun: true,
     },
     coverage: {
       host: "localhost",
