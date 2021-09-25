@@ -20,6 +20,8 @@ module.exports = async (deployer, network, accounts) => {
     res = await deployGanacheDao(deployFunction, network, accounts);
   } else if (network === "rinkeby") {
     res = await deployRinkebyDao(deployFunction, network);
+  } else if (network === "mainnet") {
+    res = await deployMainnetDao(deployFunction, network);
   } else if (network === "test" || network === "coverage") {
     res = await deployTestDao(deployFunction, network, accounts);
   }

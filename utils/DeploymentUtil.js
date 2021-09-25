@@ -25,14 +25,13 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
  */
 
-const { UNITS, LOOT, sha3, toBN } = require("./ContractUtil");
+const { UNITS, sha3, toBN } = require("./ContractUtil");
 
 const deployDao = async (options) => {
   let {
     deployFunction,
     owner,
     finalize,
-    DaoRegistry,
     BankExtension,
     BankFactory,
     ERC20Extension,
@@ -56,20 +55,12 @@ const deployDao = async (options) => {
     wethAddress = weth.address;
     options.wethAddress = wethAddress;
   }
-  const identityDao = await deployFunction(DaoRegistry);
 
-  const identityBank = await deployFunction(BankExtension);
-  const bankFactory = await deployFunction(BankFactory, [identityBank.address]);
-
-  const identityERC20Ext = await deployFunction(ERC20Extension);
-  const erc20TokenExtFactory = await deployFunction(
-    ERC20TokenExtensionFactory,
-    [identityERC20Ext.address]
-  );
+  const bankFactory = await BankFactory.at('0xF87Ba5851b45BDb2971DCf3a2125Dea6795E1436');
+  const erc20TokenExtFactory = await ERC20TokenExtensionFactory.at('0xb92C59031b5f5675F7AEffF43f909E93DF3d3e55');
 
   const { dao, daoFactory } = await cloneDao({
     ...options,
-    identityDao,
     name: options.daoName || "test-dao",
   });
 
@@ -117,17 +108,13 @@ const deployDao = async (options) => {
 
   const votingAddress = await dao.getAdapterAddress(sha3("voting"));
   const votingHelpers = {
-    snapshotProposalContract: null,
-    handleBadReporterAdapter: null,
     offchainVoting: null,
     batchVoting: null,
   };
 
   if (options.offchainVoting) {
     const {
-      offchainVoting,
-      handleBadReporterAdapter,
-      snapshotProposalContract,
+      offchainVoting
     } = await configureOffchainVoting({
       ...options,
       dao,
@@ -136,20 +123,7 @@ const deployDao = async (options) => {
       bankAddress,
     });
     votingHelpers.offchainVoting = offchainVoting;
-    votingHelpers.handleBadReporterAdapter = handleBadReporterAdapter;
-    votingHelpers.snapshotProposalContract = snapshotProposalContract;
-  } else if (options.batchVoting) {
-    const {
-      batchVoting,
-      snapshotProposalContract,
-    } = await configureBatchVoting({
-      ...options,
-      dao,
-      daoFactory,
-    });
 
-    votingHelpers.batchVoting = batchVoting;
-    votingHelpers.snapshotProposalContract = snapshotProposalContract;
   }
 
   // deploy test token contracts (for testing convenience)
@@ -160,18 +134,6 @@ const deployDao = async (options) => {
     multicall: null,
     pixelNFT: null,
   };
-
-  /*
-  if (deployTestTokens) {
-    testContracts.testToken1 = await deployFunction(TestToken1, [1000000]);
-    testContracts.testToken2 = await deployFunction(TestToken2, [1000000]);
-    testContracts.multicall = await deployFunction(Multicall);
-    testContracts.pixelNFT = await deployFunction(PixelNFT, [100]);
-    testContracts.oltToken = await deployFunction(OLToken, [
-      toBN("1000000000000000000000000"),
-    ]);
-  }
-  */
 
   if (finalize) {
     await dao.finalizeDao({ from: owner });
@@ -190,29 +152,14 @@ const deployDao = async (options) => {
 const configureOffchainVoting = async ({
   dao,
   daoFactory,
-  chainId,
   owner,
-  offchainAdmin,
-  votingAddress,
   bankAddress,
   votingPeriod,
   gracePeriod,
-  SnapshotProposalContract,
-  KickBadReporterAdapter,
   OffchainVotingContract,
-  deployFunction,
 }) => {
-  let snapshotProposalContract = await deployFunction(
-    SnapshotProposalContract,
-    [chainId]
-  );
-  let handleBadReporterAdapter = await deployFunction(KickBadReporterAdapter);
-  let offchainVoting = await deployFunction(OffchainVotingContract, [
-    votingAddress,
-    snapshotProposalContract.address,
-    handleBadReporterAdapter.address,
-    offchainAdmin,
-  ]);
+  
+  let offchainVoting = await OffchainVotingContract.at('0x8CE2EF998bdfcA14Ae6ea8CC9223c33A995aeF9e');
 
   await daoFactory.updateAdapter(
     dao.address,
@@ -238,40 +185,7 @@ const configureOffchainVoting = async ({
     { from: owner }
   );
 
-  return { offchainVoting, snapshotProposalContract, handleBadReporterAdapter };
-};
-
-const configureBatchVoting = async ({
-  owner,
-  dao,
-  daoFactory,
-  chainId,
-  votingPeriod,
-  gracePeriod,
-  SnapshotProposalContract,
-  BatchVotingContract,
-  deployFunction,
-}) => {
-  let snapshotProposalContract, batchVoting;
-
-  snapshotProposalContract = await deployFunction(SnapshotProposalContract, [
-    chainId,
-  ]);
-  batchVoting = await deployFunction(BatchVotingContract, [
-    snapshotProposalContract.address,
-  ]);
-
-  await daoFactory.updateAdapter(
-    dao.address,
-    entryDao("voting", batchVoting, {}),
-    { from: owner }
-  );
-
-  await batchVoting.configureDao(dao.address, votingPeriod, gracePeriod, {
-    from: owner,
-  });
-
-  return { batchVoting, snapshotProposalContract };
+  return { offchainVoting };
 };
 
 const prepareAdapters = async ({
@@ -284,6 +198,7 @@ const prepareAdapters = async ({
   GuildKickContract,
   DaoRegistryAdapterContract,
   BankAdapterContract,
+  CouponOnboardingContract,
   wethAddress,
 }) => {
   let voting,
@@ -293,16 +208,18 @@ const prepareAdapters = async ({
     kycOnboarding,
     guildkick,
     daoRegistryAdapter,
-    bankAdapter;
+    bankAdapter,
+    couponOnboarding;
 
-  voting = await deployFunction(VotingContract);
-  configuration = await deployFunction(ConfigurationContract);
-  ragequit = await deployFunction(RagequitContract);
-  managing = await deployFunction(ManagingContract);
-  kycOnboarding = await deployFunction(KycOnboardingContract, [1, wethAddress]);
-  guildkick = await deployFunction(GuildKickContract);
-  daoRegistryAdapter = await deployFunction(DaoRegistryAdapterContract);
-  bankAdapter = await deployFunction(BankAdapterContract);
+  voting = await VotingContract.at('0x3B06Fa591497c231A9fb9f5E7eA95B715728eaCf');
+  configuration = await ConfigurationContract.at('0xCD4b3abb35cCfF50994A756BF519A05f4E08c3D6');
+  ragequit = await RagequitContract.at('0x7066dccF8F821108F20f1c7b95DAd3639A50593D');
+  managing = await ManagingContract.at('0x858F6E69e514016D88459d9C69a50286C0857552');
+  kycOnboarding = await KycOnboardingContract.at('0x3e9425919E7F806ff0D4c29869f59e55970385fA');
+  guildkick = await GuildKickContract.at('0x7c8243E3AE58E2A16Fdc6D1F5CD8F2E4a063f6B9');
+  daoRegistryAdapter = await DaoRegistryAdapterContract.at('0xe96e170F921Bd87C9B46F3f64cc64Af09119EccF');
+  bankAdapter = await BankAdapterContract.at('0xc089c6eB34A9383458a9b6465C57095D77De9997');
+  couponOnboarding = await CouponOnboardingContract.at('0x467E0eB6793864A319B5BdD1cfB26407DB4216D4');
 
   return {
     voting,
@@ -313,6 +230,7 @@ const prepareAdapters = async ({
     kycOnboarding,
     daoRegistryAdapter,
     bankAdapter,
+    couponOnboarding,
   };
 };
 
@@ -336,11 +254,7 @@ const addDefaultAdapters = async ({ dao, options, daoFactory }) => {
     kycOnboarding,
     daoRegistryAdapter,
     bankAdapter,
-    //nftAdapter,
-    //couponOnboarding,
-    //tribute,
-    //distribute,
-    //tributeNFT,
+    couponOnboarding,
   } = await prepareAdapters(options);
 
   let { BankExtension, ERC20Extension } = options;
@@ -363,6 +277,7 @@ const addDefaultAdapters = async ({ dao, options, daoFactory }) => {
     bankAdapter,
     voting,
     configuration,
+    couponOnboarding,
     bankExtension,
     erc20TokenExtension,
     ...options,
@@ -379,6 +294,7 @@ const addDefaultAdapters = async ({ dao, options, daoFactory }) => {
       kycOnboarding,
       daoRegistryAdapter,
       bankAdapter,
+      couponOnboarding,
     },
   };
 };
@@ -397,6 +313,7 @@ const configureDao = async ({
   erc20TokenExtension,
   voting,
   configuration,
+  couponOnboarding,
   unitPrice,
   maxChunks,
   nbUnits,
@@ -424,6 +341,10 @@ const configureDao = async ({
         REMOVE_EXTENSION: true,
       }),
       entryDao("kyc-onboarding", kycOnboarding, {
+        NEW_MEMBER: true,
+      }),
+      entryDao("coupon-onboarding", couponOnboarding, {
+        ADD_TO_BALANCE: true,
         NEW_MEMBER: true,
       }),
       entryDao("daoRegistry", daoRegistryAdapter, {
@@ -460,6 +381,9 @@ const configureDao = async ({
       entryBank(kycOnboarding, {
         ADD_TO_BALANCE: true,
       }),
+      entryBank(couponOnboarding, {
+        ADD_TO_BALANCE: true,
+      }),
       // Let the unit-token extension to execute internal transfers in the bank as an adapter
       entryBank(erc20TokenExtension, {
         INTERNAL_TRANSFER: true,
@@ -481,8 +405,16 @@ const configureDao = async ({
     unitPrice,
     nbUnits,
     maxChunks,
-    100,
+    41,
     fundTargetAddress,
+    {
+      from: owner,
+    }
+  );
+  await couponOnboarding.configureDao(
+    dao.address,
+    couponCreatorAddress,
+    UNITS,
     {
       from: owner,
     }
@@ -494,20 +426,14 @@ const configureDao = async ({
 };
 
 const cloneDao = async ({
-  identityDao,
   owner,
   creator,
-  deployFunction,
   DaoRegistry,
   DaoFactory,
   name,
 }) => {
-  let daoFactory = await deployFunction(
-    DaoFactory,
-    [identityDao.address],
-    owner
-  );
-
+  let daoFactory = await DaoFactory.at('0xF44e53E7474588494B3BeC75898278050d99a8Ce');
+  
   await daoFactory.createDao(name, creator ? creator : owner, { from: owner });
 
   // checking the gas usaged to clone a contract
@@ -587,6 +513,10 @@ const networks = [
   {
     name: "rinkeby",
     chainId: 4,
+  },
+  {
+    name: "mainnet",
+    chainId: 1,
   },
   {
     name: "rinkeby-fork",
