@@ -12,52 +12,26 @@ const { deployDao, getNetworkDetails } = require("../utils/DeploymentUtil.js");
 require("dotenv").config();
 
 module.exports = async (deployer, network, accounts) => {
-  let res;
-
+  console.log(`Deployment started at: ${new Date().toISOString()}`);
   console.log(`Deploying tribute-contracts to ${network} network`);
 
   const { contracts } = require(`../deployment/${network}.config`);
   const truffleImports = require("../utils/TruffleUtil.js")(contracts);
-  const DaoArtifacts = truffleImports.DaoArtifacts;
-
-  let daoArtifacts;
-  if (process.env.DAO_ARTIFACTS_CONTRACT_ADDR) {
-    console.log(`Attach to existing DaoArtifacts contract`);
-    daoArtifacts = await DaoArtifacts.at(
-      process.env.DAO_ARTIFACTS_CONTRACT_ADDR
-    );
-  } else {
-    console.log(`Creating new DaoArtifacts contract`);
-    await deployer.deploy(DaoArtifacts);
-    daoArtifacts = await DaoArtifacts.deployed();
-  }
-  console.log(`DaoArtifacts: ${daoArtifacts.address}`);
+  const daoArtifacts = await getOrCreateDaoArtifacts(deployer, truffleImports);
 
   const deployFunction = truffleImports.deployFunctionFactory(
     deployer,
     daoArtifacts
   );
 
-  if (network === "mainnet") {
-    res = await deployMainnetDao(deployFunction, network, truffleImports);
-  } else if (network === "ganache") {
-    res = await deployGanacheDao(
-      deployFunction,
-      network,
-      accounts,
-      truffleImports
-    );
-  } else if (network === "rinkeby") {
-    res = await deployRinkebyDao(deployFunction, network, truffleImports);
-  } else if (network === "test" || network === "coverage") {
-    res = await deployTestDao(
-      deployFunction,
-      network,
-      accounts,
-      truffleImports
-    );
-  }
-  let { dao, extensions, testContracts } = res;
+  const result = await deploy(
+    network,
+    deployFunction,
+    truffleImports,
+    accounts
+  );
+
+  const { dao, extensions, testContracts } = result;
   if (dao) {
     await dao.finalizeDao();
     console.log("************************");
@@ -82,6 +56,7 @@ module.exports = async (deployer, network, accounts) => {
     console.log("no migration for network " + network);
     console.log("************************");
   }
+  console.log(`Deployment completed at: ${new Date().toISOString()}`);
 };
 
 const deployRinkebyDao = async (deployFunction, network, truffleImports) => {
@@ -105,8 +80,12 @@ const deployRinkebyDao = async (deployFunction, network, truffleImports) => {
     erc20TokenSymbol: process.env.ERC20_TOKEN_SYMBOL,
     erc20TokenDecimals: process.env.ERC20_TOKEN_DECIMALS,
     maxChunks: toBN("100000"),
-    votingPeriod: 600, // 600 secs = 10 mins
-    gracePeriod: 600, // 600 secs = 10 mins
+    votingPeriod: process.env.VOTING_PERIOD_SECONDS
+      ? parseInt(process.env.VOTING_PERIOD_SECONDS)
+      : 600, // 600 secs = 10 mins,
+    gracePeriod: process.env.GRACE_PERIOD_SECONDS
+      ? parseInt(process.env.GRACE_PERIOD_SECONDS)
+      : 600, // 600 secs = 10 mins
     offchainVoting: true,
     chainId: getNetworkDetails(network).chainId,
     deployTestTokens: true,
@@ -117,7 +96,9 @@ const deployRinkebyDao = async (deployFunction, network, truffleImports) => {
       : process.env.DAO_OWNER_ADDR,
     daoName: process.env.DAO_NAME,
     owner: process.env.DAO_OWNER_ADDR,
-    offchainAdmin: "0xedC10CFA90A135C41538325DD57FDB4c7b88faf7",
+    offchainAdmin: process.env.OFFCHAIN_ADMIN_ADDR
+      ? process.env.OFFCHAIN_ADMIN_ADDR
+      : "0xedC10CFA90A135C41538325DD57FDB4c7b88faf7",
   });
 };
 
@@ -240,4 +221,53 @@ const deployTestDao = async (
     daoName: process.env.DAO_NAME,
     owner: accounts[0],
   });
+};
+
+const deploy = async (network, deployFunction, truffleImports, accounts) => {
+  let res;
+  switch (network) {
+    case "mainnet":
+      res = await deployMainnetDao(deployFunction, network, truffleImports);
+      break;
+    case "rinkeby":
+      res = await deployRinkebyDao(deployFunction, network, truffleImports);
+      break;
+    case "test":
+    case "coverage":
+      res = await deployTestDao(
+        deployFunction,
+        network,
+        accounts,
+        truffleImports
+      );
+      break;
+    case "ganache":
+      res = await deployGanacheDao(
+        deployFunction,
+        network,
+        accounts,
+        truffleImports
+      );
+      break;
+    default:
+      throw new Error(`Unsupported operation ${network}`);
+  }
+  return res;
+};
+
+const getOrCreateDaoArtifacts = async (deployer, truffleImports) => {
+  const DaoArtifacts = truffleImports.DaoArtifacts;
+  let daoArtifacts;
+  if (process.env.DAO_ARTIFACTS_CONTRACT_ADDR) {
+    console.log(`Attach to existing DaoArtifacts contract`);
+    daoArtifacts = await DaoArtifacts.at(
+      process.env.DAO_ARTIFACTS_CONTRACT_ADDR
+    );
+  } else {
+    console.log(`Creating new DaoArtifacts contract`);
+    await deployer.deploy(DaoArtifacts);
+    daoArtifacts = await DaoArtifacts.deployed();
+  }
+  console.log(`DaoArtifacts: ${daoArtifacts.address}`);
+  return daoArtifacts;
 };
