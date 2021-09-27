@@ -127,7 +127,7 @@ Added the following environment variables to your local .env file:
 
 - `DAO_NAME`: The name of the DAO.
 - `DAO_OWNER_ADDR`: The DAO Owner ETH Address (0x...) in the target network.
-- `INFURA_KEY`: The Infura API Key is used to communicate with the Ethereum blockchain.
+- `ETH_NODE_URL`: The Ethereum Node URL to connect to the Ethereum blockchain, it can be http/ws.
 - `TRUFFLE_MNEMONIC`: The truffle mnemonic string containing the 12 keywords.
 - `ETHERSCAN_API_KEY`: The Ether Scan API Key to verify the contracts after the deployment.
 - `DEBUG_CONTRACT_VERIFICATION`: Debug the Ether Scan contract verification calls (`true`|`false`).
@@ -149,11 +149,11 @@ Checkout the [sample .env file](https://github.com/openlawteam/tribute-contracts
 
 - Test deployment: `DAO_NAME`, `ERC20_TOKEN_NAME`, `ERC20_TOKEN_SYMBOL`, `ERC20_TOKEN_DECIMALS`.
 
-- Rinkeby deployment: `DAO_NAME`, `DAO_OWNER_ADDR`, `ERC20_TOKEN_NAME`, `ERC20_TOKEN_SYMBOL`, `ERC20_TOKEN_DECIMALS`, `COUPON_CREATOR_ADDR`.
+- Rinkeby deployment: `DAO_NAME`, `DAO_OWNER_ADDR`, `ERC20_TOKEN_NAME`, `ERC20_TOKEN_SYMBOL`, `ERC20_TOKEN_DECIMALS`, `COUPON_CREATOR_ADDR`, `ETH_NODE_URL`.
 
-- Mainnet deployment: `DAO_NAME`, `DAO_OWNER_ADDR`, `ERC20_TOKEN_NAME`, `ERC20_TOKEN_SYMBOL`, `ERC20_TOKEN_DECIMALS`, `COUPON_CREATOR_ADDR`, `OFFCHAIN_ADMIN_ADDR`, `VOTING_PERIOD_SECONDS`, `GRACE_PERIOD_SECONDS`.
+- Mainnet deployment: `DAO_NAME`, `DAO_OWNER_ADDR`, `ERC20_TOKEN_NAME`, `ERC20_TOKEN_SYMBOL`, `ERC20_TOKEN_DECIMALS`, `COUPON_CREATOR_ADDR`, `OFFCHAIN_ADMIN_ADDR`, `VOTING_PERIOD_SECONDS`, `GRACE_PERIOD_SECONDS`, `ETH_NODE_URL`.
 
-### Run Tests
+### Compile Contracts
 
 This project uses truffle. To compile the contracts, run:
 
