@@ -303,7 +303,13 @@ contract LendNFTContract is AdapterGuard, IERC1155Receiver, IERC721Receiver {
         return _onERC1155Received(ppS.dao, ppS.proposalId, from, id, value);
     }
 
-    function _onERC1155Received(DaoRegistry dao, bytes32 proposalId, address from, uint256 id, uint256 value) internal reentrancyGuard(dao) returns (bytes4){
+    function _onERC1155Received(
+        DaoRegistry dao,
+        bytes32 proposalId,
+        address from,
+        uint256 id,
+        uint256 value
+    ) internal reentrancyGuard(dao) returns (bytes4) {
         (ProposalDetails storage proposal, IVoting.VotingState voteResult) =
             _processProposal(dao, proposalId);
 
@@ -354,8 +360,12 @@ contract LendNFTContract is AdapterGuard, IERC1155Receiver, IERC721Receiver {
         return _onERC721Received(ppS.dao, ppS.proposalId, from, tokenId);
     }
 
-    function _onERC721Received(DaoRegistry dao, bytes32 proposalId, address from, uint256 tokenId) internal reentrancyGuard(dao) returns (bytes4) {
-        
+    function _onERC721Received(
+        DaoRegistry dao,
+        bytes32 proposalId,
+        address from,
+        uint256 tokenId
+    ) internal reentrancyGuard(dao) returns (bytes4) {
         (ProposalDetails storage proposal, IVoting.VotingState voteResult) =
             _processProposal(dao, proposalId);
         require(proposal.nftTokenId == tokenId, "wrong NFT");

@@ -73,16 +73,10 @@ contract ERC20TransferStrategySimple is IERC20TransferStrategy {
         // member only
         if (transferType == 0 && dao.isMember(to)) {
             // members only transfer
-            return (
-                ApprovalType.STANDARD,
-                amount
-            );
+            return (ApprovalType.STANDARD, amount);
             // open transfer
         } else if (transferType == 1) {
-            return (
-                ApprovalType.STANDARD,
-                amount
-            );
+            return (ApprovalType.STANDARD, amount);
         }
         //transfer not allowed
         return (ApprovalType.NONE, 0);
