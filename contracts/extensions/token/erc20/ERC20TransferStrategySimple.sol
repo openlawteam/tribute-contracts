@@ -36,7 +36,7 @@ SOFTWARE.
  * The ERC20Extension is a contract to give erc20 functionality
  * to the internal token units held by DAO members inside the DAO itself.
  */
-contract ERC20TransferStrategy is IERC20TransferStrategy {
+contract ERC20TransferStrategySimple is IERC20TransferStrategy {
     bytes32 public constant ERC20_EXT_TRANSFER_TYPE =
         keccak256("erc20.transfer.type");
 

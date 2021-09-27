@@ -187,12 +187,6 @@ contract DistributeContract is IDistribute, AdapterGuard {
 
             BankExtension bank =
                 BankExtension(dao.getExtensionAddress(DaoHelper.BANK));
-            uint256 balance =
-                bank.balanceOf(DaoHelper.GUILD, distribution.token);
-            require(
-                balance - distribution.amount >= 0,
-                "not enough funds for the given token"
-            );
 
             bank.internalTransfer(
                 DaoHelper.GUILD,
@@ -231,7 +225,7 @@ contract DistributeContract is IDistribute, AdapterGuard {
         uint256 blockNumber = distribution.blockNumber;
         require(
             distribution.status == DistributionStatus.IN_PROGRESS,
-            "distribution completed or does not exist"
+            "distrib completed or not exist"
         );
 
         // Check if the given index was already processed
