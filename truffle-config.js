@@ -21,23 +21,20 @@
 require("dotenv").config();
 require("solidity-coverage");
 
-const newHDProvider = (network) => {
-  const HDWalletProvider = require("@truffle/hdwallet-provider");
-  const infuraKey = process.env.INFURA_KEY;
-  const alchemyKey = process.env.ALCHEMY_KEY;
-  const mnemonic = process.env.TRUFFLE_MNEMONIC;
+const getNetworkProvider = () => {
+  let HDWalletProvider = require("@truffle/hdwallet-provider");
 
-  let url;
-  if (alchemyKey) {
-    url = `wss://eth-${network}.ws.alchemyapi.io/v2/${alchemyKey}`;
-  } else {
-    url = `wss://${network}.infura.io/ws/v3/${infuraKey}`;
-  }
+  if (!process.env.TRUFFLE_MNEMONIC)
+    throw Error("Missing environment variable: TRUFFLE_MNEMONIC");
+
+  if (!process.env.ETH_NODE_URL)
+    throw Error("Missing environment variable: ETH_NODE_URL");
+
   return new HDWalletProvider({
     mnemonic: {
-      phrase: mnemonic,
+      phrase: process.env.TRUFFLE_MNEMONIC,
     },
-    providerOrUrl: url,
+    providerOrUrl: process.env.ETH_NODE_URL,
   });
 };
 
@@ -49,16 +46,23 @@ module.exports = {
       network_id: "1337", // Any network (default: none)
     },
     rinkeby: {
-      provider: () => newHDProvider("rinkeby"),
+      provider: getNetworkProvider,
       network_id: 4,
       skipDryRun: true,
       networkCheckTimeout: 10000,
       deploymentPollingInterval: 10000,
     },
     mainnet: {
-      provider: () => newHDProvider("mainnet"),
+      provider: getNetworkProvider,
       network_id: 1,
       skipDryRun: true,
+    },
+    coverage: {
+      host: "localhost",
+      network_id: "*",
+      port: 8555,
+      gas: 0xfffffffffff,
+      gasPrice: 0x01,
     },
   },
 
