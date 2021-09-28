@@ -8,6 +8,10 @@ import "../extensions/bank/Bank.sol";
 import "../guards/AdapterGuard.sol";
 import "../utils/Signatures.sol";
 import "../utils/PotentialNewMember.sol";
+import "../utils/WETH.sol";
+
+import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
+import "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 
 /**
 MIT License
@@ -40,6 +44,9 @@ contract KycOnboardingContract is
     PotentialNewMember
 {
     using Address for address payable;
+    using SafeERC20 for IERC20;
+
+    event Onboarded(DaoRegistry dao, address member, uint256 units);
 
     struct Coupon {
         address kycedMember;
@@ -55,10 +62,13 @@ contract KycOnboardingContract is
     bytes32 constant ChunkSize = keccak256("kyc-onboarding.chunkSize");
     bytes32 constant UnitsPerChunk = keccak256("kyc-onboarding.unitsPerChunk");
     bytes32 constant MaximumChunks = keccak256("kyc-onboarding.maximumChunks");
+    bytes32 constant MaxMembers = keccak256("kyc-onboarding.maxMembers");
+    bytes32 constant FundTargetAddress =
+        keccak256("kyc-onboarding.fundTargetAddress");
 
     uint256 private _chainId;
-
-    mapping(address => mapping(uint256 => uint256)) private _flags;
+    WETH private _weth;
+    IERC20 private _weth20;
 
     event CouponRedeemed(
         address daoAddress,
@@ -75,8 +85,10 @@ contract KycOnboardingContract is
         uint160 amount;
     }
 
-    constructor(uint256 chainId) {
+    constructor(uint256 chainId, address payable weth) {
         _chainId = chainId;
+        _weth = WETH(weth);
+        _weth20 = IERC20(weth);
     }
 
     /**
@@ -99,11 +111,17 @@ contract KycOnboardingContract is
         address signerAddress,
         uint256 chunkSize,
         uint256 unitsPerChunk,
-        uint256 maximumChunks
+        uint256 maximumChunks,
+        uint256 maxMembers,
+        address fundTargetAddress
     ) external onlyAdapter(dao) {
         require(
             chunkSize > 0 && chunkSize < type(uint88).max,
             "chunkSize::invalid"
+        );
+        require(
+            maxMembers > 0 && maxMembers < type(uint88).max,
+            "maxMembers::invalid"
         );
         require(
             maximumChunks > 0 && maximumChunks < type(uint88).max,
@@ -118,10 +136,14 @@ contract KycOnboardingContract is
             "potential overflow"
         );
 
+        require(signerAddress != address(0x0), "signer address is nil!");
+
         dao.setAddressConfiguration(SignerAddressConfig, signerAddress);
+        dao.setAddressConfiguration(FundTargetAddress, fundTargetAddress);
         dao.setConfiguration(ChunkSize, chunkSize);
         dao.setConfiguration(UnitsPerChunk, unitsPerChunk);
         dao.setConfiguration(MaximumChunks, maximumChunks);
+        dao.setConfiguration(MaxMembers, maxMembers);
 
         BankExtension bank = BankExtension(dao.getExtensionAddress(BANK));
         bank.registerPotentialNewInternalToken(UNITS);
@@ -148,14 +170,13 @@ contract KycOnboardingContract is
         address kycedMember,
         bytes memory signature
     ) internal view {
-        address signerAddress =
-            dao.getAddressConfiguration(SignerAddressConfig);
-
-        bytes32 hash = hashCouponMessage(dao, Coupon(kycedMember));
-
-        address recoveredKey = ECDSA.recover(hash, signature);
-
-        require(recoveredKey == signerAddress, "invalid sig");
+        require(
+            ECDSA.recover(
+                hashCouponMessage(dao, Coupon(kycedMember)),
+                signature
+            ) == dao.getAddressConfiguration(SignerAddressConfig),
+            "invalid sig"
+        );
     }
 
     /**
@@ -170,27 +191,40 @@ contract KycOnboardingContract is
         bytes memory signature
     ) external payable reentrancyGuard(dao) {
         require(!dao.isActiveMember(dao, kycedMember), "already member");
+        require(
+            dao.getNbMembers() < dao.getConfiguration(MaxMembers),
+            "the DAO is full"
+        );
         _checkKycCoupon(dao, kycedMember, signature);
         OnboardingDetails memory details = _checkData(dao);
 
         BankExtension bank = BankExtension(dao.getExtensionAddress(BANK));
         potentialNewMember(kycedMember, dao, bank);
 
-        bank.addToBalance{value: details.amount}(
-            GUILD,
-            ETH_TOKEN,
-            details.amount
-        );
+        address payable multisigAddress =
+            payable(dao.getAddressConfiguration(FundTargetAddress));
+        if (multisigAddress == address(0x0)) {
+            bank.addToBalance{value: details.amount}(
+                GUILD,
+                ETH_TOKEN,
+                details.amount
+            );
+        } else {
+            _weth.deposit{value: details.amount}();
+            _weth20.safeTransferFrom(
+                address(this),
+                multisigAddress,
+                details.amount
+            );
+        }
 
-        bank.addToBalance(
-            kycedMember,
-            UNITS,
-            details.unitsRequested
-        );
+        bank.addToBalance(kycedMember, UNITS, details.unitsRequested);
 
         if (msg.value > details.amount) {
             payable(msg.sender).sendValue(msg.value - details.amount);
         }
+
+        emit Onboarded(dao, kycedMember, details.unitsRequested);
     }
 
     /**
@@ -208,7 +242,7 @@ contract KycOnboardingContract is
         require(details.numberOfChunks > 0, "insufficient funds");
         require(
             details.numberOfChunks <= dao.getConfiguration(MaximumChunks),
-            "total units for this member must be lower than the maximum"
+            "too much funds"
         );
 
         details.unitsPerChunk = uint88(dao.getConfiguration(UnitsPerChunk));

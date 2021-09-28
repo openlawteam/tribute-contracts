@@ -362,6 +362,8 @@ const prepareAdapters = async ({
   CouponOnboardingContract,
   KycOnboardingContract,
   ERC1155AdapterContract,
+  WETH,
+  wethAddress,
 }) => {
   let voting,
     configuration,
@@ -380,6 +382,11 @@ const prepareAdapters = async ({
     tribute,
     distribute,
     tributeNFT;
+  let weth = wethAddress;
+  if(!weth) {
+    weth = await deployFunction(WETH);
+    weth = weth.address;
+  }
 
   voting = await deployFunction(VotingContract);
   configuration = await deployFunction(ConfigurationContract);
@@ -393,7 +400,7 @@ const prepareAdapters = async ({
   signatures = await deployFunction(SignaturesContract);
   nftAdapter = await deployFunction(NFTAdapterContract);
   couponOnboarding = await deployFunction(CouponOnboardingContract, [1]);
-  kycOnboarding = await deployFunction(KycOnboardingContract, [1]);
+  kycOnboarding = await deployFunction(KycOnboardingContract, [1, weth]);
   tribute = await deployFunction(TributeContract);
   distribute = await deployFunction(DistributeContract);
   tributeNFT = await deployFunction(TributeNFTContract);
@@ -416,6 +423,7 @@ const prepareAdapters = async ({
     distribute,
     tributeNFT,
     erc1155Adapter,
+    wethAddress: weth
   };
 };
 
@@ -563,6 +571,8 @@ const configureDao = async ({
   votingPeriod,
   gracePeriod,
   couponCreatorAddress,
+  fundTargetAddress,
+  maxMembers
 }) => {
   const adapters = [];
   if (voting) adapters.push(entryDao("voting", voting, {}));
@@ -883,6 +893,8 @@ const configureDao = async ({
       unitPrice,
       nbUnits,
       maxChunks,
+      maxMembers,
+      fundTargetAddress,
       {
         from: owner,
       }

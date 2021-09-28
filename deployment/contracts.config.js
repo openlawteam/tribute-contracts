@@ -348,6 +348,13 @@ const contracts = [
     version: "1.0.0",
     type: ContractType.Util,
   },
+  {
+    name: "WETH",
+    path: "../contracts/utils/WETH",
+    enabled: true,
+    version: "1.0.0",
+    type: ContractType.Util,
+  },
 ];
 
 const getConfig = (name) => {

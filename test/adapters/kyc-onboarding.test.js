@@ -57,16 +57,11 @@ const {
   SigUtilSigner,
   getMessageERC712Hash,
 } = require("../../utils/offchain_voting.js");
-const { toWei } = require("web3-utils");
 
 const signer = {
   address: "0x7D8cad0bbD68deb352C33e80fccd4D8e88b4aBb8",
   privKey: "c150429d49e8799f119434acd3f816f299a5c7e3891455ee12269cb47a5f987c",
 };
-
-function getProposalCounter() {
-  return proposalCounter().next().value;
-}
 
 describe("Adapter - KYC Onboarding", () => {
   before("deploy dao", async () => {
@@ -154,7 +149,12 @@ describe("Adapter - KYC Onboarding", () => {
     let solHash = await onboarding.hashCouponMessage(dao.address, couponData);
     expect(jsHash).equal(solHash);
 
-    var signature = signerUtil(couponData, dao.address, onboarding.address, 1);
+    const signature = signerUtil(
+      couponData,
+      dao.address,
+      onboarding.address,
+      1
+    );
 
     await onboarding.onboard(dao.address, applicant, signature, {
       from: applicant,
@@ -177,8 +177,11 @@ describe("Adapter - KYC Onboarding", () => {
       numberOfUnits.mul(toBN("3")).toString()
     );
     expect(nonMemberAccountUnits.toString()).equal("0");
-    await checkBalance(bank, GUILD, ETH_TOKEN, unitPrice.mul(toBN("3")));
+    await checkBalance(bank, GUILD, ETH_TOKEN, 0);
+    const fundTargetAddress = "0x7D8cad0bbD68deb352C33e80fccd4D8e88b4aBb8";
+    const balance = await web3.eth.getBalance(fundTargetAddress);
 
+    expect(balance.toString()).equal(unitPrice.mul(toBN("3")).toString());
     // test active member status
     const applicantIsActiveMember = await isMember(bank, applicant);
     expect(applicantIsActiveMember).equal(true);
@@ -192,22 +195,28 @@ describe("Adapter - KYC Onboarding", () => {
   it("should not be possible to have more than the maximum number of units", async () => {
     const applicant = accounts[2];
     const dao = this.dao;
-    const onboarding = this.adapters.onboarding;
+    const onboarding = this.adapters.kycOnboarding;
+    const signerUtil = SigUtilSigner(signer.privKey);
+
+    const couponData = {
+      type: "coupon-kyc",
+      kycedMember: applicant,
+    };
+
+    const signature = signerUtil(
+      couponData,
+      dao.address,
+      onboarding.address,
+      1
+    );
 
     await expectRevert(
-      onboarding.submitProposal(
-        dao.address,
-        "0x1",
-        applicant,
-        UNITS,
-        unitPrice.mul(toBN(11)).add(remaining),
-        [],
-        {
-          from: daoOwner,
-          gasPrice: toBN("0"),
-        }
-      ),
-      "total units for this member must be lower than the maximum"
+      onboarding.onboard(dao.address, applicant, signature, {
+        from: daoOwner,
+        value: unitPrice.mul(toBN(100)).add(remaining),
+        gasPrice: toBN("0"),
+      }),
+      "too much funds"
     );
   });
 });
