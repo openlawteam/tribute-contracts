@@ -70,6 +70,8 @@ contract KycOnboardingContract is
     WETH private _weth;
     IERC20 private _weth20;
 
+    uint256 private counter;
+
     event CouponRedeemed(
         address daoAddress,
         uint256 nonce,
@@ -191,10 +193,7 @@ contract KycOnboardingContract is
         bytes memory signature
     ) external payable reentrancyGuard(dao) {
         require(!dao.isActiveMember(dao, kycedMember), "already member");
-        require(
-            dao.getNbMembers() < dao.getConfiguration(MaxMembers),
-            "the DAO is full"
-        );
+        require(counter < dao.getConfiguration(MaxMembers), "the DAO is full");
         _checkKycCoupon(dao, kycedMember, signature);
         OnboardingDetails memory details = _checkData(dao);
 
@@ -223,6 +222,8 @@ contract KycOnboardingContract is
         if (msg.value > details.amount) {
             payable(msg.sender).sendValue(msg.value - details.amount);
         }
+
+        counter = counter + 1;
 
         emit Onboarded(dao, kycedMember, details.unitsRequested);
     }
