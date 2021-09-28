@@ -159,6 +159,9 @@ contract LendNFTContract is AdapterGuard, IERC1155Receiver, IERC721Receiver {
      * @param dao The DAO address.
      * @param proposalId The proposal id.
      */
+    // The function can be called only from the _onERC1155Received & _onERC721Received functions
+    // Which are protected against reentrancy attacks.
+    //slither-disable-next-line reentrancy-no-eth
     function _processProposal(DaoRegistry dao, bytes32 proposalId)
         internal
         returns (

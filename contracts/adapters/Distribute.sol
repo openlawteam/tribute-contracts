@@ -243,8 +243,8 @@ contract DistributeContract is IDistribute, AdapterGuard {
 
         address unitHolderAddr = distribution.unitHolderAddr;
         if (unitHolderAddr != address(0x0)) {
-            _distributeOne(bank, unitHolderAddr, blockNumber, token, amount);
             distribution.status = DistributionStatus.DONE;
+            _distributeOne(bank, unitHolderAddr, blockNumber, token, amount);
             emit Distributed(address(dao), token, amount, unitHolderAddr);
         } else {
             // Set the max index supported which is based on the number of members
@@ -252,6 +252,12 @@ contract DistributeContract is IDistribute, AdapterGuard {
             uint256 maxIndex = toIndex;
             if (maxIndex > nbMembers) {
                 maxIndex = nbMembers;
+            }
+
+            distribution.currentIndex = maxIndex;
+            if (maxIndex == nbMembers) {
+                distribution.status = DistributionStatus.DONE;
+                emit Distributed(address(dao), token, amount, unitHolderAddr);
             }
 
             _distributeAll(
@@ -263,12 +269,6 @@ contract DistributeContract is IDistribute, AdapterGuard {
                 token,
                 amount
             );
-
-            distribution.currentIndex = maxIndex;
-            if (maxIndex == nbMembers) {
-                distribution.status = DistributionStatus.DONE;
-                emit Distributed(address(dao), token, amount, unitHolderAddr);
-            }
         }
     }
 
