@@ -36,9 +36,11 @@ SOFTWARE.
  */
 
 contract KickBadReporterAdapter is MemberGuard {
-    /*
-     * default fallback function to prevent from sending ether to the contract
+    /**
+     * @notice default fallback function to prevent from sending ether to the contract
      */
+    // The transaction is always reverted, so there are no risks of locking ether in the contract
+    //slither-disable-next-line locked-ether
     receive() external payable {
         revert("fallback revert");
     }
@@ -48,8 +50,7 @@ contract KickBadReporterAdapter is MemberGuard {
         bytes32 proposalId,
         bytes calldata data
     ) external {
-        OffchainVotingContract votingContract =
-            OffchainVotingContract(dao.getAdapterAddress(DaoHelper.VOTING));
+        OffchainVotingContract votingContract = _getVotingContract(dao);
         address sponsoredBy =
             votingContract.getSenderAddress(
                 dao,
@@ -62,9 +63,7 @@ contract KickBadReporterAdapter is MemberGuard {
     }
 
     function processProposal(DaoRegistry dao, bytes32 proposalId) external {
-        OffchainVotingContract votingContract =
-            OffchainVotingContract(dao.getAdapterAddress(DaoHelper.VOTING));
-
+        OffchainVotingContract votingContract = _getVotingContract(dao);
         votingContract.processChallengeProposal(dao, proposalId);
 
         IVoting.VotingState votingState =
@@ -88,5 +87,14 @@ contract KickBadReporterAdapter is MemberGuard {
         } else {
             revert("vote not finished yet");
         }
+    }
+
+    function _getVotingContract(DaoRegistry dao)
+        internal
+        view
+        returns (OffchainVotingContract)
+    {
+        address addr = dao.getAdapterAddress(DaoHelper.VOTING);
+        return OffchainVotingContract(payable(addr));
     }
 }

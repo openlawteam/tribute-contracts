@@ -48,6 +48,8 @@ contract RagequitContract is IRagequit, AdapterGuard {
     /**
      * @notice default fallback function to prevent from sending ether to the contract.
      */
+    // The transaction is always reverted, so there are no risks of locking ether in the contract
+    //slither-disable-next-line locked-ether
     receive() external payable {
         revert("fallback revert");
     }
