@@ -218,6 +218,8 @@ const deployTestDao = async (
     maxExternalTokens: 100,
     couponCreatorAddress: "0x7D8cad0bbD68deb352C33e80fccd4D8e88b4aBb8",
     offchainAdmin: "0xedC10CFA90A135C41538325DD57FDB4c7b88faf7",
+    fundTargetAddress: "0x7D8cad0bbD68deb352C33e80fccd4D8e88b4aBb8",
+    maxMembers: 41,
     daoName: process.env.DAO_NAME,
     owner: accounts[0],
   });

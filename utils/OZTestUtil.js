@@ -86,6 +86,8 @@ const getDefaultOptions = (options) => {
     chainId: 1,
     maxExternalTokens: 100,
     couponCreatorAddress: "0x7D8cad0bbD68deb352C33e80fccd4D8e88b4aBb8",
+    fundTargetAddress: "0x7D8cad0bbD68deb352C33e80fccd4D8e88b4aBb8",
+    maxMembers: 41,
     deployTestTokens: true,
     ...options,
   };
@@ -194,21 +196,24 @@ module.exports = (() => {
   };
 
   const deployDefaultNFTDao = async ({ owner }) => {
-    const { dao, adapters, extensions, testContracts } = await deployDao({
-      ...getDefaultOptions({ owner }),
-      deployTestTokens: true,
-      finalize: false,
-      ...ozContracts,
-      deployFunction,
-    });
+    const { dao, adapters, extensions, testContracts, utils } = await deployDao(
+      {
+        ...getDefaultOptions({ owner }),
+        deployTestTokens: true,
+        finalize: false,
+        ...ozContracts,
+        deployFunction,
+      }
+    );
 
     await dao.finalizeDao({ from: owner });
 
     return {
-      dao: dao,
-      adapters: adapters,
-      extensions: extensions,
-      testContracts: testContracts,
+      dao,
+      adapters,
+      extensions,
+      testContracts,
+      utils,
     };
   };
 
@@ -219,12 +224,15 @@ module.exports = (() => {
       extensions,
       testContracts,
       votingHelpers,
+      utils,
     } = await deployDao({
       ...getDefaultOptions({ owner }),
       offchainVoting: true,
       deployTestTokens: true,
       offchainAdmin: owner,
       finalize: false,
+      fundTargetAddress: "0x7D8cad0bbD68deb352C33e80fccd4D8e88b4aBb8",
+      maxMembers: 41,
       ...ozContracts,
       deployFunction,
     });
@@ -242,23 +250,28 @@ module.exports = (() => {
     adapters["voting"] = votingHelpers.offchainVoting;
 
     return {
-      dao: dao,
-      adapters: adapters,
-      extensions: extensions,
-      testContracts: testContracts,
-      votingHelpers: votingHelpers,
+      dao,
+      adapters,
+      extensions,
+      testContracts,
+      votingHelpers,
+      utils,
     };
   };
 
   const deployDaoWithBatchVoting = async ({ owner, newMember }) => {
-    const { dao, adapters, extensions, votingHelpers } = await deployDao({
-      ...getDefaultOptions({ owner }),
-      ...ozContracts,
-      deployTestTokens: false,
-      batchVoting: true,
-      finalize: false,
-      deployFunction,
-    });
+    const { dao, adapters, extensions, votingHelpers, utils } = await deployDao(
+      {
+        ...getDefaultOptions({ owner }),
+        ...ozContracts,
+        fundTargetAddress: "0x7D8cad0bbD68deb352C33e80fccd4D8e88b4aBb8",
+        maxMembers: 41,
+        deployTestTokens: false,
+        batchVoting: true,
+        finalize: false,
+        deployFunction,
+      }
+    );
 
     await dao.potentialNewMember(newMember, {
       from: owner,
@@ -273,10 +286,11 @@ module.exports = (() => {
     adapters["voting"] = adapters.batchVoting;
 
     return {
-      dao: dao,
-      adapters: adapters,
-      extensions: extensions,
-      votingHelpers: votingHelpers,
+      dao,
+      adapters,
+      utils,
+      extensions,
+      votingHelpers,
     };
   };
 

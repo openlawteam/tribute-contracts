@@ -39,7 +39,6 @@ const {
   deployDefaultDao,
   takeChainSnapshot,
   revertChainSnapshot,
-  proposalIdGenerator,
   accounts,
   expectRevert,
   expect,
@@ -50,8 +49,6 @@ const { checkBalance, isMember } = require("../../utils/TestUtils.js");
 
 const daoOwner = accounts[0];
 const delegatedKey = accounts[9];
-
-const proposalCounter = proposalIdGenerator().generator;
 
 const {
   SigUtilSigner,
@@ -65,13 +62,14 @@ const signer = {
 
 describe("Adapter - KYC Onboarding", () => {
   before("deploy dao", async () => {
-    const { dao, adapters, extensions } = await deployDefaultDao({
+    const { dao, adapters, extensions, utils } = await deployDefaultDao({
       owner: daoOwner,
       creator: delegatedKey,
     });
     this.dao = dao;
     this.adapters = adapters;
     this.extensions = extensions;
+    this.utils = utils;
     this.snapshotId = await takeChainSnapshot();
   });
 
@@ -179,7 +177,8 @@ describe("Adapter - KYC Onboarding", () => {
     expect(nonMemberAccountUnits.toString()).equal("0");
     await checkBalance(bank, GUILD, ETH_TOKEN, 0);
     const fundTargetAddress = "0x7D8cad0bbD68deb352C33e80fccd4D8e88b4aBb8";
-    const balance = await web3.eth.getBalance(fundTargetAddress);
+    const WETH = this.utils.WETH;
+    const balance = await WETH.balanceOf(fundTargetAddress);
 
     expect(balance.toString()).equal(unitPrice.mul(toBN("3")).toString());
     // test active member status

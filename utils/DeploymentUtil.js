@@ -158,7 +158,7 @@ const deployDao = async (options) => {
     erc1155Ext: erc1155TokenExtension,
   };
 
-  const { adapters } = await addDefaultAdapters({
+  const { adapters, utils } = await addDefaultAdapters({
     dao,
     options,
     daoFactory,
@@ -235,6 +235,7 @@ const deployDao = async (options) => {
     adapters: adapters,
     extensions: extensions,
     testContracts: testContracts,
+    utils,
     votingHelpers: votingHelpers,
     factories: {
       daoFactory,
@@ -364,6 +365,7 @@ const prepareAdapters = async ({
   ERC1155AdapterContract,
   WETH,
   wethAddress,
+  deployTestTokens,
 }) => {
   let voting,
     configuration,
@@ -383,9 +385,15 @@ const prepareAdapters = async ({
     distribute,
     tributeNFT;
   let weth = wethAddress;
-  if(!weth) {
-    weth = await deployFunction(WETH);
-    weth = weth.address;
+  if (!weth) {
+    if (deployTestTokens) {
+      weth = await deployFunction(WETH);
+      weth = weth.address;
+    } else {
+      throw new Error(
+        "Wrapped eth contract configuration missing (wehAddress)"
+      );
+    }
   }
 
   voting = await deployFunction(VotingContract);
@@ -423,7 +431,7 @@ const prepareAdapters = async ({
     distribute,
     tributeNFT,
     erc1155Adapter,
-    wethAddress: weth
+    wethAddress: weth,
   };
 };
 
@@ -455,6 +463,7 @@ const addDefaultAdapters = async ({ dao, options, daoFactory, nftAddr }) => {
     distribute,
     tributeNFT,
     erc1155Adapter,
+    wethAddress,
   } = await prepareAdapters(options);
 
   const {
@@ -514,6 +523,8 @@ const addDefaultAdapters = async ({ dao, options, daoFactory, nftAddr }) => {
     ...options,
   });
 
+  const wethContract = await options.WETH.at(wethAddress);
+
   return {
     dao,
     adapters: {
@@ -534,6 +545,9 @@ const addDefaultAdapters = async ({ dao, options, daoFactory, nftAddr }) => {
       distribute,
       tributeNFT,
       erc1155Adapter,
+    },
+    utils: {
+      WETH: wethContract,
     },
   };
 };
@@ -572,7 +586,7 @@ const configureDao = async ({
   gracePeriod,
   couponCreatorAddress,
   fundTargetAddress,
-  maxMembers
+  maxMembers,
 }) => {
   const adapters = [];
   if (voting) adapters.push(entryDao("voting", voting, {}));
