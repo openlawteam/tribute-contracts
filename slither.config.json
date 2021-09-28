@@ -1,0 +1,14 @@
+{
+  "detectors_to_exclude": "",
+  "exclude_informational": true,
+  "exclude_low": true,
+  "exclude_medium": false,
+  "exclude_high": false,
+  "json": "./slither.db.json",
+  "disable_color": false,
+  "filter_paths": "openzeppelin|Multicall.sol|test",
+  "legacy_ast": false,
+  "truffle_version": "5.3.2",
+  "truffle_build_directory": "build/contracts",
+  "solc_solcs_select": "0.8.0"
+}
