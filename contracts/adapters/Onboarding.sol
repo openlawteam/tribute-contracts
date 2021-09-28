@@ -210,6 +210,9 @@ contract OnboardingContract is IOnboarding, AdapterGuard {
 
             address daoAddress = address(dao);
             if (token == DaoHelper.ETH_TOKEN) {
+                // This call sends ETH directly to the GUILD bank, and the address can't be changed since
+                // it is defined in the DaoHelper as a constant.
+                //slither-disable-next-line arbitrary-send
                 bank.addToBalance{value: amount}(
                     DaoHelper.GUILD,
                     token,

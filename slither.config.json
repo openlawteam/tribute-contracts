@@ -4,7 +4,6 @@
   "exclude_low": true,
   "exclude_medium": false,
   "exclude_high": false,
-  "json": "./slither.db.json",
   "disable_color": false,
   "filter_paths": "openzeppelin|Multicall.sol|test",
   "legacy_ast": false,
