@@ -53,7 +53,7 @@ contract BankExtension is AdapterGuard, IExtension {
         UPDATE_TOKEN
     }
 
-    modifier noProposal {
+    modifier noProposal() {
         require(dao.lockedAt() < block.number, "proposal lock");
         _;
     }
@@ -459,6 +459,10 @@ contract BankExtension is AdapterGuard, IExtension {
 
         uint32 nCheckpoints = numCheckpoints[token][member];
         if (
+            // The only condition that we should allow the amount update
+            // is when the block.number exactly matches the fromBlock value.
+            // Anything different from that should generate a new checkpoint.
+            //slither-disable-next-line incorrect-equality
             nCheckpoints > 0 &&
             checkpoints[token][member][nCheckpoints - 1].fromBlock ==
             block.number

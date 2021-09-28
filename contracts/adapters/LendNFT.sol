@@ -318,6 +318,8 @@ contract LendNFTContract is AdapterGuard, IERC1155Receiver, IERC721Receiver {
         proposal.tributeAmount = value;
         proposal.previousOwner = from;
 
+        // Strict matching is expect to ensure the vote has passed.
+        //slither-disable-next-line incorrect-equality
         if (voteResult == IVoting.VotingState.PASS) {
             address erc1155ExtAddr =
                 dao.getExtensionAddress(DaoHelper.ERC1155_EXT);
@@ -374,7 +376,8 @@ contract LendNFTContract is AdapterGuard, IERC1155Receiver, IERC721Receiver {
         proposal.previousOwner = from;
         IERC721 erc721 = IERC721(msg.sender);
 
-        //if proposal passes and its an erc721 token - use NFT Extension
+        // Strict matching is expect to ensure the vote has passed
+        //slither-disable-next-line incorrect-equality
         if (voteResult == IVoting.VotingState.PASS) {
             NFTExtension nftExt =
                 NFTExtension(dao.getExtensionAddress(DaoHelper.NFT));

@@ -739,7 +739,11 @@ contract DaoRegistry is MemberGuard, AdapterGuard {
         address newDelegateKey
     ) internal {
         uint32 nCheckpoints = numCheckpoints[member];
+        // The only condition that we should allow the deletegaKey upgrade
+        // is when the block.number exactly matches the fromBlock value.
+        // Anything different from that should generate a new checkpoint.
         if (
+            //slither-disable-next-line incorrect-equality
             nCheckpoints > 0 &&
             checkpoints[member][nCheckpoints - 1].fromBlock == block.number
         ) {
