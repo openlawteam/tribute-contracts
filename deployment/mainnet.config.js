@@ -9,6 +9,7 @@ const disabled = [
   "PixelNFT",
   "ProxToken",
   "ERC20Minter",
+  "MockDao",
   // Adapters disabled for Muse0 DAO Deployment
   "RagequitContract",
   "FinancingContract",

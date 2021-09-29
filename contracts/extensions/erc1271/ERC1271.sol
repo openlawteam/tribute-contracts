@@ -75,8 +75,8 @@ contract ERC1271Extension is AdapterGuard, IExtension, IERC1271 {
     function initialize(DaoRegistry _dao, address creator) external override {
         require(!initialized, "erc1271::already initialized");
         require(_dao.isMember(creator), "erc1271::not member");
-        dao = _dao;
         initialized = true;
+        dao = _dao;
     }
 
     /**

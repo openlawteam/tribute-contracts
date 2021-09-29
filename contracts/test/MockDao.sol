@@ -27,11 +27,19 @@ SOFTWARE.
  */
 
 contract MockDao {
+    enum DaoState {CREATION, READY}
+
+    DaoState public state = DaoState.CREATION;
+
     function hasAdapterAccessToExtension(
         address,
         address,
         uint8
-    ) public pure returns (bool) {
+    ) external pure returns (bool) {
+        return true;
+    }
+
+    function isMember(address) external pure returns (bool) {
         return true;
     }
 }

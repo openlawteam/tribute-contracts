@@ -27,12 +27,6 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
  */
-
-/**
- *
- * The ERC20Extension is a contract to give erc20 functionality
- * to the internal token units held by DAO members inside the DAO itself.
- */
 contract InternalTokenVestingExtension is IExtension {
     enum AclFlag {NEW_VESTING, REMOVE_VESTING}
 
@@ -48,9 +42,7 @@ contract InternalTokenVestingExtension is IExtension {
 
     modifier hasExtensionAccess(AclFlag flag) {
         require(
-            address(this) == msg.sender ||
-                address(_dao) == msg.sender ||
-                _dao.state() == DaoRegistry.DaoState.CREATION ||
+            _dao.state() == DaoRegistry.DaoState.CREATION ||
                 _dao.hasAdapterAccessToExtension(
                     msg.sender,
                     address(this),
@@ -72,18 +64,25 @@ contract InternalTokenVestingExtension is IExtension {
      * @param dao The address of the DAO that owns the extension.
      */
     function initialize(DaoRegistry dao, address) external override {
-        require(!_initialized, "already initialized");
+        require(!_initialized, "vestingExt::already initialized");
         _initialized = true;
         _dao = dao;
     }
 
+    /**
+     * @notice Creates a new vesting schedule for a member based on the internal token, amount and end date.
+     * @param member The member address to update the balance.
+     * @param internalToken The internal DAO token in which the member will receive the funds.
+     * @param amount The amount staked.
+     * @param endDate The unix timestamp in which the vesting schedule ends.
+     */
     function createNewVesting(
         address member,
         address internalToken,
         uint88 amount,
         uint64 endDate
     ) external hasExtensionAccess(AclFlag.NEW_VESTING) {
-        require(endDate > block.timestamp, "end date in the past");
+        require(endDate > block.timestamp, "vestingExt::end date in the past");
         VestingSchedule storage schedule = vesting[member][internalToken];
         uint88 minBalance =
             getMinimumBalanceInternal(
@@ -101,6 +100,12 @@ contract InternalTokenVestingExtension is IExtension {
         schedule.blockedAmount = minBalance + amount;
     }
 
+    /**
+     * @notice Updates a vesting schedule of a member based on the internal token, and amount.
+     * @param member The member address to update the balance.
+     * @param internalToken The internal DAO token in which the member will receive the funds.
+     * @param amountToRemove The amount to be removed.
+     */
     function removeVesting(
         address member,
         address internalToken,
@@ -109,6 +114,11 @@ contract InternalTokenVestingExtension is IExtension {
         vesting[member][internalToken].blockedAmount -= amountToRemove;
     }
 
+    /**
+     * @notice Returns the minimum balance of the vesting for a given member and internal token.
+     * @param member The member address to update the balance.
+     * @param internalToken The internal DAO token in which the member will receive the funds.
+     */
     function getMinimumBalance(address member, address internalToken)
         external
         view
@@ -123,6 +133,12 @@ contract InternalTokenVestingExtension is IExtension {
             );
     }
 
+    /**
+     * @notice Returns the minimum balance of the vesting for a given start date, end date, and amount.
+     * @param startDate The start date of the vesting to calculate the elapsed time.
+     * @param endDate The end date of the vesting to calculate the vesting period.
+     * @param amount The amount staked.
+     */
     function getMinimumBalanceInternal(
         uint64 startDate,
         uint64 endDate,
