@@ -63,7 +63,7 @@ contract ERC20TransferStrategySimple is IERC20TransferStrategy {
         address to,
         uint256 amount,
         address caller
-    ) public view override returns (ApprovalType, uint256) {
+    ) external view override returns (ApprovalType, uint256) {
         //if the transfer is an internal transfer, then make it unlimited
         if (hasBankAccess(dao, caller)) {
             return (ApprovalType.SPECIAL, amount);

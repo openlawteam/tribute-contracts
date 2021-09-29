@@ -83,7 +83,7 @@ contract OffchainVotingHashContract {
         DaoRegistry dao,
         address actionId,
         bytes32 resultRoot
-    ) public view returns (bytes32) {
+    ) external view returns (bytes32) {
         return
             keccak256(
                 abi.encodePacked(
@@ -117,7 +117,7 @@ contract OffchainVotingHashContract {
         DaoRegistry dao,
         address actionId,
         VoteResultNode memory node
-    ) public view returns (bytes32) {
+    ) external view returns (bytes32) {
         return
             keccak256(
                 abi.encodePacked(
@@ -151,7 +151,7 @@ contract OffchainVotingHashContract {
     }
 
     function stringToUint(string memory s)
-        public
+        external
         pure
         returns (bool success, uint256 result)
     {
@@ -177,7 +177,7 @@ contract OffchainVotingHashContract {
         OffchainVotingHashContract.VoteResultNode memory node,
         uint256 snapshot,
         VoteStepParams memory params
-    ) public view returns (bool) {
+    ) external view returns (bool) {
         address account = dao.getMemberAddress(node.index);
         address voter = dao.getPriorDelegateKey(account, snapshot);
         BankExtension bank =

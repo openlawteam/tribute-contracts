@@ -84,7 +84,7 @@ contract DaoFactory is CloneFactory {
      * @param daoName Name of the DAO to be searched.
      */
     function getDaoAddress(string calldata daoName)
-        public
+        external
         view
         returns (address)
     {

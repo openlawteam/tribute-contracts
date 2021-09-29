@@ -395,7 +395,7 @@ contract DaoRegistry is MemberGuard, AdapterGuard {
      * @param flag The ACL flag to check against the given address
      */
     function hasAdapterAccess(address adapterAddress, AclFlag flag)
-        public
+        external
         view
         returns (bool)
     {
@@ -413,7 +413,7 @@ contract DaoRegistry is MemberGuard, AdapterGuard {
         address adapterAddress,
         address extensionAddress,
         uint8 flag
-    ) public view returns (bool) {
+    ) external view returns (bool) {
         return
             isAdapter(adapterAddress) &&
             DaoHelper.getFlag(
@@ -455,7 +455,7 @@ contract DaoRegistry is MemberGuard, AdapterGuard {
      * @notice Submit proposals to the DAO registry
      */
     function submitProposal(bytes32 proposalId)
-        public
+        external
         hasAccess(this, AclFlag.SUBMIT_PROPOSAL)
     {
         require(proposalId != bytes32(0), "invalid proposalId");
@@ -551,7 +551,7 @@ contract DaoRegistry is MemberGuard, AdapterGuard {
      * @dev it will resolve by delegate key, not member address.
      * @param addr The address to look up
      */
-    function isMember(address addr) public view returns (bool) {
+    function isMember(address addr) external view returns (bool) {
         address memberAddress = memberAddressesByDelegatedKey[addr];
         return getMemberFlag(memberAddress, MemberFlag.EXISTS);
     }
@@ -582,11 +582,11 @@ contract DaoRegistry is MemberGuard, AdapterGuard {
         return DaoHelper.getFlag(members[memberAddress].flags, uint8(flag));
     }
 
-    function getNbMembers() public view returns (uint256) {
+    function getNbMembers() external view returns (uint256) {
         return _members.length;
     }
 
-    function getMemberAddress(uint256 index) public view returns (address) {
+    function getMemberAddress(uint256 index) external view returns (address) {
         return _members[index];
     }
 
@@ -596,7 +596,7 @@ contract DaoRegistry is MemberGuard, AdapterGuard {
      * @param newDelegateKey The member who is being delegated to
      */
     function updateDelegateKey(address memberAddr, address newDelegateKey)
-        public
+        external
         hasAccess(this, AclFlag.UPDATE_DELEGATE_KEY)
     {
         require(newDelegateKey != address(0x0), "newDelegateKey cannot be 0");
@@ -641,7 +641,7 @@ contract DaoRegistry is MemberGuard, AdapterGuard {
      * @return the delegated address or the checked address if it is not a delegate
      */
     function getAddressIfDelegated(address checkAddr)
-        public
+        external
         view
         returns (address)
     {
@@ -670,7 +670,7 @@ contract DaoRegistry is MemberGuard, AdapterGuard {
      * @return The delegate key address for memberAddr at the second last checkpoint number
      */
     function getPreviousDelegateKey(address memberAddr)
-        public
+        external
         view
         returns (address)
     {

@@ -86,7 +86,7 @@ contract ERC1271Extension is AdapterGuard, IExtension, IERC1271 {
      * @return The magic number in bytes4 in case the signature is valid, otherwise it reverts.
      */
     function isValidSignature(bytes32 permissionHash, bytes memory signature)
-        public
+        external
         view
         override
         returns (bytes4)
@@ -112,7 +112,7 @@ contract ERC1271Extension is AdapterGuard, IExtension, IERC1271 {
         bytes32 permissionHash,
         bytes32 signatureHash,
         bytes4 magicValue
-    ) public hasExtensionAccess(AclFlag.SIGN) {
+    ) external hasExtensionAccess(AclFlag.SIGN) {
         signatures[permissionHash] = DAOSignature({
             signatureHash: signatureHash,
             magicValue: magicValue

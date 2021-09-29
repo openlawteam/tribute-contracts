@@ -69,7 +69,7 @@ contract InternalTokenVestingExtension is IExtension {
         address internalToken,
         uint88 amount,
         uint64 endDate
-    ) public hasExtensionAccess(AclFlag.NEW_VESTING) {
+    ) external hasExtensionAccess(AclFlag.NEW_VESTING) {
         require(endDate > block.timestamp, "end date in the past!");
         VestingSchedule storage schedule = vesting[member][internalToken];
         uint88 minBalance =
@@ -92,12 +92,12 @@ contract InternalTokenVestingExtension is IExtension {
         address member,
         address internalToken,
         uint88 amountToRemove
-    ) public hasExtensionAccess(AclFlag.REMOVE_VESTING) {
+    ) external hasExtensionAccess(AclFlag.REMOVE_VESTING) {
         vesting[member][internalToken].blockedAmount -= amountToRemove;
     }
 
     function getMinimumBalance(address member, address internalToken)
-        public
+        external
         view
         returns (uint88)
     {

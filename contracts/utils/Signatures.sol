@@ -75,7 +75,7 @@ abstract contract Signatures {
         address signer,
         bytes32 hash,
         bytes memory sig
-    ) public view returns (bool) {
+    ) external view returns (bool) {
         return SignatureChecker.isValidSignatureNow(signer, hash, sig);
     }
 }

@@ -235,7 +235,7 @@ contract ERC1155TokenExtension is
         address owner,
         address tokenAddr,
         uint256 tokenId
-    ) public view returns (uint256) {
+    ) external view returns (uint256) {
         return _nftTracker[owner][tokenAddr][tokenId];
     }
 
@@ -243,7 +243,7 @@ contract ERC1155TokenExtension is
      * @notice Returns the total amount of token ids collected for an NFT address.
      * @param tokenAddr The NFT address.
      */
-    function nbNFTs(address tokenAddr) public view returns (uint256) {
+    function nbNFTs(address tokenAddr) external view returns (uint256) {
         return _nfts[tokenAddr].length();
     }
 
@@ -253,7 +253,7 @@ contract ERC1155TokenExtension is
      * @param index The index to get the token id if it exists.
      */
     function getNFT(address tokenAddr, uint256 index)
-        public
+        external
         view
         returns (uint256)
     {
@@ -284,7 +284,7 @@ contract ERC1155TokenExtension is
         address nftAddress,
         uint256 tokenId,
         uint256 index
-    ) public view returns (address) {
+    ) external view returns (address) {
         return _ownership[getNFTId(nftAddress, tokenId)].at(index);
     }
 

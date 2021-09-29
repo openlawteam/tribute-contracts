@@ -391,7 +391,7 @@ contract OffchainVotingContract is IVoting, MemberGuard, AdapterGuard, Ownable {
         DaoRegistry dao,
         bytes32 proposalId,
         bytes memory data
-    ) public override onlyAdapter(dao) {
+    ) external override onlyAdapter(dao) {
         SnapshotProposalContract.ProposalMessage memory proposal =
             abi.decode(data, (SnapshotProposalContract.ProposalMessage));
         (bool success, uint256 blockNumber) =
@@ -633,7 +633,7 @@ contract OffchainVotingContract is IVoting, MemberGuard, AdapterGuard, Ownable {
         bytes32 proposalId,
         OffchainVotingHashContract.VoteResultNode memory nodePrevious,
         OffchainVotingHashContract.VoteResultNode memory nodeCurrent
-    ) public {
+    ) external {
         Voting storage vote = votes[address(dao)][proposalId];
         bytes32 resultRoot = vote.resultRoot;
 

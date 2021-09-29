@@ -136,7 +136,7 @@ contract NFTExtension is AdapterGuard, IExtension, IERC721Receiver {
         address newOwner,
         address nftAddr,
         uint256 nftTokenId
-    ) public hasExtensionAccess(this, AclFlag.WITHDRAW_NFT) {
+    ) external hasExtensionAccess(this, AclFlag.WITHDRAW_NFT) {
         // Remove the NFT from the contract address to the actual owner
         IERC721 erc721 = IERC721(nftAddr);
         erc721.safeTransferFrom(address(this), newOwner, nftTokenId);
@@ -164,7 +164,7 @@ contract NFTExtension is AdapterGuard, IExtension, IERC721Receiver {
         address nftAddr,
         uint256 nftTokenId,
         address newOwner
-    ) public hasExtensionAccess(this, AclFlag.INTERNAL_TRANSFER) {
+    ) external hasExtensionAccess(this, AclFlag.INTERNAL_TRANSFER) {
         require(newOwner != address(0x0), "new owner is 0");
         address currentOwner = _ownership[getNFTId(nftAddr, nftTokenId)];
         require(currentOwner != address(0x0), "nft not found");
@@ -191,7 +191,7 @@ contract NFTExtension is AdapterGuard, IExtension, IERC721Receiver {
      * @notice Returns the total amount of token ids collected for an NFT address.
      * @param tokenAddr The NFT address.
      */
-    function nbNFTs(address tokenAddr) public view returns (uint256) {
+    function nbNFTs(address tokenAddr) external view returns (uint256) {
         return _nfts[tokenAddr].length();
     }
 
@@ -201,7 +201,7 @@ contract NFTExtension is AdapterGuard, IExtension, IERC721Receiver {
      * @param index The index to get the token id if it exists.
      */
     function getNFT(address tokenAddr, uint256 index)
-        public
+        external
         view
         returns (uint256)
     {
@@ -229,7 +229,7 @@ contract NFTExtension is AdapterGuard, IExtension, IERC721Receiver {
      * @param tokenId The NFT token id.
      */
     function getNFTOwner(address nftAddress, uint256 tokenId)
-        public
+        external
         view
         returns (address)
     {

@@ -138,7 +138,7 @@ contract OnboardingContract is IOnboarding, AdapterGuard {
         address tokenToMint,
         uint256 tokenAmount,
         bytes memory data
-    ) public override reentrancyGuard(dao) {
+    ) external override reentrancyGuard(dao) {
         require(
             DaoHelper.isNotReservedAddress(applicant),
             "applicant is reserved address"

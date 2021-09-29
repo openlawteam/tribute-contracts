@@ -350,7 +350,7 @@ contract BankExtension is AdapterGuard, IExtension {
         address to,
         address token,
         uint256 amount
-    ) public hasExtensionAccess(AclFlag.INTERNAL_TRANSFER) {
+    ) external hasExtensionAccess(AclFlag.INTERNAL_TRANSFER) {
         uint256 newAmount = balanceOf(from, token) - amount;
         uint256 newAmount2 = balanceOf(to, token) + amount;
 

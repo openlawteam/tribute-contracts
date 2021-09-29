@@ -229,7 +229,7 @@ contract LendNFTContract is AdapterGuard, IERC1155Receiver, IERC721Receiver {
     }
 
     function sendNFTBack(DaoRegistry dao, bytes32 proposalId)
-        public
+        external
         reentrancyGuard(dao)
     {
         ProposalDetails storage proposal = proposals[address(dao)][proposalId];

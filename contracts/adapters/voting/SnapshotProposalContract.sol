@@ -111,7 +111,7 @@ contract SnapshotProposalContract {
         DaoRegistry dao,
         address actionId,
         ProposalMessage memory message
-    ) public view returns (bytes32) {
+    ) external view returns (bytes32) {
         return
             keccak256(
                 abi.encodePacked(
@@ -161,7 +161,7 @@ contract SnapshotProposalContract {
         DaoRegistry dao,
         address actionId,
         VoteMessage memory message
-    ) public view returns (bytes32) {
+    ) external view returns (bytes32) {
         return
             keccak256(
                 abi.encodePacked(

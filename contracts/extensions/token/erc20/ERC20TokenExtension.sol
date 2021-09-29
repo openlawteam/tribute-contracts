@@ -84,7 +84,7 @@ contract ERC20Extension is AdapterGuard, IExtension, IERC20 {
      * @dev Returns the token address managed by the DAO that tracks the
      * internal transfers.
      */
-    function token() public view virtual returns (address) {
+    function token() external view virtual returns (address) {
         return tokenAddress;
     }
 
@@ -106,7 +106,7 @@ contract ERC20Extension is AdapterGuard, IExtension, IERC20 {
     /**
      * @dev Returns the name of the token.
      */
-    function name() public view virtual returns (string memory) {
+    function name() external view virtual returns (string memory) {
         return tokenName;
     }
 
@@ -122,7 +122,7 @@ contract ERC20Extension is AdapterGuard, IExtension, IERC20 {
      * @dev Returns the symbol of the token, usually a shorter version of the
      * name.
      */
-    function symbol() public view virtual returns (string memory) {
+    function symbol() external view virtual returns (string memory) {
         return tokenSymbol;
     }
 
@@ -139,7 +139,7 @@ contract ERC20Extension is AdapterGuard, IExtension, IERC20 {
      * For example, if `decimals` equals `2`, a balance of `505` tokens should
      * be displayed to a user as `5,05` (`505 / 10 ** 2`).
      */
-    function decimals() public view virtual returns (uint8) {
+    function decimals() external view virtual returns (uint8) {
         return tokenDecimals;
     }
 
