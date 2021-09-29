@@ -51,7 +51,7 @@ library DaoHelper {
     bytes32 internal constant NFT = keccak256("nft");
     bytes32 internal constant EXECUTOR_EXT = keccak256("executor-ext");
     bytes32 internal constant INTERNAL_TOKEN_VESTING_EXT =
-        keccak256("internal-token-vesting-extension");
+        keccak256("internal-token-vesting-ext");
     bytes32 internal constant ERC1155_EXT = keccak256("erc1155-ext");
 
     // Reserved Addresses

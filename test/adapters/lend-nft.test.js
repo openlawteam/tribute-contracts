@@ -33,7 +33,7 @@ const {
   proposalIdGenerator,
   advanceTime,
   accounts,
-  processProposal,
+  encodeProposalData,
   expectRevert,
   expect,
 } = require("../../utils/OZTestUtil.js");
@@ -122,7 +122,7 @@ describe("Adapter - LendNFT", () => {
       nftOwner,
       lendNFT.address,
       tokenId,
-      processProposal(dao, proposalId),
+      encodeProposalData(dao, proposalId),
       {
         from: nftOwner,
       }
@@ -155,7 +155,7 @@ describe("Adapter - LendNFT", () => {
       lendNFT.address,
       tokenId2,
       1,
-      processProposal(dao, proposalId2),
+      encodeProposalData(dao, proposalId2),
       { from: nftOwner }
     );
 

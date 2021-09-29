@@ -282,7 +282,7 @@ module.exports = (() => {
     };
   };
 
-  const processProposal = (dao, proposalId) =>
+  const encodeProposalData = (dao, proposalId) =>
     web3.eth.abi.encodeParameter(
       {
         ProcessProposal: {
@@ -302,7 +302,7 @@ module.exports = (() => {
     deployDaoWithBatchVoting,
     deployDaoWithOffchainVoting,
     entry,
-    processProposal,
+    encodeProposalData,
     entryErc1271,
     entryBank,
     entryDao,

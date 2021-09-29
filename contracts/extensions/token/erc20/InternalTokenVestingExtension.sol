@@ -48,7 +48,9 @@ contract InternalTokenVestingExtension is IExtension {
 
     modifier hasExtensionAccess(AclFlag flag) {
         require(
-            _dao.state() == DaoRegistry.DaoState.CREATION ||
+            address(this) == msg.sender ||
+                address(_dao) == msg.sender ||
+                _dao.state() == DaoRegistry.DaoState.CREATION ||
                 _dao.hasAdapterAccessToExtension(
                     msg.sender,
                     address(this),
@@ -62,10 +64,17 @@ contract InternalTokenVestingExtension is IExtension {
 
     mapping(address => mapping(address => VestingSchedule)) public vesting;
 
+    /// @notice Clonable contract must have an empty constructor
+    constructor() {}
+
+    /**
+     * @notice Initializes the extension with the DAO that it belongs to.
+     * @param dao The address of the DAO that owns the extension.
+     */
     function initialize(DaoRegistry dao, address) external override {
-        require(!_initialized, "init");
-        _dao = dao;
+        require(!_initialized, "already initialized");
         _initialized = true;
+        _dao = dao;
     }
 
     function createNewVesting(
@@ -74,7 +83,7 @@ contract InternalTokenVestingExtension is IExtension {
         uint88 amount,
         uint64 endDate
     ) external hasExtensionAccess(AclFlag.NEW_VESTING) {
-        require(endDate > block.timestamp, "end date in the past!");
+        require(endDate > block.timestamp, "end date in the past");
         VestingSchedule storage schedule = vesting[member][internalToken];
         uint88 minBalance =
             getMinimumBalanceInternal(

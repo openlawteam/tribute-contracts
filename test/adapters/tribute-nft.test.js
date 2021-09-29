@@ -40,7 +40,7 @@ const {
   accounts,
   expectRevert,
   expect,
-  processProposal,
+  encodeProposalData,
 } = require("../../utils/OZTestUtil.js");
 
 const { onboardingNewMember, isMember } = require("../../utils/TestUtils.js");
@@ -181,7 +181,7 @@ describe("Adapter - TributeNFT", () => {
       nftOwner,
       tributeNFT.address,
       tokenId,
-      processProposal(dao, proposalId),
+      encodeProposalData(dao, proposalId),
       {
         from: nftOwner,
         gasPrice: toBN("0"),
@@ -217,7 +217,7 @@ describe("Adapter - TributeNFT", () => {
         nftOwner,
         tributeNFT.address,
         tokenId,
-        processProposal(dao, proposalId),
+        encodeProposalData(dao, proposalId),
         {
           from: nftOwner,
           gasPrice: toBN("0"),
@@ -264,7 +264,7 @@ describe("Adapter - TributeNFT", () => {
       nftOwner,
       tributeNFT.address,
       tokenId,
-      processProposal(dao, proposalId),
+      encodeProposalData(dao, proposalId),
       {
         from: nftOwner,
         gasPrice: toBN("0"),
@@ -341,7 +341,7 @@ describe("Adapter - TributeNFT", () => {
       nftOwner,
       tributeNFT.address,
       tokenId,
-      processProposal(dao, proposalId),
+      encodeProposalData(dao, proposalId),
       {
         from: nftOwner,
         gasPrice: toBN("0"),
@@ -390,7 +390,7 @@ describe("Adapter - TributeNFT", () => {
         nftOwner,
         tributeNFT.address,
         tokenId,
-        processProposal(dao, proposalId),
+        encodeProposalData(dao, proposalId),
         {
           from: nftOwner,
           gasPrice: toBN("0"),
@@ -456,7 +456,7 @@ describe("Adapter - TributeNFT", () => {
         nftOwner,
         tributeNFT.address,
         tokenId,
-        processProposal(dao, proposalId),
+        encodeProposalData(dao, proposalId),
         {
           from: nftOwner,
           gasPrice: toBN("0"),
@@ -509,7 +509,7 @@ describe("Adapter - TributeNFT", () => {
       tributeNFT.address,
       id,
       3,
-      processProposal(dao, proposalId),
+      encodeProposalData(dao, proposalId),
       { from: nftOwner }
     );
 
@@ -573,7 +573,7 @@ describe("Adapter - TributeNFT", () => {
       tributeNFT.address,
       id,
       3,
-      processProposal(dao, proposalId),
+      encodeProposalData(dao, proposalId),
       { from: nftOwner }
     );
 

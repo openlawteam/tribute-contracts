@@ -444,6 +444,7 @@ const addDefaultAdapters = async ({ dao, options, daoFactory, nftAddr }) => {
     ERC20Extension,
     ERC1271Extension,
     ERC1155TokenExtension,
+    InternalTokenVestingExtension,
   } = options;
 
   const bankAddress = await dao.getExtensionAddress(sha3("bank"));
@@ -463,6 +464,13 @@ const addDefaultAdapters = async ({ dao, options, daoFactory, nftAddr }) => {
   );
   const erc1155TokenExtension = await ERC1155TokenExtension.at(
     erc1155TokenExtAddr
+  );
+
+  const vestingExtensionAddr = await dao.getExtensionAddress(
+    sha3("internal-token-vesting-ext")
+  );
+  const vestingExtension = await InternalTokenVestingExtension.at(
+    vestingExtensionAddr
   );
 
   await configureDao({
@@ -493,6 +501,7 @@ const addDefaultAdapters = async ({ dao, options, daoFactory, nftAddr }) => {
     erc1271Extension,
     erc20TokenExtension,
     erc1155TokenExtension,
+    vestingExtension,
     ...options,
   });
 
@@ -539,6 +548,7 @@ const configureDao = async ({
   erc20TokenExtension,
   erc1155Adapter,
   erc1155TokenExtension,
+  vestingExtension,
   voting,
   configuration,
   couponOnboarding,
@@ -557,356 +567,395 @@ const configureDao = async ({
   maxAmount,
   couponCreatorAddress,
 }) => {
-  const adapters = [];
-  if (voting) adapters.push(entryDao("voting", voting, {}));
+  const configureAdaptersWithDAOAccess = async () => {
+    const adapters = [];
+    if (voting) adapters.push(entryDao("voting", voting, {}));
 
-  if (configuration)
-    adapters.push(
-      entryDao("configuration", configuration, {
-        SUBMIT_PROPOSAL: true,
-        SET_CONFIGURATION: true,
-      })
-    );
+    if (configuration)
+      adapters.push(
+        entryDao("configuration", configuration, {
+          SUBMIT_PROPOSAL: true,
+          SET_CONFIGURATION: true,
+        })
+      );
 
-  if (ragequit) adapters.push(entryDao("ragequit", ragequit, {}));
+    if (ragequit) adapters.push(entryDao("ragequit", ragequit, {}));
 
-  if (guildkick)
-    adapters.push(
-      entryDao("guildkick", guildkick, {
-        SUBMIT_PROPOSAL: true,
-      })
-    );
+    if (guildkick)
+      adapters.push(
+        entryDao("guildkick", guildkick, {
+          SUBMIT_PROPOSAL: true,
+        })
+      );
 
-  if (managing)
-    adapters.push(
-      entryDao("managing", managing, {
-        SUBMIT_PROPOSAL: true,
-        REPLACE_ADAPTER: true,
-        ADD_EXTENSION: true,
-        REMOVE_EXTENSION: true,
-      })
-    );
+    if (managing)
+      adapters.push(
+        entryDao("managing", managing, {
+          SUBMIT_PROPOSAL: true,
+          REPLACE_ADAPTER: true,
+          ADD_EXTENSION: true,
+          REMOVE_EXTENSION: true,
+        })
+      );
 
-  if (financing)
-    adapters.push(
-      entryDao("financing", financing, {
-        SUBMIT_PROPOSAL: true,
-      })
-    );
+    if (financing)
+      adapters.push(
+        entryDao("financing", financing, {
+          SUBMIT_PROPOSAL: true,
+        })
+      );
 
-  if (signatures)
-    adapters.push(
-      entryDao("signatures", signatures, {
-        SUBMIT_PROPOSAL: true,
-      })
-    );
+    if (signatures)
+      adapters.push(
+        entryDao("signatures", signatures, {
+          SUBMIT_PROPOSAL: true,
+        })
+      );
 
-  if (onboarding)
-    adapters.push(
-      entryDao("onboarding", onboarding, {
-        SUBMIT_PROPOSAL: true,
-        UPDATE_DELEGATE_KEY: true,
-        NEW_MEMBER: true,
-      })
-    );
+    if (onboarding)
+      adapters.push(
+        entryDao("onboarding", onboarding, {
+          SUBMIT_PROPOSAL: true,
+          UPDATE_DELEGATE_KEY: true,
+          NEW_MEMBER: true,
+        })
+      );
 
-  if (couponOnboarding)
-    adapters.push(
-      entryDao("coupon-onboarding", couponOnboarding, {
-        NEW_MEMBER: true,
-      })
-    );
+    if (couponOnboarding)
+      adapters.push(
+        entryDao("coupon-onboarding", couponOnboarding, {
+          NEW_MEMBER: true,
+        })
+      );
 
-  if (daoRegistryAdapter)
-    adapters.push(
-      entryDao("daoRegistry", daoRegistryAdapter, {
-        UPDATE_DELEGATE_KEY: true,
-      })
-    );
+    if (daoRegistryAdapter)
+      adapters.push(
+        entryDao("daoRegistry", daoRegistryAdapter, {
+          UPDATE_DELEGATE_KEY: true,
+        })
+      );
 
-  if (tribute)
-    adapters.push(
-      entryDao("tribute", tribute, {
-        SUBMIT_PROPOSAL: true,
-        NEW_MEMBER: true,
-      })
-    );
+    if (tribute)
+      adapters.push(
+        entryDao("tribute", tribute, {
+          SUBMIT_PROPOSAL: true,
+          NEW_MEMBER: true,
+        })
+      );
 
-  if (tributeNFT)
-    adapters.push(
-      entryDao("tribute-nft", tributeNFT, {
-        SUBMIT_PROPOSAL: true,
-        NEW_MEMBER: true,
-      })
-    );
+    if (tributeNFT)
+      adapters.push(
+        entryDao("tribute-nft", tributeNFT, {
+          SUBMIT_PROPOSAL: true,
+          NEW_MEMBER: true,
+        })
+      );
 
-  if (lendNFT)
-    adapters.push(
-      entryDao("lend-nft", lendNFT, {
-        SUBMIT_PROPOSAL: true,
-        NEW_MEMBER: true,
-      })
-    );
+    if (lendNFT)
+      adapters.push(
+        entryDao("lend-nft", lendNFT, {
+          SUBMIT_PROPOSAL: true,
+          NEW_MEMBER: true,
+        })
+      );
 
-  if (distribute)
-    adapters.push(
-      entryDao("distribute", distribute, {
-        SUBMIT_PROPOSAL: true,
-      })
-    );
+    if (distribute)
+      adapters.push(
+        entryDao("distribute", distribute, {
+          SUBMIT_PROPOSAL: true,
+        })
+      );
 
-  // Adapters to access the extensions directly
-  if (nftAdapter) adapters.push(entryDao("nft", nftAdapter, {}));
+    // Adapters to access the extensions directly
+    if (nftAdapter) adapters.push(entryDao("nft", nftAdapter, {}));
 
-  if (bankAdapter) adapters.push(entryDao("bank", bankAdapter, {}));
+    if (bankAdapter) adapters.push(entryDao("bank", bankAdapter, {}));
 
-  if (erc1155Adapter)
-    adapters.push(entryDao("erc1155-adpt", erc1155Adapter, {}));
+    if (erc1155Adapter)
+      adapters.push(entryDao("erc1155-adpt", erc1155Adapter, {}));
 
-  // Declare the erc20 token extension as an adapter to be able to call the bank extension
-  if (erc20TokenExtension) {
-    adapters.push(
-      entryDao("erc20-ext", erc20TokenExtension, {
-        NEW_MEMBER: true,
-      })
-    );
+    // Declare the erc20 token extension as an adapter to be able to call the bank extension
+    if (erc20TokenExtension) {
+      adapters.push(
+        entryDao("erc20-ext", erc20TokenExtension, {
+          NEW_MEMBER: true,
+        })
+      );
 
-    adapters.push(
-      entryDao("erc20-transfer-strategy", erc20TransferStrategy, {})
-    );
-  }
-
-  await daoFactory.addAdapters(dao.address, adapters, { from: owner });
-
-  const adaptersWithSignatureAccess = [];
-
-  if (signatures)
-    adaptersWithSignatureAccess.push(
-      entryERC1271(signatures, {
-        SIGN: true,
-      })
-    );
-
-  await daoFactory.configureExtension(
-    dao.address,
-    erc1271Extension.address,
-    adaptersWithSignatureAccess,
-    { from: owner }
-  );
-
-  const adaptersWithBankAccess = [];
-
-  if (ragequit)
-    adaptersWithBankAccess.push(
-      entryBank(ragequit, {
-        INTERNAL_TRANSFER: true,
-        SUB_FROM_BALANCE: true,
-        ADD_TO_BALANCE: true,
-      })
-    );
-
-  if (guildkick)
-    adaptersWithBankAccess.push(
-      entryBank(guildkick, {
-        INTERNAL_TRANSFER: true,
-        SUB_FROM_BALANCE: true,
-        ADD_TO_BALANCE: true,
-        REGISTER_NEW_TOKEN: true,
-      })
-    );
-
-  if (bankAdapter)
-    adaptersWithBankAccess.push(
-      entryBank(bankAdapter, {
-        WITHDRAW: true,
-        SUB_FROM_BALANCE: true,
-        UPDATE_TOKEN: true,
-      })
-    );
-
-  if (onboarding)
-    adaptersWithBankAccess.push(
-      entryBank(onboarding, {
-        ADD_TO_BALANCE: true,
-        INTERNAL_TRANSFER: true,
-      })
-    );
-
-  if (couponOnboarding)
-    adaptersWithBankAccess.push(
-      entryBank(couponOnboarding, {
-        ADD_TO_BALANCE: true,
-        INTERNAL_TRANSFER: true,
-      })
-    );
-
-  if (financing)
-    adaptersWithBankAccess.push(
-      entryBank(financing, {
-        ADD_TO_BALANCE: true,
-        SUB_FROM_BALANCE: true,
-        INTERNAL_TRANSFER: true,
-      })
-    );
-
-  if (tribute)
-    adaptersWithBankAccess.push(
-      entryBank(tribute, {
-        ADD_TO_BALANCE: true,
-        REGISTER_NEW_TOKEN: true,
-      })
-    );
-
-  if (distribute)
-    adaptersWithBankAccess.push(
-      entryBank(distribute, {
-        INTERNAL_TRANSFER: true,
-      })
-    );
-
-  if (tributeNFT)
-    adaptersWithBankAccess.push(
-      entryBank(tributeNFT, {
-        ADD_TO_BALANCE: true,
-      })
-    );
-
-  if (lendNFT)
-    adaptersWithBankAccess.push(
-      entryBank(lendNFT, {
-        ADD_TO_BALANCE: true,
-        SUB_FROM_BALANCE: true,
-      })
-    );
-
-  if (erc20TokenExtension)
-    // Let the unit-token extension to execute internal transfers in the bank as an adapter
-    adaptersWithBankAccess.push(
-      entryBank(erc20TokenExtension, {
-        INTERNAL_TRANSFER: true,
-      })
-    );
-
-  await daoFactory.configureExtension(
-    dao.address,
-    bankExtension.address,
-    adaptersWithBankAccess,
-    { from: owner }
-  );
-
-  const adaptersWithNFTAccess = [];
-  if (tributeNFT)
-    adaptersWithNFTAccess.push(
-      entryNft(tributeNFT, {
-        COLLECT_NFT: true,
-      })
-    );
-
-  if (lendNFT)
-    adaptersWithNFTAccess.push(
-      entryNft(lendNFT, {
-        COLLECT_NFT: true,
-        WITHDRAW_NFT: true,
-      })
-    );
-
-  if (nftAdapter)
-    adaptersWithNFTAccess.push(
-      entryNft(nftAdapter, {
-        COLLECT_NFT: true,
-      })
-    );
-
-  if (erc1155Adapter)
-    adaptersWithNFTAccess.push(
-      entryNft(erc1155Adapter, {
-        WITHDRAW_NFT: true,
-        COLLECT_NFT: true,
-        INTERNAL_TRANSFER: true,
-      })
-    );
-
-  await daoFactory.configureExtension(
-    dao.address,
-    nftExtension.address,
-    adaptersWithNFTAccess,
-    {
-      from: owner,
+      adapters.push(
+        entryDao("erc20-transfer-strategy", erc20TransferStrategy, {})
+      );
     }
-  );
+    await daoFactory.addAdapters(dao.address, adapters, { from: owner });
+  };
 
-  await daoFactory.configureExtension(
-    dao.address,
-    erc1155TokenExtension.address,
-    adaptersWithNFTAccess,
-    //[],
-    {
-      from: owner,
-    }
-  );
+  const configureAdaptersWithBankAccess = async () => {
+    const adaptersWithBankAccess = [];
 
-  await daoFactory.configureExtension(
-    dao.address,
-    erc20TokenExtension.address,
-    [],
-    { from: owner }
-  );
+    if (ragequit)
+      adaptersWithBankAccess.push(
+        entryBank(ragequit, {
+          INTERNAL_TRANSFER: true,
+          SUB_FROM_BALANCE: true,
+          ADD_TO_BALANCE: true,
+        })
+      );
 
-  if (onboarding) {
-    await onboarding.configureDao(
+    if (guildkick)
+      adaptersWithBankAccess.push(
+        entryBank(guildkick, {
+          INTERNAL_TRANSFER: true,
+          SUB_FROM_BALANCE: true,
+          ADD_TO_BALANCE: true,
+          REGISTER_NEW_TOKEN: true,
+        })
+      );
+
+    if (bankAdapter)
+      adaptersWithBankAccess.push(
+        entryBank(bankAdapter, {
+          WITHDRAW: true,
+          SUB_FROM_BALANCE: true,
+          UPDATE_TOKEN: true,
+        })
+      );
+
+    if (onboarding)
+      adaptersWithBankAccess.push(
+        entryBank(onboarding, {
+          ADD_TO_BALANCE: true,
+          INTERNAL_TRANSFER: true,
+        })
+      );
+
+    if (couponOnboarding)
+      adaptersWithBankAccess.push(
+        entryBank(couponOnboarding, {
+          ADD_TO_BALANCE: true,
+          INTERNAL_TRANSFER: true,
+        })
+      );
+
+    if (financing)
+      adaptersWithBankAccess.push(
+        entryBank(financing, {
+          ADD_TO_BALANCE: true,
+          SUB_FROM_BALANCE: true,
+          INTERNAL_TRANSFER: true,
+        })
+      );
+
+    if (tribute)
+      adaptersWithBankAccess.push(
+        entryBank(tribute, {
+          ADD_TO_BALANCE: true,
+          REGISTER_NEW_TOKEN: true,
+        })
+      );
+
+    if (distribute)
+      adaptersWithBankAccess.push(
+        entryBank(distribute, {
+          INTERNAL_TRANSFER: true,
+        })
+      );
+
+    if (tributeNFT)
+      adaptersWithBankAccess.push(
+        entryBank(tributeNFT, {
+          ADD_TO_BALANCE: true,
+        })
+      );
+
+    if (lendNFT)
+      adaptersWithBankAccess.push(
+        entryBank(lendNFT, {
+          ADD_TO_BALANCE: true,
+          SUB_FROM_BALANCE: true,
+        })
+      );
+
+    if (erc20TokenExtension)
+      // Let the unit-token extension to execute internal transfers in the bank as an adapter
+      adaptersWithBankAccess.push(
+        entryBank(erc20TokenExtension, {
+          INTERNAL_TRANSFER: true,
+        })
+      );
+
+    await daoFactory.configureExtension(
       dao.address,
-      UNITS,
-      unitPrice,
-      nbUnits,
-      maxChunks,
-      tokenAddr,
-      {
-        from: owner,
-      }
+      bankExtension.address,
+      adaptersWithBankAccess,
+      { from: owner }
     );
+  };
 
-    await onboarding.configureDao(
+  const configureAdaptersWithERC20Access = async () => {
+    await daoFactory.configureExtension(
       dao.address,
-      LOOT,
-      unitPrice,
-      nbUnits,
-      maxChunks,
-      tokenAddr,
-      {
-        from: owner,
-      }
-    );
-  }
-  if (couponOnboarding)
-    await couponOnboarding.configureDao(
-      dao.address,
-      couponCreatorAddress,
       erc20TokenExtension.address,
-      UNITS,
-      maxAmount,
+      [],
+      { from: owner }
+    );
+  };
+
+  const configureAdaptersWithNFTAccess = async () => {
+    const adaptersWithNFTAccess = [];
+    if (tributeNFT)
+      adaptersWithNFTAccess.push(
+        entryNft(tributeNFT, {
+          COLLECT_NFT: true,
+        })
+      );
+
+    if (lendNFT)
+      adaptersWithNFTAccess.push(
+        entryNft(lendNFT, {
+          COLLECT_NFT: true,
+          WITHDRAW_NFT: true,
+        })
+      );
+
+    if (nftAdapter)
+      adaptersWithNFTAccess.push(
+        entryNft(nftAdapter, {
+          COLLECT_NFT: true,
+        })
+      );
+
+    if (erc1155Adapter)
+      adaptersWithNFTAccess.push(
+        entryNft(erc1155Adapter, {
+          WITHDRAW_NFT: true,
+          COLLECT_NFT: true,
+          INTERNAL_TRANSFER: true,
+        })
+      );
+
+    await daoFactory.configureExtension(
+      dao.address,
+      nftExtension.address,
+      adaptersWithNFTAccess,
       {
         from: owner,
       }
     );
 
-  if (voting)
-    await voting.configureDao(dao.address, votingPeriod, gracePeriod, {
-      from: owner,
-    });
+    await daoFactory.configureExtension(
+      dao.address,
+      erc1155TokenExtension.address,
+      adaptersWithNFTAccess,
+      //[],
+      {
+        from: owner,
+      }
+    );
+  };
 
-  if (tribute) {
-    await tribute.configureDao(dao.address, UNITS, {
-      from: owner,
-    });
-    await tribute.configureDao(dao.address, LOOT, {
-      from: owner,
-    });
-  }
+  const configureAdaptersWithSignatureAccess = async () => {
+    const adaptersWithSignatureAccess = [];
 
-  if (tributeNFT)
-    await tributeNFT.configureDao(dao.address, {
-      from: owner,
-    });
+    if (signatures)
+      adaptersWithSignatureAccess.push(
+        entryERC1271(signatures, {
+          SIGN: true,
+        })
+      );
+
+    await daoFactory.configureExtension(
+      dao.address,
+      erc1271Extension.address,
+      adaptersWithSignatureAccess,
+      { from: owner }
+    );
+  };
+
+  const configureAdaptersWithVestingAccess = async () => {
+    const adaptersWithVestingAccess = [];
+
+    if (lendNFT)
+      adaptersWithVestingAccess.push(
+        entryVesting(lendNFT, {
+          NEW_VESTING: true,
+          REMOVE_VESTING: true,
+        })
+      );
+
+    await daoFactory.configureExtension(
+      dao.address,
+      vestingExtension.address,
+      adaptersWithVestingAccess,
+      { from: owner }
+    );
+  };
+
+  const configureAdaptersWithDAOParameters = async () => {
+    if (onboarding) {
+      await onboarding.configureDao(
+        dao.address,
+        UNITS,
+        unitPrice,
+        nbUnits,
+        maxChunks,
+        tokenAddr,
+        {
+          from: owner,
+        }
+      );
+
+      await onboarding.configureDao(
+        dao.address,
+        LOOT,
+        unitPrice,
+        nbUnits,
+        maxChunks,
+        tokenAddr,
+        {
+          from: owner,
+        }
+      );
+    }
+    if (couponOnboarding)
+      await couponOnboarding.configureDao(
+        dao.address,
+        couponCreatorAddress,
+        erc20TokenExtension.address,
+        UNITS,
+        maxAmount,
+        {
+          from: owner,
+        }
+      );
+
+    if (voting)
+      await voting.configureDao(dao.address, votingPeriod, gracePeriod, {
+        from: owner,
+      });
+
+    if (tribute) {
+      await tribute.configureDao(dao.address, UNITS, {
+        from: owner,
+      });
+      await tribute.configureDao(dao.address, LOOT, {
+        from: owner,
+      });
+    }
+
+    if (tributeNFT) {
+      await tributeNFT.configureDao(dao.address, {
+        from: owner,
+      });
+    }
+  };
+
+  await configureAdaptersWithDAOAccess();
+  await configureAdaptersWithSignatureAccess();
+  await configureAdaptersWithBankAccess();
+  await configureAdaptersWithNFTAccess();
+  await configureAdaptersWithERC20Access();
+  await configureAdaptersWithVestingAccess();
+  await configureAdaptersWithDAOParameters();
 };
 
 const cloneDao = async ({
@@ -1063,7 +1112,7 @@ const createInternalTokenVestingExtension = async (
 
   // Adds the new extension to the DAO
   await dao.addExtension(
-    sha3("internal-token-vesting-extension"),
+    sha3("internal-token-vesting-ext"),
     extension.address,
     owner,
     {
@@ -1157,6 +1206,18 @@ const entryExecutor = (contract, flags) => {
   };
 };
 
+const entryVesting = (contract, flags) => {
+  const values = [flags.NEW_VESTING, flags.REMOVE_VESTING];
+
+  const acl = entry(values);
+
+  return {
+    id: sha3("n/a"),
+    addr: contract.address,
+    flags: acl,
+  };
+};
+
 const entryDao = (name, contract, flags) => {
   const values = [
     flags.REPLACE_ADAPTER,
@@ -1226,5 +1287,6 @@ module.exports = {
   entryERC1271,
   entryDao,
   entryExecutor,
+  entryVesting,
   getNetworkDetails,
 };
