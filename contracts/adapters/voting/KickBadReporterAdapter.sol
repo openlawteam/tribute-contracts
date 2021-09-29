@@ -77,6 +77,7 @@ contract KickBadReporterAdapter is MemberGuard {
             votingState == IVoting.VotingState.NOT_PASS ||
             votingState == IVoting.VotingState.TIE
         ) {
+            //slither-disable-next-line uninitialized-local
             (uint256 units, address challengeAddress) =
                 votingContract.getChallengeDetails(dao, proposalId);
             BankExtension bank =
