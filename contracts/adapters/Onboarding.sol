@@ -278,7 +278,7 @@ contract OnboardingContract is IOnboarding, AdapterGuard {
         uint256 value,
         address token
     ) internal returns (uint160) {
-        OnboardingDetails memory details;
+        OnboardingDetails memory details = OnboardingDetails(0, 0, 0, 0, 0, 0);
         details.chunkSize = uint88(
             dao.getConfiguration(_configKey(tokenToMint, ChunkSize))
         );
