@@ -228,6 +228,9 @@ contract LendNFTContract is AdapterGuard, IERC1155Receiver, IERC721Receiver {
         }
     }
 
+    /**
+     * @notice Sends the NFT back to the original owner.
+     */
     function sendNFTBack(DaoRegistry dao, bytes32 proposalId)
         external
         reentrancyGuard(dao)
@@ -239,6 +242,39 @@ contract LendNFTContract is AdapterGuard, IERC1155Receiver, IERC721Receiver {
             msg.sender == proposal.previousOwner,
             "only the previous owner can withdraw the NFT"
         );
+
+        proposal.sentBack = true;
+        uint256 elapsedTime = block.timestamp - proposal.lendingStart;
+
+        if (elapsedTime < proposal.lendingPeriod) {
+            InternalTokenVestingExtension vesting =
+                InternalTokenVestingExtension(
+                    dao.getExtensionAddress(
+                        DaoHelper.INTERNAL_TOKEN_VESTING_EXT
+                    )
+                );
+
+            uint256 blockedAmount =
+                vesting.getMinimumBalanceInternal(
+                    proposal.lendingStart,
+                    proposal.lendingStart + proposal.lendingPeriod,
+                    proposal.requestAmount
+                );
+            BankExtension bank =
+                BankExtension(dao.getExtensionAddress(DaoHelper.BANK));
+            bank.subtractFromBalance(
+                proposal.applicant,
+                DaoHelper.UNITS,
+                blockedAmount
+            );
+            vesting.removeVesting(
+                proposal.applicant,
+                DaoHelper.UNITS,
+                uint64(proposal.lendingPeriod - elapsedTime)
+            );
+        }
+
+        // Only ERC-721 tokens will contain tributeAmount == 0
         if (proposal.tributeAmount == 0) {
             NFTExtension nftExt =
                 NFTExtension(dao.getExtensionAddress(DaoHelper.NFT));
@@ -261,37 +297,6 @@ contract LendNFTContract is AdapterGuard, IERC1155Receiver, IERC721Receiver {
                 proposal.tributeAmount
             );
         }
-
-        BankExtension bank =
-            BankExtension(dao.getExtensionAddress(DaoHelper.BANK));
-
-        InternalTokenVestingExtension vesting =
-            InternalTokenVestingExtension(
-                dao.getExtensionAddress(DaoHelper.INTERNAL_TOKEN_VESTING_EXT)
-            );
-
-        uint256 elapsedTime = block.timestamp - proposal.lendingStart;
-
-        if (elapsedTime < proposal.lendingPeriod) {
-            uint256 blockedAmount =
-                vesting.getMinimumBalanceInternal(
-                    proposal.lendingStart,
-                    proposal.lendingStart + proposal.lendingPeriod,
-                    proposal.requestAmount
-                );
-            bank.subtractFromBalance(
-                proposal.applicant,
-                DaoHelper.UNITS,
-                blockedAmount
-            );
-            vesting.removeVesting(
-                proposal.applicant,
-                DaoHelper.UNITS,
-                uint64(proposal.lendingPeriod - elapsedTime)
-            );
-        }
-
-        proposal.sentBack = true;
     }
 
     /**

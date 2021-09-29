@@ -152,6 +152,9 @@ contract DistributeContract is IDistribute, AdapterGuard {
      * @param dao The dao address.
      * @param proposalId The distribution proposal id.
      */
+    // The function is protected against reentrancy with the reentrancyGuard
+    // Which prevents concurrent modifications in the DAO registry.
+    //slither-disable-next-line reentrancy-no-eth
     function processProposal(DaoRegistry dao, bytes32 proposalId)
         external
         override

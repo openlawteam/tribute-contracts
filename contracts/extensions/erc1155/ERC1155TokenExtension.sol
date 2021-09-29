@@ -142,17 +142,8 @@ contract ERC1155TokenExtension is
         // Updates the tokenID amount to keep the records consistent
         _updateTokenAmount(from, nftAddr, nftTokenId, remainingAmount);
 
-        // Transfer the NFT, TokenId and amount from the contract address to the new owner
-        erc1155.safeTransferFrom(
-            address(this),
-            newOwner,
-            nftTokenId,
-            amount,
-            ""
-        );
-
         uint256 ownerTokenIdBalance =
-            erc1155.balanceOf(address(this), nftTokenId);
+            erc1155.balanceOf(address(this), nftTokenId) - amount;
 
         // Updates the mappings if the amount of tokenId in the Extension is 0
         // It means the GUILD/Extension does not hold that token id anymore.
@@ -166,6 +157,15 @@ contract ERC1155TokenExtension is
                 delete _nfts[nftAddr];
             }
         }
+
+        // Transfer the NFT, TokenId and amount from the contract address to the new owner
+        erc1155.safeTransferFrom(
+            address(this),
+            newOwner,
+            nftTokenId,
+            amount,
+            ""
+        );
 
         emit WithdrawnNFT(nftAddr, nftTokenId, amount, newOwner);
     }
