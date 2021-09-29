@@ -110,6 +110,7 @@ contract DaoRegistry is MemberGuard, AdapterGuard {
     struct ExtensionEntry {
         bytes32 id;
         mapping(address => uint256) acl;
+        bool deleted;
     }
 
     /*
@@ -147,8 +148,7 @@ contract DaoRegistry is MemberGuard, AdapterGuard {
     uint256 public lockedAt;
 
     /// @notice Clonable contract must have an empty constructor
-    // constructor() {
-    // }
+    constructor() {}
 
     /**
      * @notice Initialises the DAO
@@ -157,13 +157,13 @@ contract DaoRegistry is MemberGuard, AdapterGuard {
      * @param creator The DAO's creator, who will be an initial member
      * @param payer The account which paid for the transaction to create the DAO, who will be an initial member
      */
+    //slither-disable-next-line reentrancy-no-eth
     function initialize(address creator, address payer) external {
         require(!initialized, "dao already initialized");
+        initialized = true;
         potentialNewMember(msg.sender);
         potentialNewMember(payer);
         potentialNewMember(creator);
-
-        initialized = true;
     }
 
     /**
@@ -182,12 +182,18 @@ contract DaoRegistry is MemberGuard, AdapterGuard {
         state = DaoState.READY;
     }
 
+    /**
+     * @notice Contract lock strategy to lock only the caller is an adapter or extension.
+     */
     function lockSession() external {
         if (isAdapter(msg.sender) || isExtension(msg.sender)) {
             lockedAt = block.number;
         }
     }
 
+    /**
+     * @notice Contract lock strategy to release the lock only the caller is an adapter or extension.
+     */
     function unlockSession() external {
         if (isAdapter(msg.sender) || isExtension(msg.sender)) {
             lockedAt = 0;
@@ -209,6 +215,10 @@ contract DaoRegistry is MemberGuard, AdapterGuard {
         emit ConfigurationUpdated(key, value);
     }
 
+    /**
+     * @notice Registers a member address in the DAO if it is not registered or invalid.
+     * @notice A potential new member is a member that holds no shares, and its registration still needs to be voted on.
+     */
     function potentialNewMember(address memberAddress)
         public
         hasAccess(this, AclFlag.NEW_MEMBER)
@@ -275,27 +285,8 @@ contract DaoRegistry is MemberGuard, AdapterGuard {
     }
 
     /**
-     * @notice Adds a new extension to the registry
-     * @param extensionId The unique identifier of the new extension
-     * @param extension The address of the extension
-     * @param creator The DAO's creator, who will be an initial member
+     * @notice It sets the ACL flags to an Adapter to make it possible to access specific functions of an Extension.
      */
-    function addExtension(
-        bytes32 extensionId,
-        IExtension extension,
-        address creator
-    ) external hasAccess(this, AclFlag.ADD_EXTENSION) {
-        require(extensionId != bytes32(0), "extension id must not be empty");
-        require(
-            extensions[extensionId] == address(0x0),
-            "extension Id already in use"
-        );
-        extensions[extensionId] = address(extension);
-        inverseExtensions[address(extension)].id = extensionId;
-        extension.initialize(this, creator);
-        emit ExtensionAdded(extensionId, address(extension));
-    }
-
     function setAclToExtensionForAdapter(
         address extensionAddress,
         address adapterAddress,
@@ -353,6 +344,32 @@ contract DaoRegistry is MemberGuard, AdapterGuard {
     }
 
     /**
+     * @notice Adds a new extension to the registry
+     * @param extensionId The unique identifier of the new extension
+     * @param extension The address of the extension
+     * @param creator The DAO's creator, who will be an initial member
+     */
+    function addExtension(
+        bytes32 extensionId,
+        IExtension extension,
+        address creator
+    ) external hasAccess(this, AclFlag.ADD_EXTENSION) {
+        require(extensionId != bytes32(0), "extension id must not be empty");
+        require(
+            extensions[extensionId] == address(0x0),
+            "extension Id already in use"
+        );
+        require(
+            !inverseExtensions[address(extension)].deleted,
+            "extension can not be re-added"
+        );
+        extensions[extensionId] = address(extension);
+        inverseExtensions[address(extension)].id = extensionId;
+        extension.initialize(this, creator);
+        emit ExtensionAdded(extensionId, address(extension));
+    }
+
+    /**
      * @notice Removes an adapter from the registry
      * @param extensionId The unique identifier of the extension
      */
@@ -361,11 +378,12 @@ contract DaoRegistry is MemberGuard, AdapterGuard {
         hasAccess(this, AclFlag.REMOVE_EXTENSION)
     {
         require(extensionId != bytes32(0), "extensionId must not be empty");
-        require(
-            extensions[extensionId] != address(0x0),
-            "extensionId not registered"
-        );
-        delete inverseExtensions[extensions[extensionId]];
+        address extensionAddress = extensions[extensionId];
+        require(extensionAddress != address(0x0), "extensionId not registered");
+        ExtensionEntry storage extEntry = inverseExtensions[extensionAddress];
+        extEntry.deleted = true;
+        //slither-disable-next-line mapping-deletion
+        delete inverseExtensions[extensionAddress];
         delete extensions[extensionId];
         emit ExtensionRemoved(extensionId);
     }
