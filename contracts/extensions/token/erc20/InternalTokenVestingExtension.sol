@@ -47,10 +47,14 @@ contract InternalTokenVestingExtension is IExtension {
     }
 
     modifier hasExtensionAccess(AclFlag flag) {
-        _dao.hasAdapterAccessToExtension(
-            msg.sender,
-            address(this),
-            uint8(flag)
+        require(
+            _dao.state() == DaoRegistry.DaoState.CREATION ||
+                _dao.hasAdapterAccessToExtension(
+                    msg.sender,
+                    address(this),
+                    uint8(flag)
+                ),
+            "vestingExt::accessDenied"
         );
 
         _;

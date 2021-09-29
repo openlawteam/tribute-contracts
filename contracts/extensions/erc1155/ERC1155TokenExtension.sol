@@ -149,11 +149,17 @@ contract ERC1155TokenExtension is
         // It means the GUILD/Extension does not hold that token id anymore.
         if (ownerTokenIdBalance == 0) {
             delete _nftTracker[newOwner][nftAddr][nftTokenId];
-            _ownership[getNFTId(nftAddr, nftTokenId)].remove(newOwner);
-            _nfts[nftAddr].remove(nftTokenId);
+            require(
+                _ownership[getNFTId(nftAddr, nftTokenId)].remove(newOwner),
+                "can not remove owner"
+            );
+            require(
+                _nfts[nftAddr].remove(nftTokenId),
+                "can not remove token id"
+            );
             // If there are 0 tokenIds for the NFT address, remove the NFT from the collection
             if (_nfts[nftAddr].length() == 0) {
-                _nftAddresses.remove(nftAddr);
+                require(_nftAddresses.remove(nftAddr), "can not remove nft");
                 delete _nfts[nftAddr];
             }
         }
@@ -313,11 +319,14 @@ contract ERC1155TokenExtension is
         uint256 amount
     ) private {
         // Save the asset address and tokenId
-        _nfts[nftAddr].add(nftTokenId);
+        require(_nfts[nftAddr].add(nftTokenId), "can not add token id");
         // Track the owner by nftAddr+tokenId
-        _ownership[getNFTId(nftAddr, nftTokenId)].add(owner);
+        require(
+            _ownership[getNFTId(nftAddr, nftTokenId)].add(owner),
+            "can not add owner"
+        );
         // Keep track of the collected assets addresses
-        _nftAddresses.add(nftAddr);
+        require(_nftAddresses.add(nftAddr), "can not add nft");
         // Track the actual owner per Token Id and amount
         uint256 currentAmount = _nftTracker[owner][nftAddr][nftTokenId];
         _nftTracker[owner][nftAddr][nftTokenId] = currentAmount + amount;

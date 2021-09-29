@@ -138,15 +138,15 @@ contract NFTExtension is AdapterGuard, IExtension, IERC721Receiver {
         uint256 nftTokenId
     ) external hasExtensionAccess(this, AclFlag.WITHDRAW_NFT) {
         // Remove the NFT from the contract address to the actual owner
+        require(_nfts[nftAddr].remove(nftTokenId), "can not remove token id");
         IERC721 erc721 = IERC721(nftAddr);
         erc721.safeTransferFrom(address(this), newOwner, nftTokenId);
         // Remove the asset from the extension
-        _nfts[nftAddr].remove(nftTokenId);
         delete _ownership[getNFTId(nftAddr, nftTokenId)];
 
         // If we dont hold asset from this address anymore, we can remove it
         if (_nfts[nftAddr].length() == 0) {
-            _nftAddresses.remove(nftAddr);
+            require(_nftAddresses.remove(nftAddr), "can not remove nft");
         }
 
         emit WithdrawnNFT(nftAddr, nftTokenId, newOwner);
@@ -260,10 +260,10 @@ contract NFTExtension is AdapterGuard, IExtension, IERC721Receiver {
         address owner
     ) private {
         // Save the asset
-        _nfts[nftAddr].add(nftTokenId);
+        require(_nfts[nftAddr].add(nftTokenId), "can not add token id");
         // set ownership to the GUILD
         _ownership[getNFTId(nftAddr, nftTokenId)] = owner;
         // Keep track of the collected assets
-        _nftAddresses.add(nftAddr);
+        require(_nftAddresses.add(nftAddr), "can not add nft");
     }
 }

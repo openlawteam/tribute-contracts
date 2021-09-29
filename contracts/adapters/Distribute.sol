@@ -288,7 +288,6 @@ contract DistributeContract is IDistribute, AdapterGuard {
     ) internal {
         uint256 memberTokens =
             DaoHelper.priorMemberTokens(bank, unitHolderAddr, blockNumber);
-        bank.getPriorAmount(unitHolderAddr, DaoHelper.UNITS, blockNumber);
         require(memberTokens != 0, "not enough tokens");
         // Distributes the funds to 1 unit holder only
         bank.internalTransfer(DaoHelper.ESCROW, unitHolderAddr, token, amount);
@@ -307,7 +306,7 @@ contract DistributeContract is IDistribute, AdapterGuard {
         address token,
         uint256 amount
     ) internal {
-        uint256 totalUnits = DaoHelper.priorTotalTokens(bank, blockNumber);
+        uint256 totalTokens = DaoHelper.priorTotalTokens(bank, blockNumber);
         // Distributes the funds to all unit holders of the DAO and ignores non-active members.
         for (uint256 i = currentIndex; i < maxIndex; i++) {
             address memberAddr = dao.getMemberAddress(i);
@@ -315,7 +314,7 @@ contract DistributeContract is IDistribute, AdapterGuard {
                 bank.getPriorAmount(memberAddr, DaoHelper.UNITS, blockNumber);
             if (memberUnits > 0) {
                 uint256 amountToDistribute =
-                    FairShareHelper.calc(amount, memberUnits, totalUnits);
+                    FairShareHelper.calc(amount, memberUnits, totalTokens);
 
                 if (amountToDistribute > 0) {
                     bank.internalTransfer(
