@@ -60,7 +60,7 @@ contract ExecutorExtension is AdapterGuard, IExtension {
                     address(this),
                     uint8(flag)
                 ),
-            "executor::accessDenied"
+            "executorExt::accessDenied"
         );
         _;
     }
@@ -71,8 +71,8 @@ contract ExecutorExtension is AdapterGuard, IExtension {
      * @param creator The DAO's creator, who will be an initial member
      */
     function initialize(DaoRegistry _dao, address creator) external override {
-        require(!initialized, "executor::already initialized");
-        require(_dao.isMember(creator), "executor::not member");
+        require(!initialized, "executorExt::already initialized");
+        require(_dao.isMember(creator), "executorExt::not member");
         dao = _dao;
         initialized = true;
     }
@@ -89,11 +89,11 @@ contract ExecutorExtension is AdapterGuard, IExtension {
     {
         require(
             DaoHelper.isNotZeroAddress(implementation),
-            "implementation address can not be zero"
+            "executorExt: impl address can not be zero"
         );
         require(
             DaoHelper.isNotReservedAddress(implementation),
-            "implementation address can not be reserved"
+            "executorExt: impl address can not be reserved"
         );
 
         // solhint-disable-next-line no-inline-assembly
@@ -141,6 +141,8 @@ contract ExecutorExtension is AdapterGuard, IExtension {
      * @dev Fallback function that delegates calls to the sender address. Will run if no other
      * function in the contract matches the call data.
      */
+    // Only senders with the EXECUTE ACL Flag enabled is allowed to send eth.
+    //slither-disable-next-line locked-ether
     fallback() external payable {
         _fallback();
     }
@@ -149,6 +151,8 @@ contract ExecutorExtension is AdapterGuard, IExtension {
      * @dev Fallback function that delegates calls to the address returned by `_implementation()`. Will run if call data
      * is empty.
      */
+    // Only senders with the EXECUTE ACL Flag enabled is allowed to send eth.
+    //slither-disable-next-line locked-ether
     receive() external payable {
         _fallback();
     }
