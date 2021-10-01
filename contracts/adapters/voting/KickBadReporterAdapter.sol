@@ -36,7 +36,6 @@ SOFTWARE.
  */
 
 contract KickBadReporterAdapter is MemberGuard {
-
     function sponsorProposal(
         DaoRegistry dao,
         bytes32 proposalId,

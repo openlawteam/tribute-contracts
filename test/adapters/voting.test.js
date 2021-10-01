@@ -42,7 +42,7 @@ const {
   accounts,
   expectRevert,
   expect,
-  web3
+  web3,
 } = require("../../utils/OZTestUtil.js");
 
 describe("Adapter - Voting", () => {

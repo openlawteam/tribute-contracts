@@ -21,14 +21,20 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
  */
 
-const { toWei, toBN, fromAscii, fromUtf8, ETH_TOKEN } = require("../../utils/ContractUtil.js");
+const {
+  toWei,
+  toBN,
+  fromAscii,
+  fromUtf8,
+  ETH_TOKEN,
+} = require("../../utils/ContractUtil.js");
 
 const {
   expectRevert,
   expect,
   DaoRegistry,
   web3,
-  accounts
+  accounts,
 } = require("../../utils/OZTestUtil.js");
 
 describe("Core - Registry", () => {
