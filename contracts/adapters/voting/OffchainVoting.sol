@@ -301,6 +301,10 @@ contract OffchainVotingContract is IVoting, MemberGuard, AdapterGuard, Ownable {
         vote.gracePeriodStartingTime = block.timestamp;
     }
 
+    /**
+    This function marks the proposal as challenged if a step requested by a member never came.
+    The rule is, if a step has been requested and we are after the grace period, then challenge it
+     */
     function challengeMissingStep(DaoRegistry dao, bytes32 proposalId)
         external
     {
@@ -529,6 +533,8 @@ contract OffchainVotingContract is IVoting, MemberGuard, AdapterGuard, Ownable {
             )
         ) {
             _challengeResult(dao, proposalId);
+        } else {
+            revert("nothing to challenge");
         }
     }
 
@@ -557,6 +563,8 @@ contract OffchainVotingContract is IVoting, MemberGuard, AdapterGuard, Ownable {
             ) != BadNodeError.OK
         ) {
             _challengeResult(dao, proposalId);
+        } else {
+            revert("nothing to challenge");
         }
     }
 
@@ -664,6 +672,8 @@ contract OffchainVotingContract is IVoting, MemberGuard, AdapterGuard, Ownable {
             ovHash.checkStep(dao, actionId, nodeCurrent, vote.snapshot, params)
         ) {
             _challengeResult(dao, proposalId);
+        } else {
+            revert("nothing to challenge");
         }
     }
 
