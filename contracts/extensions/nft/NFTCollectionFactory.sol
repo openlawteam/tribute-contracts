@@ -36,6 +36,7 @@ contract NFTCollectionFactory is CloneFactory {
     event NFTCollectionCreated(address nftCollAddress);
 
     constructor(address _identityAddress) {
+        require(_identityAddress != address(0x0), "invalid addr");
         identityAddress = _identityAddress;
     }
 

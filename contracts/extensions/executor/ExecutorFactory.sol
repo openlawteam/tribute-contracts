@@ -37,6 +37,7 @@ contract ExecutorExtensionFactory is CloneFactory {
     event ExecutorCreated(address executorAddress);
 
     constructor(address _identityAddress) {
+        require(_identityAddress != address(0x0), "invalid addr");
         identityAddress = _identityAddress;
     }
 

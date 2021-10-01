@@ -35,6 +35,7 @@ contract ERC20TokenExtensionFactory is CloneFactory {
     event ERC20TokenExtensionCreated(address erc20ExtTokenAddress);
 
     constructor(address _identityAddress) {
+        require(_identityAddress != address(0x0), "invalid addr");
         identityAddress = _identityAddress;
     }
 
