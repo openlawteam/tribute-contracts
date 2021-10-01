@@ -305,7 +305,6 @@ contract OnboardingContract is IOnboarding, AdapterGuard {
             "total units for this member must be lower than the maximum"
         );
 
-        dao.submitProposal(proposalId);
         proposals[address(dao)][proposalId] = ProposalDetails(
             proposalId,
             tokenToMint,
@@ -314,6 +313,8 @@ contract OnboardingContract is IOnboarding, AdapterGuard {
             token,
             applicant
         );
+
+        dao.submitProposal(proposalId);
 
         return details.amount;
     }

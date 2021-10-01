@@ -218,6 +218,7 @@ contract DistributeContract is IDistribute, AdapterGuard {
      * @param dao The dao address.
      * @param toIndex The index to control the cached for-loop.
      */
+    // slither-disable-next-line reentrancy-benign
     function distribute(DaoRegistry dao, uint256 toIndex)
         external
         override

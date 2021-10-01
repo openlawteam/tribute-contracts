@@ -115,8 +115,8 @@ contract NFTExtension is AdapterGuard, IExtension, IERC721Receiver {
             }
             //If the NFT is not in the NFTExtension, we try to transfer from the current owner of the NFT to the extension
         } else {
-            erc721.safeTransferFrom(currentOwner, address(this), nftTokenId);
             _saveNft(nftAddr, nftTokenId, DaoHelper.GUILD);
+            erc721.safeTransferFrom(currentOwner, address(this), nftTokenId);
 
             emit CollectedNFT(nftAddr, nftTokenId);
         }

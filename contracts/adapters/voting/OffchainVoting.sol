@@ -727,15 +727,13 @@ contract OffchainVotingContract is IVoting, MemberGuard, AdapterGuard, Ownable {
                 )
             );
 
-        dao.submitProposal(challengeProposalId);
-
-        uint256 units = bank.balanceOf(challengedReporter, DaoHelper.UNITS);
-
         challengeProposals[address(dao)][
             challengeProposalId
-        ] = ProposalChallenge(challengedReporter, units);
+        ] = ProposalChallenge(challengedReporter, bank.balanceOf(challengedReporter, DaoHelper.UNITS));
 
         GuildKickHelper.lockMemberTokens(dao, challengedReporter);
+
+        dao.submitProposal(challengeProposalId);
 
         emit ResultChallenged(
             address(dao),
