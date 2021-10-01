@@ -3,16 +3,14 @@ pragma solidity ^0.8.0;
 // SPDX-License-Identifier: MIT
 
 import "./interfaces/IOnboarding.sol";
-import "../core/DaoConstants.sol";
 import "../core/DaoRegistry.sol";
-import "../utils/PotentialNewMember.sol";
 import "../extensions/bank/Bank.sol";
 import "../adapters/interfaces/IVoting.sol";
-import "../guards/MemberGuard.sol";
 import "../guards/AdapterGuard.sol";
 import "@openzeppelin/contracts/utils/Address.sol";
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
+import "../helpers/DaoHelper.sol";
 
 /**
 MIT License
@@ -38,13 +36,7 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
  */
 
-contract OnboardingContract is
-    IOnboarding,
-    DaoConstants,
-    PotentialNewMember,
-    MemberGuard,
-    AdapterGuard
-{
+contract OnboardingContract is IOnboarding, AdapterGuard {
     using Address for address payable;
     using SafeERC20 for IERC20;
 
@@ -125,7 +117,8 @@ contract OnboardingContract is
             tokenAddr
         );
 
-        BankExtension bank = BankExtension(dao.getExtensionAddress(BANK));
+        BankExtension bank =
+            BankExtension(dao.getExtensionAddress(DaoHelper.BANK));
         bank.registerPotentialNewInternalToken(unitsToMint);
         bank.registerPotentialNewToken(tokenAddr);
     }
@@ -145,16 +138,16 @@ contract OnboardingContract is
         address tokenToMint,
         uint256 tokenAmount,
         bytes memory data
-    ) public override reentrancyGuard(dao) {
+    ) external override reentrancyGuard(dao) {
         require(
-            isNotReservedAddress(applicant),
+            DaoHelper.isNotReservedAddress(applicant),
             "applicant is reserved address"
         );
 
-        potentialNewMember(
+        DaoHelper.potentialNewMember(
             applicant,
             dao,
-            BankExtension(dao.getExtensionAddress(BANK))
+            BankExtension(dao.getExtensionAddress(DaoHelper.BANK))
         );
 
         address tokenAddr =
@@ -206,7 +199,8 @@ contract OnboardingContract is
             address unitsToMint = proposal.unitsToMint;
             uint256 unitsRequested = proposal.unitsRequested;
             address applicant = proposal.applicant;
-            BankExtension bank = BankExtension(dao.getExtensionAddress(BANK));
+            BankExtension bank =
+                BankExtension(dao.getExtensionAddress(DaoHelper.BANK));
             require(
                 bank.isInternalToken(unitsToMint),
                 "it can only mint units"
@@ -215,13 +209,20 @@ contract OnboardingContract is
             bank.addToBalance(applicant, unitsToMint, unitsRequested);
 
             address daoAddress = address(dao);
-            if (token == ETH_TOKEN) {
-                bank.addToBalance{value: amount}(GUILD, token, amount);
+            if (token == DaoHelper.ETH_TOKEN) {
+                // This call sends ETH directly to the GUILD bank, and the address can't be changed since
+                // it is defined in the DaoHelper as a constant.
+                //slither-disable-next-line arbitrary-send
+                bank.addToBalance{value: amount}(
+                    DaoHelper.GUILD,
+                    token,
+                    amount
+                );
                 if (msg.value > amount) {
                     payable(msg.sender).sendValue(msg.value - amount);
                 }
             } else {
-                bank.addToBalance(GUILD, token, amount);
+                bank.addToBalance(DaoHelper.GUILD, token, amount);
                 IERC20 erc20 = IERC20(token);
                 erc20.safeTransferFrom(msg.sender, address(bank), amount);
             }
@@ -252,7 +253,8 @@ contract OnboardingContract is
         bytes32 proposalId,
         bytes memory data
     ) internal {
-        IVoting votingContract = IVoting(dao.getAdapterAddress(VOTING));
+        IVoting votingContract =
+            IVoting(dao.getAdapterAddress(DaoHelper.VOTING));
         address sponsoredBy =
             votingContract.getSenderAddress(
                 dao,
@@ -276,7 +278,7 @@ contract OnboardingContract is
         uint256 value,
         address token
     ) internal returns (uint160) {
-        OnboardingDetails memory details;
+        OnboardingDetails memory details = OnboardingDetails(0, 0, 0, 0, 0, 0);
         details.chunkSize = uint88(
             dao.getConfiguration(_configKey(tokenToMint, ChunkSize))
         );

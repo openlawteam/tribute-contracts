@@ -1,6 +1,5 @@
 pragma solidity ^0.8.0;
 // SPDX-License-Identifier: MIT
-import "../../core/DaoConstants.sol";
 import "../../core/DaoRegistry.sol";
 import "../../guards/AdapterGuard.sol";
 import "../../guards/MemberGuard.sol";
@@ -35,7 +34,6 @@ SOFTWARE.
  */
 
 contract ERC1155TokenExtension is
-    DaoConstants,
     AdapterGuard,
     MemberGuard,
     IExtension,
@@ -105,8 +103,8 @@ contract ERC1155TokenExtension is
      * @param creator The owner of the DAO and Extension that is also a member of the DAO.
      */
     function initialize(DaoRegistry _dao, address creator) external override {
-        require(!initialized, "already initialized");
-        require(_dao.isMember(creator), "not a member");
+        require(!initialized, "erc1155Ext::already initialized");
+        require(_dao.isMember(creator), "erc1155Ext::not a member");
 
         initialized = true;
         dao = _dao;
@@ -134,15 +132,38 @@ contract ERC1155TokenExtension is
         uint256 balance = erc1155.balanceOf(address(this), nftTokenId);
         require(
             balance > 0 && amount > 0,
-            "not enough funds or invalid amount"
+            "erc1155Ext::not enough balance or amount"
         );
 
         uint256 currentAmount = _getTokenAmount(from, nftAddr, nftTokenId);
-        require(currentAmount >= amount, "insufficient funds");
+        require(currentAmount >= amount, "erc1155Ext::insufficient funds");
         uint256 remainingAmount = currentAmount - amount;
 
         // Updates the tokenID amount to keep the records consistent
         _updateTokenAmount(from, nftAddr, nftTokenId, remainingAmount);
+
+        uint256 ownerTokenIdBalance =
+            erc1155.balanceOf(address(this), nftTokenId) - amount;
+
+        // Updates the mappings if the amount of tokenId in the Extension is 0
+        // It means the GUILD/Extension does not hold that token id anymore.
+        if (ownerTokenIdBalance == 0) {
+            delete _nftTracker[newOwner][nftAddr][nftTokenId];
+            //slither-disable-next-line unused-return
+            _ownership[getNFTId(nftAddr, nftTokenId)].remove(newOwner);
+            require(
+                _nfts[nftAddr].remove(nftTokenId),
+                "erc1155Ext::can not remove token id"
+            );
+            // If there are 0 tokenIds for the NFT address, remove the NFT from the collection
+            if (_nfts[nftAddr].length() == 0) {
+                require(
+                    _nftAddresses.remove(nftAddr),
+                    "erc1155Ext::can not remove nft"
+                );
+                delete _nfts[nftAddr];
+            }
+        }
 
         // Transfer the NFT, TokenId and amount from the contract address to the new owner
         erc1155.safeTransferFrom(
@@ -152,22 +173,6 @@ contract ERC1155TokenExtension is
             amount,
             ""
         );
-
-        uint256 ownerTokenIdBalance =
-            erc1155.balanceOf(address(this), nftTokenId);
-
-        // Updates the mappings if the amount of tokenId in the Extension is 0
-        // It means the GUILD/Extension does not hold that token id anymore.
-        if (ownerTokenIdBalance == 0) {
-            delete _nftTracker[newOwner][nftAddr][nftTokenId];
-            _ownership[getNFTId(nftAddr, nftTokenId)].remove(newOwner);
-            _nfts[nftAddr].remove(nftTokenId);
-            // If there are 0 tokenIds for the NFT address, remove the NFT from the collection
-            if (_nfts[nftAddr].length() == 0) {
-                _nftAddresses.remove(nftAddr);
-                delete _nfts[nftAddr];
-            }
-        }
 
         emit WithdrawnNFT(nftAddr, nftTokenId, amount, newOwner);
     }
@@ -189,27 +194,37 @@ contract ERC1155TokenExtension is
         uint256 nftTokenId,
         uint256 amount
     ) external hasExtensionAccess(this, AclFlag.INTERNAL_TRANSFER) {
-        require(isActiveMember(dao, fromOwner), "fromOwner is not a member");
-        require(isActiveMember(dao, toOwner), "toOwner is not a member");
+        require(
+            isActiveMember(dao, fromOwner),
+            "erc1155Ext::fromOwner is not a member"
+        );
+        require(
+            isActiveMember(dao, toOwner),
+            "erc1155Ext::toOwner is not a member"
+        );
+
+        // Checks if there token amount is valid and has enough funds
+        uint256 tokenAmount = _getTokenAmount(fromOwner, nftAddr, nftTokenId);
+        require(
+            amount > 0 && tokenAmount >= amount,
+            "erc1155Ext::insufficient funds or invalid amount"
+        );
 
         // Checks if the extension holds the NFT
         bool isNFTCollected = _nfts[nftAddr].contains(nftTokenId);
-        require(isNFTCollected, "nft not found");
-
-        // Checks if there token amount is valid and has enough funds
-        uint256 currentAmount = _getTokenAmount(fromOwner, nftAddr, nftTokenId);
-        uint256 remainingAmount = currentAmount - amount;
-        require(
-            amount > 0 && remainingAmount >= 0,
-            "insufficient funds or invalid amount"
-        );
+        require(isNFTCollected, "erc1155Ext::nft not found");
 
         // Updates the internal records for toOwner with the current balance + the transferred amount
         uint256 toOwnerNewAmount =
             _getTokenAmount(toOwner, nftAddr, nftTokenId) + amount;
         _updateTokenAmount(toOwner, nftAddr, nftTokenId, toOwnerNewAmount);
         // Updates the internal records for fromOwner with the remaning amount
-        _updateTokenAmount(fromOwner, nftAddr, nftTokenId, remainingAmount);
+        _updateTokenAmount(
+            fromOwner,
+            nftAddr,
+            nftTokenId,
+            tokenAmount - amount
+        );
 
         emit TransferredNFT(fromOwner, toOwner, nftAddr, nftTokenId, amount);
     }
@@ -237,7 +252,7 @@ contract ERC1155TokenExtension is
         address owner,
         address tokenAddr,
         uint256 tokenId
-    ) public view returns (uint256) {
+    ) external view returns (uint256) {
         return _nftTracker[owner][tokenAddr][tokenId];
     }
 
@@ -245,7 +260,7 @@ contract ERC1155TokenExtension is
      * @notice Returns the total amount of token ids collected for an NFT address.
      * @param tokenAddr The NFT address.
      */
-    function nbNFTs(address tokenAddr) public view returns (uint256) {
+    function nbNFTs(address tokenAddr) external view returns (uint256) {
         return _nfts[tokenAddr].length();
     }
 
@@ -255,7 +270,7 @@ contract ERC1155TokenExtension is
      * @param index The index to get the token id if it exists.
      */
     function getNFT(address tokenAddr, uint256 index)
-        public
+        external
         view
         returns (uint256)
     {
@@ -286,7 +301,7 @@ contract ERC1155TokenExtension is
         address nftAddress,
         uint256 tokenId,
         uint256 index
-    ) public view returns (address) {
+    ) external view returns (address) {
         return _ownership[getNFTId(nftAddress, tokenId)].at(index);
     }
 
@@ -315,11 +330,17 @@ contract ERC1155TokenExtension is
         uint256 amount
     ) private {
         // Save the asset address and tokenId
-        _nfts[nftAddr].add(nftTokenId);
+        require(
+            _nfts[nftAddr].add(nftTokenId),
+            "erc1155Ext::can not add token id"
+        );
         // Track the owner by nftAddr+tokenId
-        _ownership[getNFTId(nftAddr, nftTokenId)].add(owner);
+        require(
+            _ownership[getNFTId(nftAddr, nftTokenId)].add(owner),
+            "erc1155Ext::can not add owner"
+        );
         // Keep track of the collected assets addresses
-        _nftAddresses.add(nftAddr);
+        require(_nftAddresses.add(nftAddr), "erc1155Ext::can not add nft");
         // Track the actual owner per Token Id and amount
         uint256 currentAmount = _nftTracker[owner][nftAddr][nftTokenId];
         _nftTracker[owner][nftAddr][nftTokenId] = currentAmount + amount;
@@ -335,7 +356,7 @@ contract ERC1155TokenExtension is
         uint256 value,
         bytes calldata
     ) external override returns (bytes4) {
-        _saveNft(msg.sender, id, GUILD, value);
+        _saveNft(msg.sender, id, DaoHelper.GUILD, value);
         return this.onERC1155Received.selector;
     }
 
@@ -349,9 +370,12 @@ contract ERC1155TokenExtension is
         uint256[] calldata values,
         bytes calldata
     ) external override returns (bytes4) {
-        require(ids.length == values.length, "ids values length mismatch");
+        require(
+            ids.length == values.length,
+            "erc1155Ext::ids values length mismatch"
+        );
         for (uint256 i = 0; i < ids.length; i++) {
-            _saveNft(msg.sender, ids[i], GUILD, values[i]);
+            _saveNft(msg.sender, ids[i], DaoHelper.GUILD, values[i]);
         }
 
         return this.onERC1155Received.selector;

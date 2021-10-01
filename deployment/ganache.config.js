@@ -9,6 +9,7 @@ const disabled = [
   "PixelNFT",
   "ProxToken",
   "ERC20Minter",
+  "MockDao",
 ];
 
 const ganacheContracts = contracts.map((c) => {

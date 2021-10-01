@@ -13,17 +13,17 @@ The Tribute NFT adapter is similar to the Onboarding adapter in that both allow 
 
 ## Workflow
 
-A tribute is made by a member first submitting a proposal specifying (1) the applicant who wishes to join the DAO (or increase his stake in the DAO), (2) the amount of internal tokens (UNITS) the applicant desires, and (3) the ERC-721/1155 address and token id of the NFT that will transfer to the DAO in exchange for those internal tokens. If the applicant wants to join using an ERC-712, the `tributeAmount` must be set to `0` - always, anything greater than `0` is considered an ERC-1155 token, and the asset will get stored in the ERC-1155 extension - if it is a valid token, and the proposal processed.
+A tribute is made by a member first submitting a proposal specifying (1) the applicant who wishes to join the DAO (or increase his stake in the DAO), (2) the amount of internal tokens (UNITS) the applicant desires, and (3) the ERC-721/1155 address and token id of the NFT that will transfer to the DAO in exchange for those internal tokens.
 
 The proposal submission does not actually transfer the ERC-721/1155 token from its owner. That occurs only after the proposal passes and is processed.
 
 The proposal is also sponsored in the same transaction when it is submitted. When a DAO member sponsors the proposal, the voting period begins allowing members to vote for or against the proposal. Only a member can sponsor the proposal.
 
-After the voting period is done along with its subsequent grace period, the proposal can be processed. Any account can process the proposal. However, prior to processing a passed proposal, the ERC-721 token owner must first separately `approve` the `NFT ERC721 extension` as spender of the token provided as tribute, or if it is an ERC-1155 token, the token owner needs to call the `setApprovalForAll` to approve the `ERC1155TokenExtension` as spender.
+After the voting period is done along with its subsequent grace period, the proposal can be processed. Any account can process the proposal. In order to process the proposal, the applicant needs to send the NFT directly to the adapter. In addition, the applicant needs to encode a ProcessProposal struct and pass it as data in "safeTransferFrom".
 
-Upon processing, if the vote has passed, the requested internal tokens are minted to the applicant (which effectively makes the applicant a member of the DAO if not already one). The tribute token is transferred from the token owner to the NFT extension.
+Upon processing, if the vote has passed, the requested internal tokens are minted to the applicant (which effectively makes the applicant a member of the DAO if not already one). The tribute NFT is transferred from the adapter to the NFT extension.
 
-Upon processing, if the vote has failed (i.e., more NO votes then YES votes or a tie), no further action is taken (the ERC-721/1155 token owner still retains ownership of the token).
+Upon processing, if the vote has failed (i.e., more NO votes then YES votes or a tie), the NFT is simply sent back.
 
 ## Access Flags
 
@@ -48,6 +48,8 @@ Upon processing, if the vote has failed (i.e., more NO votes then YES votes or a
 
 ### ERC1155TokenExtension
 
+- `WITHDRAW_NFT`
+
 ### DaoRegistry
 
 ### Voting
@@ -68,7 +70,6 @@ Upon processing, if the vote has failed (i.e., more NO votes then YES votes or a
 - `applicant`: The applicant address (who will receive the DAO internal tokens and become a member; this address may be different than the actual owner of the ERC-721 token being provided as tribute).
 - `nftAddr`: The address of the ERC-721 token that will be transferred to the DAO in exchange for DAO internal tokens.
 - `nftTokenId`: The NFT token identifier.
-- `tributeAmount`: The amount of nftTokenId for ERC1155 tokens, if 0, it is an ERC721.
 - `requestAmount`: The amount requested of DAO internal tokens (UNITS).
 
 ### ProcessProposal

@@ -256,7 +256,7 @@ describe("Extension - ERC1155", () => {
         1, //amount
         { from: nftOwner }
       ),
-      "toOwner is not a member -- Reason given: toOwner is not a member"
+      "erc1155Ext::toOwner is not a member -- Reason given: erc1155Ext::toOwner is not a member"
     );
   });
 
@@ -341,7 +341,7 @@ describe("Extension - ERC1155", () => {
         1, //amount
         { from: nonMember }
       ),
-      "fromOwner is not a member -- Reason given: fromOwner is not a member"
+      "erc1155Ext::fromOwner is not a member -- Reason given: erc1155Ext::fromOwner is not a member"
     );
   });
 });

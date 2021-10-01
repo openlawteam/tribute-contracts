@@ -5,7 +5,6 @@ pragma experimental ABIEncoderV2;
 
 import "../../core/DaoRegistry.sol";
 import "../../extensions/bank/Bank.sol";
-import "../../core/DaoConstants.sol";
 import "../../guards/MemberGuard.sol";
 import "../../guards/AdapterGuard.sol";
 import "../interfaces/IVoting.sol";
@@ -17,6 +16,7 @@ import "@openzeppelin/contracts/access/Ownable.sol";
 import "@openzeppelin/contracts/utils/cryptography/MerkleProof.sol";
 import "@openzeppelin/contracts/utils/cryptography/SignatureChecker.sol";
 import "../../helpers/GuildKickHelper.sol";
+import "../../helpers/DaoHelper.sol";
 
 /**
 MIT License
@@ -133,6 +133,16 @@ contract OffchainVotingContract is IVoting, MemberGuard, AdapterGuard, Ownable {
         Ownable(_owner);
     }
 
+    /**
+     * @notice default fallback function to prevent from sending ether to the contract
+     */
+    // The transaction is always reverted, so there are no risks of locking ether in the contract
+    //slither-disable-next-line locked-ether
+    // FIXME function commented out due to contract size limit
+    //receive() external payable {
+    //    revert("fallback revert");
+    //}
+
     function adminFailProposal(DaoRegistry dao, bytes32 proposalId)
         external
         onlyOwner
@@ -200,6 +210,9 @@ contract OffchainVotingContract is IVoting, MemberGuard, AdapterGuard, Ownable {
             );
         }
 
+        address memberAddr = dao.getAddressIfDelegated(reporter);
+        require(isActiveMember(dao, memberAddr), "not active member");
+
         (address adapterAddress, ) = dao.proposals(proposalId);
 
         require(
@@ -211,29 +224,25 @@ contract OffchainVotingContract is IVoting, MemberGuard, AdapterGuard, Ownable {
             "invalid sig"
         );
 
-        address memberAddr = dao.getAddressIfDelegated(reporter);
-        require(isActiveMember(dao, memberAddr), "not active member");
-
-        uint256 nbMembers =
-            BankExtension(dao.getExtensionAddress(BANK)).getPriorAmount(
-                TOTAL,
-                MEMBER_COUNT,
-                vote.snapshot
-            );
-        require(nbMembers - 1 == result.index, "index:member_count mismatch");
+        require(
+            MerkleProof.verify(
+                result.proof,
+                resultRoot,
+                ovHash.nodeHash(dao, adapterAddress, result)
+            ),
+            "proof:bad"
+        );
 
         require(
-            getBadNodeError(
-                dao,
-                proposalId,
-                true,
-                resultRoot,
-                vote.snapshot,
-                vote.gracePeriodStartingTime,
-                nbMembers,
-                result
-            ) == BadNodeError.OK,
-            "bad result"
+            BankExtension(dao.getExtensionAddress(DaoHelper.BANK))
+                .getPriorAmount(
+                DaoHelper.TOTAL,
+                DaoHelper.MEMBER_COUNT,
+                vote.snapshot
+            ) -
+                1 ==
+                result.index,
+            "index:member_count mismatch"
         );
 
         require(
@@ -274,11 +283,11 @@ contract OffchainVotingContract is IVoting, MemberGuard, AdapterGuard, Ownable {
         require(isActiveMember(dao, memberAddr), "not active member");
         uint256 currentFlag = retrievedStepsFlags[vote.resultRoot][index / 256];
         require(
-            getFlag(currentFlag, index % 256) == false,
+            DaoHelper.getFlag(currentFlag, index % 256) == false,
             "step already requested"
         );
 
-        retrievedStepsFlags[vote.resultRoot][index / 256] = setFlag(
+        retrievedStepsFlags[vote.resultRoot][index / 256] = DaoHelper.setFlag(
             currentFlag,
             index % 256,
             true
@@ -292,6 +301,10 @@ contract OffchainVotingContract is IVoting, MemberGuard, AdapterGuard, Ownable {
         vote.gracePeriodStartingTime = block.timestamp;
     }
 
+    /**
+    This function marks the proposal as challenged if a step requested by a member never came.
+    The rule is, if a step has been requested and we are after the grace period, then challenge it
+     */
     function challengeMissingStep(DaoRegistry dao, bytes32 proposalId)
         external
     {
@@ -333,8 +346,14 @@ contract OffchainVotingContract is IVoting, MemberGuard, AdapterGuard, Ownable {
         if (vote.forceFailed) {
             return false;
         }
-        BankExtension bank = BankExtension(dao.getExtensionAddress(BANK));
-        uint256 totalWeight = bank.getPriorAmount(TOTAL, UNITS, vote.snapshot);
+        BankExtension bank =
+            BankExtension(dao.getExtensionAddress(DaoHelper.BANK));
+        uint256 totalWeight =
+            bank.getPriorAmount(
+                DaoHelper.TOTAL,
+                DaoHelper.UNITS,
+                vote.snapshot
+            );
         uint256 unvotedWeights = totalWeight - nbYes - nbNo;
 
         uint256 diff;
@@ -376,16 +395,20 @@ contract OffchainVotingContract is IVoting, MemberGuard, AdapterGuard, Ownable {
         DaoRegistry dao,
         bytes32 proposalId,
         bytes memory data
-    ) public override onlyAdapter(dao) {
+    ) external override onlyAdapter(dao) {
         SnapshotProposalContract.ProposalMessage memory proposal =
             abi.decode(data, (SnapshotProposalContract.ProposalMessage));
         (bool success, uint256 blockNumber) =
             ovHash.stringToUint(proposal.payload.snapshot);
         require(success, "snapshot conversion error");
-        BankExtension bank = BankExtension(dao.getExtensionAddress(BANK));
+        BankExtension bank =
+            BankExtension(dao.getExtensionAddress(DaoHelper.BANK));
 
         address memberAddr = dao.getAddressIfDelegated(proposal.submitter);
-        require(bank.balanceOf(memberAddr, UNITS) > 0, "noActiveMember");
+        require(
+            bank.balanceOf(memberAddr, DaoHelper.UNITS) > 0,
+            "noActiveMember"
+        );
 
         bytes32 proposalHash =
             _snapshotContract.hashMessage(dao, msg.sender, proposal);
@@ -510,6 +533,8 @@ contract OffchainVotingContract is IVoting, MemberGuard, AdapterGuard, Ownable {
             )
         ) {
             _challengeResult(dao, proposalId);
+        } else {
+            revert("nothing to challenge");
         }
     }
 
@@ -519,7 +544,8 @@ contract OffchainVotingContract is IVoting, MemberGuard, AdapterGuard, Ownable {
         OffchainVotingHashContract.VoteResultNode memory node
     ) external {
         Voting storage vote = votes[address(dao)][proposalId];
-        BankExtension bank = BankExtension(dao.getExtensionAddress(BANK));
+        BankExtension bank =
+            BankExtension(dao.getExtensionAddress(DaoHelper.BANK));
         if (
             getBadNodeError(
                 dao,
@@ -528,11 +554,17 @@ contract OffchainVotingContract is IVoting, MemberGuard, AdapterGuard, Ownable {
                 vote.resultRoot,
                 vote.snapshot,
                 vote.gracePeriodStartingTime,
-                bank.getPriorAmount(TOTAL, MEMBER_COUNT, vote.snapshot),
+                bank.getPriorAmount(
+                    DaoHelper.TOTAL,
+                    DaoHelper.MEMBER_COUNT,
+                    vote.snapshot
+                ),
                 node
             ) != BadNodeError.OK
         ) {
             _challengeResult(dao, proposalId);
+        } else {
+            revert("nothing to challenge");
         }
     }
 
@@ -609,7 +641,7 @@ contract OffchainVotingContract is IVoting, MemberGuard, AdapterGuard, Ownable {
         bytes32 proposalId,
         OffchainVotingHashContract.VoteResultNode memory nodePrevious,
         OffchainVotingHashContract.VoteResultNode memory nodeCurrent
-    ) public {
+    ) external {
         Voting storage vote = votes[address(dao)][proposalId];
         bytes32 resultRoot = vote.resultRoot;
 
@@ -640,6 +672,8 @@ contract OffchainVotingContract is IVoting, MemberGuard, AdapterGuard, Ownable {
             ovHash.checkStep(dao, actionId, nodeCurrent, vote.snapshot, params)
         ) {
             _challengeResult(dao, proposalId);
+        } else {
+            revert("nothing to challenge");
         }
     }
 
@@ -680,7 +714,8 @@ contract OffchainVotingContract is IVoting, MemberGuard, AdapterGuard, Ownable {
     }
 
     function _challengeResult(DaoRegistry dao, bytes32 proposalId) internal {
-        BankExtension bank = BankExtension(dao.getExtensionAddress(BANK));
+        BankExtension bank =
+            BankExtension(dao.getExtensionAddress(DaoHelper.BANK));
 
         votes[address(dao)][proposalId].isChallenged = true;
         address challengedReporter = votes[address(dao)][proposalId].reporter;
@@ -694,7 +729,7 @@ contract OffchainVotingContract is IVoting, MemberGuard, AdapterGuard, Ownable {
 
         dao.submitProposal(challengeProposalId);
 
-        uint256 units = bank.balanceOf(challengedReporter, UNITS);
+        uint256 units = bank.balanceOf(challengedReporter, DaoHelper.UNITS);
 
         challengeProposals[address(dao)][
             challengeProposalId

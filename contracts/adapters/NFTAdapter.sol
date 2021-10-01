@@ -2,11 +2,10 @@ pragma solidity ^0.8.0;
 
 // SPDX-License-Identifier: MIT
 
-import "../core/DaoConstants.sol";
 import "../core/DaoRegistry.sol";
 import "../extensions/nft/NFT.sol";
-import "../guards/MemberGuard.sol";
 import "../guards/AdapterGuard.sol";
+import "../helpers/DaoHelper.sol";
 
 /**
 MIT License
@@ -32,10 +31,12 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
  */
 
-contract NFTAdapterContract is DaoConstants, MemberGuard, AdapterGuard {
+contract NFTAdapterContract is AdapterGuard {
     /**
      * @notice default fallback function to prevent from sending ether to the contract.
      */
+    // The transaction is always reverted, so there are no risks of locking ether in the contract
+    //slither-disable-next-line locked-ether
     receive() external payable {
         revert("fallback revert");
     }
@@ -51,7 +52,7 @@ contract NFTAdapterContract is DaoConstants, MemberGuard, AdapterGuard {
         address nftAddr,
         uint256 nftTokenId
     ) external reentrancyGuard(dao) {
-        NFTExtension nft = NFTExtension(dao.getExtensionAddress(NFT));
+        NFTExtension nft = NFTExtension(dao.getExtensionAddress(DaoHelper.NFT));
         nft.collect(nftAddr, nftTokenId);
     }
 }

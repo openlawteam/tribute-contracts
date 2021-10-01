@@ -2,10 +2,10 @@ pragma solidity ^0.8.0;
 
 // SPDX-License-Identifier: MIT
 
-import "../../core/DaoConstants.sol";
 import "../../core/DaoRegistry.sol";
 import "../IExtension.sol";
 import "../../guards/AdapterGuard.sol";
+import "../../helpers/DaoHelper.sol";
 import "@openzeppelin/contracts/utils/Address.sol";
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
@@ -34,7 +34,7 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
  */
 
-contract BankExtension is DaoConstants, AdapterGuard, IExtension {
+contract BankExtension is AdapterGuard, IExtension {
     using Address for address payable;
     using SafeERC20 for IERC20;
 
@@ -53,7 +53,7 @@ contract BankExtension is DaoConstants, AdapterGuard, IExtension {
         UPDATE_TOKEN
     }
 
-    modifier noProposal {
+    modifier noProposal() {
         require(dao.lockedAt() < block.number, "proposal lock");
         _;
     }
@@ -134,18 +134,18 @@ contract BankExtension is DaoConstants, AdapterGuard, IExtension {
         dao = _dao;
         initialized = true;
 
-        availableInternalTokens[UNITS] = true;
-        internalTokens.push(UNITS);
+        availableInternalTokens[DaoHelper.UNITS] = true;
+        internalTokens.push(DaoHelper.UNITS);
 
-        availableInternalTokens[MEMBER_COUNT] = true;
-        internalTokens.push(MEMBER_COUNT);
+        availableInternalTokens[DaoHelper.MEMBER_COUNT] = true;
+        internalTokens.push(DaoHelper.MEMBER_COUNT);
         uint256 nbMembers = _dao.getNbMembers();
         for (uint256 i = 0; i < nbMembers; i++) {
-            addToBalance(_dao.getMemberAddress(i), MEMBER_COUNT, 1);
+            addToBalance(_dao.getMemberAddress(i), DaoHelper.MEMBER_COUNT, 1);
         }
 
-        _createNewAmountCheckpoint(creator, UNITS, 1);
-        _createNewAmountCheckpoint(TOTAL, UNITS, 1);
+        _createNewAmountCheckpoint(creator, DaoHelper.UNITS, 1);
+        _createNewAmountCheckpoint(DaoHelper.TOTAL, DaoHelper.UNITS, 1);
     }
 
     function withdraw(
@@ -158,7 +158,7 @@ contract BankExtension is DaoConstants, AdapterGuard, IExtension {
             "bank::withdraw::not enough funds"
         );
         subtractFromBalance(member, tokenAddr, amount);
-        if (tokenAddr == ETH_TOKEN) {
+        if (tokenAddr == DaoHelper.ETH_TOKEN) {
             member.sendValue(amount);
         } else {
             IERC20(tokenAddr).safeTransfer(member, amount);
@@ -190,7 +190,7 @@ contract BankExtension is DaoConstants, AdapterGuard, IExtension {
     function setMaxExternalTokens(uint8 maxTokens) external {
         require(!initialized, "bank already initialized");
         require(
-            maxTokens > 0 && maxTokens <= MAX_TOKENS_GUILD_BANK,
+            maxTokens > 0 && maxTokens <= DaoHelper.MAX_TOKENS_GUILD_BANK,
             "max number of external tokens should be (0,200)"
         );
         maxExternalTokens = maxTokens;
@@ -209,7 +209,7 @@ contract BankExtension is DaoConstants, AdapterGuard, IExtension {
         external
         hasExtensionAccess(AclFlag.REGISTER_NEW_TOKEN)
     {
-        require(isNotReservedAddress(token), "reservedToken");
+        require(DaoHelper.isNotReservedAddress(token), "reservedToken");
         require(!availableInternalTokens[token], "internalToken");
         require(
             tokens.length <= maxExternalTokens,
@@ -231,7 +231,7 @@ contract BankExtension is DaoConstants, AdapterGuard, IExtension {
         external
         hasExtensionAccess(AclFlag.REGISTER_NEW_INTERNAL_TOKEN)
     {
-        require(isNotReservedAddress(token), "reservedToken");
+        require(DaoHelper.isNotReservedAddress(token), "reservedToken");
         require(!availableTokens[token], "availableToken");
 
         if (!availableInternalTokens[token]) {
@@ -245,11 +245,11 @@ contract BankExtension is DaoConstants, AdapterGuard, IExtension {
         hasExtensionAccess(AclFlag.UPDATE_TOKEN)
     {
         require(isTokenAllowed(tokenAddr), "token not allowed");
-        uint256 totalBalance = balanceOf(TOTAL, tokenAddr);
+        uint256 totalBalance = balanceOf(DaoHelper.TOTAL, tokenAddr);
 
         uint256 realBalance;
 
-        if (tokenAddr == ETH_TOKEN) {
+        if (tokenAddr == DaoHelper.ETH_TOKEN) {
             realBalance = address(this).balance;
         } else {
             IERC20 erc20 = IERC20(tokenAddr);
@@ -257,14 +257,18 @@ contract BankExtension is DaoConstants, AdapterGuard, IExtension {
         }
 
         if (totalBalance < realBalance) {
-            addToBalance(GUILD, tokenAddr, realBalance - totalBalance);
+            addToBalance(
+                DaoHelper.GUILD,
+                tokenAddr,
+                realBalance - totalBalance
+            );
         } else if (totalBalance > realBalance) {
             uint256 tokensToRemove = totalBalance - realBalance;
-            uint256 guildBalance = balanceOf(GUILD, tokenAddr);
+            uint256 guildBalance = balanceOf(DaoHelper.GUILD, tokenAddr);
             if (guildBalance > tokensToRemove) {
-                subtractFromBalance(GUILD, tokenAddr, tokensToRemove);
+                subtractFromBalance(DaoHelper.GUILD, tokenAddr, tokensToRemove);
             } else {
-                subtractFromBalance(GUILD, tokenAddr, guildBalance);
+                subtractFromBalance(DaoHelper.GUILD, tokenAddr, guildBalance);
             }
         }
     }
@@ -330,10 +334,10 @@ contract BankExtension is DaoConstants, AdapterGuard, IExtension {
             "unknown token address"
         );
         uint256 newAmount = balanceOf(member, token) + amount;
-        uint256 newTotalAmount = balanceOf(TOTAL, token) + amount;
+        uint256 newTotalAmount = balanceOf(DaoHelper.TOTAL, token) + amount;
 
         _createNewAmountCheckpoint(member, token, newAmount);
-        _createNewAmountCheckpoint(TOTAL, token, newTotalAmount);
+        _createNewAmountCheckpoint(DaoHelper.TOTAL, token, newTotalAmount);
     }
 
     /**
@@ -348,10 +352,10 @@ contract BankExtension is DaoConstants, AdapterGuard, IExtension {
         uint256 amount
     ) public hasExtensionAccess(AclFlag.SUB_FROM_BALANCE) {
         uint256 newAmount = balanceOf(member, token) - amount;
-        uint256 newTotalAmount = balanceOf(TOTAL, token) - amount;
+        uint256 newTotalAmount = balanceOf(DaoHelper.TOTAL, token) - amount;
 
         _createNewAmountCheckpoint(member, token, newAmount);
-        _createNewAmountCheckpoint(TOTAL, token, newTotalAmount);
+        _createNewAmountCheckpoint(DaoHelper.TOTAL, token, newTotalAmount);
     }
 
     /**
@@ -365,7 +369,7 @@ contract BankExtension is DaoConstants, AdapterGuard, IExtension {
         address to,
         address token,
         uint256 amount
-    ) public hasExtensionAccess(AclFlag.INTERNAL_TRANSFER) {
+    ) external hasExtensionAccess(AclFlag.INTERNAL_TRANSFER) {
         uint256 newAmount = balanceOf(from, token) - amount;
         uint256 newAmount2 = balanceOf(to, token) + amount;
 
@@ -474,6 +478,10 @@ contract BankExtension is DaoConstants, AdapterGuard, IExtension {
 
         uint32 nCheckpoints = numCheckpoints[token][member];
         if (
+            // The only condition that we should allow the amount update
+            // is when the block.number exactly matches the fromBlock value.
+            // Anything different from that should generate a new checkpoint.
+            //slither-disable-next-line incorrect-equality
             nCheckpoints > 0 &&
             checkpoints[token][member][nCheckpoints - 1].fromBlock ==
             block.number

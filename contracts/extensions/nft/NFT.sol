@@ -2,7 +2,6 @@ pragma solidity ^0.8.0;
 
 // SPDX-License-Identifier: MIT
 
-import "../../core/DaoConstants.sol";
 import "../../core/DaoRegistry.sol";
 import "../../guards/AdapterGuard.sol";
 import "../IExtension.sol";
@@ -35,12 +34,7 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
  */
 
-contract NFTExtension is
-    DaoConstants,
-    AdapterGuard,
-    IExtension,
-    IERC721Receiver
-{
+contract NFTExtension is AdapterGuard, IExtension, IERC721Receiver {
     using Address for address payable;
     // Add the library methods
     using EnumerableSet for EnumerableSet.UintSet;
@@ -77,7 +71,7 @@ contract NFTExtension is
                     address(extension),
                     uint8(flag)
                 ),
-            "nft::accessDenied"
+            "erc721::accessDenied"
         );
         _;
     }
@@ -91,8 +85,8 @@ contract NFTExtension is
      * @param creator The owner of the DAO and Extension that is also a member of the DAO.
      */
     function initialize(DaoRegistry _dao, address creator) external override {
-        require(!initialized, "already initialized");
-        require(_dao.isMember(creator), "not a member");
+        require(!initialized, "erc721::already initialized");
+        require(_dao.isMember(creator), "erc721::not a member");
 
         initialized = true;
         dao = _dao;
@@ -115,14 +109,14 @@ contract NFTExtension is
         //If the NFT is already in the NFTExtension, update the ownership if not set already
         if (currentOwner == address(this)) {
             if (_ownership[getNFTId(nftAddr, nftTokenId)] == address(0x0)) {
-                _saveNft(nftAddr, nftTokenId, GUILD);
+                _saveNft(nftAddr, nftTokenId, DaoHelper.GUILD);
 
                 emit CollectedNFT(nftAddr, nftTokenId);
             }
             //If the NFT is not in the NFTExtension, we try to transfer from the current owner of the NFT to the extension
         } else {
             erc721.safeTransferFrom(currentOwner, address(this), nftTokenId);
-            _saveNft(nftAddr, nftTokenId, GUILD);
+            _saveNft(nftAddr, nftTokenId, DaoHelper.GUILD);
 
             emit CollectedNFT(nftAddr, nftTokenId);
         }
@@ -142,17 +136,23 @@ contract NFTExtension is
         address newOwner,
         address nftAddr,
         uint256 nftTokenId
-    ) public hasExtensionAccess(this, AclFlag.WITHDRAW_NFT) {
+    ) external hasExtensionAccess(this, AclFlag.WITHDRAW_NFT) {
         // Remove the NFT from the contract address to the actual owner
+        require(
+            _nfts[nftAddr].remove(nftTokenId),
+            "erc721::can not remove token id"
+        );
         IERC721 erc721 = IERC721(nftAddr);
         erc721.safeTransferFrom(address(this), newOwner, nftTokenId);
         // Remove the asset from the extension
-        _nfts[nftAddr].remove(nftTokenId);
         delete _ownership[getNFTId(nftAddr, nftTokenId)];
 
         // If we dont hold asset from this address anymore, we can remove it
         if (_nfts[nftAddr].length() == 0) {
-            _nftAddresses.remove(nftAddr);
+            require(
+                _nftAddresses.remove(nftAddr),
+                "erc721::can not remove nft"
+            );
         }
 
         emit WithdrawnNFT(nftAddr, nftTokenId, newOwner);
@@ -170,10 +170,10 @@ contract NFTExtension is
         address nftAddr,
         uint256 nftTokenId,
         address newOwner
-    ) public hasExtensionAccess(this, AclFlag.INTERNAL_TRANSFER) {
-        require(newOwner != address(0x0), "new owner is 0");
+    ) external hasExtensionAccess(this, AclFlag.INTERNAL_TRANSFER) {
+        require(newOwner != address(0x0), "erc721::new owner is 0");
         address currentOwner = _ownership[getNFTId(nftAddr, nftTokenId)];
-        require(currentOwner != address(0x0), "nft not found");
+        require(currentOwner != address(0x0), "erc721::nft not found");
 
         _ownership[getNFTId(nftAddr, nftTokenId)] = newOwner;
 
@@ -197,7 +197,7 @@ contract NFTExtension is
      * @notice Returns the total amount of token ids collected for an NFT address.
      * @param tokenAddr The NFT address.
      */
-    function nbNFTs(address tokenAddr) public view returns (uint256) {
+    function nbNFTs(address tokenAddr) external view returns (uint256) {
         return _nfts[tokenAddr].length();
     }
 
@@ -207,7 +207,7 @@ contract NFTExtension is
      * @param index The index to get the token id if it exists.
      */
     function getNFT(address tokenAddr, uint256 index)
-        public
+        external
         view
         returns (uint256)
     {
@@ -235,7 +235,7 @@ contract NFTExtension is
      * @param tokenId The NFT token id.
      */
     function getNFTOwner(address nftAddress, uint256 tokenId)
-        public
+        external
         view
         returns (address)
     {
@@ -266,10 +266,10 @@ contract NFTExtension is
         address owner
     ) private {
         // Save the asset
-        _nfts[nftAddr].add(nftTokenId);
+        require(_nfts[nftAddr].add(nftTokenId), "erc721::can not add token id");
         // set ownership to the GUILD
         _ownership[getNFTId(nftAddr, nftTokenId)] = owner;
         // Keep track of the collected assets
-        _nftAddresses.add(nftAddr);
+        require(_nftAddresses.add(nftAddr), "erc721::can not add nft");
     }
 }

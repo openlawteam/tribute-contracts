@@ -25,7 +25,7 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
  */
-const { sha3, toBN } = require("../../utils/ContractUtil.js");
+const { sha3, toBN, toWei } = require("../../utils/ContractUtil.js");
 
 const {
   deployDefaultDao,
@@ -34,7 +34,9 @@ const {
   ERC20Minter,
   ProxToken,
   accounts,
+  web3,
   expect,
+  expectRevert,
 } = require("../../utils/OZTestUtil.js");
 
 describe("Extension - Executor", () => {
@@ -102,5 +104,68 @@ describe("Extension - Executor", () => {
     expect(event.event).to.be.equal("MintedProxToken");
     expect(owner).to.be.equal(executorExt.address);
     expect(amount).to.be.equal("10000");
+  });
+
+  it("should not be possible to execute a delegate call without the ACL permission", async () => {
+    const { dao, factories, extensions } = await deployDefaultDao({
+      owner: daoOwner,
+      finalize: false,
+    });
+
+    const erc20Minter = await ERC20Minter.new();
+    const executorExt = extensions.executorExt;
+
+    await factories.daoFactory.addAdapters(
+      dao.address,
+      [entryDao("erc20Minter", erc20Minter, {})],
+      { from: daoOwner }
+    );
+
+    await factories.daoFactory.configureExtension(
+      dao.address,
+      executorExt.address,
+      [
+        entryExecutor(erc20Minter, {
+          EXECUTE: false, // WITHOUT THE PERMISSION TO EXECUTE DELEGATE CALLS
+        }),
+      ],
+      { from: daoOwner }
+    );
+
+    await dao.finalizeDao({ from: daoOwner });
+
+    const minterAddress = await dao.getAdapterAddress(sha3("erc20Minter"));
+    expect(minterAddress).to.not.be.null;
+
+    const proxToken = await ProxToken.new();
+    expect(proxToken).to.not.be.null;
+
+    await expectRevert(
+      erc20Minter.execute(dao.address, proxToken.address, toBN("10000"), {
+        from: daoOwner,
+      }),
+      "executorExt::accessDenied"
+    );
+  });
+
+  it("should not be possible to send ETH to the extension without the ACL permission", async () => {
+    const { dao, extensions } = await deployDefaultDao({
+      owner: daoOwner,
+      finalize: false,
+    });
+
+    const executorExt = extensions.executorExt;
+
+    await dao.finalizeDao({ from: daoOwner });
+
+    await expectRevert(
+      web3.eth.sendTransaction({
+        to: executorExt.address,
+        from: daoOwner,
+        gasPrice: toBN("0"),
+        value: toWei(toBN("1"), "ether"),
+      }),
+      "executorExt::accessDenied"
+    );
   });
 });

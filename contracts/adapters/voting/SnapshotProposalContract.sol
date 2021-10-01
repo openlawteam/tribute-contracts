@@ -4,7 +4,6 @@ pragma solidity ^0.8.0;
 
 import "../../core/DaoRegistry.sol";
 import "../../extensions/bank/Bank.sol";
-import "../../core/DaoConstants.sol";
 import "../../guards/MemberGuard.sol";
 import "../../guards/AdapterGuard.sol";
 import "../interfaces/IVoting.sol";
@@ -57,26 +56,6 @@ contract SnapshotProposalContract {
     bytes32 public constant VOTE_PAYLOAD_TYPEHASH =
         keccak256(abi.encodePacked(VOTE_PAYLOAD_TYPE));
 
-    uint256 public chainId;
-
-    function DOMAIN_SEPARATOR(DaoRegistry dao, address actionId)
-        public
-        view
-        returns (bytes32)
-    {
-        return
-            keccak256(
-                abi.encode(
-                    EIP712_DOMAIN_TYPEHASH,
-                    keccak256("Snapshot Message"), // string name
-                    keccak256("4"), // string version
-                    chainId, // uint256 chainId
-                    address(dao), // address verifyingContract,
-                    actionId
-                )
-            );
-    }
-
     struct ProposalMessage {
         uint256 timestamp;
         bytes32 spaceHash;
@@ -104,6 +83,26 @@ contract SnapshotProposalContract {
         bytes32 proposalId;
     }
 
+    uint256 public chainId;
+
+    function DOMAIN_SEPARATOR(DaoRegistry dao, address actionId)
+        public
+        view
+        returns (bytes32)
+    {
+        return
+            keccak256(
+                abi.encode(
+                    EIP712_DOMAIN_TYPEHASH,
+                    keccak256("Snapshot Message"), // string name
+                    keccak256("4"), // string version
+                    chainId, // uint256 chainId
+                    address(dao), // address verifyingContract,
+                    actionId
+                )
+            );
+    }
+
     constructor(uint256 _chainId) {
         chainId = _chainId;
     }
@@ -112,7 +111,7 @@ contract SnapshotProposalContract {
         DaoRegistry dao,
         address actionId,
         ProposalMessage memory message
-    ) public view returns (bytes32) {
+    ) external view returns (bytes32) {
         return
             keccak256(
                 abi.encodePacked(
@@ -162,7 +161,7 @@ contract SnapshotProposalContract {
         DaoRegistry dao,
         address actionId,
         VoteMessage memory message
-    ) public view returns (bytes32) {
+    ) external view returns (bytes32) {
         return
             keccak256(
                 abi.encodePacked(

@@ -539,7 +539,7 @@ describe("Adapter - Distribute", () => {
         from: daoOwner,
         gasPrice: toBN("0"),
       }),
-      "distribution completed or does not exist"
+      "distrib completed or not exist"
     );
   });
 
@@ -597,7 +597,7 @@ describe("Adapter - Distribute", () => {
         from: daoOwner,
         gasPrice: toBN("0"),
       }),
-      "distribution completed or does not exist"
+      "distrib completed or not exist"
     );
   });
 
@@ -754,7 +754,7 @@ describe("Adapter - Distribute", () => {
         from: daoOwner,
         gasPrice: toBN("0"),
       }),
-      "distribution completed or does not exist"
+      "distrib completed or not exist"
     );
   });
 });

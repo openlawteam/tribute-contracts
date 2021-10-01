@@ -3,12 +3,11 @@ pragma solidity ^0.8.0;
 // SPDX-License-Identifier: MIT
 
 import "./interfaces/IFinancing.sol";
-import "../core/DaoConstants.sol";
 import "../core/DaoRegistry.sol";
 import "../extensions/bank/Bank.sol";
 import "../adapters/interfaces/IVoting.sol";
-import "../guards/MemberGuard.sol";
 import "../guards/AdapterGuard.sol";
+import "../helpers/DaoHelper.sol";
 
 /**
 MIT License
@@ -34,12 +33,7 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
  */
 
-contract FinancingContract is
-    IFinancing,
-    DaoConstants,
-    MemberGuard,
-    AdapterGuard
-{
+contract FinancingContract is IFinancing, AdapterGuard {
     struct ProposalDetails {
         address applicant; // the proposal applicant address, can not be a reserved address
         uint256 amount; // the amount requested for funding
@@ -52,6 +46,8 @@ contract FinancingContract is
     /**
      * @notice default fallback function to prevent from sending ether to the contract.
      */
+    // The transaction is always reverted, so there are no risks of locking ether in the contract
+    //slither-disable-next-line locked-ether
     receive() external payable {
         revert("fallback revert");
     }
@@ -78,10 +74,11 @@ contract FinancingContract is
         bytes memory data
     ) external override reentrancyGuard(dao) {
         require(amount > 0, "invalid requested amount");
-        BankExtension bank = BankExtension(dao.getExtensionAddress(BANK));
+        BankExtension bank =
+            BankExtension(dao.getExtensionAddress(DaoHelper.BANK));
         require(bank.isTokenAllowed(token), "token not allowed");
         require(
-            isNotReservedAddress(applicant),
+            DaoHelper.isNotReservedAddress(applicant),
             "applicant using reserved address"
         );
         dao.submitProposal(proposalId);
@@ -91,7 +88,8 @@ contract FinancingContract is
         proposal.amount = amount;
         proposal.token = token;
 
-        IVoting votingContract = IVoting(dao.getAdapterAddress(VOTING));
+        IVoting votingContract =
+            IVoting(dao.getAdapterAddress(DaoHelper.VOTING));
         address sponsoredBy =
             votingContract.getSenderAddress(
                 dao,
@@ -128,9 +126,14 @@ contract FinancingContract is
             "proposal needs to pass"
         );
         dao.processProposal(proposalId);
-        BankExtension bank = BankExtension(dao.getExtensionAddress(BANK));
+        BankExtension bank =
+            BankExtension(dao.getExtensionAddress(DaoHelper.BANK));
 
-        bank.subtractFromBalance(GUILD, details.token, details.amount);
+        bank.subtractFromBalance(
+            DaoHelper.GUILD,
+            details.token,
+            details.amount
+        );
         bank.addToBalance(details.applicant, details.token, details.amount);
     }
 }

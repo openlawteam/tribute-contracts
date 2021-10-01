@@ -2,12 +2,11 @@ pragma solidity ^0.8.0;
 
 // SPDX-License-Identifier: MIT
 
-import "../core/DaoConstants.sol";
 import "../core/DaoRegistry.sol";
-import "../guards/MemberGuard.sol";
 import "../guards/AdapterGuard.sol";
 import "./interfaces/IConfiguration.sol";
 import "../adapters/interfaces/IVoting.sol";
+import "../helpers/DaoHelper.sol";
 
 /**
 MIT License
@@ -33,12 +32,7 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
  */
 
-contract ConfigurationContract is
-    IConfiguration,
-    DaoConstants,
-    MemberGuard,
-    AdapterGuard
-{
+contract ConfigurationContract is IConfiguration, AdapterGuard {
     struct Configuration {
         bytes32[] keys;
         uint256[] values;
@@ -47,9 +41,11 @@ contract ConfigurationContract is
     mapping(address => mapping(bytes32 => Configuration))
         private _configurations;
 
-    /*
-     * default fallback function to prevent from sending ether to the contract
+    /**
+     * @notice default fallback function to prevent from sending ether to the contract
      */
+    // The transaction is always reverted, so there are no risks of locking ether in the contract
+    //slither-disable-next-line locked-ether
     receive() external payable {
         revert("fallback revert");
     }
@@ -68,16 +64,13 @@ contract ConfigurationContract is
         bytes32[] calldata keys,
         uint256[] calldata values,
         bytes calldata data
-    ) external override onlyMember(dao) reentrancyGuard(dao) {
+    ) external override reentrancyGuard(dao) {
         require(
             keys.length == values.length,
             "must be an equal number of config keys and values"
         );
-
-        dao.submitProposal(proposalId);
-        _configurations[address(dao)][proposalId] = Configuration(keys, values);
-
-        IVoting votingContract = IVoting(dao.getAdapterAddress(VOTING));
+        IVoting votingContract =
+            IVoting(dao.getAdapterAddress(DaoHelper.VOTING));
         address sponsoredBy =
             votingContract.getSenderAddress(
                 dao,
@@ -86,6 +79,8 @@ contract ConfigurationContract is
                 msg.sender
             );
 
+        dao.submitProposal(proposalId);
+        _configurations[address(dao)][proposalId] = Configuration(keys, values);
         dao.sponsorProposal(proposalId, sponsoredBy, address(votingContract));
         votingContract.startNewVotingForProposal(dao, proposalId, data);
     }

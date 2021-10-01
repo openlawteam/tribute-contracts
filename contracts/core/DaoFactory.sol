@@ -2,7 +2,6 @@ pragma solidity ^0.8.0;
 pragma experimental ABIEncoderV2;
 
 // SPDX-License-Identifier: MIT
-import "./DaoConstants.sol";
 import "./DaoRegistry.sol";
 import "./CloneFactory.sol";
 
@@ -30,7 +29,7 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
  */
 
-contract DaoFactory is CloneFactory, DaoConstants {
+contract DaoFactory is CloneFactory {
     struct Adapter {
         bytes32 id;
         address addr;
@@ -71,10 +70,10 @@ contract DaoFactory is CloneFactory, DaoConstants {
         DaoRegistry dao = DaoRegistry(_createClone(identityAddress));
 
         address daoAddr = address(dao);
-        dao.initialize(creator, msg.sender);
-
         addresses[hashedName] = daoAddr;
         daos[daoAddr] = hashedName;
+
+        dao.initialize(creator, msg.sender);
 
         emit DAOCreated(daoAddr, daoName);
     }
@@ -85,7 +84,7 @@ contract DaoFactory is CloneFactory, DaoConstants {
      * @param daoName Name of the DAO to be searched.
      */
     function getDaoAddress(string calldata daoName)
-        public
+        external
         view
         returns (address)
     {

@@ -74,8 +74,8 @@ module.exports = {
       settings: {
         // See the solidity docs for advice about optimization and evmVersion
         optimizer: {
-          enabled: !(process.env.DISABLE_SOLC_OPTIMIZER == "true"),
-          runs: 200,
+          enabled: !(process.env.DISABLE_SOLC_OPTIMIZER === "true"),
+          runs: 10000,
         },
         //  evmVersion: "byzantium"
       },

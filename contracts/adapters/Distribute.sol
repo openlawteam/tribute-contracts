@@ -2,9 +2,7 @@ pragma solidity ^0.8.0;
 
 // SPDX-License-Identifier: MIT
 
-import "../core/DaoConstants.sol";
 import "../core/DaoRegistry.sol";
-import "../guards/MemberGuard.sol";
 import "../guards/AdapterGuard.sol";
 import "../adapters/interfaces/IVoting.sol";
 import "../adapters/interfaces/IDistribute.sol";
@@ -36,12 +34,7 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
  */
 
-contract DistributeContract is
-    IDistribute,
-    DaoConstants,
-    MemberGuard,
-    AdapterGuard
-{
+contract DistributeContract is IDistribute, AdapterGuard {
     // Event to indicate the distribution process has been completed
     // if the unitHolder address is 0x0, then the amount were distributed to all members of the DAO.
     event Distributed(
@@ -79,6 +72,8 @@ contract DistributeContract is
     /**
      * @notice default fallback function to prevent from sending ether to the contract.
      */
+    // The transaction is always reverted, so there are no risks of locking ether in the contract
+    //slither-disable-next-line locked-ether
     receive() external payable {
         revert("fallback revert");
     }
@@ -104,7 +99,8 @@ contract DistributeContract is
         uint256 amount,
         bytes calldata data
     ) external override reentrancyGuard(dao) {
-        IVoting votingContract = IVoting(dao.getAdapterAddress(VOTING));
+        IVoting votingContract =
+            IVoting(dao.getAdapterAddress(DaoHelper.VOTING));
         address submittedBy =
             votingContract.getSenderAddress(
                 dao,
@@ -115,40 +111,17 @@ contract DistributeContract is
 
         require(amount > 0, "invalid amount");
 
-        _submitProposal(
-            dao,
-            proposalId,
-            unitHolderAddr,
-            token,
-            amount,
-            data,
-            submittedBy
-        );
-    }
-
-    /**
-     * @notice Creates the proposal, starts the voting process and sponsors the proposal.
-     * @dev If the unit holder address was provided in the params, the unit holder must have enough units to receive the funds.
-     */
-    function _submitProposal(
-        DaoRegistry dao,
-        bytes32 proposalId,
-        address unitHolderAddr,
-        address token,
-        uint256 amount,
-        bytes calldata data,
-        address submittedBy
-    ) internal onlyMember2(dao, submittedBy) {
         // Creates the distribution proposal.
         dao.submitProposal(proposalId);
 
-        BankExtension bank = BankExtension(dao.getExtensionAddress(BANK));
+        BankExtension bank =
+            BankExtension(dao.getExtensionAddress(DaoHelper.BANK));
         require(bank.isTokenAllowed(token), "token not allowed");
 
         // Only check the number of units if there is a valid unit holder address.
         if (unitHolderAddr != address(0x0)) {
             // Gets the number of units of the member
-            uint256 units = bank.balanceOf(unitHolderAddr, UNITS);
+            uint256 units = bank.balanceOf(unitHolderAddr, DaoHelper.UNITS);
             // Checks if the member has enough units to reveice the funds.
             require(units > 0, "not enough units");
         }
@@ -164,7 +137,6 @@ contract DistributeContract is
         );
 
         // Starts the voting process for the proposal.
-        IVoting votingContract = IVoting(dao.getAdapterAddress(VOTING));
         votingContract.startNewVotingForProposal(dao, proposalId, data);
 
         // Sponsors the proposal.
@@ -180,6 +152,9 @@ contract DistributeContract is
      * @param dao The dao address.
      * @param proposalId The distribution proposal id.
      */
+    // The function is protected against reentrancy with the reentrancyGuard
+    // Which prevents concurrent modifications in the DAO registry.
+    //slither-disable-next-line reentrancy-no-eth
     function processProposal(DaoRegistry dao, bytes32 proposalId)
         external
         override
@@ -215,16 +190,12 @@ contract DistributeContract is
             distribution.blockNumber = block.number;
             ongoingDistributions[address(dao)] = proposalId;
 
-            BankExtension bank = BankExtension(dao.getExtensionAddress(BANK));
-            uint256 balance = bank.balanceOf(GUILD, distribution.token);
-            require(
-                balance - distribution.amount >= 0,
-                "not enough funds for the given token"
-            );
+            BankExtension bank =
+                BankExtension(dao.getExtensionAddress(DaoHelper.BANK));
 
             bank.internalTransfer(
-                GUILD,
-                ESCROW,
+                DaoHelper.GUILD,
+                DaoHelper.ESCROW,
                 distribution.token,
                 distribution.amount
             );
@@ -259,7 +230,7 @@ contract DistributeContract is
         uint256 blockNumber = distribution.blockNumber;
         require(
             distribution.status == DistributionStatus.IN_PROGRESS,
-            "distribution completed or does not exist"
+            "distrib completed or not exist"
         );
 
         // Check if the given index was already processed
@@ -270,12 +241,13 @@ contract DistributeContract is
         uint256 amount = distribution.amount;
 
         // Get the total number of units when the proposal was processed.
-        BankExtension bank = BankExtension(dao.getExtensionAddress(BANK));
+        BankExtension bank =
+            BankExtension(dao.getExtensionAddress(DaoHelper.BANK));
 
         address unitHolderAddr = distribution.unitHolderAddr;
         if (unitHolderAddr != address(0x0)) {
-            _distributeOne(bank, unitHolderAddr, blockNumber, token, amount);
             distribution.status = DistributionStatus.DONE;
+            _distributeOne(bank, unitHolderAddr, blockNumber, token, amount);
             emit Distributed(address(dao), token, amount, unitHolderAddr);
         } else {
             // Set the max index supported which is based on the number of members
@@ -283,6 +255,12 @@ contract DistributeContract is
             uint256 maxIndex = toIndex;
             if (maxIndex > nbMembers) {
                 maxIndex = nbMembers;
+            }
+
+            distribution.currentIndex = maxIndex;
+            if (maxIndex == nbMembers) {
+                distribution.status = DistributionStatus.DONE;
+                emit Distributed(address(dao), token, amount, unitHolderAddr);
             }
 
             _distributeAll(
@@ -294,12 +272,6 @@ contract DistributeContract is
                 token,
                 amount
             );
-
-            distribution.currentIndex = maxIndex;
-            if (maxIndex == nbMembers) {
-                distribution.status = DistributionStatus.DONE;
-                emit Distributed(address(dao), token, amount, unitHolderAddr);
-            }
         }
     }
 
@@ -316,10 +288,9 @@ contract DistributeContract is
     ) internal {
         uint256 memberTokens =
             DaoHelper.priorMemberTokens(bank, unitHolderAddr, blockNumber);
-        bank.getPriorAmount(unitHolderAddr, UNITS, blockNumber);
         require(memberTokens != 0, "not enough tokens");
         // Distributes the funds to 1 unit holder only
-        bank.internalTransfer(ESCROW, unitHolderAddr, token, amount);
+        bank.internalTransfer(DaoHelper.ESCROW, unitHolderAddr, token, amount);
     }
 
     /**
@@ -335,19 +306,19 @@ contract DistributeContract is
         address token,
         uint256 amount
     ) internal {
-        uint256 totalUnits = DaoHelper.priorTotalTokens(bank, blockNumber);
+        uint256 totalTokens = DaoHelper.priorTotalTokens(bank, blockNumber);
         // Distributes the funds to all unit holders of the DAO and ignores non-active members.
         for (uint256 i = currentIndex; i < maxIndex; i++) {
             address memberAddr = dao.getMemberAddress(i);
             uint256 memberUnits =
-                bank.getPriorAmount(memberAddr, UNITS, blockNumber);
+                bank.getPriorAmount(memberAddr, DaoHelper.UNITS, blockNumber);
             if (memberUnits > 0) {
                 uint256 amountToDistribute =
-                    FairShareHelper.calc(amount, memberUnits, totalUnits);
+                    FairShareHelper.calc(amount, memberUnits, totalTokens);
 
                 if (amountToDistribute > 0) {
                     bank.internalTransfer(
-                        ESCROW,
+                        DaoHelper.ESCROW,
                         memberAddr,
                         token,
                         amountToDistribute

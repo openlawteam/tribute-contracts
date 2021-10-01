@@ -2,15 +2,14 @@ pragma solidity ^0.8.0;
 
 // SPDX-License-Identifier: MIT
 
-import "../core/DaoConstants.sol";
 import "../core/DaoRegistry.sol";
 import "../extensions/nft/NFT.sol";
 import "../extensions/erc1155/ERC1155TokenExtension.sol";
 import "../extensions/bank/Bank.sol";
 import "../adapters/interfaces/IVoting.sol";
-import "../guards/MemberGuard.sol";
 import "../guards/AdapterGuard.sol";
-import "../utils/PotentialNewMember.sol";
+
+import "../helpers/DaoHelper.sol";
 import "@openzeppelin/contracts/token/ERC1155/IERC1155.sol";
 import "@openzeppelin/contracts/token/ERC1155/IERC1155Receiver.sol";
 import "@openzeppelin/contracts/token/ERC721/IERC721Receiver.sol";
@@ -41,14 +40,7 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
  */
 
-contract TributeNFTContract is
-    DaoConstants,
-    MemberGuard,
-    AdapterGuard,
-    IERC1155Receiver,
-    IERC721Receiver,
-    PotentialNewMember
-{
+contract TributeNFTContract is AdapterGuard, IERC1155Receiver, IERC721Receiver {
     using Address for address payable;
 
     struct ProcessProposal {
@@ -78,6 +70,8 @@ contract TributeNFTContract is
     /**
      * @notice default fallback function to prevent from sending ether to the contract.
      */
+    // The transaction is always reverted, so there are no risks of locking ether in the contract
+    //slither-disable-next-line locked-ether
     receive() external payable {
         revert("fallback revert");
     }
@@ -90,8 +84,9 @@ contract TributeNFTContract is
      * @param dao The DAO address.
      */
     function configureDao(DaoRegistry dao) external onlyAdapter(dao) {
-        BankExtension bank = BankExtension(dao.getExtensionAddress(BANK));
-        bank.registerPotentialNewInternalToken(UNITS);
+        BankExtension bank =
+            BankExtension(dao.getExtensionAddress(DaoHelper.BANK));
+        bank.registerPotentialNewInternalToken(DaoHelper.UNITS);
     }
 
     /**
@@ -116,11 +111,12 @@ contract TributeNFTContract is
         bytes memory data
     ) external reentrancyGuard(dao) {
         require(
-            isNotReservedAddress(applicant),
+            DaoHelper.isNotReservedAddress(applicant),
             "applicant is reserved address"
         );
         dao.submitProposal(proposalId);
-        IVoting votingContract = IVoting(dao.getAdapterAddress(VOTING));
+        IVoting votingContract =
+            IVoting(dao.getAdapterAddress(DaoHelper.VOTING));
         address sponsoredBy =
             votingContract.getSenderAddress(
                 dao,
@@ -129,10 +125,10 @@ contract TributeNFTContract is
                 msg.sender
             );
         dao.sponsorProposal(proposalId, sponsoredBy, address(votingContract));
-        potentialNewMember(
+        DaoHelper.potentialNewMember(
             applicant,
             dao,
-            BankExtension(dao.getExtensionAddress(BANK))
+            BankExtension(dao.getExtensionAddress(DaoHelper.BANK))
         );
 
         votingContract.startNewVotingForProposal(dao, proposalId, data);
@@ -171,17 +167,19 @@ contract TributeNFTContract is
         dao.processProposal(proposalId);
         //if proposal passes and its an erc721 token - use NFT Extension
         if (voteResult == IVoting.VotingState.PASS) {
-            BankExtension bank = BankExtension(dao.getExtensionAddress(BANK));
+            BankExtension bank =
+                BankExtension(dao.getExtensionAddress(DaoHelper.BANK));
             require(
-                bank.isInternalToken(UNITS),
+                bank.isInternalToken(DaoHelper.UNITS),
                 "UNITS token is not an internal token"
             );
 
             bank.addToBalance(
                 proposal.applicant,
-                UNITS,
+                DaoHelper.UNITS,
                 proposal.requestAmount
             );
+
             return (proposal, voteResult);
         } else if (
             voteResult == IVoting.VotingState.NOT_PASS ||
@@ -213,7 +211,8 @@ contract TributeNFTContract is
         require(proposal.nftAddr == msg.sender, "wrong NFT addr");
 
         if (voteResult == IVoting.VotingState.PASS) {
-            address erc1155ExtAddr = ppS.dao.getExtensionAddress(ERC1155_EXT);
+            address erc1155ExtAddr =
+                ppS.dao.getExtensionAddress(DaoHelper.ERC1155_EXT);
 
             IERC1155 erc1155 = IERC1155(msg.sender);
             erc1155.safeTransferFrom(
@@ -281,7 +280,7 @@ contract TributeNFTContract is
         //if proposal passes and its an erc721 token - use NFT Extension
         if (voteResult == IVoting.VotingState.PASS) {
             NFTExtension nftExt =
-                NFTExtension(ppS.dao.getExtensionAddress(NFT));
+                NFTExtension(ppS.dao.getExtensionAddress(DaoHelper.NFT));
             erc721.approve(address(nftExt), proposal.nftTokenId);
 
             nftExt.collect(proposal.nftAddr, proposal.nftTokenId);
