@@ -43,41 +43,50 @@ abstract contract Reimbursable {
      */
     modifier reimbursable(DaoRegistry dao) {
         uint256 gasStart = gasleft();
+        require(dao.lockedAt() != block.number, "reentrancy guard");
+        dao.lockSession();
+        uint256 gasPriceLimit = dao.getConfiguration(GasPriceLimit);
+        uint256 spendLimitPeriod = dao.getConfiguration(SpendLimitPeriod);
+        uint256 spendLimitEth = dao.getConfiguration(SpendLimitEth);
+        uint256 ethUsed = dao.getConfiguration(EthUsed);
+        uint256 rateLimitStart = dao.getConfiguration(RateLimitStart);
         _;
-        bool shouldReimburse = dao.getConfiguration(GasPriceLimit) > tx.gasprice;
+        dao.unlockSession();
+        bool shouldReimburse =
+            dao.getConfiguration(GasPriceLimit) > tx.gasprice;
 
         BankExtension bank =
             BankExtension(dao.getExtensionAddress(DaoHelper.BANK));
-        
-        shouldReimburse = shouldReimburse &&  bank.balanceOf(DaoHelper.GUILD, DaoHelper.ETH_TOKEN) > gasStart * tx.gasprice;
+
+        shouldReimburse =
+            shouldReimburse &&
+            bank.balanceOf(DaoHelper.GUILD, DaoHelper.ETH_TOKEN) >
+            gasStart * tx.gasprice;
 
         uint256 currentSpending = 0;
 
         uint256 gasSpent = gasStart - gasleft();
         uint256 payback = (gasSpent * tx.gasprice * 11) / 10; //paying back 110%
 
-        if (
-            block.timestamp - dao.getConfiguration(RateLimitStart) <
-            dao.getConfiguration(SpendLimitPeriod)
-        ) {
-            currentSpending = dao.getConfiguration(EthUsed) + payback;
+        if (block.timestamp - rateLimitStart < spendLimitPeriod) {
+            currentSpending = ethUsed + payback;
         } else {
             currentSpending = payback;
             dao.setConfiguration(RateLimitStart, block.timestamp);
         }
 
-        shouldReimburse = shouldReimburse && dao.getConfiguration(SpendLimitEth) > currentSpending;
+        shouldReimburse = shouldReimburse && spendLimitEth > currentSpending;
 
         dao.setConfiguration(EthUsed, currentSpending);
-        if(shouldReimburse) {
+        if (shouldReimburse) {
             bank.internalTransfer(
-            DaoHelper.GUILD,
-            msg.sender,
-            DaoHelper.ETH_TOKEN,
-            payback
-        );
+                DaoHelper.GUILD,
+                msg.sender,
+                DaoHelper.ETH_TOKEN,
+                payback
+            );
 
-        bank.withdraw(payable(msg.sender), DaoHelper.ETH_TOKEN, payback);
+            bank.withdraw(payable(msg.sender), DaoHelper.ETH_TOKEN, payback);
         }
     }
 }
