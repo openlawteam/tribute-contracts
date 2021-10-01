@@ -111,6 +111,7 @@ contract ConfigurationContract is IConfiguration, AdapterGuard {
         bytes32[] memory keys = configuration.keys;
         uint256[] memory values = configuration.values;
         for (uint256 i = 0; i < keys.length; i++) {
+            //slither-disable-next-line calls-loop
             dao.setConfiguration(keys[i], values[i]);
         }
     }

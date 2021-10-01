@@ -105,9 +105,11 @@ library GuildKickHelper {
         if (unitsAndLootToBurn > 0) {
             // Transfers the funds from the internal Guild account to the internal member's account.
             for (uint256 i = 0; i < nbTokens; i++) {
+                //slither-disable-next-line calls-loop
                 address token = bank.getToken(i);
                 // Calculates the fair amount of funds to ragequit based on the token, units and loot.
                 // It takes into account the historical guild balance when the kick proposal was created.
+                //slither-disable-next-line calls-loop
                 uint256 amountToRagequit =
                     FairShareHelper.calc(
                         bank.balanceOf(GUILD, token),
@@ -121,6 +123,7 @@ library GuildKickHelper {
                     // deliberately not using safemath here to keep overflows from preventing the function execution
                     // (which would break ragekicks) if a token overflows,
                     // it is because the supply was artificially inflated to oblivion, so we probably don"t care about it anyways
+                    //slither-disable-next-line calls-loop
                     bank.internalTransfer(
                         GUILD,
                         kickedMember,

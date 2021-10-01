@@ -187,9 +187,11 @@ contract RagequitContract is IRagequit, AdapterGuard {
             }
 
             // Checks if the token is supported by the Guild Bank.
+            //slither-disable-next-line calls-loop
             require(bank.isTokenAllowed(currentToken), "token not allowed");
 
             // Calculates the fair amount of funds to ragequit based on the token, units and loot
+            //slither-disable-next-line calls-loop
             uint256 amountToRagequit =
                 FairShareHelper.calc(
                     bank.balanceOf(DaoHelper.GUILD, currentToken),
@@ -203,6 +205,7 @@ contract RagequitContract is IRagequit, AdapterGuard {
                 // deliberately not using safemath here to keep overflows from preventing the function execution
                 // (which would break ragekicks) if a token overflows,
                 // it is because the supply was artificially inflated to oblivion, so we probably don"t care about it anyways
+                //slither-disable-next-line calls-loop
                 bank.internalTransfer(
                     DaoHelper.GUILD,
                     memberAddr,

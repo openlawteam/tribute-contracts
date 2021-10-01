@@ -148,6 +148,7 @@ contract ManagingContract is IManaging, AdapterGuard {
         }
 
         for (uint128 i = 0; i < proposal.extensionAclFlags.length; i++) {
+            //slither-disable-next-line calls-loop
             dao.setAclToExtensionForAdapter(
                 proposal.extensionAddresses[i],
                 proposal.adapterOrExtensionAddr,

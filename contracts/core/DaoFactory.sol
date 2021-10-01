@@ -111,6 +111,7 @@ contract DaoFactory is CloneFactory {
         );
 
         for (uint256 i = 0; i < adapters.length; i++) {
+            //slither-disable-next-line calls-loop
             dao.replaceAdapter(
                 adapters[i].id,
                 adapters[i].addr,
@@ -142,6 +143,7 @@ contract DaoFactory is CloneFactory {
         );
 
         for (uint256 i = 0; i < adapters.length; i++) {
+            //slither-disable-next-line calls-loop
             dao.setAclToExtensionForAdapter(
                 extension,
                 adapters[i].addr,

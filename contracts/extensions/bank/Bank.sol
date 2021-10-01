@@ -121,6 +121,7 @@ contract BankExtension is AdapterGuard, IExtension {
         internalTokens.push(DaoHelper.MEMBER_COUNT);
         uint256 nbMembers = _dao.getNbMembers();
         for (uint256 i = 0; i < nbMembers; i++) {
+            //slither-disable-next-line calls-loop
             addToBalance(_dao.getMemberAddress(i), DaoHelper.MEMBER_COUNT, 1);
         }
 

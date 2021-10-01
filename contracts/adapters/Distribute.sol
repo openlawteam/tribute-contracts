@@ -309,14 +309,18 @@ contract DistributeContract is IDistribute, AdapterGuard {
         uint256 totalTokens = DaoHelper.priorTotalTokens(bank, blockNumber);
         // Distributes the funds to all unit holders of the DAO and ignores non-active members.
         for (uint256 i = currentIndex; i < maxIndex; i++) {
+            //slither-disable-next-line calls-loop
             address memberAddr = dao.getMemberAddress(i);
+            //slither-disable-next-line calls-loop
             uint256 memberUnits =
                 bank.getPriorAmount(memberAddr, DaoHelper.UNITS, blockNumber);
             if (memberUnits > 0) {
+                //slither-disable-next-line calls-loop
                 uint256 amountToDistribute =
                     FairShareHelper.calc(amount, memberUnits, totalTokens);
 
                 if (amountToDistribute > 0) {
+                    //slither-disable-next-line calls-loop
                     bank.internalTransfer(
                         DaoHelper.ESCROW,
                         memberAddr,
