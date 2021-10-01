@@ -2,11 +2,11 @@
  * @type import('hardhat/config').HardhatUserConfig
  */
 
- require('hardhat-storage-layout');
+require("hardhat-storage-layout");
 
 module.exports = {
   solidity: {
-    version:"0.8.9",
+    version: "0.8.9",
     settings: {
       optimizer: {
         enabled: true,
@@ -17,9 +17,9 @@ module.exports = {
       },
       outputSelection: {
         "*": {
-            "*": ["storageLayout"],
+          "*": ["storageLayout"],
         },
       },
-    }
-  }
+    },
+  },
 };

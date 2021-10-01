@@ -36,9 +36,7 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
  */
 
-
 contract VotingContract is IVoting, MemberGuard, AdapterGuard {
-
     using ECDSA for bytes32;
 
     struct Voting {
@@ -53,7 +51,7 @@ contract VotingContract is IVoting, MemberGuard, AdapterGuard {
         bytes32 proposalId;
         uint256 choice;
         address submitter;
-        bytes signature; 
+        bytes signature;
     }
 
     bytes32 constant VotingPeriod = keccak256("voting.votingPeriod");
@@ -119,17 +117,28 @@ contract VotingContract is IVoting, MemberGuard, AdapterGuard {
         bytes memory data,
         address sender
     ) public view override returns (address) {
-        if(data.length == 0) {
-            return sender;    
+        if (data.length == 0) {
+            return sender;
         }
         PermitVote memory permitVote = abi.decode(data, (PermitVote));
-        bytes32 hash = keccak256(abi.encode(address(dao), actionId, permitVote.proposalId, permitVote.choice));
+        bytes32 hash =
+            keccak256(
+                abi.encode(
+                    address(dao),
+                    actionId,
+                    permitVote.proposalId,
+                    permitVote.choice
+                )
+            );
 
-        require(SignatureChecker.isValidSignatureNow(
-            permitVote.submitter,
-            hash.toEthSignedMessageHash(),
-            permitVote.signature
-        ), "invalid sig");
+        require(
+            SignatureChecker.isValidSignatureNow(
+                permitVote.submitter,
+                hash.toEthSignedMessageHash(),
+                permitVote.signature
+            ),
+            "invalid sig"
+        );
 
         return permitVote.submitter;
     }
@@ -157,8 +166,9 @@ contract VotingContract is IVoting, MemberGuard, AdapterGuard {
         uint256 voteValue,
         bytes memory data
     ) public {
-        (address adapterAddress,) = dao.proposals(proposalId);
-        address sender = getSenderAddress(dao, adapterAddress, data, msg.sender);
+        (address adapterAddress, ) = dao.proposals(proposalId);
+        address sender =
+            getSenderAddress(dao, adapterAddress, data, msg.sender);
 
         require(
             dao.getProposalFlag(proposalId, DaoRegistry.ProposalFlag.SPONSORED),
@@ -173,17 +183,11 @@ contract VotingContract is IVoting, MemberGuard, AdapterGuard {
             "the proposal has already been processed"
         );
 
-        require(
-            voteValue < 3 && voteValue > 0,
-            "only yes(1) & no(2) allowed"
-        );
+        require(voteValue < 3 && voteValue > 0, "only yes(1) & no(2) allowed");
 
         Voting storage vote = votes[address(dao)][proposalId];
 
-        require(
-            vote.startingTime > 0,
-            "voting has not started yet"
-        );
+        require(vote.startingTime > 0, "voting has not started yet");
         require(
             block.timestamp <
                 vote.startingTime + dao.getConfiguration(VotingPeriod),
@@ -200,7 +204,7 @@ contract VotingContract is IVoting, MemberGuard, AdapterGuard {
 
         vote.votes[memberAddr] = voteValue;
 
-        require(correctWeight > 0 , "no weight power!");
+        require(correctWeight > 0, "no weight power!");
 
         if (voteValue == 1) {
             vote.nbYes = vote.nbYes + correctWeight;

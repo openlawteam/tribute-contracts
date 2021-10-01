@@ -48,7 +48,11 @@ const {
   web3,
 } = require("../../utils/OZTestUtil.js");
 
-const { checkBalance, isMember, onboardingNewMember } = require("../../utils/TestUtils.js");
+const {
+  checkBalance,
+  isMember,
+  onboardingNewMember,
+} = require("../../utils/TestUtils.js");
 
 const daoOwner = accounts[0];
 const delegatedKey = accounts[9];
@@ -80,20 +84,34 @@ describe("Adapter - Reimbursement", () => {
 
   it("should be possible to join a DAO with ETH contribution", async () => {
     const applicant = members[2];
-  
+
     const dao = this.dao;
     const onboarding = this.adapters.onboarding;
     const reimbursement = this.adapters.reimbursement;
     const voting = this.adapters.voting;
-    
+
     // remaining amount to test sending back to proposer
     const ethAmount = unitPrice.mul(toBN(3)).add(remaining);
 
     const proposalId = getProposalCounter();
-    
-    await onboardingNewMember(getProposalCounter(), dao, onboarding, voting, members[2].address, daoOwner, unitPrice, UNITS);
 
-    const votingSigData = sha3(web3.eth.abi.encodeParameters(["address", "address", "bytes32", "uint256"], [dao.address, onboarding.address, proposalId, 1]));
+    await onboardingNewMember(
+      getProposalCounter(),
+      dao,
+      onboarding,
+      voting,
+      members[2].address,
+      daoOwner,
+      unitPrice,
+      UNITS
+    );
+
+    const votingSigData = sha3(
+      web3.eth.abi.encodeParameters(
+        ["address", "address", "bytes32", "uint256"],
+        [dao.address, onboarding.address, proposalId, 1]
+      )
+    );
     const voteData = web3.eth.abi.encodeParameter(
       {
         PermitVote: {
@@ -106,20 +124,24 @@ describe("Adapter - Reimbursement", () => {
       {
         proposalId,
         choice: "1",
-        signature: web3.eth.accounts.sign(votingSigData, applicant.privateKey).signature,
+        signature: web3.eth.accounts.sign(votingSigData, applicant.privateKey)
+          .signature,
         submitter: applicant.address,
       }
     );
 
-    const onboardingCall = onboarding.contract.methods.submitProposal(
-      dao.address,
-      proposalId,
-      applicant.address,
-      UNITS,
-      ethAmount,
-      voteData).encodeABI();
-      
-      /*
+    const onboardingCall = onboarding.contract.methods
+      .submitProposal(
+        dao.address,
+        proposalId,
+        applicant.address,
+        UNITS,
+        ethAmount,
+        voteData
+      )
+      .encodeABI();
+
+    /*
     await expectRevert(reimbursement.callFromHere(onboarding.address, onboardingCall,
       {
         from: daoOwner,
@@ -127,12 +149,10 @@ describe("Adapter - Reimbursement", () => {
       }
     ), "not enough funds");    
 */
-    await reimbursement.callFromHere(onboarding.address, onboardingCall,
-      {
-        from: daoOwner,
-        gasPrice: toBN("0"),
-      }
-    );
+    await reimbursement.callFromHere(onboarding.address, onboardingCall, {
+      from: daoOwner,
+      gasPrice: toBN("0"),
+    });
 
     await voting.submitVote(dao.address, proposalId, 1, {
       from: daoOwner,

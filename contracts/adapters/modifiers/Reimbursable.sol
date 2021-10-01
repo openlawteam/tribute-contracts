@@ -28,11 +28,60 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
  */
 abstract contract Reimbursable {
+    bytes32 internal constant GasPriceLimit =
+        keccak256("reimbursement.gasPriceLimit");
+    bytes32 internal constant SpendLimitPeriod =
+        keccak256("reimbursement.spendlimitPeriod");
+    bytes32 internal constant SpendLimitEth =
+        keccak256("reimbursement.spendlimitEth");
+    bytes32 internal constant EthUsed = keccak256("reimbursement.ethUsed");
+    bytes32 internal constant RateLimitStart =
+        keccak256("reimbursement.rateLimitStart");
+
     /**
      * @dev Only registered adapters are allowed to execute the function call.
      */
     modifier reimbursable(DaoRegistry dao) {
-        
+        uint256 gasStart = gasleft();
         _;
+
+        if (dao.getConfiguration(GasPriceLimit) > tx.gasprice) {
+            BankExtension bank =
+                BankExtension(dao.getExtensionAddress(DaoHelper.BANK));
+            require(
+                bank.balanceOf(DaoHelper.GUILD, DaoHelper.ETH_TOKEN) >
+                    gasStart * tx.gasprice,
+                "not enough funds"
+            );
+
+            uint256 currentSpending = 0;
+
+            uint256 gasSpent = gasStart - gasleft();
+            uint256 payback = (gasSpent * tx.gasprice * 11) / 10; //paying back 110%
+
+            if (
+                block.timestamp - dao.getConfiguration(RateLimitStart) <
+                dao.getConfiguration(SpendLimitPeriod)
+            ) {
+                currentSpending = dao.getConfiguration(EthUsed) + payback;
+            } else {
+                currentSpending = payback;
+            }
+
+            require(
+                dao.getConfiguration(SpendLimitEth) > currentSpending,
+                "reimbutsement::pay rate limit"
+            );
+
+            dao.setConfiguration(EthUsed, currentSpending);
+
+            bank.internalTransfer(
+                DaoHelper.GUILD,
+                msg.sender,
+                DaoHelper.ETH_TOKEN,
+                payback
+            );
+            bank.withdraw(payable(msg.sender), DaoHelper.ETH_TOKEN, payback);
+        }
     }
 }

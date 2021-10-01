@@ -282,7 +282,6 @@ module.exports = (() => {
     };
   };
 
-
   const generateMembers = (amount) => {
     let newAccounts = [];
     for (let i = 0; i < amount; i++) {

@@ -102,20 +102,20 @@ contract BankExtension is AdapterGuard, IExtension {
         _;
     }
 
-    function toString(AclFlag flag) internal pure returns(string memory){
-        if(flag == AclFlag.ADD_TO_BALANCE) {
+    function toString(AclFlag flag) internal pure returns (string memory) {
+        if (flag == AclFlag.ADD_TO_BALANCE) {
             return "add to balance";
         }
 
-        if(flag == AclFlag.SUB_FROM_BALANCE) {
+        if (flag == AclFlag.SUB_FROM_BALANCE) {
             return "sub from balance";
         }
 
-        if(flag == AclFlag.INTERNAL_TRANSFER) {
+        if (flag == AclFlag.INTERNAL_TRANSFER) {
             return "internal transfer";
         }
 
-        if(flag == AclFlag.WITHDRAW) {
+        if (flag == AclFlag.WITHDRAW) {
             return "withdraw";
         }
 

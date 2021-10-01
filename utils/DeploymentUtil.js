@@ -1171,7 +1171,6 @@ const entryNft = (contract, flags) => {
 };
 
 const entryBank = (contract, flags) => {
-  
   const values = [
     flags.ADD_TO_BALANCE,
     flags.SUB_FROM_BALANCE,
