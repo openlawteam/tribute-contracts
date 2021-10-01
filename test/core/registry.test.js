@@ -21,12 +21,14 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
  */
 
-const { fromUtf8, ETH_TOKEN } = require("../../utils/ContractUtil.js");
+const { toWei, toBN, fromAscii, fromUtf8, ETH_TOKEN } = require("../../utils/ContractUtil.js");
 
 const {
   expectRevert,
   expect,
   DaoRegistry,
+  web3,
+  accounts
 } = require("../../utils/OZTestUtil.js");
 
 describe("Core - Registry", () => {
@@ -110,5 +112,32 @@ describe("Core - Registry", () => {
       "0x0000000000000000000000000000000000000000"
     );
     expect(isMember).equal(false);
+  });
+
+  it("should not be possible to send ETH to the DaoRegistry via receive function", async () => {
+    let registry = await DaoRegistry.new();
+    await expectRevert(
+      web3.eth.sendTransaction({
+        to: registry.address,
+        from: accounts[0],
+        gasPrice: toBN("0"),
+        value: toWei(toBN("1"), "ether"),
+      }),
+      "revert"
+    );
+  });
+
+  it("should not be possible to send ETH to the DaoRegistry via fallback function", async () => {
+    let registry = await DaoRegistry.new();
+    await expectRevert(
+      web3.eth.sendTransaction({
+        to: registry.address,
+        from: accounts[0],
+        gasPrice: toBN("0"),
+        value: toWei(toBN("1"), "ether"),
+        data: fromAscii("should go to fallback func"),
+      }),
+      "revert"
+    );
   });
 });

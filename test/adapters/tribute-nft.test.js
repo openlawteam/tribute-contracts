@@ -26,6 +26,8 @@ SOFTWARE.
  */
 const {
   toBN,
+  toWei,
+  fromAscii,
   unitPrice,
   UNITS,
   GUILD,
@@ -41,6 +43,7 @@ const {
   expectRevert,
   expect,
   encodeProposalData,
+  web3,
 } = require("../../utils/OZTestUtil.js");
 
 const { onboardingNewMember, isMember } = require("../../utils/TestUtils.js");
@@ -196,7 +199,7 @@ describe("Adapter - TributeNFT", () => {
     const applicantIsActiveMember = await isMember(bank, nftOwner);
     expect(applicantIsActiveMember).equal(true);
 
-    // Check if asset was transfered to the NFT Extension contract
+    // Check if asset was transferred to the NFT Extension contract
     const newOwnerAddr = await pixelNFT.ownerOf(tokenId);
     expect(newOwnerAddr).equal(nftExt.address);
   });
@@ -521,11 +524,11 @@ describe("Adapter - TributeNFT", () => {
     const applicantIsActiveMember = await isMember(bank, nftOwner);
     expect(applicantIsActiveMember).equal(true);
 
-    // Check if asset was transfered to the NFT Extension account
+    // Check if asset was transferred to the NFT Extension account
     const extBalance = await erc1155Token.balanceOf(erc1155Ext.address, id);
     expect(extBalance.toString()).equal("3");
 
-    // Check if asset was transfered to from the owner account
+    // Check if asset was transferred to from the owner account
     const ownerBalance = await erc1155Token.balanceOf(nftOwner, id);
     expect(ownerBalance.toString()).equal("7");
   });
@@ -585,12 +588,39 @@ describe("Adapter - TributeNFT", () => {
     const applicantIsActiveMember = await isMember(bank, nftOwner);
     expect(applicantIsActiveMember).equal(false);
 
-    // Check if asset was transfered to the NFT Extension account
+    // Check if asset was transferred to the NFT Extension account
     const extBalance = await erc1155Token.balanceOf(erc1155Ext.address, id);
     expect(extBalance.toString()).equal("0");
 
-    // Check if asset was transfered to from the owner account
+    // Check if asset was transferred to from the owner account
     const ownerBalance = await erc1155Token.balanceOf(nftOwner, id);
     expect(ownerBalance.toString()).equal("10");
+  });
+
+  it("should not be possible to send ETH to the adapter via receive function", async () => {
+    const adapter = this.adapters.tributeNFT;
+    await expectRevert(
+      web3.eth.sendTransaction({
+        to: adapter.address,
+        from: daoOwner,
+        gasPrice: toBN("0"),
+        value: toWei(toBN("1"), "ether"),
+      }),
+      "revert"
+    );
+  });
+
+  it("should not be possible to send ETH to the adapter via fallback function", async () => {
+    const adapter = this.adapters.tributeNFT;
+    await expectRevert(
+      web3.eth.sendTransaction({
+        to: adapter.address,
+        from: daoOwner,
+        gasPrice: toBN("0"),
+        value: toWei(toBN("1"), "ether"),
+        data: fromAscii("should go to fallback func"),
+      }),
+      "revert"
+    );
   });
 });

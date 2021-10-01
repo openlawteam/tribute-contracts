@@ -26,7 +26,9 @@ SOFTWARE.
  */
 const {
   toBN,
+  toWei,
   fromUtf8,
+  fromAscii,
   unitPrice,
   UNITS,
   GUILD,
@@ -44,6 +46,7 @@ const {
   expectRevert,
   expect,
   OLToken,
+  web3,
 } = require("../../utils/OZTestUtil.js");
 
 const { onboardingNewMember } = require("../../utils/TestUtils.js");
@@ -584,6 +587,33 @@ describe("Adapter - Ragequit", () => {
         }
       ),
       "missing tokens"
+    );
+  });
+
+  it("should not be possible to send ETH to the adapter via receive function", async () => {
+    const adapter = this.adapters.ragequit;
+    await expectRevert(
+      web3.eth.sendTransaction({
+        to: adapter.address,
+        from: owner,
+        gasPrice: toBN("0"),
+        value: toWei(toBN("1"), "ether"),
+      }),
+      "revert"
+    );
+  });
+
+  it("should not be possible to send ETH to the adapter via fallback function", async () => {
+    const adapter = this.adapters.ragequit;
+    await expectRevert(
+      web3.eth.sendTransaction({
+        to: adapter.address,
+        from: owner,
+        gasPrice: toBN("0"),
+        value: toWei(toBN("1"), "ether"),
+        data: fromAscii("should go to fallback func"),
+      }),
+      "revert"
     );
   });
 });

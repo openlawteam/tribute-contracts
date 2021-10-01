@@ -24,7 +24,13 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
  */
-const { ETH_TOKEN, sha3 } = require("../../utils/ContractUtil.js");
+const {
+  ETH_TOKEN,
+  toBN,
+  sha3,
+  toWei,
+  fromAscii,
+} = require("../../utils/ContractUtil.js");
 
 const {
   deployDefaultDao,
@@ -34,6 +40,7 @@ const {
   expectRevert,
   expect,
   BankFactory,
+  web3,
 } = require("../../utils/OZTestUtil.js");
 
 describe("Extension - Bank", () => {
@@ -105,6 +112,33 @@ describe("Extension - Bank", () => {
     await expectRevert(
       bank.setMaxExternalTokens(10),
       "bank already initialized"
+    );
+  });
+
+  it("should not be possible to send ETH to the adapter via receive function", async () => {
+    const adapter = this.adapters.bankAdapter;
+    await expectRevert(
+      web3.eth.sendTransaction({
+        to: adapter.address,
+        from: daoOwner,
+        gasPrice: toBN("0"),
+        value: toWei(toBN("1"), "ether"),
+      }),
+      "revert"
+    );
+  });
+
+  it("should not be possible to send ETH to the adapter via fallback function", async () => {
+    const adapter = this.adapters.bankAdapter;
+    await expectRevert(
+      web3.eth.sendTransaction({
+        to: adapter.address,
+        from: daoOwner,
+        gasPrice: toBN("0"),
+        value: toWei(toBN("1"), "ether"),
+        data: fromAscii("should go to fallback func"),
+      }),
+      "revert"
     );
   });
 });

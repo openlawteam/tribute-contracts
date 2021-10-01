@@ -193,7 +193,7 @@ contract ERC20Extension is AdapterGuard, IExtension, IERC20 {
      *
      * Emits an {Approval} event.
      */
-     //slither-disable-next-line reentrancy-benign
+    //slither-disable-next-line reentrancy-benign
     function approve(address spender, uint256 amount)
         public
         override

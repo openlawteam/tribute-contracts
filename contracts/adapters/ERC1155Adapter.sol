@@ -34,15 +34,6 @@ SOFTWARE.
 
 contract ERC1155AdapterContract is AdapterGuard {
     /**
-     * @notice default fallback function to prevent from sending ether to the contract.
-     */
-    // The transaction is always reverted, so there are no risks of locking ether in the contract
-    //slither-disable-next-line locked-ether
-    receive() external payable {
-        revert("fallback revert");
-    }
-
-    /**
      * @notice Internally transfers the NFT from one owner to a new owner as long as both are active members.
      * @notice Reverts if the addresses of the owners are not members.
      * @notice Reverts if the fromOwner does not hold the NFT.

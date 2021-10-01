@@ -26,7 +26,9 @@ SOFTWARE.
  */
 const {
   toBN,
+  toWei,
   fromUtf8,
+  fromAscii,
   unitPrice,
   UNITS,
   GUILD,
@@ -41,13 +43,14 @@ const {
   advanceTime,
   accounts,
   expect,
+  expectRevert,
   web3,
 } = require("../../utils/OZTestUtil.js");
 
 const { checkBalance } = require("../../utils/TestUtils.js");
 
 const remaining = unitPrice.sub(toBN("50000000000000"));
-const myAccount = accounts[1];
+const daoOwner = accounts[1];
 const applicant = accounts[2];
 const newMember = accounts[3];
 const expectedGuildBalance = toBN("1200000000000000000");
@@ -60,7 +63,7 @@ function getProposalCounter() {
 describe("Adapter - Financing", () => {
   before("deploy dao", async () => {
     const { dao, adapters, extensions } = await deployDefaultDao({
-      owner: myAccount,
+      owner: daoOwner,
     });
     this.dao = dao;
     this.adapters = adapters;
@@ -82,7 +85,7 @@ describe("Adapter - Financing", () => {
 
     let proposalId = getProposalCounter();
 
-    //Add funds to the Guild Bank after sposoring a member to join the Guild
+    //Add funds to the Guild Bank after sponsoring a member to join the Guild
     await onboarding.submitProposal(
       this.dao.address,
       proposalId,
@@ -91,29 +94,28 @@ describe("Adapter - Financing", () => {
       unitPrice.mul(toBN(10)).add(remaining),
       [],
       {
-        from: myAccount,
+        from: daoOwner,
         gasPrice: toBN("0"),
       }
     );
 
     await voting.submitVote(this.dao.address, proposalId, 1, {
-      from: myAccount,
+      from: daoOwner,
       gasPrice: toBN("0"),
     });
     //should not be able to process before the voting period has ended
-    try {
-      await onboarding.processProposal(this.dao.address, proposalId, {
-        from: myAccount,
+    await expectRevert(
+      onboarding.processProposal(this.dao.address, proposalId, {
+        from: daoOwner,
         value: unitPrice.mul(toBN(10)).add(remaining),
         gasPrice: toBN("0"),
-      });
-    } catch (err) {
-      expect(err.reason).equal("proposal has not been voted on yet");
-    }
+      }),
+      "proposal has not been voted on yet"
+    );
 
     await advanceTime(10000);
     await onboarding.processProposal(this.dao.address, proposalId, {
-      from: myAccount,
+      from: daoOwner,
       value: unitPrice.mul(toBN(10)).add(remaining),
       gasPrice: toBN("0"),
     });
@@ -130,12 +132,12 @@ describe("Adapter - Financing", () => {
       ETH_TOKEN,
       requestedAmount,
       fromUtf8(""),
-      { from: myAccount, gasPrice: toBN("0") }
+      { from: daoOwner, gasPrice: toBN("0") }
     );
 
     //Member votes on the Financing proposal
     await voting.submitVote(this.dao.address, proposalId, 1, {
-      from: myAccount,
+      from: daoOwner,
       gasPrice: toBN("0"),
     });
 
@@ -145,7 +147,7 @@ describe("Adapter - Financing", () => {
     //Process Financing proposal after voting
     await advanceTime(10000);
     await financing.processProposal(this.dao.address, proposalId, {
-      from: myAccount,
+      from: daoOwner,
       gasPrice: toBN("0"),
     });
 
@@ -161,7 +163,7 @@ describe("Adapter - Financing", () => {
 
     const ethBalance = await web3.eth.getBalance(applicant);
     await bankAdapter.withdraw(this.dao.address, applicant, ETH_TOKEN, {
-      from: myAccount,
+      from: daoOwner,
       gasPrice: toBN("0"),
     });
     checkBalance(bank, applicant, ETH_TOKEN, 0);
@@ -176,7 +178,7 @@ describe("Adapter - Financing", () => {
     const financing = this.adapters.financing;
     const onboarding = this.adapters.onboarding;
 
-    //Add funds to the Guild Bank after sposoring a member to join the Guild
+    //Add funds to the Guild Bank after sponsoring a member to join the Guild
     let proposalId = getProposalCounter();
     await onboarding.submitProposal(
       this.dao.address,
@@ -186,19 +188,19 @@ describe("Adapter - Financing", () => {
       unitPrice.mul(toBN(10)).add(remaining),
       [],
       {
-        from: myAccount,
+        from: daoOwner,
         gasPrice: toBN("0"),
       }
     );
 
     await voting.submitVote(this.dao.address, proposalId, 1, {
-      from: myAccount,
+      from: daoOwner,
       gasPrice: toBN("0"),
     });
     await advanceTime(10000);
 
     await onboarding.processProposal(this.dao.address, proposalId, {
-      from: myAccount,
+      from: daoOwner,
       value: unitPrice.mul(toBN(10)).add(remaining),
       gasPrice: toBN("0"),
     });
@@ -214,27 +216,26 @@ describe("Adapter - Financing", () => {
       requestedAmount,
       fromUtf8(""),
       {
-        from: myAccount,
+        from: daoOwner,
         gasPrice: toBN("0"),
       }
     );
 
     //Member votes on the Financing proposal
     await voting.submitVote(this.dao.address, proposalId, 2, {
-      from: myAccount,
+      from: daoOwner,
       gasPrice: toBN("0"),
     });
 
     //Process Financing proposal after voting
     await advanceTime(10000);
-    try {
-      await financing.processProposal(this.dao.address, proposalId, {
-        from: myAccount,
+    await expectRevert(
+      financing.processProposal(this.dao.address, proposalId, {
+        from: daoOwner,
         gasPrice: toBN("0"),
-      });
-    } catch (err) {
-      expect(err.reason).equal("proposal needs to pass");
-    }
+      }),
+      "proposal needs to pass"
+    );
   });
 
   it("should not be possible to submit a proposal with a token that is not allowed", async () => {
@@ -243,7 +244,7 @@ describe("Adapter - Financing", () => {
     const onboarding = this.adapters.onboarding;
 
     let proposalId = getProposalCounter();
-    //Add funds to the Guild Bank after sposoring a member to join the Guild
+    //Add funds to the Guild Bank after sponsoring a member to join the Guild
     await onboarding.submitProposal(
       this.dao.address,
       proposalId,
@@ -252,42 +253,38 @@ describe("Adapter - Financing", () => {
       unitPrice.mul(toBN(10)).add(remaining),
       [],
       {
-        from: myAccount,
+        from: daoOwner,
         gasPrice: toBN("0"),
       }
     );
 
     await voting.submitVote(this.dao.address, proposalId, 1, {
-      from: myAccount,
+      from: daoOwner,
       gasPrice: toBN("0"),
     });
     await advanceTime(10000);
 
     await onboarding.processProposal(this.dao.address, proposalId, {
-      from: myAccount,
+      from: daoOwner,
       value: unitPrice.mul(toBN(10)).add(remaining),
       gasPrice: toBN("0"),
     });
 
-    try {
-      proposalId = getProposalCounter();
-      const invalidToken = "0x6941a80e1a034f57ed3b1d642fc58ddcb91e2596";
-      //Create Financing Request with a token that is not allowed
-      let requestedAmount = toBN(50000);
-      await financing.submitProposal(
+    proposalId = getProposalCounter();
+    const invalidToken = "0x6941a80e1a034f57ed3b1d642fc58ddcb91e2596";
+    //Create Financing Request with a token that is not allowed
+    let requestedAmount = toBN(50000);
+    await expectRevert(
+      financing.submitProposal(
         this.dao.address,
         proposalId,
         applicant,
         invalidToken,
         requestedAmount,
         fromUtf8("")
-      );
-      throw Error(
-        "should not be possible to submit a proposal with a token that is not allowed"
-      );
-    } catch (err) {
-      expect(err.reason).equal("token not allowed");
-    }
+      ),
+      "token not allowed"
+    );
   });
 
   it("should not be possible to submit a proposal to request funding with an amount.toEqual to zero", async () => {
@@ -296,7 +293,7 @@ describe("Adapter - Financing", () => {
     const onboarding = this.adapters.onboarding;
 
     let proposalId = getProposalCounter();
-    //Add funds to the Guild Bank after sposoring a member to join the Guild
+    //Add funds to the Guild Bank after sponsoring a member to join the Guild
     await onboarding.submitProposal(
       this.dao.address,
       proposalId,
@@ -305,60 +302,54 @@ describe("Adapter - Financing", () => {
       unitPrice.mul(toBN(10)).add(remaining),
       [],
       {
-        from: myAccount,
+        from: daoOwner,
         gasPrice: toBN("0"),
       }
     );
 
     await voting.submitVote(this.dao.address, proposalId, 1, {
-      from: myAccount,
+      from: daoOwner,
       gasPrice: toBN("0"),
     });
     await advanceTime(10000);
 
     await onboarding.processProposal(this.dao.address, proposalId, {
-      from: myAccount,
+      from: daoOwner,
       value: unitPrice.mul(toBN(10)).add(remaining),
       gasPrice: toBN("0"),
     });
 
-    try {
-      proposalId = getProposalCounter();
-      // Create Financing Request with amount = 0
-      let requestedAmount = toBN(0);
-      await financing.submitProposal(
+    proposalId = getProposalCounter();
+    // Create Financing Request with amount = 0
+    let requestedAmount = toBN(0);
+    await expectRevert(
+      financing.submitProposal(
         this.dao.address,
         proposalId,
         applicant,
         ETH_TOKEN,
         requestedAmount,
         fromUtf8("")
-      );
-      throw Error(
-        "should not be possible to submit a proposal with an amount == 0"
-      );
-    } catch (err) {
-      expect(err.reason).equal("invalid requested amount");
-    }
+      ),
+      "invalid requested amount"
+    );
   });
 
   it("should not be possible to request funding with an invalid proposal id", async () => {
     const financing = this.adapters.financing;
 
-    try {
-      let invalidProposalId = "0x0";
-      await financing.submitProposal(
+    let invalidProposalId = "0x0";
+    await expectRevert(
+      financing.submitProposal(
         this.dao.address,
         invalidProposalId,
         applicant,
         ETH_TOKEN,
         toBN(10),
         fromUtf8("")
-      );
-      throw Error("should not be possible to use proposal id == 0");
-    } catch (err) {
-      expect(err.reason).equal("invalid proposalId");
-    }
+      ),
+      "invalid proposalId"
+    );
   });
 
   it("should not be possible to reuse a proposalId", async () => {
@@ -367,7 +358,7 @@ describe("Adapter - Financing", () => {
 
     let proposalId = getProposalCounter();
 
-    //Add funds to the Guild Bank after sposoring a member to join the Guild
+    //Add funds to the Guild Bank after sponsoring a member to join the Guild
     await onboarding.submitProposal(
       this.dao.address,
       proposalId,
@@ -376,41 +367,60 @@ describe("Adapter - Financing", () => {
       unitPrice.mul(toBN(10)).add(remaining),
       [],
       {
-        from: myAccount,
+        from: daoOwner,
         gasPrice: toBN("0"),
       }
     );
 
-    try {
-      let reusedProposalId = proposalId;
-      await financing.submitProposal(
+    let reusedProposalId = proposalId;
+    await expectRevert(
+      financing.submitProposal(
         this.dao.address,
         reusedProposalId,
         applicant,
         ETH_TOKEN,
         toBN(50000),
         fromUtf8("")
-      );
-      throw Error("should not be possible to create a financing request");
-    } catch (err) {
-      expect(err.reason).equal("proposalId must be unique");
-    }
+      ),
+      "proposalId must be unique"
+    );
   });
 
   it("should not be possible to process a proposal that does not exist", async () => {
-    try {
-      let proposalId = getProposalCounter();
-      await this.adapters.financing.processProposal(
-        this.dao.address,
-        proposalId,
-        {
-          from: myAccount,
-          gasPrice: toBN("0"),
-        }
-      );
-      throw Error("should not be possible to process it");
-    } catch (err) {
-      expect(err.reason).equal("adapter not found");
-    }
+    let proposalId = getProposalCounter();
+    await expectRevert(
+      this.adapters.financing.processProposal(this.dao.address, proposalId, {
+        from: daoOwner,
+        gasPrice: toBN("0"),
+      }),
+      "adapter not found"
+    );
+  });
+
+  it("should not be possible to send ETH to the adapter via receive function", async () => {
+    const adapter = this.adapters.financing;
+    await expectRevert(
+      web3.eth.sendTransaction({
+        to: adapter.address,
+        from: daoOwner,
+        gasPrice: toBN("0"),
+        value: toWei(toBN("1"), "ether"),
+      }),
+      "revert"
+    );
+  });
+
+  it("should not be possible to send ETH to the adapter via fallback function", async () => {
+    const adapter = this.adapters.financing;
+    await expectRevert(
+      web3.eth.sendTransaction({
+        to: adapter.address,
+        from: daoOwner,
+        gasPrice: toBN("0"),
+        value: toWei(toBN("1"), "ether"),
+        data: fromAscii("should go to fallback func"),
+      }),
+      "revert"
+    );
   });
 });

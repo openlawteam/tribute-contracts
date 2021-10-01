@@ -70,15 +70,6 @@ contract DistributeContract is IDistribute, AdapterGuard {
     mapping(address => bytes32) public ongoingDistributions;
 
     /**
-     * @notice default fallback function to prevent from sending ether to the contract.
-     */
-    // The transaction is always reverted, so there are no risks of locking ether in the contract
-    //slither-disable-next-line locked-ether
-    receive() external payable {
-        revert("fallback revert");
-    }
-
-    /**
      * @notice Creates a distribution proposal for one or all members of the DAO, opens it for voting, and sponsors it.
      * @dev Only tokens that are allowed by the Bank are accepted.
      * @dev If the unitHolderAddr is 0x0, then the funds will be distributed to all members of the DAO.

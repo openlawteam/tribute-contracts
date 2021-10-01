@@ -26,7 +26,9 @@ SOFTWARE.
  */
 const {
   toBN,
+  toWei,
   sha3,
+  fromAscii,
   unitPrice,
   remaining,
   UNITS,
@@ -38,6 +40,7 @@ const {
   deployDaoWithOffchainVoting,
   accounts,
   expect,
+  expectRevert,
   takeChainSnapshot,
   revertChainSnapshot,
   web3,
@@ -348,5 +351,32 @@ describe("Adapter - Offchain Voting", () => {
         i
       );
     }
+  });
+
+  it("should not be possible to send ETH to the adapter via receive function", async () => {
+    const adapter = this.adapters.voting;
+    await expectRevert(
+      web3.eth.sendTransaction({
+        to: adapter.address,
+        from: daoOwner,
+        gasPrice: toBN("0"),
+        value: toWei(toBN("1"), "ether"),
+      }),
+      "revert"
+    );
+  });
+
+  it("should not be possible to send ETH to the adapter via fallback function", async () => {
+    const adapter = this.adapters.voting;
+    await expectRevert(
+      web3.eth.sendTransaction({
+        to: adapter.address,
+        from: daoOwner,
+        gasPrice: toBN("0"),
+        value: toWei(toBN("1"), "ether"),
+        data: fromAscii("should go to fallback func"),
+      }),
+      "revert"
+    );
   });
 });

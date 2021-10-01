@@ -27,6 +27,8 @@ SOFTWARE.
 const {
   sha3,
   toBN,
+  toWei,
+  fromAscii,
   UNITS,
   GUILD,
   ETH_TOKEN,
@@ -39,7 +41,7 @@ const {
   accounts,
   expectRevert,
   expect,
-  ERC20Extension,
+  web3,
 } = require("../../utils/OZTestUtil.js");
 
 const { checkBalance } = require("../../utils/TestUtils.js");
@@ -266,5 +268,32 @@ describe("Adapter - Coupon Onboarding ", () => {
     expect(otherAccountUnits.toString()).equal("0");
 
     await checkBalance(bank, GUILD, ETH_TOKEN, toBN("0"));
+  });
+
+  it("should not be possible to send ETH to the adapter via receive function", async () => {
+    const adapter = this.adapters.couponOnboarding;
+    await expectRevert(
+      web3.eth.sendTransaction({
+        to: adapter.address,
+        from: daoOwner,
+        gasPrice: toBN("0"),
+        value: toWei(toBN("1"), "ether"),
+      }),
+      "revert"
+    );
+  });
+
+  it("should not be possible to send ETH to the adapter via fallback function", async () => {
+    const adapter = this.adapters.couponOnboarding;
+    await expectRevert(
+      web3.eth.sendTransaction({
+        to: adapter.address,
+        from: daoOwner,
+        gasPrice: toBN("0"),
+        value: toWei(toBN("1"), "ether"),
+        data: fromAscii("should go to fallback func"),
+      }),
+      "revert"
+    );
   });
 });

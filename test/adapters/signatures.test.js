@@ -26,7 +26,8 @@ SOFTWARE.
  */
 const {
   toBN,
-  unitPrice,
+  toWei,
+  fromAscii,
   soliditySha3,
 } = require("../../utils/ContractUtil.js");
 
@@ -39,11 +40,12 @@ const {
   accounts,
   expect,
   expectRevert,
+  web3,
 } = require("../../utils/OZTestUtil.js");
 
 const { checkSignature } = require("../../utils/TestUtils.js");
 
-const myAccount = accounts[1];
+const daoOwner = accounts[1];
 const proposalCounter = proposalIdGenerator().generator;
 
 const arbitrarySignature =
@@ -63,7 +65,7 @@ function getProposalCounter() {
 describe("Adapter - Signatures", () => {
   before("deploy dao", async () => {
     const { dao, adapters, extensions } = await deployDefaultDao({
-      owner: myAccount,
+      owner: daoOwner,
     });
     this.dao = dao;
     this.adapters = adapters;
@@ -92,20 +94,20 @@ describe("Adapter - Signatures", () => {
       magicValue,
       [],
       {
-        from: myAccount,
+        from: daoOwner,
         gasPrice: toBN("0"),
       }
     );
 
     await voting.submitVote(this.dao.address, proposalId, 1, {
-      from: myAccount,
+      from: daoOwner,
       gasPrice: toBN("0"),
     });
 
     //should not be able to process before the voting period has ended
     try {
       await signatures.processProposal(this.dao.address, proposalId, {
-        from: myAccount,
+        from: daoOwner,
         gasPrice: toBN("0"),
       });
     } catch (err) {
@@ -114,7 +116,7 @@ describe("Adapter - Signatures", () => {
 
     await advanceTime(10000);
     await signatures.processProposal(this.dao.address, proposalId, {
-      from: myAccount,
+      from: daoOwner,
       gasPrice: toBN("0"),
     });
     // query erc1271 interface
@@ -142,14 +144,14 @@ describe("Adapter - Signatures", () => {
       magicValue,
       [],
       {
-        from: myAccount,
+        from: daoOwner,
         gasPrice: toBN("0"),
       }
     );
 
     //Member votes on the signature proposal
     await voting.submitVote(this.dao.address, proposalId, 2, {
-      from: myAccount,
+      from: daoOwner,
       gasPrice: toBN("0"),
     });
 
@@ -157,7 +159,7 @@ describe("Adapter - Signatures", () => {
 
     try {
       await signatures.processProposal(this.dao.address, proposalId, {
-        from: myAccount,
+        from: daoOwner,
         gasPrice: toBN("0"),
       });
     } catch (err) {
@@ -167,6 +169,33 @@ describe("Adapter - Signatures", () => {
     await expectRevert(
       erc1271.isValidSignature(arbitraryMsgHash, arbitrarySignature),
       "erc1271::invalid signature"
+    );
+  });
+
+  it("should not be possible to send ETH to the adapter via receive function", async () => {
+    const adapter = this.adapters.signatures;
+    await expectRevert(
+      web3.eth.sendTransaction({
+        to: adapter.address,
+        from: daoOwner,
+        gasPrice: toBN("0"),
+        value: toWei(toBN("1"), "ether"),
+      }),
+      "revert"
+    );
+  });
+
+  it("should not be possible to send ETH to the adapter via fallback function", async () => {
+    const adapter = this.adapters.signatures;
+    await expectRevert(
+      web3.eth.sendTransaction({
+        to: adapter.address,
+        from: daoOwner,
+        gasPrice: toBN("0"),
+        value: toWei(toBN("1"), "ether"),
+        data: fromAscii("should go to fallback func"),
+      }),
+      "revert"
     );
   });
 });

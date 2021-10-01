@@ -46,15 +46,6 @@ contract RagequitContract is IRagequit, AdapterGuard {
     );
 
     /**
-     * @notice default fallback function to prevent from sending ether to the contract.
-     */
-    // The transaction is always reverted, so there are no risks of locking ether in the contract
-    //slither-disable-next-line locked-ether
-    receive() external payable {
-        revert("fallback revert");
-    }
-
-    /**
      * @notice Allows a member or advisor of the DAO to opt out by burning the proportional amount of units/loot of the member.
      * @notice Anyone is allowed to call this function, but only members and advisors that have units are able to execute the entire ragequit process.
      * @notice The array of token needs to be sorted in ascending order before executing this call, otherwise the transaction will fail.

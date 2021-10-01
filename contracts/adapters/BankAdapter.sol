@@ -34,15 +34,6 @@ SOFTWARE.
 
 contract BankAdapterContract is AdapterGuard {
     /**
-     * @notice default fallback function to prevent from sending ether to the contract.
-     */
-    // The transaction is always reverted, so there are no risks of locking ether in the contract
-    //slither-disable-next-line locked-ether
-    receive() external payable {
-        revert("fallback revert");
-    }
-
-    /**
      * @notice Allows the member/advisor of the DAO to withdraw the funds from their internal bank account.
      * @notice Only accounts that are not reserved can withdraw the funds.
      * @notice If theres is no available balance in the user's account, the transaction is reverted.

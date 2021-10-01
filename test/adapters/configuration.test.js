@@ -24,7 +24,7 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
  */
-const { sha3, toBN } = require("../../utils/ContractUtil.js");
+const { sha3, toBN, fromAscii, toWei } = require("../../utils/ContractUtil.js");
 
 const {
   deployDefaultDao,
@@ -35,6 +35,7 @@ const {
   accounts,
   expectRevert,
   expect,
+  web3,
 } = require("../../utils/OZTestUtil.js");
 
 const owner = accounts[1];
@@ -151,6 +152,33 @@ describe("Adapter - Configuration", () => {
         gasPrice: toBN("0"),
       }),
       "must be an equal number of config keys and values"
+    );
+  });
+
+  it("should not be possible to send ETH to the adapter via receive function", async () => {
+    const adapter = this.adapters.configuration;
+    await expectRevert(
+      web3.eth.sendTransaction({
+        to: adapter.address,
+        from: owner,
+        gasPrice: toBN("0"),
+        value: toWei(toBN("1"), "ether"),
+      }),
+      "revert"
+    );
+  });
+
+  it("should not be possible to send ETH to the adapter via fallback function", async () => {
+    const adapter = this.adapters.configuration;
+    await expectRevert(
+      web3.eth.sendTransaction({
+        to: adapter.address,
+        from: owner,
+        gasPrice: toBN("0"),
+        value: toWei(toBN("1"), "ether"),
+        data: fromAscii("should go to fallback func"),
+      }),
+      "revert"
     );
   });
 });
