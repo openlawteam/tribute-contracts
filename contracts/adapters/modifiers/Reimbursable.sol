@@ -51,7 +51,6 @@ abstract contract Reimbursable {
         uint256 ethUsed = dao.getConfiguration(EthUsed);
         uint256 rateLimitStart = dao.getConfiguration(RateLimitStart);
         _;
-        dao.unlockSession();
         bool shouldReimburse =
             dao.getConfiguration(GasPriceLimit) > tx.gasprice;
 
@@ -88,5 +87,6 @@ abstract contract Reimbursable {
 
             bank.withdraw(payable(msg.sender), DaoHelper.ETH_TOKEN, payback);
         }
+        dao.unlockSession();
     }
 }
