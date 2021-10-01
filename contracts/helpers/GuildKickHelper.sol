@@ -102,34 +102,36 @@ library GuildKickHelper {
         uint256 lootToBurn = bank.balanceOf(kickedMember, LOCKED_LOOT);
         uint256 unitsAndLootToBurn = unitsToBurn + lootToBurn;
 
-        // Transfers the funds from the internal Guild account to the internal member's account.
-        for (uint256 i = 0; i < nbTokens; i++) {
-            address token = bank.getToken(i);
-            // Calculates the fair amount of funds to ragequit based on the token, units and loot.
-            // It takes into account the historical guild balance when the kick proposal was created.
-            uint256 amountToRagequit =
-                FairShareHelper.calc(
-                    bank.balanceOf(GUILD, token),
-                    unitsAndLootToBurn,
-                    initialTotalTokens
-                );
+        if (unitsAndLootToBurn > 0) {
+            // Transfers the funds from the internal Guild account to the internal member's account.
+            for (uint256 i = 0; i < nbTokens; i++) {
+                address token = bank.getToken(i);
+                // Calculates the fair amount of funds to ragequit based on the token, units and loot.
+                // It takes into account the historical guild balance when the kick proposal was created.
+                uint256 amountToRagequit =
+                    FairShareHelper.calc(
+                        bank.balanceOf(GUILD, token),
+                        unitsAndLootToBurn,
+                        initialTotalTokens
+                    );
 
-            // Ony execute the internal transfer if the user has enough funds to receive.
-            if (amountToRagequit > 0) {
-                // gas optimization to allow a higher maximum token limit
-                // deliberately not using safemath here to keep overflows from preventing the function execution
-                // (which would break ragekicks) if a token overflows,
-                // it is because the supply was artificially inflated to oblivion, so we probably don"t care about it anyways
-                bank.internalTransfer(
-                    GUILD,
-                    kickedMember,
-                    token,
-                    amountToRagequit
-                );
+                // Ony execute the internal transfer if the user has enough funds to receive.
+                if (amountToRagequit > 0) {
+                    // gas optimization to allow a higher maximum token limit
+                    // deliberately not using safemath here to keep overflows from preventing the function execution
+                    // (which would break ragekicks) if a token overflows,
+                    // it is because the supply was artificially inflated to oblivion, so we probably don"t care about it anyways
+                    bank.internalTransfer(
+                        GUILD,
+                        kickedMember,
+                        token,
+                        amountToRagequit
+                    );
+                }
             }
-        }
 
-        bank.subtractFromBalance(kickedMember, LOCKED_UNITS, unitsToBurn);
-        bank.subtractFromBalance(kickedMember, LOCKED_LOOT, lootToBurn);
+            bank.subtractFromBalance(kickedMember, LOCKED_UNITS, unitsToBurn);
+            bank.subtractFromBalance(kickedMember, LOCKED_LOOT, lootToBurn);
+        }
     }
 }

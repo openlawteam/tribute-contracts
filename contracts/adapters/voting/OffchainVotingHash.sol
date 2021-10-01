@@ -5,14 +5,12 @@ pragma experimental ABIEncoderV2;
 
 import "../../core/DaoRegistry.sol";
 import "../../extensions/bank/Bank.sol";
-import "../../core/DaoConstants.sol";
-import "../../guards/MemberGuard.sol";
-import "../../guards/AdapterGuard.sol";
 import "../../utils/Signatures.sol";
 import "../interfaces/IVoting.sol";
 import "./Voting.sol";
 import "./KickBadReporterAdapter.sol";
 import "./SnapshotProposalContract.sol";
+import "../../helpers/DaoHelper.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
 import "@openzeppelin/contracts/utils/cryptography/MerkleProof.sol";
 import "@openzeppelin/contracts/utils/cryptography/SignatureChecker.sol";
@@ -41,7 +39,7 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
  */
 
-contract OffchainVotingHashContract is DaoConstants {
+contract OffchainVotingHashContract {
     string public constant VOTE_RESULT_NODE_TYPE =
         "Message(uint64 timestamp,uint88 nbYes,uint88 nbNo,uint32 index,uint32 choice,bytes32 proposalId)";
     string public constant VOTE_RESULT_ROOT_TYPE = "Message(bytes32 root)";
@@ -85,7 +83,7 @@ contract OffchainVotingHashContract is DaoConstants {
         DaoRegistry dao,
         address actionId,
         bytes32 resultRoot
-    ) public view returns (bytes32) {
+    ) external view returns (bytes32) {
         return
             keccak256(
                 abi.encodePacked(
@@ -119,7 +117,7 @@ contract OffchainVotingHashContract is DaoConstants {
         DaoRegistry dao,
         address actionId,
         VoteResultNode memory node
-    ) public view returns (bytes32) {
+    ) external view returns (bytes32) {
         return
             keccak256(
                 abi.encodePacked(
@@ -153,7 +151,7 @@ contract OffchainVotingHashContract is DaoConstants {
     }
 
     function stringToUint(string memory s)
-        public
+        external
         pure
         returns (bool success, uint256 result)
     {
@@ -179,11 +177,13 @@ contract OffchainVotingHashContract is DaoConstants {
         OffchainVotingHashContract.VoteResultNode memory node,
         uint256 snapshot,
         VoteStepParams memory params
-    ) public view returns (bool) {
+    ) external view returns (bool) {
         address account = dao.getMemberAddress(node.index);
         address voter = dao.getPriorDelegateKey(account, snapshot);
-        BankExtension bank = BankExtension(dao.getExtensionAddress(BANK));
-        uint256 weight = bank.getPriorAmount(account, UNITS, snapshot);
+        BankExtension bank =
+            BankExtension(dao.getExtensionAddress(DaoHelper.BANK));
+        uint256 weight =
+            bank.getPriorAmount(account, DaoHelper.UNITS, snapshot);
 
         if (node.choice == 0) {
             if (params.previousYes != node.nbYes) {

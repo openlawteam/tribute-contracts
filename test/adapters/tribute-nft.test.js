@@ -40,24 +40,10 @@ const {
   accounts,
   expectRevert,
   expect,
-  web3,
+  encodeProposalData,
 } = require("../../utils/OZTestUtil.js");
 
 const { onboardingNewMember, isMember } = require("../../utils/TestUtils.js");
-
-const processProposal = (dao, proposalId) =>
-  web3.eth.abi.encodeParameter(
-    {
-      ProcessProposal: {
-        dao: "address",
-        proposalId: "bytes32",
-      },
-    },
-    {
-      dao: dao.address,
-      proposalId,
-    }
-  );
 
 describe("Adapter - TributeNFT", () => {
   const proposalCounter = proposalIdGenerator().generator;
@@ -195,7 +181,7 @@ describe("Adapter - TributeNFT", () => {
       nftOwner,
       tributeNFT.address,
       tokenId,
-      processProposal(dao, proposalId),
+      encodeProposalData(dao, proposalId),
       {
         from: nftOwner,
         gasPrice: toBN("0"),
@@ -231,7 +217,7 @@ describe("Adapter - TributeNFT", () => {
         nftOwner,
         tributeNFT.address,
         tokenId,
-        processProposal(dao, proposalId),
+        encodeProposalData(dao, proposalId),
         {
           from: nftOwner,
           gasPrice: toBN("0"),
@@ -278,7 +264,7 @@ describe("Adapter - TributeNFT", () => {
       nftOwner,
       tributeNFT.address,
       tokenId,
-      processProposal(dao, proposalId),
+      encodeProposalData(dao, proposalId),
       {
         from: nftOwner,
         gasPrice: toBN("0"),
@@ -355,7 +341,7 @@ describe("Adapter - TributeNFT", () => {
       nftOwner,
       tributeNFT.address,
       tokenId,
-      processProposal(dao, proposalId),
+      encodeProposalData(dao, proposalId),
       {
         from: nftOwner,
         gasPrice: toBN("0"),
@@ -404,7 +390,7 @@ describe("Adapter - TributeNFT", () => {
         nftOwner,
         tributeNFT.address,
         tokenId,
-        processProposal(dao, proposalId),
+        encodeProposalData(dao, proposalId),
         {
           from: nftOwner,
           gasPrice: toBN("0"),
@@ -470,7 +456,7 @@ describe("Adapter - TributeNFT", () => {
         nftOwner,
         tributeNFT.address,
         tokenId,
-        processProposal(dao, proposalId),
+        encodeProposalData(dao, proposalId),
         {
           from: nftOwner,
           gasPrice: toBN("0"),
@@ -523,7 +509,7 @@ describe("Adapter - TributeNFT", () => {
       tributeNFT.address,
       id,
       3,
-      processProposal(dao, proposalId),
+      encodeProposalData(dao, proposalId),
       { from: nftOwner }
     );
 
@@ -587,7 +573,7 @@ describe("Adapter - TributeNFT", () => {
       tributeNFT.address,
       id,
       3,
-      processProposal(dao, proposalId),
+      encodeProposalData(dao, proposalId),
       { from: nftOwner }
     );
 

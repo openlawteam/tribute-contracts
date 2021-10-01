@@ -3,11 +3,10 @@ pragma solidity ^0.8.0;
 // SPDX-License-Identifier: MIT
 
 import "./interfaces/IManaging.sol";
-import "../core/DaoConstants.sol";
 import "../core/DaoRegistry.sol";
 import "../adapters/interfaces/IVoting.sol";
-import "../guards/MemberGuard.sol";
 import "../guards/AdapterGuard.sol";
+import "../helpers/DaoHelper.sol";
 
 /**
 MIT License
@@ -33,17 +32,14 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
  */
 
-contract ManagingContract is
-    IManaging,
-    DaoConstants,
-    MemberGuard,
-    AdapterGuard
-{
+contract ManagingContract is IManaging, AdapterGuard {
     mapping(address => mapping(bytes32 => ProposalDetails)) public proposals;
 
-    /*
-     * default fallback function to prevent from sending ether to the contract
+    /**
+     * @notice default fallback function to prevent from sending ether to the contract
      */
+    // The transaction is always reverted, so there are no risks of locking ether in the contract
+    //slither-disable-next-line locked-ether
     receive() external payable {
         revert("fallback revert");
     }
@@ -64,7 +60,7 @@ contract ManagingContract is
         bytes32 proposalId,
         ProposalDetails calldata proposal,
         bytes calldata data
-    ) external override onlyMember(dao) reentrancyGuard(dao) {
+    ) external override reentrancyGuard(dao) {
         require(
             proposal.keys.length == proposal.values.length,
             "must be an equal number of config keys and values"
@@ -79,7 +75,7 @@ contract ManagingContract is
         require(proposal.flags < type(uint128).max, "proposal flags overflow");
 
         require(
-            isNotReservedAddress(proposal.adapterOrExtensionAddr),
+            DaoHelper.isNotReservedAddress(proposal.adapterOrExtensionAddr),
             "address is reserved"
         );
 
@@ -87,7 +83,8 @@ contract ManagingContract is
 
         proposals[address(dao)][proposalId] = proposal;
 
-        IVoting votingContract = IVoting(dao.getAdapterAddress(VOTING));
+        IVoting votingContract =
+            IVoting(dao.getAdapterAddress(DaoHelper.VOTING));
 
         address senderAddress =
             votingContract.getSenderAddress(

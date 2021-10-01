@@ -2,7 +2,6 @@ pragma solidity ^0.8.0;
 
 // SPDX-License-Identifier: MIT
 
-import "../../core/DaoConstants.sol";
 import "../../core/DaoRegistry.sol";
 import "../IExtension.sol";
 import "../../guards/AdapterGuard.sol";
@@ -40,7 +39,7 @@ SOFTWARE.
  * This contract was based on the OpenZeppelin Proxy contract:
  * https://github.com/OpenZeppelin/openzeppelin-contracts/blob/master/contracts/proxy/Proxy.sol
  */
-contract ExecutorExtension is DaoConstants, AdapterGuard, IExtension {
+contract ExecutorExtension is AdapterGuard, IExtension {
     using Address for address payable;
 
     bool public initialized = false; // internally tracks deployment under eip-1167 proxy pattern
@@ -61,7 +60,7 @@ contract ExecutorExtension is DaoConstants, AdapterGuard, IExtension {
                     address(this),
                     uint8(flag)
                 ),
-            "executor::accessDenied"
+            "executorExt::accessDenied"
         );
         _;
     }
@@ -72,8 +71,8 @@ contract ExecutorExtension is DaoConstants, AdapterGuard, IExtension {
      * @param creator The DAO's creator, who will be an initial member
      */
     function initialize(DaoRegistry _dao, address creator) external override {
-        require(!initialized, "executor::already initialized");
-        require(_dao.isMember(creator), "executor::not member");
+        require(!initialized, "executorExt::already initialized");
+        require(_dao.isMember(creator), "executorExt::not member");
         dao = _dao;
         initialized = true;
     }
@@ -89,12 +88,12 @@ contract ExecutorExtension is DaoConstants, AdapterGuard, IExtension {
         hasExtensionAccess(AclFlag.EXECUTE)
     {
         require(
-            isNotZeroAddress(implementation),
-            "implementation address can not be zero"
+            DaoHelper.isNotZeroAddress(implementation),
+            "executorExt: impl address can not be zero"
         );
         require(
-            isNotReservedAddress(implementation),
-            "implementation address can not be reserved"
+            DaoHelper.isNotReservedAddress(implementation),
+            "executorExt: impl address can not be reserved"
         );
 
         // solhint-disable-next-line no-inline-assembly
@@ -142,6 +141,8 @@ contract ExecutorExtension is DaoConstants, AdapterGuard, IExtension {
      * @dev Fallback function that delegates calls to the sender address. Will run if no other
      * function in the contract matches the call data.
      */
+    // Only senders with the EXECUTE ACL Flag enabled is allowed to send eth.
+    //slither-disable-next-line locked-ether
     fallback() external payable {
         _fallback();
     }
@@ -150,6 +151,8 @@ contract ExecutorExtension is DaoConstants, AdapterGuard, IExtension {
      * @dev Fallback function that delegates calls to the address returned by `_implementation()`. Will run if call data
      * is empty.
      */
+    // Only senders with the EXECUTE ACL Flag enabled is allowed to send eth.
+    //slither-disable-next-line locked-ether
     receive() external payable {
         _fallback();
     }

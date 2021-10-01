@@ -2,12 +2,10 @@ pragma solidity ^0.8.0;
 
 // SPDX-License-Identifier: MIT
 
-import "../core/DaoConstants.sol";
 import "../core/DaoRegistry.sol";
-import "../utils/PotentialNewMember.sol";
 import "../extensions/bank/Bank.sol";
+import "../helpers/DaoHelper.sol";
 import "../adapters/interfaces/IVoting.sol";
-import "../guards/MemberGuard.sol";
 import "../guards/AdapterGuard.sol";
 import "@openzeppelin/contracts/utils/Address.sol";
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
@@ -37,12 +35,7 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
  */
 
-contract TributeContract is
-    DaoConstants,
-    MemberGuard,
-    AdapterGuard,
-    PotentialNewMember
-{
+contract TributeContract is AdapterGuard {
     using Address for address;
     using SafeERC20 for IERC20;
 
@@ -72,6 +65,8 @@ contract TributeContract is
     /**
      * @notice default fallback function to prevent from sending ether to the contract.
      */
+    // The transaction is always reverted, so there are no risks of locking ether in the contract
+    //slither-disable-next-line locked-ether
     receive() external payable {
         revert("fallback revert");
     }
@@ -88,7 +83,8 @@ contract TributeContract is
         external
         onlyAdapter(dao)
     {
-        BankExtension bank = BankExtension(dao.getExtensionAddress(BANK));
+        BankExtension bank =
+            BankExtension(dao.getExtensionAddress(DaoHelper.BANK));
         bank.registerPotentialNewInternalToken(tokenAddrToMint);
     }
 
@@ -118,12 +114,13 @@ contract TributeContract is
         bytes memory data
     ) external reentrancyGuard(dao) {
         require(
-            isNotReservedAddress(applicant),
+            DaoHelper.isNotReservedAddress(applicant),
             "applicant is reserved address"
         );
 
         dao.submitProposal(proposalId);
-        IVoting votingContract = IVoting(dao.getAdapterAddress(VOTING));
+        IVoting votingContract =
+            IVoting(dao.getAdapterAddress(DaoHelper.VOTING));
         address sponsoredBy =
             votingContract.getSenderAddress(
                 dao,
@@ -133,10 +130,10 @@ contract TributeContract is
             );
 
         dao.sponsorProposal(proposalId, sponsoredBy, address(votingContract));
-        potentialNewMember(
+        DaoHelper.potentialNewMember(
             applicant,
             dao,
-            BankExtension(dao.getExtensionAddress(BANK))
+            BankExtension(dao.getExtensionAddress(DaoHelper.BANK))
         );
 
         votingContract.startNewVotingForProposal(dao, proposalId, data);
@@ -185,7 +182,8 @@ contract TributeContract is
         dao.processProposal(proposalId);
 
         if (voteResult == IVoting.VotingState.PASS) {
-            BankExtension bank = BankExtension(dao.getExtensionAddress(BANK));
+            BankExtension bank =
+                BankExtension(dao.getExtensionAddress(DaoHelper.BANK));
             address tokenToMint = proposal.tokenToMint;
             address applicant = proposal.applicant;
             uint256 tributeAmount = proposal.tributeAmount;
@@ -206,7 +204,7 @@ contract TributeContract is
             );
 
             bank.addToBalance(applicant, tokenToMint, proposal.requestAmount);
-            bank.addToBalance(GUILD, proposal.token, tributeAmount);
+            bank.addToBalance(DaoHelper.GUILD, proposal.token, tributeAmount);
         } else if (
             voteResult == IVoting.VotingState.NOT_PASS ||
             voteResult == IVoting.VotingState.TIE

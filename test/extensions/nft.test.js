@@ -85,7 +85,7 @@ describe("Extension - NFT", () => {
     const pixelNFT = this.testContracts.pixelNFT;
     await expectRevert(
       nftExtension.withdrawNFT(accounts[1], pixelNFT.address, 1),
-      "nft::accessDenied"
+      "erc721::accessDenied"
     );
   });
 
@@ -99,7 +99,7 @@ describe("Extension - NFT", () => {
     const nftExtension = this.extensions.nft;
     await expectRevert(
       nftExtension.initialize(this.dao.address, accounts[0]),
-      "already initialized"
+      "erc721::already initialized"
     );
   });
 

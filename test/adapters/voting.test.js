@@ -29,7 +29,6 @@ const {
   unitPrice,
   remaining,
   UNITS,
-  maximumChunks,
 } = require("../../utils/ContractUtil.js");
 
 const {

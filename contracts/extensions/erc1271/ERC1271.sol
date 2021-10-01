@@ -2,7 +2,6 @@ pragma solidity ^0.8.0;
 
 // SPDX-License-Identifier: MIT
 
-import "../../core/DaoConstants.sol";
 import "../../core/DaoRegistry.sol";
 import "../IExtension.sol";
 import "../../guards/AdapterGuard.sol";
@@ -35,7 +34,7 @@ SOFTWARE.
 /**
  * @dev Signs arbitrary messages and exposes ERC1271 interface
  */
-contract ERC1271Extension is DaoConstants, AdapterGuard, IExtension, IERC1271 {
+contract ERC1271Extension is AdapterGuard, IExtension, IERC1271 {
     using Address for address payable;
 
     bool public initialized = false; // internally tracks deployment under eip-1167 proxy pattern
@@ -76,8 +75,8 @@ contract ERC1271Extension is DaoConstants, AdapterGuard, IExtension, IERC1271 {
     function initialize(DaoRegistry _dao, address creator) external override {
         require(!initialized, "erc1271::already initialized");
         require(_dao.isMember(creator), "erc1271::not member");
-        dao = _dao;
         initialized = true;
+        dao = _dao;
     }
 
     /**
@@ -87,7 +86,7 @@ contract ERC1271Extension is DaoConstants, AdapterGuard, IExtension, IERC1271 {
      * @return The magic number in bytes4 in case the signature is valid, otherwise it reverts.
      */
     function isValidSignature(bytes32 permissionHash, bytes memory signature)
-        public
+        external
         view
         override
         returns (bytes4)
@@ -113,7 +112,7 @@ contract ERC1271Extension is DaoConstants, AdapterGuard, IExtension, IERC1271 {
         bytes32 permissionHash,
         bytes32 signatureHash,
         bytes4 magicValue
-    ) public hasExtensionAccess(AclFlag.SIGN) {
+    ) external hasExtensionAccess(AclFlag.SIGN) {
         signatures[permissionHash] = DAOSignature({
             signatureHash: signatureHash,
             magicValue: magicValue

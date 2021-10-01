@@ -2,9 +2,7 @@ pragma solidity ^0.8.0;
 
 // SPDX-License-Identifier: MIT
 
-import "../core/DaoConstants.sol";
 import "../core/DaoRegistry.sol";
-import "../guards/MemberGuard.sol";
 import "../guards/AdapterGuard.sol";
 import "./interfaces/IGuildKick.sol";
 import "../helpers/GuildKickHelper.sol";
@@ -36,7 +34,7 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
  */
 
-contract GuildKickContract is IGuildKick, MemberGuard, AdapterGuard {
+contract GuildKickContract is IGuildKick, AdapterGuard {
     // State of the guild kick proposal
     struct GuildKick {
         // The address of the member to kick out of the DAO.
@@ -49,6 +47,8 @@ contract GuildKickContract is IGuildKick, MemberGuard, AdapterGuard {
     /**
      * @notice default fallback function to prevent from sending ether to the contract.
      */
+    // The transaction is always reverted, so there are no risks of locking ether in the contract
+    //slither-disable-next-line locked-ether
     receive() external payable {
         revert("fallback revert");
     }
@@ -70,7 +70,8 @@ contract GuildKickContract is IGuildKick, MemberGuard, AdapterGuard {
         address memberToKick,
         bytes calldata data
     ) external override reentrancyGuard(dao) {
-        IVoting votingContract = IVoting(dao.getAdapterAddress(VOTING));
+        IVoting votingContract =
+            IVoting(dao.getAdapterAddress(DaoHelper.VOTING));
         address submittedBy =
             votingContract.getSenderAddress(
                 dao,
@@ -81,35 +82,16 @@ contract GuildKickContract is IGuildKick, MemberGuard, AdapterGuard {
         // Checks if the sender address is not the same as the member to kick to prevent auto kick.
         require(submittedBy != memberToKick, "use ragequit");
 
-        _submitKickProposal(dao, proposalId, memberToKick, data, submittedBy);
-    }
-
-    /**
-     * @notice Converts the units into loot to remove the voting power, and sponsors the kick proposal.
-     * @dev Only members that have units or loot can be kicked out.
-     * @dev Proposal ids can not be reused.
-     * @param dao The dao address.
-     * @param proposalId The guild kick proposal id.
-     * @param memberToKick The member address that should be kicked out of the DAO.
-     * @param data Additional information related to the kick proposal.
-     * @param submittedBy The address of the individual that created the kick proposal.
-     */
-    function _submitKickProposal(
-        DaoRegistry dao,
-        bytes32 proposalId,
-        address memberToKick,
-        bytes calldata data,
-        address submittedBy
-    ) internal onlyMember2(dao, submittedBy) {
         // Creates a guild kick proposal.
         dao.submitProposal(proposalId);
 
-        BankExtension bank = BankExtension(dao.getExtensionAddress(BANK));
+        BankExtension bank =
+            BankExtension(dao.getExtensionAddress(DaoHelper.BANK));
         // Gets the number of units of the member
-        uint256 unitsToBurn = bank.balanceOf(memberToKick, UNITS);
+        uint256 unitsToBurn = bank.balanceOf(memberToKick, DaoHelper.UNITS);
 
         // Gets the number of loot of the member
-        uint256 lootToBurn = bank.balanceOf(memberToKick, LOOT);
+        uint256 lootToBurn = bank.balanceOf(memberToKick, DaoHelper.LOOT);
 
         // Checks if the member has enough units to be converted to loot.
         // Overflow is not possible because max value for each var is 2^64
@@ -120,7 +102,6 @@ contract GuildKickContract is IGuildKick, MemberGuard, AdapterGuard {
         kicks[address(dao)][proposalId] = GuildKick(memberToKick);
 
         // Starts the voting process for the guild kick proposal.
-        IVoting votingContract = IVoting(dao.getAdapterAddress(VOTING));
         votingContract.startNewVotingForProposal(dao, proposalId, data);
 
         GuildKickHelper.lockMemberTokens(

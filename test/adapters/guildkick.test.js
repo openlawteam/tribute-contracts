@@ -136,17 +136,30 @@ describe("Adapter - GuildKick", () => {
   });
 
   it("should not be possible for a non-member to submit a guild kick proposal", async () => {
-    const owner = accounts[5];
-    const nonMember = accounts[2];
+    const nonMember = accounts[7];
+    const member = accounts[2];
+
+    const onboarding = this.adapters.onboarding;
+    const voting = this.adapters.voting;
+
+    await onboardingNewMember(
+      getProposalCounter(),
+      this.dao,
+      onboarding,
+      voting,
+      member,
+      owner,
+      unitPrice,
+      UNITS
+    );
 
     // Non member attemps to submit a guild kick proposal
-    const memberToKick = owner;
     const newProposalId = getProposalCounter();
     await expectRevert(
       guildKickProposal(
         this.dao,
         this.adapters.guildkick,
-        memberToKick,
+        member,
         nonMember,
         newProposalId
       ),
@@ -411,7 +424,7 @@ describe("Adapter - GuildKick", () => {
 
   it("should not be possible to process a kick proposal if the member to kick does not have any units nor loot", async () => {
     const member = owner;
-    const advisor = accounts[3];
+    const newMember = accounts[3];
     const nonMember = accounts[4];
 
     const onboarding = this.adapters.onboarding;
@@ -424,19 +437,20 @@ describe("Adapter - GuildKick", () => {
       this.dao,
       onboarding,
       voting,
-      advisor,
+      newMember,
       member,
       unitPrice,
-      LOOT
+      UNITS
     );
 
     // The member attemps to process the kick proposal, but the Advisor does not have any UNITS, only LOOT
+
     await expectRevert(
       guildKickProposal(
         this.dao,
         guildkickContract,
         nonMember,
-        member,
+        newMember,
         getProposalCounter()
       ),
       "no units or loot"

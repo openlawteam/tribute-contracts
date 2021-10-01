@@ -278,10 +278,10 @@ describe("Extension - ERC20", () => {
       daoOwner,
       configuration,
       voting,
-      [sha3("erc20ExtTransferType")],
+      [sha3("erc20.transfer.type")],
       [0]
     );
-    let transferType = await dao.getConfiguration(sha3("erc20ExtTransferType"));
+    let transferType = await dao.getConfiguration(sha3("erc20.transfer.type"));
     expect(transferType.toString()).equal("0");
 
     await onboardingNewMember(
@@ -316,7 +316,7 @@ describe("Extension - ERC20", () => {
       erc20Ext.transfer(externalAddressA, numberOfUnits.mul(toBN("1")), {
         from: applicantA,
       }),
-      "recipient is not a member"
+      "transfer not allowed"
     );
 
     //check balances of externalAddressA
@@ -347,10 +347,10 @@ describe("Extension - ERC20", () => {
       daoOwner,
       configuration,
       voting,
-      [sha3("erc20ExtTransferType")],
+      [sha3("erc20.transfer.type")],
       [0]
     );
-    let transferType = await dao.getConfiguration(sha3("erc20ExtTransferType"));
+    let transferType = await dao.getConfiguration(sha3("erc20.transfer.type"));
     expect(transferType.toString()).equal("0");
 
     await onboardingNewMember(
@@ -411,7 +411,7 @@ describe("Extension - ERC20", () => {
         numberOfUnits.mul(toBN("1")),
         { from: externalAddressA }
       ),
-      "recipient is not a member"
+      "transfer not allowed"
     );
 
     //check new balances of applicantA & externalAddressB
@@ -449,10 +449,10 @@ describe("Extension - ERC20", () => {
       daoOwner,
       configuration,
       voting,
-      [sha3("erc20ExtTransferType")],
+      [sha3("erc20.transfer.type")],
       [2]
     );
-    let transferType = await dao.getConfiguration(sha3("erc20ExtTransferType"));
+    let transferType = await dao.getConfiguration(sha3("erc20.transfer.type"));
     expect(transferType.toString()).equal("2");
     //onboard A
     await onboardingNewMember(
@@ -492,9 +492,12 @@ describe("Extension - ERC20", () => {
     expect(await isMember(bank, applicantB)).equal(true);
 
     //attempt transfer
-    await erc20Ext.transfer(applicantB, numberOfUnits.mul(toBN("1")), {
-      from: applicantA,
-    });
+    await expectRevert(
+      erc20Ext.transfer(applicantB, numberOfUnits.mul(toBN("1")), {
+        from: applicantA,
+      }),
+      "transfer not allowed"
+    );
 
     //applicantA should still have the same number of Units
     applicantAUnits = await erc20Ext.balanceOf(applicantA);
@@ -528,10 +531,10 @@ describe("Extension - ERC20", () => {
       daoOwner,
       configuration,
       voting,
-      [sha3("erc20ExtTransferType")],
+      [sha3("erc20.transfer.type")],
       [1]
     );
-    let transferType = await dao.getConfiguration(sha3("erc20ExtTransferType"));
+    let transferType = await dao.getConfiguration(sha3("erc20.transfer.type"));
     expect(transferType.toString()).equal("1");
     //onboard memberA
     await onboardingNewMember(
@@ -598,10 +601,10 @@ describe("Extension - ERC20", () => {
       daoOwner,
       configuration,
       voting,
-      [sha3("erc20ExtTransferType")],
+      [sha3("erc20.transfer.type")],
       [1]
     );
-    let transferType = await dao.getConfiguration(sha3("erc20ExtTransferType"));
+    let transferType = await dao.getConfiguration(sha3("erc20.transfer.type"));
     expect(transferType.toString()).equal("1");
     //onboard memberA
     await onboardingNewMember(

@@ -3,11 +3,11 @@ pragma solidity ^0.8.0;
 // SPDX-License-Identifier: MIT
 
 import "../../core/DaoRegistry.sol";
-import "../../core/DaoConstants.sol";
 import "../../extensions/bank/Bank.sol";
 import "../../guards/MemberGuard.sol";
 import "../../guards/AdapterGuard.sol";
 import "../interfaces/IVoting.sol";
+import "../../helpers/DaoHelper.sol";
 
 /**
 MIT License
@@ -33,7 +33,7 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
  */
 
-contract VotingContract is IVoting, DaoConstants, MemberGuard, AdapterGuard {
+contract VotingContract is IVoting, MemberGuard, AdapterGuard {
     struct Voting {
         uint256 nbYes;
         uint256 nbNo;
@@ -48,6 +48,15 @@ contract VotingContract is IVoting, DaoConstants, MemberGuard, AdapterGuard {
     mapping(address => mapping(bytes32 => Voting)) public votes;
 
     string public constant ADAPTER_NAME = "VotingContract";
+
+    /**
+     * @notice default fallback function to prevent from sending ether to the contract
+     */
+    // The transaction is always reverted, so there are no risks of locking ether in the contract
+    //slither-disable-next-line locked-ether
+    receive() external payable {
+        revert("fallback revert");
+    }
 
     /**
      * @notice returns the adapter name. Useful to identify wich voting adapter is actually configurated in the DAO.
@@ -146,9 +155,10 @@ contract VotingContract is IVoting, DaoConstants, MemberGuard, AdapterGuard {
         address memberAddr = dao.getAddressIfDelegated(msg.sender);
 
         require(vote.votes[memberAddr] == 0, "member has already voted");
-        BankExtension bank = BankExtension(dao.getExtensionAddress(BANK));
+        BankExtension bank =
+            BankExtension(dao.getExtensionAddress(DaoHelper.BANK));
         uint256 correctWeight =
-            bank.getPriorAmount(memberAddr, UNITS, vote.blockNumber);
+            bank.getPriorAmount(memberAddr, DaoHelper.UNITS, vote.blockNumber);
 
         vote.votes[memberAddr] = voteValue;
 

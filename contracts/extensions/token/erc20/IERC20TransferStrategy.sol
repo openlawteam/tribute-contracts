@@ -1,10 +1,7 @@
 pragma solidity ^0.8.0;
 
 // SPDX-License-Identifier: MIT
-
-import "../core/DaoRegistry.sol";
-import "../extensions/bank/Bank.sol";
-import "../helpers/DaoHelper.sol";
+import "../../../core/DaoRegistry.sol";
 
 /**
 MIT License
@@ -29,39 +26,22 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
  */
-abstract contract MemberGuard {
-    /**
-     * @dev Only members of the DAO are allowed to execute the function call.
-     */
-    modifier onlyMember(DaoRegistry dao) {
-        _onlyMember(dao, msg.sender);
-        _;
-    }
 
-    modifier onlyMember2(DaoRegistry dao, address _addr) {
-        _onlyMember(dao, _addr);
-        _;
-    }
+/**
+ *
+ * The ERC20Extension is a contract to give erc20 functionality
+ * to the internal token units held by DAO members inside the DAO itself.
+ */
+interface IERC20TransferStrategy {
+    enum AclFlag {REGISTER_TRANSFER}
+    enum ApprovalType {NONE, STANDARD, SPECIAL}
 
-    function _onlyMember(DaoRegistry dao, address _addr) internal view {
-        require(isActiveMember(dao, _addr), "onlyMember");
-    }
-
-    function isActiveMember(DaoRegistry dao, address _addr)
-        public
-        view
-        returns (bool)
-    {
-        address bankAddress = dao.extensions(DaoHelper.BANK);
-        if (bankAddress != address(0x0)) {
-            address memberAddr = dao.getAddressIfDelegated(_addr);
-            return
-                BankExtension(bankAddress).balanceOf(
-                    memberAddr,
-                    DaoHelper.UNITS
-                ) > 0;
-        }
-
-        return dao.isMember(_addr);
-    }
+    function evaluateTransfer(
+        DaoRegistry dao,
+        address tokenAddr,
+        address from,
+        address to,
+        uint256 amount,
+        address caller
+    ) external view returns (ApprovalType, uint256);
 }

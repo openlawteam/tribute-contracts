@@ -55,10 +55,12 @@ contract ERC1155TestToken is Context, AccessControlEnumerable, ERC1155 {
         uint256 amount,
         bytes memory data
     ) public virtual {
+        /*
         require(
             hasRole(MINTER_ROLE, _msgSender()),
             "ERC1155License: must have minter role to mint"
         );
+        */
 
         _mint(to, id, amount, data);
     }

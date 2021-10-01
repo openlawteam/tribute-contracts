@@ -2,7 +2,6 @@ pragma solidity ^0.8.0;
 
 // SPDX-License-Identifier: MIT
 
-import "../../core/DaoConstants.sol";
 import "../../core/DaoRegistry.sol";
 import "../../core/CloneFactory.sol";
 import "./NFT.sol";
@@ -31,7 +30,7 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
  */
 
-contract NFTCollectionFactory is CloneFactory, DaoConstants {
+contract NFTCollectionFactory is CloneFactory {
     address public identityAddress;
 
     event NFTCollectionCreated(address nftCollAddress);

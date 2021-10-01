@@ -46,10 +46,16 @@ const ETH_TOKEN = "0x0000000000000000000000000000000000000000";
 const DAI_TOKEN = "0x95b58a6bff3d14b7db2f5cb5f0ad413dc2940658";
 const ZERO_ADDRESS = "0x0000000000000000000000000000000000000000";
 
+const BANK = sha3("bank");
+const ERC1271 = sha3("erc1271");
+const NFT = sha3("nft");
+const ERC1155 = sha3("erc1155-ext");
+
 const numberOfUnits = toBN("1000000000000000");
 const unitPrice = toBN(toWei("120", "finney"));
 const remaining = unitPrice.sub(toBN("50000000000000"));
 const maximumChunks = toBN("11");
+const maxAmount = toBN("10000000000000000000");
 
 module.exports = {
   sha3,
@@ -63,6 +69,7 @@ module.exports = {
   toUtf8,
   toHex,
   maximumChunks,
+  maxAmount,
   numberOfUnits,
   unitPrice,
   remaining,
@@ -75,4 +82,8 @@ module.exports = {
   LOOT,
   ETH_TOKEN,
   ZERO_ADDRESS,
+  BANK,
+  NFT,
+  ERC1271,
+  ERC1155,
 };

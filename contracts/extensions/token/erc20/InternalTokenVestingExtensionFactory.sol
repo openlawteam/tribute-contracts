@@ -1,10 +1,9 @@
 pragma solidity ^0.8.0;
 
 // SPDX-License-Identifier: MIT
-
-import "../core/DaoRegistry.sol";
-import "../extensions/bank/Bank.sol";
-import "../helpers/DaoHelper.sol";
+import "../../../core/DaoRegistry.sol";
+import "../../../core/CloneFactory.sol";
+import "./InternalTokenVestingExtension.sol";
 
 /**
 MIT License
@@ -29,39 +28,22 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
  */
-abstract contract MemberGuard {
+
+contract InternalTokenVestingExtensionFactory is CloneFactory {
+    address public identityAddress;
+
+    event InternalTokenVestingExtensionCreated(address addr);
+
+    constructor(address _identityAddress) {
+        identityAddress = _identityAddress;
+    }
+
     /**
-     * @dev Only members of the DAO are allowed to execute the function call.
+     * @notice Creates a clone of the ERC20 Token Extension.
      */
-    modifier onlyMember(DaoRegistry dao) {
-        _onlyMember(dao, msg.sender);
-        _;
-    }
-
-    modifier onlyMember2(DaoRegistry dao, address _addr) {
-        _onlyMember(dao, _addr);
-        _;
-    }
-
-    function _onlyMember(DaoRegistry dao, address _addr) internal view {
-        require(isActiveMember(dao, _addr), "onlyMember");
-    }
-
-    function isActiveMember(DaoRegistry dao, address _addr)
-        public
-        view
-        returns (bool)
-    {
-        address bankAddress = dao.extensions(DaoHelper.BANK);
-        if (bankAddress != address(0x0)) {
-            address memberAddr = dao.getAddressIfDelegated(_addr);
-            return
-                BankExtension(bankAddress).balanceOf(
-                    memberAddr,
-                    DaoHelper.UNITS
-                ) > 0;
-        }
-
-        return dao.isMember(_addr);
+    function create() external {
+        InternalTokenVestingExtension ext =
+            InternalTokenVestingExtension(_createClone(identityAddress));
+        emit InternalTokenVestingExtensionCreated(address(ext));
     }
 }
