@@ -10,7 +10,7 @@ The key difference between an **[Adapter](/docs/tutorial/adapters/creating-an-ad
 Each extension needs to be configured with the DaoRegistry **[Access Flags](/docs/contracts/core/dao-registry#access-flags)** in order to access the **[Core Contracts](/docs/intro/design/core/introduction)**, but it also can define its own Access Flags that will be required if an Adapter interacts with it.
 
 :::tip
-Extensions can defined their own Access Flags to retrict access to its functions. Any Adapter that needs to interact with the extension needs to configure the custom access flags.
+Extensions can defined their own Access Flags to restrict access to its functions. Any Adapter that needs to interact with the extension needs to configure the custom access flags.
 :::
 
 ### Defining the Interface
@@ -36,7 +36,7 @@ contract MyExtension is DaoConstants, IExtension {
   // }
 
   /**
-   * @notice Initialises the extension to be associated with a DAO
+   * @notice Initializes the extension to be associated with a DAO
    * @dev Can only be called once
    * @param creator The DAO's creator, who will be an initial member
    */
@@ -161,7 +161,7 @@ The extension usually saves additional state that we don't want to propagate to 
   - onlyAdapter
   - hasExtensionAccess
 
-After implemeting the functions that your extension will expose, and setting the correct guards, names, and conventions you should have, at this state, an extension code similar to the following example:
+After creating the functions that your extension will expose, and setting the correct guards, names, and conventions you should have, at this state, an extension code similar to the following example:
 
 ```solidity
 contract MyExtension is DaoConstants, IExtension {
@@ -309,7 +309,7 @@ describe("Extension - ExtensionName", () => {
   });
 
   /**
-   * Before each test funtion we take a chain snapshot, which
+   * Before each test function we take a chain snapshot, which
    * contains the fresh DAO configurations with zero
    * modifications.
    */
@@ -332,7 +332,7 @@ describe("Extension - ExtensionName", () => {
    * Add a descriptive name to your test function that
    * covers the use case that you are testing.
    */
-  it("shoud be possible to ...", async () => {
+  it("should be possible to ...", async () => {
     // Access the global scope to read the contracts you may need.
     const dao = this.dao;
     const configuration = this.adapters.configuration;
@@ -356,7 +356,7 @@ describe("Extension - ExtensionName", () => {
 });
 ```
 
-Considering the extension that you are creating is not part of the default set of extensions, you need to declare import it, and the Factory from **[utils/OZTestUtil.js](https://github.com/openlawteam/tribute-contracts/blob/master/utils/OZTestUtil.js)**, then deploy both to be able to configure the extension access flags after it is used in the test suite, but it needs to happen _before_ the DAO is finalized. When the DAO is finalized it means that the DAO initialization has been completed, so any state changes must be done though a proposal, instead of doing it through the deployment phase. Here is a simple example of an extension configurated after its creation, but before the DAO creation is finalized:
+Considering the extension that you are creating is not part of the default set of extensions, you need to declare import it, and the Factory from **[utils/OZTestUtil.js](https://github.com/openlawteam/tribute-contracts/blob/master/utils/OZTestUtil.js)**, then deploy both to be able to configure the extension access flags after it is used in the test suite, but it needs to happen _before_ the DAO is finalized. When the DAO is finalized it means that the DAO initialization has been completed, so any state changes must be done though a proposal, instead of doing it through the deployment phase. Here is a simple example of an extension configured after its creation, but before the DAO creation is finalized:
 
 ```javascript
 
@@ -421,7 +421,7 @@ describe("Extension - ExtensionName", () => {
       [
         entryAccessFlag(mySampleAdapter.address, {
           EXECUTE: true,  // the name of the ACL flag, that needs to be enabled.
-          // The flags deleclared here must match the flags declared in your new extension.
+          // The flags declared here must match the flags declared in your new extension.
         }),
       ],
       { from: owner }

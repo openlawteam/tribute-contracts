@@ -80,7 +80,6 @@ Adapters that allow new individuals to join the DAO by providing some sort of tr
 
 Adapters that allow different types governance systems within the DAO. Examples:
 
-- **[Batch Voting](/docs/contracts/adapters/voting/batch-voting-adapter)**: adds the simple batching on chain voting governance process to the DAO.
 - **[Basic Voting](/docs/contracts/adapters/voting/basic-voting-adapter)**: adds the no quorum, simple majority on chain voting governance process to the DAO.
 - **[Offchain Voting](/docs/contracts/adapters/voting/offchain-voting-adapter)**: adds the offchain voting governance process to the DAO to support gasless voting.
 

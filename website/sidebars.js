@@ -66,7 +66,6 @@ const allAdapters = {
     {
       Voting: [
         "contracts/adapters/voting/basic-voting-adapter",
-        "contracts/adapters/voting/batch-voting-adapter",
         "contracts/adapters/voting/offchain-voting-adapter",
       ],
     },
