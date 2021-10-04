@@ -104,6 +104,7 @@ contract RagequitContract is IRagequit, AdapterGuard {
      * @param tokens The array of tokens that the funds should be sent to.
      * @param bank The bank extension.
      */
+    // slither-disable-next-line reentrancy-events
     function _prepareRagequit(
         DaoRegistry dao,
         address memberAddr,
@@ -206,7 +207,9 @@ contract RagequitContract is IRagequit, AdapterGuard {
             }
         }
 
-        // Once the units and loot were burned, and the transfers completed, emit an event to indicate a successfull operation.
+        // Once the units and loot were burned, and the transfers completed,
+        // emit an event to indicate a successfull operation.
+        //slither-disable-next-line reentrancy-events
         emit MemberRagequit(
             daoAddress,
             memberAddr,

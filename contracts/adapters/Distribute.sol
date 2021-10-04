@@ -82,6 +82,7 @@ contract DistributeContract is IDistribute, AdapterGuard {
      * @param amount The amount to distribute.
      * @param data Additional information related to the distribution proposal.
      */
+    // slither-disable-next-line reentrancy-benign
     function submitProposal(
         DaoRegistry dao,
         bytes32 proposalId,
@@ -240,6 +241,7 @@ contract DistributeContract is IDistribute, AdapterGuard {
         if (unitHolderAddr != address(0x0)) {
             distribution.status = DistributionStatus.DONE;
             _distributeOne(bank, unitHolderAddr, blockNumber, token, amount);
+            //slither-disable-next-line reentrancy-events
             emit Distributed(address(dao), token, amount, unitHolderAddr);
         } else {
             // Set the max index supported which is based on the number of members
@@ -252,6 +254,7 @@ contract DistributeContract is IDistribute, AdapterGuard {
             distribution.currentIndex = maxIndex;
             if (maxIndex == nbMembers) {
                 distribution.status = DistributionStatus.DONE;
+                //slither-disable-next-line reentrancy-events
                 emit Distributed(address(dao), token, amount, unitHolderAddr);
             }
 

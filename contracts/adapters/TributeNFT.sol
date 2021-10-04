@@ -92,6 +92,7 @@ contract TributeNFTContract is AdapterGuard, IERC1155Receiver, IERC721Receiver {
      * @param requestAmount The amount requested of DAO internal tokens (UNITS).
      * @param data Additional information related to the tribute proposal.
      */
+    // slither-disable-next-line reentrancy-benign
     function submitProposal(
         DaoRegistry dao,
         bytes32 proposalId,

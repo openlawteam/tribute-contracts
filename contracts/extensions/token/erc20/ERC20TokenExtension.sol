@@ -193,7 +193,7 @@ contract ERC20Extension is AdapterGuard, IExtension, IERC20 {
      *
      * Emits an {Approval} event.
      */
-    //slither-disable-next-line reentrancy-benign
+    // slither-disable-next-line reentrancy-benign
     function approve(address spender, uint256 amount)
         public
         override
@@ -216,6 +216,7 @@ contract ERC20Extension is AdapterGuard, IExtension, IERC20 {
         );
 
         _allowances[senderAddr][spender] = amount;
+        // slither-disable-next-line reentrancy-events
         emit Approval(senderAddr, spender, amount);
         return true;
     }
@@ -251,8 +252,6 @@ contract ERC20Extension is AdapterGuard, IExtension, IERC20 {
     ) internal {
         DaoHelper.potentialNewMember(recipient, dao, bank);
         bank.internalTransfer(senderAddr, recipient, tokenAddress, amount);
-
-        emit Transfer(senderAddr, recipient, amount);
     }
 
     /**
@@ -304,6 +303,8 @@ contract ERC20Extension is AdapterGuard, IExtension, IERC20 {
 
         if (approvalType == IERC20TransferStrategy.ApprovalType.SPECIAL) {
             _transferInternal(sender, recipient, amount, bank);
+            //slither-disable-next-line reentrancy-events
+            emit Transfer(sender, recipient, amount);
             return true;
         }
 
@@ -322,6 +323,8 @@ contract ERC20Extension is AdapterGuard, IExtension, IERC20 {
 
         if (allowedAmount >= amount) {
             _transferInternal(sender, recipient, amount, bank);
+            //slither-disable-next-line reentrancy-events
+            emit Transfer(sender, recipient, amount);
             return true;
         }
 

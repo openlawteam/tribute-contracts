@@ -146,6 +146,7 @@ contract BankExtension is AdapterGuard, IExtension {
             erc20.safeTransfer(member, amount);
         }
 
+        //slither-disable-next-line reentrancy-events
         emit Withdraw(member, tokenAddr, uint160(amount));
     }
 
@@ -476,6 +477,7 @@ contract BankExtension is AdapterGuard, IExtension {
             );
             numCheckpoints[token][member] = nCheckpoints + 1;
         }
+        //slither-disable-next-line reentrancy-events
         emit NewBalance(member, token, newAmount);
     }
 }

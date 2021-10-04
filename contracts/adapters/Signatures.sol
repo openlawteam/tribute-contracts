@@ -53,6 +53,7 @@ contract SignaturesContract is ISignatures, AdapterGuard {
      * @param magicValue The value to return when a signature is valid
      * @param data Additional details about the signature proposal.
      */
+    // slither-disable-next-line reentrancy-benign
     function submitProposal(
         DaoRegistry dao,
         bytes32 proposalId,

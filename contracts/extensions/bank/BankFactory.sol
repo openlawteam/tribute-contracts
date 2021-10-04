@@ -47,6 +47,7 @@ contract BankFactory is CloneFactory {
     function createBank(uint8 maxExternalTokens) external {
         BankExtension bank = BankExtension(_createClone(identityAddress));
         bank.setMaxExternalTokens(maxExternalTokens);
+        //slither-disable-next-line reentrancy-events
         emit BankCreated(address(bank));
     }
 }

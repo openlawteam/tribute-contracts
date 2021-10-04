@@ -45,6 +45,7 @@ contract NFTCollectionFactory is CloneFactory {
      */
     function createNFTCollection() external {
         NFTExtension extension = NFTExtension(_createClone(identityAddress));
+        // slither-disable-next-line reentrancy-events
         emit NFTCollectionCreated(address(extension));
     }
 }

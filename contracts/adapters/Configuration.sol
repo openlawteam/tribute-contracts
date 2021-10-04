@@ -49,6 +49,7 @@ contract ConfigurationContract is IConfiguration, AdapterGuard {
      * @param values The token to receive the funds.
      * @param data Additional details about the financing proposal.
      */
+    // slither-disable-next-line reentrancy-benign
     function submitProposal(
         DaoRegistry dao,
         bytes32 proposalId,
@@ -81,6 +82,7 @@ contract ConfigurationContract is IConfiguration, AdapterGuard {
      * @param dao The DAO Address.
      * @param proposalId The proposal id.
      */
+    // slither-disable-next-line reentrancy-benign
     function processProposal(DaoRegistry dao, bytes32 proposalId)
         external
         override

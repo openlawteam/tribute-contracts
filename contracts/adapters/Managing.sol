@@ -46,6 +46,7 @@ contract ManagingContract is IManaging, AdapterGuard {
      * @param proposal The proposal details
      * @param data Additional data to pass to the voting contract and identify the submitter
      */
+    // slither-disable-next-line reentrancy-benign
     function submitProposal(
         DaoRegistry dao,
         bytes32 proposalId,
@@ -97,6 +98,7 @@ contract ManagingContract is IManaging, AdapterGuard {
      * @param dao The dao address.
      * @param proposalId The guild kick proposal id.
      */
+    // slither-disable-next-line reentrancy-benign
     function processProposal(DaoRegistry dao, bytes32 proposalId)
         external
         override

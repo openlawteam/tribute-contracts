@@ -74,7 +74,7 @@ contract DaoFactory is CloneFactory {
         daos[daoAddr] = hashedName;
 
         dao.initialize(creator, msg.sender);
-
+        //slither-disable-next-line reentrancy-events
         emit DAOCreated(daoAddr, daoName);
     }
 

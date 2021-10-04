@@ -702,6 +702,7 @@ contract OffchainVotingContract is IVoting, MemberGuard, AdapterGuard, Ownable {
         dao.processProposal(proposalId);
     }
 
+    // slither-disable-next-line reentrancy-events
     function _challengeResult(DaoRegistry dao, bytes32 proposalId) internal {
         BankExtension bank =
             BankExtension(dao.getExtensionAddress(DaoHelper.BANK));

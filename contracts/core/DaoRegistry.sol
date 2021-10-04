@@ -340,6 +340,7 @@ contract DaoRegistry is MemberGuard, AdapterGuard {
      * @param extension The address of the extension
      * @param creator The DAO's creator, who will be an initial member
      */
+    // slither-disable-next-line reentrancy-events
     function addExtension(
         bytes32 extensionId,
         IExtension extension,

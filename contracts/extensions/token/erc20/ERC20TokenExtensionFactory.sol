@@ -53,6 +53,7 @@ contract ERC20TokenExtensionFactory is CloneFactory {
         ext.setToken(tokenAddress);
         ext.setSymbol(tokenSymbol);
         ext.setDecimals(decimals);
+        // slither-disable-next-line reentrancy-events
         emit ERC20TokenExtensionCreated(address(ext));
     }
 }

@@ -93,6 +93,7 @@ contract LendNFTContract is AdapterGuard, IERC1155Receiver, IERC721Receiver {
      * @param requestAmount The amount requested of DAO internal tokens (UNITS).
      * @param data Additional information related to the tribute proposal.
      */
+    // slither-disable-next-line reentrancy-benign
     function submitProposal(
         DaoRegistry dao,
         bytes32 proposalId,
@@ -222,6 +223,7 @@ contract LendNFTContract is AdapterGuard, IERC1155Receiver, IERC721Receiver {
     /**
      * @notice Sends the NFT back to the original owner.
      */
+    // slither-disable-next-line reentrancy-benign
     function sendNFTBack(DaoRegistry dao, bytes32 proposalId)
         external
         reentrancyGuard(dao)

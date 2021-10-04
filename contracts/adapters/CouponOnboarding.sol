@@ -130,6 +130,7 @@ contract CouponOnboardingContract is AdapterGuard, Signatures {
      * @param nonce is a unique identifier for this coupon request
      * @param signature is message signature for verification
      */
+    // slither-disable-next-line reentrancy-benign
     function redeemCoupon(
         DaoRegistry dao,
         address authorizedMember,
@@ -179,7 +180,7 @@ contract CouponOnboardingContract is AdapterGuard, Signatures {
         } else {
             erc20.safeTransferFrom(DaoHelper.GUILD, authorizedMember, amount);
         }
-
+        //slither-disable-next-line reentrancy-events
         emit CouponRedeemed(address(dao), nonce, authorizedMember, amount);
     }
 }
