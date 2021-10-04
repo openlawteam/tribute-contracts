@@ -72,7 +72,7 @@ Writes/reads to/from the DAO state based on a proposal, and the proposal needs t
           // Add any `required` checks here before starting the proposal submission process.
           required(pre - condition, "error message");
 
-          // Starts the submissiosn
+          // Starts the submission
           _submitXProposal(dao, proposalId, param1, param2, paramN);
         }
 
@@ -99,7 +99,7 @@ Writes/reads to/from the DAO state based on a proposal, and the proposal needs t
           // The DAO already checks if the proposal id is not a duplicate.
           dao.submitProposal(proposalId);
 
-          // Perfom any additional checks or logic you may need.
+          // Performing any additional checks or logic you may need.
 
           // If you want to sponsor the proposal right away, you need to start the voting process.
           IVoting votingContract = IVoting(dao.getAdapterAddress(VOTING));
@@ -292,7 +292,7 @@ describe("Adapter - AdapterName", () => {
   });
 
   /**
-   * Before each test funtion we take a chain snapshot, which
+   * Before each test function we take a chain snapshot, which
    * contains the fresh DAO configurations with zero
    * modifications.
    */
