@@ -190,9 +190,11 @@ contract OffchainVotingContract is IVoting, MemberGuard, AdapterGuard, Ownable {
         bytes memory rootSig
     ) external {
         Voting storage vote = votes[address(dao)][proposalId];
+        // slither-disable-next-line timestamp
         require(vote.snapshot > 0, "vote:not started");
 
         if (vote.resultRoot == bytes32(0) || vote.isChallenged) {
+            // slither-disable-next-line timestamp
             require(
                 _readyToSubmitResult(dao, vote, result.nbYes, result.nbNo),
                 "vote:notReadyToSubmitResult"
@@ -222,6 +224,7 @@ contract OffchainVotingContract is IVoting, MemberGuard, AdapterGuard, Ownable {
             "proof:bad"
         );
 
+        // slither-disable-next-line timestamp
         require(
             BankExtension(dao.getExtensionAddress(DaoHelper.BANK))
                 .getPriorAmount(
@@ -234,6 +237,7 @@ contract OffchainVotingContract is IVoting, MemberGuard, AdapterGuard, Ownable {
             "index:member_count mismatch"
         );
 
+        // slither-disable-next-line timestamp
         require(
             vote.nbYes + vote.nbNo < result.nbYes + result.nbNo,
             "result weight too low"
@@ -281,6 +285,7 @@ contract OffchainVotingContract is IVoting, MemberGuard, AdapterGuard, Ownable {
             index % 256,
             true
         );
+        // slither-disable-next-line timestamp
         require(vote.stepRequested == 0, "other step already requested");
         require(
             voteResult(dao, proposalId) == VotingState.GRACE_PERIOD,
@@ -301,6 +306,7 @@ contract OffchainVotingContract is IVoting, MemberGuard, AdapterGuard, Ownable {
         uint256 gracePeriod = dao.getConfiguration(GracePeriod);
         //if the vote has started but the voting period has not passed yet, it's in progress
         require(vote.stepRequested > 0, "no step request");
+        // slither-disable-next-line timestamp
         require(
             block.timestamp >= vote.gracePeriodStartingTime + gracePeriod,
             "grace period"
@@ -315,8 +321,10 @@ contract OffchainVotingContract is IVoting, MemberGuard, AdapterGuard, Ownable {
         OffchainVotingHashContract.VoteResultNode memory node
     ) external {
         Voting storage vote = votes[address(dao)][node.proposalId];
+        // slither-disable-next-line timestamp
         require(vote.stepRequested == node.index, "wrong step provided");
         bytes32 hashCurrent = ovHash.nodeHash(dao, adapterAddress, node);
+        // slither-disable-next-line timestamp
         require(
             MerkleProof.verify(node.proof, vote.resultRoot, hashCurrent),
             "proof:bad"
@@ -357,6 +365,7 @@ contract OffchainVotingContract is IVoting, MemberGuard, AdapterGuard, Ownable {
         }
 
         uint256 votingPeriod = dao.getConfiguration(VotingPeriod);
+        // slither-disable-next-line timestamp
         return vote.startingTime + votingPeriod <= block.timestamp;
     }
 
@@ -464,14 +473,18 @@ contract OffchainVotingContract is IVoting, MemberGuard, AdapterGuard, Ownable {
 
         uint256 votingPeriod = dao.getConfiguration(VotingPeriod);
 
-        //if the vote has started but the voting period has not passed yet, it's in progress
+        // If the vote has started but the voting period has not passed yet,
+        // it's in progress
+        // slither-disable-next-line timestamp
         if (block.timestamp < vote.startingTime + votingPeriod) {
             return VotingState.IN_PROGRESS;
         }
 
         uint256 gracePeriod = dao.getConfiguration(GracePeriod);
 
-        //if no result have been submitted but we are before grace + voting period, then the proposal is GRACE_PERIOD
+        // If no result have been submitted but we are before grace + voting period,
+        // then the proposal is GRACE_PERIOD
+        // slither-disable-next-line timestamp
         if (
             vote.gracePeriodStartingTime == 0 &&
             block.timestamp < vote.startingTime + gracePeriod + votingPeriod
@@ -479,7 +492,8 @@ contract OffchainVotingContract is IVoting, MemberGuard, AdapterGuard, Ownable {
             return VotingState.GRACE_PERIOD;
         }
 
-        //if the vote has started but the voting period has not passed yet, it's in progress
+        // If the vote has started but the voting period has not passed yet, it's in progress
+        // slither-disable-next-line timestamp
         if (block.timestamp < vote.gracePeriodStartingTime + gracePeriod) {
             return VotingState.GRACE_PERIOD;
         }
@@ -670,6 +684,7 @@ contract OffchainVotingContract is IVoting, MemberGuard, AdapterGuard, Ownable {
         external
         onlyMember(dao)
     {
+        // slither-disable-next-line timestamp
         require(
             votes[address(dao)][proposalId].fallbackVotes[msg.sender] == false,
             "fallback vote duplicate"

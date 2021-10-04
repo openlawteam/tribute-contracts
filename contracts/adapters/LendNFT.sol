@@ -162,6 +162,7 @@ contract LendNFTContract is AdapterGuard, IERC1155Receiver, IERC721Receiver {
         )
     {
         proposal = proposals[address(dao)][proposalId];
+        //slither-disable-next-line timestamp
         require(proposal.id == proposalId, "proposal does not exist");
         require(
             !dao.getProposalFlag(
@@ -199,7 +200,7 @@ contract LendNFTContract is AdapterGuard, IERC1155Receiver, IERC721Receiver {
                         DaoHelper.INTERNAL_TOKEN_VESTING_EXT
                     )
                 );
-
+            //slither-disable-next-line timestamp
             proposal.lendingStart = uint64(block.timestamp);
             //add vesting here
             vesting.createNewVesting(
@@ -237,8 +238,9 @@ contract LendNFTContract is AdapterGuard, IERC1155Receiver, IERC721Receiver {
         );
 
         proposal.sentBack = true;
+        //slither-disable-next-line timestamp
         uint256 elapsedTime = block.timestamp - proposal.lendingStart;
-
+        //slither-disable-next-line timestamp
         if (elapsedTime < proposal.lendingPeriod) {
             InternalTokenVestingExtension vesting =
                 InternalTokenVestingExtension(
@@ -322,7 +324,7 @@ contract LendNFTContract is AdapterGuard, IERC1155Receiver, IERC721Receiver {
         proposal.previousOwner = from;
 
         // Strict matching is expect to ensure the vote has passed.
-        //slither-disable-next-line incorrect-equality
+        // slither-disable-next-line incorrect-equality,timestamp
         if (voteResult == IVoting.VotingState.PASS) {
             address erc1155ExtAddr =
                 dao.getExtensionAddress(DaoHelper.ERC1155_EXT);
@@ -380,7 +382,7 @@ contract LendNFTContract is AdapterGuard, IERC1155Receiver, IERC721Receiver {
         IERC721 erc721 = IERC721(msg.sender);
 
         // Strict matching is expect to ensure the vote has passed
-        //slither-disable-next-line incorrect-equality
+        // slither-disable-next-line incorrect-equality,timestamp
         if (voteResult == IVoting.VotingState.PASS) {
             NFTExtension nftExt =
                 NFTExtension(dao.getExtensionAddress(DaoHelper.NFT));

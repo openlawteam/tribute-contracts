@@ -132,11 +132,12 @@ contract VotingContract is IVoting, MemberGuard, AdapterGuard {
         );
 
         Voting storage vote = votes[address(dao)][proposalId];
-
+        // slither-disable-next-line timestamp
         require(
             vote.startingTime > 0,
             "this proposalId has no vote going on at the moment"
         );
+        // slither-disable-next-line timestamp
         require(
             block.timestamp <
                 vote.startingTime + dao.getConfiguration(VotingPeriod),
@@ -184,6 +185,7 @@ contract VotingContract is IVoting, MemberGuard, AdapterGuard {
         }
 
         if (
+            // slither-disable-next-line timestamp
             block.timestamp <
             vote.startingTime + dao.getConfiguration(VotingPeriod)
         ) {
@@ -191,6 +193,7 @@ contract VotingContract is IVoting, MemberGuard, AdapterGuard {
         }
 
         if (
+            // slither-disable-next-line timestamp
             block.timestamp <
             vote.startingTime +
                 dao.getConfiguration(VotingPeriod) +
