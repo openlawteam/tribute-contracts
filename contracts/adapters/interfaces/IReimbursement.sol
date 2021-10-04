@@ -3,12 +3,11 @@ pragma solidity ^0.8.0;
 // SPDX-License-Identifier: MIT
 
 import "../../core/DaoRegistry.sol";
-import "../interfaces/IReimbursement.sol";
 
 /**
 MIT License
 
-Copyright (c) 2021 Openlaw
+Copyright (c) 2020 Openlaw
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -28,34 +27,17 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
  */
-abstract contract Reimbursable {
-    /**
-     * @dev Only registered adapters are allowed to execute the function call.
-     */
-    modifier reimbursable(DaoRegistry dao) {
-        uint256 gasStart = gasleft();
-        dao.lockSession();
-        IReimbursement reimbursement =
-            IReimbursement(dao.getAdapterAddress(DaoHelper.REIMBURSEMENT));
-        (bool shouldReimburse, uint256 spendLimitPeriod) =
-            reimbursement.shouldReimburse(dao, gasStart);
-        require(dao.lockedAt() != block.number, "reentrancy guard");
-        _;
-        BankExtension bank =
-            BankExtension(dao.getExtensionAddress(DaoHelper.BANK));
 
-        uint256 gasUsed = gasleft() - gasStart;
-        uint256 payback = gasUsed * tx.gasprice;
-        if (shouldReimburse) {
-            bank.internalTransfer(
-                DaoHelper.GUILD,
-                msg.sender,
-                DaoHelper.ETH_TOKEN,
-                payback
-            );
+interface IReimbursement {
+    function reimburseTransaction(
+        DaoRegistry dao,
+        address payable caller,
+        uint256 gasUsage,
+        uint256 spendLimitPeriod
+    ) external;
 
-            bank.withdraw(payable(msg.sender), DaoHelper.ETH_TOKEN, payback);
-        }
-        dao.unlockSession();
-    }
+    function shouldReimburse(DaoRegistry dao, uint256 gasLeft)
+        external
+        view
+        returns (bool, uint256);
 }

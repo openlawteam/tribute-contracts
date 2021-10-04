@@ -41,6 +41,7 @@ library DaoHelper {
     bytes32 internal constant CONFIGURATION = keccak256("configuration");
     bytes32 internal constant DISTRIBUTE = keccak256("distribute");
     bytes32 internal constant TRIBUTE_NFT = keccak256("tribute-nft");
+    bytes32 internal constant REIMBURSEMENT = keccak256("reimbursement");
     bytes32 internal constant TRANSFER_STRATEGY =
         keccak256("erc20-transfer-strategy");
     bytes32 internal constant ERC1155_ADAPT = keccak256("erc1155-adpt");
