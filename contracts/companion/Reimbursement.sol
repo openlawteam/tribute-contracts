@@ -115,7 +115,7 @@ contract ReimbursementContract is IReimbursement, AdapterGuard {
         address payable caller,
         uint256 gasUsage,
         uint256 spendLimitPeriod
-    ) external override {
+    ) external override onlyAdapter(dao) {
         BankExtension bank =
             BankExtension(dao.getExtensionAddress(DaoHelper.BANK));
 

@@ -571,6 +571,9 @@ const configureDao = async ({
   nbUnits,
   tokenAddr,
   votingPeriod,
+  gasPriceLimit,
+  spendLimitPeriod,
+  spendLimitEth,
   gracePeriod,
   maxAmount,
   couponCreatorAddress,
@@ -628,6 +631,9 @@ const configureDao = async ({
           NEW_MEMBER: true,
         })
       );
+
+    if (reimbursement)
+      adapters.push(entryDao("reimbursement", reimbursement, {}));
 
     if (couponOnboarding)
       adapters.push(
@@ -732,7 +738,15 @@ const configureDao = async ({
       adaptersWithBankAccess.push(
         entryBank(onboarding, {
           ADD_TO_BALANCE: true,
+        })
+      );
+
+    if (reimbursement)
+      adaptersWithBankAccess.push(
+        entryBank(reimbursement, {
+          ADD_TO_BALANCE: true,
           INTERNAL_TRANSFER: true,
+          SUB_FROM_BALANCE: true,
         })
       );
 
@@ -955,6 +969,17 @@ const configureDao = async ({
         from: owner,
       });
     }
+
+    if (reimbursement)
+      await reimbursement.configureDao(
+        dao.address,
+        gasPriceLimit,
+        spendLimitPeriod,
+        spendLimitEth,
+        {
+          from: owner,
+        }
+      );
   };
 
   await configureAdaptersWithDAOAccess();

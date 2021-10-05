@@ -314,7 +314,7 @@ const contracts = [
   },
   {
     name: "ReimbursementContract",
-    path: "../contracts/adapters/ReimbursementContract",
+    path: "../contracts/companion/ReimbursementContract",
     enabled: true,
     version: "1.0.0",
     type: ContractType.Adapter,

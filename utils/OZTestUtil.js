@@ -52,6 +52,7 @@ const {
 
 const { expectRevert } = require("@openzeppelin/test-helpers");
 const { expect } = require("chai");
+const { toWei } = require("web3-utils");
 
 const deployFunction = async (contractInterface, args, from) => {
   if (!contractInterface) throw Error("undefined contract interface");
@@ -89,6 +90,9 @@ const getDefaultOptions = (options) => {
     maxExternalTokens: 100,
     couponCreatorAddress: "0x7D8cad0bbD68deb352C33e80fccd4D8e88b4aBb8",
     deployTestTokens: true,
+    gasPriceLimit: "10000000",
+    spendLimitPeriod: "86400", //24h
+    spendLimitEth: toWei("100", "ether"),
     ...options,
   };
 

@@ -3,7 +3,7 @@ pragma solidity ^0.8.0;
 // SPDX-License-Identifier: MIT
 
 import "../../core/DaoRegistry.sol";
-import "../interfaces/IReimbursement.sol";
+import "../../companion/interfaces/IReimbursement.sol";
 
 /**
 MIT License
@@ -34,17 +34,17 @@ abstract contract Reimbursable {
      */
     modifier reimbursable(DaoRegistry dao) {
         uint256 gasStart = gasleft();
+        require(dao.lockedAt() != block.number, "reentrancy guard");
         dao.lockSession();
         IReimbursement reimbursement =
             IReimbursement(dao.getAdapterAddress(DaoHelper.REIMBURSEMENT));
         (bool shouldReimburse, uint256 spendLimitPeriod) =
             reimbursement.shouldReimburse(dao, gasStart);
-        require(dao.lockedAt() != block.number, "reentrancy guard");
         _;
         BankExtension bank =
             BankExtension(dao.getExtensionAddress(DaoHelper.BANK));
 
-        uint256 gasUsed = gasleft() - gasStart;
+        uint256 gasUsed = gasStart - gasleft();
         uint256 payback = gasUsed * tx.gasprice;
         if (shouldReimburse) {
             bank.internalTransfer(
