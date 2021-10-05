@@ -92,9 +92,9 @@ contract ReimbursementContract is IReimbursement, AdapterGuard {
             return (false, spendLimitPeriod);
         }
 
-        uint256 payback = gasLeft * tx.gasprice; //paying back 110%
-
+        uint256 payback = gasLeft * tx.gasprice;
         if (
+            //slither-disable-next-line timestamp
             block.timestamp - _data[address(dao)].rateLimitStart <
             spendLimitPeriod
         ) {
@@ -120,16 +120,16 @@ contract ReimbursementContract is IReimbursement, AdapterGuard {
             BankExtension(dao.getExtensionAddress(DaoHelper.BANK));
 
         uint256 payback = gasUsage * tx.gasprice;
-
         if (
+            //slither-disable-next-line timestamp
             block.timestamp - _data[address(dao)].rateLimitStart >
             spendLimitPeriod
         ) {
             //slither-disable-next-line reentrancy-no-eth
             dao.setConfiguration(RateLimitStart, block.timestamp);
         }
-
         if (
+            //slither-disable-next-line timestamp
             block.timestamp - _data[address(dao)].rateLimitStart <
             spendLimitPeriod
         ) {
