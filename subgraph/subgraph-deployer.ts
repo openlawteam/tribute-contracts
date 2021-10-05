@@ -289,11 +289,11 @@ function couponOnboardingYAML({
     } else {
       console.log("🚗 ### Deploying subgraph to local graph node...");
       exec(
-        `graph create ${subgraph.GITHUB_USERNAME}/${subgraph.SUBGRAPH_NAME} --node http://localhost:8020`
+        `graph create ${subgraph.GITHUB_USERNAME}/${subgraph.SUBGRAPH_NAME} --node http://127.0.0.1:8020`
       );
 
       exec(
-        `graph deploy ${subgraph.GITHUB_USERNAME}/${subgraph.SUBGRAPH_NAME} --ipfs http://localhost:5001 --node http://localhost:8020`
+        `graph deploy ${subgraph.GITHUB_USERNAME}/${subgraph.SUBGRAPH_NAME} --ipfs http://127.0.0.1:5001 --node http://127.0.0.1:8020`
       );
     }
     console.log("👏 ### Done.");

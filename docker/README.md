@@ -36,9 +36,10 @@
    # The Ethereum Node URL to connect the Ethereum network. You can follow
    # these steps to get your ProjectId/API Key from Infura:
    # https://blog.infura.io/getting-started-with-infura-28e41844cc89/
-   # Or can use the default one from OpenLaw team.
-   INFURA_API_KEY=...
-   ETH_NODE_URL=wss://rinkeby.infura.io/ws/v3/${INFURA_API_KEY}
+   # Or can use the default one from OpenLaw team, or set your own Infura/Alchemy API keys
+   ETH_NODE_URL=ws://rinkeby.openlaw.io:8546
+   #ETH_NODE_URL=wss://eth-rinkeby.ws.alchemyapi.io/v2/your-api-key
+   #ETH_NODE_URL=wss://rinkeby.infura.io/ws/v3/your-api-key
 
    # The 12 word "secret recovery phrase" for the ethereum address
    # referenced in DAO_OWNER_ADDR above. This can be found in your wallet.
@@ -57,15 +58,13 @@
 
    - > npm ci && npm run deploy:rinkeby
 
-4. Set the tribute-ui env vars
+4. Set the tribute-ui env vars in the same `tribute-contracts/.env` file:
 
    ```
-   ### .env file in the root
-
    ###### Docker Compose env vars ######
 
    # It can be the same value you used for the Tribute DAO deployment.
-   REACT_APP_INFURA_PROJECT_ID_DEV=${INFURA_API_KEY}
+   REACT_APP_INFURA_PROJECT_ID_DEV=INFURA_API_KEY
 
    # The address of the Multicall smart contract deployed to the Rinkeby network.
    # Copy that from the tribute-contracts/logs/[network]-deploy.log
@@ -76,7 +75,7 @@
    REACT_APP_DAO_REGISTRY_CONTRACT_ADDRESS=0x...
 
    # The Ethereum Network node URL used by the Graph Node to listen to events.
-   ethereum=rinkeby:https://rinkeby.infura.io/v3/${INFURA_API_KEY}
+   ethereum=rinkeby:https://rinkeby.infura.io/v3/INFURA_API_KEY
    ```
 
 5. Set the subgraph configs in the `subgraph-config.json` file
@@ -116,7 +115,7 @@
 7. Using node v16.x deploy the subgraph
 
    - > cd subgraph
-   - > npm ci
+   - > npm install
    - > npx ts-node subgraph-deployer.ts
    - Wait for the following output:
 
