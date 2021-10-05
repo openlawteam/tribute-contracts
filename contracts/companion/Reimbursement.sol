@@ -122,14 +122,6 @@ contract ReimbursementContract is IReimbursement, AdapterGuard {
         uint256 payback = gasUsage * tx.gasprice;
         if (
             //slither-disable-next-line timestamp
-            block.timestamp - _data[address(dao)].rateLimitStart >
-            spendLimitPeriod
-        ) {
-            //slither-disable-next-line reentrancy-no-eth
-            dao.setConfiguration(RateLimitStart, block.timestamp);
-        }
-        if (
-            //slither-disable-next-line timestamp
             block.timestamp - _data[address(dao)].rateLimitStart <
             spendLimitPeriod
         ) {
