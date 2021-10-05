@@ -35,6 +35,7 @@ contract InternalTokenVestingExtensionFactory is CloneFactory {
     event InternalTokenVestingExtensionCreated(address addr);
 
     constructor(address _identityAddress) {
+        require(_identityAddress != address(0x0), "invalid addr");
         identityAddress = _identityAddress;
     }
 

@@ -68,15 +68,6 @@ contract TributeNFTContract is AdapterGuard, IERC1155Receiver, IERC721Receiver {
     mapping(address => mapping(bytes32 => ProposalDetails)) public proposals;
 
     /**
-     * @notice default fallback function to prevent from sending ether to the contract.
-     */
-    // The transaction is always reverted, so there are no risks of locking ether in the contract
-    //slither-disable-next-line locked-ether
-    receive() external payable {
-        revert("fallback revert");
-    }
-
-    /**
      * @notice Configures the adapter for a particular DAO.
      * @notice Registers the DAO internal token UNITS with the DAO Bank.
      * @dev Only adapters registered to the DAO can execute the function call (or if the DAO is in creation mode).
@@ -101,6 +92,7 @@ contract TributeNFTContract is AdapterGuard, IERC1155Receiver, IERC721Receiver {
      * @param requestAmount The amount requested of DAO internal tokens (UNITS).
      * @param data Additional information related to the tribute proposal.
      */
+    // slither-disable-next-line reentrancy-benign
     function submitProposal(
         DaoRegistry dao,
         bytes32 proposalId,

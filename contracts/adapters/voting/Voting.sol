@@ -62,15 +62,6 @@ contract VotingContract is IVoting, MemberGuard, AdapterGuard {
     string public constant ADAPTER_NAME = "VotingContract";
 
     /**
-     * @notice default fallback function to prevent from sending ether to the contract
-     */
-    // The transaction is always reverted, so there are no risks of locking ether in the contract
-    //slither-disable-next-line locked-ether
-    receive() external payable {
-        revert("fallback revert");
-    }
-
-    /**
      * @notice returns the adapter name. Useful to identify wich voting adapter is actually configurated in the DAO.
      */
     function getAdapterName() external pure override returns (string memory) {
@@ -186,8 +177,12 @@ contract VotingContract is IVoting, MemberGuard, AdapterGuard {
         require(voteValue < 3 && voteValue > 0, "only yes(1) & no(2) allowed");
 
         Voting storage vote = votes[address(dao)][proposalId];
-
-        require(vote.startingTime > 0, "voting has not started yet");
+        // slither-disable-next-line timestamp
+        require(
+            vote.startingTime > 0,
+            "this proposalId has no vote going on at the moment"
+        );
+        // slither-disable-next-line timestamp
         require(
             block.timestamp <
                 vote.startingTime + dao.getConfiguration(VotingPeriod),
@@ -237,6 +232,7 @@ contract VotingContract is IVoting, MemberGuard, AdapterGuard {
         }
 
         if (
+            // slither-disable-next-line timestamp
             block.timestamp <
             vote.startingTime + dao.getConfiguration(VotingPeriod)
         ) {
@@ -244,6 +240,7 @@ contract VotingContract is IVoting, MemberGuard, AdapterGuard {
         }
 
         if (
+            // slither-disable-next-line timestamp
             block.timestamp <
             vote.startingTime +
                 dao.getConfiguration(VotingPeriod) +

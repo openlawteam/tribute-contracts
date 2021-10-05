@@ -34,6 +34,7 @@ contract ERC1155TokenCollectionFactory is CloneFactory {
     event ERC1155CollectionCreated(address nftCollAddress);
 
     constructor(address _identityAddress) {
+        require(_identityAddress != address(0x0), "invalid addr");
         identityAddress = _identityAddress;
     }
 

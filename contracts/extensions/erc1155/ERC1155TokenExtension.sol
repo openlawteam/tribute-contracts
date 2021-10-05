@@ -173,7 +173,7 @@ contract ERC1155TokenExtension is
             amount,
             ""
         );
-
+        //slither-disable-next-line reentrancy-events
         emit WithdrawnNFT(nftAddr, nftTokenId, amount, newOwner);
     }
 
@@ -225,7 +225,7 @@ contract ERC1155TokenExtension is
             nftTokenId,
             tokenAmount - amount
         );
-
+        //slither-disable-next-line reentrancy-events
         emit TransferredNFT(fromOwner, toOwner, nftAddr, nftTokenId, amount);
     }
 

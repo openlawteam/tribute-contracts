@@ -1,5 +1,4 @@
 pragma solidity ^0.8.0;
-pragma experimental ABIEncoderV2;
 
 // SPDX-License-Identifier: MIT
 import "./DaoRegistry.sol";
@@ -51,7 +50,7 @@ contract DaoFactory is CloneFactory {
     event DAOCreated(address _address, string _name);
 
     constructor(address _identityAddress) {
-        require(_identityAddress != address(0x0), "missing address");
+        require(_identityAddress != address(0x0), "invalid addr");
         identityAddress = _identityAddress;
     }
 
@@ -75,7 +74,7 @@ contract DaoFactory is CloneFactory {
         daos[daoAddr] = hashedName;
 
         dao.initialize(creator, msg.sender);
-
+        //slither-disable-next-line reentrancy-events
         emit DAOCreated(daoAddr, daoName);
     }
 
@@ -111,6 +110,7 @@ contract DaoFactory is CloneFactory {
         );
 
         for (uint256 i = 0; i < adapters.length; i++) {
+            //slither-disable-next-line calls-loop
             dao.replaceAdapter(
                 adapters[i].id,
                 adapters[i].addr,
@@ -142,6 +142,7 @@ contract DaoFactory is CloneFactory {
         );
 
         for (uint256 i = 0; i < adapters.length; i++) {
+            //slither-disable-next-line calls-loop
             dao.setAclToExtensionForAdapter(
                 extension,
                 adapters[i].addr,

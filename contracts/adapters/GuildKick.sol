@@ -45,15 +45,6 @@ contract GuildKickContract is IGuildKick, AdapterGuard {
     mapping(address => mapping(bytes32 => GuildKick)) public kicks;
 
     /**
-     * @notice default fallback function to prevent from sending ether to the contract.
-     */
-    // The transaction is always reverted, so there are no risks of locking ether in the contract
-    //slither-disable-next-line locked-ether
-    receive() external payable {
-        revert("fallback revert");
-    }
-
-    /**
      * @notice Creates a guild kick proposal, opens it for voting, and sponsors it.
      * @dev A member can not kick himself.
      * @dev Only one kick per DAO can be executed at time.
@@ -64,6 +55,7 @@ contract GuildKickContract is IGuildKick, AdapterGuard {
      * @param memberToKick The member address that should be kicked out of the DAO.
      * @param data Additional information related to the kick proposal.
      */
+    // slither-disable-next-line reentrancy-benign
     function submitProposal(
         DaoRegistry dao,
         bytes32 proposalId,

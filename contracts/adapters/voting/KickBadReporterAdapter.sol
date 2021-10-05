@@ -36,15 +36,6 @@ SOFTWARE.
  */
 
 contract KickBadReporterAdapter is MemberGuard {
-    /**
-     * @notice default fallback function to prevent from sending ether to the contract
-     */
-    // The transaction is always reverted, so there are no risks of locking ether in the contract
-    //slither-disable-next-line locked-ether
-    receive() external payable {
-        revert("fallback revert");
-    }
-
     function sponsorProposal(
         DaoRegistry dao,
         bytes32 proposalId,
@@ -70,6 +61,7 @@ contract KickBadReporterAdapter is MemberGuard {
             votingContract.voteResult(dao, proposalId);
         // the person has been kicked out
         if (votingState == IVoting.VotingState.PASS) {
+            //slither-disable-next-line variable-scope
             (, address challengeAddress) =
                 votingContract.getChallengeDetails(dao, proposalId);
             GuildKickHelper.rageKick(dao, challengeAddress);
@@ -77,7 +69,7 @@ contract KickBadReporterAdapter is MemberGuard {
             votingState == IVoting.VotingState.NOT_PASS ||
             votingState == IVoting.VotingState.TIE
         ) {
-            //slither-disable-next-line uninitialized-local
+            //slither-disable-next-line uninitialized-local variable-scope
             (uint256 units, address challengeAddress) =
                 votingContract.getChallengeDetails(dao, proposalId);
             BankExtension bank =

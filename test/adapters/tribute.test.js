@@ -24,7 +24,13 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
  */
-const { toBN, UNITS, GUILD } = require("../../utils/ContractUtil.js");
+const {
+  toBN,
+  fromAscii,
+  toWei,
+  UNITS,
+  GUILD,
+} = require("../../utils/ContractUtil.js");
 
 const {
   deployDefaultDao,
@@ -37,6 +43,7 @@ const {
   expect,
   OLToken,
   deployDefaultNFTDao,
+  web3,
 } = require("../../utils/OZTestUtil.js");
 
 const { checkBalance, isMember } = require("../../utils/TestUtils.js");
@@ -398,6 +405,33 @@ describe("Adapter - Tribute", () => {
         gasPrice: toBN("0"),
       }),
       "token amount exceeds the maximum limit for internal tokens"
+    );
+  });
+
+  it("should not be possible to send ETH to the adapter via receive function", async () => {
+    const adapter = this.adapters.tribute;
+    await expectRevert(
+      web3.eth.sendTransaction({
+        to: adapter.address,
+        from: daoOwner,
+        gasPrice: toBN("0"),
+        value: toWei(toBN("1"), "ether"),
+      }),
+      "revert"
+    );
+  });
+
+  it("should not be possible to send ETH to the adapter via fallback function", async () => {
+    const adapter = this.adapters.tribute;
+    await expectRevert(
+      web3.eth.sendTransaction({
+        to: adapter.address,
+        from: daoOwner,
+        gasPrice: toBN("0"),
+        value: toWei(toBN("1"), "ether"),
+        data: fromAscii("should go to fallback func"),
+      }),
+      "revert"
     );
   });
 });

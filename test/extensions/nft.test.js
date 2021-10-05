@@ -24,7 +24,12 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
  */
-const { toBN, GUILD } = require("../../utils/ContractUtil.js");
+const {
+  toWei,
+  toBN,
+  fromAscii,
+  GUILD,
+} = require("../../utils/ContractUtil.js");
 
 const {
   takeChainSnapshot,
@@ -33,6 +38,7 @@ const {
   accounts,
   expectRevert,
   expect,
+  web3,
 } = require("../../utils/OZTestUtil.js");
 
 describe("Extension - NFT", () => {
@@ -136,5 +142,32 @@ describe("Extension - NFT", () => {
     expect(nftId.toString()).equal(tokenId.toString());
     const newOwner = await nftExtension.getNFTOwner(nftAddr, tokenId);
     expect(newOwner.toLowerCase()).equal(GUILD.toLowerCase());
+  });
+
+  it("should not be possible to send ETH to the adapter via receive function", async () => {
+    const adapter = this.adapters.nftAdapter;
+    await expectRevert(
+      web3.eth.sendTransaction({
+        to: adapter.address,
+        from: daoOwner,
+        gasPrice: toBN("0"),
+        value: toWei(toBN("1"), "ether"),
+      }),
+      "revert"
+    );
+  });
+
+  it("should not be possible to send ETH to the adapter via fallback function", async () => {
+    const adapter = this.adapters.nftAdapter;
+    await expectRevert(
+      web3.eth.sendTransaction({
+        to: adapter.address,
+        from: daoOwner,
+        gasPrice: toBN("0"),
+        value: toWei(toBN("1"), "ether"),
+        data: fromAscii("should go to fallback func"),
+      }),
+      "revert"
+    );
   });
 });

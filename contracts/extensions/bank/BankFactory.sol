@@ -1,5 +1,4 @@
 pragma solidity ^0.8.0;
-pragma experimental ABIEncoderV2;
 
 // SPDX-License-Identifier: MIT
 
@@ -37,7 +36,7 @@ contract BankFactory is CloneFactory {
     event BankCreated(address bankAddress);
 
     constructor(address _identityAddress) {
-        require(_identityAddress != address(0x0), "missing address");
+        require(_identityAddress != address(0x0), "invalid addr");
         identityAddress = _identityAddress;
     }
 
@@ -48,6 +47,7 @@ contract BankFactory is CloneFactory {
     function createBank(uint8 maxExternalTokens) external {
         BankExtension bank = BankExtension(_createClone(identityAddress));
         bank.setMaxExternalTokens(maxExternalTokens);
+        //slither-disable-next-line reentrancy-events
         emit BankCreated(address(bank));
     }
 }

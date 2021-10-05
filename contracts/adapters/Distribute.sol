@@ -70,15 +70,6 @@ contract DistributeContract is IDistribute, AdapterGuard {
     mapping(address => bytes32) public ongoingDistributions;
 
     /**
-     * @notice default fallback function to prevent from sending ether to the contract.
-     */
-    // The transaction is always reverted, so there are no risks of locking ether in the contract
-    //slither-disable-next-line locked-ether
-    receive() external payable {
-        revert("fallback revert");
-    }
-
-    /**
      * @notice Creates a distribution proposal for one or all members of the DAO, opens it for voting, and sponsors it.
      * @dev Only tokens that are allowed by the Bank are accepted.
      * @dev If the unitHolderAddr is 0x0, then the funds will be distributed to all members of the DAO.
@@ -91,6 +82,7 @@ contract DistributeContract is IDistribute, AdapterGuard {
      * @param amount The amount to distribute.
      * @param data Additional information related to the distribution proposal.
      */
+    // slither-disable-next-line reentrancy-benign
     function submitProposal(
         DaoRegistry dao,
         bytes32 proposalId,
@@ -218,6 +210,7 @@ contract DistributeContract is IDistribute, AdapterGuard {
      * @param dao The dao address.
      * @param toIndex The index to control the cached for-loop.
      */
+    // slither-disable-next-line reentrancy-benign
     function distribute(DaoRegistry dao, uint256 toIndex)
         external
         override
@@ -248,6 +241,7 @@ contract DistributeContract is IDistribute, AdapterGuard {
         if (unitHolderAddr != address(0x0)) {
             distribution.status = DistributionStatus.DONE;
             _distributeOne(bank, unitHolderAddr, blockNumber, token, amount);
+            //slither-disable-next-line reentrancy-events
             emit Distributed(address(dao), token, amount, unitHolderAddr);
         } else {
             // Set the max index supported which is based on the number of members
@@ -260,6 +254,7 @@ contract DistributeContract is IDistribute, AdapterGuard {
             distribution.currentIndex = maxIndex;
             if (maxIndex == nbMembers) {
                 distribution.status = DistributionStatus.DONE;
+                //slither-disable-next-line reentrancy-events
                 emit Distributed(address(dao), token, amount, unitHolderAddr);
             }
 
@@ -309,14 +304,18 @@ contract DistributeContract is IDistribute, AdapterGuard {
         uint256 totalTokens = DaoHelper.priorTotalTokens(bank, blockNumber);
         // Distributes the funds to all unit holders of the DAO and ignores non-active members.
         for (uint256 i = currentIndex; i < maxIndex; i++) {
+            //slither-disable-next-line calls-loop
             address memberAddr = dao.getMemberAddress(i);
+            //slither-disable-next-line calls-loop
             uint256 memberUnits =
                 bank.getPriorAmount(memberAddr, DaoHelper.UNITS, blockNumber);
             if (memberUnits > 0) {
+                //slither-disable-next-line calls-loop
                 uint256 amountToDistribute =
                     FairShareHelper.calc(amount, memberUnits, totalTokens);
 
                 if (amountToDistribute > 0) {
+                    //slither-disable-next-line calls-loop
                     bank.internalTransfer(
                         DaoHelper.ESCROW,
                         memberAddr,
