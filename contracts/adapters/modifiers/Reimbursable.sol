@@ -41,20 +41,15 @@ abstract contract Reimbursable {
         (bool shouldReimburse, uint256 spendLimitPeriod) =
             reimbursement.shouldReimburse(dao, gasStart);
         _;
-        BankExtension bank =
-            BankExtension(dao.getExtensionAddress(DaoHelper.BANK));
 
-        uint256 gasUsed = gasStart - gasleft();
-        uint256 payback = gasUsed * tx.gasprice;
         if (shouldReimburse) {
-            bank.internalTransfer(
-                DaoHelper.GUILD,
-                msg.sender,
-                DaoHelper.ETH_TOKEN,
-                payback
+            uint256 gasUsed = gasStart - gasleft();
+            reimbursement.reimburseTransaction(
+                dao,
+                payable(msg.sender),
+                gasUsed,
+                spendLimitPeriod
             );
-
-            bank.withdraw(payable(msg.sender), DaoHelper.ETH_TOKEN, payback);
         }
         dao.unlockSession();
     }
