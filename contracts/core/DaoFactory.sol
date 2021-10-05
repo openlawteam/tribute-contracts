@@ -51,6 +51,7 @@ contract DaoFactory is CloneFactory {
     event DAOCreated(address _address, string _name);
 
     constructor(address _identityAddress) {
+        require(_identityAddress != address(0x0), "missing address");
         identityAddress = _identityAddress;
     }
 

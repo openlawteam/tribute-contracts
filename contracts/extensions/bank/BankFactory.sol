@@ -37,6 +37,7 @@ contract BankFactory is CloneFactory {
     event BankCreated(address bankAddress);
 
     constructor(address _identityAddress) {
+        require(_identityAddress != address(0x0), "missing address");
         identityAddress = _identityAddress;
     }
 
