@@ -36,15 +36,6 @@ contract ManagingContract is IManaging, AdapterGuard {
     mapping(address => mapping(bytes32 => ProposalDetails)) public proposals;
 
     /**
-     * @notice default fallback function to prevent from sending ether to the contract
-     */
-    // The transaction is always reverted, so there are no risks of locking ether in the contract
-    //slither-disable-next-line locked-ether
-    receive() external payable {
-        revert("fallback revert");
-    }
-
-    /**
      * @notice Creates a proposal to replace, remove or add an adapter.
      * @dev If the adapterAddress is equal to 0x0, the adapterId is removed from the registry if available.
      * @dev If the adapterAddress is a reserved address, it reverts.
@@ -55,6 +46,7 @@ contract ManagingContract is IManaging, AdapterGuard {
      * @param proposal The proposal details
      * @param data Additional data to pass to the voting contract and identify the submitter
      */
+    // slither-disable-next-line reentrancy-benign
     function submitProposal(
         DaoRegistry dao,
         bytes32 proposalId,
@@ -106,6 +98,7 @@ contract ManagingContract is IManaging, AdapterGuard {
      * @param dao The dao address.
      * @param proposalId The guild kick proposal id.
      */
+    // slither-disable-next-line reentrancy-benign
     function processProposal(DaoRegistry dao, bytes32 proposalId)
         external
         override
@@ -148,6 +141,7 @@ contract ManagingContract is IManaging, AdapterGuard {
         }
 
         for (uint128 i = 0; i < proposal.extensionAclFlags.length; i++) {
+            //slither-disable-next-line calls-loop
             dao.setAclToExtensionForAdapter(
                 proposal.extensionAddresses[i],
                 proposal.adapterOrExtensionAddr,

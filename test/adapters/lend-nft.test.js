@@ -24,7 +24,13 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
  */
-const { toBN, ERC1155, UNITS } = require("../../utils/ContractUtil.js");
+const {
+  toBN,
+  toWei,
+  ERC1155,
+  UNITS,
+  fromAscii,
+} = require("../../utils/ContractUtil.js");
 
 const {
   deployDefaultNFTDao,
@@ -36,6 +42,7 @@ const {
   encodeProposalData,
   expectRevert,
   expect,
+  web3,
 } = require("../../utils/OZTestUtil.js");
 
 describe("Adapter - LendNFT", () => {
@@ -179,5 +186,32 @@ describe("Adapter - LendNFT", () => {
 
     const balance = await erc1155Token.balanceOf(nftOwner, tokenId2);
     expect(balance.toString()).equal("1");
+  });
+
+  it("should not be possible to send ETH to the adapter via receive function", async () => {
+    const adapter = this.adapters.lendNFT;
+    await expectRevert(
+      web3.eth.sendTransaction({
+        to: adapter.address,
+        from: daoOwner,
+        gasPrice: toBN("0"),
+        value: toWei(toBN("1"), "ether"),
+      }),
+      "revert"
+    );
+  });
+
+  it("should not be possible to send ETH to the adapter via fallback function", async () => {
+    const adapter = this.adapters.lendNFT;
+    await expectRevert(
+      web3.eth.sendTransaction({
+        to: adapter.address,
+        from: daoOwner,
+        gasPrice: toBN("0"),
+        value: toWei(toBN("1"), "ether"),
+        data: fromAscii("should go to fallback func"),
+      }),
+      "revert"
+    );
   });
 });

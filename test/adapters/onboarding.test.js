@@ -26,6 +26,8 @@ SOFTWARE.
  */
 const {
   toBN,
+  toWei,
+  fromAscii,
   unitPrice,
   UNITS,
   GUILD,
@@ -546,5 +548,32 @@ describe("Adapter - Onboarding", () => {
 
     let isMember = await dao.isMember(applicant);
     expect(isMember).equal(false);
+  });
+
+  it("should not be possible to send ETH to the adapter via receive function", async () => {
+    const adapter = this.adapters.onboarding;
+    await expectRevert(
+      web3.eth.sendTransaction({
+        to: adapter.address,
+        from: daoOwner,
+        gasPrice: toBN("0"),
+        value: toWei(toBN("1"), "ether"),
+      }),
+      "revert"
+    );
+  });
+
+  it("should not be possible to send ETH to the adapter via fallback function", async () => {
+    const adapter = this.adapters.onboarding;
+    await expectRevert(
+      web3.eth.sendTransaction({
+        to: adapter.address,
+        from: daoOwner,
+        gasPrice: toBN("0"),
+        value: toWei(toBN("1"), "ether"),
+        data: fromAscii("should go to fallback func"),
+      }),
+      "revert"
+    );
   });
 });

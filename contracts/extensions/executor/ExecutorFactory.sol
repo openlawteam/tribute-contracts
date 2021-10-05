@@ -1,5 +1,4 @@
 pragma solidity ^0.8.0;
-pragma experimental ABIEncoderV2;
 
 // SPDX-License-Identifier: MIT
 
@@ -37,6 +36,7 @@ contract ExecutorExtensionFactory is CloneFactory {
     event ExecutorCreated(address executorAddress);
 
     constructor(address _identityAddress) {
+        require(_identityAddress != address(0x0), "invalid addr");
         identityAddress = _identityAddress;
     }
 

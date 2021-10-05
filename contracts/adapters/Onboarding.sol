@@ -131,6 +131,7 @@ contract OnboardingContract is IOnboarding, AdapterGuard {
      * @param tokenAmount The amount of token to mint.
      * @param data Additional proposal information.
      */
+    // slither-disable-next-line reentrancy-benign
     function submitProposal(
         DaoRegistry dao,
         bytes32 proposalId,
@@ -169,6 +170,7 @@ contract OnboardingContract is IOnboarding, AdapterGuard {
      * @notice Once the vote on a proposal is finished, it is time to process it. Anybody can call this function.
      * @param proposalId The proposal id to be processed. It needs to exist in the DAO Registry.
      */
+    // slither-disable-next-line reentrancy-benign
     function processProposal(DaoRegistry dao, bytes32 proposalId)
         external
         payable
@@ -305,7 +307,6 @@ contract OnboardingContract is IOnboarding, AdapterGuard {
             "total units for this member must be lower than the maximum"
         );
 
-        dao.submitProposal(proposalId);
         proposals[address(dao)][proposalId] = ProposalDetails(
             proposalId,
             tokenToMint,
@@ -314,6 +315,8 @@ contract OnboardingContract is IOnboarding, AdapterGuard {
             token,
             applicant
         );
+
+        dao.submitProposal(proposalId);
 
         return details.amount;
     }

@@ -26,6 +26,8 @@ SOFTWARE.
  */
 const {
   toBN,
+  toWei,
+  fromAscii,
   unitPrice,
   remaining,
   UNITS,
@@ -40,6 +42,7 @@ const {
   accounts,
   expectRevert,
   expect,
+  web3,
 } = require("../../utils/OZTestUtil.js");
 
 describe("Adapter - Voting", () => {
@@ -194,5 +197,32 @@ describe("Adapter - Voting", () => {
     await advanceTime(10000);
     const vote = await voting.voteResult(dao.address, proposalId);
     expect(vote.toString()).equal("2"); // vote should be "pass = 2"
+  });
+
+  it("should not be possible to send ETH to the adapter via receive function", async () => {
+    const adapter = this.adapters.voting;
+    await expectRevert(
+      web3.eth.sendTransaction({
+        to: adapter.address,
+        from: daoOwner,
+        gasPrice: toBN("0"),
+        value: toWei(toBN("1"), "ether"),
+      }),
+      "revert"
+    );
+  });
+
+  it("should not be possible to send ETH to the adapter via fallback function", async () => {
+    const adapter = this.adapters.voting;
+    await expectRevert(
+      web3.eth.sendTransaction({
+        to: adapter.address,
+        from: daoOwner,
+        gasPrice: toBN("0"),
+        value: toWei(toBN("1"), "ether"),
+        data: fromAscii("should go to fallback func"),
+      }),
+      "revert"
+    );
   });
 });

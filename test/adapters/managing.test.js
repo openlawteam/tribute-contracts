@@ -31,6 +31,7 @@ const {
   GUILD,
   ZERO_ADDRESS,
   sha3,
+  fromAscii,
 } = require("../../utils/ContractUtil.js");
 
 const {
@@ -75,7 +76,7 @@ describe("Adapter - Managing", () => {
     this.snapshotId = await takeChainSnapshot();
   });
 
-  it("should not be possible to send ETH to the adapter", async () => {
+  it("should not be possible to send ETH to the adapter via receive function", async () => {
     const managing = this.adapters.managing;
     await expectRevert(
       web3.eth.sendTransaction({
@@ -84,7 +85,21 @@ describe("Adapter - Managing", () => {
         gasPrice: toBN("0"),
         value: toWei(toBN("1"), "ether"),
       }),
-      "Returned error: VM Exception while processing transaction: revert fallback revert"
+      "revert"
+    );
+  });
+
+  it("should not be possible to send ETH to the adapter via fallback function", async () => {
+    const managing = this.adapters.managing;
+    await expectRevert(
+      web3.eth.sendTransaction({
+        to: managing.address,
+        from: daoOwner,
+        gasPrice: toBN("0"),
+        value: toWei(toBN("1"), "ether"),
+        data: fromAscii("should go to fallback func"),
+      }),
+      "revert"
     );
   });
 

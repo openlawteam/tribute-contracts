@@ -42,15 +42,6 @@ contract ConfigurationContract is IConfiguration, AdapterGuard {
         private _configurations;
 
     /**
-     * @notice default fallback function to prevent from sending ether to the contract
-     */
-    // The transaction is always reverted, so there are no risks of locking ether in the contract
-    //slither-disable-next-line locked-ether
-    receive() external payable {
-        revert("fallback revert");
-    }
-
-    /**
      * @notice Creates and sponsors a configuration proposal.
      * @param dao The DAO Address.
      * @param proposalId The proposal id.
@@ -58,6 +49,7 @@ contract ConfigurationContract is IConfiguration, AdapterGuard {
      * @param values The token to receive the funds.
      * @param data Additional details about the financing proposal.
      */
+    // slither-disable-next-line reentrancy-benign
     function submitProposal(
         DaoRegistry dao,
         bytes32 proposalId,
@@ -90,6 +82,7 @@ contract ConfigurationContract is IConfiguration, AdapterGuard {
      * @param dao The DAO Address.
      * @param proposalId The proposal id.
      */
+    // slither-disable-next-line reentrancy-benign
     function processProposal(DaoRegistry dao, bytes32 proposalId)
         external
         override
@@ -111,6 +104,7 @@ contract ConfigurationContract is IConfiguration, AdapterGuard {
         bytes32[] memory keys = configuration.keys;
         uint256[] memory values = configuration.values;
         for (uint256 i = 0; i < keys.length; i++) {
+            //slither-disable-next-line calls-loop
             dao.setConfiguration(keys[i], values[i]);
         }
     }

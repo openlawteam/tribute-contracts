@@ -167,15 +167,6 @@ contract DaoRegistry is MemberGuard, AdapterGuard {
     }
 
     /**
-     * @notice default fallback function to prevent from sending ether to the contract
-     */
-    // The transaction is always reverted, so there are no risks of locking ether in the contract
-    //slither-disable-next-line locked-ether
-    receive() external payable {
-        revert("you cannot send money back directly");
-    }
-
-    /**
      * @dev Sets the state of the dao to READY
      */
     function finalizeDao() external {
@@ -349,6 +340,7 @@ contract DaoRegistry is MemberGuard, AdapterGuard {
      * @param extension The address of the extension
      * @param creator The DAO's creator, who will be an initial member
      */
+    // slither-disable-next-line reentrancy-events
     function addExtension(
         bytes32 extensionId,
         IExtension extension,

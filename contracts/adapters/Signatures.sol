@@ -44,15 +44,6 @@ contract SignaturesContract is ISignatures, AdapterGuard {
     mapping(address => mapping(bytes32 => ProposalDetails)) public proposals;
 
     /**
-     * @notice default fallback function to prevent from sending ether to the contract.
-     */
-    // The transaction is always reverted, so there are no risks of locking ether in the contract
-    //slither-disable-next-line locked-ether
-    receive() external payable {
-        revert("fallback revert");
-    }
-
-    /**
      * @notice Creates and sponsors a signature proposal.
      * @dev Only members of the DAO can sponsor a signature proposal.
      * @param dao The DAO Address.
@@ -62,6 +53,7 @@ contract SignaturesContract is ISignatures, AdapterGuard {
      * @param magicValue The value to return when a signature is valid
      * @param data Additional details about the signature proposal.
      */
+    // slither-disable-next-line reentrancy-benign
     function submitProposal(
         DaoRegistry dao,
         bytes32 proposalId,

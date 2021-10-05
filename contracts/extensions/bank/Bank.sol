@@ -121,6 +121,7 @@ contract BankExtension is AdapterGuard, IExtension {
         internalTokens.push(DaoHelper.MEMBER_COUNT);
         uint256 nbMembers = _dao.getNbMembers();
         for (uint256 i = 0; i < nbMembers; i++) {
+            //slither-disable-next-line calls-loop
             addToBalance(_dao.getMemberAddress(i), DaoHelper.MEMBER_COUNT, 1);
         }
 
@@ -145,6 +146,7 @@ contract BankExtension is AdapterGuard, IExtension {
             erc20.safeTransfer(member, amount);
         }
 
+        //slither-disable-next-line reentrancy-events
         emit Withdraw(member, tokenAddr, uint160(amount));
     }
 
@@ -475,6 +477,7 @@ contract BankExtension is AdapterGuard, IExtension {
             );
             numCheckpoints[token][member] = nCheckpoints + 1;
         }
+        //slither-disable-next-line reentrancy-events
         emit NewBalance(member, token, newAmount);
     }
 }

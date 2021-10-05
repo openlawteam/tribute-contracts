@@ -44,15 +44,6 @@ contract FinancingContract is IFinancing, AdapterGuard {
     mapping(address => mapping(bytes32 => ProposalDetails)) public proposals;
 
     /**
-     * @notice default fallback function to prevent from sending ether to the contract.
-     */
-    // The transaction is always reverted, so there are no risks of locking ether in the contract
-    //slither-disable-next-line locked-ether
-    receive() external payable {
-        revert("fallback revert");
-    }
-
-    /**
      * @notice Creates and sponsors a financing proposal.
      * @dev Applicant address must not be reserved.
      * @dev Token address must be allowed/supported by the DAO Bank.
@@ -65,6 +56,7 @@ contract FinancingContract is IFinancing, AdapterGuard {
      * @param amount The desired amount.
      * @param data Additional details about the financing proposal.
      */
+    // slither-disable-next-line reentrancy-benign
     function submitProposal(
         DaoRegistry dao,
         bytes32 proposalId,
@@ -110,6 +102,7 @@ contract FinancingContract is IFinancing, AdapterGuard {
      * @param dao The DAO Address.
      * @param proposalId The proposal id.
      */
+    // slither-disable-next-line reentrancy-benign
     function processProposal(DaoRegistry dao, bytes32 proposalId)
         external
         override

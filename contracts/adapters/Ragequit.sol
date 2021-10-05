@@ -46,15 +46,6 @@ contract RagequitContract is IRagequit, AdapterGuard {
     );
 
     /**
-     * @notice default fallback function to prevent from sending ether to the contract.
-     */
-    // The transaction is always reverted, so there are no risks of locking ether in the contract
-    //slither-disable-next-line locked-ether
-    receive() external payable {
-        revert("fallback revert");
-    }
-
-    /**
      * @notice Allows a member or advisor of the DAO to opt out by burning the proportional amount of units/loot of the member.
      * @notice Anyone is allowed to call this function, but only members and advisors that have units are able to execute the entire ragequit process.
      * @notice The array of token needs to be sorted in ascending order before executing this call, otherwise the transaction will fail.
@@ -113,6 +104,7 @@ contract RagequitContract is IRagequit, AdapterGuard {
      * @param tokens The array of tokens that the funds should be sent to.
      * @param bank The bank extension.
      */
+    // slither-disable-next-line reentrancy-events
     function _prepareRagequit(
         DaoRegistry dao,
         address memberAddr,
@@ -187,9 +179,11 @@ contract RagequitContract is IRagequit, AdapterGuard {
             }
 
             // Checks if the token is supported by the Guild Bank.
+            //slither-disable-next-line calls-loop
             require(bank.isTokenAllowed(currentToken), "token not allowed");
 
             // Calculates the fair amount of funds to ragequit based on the token, units and loot
+            //slither-disable-next-line calls-loop
             uint256 amountToRagequit =
                 FairShareHelper.calc(
                     bank.balanceOf(DaoHelper.GUILD, currentToken),
@@ -203,6 +197,7 @@ contract RagequitContract is IRagequit, AdapterGuard {
                 // deliberately not using safemath here to keep overflows from preventing the function execution
                 // (which would break ragekicks) if a token overflows,
                 // it is because the supply was artificially inflated to oblivion, so we probably don"t care about it anyways
+                //slither-disable-next-line calls-loop
                 bank.internalTransfer(
                     DaoHelper.GUILD,
                     memberAddr,
@@ -212,7 +207,9 @@ contract RagequitContract is IRagequit, AdapterGuard {
             }
         }
 
-        // Once the units and loot were burned, and the transfers completed, emit an event to indicate a successfull operation.
+        // Once the units and loot were burned, and the transfers completed,
+        // emit an event to indicate a successfull operation.
+        //slither-disable-next-line reentrancy-events
         emit MemberRagequit(
             daoAddress,
             memberAddr,

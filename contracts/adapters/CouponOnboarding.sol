@@ -70,15 +70,6 @@ contract CouponOnboardingContract is AdapterGuard, Signatures {
     }
 
     /**
-     * @notice default fallback function to prevent from sending ether to the contract
-     */
-    // The transaction is always reverted, so there are no risks of locking ether in the contract
-    //slither-disable-next-line locked-ether
-    receive() external payable {
-        revert("fallback revert");
-    }
-
-    /**
      * @notice Configures the Adapter with the coupon signer address and token to mint.
      * @param signerAddress is the DAO instance to be configured
      * @param tokenAddrToMint is the coupon to hash
@@ -139,6 +130,7 @@ contract CouponOnboardingContract is AdapterGuard, Signatures {
      * @param nonce is a unique identifier for this coupon request
      * @param signature is message signature for verification
      */
+    // slither-disable-next-line reentrancy-benign
     function redeemCoupon(
         DaoRegistry dao,
         address authorizedMember,
@@ -188,7 +180,7 @@ contract CouponOnboardingContract is AdapterGuard, Signatures {
         } else {
             erc20.safeTransferFrom(DaoHelper.GUILD, authorizedMember, amount);
         }
-
+        //slither-disable-next-line reentrancy-events
         emit CouponRedeemed(address(dao), nonce, authorizedMember, amount);
     }
 }
