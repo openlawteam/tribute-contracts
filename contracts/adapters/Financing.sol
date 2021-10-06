@@ -7,6 +7,7 @@ import "../core/DaoRegistry.sol";
 import "../extensions/bank/Bank.sol";
 import "../adapters/interfaces/IVoting.sol";
 import "../guards/AdapterGuard.sol";
+import "./modifiers/Reimbursable.sol";
 import "../helpers/DaoHelper.sol";
 
 /**
@@ -33,7 +34,7 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
  */
 
-contract FinancingContract is IFinancing, AdapterGuard {
+contract FinancingContract is IFinancing, AdapterGuard, Reimbursable {
     struct ProposalDetails {
         address applicant; // the proposal applicant address, can not be a reserved address
         uint256 amount; // the amount requested for funding
@@ -64,7 +65,7 @@ contract FinancingContract is IFinancing, AdapterGuard {
         address token,
         uint256 amount,
         bytes memory data
-    ) external override reentrancyGuard(dao) {
+    ) external override reimbursable(dao) {
         require(amount > 0, "invalid requested amount");
         BankExtension bank =
             BankExtension(dao.getExtensionAddress(DaoHelper.BANK));
@@ -106,7 +107,7 @@ contract FinancingContract is IFinancing, AdapterGuard {
     function processProposal(DaoRegistry dao, bytes32 proposalId)
         external
         override
-        reentrancyGuard(dao)
+        reimbursable(dao)
     {
         ProposalDetails memory details = proposals[address(dao)][proposalId];
 

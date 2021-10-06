@@ -7,6 +7,7 @@ import "../core/DaoRegistry.sol";
 import "../extensions/erc1271/ERC1271.sol";
 import "../adapters/interfaces/IVoting.sol";
 import "../guards/AdapterGuard.sol";
+import "./modifiers/Reimbursable.sol";
 import "../helpers/DaoHelper.sol";
 
 /**
@@ -33,7 +34,7 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
  */
 
-contract SignaturesContract is ISignatures, AdapterGuard {
+contract SignaturesContract is ISignatures, AdapterGuard, Reimbursable {
     struct ProposalDetails {
         bytes32 permissionHash;
         bytes32 signatureHash;
@@ -61,7 +62,7 @@ contract SignaturesContract is ISignatures, AdapterGuard {
         bytes32 signatureHash,
         bytes4 magicValue,
         bytes memory data
-    ) external override reentrancyGuard(dao) {
+    ) external override reimbursable(dao) {
         dao.submitProposal(proposalId);
 
         ProposalDetails storage proposal = proposals[address(dao)][proposalId];
@@ -94,7 +95,7 @@ contract SignaturesContract is ISignatures, AdapterGuard {
     function processProposal(DaoRegistry dao, bytes32 proposalId)
         external
         override
-        reentrancyGuard(dao)
+        reimbursable(dao)
     {
         ProposalDetails memory details = proposals[address(dao)][proposalId];
 

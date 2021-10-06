@@ -176,7 +176,7 @@ contract OnboardingContract is IOnboarding, AdapterGuard, Reimbursable {
         external
         payable
         override
-        reentrancyGuard(dao)
+        reimbursable(dao)
     {
         ProposalDetails storage proposal = proposals[address(dao)][proposalId];
         require(proposal.id == proposalId, "proposal does not exist");

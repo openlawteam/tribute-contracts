@@ -9,6 +9,7 @@ import "../extensions/token/erc20/InternalTokenVestingExtension.sol";
 import "../adapters/interfaces/IVoting.sol";
 import "../helpers/DaoHelper.sol";
 import "../guards/AdapterGuard.sol";
+import "./modifiers/Reimbursable.sol";
 import "@openzeppelin/contracts/utils/Address.sol";
 import "@openzeppelin/contracts/token/ERC1155/IERC1155.sol";
 
@@ -36,7 +37,7 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
  */
 
-contract LendNFTContract is AdapterGuard, IERC1155Receiver, IERC721Receiver {
+contract LendNFTContract is AdapterGuard, Reimbursable, IERC1155Receiver, IERC721Receiver {
     using Address for address payable;
 
     struct ProcessProposal {
@@ -103,7 +104,7 @@ contract LendNFTContract is AdapterGuard, IERC1155Receiver, IERC721Receiver {
         uint88 requestAmount,
         uint64 lendingPeriod,
         bytes memory data
-    ) external reentrancyGuard(dao) {
+    ) external reimbursable(dao) {
         require(
             DaoHelper.isNotReservedAddress(applicant),
             "applicant is reserved address"
@@ -314,7 +315,7 @@ contract LendNFTContract is AdapterGuard, IERC1155Receiver, IERC721Receiver {
         address from,
         uint256 id,
         uint256 value
-    ) internal reentrancyGuard(dao) returns (bytes4) {
+    ) internal reimbursable(dao) returns (bytes4) {
         (ProposalDetails storage proposal, IVoting.VotingState voteResult) =
             _processProposal(dao, proposalId);
 
@@ -372,7 +373,7 @@ contract LendNFTContract is AdapterGuard, IERC1155Receiver, IERC721Receiver {
         bytes32 proposalId,
         address from,
         uint256 tokenId
-    ) internal reentrancyGuard(dao) returns (bytes4) {
+    ) internal reimbursable(dao) returns (bytes4) {
         (ProposalDetails storage proposal, IVoting.VotingState voteResult) =
             _processProposal(dao, proposalId);
         require(proposal.nftTokenId == tokenId, "wrong NFT");
