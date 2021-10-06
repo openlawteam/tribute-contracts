@@ -84,10 +84,7 @@ contract StakeNFTContract is
         uint256 tokenId
     ) external reentrancyGuard(dao) {
         address previousOwner = previousOwners[nftAddress][tokenId];
-        require(
-            msg.sender == previousOwner,
-            "only the previous owner can withdraw the NFT"
-        );
+        require(msg.sender == previousOwner, "only prev. owner can get NFT");
 
         NFTExtension nftExt = NFTExtension(dao.getExtensionAddress(NFT));
 
@@ -116,10 +113,7 @@ contract StakeNFTContract is
 
         require(whitelistedNFT == msg.sender, "not from whitelisted NFT");
 
-        require(
-            bank.isInternalToken(UNITS),
-            "UNITS token is not an internal token"
-        );
+        require(bank.isInternalToken(UNITS), "UNITS token not internal token");
 
         potentialNewMember(from, dao, bank);
 
