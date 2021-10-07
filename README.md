@@ -121,11 +121,27 @@ Checkout the [sample .env file](https://github.com/openlawteam/tribute-contracts
 
 - Test deployment: `DAO_NAME`, `ERC20_TOKEN_NAME`, `ERC20_TOKEN_SYMBOL`, `ERC20_TOKEN_DECIMALS`.
 
+### Install
+
+This project uses yarn package manager. To install pckages, simply run:
+
+> yarn
+
+### Compile
+
+This project uses hardhat. To compile, simply run:
+
+> yarn compile
+
+### Copy artifacts - Mac only
+
+> cp artifacts/contracts/**/*.json build/contracts
+
 ### Run Tests
 
-This project uses truffle. To run the tests, simply run:
+This project uses mocha. To run the tests, simply run:
 
-> npm run test
+> yarn test
 
 ### Code Format
 
