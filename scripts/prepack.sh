@@ -1,12 +1,10 @@
 #!/usr/bin/env bash
 
-set -euo pipefail
-#shopt -s globstar
+if [ -d "build/contracts" ] 
+then 
+    rm -rf "build/contracts"
+fi
+mkdir -p "build"
 
-# cross platform `mkdir -p`
-node -e 'fs.mkdirSync("build/contracts", { recursive: true })'
-
-cp artifacts/contracts/**/*.json build/contracts/
-rm build/contracts/*.dbg.json
-
-#node scripts/remove-ignored-artifacts.js
+cp -rf artifacts/contracts build
+find "build/contracts" -type f -name "*.dbg.json" -delete
