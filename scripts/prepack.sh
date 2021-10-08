@@ -4,7 +4,8 @@ if [ -d "build/contracts" ]
 then 
     rm -rf "build/contracts"
 fi
-mkdir -p "build"
+mkdir -p "build/contracts"
 
-cp -rf artifacts/contracts build
+find "artifacts/contracts" -type f -name "*.json" -exec cp "{}" build/contracts \;
+
 find "build/contracts" -type f -name "*.dbg.json" -delete
