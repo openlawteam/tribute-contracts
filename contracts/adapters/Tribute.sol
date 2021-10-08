@@ -35,7 +35,7 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
  */
 
-contract TributeContract is Reimbursable {
+contract TributeContract is Reimbursable, AdapterGuard {
     using Address for address;
     using SafeERC20 for IERC20;
 

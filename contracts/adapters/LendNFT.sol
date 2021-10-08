@@ -37,7 +37,12 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
  */
 
-contract LendNFTContract is AdapterGuard, Reimbursable, IERC1155Receiver, IERC721Receiver {
+contract LendNFTContract is
+    AdapterGuard,
+    Reimbursable,
+    IERC1155Receiver,
+    IERC721Receiver
+{
     using Address for address payable;
 
     struct ProcessProposal {

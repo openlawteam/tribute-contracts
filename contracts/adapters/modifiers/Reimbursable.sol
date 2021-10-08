@@ -29,26 +29,39 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
  */
 abstract contract Reimbursable {
+    struct ReimbursementData {
+        uint256 gasStart;
+        bool shouldReimburse;
+        uint256 spendLimitPeriod;
+        IReimbursement reimbursement;
+    }
+
     /**
      * @dev Only registered adapters are allowed to execute the function call.
      */
     modifier reimbursable(DaoRegistry dao) {
-        uint256 gasStart = gasleft();
-        require(dao.lockedAt() != block.number, "reentrancy guard");
-        dao.lockSession();
-        IReimbursement reimbursement =
-            IReimbursement(dao.getAdapterAddress(DaoHelper.REIMBURSEMENT));
-        (bool shouldReimburse, uint256 spendLimitPeriod) =
-            reimbursement.shouldReimburse(dao, gasStart);
+        ReimbursementData memory data;
+        data.gasStart = gasleft();
+        {
+            require(dao.lockedAt() != block.number, "reentrancy guard");
+            dao.lockSession();
+            data.reimbursement = IReimbursement(
+                dao.getAdapterAddress(DaoHelper.REIMBURSEMENT)
+            );
+            (bool shouldReimburse, uint256 spendLimitPeriod) =
+                data.reimbursement.shouldReimburse(dao, data.gasStart);
+
+            data.shouldReimburse = shouldReimburse;
+            data.spendLimitPeriod = spendLimitPeriod;
+        }
         _;
 
-        if (shouldReimburse) {
-            uint256 gasUsed = gasStart - gasleft();
-            reimbursement.reimburseTransaction(
+        if (data.shouldReimburse) {
+            data.reimbursement.reimburseTransaction(
                 dao,
                 payable(msg.sender),
-                gasUsed,
-                spendLimitPeriod
+                data.gasStart - gasleft(),
+                data.spendLimitPeriod
             );
         }
         dao.unlockSession();

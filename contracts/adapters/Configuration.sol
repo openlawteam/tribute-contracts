@@ -39,7 +39,7 @@ contract ConfigurationContract is IConfiguration, Reimbursable {
         uint256[] values;
     }
 
-    mapping(address => mapping(bytes32 => Configuration))
+    mapping(DaoRegistry => mapping(bytes32 => Configuration))
         private _configurations;
 
     /**
@@ -73,7 +73,7 @@ contract ConfigurationContract is IConfiguration, Reimbursable {
             );
 
         dao.submitProposal(proposalId);
-        _configurations[address(dao)][proposalId] = Configuration(keys, values);
+        _configurations[dao][proposalId] = Configuration(keys, values);
         dao.sponsorProposal(proposalId, sponsoredBy, address(votingContract));
         votingContract.startNewVotingForProposal(dao, proposalId, data);
     }
@@ -91,8 +91,7 @@ contract ConfigurationContract is IConfiguration, Reimbursable {
     {
         dao.processProposal(proposalId);
 
-        Configuration storage configuration =
-            _configurations[address(dao)][proposalId];
+        Configuration storage configuration = _configurations[dao][proposalId];
 
         IVoting votingContract = IVoting(dao.votingAdapter(proposalId));
         require(address(votingContract) != address(0), "adapter not found");
