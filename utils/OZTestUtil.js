@@ -84,6 +84,8 @@ const getDefaultOptions = (options) => {
     maxExternalTokens: 100,
     couponCreatorAddress: "0x7D8cad0bbD68deb352C33e80fccd4D8e88b4aBb8",
     deployTestTokens: true,
+    nftContractWhitelist: "0x7D8cad0bbD68deb352C33e80fccd4D8e88b4aBb8",
+    unitsPerNFT: "100000",
     ...options,
   };
 

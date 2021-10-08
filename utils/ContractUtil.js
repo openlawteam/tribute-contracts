@@ -100,6 +100,7 @@ const contracts = {
   OnboardingContract: "./adapters/OnboardingContract",
   CouponOnboardingContract: "./adapters/CouponOnboardingContract",
   TributeContract: "./adapters/TributeContract",
+  StakeNFTContract: "./adapters/StakeNFTContract",
   TributeNFTContract: "./adapters/TributeNFTContract",
 
   // Utils

@@ -19,6 +19,7 @@
     "@openzeppelin/contracts": "^4.0.0",
     "@truffle/contract": "^4.3.13",
     "@truffle/hdwallet-provider": "1.2.2",
+    "eth-revert-reason": "^1.0.3",
     "eth-sig-util": "^3.0.0",
     "ethereumjs-util": "^7.0.5",
     "ganache-cli": "^6.12.1",

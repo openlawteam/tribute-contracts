@@ -43,14 +43,26 @@ contract StakeNFTContract is
 {
     using Address for address payable;
 
+    struct NFTProcess {
+        address previousOwner;
+        uint88 unitsPerNft;
+    }
+
     struct ProcessProposal {
         DaoRegistry dao;
     }
 
+    event NFTStaked(
+        address nftContract,
+        uint256 tokenId,
+        address applicant,
+        uint256 unitsPerNft
+    );
+
     bytes32 constant UnitsPerNft = keccak256("stake-nft.unitsPerNft");
     bytes32 constant WhitelistedNFT = keccak256("stake-nft.whitelistedNFT");
 
-    mapping(address => mapping(uint256 => address)) internal previousOwners;
+    mapping(address => mapping(uint256 => NFTProcess)) internal nfts;
 
     /**
      * @notice Configures the adapter for a particular DAO.
@@ -83,12 +95,22 @@ contract StakeNFTContract is
         address nftAddress,
         uint256 tokenId
     ) external reentrancyGuard(dao) {
-        address previousOwner = previousOwners[nftAddress][tokenId];
+        address previousOwner = nfts[nftAddress][tokenId].previousOwner;
         require(msg.sender == previousOwner, "only prev. owner can get NFT");
+        BankExtension bank = BankExtension(dao.getExtensionAddress(BANK));
 
+        //remove the tokens
+        bank.subtractFromBalance(
+            msg.sender,
+            UNITS,
+            nfts[nftAddress][tokenId].unitsPerNft
+        );
         NFTExtension nftExt = NFTExtension(dao.getExtensionAddress(NFT));
 
         nftExt.withdrawNFT(previousOwner, nftAddress, tokenId);
+        delete nfts[nftAddress][tokenId];
+
+        //TODO: emit an event
     }
 
     function onERC721Received(
@@ -119,12 +141,14 @@ contract StakeNFTContract is
 
         bank.addToBalance(from, UNITS, unitsPerNft);
 
-        previousOwners[msg.sender][tokenId] = from;
+        nfts[msg.sender][tokenId] = NFTProcess(from, uint88(unitsPerNft));
         IERC721 erc721 = IERC721(msg.sender);
 
         NFTExtension nftExt = NFTExtension(dao.getExtensionAddress(NFT));
         erc721.approve(address(nftExt), tokenId);
         nftExt.collect(msg.sender, tokenId);
+
+        emit NFTStaked(msg.sender, tokenId, from, unitsPerNft);
 
         return this.onERC721Received.selector;
     }

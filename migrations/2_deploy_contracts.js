@@ -125,6 +125,8 @@ async function deployRinkebyDao(deployFunction, network) {
     deployTestTokens: true,
     finalize: false,
     maxExternalTokens: 100,
+    nftContractWhitelist: "0x066a3c14ab4d30491253789232799d1c0981649c",
+    unitsPerNFT: 100000,
     couponCreatorAddress: process.env.COUPON_CREATOR_ADDR,
     daoName: process.env.DAO_NAME,
     owner: process.env.DAO_OWNER_ADDR,
