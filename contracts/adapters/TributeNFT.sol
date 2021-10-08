@@ -41,7 +41,12 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
  */
 
-contract TributeNFTContract is AdapterGuard, Reimbursable, IERC1155Receiver, IERC721Receiver {
+contract TributeNFTContract is
+    AdapterGuard,
+    Reimbursable,
+    IERC1155Receiver,
+    IERC721Receiver
+{
     using Address for address payable;
 
     struct ProcessProposal {
