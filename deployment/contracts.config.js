@@ -1,3 +1,11 @@
+const {
+  daoAccessFlagsMap,
+  bankExtensionAclFlagsMap,
+  erc721ExtensionAclFlagsMap,
+  erc1271ExtensionAclFlagsMap,
+  vestingExtensionAclFlagsMap,
+} = require("../utils/aclFlags");
+
 // Matches the DaoArtifacts.sol ArtifactType enum
 const ContractType = {
   Core: 0,
@@ -161,6 +169,9 @@ const contracts = [
     enabled: true,
     version: "1.0.0",
     type: ContractType.Extension,
+    acls: {
+      dao: [],
+    },
   },
   {
     name: "InternalTokenVestingExtension",
@@ -198,6 +209,10 @@ const contracts = [
     enabled: true,
     version: "1.0.0",
     type: ContractType.Adapter,
+    acls: {
+      dao: [daoAccessFlagsMap.UPDATE_DELEGATE_KEY],
+      extensions: {},
+    },
   },
   {
     name: "BankAdapterContract",
@@ -205,6 +220,15 @@ const contracts = [
     enabled: true,
     version: "1.0.0",
     type: ContractType.Adapter,
+    acls: {
+      dao: [],
+      extensions: {
+        bank: [
+          bankExtensionAclFlagsMap.INTERNAL_TRANSFER,
+          bankExtensionAclFlagsMap.ADD_TO_BALANCE,
+        ],
+      },
+    },
   },
   {
     name: "NFTAdapterContract",
@@ -212,6 +236,13 @@ const contracts = [
     enabled: true,
     version: "1.0.0",
     type: ContractType.Adapter,
+    acls: {
+      dao: [],
+      extensions: {
+        bank: [],
+        erc721: [erc721ExtensionAclFlagsMap.COLLECT_NFT],
+      },
+    },
   },
   {
     name: "ConfigurationContract",
@@ -219,13 +250,13 @@ const contracts = [
     enabled: true,
     version: "1.0.0",
     type: ContractType.Adapter,
-  },
-  {
-    name: "ManagingContract",
-    path: "../contracts/adapters/ManagingContract",
-    enabled: true,
-    version: "1.0.0",
-    type: ContractType.Adapter,
+    acls: {
+      dao: [
+        daoAccessFlagsMap.SUBMIT_PROPOSAL,
+        daoAccessFlagsMap.SET_CONFIGURATION,
+      ],
+      extensions: {},
+    },
   },
   {
     name: "ERC1155AdapterContract",
@@ -233,6 +264,33 @@ const contracts = [
     enabled: true,
     version: "1.0.0",
     type: ContractType.Adapter,
+    acls: {
+      dao: [],
+      extensions: {
+        bank: [],
+        erc721: [
+          erc721ExtensionAclFlagsMap.COLLECT_NFT,
+          erc721ExtensionAclFlagsMap.WITHDRAW_NFT,
+          erc721ExtensionAclFlagsMap.INTERNAL_TRANSFER,
+        ],
+      },
+    },
+  },
+  {
+    name: "ManagingContract",
+    path: "../contracts/adapters/ManagingContract",
+    enabled: true,
+    version: "1.0.0",
+    type: ContractType.Adapter,
+    acls: {
+      dao: [
+        daoAccessFlagsMap.SUBMIT_PROPOSAL,
+        daoAccessFlagsMap.REPLACE_ADAPTER,
+        daoAccessFlagsMap.ADD_EXTENSION,
+        daoAccessFlagsMap.REMOVE_EXTENSION,
+      ],
+      extensions: {},
+    },
   },
 
   // Signature Adapters
@@ -242,6 +300,14 @@ const contracts = [
     enabled: true,
     version: "1.0.0",
     type: ContractType.Adapter,
+    acls: {
+      dao: [daoAccessFlagsMap.SUBMIT_PROPOSAL],
+      extensions: {
+        bank: [],
+        erc712: [],
+        erc1271: [erc1271ExtensionAclFlagsMap.SIGN],
+      },
+    },
   },
 
   // Voting Adapters
@@ -251,6 +317,10 @@ const contracts = [
     enabled: true,
     version: "1.0.0",
     type: ContractType.Adapter,
+    acls: {
+      dao: [],
+      extensions: {},
+    },
   },
   {
     name: "SnapshotProposalContract",
@@ -258,6 +328,10 @@ const contracts = [
     enabled: true,
     version: "1.0.0",
     type: ContractType.Adapter,
+    acls: {
+      dao: [],
+      extensions: {},
+    },
   },
   {
     name: "OffchainVotingContract",
@@ -265,6 +339,10 @@ const contracts = [
     enabled: true,
     version: "1.0.0",
     type: ContractType.Adapter,
+    acls: {
+      dao: [],
+      extensions: {},
+    },
   },
   {
     name: "OffchainVotingHashContract",
@@ -272,6 +350,10 @@ const contracts = [
     enabled: true,
     version: "1.0.0",
     type: ContractType.Adapter,
+    acls: {
+      dao: [],
+      extensions: {},
+    },
   },
   {
     name: "KickBadReporterAdapter",
@@ -279,6 +361,10 @@ const contracts = [
     enabled: true,
     version: "1.0.0",
     type: ContractType.Adapter,
+    acls: {
+      dao: [],
+      extensions: {},
+    },
   },
 
   // Withdraw / Kick Adapters
@@ -288,6 +374,17 @@ const contracts = [
     enabled: true,
     version: "1.0.0",
     type: ContractType.Adapter,
+    acls: {
+      dao: [],
+      extensions: {
+        bank: [
+          bankExtensionAclFlagsMap.INTERNAL_TRANSFER,
+          bankExtensionAclFlagsMap.SUB_FROM_BALANCE,
+          bankExtensionAclFlagsMap.ADD_TO_BALANCE,
+          bankExtensionAclFlagsMap.REGISTER_NEW_TOKEN,
+        ],
+      },
+    },
   },
   {
     name: "GuildKickContract",
@@ -295,6 +392,10 @@ const contracts = [
     enabled: true,
     version: "1.0.0",
     type: ContractType.Adapter,
+    acls: {
+      dao: [daoAccessFlagsMap.SUBMIT_PROPOSAL],
+      extensions: {},
+    },
   },
   {
     name: "DistributeContract",
@@ -302,6 +403,12 @@ const contracts = [
     enabled: true,
     version: "1.0.0",
     type: ContractType.Adapter,
+    acls: {
+      dao: [daoAccessFlagsMap.SUBMIT_PROPOSAL],
+      extensions: {
+        bank: [bankExtensionAclFlagsMap.INTERNAL_TRANSFER],
+      },
+    },
   },
 
   // Funding/Onboarding Adapters
@@ -311,6 +418,16 @@ const contracts = [
     enabled: true,
     version: "1.0.0",
     type: ContractType.Adapter,
+    acls: {
+      dao: [daoAccessFlagsMap.SUBMIT_PROPOSAL],
+      extensions: {
+        bank: [
+          bankExtensionAclFlagsMap.INTERNAL_TRANSFER,
+          bankExtensionAclFlagsMap.SUB_FROM_BALANCE,
+          bankExtensionAclFlagsMap.ADD_TO_BALANCE,
+        ],
+      },
+    },
   },
   {
     name: "OnboardingContract",
@@ -318,6 +435,14 @@ const contracts = [
     enabled: true,
     version: "1.0.0",
     type: ContractType.Adapter,
+    acls: {
+      dao: [
+        daoAccessFlagsMap.SUBMIT_PROPOSAL,
+        daoAccessFlagsMap.UPDATE_DELEGATE_KEY,
+        daoAccessFlagsMap.NEW_MEMBER,
+      ],
+      extensions: {},
+    },
   },
   {
     name: "CouponOnboardingContract",
@@ -325,6 +450,15 @@ const contracts = [
     enabled: true,
     version: "1.0.0",
     type: ContractType.Adapter,
+    acls: {
+      dao: [daoAccessFlagsMap.NEW_MEMBER],
+      extensions: {
+        bank: [
+          bankExtensionAclFlagsMap.INTERNAL_TRANSFER,
+          bankExtensionAclFlagsMap.ADD_TO_BALANCE,
+        ],
+      },
+    },
   },
   {
     name: "TributeContract",
@@ -332,6 +466,15 @@ const contracts = [
     enabled: true,
     version: "1.0.0",
     type: ContractType.Adapter,
+    acls: {
+      dao: [daoAccessFlagsMap.SUBMIT_PROPOSAL, daoAccessFlagsMap.NEW_MEMBER],
+      extensions: {
+        bank: [
+          bankExtensionAclFlagsMap.ADD_TO_BALANCE,
+          bankExtensionAclFlagsMap.REGISTER_NEW_TOKEN,
+        ],
+      },
+    },
   },
   {
     name: "TributeNFTContract",
@@ -339,6 +482,16 @@ const contracts = [
     enabled: true,
     version: "1.0.0",
     type: ContractType.Adapter,
+    acls: {
+      dao: [daoAccessFlagsMap.SUBMIT_PROPOSAL, daoAccessFlagsMap.NEW_MEMBER],
+      extensions: {
+        bank: [
+          bankExtensionAclFlagsMap.SUB_FROM_BALANCE,
+          bankExtensionAclFlagsMap.ADD_TO_BALANCE,
+        ],
+        erc721: [erc721ExtensionAclFlagsMap.COLLECT_NFT],
+      },
+    },
   },
   {
     name: "LendNFTContract",
@@ -346,6 +499,23 @@ const contracts = [
     enabled: true,
     version: "1.0.0",
     type: ContractType.Adapter,
+    acls: {
+      dao: [daoAccessFlagsMap.SUBMIT_PROPOSAL, daoAccessFlagsMap.NEW_MEMBER],
+      extensions: {
+        bank: [
+          bankExtensionAclFlagsMap.SUB_FROM_BALANCE,
+          bankExtensionAclFlagsMap.ADD_TO_BALANCE,
+        ],
+        erc721: [
+          erc721ExtensionAclFlagsMap.COLLECT_NFT,
+          erc721ExtensionAclFlagsMap.WITHDRAW_NFT,
+        ],
+        vesting: [
+          vestingExtensionAclFlagsMap.NEW_VESTING,
+          vestingExtensionAclFlagsMap.REMOVE_VESTING,
+        ],
+      },
+    },
   },
   // ERC20 Util
   {
@@ -354,6 +524,12 @@ const contracts = [
     enabled: true,
     version: "1.0.0",
     type: ContractType.Adapter,
+    acls: {
+      dao: [],
+      extensions: {
+        bank: [bankExtensionAclFlagsMap.INTERNAL_TRANSFER],
+      },
+    },
   },
 
   // Utils

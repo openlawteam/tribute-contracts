@@ -29,7 +29,8 @@ module.exports = async (deployer, network, accounts) => {
     network,
     deployFunction,
     truffleImports,
-    accounts
+    accounts,
+    contracts
   );
 
   const { dao, extensions, testContracts } = result;
@@ -60,7 +61,12 @@ module.exports = async (deployer, network, accounts) => {
   console.log(`Deployment completed at: ${new Date().toISOString()}`);
 };
 
-const deployRinkebyDao = async (deployFunction, network, truffleImports) => {
+const deployRinkebyDao = async (
+  deployFunction,
+  network,
+  truffleImports,
+  contractConfigs
+) => {
   if (!process.env.DAO_NAME) throw Error("Missing env var: DAO_NAME");
   if (!process.env.DAO_OWNER_ADDR)
     throw Error("Missing env var: DAO_OWNER_ADDR");
@@ -73,6 +79,7 @@ const deployRinkebyDao = async (deployFunction, network, truffleImports) => {
 
   return await deployDao({
     ...truffleImports,
+    contractConfigs,
     deployFunction,
     maxAmount,
     unitPrice: toBN(toWei("100", "finney")),
@@ -104,7 +111,12 @@ const deployRinkebyDao = async (deployFunction, network, truffleImports) => {
   });
 };
 
-const deployMainnetDao = async (deployFunction, network, truffleImports) => {
+const deployMainnetDao = async (
+  deployFunction,
+  network,
+  truffleImports,
+  contractConfigs
+) => {
   if (!process.env.DAO_NAME) throw Error("Missing env var: DAO_NAME");
   if (!process.env.DAO_OWNER_ADDR)
     throw Error("Missing env var: DAO_OWNER_ADDR");
@@ -125,7 +137,9 @@ const deployMainnetDao = async (deployFunction, network, truffleImports) => {
 
   return await deployDao({
     ...truffleImports,
+    contractConfigs,
     deployFunction,
+    maxAmount,
     unitPrice: toBN(toWei("100", "finney")),
     nbUnits: toBN("100000"),
     tokenAddr: ETH_TOKEN,
@@ -151,7 +165,8 @@ const deployGanacheDao = async (
   deployFunction,
   network,
   accounts,
-  truffleImports
+  truffleImports,
+  contractConfigs
 ) => {
   if (!process.env.DAO_NAME) throw Error("Missing env var: DAO_NAME");
   if (!process.env.ERC20_TOKEN_NAME)
@@ -163,7 +178,9 @@ const deployGanacheDao = async (
 
   return await deployDao({
     ...truffleImports,
+    contractConfigs,
     deployFunction,
+    maxAmount,
     unitPrice: toBN(toWei("100", "finney")),
     nbUnits: toBN("100000"),
     tokenAddr: ETH_TOKEN,
@@ -191,7 +208,8 @@ const deployTestDao = async (
   deployFunction,
   network,
   accounts,
-  truffleImports
+  truffleImports,
+  contractConfigs
 ) => {
   if (!process.env.DAO_NAME) throw Error("Missing env var: DAO_NAME");
   if (!process.env.ERC20_TOKEN_NAME)
@@ -203,7 +221,9 @@ const deployTestDao = async (
 
   return await deployDao({
     ...truffleImports,
+    contractConfigs,
     deployFunction,
+    maxAmount,
     unitPrice: unitPrice,
     nbUnits: numberOfUnits,
     tokenAddr: ETH_TOKEN,
@@ -225,14 +245,30 @@ const deployTestDao = async (
   });
 };
 
-const deploy = async (network, deployFunction, truffleImports, accounts) => {
+const deploy = async (
+  network,
+  deployFunction,
+  truffleImports,
+  accounts,
+  contracts
+) => {
   let res;
   switch (network) {
     case "mainnet":
-      res = await deployMainnetDao(deployFunction, network, truffleImports);
+      res = await deployMainnetDao(
+        deployFunction,
+        network,
+        truffleImports,
+        contracts
+      );
       break;
     case "rinkeby":
-      res = await deployRinkebyDao(deployFunction, network, truffleImports);
+      res = await deployRinkebyDao(
+        deployFunction,
+        network,
+        truffleImports,
+        contracts
+      );
       break;
     case "test":
     case "coverage":
@@ -240,7 +276,8 @@ const deploy = async (network, deployFunction, truffleImports, accounts) => {
         deployFunction,
         network,
         accounts,
-        truffleImports
+        truffleImports,
+        contracts
       );
       break;
     case "ganache":
@@ -248,7 +285,8 @@ const deploy = async (network, deployFunction, truffleImports, accounts) => {
         deployFunction,
         network,
         accounts,
-        truffleImports
+        truffleImports,
+        contracts
       );
       break;
     default:

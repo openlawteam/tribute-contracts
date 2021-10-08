@@ -429,7 +429,7 @@ const addDefaultAdapters = async ({ dao, options, daoFactory, nftAddr }) => {
   } = options;
 
   const bankAddress = await dao.getExtensionAddress(sha3("bank"));
-  const bankExtension = await BankExtension.at(bankAddress);
+  const bankExtension = await deployFunction(BankExtension);
 
   const nftExtAddr = await dao.getExtensionAddress(sha3("nft"));
   const nftExtension = await NFTExtension.at(nftExtAddr);
@@ -455,6 +455,7 @@ const addDefaultAdapters = async ({ dao, options, daoFactory, nftAddr }) => {
   );
 
   await configureDao({
+    ...options,
     owner: options.owner,
     daoFactory,
     dao,
@@ -483,7 +484,6 @@ const addDefaultAdapters = async ({ dao, options, daoFactory, nftAddr }) => {
     erc20TokenExtension,
     erc1155TokenExtension,
     vestingExtension,
-    ...options,
   });
 
   return {
@@ -550,122 +550,45 @@ const configureDao = async ({
 }) => {
   const configureAdaptersWithDAOAccess = async () => {
     const adapters = [];
-    if (voting) adapters.push(entryDao("voting", voting, {}));
+    if (voting) adapters.push(entryDao("voting", voting));
 
-    if (configuration)
-      adapters.push(
-        entryDao("configuration", configuration, {
-          SUBMIT_PROPOSAL: true,
-          SET_CONFIGURATION: true,
-        })
-      );
+    if (configuration) adapters.push(entryDao("configuration", configuration));
 
-    if (ragequit) adapters.push(entryDao("ragequit", ragequit, {}));
+    if (ragequit) adapters.push(entryDao("ragequit", ragequit));
 
-    if (guildkick)
-      adapters.push(
-        entryDao("guildkick", guildkick, {
-          SUBMIT_PROPOSAL: true,
-        })
-      );
+    if (guildkick) adapters.push(entryDao("guildkick", guildkick));
 
-    if (managing)
-      adapters.push(
-        entryDao("managing", managing, {
-          SUBMIT_PROPOSAL: true,
-          REPLACE_ADAPTER: true,
-          ADD_EXTENSION: true,
-          REMOVE_EXTENSION: true,
-        })
-      );
+    if (managing) adapters.push(entryDao("managing", managing));
 
-    if (financing)
-      adapters.push(
-        entryDao("financing", financing, {
-          SUBMIT_PROPOSAL: true,
-        })
-      );
+    if (financing) adapters.push(entryDao("financing", financing));
 
-    if (signatures)
-      adapters.push(
-        entryDao("signatures", signatures, {
-          SUBMIT_PROPOSAL: true,
-        })
-      );
+    if (signatures) adapters.push(entryDao("signatures", signatures));
 
-    if (onboarding)
-      adapters.push(
-        entryDao("onboarding", onboarding, {
-          SUBMIT_PROPOSAL: true,
-          UPDATE_DELEGATE_KEY: true,
-          NEW_MEMBER: true,
-        })
-      );
+    if (onboarding) adapters.push(entryDao("onboarding", onboarding));
 
     if (couponOnboarding)
-      adapters.push(
-        entryDao("coupon-onboarding", couponOnboarding, {
-          NEW_MEMBER: true,
-        })
-      );
+      adapters.push(entryDao("coupon-onboarding", couponOnboarding));
 
     if (daoRegistryAdapter)
-      adapters.push(
-        entryDao("daoRegistry", daoRegistryAdapter, {
-          UPDATE_DELEGATE_KEY: true,
-        })
-      );
+      adapters.push(entryDao("daoRegistry", daoRegistryAdapter));
 
-    if (tribute)
-      adapters.push(
-        entryDao("tribute", tribute, {
-          SUBMIT_PROPOSAL: true,
-          NEW_MEMBER: true,
-        })
-      );
+    if (tribute) adapters.push(entryDao("tribute", tribute));
 
-    if (tributeNFT)
-      adapters.push(
-        entryDao("tribute-nft", tributeNFT, {
-          SUBMIT_PROPOSAL: true,
-          NEW_MEMBER: true,
-        })
-      );
+    if (tributeNFT) adapters.push(entryDao("tribute-nft", tributeNFT));
 
-    if (lendNFT)
-      adapters.push(
-        entryDao("lend-nft", lendNFT, {
-          SUBMIT_PROPOSAL: true,
-          NEW_MEMBER: true,
-        })
-      );
+    if (lendNFT) adapters.push(entryDao("lend-nft", lendNFT));
 
-    if (distribute)
-      adapters.push(
-        entryDao("distribute", distribute, {
-          SUBMIT_PROPOSAL: true,
-        })
-      );
+    if (distribute) adapters.push(entryDao("distribute", distribute));
 
-    // Adapters to access the extensions directly
-    if (nftAdapter) adapters.push(entryDao("nft", nftAdapter, {}));
+    // Adapters that have direct access to the Extensions need to be added to the DAO without ACLs flags
+    if (nftAdapter) adapters.push(entryDao("nft", nftAdapter));
+    if (bankAdapter) adapters.push(entryDao("bank", bankAdapter));
+    if (erc1155Adapter) adapters.push(entryDao("erc1155-adpt", erc1155Adapter));
 
-    if (bankAdapter) adapters.push(entryDao("bank", bankAdapter, {}));
-
-    if (erc1155Adapter)
-      adapters.push(entryDao("erc1155-adpt", erc1155Adapter, {}));
-
-    // Declare the erc20 token extension as an adapter to be able to call the bank extension
+    // Declaring the erc20 token extension as an adapter to be able to call the bank extension
     if (erc20TokenExtension) {
-      adapters.push(
-        entryDao("erc20-ext", erc20TokenExtension, {
-          NEW_MEMBER: true,
-        })
-      );
-
-      adapters.push(
-        entryDao("erc20-transfer-strategy", erc20TransferStrategy, {})
-      );
+      adapters.push(entryDao("erc20-ext", erc20TokenExtension));
+      adapters.push(entryDao("erc20-transfer-strategy", erc20TransferStrategy));
     }
     await daoFactory.addAdapters(dao.address, adapters, { from: owner });
   };
@@ -827,7 +750,6 @@ const configureDao = async ({
       dao.address,
       erc1155TokenExtension.address,
       adaptersWithNFTAccess,
-      //[],
       {
         from: owner,
       }
@@ -951,7 +873,6 @@ const cloneDao = async ({
 
   await daoFactory.createDao(name, creator ? creator : owner, { from: owner });
 
-  // checking the gas usaged to clone a contract
   let _address = await daoFactory.getDaoAddress(name);
   let newDao = await DaoRegistry.at(_address);
   return { dao: newDao, daoFactory, daoName: name };
@@ -1194,7 +1115,11 @@ const entryVesting = (contract, flags) => {
   };
 };
 
-const entryDao = (name, contract, flags) => {
+const entryDao = (name, contract) => {
+  const flags = contract.configs.acls.dao.map((f) =>
+    Object.assign({ [f]: true })
+  );
+
   const values = [
     flags.REPLACE_ADAPTER,
     flags.SUBMIT_PROPOSAL,
