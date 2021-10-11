@@ -284,6 +284,7 @@ const prepareAdapters = async ({
   GuildKickContract,
   DaoRegistryAdapterContract,
   BankAdapterContract,
+  CouponOnboardingContract,
   wethAddress,
 }) => {
   let voting,
@@ -293,6 +294,7 @@ const prepareAdapters = async ({
     kycOnboarding,
     guildkick,
     daoRegistryAdapter,
+    couponOnboarding,
     bankAdapter;
 
   voting = await deployFunction(VotingContract);
@@ -303,6 +305,7 @@ const prepareAdapters = async ({
   guildkick = await deployFunction(GuildKickContract);
   daoRegistryAdapter = await deployFunction(DaoRegistryAdapterContract);
   bankAdapter = await deployFunction(BankAdapterContract);
+  couponOnboarding = await deployFunction(CouponOnboardingContract, [1]);
 
   return {
     voting,
@@ -313,6 +316,7 @@ const prepareAdapters = async ({
     kycOnboarding,
     daoRegistryAdapter,
     bankAdapter,
+    couponOnboarding,
   };
 };
 
@@ -337,7 +341,7 @@ const addDefaultAdapters = async ({ dao, options, daoFactory }) => {
     daoRegistryAdapter,
     bankAdapter,
     //nftAdapter,
-    //couponOnboarding,
+    couponOnboarding,
     //tribute,
     //distribute,
     //tributeNFT,
@@ -363,6 +367,7 @@ const addDefaultAdapters = async ({ dao, options, daoFactory }) => {
     bankAdapter,
     voting,
     configuration,
+    couponOnboarding,
     bankExtension,
     erc20TokenExtension,
     ...options,
@@ -379,6 +384,7 @@ const addDefaultAdapters = async ({ dao, options, daoFactory }) => {
       kycOnboarding,
       daoRegistryAdapter,
       bankAdapter,
+      couponOnboarding,
     },
   };
 };
@@ -397,6 +403,7 @@ const configureDao = async ({
   erc20TokenExtension,
   voting,
   configuration,
+  couponOnboarding,
   unitPrice,
   maxChunks,
   nbUnits,
@@ -424,6 +431,12 @@ const configureDao = async ({
         REMOVE_EXTENSION: true,
       }),
       entryDao("kyc-onboarding", kycOnboarding, {
+        NEW_MEMBER: true,
+      }),
+      entryDao("coupon-onboarding", couponOnboarding, {
+        SUBMIT_PROPOSAL: false,
+        ADD_TO_BALANCE: true,
+        UPDATE_DELEGATE_KEY: false,
         NEW_MEMBER: true,
       }),
       entryDao("daoRegistry", daoRegistryAdapter, {
@@ -460,6 +473,9 @@ const configureDao = async ({
       entryBank(kycOnboarding, {
         ADD_TO_BALANCE: true,
       }),
+      entryBank(couponOnboarding, {
+        ADD_TO_BALANCE: true,
+      }),
       // Let the unit-token extension to execute internal transfers in the bank as an adapter
       entryBank(erc20TokenExtension, {
         INTERNAL_TRANSFER: true,
@@ -483,6 +499,15 @@ const configureDao = async ({
     maxChunks,
     100,
     fundTargetAddress,
+    {
+      from: owner,
+    }
+  );
+
+  await couponOnboarding.configureDao(
+    dao.address,
+    couponCreatorAddress,
+    UNITS,
     {
       from: owner,
     }
