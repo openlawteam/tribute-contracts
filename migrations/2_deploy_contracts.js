@@ -43,9 +43,9 @@ module.exports = async (deployer, network, accounts) => {
         testContracts.multicall ? testContracts.multicall.address : ""
       }`
     );
-    console.log(`BankExtension: ${extensions.bank.address}`);
+    console.log(`BankExtension: ${extensions.bankExt.address}`);
     console.log(
-      `NFTExtension: ${extensions.nft ? extensions.nft.address : ""}`
+      `NFTExtension: ${extensions.nft ? extensions.erc721Ext.address : ""}`
     );
     console.log(
       `ERC20Extension: ${

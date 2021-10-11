@@ -69,7 +69,11 @@ const deployFunction = (deployer, daoArtifacts, allContracts) => {
       contractConfigs.type === ContractType.Extension ||
       contractConfigs.type === ContractType.Test
     ) {
-      return await deploy(contractInterface, args);
+      const instance = await deploy(contractInterface, args);
+      return {
+        ...instance,
+        configs: contractConfigs,
+      };
     }
 
     const artifactsOwner = process.env.DAO_ARTIFACTS_OWNER_ADDR
@@ -92,7 +96,7 @@ const deployFunction = (deployer, daoArtifacts, allContracts) => {
     }
     let deployedContract;
     // When the contract is not found in the DaoArtifacts, deploy a new one
-    if (contractConfig.type === ContractType.Factory) {
+    if (contractConfigs.type === ContractType.Factory) {
       const identity = await deploy(args[0]);
       deployedContract = await deploy(
         contractInterface,
