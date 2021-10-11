@@ -81,6 +81,9 @@ const deployRinkebyDao = async (deployFunction, network, truffleImports) => {
     erc20TokenName: process.env.ERC20_TOKEN_NAME,
     erc20TokenSymbol: process.env.ERC20_TOKEN_SYMBOL,
     erc20TokenDecimals: process.env.ERC20_TOKEN_DECIMALS,
+    gasPriceLimit: "10000000",
+    spendLimitPeriod: "86400", //24h
+    spendLimitEth: toWei("10", "ether"),
     maxChunks: toBN("100000"),
     votingPeriod: process.env.VOTING_PERIOD_SECONDS
       ? parseInt(process.env.VOTING_PERIOD_SECONDS)
