@@ -67,41 +67,31 @@ const deployDao = async (options) => {
     ? parseInt(options.erc20TokenDecimals) || 0
     : 0;
 
-  const identityDao = await deployFunction(DaoRegistry);
-  const identityBank = await deployFunction(BankExtension);
-  const bankFactory = await deployFunction(BankFactory, [identityBank.address]);
+  const bankFactory = await deployFunction(BankFactory, [BankExtension]);
 
-  const identityERC1271 = await deployFunction(ERC1271Extension);
   const erc1271Factory = await deployFunction(ERC1271ExtensionFactory, [
-    identityERC1271.address,
+    ERC1271Extension,
   ]);
 
-  const identityNft = await deployFunction(NFTExtension);
-  const nftFactory = await deployFunction(NFTCollectionFactory, [
-    identityNft.address,
-  ]);
+  const nftFactory = await deployFunction(NFTCollectionFactory, [NFTExtension]);
 
-  const identityERC20Ext = await deployFunction(ERC20Extension);
   const erc20TokenExtFactory = await deployFunction(
     ERC20TokenExtensionFactory,
-    [identityERC20Ext.address]
+    [ERC20Extension]
   );
 
-  const identityExecutorExt = await deployFunction(ExecutorExtension);
   const executorExtensionFactory = await deployFunction(
     ExecutorExtensionFactory,
-    [identityExecutorExt.address]
+    [ExecutorExtension]
   );
 
-  const identityERC1155Ext = await deployFunction(ERC1155TokenExtension);
   const erc1155TokenExtFactory = await deployFunction(
     ERC1155TokenCollectionFactory,
-    [identityERC1155Ext.address]
+    [ERC1155TokenExtension]
   );
 
   const { dao, daoFactory } = await cloneDao({
     ...options,
-    identityDao,
     name: options.daoName || "test-dao",
   });
 
@@ -144,11 +134,11 @@ const deployDao = async (options) => {
     ExecutorExtension
   );
 
-  const identityVesting = await deployFunction(InternalTokenVestingExtension);
   const internalTokenVestingExtensionFactory = await deployFunction(
     InternalTokenVestingExtensionFactory,
-    [identityVesting.address]
+    [InternalTokenVestingExtension]
   );
+
   const internalTokenVestingExtension = await createInternalTokenVestingExtension(
     dao,
     owner,
@@ -409,15 +399,6 @@ const prepareAdapters = async ({
     erc20TransferStrategy,
     erc1155Adapter,
   };
-};
-
-const createIdentityDao = async (options) => {
-  let { DaoRegistry } = options;
-
-  return await DaoRegistry.new({
-    from: options.owner,
-    gasPrice: toBN("0"),
-  });
 };
 
 const addDefaultAdapters = async ({ dao, options, daoFactory, nftAddr }) => {
@@ -992,7 +973,6 @@ const configureDao = async ({
 };
 
 const cloneDao = async ({
-  identityDao,
   owner,
   creator,
   deployFunction,
@@ -1000,11 +980,7 @@ const cloneDao = async ({
   DaoFactory,
   name,
 }) => {
-  let daoFactory = await deployFunction(
-    DaoFactory,
-    [identityDao.address],
-    owner
-  );
+  let daoFactory = await deployFunction(DaoFactory, [DaoRegistry], owner);
 
   await daoFactory.createDao(name, creator ? creator : owner, { from: owner });
 
@@ -1310,7 +1286,6 @@ const getNetworkDetails = (name) => {
 
 module.exports = {
   deployDao,
-  createIdentityDao,
   cloneDao,
   prepareAdapters,
   addDefaultAdapters,

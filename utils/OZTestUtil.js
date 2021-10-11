@@ -53,14 +53,29 @@ const {
 const { expectRevert } = require("@openzeppelin/test-helpers");
 const { expect } = require("chai");
 const { toWei } = require("web3-utils");
+const { ContractType } = require("../deployment/contracts.config");
 
 const deployFunction = async (contractInterface, args, from) => {
   if (!contractInterface) throw Error("undefined contract interface");
+  const { contracts } = require("../deployment/test.config");
+
+  const contractConfig = contracts.find(
+    (c) => c.name === contractInterface.contractName
+  );
+
   const f = from ? from : accounts[0];
-  if (args) {
-    return await contractInterface.new(...args, { from: f });
+  if (contractConfig.type === ContractType.Factory) {
+    const identity = await args[0].new({ from: f });
+    return await contractInterface.new(
+      ...[identity.address].concat(args.slice(1)),
+      { from: f }
+    );
   } else {
-    return await contractInterface.new({ from: f });
+    if (args) {
+      return await contractInterface.new(...args, { from: f });
+    } else {
+      return await contractInterface.new({ from: f });
+    }
   }
 };
 
@@ -73,6 +88,7 @@ const getOpenZeppelinContracts = (contracts) => {
     .filter((c) => c.enabled)
     .reduce((previousValue, contract) => {
       previousValue[contract.name] = getContractFromOpenZeppelin(contract.path);
+      previousValue[contract.name].contractName = contract.name;
       return previousValue;
     }, {});
 };
