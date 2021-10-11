@@ -63,19 +63,21 @@ const deployFunction = async (contractInterface, args, from) => {
   );
 
   const f = from ? from : accounts[0];
+  let instance;
   if (contractConfig.type === ContractType.Factory) {
     const identity = await args[0].new({ from: f });
-    return await contractInterface.new(
+    instance = await contractInterface.new(
       ...[identity.address].concat(args.slice(1)),
       { from: f }
     );
   } else {
     if (args) {
-      return await contractInterface.new(...args, { from: f });
+      instance = await contractInterface.new(...args, { from: f });
     } else {
-      return await contractInterface.new({ from: f });
+      instance = await contractInterface.new({ from: f });
     }
   }
+  return { ...instance, configs: contractConfig };
 };
 
 const getContractFromOpenZeppelin = (c) => {
@@ -208,6 +210,7 @@ module.exports = (() => {
       ...getDefaultOptions(options),
       ...ozContracts,
       deployFunction,
+      contractConfigs: contracts,
     });
   };
 

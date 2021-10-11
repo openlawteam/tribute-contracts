@@ -26,6 +26,7 @@ SOFTWARE.
  */
 
 const { UNITS, LOOT, sha3, toBN } = require("./ContractUtil");
+const { daoAccessFlags } = require("./aclFlags");
 
 const embedConfigs = (contractInstance, name, configs) => {
   return { ...contractInstance, configs: configs.find((c) => c.name === name) };
@@ -170,9 +171,9 @@ const createExtensions = async ({ dao, factories, options }) => {
   const missingConfigs = Object.keys(extensions).find(
     (e) => !extensions[e].configs
   );
-  if (missingConfigs && missingConfigs.length > 0)
+  if (missingConfigs)
     throw new Error(
-      `Missing extension configs for: ${Object.keys(missingConfigs)}`
+      `Missing extension configs for: [${missingConfigs}] extension(s)`
     );
   return extensions;
 };
@@ -236,7 +237,7 @@ const createAdapters = async ({
   erc20TransferStrategy = await deployFunction(ERC20TransferStrategy);
   erc1155Adapter = await deployFunction(ERC1155AdapterContract);
 
-  return {
+  const adapters = {
     voting,
     configuration,
     ragequit,
@@ -256,6 +257,16 @@ const createAdapters = async ({
     erc20TransferStrategy,
     erc1155Adapter,
   };
+
+  const missingConfigs = Object.keys(adapters).find(
+    (a) => !adapters[a].configs
+  );
+
+  if (missingConfigs)
+    throw new Error(
+      `Missing adapter configs for: [${missingConfigs}] adapter(s)`
+    );
+  return adapters;
 };
 
 const addDefaultAdapters = async ({ dao, daoFactory, extensions, options }) => {
@@ -1052,21 +1063,11 @@ const entryVesting = (contract, flags) => {
 };
 
 const entryDao = (name, contract) => {
-  const flags = contract.configs.acls.dao.map((f) =>
-    Object.assign({ [f]: true })
-  );
+  const enabled = daoAccessFlags.flatMap((flag) => {
+    return contract.configs.acls.dao.some((f) => f === flag);
+  });
 
-  const values = [
-    flags.REPLACE_ADAPTER,
-    flags.SUBMIT_PROPOSAL,
-    flags.UPDATE_DELEGATE_KEY,
-    flags.SET_CONFIGURATION,
-    flags.ADD_EXTENSION,
-    flags.REMOVE_EXTENSION,
-    flags.NEW_MEMBER,
-  ];
-
-  const acl = entry(values);
+  const acl = entry(enabled);
 
   return {
     id: sha3(name),
