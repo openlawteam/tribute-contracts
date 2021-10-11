@@ -89,9 +89,17 @@ const deployFunction = (deployer, daoArtifacts, allContracts) => {
       );
       return await contractInterface.at(address);
     }
-
+    let deployedContract;
     // When the contract is not found in the DaoArtifacts, deploy a new one
-    const deployedContract = await deploy(contractInterface, args);
+    if (contractConfig.type === ContractType.Factory) {
+      const identity = await deploy(args[0]);
+      deployedContract = await deploy(
+        contractInterface,
+        [identity.address].concat(args.slice(1))
+      );
+    } else {
+      deployedContract = await deploy(contractInterface, args);
+    }
 
     if (
       // Add the new contract to DaoArtifacts, should not store Core, Extension & Test contracts
