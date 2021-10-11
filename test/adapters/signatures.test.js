@@ -79,7 +79,7 @@ describe("Adapter - Signatures", () => {
   });
 
   it("should be possible to create a signature proposal and successfully query the erc1271 interface if it passes", async () => {
-    const erc1271 = this.extensions.erc1271;
+    const erc1271 = this.extensions.erc1271Ext;
     const voting = this.adapters.voting;
     const signatures = this.adapters.signatures;
 
@@ -131,7 +131,7 @@ describe("Adapter - Signatures", () => {
   it("should not be possible to get a valid signature if the proposal fails", async () => {
     const voting = this.adapters.voting;
     const signatures = this.adapters.signatures;
-    const erc1271 = this.extensions.erc1271;
+    const erc1271 = this.extensions.erc1271Ext;
 
     let proposalId = getProposalCounter();
 

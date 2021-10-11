@@ -23,10 +23,7 @@ SOFTWARE.
 
 const { toBN } = require("../../utils/ContractUtil.js");
 
-const {
-  createIdentityDao,
-  cloneDao,
-} = require("../../utils/DeploymentUtil.js");
+const { cloneDao } = require("../../utils/DeploymentUtil.js");
 
 const {
   accounts,
@@ -40,14 +37,17 @@ describe("Core - DaoFactory", () => {
   const owner = accounts[1];
   const anotherOwner = accounts[2];
 
-  it("should be possible create an identity dao and clone it", async () => {
-    let identityDao = await createIdentityDao({
-      owner,
-      DaoRegistry,
-      DaoFactory,
+  const createIdentityDao = () => {
+    return DaoRegistry.new({
+      from: owner,
+      gasPrice: toBN("0"),
     });
+  };
 
-    let { daoName } = await cloneDao({
+  it("should be possible create an identity dao and clone it", async () => {
+    const identityDao = await createIdentityDao();
+
+    const { daoName } = await cloneDao({
       identityDao,
       owner: anotherOwner,
       name: "cloned-dao",
@@ -60,13 +60,9 @@ describe("Core - DaoFactory", () => {
   });
 
   it("should be possible to get a DAO address by its name if it was created by the factory", async () => {
-    let identityDao = await createIdentityDao({
-      owner,
-      DaoRegistry,
-      DaoFactory,
-    });
+    const identityDao = await createIdentityDao();
 
-    let { daoFactory, dao } = await cloneDao({
+    const { daoFactory, dao } = await cloneDao({
       identityDao,
       owner: anotherOwner,
       name: "new-dao",
@@ -75,7 +71,7 @@ describe("Core - DaoFactory", () => {
       deployFunction,
     });
 
-    let retrievedAddress = await daoFactory.getDaoAddress("new-dao", {
+    const retrievedAddress = await daoFactory.getDaoAddress("new-dao", {
       from: anotherOwner,
       gasPrice: toBN("0"),
     });
@@ -83,13 +79,9 @@ describe("Core - DaoFactory", () => {
   });
 
   it("should not be possible to get a DAO address of it was not created by the factory", async () => {
-    let identityDao = await createIdentityDao({
-      owner,
-      DaoRegistry,
-      DaoFactory,
-    });
+    const identityDao = await createIdentityDao();
 
-    let { daoFactory } = await cloneDao({
+    const { daoFactory } = await cloneDao({
       identityDao,
       owner: anotherOwner,
       name: "new-dao",

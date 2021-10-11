@@ -47,7 +47,6 @@ const {
   entryBank,
   entryERC1271,
   entryExecutor,
-  entry,
 } = require("./DeploymentUtil");
 
 const { expectRevert } = require("@openzeppelin/test-helpers");
@@ -202,15 +201,15 @@ const proposalIdGenerator = () => {
 };
 
 module.exports = (() => {
-  const { contracts } = require("../deployment/test.config");
-  const ozContracts = getOpenZeppelinContracts(contracts);
+  const { contracts: contractConfigs } = require("../deployment/test.config");
+  const ozContracts = getOpenZeppelinContracts(contractConfigs);
 
   const deployDefaultDao = async (options) => {
     return await deployDao({
       ...getDefaultOptions(options),
       ...ozContracts,
       deployFunction,
-      contractConfigs: contracts,
+      contractConfigs,
     });
   };
 
@@ -221,6 +220,7 @@ module.exports = (() => {
       finalize: false,
       ...ozContracts,
       deployFunction,
+      contractConfigs,
     });
 
     await dao.finalizeDao({ from: owner });
@@ -248,13 +248,14 @@ module.exports = (() => {
       finalize: false,
       ...ozContracts,
       deployFunction,
+      contractConfigs,
     });
 
     await dao.potentialNewMember(newMember, {
       from: owner,
     });
 
-    await extensions.bank.addToBalance(newMember, UNITS, 1, {
+    await extensions.bankExt.addToBalance(newMember, UNITS, 1, {
       from: owner,
     });
 
@@ -279,13 +280,14 @@ module.exports = (() => {
       batchVoting: true,
       finalize: false,
       deployFunction,
+      contractConfigs,
     });
 
     await dao.potentialNewMember(newMember, {
       from: owner,
     });
 
-    await extensions.bank.addToBalance(newMember, UNITS, 1, {
+    await extensions.bankExt.addToBalance(newMember, UNITS, 1, {
       from: owner,
     });
 
@@ -320,7 +322,6 @@ module.exports = (() => {
     deployDefaultNFTDao,
     deployDaoWithBatchVoting,
     deployDaoWithOffchainVoting,
-    entry,
     encodeProposalData,
     entryERC1271,
     entryBank,

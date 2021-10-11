@@ -154,7 +154,7 @@ describe("Adapter - Onboarding", () => {
     const nonMemberAccount = accounts[3];
 
     const dao = this.dao;
-    const bank = this.extensions.bank;
+    const bank = this.extensions.bankExt;
     const onboarding = this.adapters.onboarding;
     const voting = this.adapters.voting;
 
@@ -244,7 +244,7 @@ describe("Adapter - Onboarding", () => {
       tokenAddr: oltContract.address,
     });
 
-    const bank = extensions.bank;
+    const bank = extensions.bankExt;
     const onboarding = adapters.onboarding;
     const voting = adapters.voting;
 
@@ -358,7 +358,7 @@ describe("Adapter - Onboarding", () => {
   it("should handle an onboarding proposal with a failed vote", async () => {
     const applicant = accounts[2];
     const dao = this.dao;
-    const bank = this.extensions.bank;
+    const bank = this.extensions.bankExt;
     const onboarding = this.adapters.onboarding;
     const voting = this.adapters.voting;
 
@@ -432,7 +432,7 @@ describe("Adapter - Onboarding", () => {
   it("should be possible to update delegate key and the member continues as an active member", async () => {
     const delegateKey = accounts[9];
     const dao = this.dao;
-    const bank = this.extensions.bank;
+    const bank = this.extensions.bankExt;
     const daoRegistryAdapter = this.adapters.daoRegistryAdapter;
 
     expect(await isMember(bank, daoOwner)).equal(true);

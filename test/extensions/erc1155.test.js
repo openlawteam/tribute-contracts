@@ -181,7 +181,7 @@ describe("Extension - ERC1155", () => {
   it("should not be possible to do an internal transfer of the NFT to a non member", async () => {
     const erc1155TestToken = this.testContracts.erc1155TestToken;
     const erc1155TestTokenAddress = erc1155TestToken.address;
-    const bank = this.extensions.bank;
+    const bank = this.extensions.bankExt;
     const nftOwner = accounts[1];
     //create a test 1155 token
     await erc1155TestToken.mint(nftOwner, 1, 10, "0x0", {
@@ -266,7 +266,7 @@ describe("Extension - ERC1155", () => {
   it(" should not be possible to transfer the NFT when you are not the owner", async () => {
     const erc1155TestToken = this.testContracts.erc1155TestToken;
     const erc1155TestTokenAddress = erc1155TestToken.address;
-    const bank = this.extensions.bank;
+    const bank = this.extensions.bankExt;
     const nftOwner = accounts[1];
     //create a test 1155 token
     await erc1155TestToken.mint(nftOwner, 1, 10, "0x0", {

@@ -340,7 +340,7 @@ describe("Adapter - Offchain Voting", () => {
   it("should be possible to propose a new voting by signing the proposal hash", async () => {
     const dao = this.dao;
     const onboarding = this.adapters.onboarding;
-    const bank = this.extensions.bank;
+    const bank = this.extensions.bankExt;
 
     for (var i = 1; i < members.length; i++) {
       await onboardMember(

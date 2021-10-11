@@ -15,13 +15,16 @@ const bankExtensionAclFlagsMap = {
   SUB_FROM_BALANCE: "SUB_FROM_BALANCE",
   INTERNAL_TRANSFER: "INTERNAL_TRANSFER",
   WITHDRAW: "WITHDRAW",
-  EXECUTE: "EXECUTE",
   REGISTER_NEW_TOKEN: "REGISTER_NEW_TOKEN",
   REGISTER_NEW_INTERNAL_TOKEN: "REGISTER_NEW_INTERNAL_TOKEN",
   UPDATE_TOKEN: "UPDATE_TOKEN",
 };
 
 const bankExtensionAclFlags = Object.values(bankExtensionAclFlagsMap);
+
+const erc20ExtensionAclFlagsMap = {};
+
+const erc20ExtensionAclFlags = Object.values(erc20ExtensionAclFlagsMap);
 
 const erc721ExtensionAclFlagsMap = {
   WITHDRAW_NFT: "WITHDRAW_NFT",
@@ -67,8 +70,15 @@ const parseSelectedFlags = (allAclFlags, selectedFlags, moduleName) => {
     }, {});
 };
 
+const calculateFlagValue = (values) => {
+  return values
+    .map((v, idx) => (v === true ? 2 ** idx : 0))
+    .reduce((a, b) => a + b);
+};
+
 module.exports = {
   parseSelectedFlags,
+  calculateFlagValue,
   daoAccessFlags,
   daoAccessFlagsMap,
   bankExtensionAclFlags,
@@ -83,4 +93,6 @@ module.exports = {
   executorExtensionAclFlagsMap,
   vestingExtensionAclFlags,
   vestingExtensionAclFlagsMap,
+  erc20ExtensionAclFlags,
+  erc20ExtensionAclFlagsMap,
 };

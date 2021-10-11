@@ -72,7 +72,7 @@ describe("Extension - ERC1271", () => {
   });
 
   it("should not be possible to submit a signature without the SIGN permission", async () => {
-    const erc1271Extension = this.extensions.erc1271;
+    const erc1271Extension = this.extensions.erc1271Ext;
     await expectRevert(
       erc1271Extension.sign(
         arbitraryMsgHash,
@@ -84,7 +84,7 @@ describe("Extension - ERC1271", () => {
   });
 
   it("should revert for invalid signatures", async () => {
-    const erc1271Extension = this.extensions.erc1271;
+    const erc1271Extension = this.extensions.erc1271Ext;
     await expectRevert(
       erc1271Extension.isValidSignature(arbitraryMsgHash, arbitrarySignature),
       "erc1271::invalid signature"

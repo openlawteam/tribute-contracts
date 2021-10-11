@@ -41,7 +41,7 @@ const {
   web3,
 } = require("../../utils/OZTestUtil.js");
 
-describe("Extension - NFT", () => {
+describe("Extension - ERC721", () => {
   const daoOwner = accounts[0];
 
   before("deploy dao", async () => {
@@ -66,19 +66,19 @@ describe("Extension - NFT", () => {
   });
 
   it("should be possible to create a dao with a nft extension pre-configured", async () => {
-    const nftExtension = this.extensions.nft;
+    const nftExtension = this.extensions.erc721Ext;
     expect(nftExtension).to.not.be.null;
   });
 
   it("should be possible check how many NFTs are in the collection", async () => {
-    const nftExtension = this.extensions.nft;
+    const nftExtension = this.extensions.erc721Ext;
     const pixelNFT = this.testContracts.pixelNFT;
     const total = await nftExtension.nbNFTs(pixelNFT.address);
     expect(total.toString()).equal("0");
   });
 
   it("should not be possible get an NFT in the collection if it is empty", async () => {
-    const nftExtension = this.extensions.nft;
+    const nftExtension = this.extensions.erc721Ext;
     const pixelNFT = this.testContracts.pixelNFT;
     await expectRevert(
       nftExtension.getNFT(pixelNFT.address, 0),
@@ -87,7 +87,7 @@ describe("Extension - NFT", () => {
   });
 
   it("should not be possible to return a NFT without the RETURN permission", async () => {
-    const nftExtension = this.extensions.nft;
+    const nftExtension = this.extensions.erc721Ext;
     const pixelNFT = this.testContracts.pixelNFT;
     await expectRevert(
       nftExtension.withdrawNFT(accounts[1], pixelNFT.address, 1),
@@ -96,13 +96,13 @@ describe("Extension - NFT", () => {
   });
 
   it("should be possible check how many NFTs are in the collection", async () => {
-    const nftExtension = this.extensions.nft;
+    const nftExtension = this.extensions.erc721Ext;
     const total = await nftExtension.nbNFTAddresses();
     expect(total.toString()).equal("0");
   });
 
   it("should not be possible to initialize the extension if it was already initialized", async () => {
-    const nftExtension = this.extensions.nft;
+    const nftExtension = this.extensions.erc721Ext;
     await expectRevert(
       nftExtension.initialize(this.dao.address, accounts[0]),
       "erc721::already initialized"
@@ -123,7 +123,7 @@ describe("Extension - NFT", () => {
     expect(metadata).equal("pixel: 1,1");
     expect(owner).equal(nftOwner);
 
-    const nftExtension = this.extensions.nft;
+    const nftExtension = this.extensions.erc721Ext;
     await pixelNFT.approve(nftExtension.address, tokenId, {
       from: nftOwner,
       gasPrice: toBN("0"),

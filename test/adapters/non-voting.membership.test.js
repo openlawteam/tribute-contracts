@@ -56,7 +56,7 @@ describe("Adapter - Non Voting Onboarding", () => {
     const { dao, adapters, extensions } = await deployDefaultDao({
       owner: daoOwner,
     });
-    const bank = extensions.bank;
+    const bank = extensions.bankExt;
     const onboarding = adapters.onboarding;
     const voting = adapters.voting;
 
@@ -119,7 +119,7 @@ describe("Adapter - Non Voting Onboarding", () => {
       tokenAddr: oltContract.address,
     });
 
-    const bank = extensions.bank;
+    const bank = extensions.bankExt;
     const onboarding = adapters.onboarding;
     const voting = adapters.voting;
 

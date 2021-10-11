@@ -88,7 +88,7 @@ describe("Extension - ERC20", () => {
     const applicantA = accounts[2];
     const applicantB = accounts[3];
     const configuration = this.adapters.configuration;
-    const bank = this.extensions.bank;
+    const bank = this.extensions.bankExt;
     const onboarding = this.adapters.onboarding;
     const voting = this.adapters.voting;
     const erc20Ext = this.extensions.erc20Ext;
@@ -165,7 +165,7 @@ describe("Extension - ERC20", () => {
     const configuration = this.adapters.configuration;
     //external address - not a member
     const externalAddressA = accounts[4];
-    const bank = this.extensions.bank;
+    const bank = this.extensions.bankExt;
     const onboarding = this.adapters.onboarding;
     const voting = this.adapters.voting;
     const erc20Ext = this.extensions.erc20Ext;
@@ -266,7 +266,7 @@ describe("Extension - ERC20", () => {
     //external address - not a member
     const externalAddressA = accounts[4];
     const externalAddressB = accounts[5];
-    const bank = this.extensions.bank;
+    const bank = this.extensions.bankExt;
     const onboarding = this.adapters.onboarding;
     const configuration = this.adapters.configuration;
     const voting = this.adapters.voting;
@@ -335,7 +335,7 @@ describe("Extension - ERC20", () => {
     //external address - not a member
     const externalAddressA = accounts[4];
     const externalAddressB = accounts[5];
-    const bank = this.extensions.bank;
+    const bank = this.extensions.bankExt;
     const onboarding = this.adapters.onboarding;
     const configuration = this.adapters.configuration;
     const voting = this.adapters.voting;
@@ -437,7 +437,7 @@ describe("Extension - ERC20", () => {
     const applicantA = accounts[2];
     const applicantB = accounts[3];
 
-    const bank = this.extensions.bank;
+    const bank = this.extensions.bankExt;
     const onboarding = this.adapters.onboarding;
     const configuration = this.adapters.configuration;
     const voting = this.adapters.voting;
@@ -519,7 +519,7 @@ describe("Extension - ERC20", () => {
     //external address - not a member
     const externalAddressA = accounts[4];
 
-    const bank = this.extensions.bank;
+    const bank = this.extensions.bankExt;
     const onboarding = this.adapters.onboarding;
     const configuration = this.adapters.configuration;
     const voting = this.adapters.voting;
@@ -589,7 +589,7 @@ describe("Extension - ERC20", () => {
     const externalAddressA = accounts[4];
     const externalAddressB = accounts[5];
 
-    const bank = this.extensions.bank;
+    const bank = this.extensions.bankExt;
     const onboarding = this.adapters.onboarding;
     const configuration = this.adapters.configuration;
     const voting = this.adapters.voting;

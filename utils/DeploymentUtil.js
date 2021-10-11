@@ -26,10 +26,23 @@ SOFTWARE.
  */
 
 const { UNITS, LOOT, sha3, toBN } = require("./ContractUtil");
-const { daoAccessFlags } = require("./aclFlags");
+const {
+  daoAccessFlags,
+  bankExtensionAclFlags,
+  erc721ExtensionAclFlags,
+  erc1155ExtensionAclFlags,
+  erc1271ExtensionAclFlags,
+  vestingExtensionAclFlags,
+  executorExtensionAclFlags,
+  erc20ExtensionAclFlags,
+  calculateFlagValue,
+} = require("./aclFlags");
 
 const embedConfigs = (contractInstance, name, configs) => {
-  return { ...contractInstance, configs: configs.find((c) => c.name === name) };
+  return {
+    ...contractInstance,
+    configs: configs.find((c) => c.name === name),
+  };
 };
 
 const createFactories = async ({
@@ -331,7 +344,7 @@ const deployDao = async (options) => {
       dao,
       daoFactory,
       votingAddress,
-      bankAddress: extensions.bankExt.address,
+      extensions,
     });
     votingHelpers.offchainVoting = offchainVoting;
     votingHelpers.handleBadReporterAdapter = handleBadReporterAdapter;
@@ -373,7 +386,7 @@ const deployDao = async (options) => {
     extensions: extensions,
     testContracts: testContracts,
     votingHelpers: votingHelpers,
-    factories: factories,
+    factories: { ...factories, daoFactory },
   };
 };
 
@@ -384,7 +397,6 @@ const configureOffchainVoting = async ({
   owner,
   offchainAdmin,
   votingAddress,
-  bankAddress,
   votingPeriod,
   gracePeriod,
   SnapshotProposalContract,
@@ -392,19 +404,20 @@ const configureOffchainVoting = async ({
   OffchainVotingContract,
   OffchainVotingHashContract,
   deployFunction,
+  extensions,
 }) => {
-  let snapshotProposalContract = await deployFunction(
+  const snapshotProposalContract = await deployFunction(
     SnapshotProposalContract,
     [chainId]
   );
 
-  let offchainVotingHashContract = await deployFunction(
+  const offchainVotingHashContract = await deployFunction(
     OffchainVotingHashContract,
     [snapshotProposalContract.address]
   );
 
-  let handleBadReporterAdapter = await deployFunction(KickBadReporterAdapter);
-  let offchainVoting = await deployFunction(OffchainVotingContract, [
+  const handleBadReporterAdapter = await deployFunction(KickBadReporterAdapter);
+  const offchainVoting = await deployFunction(OffchainVotingContract, [
     votingAddress,
     offchainVotingHashContract.address,
     snapshotProposalContract.address,
@@ -414,18 +427,14 @@ const configureOffchainVoting = async ({
 
   await daoFactory.updateAdapter(
     dao.address,
-    entryDao("voting", offchainVoting, {}),
+    entryDao("voting", offchainVoting),
     { from: owner }
   );
 
   await dao.setAclToExtensionForAdapter(
-    bankAddress,
+    extensions.bankExt.address,
     offchainVoting.address,
-    entryBank(offchainVoting, {
-      ADD_TO_BALANCE: true,
-      SUB_FROM_BALANCE: true,
-      INTERNAL_TRANSFER: true,
-    }).flags,
+    entryBank(offchainVoting).flags,
     { from: owner }
   );
   await offchainVoting.configureDao(
@@ -513,203 +522,134 @@ const configureDao = async ({
     await daoFactory.addAdapters(dao.address, adapterConfigs, { from: owner });
   };
 
-  const configureAdaptersWithBankAccess = async () => {
-    const adaptersWithBankAccess = [];
-
-    if (adapters.ragequit)
-      adaptersWithBankAccess.push(
-        entryBank(adapters.ragequit, {
-          INTERNAL_TRANSFER: true,
-          SUB_FROM_BALANCE: true,
-          ADD_TO_BALANCE: true,
-        })
+  const configureAdaptersWithExtensionAccess = async (
+    adapters,
+    getAclFlag,
+    extension
+  ) => {
+    if (extension && extension.configs.enabled) {
+      const adaptersWithAccess = Object.values(adapters).reduce(
+        (accessRequired, adapter) => {
+          accessRequired.push(getAclFlag(adapter));
+          return accessRequired;
+        },
+        []
       );
 
-    if (adapters.guildkick)
-      adaptersWithBankAccess.push(
-        entryBank(adapters.guildkick, {
-          INTERNAL_TRANSFER: true,
-          SUB_FROM_BALANCE: true,
-          ADD_TO_BALANCE: true,
-          REGISTER_NEW_TOKEN: true,
-        })
-      );
+      if (adaptersWithAccess.length > 0)
+        await daoFactory.configureExtension(
+          dao.address,
+          extension.address,
+          adaptersWithAccess,
+          { from: owner }
+        );
+    }
+  };
 
-    if (adapters.bankAdapter)
-      adaptersWithBankAccess.push(
-        entryBank(adapters.bankAdapter, {
-          WITHDRAW: true,
-          SUB_FROM_BALANCE: true,
-          UPDATE_TOKEN: true,
-        })
-      );
+  const configureAdaptersWithBankExtAccess = async () => {
+    const adapterWithBankAccess = Object.values(adapters).filter(
+      (a) =>
+        a.configs &&
+        a.configs.enabled &&
+        a.configs.acls &&
+        a.configs.acls.extensions &&
+        a.configs.acls.extensions.bank &&
+        a.configs.acls.extensions.bank.length > 0
+    );
 
-    if (adapters.onboarding)
-      adaptersWithBankAccess.push(
-        entryBank(adapters.onboarding, {
-          ADD_TO_BALANCE: true,
-          INTERNAL_TRANSFER: true,
-        })
-      );
-
-    if (adapters.couponOnboarding)
-      adaptersWithBankAccess.push(
-        entryBank(adapters.couponOnboarding, {
-          ADD_TO_BALANCE: true,
-          INTERNAL_TRANSFER: true,
-        })
-      );
-
-    if (adapters.financing)
-      adaptersWithBankAccess.push(
-        entryBank(adapters.financing, {
-          ADD_TO_BALANCE: true,
-          SUB_FROM_BALANCE: true,
-          INTERNAL_TRANSFER: true,
-        })
-      );
-
-    if (adapters.tribute)
-      adaptersWithBankAccess.push(
-        entryBank(adapters.tribute, {
-          ADD_TO_BALANCE: true,
-          REGISTER_NEW_TOKEN: true,
-        })
-      );
-
-    if (adapters.distribute)
-      adaptersWithBankAccess.push(
-        entryBank(adapters.distribute, {
-          INTERNAL_TRANSFER: true,
-        })
-      );
-
-    if (adapters.tributeNFT)
-      adaptersWithBankAccess.push(
-        entryBank(adapters.tributeNFT, {
-          ADD_TO_BALANCE: true,
-        })
-      );
-
-    if (adapters.lendNFT)
-      adaptersWithBankAccess.push(
-        entryBank(adapters.lendNFT, {
-          ADD_TO_BALANCE: true,
-          SUB_FROM_BALANCE: true,
-        })
-      );
-
-    if (extensions.erc20Ext)
-      // Let the unit-token extension to execute internal transfers in the bank as an adapter
-      adaptersWithBankAccess.push(
-        entryBank(extensions.erc20Ext, {
-          INTERNAL_TRANSFER: true,
-        })
-      );
-
-    await daoFactory.configureExtension(
-      dao.address,
-      extensions.bankExt.address,
-      adaptersWithBankAccess,
-      { from: owner }
+    configureAdaptersWithExtensionAccess(
+      adapterWithBankAccess,
+      entryBank,
+      extensions.bankExt
     );
   };
 
-  const configureAdaptersWithERC20Access = async () => {
-    await daoFactory.configureExtension(
-      dao.address,
-      extensions.erc20Ext.address,
-      [],
-      { from: owner }
+  const configureAdaptersWithERC20ExtAccess = async () => {
+    const adaptersWithERC20Access = Object.values(adapters).filter(
+      (a) =>
+        a.configs &&
+        a.configs.enabled &&
+        a.configs.acls &&
+        a.configs.acls.extensions &&
+        a.configs.acls.extensions.erc20 &&
+        a.configs.acls.extensions.erc20.length > 0
+    );
+
+    configureAdaptersWithExtensionAccess(
+      adaptersWithERC20Access,
+      entryERC20,
+      extensions.erc20Ext
     );
   };
 
-  const configureAdaptersWithNFTAccess = async () => {
-    const adaptersWithNFTAccess = [];
-    if (adapters.tributeNFT)
-      adaptersWithNFTAccess.push(
-        entryNft(adapters.tributeNFT, {
-          COLLECT_NFT: true,
-        })
-      );
-
-    if (adapters.lendNFT)
-      adaptersWithNFTAccess.push(
-        entryNft(adapters.lendNFT, {
-          COLLECT_NFT: true,
-          WITHDRAW_NFT: true,
-        })
-      );
-
-    if (adapters.nftAdapter)
-      adaptersWithNFTAccess.push(
-        entryNft(adapters.nftAdapter, {
-          COLLECT_NFT: true,
-        })
-      );
-
-    if (adapters.erc1155Adapter)
-      adaptersWithNFTAccess.push(
-        entryNft(adapters.erc1155Adapter, {
-          WITHDRAW_NFT: true,
-          COLLECT_NFT: true,
-          INTERNAL_TRANSFER: true,
-        })
-      );
-
-    await daoFactory.configureExtension(
-      dao.address,
-      extensions.erc721Ext.address,
-      adaptersWithNFTAccess,
-      {
-        from: owner,
-      }
+  const configureAdaptersWithERC721ExtAccess = async () => {
+    const adaptersWithERC721Access = Object.values(adapters).filter(
+      (a) =>
+        a.configs &&
+        a.configs.enabled &&
+        a.configs.acls &&
+        a.configs.acls.extensions &&
+        a.configs.acls.extensions.erc721 &&
+        a.configs.acls.extensions.erc721.length > 0
     );
-
-    await daoFactory.configureExtension(
-      dao.address,
-      extensions.erc1155Ext.address,
-      adaptersWithNFTAccess,
-      {
-        from: owner,
-      }
+    configureAdaptersWithExtensionAccess(
+      adaptersWithERC721Access,
+      entryERC721,
+      extensions.erc721Ext
     );
   };
 
-  const configureAdaptersWithSignatureAccess = async () => {
-    const adaptersWithSignatureAccess = [];
+  const configureAdaptersWithERC1155ExtAccess = async () => {
+    const adapterWithERC1155Access = Object.values(adapters).filter(
+      (a) =>
+        a.configs &&
+        a.configs.enabled &&
+        a.configs.acls &&
+        a.configs.acls.extensions &&
+        a.configs.acls.extensions.erc1155 &&
+        a.configs.acls.extensions.erc1155.length > 0
+    );
 
-    if (adapters.signatures)
-      adaptersWithSignatureAccess.push(
-        entryERC1271(adapters.signatures, {
-          SIGN: true,
-        })
-      );
-
-    await daoFactory.configureExtension(
-      dao.address,
-      extensions.erc1271Ext.address,
-      adaptersWithSignatureAccess,
-      { from: owner }
+    configureAdaptersWithExtensionAccess(
+      adapterWithERC1155Access,
+      entryERC1155,
+      extensions.erc1155Ext
     );
   };
 
-  const configureAdaptersWithVestingAccess = async () => {
-    const adaptersWithVestingAccess = [];
+  const configureAdaptersWithERC1271ExtAccess = async () => {
+    const adaptersWithERC1271Access = Object.values(adapters).filter(
+      (a) =>
+        a.configs &&
+        a.configs.enabled &&
+        a.configs.acls &&
+        a.configs.acls.extensions &&
+        a.configs.acls.extensions.erc1271 &&
+        a.configs.acls.extensions.erc1271.length > 0
+    );
 
-    if (adapters.lendNFT)
-      adaptersWithVestingAccess.push(
-        entryVesting(adapters.lendNFT, {
-          NEW_VESTING: true,
-          REMOVE_VESTING: true,
-        })
-      );
+    configureAdaptersWithExtensionAccess(
+      adaptersWithERC1271Access,
+      entryERC1271,
+      extensions.erc1271Ext
+    );
+  };
 
-    await daoFactory.configureExtension(
-      dao.address,
-      extensions.vestingExt.address,
+  const configureAdaptersWithVestingExtAccess = async () => {
+    const adaptersWithVestingAccess = Object.values(adapters).filter(
+      (a) =>
+        a.configs &&
+        a.configs.enabled &&
+        a.configs.acls &&
+        a.configs.acls.extensions &&
+        a.configs.acls.extensions.vesting &&
+        a.configs.acls.extensions.vesting.length > 0
+    );
+
+    configureAdaptersWithExtensionAccess(
       adaptersWithVestingAccess,
-      { from: owner }
+      entryVesting,
+      extensions.vestingExt
     );
   };
 
@@ -777,13 +717,37 @@ const configureDao = async ({
     }
   };
 
+  const configureExtensionsWithBankExtAccess = async () => {
+    const extensionsWithBankAccess = Object.values(extensions).filter(
+      (a) =>
+        a.configs &&
+        a.configs.enabled &&
+        a.configs.acls &&
+        a.configs.acls.extensions &&
+        a.configs.acls.extensions.bank &&
+        a.configs.acls.extensions.bank.length > 0
+    );
+
+    configureAdaptersWithExtensionAccess(
+      extensionsWithBankAccess,
+      entryBank,
+      extensions.bankExt
+    );
+  };
+
+  /** Configures all adapters that need access to extensions */
   await configureAdaptersWithDAOAccess();
-  await configureAdaptersWithSignatureAccess();
-  await configureAdaptersWithBankAccess();
-  await configureAdaptersWithNFTAccess();
-  await configureAdaptersWithERC20Access();
-  await configureAdaptersWithVestingAccess();
+  await configureAdaptersWithBankExtAccess();
+  await configureAdaptersWithERC20ExtAccess();
+  await configureAdaptersWithERC721ExtAccess();
+  await configureAdaptersWithERC1155ExtAccess();
+  await configureAdaptersWithERC1271ExtAccess();
+  await configureAdaptersWithVestingExtAccess();
   await configureAdaptersWithDAOParameters();
+
+  /** Configures all extensions that need access to other extensions */
+  await configureExtensionsWithBankExtAccess();
+  //TODO?
 };
 
 const cloneDao = async ({
@@ -962,7 +926,6 @@ const createInternalTokenVestingExtension = async (
   );
 };
 
-//
 const createERC1155Extension = async (
   dao,
   owner,
@@ -990,96 +953,100 @@ const createERC1155Extension = async (
   );
 };
 
-const entryNft = (contract, flags) => {
-  const values = [
-    flags.WITHDRAW_NFT,
-    flags.COLLECT_NFT,
-    flags.INTERNAL_TRANSFER,
-  ];
-
-  const acl = entry(values);
+const entryERC721 = (contract) => {
+  const flags = erc721ExtensionAclFlags.flatMap((flag) => {
+    return contract.configs.acls.extensions.erc721.some((f) => f === flag);
+  });
 
   return {
     id: sha3("n/a"),
     addr: contract.address,
-    flags: acl,
+    flags: calculateFlagValue(flags),
   };
 };
 
-const entryBank = (contract, flags) => {
-  const values = [
-    flags.ADD_TO_BALANCE,
-    flags.SUB_FROM_BALANCE,
-    flags.INTERNAL_TRANSFER,
-    flags.WITHDRAW,
-    flags.REGISTER_NEW_TOKEN,
-    flags.REGISTER_NEW_INTERNAL_TOKEN,
-    flags.UPDATE_TOKEN,
-  ];
-
-  const acl = entry(values);
+const entryERC1155 = (contract) => {
+  const flags = erc1155ExtensionAclFlags.flatMap((flag) => {
+    return contract.configs.acls.extensions.erc1155.some((f) => f === flag);
+  });
 
   return {
     id: sha3("n/a"),
     addr: contract.address,
-    flags: acl,
+    flags: calculateFlagValue(flags),
   };
 };
 
-const entryERC1271 = (contract, flags) => {
-  const values = [flags.SIGN];
-
-  const acl = entry(values);
+const entryERC20 = (contract) => {
+  const flags = erc20ExtensionAclFlags.flatMap((flag) => {
+    return contract.configs.acls.extensions.erc20.some((f) => f === flag);
+  });
 
   return {
     id: sha3("n/a"),
     addr: contract.address,
-    flags: acl,
+    flags: calculateFlagValue(flags),
   };
 };
 
-const entryExecutor = (contract, flags) => {
-  const values = [flags.EXECUTE];
-
-  const acl = entry(values);
+const entryBank = (contract) => {
+  const flags = bankExtensionAclFlags.flatMap((flag) => {
+    return contract.configs.acls.extensions.bank.some((f) => f === flag);
+  });
 
   return {
     id: sha3("n/a"),
     addr: contract.address,
-    flags: acl,
+    flags: calculateFlagValue(flags),
   };
 };
 
-const entryVesting = (contract, flags) => {
-  const values = [flags.NEW_VESTING, flags.REMOVE_VESTING];
-
-  const acl = entry(values);
+const entryERC1271 = (contract) => {
+  const flags = erc1271ExtensionAclFlags.flatMap((flag) => {
+    return contract.configs.acls.extensions.erc1271.some((f) => f === flag);
+  });
 
   return {
     id: sha3("n/a"),
     addr: contract.address,
-    flags: acl,
+    flags: calculateFlagValue(flags),
+  };
+};
+
+const entryExecutor = (contract) => {
+  const flags = executorExtensionAclFlags.flatMap((flag) => {
+    return contract.configs.acls.extensions.executor.some((f) => f === flag);
+  });
+
+  return {
+    id: sha3("n/a"),
+    addr: contract.address,
+    flags: calculateFlagValue(flags),
+  };
+};
+
+const entryVesting = (contract) => {
+  const flags = vestingExtensionAclFlags.flatMap((flag) => {
+    return contract.configs.acls.extensions.vesting.some((f) => f === flag);
+  });
+
+  return {
+    id: sha3("n/a"),
+    addr: contract.address,
+    flags: calculateFlagValue(flags),
   };
 };
 
 const entryDao = (name, contract) => {
-  const enabled = daoAccessFlags.flatMap((flag) => {
+  const flags = daoAccessFlags.flatMap((flag) => {
     return contract.configs.acls.dao.some((f) => f === flag);
   });
-
-  const acl = entry(enabled);
 
   return {
     id: sha3(name),
     addr: contract.address,
-    flags: acl,
+    flags: calculateFlagValue(flags),
   };
-};
-
-const entry = (values) => {
-  return values
-    .map((v, idx) => (v === true ? 2 ** idx : 0))
-    .reduce((a, b) => a + b);
 };
 
 const networks = [
@@ -1118,9 +1085,8 @@ module.exports = {
   cloneDao,
   prepareAdapters: createAdapters,
   addDefaultAdapters,
-  entry,
   entryBank,
-  entryNft,
+  entryERC721,
   entryERC1271,
   entryDao,
   entryExecutor,

@@ -77,7 +77,7 @@ describe("Adapter - Financing", () => {
   });
 
   it("should be possible to create a financing proposal and get the funds when the proposal pass", async () => {
-    const bank = this.extensions.bank;
+    const bank = this.extensions.bankExt;
     const voting = this.adapters.voting;
     const financing = this.adapters.financing;
     const onboarding = this.adapters.onboarding;

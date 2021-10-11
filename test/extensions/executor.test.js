@@ -39,6 +39,8 @@ const {
   expectRevert,
 } = require("../../utils/OZTestUtil.js");
 
+const { executorExtensionAclFlagsMap } = require("../../utils/aclFlags");
+
 describe("Extension - Executor", () => {
   const daoOwner = accounts[0];
 
@@ -61,7 +63,16 @@ describe("Extension - Executor", () => {
 
     await factories.daoFactory.addAdapters(
       dao.address,
-      [entryDao("erc20Minter", erc20Minter, {})],
+      [
+        entryDao("erc20Minter", {
+          ...erc20Minter,
+          configs: {
+            acls: {
+              dao: [],
+            },
+          },
+        }),
+      ],
       { from: daoOwner }
     );
 
@@ -69,8 +80,15 @@ describe("Extension - Executor", () => {
       dao.address,
       executorExt.address,
       [
-        entryExecutor(erc20Minter, {
-          EXECUTE: true,
+        entryExecutor({
+          ...erc20Minter,
+          configs: {
+            acls: {
+              extensions: {
+                executor: [executorExtensionAclFlagsMap.EXECUTE],
+              },
+            },
+          },
         }),
       ],
       { from: daoOwner }
@@ -117,7 +135,12 @@ describe("Extension - Executor", () => {
 
     await factories.daoFactory.addAdapters(
       dao.address,
-      [entryDao("erc20Minter", erc20Minter, {})],
+      [
+        entryDao("erc20Minter", {
+          ...erc20Minter,
+          configs: { acls: { dao: [] } },
+        }),
+      ],
       { from: daoOwner }
     );
 
@@ -125,8 +148,9 @@ describe("Extension - Executor", () => {
       dao.address,
       executorExt.address,
       [
-        entryExecutor(erc20Minter, {
-          EXECUTE: false, // WITHOUT THE PERMISSION TO EXECUTE DELEGATE CALLS
+        entryExecutor({
+          ...erc20Minter,
+          configs: { acls: { extensions: { executor: [] } } },
         }),
       ],
       { from: daoOwner }

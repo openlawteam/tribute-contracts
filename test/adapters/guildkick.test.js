@@ -82,7 +82,7 @@ describe("Adapter - GuildKick", () => {
   it("should be possible to kick a DAO member", async () => {
     const newMember = accounts[2];
 
-    const bank = this.extensions.bank;
+    const bank = this.extensions.bankExt;
     const onboarding = this.adapters.onboarding;
     const voting = this.adapters.voting;
     const guildkickContract = this.adapters.guildkick;
@@ -113,7 +113,7 @@ describe("Adapter - GuildKick", () => {
     const kickProposalId = getProposalCounter();
     await guildKickProposal(
       this.dao,
-      this.adapters.guildkick,
+      guildkickContract,
       memberToKick,
       owner,
       kickProposalId
@@ -396,7 +396,7 @@ describe("Adapter - GuildKick", () => {
       UNITS
     );
 
-    const bank = this.extensions.bank;
+    const bank = this.extensions.bankExt;
     // Start a new kick poposal
     let memberToKick = newMember;
     let kickProposalId = getProposalCounter();
@@ -803,7 +803,7 @@ describe("Adapter - GuildKick", () => {
     const onboarding = this.adapters.onboarding;
     const voting = this.adapters.voting;
     const guildkickContract = this.adapters.guildkick;
-    const bank = this.extensions.bank;
+    const bank = this.extensions.bankExt;
 
     await onboardingNewMember(
       getProposalCounter(),

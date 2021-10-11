@@ -63,7 +63,7 @@ describe("Extension - Vesting", () => {
   });
 
   it("should be able to create vesting and the blocked amount should change with time", async () => {
-    const vesting = this.extensions.vestingExtension;
+    const vesting = this.extensions.vestingExt;
     const now = new Date();
 
     const numberOfDaysToAdd = 6;
@@ -98,7 +98,7 @@ describe("Extension - Vesting", () => {
   });
 
   it("should be able to add multiple vestings", async () => {
-    const vesting = this.extensions.vestingExtension;
+    const vesting = this.extensions.vestingExt;
     const now = new Date();
 
     const numberOfDaysToAdd = 6;
@@ -155,7 +155,7 @@ describe("Extension - Vesting", () => {
   });
 
   it("should be possible to remove vesting", async () => {
-    const vesting = this.extensions.vestingExtension;
+    const vesting = this.extensions.vestingExt;
     const now = new Date();
 
     const numberOfDaysToAdd = 6;
@@ -215,7 +215,7 @@ describe("Extension - Vesting", () => {
   it("should not be possible to create a new vesting without the ACL permission", async () => {
     // Finalize the DAO to be able to check the extension permissions
     await this.dao.finalizeDao();
-    const vesting = this.extensions.vestingExtension;
+    const vesting = this.extensions.vestingExt;
     const now = new Date();
     await expectRevert(
       vesting.createNewVesting(
@@ -232,7 +232,7 @@ describe("Extension - Vesting", () => {
   it("should not be possible to removeVesting a vesting schedule the without ACL permission", async () => {
     // Finalize the DAO to be able to check the extension permissions
     await this.dao.finalizeDao();
-    const vesting = this.extensions.vestingExtension;
+    const vesting = this.extensions.vestingExt;
     await expectRevert(
       vesting.removeVesting(daoOwner, UNITS, 100, { from: daoOwner }),
       "vestingExt::accessDenied"

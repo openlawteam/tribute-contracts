@@ -80,7 +80,7 @@ describe("Adapter - Coupon Onboarding ", () => {
     const signerUtil = SigUtilSigner(signer.privKey);
 
     const dao = this.dao;
-    const bank = this.extensions.bank;
+    const bank = this.extensions.bankExt;
 
     let signerAddr = await dao.getAddressConfiguration(
       sha3("coupon-onboarding.signerAddress")
@@ -149,7 +149,7 @@ describe("Adapter - Coupon Onboarding ", () => {
     const signerUtil = SigUtilSigner(signer.privKey);
 
     const dao = this.dao;
-    const bank = this.extensions.bank;
+    const bank = this.extensions.bankExt;
 
     let signerAddr = await dao.getAddressConfiguration(
       sha3("coupon-onboarding.signerAddress")
@@ -216,7 +216,7 @@ describe("Adapter - Coupon Onboarding ", () => {
     const signerUtil = SigUtilSigner(signer.privKey);
 
     const dao = this.dao;
-    const bank = this.extensions.bank;
+    const bank = this.extensions.bankExt;
 
     let signerAddr = await dao.getAddressConfiguration(
       sha3("coupon-onboarding.signerAddress")
