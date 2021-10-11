@@ -95,7 +95,7 @@ async function deployRinkebyDao(deployFunction, network) {
     "UNITS_PER_CHUNK",
     "MAX_CHUNKS"
   );
-  
+
   return await deployDao({
     ...truffleImports,
     deployFunction,
@@ -106,8 +106,8 @@ async function deployRinkebyDao(deployFunction, network) {
     erc20TokenSymbol: envVariables.ERC20_TOKEN_SYMBOL,
     erc20TokenDecimals: envVariables.ERC20_TOKEN_DECIMALS,
     maxChunks: envVariables.MAX_CHUNKS,
-    votingPeriod: envVariables.VOTING_PERIOD_SECONDS, // 600 secs = 10 mins
-    gracePeriod: envVariables.GRACE_PERIOD_SECONDS, // 600 secs = 10 mins
+    votingPeriod: envVariables.VOTING_PERIOD_SECONDS,
+    gracePeriod: envVariables.GRACE_PERIOD_SECONDS,
     offchainVoting: true,
     chainId: getNetworkDetails(network).chainId,
     deployTestTokens: true,
