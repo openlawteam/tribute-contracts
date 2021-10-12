@@ -1,10 +1,7 @@
-task("accounts", "Prints the list of accounts", async (taskArgs, hre) => {
-  const accounts = await hre.ethers.getSigners();
+require("@nomiclabs/hardhat-waffle");
 
-  for (const account of accounts) {
-    console.log(account.address);
-  }
-});
+require("./tasks/accounts");
+require("./tasks/deploy");
 
 /**
  * @type import('hardhat/config').HardhatUserConfig
@@ -12,7 +9,7 @@ task("accounts", "Prints the list of accounts", async (taskArgs, hre) => {
 module.exports = {
   networks: {
     ganache: {
-      url: "127.0.0.1:7545", // Localhost (default: none)
+      url: "http://127.0.0.1:7545", // Localhost (default: none)
     },
   },
 

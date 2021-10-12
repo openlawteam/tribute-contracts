@@ -1,0 +1,67 @@
+// Whole-script strict mode syntax
+"use strict";
+
+/**
+MIT License
+
+Copyright (c) 2021 Openlaw
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.
+ */
+
+const { contracts } = require("./ContractUtil");
+
+const hardhatContracts = getContracts();
+
+const deploy = async (factory, args) => {
+  return new Promise((resolve, reject) => {
+      let timer = setTimeout(async () => {
+      resolve(await args ? factory.deploy(...args) : factory.deploy());
+      clearTimeout(timer);
+     }, 0);
+  })
+}
+
+const deployFunctionFactory = (deployer) => {
+  const deployFunction = async (contract, factory, args) => {
+    const instance = await deploy(await factory, args);
+    const res = await instance.deployed();
+    const tx = await res.deployTransaction.wait();
+    console.log(`Contract deployed: ${contract} - ${tx.contractAddress}`);
+    return res;
+  };
+
+  return deployFunction;
+};
+
+async function getContractFromHardhat(c) {
+  return await hre.ethers.getContractFactory(c);
+}
+
+function getContracts() {
+  return Object.keys(contracts).reduce((previousValue, key) => {
+    previousValue[key] = getContractFromHardhat(contracts[key]);
+    return previousValue;
+  }, {});
+}
+
+module.exports = {
+  ...hardhatContracts,
+  deployFunctionFactory,
+};

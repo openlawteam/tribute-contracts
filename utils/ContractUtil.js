@@ -51,54 +51,53 @@ const maximumChunks = toBN("11");
 
 const contracts = {
   // Test Util Contracts
-  OLToken: "./test/OLToken",
-  TestToken1: "./test/TestToken1",
-  TestToken2: "./test/TestToken2",
-  TestFairShareCalc: "./test/TestFairShareCalc",
-  PixelNFT: "./test/PixelNFT",
+  OLToken: "OLToken",
+  TestToken1: "TestToken1",
+  TestToken2: "TestToken2",
+  TestFairShareCalc: "TestFairShareCalc",
+  PixelNFT: "PixelNFT",
 
   // DAO Contracts
-  DaoFactory: "./core/DaoFactory",
-  DaoRegistry: "./core/DaoRegistry",
-  NFTCollectionFactory: "./extensions/NFTCollectionFactory",
-  BankFactory: "./extensions/bank/BankFactory",
-  ERC20TokenExtensionFactory:
-    "./extensions/token/erc20/ERC20TokenExtensionFactory",
-  Multicall: "./util/Multicall",
+  DaoFactory: "DaoFactory",
+  DaoRegistry: "DaoRegistry",
+  NFTCollectionFactory: "NFTCollectionFactory",
+  BankFactory: "BankFactory",
+  ERC20TokenExtensionFactory: "ERC20TokenExtensionFactory",
+  Multicall: "Multicall",
 
   // Extensions
-  NFTExtension: "./extensions/nft/NFTExtension",
-  BankExtension: "./extensions/bank/BankExtension",
-  ERC20Extension: "./extensions/token/erc20/ERC20Extension",
+  NFTExtension: "NFTExtension",
+  BankExtension: "BankExtension",
+  ERC20Extension: "ERC20Extension",
 
   // Config Adapters
-  DaoRegistryAdapterContract: "./adapters/DaoRegistryAdapterContract",
-  BankAdapterContract: "./adapters/BankAdapterContract",
-  NFTAdapterContract: "./adapters/NFTAdapterContract",
-  ConfigurationContract: "./adapters/ConfigurationContract",
-  ManagingContract: "./adapters/ManagingContract",
+  DaoRegistryAdapterContract: "DaoRegistryAdapterContract",
+  BankAdapterContract: "BankAdapterContract",
+  NFTAdapterContract: "NFTAdapterContract",
+  ConfigurationContract: "ConfigurationContract",
+  ManagingContract: "ManagingContract",
 
   // Voting Adapters
-  VotingContract: "./adapters/VotingContract",
-  SnapshotProposalContract: "./adapters/voting/SnapshotProposalContract",
-  OffchainVotingContract: "./adapters/voting/OffchainVotingContract",
-  KickBadReporterAdapter: "./adapters/voting/KickBadReporterAdapter",
-  BatchVotingContract: "./adapters/voting/BatchVotingContract",
+  VotingContract: "VotingContract",
+  SnapshotProposalContract: "SnapshotProposalContract",
+  OffchainVotingContract: "OffchainVotingContract",
+  KickBadReporterAdapter: "KickBadReporterAdapter",
+  BatchVotingContract: "BatchVotingContract",
 
   // Withdraw Adapters
-  RagequitContract: "./adapters/RagequitContract",
-  GuildKickContract: "./adapters/GuildKickContract",
-  DistributeContract: "./adapters/DistributeContract",
+  RagequitContract: "RagequitContract",
+  GuildKickContract: "GuildKickContract",
+  DistributeContract: "DistributeContract",
 
   // Funding/Onboarding Adapters
-  FinancingContract: "./adapters/FinancingContract",
-  OnboardingContract: "./adapters/OnboardingContract",
-  CouponOnboardingContract: "./adapters/CouponOnboardingContract",
-  TributeContract: "./adapters/TributeContract",
-  TributeNFTContract: "./adapters/TributeNFTContract",
+  FinancingContract: "FinancingContract",
+  OnboardingContract: "OnboardingContract",
+  CouponOnboardingContract: "CouponOnboardingContract",
+  TributeContract: "TributeContract",
+  TributeNFTContract: "TributeNFTContract",
 
   // Utils
-  DaoArtifacts: "./utils/DaoArtifacts",
+  DaoArtifacts: "DaoArtifacts",
 };
 
 module.exports = {
