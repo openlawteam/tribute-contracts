@@ -28,8 +28,6 @@
   },
   "devDependencies": {
     "@nomiclabs/buidler": "^1.4.8",
-    "@nomiclabs/hardhat-truffle5": "^2.0.2",
-    "@nomiclabs/hardhat-web3": "^2.0.0",
     "@openzeppelin/test-environment": "^0.1.9",
     "@openzeppelin/test-helpers": "^0.5.10",
     "@smartdec/smartcheck": "^2.0.1",
