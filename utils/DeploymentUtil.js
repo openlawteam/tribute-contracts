@@ -26,17 +26,7 @@ SOFTWARE.
  */
 
 const { UNITS, LOOT, sha3, toBN } = require("./ContractUtil");
-const {
-  daoAccessFlags,
-  bankExtensionAclFlags,
-  erc721ExtensionAclFlags,
-  erc1155ExtensionAclFlags,
-  erc1271ExtensionAclFlags,
-  vestingExtensionAclFlags,
-  executorExtensionAclFlags,
-  erc20ExtensionAclFlags,
-  calculateFlagValue,
-} = require("./aclFlags");
+const { entryDao, entryBank } = require("./access-control");
 
 const embedConfigs = (contractInstance, name, configs) => {
   return {
@@ -522,137 +512,6 @@ const configureDao = async ({
     await daoFactory.addAdapters(dao.address, adapterConfigs, { from: owner });
   };
 
-  const configureAdaptersWithExtensionAccess = async (
-    adapters,
-    getAclFlag,
-    extension
-  ) => {
-    if (extension && extension.configs.enabled) {
-      const adaptersWithAccess = Object.values(adapters).reduce(
-        (accessRequired, adapter) => {
-          accessRequired.push(getAclFlag(adapter));
-          return accessRequired;
-        },
-        []
-      );
-
-      if (adaptersWithAccess.length > 0)
-        await daoFactory.configureExtension(
-          dao.address,
-          extension.address,
-          adaptersWithAccess,
-          { from: owner }
-        );
-    }
-  };
-
-  const configureAdaptersWithBankExtAccess = async () => {
-    const adapterWithBankAccess = Object.values(adapters).filter(
-      (a) =>
-        a.configs &&
-        a.configs.enabled &&
-        a.configs.acls &&
-        a.configs.acls.extensions &&
-        a.configs.acls.extensions.bank &&
-        a.configs.acls.extensions.bank.length > 0
-    );
-
-    configureAdaptersWithExtensionAccess(
-      adapterWithBankAccess,
-      entryBank,
-      extensions.bankExt
-    );
-  };
-
-  const configureAdaptersWithERC20ExtAccess = async () => {
-    const adaptersWithERC20Access = Object.values(adapters).filter(
-      (a) =>
-        a.configs &&
-        a.configs.enabled &&
-        a.configs.acls &&
-        a.configs.acls.extensions &&
-        a.configs.acls.extensions.erc20 &&
-        a.configs.acls.extensions.erc20.length > 0
-    );
-
-    configureAdaptersWithExtensionAccess(
-      adaptersWithERC20Access,
-      entryERC20,
-      extensions.erc20Ext
-    );
-  };
-
-  const configureAdaptersWithERC721ExtAccess = async () => {
-    const adaptersWithERC721Access = Object.values(adapters).filter(
-      (a) =>
-        a.configs &&
-        a.configs.enabled &&
-        a.configs.acls &&
-        a.configs.acls.extensions &&
-        a.configs.acls.extensions.erc721 &&
-        a.configs.acls.extensions.erc721.length > 0
-    );
-    configureAdaptersWithExtensionAccess(
-      adaptersWithERC721Access,
-      entryERC721,
-      extensions.erc721Ext
-    );
-  };
-
-  const configureAdaptersWithERC1155ExtAccess = async () => {
-    const adapterWithERC1155Access = Object.values(adapters).filter(
-      (a) =>
-        a.configs &&
-        a.configs.enabled &&
-        a.configs.acls &&
-        a.configs.acls.extensions &&
-        a.configs.acls.extensions.erc1155 &&
-        a.configs.acls.extensions.erc1155.length > 0
-    );
-
-    configureAdaptersWithExtensionAccess(
-      adapterWithERC1155Access,
-      entryERC1155,
-      extensions.erc1155Ext
-    );
-  };
-
-  const configureAdaptersWithERC1271ExtAccess = async () => {
-    const adaptersWithERC1271Access = Object.values(adapters).filter(
-      (a) =>
-        a.configs &&
-        a.configs.enabled &&
-        a.configs.acls &&
-        a.configs.acls.extensions &&
-        a.configs.acls.extensions.erc1271 &&
-        a.configs.acls.extensions.erc1271.length > 0
-    );
-
-    configureAdaptersWithExtensionAccess(
-      adaptersWithERC1271Access,
-      entryERC1271,
-      extensions.erc1271Ext
-    );
-  };
-
-  const configureAdaptersWithVestingExtAccess = async () => {
-    const adaptersWithVestingAccess = Object.values(adapters).filter(
-      (a) =>
-        a.configs &&
-        a.configs.enabled &&
-        a.configs.acls &&
-        a.configs.acls.extensions &&
-        a.configs.acls.extensions.vesting &&
-        a.configs.acls.extensions.vesting.length > 0
-    );
-
-    configureAdaptersWithExtensionAccess(
-      adaptersWithVestingAccess,
-      entryVesting,
-      extensions.vestingExt
-    );
-  };
-
   const configureAdaptersWithDAOParameters = async () => {
     if (adapters.onboarding) {
       await adapters.onboarding.configureDao(
@@ -717,37 +576,61 @@ const configureDao = async ({
     }
   };
 
-  const configureExtensionsWithBankExtAccess = async () => {
-    const extensionsWithBankAccess = Object.values(extensions).filter(
-      (a) =>
-        a.configs &&
-        a.configs.enabled &&
-        a.configs.acls &&
-        a.configs.acls.extensions &&
-        a.configs.acls.extensions.bank &&
-        a.configs.acls.extensions.bank.length > 0
+  const configureExtensionAccess = async (contracts, extension) => {
+    const withAccess = Object.values(contracts).reduce(
+      (accessRequired, contract) => {
+        accessRequired.push(extension.configs.buildAclFlag(contract));
+        return accessRequired;
+      },
+      []
     );
 
-    configureAdaptersWithExtensionAccess(
-      extensionsWithBankAccess,
-      entryBank,
-      extensions.bankExt
-    );
+    if (withAccess.length > 0)
+      await daoFactory.configureExtension(
+        dao.address,
+        extension.address,
+        withAccess,
+        { from: owner }
+      );
   };
 
-  /** Configures all adapters that need access to extensions */
   await configureAdaptersWithDAOAccess();
-  await configureAdaptersWithBankExtAccess();
-  await configureAdaptersWithERC20ExtAccess();
-  await configureAdaptersWithERC721ExtAccess();
-  await configureAdaptersWithERC1155ExtAccess();
-  await configureAdaptersWithERC1271ExtAccess();
-  await configureAdaptersWithVestingExtAccess();
   await configureAdaptersWithDAOParameters();
 
-  /** Configures all extensions that need access to other extensions */
-  await configureExtensionsWithBankExtAccess();
-  //TODO?
+  /** Configures all the adapters that need access to each enabled extension */
+  Object.values(extensions)
+    .filter((targetExtension) => targetExtension.configs.enabled)
+    .forEach((targetExtension) => {
+      // Filters the enabled adapters that have access to the targetExtension
+      const contracts = Object.values(adapters)
+        .filter((a) => a.configs.enabled)
+        .filter((a) =>
+          // The adapters must have at least 1 ACL flag defined to access the targetExtension
+          Object.keys(a.configs.acls.extensions).some(
+            (extId) => extId === targetExtension.configs.id
+          )
+        );
+
+      configureExtensionAccess(contracts, targetExtension);
+    });
+
+  /** Configures all the extensions that need access to other enabled extensions */
+  Object.values(extensions)
+    .filter((targetExtension) => targetExtension.configs.enabled)
+    .forEach((targetExtension) => {
+      // Filters the enabled extensions that have access to the targetExtension
+      const contracts = Object.values(extensions)
+        .filter((e) => e.configs.enabled)
+        .filter((e) => e.configs.id !== targetExtension.configs.id)
+        .filter((e) =>
+          // The other extensions must have at least 1 ACL flag defined to access the targetExtension
+          Object.keys(e.configs.acls.extensions).some(
+            (extId) => extId === targetExtension.configs.id
+          )
+        );
+
+      configureExtensionAccess(contracts, targetExtension);
+    });
 };
 
 const cloneDao = async ({
@@ -953,102 +836,6 @@ const createERC1155Extension = async (
   );
 };
 
-const entryERC721 = (contract) => {
-  const flags = erc721ExtensionAclFlags.flatMap((flag) => {
-    return contract.configs.acls.extensions.erc721.some((f) => f === flag);
-  });
-
-  return {
-    id: sha3("n/a"),
-    addr: contract.address,
-    flags: calculateFlagValue(flags),
-  };
-};
-
-const entryERC1155 = (contract) => {
-  const flags = erc1155ExtensionAclFlags.flatMap((flag) => {
-    return contract.configs.acls.extensions.erc1155.some((f) => f === flag);
-  });
-
-  return {
-    id: sha3("n/a"),
-    addr: contract.address,
-    flags: calculateFlagValue(flags),
-  };
-};
-
-const entryERC20 = (contract) => {
-  const flags = erc20ExtensionAclFlags.flatMap((flag) => {
-    return contract.configs.acls.extensions.erc20.some((f) => f === flag);
-  });
-
-  return {
-    id: sha3("n/a"),
-    addr: contract.address,
-    flags: calculateFlagValue(flags),
-  };
-};
-
-const entryBank = (contract) => {
-  const flags = bankExtensionAclFlags.flatMap((flag) => {
-    return contract.configs.acls.extensions.bank.some((f) => f === flag);
-  });
-
-  return {
-    id: sha3("n/a"),
-    addr: contract.address,
-    flags: calculateFlagValue(flags),
-  };
-};
-
-const entryERC1271 = (contract) => {
-  const flags = erc1271ExtensionAclFlags.flatMap((flag) => {
-    return contract.configs.acls.extensions.erc1271.some((f) => f === flag);
-  });
-
-  return {
-    id: sha3("n/a"),
-    addr: contract.address,
-    flags: calculateFlagValue(flags),
-  };
-};
-
-const entryExecutor = (contract) => {
-  const flags = executorExtensionAclFlags.flatMap((flag) => {
-    return contract.configs.acls.extensions.executor.some((f) => f === flag);
-  });
-
-  return {
-    id: sha3("n/a"),
-    addr: contract.address,
-    flags: calculateFlagValue(flags),
-  };
-};
-
-const entryVesting = (contract) => {
-  const flags = vestingExtensionAclFlags.flatMap((flag) => {
-    return contract.configs.acls.extensions.vesting.some((f) => f === flag);
-  });
-
-  return {
-    id: sha3("n/a"),
-    addr: contract.address,
-    flags: calculateFlagValue(flags),
-  };
-};
-
-const entryDao = (name, contract) => {
-  const flags = daoAccessFlags.flatMap((flag) => {
-    return contract.configs.acls.dao.some((f) => f === flag);
-  });
-
-  return {
-    id: sha3(name),
-    addr: contract.address,
-    flags: calculateFlagValue(flags),
-  };
-};
-
 const networks = [
   {
     name: "ganache",
@@ -1085,11 +872,5 @@ module.exports = {
   cloneDao,
   prepareAdapters: createAdapters,
   addDefaultAdapters,
-  entryBank,
-  entryERC721,
-  entryERC1271,
-  entryDao,
-  entryExecutor,
-  entryVesting,
   getNetworkDetails,
 };

@@ -62,7 +62,7 @@ function getProposalCounter() {
   return proposalCounter().next().value;
 }
 
-describe("Adapter - Signatures", () => {
+describe("Adapter - ERC1271", () => {
   before("deploy dao", async () => {
     const { dao, adapters, extensions } = await deployDefaultDao({
       owner: daoOwner,

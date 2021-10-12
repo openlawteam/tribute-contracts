@@ -1,3 +1,6 @@
+const { sha3 } = require("./ContractUtil");
+const { extensionsIdsMap } = require("./dao-ids");
+
 const daoAccessFlagsMap = {
   REPLACE_ADAPTER: "REPLACE_ADAPTER",
   SUBMIT_PROPOSAL: "SUBMIT_PROPOSAL",
@@ -70,6 +73,127 @@ const parseSelectedFlags = (allAclFlags, selectedFlags, moduleName) => {
     }, {});
 };
 
+const entryERC721 = (contract) => {
+  const flags = getEnabledExtensionFlags(
+    erc721ExtensionAclFlags,
+    extensionsIdsMap.ERC721_EXT,
+    contract.configs
+  );
+
+  return {
+    id: sha3("n/a"),
+    addr: contract.address,
+    flags: calculateFlagValue(flags),
+  };
+};
+
+const entryERC1155 = (contract) => {
+  const flags = getEnabledExtensionFlags(
+    erc1155ExtensionAclFlags,
+    extensionsIdsMap.ERC1155_EXT,
+    contract.configs
+  );
+
+  return {
+    id: sha3("n/a"),
+    addr: contract.address,
+    flags: calculateFlagValue(flags),
+  };
+};
+
+const entryERC20 = (contract) => {
+  const flags = getEnabledExtensionFlags(
+    erc20ExtensionAclFlags,
+    extensionsIdsMap.ERC20_EXT,
+    contract.configs
+  );
+
+  return {
+    id: sha3("n/a"),
+    addr: contract.address,
+    flags: calculateFlagValue(flags),
+  };
+};
+
+const entryBank = (contract) => {
+  const flags = getEnabledExtensionFlags(
+    bankExtensionAclFlags,
+    extensionsIdsMap.BANK_EXT,
+    contract.configs
+  );
+
+  return {
+    id: sha3("n/a"),
+    addr: contract.address,
+    flags: calculateFlagValue(flags),
+  };
+};
+
+const entryERC1271 = (contract) => {
+  const flags = getEnabledExtensionFlags(
+    erc1271ExtensionAclFlags,
+    extensionsIdsMap.ERC1271_EXT,
+    contract.configs
+  );
+
+  return {
+    id: sha3("n/a"),
+    addr: contract.address,
+    flags: calculateFlagValue(flags),
+  };
+};
+
+const entryExecutor = (contract) => {
+  const flags = getEnabledExtensionFlags(
+    executorExtensionAclFlags,
+    extensionsIdsMap.EXECUTOR_EXT,
+    contract.configs
+  );
+
+  return {
+    id: sha3("n/a"),
+    addr: contract.address,
+    flags: calculateFlagValue(flags),
+  };
+};
+
+const entryVesting = (contract) => {
+  const flags = getEnabledExtensionFlags(
+    vestingExtensionAclFlags,
+    extensionsIdsMap.VESTING_EXT,
+    contract.configs
+  );
+
+  return {
+    id: sha3("n/a"),
+    addr: contract.address,
+    flags: calculateFlagValue(flags),
+  };
+};
+
+const entryDao = (name, contract) => {
+  const flags = daoAccessFlags.flatMap((flag) => {
+    return contract.configs.acls.dao.some((f) => f === flag);
+  });
+
+  return {
+    id: sha3(name),
+    addr: contract.address,
+    flags: calculateFlagValue(flags),
+  };
+};
+
+const getEnabledExtensionFlags = (flags, extensionId, configs) => {
+  return flags.flatMap((flag) => {
+    const selectedAcls = configs.acls.extensions;
+    return (
+      selectedAcls &&
+      Object.keys(selectedAcls).length > 0 &&
+      selectedAcls[extensionId].some((f) => f === flag)
+    );
+  });
+};
+
 const calculateFlagValue = (values) => {
   return values
     .map((v, idx) => (v === true ? 2 ** idx : 0))
@@ -79,6 +203,14 @@ const calculateFlagValue = (values) => {
 module.exports = {
   parseSelectedFlags,
   calculateFlagValue,
+  entryBank,
+  entryERC20,
+  entryERC721,
+  entryERC1155,
+  entryERC1271,
+  entryDao,
+  entryExecutor,
+  entryVesting,
   daoAccessFlags,
   daoAccessFlagsMap,
   bankExtensionAclFlags,

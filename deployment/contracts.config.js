@@ -5,7 +5,16 @@ const {
   erc1155ExtensionAclFlagsMap,
   erc1271ExtensionAclFlagsMap,
   vestingExtensionAclFlagsMap,
-} = require("../utils/aclFlags");
+  entryBank,
+  entryERC20,
+  entryERC721,
+  entryERC1155,
+  entryERC1271,
+  entryExecutor,
+  entryVesting,
+} = require("../utils/access-control");
+
+const { extensionsIdsMap, adaptersIdsMap } = require("../utils/dao-ids");
 
 // Matches the DaoArtifacts.sol ArtifactType enum
 const ContractType = {
@@ -147,67 +156,112 @@ const contracts = [
     enabled: true,
     version: "1.0.0",
     type: ContractType.Factory,
+    acls: {
+      dao: [],
+      extensions: {},
+    },
   },
 
   // Extensions
   {
+    id: extensionsIdsMap.ERC721_EXT,
     name: "NFTExtension",
     path: "../contracts/extensions/nft/NFTExtension",
     enabled: true,
     version: "1.0.0",
     type: ContractType.Extension,
+    buildAclFlag: entryERC721,
+    acls: {
+      dao: [],
+      extensions: {},
+    },
   },
   {
+    id: extensionsIdsMap.BANK_EXT,
     name: "BankExtension",
     path: "../contracts/extensions/bank/BankExtension",
     enabled: true,
     version: "1.0.0",
     type: ContractType.Extension,
+    buildAclFlag: entryBank,
+    acls: {
+      dao: [],
+      extensions: {},
+    },
   },
   {
+    id: extensionsIdsMap.ERC20_EXT,
     name: "ERC20Extension",
     path: "../contracts/extensions/token/erc20/ERC20Extension",
     enabled: true,
     version: "1.0.0",
     type: ContractType.Extension,
+    buildAclFlag: entryERC20,
     acls: {
       dao: [daoAccessFlagsMap.NEW_MEMBER],
       extensions: {
-        bank: [bankExtensionAclFlagsMap.INTERNAL_TRANSFER],
+        [extensionsIdsMap.BANK_EXT]: [
+          bankExtensionAclFlagsMap.INTERNAL_TRANSFER,
+        ],
       },
     },
   },
   {
+    id: extensionsIdsMap.VESTING_EXT,
     name: "InternalTokenVestingExtension",
     path: "../contracts/extensions/token/erc20/InternalTokenVestingExtension",
     enabled: true,
     version: "1.0.0",
     type: ContractType.Extension,
+    buildAclFlag: entryVesting,
+    acls: {
+      dao: [],
+      extensions: {},
+    },
   },
   {
+    id: extensionsIdsMap.ERC1271_EXT,
     name: "ERC1271Extension",
     path: "../contracts/extensions/erc1271/ERC1271Extension",
     enabled: true,
     version: "1.0.0",
     type: ContractType.Extension,
+    buildAclFlag: entryERC1271,
+    acls: {
+      dao: [],
+      extensions: {},
+    },
   },
   {
+    id: extensionsIdsMap.EXECUTOR_EXT,
     name: "ExecutorExtension",
     path: "../contracts/extensions/executor/ExecutorExtension",
     enabled: true,
     version: "1.0.0",
     type: ContractType.Extension,
+    buildAclFlag: entryExecutor,
+    acls: {
+      dao: [],
+      extensions: {},
+    },
   },
   {
+    id: extensionsIdsMap.ERC1155_EXT,
     name: "ERC1155TokenExtension",
     path: "../contracts/extensions/erc1155/ERC1155TokenExtension",
     enabled: true,
     version: "1.0.0",
     type: ContractType.Extension,
+    buildAclFlag: entryERC1155,
+    acls: {
+      dao: [],
+      extensions: {},
+    },
   },
 
   // Config Adapters
   {
+    id: adaptersIdsMap.DAO_REGISTRY_ADAPTER,
     name: "DaoRegistryAdapterContract",
     path: "../contracts/adapters/DaoRegistryAdapterContract",
     enabled: true,
@@ -215,18 +269,11 @@ const contracts = [
     type: ContractType.Adapter,
     acls: {
       dao: [daoAccessFlagsMap.UPDATE_DELEGATE_KEY],
-      extensions: {
-        bank: [],
-        erc20: [],
-        erc721: [],
-        erc1155: [],
-        erc1271: [],
-        vesting: [],
-        executor: [],
-      },
+      extensions: {},
     },
   },
   {
+    id: adaptersIdsMap.BANK_ADAPTER,
     name: "BankAdapterContract",
     path: "../contracts/adapters/BankAdapterContract",
     enabled: true,
@@ -235,21 +282,16 @@ const contracts = [
     acls: {
       dao: [],
       extensions: {
-        bank: [
+        [extensionsIdsMap.BANK_EXT]: [
           bankExtensionAclFlagsMap.WITHDRAW,
           bankExtensionAclFlagsMap.SUB_FROM_BALANCE,
           bankExtensionAclFlagsMap.UPDATE_TOKEN,
         ],
-        erc20: [],
-        erc721: [],
-        erc1155: [],
-        erc1271: [],
-        vesting: [],
-        executor: [],
       },
     },
   },
   {
+    id: adaptersIdsMap.ERC721_ADAPTER,
     name: "NFTAdapterContract",
     path: "../contracts/adapters/NFTAdapterContract",
     enabled: true,
@@ -258,17 +300,15 @@ const contracts = [
     acls: {
       dao: [],
       extensions: {
-        bank: [],
-        erc20: [],
-        erc721: [erc721ExtensionAclFlagsMap.COLLECT_NFT],
-        erc1155: [erc1155ExtensionAclFlagsMap.COLLECT_NFT],
-        erc1271: [],
-        vesting: [],
-        executor: [],
+        [extensionsIdsMap.ERC721_EXT]: [erc721ExtensionAclFlagsMap.COLLECT_NFT],
+        [extensionsIdsMap.ERC1155_EXT]: [
+          erc1155ExtensionAclFlagsMap.COLLECT_NFT,
+        ],
       },
     },
   },
   {
+    id: adaptersIdsMap.CONFIGURATION_ADAPTER,
     name: "ConfigurationContract",
     path: "../contracts/adapters/ConfigurationContract",
     enabled: true,
@@ -279,18 +319,11 @@ const contracts = [
         daoAccessFlagsMap.SUBMIT_PROPOSAL,
         daoAccessFlagsMap.SET_CONFIGURATION,
       ],
-      extensions: {
-        bank: [],
-        erc20: [],
-        erc721: [],
-        erc1155: [],
-        erc1271: [],
-        vesting: [],
-        executor: [],
-      },
+      extensions: {},
     },
   },
   {
+    id: adaptersIdsMap.ERC1155_ADAPTER,
     name: "ERC1155AdapterContract",
     path: "../contracts/adapters/ERC1155AdapterContract",
     enabled: true,
@@ -299,25 +332,21 @@ const contracts = [
     acls: {
       dao: [],
       extensions: {
-        bank: [],
-        erc20: [],
-        erc721: [
+        [extensionsIdsMap.ERC721_EXT]: [
           erc721ExtensionAclFlagsMap.COLLECT_NFT,
           erc721ExtensionAclFlagsMap.WITHDRAW_NFT,
           erc721ExtensionAclFlagsMap.INTERNAL_TRANSFER,
         ],
-        erc1155: [
+        [extensionsIdsMap.ERC1155_EXT]: [
           erc1155ExtensionAclFlagsMap.COLLECT_NFT,
           erc1155ExtensionAclFlagsMap.WITHDRAW_NFT,
           erc1155ExtensionAclFlagsMap.INTERNAL_TRANSFER,
         ],
-        erc1271: [],
-        vesting: [],
-        executor: [],
       },
     },
   },
   {
+    id: adaptersIdsMap.MANAGING_ADAPTER,
     name: "ManagingContract",
     path: "../contracts/adapters/ManagingContract",
     enabled: true,
@@ -330,20 +359,13 @@ const contracts = [
         daoAccessFlagsMap.ADD_EXTENSION,
         daoAccessFlagsMap.REMOVE_EXTENSION,
       ],
-      extensions: {
-        bank: [],
-        erc20: [],
-        erc721: [],
-        erc1155: [],
-        erc1271: [],
-        vesting: [],
-        executor: [],
-      },
+      extensions: {},
     },
   },
 
   // Signature Adapters
   {
+    id: adaptersIdsMap.ERC1271_ADAPTER,
     name: "SignaturesContract",
     path: "../contracts/adapters/SignaturesContract",
     enabled: true,
@@ -352,19 +374,14 @@ const contracts = [
     acls: {
       dao: [daoAccessFlagsMap.SUBMIT_PROPOSAL],
       extensions: {
-        bank: [],
-        erc20: [],
-        erc721: [],
-        erc1155: [],
-        erc1271: [erc1271ExtensionAclFlagsMap.SIGN],
-        vesting: [],
-        executor: [],
+        [extensionsIdsMap.ERC1271_EXT]: [erc1271ExtensionAclFlagsMap.SIGN],
       },
     },
   },
 
   // Voting Adapters
   {
+    id: adaptersIdsMap.VOTING_ADAPTER,
     name: "VotingContract",
     path: "../contracts/adapters/VotingContract",
     enabled: true,
@@ -372,18 +389,11 @@ const contracts = [
     type: ContractType.Adapter,
     acls: {
       dao: [],
-      extensions: {
-        bank: [],
-        erc20: [],
-        erc721: [],
-        erc1155: [],
-        erc1271: [],
-        vesting: [],
-        executor: [],
-      },
+      extensions: {},
     },
   },
   {
+    id: adaptersIdsMap.SNAPSHOT_PROPOSAL_ADAPTER,
     name: "SnapshotProposalContract",
     path: "../contracts/adapters/voting/SnapshotProposalContract",
     enabled: true,
@@ -391,18 +401,11 @@ const contracts = [
     type: ContractType.Adapter,
     acls: {
       dao: [],
-      extensions: {
-        bank: [],
-        erc20: [],
-        erc721: [],
-        erc1155: [],
-        erc1271: [],
-        vesting: [],
-        executor: [],
-      },
+      extensions: {},
     },
   },
   {
+    id: adaptersIdsMap.VOTING_ADAPTER,
     name: "OffchainVotingContract",
     path: "../contracts/adapters/voting/OffchainVotingContract",
     enabled: true,
@@ -411,21 +414,16 @@ const contracts = [
     acls: {
       dao: [],
       extensions: {
-        bank: [
+        [extensionsIdsMap.BANK_EXT]: [
           bankExtensionAclFlagsMap.ADD_TO_BALANCE,
           bankExtensionAclFlagsMap.SUB_FROM_BALANCE,
           bankExtensionAclFlagsMap.INTERNAL_TRANSFER,
         ],
-        erc20: [],
-        erc721: [],
-        erc1155: [],
-        erc1271: [],
-        vesting: [],
-        executor: [],
       },
     },
   },
   {
+    id: adaptersIdsMap.VOTING_HASH_ADAPTER,
     name: "OffchainVotingHashContract",
     path: "../contracts/adapters/voting/OffchainVotingHashContract",
     enabled: true,
@@ -433,18 +431,11 @@ const contracts = [
     type: ContractType.Adapter,
     acls: {
       dao: [],
-      extensions: {
-        bank: [],
-        erc20: [],
-        erc721: [],
-        erc1155: [],
-        erc1271: [],
-        vesting: [],
-        executor: [],
-      },
+      extensions: {},
     },
   },
   {
+    id: adaptersIdsMap.VOTING_HASH_ADAPTER,
     name: "KickBadReporterAdapter",
     path: "../contracts/adapters/voting/KickBadReporterAdapter",
     enabled: true,
@@ -452,20 +443,13 @@ const contracts = [
     type: ContractType.Adapter,
     acls: {
       dao: [],
-      extensions: {
-        bank: [],
-        erc20: [],
-        erc721: [],
-        erc1155: [],
-        erc1271: [],
-        vesting: [],
-        executor: [],
-      },
+      extensions: {},
     },
   },
 
   // Withdraw / Kick Adapters
   {
+    id: adaptersIdsMap.RAGEQUIT_ADAPTER,
     name: "RagequitContract",
     path: "../contracts/adapters/RagequitContract",
     enabled: true,
@@ -474,21 +458,16 @@ const contracts = [
     acls: {
       dao: [],
       extensions: {
-        bank: [
+        [extensionsIdsMap.BANK_EXT]: [
           bankExtensionAclFlagsMap.INTERNAL_TRANSFER,
           bankExtensionAclFlagsMap.SUB_FROM_BALANCE,
           bankExtensionAclFlagsMap.ADD_TO_BALANCE,
         ],
-        erc20: [],
-        erc721: [],
-        erc1155: [],
-        erc1271: [],
-        vesting: [],
-        executor: [],
       },
     },
   },
   {
+    id: adaptersIdsMap.GUILDKICK_ADAPTER,
     name: "GuildKickContract",
     path: "../contracts/adapters/GuildKickContract",
     enabled: true,
@@ -497,22 +476,17 @@ const contracts = [
     acls: {
       dao: [daoAccessFlagsMap.SUBMIT_PROPOSAL],
       extensions: {
-        bank: [
+        [extensionsIdsMap.BANK_EXT]: [
           bankExtensionAclFlagsMap.INTERNAL_TRANSFER,
           bankExtensionAclFlagsMap.SUB_FROM_BALANCE,
           bankExtensionAclFlagsMap.ADD_TO_BALANCE,
           bankExtensionAclFlagsMap.REGISTER_NEW_TOKEN,
         ],
-        erc20: [],
-        erc721: [],
-        erc1155: [],
-        erc1271: [],
-        vesting: [],
-        executor: [],
       },
     },
   },
   {
+    id: adaptersIdsMap.DISTRIBUTE_ADAPTER,
     name: "DistributeContract",
     path: "../contracts/adapters/DistributeContract",
     enabled: true,
@@ -521,19 +495,16 @@ const contracts = [
     acls: {
       dao: [daoAccessFlagsMap.SUBMIT_PROPOSAL],
       extensions: {
-        bank: [bankExtensionAclFlagsMap.INTERNAL_TRANSFER],
-        erc20: [],
-        erc721: [],
-        erc1155: [],
-        erc1271: [],
-        vesting: [],
-        executor: [],
+        [extensionsIdsMap.BANK_EXT]: [
+          bankExtensionAclFlagsMap.INTERNAL_TRANSFER,
+        ],
       },
     },
   },
 
   // Funding/Onboarding Adapters
   {
+    id: adaptersIdsMap.FINANCING_ADAPTER,
     name: "FinancingContract",
     path: "../contracts/adapters/FinancingContract",
     enabled: true,
@@ -542,21 +513,16 @@ const contracts = [
     acls: {
       dao: [daoAccessFlagsMap.SUBMIT_PROPOSAL],
       extensions: {
-        bank: [
+        [extensionsIdsMap.BANK_EXT]: [
           bankExtensionAclFlagsMap.INTERNAL_TRANSFER,
           bankExtensionAclFlagsMap.SUB_FROM_BALANCE,
           bankExtensionAclFlagsMap.ADD_TO_BALANCE,
         ],
-        erc20: [],
-        erc721: [],
-        erc1155: [],
-        erc1271: [],
-        vesting: [],
-        executor: [],
       },
     },
   },
   {
+    id: adaptersIdsMap.ONBOARDING_ADAPTER,
     name: "OnboardingContract",
     path: "../contracts/adapters/OnboardingContract",
     enabled: true,
@@ -569,20 +535,15 @@ const contracts = [
         daoAccessFlagsMap.NEW_MEMBER,
       ],
       extensions: {
-        bank: [
+        [extensionsIdsMap.BANK_EXT]: [
           bankExtensionAclFlagsMap.ADD_TO_BALANCE,
           bankExtensionAclFlagsMap.INTERNAL_TRANSFER,
         ],
-        erc20: [],
-        erc721: [],
-        erc1155: [],
-        erc1271: [],
-        vesting: [],
-        executor: [],
       },
     },
   },
   {
+    id: adaptersIdsMap.COUPON_ONBOARDING_ADAPTER,
     name: "CouponOnboardingContract",
     path: "../contracts/adapters/CouponOnboardingContract",
     enabled: true,
@@ -591,20 +552,15 @@ const contracts = [
     acls: {
       dao: [daoAccessFlagsMap.NEW_MEMBER],
       extensions: {
-        bank: [
+        [extensionsIdsMap.BANK_EXT]: [
           bankExtensionAclFlagsMap.INTERNAL_TRANSFER,
           bankExtensionAclFlagsMap.ADD_TO_BALANCE,
         ],
-        erc20: [],
-        erc721: [],
-        erc1155: [],
-        erc1271: [],
-        vesting: [],
-        executor: [],
       },
     },
   },
   {
+    id: adaptersIdsMap.TRIBUTE_ADAPTER,
     name: "TributeContract",
     path: "../contracts/adapters/TributeContract",
     enabled: true,
@@ -613,20 +569,15 @@ const contracts = [
     acls: {
       dao: [daoAccessFlagsMap.SUBMIT_PROPOSAL, daoAccessFlagsMap.NEW_MEMBER],
       extensions: {
-        bank: [
+        [extensionsIdsMap.BANK_EXT]: [
           bankExtensionAclFlagsMap.ADD_TO_BALANCE,
           bankExtensionAclFlagsMap.REGISTER_NEW_TOKEN,
         ],
-        erc20: [],
-        erc721: [],
-        erc1155: [],
-        erc1271: [],
-        vesting: [],
-        executor: [],
       },
     },
   },
   {
+    id: adaptersIdsMap.TRIBUTE_NFT_ADAPTER,
     name: "TributeNFTContract",
     path: "../contracts/adapters/TributeNFTContract",
     enabled: true,
@@ -635,17 +586,13 @@ const contracts = [
     acls: {
       dao: [daoAccessFlagsMap.SUBMIT_PROPOSAL, daoAccessFlagsMap.NEW_MEMBER],
       extensions: {
-        bank: [bankExtensionAclFlagsMap.ADD_TO_BALANCE],
-        erc20: [],
-        erc721: [erc721ExtensionAclFlagsMap.COLLECT_NFT],
-        erc1155: [],
-        erc1271: [],
-        vesting: [],
-        executor: [],
+        [extensionsIdsMap.BANK_EXT]: [bankExtensionAclFlagsMap.ADD_TO_BALANCE],
+        [extensionsIdsMap.ERC721_EXT]: [erc721ExtensionAclFlagsMap.COLLECT_NFT],
       },
     },
   },
   {
+    id: adaptersIdsMap.LEND_NFT_ADAPTER,
     name: "LendNFTContract",
     path: "../contracts/adapters/LendNFTContract",
     enabled: true,
@@ -654,30 +601,28 @@ const contracts = [
     acls: {
       dao: [daoAccessFlagsMap.SUBMIT_PROPOSAL, daoAccessFlagsMap.NEW_MEMBER],
       extensions: {
-        bank: [
+        [extensionsIdsMap.BANK_EXT]: [
           bankExtensionAclFlagsMap.SUB_FROM_BALANCE,
           bankExtensionAclFlagsMap.ADD_TO_BALANCE,
         ],
-        erc20: [],
-        erc721: [
+        [extensionsIdsMap.ERC721_EXT]: [
           erc721ExtensionAclFlagsMap.COLLECT_NFT,
           erc721ExtensionAclFlagsMap.WITHDRAW_NFT,
         ],
-        erc1155: [
+        [extensionsIdsMap.ERC1155_EXT]: [
           erc1155ExtensionAclFlagsMap.COLLECT_NFT,
           erc1155ExtensionAclFlagsMap.WITHDRAW_NFT,
         ],
-        erc1271: [],
-        vesting: [
+        [extensionsIdsMap.VESTING_EXT]: [
           vestingExtensionAclFlagsMap.NEW_VESTING,
           vestingExtensionAclFlagsMap.REMOVE_VESTING,
         ],
-        executor: [],
       },
     },
   },
   // ERC20 Util
   {
+    id: adaptersIdsMap.LEND_NFT_ADAPTER,
     name: "ERC20TransferStrategy",
     path: "../contracts/extensions/token/erc20/ERC20TransferStrategy",
     enabled: true,
@@ -686,19 +631,16 @@ const contracts = [
     acls: {
       dao: [],
       extensions: {
-        bank: [bankExtensionAclFlagsMap.INTERNAL_TRANSFER],
-        erc20: [],
-        erc721: [],
-        erc1155: [],
-        erc1271: [],
-        vesting: [],
-        executor: [],
+        [extensionsIdsMap.BANK_EXT]: [
+          bankExtensionAclFlagsMap.INTERNAL_TRANSFER,
+        ],
       },
     },
   },
 
   // Utils
   {
+    id: "dao-artifacts",
     name: "DaoArtifacts",
     path: "../contracts/utils/DaoArtifacts",
     enabled: true,
@@ -706,6 +648,7 @@ const contracts = [
     type: ContractType.Util,
   },
   {
+    id: "multicall",
     name: "Multicall",
     path: "../contracts/utils/Multicall",
     enabled: true,

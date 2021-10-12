@@ -25,12 +25,10 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
  */
-const { sha3, toBN, toWei } = require("../../utils/ContractUtil.js");
+const { sha3, toBN, toWei } = require("../../utils/ContractUtil");
 
 const {
   deployDefaultDao,
-  entryDao,
-  entryExecutor,
   ERC20Minter,
   ProxToken,
   accounts,
@@ -39,7 +37,13 @@ const {
   expectRevert,
 } = require("../../utils/OZTestUtil.js");
 
-const { executorExtensionAclFlagsMap } = require("../../utils/aclFlags");
+const {
+  executorExtensionAclFlagsMap,
+  entryDao,
+  entryExecutor,
+} = require("../../utils/access-control");
+
+const { extensionsIdsMap, adaptersIdsMap } = require("../../utils/dao-ids");
 
 describe("Extension - Executor", () => {
   const daoOwner = accounts[0];
@@ -85,7 +89,9 @@ describe("Extension - Executor", () => {
           configs: {
             acls: {
               extensions: {
-                executor: [executorExtensionAclFlagsMap.EXECUTE],
+                [extensionsIdsMap.EXECUTOR_EXT]: [
+                  executorExtensionAclFlagsMap.EXECUTE,
+                ],
               },
             },
           },
@@ -150,7 +156,7 @@ describe("Extension - Executor", () => {
       [
         entryExecutor({
           ...erc20Minter,
-          configs: { acls: { extensions: { executor: [] } } },
+          configs: { acls: { extensions: {} } }, // no access granted
         }),
       ],
       { from: daoOwner }

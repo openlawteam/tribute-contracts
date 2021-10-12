@@ -51,11 +51,14 @@ const {
   VotingContract,
 } = require("../../utils/OZTestUtil.js");
 
-const { entryDao, entryBank } = require("../../utils/DeploymentUtil.js");
 const {
   bankExtensionAclFlagsMap,
   daoAccessFlagsMap,
-} = require("../../utils/aclFlags");
+  entryDao,
+  entryBank,
+} = require("../../utils/access-control");
+
+const { extensionsIdsMap } = require("../../utils/dao-ids");
 
 const daoOwner = accounts[1];
 const proposalCounter = proposalIdGenerator().generator;
@@ -803,7 +806,7 @@ describe("Adapter - Managing", () => {
             configs: {
               acls: {
                 extensions: {
-                  bank: [
+                  [extensionsIdsMap.BANK_EXT]: [
                     bankExtensionAclFlagsMap.ADD_TO_BALANCE,
                     bankExtensionAclFlagsMap.SUB_FROM_BALANCE,
                     bankExtensionAclFlagsMap.INTERNAL_TRANSFER,

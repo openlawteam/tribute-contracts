@@ -41,13 +41,7 @@ const {
   UNITS,
 } = require("./ContractUtil");
 
-const {
-  deployDao,
-  entryDao,
-  entryBank,
-  entryERC1271,
-  entryExecutor,
-} = require("./DeploymentUtil");
+const { deployDao } = require("./DeploymentUtil");
 
 const { expectRevert } = require("@openzeppelin/test-helpers");
 const { expect } = require("chai");
@@ -323,10 +317,6 @@ module.exports = (() => {
     deployDaoWithBatchVoting,
     deployDaoWithOffchainVoting,
     encodeProposalData,
-    entryERC1271,
-    entryBank,
-    entryDao,
-    entryExecutor,
     takeChainSnapshot,
     revertChainSnapshot,
     proposalIdGenerator,
