@@ -156,10 +156,6 @@ const contracts = [
     enabled: true,
     version: "1.0.0",
     type: ContractType.Factory,
-    acls: {
-      dao: [],
-      extensions: {},
-    },
   },
 
   // Extensions
@@ -435,7 +431,7 @@ const contracts = [
     },
   },
   {
-    id: adaptersIdsMap.VOTING_HASH_ADAPTER,
+    id: adaptersIdsMap.KICK_BAD_REPORTER_ADAPTER,
     name: "KickBadReporterAdapter",
     path: "../contracts/adapters/voting/KickBadReporterAdapter",
     enabled: true,
@@ -622,7 +618,7 @@ const contracts = [
   },
   // ERC20 Util
   {
-    id: adaptersIdsMap.LEND_NFT_ADAPTER,
+    id: adaptersIdsMap.ERC20_TRANSFER_STRATEGY_ADAPTER,
     name: "ERC20TransferStrategy",
     path: "../contracts/extensions/token/erc20/ERC20TransferStrategy",
     enabled: true,

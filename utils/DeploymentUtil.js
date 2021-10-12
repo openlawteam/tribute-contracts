@@ -447,69 +447,63 @@ const configureDao = async ({
   options,
 }) => {
   const configureAdaptersWithDAOAccess = async () => {
-    const adapterConfigs = [];
-    if (adapters.voting)
-      adapterConfigs.push(entryDao("voting", adapters.voting));
+    const adaptersWithAccess = Object.values(adapters)
+      .filter((a) => a.configs.enabled)
+      .filter((a) => a.configs.acls.dao)
+      .reduce((withAccess, adapter) => {
+        withAccess.push(entryDao(adapter));
+        return withAccess;
+      }, []);
 
-    if (adapters.configuration)
-      adapterConfigs.push(entryDao("configuration", adapters.configuration));
+    // const adapterConfigs = [];
+    // if (adapters.voting) adapterConfigs.push(entryDao(adapters.voting));
 
-    if (adapters.ragequit)
-      adapterConfigs.push(entryDao("ragequit", adapters.ragequit));
+    // if (adapters.configuration)
+    //   adapterConfigs.push(entryDao(adapters.configuration));
 
-    if (adapters.guildkick)
-      adapterConfigs.push(entryDao("guildkick", adapters.guildkick));
+    // if (adapters.ragequit) adapterConfigs.push(entryDao(adapters.ragequit));
 
-    if (adapters.managing)
-      adapterConfigs.push(entryDao("managing", adapters.managing));
+    // if (adapters.guildkick) adapterConfigs.push(entryDao(adapters.guildkick));
 
-    if (adapters.financing)
-      adapterConfigs.push(entryDao("financing", adapters.financing));
+    // if (adapters.managing) adapterConfigs.push(entryDao(adapters.managing));
 
-    if (adapters.signatures)
-      adapterConfigs.push(entryDao("signatures", adapters.signatures));
+    // if (adapters.financing) adapterConfigs.push(entryDao(adapters.financing));
 
-    if (adapters.onboarding)
-      adapterConfigs.push(entryDao("onboarding", adapters.onboarding));
+    // if (adapters.signatures) adapterConfigs.push(entryDao(adapters.signatures));
 
-    if (adapters.couponOnboarding)
-      adapterConfigs.push(
-        entryDao("coupon-onboarding", adapters.couponOnboarding)
-      );
+    // if (adapters.onboarding) adapterConfigs.push(entryDao(adapters.onboarding));
 
-    if (adapters.daoRegistryAdapter)
-      adapterConfigs.push(entryDao("daoRegistry", adapters.daoRegistryAdapter));
+    // if (adapters.couponOnboarding)
+    //   adapterConfigs.push(entryDao(adapters.couponOnboarding));
 
-    if (adapters.tribute)
-      adapterConfigs.push(entryDao("tribute", adapters.tribute));
+    // if (adapters.daoRegistryAdapter)
+    //   adapterConfigs.push(entryDao(adapters.daoRegistryAdapter));
 
-    if (adapters.tributeNFT)
-      adapterConfigs.push(entryDao("tribute-nft", adapters.tributeNFT));
+    // if (adapters.tribute) adapterConfigs.push(entryDao(adapters.tribute));
 
-    if (adapters.lendNFT)
-      adapterConfigs.push(entryDao("lend-nft", adapters.lendNFT));
+    // if (adapters.tributeNFT) adapterConfigs.push(entryDao(adapters.tributeNFT));
 
-    if (adapters.distribute)
-      adapterConfigs.push(entryDao("distribute", adapters.distribute));
+    // if (adapters.lendNFT) adapterConfigs.push(entryDao(adapters.lendNFT));
 
-    // Adapters that have direct access to the Extensions need to be added to the DAO without ACLs flags
-    if (adapters.nftAdapter)
-      adapterConfigs.push(entryDao("nft", adapters.nftAdapter));
+    // if (adapters.distribute) adapterConfigs.push(entryDao(adapters.distribute));
 
-    if (adapters.bankAdapter)
-      adapterConfigs.push(entryDao("bank", adapters.bankAdapter));
+    // // Adapters that have direct access to the Extensions need to be added to the DAO without ACLs flags
+    // if (adapters.nftAdapter) adapterConfigs.push(entryDao(adapters.nftAdapter));
 
-    if (adapters.erc1155Adapter)
-      adapterConfigs.push(entryDao("erc1155-adpt", adapters.erc1155Adapter));
+    // if (adapters.bankAdapter)
+    //   adapterConfigs.push(entryDao(adapters.bankAdapter));
 
-    // Declaring the erc20 token extension as an adapter to be able to call the bank extension
-    if (extensions.erc20Ext) {
-      adapterConfigs.push(entryDao("erc20-ext", extensions.erc20Ext));
-      adapterConfigs.push(
-        entryDao("erc20-transfer-strategy", adapters.erc20TransferStrategy)
-      );
-    }
-    await daoFactory.addAdapters(dao.address, adapterConfigs, { from: owner });
+    // if (adapters.erc1155Adapter)
+    //   adapterConfigs.push(entryDao(adapters.erc1155Adapter));
+
+    // // Declaring the erc20 token extension as an adapter to be able to call the bank extension
+    // if (extensions.erc20Ext) {
+    //   adapterConfigs.push(entryDao(extensions.erc20Ext));
+    //   adapterConfigs.push(entryDao(adapters.erc20TransferStrategy));
+    // }
+    await daoFactory.addAdapters(dao.address, adaptersWithAccess, {
+      from: owner,
+    });
   };
 
   const configureAdaptersWithDAOParameters = async () => {

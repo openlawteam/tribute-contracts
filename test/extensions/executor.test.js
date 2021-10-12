@@ -68,9 +68,10 @@ describe("Extension - Executor", () => {
     await factories.daoFactory.addAdapters(
       dao.address,
       [
-        entryDao("erc20Minter", {
+        entryDao({
           ...erc20Minter,
           configs: {
+            id: "erc20Minter",
             acls: {
               dao: [],
             },
@@ -142,9 +143,9 @@ describe("Extension - Executor", () => {
     await factories.daoFactory.addAdapters(
       dao.address,
       [
-        entryDao("erc20Minter", {
+        entryDao({
           ...erc20Minter,
-          configs: { acls: { dao: [] } },
+          configs: { id: "erc20Minter", acls: { dao: [] } },
         }),
       ],
       { from: daoOwner }

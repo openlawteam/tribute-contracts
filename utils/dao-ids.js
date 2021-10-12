@@ -16,7 +16,7 @@ const adaptersIdsMap = {
   BANK_ADAPTER: "bank",
   ERC721_ADAPTER: "nft",
   ERC1155_ADAPTER: "erc1155-adpt",
-  ERC1271_ADAPTER: "erc1271-adpt",
+  ERC1271_ADAPTER: "signatures",
   SNAPSHOT_PROPOSAL_ADAPTER: "snapshot-proposal-adpt",
   VOTING_HASH_ADAPTER: "voting-hash-adpt",
   KICK_BAD_REPORTER_ADAPTER: "kick-bad-reporter-adpt",

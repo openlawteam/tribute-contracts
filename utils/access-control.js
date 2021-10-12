@@ -171,13 +171,13 @@ const entryVesting = (contract) => {
   };
 };
 
-const entryDao = (name, contract) => {
+const entryDao = (contract) => {
   const flags = daoAccessFlags.flatMap((flag) => {
     return contract.configs.acls.dao.some((f) => f === flag);
   });
 
   return {
-    id: sha3(name),
+    id: sha3(contract.configs.id),
     addr: contract.address,
     flags: calculateFlagValue(flags),
   };

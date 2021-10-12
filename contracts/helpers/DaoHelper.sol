@@ -47,14 +47,18 @@ library DaoHelper {
     bytes32 internal constant BANK_ADAPT = keccak256("bank");
     bytes32 internal constant ERC721_ADAPT = keccak256("nft");
     bytes32 internal constant ERC1155_ADAPT = keccak256("erc1155-adpt");
-    bytes32 internal constant ERC1271_ADAPT = keccak256("erc1271-adpt");
-    bytes32 internal constant SNAPSHOT_PROPOSAL_ADPT = keccak256("snapshot-proposal-adpt");
+    bytes32 internal constant ERC1271_ADAPT = keccak256("signatures");
+    bytes32 internal constant SNAPSHOT_PROPOSAL_ADPT =
+        keccak256("snapshot-proposal-adpt");
     bytes32 internal constant VOTING_HASH_ADPT = keccak256("voting-hash-adpt");
-    bytes32 internal constant KICK_BAD_REPORTER_ADPT = keccak256("kick-bad-reporter-adpt");
-    bytes32 internal constant COUPON_ONBOARDING_ADPT = keccak256("coupon-onboarding");
+    bytes32 internal constant KICK_BAD_REPORTER_ADPT =
+        keccak256("kick-bad-reporter-adpt");
+    bytes32 internal constant COUPON_ONBOARDING_ADPT =
+        keccak256("coupon-onboarding");
     bytes32 internal constant LEND_NFT_ADPT = keccak256("coupon-onboarding");
-    bytes32 internal constant ERC20_TRANSFER_STRATEGY_ADPT = keccak256("erc20-transfer-strategy");
-    
+    bytes32 internal constant ERC20_TRANSFER_STRATEGY_ADPT =
+        keccak256("erc20-transfer-strategy");
+
     // Extensions
     bytes32 internal constant BANK = keccak256("bank");
     bytes32 internal constant ERC1271 = keccak256("erc1271");

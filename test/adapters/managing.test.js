@@ -382,9 +382,10 @@ describe("Adapter - Managing", () => {
     const newManaging = await ManagingContract.new();
     const newAdapterId = sha3("managing");
     const proposalId = getProposalCounter();
-    const { flags } = entryDao("managing", {
+    const { flags } = entryDao({
       ...newManaging,
       configs: {
+        id: newAdapterId,
         acls: {
           dao: [
             daoAccessFlagsMap.SUBMIT_PROPOSAL,
@@ -495,9 +496,9 @@ describe("Adapter - Managing", () => {
         adapterOrExtensionId: newAdapterId,
         adapterOrExtensionAddr: newManaging.address,
         updateType: 1,
-        flags: entryDao("managing", {
+        flags: entryDao({
           ...newManaging,
-          configs: { acls: { dao: [] } },
+          configs: { id: newAdapterId, acls: { dao: [] } },
         }).flags, // no permissions were set
         keys: [],
         values: [],
