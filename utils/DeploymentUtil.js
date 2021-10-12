@@ -415,11 +415,9 @@ const configureOffchainVoting = async ({
     offchainAdmin,
   ]);
 
-  await daoFactory.updateAdapter(
-    dao.address,
-    entryDao("voting", offchainVoting),
-    { from: owner }
-  );
+  await daoFactory.updateAdapter(dao.address, entryDao(offchainVoting), {
+    from: owner,
+  });
 
   await dao.setAclToExtensionForAdapter(
     extensions.bankExt.address,
@@ -455,53 +453,18 @@ const configureDao = async ({
         return withAccess;
       }, []);
 
-    // const adapterConfigs = [];
-    // if (adapters.voting) adapterConfigs.push(entryDao(adapters.voting));
+    // If an extension needs access to other extension,
+    // the extension needs to be added as an adapter to the DAO,
+    // but without any ACL flag enabled.
+    const contractsWithAccess = Object.values(extensions)
+      .filter((e) => e.configs.enabled)
+      .filter((e) => Object.keys(e.configs.acls.extensions).length > 0)
+      .reduce((withAccess, extension) => {
+        withAccess.push(entryDao(extension));
+        return withAccess;
+      }, adaptersWithAccess);
 
-    // if (adapters.configuration)
-    //   adapterConfigs.push(entryDao(adapters.configuration));
-
-    // if (adapters.ragequit) adapterConfigs.push(entryDao(adapters.ragequit));
-
-    // if (adapters.guildkick) adapterConfigs.push(entryDao(adapters.guildkick));
-
-    // if (adapters.managing) adapterConfigs.push(entryDao(adapters.managing));
-
-    // if (adapters.financing) adapterConfigs.push(entryDao(adapters.financing));
-
-    // if (adapters.signatures) adapterConfigs.push(entryDao(adapters.signatures));
-
-    // if (adapters.onboarding) adapterConfigs.push(entryDao(adapters.onboarding));
-
-    // if (adapters.couponOnboarding)
-    //   adapterConfigs.push(entryDao(adapters.couponOnboarding));
-
-    // if (adapters.daoRegistryAdapter)
-    //   adapterConfigs.push(entryDao(adapters.daoRegistryAdapter));
-
-    // if (adapters.tribute) adapterConfigs.push(entryDao(adapters.tribute));
-
-    // if (adapters.tributeNFT) adapterConfigs.push(entryDao(adapters.tributeNFT));
-
-    // if (adapters.lendNFT) adapterConfigs.push(entryDao(adapters.lendNFT));
-
-    // if (adapters.distribute) adapterConfigs.push(entryDao(adapters.distribute));
-
-    // // Adapters that have direct access to the Extensions need to be added to the DAO without ACLs flags
-    // if (adapters.nftAdapter) adapterConfigs.push(entryDao(adapters.nftAdapter));
-
-    // if (adapters.bankAdapter)
-    //   adapterConfigs.push(entryDao(adapters.bankAdapter));
-
-    // if (adapters.erc1155Adapter)
-    //   adapterConfigs.push(entryDao(adapters.erc1155Adapter));
-
-    // // Declaring the erc20 token extension as an adapter to be able to call the bank extension
-    // if (extensions.erc20Ext) {
-    //   adapterConfigs.push(entryDao(extensions.erc20Ext));
-    //   adapterConfigs.push(entryDao(adapters.erc20TransferStrategy));
-    // }
-    await daoFactory.addAdapters(dao.address, adaptersWithAccess, {
+    await daoFactory.addAdapters(dao.address, contractsWithAccess, {
       from: owner,
     });
   };
@@ -588,43 +551,55 @@ const configureDao = async ({
       );
   };
 
-  await configureAdaptersWithDAOAccess();
-  await configureAdaptersWithDAOParameters();
+  /**
+   * Configures all the adapters that need access to the DAO and each enabled extension
+   */
+  const configureAdapters = async () => {
+    await configureAdaptersWithDAOAccess();
+    await configureAdaptersWithDAOParameters();
 
-  /** Configures all the adapters that need access to each enabled extension */
-  Object.values(extensions)
-    .filter((targetExtension) => targetExtension.configs.enabled)
-    .forEach((targetExtension) => {
-      // Filters the enabled adapters that have access to the targetExtension
-      const contracts = Object.values(adapters)
-        .filter((a) => a.configs.enabled)
-        .filter((a) =>
-          // The adapters must have at least 1 ACL flag defined to access the targetExtension
-          Object.keys(a.configs.acls.extensions).some(
-            (extId) => extId === targetExtension.configs.id
-          )
-        );
+    Object.values(extensions)
+      .filter((targetExtension) => targetExtension.configs.enabled)
+      .forEach((targetExtension) => {
+        // Filters the enabled adapters that have access to the targetExtension
+        const contracts = Object.values(adapters)
+          .filter((a) => a.configs.enabled)
+          .filter((a) =>
+            // The adapters must have at least 1 ACL flag defined to access the targetExtension
+            Object.keys(a.configs.acls.extensions).some(
+              (extId) => extId === targetExtension.configs.id
+            )
+          );
 
-      configureExtensionAccess(contracts, targetExtension);
-    });
+        configureExtensionAccess(contracts, targetExtension);
+      });
+  };
 
-  /** Configures all the extensions that need access to other enabled extensions */
-  Object.values(extensions)
-    .filter((targetExtension) => targetExtension.configs.enabled)
-    .forEach((targetExtension) => {
-      // Filters the enabled extensions that have access to the targetExtension
-      const contracts = Object.values(extensions)
-        .filter((e) => e.configs.enabled)
-        .filter((e) => e.configs.id !== targetExtension.configs.id)
-        .filter((e) =>
-          // The other extensions must have at least 1 ACL flag defined to access the targetExtension
-          Object.keys(e.configs.acls.extensions).some(
-            (extId) => extId === targetExtension.configs.id
-          )
-        );
+  /**
+   * Configures all the extensions that need access to
+   * other enabled extensions
+   */
+  const configureExtensions = () => {
+    Object.values(extensions)
+      .filter((targetExtension) => targetExtension.configs.enabled)
+      .forEach(async (targetExtension) => {
+        // Filters the enabled extensions that have access to the targetExtension
+        const contracts = Object.values(extensions)
+          .filter((e) => e.configs.enabled)
+          .filter((e) => e.configs.id !== targetExtension.configs.id)
+          .filter((e) =>
+            // The other extensions must have at least 1 ACL flag defined to access the targetExtension
+            Object.keys(e.configs.acls.extensions).some(
+              (extId) => extId === targetExtension.configs.id
+            )
+          );
 
-      configureExtensionAccess(contracts, targetExtension);
-    });
+        configureExtensionAccess(contracts, targetExtension);
+      });
+  };
+
+  configureAdapters();
+  configureExtensions();
 };
 
 const cloneDao = async ({

@@ -193,6 +193,7 @@ const contracts = [
     version: "1.0.0",
     type: ContractType.Extension,
     buildAclFlag: entryERC20,
+
     acls: {
       dao: [daoAccessFlagsMap.NEW_MEMBER],
       extensions: {
