@@ -19,7 +19,7 @@ import {
 import { extensionsIdsMap, adaptersIdsMap } from "../utils/dao-ids-util";
 
 // Matches the DaoArtifacts.sol ArtifactType enum
-enum ContractType {
+export enum ContractType {
   Core = 0,
   Factory = 1,
   Extension = 2,
@@ -29,13 +29,21 @@ enum ContractType {
 }
 
 export type ContractConfig = {
+  // The id of the contract, usually it is imported from dao-ids-util.ts.
   id: string;
+  // The name of the solidity contract, not the file name, but the contract itself.
   name: string;
+  // The path to the solidity contract.
   path: string;
+  // If true indicates that the contract must be deployed.
   enabled: boolean;
+  // Version of the solidity contract.
   version: string;
+  // Type of the contract based on the ContractType enum.
   type: ContractType;
-  acls?: SelectedACLs;
+  // The Access Control Layer flags selected to be granted to this contract in the DAO.
+  acls: SelectedACLs;
+  // The function that computes the correct ACL value based on the selected ACL flags.
   buildAclFlag?: ACLBuilder;
 };
 
@@ -48,6 +56,10 @@ export const contracts: Array<ContractConfig> = [
     enabled: true,
     version: "1.0.0",
     type: ContractType.Test,
+    acls: {
+      dao: [],
+      extensions: {},
+    },
   },
   {
     id: "mock-dao",
@@ -56,6 +68,10 @@ export const contracts: Array<ContractConfig> = [
     enabled: true,
     version: "1.0.0",
     type: ContractType.Test,
+    acls: {
+      dao: [],
+      extensions: {},
+    },
   },
   {
     id: "test-token-1",
@@ -64,6 +80,10 @@ export const contracts: Array<ContractConfig> = [
     enabled: true,
     version: "1.0.0",
     type: ContractType.Test,
+    acls: {
+      dao: [],
+      extensions: {},
+    },
   },
   {
     id: "test-token-2",
@@ -72,6 +92,10 @@ export const contracts: Array<ContractConfig> = [
     enabled: true,
     version: "1.0.0",
     type: ContractType.Test,
+    acls: {
+      dao: [],
+      extensions: {},
+    },
   },
   {
     id: "test-fairshare-calc",
@@ -80,6 +104,10 @@ export const contracts: Array<ContractConfig> = [
     enabled: true,
     version: "1.0.0",
     type: ContractType.Test,
+    acls: {
+      dao: [],
+      extensions: {},
+    },
   },
   {
     id: "pixel-nft",
@@ -88,6 +116,10 @@ export const contracts: Array<ContractConfig> = [
     enabled: true,
     version: "1.0.0",
     type: ContractType.Test,
+    acls: {
+      dao: [],
+      extensions: {},
+    },
   },
   {
     id: "prox-token",
@@ -96,6 +128,10 @@ export const contracts: Array<ContractConfig> = [
     enabled: true,
     version: "1.0.0",
     type: ContractType.Test,
+    acls: {
+      dao: [],
+      extensions: {},
+    },
   },
   {
     id: "erc20-minter",
@@ -104,6 +140,10 @@ export const contracts: Array<ContractConfig> = [
     enabled: true,
     version: "1.0.0",
     type: ContractType.Test,
+    acls: {
+      dao: [],
+      extensions: {},
+    },
   },
   {
     id: "erc1155-test-token",
@@ -112,6 +152,10 @@ export const contracts: Array<ContractConfig> = [
     enabled: true,
     version: "1.0.0",
     type: ContractType.Test,
+    acls: {
+      dao: [],
+      extensions: {},
+    },
   },
 
   // DAO Factories Contracts
@@ -122,6 +166,10 @@ export const contracts: Array<ContractConfig> = [
     enabled: true,
     version: "1.0.0",
     type: ContractType.Factory,
+    acls: {
+      dao: [],
+      extensions: {},
+    },
   },
   {
     id: "dao-registry",
@@ -130,6 +178,10 @@ export const contracts: Array<ContractConfig> = [
     enabled: true,
     version: "1.0.0",
     type: ContractType.Core,
+    acls: {
+      dao: [],
+      extensions: {},
+    },
   },
   {
     id: "nft-collection-factory",
@@ -138,6 +190,10 @@ export const contracts: Array<ContractConfig> = [
     enabled: true,
     version: "1.0.0",
     type: ContractType.Factory,
+    acls: {
+      dao: [],
+      extensions: {},
+    },
   },
   {
     id: "bank-factory",
@@ -146,6 +202,10 @@ export const contracts: Array<ContractConfig> = [
     enabled: true,
     version: "1.0.0",
     type: ContractType.Factory,
+    acls: {
+      dao: [],
+      extensions: {},
+    },
   },
   {
     id: "erc20-extension-factory",
@@ -154,6 +214,10 @@ export const contracts: Array<ContractConfig> = [
     enabled: true,
     version: "1.0.0",
     type: ContractType.Factory,
+    acls: {
+      dao: [],
+      extensions: {},
+    },
   },
   {
     id: "vesting-extension-factory",
@@ -163,6 +227,10 @@ export const contracts: Array<ContractConfig> = [
     enabled: true,
     version: "1.0.0",
     type: ContractType.Factory,
+    acls: {
+      dao: [],
+      extensions: {},
+    },
   },
   {
     id: "erc1271-extension-factory",
@@ -171,6 +239,10 @@ export const contracts: Array<ContractConfig> = [
     enabled: true,
     version: "1.0.0",
     type: ContractType.Factory,
+    acls: {
+      dao: [],
+      extensions: {},
+    },
   },
   {
     id: "executor-extension-factory",
@@ -179,6 +251,10 @@ export const contracts: Array<ContractConfig> = [
     enabled: true,
     version: "1.0.0",
     type: ContractType.Factory,
+    acls: {
+      dao: [],
+      extensions: {},
+    },
   },
   {
     id: "erc1155-extension-factory",
@@ -187,6 +263,10 @@ export const contracts: Array<ContractConfig> = [
     enabled: true,
     version: "1.0.0",
     type: ContractType.Factory,
+    acls: {
+      dao: [],
+      extensions: {},
+    },
   },
 
   // Extensions
@@ -224,7 +304,6 @@ export const contracts: Array<ContractConfig> = [
     version: "1.0.0",
     type: ContractType.Extension,
     buildAclFlag: entryERC20,
-
     acls: {
       dao: [daoAccessFlagsMap.NEW_MEMBER],
       extensions: {
@@ -674,6 +753,10 @@ export const contracts: Array<ContractConfig> = [
     enabled: true,
     version: "1.0.0",
     type: ContractType.Util,
+    acls: {
+      dao: [],
+      extensions: {},
+    },
   },
   {
     id: "multicall",
@@ -682,6 +765,10 @@ export const contracts: Array<ContractConfig> = [
     enabled: true,
     version: "1.0.0",
     type: ContractType.Util,
+    acls: {
+      dao: [],
+      extensions: {},
+    },
   },
 ];
 

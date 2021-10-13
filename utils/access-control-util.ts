@@ -1,5 +1,5 @@
-import { sha3 } from "./contract-util";
-import { extensionsIdsMap } from "./dao-ids-util";
+const { sha3 } = require("./contract-util.js");
+const { extensionsIdsMap } = require("./dao-ids-util");
 
 export type ACLValue = {
   id: string;
@@ -8,11 +8,14 @@ export type ACLValue = {
 };
 
 export type SelectedACLs = {
-  dao: Array<any>;
+  dao: Array<string>;
   extensions: Record<string, Array<string>>;
 };
 
-export type ACLBuilder = (contractAddress: string, acls: SelectedACLs) => ACLValue
+export type ACLBuilder = (
+  contractAddress: string,
+  acls: SelectedACLs
+) => ACLValue;
 
 export const daoAccessFlagsMap: Record<string, string> = {
   REPLACE_ADAPTER: "REPLACE_ADAPTER",

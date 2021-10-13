@@ -25,8 +25,9 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
  */
 
-const { UNITS, LOOT, sha3, toBN, embedConfigs } = require("./contract-util");
 const { entryDao, entryBank } = require("./access-control-util");
+const { adaptersIdsMap } = require("./dao-ids-util");
+const { UNITS, LOOT, sha3, toBN, embedConfigs } = require("./contract-util.js");
 
 const createFactories = async ({
   BankExtension,
@@ -309,7 +310,9 @@ const deployDao = async (options) => {
     options,
   });
 
-  const votingAddress = await dao.getAdapterAddress(sha3("voting"));
+  const votingAddress = await dao.getAdapterAddress(
+    sha3(adaptersIdsMap.VOTING_ADAPTER)
+  );
   const votingHelpers = {
     snapshotProposalContract: null,
     handleBadReporterAdapter: null,
@@ -402,9 +405,9 @@ const configureDao = async ({
     const adaptersWithAccess = Object.values(adapters)
       .filter((a) => a.configs.enabled)
       .filter((a) => a.configs.acls.dao)
-      .reduce((withAccess, adapter) => {
-        const configs = adapter.configs;
-        withAccess.push(entryDao(configs.id, adapter.address, configs.acls));
+      .reduce((withAccess, a) => {
+        const configs = a.configs;
+        withAccess.push(entryDao(configs.id, a.address, configs.acls));
         return withAccess;
       }, []);
 
@@ -414,9 +417,10 @@ const configureDao = async ({
     const contractsWithAccess = Object.values(extensions)
       .filter((e) => e.configs.enabled)
       .filter((e) => Object.keys(e.configs.acls.extensions).length > 0)
-      .reduce((withAccess, extension) => {
-        const configs = extension.configs;
-        withAccess.push(entryDao(configs.id, extension.address, configs.acls));
+      .reduce((withAccess, e) => {
+        const configs = e.configs;
+        const v = entryDao(configs.id, e.address, configs.acls);
+        withAccess.push(v);
         return withAccess;
       }, adaptersWithAccess);
 
@@ -490,16 +494,13 @@ const configureDao = async ({
   };
 
   const configureExtensionAccess = async (contracts, extension) => {
-    const withAccess = Object.values(contracts).reduce(
-      (accessRequired, contract) => {
-        const configs = contract.configs;
-        accessRequired.push(
-          extension.configs.buildAclFlag(extension.address, configs.acls)
-        );
-        return accessRequired;
-      },
-      []
-    );
+    const withAccess = Object.values(contracts).reduce((accessRequired, c) => {
+      const configs = c.configs;
+      accessRequired.push(
+        extension.configs.buildAclFlag(c.address, configs.acls)
+      );
+      return accessRequired;
+    }, []);
 
     if (withAccess.length > 0)
       await daoFactory.configureExtension(
@@ -541,7 +542,7 @@ const configureDao = async ({
   const configureExtensions = () => {
     Object.values(extensions)
       .filter((targetExtension) => targetExtension.configs.enabled)
-      .forEach(async (targetExtension) => {
+      .forEach((targetExtension) => {
         // Filters the enabled extensions that have access to the targetExtension
         const contracts = Object.values(extensions)
           .filter((e) => e.configs.enabled)
@@ -782,14 +783,22 @@ const configureOffchainVoting = async ({
     offchainAdmin,
   ]);
 
-  await daoFactory.updateAdapter(dao.address, entryDao(offchainVoting), {
-    from: owner,
-  });
+  await daoFactory.updateAdapter(
+    dao.address,
+    entryDao(
+      offchainVoting.configs.id,
+      offchainVoting.address,
+      offchainVoting.configs.acls
+    ),
+    {
+      from: owner,
+    }
+  );
 
   await dao.setAclToExtensionForAdapter(
     extensions.bankExt.address,
     offchainVoting.address,
-    entryBank(offchainVoting).flags,
+    entryBank(offchainVoting.address, offchainVoting.configs.acls).flags,
     { from: owner }
   );
   await offchainVoting.configureDao(

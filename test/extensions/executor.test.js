@@ -43,7 +43,7 @@ const {
   entryExecutor,
 } = require("../../utils/access-control-util");
 
-const { extensionsIdsMap, adaptersIdsMap } = require("../../utils/dao-ids-util");
+const { extensionsIdsMap } = require("../../utils/dao-ids-util");
 
 describe("Extension - Executor", () => {
   const daoOwner = accounts[0];
@@ -68,14 +68,9 @@ describe("Extension - Executor", () => {
     await factories.daoFactory.addAdapters(
       dao.address,
       [
-        entryDao({
-          ...erc20Minter,
-          configs: {
-            id: "erc20Minter",
-            acls: {
-              dao: [],
-            },
-          },
+        entryDao("erc20Minter", erc20Minter.address, {
+          dao: [],
+          extensions: {},
         }),
       ],
       { from: daoOwner }
@@ -85,16 +80,11 @@ describe("Extension - Executor", () => {
       dao.address,
       executorExt.address,
       [
-        entryExecutor({
-          ...erc20Minter,
-          configs: {
-            acls: {
-              extensions: {
-                [extensionsIdsMap.EXECUTOR_EXT]: [
-                  executorExtensionAclFlagsMap.EXECUTE,
-                ],
-              },
-            },
+        entryExecutor(erc20Minter.address, {
+          extensions: {
+            [extensionsIdsMap.EXECUTOR_EXT]: [
+              executorExtensionAclFlagsMap.EXECUTE,
+            ],
           },
         }),
       ],
@@ -143,9 +133,9 @@ describe("Extension - Executor", () => {
     await factories.daoFactory.addAdapters(
       dao.address,
       [
-        entryDao({
-          ...erc20Minter,
-          configs: { id: "erc20Minter", acls: { dao: [] } },
+        entryDao("erc20Minter", erc20Minter.address, {
+          dao: [],
+          extensions: {},
         }),
       ],
       { from: daoOwner }
@@ -155,9 +145,9 @@ describe("Extension - Executor", () => {
       dao.address,
       executorExt.address,
       [
-        entryExecutor({
-          ...erc20Minter,
-          configs: { acls: { extensions: {} } }, // no access granted
+        entryExecutor(erc20Minter.address, {
+          dao: [], // no access granted
+          extensions: {}, // no access granted
         }),
       ],
       { from: daoOwner }

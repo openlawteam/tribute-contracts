@@ -1,3 +1,7 @@
+/**
+ * @notice the ids defined in this file must match the ids added to DaoHelper.sol.
+ */
+
 /** Adapters */
 export const adaptersIdsMap: Record<string, string> = {
   VOTING_ADAPTER: "voting",

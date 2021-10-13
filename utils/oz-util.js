@@ -39,9 +39,11 @@ const {
   maxAmount,
   ETH_TOKEN,
   UNITS,
-} = require("./contract-util");
+} = require("./contract-util.js");
 
-const { deployDao } = require("./deployment-util");
+const { adaptersIdsMap } = require("./dao-ids-util");
+
+const { deployDao } = require("./deployment-util.js");
 
 const { expectRevert } = require("@openzeppelin/test-helpers");
 const { expect } = require("chai");
@@ -255,7 +257,7 @@ module.exports = (() => {
 
     await dao.finalizeDao({ from: owner });
 
-    adapters["voting"] = votingHelpers.offchainVoting;
+    adapters[adaptersIdsMap.VOTING_ADAPTER] = votingHelpers.offchainVoting;
 
     return {
       dao: dao,
@@ -287,7 +289,7 @@ module.exports = (() => {
 
     await dao.finalizeDao({ from: owner });
 
-    adapters["voting"] = adapters.batchVoting;
+    adapters[adaptersIdsMap.VOTING_ADAPTER] = adapters.batchVoting;
 
     return {
       dao: dao,

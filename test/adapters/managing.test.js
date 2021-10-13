@@ -382,17 +382,11 @@ describe("Adapter - Managing", () => {
     const newManaging = await ManagingContract.new();
     const newAdapterId = sha3("managing");
     const proposalId = getProposalCounter();
-    const { flags } = entryDao({
-      ...newManaging,
-      configs: {
-        id: newAdapterId,
-        acls: {
-          dao: [
-            daoAccessFlagsMap.SUBMIT_PROPOSAL,
-            daoAccessFlagsMap.REPLACE_ADAPTER,
-          ],
-        },
-      },
+    const { flags } = entryDao(newAdapterId, newManaging.address, {
+      dao: [
+        daoAccessFlagsMap.SUBMIT_PROPOSAL,
+        daoAccessFlagsMap.REPLACE_ADAPTER,
+      ],
     });
     await managing.submitProposal(
       dao.address,
@@ -496,10 +490,10 @@ describe("Adapter - Managing", () => {
         adapterOrExtensionId: newAdapterId,
         adapterOrExtensionAddr: newManaging.address,
         updateType: 1,
-        flags: entryDao({
-          ...newManaging,
-          configs: { id: newAdapterId, acls: { dao: [] } },
-        }).flags, // no permissions were set
+        flags: entryDao(newAdapterId, newManaging.address, {
+          dao: [], // no permissions were set
+          extensions: {}, // no permissions were set
+        }).flags,
         keys: [],
         values: [],
         extensionAddresses: [],
@@ -802,18 +796,13 @@ describe("Adapter - Managing", () => {
         extensionAddresses: [bankExt.address],
         // Set the acl flags so the new adapter can access the bank extension
         extensionAclFlags: [
-          entryBank({
-            ...financing,
-            configs: {
-              acls: {
-                extensions: {
-                  [extensionsIdsMap.BANK_EXT]: [
-                    bankExtensionAclFlagsMap.ADD_TO_BALANCE,
-                    bankExtensionAclFlagsMap.SUB_FROM_BALANCE,
-                    bankExtensionAclFlagsMap.INTERNAL_TRANSFER,
-                  ],
-                },
-              },
+          entryBank(financing.address, {
+            extensions: {
+              [extensionsIdsMap.BANK_EXT]: [
+                bankExtensionAclFlagsMap.ADD_TO_BALANCE,
+                bankExtensionAclFlagsMap.SUB_FROM_BALANCE,
+                bankExtensionAclFlagsMap.INTERNAL_TRANSFER,
+              ],
             },
           }).flags,
         ],
