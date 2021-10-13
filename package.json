@@ -32,6 +32,7 @@
     "@openzeppelin/test-environment": "^0.1.9",
     "@openzeppelin/test-helpers": "^0.5.10",
     "@smartdec/smartcheck": "^2.0.1",
+    "@typechain/truffle-v5": "^5.1.0",
     "@types/chai": "^4.2.22",
     "@types/mocha": "^9.0.0",
     "@types/node": "^16.10.5",

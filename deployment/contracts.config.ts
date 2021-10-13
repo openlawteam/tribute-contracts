@@ -45,6 +45,8 @@ export type ContractConfig = {
   acls: SelectedACLs;
   // The function that computes the correct ACL value based on the selected ACL flags.
   buildAclFlag?: ACLBuilder;
+  // The arguments to be passed in the constructor of the contract when it is deployed to the eth network.
+  deploymentArgs?: Record<string, any>;
 };
 
 export const contracts: Array<ContractConfig> = [
@@ -656,6 +658,9 @@ export const contracts: Array<ContractConfig> = [
     enabled: true,
     version: "1.0.0",
     type: ContractType.Adapter,
+    deploymentArgs: {
+      chainId: 1,
+    },
     acls: {
       dao: [daoAccessFlagsMap.NEW_MEMBER],
       extensions: {

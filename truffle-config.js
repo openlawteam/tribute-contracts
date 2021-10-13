@@ -20,6 +20,9 @@
 
 require("dotenv").config();
 require("solidity-coverage");
+require("ts-node").register({
+  files: true,
+});
 
 const getNetworkProvider = () => {
   let HDWalletProvider = require("@truffle/hdwallet-provider");
