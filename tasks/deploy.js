@@ -13,18 +13,19 @@ require("dotenv").config();
 
 task("deploy", "Deply the list of contracts", async (taskArgs, hre) => {
   const hardhatImports = require("../utils/HardhatUtil.js");
-  const accounts = await hre.ethers.getSigners();
   const network = hre.hardhatArguments.network;
 
   let res;
   const deployFunction = hardhatImports.deployFunctionFactory(hre);
   if (network === "ganache") {
+    const accounts = await hre.ethers.getSigners();
     res = await deployGanacheDao(deployFunction, network, accounts, hardhatImports);
   } else if (network === "rinkeby") {
-    res = await deployRinkebyDao(deployFunction, network, hardhatImports);  
+    res = await deployTestNetworkDao(deployFunction, network, hardhatImports);  
   } else if (network === "ropsten") {
-    res = await deployRinkebyDao(deployFunction, network, hardhatImports);
+    res = await deployTestNetworkDao(deployFunction, network, hardhatImports);
   } else if (network === "test" || network === "coverage") {
+    const accounts = await hre.ethers.getSigners();
     res = await deployTestDao(deployFunction, network, accounts,hardhatImports);
   }
 
@@ -85,7 +86,8 @@ const formattedOject = (object, name) => {
 }
 
 async function deployTestDao(deployFunction, network, accounts, hardhatImports) {
-  if (!process.env.DAO_NAME) throw Error("Missing env var: DAO_NAME");
+  if (!process.env.DAO_NAME)
+    throw Error("Missing env var: DAO_NAME");
   if (!process.env.ERC20_TOKEN_NAME)
     throw Error("Missing env var: ERC20_TOKEN_NAME");
   if (!process.env.ERC20_TOKEN_SYMBOL)
@@ -117,8 +119,9 @@ async function deployTestDao(deployFunction, network, accounts, hardhatImports) 
   });
 }
 
-async function deployRinkebyDao(deployFunction, network, hardhatImports) {
-  if (!process.env.DAO_NAME) throw Error("Missing env var: DAO_NAME");
+async function deployTestNetworkDao(deployFunction, network, hardhatImports) {
+  if (!process.env.DAO_NAME)
+    throw Error("Missing env var: DAO_NAME");
   if (!process.env.DAO_OWNER_ADDR)
     throw Error("Missing env var: DAO_OWNER_ADDR");
   if (!process.env.ERC20_TOKEN_NAME)
@@ -129,8 +132,6 @@ async function deployRinkebyDao(deployFunction, network, hardhatImports) {
     throw Error("Missing env var: ERC20_TOKEN_DECIMALS");
   if (!process.env.COUPON_CREATOR_ADDR)
     throw Error("Missing env var: COUPON_CREATOR_ADDR");
-
-    console.log('Start Deploy Rinkeby');
 
   return await deployDao({
     ...hardhatImports,

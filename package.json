@@ -55,6 +55,7 @@
     "coverage": "scripts/coverage.js",
     "deploy:ganache": "hardhat deploy --network ganache",
     "deploy:rinkeby": "hardhat deploy --network rinkeby",
+    "deploy:ropsten": "hardhat deploy --network ropsten",
     "deploy:mainnet": "hardaht deploy --network mainnet",
     "ganache": "ganache-cli --deterministic -p 7545 --networkId 1337",
     "lint": "prettier --list-different 'contracts/**/*.sol' '**/*.js' '**/*.md'",

@@ -27,13 +27,20 @@ SOFTWARE.
 
 const { UNITS, LOOT, sha3, toBN } = require("./ContractUtil");
 
-const waitForEvent = async (contract, event) => {
-  console.log('Wait for event', event);
+const waitForEvent = async (contract, event, times) => {
+  if (!times) times = 1;
+  console.log("Wait for event", event, ", times", times);
   return new Promise((resolve, reject) => {
     let timmer = setTimeout(() => {
         contract.on(event, (...args) => {
-          resolve(args);
-          clearTimeout(timmer);
+          const a = [];
+          a.push(args);
+          console.log("Event emmited, times", a.length);
+          times -= a.length;
+          if (times <= 0) {
+            resolve(args);
+            clearTimeout(timmer);
+          }
         })
     }, 0);
   });
@@ -395,6 +402,8 @@ const addDefaultAdapters = async ({ dao, options, daoFactory, nftAddr }) => {
   const unitTokenExtAddr = await dao.getExtensionAddress(sha3("erc20-ext"));
   const erc20TokenExtension = await (await ERC20Extension).attach(unitTokenExtAddr);
 
+  console.log("Configure DAO");
+
   await configureDao({
     owner: options.owner,
     daoFactory,
@@ -524,6 +533,10 @@ const configureDao = async ({
     ]
   );
 
+  await waitForEvent(dao, dao.filters.AdapterAdded(), 14);
+
+  console.log("Configure Extension 1");
+
   await daoFactory.configureExtension(
     dao.address,
     bankExtension.address,
@@ -570,6 +583,8 @@ const configureDao = async ({
     ]
   );
 
+  console.log("Configure Extension 2");
+
   await daoFactory.configureExtension(
     dao.address,
     nftExtension.address,
@@ -583,12 +598,14 @@ const configureDao = async ({
     ]
   );
 
+  console.log("Configure Extension 3");
   await daoFactory.configureExtension(
     dao.address,
     erc20TokenExtension.address,
     []
   );
 
+  console.log("OnBoarding Configure DAO UNITS");
   await onboarding.configureDao(
     dao.address,
     UNITS,
@@ -598,6 +615,7 @@ const configureDao = async ({
     tokenAddr
   );
 
+  console.log("OnBoarding Configure DAO LOOT");
   await onboarding.configureDao(
     dao.address,
     LOOT,
@@ -607,15 +625,23 @@ const configureDao = async ({
     tokenAddr
   );
 
+  console.log("CouponOnBoarding Configure DAO UNITS");
   await couponOnboarding.configureDao(
     dao.address,
     couponCreatorAddress,
     UNITS
   );
 
+  console.log("Voting Configure DAO");
   await voting.configureDao(dao.address, votingPeriod, gracePeriod);
+
+  console.log("Tribute Configure DAO UNITS");
   await tribute.configureDao(dao.address, UNITS);
+
+  console.log("Tribute Configure DAO LOOT");
   await tribute.configureDao(dao.address, LOOT);
+
+  console.log("TributeNFT Configure DAO");
   await tributeNFT.configureDao(dao.address);
 };
 
