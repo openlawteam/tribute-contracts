@@ -32,7 +32,7 @@ const {
   ZERO_ADDRESS,
   sha3,
   fromAscii,
-} = require("../../utils/ContractUtil.js");
+} = require("../../utils/contract-util");
 
 const {
   deployDefaultDao,
@@ -49,7 +49,7 @@ const {
   FinancingContract,
   ERC1271Extension,
   VotingContract,
-} = require("../../utils/OZTestUtil.js");
+} = require("../../utils/oz-util");
 
 const {
   bankExtensionAclFlagsMap,

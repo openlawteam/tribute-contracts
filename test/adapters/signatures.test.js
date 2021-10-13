@@ -29,7 +29,7 @@ const {
   toWei,
   fromAscii,
   soliditySha3,
-} = require("../../utils/ContractUtil.js");
+} = require("../../utils/contract-util");
 
 const {
   deployDefaultDao,
@@ -41,9 +41,9 @@ const {
   expect,
   expectRevert,
   web3,
-} = require("../../utils/OZTestUtil.js");
+} = require("../../utils/oz-util");
 
-const { checkSignature } = require("../../utils/TestUtils.js");
+const { checkSignature } = require("../../utils/test-util");
 
 const daoOwner = accounts[1];
 const proposalCounter = proposalIdGenerator().generator;

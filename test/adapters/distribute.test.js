@@ -39,7 +39,7 @@ const {
   ETH_TOKEN,
   LOOT,
   ESCROW,
-} = require("../../utils/ContractUtil.js");
+} = require("../../utils/contract-util");
 
 const {
   deployDefaultDao,
@@ -51,9 +51,9 @@ const {
   expectRevert,
   expect,
   web3,
-} = require("../../utils/OZTestUtil.js");
+} = require("../../utils/oz-util");
 
-const { onboardingNewMember } = require("../../utils/TestUtils.js");
+const { onboardingNewMember } = require("../../utils/test-util");
 
 const daoOwner = accounts[2];
 const daoCreator = accounts[9];

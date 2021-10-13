@@ -31,7 +31,7 @@ const {
   unitPrice,
   UNITS,
   GUILD,
-} = require("../../utils/ContractUtil.js");
+} = require("../../utils/contract-util");
 
 const {
   deployDefaultNFTDao,
@@ -44,9 +44,9 @@ const {
   expect,
   encodeProposalData,
   web3,
-} = require("../../utils/OZTestUtil.js");
+} = require("../../utils/oz-util");
 
-const { onboardingNewMember, isMember } = require("../../utils/TestUtils.js");
+const { onboardingNewMember, isMember } = require("../../utils/test-util");
 
 describe("Adapter - TributeNFT", () => {
   const proposalCounter = proposalIdGenerator().generator;

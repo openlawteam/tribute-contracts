@@ -30,7 +30,7 @@ const {
   toWei,
   UNITS,
   GUILD,
-} = require("../../utils/ContractUtil.js");
+} = require("../../utils/contract-util");
 
 const {
   deployDefaultDao,
@@ -44,9 +44,9 @@ const {
   OLToken,
   deployDefaultNFTDao,
   web3,
-} = require("../../utils/OZTestUtil.js");
+} = require("../../utils/oz-util");
 
-const { checkBalance, isMember } = require("../../utils/TestUtils.js");
+const { checkBalance, isMember } = require("../../utils/test-util");
 
 describe("Adapter - Tribute", () => {
   const daoOwner = accounts[1];

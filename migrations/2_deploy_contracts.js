@@ -6,9 +6,9 @@ const {
   unitPrice,
   numberOfUnits,
   maxAmount,
-} = require("../utils/ContractUtil.js");
+} = require("../utils/contract-util");
 
-const { deployDao, getNetworkDetails } = require("../utils/DeploymentUtil.js");
+const { deployDao, getNetworkDetails } = require("../utils/deployment-util");
 
 require("dotenv").config();
 
@@ -17,7 +17,7 @@ module.exports = async (deployer, network, accounts) => {
   console.log(`Deploying tribute-contracts to ${network} network`);
 
   const { contracts } = require(`../deployment/${network}.config`);
-  const truffleImports = require("../utils/TruffleUtil.js")(contracts);
+  const truffleImports = require("../utils/truffle-util")(contracts);
   const daoArtifacts = await getOrCreateDaoArtifacts(deployer, truffleImports);
 
   const deployFunction = truffleImports.deployFunctionFactory(

@@ -30,7 +30,7 @@ const {
   unitPrice,
   UNITS,
   numberOfUnits,
-} = require("../../utils/ContractUtil.js");
+} = require("../../utils/contract-util");
 
 const {
   takeChainSnapshot,
@@ -40,13 +40,13 @@ const {
   accounts,
   expectRevert,
   expect,
-} = require("../../utils/OZTestUtil.js");
+} = require("../../utils/oz-util");
 
 const {
   isMember,
   onboardingNewMember,
   submitConfigProposal,
-} = require("../../utils/TestUtils.js");
+} = require("../../utils/test-util");
 
 const proposalCounter = proposalIdGenerator().generator;
 

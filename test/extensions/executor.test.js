@@ -25,7 +25,7 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
  */
-const { sha3, toBN, toWei } = require("../../utils/ContractUtil");
+const { sha3, toBN, toWei } = require("../../utils/contract-util");
 
 const {
   deployDefaultDao,
@@ -35,7 +35,7 @@ const {
   web3,
   expect,
   expectRevert,
-} = require("../../utils/OZTestUtil.js");
+} = require("../../utils/oz-util");
 
 const {
   executorExtensionAclFlagsMap,

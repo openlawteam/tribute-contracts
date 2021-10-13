@@ -32,7 +32,7 @@ const {
   UNITS,
   GUILD,
   ETH_TOKEN,
-} = require("../../utils/ContractUtil.js");
+} = require("../../utils/contract-util");
 
 const {
   deployDefaultDao,
@@ -42,14 +42,14 @@ const {
   expectRevert,
   expect,
   web3,
-} = require("../../utils/OZTestUtil.js");
+} = require("../../utils/oz-util");
 
-const { checkBalance } = require("../../utils/TestUtils.js");
+const { checkBalance } = require("../../utils/test-util");
 
 const {
   SigUtilSigner,
   getMessageERC712Hash,
-} = require("../../utils/offchain_voting.js");
+} = require("../../utils/offchain-voting-util");
 
 const signer = {
   address: "0x7D8cad0bbD68deb352C33e80fccd4D8e88b4aBb8",

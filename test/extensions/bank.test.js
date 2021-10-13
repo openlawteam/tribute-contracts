@@ -30,7 +30,7 @@ const {
   sha3,
   toWei,
   fromAscii,
-} = require("../../utils/ContractUtil.js");
+} = require("../../utils/contract-util");
 
 const {
   deployDefaultDao,
@@ -41,7 +41,7 @@ const {
   expect,
   BankFactory,
   web3,
-} = require("../../utils/OZTestUtil.js");
+} = require("../../utils/oz-util");
 
 describe("Extension - Bank", () => {
   const daoOwner = accounts[0];

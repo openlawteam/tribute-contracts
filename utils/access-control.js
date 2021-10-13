@@ -1,4 +1,4 @@
-const { sha3 } = require("./ContractUtil");
+const { sha3 } = require("./contract-util");
 const { extensionsIdsMap } = require("./dao-ids");
 
 const daoAccessFlagsMap = {

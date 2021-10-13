@@ -38,7 +38,7 @@ const {
   ETH_TOKEN,
   sha3,
   fromAscii,
-} = require("../../utils/ContractUtil.js");
+} = require("../../utils/contract-util");
 
 const {
   deployDefaultDao,
@@ -50,13 +50,13 @@ const {
   expect,
   expectRevert,
   web3,
-} = require("../../utils/OZTestUtil.js");
+} = require("../../utils/oz-util");
 
 const {
   onboardingNewMember,
   submitNewMemberProposal,
   guildKickProposal,
-} = require("../../utils/TestUtils.js");
+} = require("../../utils/test-util");
 
 const owner = accounts[1];
 const proposalCounter = proposalIdGenerator().generator;

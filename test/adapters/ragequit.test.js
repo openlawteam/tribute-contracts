@@ -34,7 +34,7 @@ const {
   GUILD,
   ETH_TOKEN,
   LOOT,
-} = require("../../utils/ContractUtil.js");
+} = require("../../utils/contract-util");
 
 const {
   deployDefaultDao,
@@ -47,9 +47,9 @@ const {
   expect,
   OLToken,
   web3,
-} = require("../../utils/OZTestUtil.js");
+} = require("../../utils/oz-util");
 
-const { onboardingNewMember } = require("../../utils/TestUtils.js");
+const { onboardingNewMember } = require("../../utils/test-util");
 
 const proposalCounter = proposalIdGenerator().generator;
 const owner = accounts[1];

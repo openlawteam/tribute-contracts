@@ -25,7 +25,7 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
  */
 
-const { UNITS, toBN } = require("../../utils/ContractUtil.js");
+const { UNITS, toBN } = require("../../utils/contract-util");
 
 const {
   takeChainSnapshot,
@@ -35,7 +35,7 @@ const {
   accounts,
   expect,
   expectRevert,
-} = require("../../utils/OZTestUtil.js");
+} = require("../../utils/oz-util");
 
 describe("Extension - Vesting", () => {
   const daoOwner = accounts[0];

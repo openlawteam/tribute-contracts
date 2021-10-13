@@ -30,7 +30,7 @@ const {
   unitPrice,
   remaining,
   LOOT,
-} = require("../../utils/ContractUtil.js");
+} = require("../../utils/contract-util");
 
 const {
   deployDefaultDao,
@@ -40,7 +40,7 @@ const {
   expect,
   expectRevert,
   OLToken,
-} = require("../../utils/OZTestUtil.js");
+} = require("../../utils/oz-util");
 
 const daoOwner = accounts[1];
 const proposalCounter = proposalIdGenerator().generator;

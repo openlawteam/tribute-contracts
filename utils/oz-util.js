@@ -39,9 +39,9 @@ const {
   maxAmount,
   ETH_TOKEN,
   UNITS,
-} = require("./ContractUtil");
+} = require("./contract-util");
 
-const { deployDao } = require("./DeploymentUtil");
+const { deployDao } = require("./deployment-util");
 
 const { expectRevert } = require("@openzeppelin/test-helpers");
 const { expect } = require("chai");

@@ -29,7 +29,7 @@ const {
   toBN,
   fromAscii,
   GUILD,
-} = require("../../utils/ContractUtil.js");
+} = require("../../utils/contract-util");
 
 const {
   takeChainSnapshot,
@@ -39,7 +39,7 @@ const {
   expectRevert,
   expect,
   web3,
-} = require("../../utils/OZTestUtil.js");
+} = require("../../utils/oz-util");
 
 describe("Extension - ERC721", () => {
   const daoOwner = accounts[0];

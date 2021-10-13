@@ -25,7 +25,7 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
  */
 
-const { sha3, toHex, ZERO_ADDRESS } = require("./ContractUtil");
+const { sha3, toHex, ZERO_ADDRESS } = require("./contract-util");
 
 const { ContractType } = require("../deployment/contracts.config");
 

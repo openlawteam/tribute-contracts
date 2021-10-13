@@ -25,7 +25,7 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
  */
 
-const { UNITS, LOOT, sha3, toBN } = require("./ContractUtil");
+const { UNITS, LOOT, sha3, toBN } = require("./contract-util");
 const { entryDao, entryBank } = require("./access-control");
 
 const embedConfigs = (contractInstance, name, configs) => {

@@ -21,9 +21,9 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
  */
 
-const { toBN } = require("../../utils/ContractUtil.js");
+const { toBN } = require("../../utils/contract-util");
 
-const { cloneDao } = require("../../utils/DeploymentUtil.js");
+const { cloneDao } = require("../../utils/deployment-util");
 
 const {
   accounts,
@@ -31,7 +31,7 @@ const {
   DaoRegistry,
   DaoFactory,
   deployFunction,
-} = require("../../utils/OZTestUtil.js");
+} = require("../../utils/oz-util");
 
 describe("Core - DaoFactory", () => {
   const owner = accounts[1];

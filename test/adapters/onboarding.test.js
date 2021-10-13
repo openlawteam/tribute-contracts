@@ -34,7 +34,7 @@ const {
   ETH_TOKEN,
   remaining,
   numberOfUnits,
-} = require("../../utils/ContractUtil.js");
+} = require("../../utils/contract-util");
 
 const {
   deployDefaultDao,
@@ -47,9 +47,9 @@ const {
   expect,
   web3,
   OLToken,
-} = require("../../utils/OZTestUtil.js");
+} = require("../../utils/oz-util");
 
-const { checkBalance, isMember } = require("../../utils/TestUtils.js");
+const { checkBalance, isMember } = require("../../utils/test-util");
 
 const daoOwner = accounts[0];
 const delegatedKey = accounts[9];
