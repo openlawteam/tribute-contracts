@@ -1,4 +1,4 @@
-const {
+import {
   daoAccessFlagsMap,
   bankExtensionAclFlagsMap,
   erc721ExtensionAclFlagsMap,
@@ -12,23 +12,37 @@ const {
   entryERC1271,
   entryExecutor,
   entryVesting,
-} = require("../utils/access-control");
+  ACLBuilder,
+  SelectedACLs,
+} from "../utils/access-control-util";
 
-const { extensionsIdsMap, adaptersIdsMap } = require("../utils/dao-ids");
+import { extensionsIdsMap, adaptersIdsMap } from "../utils/dao-ids-util";
 
 // Matches the DaoArtifacts.sol ArtifactType enum
-const ContractType = {
-  Core: 0,
-  Factory: 1,
-  Extension: 2,
-  Adapter: 3,
-  Util: 4,
-  Test: 5,
+enum ContractType {
+  Core = 0,
+  Factory = 1,
+  Extension = 2,
+  Adapter = 3,
+  Util = 4,
+  Test = 5,
+}
+
+export type ContractConfig = {
+  id: string;
+  name: string;
+  path: string;
+  enabled: boolean;
+  version: string;
+  type: ContractType;
+  acls?: SelectedACLs;
+  buildAclFlag?: ACLBuilder;
 };
 
-const contracts = [
+export const contracts: Array<ContractConfig> = [
   // Test Util Contracts
   {
+    id: "ol-token",
     name: "OLToken",
     path: "../contracts/test/OLToken",
     enabled: true,
@@ -36,6 +50,7 @@ const contracts = [
     type: ContractType.Test,
   },
   {
+    id: "mock-dao",
     name: "MockDao",
     path: "../contracts/test/MockDao",
     enabled: true,
@@ -43,6 +58,7 @@ const contracts = [
     type: ContractType.Test,
   },
   {
+    id: "test-token-1",
     name: "TestToken1",
     path: "../contracts/test/TestToken1",
     enabled: true,
@@ -50,6 +66,7 @@ const contracts = [
     type: ContractType.Test,
   },
   {
+    id: "test-token-2",
     name: "TestToken2",
     path: "../contracts/test/TestToken2",
     enabled: true,
@@ -57,6 +74,7 @@ const contracts = [
     type: ContractType.Test,
   },
   {
+    id: "test-fairshare-calc",
     name: "TestFairShareCalc",
     path: "../contracts/test/TestFairShareCalc",
     enabled: true,
@@ -64,6 +82,7 @@ const contracts = [
     type: ContractType.Test,
   },
   {
+    id: "pixel-nft",
     name: "PixelNFT",
     path: "../contracts/test/PixelNFT",
     enabled: true,
@@ -71,6 +90,7 @@ const contracts = [
     type: ContractType.Test,
   },
   {
+    id: "prox-token",
     name: "ProxToken",
     path: "../contracts/test/ProxTokenContract",
     enabled: true,
@@ -78,6 +98,7 @@ const contracts = [
     type: ContractType.Test,
   },
   {
+    id: "erc20-minter",
     name: "ERC20Minter",
     path: "../contracts/test/ERC20MinterContract",
     enabled: true,
@@ -85,6 +106,7 @@ const contracts = [
     type: ContractType.Test,
   },
   {
+    id: "erc1155-test-token",
     name: "ERC1155TestToken",
     path: "../contracts/test/ERC1155TestToken",
     enabled: true,
@@ -94,6 +116,7 @@ const contracts = [
 
   // DAO Factories Contracts
   {
+    id: "dao-factory",
     name: "DaoFactory",
     path: "../contracts/core/DaoFactory",
     enabled: true,
@@ -101,6 +124,7 @@ const contracts = [
     type: ContractType.Factory,
   },
   {
+    id: "dao-registry",
     name: "DaoRegistry",
     path: "../contracts/core/DaoRegistry",
     enabled: true,
@@ -108,6 +132,7 @@ const contracts = [
     type: ContractType.Core,
   },
   {
+    id: "nft-collection-factory",
     name: "NFTCollectionFactory",
     path: "../contracts/extensions/NFTCollectionFactory",
     enabled: true,
@@ -115,6 +140,7 @@ const contracts = [
     type: ContractType.Factory,
   },
   {
+    id: "bank-factory",
     name: "BankFactory",
     path: "../contracts/extensions/bank/BankFactory",
     enabled: true,
@@ -122,6 +148,7 @@ const contracts = [
     type: ContractType.Factory,
   },
   {
+    id: "erc20-extension-factory",
     name: "ERC20TokenExtensionFactory",
     path: "../contracts/extensions/token/erc20/ERC20TokenExtensionFactory",
     enabled: true,
@@ -129,6 +156,7 @@ const contracts = [
     type: ContractType.Factory,
   },
   {
+    id: "vesting-extension-factory",
     name: "InternalTokenVestingExtensionFactory",
     path:
       "../contracts/extensions/token/erc20/InternalTokenVestingExtensionFactory",
@@ -137,6 +165,7 @@ const contracts = [
     type: ContractType.Factory,
   },
   {
+    id: "erc1271-extension-factory",
     name: "ERC1271ExtensionFactory",
     path: "../contracts/extensions/erc1271/ERC1271ExtensionFactory",
     enabled: true,
@@ -144,6 +173,7 @@ const contracts = [
     type: ContractType.Factory,
   },
   {
+    id: "executor-extension-factory",
     name: "ExecutorExtensionFactory",
     path: "../contracts/extensions/executor/ExecutorExtensionFactory",
     enabled: true,
@@ -151,6 +181,7 @@ const contracts = [
     type: ContractType.Factory,
   },
   {
+    id: "erc1155-extension-factory",
     name: "ERC1155TokenCollectionFactory",
     path: "../contracts/extensions/erc1155/ERC1155TokenCollectionFactory",
     enabled: true,
@@ -654,13 +685,11 @@ const contracts = [
   },
 ];
 
-const getConfig = (name) => {
+export const getConfig = (name: string) => {
   return contracts.find((c) => c.name === name);
 };
 
-const isDeployable = (name) => {
+export const isDeployable = (name: string) => {
   const c = getConfig(name);
   return c && c.enabled;
 };
-
-module.exports = { contracts, getConfig, isDeployable, ContractType };

@@ -9,21 +9,6 @@
     "strict": true, /* Enable all strict type-checking options. */
     "skipLibCheck": true, /* Skip type checking all .d.ts files. */
     "outDir": "build/dist",
-    "checkJs": false,
-    "exclude": [
-      "node_modules",
-      "build",
-      "contracts",
-      "logs",
-      "migrations",
-      "scripts",
-      "subgraph",
-      "test",
-      "website",
-      "utils",
-    ],
-    "include": [
-      "deployment",
-    ]
+    "checkJs": false
   }
 }

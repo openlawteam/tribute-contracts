@@ -25,15 +25,8 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
  */
 
-const { UNITS, LOOT, sha3, toBN } = require("./contract-util");
-const { entryDao, entryBank } = require("./access-control");
-
-const embedConfigs = (contractInstance, name, configs) => {
-  return {
-    ...contractInstance,
-    configs: configs.find((c) => c.name === name),
-  };
-};
+const { UNITS, LOOT, sha3, toBN, embedConfigs } = require("./contract-util");
+const { entryDao, entryBank } = require("./access-control-util");
 
 const createFactories = async ({
   BankExtension,
@@ -108,7 +101,7 @@ const createExtensions = async ({ dao, factories, options }) => {
     options.contractConfigs
   );
 
-  const nftExtension = await createNFTExtension(
+  const nftExtension = await createERC721Extension(
     dao,
     options.owner,
     factories.erc721ExtFactory,
@@ -380,60 +373,21 @@ const deployDao = async (options) => {
   };
 };
 
-const configureOffchainVoting = async ({
-  dao,
-  daoFactory,
-  chainId,
+const cloneDao = async ({
   owner,
-  offchainAdmin,
-  votingAddress,
-  votingPeriod,
-  gracePeriod,
-  SnapshotProposalContract,
-  KickBadReporterAdapter,
-  OffchainVotingContract,
-  OffchainVotingHashContract,
+  creator,
   deployFunction,
-  extensions,
+  DaoRegistry,
+  DaoFactory,
+  name,
 }) => {
-  const snapshotProposalContract = await deployFunction(
-    SnapshotProposalContract,
-    [chainId]
-  );
+  let daoFactory = await deployFunction(DaoFactory, [DaoRegistry], owner);
 
-  const offchainVotingHashContract = await deployFunction(
-    OffchainVotingHashContract,
-    [snapshotProposalContract.address]
-  );
+  await daoFactory.createDao(name, creator ? creator : owner, { from: owner });
 
-  const handleBadReporterAdapter = await deployFunction(KickBadReporterAdapter);
-  const offchainVoting = await deployFunction(OffchainVotingContract, [
-    votingAddress,
-    offchainVotingHashContract.address,
-    snapshotProposalContract.address,
-    handleBadReporterAdapter.address,
-    offchainAdmin,
-  ]);
-
-  await daoFactory.updateAdapter(dao.address, entryDao(offchainVoting), {
-    from: owner,
-  });
-
-  await dao.setAclToExtensionForAdapter(
-    extensions.bankExt.address,
-    offchainVoting.address,
-    entryBank(offchainVoting).flags,
-    { from: owner }
-  );
-  await offchainVoting.configureDao(
-    dao.address,
-    votingPeriod,
-    gracePeriod,
-    10,
-    { from: owner }
-  );
-
-  return { offchainVoting, snapshotProposalContract, handleBadReporterAdapter };
+  let _address = await daoFactory.getDaoAddress(name);
+  let newDao = await DaoRegistry.at(_address);
+  return { dao: newDao, daoFactory, daoName: name };
 };
 
 const configureDao = async ({
@@ -449,7 +403,8 @@ const configureDao = async ({
       .filter((a) => a.configs.enabled)
       .filter((a) => a.configs.acls.dao)
       .reduce((withAccess, adapter) => {
-        withAccess.push(entryDao(adapter));
+        const configs = adapter.configs;
+        withAccess.push(entryDao(configs.id, adapter.address, configs.acls));
         return withAccess;
       }, []);
 
@@ -460,7 +415,8 @@ const configureDao = async ({
       .filter((e) => e.configs.enabled)
       .filter((e) => Object.keys(e.configs.acls.extensions).length > 0)
       .reduce((withAccess, extension) => {
-        withAccess.push(entryDao(extension));
+        const configs = extension.configs;
+        withAccess.push(entryDao(configs.id, extension.address, configs.acls));
         return withAccess;
       }, adaptersWithAccess);
 
@@ -536,7 +492,10 @@ const configureDao = async ({
   const configureExtensionAccess = async (contracts, extension) => {
     const withAccess = Object.values(contracts).reduce(
       (accessRequired, contract) => {
-        accessRequired.push(extension.configs.buildAclFlag(contract));
+        const configs = contract.configs;
+        accessRequired.push(
+          extension.configs.buildAclFlag(extension.address, configs.acls)
+        );
         return accessRequired;
       },
       []
@@ -602,23 +561,6 @@ const configureDao = async ({
   configureExtensions();
 };
 
-const cloneDao = async ({
-  owner,
-  creator,
-  deployFunction,
-  DaoRegistry,
-  DaoFactory,
-  name,
-}) => {
-  let daoFactory = await deployFunction(DaoFactory, [DaoRegistry], owner);
-
-  await daoFactory.createDao(name, creator ? creator : owner, { from: owner });
-
-  let _address = await daoFactory.getDaoAddress(name);
-  let newDao = await DaoRegistry.at(_address);
-  return { dao: newDao, daoFactory, daoName: name };
-};
-
 const createBankExtension = async (
   dao,
   owner,
@@ -668,7 +610,7 @@ const createERC1271Extension = async (
   return embedConfigs(erc1271Extension, "ERC1271Extension", contractConfigs);
 };
 
-const createNFTExtension = async (
+const createERC721Extension = async (
   dao,
   owner,
   nftFactory,
@@ -803,6 +745,62 @@ const createERC1155Extension = async (
     "ERC1155TokenExtension",
     contractConfigs
   );
+};
+
+const configureOffchainVoting = async ({
+  dao,
+  daoFactory,
+  chainId,
+  owner,
+  offchainAdmin,
+  votingAddress,
+  votingPeriod,
+  gracePeriod,
+  SnapshotProposalContract,
+  KickBadReporterAdapter,
+  OffchainVotingContract,
+  OffchainVotingHashContract,
+  deployFunction,
+  extensions,
+}) => {
+  const snapshotProposalContract = await deployFunction(
+    SnapshotProposalContract,
+    [chainId]
+  );
+
+  const offchainVotingHashContract = await deployFunction(
+    OffchainVotingHashContract,
+    [snapshotProposalContract.address]
+  );
+
+  const handleBadReporterAdapter = await deployFunction(KickBadReporterAdapter);
+  const offchainVoting = await deployFunction(OffchainVotingContract, [
+    votingAddress,
+    offchainVotingHashContract.address,
+    snapshotProposalContract.address,
+    handleBadReporterAdapter.address,
+    offchainAdmin,
+  ]);
+
+  await daoFactory.updateAdapter(dao.address, entryDao(offchainVoting), {
+    from: owner,
+  });
+
+  await dao.setAclToExtensionForAdapter(
+    extensions.bankExt.address,
+    offchainVoting.address,
+    entryBank(offchainVoting).flags,
+    { from: owner }
+  );
+  await offchainVoting.configureDao(
+    dao.address,
+    votingPeriod,
+    gracePeriod,
+    10,
+    { from: owner }
+  );
+
+  return { offchainVoting, snapshotProposalContract, handleBadReporterAdapter };
 };
 
 const networks = [

@@ -1,5 +1,5 @@
 /** Adapters */
-const adaptersIdsMap = {
+export const adaptersIdsMap: Record<string, string> = {
   VOTING_ADAPTER: "voting",
   ONBOARDING_ADAPTER: "onboarding",
   NONVOTING_ONBOARDING_ADAPTER: "nonvoting-onboarding",
@@ -26,7 +26,7 @@ const adaptersIdsMap = {
 };
 
 /** Extensions */
-const extensionsIdsMap = {
+export const extensionsIdsMap: Record<string, string> = {
   BANK_EXT: "bank",
   ERC1271_EXT: "erc1271",
   ERC721_EXT: "nft",
@@ -35,5 +35,3 @@ const extensionsIdsMap = {
   ERC1155_EXT: "erc1155-ext",
   ERC20_EXT: "erc20-ext",
 };
-
-module.exports = { adaptersIdsMap, extensionsIdsMap };

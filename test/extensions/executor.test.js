@@ -41,9 +41,9 @@ const {
   executorExtensionAclFlagsMap,
   entryDao,
   entryExecutor,
-} = require("../../utils/access-control");
+} = require("../../utils/access-control-util");
 
-const { extensionsIdsMap, adaptersIdsMap } = require("../../utils/dao-ids");
+const { extensionsIdsMap, adaptersIdsMap } = require("../../utils/dao-ids-util");
 
 describe("Extension - Executor", () => {
   const daoOwner = accounts[0];

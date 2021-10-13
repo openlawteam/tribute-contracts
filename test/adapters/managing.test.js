@@ -56,9 +56,9 @@ const {
   daoAccessFlagsMap,
   entryDao,
   entryBank,
-} = require("../../utils/access-control");
+} = require("../../utils/access-control-util");
 
-const { extensionsIdsMap } = require("../../utils/dao-ids");
+const { extensionsIdsMap } = require("../../utils/dao-ids-util");
 
 const daoOwner = accounts[1];
 const proposalCounter = proposalIdGenerator().generator;

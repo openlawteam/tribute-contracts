@@ -1,6 +1,9 @@
-const { contracts } = require("./contracts.config");
+import {
+  contracts as defaultContracts,
+  ContractConfig,
+} from "./contracts.config";
 
-const disabled = [
+const disabled: Array<String> = [
   // Utility & Test Contracts disabled by default
   "OLToken",
   "TestToken1",
@@ -18,11 +21,9 @@ const disabled = [
   "DistributeContract",
 ];
 
-const mainnetContracts = contracts.map((c) => {
+export const contracts: Array<ContractConfig> = defaultContracts.map((c) => {
   if (disabled.find((e) => e === c.name)) {
     return { ...c, enabled: false };
   }
   return c;
 });
-
-module.exports = { contracts: mainnetContracts };
