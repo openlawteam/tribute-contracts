@@ -33,6 +33,8 @@
     "@openzeppelin/test-environment": "^0.1.9",
     "@openzeppelin/test-helpers": "^0.5.10",
     "@smartdec/smartcheck": "^2.0.1",
+    "@types/chai": "^4.2.22",
+    "@types/mocha": "^9.0.0",
     "chai": "^4.3.4",
     "dotenv": "^8.2.0",
     "eth-gas-reporter": "^0.2.22",
@@ -47,6 +49,8 @@
     "truffle": "^5.3.2",
     "truffle-abi": "^1.0.3",
     "truffle-plugin-verify": "^0.5.8",
+    "ts-node": "^10.3.0",
+    "typescript": "^4.4.4",  
     "web3": "^1.3.5"
   },
   "scripts": {
@@ -60,7 +64,7 @@
     "lint": "prettier --list-different 'contracts/**/*.sol' '**/*.js' '**/*.md'",
     "lint:fix": "prettier --write 'contracts/**/*.sol' '**/*.js' '**/*.md'",
     "migrate": "truffle migrate --network",
-    "test": "mocha --timeout 2000000 --exit --recursive",
+    "test": "mocha -r ts-node/register test/**/*.test.ts --timeout 2000000 --exit --recursive",
     "verify": "scripts/verify.js",
     "release": "npm run lint:fix && np --no-publish --no-yarn"
   },

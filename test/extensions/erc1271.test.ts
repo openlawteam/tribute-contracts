@@ -1,6 +1,3 @@
-// Whole-script strict mode syntax
-"use strict";
-
 /**
 MIT License
 
@@ -24,7 +21,7 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
  */
-const { sha3, soliditySha3 } = require("../../utils/ContractUtil.js");
+import { sha3, soliditySha3 } from "web3-utils";
 
 const {
   deployDefaultDao,
@@ -48,31 +45,34 @@ const magicValue = "0x1626ba7e";
 describe("Extension - ERC1271", () => {
   const daoOwner = accounts[0];
 
+  let daoInstance: any;
+  let extensionsInstance: { erc1271: any; };
+  let snapshotId: any;
+
   before("deploy dao", async () => {
-    const { dao, adapters, extensions } = await deployDefaultDao({
+    const { dao, extensions } = await deployDefaultDao({
       owner: daoOwner,
     });
-    this.dao = dao;
-    this.adapters = adapters;
-    this.extensions = extensions;
+    daoInstance = dao;
+    extensionsInstance = extensions;
   });
 
   beforeEach(async () => {
-    this.snapshotId = await takeChainSnapshot();
+    snapshotId = await takeChainSnapshot();
   });
 
   afterEach(async () => {
-    await revertChainSnapshot(this.snapshotId);
+    await revertChainSnapshot(snapshotId);
   });
 
   it("should be possible to create a dao with an erc1271 extension pre-configured", async () => {
-    const dao = this.dao;
+    const dao = daoInstance;
     const erc1271Address = await dao.getExtensionAddress(sha3("erc1271"));
     expect(erc1271Address).to.not.be.null;
   });
 
   it("should not be possible to submit a signature without the SIGN permission", async () => {
-    const erc1271Extension = this.extensions.erc1271;
+    const erc1271Extension = extensionsInstance.erc1271;
     await expectRevert(
       erc1271Extension.sign(
         arbitraryMsgHash,
@@ -84,7 +84,7 @@ describe("Extension - ERC1271", () => {
   });
 
   it("should revert for invalid signatures", async () => {
-    const erc1271Extension = this.extensions.erc1271;
+    const erc1271Extension = extensionsInstance.erc1271;
     await expectRevert(
       erc1271Extension.isValidSignature(arbitraryMsgHash, arbitrarySignature),
       "erc1271::invalid signature"

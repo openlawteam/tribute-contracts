@@ -1,7 +1,3 @@
-// Whole-script strict mode syntax
-"use strict";
-
-const { sha3 } = require("web3-utils");
 /**
 MIT License
 
@@ -25,8 +21,10 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
  */
+
+import { sha3, toBN } from "web3-utils";
+
 const {
-  toBN,
   unitPrice,
   UNITS,
   numberOfUnits,
@@ -56,6 +54,11 @@ function getProposalCounter() {
 
 describe("Extension - ERC20", () => {
   const daoOwner = accounts[0];
+  let daoInstance: any;
+  let extensionsInstance: { bank: any, erc20Ext: any };
+  let adaptersInstance: any;
+  let snapshotId: any;
+  let testContractsInstance: any;
 
   before("deploy dao", async () => {
     const {
@@ -64,34 +67,34 @@ describe("Extension - ERC20", () => {
       extensions,
       testContracts,
     } = await deployDefaultDao({ owner: daoOwner });
-    this.dao = dao;
-    this.adapters = adapters;
-    this.extensions = extensions;
-    this.testContracts = testContracts;
+    daoInstance = dao;
+    extensionsInstance = extensions;
+    adaptersInstance = adapters
+    testContractsInstance = testContracts;
   });
 
   beforeEach(async () => {
-    this.snapshotId = await takeChainSnapshot();
+    snapshotId = await takeChainSnapshot();
   });
 
   afterEach(async () => {
-    await revertChainSnapshot(this.snapshotId);
+    await revertChainSnapshot(snapshotId);
   });
 
   it("should be possible to create a dao with a erc20 extension pre-configured", async () => {
-    const erc20Ext = this.extensions.erc20Ext;
+    const erc20Ext = extensionsInstance.erc20Ext;
     expect(erc20Ext).to.not.be.null;
   });
 
   it("should be possible to transfer units from one member to another when the transfer type is equals 0 (member transfer only)", async () => {
-    const dao = this.dao;
+    const dao = daoInstance;
     const applicantA = accounts[2];
     const applicantB = accounts[3];
-    const configuration = this.adapters.configuration;
-    const bank = this.extensions.bank;
-    const onboarding = this.adapters.onboarding;
-    const voting = this.adapters.voting;
-    const erc20Ext = this.extensions.erc20Ext;
+    const configuration = adaptersInstance.configuration;
+    const bank = extensionsInstance.bank;
+    const onboarding = adaptersInstance.onboarding;
+    const voting = adaptersInstance.voting;
+    const erc20Ext = extensionsInstance.erc20Ext;
 
     //configure
     await submitConfigProposal(
@@ -158,17 +161,17 @@ describe("Extension - ERC20", () => {
   });
 
   it("should be possible to approve and transferFrom units from a member to another member when the transfer type is equals 0 (member transfer only)", async () => {
-    const dao = this.dao;
+    const dao = daoInstance;
     //onboarded member A & B
     const applicantA = accounts[2];
     const applicantB = accounts[3];
-    const configuration = this.adapters.configuration;
+    const configuration = adaptersInstance.configuration;
     //external address - not a member
     const externalAddressA = accounts[4];
-    const bank = this.extensions.bank;
-    const onboarding = this.adapters.onboarding;
-    const voting = this.adapters.voting;
-    const erc20Ext = this.extensions.erc20Ext;
+    const bank = extensionsInstance.bank;
+    const onboarding = adaptersInstance.onboarding;
+    const voting = adaptersInstance.voting;
+    const erc20Ext = extensionsInstance.erc20Ext;
 
     //configure
     await submitConfigProposal(
@@ -259,18 +262,18 @@ describe("Extension - ERC20", () => {
   it("should not be possible to transfer units from a member to an external account when the transfer type is equals 0 (member transfer only)", async () => {
     // transferFrom to external
     // transfer to external
-    const dao = this.dao;
+    const dao = daoInstance;
     //onboarded member A & B
     const applicantA = accounts[2];
     const applicantB = accounts[3];
     //external address - not a member
     const externalAddressA = accounts[4];
     const externalAddressB = accounts[5];
-    const bank = this.extensions.bank;
-    const onboarding = this.adapters.onboarding;
-    const configuration = this.adapters.configuration;
-    const voting = this.adapters.voting;
-    const erc20Ext = this.extensions.erc20Ext;
+    const bank = extensionsInstance.bank;
+    const onboarding = adaptersInstance.onboarding;
+    const configuration = adaptersInstance.configuration;
+    const voting = adaptersInstance.voting;
+    const erc20Ext = extensionsInstance.erc20Ext;
 
     await submitConfigProposal(
       dao,
@@ -328,18 +331,18 @@ describe("Extension - ERC20", () => {
 
   it("should not be possible to approve a transferFrom units from a member to an external account when the transfer type is equals 0 (member transfer only)", async () => {
     // transfer to external
-    const dao = this.dao;
+    const dao = daoInstance;
     //onboarded member A & B
     const applicantA = accounts[2];
     const applicantB = accounts[3];
     //external address - not a member
     const externalAddressA = accounts[4];
     const externalAddressB = accounts[5];
-    const bank = this.extensions.bank;
-    const onboarding = this.adapters.onboarding;
-    const configuration = this.adapters.configuration;
-    const voting = this.adapters.voting;
-    const erc20Ext = this.extensions.erc20Ext;
+    const bank = extensionsInstance.bank;
+    const onboarding = adaptersInstance.onboarding;
+    const configuration = adaptersInstance.configuration;
+    const voting = adaptersInstance.voting;
+    const erc20Ext = extensionsInstance.erc20Ext;
 
     await submitConfigProposal(
       dao,
@@ -432,16 +435,16 @@ describe("Extension - ERC20", () => {
   });
 
   it("should be possible to pause all transfers when the transfer type is equals 2 (paused all transfers)", async () => {
-    const dao = this.dao;
+    const dao = daoInstance;
     //onboarded members A & B
     const applicantA = accounts[2];
     const applicantB = accounts[3];
 
-    const bank = this.extensions.bank;
-    const onboarding = this.adapters.onboarding;
-    const configuration = this.adapters.configuration;
-    const voting = this.adapters.voting;
-    const erc20Ext = this.extensions.erc20Ext;
+    const bank = extensionsInstance.bank;
+    const onboarding = adaptersInstance.onboarding;
+    const configuration = adaptersInstance.configuration;
+    const voting = adaptersInstance.voting;
+    const erc20Ext = extensionsInstance.erc20Ext;
     //configure to pause all transfers
     await submitConfigProposal(
       dao,
@@ -510,17 +513,17 @@ describe("Extension - ERC20", () => {
 
   it("should be possible to transfer units from a member to an external account when the transfer type is equals 1 (external transfer)", async () => {
     // transfer to external
-    const dao = this.dao;
+    const dao = daoInstance;
     //members A
     const applicantA = accounts[2];
     //external address - not a member
     const externalAddressA = accounts[4];
 
-    const bank = this.extensions.bank;
-    const onboarding = this.adapters.onboarding;
-    const configuration = this.adapters.configuration;
-    const voting = this.adapters.voting;
-    const erc20Ext = this.extensions.erc20Ext;
+    const bank = extensionsInstance.bank;
+    const onboarding = adaptersInstance.onboarding;
+    const configuration = adaptersInstance.configuration;
+    const voting = adaptersInstance.voting;
+    const erc20Ext = extensionsInstance.erc20Ext;
     //configure to pause all transfers
     await submitConfigProposal(
       dao,
@@ -578,7 +581,7 @@ describe("Extension - ERC20", () => {
 
   it("should be possible to approve and transferFrom units from a member to an external account when the transfer type is equals 1 (external transfer)", async () => {
     // transfer to external
-    const dao = this.dao;
+    const dao = daoInstance;
     //members A and B
     const applicantA = accounts[2];
     const applicantB = accounts[3];
@@ -586,11 +589,11 @@ describe("Extension - ERC20", () => {
     const externalAddressA = accounts[4];
     const externalAddressB = accounts[5];
 
-    const bank = this.extensions.bank;
-    const onboarding = this.adapters.onboarding;
-    const configuration = this.adapters.configuration;
-    const voting = this.adapters.voting;
-    const erc20Ext = this.extensions.erc20Ext;
+    const bank = extensionsInstance.bank;
+    const onboarding = adaptersInstance.onboarding;
+    const configuration = adaptersInstance.configuration;
+    const voting = adaptersInstance.voting;
+    const erc20Ext = extensionsInstance.erc20Ext;
     //configure to pause all transfers
     await submitConfigProposal(
       dao,

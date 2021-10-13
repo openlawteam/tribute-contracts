@@ -1,6 +1,3 @@
-// Whole-script strict mode syntax
-"use strict";
-
 /**
 MIT License
 
@@ -24,9 +21,9 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
  */
+import { toBN } from "web3-utils";
+
 const {
-  toBN,
-  unitPrice,
   soliditySha3,
 } = require("../../utils/ContractUtil.js");
 
@@ -61,31 +58,36 @@ function getProposalCounter() {
 }
 
 describe("Adapter - Signatures", () => {
+  let daoInstance: any;
+  let extensionsInstance: { erc1271: any };
+  let adaptersInstance: any;
+  let snapshotId: any;
+
   before("deploy dao", async () => {
     const { dao, adapters, extensions } = await deployDefaultDao({
       owner: myAccount,
     });
-    this.dao = dao;
-    this.adapters = adapters;
-    this.extensions = extensions;
-    this.snapshotId = await takeChainSnapshot();
+    daoInstance = dao;
+    extensionsInstance = extensions;
+    adaptersInstance = adapters
+    snapshotId = await takeChainSnapshot();
   });
 
   beforeEach(async () => {
-    await revertChainSnapshot(this.snapshotId);
-    this.snapshotId = await takeChainSnapshot();
+    await revertChainSnapshot(snapshotId);
+    snapshotId = await takeChainSnapshot();
   });
 
   it("should be possible to create a signature proposal and successfully query the erc1271 interface if it passes", async () => {
-    const erc1271 = this.extensions.erc1271;
-    const voting = this.adapters.voting;
-    const signatures = this.adapters.signatures;
+    const erc1271 = extensionsInstance.erc1271;
+    const voting = adaptersInstance.voting;
+    const signatures = adaptersInstance.signatures;
 
     let proposalId = getProposalCounter();
 
     //submit a sig
     await signatures.submitProposal(
-      this.dao.address,
+      daoInstance.address,
       proposalId,
       arbitraryMsgHash,
       arbitrarySignatureHash,
@@ -97,23 +99,24 @@ describe("Adapter - Signatures", () => {
       }
     );
 
-    await voting.submitVote(this.dao.address, proposalId, 1, {
+    await voting.submitVote(daoInstance.address, proposalId, 1, {
       from: myAccount,
       gasPrice: toBN("0"),
     });
 
     //should not be able to process before the voting period has ended
     try {
-      await signatures.processProposal(this.dao.address, proposalId, {
+      await signatures.processProposal(daoInstance.address, proposalId, {
         from: myAccount,
         gasPrice: toBN("0"),
       });
     } catch (err) {
+      // @ts-ignore
       expect(err.reason).equal("proposal needs to pass");
     }
 
     await advanceTime(10000);
-    await signatures.processProposal(this.dao.address, proposalId, {
+    await signatures.processProposal(daoInstance.address, proposalId, {
       from: myAccount,
       gasPrice: toBN("0"),
     });
@@ -127,15 +130,15 @@ describe("Adapter - Signatures", () => {
   });
 
   it("should not be possible to get a valid signature if the proposal fails", async () => {
-    const voting = this.adapters.voting;
-    const signatures = this.adapters.signatures;
-    const erc1271 = this.extensions.erc1271;
+    const voting = adaptersInstance.voting;
+    const signatures = adaptersInstance.signatures;
+    const erc1271 = extensionsInstance.erc1271;
 
     let proposalId = getProposalCounter();
 
     //submit a sig
     await signatures.submitProposal(
-      this.dao.address,
+      daoInstance.address,
       proposalId,
       arbitraryMsgHash,
       arbitrarySignatureHash,
@@ -148,7 +151,7 @@ describe("Adapter - Signatures", () => {
     );
 
     //Member votes on the signature proposal
-    await voting.submitVote(this.dao.address, proposalId, 2, {
+    await voting.submitVote(daoInstance.address, proposalId, 2, {
       from: myAccount,
       gasPrice: toBN("0"),
     });
@@ -156,11 +159,12 @@ describe("Adapter - Signatures", () => {
     await advanceTime(10000);
 
     try {
-      await signatures.processProposal(this.dao.address, proposalId, {
+      await signatures.processProposal(daoInstance.address, proposalId, {
         from: myAccount,
         gasPrice: toBN("0"),
       });
     } catch (err) {
+      // @ts-ignore
       expect(err.reason).equal("proposal needs to pass");
     }
 

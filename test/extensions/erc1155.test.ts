@@ -1,6 +1,3 @@
-// Whole-script strict mode syntax
-"use strict";
-
 /**
 MIT License
 
@@ -24,9 +21,9 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
  */
+import { toBN } from "web3-utils";
 
 const {
-  toBN,
   unitPrice,
   UNITS,
   GUILD,
@@ -53,6 +50,12 @@ function getProposalCounter() {
 describe("Extension - ERC1155", () => {
   const daoOwner = accounts[0];
 
+  let daoInstance: any;
+  let extensionsInstance: { bank: any, erc1155Ext: any };
+  let adaptersInstance: any;
+  let snapshotId: any;
+  let testContractsInstance: any;
+
   before("deploy dao", async () => {
     const {
       dao,
@@ -60,41 +63,41 @@ describe("Extension - ERC1155", () => {
       extensions,
       testContracts,
     } = await deployDefaultNFTDao({ owner: daoOwner });
-    this.dao = dao;
-    this.adapters = adapters;
-    this.extensions = extensions;
-    this.testContracts = testContracts;
+    daoInstance = dao;
+    extensionsInstance = extensions;
+    adaptersInstance = adapters
+    testContractsInstance = testContracts;
   });
 
   beforeEach(async () => {
-    this.snapshotId = await takeChainSnapshot();
+    snapshotId = await takeChainSnapshot();
   });
 
   afterEach(async () => {
-    await revertChainSnapshot(this.snapshotId);
+    await revertChainSnapshot(snapshotId);
   });
 
   it("should be possible to create a dao with a nft extension pre-configured", async () => {
-    const erc1155TokenExtension = this.extensions.erc1155Ext;
+    const erc1155TokenExtension = extensionsInstance.erc1155Ext;
     expect(erc1155TokenExtension).to.not.be.null;
   });
 
   it("should be possible check how many token ids are collected for a specific NFT address", async () => {
-    const erc1155TokenExtension = this.extensions.erc1155Ext;
-    const erc1155TestToken = this.testContracts.erc1155TestToken;
+    const erc1155TokenExtension = extensionsInstance.erc1155Ext;
+    const erc1155TestToken = testContractsInstance.erc1155TestToken;
     const total = await erc1155TokenExtension.nbNFTs(erc1155TestToken.address);
     expect(total.toString()).equal("0");
   });
 
   it("should be possible check how many NFTs are in the collection", async () => {
-    const erc1155TokenExtension = this.extensions.erc1155Ext;
+    const erc1155TokenExtension = extensionsInstance.erc1155Ext;
     const total = await erc1155TokenExtension.nbNFTAddresses();
     expect(total.toString()).equal("0");
   });
 
   it("should not be possible get an NFT in the collection if it is empty", async () => {
-    const erc1155TokenExtension = this.extensions.erc1155Ext;
-    const erc1155TestToken = this.testContracts.erc1155TestToken;
+    const erc1155TokenExtension = extensionsInstance.erc1155Ext;
+    const erc1155TestToken = testContractsInstance.erc1155TestToken;
     await expectRevert(
       erc1155TokenExtension.getNFT(erc1155TestToken.address, 0),
       "index out of bounds"
@@ -102,8 +105,8 @@ describe("Extension - ERC1155", () => {
   });
 
   it("should not be possible to withdraw a NFT without the WITHDRAW_NFT permission", async () => {
-    const erc1155TokenExtension = this.extensions.erc1155Ext;
-    const erc1155TestToken = this.testContracts.erc1155TestToken;
+    const erc1155TokenExtension = extensionsInstance.erc1155Ext;
+    const erc1155TestToken = testContractsInstance.erc1155TestToken;
     await expectRevert(
       erc1155TokenExtension.withdrawNFT(
         GUILD,
@@ -117,15 +120,15 @@ describe("Extension - ERC1155", () => {
   });
 
   it("should not be possible to initialize the extension if it was already initialized", async () => {
-    const erc1155TokenExtension = this.extensions.erc1155Ext;
+    const erc1155TokenExtension = extensionsInstance.erc1155Ext;
     await expectRevert(
-      erc1155TokenExtension.initialize(this.dao.address, accounts[0]),
+      erc1155TokenExtension.initialize(daoInstance.address, accounts[0]),
       "already initialized"
     );
   });
 
   it("should be possible to collect a NFT if that is allowed", async () => {
-    const erc1155TestToken = this.testContracts.erc1155TestToken;
+    const erc1155TestToken = testContractsInstance.erc1155TestToken;
     const nftOwner = accounts[1];
     //create a test 1155 token
     await erc1155TestToken.mint(nftOwner, 1, 10, "0x0", {
@@ -140,7 +143,7 @@ describe("Extension - ERC1155", () => {
     expect(value).equal("10");
 
     //instances for Extension and Adapter
-    const erc1155TokenExtension = this.extensions.erc1155Ext;
+    const erc1155TokenExtension = extensionsInstance.erc1155Ext;
 
     //set approval where Extension is the "operator" all of nftOwners
     await erc1155TestToken.safeTransferFrom(
@@ -176,9 +179,9 @@ describe("Extension - ERC1155", () => {
   });
 
   it("should not be possible to do an internal transfer of the NFT to a non member", async () => {
-    const erc1155TestToken = this.testContracts.erc1155TestToken;
+    const erc1155TestToken = testContractsInstance.erc1155TestToken;
     const erc1155TestTokenAddress = erc1155TestToken.address;
-    const bank = this.extensions.bank;
+    const bank = extensionsInstance.bank;
     const nftOwner = accounts[1];
     //create a test 1155 token
     await erc1155TestToken.mint(nftOwner, 1, 10, "0x0", {
@@ -193,8 +196,8 @@ describe("Extension - ERC1155", () => {
     expect(value).equal("10");
 
     //instances for Extension and Adapter
-    const erc1155TokenExtension = this.extensions.erc1155Ext;
-    const erc1155Adapter = this.adapters.erc1155Adapter;
+    const erc1155TokenExtension = extensionsInstance.erc1155Ext;
+    const erc1155Adapter = adaptersInstance.erc1155Adapter;
 
     //set approval where Extension is the "operator" all of nftOwners
     await erc1155TestToken.safeTransferFrom(
@@ -230,12 +233,12 @@ describe("Extension - ERC1155", () => {
     const nonMember = accounts[5];
     expect(await isMember(bank, nonMember)).equal(false);
     //Onboard members
-    const onboarding = this.adapters.onboarding;
-    const voting = this.adapters.voting;
+    const onboarding = adaptersInstance.onboarding;
+    const voting = adaptersInstance.voting;
     //onboard nftOwner
     await onboardingNewMember(
       getProposalCounter(),
-      this.dao,
+      daoInstance,
       onboarding,
       voting,
       nftOwner,
@@ -249,7 +252,7 @@ describe("Extension - ERC1155", () => {
     //internalTransfer should revert, because nonMember is not a member
     await expectRevert(
       erc1155Adapter.internalTransfer(
-        this.dao.address,
+        daoInstance.address,
         nonMember,
         erc1155TestToken.address,
         1, //tokenId
@@ -261,9 +264,9 @@ describe("Extension - ERC1155", () => {
   });
 
   it(" should not be possible to transfer the NFT when you are not the owner", async () => {
-    const erc1155TestToken = this.testContracts.erc1155TestToken;
+    const erc1155TestToken = testContractsInstance.erc1155TestToken;
     const erc1155TestTokenAddress = erc1155TestToken.address;
-    const bank = this.extensions.bank;
+    const bank = extensionsInstance.bank;
     const nftOwner = accounts[1];
     //create a test 1155 token
     await erc1155TestToken.mint(nftOwner, 1, 10, "0x0", {
@@ -278,8 +281,8 @@ describe("Extension - ERC1155", () => {
     expect(value).equal("10");
 
     //instances for Extension and Adapter
-    const erc1155TokenExtension = this.extensions.erc1155Ext;
-    const erc1155Adapter = this.adapters.erc1155Adapter;
+    const erc1155TokenExtension = extensionsInstance.erc1155Ext;
+    const erc1155Adapter = adaptersInstance.erc1155Adapter;
 
     await erc1155TestToken.safeTransferFrom(
       nftOwner,
@@ -314,12 +317,12 @@ describe("Extension - ERC1155", () => {
     const nonMember = accounts[5];
     expect(await isMember(bank, nonMember)).equal(false);
     //Onboard members
-    const onboarding = this.adapters.onboarding;
-    const voting = this.adapters.voting;
+    const onboarding = adaptersInstance.onboarding;
+    const voting = adaptersInstance.voting;
     //onboard nftOwner
     await onboardingNewMember(
       getProposalCounter(),
-      this.dao,
+      daoInstance,
       onboarding,
       voting,
       nftOwner,
@@ -334,7 +337,7 @@ describe("Extension - ERC1155", () => {
     //internalTransfer should revert, because nonMember is not a member
     await expectRevert(
       erc1155Adapter.internalTransfer(
-        this.dao.address,
+        daoInstance.address,
         nftOwner,
         erc1155TestToken.address,
         1, //tokenId

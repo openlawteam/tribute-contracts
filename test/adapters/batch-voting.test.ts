@@ -1,6 +1,3 @@
-// Whole-script strict mode syntax
-"use strict";
-
 /**
 MIT License
 
@@ -24,9 +21,8 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
  */
+import { sha3, toBN } from "web3-utils";
 const {
-  sha3,
-  toBN,
   UNITS,
   unitPrice,
   remaining,
@@ -53,7 +49,7 @@ const {
 } = require("../../utils/offchain_voting.js");
 
 describe("Adapter - BatchVoting", () => {
-  const generateMembers = (amount) => {
+  const generateMembers = (amount: number) => {
     let newAccounts = [];
     for (let i = 0; i < amount; i++) {
       const account = web3.eth.accounts.create();
@@ -69,8 +65,15 @@ describe("Adapter - BatchVoting", () => {
     return proposalCounter().next().value;
   };
 
+  let daoInstance: any;
+  let extensionsInstance: { bank: any, erc1155Ext: any };
+  let adaptersInstance: any;
+  let snapshotId: any;
+  let votingHelpersInstance: any;
+  let members: any;
+
   before("deploy dao", async () => {
-    this.members = generateMembers(5).sort((a, b) =>
+    members = generateMembers(5).sort((a, b) =>
       a.address.toLowerCase() < b.address.toLowerCase()
         ? -1
         : a.address.toLowerCase() > b.address.toLowerCase()
@@ -84,20 +87,21 @@ describe("Adapter - BatchVoting", () => {
       votingHelpers,
     } = await deployDaoWithBatchVoting({
       owner,
-      newMember: this.members[0].address,
+      newMember: members[0].address,
     });
-    this.dao = dao;
-    this.adapters = adapters;
-    this.extensions = extensions;
-    this.votingHelpers = votingHelpers;
-    this.snapshotId = await takeChainSnapshot();
+    daoInstance = dao;
+    extensionsInstance = extensions;
+    adaptersInstance = adapters
+    votingHelpersInstance = votingHelpers;
+    snapshotId = await takeChainSnapshot();
   });
 
   beforeEach(async () => {
-    await revertChainSnapshot(this.snapshotId);
-    this.snapshotId = await takeChainSnapshot();
+    await revertChainSnapshot(snapshotId);
+    snapshotId = await takeChainSnapshot();
   });
 
+  // @ts-ignore
   const onboardMember = async (dao, voting, onboarding, index) => {
     const blockNumber = await web3.eth.getBlockNumber();
     const proposalId = getProposalCounter();
@@ -119,11 +123,12 @@ describe("Adapter - BatchVoting", () => {
       timestamp: Math.floor(new Date().getTime() / 1000),
       space,
       payload: proposalPayload,
-      submitter: this.members[0].address,
+      submitter: members[0].address,
     };
 
     //signer for myAccount (its private key)
-    const signer = SigUtilSigner(this.members[0].privateKey);
+    const signer = SigUtilSigner(members[0].privateKey);
+    // @ts-ignore
     proposalData.sig = await signer(
       proposalData,
       dao.address,
@@ -141,7 +146,7 @@ describe("Adapter - BatchVoting", () => {
     await onboarding.submitProposal(
       dao.address,
       proposalId,
-      this.members[1].address,
+      members[1].address,
       UNITS,
       unitPrice.mul(toBN(3)).add(remaining),
       prepareVoteProposalData(proposalData, web3),
@@ -152,10 +157,10 @@ describe("Adapter - BatchVoting", () => {
 
     const voteEntries = [];
     for (let i = 0; i < index; i++) {
-      const voteSigner = SigUtilSigner(this.members[i].privateKey);
+      const voteSigner = SigUtilSigner(members[i].privateKey);
       const voteEntry = await createVote(
         proposalHash,
-        this.members[i].address,
+        members[i].address,
         true
       );
       const sig = voteSigner(
@@ -167,7 +172,7 @@ describe("Adapter - BatchVoting", () => {
 
       const prepareVoteEntry = {
         vote: voteEntry,
-        memberAddress: this.members[i].address,
+        memberAddress: members[i].address,
         sig,
       };
       voteEntries.push(prepareVoteEntry);
@@ -175,7 +180,7 @@ describe("Adapter - BatchVoting", () => {
       expect(
         validateMessage(
           voteEntry,
-          this.members[i].address,
+          members[i].address,
           dao.address,
           onboarding.address,
           chainId,
@@ -205,15 +210,15 @@ describe("Adapter - BatchVoting", () => {
   };
 
   it("should be possible to propose a new voting by signing the proposal hash", async () => {
-    const dao = this.dao;
-    const onboarding = this.adapters.onboarding;
+    const dao = daoInstance;
+    const onboarding = adaptersInstance.onboarding;
 
     const batchVotingAddr = await dao.getAdapterAddress(sha3("voting"));
     const voting = await BatchVotingContract.at(batchVotingAddr);
     const adapterName = await voting.getAdapterName();
     expect(adapterName).equal("BatchVotingContract");
 
-    for (var i = 0; i < this.members.length; i++) {
+    for (var i = 0; i < members.length; i++) {
       await onboardMember(dao, voting, onboarding, i);
     }
   });

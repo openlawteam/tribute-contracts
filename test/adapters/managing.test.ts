@@ -1,6 +1,3 @@
-// Whole-script strict mode syntax
-"use strict";
-
 /**
 MIT License
 
@@ -24,13 +21,12 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
  */
+import { sha3, toBN, toWei } from "web3-utils";
+
 const {
-  toBN,
-  toWei,
   TOTAL,
   GUILD,
   ZERO_ADDRESS,
-  sha3,
 } = require("../../utils/ContractUtil.js");
 
 const {
@@ -60,23 +56,28 @@ function getProposalCounter() {
 }
 
 describe("Adapter - Managing", () => {
+  let daoInstance: any;
+  let extensionsInstance: { bank: any };
+  let adaptersInstance: any;
+  let snapshotId: any;
+
   before("deploy dao", async () => {
     const { dao, adapters, extensions } = await deployDefaultDao({
       owner: daoOwner,
     });
-    this.dao = dao;
-    this.adapters = adapters;
-    this.extensions = extensions;
-    this.snapshotId = await takeChainSnapshot();
+    daoInstance = dao;
+    extensionsInstance = extensions;
+    adaptersInstance = adapters
+    snapshotId = await takeChainSnapshot();
   });
 
   beforeEach(async () => {
-    await revertChainSnapshot(this.snapshotId);
-    this.snapshotId = await takeChainSnapshot();
+    await revertChainSnapshot(snapshotId);
+    snapshotId = await takeChainSnapshot();
   });
 
   it("should not be possible to send ETH to the adapter", async () => {
-    const managing = this.adapters.managing;
+    const managing = adaptersInstance.managing;
     await expectRevert(
       web3.eth.sendTransaction({
         to: managing.address,
@@ -89,8 +90,8 @@ describe("Adapter - Managing", () => {
   });
 
   it("should not be possible to propose a new adapter with more keys than values", async () => {
-    const dao = this.dao;
-    const managing = this.adapters.managing;
+    const dao = daoInstance;
+    const managing = adaptersInstance.managing;
     const newAdapterId = sha3("bank");
 
     await expectRevert(
@@ -119,8 +120,8 @@ describe("Adapter - Managing", () => {
   });
 
   it("should not be possible to propose a new adapter with more values than keys", async () => {
-    const dao = this.dao;
-    const managing = this.adapters.managing;
+    const dao = daoInstance;
+    const managing = adaptersInstance.managing;
     const newAdapterId = sha3("bank");
     await expectRevert(
       managing.submitProposal(
@@ -144,8 +145,8 @@ describe("Adapter - Managing", () => {
   });
 
   it("should not be possible to propose a new adapter using a reserved address", async () => {
-    const dao = this.dao;
-    const managing = this.adapters.managing;
+    const dao = daoInstance;
+    const managing = adaptersInstance.managing;
     const newAdapterId = sha3("bank");
     await expectRevert(
       managing.submitProposal(
@@ -189,9 +190,9 @@ describe("Adapter - Managing", () => {
   });
 
   it("should be possible to remove an adapter if 0x0 is used as the adapter address", async () => {
-    const dao = this.dao;
-    const managing = this.adapters.managing;
-    const voting = this.adapters.voting;
+    const dao = daoInstance;
+    const managing = adaptersInstance.managing;
+    const voting = adaptersInstance.voting;
     const adapterIdToRemove = sha3("onboarding");
     let proposalId = getProposalCounter();
     // Proposal to remove the Onboading adapter
@@ -238,9 +239,9 @@ describe("Adapter - Managing", () => {
 
   it("should be possible to propose a new DAO adapter with a delegate key", async () => {
     const delegateKey = accounts[3];
-    const dao = this.dao;
-    const managing = this.adapters.managing;
-    const voting = this.adapters.voting;
+    const dao = daoInstance;
+    const managing = adaptersInstance.managing;
+    const voting = adaptersInstance.voting;
     const proposalId = getProposalCounter();
     const newAdapterId = sha3("onboarding");
     const newAdapterAddress = accounts[4];
@@ -304,8 +305,8 @@ describe("Adapter - Managing", () => {
   });
 
   it("should not be possible to reuse a proposal id", async () => {
-    const dao = this.dao;
-    const managing = this.adapters.managing;
+    const dao = daoInstance;
+    const managing = adaptersInstance.managing;
     const newManaging = await ManagingContract.new();
     const newAdapterId = sha3("managing");
     const proposalId = getProposalCounter();
@@ -354,9 +355,9 @@ describe("Adapter - Managing", () => {
   });
 
   it("should be possible to replace the managing adapter", async () => {
-    const dao = this.dao;
-    const managing = this.adapters.managing;
-    const voting = this.adapters.voting;
+    const dao = daoInstance;
+    const managing = adaptersInstance.managing;
+    const voting = adaptersInstance.voting;
     const newManaging = await ManagingContract.new();
     const newAdapterId = sha3("managing");
     const proposalId = getProposalCounter();
@@ -451,9 +452,9 @@ describe("Adapter - Managing", () => {
   });
 
   it("should not be possible to use an adapter if it is not configured with the permission flags", async () => {
-    const dao = this.dao;
-    const managing = this.adapters.managing;
-    const voting = this.adapters.voting;
+    const dao = daoInstance;
+    const managing = adaptersInstance.managing;
+    const voting = adaptersInstance.voting;
 
     const newManaging = await ManagingContract.new();
     const newAdapterId = sha3("managing");
@@ -517,8 +518,8 @@ describe("Adapter - Managing", () => {
   });
 
   it("should not be possible for a non member to propose a new adapter", async () => {
-    const dao = this.dao;
-    const managing = this.adapters.managing;
+    const dao = daoInstance;
+    const managing = adaptersInstance.managing;
     const nonMember = accounts[3];
 
     const newAdapterId = sha3("onboarding");
@@ -546,8 +547,8 @@ describe("Adapter - Managing", () => {
   });
 
   it("should not be possible for a non member to submit a proposal", async () => {
-    const dao = this.dao;
-    const managing = this.adapters.managing;
+    const dao = daoInstance;
+    const managing = adaptersInstance.managing;
     const nonMemberAddress = accounts[5];
     const newVoting = await VotingContract.new();
     const newAdapterId = sha3("voting");
@@ -578,9 +579,9 @@ describe("Adapter - Managing", () => {
   });
 
   it("should be possible for a non member to process a proposal", async () => {
-    const dao = this.dao;
-    const managing = this.adapters.managing;
-    const voting = this.adapters.voting;
+    const dao = daoInstance;
+    const managing = adaptersInstance.managing;
+    const voting = adaptersInstance.voting;
 
     const nonMember = accounts[5];
     const newAdapterId = sha3("voting");
@@ -622,9 +623,9 @@ describe("Adapter - Managing", () => {
   });
 
   it("should not be possible to process a proposal if the voting did not pass", async () => {
-    const dao = this.dao;
-    const managing = this.adapters.managing;
-    const voting = this.adapters.voting;
+    const dao = daoInstance;
+    const managing = adaptersInstance.managing;
+    const voting = adaptersInstance.voting;
     const newAdapterId = sha3("voting");
     const proposalId = getProposalCounter();
     await managing.submitProposal(
@@ -664,9 +665,9 @@ describe("Adapter - Managing", () => {
   });
 
   it("should not fail if the adapter id used for removal is not valid", async () => {
-    const dao = this.dao;
-    const managing = this.adapters.managing;
-    const voting = this.adapters.voting;
+    const dao = daoInstance;
+    const managing = adaptersInstance.managing;
+    const voting = adaptersInstance.voting;
     const newAdapterId = sha3("invalid-id");
     const proposalId = getProposalCounter();
     await managing.submitProposal(
@@ -703,9 +704,9 @@ describe("Adapter - Managing", () => {
   });
 
   it("should not be possible to add a new adapter using an address that is already registered", async () => {
-    const dao = this.dao;
-    const managing = this.adapters.managing;
-    const voting = this.adapters.voting;
+    const dao = daoInstance;
+    const managing = adaptersInstance.managing;
+    const voting = adaptersInstance.voting;
     const newAdapterId = sha3("financing");
     const proposalId = getProposalCounter();
     await managing.submitProposal(
@@ -745,11 +746,11 @@ describe("Adapter - Managing", () => {
   });
 
   it("should be possible to add a new adapter and set the acl flags for some extension", async () => {
-    const dao = this.dao;
-    const managing = this.adapters.managing;
-    const voting = this.adapters.voting;
+    const dao = daoInstance;
+    const managing = adaptersInstance.managing;
+    const voting = adaptersInstance.voting;
     const financing = await FinancingContract.new();
-    const bankExt = this.extensions.bank;
+    const bankExt = extensionsInstance.bank;
 
     const newAdapterId = sha3("testFinancing");
     const newAdapterAddress = financing.address;
@@ -866,9 +867,9 @@ describe("Adapter - Managing", () => {
   });
 
   it("should be possible to add a new extension", async () => {
-    const dao = this.dao;
-    const managing = this.adapters.managing;
-    const voting = this.adapters.voting;
+    const dao = daoInstance;
+    const managing = adaptersInstance.managing;
+    const voting = adaptersInstance.voting;
     const erc1171Ext = await ERC1271Extension.new();
 
     const newExtensionId = sha3("testNewExtension");
@@ -915,10 +916,10 @@ describe("Adapter - Managing", () => {
   });
 
   it("should be possible to remove an extension", async () => {
-    const dao = this.dao;
-    const managing = this.adapters.managing;
-    const voting = this.adapters.voting;
-    const bankExt = this.extensions.bank;
+    const dao = daoInstance;
+    const managing = adaptersInstance.managing;
+    const voting = adaptersInstance.voting;
+    const bankExt = extensionsInstance.bank;
 
     const removeExtensionId = sha3("bank");
     // Use 0 address to indicate we don't want to add, it is just a removal
@@ -966,9 +967,9 @@ describe("Adapter - Managing", () => {
   });
 
   it("should revert if UpdateType is unknown", async () => {
-    const dao = this.dao;
-    const managing = this.adapters.managing;
-    const voting = this.adapters.voting;
+    const dao = daoInstance;
+    const managing = adaptersInstance.managing;
+    const voting = adaptersInstance.voting;
 
     const removeExtensionId = sha3("bank");
     // Use 0 address to indicate we don't want to add, it is just a removal

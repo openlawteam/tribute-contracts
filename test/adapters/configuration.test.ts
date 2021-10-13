@@ -1,6 +1,3 @@
-// Whole-script strict mode syntax
-"use strict";
-
 /**
 MIT License
 
@@ -24,7 +21,7 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
  */
-const { sha3, toBN } = require("../../utils/ContractUtil.js");
+import { sha3, toBN } from "web3-utils";
 
 const {
   deployDefaultDao,
@@ -45,25 +42,30 @@ function getProposalCounter() {
 }
 
 describe("Adapter - Configuration", () => {
+  let daoInstance: any;
+  let extensionsInstance: any;
+  let adaptersInstance: any;
+  let snapshotId: any;
+
   before("deploy dao", async () => {
     const { dao, adapters, extensions } = await deployDefaultDao({ owner });
-    this.dao = dao;
-    this.adapters = adapters;
-    this.extensions = extensions;
+    daoInstance = dao;
+    extensionsInstance = extensions;
+    adaptersInstance = adapters
   });
 
   beforeEach(async () => {
-    this.snapshotId = await takeChainSnapshot();
+    snapshotId = await takeChainSnapshot();
   });
 
   afterEach(async () => {
-    await revertChainSnapshot(this.snapshotId);
+    await revertChainSnapshot(snapshotId);
   });
 
   it("should be possible to set a single configuration parameter", async () => {
-    const dao = this.dao;
-    const configuration = this.adapters.configuration;
-    const voting = this.adapters.voting;
+    const dao = daoInstance;
+    const configuration = adaptersInstance.configuration;
+    const voting = adaptersInstance.voting;
 
     let key = sha3("key");
 
@@ -100,9 +102,9 @@ describe("Adapter - Configuration", () => {
   });
 
   it("should be possible to set multiple configuration parameters", async () => {
-    const dao = this.dao;
-    const configuration = this.adapters.configuration;
-    const voting = this.adapters.voting;
+    const dao = daoInstance;
+    const configuration = adaptersInstance.configuration;
+    const voting = adaptersInstance.voting;
 
     let key1 = sha3("allowUnitTransfersBetweenMembers");
     let key2 = sha3("allowExternalUnitTransfers");
@@ -141,8 +143,8 @@ describe("Adapter - Configuration", () => {
   });
 
   it("should not be possible to provide a different number of keys and values", async () => {
-    const dao = this.dao;
-    const configuration = this.adapters.configuration;
+    const dao = daoInstance;
+    const configuration = adaptersInstance.configuration;
     let key = sha3("key");
 
     await expectRevert(

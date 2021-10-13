@@ -1,6 +1,3 @@
-// Whole-script strict mode syntax
-"use strict";
-
 /**
 MIT License
 
@@ -24,13 +21,9 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
  */
-
-// Whole-script strict mode syntax
-"use strict";
+import { toBN, fromUtf8 } from "web3-utils";
 
 const {
-  toBN,
-  fromUtf8,
   unitPrice,
   UNITS,
   GUILD,
@@ -62,31 +55,29 @@ function getProposalCounter() {
 }
 
 describe("Adapter - Distribute", () => {
+  let daoInstance: any;
+  let extensionsInstance: { bank: any };
+  let adaptersInstance: any;
+  let snapshotId: any;
+
   before("deploy dao", async () => {
     const { dao, adapters, extensions } = await deployDefaultDao({
       owner: daoOwner,
       creator: daoCreator,
     });
-    this.dao = dao;
-    this.adapters = adapters;
-    this.extensions = extensions;
-    this.snapshotId = await takeChainSnapshot();
+    daoInstance = dao;
+    extensionsInstance = extensions;
+    adaptersInstance = adapters
+    snapshotId = await takeChainSnapshot();
   });
 
   beforeEach(async () => {
-    await revertChainSnapshot(this.snapshotId);
-    this.snapshotId = await takeChainSnapshot();
+    await revertChainSnapshot(snapshotId);
+    snapshotId = await takeChainSnapshot();
   });
 
-  const distributeFundsProposal = async (
-    dao,
-    distributeContract,
-    token,
-    amount,
-    unitHolderArr,
-    sender,
-    proposalId = null
-  ) => {
+  // @ts-ignore
+  const distributeFundsProposal = async (dao, distributeContract, token, amount, unitHolderArr, sender, proposalId = null ) => {
     const newProposalId = proposalId ? proposalId : getProposalCounter();
     await distributeContract.submitProposal(
       dao.address,
@@ -106,11 +97,11 @@ describe("Adapter - Distribute", () => {
 
   it("should be possible to distribute funds to only 1 member of the DAO", async () => {
     const daoMember = accounts[3];
-    const dao = this.dao;
-    const bank = this.extensions.bank;
-    const onboarding = this.adapters.onboarding;
-    const voting = this.adapters.voting;
-    const distributeContract = this.adapters.distribute;
+    const dao = daoInstance;
+    const bank = extensionsInstance.bank;
+    const onboarding = adaptersInstance.onboarding;
+    const voting = adaptersInstance.voting;
+    const distributeContract = adaptersInstance.distribute;
 
     await onboardingNewMember(
       getProposalCounter(),
@@ -179,11 +170,11 @@ describe("Adapter - Distribute", () => {
   it("should be possible to distribute funds to all active members of the DAO", async () => {
     const daoMemberA = accounts[3];
     const daoMemberB = accounts[4];
-    const dao = this.dao;
-    const bank = this.extensions.bank;
-    const onboarding = this.adapters.onboarding;
-    const voting = this.adapters.voting;
-    const distributeContract = this.adapters.distribute;
+    const dao = daoInstance;
+    const bank = extensionsInstance.bank;
+    const onboarding = adaptersInstance.onboarding;
+    const voting = adaptersInstance.voting;
+    const distributeContract = adaptersInstance.distribute;
 
     await onboardingNewMember(
       getProposalCounter(),
@@ -275,8 +266,8 @@ describe("Adapter - Distribute", () => {
   });
 
   it("should not be possible to create a proposal with the amount.toEquals to 0", async () => {
-    const dao = this.dao;
-    const distributeContract = this.adapters.distribute;
+    const dao = daoInstance;
+    const distributeContract = adaptersInstance.distribute;
 
     // Submit distribute proposal with invalid amount
     const amountToDistribute = 0;
@@ -298,8 +289,8 @@ describe("Adapter - Distribute", () => {
   });
 
   it("should not be possible to create a proposal with an invalid token", async () => {
-    const dao = this.dao;
-    const distributeContract = this.adapters.distribute;
+    const dao = daoInstance;
+    const distributeContract = adaptersInstance.distribute;
 
     // Submit distribute proposal with invalid token
     const invalidToken = "0x0000000000000000000000000000000000000123";
@@ -322,8 +313,8 @@ describe("Adapter - Distribute", () => {
 
   it("should not be possible to create a proposal if the sender is not a member", async () => {
     const nonMember = accounts[5];
-    const dao = this.dao;
-    const distributeContract = this.adapters.distribute;
+    const dao = daoInstance;
+    const distributeContract = adaptersInstance.distribute;
 
     await expectRevert(
       distributeContract.submitProposal(
@@ -344,10 +335,10 @@ describe("Adapter - Distribute", () => {
 
   it("should not be possible to create a proposal if the target member does not have units (advisor)", async () => {
     const advisor = accounts[3];
-    const dao = this.dao;
-    const onboarding = this.adapters.onboarding;
-    const voting = this.adapters.voting;
-    const distributeContract = this.adapters.distribute;
+    const dao = daoInstance;
+    const onboarding = adaptersInstance.onboarding;
+    const voting = adaptersInstance.voting;
+    const distributeContract = adaptersInstance.distribute;
 
     // New member joins as an Advisor (only receives LOOT)
     await onboardingNewMember(
@@ -381,8 +372,8 @@ describe("Adapter - Distribute", () => {
 
   it("should not be possible to create a proposal if the a non member is indicated to receive the funds", async () => {
     const nonMember = accounts[3];
-    const dao = this.dao;
-    const distributeContract = this.adapters.distribute;
+    const dao = daoInstance;
+    const distributeContract = adaptersInstance.distribute;
 
     // Submit distribute proposal with a non member
     await expectRevert(
@@ -404,10 +395,10 @@ describe("Adapter - Distribute", () => {
 
   it("should not be possible to create more than one proposal using the same proposal id", async () => {
     const daoMember = accounts[3];
-    const dao = this.dao;
-    const onboarding = this.adapters.onboarding;
-    const voting = this.adapters.voting;
-    const distributeContract = this.adapters.distribute;
+    const dao = daoInstance;
+    const onboarding = adaptersInstance.onboarding;
+    const voting = adaptersInstance.voting;
+    const distributeContract = adaptersInstance.distribute;
 
     await onboardingNewMember(
       getProposalCounter(),
@@ -450,10 +441,10 @@ describe("Adapter - Distribute", () => {
 
   it("should not be possible to process a proposal that was not voted on", async () => {
     const daoMemberA = accounts[3];
-    const dao = this.dao;
-    const onboarding = this.adapters.onboarding;
-    const voting = this.adapters.voting;
-    const distributeContract = this.adapters.distribute;
+    const dao = daoInstance;
+    const onboarding = adaptersInstance.onboarding;
+    const voting = adaptersInstance.voting;
+    const distributeContract = adaptersInstance.distribute;
 
     await onboardingNewMember(
       getProposalCounter(),
@@ -488,10 +479,10 @@ describe("Adapter - Distribute", () => {
 
   it("should not be possible to distribute if proposal vote result is TIE", async () => {
     const daoMemberA = accounts[3];
-    const dao = this.dao;
-    const onboarding = this.adapters.onboarding;
-    const voting = this.adapters.voting;
-    const distributeContract = this.adapters.distribute;
+    const dao = daoInstance;
+    const onboarding = adaptersInstance.onboarding;
+    const voting = adaptersInstance.voting;
+    const distributeContract = adaptersInstance.distribute;
 
     await onboardingNewMember(
       getProposalCounter(),
@@ -546,10 +537,10 @@ describe("Adapter - Distribute", () => {
   it("should not be possible to distribute if proposal vote result is NOT_PASS", async () => {
     const daoMemberA = accounts[3];
 
-    const dao = this.dao;
-    const onboarding = this.adapters.onboarding;
-    const voting = this.adapters.voting;
-    const distributeContract = this.adapters.distribute;
+    const dao = daoInstance;
+    const onboarding = adaptersInstance.onboarding;
+    const voting = adaptersInstance.voting;
+    const distributeContract = adaptersInstance.distribute;
 
     await onboardingNewMember(
       getProposalCounter(),
@@ -603,10 +594,10 @@ describe("Adapter - Distribute", () => {
 
   it("should not be possible to process a proposal that was already processed", async () => {
     const daoMemberA = accounts[3];
-    const dao = this.dao;
-    const onboarding = this.adapters.onboarding;
-    const voting = this.adapters.voting;
-    const distributeContract = this.adapters.distribute;
+    const dao = daoInstance;
+    const onboarding = adaptersInstance.onboarding;
+    const voting = adaptersInstance.voting;
+    const distributeContract = adaptersInstance.distribute;
 
     await onboardingNewMember(
       getProposalCounter(),
@@ -654,10 +645,10 @@ describe("Adapter - Distribute", () => {
 
   it("should not be possible to process a new proposal if there is another in progress", async () => {
     const daoMemberA = accounts[3];
-    const dao = this.dao;
-    const onboarding = this.adapters.onboarding;
-    const voting = this.adapters.voting;
-    const distributeContract = this.adapters.distribute;
+    const dao = daoInstance;
+    const onboarding = adaptersInstance.onboarding;
+    const voting = adaptersInstance.voting;
+    const distributeContract = adaptersInstance.distribute;
 
     await onboardingNewMember(
       getProposalCounter(),
@@ -722,10 +713,10 @@ describe("Adapter - Distribute", () => {
 
   it("should not be possible to distribute the funds if the proposal is not in progress", async () => {
     const daoMemberA = accounts[3];
-    const dao = this.dao;
-    const onboarding = this.adapters.onboarding;
-    const voting = this.adapters.voting;
-    const distributeContract = this.adapters.distribute;
+    const dao = daoInstance;
+    const onboarding = adaptersInstance.onboarding;
+    const voting = adaptersInstance.voting;
+    const distributeContract = adaptersInstance.distribute;
 
     await onboardingNewMember(
       getProposalCounter(),

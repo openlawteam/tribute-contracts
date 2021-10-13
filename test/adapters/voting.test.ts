@@ -1,6 +1,3 @@
-// Whole-script strict mode syntax
-"use strict";
-
 /**
 MIT License
 
@@ -24,8 +21,9 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
  */
+import { toBN } from "web3-utils";
+
 const {
-  toBN,
   unitPrice,
   remaining,
   UNITS,
@@ -51,26 +49,31 @@ describe("Adapter - Voting", () => {
     return proposalCounter().next().value;
   };
 
+  let daoInstance: any;
+  let extensionsInstance: { bank: any };
+  let adaptersInstance: any;
+  let snapshotId: any;
+
   before("deploy dao", async () => {
     const { dao, adapters, extensions } = await deployDefaultDao({
       owner: daoOwner,
     });
-    this.dao = dao;
-    this.adapters = adapters;
-    this.extensions = extensions;
-    this.snapshotId = await takeChainSnapshot();
+    daoInstance = dao;
+    extensionsInstance = extensions;
+    adaptersInstance = adapters
+    snapshotId = await takeChainSnapshot();
   });
 
   beforeEach(async () => {
-    await revertChainSnapshot(this.snapshotId);
-    this.snapshotId = await takeChainSnapshot();
+    await revertChainSnapshot(snapshotId);
+    snapshotId = await takeChainSnapshot();
   });
 
   it("should be possible to vote", async () => {
     const account2 = accounts[2];
-    const dao = this.dao;
-    const onboarding = this.adapters.onboarding;
-    const voting = this.adapters.voting;
+    const dao = daoInstance;
+    const onboarding = adaptersInstance.onboarding;
+    const voting = adaptersInstance.voting;
 
     const proposalId = getProposalCounter();
     await onboarding.submitProposal(
@@ -98,9 +101,9 @@ describe("Adapter - Voting", () => {
 
   it("should not be possible to vote twice", async () => {
     const account2 = accounts[2];
-    const dao = this.dao;
-    const onboarding = this.adapters.onboarding;
-    const voting = this.adapters.voting;
+    const dao = daoInstance;
+    const onboarding = adaptersInstance.onboarding;
+    const voting = adaptersInstance.voting;
 
     const proposalId = getProposalCounter();
     await onboarding.submitProposal(
@@ -133,9 +136,9 @@ describe("Adapter - Voting", () => {
   it("should not be possible to vote with a non-member address", async () => {
     const account2 = accounts[2];
     const account3 = accounts[3];
-    const dao = this.dao;
-    const onboarding = this.adapters.onboarding;
-    const voting = this.adapters.voting;
+    const dao = daoInstance;
+    const onboarding = adaptersInstance.onboarding;
+    const voting = adaptersInstance.voting;
 
     const proposalId = getProposalCounter();
     await onboarding.submitProposal(
@@ -163,10 +166,10 @@ describe("Adapter - Voting", () => {
   it("should be possible to vote with a delegate non-member address", async () => {
     const account2 = accounts[2];
     const account3 = accounts[3];
-    const dao = this.dao;
-    const onboarding = this.adapters.onboarding;
-    const voting = this.adapters.voting;
-    const daoRegistryAdapter = this.adapters.daoRegistryAdapter;
+    const dao = daoInstance;
+    const onboarding = adaptersInstance.onboarding;
+    const voting = adaptersInstance.voting;
+    const daoRegistryAdapter = adaptersInstance.daoRegistryAdapter;
 
     const proposalId = getProposalCounter();
     await onboarding.submitProposal(

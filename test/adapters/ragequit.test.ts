@@ -1,6 +1,3 @@
-// Whole-script strict mode syntax
-"use strict";
-
 /**
 MIT License
 
@@ -24,9 +21,9 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
  */
+import { toBN, fromUtf8 } from "web3-utils";
+
 const {
-  toBN,
-  fromUtf8,
   unitPrice,
   UNITS,
   GUILD,
@@ -56,29 +53,34 @@ function getProposalCounter() {
 }
 
 describe("Adapter - Ragequit", () => {
+  let daoInstance: any;
+  let extensionsInstance: { bank: any };
+  let adaptersInstance: any;
+  let snapshotId: any;
+
   before("deploy dao", async () => {
     const { dao, adapters, extensions } = await deployDefaultDao({ owner });
-    this.dao = dao;
-    this.adapters = adapters;
-    this.extensions = extensions;
-    this.snapshotId = await takeChainSnapshot();
+    daoInstance = dao;
+    extensionsInstance = extensions;
+    adaptersInstance = adapters
+    snapshotId = await takeChainSnapshot();
   });
 
   beforeEach(async () => {
-    await revertChainSnapshot(this.snapshotId);
-    this.snapshotId = await takeChainSnapshot();
+    await revertChainSnapshot(snapshotId);
+    snapshotId = await takeChainSnapshot();
   });
 
   it("should return an error if a non DAO member attempts to ragequit", async () => {
     const newMember = accounts[2];
-    const bank = this.extensions.bank;
-    const onboarding = this.adapters.onboarding;
-    const voting = this.adapters.voting;
+    const bank = extensionsInstance.bank;
+    const onboarding = adaptersInstance.onboarding;
+    const voting = adaptersInstance.voting;
 
     const proposalId = getProposalCounter();
     await onboardingNewMember(
       proposalId,
-      this.dao,
+      daoInstance,
       onboarding,
       voting,
       newMember,
@@ -98,8 +100,8 @@ describe("Adapter - Ragequit", () => {
     //Ragequit
     const nonMember = accounts[4];
     await expectRevert(
-      this.adapters.ragequit.ragequit(
-        this.dao.address,
+      adaptersInstance.ragequit.ragequit(
+        daoInstance.address,
         toBN(units),
         toBN(0),
         [ETH_TOKEN],
@@ -114,14 +116,14 @@ describe("Adapter - Ragequit", () => {
 
   it("should not be possible for a member to ragequit when the member does not have enough units", async () => {
     const newMember = accounts[2];
-    const bank = this.extensions.bank;
-    const onboarding = this.adapters.onboarding;
-    const voting = this.adapters.voting;
+    const bank = extensionsInstance.bank;
+    const onboarding = adaptersInstance.onboarding;
+    const voting = adaptersInstance.voting;
 
     const proposalId = getProposalCounter();
     await onboardingNewMember(
       proposalId,
-      this.dao,
+      daoInstance,
       onboarding,
       voting,
       newMember,
@@ -140,8 +142,8 @@ describe("Adapter - Ragequit", () => {
 
     //Ragequit
     await expectRevert(
-      this.adapters.ragequit.ragequit(
-        this.dao.address,
+      adaptersInstance.ragequit.ragequit(
+        daoInstance.address,
         toBN("100000000000000001"),
         toBN(0),
         [ETH_TOKEN],
@@ -156,14 +158,14 @@ describe("Adapter - Ragequit", () => {
 
   it("should be possible for a member to ragequit when the member has not voted on any proposals yet", async () => {
     const newMember = accounts[2];
-    const bank = this.extensions.bank;
-    const onboarding = this.adapters.onboarding;
-    const voting = this.adapters.voting;
+    const bank = extensionsInstance.bank;
+    const onboarding = adaptersInstance.onboarding;
+    const voting = adaptersInstance.voting;
 
     const proposalId = getProposalCounter();
     await onboardingNewMember(
       proposalId,
-      this.dao,
+      daoInstance,
       onboarding,
       voting,
       newMember,
@@ -181,8 +183,8 @@ describe("Adapter - Ragequit", () => {
     expect(units.toString()).equal("10000000000000000");
 
     //Ragequit - Burn all the new member units
-    await this.adapters.ragequit.ragequit(
-      this.dao.address,
+    await adaptersInstance.ragequit.ragequit(
+      daoInstance.address,
       toBN(units),
       toBN(0),
       [ETH_TOKEN],
@@ -200,15 +202,15 @@ describe("Adapter - Ragequit", () => {
   it("should be possible for a member to ragequit if the member voted YES on a proposal that is not processed", async () => {
     const newMember = accounts[2];
     const applicant = accounts[3];
-    const bank = this.extensions.bank;
-    const onboarding = this.adapters.onboarding;
-    const financing = this.adapters.financing;
-    const voting = this.adapters.voting;
+    const bank = extensionsInstance.bank;
+    const onboarding = adaptersInstance.onboarding;
+    const financing = adaptersInstance.financing;
+    const voting = adaptersInstance.voting;
 
     const proposalId = getProposalCounter();
     await onboardingNewMember(
       proposalId,
-      this.dao,
+      daoInstance,
       onboarding,
       voting,
       newMember,
@@ -229,7 +231,7 @@ describe("Adapter - Ragequit", () => {
     //Create Financing Request
     const requestedAmount = toBN(50000);
     await financing.submitProposal(
-      this.dao.address,
+      daoInstance.address,
       financingProposalId,
       applicant,
       ETH_TOKEN,
@@ -240,14 +242,14 @@ describe("Adapter - Ragequit", () => {
 
     //New Member votes YES on the Financing proposal
     let vote = 1; //YES
-    await voting.submitVote(this.dao.address, financingProposalId, vote, {
+    await voting.submitVote(daoInstance.address, financingProposalId, vote, {
       from: newMember,
       gasPrice: toBN("0"),
     });
 
     //Ragequit - New member ragequits after YES vote
-    await this.adapters.ragequit.ragequit(
-      this.dao.address,
+    await adaptersInstance.ragequit.ragequit(
+      daoInstance.address,
       toBN(units),
       toBN(0),
       [ETH_TOKEN],
@@ -265,15 +267,15 @@ describe("Adapter - Ragequit", () => {
   it("should be possible for a member to ragequit if the member voted NO on a proposal that is not processed", async () => {
     const newMember = accounts[2];
     const applicant = accounts[3];
-    const bank = this.extensions.bank;
-    const onboarding = this.adapters.onboarding;
-    const financing = this.adapters.financing;
-    const voting = this.adapters.voting;
+    const bank = extensionsInstance.bank;
+    const onboarding = adaptersInstance.onboarding;
+    const financing = adaptersInstance.financing;
+    const voting = adaptersInstance.voting;
 
     const proposalId = getProposalCounter();
     await onboardingNewMember(
       proposalId,
-      this.dao,
+      daoInstance,
       onboarding,
       voting,
       newMember,
@@ -294,7 +296,7 @@ describe("Adapter - Ragequit", () => {
     //Create Financing Request
     const requestedAmount = toBN(50000);
     await financing.submitProposal(
-      this.dao.address,
+      daoInstance.address,
       financingProposalId,
       applicant,
       ETH_TOKEN,
@@ -305,14 +307,14 @@ describe("Adapter - Ragequit", () => {
 
     //New Member votes NO on the Financing proposal
     const vote = 2; //NO
-    await voting.submitVote(this.dao.address, financingProposalId, vote, {
+    await voting.submitVote(daoInstance.address, financingProposalId, vote, {
       from: newMember,
       gasPrice: toBN("0"),
     });
 
     //Ragequit - New member ragequits after YES vote
-    await this.adapters.ragequit.ragequit(
-      this.dao.address,
+    await adaptersInstance.ragequit.ragequit(
+      daoInstance.address,
       toBN(units),
       toBN(0),
       [ETH_TOKEN],
@@ -425,14 +427,14 @@ describe("Adapter - Ragequit", () => {
 
   it("should not be possible to vote after the ragequit", async () => {
     const memberAddr = accounts[2];
-    const bank = this.extensions.bank;
-    const onboarding = this.adapters.onboarding;
-    const voting = this.adapters.voting;
+    const bank = extensionsInstance.bank;
+    const onboarding = adaptersInstance.onboarding;
+    const voting = adaptersInstance.voting;
 
     let proposalId = getProposalCounter();
     await onboardingNewMember(
       proposalId,
-      this.dao,
+      daoInstance,
       onboarding,
       voting,
       memberAddr,
@@ -450,8 +452,8 @@ describe("Adapter - Ragequit", () => {
     expect(units.toString()).equal("10000000000000000");
 
     //Ragequit - Burn all the new member units
-    await this.adapters.ragequit.ragequit(
-      this.dao.address,
+    await adaptersInstance.ragequit.ragequit(
+      daoInstance.address,
       toBN(units),
       toBN(0),
       [ETH_TOKEN],
@@ -466,7 +468,7 @@ describe("Adapter - Ragequit", () => {
     await expectRevert(
       onboardingNewMember(
         proposalId,
-        this.dao,
+        daoInstance,
         onboarding,
         voting,
         memberAddr,
@@ -478,7 +480,7 @@ describe("Adapter - Ragequit", () => {
     );
 
     await expectRevert(
-      voting.submitVote(this.dao.address, proposalId, 1, {
+      voting.submitVote(daoInstance.address, proposalId, 1, {
         from: memberAddr,
         gasPrice: toBN("0"),
       }),
@@ -487,7 +489,7 @@ describe("Adapter - Ragequit", () => {
   });
 
   it("should not be possible to ragequit if the member have provided an invalid token", async () => {
-    const bank = this.extensions.bank;
+    const bank = extensionsInstance.bank;
 
     // Check member units
     let units = await bank.balanceOf(owner, UNITS);
@@ -496,8 +498,8 @@ describe("Adapter - Ragequit", () => {
     //Ragequit - Attempts to ragequit using an invalid token to receive funds
     let invalidToken = accounts[7];
     await expectRevert(
-      this.adapters.ragequit.ragequit(
-        this.dao.address,
+      adaptersInstance.ragequit.ragequit(
+        daoInstance.address,
         toBN(units),
         toBN(0),
         [invalidToken],
@@ -512,14 +514,14 @@ describe("Adapter - Ragequit", () => {
 
   it("should not be possible to ragequit if there are no tokens to receive the funds", async () => {
     const newMember = accounts[2];
-    const bank = this.extensions.bank;
-    const onboarding = this.adapters.onboarding;
-    const voting = this.adapters.voting;
+    const bank = extensionsInstance.bank;
+    const onboarding = adaptersInstance.onboarding;
+    const voting = adaptersInstance.voting;
 
     const proposalId = getProposalCounter();
     await onboardingNewMember(
       proposalId,
-      this.dao,
+      daoInstance,
       onboarding,
       voting,
       newMember,
@@ -537,8 +539,8 @@ describe("Adapter - Ragequit", () => {
     expect(units.toString()).equal("10000000000000000");
 
     await expectRevert(
-      this.adapters.ragequit.ragequit(
-        this.dao.address,
+      adaptersInstance.ragequit.ragequit(
+        daoInstance.address,
         toBN(units),
         toBN(0),
         [ETH_TOKEN, ETH_TOKEN], // token array with duplicates
@@ -553,14 +555,14 @@ describe("Adapter - Ragequit", () => {
 
   it("should not be possible to ragequit if there is a duplicate token", async () => {
     const memberA = accounts[2];
-    const bank = this.extensions.bank;
-    const onboarding = this.adapters.onboarding;
-    const voting = this.adapters.voting;
+    const bank = extensionsInstance.bank;
+    const onboarding = adaptersInstance.onboarding;
+    const voting = adaptersInstance.voting;
 
     const proposalId = getProposalCounter();
     await onboardingNewMember(
       proposalId,
-      this.dao,
+      daoInstance,
       onboarding,
       voting,
       memberA,
@@ -573,8 +575,8 @@ describe("Adapter - Ragequit", () => {
     expect(memberAUnits.toString()).equal("10000000000000000");
 
     await expectRevert(
-      this.adapters.ragequit.ragequit(
-        this.dao.address,
+      adaptersInstance.ragequit.ragequit(
+        daoInstance.address,
         toBN(memberAUnits),
         toBN(0),
         [], //empty token array

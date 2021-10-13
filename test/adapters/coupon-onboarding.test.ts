@@ -1,6 +1,3 @@
-// Whole-script strict mode syntax
-"use strict";
-
 /**
 MIT License
 
@@ -24,9 +21,8 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
  */
+import { sha3, toBN } from "web3-utils";
 const {
-  sha3,
-  toBN,
   UNITS,
   GUILD,
   ETH_TOKEN,
@@ -56,19 +52,24 @@ const signer = {
 const daoOwner = accounts[1];
 
 describe("Adapter - Coupon Onboarding ", () => {
+  let daoInstance: any;
+  let extensionsInstance: { bank: any };
+  let adaptersInstance: any;
+  let snapshotId: any;
+
   before("deploy dao", async () => {
     const { dao, adapters, extensions } = await deployDefaultDao({
       owner: daoOwner,
     });
-    this.dao = dao;
-    this.adapters = adapters;
-    this.extensions = extensions;
-    this.snapshotId = await takeChainSnapshot();
+    daoInstance = dao;
+    extensionsInstance = extensions;
+    adaptersInstance = adapters
+    snapshotId = await takeChainSnapshot();
   });
 
   beforeEach(async () => {
-    await revertChainSnapshot(this.snapshotId);
-    this.snapshotId = await takeChainSnapshot();
+    await revertChainSnapshot(snapshotId);
+    snapshotId = await takeChainSnapshot();
   });
 
   it("should be possible to join a DAO with a valid coupon", async () => {
@@ -76,15 +77,15 @@ describe("Adapter - Coupon Onboarding ", () => {
 
     const signerUtil = SigUtilSigner(signer.privKey);
 
-    const dao = this.dao;
-    const bank = this.extensions.bank;
+    const dao = daoInstance;
+    const bank = extensionsInstance.bank;
 
     let signerAddr = await dao.getAddressConfiguration(
       sha3("coupon-onboarding.signerAddress")
     );
     expect(signerAddr).equal(signer.address);
 
-    const couponOnboarding = this.adapters.couponOnboarding;
+    const couponOnboarding = adaptersInstance.couponOnboarding;
 
     const couponData = {
       type: "coupon",
@@ -141,15 +142,15 @@ describe("Adapter - Coupon Onboarding ", () => {
 
     const signerUtil = SigUtilSigner(signer.privKey);
 
-    const dao = this.dao;
-    const bank = this.extensions.bank;
+    const dao = daoInstance;
+    const bank = extensionsInstance.bank;
 
     let signerAddr = await dao.getAddressConfiguration(
       sha3("coupon-onboarding.signerAddress")
     );
     expect(signerAddr).equal(signer.address);
 
-    const couponOnboarding = this.adapters.couponOnboarding;
+    const couponOnboarding = adaptersInstance.couponOnboarding;
 
     const couponData = {
       type: "coupon",
@@ -204,15 +205,15 @@ describe("Adapter - Coupon Onboarding ", () => {
 
     const signerUtil = SigUtilSigner(signer.privKey);
 
-    const dao = this.dao;
-    const bank = this.extensions.bank;
+    const dao = daoInstance;
+    const bank = extensionsInstance.bank;
 
     let signerAddr = await dao.getAddressConfiguration(
       sha3("coupon-onboarding.signerAddress")
     );
     expect(signerAddr).equal(signer.address);
 
-    const couponOnboarding = this.adapters.couponOnboarding;
+    const couponOnboarding = adaptersInstance.couponOnboarding;
 
     const couponData = {
       type: "coupon",

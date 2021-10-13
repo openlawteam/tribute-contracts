@@ -1,6 +1,4 @@
 // Whole-script strict mode syntax
-"use strict";
-
 /**
 MIT License
 
@@ -59,20 +57,25 @@ function getProposalCounter() {
 }
 
 describe("Adapter - Onboarding", () => {
+  let daoInstance: any;
+  let extensionsInstance: { bank: any };
+  let adaptersInstance: any;
+  let snapshotId: any;
+  
   before("deploy dao", async () => {
     const { dao, adapters, extensions } = await deployDefaultDao({
       owner: daoOwner,
       creator: delegatedKey,
     });
-    this.dao = dao;
-    this.adapters = adapters;
-    this.extensions = extensions;
-    this.snapshotId = await takeChainSnapshot();
+    daoInstance = dao;
+    extensionsInstance = extensions;
+    adaptersInstance = adapters
+    snapshotId = await takeChainSnapshot();
   });
 
   beforeEach(async () => {
-    await revertChainSnapshot(this.snapshotId);
-    this.snapshotId = await takeChainSnapshot();
+    await revertChainSnapshot(snapshotId);
+    snapshotId = await takeChainSnapshot();
   });
 
   it("should not be possible onboard when the token amount exceeds the external token limits", async () => {
@@ -151,10 +154,10 @@ describe("Adapter - Onboarding", () => {
     const applicant = accounts[2];
     const nonMemberAccount = accounts[3];
 
-    const dao = this.dao;
-    const bank = this.extensions.bank;
-    const onboarding = this.adapters.onboarding;
-    const voting = this.adapters.voting;
+    const dao = daoInstance;
+    const bank = extensionsInstance.bank;
+    const onboarding = adaptersInstance.onboarding;
+    const voting = adaptersInstance.voting;
 
     const myAccountInitialBalance = await web3.eth.getBalance(daoOwner);
     // remaining amount to test sending back to proposer
@@ -333,8 +336,8 @@ describe("Adapter - Onboarding", () => {
 
   it("should not be possible to have more than the maximum number of units", async () => {
     const applicant = accounts[2];
-    const dao = this.dao;
-    const onboarding = this.adapters.onboarding;
+    const dao = daoInstance;
+    const onboarding = adaptersInstance.onboarding;
 
     await expectRevert(
       onboarding.submitProposal(
@@ -355,10 +358,10 @@ describe("Adapter - Onboarding", () => {
 
   it("should handle an onboarding proposal with a failed vote", async () => {
     const applicant = accounts[2];
-    const dao = this.dao;
-    const bank = this.extensions.bank;
-    const onboarding = this.adapters.onboarding;
-    const voting = this.adapters.voting;
+    const dao = daoInstance;
+    const bank = extensionsInstance.bank;
+    const onboarding = adaptersInstance.onboarding;
+    const voting = adaptersInstance.voting;
 
     const myAccountInitialBalance = await web3.eth.getBalance(daoOwner);
     const proposalId = getProposalCounter();
@@ -418,8 +421,8 @@ describe("Adapter - Onboarding", () => {
   });
 
   it("should not be possible to process proposal that does not exist", async () => {
-    const dao = this.dao;
-    const onboarding = this.adapters.onboarding;
+    const dao = daoInstance;
+    const onboarding = adaptersInstance.onboarding;
     const result = onboarding.processProposal(dao.address, "0x999", {
       from: daoOwner,
       gasPrice: toBN("0"),
@@ -429,9 +432,9 @@ describe("Adapter - Onboarding", () => {
 
   it("should be possible to update delegate key and the member continues as an active member", async () => {
     const delegateKey = accounts[9];
-    const dao = this.dao;
-    const bank = this.extensions.bank;
-    const daoRegistryAdapter = this.adapters.daoRegistryAdapter;
+    const dao = daoInstance;
+    const bank = extensionsInstance.bank;
+    const daoRegistryAdapter = adaptersInstance.daoRegistryAdapter;
 
     expect(await isMember(bank, daoOwner)).equal(true);
     expect(await dao.isMember(delegateKey)).equal(true); // use the dao to check delegatedKeys
@@ -448,9 +451,9 @@ describe("Adapter - Onboarding", () => {
 
   it("should not be possible to overwrite a delegated key", async () => {
     const applicant = accounts[2];
-    const dao = this.dao;
-    const daoRegistryAdapter = this.adapters.daoRegistryAdapter;
-    const onboarding = this.adapters.onboarding;
+    const dao = daoInstance;
+    const daoRegistryAdapter = adaptersInstance.daoRegistryAdapter;
+    const onboarding = adaptersInstance.onboarding;
 
     const proposalId = getProposalCounter();
     await onboarding.submitProposal(
@@ -478,10 +481,10 @@ describe("Adapter - Onboarding", () => {
 
   it("should not be possible to update delegate key if the address is already taken as delegated key", async () => {
     const applicant = accounts[2];
-    const dao = this.dao;
-    const daoRegistryAdapter = this.adapters.daoRegistryAdapter;
-    const onboarding = this.adapters.onboarding;
-    const voting = this.adapters.voting;
+    const dao = daoInstance;
+    const daoRegistryAdapter = adaptersInstance.daoRegistryAdapter;
+    const onboarding = adaptersInstance.onboarding;
+    const voting = adaptersInstance.voting;
 
     const proposalId = getProposalCounter();
 
@@ -524,8 +527,8 @@ describe("Adapter - Onboarding", () => {
 
   it("should not be possible to onboard a member with a zero address", async () => {
     const applicant = "0x0000000000000000000000000000000000000000";
-    const dao = this.dao;
-    const onboarding = this.adapters.onboarding;
+    const dao = daoInstance;
+    const onboarding = adaptersInstance.onboarding;
 
     const proposalId = getProposalCounter();
     await expectRevert(
