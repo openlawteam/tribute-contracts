@@ -7,7 +7,7 @@ const {
     numberOfUnits,
 } = require("../utils/ContractUtil.js");
   
-const { deployDao, getNetworkDetails } = require("../utils/DeploymentUtil.js");
+const { deployDao, getNetworkDetails } = require("../utils/HardhatDeploymentUtil.js");
   
 require("dotenv").config();
   
