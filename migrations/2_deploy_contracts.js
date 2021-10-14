@@ -35,6 +35,7 @@ module.exports = async (deployer, network, accounts) => {
 
   const { dao, extensions, testContracts } = result;
   if (dao) {
+    //TODO better logs and output
     await dao.finalizeDao();
     console.log("************************");
     console.log(`DaoRegistry: ${dao.address}`);
