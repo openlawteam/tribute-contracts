@@ -32,7 +32,7 @@ SOFTWARE.
 contract ERC20TokenExtensionFactory is CloneFactory {
     address public identityAddress;
 
-    event ERC20TokenExtensionCreated(address erc20ExtTokenAddress);
+    event ERC20TokenExtensionCreated(address extensionAddress);
 
     constructor(address _identityAddress) {
         require(_identityAddress != address(0x0), "invalid addr");

@@ -85,75 +85,66 @@ const createFactories = async ({
 };
 
 const createExtensions = async ({ dao, factories, options }) => {
-  const bankExtension = await createBankExtension(
+  const bankExtension = await createExtension({
     dao,
-    options.owner,
-    factories.bankExtFactory,
-    options.BankExtension,
-    options.maxExternalTokens,
-    options.contractConfigs
-  );
+    extensionFactory: factories.bankExtFactory,
+    extensionContract: options.BankExtension,
+    options,
+  });
 
-  const erc1271Extension = await createERC1271Extension(
+  const erc1271Extension = await createExtension({
     dao,
-    options.owner,
-    factories.erc1271ExtFactory,
-    options.ERC1271Extension,
-    options.contractConfigs
-  );
+    extensionFactory: factories.erc1271ExtFactory,
+    extensionContract: options.ERC1271Extension,
+    options,
+  });
 
-  const nftExtension = await createERC721Extension(
+  const nftExtension = await createExtension({
     dao,
-    options.owner,
-    factories.erc721ExtFactory,
-    options.NFTExtension,
-    options.contractConfigs
-  );
+    extensionFactory: factories.erc721ExtFactory,
+    extensionContract: options.NFTExtension,
+    options,
+  });
 
-  const erc20TokenName = options.erc20TokenName
-    ? options.erc20TokenName
-    : "Unit Test Tokens";
-  const erc20TokenSymbol = options.erc20TokenSymbol
-    ? options.erc20TokenSymbol
-    : "UTT";
-  const erc20TokenDecimals = options.erc20TokenDecimals
-    ? parseInt(options.erc20TokenDecimals) || 0
-    : 0;
-
-  const erc20TokenExtension = await createERC20Extension(
+  const erc20TokenExtension = await createExtension({
     dao,
-    options.owner,
-    factories.erc20ExtFactory,
-    erc20TokenName,
-    erc20TokenSymbol,
-    erc20TokenDecimals,
-    options.ERC20Extension,
-    options.contractConfigs
-  );
+    extensionFactory: factories.erc20ExtFactory,
+    extensionContract: options.ERC20Extension,
+    options: {
+      ...options,
+      erc20TokenName: options.erc20TokenName
+        ? options.erc20TokenName
+        : "Unit Test Tokens",
+      erc20TokenAddress: UNITS,
+      erc20TokenSymbol: options.erc20TokenSymbol
+        ? options.erc20TokenSymbol
+        : "UTT",
+      erc20TokenDecimals: options.erc20TokenDecimals
+        ? parseInt(options.erc20TokenDecimals) || Number(0)
+        : Number(0),
+    },
+  });
 
-  const executorExtension = await createExecutorExtension(
+  const executorExtension = await createExtension({
     dao,
-    options.owner,
-    factories.executorExtFactory,
-    options.ExecutorExtension,
-    options.contractConfigs
-  );
+    extensionFactory: factories.executorExtFactory,
+    extensionContract: options.ExecutorExtension,
+    options,
+  });
 
-  const internalTokenVestingExtension = await createInternalTokenVestingExtension(
+  const vestingExtension = await createExtension({
     dao,
-    options.owner,
-    factories.vestingExtFactory,
-    options.InternalTokenVestingExtension,
-    options.contractConfigs
-  );
+    extensionFactory: factories.vestingExtFactory,
+    extensionContract: options.InternalTokenVestingExtension,
+    options,
+  });
 
-  const erc1155TokenExtension = await createERC1155Extension(
+  const erc1155TokenExtension = await createExtension({
     dao,
-    options.owner,
-    factories.erc1155ExtFactory,
-    options.ERC1155TokenExtension,
-    options.contractConfigs
-  );
+    extensionFactory: factories.erc1155ExtFactory,
+    extensionContract: options.ERC1155TokenExtension,
+    options,
+  });
 
   const extensions = {
     bankExt: bankExtension,
@@ -162,7 +153,7 @@ const createExtensions = async ({ dao, factories, options }) => {
     erc1271Ext: erc1271Extension,
     erc1155Ext: erc1155TokenExtension,
     executorExt: executorExtension,
-    vestingExt: internalTokenVestingExtension,
+    vestingExt: vestingExtension,
   };
 
   const missingConfigs = Object.keys(extensions).find(
@@ -562,190 +553,51 @@ const configureDao = async ({
   configureExtensions();
 };
 
-const createBankExtension = async (
+const createExtension = async ({
   dao,
-  owner,
-  bankFactory,
-  BankExtension,
-  maxExternalTokens,
-  contractConfigs
-) => {
-  await bankFactory.createBank(maxExternalTokens);
+  extensionFactory,
+  extensionContract,
+  options,
+}) => {
+  const configs = extensionFactory.configs;
+
+  if (configs.deploymentArgs && configs.deploymentArgs.length > 0) {
+    const args = configs.deploymentArgs.map((argName) => {
+      const arg = options[argName];
+      if (arg !== null && arg !== undefined) return arg;
+      throw new Error(
+        `Missing deployment argument <${argName}> in ${configs.name}.create`
+      );
+    });
+    await extensionFactory.create(...args);
+  } else {
+    await extensionFactory.create();
+  }
+
   let pastEvent;
   while (pastEvent === undefined) {
-    let pastEvents = await bankFactory.getPastEvents();
+    let pastEvents = await extensionFactory.getPastEvents();
     pastEvent = pastEvents[0];
   }
-  const { bankAddress } = pastEvent.returnValues;
-  const bankExtension = await BankExtension.at(bankAddress);
 
-  // Adds the new extension to the DAO
-  await dao.addExtension(sha3("bank"), bankExtension.address, owner, {
-    from: owner,
-  });
-
-  return embedConfigs(bankExtension, "BankExtension", contractConfigs);
-};
-
-const createERC1271Extension = async (
-  dao,
-  owner,
-  erc1271Factory,
-  ERC1271Extension,
-  contractConfigs
-) => {
-  await erc1271Factory.create();
-  let pastEvent;
-  while (pastEvent === undefined) {
-    let pastEvents = await erc1271Factory.getPastEvents();
-    pastEvent = pastEvents[0];
-  }
-  const { erc1271Address } = pastEvent.returnValues;
-  const erc1271Extension = await ERC1271Extension.at(erc1271Address);
-
-  // Adds the new extension to the DAO
-  await dao.addExtension(sha3("erc1271"), erc1271Extension.address, owner, {
-    from: owner,
-  });
-
-  return embedConfigs(erc1271Extension, "ERC1271Extension", contractConfigs);
-};
-
-const createERC721Extension = async (
-  dao,
-  owner,
-  nftFactory,
-  NFTExtension,
-  contractConfigs
-) => {
-  await nftFactory.createNFTCollection();
-  let pastEvent;
-  while (pastEvent === undefined) {
-    let pastEvents = await nftFactory.getPastEvents();
-    pastEvent = pastEvents[0];
-  }
-  const { nftCollAddress } = pastEvent.returnValues;
-  const nftExtension = await NFTExtension.at(nftCollAddress);
-
-  // Adds the new extension to the DAO
-  await dao.addExtension(sha3("nft"), nftCollAddress, owner, {
-    from: owner,
-  });
-
-  return embedConfigs(nftExtension, "NFTExtension", contractConfigs);
-};
-
-const createERC20Extension = async (
-  dao,
-  owner,
-  erc20TokenExtFactory,
-  erc20TokenName,
-  erc20TokenSymbol,
-  erc20TokenDecimals,
-  ERC20Extension,
-  contractConfigs
-) => {
-  await erc20TokenExtFactory.create(
-    erc20TokenName,
-    UNITS,
-    erc20TokenSymbol,
-    erc20TokenDecimals
+  const { extensionAddress } = pastEvent.returnValues;
+  const newExtension = embedConfigs(
+    await extensionContract.at(extensionAddress),
+    extensionContract.contractName,
+    options.contractConfigs
   );
-  let pastEvent;
-  while (pastEvent === undefined) {
-    let pastEvents = await erc20TokenExtFactory.getPastEvents();
-    pastEvent = pastEvents[0];
-  }
-  const { erc20ExtTokenAddress } = pastEvent.returnValues;
-  const erc20TokenExtension = await ERC20Extension.at(erc20ExtTokenAddress);
-
-  // Adds the new extension to the DAO
-  await dao.addExtension(sha3("erc20-ext"), erc20ExtTokenAddress, owner, {
-    from: owner,
-  });
-  return embedConfigs(erc20TokenExtension, "ERC20Extension", contractConfigs);
-};
-
-const createExecutorExtension = async (
-  dao,
-  owner,
-  executorExtensionFactory,
-  ExecutorExtension,
-  contractConfigs
-) => {
-  await executorExtensionFactory.create();
-  let pastEvent;
-  while (pastEvent === undefined) {
-    let pastEvents = await executorExtensionFactory.getPastEvents();
-    pastEvent = pastEvents[0];
-  }
-  const { executorAddress } = pastEvent.returnValues;
-  const executorExtension = await ExecutorExtension.at(executorAddress);
-
-  // Adds the new extension to the DAO
-  await dao.addExtension(sha3("executor-ext"), executorAddress, owner, {
-    from: owner,
-  });
-  return embedConfigs(executorExtension, "ExecutorExtension", contractConfigs);
-};
-
-const createInternalTokenVestingExtension = async (
-  dao,
-  owner,
-  factory,
-  contract,
-  contractConfigs
-) => {
-  await factory.create();
-  let pastEvent;
-  while (pastEvent === undefined) {
-    let pastEvents = await factory.getPastEvents();
-    pastEvent = pastEvents[0];
-  }
-  const { addr } = pastEvent.returnValues;
-  const vestingExtension = await contract.at(addr);
 
   // Adds the new extension to the DAO
   await dao.addExtension(
-    sha3("internal-token-vesting-ext"),
-    vestingExtension.address,
-    owner,
+    sha3(newExtension.configs.id),
+    newExtension.address,
+    options.owner,
     {
-      from: owner,
+      from: options.owner,
     }
   );
-  return embedConfigs(
-    vestingExtension,
-    "InternalTokenVestingExtension",
-    contractConfigs
-  );
-};
 
-const createERC1155Extension = async (
-  dao,
-  owner,
-  erc1155TokenExtFactory,
-  ERC1155TokenExtension,
-  contractConfigs
-) => {
-  await erc1155TokenExtFactory.createERC1155Collection();
-  let pastEvent;
-  while (pastEvent === undefined) {
-    let pastEvents = await erc1155TokenExtFactory.getPastEvents();
-    pastEvent = pastEvents[0];
-  }
-  const { nftCollAddress } = pastEvent.returnValues;
-  const erc1155TokenExtension = await ERC1155TokenExtension.at(nftCollAddress);
-
-  // Adds the new extension to the DAO
-  await dao.addExtension(sha3("erc1155-ext"), nftCollAddress, owner, {
-    from: owner,
-  });
-  return embedConfigs(
-    erc1155TokenExtension,
-    "ERC1155TokenExtension",
-    contractConfigs
-  );
+  return newExtension;
 };
 
 const configureOffchainVoting = async ({
@@ -846,7 +698,7 @@ const getNetworkDetails = (name) => {
 module.exports = {
   deployDao,
   cloneDao,
-  prepareAdapters: createAdapters,
+  createAdapters,
   addDefaultAdapters,
   getNetworkDetails,
 };

@@ -33,7 +33,7 @@ SOFTWARE.
 contract BankFactory is CloneFactory {
     address public identityAddress;
 
-    event BankCreated(address bankAddress);
+    event BankCreated(address extensionAddress);
 
     constructor(address _identityAddress) {
         require(_identityAddress != address(0x0), "invalid addr");
@@ -44,7 +44,7 @@ contract BankFactory is CloneFactory {
      * @notice Create and initialize a new BankExtension
      * @param maxExternalTokens The maximum number of external tokens stored in the Bank
      */
-    function createBank(uint8 maxExternalTokens) external {
+    function create(uint8 maxExternalTokens) external {
         BankExtension bank = BankExtension(_createClone(identityAddress));
         bank.setMaxExternalTokens(maxExternalTokens);
         //slither-disable-next-line reentrancy-events

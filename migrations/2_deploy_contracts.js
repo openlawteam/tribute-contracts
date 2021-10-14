@@ -46,7 +46,9 @@ module.exports = async (deployer, network, accounts) => {
     );
     console.log(`BankExtension: ${extensions.bankExt.address}`);
     console.log(
-      `NFTExtension: ${extensions.nft ? extensions.erc721Ext.address : ""}`
+      `NFTExtension: ${
+        extensions.erc721Ext ? extensions.erc721Ext.address : ""
+      }`
     );
     console.log(
       `ERC20Extension: ${

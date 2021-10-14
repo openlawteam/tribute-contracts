@@ -33,7 +33,7 @@ SOFTWARE.
 contract ERC1271ExtensionFactory is CloneFactory {
     address public identityAddress;
 
-    event ERC1271Created(address erc1271Address);
+    event ERC1271Created(address extensionAddress);
 
     constructor(address _identityAddress) {
         require(_identityAddress != address(0x0), "invalid addr");

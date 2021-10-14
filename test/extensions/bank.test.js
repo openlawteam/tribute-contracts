@@ -92,7 +92,7 @@ describe("Extension - Bank", () => {
     const identityBank = this.extensions.bankExt;
     const bankFactory = await BankFactory.new(identityBank.address);
     await expectRevert(
-      bankFactory.createBank(maxExternalTokens),
+      bankFactory.create(maxExternalTokens),
       "max number of external tokens should be (0,200)"
     );
   });
@@ -102,7 +102,7 @@ describe("Extension - Bank", () => {
     const identityBank = this.extensions.bankExt;
     const bankFactory = await BankFactory.new(identityBank.address);
     await expectRevert(
-      bankFactory.createBank(maxExternalTokens),
+      bankFactory.create(maxExternalTokens),
       "max number of external tokens should be (0,200)"
     );
   });

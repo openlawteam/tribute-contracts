@@ -28,6 +28,15 @@ export enum ContractType {
   Test = 5,
 }
 
+// The arguments that can be read from the env, and passed to the configuration/deployment functions
+export const deployArgs = {
+  maxExternalTokens: "maxExternalTokens",
+  erc20TokenName: "erc20TokenName",
+  erc20TokenAddress: "erc20TokenAddress",
+  erc20TokenSymbol: "erc20TokenSymbol",
+  erc20TokenDecimals: "erc20TokenDecimals",
+};
+
 export type ContractConfig = {
   // The id of the contract, usually it is imported from dao-ids-util.ts.
   id: string;
@@ -45,8 +54,8 @@ export type ContractConfig = {
   acls: SelectedACLs;
   // The function that computes the correct ACL value based on the selected ACL flags.
   buildAclFlag?: ACLBuilder;
-  // The arguments to be passed in the constructor of the contract when it is deployed to the eth network.
-  deploymentArgs?: Record<string, any>;
+  // The names of the arguments to be read from the env, and passed in the deployment function.
+  deploymentArgs?: Array<string>;
 };
 
 export const contracts: Array<ContractConfig> = [
@@ -208,6 +217,7 @@ export const contracts: Array<ContractConfig> = [
       dao: [],
       extensions: {},
     },
+    deploymentArgs: [deployArgs.maxExternalTokens],
   },
   {
     id: "erc20-extension-factory",
@@ -220,6 +230,12 @@ export const contracts: Array<ContractConfig> = [
       dao: [],
       extensions: {},
     },
+    deploymentArgs: [
+      deployArgs.erc20TokenName,
+      deployArgs.erc20TokenAddress,
+      deployArgs.erc20TokenSymbol,
+      deployArgs.erc20TokenDecimals,
+    ],
   },
   {
     id: "vesting-extension-factory",
@@ -658,9 +674,7 @@ export const contracts: Array<ContractConfig> = [
     enabled: true,
     version: "1.0.0",
     type: ContractType.Adapter,
-    deploymentArgs: {
-      chainId: 1,
-    },
+    deploymentArgs: ["chainId"],
     acls: {
       dao: [daoAccessFlagsMap.NEW_MEMBER],
       extensions: {
