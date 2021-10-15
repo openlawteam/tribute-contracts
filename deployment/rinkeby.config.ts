@@ -1,8 +1,5 @@
 import { adaptersIdsMap } from "../utils/dao-ids-util";
-import {
-  contracts as defaultContracts,
-  ContractConfig,
-} from "./contracts.config";
+import { contracts as defaultContracts } from "./contracts.config";
 import { getNetworkDetails } from "../utils/deployment-util";
 
 const disabled: Array<string> = [
@@ -17,7 +14,7 @@ const disabled: Array<string> = [
   "MockDao",
 ];
 
-export const contracts: Array<ContractConfig> = defaultContracts
+export const contracts = defaultContracts
   .map((c) => {
     if (disabled.find((e) => e === c.name)) {
       return { ...c, enabled: false };

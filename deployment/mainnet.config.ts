@@ -23,7 +23,7 @@ const disabled: Array<String> = [
   "DistributeContract",
 ];
 
-export const contracts: Array<ContractConfig> = defaultContracts
+export const contracts = defaultContracts
   .map((c) => {
     if (disabled.find((e) => e === c.name)) {
       return { ...c, enabled: false };

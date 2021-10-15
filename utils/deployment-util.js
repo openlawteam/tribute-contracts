@@ -31,59 +31,44 @@ const { UNITS, LOOT, sha3, toBN, embedConfigs } = require("./contract-util.js");
 const { ContractType } = require("../deployment/contracts.config");
 const sleep = (t) => new Promise((s) => setTimeout(s, t));
 
-const createFactories = async ({
-  BankExtension,
-  BankFactory,
-  ERC1271Extension,
-  ERC1271ExtensionFactory,
-  NFTExtension,
-  NFTCollectionFactory,
-  ERC20Extension,
-  ERC20TokenExtensionFactory,
-  ExecutorExtension,
-  ExecutorExtensionFactory,
-  InternalTokenVestingExtensionFactory,
-  InternalTokenVestingExtension,
-  ERC1155TokenExtension,
-  ERC1155TokenCollectionFactory,
-  deployFunction,
-}) => {
-  const bankExtFactory = await deployFunction(BankFactory, [BankExtension]);
+const createFactories = async ({ options }) => {
+  const factories = {};
+  await Object.values(options.contractConfigs)
+    .filter((config) => config.type === ContractType.Factory)
+    .filter((config) => config.enabled)
+    .filter((config) => !config.skipAutoDeploy)
+    .reduce((p, config) => {
+      return p
+        .then((_) => {
+          const factoryContract = options[config.name];
+          if (!factoryContract)
+            throw new Error(`Missing factory contract ${config.name}`);
 
-  const erc1271ExtFactory = await deployFunction(ERC1271ExtensionFactory, [
-    ERC1271Extension,
-  ]);
+          const extensionConfig = options.contractConfigs.find(
+            (c) => c.id === config.generatesExtensionId
+          );
+          if (!extensionConfig)
+            throw new Error(
+              `Missing extension config ${config.generatesExtensionId}`
+            );
 
-  const erc721ExtFactory = await deployFunction(NFTCollectionFactory, [
-    NFTExtension,
-  ]);
+          const extensionContract = options[extensionConfig.name];
+          if (!extensionContract)
+            throw new Error(
+              `Missing extension contract ${extensionConfig.name}`
+            );
 
-  const erc20ExtFactory = await deployFunction(ERC20TokenExtensionFactory, [
-    ERC20Extension,
-  ]);
+          return options
+            .deployFunction(factoryContract, [extensionContract])
+            .catch((e) => {
+              console.error(`Failed factory deployment [${config.name}].`, e);
+              throw e;
+            });
+        })
+        .then((factory) => (factories[factory.configs.alias] = factory));
+    }, Promise.resolve());
 
-  const executorExtFactory = await deployFunction(ExecutorExtensionFactory, [
-    ExecutorExtension,
-  ]);
-
-  const erc1155ExtFactory = await deployFunction(
-    ERC1155TokenCollectionFactory,
-    [ERC1155TokenExtension]
-  );
-
-  const vestingExtFactory = await deployFunction(
-    InternalTokenVestingExtensionFactory,
-    [InternalTokenVestingExtension]
-  );
-  return {
-    bankExtFactory,
-    erc20ExtFactory,
-    erc721ExtFactory,
-    erc1271ExtFactory,
-    executorExtFactory,
-    erc1155ExtFactory,
-    vestingExtFactory,
-  };
+  return factories;
 };
 
 const createExtensions = async ({ dao, factories, options }) => {
@@ -98,12 +83,15 @@ const createExtensions = async ({ dao, factories, options }) => {
         })
       )
       .then((extension) => (extensions[extension.configs.alias] = extension))
-      .catch((e) => console.error(e));
+      .catch((e) => {
+        console.error(`Failed extension deployment ${factory.configs.name}`, e);
+        throw e;
+      });
   }, Promise.resolve());
   return extensions;
 };
 
-const createAdapters = async ({ dao, daoFactory, extensions, options }) => {
+const createAdapters = async ({ options }) => {
   const adapters = {};
   await Object.values(options.contractConfigs)
     .filter((config) => config.type === ContractType.Adapter)
@@ -115,7 +103,7 @@ const createAdapters = async ({ dao, daoFactory, extensions, options }) => {
           const contract = options[config.name];
           if (!contract) throw new Error(`Missing contract ${config.name}`);
           return options.deployFunction(contract).catch((e) => {
-            console.error(`Failed deployment [${config.name}].`, e);
+            console.error(`Failed adapter deployment ${config.name}.`, e);
             throw e;
           });
         })
@@ -140,7 +128,7 @@ const deployDao = async (options) => {
     name: options.daoName || "test-dao",
   });
 
-  const factories = await createFactories(options);
+  const factories = await createFactories({ options });
   const extensions = await createExtensions({ dao, factories, options });
   const adapters = await createAdapters({
     dao,
@@ -351,7 +339,7 @@ const configureDao = async ({
           .then(() => configureExtensionAccess(contracts, targetExtension))
           .catch((e) => {
             console.error(
-              `Error while configuring extension access ${extensions.configs.name}`,
+              `Error while configuring adapters access to extension ${extensions.configs.name}`,
               e
             );
             throw e;
@@ -378,9 +366,14 @@ const configureDao = async ({
             )
           );
 
-        return p.then(() =>
-          configureExtensionAccess(contracts, targetExtension)
-        );
+        return p
+          .then(() => configureExtensionAccess(contracts, targetExtension))
+          .catch((e) => {
+            console.error(
+              `Error while configuring extensions access to extension ${targetExtension.configs.name}`
+            );
+            throw e;
+          });
       }, Promise.resolve());
   };
 
