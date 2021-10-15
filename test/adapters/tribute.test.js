@@ -346,7 +346,6 @@ describe("Adapter - Tribute", () => {
     const applicant = accounts[2];
 
     const dao = this.dao;
-    const bank = this.extensions.bankExt;
     const tribute = this.adapters.tribute;
     const voting = this.adapters.voting;
 

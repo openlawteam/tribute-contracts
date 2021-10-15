@@ -28,6 +28,7 @@ SOFTWARE.
 const { entryDao, entryBank } = require("./access-control-util");
 const { adaptersIdsMap } = require("./dao-ids-util");
 const { UNITS, LOOT, sha3, toBN, embedConfigs } = require("./contract-util.js");
+const { ContractType } = require("../deployment/contracts.config");
 const sleep = (t) => new Promise((s) => setTimeout(s, t));
 
 const createFactories = async ({
@@ -102,85 +103,24 @@ const createExtensions = async ({ dao, factories, options }) => {
   return extensions;
 };
 
-const createAdapters = async ({
-  deployFunction,
-  VotingContract,
-  ConfigurationContract,
-  TributeContract,
-  TributeNFTContract,
-  LendNFTContract,
-  ERC20TransferStrategy,
-  DistributeContract,
-  RagequitContract,
-  ManagingContract,
-  FinancingContract,
-  OnboardingContract,
-  GuildKickContract,
-  DaoRegistryAdapterContract,
-  BankAdapterContract,
-  SignaturesContract,
-  NFTAdapterContract,
-  CouponOnboardingContract,
-  ERC1155AdapterContract,
-}) => {
-  let voting,
-    configuration,
-    ragequit,
-    managing,
-    financing,
-    onboarding,
-    guildkick,
-    daoRegistryAdapter,
-    bankAdapter,
-    signatures,
-    nftAdapter,
-    erc1155Adapter,
-    couponOnboarding,
-    tribute,
-    distribute,
-    lendNFT,
-    erc20TransferStrategy,
-    tributeNFT;
-
-  voting = await deployFunction(VotingContract);
-  configuration = await deployFunction(ConfigurationContract);
-  ragequit = await deployFunction(RagequitContract);
-  managing = await deployFunction(ManagingContract);
-  financing = await deployFunction(FinancingContract);
-  onboarding = await deployFunction(OnboardingContract);
-  guildkick = await deployFunction(GuildKickContract);
-  daoRegistryAdapter = await deployFunction(DaoRegistryAdapterContract);
-  bankAdapter = await deployFunction(BankAdapterContract);
-  signatures = await deployFunction(SignaturesContract);
-  nftAdapter = await deployFunction(NFTAdapterContract);
-  couponOnboarding = await deployFunction(CouponOnboardingContract, [1]);
-  tribute = await deployFunction(TributeContract);
-  distribute = await deployFunction(DistributeContract);
-  tributeNFT = await deployFunction(TributeNFTContract);
-  lendNFT = await deployFunction(LendNFTContract);
-  erc20TransferStrategy = await deployFunction(ERC20TransferStrategy);
-  erc1155Adapter = await deployFunction(ERC1155AdapterContract);
-
-  const adapters = {
-    voting,
-    configuration,
-    ragequit,
-    guildkick,
-    managing,
-    financing,
-    onboarding,
-    daoRegistryAdapter,
-    bankAdapter,
-    signatures,
-    nftAdapter,
-    couponOnboarding,
-    tribute,
-    distribute,
-    tributeNFT,
-    lendNFT,
-    erc20TransferStrategy,
-    erc1155Adapter,
-  };
+const createAdapters = async ({ dao, daoFactory, extensions, options }) => {
+  const adapters = {};
+  await Object.values(options.contractConfigs)
+    .filter((config) => config.type === ContractType.Adapter)
+    .filter((config) => config.enabled)
+    .filter((config) => !config.skipAutoDeploy)
+    .reduce((p, config) => {
+      return p
+        .then((_) => {
+          const contract = options[config.name];
+          if (!contract) throw new Error(`Missing contract ${config.name}`);
+          return options.deployFunction(contract).catch((e) => {
+            console.error(`Failed deployment [${config.name}].`, e);
+            throw e;
+          });
+        })
+        .then((adapter) => (adapters[adapter.configs.alias] = adapter));
+    }, Promise.resolve());
 
   const missingConfigs = Object.keys(adapters).find(
     (a) => !adapters[a].configs
@@ -188,13 +128,26 @@ const createAdapters = async ({
 
   if (missingConfigs)
     throw new Error(
-      `Missing adapter configs for: [${missingConfigs}] adapter(s)`
+      `Missing adapter configs for [${missingConfigs}] adapter(s)`
     );
+
   return adapters;
 };
 
-const addDefaultAdapters = async ({ dao, daoFactory, extensions, options }) => {
-  const adapters = await createAdapters(options);
+const deployDao = async (options) => {
+  const { dao, daoFactory } = await cloneDao({
+    ...options,
+    name: options.daoName || "test-dao",
+  });
+
+  const factories = await createFactories(options);
+  const extensions = await createExtensions({ dao, factories, options });
+  const adapters = await createAdapters({
+    dao,
+    daoFactory,
+    extensions,
+    options,
+  });
 
   await configureDao({
     owner: options.owner,
@@ -205,92 +158,24 @@ const addDefaultAdapters = async ({ dao, daoFactory, extensions, options }) => {
     options,
   });
 
-  return adapters;
-};
-
-const deployDao = async (options) => {
-  const {
-    deployFunction,
-    owner,
-    deployTestTokens,
-    finalize,
-    ERC1155TestToken,
-    TestToken1,
-    TestToken2,
-    Multicall,
-    PixelNFT,
-    OLToken,
-    ProxToken,
-  } = options;
-
-  const { dao, daoFactory } = await cloneDao({
+  const votingHelpers = await configureOffchainVoting({
     ...options,
-    name: options.daoName || "test-dao",
-  });
-
-  const factories = await createFactories(options);
-  const extensions = await createExtensions({ dao, factories, options });
-  const adapters = await addDefaultAdapters({
     dao,
     daoFactory,
     extensions,
-    options,
   });
 
-  const votingAddress = await dao.getAdapterAddress(
-    sha3(adaptersIdsMap.VOTING_ADAPTER)
-  );
-  const votingHelpers = {
-    snapshotProposalContract: null,
-    handleBadReporterAdapter: null,
-    offchainVoting: null,
-    batchVoting: null,
-  };
-
-  if (options.offchainVoting) {
-    const {
-      offchainVoting,
-      handleBadReporterAdapter,
-      snapshotProposalContract,
-    } = await configureOffchainVoting({
-      ...options,
-      dao,
-      daoFactory,
-      votingAddress,
-      extensions,
-    });
-    votingHelpers.offchainVoting = offchainVoting;
-    votingHelpers.handleBadReporterAdapter = handleBadReporterAdapter;
-    votingHelpers.snapshotProposalContract = snapshotProposalContract;
+  // If the offchain contract was created, set it to the adapters map using the alias
+  if (votingHelpers.offchainVoting) {
+    adapters[votingHelpers.offchainVoting.configs.alias] =
+      votingHelpers.offchainVoting;
   }
 
-  // deploy test token contracts (for testing convenience)
-  const testContracts = {
-    oltToken: null,
-    testToken1: null,
-    testToken2: null,
-    multicall: null,
-    pixelNFT: null,
-    proxToken: null,
-    erc1155TestToken: null,
-  };
+  // deploy test token contracts for testing convenience
+  const testContracts = await createTestContracts({ ...options });
 
-  if (deployTestTokens) {
-    testContracts.testToken1 = await deployFunction(TestToken1, [1000000]);
-    testContracts.testToken2 = await deployFunction(TestToken2, [1000000]);
-    testContracts.multicall = await deployFunction(Multicall);
-    testContracts.pixelNFT = await deployFunction(PixelNFT, [100]);
-    testContracts.oltToken = await deployFunction(OLToken, [
-      toBN("1000000000000000000000000"),
-    ]);
-    testContracts.proxToken = await deployFunction(ProxToken);
-    testContracts.erc1155TestToken = await deployFunction(ERC1155TestToken, [
-      "1155 test token",
-    ]);
-  }
-
-  if (finalize) {
-    await dao.finalizeDao({ from: owner });
+  if (options.finalize) {
+    await dao.finalizeDao({ from: options.owner });
   }
 
   return {
@@ -331,6 +216,7 @@ const configureDao = async ({
   const configureAdaptersWithDAOAccess = async () => {
     const adaptersWithAccess = Object.values(adapters)
       .filter((a) => a.configs.enabled)
+      .filter((a) => !a.configs.skipAutoDeploy)
       .filter((a) => a.configs.acls.dao)
       .reduce((withAccess, a) => {
         const configs = a.configs;
@@ -343,6 +229,7 @@ const configureDao = async ({
     // but without any ACL flag enabled.
     const contractsWithAccess = Object.values(extensions)
       .filter((e) => e.configs.enabled)
+      .filter((a) => !a.configs.skipAutoDeploy)
       .filter((e) => Object.keys(e.configs.acls.extensions).length > 0)
       .reduce((withAccess, e) => {
         const configs = e.configs;
@@ -389,6 +276,7 @@ const configureDao = async ({
         extensions.erc20Ext.address,
         UNITS,
         options.maxAmount,
+        options.chainId,
         {
           from: owner,
         }
@@ -444,13 +332,14 @@ const configureDao = async ({
   const configureAdapters = async () => {
     await configureAdaptersWithDAOAccess();
     await configureAdaptersWithDAOParameters();
-
-    Object.values(extensions)
+    await Object.values(extensions)
       .filter((targetExtension) => targetExtension.configs.enabled)
-      .forEach((targetExtension) => {
+      .filter((targetExtension) => !targetExtension.configs.skipAutoDeploy)
+      .reduce((p, targetExtension) => {
         // Filters the enabled adapters that have access to the targetExtension
         const contracts = Object.values(adapters)
           .filter((a) => a.configs.enabled)
+          .filter((a) => !a.configs.skipAutoDeploy)
           .filter((a) =>
             // The adapters must have at least 1 ACL flag defined to access the targetExtension
             Object.keys(a.configs.acls.extensions).some(
@@ -458,18 +347,26 @@ const configureDao = async ({
             )
           );
 
-        configureExtensionAccess(contracts, targetExtension);
-      });
+        return p
+          .then(() => configureExtensionAccess(contracts, targetExtension))
+          .catch((e) => {
+            console.error(
+              `Error while configuring extension access ${extensions.configs.name}`,
+              e
+            );
+            throw e;
+          });
+      }, Promise.resolve());
   };
 
   /**
    * Configures all the extensions that need access to
    * other enabled extensions
    */
-  const configureExtensions = () => {
-    Object.values(extensions)
+  const configureExtensions = async () => {
+    await Object.values(extensions)
       .filter((targetExtension) => targetExtension.configs.enabled)
-      .forEach((targetExtension) => {
+      .reduce((p, targetExtension) => {
         // Filters the enabled extensions that have access to the targetExtension
         const contracts = Object.values(extensions)
           .filter((e) => e.configs.enabled)
@@ -481,12 +378,14 @@ const configureDao = async ({
             )
           );
 
-        configureExtensionAccess(contracts, targetExtension);
-      });
+        return p.then(() =>
+          configureExtensionAccess(contracts, targetExtension)
+        );
+      }, Promise.resolve());
   };
 
-  configureAdapters();
-  configureExtensions();
+  await configureAdapters();
+  await configureExtensions();
 };
 
 const createExtension = async ({ dao, factory, options }) => {
@@ -553,13 +452,50 @@ const createExtension = async ({ dao, factory, options }) => {
   return newExtension;
 };
 
+const createTestContracts = async ({
+  deployTestTokens,
+  deployFunction,
+  TestToken1,
+  TestToken2,
+  Multicall,
+  PixelNFT,
+  OLToken,
+  ProxToken,
+  ERC1155TestToken,
+}) => {
+  const testContracts = {
+    oltToken: null,
+    testToken1: null,
+    testToken2: null,
+    multicall: null,
+    pixelNFT: null,
+    proxToken: null,
+    erc1155TestToken: null,
+  };
+
+  if (deployTestTokens) {
+    testContracts.testToken1 = await deployFunction(TestToken1, [1000000]);
+    testContracts.testToken2 = await deployFunction(TestToken2, [1000000]);
+    testContracts.multicall = await deployFunction(Multicall);
+    testContracts.pixelNFT = await deployFunction(PixelNFT, [100]);
+    testContracts.oltToken = await deployFunction(OLToken, [
+      toBN("1000000000000000000000000"),
+    ]);
+    testContracts.proxToken = await deployFunction(ProxToken);
+    testContracts.erc1155TestToken = await deployFunction(ERC1155TestToken, [
+      "1155 test token",
+    ]);
+  }
+  return testContracts;
+};
+
 const configureOffchainVoting = async ({
   dao,
   daoFactory,
+  offchainVoting,
   chainId,
   owner,
   offchainAdmin,
-  votingAddress,
   votingPeriod,
   gracePeriod,
   SnapshotProposalContract,
@@ -569,6 +505,19 @@ const configureOffchainVoting = async ({
   deployFunction,
   extensions,
 }) => {
+  const votingHelpers = {
+    snapshotProposalContract: null,
+    handleBadReporterAdapter: null,
+    offchainVoting: null,
+  };
+
+  // Offchain voting is disabled
+  if (!offchainVoting) return votingHelpers;
+
+  const currentVotingAdapterAddress = await dao.getAdapterAddress(
+    sha3(adaptersIdsMap.VOTING_ADAPTER)
+  );
+
   const snapshotProposalContract = await deployFunction(
     SnapshotProposalContract,
     [chainId]
@@ -580,8 +529,8 @@ const configureOffchainVoting = async ({
   );
 
   const handleBadReporterAdapter = await deployFunction(KickBadReporterAdapter);
-  const offchainVoting = await deployFunction(OffchainVotingContract, [
-    votingAddress,
+  const offchainVotingContract = await deployFunction(OffchainVotingContract, [
+    currentVotingAdapterAddress,
     offchainVotingHashContract.address,
     snapshotProposalContract.address,
     handleBadReporterAdapter.address,
@@ -591,9 +540,9 @@ const configureOffchainVoting = async ({
   await daoFactory.updateAdapter(
     dao.address,
     entryDao(
-      offchainVoting.configs.id,
-      offchainVoting.address,
-      offchainVoting.configs.acls
+      offchainVotingContract.configs.id,
+      offchainVotingContract.address,
+      offchainVotingContract.configs.acls
     ),
     {
       from: owner,
@@ -602,11 +551,15 @@ const configureOffchainVoting = async ({
 
   await dao.setAclToExtensionForAdapter(
     extensions.bankExt.address,
-    offchainVoting.address,
-    entryBank(offchainVoting.address, offchainVoting.configs.acls).flags,
+    offchainVotingContract.address,
+    entryBank(
+      offchainVotingContract.address,
+      offchainVotingContract.configs.acls
+    ).flags,
     { from: owner }
   );
-  await offchainVoting.configureDao(
+
+  await offchainVotingContract.configureDao(
     dao.address,
     votingPeriod,
     gracePeriod,
@@ -614,7 +567,11 @@ const configureOffchainVoting = async ({
     { from: owner }
   );
 
-  return { offchainVoting, snapshotProposalContract, handleBadReporterAdapter };
+  votingHelpers.offchainVoting = offchainVotingContract;
+  votingHelpers.handleBadReporterAdapter = handleBadReporterAdapter;
+  votingHelpers.snapshotProposalContract = snapshotProposalContract;
+
+  return votingHelpers;
 };
 
 const networks = [
@@ -652,6 +609,8 @@ module.exports = {
   deployDao,
   cloneDao,
   createAdapters,
-  addDefaultAdapters,
+  createFactories,
+  createExtensions,
+  createExtension,
   getNetworkDetails,
 };

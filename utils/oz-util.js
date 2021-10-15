@@ -41,19 +41,18 @@ const {
   UNITS,
 } = require("./contract-util.js");
 
-const { adaptersIdsMap } = require("./dao-ids-util");
-
-const { deployDao } = require("./deployment-util.js");
-
-const { expectRevert } = require("@openzeppelin/test-helpers");
 const { expect } = require("chai");
-const { ContractType } = require("../deployment/contracts.config");
+const { expectRevert } = require("@openzeppelin/test-helpers");
+const { deployDao } = require("./deployment-util.js");
+const {
+  ContractType,
+  contracts: allContractConfigs,
+} = require("../deployment/contracts.config");
 
 const deployFunction = async (contractInterface, args, from) => {
   if (!contractInterface) throw Error("undefined contract interface");
-  const { contracts } = require("../deployment/test.config");
 
-  const contractConfig = contracts.find(
+  const contractConfig = allContractConfigs.find(
     (c) => c.name === contractInterface.contractName
   );
 
@@ -201,15 +200,14 @@ const proposalIdGenerator = () => {
 };
 
 module.exports = (() => {
-  const { contracts: contractConfigs } = require("../deployment/test.config");
-  const ozContracts = getOpenZeppelinContracts(contractConfigs);
+  const ozContracts = getOpenZeppelinContracts(allContractConfigs);
 
   const deployDefaultDao = async (options) => {
     return await deployDao({
       ...getDefaultOptions(options),
       ...ozContracts,
       deployFunction,
-      contractConfigs,
+      contractConfigs: allContractConfigs,
     });
   };
 
@@ -220,7 +218,7 @@ module.exports = (() => {
       finalize: false,
       ...ozContracts,
       deployFunction,
-      contractConfigs,
+      contractConfigs: allContractConfigs,
     });
 
     await dao.finalizeDao({ from: owner });
@@ -248,7 +246,7 @@ module.exports = (() => {
       finalize: false,
       ...ozContracts,
       deployFunction,
-      contractConfigs,
+      contractConfigs: allContractConfigs,
     });
 
     await dao.potentialNewMember(newMember, {
@@ -260,45 +258,12 @@ module.exports = (() => {
     });
 
     await dao.finalizeDao({ from: owner });
-
-    adapters[adaptersIdsMap.VOTING_ADAPTER] = votingHelpers.offchainVoting;
 
     return {
       dao: dao,
       adapters: adapters,
       extensions: extensions,
       testContracts: testContracts,
-      votingHelpers: votingHelpers,
-    };
-  };
-
-  const deployDaoWithBatchVoting = async ({ owner, newMember }) => {
-    const { dao, adapters, extensions, votingHelpers } = await deployDao({
-      ...getDefaultOptions({ owner }),
-      ...ozContracts,
-      deployTestTokens: false,
-      batchVoting: true,
-      finalize: false,
-      deployFunction,
-      contractConfigs,
-    });
-
-    await dao.potentialNewMember(newMember, {
-      from: owner,
-    });
-
-    await extensions.bankExt.addToBalance(newMember, UNITS, 1, {
-      from: owner,
-    });
-
-    await dao.finalizeDao({ from: owner });
-
-    adapters[adaptersIdsMap.VOTING_ADAPTER] = adapters.batchVoting;
-
-    return {
-      dao: dao,
-      adapters: adapters,
-      extensions: extensions,
       votingHelpers: votingHelpers,
     };
   };
@@ -320,7 +285,6 @@ module.exports = (() => {
   return {
     deployDefaultDao,
     deployDefaultNFTDao,
-    deployDaoWithBatchVoting,
     deployDaoWithOffchainVoting,
     encodeProposalData,
     takeChainSnapshot,

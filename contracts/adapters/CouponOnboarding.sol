@@ -65,21 +65,21 @@ contract CouponOnboardingContract is AdapterGuard, Signatures {
         uint256 amount
     );
 
-    constructor(uint256 chainId) {
-        _chainId = chainId;
-    }
-
     /**
      * @notice Configures the Adapter with the coupon signer address and token to mint.
-     * @param signerAddress is the DAO instance to be configured
-     * @param tokenAddrToMint is the coupon to hash
+     * @param signerAddress the address of the coupon signer
+     * @param erc20 the address of the internal ERC20 token to issue shares
+     * @param tokenAddrToMint the address of the token to mint the coupon
+     * @param maxAmount max amount of coupons to mint
+     * @param chainId the chain id in which it will be minted, and is used as part of the hash
      */
     function configureDao(
         DaoRegistry dao,
         address signerAddress,
         address erc20,
         address tokenAddrToMint,
-        uint88 maxAmount
+        uint88 maxAmount,
+        uint256 chainId
     ) external onlyAdapter(dao) {
         dao.setAddressConfiguration(SignerAddressConfig, signerAddress);
         dao.setAddressConfiguration(ERC20InternalTokenAddr, erc20);
@@ -97,6 +97,7 @@ contract CouponOnboardingContract is AdapterGuard, Signatures {
                 maxAmount - currentBalance
             );
         }
+        _chainId = chainId;
     }
 
     /**
