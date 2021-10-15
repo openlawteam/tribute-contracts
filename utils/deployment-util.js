@@ -28,6 +28,7 @@ SOFTWARE.
 const { entryDao, entryBank } = require("./access-control-util");
 const { adaptersIdsMap } = require("./dao-ids-util");
 const { UNITS, LOOT, sha3, toBN, embedConfigs } = require("./contract-util.js");
+const sleep = (t) => new Promise((s) => setTimeout(s, t));
 
 const createFactories = async ({
   BankExtension,
@@ -85,84 +86,19 @@ const createFactories = async ({
 };
 
 const createExtensions = async ({ dao, factories, options }) => {
-  const bankExtension = await createExtension({
-    dao,
-    extensionFactory: factories.bankExtFactory,
-    extensionContract: options.BankExtension,
-    options,
-  });
-
-  const erc1271Extension = await createExtension({
-    dao,
-    extensionFactory: factories.erc1271ExtFactory,
-    extensionContract: options.ERC1271Extension,
-    options,
-  });
-
-  const nftExtension = await createExtension({
-    dao,
-    extensionFactory: factories.erc721ExtFactory,
-    extensionContract: options.NFTExtension,
-    options,
-  });
-
-  const erc20TokenExtension = await createExtension({
-    dao,
-    extensionFactory: factories.erc20ExtFactory,
-    extensionContract: options.ERC20Extension,
-    options: {
-      ...options,
-      erc20TokenName: options.erc20TokenName
-        ? options.erc20TokenName
-        : "Unit Test Tokens",
-      erc20TokenAddress: UNITS,
-      erc20TokenSymbol: options.erc20TokenSymbol
-        ? options.erc20TokenSymbol
-        : "UTT",
-      erc20TokenDecimals: options.erc20TokenDecimals
-        ? parseInt(options.erc20TokenDecimals) || Number(0)
-        : Number(0),
-    },
-  });
-
-  const executorExtension = await createExtension({
-    dao,
-    extensionFactory: factories.executorExtFactory,
-    extensionContract: options.ExecutorExtension,
-    options,
-  });
-
-  const vestingExtension = await createExtension({
-    dao,
-    extensionFactory: factories.vestingExtFactory,
-    extensionContract: options.InternalTokenVestingExtension,
-    options,
-  });
-
-  const erc1155TokenExtension = await createExtension({
-    dao,
-    extensionFactory: factories.erc1155ExtFactory,
-    extensionContract: options.ERC1155TokenExtension,
-    options,
-  });
-
-  const extensions = {
-    bankExt: bankExtension,
-    erc20Ext: erc20TokenExtension,
-    erc721Ext: nftExtension,
-    erc1271Ext: erc1271Extension,
-    erc1155Ext: erc1155TokenExtension,
-    executorExt: executorExtension,
-    vestingExt: vestingExtension,
-  };
-
-  const missingConfigs = Object.keys(extensions).find(
-    (e) => !extensions[e].configs
-  );
-  if (missingConfigs)
-    throw new Error(
-      `Missing extension configs for: [${missingConfigs}] extension(s)`
-    );
+  const extensions = {};
+  await Object.values(factories).reduce((p, factory) => {
+    return p
+      .then((_) =>
+        createExtension({
+          dao,
+          factory,
+          options,
+        })
+      )
+      .then((extension) => (extensions[extension.configs.alias] = extension))
+      .catch((e) => console.error(e));
+  }, Promise.resolve());
   return extensions;
 };
 
@@ -553,41 +489,58 @@ const configureDao = async ({
   configureExtensions();
 };
 
-const createExtension = async ({
-  dao,
-  extensionFactory,
-  extensionContract,
-  options,
-}) => {
-  const configs = extensionFactory.configs;
+const createExtension = async ({ dao, factory, options }) => {
+  const factoryConfigs = factory.configs;
+  const extensionConfigs = options.contractConfigs.find(
+    (c) => c.id === factoryConfigs.generatesExtensionId
+  );
+  if (!extensionConfigs)
+    throw new Error(
+      `Missing extension configuration <generatesExtensionId> for in ${factoryConfigs.name} configs`
+    );
 
-  if (configs.deploymentArgs && configs.deploymentArgs.length > 0) {
-    const args = configs.deploymentArgs.map((argName) => {
+  if (
+    factoryConfigs.deploymentArgs &&
+    factoryConfigs.deploymentArgs.length > 0
+  ) {
+    const args = factoryConfigs.deploymentArgs.map((argName) => {
       const arg = options[argName];
       if (arg !== null && arg !== undefined) return arg;
       throw new Error(
-        `Missing deployment argument <${argName}> in ${configs.name}.create`
+        `Missing deployment argument <${argName}> in ${factoryConfigs.name}.create`
       );
     });
-    await extensionFactory.create(...args);
+    await factory.create(...args);
   } else {
-    await extensionFactory.create();
+    await factory.create();
   }
 
   let pastEvent;
+
   while (pastEvent === undefined) {
-    let pastEvents = await extensionFactory.getPastEvents();
+    await sleep(100);
+    let pastEvents = await factory.getPastEvents();
     pastEvent = pastEvents[0];
   }
 
   const { extensionAddress } = pastEvent.returnValues;
+  const extensionContract = options[extensionConfigs.name];
+  if (!extensionContract)
+    throw new Error(
+      `Extension contract not found for ${extensionConfigs.name}`
+    );
+
   const newExtension = embedConfigs(
     await extensionContract.at(extensionAddress),
     extensionContract.contractName,
     options.contractConfigs
   );
 
-  // Adds the new extension to the DAO
+  if (!newExtension || !newExtension.configs)
+    throw new Error(
+      `Unable to embed extension configs for ${extensionConfigs.name}`
+    );
+
   await dao.addExtension(
     sha3(newExtension.configs.id),
     newExtension.address,

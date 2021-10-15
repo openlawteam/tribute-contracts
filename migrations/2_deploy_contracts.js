@@ -2,6 +2,7 @@ const {
   toBN,
   toWei,
   ETH_TOKEN,
+  UNITS,
   maximumChunks,
   unitPrice,
   numberOfUnits,
@@ -91,6 +92,7 @@ const deployRinkebyDao = async (
     erc20TokenName: process.env.ERC20_TOKEN_NAME,
     erc20TokenSymbol: process.env.ERC20_TOKEN_SYMBOL,
     erc20TokenDecimals: process.env.ERC20_TOKEN_DECIMALS,
+    erc20TokenAddress: UNITS,
     maxChunks: toBN("100000"),
     votingPeriod: process.env.VOTING_PERIOD_SECONDS
       ? parseInt(process.env.VOTING_PERIOD_SECONDS)
@@ -149,6 +151,7 @@ const deployMainnetDao = async (
     erc20TokenName: process.env.ERC20_TOKEN_NAME,
     erc20TokenSymbol: process.env.ERC20_TOKEN_SYMBOL,
     erc20TokenDecimals: process.env.ERC20_TOKEN_DECIMALS,
+    erc20TokenAddress: UNITS,
     maxChunks: toBN("100000"),
     votingPeriod: parseInt(process.env.VOTING_PERIOD_SECONDS),
     gracePeriod: parseInt(process.env.GRACE_PERIOD_SECONDS),
@@ -190,6 +193,7 @@ const deployGanacheDao = async (
     erc20TokenName: process.env.ERC20_TOKEN_NAME,
     erc20TokenSymbol: process.env.ERC20_TOKEN_SYMBOL,
     erc20TokenDecimals: process.env.ERC20_TOKEN_DECIMALS,
+    erc20TokenAddress: UNITS,
     maxChunks: toBN("100000"),
     votingPeriod: 120, // 120 secs = 2 mins
     gracePeriod: 60, // 60 secs = 1 min
@@ -233,6 +237,7 @@ const deployTestDao = async (
     erc20TokenName: process.env.ERC20_TOKEN_NAME,
     erc20TokenSymbol: process.env.ERC20_TOKEN_SYMBOL,
     erc20TokenDecimals: process.env.ERC20_TOKEN_DECIMALS,
+    erc20TokenAddress: UNITS,
     maxChunks: maximumChunks,
     votingPeriod: 10, // 10 secs
     gracePeriod: 1, // 1 sec

@@ -102,6 +102,10 @@ const getDefaultOptions = (options) => {
     maxExternalTokens: 100,
     couponCreatorAddress: "0x7D8cad0bbD68deb352C33e80fccd4D8e88b4aBb8",
     deployTestTokens: true,
+    erc20TokenName: "Test Token",
+    erc20TokenSymbol: "TTK",
+    erc20TokenDecimals: Number(0),
+    erc20TokenAddress: UNITS,
     ...options,
   };
 
