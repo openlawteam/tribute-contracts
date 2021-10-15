@@ -177,13 +177,22 @@ contract OffchainVotingHashContract {
         uint256 snapshot,
         VoteStepParams memory params
     ) external view returns (bool) {
+        address internalToken = dao.getAddressConfiguration(keccak256(abi.encodePacked(
+            "offchain.voting", 
+            actionId, 
+            "voting.token")));
+
         address account = dao.getMemberAddress(node.index);
         address voter = dao.getPriorDelegateKey(account, snapshot);
         BankExtension bank =
             BankExtension(dao.getExtensionAddress(DaoHelper.BANK));
-        uint256 weight =
-            bank.getPriorAmount(account, DaoHelper.UNITS, snapshot);
-
+        uint256 weight = 0;
+        if(internalToken == address(0x0)) {
+            weight = bank.getPriorAmount(account, DaoHelper.UNITS, snapshot);
+        } else {
+            weight = bank.getPriorAmount(account, DaoHelper.UNITS, snapshot) + bank.getPriorAmount(account, internalToken, snapshot);
+        }
+            
         if (node.choice == 0) {
             if (params.previousYes != node.nbYes) {
                 return true;

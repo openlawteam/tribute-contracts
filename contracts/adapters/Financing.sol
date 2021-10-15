@@ -73,6 +73,7 @@ contract FinancingContract is IFinancing, AdapterGuard {
             DaoHelper.isNotReservedAddress(applicant),
             "applicant using reserved address"
         );
+
         dao.submitProposal(proposalId);
 
         ProposalDetails storage proposal = proposals[address(dao)][proposalId];
@@ -128,5 +129,17 @@ contract FinancingContract is IFinancing, AdapterGuard {
             details.amount
         );
         bank.addToBalance(details.applicant, details.token, details.amount);
+    }
+
+    function configureDao(DaoRegistry dao, address votingInternalToken) external {
+
+        BankExtension bank;
+
+        bank.registerPotentialNewInternalToken(votingInternalToken);
+
+        dao.setAddressConfiguration(keccak256(abi.encodePacked(
+            "offchain.voting", 
+            address(this), 
+            "voting.token")), votingInternalToken);
     }
 }
