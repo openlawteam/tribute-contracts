@@ -419,7 +419,6 @@ describe("Adapter - TributeNFT", () => {
     const nftOwner = accounts[2];
     const proposalId = getProposalCounter();
     const dao = this.dao;
-    const nftExt = this.extensions.erc721Ext;
     const pixelNFT = this.testContracts.pixelNFT;
     const tributeNFT = this.adapters.tributeNFT;
     const voting = this.adapters.voting;

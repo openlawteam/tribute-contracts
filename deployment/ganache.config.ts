@@ -3,17 +3,7 @@ import {
   ContractConfig,
 } from "./contracts.config";
 
-const disabled: Array<string> = [
-  // Utility & Test Contracts disabled by default
-  "OLToken",
-  "TestToken1",
-  "TestToken2",
-  "TestFairShareCalc",
-  "PixelNFT",
-  "ProxToken",
-  "ERC20Minter",
-  "MockDao",
-];
+const disabled: Array<string> = [];
 
 export const contracts: Array<ContractConfig> = defaultContracts.map((c) => {
   if (disabled.find((e) => e === c.name)) {

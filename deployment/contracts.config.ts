@@ -29,22 +29,6 @@ export enum ContractType {
 }
 
 /**
- * A contract may need custom arguments during the deployment time,
- * declare here all the arguments that are read from the env,
- * and passed to the configuration/deployment functions.
- * The names of the arguments must match the arguments provided
- * in the deployment script 2_deploy_contracts.js
- */
-export const deployArgs = {
-  maxExternalTokens: "maxExternalTokens",
-  erc20TokenName: "erc20TokenName",
-  erc20TokenAddress: "erc20TokenAddress",
-  erc20TokenSymbol: "erc20TokenSymbol",
-  erc20TokenDecimals: "erc20TokenDecimals",
-  chainId: "chainId",
-};
-
-/**
  * Each contract contains different configurations that will be required by the deployment
  * script. This type helps you to define these configs.
  */
@@ -102,8 +86,11 @@ export type ContractConfig = {
   buildAclFlag?: ACLBuilder;
   /**
    * Optional
-   * The names of the arguments to be read from the env, and passed in the deployment function.
-   * These arguments need to match the arguments provided in the 2_deploy_contract.js file.
+   * A contract may need custom arguments during the deployment time,
+   * declare here all the arguments that are read from the env,
+   * and passed to the configuration/deployment functions.
+   * The names of the arguments must match the arguments provided
+   * in the deployment script 2_deploy_contracts.js
    */
   deploymentArgs?: Array<string>;
   /**
@@ -136,6 +123,7 @@ export const contracts: Array<ContractConfig> = [
       dao: [],
       extensions: {},
     },
+    deploymentArgs: ["supplyOLToken"],
   },
   {
     id: "mock-dao",
@@ -152,6 +140,7 @@ export const contracts: Array<ContractConfig> = [
   {
     id: "test-token-1",
     name: "TestToken1",
+    alias: "testToken1",
     path: "../contracts/test/TestToken1",
     enabled: true,
     version: "1.0.0",
@@ -160,10 +149,12 @@ export const contracts: Array<ContractConfig> = [
       dao: [],
       extensions: {},
     },
+    deploymentArgs: ["supplyTestToken1"],
   },
   {
     id: "test-token-2",
     name: "TestToken2",
+    alias: "testToken2",
     path: "../contracts/test/TestToken2",
     enabled: true,
     version: "1.0.0",
@@ -172,6 +163,7 @@ export const contracts: Array<ContractConfig> = [
       dao: [],
       extensions: {},
     },
+    deploymentArgs: ["supplyTestToken2"],
   },
   {
     id: "test-fairshare-calc",
@@ -188,6 +180,7 @@ export const contracts: Array<ContractConfig> = [
   {
     id: "pixel-nft",
     name: "PixelNFT",
+    alias: "pixelNFT",
     path: "../contracts/test/PixelNFT",
     enabled: true,
     version: "1.0.0",
@@ -196,10 +189,12 @@ export const contracts: Array<ContractConfig> = [
       dao: [],
       extensions: {},
     },
+    deploymentArgs: ["supplyPixelNFT"],
   },
   {
     id: "prox-token",
-    name: "ProxToken",
+    name: "ProxTokenContract",
+    alias: "proxToken",
     path: "../contracts/test/ProxTokenContract",
     enabled: true,
     version: "1.0.0",
@@ -211,7 +206,7 @@ export const contracts: Array<ContractConfig> = [
   },
   {
     id: "erc20-minter",
-    name: "ERC20Minter",
+    name: "ERC20MinterContract",
     path: "../contracts/test/ERC20MinterContract",
     enabled: true,
     version: "1.0.0",
@@ -224,6 +219,7 @@ export const contracts: Array<ContractConfig> = [
   {
     id: "erc1155-test-token",
     name: "ERC1155TestToken",
+    alias: "erc1155TestToken",
     path: "../contracts/test/ERC1155TestToken",
     enabled: true,
     version: "1.0.0",
@@ -232,6 +228,7 @@ export const contracts: Array<ContractConfig> = [
       dao: [],
       extensions: {},
     },
+    deploymentArgs: ["erc1155TestTokenUri"],
   },
 
   /**
@@ -289,7 +286,7 @@ export const contracts: Array<ContractConfig> = [
       dao: [],
       extensions: {},
     },
-    deploymentArgs: [deployArgs.maxExternalTokens],
+    deploymentArgs: ["maxExternalTokens"],
     generatesExtensionId: extensionsIdsMap.BANK_EXT,
   },
   {
@@ -305,10 +302,10 @@ export const contracts: Array<ContractConfig> = [
       extensions: {},
     },
     deploymentArgs: [
-      deployArgs.erc20TokenName,
-      deployArgs.erc20TokenAddress,
-      deployArgs.erc20TokenSymbol,
-      deployArgs.erc20TokenDecimals,
+      "erc20TokenName",
+      "erc20TokenAddress",
+      "erc20TokenSymbol",
+      "erc20TokenDecimals",
     ],
     generatesExtensionId: extensionsIdsMap.ERC20_EXT,
   },
@@ -792,7 +789,7 @@ export const contracts: Array<ContractConfig> = [
     enabled: true,
     version: "1.0.0",
     type: ContractType.Adapter,
-    deploymentArgs: [deployArgs.chainId],
+    deploymentArgs: ["chainId"],
     acls: {
       dao: [daoAccessFlagsMap.NEW_MEMBER],
       extensions: {

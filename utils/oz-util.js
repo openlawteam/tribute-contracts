@@ -39,6 +39,7 @@ const {
   maxAmount,
   ETH_TOKEN,
   UNITS,
+  toBN
 } = require("./contract-util.js");
 
 const { expect } = require("chai");
@@ -90,6 +91,7 @@ const getOpenZeppelinContracts = (contracts) => {
 
 const getDefaultOptions = (options) => {
   let o = {
+    ...options,
     unitPrice: unitPrice,
     nbUnits: numberOfUnits,
     votingPeriod: 10,
@@ -100,12 +102,16 @@ const getDefaultOptions = (options) => {
     chainId: 1,
     maxExternalTokens: 100,
     couponCreatorAddress: "0x7D8cad0bbD68deb352C33e80fccd4D8e88b4aBb8",
-    deployTestTokens: true,
     erc20TokenName: "Test Token",
     erc20TokenSymbol: "TTK",
     erc20TokenDecimals: Number(0),
     erc20TokenAddress: UNITS,
-    ...options,
+    deployTestTokens: true,
+    supplyTestToken1: 1000000,
+    supplyTestToken2: 1000000,
+    supplyPixelNFT: 100,
+    supplyOLToken: toBN("1000000000000000000000000"),
+    erc1155TestTokenUri: "1155 test token",
   };
 
   o.finalize = options.finalize === undefined || !!options.finalize;
@@ -214,10 +220,9 @@ module.exports = (() => {
   const deployDefaultNFTDao = async ({ owner }) => {
     const { dao, adapters, extensions, testContracts } = await deployDao({
       ...getDefaultOptions({ owner }),
-      deployTestTokens: true,
-      finalize: false,
       ...ozContracts,
       deployFunction,
+      finalize: false,
       contractConfigs: allContractConfigs,
     });
 
@@ -240,12 +245,11 @@ module.exports = (() => {
       votingHelpers,
     } = await deployDao({
       ...getDefaultOptions({ owner }),
-      offchainVoting: true,
-      deployTestTokens: true,
-      offchainAdmin: owner,
-      finalize: false,
       ...ozContracts,
       deployFunction,
+      finalize: false,
+      offchainVoting: true,
+      offchainAdmin: owner,
       contractConfigs: allContractConfigs,
     });
 

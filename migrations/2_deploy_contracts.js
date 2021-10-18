@@ -102,7 +102,7 @@ const deployRinkebyDao = async (
       : 600, // 600 secs = 10 mins
     offchainVoting: true,
     chainId: getNetworkDetails(network).chainId,
-    deployTestTokens: true,
+
     finalize: false,
     maxExternalTokens: 100,
     couponCreatorAddress: process.env.COUPON_CREATOR_ADDR
@@ -113,6 +113,12 @@ const deployRinkebyDao = async (
     offchainAdmin: process.env.OFFCHAIN_ADMIN_ADDR
       ? process.env.OFFCHAIN_ADMIN_ADDR
       : "0xedC10CFA90A135C41538325DD57FDB4c7b88faf7",
+    deployTestTokens: true,
+    supplyTestToken1: 1000000,
+    supplyTestToken2: 1000000,
+    supplyPixelNFT: 100,
+    supplyOLToken: toBN("1000000000000000000000000"),
+    erc1155TestTokenUri: "1155 test token",
   });
 };
 
@@ -199,7 +205,6 @@ const deployGanacheDao = async (
     gracePeriod: 60, // 60 secs = 1 min
     offchainVoting: true,
     chainId: getNetworkDetails(network).chainId,
-    deployTestTokens: true,
     finalize: false,
     maxExternalTokens: 100,
     couponCreatorAddress: process.env.COUPON_CREATOR_ADDR
@@ -208,6 +213,12 @@ const deployGanacheDao = async (
     daoName: process.env.DAO_NAME,
     owner: accounts[0],
     offchainAdmin: "0xedC10CFA90A135C41538325DD57FDB4c7b88faf7",
+    deployTestTokens: true,
+    supplyTestToken1: 1000000,
+    supplyTestToken2: 1000000,
+    supplyPixelNFT: 100,
+    supplyOLToken: toBN("1000000000000000000000000"),
+    erc1155TestTokenUri: "1155 test token",
   });
 };
 

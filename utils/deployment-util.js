@@ -31,6 +31,25 @@ const { UNITS, LOOT, sha3, toBN, embedConfigs } = require("./contract-util.js");
 const { ContractType } = require("../deployment/contracts.config");
 const sleep = (t) => new Promise((s) => setTimeout(s, t));
 
+const deployContract = ({ config, options }) => {
+  const contract = options[config.name];
+  if (!contract)
+    throw new Error(`Contract ${config.name} not found in environment options`);
+
+  let instance;
+  if (config.deploymentArgs && config.deploymentArgs.length > 0) {
+    const args = config.deploymentArgs.map((argName) => {
+      const arg = options[argName];
+      if (arg !== null && arg !== undefined) return arg;
+      throw new Error(
+        `Missing deployment argument <${argName}> for ${testConfig.name}`
+      );
+    });
+    return options.deployFunction(contract, args);
+  }
+  return options.deployFunction(contract);
+};
+
 const createFactories = async ({ options }) => {
   const factories = {};
   await Object.values(options.contractConfigs)
@@ -73,21 +92,28 @@ const createFactories = async ({ options }) => {
 
 const createExtensions = async ({ dao, factories, options }) => {
   const extensions = {};
-  await Object.values(factories).reduce((p, factory) => {
-    return p
-      .then((_) =>
-        createExtension({
-          dao,
-          factory,
-          options,
+  await Object.values(factories).reduce(
+    (p, factory) =>
+      p
+        .then(() =>
+          createExtension({
+            dao,
+            factory,
+            options,
+          })
+        )
+        .then((extension) => {
+          extensions[extension.configs.alias] = extension;
         })
-      )
-      .then((extension) => (extensions[extension.configs.alias] = extension))
-      .catch((e) => {
-        console.error(`Failed extension deployment ${factory.configs.name}`, e);
-        throw e;
-      });
-  }, Promise.resolve());
+        .catch((e) => {
+          console.error(
+            `Failed extension deployment ${factory.configs.name}`,
+            e
+          );
+          throw e;
+        }),
+    Promise.resolve()
+  );
   return extensions;
 };
 
@@ -97,26 +123,18 @@ const createAdapters = async ({ options }) => {
     .filter((config) => config.type === ContractType.Adapter)
     .filter((config) => config.enabled)
     .filter((config) => !config.skipAutoDeploy)
-    .reduce((p, config) => {
-      return p
-        .then((_) => {
-          const contract = options[config.name];
-          if (!contract) throw new Error(`Missing contract ${config.name}`);
-          return options.deployFunction(contract).catch((e) => {
-            console.error(`Failed adapter deployment ${config.name}.`, e);
+    .reduce(
+      (p, config) =>
+        p
+          .then(() => deployContract({ config, options }))
+          .then((adapter) => {
+            adapters[adapter.configs.alias] = adapter;
+          })
+          .catch((e) => {
+            console.error(`Error while creating adapter ${config.name}.`, e);
             throw e;
-          });
-        })
-        .then((adapter) => (adapters[adapter.configs.alias] = adapter));
-    }, Promise.resolve());
-
-  const missingConfigs = Object.keys(adapters).find(
-    (a) => !adapters[a].configs
-  );
-
-  if (missingConfigs)
-    throw new Error(
-      `Missing adapter configs for [${missingConfigs}] adapter(s)`
+          }),
+      Promise.resolve()
     );
 
   return adapters;
@@ -160,7 +178,7 @@ const deployDao = async (options) => {
   }
 
   // deploy test token contracts for testing convenience
-  const testContracts = await createTestContracts({ ...options });
+  const testContracts = await createTestContracts({ options });
 
   if (options.finalize) {
     await dao.finalizeDao({ from: options.owner });
@@ -445,40 +463,31 @@ const createExtension = async ({ dao, factory, options }) => {
   return newExtension;
 };
 
-const createTestContracts = async ({
-  deployTestTokens,
-  deployFunction,
-  TestToken1,
-  TestToken2,
-  Multicall,
-  PixelNFT,
-  OLToken,
-  ProxToken,
-  ERC1155TestToken,
-}) => {
-  const testContracts = {
-    oltToken: null,
-    testToken1: null,
-    testToken2: null,
-    multicall: null,
-    pixelNFT: null,
-    proxToken: null,
-    erc1155TestToken: null,
-  };
+const createTestContracts = async ({ options }) => {
+  const testContracts = {};
 
-  if (deployTestTokens) {
-    testContracts.testToken1 = await deployFunction(TestToken1, [1000000]);
-    testContracts.testToken2 = await deployFunction(TestToken2, [1000000]);
-    testContracts.multicall = await deployFunction(Multicall);
-    testContracts.pixelNFT = await deployFunction(PixelNFT, [100]);
-    testContracts.oltToken = await deployFunction(OLToken, [
-      toBN("1000000000000000000000000"),
-    ]);
-    testContracts.proxToken = await deployFunction(ProxToken);
-    testContracts.erc1155TestToken = await deployFunction(ERC1155TestToken, [
-      "1155 test token",
-    ]);
-  }
+  if (!options.deployTestTokens) return testContracts;
+
+  await Object.values(options.contractConfigs)
+    .filter((config) => config.type === ContractType.Test)
+    .filter((config) => config.enabled)
+    .filter((config) => !config.skipAutoDeploy)
+    .reduce(
+      (p, config) =>
+        p
+          .then(() => deployContract({ config, options }))
+          .then((testContract) => {
+            testContracts[testContract.configs.alias] = testContract;
+          })
+          .catch((e) => {
+            console.error(
+              `Error while creating test contract ${config.name}`,
+              e
+            );
+            throw e;
+          }),
+      Promise.resolve()
+    );
   return testContracts;
 };
 
