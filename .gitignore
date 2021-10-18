@@ -114,7 +114,7 @@ coverageEnv
 .coverage_artifacts
 .coverage_contracts
 
-.env
+.env*
 
 docker/data
 artifacts
