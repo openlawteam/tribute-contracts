@@ -2,7 +2,6 @@
 
 const util = require("util");
 const path = require("path");
-const { contracts } = require("../utils/ContractUtil");
 const exec = util.promisify(require("child_process").exec);
 const debugMode = process.env.DEBUG_CONTRACT_VERIFICATION || false;
 const verifyCMD = `./node_modules/.bin/truffle run verify ${
@@ -16,8 +15,12 @@ const skipContracts = [
   "TestToken2",
   "TestFairShareCalc",
   "PixelNFT",
+  "ProxToken",
+  "ERC20Minter",
   // Already Verified
   "Multicall",
+  "MockDao",
+  "ERC1155TestToken"
 ];
 
 const args = process.argv.slice(2);
@@ -32,13 +35,16 @@ const verify = async (contract) => {
     return Promise.resolve({ stderr: "missing contract name and address" });
 
   console.log(`Contract: ${contract.contractName}@${contract.contractAddress}`);
-
-  const { stderr, stdout } = await exec(
-    `${verifyCMD} ${network} ${contract.contractName}@${contract.contractAddress}`
-  );
-
-  if (stderr) console.error(stderr);
-  if (stdout) console.log(stdout);
+  try {
+    const { stderr, stdout } = await exec(
+      `${verifyCMD} ${network} ${contract.contractName}@${contract.contractAddress}`
+    );
+  
+    if (stderr) console.error(stderr);
+    if (stdout) console.log(stdout);
+  } catch (err) {
+    console.error(`${err}`);
+  }
 
   return Promise.resolve();
 };
@@ -63,19 +69,24 @@ const main = async () => {
   const { stdout } = await exec(
     `cat ${deployLog} | grep -e "Deploying" -e "contract address:" -e "Cloned"`
   );
-  const verifyContracts = Object.keys(contracts).filter(
-    (c) => !skipContracts.includes(c)
-  );
+  const { contracts } = require(`../deployment/${network}.config`);
+  const verifyContracts = contracts.filter(
+    (c) => !skipContracts.includes(c.name)
+  ).map(contract => {
+    const contractPath = contract.path.split("/");
+    const contractName = contractPath[contractPath.length - 1];
+    return require(`../build/contracts/${contractName}.json`);
+  });
 
   // Verify all the deployed addresses first (including the identity/proxy contracts)
   // When the identity/proxy contracts are verified, the verification gets propagated
   // to the cloned ones because they have the exact same code.
   return verifyContracts
-    .map((contractName) =>
+    .map((contract) =>
       matchAddress(
         stdout,
-        contractName,
-        `Deploying\\s'${contractName}'\n.+contract address:\\s+\(.+\)\n`
+        contract.contractName,
+        `Deploying\\s'${contract.contractName}'\n.+contract address:\\s+\(.+\)\n`
       )
     )
     .reduce((p, c) => p.then(() => verify(c)), Promise.resolve());

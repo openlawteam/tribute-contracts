@@ -33,7 +33,6 @@ const deployDao = async (options) => {
     owner,
     deployTestTokens,
     finalize,
-    DaoRegistry,
     BankExtension,
     BankFactory,
     ERC1271Extension,

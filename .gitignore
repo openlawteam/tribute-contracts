@@ -115,7 +115,7 @@ contracts-backup
 .coverage_artifacts
 .coverage_contracts
 
-.env
+.env*
 
 subgraph/docker/data
 artifacts
