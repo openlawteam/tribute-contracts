@@ -39,16 +39,14 @@ const {
   maxAmount,
   ETH_TOKEN,
   UNITS,
-  toBN
+  toBN,
 } = require("./contract-util.js");
 
 const { expect } = require("chai");
 const { expectRevert } = require("@openzeppelin/test-helpers");
 const { deployDao } = require("./deployment-util.js");
-const {
-  ContractType,
-  contracts: allContractConfigs,
-} = require("../deployment/contracts.config");
+const { contracts: allContractConfigs } = require("../deployment/test.config");
+const { ContractType } = require("../deployment/contracts.config");
 
 const deployFunction = async (contractInterface, args, from) => {
   if (!contractInterface) throw Error("undefined contract interface");
@@ -90,8 +88,7 @@ const getOpenZeppelinContracts = (contracts) => {
 };
 
 const getDefaultOptions = (options) => {
-  let o = {
-    ...options,
+  return {
     unitPrice: unitPrice,
     nbUnits: numberOfUnits,
     votingPeriod: 10,
@@ -102,20 +99,19 @@ const getDefaultOptions = (options) => {
     chainId: 1,
     maxExternalTokens: 100,
     couponCreatorAddress: "0x7D8cad0bbD68deb352C33e80fccd4D8e88b4aBb8",
+    deployTestTokens: true,
     erc20TokenName: "Test Token",
     erc20TokenSymbol: "TTK",
     erc20TokenDecimals: Number(0),
     erc20TokenAddress: UNITS,
-    deployTestTokens: true,
     supplyTestToken1: 1000000,
     supplyTestToken2: 1000000,
     supplyPixelNFT: 100,
     supplyOLToken: toBN("1000000000000000000000000"),
     erc1155TestTokenUri: "1155 test token",
+    finalize: options.finalize === undefined || !!options.finalize,
+    ...options, // to make sure the options from the tests override the default ones
   };
-
-  o.finalize = options.finalize === undefined || !!options.finalize;
-  return o;
 };
 
 const advanceTime = async (time) => {

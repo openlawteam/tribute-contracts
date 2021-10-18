@@ -83,7 +83,7 @@ describe("Adapter - Onboarding", () => {
     // Issue OpenLaw ERC20 Basic Token for tests
     // Token supply higher than the limit for external tokens
     // defined in Bank._createNewAmountCheckpoint function (2**160-1).
-    const supply = toBN("2").pow(toBN("180")).toString();
+    const supply = toBN(2).pow(toBN(180));
     const oltContract = await OLToken.new(supply, { from: daoOwner });
     const nbOfERC20Units = 100000000;
     const erc20UnitPrice = toBN("10");
@@ -99,7 +99,7 @@ describe("Adapter - Onboarding", () => {
 
     // Transfer OLTs to myAccount
     // Use an amount that will cause an overflow 2**161 > 2**160-1 for external tokens
-    const initialTokenBalance = toBN("2").pow(toBN("161")).toString();
+    const initialTokenBalance = toBN(2).pow(toBN(161)).toString();
     await oltContract.approve.sendTransaction(applicant, initialTokenBalance, {
       from: daoOwner,
     });
@@ -230,12 +230,12 @@ describe("Adapter - Onboarding", () => {
     const nonMemberAccount = accounts[3];
 
     // Issue OpenLaw ERC20 Basic Token for tests
-    const tokenSupply = 1000000;
+    const tokenSupply = toBN(10000000000);
     let oltContract = await OLToken.new(tokenSupply);
 
-    const nbOfERC20Units = 100000000;
-    const erc20UnitPrice = toBN("10");
-    const erc20Remaining = erc20UnitPrice.sub(toBN("1"));
+    const nbOfERC20Units = toBN(100000000);
+    const erc20UnitPrice = toBN(10);
+    const erc20Remaining = erc20UnitPrice.sub(toBN(1));
 
     const { dao, adapters, extensions } = await deployDefaultDao({
       owner: daoOwner,
@@ -249,7 +249,7 @@ describe("Adapter - Onboarding", () => {
     const voting = adapters.voting;
 
     // Transfer OLTs to myAccount
-    const initialTokenBalance = toBN("100");
+    const initialTokenBalance = toBN(100);
     await oltContract.transfer(daoOwner, initialTokenBalance);
     let myAccountTokenBalance = await oltContract.balanceOf.call(daoOwner);
     expect(myAccountTokenBalance.toString()).equal(

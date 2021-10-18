@@ -29,8 +29,8 @@ const { sha3, toBN, toWei } = require("../../utils/contract-util");
 
 const {
   deployDefaultDao,
-  ERC20Minter,
-  ProxToken,
+  ERC20MinterContract,
+  ProxTokenContract,
   accounts,
   web3,
   expect,
@@ -62,7 +62,7 @@ describe("Extension - Executor", () => {
       finalize: false,
     });
 
-    const erc20Minter = await ERC20Minter.new();
+    const erc20Minter = await ERC20MinterContract.new();
     const executorExt = extensions.executorExt;
 
     await factories.daoFactory.addAdapters(
@@ -96,7 +96,7 @@ describe("Extension - Executor", () => {
     const minterAddress = await dao.getAdapterAddress(sha3("erc20Minter"));
     expect(minterAddress).to.not.be.null;
 
-    const proxToken = await ProxToken.new();
+    const proxToken = await ProxTokenContract.new();
     expect(proxToken).to.not.be.null;
 
     const res = await erc20Minter.execute(
@@ -127,7 +127,7 @@ describe("Extension - Executor", () => {
       finalize: false,
     });
 
-    const erc20Minter = await ERC20Minter.new();
+    const erc20Minter = await ERC20MinterContract.new();
     const executorExt = extensions.executorExt;
 
     await factories.daoFactory.addAdapters(
@@ -158,7 +158,7 @@ describe("Extension - Executor", () => {
     const minterAddress = await dao.getAdapterAddress(sha3("erc20Minter"));
     expect(minterAddress).to.not.be.null;
 
-    const proxToken = await ProxToken.new();
+    const proxToken = await ProxTokenContract.new();
     expect(proxToken).to.not.be.null;
 
     await expectRevert(
