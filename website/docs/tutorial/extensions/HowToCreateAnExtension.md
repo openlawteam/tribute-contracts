@@ -32,8 +32,7 @@ contract MyExtension is DaoConstants, IExtension {
   DaoRegistry public dao;
 
   /// @notice Clonable contract must have an empty constructor
-  // constructor() {
-  // }
+  constructor() {}
 
   /**
    * @notice Initializes the extension to be associated with a DAO
@@ -136,25 +135,13 @@ The extension usually saves additional state that we don't want to propagate to 
 
 - Revert as early as possible
 
-- Your extension should not accept any funds. So it is a good practice to always revert the receive call.
-
-  ```solidity
-  /**
-   * @notice default fallback function to prevent from sending ether to the contract.
-   */
-  receive() external payable {
-    revert("fallback revert");
-  }
-
-  ```
-
 - Make sure you add the correct `require` checks
 
   - Usually the extension needs to perform some verifications before executing the calls that may change the DAO state. Double check if the DAORegistry functions that your extension uses already implement some checks, so you do not need to repeat them in the adapter.
 
-- Update the DAOConstants
+- Update the DaoHelper
 
-  - If you are creating an extension that does not have the `keccak256` id declared in the [DAOConstants](https://github.com/openlawteam/tribute-contracts/blob/master/contracts/core/DaoConstants.sol#L45) make sure you add it there.
+  - If you are creating an extension that does not have the `keccak256` id declared in the [DaoHelper](https://github.com/openlawteam/tribute-contracts/blob/master/contracts/helpers/DaoHelper.sol) make sure you add it there.
 
 - Add the correct function guards
 
@@ -170,10 +157,6 @@ contract MyExtension is DaoConstants, IExtension {
 
   // The DAO address that is the owner of this extension
   DaoRegistry public dao;
-
-  /// @notice Clonable contract must have an empty constructor
-  // constructor() {
-  // }
 
   enum AclFlag { EXECUTE }
 
@@ -194,14 +177,7 @@ contract MyExtension is DaoConstants, IExtension {
   }
 
   /**
-   * @notice default fallback function to prevent from sending ether to the contract.
-   */
-  receive() external payable {
-    revert("fallback revert");
-  }
-
-  /**
-   * @notice Initialises the extension to be associated with a DAO
+   * @notice Initializes the extension to be associated with a DAO
    * @dev Can only be called once
    * @param creator The DAO's creator, who will be an initial member
    */
@@ -253,36 +229,131 @@ The factory also needs to be declared in the
 
 In order to verify if the new extension works properly, one needs to implement the basic test suite, so we can ensure it is actually doing what it was supposed to do.
 
-There are several examples of tests that you can check to start building your own. Take a look at the **[tests/extenions](https://github.com/openlawteam/tribute-contracts/tree/master/test/extensions)**.
+There are several examples of tests that you can check to start building your own. Take a look at the **[tests/extensions](https://github.com/openlawteam/tribute-contracts/tree/master/test/extensions)**.
 
 The general idea is to create one test suite per extension/contract. And try to cover all the happy paths first, and then add more complex and negative test cases after that.
 
-You need to declare the new extension and factory contracts in `deployment/contracts.config.js` file, so both contracts can be accessed in the deploy/test environment. Make sure you use following the structure:
+You need to declare the new extension and factory contracts in `migrations/configs/contracts.config.js` file, so both contracts can be accessed in the deploy/test environment. Make sure you use following the structure:
 
 ```json
- {
+  {
+    id: extensionsIdsMap.MY_EXTENSION,
     name: "MyExtension",
-    path: "../contracts/path/MyExtension",
+    alias: "myExt",
+    path: "../../contracts/extensions/path/MyExtension",
     enabled: true,
     version: "1.0.0",
     type: ContractType.Extension,
+    buildAclFlag: entryMyExtension,
+    acls: {
+      dao: [],
+      extensions: {},
+    },
   },
-   {
+  {
+    id: "my-extension-factory",
     name: "MyExtensionFactory",
-    path: "../contracts/path/MyExtensionFactory",
+    alias: "myExtFactory",
+    path: "../../contracts/extensions/path/MyExtensionFactory",
     enabled: true,
     version: "1.0.0",
     type: ContractType.Factory,
+    acls: {
+      dao: [],
+      extensions: {},
+    },
+    generatesExtensionId: extensionsIdsMap.MY_EXTENSION,
   },
 ```
 
-- `name`: the name of the contract declared in the .sol file;
-- `path`: the path of the contract in the `contracts` folder;
-- `enabled`: the flag indicating if that contract must be deployed/enabled;
-- `version`: the version of the contract that will be used to write/read to/from the `DaoArtifacts` contract;
-- `type`: the type of the contract (Core = 0, Factory = 1, Extension = 2, Adapter = 3, Util = 4, Test = 5).
+The attributes of the contract configuration are defined below:
 
-In order to speed up the test suites we usually don't create one DAO per test function, but we create the DAO during the suite initialization, and only reset the chain after each test function using the chain snapshot feature. For instance:
+```typescript
+/**
+ * Each contract contains different configurations that will be required by the deployment
+ * script. This type helps you to define these configs.
+ */
+export type ContractConfig = {
+  /**
+   * The id of the contract, usually it is imported from dao-ids-util.ts.
+   */
+  id: string;
+  /**
+   *  The name of the solidity contract, not the file name, but the contract itself.
+   */
+  name: string;
+  /**
+   * The javascript variable name that will be named
+   * to access the contract. This is useful for variables
+   * that are created during the deployment such as
+   * adapters and extension. Using this alias you will be
+   * able to access it in the test context,
+   * e.g: adapters.<alias> will return the deployed contract.
+   */
+  alias?: string;
+  /**
+   * The path to the solidity contract.
+   */
+  path: string;
+  /**
+   * If true indicates that the contract must be deployed.
+   */
+  enabled: boolean;
+  /**
+   * Optional
+   * skip auto deploy true indicates that the contract do need to be
+   * automatically deployed during the migration script execution.
+   * It is useful to skip the auto deploy for contracts that are not required
+   * to launch a DAO, but that you manually configure them after the DAO is created,
+   * but not finalized, e.g: Offchain Voting.
+   */
+  skipAutoDeploy?: boolean;
+  /**
+   * Version of the solidity contract.
+   * It needs to be the name of the contract, and not the name of the .sol file.
+   */
+  version: string;
+  /**
+   * Type of the contract based on the ContractType enum.
+   */
+  type: ContractType;
+  /**
+   * The Access Control Layer flags selected to be granted to this contract in the DAO.
+   */
+  acls: SelectedACLs;
+  /**
+   * Optional
+   * The function that computes the correct ACL value based on the selected ACL flags.
+   */
+  buildAclFlag?: ACLBuilder;
+  /**
+   * Optional
+   * A contract may need custom arguments during the deployment time,
+   * declare here all the arguments that are read from the env,
+   * and passed to the configuration/deployment functions.
+   * The names of the arguments must match the arguments provided
+   * in the deployment script 2_deploy_contracts.js
+   */
+  deploymentArgs?: Array<string>;
+  /**
+   * Optional
+   * Set of arguments to be passed to the `configureDao` call
+   * after the contract has been deployment.
+   */
+  daoConfigs?: Array<Array<string>>;
+  /**
+   * Optional
+   * The id of the extension generated by the factory, usually you will import that from extensionsIdsMap.
+   * e.g: a BankFactory generates instances of contract BankContract, so the BankFactory config needs to
+   * set the extensionsIdsMap.BANK_EXT in this attribute to indicate it generates bank contracts.
+   */
+  generatesExtensionId?: string;
+};
+```
+
+After adding the config to the file, next time you run the tests or the migration script, your new extension will be auto deployed.
+
+In order to speed up the test suites we usually don't create one DAO per test function, but we create the DAO during the suite initialization, and then only reset the chain after each test case using the evm snapshot feature. For instance:
 
 ```javascript
 describe("Extension - ExtensionName", () => {
@@ -356,90 +427,9 @@ describe("Extension - ExtensionName", () => {
 });
 ```
 
-Considering the extension that you are creating is not part of the default set of extensions, you need to declare import it, and the Factory from **[utils/OZTestUtil.js](https://github.com/openlawteam/tribute-contracts/blob/master/utils/OZTestUtil.js)**, then deploy both to be able to configure the extension access flags after it is used in the test suite, but it needs to happen _before_ the DAO is finalized. When the DAO is finalized it means that the DAO initialization has been completed, so any state changes must be done though a proposal, instead of doing it through the deployment phase. Here is a simple example of an extension configured after its creation, but before the DAO creation is finalized:
+You may need to use an Adapter to test your new extension functions that are protected with the `adapterOnly` and `hasExtensionAccess` guards, you can ignore that if you have defined public functions that do not use any of these guards.
 
-```javascript
-
-import { MyExtensionContract, MyExtensionFactory } from "../../utils/OZTestUtil";
-
-import { entry } from 'DeploymentUtil';
-
-describe("Extension - ExtensionName", () => {
-
-  const entryAccessFlag = (contract, flags) => {
-    const values = [
-      flags.EXECUTE,
-    ];
-
-    const acl = entry(values);
-
-    return {
-      id: sha3("n/a"),
-      addr: contract.address,
-      flags: acl,
-    };
-  };
-
-  it("should be possible to...", async () => {
-
-    // Creating the new DAO without finalizing it
-    // So you can add new adapters without going through
-    // a proposal process.
-    const { dao, factories, extensions } = await deployDefaultDao({
-      owner: owner,
-      finalize: false, // Do not finalize the DAO so you can add your extension to it
-    });
-
-    // Create and deploy the identity contract and the factory contract
-    const identityExtension = await MyExtensionContract.new();
-    const myExtensionFactory = await MyExtensionFactory.new(identityExtension.address);
-
-    let x1 = 1;
-    // Create your new extension instance applying the custom parameters
-    await myExtensionFactory.create(x1);
-
-    let pastEvent;
-    // Check if the event was emitted to capture the new extension address
-    while (pastEvent === undefined) {
-      let pastEvents = await myExtensionFactory.getPastEvents();
-      pastEvent = pastEvents[0];
-    }
-    const { myExtensionAddress } = pastEvent.returnValues;
-    // Associate your extension contract to the new address
-    const myExtension = await MyExtensionContract.at(myExtensionAddress);
-
-    // Add the new extension to the DAO, this is possible because the DAO was not finalized yet.
-    await dao.addExtension(sha3("myExtension"), myExtension.address, owner, {
-      from: owner,
-    });
-
-    // If you have an adapter that needs access to your new Extension,
-    // you can set that up using the `daoFactory.configureExtension` function:
-    await factories.daoFactory.configureExtension(
-      dao.address,
-      myExtension.address,
-      [
-        entryAccessFlag(mySampleAdapter.address, {
-          EXECUTE: true,  // the name of the ACL flag, that needs to be enabled.
-          // The flags declared here must match the flags declared in your new extension.
-        }),
-      ],
-      { from: owner }
-    );
-
-    // After the extension was configured to access the DAO,
-    // and/or an Extension, you can finalize the DAO creation.
-    await dao.finalizeDao({ from: owner });
-
-    // Start your test here
-    ...
-  });
-});
-```
-
-You may need to use an adapter to test your new extension functions that are protected with the `adapterOnly` and `hasExtensionAccess` guards, unless you have defined functions that are not restricted to adapters only.
-
-The adapters are known as Utility Adapters, we currently have some of them to access the **[Bank](/docs/contracts/adapters/utils/bank-adapter)** and **[NFT](/docs/contracts/adapters/utils/nft-adapter)** Extensions, or you can simply modify one of the existing adapters to access your new extensions as defined in the tutorial **[How to create an adapter](/docs/tutorial/adapters/creating-an-adapter#testing-the-new-adapter)**.
+These adapters are known as Utility Adapters, we currently have some of them to access the **[Bank](/docs/contracts/adapters/utils/bank-adapter)** and **[NFT](/docs/contracts/adapters/utils/nft-adapter)** Extensions, or you can simply modify one of the existing adapters to access your new extensions as defined in the tutorial **[How to create an adapter](/docs/tutorial/adapters/creating-an-adapter#testing-the-new-adapter)**.
 
 ### Adding documentation
 

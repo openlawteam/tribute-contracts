@@ -1,3 +1,6 @@
+const log = console.log;
+const fs = require("fs");
+
 const {
   toBN,
   toWei,
@@ -14,10 +17,10 @@ const { deployDao, getNetworkDetails } = require("../utils/deployment-util");
 require("dotenv").config();
 
 module.exports = async (deployer, network, accounts) => {
-  console.log(`Deployment started at: ${new Date().toISOString()}`);
-  console.log(`Deploying tribute-contracts to ${network} network`);
+  log(`Deployment started at: ${new Date().toISOString()}`);
+  log(`Deploying tribute-contracts to ${network} network`);
 
-  const { contracts } = require(`../deployment/${network}.config`);
+  const { contracts } = require(`./configs/${network}.config`);
   const truffleImports = require("../utils/truffle-util")(contracts);
   const daoArtifacts = await getOrCreateDaoArtifacts(deployer, truffleImports);
 
@@ -26,43 +29,39 @@ module.exports = async (deployer, network, accounts) => {
     daoArtifacts
   );
 
-  const result = await deploy(
+  const result = await deploy({
     network,
     deployFunction,
     truffleImports,
     accounts,
-    contracts
-  );
+    contracts,
+  });
 
-  const { dao, extensions, testContracts } = result;
+  const { dao, factories, extensions, adapters, testContracts } = result;
   if (dao) {
-    //TODO better logs and output
     await dao.finalizeDao();
-    console.log("************************");
-    console.log(`DaoRegistry: ${dao.address}`);
-    console.log(
-      `Multicall: ${
-        testContracts.multicall ? testContracts.multicall.address : ""
-      }`
-    );
-    console.log(`BankExtension: ${extensions.bankExt.address}`);
-    console.log(
-      `NFTExtension: ${
-        extensions.erc721Ext ? extensions.erc721Ext.address : ""
-      }`
-    );
-    console.log(
-      `ERC20Extension: ${
-        extensions.erc20Ext ? extensions.erc20Ext.address : ""
-      }`
-    );
-    console.log("************************");
+    log("************************************************");
+    log(`Owner: ${accounts[0]}`);
+    log(`DaoRegistry: ${dao.address}`);
+    const addresses = {};
+    Object.values(factories)
+      .concat(Object.values(extensions))
+      .concat(Object.values(adapters))
+      .concat(Object.values(testContracts))
+      .forEach((c) => {
+        log(`${c.configs.name}: ${c.address}`);
+        addresses[c.configs.name] = c.address;
+      });
+    const filename = `build/${network}-deployment-${new Date().toISOString()}.json`;
+    fs.writeFileSync(filename, JSON.stringify(addresses), "utf8");
+    log("************************************************");
+    log(`\nDeployed contracts: ${filename}`);
   } else {
-    console.log("************************");
-    console.log("no migration for network " + network);
-    console.log("************************");
+    log("************************************************");
+    log("no migration for network " + network);
+    log("************************************************");
   }
-  console.log(`Deployment completed at: ${new Date().toISOString()}`);
+  log(`Deployment completed at: ${new Date().toISOString()}`);
 };
 
 const deployRinkebyDao = async (
@@ -264,13 +263,13 @@ const deployTestDao = async (
   });
 };
 
-const deploy = async (
+const deploy = async ({
   network,
   deployFunction,
   truffleImports,
   accounts,
-  contracts
-) => {
+  contracts,
+}) => {
   let res;
   switch (network) {
     case "mainnet":

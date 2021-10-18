@@ -27,7 +27,7 @@ SOFTWARE.
 
 const { sha3, toHex, ZERO_ADDRESS } = require("./contract-util");
 
-const { ContractType } = require("../deployment/contracts.config");
+const { ContractType } = require("../migrations/configs/contracts.config");
 
 const getContractFromTruffle = (c) => {
   return artifacts.require(c);
@@ -60,7 +60,7 @@ const deployFunction = (deployer, daoArtifacts, allContracts) => {
     );
     if (!contractConfigs)
       throw Error(
-        `${contractInterface.contractName} contract not found in deployment/contracts.config`
+        `${contractInterface.contractName} contract not found in migrations/configs/contracts.config`
       );
 
     if (

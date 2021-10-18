@@ -40,13 +40,6 @@ Writes/reads to/from the DAO state based on a proposal, and the proposal needs t
         {
 
         /**
-         * @notice default fallback function to prevent from sending ether to the contract.
-         */
-        receive() external payable {
-          revert("fallback revert");
-        }
-
-        /**
          * @notice Explain what the function does in addition to the proposal submission.
          * @dev Describe any required states/checks/parameters that are necessary to execute the function.
          * @param dao The DAO address.
@@ -61,7 +54,7 @@ Writes/reads to/from the DAO state based on a proposal, and the proposal needs t
           type1 param1,
           type2 param2,
           typeN paramN
-        ) external override {
+        ) external override reentrancyGuard(dao) {
           // If the submission needs to be restricted by DAO members/advisors
           // it is a good practice to use the helper function from the IVoting interface.
           // Mainly because if you have an offchain voting Adapter enabled, the sender address may vary.
@@ -122,6 +115,7 @@ Writes/reads to/from the DAO state based on a proposal, and the proposal needs t
         function processProposal(DaoRegistry dao, bytes32 proposalId)
             external
             override
+            reentrancyGuard(dao)
         {
             // Update the DAO state to ensure the proposal is processed
             // The DAO already checks if the proposal id exists, or was already processed,
@@ -155,19 +149,15 @@ contract Sample2Contract is
   AdapterGuard // Guards to prevent reentrancy
 {
   /**
-   * @notice default fallback function to prevent from sending ether to the contract.
-   */
-  receive() external payable {
-    revert("fallback revert");
-  }
-
-  /**
    * @notice Explain what the function does, if it changes the DAO state or just reads, etc.
    * @dev Describe any additional requirements/checks/configurations.
    * @param dao The DAO address.
    * @param param1 The description of the parameter 1.
    */
-  function myFunction(DaoRegistry dao, type1 param1) external {
+  function myFunction(DaoRegistry dao, type1 param1)
+    external
+    reentrancyGuard(dao)
+  {
     // Add any checks / validation you may need
     require(pre - condition, "error message");
 
@@ -223,21 +213,13 @@ The key advantage of the adapters is to make them very small and suitable to a v
 
 - Revert as early as possible
 
-- Your adapter should not accept any funds. So it is a good practice to always revert the receive call.
+- If your adapter needs configurations, please add the `configureDao` function to receive the parameters.
 
-  ```solidity
-  /**
-   * @notice default fallback function to prevent from sending ether to the contract.
-   */
-  receive() external payable {
-    revert("fallback revert");
-  }
+- Make sure you add the correct `require` checks.
 
-  ```
+- Add the `reentrancyGuard(dao)` for external functions.
 
-- Make sure you add the correct `require` checks
-
-  - Usually the adapter needs to perform some verifications before executing the calls that may change the DAO state. Double check if the DAORegistry functions that your adapter uses already implement some checks, so you do not need to repeat them in the adapter.
+- Usually the adapter needs to perform some verifications before executing the calls that may change the DAO state. Double check if the DAORegistry functions that your adapter uses already implement some checks, so you do not need to repeat them in the adapter.
 
 ### Testing the new Adapter
 
@@ -247,25 +229,123 @@ There are several examples of tests that you can check to start building your ow
 
 The general idea is to create one test suite per adapter/contract. And try to cover all the happy paths first, and then add more complex test cases after that.
 
-You need to declare the new adapter contract in `deployment/contracts.config.js` file, so it can be accessed in the deploy/test environment. Make sure you use following the structure:
+You need to declare the new adapter contract in `migration/configs/contracts.config.js` file, so it can be accessed in the deploy/test environment. Make sure you use following the structure:
 
 ```json
-{
+ {
+    id: adaptersIdsMap.SAMPLE2_ADAPTER,
     name: "Sample2Contract",
-    path: "../contracts/path/Sample2Contract",
+    alias: "sample2Adapter",
+    path: "../../contracts/adapters/Sample2Contract",
     enabled: true,
     version: "1.0.0",
     type: ContractType.Adapter,
+    acls: {
+      // Set the Flags your adapter needs to work with the DAO
+      dao: [
+        daoAccessFlagsMap.SUBMIT_PROPOSAL,
+        daoAccessFlagsMap.SET_CONFIGURATION,
+      ],
+      extensions: {
+        // Set the Flags your adapter needs to work with the extension
+        [extensionsIdsMap.BANK_EXT]: [
+          bankExtensionAclFlagsMap.ADD_TO_BALANCE,
+          bankExtensionAclFlagsMap.SUB_FROM_BALANCE,
+          bankExtensionAclFlagsMap.INTERNAL_TRANSFER,
+        ],
+      },
+    },
   },
 ```
 
-- `name`: the name of the contract declared in the .sol file;
-- `path`: the path of the contract in the `contracts` folder;
-- `enabled`: the flag indicating if that contract must be deployed/enabled;
-- `version`: the version of the contract that will be used to write/read to/from the `DaoArtifacts` contract;
-- `type`: the type of the contract (Core = 0, Factory = 1, Extension = 2, Adapter = 3, Util = 4, Test = 5).
+The attributes of the contract configuration are defined below:
 
-In order to speed up the test suites we usually don't create one DAO per test function, but we create the DAO during the suite initialization, and only reset the chain after each test function using the chain snapshot feature. For instance:
+```typescript
+/**
+ * Each contract contains different configurations that will be required by the deployment
+ * script. This type helps you to define these configs.
+ */
+export type ContractConfig = {
+  /**
+   * The id of the contract, usually it is imported from dao-ids-util.ts.
+   */
+  id: string;
+  /**
+   *  The name of the solidity contract, not the file name, but the contract itself.
+   */
+  name: string;
+  /**
+   * The javascript variable name that will be named
+   * to access the contract. This is useful for variables
+   * that are created during the deployment such as
+   * adapters and extension. Using this alias you will be
+   * able to access it in the test context,
+   * e.g: adapters.<alias> will return the deployed contract.
+   */
+  alias?: string;
+  /**
+   * The path to the solidity contract.
+   */
+  path: string;
+  /**
+   * If true indicates that the contract must be deployed.
+   */
+  enabled: boolean;
+  /**
+   * Optional
+   * skip auto deploy true indicates that the contract do need to be
+   * automatically deployed during the migration script execution.
+   * It is useful to skip the auto deploy for contracts that are not required
+   * to launch a DAO, but that you manually configure them after the DAO is created,
+   * but not finalized, e.g: Offchain Voting.
+   */
+  skipAutoDeploy?: boolean;
+  /**
+   * Version of the solidity contract.
+   * It needs to be the name of the contract, and not the name of the .sol file.
+   */
+  version: string;
+  /**
+   * Type of the contract based on the ContractType enum.
+   */
+  type: ContractType;
+  /**
+   * The Access Control Layer flags selected to be granted to this contract in the DAO.
+   */
+  acls: SelectedACLs;
+  /**
+   * Optional
+   * The function that computes the correct ACL value based on the selected ACL flags.
+   */
+  buildAclFlag?: ACLBuilder;
+  /**
+   * Optional
+   * A contract may need custom arguments during the deployment time,
+   * declare here all the arguments that are read from the env,
+   * and passed to the configuration/deployment functions.
+   * The names of the arguments must match the arguments provided
+   * in the deployment script 2_deploy_contracts.js
+   */
+  deploymentArgs?: Array<string>;
+  /**
+   * Optional
+   * Set of arguments to be passed to the `configureDao` call
+   * after the contract has been deployment.
+   */
+  daoConfigs?: Array<Array<string>>;
+  /**
+   * Optional
+   * The id of the extension generated by the factory, usually you will import that from extensionsIdsMap.
+   * e.g: a BankFactory generates instances of contract BankContract, so the BankFactory config needs to
+   * set the extensionsIdsMap.BANK_EXT in this attribute to indicate it generates bank contracts.
+   */
+  generatesExtensionId?: string;
+};
+```
+
+After adding the config the file, next time you run the tests or the migration script, your new adapter will be auto deployed.
+
+In order to speed up the test suites we usually don't create one DAO per test function, but we create the DAO during the suite initialization, and then only reset the chain after each test case using the evm snapshot feature. For instance:
 
 ```javascript
 describe("Adapter - AdapterName", () => {
@@ -335,69 +415,6 @@ describe("Adapter - AdapterName", () => {
       }),
       "must be an equal number of config keys and values"
     );
-  });
-});
-```
-
-Considering the adapter that you are creating is not part of the default set of adapters, you need to import it from **[utils/OZTestUtil.js](https://github.com/openlawteam/tribute-contracts/blob/master/utils/OZTestUtil.js)**, and deploy it, then you can configure the Adapter access flags after the adapter is created in the test suite, but before the DAO is finalized. When the DAO is finalized it means that the DAO initialization has been completed, so any state changes must be done though a proposal, instead of doing it through the deployment phase. Here is a simple example of an adapter configurated after its creation, but before the DAO creation is finalized:
-
-```javascript
-
-import { MyAdapter2Contract } from "../../utils/OZTestUtil";
-
-
-describe("Adapter - AdapterName2", () => {
-  it("should be possible to...", async () => {
-
-    // Creating the new DAO without finalizing it
-    // So you can add new adapters without going through
-    // a proposal process.
-    const { dao, factories, extensions } = await deployDefaultDao({
-      owner: owner,
-      finalize: false,
-    });
-
-    // Creating your adapter
-    const myAdapter2Contract = await MyAdapter2Contract.new();
-
-    // Once the dao is created, use the daoFactory contract
-    // to add the new adapter to the DAO with the correct
-    // ACL using the `addAdapters` function:
-    await factories.daoFactory.addAdapters(
-      dao.address,
-      // When you are creating an adapter that access the DAO
-      // state, you need to provide the `entryDAO` ACL
-      // from DeploymentUtil.entryDao
-      [entryDao("myAdapter2", myAdapter2Contract, {
-        THE_ACL_FLAG_1: true // the name of the ACL flag, that needs to be enabled.
-        // for more info checkout:
-        // https://github.com/openlawteam/tribute-contracts/blob/master/docs/core/DaoRegistry.md#access-flags
-      })],
-      { from: owner }
-    );
-
-    // If your adapter needs to access a DAO Extension,
-    // you can set up your adapter to access the extension
-    // using the `daoFactory.configureExtension` function:
-    await factories.daoFactory.configureExtension(
-      dao.address,
-      myAdapter2Contract.address,
-      [
-        entryExecutor(myAdapter2Contract, {
-          THE_ACL_FLAG_X: true,  // the name of the ACL flag, that needs to be enabled.
-          // Checkout the extension documentation for more info:
-          // https://github.com/openlawteam/tribute-contracts/tree/master/docs/extensions
-        }),
-      ],
-      { from: owner }
-    );
-
-    // After the adapter was configured to access the DAO,
-    // and/or an Extension, you can finalize the DAO creation.
-    await dao.finalizeDao({ from: owner });
-
-    // Start your test here
-    ...
   });
 });
 ```

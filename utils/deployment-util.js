@@ -28,7 +28,7 @@ SOFTWARE.
 const { entryDao, entryBank } = require("./access-control-util");
 const { adaptersIdsMap, extensionsIdsMap } = require("./dao-ids-util");
 const { UNITS, LOOT, sha3, embedConfigs } = require("./contract-util.js");
-const { ContractType } = require("../deployment/contracts.config");
+const { ContractType } = require("../migrations/configs/contracts.config");
 const sleep = (t) => new Promise((s) => setTimeout(s, t));
 
 /**
@@ -55,7 +55,7 @@ const deployContract = ({ config, options }) => {
 
 /**
  * Deploys all the contracts defined with Factory type.
- * The contracts must be enabled in the deployment/*.config.ts,
+ * The contracts must be enabled in the migrations/configs/*.config.ts,
  * and should not be skipped in the auto deploy process.
  * The factory contract must be provided in the options object.
  * If the contract is not found in the options object the deployment reverts with an error.
@@ -102,7 +102,7 @@ const createFactories = async ({ options }) => {
 
 /**
  * Deploys all the contracts defined with Extension type.
- * The contracts must be enabled in the deployment/*.config.ts,
+ * The contracts must be enabled in the migrations/configs/*.config.ts,
  * and should not be skipped in the auto deploy process.
  * The extension contract must be provided in the options object.
  * If the contract is not found in the options object the deployment reverts with an error.
@@ -203,7 +203,7 @@ const createExtensions = async ({ dao, factories, options }) => {
 
 /**
  * Deploys all the contracts defined with Adapter type.
- * The contracts must be enabled in the deployment/*.config.ts,
+ * The contracts must be enabled in the migrations/configs/*.config.ts,
  * and should not be skipped in the auto deploy process.
  * The adapter contract must be provided in the options object.
  * If the contract is not found in the options object the deployment reverts with an error.
@@ -232,8 +232,8 @@ const createAdapters = async ({ options }) => {
 };
 
 /**
- * Deploys all the contracts defined in the deployment/*.config.ts.
- * The contracts must be enabled in the deployment/*.config.ts,
+ * Deploys all the contracts defined in the migrations/configs/*.config.ts.
+ * The contracts must be enabled in the migrations/configs/*.config.ts,
  * and should not be skipped in the auto deploy process.
  * Each one of the contracts must be provided in the options object.
  * If the contract is not found in the options object the deployment reverts with an error.
@@ -243,7 +243,7 @@ const createAdapters = async ({ options }) => {
  * The Offchain voting is deployed only if it is required via options.offchainVoting parameter.
  *
  * All the deployed contracts will be returned in a map with the aliases defined in the
- * deployment/*.config.ts.
+ * migrations/configs/*.config.ts.
  */
 const deployDao = async (options) => {
   const { dao, daoFactory } = await cloneDao({

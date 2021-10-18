@@ -45,8 +45,10 @@ const {
 const { expect } = require("chai");
 const { expectRevert } = require("@openzeppelin/test-helpers");
 const { deployDao } = require("./deployment-util.js");
-const { contracts: allContractConfigs } = require("../deployment/test.config");
-const { ContractType } = require("../deployment/contracts.config");
+const {
+  contracts: allContractConfigs,
+} = require("../migrations/configs/test.config");
+const { ContractType } = require("../migrations/configs/contracts.config");
 
 const deployFunction = async (contractInterface, args, from) => {
   if (!contractInterface) throw Error("undefined contract interface");
