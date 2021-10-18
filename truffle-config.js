@@ -33,8 +33,8 @@ module.exports = {
         let infuraKey = process.env.INFURA_KEY;
         let HDWalletProvider = require("@truffle/hdwallet-provider");
         let mnemonic = process.env.TRUFFLE_MNEMONIC;
-        //let infuraUrl = "wss://rinkeby.infura.io/ws/v3/" + infuraKey;
-        let infuraUrl = "http://127.0.0.1:8545";
+        let infuraUrl = "wss://rinkeby.infura.io/ws/v3/" + infuraKey;
+        //let infuraUrl = "http://127.0.0.1:8545";
         return new HDWalletProvider(mnemonic, infuraUrl);
       },
       network_id: 4,
@@ -46,7 +46,8 @@ module.exports = {
         let infuraKey = process.env.INFURA_KEY;
         let HDWalletProvider = require("@truffle/hdwallet-provider");
         let mnemonic = process.env.TRUFFLE_MNEMONIC;
-        let infuraUrl = "ws://mainnet.openlaw.io:8546";
+        let infuraUrl = "wss://mainnet.infura.io/ws/v3/" + infuraKey;
+        //let infuraUrl = "ws://mainnet.openlaw.io:8546";
         //let infuraUrl = "http://127.0.0.1:8545";
         return new HDWalletProvider(mnemonic, infuraUrl);
       },

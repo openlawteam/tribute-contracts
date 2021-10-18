@@ -148,7 +148,9 @@ async function deployMainnetDao(deployFunction, network) {
     "OFFCHAIN_ADMIN_ADDR",
     "CHUNK_PRICE",
     "UNITS_PER_CHUNK",
-    "MAX_CHUNKS"
+    "MAX_CHUNKS",
+    "MAX_MEMBERS",
+    "MAX_UNITS"
   );
 
   return await deployDao({
@@ -173,6 +175,8 @@ async function deployMainnetDao(deployFunction, network) {
     daoName: envVariables.DAO_NAME,
     owner: envVariables.DAO_OWNER_ADDR,
     offchainAdmin: envVariables.OFFCHAIN_ADMIN_ADDR,
+    maxMembers: envVariables.MAX_MEMBERS,
+    maxUnits: envVariables.MAX_UNITS,
     wethAddress: "0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2",
   });
 }

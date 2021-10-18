@@ -58,12 +58,12 @@ const deployDao = async (options) => {
 
   const bankFactory = await BankFactory.at('0xF87Ba5851b45BDb2971DCf3a2125Dea6795E1436');
   const erc20TokenExtFactory = await ERC20TokenExtensionFactory.at('0xb92C59031b5f5675F7AEffF43f909E93DF3d3e55');
-
+  console.log('clone dao ...');
   const { dao, daoFactory } = await cloneDao({
     ...options,
     name: options.daoName || "test-dao",
   });
-
+  console.log('create bank');
   // Start the BankExtension deployment and configuration
   await bankFactory.createBank(options.maxExternalTokens);
   let pastEvent;
@@ -73,10 +73,12 @@ const deployDao = async (options) => {
   }
   const { bankAddress } = pastEvent.returnValues;
   const bankExtension = await BankExtension.at(bankAddress);
+  console.log('add bank to Dao');
   await dao.addExtension(sha3("bank"), bankExtension.address, owner, {
     from: owner,
   });
 
+  console.log('create erc20 extension');
   // Start the Erc20TokenExtension deployment & configuration
   await erc20TokenExtFactory.create(
     erc20TokenName,
@@ -91,6 +93,7 @@ const deployDao = async (options) => {
   }
   const { erc20ExtTokenAddress } = pastEvent.returnValues;
   const erc20TokenExtension = await ERC20Extension.at(erc20ExtTokenAddress);
+  console.log('add erc20 extension to dao');
   await dao.addExtension(sha3("erc20-ext"), erc20ExtTokenAddress, owner, {
     from: owner,
   });
@@ -136,6 +139,7 @@ const deployDao = async (options) => {
   };
 
   if (finalize) {
+    console.log('finalize dao');
     await dao.finalizeDao({ from: owner });
   }
 
@@ -160,13 +164,14 @@ const configureOffchainVoting = async ({
 }) => {
   
   let offchainVoting = await OffchainVotingContract.at('0x8CE2EF998bdfcA14Ae6ea8CC9223c33A995aeF9e');
-
+  console.log('add offchain voting');
   await daoFactory.updateAdapter(
     dao.address,
     entryDao("voting", offchainVoting, {}),
     { from: owner }
   );
 
+  console.log('configure bank / offchain voting');
   await dao.setAclToExtensionForAdapter(
     bankAddress,
     offchainVoting.address,
@@ -177,6 +182,7 @@ const configureOffchainVoting = async ({
     }).flags,
     { from: owner }
   );
+  console.log('configure offchain voting');
   await offchainVoting.configureDao(
     dao.address,
     votingPeriod,
@@ -215,7 +221,7 @@ const prepareAdapters = async ({
   configuration = await ConfigurationContract.at('0xCD4b3abb35cCfF50994A756BF519A05f4E08c3D6');
   ragequit = await RagequitContract.at('0x7066dccF8F821108F20f1c7b95DAd3639A50593D');
   managing = await ManagingContract.at('0x858F6E69e514016D88459d9C69a50286C0857552');
-  kycOnboarding = await KycOnboardingContract.at('0x3e9425919E7F806ff0D4c29869f59e55970385fA');
+  kycOnboarding = await deployFunction(KycOnboardingContract, [1, wethAddress]);
   guildkick = await GuildKickContract.at('0x7c8243E3AE58E2A16Fdc6D1F5CD8F2E4a063f6B9');
   daoRegistryAdapter = await DaoRegistryAdapterContract.at('0xe96e170F921Bd87C9B46F3f64cc64Af09119EccF');
   bankAdapter = await BankAdapterContract.at('0xc089c6eB34A9383458a9b6465C57095D77De9997');
@@ -316,12 +322,15 @@ const configureDao = async ({
   couponOnboarding,
   unitPrice,
   maxChunks,
+  maxUnits,
+  maxMembers,
   nbUnits,
   votingPeriod,
   gracePeriod,
   couponCreatorAddress,
   fundTargetAddress,
 }) => {
+  console.log('add adapters!');
   await daoFactory.addAdapters(
     dao.address,
     [
@@ -358,7 +367,7 @@ const configureDao = async ({
     ],
     { from: owner }
   );
-
+  console.log('configure bank');
   await daoFactory.configureExtension(
     dao.address,
     bankExtension.address,
@@ -392,6 +401,8 @@ const configureDao = async ({
     { from: owner }
   );
 
+  console.log('configure erc20');
+
   await daoFactory.configureExtension(
     dao.address,
     erc20TokenExtension.address,
@@ -399,18 +410,22 @@ const configureDao = async ({
     { from: owner }
   );
 
+  console.log('configure kycOnboarding');
+
   await kycOnboarding.configureDao(
     dao.address,
     couponCreatorAddress,
     unitPrice,
     nbUnits,
     maxChunks,
-    41,
+    maxUnits,
+    maxMembers,
     fundTargetAddress,
     {
       from: owner,
     }
   );
+  console.log('configure coupon onboarding');
   await couponOnboarding.configureDao(
     dao.address,
     couponCreatorAddress,
@@ -419,6 +434,8 @@ const configureDao = async ({
       from: owner,
     }
   );
+
+  console.log('configure voting');
 
   await voting.configureDao(dao.address, votingPeriod, gracePeriod, {
     from: owner,

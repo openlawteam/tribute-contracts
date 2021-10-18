@@ -62,6 +62,7 @@ contract KycOnboardingContract is
     bytes32 constant ChunkSize = keccak256("kyc-onboarding.chunkSize");
     bytes32 constant UnitsPerChunk = keccak256("kyc-onboarding.unitsPerChunk");
     bytes32 constant MaximumChunks = keccak256("kyc-onboarding.maximumChunks");
+    bytes32 constant MaximumUnits = keccak256("kyc-onboarding.maximumTotalUnits");
     bytes32 constant MaxMembers = keccak256("kyc-onboarding.maxMembers");
     bytes32 constant FundTargetAddress =
         keccak256("kyc-onboarding.fundTargetAddress");
@@ -82,8 +83,11 @@ contract KycOnboardingContract is
         uint88 numberOfChunks;
         uint88 unitsPerChunk;
         uint88 unitsRequested;
+        uint88 maximumTotalUnits;
         uint160 amount;
     }
+
+    mapping(DaoRegistry => uint256) public totalUnits;
 
     constructor(uint256 chainId, address payable weth) {
         _chainId = chainId;
@@ -112,6 +116,7 @@ contract KycOnboardingContract is
         uint256 chunkSize,
         uint256 unitsPerChunk,
         uint256 maximumChunks,
+        uint256 maxUnits,
         uint256 maxMembers,
         address fundTargetAddress
     ) external onlyAdapter(dao) {
@@ -126,6 +131,10 @@ contract KycOnboardingContract is
         require(
             maximumChunks > 0 && maximumChunks < type(uint88).max,
             "maximumChunks::invalid"
+        );
+        require(
+            maxUnits > 0 && maxUnits < type(uint88).max,
+            "maxUnits::invalid"
         );
         require(
             unitsPerChunk > 0 && unitsPerChunk < type(uint88).max,
@@ -143,6 +152,7 @@ contract KycOnboardingContract is
         dao.setConfiguration(ChunkSize, chunkSize);
         dao.setConfiguration(UnitsPerChunk, unitsPerChunk);
         dao.setConfiguration(MaximumChunks, maximumChunks);
+        dao.setConfiguration(MaximumUnits, maxUnits);
         dao.setConfiguration(MaxMembers, maxMembers);
 
         BankExtension bank = BankExtension(dao.getExtensionAddress(BANK));
@@ -200,7 +210,7 @@ contract KycOnboardingContract is
 
         BankExtension bank = BankExtension(dao.getExtensionAddress(BANK));
         potentialNewMember(kycedMember, dao, bank);
-
+        totalUnits[dao] += details.unitsRequested;
         address payable multisigAddress =
             payable(dao.getAddressConfiguration(FundTargetAddress));
         if (multisigAddress == address(0x0)) {
@@ -234,7 +244,6 @@ contract KycOnboardingContract is
     {
         details.chunkSize = uint88(dao.getConfiguration(ChunkSize));
         require(details.chunkSize > 0, "config chunkSize missing");
-
         details.numberOfChunks = uint88(msg.value / details.chunkSize);
         require(details.numberOfChunks > 0, "insufficient funds");
         require(
@@ -247,5 +256,8 @@ contract KycOnboardingContract is
         require(details.unitsPerChunk > 0, "config unitsPerChunk missing");
         details.amount = details.numberOfChunks * details.chunkSize;
         details.unitsRequested = details.numberOfChunks * details.unitsPerChunk;
+        details.maximumTotalUnits = uint88(dao.getConfiguration(MaximumUnits));
+
+        require(details.unitsRequested + totalUnits[dao] <= details.maximumTotalUnits, "over max total units");
     }
 }
