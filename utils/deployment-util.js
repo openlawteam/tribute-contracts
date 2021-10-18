@@ -26,17 +26,20 @@ SOFTWARE.
  */
 
 const { entryDao, entryBank } = require("./access-control-util");
-const { adaptersIdsMap } = require("./dao-ids-util");
-const { UNITS, LOOT, sha3, toBN, embedConfigs } = require("./contract-util.js");
+const { adaptersIdsMap, extensionsIdsMap } = require("./dao-ids-util");
+const { UNITS, LOOT, sha3, embedConfigs } = require("./contract-util.js");
 const { ContractType } = require("../deployment/contracts.config");
 const sleep = (t) => new Promise((s) => setTimeout(s, t));
 
+/**
+ * Deploys a contract based on the contract name defined in the config parameter.
+ * If the contract is not found in the options object the deployment reverts with an error.
+ */
 const deployContract = ({ config, options }) => {
   const contract = options[config.name];
   if (!contract)
     throw new Error(`Contract ${config.name} not found in environment options`);
 
-  let instance;
   if (config.deploymentArgs && config.deploymentArgs.length > 0) {
     const args = config.deploymentArgs.map((argName) => {
       const arg = options[argName];
@@ -50,6 +53,13 @@ const deployContract = ({ config, options }) => {
   return options.deployFunction(contract);
 };
 
+/**
+ * Deploys all the contracts defined with Factory type.
+ * The contracts must be enabled in the deployment/*.config.ts,
+ * and should not be skipped in the auto deploy process.
+ * The factory contract must be provided in the options object.
+ * If the contract is not found in the options object the deployment reverts with an error.
+ */
 const createFactories = async ({ options }) => {
   const factories = {};
   await Object.values(options.contractConfigs)
@@ -90,8 +100,82 @@ const createFactories = async ({ options }) => {
   return factories;
 };
 
+/**
+ * Deploys all the contracts defined with Extension type.
+ * The contracts must be enabled in the deployment/*.config.ts,
+ * and should not be skipped in the auto deploy process.
+ * The extension contract must be provided in the options object.
+ * If the contract is not found in the options object the deployment reverts with an error.
+ * In order to deploy the extension it uses the factory contract of each extension,
+ * so the factories must be deployed first.
+ */
 const createExtensions = async ({ dao, factories, options }) => {
   const extensions = {};
+
+  const createExtension = async ({ dao, factory, options }) => {
+    const factoryConfigs = factory.configs;
+    const extensionConfigs = options.contractConfigs.find(
+      (c) => c.id === factoryConfigs.generatesExtensionId
+    );
+    if (!extensionConfigs)
+      throw new Error(
+        `Missing extension configuration <generatesExtensionId> for in ${factoryConfigs.name} configs`
+      );
+
+    if (
+      factoryConfigs.deploymentArgs &&
+      factoryConfigs.deploymentArgs.length > 0
+    ) {
+      const args = factoryConfigs.deploymentArgs.map((argName) => {
+        const arg = options[argName];
+        if (arg !== null && arg !== undefined) return arg;
+        throw new Error(
+          `Missing deployment argument <${argName}> in ${factoryConfigs.name}.create`
+        );
+      });
+      await factory.create(...args);
+    } else {
+      await factory.create();
+    }
+
+    let pastEvent;
+
+    while (pastEvent === undefined) {
+      await sleep(100);
+      let pastEvents = await factory.getPastEvents();
+      pastEvent = pastEvents[0];
+    }
+
+    const { extensionAddress } = pastEvent.returnValues;
+    const extensionContract = options[extensionConfigs.name];
+    if (!extensionContract)
+      throw new Error(
+        `Extension contract not found for ${extensionConfigs.name}`
+      );
+
+    const newExtension = embedConfigs(
+      await extensionContract.at(extensionAddress),
+      extensionContract.contractName,
+      options.contractConfigs
+    );
+
+    if (!newExtension || !newExtension.configs)
+      throw new Error(
+        `Unable to embed extension configs for ${extensionConfigs.name}`
+      );
+
+    await dao.addExtension(
+      sha3(newExtension.configs.id),
+      newExtension.address,
+      options.owner,
+      {
+        from: options.owner,
+      }
+    );
+
+    return newExtension;
+  };
+
   await Object.values(factories).reduce(
     (p, factory) =>
       p
@@ -117,6 +201,13 @@ const createExtensions = async ({ dao, factories, options }) => {
   return extensions;
 };
 
+/**
+ * Deploys all the contracts defined with Adapter type.
+ * The contracts must be enabled in the deployment/*.config.ts,
+ * and should not be skipped in the auto deploy process.
+ * The adapter contract must be provided in the options object.
+ * If the contract is not found in the options object the deployment reverts with an error.
+ */
 const createAdapters = async ({ options }) => {
   const adapters = {};
   await Object.values(options.contractConfigs)
@@ -140,11 +231,32 @@ const createAdapters = async ({ options }) => {
   return adapters;
 };
 
+/**
+ * Deploys all the contracts defined in the deployment/*.config.ts.
+ * The contracts must be enabled in the deployment/*.config.ts,
+ * and should not be skipped in the auto deploy process.
+ * Each one of the contracts must be provided in the options object.
+ * If the contract is not found in the options object the deployment reverts with an error.
+ * It also configures the DAO with the proper access, and configuration parameters for all
+ * adapters and extensions.
+ *
+ * The Offchain voting is deployed only if it is required via options.offchainVoting parameter.
+ *
+ * All the deployed contracts will be returned in a map with the aliases defined in the
+ * deployment/*.config.ts.
+ */
 const deployDao = async (options) => {
   const { dao, daoFactory } = await cloneDao({
     ...options,
     name: options.daoName || "test-dao",
   });
+
+  options = {
+    ...options,
+    daoAddress: dao.address,
+    unitTokenToMint: UNITS,
+    lootTokenToMint: LOOT,
+  };
 
   const factories = await createFactories({ options });
   const extensions = await createExtensions({ dao, factories, options });
@@ -250,68 +362,61 @@ const configureDao = async ({
   };
 
   const configureAdaptersWithDAOParameters = async () => {
-    if (adapters.onboarding) {
-      await adapters.onboarding.configureDao(
-        dao.address,
-        UNITS,
-        options.unitPrice,
-        options.nbUnits,
-        options.maxChunks,
-        options.tokenAddr,
-        {
-          from: owner,
-        }
-      );
+    const readConfigValue = (configName, contractName) => {
+      // 1st check for configs that are using extension addresses
+      if (Object.values(extensionsIdsMap).includes(configName)) {
+        const extension = Object.values(extensions).find(
+          (e) => e.configs.id === configName
+        );
+        if (!extension || !extension.address)
+          throw new Error(
+            `Error while configuring dao parameter [${configName}] for ${contractName}`
+          );
+        return extension.address;
+      }
+      // 2nd lookup for configs in the options object
+      const configValue = options[configName];
+      if (!configValue)
+        throw new Error(
+          `Error while configuring dao parameter [${configName}] for ${contractName}`
+        );
+      return configValue;
+    };
 
-      await adapters.onboarding.configureDao(
-        dao.address,
-        LOOT,
-        options.unitPrice,
-        options.nbUnits,
-        options.maxChunks,
-        options.tokenAddr,
-        {
-          from: owner,
-        }
-      );
-    }
-    if (adapters.couponOnboarding)
-      await adapters.couponOnboarding.configureDao(
-        dao.address,
-        options.couponCreatorAddress,
-        extensions.erc20Ext.address,
-        UNITS,
-        options.maxAmount,
-        options.chainId,
-        {
-          from: owner,
-        }
-      );
-
-    if (adapters.voting)
-      await adapters.voting.configureDao(
-        dao.address,
-        options.votingPeriod,
-        options.gracePeriod,
-        {
-          from: owner,
-        }
-      );
-
-    if (adapters.tribute) {
-      await adapters.tribute.configureDao(dao.address, UNITS, {
-        from: owner,
-      });
-      await adapters.tribute.configureDao(dao.address, LOOT, {
-        from: owner,
-      });
-    }
-
-    if (adapters.tributeNFT) {
-      await adapters.tributeNFT.configureDao(dao.address, {
-        from: owner,
-      });
-    }
+    await Object.values(adapters)
+      .filter((a) => a.configs.enabled)
+      .filter((a) => !a.configs.skipAutoDeploy)
+      .filter((a) => a.configs.daoConfigs && a.configs.daoConfigs.length > 0)
+      .reduce((p, adapter) => {
+        const contractConfigs = adapter.configs;
+        return p
+          .then(() =>
+            contractConfigs.daoConfigs.reduce(
+              (q, configEntry) =>
+                q.then(() => {
+                  const configValues = configEntry.map((configName) =>
+                    readConfigValue(configName, contractConfigs.name)
+                  );
+                  return adapter
+                    .configureDao(...configValues, {
+                      from: options.owner,
+                    })
+                    .catch((e) => {
+                      console.error(e);
+                      throw e;
+                    });
+                }),
+              Promise.resolve()
+            )
+          )
+          .catch((e) => {
+            console.error(
+              `Error while configuring dao with contract ${contractConfigs.name}`,
+              e
+            );
+            throw e;
+          });
+      }, Promise.resolve());
   };
 
   const configureExtensionAccess = async (contracts, extension) => {
@@ -397,70 +502,6 @@ const configureDao = async ({
 
   await configureAdapters();
   await configureExtensions();
-};
-
-const createExtension = async ({ dao, factory, options }) => {
-  const factoryConfigs = factory.configs;
-  const extensionConfigs = options.contractConfigs.find(
-    (c) => c.id === factoryConfigs.generatesExtensionId
-  );
-  if (!extensionConfigs)
-    throw new Error(
-      `Missing extension configuration <generatesExtensionId> for in ${factoryConfigs.name} configs`
-    );
-
-  if (
-    factoryConfigs.deploymentArgs &&
-    factoryConfigs.deploymentArgs.length > 0
-  ) {
-    const args = factoryConfigs.deploymentArgs.map((argName) => {
-      const arg = options[argName];
-      if (arg !== null && arg !== undefined) return arg;
-      throw new Error(
-        `Missing deployment argument <${argName}> in ${factoryConfigs.name}.create`
-      );
-    });
-    await factory.create(...args);
-  } else {
-    await factory.create();
-  }
-
-  let pastEvent;
-
-  while (pastEvent === undefined) {
-    await sleep(100);
-    let pastEvents = await factory.getPastEvents();
-    pastEvent = pastEvents[0];
-  }
-
-  const { extensionAddress } = pastEvent.returnValues;
-  const extensionContract = options[extensionConfigs.name];
-  if (!extensionContract)
-    throw new Error(
-      `Extension contract not found for ${extensionConfigs.name}`
-    );
-
-  const newExtension = embedConfigs(
-    await extensionContract.at(extensionAddress),
-    extensionContract.contractName,
-    options.contractConfigs
-  );
-
-  if (!newExtension || !newExtension.configs)
-    throw new Error(
-      `Unable to embed extension configs for ${extensionConfigs.name}`
-    );
-
-  await dao.addExtension(
-    sha3(newExtension.configs.id),
-    newExtension.address,
-    options.owner,
-    {
-      from: options.owner,
-    }
-  );
-
-  return newExtension;
 };
 
 const createTestContracts = async ({ options }) => {
@@ -608,11 +649,10 @@ const getNetworkDetails = (name) => {
 };
 
 module.exports = {
-  deployDao,
-  cloneDao,
-  createAdapters,
   createFactories,
   createExtensions,
-  createExtension,
+  createAdapters,
+  deployDao,
+  cloneDao,
   getNetworkDetails,
 };
