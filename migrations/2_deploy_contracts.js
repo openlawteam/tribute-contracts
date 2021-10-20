@@ -21,6 +21,7 @@ module.exports = async (deployer, network, accounts) => {
     case "ganache":
       res = await deployGanacheDao(deployFunction, network, accounts);
       break;
+    case "goerli": // Chain ID is retrieved automatically and ETH_NODE_URL specifies RPC endpoint, so Goerli and Rinkeby should be treated the same
     case "rinkeby":
       res = await deployRinkebyDao(deployFunction, network);
       break;

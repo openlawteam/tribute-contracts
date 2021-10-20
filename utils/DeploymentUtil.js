@@ -845,6 +845,10 @@ const networks = [
     chainId: 1337,
   },
   {
+    name: "goerli",
+    chainId: 5,
+  },
+  {
     name: "rinkeby",
     chainId: 4,
   },
