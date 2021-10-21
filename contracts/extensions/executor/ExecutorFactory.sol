@@ -1,7 +1,12 @@
 pragma solidity ^0.8.0;
-import "../extensions/bank/Bank.sol";
+pragma experimental ABIEncoderV2;
 
 // SPDX-License-Identifier: MIT
+
+import "../../core/DaoConstants.sol";
+import "../../core/DaoRegistry.sol";
+import "../../core/CloneFactory.sol";
+import "./Executor.sol";
 
 /**
 MIT License
@@ -27,20 +32,21 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
  */
 
-abstract contract PotentialNewMember {
-    address internal constant _MEMBER_COUNT = address(0xDECAFBAD);
+contract ExecutorExtensionFactory is CloneFactory, DaoConstants {
+    address public identityAddress;
 
-    function potentialNewMember(
-        address memberAddress,
-        DaoRegistry dao,
-        BankExtension bank
-    ) internal {
-        dao.potentialNewMember(memberAddress);
-        require(memberAddress != address(0x0), "invalid member address");
-        if (address(bank) != address(0x0)) {
-            if (bank.balanceOf(memberAddress, _MEMBER_COUNT) == 0) {
-                bank.addToBalance(memberAddress, _MEMBER_COUNT, 1);
-            }
-        }
+    event ExecutorCreated(address executorAddress);
+
+    constructor(address _identityAddress) {
+        identityAddress = _identityAddress;
+    }
+
+    /**
+     * @notice Create and initialize a new Executor Extension
+     */
+    function create() external {
+        ExecutorExtension exec =
+            ExecutorExtension(_createClone(identityAddress));
+        emit ExecutorCreated(address(exec));
     }
 }

@@ -1,6 +1,6 @@
 {
   "name": "tribute-contracts",
-  "version": "1.0.2",
+  "version": "1.0.3",
   "description": "A new modular DAO framework, inspired by the Moloch smart contracts",
   "main": "truffle-config.js",
   "keywords": [
@@ -50,8 +50,8 @@
     "compile": "truffle compile",
     "compile-abi": "truffle compile && truffle-abi",
     "coverage": "scripts/coverage.js",
-    "deploy:ganache": "truffle deploy --network ganache --reset 2>&1 | tee logs/ganache-deploy.log",
     "deploy:rinkeby": "truffle deploy --network rinkeby --reset 2>&1 | tee logs/rinkeby-deploy.log",
+    "deploy:goerli": "truffle deploy --network goerli --reset 2>&1 | tee logs/goerli-deploy.log",
     "deploy:mainnet": "truffle deploy --network mainnet --reset 2>&1 | tee logs/mainnet-deploy.log",
     "ganache": "ganache-cli --deterministic -p 7545 --networkId 1337",
     "lint": "prettier --list-different 'contracts/**/*.sol' '**/*.js' '**/*.md'",

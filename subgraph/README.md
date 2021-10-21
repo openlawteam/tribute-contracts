@@ -6,7 +6,7 @@
 
 ### Multiple Ethereum Networks Setup
 
-Managing different network deployments for the contracts, is currently setup using a config file in `config/subgraph-config.json`, providing the network, start block, subgraph directory, github username, and contract address for the DaoFactory:
+Managing different network deployments for the contracts, is currently setup using a config file in `config/subgraph-config.json`, providing the network, start block, subgraph directory, github username, and contract address for the DaoFactory and optional adapters:
 
 For example:
 
@@ -16,6 +16,8 @@ For example:
    "network": "rinkeby",
     "daoFactoryAddress": "0x10a14A1665DE72faeDb866Fc75c57036813E2Eb2",
     "daoFactoryStartBlock": 6204221,
+    "couponOnboardingAddress": "0x20a14A1665DE72faeDb866Fc75c57036813E2Eb3",
+    "couponOnboardingStartBlock": 7204228,
     "GITHUB_USERNAME": "openlawteam",
     "SUBGRAPH_NAME": "tribute-dev"
   },

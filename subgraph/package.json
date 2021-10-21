@@ -41,7 +41,7 @@
     "create": "graph create openlawteam/tribute --node https://api.thegraph.com/deploy/",
     "create-local": "graph create openlawteam/tribute --node http://127.0.0.1:8020",
     "deploy": "graph deploy openlawteam/tribute --ipfs https://api.thegraph.com/ipfs/ --node https://api.thegraph.com/deploy/",
-    "deploy-local": "graph deploy openlawteam/tribute --ipfs http://localhost:5001 --node http://127.0.0.1:8020",
+    "deploy-local": "graph deploy openlawteam/tribute --ipfs http://127.0.0.1:5001 --node http://127.0.0.1:8020",
     "ganache": "node_modules/.bin/ganache-cli -s=test -g=0 --secure -u 0 -u 1 -p 7545 --networkId 1337",
     "codegen": "graph codegen",
     "build": "graph build"

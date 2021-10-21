@@ -35,6 +35,8 @@ type TributeDao @entity {
   proposals: [Proposal]! @derivedFrom(field: "tributeDao")
   "List of nfts in the DAO"
   nftCollection: NFTCollection! @derivedFrom(field: "tributeDao")
+  "List of redeemed coupons"
+  coupons: [Coupon]! @derivedFrom(field: "tributeDao")
 }
 
 type Member @entity {
@@ -44,7 +46,7 @@ type Member @entity {
   createdAt: String
   delegateKey: Bytes
   units: BigInt!
-  tokenBalances: [TokenBalance!] @derivedFrom(field: "member")
+  tokenHoldings: [TokenHolder!] @derivedFrom(field: "member")
   proposals: [Proposal!] @derivedFrom(field: "member")
   didFullyRagequit: Boolean
   isDelegated: Boolean
@@ -157,7 +159,6 @@ type Bank @entity {
   id: ID! # Set to `${tribute.id}-bank-${bank.id}`
   "The bank of the DAO"
   bankAddress: Bytes!
-  tokenBalances: [TokenBalance!] @derivedFrom(field: "bank")
   tributeDao: TributeDao!
 }
 
@@ -167,17 +168,15 @@ type Token @entity {
   name: String
   symbol: String
   tokenAddress: Bytes!
-  balance: BigInt
+  totalSupply: BigInt
+  holders: [TokenHolder!] @derivedFrom(field: "token")
 }
 
-type TokenBalance @entity {
-  "Unique identifier and primary key of the `TokenBalance` entity"
-  id: ID! # Set to `${tribute.id}-tokenbalance-${tokenBalance.id}`
-  token: Token! #[Token!]
-  tokenBalance: BigInt!
+type TokenHolder @entity {
+  id: ID! # Set to `${tribute.id}-tokenholder-${memberAddress.id}`
   member: Member
-  bank: Bank
-  tributeDao: TributeDao
+  balance: BigInt
+  token: Token #`${tribute.id}-token-${token.id}`
 }
 
 type NFT @entity {
@@ -214,5 +213,16 @@ type Extension @entity {
   extensionAddress: Bytes!
   "Extension ID"
   extensionId: Bytes!
+  tributeDao: TributeDao
+}
+
+type Coupon @entity {
+  "Unique identifier and primary key of the `Coupon` entity"
+  id: ID! # Set to `${tribute.id}-coupon-${nonce}-${authorizedMember}`
+  redeemedAt: String!
+  "Authorized member address"
+  authorizedMember: Bytes!
+  amount: BigInt!
+  nonce: BigInt!
   tributeDao: TributeDao
 }

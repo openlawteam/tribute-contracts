@@ -5,7 +5,7 @@ import { config as dotenvConfig } from "dotenv";
 
 import subgraphConfig from "./config/subgraph-config.json";
 
-dotenvConfig({ path: resolve(__dirname, "./.env") });
+dotenvConfig({ path: resolve(__dirname, "../.env") });
 
 type DeploySettings = {
   GITHUB_USERNAME: string;
@@ -15,6 +15,8 @@ type DeploySettings = {
 type YAMLSettings = {
   daoFactoryAddress: string;
   daoFactoryStartBlock: number;
+  couponOnboardingAddress?: string | undefined;
+  couponOnboardingStartBlock?: number | undefined;
   network: string;
 };
 
@@ -33,6 +35,8 @@ export const exec = (cmd: string) => {
 const getYAML = ({
   daoFactoryAddress,
   daoFactoryStartBlock,
+  couponOnboardingAddress,
+  couponOnboardingStartBlock,
   network,
 }: YAMLSettings): string => {
   return ` 
@@ -63,6 +67,12 @@ const getYAML = ({
           - event: DAOCreated(address,string)
             handler: handleDaoCreated
         file: ./mappings/dao-factory-mapping.ts
+
+${couponOnboardingYAML({
+  network,
+  couponOnboardingAddress,
+  couponOnboardingStartBlock,
+})}
 
   templates:
     # ====================================== DaoRegistry ====================================
@@ -104,6 +114,8 @@ const getYAML = ({
             file: ../build/contracts/VotingContract.json
           - name: IVoting
             file: ../build/contracts/IVoting.json
+          - name: ERC20Extension
+            file: ../build/contracts/ERC20Extension.json
         eventHandlers:
           - event: SubmittedProposal(bytes32,uint256)
             handler: handleSubmittedProposal
@@ -137,7 +149,7 @@ const getYAML = ({
         apiVersion: 0.0.4
         language: wasm/assemblyscript
         entities:
-          - TokenBalance
+          - TokenHolder
           - Token
           - Member
         abis:
@@ -145,6 +157,8 @@ const getYAML = ({
             file: ../build/contracts/BankExtension.json
           - name: ERC20
             file: ../build/contracts/ERC20.json
+          - name: ERC20Extension
+            file: ../build/contracts/ERC20Extension.json
         eventHandlers:
           - event: NewBalance(address,address,uint160)
             handler: handleNewBalance
@@ -180,6 +194,44 @@ const getYAML = ({
 `;
 };
 
+type CouponOnboardingYAML = {
+  network: string;
+  couponOnboardingAddress: string | undefined;
+  couponOnboardingStartBlock: number | undefined;
+};
+
+function couponOnboardingYAML({
+  network,
+  couponOnboardingAddress,
+  couponOnboardingStartBlock,
+}: CouponOnboardingYAML) {
+  if (!couponOnboardingAddress) return ``;
+
+  return `
+    # ====================================== Adapter: CouponOnboarding ====================================
+    - kind: ethereum/contract
+      name: CouponOnboarding
+      network: ${network}
+      source:
+        address: "${couponOnboardingAddress}"
+        abi: CouponOnboardingContract
+        startBlock: ${couponOnboardingStartBlock}
+      mapping:
+        kind: ethereum/events
+        apiVersion: 0.0.4
+        language: wasm/assemblyscript
+        entities:
+          - Coupon
+        abis:
+          - name: CouponOnboardingContract
+            file: ../build/contracts/CouponOnboardingContract.json
+        eventHandlers:
+          - event: CouponRedeemed(address,uint256,address,uint256)
+            handler: handleCouponRedeemed
+        file: ./mappings/adapters/coupon-onboarding-mapping.ts
+  `;
+}
+
 (function () {
   // Compile the solidity contracts
   console.log("📦 ### 1/3 Compiling the smart contracts...");
@@ -211,22 +263,39 @@ const getYAML = ({
     Start Block: ${subgraph.daoFactoryStartBlock}
     `);
 
+    subgraph.couponOnboardingAddress &&
+      console.log(
+        `CouponOnboarding: Address - ${subgraph.couponOnboardingAddress}, Start Block - ${subgraph.couponOnboardingStartBlock}`
+      );
+
     // Write YAML file
     fs.writeFileSync(
       "subgraph.yaml",
       getYAML({
         daoFactoryAddress: subgraph.daoFactoryAddress,
         daoFactoryStartBlock: subgraph.daoFactoryStartBlock,
+        couponOnboardingAddress: subgraph.couponOnboardingAddress,
+        couponOnboardingStartBlock: subgraph.couponOnboardingStartBlock,
         network: subgraph.network,
       })
     );
 
     // Deploy subgraph <GITHUB_USERNAME/SUBGRAPH_NAME>
-    console.log("🚗 ### Deploying subgraph...");
-    exec(
-      `graph deploy --access-token ${process.env.GRAPH_ACCESS_TOKEN} --node https://api.thegraph.com/deploy/ --ipfs https://api.thegraph.com/ipfs/ ${subgraph.GITHUB_USERNAME}/${subgraph.SUBGRAPH_NAME}`
-    );
+    if (process.env.REMOTE_GRAPH_NODE === "true") {
+      console.log("🚗 ### Deploying subgraph to remote graph node...");
+      exec(
+        `graph deploy --access-token ${process.env.GRAPH_ACCESS_TOKEN} --node https://api.thegraph.com/deploy/ --ipfs https://api.thegraph.com/ipfs/ ${subgraph.GITHUB_USERNAME}/${subgraph.SUBGRAPH_NAME}`
+      );
+    } else {
+      console.log("🚗 ### Deploying subgraph to local graph node...");
+      exec(
+        `graph create ${subgraph.GITHUB_USERNAME}/${subgraph.SUBGRAPH_NAME} --node http://127.0.0.1:8020`
+      );
 
+      exec(
+        `graph deploy ${subgraph.GITHUB_USERNAME}/${subgraph.SUBGRAPH_NAME} --ipfs http://127.0.0.1:5001 --node http://127.0.0.1:8020`
+      );
+    }
     console.log("👏 ### Done.");
 
     // Increment deployment counter

@@ -57,6 +57,8 @@ const contracts = {
   TestToken2: "./test/TestToken2",
   TestFairShareCalc: "./test/TestFairShareCalc",
   PixelNFT: "./test/PixelNFT",
+  ProxToken: "./test/ProxTokenContract",
+  ERC20Minter: "./test/ERC20MinterContract",
 
   // DAO Contracts
   DaoFactory: "./core/DaoFactory",
@@ -65,12 +67,14 @@ const contracts = {
   BankFactory: "./extensions/bank/BankFactory",
   ERC20TokenExtensionFactory:
     "./extensions/token/erc20/ERC20TokenExtensionFactory",
+  ExecutorExtensionFactory: "./extensions/executor/ExecutorExtensionFactory",
   Multicall: "./util/Multicall",
 
   // Extensions
   NFTExtension: "./extensions/nft/NFTExtension",
   BankExtension: "./extensions/bank/BankExtension",
   ERC20Extension: "./extensions/token/erc20/ERC20Extension",
+  ExecutorExtension: "./extensions/token/executor/ExecutorExtension",
 
   // Config Adapters
   DaoRegistryAdapterContract: "./adapters/DaoRegistryAdapterContract",

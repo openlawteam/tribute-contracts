@@ -1,7 +1,7 @@
 pragma solidity ^0.8.0;
-import "../extensions/bank/Bank.sol";
 
 // SPDX-License-Identifier: MIT
+import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 
 /**
 MIT License
@@ -26,21 +26,19 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
  */
+contract ProxTokenContract is ERC20 {
+    event MintedProxToken(address owner, uint256 amount);
 
-abstract contract PotentialNewMember {
-    address internal constant _MEMBER_COUNT = address(0xDECAFBAD);
+    constructor() ERC20("ProxToken", "PRX") {
+        _mint(msg.sender, 0);
+    }
 
-    function potentialNewMember(
-        address memberAddress,
-        DaoRegistry dao,
-        BankExtension bank
-    ) internal {
-        dao.potentialNewMember(memberAddress);
-        require(memberAddress != address(0x0), "invalid member address");
-        if (address(bank) != address(0x0)) {
-            if (bank.balanceOf(memberAddress, _MEMBER_COUNT) == 0) {
-                bank.addToBalance(memberAddress, _MEMBER_COUNT, 1);
-            }
-        }
+    /**
+     * Public function open to anyone that wants to mint new tokens in this test contract.
+     */
+    function mint(uint256 amount) external {
+        address owner = msg.sender;
+        _mint(owner, amount);
+        emit MintedProxToken(owner, amount);
     }
 }
