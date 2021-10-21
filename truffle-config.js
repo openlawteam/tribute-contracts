@@ -52,7 +52,7 @@ module.exports = {
         return new HDWalletProvider(mnemonic, infuraUrl);
       },
       network_id: 1,
-      gasPrice: 120000000000,
+      gasPrice: 100000000000,
       skipDryRun: true,
     },
     coverage: {
