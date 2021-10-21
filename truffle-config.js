@@ -43,7 +43,17 @@ module.exports = {
     mainnet: {
       provider: getNetworkProvider,
       network_id: 1,
-      skipDryRun: true,
+      skipDryRun: true
+    },
+    harmony: {
+      provider: getNetworkProvider,
+      network_id: 1666600000,
+      skipDryRun: true
+    },
+    harmonytest: {
+      provider: getNetworkProvider,
+      network_id: 1666700000,
+      skipDryRun: true
     },
     coverage: {
       host: "localhost",
