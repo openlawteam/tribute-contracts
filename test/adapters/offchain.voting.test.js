@@ -32,7 +32,7 @@ const {
   unitPrice,
   remaining,
   UNITS,
-} = require("../../utils/ContractUtil.js");
+} = require("../../utils/contract-util");
 
 const {
   proposalIdGenerator,
@@ -45,7 +45,7 @@ const {
   revertChainSnapshot,
   web3,
   OffchainVotingHashContract,
-} = require("../../utils/OZTestUtil.js");
+} = require("../../utils/oz-util");
 
 const {
   createVote,
@@ -57,7 +57,7 @@ const {
   prepareVoteResult,
   SigUtilSigner,
   getVoteStepDomainDefinition,
-} = require("../../utils/offchain_voting.js");
+} = require("../../utils/offchain-voting-util");
 
 const generateMembers = (amount) => {
   let newAccounts = [];
@@ -340,7 +340,7 @@ describe("Adapter - Offchain Voting", () => {
   it("should be possible to propose a new voting by signing the proposal hash", async () => {
     const dao = this.dao;
     const onboarding = this.adapters.onboarding;
-    const bank = this.extensions.bank;
+    const bank = this.extensions.bankExt;
 
     for (var i = 1; i < members.length; i++) {
       await onboardMember(

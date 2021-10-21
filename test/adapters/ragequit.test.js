@@ -34,7 +34,7 @@ const {
   GUILD,
   ETH_TOKEN,
   LOOT,
-} = require("../../utils/ContractUtil.js");
+} = require("../../utils/contract-util");
 
 const {
   deployDefaultDao,
@@ -47,9 +47,9 @@ const {
   expect,
   OLToken,
   web3,
-} = require("../../utils/OZTestUtil.js");
+} = require("../../utils/oz-util");
 
-const { onboardingNewMember } = require("../../utils/TestUtils.js");
+const { onboardingNewMember } = require("../../utils/test-util");
 
 const proposalCounter = proposalIdGenerator().generator;
 const owner = accounts[1];
@@ -74,7 +74,7 @@ describe("Adapter - Ragequit", () => {
 
   it("should return an error if a non DAO member attempts to ragequit", async () => {
     const newMember = accounts[2];
-    const bank = this.extensions.bank;
+    const bank = this.extensions.bankExt;
     const onboarding = this.adapters.onboarding;
     const voting = this.adapters.voting;
 
@@ -117,7 +117,7 @@ describe("Adapter - Ragequit", () => {
 
   it("should not be possible for a member to ragequit when the member does not have enough units", async () => {
     const newMember = accounts[2];
-    const bank = this.extensions.bank;
+    const bank = this.extensions.bankExt;
     const onboarding = this.adapters.onboarding;
     const voting = this.adapters.voting;
 
@@ -159,7 +159,7 @@ describe("Adapter - Ragequit", () => {
 
   it("should be possible for a member to ragequit when the member has not voted on any proposals yet", async () => {
     const newMember = accounts[2];
-    const bank = this.extensions.bank;
+    const bank = this.extensions.bankExt;
     const onboarding = this.adapters.onboarding;
     const voting = this.adapters.voting;
 
@@ -203,7 +203,7 @@ describe("Adapter - Ragequit", () => {
   it("should be possible for a member to ragequit if the member voted YES on a proposal that is not processed", async () => {
     const newMember = accounts[2];
     const applicant = accounts[3];
-    const bank = this.extensions.bank;
+    const bank = this.extensions.bankExt;
     const onboarding = this.adapters.onboarding;
     const financing = this.adapters.financing;
     const voting = this.adapters.voting;
@@ -268,7 +268,7 @@ describe("Adapter - Ragequit", () => {
   it("should be possible for a member to ragequit if the member voted NO on a proposal that is not processed", async () => {
     const newMember = accounts[2];
     const applicant = accounts[3];
-    const bank = this.extensions.bank;
+    const bank = this.extensions.bankExt;
     const onboarding = this.adapters.onboarding;
     const financing = this.adapters.financing;
     const voting = this.adapters.voting;
@@ -347,7 +347,7 @@ describe("Adapter - Ragequit", () => {
       tokenAddr: oltContract.address,
     });
 
-    const bank = extensions.bank;
+    const bank = extensions.bankExt;
 
     // Transfer 1000 OLTs to the Advisor account
     await oltContract.transfer(advisorAccount, 1000, { from: owner });
@@ -428,7 +428,7 @@ describe("Adapter - Ragequit", () => {
 
   it("should not be possible to vote after the ragequit", async () => {
     const memberAddr = accounts[2];
-    const bank = this.extensions.bank;
+    const bank = this.extensions.bankExt;
     const onboarding = this.adapters.onboarding;
     const voting = this.adapters.voting;
 
@@ -490,7 +490,7 @@ describe("Adapter - Ragequit", () => {
   });
 
   it("should not be possible to ragequit if the member have provided an invalid token", async () => {
-    const bank = this.extensions.bank;
+    const bank = this.extensions.bankExt;
 
     // Check member units
     let units = await bank.balanceOf(owner, UNITS);
@@ -515,7 +515,7 @@ describe("Adapter - Ragequit", () => {
 
   it("should not be possible to ragequit if there are no tokens to receive the funds", async () => {
     const newMember = accounts[2];
-    const bank = this.extensions.bank;
+    const bank = this.extensions.bankExt;
     const onboarding = this.adapters.onboarding;
     const voting = this.adapters.voting;
 
@@ -556,7 +556,7 @@ describe("Adapter - Ragequit", () => {
 
   it("should not be possible to ragequit if there is a duplicate token", async () => {
     const memberA = accounts[2];
-    const bank = this.extensions.bank;
+    const bank = this.extensions.bankExt;
     const onboarding = this.adapters.onboarding;
     const voting = this.adapters.voting;
 

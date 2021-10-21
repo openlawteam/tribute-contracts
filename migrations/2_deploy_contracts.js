@@ -1,23 +1,27 @@
+const log = console.log;
+const fs = require("fs");
+
 const {
   toBN,
   toWei,
   ETH_TOKEN,
+  UNITS,
   maximumChunks,
   unitPrice,
   numberOfUnits,
   maxAmount,
-} = require("../utils/ContractUtil.js");
+} = require("../utils/contract-util");
 
-const { deployDao, getNetworkDetails } = require("../utils/DeploymentUtil.js");
+const { deployDao, getNetworkDetails } = require("../utils/deployment-util");
 
 require("dotenv").config();
 
 module.exports = async (deployer, network, accounts) => {
-  console.log(`Deployment started at: ${new Date().toISOString()}`);
-  console.log(`Deploying tribute-contracts to ${network} network`);
+  log(`Deployment started at: ${new Date().toISOString()}`);
+  log(`Deploying tribute-contracts to ${network} network`);
 
-  const { contracts } = require(`../deployment/${network}.config`);
-  const truffleImports = require("../utils/TruffleUtil.js")(contracts);
+  const { contracts } = require(`./configs/${network}.config`);
+  const truffleImports = require("../utils/truffle-util")(contracts);
   const daoArtifacts = await getOrCreateDaoArtifacts(deployer, truffleImports);
 
   const deployFunction = truffleImports.deployFunctionFactory(
@@ -25,42 +29,47 @@ module.exports = async (deployer, network, accounts) => {
     daoArtifacts
   );
 
-  const result = await deploy(
+  const result = await deploy({
     network,
     deployFunction,
     truffleImports,
-    accounts
-  );
+    accounts,
+    contracts,
+  });
 
-  const { dao, extensions, testContracts } = result;
+  const { dao, factories, extensions, adapters, testContracts } = result;
   if (dao) {
     await dao.finalizeDao();
-    console.log("************************");
-    console.log(`DaoRegistry: ${dao.address}`);
-    console.log(
-      `Multicall: ${
-        testContracts.multicall ? testContracts.multicall.address : ""
-      }`
-    );
-    console.log(`BankExtension: ${extensions.bank.address}`);
-    console.log(
-      `NFTExtension: ${extensions.nft ? extensions.nft.address : ""}`
-    );
-    console.log(
-      `ERC20Extension: ${
-        extensions.erc20Ext ? extensions.erc20Ext.address : ""
-      }`
-    );
-    console.log("************************");
+    log("************************************************");
+    log(`Owner: ${accounts[0]}`);
+    log(`DaoRegistry: ${dao.address}`);
+    const addresses = {};
+    Object.values(factories)
+      .concat(Object.values(extensions))
+      .concat(Object.values(adapters))
+      .concat(Object.values(testContracts))
+      .forEach((c) => {
+        log(`${c.configs.name}: ${c.address}`);
+        addresses[c.configs.name] = c.address;
+      });
+    const filename = `build/${network}-deployment-${new Date().toISOString()}.json`;
+    fs.writeFileSync(filename, JSON.stringify(addresses), "utf8");
+    log("************************************************");
+    log(`\nDeployed contracts: ${filename}`);
   } else {
-    console.log("************************");
-    console.log("no migration for network " + network);
-    console.log("************************");
+    log("************************************************");
+    log("no migration for network " + network);
+    log("************************************************");
   }
-  console.log(`Deployment completed at: ${new Date().toISOString()}`);
+  log(`Deployment completed at: ${new Date().toISOString()}`);
 };
 
-const deployRinkebyDao = async (deployFunction, network, truffleImports) => {
+const deployRinkebyDao = async (
+  deployFunction,
+  network,
+  truffleImports,
+  contractConfigs
+) => {
   if (!process.env.DAO_NAME) throw Error("Missing env var: DAO_NAME");
   if (!process.env.DAO_OWNER_ADDR)
     throw Error("Missing env var: DAO_OWNER_ADDR");
@@ -73,6 +82,7 @@ const deployRinkebyDao = async (deployFunction, network, truffleImports) => {
 
   return await deployDao({
     ...truffleImports,
+    contractConfigs,
     deployFunction,
     maxAmount,
     unitPrice: toBN(toWei("100", "finney")),
@@ -81,6 +91,7 @@ const deployRinkebyDao = async (deployFunction, network, truffleImports) => {
     erc20TokenName: process.env.ERC20_TOKEN_NAME,
     erc20TokenSymbol: process.env.ERC20_TOKEN_SYMBOL,
     erc20TokenDecimals: process.env.ERC20_TOKEN_DECIMALS,
+    erc20TokenAddress: UNITS,
     maxChunks: toBN("100000"),
     votingPeriod: process.env.VOTING_PERIOD_SECONDS
       ? parseInt(process.env.VOTING_PERIOD_SECONDS)
@@ -90,7 +101,7 @@ const deployRinkebyDao = async (deployFunction, network, truffleImports) => {
       : 600, // 600 secs = 10 mins
     offchainVoting: true,
     chainId: getNetworkDetails(network).chainId,
-    deployTestTokens: true,
+
     finalize: false,
     maxExternalTokens: 100,
     couponCreatorAddress: process.env.COUPON_CREATOR_ADDR
@@ -101,10 +112,21 @@ const deployRinkebyDao = async (deployFunction, network, truffleImports) => {
     offchainAdmin: process.env.OFFCHAIN_ADMIN_ADDR
       ? process.env.OFFCHAIN_ADMIN_ADDR
       : "0xedC10CFA90A135C41538325DD57FDB4c7b88faf7",
+    deployTestTokens: true,
+    supplyTestToken1: 1000000,
+    supplyTestToken2: 1000000,
+    supplyPixelNFT: 100,
+    supplyOLToken: toBN("1000000000000000000000000"),
+    erc1155TestTokenUri: "1155 test token",
   });
 };
 
-const deployMainnetDao = async (deployFunction, network, truffleImports) => {
+const deployMainnetDao = async (
+  deployFunction,
+  network,
+  truffleImports,
+  contractConfigs
+) => {
   if (!process.env.DAO_NAME) throw Error("Missing env var: DAO_NAME");
   if (!process.env.DAO_OWNER_ADDR)
     throw Error("Missing env var: DAO_OWNER_ADDR");
@@ -125,13 +147,16 @@ const deployMainnetDao = async (deployFunction, network, truffleImports) => {
 
   return await deployDao({
     ...truffleImports,
+    contractConfigs,
     deployFunction,
+    maxAmount,
     unitPrice: toBN(toWei("100", "finney")),
     nbUnits: toBN("100000"),
     tokenAddr: ETH_TOKEN,
     erc20TokenName: process.env.ERC20_TOKEN_NAME,
     erc20TokenSymbol: process.env.ERC20_TOKEN_SYMBOL,
     erc20TokenDecimals: process.env.ERC20_TOKEN_DECIMALS,
+    erc20TokenAddress: UNITS,
     maxChunks: toBN("100000"),
     votingPeriod: parseInt(process.env.VOTING_PERIOD_SECONDS),
     gracePeriod: parseInt(process.env.GRACE_PERIOD_SECONDS),
@@ -151,7 +176,8 @@ const deployGanacheDao = async (
   deployFunction,
   network,
   accounts,
-  truffleImports
+  truffleImports,
+  contractConfigs
 ) => {
   if (!process.env.DAO_NAME) throw Error("Missing env var: DAO_NAME");
   if (!process.env.ERC20_TOKEN_NAME)
@@ -163,19 +189,21 @@ const deployGanacheDao = async (
 
   return await deployDao({
     ...truffleImports,
+    contractConfigs,
     deployFunction,
+    maxAmount,
     unitPrice: toBN(toWei("100", "finney")),
     nbUnits: toBN("100000"),
     tokenAddr: ETH_TOKEN,
     erc20TokenName: process.env.ERC20_TOKEN_NAME,
     erc20TokenSymbol: process.env.ERC20_TOKEN_SYMBOL,
     erc20TokenDecimals: process.env.ERC20_TOKEN_DECIMALS,
+    erc20TokenAddress: UNITS,
     maxChunks: toBN("100000"),
     votingPeriod: 120, // 120 secs = 2 mins
     gracePeriod: 60, // 60 secs = 1 min
     offchainVoting: true,
     chainId: getNetworkDetails(network).chainId,
-    deployTestTokens: true,
     finalize: false,
     maxExternalTokens: 100,
     couponCreatorAddress: process.env.COUPON_CREATOR_ADDR
@@ -184,6 +212,12 @@ const deployGanacheDao = async (
     daoName: process.env.DAO_NAME,
     owner: accounts[0],
     offchainAdmin: "0xedC10CFA90A135C41538325DD57FDB4c7b88faf7",
+    deployTestTokens: true,
+    supplyTestToken1: 1000000,
+    supplyTestToken2: 1000000,
+    supplyPixelNFT: 100,
+    supplyOLToken: toBN("1000000000000000000000000"),
+    erc1155TestTokenUri: "1155 test token",
   });
 };
 
@@ -191,7 +225,8 @@ const deployTestDao = async (
   deployFunction,
   network,
   accounts,
-  truffleImports
+  truffleImports,
+  contractConfigs
 ) => {
   if (!process.env.DAO_NAME) throw Error("Missing env var: DAO_NAME");
   if (!process.env.ERC20_TOKEN_NAME)
@@ -203,13 +238,16 @@ const deployTestDao = async (
 
   return await deployDao({
     ...truffleImports,
+    contractConfigs,
     deployFunction,
+    maxAmount,
     unitPrice: unitPrice,
     nbUnits: numberOfUnits,
     tokenAddr: ETH_TOKEN,
     erc20TokenName: process.env.ERC20_TOKEN_NAME,
     erc20TokenSymbol: process.env.ERC20_TOKEN_SYMBOL,
     erc20TokenDecimals: process.env.ERC20_TOKEN_DECIMALS,
+    erc20TokenAddress: UNITS,
     maxChunks: maximumChunks,
     votingPeriod: 10, // 10 secs
     gracePeriod: 1, // 1 sec
@@ -225,14 +263,30 @@ const deployTestDao = async (
   });
 };
 
-const deploy = async (network, deployFunction, truffleImports, accounts) => {
+const deploy = async ({
+  network,
+  deployFunction,
+  truffleImports,
+  accounts,
+  contracts,
+}) => {
   let res;
   switch (network) {
     case "mainnet":
-      res = await deployMainnetDao(deployFunction, network, truffleImports);
+      res = await deployMainnetDao(
+        deployFunction,
+        network,
+        truffleImports,
+        contracts
+      );
       break;
     case "rinkeby":
-      res = await deployRinkebyDao(deployFunction, network, truffleImports);
+      res = await deployRinkebyDao(
+        deployFunction,
+        network,
+        truffleImports,
+        contracts
+      );
       break;
     case "test":
     case "coverage":
@@ -240,7 +294,8 @@ const deploy = async (network, deployFunction, truffleImports, accounts) => {
         deployFunction,
         network,
         accounts,
-        truffleImports
+        truffleImports,
+        contracts
       );
       break;
     case "ganache":
@@ -248,7 +303,8 @@ const deploy = async (network, deployFunction, truffleImports, accounts) => {
         deployFunction,
         network,
         accounts,
-        truffleImports
+        truffleImports,
+        contracts
       );
       break;
     default:

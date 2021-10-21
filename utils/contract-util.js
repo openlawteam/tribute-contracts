@@ -57,6 +57,13 @@ const remaining = unitPrice.sub(toBN("50000000000000"));
 const maximumChunks = toBN("11");
 const maxAmount = toBN("10000000000000000000");
 
+const embedConfigs = (contractInstance, name, configs) => {
+  return {
+    ...contractInstance,
+    configs: configs.find((c) => c.name === name),
+  };
+};
+
 module.exports = {
   sha3,
   soliditySha3,
@@ -68,6 +75,7 @@ module.exports = {
   fromAscii,
   toUtf8,
   toHex,
+  embedConfigs,
   maximumChunks,
   maxAmount,
   numberOfUnits,

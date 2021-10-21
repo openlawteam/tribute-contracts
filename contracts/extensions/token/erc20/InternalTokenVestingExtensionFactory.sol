@@ -32,7 +32,7 @@ SOFTWARE.
 contract InternalTokenVestingExtensionFactory is CloneFactory {
     address public identityAddress;
 
-    event InternalTokenVestingExtensionCreated(address addr);
+    event InternalTokenVestingExtensionCreated(address extensionAddress);
 
     constructor(address _identityAddress) {
         require(_identityAddress != address(0x0), "invalid addr");

@@ -25,9 +25,9 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
  */
 
-const { sha3, toHex, ZERO_ADDRESS } = require("./ContractUtil");
+const { sha3, toHex, ZERO_ADDRESS } = require("./contract-util");
 
-const { ContractType } = require("../deployment/contracts.config");
+const { ContractType } = require("../migrations/configs/contracts.config");
 
 const getContractFromTruffle = (c) => {
   return artifacts.require(c);
@@ -55,21 +55,25 @@ const deployFunction = (deployer, daoArtifacts, allContracts) => {
   const loadOrDeploy = async (contractInterface, args) => {
     if (!contractInterface) return null; //throw Error("Invalid contract interface");
 
-    const contractConfig = allContracts.find(
+    const contractConfigs = allContracts.find(
       (c) => c.name === contractInterface.contractName
     );
-    if (!contractConfig)
+    if (!contractConfigs)
       throw Error(
-        `${contractInterface.contractName} contract not found in deployment/contracts.config`
+        `${contractInterface.contractName} contract not found in migrations/configs/contracts.config`
       );
 
     if (
       // Always deploy core, extension and test contracts
-      contractConfig.type === ContractType.Core ||
-      contractConfig.type === ContractType.Extension ||
-      contractConfig.type === ContractType.Test
+      contractConfigs.type === ContractType.Core ||
+      contractConfigs.type === ContractType.Extension ||
+      contractConfigs.type === ContractType.Test
     ) {
-      return deploy(contractInterface, args);
+      const instance = await deploy(contractInterface, args);
+      return {
+        ...instance,
+        configs: contractConfigs,
+      };
     }
 
     const artifactsOwner = process.env.DAO_ARTIFACTS_OWNER_ADDR
@@ -78,20 +82,21 @@ const deployFunction = (deployer, daoArtifacts, allContracts) => {
 
     // Attempt to load the contract from the DaoArtifacts to save deploy gas
     const address = await daoArtifacts.getArtifactAddress(
-      sha3(contractConfig.name),
+      sha3(contractConfigs.name),
       artifactsOwner,
-      toHex(contractConfig.version),
-      contractConfig.type
+      toHex(contractConfigs.version),
+      contractConfigs.type
     );
     if (address && address !== ZERO_ADDRESS) {
       console.log(
-        `Attached to existing contract ${contractConfig.name}: ${address}`
+        `Attached to existing contract ${contractConfigs.name}: ${address}`
       );
-      return await contractInterface.at(address);
+      const instance = await contractInterface.at(address);
+      return { ...instance, configs: contractConfigs };
     }
     let deployedContract;
     // When the contract is not found in the DaoArtifacts, deploy a new one
-    if (contractConfig.type === ContractType.Factory) {
+    if (contractConfigs.type === ContractType.Factory) {
       const identity = await deploy(args[0]);
       deployedContract = await deploy(
         contractInterface,
@@ -103,22 +108,22 @@ const deployFunction = (deployer, daoArtifacts, allContracts) => {
 
     if (
       // Add the new contract to DaoArtifacts, should not store Core, Extension & Test contracts
-      contractConfig.type === ContractType.Factory ||
-      contractConfig.type === ContractType.Adapter ||
-      contractConfig.type === ContractType.Util
+      contractConfigs.type === ContractType.Factory ||
+      contractConfigs.type === ContractType.Adapter ||
+      contractConfigs.type === ContractType.Util
     ) {
       await daoArtifacts.addArtifact(
-        sha3(contractConfig.name),
-        toHex(contractConfig.version),
+        sha3(contractConfigs.name),
+        toHex(contractConfigs.version),
         deployedContract.address,
-        contractConfig.type
+        contractConfigs.type
       );
       console.log(
-        `${contractConfig.name}:${contractConfig.type}:${contractConfig.version}:${deployedContract.address} added to DaoArtifacts`
+        `${contractConfigs.name}:${contractConfigs.type}:${contractConfigs.version}:${deployedContract.address} added to DaoArtifacts`
       );
     }
 
-    return deployedContract;
+    return { ...deployedContract, configs: contractConfigs };
   };
 
   return loadOrDeploy;
@@ -127,7 +132,7 @@ const deployFunction = (deployer, daoArtifacts, allContracts) => {
 module.exports = (contracts) => {
   const allContracts = getTruffleContracts(contracts);
   const truffleInterfaces = allContracts.reduce((previousValue, contract) => {
-    previousValue[contract.name] = getContractFromTruffle(contract.path);
+    previousValue[contract.name] = contract.interface;
     return previousValue;
   }, {});
 

@@ -6,7 +6,7 @@ module.exports = {
   compileCommand: "npm run compile",
   providerOptions: {
     default_balance_ether: "10000000000000000000000000",
-    allowUnlimetedContractSize: true,
+    allowUnlimitedContractSize: true,
     gasLimit: 0xfffffffffff,
     gasPrice: 0x0,
   },

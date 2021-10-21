@@ -26,10 +26,10 @@ SOFTWARE.
  */
 const expectEvent = require("@openzeppelin/test-helpers/src/expectEvent");
 const expectRevert = require("@openzeppelin/test-helpers/src/expectRevert");
-const { sha3 } = require("../../utils/ContractUtil.js");
+const { sha3 } = require("../../utils/contract-util");
 const { toBN } = require("web3-utils");
-const { accounts, expect, DaoArtifacts } = require("../../utils/OZTestUtil.js");
-const { ContractType } = require("../../deployment/contracts.config");
+const { accounts, expect, DaoArtifacts } = require("../../utils/oz-util");
+const { ContractType } = require("../../migrations/configs/contracts.config");
 
 describe("Utils - DaoArtifacts", () => {
   it("should be possible to create a dao artifacts contract", async () => {

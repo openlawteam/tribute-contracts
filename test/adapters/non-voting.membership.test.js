@@ -30,7 +30,7 @@ const {
   unitPrice,
   remaining,
   LOOT,
-} = require("../../utils/ContractUtil.js");
+} = require("../../utils/contract-util");
 
 const {
   deployDefaultDao,
@@ -40,7 +40,7 @@ const {
   expect,
   expectRevert,
   OLToken,
-} = require("../../utils/OZTestUtil.js");
+} = require("../../utils/oz-util");
 
 const daoOwner = accounts[1];
 const proposalCounter = proposalIdGenerator().generator;
@@ -56,7 +56,7 @@ describe("Adapter - Non Voting Onboarding", () => {
     const { dao, adapters, extensions } = await deployDefaultDao({
       owner: daoOwner,
     });
-    const bank = extensions.bank;
+    const bank = extensions.bankExt;
     const onboarding = adapters.onboarding;
     const voting = adapters.voting;
 
@@ -119,7 +119,7 @@ describe("Adapter - Non Voting Onboarding", () => {
       tokenAddr: oltContract.address,
     });
 
-    const bank = extensions.bank;
+    const bank = extensions.bankExt;
     const onboarding = adapters.onboarding;
     const voting = adapters.voting;
 

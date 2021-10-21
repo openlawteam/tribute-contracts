@@ -39,43 +39,40 @@ const {
   maxAmount,
   ETH_TOKEN,
   UNITS,
-} = require("./ContractUtil");
+  toBN,
+} = require("./contract-util.js");
 
-const {
-  deployDao,
-  entryDao,
-  entryBank,
-  entryERC1271,
-  entryExecutor,
-  entry,
-} = require("./DeploymentUtil");
-
-const { expectRevert } = require("@openzeppelin/test-helpers");
 const { expect } = require("chai");
-const { ContractType } = require("../deployment/contracts.config");
+const { expectRevert } = require("@openzeppelin/test-helpers");
+const { deployDao } = require("./deployment-util.js");
+const {
+  contracts: allContractConfigs,
+} = require("../migrations/configs/test.config");
+const { ContractType } = require("../migrations/configs/contracts.config");
 
 const deployFunction = async (contractInterface, args, from) => {
   if (!contractInterface) throw Error("undefined contract interface");
-  const { contracts } = require("../deployment/test.config");
 
-  const contractConfig = contracts.find(
+  const contractConfig = allContractConfigs.find(
     (c) => c.name === contractInterface.contractName
   );
 
   const f = from ? from : accounts[0];
+  let instance;
   if (contractConfig.type === ContractType.Factory) {
     const identity = await args[0].new({ from: f });
-    return await contractInterface.new(
+    instance = await contractInterface.new(
       ...[identity.address].concat(args.slice(1)),
       { from: f }
     );
   } else {
     if (args) {
-      return await contractInterface.new(...args, { from: f });
+      instance = await contractInterface.new(...args, { from: f });
     } else {
-      return await contractInterface.new({ from: f });
+      instance = await contractInterface.new({ from: f });
     }
   }
+  return { ...instance, configs: contractConfig };
 };
 
 const getContractFromOpenZeppelin = (c) => {
@@ -93,7 +90,7 @@ const getOpenZeppelinContracts = (contracts) => {
 };
 
 const getDefaultOptions = (options) => {
-  let o = {
+  return {
     unitPrice: unitPrice,
     nbUnits: numberOfUnits,
     votingPeriod: 10,
@@ -105,11 +102,18 @@ const getDefaultOptions = (options) => {
     maxExternalTokens: 100,
     couponCreatorAddress: "0x7D8cad0bbD68deb352C33e80fccd4D8e88b4aBb8",
     deployTestTokens: true,
-    ...options,
+    erc20TokenName: "Test Token",
+    erc20TokenSymbol: "TTK",
+    erc20TokenDecimals: Number(0),
+    erc20TokenAddress: UNITS,
+    supplyTestToken1: 1000000,
+    supplyTestToken2: 1000000,
+    supplyPixelNFT: 100,
+    supplyOLToken: toBN("1000000000000000000000000"),
+    erc1155TestTokenUri: "1155 test token",
+    finalize: options.finalize === undefined || !!options.finalize,
+    ...options, // to make sure the options from the tests override the default ones
   };
-
-  o.finalize = options.finalize === undefined || !!options.finalize;
-  return o;
 };
 
 const advanceTime = async (time) => {
@@ -200,24 +204,24 @@ const proposalIdGenerator = () => {
 };
 
 module.exports = (() => {
-  const { contracts } = require("../deployment/test.config");
-  const ozContracts = getOpenZeppelinContracts(contracts);
+  const ozContracts = getOpenZeppelinContracts(allContractConfigs);
 
   const deployDefaultDao = async (options) => {
     return await deployDao({
       ...getDefaultOptions(options),
       ...ozContracts,
       deployFunction,
+      contractConfigs: allContractConfigs,
     });
   };
 
   const deployDefaultNFTDao = async ({ owner }) => {
     const { dao, adapters, extensions, testContracts } = await deployDao({
       ...getDefaultOptions({ owner }),
-      deployTestTokens: true,
-      finalize: false,
       ...ozContracts,
       deployFunction,
+      finalize: false,
+      contractConfigs: allContractConfigs,
     });
 
     await dao.finalizeDao({ from: owner });
@@ -239,61 +243,29 @@ module.exports = (() => {
       votingHelpers,
     } = await deployDao({
       ...getDefaultOptions({ owner }),
-      offchainVoting: true,
-      deployTestTokens: true,
-      offchainAdmin: owner,
-      finalize: false,
       ...ozContracts,
       deployFunction,
+      finalize: false,
+      offchainVoting: true,
+      offchainAdmin: owner,
+      contractConfigs: allContractConfigs,
     });
 
     await dao.potentialNewMember(newMember, {
       from: owner,
     });
 
-    await extensions.bank.addToBalance(newMember, UNITS, 1, {
+    await extensions.bankExt.addToBalance(newMember, UNITS, 1, {
       from: owner,
     });
 
     await dao.finalizeDao({ from: owner });
-
-    adapters["voting"] = votingHelpers.offchainVoting;
 
     return {
       dao: dao,
       adapters: adapters,
       extensions: extensions,
       testContracts: testContracts,
-      votingHelpers: votingHelpers,
-    };
-  };
-
-  const deployDaoWithBatchVoting = async ({ owner, newMember }) => {
-    const { dao, adapters, extensions, votingHelpers } = await deployDao({
-      ...getDefaultOptions({ owner }),
-      ...ozContracts,
-      deployTestTokens: false,
-      batchVoting: true,
-      finalize: false,
-      deployFunction,
-    });
-
-    await dao.potentialNewMember(newMember, {
-      from: owner,
-    });
-
-    await extensions.bank.addToBalance(newMember, UNITS, 1, {
-      from: owner,
-    });
-
-    await dao.finalizeDao({ from: owner });
-
-    adapters["voting"] = adapters.batchVoting;
-
-    return {
-      dao: dao,
-      adapters: adapters,
-      extensions: extensions,
       votingHelpers: votingHelpers,
     };
   };
@@ -315,14 +287,8 @@ module.exports = (() => {
   return {
     deployDefaultDao,
     deployDefaultNFTDao,
-    deployDaoWithBatchVoting,
     deployDaoWithOffchainVoting,
-    entry,
     encodeProposalData,
-    entryERC1271,
-    entryBank,
-    entryDao,
-    entryExecutor,
     takeChainSnapshot,
     revertChainSnapshot,
     proposalIdGenerator,

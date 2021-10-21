@@ -31,7 +31,7 @@ SOFTWARE.
 contract ERC1155TokenCollectionFactory is CloneFactory {
     address public identityAddress;
 
-    event ERC1155CollectionCreated(address nftCollAddress);
+    event ERC1155CollectionCreated(address extensionAddress);
 
     constructor(address _identityAddress) {
         require(_identityAddress != address(0x0), "invalid addr");
@@ -41,7 +41,7 @@ contract ERC1155TokenCollectionFactory is CloneFactory {
     /**
      * @notice Create and initialize a new Standard NFT Extension which is based on ERC1155
      */
-    function createERC1155Collection() external {
+    function create() external {
         ERC1155TokenExtension extension =
             ERC1155TokenExtension(_createClone(identityAddress));
         emit ERC1155CollectionCreated(address(extension));

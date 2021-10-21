@@ -25,19 +25,25 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
  */
-const { sha3, toBN, toWei } = require("../../utils/ContractUtil.js");
+const { sha3, toBN, toWei } = require("../../utils/contract-util");
 
 const {
   deployDefaultDao,
-  entryDao,
-  entryExecutor,
-  ERC20Minter,
-  ProxToken,
+  ERC20MinterContract,
+  ProxTokenContract,
   accounts,
   web3,
   expect,
   expectRevert,
-} = require("../../utils/OZTestUtil.js");
+} = require("../../utils/oz-util");
+
+const {
+  executorExtensionAclFlagsMap,
+  entryDao,
+  entryExecutor,
+} = require("../../utils/access-control-util");
+
+const { extensionsIdsMap } = require("../../utils/dao-ids-util");
 
 describe("Extension - Executor", () => {
   const daoOwner = accounts[0];
@@ -56,12 +62,17 @@ describe("Extension - Executor", () => {
       finalize: false,
     });
 
-    const erc20Minter = await ERC20Minter.new();
+    const erc20Minter = await ERC20MinterContract.new();
     const executorExt = extensions.executorExt;
 
     await factories.daoFactory.addAdapters(
       dao.address,
-      [entryDao("erc20Minter", erc20Minter, {})],
+      [
+        entryDao("erc20Minter", erc20Minter.address, {
+          dao: [],
+          extensions: {},
+        }),
+      ],
       { from: daoOwner }
     );
 
@@ -69,8 +80,12 @@ describe("Extension - Executor", () => {
       dao.address,
       executorExt.address,
       [
-        entryExecutor(erc20Minter, {
-          EXECUTE: true,
+        entryExecutor(erc20Minter.address, {
+          extensions: {
+            [extensionsIdsMap.EXECUTOR_EXT]: [
+              executorExtensionAclFlagsMap.EXECUTE,
+            ],
+          },
         }),
       ],
       { from: daoOwner }
@@ -81,7 +96,7 @@ describe("Extension - Executor", () => {
     const minterAddress = await dao.getAdapterAddress(sha3("erc20Minter"));
     expect(minterAddress).to.not.be.null;
 
-    const proxToken = await ProxToken.new();
+    const proxToken = await ProxTokenContract.new();
     expect(proxToken).to.not.be.null;
 
     const res = await erc20Minter.execute(
@@ -112,12 +127,17 @@ describe("Extension - Executor", () => {
       finalize: false,
     });
 
-    const erc20Minter = await ERC20Minter.new();
+    const erc20Minter = await ERC20MinterContract.new();
     const executorExt = extensions.executorExt;
 
     await factories.daoFactory.addAdapters(
       dao.address,
-      [entryDao("erc20Minter", erc20Minter, {})],
+      [
+        entryDao("erc20Minter", erc20Minter.address, {
+          dao: [],
+          extensions: {},
+        }),
+      ],
       { from: daoOwner }
     );
 
@@ -125,8 +145,9 @@ describe("Extension - Executor", () => {
       dao.address,
       executorExt.address,
       [
-        entryExecutor(erc20Minter, {
-          EXECUTE: false, // WITHOUT THE PERMISSION TO EXECUTE DELEGATE CALLS
+        entryExecutor(erc20Minter.address, {
+          dao: [], // no access granted
+          extensions: {}, // no access granted
         }),
       ],
       { from: daoOwner }
@@ -137,7 +158,7 @@ describe("Extension - Executor", () => {
     const minterAddress = await dao.getAdapterAddress(sha3("erc20Minter"));
     expect(minterAddress).to.not.be.null;
 
-    const proxToken = await ProxToken.new();
+    const proxToken = await ProxTokenContract.new();
     expect(proxToken).to.not.be.null;
 
     await expectRevert(

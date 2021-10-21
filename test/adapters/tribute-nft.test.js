@@ -31,7 +31,7 @@ const {
   unitPrice,
   UNITS,
   GUILD,
-} = require("../../utils/ContractUtil.js");
+} = require("../../utils/contract-util");
 
 const {
   deployDefaultNFTDao,
@@ -44,9 +44,9 @@ const {
   expect,
   encodeProposalData,
   web3,
-} = require("../../utils/OZTestUtil.js");
+} = require("../../utils/oz-util");
 
-const { onboardingNewMember, isMember } = require("../../utils/TestUtils.js");
+const { onboardingNewMember, isMember } = require("../../utils/test-util");
 
 describe("Adapter - TributeNFT", () => {
   const proposalCounter = proposalIdGenerator().generator;
@@ -151,8 +151,8 @@ describe("Adapter - TributeNFT", () => {
     const nftOwner = accounts[2];
     const proposalId = getProposalCounter();
     const dao = this.dao;
-    const bank = this.extensions.bank;
-    const nftExt = this.extensions.nft;
+    const bank = this.extensions.bankExt;
+    const nftExt = this.extensions.erc721Ext;
     const pixelNFT = this.testContracts.pixelNFT;
     const tributeNFT = this.adapters.tributeNFT;
     const voting = this.adapters.voting;
@@ -234,8 +234,8 @@ describe("Adapter - TributeNFT", () => {
     const nftOwner = accounts[2];
     const proposalId = getProposalCounter();
     const dao = this.dao;
-    const bank = this.extensions.bank;
-    const nftExt = this.extensions.nft;
+    const bank = this.extensions.bankExt;
+    const nftExt = this.extensions.erc721Ext;
     const pixelNFT = this.testContracts.pixelNFT;
     const tributeNFT = this.adapters.tributeNFT;
     const voting = this.adapters.voting;
@@ -292,8 +292,8 @@ describe("Adapter - TributeNFT", () => {
     const newMemberA = accounts[3];
     const proposalId = getProposalCounter();
     const dao = this.dao;
-    const bank = this.extensions.bank;
-    const nftExt = this.extensions.nft;
+    const bank = this.extensions.bankExt;
+    const nftExt = this.extensions.erc721Ext;
     const pixelNFT = this.testContracts.pixelNFT;
     const tributeNFT = this.adapters.tributeNFT;
     const voting = this.adapters.voting;
@@ -368,8 +368,8 @@ describe("Adapter - TributeNFT", () => {
     const nftOwner = accounts[2];
     const proposalId = getProposalCounter();
     const dao = this.dao;
-    const bank = this.extensions.bank;
-    const nftExt = this.extensions.nft;
+    const bank = this.extensions.bankExt;
+    const nftExt = this.extensions.erc721Ext;
     const pixelNFT = this.testContracts.pixelNFT;
     const tributeNFT = this.adapters.tributeNFT;
 
@@ -419,7 +419,6 @@ describe("Adapter - TributeNFT", () => {
     const nftOwner = accounts[2];
     const proposalId = getProposalCounter();
     const dao = this.dao;
-    const nftExt = this.extensions.nft;
     const pixelNFT = this.testContracts.pixelNFT;
     const tributeNFT = this.adapters.tributeNFT;
     const voting = this.adapters.voting;
@@ -475,7 +474,7 @@ describe("Adapter - TributeNFT", () => {
     const erc1155Token = this.testContracts.erc1155TestToken;
     const tributeNFT = this.adapters.tributeNFT;
     const erc1155Ext = this.extensions.erc1155Ext;
-    const bank = this.extensions.bank;
+    const bank = this.extensions.bankExt;
     const voting = this.adapters.voting;
     const proposalId = getProposalCounter();
 
@@ -539,7 +538,7 @@ describe("Adapter - TributeNFT", () => {
     const erc1155Token = this.testContracts.erc1155TestToken;
     const tributeNFT = this.adapters.tributeNFT;
     const erc1155Ext = this.extensions.erc1155Ext;
-    const bank = this.extensions.bank;
+    const bank = this.extensions.bankExt;
     const voting = this.adapters.voting;
     const proposalId = getProposalCounter();
 

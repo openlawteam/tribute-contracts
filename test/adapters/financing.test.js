@@ -33,7 +33,7 @@ const {
   UNITS,
   GUILD,
   ETH_TOKEN,
-} = require("../../utils/ContractUtil.js");
+} = require("../../utils/contract-util");
 
 const {
   deployDefaultDao,
@@ -45,9 +45,9 @@ const {
   expect,
   expectRevert,
   web3,
-} = require("../../utils/OZTestUtil.js");
+} = require("../../utils/oz-util");
 
-const { checkBalance } = require("../../utils/TestUtils.js");
+const { checkBalance } = require("../../utils/test-util");
 
 const remaining = unitPrice.sub(toBN("50000000000000"));
 const daoOwner = accounts[1];
@@ -77,7 +77,7 @@ describe("Adapter - Financing", () => {
   });
 
   it("should be possible to create a financing proposal and get the funds when the proposal pass", async () => {
-    const bank = this.extensions.bank;
+    const bank = this.extensions.bankExt;
     const voting = this.adapters.voting;
     const financing = this.adapters.financing;
     const onboarding = this.adapters.onboarding;

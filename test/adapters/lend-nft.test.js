@@ -30,7 +30,7 @@ const {
   ERC1155,
   UNITS,
   fromAscii,
-} = require("../../utils/ContractUtil.js");
+} = require("../../utils/contract-util");
 
 const {
   deployDefaultNFTDao,
@@ -43,7 +43,7 @@ const {
   expectRevert,
   expect,
   web3,
-} = require("../../utils/OZTestUtil.js");
+} = require("../../utils/oz-util");
 
 describe("Adapter - LendNFT", () => {
   const proposalCounter = proposalIdGenerator().generator;
@@ -79,8 +79,8 @@ describe("Adapter - LendNFT", () => {
     const lendNFT = this.adapters.lendNFT;
     const dao = this.dao;
     const voting = this.adapters.voting;
-    const nftExtension = this.extensions.nft;
-    const bank = this.extensions.bank;
+    const nftExtension = this.extensions.erc721Ext;
+    const bank = this.extensions.bankExt;
     const proposalId = getProposalCounter();
     const proposalId2 = getProposalCounter();
 
