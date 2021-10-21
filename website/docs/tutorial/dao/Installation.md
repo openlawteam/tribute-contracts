@@ -8,42 +8,13 @@ sidebar_position: 2
 
 ## Requirements
 
-- **[Node.js](https://nodejs.org/en/download/)** version >= 12.12.0 or above (which can be checked by running `node -v`). You can use [nvm](https://github.com/nvm-sh/nvm) for managing multiple Node versions on a single machine installed
+- **[Node.js](https://nodejs.org/en/download/)** version >= 16.0.0 or above (which can be checked by running `node -v`). You can use [nvm](https://github.com/nvm-sh/nvm) for managing multiple Node versions on a single machine.
 - **[Git](https://git-scm.com/downloads)** version 2.15.0 or above.
 - **[Solc](https://docs.soliditylang.org/en/develop/installing-solidity.html)** version 0.8.0.
 
 ## Creating the project
 
-The easiest way to start with TributeDAO Framework is to use the command line tool to clone the Github repository and install all the project dependencies.
-
-We will use several projects to build and run the TributeDAO in your local environment, so please try to keep the following folder structure:
-
-```
-tribute-tutorial
-│
-└───tribute-contracts (branch v1.0.0)
-│   │   .env
-│   │   ...
-|   |
-│   └───subgraph (branch v1.1.0)
-│       │   .env
-│       │   ...
-│
-└───tribute-ui
-│     │   .env
-│     │   ...
-│
-└───snapshot-hub (branch erc-712)
-    │   .env
-    │   docker-compose.yml
-    │   ...
-```
-
-Create and access the tutorial folder:
-
-```bash
-mkdir tribute-tutorial && cd tribute-tutorial
-```
+The easiest way to start with TributeDAO Framework is to use the command line tool to clone the Github repository, and install all the project dependencies.
 
 Clone and access the _tribute-contracts_ Github repo:
 
@@ -51,28 +22,20 @@ Clone and access the _tribute-contracts_ Github repo:
 git clone https://github.com/openlawteam/tribute-contracts.git && cd tribute-contracts
 ```
 
+Fetch and checkout the branch `release-v1.0.3`:
+
+> git fetch origin release-v1.0.3
+
+> git checkout release-v1.0.3
+
 :::caution
-Make sure you checkout the tag [v1.0.0](https://github.com/openlawteam/tribute-contracts/releases/tag/v1.0.0) which is the version that contains the contracts that work with [TributeUI](https://github.com/openlawteam/tribute-ui).
+Before installing the dependencies make sure you are on the branch [release-v1.0.3](https://github.com/openlawteam/tribute-contracts/releases/tag/v1.0.3) which is the version that contains the contracts integrated with [TributeUI](https://github.com/openlawteam/tribute-ui).
 :::
 
-```bash
-git checkout tags/v1.0.0 -b branch-v1.0.0
-```
-
-Install all the project dependencies and compile the smart contracts:
+Install all the project dependencies and deploy the smart contracts:
 
 ```bash
 npm ci && npm run compile
-```
-
-The expected output from the compilation process should be:
-
-```bash
-...
-> Compiling ...
-> Artifacts written to ~/tribute-contracts/build/contracts
-> Compiled successfully using:
-   - solc: 0.8.0...
 ```
 
 ⚡️ That's is great! You have installed project dependencies, compiled all the smart contracts, and is prepared to configure the testnet deployment. Let's move to the next section!
