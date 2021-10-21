@@ -4,7 +4,9 @@ pragma solidity ^0.8.0;
 
 import "../../core/DaoRegistry.sol";
 import "../../core/CloneFactory.sol";
+import "../IFactory.sol";
 import "./Bank.sol";
+import "@openzeppelin/contracts/security/ReentrancyGuard.sol";
 
 /**
 MIT License
@@ -30,10 +32,12 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
  */
 
-contract BankFactory is CloneFactory {
+contract BankFactory is IFactory, CloneFactory, ReentrancyGuard {
     address public identityAddress;
 
-    event BankCreated(address extensionAddress);
+    event BankCreated(address daoAddress, address extensionAddress);
+
+    mapping(address => address) private _extensions;
 
     constructor(address _identityAddress) {
         require(_identityAddress != address(0x0), "invalid addr");
@@ -44,10 +48,27 @@ contract BankFactory is CloneFactory {
      * @notice Create and initialize a new BankExtension
      * @param maxExternalTokens The maximum number of external tokens stored in the Bank
      */
-    function create(uint8 maxExternalTokens) external {
-        BankExtension bank = BankExtension(_createClone(identityAddress));
+    function create(address dao, uint8 maxExternalTokens)
+        external
+        nonReentrant
+    {
+        require(dao != address(0x0), "invalid dao addr");
+        address extensionAddr = _createClone(identityAddress);
+        _extensions[dao] = extensionAddr;
+        BankExtension bank = BankExtension(extensionAddr);
         bank.setMaxExternalTokens(maxExternalTokens);
-        //slither-disable-next-line reentrancy-events
-        emit BankCreated(address(bank));
+        emit BankCreated(dao, address(bank));
+    }
+
+    /**
+     * @notice Returns the extension address created for that DAO, or 0x0... if it does not exist.
+     */
+    function getExtensionAddress(address dao)
+        external
+        view
+        override
+        returns (address)
+    {
+        return _extensions[dao];
     }
 }

@@ -138,15 +138,9 @@ const createExtensions = async ({ dao, factories, options }) => {
       await factory.create();
     }
 
-    let pastEvent;
-
-    while (pastEvent === undefined) {
-      await sleep(100);
-      let pastEvents = await factory.getPastEvents();
-      pastEvent = pastEvents[0];
-    }
-
-    const { extensionAddress } = pastEvent.returnValues;
+    const extensionAddress = await factory.getExtensionAddress(
+      options.daoAddress
+    );
     const extensionContract = options[extensionConfigs.name];
     if (!extensionContract)
       throw new Error(

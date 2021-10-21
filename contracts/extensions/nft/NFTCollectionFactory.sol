@@ -4,7 +4,9 @@ pragma solidity ^0.8.0;
 
 import "../../core/DaoRegistry.sol";
 import "../../core/CloneFactory.sol";
+import "../IFactory.sol";
 import "./NFT.sol";
+import "@openzeppelin/contracts/security/ReentrancyGuard.sol";
 
 /**
 MIT License
@@ -30,10 +32,12 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
  */
 
-contract NFTCollectionFactory is CloneFactory {
+contract NFTCollectionFactory is IFactory, CloneFactory, ReentrancyGuard {
     address public identityAddress;
 
-    event NFTCollectionCreated(address extensionAddress);
+    event NFTCollectionCreated(address daoAddress, address extensionAddress);
+
+    mapping(address => address) private _extensions;
 
     constructor(address _identityAddress) {
         require(_identityAddress != address(0x0), "invalid addr");
@@ -43,9 +47,23 @@ contract NFTCollectionFactory is CloneFactory {
     /**
      * @notice Create and initialize a new Standard NFT Extension which is based on ERC712
      */
-    function create() external {
-        NFTExtension extension = NFTExtension(_createClone(identityAddress));
-        // slither-disable-next-line reentrancy-events
-        emit NFTCollectionCreated(address(extension));
+    function create(address dao) external nonReentrant {
+        require(dao != address(0x0), "invalid dao addr");
+        address payable extensionAddr = _createClone(identityAddress);
+        _extensions[dao] = extensionAddr;
+        NFTExtension extension = NFTExtension(extensionAddr);
+        emit NFTCollectionCreated(dao, address(extension));
+    }
+
+    /**
+     * @notice Returns the extension address created for that DAO, or 0x0... if it does not exist.
+     */
+    function getExtensionAddress(address dao)
+        external
+        view
+        override
+        returns (address)
+    {
+        return _extensions[dao];
     }
 }
