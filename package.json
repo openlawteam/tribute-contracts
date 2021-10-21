@@ -61,6 +61,7 @@
     "coverage": "DISABLE_SOLC_OPTIMIZER=true ts-node scripts/coverage.ts",
     "deploy:ganache": "truffle deploy --network ganache --reset 2>&1 | tee logs/ganache-deploy_`date '+%F_%T'`.log",
     "deploy:rinkeby": "truffle deploy --network rinkeby --reset 2>&1 | tee logs/rinkeby-deploy_`date '+%F_%T'`.log",
+    "deploy:goerli": "truffle deploy --network goerli --reset 2>&1 | tee logs/goerli-deploy_`date '+%F_%T'`.log",
     "deploy:mainnet": "truffle deploy --network mainnet --reset 2>&1 | tee logs/mainnet-deploy_`date '+%F_%T'`.log",
     "ganache": "ganache-cli --deterministic -p 7545 --networkId 1337",
     "lint": "prettier --list-different 'contracts/**/*.sol' '**/*.js' '**/*.md'",

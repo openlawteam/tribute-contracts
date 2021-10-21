@@ -625,6 +625,10 @@ const networks = [
     chainId: 4,
   },
   {
+    name: "goerli",
+    chainId: 5,
+  },
+  {
     name: "test",
     chainId: 1,
   },
