@@ -257,7 +257,7 @@ async function deployHarmonyDao(deployFunction, network) {
     votingPeriod: parseInt(process.env.VOTING_PERIOD_SECONDS),
     gracePeriod: parseInt(process.env.GRACE_PERIOD_SECONDS),
     offchainVoting: true,
-    chainId: 1666600000,
+    chainId: getNetworkDetails(network).chainId,
     deployTestTokens: false,
     finalize: false,
     maxExternalTokens: 100,
@@ -298,7 +298,7 @@ async function deployHarmonyTestDao(deployFunction, network) {
       ? parseInt(process.env.GRACE_PERIOD_SECONDS)
       : 600, // 600 secs = 10 min
     offchainVoting: true,
-    chainId: 1666700000,
+    chainId: getNetworkDetails(network).chainId,
     deployTestTokens: true,
     finalize: false,
     maxExternalTokens: 100,
