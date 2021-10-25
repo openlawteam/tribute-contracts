@@ -864,6 +864,14 @@ const networks = [
     name: "coverage",
     chainId: 1,
   },
+  {
+    name: "harmony",
+    chainId: 1666600000,
+  },
+  {
+    name: "harmonytest",
+    chainId: 1666700000,
+  },
 ];
 
 const getNetworkDetails = (name) => {
