@@ -45,7 +45,7 @@ const deployContract = ({ config, options }) => {
       const arg = options[argName];
       if (arg !== null && arg !== undefined) return arg;
       throw new Error(
-        `Missing deployment argument <${argName}> for ${testConfig.name}`
+        `Missing deployment argument <${argName}> for ${config.name}`
       );
     });
     return options.deployFunction(contract, args);
@@ -639,6 +639,14 @@ const networks = [
   {
     name: "mainnet",
     chainId: 1,
+  },
+  {
+    name: "harmony",
+    chainId: 1666600000,
+  },
+  {
+    name: "harmonytest",
+    chainId: 1666700000,
   },
 ];
 
