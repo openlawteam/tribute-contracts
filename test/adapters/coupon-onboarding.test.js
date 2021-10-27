@@ -32,7 +32,7 @@ const {
   UNITS,
   GUILD,
   ETH_TOKEN,
-} = require("../../utils/ContractUtil.js");
+} = require("../../utils/contract-util");
 
 const {
   deployDefaultDao,
@@ -42,14 +42,14 @@ const {
   expectRevert,
   expect,
   web3,
-} = require("../../utils/OZTestUtil.js");
+} = require("../../utils/oz-util");
 
-const { checkBalance } = require("../../utils/TestUtils.js");
+const { checkBalance } = require("../../utils/test-util");
 
 const {
   SigUtilSigner,
   getMessageERC712Hash,
-} = require("../../utils/offchain_voting.js");
+} = require("../../utils/offchain-voting-util");
 
 const signer = {
   address: "0x7D8cad0bbD68deb352C33e80fccd4D8e88b4aBb8",
@@ -58,7 +58,7 @@ const signer = {
 
 const daoOwner = accounts[1];
 
-describe("Adapter - Coupon Onboarding ", () => {
+describe("Adapter - Coupon Onboarding", () => {
   before("deploy dao", async () => {
     const { dao, adapters, extensions } = await deployDefaultDao({
       owner: daoOwner,
@@ -80,7 +80,7 @@ describe("Adapter - Coupon Onboarding ", () => {
     const signerUtil = SigUtilSigner(signer.privKey);
 
     const dao = this.dao;
-    const bank = this.extensions.bank;
+    const bank = this.extensions.bankExt;
 
     let signerAddr = await dao.getAddressConfiguration(
       sha3("coupon-onboarding.signerAddress")
@@ -149,7 +149,7 @@ describe("Adapter - Coupon Onboarding ", () => {
     const signerUtil = SigUtilSigner(signer.privKey);
 
     const dao = this.dao;
-    const bank = this.extensions.bank;
+    const bank = this.extensions.bankExt;
 
     let signerAddr = await dao.getAddressConfiguration(
       sha3("coupon-onboarding.signerAddress")
@@ -216,7 +216,7 @@ describe("Adapter - Coupon Onboarding ", () => {
     const signerUtil = SigUtilSigner(signer.privKey);
 
     const dao = this.dao;
-    const bank = this.extensions.bank;
+    const bank = this.extensions.bankExt;
 
     let signerAddr = await dao.getAddressConfiguration(
       sha3("coupon-onboarding.signerAddress")

@@ -39,7 +39,7 @@ const {
   ETH_TOKEN,
   LOOT,
   ESCROW,
-} = require("../../utils/ContractUtil.js");
+} = require("../../utils/contract-util");
 
 const {
   deployDefaultDao,
@@ -51,9 +51,9 @@ const {
   expectRevert,
   expect,
   web3,
-} = require("../../utils/OZTestUtil.js");
+} = require("../../utils/oz-util");
 
-const { onboardingNewMember } = require("../../utils/TestUtils.js");
+const { onboardingNewMember } = require("../../utils/test-util");
 
 const daoOwner = accounts[2];
 const daoCreator = accounts[9];
@@ -110,7 +110,7 @@ describe("Adapter - Distribute", () => {
   it("should be possible to distribute funds to only 1 member of the DAO", async () => {
     const daoMember = accounts[3];
     const dao = this.dao;
-    const bank = this.extensions.bank;
+    const bank = this.extensions.bankExt;
     const onboarding = this.adapters.onboarding;
     const voting = this.adapters.voting;
     const distributeContract = this.adapters.distribute;
@@ -183,7 +183,7 @@ describe("Adapter - Distribute", () => {
     const daoMemberA = accounts[3];
     const daoMemberB = accounts[4];
     const dao = this.dao;
-    const bank = this.extensions.bank;
+    const bank = this.extensions.bankExt;
     const onboarding = this.adapters.onboarding;
     const voting = this.adapters.voting;
     const distributeContract = this.adapters.distribute;

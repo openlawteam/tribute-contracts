@@ -30,7 +30,7 @@ const {
   toWei,
   UNITS,
   GUILD,
-} = require("../../utils/ContractUtil.js");
+} = require("../../utils/contract-util");
 
 const {
   deployDefaultDao,
@@ -44,9 +44,9 @@ const {
   OLToken,
   deployDefaultNFTDao,
   web3,
-} = require("../../utils/OZTestUtil.js");
+} = require("../../utils/oz-util");
 
-const { checkBalance, isMember } = require("../../utils/TestUtils.js");
+const { checkBalance, isMember } = require("../../utils/test-util");
 
 describe("Adapter - Tribute", () => {
   const daoOwner = accounts[1];
@@ -76,7 +76,7 @@ describe("Adapter - Tribute", () => {
     const nonMemberAccount = accounts[3];
 
     const dao = this.dao;
-    const bank = this.extensions.bank;
+    const bank = this.extensions.bankExt;
     const tribute = this.adapters.tribute;
     const voting = this.adapters.voting;
 
@@ -165,7 +165,7 @@ describe("Adapter - Tribute", () => {
     const applicant = accounts[2];
 
     const dao = this.dao;
-    const bank = this.extensions.bank;
+    const bank = this.extensions.bankExt;
     const tribute = this.adapters.tribute;
     const voting = this.adapters.voting;
 
@@ -346,7 +346,6 @@ describe("Adapter - Tribute", () => {
     const applicant = accounts[2];
 
     const dao = this.dao;
-    const bank = this.extensions.bank;
     const tribute = this.adapters.tribute;
     const voting = this.adapters.voting;
 

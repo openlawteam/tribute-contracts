@@ -33,7 +33,7 @@ SOFTWARE.
 contract ExecutorExtensionFactory is CloneFactory {
     address public identityAddress;
 
-    event ExecutorCreated(address executorAddress);
+    event ExecutorCreated(address extensionAddress);
 
     constructor(address _identityAddress) {
         require(_identityAddress != address(0x0), "invalid addr");

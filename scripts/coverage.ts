@@ -13,6 +13,7 @@ const skipFiles = [
   "adapters/interfaces/ISignatures.sol",
   "adapters/interfaces/IVoting.sol",
   "extensions/IExtension.sol",
+  "test/MockDao.sol",
   "test/ERC1155TestToken.sol",
   "test/ERC20Minter.sol",
   "test/OLToken.sol",
@@ -28,7 +29,7 @@ const main = async () => {
   await runCoverage(
     skipFiles,
     "npm run compile",
-    "./node_modules/.bin/mocha --timeout 2000000 --exit --recursive".split(" ")
+    "./node_modules/.bin/mocha --timeout 2000000 --recursive --exit".split(" ")
   );
 };
 

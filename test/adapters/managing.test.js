@@ -32,7 +32,7 @@ const {
   ZERO_ADDRESS,
   sha3,
   fromAscii,
-} = require("../../utils/ContractUtil.js");
+} = require("../../utils/contract-util");
 
 const {
   deployDefaultDao,
@@ -49,9 +49,16 @@ const {
   FinancingContract,
   ERC1271Extension,
   VotingContract,
-} = require("../../utils/OZTestUtil.js");
+} = require("../../utils/oz-util");
 
-const { entryDao, entryBank } = require("../../utils/DeploymentUtil.js");
+const {
+  bankExtensionAclFlagsMap,
+  daoAccessFlagsMap,
+  entryDao,
+  entryBank,
+} = require("../../utils/access-control-util");
+
+const { extensionsIdsMap } = require("../../utils/dao-ids-util");
 
 const daoOwner = accounts[1];
 const proposalCounter = proposalIdGenerator().generator;
@@ -375,9 +382,11 @@ describe("Adapter - Managing", () => {
     const newManaging = await ManagingContract.new();
     const newAdapterId = sha3("managing");
     const proposalId = getProposalCounter();
-    const { flags } = entryDao("managing", newManaging, {
-      SUBMIT_PROPOSAL: true,
-      REPLACE_ADAPTER: true,
+    const { flags } = entryDao(newAdapterId, newManaging.address, {
+      dao: [
+        daoAccessFlagsMap.SUBMIT_PROPOSAL,
+        daoAccessFlagsMap.REPLACE_ADAPTER,
+      ],
     });
     await managing.submitProposal(
       dao.address,
@@ -481,7 +490,10 @@ describe("Adapter - Managing", () => {
         adapterOrExtensionId: newAdapterId,
         adapterOrExtensionAddr: newManaging.address,
         updateType: 1,
-        flags: entryDao("managing", newManaging, {}).flags, // no permissions were set
+        flags: entryDao(newAdapterId, newManaging.address, {
+          dao: [], // no permissions were set
+          extensions: {}, // no permissions were set
+        }).flags,
         keys: [],
         values: [],
         extensionAddresses: [],
@@ -764,7 +776,7 @@ describe("Adapter - Managing", () => {
     const managing = this.adapters.managing;
     const voting = this.adapters.voting;
     const financing = await FinancingContract.new();
-    const bankExt = this.extensions.bank;
+    const bankExt = this.extensions.bankExt;
 
     const newAdapterId = sha3("testFinancing");
     const newAdapterAddress = financing.address;
@@ -784,10 +796,14 @@ describe("Adapter - Managing", () => {
         extensionAddresses: [bankExt.address],
         // Set the acl flags so the new adapter can access the bank extension
         extensionAclFlags: [
-          entryBank(financing, {
-            ADD_TO_BALANCE: true,
-            SUB_FROM_BALANCE: true,
-            INTERNAL_TRANSFER: true,
+          entryBank(financing.address, {
+            extensions: {
+              [extensionsIdsMap.BANK_EXT]: [
+                bankExtensionAclFlagsMap.ADD_TO_BALANCE,
+                bankExtensionAclFlagsMap.SUB_FROM_BALANCE,
+                bankExtensionAclFlagsMap.INTERNAL_TRANSFER,
+              ],
+            },
           }).flags,
         ],
       },
@@ -933,7 +949,7 @@ describe("Adapter - Managing", () => {
     const dao = this.dao;
     const managing = this.adapters.managing;
     const voting = this.adapters.voting;
-    const bankExt = this.extensions.bank;
+    const bankExt = this.extensions.bankExt;
 
     const removeExtensionId = sha3("bank");
     // Use 0 address to indicate we don't want to add, it is just a removal

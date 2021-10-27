@@ -33,7 +33,7 @@ SOFTWARE.
 contract NFTCollectionFactory is CloneFactory {
     address public identityAddress;
 
-    event NFTCollectionCreated(address nftCollAddress);
+    event NFTCollectionCreated(address extensionAddress);
 
     constructor(address _identityAddress) {
         require(_identityAddress != address(0x0), "invalid addr");
@@ -43,7 +43,7 @@ contract NFTCollectionFactory is CloneFactory {
     /**
      * @notice Create and initialize a new Standard NFT Extension which is based on ERC712
      */
-    function createNFTCollection() external {
+    function create() external {
         NFTExtension extension = NFTExtension(_createClone(identityAddress));
         // slither-disable-next-line reentrancy-events
         emit NFTCollectionCreated(address(extension));

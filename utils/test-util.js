@@ -1,9 +1,9 @@
 // Whole-script strict mode syntax
 "use strict";
 
-const { toBN, UNITS } = require("./ContractUtil.js");
+const { toBN, UNITS } = require("./contract-util");
 
-const { expect, advanceTime } = require("./OZTestUtil.js");
+const { expect, advanceTime } = require("./oz-util");
 
 const checkLastEvent = async (dao, testObject) => {
   let pastEvents = await dao.getPastEvents();

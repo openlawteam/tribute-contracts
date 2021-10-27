@@ -27,7 +27,7 @@ const {
   fromAscii,
   fromUtf8,
   ETH_TOKEN,
-} = require("../../utils/ContractUtil.js");
+} = require("../../utils/contract-util");
 
 const {
   expectRevert,
@@ -35,7 +35,7 @@ const {
   DaoRegistry,
   web3,
   accounts,
-} = require("../../utils/OZTestUtil.js");
+} = require("../../utils/oz-util");
 
 describe("Core - Registry", () => {
   it("should not be possible to add a module with invalid id", async () => {

@@ -31,7 +31,7 @@ const {
   unitPrice,
   remaining,
   UNITS,
-} = require("../../utils/ContractUtil.js");
+} = require("../../utils/contract-util");
 
 const {
   deployDefaultDao,
@@ -43,7 +43,7 @@ const {
   expectRevert,
   expect,
   web3,
-} = require("../../utils/OZTestUtil.js");
+} = require("../../utils/oz-util");
 
 describe("Adapter - Voting", () => {
   const daoOwner = accounts[1];

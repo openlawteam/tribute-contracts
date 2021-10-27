@@ -80,10 +80,13 @@ contract TributeNFTContract is
      * @dev A DAO Bank extension must exist and be configured with proper access for this adapter.
      * @param dao The DAO address.
      */
-    function configureDao(DaoRegistry dao) external onlyAdapter(dao) {
+    function configureDao(DaoRegistry dao, address tokenAddrToMint)
+        external
+        onlyAdapter(dao)
+    {
         BankExtension bank =
             BankExtension(dao.getExtensionAddress(DaoHelper.BANK));
-        bank.registerPotentialNewInternalToken(DaoHelper.UNITS);
+        bank.registerPotentialNewInternalToken(tokenAddrToMint);
     }
 
     /**

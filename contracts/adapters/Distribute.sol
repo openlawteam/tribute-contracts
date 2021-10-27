@@ -140,7 +140,7 @@ contract DistributeContract is IDistribute, AdapterGuard, Reimbursable {
      * @notice Process the distribution proposal, calculates the fair amount of funds to distribute to the members based on the units holdings.
      * @dev A distribution proposal proposal must be in progress.
      * @dev Only one proposal per DAO can be executed at time.
-     * @dev Only active members can reveice funds.
+     * @dev Only active members can receive funds.
      * @dev Only proposals that passed the voting can be set to In Progress status.
      * @param dao The dao address.
      * @param proposalId The distribution proposal id.

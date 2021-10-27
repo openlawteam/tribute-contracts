@@ -24,8 +24,8 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
  */
-const { MerkleTree } = require("./merkleTree.js");
-const { toBN, sha3 } = require("./ContractUtil.js");
+const { MerkleTree } = require("./merkle-tree");
+const { toBN, sha3 } = require("./contract-util");
 const sigUtil = require("eth-sig-util");
 
 function getMessageERC712Hash(m, verifyingContract, actionId, chainId) {

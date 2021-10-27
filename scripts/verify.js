@@ -2,6 +2,7 @@
 
 const util = require("util");
 const path = require("path");
+const { contracts } = require("../utils/contract-util");
 const exec = util.promisify(require("child_process").exec);
 const debugMode = process.env.DEBUG_CONTRACT_VERIFICATION || false;
 const verifyCMD = `./node_modules/.bin/truffle run verify ${

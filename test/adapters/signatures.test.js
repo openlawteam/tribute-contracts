@@ -29,7 +29,7 @@ const {
   toWei,
   fromAscii,
   soliditySha3,
-} = require("../../utils/ContractUtil.js");
+} = require("../../utils/contract-util");
 
 const {
   deployDefaultDao,
@@ -41,9 +41,9 @@ const {
   expect,
   expectRevert,
   web3,
-} = require("../../utils/OZTestUtil.js");
+} = require("../../utils/oz-util");
 
-const { checkSignature } = require("../../utils/TestUtils.js");
+const { checkSignature } = require("../../utils/test-util");
 
 const daoOwner = accounts[1];
 const proposalCounter = proposalIdGenerator().generator;
@@ -62,7 +62,7 @@ function getProposalCounter() {
   return proposalCounter().next().value;
 }
 
-describe("Adapter - Signatures", () => {
+describe("Adapter - ERC1271", () => {
   before("deploy dao", async () => {
     const { dao, adapters, extensions } = await deployDefaultDao({
       owner: daoOwner,
@@ -79,7 +79,7 @@ describe("Adapter - Signatures", () => {
   });
 
   it("should be possible to create a signature proposal and successfully query the erc1271 interface if it passes", async () => {
-    const erc1271 = this.extensions.erc1271;
+    const erc1271 = this.extensions.erc1271Ext;
     const voting = this.adapters.voting;
     const signatures = this.adapters.signatures;
 
@@ -131,7 +131,7 @@ describe("Adapter - Signatures", () => {
   it("should not be possible to get a valid signature if the proposal fails", async () => {
     const voting = this.adapters.voting;
     const signatures = this.adapters.signatures;
-    const erc1271 = this.extensions.erc1271;
+    const erc1271 = this.extensions.erc1271Ext;
 
     let proposalId = getProposalCounter();
 
