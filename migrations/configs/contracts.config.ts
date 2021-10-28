@@ -273,6 +273,7 @@ export const contracts: Array<ContractConfig> = [
       dao: [],
       extensions: {},
     },
+    deploymentArgs: ["daoAddress"],
     generatesExtensionId: extensionsIdsMap.ERC721_EXT,
   },
   {
@@ -287,7 +288,7 @@ export const contracts: Array<ContractConfig> = [
       dao: [],
       extensions: {},
     },
-    deploymentArgs: ["maxExternalTokens"],
+    deploymentArgs: ["daoAddress", "maxExternalTokens"],
     generatesExtensionId: extensionsIdsMap.BANK_EXT,
   },
   {
@@ -303,6 +304,7 @@ export const contracts: Array<ContractConfig> = [
       extensions: {},
     },
     deploymentArgs: [
+      "daoAddress",
       "erc20TokenName",
       "erc20TokenAddress",
       "erc20TokenSymbol",
@@ -323,6 +325,7 @@ export const contracts: Array<ContractConfig> = [
       dao: [],
       extensions: {},
     },
+    deploymentArgs: ["daoAddress"],
     generatesExtensionId: extensionsIdsMap.VESTING_EXT,
   },
   {
@@ -337,6 +340,7 @@ export const contracts: Array<ContractConfig> = [
       dao: [],
       extensions: {},
     },
+    deploymentArgs: ["daoAddress"],
     generatesExtensionId: extensionsIdsMap.ERC1271_EXT,
   },
   {
@@ -351,6 +355,7 @@ export const contracts: Array<ContractConfig> = [
       dao: [],
       extensions: {},
     },
+    deploymentArgs: ["daoAddress"],
     generatesExtensionId: extensionsIdsMap.EXECUTOR_EXT,
   },
   {
@@ -365,6 +370,7 @@ export const contracts: Array<ContractConfig> = [
       dao: [],
       extensions: {},
     },
+    deploymentArgs: ["daoAddress"],
     generatesExtensionId: extensionsIdsMap.ERC1155_EXT,
   },
 
@@ -421,7 +427,8 @@ export const contracts: Array<ContractConfig> = [
     id: extensionsIdsMap.VESTING_EXT,
     name: "InternalTokenVestingExtension",
     alias: "vestingExt",
-    path: "../../contracts/extensions/token/erc20/InternalTokenVestingExtension",
+    path:
+      "../../contracts/extensions/token/erc20/InternalTokenVestingExtension",
     enabled: true,
     version: "1.0.0",
     type: ContractType.Extension,
