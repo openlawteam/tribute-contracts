@@ -40,6 +40,12 @@ module.exports = {
       port: 7545, // Standard Ethereum port (default: none)
       network_id: "1337", // Any network (default: none)
     },
+    goerli: {
+      provider: getNetworkProvider,
+      network_id: 5,
+      gasPrice: 10000000000,
+      skipDryRun: true,
+    },
     rinkeby: {
       provider: getNetworkProvider,
       network_id: 4,

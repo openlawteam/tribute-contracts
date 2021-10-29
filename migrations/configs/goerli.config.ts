@@ -1,10 +1,8 @@
 import { adaptersIdsMap } from "../../utils/dao-ids-util";
-import {
-  contracts as defaultContracts,
-} from "./contracts.config";
+import { contracts as defaultContracts } from "./contracts.config";
 import { getNetworkDetails } from "../../utils/deployment-util";
 
-const disabled: Array<String> = [
+const disabled: Array<string> = [
   // Utility & Test Contracts disabled by default
   "OLToken",
   "TestToken1",
@@ -14,12 +12,6 @@ const disabled: Array<String> = [
   "ProxToken",
   "ERC20Minter",
   "MockDao",
-  // Adapters disabled for Muse0 DAO Deployment
-  "RagequitContract",
-  "FinancingContract",
-  "OnboardingContract",
-  "TributeContract",
-  "DistributeContract",
 ];
 
 export const contracts = defaultContracts
@@ -31,7 +23,7 @@ export const contracts = defaultContracts
   })
   .map((c) => {
     if (adaptersIdsMap.COUPON_MANAGER_ADAPTER === c.id) {
-      const chainDetails = getNetworkDetails("mainnet");
+      const chainDetails = getNetworkDetails("goerli");
       return {
         ...c,
         deploymentArgs: {

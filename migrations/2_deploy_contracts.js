@@ -292,6 +292,9 @@ const deploy = async ({
         contracts
       );
       break;
+    // Chain ID is retrieved automatically and ETH_NODE_URL specifies RPC endpoint,
+    // so Goerli and Rinkeby should be treated the same
+    case "goerli":
     case "rinkeby":
       res = await deployRinkebyDao(
         deployFunction,
