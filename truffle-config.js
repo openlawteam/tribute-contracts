@@ -44,13 +44,13 @@ module.exports = {
       provider: getNetworkProvider,
       network_id: 4,
       skipDryRun: true,
-      networkCheckTimeout: 10000,
-      deploymentPollingInterval: 10000,
+      gasPrice: 30000000000
     },
     mainnet: {
       provider: getNetworkProvider,
       network_id: 1,
       skipDryRun: true,
+      gasPrice: 30000000000
     },
     coverage: {
       host: "localhost",

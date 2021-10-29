@@ -504,6 +504,7 @@ export const contracts: Array<ContractConfig> = [
         [extensionsIdsMap.BANK_EXT]: [
           bankExtensionAclFlagsMap.WITHDRAW,
           bankExtensionAclFlagsMap.SUB_FROM_BALANCE,
+          bankExtensionAclFlagsMap.ADD_TO_BALANCE,
           bankExtensionAclFlagsMap.UPDATE_TOKEN,
         ],
       },

@@ -118,6 +118,9 @@ const deployRinkebyDao = async (
     supplyPixelNFT: 100,
     supplyOLToken: toBN("1000000000000000000000000"),
     erc1155TestTokenUri: "1155 test token",
+    gasPriceLimit: process.env.GAS_PRICE_LIMIT,
+    spendLimitPeriod: process.env.SPEND_LIMIT_PERIOD,
+    spendLimitEth: process.env.SPEND_LIMIT_ETH
   });
 };
 

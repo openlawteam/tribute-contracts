@@ -62,10 +62,12 @@ const deployContract = ({ config, options }) => {
  */
 const createFactories = async ({ options }) => {
   const factories = {};
-  await Object.values(options.contractConfigs)
-    .filter((config) => config.type === ContractType.Factory)
-    .filter((config) => config.enabled)
-    .filter((config) => !config.skipAutoDeploy)
+  const factoryList = Object.values(options.contractConfigs)
+  .filter((config) => config.type === ContractType.Factory)
+  .filter((config) => config.enabled)
+  .filter((config) => !config.skipAutoDeploy);
+  console.log('deploying or reusing ', factoryList.length, ' factories...');
+  await factoryList
     .reduce((p, config) => {
       return p
         .then((_) => {
@@ -111,8 +113,9 @@ const createFactories = async ({ options }) => {
  */
 const createExtensions = async ({ dao, factories, options }) => {
   const extensions = {};
-
+  console.log('create extensions ...');
   const createExtension = async ({ dao, factory, options }) => {
+    console.log('create extension ', factory.configs.alias);
     const factoryConfigs = factory.configs;
     const extensionConfigs = options.contractConfigs.find(
       (c) => c.id === factoryConfigs.generatesExtensionId
@@ -210,10 +213,12 @@ const createExtensions = async ({ dao, factories, options }) => {
  */
 const createAdapters = async ({ options }) => {
   const adapters = {};
-  await Object.values(options.contractConfigs)
-    .filter((config) => config.type === ContractType.Adapter)
-    .filter((config) => config.enabled)
-    .filter((config) => !config.skipAutoDeploy)
+  const adapterList = Object.values(options.contractConfigs)
+  .filter((config) => config.type === ContractType.Adapter)
+  .filter((config) => config.enabled)
+  .filter((config) => !config.skipAutoDeploy);
+  console.log('deploying or re-using ', adapterList.length, ' adapters...');
+  await adapterList
     .reduce(
       (p, config) =>
         p
@@ -331,7 +336,9 @@ const configureDao = async ({
   adapters,
   options,
 }) => {
+  console.log('configure new dao ...');
   const configureAdaptersWithDAOAccess = async () => {
+    console.log('configure adapters with access');
     const adaptersWithAccess = Object.values(adapters)
       .filter((a) => a.configs.enabled)
       .filter((a) => !a.configs.skipAutoDeploy)
@@ -362,6 +369,7 @@ const configureDao = async ({
   };
 
   const configureAdaptersWithDAOParameters = async () => {
+    console.log('configure adapters ...');
     const readConfigValue = (configName, contractName) => {
       // 1st check for configs that are using extension addresses
       if (Object.values(extensionsIdsMap).includes(configName)) {
@@ -416,6 +424,7 @@ const configureDao = async ({
   };
 
   const configureExtensionAccess = async (contracts, extension) => {
+    console.log('configure extension access for ', extension.configs.alias);
     const withAccess = Object.values(contracts).reduce((accessRequired, c) => {
       const configs = c.configs;
       accessRequired.push(
@@ -437,6 +446,7 @@ const configureDao = async ({
    * Configures all the adapters that need access to the DAO and each enabled extension
    */
   const configureAdapters = async () => {
+    console.log('configure adapters ...');
     await configureAdaptersWithDAOAccess();
     await configureAdaptersWithDAOParameters();
     await Object.values(extensions)
@@ -471,6 +481,7 @@ const configureDao = async ({
    * other enabled extensions
    */
   const configureExtensions = async () => {
+    console.log('configure extensions ...');
     await Object.values(extensions)
       .filter((targetExtension) => targetExtension.configs.enabled)
       .reduce((p, targetExtension) => {

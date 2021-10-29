@@ -1,9 +1,9 @@
-import { adaptersIdsMap } from "../utils/dao-ids-util";
+import { adaptersIdsMap } from "../../utils/dao-ids-util";
 import {
   contracts as defaultContracts,
   ContractConfig,
 } from "./contracts.config";
-import { getNetworkDetails } from "../utils/deployment-util";
+import { getNetworkDetails } from "../../utils/deployment-util";
 
 const disabled: Array<String> = [
   // Utility & Test Contracts disabled by default
