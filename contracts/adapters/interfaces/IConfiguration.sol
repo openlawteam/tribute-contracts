@@ -34,6 +34,7 @@ interface IConfiguration {
         bytes32 proposalId,
         bytes32[] calldata keys,
         uint256[] calldata values,
+        address[] calldata addresses,
         bytes calldata data
     ) external;
 

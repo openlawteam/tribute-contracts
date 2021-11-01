@@ -114,7 +114,8 @@ const submitConfigProposal = async (
   configuration,
   voting,
   configKeys,
-  configValues
+  configValues,
+  configAddresses = []
 ) => {
   //Submit a new configuration proposal
   await configuration.submitProposal(
@@ -122,6 +123,7 @@ const submitConfigProposal = async (
     proposalId,
     configKeys,
     configValues,
+    configAddresses,
     [],
     { from: sender, gasPrice: toBN("0") }
   );

@@ -42,6 +42,7 @@ contract ConfigurationContract is
     struct Configuration {
         bytes32[] keys;
         uint256[] values;
+        address[] addresses;
     }
 
     mapping(address => mapping(bytes32 => Configuration))
@@ -59,15 +60,30 @@ contract ConfigurationContract is
         bytes32 proposalId,
         bytes32[] calldata keys,
         uint256[] calldata values,
+        address[] calldata addresses,
         bytes calldata data
     ) external override onlyMember(dao) reentrancyGuard(dao) {
+        require(keys.length > 0, "missing keys");
         require(
-            keys.length == values.length,
-            "must be an equal number of config keys and values"
+            keys.length == values.length || keys.length == addresses.length,
+            "must be an equal number of keys and values/addresses"
         );
 
+        if (addresses.length == keys.length) {
+            for (uint256 i = 0; i < addresses.length; i++) {
+                require(
+                    addresses[i] != address(0x0),
+                    "address can not be zero"
+                );
+            }
+        }
+
         dao.submitProposal(proposalId);
-        _configurations[address(dao)][proposalId] = Configuration(keys, values);
+        _configurations[address(dao)][proposalId] = Configuration(
+            keys,
+            values,
+            addresses
+        );
 
         IVoting votingContract = IVoting(dao.getAdapterAddress(VOTING));
         address sponsoredBy =
@@ -102,8 +118,18 @@ contract ConfigurationContract is
 
         bytes32[] memory keys = configuration.keys;
         uint256[] memory values = configuration.values;
-        for (uint256 i = 0; i < keys.length; i++) {
-            dao.setConfiguration(keys[i], values[i]);
+
+        if (keys.length == values.length) {
+            for (uint256 i = 0; i < keys.length; i++) {
+                dao.setConfiguration(keys[i], values[i]);
+            }
+        } else {
+            address[] memory addresses = configuration.addresses;
+            if (keys.length == addresses.length) {
+                for (uint256 i = 0; i < addresses.length; i++) {
+                    dao.setAddressConfiguration(keys[i], addresses[i]);
+                }
+            }
         }
     }
 }
