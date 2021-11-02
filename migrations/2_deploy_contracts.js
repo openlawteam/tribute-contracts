@@ -37,17 +37,18 @@ module.exports = async (deployer, network, accounts) => {
     contracts,
   });
 
-  const { dao, factories, extensions, adapters, testContracts } = result;
+  const { dao, factories, extensions, adapters, testContracts, utilContracts } = result;
   if (dao) {
     await dao.finalizeDao();
     log("************************************************");
-    log(`Owner: ${accounts[0]}`);
+    log(`DaoOwner: ${accounts[0]}`);
     log(`DaoRegistry: ${dao.address}`);
     const addresses = {};
     Object.values(factories)
       .concat(Object.values(extensions))
       .concat(Object.values(adapters))
       .concat(Object.values(testContracts))
+      .concat(Object.values(utilContracts))
       .forEach((c) => {
         log(`${c.configs.name}: ${c.address}`);
         addresses[c.configs.name] = c.address;
