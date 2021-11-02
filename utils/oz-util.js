@@ -216,7 +216,7 @@ module.exports = (() => {
   };
 
   const deployDefaultNFTDao = async ({ owner }) => {
-    const { dao, adapters, extensions, testContracts } = await deployDao({
+    const { dao, adapters, extensions, testContracts, utilContracts } = await deployDao({
       ...getDefaultOptions({ owner }),
       ...ozContracts,
       deployFunction,
@@ -231,6 +231,7 @@ module.exports = (() => {
       adapters: adapters,
       extensions: extensions,
       testContracts: testContracts,
+      utilContracts: utilContracts,
     };
   };
 

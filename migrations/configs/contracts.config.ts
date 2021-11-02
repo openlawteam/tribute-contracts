@@ -631,6 +631,7 @@ export const contracts: Array<ContractConfig> = [
     alias: "snapshotProposalAdapter",
     path: "../../contracts/adapters/voting/SnapshotProposalContract",
     enabled: true,
+    skipAutoDeploy: true,
     version: "1.0.0",
     type: ContractType.Util,
     acls: {
