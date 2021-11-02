@@ -199,8 +199,12 @@ const deployGanacheDao = async (
     erc20TokenDecimals: envVars.ERC20_TOKEN_DECIMALS,
     erc20TokenAddress: UNITS,
     maxChunks: toBN("100000"),
-    votingPeriod: 120, // 120 secs = 2 mins
-    gracePeriod: 60, // 60 secs = 1 min
+    votingPeriod: envVars.VOTING_PERIOD_SECONDS
+      ? parseInt(envVars.VOTING_PERIOD_SECONDS)
+      : 120, // 120 secs = 2 mins
+    gracePeriod: envVars.GRACE_PERIOD_SECONDS
+      ? parseInt(envVars.GRACE_PERIOD_SECONDS)
+      : 60, // 60 secs = 1 min
     offchainVoting: true,
     chainId: getNetworkDetails(network).chainId,
     finalize: false,
@@ -210,7 +214,9 @@ const deployGanacheDao = async (
       : accounts[0],
     daoName: envVars.DAO_NAME,
     owner: accounts[0],
-    offchainAdmin: "0xedC10CFA90A135C41538325DD57FDB4c7b88faf7",
+    offchainAdmin: envVars.OFFCHAIN_ADMIN_ADDR
+      ? envVars.OFFCHAIN_ADMIN_ADDR
+      : "0xedC10CFA90A135C41538325DD57FDB4c7b88faf7",
     deployTestTokens: true,
     supplyTestToken1: 1000000,
     supplyTestToken2: 1000000,
