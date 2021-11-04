@@ -632,6 +632,7 @@ export const contracts: Array<ContractConfig> = [
     alias: "snapshotProposalAdapter",
     path: "../../contracts/adapters/voting/SnapshotProposalContract",
     enabled: true,
+    skipAutoDeploy: true,
     version: "1.0.0",
     type: ContractType.Util,
     acls: {
@@ -970,6 +971,7 @@ export const contracts: Array<ContractConfig> = [
     name: "DaoArtifacts",
     path: "../../contracts/utils/DaoArtifacts",
     enabled: true,
+    skipAutoDeploy: true,
     version: "1.0.0",
     type: ContractType.Util,
     acls: {

@@ -29,7 +29,6 @@ const { entryDao, entryBank } = require("./access-control-util");
 const { adaptersIdsMap, extensionsIdsMap } = require("./dao-ids-util");
 const { UNITS, LOOT, sha3, embedConfigs } = require("./contract-util.js");
 const { ContractType } = require("../migrations/configs/contracts.config");
-const sleep = (t) => new Promise((s) => setTimeout(s, t));
 
 /**
  * Deploys a contract based on the contract name defined in the config parameter.
@@ -45,7 +44,7 @@ const deployContract = ({ config, options }) => {
       const arg = options[argName];
       if (arg !== null && arg !== undefined) return arg;
       throw new Error(
-        `Missing deployment argument <${argName}> for ${testConfig.name}`
+        `Missing deployment argument <${argName}> for ${config.name}`
       );
     });
     return options.deployFunction(contract, args);
@@ -288,6 +287,9 @@ const deployDao = async (options) => {
       votingHelpers.offchainVoting;
   }
 
+  // deploy utility contracts
+  const utilContracts = await createUtilContracts({ options });
+
   // deploy test token contracts for testing convenience
   const testContracts = await createTestContracts({ options });
 
@@ -300,6 +302,7 @@ const deployDao = async (options) => {
     adapters: adapters,
     extensions: extensions,
     testContracts: testContracts,
+    utilContracts: utilContracts,
     votingHelpers: votingHelpers,
     factories: { ...factories, daoFactory },
   };
@@ -505,6 +508,32 @@ const configureDao = async ({
   await configureExtensions();
 };
 
+const createUtilContracts = async ({ options }) => {
+  const utilContracts = {};
+
+  await Object.values(options.contractConfigs)
+    .filter((config) => config.type === ContractType.Util)
+    .filter((config) => config.enabled)
+    .filter((config) => !config.skipAutoDeploy)
+    .reduce(
+      (p, config) =>
+        p
+          .then(() => deployContract({ config, options }))
+          .then((utilContract) => {
+            utilContracts[utilContract.configs.alias] = utilContract;
+          })
+          .catch((e) => {
+            console.error(
+              `Error while creating util contract ${config.name}`,
+              e
+            );
+            throw e;
+          }),
+      Promise.resolve()
+    );
+  return utilContracts;
+};
+
 const createTestContracts = async ({ options }) => {
   const testContracts = {};
 
@@ -646,6 +675,14 @@ const networks = [
   {
     name: "mainnet",
     chainId: 1,
+  },
+  {
+    name: "harmony",
+    chainId: 1666600000,
+  },
+  {
+    name: "harmonytest",
+    chainId: 1666700000,
   },
 ];
 

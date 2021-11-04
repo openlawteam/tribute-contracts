@@ -58,6 +58,16 @@ module.exports = {
       skipDryRun: true,
       gasPrice: 30000000000
     },
+    harmony: {
+      provider: getNetworkProvider,
+      network_id: 1666600000,
+      skipDryRun: true,
+    },
+    harmonytest: {
+      provider: getNetworkProvider,
+      network_id: 1666700000,
+      skipDryRun: true,
+    },
     coverage: {
       host: "localhost",
       network_id: "*",
