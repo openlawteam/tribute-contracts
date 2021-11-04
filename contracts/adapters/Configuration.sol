@@ -39,13 +39,7 @@ contract ConfigurationContract is
     MemberGuard,
     AdapterGuard
 {
-    struct Configuration {
-        bytes32[] keys;
-        uint256[] values;
-        address[] addresses;
-    }
-
-    mapping(address => mapping(bytes32 => Configuration))
+    mapping(address => mapping(bytes32 => Configuration[]))
         private _configurations;
 
     /*
@@ -58,41 +52,22 @@ contract ConfigurationContract is
     function submitProposal(
         DaoRegistry dao,
         bytes32 proposalId,
-        bytes32[] calldata keys,
-        uint256[] calldata values,
-        address[] calldata addresses,
+        Configuration[] calldata configs,
         bytes calldata data
     ) external override onlyMember(dao) reentrancyGuard(dao) {
-        require(keys.length > 0, "missing keys");
-        require(
-            keys.length == values.length || keys.length == addresses.length,
-            "must be an equal number of keys and values/addresses"
-        );
-
-        if (addresses.length == keys.length) {
-            for (uint256 i = 0; i < addresses.length; i++) {
-                require(
-                    addresses[i] != address(0x0),
-                    "address can not be zero"
-                );
-            }
-        }
+        require(configs.length > 0, "missing configs");
 
         dao.submitProposal(proposalId);
-        _configurations[address(dao)][proposalId] = Configuration(
-            keys,
-            values,
-            addresses
-        );
+
+        _configurations[address(dao)][proposalId] = configs;
 
         IVoting votingContract = IVoting(dao.getAdapterAddress(VOTING));
-        address sponsoredBy =
-            votingContract.getSenderAddress(
-                dao,
-                address(this),
-                data,
-                msg.sender
-            );
+        address sponsoredBy = votingContract.getSenderAddress(
+            dao,
+            address(this),
+            data,
+            msg.sender
+        );
 
         dao.sponsorProposal(proposalId, sponsoredBy, address(votingContract));
         votingContract.startNewVotingForProposal(dao, proposalId, data);
@@ -105,9 +80,6 @@ contract ConfigurationContract is
     {
         dao.processProposal(proposalId);
 
-        Configuration storage configuration =
-            _configurations[address(dao)][proposalId];
-
         IVoting votingContract = IVoting(dao.votingAdapter(proposalId));
         require(address(votingContract) != address(0), "adapter not found");
         require(
@@ -116,19 +88,15 @@ contract ConfigurationContract is
             "proposal did not pass"
         );
 
-        bytes32[] memory keys = configuration.keys;
-        uint256[] memory values = configuration.values;
-
-        if (keys.length == values.length) {
-            for (uint256 i = 0; i < keys.length; i++) {
-                dao.setConfiguration(keys[i], values[i]);
-            }
-        } else {
-            address[] memory addresses = configuration.addresses;
-            if (keys.length == addresses.length) {
-                for (uint256 i = 0; i < addresses.length; i++) {
-                    dao.setAddressConfiguration(keys[i], addresses[i]);
-                }
+        Configuration[] memory configs = _configurations[address(dao)][
+            proposalId
+        ];
+        for (uint256 i = 0; i < configs.length; i++) {
+            Configuration memory config = configs[i];
+            if (ConfigType.NUMERIC == config.configType) {
+                dao.setConfiguration(config.key, config.numericValue);
+            } else if (ConfigType.ADDRESS == config.configType) {
+                dao.setAddressConfiguration(config.key, config.addressValue);
             }
         }
     }
