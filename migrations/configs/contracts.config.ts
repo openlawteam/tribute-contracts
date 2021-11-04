@@ -795,7 +795,9 @@ export const contracts: Array<ContractConfig> = [
         "daoAddress",
         "gasPriceLimit",
         "spendLimitPeriod",
-        "spendLimitEth"
+        "spendLimitEth",
+        "feePercent",
+        "gasFixed"
       ],
     ],
   },

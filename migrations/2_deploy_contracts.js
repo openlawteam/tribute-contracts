@@ -126,7 +126,7 @@ const deployRinkebyDao = async (
     erc1155TestTokenUri: "1155 test token",
     gasPriceLimit: process.env.GAS_PRICE_LIMIT,
     spendLimitPeriod: process.env.SPEND_LIMIT_PERIOD,
-    spendLimitEth: process.env.SPEND_LIMIT_ETH
+    spendLimitEth: process.env.SPEND_LIMIT_ETH,
   });
 };
 
@@ -174,7 +174,7 @@ const deployMainnetDao = async (
     offchainAdmin: envVars.OFFCHAIN_ADMIN_ADDR,
     gasPriceLimit: envVars.GAS_PRICE_LIMIT,
     spendLimitPeriod: envVars.SPEND_LIMIT_PERIOD,
-    spendLimitEth: envVars.SPEND_LIMIT_ETH
+    spendLimitEth: envVars.SPEND_LIMIT_ETH,
   });
 };
 
@@ -231,7 +231,7 @@ const deployGanacheDao = async (
     erc1155TestTokenUri: "1155 test token",
     gasPriceLimit: process.env.GAS_PRICE_LIMIT,
     spendLimitPeriod: process.env.SPEND_LIMIT_PERIOD,
-    spendLimitEth: process.env.SPEND_LIMIT_ETH
+    spendLimitEth: process.env.SPEND_LIMIT_ETH,
   });
 };
 
@@ -246,7 +246,13 @@ const deployTestDao = async (
     "DAO_NAME",
     "ERC20_TOKEN_NAME",
     "ERC20_TOKEN_SYMBOL",
-    "ERC20_TOKEN_DECIMALS"
+    "ERC20_TOKEN_DECIMALS",
+    "GAS_PRICE_LIMIT",
+    "SPEND_LIMIT_PERIOD",
+    "SPEND_LIMIT_ETH",
+    "GAS_PRICE_LIMIT",
+    "SPEND_LIMIT_PERIOD",
+    "SPEND_LIMIT_ETH"
   );
 
   return await deployDao({
@@ -273,9 +279,9 @@ const deployTestDao = async (
     offchainAdmin: "0xedC10CFA90A135C41538325DD57FDB4c7b88faf7",
     daoName: envVars.DAO_NAME,
     owner: accounts[0],
-    gasPriceLimit: process.env.GAS_PRICE_LIMIT,
-    spendLimitPeriod: process.env.SPEND_LIMIT_PERIOD,
-    spendLimitEth: process.env.SPEND_LIMIT_ETH
+    gasPriceLimit: envVars.GAS_PRICE_LIMIT,
+    spendLimitPeriod: envVars.SPEND_LIMIT_PERIOD,
+    spendLimitEth: envVars.SPEND_LIMIT_ETH,
   });
 };
 

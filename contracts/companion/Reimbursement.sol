@@ -55,20 +55,29 @@ contract ReimbursementContract is IReimbursement, AdapterGuard {
     bytes32 internal constant EthUsed = keccak256("reimbursement.ethUsed");
     bytes32 internal constant RateLimitStart =
         keccak256("reimbursement.rateLimitStart");
+    bytes32 internal constant FeePercent =
+        keccak256("reimbursement.feePercent");
+    bytes32 internal constant GasFixed = keccak256("reimbursement.gasFixed");
 
     function configureDao(
         DaoRegistry dao,
         uint256 gasPriceLimit,
         uint256 spendLimitPeriod,
-        uint256 spendLimitEth
+        uint256 spendLimitEth,
+        uint256 feePercent,
+        uint256 gasFixed
     ) external onlyAdapter(dao) {
         require(gasPriceLimit > 0, "gasPriceLimit::invalid");
         require(spendLimitPeriod > 0, "spendLimitPeriod::invalid");
         require(spendLimitEth > 0, "spendLimitEth::invalid");
+        require(feePercent > 0, "feePercent::invalid");
+        require(gasFixed > 0, "gasFixed::invalid");
 
         dao.setConfiguration(GasPriceLimit, gasPriceLimit);
         dao.setConfiguration(SpendLimitPeriod, spendLimitPeriod);
         dao.setConfiguration(SpendLimitEth, spendLimitEth);
+        dao.setConfiguration(FeePercent, feePercent);
+        dao.setConfiguration(GasFixed, gasFixed);
     }
 
     function shouldReimburse(DaoRegistry dao, uint256 gasLeft)
@@ -92,7 +101,12 @@ contract ReimbursementContract is IReimbursement, AdapterGuard {
             return (false, spendLimitPeriod);
         }
 
-        uint256 payback = gasLeft * tx.gasprice;
+        uint256 feePercent = dao.getConfiguration(FeePercent);
+        uint256 gasFixed = dao.getConfiguration(GasFixed);
+
+        uint256 payback =
+            ((gasLeft + gasFixed) * tx.gasprice * feePercent) / 100;
+
         if (
             //slither-disable-next-line timestamp
             block.timestamp - _data[address(dao)].rateLimitStart <

@@ -115,7 +115,9 @@ const getDefaultOptions = (options) => {
     ...options, // to make sure the options from the tests override the default ones
     gasPriceLimit: "2000000000000",
     spendLimitPeriod: "259200",
-    spendLimitEth: "2000000000000000000000"
+    spendLimitEth: "2000000000000000000000",
+    feePercent: "110",
+    gasFixed: "50000",
   };
 };
 
