@@ -97,7 +97,7 @@ contract BankExtension is AdapterGuard, IExtension {
                     address(this),
                     uint8(flag)
                 ),
-            string(abi.encodePacked("bank::accessDenied:", toString(flag)))
+            "bank::accessDenied:"
         );
         _;
     }
