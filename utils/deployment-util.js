@@ -225,6 +225,74 @@ const createAdapters = async ({ options }) => {
 };
 
 /**
+ * Deploys all the utility contracts defined with Util type.
+ * The contracts must be enabled in the migrations/configs/*.config.ts,
+ * and should not be skipped in the auto deploy process.
+ * The util contract must be provided in the options object.
+ * If the contract is not found in the options object the deployment reverts with an error.
+ */
+const createUtilContracts = async ({ options }) => {
+  const utilContracts = {};
+
+  await Object.values(options.contractConfigs)
+    .filter((config) => config.type === ContractType.Util)
+    .filter((config) => config.enabled)
+    .filter((config) => !config.skipAutoDeploy)
+    .reduce(
+      (p, config) =>
+        p
+          .then(() => deployContract({ config, options }))
+          .then((utilContract) => {
+            utilContracts[utilContract.configs.alias] = utilContract;
+          })
+          .catch((e) => {
+            console.error(
+              `Error while creating util contract ${config.name}`,
+              e
+            );
+            throw e;
+          }),
+      Promise.resolve()
+    );
+  return utilContracts;
+};
+
+/**
+ * Deploys all the test contracts defined with Test type if flag `deployTestTokens`
+ * is enabled in the options. The contracts must be enabled in the migrations/configs/*.config.ts,
+ * and should not be skipped in the auto deploy process.
+ * The test contract must be provided in the options object.
+ * If the contract is not found in the options object the deployment reverts with an error.
+ */
+const createTestContracts = async ({ options }) => {
+  const testContracts = {};
+
+  if (!options.deployTestTokens) return testContracts;
+
+  await Object.values(options.contractConfigs)
+    .filter((config) => config.type === ContractType.Test)
+    .filter((config) => config.enabled)
+    .filter((config) => !config.skipAutoDeploy)
+    .reduce(
+      (p, config) =>
+        p
+          .then(() => deployContract({ config, options }))
+          .then((testContract) => {
+            testContracts[testContract.configs.alias] = testContract;
+          })
+          .catch((e) => {
+            console.error(
+              `Error while creating test contract ${config.name}`,
+              e
+            );
+            throw e;
+          }),
+      Promise.resolve()
+    );
+  return testContracts;
+};
+
+/**
  * Deploys all the contracts defined in the migrations/configs/*.config.ts.
  * The contracts must be enabled in the migrations/configs/*.config.ts,
  * and should not be skipped in the auto deploy process.
@@ -303,6 +371,10 @@ const deployDao = async (options) => {
   };
 };
 
+/**
+ * Creates an instance of the DAO based of the DaoFactory contract.
+ * Returns the new DAO instance, and dao name.
+ */
 const cloneDao = async ({
   owner,
   creator,
@@ -320,6 +392,13 @@ const cloneDao = async ({
   return { dao: newDao, daoFactory, daoName: name };
 };
 
+/**
+ * Configures an instance of the DAO to work with the provided factories, extension, and adapters.
+ * It ensures that every extension and adapter has the correct ACL Flags enabled to be able to communicate
+ * with the DAO instance.
+ * Adapters can communicate with the DAO registry, with different extensions or even other adapters.
+ * Extensions can communicate with the DAO registry, other extensions and adapters.
+ */
 const configureDao = async ({
   owner,
   dao,
@@ -501,60 +580,10 @@ const configureDao = async ({
   await configureExtensions();
 };
 
-const createUtilContracts = async ({ options }) => {
-  const utilContracts = {};
-
-  await Object.values(options.contractConfigs)
-    .filter((config) => config.type === ContractType.Util)
-    .filter((config) => config.enabled)
-    .filter((config) => !config.skipAutoDeploy)
-    .reduce(
-      (p, config) =>
-        p
-          .then(() => deployContract({ config, options }))
-          .then((utilContract) => {
-            utilContracts[utilContract.configs.alias] = utilContract;
-          })
-          .catch((e) => {
-            console.error(
-              `Error while creating util contract ${config.name}`,
-              e
-            );
-            throw e;
-          }),
-      Promise.resolve()
-    );
-  return utilContracts;
-};
-
-const createTestContracts = async ({ options }) => {
-  const testContracts = {};
-
-  if (!options.deployTestTokens) return testContracts;
-
-  await Object.values(options.contractConfigs)
-    .filter((config) => config.type === ContractType.Test)
-    .filter((config) => config.enabled)
-    .filter((config) => !config.skipAutoDeploy)
-    .reduce(
-      (p, config) =>
-        p
-          .then(() => deployContract({ config, options }))
-          .then((testContract) => {
-            testContracts[testContract.configs.alias] = testContract;
-          })
-          .catch((e) => {
-            console.error(
-              `Error while creating test contract ${config.name}`,
-              e
-            );
-            throw e;
-          }),
-      Promise.resolve()
-    );
-  return testContracts;
-};
-
+/**
+ * If the flag `flag options.offchainVoting` is enabled, it deploys and configures all the
+ * contracts required to enable the Offchain voting adapter.
+ */
 const configureOffchainVoting = async ({
   dao,
   daoFactory,
