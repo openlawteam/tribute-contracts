@@ -85,12 +85,20 @@ function internalTransfer(
     member.save();
   }
 
-  // get totalUnits in the dao
+  // get total units minted/authorized for the DAO
   let balanceOfTotalUnits = bankRegistry.balanceOf(TOTAL, UNITS);
+  // get balance of units owned by the guild bank
+  let balanceOfGuildUnits = bankRegistry.balanceOf(GUILD, UNITS);
+  // get total units issued and outstanding in the DAO (not owned by guild bank)
+  let balanceOfTotalUnitsIssued = balanceOfTotalUnits.minus(
+    balanceOfGuildUnits
+  );
+
   let dao = TributeDao.load(daoAddress.toHexString());
 
   if (dao != null) {
     dao.totalUnits = balanceOfTotalUnits.toString();
+    dao.totalUnitsIssued = balanceOfTotalUnitsIssued.toString();
 
     dao.save();
   }

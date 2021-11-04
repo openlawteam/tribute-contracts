@@ -22,7 +22,10 @@ type TributeDao @entity {
   "The DAO creator address"
   creator: Bytes
   createdAt: String
+  "Total units minted/authorized for the DAO"
   totalUnits: String
+  "Total units issued and outstanding"
+  totalUnitsIssued: String
   "The bank of the DAO"
   bank: Bank! @derivedFrom(field: "tributeDao")
   "List of registered adapters"
