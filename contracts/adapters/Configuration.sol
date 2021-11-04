@@ -59,15 +59,28 @@ contract ConfigurationContract is
 
         dao.submitProposal(proposalId);
 
-        _configurations[address(dao)][proposalId] = configs;
+        Configuration[] storage newConfigs;
+        for (uint256 i = 0; i < configs.length; i++) {
+            Configuration memory config = configs[i];
+            newConfigs.push(
+                Configuration({
+                    key: config.key,
+                    configType: config.configType,
+                    numericValue: config.numericValue,
+                    addressValue: config.addressValue
+                })
+            );
+        }
+        _configurations[address(dao)][proposalId] = newConfigs;
 
         IVoting votingContract = IVoting(dao.getAdapterAddress(VOTING));
-        address sponsoredBy = votingContract.getSenderAddress(
-            dao,
-            address(this),
-            data,
-            msg.sender
-        );
+        address sponsoredBy =
+            votingContract.getSenderAddress(
+                dao,
+                address(this),
+                data,
+                msg.sender
+            );
 
         dao.sponsorProposal(proposalId, sponsoredBy, address(votingContract));
         votingContract.startNewVotingForProposal(dao, proposalId, data);
@@ -88,9 +101,8 @@ contract ConfigurationContract is
             "proposal did not pass"
         );
 
-        Configuration[] memory configs = _configurations[address(dao)][
-            proposalId
-        ];
+        Configuration[] memory configs =
+            _configurations[address(dao)][proposalId];
         for (uint256 i = 0; i < configs.length; i++) {
             Configuration memory config = configs[i];
             if (ConfigType.NUMERIC == config.configType) {

@@ -113,20 +113,13 @@ const submitConfigProposal = async (
   sender,
   configuration,
   voting,
-  configKeys,
-  configValues,
-  configAddresses = []
+  configs
 ) => {
   //Submit a new configuration proposal
-  await configuration.submitProposal(
-    dao.address,
-    proposalId,
-    configKeys,
-    configValues,
-    configAddresses,
-    [],
-    { from: sender, gasPrice: toBN("0") }
-  );
+  await configuration.submitProposal(dao.address, proposalId, configs, [], {
+    from: sender,
+    gasPrice: toBN("0"),
+  });
 
   await voting.submitVote(dao.address, proposalId, 1, {
     from: sender,

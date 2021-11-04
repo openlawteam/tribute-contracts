@@ -78,7 +78,14 @@ describe("Adapter - Configuration", () => {
     await configuration.submitProposal(
       dao.address,
       proposalId,
-      { keys: [key], values: [toBN("11")], addresses: [], configType: 0 },
+      [
+        {
+          key: key,
+          numericValue: 11,
+          addressValue: ZERO_ADDRESS,
+          configType: 0,
+        },
+      ],
       [],
       { from: owner, gasPrice: toBN("0") }
     );
@@ -106,15 +113,28 @@ describe("Adapter - Configuration", () => {
     const configuration = this.adapters.configuration;
     const voting = this.adapters.voting;
 
-    let key1 = sha3("allowUnitTransfersBetweenMembers");
-    let key2 = sha3("allowExternalUnitTransfers");
+    const key1 = sha3("allowUnitTransfersBetweenMembers");
+    const key2 = sha3("allowExternalUnitTransfers");
 
     //Submit a new configuration proposal
     const proposalId = getProposalCounter();
     await configuration.submitProposal(
       dao.address,
       proposalId,
-      { keys: [key1, key2], values: [1, 2], addresses: [], configType: 0 },
+      [
+        {
+          key: key1,
+          numericValue: 11,
+          addressValue: ZERO_ADDRESS,
+          configType: 0,
+        },
+        {
+          key: key2,
+          numericValue: 12,
+          addressValue: ZERO_ADDRESS,
+          configType: 0,
+        },
+      ],
       [],
       { from: owner, gasPrice: toBN("0") }
     );
@@ -137,8 +157,8 @@ describe("Adapter - Configuration", () => {
 
     value1 = await dao.getConfiguration(key1);
     value2 = await dao.getConfiguration(key2);
-    expect(value1.toString()).equal("1");
-    expect(value2.toString()).equal("2");
+    expect(value1.toString()).equal("11");
+    expect(value2.toString()).equal("12");
   });
 
   it("should be possible to set a single address configuration parameter", async () => {
@@ -153,7 +173,14 @@ describe("Adapter - Configuration", () => {
     await configuration.submitProposal(
       dao.address,
       proposalId,
-      { keys: [key], values: [], addresses: [DAI_TOKEN], configType: 0 },
+      [
+        {
+          key: key,
+          numericValue: 0,
+          addressValue: DAI_TOKEN,
+          configType: 1,
+        },
+      ],
       [],
       { from: owner, gasPrice: toBN("0") }
     );
@@ -181,20 +208,28 @@ describe("Adapter - Configuration", () => {
     const configuration = this.adapters.configuration;
     const voting = this.adapters.voting;
 
-    let key1 = sha3("token.dai");
-    let key2 = sha3("token.loot");
+    const key1 = sha3("token.dai");
+    const key2 = sha3("token.loot");
 
     //Submit a new configuration proposal
     const proposalId = getProposalCounter();
     await configuration.submitProposal(
       dao.address,
       proposalId,
-      {
-        keys: [key1, key2],
-        values: [],
-        addresses: [DAI_TOKEN, LOOT],
-        configType: 1,
-      },
+      [
+        {
+          key: key1,
+          numericValue: 0,
+          addressValue: DAI_TOKEN,
+          configType: 1,
+        },
+        {
+          key: key2,
+          numericValue: 0,
+          addressValue: LOOT,
+          configType: 1,
+        },
+      ],
       [],
       { from: owner, gasPrice: toBN("0") }
     );
@@ -221,173 +256,54 @@ describe("Adapter - Configuration", () => {
     expect(value2.toString().toLowerCase()).equal(LOOT);
   });
 
-  it("should not be possible to provide a different number of keys and values", async () => {
+  it("should not be possible to submit a proposal with configs", async () => {
     const dao = this.dao;
     const configuration = this.adapters.configuration;
 
     await expectRevert(
-      configuration.submitProposal(
-        dao.address,
-        "0x1",
-        {
-          keys: [sha3("key")],
-          values: [],
-          addresses: [],
-          configType: 0,
-        },
-        [],
-        {
-          from: owner,
-          gasPrice: toBN("0"),
-        }
-      ),
-      "must be an equal number of keys and values"
-    );
-
-    await expectRevert(
-      configuration.submitProposal(
-        dao.address,
-        "0x1",
-        {
-          keys: [sha3("key1"), sha3("key2")],
-          values: [toBN("1")],
-          addresses: [],
-          configType: 0,
-        },
-        [],
-        {
-          from: owner,
-          gasPrice: toBN("0"),
-        }
-      ),
-      "must be an equal number of keys and values"
-    );
-
-    await expectRevert(
-      configuration.submitProposal(
-        dao.address,
-        "0x1",
-        {
-          keys: [sha3("key1")],
-          values: [toBN("1"), toBN("2")],
-          addresses: [],
-          configType: 0,
-        },
-        [],
-        {
-          from: owner,
-          gasPrice: toBN("0"),
-        }
-      ),
-      "must be an equal number of keys and values"
+      configuration.submitProposal(dao.address, "0x1", [], [], {
+        from: owner,
+        gasPrice: toBN("0"),
+      }),
+      "missing configs"
     );
   });
 
-  it("should not be possible to provide a different number of keys and addresses", async () => {
-    const dao = this.dao;
-    const configuration = this.adapters.configuration;
-
-    await expectRevert(
-      configuration.submitProposal(
-        dao.address,
-        "0x1",
-        {
-          keys: [sha3("key")],
-          values: [],
-          addresses: [],
-          configType: 1,
-        },
-        {
-          from: owner,
-          gasPrice: toBN("0"),
-        }
-      ),
-      "must be an equal number of keys and values/addresses"
-    );
-
-    await expectRevert(
-      configuration.submitProposal(
-        dao.address,
-        "0x1",
-        {
-          keys: [],
-          values: [],
-          addresses: [DAI_TOKEN],
-          configType: 1,
-        },
-        [],
-        {
-          from: owner,
-          gasPrice: toBN("0"),
-        }
-      ),
-      "missing keys"
-    );
-    await expectRevert(
-      configuration.submitProposal(
-        dao.address,
-        "0x1",
-        {
-          keys: [sha3("key1"), sha3("key2")],
-          values: [],
-          addresses: [DAI_TOKEN],
-          configType: 1,
-        },
-        [],
-        {
-          from: owner,
-          gasPrice: toBN("0"),
-        }
-      ),
-      "must be an equal number of keys and values/addresses"
-    );
-
-    await expectRevert(
-      configuration.submitProposal(
-        dao.address,
-        "0x1",
-        {
-          keys: [sha3("key1")],
-          values: [],
-          addresses: [DAI_TOKEN, LOOT],
-          configType: 1,
-        },
-        [],
-        {
-          from: owner,
-          gasPrice: toBN("0"),
-        }
-      ),
-      "must be an equal number of keys and values/addresses"
-    );
-  });
-
-  it("should be possible to configure only integers when values and addresses are provided in the same proposal", async () => {
+  it("should be possible to configure numeric and address configs in the same proposal", async () => {
     const dao = this.dao;
     const configuration = this.adapters.configuration;
     const voting = this.adapters.voting;
 
-    let key1 = sha3("config1");
+    const key1 = sha3("config.numeric");
+    const key2 = sha3("config.address");
 
     //Submit a new configuration proposal
     const proposalId = getProposalCounter();
     await configuration.submitProposal(
       dao.address,
       proposalId,
-      {
-        keys: [key1],
-        values: [1],
-        addresses: [DAI_TOKEN],
-        configType: 1,
-      },
+      [
+        {
+          key: key1,
+          numericValue: 200,
+          addressValue: ZERO_ADDRESS,
+          configType: 0,
+        },
+        {
+          key: key2,
+          numericValue: 0,
+          addressValue: DAI_TOKEN,
+          configType: 1,
+        },
+      ],
       [],
       { from: owner, gasPrice: toBN("0") }
     );
 
-    let value1 = await dao.getConfiguration(key1);
-    expect(value1.toString()).equal("0");
-    let addr1 = await dao.getAddressConfiguration(key1);
-    expect(addr1.toString()).equal(ZERO_ADDRESS);
+    let value = await dao.getConfiguration(key1);
+    expect(value.toString()).equal("0");
+    let addr = await dao.getAddressConfiguration(key2);
+    expect(addr.toString()).equal(ZERO_ADDRESS);
 
     await voting.submitVote(dao.address, proposalId, 1, {
       from: owner,
@@ -400,11 +316,10 @@ describe("Adapter - Configuration", () => {
       gasPrice: toBN("0"),
     });
 
-    value1 = await dao.getConfiguration(key1);
-    expect(value1.toString()).equal("1");
-    addr1 = await dao.getAddressConfiguration(key1);
-    // not configured
-    expect(addr1.toString().toLowerCase()).equal(ZERO_ADDRESS);
+    value = await dao.getConfiguration(key1);
+    expect(value.toString()).equal("200");
+    addr = await dao.getAddressConfiguration(key2);
+    expect(addr.toString().toLowerCase()).equal(DAI_TOKEN);
   });
 
   it("should be possible to set an addresses config to 0x0 to indicate it was removed", async () => {
@@ -421,12 +336,14 @@ describe("Adapter - Configuration", () => {
     await configuration.submitProposal(
       dao.address,
       proposalId,
-      {
-        keys: [key],
-        values: [],
-        addresses: [DAI_TOKEN],
-        configType: 1,
-      },
+      [
+        {
+          key: key,
+          numericValue: 0,
+          addressValue: DAI_TOKEN,
+          configType: 1,
+        },
+      ],
       [],
       { from: owner, gasPrice: toBN("0") }
     );
@@ -446,26 +363,29 @@ describe("Adapter - Configuration", () => {
     expect(value1.toString().toLowerCase()).equal(DAI_TOKEN);
 
     // Set to 0x0 to remove the config
+    const proposalIdB = getProposalCounter();
     await configuration.submitProposal(
       dao.address,
-      proposalId,
-      {
-        keys: [key],
-        values: [],
-        addresses: [ZERO_ADDRESS],
-        configType: 1,
-      },
+      proposalIdB,
+      [
+        {
+          key: key,
+          numericValue: 0,
+          addressValue: ZERO_ADDRESS,
+          configType: 1,
+        },
+      ],
       [],
       { from: owner, gasPrice: toBN("0") }
     );
 
-    await voting.submitVote(dao.address, proposalId, 1, {
+    await voting.submitVote(dao.address, proposalIdB, 1, {
       from: owner,
       gasPrice: toBN("0"),
     });
 
     await advanceTime(10000);
-    await configuration.processProposal(dao.address, proposalId, {
+    await configuration.processProposal(dao.address, proposalIdB, {
       from: owner,
       gasPrice: toBN("0"),
     });
@@ -487,12 +407,14 @@ describe("Adapter - Configuration", () => {
     await configuration.submitProposal(
       dao.address,
       proposalId,
-      {
-        keys: [key],
-        values: [toBN("123")],
-        addresses: [],
-        configType: 0,
-      },
+      [
+        {
+          key: key,
+          numericValue: 123,
+          addressValue: ZERO_ADDRESS,
+          configType: 0,
+        },
+      ],
       [],
       { from: owner, gasPrice: toBN("0") }
     );
@@ -513,26 +435,29 @@ describe("Adapter - Configuration", () => {
     expect(value1.toString()).equal("123");
 
     // Remove the numeric config
+    const proposalIdB = getProposalCounter();
     await configuration.submitProposal(
       dao.address,
-      proposalId,
-      {
-        keys: [key],
-        values: [toBN("0")], // set 0 to indicate it needs to be removed
-        addresses: [],
-        configType: 0,
-      },
+      proposalIdB,
+      [
+        {
+          key: key,
+          numericValue: 0, //remove the config
+          addressValue: ZERO_ADDRESS,
+          configType: 0,
+        },
+      ],
       [],
       { from: owner, gasPrice: toBN("0") }
     );
 
-    await voting.submitVote(dao.address, proposalId, 1, {
+    await voting.submitVote(dao.address, proposalIdB, 1, {
       from: owner,
       gasPrice: toBN("0"),
     });
 
     await advanceTime(10000);
-    await configuration.processProposal(dao.address, proposalId, {
+    await configuration.processProposal(dao.address, proposalIdB, {
       from: owner,
       gasPrice: toBN("0"),
     });
