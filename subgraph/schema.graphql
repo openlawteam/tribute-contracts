@@ -22,7 +22,7 @@ type TributeDao @entity {
   "The DAO creator address"
   creator: Bytes
   createdAt: String
-  "Total units minted/authorized for the DAO"
+  "Total units minted for the DAO"
   totalUnits: String
   "Total units issued and outstanding"
   totalUnitsIssued: String

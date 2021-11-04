@@ -85,7 +85,7 @@ function internalTransfer(
     member.save();
   }
 
-  // get total units minted/authorized for the DAO
+  // get total units minted for the DAO
   let balanceOfTotalUnits = bankRegistry.balanceOf(TOTAL, UNITS);
   // get balance of units owned by the guild bank
   let balanceOfGuildUnits = bankRegistry.balanceOf(GUILD, UNITS);
