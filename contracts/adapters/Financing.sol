@@ -66,8 +66,9 @@ contract FinancingContract is IFinancing, AdapterGuard {
         bytes memory data
     ) external override reentrancyGuard(dao) {
         require(amount > 0, "invalid requested amount");
-        BankExtension bank =
-            BankExtension(dao.getExtensionAddress(DaoHelper.BANK));
+        BankExtension bank = BankExtension(
+            dao.getExtensionAddress(DaoHelper.BANK)
+        );
         require(bank.isTokenAllowed(token), "token not allowed");
         require(
             DaoHelper.isNotReservedAddress(applicant),
@@ -80,15 +81,15 @@ contract FinancingContract is IFinancing, AdapterGuard {
         proposal.amount = amount;
         proposal.token = token;
 
-        IVoting votingContract =
-            IVoting(dao.getAdapterAddress(DaoHelper.VOTING));
-        address sponsoredBy =
-            votingContract.getSenderAddress(
-                dao,
-                address(this),
-                data,
-                msg.sender
-            );
+        IVoting votingContract = IVoting(
+            dao.getAdapterAddress(DaoHelper.VOTING)
+        );
+        address sponsoredBy = votingContract.getSenderAddress(
+            dao,
+            address(this),
+            data,
+            msg.sender
+        );
 
         dao.sponsorProposal(proposalId, sponsoredBy, address(votingContract));
         votingContract.startNewVotingForProposal(dao, proposalId, data);
@@ -119,8 +120,9 @@ contract FinancingContract is IFinancing, AdapterGuard {
             "proposal needs to pass"
         );
         dao.processProposal(proposalId);
-        BankExtension bank =
-            BankExtension(dao.getExtensionAddress(DaoHelper.BANK));
+        BankExtension bank = BankExtension(
+            dao.getExtensionAddress(DaoHelper.BANK)
+        );
 
         bank.subtractFromBalance(
             DaoHelper.GUILD,

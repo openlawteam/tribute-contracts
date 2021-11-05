@@ -41,12 +41,9 @@ describe("Extension - Vesting", () => {
   const daoOwner = accounts[0];
 
   before("deploy dao", async () => {
-    const {
-      dao,
-      adapters,
-      extensions,
-      testContracts,
-    } = await deployDefaultDao({ owner: daoOwner, finalize: false });
+    const { dao, adapters, extensions, testContracts } = await deployDefaultDao(
+      { owner: daoOwner, finalize: false }
+    );
     this.dao = dao;
     this.adapters = adapters;
     this.extensions = extensions;

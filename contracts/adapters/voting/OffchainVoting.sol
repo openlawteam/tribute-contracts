@@ -228,10 +228,10 @@ contract OffchainVotingContract is IVoting, MemberGuard, AdapterGuard, Ownable {
         require(
             BankExtension(dao.getExtensionAddress(DaoHelper.BANK))
                 .getPriorAmount(
-                DaoHelper.TOTAL,
-                DaoHelper.MEMBER_COUNT,
-                vote.snapshot
-            ) -
+                    DaoHelper.TOTAL,
+                    DaoHelper.MEMBER_COUNT,
+                    vote.snapshot
+                ) -
                 1 ==
                 result.index,
             "index:member_count mismatch"
@@ -343,14 +343,14 @@ contract OffchainVotingContract is IVoting, MemberGuard, AdapterGuard, Ownable {
         if (vote.forceFailed) {
             return false;
         }
-        BankExtension bank =
-            BankExtension(dao.getExtensionAddress(DaoHelper.BANK));
-        uint256 totalWeight =
-            bank.getPriorAmount(
-                DaoHelper.TOTAL,
-                DaoHelper.UNITS,
-                vote.snapshot
-            );
+        BankExtension bank = BankExtension(
+            dao.getExtensionAddress(DaoHelper.BANK)
+        );
+        uint256 totalWeight = bank.getPriorAmount(
+            DaoHelper.TOTAL,
+            DaoHelper.UNITS,
+            vote.snapshot
+        );
         uint256 unvotedWeights = totalWeight - nbYes - nbNo;
 
         uint256 diff;
@@ -375,8 +375,10 @@ contract OffchainVotingContract is IVoting, MemberGuard, AdapterGuard, Ownable {
         bytes memory data,
         address
     ) external view override returns (address) {
-        SnapshotProposalContract.ProposalMessage memory proposal =
-            abi.decode(data, (SnapshotProposalContract.ProposalMessage));
+        SnapshotProposalContract.ProposalMessage memory proposal = abi.decode(
+            data,
+            (SnapshotProposalContract.ProposalMessage)
+        );
         require(
             SignatureChecker.isValidSignatureNow(
                 proposal.submitter,
@@ -394,13 +396,17 @@ contract OffchainVotingContract is IVoting, MemberGuard, AdapterGuard, Ownable {
         bytes32 proposalId,
         bytes memory data
     ) external override onlyAdapter(dao) {
-        SnapshotProposalContract.ProposalMessage memory proposal =
-            abi.decode(data, (SnapshotProposalContract.ProposalMessage));
-        (bool success, uint256 blockNumber) =
-            ovHash.stringToUint(proposal.payload.snapshot);
+        SnapshotProposalContract.ProposalMessage memory proposal = abi.decode(
+            data,
+            (SnapshotProposalContract.ProposalMessage)
+        );
+        (bool success, uint256 blockNumber) = ovHash.stringToUint(
+            proposal.payload.snapshot
+        );
         require(success, "snapshot conversion error");
-        BankExtension bank =
-            BankExtension(dao.getExtensionAddress(DaoHelper.BANK));
+        BankExtension bank = BankExtension(
+            dao.getExtensionAddress(DaoHelper.BANK)
+        );
 
         address memberAddr = dao.getAddressIfDelegated(proposal.submitter);
         require(
@@ -408,8 +414,11 @@ contract OffchainVotingContract is IVoting, MemberGuard, AdapterGuard, Ownable {
             "noActiveMember"
         );
 
-        bytes32 proposalHash =
-            _snapshotContract.hashMessage(dao, msg.sender, proposal);
+        bytes32 proposalHash = _snapshotContract.hashMessage(
+            dao,
+            msg.sender,
+            proposal
+        );
         require(
             SignatureChecker.isValidSignatureNow(
                 proposal.submitter,
@@ -547,8 +556,9 @@ contract OffchainVotingContract is IVoting, MemberGuard, AdapterGuard, Ownable {
         OffchainVotingHashContract.VoteResultNode memory node
     ) external {
         Voting storage vote = votes[address(dao)][proposalId];
-        BankExtension bank =
-            BankExtension(dao.getExtensionAddress(DaoHelper.BANK));
+        BankExtension bank = BankExtension(
+            dao.getExtensionAddress(DaoHelper.BANK)
+        );
         if (
             getBadNodeError(
                 dao,
@@ -651,8 +661,11 @@ contract OffchainVotingContract is IVoting, MemberGuard, AdapterGuard, Ownable {
         (address adapterAddress, ) = dao.proposals(proposalId);
         require(resultRoot != bytes32(0), "no result!");
         bytes32 hashCurrent = ovHash.nodeHash(dao, adapterAddress, nodeCurrent);
-        bytes32 hashPrevious =
-            ovHash.nodeHash(dao, adapterAddress, nodePrevious);
+        bytes32 hashPrevious = ovHash.nodeHash(
+            dao,
+            adapterAddress,
+            nodePrevious
+        );
         require(
             MerkleProof.verify(nodeCurrent.proof, resultRoot, hashCurrent),
             "proof invalid for current"
@@ -665,8 +678,8 @@ contract OffchainVotingContract is IVoting, MemberGuard, AdapterGuard, Ownable {
         require(nodeCurrent.index == nodePrevious.index + 1, "not consecutive");
 
         (address actionId, ) = dao.proposals(proposalId);
-        OffchainVotingHashContract.VoteStepParams memory params =
-            OffchainVotingHashContract.VoteStepParams(
+        OffchainVotingHashContract.VoteStepParams
+            memory params = OffchainVotingHashContract.VoteStepParams(
                 nodePrevious.nbYes,
                 nodePrevious.nbNo,
                 proposalId
@@ -719,18 +732,18 @@ contract OffchainVotingContract is IVoting, MemberGuard, AdapterGuard, Ownable {
 
     // slither-disable-next-line reentrancy-events
     function _challengeResult(DaoRegistry dao, bytes32 proposalId) internal {
-        BankExtension bank =
-            BankExtension(dao.getExtensionAddress(DaoHelper.BANK));
+        BankExtension bank = BankExtension(
+            dao.getExtensionAddress(DaoHelper.BANK)
+        );
 
         votes[address(dao)][proposalId].isChallenged = true;
         address challengedReporter = votes[address(dao)][proposalId].reporter;
-        bytes32 challengeProposalId =
-            keccak256(
-                abi.encodePacked(
-                    proposalId,
-                    votes[address(dao)][proposalId].resultRoot
-                )
-            );
+        bytes32 challengeProposalId = keccak256(
+            abi.encodePacked(
+                proposalId,
+                votes[address(dao)][proposalId].resultRoot
+            )
+        );
 
         challengeProposals[address(dao)][
             challengeProposalId

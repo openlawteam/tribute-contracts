@@ -85,11 +85,14 @@ contract CouponOnboardingContract is AdapterGuard, Signatures {
         dao.setAddressConfiguration(ERC20InternalTokenAddr, erc20);
         dao.setAddressConfiguration(TokenAddrToMint, tokenAddrToMint);
 
-        BankExtension bank =
-            BankExtension(dao.getExtensionAddress(DaoHelper.BANK));
+        BankExtension bank = BankExtension(
+            dao.getExtensionAddress(DaoHelper.BANK)
+        );
         bank.registerPotentialNewInternalToken(tokenAddrToMint);
-        uint160 currentBalance =
-            bank.balanceOf(DaoHelper.TOTAL, tokenAddrToMint);
+        uint160 currentBalance = bank.balanceOf(
+            DaoHelper.TOTAL,
+            tokenAddrToMint
+        );
         if (currentBalance < maxAmount) {
             bank.addToBalance(
                 DaoHelper.GUILD,
@@ -110,15 +113,14 @@ contract CouponOnboardingContract is AdapterGuard, Signatures {
         view
         returns (bytes32)
     {
-        bytes32 message =
-            keccak256(
-                abi.encode(
-                    COUPON_MESSAGE_TYPEHASH,
-                    coupon.authorizedMember,
-                    coupon.amount,
-                    coupon.nonce
-                )
-            );
+        bytes32 message = keccak256(
+            abi.encode(
+                COUPON_MESSAGE_TYPEHASH,
+                coupon.authorizedMember,
+                coupon.amount,
+                coupon.nonce
+            )
+        );
 
         return hashMessage(dao, _chainId, address(this), message);
     }
@@ -163,13 +165,16 @@ contract CouponOnboardingContract is AdapterGuard, Signatures {
             true
         );
 
-        IERC20 erc20 =
-            IERC20(dao.getAddressConfiguration(ERC20InternalTokenAddr));
-        BankExtension bank =
-            BankExtension(dao.getExtensionAddress(DaoHelper.BANK));
+        IERC20 erc20 = IERC20(
+            dao.getAddressConfiguration(ERC20InternalTokenAddr)
+        );
+        BankExtension bank = BankExtension(
+            dao.getExtensionAddress(DaoHelper.BANK)
+        );
         if (address(erc20) == address(0x0)) {
-            address tokenAddressToMint =
-                dao.getAddressConfiguration(TokenAddrToMint);
+            address tokenAddressToMint = dao.getAddressConfiguration(
+                TokenAddrToMint
+            );
             bank.internalTransfer(
                 DaoHelper.GUILD,
                 authorizedMember,

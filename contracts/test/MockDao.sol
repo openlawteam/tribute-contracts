@@ -27,7 +27,10 @@ SOFTWARE.
  */
 
 contract MockDao {
-    enum DaoState {CREATION, READY}
+    enum DaoState {
+        CREATION,
+        READY
+    }
 
     DaoState public state = DaoState.CREATION;
 

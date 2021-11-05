@@ -40,7 +40,9 @@ contract ERC1271Extension is AdapterGuard, IExtension, IERC1271 {
     bool public initialized = false; // internally tracks deployment under eip-1167 proxy pattern
     DaoRegistry public dao;
 
-    enum AclFlag {SIGN}
+    enum AclFlag {
+        SIGN
+    }
 
     struct DAOSignature {
         bytes32 signatureHash;

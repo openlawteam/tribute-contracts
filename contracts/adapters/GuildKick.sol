@@ -62,23 +62,24 @@ contract GuildKickContract is IGuildKick, AdapterGuard {
         address memberToKick,
         bytes calldata data
     ) external override reentrancyGuard(dao) {
-        IVoting votingContract =
-            IVoting(dao.getAdapterAddress(DaoHelper.VOTING));
-        address submittedBy =
-            votingContract.getSenderAddress(
-                dao,
-                address(this),
-                data,
-                msg.sender
-            );
+        IVoting votingContract = IVoting(
+            dao.getAdapterAddress(DaoHelper.VOTING)
+        );
+        address submittedBy = votingContract.getSenderAddress(
+            dao,
+            address(this),
+            data,
+            msg.sender
+        );
         // Checks if the sender address is not the same as the member to kick to prevent auto kick.
         require(submittedBy != memberToKick, "use ragequit");
 
         // Creates a guild kick proposal.
         dao.submitProposal(proposalId);
 
-        BankExtension bank =
-            BankExtension(dao.getExtensionAddress(DaoHelper.BANK));
+        BankExtension bank = BankExtension(
+            dao.getExtensionAddress(DaoHelper.BANK)
+        );
         // Gets the number of units of the member
         uint256 unitsToBurn = bank.balanceOf(memberToKick, DaoHelper.UNITS);
 
@@ -121,8 +122,10 @@ contract GuildKickContract is IGuildKick, AdapterGuard {
         // Checks if the proposal has passed.
         IVoting votingContract = IVoting(dao.votingAdapter(proposalId));
         require(address(votingContract) != address(0), "adapter not found");
-        IVoting.VotingState votingState =
-            votingContract.voteResult(dao, proposalId);
+        IVoting.VotingState votingState = votingContract.voteResult(
+            dao,
+            proposalId
+        );
         if (votingState == IVoting.VotingState.PASS) {
             GuildKickHelper.rageKick(
                 dao,

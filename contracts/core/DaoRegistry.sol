@@ -34,7 +34,10 @@ SOFTWARE.
 contract DaoRegistry is MemberGuard, AdapterGuard {
     bool public initialized = false; // internally tracks deployment under eip-1167 proxy pattern
 
-    enum DaoState {CREATION, READY}
+    enum DaoState {
+        CREATION,
+        READY
+    }
 
     /*
      * EVENTS
@@ -62,9 +65,15 @@ contract DaoRegistry is MemberGuard, AdapterGuard {
     event ConfigurationUpdated(bytes32 key, uint256 value);
     event AddressConfigurationUpdated(bytes32 key, address value);
 
-    enum MemberFlag {EXISTS}
+    enum MemberFlag {
+        EXISTS
+    }
 
-    enum ProposalFlag {EXISTS, SPONSORED, PROCESSED}
+    enum ProposalFlag {
+        EXISTS,
+        SPONSORED,
+        PROCESSED
+    }
 
     enum AclFlag {
         REPLACE_ADAPTER,
@@ -489,8 +498,10 @@ contract DaoRegistry is MemberGuard, AdapterGuard {
         address votingAdapterAddr
     ) external onlyMember2(this, sponsoringMember) {
         // also checks if the flag was already set
-        Proposal storage proposal =
-            _setProposalFlag(proposalId, ProposalFlag.SPONSORED);
+        Proposal storage proposal = _setProposalFlag(
+            proposalId,
+            ProposalFlag.SPONSORED
+        );
 
         uint256 flags = proposal.flags;
 
@@ -512,8 +523,10 @@ contract DaoRegistry is MemberGuard, AdapterGuard {
      * @param proposalId The ID of the proposal that is being processed
      */
     function processProposal(bytes32 proposalId) external {
-        Proposal storage proposal =
-            _setProposalFlag(proposalId, ProposalFlag.PROCESSED);
+        Proposal storage proposal = _setProposalFlag(
+            proposalId,
+            ProposalFlag.PROCESSED
+        );
 
         require(proposal.adapterAddress == msg.sender, "err::adapter mismatch");
         uint256 flags = proposal.flags;

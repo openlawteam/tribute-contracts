@@ -74,8 +74,9 @@ contract TributeContract is AdapterGuard {
         external
         onlyAdapter(dao)
     {
-        BankExtension bank =
-            BankExtension(dao.getExtensionAddress(DaoHelper.BANK));
+        BankExtension bank = BankExtension(
+            dao.getExtensionAddress(DaoHelper.BANK)
+        );
         bank.registerPotentialNewInternalToken(tokenAddrToMint);
     }
 
@@ -111,15 +112,15 @@ contract TributeContract is AdapterGuard {
         );
 
         dao.submitProposal(proposalId);
-        IVoting votingContract =
-            IVoting(dao.getAdapterAddress(DaoHelper.VOTING));
-        address sponsoredBy =
-            votingContract.getSenderAddress(
-                dao,
-                address(this),
-                data,
-                msg.sender
-            );
+        IVoting votingContract = IVoting(
+            dao.getAdapterAddress(DaoHelper.VOTING)
+        );
+        address sponsoredBy = votingContract.getSenderAddress(
+            dao,
+            address(this),
+            data,
+            msg.sender
+        );
 
         dao.sponsorProposal(proposalId, sponsoredBy, address(votingContract));
         DaoHelper.potentialNewMember(
@@ -168,14 +169,17 @@ contract TributeContract is AdapterGuard {
         IVoting votingContract = IVoting(dao.votingAdapter(proposalId));
         require(address(votingContract) != address(0), "adapter not found");
 
-        IVoting.VotingState voteResult =
-            votingContract.voteResult(dao, proposalId);
+        IVoting.VotingState voteResult = votingContract.voteResult(
+            dao,
+            proposalId
+        );
 
         dao.processProposal(proposalId);
 
         if (voteResult == IVoting.VotingState.PASS) {
-            BankExtension bank =
-                BankExtension(dao.getExtensionAddress(DaoHelper.BANK));
+            BankExtension bank = BankExtension(
+                dao.getExtensionAddress(DaoHelper.BANK)
+            );
             address tokenToMint = proposal.tokenToMint;
             address applicant = proposal.applicant;
             uint256 tributeAmount = proposal.tributeAmount;
