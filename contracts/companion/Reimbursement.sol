@@ -133,7 +133,10 @@ contract ReimbursementContract is IReimbursement, AdapterGuard {
         BankExtension bank =
             BankExtension(dao.getExtensionAddress(DaoHelper.BANK));
 
-        uint256 payback = (gasUsage * tx.gasprice * 11) / 10;
+        uint256 feePercent = dao.getConfiguration(FeePercent);
+        uint256 gasFixed = dao.getConfiguration(GasFixed);
+        uint256 payback =
+            ((gasUsage + gasFixed) * tx.gasprice * feePercent) / 100;
         if (
             //slither-disable-next-line timestamp
             block.timestamp - _data[address(dao)].rateLimitStart <
