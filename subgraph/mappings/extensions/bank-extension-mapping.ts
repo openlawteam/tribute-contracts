@@ -14,11 +14,12 @@ import {
   Extension,
 } from "../../generated/schema";
 import {
-  GUILD,
-  UNITS,
-  TOTAL,
-  MEMBER_COUNT,
   ERC20_EXTENSION_ID,
+  ESCROW,
+  GUILD,
+  MEMBER_COUNT,
+  TOTAL,
+  UNITS,
 } from "../core/dao-constants";
 
 function internalTransfer(
@@ -38,9 +39,11 @@ function internalTransfer(
     TOTAL.toHex() != memberAddress.toHex() &&
     GUILD.toHex() != memberAddress.toHex() &&
     MEMBER_COUNT.toHex() != memberAddress.toHex() &&
+    ESCROW.toHex() != memberAddress.toHex() &&
     TOTAL.toHex() != tokenAddress.toHex() &&
     GUILD.toHex() != tokenAddress.toHex() &&
-    MEMBER_COUNT.toHex() != tokenAddress.toHex()
+    MEMBER_COUNT.toHex() != tokenAddress.toHex() &&
+    ESCROW.toHex() != tokenAddress.toHex()
   ) {
     // check if the DAO has an ERC20 extension and assign members balance
     internalERC20Balance(daoAddress, memberAddress);
