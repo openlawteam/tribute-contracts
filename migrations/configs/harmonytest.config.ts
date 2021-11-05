@@ -22,7 +22,7 @@ export const contracts = defaultContracts
     return c;
   })
   .map((c) => {
-    if (adaptersIdsMap.COUPON_MANAGER_ADAPTER === c.id) {
+    if (adaptersIdsMap.COUPON_ONBOARDING_ADAPTER === c.id) {
       const chainDetails = getNetworkDetails("harmonytest");
       return {
         ...c,

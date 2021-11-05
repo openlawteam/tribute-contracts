@@ -1,7 +1,5 @@
 import { adaptersIdsMap } from "../../utils/dao-ids-util";
-import {
-  contracts as defaultContracts,
-} from "./contracts.config";
+import { contracts as defaultContracts } from "./contracts.config";
 import { getNetworkDetails } from "../../utils/deployment-util";
 
 const disabled: Array<String> = [
@@ -30,7 +28,7 @@ export const contracts = defaultContracts
     return c;
   })
   .map((c) => {
-    if (adaptersIdsMap.COUPON_MANAGER_ADAPTER === c.id) {
+    if (adaptersIdsMap.COUPON_ONBOARDING_ADAPTER === c.id) {
       const chainDetails = getNetworkDetails("mainnet");
       return {
         ...c,
