@@ -67,6 +67,7 @@
     "deploy:harmony": "truffle deploy --network harmony --reset 2>&1 | tee logs/harmony-deploy_`date '+%F_%T'`.log",
     "deploy:harmonytest": "truffle deploy --network harmonytest --reset 2>&1 | tee logs/harmonytest-deploy_`date '+%F_%T'`.log",
     "ganache": "ganache-cli --deterministic -p 7545 --networkId 1337",
+    "ganache:fork": "ganache-cli --deterministic -f ",
     "lint": "prettier --list-different 'contracts/**/*.sol' '**/*.js' '**/*.md'",
     "lint:fix": "prettier --write 'contracts/**/*.sol' '**/*.js' '**/*.md'",
     "migrate": "truffle migrate --network",

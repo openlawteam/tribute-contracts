@@ -1,5 +1,6 @@
 const log = console.log;
 const fs = require("fs");
+const path = require("path");
 
 const {
   toBN,
@@ -13,7 +14,7 @@ const {
 } = require("../utils/contract-util");
 
 const { deployDao, getNetworkDetails } = require("../utils/deployment-util");
-
+const { deployConfigs } = require("../deploy-config");
 require("dotenv").config();
 
 module.exports = async (deployer, network, accounts) => {
@@ -54,10 +55,7 @@ module.exports = async (deployer, network, accounts) => {
         log(`${c.configs.name}: ${c.address}`);
         addresses[c.configs.name] = c.address;
       });
-    const filename = `build/${network}-deployment-${new Date().toISOString()}.json`;
-    fs.writeFileSync(filename, JSON.stringify(addresses), "utf8");
-    log("************************************************");
-    log(`\nDeployed contracts: ${filename}`);
+    saveDeployedContracts(network, addresses);
   } else {
     log("************************************************");
     log("no migration for network " + network);
@@ -448,4 +446,12 @@ const checkEnvVariable = (...names) => {
     envVariables[name] = process.env[name];
   });
   return envVariables;
+};
+const saveDeployedContracts = (network, addresses) => {
+  const now = new Date().toISOString();
+  const dir = path.resolve(deployConfigs.deployedContractsDir);
+  const file = `${dir}/contracts-${network}-${now}.json`;
+  fs.writeFileSync(`${file}`, JSON.stringify(addresses), "utf8");
+  log("************************************************");
+  log(`\nDeployed contracts: ${file}\n`);
 };
