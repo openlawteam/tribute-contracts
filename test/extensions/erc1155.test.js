@@ -96,7 +96,7 @@ describe("Extension - ERC1155", () => {
     const erc1155TestToken = this.testContracts.erc1155TestToken;
     await expectRevert(
       erc1155TokenExtension.getNFT(erc1155TestToken.address, 0),
-      "index out of bounds"
+      "revert"
     );
   });
 

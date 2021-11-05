@@ -1,4 +1,4 @@
-name: Test
+name: Coverage
 
 on:
   push:
@@ -28,8 +28,8 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
-      - name: Run Linter
-        run: npm run lint
-
       - name: Compile Contracts, Run Tests and Check Coverage
-        run: npm run test
+        run: npm run coverage
+
+      - name: Publish to Codecov.io
+        run: bash <(curl -s https://codecov.io/bash) -t ${{ secrets.CODECOV_TOKEN }}
