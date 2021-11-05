@@ -31,5 +31,5 @@ jobs:
       - name: Run Linter
         run: npm run lint
 
-      - name: Compile Contracts, Run Tests and Check Coverage
-        run: npm run test
+      - name: Compile Contracts and Run Tests
+        run: npm run compile && npm run test

@@ -9,7 +9,7 @@ on:
       - "*"
 
 jobs:
-  test:
+  coverage:
     runs-on: ubuntu-20.04
     steps:
       - name: Checkout code
@@ -28,8 +28,8 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
-      - name: Compile Contracts, Run Tests and Check Coverage
-        run: npm run coverage
+      - name: Compile Contracts and Check Coverage
+        run: npm run compile && npm run coverage
 
       - name: Publish to Codecov.io
         run: bash <(curl -s https://codecov.io/bash) -t ${{ secrets.CODECOV_TOKEN }}
