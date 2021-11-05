@@ -100,14 +100,14 @@ describe("Extension - ERC20", () => {
       voting,
       [
         {
-          key: sha3("erc20ExtTransferType"),
+          key: sha3("erc20.transfer.type"),
           numericValue: 0,
           addressValue: ZERO_ADDRESS,
           configType: 0,
         },
       ]
     );
-    let transferType = await dao.getConfiguration(sha3("erc20ExtTransferType"));
+    let transferType = await dao.getConfiguration(sha3("erc20.transfer.type"));
     expect(transferType.toString()).equal("0");
 
     await onboardingNewMember(
@@ -183,14 +183,14 @@ describe("Extension - ERC20", () => {
       voting,
       [
         {
-          key: sha3("erc20ExtTransferType"),
+          key: sha3("erc20.transfer.type"),
           numericValue: 0,
           addressValue: ZERO_ADDRESS,
           configType: 0,
         },
       ]
     );
-    let transferType = await dao.getConfiguration(sha3("erc20ExtTransferType"));
+    let transferType = await dao.getConfiguration(sha3("erc20.transfer.type"));
     expect(transferType.toString()).equal("0");
 
     await onboardingNewMember(
@@ -290,7 +290,7 @@ describe("Extension - ERC20", () => {
       voting,
       [
         {
-          key: sha3("erc20ExtTransferType"),
+          key: sha3("erc20.transfer.type"),
           numericValue: 0,
           addressValue: ZERO_ADDRESS,
           configType: 0,
@@ -365,7 +365,7 @@ describe("Extension - ERC20", () => {
       voting,
       [
         {
-          key: sha3("erc20ExtTransferType"),
+          key: sha3("erc20.transfer.type"),
           numericValue: 0,
           addressValue: ZERO_ADDRESS,
           configType: 0,
@@ -473,7 +473,7 @@ describe("Extension - ERC20", () => {
       voting,
       [
         {
-          key: sha3("erc20ExtTransferType"),
+          key: sha3("erc20.transfer.type"),
           numericValue: 2,
           addressValue: ZERO_ADDRESS,
           configType: 0,
@@ -561,7 +561,7 @@ describe("Extension - ERC20", () => {
       voting,
       [
         {
-          key: sha3("erc20ExtTransferType"),
+          key: sha3("erc20.transfer.type"),
           numericValue: 1,
           addressValue: ZERO_ADDRESS,
           configType: 0,
@@ -637,7 +637,7 @@ describe("Extension - ERC20", () => {
       voting,
       [
         {
-          key: sha3("erc20ExtTransferType"),
+          key: sha3("erc20.transfer.type"),
           numericValue: 1,
           addressValue: ZERO_ADDRESS,
           configType: 0,

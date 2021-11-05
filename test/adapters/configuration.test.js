@@ -69,7 +69,7 @@ describe("Adapter - Configuration", () => {
     await revertChainSnapshot(this.snapshotId);
   });
 
-  it("should be possible to set a single integer configuration parameter", async () => {
+  it("should be possible to set a single numeric configuration parameter", async () => {
     const dao = this.dao;
     const configuration = this.adapters.configuration;
     const voting = this.adapters.voting;
@@ -111,7 +111,7 @@ describe("Adapter - Configuration", () => {
     expect(value.toString()).equal("11");
   });
 
-  it("should be possible to set multiple integer configuration parameters", async () => {
+  it("should be possible to set multiple numeric configuration parameters", async () => {
     const dao = this.dao;
     const configuration = this.adapters.configuration;
     const voting = this.adapters.voting;
@@ -259,7 +259,7 @@ describe("Adapter - Configuration", () => {
     expect(value2.toString().toLowerCase()).equal(LOOT);
   });
 
-  it("should not be possible to submit a proposal with configs", async () => {
+  it("should not be possible to submit a proposal without configs", async () => {
     const dao = this.dao;
     const configuration = this.adapters.configuration;
 

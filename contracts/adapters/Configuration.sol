@@ -77,7 +77,6 @@ contract ConfigurationContract is IConfiguration, AdapterGuard {
             msg.sender
         );
 
-        dao.submitProposal(proposalId);
         dao.sponsorProposal(proposalId, sponsoredBy, address(votingContract));
         _configurations[address(dao)][proposalId] = newConfigs;
         votingContract.startNewVotingForProposal(dao, proposalId, data);
