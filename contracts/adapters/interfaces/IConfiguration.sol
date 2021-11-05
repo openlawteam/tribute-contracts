@@ -29,11 +29,19 @@ SOFTWARE.
  */
 
 interface IConfiguration {
+    enum ConfigType {NUMERIC, ADDRESS}
+
+    struct Configuration {
+        bytes32 key;
+        uint256 numericValue;
+        address addressValue;
+        ConfigType configType;
+    }
+
     function submitProposal(
         DaoRegistry dao,
         bytes32 proposalId,
-        bytes32[] calldata keys,
-        uint256[] calldata values,
+        Configuration[] calldata configs,
         bytes calldata data
     ) external;
 

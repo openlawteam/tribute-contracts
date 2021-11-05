@@ -29,6 +29,7 @@ const {
   toBN,
   unitPrice,
   UNITS,
+  ZERO_ADDRESS,
   numberOfUnits,
 } = require("../../utils/contract-util");
 
@@ -100,8 +101,14 @@ describe("Extension - ERC20", () => {
       daoOwner,
       configuration,
       voting,
-      [sha3("erc20ExtTransferType")],
-      [0]
+      [
+        {
+          key: sha3("erc20ExtTransferType"),
+          numericValue: 0,
+          addressValue: ZERO_ADDRESS,
+          configType: 0,
+        },
+      ]
     );
     let transferType = await dao.getConfiguration(sha3("erc20ExtTransferType"));
     expect(transferType.toString()).equal("0");
@@ -177,8 +184,14 @@ describe("Extension - ERC20", () => {
       daoOwner,
       configuration,
       voting,
-      [sha3("erc20ExtTransferType")],
-      [0]
+      [
+        {
+          key: sha3("erc20ExtTransferType"),
+          numericValue: 0,
+          addressValue: ZERO_ADDRESS,
+          configType: 0,
+        },
+      ]
     );
     let transferType = await dao.getConfiguration(sha3("erc20ExtTransferType"));
     expect(transferType.toString()).equal("0");
@@ -278,8 +291,14 @@ describe("Extension - ERC20", () => {
       daoOwner,
       configuration,
       voting,
-      [sha3("erc20.transfer.type")],
-      [0]
+      [
+        {
+          key: sha3("erc20ExtTransferType"),
+          numericValue: 0,
+          addressValue: ZERO_ADDRESS,
+          configType: 0,
+        },
+      ]
     );
     let transferType = await dao.getConfiguration(sha3("erc20.transfer.type"));
     expect(transferType.toString()).equal("0");
@@ -347,8 +366,14 @@ describe("Extension - ERC20", () => {
       daoOwner,
       configuration,
       voting,
-      [sha3("erc20.transfer.type")],
-      [0]
+      [
+        {
+          key: sha3("erc20ExtTransferType"),
+          numericValue: 0,
+          addressValue: ZERO_ADDRESS,
+          configType: 0,
+        },
+      ]
     );
     let transferType = await dao.getConfiguration(sha3("erc20.transfer.type"));
     expect(transferType.toString()).equal("0");
@@ -449,8 +474,14 @@ describe("Extension - ERC20", () => {
       daoOwner,
       configuration,
       voting,
-      [sha3("erc20.transfer.type")],
-      [2]
+      [
+        {
+          key: sha3("erc20ExtTransferType"),
+          numericValue: 2,
+          addressValue: ZERO_ADDRESS,
+          configType: 0,
+        },
+      ]
     );
     let transferType = await dao.getConfiguration(sha3("erc20.transfer.type"));
     expect(transferType.toString()).equal("2");
@@ -531,8 +562,14 @@ describe("Extension - ERC20", () => {
       daoOwner,
       configuration,
       voting,
-      [sha3("erc20.transfer.type")],
-      [1]
+      [
+        {
+          key: sha3("erc20ExtTransferType"),
+          numericValue: 1,
+          addressValue: ZERO_ADDRESS,
+          configType: 0,
+        },
+      ]
     );
     let transferType = await dao.getConfiguration(sha3("erc20.transfer.type"));
     expect(transferType.toString()).equal("1");
@@ -601,8 +638,14 @@ describe("Extension - ERC20", () => {
       daoOwner,
       configuration,
       voting,
-      [sha3("erc20.transfer.type")],
-      [1]
+      [
+        {
+          key: sha3("erc20ExtTransferType"),
+          numericValue: 1,
+          addressValue: ZERO_ADDRESS,
+          configType: 0,
+        },
+      ]
     );
     let transferType = await dao.getConfiguration(sha3("erc20.transfer.type"));
     expect(transferType.toString()).equal("1");
