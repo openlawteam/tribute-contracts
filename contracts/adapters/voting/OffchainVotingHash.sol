@@ -136,15 +136,14 @@ contract OffchainVotingHashContract {
         uint32 choiceIdx,
         bytes memory sig
     ) public view returns (bool) {
-        bytes32 voteHash =
-            snapshotContract.hashVote(
-                dao,
-                actionId,
-                SnapshotProposalContract.VoteMessage(
-                    timestamp,
-                    SnapshotProposalContract.VotePayload(choiceIdx, proposalId)
-                )
-            );
+        bytes32 voteHash = snapshotContract.hashVote(
+            dao,
+            actionId,
+            SnapshotProposalContract.VoteMessage(
+                timestamp,
+                SnapshotProposalContract.VotePayload(choiceIdx, proposalId)
+            )
+        );
 
         return SignatureChecker.isValidSignatureNow(voter, voteHash, sig);
     }
@@ -179,10 +178,14 @@ contract OffchainVotingHashContract {
     ) external view returns (bool) {
         address account = dao.getMemberAddress(node.index);
         address voter = dao.getPriorDelegateKey(account, snapshot);
-        BankExtension bank =
-            BankExtension(dao.getExtensionAddress(DaoHelper.BANK));
-        uint256 weight =
-            bank.getPriorAmount(account, DaoHelper.UNITS, snapshot);
+        BankExtension bank = BankExtension(
+            dao.getExtensionAddress(DaoHelper.BANK)
+        );
+        uint256 weight = bank.getPriorAmount(
+            account,
+            DaoHelper.UNITS,
+            snapshot
+        );
 
         if (node.choice == 0) {
             if (params.previousYes != node.nbYes) {

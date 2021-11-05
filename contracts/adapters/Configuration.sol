@@ -67,15 +67,15 @@ contract ConfigurationContract is IConfiguration, AdapterGuard {
             );
         }
 
-        IVoting votingContract =
-            IVoting(dao.getAdapterAddress(DaoHelper.VOTING));
-        address sponsoredBy =
-            votingContract.getSenderAddress(
-                dao,
-                address(this),
-                data,
-                msg.sender
-            );
+        IVoting votingContract = IVoting(
+            dao.getAdapterAddress(DaoHelper.VOTING)
+        );
+        address sponsoredBy = votingContract.getSenderAddress(
+            dao,
+            address(this),
+            data,
+            msg.sender
+        );
 
         dao.submitProposal(proposalId);
         dao.sponsorProposal(proposalId, sponsoredBy, address(votingContract));
@@ -104,8 +104,9 @@ contract ConfigurationContract is IConfiguration, AdapterGuard {
             "proposal did not pass"
         );
 
-        Configuration[] memory configs =
-            _configurations[address(dao)][proposalId];
+        Configuration[] memory configs = _configurations[address(dao)][
+            proposalId
+        ];
         for (uint256 i = 0; i < configs.length; i++) {
             Configuration memory config = configs[i];
             if (ConfigType.NUMERIC == config.configType) {

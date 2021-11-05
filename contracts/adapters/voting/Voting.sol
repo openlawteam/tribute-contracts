@@ -147,10 +147,14 @@ contract VotingContract is IVoting, MemberGuard, AdapterGuard {
         address memberAddr = dao.getAddressIfDelegated(msg.sender);
 
         require(vote.votes[memberAddr] == 0, "member has already voted");
-        BankExtension bank =
-            BankExtension(dao.getExtensionAddress(DaoHelper.BANK));
-        uint256 correctWeight =
-            bank.getPriorAmount(memberAddr, DaoHelper.UNITS, vote.blockNumber);
+        BankExtension bank = BankExtension(
+            dao.getExtensionAddress(DaoHelper.BANK)
+        );
+        uint256 correctWeight = bank.getPriorAmount(
+            memberAddr,
+            DaoHelper.UNITS,
+            vote.blockNumber
+        );
 
         vote.votes[memberAddr] = voteValue;
 

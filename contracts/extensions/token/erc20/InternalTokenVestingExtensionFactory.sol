@@ -59,8 +59,9 @@ contract InternalTokenVestingExtensionFactory is
         address payable extensionAddr = _createClone(identityAddress);
         _extensions[dao] = extensionAddr;
 
-        InternalTokenVestingExtension ext =
-            InternalTokenVestingExtension(extensionAddr);
+        InternalTokenVestingExtension ext = InternalTokenVestingExtension(
+            extensionAddr
+        );
         emit InternalTokenVestingExtensionCreated(dao, address(ext));
     }
 

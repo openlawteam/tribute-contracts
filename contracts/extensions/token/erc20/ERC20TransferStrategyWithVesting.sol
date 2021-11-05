@@ -93,12 +93,12 @@ contract ERC20TransferStrategy is IERC20TransferStrategy {
         address from,
         address tokenAddr
     ) public view returns (uint160) {
-        InternalTokenVestingExtension vesting =
-            InternalTokenVestingExtension(
-                dao.getExtensionAddress(DaoHelper.INTERNAL_TOKEN_VESTING_EXT)
-            );
-        BankExtension bank =
-            BankExtension(dao.getExtensionAddress(DaoHelper.BANK));
+        InternalTokenVestingExtension vesting = InternalTokenVestingExtension(
+            dao.getExtensionAddress(DaoHelper.INTERNAL_TOKEN_VESTING_EXT)
+        );
+        BankExtension bank = BankExtension(
+            dao.getExtensionAddress(DaoHelper.BANK)
+        );
 
         uint88 minBalance = vesting.getMinimumBalance(from, tokenAddr);
         uint160 balance = bank.balanceOf(from, tokenAddr);

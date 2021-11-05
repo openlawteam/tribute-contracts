@@ -29,7 +29,10 @@ SOFTWARE.
  */
 
 interface IConfiguration {
-    enum ConfigType {NUMERIC, ADDRESS}
+    enum ConfigType {
+        NUMERIC,
+        ADDRESS
+    }
 
     struct Configuration {
         bytes32 key;

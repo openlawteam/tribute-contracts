@@ -47,7 +47,11 @@ contract ERC1155TokenExtension is
     bool public initialized = false; //internally tracks deployment under eip-1167 proxy pattern
     DaoRegistry public dao;
 
-    enum AclFlag {WITHDRAW_NFT, COLLECT_NFT, INTERNAL_TRANSFER}
+    enum AclFlag {
+        WITHDRAW_NFT,
+        COLLECT_NFT,
+        INTERNAL_TRANSFER
+    }
 
     //EVENTS
     event TransferredNFT(
@@ -142,8 +146,10 @@ contract ERC1155TokenExtension is
         // Updates the tokenID amount to keep the records consistent
         _updateTokenAmount(from, nftAddr, nftTokenId, remainingAmount);
 
-        uint256 ownerTokenIdBalance =
-            erc1155.balanceOf(address(this), nftTokenId) - amount;
+        uint256 ownerTokenIdBalance = erc1155.balanceOf(
+            address(this),
+            nftTokenId
+        ) - amount;
 
         // Updates the mappings if the amount of tokenId in the Extension is 0
         // It means the GUILD/Extension does not hold that token id anymore.
@@ -215,8 +221,11 @@ contract ERC1155TokenExtension is
         require(isNFTCollected, "erc1155Ext::nft not found");
 
         // Updates the internal records for toOwner with the current balance + the transferred amount
-        uint256 toOwnerNewAmount =
-            _getTokenAmount(toOwner, nftAddr, nftTokenId) + amount;
+        uint256 toOwnerNewAmount = _getTokenAmount(
+            toOwner,
+            nftAddr,
+            nftTokenId
+        ) + amount;
         _updateTokenAmount(toOwner, nftAddr, nftTokenId, toOwnerNewAmount);
         // Updates the internal records for fromOwner with the remaning amount
         _updateTokenAmount(

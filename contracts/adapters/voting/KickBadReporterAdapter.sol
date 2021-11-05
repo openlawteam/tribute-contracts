@@ -42,13 +42,12 @@ contract KickBadReporterAdapter is MemberGuard {
         bytes calldata data
     ) external {
         OffchainVotingContract votingContract = _getVotingContract(dao);
-        address sponsoredBy =
-            votingContract.getSenderAddress(
-                dao,
-                address(this),
-                data,
-                msg.sender
-            );
+        address sponsoredBy = votingContract.getSenderAddress(
+            dao,
+            address(this),
+            data,
+            msg.sender
+        );
         votingContract.sponsorChallengeProposal(dao, proposalId, sponsoredBy);
         votingContract.startNewVotingForProposal(dao, proposalId, data);
     }
@@ -57,23 +56,28 @@ contract KickBadReporterAdapter is MemberGuard {
         OffchainVotingContract votingContract = _getVotingContract(dao);
         votingContract.processChallengeProposal(dao, proposalId);
 
-        IVoting.VotingState votingState =
-            votingContract.voteResult(dao, proposalId);
+        IVoting.VotingState votingState = votingContract.voteResult(
+            dao,
+            proposalId
+        );
         // the person has been kicked out
         if (votingState == IVoting.VotingState.PASS) {
             //slither-disable-next-line variable-scope
-            (, address challengeAddress) =
-                votingContract.getChallengeDetails(dao, proposalId);
+            (, address challengeAddress) = votingContract.getChallengeDetails(
+                dao,
+                proposalId
+            );
             GuildKickHelper.rageKick(dao, challengeAddress);
         } else if (
             votingState == IVoting.VotingState.NOT_PASS ||
             votingState == IVoting.VotingState.TIE
         ) {
             //slither-disable-next-line uninitialized-local variable-scope
-            (uint256 units, address challengeAddress) =
-                votingContract.getChallengeDetails(dao, proposalId);
-            BankExtension bank =
-                BankExtension(dao.getExtensionAddress(DaoHelper.BANK));
+            (uint256 units, address challengeAddress) = votingContract
+                .getChallengeDetails(dao, proposalId);
+            BankExtension bank = BankExtension(
+                dao.getExtensionAddress(DaoHelper.BANK)
+            );
 
             bank.subtractFromBalance(challengeAddress, DaoHelper.LOOT, units);
             bank.addToBalance(challengeAddress, DaoHelper.UNITS, units);

@@ -37,14 +37,8 @@ module.exports = async (deployer, network, accounts) => {
     contracts,
   });
 
-  const {
-    dao,
-    factories,
-    extensions,
-    adapters,
-    testContracts,
-    utilContracts,
-  } = result;
+  const { dao, factories, extensions, adapters, testContracts, utilContracts } =
+    result;
   if (dao) {
     await dao.finalizeDao();
     log("************************************************");

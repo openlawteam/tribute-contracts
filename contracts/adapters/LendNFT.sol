@@ -76,8 +76,9 @@ contract LendNFTContract is AdapterGuard, IERC1155Receiver, IERC721Receiver {
      * @param dao The DAO address.
      */
     function configureDao(DaoRegistry dao) external onlyAdapter(dao) {
-        BankExtension bank =
-            BankExtension(dao.getExtensionAddress(DaoHelper.BANK));
+        BankExtension bank = BankExtension(
+            dao.getExtensionAddress(DaoHelper.BANK)
+        );
         bank.registerPotentialNewInternalToken(DaoHelper.UNITS);
     }
 
@@ -110,15 +111,15 @@ contract LendNFTContract is AdapterGuard, IERC1155Receiver, IERC721Receiver {
         );
 
         dao.submitProposal(proposalId);
-        IVoting votingContract =
-            IVoting(dao.getAdapterAddress(DaoHelper.VOTING));
-        address sponsoredBy =
-            votingContract.getSenderAddress(
-                dao,
-                address(this),
-                data,
-                msg.sender
-            );
+        IVoting votingContract = IVoting(
+            dao.getAdapterAddress(DaoHelper.VOTING)
+        );
+        address sponsoredBy = votingContract.getSenderAddress(
+            dao,
+            address(this),
+            data,
+            msg.sender
+        );
         dao.sponsorProposal(proposalId, sponsoredBy, address(votingContract));
         DaoHelper.potentialNewMember(
             applicant,
@@ -180,8 +181,9 @@ contract LendNFTContract is AdapterGuard, IERC1155Receiver, IERC721Receiver {
         dao.processProposal(proposalId);
         //if proposal passes and its an erc721 token - use NFT Extension
         if (voteResult == IVoting.VotingState.PASS) {
-            BankExtension bank =
-                BankExtension(dao.getExtensionAddress(DaoHelper.BANK));
+            BankExtension bank = BankExtension(
+                dao.getExtensionAddress(DaoHelper.BANK)
+            );
 
             require(
                 bank.isInternalToken(DaoHelper.UNITS),
@@ -194,8 +196,7 @@ contract LendNFTContract is AdapterGuard, IERC1155Receiver, IERC721Receiver {
                 proposal.requestAmount
             );
 
-            InternalTokenVestingExtension vesting =
-                InternalTokenVestingExtension(
+            InternalTokenVestingExtension vesting = InternalTokenVestingExtension(
                     dao.getExtensionAddress(
                         DaoHelper.INTERNAL_TOKEN_VESTING_EXT
                     )
@@ -242,21 +243,20 @@ contract LendNFTContract is AdapterGuard, IERC1155Receiver, IERC721Receiver {
         uint256 elapsedTime = block.timestamp - proposal.lendingStart;
         //slither-disable-next-line timestamp
         if (elapsedTime < proposal.lendingPeriod) {
-            InternalTokenVestingExtension vesting =
-                InternalTokenVestingExtension(
+            InternalTokenVestingExtension vesting = InternalTokenVestingExtension(
                     dao.getExtensionAddress(
                         DaoHelper.INTERNAL_TOKEN_VESTING_EXT
                     )
                 );
 
-            uint256 blockedAmount =
-                vesting.getMinimumBalanceInternal(
-                    proposal.lendingStart,
-                    proposal.lendingStart + proposal.lendingPeriod,
-                    proposal.requestAmount
-                );
-            BankExtension bank =
-                BankExtension(dao.getExtensionAddress(DaoHelper.BANK));
+            uint256 blockedAmount = vesting.getMinimumBalanceInternal(
+                proposal.lendingStart,
+                proposal.lendingStart + proposal.lendingPeriod,
+                proposal.requestAmount
+            );
+            BankExtension bank = BankExtension(
+                dao.getExtensionAddress(DaoHelper.BANK)
+            );
             bank.subtractFromBalance(
                 proposal.applicant,
                 DaoHelper.UNITS,
@@ -271,8 +271,9 @@ contract LendNFTContract is AdapterGuard, IERC1155Receiver, IERC721Receiver {
 
         // Only ERC-721 tokens will contain tributeAmount == 0
         if (proposal.tributeAmount == 0) {
-            NFTExtension nftExt =
-                NFTExtension(dao.getExtensionAddress(DaoHelper.NFT));
+            NFTExtension nftExt = NFTExtension(
+                dao.getExtensionAddress(DaoHelper.NFT)
+            );
 
             nftExt.withdrawNFT(
                 proposal.previousOwner,
@@ -280,10 +281,9 @@ contract LendNFTContract is AdapterGuard, IERC1155Receiver, IERC721Receiver {
                 proposal.nftTokenId
             );
         } else {
-            ERC1155TokenExtension tokenExt =
-                ERC1155TokenExtension(
-                    dao.getExtensionAddress(DaoHelper.ERC1155_EXT)
-                );
+            ERC1155TokenExtension tokenExt = ERC1155TokenExtension(
+                dao.getExtensionAddress(DaoHelper.ERC1155_EXT)
+            );
             tokenExt.withdrawNFT(
                 DaoHelper.GUILD,
                 proposal.previousOwner,
@@ -315,8 +315,10 @@ contract LendNFTContract is AdapterGuard, IERC1155Receiver, IERC721Receiver {
         uint256 id,
         uint256 value
     ) internal reentrancyGuard(dao) returns (bytes4) {
-        (ProposalDetails storage proposal, IVoting.VotingState voteResult) =
-            _processProposal(dao, proposalId);
+        (
+            ProposalDetails storage proposal,
+            IVoting.VotingState voteResult
+        ) = _processProposal(dao, proposalId);
 
         require(proposal.nftTokenId == id, "wrong NFT");
         require(proposal.nftAddr == msg.sender, "wrong NFT addr");
@@ -326,8 +328,9 @@ contract LendNFTContract is AdapterGuard, IERC1155Receiver, IERC721Receiver {
         // Strict matching is expect to ensure the vote has passed.
         // slither-disable-next-line incorrect-equality,timestamp
         if (voteResult == IVoting.VotingState.PASS) {
-            address erc1155ExtAddr =
-                dao.getExtensionAddress(DaoHelper.ERC1155_EXT);
+            address erc1155ExtAddr = dao.getExtensionAddress(
+                DaoHelper.ERC1155_EXT
+            );
 
             IERC1155 erc1155 = IERC1155(msg.sender);
             erc1155.safeTransferFrom(
@@ -373,8 +376,10 @@ contract LendNFTContract is AdapterGuard, IERC1155Receiver, IERC721Receiver {
         address from,
         uint256 tokenId
     ) internal reentrancyGuard(dao) returns (bytes4) {
-        (ProposalDetails storage proposal, IVoting.VotingState voteResult) =
-            _processProposal(dao, proposalId);
+        (
+            ProposalDetails storage proposal,
+            IVoting.VotingState voteResult
+        ) = _processProposal(dao, proposalId);
         require(proposal.nftTokenId == tokenId, "wrong NFT");
         require(proposal.nftAddr == msg.sender, "wrong NFT addr");
         proposal.tributeAmount = 0;
@@ -384,8 +389,9 @@ contract LendNFTContract is AdapterGuard, IERC1155Receiver, IERC721Receiver {
         // Strict matching is expect to ensure the vote has passed
         // slither-disable-next-line incorrect-equality,timestamp
         if (voteResult == IVoting.VotingState.PASS) {
-            NFTExtension nftExt =
-                NFTExtension(dao.getExtensionAddress(DaoHelper.NFT));
+            NFTExtension nftExt = NFTExtension(
+                dao.getExtensionAddress(DaoHelper.NFT)
+            );
             erc721.approve(address(nftExt), proposal.nftTokenId);
             nftExt.collect(proposal.nftAddr, proposal.nftTokenId);
         } else {
