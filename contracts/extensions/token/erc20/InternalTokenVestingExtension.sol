@@ -28,7 +28,10 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
  */
 contract InternalTokenVestingExtension is IExtension {
-    enum AclFlag {NEW_VESTING, REMOVE_VESTING}
+    enum AclFlag {
+        NEW_VESTING,
+        REMOVE_VESTING
+    }
 
     bool private _initialized;
 
@@ -85,12 +88,11 @@ contract InternalTokenVestingExtension is IExtension {
         //slither-disable-next-line timestamp
         require(endDate > block.timestamp, "vestingExt::end date in the past");
         VestingSchedule storage schedule = vesting[member][internalToken];
-        uint88 minBalance =
-            getMinimumBalanceInternal(
-                schedule.startDate,
-                schedule.endDate,
-                schedule.blockedAmount
-            );
+        uint88 minBalance = getMinimumBalanceInternal(
+            schedule.startDate,
+            schedule.endDate,
+            schedule.blockedAmount
+        );
 
         schedule.startDate = uint64(block.timestamp);
         //get max value between endDate and previous one

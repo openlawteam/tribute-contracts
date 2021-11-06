@@ -110,12 +110,11 @@ library GuildKickHelper {
                 // Calculates the fair amount of funds to ragequit based on the token, units and loot.
                 // It takes into account the historical guild balance when the kick proposal was created.
                 //slither-disable-next-line calls-loop
-                uint256 amountToRagequit =
-                    FairShareHelper.calc(
-                        bank.balanceOf(GUILD, token),
-                        unitsAndLootToBurn,
-                        initialTotalTokens
-                    );
+                uint256 amountToRagequit = FairShareHelper.calc(
+                    bank.balanceOf(GUILD, token),
+                    unitsAndLootToBurn,
+                    initialTotalTokens
+                );
 
                 // Ony execute the internal transfer if the user has enough funds to receive.
                 if (amountToRagequit > 0) {

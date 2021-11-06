@@ -1,6 +1,6 @@
 {
   "name": "tribute-contracts",
-  "version": "2.2.1",
+  "version": "2.2.2",
   "description": "A new modular DAO framework, inspired by the Moloch smart contracts",
   "main": "truffle-config.js",
   "keywords": [
@@ -52,6 +52,7 @@
     "truffle-abi": "^1.0.3",
     "truffle-plugin-verify": "^0.5.8",
     "ts-mocha": "^8.0.0",
+    "ts-node": "^10.4.0",
     "typescript": "^4.4.4",
     "web3": "^1.5.2"
   },
@@ -61,11 +62,12 @@
     "coverage": "DISABLE_SOLC_OPTIMIZER=true ts-node scripts/coverage.ts",
     "deploy:ganache": "truffle deploy --network ganache --reset 2>&1 | tee logs/ganache-deploy_`date '+%F_%T'`.log",
     "deploy:rinkeby": "truffle deploy --network rinkeby --reset 2>&1 | tee logs/rinkeby-deploy_`date '+%F_%T'`.log",
-    "deploy:goerli": "truffle deploy --network goerli --reset 2>&1 | tee logs/goerli-deploy_`date '+%F_%T'`.log",
-    "deploy:harmonytest": "truffle deploy --network harmonytest --reset 2>&1 | tee logs/harmonytest-deploy_`date '+%F_%T'`.log",
-    "deploy:harmony": "truffle deploy --network harmony --reset 2>&1 | tee logs/harmony-deploy_`date '+%F_%T'`.log",
     "deploy:mainnet": "truffle deploy --network mainnet --reset 2>&1 | tee logs/mainnet-deploy_`date '+%F_%T'`.log",
+    "deploy:goerli": "truffle deploy --network goerli --reset 2>&1 | tee logs/goerli-deploy_`date '+%F_%T'`.log",
+    "deploy:harmony": "truffle deploy --network harmony --reset 2>&1 | tee logs/harmony-deploy_`date '+%F_%T'`.log",
+    "deploy:harmonytest": "truffle deploy --network harmonytest --reset 2>&1 | tee logs/harmonytest-deploy_`date '+%F_%T'`.log",
     "ganache": "ganache-cli --deterministic -p 7545 --networkId 1337",
+    "ganache:fork": "ganache-cli --deterministic -f ",
     "lint": "prettier --list-different 'contracts/**/*.sol' '**/*.js' '**/*.md'",
     "lint:fix": "prettier --write 'contracts/**/*.sol' '**/*.js' '**/*.md'",
     "migrate": "truffle migrate --network",

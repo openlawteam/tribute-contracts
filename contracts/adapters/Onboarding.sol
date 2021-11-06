@@ -118,8 +118,9 @@ contract OnboardingContract is IOnboarding, AdapterGuard, Reimbursable {
             tokenAddr
         );
 
-        BankExtension bank =
-            BankExtension(dao.getExtensionAddress(DaoHelper.BANK));
+        BankExtension bank = BankExtension(
+            dao.getExtensionAddress(DaoHelper.BANK)
+        );
         bank.registerPotentialNewInternalToken(unitsToMint);
         bank.registerPotentialNewToken(tokenAddr);
     }
@@ -152,8 +153,9 @@ contract OnboardingContract is IOnboarding, AdapterGuard, Reimbursable {
             BankExtension(dao.getExtensionAddress(DaoHelper.BANK))
         );
 
-        address tokenAddr =
-            dao.getAddressConfiguration(_configKey(tokenToMint, TokenAddr));
+        address tokenAddr = dao.getAddressConfiguration(
+            _configKey(tokenToMint, TokenAddr)
+        );
 
         _submitMembershipProposal(
             dao,
@@ -191,8 +193,10 @@ contract OnboardingContract is IOnboarding, AdapterGuard, Reimbursable {
         IVoting votingContract = IVoting(dao.votingAdapter(proposalId));
         require(address(votingContract) != address(0), "adapter not found");
 
-        IVoting.VotingState voteResult =
-            votingContract.voteResult(dao, proposalId);
+        IVoting.VotingState voteResult = votingContract.voteResult(
+            dao,
+            proposalId
+        );
 
         dao.processProposal(proposalId);
 
@@ -202,8 +206,9 @@ contract OnboardingContract is IOnboarding, AdapterGuard, Reimbursable {
             address unitsToMint = proposal.unitsToMint;
             uint256 unitsRequested = proposal.unitsRequested;
             address applicant = proposal.applicant;
-            BankExtension bank =
-                BankExtension(dao.getExtensionAddress(DaoHelper.BANK));
+            BankExtension bank = BankExtension(
+                dao.getExtensionAddress(DaoHelper.BANK)
+            );
             require(
                 bank.isInternalToken(unitsToMint),
                 "it can only mint units"
@@ -230,9 +235,8 @@ contract OnboardingContract is IOnboarding, AdapterGuard, Reimbursable {
                 erc20.safeTransferFrom(msg.sender, address(bank), amount);
             }
 
-            uint88 totalUnits =
-                _getUnits(daoAddress, unitsToMint, applicant) +
-                    proposal.unitsRequested;
+            uint88 totalUnits = _getUnits(daoAddress, unitsToMint, applicant) +
+                proposal.unitsRequested;
             units[daoAddress][unitsToMint][applicant] = totalUnits;
         } else if (
             voteResult == IVoting.VotingState.NOT_PASS ||
@@ -256,15 +260,15 @@ contract OnboardingContract is IOnboarding, AdapterGuard, Reimbursable {
         bytes32 proposalId,
         bytes memory data
     ) internal {
-        IVoting votingContract =
-            IVoting(dao.getAdapterAddress(DaoHelper.VOTING));
-        address sponsoredBy =
-            votingContract.getSenderAddress(
-                dao,
-                address(this),
-                data,
-                msg.sender
-            );
+        IVoting votingContract = IVoting(
+            dao.getAdapterAddress(DaoHelper.VOTING)
+        );
+        address sponsoredBy = votingContract.getSenderAddress(
+            dao,
+            address(this),
+            data,
+            msg.sender
+        );
         dao.sponsorProposal(proposalId, sponsoredBy, address(votingContract));
         votingContract.startNewVotingForProposal(dao, proposalId, data);
     }

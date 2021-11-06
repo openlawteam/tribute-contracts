@@ -46,7 +46,12 @@ contract DistributeContract is IDistribute, AdapterGuard, Reimbursable {
     );
 
     // The distribution status
-    enum DistributionStatus {NOT_STARTED, IN_PROGRESS, DONE, FAILED}
+    enum DistributionStatus {
+        NOT_STARTED,
+        IN_PROGRESS,
+        DONE,
+        FAILED
+    }
 
     // State of the distribution proposal
     struct Distribution {
@@ -92,23 +97,24 @@ contract DistributeContract is IDistribute, AdapterGuard, Reimbursable {
         uint256 amount,
         bytes calldata data
     ) external override reimbursable(dao) {
-        IVoting votingContract =
-            IVoting(dao.getAdapterAddress(DaoHelper.VOTING));
-        address submittedBy =
-            votingContract.getSenderAddress(
-                dao,
-                address(this),
-                data,
-                msg.sender
-            );
+        IVoting votingContract = IVoting(
+            dao.getAdapterAddress(DaoHelper.VOTING)
+        );
+        address submittedBy = votingContract.getSenderAddress(
+            dao,
+            address(this),
+            data,
+            msg.sender
+        );
 
         require(amount > 0, "invalid amount");
 
         // Creates the distribution proposal.
         dao.submitProposal(proposalId);
 
-        BankExtension bank =
-            BankExtension(dao.getExtensionAddress(DaoHelper.BANK));
+        BankExtension bank = BankExtension(
+            dao.getExtensionAddress(DaoHelper.BANK)
+        );
         require(bank.isTokenAllowed(token), "token not allowed");
 
         // Only check the number of units if there is a valid unit holder address.
@@ -156,8 +162,9 @@ contract DistributeContract is IDistribute, AdapterGuard, Reimbursable {
         dao.processProposal(proposalId);
 
         // Checks if the proposal exists or is not in progress yet.
-        Distribution storage distribution =
-            distributions[address(dao)][proposalId];
+        Distribution storage distribution = distributions[address(dao)][
+            proposalId
+        ];
         require(
             distribution.status == DistributionStatus.NOT_STARTED,
             "proposal already completed or in progress"
@@ -176,15 +183,18 @@ contract DistributeContract is IDistribute, AdapterGuard, Reimbursable {
         IVoting votingContract = IVoting(dao.votingAdapter(proposalId));
         require(address(votingContract) != address(0), "adapter not found");
 
-        IVoting.VotingState voteResult =
-            votingContract.voteResult(dao, proposalId);
+        IVoting.VotingState voteResult = votingContract.voteResult(
+            dao,
+            proposalId
+        );
         if (voteResult == IVoting.VotingState.PASS) {
             distribution.status = DistributionStatus.IN_PROGRESS;
             distribution.blockNumber = block.number;
             ongoingDistributions[address(dao)] = proposalId;
 
-            BankExtension bank =
-                BankExtension(dao.getExtensionAddress(DaoHelper.BANK));
+            BankExtension bank = BankExtension(
+                dao.getExtensionAddress(DaoHelper.BANK)
+            );
 
             bank.internalTransfer(
                 DaoHelper.GUILD,
@@ -219,8 +229,9 @@ contract DistributeContract is IDistribute, AdapterGuard, Reimbursable {
     {
         // Checks if the proposal does not exist or is not completed yet
         bytes32 ongoingProposalId = ongoingDistributions[address(dao)];
-        Distribution storage distribution =
-            distributions[address(dao)][ongoingProposalId];
+        Distribution storage distribution = distributions[address(dao)][
+            ongoingProposalId
+        ];
         uint256 blockNumber = distribution.blockNumber;
         require(
             distribution.status == DistributionStatus.IN_PROGRESS,
@@ -235,8 +246,9 @@ contract DistributeContract is IDistribute, AdapterGuard, Reimbursable {
         uint256 amount = distribution.amount;
 
         // Get the total number of units when the proposal was processed.
-        BankExtension bank =
-            BankExtension(dao.getExtensionAddress(DaoHelper.BANK));
+        BankExtension bank = BankExtension(
+            dao.getExtensionAddress(DaoHelper.BANK)
+        );
 
         address unitHolderAddr = distribution.unitHolderAddr;
         if (unitHolderAddr != address(0x0)) {
@@ -282,8 +294,11 @@ contract DistributeContract is IDistribute, AdapterGuard, Reimbursable {
         address token,
         uint256 amount
     ) internal {
-        uint256 memberTokens =
-            DaoHelper.priorMemberTokens(bank, unitHolderAddr, blockNumber);
+        uint256 memberTokens = DaoHelper.priorMemberTokens(
+            bank,
+            unitHolderAddr,
+            blockNumber
+        );
         require(memberTokens != 0, "not enough tokens");
         // Distributes the funds to 1 unit holder only
         bank.internalTransfer(DaoHelper.ESCROW, unitHolderAddr, token, amount);
@@ -308,12 +323,18 @@ contract DistributeContract is IDistribute, AdapterGuard, Reimbursable {
             //slither-disable-next-line calls-loop
             address memberAddr = dao.getMemberAddress(i);
             //slither-disable-next-line calls-loop
-            uint256 memberUnits =
-                bank.getPriorAmount(memberAddr, DaoHelper.UNITS, blockNumber);
+            uint256 memberUnits = bank.getPriorAmount(
+                memberAddr,
+                DaoHelper.UNITS,
+                blockNumber
+            );
             if (memberUnits > 0) {
                 //slither-disable-next-line calls-loop
-                uint256 amountToDistribute =
-                    FairShareHelper.calc(amount, memberUnits, totalTokens);
+                uint256 amountToDistribute = FairShareHelper.calc(
+                    amount,
+                    memberUnits,
+                    totalTokens
+                );
 
                 if (amountToDistribute > 0) {
                     //slither-disable-next-line calls-loop

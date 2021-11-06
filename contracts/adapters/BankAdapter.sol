@@ -53,8 +53,9 @@ contract BankAdapterContract is AdapterGuard {
 
         // We do not need to check if the token is supported by the bank,
         // because if it is not, the balance will always be zero.
-        BankExtension bank =
-            BankExtension(dao.getExtensionAddress(DaoHelper.BANK));
+        BankExtension bank = BankExtension(
+            dao.getExtensionAddress(DaoHelper.BANK)
+        );
         uint256 balance = bank.balanceOf(account, token);
         require(balance > 0, "nothing to withdraw");
 
@@ -73,8 +74,9 @@ contract BankAdapterContract is AdapterGuard {
     {
         // We do not need to check if the token is supported by the bank,
         // because if it is not, the balance will always be zero.
-        BankExtension bank =
-            BankExtension(dao.getExtensionAddress(DaoHelper.BANK));
+        BankExtension bank = BankExtension(
+            dao.getExtensionAddress(DaoHelper.BANK)
+        );
         bank.updateToken(token);
     }
 

@@ -33,8 +33,14 @@ SOFTWARE.
  * to the internal token units held by DAO members inside the DAO itself.
  */
 interface IERC20TransferStrategy {
-    enum AclFlag {REGISTER_TRANSFER}
-    enum ApprovalType {NONE, STANDARD, SPECIAL}
+    enum AclFlag {
+        REGISTER_TRANSFER
+    }
+    enum ApprovalType {
+        NONE,
+        STANDARD,
+        SPECIAL
+    }
 
     function evaluateTransfer(
         DaoRegistry dao,

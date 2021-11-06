@@ -33,48 +33,53 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
  */
 
-contract ConfigurationContract is IConfiguration, Reimbursable {
-    struct Configuration {
-        bytes32[] keys;
-        uint256[] values;
-    }
-
-    mapping(DaoRegistry => mapping(bytes32 => Configuration))
+contract ConfigurationContract is IConfiguration, AdapterGuard {
+    mapping(address => mapping(bytes32 => Configuration[]))
         private _configurations;
 
     /**
      * @notice Creates and sponsors a configuration proposal.
      * @param dao The DAO Address.
      * @param proposalId The proposal id.
-     * @param keys The applicant address.
-     * @param values The token to receive the funds.
+     * @param configs The keys, type, numeric and address config values.
      * @param data Additional details about the financing proposal.
      */
     // slither-disable-next-line reentrancy-benign
     function submitProposal(
         DaoRegistry dao,
         bytes32 proposalId,
-        bytes32[] calldata keys,
-        uint256[] calldata values,
+        Configuration[] calldata configs,
         bytes calldata data
     ) external override reimbursable(dao) {
-        require(
-            keys.length == values.length,
-            "must be an equal number of config keys and values"
-        );
-        IVoting votingContract =
-            IVoting(dao.getAdapterAddress(DaoHelper.VOTING));
-        address sponsoredBy =
-            votingContract.getSenderAddress(
-                dao,
-                address(this),
-                data,
-                msg.sender
-            );
+        require(configs.length > 0, "missing configs");
 
         dao.submitProposal(proposalId);
-        _configurations[dao][proposalId] = Configuration(keys, values);
+
+        Configuration[] storage newConfigs;
+        for (uint256 i = 0; i < configs.length; i++) {
+            Configuration memory config = configs[i];
+            newConfigs.push(
+                Configuration({
+                    key: config.key,
+                    configType: config.configType,
+                    numericValue: config.numericValue,
+                    addressValue: config.addressValue
+                })
+            );
+        }
+
+        IVoting votingContract = IVoting(
+            dao.getAdapterAddress(DaoHelper.VOTING)
+        );
+        address sponsoredBy = votingContract.getSenderAddress(
+            dao,
+            address(this),
+            data,
+            msg.sender
+        );
+
         dao.sponsorProposal(proposalId, sponsoredBy, address(votingContract));
+        _configurations[address(dao)][proposalId] = newConfigs;
         votingContract.startNewVotingForProposal(dao, proposalId, data);
     }
 
@@ -91,8 +96,6 @@ contract ConfigurationContract is IConfiguration, Reimbursable {
     {
         dao.processProposal(proposalId);
 
-        Configuration storage configuration = _configurations[dao][proposalId];
-
         IVoting votingContract = IVoting(dao.votingAdapter(proposalId));
         require(address(votingContract) != address(0), "adapter not found");
         require(
@@ -101,11 +104,18 @@ contract ConfigurationContract is IConfiguration, Reimbursable {
             "proposal did not pass"
         );
 
-        bytes32[] memory keys = configuration.keys;
-        uint256[] memory values = configuration.values;
-        for (uint256 i = 0; i < keys.length; i++) {
-            //slither-disable-next-line calls-loop
-            dao.setConfiguration(keys[i], values[i]);
+        Configuration[] memory configs = _configurations[address(dao)][
+            proposalId
+        ];
+        for (uint256 i = 0; i < configs.length; i++) {
+            Configuration memory config = configs[i];
+            if (ConfigType.NUMERIC == config.configType) {
+                //slither-disable-next-line calls-loop
+                dao.setConfiguration(config.key, config.numericValue);
+            } else if (ConfigType.ADDRESS == config.configType) {
+                //slither-disable-next-line calls-loop
+                dao.setAddressConfiguration(config.key, config.addressValue);
+            }
         }
     }
 }

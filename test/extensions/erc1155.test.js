@@ -57,12 +57,8 @@ describe("Extension - ERC1155", () => {
   const daoOwner = accounts[0];
 
   before("deploy dao", async () => {
-    const {
-      dao,
-      adapters,
-      extensions,
-      testContracts,
-    } = await deployDefaultNFTDao({ owner: daoOwner });
+    const { dao, adapters, extensions, testContracts } =
+      await deployDefaultNFTDao({ owner: daoOwner });
     this.dao = dao;
     this.adapters = adapters;
     this.extensions = extensions;
@@ -100,7 +96,7 @@ describe("Extension - ERC1155", () => {
     const erc1155TestToken = this.testContracts.erc1155TestToken;
     await expectRevert(
       erc1155TokenExtension.getNFT(erc1155TestToken.address, 0),
-      "index out of bounds"
+      "revert"
     );
   });
 

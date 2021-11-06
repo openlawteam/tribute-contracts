@@ -221,19 +221,14 @@ module.exports = (() => {
   };
 
   const deployDefaultNFTDao = async ({ owner }) => {
-    const {
-      dao,
-      adapters,
-      extensions,
-      testContracts,
-      utilContracts,
-    } = await deployDao({
-      ...getDefaultOptions({ owner }),
-      ...ozContracts,
-      deployFunction,
-      finalize: false,
-      contractConfigs: allContractConfigs,
-    });
+    const { dao, adapters, extensions, testContracts, utilContracts } =
+      await deployDao({
+        ...getDefaultOptions({ owner }),
+        ...ozContracts,
+        deployFunction,
+        finalize: false,
+        contractConfigs: allContractConfigs,
+      });
 
     await dao.finalizeDao({ from: owner });
 
@@ -247,21 +242,16 @@ module.exports = (() => {
   };
 
   const deployDaoWithOffchainVoting = async ({ owner, newMember }) => {
-    const {
-      dao,
-      adapters,
-      extensions,
-      testContracts,
-      votingHelpers,
-    } = await deployDao({
-      ...getDefaultOptions({ owner }),
-      ...ozContracts,
-      deployFunction,
-      finalize: false,
-      offchainVoting: true,
-      offchainAdmin: owner,
-      contractConfigs: allContractConfigs,
-    });
+    const { dao, adapters, extensions, testContracts, votingHelpers } =
+      await deployDao({
+        ...getDefaultOptions({ owner }),
+        ...ozContracts,
+        deployFunction,
+        finalize: false,
+        offchainVoting: true,
+        offchainAdmin: owner,
+        contractConfigs: allContractConfigs,
+      });
 
     await dao.potentialNewMember(newMember, {
       from: owner,

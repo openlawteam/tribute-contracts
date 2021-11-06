@@ -26,7 +26,7 @@ SOFTWARE.
  */
 
 const { sha3, toHex, ZERO_ADDRESS } = require("./contract-util");
-
+const { checkpoint, restore } = require("../utils/checkpoint-utils");
 const { ContractType } = require("../migrations/configs/contracts.config");
 
 const getContractFromTruffle = (c) => {
@@ -43,13 +43,25 @@ const getTruffleContracts = (contracts) => {
 };
 
 const deployFunction = (deployer, daoArtifacts, allContracts) => {
-  const deploy = async (contractInterface, args) => {
+  const deploy = async (contractInterface, args, configs) => {
+    const restored = await restore(contractInterface, configs);
+    if (restored)
+      return {
+        ...restored,
+        configs,
+      };
+
     if (args) {
       await deployer.deploy(contractInterface, ...args);
     } else {
       await deployer.deploy(contractInterface);
     }
-    return await contractInterface.deployed();
+    const instance = await contractInterface.deployed();
+    const contract = {
+      ...instance,
+      configs,
+    };
+    return checkpoint(contract);
   };
 
   const loadOrDeploy = async (contractInterface, args) => {
@@ -69,11 +81,7 @@ const deployFunction = (deployer, daoArtifacts, allContracts) => {
       contractConfigs.type === ContractType.Extension ||
       contractConfigs.type === ContractType.Test
     ) {
-      const instance = await deploy(contractInterface, args);
-      return {
-        ...instance,
-        configs: contractConfigs,
-      };
+      return await deploy(contractInterface, args, contractConfigs);
     }
 
     const artifactsOwner = process.env.DAO_ARTIFACTS_OWNER_ADDR
@@ -97,13 +105,14 @@ const deployFunction = (deployer, daoArtifacts, allContracts) => {
     let deployedContract;
     // When the contract is not found in the DaoArtifacts, deploy a new one
     if (contractConfigs.type === ContractType.Factory) {
-      const identity = await deploy(args[0]);
+      const identity = await deploy(args[0], null, contractConfigs);
       deployedContract = await deploy(
         contractInterface,
-        [identity.address].concat(args.slice(1))
+        [identity.address].concat(args.slice(1)),
+        contractConfigs
       );
     } else {
-      deployedContract = await deploy(contractInterface, args);
+      deployedContract = await deploy(contractInterface, args, contractConfigs);
     }
 
     if (
@@ -123,7 +132,7 @@ const deployFunction = (deployer, daoArtifacts, allContracts) => {
       );
     }
 
-    return { ...deployedContract, configs: contractConfigs };
+    return deployedContract;
   };
 
   return loadOrDeploy;

@@ -183,15 +183,11 @@ const onboardMember = async (dao, voting, onboarding, bank, index) => {
 
 describe("Adapter - Offchain Voting", () => {
   before("deploy dao", async () => {
-    const {
-      dao,
-      adapters,
-      extensions,
-      votingHelpers,
-    } = await deployDaoWithOffchainVoting({
-      owner: daoOwner,
-      newMember: newMember.address,
-    });
+    const { dao, adapters, extensions, votingHelpers } =
+      await deployDaoWithOffchainVoting({
+        owner: daoOwner,
+        newMember: newMember.address,
+      });
     this.dao = dao;
     this.adapters = adapters;
     this.extensions = extensions;

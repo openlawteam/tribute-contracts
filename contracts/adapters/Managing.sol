@@ -76,16 +76,16 @@ contract ManagingContract is IManaging, AdapterGuard, Reimbursable {
 
         proposals[address(dao)][proposalId] = proposal;
 
-        IVoting votingContract =
-            IVoting(dao.getAdapterAddress(DaoHelper.VOTING));
+        IVoting votingContract = IVoting(
+            dao.getAdapterAddress(DaoHelper.VOTING)
+        );
 
-        address senderAddress =
-            votingContract.getSenderAddress(
-                dao,
-                address(this),
-                data,
-                msg.sender
-            );
+        address senderAddress = votingContract.getSenderAddress(
+            dao,
+            address(this),
+            data,
+            msg.sender
+        );
 
         dao.sponsorProposal(proposalId, senderAddress, address(votingContract));
         votingContract.startNewVotingForProposal(dao, proposalId, data);

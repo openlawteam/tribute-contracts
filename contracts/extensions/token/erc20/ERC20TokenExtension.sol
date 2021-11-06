@@ -155,8 +155,9 @@ contract ERC20Extension is AdapterGuard, IExtension, IERC20 {
      * @dev Returns the amount of tokens in existence.
      */
     function totalSupply() public view override returns (uint256) {
-        BankExtension bank =
-            BankExtension(dao.getExtensionAddress(DaoHelper.BANK));
+        BankExtension bank = BankExtension(
+            dao.getExtensionAddress(DaoHelper.BANK)
+        );
         return bank.balanceOf(DaoHelper.TOTAL, tokenAddress);
     }
 
@@ -164,8 +165,9 @@ contract ERC20Extension is AdapterGuard, IExtension, IERC20 {
      * @dev Returns the amount of tokens owned by `account`.
      */
     function balanceOf(address account) public view override returns (uint256) {
-        BankExtension bank =
-            BankExtension(dao.getExtensionAddress(DaoHelper.BANK));
+        BankExtension bank = BankExtension(
+            dao.getExtensionAddress(DaoHelper.BANK)
+        );
         return bank.balanceOf(account, tokenAddress);
     }
 
@@ -277,15 +279,13 @@ contract ERC20Extension is AdapterGuard, IExtension, IERC20 {
             "ERC20: transfer to the zero address"
         );
 
-        IERC20TransferStrategy strategy =
-            IERC20TransferStrategy(
-                dao.getAdapterAddress(DaoHelper.TRANSFER_STRATEGY)
-            );
+        IERC20TransferStrategy strategy = IERC20TransferStrategy(
+            dao.getAdapterAddress(DaoHelper.TRANSFER_STRATEGY)
+        );
         (
             IERC20TransferStrategy.ApprovalType approvalType,
             uint256 allowedAmount
-        ) =
-            strategy.evaluateTransfer(
+        ) = strategy.evaluateTransfer(
                 dao,
                 tokenAddress,
                 sender,
@@ -294,8 +294,9 @@ contract ERC20Extension is AdapterGuard, IExtension, IERC20 {
                 msg.sender
             );
 
-        BankExtension bank =
-            BankExtension(dao.getExtensionAddress(DaoHelper.BANK));
+        BankExtension bank = BankExtension(
+            dao.getExtensionAddress(DaoHelper.BANK)
+        );
 
         if (approvalType == IERC20TransferStrategy.ApprovalType.NONE) {
             revert("transfer not allowed");

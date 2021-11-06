@@ -70,15 +70,15 @@ contract SignaturesContract is ISignatures, AdapterGuard, Reimbursable {
         proposal.signatureHash = signatureHash;
         proposal.magicValue = magicValue;
 
-        IVoting votingContract =
-            IVoting(dao.getAdapterAddress(DaoHelper.VOTING));
-        address sponsoredBy =
-            votingContract.getSenderAddress(
-                dao,
-                address(this),
-                data,
-                msg.sender
-            );
+        IVoting votingContract = IVoting(
+            dao.getAdapterAddress(DaoHelper.VOTING)
+        );
+        address sponsoredBy = votingContract.getSenderAddress(
+            dao,
+            address(this),
+            data,
+            msg.sender
+        );
 
         dao.sponsorProposal(proposalId, sponsoredBy, address(votingContract));
         votingContract.startNewVotingForProposal(dao, proposalId, data);
@@ -108,8 +108,9 @@ contract SignaturesContract is ISignatures, AdapterGuard, Reimbursable {
             "proposal needs to pass"
         );
         dao.processProposal(proposalId);
-        ERC1271Extension erc1271 =
-            ERC1271Extension(dao.getExtensionAddress(DaoHelper.ERC1271));
+        ERC1271Extension erc1271 = ERC1271Extension(
+            dao.getExtensionAddress(DaoHelper.ERC1271)
+        );
 
         erc1271.sign(
             details.permissionHash,

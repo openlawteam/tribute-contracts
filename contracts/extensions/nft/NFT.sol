@@ -43,7 +43,11 @@ contract NFTExtension is AdapterGuard, IExtension, IERC721Receiver {
     bool public initialized = false; // internally tracks deployment under eip-1167 proxy pattern
     DaoRegistry public dao;
 
-    enum AclFlag {WITHDRAW_NFT, COLLECT_NFT, INTERNAL_TRANSFER}
+    enum AclFlag {
+        WITHDRAW_NFT,
+        COLLECT_NFT,
+        INTERNAL_TRANSFER
+    }
 
     event CollectedNFT(address nftAddr, uint256 nftTokenId);
     event TransferredNFT(
