@@ -48,8 +48,9 @@ abstract contract Reimbursable {
             data.reimbursement = IReimbursement(
                 dao.getAdapterAddress(DaoHelper.REIMBURSEMENT)
             );
-            (bool shouldReimburse, uint256 spendLimitPeriod) =
-                data.reimbursement.shouldReimburse(dao, data.gasStart);
+            (bool shouldReimburse, uint256 spendLimitPeriod) = data
+                .reimbursement
+                .shouldReimburse(dao, data.gasStart);
 
             data.shouldReimburse = shouldReimburse;
             data.spendLimitPeriod = spendLimitPeriod;

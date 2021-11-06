@@ -81,8 +81,9 @@ contract BankAdapterContract is AdapterGuard {
     }
 
     function sendEth(DaoRegistry dao) external payable reentrancyGuard(dao) {
-        BankExtension bank =
-            BankExtension(dao.getExtensionAddress(DaoHelper.BANK));
+        BankExtension bank = BankExtension(
+            dao.getExtensionAddress(DaoHelper.BANK)
+        );
 
         bank.addToBalance{value: msg.value}(
             DaoHelper.GUILD,

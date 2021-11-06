@@ -90,8 +90,9 @@ contract ReimbursementContract is IReimbursement, AdapterGuard {
         uint256 spendLimitPeriod = dao.getConfiguration(SpendLimitPeriod);
         uint256 spendLimitEth = dao.getConfiguration(SpendLimitEth);
 
-        BankExtension bank =
-            BankExtension(dao.getExtensionAddress(DaoHelper.BANK));
+        BankExtension bank = BankExtension(
+            dao.getExtensionAddress(DaoHelper.BANK)
+        );
 
         if (gasPriceLimit < tx.gasprice) {
             return (false, spendLimitPeriod);
@@ -104,8 +105,8 @@ contract ReimbursementContract is IReimbursement, AdapterGuard {
         uint256 feePercent = dao.getConfiguration(FeePercent);
         uint256 gasFixed = dao.getConfiguration(GasFixed);
 
-        uint256 payback =
-            ((gasLeft + gasFixed) * tx.gasprice * feePercent) / 100;
+        uint256 payback = ((gasLeft + gasFixed) * tx.gasprice * feePercent) /
+            100;
 
         if (
             //slither-disable-next-line timestamp
@@ -130,13 +131,14 @@ contract ReimbursementContract is IReimbursement, AdapterGuard {
         uint256 gasUsage,
         uint256 spendLimitPeriod
     ) external override onlyAdapter(dao) {
-        BankExtension bank =
-            BankExtension(dao.getExtensionAddress(DaoHelper.BANK));
+        BankExtension bank = BankExtension(
+            dao.getExtensionAddress(DaoHelper.BANK)
+        );
 
         uint256 feePercent = dao.getConfiguration(FeePercent);
         uint256 gasFixed = dao.getConfiguration(GasFixed);
-        uint256 payback =
-            ((gasUsage + gasFixed) * tx.gasprice * feePercent) / 100;
+        uint256 payback = ((gasUsage + gasFixed) * tx.gasprice * feePercent) /
+            100;
         if (
             //slither-disable-next-line timestamp
             block.timestamp - _data[address(dao)].rateLimitStart <
