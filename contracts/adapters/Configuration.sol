@@ -55,7 +55,9 @@ contract ConfigurationContract is IConfiguration, AdapterGuard, Reimbursable {
 
         dao.submitProposal(proposalId);
 
-        Configuration[] storage newConfigs = _configurations[address(dao)][proposalId];
+        Configuration[] storage newConfigs = _configurations[address(dao)][
+            proposalId
+        ];
         for (uint256 i = 0; i < configs.length; i++) {
             Configuration memory config = configs[i];
             newConfigs.push(
