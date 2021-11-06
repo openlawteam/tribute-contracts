@@ -180,7 +180,9 @@ describe("Adapter - LendNFT", () => {
     console.log(unitBalance.toString());
 
     expect(
-      unitBalance.toString() === "200" || unitBalance.toString() === "201" || unitBalance.toString() === "202"
+      unitBalance.toString() === "200" ||
+        unitBalance.toString() === "201" ||
+        unitBalance.toString() === "202"
     ).equal(true);
 
     const balance = await erc1155Token.balanceOf(nftOwner, tokenId2);
