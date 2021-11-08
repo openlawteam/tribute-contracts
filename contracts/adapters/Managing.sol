@@ -89,13 +89,12 @@ contract ManagingContract is
 
         IVoting votingContract = IVoting(dao.getAdapterAddress(VOTING));
 
-        address senderAddress =
-            votingContract.getSenderAddress(
-                dao,
-                address(this),
-                data,
-                msg.sender
-            );
+        address senderAddress = votingContract.getSenderAddress(
+            dao,
+            address(this),
+            data,
+            msg.sender
+        );
 
         dao.sponsorProposal(proposalId, senderAddress, address(votingContract));
         votingContract.startNewVotingForProposal(dao, proposalId, data);

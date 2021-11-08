@@ -86,15 +86,14 @@ contract CouponOnboardingContract is
         view
         returns (bytes32)
     {
-        bytes32 message =
-            keccak256(
-                abi.encode(
-                    COUPON_MESSAGE_TYPEHASH,
-                    coupon.authorizedMember,
-                    coupon.amount,
-                    coupon.nonce
-                )
-            );
+        bytes32 message = keccak256(
+            abi.encode(
+                COUPON_MESSAGE_TYPEHASH,
+                coupon.authorizedMember,
+                coupon.amount,
+                coupon.nonce
+            )
+        );
 
         return hashMessage(dao, chainId, address(this), message);
     }
@@ -112,8 +111,9 @@ contract CouponOnboardingContract is
             "coupon has already been redeemed"
         );
 
-        address signerAddress =
-            dao.getAddressConfiguration(SignerAddressConfig);
+        address signerAddress = dao.getAddressConfiguration(
+            SignerAddressConfig
+        );
 
         Coupon memory coupon = Coupon(authorizedMember, amount, nonce);
         bytes32 hash = hashCouponMessage(dao, coupon);
@@ -128,8 +128,9 @@ contract CouponOnboardingContract is
             true
         );
 
-        address tokenAddrToMint =
-            address(dao.getAddressConfiguration(TokenAddrToMint));
+        address tokenAddrToMint = address(
+            dao.getAddressConfiguration(TokenAddrToMint)
+        );
 
         BankExtension bank = BankExtension(dao.getExtensionAddress(BANK));
 

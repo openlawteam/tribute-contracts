@@ -77,15 +77,11 @@ describe("Adapter - BatchVoting", () => {
         ? 1
         : 0
     );
-    const {
-      dao,
-      adapters,
-      extensions,
-      votingHelpers,
-    } = await deployDaoWithBatchVoting({
-      owner,
-      newMember: this.members[0].address,
-    });
+    const { dao, adapters, extensions, votingHelpers } =
+      await deployDaoWithBatchVoting({
+        owner,
+        newMember: this.members[0].address,
+      });
     this.dao = dao;
     this.adapters = adapters;
     this.extensions = extensions;

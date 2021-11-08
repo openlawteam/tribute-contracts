@@ -29,7 +29,11 @@ SOFTWARE.
  */
 
 interface IManaging {
-    enum UpdateType {UNKNOWN, ADAPTER, EXTENSION}
+    enum UpdateType {
+        UNKNOWN,
+        ADAPTER,
+        EXTENSION
+    }
 
     struct ProposalDetails {
         bytes32 adapterOrExtensionId;

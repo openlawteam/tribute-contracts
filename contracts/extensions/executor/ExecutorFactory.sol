@@ -45,8 +45,9 @@ contract ExecutorExtensionFactory is CloneFactory, DaoConstants {
      * @notice Create and initialize a new Executor Extension
      */
     function create() external {
-        ExecutorExtension exec =
-            ExecutorExtension(_createClone(identityAddress));
+        ExecutorExtension exec = ExecutorExtension(
+            _createClone(identityAddress)
+        );
         emit ExecutorCreated(address(exec));
     }
 }

@@ -157,14 +157,12 @@ const deployDao = async (options) => {
     votingHelpers.handleBadReporterAdapter = handleBadReporterAdapter;
     votingHelpers.snapshotProposalContract = snapshotProposalContract;
   } else if (options.batchVoting) {
-    const {
-      batchVoting,
-      snapshotProposalContract,
-    } = await configureBatchVoting({
-      ...options,
-      dao,
-      daoFactory,
-    });
+    const { batchVoting, snapshotProposalContract } =
+      await configureBatchVoting({
+        ...options,
+        dao,
+        daoFactory,
+      });
 
     votingHelpers.batchVoting = batchVoting;
     votingHelpers.snapshotProposalContract = snapshotProposalContract;

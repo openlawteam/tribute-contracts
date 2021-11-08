@@ -46,7 +46,12 @@ contract DistributeContract is
     event Distributed(address token, uint256 amount, address unitHolder);
 
     // The distribution status
-    enum DistributionStatus {NOT_STARTED, IN_PROGRESS, DONE, FAILED}
+    enum DistributionStatus {
+        NOT_STARTED,
+        IN_PROGRESS,
+        DONE,
+        FAILED
+    }
 
     // State of the guild kick proposal
     struct Distribution {
@@ -99,13 +104,12 @@ contract DistributeContract is
         bytes calldata data
     ) external override reentrancyGuard(dao) {
         IVoting votingContract = IVoting(dao.getAdapterAddress(VOTING));
-        address submittedBy =
-            votingContract.getSenderAddress(
-                dao,
-                address(this),
-                data,
-                msg.sender
-            );
+        address submittedBy = votingContract.getSenderAddress(
+            dao,
+            address(this),
+            data,
+            msg.sender
+        );
 
         require(amount > 0, "invalid amount");
 
@@ -182,8 +186,9 @@ contract DistributeContract is
         dao.processProposal(proposalId);
 
         // Checks if the proposal exists or is not in progress yet.
-        Distribution storage distribution =
-            distributions[address(dao)][proposalId];
+        Distribution storage distribution = distributions[address(dao)][
+            proposalId
+        ];
         require(
             distribution.status == DistributionStatus.NOT_STARTED,
             "proposal already completed or in progress"
@@ -202,8 +207,10 @@ contract DistributeContract is
         IVoting votingContract = IVoting(dao.votingAdapter(proposalId));
         require(address(votingContract) != address(0), "adapter not found");
 
-        IVoting.VotingState voteResult =
-            votingContract.voteResult(dao, proposalId);
+        IVoting.VotingState voteResult = votingContract.voteResult(
+            dao,
+            proposalId
+        );
         if (voteResult == IVoting.VotingState.PASS) {
             distribution.status = DistributionStatus.IN_PROGRESS;
             distribution.blockNumber = block.number;
@@ -248,8 +255,9 @@ contract DistributeContract is
     {
         // Checks if the proposal does not exist or is not completed yet
         bytes32 ongoingProposalId = ongoingDistributions[address(dao)];
-        Distribution storage distribution =
-            distributions[address(dao)][ongoingProposalId];
+        Distribution storage distribution = distributions[address(dao)][
+            ongoingProposalId
+        ];
         uint256 blockNumber = distribution.blockNumber;
         require(
             distribution.status == DistributionStatus.IN_PROGRESS,
@@ -304,8 +312,11 @@ contract DistributeContract is
         address token,
         uint256 amount
     ) internal {
-        uint256 memberUnits =
-            bank.getPriorAmount(unitHolderAddr, UNITS, blockNumber);
+        uint256 memberUnits = bank.getPriorAmount(
+            unitHolderAddr,
+            UNITS,
+            blockNumber
+        );
         require(memberUnits != 0, "not enough units");
         // Distributes the funds to 1 unit holder only
         bank.internalTransfer(ESCROW, unitHolderAddr, token, amount);
@@ -324,11 +335,17 @@ contract DistributeContract is
         // Distributes the funds to all unit holders of the DAO and ignores non-active members.
         for (uint256 i = currentIndex; i < maxIndex; i++) {
             address memberAddr = dao.getMemberAddress(i);
-            uint256 memberUnits =
-                bank.getPriorAmount(memberAddr, UNITS, blockNumber);
+            uint256 memberUnits = bank.getPriorAmount(
+                memberAddr,
+                UNITS,
+                blockNumber
+            );
             if (memberUnits > 0) {
-                uint256 amountToDistribute =
-                    FairShareHelper.calc(amount, memberUnits, totalUnits);
+                uint256 amountToDistribute = FairShareHelper.calc(
+                    amount,
+                    memberUnits,
+                    totalUnits
+                );
 
                 if (amountToDistribute > 0) {
                     bank.internalTransfer(

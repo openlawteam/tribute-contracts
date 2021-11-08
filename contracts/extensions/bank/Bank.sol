@@ -54,7 +54,7 @@ contract BankExtension is DaoConstants, AdapterGuard, IExtension {
         UPDATE_TOKEN
     }
 
-    modifier noProposal {
+    modifier noProposal() {
         require(dao.lockedAt() < block.number, "proposal lock");
         _;
     }

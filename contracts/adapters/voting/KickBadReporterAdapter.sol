@@ -49,15 +49,15 @@ contract KickBadReporterAdapter is DaoConstants, MemberGuard {
         bytes32 proposalId,
         bytes calldata data
     ) external {
-        OffchainVotingContract votingContract =
-            OffchainVotingContract(dao.getAdapterAddress(VOTING));
-        address sponsoredBy =
-            votingContract.getSenderAddress(
-                dao,
-                address(this),
-                data,
-                msg.sender
-            );
+        OffchainVotingContract votingContract = OffchainVotingContract(
+            dao.getAdapterAddress(VOTING)
+        );
+        address sponsoredBy = votingContract.getSenderAddress(
+            dao,
+            address(this),
+            data,
+            msg.sender
+        );
         _sponsorProposal(dao, proposalId, data, sponsoredBy, votingContract);
     }
 
@@ -73,24 +73,29 @@ contract KickBadReporterAdapter is DaoConstants, MemberGuard {
     }
 
     function processProposal(DaoRegistry dao, bytes32 proposalId) external {
-        OffchainVotingContract votingContract =
-            OffchainVotingContract(dao.getAdapterAddress(VOTING));
+        OffchainVotingContract votingContract = OffchainVotingContract(
+            dao.getAdapterAddress(VOTING)
+        );
 
         votingContract.processChallengeProposal(dao, proposalId);
 
-        IVoting.VotingState votingState =
-            votingContract.voteResult(dao, proposalId);
+        IVoting.VotingState votingState = votingContract.voteResult(
+            dao,
+            proposalId
+        );
         // the person has been kicked out
         if (votingState == IVoting.VotingState.PASS) {
-            (, address challengeAddress) =
-                votingContract.getChallengeDetails(dao, proposalId);
+            (, address challengeAddress) = votingContract.getChallengeDetails(
+                dao,
+                proposalId
+            );
             GuildKickHelper.rageKick(dao, challengeAddress);
         } else if (
             votingState == IVoting.VotingState.NOT_PASS ||
             votingState == IVoting.VotingState.TIE
         ) {
-            (uint256 units, address challengeAddress) =
-                votingContract.getChallengeDetails(dao, proposalId);
+            (uint256 units, address challengeAddress) = votingContract
+                .getChallengeDetails(dao, proposalId);
             BankExtension bank = BankExtension(dao.getExtensionAddress(BANK));
 
             bank.subtractFromBalance(challengeAddress, LOOT, units);

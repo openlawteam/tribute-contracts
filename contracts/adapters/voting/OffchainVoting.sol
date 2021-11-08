@@ -253,16 +253,18 @@ contract OffchainVotingContract is
         }
 
         (address adapterAddress, ) = dao.proposals(proposalId);
-        address reporter =
-            ECDSA.recover(
-                hashResultRoot(dao, adapterAddress, resultRoot),
-                rootSig
-            );
+        address reporter = ECDSA.recover(
+            hashResultRoot(dao, adapterAddress, resultRoot),
+            rootSig
+        );
         address memberAddr = dao.getAddressIfDelegated(reporter);
         require(isActiveMember(dao, memberAddr), "not active member");
         BankExtension bank = BankExtension(dao.getExtensionAddress(BANK));
-        uint256 nbMembers =
-            bank.getPriorAmount(TOTAL, MEMBER_COUNT, vote.snapshot);
+        uint256 nbMembers = bank.getPriorAmount(
+            TOTAL,
+            MEMBER_COUNT,
+            vote.snapshot
+        );
         require(nbMembers - 1 == result.index, "index:member_count mismatch");
         require(
             getBadNodeError(
@@ -330,8 +332,10 @@ contract OffchainVotingContract is
         bytes memory data,
         address
     ) external view override returns (address) {
-        SnapshotProposalContract.ProposalMessage memory proposal =
-            abi.decode(data, (SnapshotProposalContract.ProposalMessage));
+        SnapshotProposalContract.ProposalMessage memory proposal = abi.decode(
+            data,
+            (SnapshotProposalContract.ProposalMessage)
+        );
         return
             ECDSA.recover(
                 _snapshotContract.hashMessage(dao, actionId, proposal),
@@ -344,15 +348,21 @@ contract OffchainVotingContract is
         bytes32 proposalId,
         bytes memory data
     ) public override onlyAdapter(dao) {
-        SnapshotProposalContract.ProposalMessage memory proposal =
-            abi.decode(data, (SnapshotProposalContract.ProposalMessage));
-        (bool success, uint256 blockNumber) =
-            _stringToUint(proposal.payload.snapshot);
+        SnapshotProposalContract.ProposalMessage memory proposal = abi.decode(
+            data,
+            (SnapshotProposalContract.ProposalMessage)
+        );
+        (bool success, uint256 blockNumber) = _stringToUint(
+            proposal.payload.snapshot
+        );
         require(success, "snapshot conversion error");
         BankExtension bank = BankExtension(dao.getExtensionAddress(BANK));
 
-        bytes32 proposalHash =
-            _snapshotContract.hashMessage(dao, msg.sender, proposal);
+        bytes32 proposalHash = _snapshotContract.hashMessage(
+            dao,
+            msg.sender,
+            proposal
+        );
         address addr = ECDSA.recover(proposalHash, proposal.sig);
 
         address memberAddr = dao.getAddressIfDelegated(addr);
@@ -576,8 +586,11 @@ contract OffchainVotingContract is
         );
 
         (address actionId, ) = dao.proposals(proposalId);
-        VoteStepParams memory params =
-            VoteStepParams(nodePrevious.nbYes, nodePrevious.nbNo, proposalId);
+        VoteStepParams memory params = VoteStepParams(
+            nodePrevious.nbYes,
+            nodePrevious.nbNo,
+            proposalId
+        );
         if (_checkStep(dao, actionId, nodeCurrent, params)) {
             _challengeResult(dao, proposalId);
         }
@@ -682,13 +695,12 @@ contract OffchainVotingContract is
 
         votes[address(dao)][proposalId].isChallenged = true;
         address challengedReporter = votes[address(dao)][proposalId].reporter;
-        bytes32 challengeProposalId =
-            keccak256(
-                abi.encodePacked(
-                    proposalId,
-                    votes[address(dao)][proposalId].resultRoot
-                )
-            );
+        bytes32 challengeProposalId = keccak256(
+            abi.encodePacked(
+                proposalId,
+                votes[address(dao)][proposalId].resultRoot
+            )
+        );
 
         dao.submitProposal(challengeProposalId);
 
@@ -714,15 +726,14 @@ contract OffchainVotingContract is
         uint32 choiceIdx,
         bytes memory sig
     ) internal view returns (bool) {
-        bytes32 voteHash =
-            _snapshotContract.hashVote(
-                dao,
-                actionId,
-                SnapshotProposalContract.VoteMessage(
-                    timestamp,
-                    SnapshotProposalContract.VotePayload(choiceIdx, proposalId)
-                )
-            );
+        bytes32 voteHash = _snapshotContract.hashVote(
+            dao,
+            actionId,
+            SnapshotProposalContract.VoteMessage(
+                timestamp,
+                SnapshotProposalContract.VotePayload(choiceIdx, proposalId)
+            )
+        );
 
         return ECDSA.recover(voteHash, sig) == voter;
     }

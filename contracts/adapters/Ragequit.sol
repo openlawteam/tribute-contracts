@@ -112,8 +112,8 @@ contract RagequitContract is IRagequit, DaoConstants, AdapterGuard {
         // Calculates the total units, loot and locked loot before any internal transfers
         // it considers the locked loot to be able to calculate the fair amount to ragequit,
         // but locked loot can not be burned.
-        uint256 initialTotalUnitsAndLoot =
-            bank.balanceOf(TOTAL, UNITS) + bank.balanceOf(TOTAL, LOOT);
+        uint256 initialTotalUnitsAndLoot = bank.balanceOf(TOTAL, UNITS) +
+            bank.balanceOf(TOTAL, LOOT);
 
         // Burns / subtracts from member's balance the number of units to burn.
         bank.subtractFromBalance(memberAddr, UNITS, unitsToBurn);
@@ -167,12 +167,11 @@ contract RagequitContract is IRagequit, DaoConstants, AdapterGuard {
             require(bank.isTokenAllowed(currentToken), "token not allowed");
 
             // Calculates the fair amount of funds to ragequit based on the token, units and loot
-            uint256 amountToRagequit =
-                FairShareHelper.calc(
-                    bank.balanceOf(GUILD, currentToken),
-                    unitsAndLootToBurn,
-                    initialTotalUnitsAndLoot
-                );
+            uint256 amountToRagequit = FairShareHelper.calc(
+                bank.balanceOf(GUILD, currentToken),
+                unitsAndLootToBurn,
+                initialTotalUnitsAndLoot
+            );
 
             // Ony execute the internal transfer if the user has enough funds to receive.
             if (amountToRagequit > 0) {

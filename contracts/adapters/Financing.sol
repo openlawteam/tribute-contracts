@@ -92,13 +92,12 @@ contract FinancingContract is
         proposal.token = token;
 
         IVoting votingContract = IVoting(dao.getAdapterAddress(VOTING));
-        address sponsoredBy =
-            votingContract.getSenderAddress(
-                dao,
-                address(this),
-                data,
-                msg.sender
-            );
+        address sponsoredBy = votingContract.getSenderAddress(
+            dao,
+            address(this),
+            data,
+            msg.sender
+        );
 
         dao.sponsorProposal(proposalId, sponsoredBy, address(votingContract));
         votingContract.startNewVotingForProposal(dao, proposalId, data);

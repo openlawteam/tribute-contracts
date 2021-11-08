@@ -153,16 +153,15 @@ contract BatchVotingContract is
         for (uint256 i = 0; i < entries.length; i++) {
             VoteEntry memory entry = entries[i];
 
-            uint256 weight =
-                validateVote(
-                    dao,
-                    bank,
-                    actionId,
-                    snapshot,
-                    proposalHash,
-                    previousMember,
-                    entry
-                );
+            uint256 weight = validateVote(
+                dao,
+                bank,
+                actionId,
+                snapshot,
+                proposalHash,
+                previousMember,
+                entry
+            );
 
             previousMember = entry.memberAddress;
 
@@ -183,13 +182,18 @@ contract BatchVotingContract is
         address previousAddress,
         VoteEntry memory entry
     ) public view returns (uint256) {
-        bytes32 hashVote =
-            _snapshotContract.hashVote(dao, actionId, entry.vote);
+        bytes32 hashVote = _snapshotContract.hashVote(
+            dao,
+            actionId,
+            entry.vote
+        );
 
         address addr = ECDSA.recover(hashVote, entry.sig);
 
-        address delegateKey =
-            dao.getPriorDelegateKey(entry.memberAddress, snapshot);
+        address delegateKey = dao.getPriorDelegateKey(
+            entry.memberAddress,
+            snapshot
+        );
 
         require(entry.memberAddress > previousAddress, "unsorted members");
         require(addr == delegateKey, "signing key mismatch");
@@ -228,8 +232,10 @@ contract BatchVotingContract is
         bytes memory data,
         address
     ) external view override returns (address) {
-        SnapshotProposalContract.ProposalMessage memory proposal =
-            abi.decode(data, (SnapshotProposalContract.ProposalMessage));
+        SnapshotProposalContract.ProposalMessage memory proposal = abi.decode(
+            data,
+            (SnapshotProposalContract.ProposalMessage)
+        );
 
         return
             ECDSA.recover(
@@ -243,16 +249,22 @@ contract BatchVotingContract is
         bytes32 proposalId,
         bytes memory data
     ) public override onlyAdapter(dao) {
-        SnapshotProposalContract.ProposalMessage memory proposal =
-            abi.decode(data, (SnapshotProposalContract.ProposalMessage));
+        SnapshotProposalContract.ProposalMessage memory proposal = abi.decode(
+            data,
+            (SnapshotProposalContract.ProposalMessage)
+        );
         BankExtension bank = BankExtension(dao.getExtensionAddress(BANK));
 
-        (bool success, uint256 blockNumber) =
-            _stringToUint(proposal.payload.snapshot);
+        (bool success, uint256 blockNumber) = _stringToUint(
+            proposal.payload.snapshot
+        );
         require(success, "snapshot conversion error");
 
-        bytes32 proposalHash =
-            _snapshotContract.hashMessage(dao, msg.sender, proposal);
+        bytes32 proposalHash = _snapshotContract.hashMessage(
+            dao,
+            msg.sender,
+            proposal
+        );
         address addr = ECDSA.recover(proposalHash, proposal.sig);
         address memberAddr = dao.getAddressIfDelegated(addr);
         require(bank.balanceOf(memberAddr, UNITS) > 0, "noActiveMember");

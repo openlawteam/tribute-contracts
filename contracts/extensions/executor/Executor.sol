@@ -46,7 +46,9 @@ contract ExecutorExtension is DaoConstants, AdapterGuard, IExtension {
     bool public initialized = false; // internally tracks deployment under eip-1167 proxy pattern
     DaoRegistry public dao;
 
-    enum AclFlag {EXECUTE}
+    enum AclFlag {
+        EXECUTE
+    }
 
     /// @notice Clonable contract must have an empty constructor
     // constructor() {
@@ -120,13 +122,13 @@ contract ExecutorExtension is DaoConstants, AdapterGuard, IExtension {
             returndatacopy(0, 0, returndatasize())
 
             switch result
-                // delegatecall returns 0 on error.
-                case 0 {
-                    revert(0, returndatasize())
-                }
-                default {
-                    return(0, returndatasize())
-                }
+            // delegatecall returns 0 on error.
+            case 0 {
+                revert(0, returndatasize())
+            }
+            default {
+                return(0, returndatasize())
+            }
         }
     }
 

@@ -71,13 +71,12 @@ contract GuildKickContract is IGuildKick, MemberGuard, AdapterGuard {
         bytes calldata data
     ) external override reentrancyGuard(dao) {
         IVoting votingContract = IVoting(dao.getAdapterAddress(VOTING));
-        address submittedBy =
-            votingContract.getSenderAddress(
-                dao,
-                address(this),
-                data,
-                msg.sender
-            );
+        address submittedBy = votingContract.getSenderAddress(
+            dao,
+            address(this),
+            data,
+            msg.sender
+        );
         // Checks if the sender address is not the same as the member to kick to prevent auto kick.
         require(submittedBy != memberToKick, "use ragequit");
 

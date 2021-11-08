@@ -39,12 +39,8 @@ describe("Extension - NFT", () => {
   const daoOwner = accounts[0];
 
   before("deploy dao", async () => {
-    const {
-      dao,
-      adapters,
-      extensions,
-      testContracts,
-    } = await deployDefaultNFTDao({ owner: daoOwner });
+    const { dao, adapters, extensions, testContracts } =
+      await deployDefaultNFTDao({ owner: daoOwner });
     this.dao = dao;
     this.adapters = adapters;
     this.extensions = extensions;

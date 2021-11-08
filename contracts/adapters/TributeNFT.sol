@@ -108,13 +108,12 @@ contract TributeNFTContract is
 
         dao.submitProposal(proposalId);
         IVoting votingContract = IVoting(dao.getAdapterAddress(VOTING));
-        address sponsoredBy =
-            votingContract.getSenderAddress(
-                dao,
-                address(this),
-                data,
-                msg.sender
-            );
+        address sponsoredBy = votingContract.getSenderAddress(
+            dao,
+            address(this),
+            data,
+            msg.sender
+        );
         dao.sponsorProposal(proposalId, sponsoredBy, address(votingContract));
         potentialNewMember(
             applicant,
@@ -159,8 +158,10 @@ contract TributeNFTContract is
         IVoting votingContract = IVoting(dao.votingAdapter(proposalId));
         require(address(votingContract) != address(0), "adapter not found");
 
-        IVoting.VotingState voteResult =
-            votingContract.voteResult(dao, proposalId);
+        IVoting.VotingState voteResult = votingContract.voteResult(
+            dao,
+            proposalId
+        );
 
         dao.processProposal(proposalId);
 

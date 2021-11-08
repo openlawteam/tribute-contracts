@@ -148,8 +148,9 @@ contract OnboardingContract is
             BankExtension(dao.getExtensionAddress(BANK))
         );
 
-        address tokenAddr =
-            dao.getAddressConfiguration(configKey(tokenToMint, TokenAddr));
+        address tokenAddr = dao.getAddressConfiguration(
+            configKey(tokenToMint, TokenAddr)
+        );
 
         _submitMembershipProposal(
             dao,
@@ -169,13 +170,12 @@ contract OnboardingContract is
         bytes memory data
     ) internal {
         IVoting votingContract = IVoting(dao.getAdapterAddress(VOTING));
-        address sponsoredBy =
-            votingContract.getSenderAddress(
-                dao,
-                address(this),
-                data,
-                msg.sender
-            );
+        address sponsoredBy = votingContract.getSenderAddress(
+            dao,
+            address(this),
+            data,
+            msg.sender
+        );
         dao.sponsorProposal(proposalId, sponsoredBy, address(votingContract));
         votingContract.startNewVotingForProposal(dao, proposalId, data);
     }
@@ -199,8 +199,10 @@ contract OnboardingContract is
         IVoting votingContract = IVoting(dao.votingAdapter(proposalId));
         require(address(votingContract) != address(0), "adapter not found");
 
-        IVoting.VotingState voteResult =
-            votingContract.voteResult(dao, proposalId);
+        IVoting.VotingState voteResult = votingContract.voteResult(
+            dao,
+            proposalId
+        );
 
         dao.processProposal(proposalId);
 
@@ -230,9 +232,8 @@ contract OnboardingContract is
                 erc20.safeTransferFrom(msg.sender, address(bank), amount);
             }
 
-            uint88 totalUnits =
-                _getUnits(daoAddress, unitsToMint, applicant) +
-                    proposal.unitsRequested;
+            uint88 totalUnits = _getUnits(daoAddress, unitsToMint, applicant) +
+                proposal.unitsRequested;
             units[daoAddress][unitsToMint][applicant] = totalUnits;
         } else if (
             voteResult == IVoting.VotingState.NOT_PASS ||
