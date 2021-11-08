@@ -177,7 +177,7 @@ describe("Adapter - LendNFT", () => {
     await lendNFT.sendNFTBack(dao.address, proposalId2, { from: nftOwner });
     unitBalance = await bank.balanceOf(nftOwner, UNITS);
 
-    console.log(unitBalance.toString());
+    console.log("*****" + unitBalance.toString());
 
     expect(
       unitBalance.toString() === "200" ||

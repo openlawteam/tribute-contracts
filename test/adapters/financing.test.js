@@ -125,6 +125,9 @@ describe("Adapter - Financing", () => {
     //Create Financing Request
     let requestedAmount = toBN(50000);
     proposalId = getProposalCounter();
+
+    await bankAdapter.sendEth(this.dao.address, { value: toWei("1", "ether") });
+
     await financing.submitProposal(
       this.dao.address,
       proposalId,

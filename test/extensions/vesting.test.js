@@ -86,7 +86,7 @@ describe("Extension - Vesting", () => {
     await advanceTime(halfWay.toNumber());
 
     minBalance = await vesting.getMinimumBalance(daoOwner, UNITS);
-    expect(minBalance.toString()).equal("500");
+    expect(minBalance.toString() === "500" || minBalance.toString() === "501");
 
     await advanceTime(diff.toNumber());
 
