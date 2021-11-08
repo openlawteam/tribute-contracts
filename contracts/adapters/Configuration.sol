@@ -54,7 +54,9 @@ contract ConfigurationContract is IConfiguration, AdapterGuard {
 
         dao.submitProposal(proposalId);
 
-        Configuration[] storage newConfigs;
+        Configuration[] storage newConfigs = _configurations[address(dao)][
+            proposalId
+        ];
         for (uint256 i = 0; i < configs.length; i++) {
             Configuration memory config = configs[i];
             newConfigs.push(
@@ -78,7 +80,6 @@ contract ConfigurationContract is IConfiguration, AdapterGuard {
         );
 
         dao.sponsorProposal(proposalId, sponsoredBy, address(votingContract));
-        _configurations[address(dao)][proposalId] = newConfigs;
         votingContract.startNewVotingForProposal(dao, proposalId, data);
     }
 
