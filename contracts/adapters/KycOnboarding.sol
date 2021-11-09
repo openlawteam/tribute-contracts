@@ -35,10 +35,7 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
  */
 
-contract KycOnboardingContract is
-    AdapterGuard,
-    Signatures
-{
+contract KycOnboardingContract is AdapterGuard, Signatures {
     using Address for address payable;
     using SafeERC20 for IERC20;
 
@@ -58,7 +55,8 @@ contract KycOnboardingContract is
     bytes32 constant ChunkSize = keccak256("kyc-onboarding.chunkSize");
     bytes32 constant UnitsPerChunk = keccak256("kyc-onboarding.unitsPerChunk");
     bytes32 constant MaximumChunks = keccak256("kyc-onboarding.maximumChunks");
-    bytes32 constant MaximumUnits = keccak256("kyc-onboarding.maximumTotalUnits");
+    bytes32 constant MaximumUnits =
+        keccak256("kyc-onboarding.maximumTotalUnits");
     bytes32 constant MaxMembers = keccak256("kyc-onboarding.maxMembers");
     bytes32 constant FundTargetAddress =
         keccak256("kyc-onboarding.fundTargetAddress");
@@ -151,8 +149,10 @@ contract KycOnboardingContract is
         dao.setConfiguration(MaximumUnits, maxUnits);
         dao.setConfiguration(MaxMembers, maxMembers);
 
-        BankExtension bank = BankExtension(dao.getExtensionAddress(BANK));
-        bank.registerPotentialNewInternalToken(UNITS);
+        BankExtension bank = BankExtension(
+            dao.getExtensionAddress(DaoHelper.BANK)
+        );
+        bank.registerPotentialNewInternalToken(DaoHelper.UNITS);
     }
 
     /**
@@ -165,8 +165,9 @@ contract KycOnboardingContract is
         view
         returns (bytes32)
     {
-        bytes32 message =
-            keccak256(abi.encode(COUPON_MESSAGE_TYPEHASH, coupon.kycedMember));
+        bytes32 message = keccak256(
+            abi.encode(COUPON_MESSAGE_TYPEHASH, coupon.kycedMember)
+        );
 
         return hashMessage(dao, _chainId, address(this), message);
     }
@@ -204,15 +205,18 @@ contract KycOnboardingContract is
         _checkKycCoupon(dao, kycedMember, signature);
         OnboardingDetails memory details = _checkData(dao);
 
-        BankExtension bank = BankExtension(dao.getExtensionAddress(BANK));
-        potentialNewMember(kycedMember, dao, bank);
+        BankExtension bank = BankExtension(
+            dao.getExtensionAddress(DaoHelper.BANK)
+        );
+        DaoHelper.potentialNewMember(kycedMember, dao, bank);
         totalUnits[dao] += details.unitsRequested;
-        address payable multisigAddress =
-            payable(dao.getAddressConfiguration(FundTargetAddress));
+        address payable multisigAddress = payable(
+            dao.getAddressConfiguration(FundTargetAddress)
+        );
         if (multisigAddress == address(0x0)) {
             bank.addToBalance{value: details.amount}(
-                GUILD,
-                ETH_TOKEN,
+                DaoHelper.GUILD,
+                DaoHelper.ETH_TOKEN,
                 details.amount
             );
         } else {
@@ -224,7 +228,7 @@ contract KycOnboardingContract is
             );
         }
 
-        bank.addToBalance(kycedMember, UNITS, details.unitsRequested);
+        bank.addToBalance(kycedMember, DaoHelper.UNITS, details.unitsRequested);
 
         if (msg.value > details.amount) {
             payable(msg.sender).sendValue(msg.value - details.amount);
@@ -254,6 +258,10 @@ contract KycOnboardingContract is
         details.unitsRequested = details.numberOfChunks * details.unitsPerChunk;
         details.maximumTotalUnits = uint88(dao.getConfiguration(MaximumUnits));
 
-        require(details.unitsRequested + totalUnits[dao] <= details.maximumTotalUnits, "over max total units");
+        require(
+            details.unitsRequested + totalUnits[dao] <=
+                details.maximumTotalUnits,
+            "over max total units"
+        );
     }
 }
