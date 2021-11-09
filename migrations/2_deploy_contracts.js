@@ -91,25 +91,22 @@ const deployRinkebyDao = async (
     erc20TokenDecimals: envVars.ERC20_TOKEN_DECIMALS,
     erc20TokenAddress: UNITS,
     maxChunks: toBN("100000"),
-    votingPeriod: envVars.VOTING_PERIOD_SECONDS
-      ? parseInt(envVars.VOTING_PERIOD_SECONDS)
-      : 600, // 600 secs = 10 mins,
-    gracePeriod: envVars.GRACE_PERIOD_SECONDS
-      ? parseInt(envVars.GRACE_PERIOD_SECONDS)
-      : 600, // 600 secs = 10 mins
+    votingPeriod: getOptionalEnvVar("VOTING_PERIOD_SECONDS", 600), // 600 secs = 10 min
+    gracePeriod: getOptionalEnvVar("GRACE_PERIOD_SECONDS", 600), // 600 secs = 10 min
     offchainVoting: true,
     chainId: getNetworkDetails(network).chainId,
-
     finalize: false,
     maxExternalTokens: 100,
-    couponCreatorAddress: envVars.COUPON_CREATOR_ADDR
-      ? envVars.COUPON_CREATOR_ADDR
-      : envVars.DAO_OWNER_ADDR,
+    couponCreatorAddress: getOptionalEnvVar(
+      "COUPON_CREATOR_ADDR",
+      envVars.DAO_OWNER_ADDR
+    ),
     daoName: envVars.DAO_NAME,
     owner: envVars.DAO_OWNER_ADDR,
-    offchainAdmin: envVars.OFFCHAIN_ADMIN_ADDR
-      ? envVars.OFFCHAIN_ADMIN_ADDR
-      : "0xedC10CFA90A135C41538325DD57FDB4c7b88faf7",
+    offchainAdmin: getOptionalEnvVar(
+      "OFFCHAIN_ADMIN_ADDR",
+      envVars.DAO_OWNER_ADDR
+    ),
     deployTestTokens: true,
     supplyTestToken1: 1000000,
     supplyTestToken2: 1000000,
@@ -177,6 +174,7 @@ const deployGanacheDao = async (
     "ERC20_TOKEN_SYMBOL",
     "ERC20_TOKEN_DECIMALS"
   );
+  const daoOwnerAddress = accounts[0];
 
   return await deployDao({
     ...truffleImports,
@@ -191,24 +189,19 @@ const deployGanacheDao = async (
     erc20TokenDecimals: envVars.ERC20_TOKEN_DECIMALS,
     erc20TokenAddress: UNITS,
     maxChunks: toBN("100000"),
-    votingPeriod: envVars.VOTING_PERIOD_SECONDS
-      ? parseInt(envVars.VOTING_PERIOD_SECONDS)
-      : 120, // 120 secs = 2 mins
-    gracePeriod: envVars.GRACE_PERIOD_SECONDS
-      ? parseInt(envVars.GRACE_PERIOD_SECONDS)
-      : 60, // 60 secs = 1 min
+    votingPeriod: getOptionalEnvVar("VOTING_PERIOD_SECONDS", 120), // 120 secs = 2 min
+    gracePeriod: getOptionalEnvVar("GRACE_PERIOD_SECONDS", 60), // 600 secs = 1 min
     offchainVoting: true,
     chainId: getNetworkDetails(network).chainId,
     finalize: false,
     maxExternalTokens: 100,
-    couponCreatorAddress: envVars.COUPON_CREATOR_ADDR
-      ? envVars.COUPON_CREATOR_ADDR
-      : accounts[0],
+    couponCreatorAddress: getOptionalEnvVar(
+      "COUPON_CREATOR_ADDR",
+      daoOwnerAddress
+    ),
     daoName: envVars.DAO_NAME,
-    owner: accounts[0],
-    offchainAdmin: envVars.OFFCHAIN_ADMIN_ADDR
-      ? envVars.OFFCHAIN_ADMIN_ADDR
-      : "0xedC10CFA90A135C41538325DD57FDB4c7b88faf7",
+    owner: daoOwnerAddress,
+    offchainAdmin: getOptionalEnvVar("OFFCHAIN_ADMIN_ADDR", daoOwnerAddress),
     deployTestTokens: true,
     supplyTestToken1: 1000000,
     supplyTestToken2: 1000000,
@@ -232,6 +225,8 @@ const deployTestDao = async (
     "ERC20_TOKEN_DECIMALS"
   );
 
+  const daoOwnerAddress = accounts[0];
+
   return await deployDao({
     ...truffleImports,
     contractConfigs,
@@ -252,8 +247,8 @@ const deployTestDao = async (
     deployTestTokens: false,
     finalize: false,
     maxExternalTokens: 100,
-    couponCreatorAddress: "0x7D8cad0bbD68deb352C33e80fccd4D8e88b4aBb8",
-    offchainAdmin: "0xedC10CFA90A135C41538325DD57FDB4c7b88faf7",
+    couponCreatorAddress: daoOwnerAddress,
+    offchainAdmin: daoOwnerAddress,
     daoName: envVars.DAO_NAME,
     owner: accounts[0],
   });
@@ -333,12 +328,8 @@ const deployHarmonyTestDao = async (
     erc20TokenAddress: UNITS,
     erc1155TestTokenUri: "1155 test token",
     maxChunks: toBN("100000"),
-    votingPeriod: envVars.VOTING_PERIOD_SECONDS
-      ? parseInt(envVars.VOTING_PERIOD_SECONDS)
-      : 600, // 600 secs = 10 mins
-    gracePeriod: envVars.GRACE_PERIOD_SECONDS
-      ? parseInt(envVars.GRACE_PERIOD_SECONDS)
-      : 600, // 600 secs = 10 min
+    votingPeriod: getOptionalEnvVar("VOTING_PERIOD_SECONDS", 600), // 600 secs = 10 min
+    gracePeriod: getOptionalEnvVar("GRACE_PERIOD_SECONDS", 600), // 600 secs = 10 min
     offchainVoting: true,
     chainId: getNetworkDetails(network).chainId,
     deployTestTokens: true,
@@ -347,9 +338,10 @@ const deployHarmonyTestDao = async (
     couponCreatorAddress: envVars.COUPON_CREATOR_ADDR,
     daoName: envVars.DAO_NAME,
     owner: envVars.DAO_OWNER_ADDR,
-    offchainAdmin: envVars.OFFCHAIN_ADMIN_ADDR
-      ? envVars.OFFCHAIN_ADMIN_ADDR
-      : "0xedC10CFA90A135C41538325DD57FDB4c7b88faf7",
+    offchainAdmin: getOptionalEnvVar(
+      "OFFCHAIN_ADMIN_ADDR",
+      envVars.DAO_OWNER_ADDR
+    ),
   });
 };
 
@@ -447,6 +439,12 @@ const checkEnvVariable = (...names) => {
   });
   return envVariables;
 };
+
+const getOptionalEnvVar = (name, defaultValue) => {
+  const envVar = process.env[name];
+  return envVar ? envVar : defaultValue;
+};
+
 const saveDeployedContracts = (network, addresses) => {
   const now = new Date().toISOString();
   const dir = path.resolve(deployConfigs.deployedContractsDir);
