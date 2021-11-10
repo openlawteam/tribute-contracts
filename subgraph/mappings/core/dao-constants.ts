@@ -13,6 +13,9 @@ export let TOTAL: Address = Address.fromString(
 export let MEMBER_COUNT: Address = Address.fromString(
   "0x00000000000000000000000000000000decafbad"
 );
+export let ESCROW: Address = Address.fromString(
+  "0x0000000000000000000000000000000000004bec"
+);
 
 // adapter/extension names hashed (lowercase)
 

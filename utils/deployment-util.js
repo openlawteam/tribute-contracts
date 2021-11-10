@@ -469,11 +469,11 @@ const configureDao = async ({
           .then(() =>
             contractConfigs.daoConfigs.reduce(
               (q, configEntry) =>
-                q.then(() => {
+                q.then(async () => {
                   const configValues = configEntry.map((configName) =>
                     readConfigValue(configName, contractConfigs.name)
                   );
-                  return adapter
+                  return await adapter
                     .configureDao(...configValues, {
                       from: options.owner,
                     })
