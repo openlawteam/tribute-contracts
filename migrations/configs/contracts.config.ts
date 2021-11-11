@@ -127,6 +127,20 @@ export const contracts: Array<ContractConfig> = [
     deploymentArgs: ["supplyOLToken"],
   },
   {
+    id: "weth",
+    name: "WETH",
+    path: "../../contracts/helpers/WETH",
+    enabled: true,
+    skipAutoDeploy: true,
+    version: "1.0.0",
+    type: ContractType.Test,
+    acls: {
+      dao: [],
+      extensions: {},
+    },
+    deploymentArgs: [],
+  },
+  {
     id: "mock-dao",
     name: "MockDao",
     path: "../../contracts/test/MockDao",
@@ -838,6 +852,37 @@ export const contracts: Array<ContractConfig> = [
         "unitTokenToMint",
         "maxAmount",
         "chainId",
+      ],
+    ],
+  },
+  {
+    id: adaptersIdsMap.KYC_ONBOARDING_ADAPTER,
+    name: "KycOnboardingContract",
+    alias: "kycOnboarding",
+    path: "../../contracts/adapters/KycOnboardingContract",
+    enabled: true,
+    version: "1.0.0",
+    type: ContractType.Adapter,
+    deploymentArgs: ["chainId", "weth"],
+    acls: {
+      dao: [daoAccessFlagsMap.NEW_MEMBER],
+      extensions: {
+        [extensionsIdsMap.BANK_EXT]: [
+          bankExtensionAclFlagsMap.INTERNAL_TRANSFER,
+          bankExtensionAclFlagsMap.ADD_TO_BALANCE,
+        ],
+      },
+    },
+    daoConfigs: [
+      [
+        "daoAddress",
+        "kycAddress",
+        "unitPrice",
+        "nbUnits",
+        "maxChunks",
+        "maxUnits",
+        "maxMembers",
+        "fundTargetAddress",
       ],
     ],
   },

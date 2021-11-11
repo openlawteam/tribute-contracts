@@ -150,6 +150,9 @@ const deployGanacheDao = async (
 ) => {
   const daoOwnerAddress = accounts[0];
 
+  const { WETH } = truffleImports;
+  const weth = await deployer(WETH);
+
   return await deployDao({
     ...truffleImports,
     contractConfigs,
@@ -182,6 +185,7 @@ const deployGanacheDao = async (
     supplyPixelNFT: 100,
     supplyOLToken: toBN("1000000000000000000000000"),
     erc1155TestTokenUri: "1155 test token",
+    weth: weth.address,
   });
 };
 
@@ -193,7 +197,9 @@ const deployTestDao = async (
   contractConfigs
 ) => {
   const daoOwnerAddress = accounts[0];
+  const { WETH } = truffleImports;
 
+  const weth = await deployFunction(WETH);
   return await deployDao({
     ...truffleImports,
     contractConfigs,
@@ -218,6 +224,7 @@ const deployTestDao = async (
     offchainAdmin: daoOwnerAddress,
     daoName: getEnvVar("DAO_NAME"),
     owner: accounts[0],
+    weth: weth.address,
   });
 };
 
@@ -364,16 +371,16 @@ const getOrCreateDaoArtifacts = async (deployer, truffleImports) => {
   const DaoArtifacts = truffleImports.DaoArtifacts;
   let daoArtifacts;
   if (process.env.DAO_ARTIFACTS_CONTRACT_ADDR) {
-    console.log(`Attach to existing DaoArtifacts contract`);
+    log(`Attach to existing DaoArtifacts contract`);
     daoArtifacts = await DaoArtifacts.at(
       process.env.DAO_ARTIFACTS_CONTRACT_ADDR
     );
   } else {
-    console.log(`Creating new DaoArtifacts contract`);
+    log(`Creating new DaoArtifacts contract`);
     await deployer.deploy(DaoArtifacts);
     daoArtifacts = await DaoArtifacts.deployed();
   }
-  console.log(`DaoArtifacts: ${daoArtifacts.address}`);
+  log(`DaoArtifacts: ${daoArtifacts.address}`);
   return daoArtifacts;
 };
 

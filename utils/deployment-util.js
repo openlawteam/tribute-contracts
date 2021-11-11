@@ -292,6 +292,19 @@ const createTestContracts = async ({ options }) => {
   return testContracts;
 };
 
+const validateContractConfigs = (contractConfigs) => {
+  const found = new Map();
+  Object.values(contractConfigs)
+    .filter((c) => c.type === ContractType.Adapter && c.id !== "voting")
+    .forEach((c) => {
+      const current = found.get(c.id);
+      if (current) {
+        throw new Error("contract id duplicate detected! '" + c.id + "'");
+      }
+      found.set(c.id, true);
+    });
+};
+
 /**
  * Deploys all the contracts defined in the migrations/configs/*.config.ts.
  * The contracts must be enabled in the migrations/configs/*.config.ts,
@@ -307,6 +320,8 @@ const createTestContracts = async ({ options }) => {
  * migrations/configs/*.config.ts.
  */
 const deployDao = async (options) => {
+  validateContractConfigs(options.contractConfigs);
+
   const { dao, daoFactory } = await cloneDao({
     ...options,
     name: options.daoName || "test-dao",
@@ -459,40 +474,33 @@ const configureDao = async ({
       return configValue;
     };
 
-    await Object.values(adapters)
+    const adapterList = Object.values(adapters)
       .filter((a) => a.configs.enabled)
       .filter((a) => !a.configs.skipAutoDeploy)
-      .filter((a) => a.configs.daoConfigs && a.configs.daoConfigs.length > 0)
-      .reduce((p, adapter) => {
-        const contractConfigs = adapter.configs;
-        return p
-          .then(() =>
-            contractConfigs.daoConfigs.reduce(
-              (q, configEntry) =>
-                q.then(() => {
-                  const configValues = configEntry.map((configName) =>
-                    readConfigValue(configName, contractConfigs.name)
-                  );
-                  return adapter
-                    .configureDao(...configValues, {
-                      from: options.owner,
-                    })
-                    .catch((e) => {
-                      console.error(e);
-                      throw e;
-                    });
-                }),
-              Promise.resolve()
-            )
-          )
-          .catch((e) => {
-            console.error(
-              `Error while configuring dao with contract ${contractConfigs.name}`,
-              e
-            );
-            throw e;
+      .filter((a) => a.configs.daoConfigs && a.configs.daoConfigs.length > 0);
+
+    for (let i = 0; i < adapterList.length; i++) {
+      const adapter = adapterList[i];
+      const contractConfigs = adapter.configs;
+      for (let j = 0; j < contractConfigs.daoConfigs.length; j++) {
+        const configEntry = contractConfigs.daoConfigs[j];
+        const configValues = configEntry.map((configName) =>
+          readConfigValue(configName, contractConfigs.name)
+        );
+
+        try {
+          await adapter.configureDao(...configValues, {
+            from: options.owner,
           });
-      }, Promise.resolve());
+        } catch (e) {
+          console.error(
+            `Error while configuring dao with contract ${contractConfigs.name}`,
+            e
+          );
+          throw e;
+        }
+      }
+    }
   };
 
   const configureExtensionAccess = async (contracts, extension) => {
