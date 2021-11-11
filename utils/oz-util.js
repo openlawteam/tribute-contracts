@@ -215,13 +215,15 @@ module.exports = (() => {
     const { WETH } = ozContracts;
     const weth = await WETH.new();
 
-    return await deployDao({
+    const result = await deployDao({
       ...getDefaultOptions(options),
       ...ozContracts,
       deployFunction,
       contractConfigs: allContractConfigs,
       weth: weth.address,
     });
+
+    return { wethContract: weth, ...result };
   };
 
   const deployDefaultNFTDao = async ({ owner }) => {
@@ -235,6 +237,7 @@ module.exports = (() => {
         finalize: false,
         contractConfigs: allContractConfigs,
         weth: weth.address,
+        wethContract: weth,
       });
 
     await dao.finalizeDao({ from: owner });
@@ -245,6 +248,7 @@ module.exports = (() => {
       extensions: extensions,
       testContracts: testContracts,
       utilContracts: utilContracts,
+      wethContract: weth,
     };
   };
 
@@ -279,6 +283,7 @@ module.exports = (() => {
       extensions: extensions,
       testContracts: testContracts,
       votingHelpers: votingHelpers,
+      wethContract: weth,
     };
   };
 

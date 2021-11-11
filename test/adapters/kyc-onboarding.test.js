@@ -60,10 +60,11 @@ const signer = {
 
 describe("Adapter - KYC Onboarding", () => {
   before("deploy dao", async () => {
-    const { dao, adapters, extensions } = await deployDefaultDao({
+    const { dao, adapters, extensions, wethContract } = await deployDefaultDao({
       owner: daoOwner,
     });
     this.dao = dao;
+    this.weth = wethContract;
     this.adapters = adapters;
     this.extensions = extensions;
     this.snapshotId = await takeChainSnapshot();
@@ -83,7 +84,7 @@ describe("Adapter - KYC Onboarding", () => {
     const nbOfERC20Units = 100000000;
     const erc20UnitPrice = toBN("10");
 
-    const { dao, adapters } = await deployDefaultDao({
+    const { dao, adapters, wethContract } = await deployDefaultDao({
       owner: daoOwner,
       unitPrice: erc20UnitPrice,
       nbUnits: nbOfERC20Units,
@@ -115,7 +116,7 @@ describe("Adapter - KYC Onboarding", () => {
     const nonMemberAccount = accounts[3];
 
     const dao = this.dao;
-    const bank = this.extensions.bank;
+    const bank = this.extensions.bankExt;
     const onboarding = this.adapters.kycOnboarding;
 
     const myAccountInitialBalance = await web3.eth.getBalance(applicant);
@@ -172,8 +173,8 @@ describe("Adapter - KYC Onboarding", () => {
     );
     expect(nonMemberAccountUnits.toString()).equal("0");
     await checkBalance(bank, GUILD, ETH_TOKEN, 0);
-    const fundTargetAddress = "0x7D8cad0bbD68deb352C33e80fccd4D8e88b4aBb8";
-    const balance = await web3.eth.getBalance(fundTargetAddress);
+    const fundTargetAddress = "0x823A19521A76f80EC49670BE32950900E8Cd0ED3";
+    const balance = await this.weth.balanceOf(fundTargetAddress);
 
     expect(balance.toString()).equal(unitPrice.mul(toBN("3")).toString());
     // test active member status
