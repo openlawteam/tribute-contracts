@@ -22,7 +22,10 @@ type TributeDao @entity {
   "The DAO creator address"
   creator: Bytes
   createdAt: String
+  "Total units minted for the DAO"
   totalUnits: String
+  "Total units issued and outstanding"
+  totalUnitsIssued: String
   "The bank of the DAO"
   bank: Bank! @derivedFrom(field: "tributeDao")
   "List of registered adapters"
@@ -119,6 +122,8 @@ type Proposal @entity {
 
   # MANAGING; proposal details
   "Additional details for the managing proposal"
+  adapterOrExtensionId: Bytes
+  adapterOrExtensionAddr: Bytes
   keys: [Bytes!]
   values: [BigInt!]
 
@@ -134,8 +139,8 @@ type Proposal @entity {
   gracePeriodStartingTime: BigInt
   isChallenged: Boolean
   stepRequested: BigInt
-  # fallbackVotes: BigInt
   forceFailed: Boolean
+  # fallbackVotes: BigInt
   fallbackVotesCount: BigInt
 
   # ONCHAIN VOTES: additional info
