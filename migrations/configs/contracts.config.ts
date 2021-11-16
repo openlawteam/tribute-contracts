@@ -517,24 +517,6 @@ export const contracts: Array<ContractConfig> = [
     },
   },
   {
-    id: adaptersIdsMap.ERC721_ADAPTER,
-    name: "NFTAdapterContract",
-    alias: "nftAdapter",
-    path: "../../contracts/adapters/NFTAdapterContract",
-    enabled: true,
-    version: "1.0.0",
-    type: ContractType.Adapter,
-    acls: {
-      dao: [],
-      extensions: {
-        [extensionsIdsMap.ERC721_EXT]: [erc721ExtensionAclFlagsMap.COLLECT_NFT],
-        [extensionsIdsMap.ERC1155_EXT]: [
-          erc1155ExtensionAclFlagsMap.COLLECT_NFT,
-        ],
-      },
-    },
-  },
-  {
     id: adaptersIdsMap.CONFIGURATION_ADAPTER,
     name: "ConfigurationContract",
     alias: "configuration",

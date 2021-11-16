@@ -45,7 +45,11 @@ const {
   web3,
 } = require("../../utils/oz-util");
 
-const { isMember, onboardingNewMember } = require("../../utils/test-util");
+const {
+  isMember,
+  onboardingNewMember,
+  encodeDaoInfo,
+} = require("../../utils/test-util");
 
 const proposalCounter = proposalIdGenerator().generator;
 
@@ -123,55 +127,48 @@ describe("Extension - ERC1155", () => {
     );
   });
 
-  it("should be possible to collect a NFT if that is allowed", async () => {
-    const erc1155TestToken = this.testContracts.erc1155TestToken;
-    const nftOwner = accounts[1];
-    //create a test 1155 token
-    await erc1155TestToken.mint(nftOwner, 1, 10, "0x0", {
+  it("should be possible to collect a NFT if that is sent directly to the extension", async () => {
+    const nftOwner = accounts[2];
+    const dao = this.dao;
+    const erc1155Token = this.testContracts.erc1155TestToken;
+    const erc1155Ext = this.extensions.erc1155Ext;
+
+    await erc1155Token.mint(nftOwner, 1, 10, "0x0", {
       from: daoOwner,
       gasPrice: toBN("0"),
     });
+    const pastEvents = await erc1155Token.getPastEvents();
+    const { id: tokenId } = pastEvents[0].returnValues;
 
-    const pastEvents = await erc1155TestToken.getPastEvents();
+    const tokenBalance = await erc1155Token.balanceOf(nftOwner, tokenId);
+    expect(tokenBalance.toString()).equal("10");
 
-    const { id, value } = pastEvents[0].returnValues;
-    expect(id).equal("1");
-    expect(value).equal("10");
-
-    //instances for Extension and Adapter
-    const erc1155TokenExtension = this.extensions.erc1155Ext;
-
-    //set approval where Extension is the "operator" all of nftOwners
-    await erc1155TestToken.safeTransferFrom(
+    const tokenValue = 3;
+    await erc1155Token.safeTransferFrom(
       nftOwner,
-      erc1155TokenExtension.address,
-      1,
-      2,
-      [],
-      {
-        from: nftOwner,
-        gasPrice: toBN("0"),
-      }
+      erc1155Ext.address,
+      tokenId,
+      tokenValue,
+      encodeDaoInfo(dao.address),
+      { from: nftOwner }
     );
 
-    // Make sure it was collected
-    const nftAddr = await erc1155TokenExtension.getNFTAddress(0);
-    expect(nftAddr).equal(erc1155TestToken.address);
-    const nftId = await erc1155TokenExtension.getNFT(nftAddr, 0);
-    expect(nftId.toString()).equal(id.toString());
+    // Make sure it was collected in the NFT Extension
+    const nftAddr = await erc1155Ext.getNFTAddress(0);
+    expect(nftAddr).equal(erc1155Token.address);
+    const nftId = await erc1155Ext.getNFT(nftAddr, 0);
+    expect(nftId.toString()).equal(tokenId.toString());
 
-    //check token balance of nftOwner after collection = -2
-    const balanceOfnftOwner = await erc1155TestToken.balanceOf(nftOwner, 1);
-    expect(balanceOfnftOwner.toString()).equal("8");
+    // The NFT belongs to the GUILD after it is collected via ERC1155 Extension
+    const newOwner = await erc1155Ext.getNFTOwner(nftAddr, tokenId, 0);
+    expect(newOwner.toLowerCase()).equal(GUILD);
 
-    //check token balance of the owner = +2 within the extension
-    const newGuildBlance = await erc1155TokenExtension.getNFTIdAmount(
-      GUILD,
-      erc1155TestToken.address,
-      1
+    // The actual holder of the NFT is the ERC1155 Extension
+    const holderBalance = await erc1155Token.balanceOf(
+      erc1155Ext.address,
+      tokenId
     );
-
-    expect(newGuildBlance.toString()).equal("2");
+    expect(holderBalance.toString()).equal(tokenValue.toString());
   });
 
   it("should not be possible to do an internal transfer of the NFT to a non member", async () => {
@@ -342,11 +339,11 @@ describe("Extension - ERC1155", () => {
     );
   });
 
-  it("should not be possible to send ETH to the adapter via receive function", async () => {
-    const adapter = this.adapters.erc1155Adapter;
+  it("should not be possible to send ETH to the extension via receive function", async () => {
+    const extension = this.extensions.erc1155Ext;
     await expectRevert(
       web3.eth.sendTransaction({
-        to: adapter.address,
+        to: extension.address,
         from: daoOwner,
         gasPrice: toBN("0"),
         value: toWei(toBN("1"), "ether"),
@@ -355,11 +352,11 @@ describe("Extension - ERC1155", () => {
     );
   });
 
-  it("should not be possible to send ETH to the adapter via fallback function", async () => {
-    const adapter = this.adapters.erc1155Adapter;
+  it("should not be possible to send ETH to the extension via fallback function", async () => {
+    const extension = this.extensions.erc1155Ext;
     await expectRevert(
       web3.eth.sendTransaction({
-        to: adapter.address,
+        to: extension.address,
         from: daoOwner,
         gasPrice: toBN("0"),
         value: toWei(toBN("1"), "ether"),
