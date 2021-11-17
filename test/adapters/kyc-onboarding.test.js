@@ -96,7 +96,7 @@ describe("Adapter - KYC Onboarding", () => {
     const initialTokenBalance = await web3.eth.getBalance(applicant);
 
     await expectRevert(
-      onboarding.onboard(dao.address, applicant, [], {
+      onboarding.onboardEth(dao.address, applicant, [], {
         from: applicant,
         gasPrice: toBN("0"),
       }),
@@ -125,11 +125,6 @@ describe("Adapter - KYC Onboarding", () => {
 
     const signerUtil = SigUtilSigner(signer.privKey);
 
-    let signerAddr = await dao.getAddressConfiguration(
-      sha3("kyc-onboarding.signerAddress")
-    );
-    expect(signerAddr).equal(signer.address);
-
     const couponData = {
       type: "coupon-kyc",
       kycedMember: applicant,
@@ -151,7 +146,7 @@ describe("Adapter - KYC Onboarding", () => {
       1
     );
 
-    await onboarding.onboard(dao.address, applicant, signature, {
+    await onboarding.onboardEth(dao.address, applicant, signature, {
       from: applicant,
       value: ethAmount,
       gasPrice: toBN("0"),
@@ -207,7 +202,7 @@ describe("Adapter - KYC Onboarding", () => {
     );
 
     await expectRevert(
-      onboarding.onboard(dao.address, applicant, signature, {
+      onboarding.onboardEth(dao.address, applicant, signature, {
         from: daoOwner,
         value: unitPrice.mul(toBN(100)).add(remaining),
         gasPrice: toBN("0"),

@@ -60,8 +60,8 @@ contract KycOnboardingContract is AdapterGuard, Signatures {
     bytes32 constant MaxMembers = keccak256("kyc-onboarding.maxMembers");
     bytes32 constant FundTargetAddress =
         keccak256("kyc-onboarding.fundTargetAddress");
+    bytes32 constant TokensToMint = keccak256("kyc-onboarding.tokensToMint");
 
-    uint256 private _chainId;
     WETH private _weth;
     IERC20 private _weth20;
 
@@ -81,10 +81,9 @@ contract KycOnboardingContract is AdapterGuard, Signatures {
         uint160 amount;
     }
 
-    mapping(DaoRegistry => uint256) public totalUnits;
+    mapping(DaoRegistry => mapping(address => uint256)) public totalUnits;
 
-    constructor(uint256 chainId, address payable weth) {
-        _chainId = chainId;
+    constructor(address payable weth) {
         _weth = WETH(weth);
         _weth20 = IERC20(weth);
     }
@@ -112,7 +111,9 @@ contract KycOnboardingContract is AdapterGuard, Signatures {
         uint256 maximumChunks,
         uint256 maxUnits,
         uint256 maxMembers,
-        address fundTargetAddress
+        address fundTargetAddress,
+        address tokenAddr,
+        address internalTokensToMint
     ) external onlyAdapter(dao) {
         require(
             chunkSize > 0 && chunkSize < type(uint88).max,
@@ -141,18 +142,40 @@ contract KycOnboardingContract is AdapterGuard, Signatures {
 
         require(signerAddress != address(0x0), "signer address is nil!");
 
-        dao.setAddressConfiguration(SignerAddressConfig, signerAddress);
-        dao.setAddressConfiguration(FundTargetAddress, fundTargetAddress);
-        dao.setConfiguration(ChunkSize, chunkSize);
-        dao.setConfiguration(UnitsPerChunk, unitsPerChunk);
-        dao.setConfiguration(MaximumChunks, maximumChunks);
-        dao.setConfiguration(MaximumUnits, maxUnits);
-        dao.setConfiguration(MaxMembers, maxMembers);
+        require(
+            internalTokensToMint != address(0x0),
+            "null internal token address"
+        );
+
+        dao.setAddressConfiguration(
+            _configKey(tokenAddr, SignerAddressConfig),
+            signerAddress
+        );
+        dao.setAddressConfiguration(
+            _configKey(tokenAddr, FundTargetAddress),
+            fundTargetAddress
+        );
+        dao.setConfiguration(_configKey(tokenAddr, ChunkSize), chunkSize);
+        dao.setConfiguration(
+            _configKey(tokenAddr, UnitsPerChunk),
+            unitsPerChunk
+        );
+        dao.setConfiguration(
+            _configKey(tokenAddr, MaximumChunks),
+            maximumChunks
+        );
+        dao.setConfiguration(_configKey(tokenAddr, MaximumUnits), maxUnits);
+        dao.setConfiguration(_configKey(tokenAddr, MaxMembers), maxMembers);
+        dao.setAddressConfiguration(
+            _configKey(tokenAddr, TokensToMint),
+            internalTokensToMint
+        );
 
         BankExtension bank = BankExtension(
             dao.getExtensionAddress(DaoHelper.BANK)
         );
         bank.registerPotentialNewInternalToken(DaoHelper.UNITS);
+        bank.registerPotentialNewToken(tokenAddr);
     }
 
     /**
@@ -169,21 +192,42 @@ contract KycOnboardingContract is AdapterGuard, Signatures {
             abi.encode(COUPON_MESSAGE_TYPEHASH, coupon.kycedMember)
         );
 
-        return hashMessage(dao, _chainId, address(this), message);
+        return hashMessage(dao, block.chainid, address(this), message);
     }
 
     function _checkKycCoupon(
         DaoRegistry dao,
         address kycedMember,
+        address tokenAddr,
         bytes memory signature
     ) internal view {
         require(
             ECDSA.recover(
                 hashCouponMessage(dao, Coupon(kycedMember)),
                 signature
-            ) == dao.getAddressConfiguration(SignerAddressConfig),
+            ) ==
+                dao.getAddressConfiguration(
+                    _configKey(tokenAddr, SignerAddressConfig)
+                ),
             "invalid sig"
         );
+    }
+
+    function onboardEth(
+        DaoRegistry dao,
+        address kycedMember,
+        bytes memory signature
+    ) external payable {
+        _onboard(dao, kycedMember, DaoHelper.ETH_TOKEN, signature);
+    }
+
+    function onboard(
+        DaoRegistry dao,
+        address kycedMember,
+        address tokenAddr,
+        bytes memory signature
+    ) external {
+        _onboard(dao, kycedMember, tokenAddr, signature);
     }
 
     /**
@@ -192,40 +236,65 @@ contract KycOnboardingContract is AdapterGuard, Signatures {
      * @param kycedMember is the address that this coupon authorized to become a new member
      * @param signature is message signature for verification
      */
-    function onboard(
+    function _onboard(
         DaoRegistry dao,
         address kycedMember,
+        address tokenAddr,
         bytes memory signature
-    ) external payable reentrancyGuard(dao) {
+    ) internal reentrancyGuard(dao) {
         require(!dao.isActiveMember(dao, kycedMember), "already member");
+
         require(
-            dao.getNbMembers() < dao.getConfiguration(MaxMembers),
+            dao.getNbMembers() <
+                dao.getConfiguration(_configKey(tokenAddr, MaxMembers)),
             "the DAO is full"
         );
-        _checkKycCoupon(dao, kycedMember, signature);
-        OnboardingDetails memory details = _checkData(dao);
+
+        _checkKycCoupon(dao, kycedMember, tokenAddr, signature);
+        OnboardingDetails memory details = _checkData(dao, tokenAddr);
 
         BankExtension bank = BankExtension(
             dao.getExtensionAddress(DaoHelper.BANK)
         );
         DaoHelper.potentialNewMember(kycedMember, dao, bank);
-        totalUnits[dao] += details.unitsRequested;
+        totalUnits[dao][tokenAddr] += details.unitsRequested;
         address payable multisigAddress = payable(
-            dao.getAddressConfiguration(FundTargetAddress)
+            dao.getAddressConfiguration(
+                _configKey(tokenAddr, FundTargetAddress)
+            )
         );
         if (multisigAddress == address(0x0)) {
-            bank.addToBalance{value: details.amount}(
-                DaoHelper.GUILD,
-                DaoHelper.ETH_TOKEN,
-                details.amount
-            );
+            if (tokenAddr == DaoHelper.ETH_TOKEN) {
+                bank.addToBalance{value: details.amount}(
+                    DaoHelper.GUILD,
+                    DaoHelper.ETH_TOKEN,
+                    details.amount
+                );
+            } else {
+                bank.addToBalance(DaoHelper.GUILD, tokenAddr, details.amount);
+                IERC20 erc20 = IERC20(tokenAddr);
+                erc20.safeTransferFrom(
+                    msg.sender,
+                    address(bank),
+                    details.amount
+                );
+            }
         } else {
-            _weth.deposit{value: details.amount}();
-            _weth20.safeTransferFrom(
-                address(this),
-                multisigAddress,
-                details.amount
-            );
+            if (tokenAddr == DaoHelper.ETH_TOKEN) {
+                _weth.deposit{value: details.amount}();
+                _weth20.safeTransferFrom(
+                    address(this),
+                    multisigAddress,
+                    details.amount
+                );
+            } else {
+                IERC20 erc20 = IERC20(tokenAddr);
+                erc20.safeTransferFrom(
+                    msg.sender,
+                    multisigAddress,
+                    details.amount
+                );
+            }
         }
 
         bank.addToBalance(kycedMember, DaoHelper.UNITS, details.unitsRequested);
@@ -237,31 +306,51 @@ contract KycOnboardingContract is AdapterGuard, Signatures {
         emit Onboarded(dao, kycedMember, details.unitsRequested);
     }
 
-    function _checkData(DaoRegistry dao)
+    function _checkData(DaoRegistry dao, address tokenAddr)
         internal
         view
         returns (OnboardingDetails memory details)
     {
-        details.chunkSize = uint88(dao.getConfiguration(ChunkSize));
+        details.chunkSize = uint88(
+            dao.getConfiguration(_configKey(tokenAddr, ChunkSize))
+        );
         require(details.chunkSize > 0, "config chunkSize missing");
         details.numberOfChunks = uint88(msg.value / details.chunkSize);
         require(details.numberOfChunks > 0, "insufficient funds");
         require(
-            details.numberOfChunks <= dao.getConfiguration(MaximumChunks),
+            details.numberOfChunks <=
+                dao.getConfiguration(_configKey(tokenAddr, MaximumChunks)),
             "too much funds"
         );
 
-        details.unitsPerChunk = uint88(dao.getConfiguration(UnitsPerChunk));
+        details.unitsPerChunk = uint88(
+            dao.getConfiguration(_configKey(tokenAddr, UnitsPerChunk))
+        );
 
         require(details.unitsPerChunk > 0, "config unitsPerChunk missing");
         details.amount = details.numberOfChunks * details.chunkSize;
         details.unitsRequested = details.numberOfChunks * details.unitsPerChunk;
-        details.maximumTotalUnits = uint88(dao.getConfiguration(MaximumUnits));
+        details.maximumTotalUnits = uint88(
+            dao.getConfiguration(_configKey(tokenAddr, MaximumUnits))
+        );
 
         require(
-            details.unitsRequested + totalUnits[dao] <=
+            details.unitsRequested + totalUnits[dao][tokenAddr] <=
                 details.maximumTotalUnits,
             "over max total units"
         );
+    }
+
+    /**
+     * @notice Builds the configuration key by encoding an address with a string key.
+     * @param tokenAddrToMint The address to encode.
+     * @param key The key to encode.
+     */
+    function _configKey(address tokenAddrToMint, bytes32 key)
+        internal
+        pure
+        returns (bytes32)
+    {
+        return keccak256(abi.encode(tokenAddrToMint, key));
     }
 }

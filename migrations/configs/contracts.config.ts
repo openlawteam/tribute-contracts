@@ -861,7 +861,7 @@ export const contracts: Array<ContractConfig> = [
     enabled: true,
     version: "1.0.0",
     type: ContractType.Adapter,
-    deploymentArgs: ["chainId", "weth"],
+    deploymentArgs: ["weth"],
     acls: {
       dao: [daoAccessFlagsMap.NEW_MEMBER],
       extensions: {
@@ -881,6 +881,8 @@ export const contracts: Array<ContractConfig> = [
         "maxUnits",
         "maxMembers",
         "fundTargetAddress",
+        "tokenAddr",
+        "unitTokenToMint"
       ],
     ],
   },
