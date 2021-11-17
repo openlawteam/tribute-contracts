@@ -616,8 +616,7 @@ const configureOffchainVoting = async ({
   );
 
   const snapshotProposalContract = await deployFunction(
-    SnapshotProposalContract,
-    [chainId]
+    SnapshotProposalContract
   );
 
   const offchainVotingHashContract = await deployFunction(

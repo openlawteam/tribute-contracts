@@ -63,30 +63,22 @@ The address of the token that will be created and issued to the address in the r
 
 ## Functions
 
-### receive
-
-```solidity
-/**
- * @notice default fallback function to prevent from sending ether to the contract
- */
-receive() external payable {
-  revert("fallback revert");
-}
-
-```
-
-### configure
+### configureDao
 
 ```solidity
    /**
-    * @notice Configures the Adapter with the coupon signer address and token to mint.
-    * @param signerAddress is the DAO instance to be configured
-    * @param tokenAddrToMint is the coupon to hash
-    */
+     * @notice Configures the Adapter with the coupon signer address and token to mint.
+     * @param signerAddress the address of the coupon signer
+     * @param erc20 the address of the internal ERC20 token to issue shares
+     * @param tokenAddrToMint the address of the token to mint the coupon
+     * @param maxAmount max amount of coupons to mint
+     */
     function configureDao(
         DaoRegistry dao,
         address signerAddress,
-        address tokenAddrToMint
+        address erc20,
+        address tokenAddrToMint,
+        uint88 maxAmount
     ) external onlyAdapter(dao)
 ```
 

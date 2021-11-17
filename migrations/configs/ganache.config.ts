@@ -6,8 +6,6 @@ import {
 const disabled: Array<string> = [
   // Utility & Test Contracts disabled by default
   "OLToken",
-  "TestToken1",
-  "TestToken2",
   "TestFairShareCalc",
   "PixelNFT",
   "ProxToken",

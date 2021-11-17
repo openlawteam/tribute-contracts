@@ -168,10 +168,10 @@ function managing(
   let proposal = Proposal.load(daoProposalId);
 
   if (proposal) {
-    proposal.adapterId = data.value0;
-    proposal.adapterAddress = data.value1;
+    proposal.adapterOrExtensionId = data.value0;
+    proposal.adapterOrExtensionAddr = data.value1;
 
-    proposal.adapterAddress = adapterAdddress;
+    proposal.adapterOrExtensionAddr = adapterAdddress;
 
     // @todo
     // let keys: Bytes[] = [];

@@ -1,8 +1,7 @@
-import { adaptersIdsMap } from "../../utils/dao-ids-util";
 import {
   contracts as defaultContracts,
+  ContractConfig,
 } from "./contracts.config";
-import { getNetworkDetails } from "../../utils/deployment-util";
 
 const disabled: Array<String> = [
   // Utility & Test Contracts disabled by default
@@ -22,18 +21,9 @@ const disabled: Array<String> = [
   "DistributeContract",
 ];
 
-export const contracts = defaultContracts
-  .map((c) => {
-    if (disabled.find((e) => e === c.name)) {
-      return { ...c, enabled: false };
-    }
-    return c;
-  })
-  .map((c) => {
-    if (adaptersIdsMap.COUPON_MANAGER_ADAPTER === c.id) {
-      return {
-        ...c
-      };
-    }
-    return c;
-  });
+export const contracts: Array<ContractConfig> = defaultContracts.map((c) => {
+  if (disabled.find((e) => e === c.name)) {
+    return { ...c, enabled: false };
+  }
+  return c;
+});
