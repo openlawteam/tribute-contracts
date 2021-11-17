@@ -118,6 +118,7 @@ const getDefaultOptions = (options) => {
     spendLimitEth: "2000000000000000000000",
     feePercent: "110",
     gasFixed: "50000",
+    gelato: "0x1000000000000000000000000000000000000000",
   };
 };
 

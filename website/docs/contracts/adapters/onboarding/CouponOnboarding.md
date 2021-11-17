@@ -49,10 +49,6 @@ The coupon structure contains the data fields necessary to redeem and add a new 
 
 ## Storage
 
-### \_chainId
-
-The chain id in which it has been deployed, which is used to hash the coupon message.
-
 ### \_flags
 
 Tracks all the coupons that were redeemed per DAO.

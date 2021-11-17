@@ -6,6 +6,7 @@ import "../../core/DaoRegistry.sol";
 import "../../extensions/bank/Bank.sol";
 import "../../guards/MemberGuard.sol";
 import "../../guards/AdapterGuard.sol";
+import "../modifiers/Reimbursable.sol";
 import "../interfaces/IVoting.sol";
 import "./Voting.sol";
 import "./KickBadReporterAdapter.sol";
@@ -41,7 +42,13 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
  */
 
-contract OffchainVotingContract is IVoting, MemberGuard, AdapterGuard, Ownable {
+contract OffchainVotingContract is
+    IVoting,
+    MemberGuard,
+    AdapterGuard,
+    Reimbursable,
+    Ownable
+{
     enum BadNodeError {
         OK,
         WRONG_PROPOSAL_ID,
@@ -188,7 +195,7 @@ contract OffchainVotingContract is IVoting, MemberGuard, AdapterGuard, Ownable {
         address reporter,
         OffchainVotingHashContract.VoteResultNode memory result,
         bytes memory rootSig
-    ) external {
+    ) external reimbursable(dao) {
         Voting storage vote = votes[address(dao)][proposalId];
         // slither-disable-next-line timestamp
         require(vote.snapshot > 0, "vote:not started");
@@ -270,7 +277,7 @@ contract OffchainVotingContract is IVoting, MemberGuard, AdapterGuard, Ownable {
         DaoRegistry dao,
         bytes32 proposalId,
         uint256 index
-    ) external {
+    ) external reimbursable(dao) {
         address memberAddr = dao.getAddressIfDelegated(msg.sender);
         Voting storage vote = votes[address(dao)][proposalId];
         require(isActiveMember(dao, memberAddr), "not active member");
@@ -301,6 +308,7 @@ contract OffchainVotingContract is IVoting, MemberGuard, AdapterGuard, Ownable {
      */
     function challengeMissingStep(DaoRegistry dao, bytes32 proposalId)
         external
+        reimbursable(dao)
     {
         Voting storage vote = votes[address(dao)][proposalId];
         uint256 gracePeriod = dao.getConfiguration(GracePeriod);
@@ -521,7 +529,7 @@ contract OffchainVotingContract is IVoting, MemberGuard, AdapterGuard, Ownable {
         DaoRegistry dao,
         bytes32 proposalId,
         OffchainVotingHashContract.VoteResultNode memory node
-    ) external {
+    ) external reimbursable(dao) {
         require(node.index == 0, "only first node");
         Voting storage vote = votes[address(dao)][proposalId];
         (address adapterAddress, ) = dao.proposals(proposalId);
@@ -554,7 +562,7 @@ contract OffchainVotingContract is IVoting, MemberGuard, AdapterGuard, Ownable {
         DaoRegistry dao,
         bytes32 proposalId,
         OffchainVotingHashContract.VoteResultNode memory node
-    ) external {
+    ) external reimbursable(dao) {
         Voting storage vote = votes[address(dao)][proposalId];
         BankExtension bank = BankExtension(
             dao.getExtensionAddress(DaoHelper.BANK)
@@ -654,7 +662,7 @@ contract OffchainVotingContract is IVoting, MemberGuard, AdapterGuard, Ownable {
         bytes32 proposalId,
         OffchainVotingHashContract.VoteResultNode memory nodePrevious,
         OffchainVotingHashContract.VoteResultNode memory nodeCurrent
-    ) external {
+    ) external reimbursable(dao) {
         Voting storage vote = votes[address(dao)][proposalId];
         bytes32 resultRoot = vote.resultRoot;
 

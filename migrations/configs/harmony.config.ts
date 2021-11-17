@@ -31,12 +31,8 @@ export const contracts = defaultContracts
   })
   .map((c) => {
     if (adaptersIdsMap.COUPON_MANAGER_ADAPTER === c.id) {
-      const chainDetails = getNetworkDetails("harmony");
       return {
-        ...c,
-        deploymentArgs: {
-          chainId: chainDetails?.chainId,
-        },
+        ...c
       };
     }
     return c;

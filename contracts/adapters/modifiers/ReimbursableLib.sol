@@ -1,10 +1,10 @@
 pragma solidity ^0.8.0;
 
-// SPDX-License-Identifier: MIT
-
 import "../../core/DaoRegistry.sol";
 import "../../companion/interfaces/IReimbursement.sol";
-import "./ReimbursableLib.sol";
+import "./Reimbursable.sol";
+
+// SPDX-License-Identifier: MIT
 
 /**
 MIT License
@@ -29,20 +29,38 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
  */
-abstract contract Reimbursable {
-    struct ReimbursementData {
-        uint256 gasStart;
-        bool shouldReimburse;
-        uint256 spendLimitPeriod;
-        IReimbursement reimbursement;
+library ReimbursableLib {
+    function beforeExecution(DaoRegistry dao)
+        internal
+        returns (Reimbursable.ReimbursementData memory data)
+    {
+        data.gasStart = gasleft();
+        require(dao.lockedAt() != block.number, "reentrancy guard");
+        dao.lockSession();
+        data.reimbursement = IReimbursement(
+            dao.getAdapterAddress(DaoHelper.REIMBURSEMENT)
+        );
+
+        (bool shouldReimburse, uint256 spendLimitPeriod) = data
+            .reimbursement
+            .shouldReimburse(dao, data.gasStart);
+
+        data.shouldReimburse = shouldReimburse;
+        data.spendLimitPeriod = spendLimitPeriod;
     }
 
-    /**
-     * @dev Only registered adapters are allowed to execute the function call.
-     */
-    modifier reimbursable(DaoRegistry dao) {
-        ReimbursementData memory data = ReimbursableLib.beforeExecution(dao);
-        _;
-        ReimbursableLib.afterExecution(dao, data);
+    function afterExecution(
+        DaoRegistry dao,
+        Reimbursable.ReimbursementData memory data
+    ) internal {
+        if (data.shouldReimburse) {
+            data.reimbursement.reimburseTransaction(
+                dao,
+                payable(msg.sender),
+                data.gasStart - gasleft(),
+                data.spendLimitPeriod
+            );
+        }
+        dao.unlockSession();
     }
 }

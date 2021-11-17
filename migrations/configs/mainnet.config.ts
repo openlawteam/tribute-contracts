@@ -28,16 +28,4 @@ export const contracts = defaultContracts
       return { ...c, enabled: false };
     }
     return c;
-  })
-  .map((c) => {
-    if (adaptersIdsMap.COUPON_MANAGER_ADAPTER === c.id) {
-      const chainDetails = getNetworkDetails("mainnet");
-      return {
-        ...c,
-        deploymentArgs: {
-          chainId: chainDetails?.chainId,
-        },
-      };
-    }
-    return c;
   });

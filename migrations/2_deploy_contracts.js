@@ -98,8 +98,6 @@ const deployRinkebyDao = async (
       ? parseInt(envVars.GRACE_PERIOD_SECONDS)
       : 600, // 600 secs = 10 mins
     offchainVoting: true,
-    chainId: getNetworkDetails(network).chainId,
-
     finalize: false,
     maxExternalTokens: 100,
     couponCreatorAddress: envVars.COUPON_CREATOR_ADDR
@@ -156,7 +154,6 @@ const deployMainnetDao = async (
     votingPeriod: parseInt(envVars.VOTING_PERIOD_SECONDS),
     gracePeriod: parseInt(envVars.GRACE_PERIOD_SECONDS),
     offchainVoting: true,
-    chainId: getNetworkDetails(network).chainId,
     deployTestTokens: false,
     finalize: false,
     maxExternalTokens: 100,
@@ -204,7 +201,6 @@ const deployGanacheDao = async (
       ? parseInt(envVars.GRACE_PERIOD_SECONDS)
       : 60, // 60 secs = 1 min
     offchainVoting: true,
-    chainId: getNetworkDetails(network).chainId,
     finalize: false,
     maxExternalTokens: 100,
     couponCreatorAddress: envVars.COUPON_CREATOR_ADDR
@@ -263,7 +259,6 @@ const deployTestDao = async (
     votingPeriod: 10, // 10 secs
     gracePeriod: 1, // 1 sec
     offchainVoting: true,
-    chainId: getNetworkDetails(network).chainId,
     deployTestTokens: false,
     finalize: false,
     maxExternalTokens: 100,
@@ -311,7 +306,6 @@ const deployHarmonyDao = async (
     votingPeriod: parseInt(envVars.VOTING_PERIOD_SECONDS),
     gracePeriod: parseInt(envVars.GRACE_PERIOD_SECONDS),
     offchainVoting: true,
-    chainId: getNetworkDetails(network).chainId,
     deployTestTokens: false,
     finalize: false,
     maxExternalTokens: 100,
@@ -358,7 +352,6 @@ const deployHarmonyTestDao = async (
       ? parseInt(envVars.GRACE_PERIOD_SECONDS)
       : 600, // 600 secs = 10 min
     offchainVoting: true,
-    chainId: getNetworkDetails(network).chainId,
     deployTestTokens: true,
     finalize: false,
     maxExternalTokens: 100,

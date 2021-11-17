@@ -55,8 +55,6 @@ contract CouponOnboardingContract is Reimbursable, AdapterGuard, Signatures {
     bytes32 constant ERC20InternalTokenAddr =
         keccak256("coupon-onboarding.erc20.internal.token.address");
 
-    uint256 private _chainId;
-
     mapping(address => mapping(uint256 => uint256)) private _flags;
 
     event CouponRedeemed(
@@ -72,15 +70,13 @@ contract CouponOnboardingContract is Reimbursable, AdapterGuard, Signatures {
      * @param erc20 the address of the internal ERC20 token to issue shares
      * @param tokenAddrToMint the address of the token to mint the coupon
      * @param maxAmount max amount of coupons to mint
-     * @param chainId the chain id in which it will be minted, and is used as part of the hash
      */
     function configureDao(
         DaoRegistry dao,
         address signerAddress,
         address erc20,
         address tokenAddrToMint,
-        uint88 maxAmount,
-        uint256 chainId
+        uint88 maxAmount
     ) external onlyAdapter(dao) {
         dao.setAddressConfiguration(SignerAddressConfig, signerAddress);
         dao.setAddressConfiguration(ERC20InternalTokenAddr, erc20);
@@ -101,7 +97,6 @@ contract CouponOnboardingContract is Reimbursable, AdapterGuard, Signatures {
                 maxAmount - currentBalance
             );
         }
-        _chainId = chainId;
     }
 
     /**
@@ -123,7 +118,7 @@ contract CouponOnboardingContract is Reimbursable, AdapterGuard, Signatures {
             )
         );
 
-        return hashMessage(dao, _chainId, address(this), message);
+        return hashMessage(dao, address(this), message);
     }
 
     /**

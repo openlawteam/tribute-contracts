@@ -778,6 +778,7 @@ export const contracts: Array<ContractConfig> = [
     enabled: true,
     version: "1.0.0",
     type: ContractType.Adapter,
+    deploymentArgs: ["gelato"],
     acls: {
       dao: [],
       extensions: {
@@ -795,9 +796,7 @@ export const contracts: Array<ContractConfig> = [
         "daoAddress",
         "gasPriceLimit",
         "spendLimitPeriod",
-        "spendLimitEth",
-        "feePercent",
-        "gasFixed"
+        "spendLimitEth"
       ],
     ],
   },
@@ -851,7 +850,6 @@ export const contracts: Array<ContractConfig> = [
     enabled: true,
     version: "1.0.0",
     type: ContractType.Adapter,
-    deploymentArgs: ["chainId"],
     acls: {
       dao: [daoAccessFlagsMap.NEW_MEMBER],
       extensions: {
@@ -868,8 +866,7 @@ export const contracts: Array<ContractConfig> = [
         "couponCreatorAddress",
         extensionsIdsMap.ERC20_EXT, //loads the address from the ext
         "unitTokenToMint",
-        "maxAmount",
-        "chainId",
+        "maxAmount"
       ],
     ],
   },

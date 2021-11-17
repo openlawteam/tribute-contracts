@@ -10,6 +10,7 @@ import "@openzeppelin/contracts/utils/Address.sol";
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 import "../helpers/DaoHelper.sol";
+import "./GelatoRelay.sol";
 
 /**
 MIT License
@@ -35,7 +36,7 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
  */
 
-contract ReimbursementContract is IReimbursement, AdapterGuard {
+contract ReimbursementContract is IReimbursement, AdapterGuard, GelatoRelay {
     using Address for address payable;
     using SafeERC20 for IERC20;
 
@@ -43,6 +44,8 @@ contract ReimbursementContract is IReimbursement, AdapterGuard {
         uint256 ethUsed;
         uint256 rateLimitStart;
     }
+
+    constructor(address payable _gelato) GelatoRelay(_gelato) {}
 
     mapping(address => ReimbursementData) private _data;
 
@@ -55,29 +58,20 @@ contract ReimbursementContract is IReimbursement, AdapterGuard {
     bytes32 internal constant EthUsed = keccak256("reimbursement.ethUsed");
     bytes32 internal constant RateLimitStart =
         keccak256("reimbursement.rateLimitStart");
-    bytes32 internal constant FeePercent =
-        keccak256("reimbursement.feePercent");
-    bytes32 internal constant GasFixed = keccak256("reimbursement.gasFixed");
 
     function configureDao(
         DaoRegistry dao,
         uint256 gasPriceLimit,
         uint256 spendLimitPeriod,
-        uint256 spendLimitEth,
-        uint256 feePercent,
-        uint256 gasFixed
+        uint256 spendLimitEth
     ) external onlyAdapter(dao) {
         require(gasPriceLimit > 0, "gasPriceLimit::invalid");
         require(spendLimitPeriod > 0, "spendLimitPeriod::invalid");
         require(spendLimitEth > 0, "spendLimitEth::invalid");
-        require(feePercent > 0, "feePercent::invalid");
-        require(gasFixed > 0, "gasFixed::invalid");
 
         dao.setConfiguration(GasPriceLimit, gasPriceLimit);
         dao.setConfiguration(SpendLimitPeriod, spendLimitPeriod);
         dao.setConfiguration(SpendLimitEth, spendLimitEth);
-        dao.setConfiguration(FeePercent, feePercent);
-        dao.setConfiguration(GasFixed, gasFixed);
     }
 
     function shouldReimburse(DaoRegistry dao, uint256 gasLeft)
@@ -86,27 +80,29 @@ contract ReimbursementContract is IReimbursement, AdapterGuard {
         override
         returns (bool, uint256)
     {
+        //if it is a gelato call, do nothing as it will be handled somewhere else
+        if (msg.sender == address(this)) {
+            return (false, 0);
+        }
+
         uint256 gasPriceLimit = dao.getConfiguration(GasPriceLimit);
-        uint256 spendLimitPeriod = dao.getConfiguration(SpendLimitPeriod);
-        uint256 spendLimitEth = dao.getConfiguration(SpendLimitEth);
 
         BankExtension bank = BankExtension(
             dao.getExtensionAddress(DaoHelper.BANK)
         );
 
         if (gasPriceLimit < tx.gasprice) {
-            return (false, spendLimitPeriod);
+            return (false, 0);
         }
 
         if (bank.balanceOf(DaoHelper.GUILD, DaoHelper.ETH_TOKEN) < gasLeft) {
-            return (false, spendLimitPeriod);
+            return (false, 0);
         }
 
-        uint256 feePercent = dao.getConfiguration(FeePercent);
-        uint256 gasFixed = dao.getConfiguration(GasFixed);
+        uint256 spendLimitPeriod = dao.getConfiguration(SpendLimitPeriod);
+        uint256 spendLimitEth = dao.getConfiguration(SpendLimitEth);
 
-        uint256 payback = ((gasLeft + gasFixed) * tx.gasprice * feePercent) /
-            100;
+        uint256 payback = gasLeft * tx.gasprice;
 
         if (
             //slither-disable-next-line timestamp
@@ -114,11 +110,11 @@ contract ReimbursementContract is IReimbursement, AdapterGuard {
             spendLimitPeriod
         ) {
             if (spendLimitEth < _data[address(dao)].ethUsed + payback) {
-                return (false, spendLimitPeriod);
+                return (false, 0);
             }
         } else {
             if (spendLimitEth < payback) {
-                return (false, spendLimitPeriod);
+                return (false, 0);
             }
         }
 
@@ -134,11 +130,7 @@ contract ReimbursementContract is IReimbursement, AdapterGuard {
         BankExtension bank = BankExtension(
             dao.getExtensionAddress(DaoHelper.BANK)
         );
-
-        uint256 feePercent = dao.getConfiguration(FeePercent);
-        uint256 gasFixed = dao.getConfiguration(GasFixed);
-        uint256 payback = ((gasUsage + gasFixed) * tx.gasprice * feePercent) /
-            100;
+        uint256 payback = gasUsage * tx.gasprice;
         if (
             //slither-disable-next-line timestamp
             block.timestamp - _data[address(dao)].rateLimitStart <
