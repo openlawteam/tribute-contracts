@@ -89,13 +89,6 @@ contract KycOnboardingContract is AdapterGuard, Signatures {
     }
 
     /**
-     * @notice default fallback function to prevent from sending ether to the contract
-     */
-    receive() external payable {
-        revert("fallback revert");
-    }
-
-    /**
      * @notice Configures the Adapter with the coupon signer address and token to mint.
      * @param dao the dao to configure
      * @param signerAddress is the DAO instance to be configured
@@ -140,10 +133,13 @@ contract KycOnboardingContract is AdapterGuard, Signatures {
             "potential overflow"
         );
 
-        require(signerAddress != address(0x0), "signer address is nil!");
+        require(
+            DaoHelper.isNotZeroAddress(signerAddress),
+            "signer address is nil!"
+        );
 
         require(
-            internalTokensToMint != address(0x0),
+            DaoHelper.isNotZeroAddress(internalTokensToMint),
             "null internal token address"
         );
 
