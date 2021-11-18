@@ -9,6 +9,7 @@ import "../../helpers/DaoHelper.sol";
 import "@openzeppelin/contracts/utils/Address.sol";
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
+import "@openzeppelin/contracts/utils/introspection/ERC165.sol";
 
 /**
 MIT License
@@ -34,7 +35,7 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
  */
 
-contract BankExtension is AdapterGuard, IExtension {
+contract BankExtension is AdapterGuard, IExtension, ERC165 {
     using Address for address payable;
     using SafeERC20 for IERC20;
 
@@ -62,6 +63,13 @@ contract BankExtension is AdapterGuard, IExtension {
     event NewBalance(address member, address tokenAddr, uint160 amount);
 
     event Withdraw(address account, address tokenAddr, uint160 amount);
+
+    event WithdrawTo(
+        address accountFrom,
+        address accountTo,
+        address tokenAddr,
+        uint160 amount
+    );
 
     /*
      * STRUCTURES
@@ -100,26 +108,6 @@ contract BankExtension is AdapterGuard, IExtension {
             "bank::accessDenied:"
         );
         _;
-    }
-
-    function toString(AclFlag flag) internal pure returns (string memory) {
-        if (flag == AclFlag.ADD_TO_BALANCE) {
-            return "add to balance";
-        }
-
-        if (flag == AclFlag.SUB_FROM_BALANCE) {
-            return "sub from balance";
-        }
-
-        if (flag == AclFlag.INTERNAL_TRANSFER) {
-            return "internal transfer";
-        }
-
-        if (flag == AclFlag.WITHDRAW) {
-            return "withdraw";
-        }
-
-        return "other";
     }
 
     /**
@@ -167,6 +155,27 @@ contract BankExtension is AdapterGuard, IExtension {
 
         //slither-disable-next-line reentrancy-events
         emit Withdraw(member, tokenAddr, uint160(amount));
+    }
+
+    function withdrawTo(
+        address memberFrom,
+        address payable memberTo,
+        address tokenAddr,
+        uint256 amount
+    ) external hasExtensionAccess(AclFlag.WITHDRAW) {
+        require(
+            balanceOf(memberFrom, tokenAddr) >= amount,
+            "bank::withdraw::not enough funds"
+        );
+        subtractFromBalance(memberFrom, tokenAddr, amount);
+        if (tokenAddr == DaoHelper.ETH_TOKEN) {
+            memberTo.sendValue(amount);
+        } else {
+            IERC20(tokenAddr).safeTransfer(memberTo, amount);
+        }
+
+        //slither-disable-next-line reentrancy-events
+        emit WithdrawTo(memberFrom, memberTo, tokenAddr, uint160(amount));
     }
 
     /**
@@ -446,6 +455,35 @@ contract BankExtension is AdapterGuard, IExtension {
             }
         }
         return checkpoints[tokenAddr][account][lower].amount;
+    }
+
+    function supportsInterface(bytes4 interfaceId)
+        public
+        view
+        virtual
+        override
+        returns (bool)
+    {
+        return
+            super.supportsInterface(interfaceId) ||
+            this.subtractFromBalance.selector == interfaceId ||
+            this.addToBalance.selector == interfaceId ||
+            this.getPriorAmount.selector == interfaceId ||
+            this.balanceOf.selector == interfaceId ||
+            this.internalTransfer.selector == interfaceId ||
+            this.nbInternalTokens.selector == interfaceId ||
+            this.getInternalToken.selector == interfaceId ||
+            this.getTokens.selector == interfaceId ||
+            this.nbTokens.selector == interfaceId ||
+            this.getToken.selector == interfaceId ||
+            this.updateToken.selector == interfaceId ||
+            this.registerPotentialNewInternalToken.selector == interfaceId ||
+            this.registerPotentialNewToken.selector == interfaceId ||
+            this.setMaxExternalTokens.selector == interfaceId ||
+            this.isTokenAllowed.selector == interfaceId ||
+            this.isInternalToken.selector == interfaceId ||
+            this.withdraw.selector == interfaceId ||
+            this.withdrawTo.selector == interfaceId;
     }
 
     /**

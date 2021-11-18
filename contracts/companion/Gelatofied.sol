@@ -2,21 +2,52 @@
 
 pragma solidity ^0.8.0;
 
-import "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
-import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
+import "../core/DaoRegistry.sol";
+import "../extensions/bank/Bank.sol";
 
 abstract contract Gelatofied {
-    using SafeERC20 for IERC20;
-
-    address public constant ETH = 0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE;
+    
     address payable public immutable gelato;
 
-    modifier gelatofy(uint256 _amount) {
+    modifier gelatofy(DaoRegistry dao, uint256 _amount) {
         require(
             gelato == address(0x1) || msg.sender == gelato,
             "Gelatofied: Only gelato"
         );
 
+        BankExtension bank = BankExtension(
+            dao.getExtensionAddress(DaoHelper.BANK)
+        );
+
+        try bank.supportsInterface(bank.withdrawTo.selector) returns (
+            bool supportsInterface
+        ) {
+            if (supportsInterface) {
+                bank.withdrawTo(
+                    DaoHelper.GUILD,
+                    gelato,
+                    DaoHelper.ETH_TOKEN,
+                    _amount
+                );
+            } else {
+                bank.internalTransfer(
+                    DaoHelper.GUILD,
+                    gelato,
+                    DaoHelper.ETH_TOKEN,
+                    _amount
+                );
+                bank.withdraw(gelato, DaoHelper.ETH_TOKEN, _amount);
+            }
+        } catch {
+            //if supportsInterface reverts ( function does not exist, assume it does not have withdrawTo )
+            bank.internalTransfer(
+                DaoHelper.GUILD,
+                gelato,
+                DaoHelper.ETH_TOKEN,
+                _amount
+            );
+            bank.withdraw(gelato, DaoHelper.ETH_TOKEN, _amount);
+        }
         _;
 
         (bool success, ) = gelato.call{value: _amount}("");

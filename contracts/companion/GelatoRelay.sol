@@ -15,33 +15,6 @@ contract GelatoRelay is Gelatofied {
     // solhint-disable-next-line no-empty-blocks
     receive() external payable {}
 
-    function sufficientFee(
-        address _dest,
-        bytes memory _data,
-        uint256 _desiredFee,
-        address
-    )
-        external
-        returns (
-            bool canExec,
-            uint256 receivedFee,
-            uint256 desiredFeee
-        )
-    {
-        DaoRegistry dao = _getDao(_data);
-        require(dao.isAdapter(_dest), "not part of the dao");
-
-        (bool success, bytes memory returndata) = _dest.call(_data);
-        if (!success) returndata.revertWithError("Relay.sufficientFee:");
-        BankExtension bank = BankExtension(
-            dao.getExtensionAddress((DaoHelper.BANK))
-        );
-
-        uint256 balance = bank.balanceOf(DaoHelper.GUILD, DaoHelper.ETH_TOKEN);
-        if (balance < _desiredFee) return (false, balance, _desiredFee);
-        return (true, balance, _desiredFee);
-    }
-
     function _getDao(bytes memory bys) internal pure returns (DaoRegistry dao) {
         address addr;
         assembly {
@@ -56,8 +29,17 @@ contract GelatoRelay is Gelatofied {
         bytes memory _data,
         uint256 _desiredFee,
         address
-    ) external gelatofy(_desiredFee) {
+    ) external {
         DaoRegistry dao = _getDao(_data);
+        _exec(dao, _dest, _data, _desiredFee);
+    }
+
+    function _exec(
+        DaoRegistry dao,
+        address _dest,
+        bytes memory _data,
+        uint256 _desiredFee
+    ) internal gelatofy(dao, _desiredFee) {
         require(dao.isAdapter(_dest), "not part of the dao");
         (bool success, bytes memory returndata) = _dest.call(_data);
         if (!success) returndata.revertWithError("Relay.exec:");
