@@ -22,14 +22,14 @@ Clone and access the _tribute-contracts_ Github repo:
 git clone https://github.com/openlawteam/tribute-contracts.git && cd tribute-contracts
 ```
 
-Fetch and checkout the branch `release-v1.0.3`:
+Fetch and checkout the branch `release-v1.0.4`:
 
-> git fetch origin release-v1.0.3
+> git fetch origin release-v1.0.4
 
-> git checkout release-v1.0.3
+> git checkout release-v1.0.4
 
 :::caution
-Before installing the dependencies make sure you are on the branch [release-v1.0.3](https://github.com/openlawteam/tribute-contracts/releases/tag/v1.0.3) which is the version that contains the contracts integrated with [TributeUI](https://github.com/openlawteam/tribute-ui).
+Before installing the dependencies make sure you are on the branch [release-v1.0.4](https://github.com/openlawteam/tribute-contracts/releases/tag/v1.0.4) which is the version that contains the contracts integrated with [TributeUI](https://github.com/openlawteam/tribute-ui).
 :::
 
 Install all the project dependencies and deploy the smart contracts:
