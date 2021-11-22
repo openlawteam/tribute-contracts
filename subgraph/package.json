@@ -6,7 +6,7 @@
     "test": "test"
   },
   "dependencies": {
-    "@openzeppelin/contracts": "^4.0.0-beta.0",
+    "@openzeppelin/contracts": "^4.3.3",
     "@truffle/hdwallet-provider": "1.2.2",
     "@typechain/ethers-v5": "^6.0.2",
     "eth-sig-util": "^3.0.0",
