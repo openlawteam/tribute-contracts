@@ -6,6 +6,7 @@ import "./interfaces/IManaging.sol";
 import "../core/DaoRegistry.sol";
 import "../adapters/interfaces/IVoting.sol";
 import "../guards/AdapterGuard.sol";
+import "../guards/GovernanceGuard.sol";
 import "../helpers/DaoHelper.sol";
 
 /**
@@ -32,7 +33,7 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
  */
 
-contract ManagingContract is IManaging, AdapterGuard {
+contract ManagingContract is IManaging, AdapterGuard, GovernanceGuard {
     mapping(address => mapping(bytes32 => ProposalDetails)) public proposals;
 
     /**
@@ -52,7 +53,12 @@ contract ManagingContract is IManaging, AdapterGuard {
         bytes32 proposalId,
         ProposalDetails calldata proposal,
         bytes calldata data
-    ) external override reentrancyGuard(dao) {
+    )
+        external
+        override
+        reentrancyGuard(dao)
+        onlyGovernor(dao, DaoHelper.MANAGING_GOVERNOR)
+    {
         require(
             proposal.keys.length == proposal.values.length,
             "must be an equal number of config keys and values"
@@ -103,6 +109,7 @@ contract ManagingContract is IManaging, AdapterGuard {
         external
         override
         reentrancyGuard(dao)
+        onlyGovernor(dao, DaoHelper.MANAGING_GOVERNOR)
     {
         ProposalDetails memory proposal = proposals[address(dao)][proposalId];
 

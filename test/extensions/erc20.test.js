@@ -1,7 +1,6 @@
 // Whole-script strict mode syntax
 "use strict";
 
-const { sha3 } = require("web3-utils");
 /**
 MIT License
 
@@ -31,6 +30,7 @@ const {
   UNITS,
   ZERO_ADDRESS,
   numberOfUnits,
+  sha3,
 } = require("../../utils/contract-util");
 
 const {
@@ -60,7 +60,9 @@ describe("Extension - ERC20", () => {
 
   before("deploy dao", async () => {
     const { dao, adapters, extensions, testContracts } = await deployDefaultDao(
-      { owner: daoOwner }
+      {
+        owner: daoOwner,
+      }
     );
     this.dao = dao;
     this.adapters = adapters;

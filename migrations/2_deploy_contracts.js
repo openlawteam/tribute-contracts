@@ -15,6 +15,7 @@ const {
 
 const { deployDao, getNetworkDetails } = require("../utils/deployment-util");
 const { deployConfigs } = require("../deploy-config");
+const { governanceRoles } = require("../utils/access-control-util");
 require("dotenv").config();
 
 module.exports = async (deployer, network, accounts) => {
@@ -113,6 +114,8 @@ const deployRinkebyDao = async (
     supplyPixelNFT: 100,
     supplyOLToken: toBN("1000000000000000000000000"),
     erc1155TestTokenUri: "1155 test token",
+    [governanceRoles.MANAGING_GOVERNOR]: UNITS,
+    [governanceRoles.CONFIGURATION_GOVERNOR]: UNITS,
   });
 };
 
@@ -208,6 +211,8 @@ const deployGanacheDao = async (
     supplyPixelNFT: 100,
     supplyOLToken: toBN("1000000000000000000000000"),
     erc1155TestTokenUri: "1155 test token",
+    [governanceRoles.MANAGING_GOVERNOR]: UNITS,
+    [governanceRoles.CONFIGURATION_GOVERNOR]: UNITS,
   });
 };
 
@@ -251,6 +256,8 @@ const deployTestDao = async (
     offchainAdmin: daoOwnerAddress,
     daoName: envVars.DAO_NAME,
     owner: accounts[0],
+    [governanceRoles.MANAGING_GOVERNOR]: UNITS,
+    [governanceRoles.CONFIGURATION_GOVERNOR]: UNITS,
   });
 };
 
@@ -342,6 +349,8 @@ const deployHarmonyTestDao = async (
       "OFFCHAIN_ADMIN_ADDR",
       envVars.DAO_OWNER_ADDR
     ),
+    [governanceRoles.MANAGING_GOVERNOR]: UNITS,
+    [governanceRoles.CONFIGURATION_GOVERNOR]: UNITS,
   });
 };
 

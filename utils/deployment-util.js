@@ -293,6 +293,48 @@ const createTestContracts = async ({ options }) => {
 };
 
 /**
+ * Creates the governance config roles in the DAO Registry based on the contract configs.roles.
+ */
+const createGovernanceRoles = async ({ options, dao }) => {
+  const readConfigRole = (configName, contractName) => {
+    const configValue = options[configName];
+    if (!configValue)
+      throw new Error(
+        `Error while creating governance role [${configName}] for ${contractName}`
+      );
+    return configValue;
+  };
+
+  await Object.values(options.contractConfigs)
+    .filter((c) => c.enabled)
+    .filter((c) => c.roles && c.roles.length > 0)
+    .reduce((p, c) => {
+      const roles = c.roles;
+      return p
+        .then(() =>
+          roles.reduce(
+            (q, role) =>
+              q.then(() =>
+                dao.setAddressConfiguration(
+                  sha3(role),
+                  readConfigRole(role, c.name),
+                  { from: options.owner }
+                )
+              ),
+            Promise.resolve()
+          )
+        )
+        .catch((e) => {
+          console.error(
+            `Error while creating governance roles for contract ${c.name}`,
+            e
+          );
+          throw e;
+        });
+    }, Promise.resolve());
+};
+
+/**
  * Deploys all the contracts defined in the migrations/configs/*.config.ts.
  * The contracts must be enabled in the migrations/configs/*.config.ts,
  * and should not be skipped in the auto deploy process.
@@ -319,6 +361,9 @@ const deployDao = async (options) => {
     lootTokenToMint: LOOT,
   };
 
+  // creates the governance roles configs
+  await createGovernanceRoles({ options, dao });
+
   const factories = await createFactories({ options });
   const extensions = await createExtensions({ dao, factories, options });
   const adapters = await createAdapters({
@@ -328,6 +373,7 @@ const deployDao = async (options) => {
     options,
   });
 
+  // executes the .configureDao function in every contract that uses dao configs
   await configureDao({
     owner: options.owner,
     dao,

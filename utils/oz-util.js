@@ -49,6 +49,7 @@ const {
   contracts: allContractConfigs,
 } = require("../migrations/configs/test.config");
 const { ContractType } = require("../migrations/configs/contracts.config");
+const { governanceRoles } = require("./access-control-util");
 
 const deployFunction = async (contractInterface, args, from) => {
   if (!contractInterface) throw Error("undefined contract interface");
@@ -212,6 +213,8 @@ module.exports = (() => {
       ...ozContracts,
       deployFunction,
       contractConfigs: allContractConfigs,
+      [governanceRoles.MANAGING_GOVERNOR]: UNITS,
+      [governanceRoles.CONFIGURATION_GOVERNOR]: UNITS,
     });
   };
 
@@ -223,6 +226,8 @@ module.exports = (() => {
         deployFunction,
         finalize: false,
         contractConfigs: allContractConfigs,
+        [governanceRoles.MANAGING_GOVERNOR]: UNITS,
+        [governanceRoles.CONFIGURATION_GOVERNOR]: UNITS,
       });
 
     await dao.finalizeDao({ from: owner });
@@ -246,6 +251,8 @@ module.exports = (() => {
         offchainVoting: true,
         offchainAdmin: owner,
         contractConfigs: allContractConfigs,
+        [governanceRoles.MANAGING_GOVERNOR]: UNITS,
+        [governanceRoles.CONFIGURATION_GOVERNOR]: UNITS,
       });
 
     await dao.potentialNewMember(newMember, {

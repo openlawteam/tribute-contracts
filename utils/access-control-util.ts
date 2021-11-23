@@ -243,3 +243,12 @@ export const calculateFlagValue = (values: Array<boolean>): number => {
     .map((v, idx) => (v === true ? 2 ** idx : 0))
     .reduce((a, b) => a + b);
 };
+
+/**
+ * The roles defined here are matching the roles available in the DaoHelper.sol,
+ * otherwise the roles won't work.
+ */
+export const governanceRoles: Record<string, string> = {
+  CONFIGURATION_GOVERNOR: "governor.role.configuration",
+  MANAGING_GOVERNOR: "governor.role.managing",
+};

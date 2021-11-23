@@ -543,7 +543,7 @@ describe("Adapter - Managing", () => {
     );
   });
 
-  it("should not be possible for a non member to propose a new adapter", async () => {
+  it("should not be possible for a non governor to propose a new adapter", async () => {
     const dao = this.dao;
     const managing = this.adapters.managing;
     const nonMember = accounts[3];
@@ -568,11 +568,11 @@ describe("Adapter - Managing", () => {
         [],
         { from: nonMember, gasPrice: toBN("0") }
       ),
-      "onlyMember"
+      "onlyGovernor"
     );
   });
 
-  it("should not be possible for a non member to submit a proposal", async () => {
+  it("should not be possible for a non governor to submit a proposal", async () => {
     const dao = this.dao;
     const managing = this.adapters.managing;
     const nonMemberAddress = accounts[5];
@@ -600,11 +600,11 @@ describe("Adapter - Managing", () => {
           gasPrice: toBN("0"),
         }
       ),
-      "onlyMember"
+      "onlyGovernor"
     );
   });
 
-  it("should be possible for a non member to process a proposal", async () => {
+  it("should not be possible for a non governor to process a proposal", async () => {
     const dao = this.dao;
     const managing = this.adapters.managing;
     const voting = this.adapters.voting;
@@ -639,13 +639,13 @@ describe("Adapter - Managing", () => {
 
     await advanceTime(1000);
 
-    await managing.processProposal(dao.address, proposalId, {
-      from: nonMember,
-      gasPrice: toBN("0"),
-    });
-
-    const processedFlag = 2;
-    expect(await dao.getProposalFlag(proposalId, processedFlag)).equal(true);
+    await expectRevert(
+      managing.processProposal(dao.address, proposalId, {
+        from: nonMember,
+        gasPrice: toBN("0"),
+      }),
+      "onlyGovernor"
+    );
   });
 
   it("should not be possible to process a proposal if the voting did not pass", async () => {

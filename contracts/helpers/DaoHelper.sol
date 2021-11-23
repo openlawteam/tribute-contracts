@@ -28,7 +28,9 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
  */
 library DaoHelper {
-    // Adapters
+    /*
+     * Adapters Ids
+     */
     bytes32 internal constant VOTING = keccak256("voting");
     bytes32 internal constant ONBOARDING = keccak256("onboarding");
     bytes32 internal constant NONVOTING_ONBOARDING =
@@ -59,7 +61,9 @@ library DaoHelper {
     bytes32 internal constant ERC20_TRANSFER_STRATEGY_ADPT =
         keccak256("erc20-transfer-strategy");
 
-    // Extensions
+    /*
+     * Extensions Ids
+     */
     bytes32 internal constant BANK = keccak256("bank");
     bytes32 internal constant ERC1271 = keccak256("erc1271");
     bytes32 internal constant NFT = keccak256("nft");
@@ -69,7 +73,9 @@ library DaoHelper {
     bytes32 internal constant ERC1155_EXT = keccak256("erc1155-ext");
     bytes32 internal constant ERC20_EXT = keccak256("erc20-ext");
 
-    // Reserved Addresses
+    /*
+     * Reserved Addresses
+     */
     address internal constant GUILD = address(0xdead);
     address internal constant ESCROW = address(0x4bec);
     address internal constant TOTAL = address(0xbabe);
@@ -80,7 +86,25 @@ library DaoHelper {
     address internal constant ETH_TOKEN = address(0x0);
     address internal constant MEMBER_COUNT = address(0xDECAFBAD);
 
+    /*
+     * Global Constants
+     */
+
+    // The maximum number of tokens supported in the Guild Bank.
     uint8 internal constant MAX_TOKENS_GUILD_BANK = 200;
+
+    /*
+     * Governor Config Roles
+     */
+    // Indicates the name of the dao config that must be read to get the token
+    // address that grants the access to the Configuration Adapter.
+    bytes32 internal constant CONFIGURATION_GOVERNOR =
+        keccak256("governor.role.configuration");
+
+    // Indicates the name of the dao config that must be read to get the token
+    // address that grants the access to the Managing Adapter.
+    bytes32 internal constant MANAGING_GOVERNOR =
+        keccak256("governor.role.managing");
 
     function totalTokens(BankExtension bank) internal view returns (uint256) {
         return memberTokens(bank, TOTAL) - memberTokens(bank, GUILD); //GUILD is accounted for twice otherwise

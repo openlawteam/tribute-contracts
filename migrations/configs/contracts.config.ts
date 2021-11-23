@@ -14,6 +14,7 @@ import {
   entryVesting,
   ACLBuilder,
   SelectedACLs,
+  governanceRoles,
 } from "../../utils/access-control-util";
 
 import { extensionsIdsMap, adaptersIdsMap } from "../../utils/dao-ids-util";
@@ -68,7 +69,7 @@ export type ContractConfig = {
    */
   skipAutoDeploy?: boolean;
   /**
-   * Version of the solidity contract. 
+   * Version of the solidity contract.
    * It needs to be the name of the contract, and not the name of the .sol file.
    */
   version: string;
@@ -107,6 +108,18 @@ export type ContractConfig = {
    * set the extensionsIdsMap.BANK_EXT in this attribute to indicate it generates bank contracts.
    */
   generatesExtensionId?: string;
+
+  /**
+   * Optional
+   * The governor roles defined in the DaoHelper and verified using GovernanceGuard.onlyGovernor.
+   * A role is essentially a DAO config, and the config is read by the GovernanceGuard.
+   * If not present in the DAO Registry it will revert with an error, otherwise it will verify
+   * if the caller is allowed to execute the call.
+   * Roles are used to limit the access to a given member by checking which token the member holds.
+   * So the DAO members can decide and set the configuration with the internal or external token address
+   * that indicates the access to a given resource.
+   */
+  roles?: Array<String>;
 };
 
 export const contracts: Array<ContractConfig> = [
@@ -316,8 +329,7 @@ export const contracts: Array<ContractConfig> = [
     id: "vesting-extension-factory",
     name: "InternalTokenVestingExtensionFactory",
     alias: "vestingExtFactory",
-    path:
-      "../../contracts/extensions/token/erc20/InternalTokenVestingExtensionFactory",
+    path: "../../contracts/extensions/token/erc20/InternalTokenVestingExtensionFactory",
     enabled: true,
     version: "1.0.0",
     type: ContractType.Factory,
@@ -427,8 +439,7 @@ export const contracts: Array<ContractConfig> = [
     id: extensionsIdsMap.VESTING_EXT,
     name: "InternalTokenVestingExtension",
     alias: "vestingExt",
-    path:
-      "../../contracts/extensions/token/erc20/InternalTokenVestingExtension",
+    path: "../../contracts/extensions/token/erc20/InternalTokenVestingExtension",
     enabled: true,
     version: "1.0.0",
     type: ContractType.Extension,
@@ -549,6 +560,7 @@ export const contracts: Array<ContractConfig> = [
       ],
       extensions: {},
     },
+    roles: [governanceRoles.CONFIGURATION_GOVERNOR],
   },
   {
     id: adaptersIdsMap.ERC1155_ADAPTER,
@@ -591,6 +603,7 @@ export const contracts: Array<ContractConfig> = [
       ],
       extensions: {},
     },
+    roles: [governanceRoles.MANAGING_GOVERNOR],
   },
 
   // Signature Adapters

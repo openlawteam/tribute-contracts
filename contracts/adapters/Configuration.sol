@@ -4,6 +4,7 @@ pragma solidity ^0.8.0;
 
 import "../core/DaoRegistry.sol";
 import "../guards/AdapterGuard.sol";
+import "../guards/GovernanceGuard.sol";
 import "./interfaces/IConfiguration.sol";
 import "../adapters/interfaces/IVoting.sol";
 import "../helpers/DaoHelper.sol";
@@ -32,7 +33,11 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
  */
 
-contract ConfigurationContract is IConfiguration, AdapterGuard {
+contract ConfigurationContract is
+    IConfiguration,
+    AdapterGuard,
+    GovernanceGuard
+{
     mapping(address => mapping(bytes32 => Configuration[]))
         private _configurations;
 
@@ -49,7 +54,12 @@ contract ConfigurationContract is IConfiguration, AdapterGuard {
         bytes32 proposalId,
         Configuration[] calldata configs,
         bytes calldata data
-    ) external override reentrancyGuard(dao) {
+    )
+        external
+        override
+        reentrancyGuard(dao)
+        onlyGovernor(dao, DaoHelper.CONFIGURATION_GOVERNOR)
+    {
         require(configs.length > 0, "missing configs");
 
         dao.submitProposal(proposalId);
@@ -93,6 +103,7 @@ contract ConfigurationContract is IConfiguration, AdapterGuard {
         external
         override
         reentrancyGuard(dao)
+        onlyGovernor(dao, DaoHelper.CONFIGURATION_GOVERNOR)
     {
         dao.processProposal(proposalId);
 

@@ -721,7 +721,7 @@ describe("Adapter - GuildKick", () => {
         [],
         { from: kickedMember, gasPrice: toBN("0") }
       ),
-      "onlyMember"
+      "onlyGovernor"
     );
   });
 
@@ -773,15 +773,15 @@ describe("Adapter - GuildKick", () => {
 
     const proposalId = getProposalCounter();
     //Submit a new Bank adapter proposal
-    let newadapterId = sha3("onboarding");
-    let newadapterAddress = accounts[3]; //TODO deploy some Banking test contract
+    let newAdapterId = sha3("onboarding");
+    let newAdapterAddress = accounts[3]; //TODO deploy some Banking test contract
     await expectRevert(
       managing.submitProposal(
         this.dao.address,
         proposalId,
         {
-          adapterOrExtensionId: newadapterId,
-          adapterOrExtensionAddr: newadapterAddress,
+          adapterOrExtensionId: newAdapterId,
+          adapterOrExtensionAddr: newAdapterAddress,
           updateType: 1,
           flags: 0,
           keys: [],
@@ -792,7 +792,7 @@ describe("Adapter - GuildKick", () => {
         [],
         { from: kickedMember, gasPrice: toBN("0") }
       ),
-      "onlyMember"
+      "onlyGovernor"
     );
   });
 
