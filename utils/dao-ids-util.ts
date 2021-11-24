@@ -25,6 +25,7 @@ export const adaptersIdsMap: Record<string, string> = {
   VOTING_HASH_ADAPTER: "voting-hash-adpt",
   KICK_BAD_REPORTER_ADAPTER: "kick-bad-reporter-adpt",
   COUPON_ONBOARDING_ADAPTER: "coupon-onboarding",
+  KYC_ONBOARDING_ADAPTER: "kyc-onboarding",
   LEND_NFT_ADAPTER: "lend-nft",
   ERC20_TRANSFER_STRATEGY_ADAPTER: "erc20-transfer-strategy",
   REIMBURSEMENT_ADAPTER: "reimbursement"

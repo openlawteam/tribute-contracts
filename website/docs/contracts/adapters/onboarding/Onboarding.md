@@ -206,7 +206,3 @@ Starts a vote on the proposal to onboard a new member.
 ### Events
 
 No events are emitted.
-
-## Events
-
-- No events are emitted.

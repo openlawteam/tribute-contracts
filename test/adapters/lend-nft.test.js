@@ -84,8 +84,8 @@ describe("Adapter - LendNFT", () => {
     await pixelNFT.mintPixel(nftOwner, 1, 1, { from: daoOwner });
 
     let pastEvents = await pixelNFT.getPastEvents();
-    let { tokenId } = pastEvents[1].returnValues;
-    let tokenId2 = 10;
+    const { tokenId } = pastEvents[1].returnValues;
+    const tokenId2 = 10;
     await erc1155Token.mint(nftOwner, tokenId2, 1, [], { from: daoOwner });
 
     //create 2 proposals, one for each NFT
@@ -176,9 +176,6 @@ describe("Adapter - LendNFT", () => {
     //after 100 seconds, get the second NFT back
     await lendNFT.sendNFTBack(dao.address, proposalId2, { from: nftOwner });
     unitBalance = await bank.balanceOf(nftOwner, UNITS);
-
-    console.log("*****" + unitBalance.toString());
-
     expect(
       unitBalance.toString() === "200" ||
         unitBalance.toString() === "201" ||

@@ -254,9 +254,10 @@ contract NFTExtension is AdapterGuard, IExtension, IERC721Receiver {
     function onERC721Received(
         address,
         address,
-        uint256,
+        uint256 id,
         bytes calldata
-    ) external pure override returns (bytes4) {
+    ) external override returns (bytes4) {
+        _saveNft(msg.sender, id, DaoHelper.GUILD);
         return this.onERC721Received.selector;
     }
 
@@ -271,11 +272,13 @@ contract NFTExtension is AdapterGuard, IExtension, IERC721Receiver {
         uint256 nftTokenId,
         address owner
     ) private {
-        // Save the asset
-        require(_nfts[nftAddr].add(nftTokenId), "erc721::can not add token id");
-        // set ownership to the GUILD
-        _ownership[getNFTId(nftAddr, nftTokenId)] = owner;
-        // Keep track of the collected assets
-        require(_nftAddresses.add(nftAddr), "erc721::can not add nft");
+        // Save the asset, returns false if already saved.
+        bool saved = _nfts[nftAddr].add(nftTokenId);
+        if (saved) {
+            // set ownership to the GUILD.
+            _ownership[getNFTId(nftAddr, nftTokenId)] = owner;
+            // Keep track of the collected assets.
+            require(_nftAddresses.add(nftAddr), "erc721::can not add nft");
+        }
     }
 }

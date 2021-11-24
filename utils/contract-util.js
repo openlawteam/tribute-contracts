@@ -56,6 +56,7 @@ const unitPrice = toBN(toWei("120", "finney"));
 const remaining = unitPrice.sub(toBN("50000000000000"));
 const maximumChunks = toBN("11");
 const maxAmount = toBN("10000000000000000000");
+const maxUnits = toBN("10000000000000000000");
 
 const embedConfigs = (contractInstance, name, configs) => {
   return {
@@ -78,6 +79,7 @@ module.exports = {
   embedConfigs,
   maximumChunks,
   maxAmount,
+  maxUnits,
   numberOfUnits,
   unitPrice,
   remaining,

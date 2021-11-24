@@ -127,6 +127,20 @@ export const contracts: Array<ContractConfig> = [
     deploymentArgs: ["supplyOLToken"],
   },
   {
+    id: "weth",
+    name: "WETH",
+    path: "../../contracts/helpers/WETH",
+    enabled: true,
+    skipAutoDeploy: true,
+    version: "1.0.0",
+    type: ContractType.Test,
+    acls: {
+      dao: [],
+      extensions: {},
+    },
+    deploymentArgs: [],
+  },
+  {
     id: "mock-dao",
     name: "MockDao",
     path: "../../contracts/test/MockDao",
@@ -518,24 +532,6 @@ export const contracts: Array<ContractConfig> = [
     },
   },
   {
-    id: adaptersIdsMap.ERC721_ADAPTER,
-    name: "NFTAdapterContract",
-    alias: "nftAdapter",
-    path: "../../contracts/adapters/NFTAdapterContract",
-    enabled: true,
-    version: "1.0.0",
-    type: ContractType.Adapter,
-    acls: {
-      dao: [],
-      extensions: {
-        [extensionsIdsMap.ERC721_EXT]: [erc721ExtensionAclFlagsMap.COLLECT_NFT],
-        [extensionsIdsMap.ERC1155_EXT]: [
-          erc1155ExtensionAclFlagsMap.COLLECT_NFT,
-        ],
-      },
-    },
-  },
-  {
     id: adaptersIdsMap.CONFIGURATION_ADAPTER,
     name: "ConfigurationContract",
     alias: "configuration",
@@ -867,6 +863,39 @@ export const contracts: Array<ContractConfig> = [
         extensionsIdsMap.ERC20_EXT, //loads the address from the ext
         "unitTokenToMint",
         "maxAmount"
+      ],
+    ],
+  },
+  {
+    id: adaptersIdsMap.KYC_ONBOARDING_ADAPTER,
+    name: "KycOnboardingContract",
+    alias: "kycOnboarding",
+    path: "../../contracts/adapters/KycOnboardingContract",
+    enabled: true,
+    version: "1.0.0",
+    type: ContractType.Adapter,
+    deploymentArgs: ["weth"],
+    acls: {
+      dao: [daoAccessFlagsMap.NEW_MEMBER],
+      extensions: {
+        [extensionsIdsMap.BANK_EXT]: [
+          bankExtensionAclFlagsMap.INTERNAL_TRANSFER,
+          bankExtensionAclFlagsMap.ADD_TO_BALANCE,
+        ],
+      },
+    },
+    daoConfigs: [
+      [
+        "daoAddress",
+        "kycAddress",
+        "unitPrice",
+        "nbUnits",
+        "maxChunks",
+        "maxUnits",
+        "maxMembers",
+        "fundTargetAddress",
+        "tokenAddr",
+        "unitTokenToMint"
       ],
     ],
   },

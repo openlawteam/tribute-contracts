@@ -56,7 +56,7 @@ library DaoHelper {
         keccak256("kick-bad-reporter-adpt");
     bytes32 internal constant COUPON_ONBOARDING_ADPT =
         keccak256("coupon-onboarding");
-    bytes32 internal constant LEND_NFT_ADPT = keccak256("coupon-onboarding");
+    bytes32 internal constant LEND_NFT_ADPT = keccak256("lend-nft");
     bytes32 internal constant ERC20_TRANSFER_STRATEGY_ADPT =
         keccak256("erc20-transfer-strategy");
 
