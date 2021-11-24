@@ -27,11 +27,12 @@ SOFTWARE.
 const {
   toBN,
   toWei,
+  sha3,
+  fromAscii,
   TOTAL,
   GUILD,
   ZERO_ADDRESS,
-  sha3,
-  fromAscii,
+  DAI_TOKEN,
 } = require("../../utils/contract-util");
 
 const {
@@ -49,6 +50,7 @@ const {
   FinancingContract,
   ERC1271Extension,
   VotingContract,
+  NFTExtension,
 } = require("../../utils/oz-util");
 
 const {
@@ -133,7 +135,8 @@ describe("Adapter - Managing", () => {
           extensionAddresses: [],
           extensionAclFlags: [],
         },
-        [],
+        [], //configs
+        [], //data
         { from: daoOwner, gasPrice: toBN("0") }
       ),
       "must be an equal number of config keys and values"
@@ -158,7 +161,8 @@ describe("Adapter - Managing", () => {
           extensionAddresses: [],
           extensionAclFlags: [],
         },
-        [],
+        [], //configs
+        [], //data
         { from: daoOwner, gasPrice: toBN("0") }
       ),
       "must be an equal number of config keys and values"
@@ -183,7 +187,8 @@ describe("Adapter - Managing", () => {
           extensionAddresses: [],
           extensionAclFlags: [],
         },
-        [],
+        [], //configs
+        [], //data
         { from: daoOwner, gasPrice: toBN("0") }
       ),
       "address is reserved"
@@ -203,7 +208,8 @@ describe("Adapter - Managing", () => {
           extensionAddresses: [],
           extensionAclFlags: [],
         },
-        [],
+        [], //configs
+        [], //data
         { from: daoOwner, gasPrice: toBN("0") }
       ),
       "address is reserved"
@@ -230,7 +236,8 @@ describe("Adapter - Managing", () => {
         extensionAddresses: [],
         extensionAclFlags: [],
       },
-      [],
+      [], //configs
+      [], //data
       {
         from: daoOwner,
         gasPrice: toBN("0"),
@@ -280,7 +287,8 @@ describe("Adapter - Managing", () => {
         extensionAddresses: [],
         extensionAclFlags: [],
       },
-      [],
+      [], //configs
+      [], //data
       { from: daoOwner, gasPrice: toBN("0") }
     );
 
@@ -344,7 +352,8 @@ describe("Adapter - Managing", () => {
         extensionAddresses: [],
         extensionAclFlags: [],
       },
-      [],
+      [], //configs
+      [], //data
       {
         from: daoOwner,
         gasPrice: toBN("0"),
@@ -365,7 +374,8 @@ describe("Adapter - Managing", () => {
           extensionAddresses: [],
           extensionAclFlags: [],
         },
-        [],
+        [], //configs
+        [], //data
         {
           from: daoOwner,
           gasPrice: toBN("0"),
@@ -401,7 +411,8 @@ describe("Adapter - Managing", () => {
         extensionAddresses: [],
         extensionAclFlags: [],
       },
-      [],
+      [], //configs
+      [], //data
       {
         from: daoOwner,
         gasPrice: toBN("0"),
@@ -446,7 +457,8 @@ describe("Adapter - Managing", () => {
         extensionAddresses: [],
         extensionAclFlags: [],
       },
-      [],
+      [], //configs
+      [], //data
       {
         from: daoOwner,
         gasPrice: toBN("0"),
@@ -499,7 +511,8 @@ describe("Adapter - Managing", () => {
         extensionAddresses: [],
         extensionAclFlags: [],
       },
-      [],
+      [], //configs
+      [], //data
       {
         from: daoOwner,
         gasPrice: toBN("0"),
@@ -533,7 +546,8 @@ describe("Adapter - Managing", () => {
           extensionAddresses: [],
           extensionAclFlags: [],
         },
-        [],
+        [], //configs
+        [], //data
         {
           from: daoOwner,
           gasPrice: toBN("0"),
@@ -565,7 +579,8 @@ describe("Adapter - Managing", () => {
           extensionAddresses: [],
           extensionAclFlags: [],
         },
-        [],
+        [], //configs
+        [], //data
         { from: nonMember, gasPrice: toBN("0") }
       ),
       "onlyMember"
@@ -594,7 +609,8 @@ describe("Adapter - Managing", () => {
           extensionAddresses: [],
           extensionAclFlags: [],
         },
-        [],
+        [], //configs
+        [], //data
         {
           from: nonMemberAddress,
           gasPrice: toBN("0"),
@@ -625,7 +641,8 @@ describe("Adapter - Managing", () => {
         extensionAddresses: [],
         extensionAclFlags: [],
       },
-      [],
+      [], //configs
+      [], //data
       {
         from: daoOwner,
         gasPrice: toBN("0"),
@@ -667,7 +684,8 @@ describe("Adapter - Managing", () => {
         extensionAddresses: [],
         extensionAclFlags: [],
       },
-      [],
+      [], //configs
+      [], //data
       {
         from: daoOwner,
         gasPrice: toBN("0"),
@@ -709,7 +727,8 @@ describe("Adapter - Managing", () => {
         extensionAddresses: [],
         extensionAclFlags: [],
       },
-      [],
+      [], //configs
+      [], //data
       {
         from: daoOwner,
         gasPrice: toBN("0"),
@@ -748,7 +767,8 @@ describe("Adapter - Managing", () => {
         extensionAddresses: [],
         extensionAclFlags: [],
       },
-      [],
+      [], //configs
+      [], //data
       {
         from: daoOwner,
         gasPrice: toBN("0"),
@@ -807,7 +827,8 @@ describe("Adapter - Managing", () => {
           }).flags,
         ],
       },
-      [],
+      [], //configs
+      [], //data
       {
         from: daoOwner,
         gasPrice: toBN("0"),
@@ -896,6 +917,82 @@ describe("Adapter - Managing", () => {
     ).equal(false);
   });
 
+  it("should be possible to add a new adapter with DAO configs", async () => {
+    const dao = this.dao;
+    const managing = this.adapters.managing;
+    const voting = this.adapters.voting;
+    const financing = await FinancingContract.new();
+    const bankExt = this.extensions.bankExt;
+
+    const newAdapterId = sha3("testFinancing");
+    const newAdapterAddress = financing.address;
+    const proposalId = getProposalCounter();
+
+    await managing.submitProposal(
+      dao.address,
+      proposalId,
+      {
+        adapterOrExtensionId: newAdapterId,
+        adapterOrExtensionAddr: newAdapterAddress,
+        updateType: 1,
+        flags: 0,
+        keys: [],
+        values: [],
+        // Set the extension address which will be accessed by the new adapter
+        extensionAddresses: [bankExt.address],
+        // Set the acl flags so the new adapter can access the bank extension
+        extensionAclFlags: [
+          entryBank(financing, {
+            ADD_TO_BALANCE: true,
+            SUB_FROM_BALANCE: true,
+            INTERNAL_TRANSFER: true,
+          }).flags,
+        ],
+      },
+      [
+        {
+          key: sha3("some.numeric.config"),
+          numericValue: 32,
+          addressValue: ZERO_ADDRESS,
+          configType: 0, //NUMERIC
+        },
+        {
+          key: sha3("some.address.config"),
+          numericValue: 0,
+          addressValue: DAI_TOKEN,
+          configType: 1, //ADDRESS
+        },
+      ], //configs
+      [], //data
+      {
+        from: daoOwner,
+        gasPrice: toBN("0"),
+      }
+    );
+
+    await voting.submitVote(dao.address, proposalId, 1, {
+      from: daoOwner,
+      gasPrice: toBN("0"),
+    });
+
+    await advanceTime(1000);
+
+    await managing.processProposal(dao.address, proposalId, {
+      from: daoOwner,
+      gasPrice: toBN("0"),
+    });
+
+    expect(await dao.getAdapterAddress(newAdapterId)).equal(newAdapterAddress);
+    const numericConfig = await dao.getConfiguration(
+      sha3("some.numeric.config")
+    );
+    expect(numericConfig.toString()).equal("32");
+    const addressConfig = await dao.getAddressConfiguration(
+      sha3("some.address.config")
+    );
+    expect(addressConfig.toLowerCase()).equal(DAI_TOKEN);
+  });
+
   it("should be possible to add a new extension", async () => {
     const dao = this.dao;
     const managing = this.adapters.managing;
@@ -921,7 +1018,8 @@ describe("Adapter - Managing", () => {
         // Set the acl flags so the new adapter can access the bank extension
         extensionAclFlags: [],
       },
-      [],
+      [], //configs
+      [], //data
       {
         from: daoOwner,
         gasPrice: toBN("0"),
@@ -943,6 +1041,77 @@ describe("Adapter - Managing", () => {
     expect(await dao.getExtensionAddress(newExtensionId)).equal(
       newExtensionAddr
     );
+  });
+
+  it("should be possible to add a new extension with DAO configs", async () => {
+    const dao = this.dao;
+    const managing = this.adapters.managing;
+    const voting = this.adapters.voting;
+    const nftExt = await NFTExtension.new();
+
+    const newExtensionId = sha3("testNewExtension");
+    const newExtensionAddr = nftExt.address;
+    const proposalId = getProposalCounter();
+
+    await managing.submitProposal(
+      dao.address,
+      proposalId,
+      {
+        adapterOrExtensionId: newExtensionId,
+        adapterOrExtensionAddr: newExtensionAddr,
+        updateType: 2, // 1 = Adapter, 2 = Extension
+        flags: 0,
+        keys: [],
+        values: [],
+        // Set the extension address which will be accessed by the new adapter
+        extensionAddresses: [],
+        // Set the acl flags so the new adapter can access the bank extension
+        extensionAclFlags: [],
+      },
+      [
+        {
+          key: sha3("some.numeric.config"),
+          numericValue: 32,
+          addressValue: ZERO_ADDRESS,
+          configType: 0, //NUMERIC
+        },
+        {
+          key: sha3("some.address.config"),
+          numericValue: 0,
+          addressValue: DAI_TOKEN,
+          configType: 1, //ADDRESS
+        },
+      ], //configs
+      [], //data
+      {
+        from: daoOwner,
+        gasPrice: toBN("0"),
+      }
+    );
+
+    await voting.submitVote(dao.address, proposalId, 1, {
+      from: daoOwner,
+      gasPrice: toBN("0"),
+    });
+
+    await advanceTime(1000);
+
+    await managing.processProposal(dao.address, proposalId, {
+      from: daoOwner,
+      gasPrice: toBN("0"),
+    });
+
+    expect(await dao.getExtensionAddress(newExtensionId)).equal(
+      newExtensionAddr
+    );
+    const numericConfig = await dao.getConfiguration(
+      sha3("some.numeric.config")
+    );
+    expect(numericConfig.toString()).equal("32");
+    const addressConfig = await dao.getAddressConfiguration(
+      sha3("some.address.config")
+    );
+    expect(addressConfig.toLowerCase()).equal(DAI_TOKEN);
   });
 
   it("should be possible to remove an extension", async () => {
@@ -971,7 +1140,8 @@ describe("Adapter - Managing", () => {
         // Set the acl flags so the new adapter can access the bank extension
         extensionAclFlags: [],
       },
-      [],
+      [], //configs
+      [], //data
       {
         from: daoOwner,
         gasPrice: toBN("0"),
@@ -1021,7 +1191,8 @@ describe("Adapter - Managing", () => {
         // Set the acl flags so the new adapter can access the bank extension
         extensionAclFlags: [],
       },
-      [],
+      [], //configs
+      [], //data
       {
         from: daoOwner,
         gasPrice: toBN("0"),

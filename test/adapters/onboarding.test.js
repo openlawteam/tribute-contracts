@@ -303,7 +303,7 @@ describe("Adapter - Onboarding", () => {
       from: daoOwner,
     });
 
-    onboarding.processProposal(dao.address, proposalId, {
+    await onboarding.processProposal(dao.address, proposalId, {
       from: daoOwner,
       gasPrice: toBN("0"),
     });
