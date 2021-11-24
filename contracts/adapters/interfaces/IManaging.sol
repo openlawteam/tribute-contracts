@@ -35,6 +35,18 @@ interface IManaging {
         EXTENSION
     }
 
+    enum ConfigType {
+        NUMERIC,
+        ADDRESS
+    }
+
+    struct Configuration {
+        bytes32 key;
+        uint256 numericValue;
+        address addressValue;
+        ConfigType configType;
+    }
+
     struct ProposalDetails {
         bytes32 adapterOrExtensionId;
         address adapterOrExtensionAddr;
@@ -50,6 +62,7 @@ interface IManaging {
         DaoRegistry dao,
         bytes32 proposalId,
         ProposalDetails calldata proposal,
+        Configuration[] memory configs,
         bytes calldata data
     ) external;
 

@@ -112,7 +112,7 @@ describe("Extension - ERC721", () => {
     const firstOwner = await pixelNFT.ownerOf(tokenId);
     expect(firstOwner).equal(nftOwner);
 
-    pixelNFT.methods["safeTransferFrom(address,address,uint256,bytes)"](
+    await pixelNFT.methods["safeTransferFrom(address,address,uint256,bytes)"](
       nftOwner,
       nftExtension.address,
       tokenId,
