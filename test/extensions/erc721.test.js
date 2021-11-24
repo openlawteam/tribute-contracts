@@ -36,6 +36,8 @@ const {
   web3,
 } = require("../../utils/oz-util");
 
+const { encodeDaoInfo } = require("../../utils/test-util");
+
 describe("Extension - ERC721", () => {
   const daoOwner = accounts[0];
 
@@ -97,46 +99,49 @@ describe("Extension - ERC721", () => {
     );
   });
 
-  it("should be possible to collect a NFT that is allowed", async () => {
+  it("should be possible to collect a NFT that is send directly to the extension", async () => {
+    const nftOwner = accounts[2];
+    const dao = this.dao;
     const pixelNFT = this.testContracts.pixelNFT;
-
-    const nftOwner = accounts[1];
-    await pixelNFT.mintPixel(nftOwner, 1, 1);
-
-    const pastEvents = await pixelNFT.getPastEvents();
-    const { owner, tokenId, uri, metadata } = pastEvents[1].returnValues;
-
-    expect(tokenId).equal("1");
-    expect(uri).equal("https://www.openlaw.io/nfts/pix/1");
-    expect(metadata).equal("pixel: 1,1");
-    expect(owner).equal(nftOwner);
-
     const nftExtension = this.extensions.erc721Ext;
-    await pixelNFT.approve(nftExtension.address, tokenId, {
-      from: nftOwner,
-      gasPrice: toBN("0"),
-    });
 
-    const nftAdapter = this.adapters.nftAdapter;
-    await nftAdapter.collect(this.dao.address, pixelNFT.address, tokenId, {
-      from: nftOwner,
-      gasPrice: toBN("0"),
-    });
+    await pixelNFT.mintPixel(nftOwner, 1, 1, { from: daoOwner });
+    let pastEvents = await pixelNFT.getPastEvents();
+    let { tokenId } = pastEvents[1].returnValues;
 
-    // Make sure it was collected
+    const firstOwner = await pixelNFT.ownerOf(tokenId);
+    expect(firstOwner).equal(nftOwner);
+
+    pixelNFT.methods["safeTransferFrom(address,address,uint256,bytes)"](
+      nftOwner,
+      nftExtension.address,
+      tokenId,
+      encodeDaoInfo(dao.address),
+      {
+        from: nftOwner,
+      }
+    );
+
+    // Make sure it was collected in the NFT Extension
     const nftAddr = await nftExtension.getNFTAddress(0);
     expect(nftAddr).equal(pixelNFT.address);
     const nftId = await nftExtension.getNFT(nftAddr, 0);
     expect(nftId.toString()).equal(tokenId.toString());
+
+    // The NFT belongs to the GUILD after it is collected via ERC721 Extension
     const newOwner = await nftExtension.getNFTOwner(nftAddr, tokenId);
-    expect(newOwner.toLowerCase()).equal(GUILD.toLowerCase());
+    expect(newOwner.toLowerCase()).equal(GUILD);
+
+    // The actual holder of the NFT is the ERC721 Extension
+    const holder = await pixelNFT.ownerOf(tokenId);
+    expect(holder).equal(nftExtension.address);
   });
 
-  it("should not be possible to send ETH to the adapter via receive function", async () => {
-    const adapter = this.adapters.nftAdapter;
+  it("should not be possible to send ETH to the extension via receive function", async () => {
+    const extension = this.extensions.erc721Ext;
     await expectRevert(
       web3.eth.sendTransaction({
-        to: adapter.address,
+        to: extension.address,
         from: daoOwner,
         gasPrice: toBN("0"),
         value: toWei(toBN("1"), "ether"),
@@ -145,11 +150,11 @@ describe("Extension - ERC721", () => {
     );
   });
 
-  it("should not be possible to send ETH to the adapter via fallback function", async () => {
-    const adapter = this.adapters.nftAdapter;
+  it("should not be possible to send ETH to the extension via fallback function", async () => {
+    const extension = this.extensions.erc721Ext;
     await expectRevert(
       web3.eth.sendTransaction({
-        to: adapter.address,
+        to: extension.address,
         from: daoOwner,
         gasPrice: toBN("0"),
         value: toWei(toBN("1"), "ether"),

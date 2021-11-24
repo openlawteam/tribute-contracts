@@ -3,7 +3,7 @@
 
 const { toBN, UNITS } = require("./contract-util");
 
-const { expect, advanceTime } = require("./oz-util");
+const { expect, advanceTime, web3 } = require("./oz-util");
 
 const checkLastEvent = async (dao, testObject) => {
   let pastEvents = await dao.getPastEvents();
@@ -35,6 +35,18 @@ const checkSignature = async (
 
   expect(returnedValue).equal(magicValue);
 };
+
+const encodeDaoInfo = (daoAddress) =>
+  web3.eth.abi.encodeParameter(
+    {
+      DaoInfo: {
+        dao: "address",
+      },
+    },
+    {
+      dao: daoAddress,
+    }
+  );
 
 const isMember = async (bank, member) => {
   const units = await bank.balanceOf(member, UNITS);
@@ -156,4 +168,5 @@ module.exports = {
   guildKickProposal,
   submitConfigProposal,
   isMember,
+  encodeDaoInfo,
 };
