@@ -714,7 +714,8 @@ describe("Adapter - GuildKick", () => {
           extensionAddresses: [],
           extensionAclFlags: [],
         },
-        [],
+        [], //configs
+        [], //data
         { from: kickedMember, gasPrice: toBN("0") }
       ),
       "onlyMember"
@@ -785,7 +786,8 @@ describe("Adapter - GuildKick", () => {
           extensionAddresses: [],
           extensionAclFlags: [],
         },
-        [],
+        [], //configs
+        [], //data
         { from: kickedMember, gasPrice: toBN("0") }
       ),
       "onlyMember"

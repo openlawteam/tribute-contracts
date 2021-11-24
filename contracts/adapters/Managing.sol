@@ -39,7 +39,11 @@ contract ManagingContract is
     MemberGuard,
     AdapterGuard
 {
+    // DAO => (ProposalID => ProposalDetails)
     mapping(address => mapping(bytes32 => ProposalDetails)) public proposals;
+    // DAO => (ProposalId => Configuration[])
+    mapping(address => mapping(bytes32 => Configuration[]))
+        public configurations;
 
     /*
      * default fallback function to prevent from sending ether to the contract
@@ -63,6 +67,7 @@ contract ManagingContract is
         DaoRegistry dao,
         bytes32 proposalId,
         ProposalDetails calldata proposal,
+        Configuration[] memory configs,
         bytes calldata data
     ) external override onlyMember(dao) reentrancyGuard(dao) {
         require(
@@ -76,8 +81,6 @@ contract ManagingContract is
             "must be an equal number of extension addresses and acl"
         );
 
-        require(proposal.flags < type(uint128).max, "proposal flags overflow");
-
         require(
             isNotReservedAddress(proposal.adapterOrExtensionAddr),
             "address is reserved"
@@ -86,6 +89,21 @@ contract ManagingContract is
         dao.submitProposal(proposalId);
 
         proposals[address(dao)][proposalId] = proposal;
+
+        Configuration[] storage newConfigs = configurations[address(dao)][
+            proposalId
+        ];
+        for (uint256 i = 0; i < configs.length; i++) {
+            Configuration memory config = configs[i];
+            newConfigs.push(
+                Configuration({
+                    key: config.key,
+                    configType: config.configType,
+                    numericValue: config.numericValue,
+                    addressValue: config.addressValue
+                })
+            );
+        }
 
         IVoting votingContract = IVoting(dao.getAdapterAddress(VOTING));
 
@@ -105,8 +123,9 @@ contract ManagingContract is
      * @dev Only members can process a proposal.
      * @dev Only if the voting pass the proposal is processed.
      * @dev Reverts when the adapter address is already in use and it is an adapter addition.
+     * @dev Reverts when the extension address is already in use and it is an extension addition.
      * @param dao The dao address.
-     * @param proposalId The guild kick proposal id.
+     * @param proposalId The proposal id.
      */
     function processProposal(DaoRegistry dao, bytes32 proposalId)
         external
@@ -134,27 +153,72 @@ contract ManagingContract is
                 proposal.values
             );
         } else if (proposal.updateType == UpdateType.EXTENSION) {
-            if (dao.extensions(proposal.adapterOrExtensionId) != address(0x0)) {
-                dao.removeExtension(proposal.adapterOrExtensionId);
-            }
-
-            if (proposal.adapterOrExtensionAddr != address(0x0)) {
-                dao.addExtension(
-                    proposal.adapterOrExtensionId,
-                    IExtension(proposal.adapterOrExtensionAddr),
-                    dao.getMemberAddress(0)
-                );
-            }
+            _replaceExtension(dao, proposal);
         } else {
             revert("unknown update type");
         }
+        _grantExtensionAccess(dao, proposal);
+        _saveDaoConfigurations(dao, proposalId);
+    }
 
-        for (uint128 i = 0; i < proposal.extensionAclFlags.length; i++) {
+    /**
+     * @notice If the extension is already registered, it removes the extension from the DAO Registry.
+     * @notice If the adapterOrExtensionAddr is provided, the new address is added as a new extension to the DAO Registry.
+     */
+    function _replaceExtension(DaoRegistry dao, ProposalDetails memory proposal)
+        internal
+    {
+        if (dao.extensions(proposal.adapterOrExtensionId) != address(0x0)) {
+            dao.removeExtension(proposal.adapterOrExtensionId);
+        }
+
+        if (proposal.adapterOrExtensionAddr != address(0x0)) {
+            dao.addExtension(
+                proposal.adapterOrExtensionId,
+                IExtension(proposal.adapterOrExtensionAddr),
+                // The creator of the extension must be set as the DAO owner,
+                // which is stored at index 0 in the members storage.
+                dao.getMemberAddress(0)
+            );
+        }
+    }
+
+    /**
+     * @notice Saves to the DAO Registry the ACL Flag that grants the access to the given `extensionAddresses`
+     */
+    function _grantExtensionAccess(
+        DaoRegistry dao,
+        ProposalDetails memory proposal
+    ) internal {
+        for (uint256 i = 0; i < proposal.extensionAclFlags.length; i++) {
             dao.setAclToExtensionForAdapter(
+                // It needs to be registered as extension
                 proposal.extensionAddresses[i],
+                // It needs to be registered as adapter
                 proposal.adapterOrExtensionAddr,
+                // Indicate which access level will be granted
                 proposal.extensionAclFlags[i]
             );
+        }
+    }
+
+    /**
+     * @notice Saves the numeric/address configurations to the DAO registry
+     */
+    function _saveDaoConfigurations(DaoRegistry dao, bytes32 proposalId)
+        internal
+    {
+        Configuration[] memory configs = configurations[address(dao)][
+            proposalId
+        ];
+
+        for (uint256 i = 0; i < configs.length; i++) {
+            Configuration memory config = configs[i];
+            if (ConfigType.NUMERIC == config.configType) {
+                dao.setConfiguration(config.key, config.numericValue);
+            } else if (ConfigType.ADDRESS == config.configType) {
+                dao.setAddressConfiguration(config.key, config.addressValue);
+            }
         }
     }
 }

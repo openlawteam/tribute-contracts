@@ -70,10 +70,7 @@ describe("Extension - NFT", () => {
   it("should not be possible get an NFT in the collection if it is empty", async () => {
     const nftExtension = this.extensions.nft;
     const pixelNFT = this.testContracts.pixelNFT;
-    await expectRevert(
-      nftExtension.getNFT(pixelNFT.address, 0),
-      "index out of bounds"
-    );
+    await expectRevert(nftExtension.getNFT(pixelNFT.address, 0), "revert");
   });
 
   it("should not be possible to return a NFT without the RETURN permission", async () => {
