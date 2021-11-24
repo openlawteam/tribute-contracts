@@ -37,6 +37,7 @@ const {
   numberOfUnits,
   maximumChunks,
   maxAmount,
+  maxUnits,
   ETH_TOKEN,
   UNITS,
   toBN,
@@ -98,9 +99,13 @@ const getDefaultOptions = (options) => {
     tokenAddr: ETH_TOKEN,
     maxChunks: maximumChunks,
     maxAmount,
+    maxUnits,
+    maxMembers: 1000,
     chainId: 1,
     maxExternalTokens: 100,
     couponCreatorAddress: "0x7D8cad0bbD68deb352C33e80fccd4D8e88b4aBb8",
+    kycAddress: "0x7D8cad0bbD68deb352C33e80fccd4D8e88b4aBb8",
+    fundTargetAddress: "0x823A19521A76f80EC49670BE32950900E8Cd0ED3",
     deployTestTokens: true,
     erc20TokenName: "Test Token",
     erc20TokenSymbol: "TTK",
@@ -207,15 +212,23 @@ module.exports = (() => {
   const ozContracts = getOpenZeppelinContracts(allContractConfigs);
 
   const deployDefaultDao = async (options) => {
-    return await deployDao({
+    const { WETH } = ozContracts;
+    const weth = await WETH.new();
+
+    const result = await deployDao({
       ...getDefaultOptions(options),
       ...ozContracts,
       deployFunction,
       contractConfigs: allContractConfigs,
+      weth: weth.address,
     });
+
+    return { wethContract: weth, ...result };
   };
 
   const deployDefaultNFTDao = async ({ owner }) => {
+    const { WETH } = ozContracts;
+    const weth = await WETH.new();
     const { dao, adapters, extensions, testContracts, utilContracts } =
       await deployDao({
         ...getDefaultOptions({ owner }),
@@ -223,6 +236,8 @@ module.exports = (() => {
         deployFunction,
         finalize: false,
         contractConfigs: allContractConfigs,
+        weth: weth.address,
+        wethContract: weth,
       });
 
     await dao.finalizeDao({ from: owner });
@@ -233,10 +248,13 @@ module.exports = (() => {
       extensions: extensions,
       testContracts: testContracts,
       utilContracts: utilContracts,
+      wethContract: weth,
     };
   };
 
   const deployDaoWithOffchainVoting = async ({ owner, newMember }) => {
+    const { WETH } = ozContracts;
+    const weth = await WETH.new();
     const { dao, adapters, extensions, testContracts, votingHelpers } =
       await deployDao({
         ...getDefaultOptions({ owner }),
@@ -246,6 +264,7 @@ module.exports = (() => {
         offchainVoting: true,
         offchainAdmin: owner,
         contractConfigs: allContractConfigs,
+        weth: weth.address,
       });
 
     await dao.potentialNewMember(newMember, {
@@ -264,6 +283,7 @@ module.exports = (() => {
       extensions: extensions,
       testContracts: testContracts,
       votingHelpers: votingHelpers,
+      wethContract: weth,
     };
   };
 
