@@ -48,9 +48,11 @@ There is no proposal involved here, i.e. if you are elligible to become a member
 ### OnboardingDetails
 
 - `chunkSize`: How many tokens need to be minted per chunk bought.
+- `numberOfChunks`: How many chunks need to be created based on the contribution.
 - `unitsPerChunk`: How many units (tokens from tokenAddr) are being minted per chunk.
-- `tokenAddr`: In which currency (tokenAddr) should the onboarding take place.
-- `maximumChunks`: How many chunks can someone buy max. This helps force decentralization of token holders.
+- `unitsRequested`: which internal token to mint
+- `amount`: the amount of internal tokens minted
+- `maximumTotalUnits`: How many internal tokens can be minted
 
 ## Storage
 

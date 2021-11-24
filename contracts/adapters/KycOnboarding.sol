@@ -214,16 +214,17 @@ contract KycOnboardingContract is AdapterGuard, Signatures {
         address kycedMember,
         bytes memory signature
     ) external payable {
-        _onboard(dao, kycedMember, DaoHelper.ETH_TOKEN, signature);
+        _onboard(dao, kycedMember, DaoHelper.ETH_TOKEN, msg.value, signature);
     }
 
     function onboard(
         DaoRegistry dao,
         address kycedMember,
         address tokenAddr,
+        uint256 amount,
         bytes memory signature
     ) external {
-        _onboard(dao, kycedMember, tokenAddr, signature);
+        _onboard(dao, kycedMember, tokenAddr, amount, signature);
     }
 
     /**
@@ -236,18 +237,18 @@ contract KycOnboardingContract is AdapterGuard, Signatures {
         DaoRegistry dao,
         address kycedMember,
         address tokenAddr,
+        uint256 amount,
         bytes memory signature
     ) internal reentrancyGuard(dao) {
         require(!dao.isActiveMember(dao, kycedMember), "already member");
-
-        require(
-            dao.getNbMembers() <
-                dao.getConfiguration(_configKey(tokenAddr, MaxMembers)),
-            "the DAO is full"
+        uint256 maxMembers = dao.getConfiguration(
+            _configKey(tokenAddr, MaxMembers)
         );
+        require(maxMembers > 0, "token not configured");
+        require(dao.getNbMembers() < maxMembers, "the DAO is full");
 
         _checkKycCoupon(dao, kycedMember, tokenAddr, signature);
-        OnboardingDetails memory details = _checkData(dao, tokenAddr);
+        OnboardingDetails memory details = _checkData(dao, tokenAddr, amount);
 
         BankExtension bank = BankExtension(
             dao.getExtensionAddress(DaoHelper.BANK)
@@ -295,23 +296,23 @@ contract KycOnboardingContract is AdapterGuard, Signatures {
 
         bank.addToBalance(kycedMember, DaoHelper.UNITS, details.unitsRequested);
 
-        if (msg.value > details.amount) {
+        if (amount > details.amount && tokenAddr == DaoHelper.ETH_TOKEN) {
             payable(msg.sender).sendValue(msg.value - details.amount);
         }
 
         emit Onboarded(dao, kycedMember, details.unitsRequested);
     }
 
-    function _checkData(DaoRegistry dao, address tokenAddr)
-        internal
-        view
-        returns (OnboardingDetails memory details)
-    {
+    function _checkData(
+        DaoRegistry dao,
+        address tokenAddr,
+        uint256 amount
+    ) internal view returns (OnboardingDetails memory details) {
         details.chunkSize = uint88(
             dao.getConfiguration(_configKey(tokenAddr, ChunkSize))
         );
         require(details.chunkSize > 0, "config chunkSize missing");
-        details.numberOfChunks = uint88(msg.value / details.chunkSize);
+        details.numberOfChunks = uint88(amount / details.chunkSize);
         require(details.numberOfChunks > 0, "insufficient funds");
         require(
             details.numberOfChunks <=

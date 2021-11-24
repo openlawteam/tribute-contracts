@@ -43,6 +43,7 @@ const {
   expectRevert,
   expect,
   web3,
+  OLToken,
 } = require("../../utils/oz-util.js");
 
 const { checkBalance, isMember } = require("../../utils/test-util.js");
@@ -52,6 +53,7 @@ const {
   SigUtilSigner,
   getMessageERC712Hash,
 } = require("../../utils/offchain-voting-util.js");
+const { toWei } = require("web3-utils");
 
 const signer = {
   address: "0x7D8cad0bbD68deb352C33e80fccd4D8e88b4aBb8",
@@ -84,7 +86,7 @@ describe("Adapter - KYC Onboarding", () => {
     const nbOfERC20Units = 100000000;
     const erc20UnitPrice = toBN("10");
 
-    const { dao, adapters, wethContract } = await deployDefaultDao({
+    const { dao, adapters } = await deployDefaultDao({
       owner: daoOwner,
       unitPrice: erc20UnitPrice,
       nbUnits: nbOfERC20Units,
@@ -109,6 +111,93 @@ describe("Adapter - KYC Onboarding", () => {
     expect(initialTokenBalance.toString()).equal(
       applicantTokenBalance.toString()
     );
+  });
+
+  it("should be possible to join a DAO with ERC-20 contribution", async () => {
+    const applicant = accounts[2];
+    const nonMemberAccount = accounts[3];
+    const tokenSupply = toBN("10000000000000000000000");
+    const oltContract = await OLToken.new(tokenSupply);
+
+    const { dao, adapters, extensions, wethContract } = await deployDefaultDao({
+      owner: daoOwner,
+      tokenAddr: oltContract.address,
+    });
+
+    const bank = extensions.bankExt;
+    const onboarding = adapters.kycOnboarding;
+
+    const myAccountInitialBalance = await web3.eth.getBalance(applicant);
+    // remaining amount to test sending back to proposer
+    const ethAmount = unitPrice.mul(toBN(3)).add(remaining);
+
+    const signerUtil = SigUtilSigner(signer.privKey);
+
+    const couponData = {
+      type: "coupon-kyc",
+      kycedMember: applicant,
+    };
+
+    let jsHash = getMessageERC712Hash(
+      couponData,
+      dao.address,
+      onboarding.address,
+      1
+    );
+    let solHash = await onboarding.hashCouponMessage(dao.address, couponData);
+    expect(jsHash).equal(solHash);
+
+    const signature = signerUtil(
+      couponData,
+      dao.address,
+      onboarding.address,
+      1
+    );
+
+    await oltContract.transfer(applicant, toWei(toBN("1"), "ether"));
+
+    await oltContract.approve(onboarding.address, toWei(toBN("1"), "ether"), {
+      from: applicant,
+    });
+
+    await onboarding.onboard(
+      dao.address,
+      applicant,
+      oltContract.address,
+      toWei(toBN("1"), "ether"),
+      signature,
+      {
+        from: applicant,
+        gasPrice: toBN("0"),
+      }
+    );
+
+    // test return of remaining amount in excess of multiple of unitsPerChunk
+    const myAccountBalance = await web3.eth.getBalance(applicant);
+    // daoOwner did not receive remaining amount in excess of multiple of unitsPerChunk
+    expect(myAccountBalance.toString()).equal("1000000000000000000000000");
+
+    const myAccountUnits = await bank.balanceOf(daoOwner, UNITS);
+    const applicantUnits = await bank.balanceOf(applicant, UNITS);
+    const nonMemberAccountUnits = await bank.balanceOf(nonMemberAccount, UNITS);
+    expect(myAccountUnits.toString()).equal("1");
+    expect(applicantUnits.toString()).equal(
+      numberOfUnits.mul(toBN("8")).toString()
+    );
+    expect(nonMemberAccountUnits.toString()).equal("0");
+    await checkBalance(bank, GUILD, ETH_TOKEN, 0);
+    const fundTargetAddress = "0x823A19521A76f80EC49670BE32950900E8Cd0ED3";
+    const balance = await oltContract.balanceOf(fundTargetAddress);
+
+    expect(balance.toString()).equal(unitPrice.mul(toBN("8")).toString());
+    // test active member status
+    const applicantIsActiveMember = await isMember(bank, applicant);
+    expect(applicantIsActiveMember).equal(true);
+    const nonMemberAccountIsActiveMember = await isMember(
+      bank,
+      nonMemberAccount
+    );
+    expect(nonMemberAccountIsActiveMember).equal(false);
   });
 
   it("should be possible to join a DAO with ETH contribution", async () => {
