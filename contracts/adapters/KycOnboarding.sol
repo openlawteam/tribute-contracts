@@ -7,7 +7,6 @@ import "../extensions/bank/Bank.sol";
 import "../guards/AdapterGuard.sol";
 import "../utils/Signatures.sol";
 import "../helpers/WETH.sol";
-
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 
@@ -40,9 +39,17 @@ contract KycOnboardingContract is AdapterGuard, Signatures {
     using SafeERC20 for IERC20;
 
     event Onboarded(DaoRegistry dao, address member, uint256 units);
-
     struct Coupon {
         address kycedMember;
+    }
+
+    struct OnboardingDetails {
+        uint88 chunkSize;
+        uint88 numberOfChunks;
+        uint88 unitsPerChunk;
+        uint88 unitsRequested;
+        uint88 maximumTotalUnits;
+        uint160 amount;
     }
 
     string public constant COUPON_MESSAGE_TYPE = "Message(address kycedMember)";
@@ -65,22 +72,6 @@ contract KycOnboardingContract is AdapterGuard, Signatures {
     WETH private _weth;
     IERC20 private _weth20;
 
-    event CouponRedeemed(
-        address daoAddress,
-        uint256 nonce,
-        address authorizedMember,
-        uint256 amount
-    );
-
-    struct OnboardingDetails {
-        uint88 chunkSize;
-        uint88 numberOfChunks;
-        uint88 unitsPerChunk;
-        uint88 unitsRequested;
-        uint88 maximumTotalUnits;
-        uint160 amount;
-    }
-
     mapping(DaoRegistry => mapping(address => uint256)) public totalUnits;
 
     constructor(address payable weth) {
@@ -94,7 +85,12 @@ contract KycOnboardingContract is AdapterGuard, Signatures {
      * @param signerAddress is the DAO instance to be configured
      * @param chunkSize how many wei per chunk
      * @param unitsPerChunk how many units do we get per chunk
-     * @param maximumChunks  how many chunks can you get at most
+     * @param maximumChunks maximum number of chunks allowed
+     * @param maxUnits how many internal tokens can be minted
+     * @param maxMembers maximum number of members allowed to join
+     * @param fundTargetAddress multisig address to transfer the money from, set it to address(0) if you dont want to use a multisig
+     * @param tokenAddr the token in which the onboarding can take place
+     * @param internalTokensToMint the token that will be minted when the member joins the DAO
      */
     function configureDao(
         DaoRegistry dao,
@@ -191,24 +187,11 @@ contract KycOnboardingContract is AdapterGuard, Signatures {
         return hashMessage(dao, block.chainid, address(this), message);
     }
 
-    function _checkKycCoupon(
-        DaoRegistry dao,
-        address kycedMember,
-        address tokenAddr,
-        bytes memory signature
-    ) internal view {
-        require(
-            ECDSA.recover(
-                hashCouponMessage(dao, Coupon(kycedMember)),
-                signature
-            ) ==
-                dao.getAddressConfiguration(
-                    _configKey(tokenAddr, SignerAddressConfig)
-                ),
-            "invalid sig"
-        );
-    }
-
+    /**
+     * @notice Starts the onboarding propocess of a kyc member that is using ETH to join the DAO.
+     * @param kycedMember The address of the kyced member that wants to join the DAO.
+     * @param signature The signature that will be verified to redeem the coupon.
+     */
     function onboardEth(
         DaoRegistry dao,
         address kycedMember,
@@ -217,6 +200,13 @@ contract KycOnboardingContract is AdapterGuard, Signatures {
         _onboard(dao, kycedMember, DaoHelper.ETH_TOKEN, msg.value, signature);
     }
 
+    /**
+     * @notice Starts the onboarding propocess of a kyc member that is any ERC20 token to join the DAO.
+     * @param kycedMember The address of the kyced member that wants to join the DAO.
+     * @param tokenAddr The address of the ERC20 token that contains that funds of the kycedMember.
+     * @param amount The amount in ERC20 that will be contributed to the DAO in exchange for the DAO units.
+     * @param signature The signature that will be verified to redeem the coupon.
+     */
     function onboard(
         DaoRegistry dao,
         address kycedMember,
@@ -228,9 +218,10 @@ contract KycOnboardingContract is AdapterGuard, Signatures {
     }
 
     /**
-     * @notice Redeems a coupon to add a new member.
+     * @notice Redeems a coupon to add a new member
      * @param dao is the DAO instance to be configured
      * @param kycedMember is the address that this coupon authorized to become a new member
+     * @param tokenAddr is the address the ETH address(0) or an ERC20 Token address
      * @param signature is message signature for verification
      */
     function _onboard(
@@ -303,6 +294,9 @@ contract KycOnboardingContract is AdapterGuard, Signatures {
         emit Onboarded(dao, kycedMember, details.unitsRequested);
     }
 
+    /**
+     * @notice Verifies if the given amount is enough to join the DAO
+     */
     function _checkData(
         DaoRegistry dao,
         address tokenAddr,
@@ -335,6 +329,30 @@ contract KycOnboardingContract is AdapterGuard, Signatures {
             details.unitsRequested + totalUnits[dao][tokenAddr] <=
                 details.maximumTotalUnits,
             "over max total units"
+        );
+    }
+
+    /**
+     * @notice Checks if the given signature is valid, if so the member is allowed to reedem the coupon and join the DAO.
+     * @param kycedMember is the address that this coupon authorized to become a new member
+     * @param tokenAddr is the address the ETH address(0) or an ERC20 Token address.
+     * @param signature is message signature for verification
+     */
+    function _checkKycCoupon(
+        DaoRegistry dao,
+        address kycedMember,
+        address tokenAddr,
+        bytes memory signature
+    ) internal view {
+        require(
+            ECDSA.recover(
+                hashCouponMessage(dao, Coupon(kycedMember)),
+                signature
+            ) ==
+                dao.getAddressConfiguration(
+                    _configKey(tokenAddr, SignerAddressConfig)
+                ),
+            "invalid sig"
         );
     }
 

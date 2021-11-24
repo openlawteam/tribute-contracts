@@ -61,6 +61,8 @@ const allAdapters = {
         "contracts/adapters/onboarding/onboarding-adapter",
         "contracts/adapters/onboarding/tribute-adapter",
         "contracts/adapters/onboarding/tribute-nft-adapter",
+        "contracts/adapters/onboarding/lend-nft-adapter",
+        "contracts/adapters/onboarding/kyc-onboarding-adapter",
       ],
     },
     {
