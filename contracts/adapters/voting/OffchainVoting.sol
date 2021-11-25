@@ -48,7 +48,8 @@ contract OffchainVotingContract is IVoting, MemberGuard, AdapterGuard, Ownable {
         INVALID_CHOICE,
         AFTER_VOTING_PERIOD,
         BAD_SIGNATURE,
-        INDEX_OUT_OF_BOUND
+        INDEX_OUT_OF_BOUND,
+        VOTE_NOT_ALLOWED
     }
 
     struct ProposalChallenge {
@@ -646,6 +647,17 @@ contract OffchainVotingContract is IVoting, MemberGuard, AdapterGuard, Ownable {
             return BadNodeError.BAD_SIGNATURE;
         }
 
+        // If the weight is 0, the member has no permission to vote
+        uint256 weight = GovernanceHelper.getVotingWeight(
+            dao,
+            voter,
+            node.proposalId,
+            blockNumber
+        );
+        if (weight == 0) {
+            return BadNodeError.VOTE_NOT_ALLOWED;
+        }
+
         return BadNodeError.OK;
     }
 
@@ -739,11 +751,11 @@ contract OffchainVotingContract is IVoting, MemberGuard, AdapterGuard, Ownable {
         votes[address(dao)][proposalId].isChallenged = true;
         address challengedReporter = votes[address(dao)][proposalId].reporter;
         bytes32 challengeProposalId = keccak256(
-            abi.encodePacked(
-                proposalId,
-                votes[address(dao)][proposalId].resultRoot
-            )
-        );
+                abi.encodePacked(
+                    proposalId,
+                    votes[address(dao)][proposalId].resultRoot
+                )
+            );
 
         challengeProposals[address(dao)][
             challengeProposalId

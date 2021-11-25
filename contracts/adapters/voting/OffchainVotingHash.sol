@@ -4,12 +4,14 @@ pragma solidity ^0.8.0;
 
 import "../../core/DaoRegistry.sol";
 import "../../extensions/bank/Bank.sol";
+import "../../extensions/token/erc20/ERC20TokenExtension.sol";
 import "../../utils/Signatures.sol";
 import "../interfaces/IVoting.sol";
 import "./Voting.sol";
 import "./KickBadReporterAdapter.sol";
 import "./SnapshotProposalContract.sol";
 import "../../helpers/DaoHelper.sol";
+import "../../helpers/GovernanceHelper.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
 import "@openzeppelin/contracts/utils/cryptography/MerkleProof.sol";
 import "@openzeppelin/contracts/utils/cryptography/SignatureChecker.sol";
@@ -178,12 +180,10 @@ contract OffchainVotingHashContract {
     ) external view returns (bool) {
         address account = dao.getMemberAddress(node.index);
         address voter = dao.getPriorDelegateKey(account, snapshot);
-        BankExtension bank = BankExtension(
-            dao.getExtensionAddress(DaoHelper.BANK)
-        );
-        uint256 weight = bank.getPriorAmount(
-            account,
-            DaoHelper.UNITS,
+        uint256 weight = GovernanceHelper.getVotingWeight(
+            dao,
+            voter,
+            node.proposalId,
             snapshot
         );
 
