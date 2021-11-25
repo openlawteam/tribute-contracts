@@ -6,7 +6,6 @@ import "../core/DaoRegistry.sol";
 import "../extensions/bank/Bank.sol";
 
 abstract contract Gelatofied {
-    
     address payable public immutable gelato;
 
     modifier gelatofy(DaoRegistry dao, uint256 _amount) {
