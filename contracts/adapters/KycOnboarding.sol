@@ -184,7 +184,7 @@ contract KycOnboardingContract is AdapterGuard, Signatures {
             abi.encode(COUPON_MESSAGE_TYPEHASH, coupon.kycedMember)
         );
 
-        return hashMessage(dao, block.chainid, address(this), message);
+        return hashMessage(dao, address(this), message);
     }
 
     /**
