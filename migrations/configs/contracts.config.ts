@@ -330,8 +330,7 @@ export const contracts: Array<ContractConfig> = [
     id: "vesting-extension-factory",
     name: "InternalTokenVestingExtensionFactory",
     alias: "vestingExtFactory",
-    path:
-      "../../contracts/extensions/token/erc20/InternalTokenVestingExtensionFactory",
+    path: "../../contracts/extensions/token/erc20/InternalTokenVestingExtensionFactory",
     enabled: true,
     version: "1.0.0",
     type: ContractType.Factory,
@@ -441,8 +440,7 @@ export const contracts: Array<ContractConfig> = [
     id: extensionsIdsMap.VESTING_EXT,
     name: "InternalTokenVestingExtension",
     alias: "vestingExt",
-    path:
-      "../../contracts/extensions/token/erc20/InternalTokenVestingExtension",
+    path: "../../contracts/extensions/token/erc20/InternalTokenVestingExtension",
     enabled: true,
     version: "1.0.0",
     type: ContractType.Extension,
@@ -585,6 +583,7 @@ export const contracts: Array<ContractConfig> = [
         daoAccessFlagsMap.REPLACE_ADAPTER,
         daoAccessFlagsMap.ADD_EXTENSION,
         daoAccessFlagsMap.REMOVE_EXTENSION,
+        daoAccessFlagsMap.SET_CONFIGURATION,
       ],
       extensions: {},
     },

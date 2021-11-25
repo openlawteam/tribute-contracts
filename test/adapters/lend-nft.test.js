@@ -148,7 +148,9 @@ describe("Adapter - LendNFT", () => {
 
     unitBalance = await bank.balanceOf(nftOwner, UNITS);
     expect(
-      unitBalance.toString() == "100" || unitBalance.toString() == "101"
+      unitBalance.toString() == "100" ||
+        unitBalance.toString() == "101" ||
+        unitBalance.toString() === "202"
     ).equal(true);
 
     await advanceTime(10000);
