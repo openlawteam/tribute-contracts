@@ -142,13 +142,6 @@ contract ReimbursementContract is IReimbursement, AdapterGuard, GelatoRelay {
             _data[address(dao)].ethUsed = payback;
         }
 
-        bank.internalTransfer(
-            DaoHelper.GUILD,
-            caller,
-            DaoHelper.ETH_TOKEN,
-            payback
-        );
-
-        bank.withdraw(caller, DaoHelper.ETH_TOKEN, payback);
+        bank.withdrawTo(DaoHelper.GUILD, caller, DaoHelper.ETH_TOKEN, payback);
     }
 }
