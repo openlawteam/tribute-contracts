@@ -142,6 +142,34 @@ contract ReimbursementContract is IReimbursement, AdapterGuard, GelatoRelay {
             _data[address(dao)].ethUsed = payback;
         }
 
-        bank.withdrawTo(DaoHelper.GUILD, caller, DaoHelper.ETH_TOKEN, payback);
+        try bank.supportsInterface(bank.withdrawTo.selector) returns (
+            bool supportsInterface
+        ) {
+            if (supportsInterface) {
+                bank.withdrawTo(
+                    DaoHelper.GUILD,
+                    caller,
+                    DaoHelper.ETH_TOKEN,
+                    payback
+                );
+            } else {
+                bank.internalTransfer(
+                    DaoHelper.GUILD,
+                    caller,
+                    DaoHelper.ETH_TOKEN,
+                    payback
+                );
+                bank.withdraw(gelato, DaoHelper.ETH_TOKEN, payback);
+            }
+        } catch {
+            //if supportsInterface reverts ( function does not exist, assume it does not have withdrawTo )
+            bank.internalTransfer(
+                DaoHelper.GUILD,
+                gelato,
+                DaoHelper.ETH_TOKEN,
+                payback
+            );
+            bank.withdraw(gelato, DaoHelper.ETH_TOKEN, payback);
+        }
     }
 }
