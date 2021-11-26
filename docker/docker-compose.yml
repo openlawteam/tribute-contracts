@@ -10,7 +10,8 @@ services:
       ENV: "local"
       PORT: 8080
       RELAYER_PK: "0xb80a5165a59af8ce566266fcd0e919e13ed4ecbd57ae952e73ae2cddc08b84c6"
-      ALCHEMY_API_URL: "http://rinkeby.openlaw.io:8545"
+      ALCHEMY_API_URL: "https://api.s0.pops.one"
+      #ALCHEMY_API_URL: "http://rinkeby.openlaw.io:8545"
       JAWSDB_URL: "postgres://snap:pwd123@trib-snapshot-db:5432/snapshot-db"
       IGNORE_VOTE_END_CONSTRAINT: "true"
       ALLOWED_DOMAINS: "http://localhost:3000"
@@ -86,7 +87,7 @@ services:
 
   # The Tribute UI React App
   trib-ui:
-    image: openlaw/tribute-ui:main-920ab124
+    image: openlaw/tribute-ui:dev-4 #main-920ab124
     container_name: trib-ui
     ports:
       - "3000:3000"
@@ -107,7 +108,7 @@ services:
 
       # Do not change it.
       # The environment in which the app is being executed.
-      REACT_APP_ENVIRONMENT: "development"
+      #REACT_APP_ENVIRONMENT: "development"
 
       # Do not change it.
       # The unique name registered in Snapshot Hub under which proposals, votes, etc. will be stored.
