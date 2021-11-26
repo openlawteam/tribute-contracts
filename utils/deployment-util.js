@@ -596,7 +596,6 @@ const configureOffchainVoting = async ({
   dao,
   daoFactory,
   offchainVoting,
-  chainId,
   owner,
   offchainAdmin,
   votingPeriod,
@@ -605,6 +604,7 @@ const configureOffchainVoting = async ({
   KickBadReporterAdapter,
   OffchainVotingContract,
   OffchainVotingHashContract,
+  OffchainVotingHelper,
   deployFunction,
   extensions,
 }) => {
@@ -623,6 +623,10 @@ const configureOffchainVoting = async ({
 
   const snapshotProposalContract = await deployFunction(
     SnapshotProposalContract
+  );
+
+  const offchainVotingHelper = await deployFunction(
+    OffchainVotingHelper
   );
 
   const offchainVotingHashContract = await deployFunction(

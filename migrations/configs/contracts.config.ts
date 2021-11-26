@@ -635,6 +635,20 @@ export const contracts: Array<ContractConfig> = [
     },
   },
   {
+    id: "offchainVotingHelper",
+    name: "OffchainVotingHelper",
+    alias: "offchainVotingHelper",
+    path: "../../contracts/helpers/OffchainVotingHelper",
+    enabled: true,
+    skipAutoDeploy: true,
+    version: "1.0.0",
+    type: ContractType.Util,
+    acls: {
+      dao: [],
+      extensions: {},
+    },
+  },
+  {
     id: adaptersIdsMap.VOTING_ADAPTER,
     name: "OffchainVotingContract",
     alias: "voting",
@@ -863,7 +877,7 @@ export const contracts: Array<ContractConfig> = [
         "kycMaxMembers",
         "kycFundTargetAddress",
         "tokenAddr",
-        "unitTokenToMint"
+        "unitTokenToMint",
       ],
     ],
   },

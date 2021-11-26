@@ -14,8 +14,9 @@ import "./SnapshotProposalContract.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
 import "@openzeppelin/contracts/utils/cryptography/MerkleProof.sol";
 import "@openzeppelin/contracts/utils/cryptography/SignatureChecker.sol";
-import "../../helpers/GuildKickHelper.sol";
 import "../../helpers/DaoHelper.sol";
+import "../../helpers/GuildKickHelper.sol";
+import "../../helpers/OffchainVotingHelper.sol";
 
 /**
 MIT License
@@ -42,16 +43,6 @@ SOFTWARE.
  */
 
 contract OffchainVotingContract is IVoting, MemberGuard, AdapterGuard, Ownable {
-    enum BadNodeError {
-        OK,
-        WRONG_PROPOSAL_ID,
-        INVALID_CHOICE,
-        AFTER_VOTING_PERIOD,
-        BAD_SIGNATURE,
-        INDEX_OUT_OF_BOUND,
-        VOTE_NOT_ALLOWED
-    }
-
     struct ProposalChallenge {
         address reporter;
         uint256 units;
@@ -71,35 +62,13 @@ contract OffchainVotingContract is IVoting, MemberGuard, AdapterGuard, Ownable {
         bytes32 resultRoot
     );
 
-    uint256 private constant NB_CHOICES = 2;
     SnapshotProposalContract private _snapshotContract;
     OffchainVotingHashContract public ovHash;
     KickBadReporterAdapter private _handleBadReporterAdapter;
 
     string private constant ADAPTER_NAME = "OffchainVotingContract";
-    bytes32 private constant VotingPeriod =
-        keccak256("offchainvoting.votingPeriod");
-    bytes32 private constant GracePeriod =
-        keccak256("offchainvoting.gracePeriod");
-    bytes32 private constant FallbackThreshold =
-        keccak256("offchainvoting.fallbackThreshold");
 
     mapping(bytes32 => mapping(uint256 => uint256)) private retrievedStepsFlags;
-
-    struct Voting {
-        uint256 snapshot;
-        address reporter;
-        bytes32 resultRoot;
-        uint256 nbYes;
-        uint256 nbNo;
-        uint256 startingTime;
-        uint256 gracePeriodStartingTime;
-        bool isChallenged;
-        uint256 stepRequested;
-        bool forceFailed;
-        mapping(address => bool) fallbackVotes;
-        uint256 fallbackVotesCount;
-    }
 
     modifier onlyBadReporterAdapter() {
         require(msg.sender == address(_handleBadReporterAdapter), "only:hbra");
@@ -110,7 +79,7 @@ contract OffchainVotingContract is IVoting, MemberGuard, AdapterGuard, Ownable {
 
     mapping(address => mapping(bytes32 => ProposalChallenge))
         private challengeProposals;
-    mapping(address => mapping(bytes32 => Voting)) public votes;
+    mapping(address => mapping(bytes32 => OffchainVotingHelper.Voting)) public votes;
 
     constructor(
         VotingContract _c,
@@ -137,7 +106,7 @@ contract OffchainVotingContract is IVoting, MemberGuard, AdapterGuard, Ownable {
         external
         onlyOwner
     {
-        Voting storage vote = votes[address(dao)][proposalId];
+        OffchainVotingHelper.Voting storage vote = votes[address(dao)][proposalId];
         require(vote.startingTime > 0, "proposal has not started yet");
 
         vote.forceFailed = true;
@@ -164,9 +133,9 @@ contract OffchainVotingContract is IVoting, MemberGuard, AdapterGuard, Ownable {
         uint256 gracePeriod,
         uint256 fallbackThreshold
     ) external onlyAdapter(dao) {
-        dao.setConfiguration(VotingPeriod, votingPeriod);
-        dao.setConfiguration(GracePeriod, gracePeriod);
-        dao.setConfiguration(FallbackThreshold, fallbackThreshold);
+        dao.setConfiguration(OffchainVotingHelper.VotingPeriod, votingPeriod);
+        dao.setConfiguration(OffchainVotingHelper.GracePeriod, gracePeriod);
+        dao.setConfiguration(OffchainVotingHelper.FallbackThreshold, fallbackThreshold);
     }
 
     /** 
@@ -190,14 +159,19 @@ contract OffchainVotingContract is IVoting, MemberGuard, AdapterGuard, Ownable {
         OffchainVotingHashContract.VoteResultNode memory result,
         bytes memory rootSig
     ) external {
-        Voting storage vote = votes[address(dao)][proposalId];
+        OffchainVotingHelper.Voting storage vote = votes[address(dao)][proposalId];
         // slither-disable-next-line timestamp
         require(vote.snapshot > 0, "vote:not started");
 
         if (vote.resultRoot == bytes32(0) || vote.isChallenged) {
             // slither-disable-next-line timestamp
             require(
-                _readyToSubmitResult(dao, vote, result.nbYes, result.nbNo),
+                OffchainVotingHelper._readyToSubmitResult(
+                    dao,
+                    vote,
+                    result.nbYes,
+                    result.nbNo
+                ),
                 "vote:notReadyToSubmitResult"
             );
         }
@@ -273,8 +247,8 @@ contract OffchainVotingContract is IVoting, MemberGuard, AdapterGuard, Ownable {
         uint256 index
     ) external {
         address memberAddr = dao.getAddressIfDelegated(msg.sender);
-        Voting storage vote = votes[address(dao)][proposalId];
         require(isActiveMember(dao, memberAddr), "not active member");
+        OffchainVotingHelper.Voting storage vote = votes[address(dao)][proposalId];
         uint256 currentFlag = retrievedStepsFlags[vote.resultRoot][index / 256];
         require(
             DaoHelper.getFlag(currentFlag, index % 256) == false,
@@ -303,8 +277,8 @@ contract OffchainVotingContract is IVoting, MemberGuard, AdapterGuard, Ownable {
     function challengeMissingStep(DaoRegistry dao, bytes32 proposalId)
         external
     {
-        Voting storage vote = votes[address(dao)][proposalId];
-        uint256 gracePeriod = dao.getConfiguration(GracePeriod);
+        OffchainVotingHelper.Voting storage vote = votes[address(dao)][proposalId];
+        uint256 gracePeriod = dao.getConfiguration(OffchainVotingHelper.GracePeriod);
         //if the vote has started but the voting period has not passed yet, it's in progress
         require(vote.stepRequested > 0, "no step request");
         // slither-disable-next-line timestamp
@@ -321,7 +295,7 @@ contract OffchainVotingContract is IVoting, MemberGuard, AdapterGuard, Ownable {
         address adapterAddress,
         OffchainVotingHashContract.VoteResultNode memory node
     ) external {
-        Voting storage vote = votes[address(dao)][node.proposalId];
+        OffchainVotingHelper.Voting storage vote = votes[address(dao)][node.proposalId];
         // slither-disable-next-line timestamp
         require(vote.stepRequested == node.index, "wrong step provided");
         bytes32 hashCurrent = ovHash.nodeHash(dao, adapterAddress, node);
@@ -335,61 +309,20 @@ contract OffchainVotingContract is IVoting, MemberGuard, AdapterGuard, Ownable {
         vote.gracePeriodStartingTime = block.timestamp;
     }
 
-    function _readyToSubmitResult(
-        DaoRegistry dao,
-        Voting storage vote,
-        uint256 nbYes,
-        uint256 nbNo
-    ) internal view returns (bool) {
-        if (vote.forceFailed) {
-            return false;
-        }
-        BankExtension bank = BankExtension(
-            dao.getExtensionAddress(DaoHelper.BANK)
-        );
-        uint256 totalWeight = bank.getPriorAmount(
-            DaoHelper.TOTAL,
-            DaoHelper.UNITS,
-            vote.snapshot
-        );
-        uint256 unvotedWeights = totalWeight - nbYes - nbNo;
-
-        uint256 diff;
-        if (nbYes > nbNo) {
-            diff = nbYes - nbNo;
-        } else {
-            diff = nbNo - nbYes;
-        }
-
-        if (diff > unvotedWeights) {
-            return true;
-        }
-
-        uint256 votingPeriod = dao.getConfiguration(VotingPeriod);
-        // slither-disable-next-line timestamp
-        return vote.startingTime + votingPeriod <= block.timestamp;
-    }
-
     function getSenderAddress(
         DaoRegistry dao,
         address actionId,
         bytes memory data,
-        address
+        address addr
     ) external view override returns (address) {
-        SnapshotProposalContract.ProposalMessage memory proposal = abi.decode(
-            data,
-            (SnapshotProposalContract.ProposalMessage)
-        );
-        require(
-            SignatureChecker.isValidSignatureNow(
-                proposal.submitter,
-                _snapshotContract.hashMessage(dao, actionId, proposal),
-                proposal.sig
-            ),
-            "invalid sig"
-        );
-
-        return proposal.submitter;
+        return
+            OffchainVotingHelper._getSenderAddress(
+                dao,
+                actionId,
+                data,
+                addr,
+                _snapshotContract
+            );
     }
 
     function startNewVotingForProposal(
@@ -436,23 +369,14 @@ contract OffchainVotingContract is IVoting, MemberGuard, AdapterGuard, Ownable {
         votes[address(dao)][proposalId].snapshot = blockNumber;
     }
 
-    function _fallbackVotingActivated(
-        DaoRegistry dao,
-        uint256 fallbackVotesCount
-    ) internal view returns (bool) {
-        return
-            fallbackVotesCount >
-            (dao.getNbMembers() * 100) /
-                dao.getConfiguration(FallbackThreshold);
-    }
-
-    /**
-    possible results here:
-    0: has not started
-    1: tie
-    2: pass
-    3: not pass
-    4: in progress
+    /*
+     * @notice Returns the voting result of a given proposal.
+     * possible results:
+     * 0: has not started
+     * 1: tie
+     * 2: pass
+     * 3: not pass
+     * 4: in progress
      */
     function voteResult(DaoRegistry dao, bytes32 proposalId)
         public
@@ -460,62 +384,13 @@ contract OffchainVotingContract is IVoting, MemberGuard, AdapterGuard, Ownable {
         override
         returns (VotingState state)
     {
-        Voting storage vote = votes[address(dao)][proposalId];
-        if (vote.startingTime == 0) {
-            return VotingState.NOT_STARTED;
-        }
-
-        if (vote.forceFailed) {
-            return VotingState.NOT_PASS;
-        }
-
-        if (_fallbackVotingActivated(dao, vote.fallbackVotesCount)) {
-            return fallbackVoting.voteResult(dao, proposalId);
-        }
-
-        if (vote.isChallenged) {
-            return VotingState.IN_PROGRESS;
-        }
-
-        if (vote.stepRequested > 0) {
-            return VotingState.IN_PROGRESS;
-        }
-
-        uint256 votingPeriod = dao.getConfiguration(VotingPeriod);
-
-        // If the vote has started but the voting period has not passed yet,
-        // it's in progress
-        // slither-disable-next-line timestamp
-        if (block.timestamp < vote.startingTime + votingPeriod) {
-            return VotingState.IN_PROGRESS;
-        }
-
-        uint256 gracePeriod = dao.getConfiguration(GracePeriod);
-
-        // If no result have been submitted but we are before grace + voting period,
-        // then the proposal is GRACE_PERIOD
-        // slither-disable-next-line timestamp
-        if (
-            vote.gracePeriodStartingTime == 0 &&
-            block.timestamp < vote.startingTime + gracePeriod + votingPeriod
-        ) {
-            return VotingState.GRACE_PERIOD;
-        }
-
-        // If the vote has started but the voting period has not passed yet, it's in progress
-        // slither-disable-next-line timestamp
-        if (block.timestamp < vote.gracePeriodStartingTime + gracePeriod) {
-            return VotingState.GRACE_PERIOD;
-        }
-
-        if (vote.nbYes > vote.nbNo) {
-            return VotingState.PASS;
-        }
-        if (vote.nbYes < vote.nbNo) {
-            return VotingState.NOT_PASS;
-        }
-
-        return VotingState.TIE;
+        return
+            OffchainVotingHelper._getVoteResult(
+                dao,
+                proposalId,
+                votes[address(dao)][proposalId],
+                fallbackVoting
+            );
     }
 
     function challengeBadFirstNode(
@@ -524,17 +399,17 @@ contract OffchainVotingContract is IVoting, MemberGuard, AdapterGuard, Ownable {
         OffchainVotingHashContract.VoteResultNode memory node
     ) external {
         require(node.index == 0, "only first node");
-        Voting storage vote = votes[address(dao)][proposalId];
-        (address adapterAddress, ) = dao.proposals(proposalId);
+
+        OffchainVotingHelper.Voting storage vote = votes[address(dao)][proposalId];
         require(vote.resultRoot != bytes32(0), "no result available yet!");
-        bytes32 hashCurrent = ovHash.nodeHash(dao, adapterAddress, node);
+
+        (address actionId, ) = dao.proposals(proposalId);
+        bytes32 hashCurrent = ovHash.nodeHash(dao, actionId, node);
         //check that the step is indeed part of the result
         require(
             MerkleProof.verify(node.proof, vote.resultRoot, hashCurrent),
             "proof:bad"
         );
-
-        (address actionId, ) = dao.proposals(proposalId);
 
         if (
             ovHash.checkStep(
@@ -556,12 +431,12 @@ contract OffchainVotingContract is IVoting, MemberGuard, AdapterGuard, Ownable {
         bytes32 proposalId,
         OffchainVotingHashContract.VoteResultNode memory node
     ) external {
-        Voting storage vote = votes[address(dao)][proposalId];
+        OffchainVotingHelper.Voting storage vote = votes[address(dao)][proposalId];
         BankExtension bank = BankExtension(
             dao.getExtensionAddress(DaoHelper.BANK)
         );
         if (
-            getBadNodeError(
+            OffchainVotingHelper._getBadNodeError(
                 dao,
                 proposalId,
                 false,
@@ -573,17 +448,14 @@ contract OffchainVotingContract is IVoting, MemberGuard, AdapterGuard, Ownable {
                     DaoHelper.MEMBER_COUNT,
                     vote.snapshot
                 ),
-                node
-            ) != BadNodeError.OK
+                node,
+                ovHash
+            ) != OffchainVotingHelper.BadNodeError.OK
         ) {
             _challengeResult(dao, proposalId);
         } else {
             revert("nothing to challenge");
         }
-    }
-
-    function _isValidChoice(uint256 choice) internal pure returns (bool) {
-        return choice > 0 && choice < NB_CHOICES + 1;
     }
 
     function getBadNodeError(
@@ -595,70 +467,19 @@ contract OffchainVotingContract is IVoting, MemberGuard, AdapterGuard, Ownable {
         uint256 gracePeriodStartingTime,
         uint256 nbMembers,
         OffchainVotingHashContract.VoteResultNode memory node
-    ) public view returns (BadNodeError) {
-        (address adapterAddress, ) = dao.proposals(proposalId);
-        require(resultRoot != bytes32(0), "no result available yet!");
-        bytes32 hashCurrent = ovHash.nodeHash(dao, adapterAddress, node);
-        //check that the step is indeed part of the result
-        require(
-            MerkleProof.verify(node.proof, resultRoot, hashCurrent),
-            "proof:bad"
-        );
-        if (node.index >= nbMembers) {
-            return BadNodeError.INDEX_OUT_OF_BOUND;
-        }
-        address account = dao.getMemberAddress(node.index);
-        //return 1 if yes, 2 if no and 0 if the vote is incorrect
-        address voter = dao.getPriorDelegateKey(account, blockNumber);
-
-        (address actionId, ) = dao.proposals(proposalId);
-
-        //invalid choice
-        if (
-            (node.sig.length == 0 && node.choice != 0) || // no vote
-            (node.sig.length > 0 && !_isValidChoice(node.choice))
-        ) {
-            return BadNodeError.INVALID_CHOICE;
-        }
-
-        //invalid proposal hash
-        if (node.proposalId != proposalId) {
-            return BadNodeError.WRONG_PROPOSAL_ID;
-        }
-
-        //has voted outside of the voting time
-        if (!submitNewVote && node.timestamp > gracePeriodStartingTime) {
-            return BadNodeError.AFTER_VOTING_PERIOD;
-        }
-
-        //bad signature
-        if (
-            node.sig.length > 0 && // a vote has happened
-            !ovHash.hasVoted(
+    ) public view returns (OffchainVotingHelper.BadNodeError) {
+        return
+            OffchainVotingHelper._getBadNodeError(
                 dao,
-                actionId,
-                voter,
-                node.timestamp,
-                node.proposalId,
-                node.choice,
-                node.sig
-            )
-        ) {
-            return BadNodeError.BAD_SIGNATURE;
-        }
-
-        // If the weight is 0, the member has no permission to vote
-        uint256 weight = GovernanceHelper.getVotingWeight(
-            dao,
-            voter,
-            node.proposalId,
-            blockNumber
-        );
-        if (weight == 0) {
-            return BadNodeError.VOTE_NOT_ALLOWED;
-        }
-
-        return BadNodeError.OK;
+                proposalId,
+                submitNewVote,
+                resultRoot,
+                blockNumber,
+                gracePeriodStartingTime,
+                nbMembers,
+                node,
+                ovHash
+            );
     }
 
     function challengeBadStep(
@@ -667,7 +488,7 @@ contract OffchainVotingContract is IVoting, MemberGuard, AdapterGuard, Ownable {
         OffchainVotingHashContract.VoteResultNode memory nodePrevious,
         OffchainVotingHashContract.VoteResultNode memory nodeCurrent
     ) external {
-        Voting storage vote = votes[address(dao)][proposalId];
+        OffchainVotingHelper.Voting storage vote = votes[address(dao)][proposalId];
         bytes32 resultRoot = vote.resultRoot;
 
         (address adapterAddress, ) = dao.proposals(proposalId);
@@ -718,7 +539,7 @@ contract OffchainVotingContract is IVoting, MemberGuard, AdapterGuard, Ownable {
         votes[address(dao)][proposalId].fallbackVotesCount += 1;
 
         if (
-            _fallbackVotingActivated(
+            OffchainVotingHelper._fallbackVotingActivated(
                 dao,
                 votes[address(dao)][proposalId].fallbackVotesCount
             )
@@ -751,11 +572,11 @@ contract OffchainVotingContract is IVoting, MemberGuard, AdapterGuard, Ownable {
         votes[address(dao)][proposalId].isChallenged = true;
         address challengedReporter = votes[address(dao)][proposalId].reporter;
         bytes32 challengeProposalId = keccak256(
-                abi.encodePacked(
-                    proposalId,
-                    votes[address(dao)][proposalId].resultRoot
-                )
-            );
+            abi.encodePacked(
+                proposalId,
+                votes[address(dao)][proposalId].resultRoot
+            )
+        );
 
         challengeProposals[address(dao)][
             challengeProposalId
