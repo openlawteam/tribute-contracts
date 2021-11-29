@@ -148,19 +148,20 @@ contract VotingContract is IVoting, MemberGuard, AdapterGuard {
         address memberAddr = dao.getAddressIfDelegated(msg.sender);
 
         require(vote.votes[memberAddr] == 0, "member has already voted");
-        uint256 correctWeight = GovernanceHelper.getVotingWeight(
+        uint256 votingWeight = GovernanceHelper.getVotingWeight(
             dao,
             memberAddr,
             proposalId,
             vote.blockNumber
         );
+        if (votingWeight == 0) revert("vote not allowed");
 
         vote.votes[memberAddr] = voteValue;
 
         if (voteValue == 1) {
-            vote.nbYes = vote.nbYes + correctWeight;
+            vote.nbYes = vote.nbYes + votingWeight;
         } else if (voteValue == 2) {
-            vote.nbNo = vote.nbNo + correctWeight;
+            vote.nbNo = vote.nbNo + votingWeight;
         }
     }
 

@@ -29,7 +29,8 @@ const { entryDao, entryBank } = require("./access-control-util");
 const { adaptersIdsMap, extensionsIdsMap } = require("./dao-ids-util");
 const { UNITS, LOOT, sha3, embedConfigs } = require("./contract-util.js");
 const { ContractType } = require("../migrations/configs/contracts.config");
-
+const { utils } = require("ethers");
+const { web3 } = require("@openzeppelin/test-environment");
 /**
  * Deploys a contract based on the contract name defined in the config parameter.
  * If the contract is not found in the options object the deployment reverts with an error.
@@ -317,19 +318,18 @@ const createGovernanceRoles = async ({ options, dao, adapters }) => {
               const adapter = Object.values(adapters).find(
                 (a) => a.configs.name === c.name
               );
-              const configKey = role.replace(
-                "$contractAddress",
-                adapter.address
+              const contractAddress = utils.getAddress(adapter.address);
+              const configKey = sha3(
+                web3.utils.encodePacked(
+                  role.replace("$contractAddress", ""),
+                  contractAddress
+                )
               );
               const configValue = readConfigValue(
                 c.governanceRoles[role],
                 c.name
               );
-              if (process.env.DEBUG)
-                console.log(
-                  `Configured role: ${configKey}:${configValue} for ${c.name}`
-                );
-              return dao.setAddressConfiguration(sha3(configKey), configValue, {
+              return dao.setAddressConfiguration(configKey, configValue, {
                 from: options.owner,
               });
             }),

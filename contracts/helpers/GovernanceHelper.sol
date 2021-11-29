@@ -53,7 +53,7 @@ library GovernanceHelper {
 
         (address adapterAddress, ) = dao.proposals(proposalId);
         address governanceToken = dao.getAddressConfiguration(
-            keccak256(abi.encode("governance.role.", adapterAddress))
+            keccak256(abi.encodePacked("governance.role.", adapterAddress))
         );
 
         if (DaoHelper.isNotZeroAddress(governanceToken)) {
@@ -68,14 +68,15 @@ library GovernanceHelper {
                 );
         }
 
-        address memberGovernanceToken = dao.getAddressConfiguration(
-            DEFAULT_GOV_TOKEN_CFG
-        );
-        if (DaoHelper.isNotZeroAddress(memberGovernanceToken)) {
-            return
-                bank.getPriorAmount(voterAddr, memberGovernanceToken, snapshot);
-        }
+        // address memberGovernanceToken = dao.getAddressConfiguration(
+        //     DEFAULT_GOV_TOKEN_CFG
+        // );
+        // if (DaoHelper.isNotZeroAddress(memberGovernanceToken)) {
+        //     return
+        //         bank.getPriorAmount(voterAddr, memberGovernanceToken, snapshot);
+        // }
 
-        return bank.getPriorAmount(voterAddr, DaoHelper.UNITS, snapshot);
+        // return bank.getPriorAmount(voterAddr, DaoHelper.UNITS, snapshot);
+        revert("config not found");
     }
 }

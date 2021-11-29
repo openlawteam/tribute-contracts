@@ -24,6 +24,7 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
  */
+const { utils } = require("ethers");
 const {
   sha3,
   toBN,
@@ -45,14 +46,11 @@ const {
   accounts,
   expectRevert,
   expect,
-  web3,
   OLToken,
+  web3
 } = require("../../utils/oz-util");
 
-const {
-  onboardingNewMember,
-  submitNewMemberProposal,
-} = require("../../utils/test-util");
+const { onboardingNewMember } = require("../../utils/test-util");
 
 const owner = accounts[1];
 const proposalCounter = proposalIdGenerator().generator;
@@ -535,6 +533,10 @@ describe("Adapter - Configuration", () => {
     });
     const voting = adapters.voting;
     const configuration = adapters.configuration;
+    const governanceToken = await dao.getAddressConfiguration(
+      sha3(`governance.role.${utils.getAddress(configuration.address)}`)
+    );
+    expect(governanceToken).equal(oltContract.address);
 
     // onboard the maintainer as a DAO member
     await onboardingNewMember(
@@ -677,13 +679,13 @@ describe("Adapter - Configuration", () => {
 
     // The DAO owner attempts to vote on the new proposal,
     // but since he is not a maintainer (does not hold OLT tokens) the voting weight is zero
-    // so the vote wont count
-    await voting.submitVote(dao.address, proposalId, 1, {
-      from: owner,
-      gasPrice: toBN("0"),
-    });
-
-    const votes = await voting.votes();
-    
+    // so the vote should not be allowed
+    await expectRevert(
+      voting.submitVote(dao.address, proposalId, 1, {
+        from: owner,
+        gasPrice: toBN("0"),
+      }),
+      "vote not allowed"
+    );
   });
 });
