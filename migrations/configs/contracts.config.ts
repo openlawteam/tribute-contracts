@@ -855,13 +855,13 @@ export const contracts: Array<ContractConfig> = [
     daoConfigs: [
       [
         "daoAddress",
-        "kycAddress",
+        "kycSignerAddress",
         "unitPrice",
         "nbUnits",
         "maxChunks",
         "maxUnits",
-        "maxMembers",
-        "fundTargetAddress",
+        "kycMaxMembers",
+        "kycFundTargetAddress",
         "tokenAddr",
         "unitTokenToMint"
       ],
