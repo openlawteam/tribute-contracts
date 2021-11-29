@@ -147,7 +147,6 @@ const deployMainnetDao = async (
 
 const deployGanacheDao = async (
   deployFunction,
-  network,
   accounts,
   truffleImports,
   contractConfigs
@@ -155,7 +154,7 @@ const deployGanacheDao = async (
   const daoOwnerAddress = accounts[0];
 
   const { WETH } = truffleImports;
-  const weth = await deployer(WETH);
+  const weth = await deployFunction(WETH);
 
   return await deployDao({
     ...truffleImports,
@@ -192,6 +191,11 @@ const deployGanacheDao = async (
     spendLimitPeriod: getEnvVar("SPEND_LIMIT_PERIOD"),
     spendLimitEth: getEnvVar("SPEND_LIMIT_ETH"),
     weth: weth.address,
+    gelato: getEnvVar("GELATO_ADDR"),
+    kycAddress: getEnvVar("KYC_SIGNER_ADDRESS"),
+    maxUnits: getEnvVar("MAX_UNITS"),
+    maxMembers: getEnvVar("MAX_MEMBERS"),
+    fundTargetAddress: getEnvVar("FUND_TARGET_ADDR"),
   });
 };
 
@@ -233,6 +237,11 @@ const deployTestDao = async (
     spendLimitPeriod: getEnvVar("SPEND_LIMIT_PERIOD"),
     spendLimitEth: getEnvVar("SPEND_LIMIT_ETH"),
     weth: weth.address,
+    gelato: getEnvVar("GELATO_ADDR"),
+    kycAddress: getEnvVar("KYC_SIGNER_ADDRESS"),
+    maxUnits: getEnvVar("MAX_UNITS"),
+    maxMembers: getEnvVar("MAX_MEMBERS"),
+    fundTargetAddress: getEnvVar("FUND_TARGET_ADDR"),
   });
 };
 
@@ -301,6 +310,11 @@ const deployHarmonyTestDao = async (
       "OFFCHAIN_ADMIN_ADDR",
       getEnvVar("DAO_OWNER_ADDR")
     ),
+    gelato: getEnvVar("GELATO_ADDR"),
+    kycAddress: getEnvVar("KYC_SIGNER_ADDRESS"),
+    maxUnits: getEnvVar("MAX_UNITS"),
+    maxMembers: getEnvVar("MAX_MEMBERS"),
+    fundTargetAddress: getEnvVar("FUND_TARGET_ADDR"),
   });
 };
 
@@ -345,7 +359,6 @@ const deploy = async ({
     case "ganache":
       res = await deployGanacheDao(
         deployFunction,
-        network,
         accounts,
         truffleImports,
         contracts
