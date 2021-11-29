@@ -122,6 +122,10 @@ const deployRinkebyDao = async (
       "0xc778417e063141139fce010982780140aa0cd5ab"
     ),
     maintainerTokenAddress: getOptionalEnvVar("MAINTAINER_TOKEN_ADDR", UNITS),
+    weth: getOptionalEnvVar(
+      "WETH_ADDR",
+      "0x8dd25714ccece48767baf266ec4f220b60f84d52"
+    ),
   });
 };
 

@@ -29,7 +29,9 @@ const {
   toBN,
   fromAscii,
   toWei,
+  unitPrice,
   DAI_TOKEN,
+  UNITS,
   LOOT,
   ZERO_ADDRESS,
 } = require("../../utils/contract-util");
@@ -44,7 +46,13 @@ const {
   expectRevert,
   expect,
   web3,
+  OLToken,
 } = require("../../utils/oz-util");
+
+const {
+  onboardingNewMember,
+  submitNewMemberProposal,
+} = require("../../utils/test-util");
 
 const owner = accounts[1];
 const proposalCounter = proposalIdGenerator().generator;
@@ -508,5 +516,174 @@ describe("Adapter - Configuration", () => {
       }),
       "revert"
     );
+  });
+
+  it("should be possible to update a DAO configuration only if you are a maintainer and a member", async () => {
+    const maintainer = accounts[5];
+    // Issue OpenLaw ERC20 Basic Token for tests, only DAO maintainer will hold this token
+    const tokenSupply = toBN(100000);
+    const oltContract = await OLToken.new(tokenSupply);
+
+    // Transfer OLTs to the maintainer account
+    await oltContract.transfer(maintainer, toBN(1));
+    const maintainerBalance = await oltContract.balanceOf.call(maintainer);
+    expect(maintainerBalance.toString()).equal("1");
+
+    const { dao, adapters } = await deployDefaultDao({
+      owner,
+      maintainerTokenAddress: oltContract.address,
+    });
+    const voting = adapters.voting;
+    const configuration = adapters.configuration;
+
+    // onboard the maintainer as a DAO member
+    await onboardingNewMember(
+      getProposalCounter(),
+      dao,
+      adapters.onboarding,
+      voting,
+      maintainer,
+      owner,
+      unitPrice,
+      UNITS
+    );
+
+    let key = sha3("key");
+
+    const proposalId = getProposalCounter();
+
+    // The maintainer submits a new configuration proposal
+    await configuration.submitProposal(
+      dao.address,
+      proposalId,
+      [
+        {
+          key: key,
+          numericValue: 99,
+          addressValue: ZERO_ADDRESS,
+          configType: 0,
+        },
+      ],
+      [],
+      { from: maintainer, gasPrice: toBN("0") }
+    );
+
+    let value = await dao.getConfiguration(key);
+    expect(value.toString()).equal("0");
+
+    // The maintainer votes on the new proposal
+    await voting.submitVote(dao.address, proposalId, 1, {
+      from: maintainer,
+      gasPrice: toBN("0"),
+    });
+
+    await advanceTime(10000);
+
+    // The maintainer processes on the new proposal
+    await configuration.processProposal(dao.address, proposalId, {
+      from: maintainer,
+      gasPrice: toBN("0"),
+    });
+
+    value = await dao.getConfiguration(key);
+    expect(value.toString()).equal("99");
+  });
+
+  it("should not be possible to update a DAO configuration if you are a maintainer but not a member", async () => {
+    const maintainer = accounts[5]; // not a member
+
+    // Issue OpenLaw ERC20 Basic Token for tests, only DAO maintainer will hold this token
+    const tokenSupply = toBN(100000);
+    const oltContract = await OLToken.new(tokenSupply);
+
+    // Transfer OLTs to the maintainer account
+    await oltContract.transfer(maintainer, toBN(1));
+    const maintainerBalance = await oltContract.balanceOf.call(maintainer);
+    expect(maintainerBalance.toString()).equal("1");
+
+    const { dao, adapters } = await deployDefaultDao({
+      owner,
+      maintainerTokenAddress: oltContract.address, // only holders of the OLT token are considered maintainers
+    });
+    const configuration = adapters.configuration;
+
+    let key = sha3("key");
+
+    const proposalId = getProposalCounter();
+    //Submit a new configuration proposal
+    await expectRevert(
+      configuration.submitProposal(
+        dao.address,
+        proposalId,
+        [
+          {
+            key: key,
+            numericValue: 99,
+            addressValue: ZERO_ADDRESS,
+            configType: 0,
+          },
+        ],
+        [],
+        { from: maintainer, gasPrice: toBN("0") }
+      ),
+      "onlyMember"
+    );
+  });
+
+  it("should not be possible to update a DAO configuration if you are a member but not a maintainer", async () => {
+    const maintainer = accounts[5]; // not a member
+
+    // Issue OpenLaw ERC20 Basic Token for tests, only DAO maintainer will hold this token
+    const tokenSupply = toBN(100000);
+    const oltContract = await OLToken.new(tokenSupply);
+
+    // Transfer OLTs to the maintainer account
+    await oltContract.transfer(maintainer, toBN(1));
+    const maintainerBalance = await oltContract.balanceOf.call(maintainer);
+    expect(maintainerBalance.toString()).equal("1");
+
+    const { dao, adapters } = await deployDefaultDao({
+      owner,
+      maintainerTokenAddress: oltContract.address, //only holders of the OLT tokens are considered maintainers
+    });
+    const voting = adapters.voting;
+    const configuration = adapters.configuration;
+
+    let key = sha3("key");
+
+    const proposalId = getProposalCounter();
+
+    // The DAO owner submits a new configuration proposal
+    await configuration.submitProposal(
+      dao.address,
+      proposalId,
+      [
+        {
+          key: key,
+          numericValue: 99,
+          addressValue: ZERO_ADDRESS,
+          configType: 0,
+        },
+      ],
+      [],
+      {
+        from: owner, // The DAO Owner is not a maintainer because does not hold any OLT Tokens
+        gasPrice: toBN("0"),
+      }
+    );
+
+    let value = await dao.getConfiguration(key);
+    expect(value.toString()).equal("0");
+
+    // The DAO owner attempts to vote on the new proposal,
+    // but since he is not a maintainer (does not hold OLT tokens) the voting weight is zero
+    // so the vote wont count
+    await voting.submitVote(dao.address, proposalId, 1, {
+      from: owner,
+      gasPrice: toBN("0"),
+    });
+
+    const votes = await voting.votes();
+    
   });
 });

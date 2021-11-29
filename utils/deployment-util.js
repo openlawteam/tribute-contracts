@@ -325,9 +325,10 @@ const createGovernanceRoles = async ({ options, dao, adapters }) => {
                 c.governanceRoles[role],
                 c.name
               );
-              console.log(
-                `Configured role: ${configKey}:${configValue} for ${c.name}`
-              );
+              if (process.env.DEBUG)
+                console.log(
+                  `Configured role: ${configKey}:${configValue} for ${c.name}`
+                );
               return dao.setAddressConfiguration(sha3(configKey), configValue, {
                 from: options.owner,
               });
