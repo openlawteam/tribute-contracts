@@ -146,6 +146,7 @@ contract TributeNFTContract is
 
     function _processProposal(DaoRegistry dao, bytes32 proposalId)
         internal
+        reimbursable(dao)
         returns (
             ProposalDetails storage proposal,
             IVoting.VotingState voteResult

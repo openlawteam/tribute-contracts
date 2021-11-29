@@ -9,6 +9,7 @@ import "../utils/Signatures.sol";
 import "../helpers/WETH.sol";
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
+import "./modifiers/Reimbursable.sol";
 
 /**
 MIT License
@@ -34,7 +35,7 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
  */
 
-contract KycOnboardingContract is AdapterGuard, Signatures {
+contract KycOnboardingContract is AdapterGuard, Signatures, Reimbursable {
     using Address for address payable;
     using SafeERC20 for IERC20;
 
@@ -196,7 +197,7 @@ contract KycOnboardingContract is AdapterGuard, Signatures {
         DaoRegistry dao,
         address kycedMember,
         bytes memory signature
-    ) external payable {
+    ) external payable reimbursable(dao) {
         _onboard(dao, kycedMember, DaoHelper.ETH_TOKEN, msg.value, signature);
     }
 
@@ -213,7 +214,7 @@ contract KycOnboardingContract is AdapterGuard, Signatures {
         address tokenAddr,
         uint256 amount,
         bytes memory signature
-    ) external {
+    ) external reimbursable(dao) {
         _onboard(dao, kycedMember, tokenAddr, amount, signature);
     }
 

@@ -8,6 +8,7 @@ import "../../guards/MemberGuard.sol";
 import "../../guards/AdapterGuard.sol";
 import "../interfaces/IVoting.sol";
 import "../../helpers/DaoHelper.sol";
+import "../modifiers/Reimbursable.sol";
 
 /**
 MIT License
@@ -33,7 +34,7 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
  */
 
-contract VotingContract is IVoting, MemberGuard, AdapterGuard {
+contract VotingContract is IVoting, MemberGuard, AdapterGuard, Reimbursable {
     struct Voting {
         uint256 nbYes;
         uint256 nbNo;
@@ -112,7 +113,7 @@ contract VotingContract is IVoting, MemberGuard, AdapterGuard {
         DaoRegistry dao,
         bytes32 proposalId,
         uint256 voteValue
-    ) external onlyMember(dao) {
+    ) external onlyMember(dao) reimbursable(dao) {
         require(
             dao.getProposalFlag(proposalId, DaoRegistry.ProposalFlag.SPONSORED),
             "the proposal has not been sponsored yet"

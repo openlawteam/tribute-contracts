@@ -327,7 +327,7 @@ contract OffchainVotingContract is
         DaoRegistry dao,
         address adapterAddress,
         OffchainVotingHashContract.VoteResultNode memory node
-    ) external {
+    ) external reimbursable(dao) {
         Voting storage vote = votes[address(dao)][node.proposalId];
         // slither-disable-next-line timestamp
         require(vote.stepRequested == node.index, "wrong step provided");
@@ -704,6 +704,7 @@ contract OffchainVotingContract is
     function requestFallback(DaoRegistry dao, bytes32 proposalId)
         external
         onlyMember(dao)
+        reimbursable(dao)
     {
         // slither-disable-next-line timestamp
         require(

@@ -605,7 +605,6 @@ const configureOffchainVoting = async ({
   dao,
   daoFactory,
   offchainVoting,
-  chainId,
   owner,
   offchainAdmin,
   votingPeriod,

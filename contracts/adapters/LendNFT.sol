@@ -235,6 +235,7 @@ contract LendNFTContract is
     function sendNFTBack(DaoRegistry dao, bytes32 proposalId)
         external
         reentrancyGuard(dao)
+        reimbursable(dao)
     {
         ProposalDetails storage proposal = proposals[address(dao)][proposalId];
         require(proposal.lendingStart > 0, "lending not started");
