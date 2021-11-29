@@ -46,7 +46,7 @@ contract BankAdapterContract is AdapterGuard, Reimbursable {
         DaoRegistry dao,
         address payable account,
         address token
-    ) external reentrancyGuard(dao) reimbursable(dao) {
+    ) external reimbursable(dao) {
         require(
             DaoHelper.isNotReservedAddress(account),
             "withdraw::reserved address"
@@ -81,12 +81,7 @@ contract BankAdapterContract is AdapterGuard, Reimbursable {
         bank.updateToken(token);
     }
 
-    function sendEth(DaoRegistry dao)
-        external
-        payable
-        reentrancyGuard(dao)
-        reimbursable(dao)
-    {
+    function sendEth(DaoRegistry dao) external payable reimbursable(dao) {
         require(msg.value > 0, "no eth sent!");
         BankExtension bank = BankExtension(
             dao.getExtensionAddress(DaoHelper.BANK)

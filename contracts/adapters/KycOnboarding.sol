@@ -197,7 +197,7 @@ contract KycOnboardingContract is AdapterGuard, Signatures, Reimbursable {
         DaoRegistry dao,
         address kycedMember,
         bytes memory signature
-    ) external payable reimbursable(dao) {
+    ) external payable {
         _onboard(dao, kycedMember, DaoHelper.ETH_TOKEN, msg.value, signature);
     }
 
@@ -214,7 +214,7 @@ contract KycOnboardingContract is AdapterGuard, Signatures, Reimbursable {
         address tokenAddr,
         uint256 amount,
         bytes memory signature
-    ) external reimbursable(dao) {
+    ) external {
         _onboard(dao, kycedMember, tokenAddr, amount, signature);
     }
 
@@ -231,7 +231,7 @@ contract KycOnboardingContract is AdapterGuard, Signatures, Reimbursable {
         address tokenAddr,
         uint256 amount,
         bytes memory signature
-    ) internal reentrancyGuard(dao) {
+    ) internal reimbursable(dao) {
         require(!dao.isActiveMember(dao, kycedMember), "already member");
         uint256 maxMembers = dao.getConfiguration(
             _configKey(tokenAddr, MaxMembers)

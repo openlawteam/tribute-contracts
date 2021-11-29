@@ -146,7 +146,6 @@ contract TributeNFTContract is
 
     function _processProposal(DaoRegistry dao, bytes32 proposalId)
         internal
-        reimbursable(dao)
         returns (
             ProposalDetails storage proposal,
             IVoting.VotingState voteResult
@@ -206,7 +205,9 @@ contract TributeNFTContract is
         bytes calldata data
     ) external override returns (bytes4) {
         ProcessProposal memory ppS = abi.decode(data, (ProcessProposal));
-        require(ppS.dao.lockedAt() != block.number, "reentrancy guard");
+        ReimbursementData memory rData = ReimbursableLib.beforeExecution(
+            ppS.dao
+        );
         ppS.dao.lockSession();
         (
             ProposalDetails storage proposal,
@@ -234,6 +235,7 @@ contract TributeNFTContract is
             erc1155.safeTransferFrom(address(this), from, id, value, "");
         }
 
+        ReimbursableLib.afterExecution(ppS.dao, rData);
         ppS.dao.unlockSession();
         return this.onERC1155Received.selector;
     }

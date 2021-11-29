@@ -234,7 +234,6 @@ contract LendNFTContract is
     // slither-disable-next-line reentrancy-benign
     function sendNFTBack(DaoRegistry dao, bytes32 proposalId)
         external
-        reentrancyGuard(dao)
         reimbursable(dao)
     {
         ProposalDetails storage proposal = proposals[address(dao)][proposalId];
