@@ -116,6 +116,7 @@ const getDefaultOptions = (options) => {
     supplyPixelNFT: 100,
     supplyOLToken: toBN("1000000000000000000000000"),
     erc1155TestTokenUri: "1155 test token",
+    maintainerTokenAddress: UNITS,
     finalize: options.finalize === undefined || !!options.finalize,
     ...options, // to make sure the options from the tests override the default ones
   };

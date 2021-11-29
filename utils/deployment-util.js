@@ -292,6 +292,52 @@ const createTestContracts = async ({ options }) => {
   return testContracts;
 };
 
+/**
+ * Creates the governance config roles in the DAO Registry based on the contract configs.governanceRoles.
+ */
+const createGovernanceRoles = async ({ options, dao, adapters }) => {
+  const readConfigValue = (configName, contractName) => {
+    const configValue = options[configName];
+    if (!configValue)
+      throw new Error(
+        `Error while creating governance role [${configName}] for ${contractName}`
+      );
+    return configValue;
+  };
+
+  await Object.values(options.contractConfigs)
+    .filter((c) => c.enabled)
+    .filter((c) => c.governanceRoles)
+    .reduce((p, c) => {
+      const roles = Object.keys(c.governanceRoles);
+      return p.then(() =>
+        roles.reduce(
+          (q, role) =>
+            q.then(() => {
+              const adapter = Object.values(adapters).find(
+                (a) => a.configs.name === c.name
+              );
+              const configKey = role.replace(
+                "$contractAddress",
+                adapter.address
+              );
+              const configValue = readConfigValue(
+                c.governanceRoles[role],
+                c.name
+              );
+              console.log(
+                `Configured role: ${configKey}:${configValue} for ${c.name}`
+              );
+              return dao.setAddressConfiguration(sha3(configKey), configValue, {
+                from: options.owner,
+              });
+            }),
+          Promise.resolve()
+        )
+      );
+    }, Promise.resolve());
+};
+
 const validateContractConfigs = (contractConfigs) => {
   const found = new Map();
   Object.values(contractConfigs)
@@ -342,6 +388,8 @@ const deployDao = async (options) => {
     extensions,
     options,
   });
+
+  await createGovernanceRoles({ options, dao, adapters });
 
   await configureDao({
     owner: options.owner,

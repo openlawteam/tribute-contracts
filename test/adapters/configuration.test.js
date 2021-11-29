@@ -495,4 +495,18 @@ describe("Adapter - Configuration", () => {
       "revert"
     );
   });
+
+  it("should not be possible to vote on a configuration proposal if you are not an admin", async () => {
+    const adapter = this.adapters.configuration;
+    await expectRevert(
+      web3.eth.sendTransaction({
+        to: adapter.address,
+        from: owner,
+        gasPrice: toBN("0"),
+        value: toWei(toBN("1"), "ether"),
+        data: fromAscii("should go to fallback func"),
+      }),
+      "revert"
+    );
+  });
 });
