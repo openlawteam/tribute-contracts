@@ -635,10 +635,10 @@ export const contracts: Array<ContractConfig> = [
     },
   },
   {
-    id: "offchainVotingHelper",
-    name: "OffchainVotingHelper",
+    id: "OffchainVotingHelperContract",
+    name: "OffchainVotingHelperContract",
     alias: "offchainVotingHelper",
-    path: "../../contracts/helpers/OffchainVotingHelper",
+    path: "../../contracts/helpers/OffchainVotingHelperContract",
     enabled: true,
     skipAutoDeploy: true,
     version: "1.0.0",

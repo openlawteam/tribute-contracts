@@ -604,7 +604,7 @@ const configureOffchainVoting = async ({
   KickBadReporterAdapter,
   OffchainVotingContract,
   OffchainVotingHashContract,
-  OffchainVotingHelper,
+  OffchainVotingHelperContract,
   deployFunction,
   extensions,
 }) => {
@@ -625,17 +625,21 @@ const configureOffchainVoting = async ({
     SnapshotProposalContract
   );
 
-  const offchainVotingHelper = await deployFunction(OffchainVotingHelper);
-
   const offchainVotingHashContract = await deployFunction(
     OffchainVotingHashContract,
     [snapshotProposalContract.address]
+  );
+
+  const offchainVotingHelper = await deployFunction(
+    OffchainVotingHelperContract,
+    [offchainVotingHashContract.address]
   );
 
   const handleBadReporterAdapter = await deployFunction(KickBadReporterAdapter);
   const offchainVotingContract = await deployFunction(OffchainVotingContract, [
     currentVotingAdapterAddress,
     offchainVotingHashContract.address,
+    offchainVotingHelper.address,
     snapshotProposalContract.address,
     handleBadReporterAdapter.address,
     offchainAdmin,
