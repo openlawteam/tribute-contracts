@@ -38,7 +38,6 @@ module.exports = async (deployer, network, accounts) => {
     truffleImports,
     accounts,
     contracts,
-    deployer,
   });
 
   const { dao, factories, extensions, adapters, testContracts, utilContracts } =
@@ -229,8 +228,7 @@ const deployTestDao = async (
   network,
   accounts,
   truffleImports,
-  contractConfigs,
-  deployer
+  contractConfigs
 ) => {
   const daoOwnerAddress = accounts[0];
   const { WETH } = truffleImports;
@@ -366,7 +364,6 @@ const deploy = async ({
   truffleImports,
   accounts,
   contracts,
-  deployer,
 }) => {
   let res;
   switch (network) {
@@ -375,8 +372,7 @@ const deploy = async ({
         deployFunction,
         network,
         truffleImports,
-        contracts,
-        deployer
+        contracts
       );
       break;
     // Chain ID is retrieved automatically and ETH_NODE_URL specifies RPC endpoint,
@@ -387,8 +383,7 @@ const deploy = async ({
         deployFunction,
         network,
         truffleImports,
-        contracts,
-        deployer
+        contracts
       );
       break;
     case "test":
@@ -398,8 +393,7 @@ const deploy = async ({
         network,
         accounts,
         truffleImports,
-        contracts,
-        deployer
+        contracts
       );
       break;
     case "ganache":
@@ -408,8 +402,7 @@ const deploy = async ({
         network,
         accounts,
         truffleImports,
-        contracts,
-        deployer
+        contracts
       );
       break;
     case "harmony":
@@ -417,8 +410,7 @@ const deploy = async ({
         deployFunction,
         network,
         truffleImports,
-        contracts,
-        deployer
+        contracts
       );
       break;
     case "harmonytest":
@@ -426,8 +418,7 @@ const deploy = async ({
         deployFunction,
         network,
         truffleImports,
-        contracts,
-        deployer
+        contracts
       );
       break;
     default:
