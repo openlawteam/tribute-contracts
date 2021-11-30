@@ -3,5 +3,5 @@
  * otherwise the roles won't work.
  */
 export const governanceRoles: Record<string, string> = {
-  ONLY_GOVERNOR: `governance.role.$contractAddress`,
+  ONLY_GOVERNOR: "governance.role.$contractAddress",
 };

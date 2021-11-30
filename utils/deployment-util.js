@@ -314,22 +314,20 @@ const createGovernanceRoles = async ({ options, dao, adapters }) => {
       return p.then(() =>
         roles.reduce(
           (q, role) =>
-            q.then(() => {
+            q.then(async () => {
               const adapter = Object.values(adapters).find(
                 (a) => a.configs.name === c.name
               );
-              const contractAddress = utils.getAddress(adapter.address);
               const configKey = sha3(
                 web3.utils.encodePacked(
                   role.replace("$contractAddress", ""),
-                  contractAddress
+                  utils.getAddress(adapter.address)
                 )
               );
-              const configValue = readConfigValue(
-                c.governanceRoles[role],
-                c.name
+              const configValue = utils.getAddress(
+                readConfigValue(c.governanceRoles[role], c.name)
               );
-              return dao.setAddressConfiguration(configKey, configValue, {
+              return await dao.setAddressConfiguration(configKey, configValue, {
                 from: options.owner,
               });
             }),
@@ -337,6 +335,17 @@ const createGovernanceRoles = async ({ options, dao, adapters }) => {
         )
       );
     }, Promise.resolve());
+
+  if (options.defaultMemberGovernanceToken) {
+    const configKey = sha3(web3.utils.encodePacked("governance.role.default"));
+    await dao.setAddressConfiguration(
+      configKey,
+      utils.getAddress(options.defaultMemberGovernanceToken),
+      {
+        from: options.owner,
+      }
+    );
+  }
 };
 
 const validateContractConfigs = (contractConfigs) => {

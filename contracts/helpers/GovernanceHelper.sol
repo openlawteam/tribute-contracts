@@ -6,6 +6,7 @@ import "../helpers/DaoHelper.sol";
 import "../core/DaoRegistry.sol";
 import "../extensions/bank/Bank.sol";
 import "../extensions/token/erc20/ERC20TokenExtension.sol";
+import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 
 /**
 MIT License
@@ -31,8 +32,9 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
  */
 library GovernanceHelper {
+    string public constant ROLE_PREFIX = "governance.role.";
     bytes32 public constant DEFAULT_GOV_TOKEN_CFG =
-        keccak256(abi.encode("governance.role.default"));
+        keccak256(abi.encodePacked(ROLE_PREFIX, "default"));
 
     /*
      * @dev Checks if the member address holds enough funds to be considered a governor.
@@ -52,31 +54,30 @@ library GovernanceHelper {
         );
 
         (address adapterAddress, ) = dao.proposals(proposalId);
-        address governanceToken = dao.getAddressConfiguration(
-            keccak256(abi.encodePacked("governance.role.", adapterAddress))
+        address maintainerGovernanceToken = dao.getAddressConfiguration(
+            keccak256(abi.encodePacked(ROLE_PREFIX, adapterAddress))
         );
-
-        if (DaoHelper.isNotZeroAddress(governanceToken)) {
-            if (bank.isInternalToken(governanceToken)) {
+        if (DaoHelper.isNotZeroAddress(maintainerGovernanceToken)) {
+            if (bank.isInternalToken(maintainerGovernanceToken)) {
                 return
-                    bank.getPriorAmount(voterAddr, governanceToken, snapshot);
+                    bank.getPriorAmount(
+                        voterAddr,
+                        maintainerGovernanceToken,
+                        snapshot
+                    );
             }
-            return
-                ERC20Extension(governanceToken).getPriorAmount(
-                    voterAddr,
-                    snapshot
-                );
+            // For external tokens we don't consider the historical balance.
+            return IERC20(maintainerGovernanceToken).balanceOf(voterAddr);
         }
 
-        // address memberGovernanceToken = dao.getAddressConfiguration(
-        //     DEFAULT_GOV_TOKEN_CFG
-        // );
-        // if (DaoHelper.isNotZeroAddress(memberGovernanceToken)) {
-        //     return
-        //         bank.getPriorAmount(voterAddr, memberGovernanceToken, snapshot);
-        // }
+        address memberGovernanceToken = dao.getAddressConfiguration(
+            DEFAULT_GOV_TOKEN_CFG
+        );
+        if (DaoHelper.isNotZeroAddress(memberGovernanceToken)) {
+            return
+                bank.getPriorAmount(voterAddr, memberGovernanceToken, snapshot);
+        }
 
-        // return bank.getPriorAmount(voterAddr, DaoHelper.UNITS, snapshot);
-        revert("config not found");
+        return bank.getPriorAmount(voterAddr, DaoHelper.UNITS, snapshot);
     }
 }

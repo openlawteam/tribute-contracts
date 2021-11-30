@@ -47,7 +47,7 @@ const {
   expectRevert,
   expect,
   OLToken,
-  web3
+  web3,
 } = require("../../utils/oz-util");
 
 const { onboardingNewMember } = require("../../utils/test-util");
@@ -516,7 +516,7 @@ describe("Adapter - Configuration", () => {
     );
   });
 
-  it("should be possible to update a DAO configuration only if you are a maintainer and a member", async () => {
+  it("should be possible to update a DAO configuration if you are a member and a maintainer that holds an external governance token", async () => {
     const maintainer = accounts[5];
     // Issue OpenLaw ERC20 Basic Token for tests, only DAO maintainer will hold this token
     const tokenSupply = toBN(100000);
@@ -533,12 +533,18 @@ describe("Adapter - Configuration", () => {
     });
     const voting = adapters.voting;
     const configuration = adapters.configuration;
-    const governanceToken = await dao.getAddressConfiguration(
-      sha3(`governance.role.${utils.getAddress(configuration.address)}`)
+    const configKey = sha3(
+      web3.utils.encodePacked(
+        "governance.role.",
+        utils.getAddress(configuration.address)
+      )
     );
+
+    // Make sure the governance token configuration was created
+    const governanceToken = await dao.getAddressConfiguration(configKey);
     expect(governanceToken).equal(oltContract.address);
 
-    // onboard the maintainer as a DAO member
+    // Onboard the maintainer as a DAO member
     await onboardingNewMember(
       getProposalCounter(),
       dao,
@@ -550,8 +556,146 @@ describe("Adapter - Configuration", () => {
       UNITS
     );
 
-    let key = sha3("key");
+    const key = sha3("key");
+    const proposalId = getProposalCounter();
 
+    // The maintainer submits a new configuration proposal
+    await configuration.submitProposal(
+      dao.address,
+      proposalId,
+      [
+        {
+          key: key,
+          numericValue: 99,
+          addressValue: ZERO_ADDRESS,
+          configType: 0,
+        },
+      ],
+      [],
+      { from: maintainer, gasPrice: toBN("0") }
+    );
+
+    let value = await dao.getConfiguration(key);
+    expect(value.toString()).equal("0");
+
+    // The maintainer votes on the new proposal
+    await voting.submitVote(dao.address, proposalId, 1, {
+      from: maintainer,
+      gasPrice: toBN("0"),
+    });
+
+    await advanceTime(10000);
+
+    // The maintainer processes on the new proposal
+    await configuration.processProposal(dao.address, proposalId, {
+      from: maintainer,
+      gasPrice: toBN("0"),
+    });
+
+    value = await dao.getConfiguration(key);
+    expect(value.toString()).equal("99");
+  });
+
+  it("should be possible to update a DAO configuration if you are a member and a maintainer that holds an internal governance token", async () => {
+    const maintainer = accounts[5];
+    const { dao, adapters } = await deployDefaultDao({
+      owner,
+      maintainerTokenAddress: UNITS, // if the member holds any UNITS he is a maintainer
+    });
+    const voting = adapters.voting;
+    const configuration = adapters.configuration;
+    const configKey = sha3(
+      web3.utils.encodePacked(
+        "governance.role.",
+        utils.getAddress(configuration.address)
+      )
+    );
+
+    // Make sure the governance token configuration was created
+    const governanceToken = await dao.getAddressConfiguration(configKey);
+    expect(governanceToken).equal(utils.getAddress(UNITS));
+
+    // Onboard the maintainer as a DAO member
+    await onboardingNewMember(
+      getProposalCounter(),
+      dao,
+      adapters.onboarding,
+      voting,
+      maintainer,
+      owner,
+      unitPrice,
+      UNITS
+    );
+
+    const key = sha3("key");
+    const proposalId = getProposalCounter();
+
+    // The maintainer submits a new configuration proposal
+    await configuration.submitProposal(
+      dao.address,
+      proposalId,
+      [
+        {
+          key: key,
+          numericValue: 99,
+          addressValue: ZERO_ADDRESS,
+          configType: 0,
+        },
+      ],
+      [],
+      { from: maintainer, gasPrice: toBN("0") }
+    );
+
+    let value = await dao.getConfiguration(key);
+    expect(value.toString()).equal("0");
+
+    // The maintainer votes on the new proposal
+    await voting.submitVote(dao.address, proposalId, 1, {
+      from: maintainer,
+      gasPrice: toBN("0"),
+    });
+
+    await advanceTime(10000);
+
+    // The maintainer processes on the new proposal
+    await configuration.processProposal(dao.address, proposalId, {
+      from: maintainer,
+      gasPrice: toBN("0"),
+    });
+
+    value = await dao.getConfiguration(key);
+    expect(value.toString()).equal("99");
+  });
+
+  it("should be possible to update a DAO configuration if you are a member and a maintainer that holds the default governance token", async () => {
+    const maintainer = accounts[5];
+    const { dao, adapters } = await deployDefaultDao({
+      owner,
+      // if the member holds any UNITS that represents the default governance token,
+      // the member is considered a maintainer.
+      defaultMemberGovernanceToken: UNITS,
+    });
+    const voting = adapters.voting;
+    const configuration = adapters.configuration;
+    const configKey = sha3(web3.utils.encodePacked("governance.role.default"));
+
+    // Make sure the governance token configuration was created
+    const governanceToken = await dao.getAddressConfiguration(configKey);
+    expect(governanceToken).equal(utils.getAddress(UNITS));
+
+    // Onboard the maintainer as a DAO member
+    await onboardingNewMember(
+      getProposalCounter(),
+      dao,
+      adapters.onboarding,
+      voting,
+      maintainer,
+      owner,
+      unitPrice,
+      UNITS
+    );
+
+    const key = sha3("key");
     const proposalId = getProposalCounter();
 
     // The maintainer submits a new configuration proposal
@@ -608,6 +752,16 @@ describe("Adapter - Configuration", () => {
       maintainerTokenAddress: oltContract.address, // only holders of the OLT token are considered maintainers
     });
     const configuration = adapters.configuration;
+    const configKey = sha3(
+      web3.utils.encodePacked(
+        "governance.role.",
+        utils.getAddress(configuration.address)
+      )
+    );
+
+    // Make sure the governance token configuration was created
+    const governanceToken = await dao.getAddressConfiguration(configKey);
+    expect(governanceToken).equal(oltContract.address);
 
     let key = sha3("key");
 
@@ -650,6 +804,16 @@ describe("Adapter - Configuration", () => {
     });
     const voting = adapters.voting;
     const configuration = adapters.configuration;
+    const configKey = sha3(
+      web3.utils.encodePacked(
+        "governance.role.",
+        utils.getAddress(configuration.address)
+      )
+    );
+
+    // Make sure the governance token configuration was created
+    const governanceToken = await dao.getAddressConfiguration(configKey);
+    expect(governanceToken).equal(oltContract.address);
 
     let key = sha3("key");
 
