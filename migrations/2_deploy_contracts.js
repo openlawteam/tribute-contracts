@@ -6,11 +6,13 @@ const {
   toBN,
   toWei,
   ETH_TOKEN,
+  ZERO_ADDRESS,
   UNITS,
   maximumChunks,
   unitPrice,
   numberOfUnits,
   maxAmount,
+  maxUnits,
 } = require("../utils/contract-util");
 
 const { deployDao, getNetworkDetails } = require("../utils/deployment-util");
@@ -74,9 +76,10 @@ const deployRinkebyDao = async (
     ...truffleImports,
     contractConfigs,
     deployFunction,
-    maxAmount,
+    maxAmount: getOptionalEnvVar("MAX_AMOUNT", maxAmount),
     unitPrice: toBN(toWei("100", "finney")),
     nbUnits: toBN("100000"),
+    maxUnits: getOptionalEnvVar("MAX_UNITS", maxUnits),
     tokenAddr: ETH_TOKEN,
     erc20TokenName: getEnvVar("ERC20_TOKEN_NAME"),
     erc20TokenSymbol: getEnvVar("ERC20_TOKEN_SYMBOL"),
@@ -91,6 +94,15 @@ const deployRinkebyDao = async (
     couponCreatorAddress: getOptionalEnvVar(
       "COUPON_CREATOR_ADDR",
       getEnvVar("DAO_OWNER_ADDR")
+    ),
+    kycSignerAddress: getOptionalEnvVar(
+      "KYC_SIGNER_ADDR",
+      getEnvVar("DAO_OWNER_ADDR")
+    ),
+    kycMaxMembers: getOptionalEnvVar("KYC_MAX_MEMBERS", toBN(1000)),
+    kycFundTargetAddress: getOptionalEnvVar(
+      "KYC_MULTISIG_FUND_ADDR",
+      ZERO_ADDRESS
     ),
     daoName: getEnvVar("DAO_NAME"),
     owner: getEnvVar("DAO_OWNER_ADDR"),
@@ -107,6 +119,7 @@ const deployRinkebyDao = async (
     gasPriceLimit: process.env.GAS_PRICE_LIMIT,
     spendLimitPeriod: process.env.SPEND_LIMIT_PERIOD,
     spendLimitEth: process.env.SPEND_LIMIT_ETH,
+    weth: "0xc778417e063141139fce010982780140aa0cd5ab",
   });
 };
 
@@ -120,9 +133,10 @@ const deployMainnetDao = async (
     ...truffleImports,
     contractConfigs,
     deployFunction,
-    maxAmount,
+    maxAmount: getOptionalEnvVar("MAX_AMOUNT", maxAmount),
     unitPrice: toBN(toWei("100", "finney")),
     nbUnits: toBN("100000"),
+    maxUnits: getOptionalEnvVar("MAX_UNITS", maxUnits),
     tokenAddr: ETH_TOKEN,
     erc20TokenName: getEnvVar("ERC20_TOKEN_NAME"),
     erc20TokenSymbol: getEnvVar("ERC20_TOKEN_SYMBOL"),
@@ -136,12 +150,19 @@ const deployMainnetDao = async (
     finalize: false,
     maxExternalTokens: 100,
     couponCreatorAddress: getEnvVar("COUPON_CREATOR_ADDR"),
+    kycSignerAddress: getEnvVar("KYC_SIGNER_ADDR"),
+    kycMaxMembers: getEnvVar("KYC_MAX_MEMBERS"),
+    kycFundTargetAddress: getOptionalEnvVar(
+      "KYC_MULTISIG_FUND_ADDR",
+      ZERO_ADDRESS
+    ),
     daoName: getEnvVar("DAO_NAME"),
     owner: getEnvVar("DAO_OWNER_ADDR"),
     offchainAdmin: getEnvVar("OFFCHAIN_ADMIN_ADDR"),
     gasPriceLimit: getEnvVar("GAS_PRICE_LIMIT"),
     spendLimitPeriod: getEnvVar("SPEND_LIMIT_PERIOD"),
     spendLimitEth: getEnvVar("SPEND_LIMIT_ETH"),
+    weth: "0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2",
   });
 };
 
@@ -160,9 +181,10 @@ const deployGanacheDao = async (
     ...truffleImports,
     contractConfigs,
     deployFunction,
-    maxAmount,
+    maxAmount: getOptionalEnvVar("MAX_AMOUNT", maxAmount),
     unitPrice: toBN(toWei("100", "finney")),
     nbUnits: toBN("100000"),
+    maxUnits: getOptionalEnvVar("MAX_UNITS", maxUnits),
     tokenAddr: ETH_TOKEN,
     erc20TokenName: getEnvVar("ERC20_TOKEN_NAME"),
     erc20TokenSymbol: getEnvVar("ERC20_TOKEN_SYMBOL"),
@@ -177,6 +199,12 @@ const deployGanacheDao = async (
     couponCreatorAddress: getOptionalEnvVar(
       "COUPON_CREATOR_ADDR",
       daoOwnerAddress
+    ),
+    kycSignerAddress: getOptionalEnvVar("KYC_SIGNER_ADDR", daoOwnerAddress),
+    kycMaxMembers: getOptionalEnvVar("KYC_MAX_MEMBERS", toBN(1000)),
+    kycFundTargetAddress: getOptionalEnvVar(
+      "KYC_MULTISIG_FUND_ADDR",
+      ZERO_ADDRESS
     ),
     daoName: getEnvVar("DAO_NAME"),
     owner: daoOwnerAddress,
@@ -214,9 +242,10 @@ const deployTestDao = async (
     ...truffleImports,
     contractConfigs,
     deployFunction,
-    maxAmount,
+    maxAmount: getOptionalEnvVar("MAX_AMOUNT", maxAmount),
     unitPrice: unitPrice,
     nbUnits: numberOfUnits,
+    maxUnits: numberOfUnits,
     tokenAddr: ETH_TOKEN,
     erc20TokenName: getEnvVar("ERC20_TOKEN_NAME"),
     erc20TokenSymbol: getEnvVar("ERC20_TOKEN_SYMBOL"),
@@ -230,6 +259,12 @@ const deployTestDao = async (
     finalize: false,
     maxExternalTokens: 100,
     couponCreatorAddress: daoOwnerAddress,
+    kycSignerAddress: daoOwnerAddress,
+    kycMaxMembers: toBN(1000),
+    kycFundTargetAddress: getOptionalEnvVar(
+      "KYC_MULTISIG_FUND_ADDR",
+      ZERO_ADDRESS
+    ),
     offchainAdmin: daoOwnerAddress,
     daoName: getEnvVar("DAO_NAME"),
     owner: accounts[0],
@@ -255,9 +290,10 @@ const deployHarmonyDao = async (
     ...truffleImports,
     contractConfigs,
     deployFunction,
-    maxAmount,
+    maxAmount: getOptionalEnvVar("MAX_AMOUNT", maxAmount),
     unitPrice: toBN(toWei("100", "finney")),
     nbUnits: toBN("100000"),
+    maxUnits: getOptionalEnvVar("MAX_UNITS", maxUnits),
     tokenAddr: ETH_TOKEN,
     erc20TokenName: getEnvVar("ERC20_TOKEN_NAME"),
     erc20TokenSymbol: getEnvVar("ERC20_TOKEN_SYMBOL"),
@@ -271,9 +307,16 @@ const deployHarmonyDao = async (
     finalize: false,
     maxExternalTokens: 100,
     couponCreatorAddress: getEnvVar("COUPON_CREATOR_ADDR"),
+    kycSignerAddress: getEnvVar("KYC_SIGNER_ADDR"),
+    kycMaxMembers: getOptionalEnvVar("KYC_MAX_MEMBERS", toBN(99)),
+    kycFundTargetAddress: getOptionalEnvVar(
+      "KYC_MULTISIG_FUND_ADDR",
+      ZERO_ADDRESS
+    ),
     daoName: getEnvVar("DAO_NAME"),
     owner: getEnvVar("DAO_OWNER_ADDR"),
     offchainAdmin: getEnvVar("OFFCHAIN_ADMIN_ADDR"),
+    weth: getEnvVar("WETH_ADDR"),
   });
 };
 
@@ -283,13 +326,17 @@ const deployHarmonyTestDao = async (
   truffleImports,
   contractConfigs
 ) => {
+  const { WETH } = truffleImports;
+
+  const weth = await deployFunction(WETH);
   return await deployDao({
     ...truffleImports,
     contractConfigs,
     deployFunction,
-    maxAmount,
+    maxAmount: getOptionalEnvVar("MAX_AMOUNT", maxAmount),
     unitPrice: toBN(toWei("100", "finney")),
     nbUnits: toBN("100000"),
+    maxUnits: getOptionalEnvVar("MAX_UNITS", maxUnits),
     tokenAddr: ETH_TOKEN,
     erc20TokenName: getEnvVar("ERC20_TOKEN_NAME"),
     erc20TokenSymbol: getEnvVar("ERC20_TOKEN_SYMBOL"),
@@ -304,6 +351,12 @@ const deployHarmonyTestDao = async (
     finalize: false,
     maxExternalTokens: 100,
     couponCreatorAddress: getEnvVar("COUPON_CREATOR_ADDR"),
+    kycSignerAddress: getEnvVar("KYC_SIGNER_ADDR"),
+    kycMaxMembers: getOptionalEnvVar("KYC_MAX_MEMBERS", toBN(99)),
+    kycFundTargetAddress: getOptionalEnvVar(
+      "KYC_MULTISIG_FUND_ADDR",
+      ZERO_ADDRESS
+    ),
     daoName: getEnvVar("DAO_NAME"),
     owner: getEnvVar("DAO_OWNER_ADDR"),
     offchainAdmin: getOptionalEnvVar(
@@ -315,6 +368,7 @@ const deployHarmonyTestDao = async (
     maxUnits: getEnvVar("MAX_UNITS"),
     maxMembers: getEnvVar("MAX_MEMBERS"),
     fundTargetAddress: getEnvVar("FUND_TARGET_ADDR"),
+    weth: weth.address,
   });
 };
 
