@@ -11,10 +11,8 @@ The TributeDAO subgraph utilizes the **[GraphGL](https://graphql.org/)** API and
 - **[GraphQL API](https://thegraph.com/docs/graphql-api):** explains the GraphQL Query API that is used for the Graph Protocol
 - **[AssemblyScript API](https://thegraph.com/docs/assemblyscript-api)**: documents what built-in APIs can be used when writing subgraph mappings.
 
-The subgraph definition consists of the following files:
+Each subgraph definition directory consists of the following files:
 
 - `subgraph.yaml`: a YAML file containing the **[datasources and templates](https://thegraph.com/docs/define-a-subgraph#data-source-for-the-main-contract)** used for the subgraph manifest
 - `schema.graphql`: a GraphQL schema containing the entities and fields of the data that is stored for the subgraph, and how to query it via GraphQL
-- `AssemblyScript Mappings`: AssemblyScript code that translates from the event data in Ethereum to the entities defined in the schema.graphql (e.g. `subgraph/mappings/core/dao-registry-mapping.ts`)
-
-More details on each of these files are provided in the subgraph structure category.
+- `AssemblyScript Mappings`: AssemblyScript code that translates from the event data in Ethereum to the entities defined in the schema.graphql (e.g. `mapping.ts`)
