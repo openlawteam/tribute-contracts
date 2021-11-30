@@ -253,12 +253,14 @@ module.exports = (() => {
     };
   };
 
-  const deployDaoWithOffchainVoting = async ({ owner, newMember }) => {
+  const deployDaoWithOffchainVoting = async (options) => {
+    const owner = options.owner;
+    const newMember = options.newMember;
     const { WETH } = ozContracts;
     const weth = await WETH.new();
     const { dao, adapters, extensions, testContracts, votingHelpers } =
       await deployDao({
-        ...getDefaultOptions({ owner }),
+        ...getDefaultOptions(options),
         ...ozContracts,
         deployFunction,
         finalize: false,

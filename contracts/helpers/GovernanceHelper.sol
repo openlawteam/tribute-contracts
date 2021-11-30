@@ -66,8 +66,13 @@ library GovernanceHelper {
                         snapshot
                     );
             }
-            // For external tokens we don't consider the historical balance.
-            return IERC20(maintainerGovernanceToken).balanceOf(voterAddr);
+            // The external token must implement the getPriorAmount,
+            // otherwise this call will fail.
+            return
+                ERC20Extension(maintainerGovernanceToken).getPriorAmount(
+                    voterAddr,
+                    snapshot
+                );
         }
 
         address memberGovernanceToken = dao.getAddressConfiguration(
