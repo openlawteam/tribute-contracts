@@ -68,6 +68,8 @@ contract KycOnboardingContract is AdapterGuard, Signatures {
     bytes32 constant FundTargetAddress =
         keccak256("kyc-onboarding.fundTargetAddress");
     bytes32 constant TokensToMint = keccak256("kyc-onboarding.tokensToMint");
+    bytes32 constant DefaultTokenAddr =
+        keccak256("kyc-onboarding.tokenAddr.default");
 
     WETH private _weth;
     IERC20 private _weth20;
@@ -168,6 +170,10 @@ contract KycOnboardingContract is AdapterGuard, Signatures {
         );
         bank.registerPotentialNewInternalToken(DaoHelper.UNITS);
         bank.registerPotentialNewToken(tokenAddr);
+
+        if (dao.getAddressConfiguration(DefaultTokenAddr) == address(0x0)) {
+            dao.setAddressConfiguration(DefaultTokenAddr, tokenAddr);
+        }
     }
 
     /**
