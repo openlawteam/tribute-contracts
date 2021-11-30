@@ -8,7 +8,7 @@ The Graph have launched their decentralized product called Subgraph Studio, for 
 The subgraph-deployer.ts script has been updated to deploy to both testnet and mainnet networks.
 
 :::info
-You need to install Graph CLI version 0.21.0 or above with either npm or yarn.
+You need to install Graph CLI version 0.21.1 with either npm or yarn.
 :::
 
 NPM Install:
