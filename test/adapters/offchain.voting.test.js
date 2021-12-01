@@ -62,6 +62,7 @@ const {
   prepareVoteResult,
   SigUtilSigner,
   getVoteStepDomainDefinition,
+  BadNodeError,
 } = require("../../utils/offchain-voting-util");
 
 const generateMembers = (amount) => {
@@ -202,7 +203,8 @@ const updateConfiguration = async (
   bank,
   index,
   configs,
-  singleVote = false
+  singleVote = false,
+  processProposal = true
 ) => {
   const blockNumber = await web3.eth.getBlockNumber();
   const proposalId = getProposalCounter();
@@ -290,20 +292,33 @@ const updateConfiguration = async (
   const lastResult = result[result.length - 1];
   lastResult.nbYes = lastResult.nbYes.toString();
   lastResult.nbNo = lastResult.nbNo.toString();
+  const submitter = members[index].address;
 
-  await voting.submitVoteResult(
-    dao.address,
+  if (processProposal) {
+    await voting.submitVoteResult(
+      dao.address,
+      proposalId,
+      voteResultTree.getHexRoot(),
+      members[index].address,
+      lastResult,
+      rootSig
+    );
+
+    await advanceTime(10000);
+
+    // The maintainer processes on the new proposal
+    await configuration.processProposal(dao.address, proposalId);
+  }
+
+  return {
     proposalId,
-    voteResultTree.getHexRoot(),
-    members[index].address,
+    voteResultTree,
+    blockNumber,
+    membersCount,
     lastResult,
-    rootSig
-  );
-
-  await advanceTime(10000);
-
-  // The maintainer processes on the new proposal
-  await configuration.processProposal(dao.address, proposalId);
+    submitter,
+    rootSig,
+  };
 };
 
 describe("Adapter - Offchain Voting", () => {
@@ -740,18 +755,44 @@ describe("Adapter - Offchain Voting", () => {
     // The new member attempts to vote on the new proposal,
     // but since he is not a maintainer (does not hold OLT tokens)
     // the voting weight is zero, so the proposal should not pass
-    await updateConfiguration(
+    const data = await updateConfiguration(
       dao,
       voting,
       configuration,
       bank,
       accountIndex, // the index of the member that will vote
       configs,
-      true // indicates that only 1 member is voting Yes on the proposal, but he is not a maintainer
+      true, // indicates that only 1 member is voting Yes on the proposal, but he is not a maintainer
+      false // skip the process proposal call
     );
 
-    // The configuration shouldn't be present in the DAO
-    const updatedConfigValue = await dao.getConfiguration(newConfigKey);
-    expect(updatedConfigValue.toString()).equal("0".toString());
+    await expectRevert(
+      voting.submitVoteResult(
+        dao.address,
+        data.proposalId,
+        data.voteResultTree.getHexRoot(),
+        data.submitter,
+        data.lastResult,
+        data.rootSig
+      ),
+      "bad node"
+    );
+
+    // Validate the vote result node by calling the contract
+    const getBadNodeErrorResponse = await voting.getBadNodeError(
+      dao.address,
+      data.proposalId,
+      // `bool submitNewVote`
+      true,
+      data.voteResultTree.getHexRoot(),
+      data.blockNumber,
+      // `gracePeriodStartingTime` should be `0` as `submitNewVote` is `true`
+      0,
+      data.membersCount,
+      data.lastResult
+    );
+
+    const errorCode = getBadNodeErrorResponse.toString();
+    expect(BadNodeError[parseInt(errorCode)]).equal("VOTE_NOT_ALLOWED");
   });
 });

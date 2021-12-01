@@ -259,7 +259,6 @@ contract OffchainVotingContract is IVoting, MemberGuard, AdapterGuard, Ownable {
         Voting storage vote = votes[address(dao)][proposalId];
         // slither-disable-next-line timestamp
         require(vote.snapshot > 0, "vote:not started");
-
         if (vote.resultRoot == bytes32(0) || vote.isChallenged) {
             // slither-disable-next-line timestamp
             require(
@@ -267,6 +266,34 @@ contract OffchainVotingContract is IVoting, MemberGuard, AdapterGuard, Ownable {
                 "vote:notReadyToSubmitResult"
             );
         }
+
+        BankExtension bank = BankExtension(
+            dao.getExtensionAddress(DaoHelper.BANK)
+        );
+        uint256 membersCount = bank.getPriorAmount(
+            DaoHelper.TOTAL,
+            DaoHelper.MEMBER_COUNT,
+            vote.snapshot
+        );
+        // slither-disable-next-line timestamp
+        require(
+            membersCount - 1 == result.index,
+            "index:member_count mismatch"
+        );
+
+        require(
+            _ovHelper.getBadNodeError(
+                dao,
+                proposalId,
+                true,
+                resultRoot,
+                vote.snapshot,
+                0,
+                membersCount,
+                result
+            ) == OffchainVotingHelperContract.BadNodeError.OK,
+            "bad node"
+        );
 
         address memberAddr = dao.getAddressIfDelegated(reporter);
         require(isActiveMember(dao, memberAddr), "not active member");
@@ -289,19 +316,6 @@ contract OffchainVotingContract is IVoting, MemberGuard, AdapterGuard, Ownable {
                 ovHash.nodeHash(dao, adapterAddress, result)
             ),
             "proof:bad"
-        );
-
-        // slither-disable-next-line timestamp
-        require(
-            BankExtension(dao.getExtensionAddress(DaoHelper.BANK))
-                .getPriorAmount(
-                    DaoHelper.TOTAL,
-                    DaoHelper.MEMBER_COUNT,
-                    vote.snapshot
-                ) -
-                1 ==
-                result.index,
-            "index:member_count mismatch"
         );
 
         // slither-disable-next-line timestamp

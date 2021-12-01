@@ -28,6 +28,25 @@ const { MerkleTree } = require("./merkle-tree");
 const { toBN, sha3 } = require("./contract-util");
 const sigUtil = require("eth-sig-util");
 
+const BadNodeError = {
+  0: "OK",
+  1: "WRONG_PROPOSAL_ID",
+  2: "INVALID_CHOICE",
+  3: "AFTER_VOTING_PERIOD",
+  4: "BAD_SIGNATURE",
+  5: "INDEX_OUT_OF_BOUND",
+  6: "VOTE_NOT_ALLOWED",
+};
+
+const VotingState = {
+  0: "NOT_STARTED",
+  1: "TIE",
+  2: "PASS",
+  3: "NOT_PASS",
+  4: "IN_PROGRESS",
+  5: "GRACE_PERIOD",
+};
+
 function getMessageERC712Hash(m, verifyingContract, actionId, chainId) {
   const message = prepareMessage(m);
   const { domain, types } = getDomainDefinition(
@@ -530,4 +549,6 @@ Object.assign(exports, {
   getVoteStepDomainDefinition,
   getVoteResultRootDomainDefinition,
   TypedDataUtils: sigUtil.TypedDataUtils,
+  BadNodeError,
+  VotingState,
 });
