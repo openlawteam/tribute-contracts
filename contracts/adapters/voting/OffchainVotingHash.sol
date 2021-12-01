@@ -178,8 +178,10 @@ contract OffchainVotingHashContract {
         uint256 snapshot,
         VoteStepParams memory params
     ) external view returns (bool) {
-        address account = dao.getMemberAddress(node.index);
-        address voter = dao.getPriorDelegateKey(account, snapshot);
+        address voter = dao.getPriorDelegateKey(
+            dao.getMemberAddress(node.index),
+            snapshot
+        );
         uint256 weight = GovernanceHelper.getVotingWeight(
             dao,
             voter,

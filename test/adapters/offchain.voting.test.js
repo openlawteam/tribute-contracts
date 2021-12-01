@@ -33,6 +33,8 @@ const {
   unitPrice,
   remaining,
   UNITS,
+  TOTAL,
+  MEMBER_COUNT,
   ZERO_ADDRESS,
 } = require("../../utils/contract-util");
 
@@ -198,8 +200,9 @@ const updateConfiguration = async (
   voting,
   configuration,
   bank,
-  maintainer,
-  configs
+  index,
+  configs,
+  singleVote = false
 ) => {
   const blockNumber = await web3.eth.getBlockNumber();
   const proposalId = getProposalCounter();
@@ -221,11 +224,11 @@ const updateConfiguration = async (
     timestamp: Math.floor(new Date().getTime() / 1000),
     space,
     payload: proposalPayload,
-    submitter: maintainer.address,
+    submitter: members[index].address,
   };
 
   //signer for myAccount (its private key)
-  const signer = SigUtilSigner(maintainer.privateKey);
+  const signer = SigUtilSigner(members[index].privateKey);
   proposalData.sig = await signer(
     proposalData,
     dao.address,
@@ -235,20 +238,38 @@ const updateConfiguration = async (
   const data = prepareVoteProposalData(proposalData, web3);
   await configuration.submitProposal(dao.address, proposalId, configs, data, {
     from: daoOwner,
+    gasPrice: toBN("0"),
   });
 
-  const member = findMember(maintainer.address);
-  const voteSigner = SigUtilSigner(member.privateKey);
-  const weight = await bank.balanceOf(member.address, UNITS);
-  const voteEntry = await createVote(proposalId, weight, true);
-  voteEntry.sig = voteSigner(
-    voteEntry,
-    dao.address,
-    configuration.address,
-    chainId
+  const membersCount = await bank.getPriorAmount(
+    TOTAL,
+    MEMBER_COUNT,
+    blockNumber
   );
   const voteEntries = [];
-  voteEntries.push(voteEntry);
+  const maintainer = members[index];
+  for (let i = 0; i < parseInt(membersCount.toString()); i++) {
+    const memberAddress = await dao.getMemberAddress(i);
+    const member = findMember(memberAddress);
+    let voteEntry;
+    const voteYes = singleVote ? memberAddress === maintainer.address : true;
+    if (member) {
+      const voteSigner = SigUtilSigner(member.privateKey);
+      const weight = await bank.balanceOf(member.address, UNITS);
+      voteEntry = await createVote(proposalId, weight, voteYes);
+      voteEntry.sig = voteSigner(
+        voteEntry,
+        dao.address,
+        configuration.address,
+        chainId
+      );
+    } else {
+      voteEntry = await createVote(proposalId, 0, voteYes);
+      voteEntry.sig = "0x";
+    }
+
+    voteEntries.push(voteEntry);
+  }
 
   await advanceTime(10000);
 
@@ -267,11 +288,14 @@ const updateConfiguration = async (
   );
 
   const lastResult = result[result.length - 1];
+  lastResult.nbYes = lastResult.nbYes.toString();
+  lastResult.nbNo = lastResult.nbNo.toString();
+
   await voting.submitVoteResult(
     dao.address,
     proposalId,
     voteResultTree.getHexRoot(),
-    maintainer.address,
+    members[index].address,
     lastResult,
     rootSig
   );
@@ -470,7 +494,7 @@ describe("Adapter - Offchain Voting", () => {
   });
 
   it("should be possible to update a DAO configuration if you are a member and a maintainer that holds an external governance token", async () => {
-    const accountIndex = 5;
+    const accountIndex = 0;
     const maintainer = members[accountIndex];
     // Issue OpenLaw ERC20 Basic Token for tests, only DAO maintainer will hold this token
     const tokenSupply = toBN(100000);
@@ -507,7 +531,7 @@ describe("Adapter - Offchain Voting", () => {
     const configs = [
       {
         key: newConfigKey,
-        numericValue: newConfigValue,
+        numericValue: "10",
         addressValue: ZERO_ADDRESS,
         configType: 0,
       },
@@ -518,11 +542,216 @@ describe("Adapter - Offchain Voting", () => {
       voting,
       configuration,
       bank,
-      maintainer,
+      accountIndex,
       configs
     );
 
     const updatedConfigValue = await dao.getConfiguration(newConfigKey);
     expect(updatedConfigValue.toString()).equal(newConfigValue.toString());
+  });
+
+  it("should be possible to update a DAO configuration if you are a member and a maintainer that holds an internal governance token", async () => {
+    const accountIndex = 0;
+    const maintainer = members[accountIndex];
+
+    const { dao, adapters, extensions } = await deployDaoWithOffchainVoting({
+      owner: daoOwner,
+      newMember: maintainer.address,
+      // if the member holds any UNITS he is a maintainer
+      maintainerTokenAddress: UNITS,
+    });
+    const bank = extensions.bankExt;
+    const voting = adapters.voting; //This is the offchain voting adapter
+    const configuration = adapters.configuration;
+    const configKey = sha3(
+      web3.utils.encodePacked(
+        "governance.role.",
+        utils.getAddress(configuration.address)
+      )
+    );
+
+    // Make sure the governance token configuration was created
+    const governanceToken = await dao.getAddressConfiguration(configKey);
+    expect(governanceToken).equal(utils.getAddress(UNITS));
+
+    const newConfigKey = sha3("new-config-a");
+    const newConfigValue = toBN("10");
+    const configs = [
+      {
+        key: newConfigKey,
+        numericValue: "10",
+        addressValue: ZERO_ADDRESS,
+        configType: 0,
+      },
+    ];
+
+    await updateConfiguration(
+      dao,
+      voting,
+      configuration,
+      bank,
+      accountIndex,
+      configs
+    );
+
+    const updatedConfigValue = await dao.getConfiguration(newConfigKey);
+    expect(updatedConfigValue.toString()).equal(newConfigValue.toString());
+  });
+
+  it("should be possible to update a DAO configuration if you are a member and a maintainer that holds the default governance token", async () => {
+    const accountIndex = 0;
+    const maintainer = members[accountIndex];
+
+    const { dao, adapters, extensions } = await deployDaoWithOffchainVoting({
+      owner: daoOwner,
+      newMember: maintainer.address,
+      // if the member holds any UNITS that represents the default governance token,
+      // the member is considered a maintainer.
+      defaultMemberGovernanceToken: UNITS,
+    });
+    const bank = extensions.bankExt;
+    const voting = adapters.voting; //This is the offchain voting adapter
+    const configuration = adapters.configuration;
+    const configKey = sha3(web3.utils.encodePacked("governance.role.default"));
+
+    // Make sure the governance token configuration was created
+    const governanceToken = await dao.getAddressConfiguration(configKey);
+    expect(governanceToken).equal(utils.getAddress(UNITS));
+
+    const newConfigKey = sha3("new-config-a");
+    const newConfigValue = toBN("10");
+    const configs = [
+      {
+        key: newConfigKey,
+        numericValue: "10",
+        addressValue: ZERO_ADDRESS,
+        configType: 0,
+      },
+    ];
+
+    await updateConfiguration(
+      dao,
+      voting,
+      configuration,
+      bank,
+      accountIndex,
+      configs
+    );
+
+    const updatedConfigValue = await dao.getConfiguration(newConfigKey);
+    expect(updatedConfigValue.toString()).equal(newConfigValue.toString());
+  });
+
+  it("should not be possible to update a DAO configuration if you are a maintainer but not a member", async () => {
+    const accountIndex = 5; //not a member
+    const maintainer = members[accountIndex];
+    // Issue OpenLaw ERC20 Basic Token for tests, only DAO maintainer will hold this token
+    const tokenSupply = toBN(100000);
+    const oltContract = await OLToken.new(tokenSupply);
+
+    // Transfer OLTs to the maintainer account
+    await oltContract.transfer(maintainer.address, toBN(1));
+    const maintainerBalance = await oltContract.balanceOf.call(
+      maintainer.address
+    );
+    expect(maintainerBalance.toString()).equal("1");
+
+    const { dao, adapters, extensions } = await deployDaoWithOffchainVoting({
+      owner: daoOwner,
+      newMember: members[0].address,
+      maintainerTokenAddress: oltContract.address,
+    });
+    const bank = extensions.bankExt;
+    const voting = adapters.voting; //This is the offchain voting adapter
+    const configuration = adapters.configuration;
+    const configKey = sha3(
+      web3.utils.encodePacked(
+        "governance.role.",
+        utils.getAddress(configuration.address)
+      )
+    );
+
+    // Make sure the governance token configuration was created
+    const governanceToken = await dao.getAddressConfiguration(configKey);
+    expect(governanceToken).equal(oltContract.address);
+
+    const newConfigKey = sha3("new-config-a");
+    const configs = [
+      {
+        key: newConfigKey,
+        numericValue: "10",
+        addressValue: ZERO_ADDRESS,
+        configType: 0,
+      },
+    ];
+
+    await expectRevert(
+      updateConfiguration(
+        dao,
+        voting,
+        configuration,
+        bank,
+        accountIndex,
+        configs
+      ),
+      "onlyMember"
+    );
+  });
+
+  it("should not be possible to update a DAO configuration if you are a member but not a maintainer", async () => {
+    const accountIndex = 0; // new member
+
+    // Issue OpenLaw ERC20 Basic Token for tests, only DAO maintainer will hold this token
+    const tokenSupply = toBN(100000);
+    const oltContract = await OLToken.new(tokenSupply);
+
+    const { dao, adapters, extensions } = await deployDaoWithOffchainVoting({
+      owner: daoOwner,
+      // New members is added, but does not hold OLTs
+      newMember: members[accountIndex].address,
+      // only holders of the OLT tokens are considered
+      // maintainers
+      maintainerTokenAddress: oltContract.address,
+    });
+    const bank = extensions.bankExt;
+    const voting = adapters.voting; //This is the offchain voting adapter
+    const configuration = adapters.configuration;
+    const configKey = sha3(
+      web3.utils.encodePacked(
+        "governance.role.",
+        utils.getAddress(configuration.address)
+      )
+    );
+
+    // Make sure the governance token configuration was created
+    const governanceToken = await dao.getAddressConfiguration(configKey);
+    expect(governanceToken).equal(oltContract.address);
+
+    const newConfigKey = sha3("new-config-a");
+    const configs = [
+      {
+        key: newConfigKey,
+        numericValue: "10",
+        addressValue: ZERO_ADDRESS,
+        configType: 0,
+      },
+    ];
+
+    // The new member attempts to vote on the new proposal,
+    // but since he is not a maintainer (does not hold OLT tokens)
+    // the voting weight is zero, so the proposal should not pass
+    await updateConfiguration(
+      dao,
+      voting,
+      configuration,
+      bank,
+      accountIndex, // the index of the member that will vote
+      configs,
+      true // indicates that only 1 member is voting Yes on the proposal, but he is not a maintainer
+    );
+
+    // The configuration shouldn't be present in the DAO
+    const updatedConfigValue = await dao.getConfiguration(newConfigKey);
+    expect(updatedConfigValue.toString()).equal("0".toString());
   });
 });

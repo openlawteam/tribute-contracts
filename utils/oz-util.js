@@ -270,13 +270,15 @@ module.exports = (() => {
         weth: weth.address,
       });
 
-    await dao.potentialNewMember(newMember, {
-      from: owner,
-    });
+    if (newMember) {
+      await dao.potentialNewMember(newMember, {
+        from: owner,
+      });
 
-    await extensions.bankExt.addToBalance(newMember, UNITS, 1, {
-      from: owner,
-    });
+      await extensions.bankExt.addToBalance(newMember, UNITS, 1, {
+        from: owner,
+      });
+    }
 
     await dao.finalizeDao({ from: owner });
 
