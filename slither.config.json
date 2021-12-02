@@ -1,5 +1,4 @@
 {
-  "detectors_to_exclude": "",
   "exclude_informational": true,
   "exclude_low": false,
   "exclude_medium": false,
@@ -9,5 +8,5 @@
   "legacy_ast": false,
   "truffle_version": "5.3.2",
   "truffle_build_directory": "build/contracts",
-  "solc_solcs_select": "0.8.0"
+  "solc_solcs_select": "0.8.9"
 }
