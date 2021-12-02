@@ -83,7 +83,7 @@ contract ReimbursementContract is IReimbursement, AdapterGuard, GelatoRelay {
     /**
      * @notice returns whether the current transaction should be reimbursed or not. It returns the spendLimitPeriod to avoid someone updating it during the execution.
      * @param dao the dao that should reimburse
-     * @param the maximum gas usable in this transaction
+     * @param gasLeft the maximum gas usable in this transaction
      */
     function shouldReimburse(DaoRegistry dao, uint256 gasLeft)
         external
