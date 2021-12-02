@@ -140,7 +140,6 @@ type Proposal @entity {
   isChallenged: Boolean
   stepRequested: BigInt
   forceFailed: Boolean
-  # fallbackVotes: BigInt
   fallbackVotesCount: BigInt
 
   # ONCHAIN VOTES: additional info
