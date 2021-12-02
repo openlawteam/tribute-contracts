@@ -53,10 +53,18 @@ library ReimbursableLib {
         DaoRegistry dao,
         Reimbursable.ReimbursementData memory data
     ) internal {
+        afterExecution2(dao, data, payable(msg.sender));
+    }
+
+    function afterExecution2(
+        DaoRegistry dao,
+        Reimbursable.ReimbursementData memory data,
+        address payable caller
+    ) internal {
         if (data.shouldReimburse) {
             data.reimbursement.reimburseTransaction(
                 dao,
-                payable(msg.sender),
+                caller,
                 data.gasStart - gasleft(),
                 data.spendLimitPeriod
             );

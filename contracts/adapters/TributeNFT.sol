@@ -234,7 +234,7 @@ contract TributeNFTContract is
             erc1155.safeTransferFrom(address(this), from, id, value, "");
         }
 
-        ReimbursableLib.afterExecution(ppS.dao, rData);
+        ReimbursableLib.afterExecution2(ppS.dao, rData, payable(from));
         return this.onERC1155Received.selector;
     }
 
@@ -274,8 +274,6 @@ contract TributeNFTContract is
         bytes calldata data
     ) external override returns (bytes4) {
         ProcessProposal memory ppS = abi.decode(data, (ProcessProposal));
-
-        require(ppS.dao.lockedAt() != block.number, "reentrancy guard");
         ReimbursementData memory rData = ReimbursableLib.beforeExecution(
             ppS.dao
         );
@@ -300,7 +298,7 @@ contract TributeNFTContract is
             erc721.safeTransferFrom(address(this), from, tokenId);
         }
 
-        ReimbursableLib.afterExecution(ppS.dao, rData);
+        ReimbursableLib.afterExecution2(ppS.dao, rData, payable(from));
         return this.onERC721Received.selector;
     }
 }
