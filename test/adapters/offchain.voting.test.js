@@ -50,6 +50,7 @@ const {
   web3,
   OffchainVotingHashContract,
   OLToken,
+  PixelNFT,
 } = require("../../utils/oz-util");
 
 const {
@@ -613,7 +614,7 @@ describe("Adapter - Offchain Voting", () => {
     expect(updatedConfigValue.toString()).equal(newConfigValue.toString());
   });
 
-  it("should be possible to update a DAO configuration if you are a member and a maintainer that holds the default governance token", async () => {
+  it("should be possible to update a DAO configuration if you are a member and a maintainer that holds an internal default governance token", async () => {
     const accountIndex = 0;
     const maintainer = members[accountIndex];
 
@@ -632,6 +633,61 @@ describe("Adapter - Offchain Voting", () => {
     // Make sure the governance token configuration was created
     const governanceToken = await dao.getAddressConfiguration(configKey);
     expect(governanceToken).equal(utils.getAddress(UNITS));
+
+    const newConfigKey = sha3("new-config-a");
+    const newConfigValue = toBN("10");
+    const configs = [
+      {
+        key: newConfigKey,
+        numericValue: "10",
+        addressValue: ZERO_ADDRESS,
+        configType: 0,
+      },
+    ];
+
+    await updateConfiguration(
+      dao,
+      voting,
+      configuration,
+      bank,
+      accountIndex,
+      configs
+    );
+
+    const updatedConfigValue = await dao.getConfiguration(newConfigKey);
+    expect(updatedConfigValue.toString()).equal(newConfigValue.toString());
+  });
+
+  it("should be possible to update a DAO configuration if you are a member and a maintainer that holds an external default governance token", async () => {
+    const accountIndex = 0;
+    const maintainer = members[accountIndex];
+
+    // Issue OpenLaw ERC20 Basic Token for tests, only DAO maintainer will hold this token
+    const tokenSupply = toBN(100000);
+    const oltContract = await OLToken.new(tokenSupply);
+
+    // Transfer OLTs to the maintainer account
+    await oltContract.transfer(maintainer.address, toBN(1));
+    const maintainerBalance = await oltContract.balanceOf.call(
+      maintainer.address
+    );
+    expect(maintainerBalance.toString()).equal("1");
+
+    const { dao, adapters, extensions } = await deployDaoWithOffchainVoting({
+      owner: daoOwner,
+      newMember: maintainer.address,
+      // if the member holds any OLTs that represents the default governance token,
+      // the member is considered a maintainer.
+      defaultMemberGovernanceToken: oltContract.address,
+    });
+    const bank = extensions.bankExt;
+    const voting = adapters.voting; //This is the offchain voting adapter
+    const configuration = adapters.configuration;
+    const configKey = sha3(web3.utils.encodePacked("governance.role.default"));
+
+    // Make sure the governance token configuration was created
+    const governanceToken = await dao.getAddressConfiguration(configKey);
+    expect(governanceToken).equal(oltContract.address);
 
     const newConfigKey = sha3("new-config-a");
     const newConfigValue = toBN("10");
@@ -794,5 +850,75 @@ describe("Adapter - Offchain Voting", () => {
 
     const errorCode = getBadNodeErrorResponse.toString();
     expect(BadNodeError[parseInt(errorCode)]).equal("VOTE_NOT_ALLOWED");
+  });
+
+  it("should not be possible to update a DAO configuration if you are a member & maintainer that holds an external token which not implements getPriorAmount function", async () => {
+    const accountIndex = 0; // new member
+
+    // Mint a PixelNFT to use it as an External Governance Token which does not implements
+    // the getPriorAmount function. Only a DAO maintainer will hold this token.
+    const externalGovToken = await PixelNFT.new(10);
+    await externalGovToken.mintPixel(members[accountIndex].address, 1, 1, {
+      from: daoOwner,
+    });
+
+    const { dao, adapters, extensions } = await deployDaoWithOffchainVoting({
+      owner: daoOwner,
+      // New members is added, but does not hold OLTs
+      newMember: members[accountIndex].address,
+      // only holders of the OLT tokens are considered
+      // maintainers
+      maintainerTokenAddress: externalGovToken.address,
+    });
+
+    const bank = extensions.bankExt;
+    const voting = adapters.voting; //This is the offchain voting adapter
+    const configuration = adapters.configuration;
+    const configKey = sha3(
+      web3.utils.encodePacked(
+        "governance.role.",
+        utils.getAddress(configuration.address)
+      )
+    );
+
+    // Make sure the governance token configuration was created
+    const governanceToken = await dao.getAddressConfiguration(configKey);
+    expect(governanceToken).equal(externalGovToken.address);
+
+    const newConfigKey = sha3("new-config-a");
+    const configs = [
+      {
+        key: newConfigKey,
+        numericValue: "10",
+        addressValue: ZERO_ADDRESS,
+        configType: 0,
+      },
+    ];
+
+    // The new member attempts to vote on the new proposal,
+    // but since he is not a maintainer (does not hold OLT tokens)
+    // the voting weight is zero, so the proposal should not pass
+    const data = await updateConfiguration(
+      dao,
+      voting,
+      configuration,
+      bank,
+      accountIndex, // the index of the member that will vote
+      configs,
+      true, // indicates that only 1 member is voting Yes on the proposal, but he is not a maintainer
+      false // skip the process proposal call
+    );
+
+    await expectRevert(
+      voting.submitVoteResult(
+        dao.address,
+        data.proposalId,
+        data.voteResultTree.getHexRoot(),
+        data.submitter,
+        data.lastResult,
+        data.rootSig
+      ),
+      "getPriorAmount not found"
+    );
   });
 });

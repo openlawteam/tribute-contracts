@@ -49,40 +49,55 @@ library GovernanceHelper {
         bytes32 proposalId,
         uint256 snapshot
     ) internal view returns (uint256) {
+        (address adapterAddress, ) = dao.proposals(proposalId);
+
+        // 1st - if there is any governance token configuration
+        // for the adapter address, then read the voting weight based on that token.
+        address governanceToken = dao.getAddressConfiguration(
+            keccak256(abi.encodePacked(ROLE_PREFIX, adapterAddress))
+        );
+        if (DaoHelper.isNotZeroAddress(governanceToken)) {
+            return getVotingWeight(dao, governanceToken, voterAddr, snapshot);
+        }
+
+        // 2nd - if there is no governance token configured for the adapter,
+        // then check if exists a default governance token.
+        // If so, then read the voting weight based on that token.
+        governanceToken = dao.getAddressConfiguration(DEFAULT_GOV_TOKEN_CFG);
+        if (DaoHelper.isNotZeroAddress(governanceToken)) {
+            return getVotingWeight(dao, governanceToken, voterAddr, snapshot);
+        }
+
+        // 3rd - if none of the previous options are available, assume the
+        // governance token is UNITS, then read the voting weight based on that token.
+        return
+            BankExtension(dao.getExtensionAddress(DaoHelper.BANK))
+                .getPriorAmount(voterAddr, DaoHelper.UNITS, snapshot);
+    }
+
+    function getVotingWeight(
+        DaoRegistry dao,
+        address governanceToken,
+        address voterAddr,
+        uint256 snapshot
+    ) internal view returns (uint256) {
         BankExtension bank = BankExtension(
             dao.getExtensionAddress(DaoHelper.BANK)
         );
-
-        (address adapterAddress, ) = dao.proposals(proposalId);
-        address maintainerGovernanceToken = dao.getAddressConfiguration(
-            keccak256(abi.encodePacked(ROLE_PREFIX, adapterAddress))
-        );
-        if (DaoHelper.isNotZeroAddress(maintainerGovernanceToken)) {
-            if (bank.isInternalToken(maintainerGovernanceToken)) {
-                return
-                    bank.getPriorAmount(
-                        voterAddr,
-                        maintainerGovernanceToken,
-                        snapshot
-                    );
-            }
-            // The external token must implement the getPriorAmount,
-            // otherwise this call will fail.
-            return
-                ERC20Extension(maintainerGovernanceToken).getPriorAmount(
-                    voterAddr,
-                    snapshot
-                );
+        if (bank.isInternalToken(governanceToken)) {
+            return bank.getPriorAmount(voterAddr, governanceToken, snapshot);
         }
 
-        address memberGovernanceToken = dao.getAddressConfiguration(
-            DEFAULT_GOV_TOKEN_CFG
-        );
-        if (DaoHelper.isNotZeroAddress(memberGovernanceToken)) {
-            return
-                bank.getPriorAmount(voterAddr, memberGovernanceToken, snapshot);
+        // The external token must implement the getPriorAmount function,
+        // otherwise this call will fail and revert the voting process.
+        // The actual revert does not show a clear reason, so we catch the error
+        // and revert with a better error message.
+        try
+            ERC20Extension(governanceToken).getPriorAmount(voterAddr, snapshot)
+        returns (uint256 votingWeight) {
+            return votingWeight;
+        } catch {
+            revert("getPriorAmount not found");
         }
-
-        return bank.getPriorAmount(voterAddr, DaoHelper.UNITS, snapshot);
     }
 }
