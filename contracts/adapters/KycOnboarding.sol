@@ -224,6 +224,10 @@ contract KycOnboardingContract is AdapterGuard, Signatures {
      * @param tokenAddr is the address the ETH address(0) or an ERC20 Token address
      * @param signature is message signature for verification
      */
+    // The function is protected against reentrancy with the reentrancyGuard(dao)
+    // so it is fine to change some state after the reentrancyGuard(dao) external call
+    // because it calls the dao contract to lock the session/transaction flow.
+    // slither-disable-next-line reentrancy-benign,reentrancy-events
     function _onboard(
         DaoRegistry dao,
         address kycedMember,
