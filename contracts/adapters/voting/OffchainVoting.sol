@@ -234,61 +234,22 @@ contract OffchainVotingContract is IVoting, MemberGuard, AdapterGuard, Ownable {
         returns (VotingState state)
     {
         Voting storage vote = votes[address(dao)][proposalId];
-        if (vote.startingTime == 0) {
-            return IVoting.VotingState.NOT_STARTED;
-        }
-
-        if (vote.forceFailed) {
-            return IVoting.VotingState.NOT_PASS;
-        }
-
-        if (_ovHelper.fallbackVotingActivated(dao, vote.fallbackVotesCount)) {
+        if (_ovHelper.isFallbackVotingActivated(dao, vote.fallbackVotesCount)) {
             return fallbackVoting.voteResult(dao, proposalId);
         }
 
-        if (vote.isChallenged) {
-            return IVoting.VotingState.IN_PROGRESS;
-        }
-
-        if (vote.stepRequested > 0) {
-            return IVoting.VotingState.IN_PROGRESS;
-        }
-
-        uint256 votingPeriod = dao.getConfiguration(VotingPeriod);
-
-        // If the vote has started but the voting period has not passed yet,
-        // it's in progress
-        // slither-disable-next-line timestamp
-        if (block.timestamp < vote.startingTime + votingPeriod) {
-            return IVoting.VotingState.IN_PROGRESS;
-        }
-
-        uint256 gracePeriod = dao.getConfiguration(GracePeriod);
-
-        // If no result have been submitted but we are before grace + voting period,
-        // then the proposal is GRACE_PERIOD
-        // slither-disable-next-line timestamp
-        if (
-            vote.gracePeriodStartingTime == 0 &&
-            block.timestamp < vote.startingTime + gracePeriod + votingPeriod
-        ) {
-            return IVoting.VotingState.GRACE_PERIOD;
-        }
-
-        // If the vote has started but the voting period has not passed yet, it's in progress
-        // slither-disable-next-line timestamp
-        if (block.timestamp < vote.gracePeriodStartingTime + gracePeriod) {
-            return IVoting.VotingState.GRACE_PERIOD;
-        }
-
-        if (vote.nbYes > vote.nbNo) {
-            return IVoting.VotingState.PASS;
-        }
-        if (vote.nbYes < vote.nbNo) {
-            return IVoting.VotingState.NOT_PASS;
-        }
-
-        return IVoting.VotingState.TIE;
+        return
+            _ovHelper.getVoteResult(
+                vote.startingTime,
+                vote.forceFailed,
+                vote.isChallenged,
+                vote.stepRequested,
+                vote.gracePeriodStartingTime,
+                vote.nbYes,
+                vote.nbNo,
+                dao.getConfiguration(VotingPeriod),
+                dao.getConfiguration(GracePeriod)
+            );
     }
 
     function getBadNodeError(
@@ -341,9 +302,17 @@ contract OffchainVotingContract is IVoting, MemberGuard, AdapterGuard, Ownable {
         // slither-disable-next-line timestamp
         require(vote.snapshot > 0, "vote:not started");
         if (vote.resultRoot == bytes32(0) || vote.isChallenged) {
-            // slither-disable-next-line timestamp
             require(
-                _readyToSubmitResult(dao, vote, result.nbYes, result.nbNo),
+                _ovHelper.isReadyToSubmitResult(
+                    dao,
+                    vote.forceFailed,
+                    vote.snapshot,
+                    vote.startingTime,
+                    dao.getConfiguration(VotingPeriod),
+                    result.nbYes,
+                    result.nbNo,
+                    block.timestamp
+                ),
                 "vote:notReadyToSubmitResult"
             );
         }
@@ -459,7 +428,7 @@ contract OffchainVotingContract is IVoting, MemberGuard, AdapterGuard, Ownable {
      * @notice This function marks the proposal as challenged if a step requested by a member never came.
      * @notice The rule is, if a step has been requested and we are after the grace period, then challenge it
      */
-     // slither-disable-next-line reentrancy-benign,reentrancy-events
+    // slither-disable-next-line reentrancy-benign,reentrancy-events
     function challengeMissingStep(DaoRegistry dao, bytes32 proposalId)
         external
         reentrancyGuard(dao)
@@ -654,7 +623,7 @@ contract OffchainVotingContract is IVoting, MemberGuard, AdapterGuard, Ownable {
         votes[address(dao)][proposalId].fallbackVotesCount += 1;
 
         if (
-            _ovHelper.fallbackVotingActivated(
+            _ovHelper.isFallbackVotingActivated(
                 dao,
                 votes[address(dao)][proposalId].fallbackVotesCount
             )
@@ -709,40 +678,5 @@ contract OffchainVotingContract is IVoting, MemberGuard, AdapterGuard, Ownable {
             proposalId,
             votes[address(dao)][proposalId].resultRoot
         );
-    }
-
-    function _readyToSubmitResult(
-        DaoRegistry dao,
-        Voting storage vote,
-        uint256 nbYes,
-        uint256 nbNo
-    ) internal view returns (bool) {
-        if (vote.forceFailed) {
-            return false;
-        }
-        BankExtension bank = BankExtension(
-            dao.getExtensionAddress(DaoHelper.BANK)
-        );
-        uint256 totalWeight = bank.getPriorAmount(
-            DaoHelper.TOTAL,
-            DaoHelper.UNITS,
-            vote.snapshot
-        );
-        uint256 unvotedWeights = totalWeight - nbYes - nbNo;
-
-        uint256 diff;
-        if (nbYes > nbNo) {
-            diff = nbYes - nbNo;
-        } else {
-            diff = nbNo - nbYes;
-        }
-
-        if (diff > unvotedWeights) {
-            return true;
-        }
-
-        uint256 votingPeriod = dao.getConfiguration(VotingPeriod);
-        // slither-disable-next-line timestamp
-        return vote.startingTime + votingPeriod <= block.timestamp;
     }
 }

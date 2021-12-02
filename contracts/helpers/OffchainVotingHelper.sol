@@ -169,7 +169,7 @@ contract OffchainVotingHelperContract {
         return choice > 0 && choice < NB_CHOICES + 1;
     }
 
-    function fallbackVotingActivated(
+    function isFallbackVotingActivated(
         DaoRegistry dao,
         uint256 fallbackVotesCount
     ) external view returns (bool) {
@@ -177,5 +177,98 @@ contract OffchainVotingHelperContract {
             fallbackVotesCount >
             (dao.getNbMembers() * 100) /
                 dao.getConfiguration(FallbackThreshold);
+    }
+
+    function isReadyToSubmitResult(
+        DaoRegistry dao,
+        bool forceFailed,
+        uint256 snapshot,
+        uint256 startingTime,
+        uint256 votingPeriod,
+        uint256 nbYes,
+        uint256 nbNo,
+        uint256 blockTs
+    ) external view returns (bool) {
+        if (forceFailed) {
+            return false;
+        }
+
+        uint256 diff;
+        if (nbYes > nbNo) {
+            diff = nbYes - nbNo;
+        } else {
+            diff = nbNo - nbYes;
+        }
+
+        uint256 totalWeight = BankExtension(
+            dao.getExtensionAddress(DaoHelper.BANK)
+        ).getPriorAmount(DaoHelper.TOTAL, DaoHelper.UNITS, snapshot);
+        uint256 unvotedWeights = totalWeight - nbYes - nbNo;
+        if (diff > unvotedWeights) {
+            return true;
+        }
+
+        // slither-disable-next-line timestamp
+        return startingTime + votingPeriod <= blockTs;
+    }
+
+    function getVoteResult(
+        uint256 startingTime,
+        bool forceFailed,
+        bool isChallenged,
+        uint256 stepRequested,
+        uint256 gracePeriodStartingTime,
+        uint256 nbYes,
+        uint256 nbNo,
+        uint256 votingPeriod, // dao.getConfiguration(VotingPeriod)
+        uint256 gracePeriod //dao.getConfiguration(GracePeriod)
+    ) external view returns (IVoting.VotingState state) {
+        if (startingTime == 0) {
+            return IVoting.VotingState.NOT_STARTED;
+        }
+
+        if (forceFailed) {
+            return IVoting.VotingState.NOT_PASS;
+        }
+
+        if (isChallenged) {
+            return IVoting.VotingState.IN_PROGRESS;
+        }
+
+        if (stepRequested > 0) {
+            return IVoting.VotingState.IN_PROGRESS;
+        }
+
+        // If the vote has started but the voting period has not passed yet,
+        // it's in progress
+        // slither-disable-next-line timestamp
+        if (block.timestamp < startingTime + votingPeriod) {
+            return IVoting.VotingState.IN_PROGRESS;
+        }
+
+        // If no result have been submitted but we are before grace + voting period,
+        // then the proposal is GRACE_PERIOD
+        // slither-disable-next-line timestamp
+        if (
+            gracePeriodStartingTime == 0 &&
+            block.timestamp < startingTime + gracePeriod + votingPeriod
+        ) {
+            return IVoting.VotingState.GRACE_PERIOD;
+        }
+
+        // If the vote has started but the voting period has not passed yet, it's in progress
+        // slither-disable-next-line timestamp
+        if (block.timestamp < gracePeriodStartingTime + gracePeriod) {
+            return IVoting.VotingState.GRACE_PERIOD;
+        }
+
+        if (nbYes > nbNo) {
+            return IVoting.VotingState.PASS;
+        }
+        if (nbYes < nbNo) {
+            return IVoting.VotingState.NOT_PASS;
+        }
+
+        return IVoting.VotingState.TIE;
     }
 }
