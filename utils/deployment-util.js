@@ -29,7 +29,8 @@ const { entryDao, entryBank } = require("./access-control-util");
 const { adaptersIdsMap, extensionsIdsMap } = require("./dao-ids-util");
 const { UNITS, LOOT, sha3, embedConfigs } = require("./contract-util.js");
 const { ContractType } = require("../migrations/configs/contracts.config");
-
+const { utils } = require("ethers");
+const { web3 } = require("@openzeppelin/test-environment");
 /**
  * Deploys a contract based on the contract name defined in the config parameter.
  * If the contract is not found in the options object the deployment reverts with an error.
@@ -292,6 +293,61 @@ const createTestContracts = async ({ options }) => {
   return testContracts;
 };
 
+/**
+ * Creates the governance config roles in the DAO Registry based on the contract configs.governanceRoles.
+ */
+const createGovernanceRoles = async ({ options, dao, adapters }) => {
+  const readConfigValue = (configName, contractName) => {
+    const configValue = options[configName];
+    if (!configValue)
+      throw new Error(
+        `Error while creating governance role [${configName}] for ${contractName}`
+      );
+    return configValue;
+  };
+
+  await Object.values(options.contractConfigs)
+    .filter((c) => c.enabled)
+    .filter((c) => c.governanceRoles)
+    .reduce((p, c) => {
+      const roles = Object.keys(c.governanceRoles);
+      return p.then(() =>
+        roles.reduce(
+          (q, role) =>
+            q.then(async () => {
+              const adapter = Object.values(adapters).find(
+                (a) => a.configs.name === c.name
+              );
+              const configKey = sha3(
+                web3.utils.encodePacked(
+                  role.replace("$contractAddress", ""),
+                  utils.getAddress(adapter.address)
+                )
+              );
+              const configValue = utils.getAddress(
+                readConfigValue(c.governanceRoles[role], c.name)
+              );
+              return await dao.setAddressConfiguration(configKey, configValue, {
+                from: options.owner,
+              });
+            }),
+          Promise.resolve()
+        )
+      );
+    }, Promise.resolve());
+
+  if (options.defaultMemberGovernanceToken) {
+    const configKey = sha3(web3.utils.encodePacked("governance.role.default"));
+    await dao.setAddressConfiguration(
+      configKey,
+      utils.getAddress(options.defaultMemberGovernanceToken),
+      {
+        from: options.owner,
+      }
+    );
+  }
+};
+
 const validateContractConfigs = (contractConfigs) => {
   const found = new Map();
   Object.values(contractConfigs)
@@ -342,6 +398,8 @@ const deployDao = async (options) => {
     extensions,
     options,
   });
+
+  await createGovernanceRoles({ options, dao, adapters });
 
   await configureDao({
     owner: options.owner,
@@ -596,7 +654,6 @@ const configureOffchainVoting = async ({
   dao,
   daoFactory,
   offchainVoting,
-  chainId,
   owner,
   offchainAdmin,
   votingPeriod,
@@ -605,6 +662,7 @@ const configureOffchainVoting = async ({
   KickBadReporterAdapter,
   OffchainVotingContract,
   OffchainVotingHashContract,
+  OffchainVotingHelperContract,
   deployFunction,
   extensions,
 }) => {
@@ -630,10 +688,16 @@ const configureOffchainVoting = async ({
     [snapshotProposalContract.address]
   );
 
+  const offchainVotingHelper = await deployFunction(
+    OffchainVotingHelperContract,
+    [offchainVotingHashContract.address]
+  );
+
   const handleBadReporterAdapter = await deployFunction(KickBadReporterAdapter);
   const offchainVotingContract = await deployFunction(OffchainVotingContract, [
     currentVotingAdapterAddress,
     offchainVotingHashContract.address,
+    offchainVotingHelper.address,
     snapshotProposalContract.address,
     handleBadReporterAdapter.address,
     offchainAdmin,

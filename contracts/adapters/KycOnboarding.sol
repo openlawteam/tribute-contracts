@@ -34,7 +34,7 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
  */
 
-contract KycOnboardingContract is AdapterGuard, Signatures {
+contract KycOnboardingContract is AdapterGuard, MemberGuard, Signatures {
     using Address for address payable;
     using SafeERC20 for IERC20;
 
@@ -235,7 +235,7 @@ contract KycOnboardingContract is AdapterGuard, Signatures {
         uint256 amount,
         bytes memory signature
     ) internal reentrancyGuard(dao) {
-        require(!dao.isActiveMember(dao, kycedMember), "already member");
+        require(!isActiveMember(dao, kycedMember), "already member");
         uint256 maxMembers = dao.getConfiguration(
             _configKey(tokenAddr, MaxMembers)
         );

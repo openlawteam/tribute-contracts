@@ -8,6 +8,7 @@ import "../../guards/MemberGuard.sol";
 import "../../guards/AdapterGuard.sol";
 import "../interfaces/IVoting.sol";
 import "../../helpers/DaoHelper.sol";
+import "../../helpers/GovernanceHelper.sol";
 
 /**
 MIT License
@@ -147,21 +148,20 @@ contract VotingContract is IVoting, MemberGuard, AdapterGuard {
         address memberAddr = dao.getAddressIfDelegated(msg.sender);
 
         require(vote.votes[memberAddr] == 0, "member has already voted");
-        BankExtension bank = BankExtension(
-            dao.getExtensionAddress(DaoHelper.BANK)
-        );
-        uint256 correctWeight = bank.getPriorAmount(
+        uint256 votingWeight = GovernanceHelper.getVotingWeight(
+            dao,
             memberAddr,
-            DaoHelper.UNITS,
+            proposalId,
             vote.blockNumber
         );
+        if (votingWeight == 0) revert("vote not allowed");
 
         vote.votes[memberAddr] = voteValue;
 
         if (voteValue == 1) {
-            vote.nbYes = vote.nbYes + correctWeight;
+            vote.nbYes = vote.nbYes + votingWeight;
         } else if (voteValue == 2) {
-            vote.nbNo = vote.nbNo + correctWeight;
+            vote.nbNo = vote.nbNo + votingWeight;
         }
     }
 

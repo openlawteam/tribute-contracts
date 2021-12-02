@@ -60,36 +60,38 @@ export function loadProposalAndSaveVoteResults(
           Address.fromString(votingAdapterAddress.toHex()) as Address
         );
         // get vote results and state
-        let voteResults = offchainVotingContract.votes(daoAddress, proposalId);
+        let voteResults = offchainVotingContract.getVote(
+          daoAddress,
+          proposalId
+        );
         let voteState = offchainVotingContract.voteResult(
           daoAddress,
           proposalId
         );
 
         // assign voting data
-        vote.nbYes = voteResults.value3;
-        vote.nbNo = voteResults.value4;
+        vote.nbYes = voteResults.nbYes;
+        vote.nbNo = voteResults.nbNo;
 
         vote.adapterName = votingAdapterName;
         vote.adapterAddress = votingAdapterAddress;
         vote.proposal = maybeProposalId;
 
         if (proposal) {
-          proposal.snapshot = voteResults.value0;
-          proposal.reporter = voteResults.value1;
-          proposal.resultRoot = voteResults.value2;
+          proposal.snapshot = voteResults.snapshot;
+          proposal.reporter = voteResults.reporter;
+          proposal.resultRoot = voteResults.resultRoot;
 
-          proposal.nbYes = voteResults.value3;
-          proposal.nbNo = voteResults.value4;
+          proposal.nbYes = voteResults.nbYes;
+          proposal.nbNo = voteResults.nbNo;
 
-          proposal.startingTime = voteResults.value5;
-          proposal.gracePeriodStartingTime = voteResults.value6;
-          proposal.isChallenged = voteResults.value7;
-          proposal.stepRequested = voteResults.value8;
-          proposal.forceFailed = voteResults.value9;
-          // @todo its a mapping, not generated in schema
-          // proposal.fallbackVotes = voteResults.value10;
-          proposal.fallbackVotesCount = voteResults.value10;
+          proposal.startingTime = voteResults.startingTime;
+          proposal.gracePeriodStartingTime =
+            voteResults.gracePeriodStartingTime;
+          proposal.isChallenged = voteResults.isChallenged;
+          proposal.stepRequested = voteResults.stepRequested;
+          proposal.forceFailed = voteResults.forceFailed;
+          proposal.fallbackVotesCount = voteResults.fallbackVotesCount;
 
           proposal.votingState = voteState.toString();
           proposal.votingResult = voteId;
