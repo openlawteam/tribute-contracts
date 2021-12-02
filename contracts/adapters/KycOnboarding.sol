@@ -243,7 +243,7 @@ contract KycOnboardingContract is AdapterGuard, Signatures {
         require(dao.getNbMembers() < maxMembers, "the DAO is full");
 
         _checkKycCoupon(dao, kycedMember, tokenAddr, signature);
-        
+
         OnboardingDetails memory details = _checkData(dao, tokenAddr, amount);
         totalUnits[dao][tokenAddr] += details.unitsRequested;
 
@@ -251,7 +251,7 @@ contract KycOnboardingContract is AdapterGuard, Signatures {
             dao.getExtensionAddress(DaoHelper.BANK)
         );
         DaoHelper.potentialNewMember(kycedMember, dao, bank);
-        
+
         address payable multisigAddress = payable(
             dao.getAddressConfiguration(
                 _configKey(tokenAddr, FundTargetAddress)
@@ -259,7 +259,7 @@ contract KycOnboardingContract is AdapterGuard, Signatures {
         );
         if (multisigAddress == address(0x0)) {
             if (tokenAddr == DaoHelper.ETH_TOKEN) {
-                // The bank address is loaded from the DAO registry, 
+                // The bank address is loaded from the DAO registry,
                 // hence even if we change that, it belongs to the DAO,
                 // so it is fine to send eth to it.
                 // slither-disable-next-line arbitrary-send
