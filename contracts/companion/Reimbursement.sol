@@ -59,6 +59,12 @@ contract ReimbursementContract is IReimbursement, AdapterGuard, GelatoRelay {
     bytes32 internal constant RateLimitStart =
         keccak256("reimbursement.rateLimitStart");
 
+    /**
+     * @param dao the dao to configure
+     * @param gasPriceLimit the max gas price allowed for reimbursement. This is used to avoid someone draining the DAO by putting crazy gas price
+     * @param spendLimitPeriod how many seconds constitute a period (a way to define a period as 1 day, 1 week, 1 hour etc ...)
+     * @param spendLimitEth how much ETH is reimbursable during the payment period
+     **/
     function configureDao(
         DaoRegistry dao,
         uint256 gasPriceLimit,
@@ -74,6 +80,11 @@ contract ReimbursementContract is IReimbursement, AdapterGuard, GelatoRelay {
         dao.setConfiguration(SpendLimitEth, spendLimitEth);
     }
 
+    /**
+     * @notice returns whether the current transaction should be reimbursed or not. It returns the spendLimitPeriod to avoid someone updating it during the execution.
+     * @param dao the dao that should reimburse
+     * @param the maximum gas usable in this transaction
+     */
     function shouldReimburse(DaoRegistry dao, uint256 gasLeft)
         external
         view
@@ -121,6 +132,13 @@ contract ReimbursementContract is IReimbursement, AdapterGuard, GelatoRelay {
         return (true, spendLimitPeriod);
     }
 
+    /**
+     * @notice reimburse the transaction
+     * @param dao the dao that needs to reimburse
+     * @param caller who is the caller (the one who should be reimbursed)
+     * @param gasUsage how much gas has been used
+     * @param spendLimitPeriod the spend liimt period param read before executing the transaction
+     */
     function reimburseTransaction(
         DaoRegistry dao,
         address payable caller,

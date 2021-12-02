@@ -31,10 +31,10 @@ SOFTWARE.
  */
 abstract contract Reimbursable {
     struct ReimbursementData {
-        uint256 gasStart;
-        bool shouldReimburse;
-        uint256 spendLimitPeriod;
-        IReimbursement reimbursement;
+        uint256 gasStart; // how much gas is left before executing anything
+        bool shouldReimburse; // should the transaction be reimbursed or not ?
+        uint256 spendLimitPeriod; // how long (in seconds) is the spend limit period
+        IReimbursement reimbursement; // which adapter address is used for reimbursement
     }
 
     /**
