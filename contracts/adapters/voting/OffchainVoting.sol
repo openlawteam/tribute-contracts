@@ -289,7 +289,8 @@ contract OffchainVotingContract is IVoting, MemberGuard, AdapterGuard, Ownable {
      * - if we already have a result that has not been challenged
      *   - is the new one heavier than the previous one?
      */
-    // slither-disable-next-line reentrancy-events,reentrancy-benign
+    // The function is protected against reentrancy with the reentrancyGuard
+    // slither-disable-next-line reentrancy-events,reentrancy-benign,reentrancy-no-eth
     function submitVoteResult(
         DaoRegistry dao,
         bytes32 proposalId,
@@ -320,19 +321,6 @@ contract OffchainVotingContract is IVoting, MemberGuard, AdapterGuard, Ownable {
         address memberAddr = dao.getAddressIfDelegated(reporter);
         require(isActiveMember(dao, memberAddr), "not active member");
 
-        if (
-            vote.gracePeriodStartingTime == 0 ||
-            // check whether the new result changes the outcome
-            vote.nbNo > vote.nbYes != result.nbNo > result.nbYes
-        ) {
-            vote.gracePeriodStartingTime = block.timestamp;
-        }
-        vote.nbNo = result.nbNo;
-        vote.nbYes = result.nbYes;
-        vote.resultRoot = resultRoot;
-        vote.reporter = memberAddr;
-        vote.isChallenged = false;
-
         uint256 membersCount = _ovHelper.checkMemberCount(
             dao,
             result.index,
@@ -360,13 +348,26 @@ contract OffchainVotingContract is IVoting, MemberGuard, AdapterGuard, Ownable {
             "invalid sig"
         );
 
-        _checkNode(dao, adapterAddress, result, resultRoot);
+        _verifyNode(dao, adapterAddress, result, resultRoot);
 
         // slither-disable-next-line timestamp
         require(
             vote.nbYes + vote.nbNo < result.nbYes + result.nbNo,
             "result weight too low"
         );
+
+        if (
+            vote.gracePeriodStartingTime == 0 ||
+            // check whether the new result changes the outcome
+            vote.nbNo > vote.nbYes != result.nbNo > result.nbYes
+        ) {
+            vote.gracePeriodStartingTime = block.timestamp;
+        }
+        vote.nbNo = result.nbNo;
+        vote.nbYes = result.nbYes;
+        vote.resultRoot = resultRoot;
+        vote.reporter = memberAddr;
+        vote.isChallenged = false;
 
         emit VoteResultSubmitted(
             address(dao),
@@ -440,7 +441,7 @@ contract OffchainVotingContract is IVoting, MemberGuard, AdapterGuard, Ownable {
         // slither-disable-next-line timestamp
         require(vote.stepRequested == node.index, "wrong step provided");
 
-        _checkNode(dao, adapterAddress, node, vote.resultRoot);
+        _verifyNode(dao, adapterAddress, node, vote.resultRoot);
 
         vote.stepRequested = 0;
         vote.gracePeriodStartingTime = block.timestamp;
@@ -467,7 +468,7 @@ contract OffchainVotingContract is IVoting, MemberGuard, AdapterGuard, Ownable {
         votes[address(dao)][proposalId].snapshot = blockNumber;
 
         require(
-            BankExtension(dao.getExtensionAddress(DaoHelper.BANK)).balanceOf(
+            _getBank(dao).balanceOf(
                 dao.getAddressIfDelegated(proposal.submitter),
                 DaoHelper.UNITS
             ) > 0,
@@ -495,7 +496,7 @@ contract OffchainVotingContract is IVoting, MemberGuard, AdapterGuard, Ownable {
         Voting storage vote = votes[address(dao)][proposalId];
         require(vote.resultRoot != bytes32(0), "no result available yet!");
         (address actionId, ) = dao.proposals(proposalId);
-        _checkNode(dao, actionId, node, vote.resultRoot);
+        _verifyNode(dao, actionId, node, vote.resultRoot);
 
         if (
             ovHash.checkStep(
@@ -527,12 +528,11 @@ contract OffchainVotingContract is IVoting, MemberGuard, AdapterGuard, Ownable {
                 vote.resultRoot,
                 vote.snapshot,
                 vote.gracePeriodStartingTime,
-                BankExtension(dao.getExtensionAddress(DaoHelper.BANK))
-                    .getPriorAmount(
-                        DaoHelper.TOTAL,
-                        DaoHelper.MEMBER_COUNT,
-                        vote.snapshot
-                    ),
+                _getBank(dao).getPriorAmount(
+                    DaoHelper.TOTAL,
+                    DaoHelper.MEMBER_COUNT,
+                    vote.snapshot
+                ),
                 node
             ) != OffchainVotingHelperContract.BadNodeError.OK
         ) {
@@ -557,8 +557,8 @@ contract OffchainVotingContract is IVoting, MemberGuard, AdapterGuard, Ownable {
         require(resultRoot != bytes32(0), "no result!");
         require(nodeCurrent.index == nodePrevious.index + 1, "not consecutive");
 
-        _checkNode(dao, actionId, nodeCurrent, vote.resultRoot);
-        _checkNode(dao, actionId, nodePrevious, vote.resultRoot);
+        _verifyNode(dao, actionId, nodeCurrent, vote.resultRoot);
+        _verifyNode(dao, actionId, nodePrevious, vote.resultRoot);
 
         OffchainVotingHashContract.VoteStepParams
             memory params = OffchainVotingHashContract.VoteStepParams(
@@ -630,10 +630,7 @@ contract OffchainVotingContract is IVoting, MemberGuard, AdapterGuard, Ownable {
             challengeProposalId
         ] = ProposalChallenge(
             challengedReporter,
-            BankExtension(dao.getExtensionAddress(DaoHelper.BANK)).balanceOf(
-                challengedReporter,
-                DaoHelper.UNITS
-            )
+            _getBank(dao).balanceOf(challengedReporter, DaoHelper.UNITS)
         );
 
         GuildKickHelper.lockMemberTokens(dao, challengedReporter);
@@ -647,14 +644,23 @@ contract OffchainVotingContract is IVoting, MemberGuard, AdapterGuard, Ownable {
         );
     }
 
-    function _checkNode(
+    function _verifyNode(
         DaoRegistry dao,
         address adapterAddress,
         OffchainVotingHashContract.VoteResultNode memory node,
         bytes32 root
     ) internal view {
-        bytes32 hashCurrent = ovHash.nodeHash(dao, adapterAddress, node);
-        // slither-disable-next-line timestamp
-        require(MerkleProof.verify(node.proof, root, hashCurrent), "proof:bad");
+        require(
+            MerkleProof.verify(
+                node.proof,
+                root,
+                ovHash.nodeHash(dao, adapterAddress, node)
+            ),
+            "proof:bad"
+        );
+    }
+
+    function _getBank(DaoRegistry dao) internal view returns (BankExtension) {
+        return BankExtension(dao.getExtensionAddress(DaoHelper.BANK));
     }
 }
