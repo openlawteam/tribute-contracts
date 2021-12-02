@@ -43,6 +43,10 @@ jobs:
           python -m pip install --upgrade pip
           pip3 install slither-analyzer==0.8.1 solc-select==0.2.1
       
-      - name: Summary of static ananlysis
+      - name: Summary of static analysis
         run: |
           slither . --print human-summary
+
+      - name: High/Med/Low issues
+        run: |
+          slither . --config-file slither.config.json

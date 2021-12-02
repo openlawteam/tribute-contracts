@@ -182,6 +182,10 @@ contract ManagingContract is IManaging, AdapterGuard, Reimbursable {
         ProposalDetails memory proposal
     ) internal {
         for (uint256 i = 0; i < proposal.extensionAclFlags.length; i++) {
+            // It is fine to execute the external call inside the loop
+            // because it is calling the correct function in the dao contract
+            // it won't be calling a fallback that always revert.
+            // slither-disable-next-line calls-loop
             dao.setAclToExtensionForAdapter(
                 // It needs to be registered as extension
                 proposal.extensionAddresses[i],
@@ -206,8 +210,16 @@ contract ManagingContract is IManaging, AdapterGuard, Reimbursable {
         for (uint256 i = 0; i < configs.length; i++) {
             Configuration memory config = configs[i];
             if (ConfigType.NUMERIC == config.configType) {
+                // It is fine to execute the external call inside the loop
+                // because it is calling the correct function in the dao contract
+                // it won't be calling a fallback that always revert.
+                // slither-disable-next-line calls-loop
                 dao.setConfiguration(config.key, config.numericValue);
             } else if (ConfigType.ADDRESS == config.configType) {
+                // It is fine to execute the external call inside the loop
+                // because it is calling the correct function in the dao contract
+                // it won't be calling a fallback that always revert.
+                // slither-disable-next-line calls-loop
                 dao.setAddressConfiguration(config.key, config.addressValue);
             }
         }
