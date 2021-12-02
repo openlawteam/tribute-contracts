@@ -152,12 +152,12 @@ contract OffchainVotingContract is IVoting, MemberGuard, AdapterGuard, Ownable {
         dao.setConfiguration(FallbackThreshold, fallbackThreshold);
     }
 
-    function getVote(address adapterAddress, bytes32 proposalId)
+    function getVote(DaoRegistry dao, bytes32 proposalId)
         external
         view
         returns (VotingDetails memory)
     {
-        Voting storage vote = votes[adapterAddress][proposalId];
+        Voting storage vote = votes[address(dao)][proposalId];
 
         return
             VotingDetails(
