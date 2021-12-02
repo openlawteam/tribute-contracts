@@ -224,6 +224,10 @@ contract KycOnboardingContract is AdapterGuard, Signatures {
      * @param tokenAddr is the address the ETH address(0) or an ERC20 Token address
      * @param signature is message signature for verification
      */
+    // The function is protected against reentrancy with the reentrancyGuard(dao)
+    // so it is fine to change some state after the reentrancyGuard(dao) external call
+    // because it calls the dao contract to lock the session/transaction flow.
+    // slither-disable-next-line reentrancy-benign,reentrancy-events
     function _onboard(
         DaoRegistry dao,
         address kycedMember,
@@ -239,13 +243,15 @@ contract KycOnboardingContract is AdapterGuard, Signatures {
         require(dao.getNbMembers() < maxMembers, "the DAO is full");
 
         _checkKycCoupon(dao, kycedMember, tokenAddr, signature);
+
         OnboardingDetails memory details = _checkData(dao, tokenAddr, amount);
+        totalUnits[dao][tokenAddr] += details.unitsRequested;
 
         BankExtension bank = BankExtension(
             dao.getExtensionAddress(DaoHelper.BANK)
         );
         DaoHelper.potentialNewMember(kycedMember, dao, bank);
-        totalUnits[dao][tokenAddr] += details.unitsRequested;
+
         address payable multisigAddress = payable(
             dao.getAddressConfiguration(
                 _configKey(tokenAddr, FundTargetAddress)
@@ -253,6 +259,10 @@ contract KycOnboardingContract is AdapterGuard, Signatures {
         );
         if (multisigAddress == address(0x0)) {
             if (tokenAddr == DaoHelper.ETH_TOKEN) {
+                // The bank address is loaded from the DAO registry,
+                // hence even if we change that, it belongs to the DAO,
+                // so it is fine to send eth to it.
+                // slither-disable-next-line arbitrary-send
                 bank.addToBalance{value: details.amount}(
                     DaoHelper.GUILD,
                     DaoHelper.ETH_TOKEN,
@@ -269,6 +279,10 @@ contract KycOnboardingContract is AdapterGuard, Signatures {
             }
         } else {
             if (tokenAddr == DaoHelper.ETH_TOKEN) {
+                // The _weth address is defined during the deployment of the contract
+                // There is no way to change it once it has been deployed,
+                // so it is fine to send eth to it.
+                // slither-disable-next-line arbitrary-send
                 _weth.deposit{value: details.amount}();
                 _weth20.safeTransferFrom(
                     address(this),

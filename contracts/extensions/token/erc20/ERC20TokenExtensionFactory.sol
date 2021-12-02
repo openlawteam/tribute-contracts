@@ -49,6 +49,7 @@ contract ERC20TokenExtensionFactory is IFactory, CloneFactory, ReentrancyGuard {
     /**
      * @notice Creates a clone of the ERC20 Token Extension.
      */
+    // slither-disable-next-line reentrancy-events
     function create(
         address dao,
         string calldata tokenName,

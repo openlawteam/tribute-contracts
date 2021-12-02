@@ -4,9 +4,9 @@
 pragma solidity ^0.8.0;
 
 contract WETH {
-    string public name = "Wrapped Ether";
-    string public symbol = "WETH";
-    uint8 public decimals = 18;
+    string public constant name = "Wrapped Ether";
+    string public constant symbol = "WETH";
+    uint8 public constant decimals = 18;
 
     event Approval(address indexed src, address indexed guy, uint256 wad);
     event Transfer(address indexed src, address indexed dst, uint256 wad);
@@ -25,7 +25,7 @@ contract WETH {
         emit Deposit(msg.sender, msg.value);
     }
 
-    function withdraw(uint256 wad) public {
+    function withdraw(uint256 wad) external {
         require(balanceOf[msg.sender] >= wad, "not enough WETH to withdraw");
         require(address(this).balance >= wad, "not enough ETH in the contract");
         balanceOf[msg.sender] -= wad;
@@ -33,17 +33,17 @@ contract WETH {
         emit Withdrawal(msg.sender, wad);
     }
 
-    function totalSupply() public view returns (uint256) {
+    function totalSupply() external view returns (uint256) {
         return address(this).balance;
     }
 
-    function approve(address guy, uint256 wad) public returns (bool) {
+    function approve(address guy, uint256 wad) external returns (bool) {
         allowance[msg.sender][guy] = wad;
         emit Approval(msg.sender, guy, wad);
         return true;
     }
 
-    function transfer(address dst, uint256 wad) public returns (bool) {
+    function transfer(address dst, uint256 wad) external returns (bool) {
         return transferFrom(msg.sender, dst, wad);
     }
 
