@@ -52,9 +52,9 @@ contract ReimbursementContract is IReimbursement, AdapterGuard, GelatoRelay {
     bytes32 internal constant GasPriceLimit =
         keccak256("reimbursement.gasPriceLimit");
     bytes32 internal constant SpendLimitPeriod =
-        keccak256("reimbursement.spendlimitPeriod");
+        keccak256("reimbursement.spendLimitPeriod");
     bytes32 internal constant SpendLimitEth =
-        keccak256("reimbursement.spendlimitEth");
+        keccak256("reimbursement.spendLimitEth");
     bytes32 internal constant EthUsed = keccak256("reimbursement.ethUsed");
     bytes32 internal constant RateLimitStart =
         keccak256("reimbursement.rateLimitStart");
@@ -159,17 +159,17 @@ contract ReimbursementContract is IReimbursement, AdapterGuard, GelatoRelay {
                     DaoHelper.ETH_TOKEN,
                     payback
                 );
-                bank.withdraw(gelato, DaoHelper.ETH_TOKEN, payback);
+                bank.withdraw(caller, DaoHelper.ETH_TOKEN, payback);
             }
         } catch {
             //if supportsInterface reverts ( function does not exist, assume it does not have withdrawTo )
             bank.internalTransfer(
                 DaoHelper.GUILD,
-                gelato,
+                caller,
                 DaoHelper.ETH_TOKEN,
                 payback
             );
-            bank.withdraw(gelato, DaoHelper.ETH_TOKEN, payback);
+            bank.withdraw(caller, DaoHelper.ETH_TOKEN, payback);
         }
     }
 }

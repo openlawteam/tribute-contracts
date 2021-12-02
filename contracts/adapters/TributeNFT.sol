@@ -208,7 +208,6 @@ contract TributeNFTContract is
         ReimbursementData memory rData = ReimbursableLib.beforeExecution(
             ppS.dao
         );
-        ppS.dao.lockSession();
         (
             ProposalDetails storage proposal,
             IVoting.VotingState voteResult
@@ -236,7 +235,6 @@ contract TributeNFTContract is
         }
 
         ReimbursableLib.afterExecution(ppS.dao, rData);
-        ppS.dao.unlockSession();
         return this.onERC1155Received.selector;
     }
 
@@ -278,7 +276,9 @@ contract TributeNFTContract is
         ProcessProposal memory ppS = abi.decode(data, (ProcessProposal));
 
         require(ppS.dao.lockedAt() != block.number, "reentrancy guard");
-        ppS.dao.lockSession();
+        ReimbursementData memory rData = ReimbursableLib.beforeExecution(
+            ppS.dao
+        );
 
         (
             ProposalDetails storage proposal,
@@ -300,7 +300,7 @@ contract TributeNFTContract is
             erc721.safeTransferFrom(address(this), from, tokenId);
         }
 
-        ppS.dao.unlockSession();
+        ReimbursableLib.afterExecution(ppS.dao, rData);
         return this.onERC721Received.selector;
     }
 }

@@ -43,20 +43,17 @@ module.exports = {
     goerli: {
       provider: getNetworkProvider,
       network_id: 5,
-      gasPrice: 10000000000,
       skipDryRun: true,
     },
     rinkeby: {
       provider: getNetworkProvider,
       network_id: 4,
       skipDryRun: true,
-      gasPrice: 30000000000,
     },
     mainnet: {
       provider: getNetworkProvider,
       network_id: 1,
       skipDryRun: true,
-      gasPrice: 30000000000,
     },
     harmony: {
       provider: getNetworkProvider,
