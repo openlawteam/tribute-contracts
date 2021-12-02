@@ -301,6 +301,7 @@ contract OffchainVotingContract is IVoting, MemberGuard, AdapterGuard, Ownable {
         Voting storage vote = votes[address(dao)][proposalId];
         // slither-disable-next-line timestamp
         require(vote.snapshot > 0, "vote:not started");
+
         if (vote.resultRoot == bytes32(0) || vote.isChallenged) {
             require(
                 _ovHelper.isReadyToSubmitResult(
@@ -332,31 +333,21 @@ contract OffchainVotingContract is IVoting, MemberGuard, AdapterGuard, Ownable {
         vote.reporter = memberAddr;
         vote.isChallenged = false;
 
-        uint256 membersCount = BankExtension(
-            dao.getExtensionAddress(DaoHelper.BANK)
-        ).getPriorAmount(
-                DaoHelper.TOTAL,
-                DaoHelper.MEMBER_COUNT,
-                vote.snapshot
-            );
-        // slither-disable-next-line timestamp
-        require(
-            membersCount - 1 == result.index,
-            "index:member_count mismatch"
+        uint256 membersCount = _ovHelper.checkMemberCount(
+            dao,
+            result.index,
+            vote.snapshot
         );
 
-        require(
-            _ovHelper.getBadNodeError(
-                dao,
-                proposalId,
-                true,
-                resultRoot,
-                vote.snapshot,
-                0,
-                membersCount,
-                result
-            ) == OffchainVotingHelperContract.BadNodeError.OK,
-            "bad node"
+        _ovHelper.checkBadNodeError(
+            dao,
+            proposalId,
+            true,
+            resultRoot,
+            vote.snapshot,
+            0,
+            membersCount,
+            result
         );
 
         (address adapterAddress, ) = dao.proposals(proposalId);
@@ -369,14 +360,7 @@ contract OffchainVotingContract is IVoting, MemberGuard, AdapterGuard, Ownable {
             "invalid sig"
         );
 
-        require(
-            MerkleProof.verify(
-                result.proof,
-                resultRoot,
-                ovHash.nodeHash(dao, adapterAddress, result)
-            ),
-            "proof:bad"
-        );
+        _checkNode(dao, adapterAddress, result, resultRoot);
 
         // slither-disable-next-line timestamp
         require(
@@ -455,15 +439,22 @@ contract OffchainVotingContract is IVoting, MemberGuard, AdapterGuard, Ownable {
         Voting storage vote = votes[address(dao)][node.proposalId];
         // slither-disable-next-line timestamp
         require(vote.stepRequested == node.index, "wrong step provided");
-        bytes32 hashCurrent = ovHash.nodeHash(dao, adapterAddress, node);
-        // slither-disable-next-line timestamp
-        require(
-            MerkleProof.verify(node.proof, vote.resultRoot, hashCurrent),
-            "proof:bad"
-        );
+
+        _checkNode(dao, adapterAddress, node, vote.resultRoot);
 
         vote.stepRequested = 0;
         vote.gracePeriodStartingTime = block.timestamp;
+    }
+
+    function _checkNode(
+        DaoRegistry dao,
+        address adapterAddress,
+        OffchainVotingHashContract.VoteResultNode memory node,
+        bytes32 root
+    ) internal view {
+        bytes32 hashCurrent = ovHash.nodeHash(dao, adapterAddress, node);
+        // slither-disable-next-line timestamp
+        require(MerkleProof.verify(node.proof, root, hashCurrent), "proof:bad");
     }
 
     // slither-disable-next-line reentrancy-benign
@@ -514,14 +505,8 @@ contract OffchainVotingContract is IVoting, MemberGuard, AdapterGuard, Ownable {
 
         Voting storage vote = votes[address(dao)][proposalId];
         require(vote.resultRoot != bytes32(0), "no result available yet!");
-
         (address actionId, ) = dao.proposals(proposalId);
-        bytes32 hashCurrent = ovHash.nodeHash(dao, actionId, node);
-        //check that the step is indeed part of the result
-        require(
-            MerkleProof.verify(node.proof, vote.resultRoot, hashCurrent),
-            "proof:bad"
-        );
+        _checkNode(dao, actionId, node, vote.resultRoot);
 
         if (
             ovHash.checkStep(
@@ -579,19 +564,12 @@ contract OffchainVotingContract is IVoting, MemberGuard, AdapterGuard, Ownable {
         bytes32 resultRoot = vote.resultRoot;
 
         (address actionId, ) = dao.proposals(proposalId);
-        require(resultRoot != bytes32(0), "no result!");
-        bytes32 hashCurrent = ovHash.nodeHash(dao, actionId, nodeCurrent);
-        bytes32 hashPrevious = ovHash.nodeHash(dao, actionId, nodePrevious);
-        require(
-            MerkleProof.verify(nodeCurrent.proof, resultRoot, hashCurrent),
-            "proof invalid for current"
-        );
-        require(
-            MerkleProof.verify(nodePrevious.proof, resultRoot, hashPrevious),
-            "proof invalid for previous"
-        );
 
+        require(resultRoot != bytes32(0), "no result!");
         require(nodeCurrent.index == nodePrevious.index + 1, "not consecutive");
+
+        _checkNode(dao, actionId, nodeCurrent, vote.resultRoot);
+        _checkNode(dao, actionId, nodePrevious, vote.resultRoot);
 
         OffchainVotingHashContract.VoteStepParams
             memory params = OffchainVotingHashContract.VoteStepParams(

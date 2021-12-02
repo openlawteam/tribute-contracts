@@ -66,6 +66,46 @@ contract OffchainVotingHelperContract {
         _ovHash = _contract;
     }
 
+    function checkMemberCount(
+        DaoRegistry dao,
+        uint256 resultIndex,
+        uint256 blockNumber
+    ) external view returns (uint256 membersCount) {
+        membersCount = BankExtension(dao.getExtensionAddress(DaoHelper.BANK))
+            .getPriorAmount(
+                DaoHelper.TOTAL,
+                DaoHelper.MEMBER_COUNT,
+                blockNumber
+            );
+        // slither-disable-next-line timestamp
+        require(membersCount - 1 == resultIndex, "index:member_count mismatch");
+    }
+
+    function checkBadNodeError(
+        DaoRegistry dao,
+        bytes32 proposalId,
+        bool submitNewVote,
+        bytes32 resultRoot,
+        uint256 blockNumber,
+        uint256 gracePeriodStartingTime,
+        uint256 nbMembers,
+        OffchainVotingHashContract.VoteResultNode memory node
+    ) external view {
+        require(
+            getBadNodeError(
+                dao,
+                proposalId,
+                submitNewVote,
+                resultRoot,
+                blockNumber,
+                gracePeriodStartingTime,
+                nbMembers,
+                node
+            ) == OffchainVotingHelperContract.BadNodeError.OK,
+            "bad node"
+        );
+    }
+
     function getBadNodeError(
         DaoRegistry dao,
         bytes32 proposalId,
@@ -75,7 +115,7 @@ contract OffchainVotingHelperContract {
         uint256 gracePeriodStartingTime,
         uint256 nbMembers,
         OffchainVotingHashContract.VoteResultNode memory node
-    ) external view returns (BadNodeError) {
+    ) public view returns (BadNodeError) {
         (address actionId, ) = dao.proposals(proposalId);
         require(resultRoot != bytes32(0), "no result available yet!");
         bytes32 hashCurrent = _ovHash.nodeHash(dao, actionId, node);
