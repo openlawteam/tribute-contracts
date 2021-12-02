@@ -239,13 +239,15 @@ contract KycOnboardingContract is AdapterGuard, Signatures {
         require(dao.getNbMembers() < maxMembers, "the DAO is full");
 
         _checkKycCoupon(dao, kycedMember, tokenAddr, signature);
+        
         OnboardingDetails memory details = _checkData(dao, tokenAddr, amount);
+        totalUnits[dao][tokenAddr] += details.unitsRequested;
 
         BankExtension bank = BankExtension(
             dao.getExtensionAddress(DaoHelper.BANK)
         );
         DaoHelper.potentialNewMember(kycedMember, dao, bank);
-        totalUnits[dao][tokenAddr] += details.unitsRequested;
+        
         address payable multisigAddress = payable(
             dao.getAddressConfiguration(
                 _configKey(tokenAddr, FundTargetAddress)

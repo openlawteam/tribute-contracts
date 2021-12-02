@@ -128,6 +128,7 @@ contract CouponOnboardingContract is AdapterGuard, Signatures {
      * @param nonce is a unique identifier for this coupon request
      * @param signature is message signature for verification
      */
+    // function is protected against reentrancy attack with the reentrancyGuard(dao)
     // slither-disable-next-line reentrancy-benign
     function redeemCoupon(
         DaoRegistry dao,
@@ -137,6 +138,11 @@ contract CouponOnboardingContract is AdapterGuard, Signatures {
         bytes memory signature
     ) external reentrancyGuard(dao) {
         uint256 currentFlag = _flags[address(dao)][nonce / 256];
+        _flags[address(dao)][nonce / 256] = DaoHelper.setFlag(
+            currentFlag,
+            nonce % 256,
+            true
+        );
         require(
             DaoHelper.getFlag(currentFlag, nonce % 256) == false,
             "coupon already redeemed"
@@ -152,12 +158,6 @@ contract CouponOnboardingContract is AdapterGuard, Signatures {
                 signature
             ),
             "invalid sig"
-        );
-
-        _flags[address(dao)][nonce / 256] = DaoHelper.setFlag(
-            currentFlag,
-            nonce % 256,
-            true
         );
 
         IERC20 erc20 = IERC20(
