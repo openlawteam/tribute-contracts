@@ -75,7 +75,7 @@ contract OffchainVotingHelperContract {
         uint256 gracePeriodStartingTime,
         uint256 nbMembers,
         OffchainVotingHashContract.VoteResultNode memory node
-    ) public view returns (BadNodeError) {
+    ) external view returns (BadNodeError) {
         (address actionId, ) = dao.proposals(proposalId);
         require(resultRoot != bytes32(0), "no result available yet!");
         bytes32 hashCurrent = _ovHash.nodeHash(dao, actionId, node);
@@ -148,7 +148,7 @@ contract OffchainVotingHelperContract {
         bytes memory data,
         address,
         SnapshotProposalContract snapshotContract
-    ) public view returns (address) {
+    ) external view returns (address) {
         SnapshotProposalContract.ProposalMessage memory proposal = abi.decode(
             data,
             (SnapshotProposalContract.ProposalMessage)
@@ -172,7 +172,7 @@ contract OffchainVotingHelperContract {
     function fallbackVotingActivated(
         DaoRegistry dao,
         uint256 fallbackVotesCount
-    ) public view returns (bool) {
+    ) external view returns (bool) {
         return
             fallbackVotesCount >
             (dao.getNbMembers() * 100) /

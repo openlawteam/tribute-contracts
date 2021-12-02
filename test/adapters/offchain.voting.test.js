@@ -918,7 +918,7 @@ describe("Adapter - Offchain Voting", () => {
         data.lastResult,
         data.rootSig
       ),
-      "getPriorAmount not found"
+      "getPriorAmount not implemented"
     );
   });
 });

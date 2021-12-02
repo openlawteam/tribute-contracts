@@ -704,7 +704,7 @@ describe("Adapter - Voting", () => {
         from: daoOwner,
         gasPrice: toBN("0"),
       }),
-      "getPriorAmount not found"
+      "getPriorAmount not implemented"
     );
   });
 });

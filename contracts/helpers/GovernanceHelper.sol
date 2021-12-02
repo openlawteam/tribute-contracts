@@ -92,12 +92,16 @@ library GovernanceHelper {
         // otherwise this call will fail and revert the voting process.
         // The actual revert does not show a clear reason, so we catch the error
         // and revert with a better error message.
+        // slither-disable-next-line unused-return
         try
             ERC20Extension(governanceToken).getPriorAmount(voterAddr, snapshot)
-        returns (uint256 votingWeight) {
+        returns (
+            // slither-disable-next-line uninitialized-local,variable-scope
+            uint256 votingWeight
+        ) {
             return votingWeight;
         } catch {
-            revert("getPriorAmount not found");
+            revert("getPriorAmount not implemented");
         }
     }
 }

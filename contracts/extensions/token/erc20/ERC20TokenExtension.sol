@@ -175,7 +175,7 @@ contract ERC20Extension is AdapterGuard, IExtension, IERC20 {
      * @dev Returns the amount of tokens owned by `account` considering the snapshot.
      */
     function getPriorAmount(address account, uint256 snapshot)
-        public
+        external
         view
         returns (uint256)
     {
