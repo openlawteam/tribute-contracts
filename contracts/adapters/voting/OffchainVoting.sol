@@ -446,17 +446,6 @@ contract OffchainVotingContract is IVoting, MemberGuard, AdapterGuard, Ownable {
         vote.gracePeriodStartingTime = block.timestamp;
     }
 
-    function _checkNode(
-        DaoRegistry dao,
-        address adapterAddress,
-        OffchainVotingHashContract.VoteResultNode memory node,
-        bytes32 root
-    ) internal view {
-        bytes32 hashCurrent = ovHash.nodeHash(dao, adapterAddress, node);
-        // slither-disable-next-line timestamp
-        require(MerkleProof.verify(node.proof, root, hashCurrent), "proof:bad");
-    }
-
     // slither-disable-next-line reentrancy-benign
     function startNewVotingForProposal(
         DaoRegistry dao,
@@ -656,5 +645,16 @@ contract OffchainVotingContract is IVoting, MemberGuard, AdapterGuard, Ownable {
             proposalId,
             votes[address(dao)][proposalId].resultRoot
         );
+    }
+
+    function _checkNode(
+        DaoRegistry dao,
+        address adapterAddress,
+        OffchainVotingHashContract.VoteResultNode memory node,
+        bytes32 root
+    ) internal view {
+        bytes32 hashCurrent = ovHash.nodeHash(dao, adapterAddress, node);
+        // slither-disable-next-line timestamp
+        require(MerkleProof.verify(node.proof, root, hashCurrent), "proof:bad");
     }
 }
