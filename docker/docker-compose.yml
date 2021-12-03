@@ -10,7 +10,7 @@ services:
       ENV: "local"
       PORT: 8080
       RELAYER_PK: "0xb80a5165a59af8ce566266fcd0e919e13ed4ecbd57ae952e73ae2cddc08b84c6"
-      ALCHEMY_API_URL: "http://rinkeby.openlaw.io:8545"
+      ALCHEMY_API_URL: "https://rpc.xdaichain.com"
       JAWSDB_URL: "postgres://snap:pwd123@trib-snapshot-db:5432/snapshot-db"
       IGNORE_VOTE_END_CONSTRAINT: "true"
       ALLOWED_DOMAINS: "http://localhost:3000"

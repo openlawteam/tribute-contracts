@@ -1,8 +1,8 @@
 [
   {
-    "network": "rinkeby",
-    "daoFactoryAddress": "0x08e3e2a8b82352d2eE3906Ff57A0B6fCB2eF72c5",
-    "daoFactoryStartBlock": 9414112,
+    "network": "xdai",
+    "daoFactoryAddress": "",
+    "daoFactoryStartBlock": ,
     "GITHUB_USERNAME": "openlawteam",
     "SUBGRAPH_NAME": "tribute"
   }

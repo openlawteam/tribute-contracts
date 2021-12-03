@@ -61,6 +61,11 @@ module.exports = {
       network_id: 1666700000,
       skipDryRun: true,
     },
+    xdai: {
+      provider: getNetworkProvider,
+      network_id: 100,
+      skipDryRun: true,
+    },
     coverage: {
       host: "localhost",
       network_id: "*",
