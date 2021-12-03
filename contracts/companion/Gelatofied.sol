@@ -18,7 +18,9 @@ abstract contract Gelatofied {
             dao.getExtensionAddress(DaoHelper.BANK)
         );
 
+        // slither-disable-next-line unused-return
         try bank.supportsInterface(bank.withdrawTo.selector) returns (
+            // slither-disable-next-line uninitialized-local,variable-scope
             bool supportsInterface
         ) {
             if (supportsInterface) {

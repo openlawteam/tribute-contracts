@@ -110,7 +110,8 @@ contract VotingContract is IVoting, MemberGuard, AdapterGuard, Reimbursable {
      * @param proposalId The proposal needs to be sponsored, and not processed.
      * @param voteValue Only Yes (1) and No (2) votes are allowed.
      */
-    //slither-disable-next-line reentrancy-no-eth
+    // The function is protected against reentrancy with the reimbursable modifier
+    //slither-disable-next-line reentrancy-no-eth,reentrancy-benign
     function submitVote(
         DaoRegistry dao,
         bytes32 proposalId,
