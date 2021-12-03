@@ -76,16 +76,18 @@ contract LendNFTContract is
 
     /**
      * @notice Configures the adapter for a particular DAO.
-     * @notice Registers the DAO internal token UNITS with the DAO Bank.
+     * @notice Registers the DAO internal token with the DAO Bank.
      * @dev Only adapters registered to the DAO can execute the function call (or if the DAO is in creation mode).
      * @dev A DAO Bank extension must exist and be configured with proper access for this adapter.
      * @param dao The DAO address.
+     * @param token The token address that will be configured as internal token.
      */
-    function configureDao(DaoRegistry dao) external onlyAdapter(dao) {
-        BankExtension bank = BankExtension(
-            dao.getExtensionAddress(DaoHelper.BANK)
-        );
-        bank.registerPotentialNewInternalToken(DaoHelper.UNITS);
+    function configureDao(DaoRegistry dao, address token)
+        external
+        onlyAdapter(dao)
+    {
+        BankExtension(dao.getExtensionAddress(DaoHelper.BANK))
+            .registerPotentialNewInternalToken(token);
     }
 
     /**

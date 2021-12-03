@@ -817,12 +817,7 @@ export const contracts: Array<ContractConfig> = [
     },
     daoConfigs: [
       //config to mint UNITS
-      [
-        "daoAddress",
-        "gasPriceLimit",
-        "spendLimitPeriod",
-        "spendLimitEth"
-      ],
+      ["daoAddress", "gasPriceLimit", "spendLimitPeriod", "spendLimitEth"],
     ],
   },
   {
@@ -891,7 +886,7 @@ export const contracts: Array<ContractConfig> = [
         "couponCreatorAddress",
         extensionsIdsMap.ERC20_EXT, //loads the address from the ext
         "unitTokenToMint",
-        "maxAmount"
+        "maxAmount",
       ],
     ],
   },
@@ -1001,6 +996,10 @@ export const contracts: Array<ContractConfig> = [
         ],
       },
     },
+    daoConfigs: [
+      //config to mint UNITS
+      ["daoAddress", "unitTokenToMint"],
+    ],
   },
   {
     id: adaptersIdsMap.ERC20_TRANSFER_STRATEGY_ADAPTER,

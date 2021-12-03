@@ -31,6 +31,14 @@ const { UNITS, LOOT, sha3, embedConfigs } = require("./contract-util.js");
 const { ContractType } = require("../migrations/configs/contracts.config");
 const { utils } = require("ethers");
 const { web3 } = require("@openzeppelin/test-environment");
+const isDebug = process.env.DEBUG === "true";
+const log = (...data) => {
+  if (isDebug) console.log(data.join(""));
+};
+const error = (...data) => {
+  console.error(data.join(""));
+};
+
 /**
  * Deploys a contract based on the contract name defined in the config parameter.
  * If the contract is not found in the options object the deployment reverts with an error.
@@ -66,7 +74,7 @@ const createFactories = async ({ options }) => {
     .filter((config) => config.type === ContractType.Factory)
     .filter((config) => config.enabled)
     .filter((config) => !config.skipAutoDeploy);
-  console.log("deploying or reusing ", factoryList.length, " factories...");
+  log("deploying or reusing ", factoryList.length, " factories...");
   await factoryList.reduce((p, config) => {
     return p
       .then((_) => {
@@ -89,7 +97,7 @@ const createFactories = async ({ options }) => {
         return options
           .deployFunction(factoryContract, [extensionContract])
           .catch((e) => {
-            console.error(`Failed factory deployment [${config.name}].`, e);
+            error(`Failed factory deployment [${config.name}].`, e);
             throw e;
           });
       })
@@ -110,9 +118,9 @@ const createFactories = async ({ options }) => {
  */
 const createExtensions = async ({ dao, factories, options }) => {
   const extensions = {};
-  console.log("create extensions ...");
+  log("create extensions ...");
   const createExtension = async ({ dao, factory, options }) => {
-    console.log("create extension ", factory.configs.alias);
+    log("create extension ", factory.configs.alias);
     const factoryConfigs = factory.configs;
     const extensionConfigs = options.contractConfigs.find(
       (c) => c.id === factoryConfigs.generatesExtensionId
@@ -184,10 +192,7 @@ const createExtensions = async ({ dao, factories, options }) => {
           extensions[extension.configs.alias] = extension;
         })
         .catch((e) => {
-          console.error(
-            `Failed extension deployment ${factory.configs.name}`,
-            e
-          );
+          error(`Failed extension deployment ${factory.configs.name}`, e);
           throw e;
         }),
     Promise.resolve()
@@ -208,7 +213,7 @@ const createAdapters = async ({ options }) => {
     .filter((config) => config.type === ContractType.Adapter)
     .filter((config) => config.enabled)
     .filter((config) => !config.skipAutoDeploy);
-  console.log("deploying or re-using ", adapterList.length, " adapters...");
+  log("deploying or re-using ", adapterList.length, " adapters...");
   await adapterList.reduce(
     (p, config) =>
       p
@@ -217,7 +222,7 @@ const createAdapters = async ({ options }) => {
           adapters[adapter.configs.alias] = adapter;
         })
         .catch((e) => {
-          console.error(`Error while creating adapter ${config.name}.`, e);
+          error(`Error while creating adapter ${config.name}.`, e);
           throw e;
         }),
     Promise.resolve()
@@ -248,10 +253,7 @@ const createUtilContracts = async ({ options }) => {
             utilContracts[utilContract.configs.alias] = utilContract;
           })
           .catch((e) => {
-            console.error(
-              `Error while creating util contract ${config.name}`,
-              e
-            );
+            error(`Error while creating util contract ${config.name}`, e);
             throw e;
           }),
       Promise.resolve()
@@ -283,10 +285,7 @@ const createTestContracts = async ({ options }) => {
             testContracts[testContract.configs.alias] = testContract;
           })
           .catch((e) => {
-            console.error(
-              `Error while creating test contract ${config.name}`,
-              e
-            );
+            error(`Error while creating test contract ${config.name}`, e);
             throw e;
           }),
       Promise.resolve()
@@ -350,13 +349,19 @@ const createGovernanceRoles = async ({ options, dao, adapters }) => {
 };
 
 const validateContractConfigs = (contractConfigs) => {
+  if (!contractConfigs) throw Error(`Missing contract configs`);
+
   const found = new Map();
   Object.values(contractConfigs)
-    .filter((c) => c.type === ContractType.Adapter && c.id !== "voting")
+    .filter(
+      (c) =>
+        c.type === ContractType.Adapter &&
+        c.id !== adaptersIdsMap.VOTING_ADAPTER
+    )
     .forEach((c) => {
       const current = found.get(c.id);
       if (current) {
-        throw new Error("contract id duplicate detected! '" + c.id + "'");
+        throw Error(`Duplicate contract Id detected: ${c.id}`);
       }
       found.set(c.id, true);
     });
@@ -481,9 +486,9 @@ const configureDao = async ({
   adapters,
   options,
 }) => {
-  console.log("configure new dao ...");
+  log("configure new dao ...");
   const configureAdaptersWithDAOAccess = async () => {
-    console.log("configure adapters with access");
+    log("configure adapters with access");
     const adaptersWithAccess = Object.values(adapters)
       .filter((a) => a.configs.enabled)
       .filter((a) => !a.configs.skipAutoDeploy)
@@ -514,7 +519,7 @@ const configureDao = async ({
   };
 
   const configureAdaptersWithDAOParameters = async () => {
-    console.log("configure adapters ...");
+    log("configure adapters ...");
     const readConfigValue = (configName, contractName) => {
       // 1st check for configs that are using extension addresses
       if (Object.values(extensionsIdsMap).includes(configName)) {
@@ -554,7 +559,7 @@ const configureDao = async ({
                     from: options.owner,
                   })
                   .catch((e) => {
-                    console.error(
+                    error(
                       `Error while configuring dao with contract ${contractConfigs.name}`,
                       e
                     );
@@ -568,7 +573,7 @@ const configureDao = async ({
   };
 
   const configureExtensionAccess = async (contracts, extension) => {
-    console.log("configure extension access for ", extension.configs.alias);
+    log("configure extension access for ", extension.configs.alias);
     const withAccess = Object.values(contracts).reduce((accessRequired, c) => {
       const configs = c.configs;
       accessRequired.push(
@@ -590,7 +595,7 @@ const configureDao = async ({
    * Configures all the adapters that need access to the DAO and each enabled extension
    */
   const configureAdapters = async () => {
-    console.log("configure adapters ...");
+    log("configure adapters ...");
     await configureAdaptersWithDAOAccess();
     await configureAdaptersWithDAOParameters();
     await Object.values(extensions)
@@ -611,7 +616,7 @@ const configureDao = async ({
         return p
           .then(() => configureExtensionAccess(contracts, targetExtension))
           .catch((e) => {
-            console.error(
+            error(
               `Error while configuring adapters access to extension ${extensions.configs.name}`,
               e
             );
@@ -625,7 +630,7 @@ const configureDao = async ({
    * other enabled extensions
    */
   const configureExtensions = async () => {
-    console.log("configure extensions ...");
+    log("configure extensions ...");
     await Object.values(extensions)
       .filter((targetExtension) => targetExtension.configs.enabled)
       .reduce((p, targetExtension) => {
@@ -643,7 +648,7 @@ const configureDao = async ({
         return p
           .then(() => configureExtensionAccess(contracts, targetExtension))
           .catch((e) => {
-            console.error(
+            error(
               `Error while configuring extensions access to extension ${targetExtension.configs.name}`
             );
             throw e;

@@ -75,22 +75,19 @@ contract BankAdapterContract is AdapterGuard, Reimbursable {
     {
         // We do not need to check if the token is supported by the bank,
         // because if it is not, the balance will always be zero.
-        BankExtension bank = BankExtension(
-            dao.getExtensionAddress(DaoHelper.BANK)
+        BankExtension(dao.getExtensionAddress(DaoHelper.BANK)).updateToken(
+            token
         );
-        bank.updateToken(token);
     }
 
+    /*
+     * @notice Allows anyone to send eth to the bank extension
+     * @param dao The DAO address.
+     */
     function sendEth(DaoRegistry dao) external payable reimbursable(dao) {
         require(msg.value > 0, "no eth sent!");
-        BankExtension bank = BankExtension(
-            dao.getExtensionAddress(DaoHelper.BANK)
-        );
-
-        bank.addToBalance{value: msg.value}(
-            DaoHelper.GUILD,
-            DaoHelper.ETH_TOKEN,
-            msg.value
-        );
+        BankExtension(dao.getExtensionAddress(DaoHelper.BANK)).addToBalance{
+            value: msg.value
+        }(DaoHelper.GUILD, DaoHelper.ETH_TOKEN, msg.value);
     }
 }
