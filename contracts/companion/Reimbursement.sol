@@ -159,10 +159,11 @@ contract ReimbursementContract is IReimbursement, AdapterGuard, GelatoRelay {
             _data[address(dao)].rateLimitStart = block.timestamp;
             _data[address(dao)].ethUsed = payback;
         }
-
+        //slither-disable-next-line uninitialized-local,variable-scope
         try bank.supportsInterface(bank.withdrawTo.selector) returns (
             bool supportsInterface
         ) {
+            //slither-disable-next-line unused-local
             if (supportsInterface) {
                 bank.withdrawTo(
                     DaoHelper.GUILD,
