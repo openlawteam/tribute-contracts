@@ -220,12 +220,9 @@ const deployGanacheDao = async ({
     supplyPixelNFT: 100,
     supplyOLToken: toBN("1000000000000000000000000"),
     erc1155TestTokenUri: "1155 test token",
-    gasPriceLimit: getOptionalEnvVar("GAS_PRICE_LIMIT", 2000000000000),
-    spendLimitPeriod: getOptionalEnvVar("SPEND_LIMIT_PERIOD", 86400),
-    spendLimitEth: getOptionalEnvVar(
-      "SPEND_LIMIT_ETH",
-      toBN("200000000000000000000")
-    ),
+    gasPriceLimit: getOptionalEnvVar("GAS_PRICE_LIMIT", 0 /* disabled */),
+    spendLimitPeriod: getOptionalEnvVar("SPEND_LIMIT_PERIOD", 0 /* disabled */),
+    spendLimitEth: getOptionalEnvVar("SPEND_LIMIT_ETH", 0 /* disabled */),
     gelato: getOptionalEnvVar(
       "GELATO_ADDR",
       "0xDe6ab16a4015c680daab58021815D09ddB57db8E"
