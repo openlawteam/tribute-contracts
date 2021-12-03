@@ -5,6 +5,7 @@ pragma solidity ^0.8.0;
 import "../core/DaoRegistry.sol";
 import "../extensions/bank/Bank.sol";
 import "../guards/AdapterGuard.sol";
+import "./modifiers/Reimbursable.sol";
 import "../utils/Signatures.sol";
 import "../helpers/DaoHelper.sol";
 
@@ -32,7 +33,7 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
  */
 
-contract CouponOnboardingContract is AdapterGuard, Signatures {
+contract CouponOnboardingContract is Reimbursable, AdapterGuard, Signatures {
     struct Coupon {
         address authorizedMember;
         uint256 amount;
@@ -117,7 +118,7 @@ contract CouponOnboardingContract is AdapterGuard, Signatures {
             )
         );
 
-        return hashMessage(dao, block.chainid, address(this), message);
+        return hashMessage(dao, address(this), message);
     }
 
     /**
@@ -136,7 +137,7 @@ contract CouponOnboardingContract is AdapterGuard, Signatures {
         uint256 amount,
         uint256 nonce,
         bytes memory signature
-    ) external reentrancyGuard(dao) {
+    ) external reimbursable(dao) {
         uint256 currentFlag = _flags[address(dao)][nonce / 256];
         _flags[address(dao)][nonce / 256] = DaoHelper.setFlag(
             currentFlag,

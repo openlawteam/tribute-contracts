@@ -4,6 +4,7 @@ pragma solidity ^0.8.0;
 
 import "../core/DaoRegistry.sol";
 import "../guards/AdapterGuard.sol";
+import "./modifiers/Reimbursable.sol";
 import "./interfaces/IConfiguration.sol";
 import "../adapters/interfaces/IVoting.sol";
 import "../helpers/DaoHelper.sol";
@@ -32,7 +33,7 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
  */
 
-contract ConfigurationContract is IConfiguration, AdapterGuard {
+contract ConfigurationContract is IConfiguration, AdapterGuard, Reimbursable {
     mapping(address => mapping(bytes32 => Configuration[]))
         private _configurations;
 
@@ -49,7 +50,7 @@ contract ConfigurationContract is IConfiguration, AdapterGuard {
         bytes32 proposalId,
         Configuration[] calldata configs,
         bytes calldata data
-    ) external override reentrancyGuard(dao) {
+    ) external override reimbursable(dao) {
         require(configs.length > 0, "missing configs");
 
         dao.submitProposal(proposalId);
@@ -92,7 +93,7 @@ contract ConfigurationContract is IConfiguration, AdapterGuard {
     function processProposal(DaoRegistry dao, bytes32 proposalId)
         external
         override
-        reentrancyGuard(dao)
+        reimbursable(dao)
     {
         dao.processProposal(proposalId);
 

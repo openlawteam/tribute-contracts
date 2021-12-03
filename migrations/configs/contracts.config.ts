@@ -533,6 +533,7 @@ export const contracts: Array<ContractConfig> = [
         [extensionsIdsMap.BANK_EXT]: [
           bankExtensionAclFlagsMap.WITHDRAW,
           bankExtensionAclFlagsMap.SUB_FROM_BALANCE,
+          bankExtensionAclFlagsMap.ADD_TO_BALANCE,
           bankExtensionAclFlagsMap.UPDATE_TOKEN,
         ],
       },
@@ -795,6 +796,31 @@ export const contracts: Array<ContractConfig> = [
     },
   },
   {
+    id: adaptersIdsMap.REIMBURSEMENT_ADAPTER,
+    name: "ReimbursementContract",
+    alias: "reimbursement",
+    path: "../../contracts/companion/ReimbursementContract",
+    enabled: true,
+    version: "1.0.0",
+    type: ContractType.Adapter,
+    deploymentArgs: ["gelato"],
+    acls: {
+      dao: [],
+      extensions: {
+        [extensionsIdsMap.BANK_EXT]: [
+          bankExtensionAclFlagsMap.ADD_TO_BALANCE,
+          bankExtensionAclFlagsMap.SUB_FROM_BALANCE,
+          bankExtensionAclFlagsMap.INTERNAL_TRANSFER,
+          bankExtensionAclFlagsMap.WITHDRAW,
+        ],
+      },
+    },
+    daoConfigs: [
+      //config to mint UNITS
+      ["daoAddress", "gasPriceLimit", "spendLimitPeriod", "spendLimitEth"],
+    ],
+  },
+  {
     id: adaptersIdsMap.ONBOARDING_ADAPTER,
     name: "OnboardingContract",
     alias: "onboarding",
@@ -970,6 +996,10 @@ export const contracts: Array<ContractConfig> = [
         ],
       },
     },
+    daoConfigs: [
+      //config to mint UNITS
+      ["daoAddress", "unitTokenToMint"],
+    ],
   },
   {
     id: adaptersIdsMap.ERC20_TRANSFER_STRATEGY_ADAPTER,

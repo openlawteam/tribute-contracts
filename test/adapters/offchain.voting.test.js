@@ -48,6 +48,7 @@ const {
   takeChainSnapshot,
   revertChainSnapshot,
   web3,
+  generateMembers,
   OffchainVotingHashContract,
   OLToken,
   PixelNFT,
@@ -65,15 +66,6 @@ const {
   getVoteStepDomainDefinition,
   BadNodeError,
 } = require("../../utils/offchain-voting-util");
-
-const generateMembers = (amount) => {
-  let newAccounts = [];
-  for (let i = 0; i < amount; i++) {
-    const account = web3.eth.accounts.create();
-    newAccounts.push(account);
-  }
-  return newAccounts;
-};
 
 const members = generateMembers(10);
 const findMember = (addr) => members.find((member) => member.address === addr);

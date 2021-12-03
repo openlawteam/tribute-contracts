@@ -7,6 +7,7 @@ import "../extensions/bank/Bank.sol";
 import "../guards/AdapterGuard.sol";
 import "../adapters/interfaces/IVoting.sol";
 import "../helpers/DaoHelper.sol";
+import "./modifiers/Reimbursable.sol";
 
 /**
 MIT License
@@ -32,7 +33,7 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
  */
 
-contract BankAdapterContract is AdapterGuard {
+contract BankAdapterContract is AdapterGuard, Reimbursable {
     /**
      * @notice Allows the member/advisor of the DAO to withdraw the funds from their internal bank account.
      * @notice Only accounts that are not reserved can withdraw the funds.
@@ -45,7 +46,7 @@ contract BankAdapterContract is AdapterGuard {
         DaoRegistry dao,
         address payable account,
         address token
-    ) external reentrancyGuard(dao) {
+    ) external reimbursable(dao) {
         require(
             DaoHelper.isNotReservedAddress(account),
             "withdraw::reserved address"
@@ -74,9 +75,19 @@ contract BankAdapterContract is AdapterGuard {
     {
         // We do not need to check if the token is supported by the bank,
         // because if it is not, the balance will always be zero.
-        BankExtension bank = BankExtension(
-            dao.getExtensionAddress(DaoHelper.BANK)
+        BankExtension(dao.getExtensionAddress(DaoHelper.BANK)).updateToken(
+            token
         );
-        bank.updateToken(token);
+    }
+
+    /*
+     * @notice Allows anyone to send eth to the bank extension
+     * @param dao The DAO address.
+     */
+    function sendEth(DaoRegistry dao) external payable reimbursable(dao) {
+        require(msg.value > 0, "no eth sent!");
+        BankExtension(dao.getExtensionAddress(DaoHelper.BANK)).addToBalance{
+            value: msg.value
+        }(DaoHelper.GUILD, DaoHelper.ETH_TOKEN, msg.value);
     }
 }

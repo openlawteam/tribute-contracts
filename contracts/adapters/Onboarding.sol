@@ -6,6 +6,7 @@ import "./interfaces/IOnboarding.sol";
 import "../core/DaoRegistry.sol";
 import "../extensions/bank/Bank.sol";
 import "../adapters/interfaces/IVoting.sol";
+import "../adapters/modifiers/Reimbursable.sol";
 import "../guards/AdapterGuard.sol";
 import "@openzeppelin/contracts/utils/Address.sol";
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
@@ -36,7 +37,7 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
  */
 
-contract OnboardingContract is IOnboarding, AdapterGuard {
+contract OnboardingContract is IOnboarding, AdapterGuard, Reimbursable {
     using Address for address payable;
     using SafeERC20 for IERC20;
 
@@ -140,7 +141,7 @@ contract OnboardingContract is IOnboarding, AdapterGuard {
         address tokenToMint,
         uint256 tokenAmount,
         bytes memory data
-    ) external override reentrancyGuard(dao) {
+    ) external override reimbursable(dao) {
         require(
             DaoHelper.isNotReservedAddress(applicant),
             "applicant is reserved address"
@@ -177,7 +178,7 @@ contract OnboardingContract is IOnboarding, AdapterGuard {
         external
         payable
         override
-        reentrancyGuard(dao)
+        reimbursable(dao)
     {
         ProposalDetails storage proposal = proposals[address(dao)][proposalId];
         require(proposal.id == proposalId, "proposal does not exist");

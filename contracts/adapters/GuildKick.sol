@@ -4,6 +4,7 @@ pragma solidity ^0.8.0;
 
 import "../core/DaoRegistry.sol";
 import "../guards/AdapterGuard.sol";
+import "./modifiers/Reimbursable.sol";
 import "./interfaces/IGuildKick.sol";
 import "../helpers/GuildKickHelper.sol";
 import "../adapters/interfaces/IVoting.sol";
@@ -34,7 +35,7 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
  */
 
-contract GuildKickContract is IGuildKick, AdapterGuard {
+contract GuildKickContract is IGuildKick, AdapterGuard, Reimbursable {
     // State of the guild kick proposal
     struct GuildKick {
         // The address of the member to kick out of the DAO.
@@ -61,7 +62,7 @@ contract GuildKickContract is IGuildKick, AdapterGuard {
         bytes32 proposalId,
         address memberToKick,
         bytes calldata data
-    ) external override reentrancyGuard(dao) {
+    ) external override reimbursable(dao) {
         IVoting votingContract = IVoting(
             dao.getAdapterAddress(DaoHelper.VOTING)
         );
@@ -115,7 +116,7 @@ contract GuildKickContract is IGuildKick, AdapterGuard {
     function processProposal(DaoRegistry dao, bytes32 proposalId)
         external
         override
-        reentrancyGuard(dao)
+        reimbursable(dao)
     {
         dao.processProposal(proposalId);
 

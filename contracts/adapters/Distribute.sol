@@ -4,6 +4,7 @@ pragma solidity ^0.8.0;
 
 import "../core/DaoRegistry.sol";
 import "../guards/AdapterGuard.sol";
+import "./modifiers/Reimbursable.sol";
 import "../adapters/interfaces/IVoting.sol";
 import "../adapters/interfaces/IDistribute.sol";
 import "../helpers/FairShareHelper.sol";
@@ -34,7 +35,7 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
  */
 
-contract DistributeContract is IDistribute, AdapterGuard {
+contract DistributeContract is IDistribute, AdapterGuard, Reimbursable {
     // Event to indicate the distribution process has been completed
     // if the unitHolder address is 0x0, then the amount were distributed to all members of the DAO.
     event Distributed(
@@ -95,7 +96,7 @@ contract DistributeContract is IDistribute, AdapterGuard {
         address token,
         uint256 amount,
         bytes calldata data
-    ) external override reentrancyGuard(dao) {
+    ) external override reimbursable(dao) {
         IVoting votingContract = IVoting(
             dao.getAdapterAddress(DaoHelper.VOTING)
         );
@@ -156,7 +157,7 @@ contract DistributeContract is IDistribute, AdapterGuard {
     function processProposal(DaoRegistry dao, bytes32 proposalId)
         external
         override
-        reentrancyGuard(dao)
+        reimbursable(dao)
     {
         dao.processProposal(proposalId);
 
@@ -224,7 +225,7 @@ contract DistributeContract is IDistribute, AdapterGuard {
     function distribute(DaoRegistry dao, uint256 toIndex)
         external
         override
-        reentrancyGuard(dao)
+        reimbursable(dao)
     {
         // Checks if the proposal does not exist or is not completed yet
         bytes32 ongoingProposalId = ongoingDistributions[address(dao)];

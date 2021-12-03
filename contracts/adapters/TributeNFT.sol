@@ -8,6 +8,7 @@ import "../extensions/erc1155/ERC1155TokenExtension.sol";
 import "../extensions/bank/Bank.sol";
 import "../adapters/interfaces/IVoting.sol";
 import "../guards/AdapterGuard.sol";
+import "./modifiers/Reimbursable.sol";
 
 import "../helpers/DaoHelper.sol";
 import "@openzeppelin/contracts/token/ERC1155/IERC1155.sol";
@@ -40,7 +41,12 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
  */
 
-contract TributeNFTContract is AdapterGuard, IERC1155Receiver, IERC721Receiver {
+contract TributeNFTContract is
+    AdapterGuard,
+    Reimbursable,
+    IERC1155Receiver,
+    IERC721Receiver
+{
     using Address for address payable;
 
     struct ProcessProposal {
@@ -105,7 +111,7 @@ contract TributeNFTContract is AdapterGuard, IERC1155Receiver, IERC721Receiver {
         uint256 nftTokenId,
         uint256 requestAmount,
         bytes memory data
-    ) external reentrancyGuard(dao) {
+    ) external reimbursable(dao) {
         require(
             DaoHelper.isNotReservedAddress(applicant),
             "applicant is reserved address"
@@ -199,8 +205,9 @@ contract TributeNFTContract is AdapterGuard, IERC1155Receiver, IERC721Receiver {
         bytes calldata data
     ) external override returns (bytes4) {
         ProcessProposal memory ppS = abi.decode(data, (ProcessProposal));
-        require(ppS.dao.lockedAt() != block.number, "reentrancy guard");
-        ppS.dao.lockSession();
+        ReimbursementData memory rData = ReimbursableLib.beforeExecution(
+            ppS.dao
+        );
         (
             ProposalDetails storage proposal,
             IVoting.VotingState voteResult
@@ -227,7 +234,7 @@ contract TributeNFTContract is AdapterGuard, IERC1155Receiver, IERC721Receiver {
             erc1155.safeTransferFrom(address(this), from, id, value, "");
         }
 
-        ppS.dao.unlockSession();
+        ReimbursableLib.afterExecution2(ppS.dao, rData, payable(from));
         return this.onERC1155Received.selector;
     }
 
@@ -267,9 +274,9 @@ contract TributeNFTContract is AdapterGuard, IERC1155Receiver, IERC721Receiver {
         bytes calldata data
     ) external override returns (bytes4) {
         ProcessProposal memory ppS = abi.decode(data, (ProcessProposal));
-
-        require(ppS.dao.lockedAt() != block.number, "reentrancy guard");
-        ppS.dao.lockSession();
+        ReimbursementData memory rData = ReimbursableLib.beforeExecution(
+            ppS.dao
+        );
 
         (
             ProposalDetails storage proposal,
@@ -291,7 +298,7 @@ contract TributeNFTContract is AdapterGuard, IERC1155Receiver, IERC721Receiver {
             erc721.safeTransferFrom(address(this), from, tokenId);
         }
 
-        ppS.dao.unlockSession();
+        ReimbursableLib.afterExecution2(ppS.dao, rData, payable(from));
         return this.onERC721Received.selector;
     }
 }

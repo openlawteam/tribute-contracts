@@ -9,6 +9,7 @@ import "../utils/Signatures.sol";
 import "../helpers/WETH.sol";
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
+import "./modifiers/Reimbursable.sol";
 
 /**
 MIT License
@@ -34,7 +35,12 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
  */
 
-contract KycOnboardingContract is AdapterGuard, MemberGuard, Signatures {
+contract KycOnboardingContract is
+    AdapterGuard,
+    MemberGuard,
+    Signatures,
+    Reimbursable
+{
     using Address for address payable;
     using SafeERC20 for IERC20;
 
@@ -184,7 +190,7 @@ contract KycOnboardingContract is AdapterGuard, MemberGuard, Signatures {
             abi.encode(COUPON_MESSAGE_TYPEHASH, coupon.kycedMember)
         );
 
-        return hashMessage(dao, block.chainid, address(this), message);
+        return hashMessage(dao, address(this), message);
     }
 
     /**
@@ -234,7 +240,7 @@ contract KycOnboardingContract is AdapterGuard, MemberGuard, Signatures {
         address tokenAddr,
         uint256 amount,
         bytes memory signature
-    ) internal reentrancyGuard(dao) {
+    ) internal reimbursable(dao) {
         require(!isActiveMember(dao, kycedMember), "already member");
         uint256 maxMembers = dao.getConfiguration(
             _configKey(tokenAddr, MaxMembers)

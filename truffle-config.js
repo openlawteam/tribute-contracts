@@ -43,15 +43,12 @@ module.exports = {
     goerli: {
       provider: getNetworkProvider,
       network_id: 5,
-      gasPrice: 10000000000,
       skipDryRun: true,
     },
     rinkeby: {
       provider: getNetworkProvider,
       network_id: 4,
       skipDryRun: true,
-      networkCheckTimeout: 10000,
-      deploymentPollingInterval: 10000,
     },
     mainnet: {
       provider: getNetworkProvider,

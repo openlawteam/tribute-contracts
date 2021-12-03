@@ -6,6 +6,7 @@ import "../../core/DaoRegistry.sol";
 import "../../extensions/bank/Bank.sol";
 import "../../guards/MemberGuard.sol";
 import "../../guards/AdapterGuard.sol";
+import "../modifiers/Reimbursable.sol";
 import "../interfaces/IVoting.sol";
 import "./Voting.sol";
 import "./KickBadReporterAdapter.sol";
@@ -42,7 +43,13 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
  */
 
-contract OffchainVotingContract is IVoting, MemberGuard, AdapterGuard, Ownable {
+contract OffchainVotingContract is
+    IVoting,
+    MemberGuard,
+    AdapterGuard,
+    Ownable,
+    Reimbursable
+{
     struct ProposalChallenge {
         address reporter;
         uint256 units;
@@ -298,7 +305,7 @@ contract OffchainVotingContract is IVoting, MemberGuard, AdapterGuard, Ownable {
         address reporter,
         OffchainVotingHashContract.VoteResultNode memory result,
         bytes memory rootSig
-    ) external reentrancyGuard(dao) {
+    ) external reimbursable(dao) {
         Voting storage vote = votes[address(dao)][proposalId];
         // slither-disable-next-line timestamp
         require(vote.snapshot > 0, "vote:not started");
@@ -384,7 +391,7 @@ contract OffchainVotingContract is IVoting, MemberGuard, AdapterGuard, Ownable {
         DaoRegistry dao,
         bytes32 proposalId,
         uint256 index
-    ) external reentrancyGuard(dao) {
+    ) external reimbursable(dao) {
         address memberAddr = dao.getAddressIfDelegated(msg.sender);
         require(isActiveMember(dao, memberAddr), "not active member");
         Voting storage vote = votes[address(dao)][proposalId];
@@ -416,7 +423,7 @@ contract OffchainVotingContract is IVoting, MemberGuard, AdapterGuard, Ownable {
     // slither-disable-next-line reentrancy-benign,reentrancy-events
     function challengeMissingStep(DaoRegistry dao, bytes32 proposalId)
         external
-        reentrancyGuard(dao)
+        reimbursable(dao)
     {
         Voting storage vote = votes[address(dao)][proposalId];
         uint256 gracePeriod = dao.getConfiguration(GracePeriod);
@@ -436,7 +443,7 @@ contract OffchainVotingContract is IVoting, MemberGuard, AdapterGuard, Ownable {
         DaoRegistry dao,
         address adapterAddress,
         OffchainVotingHashContract.VoteResultNode memory node
-    ) external reentrancyGuard(dao) {
+    ) external reimbursable(dao) {
         Voting storage vote = votes[address(dao)][node.proposalId];
         // slither-disable-next-line timestamp
         require(vote.stepRequested == node.index, "wrong step provided");
@@ -490,7 +497,7 @@ contract OffchainVotingContract is IVoting, MemberGuard, AdapterGuard, Ownable {
         DaoRegistry dao,
         bytes32 proposalId,
         OffchainVotingHashContract.VoteResultNode memory node
-    ) external reentrancyGuard(dao) {
+    ) external reimbursable(dao) {
         require(node.index == 0, "only first node");
 
         Voting storage vote = votes[address(dao)][proposalId];
@@ -518,7 +525,7 @@ contract OffchainVotingContract is IVoting, MemberGuard, AdapterGuard, Ownable {
         DaoRegistry dao,
         bytes32 proposalId,
         OffchainVotingHashContract.VoteResultNode memory node
-    ) external reentrancyGuard(dao) {
+    ) external reimbursable(dao) {
         Voting storage vote = votes[address(dao)][proposalId];
         if (
             _ovHelper.getBadNodeError(
@@ -548,7 +555,7 @@ contract OffchainVotingContract is IVoting, MemberGuard, AdapterGuard, Ownable {
         bytes32 proposalId,
         OffchainVotingHashContract.VoteResultNode memory nodePrevious,
         OffchainVotingHashContract.VoteResultNode memory nodeCurrent
-    ) external reentrancyGuard(dao) {
+    ) external reimbursable(dao) {
         Voting storage vote = votes[address(dao)][proposalId];
         bytes32 resultRoot = vote.resultRoot;
 
@@ -580,6 +587,7 @@ contract OffchainVotingContract is IVoting, MemberGuard, AdapterGuard, Ownable {
         external
         reentrancyGuard(dao)
         onlyMember(dao)
+        reimbursable(dao)
     {
         // slither-disable-next-line timestamp
         require(

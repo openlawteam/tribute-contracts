@@ -6,7 +6,7 @@ import "../core/DaoRegistry.sol";
 import "../extensions/bank/Bank.sol";
 import "../helpers/DaoHelper.sol";
 import "../adapters/interfaces/IVoting.sol";
-import "../guards/AdapterGuard.sol";
+import "./modifiers/Reimbursable.sol";
 import "@openzeppelin/contracts/utils/Address.sol";
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
@@ -35,7 +35,7 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
  */
 
-contract TributeContract is AdapterGuard {
+contract TributeContract is Reimbursable, AdapterGuard {
     using Address for address;
     using SafeERC20 for IERC20;
 
@@ -105,7 +105,7 @@ contract TributeContract is AdapterGuard {
         uint256 tributeAmount,
         address tributeTokenOwner,
         bytes memory data
-    ) external reentrancyGuard(dao) {
+    ) external reimbursable(dao) {
         require(
             DaoHelper.isNotReservedAddress(applicant),
             "applicant is reserved address"
@@ -154,7 +154,7 @@ contract TributeContract is AdapterGuard {
      */
     function processProposal(DaoRegistry dao, bytes32 proposalId)
         external
-        reentrancyGuard(dao)
+        reimbursable(dao)
     {
         ProposalDetails memory proposal = proposals[address(dao)][proposalId];
         require(proposal.id == proposalId, "proposal does not exist");

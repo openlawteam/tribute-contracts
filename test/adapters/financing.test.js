@@ -120,11 +120,12 @@ describe("Adapter - Financing", () => {
       gasPrice: toBN("0"),
     });
     //Check Guild Bank Balance
-    checkBalance(bank, GUILD, ETH_TOKEN, expectedGuildBalance);
+    await checkBalance(bank, GUILD, ETH_TOKEN, expectedGuildBalance);
 
     //Create Financing Request
     let requestedAmount = toBN(50000);
     proposalId = getProposalCounter();
+
     await financing.submitProposal(
       this.dao.address,
       proposalId,
@@ -142,7 +143,7 @@ describe("Adapter - Financing", () => {
     });
 
     //Check applicant balance before Financing proposal is processed
-    checkBalance(bank, applicant, ETH_TOKEN, "0");
+    await checkBalance(bank, applicant, ETH_TOKEN, "0");
 
     //Process Financing proposal after voting
     await advanceTime(10000);
@@ -152,21 +153,21 @@ describe("Adapter - Financing", () => {
     });
 
     //Check Guild Bank balance to make sure the transfer has happened
-    checkBalance(
+    await checkBalance(
       bank,
       GUILD,
       ETH_TOKEN,
       expectedGuildBalance.sub(requestedAmount)
     );
     //Check the applicant token balance to make sure the funds are available in the bank for the applicant account
-    checkBalance(bank, applicant, ETH_TOKEN, requestedAmount);
+    await checkBalance(bank, applicant, ETH_TOKEN, requestedAmount);
 
     const ethBalance = await web3.eth.getBalance(applicant);
     await bankAdapter.withdraw(this.dao.address, applicant, ETH_TOKEN, {
       from: daoOwner,
       gasPrice: toBN("0"),
     });
-    checkBalance(bank, applicant, ETH_TOKEN, 0);
+    await checkBalance(bank, applicant, ETH_TOKEN, 0);
     const ethBalance2 = await web3.eth.getBalance(applicant);
     expect(toBN(ethBalance).add(requestedAmount).toString()).equal(
       ethBalance2.toString()

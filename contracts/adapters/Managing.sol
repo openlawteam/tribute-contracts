@@ -6,6 +6,7 @@ import "./interfaces/IManaging.sol";
 import "../core/DaoRegistry.sol";
 import "../adapters/interfaces/IVoting.sol";
 import "../guards/AdapterGuard.sol";
+import "./modifiers/Reimbursable.sol";
 import "../helpers/DaoHelper.sol";
 
 /**
@@ -32,7 +33,7 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
  */
 
-contract ManagingContract is IManaging, AdapterGuard {
+contract ManagingContract is IManaging, AdapterGuard, Reimbursable {
     // DAO => (ProposalID => ProposalDetails)
     mapping(address => mapping(bytes32 => ProposalDetails)) public proposals;
     // DAO => (ProposalId => Configuration[])
@@ -57,7 +58,7 @@ contract ManagingContract is IManaging, AdapterGuard {
         ProposalDetails calldata proposal,
         Configuration[] memory configs,
         bytes calldata data
-    ) external override reentrancyGuard(dao) {
+    ) external override reimbursable(dao) {
         require(
             proposal.keys.length == proposal.values.length,
             "must be an equal number of config keys and values"
@@ -120,7 +121,7 @@ contract ManagingContract is IManaging, AdapterGuard {
     function processProposal(DaoRegistry dao, bytes32 proposalId)
         external
         override
-        reentrancyGuard(dao)
+        reimbursable(dao)
     {
         ProposalDetails memory proposal = proposals[address(dao)][proposalId];
 

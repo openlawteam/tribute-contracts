@@ -8,6 +8,7 @@ import "../../guards/MemberGuard.sol";
 import "../../guards/AdapterGuard.sol";
 import "../interfaces/IVoting.sol";
 import "../../helpers/DaoHelper.sol";
+import "../modifiers/Reimbursable.sol";
 import "../../helpers/GovernanceHelper.sol";
 
 /**
@@ -34,7 +35,7 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
  */
 
-contract VotingContract is IVoting, MemberGuard, AdapterGuard {
+contract VotingContract is IVoting, MemberGuard, AdapterGuard, Reimbursable {
     struct Voting {
         uint256 nbYes;
         uint256 nbNo;
@@ -109,11 +110,13 @@ contract VotingContract is IVoting, MemberGuard, AdapterGuard {
      * @param proposalId The proposal needs to be sponsored, and not processed.
      * @param voteValue Only Yes (1) and No (2) votes are allowed.
      */
+    // The function is protected against reentrancy with the reimbursable modifier
+    //slither-disable-next-line reentrancy-no-eth,reentrancy-benign
     function submitVote(
         DaoRegistry dao,
         bytes32 proposalId,
         uint256 voteValue
-    ) external onlyMember(dao) {
+    ) external onlyMember(dao) reimbursable(dao) {
         require(
             dao.getProposalFlag(proposalId, DaoRegistry.ProposalFlag.SPONSORED),
             "the proposal has not been sponsored yet"

@@ -15,7 +15,7 @@ const {
   maxUnits,
 } = require("../utils/contract-util");
 
-const { deployDao, getNetworkDetails } = require("../utils/deployment-util");
+const { deployDao } = require("../utils/deployment-util");
 const { deployConfigs } = require("../deploy-config");
 require("dotenv").config();
 
@@ -23,8 +23,8 @@ module.exports = async (deployer, network, accounts) => {
   log(`Deployment started at: ${new Date().toISOString()}`);
   log(`Deploying tribute-contracts to ${network} network`);
 
-  const { contracts } = require(`./configs/${network}.config`);
-  const truffleImports = require("../utils/truffle-util")(contracts);
+  const { contracts: contractConfigs } = require(`./configs/${network}.config`);
+  const truffleImports = require("../utils/truffle-util")(contractConfigs);
   const daoArtifacts = await getOrCreateDaoArtifacts(deployer, truffleImports);
 
   const deployFunction = truffleImports.deployFunctionFactory(
@@ -37,7 +37,7 @@ module.exports = async (deployer, network, accounts) => {
     deployFunction,
     truffleImports,
     accounts,
-    contracts,
+    contractConfigs,
   });
 
   const { dao, factories, extensions, adapters, testContracts, utilContracts } =
@@ -66,12 +66,11 @@ module.exports = async (deployer, network, accounts) => {
   log(`Deployment completed at: ${new Date().toISOString()}`);
 };
 
-const deployRinkebyDao = async (
+const deployRinkebyDao = async ({
   deployFunction,
-  network,
   truffleImports,
-  contractConfigs
-) => {
+  contractConfigs,
+}) => {
   return await deployDao({
     ...truffleImports,
     contractConfigs,
@@ -89,7 +88,6 @@ const deployRinkebyDao = async (
     votingPeriod: getOptionalEnvVar("VOTING_PERIOD_SECONDS", 600), // 600 secs = 10 min
     gracePeriod: getOptionalEnvVar("GRACE_PERIOD_SECONDS", 600), // 600 secs = 10 min
     offchainVoting: true,
-    chainId: getNetworkDetails(network).chainId,
     finalize: false,
     maxExternalTokens: 100,
     couponCreatorAddress: getOptionalEnvVar(
@@ -117,24 +115,23 @@ const deployRinkebyDao = async (
     supplyPixelNFT: 100,
     supplyOLToken: toBN("1000000000000000000000000"),
     erc1155TestTokenUri: "1155 test token",
-    weth: getOptionalEnvVar(
-      "WETH_ADDR",
-      "0xc778417e063141139fce010982780140aa0cd5ab"
+    gasPriceLimit: getOptionalEnvVar("GAS_PRICE_LIMIT", 0 /* disabled */),
+    spendLimitPeriod: getOptionalEnvVar("SPEND_LIMIT_PERIOD", 0 /* disabled */),
+    spendLimitEth: getOptionalEnvVar("SPEND_LIMIT_ETH", 0 /* disabled */),
+    gelato: getOptionalEnvVar(
+      "GELATO_ADDR",
+      "0xDe6ab16a4015c680daab58021815D09ddB57db8E"
     ),
+    weth: "0xc778417e063141139fce010982780140aa0cd5ab",
     maintainerTokenAddress: getOptionalEnvVar("MAINTAINER_TOKEN_ADDR", UNITS),
-    weth: getOptionalEnvVar(
-      "WETH_ADDR",
-      "0x8dd25714ccece48767baf266ec4f220b60f84d52"
-    ),
   });
 };
 
-const deployMainnetDao = async (
+const deployMainnetDao = async ({
   deployFunction,
-  network,
   truffleImports,
-  contractConfigs
-) => {
+  contractConfigs,
+}) => {
   return await deployDao({
     ...truffleImports,
     contractConfigs,
@@ -152,7 +149,6 @@ const deployMainnetDao = async (
     votingPeriod: parseInt(getEnvVar("VOTING_PERIOD_SECONDS")),
     gracePeriod: parseInt(getEnvVar("GRACE_PERIOD_SECONDS")),
     offchainVoting: true,
-    chainId: getNetworkDetails(network).chainId,
     deployTestTokens: false,
     finalize: false,
     maxExternalTokens: 100,
@@ -166,21 +162,21 @@ const deployMainnetDao = async (
     daoName: getEnvVar("DAO_NAME"),
     owner: getEnvVar("DAO_OWNER_ADDR"),
     offchainAdmin: getEnvVar("OFFCHAIN_ADMIN_ADDR"),
-    weth: getOptionalEnvVar(
-      "WETH_ADDR",
-      "0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2"
-    ),
+    weth: "0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2",
+    gasPriceLimit: getOptionalEnvVar("GAS_PRICE_LIMIT", 0 /* disabled */),
+    spendLimitPeriod: getOptionalEnvVar("SPEND_LIMIT_PERIOD", 0 /* disabled */),
+    spendLimitEth: getOptionalEnvVar("SPEND_LIMIT_ETH", 0 /* disabled */),
+    gelato: getEnvVar("GELATO_ADDR"),
     maintainerTokenAddress: getOptionalEnvVar("MAINTAINER_TOKEN_ADDR", UNITS),
   });
 };
 
-const deployGanacheDao = async (
+const deployGanacheDao = async ({
   deployFunction,
-  network,
   accounts,
   truffleImports,
-  contractConfigs
-) => {
+  contractConfigs,
+}) => {
   const daoOwnerAddress = accounts[0];
 
   const { WETH } = truffleImports;
@@ -203,7 +199,6 @@ const deployGanacheDao = async (
     votingPeriod: getOptionalEnvVar("VOTING_PERIOD_SECONDS", 120), // 120 secs = 2 min
     gracePeriod: getOptionalEnvVar("GRACE_PERIOD_SECONDS", 60), // 600 secs = 1 min
     offchainVoting: true,
-    chainId: getNetworkDetails(network).chainId,
     finalize: false,
     maxExternalTokens: 100,
     couponCreatorAddress: getOptionalEnvVar(
@@ -225,22 +220,32 @@ const deployGanacheDao = async (
     supplyPixelNFT: 100,
     supplyOLToken: toBN("1000000000000000000000000"),
     erc1155TestTokenUri: "1155 test token",
+    gasPriceLimit: getOptionalEnvVar("GAS_PRICE_LIMIT", 2000000000000),
+    spendLimitPeriod: getOptionalEnvVar("SPEND_LIMIT_PERIOD", 86400),
+    spendLimitEth: getOptionalEnvVar(
+      "SPEND_LIMIT_ETH",
+      toBN("200000000000000000000")
+    ),
+    gelato: getOptionalEnvVar(
+      "GELATO_ADDR",
+      "0xDe6ab16a4015c680daab58021815D09ddB57db8E"
+    ),
     weth: weth.address,
     maintainerTokenAddress: getOptionalEnvVar("MAINTAINER_TOKEN_ADDR", UNITS),
   });
 };
 
-const deployTestDao = async (
+const deployTestDao = async ({
   deployFunction,
-  network,
   accounts,
   truffleImports,
-  contractConfigs
-) => {
+  contractConfigs,
+}) => {
   const daoOwnerAddress = accounts[0];
   const { WETH } = truffleImports;
 
   const weth = await deployFunction(WETH);
+
   return await deployDao({
     ...truffleImports,
     contractConfigs,
@@ -258,7 +263,6 @@ const deployTestDao = async (
     votingPeriod: 10, // 10 secs
     gracePeriod: 1, // 1 sec
     offchainVoting: true,
-    chainId: getNetworkDetails(network).chainId,
     deployTestTokens: false,
     finalize: false,
     maxExternalTokens: 100,
@@ -273,16 +277,22 @@ const deployTestDao = async (
     daoName: getEnvVar("DAO_NAME"),
     owner: accounts[0],
     weth: weth.address,
+    gasPriceLimit: getOptionalEnvVar("GAS_PRICE_LIMIT", 0 /* disabled */),
+    spendLimitPeriod: getOptionalEnvVar("SPEND_LIMIT_PERIOD", 0 /* disabled */),
+    spendLimitEth: getOptionalEnvVar("SPEND_LIMIT_ETH", 0 /* disabled */),
+    gelato: getOptionalEnvVar(
+      "GELATO_ADDR",
+      "0xDe6ab16a4015c680daab58021815D09ddB57db8E"
+    ),
     maintainerTokenAddress: getOptionalEnvVar("MAINTAINER_TOKEN_ADDR", UNITS),
   });
 };
 
-const deployHarmonyDao = async (
+const deployHarmonyDao = async ({
   deployFunction,
-  network,
   truffleImports,
-  contractConfigs
-) => {
+  contractConfigs,
+}) => {
   return await deployDao({
     ...truffleImports,
     contractConfigs,
@@ -300,7 +310,6 @@ const deployHarmonyDao = async (
     votingPeriod: parseInt(getEnvVar("VOTING_PERIOD_SECONDS")),
     gracePeriod: parseInt(getEnvVar("GRACE_PERIOD_SECONDS")),
     offchainVoting: true,
-    chainId: getNetworkDetails(network).chainId,
     deployTestTokens: false,
     finalize: false,
     maxExternalTokens: 100,
@@ -315,16 +324,22 @@ const deployHarmonyDao = async (
     owner: getEnvVar("DAO_OWNER_ADDR"),
     offchainAdmin: getEnvVar("OFFCHAIN_ADMIN_ADDR"),
     weth: getEnvVar("WETH_ADDR"),
+    gasPriceLimit: getOptionalEnvVar("GAS_PRICE_LIMIT", 0 /* disabled */),
+    spendLimitPeriod: getOptionalEnvVar("SPEND_LIMIT_PERIOD", 0 /* disabled */),
+    spendLimitEth: getOptionalEnvVar("SPEND_LIMIT_ETH", 0 /* disabled */),
+    gelato: getOptionalEnvVar(
+      "GELATO_ADDR",
+      "0xDe6ab16a4015c680daab58021815D09ddB57db8E"
+    ),
     maintainerTokenAddress: getOptionalEnvVar("MAINTAINER_TOKEN_ADDR", UNITS),
   });
 };
 
-const deployHarmonyTestDao = async (
+const deployHarmonyTestDao = async ({
   deployFunction,
-  network,
   truffleImports,
-  contractConfigs
-) => {
+  contractConfigs,
+}) => {
   const { WETH } = truffleImports;
 
   const weth = await deployFunction(WETH);
@@ -346,7 +361,6 @@ const deployHarmonyTestDao = async (
     votingPeriod: getOptionalEnvVar("VOTING_PERIOD_SECONDS", "600"), // 600 secs = 10 min
     gracePeriod: getOptionalEnvVar("GRACE_PERIOD_SECONDS", "600"), // 600 secs = 10 min
     offchainVoting: true,
-    chainId: getNetworkDetails(network).chainId,
     deployTestTokens: true,
     finalize: false,
     maxExternalTokens: 100,
@@ -363,76 +377,50 @@ const deployHarmonyTestDao = async (
       "OFFCHAIN_ADMIN_ADDR",
       getEnvVar("DAO_OWNER_ADDR")
     ),
+    gelato: getEnvVar("GELATO_ADDR"),
+    kycAddress: getEnvVar("KYC_SIGNER_ADDRESS"),
+    maxUnits: getEnvVar("MAX_UNITS"),
+    maxMembers: getEnvVar("MAX_MEMBERS"),
+    fundTargetAddress: getEnvVar("FUND_TARGET_ADDR"),
     weth: weth.address,
+    gasPriceLimit: getOptionalEnvVar("GAS_PRICE_LIMIT", 0 /* disabled */),
+    spendLimitPeriod: getOptionalEnvVar("SPEND_LIMIT_PERIOD", 0 /* disabled */),
+    spendLimitEth: getOptionalEnvVar("SPEND_LIMIT_ETH", 0 /* disabled */),
+    gelato: getOptionalEnvVar(
+      "GELATO_ADDR",
+      "0xDe6ab16a4015c680daab58021815D09ddB57db8E"
+    ),
     maintainerTokenAddress: getOptionalEnvVar("MAINTAINER_TOKEN_ADDR", UNITS),
   });
 };
 
-const deploy = async ({
-  network,
-  deployFunction,
-  truffleImports,
-  accounts,
-  contracts,
-}) => {
+const deploy = async (opts) => {
   let res;
-  switch (network) {
+  switch (opts.network) {
     case "mainnet":
-      res = await deployMainnetDao(
-        deployFunction,
-        network,
-        truffleImports,
-        contracts
-      );
+      res = await deployMainnetDao(opts);
       break;
     // Chain ID is retrieved automatically and ETH_NODE_URL specifies RPC endpoint,
     // so Goerli and Rinkeby should be treated the same
     case "goerli":
     case "rinkeby":
-      res = await deployRinkebyDao(
-        deployFunction,
-        network,
-        truffleImports,
-        contracts
-      );
+      res = await deployRinkebyDao(opts);
       break;
     case "test":
     case "coverage":
-      res = await deployTestDao(
-        deployFunction,
-        network,
-        accounts,
-        truffleImports,
-        contracts
-      );
+      res = await deployTestDao(opts);
       break;
     case "ganache":
-      res = await deployGanacheDao(
-        deployFunction,
-        network,
-        accounts,
-        truffleImports,
-        contracts
-      );
+      res = await deployGanacheDao(opts);
       break;
     case "harmony":
-      res = await deployHarmonyDao(
-        deployFunction,
-        network,
-        truffleImports,
-        contracts
-      );
+      res = await deployHarmonyDao(opts);
       break;
     case "harmonytest":
-      res = await deployHarmonyTestDao(
-        deployFunction,
-        network,
-        truffleImports,
-        contracts
-      );
+      res = await deployHarmonyTestDao(opts);
       break;
     default:
-      throw new Error(`Unsupported operation ${network}`);
+      throw new Error(`Unsupported operation ${opts.network}`);
   }
   return res;
 };

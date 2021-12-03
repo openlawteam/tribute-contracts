@@ -119,6 +119,12 @@ const getDefaultOptions = (options) => {
     maintainerTokenAddress: UNITS,
     finalize: options.finalize === undefined || !!options.finalize,
     ...options, // to make sure the options from the tests override the default ones
+    gasPriceLimit: "2000000000000",
+    spendLimitPeriod: "259200",
+    spendLimitEth: "2000000000000000000000",
+    feePercent: "110",
+    gasFixed: "50000",
+    gelato: "0x1000000000000000000000000000000000000000",
   };
 };
 
@@ -292,6 +298,15 @@ module.exports = (() => {
     };
   };
 
+  const generateMembers = (amount) => {
+    let newAccounts = [];
+    for (let i = 0; i < amount; i++) {
+      const account = web3.eth.accounts.create();
+      newAccounts.push(account);
+    }
+    return newAccounts;
+  };
+
   const encodeProposalData = (dao, proposalId) =>
     web3.eth.abi.encodeParameter(
       {
@@ -307,6 +322,7 @@ module.exports = (() => {
     );
 
   return {
+    generateMembers,
     deployDefaultDao,
     deployDefaultNFTDao,
     deployDaoWithOffchainVoting,
