@@ -116,6 +116,7 @@ const getDefaultOptions = (options) => {
     supplyPixelNFT: 100,
     supplyOLToken: toBN("1000000000000000000000000"),
     erc1155TestTokenUri: "1155 test token",
+    maintainerTokenAddress: UNITS,
     finalize: options.finalize === undefined || !!options.finalize,
     ...options, // to make sure the options from the tests override the default ones
     gasPriceLimit: "2000000000000",
@@ -258,12 +259,14 @@ module.exports = (() => {
     };
   };
 
-  const deployDaoWithOffchainVoting = async ({ owner, newMember }) => {
+  const deployDaoWithOffchainVoting = async (options) => {
+    const owner = options.owner;
+    const newMember = options.newMember;
     const { WETH } = ozContracts;
     const weth = await WETH.new();
     const { dao, adapters, extensions, testContracts, votingHelpers } =
       await deployDao({
-        ...getDefaultOptions({ owner }),
+        ...getDefaultOptions(options),
         ...ozContracts,
         deployFunction,
         finalize: false,
@@ -273,13 +276,15 @@ module.exports = (() => {
         weth: weth.address,
       });
 
-    await dao.potentialNewMember(newMember, {
-      from: owner,
-    });
+    if (newMember) {
+      await dao.potentialNewMember(newMember, {
+        from: owner,
+      });
 
-    await extensions.bankExt.addToBalance(newMember, UNITS, 1, {
-      from: owner,
-    });
+      await extensions.bankExt.addToBalance(newMember, UNITS, 1, {
+        from: owner,
+      });
+    }
 
     await dao.finalizeDao({ from: owner });
 

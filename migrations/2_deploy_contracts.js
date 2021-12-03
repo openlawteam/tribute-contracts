@@ -120,6 +120,7 @@ const deployRinkebyDao = async (
     spendLimitPeriod: process.env.SPEND_LIMIT_PERIOD,
     spendLimitEth: process.env.SPEND_LIMIT_ETH,
     weth: "0xc778417e063141139fce010982780140aa0cd5ab",
+    maintainerTokenAddress: getOptionalEnvVar("MAINTAINER_TOKEN_ADDR", UNITS),
   });
 };
 
@@ -163,6 +164,7 @@ const deployMainnetDao = async (
     spendLimitPeriod: getEnvVar("SPEND_LIMIT_PERIOD"),
     spendLimitEth: getEnvVar("SPEND_LIMIT_ETH"),
     weth: "0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2",
+    maintainerTokenAddress: getOptionalEnvVar("MAINTAINER_TOKEN_ADDR", UNITS),
   });
 };
 
@@ -224,6 +226,7 @@ const deployGanacheDao = async (
     maxUnits: getEnvVar("MAX_UNITS"),
     maxMembers: getEnvVar("MAX_MEMBERS"),
     fundTargetAddress: getEnvVar("FUND_TARGET_ADDR"),
+    maintainerTokenAddress: getOptionalEnvVar("MAINTAINER_TOKEN_ADDR", UNITS),
   });
 };
 
@@ -277,6 +280,7 @@ const deployTestDao = async (
     maxUnits: getEnvVar("MAX_UNITS"),
     maxMembers: getEnvVar("MAX_MEMBERS"),
     fundTargetAddress: getEnvVar("FUND_TARGET_ADDR"),
+    maintainerTokenAddress: getOptionalEnvVar("MAINTAINER_TOKEN_ADDR", UNITS),
   });
 };
 
@@ -317,6 +321,7 @@ const deployHarmonyDao = async (
     owner: getEnvVar("DAO_OWNER_ADDR"),
     offchainAdmin: getEnvVar("OFFCHAIN_ADMIN_ADDR"),
     weth: getEnvVar("WETH_ADDR"),
+    maintainerTokenAddress: getOptionalEnvVar("MAINTAINER_TOKEN_ADDR", UNITS),
   });
 };
 
@@ -369,6 +374,7 @@ const deployHarmonyTestDao = async (
     maxMembers: getEnvVar("MAX_MEMBERS"),
     fundTargetAddress: getEnvVar("FUND_TARGET_ADDR"),
     weth: weth.address,
+    maintainerTokenAddress: getOptionalEnvVar("MAINTAINER_TOKEN_ADDR", UNITS),
   });
 };
 

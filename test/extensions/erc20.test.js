@@ -1,7 +1,6 @@
 // Whole-script strict mode syntax
 "use strict";
 
-const { sha3 } = require("web3-utils");
 /**
 MIT License
 
@@ -32,6 +31,7 @@ const {
   ZERO_ADDRESS,
   numberOfUnits,
 } = require("../../utils/contract-util");
+const { sha3 } = require("web3-utils");
 
 const {
   takeChainSnapshot,
@@ -41,6 +41,7 @@ const {
   accounts,
   expectRevert,
   expect,
+  web3,
 } = require("../../utils/oz-util");
 
 const {
@@ -721,5 +722,56 @@ describe("Extension - ERC20", () => {
     );
     //externalAddressB is now a member after receiving unit
     expect(await isMember(bank, externalAddressB)).equal(true);
+  });
+
+  it("should be possible to read the historical balance of a token holder", async () => {
+    const dao = this.dao;
+    const applicantA = accounts[2];
+    const onboarding = this.adapters.onboarding;
+    const voting = this.adapters.voting;
+    const erc20Ext = this.extensions.erc20Ext;
+
+    await onboardingNewMember(
+      getProposalCounter(),
+      dao,
+      onboarding,
+      voting,
+      applicantA,
+      daoOwner,
+      unitPrice,
+      UNITS,
+      toBN("3")
+    );
+
+    // save the block number to check the historical balance later on
+    const blockNumber = await web3.eth.getBlockNumber();
+
+    // check A's current balance
+    const currentUnits = await erc20Ext.balanceOf(applicantA);
+    expect(currentUnits.toString()).equal(
+      numberOfUnits.mul(toBN("3")).toString()
+    );
+
+    // Onboard another member to create more blocks
+    await onboardingNewMember(
+      getProposalCounter(),
+      dao,
+      onboarding,
+      voting,
+      accounts[3], //applicant B
+      daoOwner,
+      unitPrice,
+      UNITS,
+      toBN("5")
+    );
+
+    // Check the A's historical balance using the saved block number
+    const historicalUnits = await erc20Ext.getPriorAmount(
+      applicantA,
+      blockNumber
+    );
+    expect(historicalUnits.toString()).equal(
+      numberOfUnits.mul(toBN("3")).toString()
+    );
   });
 });

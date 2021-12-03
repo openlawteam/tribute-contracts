@@ -30,4 +30,19 @@ contract OLToken is ERC20 {
     constructor(uint256 _totalSupply) ERC20("OpenLawToken", "OLT") {
         _mint(msg.sender, _totalSupply);
     }
+
+    /**
+     * Helper function added to make it compatible with Governance Tokens in Tribute DAO.
+     * Any governance token must implement this function to track historical balance.
+     * In this case it is just a dummy function that ignores the block/snapshot number and
+     * reads the current balance, but ideally it would have an internal storage to track the
+     * historical balances of each token holder.
+     */
+    function getPriorAmount(address account, uint256)
+        public
+        view
+        returns (uint256)
+    {
+        return balanceOf(account);
+    }
 }

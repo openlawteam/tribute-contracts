@@ -17,6 +17,7 @@ import {
 } from "../../utils/access-control-util";
 
 import { extensionsIdsMap, adaptersIdsMap } from "../../utils/dao-ids-util";
+import { governanceRoles } from "../../utils/governance-utils";
 
 // Matches the DaoArtifacts.sol ArtifactType enum
 export enum ContractType {
@@ -68,7 +69,7 @@ export type ContractConfig = {
    */
   skipAutoDeploy?: boolean;
   /**
-   * Version of the solidity contract. 
+   * Version of the solidity contract.
    * It needs to be the name of the contract, and not the name of the .sol file.
    */
   version: string;
@@ -107,6 +108,15 @@ export type ContractConfig = {
    * set the extensionsIdsMap.BANK_EXT in this attribute to indicate it generates bank contracts.
    */
   generatesExtensionId?: string;
+
+  /**
+   * Optional
+   * The governanceRole attribute indicates which DAO configuration needs to be considered when evaluating votes
+   * from members of the DAOs. e.g: a Configuration adapter restricts the voting rights to members that hold a particular
+   * token, and the token is defined via governance role configuration. If the member does not hold that don't, the vote
+   * doesn't go through.
+   */
+  governanceRoles?: Record<string, string>;
 };
 
 export const contracts: Array<ContractConfig> = [
@@ -544,6 +554,9 @@ export const contracts: Array<ContractConfig> = [
       ],
       extensions: {},
     },
+    governanceRoles: {
+      [governanceRoles.ONLY_GOVERNOR]: "maintainerTokenAddress",
+    },
   },
   {
     id: adaptersIdsMap.ERC1155_ADAPTER,
@@ -587,6 +600,9 @@ export const contracts: Array<ContractConfig> = [
       ],
       extensions: {},
     },
+    governanceRoles: {
+      [governanceRoles.ONLY_GOVERNOR]: "maintainerTokenAddress",
+    },
   },
 
   // Signature Adapters
@@ -626,6 +642,20 @@ export const contracts: Array<ContractConfig> = [
     name: "SnapshotProposalContract",
     alias: "snapshotProposalAdapter",
     path: "../../contracts/adapters/voting/SnapshotProposalContract",
+    enabled: true,
+    skipAutoDeploy: true,
+    version: "1.0.0",
+    type: ContractType.Util,
+    acls: {
+      dao: [],
+      extensions: {},
+    },
+  },
+  {
+    id: "OffchainVotingHelperContract",
+    name: "OffchainVotingHelperContract",
+    alias: "offchainVotingHelper",
+    path: "../../contracts/helpers/OffchainVotingHelperContract",
     enabled: true,
     skipAutoDeploy: true,
     version: "1.0.0",
@@ -894,7 +924,7 @@ export const contracts: Array<ContractConfig> = [
         "kycMaxMembers",
         "kycFundTargetAddress",
         "tokenAddr",
-        "unitTokenToMint"
+        "unitTokenToMint",
       ],
     ],
   },
