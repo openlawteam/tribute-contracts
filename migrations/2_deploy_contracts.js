@@ -95,9 +95,12 @@ async function deployRinkebyDao(deployFunction, network) {
     "OFFCHAIN_ADMIN_ADDR",
     "CHUNK_PRICE",
     "UNITS_PER_CHUNK",
-    "MAX_CHUNKS"
+    "MAX_CHUNKS",
+    "MAX_MEMBERS",
+    "MAX_UNITS",
+    "KYC_SIGNER_ADDR"
   );
-  
+
   return await deployDao({
     ...truffleImports,
     deployFunction,
@@ -108,19 +111,22 @@ async function deployRinkebyDao(deployFunction, network) {
     erc20TokenSymbol: envVariables.ERC20_TOKEN_SYMBOL,
     erc20TokenDecimals: envVariables.ERC20_TOKEN_DECIMALS,
     maxChunks: envVariables.MAX_CHUNKS,
-    votingPeriod: envVariables.VOTING_PERIOD_SECONDS, // 600 secs = 10 mins
-    gracePeriod: envVariables.GRACE_PERIOD_SECONDS, // 600 secs = 10 mins
+    votingPeriod: envVariables.VOTING_PERIOD_SECONDS,
+    gracePeriod: envVariables.GRACE_PERIOD_SECONDS,
     offchainVoting: true,
     chainId: getNetworkDetails(network).chainId,
     deployTestTokens: true,
-    finalize: false,
+    finalize: true,
     maxExternalTokens: 100,
     couponCreatorAddress: envVariables.COUPON_CREATOR_ADDR,
     fundTargetAddress: envVariables.FUND_TARGET_ADDR,
     daoName: envVariables.DAO_NAME,
     owner: envVariables.DAO_OWNER_ADDR,
     offchainAdmin: envVariables.OFFCHAIN_ADMIN_ADDR,
+    maxMembers: envVariables.MAX_MEMBERS,
+    maxUnits: envVariables.MAX_UNITS,
     wethAddress: "0xc778417e063141139fce010982780140aa0cd5ab",
+    kycSignerAddress: envVariables.KYC_SIGNER_ADDR,
   });
 }
 
