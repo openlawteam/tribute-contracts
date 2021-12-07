@@ -1,30 +1,9 @@
 [
   {
     "network": "rinkeby",
-    "daoFactoryAddress": "0xC983C974aF295F7c80DE2dAd4707bC79454C8BA4",
-    "daoFactoryStartBlock": 8694485,
+    "daoFactoryAddress": "0x586336275C1a4c181D35961f083C466a77b2961C",
+    "daoFactoryStartBlock": 9460035,
     "GITHUB_USERNAME": "openlawteam",
-    "SUBGRAPH_NAME": "tribute-dev"
-  },
-  {
-    "network": "rinkeby",
-    "daoFactoryAddress": "0xbDf9279c4bb680347B6A351Ed0B9139E8752C417",
-    "daoFactoryStartBlock": 8694741,
-    "GITHUB_USERNAME": "openlawteam",
-    "SUBGRAPH_NAME": "museo-dev"
-  },
-  {
-    "network": "rinkeby",
-    "daoFactoryAddress": "0x32fe234FD0C9a4CaDc3F14495Ad1144bdA52E840",
-    "daoFactoryStartBlock": 8695137,
-    "GITHUB_USERNAME": "openlawteam",
-    "SUBGRAPH_NAME": "alien-dev"
-  },
-  {
-    "network": "rinkeby",
-    "daoFactoryAddress": "0xD1588E0F31604E14F85Ed116D2B8AE816673B57F",
-    "daoFactoryStartBlock": 8686996,
-    "GITHUB_USERNAME": "openlawteam",
-    "SUBGRAPH_NAME": "darkhorse-dev"
+    "SUBGRAPH_NAME": "noise-dev"
   }
 ]
