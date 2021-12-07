@@ -232,7 +232,7 @@ const prepareAdapters = async ({
     "0x54e0D7E1811EcF3e5B2e9cd592521EB5Aa86BA21"
   );
   kycOnboarding = await KycOnboardingContract.at(
-    "0x0dc3df07277faD92f881aC261ed1D6A7846a5eE0"
+    "0x4341C6Bc3848044a79b02a906c52Cc6f5E64C0c5"
   );
   guildkick = await GuildKickContract.at(
     "0x18B60Df8C7f1bB11fE84B82441BF27964b5D163E"
