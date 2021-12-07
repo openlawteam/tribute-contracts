@@ -20,6 +20,7 @@
 
    # You can set that to use the same address you have in the DAO_OWNER_ADDR
    COUPON_CREATOR_ADDR=0x...
+   KYC_COUPON_CREATOR_ADDR=0x...
 
    # The name of the ERC20 token of your DAO.
    ERC20_TOKEN_NAME=My First DAO Token

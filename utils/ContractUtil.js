@@ -49,6 +49,8 @@ const numberOfUnits = toBN("1000000000000000");
 const unitPrice = toBN(toWei("120", "finney"));
 const remaining = unitPrice.sub(toBN("50000000000000"));
 const maximumChunks = toBN("11");
+const maxAmount = toBN("10000000000000000000");
+const maxUnits = toBN("10000000000000000000");
 
 const contracts = {
   // Test Util Contracts
@@ -88,7 +90,6 @@ const contracts = {
   SnapshotProposalContract: "./adapters/voting/SnapshotProposalContract",
   OffchainVotingContract: "./adapters/voting/OffchainVotingContract",
   KickBadReporterAdapter: "./adapters/voting/KickBadReporterAdapter",
-  BatchVotingContract: "./adapters/voting/BatchVotingContract",
 
   // Withdraw Adapters
   RagequitContract: "./adapters/RagequitContract",
@@ -99,11 +100,13 @@ const contracts = {
   FinancingContract: "./adapters/FinancingContract",
   OnboardingContract: "./adapters/OnboardingContract",
   CouponOnboardingContract: "./adapters/CouponOnboardingContract",
+  KycOnboardingContract: "./adapters/KycOnboardingContract",
   TributeContract: "./adapters/TributeContract",
   TributeNFTContract: "./adapters/TributeNFTContract",
 
   // Utils
   DaoArtifacts: "./utils/DaoArtifacts",
+  WETH: "./helpers/WETH",
 };
 
 module.exports = {
@@ -118,6 +121,8 @@ module.exports = {
   toUtf8,
   maximumChunks,
   numberOfUnits,
+  maxAmount,
+  maxUnits,
   unitPrice,
   remaining,
   GUILD,

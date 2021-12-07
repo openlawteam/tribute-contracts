@@ -57,8 +57,6 @@ contract SnapshotProposalContract {
     bytes32 public constant VOTE_PAYLOAD_TYPEHASH =
         keccak256(abi.encodePacked(VOTE_PAYLOAD_TYPE));
 
-    uint256 public chainId;
-
     function DOMAIN_SEPARATOR(DaoRegistry dao, address actionId)
         public
         view
@@ -70,7 +68,7 @@ contract SnapshotProposalContract {
                     EIP712_DOMAIN_TYPEHASH,
                     keccak256("Snapshot Message"), // string name
                     keccak256("4"), // string version
-                    chainId, // uint256 chainId
+                    block.chainid, // uint256 chainId
                     address(dao), // address verifyingContract,
                     actionId
                 )
@@ -101,10 +99,6 @@ contract SnapshotProposalContract {
     struct VotePayload {
         uint32 choice;
         bytes32 proposalId;
-    }
-
-    constructor(uint256 _chainId) {
-        chainId = _chainId;
     }
 
     function hashMessage(

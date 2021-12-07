@@ -55,7 +55,6 @@ contract CouponOnboardingContract is
     bytes32 constant TokenAddrToMint =
         keccak256("coupon-onboarding.tokenAddrToMint");
 
-    uint256 chainId;
     mapping(address => mapping(uint256 => uint256)) flags;
 
     event CouponRedeemed(
@@ -64,10 +63,6 @@ contract CouponOnboardingContract is
         address authorizedMember,
         uint256 amount
     );
-
-    constructor(uint256 _chainId) {
-        chainId = _chainId;
-    }
 
     function configureDao(
         DaoRegistry dao,
@@ -95,7 +90,7 @@ contract CouponOnboardingContract is
             )
         );
 
-        return hashMessage(dao, chainId, address(this), message);
+        return hashMessage(dao, block.chainid, address(this), message);
     }
 
     function redeemCoupon(

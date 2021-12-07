@@ -2,8 +2,12 @@ const {
   toBN,
   toWei,
   ETH_TOKEN,
+  UNITS,
+  ZERO_ADDRESS,
   maximumChunks,
   unitPrice,
+  maxAmount,
+  maxUnits,
   numberOfUnits,
 } = require("../utils/ContractUtil.js");
 
@@ -38,12 +42,11 @@ module.exports = async (deployer, network, accounts) => {
     case "harmonytest":
       res = await deployHarmonyTestDao(deployFunction, network);
       break;
-
     default:
       throw Error(`Unsupported network: ${network}`);
   }
 
-  let { dao, extensions } = res;
+  const { dao, extensions } = res;
   if (dao) {
     await dao.finalizeDao();
     console.log("************************");
@@ -66,14 +69,10 @@ module.exports = async (deployer, network, accounts) => {
   console.log(`### Deployment completed at: ${new Date().toISOString()}`);
 };
 
-async function deployTestDao(deployFunction, network, accounts) {
-  if (!process.env.DAO_NAME) throw Error("Missing env var: DAO_NAME");
-  if (!process.env.ERC20_TOKEN_NAME)
-    throw Error("Missing env var: ERC20_TOKEN_NAME");
-  if (!process.env.ERC20_TOKEN_SYMBOL)
-    throw Error("Missing env var: ERC20_TOKEN_SYMBOL");
-  if (!process.env.ERC20_TOKEN_DECIMALS)
-    throw Error("Missing env var: ERC20_TOKEN_DECIMALS");
+const deployTestDao = async (deployFunction, network, accounts) => {
+  const daoOwnerAddress = accounts[0];
+  const { WETH } = truffleImports;
+  const weth = await deployFunction(WETH);
 
   return await deployDao({
     ...truffleImports,
@@ -81,9 +80,12 @@ async function deployTestDao(deployFunction, network, accounts) {
     unitPrice: unitPrice,
     nbUnits: numberOfUnits,
     tokenAddr: ETH_TOKEN,
-    erc20TokenName: process.env.ERC20_TOKEN_NAME,
-    erc20TokenSymbol: process.env.ERC20_TOKEN_SYMBOL,
-    erc20TokenDecimals: process.env.ERC20_TOKEN_DECIMALS,
+    maxAmount: getOptionalEnvVar("MAX_AMOUNT", maxAmount),
+    maxUnits: getOptionalEnvVar("MAX_UNITS", maxUnits),
+    maxMembers: getOptionalEnvVar("MAX_MEMBERS", toBN(1000)),
+    erc20TokenName: getEnvVar("ERC20_TOKEN_NAME"),
+    erc20TokenSymbol: getEnvVar("ERC20_TOKEN_SYMBOL"),
+    erc20TokenDecimals: getEnvVar("ERC20_TOKEN_DECIMALS"),
     maxChunks: maximumChunks,
     votingPeriod: 10, // 10 secs
     gracePeriod: 1, // 1 sec
@@ -92,66 +94,67 @@ async function deployTestDao(deployFunction, network, accounts) {
     deployTestTokens: false,
     finalize: false,
     maxExternalTokens: 100,
-    couponCreatorAddress: "0x7D8cad0bbD68deb352C33e80fccd4D8e88b4aBb8",
-    offchainAdmin: "0xedC10CFA90A135C41538325DD57FDB4c7b88faf7",
-    daoName: process.env.DAO_NAME,
-    owner: accounts[0],
+    couponCreatorAddress: daoOwnerAddress,
+    offchainAdmin: daoOwnerAddress,
+    kycCouponCreatorAddress: daoOwnerAddress,
+    fundTargetAddress: getOptionalEnvVar(
+      "KYC_MULTISIG_FUND_ADDR",
+      ZERO_ADDRESS
+    ),
+    daoName: getEnvVar("DAO_NAME"),
+    owner: daoOwnerAddress,
+    wethAddress: weth.address,
   });
-}
+};
 
-async function deployRinkebyDao(deployFunction, network) {
-  if (!process.env.DAO_NAME) throw Error("Missing env var: DAO_NAME");
-  if (!process.env.DAO_OWNER_ADDR)
-    throw Error("Missing env var: DAO_OWNER_ADDR");
-  if (!process.env.ERC20_TOKEN_NAME)
-    throw Error("Missing env var: ERC20_TOKEN_NAME");
-  if (!process.env.ERC20_TOKEN_SYMBOL)
-    throw Error("Missing env var: ERC20_TOKEN_SYMBOL");
-  if (!process.env.ERC20_TOKEN_DECIMALS)
-    throw Error("Missing env var: ERC20_TOKEN_DECIMALS");
-  if (!process.env.COUPON_CREATOR_ADDR)
-    throw Error("Missing env var: COUPON_CREATOR_ADDR");
-
+const deployRinkebyDao = async (deployFunction, network) => {
   return await deployDao({
     ...truffleImports,
     deployFunction,
     unitPrice: toBN(toWei("100", "finney")),
     nbUnits: toBN("100000"),
     tokenAddr: ETH_TOKEN,
-    erc20TokenName: process.env.ERC20_TOKEN_NAME,
-    erc20TokenSymbol: process.env.ERC20_TOKEN_SYMBOL,
-    erc20TokenDecimals: process.env.ERC20_TOKEN_DECIMALS,
+    erc20TokenName: getEnvVar("ERC20_TOKEN_NAME"),
+    erc20TokenSymbol: getEnvVar("ERC20_TOKEN_SYMBOL"),
+    erc20TokenDecimals: getEnvVar("ERC20_TOKEN_DECIMALS"),
+    erc20TokenAddress: UNITS,
     maxChunks: toBN("100000"),
-    votingPeriod: process.env.VOTING_PERIOD_SECONDS
-      ? parseInt(process.env.VOTING_PERIOD_SECONDS)
-      : 600, // 600 secs = 10 mins
-    gracePeriod: process.env.GRACE_PERIOD_SECONDS
-      ? parseInt(process.env.GRACE_PERIOD_SECONDS)
-      : 600, // 600 secs = 10 min
+    maxUnits: getOptionalEnvVar("MAX_UNITS", maxUnits),
+    maxMembers: getOptionalEnvVar("MAX_MEMBERS", toBN(1000)),
+    votingPeriod: getOptionalEnvVar("VOTING_PERIOD_SECONDS", 600), // 600 secs = 10 min
+    gracePeriod: getOptionalEnvVar("GRACE_PERIOD_SECONDS", 600), // 600 secs = 10 min
     offchainVoting: true,
     chainId: getNetworkDetails(network).chainId,
     deployTestTokens: true,
     finalize: false,
     maxExternalTokens: 100,
-    couponCreatorAddress: process.env.COUPON_CREATOR_ADDR,
-    daoName: process.env.DAO_NAME,
-    owner: process.env.DAO_OWNER_ADDR,
-    offchainAdmin: process.env.OFFCHAIN_ADMIN_ADDR
-      ? process.env.OFFCHAIN_ADMIN_ADDR
-      : "0xedC10CFA90A135C41538325DD57FDB4c7b88faf7",
+    couponCreatorAddress: getOptionalEnvVar(
+      "COUPON_CREATOR_ADDR",
+      getEnvVar("DAO_OWNER_ADDR")
+    ),
+    kycCouponCreatorAddress: getOptionalEnvVar(
+      "KYC_COUPON_CREATOR_ADDR",
+      getEnvVar("DAO_OWNER_ADDR")
+    ),
+    daoName: getEnvVar("DAO_NAME"),
+    owner: getEnvVar("DAO_OWNER_ADDR"),
+    offchainAdmin: getOptionalEnvVar(
+      "OFFCHAIN_ADMIN_ADDR",
+      getEnvVar("DAO_OWNER_ADDR")
+    ),
+    fundTargetAddress: getOptionalEnvVar(
+      "KYC_MULTISIG_FUND_ADDR",
+      ZERO_ADDRESS
+    ),
+    wethAddress: "0xc778417e063141139fce010982780140aa0cd5ab",
   });
-}
+};
 
-async function deployGanacheDao(deployFunction, network, accounts) {
-  if (!process.env.DAO_NAME) throw Error("Missing env var: DAO_NAME");
-  if (!process.env.COUPON_CREATOR_ADDR)
-    throw Error("Missing env var: COUPON_CREATOR_ADDR");
-  if (!process.env.ERC20_TOKEN_NAME)
-    throw Error("Missing env var: ERC20_TOKEN_NAME");
-  if (!process.env.ERC20_TOKEN_SYMBOL)
-    throw Error("Missing env var: ERC20_TOKEN_SYMBOL");
-  if (!process.env.ERC20_TOKEN_DECIMALS)
-    throw Error("Missing env var: ERC20_TOKEN_DECIMALS");
+const deployGanacheDao = async (deployFunction, network, accounts) => {
+  const daoOwnerAddress = accounts[0];
+
+  const { WETH } = truffleImports;
+  const weth = await deployFunction(WETH);
 
   return await deployDao({
     ...truffleImports,
@@ -159,155 +162,152 @@ async function deployGanacheDao(deployFunction, network, accounts) {
     unitPrice: toBN(toWei("100", "finney")),
     nbUnits: toBN("100000"),
     tokenAddr: ETH_TOKEN,
-    erc20TokenName: process.env.ERC20_TOKEN_NAME,
-    erc20TokenSymbol: process.env.ERC20_TOKEN_SYMBOL,
-    erc20TokenDecimals: process.env.ERC20_TOKEN_DECIMALS,
+    maxAmount: getOptionalEnvVar("MAX_AMOUNT", maxAmount),
+    maxUnits: getOptionalEnvVar("MAX_UNITS", maxUnits),
+    maxMembers: getOptionalEnvVar("MAX_MEMBERS", toBN(1000)),
+    erc20TokenName: getEnvVar("ERC20_TOKEN_NAME"),
+    erc20TokenSymbol: getEnvVar("ERC20_TOKEN_SYMBOL"),
+    erc20TokenDecimals: getEnvVar("ERC20_TOKEN_DECIMALS"),
     maxChunks: toBN("100000"),
-    votingPeriod: process.env.VOTING_PERIOD_SECONDS
-      ? parseInt(process.env.VOTING_PERIOD_SECONDS)
-      : 120, // 120 secs = 2 mins
-    gracePeriod: process.env.GRACE_PERIOD_SECONDS
-      ? parseInt(process.env.GRACE_PERIOD_SECONDS)
-      : 60, // 60 secs = 1 min
+    votingPeriod: getOptionalEnvVar("VOTING_PERIOD_SECONDS", 120), // 120 secs = 2 min
+    gracePeriod: getOptionalEnvVar("GRACE_PERIOD_SECONDS", 60), // 600 secs = 1 min
     offchainVoting: true,
     chainId: getNetworkDetails(network).chainId,
     deployTestTokens: true,
     finalize: false,
     maxExternalTokens: 100,
-    couponCreatorAddress: process.env.COUPON_CREATOR_ADDR,
-    daoName: process.env.DAO_NAME,
-    owner: accounts[0],
-    offchainAdmin: process.env.OFFCHAIN_ADMIN_ADDR
-      ? process.env.OFFCHAIN_ADMIN_ADDR
-      : "0xedC10CFA90A135C41538325DD57FDB4c7b88faf7",
+    couponCreatorAddress: getOptionalEnvVar(
+      "COUPON_CREATOR_ADDR",
+      daoOwnerAddress
+    ),
+    kycCouponCreatorAddress: getOptionalEnvVar(
+      "KYC_COUPON_CREATOR_ADDR",
+      getEnvVar("DAO_OWNER_ADDR")
+    ),
+    fundTargetAddress: getOptionalEnvVar(
+      "KYC_MULTISIG_FUND_ADDR",
+      ZERO_ADDRESS
+    ),
+    daoName: getEnvVar("DAO_NAME"),
+    owner: daoOwnerAddress,
+    offchainAdmin: getOptionalEnvVar("OFFCHAIN_ADMIN_ADDR", daoOwnerAddress),
+    wethAddress: weth.address,
   });
-}
+};
 
-async function deployMainnetDao(deployFunction, network) {
-  if (!process.env.DAO_NAME) throw Error("Missing env var: DAO_NAME");
-  if (!process.env.DAO_OWNER_ADDR)
-    throw Error("Missing env var: DAO_OWNER_ADDR");
-  if (!process.env.ERC20_TOKEN_NAME)
-    throw Error("Missing env var: ERC20_TOKEN_NAME");
-  if (!process.env.ERC20_TOKEN_SYMBOL)
-    throw Error("Missing env var: ERC20_TOKEN_SYMBOL");
-  if (!process.env.ERC20_TOKEN_DECIMALS)
-    throw Error("Missing env var: ERC20_TOKEN_DECIMALS");
-  if (!process.env.COUPON_CREATOR_ADDR)
-    throw Error("Missing env var: COUPON_CREATOR_ADDR");
-  if (!process.env.OFFCHAIN_ADMIN_ADDR)
-    throw Error("Missing env var: OFFCHAIN_ADMIN_ADDR");
-  if (!process.env.VOTING_PERIOD_SECONDS)
-    throw Error("Missing env var: VOTING_PERIOD_SECONDS");
-  if (!process.env.GRACE_PERIOD_SECONDS)
-    throw Error("Missing env var: GRACE_PERIOD_SECONDS");
-
+const deployMainnetDao = async (deployFunction, network) => {
   return await deployDao({
     ...truffleImports,
     deployFunction,
     unitPrice: toBN(toWei("100", "finney")),
     nbUnits: toBN("100000"),
+    maxAmount: getOptionalEnvVar("MAX_AMOUNT", maxAmount),
+    maxUnits: getOptionalEnvVar("MAX_UNITS", maxUnits),
+    maxMembers: getEnvVar("MAX_MEMBERS"),
     tokenAddr: ETH_TOKEN,
-    erc20TokenName: process.env.ERC20_TOKEN_NAME,
-    erc20TokenSymbol: process.env.ERC20_TOKEN_SYMBOL,
-    erc20TokenDecimals: process.env.ERC20_TOKEN_DECIMALS,
+    erc20TokenName: getEnvVar("ERC20_TOKEN_NAME"),
+    erc20TokenSymbol: getEnvVar("ERC20_TOKEN_SYMBOL"),
+    erc20TokenDecimals: getEnvVar("ERC20_TOKEN_DECIMALS"),
+    erc20TokenAddress: UNITS,
     maxChunks: toBN("100000"),
-    votingPeriod: parseInt(process.env.VOTING_PERIOD_SECONDS),
-    gracePeriod: parseInt(process.env.GRACE_PERIOD_SECONDS),
+    votingPeriod: parseInt(getEnvVar("VOTING_PERIOD_SECONDS")),
+    gracePeriod: parseInt(getEnvVar("GRACE_PERIOD_SECONDS")),
     offchainVoting: true,
     chainId: getNetworkDetails(network).chainId,
     deployTestTokens: false,
     finalize: false,
     maxExternalTokens: 100,
-    couponCreatorAddress: process.env.COUPON_CREATOR_ADDR,
-    daoName: process.env.DAO_NAME,
-    owner: process.env.DAO_OWNER_ADDR,
-    offchainAdmin: process.env.OFFCHAIN_ADMIN_ADDR,
+    couponCreatorAddress: getEnvVar("COUPON_CREATOR_ADDR"),
+    kycCouponCreatorAddress: getEnvVar("KYC_COUPON_CREATOR_ADDR"),
+    fundTargetAddress: getOptionalEnvVar(
+      "KYC_MULTISIG_FUND_ADDR",
+      ZERO_ADDRESS
+    ),
+    daoName: getEnvVar("DAO_NAME"),
+    owner: getEnvVar("DAO_OWNER_ADDR"),
+    offchainAdmin: getEnvVar("OFFCHAIN_ADMIN_ADDR"),
+    wethAddress: "0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2",
   });
-}
+};
 
-async function deployHarmonyDao(deployFunction, network) {
-  if (!process.env.DAO_NAME) throw Error("Missing env var: DAO_NAME");
-  if (!process.env.DAO_OWNER_ADDR)
-    throw Error("Missing env var: DAO_OWNER_ADDR");
-  if (!process.env.ERC20_TOKEN_NAME)
-    throw Error("Missing env var: ERC20_TOKEN_NAME");
-  if (!process.env.ERC20_TOKEN_SYMBOL)
-    throw Error("Missing env var: ERC20_TOKEN_SYMBOL");
-  if (!process.env.ERC20_TOKEN_DECIMALS)
-    throw Error("Missing env var: ERC20_TOKEN_DECIMALS");
-  if (!process.env.COUPON_CREATOR_ADDR)
-    throw Error("Missing env var: COUPON_CREATOR_ADDR");
-  if (!process.env.OFFCHAIN_ADMIN_ADDR)
-    throw Error("Missing env var: OFFCHAIN_ADMIN_ADDR");
-  if (!process.env.VOTING_PERIOD_SECONDS)
-    throw Error("Missing env var: VOTING_PERIOD_SECONDS");
-  if (!process.env.GRACE_PERIOD_SECONDS)
-    throw Error("Missing env var: GRACE_PERIOD_SECONDS");
-
+const deployHarmonyDao = async (deployFunction, network) => {
   return await deployDao({
     ...truffleImports,
     deployFunction,
     unitPrice: toBN(toWei("100", "finney")),
     nbUnits: toBN("100000"),
+    maxAmount: getOptionalEnvVar("MAX_AMOUNT", maxAmount),
+    maxUnits: getOptionalEnvVar("MAX_UNITS", maxUnits),
+    maxMembers: getEnvVar("MAX_MEMBERS"),
     tokenAddr: ETH_TOKEN,
-    erc20TokenName: process.env.ERC20_TOKEN_NAME,
-    erc20TokenSymbol: process.env.ERC20_TOKEN_SYMBOL,
-    erc20TokenDecimals: process.env.ERC20_TOKEN_DECIMALS,
+    erc20TokenName: getEnvVar("ERC20_TOKEN_NAME"),
+    erc20TokenSymbol: getEnvVar("ERC20_TOKEN_SYMBOL"),
+    erc20TokenDecimals: getEnvVar("ERC20_TOKEN_DECIMALS"),
+    erc20TokenAddress: UNITS,
     maxChunks: toBN("100000"),
-    votingPeriod: parseInt(process.env.VOTING_PERIOD_SECONDS),
-    gracePeriod: parseInt(process.env.GRACE_PERIOD_SECONDS),
+    votingPeriod: parseInt(getEnvVar("VOTING_PERIOD_SECONDS")),
+    gracePeriod: parseInt(getEnvVar("GRACE_PERIOD_SECONDS")),
     offchainVoting: true,
     chainId: getNetworkDetails(network).chainId,
     deployTestTokens: false,
     finalize: false,
     maxExternalTokens: 100,
-    couponCreatorAddress: process.env.COUPON_CREATOR_ADDR,
-    daoName: process.env.DAO_NAME,
-    owner: process.env.DAO_OWNER_ADDR,
-    offchainAdmin: process.env.OFFCHAIN_ADMIN_ADDR,
+    couponCreatorAddress: getEnvVar("COUPON_CREATOR_ADDR"),
+    kycCouponCreatorAddress: getEnvVar("KYC_COUPON_CREATOR_ADDR"),
+    fundTargetAddress: getOptionalEnvVar(
+      "KYC_MULTISIG_FUND_ADDR",
+      ZERO_ADDRESS
+    ),
+    daoName: getEnvVar("DAO_NAME"),
+    owner: getEnvVar("DAO_OWNER_ADDR"),
+    offchainAdmin: getEnvVar("OFFCHAIN_ADMIN_ADDR"),
+    wethAddress: getEnvVar("WETH_ADDRESS"),
   });
-}
+};
 
-async function deployHarmonyTestDao(deployFunction, network) {
-  if (!process.env.DAO_NAME) throw Error("Missing env var: DAO_NAME");
-  if (!process.env.DAO_OWNER_ADDR)
-    throw Error("Missing env var: DAO_OWNER_ADDR");
-  if (!process.env.ERC20_TOKEN_NAME)
-    throw Error("Missing env var: ERC20_TOKEN_NAME");
-  if (!process.env.ERC20_TOKEN_SYMBOL)
-    throw Error("Missing env var: ERC20_TOKEN_SYMBOL");
-  if (!process.env.ERC20_TOKEN_DECIMALS)
-    throw Error("Missing env var: ERC20_TOKEN_DECIMALS");
-  if (!process.env.COUPON_CREATOR_ADDR)
-    throw Error("Missing env var: COUPON_CREATOR_ADDR");
-
+const deployHarmonyTestDao = async (deployFunction, network) => {
   return await deployDao({
     ...truffleImports,
     deployFunction,
     unitPrice: toBN(toWei("100", "finney")),
     nbUnits: toBN("100000"),
+    maxUnits: getOptionalEnvVar("MAX_UNITS", maxUnits),
+    maxMembers: getOptionalEnvVar("MAX_MEMBERS", toBN(1000)),
     tokenAddr: ETH_TOKEN,
-    erc20TokenName: process.env.ERC20_TOKEN_NAME,
-    erc20TokenSymbol: process.env.ERC20_TOKEN_SYMBOL,
-    erc20TokenDecimals: process.env.ERC20_TOKEN_DECIMALS,
+    erc20TokenName: getEnvVar("ERC20_TOKEN_NAME"),
+    erc20TokenSymbol: getEnvVar("ERC20_TOKEN_SYMBOL"),
+    erc20TokenDecimals: getEnvVar("ERC20_TOKEN_DECIMALS"),
+    erc20TokenAddress: UNITS,
     maxChunks: toBN("100000"),
-    votingPeriod: process.env.VOTING_PERIOD_SECONDS
-      ? parseInt(process.env.VOTING_PERIOD_SECONDS)
-      : 600, // 600 secs = 10 mins
-    gracePeriod: process.env.GRACE_PERIOD_SECONDS
-      ? parseInt(process.env.GRACE_PERIOD_SECONDS)
-      : 600, // 600 secs = 10 min
+    votingPeriod: getOptionalEnvVar("VOTING_PERIOD_SECONDS", 600), // 600 secs = 10 min
+    gracePeriod: getOptionalEnvVar("GRACE_PERIOD_SECONDS", 600), // 600 secs = 10 min
     offchainVoting: true,
     chainId: getNetworkDetails(network).chainId,
     deployTestTokens: true,
     finalize: false,
     maxExternalTokens: 100,
-    couponCreatorAddress: process.env.COUPON_CREATOR_ADDR,
-    daoName: process.env.DAO_NAME,
-    owner: process.env.DAO_OWNER_ADDR,
-    offchainAdmin: process.env.OFFCHAIN_ADMIN_ADDR
-      ? process.env.OFFCHAIN_ADMIN_ADDR
-      : "0xedC10CFA90A135C41538325DD57FDB4c7b88faf7",
+    couponCreatorAddress: getEnvVar("COUPON_CREATOR_ADDR"),
+    kycCouponCreatorAddress: getOptionalEnvVar(
+      "KYC_COUPON_CREATOR_ADDR",
+      getEnvVar("DAO_OWNER_ADDR")
+    ),
+    fundTargetAddress: getOptionalEnvVar(
+      "KYC_MULTISIG_FUND_ADDR",
+      ZERO_ADDRESS
+    ),
+    daoName: getEnvVar("DAO_NAME"),
+    owner: getEnvVar("DAO_OWNER_ADDR"),
+    offchainAdmin: getEnvVar("OFFCHAIN_ADMIN_ADDR"),
+    wethAddress: getEnvVar("WETH_ADDRESS"),
   });
-}
+};
+
+const getEnvVar = (name) => {
+  if (!process.env[name]) throw Error(`Missing env var: ${name}`);
+  return process.env[name];
+};
+
+const getOptionalEnvVar = (name, defaultValue) => {
+  const envVar = process.env[name];
+  return envVar ? envVar : defaultValue;
+};
