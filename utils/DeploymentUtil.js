@@ -871,6 +871,10 @@ const networks = [
     name: "harmonytest",
     chainId: 1666700000,
   },
+  {
+    name: "xdai",
+    chainId: 100,
+  },
 ];
 
 const getNetworkDetails = (name) => {
