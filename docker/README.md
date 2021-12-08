@@ -1,9 +1,9 @@
 ### Launching a DAO
 
-1. Checkout tribute-contracts branch `release-v1.0.3`
+1. Checkout tribute-contracts branch `release-v1.0.6`
 
-   - > git fetch origin release-v1.0.3
-   - > git checkout release-v1.0.3
+   - > git fetch origin release-v1.0.6
+   - > git checkout release-v1.0.6
 
 2. Set the env vars in the root of `tribute-contracts` project
 
