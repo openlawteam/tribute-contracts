@@ -40,7 +40,7 @@ module.exports = async (deployer, network, accounts) => {
       break;
     case "xdai":
       res = await deployXDaiDao(deployFunction,network);
-
+      break;
     default:
       throw Error(`Unsupported network: ${network}`);
   }
