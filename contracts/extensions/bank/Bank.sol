@@ -99,7 +99,8 @@ contract BankExtension is AdapterGuard, IExtension, ERC165 {
         require(
             address(this) == msg.sender ||
                 address(dao) == msg.sender ||
-                dao.state() == DaoRegistry.DaoState.CREATION ||
+                (dao.state() == DaoRegistry.DaoState.CREATION &&
+                    creationModeCheck(dao)) ||
                 dao.hasAdapterAccessToExtension(
                     msg.sender,
                     address(this),

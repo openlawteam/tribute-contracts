@@ -87,7 +87,8 @@ contract ERC1155TokenExtension is
     //MODIFIERS
     modifier hasExtensionAccess(IExtension extension, AclFlag flag) {
         require(
-            dao.state() == DaoRegistry.DaoState.CREATION ||
+            (dao.state() == DaoRegistry.DaoState.CREATION &&
+                creationModeCheck(dao)) ||
                 dao.hasAdapterAccessToExtension(
                     msg.sender,
                     address(extension),

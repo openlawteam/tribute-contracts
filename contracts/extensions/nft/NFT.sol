@@ -69,7 +69,8 @@ contract NFTExtension is AdapterGuard, IExtension, IERC721Receiver {
 
     modifier hasExtensionAccess(IExtension extension, AclFlag flag) {
         require(
-            dao.state() == DaoRegistry.DaoState.CREATION ||
+            (dao.state() == DaoRegistry.DaoState.CREATION &&
+                creationModeCheck(dao)) ||
                 dao.hasAdapterAccessToExtension(
                     msg.sender,
                     address(extension),

@@ -179,6 +179,10 @@ contract DaoRegistry is MemberGuard, AdapterGuard {
      * @dev Sets the state of the dao to READY
      */
     function finalizeDao() external {
+        require(
+            isActiveMember(this, msg.sender) || isAdapter(msg.sender),
+            "not allowed to finalize"
+        );
         state = DaoState.READY;
     }
 

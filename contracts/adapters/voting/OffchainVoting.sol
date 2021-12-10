@@ -587,14 +587,22 @@ contract OffchainVotingContract is
         external
         reentrancyGuard(dao)
         onlyMember(dao)
-        reimbursable(dao)
     {
+        VotingState state = voteResult(dao, proposalId);
+        require(
+            state != VotingState.PASS &&
+                state != VotingState.NOT_PASS &&
+                state != VotingState.TIE,
+            "voting ended"
+        );
+
+        address memberAddr = dao.getAddressIfDelegated(msg.sender);
         // slither-disable-next-line timestamp
         require(
-            votes[address(dao)][proposalId].fallbackVotes[msg.sender] == false,
+            votes[address(dao)][proposalId].fallbackVotes[memberAddr] == false,
             "fallback vote duplicate"
         );
-        votes[address(dao)][proposalId].fallbackVotes[msg.sender] = true;
+        votes[address(dao)][proposalId].fallbackVotes[memberAddr] = true;
         votes[address(dao)][proposalId].fallbackVotesCount += 1;
 
         if (

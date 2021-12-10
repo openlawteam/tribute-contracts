@@ -56,7 +56,8 @@ contract ExecutorExtension is AdapterGuard, IExtension {
         require(
             address(this) == msg.sender ||
                 address(dao) == msg.sender ||
-                dao.state() == DaoRegistry.DaoState.CREATION ||
+                (dao.state() == DaoRegistry.DaoState.CREATION &&
+                    creationModeCheck(dao)) ||
                 dao.hasAdapterAccessToExtension(
                     msg.sender,
                     address(this),
