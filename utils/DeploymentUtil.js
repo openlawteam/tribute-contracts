@@ -864,6 +864,14 @@ const networks = [
     name: "harmonytest",
     chainId: 1666700000,
   },
+  {
+    name: "polygon",
+    chainId: 137,
+  },
+  {
+    name: "polygontest",
+    chainId: 80001,
+  },
 ];
 
 const getNetworkDetails = (name) => {
