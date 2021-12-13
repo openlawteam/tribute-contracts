@@ -54,7 +54,7 @@ module.exports = async (deployer, network, accounts) => {
 
   const { dao, extensions } = res;
   if (dao) {
-//    await dao.finalizeDao();
+    await dao.finalizeDao();
     console.log("************************");
     console.log(`DaoRegistry: ${dao.address}`);
     console.log(`BankExtension: ${extensions.bank.address}`);
