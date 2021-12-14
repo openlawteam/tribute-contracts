@@ -17,6 +17,7 @@
   },
   "dependencies": {
     "@openzeppelin/contracts": "4.3.3",
+    "@snapshot-labs/snapshot.js": "^0.3.21",
     "@truffle/contract": "^4.3.13",
     "@truffle/hdwallet-provider": "1.2.2",
     "chalk": "^4.1.2",
