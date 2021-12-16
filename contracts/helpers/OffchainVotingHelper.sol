@@ -212,8 +212,8 @@ contract OffchainVotingHelperContract {
     ) external view returns (bool) {
         return
             fallbackVotesCount >
-            (dao.getNbMembers() * 100) /
-                dao.getConfiguration(FallbackThreshold);
+            (dao.getNbMembers() * dao.getConfiguration(FallbackThreshold)) /
+                100;
     }
 
     function isReadyToSubmitResult(
