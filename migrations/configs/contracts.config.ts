@@ -800,7 +800,7 @@ export const contracts: Array<ContractConfig> = [
     name: "ReimbursementContract",
     alias: "reimbursement",
     path: "../../contracts/companion/ReimbursementContract",
-    enabled: true,
+    enabled: false,
     version: "1.0.0",
     type: ContractType.Adapter,
     deploymentArgs: ["gelato"],
