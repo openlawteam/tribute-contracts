@@ -127,11 +127,8 @@ contract OffchainVotingHelperContract {
         if (node.index >= nbMembers) {
             return BadNodeError.INDEX_OUT_OF_BOUND;
         }
-        //return 1 if yes, 2 if no and 0 if the vote is incorrect
-        address voter = dao.getPriorDelegateKey(
-            dao.getMemberAddress(node.index),
-            blockNumber
-        );
+
+        address memberAddr = dao.getMemberAddress(node.index);
 
         //invalid choice
         if (
@@ -157,7 +154,7 @@ contract OffchainVotingHelperContract {
             !_ovHash.hasVoted(
                 dao,
                 actionId,
-                voter,
+                dao.getPriorDelegateKey(memberAddr, blockNumber),
                 node.timestamp,
                 node.proposalId,
                 node.choice,
@@ -171,7 +168,7 @@ contract OffchainVotingHelperContract {
         if (
             GovernanceHelper.getVotingWeight(
                 dao,
-                voter,
+                memberAddr, // always check the weight of the member, not the delegate
                 node.proposalId,
                 blockNumber
             ) == 0
