@@ -13,6 +13,10 @@ title: Deployment
 
 ## Deploying your DAO
 
+:::warning
+Make sure you are on the branch [release-v1.0.6](https://github.com/openlawteam/tribute-contracts/releases/tag/v1.0.6) which is the version that contains the contracts integrated with [TributeUI](https://github.com/openlawteam/tribute-ui).
+:::
+
 ### Command line
 
 The deployment process is triggered by the script `deploy:*`, where the `*` indicates which network the contracts are going to be deployed.
