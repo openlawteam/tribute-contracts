@@ -14,6 +14,10 @@ sidebar_position: 2
 
 ## Creating the project
 
+:::warning
+Make sure you are on the branch [release-v1.0.6](https://github.com/openlawteam/tribute-contracts/releases/tag/v1.0.6) which is the version that contains the contracts integrated with [TributeUI](https://github.com/openlawteam/tribute-ui).
+:::
+
 The easiest way to start with TributeDAO Framework is to use the command line tool to clone the Github repository, and install all the project dependencies.
 
 Clone and access the _tribute-contracts_ Github repo:
@@ -22,15 +26,11 @@ Clone and access the _tribute-contracts_ Github repo:
 git clone https://github.com/openlawteam/tribute-contracts.git && cd tribute-contracts
 ```
 
-Fetch and checkout the branch `release-v1.0.4`:
+Fetch and checkout the branch `release-v1.0.6`:
 
-> git fetch origin release-v1.0.4
+> git fetch origin release-v1.0.6
 
-> git checkout release-v1.0.4
-
-:::caution
-Before installing the dependencies make sure you are on the branch [release-v1.0.4](https://github.com/openlawteam/tribute-contracts/releases/tag/v1.0.4) which is the version that contains the contracts integrated with [TributeUI](https://github.com/openlawteam/tribute-ui).
-:::
+> git checkout release-v1.0.6
 
 Install all the project dependencies and deploy the smart contracts:
 

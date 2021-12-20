@@ -11,6 +11,10 @@ title: Configuration
 
 ## Configuring the project
 
+:::warning
+Make sure you are on the branch [release-v1.0.6](https://github.com/openlawteam/tribute-contracts/releases/tag/v1.0.6) which is the version that contains the contracts integrated with [TributeUI](https://github.com/openlawteam/tribute-ui).
+:::
+
 ⚙️ Now that you have the `tribute-contracts` project prepared in your local environment, it is time to set up the DAO configs. These configs are a set of environment variables that will provide to the deployment script all the essential information to create the smart contracts in the correct Ethereum network. In this section we will be covering the deploying of the DAO using **[Rinkeby](https://rinkeby.etherscan.io/)** test network.
 
 ### Environment Variables
