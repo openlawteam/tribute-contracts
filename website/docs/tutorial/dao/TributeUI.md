@@ -26,6 +26,9 @@ First, set the `tribute-ui` env vars in the `tribute-contracts/.env` file, just 
 # Paste it after the DAO env vars declared in the previous sections, these env vars are used by the services launched with Docker Compose.
 ######
 
+# Configure the UI to use the Rinkeby network for local development
+REACT_APP_DEFAULT_CHAIN_NAME_LOCAL=RINKEBY
+
 # It can be the same value you used for the Tribute DAO deployment.
 # Replace "your-api-key" with your Infura key
 REACT_APP_INFURA_PROJECT_ID_DEV=your-api-key
