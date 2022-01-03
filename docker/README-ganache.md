@@ -137,7 +137,7 @@
 
    - Access your rinkeby DAO at http://localhost:3000
    - Make sure you add the ganache network to your MetaMask
-      - Network: Ganache
-      - Port: 7545
-      - ChainId: 1337
-      - URL: http://localhost:7545
+     - Network: Ganache
+     - Port: 7545
+     - ChainId: 1337
+     - URL: http://localhost:7545

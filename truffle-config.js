@@ -61,6 +61,17 @@ module.exports = {
       network_id: 1666700000,
       skipDryRun: true,
     },
+    polygon: {
+      provider: getNetworkProvider,
+      network_id: 137,
+      skipDryRun: true,
+    },
+    polygontest: {
+      provider: getNetworkProvider,
+      network_id: 80001,
+      skipDryRun: true,
+      gasPrice: 10000000000,
+    },
     coverage: {
       host: "localhost",
       network_id: "*",
