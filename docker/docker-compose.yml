@@ -57,6 +57,8 @@ services:
       ipfs: "http://trib-graph-ipfs:5001"
       RUST_LOG: "info"
       #GRAPH_LOG: "info"
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
 
   # The IPFS instance to pin subgraph data
   trib-graph-ipfs:
@@ -107,7 +109,7 @@ services:
 
       # Do not change it.
       # The environment in which the app is being executed.
-      REACT_APP_ENVIRONMENT: "development"
+      REACT_APP_ENVIRONMENT: ${REACT_APP_ENVIRONMENT}:"development"
 
       # Do not change it.
       # The unique name registered in Snapshot Hub under which proposals, votes, etc. will be stored.
