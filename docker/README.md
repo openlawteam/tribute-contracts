@@ -64,6 +64,9 @@
    ```
    ###### Docker Compose env vars ######
 
+   # Configure the UI to use the Rinkeby network for local development
+   REACT_APP_DEFAULT_CHAIN_NAME_LOCAL=RINKEBY
+
    # It can be the same value you used for the Tribute DAO deployment.
    REACT_APP_INFURA_PROJECT_ID_DEV=INFURA_API_KEY
 
