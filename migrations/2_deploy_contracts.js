@@ -341,7 +341,7 @@ const deployPolygonDao = async (deployFunction, network) => {
     offchainAdmin: getOptionalEnvVar(
       "OFFCHAIN_ADMIN_ADDR",
       getEnvVar("DAO_OWNER_ADDR")
-    )
+    ),
   });
 };
 
@@ -380,7 +380,7 @@ const deployPolygonTestDao = async (deployFunction, network) => {
     offchainAdmin: getOptionalEnvVar(
       "OFFCHAIN_ADMIN_ADDR",
       getEnvVar("DAO_OWNER_ADDR")
-    )
+    ),
   });
 };
 
