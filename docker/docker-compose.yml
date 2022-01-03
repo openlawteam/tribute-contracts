@@ -88,7 +88,7 @@ services:
 
   # The Tribute UI React App
   trib-ui:
-    image: openlaw/tribute-ui:main-920ab124
+    image: openlaw/tribute-ui:main-1eaa5a21
     container_name: trib-ui
     ports:
       - "3000:3000"
