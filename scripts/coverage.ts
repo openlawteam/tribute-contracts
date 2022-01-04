@@ -24,6 +24,10 @@ const skipFiles = [
   "test/TestToken1.sol",
   "test/TestToken2.sol",
   "utils/Multicall.sol",
+  "companion/interfaces/IReimbursement.sol",
+  "companion/GelatoBytes.sol",
+  "companion/Gelatofied.sol",
+  "companion/GelatoRelay.sol",
 ];
 
 const main = async () => {
