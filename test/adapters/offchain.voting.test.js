@@ -913,4 +913,5 @@ describe("Adapter - Offchain Voting", () => {
       "getPriorAmount not implemented"
     );
   });
+  //TODO create a proposal, vote, and submit the result using a delegated address - PASS
 });

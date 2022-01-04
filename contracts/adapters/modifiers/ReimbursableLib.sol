@@ -37,16 +37,19 @@ library ReimbursableLib {
         data.gasStart = gasleft();
         require(dao.lockedAt() != block.number, "reentrancy guard");
         dao.lockSession();
-        data.reimbursement = IReimbursement(
-            dao.getAdapterAddress(DaoHelper.REIMBURSEMENT)
-        );
+        address reimbursementAdapter = dao.adapters(DaoHelper.REIMBURSEMENT);
+        if (reimbursementAdapter == address(0x0)) {
+            data.shouldReimburse = false;
+        } else {
+            data.reimbursement = IReimbursement(reimbursementAdapter);
 
-        (bool shouldReimburse, uint256 spendLimitPeriod) = data
-            .reimbursement
-            .shouldReimburse(dao, data.gasStart);
+            (bool shouldReimburse, uint256 spendLimitPeriod) = data
+                .reimbursement
+                .shouldReimburse(dao, data.gasStart);
 
-        data.shouldReimburse = shouldReimburse;
-        data.spendLimitPeriod = spendLimitPeriod;
+            data.shouldReimburse = shouldReimburse;
+            data.spendLimitPeriod = spendLimitPeriod;
+        }
     }
 
     function afterExecution(

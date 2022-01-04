@@ -48,7 +48,7 @@ abstract contract MemberGuard {
     }
 
     function isActiveMember(DaoRegistry dao, address _addr)
-        internal
+        public
         view
         returns (bool)
     {
