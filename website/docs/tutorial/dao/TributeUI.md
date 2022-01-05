@@ -14,7 +14,7 @@ title: Tribute UI
 ## Configuring the dApp
 
 :::warning
-Make sure you are on the branch [release-v1.0.6](https://github.com/openlawteam/tribute-contracts/releases/tag/v1.0.6) which is the version that contains the contracts integrated with [TributeUI](https://github.com/openlawteam/tribute-ui).
+Make sure you are on the branch [release-v2.3.2](https://github.com/openlawteam/tribute-contracts/tree/release-v2.3.2) which is the version that contains the contracts integrated with [TributeUI](https://github.com/openlawteam/tribute-ui).
 :::
 
 In order to run the dApp we will be using `docker-compose`, which will help us to spin up all the services required by the dApp.
