@@ -12,7 +12,7 @@ title: Configuration
 ## Configuring the project
 
 :::warning
-Make sure you are on the branch [release-v1.0.6](https://github.com/openlawteam/tribute-contracts/releases/tag/v1.0.6) which is the version that contains the contracts integrated with [TributeUI](https://github.com/openlawteam/tribute-ui).
+Make sure you are on the branch [release-v2.3.2](https://github.com/openlawteam/tribute-contracts/tree/release-v2.3.2) which is the version that contains the contracts integrated with [TributeUI](https://github.com/openlawteam/tribute-ui).
 :::
 
 ⚙️ Now that you have the `tribute-contracts` project prepared in your local environment, it is time to set up the DAO configs. These configs are a set of environment variables that will provide to the deployment script all the essential information to create the smart contracts in the correct Ethereum network. In this section we will be covering the deploying of the DAO using **[Rinkeby](https://rinkeby.etherscan.io/)** test network.
@@ -38,6 +38,11 @@ DAO_NAME=My First DAO
 # Make sure you have some ETH, otherwise the deployment will fail.
 DAO_OWNER_ADDR=0x...
 
+# The contract which contains the previously deployed adapters and extensions,
+# so you don't have to deploy it again.
+# Rinkeby: 0xE5BE4f7CFf9E2A7Ece34909E68e30D71a7787d2A - contracts v2.3.2
+DAO_ARTIFACTS_CONTRACT_ADDR=0xE5BE4f7CFf9E2A7Ece34909E68e30D71a7787d2A
+
 # You can set that to use the same address you have in the DAO_OWNER_ADDR
 COUPON_CREATOR_ADDR=0x...
 
@@ -57,9 +62,9 @@ ERC20_TOKEN_DECIMALS=0
 # these steps to get your ProjectId/API Key from Infura:
 # https://blog.infura.io/getting-started-with-infura-28e41844cc89/
 # Or can use the default one from OpenLaw team, or set your own Infura/Alchemy API keys
+ETH_NODE_URL=ws://rinkeby.openlaw.io:8546
 #ETH_NODE_URL=wss://eth-rinkeby.ws.alchemyapi.io/v2/your-api-key
-# Replace the "your-api-key" with your infura key
-ETH_NODE_URL=wss://rinkeby.infura.io/ws/v3/your-api-key
+#ETH_NODE_URL=wss://rinkeby.infura.io/ws/v3/your-api-key
 
 # The 12 word "secret recovery phrase" for the ethereum address
 # referenced in DAO_OWNER_ADDR above. This can be found in your wallet.

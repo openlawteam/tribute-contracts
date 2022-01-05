@@ -14,7 +14,7 @@ title: Deployment
 ## Deploying your DAO
 
 :::warning
-Make sure you are on the branch [release-v1.0.6](https://github.com/openlawteam/tribute-contracts/releases/tag/v1.0.6) which is the version that contains the contracts integrated with [TributeUI](https://github.com/openlawteam/tribute-ui).
+Make sure you are on the branch [release-v2.3.2](https://github.com/openlawteam/tribute-contracts/tree/release-v2.3.2) which is the version that contains the contracts integrated with [TributeUI](https://github.com/openlawteam/tribute-ui).
 :::
 
 ### Command line
@@ -37,24 +37,23 @@ At the end of the deployment process you should see the following output:
 
 ```bash
 ...
-************************
+************************************************
+DaoOwner: 0x...
 DaoRegistry: 0x...
-BankExtension: 0x...
-NFTExtension: 0x...
-ERC20Extension: 0x...
-************************
+NFTCollectionFactory: 0x...
+BankFactory: 0x...
+...
+************************************************
+
+Deployed contracts: ~/Development/tribute-contracts/build/contracts-rinkeby-YYYY-MM-DDThh:mm:ss.ZZZ.json
+
+Deployment completed at: YYYY-MM-DDThh:mm:ss.ZZZ
 
 - Saving migration to chain.
    > Saving migration to chain.
    > Saving artifacts
    -------------------------------------
-   > Total cost:          0.51462506 ETH
-
-
-Summary
-=======
-> Total deployments:   34
-> Final cost:          0.51610942 ETH
+   > Total cost:     0.062332692391045646 ETH
 ```
 
 ⚡️ Awesome!! You have deployed your DAO to the **[Rinkeby](https://rinkeby.etherscan.io/)** test network, and now it is time to interact with it using our dApp called **[Tribute UI](https://github.com/openlawteam/tribute-ui)**. Checkout the next section to dive into that.
