@@ -19,7 +19,7 @@ Make sure you are on the branch [release-v2.3.2](https://github.com/openlawteam/
 
 In order to run the dApp we will be using `docker-compose`, which will help us to spin up all the services required by the dApp.
 
-First, set the `tribute-ui` env vars in the `tribute-contracts/.env` file, just append the following content to the bottom of the file if you did not use the sample .env from previous sections:
+First, set the `tribute-ui` env vars in the `tribute-contracts/.env` file, just append the following content to the bottom of the file if you did not use the sample .env file from previous sections:
 
 ```bash
 # tribute-contracts/.env
@@ -53,34 +53,9 @@ Open the file which contains the addresses of all deployed contracts:
 
 - `tribute-contracts/build/contracts-rinkeby-YYYY-MM-DD-HH:mm:ss.json`
 
-Copy the address from `DaoRegistry` contract and set it to `REACT_APP_DAO_REGISTRY_CONTRACT_ADDRESS` env var.
+Copy the address of `DaoRegistry` contract and set it to `REACT_APP_DAO_REGISTRY_CONTRACT_ADDRESS` env var.
 
-Next, copy the address from `Multicall` contract and set it to `REACT_APP_MULTICALL_CONTRACT_ADDRESS` env var.
-
-## Building and deploying the Subgraph
-
-The dApp uses a Subgraph to index the data collected from the chain. The data is processed and stored in the graph node, so it can be easily queried.
-
-Clone the subgraph repo within the `tribute-contracts` folder:
-
-- Repo: https://github.com/openlawteam/tribute-subgraph
-
-Open the file `tribute-contracts/tribute-subgraph/subgraphs/Core/subgraph.yaml`, and set the `address` and `startBlock` attributes for the **DaoFactory** subgraph:
-
-```yaml
-### tribute-subgraph/subgraphs/Core/subgraph.yaml
-...
-# ====================== DaoFactory ======================
-- kind: ethereum/contract
-    name: DaoFactory
-    network: mainnet
-    source:
-    address: "0x..." # 1. Set the DaoFactory address
-    abi: DaoFactory
-    startBlock: xxx # 2. Set the block number in which the DaoFactory contract was deployed
-```
-
-In the Rinkeby deployment logs at `_tribute-contracts/logs/rinkeby-deploy_YYYY-MM-DD_HH:mm:ss.log` file search by **DaoFactory** and copy the **contract address** and **block number**, set these values to **address** and **startBlock** attributes respectively.
+Next, copy the address of `Multicall` contract and set it to `REACT_APP_MULTICALL_CONTRACT_ADDRESS`.
 
 ## Start all the services
 
@@ -111,9 +86,15 @@ Wait for the following output:
   ...
 ```
 
-## Building and deploying the subgraph
+## Building and deploying the Subgraph
 
-The dApp uses a subgraph to index and query the chain data. We already have it configured, but we still need to deploy it to our local graph node - which was launched with docker-compose.
+The dApp uses a Subgraph to index the data collected from the chain. The data is processed and stored in the graph node, so it can be easily queried.
+
+Now that the services are up and running we can deploy the subgraph to our local graph node.
+
+Clone the subgraph repo within the `tribute-contracts` folder:
+
+- Repo: https://github.com/openlawteam/tribute-subgraph
 
 Using node v16.x in the `tribute-contracts/tribute-subgraph` folder, checkout the subgraph version `v2.0.2`:
 
@@ -133,6 +114,25 @@ Install the dependencies using node v16+:
 
 ```bash
 npm install
+```
+
+Open the file `tribute-contracts/tribute-subgraph/subgraphs/Core/subgraph.yaml`, and set the `address` and `startBlock` attributes for the **DaoFactory** subgraph definition:
+
+:::tip
+Copy the _DaoFactory_ address and block number from the Rinkeby deployment logs at `tribute-contracts/logs/rinkeby-deploy_YYYY-MM-DD_HH:mm:ss.log` file. Search by **DaoFactory** and copy the **contract address** and **block number**, set these values to **address** and **startBlock** attributes respectively.
+:::
+
+```yaml
+### tribute-subgraph/subgraphs/Core/subgraph.yaml
+...
+# ====================== DaoFactory ======================
+- kind: ethereum/contract
+    name: DaoFactory
+    network: mainnet
+    source:
+    address: "0x..." # 1. Set the DaoFactory address
+    abi: DaoFactory
+    startBlock: xxx # 2. Set the block number in which the DaoFactory contract was deployed
 ```
 
 Build and deploy the subgraph:
