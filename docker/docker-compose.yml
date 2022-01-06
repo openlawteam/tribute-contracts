@@ -109,7 +109,7 @@ services:
 
       # Do not change it.
       # The environment in which the app is being executed.
-      REACT_APP_ENVIRONMENT: ${REACT_APP_ENVIRONMENT}:"development"
+      REACT_APP_ENVIRONMENT: ${REACT_APP_ENVIRONMENT}
 
       # Do not change it.
       # The unique name registered in Snapshot Hub under which proposals, votes, etc. will be stored.

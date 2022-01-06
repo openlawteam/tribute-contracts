@@ -11,83 +11,82 @@ title: Tribute UI
 - **[Docker Compose](https://docs.docker.com/compose/install/)** install Docker Compose (https://docs.docker.com/compose/install/). This will be used in this tutorial to launch the local instances of snapshot-hub, graph node, and ipfs services.
 - **[MetaMask](https://metamask.io/download.html)** download and install MetaMask from https://metamask.io/download.html into your browser to access the DAO dApp.
 
-## Configuring the dApp
-
 :::warning
 Make sure you are on the branch [release-v2.3.2](https://github.com/openlawteam/tribute-contracts/tree/release-v2.3.2) which is the version that contains the contracts integrated with [TributeUI](https://github.com/openlawteam/tribute-ui).
 :::
 
+## Configuring the dApp
+
 In order to run the dApp we will be using `docker-compose`, which will help us to spin up all the services required by the dApp.
 
-First, set the `tribute-ui` env vars in the `tribute-contracts/.env` file, just append it to the bottom of the file:
+First, set the `tribute-ui` env vars in the `tribute-contracts/.env` file, just append the following content to the bottom of the file if you did not use the sample .env from previous sections:
 
 ```bash
-######
-# Paste it after the DAO env vars declared in the previous sections, these env vars are used by the services launched with Docker Compose.
-######
+# tribute-contracts/.env
+
+######################## Tribute UI env vars ########################
 
 # Configure the UI to use the Rinkeby network for local development
 REACT_APP_DEFAULT_CHAIN_NAME_LOCAL=RINKEBY
 
 # It can be the same value you used for the Tribute DAO deployment.
-# Replace "your-api-key" with your Infura key
-REACT_APP_INFURA_PROJECT_ID_DEV=your-api-key
+REACT_APP_INFURA_PROJECT_ID_DEV=INFURA_API_KEY
 
 # The address of the Multicall smart contract deployed to the Rinkeby network.
-# Copy that from the tribute-contracts/logs/[network]-deploy.log
+# Copy that from the tribute-contracts/build/contracts-rinkeby-YYYY-MM-DD-HH:mm:ss.json
 REACT_APP_MULTICALL_CONTRACT_ADDRESS=0x...
 
 # The address of the DaoRegistry smart contract deployed to the Rinkeby network.
-# Copy that from the tribute-contracts/logs/[network]-deploy.log
+# Copy that from the tribute-contracts/build/contracts-rinkeby-YYYY-MM-DD-HH:mm:ss.json
 REACT_APP_DAO_REGISTRY_CONTRACT_ADDRESS=0x...
 
+# Enable Rinkeby network for Tribute UI
+REACT_APP_ENVIRONMENT=development
+
+######################## Graph Node env vars ########################
+
 # The Ethereum Network node URL used by the Graph Node to listen to events.
-# Replace "your-api-key" with your Infura key
-ethereum=rinkeby:https://rinkeby.infura.io/v3/your-api-key
+ethereum=rinkeby:https://rinkeby.infura.io/v3/INFURA_API_KEY
 ```
 
-Open the file:
+Open the file which contains the addresses of all deployed contracts:
 
-> tribute-contracts/logs/rinkeby-deploy.log
+- `tribute-contracts/build/contracts-rinkeby-YYYY-MM-DD-HH:mm:ss.json`
 
-Scroll to the end of the file, and find an output like this:
+Copy the address from `DaoRegistry` contract and set it to `REACT_APP_DAO_REGISTRY_CONTRACT_ADDRESS` env var.
 
-```bash
-************************
-DaoRegistry: 0x...
-Multicall: 0x...
+Next, copy the address from `Multicall` contract and set it to `REACT_APP_MULTICALL_CONTRACT_ADDRESS` env var.
+
+## Building and deploying the Subgraph
+
+The dApp uses a Subgraph to index the data collected from the chain. The data is processed and stored in the graph node, so it can be easily queried.
+
+Clone the subgraph repo within the `tribute-contracts` folder:
+
+- Repo: https://github.com/openlawteam/tribute-subgraph
+
+Open the file `tribute-contracts/tribute-subgraph/subgraphs/Core/subgraph.yaml`, and set the `address` and `startBlock` attributes for the **DaoFactory** subgraph:
+
+```yaml
+### tribute-subgraph/subgraphs/Core/subgraph.yaml
 ...
-************************
+# ====================== DaoFactory ======================
+- kind: ethereum/contract
+    name: DaoFactory
+    network: mainnet
+    source:
+    address: "0x..." # 1. Set the DaoFactory address
+    abi: DaoFactory
+    startBlock: xxx # 2. Set the block number in which the DaoFactory contract was deployed
 ```
 
-These are the addresses of the contracts you have deployed to Rinkeby network. Just copy the address of **DaoRegistry** and **Multicall**, set them to **REACT_APP_DAO_REGISTRY_CONTRACT_ADDRESS** and **REACT_APP_MULTICALL_CONTRACT_ADDRESS** respectively.
+In the Rinkeby deployment logs at `_tribute-contracts/logs/rinkeby-deploy_YYYY-MM-DD_HH:mm:ss.log` file search by **DaoFactory** and copy the **contract address** and **block number**, set these values to **address** and **startBlock** attributes respectively.
 
-## Configuring the Subgraph
+## Start all the services
 
-Open the file:
+The contracts were deployed and the subgraph configurations were prepared, now it is time to start the services using docker-compose.
 
-> tribute-contracts/subgraph/config/subgraph-config.json
-
-You should see something like this:
-
-```bash
-### tribute-contracts/subgraph/config/subgraph-config.json
-[
-  {
-    "network": "rinkeby",
-    "daoFactoryAddress": "0x...", # Copy the DaoFactory contracts address from the deployment logs.
-    "daoFactoryStartBlock": blockNumber, # Copy the DaoFactory blockNumber from the deployment logs.
-    "GITHUB_USERNAME": "openlawteam", # do not change it
-    "SUBGRAPH_NAME": "tribute"  # do not change it
-  }
-]
-```
-
-In the Rinkeby deployment logs at _tribute-contracts/logs/rinkeby-deploy.log_ search by **DaoFactory** and copy the **contract address** and **block number**, set the values to **daoFactoryAddress** and **daoFactoryStartBlock** respectively.
-
-## Starting the services
-
-Using docker-compose let's start all the services in the `tribute-contracts/docker ` folder:
+From the `tribute-contracts/docker` folder, run:
 
 ```bash
 docker-compose up
@@ -112,14 +111,22 @@ Wait for the following output:
   ...
 ```
 
-## Deploying the Subgraph
+## Building and deploying the subgraph
 
-The dApp uses the subgraph to index and query the chain data, we already have it configured, but we still need to deploy it to our local graph node that we started with docker-compose.
+The dApp uses a subgraph to index and query the chain data. We already have it configured, but we still need to deploy it to our local graph node - which was launched with docker-compose.
 
-In another terminal window access the subgraph folder `tribute-contracts/subgraph`:
+Using node v16.x in the `tribute-contracts/tribute-subgraph` folder, checkout the subgraph version `v2.0.2`:
 
 ```bash
-cd subgraph
+cd tribute-subgraph
+```
+
+```bash
+git fetch origin release-v2.0.2
+```
+
+```bash
+git checkout release-v2.0.2
 ```
 
 Install the dependencies using node v16+:
@@ -128,7 +135,7 @@ Install the dependencies using node v16+:
 npm install
 ```
 
-Deploy the subgraph:
+Build and deploy the subgraph:
 
 ```bash
 npx ts-node subgraph-deployer.ts
@@ -156,7 +163,7 @@ You should see the Tribute UI onboarding page:
 ![Join Tribute DAO](/img/tutorial/dao-tutorial/join.png)
 
 :::tip
-Connect to TributeUI using the same MetaMask account you used to deploy the DAO to Rinkeby, since that address is considered the owner of the DAO you will have access to all features, and will hold 1 unit token.
+Connect to TributeUI using the same MetaMask account you used to deploy the DAO to Rinkeby, since that address is considered the owner of the DAO you will have access to all features, and will hold 1 unit token (1 share).
 :::
 
 Connected:
@@ -167,7 +174,7 @@ Access the _Governance_ page and hit _new proposal_ to create a proposal for vot
 
 ![Governance](/img/tutorial/dao-tutorial/governance.png)
 
-👏 Yeah, it was a lengthy tutorial, Well Done!!!
+👏 Yeah, it was a lengthy tutorial. Congrats you have a Tribute DAO running on Rinkeby. Well Done!
 
 🎉 You have launched your DAO using Tribute DAO framework, and now you can interact with it using the Tribute UI dApp!
 

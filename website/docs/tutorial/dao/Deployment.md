@@ -7,21 +7,18 @@ title: Deployment
 
 ## Requirements
 
+- **[Tribute Contracts](https://github.com/openlawteam/tribute-contracts/tree/release-v2.3.2)** version [v2.3.2](https://github.com/openlawteam/tribute-contracts/tree/release-v2.3.2).
 - ⚙️ All the environment variables must be set in the _.env_ file as indicated in the previous section.
 
-- 💲 Make sure you have ETH in your account (2 ETH should be more than enough).
-
-## Deploying your DAO
+- 💲 You have ETH in your DAO Owner account (2 ETH should be more than enough).
 
 :::warning
 Make sure you are on the branch [release-v2.3.2](https://github.com/openlawteam/tribute-contracts/tree/release-v2.3.2) which is the version that contains the contracts integrated with [TributeUI](https://github.com/openlawteam/tribute-ui).
 :::
 
-### Command line
+## Deploying your DAO
 
-The deployment process is triggered by the script `deploy:*`, where the `*` indicates which network the contracts are going to be deployed.
-
-Execute the following command from the root directory of `tribute-contracts` project to deploy all the contracts to Rinkeby:
+Execute the following command from the root of `tribute-contracts` folder to deploy all the contracts to Rinkeby:
 
 ```bash
 npm run deploy:rinkeby
@@ -30,7 +27,11 @@ npm run deploy:rinkeby
 🍺 Sit back and have some drink while the deployment script is executed. It may take from 10 to 20 minutes to create all the smart contracts.
 
 :::info
-The deployment is slow mainly because we publish all the smart contracts at once, even the ones that are not in use by the DAO. We certainly don't do that for Mainnet deployments, but we are constantly working to improve the developer experience, and minimize the gas costs.
+The deployment is slow mainly because we publish all the smart contracts at once, even the ones that are not in use by the DAO or are just test contracts. We certainly don't do that for Mainnet deployments, but we are constantly working to improve the developer experience, and minimize the gas costs.
+:::
+
+:::tip
+Set to `enabled: false` in the contract configuration found in the `tribute-contracts/migrations/configs/contracts.config.ts` file to remove that contract from the deployment. Be mindful on which contracts you are disabling, otherwise you DAO might not be functional.
 :::
 
 At the end of the deployment process you should see the following output:

@@ -8,31 +8,40 @@ sidebar_position: 2
 
 ## Requirements
 
+- **[Tribute Contracts](https://github.com/openlawteam/tribute-contracts/tree/release-v2.3.2)** version [v2.3.2](https://github.com/openlawteam/tribute-contracts/tree/release-v2.3.2).
 - **[Node.js](https://nodejs.org/en/download/)** version >= 16.0.0 or above (which can be checked by running `node -v`). You can use [nvm](https://github.com/nvm-sh/nvm) for managing multiple Node versions on a single machine.
 - **[Git](https://git-scm.com/downloads)** version 2.15.0 or above.
 - **[Solc](https://docs.soliditylang.org/en/develop/installing-solidity.html)** version 0.8.0.
 
-## Creating the project
-
 :::warning
 Make sure you are on the branch [release-v2.3.2](https://github.com/openlawteam/tribute-contracts/tree/release-v2.3.2) which is the version that contains the contracts integrated with [TributeUI](https://github.com/openlawteam/tribute-ui).
 :::
+
+## Creating the project
 
 The easiest way to start with TributeDAO Framework is to use the command line tool to clone the Github repository, and install all the project dependencies.
 
 Clone and access the _tribute-contracts_ Github repo:
 
 ```bash
-git clone https://github.com/openlawteam/tribute-contracts.git && cd tribute-contracts
+git clone https://github.com/openlawteam/tribute-contracts.git
+```
+
+```bash
+cd tribute-contracts
 ```
 
 Fetch and checkout the branch `release-v2.3.2`:
 
-> git fetch origin release-v2.3.2
+```bash
+git fetch origin release-v2.3.2
+```
 
-> git checkout release-v2.3.2
+```bash
+git checkout release-v2.3.2
+```
 
-Install all the project dependencies and deploy the smart contracts:
+Install the project dependencies and compile the smart contracts:
 
 ```bash
 npm ci && npm run compile
