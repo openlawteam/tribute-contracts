@@ -40,8 +40,8 @@ DAO_OWNER_ADDR=0x...
 
 # The contract which contains the previously deployed adapters and extensions,
 # so you don't have to deploy it again.
-# Rinkeby: 
-DAO_ARTIFACTS_CONTRACT_ADDR=
+# Rinkeby: 0xE5BE4f7CFf9E2A7Ece34909E68e30D71a7787d2A - contracts v2.3.2
+DAO_ARTIFACTS_CONTRACT_ADDR=0xE5BE4f7CFf9E2A7Ece34909E68e30D71a7787d2A
 
 # You can set that to use the same address you have in the DAO_OWNER_ADDR
 COUPON_CREATOR_ADDR=0x...
