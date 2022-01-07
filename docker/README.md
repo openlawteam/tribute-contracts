@@ -15,8 +15,8 @@ In the root of `tribute-contracts` folder create a `.env` file. This file will c
 ```
 ######################## Tribute Contracts env vars ########################
 
-# Set the name of your DAO.
-DAO_NAME=My First DAO
+# Set the name of your DAO. Make sure the DAO name is unique.
+DAO_NAME=My Tribute DAO xyz...
 
 # The public ethereum address that belongs to the Owner of the DAO,
 # in this case, it is your public ethereum address on Rinkeby network.
