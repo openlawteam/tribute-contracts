@@ -38,9 +38,10 @@ contract DaoArtifacts is Ownable {
         UTIL
     }
 
-    // Mapping from Artifact Name => (Owner Address => (Type => (Version => Adapters Address)))
-    mapping(bytes32 => mapping(address => mapping(ArtifactType => mapping(bytes32 => address))))
-        public artifacts;
+    struct ArtifactRef {
+        address _address;
+        uint256 _blockNumber;
+    }
 
     struct Artifact {
         bytes32 _id;
@@ -48,7 +49,13 @@ contract DaoArtifacts is Ownable {
         bytes32 _version;
         address _address;
         ArtifactType _type;
+        uint256 _blockNumber;
     }
+
+    // sha3(ArtifactName) => (ArtifactOwnerAddress => (Type => (Version => ContractAddress)))
+    mapping(bytes32 => mapping(address => mapping(ArtifactType => mapping(bytes32 => ArtifactRef))))
+        public artifacts;
+
 
     event NewArtifact(
         bytes32 _id,
@@ -69,10 +76,11 @@ contract DaoArtifacts is Ownable {
         bytes32 _id,
         bytes32 _version,
         address _address,
-        ArtifactType _type
+        ArtifactType _type,
+        uint256 _blockNumber
     ) external {
         address _owner = msg.sender;
-        artifacts[_id][_owner][_type][_version] = _address;
+        artifacts[_id][_owner][_type][_version] = ArtifactRef(_address, _blockNumber);
         emit NewArtifact(_id, _owner, _version, _address, _type);
     }
 
@@ -84,13 +92,14 @@ contract DaoArtifacts is Ownable {
      * @param _type The type of the artifact: 0 = Core, 1 = Factory, 2 = Extension, 3 = Adapter, 4 = Util.
      * @return The address of the adapter/extension factory if any.
      */
-    function getArtifactAddress(
+    function getArtifactRef(
         bytes32 _id,
         address _owner,
         bytes32 _version,
         ArtifactType _type
-    ) external view returns (address) {
-        return artifacts[_id][_owner][_type][_version];
+    ) external view returns (address,uint256) {
+        ArtifactRef memory ref = artifacts[_id][_owner][_type][_version];
+        return (ref._address, ref._blockNumber);
     }
 
     /**
@@ -104,7 +113,7 @@ contract DaoArtifacts is Ownable {
 
         for (uint256 i = 0; i < _artifacts.length; i++) {
             Artifact memory a = _artifacts[i];
-            artifacts[a._id][a._owner][a._type][a._version] = a._address;
+            artifacts[a._id][a._owner][a._type][a._version] = ArtifactRef(a._address, a._blockNumber);
         }
     }
 }
