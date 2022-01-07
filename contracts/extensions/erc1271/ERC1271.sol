@@ -4,6 +4,7 @@ pragma solidity ^0.8.0;
 
 import "../../core/DaoRegistry.sol";
 import "../IExtension.sol";
+import "../../helpers/DaoHelper.sol";
 import "../../guards/AdapterGuard.sol";
 import "@openzeppelin/contracts/interfaces/IERC1271.sol";
 
@@ -34,7 +35,7 @@ SOFTWARE.
 /**
  * @dev Signs arbitrary messages and exposes ERC1271 interface
  */
-contract ERC1271Extension is AdapterGuard, IExtension, IERC1271 {
+contract ERC1271Extension is IExtension, IERC1271 {
     using Address for address payable;
 
     bool public initialized = false; // internally tracks deployment under eip-1167 proxy pattern
@@ -59,7 +60,7 @@ contract ERC1271Extension is AdapterGuard, IExtension, IERC1271 {
             address(this) == msg.sender ||
                 address(dao) == msg.sender ||
                 (dao.state() == DaoRegistry.DaoState.CREATION &&
-                    creationModeCheck(dao)) ||
+                    DaoHelper.creationModeCheck(dao)) ||
                 dao.hasAdapterAccessToExtension(
                     msg.sender,
                     address(this),

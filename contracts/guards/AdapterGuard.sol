@@ -3,7 +3,7 @@ pragma solidity ^0.8.0;
 // SPDX-License-Identifier: MIT
 
 import "../core/DaoRegistry.sol";
-import "../extensions/IExtension.sol";
+import "../helpers/DaoHelper.sol";
 
 /**
 MIT License
@@ -35,7 +35,7 @@ abstract contract AdapterGuard {
     modifier onlyAdapter(DaoRegistry dao) {
         require(
             (dao.state() == DaoRegistry.DaoState.CREATION &&
-                creationModeCheck(dao)) || dao.isAdapter(msg.sender),
+                DaoHelper.creationModeCheck(dao)),
             "onlyAdapter"
         );
         _;
@@ -59,17 +59,10 @@ abstract contract AdapterGuard {
     modifier hasAccess(DaoRegistry dao, DaoRegistry.AclFlag flag) {
         require(
             (dao.state() == DaoRegistry.DaoState.CREATION &&
-                creationModeCheck(dao)) ||
+                DaoHelper.creationModeCheck(dao)) ||
                 dao.hasAdapterAccess(msg.sender, flag),
             "accessDenied"
         );
         _;
-    }
-
-    function creationModeCheck(DaoRegistry dao) internal view returns (bool) {
-        return
-            dao.getNbMembers() == 0 ||
-            dao.isMember(msg.sender) ||
-            dao.isAdapter(msg.sender);
     }
 }

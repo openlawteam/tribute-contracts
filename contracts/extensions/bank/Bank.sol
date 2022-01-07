@@ -35,7 +35,7 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
  */
 
-contract BankExtension is AdapterGuard, IExtension, ERC165 {
+contract BankExtension is IExtension, ERC165 {
     using Address for address payable;
     using SafeERC20 for IERC20;
 
@@ -100,7 +100,7 @@ contract BankExtension is AdapterGuard, IExtension, ERC165 {
             address(this) == msg.sender ||
                 address(dao) == msg.sender ||
                 (dao.state() == DaoRegistry.DaoState.CREATION &&
-                    creationModeCheck(dao)) ||
+                    DaoHelper.creationModeCheck(dao)) ||
                 dao.hasAdapterAccessToExtension(
                     msg.sender,
                     address(this),

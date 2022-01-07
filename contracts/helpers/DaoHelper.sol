@@ -175,4 +175,11 @@ library DaoHelper {
             }
         }
     }
+
+    function creationModeCheck(DaoRegistry dao) internal view returns (bool) {
+        return
+            dao.getNbMembers() == 0 ||
+            dao.isMember(msg.sender) ||
+            dao.isAdapter(msg.sender);
+    }
 }
