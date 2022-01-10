@@ -116,7 +116,8 @@ contracts-backup
 
 .env*
 
-subgraph/docker/data
+# Tribute Subgraph
+subgraph/
 artifacts
 cache
 typechain
