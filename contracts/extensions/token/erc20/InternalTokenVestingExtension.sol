@@ -46,8 +46,7 @@ contract InternalTokenVestingExtension is IExtension {
 
     modifier hasExtensionAccess(AclFlag flag) {
         require(
-            (_dao.state() == DaoRegistry.DaoState.CREATION &&
-                DaoHelper.creationModeCheck(_dao)) ||
+            DaoHelper.isInCreationModeAndHasAccess(_dao) ||
                 _dao.hasAdapterAccessToExtension(
                     msg.sender,
                     address(this),

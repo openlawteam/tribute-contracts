@@ -99,8 +99,7 @@ contract BankExtension is IExtension, ERC165 {
         require(
             address(this) == msg.sender ||
                 address(dao) == msg.sender ||
-                (dao.state() == DaoRegistry.DaoState.CREATION &&
-                    DaoHelper.creationModeCheck(dao)) ||
+                DaoHelper.isInCreationModeAndHasAccess(dao) ||
                 dao.hasAdapterAccessToExtension(
                     msg.sender,
                     address(this),

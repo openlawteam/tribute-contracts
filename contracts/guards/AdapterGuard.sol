@@ -34,8 +34,8 @@ abstract contract AdapterGuard {
      */
     modifier onlyAdapter(DaoRegistry dao) {
         require(
-            (dao.state() == DaoRegistry.DaoState.CREATION &&
-                DaoHelper.creationModeCheck(dao)),
+            dao.isAdapter(msg.sender) ||
+                DaoHelper.isInCreationModeAndHasAccess(dao),
             "onlyAdapter"
         );
         _;
@@ -58,8 +58,7 @@ abstract contract AdapterGuard {
 
     modifier hasAccess(DaoRegistry dao, DaoRegistry.AclFlag flag) {
         require(
-            (dao.state() == DaoRegistry.DaoState.CREATION &&
-                DaoHelper.creationModeCheck(dao)) ||
+            DaoHelper.isInCreationModeAndHasAccess(dao) ||
                 dao.hasAdapterAccess(msg.sender, flag),
             "accessDenied"
         );

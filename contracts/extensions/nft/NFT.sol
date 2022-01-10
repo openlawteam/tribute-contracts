@@ -68,8 +68,7 @@ contract NFTExtension is IExtension, IERC721Receiver {
 
     modifier hasExtensionAccess(IExtension extension, AclFlag flag) {
         require(
-            (dao.state() == DaoRegistry.DaoState.CREATION &&
-                DaoHelper.creationModeCheck(dao)) ||
+            DaoHelper.isInCreationModeAndHasAccess(dao) ||
                 dao.hasAdapterAccessToExtension(
                     msg.sender,
                     address(extension),

@@ -176,10 +176,21 @@ library DaoHelper {
         }
     }
 
-    function creationModeCheck(DaoRegistry dao) internal view returns (bool) {
+    /**
+     * A DAO is in creation mode is the state of the DAO is equals to CREATION and
+     * 1. The number of members in the DAO is ZERO or,
+     * 2. The sender of the tx is a DAO member (usually the DAO owner) or,
+     * 3. The sender is an adapter.
+     */
+    function isInCreationModeAndHasAccess(DaoRegistry dao)
+        internal
+        view
+        returns (bool)
+    {
         return
-            dao.getNbMembers() == 0 ||
-            dao.isMember(msg.sender) ||
-            dao.isAdapter(msg.sender);
+            dao.state() == DaoRegistry.DaoState.CREATION &&
+            (dao.getNbMembers() == 0 ||
+                dao.isMember(msg.sender) ||
+                dao.isAdapter(msg.sender));
     }
 }
