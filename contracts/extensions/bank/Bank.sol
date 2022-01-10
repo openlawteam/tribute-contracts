@@ -95,6 +95,7 @@ contract BankExtension is IExtension, ERC165 {
     /// @notice Clonable contract must have an empty constructor
     constructor() {}
 
+    // slither-disable-next-line calls-loop
     modifier hasExtensionAccess(AclFlag flag) {
         require(
             address(this) == msg.sender ||

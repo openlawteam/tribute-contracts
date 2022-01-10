@@ -182,6 +182,7 @@ library DaoHelper {
      * 2. The sender of the tx is a DAO member (usually the DAO owner) or,
      * 3. The sender is an adapter.
      */
+    // slither-disable-next-line calls-loop
     function isInCreationModeAndHasAccess(DaoRegistry dao)
         internal
         view
