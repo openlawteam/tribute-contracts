@@ -597,7 +597,7 @@ contract OffchainVotingContract is
         );
 
         address memberAddr = dao.getAddressIfDelegated(msg.sender);
-        // slither-disable-next-line timestamp
+        // slither-disable-next-line timestamp,incorrect-equality
         require(
             votes[address(dao)][proposalId].fallbackVotes[memberAddr] == false,
             "fallback vote duplicate"
