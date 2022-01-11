@@ -75,7 +75,7 @@ Example:
             // 2. Allowed if the DAO is calling the extension
                 address(dao) == msg.sender ||
             // 3. Allowed if the DAO state is in CREATION mode
-                dao.state() == DaoRegistry.DaoState.CREATION ||
+                DaoHelper.isInCreationModeAndHasAccess(dao) ||
             // 4. Allowed if the sender is a registered adapter
                 dao.hasAdapterAccessToExtension(
                     msg.sender,
@@ -167,7 +167,7 @@ contract MyExtension is DaoConstants, IExtension {
         // 2. Allowed if the DAO is calling the extension
         address(dao) == msg.sender ||
         // 3. Allowed if the DAO state is in CREATION mode
-        dao.state() == DaoRegistry.DaoState.CREATION ||
+        DaoHelper.isInCreationModeAndHasAccess(dao) ||
         // 4. Allowed if the sender is a registered adapter
         dao.hasAdapterAccessToExtension(msg.sender, address(this), uint8(flag)),
       // 5. Revert message

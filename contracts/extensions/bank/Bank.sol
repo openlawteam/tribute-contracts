@@ -35,7 +35,7 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
  */
 
-contract BankExtension is AdapterGuard, IExtension, ERC165 {
+contract BankExtension is IExtension, ERC165 {
     using Address for address payable;
     using SafeERC20 for IERC20;
 
@@ -95,11 +95,12 @@ contract BankExtension is AdapterGuard, IExtension, ERC165 {
     /// @notice Clonable contract must have an empty constructor
     constructor() {}
 
+    // slither-disable-next-line calls-loop
     modifier hasExtensionAccess(AclFlag flag) {
         require(
             address(this) == msg.sender ||
                 address(dao) == msg.sender ||
-                dao.state() == DaoRegistry.DaoState.CREATION ||
+                DaoHelper.isInCreationModeAndHasAccess(dao) ||
                 dao.hasAdapterAccessToExtension(
                     msg.sender,
                     address(this),

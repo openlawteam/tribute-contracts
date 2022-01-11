@@ -4,7 +4,6 @@ pragma solidity ^0.8.0;
 
 import "../../core/DaoRegistry.sol";
 import "../IExtension.sol";
-import "../../guards/AdapterGuard.sol";
 
 /**
 MIT License
@@ -39,7 +38,7 @@ SOFTWARE.
  * This contract was based on the OpenZeppelin Proxy contract:
  * https://github.com/OpenZeppelin/openzeppelin-contracts/blob/master/contracts/proxy/Proxy.sol
  */
-contract ExecutorExtension is AdapterGuard, IExtension {
+contract ExecutorExtension is IExtension {
     using Address for address payable;
 
     bool public initialized = false; // internally tracks deployment under eip-1167 proxy pattern
@@ -56,7 +55,7 @@ contract ExecutorExtension is AdapterGuard, IExtension {
         require(
             address(this) == msg.sender ||
                 address(dao) == msg.sender ||
-                dao.state() == DaoRegistry.DaoState.CREATION ||
+                DaoHelper.isInCreationModeAndHasAccess(dao) ||
                 dao.hasAdapterAccessToExtension(
                     msg.sender,
                     address(this),

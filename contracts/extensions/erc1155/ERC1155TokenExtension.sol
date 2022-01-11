@@ -1,8 +1,8 @@
 pragma solidity ^0.8.0;
 // SPDX-License-Identifier: MIT
 import "../../core/DaoRegistry.sol";
-import "../../guards/AdapterGuard.sol";
 import "../../guards/MemberGuard.sol";
+import "../../helpers/DaoHelper.sol";
 import "../IExtension.sol";
 import "@openzeppelin/contracts/utils/Address.sol";
 import "@openzeppelin/contracts/token/ERC1155/IERC1155.sol";
@@ -33,12 +33,7 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
  */
 
-contract ERC1155TokenExtension is
-    AdapterGuard,
-    MemberGuard,
-    IExtension,
-    IERC1155Receiver
-{
+contract ERC1155TokenExtension is MemberGuard, IExtension, IERC1155Receiver {
     using Address for address payable;
     //LIBRARIES
     using EnumerableSet for EnumerableSet.UintSet;
@@ -87,7 +82,7 @@ contract ERC1155TokenExtension is
     //MODIFIERS
     modifier hasExtensionAccess(IExtension extension, AclFlag flag) {
         require(
-            dao.state() == DaoRegistry.DaoState.CREATION ||
+            DaoHelper.isInCreationModeAndHasAccess(dao) ||
                 dao.hasAdapterAccessToExtension(
                     msg.sender,
                     address(extension),

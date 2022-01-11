@@ -3,7 +3,6 @@ pragma solidity ^0.8.0;
 // SPDX-License-Identifier: MIT
 
 import "../../core/DaoRegistry.sol";
-import "../../guards/AdapterGuard.sol";
 import "../IExtension.sol";
 import "@openzeppelin/contracts/utils/Address.sol";
 import "@openzeppelin/contracts/token/ERC721/IERC721.sol";
@@ -34,7 +33,7 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
  */
 
-contract NFTExtension is AdapterGuard, IExtension, IERC721Receiver {
+contract NFTExtension is IExtension, IERC721Receiver {
     using Address for address payable;
     // Add the library methods
     using EnumerableSet for EnumerableSet.UintSet;
@@ -69,7 +68,7 @@ contract NFTExtension is AdapterGuard, IExtension, IERC721Receiver {
 
     modifier hasExtensionAccess(IExtension extension, AclFlag flag) {
         require(
-            dao.state() == DaoRegistry.DaoState.CREATION ||
+            DaoHelper.isInCreationModeAndHasAccess(dao) ||
                 dao.hasAdapterAccessToExtension(
                     msg.sender,
                     address(extension),

@@ -3,6 +3,7 @@ pragma solidity ^0.8.0;
 // SPDX-License-Identifier: MIT
 import "../../../core/DaoRegistry.sol";
 import "../../../extensions/IExtension.sol";
+import "../../../helpers/DaoHelper.sol";
 
 /**
 MIT License
@@ -45,7 +46,7 @@ contract InternalTokenVestingExtension is IExtension {
 
     modifier hasExtensionAccess(AclFlag flag) {
         require(
-            _dao.state() == DaoRegistry.DaoState.CREATION ||
+            DaoHelper.isInCreationModeAndHasAccess(_dao) ||
                 _dao.hasAdapterAccessToExtension(
                     msg.sender,
                     address(this),

@@ -72,7 +72,8 @@ describe("Extension - Vesting", () => {
       daoOwner,
       UNITS,
       1000,
-      Math.floor(now.getTime() / 1000)
+      Math.floor(now.getTime() / 1000),
+      { from: daoOwner }
     );
 
     const v = await vesting.vesting(daoOwner, UNITS);
@@ -107,7 +108,8 @@ describe("Extension - Vesting", () => {
       daoOwner,
       UNITS,
       100,
-      Math.floor(now.getTime() / 1000)
+      Math.floor(now.getTime() / 1000),
+      { from: daoOwner }
     );
 
     let v = await vesting.vesting(daoOwner, UNITS);
@@ -126,7 +128,8 @@ describe("Extension - Vesting", () => {
       daoOwner,
       UNITS,
       100,
-      Math.floor(now.getTime() / 1000)
+      Math.floor(now.getTime() / 1000),
+      { from: daoOwner }
     );
 
     v = await vesting.vesting(daoOwner, UNITS);
@@ -184,7 +187,8 @@ describe("Extension - Vesting", () => {
       daoOwner,
       UNITS,
       100,
-      Math.floor(now.getTime() / 1000)
+      Math.floor(now.getTime() / 1000),
+      { from: daoOwner }
     );
 
     v = await vesting.vesting(daoOwner, UNITS);
@@ -203,7 +207,7 @@ describe("Extension - Vesting", () => {
       minBalance.toString() === "75" || minBalance.toString() === "76"
     ).equal(true);
 
-    await vesting.removeVesting(daoOwner, UNITS, 50);
+    await vesting.removeVesting(daoOwner, UNITS, 50, { from: daoOwner });
 
     minBalance = await vesting.getMinimumBalance(daoOwner, UNITS);
     expect(
@@ -213,7 +217,7 @@ describe("Extension - Vesting", () => {
 
   it("should not be possible to create a new vesting without the ACL permission", async () => {
     // Finalize the DAO to be able to check the extension permissions
-    await this.dao.finalizeDao();
+    await this.dao.finalizeDao({ from: daoOwner });
     const vesting = this.extensions.vestingExt;
     const now = new Date();
     await expectRevert(
@@ -230,7 +234,7 @@ describe("Extension - Vesting", () => {
 
   it("should not be possible to removeVesting a vesting schedule the without ACL permission", async () => {
     // Finalize the DAO to be able to check the extension permissions
-    await this.dao.finalizeDao();
+    await this.dao.finalizeDao({ from: daoOwner });
     const vesting = this.extensions.vestingExt;
     await expectRevert(
       vesting.removeVesting(daoOwner, UNITS, 100, { from: daoOwner }),
