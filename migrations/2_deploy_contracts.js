@@ -20,6 +20,8 @@ const { deployConfigs } = require("../deploy-config");
 require("dotenv").config();
 
 module.exports = async (deployer, network, accounts) => {
+  const daoOwnerAddr = process.env.DAO_OWNER_ADDR;
+  log(`DaoOwner: ${daoOwnerAddr}`);
   log(`Deployment started at: ${new Date().toISOString()}`);
   log(`Deploying tribute-contracts@${pkgJson.version} to ${network} network`);
 
@@ -43,9 +45,11 @@ module.exports = async (deployer, network, accounts) => {
   const { dao, factories, extensions, adapters, testContracts, utilContracts } =
     result;
   if (dao) {
-    await dao.finalizeDao();
+    if (network === "ganache") await dao.finalizeDao();
+    else await dao.finalizeDao({ from: daoOwnerAddr });
+
     log("************************************************");
-    log(`DaoOwner: ${process.env.DAO_OWNER_ADDR}`);
+    log(`DaoOwner: ${daoOwnerAddr}`);
     log(`DaoRegistry: ${dao.address}`);
     const addresses = {};
     Object.values(factories)
