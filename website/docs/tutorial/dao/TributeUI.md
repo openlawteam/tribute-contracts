@@ -89,7 +89,6 @@ You should see the Tribute UI onboarding page:
 
 ![JoinTributeDAO](https://user-images.githubusercontent.com/708579/149008572-5e81128c-43df-4f15-adce-b5be560809a5.png)
 
-
 :::tip
 Connect to TributeUI using the same MetaMask account you used to deploy the DAO to Rinkeby, since that address is considered the owner of the DAO you will have access to all features, and will hold 1 unit token (1 share).
 :::
