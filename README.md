@@ -5,7 +5,7 @@
 - [Overview](#overview)
 - [Usage](#Usage)
 - [Contribute](#contribute)
-- [Subgraph](https://github.com/openlawteam/tribute-contracts/tree/master/subgraph/README.md)
+- [Subgraph](https://github.com/openlawteam/tribute-subgraph)
 
 ## Overview and Benefits
 

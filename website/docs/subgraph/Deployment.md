@@ -8,7 +8,7 @@ The Graph have launched their decentralized product called Subgraph Studio, for 
 The subgraph-deployer.ts script has been updated to deploy to both testnet and mainnet networks.
 
 :::info
-You need to install Graph CLI version 0.21.0 or above with either npm or yarn.
+You need to install Graph CLI version 0.21.1 with either npm or yarn.
 :::
 
 NPM Install:
@@ -23,44 +23,72 @@ Yarn Install:
 yarn global add @graphprotocol/graph-cli
 ```
 
-Managing different network deployments for the contracts, is currently setup using a config file in `config/subgraph-config.json`, providing the network, start block, subgraph directory, github username, and contract address for the DaoFactory and optional adapters:
+## Subgraph Development Setup
 
-For example:
+In addition to the mandatory core subgraph (which queries the `DaoFactory`, `DaoRegistry`, and `BankExtension` contracts), each adapter and extension contract should have its own subgraph. To create a new subgraph for a new adapter or extension contract, create a new folder in the `subgraphs` directory with the contract name.
+
+Take a look at The Graph's [documentation](https://thegraph.com/docs/developer/create-subgraph-hosted) on how to write a subgraph, also check out the current examples in the subgraphs directory.
+
+## Subgraph Deployment
+
+In the `subgraph-deployer.ts` script, you will need to add the subgraph slug for all the datasources of each adapter and extension subgraph you want to deploy:
 
 ```json
-[
-  {
-    "network": "rinkeby",
-    "daoFactoryAddress": "0x10a14A1665DE72faeDb866Fc75c57036813E2Eb2",
-    "daoFactoryStartBlock": 6204221,
-    "couponOnboardingAddress": "0x20a14A1665DE72faeDb866Fc75c57036813E2Eb3",
-    "couponOnboardingStartBlock": 7204228,
-    "GITHUB_USERNAME": "openlawteam",
-    "SUBGRAPH_NAME_OR_SLUG": "tribute-dev"
-  },
-  {
-    "network": "mainnet",
-    "daoFactoryAddress": "0xac665be1e44cc4eec388e34c3899c271fee847f4",
-    "daoFactoryStartBlock": 8332211,
-    "SUBGRAPH_NAME_OR_SLUG": "tribute-prod"
-  }
-]
+const SUBGRAPH_SLUGS = {
+  /**
+   * CORE
+   * Mandatory core subgraph (DaoFactory, DaoRegistry, BankExtension)
+   */
+  Core: "tribute-dao-core-dev",
+
+  /**
+   * ADAPTERS
+   * Add your adpater subgraphs datasource and subgraph slug
+   */
+  CouponOnboarding: "tribute-dao-coupon-onboarding-dev",
+  ...
+
+  /**
+   * EXTENSIONS
+   * Add your extension subgraphs datasource and subgraph slug
+   */
+  NFTExtension: "tribute-dao-nft-extension-dev",
+  ...
+};
 ```
 
-In `.env` (create `.env` file if necessary):
+In `.env` (create `.env` file if there isn't one already created), add your wallet seed phrase (for the hardhat contract compilation), network, GitHub username, graph access token from your Hosted Service [dashboard](https://thegraph.com/hosted-service/dashboard) and the deployment key from your Subgraph Studio account:
 
-```
-# For testnet (rinkeby, ropsten, etc)
+```json
+# The ethereum network to deploy the subgraph.
+NETWORK=...
+
+# Your GitHub username to deploy the subgraph to the hosted service.
+GITHUB_USERNAME=...
+
+# The Graph API Access Token that will be used to deploy the Subgraph
+# to the hosted service (rinkeby/testnet).
 GRAPH_ACCESS_TOKEN=...
 
-# For mainnet
+# The Graph API Deployment Key that will be used to deploy the Subgraph
+# to the decentralized service (mainnet).
 GRAPH_DEPLOYMENT_KEY=...
+
+# The wallet mnemonic/seed phrase is a 12 word string which is used to create
+# the HD Wallet, and sign transactions on your behalf.
+WALLET_SEED_PHRASE=...
 ```
 
-Then from the `subgraph` directory, simply run the following command to deploy the subgraphs:
+Using your Tribute DAO contracts deployed from [tribute-contracts](https://github.com/openlawteam/tribute-contracts) to the same network as your subgraphs, copy the `DaoFactory` contract address and block number into the respective `address` and `startBlock` (important: make sure the block number starts from 1 previous block, for example, if the block number is `19`, use `18` as the `startBlock`) for the `DaoFactory` source in `subgraphs/Core/subgraph.yaml`.
 
-```
-npx ts-node subgraph-deployer.ts
+If you are deploying other optional subgraphs (e.g., `CouponOnboarding`, `NFTExtension`), you will also need to enter the contract address and block number of the subject contract into the respective `subgraphs/[SUBGRAPH CONTRACT DIRNAME]/subgraph.yaml` file.
+
+The `network` in the `subgraphs/[SUBGRAPH CONTRACT DIRNAME]/subgraph.yaml` files should be set to the targeted network (e.g., `mainnet`, `rinkeby`).
+
+Then, simply run the following command to deploy the subgraphs:
+
+```json
+npm run deploy-subgraph
 ```
 
 :::warning

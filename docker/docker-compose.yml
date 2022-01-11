@@ -1,0 +1,115 @@
+# Compatible with Docker Engine v18.06.0+
+version: "3.7"
+services:
+
+  # Snapshot hub
+  trib-snapshot-hub:
+    image: openlaw/snapshot-hub:v5.0.1-erc712
+    container_name: trib-snapshot-hub
+    environment:
+      ENV: "local"
+      PORT: 8080
+      RELAYER_PK: "0xb80a5165a59af8ce566266fcd0e919e13ed4ecbd57ae952e73ae2cddc08b84c6"
+      ALCHEMY_API_URL: "http://rinkeby.openlaw.io:8545"
+      JAWSDB_URL: "postgres://snap:pwd123@trib-snapshot-db:5432/snapshot-db"
+      IGNORE_VOTE_END_CONSTRAINT: "true"
+      ALLOWED_DOMAINS: "http://localhost:3000"
+    depends_on:
+      - trib-snapshot-db
+    ports:
+      - 9090:8080
+
+  # Snapshot Postgres Database to store the Snapshot messages
+  trib-snapshot-db:
+    image: postgres:9.6
+    container_name: trib-snapshot-db
+    ports:
+      - "5432:5432"
+    command: ["postgres", "-p 5432"]
+    environment:
+      POSTGRES_USER: snap
+      POSTGRES_PASSWORD: pwd123
+      POSTGRES_DB: snapshot-db
+
+  # Graph node to host the Subgraph
+  # trib-graph-node:
+  #   image: graphprotocol/graph-node:v0.24.1
+  #   container_name: trib-graph-node
+  #   ports:
+  #     - "8000:8000"
+  #     - "8001:8001"
+  #     - "8020:8020"
+  #     - "8030:8030"
+  #     - "8040:8040"
+  #   depends_on:
+  #     - trib-graph-ipfs
+  #     - trib-graph-db
+  #   env_file:
+  #     - ../.env
+  #   environment:
+  #     node_id: "default"
+  #     node_role: "combined-node"
+  #     postgres_host: "trib-graph-db"
+  #     postgres_port: "5433"
+  #     postgres_user: "graph"
+  #     postgres_pass: "pwd123"
+  #     postgres_db: "graph-db"
+  #     ipfs: "http://trib-graph-ipfs:5001"
+  #     RUST_LOG: "info"
+  #     #GRAPH_LOG: "info"
+  #   extra_hosts:
+  #     - "host.docker.internal:host-gateway"
+
+  # The IPFS instance to pin subgraph data
+  # trib-graph-ipfs:
+  #   image: ipfs/go-ipfs:v0.9.1
+  #   container_name: trib-graph-ipfs
+  #   environment:
+  #     IPFS_PROFILE: "server"
+  #   ports:
+  #     - "4001:4001" # swarm
+  #     - "5001:5001" # api
+  #     - "8080:8080" # gateway (readonly)
+  #     - "8081:8081" # ws?
+  #   volumes:
+  #     - ./build/data/ipfs:/data/ipfs
+
+  # The Database to store the subgraph events
+  # trib-graph-db:
+  #   image: postgres:9.6
+  #   container_name: trib-graph-db
+  #   ports:
+  #     - "5433:5433"
+  #   command: ["postgres", "-p 5433"]
+  #   environment:
+  #     POSTGRES_USER: graph
+  #     POSTGRES_PASSWORD: pwd123
+  #     POSTGRES_DB: graph-db
+
+  # The Tribute UI React App
+  trib-ui:
+    image: openlaw/tribute-ui:main-4aec11f1 # tribute-ui@v2.0.1
+    container_name: trib-ui
+    ports:
+      - "3000:3000"
+    command: ["npm", "start"]
+    depends_on:
+      - trib-snapshot-hub
+    env_file:
+      - ../.env
+    environment:
+      # Do not change it.
+      # The url of the subgraph running locally in a container.
+      REACT_APP_GRAPH_API_URL: "http://localhost:8000/subgraphs/name/openlawteam/tribute"
+
+      # Do not change it.
+      # The url of snaphot-hub running locally in a container.
+      REACT_APP_SNAPSHOT_HUB_API_URL: "http://localhost:9090"
+
+      # Do not change it.
+      # The unique name registered in Snapshot Hub under which proposals, votes, etc. will be stored.
+      REACT_APP_SNAPSHOT_SPACE: "tribute"
+
+networks:
+  default:
+    name: trib-network

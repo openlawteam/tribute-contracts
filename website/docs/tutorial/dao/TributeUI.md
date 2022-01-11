@@ -11,83 +11,52 @@ title: Tribute UI
 - **[Docker Compose](https://docs.docker.com/compose/install/)** install Docker Compose (https://docs.docker.com/compose/install/). This will be used in this tutorial to launch the local instances of snapshot-hub, graph node, and ipfs services.
 - **[MetaMask](https://metamask.io/download.html)** download and install MetaMask from https://metamask.io/download.html into your browser to access the DAO dApp.
 
-## Configuring the dApp
-
 :::warning
-Make sure you are on the branch [release-v1.0.6](https://github.com/openlawteam/tribute-contracts/releases/tag/v1.0.6) which is the version that contains the contracts integrated with [TributeUI](https://github.com/openlawteam/tribute-ui).
+Make sure you are on the branch [release-v2.3.3](https://github.com/openlawteam/tribute-contracts/tree/release-v2.3.3) which is the version that contains the contracts integrated with [TributeUI](https://github.com/openlawteam/tribute-ui).
 :::
+
+## Configuring the dApp
 
 In order to run the dApp we will be using `docker-compose`, which will help us to spin up all the services required by the dApp.
 
-First, set the `tribute-ui` env vars in the `tribute-contracts/.env` file, just append it to the bottom of the file:
+First, set the `tribute-ui` env vars in the `tribute-contracts/.env` file, just append the following content to the bottom of the file if you did not use the sample .env file from previous sections:
 
 ```bash
-######
-# Paste it after the DAO env vars declared in the previous sections, these env vars are used by the services launched with Docker Compose.
-######
+# tribute-contracts/.env
+
+######################## Tribute UI env vars ########################
 
 # Configure the UI to use the Rinkeby network for local development
 REACT_APP_DEFAULT_CHAIN_NAME_LOCAL=RINKEBY
 
 # It can be the same value you used for the Tribute DAO deployment.
-# Replace "your-api-key" with your Infura key
-REACT_APP_INFURA_PROJECT_ID_DEV=your-api-key
+REACT_APP_INFURA_PROJECT_ID_DEV=INFURA_API_KEY
 
 # The address of the Multicall smart contract deployed to the Rinkeby network.
-# Copy that from the tribute-contracts/logs/[network]-deploy.log
+# Copy that from the tribute-contracts/build/contracts-rinkeby-YYYY-MM-DD-HH:mm:ss.json
 REACT_APP_MULTICALL_CONTRACT_ADDRESS=0x...
 
 # The address of the DaoRegistry smart contract deployed to the Rinkeby network.
-# Copy that from the tribute-contracts/logs/[network]-deploy.log
+# Copy that from the tribute-contracts/build/contracts-rinkeby-YYYY-MM-DD-HH:mm:ss.json
 REACT_APP_DAO_REGISTRY_CONTRACT_ADDRESS=0x...
 
-# The Ethereum Network node URL used by the Graph Node to listen to events.
-# Replace "your-api-key" with your Infura key
-ethereum=rinkeby:https://rinkeby.infura.io/v3/your-api-key
+# Enable Rinkeby network for Tribute UI
+REACT_APP_ENVIRONMENT=development
 ```
 
-Open the file:
+Open the file which contains the addresses of all deployed contracts:
 
-> tribute-contracts/logs/rinkeby-deploy.log
+- `tribute-contracts/build/contracts-rinkeby-YYYY-MM-DD-HH:mm:ss.json`
 
-Scroll to the end of the file, and find an output like this:
+Copy the address of `DaoRegistry` contract and set it to `REACT_APP_DAO_REGISTRY_CONTRACT_ADDRESS` env var.
 
-```bash
-************************
-DaoRegistry: 0x...
-Multicall: 0x...
-...
-************************
-```
+Next, copy the address of `Multicall` contract and set it to `REACT_APP_MULTICALL_CONTRACT_ADDRESS`.
 
-These are the addresses of the contracts you have deployed to Rinkeby network. Just copy the address of **DaoRegistry** and **Multicall**, set them to **REACT_APP_DAO_REGISTRY_CONTRACT_ADDRESS** and **REACT_APP_MULTICALL_CONTRACT_ADDRESS** respectively.
+## Launching the DAO
 
-## Configuring the Subgraph
+The contracts were deployed and the subgraph configurations were prepared, now it is time to start the services using docker-compose.
 
-Open the file:
-
-> tribute-contracts/subgraph/config/subgraph-config.json
-
-You should see something like this:
-
-```bash
-### tribute-contracts/subgraph/config/subgraph-config.json
-[
-  {
-    "network": "rinkeby",
-    "daoFactoryAddress": "0x...", # Copy the DaoFactory contracts address from the deployment logs.
-    "daoFactoryStartBlock": blockNumber, # Copy the DaoFactory blockNumber from the deployment logs.
-    "GITHUB_USERNAME": "openlawteam", # do not change it
-    "SUBGRAPH_NAME": "tribute"  # do not change it
-  }
-]
-```
-
-In the Rinkeby deployment logs at _tribute-contracts/logs/rinkeby-deploy.log_ search by **DaoFactory** and copy the **contract address** and **block number**, set the values to **daoFactoryAddress** and **daoFactoryStartBlock** respectively.
-
-## Starting the services
-
-Using docker-compose let's start all the services in the `tribute-contracts/docker ` folder:
+From the `tribute-contracts/docker` folder, run:
 
 ```bash
 docker-compose up
@@ -107,69 +76,56 @@ Wait for the following output:
   trib-ui              |
   trib-ui              | Note that the development build is not optimized.
   trib-ui              | To create a production build, use npm run build.
-  trib-ui              |
-  trib-graph-node      | Sep 24 14:02:47.585 INFO Syncing 1 blocks from Ethereum., code: BlockIngestionStatus, blocks_needed: 1, blocks_behind: 1, latest_block_head: 9349060, current_block_head: 9349059, provider: rinkeby-rpc-0, component: BlockIngestor
   ...
 ```
 
-## Deploying the Subgraph
-
-The dApp uses the subgraph to index and query the chain data, we already have it configured, but we still need to deploy it to our local graph node that we started with docker-compose.
-
-In another terminal window access the subgraph folder `tribute-contracts/subgraph`:
-
-```bash
-cd subgraph
-```
-
-Install the dependencies using node v16+:
-
-```bash
-npm install
-```
-
-Deploy the subgraph:
-
-```bash
-npx ts-node subgraph-deployer.ts
-```
-
-Wait for the following output:
-
-```bash
-Deployed to http://localhost:8000/subgraphs/name/openlawteam/tribute/graphql
-
-Subgraph endpoints:
-Queries (HTTP):     http://localhost:8000/subgraphs/name/openlawteam/tribute
-Subscriptions (WS): http://localhost:8001/subgraphs/name/openlawteam/tribute
-
-👏 ### Done.
-🎉 ### 1 Deployment(s) Successful!
-```
-
 ## Interacting with the DAO
+
+🎉 You have launched your DAO using Tribute DAO framework, and now you can interact with it using the Tribute UI dApp!
 
 Open your browser and access [http://localhost:3000](http://localhost:3000).
 
 You should see the Tribute UI onboarding page:
 
-![Join Tribute DAO](/img/tutorial/dao-tutorial/join.png)
+![JoinTributeDAO](https://user-images.githubusercontent.com/708579/149008572-5e81128c-43df-4f15-adce-b5be560809a5.png)
 
 :::tip
-Connect to TributeUI using the same MetaMask account you used to deploy the DAO to Rinkeby, since that address is considered the owner of the DAO you will have access to all features, and will hold 1 unit token.
+Connect to TributeUI using the same MetaMask account you used to deploy the DAO to Rinkeby, since that address is considered the owner of the DAO you will have access to all features, and will hold 1 unit token (1 share).
 :::
 
 Connected:
 
-![Connected](/img/tutorial/dao-tutorial/connected.png)
+![Connected](https://user-images.githubusercontent.com/708579/149004770-37cca651-e86f-47a8-9764-515e5f4f4fea.png)
 
-Access the _Governance_ page and hit _new proposal_ to create a proposal for vote, e.g:
+In order to add new members to the DAO open the _Onboarding_ page, and click on _onboard_ button to create a new onboarding proposal. Set the new member address and the amount in ETH that the member needs to contribute to join the DAO. Click on _Submit_, sponsor it, vote yes, and wait for the voting period to end.
 
-![Governance](/img/tutorial/dao-tutorial/governance.png)
+![NewOnboardingProposal](https://user-images.githubusercontent.com/708579/149005966-6e640ea3-6d07-41b5-a470-0433f96657d9.png)
 
-👏 Yeah, it was a lengthy tutorial, Well Done!!!
+![VotingPeriod](https://user-images.githubusercontent.com/708579/149007310-ddef836a-f9c2-4586-bb2d-8f1490fb8a10.png)
 
-🎉 You have launched your DAO using Tribute DAO framework, and now you can interact with it using the Tribute UI dApp!
+Once the voting period is ended you can submit the vote result to the DAO. Then the grace period starts.
+
+![GracePeriod](https://user-images.githubusercontent.com/708579/149004990-b5d4f46a-1769-4a36-8518-85ef8a894176.png)
+
+![ViewProposalInGracePeriod](https://user-images.githubusercontent.com/708579/149005638-5332e487-e2e9-4f2c-97c7-15ad2418f61d.png)
+
+The new member will be able to access the proposal page, and click on _Process_ button to join the DAO after the grace period is over.
+
+You can also process the proposal using your member, but you will be paying for the new member contribution.
+
+![ProcessProposal](https://user-images.githubusercontent.com/708579/149006462-d974e743-4263-4fde-95ce-226c97fe23bd.png)
+
+The _Process Proposal_ routine will move the funds from the sender wallet to the bank, and issue the new DAO shares for the address that is specified in the Onboarding proposal.
+
+If the proposal was successfully processed, you will see it in the _Passed_ section on the _Onboarding_ page.
+
+![ProposalPassed](https://user-images.githubusercontent.com/708579/149008302-f6c9ce78-1193-4d53-824d-118fa60ae810.png)
+
+The the address informed in the proposal is now a DAO member.
+
+![NewMember](https://user-images.githubusercontent.com/708579/149008045-49ca04ce-32b7-4119-871a-6f1ee17117ea.png)
+
+👏 Yeah, it was a lengthy tutorial, but you made it. Congrats and welcome to the Tribute DAO community!
 
 ## Problems?
 

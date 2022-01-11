@@ -14,14 +14,14 @@ const {
   maxAmount,
   maxUnits,
 } = require("../utils/contract-util");
-
+const pkgJson = require("../package.json");
 const { deployDao } = require("../utils/deployment-util");
 const { deployConfigs } = require("../deploy-config");
 require("dotenv").config();
 
 module.exports = async (deployer, network, accounts) => {
   log(`Deployment started at: ${new Date().toISOString()}`);
-  log(`Deploying tribute-contracts to ${network} network`);
+  log(`Deploying tribute-contracts@${pkgJson.version} to ${network} network`);
 
   const { contracts: contractConfigs } = require(`./configs/${network}.config`);
   const truffleImports = require("../utils/truffle-util")(contractConfigs);
@@ -84,7 +84,7 @@ const deployRinkebyDao = async ({
     erc20TokenSymbol: getEnvVar("ERC20_TOKEN_SYMBOL"),
     erc20TokenDecimals: getEnvVar("ERC20_TOKEN_DECIMALS"),
     erc20TokenAddress: UNITS,
-    maxChunks: toBN("100000"),
+    maxChunks: getOptionalEnvVar("MAX_CHUNKS", maximumChunks),
     votingPeriod: getOptionalEnvVar("VOTING_PERIOD_SECONDS", 600), // 600 secs = 10 min
     gracePeriod: getOptionalEnvVar("GRACE_PERIOD_SECONDS", 600), // 600 secs = 10 min
     offchainVoting: true,
@@ -145,7 +145,7 @@ const deployMainnetDao = async ({
     erc20TokenSymbol: getEnvVar("ERC20_TOKEN_SYMBOL"),
     erc20TokenDecimals: getEnvVar("ERC20_TOKEN_DECIMALS"),
     erc20TokenAddress: UNITS,
-    maxChunks: toBN("100000"),
+    maxChunks: getOptionalEnvVar("MAX_CHUNKS", maximumChunks),
     votingPeriod: parseInt(getEnvVar("VOTING_PERIOD_SECONDS")),
     gracePeriod: parseInt(getEnvVar("GRACE_PERIOD_SECONDS")),
     offchainVoting: true,
@@ -195,7 +195,7 @@ const deployGanacheDao = async ({
     erc20TokenSymbol: getEnvVar("ERC20_TOKEN_SYMBOL"),
     erc20TokenDecimals: getEnvVar("ERC20_TOKEN_DECIMALS"),
     erc20TokenAddress: UNITS,
-    maxChunks: toBN("100000"),
+    maxChunks: getOptionalEnvVar("MAX_CHUNKS", maximumChunks),
     votingPeriod: getOptionalEnvVar("VOTING_PERIOD_SECONDS", 120), // 120 secs = 2 min
     gracePeriod: getOptionalEnvVar("GRACE_PERIOD_SECONDS", 60), // 600 secs = 1 min
     offchainVoting: true,
@@ -303,7 +303,7 @@ const deployHarmonyDao = async ({
     erc20TokenSymbol: getEnvVar("ERC20_TOKEN_SYMBOL"),
     erc20TokenDecimals: getEnvVar("ERC20_TOKEN_DECIMALS"),
     erc20TokenAddress: UNITS,
-    maxChunks: toBN("100000"),
+    maxChunks: getOptionalEnvVar("MAX_CHUNKS", maximumChunks),
     votingPeriod: parseInt(getEnvVar("VOTING_PERIOD_SECONDS")),
     gracePeriod: parseInt(getEnvVar("GRACE_PERIOD_SECONDS")),
     offchainVoting: true,
@@ -354,7 +354,7 @@ const deployHarmonyTestDao = async ({
     erc20TokenDecimals: getEnvVar("ERC20_TOKEN_DECIMALS"),
     erc20TokenAddress: UNITS,
     erc1155TestTokenUri: "1155 test token",
-    maxChunks: toBN("100000"),
+    maxChunks: getOptionalEnvVar("MAX_CHUNKS", maximumChunks),
     votingPeriod: getOptionalEnvVar("VOTING_PERIOD_SECONDS", "600"), // 600 secs = 10 min
     gracePeriod: getOptionalEnvVar("GRACE_PERIOD_SECONDS", "600"), // 600 secs = 10 min
     offchainVoting: true,

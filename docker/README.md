@@ -1,3 +1,18 @@
+## Launching a Tribute DAO on Rinkeby
+
+### 1. Clone tribute-contracts repository
+
+Make sure you are using branch `release-v2.3.3`. This is the branch that contains the latest contracts.
+
+- > cd tribute-contracts
+- > git fetch origin release-v2.3.3
+- > git checkout release-v2.3.3
+
+### 2. Set the env vars
+
+In the root of `tribute-contracts` folder create a `.env` file. This file will contain all the environment variables required by the deployment script. Most of these variables are configurations that are applied to the DAO contracts during the deployment. Please use the following template:
+
+```
 ######################## Tribute Contracts env vars ########################
 
 # Set the name of your DAO. Make sure the DAO name is unique.
@@ -46,8 +61,23 @@ TRUFFLE_MNEMONIC=...
 # You can set that to use the same address you have in the DAO_OWNER_ADDR
 COUPON_CREATOR_ADDR=0x...
 KYC_COUPON_CREATOR_ADDR=0x...
+```
 
+### 3. Installing the dependencies and deploying the contracts
 
+With the environment variables ready, we can install the project dependencies and start the deployment process.
+
+Using NodeJS v16.x, run:
+
+- > npm ci && npm run deploy:rinkeby
+
+### 4. Set the tribute-ui environment variables
+
+After all contracts are deployed it is time to prepare the dApp, so it can interact with the DAO.
+
+In the same `.env` file created under the `tribute-contracts` folder, add the following environment variables:
+
+```
 ######################## Tribute UI env vars ########################
 
 # Configure the UI to use the Rinkeby network for local development
@@ -66,3 +96,31 @@ REACT_APP_DAO_REGISTRY_CONTRACT_ADDRESS=0x...
 
 # Enable Rinkeby network for Tribute UI
 REACT_APP_ENVIRONMENT=development
+```
+
+Make sure you have set the correct addresses for `REACT_APP_MULTICALL_CONTRACT_ADDRESS` & `REACT_APP_DAO_REGISTRY_CONTRACT_ADDRESS`.
+
+### 5. Launching your DAO
+
+The contracts were deployed and the configurations were prepared, now it is time to spin up the DAO using docker-compose.
+
+From the `tribute-contracts/docker` folder, run:
+
+- > docker-compose up
+
+Wait for the following output:
+
+```
+    trib-ui              | Compiled successfully!
+    trib-ui              |
+    trib-ui              | You can now view tribute-ui in the browser.
+    trib-ui              |
+    trib-ui              |   Local:            http://localhost:3000
+    trib-ui              |   On Your Network:  http://a.b.c.d:3000
+    trib-ui              |
+    trib-ui              | Note that the development build is not optimized.
+    trib-ui              | To create a production build, use npm run build.
+    ...
+```
+
+Done. Your DAO was launched! You can access it at http://localhost:3000

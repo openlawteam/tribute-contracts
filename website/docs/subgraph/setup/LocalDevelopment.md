@@ -5,6 +5,8 @@ title: Development
 
 > The Graph preconfigured Docker image for running a Graph Node.
 
+In .env (create .env file if there isn't one already created), add your wallet seed phrase (for the hardhat contract compilation), and add the network name `ganache`.
+
 ## Terminal 1
 
 Start ganache with in one terminal window:
@@ -34,13 +36,13 @@ npm run deploy:ganache
 and copy the **DaoFactory** contract address and block number into the respective `address` and `startBlock`.
 
 :::caution
-Make sure the block number starts from 1 previous block, for example, if the block number is 19 add 18 as the **startBlock** for the **DaoFactory** source in `subgraph/subgraph.yaml`
+Make sure the block number starts from 1 previous block, for example, if the block number is 19 add 18 as the **startBlock** for the **DaoFactory** source in each subgraph YAML `tribute-subgraph/subgraphs/<SUBGRAPH CONTRACT DIRNAME>/subgraph.yaml`
 :::
 
 Then execute:
 
 ```bash
-cd subgraph/docker/
+cd tribute-subgraph/docker/
 docker-compose up
 ```
 
@@ -60,11 +62,4 @@ can access these via:
 
 ## Terminal 3
 
-Once this is up and running, you can create and deploy your subgraph to the running Graph Node. To do this, from the project root directory, `truffle compile` to build the contracts, if they aren't already built.
-
-Then from the `subgraph` directory:
-
-- `npm ci` to install dependencies
-- `npm run codegen` to run the code generation
-- `yarn create-local` to allocate the subgraph name in the Graph Node
-- `yarn deploy-local` to deploy the subgraph to your local Graph Node
+Once this is up and running, you can create and deploy your subgraphs to the running Graph Node. To do this, from the project root tribute-subgraph directory, `npm run deploy-subgraph`.
