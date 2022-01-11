@@ -14,14 +14,14 @@ const {
   maxAmount,
   maxUnits,
 } = require("../utils/contract-util");
-
+const pkgJson = require("../package.json");
 const { deployDao } = require("../utils/deployment-util");
 const { deployConfigs } = require("../deploy-config");
 require("dotenv").config();
 
 module.exports = async (deployer, network, accounts) => {
   log(`Deployment started at: ${new Date().toISOString()}`);
-  log(`Deploying tribute-contracts to ${network} network`);
+  log(`Deploying tribute-contracts@${pkgJson.version} to ${network} network`);
 
   const { contracts: contractConfigs } = require(`./configs/${network}.config`);
   const truffleImports = require("../utils/truffle-util")(contractConfigs);

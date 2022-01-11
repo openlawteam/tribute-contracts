@@ -12,7 +12,7 @@ title: Tribute UI
 - **[MetaMask](https://metamask.io/download.html)** download and install MetaMask from https://metamask.io/download.html into your browser to access the DAO dApp.
 
 :::warning
-Make sure you are on the branch [release-v2.3.2](https://github.com/openlawteam/tribute-contracts/tree/release-v2.3.2) which is the version that contains the contracts integrated with [TributeUI](https://github.com/openlawteam/tribute-ui).
+Make sure you are on the branch [release-v2.3.3](https://github.com/openlawteam/tribute-contracts/tree/release-v2.3.3) which is the version that contains the contracts integrated with [TributeUI](https://github.com/openlawteam/tribute-ui).
 :::
 
 ## Configuring the dApp
@@ -42,11 +42,6 @@ REACT_APP_DAO_REGISTRY_CONTRACT_ADDRESS=0x...
 
 # Enable Rinkeby network for Tribute UI
 REACT_APP_ENVIRONMENT=development
-
-######################## Graph Node env vars ########################
-
-# The Ethereum Network node URL used by the Graph Node to listen to events.
-ethereum=rinkeby:https://rinkeby.infura.io/v3/INFURA_API_KEY
 ```
 
 Open the file which contains the addresses of all deployed contracts:
@@ -81,80 +76,12 @@ Wait for the following output:
   trib-ui              |
   trib-ui              | Note that the development build is not optimized.
   trib-ui              | To create a production build, use npm run build.
-  trib-ui              |
-  trib-graph-node      | Sep 24 14:02:47.585 INFO Syncing 1 blocks from Ethereum., code: BlockIngestionStatus, blocks_needed: 1, blocks_behind: 1, latest_block_head: 9349060, current_block_head: 9349059, provider: rinkeby-rpc-0, component: BlockIngestor
   ...
 ```
 
-## Building and deploying the Subgraph
-
-The dApp uses a Subgraph to index the data collected from the chain. The data is processed and stored in the graph node, so it can be easily queried.
-
-Now that the services are up and running we can deploy the subgraph to our local graph node.
-
-Clone the subgraph repo within the `tribute-contracts` folder:
-
-- Repo: https://github.com/openlawteam/tribute-subgraph
-
-Using node v16.x in the `tribute-contracts/tribute-subgraph` folder, checkout the subgraph version `v2.0.2`:
-
-```bash
-cd tribute-subgraph
-```
-
-```bash
-git fetch origin release-v2.0.2
-```
-
-```bash
-git checkout release-v2.0.2
-```
-
-Install the dependencies using node v16+:
-
-```bash
-npm install
-```
-
-Open the file `tribute-contracts/tribute-subgraph/subgraphs/Core/subgraph.yaml`, and set the `address` and `startBlock` attributes for the **DaoFactory** subgraph definition:
-
-:::tip
-Copy the _DaoFactory_ address and block number from the Rinkeby deployment logs at `tribute-contracts/logs/rinkeby-deploy_YYYY-MM-DD_HH:mm:ss.log` file. Search by **DaoFactory** and copy the **contract address** and **block number**, set these values to **address** and **startBlock** attributes respectively.
-:::
-
-```yaml
-### tribute-subgraph/subgraphs/Core/subgraph.yaml
-...
-# ====================== DaoFactory ======================
-- kind: ethereum/contract
-    name: DaoFactory
-    network: mainnet
-    source:
-    address: "0x..." # 1. Set the DaoFactory address
-    abi: DaoFactory
-    startBlock: xxx # 2. Set the block number in which the DaoFactory contract was deployed
-```
-
-Build and deploy the subgraph:
-
-```bash
-npx ts-node subgraph-deployer.ts
-```
-
-Wait for the following output:
-
-```bash
-Deployed to http://localhost:8000/subgraphs/name/openlawteam/tribute/graphql
-
-Subgraph endpoints:
-Queries (HTTP):     http://localhost:8000/subgraphs/name/openlawteam/tribute
-Subscriptions (WS): http://localhost:8001/subgraphs/name/openlawteam/tribute
-
-👏 ### Done.
-🎉 ### 1 Deployment(s) Successful!
-```
-
 ## Interacting with the DAO
+
+🎉 You have launched your DAO using Tribute DAO framework, and now you can interact with it using the Tribute UI dApp!
 
 Open your browser and access [http://localhost:3000](http://localhost:3000).
 
@@ -174,9 +101,10 @@ Access the _Governance_ page and hit _new proposal_ to create a proposal for vot
 
 ![Governance](/img/tutorial/dao-tutorial/governance.png)
 
-👏 Yeah, it was a lengthy tutorial. Congrats you have a Tribute DAO running on Rinkeby. Well Done!
+In order to add new members to the DAO open the Onboarding page: http://localhost:3000/onboarding,
+create a new onboarding proposal for the new member account, sponsor it, vote yes, and submit the vote result to the DAO. Once that is done, the new member can access the proposal page and click on Process Proposal to join the DAO.
 
-🎉 You have launched your DAO using Tribute DAO framework, and now you can interact with it using the Tribute UI dApp!
+👏 Yeah, it was a lengthy tutorial, but you made it. Congrats and welcome to the Tribute DAO community!
 
 ## Problems?
 

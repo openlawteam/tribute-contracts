@@ -117,7 +117,7 @@ contracts-backup
 .env*
 
 # Tribute Subgraph
-subgraph/
+tribute-subgraph/
 artifacts
 cache
 typechain

@@ -2,11 +2,11 @@
 
 ### 1. Clone tribute-contracts repository
 
-Make sure you are using branch `release-v2.3.2`. This is the branch that contains the latest contracts.
+Make sure you are using branch `release-v2.3.3`. This is the branch that contains the latest contracts.
 
 - > cd tribute-contracts
-- > git fetch origin release-v2.3.2
-- > git checkout release-v2.3.2
+- > git fetch origin release-v2.3.3
+- > git checkout release-v2.3.3
 
 ### 2. Set the env vars
 
@@ -51,13 +51,6 @@ TRUFFLE_MNEMONIC=...
 # You can set that to use the same address you have in the DAO_OWNER_ADDR
 COUPON_CREATOR_ADDR=0x...
 KYC_COUPON_CREATOR_ADDR=0x...
-
-######################## Subgraph env vars ########################
-
-# Set it to true if you want to deploy the subgraph to the TheGraph.com API.
-# Usually we leave it disabled because we deploy to a local Graph Node
-# created in docker/docker-compose.yml file.
-REMOTE_GRAPH_NODE=false
 ```
 
 ### 3. Installing the dependencies and deploying the contracts
@@ -102,46 +95,13 @@ REACT_APP_DAO_REGISTRY_CONTRACT_ADDRESS=0x...
 
 # Enable Ganache network for Tribute UI
 REACT_APP_ENVIRONMENT=local
-
-
-######################## Graph Node env vars ########################
-
-# The Ethereum Network node URL used by the Graph Node to listen to events.
-ethereum=ganache:http://host.docker.internal:7545
-
-
 ```
 
 Make sure you have set the correct addresses for `REACT_APP_MULTICALL_CONTRACT_ADDRESS` & `REACT_APP_DAO_REGISTRY_CONTRACT_ADDRESS`.
 
-### 5. Building and deploying the Subgraph
+### 5. Launching your DAO
 
-The dApp uses a Subgraph to index the data collected from the chain. The data is processed and stored in the graph node, so it can be easily queried.
-
-First, copy the **DaoFactory** `address` and `blockNumber` attributes from `tribute-contracts/logs/ganache-deploy_YYYY-MM-DD_HH:mm:ss.log`.
-
-Clone the subgraph repo within `tribute-contracts` folder:
-
-- Repo: https://github.com/openlawteam/tribute-subgraph
-
-Open the file `tribute-contracts/tribute-subgraph/subgraphs/Core/subgraph.yaml`, and set the `address` and `startBlock` attributes for the **DaoFactory** subgraph:
-
-```yaml
-### tribute-subgraph/subgraphs/Core/subgraph.yaml
-...
-# ====================== DaoFactory ======================
-- kind: ethereum/contract
-    name: DaoFactory
-    network: mainnet
-    source:
-    address: "0x..." # 1. Set the DaoFactory address
-    abi: DaoFactory
-    startBlock: xxx # 2. Set the block number in which the DaoFactory contract was deployed
-```
-
-### 6. Start all the services
-
-The contracts were deployed and the subgraph configurations were prepared, now it is time to start the services using docker-compose.
+The contracts were deployed and the configurations were prepared, now it is time to spin up the DAO using docker-compose.
 
 From the `tribute-contracts/docker` folder, run:
 
@@ -159,53 +119,16 @@ Wait for the following output:
    trib-ui              |
    trib-ui              | Note that the development build is not optimized.
    trib-ui              | To create a production build, use npm run build.
-   trib-ui              |
-   trib-graph-node      | Sep 24 14:02:47.585 INFO Syncing 1 blocks from Ethereum., code: BlockIngestionStatus, blocks_needed: 1, blocks_behind: 1, latest_block_head: 13, current_block_head: 9349059, provider: ganache-rpc-0, component: BlockIngestor
    ...
 ```
 
-### 7. Building and deploying the subgraph
-
-Now that the services are up and running we can deploy the subgraph to our local graph node.
-
-Using node v16.x in the `tribute-contracts/tribute-subgraph` folder, checkout the subgraph version `v2.0.2`:
-
-- > cd tribute-subgraph
-- > git fetch origin release-v2.0.2
-- > git checkout release-v2.0.2
-
-Install the subgraph project dependencies:
-
-- > npm install
-
-Build and deploy the subgraph:
-
-- > npx ts-node subgraph-deployer.ts
-
-Wait for the following output:
-
-````
-Deployed to http://localhost:8000/subgraphs/name/openlawteam/tribute/graphql
-
-     Subgraph endpoints:
-     Queries (HTTP):     http://localhost:8000/subgraphs/name/openlawteam/tribute
-     Subscriptions (WS): http://localhost:8001/subgraphs/name/openlawteam/tribute
-
-     👏 ### Done.
-     🎉 ### 1 Deployment(s) Successful!
-     ```
-
 Done. Your DAO was launched! You can access it at http://localhost:3000
 
-Make sure you add the ganache network to your MetaMask. Configs:
+Make sure you add the ganache network to your MetaMask:
 
-````
-
+```
 Network: Ganache
 Port: 7545
 ChainId: 1337
 URL: http://localhost:7545
-
-```
-
 ```

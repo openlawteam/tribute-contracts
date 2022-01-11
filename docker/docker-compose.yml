@@ -32,59 +32,59 @@ services:
       POSTGRES_DB: snapshot-db
 
   # Graph node to host the Subgraph
-  trib-graph-node:
-    image: graphprotocol/graph-node:v0.24.1
-    container_name: trib-graph-node
-    ports:
-      - "8000:8000"
-      - "8001:8001"
-      - "8020:8020"
-      - "8030:8030"
-      - "8040:8040"
-    depends_on:
-      - trib-graph-ipfs
-      - trib-graph-db
-    env_file:
-      - ../.env
-    environment:
-      node_id: "default"
-      node_role: "combined-node"
-      postgres_host: "trib-graph-db"
-      postgres_port: "5433"
-      postgres_user: "graph"
-      postgres_pass: "pwd123"
-      postgres_db: "graph-db"
-      ipfs: "http://trib-graph-ipfs:5001"
-      RUST_LOG: "info"
-      #GRAPH_LOG: "info"
-    extra_hosts:
-      - "host.docker.internal:host-gateway"
+  # trib-graph-node:
+  #   image: graphprotocol/graph-node:v0.24.1
+  #   container_name: trib-graph-node
+  #   ports:
+  #     - "8000:8000"
+  #     - "8001:8001"
+  #     - "8020:8020"
+  #     - "8030:8030"
+  #     - "8040:8040"
+  #   depends_on:
+  #     - trib-graph-ipfs
+  #     - trib-graph-db
+  #   env_file:
+  #     - ../.env
+  #   environment:
+  #     node_id: "default"
+  #     node_role: "combined-node"
+  #     postgres_host: "trib-graph-db"
+  #     postgres_port: "5433"
+  #     postgres_user: "graph"
+  #     postgres_pass: "pwd123"
+  #     postgres_db: "graph-db"
+  #     ipfs: "http://trib-graph-ipfs:5001"
+  #     RUST_LOG: "info"
+  #     #GRAPH_LOG: "info"
+  #   extra_hosts:
+  #     - "host.docker.internal:host-gateway"
 
   # The IPFS instance to pin subgraph data
-  trib-graph-ipfs:
-    image: ipfs/go-ipfs:v0.9.1
-    container_name: trib-graph-ipfs
-    environment:
-      IPFS_PROFILE: "server"
-    ports:
-      - "4001:4001" # swarm
-      - "5001:5001" # api
-      - "8080:8080" # gateway (readonly)
-      - "8081:8081" # ws?
-    volumes:
-      - ./build/data/ipfs:/data/ipfs
+  # trib-graph-ipfs:
+  #   image: ipfs/go-ipfs:v0.9.1
+  #   container_name: trib-graph-ipfs
+  #   environment:
+  #     IPFS_PROFILE: "server"
+  #   ports:
+  #     - "4001:4001" # swarm
+  #     - "5001:5001" # api
+  #     - "8080:8080" # gateway (readonly)
+  #     - "8081:8081" # ws?
+  #   volumes:
+  #     - ./build/data/ipfs:/data/ipfs
 
   # The Database to store the subgraph events
-  trib-graph-db:
-    image: postgres:9.6
-    container_name: trib-graph-db
-    ports:
-      - "5433:5433"
-    command: ["postgres", "-p 5433"]
-    environment:
-      POSTGRES_USER: graph
-      POSTGRES_PASSWORD: pwd123
-      POSTGRES_DB: graph-db
+  # trib-graph-db:
+  #   image: postgres:9.6
+  #   container_name: trib-graph-db
+  #   ports:
+  #     - "5433:5433"
+  #   command: ["postgres", "-p 5433"]
+  #   environment:
+  #     POSTGRES_USER: graph
+  #     POSTGRES_PASSWORD: pwd123
+  #     POSTGRES_DB: graph-db
 
   # The Tribute UI React App
   trib-ui:
@@ -95,7 +95,6 @@ services:
     command: ["npm", "start"]
     depends_on:
       - trib-snapshot-hub
-      - trib-graph-node
     env_file:
       - ../.env
     environment:
@@ -106,10 +105,6 @@ services:
       # Do not change it.
       # The url of snaphot-hub running locally in a container.
       REACT_APP_SNAPSHOT_HUB_API_URL: "http://localhost:9090"
-
-      # Do not change it.
-      # The environment in which the app is being executed.
-      REACT_APP_ENVIRONMENT: ${REACT_APP_ENVIRONMENT}
 
       # Do not change it.
       # The unique name registered in Snapshot Hub under which proposals, votes, etc. will be stored.

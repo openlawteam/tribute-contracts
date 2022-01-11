@@ -7,11 +7,11 @@ title: Configuration
 
 ## Requirements
 
-- **[Tribute Contracts](https://github.com/openlawteam/tribute-contracts/tree/release-v2.3.2)** version [v2.3.2](https://github.com/openlawteam/tribute-contracts/tree/release-v2.3.2).
+- **[Tribute Contracts](https://github.com/openlawteam/tribute-contracts/tree/release-v2.3.3)** version [release-v2.3.3](https://github.com/openlawteam/tribute-contracts/tree/release-v2.3.3).
 - **[Infura Ethereum API KEY](https://infura.io/product/ethereum)**: sign up for free, verify your email, create an ethereum project to get your API Key (also known as `Project Id`). We will use that to deploy the contracts to the Rinkeby network. Checkout this **[Infura Blog Post](https://blog.infura.io/getting-started-with-infura-28e41844cc89/)** for more info on that.
 
 :::warning
-Make sure you are on the branch [release-v2.3.2](https://github.com/openlawteam/tribute-contracts/tree/release-v2.3.2) which is the version that contains the contracts integrated with [TributeUI](https://github.com/openlawteam/tribute-ui).
+Make sure you are on the branch [release-v2.3.3](https://github.com/openlawteam/tribute-contracts/tree/release-v2.3.3) which is the version that contains the contracts integrated with [TributeUI](https://github.com/openlawteam/tribute-ui).
 :::
 
 ## Configuring the project
@@ -57,8 +57,9 @@ DAO_OWNER_ADDR=0x...
 # so you don't have to deploy it again.
 # You don't need to change this address if you are deploying to Rinkeby.
 # For any other network, you can disable this environment variable.
-# Rinkeby: 0xE5BE4f7CFf9E2A7Ece34909E68e30D71a7787d2A - contracts v2.3.2
-DAO_ARTIFACTS_CONTRACT_ADDR=0xE5BE4f7CFf9E2A7Ece34909E68e30D71a7787d2A
+# Rinkeby: 0xFc1EFB0e026396BdCf3Fa6bfB34Ff9f07158b7dA - contracts v2.3.3
+DAO_ARTIFACTS_CONTRACT_ADDR=0xFc1EFB0e026396BdCf3Fa6bfB34Ff9f07158b7dA
+DAO_ARTIFACTS_OWNER_ADDR=0xEd7B3f2902f2E1B17B027bD0c125B674d293bDA0
 
 # The name of the ERC20 token of your DAO.
 ERC20_TOKEN_NAME=My First DAO Token
@@ -88,13 +89,6 @@ TRUFFLE_MNEMONIC=...
 # You can set that to use the same address you have in the DAO_OWNER_ADDR
 COUPON_CREATOR_ADDR=0x...
 KYC_COUPON_CREATOR_ADDR=0x...
-
-######################## Subgraph env vars ########################
-
-# Set it to true if you want to deploy the subgraph to the TheGraph.com API.
-# Usually we leave it disabled because we deploy to a local Graph Node
-# created in docker/docker-compose.yml file.
-REMOTE_GRAPH_NODE=false
 ```
 
 ⚡️ Alright! You have configured the project to deploy the contracts to **[Rinkeby](https://rinkeby.etherscan.io/)** test network. Let's move the next section to finally publish your DAO to the world 🌎!
