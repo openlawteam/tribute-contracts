@@ -9,7 +9,6 @@ title: Moloch
 | --------------------------------------: | :----------------: | :----------------: | :----------------: |
 |                          **Guild Bank** | :heavy_check_mark: | :heavy_check_mark: | :heavy_check_mark: |
 |                   **Join DAO with ETH** | :heavy_check_mark: | :heavy_check_mark: | :heavy_check_mark: |
-|            **Permissioned Proxy Calls** | :heavy_check_mark: | :heavy_check_mark: | :heavy_check_mark: |
 |                 **Proposal Sponsoring** | :heavy_check_mark: | :heavy_check_mark: | :heavy_check_mark: |
 |                           **Rage Quit** | :heavy_check_mark: | :heavy_check_mark: | :heavy_check_mark: |
 |    **No quorum simple majority voting** | :heavy_check_mark: | :heavy_check_mark: | :heavy_check_mark: |
@@ -32,6 +31,7 @@ title: Moloch
 | **Internal/External Governance Tokens** |        :x:         |        :x:         | :heavy_check_mark: |
 |                **Modular Architecture** |        :x:         |        :x:         | :heavy_check_mark: |
 |                  **Permissioned Entry** |        :x:         |        :x:         | :heavy_check_mark: |
+|            **Permissioned Proxy Calls** |        :x:         |        :x:         | :heavy_check_mark: |
 |  **Signature Validation with EIP-1271** |        :x:         |        :x:         | :heavy_check_mark: |
 |                **Upgradable Contracts** |        :x:         |        :x:         | :heavy_check_mark: |
 |  **Lower cost EIP-712 offchain voting** |        :x:         |        :x:         | :heavy_check_mark: |
