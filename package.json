@@ -16,6 +16,7 @@
     "test": "test"
   },
   "dependencies": {
+    "@biconomy/mexa": "^2.0.25",
     "@openzeppelin/contracts": "4.3.3",
     "@truffle/contract": "^4.3.13",
     "@truffle/hdwallet-provider": "1.2.2",
@@ -49,7 +50,7 @@
     "prettier-plugin-solidity": "^1.0.0-beta.19",
     "solhint": "^3.3.2",
     "solidity-coverage": "^0.7.16",
-    "truffle": "^5.3.2",
+    "truffle": "^5.4.28",
     "truffle-abi": "^1.0.3",
     "truffle-plugin-verify": "^0.5.8",
     "ts-mocha": "^8.0.0",
@@ -63,6 +64,7 @@
     "coverage": "DISABLE_SOLC_OPTIMIZER=true ts-node scripts/coverage.ts",
     "deploy:ganache": "truffle deploy --network ganache --reset 2>&1 | tee logs/ganache-deploy_`date '+%F_%T'`.log",
     "deploy:rinkeby": "truffle deploy --network rinkeby --reset 2>&1 | tee logs/rinkeby-deploy_`date '+%F_%T'`.log",
+    "deploy:kovan": "truffle deploy --network kovan --reset 2>&1 | tee logs/kovan-deploy_`date '+%F_%T'`.log",
     "deploy:mainnet": "truffle deploy --network mainnet --reset 2>&1 | tee logs/mainnet-deploy_`date '+%F_%T'`.log",
     "deploy:goerli": "truffle deploy --network goerli --reset 2>&1 | tee logs/goerli-deploy_`date '+%F_%T'`.log",
     "deploy:harmony": "truffle deploy --network harmony --reset 2>&1 | tee logs/harmony-deploy_`date '+%F_%T'`.log",

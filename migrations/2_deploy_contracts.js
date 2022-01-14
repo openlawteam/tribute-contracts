@@ -66,6 +66,67 @@ module.exports = async (deployer, network, accounts) => {
   log(`Deployment completed at: ${new Date().toISOString()}`);
 };
 
+const deployKovanDao = async ({
+  deployFunction,
+  truffleImports,
+  contractConfigs,
+}) => {
+  return await deployDao({
+    ...truffleImports,
+    contractConfigs,
+    deployFunction,
+    maxAmount: getOptionalEnvVar("MAX_AMOUNT", maxAmount),
+    unitPrice: toBN(toWei("100", "finney")),
+    nbUnits: toBN("100000"),
+    maxUnits: getOptionalEnvVar("MAX_UNITS", maxUnits),
+    tokenAddr: ETH_TOKEN,
+    erc20TokenName: getEnvVar("ERC20_TOKEN_NAME"),
+    erc20TokenSymbol: getEnvVar("ERC20_TOKEN_SYMBOL"),
+    erc20TokenDecimals: getEnvVar("ERC20_TOKEN_DECIMALS"),
+    erc20TokenAddress: UNITS,
+    maxChunks: toBN("100000"),
+    votingPeriod: getOptionalEnvVar("VOTING_PERIOD_SECONDS", 600), // 600 secs = 10 min
+    gracePeriod: getOptionalEnvVar("GRACE_PERIOD_SECONDS", 600), // 600 secs = 10 min
+    offchainVoting: true,
+    finalize: false,
+    maxExternalTokens: 100,
+    couponCreatorAddress: getOptionalEnvVar(
+      "COUPON_CREATOR_ADDR",
+      getEnvVar("DAO_OWNER_ADDR")
+    ),
+    kycSignerAddress: getOptionalEnvVar(
+      "KYC_SIGNER_ADDR",
+      getEnvVar("DAO_OWNER_ADDR")
+    ),
+    kycMaxMembers: getOptionalEnvVar("KYC_MAX_MEMBERS", toBN(1000)),
+    kycFundTargetAddress: getOptionalEnvVar(
+      "KYC_MULTISIG_FUND_ADDR",
+      ZERO_ADDRESS
+    ),
+    daoName: getEnvVar("DAO_NAME"),
+    owner: getEnvVar("DAO_OWNER_ADDR"),
+    offchainAdmin: getOptionalEnvVar(
+      "OFFCHAIN_ADMIN_ADDR",
+      getEnvVar("DAO_OWNER_ADDR")
+    ),
+    deployTestTokens: true,
+    supplyTestToken1: 1000000,
+    supplyTestToken2: 1000000,
+    supplyPixelNFT: 100,
+    supplyOLToken: toBN("1000000000000000000000000"),
+    erc1155TestTokenUri: "1155 test token",
+    gasPriceLimit: getOptionalEnvVar("GAS_PRICE_LIMIT", 0 /* disabled */),
+    spendLimitPeriod: getOptionalEnvVar("SPEND_LIMIT_PERIOD", 0 /* disabled */),
+    spendLimitEth: getOptionalEnvVar("SPEND_LIMIT_ETH", 0 /* disabled */),
+    gelato: getOptionalEnvVar(
+      "GELATO_ADDR",
+      "0xDe6ab16a4015c680daab58021815D09ddB57db8E"
+    ),
+    weth: "0xc778417e063141139fce010982780140aa0cd5ab",
+    maintainerTokenAddress: getOptionalEnvVar("MAINTAINER_TOKEN_ADDR", UNITS),
+  });
+};
+
 const deployRinkebyDao = async ({
   deployFunction,
   truffleImports,
@@ -402,6 +463,10 @@ const deploy = async (opts) => {
     case "goerli":
     case "rinkeby":
       res = await deployRinkebyDao(opts);
+      break;
+
+    case "kovan":
+      res = await deployKovanDao(opts);
       break;
     case "test":
     case "coverage":

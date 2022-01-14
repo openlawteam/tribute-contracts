@@ -75,34 +75,34 @@ const createFactories = async ({ options }) => {
     .filter((config) => config.enabled)
     .filter((config) => !config.skipAutoDeploy);
   log("deploying or reusing ", factoryList.length, " factories...");
-  await factoryList.reduce((p, config) => {
-    return p
-      .then((_) => {
-        const factoryContract = options[config.name];
-        if (!factoryContract)
-          throw new Error(`Missing factory contract ${config.name}`);
 
-        const extensionConfig = options.contractConfigs.find(
-          (c) => c.id === config.generatesExtensionId
+  await Promise.all(
+    factoryList.map((config) => {
+      const factoryContract = options[config.name];
+      if (!factoryContract)
+        throw new Error(`Missing factory contract ${config.name}`);
+
+      const extensionConfig = options.contractConfigs.find(
+        (c) => c.id === config.generatesExtensionId
+      );
+      if (!extensionConfig)
+        throw new Error(
+          `Missing extension config ${config.generatesExtensionId}`
         );
-        if (!extensionConfig)
-          throw new Error(
-            `Missing extension config ${config.generatesExtensionId}`
-          );
 
-        const extensionContract = options[extensionConfig.name];
-        if (!extensionContract)
-          throw new Error(`Missing extension contract ${extensionConfig.name}`);
+      const extensionContract = options[extensionConfig.name];
+      if (!extensionContract)
+        throw new Error(`Missing extension contract ${extensionConfig.name}`);
 
-        return options
-          .deployFunction(factoryContract, [extensionContract])
-          .catch((e) => {
-            error(`Failed factory deployment [${config.name}].`, e);
-            throw e;
-          });
-      })
-      .then((factory) => (factories[factory.configs.alias] = factory));
-  }, Promise.resolve());
+      return options
+        .deployFunction(factoryContract, [extensionContract])
+        .catch((e) => {
+          error(`Failed factory deployment [${config.name}].`, e);
+          throw e;
+        })
+        .then((factory) => (factories[factory.configs.alias] = factory));
+    })
+  );
 
   return factories;
 };
@@ -178,25 +178,23 @@ const createExtensions = async ({ dao, factories, options }) => {
     return newExtension;
   };
 
-  await Object.values(factories).reduce(
-    (p, factory) =>
-      p
-        .then(() =>
-          createExtension({
-            dao,
-            factory,
-            options,
-          })
-        )
+  await Promise.all(
+    Object.values(factories).map((factory) =>
+      createExtension({
+        dao,
+        factory,
+        options,
+      })
         .then((extension) => {
           extensions[extension.configs.alias] = extension;
         })
         .catch((e) => {
           error(`Failed extension deployment ${factory.configs.name}`, e);
           throw e;
-        }),
-    Promise.resolve()
+        })
+    )
   );
+
   return extensions;
 };
 
@@ -214,18 +212,17 @@ const createAdapters = async ({ options }) => {
     .filter((config) => config.enabled)
     .filter((config) => !config.skipAutoDeploy);
   log("deploying or re-using ", adapterList.length, " adapters...");
-  await adapterList.reduce(
-    (p, config) =>
-      p
-        .then(() => deployContract({ config, options }))
+  await Promise.all(
+    adapterList.map((config) =>
+      deployContract({ config, options })
         .then((adapter) => {
           adapters[adapter.configs.alias] = adapter;
         })
         .catch((e) => {
           error(`Error while creating adapter ${config.name}.`, e);
           throw e;
-        }),
-    Promise.resolve()
+        })
+    )
   );
 
   return adapters;
@@ -241,23 +238,22 @@ const createAdapters = async ({ options }) => {
 const createUtilContracts = async ({ options }) => {
   const utilContracts = {};
 
-  await Object.values(options.contractConfigs)
-    .filter((config) => config.type === ContractType.Util)
-    .filter((config) => config.enabled)
-    .filter((config) => !config.skipAutoDeploy)
-    .reduce(
-      (p, config) =>
-        p
-          .then(() => deployContract({ config, options }))
+  await Promise.all(
+    Object.values(options.contractConfigs)
+      .filter((config) => config.type === ContractType.Util)
+      .filter((config) => config.enabled)
+      .filter((config) => !config.skipAutoDeploy)
+      .map((config) =>
+        deployContract({ config, options })
           .then((utilContract) => {
             utilContracts[utilContract.configs.alias] = utilContract;
           })
           .catch((e) => {
             error(`Error while creating util contract ${config.name}`, e);
             throw e;
-          }),
-      Promise.resolve()
-    );
+          })
+      )
+  );
   return utilContracts;
 };
 
@@ -306,35 +302,33 @@ const createGovernanceRoles = async ({ options, dao, adapters }) => {
     return configValue;
   };
 
-  await Object.values(options.contractConfigs)
-    .filter((c) => c.enabled)
-    .filter((c) => c.governanceRoles)
-    .reduce((p, c) => {
-      const roles = Object.keys(c.governanceRoles);
-      return p.then(() =>
-        roles.reduce(
-          (q, role) =>
-            q.then(async () => {
-              const adapter = Object.values(adapters).find(
-                (a) => a.configs.name === c.name
-              );
-              const configKey = sha3(
-                web3.utils.encodePacked(
-                  role.replace("$contractAddress", ""),
-                  utils.getAddress(adapter.address)
-                )
-              );
-              const configValue = utils.getAddress(
-                readConfigValue(c.governanceRoles[role], c.name)
-              );
-              return await dao.setAddressConfiguration(configKey, configValue, {
-                from: options.owner,
-              });
-            }),
-          Promise.resolve()
-        )
-      );
-    }, Promise.resolve());
+  await Promise.all(
+    Object.values(options.contractConfigs)
+      .filter((c) => c.enabled)
+      .filter((c) => c.governanceRoles)
+      .map((c) => {
+        const roles = Object.keys(c.governanceRoles);
+        return Promise.all(
+          roles.map((role) => {
+            const adapter = Object.values(adapters).find(
+              (a) => a.configs.name === c.name
+            );
+            const configKey = sha3(
+              web3.utils.encodePacked(
+                role.replace("$contractAddress", ""),
+                utils.getAddress(adapter.address)
+              )
+            );
+            const configValue = utils.getAddress(
+              readConfigValue(c.governanceRoles[role], c.name)
+            );
+            return dao.setAddressConfiguration(configKey, configValue, {
+              from: options.owner,
+            });
+          })
+        );
+      })
+  );
 
   if (options.defaultMemberGovernanceToken) {
     const configKey = sha3(web3.utils.encodePacked("governance.role.default"));
@@ -541,35 +535,33 @@ const configureDao = async ({
       return configValue;
     };
 
-    const adapterList = Object.values(adapters)
-      .filter((a) => a.configs.enabled)
-      .filter((a) => !a.configs.skipAutoDeploy)
-      .filter((a) => a.configs.daoConfigs && a.configs.daoConfigs.length > 0)
-      .reduce((p, adapter) => {
-        const contractConfigs = adapter.configs;
-        return p.then(() =>
-          contractConfigs.daoConfigs.reduce(
-            (q, configEntry) =>
-              q.then(() => {
-                const configValues = configEntry.map((configName) =>
-                  readConfigValue(configName, contractConfigs.name)
-                );
-                return adapter
-                  .configureDao(...configValues, {
-                    from: options.owner,
-                  })
-                  .catch((e) => {
-                    error(
-                      `Error while configuring dao with contract ${contractConfigs.name}`,
-                      e
-                    );
-                    throw e;
-                  });
-              }),
-            Promise.resolve()
-          )
-        );
-      }, Promise.resolve());
+    await Promise.all(
+      Object.values(adapters)
+        .filter((a) => a.configs.enabled)
+        .filter((a) => !a.configs.skipAutoDeploy)
+        .filter((a) => a.configs.daoConfigs && a.configs.daoConfigs.length > 0)
+        .map((adapter) => {
+          const contractConfigs = adapter.configs;
+          return Promise.all(
+            contractConfigs.daoConfigs.map((configEntry) => {
+              const configValues = configEntry.map((configName) =>
+                readConfigValue(configName, contractConfigs.name)
+              );
+              return adapter
+                .configureDao(...configValues, {
+                  from: options.owner,
+                })
+                .catch((e) => {
+                  error(
+                    `Error while configuring dao with contract ${contractConfigs.name}`,
+                    e
+                  );
+                  throw e;
+                });
+            })
+          );
+        })
+    );
   };
 
   const configureExtensionAccess = async (contracts, extension) => {
@@ -598,31 +590,33 @@ const configureDao = async ({
     log("configure adapters ...");
     await configureAdaptersWithDAOAccess();
     await configureAdaptersWithDAOParameters();
-    await Object.values(extensions)
-      .filter((targetExtension) => targetExtension.configs.enabled)
-      .filter((targetExtension) => !targetExtension.configs.skipAutoDeploy)
-      .reduce((p, targetExtension) => {
-        // Filters the enabled adapters that have access to the targetExtension
-        const contracts = Object.values(adapters)
-          .filter((a) => a.configs.enabled)
-          .filter((a) => !a.configs.skipAutoDeploy)
-          .filter((a) =>
-            // The adapters must have at least 1 ACL flag defined to access the targetExtension
-            Object.keys(a.configs.acls.extensions).some(
-              (extId) => extId === targetExtension.configs.id
-            )
-          );
-
-        return p
-          .then(() => configureExtensionAccess(contracts, targetExtension))
-          .catch((e) => {
-            error(
-              `Error while configuring adapters access to extension ${extensions.configs.name}`,
-              e
+    await Promise.all(
+      Object.values(extensions)
+        .filter((targetExtension) => targetExtension.configs.enabled)
+        .filter((targetExtension) => !targetExtension.configs.skipAutoDeploy)
+        .map((targetExtension) => {
+          // Filters the enabled adapters that have access to the targetExtension
+          const contracts = Object.values(adapters)
+            .filter((a) => a.configs.enabled)
+            .filter((a) => !a.configs.skipAutoDeploy)
+            .filter((a) =>
+              // The adapters must have at least 1 ACL flag defined to access the targetExtension
+              Object.keys(a.configs.acls.extensions).some(
+                (extId) => extId === targetExtension.configs.id
+              )
             );
-            throw e;
-          });
-      }, Promise.resolve());
+
+          return configureExtensionAccess(contracts, targetExtension).catch(
+            (e) => {
+              error(
+                `Error while configuring adapters access to extension ${extensions.configs.name}`,
+                e
+              );
+              throw e;
+            }
+          );
+        })
+    );
   };
 
   /**
@@ -631,29 +625,31 @@ const configureDao = async ({
    */
   const configureExtensions = async () => {
     log("configure extensions ...");
-    await Object.values(extensions)
-      .filter((targetExtension) => targetExtension.configs.enabled)
-      .reduce((p, targetExtension) => {
-        // Filters the enabled extensions that have access to the targetExtension
-        const contracts = Object.values(extensions)
-          .filter((e) => e.configs.enabled)
-          .filter((e) => e.configs.id !== targetExtension.configs.id)
-          .filter((e) =>
-            // The other extensions must have at least 1 ACL flag defined to access the targetExtension
-            Object.keys(e.configs.acls.extensions).some(
-              (extId) => extId === targetExtension.configs.id
-            )
-          );
-
-        return p
-          .then(() => configureExtensionAccess(contracts, targetExtension))
-          .catch((e) => {
-            error(
-              `Error while configuring extensions access to extension ${targetExtension.configs.name}`
+    await Promise.all(
+      Object.values(extensions)
+        .filter((targetExtension) => targetExtension.configs.enabled)
+        .map((targetExtension) => {
+          // Filters the enabled extensions that have access to the targetExtension
+          const contracts = Object.values(extensions)
+            .filter((e) => e.configs.enabled)
+            .filter((e) => e.configs.id !== targetExtension.configs.id)
+            .filter((e) =>
+              // The other extensions must have at least 1 ACL flag defined to access the targetExtension
+              Object.keys(e.configs.acls.extensions).some(
+                (extId) => extId === targetExtension.configs.id
+              )
             );
-            throw e;
-          });
-      }, Promise.resolve());
+
+          return configureExtensionAccess(contracts, targetExtension).catch(
+            (e) => {
+              error(
+                `Error while configuring extensions access to extension ${targetExtension.configs.name}`
+              );
+              throw e;
+            }
+          );
+        })
+    );
   };
 
   await configureAdapters();
