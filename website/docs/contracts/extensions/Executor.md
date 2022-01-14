@@ -9,7 +9,7 @@ The common use case for [Proxy Patterns in Ethereum Blockchain](https://blog.ope
 
 When working with Proxy contract we need to take into account:
 
-1. If you call a function that is not supported/implemented by the contract, the contract `fallback` function is trigged. You can customize your `fallback` function to handle special cases. For instance, you can make your proxy contract to use a custom `fallback` function to redirect/delegate calls to other contracts.
+1. If you call a function that is not supported/implemented by the contract, the contract `fallback` function is triggered. You can customize your `fallback` function to handle special cases. For instance, you can make your proxy contract to use a custom `fallback` function to redirect/delegate calls to other contracts.
 2. If a contract `A` delegates a call to another contract `B`, `A` executes the code of contract `B` in the context of contract `A`, so the `msg.value` and `msg.sender` values will be preserved, i.e: you will not see the address of `A` as `msg.sender` in the executed function in `B`, but you will see the actual caller address that triggered the call to contract `A`. In addition to that, the storage modifications will always be applied to the storage of contract `A`, and `B` storage remains intact even after the delegated execution.
 
 With that in mind, we implemented the Executor Extension, which adds to the DAO the capability of executing delegated calls to another contract using the same EVM instruction `delegatecall`. The call is triggered via custom `fallback` function, which sets the `msg.sender` as the called address, and executes in the target contract identified by its address provided via `implementation` argument. For that, we can use the `fallback` function to pass the `implementation` address as the `msg.sender`, i.e: the contract `A`, in our example, will be calling itself through a proxy. This enables different use cases for proxy patterns in the Tribute DAO Framework.
@@ -19,13 +19,13 @@ Most of the time, we determine who is calling a function by checking the `msg.se
 
 However, when you execute the function call through the Executor Extension, suddenly the DAO has creates an identity, because the interaction with the implementation contract that triggers a new function call that will be using the `msg.sender` as the Executor address via an internal transaction, and that provides a generic proxy pattern that allows you to interact with other smart contracts with the same `msg.sender` (Executor Extension), no matter the logic implemented in the target contract.
 
-There are some restrictions and conventions that need to be respected to make sure the calls are executed safelly:
+There are some restrictions and conventions that need to be respected to make sure the calls are executed safely:
 
 - The caller contract, usually an Adapter, must have permission to use the extension. The permission is set through the ACL Flag: `EXECUTE` during the Adapter configuration phase.
 - The caller contract must implement the function that will be triggered by the Executor, and it needs to be restricted to the Executor address only. It can be done by adding the access guard: `executorFunc(dao)` from `AdapterGuard`.
 - The caller contract can not change/upgrade it's own state/storage in the logic function (i.e: the function that will be called by the Executor). The reason for that is to prevent storage collisions with the Executor storage. Any state change must be stored in a third contract, the contract that actually manages the state changes, and that will be associated to the Executor address though an internal transaction.
 
-With the Executor Extension we can cover new use cases, and basically execute any sort function call from the DAO to the outside world. Considering the Tribute DAO Framework architecture, the call should always go through an Adapter, because a core contract should not acess the extenal world directly, but it is fine if it relies on an Adapter. Some examples of these proxy call are:
+With the Executor Extension we can cover new use cases, and basically execute any sort function call from the DAO to the outside world. Considering the Tribute DAO Framework architecture, the call should always go through an Adapter, because a core contract should not access the external world directly, but it is fine if it relies on an Adapter. Some examples of these proxy call are:
 
 - joining an LP from the DAO (with staking).
 - joining another DAO.
@@ -84,7 +84,7 @@ receive() external payable
 /**
   * @dev Delegates the current call to `implementation`.
   *
-  * This function does not return to its internall call site, it will return directly to the external caller.
+  * This function does not return to its internal call site, it will return directly to the external caller.
   */
 function _delegate(address implementation)
     internal
@@ -98,7 +98,7 @@ function _delegate(address implementation)
 /**
   * @dev Delegates the current call to the sender address.
   *
-  * This function does not return to its internall call site, it will return directly to the external caller.
+  * This function does not return to its internal call site, it will return directly to the external caller.
   */
 function _fallback() internal virtual
 ```
