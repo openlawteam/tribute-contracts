@@ -39,6 +39,7 @@
     "@types/mocha": "^9.0.0",
     "@types/node": "^16.10.5",
     "chai": "^4.3.4",
+    "defender-relay-client": "^1.12.1",
     "dotenv": "^8.2.0",
     "eth-gas-reporter": "^0.2.22",
     "ethers": "^5.5.1",
