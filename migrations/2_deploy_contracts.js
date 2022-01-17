@@ -342,7 +342,6 @@ const deployHarmonyTestDao = async ({
   contractConfigs,
 }) => {
   const { WETH } = truffleImports;
-
   const weth = await deployFunction(WETH);
   return await deployDao({
     ...truffleImports,
@@ -357,17 +356,21 @@ const deployHarmonyTestDao = async ({
     erc20TokenSymbol: getEnvVar("ERC20_TOKEN_SYMBOL"),
     erc20TokenDecimals: getEnvVar("ERC20_TOKEN_DECIMALS"),
     erc20TokenAddress: UNITS,
-    erc1155TestTokenUri: "1155 test token",
     maxChunks: getOptionalEnvVar("MAX_CHUNKS", maximumChunks),
-    votingPeriod: getOptionalEnvVar("VOTING_PERIOD_SECONDS", "600"), // 600 secs = 10 min
-    gracePeriod: getOptionalEnvVar("GRACE_PERIOD_SECONDS", "600"), // 600 secs = 10 min
+    votingPeriod: getOptionalEnvVar("VOTING_PERIOD_SECONDS", 600), // 600 secs = 10 min
+    gracePeriod: getOptionalEnvVar("GRACE_PERIOD_SECONDS", 600), // 600 secs = 10 min
     offchainVoting: true,
-    deployTestTokens: true,
     finalize: false,
     maxExternalTokens: 100,
-    couponCreatorAddress: getEnvVar("COUPON_CREATOR_ADDR"),
-    kycSignerAddress: getEnvVar("KYC_SIGNER_ADDR"),
-    kycMaxMembers: getOptionalEnvVar("KYC_MAX_MEMBERS", toBN(99)),
+    couponCreatorAddress: getOptionalEnvVar(
+      "COUPON_CREATOR_ADDR",
+      getEnvVar("DAO_OWNER_ADDR")
+    ),
+    kycSignerAddress: getOptionalEnvVar(
+      "KYC_SIGNER_ADDR",
+      getEnvVar("DAO_OWNER_ADDR")
+    ),
+    kycMaxMembers: getOptionalEnvVar("KYC_MAX_MEMBERS", toBN(1000)),
     kycFundTargetAddress: getOptionalEnvVar(
       "KYC_MULTISIG_FUND_ADDR",
       ZERO_ADDRESS
@@ -378,52 +381,133 @@ const deployHarmonyTestDao = async ({
       "OFFCHAIN_ADMIN_ADDR",
       getEnvVar("DAO_OWNER_ADDR")
     ),
-    gelato: getEnvVar("GELATO_ADDR"),
-    kycAddress: getEnvVar("KYC_SIGNER_ADDRESS"),
-    maxUnits: getEnvVar("MAX_UNITS"),
-    maxMembers: getEnvVar("MAX_MEMBERS"),
-    fundTargetAddress: getEnvVar("FUND_TARGET_ADDR"),
-    weth: weth.address,
+    deployTestTokens: true,
+    supplyTestToken1: 1000000,
+    supplyTestToken2: 1000000,
+    supplyPixelNFT: 100,
+    supplyOLToken: toBN("1000000000000000000000000"),
+    erc1155TestTokenUri: "1155 test token",
     gasPriceLimit: getOptionalEnvVar("GAS_PRICE_LIMIT", 0 /* disabled */),
     spendLimitPeriod: getOptionalEnvVar("SPEND_LIMIT_PERIOD", 0 /* disabled */),
     spendLimitEth: getOptionalEnvVar("SPEND_LIMIT_ETH", 0 /* disabled */),
-    gelato: getOptionalEnvVar(
-      "GELATO_ADDR",
-      "0xDe6ab16a4015c680daab58021815D09ddB57db8E"
+    gelato: getOptionalEnvVar("GELATO_ADDR", ZERO_ADDRESS),
+    weth: weth.address,
+    maintainerTokenAddress: getOptionalEnvVar("MAINTAINER_TOKEN_ADDR", UNITS),
+  });
+};
+
+const deployPolygonDao = async ({
+  deployFunction,
+  truffleImports,
+  contractConfigs,
+}) => {
+  return await deployDao({
+    ...truffleImports,
+    contractConfigs,
+    deployFunction,
+    maxAmount: getOptionalEnvVar("MAX_AMOUNT", maxAmount),
+    unitPrice: toBN(toWei("100", "finney")),
+    nbUnits: toBN("100000"),
+    maxUnits: getOptionalEnvVar("MAX_UNITS", maxUnits),
+    tokenAddr: ETH_TOKEN,
+    erc20TokenName: getEnvVar("ERC20_TOKEN_NAME"),
+    erc20TokenSymbol: getEnvVar("ERC20_TOKEN_SYMBOL"),
+    erc20TokenDecimals: getEnvVar("ERC20_TOKEN_DECIMALS"),
+    erc20TokenAddress: UNITS,
+    maxChunks: getOptionalEnvVar("MAX_CHUNKS", maximumChunks),
+    votingPeriod: parseInt(getEnvVar("VOTING_PERIOD_SECONDS")),
+    gracePeriod: parseInt(getEnvVar("GRACE_PERIOD_SECONDS")),
+    offchainVoting: true,
+    deployTestTokens: false,
+    finalize: false,
+    maxExternalTokens: 100,
+    couponCreatorAddress: getEnvVar("COUPON_CREATOR_ADDR"),
+    kycSignerAddress: getEnvVar("KYC_SIGNER_ADDR"),
+    kycMaxMembers: getEnvVar("KYC_MAX_MEMBERS"),
+    kycFundTargetAddress: getOptionalEnvVar(
+      "KYC_MULTISIG_FUND_ADDR",
+      ZERO_ADDRESS
     ),
+    daoName: getEnvVar("DAO_NAME"),
+    owner: getEnvVar("DAO_OWNER_ADDR"),
+    offchainAdmin: getEnvVar("OFFCHAIN_ADMIN_ADDR"),
+    weth: getEnvVar("WRAPPED_ETH_ADDR"),
+    gasPriceLimit: getOptionalEnvVar("GAS_PRICE_LIMIT", 0 /* disabled */),
+    spendLimitPeriod: getOptionalEnvVar("SPEND_LIMIT_PERIOD", 0 /* disabled */),
+    spendLimitEth: getOptionalEnvVar("SPEND_LIMIT_ETH", 0 /* disabled */),
+    gelato: getEnvVar("GELATO_ADDR"),
+    maintainerTokenAddress: getOptionalEnvVar("MAINTAINER_TOKEN_ADDR", UNITS),
+  });
+};
+
+const deployPolygonTestDao = async ({
+  deployFunction,
+  truffleImports,
+  contractConfigs,
+}) => {
+  const { WETH } = truffleImports;
+
+  const weth = await deployFunction(WETH);
+
+  return await deployDao({
+    ...truffleImports,
+    contractConfigs,
+    deployFunction,
+    maxAmount: getOptionalEnvVar("MAX_AMOUNT", maxAmount),
+    unitPrice: toBN(toWei("100", "finney")),
+    nbUnits: toBN("100000"),
+    maxUnits: getOptionalEnvVar("MAX_UNITS", maxUnits),
+    tokenAddr: ETH_TOKEN,
+    erc20TokenName: getEnvVar("ERC20_TOKEN_NAME"),
+    erc20TokenSymbol: getEnvVar("ERC20_TOKEN_SYMBOL"),
+    erc20TokenDecimals: getEnvVar("ERC20_TOKEN_DECIMALS"),
+    erc20TokenAddress: UNITS,
+    maxChunks: getOptionalEnvVar("MAX_CHUNKS", maximumChunks),
+    votingPeriod: getOptionalEnvVar("VOTING_PERIOD_SECONDS", 600), // 600 secs = 10 min
+    gracePeriod: getOptionalEnvVar("GRACE_PERIOD_SECONDS", 600), // 600 secs = 10 min
+    offchainVoting: true,
+    finalize: false,
+    maxExternalTokens: 100,
+    couponCreatorAddress: getOptionalEnvVar(
+      "COUPON_CREATOR_ADDR",
+      getEnvVar("DAO_OWNER_ADDR")
+    ),
+    kycSignerAddress: getOptionalEnvVar(
+      "KYC_SIGNER_ADDR",
+      getEnvVar("DAO_OWNER_ADDR")
+    ),
+    kycMaxMembers: getOptionalEnvVar("KYC_MAX_MEMBERS", toBN(1000)),
+    kycFundTargetAddress: getOptionalEnvVar(
+      "KYC_MULTISIG_FUND_ADDR",
+      ZERO_ADDRESS
+    ),
+    daoName: getEnvVar("DAO_NAME"),
+    owner: getEnvVar("DAO_OWNER_ADDR"),
+    offchainAdmin: getOptionalEnvVar(
+      "OFFCHAIN_ADMIN_ADDR",
+      getEnvVar("DAO_OWNER_ADDR")
+    ),
+    deployTestTokens: true,
+    supplyTestToken1: 1000000,
+    supplyTestToken2: 1000000,
+    supplyPixelNFT: 100,
+    supplyOLToken: toBN("1000000000000000000000000"),
+    erc1155TestTokenUri: "1155 test token",
+    gasPriceLimit: getOptionalEnvVar("GAS_PRICE_LIMIT", 0 /* disabled */),
+    spendLimitPeriod: getOptionalEnvVar("SPEND_LIMIT_PERIOD", 0 /* disabled */),
+    spendLimitEth: getOptionalEnvVar("SPEND_LIMIT_ETH", 0 /* disabled */),
+    gelato: getOptionalEnvVar("GELATO_ADDR", ZERO_ADDRESS),
+    weth: weth.address,
     maintainerTokenAddress: getOptionalEnvVar("MAINTAINER_TOKEN_ADDR", UNITS),
   });
 };
 
 const deploy = async (opts) => {
-  let res;
-  switch (opts.network) {
-    case "mainnet":
-      res = await deployMainnetDao(opts);
-      break;
-    // Chain ID is retrieved automatically and ETH_NODE_URL specifies RPC endpoint,
-    // so Goerli and Rinkeby should be treated the same
-    case "goerli":
-    case "rinkeby":
-      res = await deployRinkebyDao(opts);
-      break;
-    case "test":
-    case "coverage":
-      res = await deployTestDao(opts);
-      break;
-    case "ganache":
-      res = await deployGanacheDao(opts);
-      break;
-    case "harmony":
-      res = await deployHarmonyDao(opts);
-      break;
-    case "harmonytest":
-      res = await deployHarmonyTestDao(opts);
-      break;
-    default:
-      throw new Error(`Unsupported operation ${opts.network}`);
+  const action = DeploymentActions[opts.network];
+  if (action) {
+    return action(opts);
   }
-  return res;
+  throw new Error(`Unsupported operation ${opts.network}`);
 };
 
 const getOrCreateDaoArtifacts = async (deployer, truffleImports) => {
@@ -460,4 +544,19 @@ const saveDeployedContracts = (network, addresses) => {
   fs.writeFileSync(`${file}`, JSON.stringify(addresses), "utf8");
   log("************************************************");
   log(`\nDeployed contracts: ${file}\n`);
+};
+
+const DeploymentActions = {
+  mainnet: deployMainnetDao,
+  ganache: deployGanacheDao,
+  harmony: deployHarmonyDao,
+  harmonytest: deployHarmonyTestDao,
+  polygon: deployPolygonDao,
+  polygontest: deployPolygonTestDao,
+  // Goerli and Rinkeby should be treated the same
+  goerli: deployRinkebyDao,
+  rinkeby: deployRinkebyDao,
+  // Test and Coverage should be treated the same
+  test: deployTestDao,
+  coverage: deployTestDao,
 };

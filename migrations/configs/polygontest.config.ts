@@ -3,7 +3,7 @@ import {
   ContractConfig,
 } from "./contracts.config";
 
-const disabled: Array<String> = [
+const disabled: Array<string> = [
   // Utility & Test Contracts disabled by default
   "OLToken",
   "TestToken1",
