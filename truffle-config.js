@@ -1,4 +1,5 @@
 /**
+import default from './website/.docusaurus/registry';
  *
  * More information about configuration can be found at:
  *
@@ -16,8 +17,8 @@ require("ts-node").register({
   files: true,
 });
 
-const getNetworkProvider = () => {
-  let HDWalletProvider = require("@truffle/hdwallet-provider");
+const getHDWalletProvider = () => {
+  const HDWalletProvider = require("@truffle/hdwallet-provider");
 
   if (!process.env.TRUFFLE_MNEMONIC)
     throw Error("Missing environment variable: TRUFFLE_MNEMONIC");
@@ -31,6 +32,37 @@ const getNetworkProvider = () => {
     },
     providerOrUrl: process.env.ETH_NODE_URL,
   });
+};
+
+const getOZDefenderProvider = () => {
+  const { DefenderRelayProvider } = require("defender-relay-client/lib/web3");
+
+  if (!process.env.DEFENDER_API_KEY)
+    throw Error("Missing environment variable: DEFENDER_API_KEY");
+
+  if (!process.env.DEFENDER_API_SECRET)
+    throw Error("Missing environment variable: DEFENDER_API_SECRET");
+
+  const provider = new DefenderRelayProvider(
+    {
+      apiKey: process.env.DEFENDER_API_KEY,
+      apiSecret: process.env.DEFENDER_API_SECRET,
+    },
+    {
+      speed: "fast",
+    }
+  );
+
+  return provider;
+};
+
+const getNetworkProvider = () => {
+  switch (process.env.RELAYER) {
+    case "defender":
+      return getOZDefenderProvider();
+    default:
+      return getHDWalletProvider();
+  }
 };
 
 module.exports = {
@@ -49,6 +81,7 @@ module.exports = {
       provider: getNetworkProvider,
       network_id: 4,
       skipDryRun: true,
+      networkCheckTimeout: 10000,
     },
     mainnet: {
       provider: getNetworkProvider,

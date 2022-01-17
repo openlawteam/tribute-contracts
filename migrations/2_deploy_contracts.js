@@ -44,6 +44,7 @@ module.exports = async (deployer, network, accounts) => {
 
   const { dao, factories, extensions, adapters, testContracts, utilContracts } =
     result;
+
   if (dao) {
     if (network === "ganache") await dao.finalizeDao();
     else await dao.finalizeDao({ from: daoOwnerAddr });
