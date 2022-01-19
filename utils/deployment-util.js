@@ -100,7 +100,7 @@ const createFactories = async ({ options }) => {
         .deployFunction(factoryContract, extensionContract)
         .then((factory) => (factories[factory.configs.alias] = factory))
         .catch((err) => {
-          error(`Failed factory deployment [${config.name}].`, err);
+          error(`Failed factory deployment [${config.name}]. `, err);
           throw err;
         });
     });
@@ -158,7 +158,7 @@ const createExtensions = async ({ dao, factories, options }) => {
       );
 
     const newExtension = embedConfigs(
-      await extensionContract.at(extensionAddress),
+      await options.attachFunction(extensionContract, extensionAddress),
       extensionContract.contractName,
       options.contractConfigs
     );
@@ -189,7 +189,7 @@ const createExtensions = async ({ dao, factories, options }) => {
         )
         .then((ext) => (extensions[ext.configs.alias] = ext))
         .catch((err) => {
-          error(`Failed extension deployment ${factory.configs.name}`, err);
+          error(`Failed extension deployment ${factory.configs.name}. `, err);
           throw err;
         }),
     Promise.resolve()
@@ -212,17 +212,16 @@ const createAdapters = async ({ options }) => {
     .filter((config) => !config.skipAutoDeploy);
 
   log("deploying or re-using ", adapterList.length, " adapters...");
-  await Promise.all(
-    adapterList.map((config) =>
-      deployContract({ config, options })
-        .then((adapter) => {
-          adapters[adapter.configs.alias] = adapter;
-        })
-        .catch((e) => {
-          error(`Error while creating adapter ${config.name}.`, e);
-          throw e;
-        })
-    )
+  await adapterList.reduce(
+    (p, config) =>
+      p
+        .then(() => deployContract({ config, options }))
+        .then((adapter) => (adapters[adapter.configs.alias] = adapter))
+        .catch((err) => {
+          error(`Error while creating adapter ${config.name}. `, err);
+          throw err;
+        }),
+    Promise.resolve()
   );
 
   return adapters;
@@ -238,22 +237,24 @@ const createAdapters = async ({ options }) => {
 const createUtilContracts = async ({ options }) => {
   const utilContracts = {};
 
-  await Promise.all(
-    Object.values(options.contractConfigs)
-      .filter((config) => config.type === ContractType.Util)
-      .filter((config) => config.enabled)
-      .filter((config) => !config.skipAutoDeploy)
-      .map((config) =>
-        deployContract({ config, options })
-          .then((utilContract) => {
-            utilContracts[utilContract.configs.alias] = utilContract;
-          })
-          .catch((e) => {
-            error(`Error while creating util contract ${config.name}`, e);
-            throw e;
-          })
-      )
-  );
+  await Object.values(options.contractConfigs)
+    .filter((config) => config.type === ContractType.Util)
+    .filter((config) => config.enabled)
+    .filter((config) => !config.skipAutoDeploy)
+    .reduce(
+      (p, config) =>
+        p
+          .then(() => deployContract({ config, options }))
+          .then(
+            (utilContract) =>
+              (utilContracts[utilContract.configs.alias] = utilContract)
+          )
+          .catch((err) => {
+            error(`Error while creating util contract ${config.name}. `, err);
+            throw err;
+          }),
+      Promise.resolve()
+    );
   return utilContracts;
 };
 
@@ -269,22 +270,24 @@ const createTestContracts = async ({ options }) => {
 
   if (!options.deployTestTokens) return testContracts;
 
-  await Promise.all(
-    Object.values(options.contractConfigs)
-      .filter((config) => config.type === ContractType.Test)
-      .filter((config) => config.enabled)
-      .filter((config) => !config.skipAutoDeploy)
-      .map((config) =>
-        deployContract({ config, options })
-          .then((testContract) => {
-            testContracts[testContract.configs.alias] = testContract;
-          })
-          .catch((e) => {
-            error(`Error while creating test contract ${config.name}`, e);
-            throw e;
-          })
-      )
-  );
+  await Object.values(options.contractConfigs)
+    .filter((config) => config.type === ContractType.Test)
+    .filter((config) => config.enabled)
+    .filter((config) => !config.skipAutoDeploy)
+    .reduce(
+      (p, config) =>
+        p
+          .then(() => deployContract({ config, options }))
+          .then(
+            (testContract) =>
+              (testContracts[testContract.configs.alias] = testContract)
+          )
+          .catch((err) => {
+            error(`Error while creating test contract ${config.name}. `, err);
+            throw err;
+          }),
+      Promise.resolve()
+    );
   return testContracts;
 };
 
@@ -301,13 +304,13 @@ const createGovernanceRoles = async ({ options, dao, adapters }) => {
     return configValue;
   };
 
-  await Promise.all(
-    Object.values(options.contractConfigs)
-      .filter((c) => c.enabled)
-      .filter((c) => c.governanceRoles)
-      .map((c) => {
-        const roles = Object.keys(c.governanceRoles);
-        return roles.reduce(
+  await Object.values(options.contractConfigs)
+    .filter((c) => c.enabled)
+    .filter((c) => c.governanceRoles)
+    .reduce((p, c) => {
+      const roles = Object.keys(c.governanceRoles);
+      return p.then(() =>
+        roles.reduce(
           (q, role) =>
             q.then(async () => {
               const adapter = Object.values(adapters).find(
@@ -322,12 +325,14 @@ const createGovernanceRoles = async ({ options, dao, adapters }) => {
               const configValue = utils.getAddress(
                 readConfigValue(c.governanceRoles[role], c.name)
               );
-              return await dao.setAddressConfiguration(configKey, configValue);
+              return await dao.setAddressConfiguration(configKey, configValue, {
+                from: options.owner,
+              });
             }),
           Promise.resolve()
-        );
-      })
-  );
+        )
+      );
+    }, Promise.resolve());
 
   if (options.defaultMemberGovernanceToken) {
     const configKey = sha3(web3.utils.encodePacked("governance.role.default"));
@@ -735,54 +740,10 @@ const configureOffchainVoting = async ({
   return votingHelpers;
 };
 
-const networks = [
-  {
-    name: "ganache",
-    chainId: 1337,
-  },
-  {
-    name: "rinkeby",
-    chainId: 4,
-  },
-  {
-    name: "rinkeby-fork",
-    chainId: 4,
-  },
-  {
-    name: "goerli",
-    chainId: 5,
-  },
-  {
-    name: "test",
-    chainId: 1,
-  },
-  {
-    name: "coverage",
-    chainId: 1,
-  },
-  {
-    name: "mainnet",
-    chainId: 1,
-  },
-  {
-    name: "harmony",
-    chainId: 1666600000,
-  },
-  {
-    name: "harmonytest",
-    chainId: 1666700000,
-  },
-];
-
-const getNetworkDetails = (name) => {
-  return networks.find((n) => n.name === name);
-};
-
 module.exports = {
   createFactories,
   createExtensions,
   createAdapters,
   deployDao,
   cloneDao,
-  getNetworkDetails,
 };

@@ -10,6 +10,7 @@ require("./tasks/deploy");
 module.exports = {
   // Supported Networks
   networks: {
+    // Test Networks
     ganache: {
       url: "http://127.0.0.1:7545",
       network_id: "1337",
@@ -18,6 +19,8 @@ module.exports = {
       url: process.env.ETH_NODE_URL,
       network_id: 5,
       skipDryRun: true,
+      gas: 2100000,
+      gasPrice: 4000000000,
       accounts: {
         mnemonic: process.env.WALLET_MNEMONIC,
       },
@@ -26,18 +29,49 @@ module.exports = {
       url: process.env.ETH_NODE_URL,
       network_id: 4,
       skipDryRun: true,
-      networkCheckTimeout: 10000,
-      deploymentPollingInterval: 10000,
+      gas: 2100000,
+      gasPrice: 4000000000,
       accounts: {
         mnemonic: process.env.WALLET_MNEMONIC,
       },
     },
     ropsten: {
       url: process.env.ETH_NODE_URL,
+      network_id: 3,
+      gas: 2100000,
+      gasPrice: 4000000000,
       accounts: {
         mnemonic: process.env.WALLET_MNEMONIC,
       },
     },
+    harmonytest: {
+      url: process.env.ETH_NODE_URL,
+      network_id: 1666700000,
+      skipDryRun: true,
+      gas: 2100000,
+      gasPrice: 10000000000,
+      accounts: {
+        mnemonic: process.env.WALLET_MNEMONIC,
+      },
+    },
+    polygontest: {
+      url: process.env.ETH_NODE_URL,
+      network_id: 80001,
+      skipDryRun: true,
+      gas: 2100000,
+      gasPrice: 10000000000,
+      accounts: {
+        mnemonic: process.env.WALLET_MNEMONIC,
+      },
+    },
+    coverage: {
+      url: "http://127.0.0.1:8555",
+      network_id: "*",
+      gas: 0xfffffffffff,
+      gasPrice: 10000000000,
+    },
+    
+    // Main Networks
     mainnet: {
       url: process.env.ETH_NODE_URL,
       network_id: 1,
@@ -54,14 +88,6 @@ module.exports = {
         mnemonic: process.env.WALLET_MNEMONIC,
       },
     },
-    harmonytest: {
-      url: process.env.ETH_NODE_URL,
-      network_id: 1666700000,
-      skipDryRun: true,
-      accounts: {
-        mnemonic: process.env.WALLET_MNEMONIC,
-      },
-    },
     polygon: {
       url: process.env.ETH_NODE_URL,
       network_id: 137,
@@ -69,21 +95,6 @@ module.exports = {
       accounts: {
         mnemonic: process.env.WALLET_MNEMONIC,
       },
-    },
-    polygontest: {
-      url: process.env.ETH_NODE_URL,
-      network_id: 80001,
-      skipDryRun: true,
-      gasPrice: 10000000000,
-      accounts: {
-        mnemonic: process.env.WALLET_MNEMONIC,
-      },
-    },
-    coverage: {
-      url: "http://127.0.0.1:8555",
-      network_id: "*",
-      gas: 0xfffffffffff,
-      gasPrice: 0x01,
     },
   },
 
@@ -96,6 +107,14 @@ module.exports = {
         runs: 200,
       },
     },
+  },
+
+  // Project Settings
+  paths: {
+    tests: "./test",
+    sources: "./contracts",
+    cache: "./build/cache",
+    artifacts: "./build/artifacts",
   },
 
   // Smart Contract Verification APIs

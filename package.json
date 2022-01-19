@@ -64,7 +64,7 @@
     "web3": "^1.5.2"
   },
   "scripts": {
-    "compile": "hardhat compile && scripts/prepack.sh",
+    "compile": "hardhat compile",
     "compile-abi": "truffle compile && truffle-abi",
     "coverage": "DISABLE_SOLC_OPTIMIZER=true ts-node scripts/coverage.ts",
     "hdeploy:ganache": "hardhat deploy --network ganache",
