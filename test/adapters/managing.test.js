@@ -296,6 +296,7 @@ describe("Adapter - Managing", () => {
     const daoRegistryAdapterAddress = await dao.getAdapterAddress(
       sha3("daoRegistry")
     );
+
     const daoRegistryAdapter = await DaoRegistryAdapterContract.at(
       daoRegistryAdapterAddress
     );
@@ -311,10 +312,18 @@ describe("Adapter - Managing", () => {
       gasPrice: toBN("0"),
     });
 
-    // The same member attempts to vote again
     await expectRevert(
       voting.submitVote(dao.address, proposalId, 1, {
         from: daoOwner,
+        gasPrice: toBN("0"),
+      }),
+      "onlyMember"
+    );
+
+    // The same member attempts to vote again
+    await expectRevert(
+      voting.submitVote(dao.address, proposalId, 1, {
+        from: delegateKey,
         gasPrice: toBN("0"),
       }),
       "member has already voted"

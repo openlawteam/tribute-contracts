@@ -558,7 +558,7 @@ contract DaoRegistry is MemberGuard, AdapterGuard {
 
         require(
             proposal.adapterAddress == msg.sender,
-            "only the adapter that submitted the proposal can set its flag"
+            "invalid adapter try to set flag"
         );
 
         require(!DaoHelper.getFlag(flags, uint8(flag)), "flag already set");
@@ -720,10 +720,7 @@ contract DaoRegistry is MemberGuard, AdapterGuard {
         view
         returns (address)
     {
-        require(
-            blockNumber < block.number,
-            "Uni::getPriorDelegateKey: not yet determined"
-        );
+        require(blockNumber < block.number, "Uni::getPriorDelegateKey: NYD");
 
         uint32 nCheckpoints = numCheckpoints[memberAddr];
         if (nCheckpoints == 0) {

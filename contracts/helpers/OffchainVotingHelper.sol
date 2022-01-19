@@ -166,12 +166,14 @@ contract OffchainVotingHelperContract {
 
         // If the weight is 0, the member has no permission to vote
         if (
+            node.choice != 0 &&
             GovernanceHelper.getVotingWeight(
                 dao,
                 memberAddr, // always check the weight of the member, not the delegate
                 node.proposalId,
                 blockNumber
-            ) == 0
+            ) ==
+            0
         ) {
             return BadNodeError.VOTE_NOT_ALLOWED;
         }

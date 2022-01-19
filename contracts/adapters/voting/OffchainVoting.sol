@@ -61,13 +61,14 @@ contract OffchainVotingContract is
         bytes32 resultRoot;
         uint256 nbYes;
         uint256 nbNo;
-        uint256 startingTime;
-        uint256 gracePeriodStartingTime;
+        uint64 startingTime;
+        uint64 gracePeriodStartingTime;
         bool isChallenged;
-        uint256 stepRequested;
         bool forceFailed;
-        mapping(address => bool) fallbackVotes;
+        uint256 nbMembers;
+        uint256 stepRequested;
         uint256 fallbackVotesCount;
+        mapping(address => bool) fallbackVotes;
     }
 
     struct VotingDetails {
@@ -368,13 +369,14 @@ contract OffchainVotingContract is
             // check whether the new result changes the outcome
             vote.nbNo > vote.nbYes != result.nbNo > result.nbYes
         ) {
-            vote.gracePeriodStartingTime = block.timestamp;
+            vote.gracePeriodStartingTime = uint64(block.timestamp);
         }
         vote.nbNo = result.nbNo;
         vote.nbYes = result.nbYes;
         vote.resultRoot = resultRoot;
         vote.reporter = memberAddr;
         vote.isChallenged = false;
+        vote.nbMembers = membersCount;
 
         emit VoteResultSubmitted(
             address(dao),
@@ -395,6 +397,7 @@ contract OffchainVotingContract is
         address memberAddr = dao.getAddressIfDelegated(msg.sender);
         require(isActiveMember(dao, memberAddr), "not active member");
         Voting storage vote = votes[address(dao)][proposalId];
+        require(index < vote.nbMembers, "index out of bound");
         uint256 currentFlag = retrievedStepsFlags[vote.resultRoot][index / 256];
         require(
             DaoHelper.getFlag(currentFlag, index % 256) == false,
@@ -413,7 +416,7 @@ contract OffchainVotingContract is
             "should be grace period"
         );
         vote.stepRequested = index;
-        vote.gracePeriodStartingTime = block.timestamp;
+        vote.gracePeriodStartingTime = uint64(block.timestamp);
     }
 
     /*
@@ -451,7 +454,7 @@ contract OffchainVotingContract is
         _verifyNode(dao, adapterAddress, node, vote.resultRoot);
 
         vote.stepRequested = 0;
-        vote.gracePeriodStartingTime = block.timestamp;
+        vote.gracePeriodStartingTime = uint64(block.timestamp);
     }
 
     // slither-disable-next-line reentrancy-benign
@@ -471,7 +474,7 @@ contract OffchainVotingContract is
         require(blockNumber <= block.number, "snapshot block in future");
         require(blockNumber > 0, "block number cannot be 0");
 
-        votes[address(dao)][proposalId].startingTime = block.timestamp;
+        votes[address(dao)][proposalId].startingTime = uint64(block.timestamp);
         votes[address(dao)][proposalId].snapshot = blockNumber;
 
         require(
