@@ -32,9 +32,11 @@ const { ContractType } = require("../migrations/configs/contracts.config");
 const { utils } = require("ethers");
 const { web3 } = require("@openzeppelin/test-environment");
 const isDebug = process.env.DEBUG === "true";
+
 const log = (...data) => {
   if (isDebug) console.log(data.join(""));
 };
+
 const error = (...data) => {
   console.error(data.join(""));
 };
@@ -76,8 +78,8 @@ const createFactories = async ({ options }) => {
     .filter((config) => !config.skipAutoDeploy);
 
   log("deploying or reusing ", factoryList.length, " factories...");
-  await Promise.all(
-    factoryList.map((config) => {
+  await factoryList.reduce((p, config) => {
+    return p.then((_) => {
       const factoryContract = options[config.name];
       if (!factoryContract)
         throw new Error(`Missing factory contract ${config.name}`);
@@ -95,14 +97,14 @@ const createFactories = async ({ options }) => {
         throw new Error(`Missing extension contract ${extensionConfig.name}`);
 
       return options
-        .deployFunction(factoryContract, [extensionContract])
-        .catch((e) => {
-          error(`Failed factory deployment [${config.name}].`, e);
-          throw e;
-        })
-        .then((factory) => (factories[factory.configs.alias] = factory));
-    })
-  );
+        .deployFunction(factoryContract, extensionContract)
+        .then((factory) => (factories[factory.configs.alias] = factory))
+        .catch((err) => {
+          error(`Failed factory deployment [${config.name}].`, err);
+          throw err;
+        });
+    });
+  }, Promise.resolve());
 
   return factories;
 };
@@ -175,21 +177,22 @@ const createExtensions = async ({ dao, factories, options }) => {
     return newExtension;
   };
 
-  await Promise.all(
-    Object.values(factories).map((factory) =>
-      createExtension({
-        dao,
-        factory,
-        options,
-      })
-        .then((extension) => {
-          extensions[extension.configs.alias] = extension;
-        })
-        .catch((e) => {
-          error(`Failed extension deployment ${factory.configs.name}`, e);
-          throw e;
-        })
-    )
+  await Object.values(factories).reduce(
+    (p, factory) =>
+      p
+        .then(() =>
+          createExtension({
+            dao,
+            factory,
+            options,
+          })
+        )
+        .then((ext) => (extensions[ext.configs.alias] = ext))
+        .catch((err) => {
+          error(`Failed extension deployment ${factory.configs.name}`, err);
+          throw err;
+        }),
+    Promise.resolve()
   );
   return extensions;
 };
@@ -445,16 +448,15 @@ const cloneDao = async ({
   owner,
   creator,
   deployFunction,
+  attachFunction,
   DaoRegistry,
   DaoFactory,
   name,
 }) => {
-  const daoFactory = await deployFunction(DaoFactory, [DaoRegistry], owner);
-
+  const daoFactory = await deployFunction(DaoFactory, DaoRegistry);
   await daoFactory.createDao(name, creator ? creator : owner);
-
   const daoAddress = await daoFactory.getDaoAddress(name);
-  const daoInstance = await DaoRegistry.at(daoAddress);
+  const daoInstance = await attachFunction(DaoRegistry, daoAddress);
   return { dao: daoInstance, daoFactory, daoName: name };
 };
 

@@ -3,19 +3,15 @@
 
 /**
 MIT License
-
 Copyright (c) 2021 Openlaw
-
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
 in the Software without restriction, including without limitation the rights
 to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
 copies of the Software, and to permit persons to whom the Software is
 furnished to do so, subject to the following conditions:
-
 The above copyright notice and this permission notice shall be included in all
 copies or substantial portions of the Software.
-
 THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
 IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
 FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
@@ -26,45 +22,52 @@ SOFTWARE.
  */
 
 const { sha3, toHex, ZERO_ADDRESS } = require("./contract-util");
-const { checkpoint, restore } = require("../utils/checkpoint-utils");
+const { checkpoint, restore } = require("./checkpoint-utils");
 const { ContractType } = require("../migrations/configs/contracts.config");
+const hre = require("hardhat");
 
-const getContractFromTruffle = (c) => {
-  return artifacts.require(c);
+const attach = async (contractInterface, address) => {
+  const factory = await hre.ethers.getContractFactory(
+    contractInterface.contractName
+  );
+  return factory.attach(address);
 };
 
-const getConfigsWithFactories = (configs) => {
-  return configs
-    .filter((c) => c.enabled)
-    .map((c) => {
-      c.interface = getContractFromTruffle(c.path);
-      return c;
-    });
-};
-
-const deployFunction = (deployer, daoArtifacts, allConfigs) => {
-  const deploy = async (contractInterface, args, contractConfig) => {
-    const restored = await restore(contractInterface, contractConfig);
-    if (restored)
-      return {
-        ...restored,
-        configs: contractConfig,
-      };
-
+const deployFunction = async (deployer, daoArtifacts, allConfigs) => {
+  const deploy = async (contractFactory, args, contractConfig) => {
+    let instance;
     if (args) {
-      await deployer.deploy(contractInterface, ...args);
+      instance = await contractFactory.deploy(...args);
     } else {
-      await deployer.deploy(contractInterface);
+      instance = await contractFactory.deploy();
     }
-    const instance = await contractInterface.deployed();
-    const contract = {
-      ...instance,
+
+    const contract = await instance.deployed();
+    // await contract.deployTransaction.wait();
+    console.log(
+      `Contract deployed: ${contractConfig.name}@${contract.address}`
+    );
+    //     Deploying 'ProxTokenContract'
+    //    -----------------------------
+    //    > transaction hash:    0xca3ecb072f46960b520b17c797c5fd83f38ae6637c720bbaa4471f5d46e5550d
+    // - Blocks: 0            Seconds: 0
+    //    > Blocks: 1            Seconds: 12
+    //    > contract address:    0xfA9324b96db2f685FAB616eb4547Be00091B8D4e
+    //    > block number:        9975523
+    //    > block timestamp:     1641945671
+    //    > account:             0xEd7B3f2902f2E1B17B027bD0c125B674d293bDA0
+    //    > balance:             4.96689377772692208
+    //    > gas used:            830997 (0xcae15)
+    //    > gas price:           2.500000015 gwei
+    //    > value sent:          0 ETH
+    //    > total cost:          0.002077492512464955 ETH
+    return {
+      ...contract,
       configs: contractConfig,
     };
-    return checkpoint(contract);
   };
 
-  const loadOrDeploy = async (contractInterface, args) => {
+  const loadOrDeploy = async (contractInterface, ...args) => {
     if (!contractInterface) return null; //throw Error("Invalid contract interface");
 
     const contractConfig = allConfigs.find(
@@ -75,13 +78,17 @@ const deployFunction = (deployer, daoArtifacts, allConfigs) => {
         `${contractInterface.contractName} contract not found in migrations/configs/contracts.config`
       );
 
+    const contractFactory = await hre.ethers.getContractFactory(
+      contractInterface.contractName
+    );
+
     if (
       // Always deploy core, extension and test contracts
       contractConfig.type === ContractType.Core ||
       contractConfig.type === ContractType.Extension ||
       contractConfig.type === ContractType.Test
     ) {
-      return await deploy(contractInterface, args, contractConfig);
+      return await deploy(contractFactory, args, contractConfig);
     }
 
     const artifactsOwner = process.env.DAO_ARTIFACTS_OWNER_ADDR
@@ -89,12 +96,13 @@ const deployFunction = (deployer, daoArtifacts, allConfigs) => {
       : process.env.DAO_OWNER_ADDR;
 
     // Attempt to load the contract from the DaoArtifacts to save deploy gas
-    const address = await daoArtifacts.getArtifactAddress(
-      sha3(contractConfig.name),
-      artifactsOwner,
-      toHex(contractConfig.version),
-      contractConfig.type
-    );
+    const address = null;
+    // await daoArtifacts.getArtifactAddress(
+    //   sha3(contractConfig.name),
+    //   artifactsOwner,
+    //   toHex(contractConfig.version),
+    //   contractConfig.type
+    // );
     if (address && address !== ZERO_ADDRESS) {
       console.log(
         `Attached to existing contract ${contractConfig.name}: ${address}`
@@ -105,14 +113,28 @@ const deployFunction = (deployer, daoArtifacts, allConfigs) => {
     let deployedContract;
     // When the contract is not found in the DaoArtifacts, deploy a new one
     if (contractConfig.type === ContractType.Factory) {
-      const identity = await deploy(args[0], null, args[0].configs);
+      // first create a new identity contract
+      const identityInterface = args[0];
+      const identityConfig = allConfigs.find(
+        (c) => c.name === identityInterface.contractName
+      );
+      const identityFactory = await hre.ethers.getContractFactory(
+        identityInterface.contractName
+      );
+      const identityInstance = await deploy(
+        identityFactory,
+        null,
+        identityConfig
+      );
+
+      // deploy the factory with the new identity address, so it can be used later for cloning
       deployedContract = await deploy(
-        contractInterface,
-        [identity.address],
+        contractFactory,
+        [identityInstance.address],
         contractConfig
       );
     } else {
-      deployedContract = await deploy(contractInterface, args, contractConfig);
+      deployedContract = await deploy(contractFactory, args, contractConfig);
     }
 
     if (
@@ -121,12 +143,12 @@ const deployFunction = (deployer, daoArtifacts, allConfigs) => {
       contractConfig.type === ContractType.Adapter ||
       contractConfig.type === ContractType.Util
     ) {
-      await daoArtifacts.addArtifact(
-        sha3(contractConfig.name),
-        toHex(contractConfig.version),
-        deployedContract.address,
-        contractConfig.type
-      );
+      // await daoArtifacts.addArtifact(
+      //   sha3(contractConfig.name),
+      //   toHex(contractConfig.version),
+      //   deployedContract.address,
+      //   contractConfig.type
+      // );
       console.log(
         `${contractConfig.name}:${contractConfig.type}:${contractConfig.version}:${deployedContract.address} added to DaoArtifacts`
       );
@@ -138,6 +160,20 @@ const deployFunction = (deployer, daoArtifacts, allConfigs) => {
   return loadOrDeploy;
 };
 
+const getContractFromHardhat = (c) => {
+  const artifact = hre.artifacts.readArtifactSync(c);
+  return artifact;
+};
+
+const getConfigsWithFactories = (configs) => {
+  return configs
+    .filter((c) => c.enabled)
+    .map((c) => {
+      c.interface = getContractFromHardhat(c.name);
+      return c;
+    });
+};
+
 module.exports = (configs) => {
   const allConfigs = getConfigsWithFactories(configs);
   const interfaces = allConfigs.reduce((previousValue, contract) => {
@@ -147,9 +183,11 @@ module.exports = (configs) => {
 
   return {
     ...interfaces,
+    attach,
     deployFunctionFactory: (deployer, daoArtifacts) => {
-      if (!deployer || !daoArtifacts)
-        throw Error("Missing deployer or DaoArtifacts contract");
+      // if (!deployer || !daoArtifacts)
+      // throw Error("Missing deployer or DaoArtifacts contract");
+      if (!deployer) throw Error("Missing deployer or DaoArtifacts contract");
       return deployFunction(deployer, daoArtifacts, allConfigs);
     },
   };

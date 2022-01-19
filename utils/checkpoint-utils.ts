@@ -52,12 +52,12 @@ export const checkpoint = (contract: any) => {
 
 export const restore = async (
   contractInterface: any,
-  contractConfigs: typeof ContractConfig
+  contractConfig: typeof ContractConfig
 ) => {
   const checkpoints = load();
-  const checkpoint = checkpoints[contractConfigs.name];
+  const checkpoint = checkpoints[contractConfig.name];
   if (checkpoint) {
-    log(`Restored: ${contractConfigs.name}:${checkpoint.address}`);
+    log(`Restored: ${contractConfig.name}:${checkpoint.address}`);
     return await contractInterface.at(checkpoint.address);
   }
   return null;
