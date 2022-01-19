@@ -376,7 +376,7 @@ contract OffchainVotingContract is
         vote.resultRoot = resultRoot;
         vote.reporter = memberAddr;
         vote.isChallenged = false;
-        vote.nbMembers = dao.getNbMembers();
+        vote.nbMembers = membersCount;
 
         emit VoteResultSubmitted(
             address(dao),
