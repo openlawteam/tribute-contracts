@@ -63,11 +63,11 @@ contract OffchainVotingContract is
         uint256 nbNo;
         uint64 startingTime;
         uint64 gracePeriodStartingTime;
-        uint64 fallbackVotesCount;
         bool isChallenged;
         bool forceFailed;
         uint256 nbMembers;
         uint256 stepRequested;
+        uint256 fallbackVotesCount;
         mapping(address => bool) fallbackVotes;
     }
 
