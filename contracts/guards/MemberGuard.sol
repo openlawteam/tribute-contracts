@@ -47,6 +47,16 @@ abstract contract MemberGuard {
         require(isActiveMember(dao, _addr), "onlyMember");
     }
 
+    function isDelegatedMemberAddr(DaoRegistry dao, address _addr)
+        public
+        view
+        returns (bool)
+    {
+        address delegateKey = dao.getCurrentDelegateKey(_addr);
+
+        return !dao.isMember(_addr) && dao.isMember(delegateKey);
+    }
+
     function isActiveMember(DaoRegistry dao, address _addr)
         public
         view

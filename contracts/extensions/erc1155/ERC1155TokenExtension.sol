@@ -197,18 +197,18 @@ contract ERC1155TokenExtension is MemberGuard, IExtension, IERC1155Receiver {
     ) external hasExtensionAccess(this, AclFlag.INTERNAL_TRANSFER) {
         require(
             isActiveMember(dao, fromOwner),
-            "erc1155Ext::fromOwner is not a member"
+            "erc1155Ext::fromOwner not member"
         );
         require(
             isActiveMember(dao, toOwner),
-            "erc1155Ext::toOwner is not a member"
+            "erc1155Ext::toOwner not member"
         );
 
         // Checks if there token amount is valid and has enough funds
         uint256 tokenAmount = _getTokenAmount(fromOwner, nftAddr, nftTokenId);
         require(
             amount > 0 && tokenAmount >= amount,
-            "erc1155Ext::insufficient funds or invalid amount"
+            "erc1155Ext::invalid amount"
         );
 
         // Checks if the extension holds the NFT
