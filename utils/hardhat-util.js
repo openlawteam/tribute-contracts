@@ -34,10 +34,15 @@ const attach = async (contractInterface, address) => {
 };
 
 const deployFunction = async (deployer, daoArtifacts, allConfigs) => {
-  const deploy = async (contractFactory, args, contractConfig) => {
+  const deploy = async (contractFactory, contractConfig, args) => {
     let instance;
-    if (args) {
-      instance = await contractFactory.deploy(...args);
+    if (args && args.length > 0) {
+      console.log({
+        contract: contractConfig.name,
+        args: args,
+      });
+      console.log(args);
+      instance = await contractFactory.deploy(...args.flat());
     } else {
       instance = await contractFactory.deploy();
     }
@@ -88,7 +93,7 @@ const deployFunction = async (deployer, daoArtifacts, allConfigs) => {
       contractConfig.type === ContractType.Extension ||
       contractConfig.type === ContractType.Test
     ) {
-      return await deploy(contractFactory, args, contractConfig);
+      return await deploy(contractFactory, contractConfig, args);
     }
 
     const artifactsOwner = process.env.DAO_ARTIFACTS_OWNER_ADDR
@@ -114,27 +119,21 @@ const deployFunction = async (deployer, daoArtifacts, allConfigs) => {
     // When the contract is not found in the DaoArtifacts, deploy a new one
     if (contractConfig.type === ContractType.Factory) {
       // first create a new identity contract
-      const identityInterface = args[0];
+      const identityInterface = args.flat()[0];
       const identityConfig = allConfigs.find(
         (c) => c.name === identityInterface.contractName
       );
       const identityFactory = await hre.ethers.getContractFactory(
-        identityInterface.contractName
+        identityConfig.name
       );
-      const identityInstance = await deploy(
-        identityFactory,
-        null,
-        identityConfig
-      );
+      const identityInstance = await deploy(identityFactory, identityConfig);
 
       // deploy the factory with the new identity address, so it can be used later for cloning
-      deployedContract = await deploy(
-        contractFactory,
-        [identityInstance.address],
-        contractConfig
-      );
+      deployedContract = await deploy(contractFactory, contractConfig, [
+        identityInstance.address,
+      ]);
     } else {
-      deployedContract = await deploy(contractFactory, args, contractConfig);
+      deployedContract = await deploy(contractFactory, contractConfig, args);
     }
 
     if (

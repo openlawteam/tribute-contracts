@@ -20,17 +20,20 @@ const { deployConfigs } = require("../deploy-config");
 require("dotenv").config({ path: "../.env" });
 
 task("deploy", "Deploy the list of contracts", async (taskArgs, deployer) => {
-  const daoOwnerAddr = process.env.DAO_OWNER_ADDR;
   const { network } = hre.hardhatArguments;
-
-  log(`DaoOwner: ${daoOwnerAddr}`);
   log(`Deployment started at: ${new Date().toISOString()}`);
   log(`Deploying tribute-contracts@${pkgJson.version} to ${network} network`);
+
+  const daoOwnerAddr = process.env.DAO_OWNER_ADDR;
+  log(`DaoOwner: ${daoOwnerAddr}`);
+  log(`Relayer: ${process.env.RELAYER ? process.env.RELAYER : "none"}`);
 
   const {
     contracts: contractConfigs,
   } = require(`../migrations/configs/${network}.config`);
-  const hardhatImports = await require("../utils/hardhat-util.js")(contractConfigs);
+  const hardhatImports = await require("../utils/hardhat-util.js")(
+    contractConfigs
+  );
   const daoArtifacts = null; //await getOrCreateDaoArtifacts(deployer, truffleImports);
   const deployFunction = await hardhatImports.deployFunctionFactory(
     deployer,
@@ -88,7 +91,7 @@ const deployRinkebyDao = async ({
     deployFunction,
     attachFunction,
     maxAmount: getOptionalEnvVar("MAX_AMOUNT", maxAmount),
-    unitPrice: toBN(toWei("100", "finney")),
+    unitPrice: toWei("0.1"),
     nbUnits: toBN("100000"),
     maxUnits: getOptionalEnvVar("MAX_UNITS", maxUnits),
     tokenAddr: ETH_TOKEN,
@@ -149,7 +152,7 @@ const deployMainnetDao = async ({
     contractConfigs,
     deployFunction,
     maxAmount: getOptionalEnvVar("MAX_AMOUNT", maxAmount),
-    unitPrice: toBN(toWei("100", "finney")),
+    unitPrice: toWei("0.1"),
     nbUnits: toBN("100000"),
     maxUnits: getOptionalEnvVar("MAX_UNITS", maxUnits),
     tokenAddr: ETH_TOKEN,
@@ -199,7 +202,7 @@ const deployGanacheDao = async ({
     contractConfigs,
     deployFunction,
     maxAmount: getOptionalEnvVar("MAX_AMOUNT", maxAmount),
-    unitPrice: toBN(toWei("100", "finney")),
+    unitPrice: toWei("0.1"),
     nbUnits: toBN("100000"),
     maxUnits: getOptionalEnvVar("MAX_UNITS", maxUnits),
     tokenAddr: ETH_TOKEN,
@@ -307,7 +310,7 @@ const deployHarmonyDao = async ({
     contractConfigs,
     deployFunction,
     maxAmount: getOptionalEnvVar("MAX_AMOUNT", maxAmount),
-    unitPrice: toBN(toWei("100", "finney")),
+    unitPrice: toWei("0.1"),
     nbUnits: toBN("100000"),
     maxUnits: getOptionalEnvVar("MAX_UNITS", maxUnits),
     tokenAddr: ETH_TOKEN,
@@ -356,7 +359,7 @@ const deployHarmonyTestDao = async ({
     contractConfigs,
     deployFunction,
     maxAmount: getOptionalEnvVar("MAX_AMOUNT", maxAmount),
-    unitPrice: toBN(toWei("100", "finney")),
+    unitPrice: toWei("0.1"),
     nbUnits: toBN("100000"),
     maxUnits: getOptionalEnvVar("MAX_UNITS", maxUnits),
     tokenAddr: ETH_TOKEN,
@@ -414,7 +417,7 @@ const deployPolygonDao = async ({
     contractConfigs,
     deployFunction,
     maxAmount: getOptionalEnvVar("MAX_AMOUNT", maxAmount),
-    unitPrice: toBN(toWei("100", "finney")),
+    unitPrice: toWei("0.1"),
     nbUnits: toBN("100000"),
     maxUnits: getOptionalEnvVar("MAX_UNITS", maxUnits),
     tokenAddr: ETH_TOKEN,
@@ -462,7 +465,7 @@ const deployPolygonTestDao = async ({
     contractConfigs,
     deployFunction,
     maxAmount: getOptionalEnvVar("MAX_AMOUNT", maxAmount),
-    unitPrice: toBN(toWei("100", "finney")),
+    unitPrice: toWei("0.1"),
     nbUnits: toBN("100000"),
     maxUnits: getOptionalEnvVar("MAX_UNITS", maxUnits),
     tokenAddr: ETH_TOKEN,

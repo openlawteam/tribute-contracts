@@ -25,16 +25,22 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
  */
 const Web3Utils = require("web3-utils");
+const { ethers } = require("ethers");
 const sha3 = Web3Utils.sha3;
 const soliditySha3 = Web3Utils.soliditySha3;
-const toBN = Web3Utils.toBN;
-const toWei = Web3Utils.toWei;
+// const toBN = Web3Utils.toBN;
+// const toWei = Web3Utils.toWei;
 const fromUtf8 = Web3Utils.fromUtf8;
 const hexToBytes = Web3Utils.hexToBytes;
 const toAscii = Web3Utils.toAscii;
 const fromAscii = Web3Utils.fromAscii;
-const toUtf8 = Web3Utils.toUtf8;
-const toHex = Web3Utils.toHex;
+// const toUtf8 = Web3Utils.toUtf8;
+// const toHex = Web3Utils.toHex;
+// const fromAscii = ethers.utils.formatBytes32String;
+const toUtf8 = ethers.utils.toUtf8String;
+const toHex = ethers.utils.hexValue
+const toWei = ethers.utils.parseEther
+const toBN = ethers.BigNumber.from
 
 const GUILD = "0x000000000000000000000000000000000000dead";
 const TOTAL = "0x000000000000000000000000000000000000babe";

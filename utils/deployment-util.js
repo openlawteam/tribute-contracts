@@ -458,7 +458,7 @@ const cloneDao = async ({
   DaoFactory,
   name,
 }) => {
-  const daoFactory = await deployFunction(DaoFactory, DaoRegistry);
+  const daoFactory = await deployFunction(DaoFactory, [DaoRegistry]);
   await daoFactory.createDao(name, creator ? creator : owner);
   const daoAddress = await daoFactory.getDaoAddress(name);
   const daoInstance = await attachFunction(DaoRegistry, daoAddress);
@@ -519,7 +519,7 @@ const configureDao = async ({
         );
         if (!extension || !extension.address)
           throw new Error(
-            `Error while configuring dao parameter [${configName}] for ${contractName}`
+            `Error while configuring dao parameter [${configName}] for ${contractName}. Extension not found.`
           );
         return extension.address;
       }
@@ -527,7 +527,7 @@ const configureDao = async ({
       const configValue = options[configName];
       if (!configValue)
         throw new Error(
-          `Error while configuring dao parameter [${configName}] for ${contractName}`
+          `Error while configuring dao parameter [${configName}] for ${contractName}. Config not found.`
         );
       return configValue;
     };
@@ -538,21 +538,22 @@ const configureDao = async ({
         .filter((a) => !a.configs.skipAutoDeploy)
         .filter((a) => a.configs.daoConfigs && a.configs.daoConfigs.length > 0)
         .map((adapter) => {
-          const contractConfigs = adapter.configs;
-          return contractConfigs.daoConfigs.reduce(
+          const contractConfig = adapter.configs;
+          return contractConfig.daoConfigs.reduce(
             (q, configEntry) =>
               q.then(async () => {
                 const configValues = configEntry.map((configName) =>
-                  readConfigValue(configName, contractConfigs.name)
+                  readConfigValue(configName, contractConfig.name)
                 );
+                console.log({ contract: contractConfig.name, configValues });
                 return await adapter
                   .configureDao(...configValues)
-                  .catch((e) => {
+                  .catch((err) => {
                     error(
-                      `Error while configuring dao with contract ${contractConfigs.name}`,
-                      e
+                      `Error while configuring dao with contract ${contractConfig.name}. `,
+                      err
                     );
-                    throw e;
+                    throw err;
                   });
               }),
             Promise.resolve()
