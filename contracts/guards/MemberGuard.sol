@@ -52,9 +52,12 @@ abstract contract MemberGuard {
         view
         returns (bool)
     {
-        address delegateKey = dao.getCurrentDelegateKey(_addr);
-
-        return !dao.isMember(_addr) && dao.isMember(delegateKey);
+        //if the address points to another member address, then it is using the delegate key
+        if (dao.getAddressIfDelegated(_addr) != _addr) {
+            return false;
+        }
+        //if getAddressIfDelegated(addr) == addr, then we need to check if the address has a delegate key linked to it.
+        return dao.getCurrentDelegateKey(_addr) != _addr;
     }
 
     function isActiveMember(DaoRegistry dao, address _addr)
