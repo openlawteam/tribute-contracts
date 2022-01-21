@@ -124,8 +124,9 @@ const deployRinkebyDao = async (deployFunction, network) => {
     erc20TokenSymbol: getEnvVar("ERC20_TOKEN_SYMBOL"),
     erc20TokenDecimals: getEnvVar("ERC20_TOKEN_DECIMALS"),
     erc20TokenAddress: UNITS,
-    maxChunks: toBN("100000"),
+    maxChunks: getOptionalEnvVar("MAX_CHUNKS", maximumChunks),
     maxUnits: getOptionalEnvVar("MAX_UNITS", maxUnits),
+    maxAmount: getOptionalEnvVar("MAX_AMOUNT", maxAmount),
     maxMembers: getOptionalEnvVar("MAX_MEMBERS", toBN(1000)),
     votingPeriod: getOptionalEnvVar("VOTING_PERIOD_SECONDS", 600), // 600 secs = 10 min
     gracePeriod: getOptionalEnvVar("GRACE_PERIOD_SECONDS", 600), // 600 secs = 10 min
@@ -174,9 +175,9 @@ const deployGanacheDao = async (deployFunction, network, accounts) => {
     erc20TokenName: getEnvVar("ERC20_TOKEN_NAME"),
     erc20TokenSymbol: getEnvVar("ERC20_TOKEN_SYMBOL"),
     erc20TokenDecimals: getEnvVar("ERC20_TOKEN_DECIMALS"),
-    maxChunks: toBN("100000"),
+    maxChunks: getOptionalEnvVar("MAX_CHUNKS", maximumChunks),
     votingPeriod: getOptionalEnvVar("VOTING_PERIOD_SECONDS", 120), // 120 secs = 2 min
-    gracePeriod: getOptionalEnvVar("GRACE_PERIOD_SECONDS", 60), // 600 secs = 1 min
+    gracePeriod: getOptionalEnvVar("GRACE_PERIOD_SECONDS", 60), // 60 secs = 1 min
     offchainVoting: true,
     chainId: getNetworkDetails(network).chainId,
     deployTestTokens: true,

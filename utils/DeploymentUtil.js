@@ -306,7 +306,7 @@ const prepareAdapters = async (opts) => {
   bankAdapter = await deployFunction(BankAdapterContract);
   nftAdapter = await deployFunction(NFTAdapterContract);
   couponOnboarding = await deployFunction(CouponOnboardingContract);
-  kycOnboarding = await deployFunction(KycOnboardingContract, [wethAddress]);
+  kycOnboarding = await deployFunction(KycOnboardingContract, [1, wethAddress]);
   tribute = await deployFunction(TributeContract);
   distribute = await deployFunction(DistributeContract);
   tributeNFT = await deployFunction(TributeNFTContract);

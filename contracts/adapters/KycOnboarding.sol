@@ -63,6 +63,7 @@ contract KycOnboardingContract is
     bytes32 constant FundTargetAddress =
         keccak256("kyc-onboarding.fundTargetAddress");
 
+    uint256 private _chainId;
     WETH private _weth;
     IERC20 private _weth20;
 
@@ -84,7 +85,8 @@ contract KycOnboardingContract is
 
     mapping(DaoRegistry => uint256) public totalUnits;
 
-    constructor(address payable weth) {
+    constructor(uint256 chainId, address payable weth) {
+        _chainId = chainId;
         _weth = WETH(weth);
         _weth20 = IERC20(weth);
     }
@@ -167,7 +169,7 @@ contract KycOnboardingContract is
             abi.encode(COUPON_MESSAGE_TYPEHASH, coupon.kycedMember)
         );
 
-        return hashMessage(dao, block.chainid, address(this), message);
+        return hashMessage(dao, _chainId, address(this), message);
     }
 
     function _checkKycCoupon(
