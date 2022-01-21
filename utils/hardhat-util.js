@@ -33,15 +33,26 @@ const attach = async (contractInterface, address) => {
   return factory.attach(address);
 };
 
-const deployFunction = async (deployer, daoArtifacts, allConfigs) => {
-  const deploy = async (contractFactory, contractConfig, args) => {
+const deployFunction = async ({ allConfigs, network }) => {
+  const deploy = async (contractInterface, contractConfig, args) => {
+    const restored = await restore(
+      contractInterface,
+      contractConfig,
+      attach,
+      network
+    );
+    if (restored)
+      return {
+        ...restored,
+        configs: contractConfig,
+      };
+
+    const contractFactory = await hre.ethers.getContractFactory(
+      contractConfig.name
+    );
+
     let instance;
     if (args && args.length > 0) {
-      console.log({
-        contract: contractConfig.name,
-        args: args,
-      });
-      console.log(args);
       instance = await contractFactory.deploy(...args.flat());
     } else {
       instance = await contractFactory.deploy();
@@ -55,25 +66,19 @@ const deployFunction = async (deployer, daoArtifacts, allConfigs) => {
     //     Deploying 'ProxTokenContract'
     //    -----------------------------
     //    > transaction hash:    0xca3ecb072f46960b520b17c797c5fd83f38ae6637c720bbaa4471f5d46e5550d
-    // - Blocks: 0            Seconds: 0
-    //    > Blocks: 1            Seconds: 12
     //    > contract address:    0xfA9324b96db2f685FAB616eb4547Be00091B8D4e
     //    > block number:        9975523
-    //    > block timestamp:     1641945671
-    //    > account:             0xEd7B3f2902f2E1B17B027bD0c125B674d293bDA0
-    //    > balance:             4.96689377772692208
-    //    > gas used:            830997 (0xcae15)
-    //    > gas price:           2.500000015 gwei
-    //    > value sent:          0 ETH
-    //    > total cost:          0.002077492512464955 ETH
-    return {
-      ...contract,
-      configs: contractConfig,
-    };
+    return checkpoint(
+      {
+        ...contract,
+        configs: contractConfig,
+      },
+      network
+    );
   };
 
   const loadOrDeploy = async (contractInterface, ...args) => {
-    if (!contractInterface) return null; //throw Error("Invalid contract interface");
+    if (!contractInterface) throw Error("Invalid contract interface");
 
     const contractConfig = allConfigs.find(
       (c) => c.name === contractInterface.contractName
@@ -83,17 +88,13 @@ const deployFunction = async (deployer, daoArtifacts, allConfigs) => {
         `${contractInterface.contractName} contract not found in migrations/configs/contracts.config`
       );
 
-    const contractFactory = await hre.ethers.getContractFactory(
-      contractInterface.contractName
-    );
-
     if (
       // Always deploy core, extension and test contracts
       contractConfig.type === ContractType.Core ||
       contractConfig.type === ContractType.Extension ||
       contractConfig.type === ContractType.Test
     ) {
-      return await deploy(contractFactory, contractConfig, args);
+      return await deploy(contractInterface, contractConfig, args);
     }
 
     const artifactsOwner = process.env.DAO_ARTIFACTS_OWNER_ADDR
@@ -129,11 +130,11 @@ const deployFunction = async (deployer, daoArtifacts, allConfigs) => {
       const identityInstance = await deploy(identityFactory, identityConfig);
 
       // deploy the factory with the new identity address, so it can be used later for cloning
-      deployedContract = await deploy(contractFactory, contractConfig, [
+      deployedContract = await deploy(contractInterface, contractConfig, [
         identityInstance.address,
       ]);
     } else {
-      deployedContract = await deploy(contractFactory, contractConfig, args);
+      deployedContract = await deploy(contractInterface, contractConfig, args);
     }
 
     if (
@@ -148,9 +149,9 @@ const deployFunction = async (deployer, daoArtifacts, allConfigs) => {
       //   deployedContract.address,
       //   contractConfig.type
       // );
-      console.log(
-        `${contractConfig.name}:${contractConfig.type}:${contractConfig.version}:${deployedContract.address} added to DaoArtifacts`
-      );
+      // console.log(
+      //   `${contractConfig.name}:${contractConfig.type}:${contractConfig.version}:${deployedContract.address} added to DaoArtifacts`
+      // );
     }
 
     return deployedContract;
@@ -173,7 +174,7 @@ const getConfigsWithFactories = (configs) => {
     });
 };
 
-module.exports = (configs) => {
+module.exports = (configs, network) => {
   const allConfigs = getConfigsWithFactories(configs);
   const interfaces = allConfigs.reduce((previousValue, contract) => {
     previousValue[contract.name] = contract.interface;
@@ -182,12 +183,12 @@ module.exports = (configs) => {
 
   return {
     ...interfaces,
-    attach,
+    attachFunction: attach,
     deployFunctionFactory: (deployer, daoArtifacts) => {
       // if (!deployer || !daoArtifacts)
       // throw Error("Missing deployer or DaoArtifacts contract");
       if (!deployer) throw Error("Missing deployer or DaoArtifacts contract");
-      return deployFunction(deployer, daoArtifacts, allConfigs);
+      return deployFunction({ deployer, daoArtifacts, allConfigs, network });
     },
   };
 };

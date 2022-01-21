@@ -70,7 +70,7 @@ module.exports = {
       gas: 0xfffffffffff,
       gasPrice: 10000000000,
     },
-    
+
     // Main Networks
     mainnet: {
       url: process.env.ETH_NODE_URL,

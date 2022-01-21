@@ -32,7 +32,8 @@ task("deploy", "Deploy the list of contracts", async (taskArgs, deployer) => {
     contracts: contractConfigs,
   } = require(`../migrations/configs/${network}.config`);
   const hardhatImports = await require("../utils/hardhat-util.js")(
-    contractConfigs
+    contractConfigs,
+    network
   );
   const daoArtifacts = null; //await getOrCreateDaoArtifacts(deployer, truffleImports);
   const deployFunction = await hardhatImports.deployFunctionFactory(
@@ -44,10 +45,10 @@ task("deploy", "Deploy the list of contracts", async (taskArgs, deployer) => {
   const result = await deploy({
     network,
     deployFunction,
+    attachFunction: hardhatImports.attachFunction,
     contractImports: hardhatImports,
     contractConfigs,
     accounts,
-    attachFunction: hardhatImports.attach,
   });
 
   const { dao, factories, extensions, adapters, testContracts, utilContracts } =

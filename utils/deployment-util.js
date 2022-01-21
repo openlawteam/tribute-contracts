@@ -27,10 +27,18 @@ SOFTWARE.
 
 const { entryDao, entryBank } = require("./access-control-util");
 const { adaptersIdsMap, extensionsIdsMap } = require("./dao-ids-util");
-const { UNITS, LOOT, sha3, embedConfigs } = require("./contract-util.js");
+const {
+  UNITS,
+  LOOT,
+  sha3,
+  embedConfigs,
+  toBytes32,
+} = require("./contract-util.js");
 const { ContractType } = require("../migrations/configs/contracts.config");
 const { utils } = require("ethers");
 const { web3 } = require("@openzeppelin/test-environment");
+const { sha256FromString, sha256 } = require("ethereumjs-util");
+const { formatBytes32String } = require("ethers/lib/utils");
 const isDebug = process.env.DEBUG === "true";
 
 const log = (...data) => {
@@ -462,6 +470,11 @@ const cloneDao = async ({
   await daoFactory.createDao(name, creator ? creator : owner);
   const daoAddress = await daoFactory.getDaoAddress(name);
   const daoInstance = await attachFunction(DaoRegistry, daoAddress);
+  const c = sha3(adaptersIdsMap.VOTING_ADAPTER);
+  const d = formatBytes32String(c);
+  console.log({ c, d });
+  const addr = await daoInstance.getAdapterAddress(d);
+  console.log({ addr });
   return { dao: daoInstance, daoFactory, daoName: name };
 };
 
@@ -532,34 +545,32 @@ const configureDao = async ({
       return configValue;
     };
 
-    await Promise.all(
-      Object.values(adapters)
-        .filter((a) => a.configs.enabled)
-        .filter((a) => !a.configs.skipAutoDeploy)
-        .filter((a) => a.configs.daoConfigs && a.configs.daoConfigs.length > 0)
-        .map((adapter) => {
-          const contractConfig = adapter.configs;
-          return contractConfig.daoConfigs.reduce(
-            (q, configEntry) =>
-              q.then(async () => {
-                const configValues = configEntry.map((configName) =>
-                  readConfigValue(configName, contractConfig.name)
+    const adapterList = Object.values(adapters)
+      .filter((a) => a.configs.enabled)
+      .filter((a) => !a.configs.skipAutoDeploy)
+      .filter((a) => a.configs.daoConfigs && a.configs.daoConfigs.length > 0);
+
+    await adapterList.reduce((p, adapter) => {
+      const contractConfigs = adapter.configs;
+      return p.then(() =>
+        contractConfigs.daoConfigs.reduce(
+          (q, configEntry) =>
+            q.then(() => {
+              const configValues = configEntry.map((configName) =>
+                readConfigValue(configName, contractConfigs.name)
+              );
+              return adapter.configureDao(...configValues).catch((err) => {
+                error(
+                  `Error while configuring dao with contract ${contractConfigs.name}. `,
+                  err
                 );
-                console.log({ contract: contractConfig.name, configValues });
-                return await adapter
-                  .configureDao(...configValues)
-                  .catch((err) => {
-                    error(
-                      `Error while configuring dao with contract ${contractConfig.name}. `,
-                      err
-                    );
-                    throw err;
-                  });
-              }),
-            Promise.resolve()
-          );
-        })
-    );
+                throw err;
+              });
+            }),
+          Promise.resolve()
+        )
+      );
+    }, Promise.resolve());
   };
 
   const configureExtensionAccess = async (contracts, extension) => {
@@ -587,33 +598,32 @@ const configureDao = async ({
     log("configure adapters ...");
     await configureAdaptersWithDAOAccess();
     await configureAdaptersWithDAOParameters();
-    await Promise.all(
-      Object.values(extensions)
-        .filter((targetExtension) => targetExtension.configs.enabled)
-        .filter((targetExtension) => !targetExtension.configs.skipAutoDeploy)
-        .map((targetExtension) => {
-          // Filters the enabled adapters that have access to the targetExtension
-          const contracts = Object.values(adapters)
-            .filter((a) => a.configs.enabled)
-            .filter((a) => !a.configs.skipAutoDeploy)
-            .filter((a) =>
-              // The adapters must have at least 1 ACL flag defined to access the targetExtension
-              Object.keys(a.configs.acls.extensions).some(
-                (extId) => extId === targetExtension.configs.id
-              )
-            );
+    const extensionsList = Object.values(extensions)
+      .filter((targetExtension) => targetExtension.configs.enabled)
+      .filter((targetExtension) => !targetExtension.configs.skipAutoDeploy);
 
-          return configureExtensionAccess(contracts, targetExtension).catch(
-            (e) => {
-              error(
-                `Error while configuring adapters access to extension ${extensions.configs.name}`,
-                e
-              );
-              throw e;
-            }
+    await extensionsList.reduce((p, targetExtension) => {
+      // Filters the enabled adapters that have access to the targetExtension
+      const contracts = Object.values(adapters)
+        .filter((a) => a.configs.enabled)
+        .filter((a) => !a.configs.skipAutoDeploy)
+        .filter((a) =>
+          // The adapters must have at least 1 ACL flag defined to access the targetExtension
+          Object.keys(a.configs.acls.extensions).some(
+            (extId) => extId === targetExtension.configs.id
+          )
+        );
+
+      return p
+        .then(() => configureExtensionAccess(contracts, targetExtension))
+        .catch((err) => {
+          error(
+            `Error while configuring adapters access to extension ${targetExtension.configs.name}. `,
+            err
           );
-        })
-    );
+          throw err;
+        });
+    }, Promise.resolve());
   };
 
   /**
@@ -622,31 +632,31 @@ const configureDao = async ({
    */
   const configureExtensions = async () => {
     log("configure extensions ...");
-    await Promise.all(
-      Object.values(extensions)
-        .filter((targetExtension) => targetExtension.configs.enabled)
-        .map((targetExtension) => {
-          // Filters the enabled extensions that have access to the targetExtension
-          const contracts = Object.values(extensions)
-            .filter((e) => e.configs.enabled)
-            .filter((e) => e.configs.id !== targetExtension.configs.id)
-            .filter((e) =>
-              // The other extensions must have at least 1 ACL flag defined to access the targetExtension
-              Object.keys(e.configs.acls.extensions).some(
-                (extId) => extId === targetExtension.configs.id
-              )
-            );
-
-          return configureExtensionAccess(contracts, targetExtension).catch(
-            (e) => {
-              error(
-                `Error while configuring extensions access to extension ${targetExtension.configs.name}`
-              );
-              throw e;
-            }
-          );
-        })
+    const extensionsList = Object.values(extensions).filter(
+      (targetExtension) => targetExtension.configs.enabled
     );
+
+    await extensionsList.reduce((p, targetExtension) => {
+      // Filters the enabled extensions that have access to the targetExtension
+      const contracts = Object.values(extensions)
+        .filter((e) => e.configs.enabled)
+        .filter((e) => e.configs.id !== targetExtension.configs.id)
+        .filter((e) =>
+          // The other extensions must have at least 1 ACL flag defined to access the targetExtension
+          Object.keys(e.configs.acls.extensions).some(
+            (extId) => extId === targetExtension.configs.id
+          )
+        );
+
+      return p
+        .then(() => configureExtensionAccess(contracts, targetExtension))
+        .catch((err) => {
+          error(
+            `Error while configuring extensions access to extension ${targetExtension.configs.name}. `
+          );
+          throw err;
+        });
+    }, Promise.resolve());
   };
 
   await configureAdapters();
@@ -672,6 +682,7 @@ const configureOffchainVoting = async ({
   deployFunction,
   extensions,
 }) => {
+  log("Configuring offchain voting...");
   const votingHelpers = {
     snapshotProposalContract: null,
     handleBadReporterAdapter: null,
@@ -680,7 +691,6 @@ const configureOffchainVoting = async ({
 
   // Offchain voting is disabled
   if (!offchainVoting) return votingHelpers;
-
   const currentVotingAdapterAddress = await dao.getAdapterAddress(
     sha3(adaptersIdsMap.VOTING_ADAPTER)
   );

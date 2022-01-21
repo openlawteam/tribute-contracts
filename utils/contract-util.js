@@ -26,7 +26,7 @@ SOFTWARE.
  */
 const Web3Utils = require("web3-utils");
 const { ethers } = require("ethers");
-const sha3 = Web3Utils.sha3;
+const sha3 = (v) => ethers.utils.solidityKeccak256(["string"], [v]);
 const soliditySha3 = Web3Utils.soliditySha3;
 // const toBN = Web3Utils.toBN;
 // const toWei = Web3Utils.toWei;
@@ -37,10 +37,12 @@ const fromAscii = Web3Utils.fromAscii;
 // const toUtf8 = Web3Utils.toUtf8;
 // const toHex = Web3Utils.toHex;
 // const fromAscii = ethers.utils.formatBytes32String;
+// const soliditySha3 = ethers.utils.soliditySha256;
 const toUtf8 = ethers.utils.toUtf8String;
-const toHex = ethers.utils.hexValue
-const toWei = ethers.utils.parseEther
-const toBN = ethers.BigNumber.from
+const toBytes32 = ethers.utils.formatBytes32String;
+const toHex = ethers.utils.hexValue;
+const toWei = ethers.utils.parseEther;
+const toBN = ethers.BigNumber.from;
 
 const GUILD = "0x000000000000000000000000000000000000dead";
 const TOTAL = "0x000000000000000000000000000000000000babe";
@@ -81,6 +83,7 @@ module.exports = {
   toAscii,
   fromAscii,
   toUtf8,
+  toBytes32,
   toHex,
   embedConfigs,
   maximumChunks,

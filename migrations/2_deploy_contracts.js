@@ -26,7 +26,7 @@ module.exports = async (deployer, network, accounts) => {
   log(`Deploying tribute-contracts@${pkgJson.version} to ${network} network`);
 
   const { contracts: contractConfigs } = require(`./configs/${network}.config`);
-  const truffleImports = require("../utils/truffle-util")(contractConfigs);
+  const truffleImports = require("../utils/truffle-util")(contractConfigs, network);
   const daoArtifacts = await getOrCreateDaoArtifacts(deployer, truffleImports);
 
   const deployFunction = truffleImports.deployFunctionFactory(
@@ -37,6 +37,7 @@ module.exports = async (deployer, network, accounts) => {
   const result = await deploy({
     network,
     deployFunction,
+    attachFunction: truffleImports.attachFunction,
     truffleImports,
     accounts,
     contractConfigs,

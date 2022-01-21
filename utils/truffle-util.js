@@ -29,6 +29,10 @@ const { sha3, toHex, ZERO_ADDRESS } = require("./contract-util");
 const { checkpoint, restore } = require("../utils/checkpoint-utils");
 const { ContractType } = require("../migrations/configs/contracts.config");
 
+const attach = async (contractInterface, address) => {
+  return await contractInterface.at(address);
+};
+
 const getContractFromTruffle = (c) => {
   return artifacts.require(c);
 };
@@ -42,9 +46,9 @@ const getConfigsWithFactories = (configs) => {
     });
 };
 
-const deployFunction = (deployer, daoArtifacts, allConfigs) => {
+const deployFunction = ({ deployer, daoArtifacts, allConfigs, network }) => {
   const deploy = async (contractInterface, args, contractConfig) => {
-    const restored = await restore(contractInterface, contractConfig);
+    const restored = await restore(contractInterface, contractConfig, network);
     if (restored)
       return {
         ...restored,
@@ -61,7 +65,7 @@ const deployFunction = (deployer, daoArtifacts, allConfigs) => {
       ...instance,
       configs: contractConfig,
     };
-    return checkpoint(contract);
+    return checkpoint(contract, network);
   };
 
   const loadOrDeploy = async (contractInterface, args) => {
@@ -138,7 +142,7 @@ const deployFunction = (deployer, daoArtifacts, allConfigs) => {
   return loadOrDeploy;
 };
 
-module.exports = (configs) => {
+module.exports = (configs, network) => {
   const allConfigs = getConfigsWithFactories(configs);
   const interfaces = allConfigs.reduce((previousValue, contract) => {
     previousValue[contract.name] = contract.interface;
@@ -147,10 +151,11 @@ module.exports = (configs) => {
 
   return {
     ...interfaces,
+    attachFunction: attach,
     deployFunctionFactory: (deployer, daoArtifacts) => {
       if (!deployer || !daoArtifacts)
         throw Error("Missing deployer or DaoArtifacts contract");
-      return deployFunction(deployer, daoArtifacts, allConfigs);
+      return deployFunction({ deployer, daoArtifacts, allConfigs, network });
     },
   };
 };

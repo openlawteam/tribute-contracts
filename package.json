@@ -67,7 +67,6 @@
     "build": "npm ci && npm run compile",
     "clean": "rimraf build/",
     "compile": "hardhat compile",
-    "compile-abi": "hardhat compile && truffle-abi",
     "coverage": "DISABLE_SOLC_OPTIMIZER=true ts-node tasks/coverage.ts",
     "deploy:mainnet": "npm run compile && hardhat deploy --network mainnet 2>&1 | tee logs/mainnet-deploy_`date '+%F_%T'`.log",
     "deploy:harmony": "npm run compile && hardhat deploy --network harmony 2>&1 | tee logs/harmony-deploy_`date '+%F_%T'`.log",

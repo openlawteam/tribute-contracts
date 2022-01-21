@@ -6,25 +6,33 @@ const {
 } = require("../migrations/configs/contracts.config");
 const { deployConfigs } = require("../deploy-config");
 const checkpointDir = path.resolve(deployConfigs.checkpointDir);
-const checkpointPath = path.resolve(`${checkpointDir}/checkpoints.json`);
+const checkpointPath = path.resolve(
+  `${checkpointDir}/%network%-checkpoints.json`
+);
 
 const log = (msg: string) => {
   if (process.env.DEBUG === "true") console.log(msg);
 };
 
-const save = (checkpoints: JSON) => {
-  fs.writeFileSync(checkpointPath, JSON.stringify(checkpoints), "utf-8");
+const save = (checkpoints: JSON, network: string) => {
+  fs.writeFileSync(
+    checkpointPath.replace("%network%", network),
+    JSON.stringify(checkpoints),
+    "utf-8"
+  );
 };
 
-const load = () => {
+const load = (network: string) => {
   try {
-    return JSON.parse(fs.readFileSync(checkpointPath, "utf-8"));
+    return JSON.parse(
+      fs.readFileSync(checkpointPath.replace("%network%", network), "utf-8")
+    );
   } catch (e) {
     return {};
   }
 };
 
-export const checkpoint = (contract: any) => {
+export const checkpoint = (contract: any, network: string) => {
   try {
     if (
       contract.configs.type === ContractType.Core ||
@@ -37,12 +45,12 @@ export const checkpoint = (contract: any) => {
     if (!fs.existsSync(checkpointDir)) {
       fs.mkdirSync(checkpointDir);
     }
-    const checkpoints = load();
+    const checkpoints = load(network);
     checkpoints[contract.configs.name] = {
       address: contract.address,
       ts: new Date().getTime(),
     };
-    save(checkpoints);
+    save(checkpoints, network);
     log(`Checkpoint: ${contract.configs.name}:${contract.address}`);
   } catch (e) {
     console.error(e);
@@ -52,13 +60,15 @@ export const checkpoint = (contract: any) => {
 
 export const restore = async (
   contractInterface: any,
-  contractConfig: typeof ContractConfig
+  contractConfig: typeof ContractConfig,
+  attach: Function,
+  network: string
 ) => {
-  const checkpoints = load();
+  const checkpoints = load(network);
   const checkpoint = checkpoints[contractConfig.name];
   if (checkpoint) {
-    log(`Restored: ${contractConfig.name}:${checkpoint.address}`);
-    return await contractInterface.at(checkpoint.address);
+    console.log(`Restored: ${contractConfig.name}:${checkpoint.address}`);
+    return await attach(contractInterface, checkpoint.address);
   }
   return null;
 };
