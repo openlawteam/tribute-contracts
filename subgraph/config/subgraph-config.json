@@ -1,9 +1,9 @@
 [
   {
     "network": "rinkeby",
-    "daoFactoryAddress": "0x2612Af3A521c2df9EAF28422Ca335b04AdF3ac66",
-    "daoFactoryStartBlock": 13,
+    "daoFactoryAddress": "0x07F3C7b1481599bf98608AE67f31590E60EE4c0A",
+    "daoFactoryStartBlock": 10031895,
     "GITHUB_USERNAME": "openlawteam",
-    "SUBGRAPH_NAME": "tribute"
+    "SUBGRAPH_NAME": "spaceship-dev"
   }
 ]
