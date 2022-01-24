@@ -21,6 +21,7 @@ require("dotenv").config({ path: "../.env" });
 
 task("deploy", "Deploy the list of contracts", async (taskArgs, deployer) => {
   const { network } = hre.hardhatArguments;
+
   log(`Deployment started at ${new Date().toISOString()}`);
   log(`Deploying tribute-contracts@${pkgJson.version} to ${network} network`);
 
@@ -58,7 +59,8 @@ task("deploy", "Deploy the list of contracts", async (taskArgs, deployer) => {
     if (network === "ganache") await dao.finalizeDao();
     else await dao.finalizeDao({ from: daoOwnerAddr });
 
-    log("************************************************");
+    log(`Available contracts
+    -------------------------------------------------`);
     log(`DaoOwner: ${daoOwnerAddr}`);
     log(`DaoRegistry: ${dao.address}`);
     const addresses = {};
@@ -72,12 +74,12 @@ task("deploy", "Deploy the list of contracts", async (taskArgs, deployer) => {
         addresses[c.configs.name] = c.address;
       });
     saveDeployedContracts(network, addresses);
+    log(`Deployment completed at ${new Date().toISOString()}`);
   } else {
-    log("************************************************");
-    log("no migration for network " + network);
-    log("************************************************");
+    log("-------------------------------------------------");
+    log(`There is no deployment script for ${network} network`);
+    log("-------------------------------------------------");
   }
-  log(`Deployment completed at: ${new Date().toISOString()}`);
 });
 
 const deployRinkebyDao = async ({

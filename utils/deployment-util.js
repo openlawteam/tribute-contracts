@@ -37,6 +37,7 @@ const {
 const { ContractType } = require("../migrations/configs/contracts.config");
 const { utils } = require("ethers");
 const { web3 } = require("@openzeppelin/test-environment");
+const { restore } = require("./checkpoint-utils");
 const isDebug = process.env.DEBUG === "true";
 
 const debug = (...data) => {
@@ -44,7 +45,7 @@ const debug = (...data) => {
 };
 
 const info = (data) => {
-  console.error(data);
+  console.error(data.replace(/^ {8}/gm, "    "));
 };
 
 const error = (...data) => {
@@ -56,6 +57,7 @@ const waitTx = async (p) => {
   if (res && res.wait) {
     await res.wait();
   }
+  return res;
 };
 
 /**
@@ -194,10 +196,10 @@ const createExtensions = async ({ dao, factories, options }) => {
     );
 
     info(`
-      Extension enabled '${newExtension.configs.name}'
-      -------------------------------------------------
-       contract address: ${newExtension.address}
-       creator address:  ${options.owner}`);
+    Extension enabled '${newExtension.configs.name}'
+    -------------------------------------------------
+     contract address: ${newExtension.address}
+     creator address:  ${options.owner}`);
 
     return newExtension;
   };
@@ -512,42 +514,55 @@ const configureDao = async ({
   debug("configure new dao ...");
   const configureAdaptersWithDAOAccess = async () => {
     debug("configure adapters with access");
+
+    // If an adapter needs access to the DAO registry or to any enabled Extension,
+    // it needs to be added to the DAO with the correct ACL flags.
     const adaptersWithAccess = Object.values(adapters)
       .filter((a) => a.configs.enabled)
       .filter((a) => !a.configs.skipAutoDeploy)
-      .filter((a) => a.configs.acls.dao)
-      .reduce((withAccess, a) => {
-        const configs = a.configs;
-        info(`
-          Adapter configured '${configs.name}'
-          -------------------------------------------------
-           contract address: ${a.address}
-           contract acls: ${JSON.stringify(configs.acls)}`);
-        withAccess.push(entryDao(configs.id, a.address, configs.acls));
-        return withAccess;
-      }, []);
+      .filter((a) => a.configs.acls.dao);
 
-    await waitTx(daoFactory.addAdapters(dao.address, adaptersWithAccess));
+    await adaptersWithAccess.reduce((p, a) => {
+      info(`
+        Adapter configured '${a.configs.name}'
+        -------------------------------------------------
+         contract address: ${a.address}
+         contract acls: ${JSON.stringify(a.configs.acls)}`);
+
+      return p.then(
+        async () =>
+          await waitTx(
+            daoFactory.addAdapters(dao.address, [
+              entryDao(a.configs.id, a.address, a.configs.acls),
+            ])
+          )
+      );
+    }, Promise.resolve());
 
     // If an extension needs access to other extension,
-    // the extension needs to be added as an adapter to the DAO,
+    // that extension needs to be added to the DAO as an adapter contract,
     // but without any ACL flag enabled.
-    const contractsWithAccess = Object.values(extensions)
+    const extensionsWithAccess = Object.values(extensions)
       .filter((e) => e.configs.enabled)
       .filter((a) => !a.configs.skipAutoDeploy)
-      .filter((e) => Object.keys(e.configs.acls.extensions).length > 0)
-      .reduce((withAccess, e) => {
-        const configs = e.configs;
-        info(`Extension configured '${configs.name}'
+      .filter((e) => Object.keys(e.configs.acls.extensions).length > 0);
+
+    await extensionsWithAccess.reduce((p, e) => {
+      info(`
+        Extension configured '${e.configs.name}'
         -------------------------------------------------
          contract address: ${e.address}
-         contract acls: ${JSON.stringify(configs.acls)}`);
-        const v = entryDao(configs.id, e.address, configs.acls);
-        withAccess.push(v);
-        return withAccess;
-      }, []);
+         contract acls: ${JSON.stringify(e.configs.acls)}`);
 
-    await waitTx(daoFactory.addAdapters(dao.address, contractsWithAccess));
+      return p.then(
+        async () =>
+          await waitTx(
+            daoFactory.addAdapters(dao.address, [
+              entryDao(e.configs.id, e.address, e.configs.acls),
+            ])
+          )
+      );
+    }, Promise.resolve());
   };
 
   const configureAdaptersWithDAOParameters = async () => {
