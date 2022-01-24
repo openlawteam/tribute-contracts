@@ -336,6 +336,7 @@ contract ERC1155TokenExtension is IExtension, IERC1155Receiver {
         //slither-disable-next-line unused-return
         _ownership[getNFTId(nftAddr, nftTokenId)].add(owner);
         // Keep track of the collected assets addresses
+        //slither-disable-next-line unused-return
         _nftAddresses.add(nftAddr);
         // Track the actual owner per Token Id and amount
         uint256 currentAmount = _nftTracker[owner][nftAddr][nftTokenId];
