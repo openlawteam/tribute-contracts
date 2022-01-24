@@ -153,6 +153,15 @@ describe("Extension - ERC1155", () => {
       { from: nftOwner }
     );
 
+    await erc1155Token.safeTransferFrom(
+      nftOwner,
+      erc1155Ext.address,
+      tokenId,
+      tokenValue,
+      encodeDaoInfo(dao.address),
+      { from: nftOwner }
+    );
+
     // Make sure it was collected in the NFT Extension
     const nftAddr = await erc1155Ext.getNFTAddress(0);
     expect(nftAddr).equal(erc1155Token.address);
@@ -168,7 +177,7 @@ describe("Extension - ERC1155", () => {
       erc1155Ext.address,
       tokenId
     );
-    expect(holderBalance.toString()).equal(tokenValue.toString());
+    expect(holderBalance.toString()).equal((tokenValue * 2).toString());
   });
 
   it("should not be possible to do an internal transfer of the NFT to a non member", async () => {
@@ -242,17 +251,17 @@ describe("Extension - ERC1155", () => {
     //check if nftOwner is a member
     expect(await isMember(bank, nftOwner)).equal(true);
     //internalTransfer should revert, because nonMember is not a member
-    await expectRevert(
-      erc1155Adapter.internalTransfer(
-        this.dao.address,
-        nonMember,
-        erc1155TestToken.address,
-        1, //tokenId
-        1, //amount
-        { from: nftOwner }
-      ),
-      "erc1155Ext::toOwner is not a member -- Reason given: erc1155Ext::toOwner is not a member"
+
+    erc1155Adapter.internalTransfer(
+      this.dao.address,
+      nonMember,
+      erc1155TestToken.address,
+      1, //tokenId
+      1, //amount
+      { from: nftOwner }
     );
+
+    //TODO: check that transfer went well
   });
 
   it("should not be possible to transfer the NFT when you are not the owner", async () => {
@@ -275,6 +284,7 @@ describe("Extension - ERC1155", () => {
     const erc1155TokenExtension = this.extensions.erc1155Ext;
     const erc1155Adapter = this.adapters.erc1155Adapter;
 
+    // transfer from nft owner to the extension
     await erc1155TestToken.safeTransferFrom(
       nftOwner,
       erc1155TokenExtension.address,
@@ -294,16 +304,16 @@ describe("Extension - ERC1155", () => {
     expect(nftId.toString()).equal(id.toString());
 
     //check token balance of nftOwner after collection = -2
-    const balanceOfnftOwner = await erc1155TestToken.balanceOf(nftOwner, 1);
+    let balanceOfnftOwner = await erc1155TestToken.balanceOf(nftOwner, id);
     expect(balanceOfnftOwner.toString()).equal("8");
 
     //check token balance of the nftOwner inside the Extension = +2
-    const nftOwnerGuildBlance = await erc1155TokenExtension.getNFTIdAmount(
+    const nftOwnerGuildBalance = await erc1155TokenExtension.getNFTIdAmount(
       GUILD,
       erc1155TestToken.address,
       1
     );
-    expect(nftOwnerGuildBlance.toString()).equal("2");
+    expect(nftOwnerGuildBalance.toString()).equal("2");
     //create nonMember
     const nonMember = accounts[5];
     expect(await isMember(bank, nonMember)).equal(false);
@@ -325,17 +335,41 @@ describe("Extension - ERC1155", () => {
     //check if nftOwner is a member
     expect(await isMember(bank, nftOwner)).equal(true);
 
+    const owner = await erc1155TokenExtension.getNFTOwner(
+      erc1155TestToken.address,
+      id,
+      0
+    );
+    expect(owner.toLowerCase()).equal(GUILD);
+
+    await this.adapters.erc1155TestAdapter.internalTransfer(
+      this.dao.address,
+      erc1155TestToken.address,
+      id, //tokenId
+      1, //amount
+      { from: nftOwner }
+    );
+
     //internalTransfer should revert, because nonMember is not a member
+    await erc1155Adapter.internalTransfer(
+      this.dao.address,
+      nonMember,
+      erc1155TestToken.address,
+      id, //tokenId
+      1, //amount
+      { from: nftOwner }
+    );
+
     await expectRevert(
       erc1155Adapter.internalTransfer(
         this.dao.address,
-        nftOwner,
+        nonMember,
         erc1155TestToken.address,
-        1, //tokenId
+        id, //tokenId
         1, //amount
-        { from: nonMember }
+        { from: nftOwner }
       ),
-      "erc1155Ext::fromOwner is not a member -- Reason given: erc1155Ext::fromOwner is not a member"
+      "erc1155Ext::invalid amount"
     );
   });
 

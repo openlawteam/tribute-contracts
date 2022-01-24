@@ -317,7 +317,7 @@ describe("Adapter - Managing", () => {
         from: daoOwner,
         gasPrice: toBN("0"),
       }),
-      "onlyMember"
+      "call with your delegate key"
     );
 
     // The same member attempts to vote again

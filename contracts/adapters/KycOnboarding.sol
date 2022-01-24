@@ -241,9 +241,10 @@ contract KycOnboardingContract is
         uint256 amount,
         bytes memory signature
     ) internal reimbursable(dao) {
-        address delegateKey = dao.getCurrentDelegateKey(kycedMember);
-
-        require(!isActiveMember(dao, delegateKey), "already member");
+        require(
+            !isActiveMember(dao, dao.getCurrentDelegateKey(kycedMember)),
+            "already member"
+        );
         uint256 maxMembers = dao.getConfiguration(
             _configKey(tokenAddr, MaxMembers)
         );

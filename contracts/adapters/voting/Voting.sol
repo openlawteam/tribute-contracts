@@ -148,7 +148,7 @@ contract VotingContract is IVoting, MemberGuard, AdapterGuard, Reimbursable {
             "vote has already ended"
         );
 
-        address memberAddr = dao.getAddressIfDelegated(msg.sender);
+        address memberAddr = DaoHelper.msgSender(dao, msg.sender);
 
         require(vote.votes[memberAddr] == 0, "member has already voted");
         uint256 votingWeight = GovernanceHelper.getVotingWeight(

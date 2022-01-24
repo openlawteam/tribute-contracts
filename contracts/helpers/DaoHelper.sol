@@ -112,6 +112,22 @@ library DaoHelper {
             bank.balanceOf(member, LOCKED_LOOT);
     }
 
+    function msgSender(DaoRegistry dao, address addr)
+        internal
+        view
+        returns (address)
+    {
+        address memberAddress = dao.getAddressIfDelegated(addr);
+        address delegatedAddress = dao.getCurrentDelegateKey(addr);
+
+        require(
+            memberAddress == delegatedAddress || delegatedAddress == addr,
+            "call with your delegate key"
+        );
+
+        return memberAddress;
+    }
+
     /**
      * @notice calculates the total number of units.
      */

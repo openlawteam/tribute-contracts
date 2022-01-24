@@ -4,7 +4,6 @@ pragma solidity ^0.8.0;
 import "../core/DaoRegistry.sol";
 import "../extensions/erc1155/ERC1155TokenExtension.sol";
 import "../guards/AdapterGuard.sol";
-import "./interfaces/IConfiguration.sol";
 import "../adapters/interfaces/IVoting.sol";
 import "../helpers/DaoHelper.sol";
 
@@ -32,20 +31,18 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
  */
 
-contract ERC1155AdapterContract is AdapterGuard {
+contract ERC1155TestAdapterContract is AdapterGuard {
     /**
      * @notice Internally transfers the NFT from one owner to a new owner as long as both are active members.
      * @notice Reverts if the addresses of the owners are not members.
      * @notice Reverts if the fromOwner does not hold the NFT.
      * @param dao The DAO address.
-     * @param toOwner The new owner address of the NFT.
      * @param nftAddr The NFT smart contract address.
      * @param nftTokenId The NFT token id.
      * @param amount of the nftTokenId.
      */
     function internalTransfer(
         DaoRegistry dao,
-        address toOwner,
         address nftAddr,
         uint256 nftTokenId,
         uint256 amount
@@ -54,8 +51,8 @@ contract ERC1155AdapterContract is AdapterGuard {
             dao.getExtensionAddress(DaoHelper.ERC1155_EXT)
         );
         erc1155.internalTransfer(
+            DaoHelper.GUILD,
             DaoHelper.msgSender(dao, msg.sender),
-            toOwner,
             nftAddr,
             nftTokenId,
             amount

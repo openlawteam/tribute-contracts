@@ -32,6 +32,8 @@ const {
   provider,
 } = require("@openzeppelin/test-environment");
 
+const { entryDao } = require("./access-control-util");
+
 const {
   unitPrice,
   numberOfUnits,
@@ -45,11 +47,12 @@ const {
 
 const { expect } = require("chai");
 const { expectRevert } = require("@openzeppelin/test-helpers");
-const { deployDao } = require("./deployment-util.js");
+const { deployDao, configureExtensionAccess } = require("./deployment-util.js");
 const {
   contracts: allContractConfigs,
 } = require("../migrations/configs/test.config");
 const { ContractType } = require("../migrations/configs/contracts.config");
+const { sha3 } = require("web3-utils");
 
 const deployFunction = async (contractInterface, args, from) => {
   if (!contractInterface) throw Error("undefined contract interface");

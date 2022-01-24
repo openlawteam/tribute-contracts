@@ -327,15 +327,6 @@ describe("Adapter - KYC Onboarding", () => {
 
     await expectRevert(
       onboarding.onboardEth(dao.address, applicant, signature, {
-        from: applicant,
-        value: ethAmount,
-        gasPrice: toBN("0"),
-      }),
-      "already member"
-    );
-
-    await expectRevert(
-      onboarding.onboardEth(dao.address, applicant, signature, {
         from: delegateKey,
         value: ethAmount,
         gasPrice: toBN("0"),
