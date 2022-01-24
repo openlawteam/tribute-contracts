@@ -67,7 +67,10 @@ export const restore = async (
   const checkpoints = load(network);
   const checkpoint = checkpoints[contractConfig.name];
   if (checkpoint) {
-    console.log(`Restored: ${contractConfig.name}:${checkpoint.address}`);
+    console.log(`
+    Contract restored '${contractConfig.name}'
+    -------------------------------------------------
+     contract address: ${checkpoint.address}`);
     return await attach(contractInterface, checkpoint.address);
   }
   return null;

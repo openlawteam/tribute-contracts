@@ -21,7 +21,7 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
  */
 
-const { sha3, toHex, ZERO_ADDRESS } = require("./contract-util");
+const { ZERO_ADDRESS } = require("./contract-util");
 const { checkpoint, restore } = require("./checkpoint-utils");
 const { ContractType } = require("../migrations/configs/contracts.config");
 const hre = require("hardhat");
@@ -51,27 +51,27 @@ const deployFunction = async ({ allConfigs, network }) => {
       contractConfig.name
     );
 
-    let instance;
+    let res;
     if (args && args.length > 0) {
-      instance = await contractFactory.deploy(...args.flat());
+      res = await contractFactory.deploy(...args.flat());
     } else {
-      instance = await contractFactory.deploy();
+      res = await contractFactory.deploy();
     }
 
-    const contract = await instance.deployed();
-    // await contract.deployTransaction.wait();
-    console.log(
-      `Contract deployed: ${contractConfig.name}@${contract.address}`
-    );
-    //     Deploying 'ProxTokenContract'
-    //    -----------------------------
-    //    > transaction hash:    0xca3ecb072f46960b520b17c797c5fd83f38ae6637c720bbaa4471f5d46e5550d
-    //    > contract address:    0xfA9324b96db2f685FAB616eb4547Be00091B8D4e
-    //    > block number:        9975523
+    const tx = await res.deployTransaction.wait();
+    const contract = await res.deployed();
+    console.log(`
+    Contract deployed '${contractConfig.name}'
+    -------------------------------------------------
+     transaction hash: ${tx.transactionHash}
+     contract address: ${tx.contractAddress}
+     block number:     ${tx.blockNumber}`);
+
     return checkpoint(
       {
         ...contract,
         configs: contractConfig,
+        address: tx.contractAddress,
       },
       network
     );
@@ -119,17 +119,14 @@ const deployFunction = async ({ allConfigs, network }) => {
     let deployedContract;
     // When the contract is not found in the DaoArtifacts, deploy a new one
     if (contractConfig.type === ContractType.Factory) {
-      // first create a new identity contract
+      // 1. first create a new identity contract
       const identityInterface = args.flat()[0];
       const identityConfig = allConfigs.find(
         (c) => c.name === identityInterface.contractName
       );
-      const identityFactory = await hre.ethers.getContractFactory(
-        identityConfig.name
-      );
-      const identityInstance = await deploy(identityFactory, identityConfig);
+      const identityInstance = await deploy(identityInterface, identityConfig);
 
-      // deploy the factory with the new identity address, so it can be used later for cloning
+      // 2 deploy the factory with the new identity address, so it can be used for cloning ops later on
       deployedContract = await deploy(contractInterface, contractConfig, [
         identityInstance.address,
       ]);

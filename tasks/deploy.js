@@ -21,7 +21,7 @@ require("dotenv").config({ path: "../.env" });
 
 task("deploy", "Deploy the list of contracts", async (taskArgs, deployer) => {
   const { network } = hre.hardhatArguments;
-  log(`Deployment started at: ${new Date().toISOString()}`);
+  log(`Deployment started at ${new Date().toISOString()}`);
   log(`Deploying tribute-contracts@${pkgJson.version} to ${network} network`);
 
   const daoOwnerAddr = process.env.DAO_OWNER_ADDR;
@@ -35,7 +35,7 @@ task("deploy", "Deploy the list of contracts", async (taskArgs, deployer) => {
     contractConfigs,
     network
   );
-  const daoArtifacts = null; //await getOrCreateDaoArtifacts(deployer, truffleImports);
+  const daoArtifacts = null; //await getOrCreateDaoArtifacts(deployer, hardhatImports);
   const deployFunction = await hardhatImports.deployFunctionFactory(
     deployer,
     daoArtifacts
