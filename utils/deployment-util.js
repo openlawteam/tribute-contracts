@@ -39,6 +39,7 @@ const { utils } = require("ethers");
 const { web3 } = require("@openzeppelin/test-environment");
 const { sha256FromString, sha256 } = require("ethereumjs-util");
 const { formatBytes32String } = require("ethers/lib/utils");
+const { default: Web3 } = require("web3");
 const isDebug = process.env.DEBUG === "true";
 
 const log = (...data) => {
@@ -470,10 +471,9 @@ const cloneDao = async ({
   await daoFactory.createDao(name, creator ? creator : owner);
   const daoAddress = await daoFactory.getDaoAddress(name);
   const daoInstance = await attachFunction(DaoRegistry, daoAddress);
-  const c = sha3(adaptersIdsMap.VOTING_ADAPTER);
-  const d = formatBytes32String(c);
-  console.log({ c, d });
-  const addr = await daoInstance.getAdapterAddress(d);
+  const b = sha3(adaptersIdsMap.VOTING_ADAPTER);
+  console.log({ b });
+  const addr = await daoInstance.getAdapterAddress(b);
   console.log({ addr });
   return { dao: daoInstance, daoFactory, daoName: name };
 };

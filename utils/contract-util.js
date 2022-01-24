@@ -26,7 +26,7 @@ SOFTWARE.
  */
 const Web3Utils = require("web3-utils");
 const { ethers } = require("ethers");
-const sha3 = (v) => ethers.utils.solidityKeccak256(["string"], [v]);
+const sha3 = Web3Utils.sha3;
 const soliditySha3 = Web3Utils.soliditySha3;
 // const toBN = Web3Utils.toBN;
 // const toWei = Web3Utils.toWei;
