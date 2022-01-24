@@ -152,9 +152,11 @@ contract ERC1155TokenExtension is IExtension, IERC1155Receiver {
             delete _nftTracker[newOwner][nftAddr][nftTokenId];
             //slither-disable-next-line unused-return
             _ownership[getNFTId(nftAddr, nftTokenId)].remove(newOwner);
+            //slither-disable-next-line unused-return
             _nfts[nftAddr].remove(nftTokenId);
             // If there are 0 tokenIds for the NFT address, remove the NFT from the collection
             if (_nfts[nftAddr].length() == 0) {
+                //slither-disable-next-line unused-return
                 _nftAddresses.remove(nftAddr);
                 delete _nfts[nftAddr];
             }
@@ -328,8 +330,10 @@ contract ERC1155TokenExtension is IExtension, IERC1155Receiver {
         uint256 amount
     ) private {
         // Save the asset address and tokenId
+        //slither-disable-next-line unused-return
         _nfts[nftAddr].add(nftTokenId);
         // Track the owner by nftAddr+tokenId
+        //slither-disable-next-line unused-return
         _ownership[getNFTId(nftAddr, nftTokenId)].add(owner);
         // Keep track of the collected assets addresses
         _nftAddresses.add(nftAddr);
