@@ -261,7 +261,13 @@ describe("Extension - ERC1155", () => {
       { from: nftOwner }
     );
 
-    //TODO: check that transfer went well
+    const nonMemberBalance = await erc1155Ext.getNFTIdAmount(
+      nonMember,
+      erc1155TestToken.address,
+      1
+    );
+
+    expect(nonMemberBalance.toString()).equal("1");
   });
 
   it("should not be possible to transfer the NFT when you are not the owner", async () => {
