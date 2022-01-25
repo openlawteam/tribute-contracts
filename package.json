@@ -86,7 +86,7 @@
     "verify": "npx ts-node tasks/verify.ts",
     "release": "npm run lint:fix && np --no-publish --no-yarn",
     "slither": "slither . --config-file slither.config.json",
-    "test": "truffle compile && ts-mocha --timeout 2000000 --exit --recursive"
+    "test": "truffle compile && TEST=true ts-mocha --timeout 2000000 --exit --recursive"
   },
   "repository": {
     "type": "git",

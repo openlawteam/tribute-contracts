@@ -59,7 +59,7 @@ const attach = async (contractInterface, address) => {
 };
 
 const deployFunction = async (contractInterface, args, from) => {
-  if (!contractInterface) throw Error("undefined contract interface");
+  if (!contractInterface) throw Error("undefined contractInterface");
 
   const contractConfig = allContractConfigs.find(
     (c) => c.name === contractInterface.contractName
@@ -67,13 +67,11 @@ const deployFunction = async (contractInterface, args, from) => {
 
   const f = from ? from : accounts[0];
   let instance;
-  if (contractConfig.type === ContractType.Factory) {
+  if (contractConfig.type === ContractType.Factory && args) {
     const identityInterface = args[0];
-    const identity = await identityInterface.new({ from: f });
-    instance = await contractInterface.new(
-      ...[identity.address].concat(args.slice(1)),
-      { from: f }
-    );
+    const identityInstance = await identityInterface.new();
+    const constructorArgs = [identityInstance.address].concat(args.slice(1));
+    instance = await contractInterface.new(...constructorArgs, { from: f });
   } else {
     if (args) {
       instance = await contractInterface.new(...args, { from: f });
@@ -229,6 +227,7 @@ module.exports = (() => {
   const deployDefaultDao = async (options) => {
     const { WETH } = ozContracts;
     const weth = await WETH.new();
+    const finalize = options.finalize;
 
     const result = await deployDao({
       ...getDefaultOptions(options),
@@ -237,7 +236,12 @@ module.exports = (() => {
       attachFunction: attach,
       contractConfigs: allContractConfigs,
       weth: weth.address,
+      finalize: false,
     });
+
+    if (finalize) {
+      await result.dao.finalizeDao({ from: options.owner });
+    }
 
     return { wethContract: weth, ...result };
   };

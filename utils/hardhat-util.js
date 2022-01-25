@@ -122,7 +122,7 @@ const deployFunction = async ({ allConfigs, network, daoArtifacts }) => {
     }
     let deployedContract;
     // When the contract is not found in the DaoArtifacts, deploy a new one
-    if (contractConfig.type === ContractType.Factory) {
+    if (contractConfig.type === ContractType.Factory && args) {
       // 1. first create a new identity contract
       const identityInterface = args.flat()[0];
       const identityConfig = allConfigs.find(

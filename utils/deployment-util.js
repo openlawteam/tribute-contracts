@@ -96,7 +96,7 @@ const createFactories = async ({ options }) => {
         throw new Error(`Missing extension contract ${extensionConfig.name}`);
 
       return options
-        .deployFunction(factoryContract, extensionContract)
+        .deployFunction(factoryContract, [extensionContract])
         .then((factory) => (factories[factory.configs.alias] = factory))
         .catch((err) => {
           error(`Failed factory deployment [${config.name}]. `, err);

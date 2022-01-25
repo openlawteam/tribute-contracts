@@ -1,4 +1,5 @@
 const isDebug = process.env.DEBUG === "true";
+const isTest = process.env.TEST === "true";
 
 const debug = (...data) => {
   if (isDebug) console.log(data.join(""));
@@ -9,7 +10,7 @@ const log = (data) => {
 };
 
 const info = (data) => {
-  console.error(data.replace(/^ {8}/gm, "    "));
+  if (!isTest) console.error(data.replace(/^ {8}/gm, "    "));
 };
 
 const error = (...data) => {
