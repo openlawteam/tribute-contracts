@@ -326,8 +326,16 @@ contract OffchainVotingContract is
                 "vote:notReadyToSubmitResult"
             );
         }
-        address memberAddr = dao.getAddressIfDelegated(reporter);
-        require(isActiveMember(dao, memberAddr), "not active member");
+
+        require(
+            vote.gracePeriodStartingTime == 0 ||
+                vote.gracePeriodStartingTime +
+                    dao.getConfiguration(VotingPeriod) <=
+                block.timestamp,
+            "graceperiod finished!"
+        );
+
+        require(isActiveMember(dao, reporter), "not active member");
 
         uint256 membersCount = _ovHelper.checkMemberCount(
             dao,
@@ -374,7 +382,7 @@ contract OffchainVotingContract is
         vote.nbNo = result.nbNo;
         vote.nbYes = result.nbYes;
         vote.resultRoot = resultRoot;
-        vote.reporter = memberAddr;
+        vote.reporter = dao.getAddressIfDelegated(reporter);
         vote.isChallenged = false;
         vote.nbMembers = membersCount;
 
@@ -384,7 +392,7 @@ contract OffchainVotingContract is
             result.nbNo,
             result.nbYes,
             resultRoot,
-            memberAddr
+            vote.reporter
         );
     }
 
@@ -393,9 +401,7 @@ contract OffchainVotingContract is
         DaoRegistry dao,
         bytes32 proposalId,
         uint256 index
-    ) external reimbursable(dao) {
-        address memberAddr = dao.getAddressIfDelegated(msg.sender);
-        require(isActiveMember(dao, memberAddr), "not active member");
+    ) external reimbursable(dao) onlyMember(dao) {
         Voting storage vote = votes[address(dao)][proposalId];
         require(index < vote.nbMembers, "index out of bound");
         uint256 currentFlag = retrievedStepsFlags[vote.resultRoot][index / 256];

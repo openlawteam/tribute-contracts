@@ -69,7 +69,7 @@ contract RagequitContract is IRagequit, AdapterGuard {
         // Checks if the are enough units and/or loot to burn
         require(unitsToBurn + lootToBurn > 0, "insufficient units/loot");
         // Gets the delegated address, otherwise returns the sender address.
-        address memberAddr = dao.getAddressIfDelegated(msg.sender);
+        address memberAddr = DaoHelper.msgSender(dao, msg.sender);
 
         // Instantiates the Bank extension to handle the internal balance checks and transfers.
         BankExtension bank = BankExtension(

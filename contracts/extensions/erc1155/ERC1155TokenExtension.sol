@@ -33,7 +33,7 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
  */
 
-contract ERC1155TokenExtension is MemberGuard, IExtension, IERC1155Receiver {
+contract ERC1155TokenExtension is IExtension, IERC1155Receiver {
     using Address for address payable;
     //LIBRARIES
     using EnumerableSet for EnumerableSet.UintSet;
@@ -152,16 +152,12 @@ contract ERC1155TokenExtension is MemberGuard, IExtension, IERC1155Receiver {
             delete _nftTracker[newOwner][nftAddr][nftTokenId];
             //slither-disable-next-line unused-return
             _ownership[getNFTId(nftAddr, nftTokenId)].remove(newOwner);
-            require(
-                _nfts[nftAddr].remove(nftTokenId),
-                "erc1155Ext::can not remove token id"
-            );
+            //slither-disable-next-line unused-return
+            _nfts[nftAddr].remove(nftTokenId);
             // If there are 0 tokenIds for the NFT address, remove the NFT from the collection
             if (_nfts[nftAddr].length() == 0) {
-                require(
-                    _nftAddresses.remove(nftAddr),
-                    "erc1155Ext::can not remove nft"
-                );
+                //slither-disable-next-line unused-return
+                _nftAddresses.remove(nftAddr);
                 delete _nfts[nftAddr];
             }
         }
@@ -195,42 +191,42 @@ contract ERC1155TokenExtension is MemberGuard, IExtension, IERC1155Receiver {
         uint256 nftTokenId,
         uint256 amount
     ) external hasExtensionAccess(this, AclFlag.INTERNAL_TRANSFER) {
-        require(
-            isActiveMember(dao, fromOwner),
-            "erc1155Ext::fromOwner is not a member"
-        );
-        require(
-            isActiveMember(dao, toOwner),
-            "erc1155Ext::toOwner is not a member"
-        );
-
         // Checks if there token amount is valid and has enough funds
         uint256 tokenAmount = _getTokenAmount(fromOwner, nftAddr, nftTokenId);
         require(
             amount > 0 && tokenAmount >= amount,
-            "erc1155Ext::insufficient funds or invalid amount"
+            "erc1155Ext::invalid amount"
         );
 
         // Checks if the extension holds the NFT
-        bool isNFTCollected = _nfts[nftAddr].contains(nftTokenId);
-        require(isNFTCollected, "erc1155Ext::nft not found");
-
-        // Updates the internal records for toOwner with the current balance + the transferred amount
-        uint256 toOwnerNewAmount = _getTokenAmount(
-            toOwner,
-            nftAddr,
-            nftTokenId
-        ) + amount;
-        _updateTokenAmount(toOwner, nftAddr, nftTokenId, toOwnerNewAmount);
-        // Updates the internal records for fromOwner with the remaning amount
-        _updateTokenAmount(
-            fromOwner,
-            nftAddr,
-            nftTokenId,
-            tokenAmount - amount
+        require(
+            _nfts[nftAddr].contains(nftTokenId),
+            "erc1155Ext::nft not found"
         );
-        //slither-disable-next-line reentrancy-events
-        emit TransferredNFT(fromOwner, toOwner, nftAddr, nftTokenId, amount);
+        if (fromOwner != toOwner) {
+            // Updates the internal records for toOwner with the current balance + the transferred amount
+            uint256 toOwnerNewAmount = _getTokenAmount(
+                toOwner,
+                nftAddr,
+                nftTokenId
+            ) + amount;
+            _updateTokenAmount(toOwner, nftAddr, nftTokenId, toOwnerNewAmount);
+            // Updates the internal records for fromOwner with the remaning amount
+            _updateTokenAmount(
+                fromOwner,
+                nftAddr,
+                nftTokenId,
+                tokenAmount - amount
+            );
+            //slither-disable-next-line reentrancy-events
+            emit TransferredNFT(
+                fromOwner,
+                toOwner,
+                nftAddr,
+                nftTokenId,
+                amount
+            );
+        }
     }
 
     /**
@@ -334,17 +330,14 @@ contract ERC1155TokenExtension is MemberGuard, IExtension, IERC1155Receiver {
         uint256 amount
     ) private {
         // Save the asset address and tokenId
-        require(
-            _nfts[nftAddr].add(nftTokenId),
-            "erc1155Ext::can not add token id"
-        );
+        //slither-disable-next-line unused-return
+        _nfts[nftAddr].add(nftTokenId);
         // Track the owner by nftAddr+tokenId
-        require(
-            _ownership[getNFTId(nftAddr, nftTokenId)].add(owner),
-            "erc1155Ext::can not add owner"
-        );
+        //slither-disable-next-line unused-return
+        _ownership[getNFTId(nftAddr, nftTokenId)].add(owner);
         // Keep track of the collected assets addresses
-        require(_nftAddresses.add(nftAddr), "erc1155Ext::can not add nft");
+        //slither-disable-next-line unused-return
+        _nftAddresses.add(nftAddr);
         // Track the actual owner per Token Id and amount
         uint256 currentAmount = _nftTracker[owner][nftAddr][nftTokenId];
         _nftTracker[owner][nftAddr][nftTokenId] = currentAmount + amount;

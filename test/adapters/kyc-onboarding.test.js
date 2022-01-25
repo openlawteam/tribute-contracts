@@ -271,6 +271,70 @@ describe("Adapter - KYC Onboarding", () => {
     expect(nonMemberAccountIsActiveMember).equal(false);
   });
 
+  it("should not be possible to join the same member after he delegates his membership to another address", async () => {
+    const applicant = accounts[2];
+    const delegateKey = accounts[3];
+
+    const dao = this.dao;
+    const bank = this.extensions.bankExt;
+    const onboarding = this.adapters.kycOnboarding;
+    const daoRegistryAdapter = this.adapters.daoRegistryAdapter;
+
+    const myAccountInitialBalance = await web3.eth.getBalance(applicant);
+    // remaining amount to test sending back to proposer
+    const ethAmount = unitPrice.mul(toBN(3)).add(remaining);
+
+    const signerUtil = SigUtilSigner(signer.privKey);
+
+    const couponData = {
+      type: "coupon-kyc",
+      kycedMember: applicant,
+    };
+
+    let jsHash = getMessageERC712Hash(
+      couponData,
+      dao.address,
+      onboarding.address,
+      1
+    );
+    let solHash = await onboarding.hashCouponMessage(dao.address, couponData);
+    expect(jsHash).equal(solHash);
+
+    const signature = signerUtil(
+      couponData,
+      dao.address,
+      onboarding.address,
+      1
+    );
+
+    await onboarding.onboardEth(dao.address, applicant, signature, {
+      from: applicant,
+      value: ethAmount,
+      gasPrice: toBN("0"),
+    });
+
+    // test return of remaining amount in excess of multiple of unitsPerChunk
+    const myAccountBalance = await web3.eth.getBalance(applicant);
+    // daoOwner did not receive remaining amount in excess of multiple of unitsPerChunk
+    expect(
+      toBN(myAccountInitialBalance).sub(ethAmount).add(remaining).toString()
+    ).equal(myAccountBalance.toString());
+
+    await daoRegistryAdapter.updateDelegateKey(dao.address, delegateKey, {
+      from: applicant,
+      gasPrice: toBN("0"),
+    });
+
+    await expectRevert(
+      onboarding.onboardEth(dao.address, applicant, signature, {
+        from: delegateKey,
+        value: ethAmount,
+        gasPrice: toBN("0"),
+      }),
+      "already member"
+    );
+  });
+
   it("should not be possible to have more than the maximum number of units", async () => {
     const applicant = accounts[2];
     const dao = this.dao;
