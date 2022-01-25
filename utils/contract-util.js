@@ -24,26 +24,27 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
  */
+
+// Web3.js Utils
 const Web3Utils = require("web3-utils");
-const { ethers } = require("ethers");
 const sha3 = Web3Utils.sha3;
 const soliditySha3 = Web3Utils.soliditySha3;
-// const toBN = Web3Utils.toBN;
-// const toWei = Web3Utils.toWei;
+const encodePacked = Web3Utils.encodePacked;
 const fromUtf8 = Web3Utils.fromUtf8;
 const hexToBytes = Web3Utils.hexToBytes;
 const toAscii = Web3Utils.toAscii;
 const fromAscii = Web3Utils.fromAscii;
-// const toUtf8 = Web3Utils.toUtf8;
-// const toHex = Web3Utils.toHex;
-// const fromAscii = ethers.utils.formatBytes32String;
-// const soliditySha3 = ethers.utils.soliditySha256;
+
+// Ethers.js utils
+const { ethers } = require("ethers");
 const toUtf8 = ethers.utils.toUtf8String;
 const toBytes32 = ethers.utils.formatBytes32String;
 const toHex = ethers.utils.hexValue;
 const toWei = ethers.utils.parseEther;
 const toBN = ethers.BigNumber.from;
+const getAddress = ethers.utils.getAddress;
 
+// Dao Constants
 const GUILD = "0x000000000000000000000000000000000000dead";
 const TOTAL = "0x000000000000000000000000000000000000babe";
 const ESCROW = "0x0000000000000000000000000000000000004bec";
@@ -66,6 +67,14 @@ const maximumChunks = toBN("11");
 const maxAmount = toBN("10000000000000000000");
 const maxUnits = toBN("10000000000000000000");
 
+const waitTx = async (p) => {
+  const res = await p;
+  if (res && res.wait) {
+    await res.wait();
+  }
+  return res;
+};
+
 const embedConfigs = (contractInstance, name, configs) => {
   return {
     ...contractInstance,
@@ -86,6 +95,9 @@ module.exports = {
   toBytes32,
   toHex,
   embedConfigs,
+  encodePacked,
+  getAddress,
+  waitTx,
   maximumChunks,
   maxAmount,
   maxUnits,

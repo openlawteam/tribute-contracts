@@ -1,4 +1,3 @@
-const log = console.log;
 const fs = require("fs");
 const path = require("path");
 
@@ -14,6 +13,7 @@ const {
   maxAmount,
   maxUnits,
 } = require("../utils/contract-util");
+const { log } = require("../utils/log-util");
 const pkgJson = require("../package.json");
 const { deployDao } = require("../utils/deployment-util");
 const { deployConfigs } = require("../deploy-config");
@@ -26,7 +26,10 @@ module.exports = async (deployer, network, accounts) => {
   log(`Deploying tribute-contracts@${pkgJson.version} to ${network} network`);
 
   const { contracts: contractConfigs } = require(`./configs/${network}.config`);
-  const truffleImports = require("../utils/truffle-util")(contractConfigs, network);
+  const truffleImports = require("../utils/truffle-util")(
+    contractConfigs,
+    network
+  );
   const daoArtifacts = await getOrCreateDaoArtifacts(deployer, truffleImports);
 
   const deployFunction = truffleImports.deployFunctionFactory(

@@ -30,35 +30,15 @@ const { adaptersIdsMap, extensionsIdsMap } = require("./dao-ids-util");
 const {
   UNITS,
   LOOT,
+  ZERO_ADDRESS,
   sha3,
   embedConfigs,
-  ZERO_ADDRESS,
+  encodePacked,
+  getAddress,
+  waitTx,
 } = require("./contract-util.js");
+const { debug, info, error } = require("./log-util");
 const { ContractType } = require("../migrations/configs/contracts.config");
-const { utils } = require("ethers");
-const { web3 } = require("@openzeppelin/test-environment");
-const { restore } = require("./checkpoint-utils");
-const isDebug = process.env.DEBUG === "true";
-
-const debug = (...data) => {
-  if (isDebug) console.log(data.join(""));
-};
-
-const info = (data) => {
-  console.error(data.replace(/^ {8}/gm, "    "));
-};
-
-const error = (...data) => {
-  console.error(data.join(""));
-};
-
-const waitTx = async (p) => {
-  const res = await p;
-  if (res && res.wait) {
-    await res.wait();
-  }
-  return res;
-};
 
 /**
  * Deploys a contract based on the contract name defined in the config parameter.
@@ -344,12 +324,12 @@ const createGovernanceRoles = async ({ options, dao, adapters }) => {
                 (a) => a.configs.name === c.name
               );
               const configKey = sha3(
-                web3.utils.encodePacked(
+                encodePacked(
                   role.replace("$contractAddress", ""),
-                  utils.getAddress(adapter.address)
+                  getAddress(adapter.address)
                 )
               );
-              const configValue = utils.getAddress(
+              const configValue = getAddress(
                 readConfigValue(c.governanceRoles[role], c.name)
               );
               return await waitTx(
@@ -364,11 +344,11 @@ const createGovernanceRoles = async ({ options, dao, adapters }) => {
     }, Promise.resolve());
 
   if (options.defaultMemberGovernanceToken) {
-    const configKey = sha3(web3.utils.encodePacked("governance.role.default"));
+    const configKey = sha3(encodePacked("governance.role.default"));
     await waitTx(
       dao.setAddressConfiguration(
         configKey,
-        utils.getAddress(options.defaultMemberGovernanceToken)
+        getAddress(options.defaultMemberGovernanceToken)
       )
     );
   }

@@ -54,6 +54,10 @@ const {
 const { ContractType } = require("../migrations/configs/contracts.config");
 const { sha3 } = require("web3-utils");
 
+const attach = async (contractInterface, address) => {
+  return await contractInterface.at(address);
+};
+
 const deployFunction = async (contractInterface, args, from) => {
   if (!contractInterface) throw Error("undefined contract interface");
 
@@ -64,7 +68,8 @@ const deployFunction = async (contractInterface, args, from) => {
   const f = from ? from : accounts[0];
   let instance;
   if (contractConfig.type === ContractType.Factory) {
-    const identity = await args[0].new({ from: f });
+    const identityInterface = args[0];
+    const identity = await identityInterface.new({ from: f });
     instance = await contractInterface.new(
       ...[identity.address].concat(args.slice(1)),
       { from: f }
@@ -229,6 +234,7 @@ module.exports = (() => {
       ...getDefaultOptions(options),
       ...ozContracts,
       deployFunction,
+      attachFunction: attach,
       contractConfigs: allContractConfigs,
       weth: weth.address,
     });
@@ -244,6 +250,7 @@ module.exports = (() => {
         ...getDefaultOptions({ owner }),
         ...ozContracts,
         deployFunction,
+        attachFunction: attach,
         finalize: false,
         contractConfigs: allContractConfigs,
         weth: weth.address,
@@ -272,6 +279,7 @@ module.exports = (() => {
         ...getDefaultOptions(options),
         ...ozContracts,
         deployFunction,
+        attachFunction: attach,
         finalize: false,
         offchainVoting: true,
         offchainAdmin: owner,
@@ -340,6 +348,7 @@ module.exports = (() => {
     expect,
     expectRevert,
     deployFunction,
+    attachFunction: attach,
     getContractFromOpenZeppelin,
     ...ozContracts,
   };

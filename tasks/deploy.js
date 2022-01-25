@@ -1,4 +1,3 @@
-const log = console.log;
 const fs = require("fs");
 const path = require("path");
 
@@ -16,12 +15,13 @@ const {
 } = require("../utils/contract-util");
 const pkgJson = require("../package.json");
 const { deployDao } = require("../utils/deployment-util");
+const { log } = require("../utils/log-util");
 const { deployConfigs } = require("../deploy-config");
 require("dotenv").config({ path: "../.env" });
 
 task("deploy", "Deploy the list of contracts", async (taskArgs, deployer) => {
-  const { network } = hre.hardhatArguments;
-
+  const { network } = deployer.hardhatArguments;
+  
   log(`Deployment started at ${new Date().toISOString()}`);
   log(`Deploying tribute-contracts@${pkgJson.version} to ${network} network`);
 
@@ -36,7 +36,8 @@ task("deploy", "Deploy the list of contracts", async (taskArgs, deployer) => {
     contractConfigs,
     network
   );
-  const daoArtifacts = null; //await getOrCreateDaoArtifacts(deployer, hardhatImports);
+
+  const daoArtifacts = null;// FIXME await getOrCreateDaoArtifacts(deployer, hardhatImports);
   const deployFunction = await hardhatImports.deployFunctionFactory(
     deployer,
     daoArtifacts
@@ -59,7 +60,8 @@ task("deploy", "Deploy the list of contracts", async (taskArgs, deployer) => {
     if (network === "ganache") await dao.finalizeDao();
     else await dao.finalizeDao({ from: daoOwnerAddr });
 
-    log(`Available contracts
+    log(`
+    Available contracts
     -------------------------------------------------`);
     log(`DaoOwner: ${daoOwnerAddr}`);
     log(`DaoRegistry: ${dao.address}`);
@@ -528,7 +530,7 @@ const getOrCreateDaoArtifacts = async (deployer, contractImports) => {
   const DaoArtifacts = contractImports.DaoArtifacts;
   let daoArtifacts;
   if (process.env.DAO_ARTIFACTS_CONTRACT_ADDR) {
-    log(`Attach to existing DaoArtifacts contract`);
+    log(`Attached to existing DaoArtifacts contract`);
     daoArtifacts = await DaoArtifacts.at(
       process.env.DAO_ARTIFACTS_CONTRACT_ADDR
     );
@@ -556,7 +558,6 @@ const saveDeployedContracts = (network, addresses) => {
   const dir = path.resolve(deployConfigs.deployedContractsDir);
   const file = `${dir}/contracts-${network}-${now}.json`;
   fs.writeFileSync(`${file}`, JSON.stringify(addresses), "utf8");
-  log("************************************************");
   log(`\nDeployed contracts: ${file}\n`);
 };
 

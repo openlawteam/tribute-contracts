@@ -37,6 +37,7 @@ const {
   MEMBER_COUNT,
   ZERO_ADDRESS,
 } = require("../../utils/contract-util");
+const { log } = require("../../utils/log-util");
 
 const {
   proposalIdGenerator,
@@ -177,7 +178,7 @@ const onboardMember = async (dao, voting, onboarding, bank, index) => {
     rootSig
   );
 
-  console.log(
+  log(
     `gas used for ( ${proposalId} ) votes: ` +
       new Intl.NumberFormat().format(tx.receipt.gasUsed)
   );

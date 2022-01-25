@@ -26,7 +26,8 @@ SOFTWARE.
  */
 
 const { sha3, toHex, ZERO_ADDRESS } = require("./contract-util");
-const { checkpoint, restore } = require("../utils/checkpoint-utils");
+const { checkpoint, restore } = require("./checkpoint-util");
+const { log } = require("./log-util");
 const { ContractType } = require("../migrations/configs/contracts.config");
 
 const attach = async (contractInterface, address) => {
@@ -100,9 +101,7 @@ const deployFunction = ({ deployer, daoArtifacts, allConfigs, network }) => {
       contractConfig.type
     );
     if (address && address !== ZERO_ADDRESS) {
-      console.log(
-        `Attached to existing contract ${contractConfig.name}: ${address}`
-      );
+      log(`Attached to existing contract ${contractConfig.name}: ${address}`);
       const instance = await contractInterface.at(address);
       return { ...instance, configs: contractConfig };
     }
@@ -130,9 +129,6 @@ const deployFunction = ({ deployer, daoArtifacts, allConfigs, network }) => {
         toHex(contractConfig.version),
         deployedContract.address,
         contractConfig.type
-      );
-      console.log(
-        `${contractConfig.name}:${contractConfig.type}:${contractConfig.version}:${deployedContract.address} added to DaoArtifacts`
       );
     }
 
