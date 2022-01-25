@@ -78,7 +78,7 @@ describe("Extension - Vesting", () => {
     );
 
     const v = await vesting.vesting(daoOwner, UNITS);
-    const diff = v.endDate.sub(v.startDate);
+    const diff = toBN(v.endDate.toString()).sub(toBN(v.startDate.toString()));
 
     minBalance = await vesting.getMinimumBalance(daoOwner, UNITS);
     expect(minBalance.toString()).equal("1000");
@@ -115,7 +115,7 @@ describe("Extension - Vesting", () => {
     );
 
     let v = await vesting.vesting(daoOwner, UNITS);
-    let diff = v.endDate.sub(v.startDate);
+    let diff = toBN(v.endDate.toString()).sub(toBN(v.startDate.toString()));
 
     minBalance = await vesting.getMinimumBalance(daoOwner, UNITS);
     expect(minBalance.toString()).equal("100");
@@ -136,7 +136,7 @@ describe("Extension - Vesting", () => {
     );
 
     v = await vesting.vesting(daoOwner, UNITS);
-    diff = v.endDate.sub(v.startDate);
+    diff = toBN(v.endDate.toString()).sub(toBN(v.startDate.toString()));
     halfWay = diff.div(toBN("2"));
 
     minBalance = await vesting.getMinimumBalance(daoOwner, UNITS);
@@ -176,7 +176,7 @@ describe("Extension - Vesting", () => {
     );
 
     let v = await vesting.vesting(daoOwner, UNITS);
-    let diff = v.endDate.sub(v.startDate);
+    let diff = toBN(v.endDate.toString()).sub(toBN(v.startDate.toString()));
 
     minBalance = await vesting.getMinimumBalance(daoOwner, UNITS);
     expect(minBalance.toString()).equal("100");
@@ -197,7 +197,7 @@ describe("Extension - Vesting", () => {
     );
 
     v = await vesting.vesting(daoOwner, UNITS);
-    diff = v.endDate.sub(v.startDate);
+    diff = toBN(v.endDate.toString()).sub(toBN(v.startDate.toString()));
     halfWay = diff.div(toBN("2"));
 
     minBalance = await vesting.getMinimumBalance(daoOwner, UNITS);

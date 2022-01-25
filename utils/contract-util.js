@@ -26,6 +26,7 @@ SOFTWARE.
  */
 
 // Web3.js Utils
+const web3 = require("web3");
 const Web3Utils = require("web3-utils");
 const sha3 = Web3Utils.sha3;
 const soliditySha3 = Web3Utils.soliditySha3;
@@ -34,6 +35,7 @@ const fromUtf8 = Web3Utils.fromUtf8;
 const hexToBytes = Web3Utils.hexToBytes;
 const toAscii = Web3Utils.toAscii;
 const fromAscii = Web3Utils.fromAscii;
+const toBNWeb3 = Web3Utils.toBN;
 
 // Ethers.js utils
 const { ethers } = require("ethers");
@@ -61,7 +63,7 @@ const NFT = sha3("nft");
 const ERC1155 = sha3("erc1155-ext");
 
 const numberOfUnits = toBN("1000000000000000");
-const unitPrice = toBN(toWei("120", "finney"));
+const unitPrice = toWei("0.12");
 const remaining = unitPrice.sub(toBN("50000000000000"));
 const maximumChunks = toBN("11");
 const maxAmount = toBN("10000000000000000000");
@@ -86,6 +88,7 @@ module.exports = {
   sha3,
   soliditySha3,
   toBN,
+  toBNWeb3,
   toWei,
   hexToBytes,
   fromUtf8,

@@ -26,13 +26,13 @@ SOFTWARE.
  */
 const {
   toBN,
+  toWei,
   unitPrice,
   UNITS,
   GUILD,
   ETH_TOKEN,
   remaining,
   numberOfUnits,
-  sha3,
 } = require("../../utils/contract-util.js");
 
 const {
@@ -42,8 +42,8 @@ const {
   accounts,
   expectRevert,
   expect,
-  web3,
   OLToken,
+  getBalance,
 } = require("../../utils/oz-util.js");
 
 const { checkBalance, isMember } = require("../../utils/test-util.js");
@@ -53,7 +53,6 @@ const {
   SigUtilSigner,
   getMessageERC712Hash,
 } = require("../../utils/offchain-voting-util.js");
-const { toWei } = require("web3-utils");
 
 const signer = {
   address: "0x7D8cad0bbD68deb352C33e80fccd4D8e88b4aBb8",
@@ -95,7 +94,7 @@ describe("Adapter - KYC Onboarding", () => {
 
     const onboarding = adapters.kycOnboarding;
 
-    const initialTokenBalance = await web3.eth.getBalance(applicant);
+    const initialTokenBalance = await getBalance(applicant);
 
     await expectRevert(
       onboarding.onboardEth(dao.address, applicant, [], {
@@ -106,7 +105,7 @@ describe("Adapter - KYC Onboarding", () => {
     );
 
     // In case of failures the funds must be in the applicant account
-    const applicantTokenBalance = await web3.eth.getBalance(applicant);
+    const applicantTokenBalance = await getBalance(applicant);
     // "applicant account should contain 2**161 OLT Tokens when the onboard fails"
     expect(initialTokenBalance.toString()).equal(
       applicantTokenBalance.toString()
@@ -127,7 +126,7 @@ describe("Adapter - KYC Onboarding", () => {
     const bank = extensions.bankExt;
     const onboarding = adapters.kycOnboarding;
 
-    const myAccountInitialBalance = await web3.eth.getBalance(applicant);
+    const myAccountInitialBalance = await getBalance(applicant);
     // remaining amount to test sending back to proposer
     const ethAmount = unitPrice.mul(toBN(3)).add(remaining);
 
@@ -154,9 +153,9 @@ describe("Adapter - KYC Onboarding", () => {
       1
     );
 
-    await oltContract.transfer(applicant, toWei(toBN("1"), "ether"));
+    await oltContract.transfer(applicant, toWei("1"));
 
-    await oltContract.approve(onboarding.address, toWei(toBN("1"), "ether"), {
+    await oltContract.approve(onboarding.address, toWei("1"), {
       from: applicant,
     });
 
@@ -164,7 +163,7 @@ describe("Adapter - KYC Onboarding", () => {
       dao.address,
       applicant,
       oltContract.address,
-      toWei(toBN("1"), "ether"),
+      toWei("1"),
       signature,
       {
         from: applicant,
@@ -173,7 +172,7 @@ describe("Adapter - KYC Onboarding", () => {
     );
 
     // test return of remaining amount in excess of multiple of unitsPerChunk
-    const myAccountBalance = await web3.eth.getBalance(applicant);
+    const myAccountBalance = await getBalance(applicant);
     // daoOwner did not receive remaining amount in excess of multiple of unitsPerChunk
     expect(myAccountBalance.toString()).equal("1000000000000000000000000");
 
@@ -208,7 +207,7 @@ describe("Adapter - KYC Onboarding", () => {
     const bank = this.extensions.bankExt;
     const onboarding = this.adapters.kycOnboarding;
 
-    const myAccountInitialBalance = await web3.eth.getBalance(applicant);
+    const myAccountInitialBalance = await getBalance(applicant);
     // remaining amount to test sending back to proposer
     const ethAmount = unitPrice.mul(toBN(3)).add(remaining);
 
@@ -242,7 +241,7 @@ describe("Adapter - KYC Onboarding", () => {
     });
 
     // test return of remaining amount in excess of multiple of unitsPerChunk
-    const myAccountBalance = await web3.eth.getBalance(applicant);
+    const myAccountBalance = await getBalance(applicant);
     // daoOwner did not receive remaining amount in excess of multiple of unitsPerChunk
     expect(
       toBN(myAccountInitialBalance).sub(ethAmount).add(remaining).toString()

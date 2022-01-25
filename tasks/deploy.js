@@ -21,7 +21,7 @@ require("dotenv").config({ path: "../.env" });
 
 task("deploy", "Deploy the list of contracts", async (taskArgs, deployer) => {
   const { network } = deployer.hardhatArguments;
-  
+
   log(`Deployment started at ${new Date().toISOString()}`);
   log(`Deploying tribute-contracts@${pkgJson.version} to ${network} network`);
 
@@ -37,7 +37,7 @@ task("deploy", "Deploy the list of contracts", async (taskArgs, deployer) => {
     network
   );
 
-  const daoArtifacts = null;// FIXME await getOrCreateDaoArtifacts(deployer, hardhatImports);
+  const daoArtifacts = null; // FIXME await getOrCreateDaoArtifacts(deployer, hardhatImports);
   const deployFunction = await hardhatImports.deployFunctionFactory(
     deployer,
     daoArtifacts
@@ -285,7 +285,7 @@ const deployTestDao = async ({
     maxExternalTokens: 100,
     couponCreatorAddress: daoOwnerAddress,
     kycSignerAddress: daoOwnerAddress,
-    kycMaxMembers: toBN(1000),
+    kycMaxMembers: toBN("1000"),
     kycFundTargetAddress: getOptionalEnvVar(
       "KYC_MULTISIG_FUND_ADDR",
       ZERO_ADDRESS

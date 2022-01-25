@@ -108,7 +108,7 @@ describe("Extension - Executor", () => {
     // The adapter should call itself via proxy and mint the token
     expectEvent(res.receipt, "Minted", {
       owner: erc20Minter.address,
-      amount: toBN("10000"),
+      amount: "10000",
     });
 
     // The token mint call should be triggered from the adapter, but the
@@ -184,7 +184,7 @@ describe("Extension - Executor", () => {
         to: executorExt.address,
         from: daoOwner,
         gasPrice: toBN("0"),
-        value: toWei(toBN("1"), "ether"),
+        value: toWei("1"),
       }),
       "executorExt::accessDenied"
     );

@@ -103,7 +103,7 @@ describe("Adapter - Ragequit", () => {
     await expectRevert(
       this.adapters.ragequit.ragequit(
         this.dao.address,
-        toBN(units),
+        units,
         toBN(0),
         [ETH_TOKEN],
         {
@@ -186,7 +186,7 @@ describe("Adapter - Ragequit", () => {
     //Ragequit - Burn all the new member units
     await this.adapters.ragequit.ragequit(
       this.dao.address,
-      toBN(units),
+      units,
       toBN(0),
       [ETH_TOKEN],
       {
@@ -251,7 +251,7 @@ describe("Adapter - Ragequit", () => {
     //Ragequit - New member ragequits after YES vote
     await this.adapters.ragequit.ragequit(
       this.dao.address,
-      toBN(units),
+      units,
       toBN(0),
       [ETH_TOKEN],
       {
@@ -316,7 +316,7 @@ describe("Adapter - Ragequit", () => {
     //Ragequit - New member ragequits after YES vote
     await this.adapters.ragequit.ragequit(
       this.dao.address,
-      toBN(units),
+      units,
       toBN(0),
       [ETH_TOKEN],
       {
@@ -327,7 +327,7 @@ describe("Adapter - Ragequit", () => {
 
     //Check Guild Bank Balance
     const newGuildBalance = await bank.balanceOf(GUILD, ETH_TOKEN);
-    expect(toBN(newGuildBalance).toString()).equal("120"); //must be close to 0
+    expect(newGuildBalance.toString()).equal("120"); //must be close to 0
   });
 
   it("should be possible for an Advisor to ragequit", async () => {
@@ -413,7 +413,7 @@ describe("Adapter - Ragequit", () => {
     await adapters.ragequit.ragequit(
       dao.address,
       toBN(0),
-      toBN(advisorAccountLoot),
+      advisorAccountLoot,
       [oltContract.address],
       {
         from: advisorAccount,
@@ -449,13 +449,13 @@ describe("Adapter - Ragequit", () => {
     expect(guildBalance.toString()).equal("1200000000000000000");
 
     //Check New Member Units
-    let units = await bank.balanceOf(memberAddr, UNITS);
-    expect(units.toString()).equal("10000000000000000");
+    const memberUnits = await bank.balanceOf(memberAddr, UNITS);
+    expect(memberUnits.toString()).equal("10000000000000000");
 
     //Ragequit - Burn all the new member units
     await this.adapters.ragequit.ragequit(
       this.dao.address,
-      toBN(units),
+      memberUnits,
       toBN(0),
       [ETH_TOKEN],
       {
@@ -493,15 +493,15 @@ describe("Adapter - Ragequit", () => {
     const bank = this.extensions.bankExt;
 
     // Check member units
-    let units = await bank.balanceOf(owner, UNITS);
-    expect(units.toString()).equal("1");
+    const memberUnits = await bank.balanceOf(owner, UNITS);
+    expect(memberUnits.toString()).equal("1");
 
     //Ragequit - Attempts to ragequit using an invalid token to receive funds
     let invalidToken = accounts[7];
     await expectRevert(
       this.adapters.ragequit.ragequit(
         this.dao.address,
-        toBN(units),
+        memberUnits,
         toBN(0),
         [invalidToken],
         {
@@ -536,13 +536,13 @@ describe("Adapter - Ragequit", () => {
     expect(guildBalance.toString()).equal("1200000000000000000");
 
     //Check New Member Units
-    let units = await bank.balanceOf(newMember, UNITS);
-    expect(units.toString()).equal("10000000000000000");
+    const memberUnits = await bank.balanceOf(newMember, UNITS);
+    expect(memberUnits.toString()).equal("10000000000000000");
 
     await expectRevert(
       this.adapters.ragequit.ragequit(
         this.dao.address,
-        toBN(units),
+        memberUnits,
         toBN(0),
         [ETH_TOKEN, ETH_TOKEN], // token array with duplicates
         {
@@ -578,7 +578,7 @@ describe("Adapter - Ragequit", () => {
     await expectRevert(
       this.adapters.ragequit.ragequit(
         this.dao.address,
-        toBN(memberAUnits),
+        memberAUnits,
         toBN(0),
         [], //empty token array
         {
@@ -597,7 +597,7 @@ describe("Adapter - Ragequit", () => {
         to: adapter.address,
         from: owner,
         gasPrice: toBN("0"),
-        value: toWei(toBN("1"), "ether"),
+        value: toWei("1"),
       }),
       "revert"
     );
@@ -610,7 +610,7 @@ describe("Adapter - Ragequit", () => {
         to: adapter.address,
         from: owner,
         gasPrice: toBN("0"),
-        value: toWei(toBN("1"), "ether"),
+        value: toWei("1"),
         data: fromAscii("should go to fallback func"),
       }),
       "revert"

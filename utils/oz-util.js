@@ -47,12 +47,16 @@ const {
 
 const { expect } = require("chai");
 const { expectRevert } = require("@openzeppelin/test-helpers");
-const { deployDao, configureExtensionAccess } = require("./deployment-util.js");
+const { deployDao } = require("./deployment-util.js");
 const {
   contracts: allContractConfigs,
 } = require("../migrations/configs/test.config");
 const { ContractType } = require("../migrations/configs/contracts.config");
-const { sha3 } = require("web3-utils");
+
+const getBalance = async (account) => {
+  const balance = await web3.eth.getBalance(account);
+  return toBN(balance);
+};
 
 const attach = async (contractInterface, address) => {
   return await contractInterface.at(address);
@@ -227,7 +231,7 @@ module.exports = (() => {
   const deployDefaultDao = async (options) => {
     const { WETH } = ozContracts;
     const weth = await WETH.new();
-    const finalize = options.finalize;
+    const finalize = options.finalize === undefined ? true : options.finalize;
 
     const result = await deployDao({
       ...getDefaultOptions(options),
@@ -239,9 +243,7 @@ module.exports = (() => {
       finalize: false,
     });
 
-    if (finalize) {
-      await result.dao.finalizeDao({ from: options.owner });
-    }
+    if (finalize) await result.dao.finalizeDao({ from: options.owner });
 
     return { wethContract: weth, ...result };
   };
@@ -249,6 +251,7 @@ module.exports = (() => {
   const deployDefaultNFTDao = async ({ owner }) => {
     const { WETH } = ozContracts;
     const weth = await WETH.new();
+
     const { dao, adapters, extensions, testContracts, utilContracts } =
       await deployDao({
         ...getDefaultOptions({ owner }),
@@ -276,6 +279,7 @@ module.exports = (() => {
   const deployDaoWithOffchainVoting = async (options) => {
     const owner = options.owner;
     const newMember = options.newMember;
+
     const { WETH } = ozContracts;
     const weth = await WETH.new();
     const { dao, adapters, extensions, testContracts, votingHelpers } =
@@ -337,6 +341,12 @@ module.exports = (() => {
     );
 
   return {
+    web3,
+    provider,
+    accounts,
+    expect,
+    expectRevert,
+    getBalance,
     generateMembers,
     deployDefaultDao,
     deployDefaultNFTDao,
@@ -346,11 +356,6 @@ module.exports = (() => {
     revertChainSnapshot,
     proposalIdGenerator,
     advanceTime,
-    web3,
-    provider,
-    accounts,
-    expect,
-    expectRevert,
     deployFunction,
     attachFunction: attach,
     getContractFromOpenZeppelin,

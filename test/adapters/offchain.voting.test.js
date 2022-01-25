@@ -252,7 +252,11 @@ const updateConfiguration = async (
     if (member) {
       const voteSigner = SigUtilSigner(member.privateKey);
       const weight = await bank.balanceOf(member.address, UNITS);
-      voteEntry = await createVote(proposalId, weight, voteYes);
+      voteEntry = await createVote(
+        proposalId,
+        toBN(weight.toString()),
+        voteYes
+      );
       voteEntry.sig = voteSigner(
         voteEntry,
         dao.address,
@@ -260,7 +264,7 @@ const updateConfiguration = async (
         chainId
       );
     } else {
-      voteEntry = await createVote(proposalId, 0, voteYes);
+      voteEntry = await createVote(proposalId, toBN("0"), voteYes);
       voteEntry.sig = "0x";
     }
 
@@ -482,7 +486,7 @@ describe("Adapter - Offchain Voting", () => {
         to: adapter.address,
         from: daoOwner,
         gasPrice: toBN("0"),
-        value: toWei(toBN("1"), "ether"),
+        value: toWei("1"),
       }),
       "revert"
     );
@@ -495,7 +499,7 @@ describe("Adapter - Offchain Voting", () => {
         to: adapter.address,
         from: daoOwner,
         gasPrice: toBN("0"),
-        value: toWei(toBN("1"), "ether"),
+        value: toWei("1"),
         data: fromAscii("should go to fallback func"),
       }),
       "revert"
