@@ -1,4 +1,4 @@
-[![codecov](https://codecov.io/gh/openlawteam/tribute-contracts/branch/master/graph/badge.svg?token=XZRL9RUYZE)](https://codecov.io/gh/openlawteam/tribute-contracts)
+[![Docs](https://img.shields.io/badge/docs-%F0%9F%93%84-blue)](https://tributedao.com/) [![NPM Package](https://img.shields.io/npm/v/tribute-contracts.svg)](https://www.npmjs.com/package/tribute-contracts) [![Coverage Status](https://codecov.io/gh/openlawteam/tribute-contracts/branch/master/graph/badge.svg)](https://codecov.io/gh/openlawteam/tribute-contracts)
 
 ## Contents
 
