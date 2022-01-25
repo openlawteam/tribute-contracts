@@ -252,7 +252,15 @@ describe("Extension - ERC1155", () => {
     expect(await isMember(bank, nftOwner)).equal(true);
     //internalTransfer should revert, because nonMember is not a member
 
-    erc1155Adapter.internalTransfer(
+    await this.adapters.erc1155TestAdapter.internalTransfer(
+      this.dao.address,
+      erc1155TestToken.address,
+      id, //tokenId
+      2, //amount
+      { from: nftOwner }
+    );
+
+    await erc1155Adapter.internalTransfer(
       this.dao.address,
       nonMember,
       erc1155TestToken.address,
@@ -261,13 +269,20 @@ describe("Extension - ERC1155", () => {
       { from: nftOwner }
     );
 
-    const nonMemberBalance = await erc1155Ext.getNFTIdAmount(
+    const nonMemberBalance = await erc1155TokenExtension.getNFTIdAmount(
       nonMember,
       erc1155TestToken.address,
       1
     );
 
+    const nftOwnerBalance = await erc1155TokenExtension.getNFTIdAmount(
+      nftOwner,
+      erc1155TestToken.address,
+      1
+    );
+
     expect(nonMemberBalance.toString()).equal("1");
+    expect(nftOwnerBalance.toString()).equal("1");
   });
 
   it("should not be possible to transfer the NFT when you are not the owner", async () => {
