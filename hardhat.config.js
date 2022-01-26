@@ -24,10 +24,6 @@ module.exports = {
     },
     ganache: {
       url: "http://127.0.0.1:7545",
-      network_id: "1337",
-      accounts: {
-        mnemonic: process.env.WALLET_MNEMONIC,
-      },
     },
     goerli: {
       url: process.env.ETH_NODE_URL,

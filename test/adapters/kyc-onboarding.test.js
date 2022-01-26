@@ -275,11 +275,10 @@ describe("Adapter - KYC Onboarding", () => {
     const delegateKey = accounts[3];
 
     const dao = this.dao;
-    const bank = this.extensions.bankExt;
     const onboarding = this.adapters.kycOnboarding;
     const daoRegistryAdapter = this.adapters.daoRegistryAdapter;
 
-    const myAccountInitialBalance = await web3.eth.getBalance(applicant);
+    const myAccountInitialBalance = await getBalance(applicant);
     // remaining amount to test sending back to proposer
     const ethAmount = unitPrice.mul(toBN(3)).add(remaining);
 
@@ -313,7 +312,7 @@ describe("Adapter - KYC Onboarding", () => {
     });
 
     // test return of remaining amount in excess of multiple of unitsPerChunk
-    const myAccountBalance = await web3.eth.getBalance(applicant);
+    const myAccountBalance = await getBalance(applicant);
     // daoOwner did not receive remaining amount in excess of multiple of unitsPerChunk
     expect(
       toBN(myAccountInitialBalance).sub(ethAmount).add(remaining).toString()
