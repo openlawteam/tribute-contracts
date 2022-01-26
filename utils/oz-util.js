@@ -32,8 +32,6 @@ const {
   provider,
 } = require("@openzeppelin/test-environment");
 
-const { entryDao } = require("./access-control-util");
-
 const {
   unitPrice,
   numberOfUnits,

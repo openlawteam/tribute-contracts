@@ -137,10 +137,7 @@ module.exports = {
   },
 
   // Additional Plugins
-  plugins: [
-    "truffle-plugin-verify",
-    "truffle-contract-size",
-  ],
+  plugins: ["truffle-plugin-verify", "truffle-contract-size"],
 };
 
 if (process.env.COVERAGE === "true") {
