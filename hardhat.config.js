@@ -1,8 +1,10 @@
 require("dotenv").config();
-require("solidity-coverage");
 require("ts-node").register({
   files: true,
 });
+// require("truffle-plugin-verify");
+// require("truffle-contract-size");
+require("solidity-coverage");
 require("@nomiclabs/hardhat-waffle");
 require("./tasks/accounts");
 require("./tasks/deploy");
@@ -21,6 +23,9 @@ module.exports = {
       throwOnCallFailures: false,
       loggingEnabled: true,
       allowUnlimitedContractSize: false,
+      gas: 0xfffffffffff,
+      gasPrice: 10000000000,
+      initialBaseFeePerGas: 0,
     },
     ganache: {
       url: "http://127.0.0.1:7545",
@@ -79,6 +84,7 @@ module.exports = {
       network_id: "*",
       gas: 0xfffffffffff,
       gasPrice: 10000000000,
+      initialBaseFeePerGas: 0,
     },
 
     // Main Networks
@@ -113,7 +119,7 @@ module.exports = {
     version: "0.8.9", // slither v0.8.2 does not support solc > 0.8.9
     settings: {
       optimizer: {
-        enabled: !(process.env.DISABLE_SOLC_OPTIMIZER === "true"),
+        enabled: !(process.env.SOLC_OPTIMIZER === "false"),
         runs: 200,
       },
     },
@@ -131,12 +137,4 @@ module.exports = {
   api_keys: {
     etherscan: process.env.ETHERSCAN_API_KEY, // Obtain one at https://etherscan.io/myapikey
   },
-
-  // Additional Plugins
-  plugins: ["truffle-plugin-verify", "truffle-contract-size"],
 };
-
-if (process.env.COVERAGE === "true") {
-  require("solidity-coverage");
-  module.exports.networks.hardhat.initialBaseFeePerGas = 0;
-}

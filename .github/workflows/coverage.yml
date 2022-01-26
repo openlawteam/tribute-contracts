@@ -9,6 +9,7 @@ on:
       - "*"
 env:
   ETH_NODE_URL: ${{ secrets.ETH_NODE_URL }}
+  WALLET_MNEMONIC: ${{ secrets.WALLET_MNEMONIC }}
 
 jobs:
   coverage:
@@ -30,7 +31,7 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
-      - name: Compile Contracts and Check Coverage
+      - name: Check Coverage
         run: npm run coverage
 
       - name: Publish to Codecov.io

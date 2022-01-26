@@ -28,8 +28,8 @@
   "scripts": {
     "build": "npm ci && npm run compile",
     "clean": "rimraf build/",
-    "compile": "DISABLE_SOLC_OPTIMIZER=false hardhat compile && scripts/prepack.sh",
-    "coverage": "TEST=true DISABLE_SOLC_OPTIMIZER=true ts-node tasks/coverage.ts",
+    "compile": "hardhat compile && scripts/prepack.sh",
+    "coverage": "TEST=true ts-node tasks/coverage.ts",
     "deploy:ganache": "npm run compile && hardhat deploy --network ganache 2>&1 | tee logs/ganache-deploy_`date '+%F_%T'`.log",
     "deploy:goerli": "npm run compile && hardhat deploy --network goerli 2>&1 | tee logs/goerli-deploy_`date '+%F_%T'`.log",
     "deploy:hardhat": "npm run compile && hardhat deploy --network hardhat",

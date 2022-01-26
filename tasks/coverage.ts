@@ -34,7 +34,7 @@ const skipFiles = [
 const main = async () => {
   await runCoverage(
     skipFiles,
-    "npm run compile",
+    "SOLC_OPTIMIZER=false npm run compile",
     "./node_modules/.bin/mocha --timeout 2000000 --recursive --exit".split(" ")
   );
 };
