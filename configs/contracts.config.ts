@@ -14,10 +14,10 @@ import {
   entryVesting,
   ACLBuilder,
   SelectedACLs,
-} from "../../utils/access-control-util";
+} from "../utils/access-control-util";
 
-import { extensionsIdsMap, adaptersIdsMap } from "../../utils/dao-ids-util";
-import { governanceRoles } from "../../utils/governance-util";
+import { extensionsIdsMap, adaptersIdsMap } from "../utils/dao-ids-util";
+import { governanceRoles } from "../utils/governance-util";
 
 // Matches the DaoArtifacts.sol ArtifactType enum
 export enum ContractType {

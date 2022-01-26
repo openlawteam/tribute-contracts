@@ -1,4 +1,6 @@
 pragma solidity ^0.8.0;
+function c_0xb07c1999(bytes32 c__0xb07c1999) pure {}
+
 
 // SPDX-License-Identifier: MIT
 
@@ -26,11 +28,17 @@ SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 //solhint-disable no-inline-assembly
 
 contract CloneFactory {
+function c_0x1db38551(bytes32 c__0x1db38551) public pure {}
+
     function _createClone(address target)
         internal
         returns (address payable result)
-    {
-        bytes20 targetBytes = bytes20(target);
+    {c_0x1db38551(0x3c1288e11dfad335e6bbd5e359a4904ea4770bdca90796b40a170d92dce8ba4c); /* function */ 
+
+c_0x1db38551(0x5a96671c0d160ce83212b1962f35fb238010c93b5b728c598bc49b7e01c5e007); /* line */ 
+        c_0x1db38551(0x7c1aa7aea969550f33dc6a906259128904ccd7c131c5fbabd13e6cf80e56ad1f); /* statement */ 
+bytes20 targetBytes = bytes20(target);
+c_0x1db38551(0x823b18a6fd1eb9c03fe8b7f2a87439b3b4aaa7fb91c0b0827ab629135e7c6511); /* line */ 
         assembly {
             let clone := mload(0x40)
             mstore(
@@ -50,8 +58,12 @@ contract CloneFactory {
         internal
         view
         returns (bool result)
-    {
-        bytes20 targetBytes = bytes20(target);
+    {c_0x1db38551(0x2e136e6c1701a6ceb636ea0358a77def84b977bd11b18d33a4bf3426f1eecb5b); /* function */ 
+
+c_0x1db38551(0xe4cce3c5024f45f765708188975d73dd25e2b9b6e3d5bf136e532018582c2566); /* line */ 
+        c_0x1db38551(0x9da3a9ac8af5e9e1d2cc8ec1c344c0220401c15e0f0aae0ff74483c9170bb1b0); /* statement */ 
+bytes20 targetBytes = bytes20(target);
+c_0x1db38551(0x14e8b1977fa93e44f5a541143176dbe70baadc6b3565106058c44f3956190c15); /* line */ 
         assembly {
             let clone := mload(0x40)
             mstore(

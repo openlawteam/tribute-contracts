@@ -1,4 +1,6 @@
 pragma solidity ^0.8.0;
+function c_0xdf071ed3(bytes32 c__0xdf071ed3) pure {}
+
 
 // SPDX-License-Identifier: MIT
 import "../core/DaoRegistry.sol";
@@ -33,6 +35,8 @@ SOFTWARE.
  */
 
 contract ERC1155AdapterContract is AdapterGuard {
+function c_0x6db68451(bytes32 c__0x6db68451) public pure {}
+
     /**
      * @notice Internally transfers the NFT from one owner to a new owner as long as both are active members.
      * @notice Reverts if the addresses of the owners are not members.
@@ -49,11 +53,16 @@ contract ERC1155AdapterContract is AdapterGuard {
         address nftAddr,
         uint256 nftTokenId,
         uint256 amount
-    ) external reentrancyGuard(dao) {
-        ERC1155TokenExtension erc1155 = ERC1155TokenExtension(
+    ) external reentrancyGuard(dao) {c_0x6db68451(0x68efaa4076508c35e1c7569e41d34d2e282777fc76cb87830dc1210f25d7a132); /* function */ 
+
+c_0x6db68451(0x6b4e8f73527f9370e1cba61e183b783901b48a3e011ca3667b7bf8e66e60f103); /* line */ 
+        c_0x6db68451(0x1c2606bbc05f69b875a67479d95bd224dc3ddb731863f3a0cfe5e8ea7ec18ddb); /* statement */ 
+ERC1155TokenExtension erc1155 = ERC1155TokenExtension(
             dao.getExtensionAddress(DaoHelper.ERC1155_EXT)
         );
-        erc1155.internalTransfer(
+c_0x6db68451(0x425d0a00f71d817617d43d3d80c05fe238f1af7a2309688822f8c23342d0f332); /* line */ 
+        c_0x6db68451(0x2419950a5ef51b2a8ac3e3543b7783907ff76602061393179bc51e85943e9abc); /* statement */ 
+erc1155.internalTransfer(
             dao,
             DaoHelper.msgSender(dao, msg.sender),
             toOwner,

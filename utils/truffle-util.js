@@ -28,7 +28,7 @@ SOFTWARE.
 const { sha3, toHex, ZERO_ADDRESS } = require("./contract-util");
 const { checkpoint, restore } = require("./checkpoint-util");
 const { log } = require("./log-util");
-const { ContractType } = require("../migrations/configs/contracts.config");
+const { ContractType } = require("../configs/contracts.config");
 
 const attach = async (contractInterface, address) => {
   return await contractInterface.at(address);
@@ -77,7 +77,7 @@ const deployFunction = ({ deployer, daoArtifacts, allConfigs, network }) => {
     );
     if (!contractConfig)
       throw Error(
-        `${contractInterface.contractName} contract not found in migrations/configs/contracts.config`
+        `${contractInterface.contractName} contract not found in configs/contracts.config`
       );
 
     if (

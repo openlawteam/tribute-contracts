@@ -25,7 +25,7 @@ module.exports = async (deployer, network, accounts) => {
   log(`Deployment started at: ${new Date().toISOString()}`);
   log(`Deploying tribute-contracts@${pkgJson.version} to ${network} network`);
 
-  const { contracts: contractConfigs } = require(`./configs/${network}.config`);
+  const { contracts: contractConfigs } = require(`../configs/networks/${network}.config`);
   const truffleImports = require("../utils/truffle-util")(
     contractConfigs,
     network
