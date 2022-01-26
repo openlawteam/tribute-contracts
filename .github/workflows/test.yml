@@ -32,4 +32,4 @@ jobs:
         run: npm run lint
 
       - name: Compile Contracts and Run Tests
-        run: npm run compile && npm run test
+        run: npm run test
