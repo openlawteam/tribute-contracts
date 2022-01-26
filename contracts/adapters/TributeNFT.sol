@@ -168,6 +168,7 @@ contract TributeNFTContract is
         if (voteResult == IVoting.VotingState.PASS) {
             NFTExtension nftExt = NFTExtension(dao.getExtensionAddress(NFT));
             BankExtension bank = BankExtension(dao.getExtensionAddress(BANK));
+            require(nftExt.dao() == dao, "wrong dao");
             require(bank.dao() == dao, "wrong dao");
             require(
                 bank.isInternalToken(UNITS),
