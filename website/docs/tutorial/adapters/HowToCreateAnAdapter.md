@@ -229,7 +229,7 @@ There are several examples of tests that you can check to start building your ow
 
 The general idea is to create one test suite per adapter/contract. And try to cover all the happy paths first, and then add more complex test cases after that.
 
-You need to declare the new adapter contract in `migration/configs/contracts.config.js` file, so it can be accessed in the deploy/test environment. Make sure you use following the structure:
+You need to declare the new adapter contract in `configs/contracts.config.js` file, so it can be accessed in the deploy/test environment. Make sure you use following the structure:
 
 ```json
  {

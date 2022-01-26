@@ -31,7 +31,7 @@ task("deploy", "Deploy the list of contracts", async (taskArgs, deployer) => {
 
   const {
     contracts: contractConfigs,
-  } = require(`../migrations/configs/${network}.config`);
+  } = require(`../configs/networks/${network}.config`);
   const hardhatImports = await require("../utils/hardhat-util.js")(
     contractConfigs,
     network

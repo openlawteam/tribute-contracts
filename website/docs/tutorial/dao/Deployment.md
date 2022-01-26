@@ -31,7 +31,7 @@ The deployment is slow mainly because we publish all the smart contracts at once
 :::
 
 :::tip
-Set `enabled: false` to the contract configuration found in the `tribute-contracts/migrations/configs/contracts.config.ts` file, and that will remove the contract from the deployment. Be mindful on which contracts you are disabling, otherwise your DAO might not be functional.
+Set `enabled: false` to the contract configuration found in the `tribute-contracts/configs/contracts.config.ts` file, and that will remove the contract from the deployment. Be mindful on which contracts you are disabling, otherwise your DAO might not be functional.
 :::
 
 At the end of the deployment process you should see the following output:

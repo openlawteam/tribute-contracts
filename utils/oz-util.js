@@ -51,8 +51,8 @@ const { expectRevert } = require("@openzeppelin/test-helpers");
 const { deployDao } = require("./deployment-util.js");
 const {
   contracts: allContractConfigs,
-} = require("../migrations/configs/test.config");
-const { ContractType } = require("../migrations/configs/contracts.config");
+} = require("../configs/networks/test.config");
+const { ContractType } = require("../configs/contracts.config");
 
 const getBalance = async (account) => {
   const balance = await web3.eth.getBalance(account);
