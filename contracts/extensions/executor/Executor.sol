@@ -53,14 +53,14 @@ contract ExecutorExtension is IExtension {
 
     modifier hasExtensionAccess(AclFlag flag) {
         require(
-            address(this) == msg.sender ||
+            (address(this) == msg.sender ||
                 address(dao) == msg.sender ||
                 DaoHelper.isInCreationModeAndHasAccess(dao) ||
                 dao.hasAdapterAccessToExtension(
                     msg.sender,
                     address(this),
                     uint8(flag)
-                ),
+                )),
             "executorExt::accessDenied"
         );
         _;
@@ -96,6 +96,12 @@ contract ExecutorExtension is IExtension {
             DaoHelper.isNotReservedAddress(implementation),
             "executorExt: impl address can not be reserved"
         );
+
+        
+        address daoAddr;
+        assembly {
+            daoAddr := mload(add(msg.data, 36))
+        }
 
         // solhint-disable-next-line no-inline-assembly
         assembly {

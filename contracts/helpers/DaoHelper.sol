@@ -187,7 +187,7 @@ library DaoHelper {
         require(memberAddress != address(0x0), "invalid member address");
         if (address(bank) != address(0x0)) {
             if (bank.balanceOf(memberAddress, MEMBER_COUNT) == 0) {
-                bank.addToBalance(memberAddress, MEMBER_COUNT, 1);
+                bank.addToBalance(dao, memberAddress, MEMBER_COUNT, 1);
             }
         }
     }

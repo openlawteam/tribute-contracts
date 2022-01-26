@@ -25,6 +25,7 @@ abstract contract Gelatofied {
         ) {
             if (supportsInterface) {
                 bank.withdrawTo(
+                    dao,
                     DaoHelper.GUILD,
                     gelato,
                     DaoHelper.ETH_TOKEN,
@@ -32,22 +33,24 @@ abstract contract Gelatofied {
                 );
             } else {
                 bank.internalTransfer(
+                    dao,
                     DaoHelper.GUILD,
                     gelato,
                     DaoHelper.ETH_TOKEN,
                     _amount
                 );
-                bank.withdraw(gelato, DaoHelper.ETH_TOKEN, _amount);
+                bank.withdraw(dao, gelato, DaoHelper.ETH_TOKEN, _amount);
             }
         } catch {
             //if supportsInterface reverts ( function does not exist, assume it does not have withdrawTo )
             bank.internalTransfer(
+                dao,
                 DaoHelper.GUILD,
                 gelato,
                 DaoHelper.ETH_TOKEN,
                 _amount
             );
-            bank.withdraw(gelato, DaoHelper.ETH_TOKEN, _amount);
+            bank.withdraw(dao, gelato, DaoHelper.ETH_TOKEN, _amount);
         }
         _;
 

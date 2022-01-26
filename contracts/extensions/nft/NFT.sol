@@ -34,7 +34,6 @@ SOFTWARE.
  */
 
 contract NFTExtension is IExtension, IERC721Receiver {
-    using Address for address payable;
     // Add the library methods
     using EnumerableSet for EnumerableSet.UintSet;
     using EnumerableSet for EnumerableSet.AddressSet;
@@ -66,14 +65,15 @@ contract NFTExtension is IExtension, IERC721Receiver {
     // All the NFTs addresses collected and stored in the GUILD collection
     EnumerableSet.AddressSet private _nftAddresses;
 
-    modifier hasExtensionAccess(IExtension extension, AclFlag flag) {
+    modifier hasExtensionAccess(DaoRegistry _dao, AclFlag flag) {
         require(
-            DaoHelper.isInCreationModeAndHasAccess(dao) ||
-                dao.hasAdapterAccessToExtension(
-                    msg.sender,
-                    address(extension),
-                    uint8(flag)
-                ),
+            dao == _dao &&
+                (DaoHelper.isInCreationModeAndHasAccess(dao) ||
+                    dao.hasAdapterAccessToExtension(
+                        msg.sender,
+                        address(this),
+                        uint8(flag)
+                    )),
             "erc721::accessDenied"
         );
         _;
@@ -103,10 +103,11 @@ contract NFTExtension is IExtension, IERC721Receiver {
      * @param nftTokenId The NFT token id.
      */
     // slither-disable-next-line reentrancy-benign
-    function collect(address nftAddr, uint256 nftTokenId)
-        external
-        hasExtensionAccess(this, AclFlag.COLLECT_NFT)
-    {
+    function collect(
+        DaoRegistry _dao,
+        address nftAddr,
+        uint256 nftTokenId
+    ) external hasExtensionAccess(_dao, AclFlag.COLLECT_NFT) {
         IERC721 erc721 = IERC721(nftAddr);
         // Move the NFT to the contract address
         address currentOwner = erc721.ownerOf(nftTokenId);
@@ -138,10 +139,11 @@ contract NFTExtension is IExtension, IERC721Receiver {
      */
     // slither-disable-next-line reentrancy-benign
     function withdrawNFT(
+        DaoRegistry _dao,
         address newOwner,
         address nftAddr,
         uint256 nftTokenId
-    ) external hasExtensionAccess(this, AclFlag.WITHDRAW_NFT) {
+    ) external hasExtensionAccess(_dao, AclFlag.WITHDRAW_NFT) {
         // Remove the NFT from the contract address to the actual owner
         require(
             _nfts[nftAddr].remove(nftTokenId),
@@ -172,10 +174,11 @@ contract NFTExtension is IExtension, IERC721Receiver {
      * @param newOwner The address of the new owner.
      */
     function internalTransfer(
+        DaoRegistry _dao,
         address nftAddr,
         uint256 nftTokenId,
         address newOwner
-    ) external hasExtensionAccess(this, AclFlag.INTERNAL_TRANSFER) {
+    ) external hasExtensionAccess(_dao, AclFlag.INTERNAL_TRANSFER) {
         require(newOwner != address(0x0), "erc721::new owner is 0");
         address currentOwner = _ownership[getNFTId(nftAddr, nftTokenId)];
         require(currentOwner != address(0x0), "erc721::nft not found");

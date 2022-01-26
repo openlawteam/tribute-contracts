@@ -69,6 +69,7 @@ describe("Extension - Vesting", () => {
     expect(minBalance.toString()).equal("0");
 
     await vesting.createNewVesting(
+      this.dao.address,
       daoOwner,
       UNITS,
       1000,
@@ -105,6 +106,7 @@ describe("Extension - Vesting", () => {
     expect(minBalance.toString()).equal("0");
 
     await vesting.createNewVesting(
+      this.dao.address,
       daoOwner,
       UNITS,
       100,
@@ -125,6 +127,7 @@ describe("Extension - Vesting", () => {
     now.setDate(now.getDate() + numberOfDaysToAdd);
 
     await vesting.createNewVesting(
+      this.dao.address,
       daoOwner,
       UNITS,
       100,
@@ -164,6 +167,7 @@ describe("Extension - Vesting", () => {
     expect(minBalance.toString()).equal("0");
 
     await vesting.createNewVesting(
+      this.dao.address,
       daoOwner,
       UNITS,
       100,
@@ -184,6 +188,7 @@ describe("Extension - Vesting", () => {
     now.setDate(now.getDate() + numberOfDaysToAdd);
 
     await vesting.createNewVesting(
+      this.dao.address,
       daoOwner,
       UNITS,
       100,
@@ -207,7 +212,9 @@ describe("Extension - Vesting", () => {
       minBalance.toString() === "75" || minBalance.toString() === "76"
     ).equal(true);
 
-    await vesting.removeVesting(daoOwner, UNITS, 50, { from: daoOwner });
+    await vesting.removeVesting(this.dao.address, daoOwner, UNITS, 50, {
+      from: daoOwner,
+    });
 
     minBalance = await vesting.getMinimumBalance(daoOwner, UNITS);
     expect(
@@ -222,6 +229,7 @@ describe("Extension - Vesting", () => {
     const now = new Date();
     await expectRevert(
       vesting.createNewVesting(
+        this.dao.address,
         daoOwner,
         UNITS,
         100,
@@ -237,7 +245,9 @@ describe("Extension - Vesting", () => {
     await this.dao.finalizeDao({ from: daoOwner });
     const vesting = this.extensions.vestingExt;
     await expectRevert(
-      vesting.removeVesting(daoOwner, UNITS, 100, { from: daoOwner }),
+      vesting.removeVesting(this.dao.address, daoOwner, UNITS, 100, {
+        from: daoOwner,
+      }),
       "vestingExt::accessDenied"
     );
   });

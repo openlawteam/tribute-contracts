@@ -172,8 +172,8 @@ contract KycOnboardingContract is
         BankExtension bank = BankExtension(
             dao.getExtensionAddress(DaoHelper.BANK)
         );
-        bank.registerPotentialNewInternalToken(DaoHelper.UNITS);
-        bank.registerPotentialNewToken(tokenAddr);
+        bank.registerPotentialNewInternalToken(dao, DaoHelper.UNITS);
+        bank.registerPotentialNewToken(dao, tokenAddr);
     }
 
     /**
@@ -273,12 +273,18 @@ contract KycOnboardingContract is
                 // so it is fine to send eth to it.
                 // slither-disable-next-line arbitrary-send
                 bank.addToBalance{value: details.amount}(
+                    dao,
                     DaoHelper.GUILD,
                     DaoHelper.ETH_TOKEN,
                     details.amount
                 );
             } else {
-                bank.addToBalance(DaoHelper.GUILD, tokenAddr, details.amount);
+                bank.addToBalance(
+                    dao,
+                    DaoHelper.GUILD,
+                    tokenAddr,
+                    details.amount
+                );
                 IERC20 erc20 = IERC20(tokenAddr);
                 erc20.safeTransferFrom(
                     msg.sender,
@@ -308,7 +314,12 @@ contract KycOnboardingContract is
             }
         }
 
-        bank.addToBalance(kycedMember, DaoHelper.UNITS, details.unitsRequested);
+        bank.addToBalance(
+            dao,
+            kycedMember,
+            DaoHelper.UNITS,
+            details.unitsRequested
+        );
 
         if (amount > details.amount && tokenAddr == DaoHelper.ETH_TOKEN) {
             payable(msg.sender).sendValue(msg.value - details.amount);

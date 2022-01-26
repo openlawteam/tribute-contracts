@@ -166,6 +166,7 @@ contract ReimbursementContract is IReimbursement, AdapterGuard, GelatoRelay {
         ) {
             if (supportsInterface) {
                 bank.withdrawTo(
+                    dao,
                     DaoHelper.GUILD,
                     caller,
                     DaoHelper.ETH_TOKEN,
@@ -173,22 +174,24 @@ contract ReimbursementContract is IReimbursement, AdapterGuard, GelatoRelay {
                 );
             } else {
                 bank.internalTransfer(
+                    dao,
                     DaoHelper.GUILD,
                     caller,
                     DaoHelper.ETH_TOKEN,
                     payback
                 );
-                bank.withdraw(caller, DaoHelper.ETH_TOKEN, payback);
+                bank.withdraw(dao, caller, DaoHelper.ETH_TOKEN, payback);
             }
         } catch {
             //if supportsInterface reverts ( function does not exist, assume it does not have withdrawTo )
             bank.internalTransfer(
+                dao,
                 DaoHelper.GUILD,
                 caller,
                 DaoHelper.ETH_TOKEN,
                 payback
             );
-            bank.withdraw(caller, DaoHelper.ETH_TOKEN, payback);
+            bank.withdraw(dao, caller, DaoHelper.ETH_TOKEN, payback);
         }
     }
 }

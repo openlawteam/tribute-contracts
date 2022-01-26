@@ -121,6 +121,7 @@ contract RagequitContract is IRagequit, AdapterGuard {
 
         // Burns / subtracts from member's balance the number of units to burn.
         bank.internalTransfer(
+            dao,
             memberAddr,
             DaoHelper.GUILD,
             DaoHelper.UNITS,
@@ -128,6 +129,7 @@ contract RagequitContract is IRagequit, AdapterGuard {
         );
         // Burns / subtracts from member's balance the number of loot to burn.
         bank.internalTransfer(
+            dao,
             memberAddr,
             DaoHelper.GUILD,
             DaoHelper.LOOT,
@@ -136,7 +138,7 @@ contract RagequitContract is IRagequit, AdapterGuard {
 
         // Completes the ragequit process by updating the GUILD internal balance based on each provided token.
         _burnUnits(
-            address(dao),
+            dao,
             memberAddr,
             unitsToBurn,
             lootToBurn,
@@ -157,7 +159,7 @@ contract RagequitContract is IRagequit, AdapterGuard {
      * @param bank The bank extension.
      */
     function _burnUnits(
-        address daoAddress,
+        DaoRegistry dao,
         address memberAddr,
         uint256 unitsToBurn,
         uint256 lootToBurn,
@@ -199,6 +201,7 @@ contract RagequitContract is IRagequit, AdapterGuard {
                 // it is because the supply was artificially inflated to oblivion, so we probably don"t care about it anyways
                 //slither-disable-next-line calls-loop
                 bank.internalTransfer(
+                    dao,
                     DaoHelper.GUILD,
                     memberAddr,
                     currentToken,
@@ -211,7 +214,7 @@ contract RagequitContract is IRagequit, AdapterGuard {
         // emit an event to indicate a successfull operation.
         //slither-disable-next-line reentrancy-events
         emit MemberRagequit(
-            daoAddress,
+            address(dao),
             memberAddr,
             unitsToBurn,
             lootToBurn,

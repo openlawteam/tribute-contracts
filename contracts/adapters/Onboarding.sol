@@ -65,9 +65,10 @@ contract OnboardingContract is IOnboarding, AdapterGuard, Reimbursable {
     }
 
     // proposals per dao
-    mapping(address => mapping(bytes32 => ProposalDetails)) public proposals;
+    mapping(DaoRegistry => mapping(bytes32 => ProposalDetails))
+        public proposals;
     // minted units per dao, per token, per applicant
-    mapping(address => mapping(address => mapping(address => uint88)))
+    mapping(DaoRegistry => mapping(address => mapping(address => uint88)))
         public units;
 
     /**
@@ -121,8 +122,8 @@ contract OnboardingContract is IOnboarding, AdapterGuard, Reimbursable {
         BankExtension bank = BankExtension(
             dao.getExtensionAddress(DaoHelper.BANK)
         );
-        bank.registerPotentialNewInternalToken(unitsToMint);
-        bank.registerPotentialNewToken(tokenAddr);
+        bank.registerPotentialNewInternalToken(dao, unitsToMint);
+        bank.registerPotentialNewToken(dao, tokenAddr);
     }
 
     /**
@@ -180,7 +181,7 @@ contract OnboardingContract is IOnboarding, AdapterGuard, Reimbursable {
         override
         reimbursable(dao)
     {
-        ProposalDetails storage proposal = proposals[address(dao)][proposalId];
+        ProposalDetails storage proposal = proposals[dao][proposalId];
         require(proposal.id == proposalId, "proposal does not exist");
         require(
             !dao.getProposalFlag(
@@ -200,8 +201,6 @@ contract OnboardingContract is IOnboarding, AdapterGuard, Reimbursable {
 
         dao.processProposal(proposalId);
 
-        address token = proposal.token;
-        uint256 amount = proposal.amount;
         if (voteResult == IVoting.VotingState.PASS) {
             address unitsToMint = proposal.unitsToMint;
             uint256 unitsRequested = proposal.unitsRequested;
@@ -214,30 +213,38 @@ contract OnboardingContract is IOnboarding, AdapterGuard, Reimbursable {
                 "it can only mint units"
             );
 
-            bank.addToBalance(applicant, unitsToMint, unitsRequested);
+            bank.addToBalance(dao, applicant, unitsToMint, unitsRequested);
 
-            address daoAddress = address(dao);
-            if (token == DaoHelper.ETH_TOKEN) {
+            if (proposal.token == DaoHelper.ETH_TOKEN) {
                 // This call sends ETH directly to the GUILD bank, and the address can't be changed since
                 // it is defined in the DaoHelper as a constant.
                 //slither-disable-next-line arbitrary-send
-                bank.addToBalance{value: amount}(
+                bank.addToBalance{value: proposal.amount}(
+                    dao,
                     DaoHelper.GUILD,
-                    token,
-                    amount
+                    proposal.token,
+                    proposal.amount
                 );
-                if (msg.value > amount) {
-                    payable(msg.sender).sendValue(msg.value - amount);
+                if (msg.value > proposal.amount) {
+                    payable(msg.sender).sendValue(msg.value - proposal.amount);
                 }
             } else {
-                bank.addToBalance(DaoHelper.GUILD, token, amount);
-                IERC20 erc20 = IERC20(token);
-                erc20.safeTransferFrom(msg.sender, address(bank), amount);
+                bank.addToBalance(
+                    dao,
+                    DaoHelper.GUILD,
+                    proposal.token,
+                    proposal.amount
+                );
+                IERC20(proposal.token).safeTransferFrom(
+                    msg.sender,
+                    address(bank),
+                    proposal.amount
+                );
             }
 
-            uint88 totalUnits = _getUnits(daoAddress, unitsToMint, applicant) +
+            uint88 totalUnits = _getUnits(dao, unitsToMint, applicant) +
                 proposal.unitsRequested;
-            units[daoAddress][unitsToMint][applicant] = totalUnits;
+            units[dao][unitsToMint][applicant] = totalUnits;
         } else if (
             voteResult == IVoting.VotingState.NOT_PASS ||
             voteResult == IVoting.VotingState.TIE
@@ -303,7 +310,7 @@ contract OnboardingContract is IOnboarding, AdapterGuard, Reimbursable {
         details.unitsRequested = details.numberOfChunks * details.unitsPerChunk;
 
         details.totalUnits =
-            _getUnits(address(dao), token, applicant) +
+            _getUnits(dao, token, applicant) +
             details.unitsRequested;
 
         require(
@@ -312,7 +319,7 @@ contract OnboardingContract is IOnboarding, AdapterGuard, Reimbursable {
             "total units for this member must be lower than the maximum"
         );
 
-        proposals[address(dao)][proposalId] = ProposalDetails(
+        proposals[dao][proposalId] = ProposalDetails(
             proposalId,
             tokenToMint,
             details.amount,
@@ -328,16 +335,16 @@ contract OnboardingContract is IOnboarding, AdapterGuard, Reimbursable {
 
     /**
      * @notice Gets the current number of units.
-     * @param daoAddress The DAO Address that contains the units.
+     * @param dao The DAO that contains the units.
      * @param token The Token Address in which the Unit were minted.
      * @param applicant The Applicant Address which holds the units.
      */
     function _getUnits(
-        address daoAddress,
+        DaoRegistry dao,
         address token,
         address applicant
     ) internal view returns (uint88) {
-        return units[daoAddress][token][applicant];
+        return units[dao][token][applicant];
     }
 
     /**

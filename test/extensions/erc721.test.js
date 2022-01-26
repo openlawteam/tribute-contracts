@@ -80,7 +80,12 @@ describe("Extension - ERC721", () => {
     const nftExtension = this.extensions.erc721Ext;
     const pixelNFT = this.testContracts.pixelNFT;
     await expectRevert(
-      nftExtension.withdrawNFT(accounts[1], pixelNFT.address, 1),
+      nftExtension.withdrawNFT(
+        this.dao.address,
+        accounts[1],
+        pixelNFT.address,
+        1
+      ),
       "erc721::accessDenied"
     );
   });

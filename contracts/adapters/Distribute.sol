@@ -197,6 +197,7 @@ contract DistributeContract is IDistribute, AdapterGuard, Reimbursable {
             );
 
             bank.internalTransfer(
+                dao,
                 DaoHelper.GUILD,
                 DaoHelper.ESCROW,
                 distribution.token,
@@ -253,7 +254,14 @@ contract DistributeContract is IDistribute, AdapterGuard, Reimbursable {
         address unitHolderAddr = distribution.unitHolderAddr;
         if (unitHolderAddr != address(0x0)) {
             distribution.status = DistributionStatus.DONE;
-            _distributeOne(bank, unitHolderAddr, blockNumber, token, amount);
+            _distributeOne(
+                dao,
+                bank,
+                unitHolderAddr,
+                blockNumber,
+                token,
+                amount
+            );
             //slither-disable-next-line reentrancy-events
             emit Distributed(address(dao), token, amount, unitHolderAddr);
         } else {
@@ -288,6 +296,7 @@ contract DistributeContract is IDistribute, AdapterGuard, Reimbursable {
      * @notice It is an internal transfer only that happens in the Bank extension.
      */
     function _distributeOne(
+        DaoRegistry dao,
         BankExtension bank,
         address unitHolderAddr,
         uint256 blockNumber,
@@ -301,7 +310,13 @@ contract DistributeContract is IDistribute, AdapterGuard, Reimbursable {
         );
         require(memberTokens != 0, "not enough tokens");
         // Distributes the funds to 1 unit holder only
-        bank.internalTransfer(DaoHelper.ESCROW, unitHolderAddr, token, amount);
+        bank.internalTransfer(
+            dao,
+            DaoHelper.ESCROW,
+            unitHolderAddr,
+            token,
+            amount
+        );
     }
 
     /**
@@ -339,6 +354,7 @@ contract DistributeContract is IDistribute, AdapterGuard, Reimbursable {
                 if (amountToDistribute > 0) {
                     //slither-disable-next-line calls-loop
                     bank.internalTransfer(
+                        dao,
                         DaoHelper.ESCROW,
                         memberAddr,
                         token,

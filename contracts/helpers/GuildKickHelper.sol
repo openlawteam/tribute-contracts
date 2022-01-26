@@ -55,14 +55,24 @@ library GuildKickHelper {
         uint256 unitsToBurn = bank.balanceOf(potentialKickedMember, UNITS);
         uint256 lootToBurn = bank.balanceOf(potentialKickedMember, LOOT);
 
-        bank.registerPotentialNewToken(LOCKED_UNITS);
-        bank.registerPotentialNewToken(LOCKED_LOOT);
+        bank.registerPotentialNewToken(dao, LOCKED_UNITS);
+        bank.registerPotentialNewToken(dao, LOCKED_LOOT);
 
-        bank.addToBalance(potentialKickedMember, LOCKED_UNITS, unitsToBurn);
-        bank.subtractFromBalance(potentialKickedMember, UNITS, unitsToBurn);
+        bank.addToBalance(
+            dao,
+            potentialKickedMember,
+            LOCKED_UNITS,
+            unitsToBurn
+        );
+        bank.subtractFromBalance(
+            dao,
+            potentialKickedMember,
+            UNITS,
+            unitsToBurn
+        );
 
-        bank.addToBalance(potentialKickedMember, LOCKED_LOOT, lootToBurn);
-        bank.subtractFromBalance(potentialKickedMember, LOOT, lootToBurn);
+        bank.addToBalance(dao, potentialKickedMember, LOCKED_LOOT, lootToBurn);
+        bank.subtractFromBalance(dao, potentialKickedMember, LOOT, lootToBurn);
     }
 
     function unlockMemberTokens(DaoRegistry dao, address kickedMember)
@@ -73,11 +83,16 @@ library GuildKickHelper {
         uint256 unitsToReturn = bank.balanceOf(kickedMember, LOCKED_UNITS);
         uint256 lootToReturn = bank.balanceOf(kickedMember, LOCKED_LOOT);
 
-        bank.addToBalance(kickedMember, UNITS, unitsToReturn);
-        bank.subtractFromBalance(kickedMember, LOCKED_UNITS, unitsToReturn);
+        bank.addToBalance(dao, kickedMember, UNITS, unitsToReturn);
+        bank.subtractFromBalance(
+            dao,
+            kickedMember,
+            LOCKED_UNITS,
+            unitsToReturn
+        );
 
-        bank.addToBalance(kickedMember, LOOT, lootToReturn);
-        bank.subtractFromBalance(kickedMember, LOCKED_LOOT, lootToReturn);
+        bank.addToBalance(dao, kickedMember, LOOT, lootToReturn);
+        bank.subtractFromBalance(dao, kickedMember, LOCKED_LOOT, lootToReturn);
     }
 
     /**
@@ -124,6 +139,7 @@ library GuildKickHelper {
                     // it is because the supply was artificially inflated to oblivion, so we probably don"t care about it anyways
                     //slither-disable-next-line calls-loop
                     bank.internalTransfer(
+                        dao,
                         GUILD,
                         kickedMember,
                         token,
@@ -132,8 +148,18 @@ library GuildKickHelper {
                 }
             }
 
-            bank.subtractFromBalance(kickedMember, LOCKED_UNITS, unitsToBurn);
-            bank.subtractFromBalance(kickedMember, LOCKED_LOOT, lootToBurn);
+            bank.subtractFromBalance(
+                dao,
+                kickedMember,
+                LOCKED_UNITS,
+                unitsToBurn
+            );
+            bank.subtractFromBalance(
+                dao,
+                kickedMember,
+                LOCKED_LOOT,
+                lootToBurn
+            );
         }
     }
 }

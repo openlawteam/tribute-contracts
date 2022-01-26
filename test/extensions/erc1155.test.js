@@ -109,6 +109,7 @@ describe("Extension - ERC1155", () => {
     const erc1155TestToken = this.testContracts.erc1155TestToken;
     await expectRevert(
       erc1155TokenExtension.withdrawNFT(
+        this.dao.address,
         GUILD,
         accounts[1],
         erc1155TestToken.address,

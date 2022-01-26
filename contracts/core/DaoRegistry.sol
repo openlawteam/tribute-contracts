@@ -248,7 +248,12 @@ contract DaoRegistry is MemberGuard, AdapterGuard {
         if (bankAddress != address(0x0)) {
             BankExtension bank = BankExtension(bankAddress);
             if (bank.balanceOf(memberAddress, DaoHelper.MEMBER_COUNT) == 0) {
-                bank.addToBalance(memberAddress, DaoHelper.MEMBER_COUNT, 1);
+                bank.addToBalance(
+                    this,
+                    memberAddress,
+                    DaoHelper.MEMBER_COUNT,
+                    1
+                );
             }
         }
     }

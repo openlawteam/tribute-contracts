@@ -85,13 +85,14 @@ contract CouponOnboardingContract is Reimbursable, AdapterGuard, Signatures {
         BankExtension bank = BankExtension(
             dao.getExtensionAddress(DaoHelper.BANK)
         );
-        bank.registerPotentialNewInternalToken(tokenAddrToMint);
+        bank.registerPotentialNewInternalToken(dao, tokenAddrToMint);
         uint160 currentBalance = bank.balanceOf(
             DaoHelper.TOTAL,
             tokenAddrToMint
         );
         if (currentBalance < maxAmount) {
             bank.addToBalance(
+                dao,
                 DaoHelper.GUILD,
                 tokenAddrToMint,
                 maxAmount - currentBalance
@@ -138,16 +139,18 @@ contract CouponOnboardingContract is Reimbursable, AdapterGuard, Signatures {
         uint256 nonce,
         bytes memory signature
     ) external reimbursable(dao) {
-        uint256 currentFlag = _flags[address(dao)][nonce / 256];
-        _flags[address(dao)][nonce / 256] = DaoHelper.setFlag(
-            currentFlag,
-            nonce % 256,
-            true
-        );
-        require(
-            DaoHelper.getFlag(currentFlag, nonce % 256) == false,
-            "coupon already redeemed"
-        );
+        {
+            uint256 currentFlag = _flags[address(dao)][nonce / 256];
+            _flags[address(dao)][nonce / 256] = DaoHelper.setFlag(
+                currentFlag,
+                nonce % 256,
+                true
+            );
+            require(
+                DaoHelper.getFlag(currentFlag, nonce % 256) == false,
+                "coupon already redeemed"
+            );
+        }
 
         Coupon memory coupon = Coupon(authorizedMember, amount, nonce);
         bytes32 hash = hashCouponMessage(dao, coupon);
@@ -172,6 +175,7 @@ contract CouponOnboardingContract is Reimbursable, AdapterGuard, Signatures {
                 TokenAddrToMint
             );
             bank.internalTransfer(
+                dao,
                 DaoHelper.GUILD,
                 authorizedMember,
                 tokenAddressToMint,

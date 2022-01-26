@@ -60,7 +60,7 @@ contract BankAdapterContract is AdapterGuard, Reimbursable {
         uint256 balance = bank.balanceOf(account, token);
         require(balance > 0, "nothing to withdraw");
 
-        bank.withdraw(account, token, balance);
+        bank.withdraw(dao, account, token, balance);
     }
 
     /**
@@ -76,6 +76,7 @@ contract BankAdapterContract is AdapterGuard, Reimbursable {
         // We do not need to check if the token is supported by the bank,
         // because if it is not, the balance will always be zero.
         BankExtension(dao.getExtensionAddress(DaoHelper.BANK)).updateToken(
+            dao,
             token
         );
     }
@@ -88,6 +89,6 @@ contract BankAdapterContract is AdapterGuard, Reimbursable {
         require(msg.value > 0, "no eth sent!");
         BankExtension(dao.getExtensionAddress(DaoHelper.BANK)).addToBalance{
             value: msg.value
-        }(DaoHelper.GUILD, DaoHelper.ETH_TOKEN, msg.value);
+        }(dao, DaoHelper.GUILD, DaoHelper.ETH_TOKEN, msg.value);
     }
 }

@@ -54,6 +54,7 @@ contract ERC1155AdapterContract is AdapterGuard {
             dao.getExtensionAddress(DaoHelper.ERC1155_EXT)
         );
         erc1155.internalTransfer(
+            dao,
             DaoHelper.msgSender(dao, msg.sender),
             toOwner,
             nftAddr,

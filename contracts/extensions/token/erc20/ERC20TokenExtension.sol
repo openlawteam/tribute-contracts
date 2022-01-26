@@ -267,7 +267,7 @@ contract ERC20Extension is AdapterGuard, IExtension, IERC20 {
         BankExtension bank
     ) internal {
         DaoHelper.potentialNewMember(recipient, dao, bank);
-        bank.internalTransfer(senderAddr, recipient, tokenAddress, amount);
+        bank.internalTransfer(dao, senderAddr, recipient, tokenAddress, amount);
     }
 
     /**

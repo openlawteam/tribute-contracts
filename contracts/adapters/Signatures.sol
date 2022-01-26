@@ -113,6 +113,7 @@ contract SignaturesContract is ISignatures, AdapterGuard, Reimbursable {
         );
 
         erc1271.sign(
+            dao,
             details.permissionHash,
             details.signatureHash,
             details.magicValue

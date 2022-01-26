@@ -36,8 +36,6 @@ SOFTWARE.
  * @dev Signs arbitrary messages and exposes ERC1271 interface
  */
 contract ERC1271Extension is IExtension, IERC1271 {
-    using Address for address payable;
-
     bool public initialized = false; // internally tracks deployment under eip-1167 proxy pattern
     DaoRegistry public dao;
 
@@ -55,16 +53,17 @@ contract ERC1271Extension is IExtension, IERC1271 {
     /// @notice Clonable contract must have an empty constructor
     constructor() {}
 
-    modifier hasExtensionAccess(AclFlag flag) {
+    modifier hasExtensionAccess(DaoRegistry _dao, AclFlag flag) {
         require(
-            address(this) == msg.sender ||
-                address(dao) == msg.sender ||
-                DaoHelper.isInCreationModeAndHasAccess(dao) ||
-                dao.hasAdapterAccessToExtension(
-                    msg.sender,
-                    address(this),
-                    uint8(flag)
-                ),
+            dao == _dao &&
+                (address(this) == msg.sender ||
+                    address(dao) == msg.sender ||
+                    DaoHelper.isInCreationModeAndHasAccess(dao) ||
+                    dao.hasAdapterAccessToExtension(
+                        msg.sender,
+                        address(this),
+                        uint8(flag)
+                    )),
             "erc1271::accessDenied"
         );
         _;
@@ -112,10 +111,11 @@ contract ERC1271Extension is IExtension, IERC1271 {
      * @param magicValue The value to be returned by the ERC1271 interface upon success.
      */
     function sign(
+        DaoRegistry _dao,
         bytes32 permissionHash,
         bytes32 signatureHash,
         bytes4 magicValue
-    ) external hasExtensionAccess(AclFlag.SIGN) {
+    ) external hasExtensionAccess(_dao, AclFlag.SIGN) {
         signatures[permissionHash] = DAOSignature({
             signatureHash: signatureHash,
             magicValue: magicValue

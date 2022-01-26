@@ -126,10 +126,16 @@ contract FinancingContract is IFinancing, AdapterGuard, Reimbursable {
         );
 
         bank.subtractFromBalance(
+            dao,
             DaoHelper.GUILD,
             details.token,
             details.amount
         );
-        bank.addToBalance(details.applicant, details.token, details.amount);
+        bank.addToBalance(
+            dao,
+            details.applicant,
+            details.token,
+            details.amount
+        );
     }
 }
