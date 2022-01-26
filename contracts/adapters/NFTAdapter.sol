@@ -54,6 +54,7 @@ contract NFTAdapterContract is DaoConstants, MemberGuard, AdapterGuard {
         uint256 nftTokenId
     ) external reentrancyGuard(dao) {
         NFTExtension nft = NFTExtension(dao.getExtensionAddress(NFT));
+        require(nft.dao() == dao, "wrong dao");
         nft.collect(nftAddr, nftTokenId);
     }
 }

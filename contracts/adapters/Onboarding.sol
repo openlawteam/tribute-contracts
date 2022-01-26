@@ -125,6 +125,7 @@ contract OnboardingContract is
         );
 
         BankExtension bank = BankExtension(dao.getExtensionAddress(BANK));
+        require(bank.dao() == dao, "wrong dao");
         bank.registerPotentialNewInternalToken(unitsToMint);
         bank.registerPotentialNewToken(tokenAddr);
     }
@@ -213,6 +214,7 @@ contract OnboardingContract is
             uint256 unitsRequested = proposal.unitsRequested;
             address applicant = proposal.applicant;
             BankExtension bank = BankExtension(dao.getExtensionAddress(BANK));
+            require(bank.dao() == dao, "wrong dao");
             require(
                 bank.isInternalToken(unitsToMint),
                 "it can only mint units"

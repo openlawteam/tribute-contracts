@@ -217,6 +217,7 @@ contract DistributeContract is
             ongoingDistributions[address(dao)] = proposalId;
 
             BankExtension bank = BankExtension(dao.getExtensionAddress(BANK));
+            require(bank.dao() == dao, "wrong dao");
             uint256 balance = bank.balanceOf(GUILD, distribution.token);
             require(
                 balance - distribution.amount >= 0,

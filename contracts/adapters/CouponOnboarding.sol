@@ -128,7 +128,7 @@ contract CouponOnboardingContract is
         );
 
         BankExtension bank = BankExtension(dao.getExtensionAddress(BANK));
-
+        require(bank.dao() == dao, "wrong dao");
         bank.addToBalance(authorizedMember, tokenAddrToMint, amount);
         // address needs to be added to the members mappings
         potentialNewMember(authorizedMember, dao, bank);

@@ -89,6 +89,7 @@ contract TributeContract is
         onlyAdapter(dao)
     {
         BankExtension bank = BankExtension(dao.getExtensionAddress(BANK));
+        require(bank.dao() == dao, "wrong dao");
         bank.registerPotentialNewInternalToken(tokenAddrToMint);
     }
 
@@ -187,6 +188,7 @@ contract TributeContract is
 
         if (voteResult == IVoting.VotingState.PASS) {
             BankExtension bank = BankExtension(dao.getExtensionAddress(BANK));
+            require(bank.dao() == dao, "wrong dao");
             address tokenToMint = proposal.tokenToMint;
             address applicant = proposal.applicant;
             uint256 tributeAmount = proposal.tributeAmount;
