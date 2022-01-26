@@ -1,5 +1,6 @@
 const isDebug = process.env.DEBUG === "true";
 const isTest = process.env.TEST === "true";
+const isCoverage = process.env.DISABLE_SOLC_OPTIMIZER === "true";
 
 const debug = (...data) => {
   if (isDebug) console.log(data.join(""));
@@ -10,7 +11,7 @@ const log = (data) => {
 };
 
 const info = (data) => {
-  if (!isTest) console.error(data.replace(/^ {8}/gm, "    "));
+  if (!isTest && !isCoverage) console.error(data.replace(/^ {8}/gm, "    "));
 };
 
 const error = (...data) => {

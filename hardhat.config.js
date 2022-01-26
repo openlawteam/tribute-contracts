@@ -138,8 +138,12 @@ module.exports = {
 
   // Additional Plugins
   plugins: [
-    "solidity-coverage",
     "truffle-plugin-verify",
     "truffle-contract-size",
   ],
 };
+
+if (process.env.COVERAGE === "true") {
+  require("solidity-coverage");
+  module.exports.networks.hardhat.initialBaseFeePerGas = 0;
+}

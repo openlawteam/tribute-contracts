@@ -18,7 +18,7 @@ jobs:
       - name: Setup node
         uses: actions/setup-node@v2
         with:
-          node-version: "14.17.0"
+          node-version: "16.3.0"
 
       - name: Setup SSH to install dependencies
         uses: webfactory/ssh-agent@v0.5.0
@@ -29,7 +29,7 @@ jobs:
         run: npm ci
 
       - name: Compile Contracts and Check Coverage
-        run: npm run compile && npm run coverage
+        run: npm run coverage
 
       - name: Publish to Codecov.io
         run: bash <(curl -s https://codecov.io/bash) -t ${{ secrets.CODECOV_TOKEN }}

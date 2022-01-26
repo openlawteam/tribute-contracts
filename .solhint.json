@@ -1,16 +1,15 @@
-{
+{ 
   "extends": "solhint:recommended",
   "rules": {
-    "func-order": "off",
-    "mark-callable-contracts": "off",
     "no-empty-blocks": "off",
+    "no-inline-assembly": "warn",
+    "func-order": "warn",
+    "func-param-name-mixedcase": "error",
     "compiler-version": ["error", "^0.8.0"],
-    "private-vars-leading-underscore": "error",
-    "reason-string": "on",
-    "no-unused-vars": "warn",
-    "payable-fallback": "error",
+    "mark-callable-contracts": "off",
     "reentrancy": "error",
     "code-complexity": ["warn", 7],
-    "no-inline-assembly": "warn"
+    "private-vars-leading-underscore": "error",
+    "modifier-name-mixedcase": "error"
   }
 }
