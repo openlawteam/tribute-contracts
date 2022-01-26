@@ -79,8 +79,13 @@ contract KickBadReporterAdapter is MemberGuard {
                 dao.getExtensionAddress(DaoHelper.BANK)
             );
 
-            bank.subtractFromBalance(challengeAddress, DaoHelper.LOOT, units);
-            bank.addToBalance(challengeAddress, DaoHelper.UNITS, units);
+            bank.subtractFromBalance(
+                dao,
+                challengeAddress,
+                DaoHelper.LOOT,
+                units
+            );
+            bank.addToBalance(dao, challengeAddress, DaoHelper.UNITS, units);
         } else {
             revert("vote not finished yet");
         }

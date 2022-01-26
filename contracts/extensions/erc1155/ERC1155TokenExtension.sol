@@ -80,14 +80,15 @@ contract ERC1155TokenExtension is IExtension, IERC1155Receiver {
     EnumerableSet.AddressSet private _nftAddresses;
 
     //MODIFIERS
-    modifier hasExtensionAccess(IExtension extension, AclFlag flag) {
+    modifier hasExtensionAccess(DaoRegistry _dao, AclFlag flag) {
         require(
-            DaoHelper.isInCreationModeAndHasAccess(dao) ||
-                dao.hasAdapterAccessToExtension(
-                    msg.sender,
-                    address(extension),
-                    uint8(flag)
-                ),
+            _dao == dao &&
+                (DaoHelper.isInCreationModeAndHasAccess(dao) ||
+                    dao.hasAdapterAccessToExtension(
+                        msg.sender,
+                        address(this),
+                        uint8(flag)
+                    )),
             "erc1155Ext::accessDenied"
         );
         _;
@@ -121,12 +122,13 @@ contract ERC1155TokenExtension is IExtension, IERC1155Receiver {
      * @param amount The NFT token id amount to withdraw.
      */
     function withdrawNFT(
+        DaoRegistry _dao,
         address from,
         address newOwner,
         address nftAddr,
         uint256 nftTokenId,
         uint256 amount
-    ) external hasExtensionAccess(this, AclFlag.WITHDRAW_NFT) {
+    ) external hasExtensionAccess(_dao, AclFlag.WITHDRAW_NFT) {
         IERC1155 erc1155 = IERC1155(nftAddr);
         uint256 balance = erc1155.balanceOf(address(this), nftTokenId);
         require(
@@ -185,12 +187,13 @@ contract ERC1155TokenExtension is IExtension, IERC1155Receiver {
      * @param amount the number of a particular NFT token id.
      */
     function internalTransfer(
+        DaoRegistry _dao,
         address fromOwner,
         address toOwner,
         address nftAddr,
         uint256 nftTokenId,
         uint256 amount
-    ) external hasExtensionAccess(this, AclFlag.INTERNAL_TRANSFER) {
+    ) external hasExtensionAccess(_dao, AclFlag.INTERNAL_TRANSFER) {
         // Checks if there token amount is valid and has enough funds
         uint256 tokenAmount = _getTokenAmount(fromOwner, nftAddr, nftTokenId);
         require(

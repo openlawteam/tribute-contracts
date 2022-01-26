@@ -87,7 +87,7 @@ contract TributeNFTContract is
         BankExtension bank = BankExtension(
             dao.getExtensionAddress(DaoHelper.BANK)
         );
-        bank.registerPotentialNewInternalToken(tokenAddrToMint);
+        bank.registerPotentialNewInternalToken(dao, tokenAddrToMint);
     }
 
     /**
@@ -178,6 +178,7 @@ contract TributeNFTContract is
             );
 
             bank.addToBalance(
+                dao,
                 proposal.applicant,
                 DaoHelper.UNITS,
                 proposal.requestAmount
@@ -293,7 +294,7 @@ contract TributeNFTContract is
             );
             erc721.approve(address(nftExt), proposal.nftTokenId);
 
-            nftExt.collect(proposal.nftAddr, proposal.nftTokenId);
+            nftExt.collect(ppS.dao, proposal.nftAddr, proposal.nftTokenId);
         } else {
             erc721.safeTransferFrom(address(this), from, tokenId);
         }

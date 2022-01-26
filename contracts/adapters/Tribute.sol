@@ -77,7 +77,7 @@ contract TributeContract is Reimbursable, AdapterGuard {
         BankExtension bank = BankExtension(
             dao.getExtensionAddress(DaoHelper.BANK)
         );
-        bank.registerPotentialNewInternalToken(tokenAddrToMint);
+        bank.registerPotentialNewInternalToken(dao, tokenAddrToMint);
     }
 
     /**
@@ -190,7 +190,7 @@ contract TributeContract is Reimbursable, AdapterGuard {
             );
 
             if (!bank.isTokenAllowed(proposal.token)) {
-                bank.registerPotentialNewToken(proposal.token);
+                bank.registerPotentialNewToken(dao, proposal.token);
             }
             IERC20 erc20 = IERC20(proposal.token);
             erc20.safeTransferFrom(
@@ -199,8 +199,18 @@ contract TributeContract is Reimbursable, AdapterGuard {
                 tributeAmount
             );
 
-            bank.addToBalance(applicant, tokenToMint, proposal.requestAmount);
-            bank.addToBalance(DaoHelper.GUILD, proposal.token, tributeAmount);
+            bank.addToBalance(
+                dao,
+                applicant,
+                tokenToMint,
+                proposal.requestAmount
+            );
+            bank.addToBalance(
+                dao,
+                DaoHelper.GUILD,
+                proposal.token,
+                tributeAmount
+            );
         } else if (
             voteResult == IVoting.VotingState.NOT_PASS ||
             voteResult == IVoting.VotingState.TIE

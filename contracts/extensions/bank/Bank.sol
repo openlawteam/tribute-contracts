@@ -96,16 +96,17 @@ contract BankExtension is IExtension, ERC165 {
     constructor() {}
 
     // slither-disable-next-line calls-loop
-    modifier hasExtensionAccess(AclFlag flag) {
+    modifier hasExtensionAccess(DaoRegistry _dao, AclFlag flag) {
         require(
-            address(this) == msg.sender ||
-                address(dao) == msg.sender ||
-                DaoHelper.isInCreationModeAndHasAccess(dao) ||
-                dao.hasAdapterAccessToExtension(
-                    msg.sender,
-                    address(this),
-                    uint8(flag)
-                ),
+            dao == _dao &&
+                (address(this) == msg.sender ||
+                    address(dao) == msg.sender ||
+                    DaoHelper.isInCreationModeAndHasAccess(dao) ||
+                    dao.hasAdapterAccessToExtension(
+                        msg.sender,
+                        address(this),
+                        uint8(flag)
+                    )),
             "bank::accessDenied:"
         );
         _;
@@ -131,7 +132,12 @@ contract BankExtension is IExtension, ERC165 {
         uint256 nbMembers = _dao.getNbMembers();
         for (uint256 i = 0; i < nbMembers; i++) {
             //slither-disable-next-line calls-loop
-            addToBalance(_dao.getMemberAddress(i), DaoHelper.MEMBER_COUNT, 1);
+            addToBalance(
+                _dao,
+                _dao.getMemberAddress(i),
+                DaoHelper.MEMBER_COUNT,
+                1
+            );
         }
 
         _createNewAmountCheckpoint(creator, DaoHelper.UNITS, 1);
@@ -139,15 +145,16 @@ contract BankExtension is IExtension, ERC165 {
     }
 
     function withdraw(
+        DaoRegistry _dao,
         address payable member,
         address tokenAddr,
         uint256 amount
-    ) external hasExtensionAccess(AclFlag.WITHDRAW) {
+    ) external hasExtensionAccess(_dao, AclFlag.WITHDRAW) {
         require(
             balanceOf(member, tokenAddr) >= amount,
             "bank::withdraw::not enough funds"
         );
-        subtractFromBalance(member, tokenAddr, amount);
+        subtractFromBalance(_dao, member, tokenAddr, amount);
         if (tokenAddr == DaoHelper.ETH_TOKEN) {
             member.sendValue(amount);
         } else {
@@ -159,16 +166,17 @@ contract BankExtension is IExtension, ERC165 {
     }
 
     function withdrawTo(
+        DaoRegistry _dao,
         address memberFrom,
         address payable memberTo,
         address tokenAddr,
         uint256 amount
-    ) external hasExtensionAccess(AclFlag.WITHDRAW) {
+    ) external hasExtensionAccess(_dao, AclFlag.WITHDRAW) {
         require(
             balanceOf(memberFrom, tokenAddr) >= amount,
             "bank::withdraw::not enough funds"
         );
-        subtractFromBalance(memberFrom, tokenAddr, amount);
+        subtractFromBalance(_dao, memberFrom, tokenAddr, amount);
         if (tokenAddr == DaoHelper.ETH_TOKEN) {
             memberTo.sendValue(amount);
         } else {
@@ -217,9 +225,9 @@ contract BankExtension is IExtension, ERC165 {
      * @dev Cannot be a reserved token or an available internal token
      * @param token The address of the token
      */
-    function registerPotentialNewToken(address token)
+    function registerPotentialNewToken(DaoRegistry _dao, address token)
         external
-        hasExtensionAccess(AclFlag.REGISTER_NEW_TOKEN)
+        hasExtensionAccess(_dao, AclFlag.REGISTER_NEW_TOKEN)
     {
         require(DaoHelper.isNotReservedAddress(token), "reservedToken");
         require(!availableInternalTokens[token], "internalToken");
@@ -239,9 +247,9 @@ contract BankExtension is IExtension, ERC165 {
      * @dev Can not be a reserved token or an available token
      * @param token The address of the token
      */
-    function registerPotentialNewInternalToken(address token)
+    function registerPotentialNewInternalToken(DaoRegistry _dao, address token)
         external
-        hasExtensionAccess(AclFlag.REGISTER_NEW_INTERNAL_TOKEN)
+        hasExtensionAccess(_dao, AclFlag.REGISTER_NEW_INTERNAL_TOKEN)
     {
         require(DaoHelper.isNotReservedAddress(token), "reservedToken");
         require(!availableTokens[token], "availableToken");
@@ -252,9 +260,9 @@ contract BankExtension is IExtension, ERC165 {
         }
     }
 
-    function updateToken(address tokenAddr)
+    function updateToken(DaoRegistry _dao, address tokenAddr)
         external
-        hasExtensionAccess(AclFlag.UPDATE_TOKEN)
+        hasExtensionAccess(_dao, AclFlag.UPDATE_TOKEN)
     {
         require(isTokenAllowed(tokenAddr), "token not allowed");
         uint256 totalBalance = balanceOf(DaoHelper.TOTAL, tokenAddr);
@@ -270,6 +278,7 @@ contract BankExtension is IExtension, ERC165 {
 
         if (totalBalance < realBalance) {
             addToBalance(
+                _dao,
                 DaoHelper.GUILD,
                 tokenAddr,
                 realBalance - totalBalance
@@ -278,9 +287,19 @@ contract BankExtension is IExtension, ERC165 {
             uint256 tokensToRemove = totalBalance - realBalance;
             uint256 guildBalance = balanceOf(DaoHelper.GUILD, tokenAddr);
             if (guildBalance > tokensToRemove) {
-                subtractFromBalance(DaoHelper.GUILD, tokenAddr, tokensToRemove);
+                subtractFromBalance(
+                    _dao,
+                    DaoHelper.GUILD,
+                    tokenAddr,
+                    tokensToRemove
+                );
             } else {
-                subtractFromBalance(DaoHelper.GUILD, tokenAddr, guildBalance);
+                subtractFromBalance(
+                    _dao,
+                    DaoHelper.GUILD,
+                    tokenAddr,
+                    guildBalance
+                );
             }
         }
     }
@@ -337,10 +356,11 @@ contract BankExtension is IExtension, ERC165 {
      * @param amount The new balance
      */
     function addToBalance(
+        DaoRegistry _dao,
         address member,
         address token,
         uint256 amount
-    ) public payable hasExtensionAccess(AclFlag.ADD_TO_BALANCE) {
+    ) public payable hasExtensionAccess(_dao, AclFlag.ADD_TO_BALANCE) {
         require(
             availableTokens[token] || availableInternalTokens[token],
             "unknown token address"
@@ -359,10 +379,11 @@ contract BankExtension is IExtension, ERC165 {
      * @param amount The new balance
      */
     function subtractFromBalance(
+        DaoRegistry _dao,
         address member,
         address token,
         uint256 amount
-    ) public hasExtensionAccess(AclFlag.SUB_FROM_BALANCE) {
+    ) public hasExtensionAccess(_dao, AclFlag.SUB_FROM_BALANCE) {
         uint256 newAmount = balanceOf(member, token) - amount;
         uint256 newTotalAmount = balanceOf(DaoHelper.TOTAL, token) - amount;
 
@@ -377,11 +398,12 @@ contract BankExtension is IExtension, ERC165 {
      * @param amount The new amount to transfer
      */
     function internalTransfer(
+        DaoRegistry _dao,
         address from,
         address to,
         address token,
         uint256 amount
-    ) external hasExtensionAccess(AclFlag.INTERNAL_TRANSFER) {
+    ) external hasExtensionAccess(_dao, AclFlag.INTERNAL_TRANSFER) {
         uint256 newAmount = balanceOf(from, token) - amount;
         uint256 newAmount2 = balanceOf(to, token) + amount;
 

@@ -43,8 +43,6 @@ contract LendNFTContract is
     IERC1155Receiver,
     IERC721Receiver
 {
-    using Address for address payable;
-
     struct ProcessProposal {
         DaoRegistry dao;
         bytes32 proposalId;
@@ -87,7 +85,7 @@ contract LendNFTContract is
         onlyAdapter(dao)
     {
         BankExtension(dao.getExtensionAddress(DaoHelper.BANK))
-            .registerPotentialNewInternalToken(token);
+            .registerPotentialNewInternalToken(dao, token);
     }
 
     /**
@@ -199,6 +197,7 @@ contract LendNFTContract is
             );
 
             bank.addToBalance(
+                dao,
                 proposal.applicant,
                 DaoHelper.UNITS,
                 proposal.requestAmount
@@ -213,6 +212,7 @@ contract LendNFTContract is
             proposal.lendingStart = uint64(block.timestamp);
             //add vesting here
             vesting.createNewVesting(
+                dao,
                 proposal.applicant,
                 DaoHelper.UNITS,
                 proposal.requestAmount,
@@ -266,11 +266,13 @@ contract LendNFTContract is
                 dao.getExtensionAddress(DaoHelper.BANK)
             );
             bank.subtractFromBalance(
+                dao,
                 proposal.applicant,
                 DaoHelper.UNITS,
                 blockedAmount
             );
             vesting.removeVesting(
+                dao,
                 proposal.applicant,
                 DaoHelper.UNITS,
                 uint64(proposal.lendingPeriod - elapsedTime)
@@ -284,6 +286,7 @@ contract LendNFTContract is
             );
 
             nftExt.withdrawNFT(
+                dao,
                 proposal.previousOwner,
                 proposal.nftAddr,
                 proposal.nftTokenId
@@ -293,6 +296,7 @@ contract LendNFTContract is
                 dao.getExtensionAddress(DaoHelper.ERC1155_EXT)
             );
             tokenExt.withdrawNFT(
+                dao,
                 DaoHelper.GUILD,
                 proposal.previousOwner,
                 proposal.nftAddr,
@@ -401,7 +405,7 @@ contract LendNFTContract is
                 dao.getExtensionAddress(DaoHelper.NFT)
             );
             erc721.approve(address(nftExt), proposal.nftTokenId);
-            nftExt.collect(proposal.nftAddr, proposal.nftTokenId);
+            nftExt.collect(dao, proposal.nftAddr, proposal.nftTokenId);
         } else {
             erc721.safeTransferFrom(address(this), from, tokenId);
         }

@@ -75,6 +75,7 @@ describe("Extension - ERC1271", () => {
     const erc1271Extension = this.extensions.erc1271Ext;
     await expectRevert(
       erc1271Extension.sign(
+        this.dao.address,
         arbitraryMsgHash,
         arbitrarySignatureHash,
         magicValue

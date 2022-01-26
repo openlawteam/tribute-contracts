@@ -53,14 +53,14 @@ contract ExecutorExtension is IExtension {
 
     modifier hasExtensionAccess(AclFlag flag) {
         require(
-            address(this) == msg.sender ||
+            (address(this) == msg.sender ||
                 address(dao) == msg.sender ||
                 DaoHelper.isInCreationModeAndHasAccess(dao) ||
                 dao.hasAdapterAccessToExtension(
                     msg.sender,
                     address(this),
                     uint8(flag)
-                ),
+                )),
             "executorExt::accessDenied"
         );
         _;
@@ -97,13 +97,20 @@ contract ExecutorExtension is IExtension {
             "executorExt: impl address can not be reserved"
         );
 
+        address daoAddr;
+        bytes memory data = msg.data;
+        assembly {
+            daoAddr := mload(add(data, 36))
+        }
+
+        require(daoAddr == address(dao), "wrong dao!");
+
         // solhint-disable-next-line no-inline-assembly
         assembly {
             // Copy msg.data. We take full control of memory in this inline assembly
             // block because it will not return to Solidity code. We overwrite the
             // Solidity scratch pad at memory position 0.
             calldatacopy(0, 0, calldatasize())
-
             // Call the implementation.
             // out and outsize are 0 because we don't know the size yet.
             let result := delegatecall(

@@ -44,14 +44,15 @@ contract InternalTokenVestingExtension is IExtension {
         uint88 blockedAmount;
     }
 
-    modifier hasExtensionAccess(AclFlag flag) {
+    modifier hasExtensionAccess(DaoRegistry dao, AclFlag flag) {
         require(
-            DaoHelper.isInCreationModeAndHasAccess(_dao) ||
-                _dao.hasAdapterAccessToExtension(
-                    msg.sender,
-                    address(this),
-                    uint8(flag)
-                ),
+            dao == _dao &&
+                (DaoHelper.isInCreationModeAndHasAccess(_dao) ||
+                    _dao.hasAdapterAccessToExtension(
+                        msg.sender,
+                        address(this),
+                        uint8(flag)
+                    )),
             "vestingExt::accessDenied"
         );
 
@@ -81,11 +82,12 @@ contract InternalTokenVestingExtension is IExtension {
      * @param endDate The unix timestamp in which the vesting schedule ends.
      */
     function createNewVesting(
+        DaoRegistry dao,
         address member,
         address internalToken,
         uint88 amount,
         uint64 endDate
-    ) external hasExtensionAccess(AclFlag.NEW_VESTING) {
+    ) external hasExtensionAccess(dao, AclFlag.NEW_VESTING) {
         //slither-disable-next-line timestamp
         require(endDate > block.timestamp, "vestingExt::end date in the past");
         VestingSchedule storage schedule = vesting[member][internalToken];
@@ -111,10 +113,11 @@ contract InternalTokenVestingExtension is IExtension {
      * @param amountToRemove The amount to be removed.
      */
     function removeVesting(
+        DaoRegistry dao,
         address member,
         address internalToken,
         uint88 amountToRemove
-    ) external hasExtensionAccess(AclFlag.REMOVE_VESTING) {
+    ) external hasExtensionAccess(dao, AclFlag.REMOVE_VESTING) {
         vesting[member][internalToken].blockedAmount -= amountToRemove;
     }
 
