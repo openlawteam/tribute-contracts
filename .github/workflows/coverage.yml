@@ -7,6 +7,8 @@ on:
   pull_request:
     branches:
       - "*"
+env:
+  ETH_NODE_URL: ${{ secrets.ETH_NODE_URL }}
 
 jobs:
   coverage:

@@ -11,6 +11,10 @@ on:
       - "*"
     paths:
       - "contracts/**"
+
+env:
+  ETH_NODE_URL: ${{ secrets.ETH_NODE_URL }}
+
 jobs:
   slither:
     name: Slither Analysis

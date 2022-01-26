@@ -4,6 +4,9 @@ on:
     tags:
       - '*'
 
+env:
+  ETH_NODE_URL: ${{ secrets.ETH_NODE_URL }}
+
 jobs:
   publish:
     runs-on: ubuntu-20.04

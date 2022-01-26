@@ -8,6 +8,9 @@ on:
     branches:
       - "*"
 
+env:
+  ETH_NODE_URL: ${{ secrets.ETH_NODE_URL }}
+
 jobs:
   test:
     runs-on: ubuntu-20.04
