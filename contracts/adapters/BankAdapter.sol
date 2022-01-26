@@ -78,6 +78,7 @@ contract BankAdapterContract is DaoConstants, AdapterGuard {
         // We do not need to check if the token is supported by the bank,
         // because if it is not, the balance will always be zero.
         BankExtension bank = BankExtension(dao.getExtensionAddress(BANK));
+        require(bank.dao() == dao, "wrong dao");
         bank.updateToken(token);
     }
 }

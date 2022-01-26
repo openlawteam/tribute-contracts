@@ -79,6 +79,7 @@ contract FinancingContract is
     ) external override reentrancyGuard(dao) {
         require(amount > 0, "invalid requested amount");
         BankExtension bank = BankExtension(dao.getExtensionAddress(BANK));
+        require(bank.dao() == dao, "wrong dao");
         require(bank.isTokenAllowed(token), "token not allowed");
         require(
             isNotReservedAddress(applicant),

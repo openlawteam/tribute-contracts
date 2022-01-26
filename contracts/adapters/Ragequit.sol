@@ -79,6 +79,7 @@ contract RagequitContract is IRagequit, DaoConstants, AdapterGuard {
 
         // Instantiates the Bank extension to handle the internal balance checks and transfers.
         BankExtension bank = BankExtension(dao.getExtensionAddress(BANK));
+        require(bank.dao() == dao, "wrong dao");
         // Check if member has enough units to burn.
         require(
             bank.balanceOf(memberAddr, UNITS) >= unitsToBurn,

@@ -104,6 +104,7 @@ contract GuildKickContract is IGuildKick, MemberGuard, AdapterGuard {
         dao.submitProposal(proposalId);
 
         BankExtension bank = BankExtension(dao.getExtensionAddress(BANK));
+        require(bank.dao() == dao, "wrong dao");
         // Gets the number of units of the member
         uint256 unitsToBurn = bank.balanceOf(memberToKick, UNITS);
 
