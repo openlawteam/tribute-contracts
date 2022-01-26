@@ -28,7 +28,7 @@ const expectEvent = require("@openzeppelin/test-helpers/src/expectEvent");
 const expectRevert = require("@openzeppelin/test-helpers/src/expectRevert");
 const { sha3, toBN } = require("../../utils/contract-util");
 const { accounts, expect, DaoArtifacts } = require("../../utils/oz-util");
-const { ContractType } = require("../../configs/contracts.config");
+const { ContractType } = require("../../migrations/configs/contracts.config");
 
 describe("Utils - DaoArtifacts", () => {
   it("should be possible to create a dao artifacts contract", async () => {

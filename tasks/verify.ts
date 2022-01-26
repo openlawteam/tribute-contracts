@@ -70,7 +70,7 @@ async function main() {
   const { stdout } = await exec(
     `cat ${deployLog} | grep -e "Deploying" -e "contract address:" -e "Cloned"`
   );
-  const { contracts } = require(`../configs/networks/${network}.config`);
+  const { contracts } = require(`../migrations/configs/${network}.config`);
   const verifyContracts = contracts.filter(
     (c: any) => !skipContracts.includes(c.name)
   ).map((contract:any) => {

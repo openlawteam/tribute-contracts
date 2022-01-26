@@ -1,7 +1,7 @@
 import {
   contracts as defaultContracts,
   ContractConfig,
-} from "../contracts.config";
+} from "./contracts.config";
 
 const disabled: Array<String> = [
   // Utility & Test Contracts disabled by default
@@ -13,6 +13,12 @@ const disabled: Array<String> = [
   "ProxToken",
   "ERC20Minter",
   "MockDao",
+  // Adapters disabled for Muse0 DAO Deployment
+  "RagequitContract",
+  "FinancingContract",
+  "OnboardingContract",
+  "TributeContract",
+  "DistributeContract",
 ];
 
 export const contracts: Array<ContractConfig> = defaultContracts.map((c) => {

@@ -1,11 +1,13 @@
 import {
   contracts as defaultContracts,
   ContractConfig,
-} from "../contracts.config";
+} from "./contracts.config";
 
-const disabled: Array<string> = [
+const disabled: Array<String> = [
   // Utility & Test Contracts disabled by default
   "OLToken",
+  "TestToken1",
+  "TestToken2",
   "TestFairShareCalc",
   "PixelNFT",
   "ProxToken",

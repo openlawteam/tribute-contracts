@@ -38,7 +38,7 @@ const {
   waitTx,
 } = require("./contract-util.js");
 const { debug, info, error } = require("./log-util");
-const { ContractType } = require("../configs/contracts.config");
+const { ContractType } = require("../migrations/configs/contracts.config");
 
 /**
  * Deploys a contract based on the contract name defined in the config parameter.
@@ -64,7 +64,7 @@ const deployContract = ({ config, options }) => {
 
 /**
  * Deploys all the contracts defined with Factory type.
- * The contracts must be enabled in the configs/networks/*.config.ts,
+ * The contracts must be enabled in the migrations/configs/*.config.ts,
  * and should not be skipped in the auto deploy process.
  * The factory contract must be provided in the options object.
  * If the contract is not found in the options object the deployment reverts with an error.
@@ -110,7 +110,7 @@ const createFactories = async ({ options }) => {
 
 /**
  * Deploys all the contracts defined with Extension type.
- * The contracts must be enabled in the configs/networks/*.config.ts,
+ * The contracts must be enabled in the migrations/configs/*.config.ts,
  * and should not be skipped in the auto deploy process.
  * The extension contract must be provided in the options object.
  * If the contract is not found in the options object the deployment reverts with an error.
@@ -206,7 +206,7 @@ const createExtensions = async ({ dao, factories, options }) => {
 
 /**
  * Deploys all the contracts defined with Adapter type.
- * The contracts must be enabled in the configs/networks/*.config.ts,
+ * The contracts must be enabled in the migrations/configs/*.config.ts,
  * and should not be skipped in the auto deploy process.
  * The adapter contract must be provided in the options object.
  * If the contract is not found in the options object the deployment reverts with an error.
@@ -236,7 +236,7 @@ const createAdapters = async ({ options }) => {
 
 /**
  * Deploys all the utility contracts defined with Util type.
- * The contracts must be enabled in the configs/networks/*.config.ts,
+ * The contracts must be enabled in the migrations/configs/*.config.ts,
  * and should not be skipped in the auto deploy process.
  * The util contract must be provided in the options object.
  * If the contract is not found in the options object the deployment reverts with an error.
@@ -267,7 +267,7 @@ const createUtilContracts = async ({ options }) => {
 
 /**
  * Deploys all the test contracts defined with Test type if flag `deployTestTokens`
- * is enabled in the options. The contracts must be enabled in the configs/networks/*.config.ts,
+ * is enabled in the options. The contracts must be enabled in the migrations/configs/*.config.ts,
  * and should not be skipped in the auto deploy process.
  * The test contract must be provided in the options object.
  * If the contract is not found in the options object the deployment reverts with an error.
@@ -374,8 +374,8 @@ const validateContractConfigs = (contractConfigs) => {
 };
 
 /**
- * Deploys all the contracts defined in the configs/networks/*.config.ts.
- * The contracts must be enabled in the configs/networks/*.config.ts,
+ * Deploys all the contracts defined in the migrations/configs/*.config.ts.
+ * The contracts must be enabled in the migrations/configs/*.config.ts,
  * and should not be skipped in the auto deploy process.
  * Each one of the contracts must be provided in the options object.
  * If the contract is not found in the options object the deployment reverts with an error.
@@ -385,7 +385,7 @@ const validateContractConfigs = (contractConfigs) => {
  * The Offchain voting is deployed only if it is required via options.offchainVoting parameter.
  *
  * All the deployed contracts will be returned in a map with the aliases defined in the
- * configs/networks/*.config.ts.
+ * migrations/configs/*.config.ts.
  */
 const deployDao = async (options) => {
   validateContractConfigs(options.contractConfigs);

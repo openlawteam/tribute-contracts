@@ -3,7 +3,7 @@ const path = require("path");
 const {
   ContractType,
   ContractConfig,
-} = require("../configs/contracts.config");
+} = require("../migrations/configs/contracts.config");
 const { deployConfigs } = require("../deploy-config");
 const checkpointDir = path.resolve(deployConfigs.checkpointDir);
 const checkpointPath = path.resolve(

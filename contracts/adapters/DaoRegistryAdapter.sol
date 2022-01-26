@@ -1,6 +1,4 @@
 pragma solidity ^0.8.0;
-function c_0x424e3525(bytes32 c__0x424e3525) pure {}
-
 
 // SPDX-License-Identifier: MIT
 
@@ -35,8 +33,6 @@ SOFTWARE.
  */
 
 contract DaoRegistryAdapterContract is MemberGuard, AdapterGuard {
-function c_0x8917a35b(bytes32 c__0x8917a35b) public pure {}
-
     /**
      * @notice Allows the member/advisor to update their delegate key
      * @param dao The DAO address.
@@ -46,11 +42,8 @@ function c_0x8917a35b(bytes32 c__0x8917a35b) public pure {}
         external
         reentrancyGuard(dao)
         onlyMember(dao)
-    {c_0x8917a35b(0x806fd8993d7147b29c9de67c59eef0db1111293f8d5d3d70d6227e22d0b53ef1); /* function */ 
-
-c_0x8917a35b(0x8fd9bae553bfc8f032450a07a60b62e6a208adb5bd58be2d76adc43fe60f2c11); /* line */ 
-        c_0x8917a35b(0xc83465db5aebf10795d19367c94aba022e94e6322c768239dca7553796e44052); /* statement */ 
-dao.updateDelegateKey(
+    {
+        dao.updateDelegateKey(
             DaoHelper.msgSender(dao, msg.sender),
             delegateKey
         );

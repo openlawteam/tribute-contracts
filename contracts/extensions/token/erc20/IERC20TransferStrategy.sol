@@ -1,6 +1,4 @@
 pragma solidity ^0.8.0;
-function c_0x906ea33c(bytes32 c__0x906ea33c) pure {}
-
 
 // SPDX-License-Identifier: MIT
 import "../../../core/DaoRegistry.sol";
