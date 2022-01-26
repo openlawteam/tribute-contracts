@@ -88,7 +88,7 @@ describe("Extension - Vesting", () => {
     await advanceTime(halfWay.toNumber());
 
     minBalance = await vesting.getMinimumBalance(daoOwner, UNITS);
-    expect(minBalance.toString() === "500" || minBalance.toString() === "501");
+    expect(toBN(minBalance.toString())).to.be.closeTo(toBN("500"), 5);
 
     await advanceTime(diff.toNumber());
 
@@ -140,16 +140,12 @@ describe("Extension - Vesting", () => {
     halfWay = diff.div(toBN("2"));
 
     minBalance = await vesting.getMinimumBalance(daoOwner, UNITS);
-    expect(
-      minBalance.toString() === "150" || minBalance.toString() === "151"
-    ).equal(true);
+    expect(toBN(minBalance.toString())).to.be.closeTo(toBN("150"), 5);
 
     await advanceTime(halfWay.toNumber());
 
     minBalance = await vesting.getMinimumBalance(daoOwner, UNITS);
-    expect(
-      minBalance.toString() === "75" || minBalance.toString() === "76"
-    ).equal(true);
+    expect(toBN(minBalance.toString())).to.be.closeTo(toBN("75"), 5);
 
     await advanceTime(diff.toNumber());
 
@@ -201,25 +197,20 @@ describe("Extension - Vesting", () => {
     halfWay = diff.div(toBN("2"));
 
     minBalance = await vesting.getMinimumBalance(daoOwner, UNITS);
-    const minBalanceStr = minBalance.toString();
     //to manage rounding error
-    expect(minBalanceStr === "150" || minBalanceStr === "151").equal(true);
+    expect(toBN(minBalance.toString())).to.be.closeTo(toBN("150"), 5);
 
     await advanceTime(halfWay.toNumber());
 
     minBalance = await vesting.getMinimumBalance(daoOwner, UNITS);
-    expect(
-      minBalance.toString() === "75" || minBalance.toString() === "76"
-    ).equal(true);
+    expect(toBN(minBalance.toString())).to.be.closeTo(toBN("75"), 5);
 
     await vesting.removeVesting(this.dao.address, daoOwner, UNITS, 50, {
       from: daoOwner,
     });
 
     minBalance = await vesting.getMinimumBalance(daoOwner, UNITS);
-    expect(
-      minBalance.toString() === "50" || minBalance.toString() === "51"
-    ).equal(true);
+    expect(toBN(minBalance.toString())).to.be.closeTo(toBN("50"), 5);
   });
 
   it("should not be possible to create a new vesting without the ACL permission", async () => {

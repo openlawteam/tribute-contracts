@@ -45,6 +45,9 @@ const {
   toBN,
 } = require("./contract-util.js");
 
+const chai = require("chai");
+const { solidity } = require("ethereum-waffle");
+chai.use(solidity);
 const { expect } = require("chai");
 const { expectRevert } = require("@openzeppelin/test-helpers");
 const { deployDao } = require("./deployment-util.js");

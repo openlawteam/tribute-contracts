@@ -147,11 +147,7 @@ describe("Adapter - LendNFT", () => {
     await lendNFT.sendNFTBack(dao.address, proposalId, { from: nftOwner });
 
     unitBalance = await bank.balanceOf(nftOwner, UNITS);
-    expect(
-      unitBalance.toString() == "100" ||
-        unitBalance.toString() == "101" ||
-        unitBalance.toString() === "202"
-    ).equal(true);
+    expect(toBN(unitBalance.toString())).to.be.closeTo(toBN("100"), 5);
 
     await advanceTime(10000);
     //process the second proposal
@@ -169,20 +165,14 @@ describe("Adapter - LendNFT", () => {
     expect(balanceOf.toString()).equal("1");
 
     unitBalance = await bank.balanceOf(nftOwner, UNITS);
-    expect(
-      unitBalance.toString() == "10100" || unitBalance.toString() == "10101"
-    ).equal(true);
+    expect(toBN(unitBalance.toString())).to.be.closeTo(toBN("10100"), 5);
 
     await advanceTime(100);
 
     //after 100 seconds, get the second NFT back
     await lendNFT.sendNFTBack(dao.address, proposalId2, { from: nftOwner });
     unitBalance = await bank.balanceOf(nftOwner, UNITS);
-    expect(
-      unitBalance.toString() === "200" ||
-        unitBalance.toString() === "201" ||
-        unitBalance.toString() === "202"
-    ).equal(true);
+    expect(toBN(unitBalance.toString())).to.be.closeTo(toBN("200"), 5);
 
     const balance = await erc1155Token.balanceOf(nftOwner, tokenId2);
     expect(balance.toString()).equal("1");

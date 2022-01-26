@@ -17,97 +17,12 @@ require("ts-node").register({
   files: true,
 });
 
-const getHDWalletProvider = () => {
-  const HDWalletProvider = require("@truffle/hdwallet-provider");
-
-  if (!process.env.TRUFFLE_MNEMONIC)
-    throw Error("Missing environment variable: TRUFFLE_MNEMONIC");
-
-  if (!process.env.ETH_NODE_URL)
-    throw Error("Missing environment variable: ETH_NODE_URL");
-
-  return new HDWalletProvider({
-    mnemonic: {
-      phrase: process.env.TRUFFLE_MNEMONIC,
-    },
-    providerOrUrl: process.env.ETH_NODE_URL,
-  });
-};
-
-const getOZDefenderProvider = () => {
-  const { DefenderRelayProvider } = require("defender-relay-client/lib/web3");
-
-  if (!process.env.DEFENDER_API_KEY)
-    throw Error("Missing environment variable: DEFENDER_API_KEY");
-
-  if (!process.env.DEFENDER_API_SECRET)
-    throw Error("Missing environment variable: DEFENDER_API_SECRET");
-
-  const provider = new DefenderRelayProvider(
-    {
-      apiKey: process.env.DEFENDER_API_KEY,
-      apiSecret: process.env.DEFENDER_API_SECRET,
-    },
-    {
-      speed: "fast",
-    }
-  );
-
-  return provider;
-};
-
-const getNetworkProvider = () => {
-  switch (process.env.RELAYER) {
-    case "defender":
-      return getOZDefenderProvider();
-    default:
-      return getHDWalletProvider();
-  }
-};
-
 module.exports = {
   networks: {
     ganache: {
       host: "127.0.0.1", // Localhost (default: none)
       port: 7545, // Standard Ethereum port (default: none)
       network_id: "1337", // Any network (default: none)
-    },
-    goerli: {
-      provider: getNetworkProvider,
-      network_id: 5,
-      skipDryRun: true,
-    },
-    rinkeby: {
-      provider: getNetworkProvider,
-      network_id: 4,
-      skipDryRun: true,
-      networkCheckTimeout: 10000,
-    },
-    mainnet: {
-      provider: getNetworkProvider,
-      network_id: 1,
-      skipDryRun: true,
-    },
-    harmony: {
-      provider: getNetworkProvider,
-      network_id: 1666600000,
-      skipDryRun: true,
-    },
-    harmonytest: {
-      provider: getNetworkProvider,
-      network_id: 1666700000,
-      skipDryRun: true,
-    },
-    polygon: {
-      provider: getNetworkProvider,
-      network_id: 137,
-      skipDryRun: true,
-    },
-    polygontest: {
-      provider: getNetworkProvider,
-      network_id: 80001,
-      skipDryRun: true,
-      gasPrice: 10000000000,
     },
     coverage: {
       host: "localhost",

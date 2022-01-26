@@ -11,9 +11,23 @@ module.exports = {
   // Supported Networks
   networks: {
     // Test Networks
+    hardhat: {
+      network_id: "1337",
+      count: 10,
+      accounts: {
+        mnemonic: process.env.WALLET_MNEMONIC,
+      },
+      throwOnTransactionFailures: true,
+      throwOnCallFailures: false,
+      loggingEnabled: true,
+      allowUnlimitedContractSize: false,
+    },
     ganache: {
       url: "http://127.0.0.1:7545",
       network_id: "1337",
+      accounts: {
+        mnemonic: process.env.WALLET_MNEMONIC,
+      },
     },
     goerli: {
       url: process.env.ETH_NODE_URL,
