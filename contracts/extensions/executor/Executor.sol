@@ -78,6 +78,23 @@ contract ExecutorExtension is IExtension {
         initialized = true;
     }
 
+    function toAsciiString(address x) internal pure returns (string memory) {
+        bytes memory s = new bytes(40);
+        for (uint256 i = 0; i < 20; i++) {
+            bytes1 b = bytes1(uint8(uint256(uint160(x)) / (2**(8 * (19 - i)))));
+            bytes1 hi = bytes1(uint8(b) / 16);
+            bytes1 lo = bytes1(uint8(b) - 16 * uint8(hi));
+            s[2 * i] = char(hi);
+            s[2 * i + 1] = char(lo);
+        }
+        return string(s);
+    }
+
+    function char(bytes1 b) internal pure returns (bytes1 c) {
+        if (uint8(b) < 10) return bytes1(uint8(b) + 0x30);
+        else return bytes1(uint8(b) + 0x57);
+    }
+
     /**
      * @dev Delegates the current call to `implementation`.
      *
@@ -97,11 +114,23 @@ contract ExecutorExtension is IExtension {
             "executorExt: impl address can not be reserved"
         );
 
-        
         address daoAddr;
+        bytes memory data = msg.data;
         assembly {
-            daoAddr := mload(add(msg.data, 36))
+            daoAddr := mload(add(data, 36))
         }
+
+        require(
+            daoAddr == address(dao),
+            string(
+                abi.encodePacked(
+                    "wrong dao! ",
+                    toAsciiString(address(dao)),
+                    " ",
+                    toAsciiString(daoAddr)
+                )
+            )
+        );
 
         // solhint-disable-next-line no-inline-assembly
         assembly {
@@ -109,7 +138,6 @@ contract ExecutorExtension is IExtension {
             // block because it will not return to Solidity code. We overwrite the
             // Solidity scratch pad at memory position 0.
             calldatacopy(0, 0, calldatasize())
-
             // Call the implementation.
             // out and outsize are 0 because we don't know the size yet.
             let result := delegatecall(
