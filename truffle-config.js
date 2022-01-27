@@ -1,8 +1,26 @@
 require("dotenv").config();
+require("truffle-plugin-verify");
 require("solidity-coverage");
 require("ts-node").register({
   files: true,
 });
+
+const getNetworkProvider = () => {
+  const HDWalletProvider = require("@truffle/hdwallet-provider");
+
+  if (!process.env.WALLET_MNEMONIC)
+    throw Error("Missing environment variable: WALLET_MNEMONIC");
+
+  if (!process.env.ETH_NODE_URL)
+    throw Error("Missing environment variable: ETH_NODE_URL");
+
+  return new HDWalletProvider({
+    mnemonic: {
+      phrase: process.env.WALLET_MNEMONIC,
+    },
+    providerOrUrl: process.env.ETH_NODE_URL,
+  });
+};
 
 module.exports = {
   networks: {
@@ -17,6 +35,43 @@ module.exports = {
       port: 8555,
       gas: 0xfffffffffff,
       gasPrice: 0x01,
+    },
+    goerli: {
+      provider: getNetworkProvider,
+      network_id: 5,
+      skipDryRun: true,
+    },
+    rinkeby: {
+      provider: getNetworkProvider,
+      network_id: 4,
+      chainId: 4,
+      skipDryRun: true,
+    },
+    mainnet: {
+      provider: getNetworkProvider,
+      network_id: 1,
+      skipDryRun: true,
+    },
+    harmony: {
+      provider: getNetworkProvider,
+      network_id: 1666600000,
+      skipDryRun: true,
+    },
+    harmonytest: {
+      provider: getNetworkProvider,
+      network_id: 1666700000,
+      skipDryRun: true,
+    },
+    polygon: {
+      provider: getNetworkProvider,
+      network_id: 137,
+      skipDryRun: true,
+    },
+    polygontest: {
+      provider: getNetworkProvider,
+      network_id: 80001,
+      skipDryRun: true,
+      gasPrice: 10000000000,
     },
   },
 

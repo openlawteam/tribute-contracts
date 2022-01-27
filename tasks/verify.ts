@@ -1,5 +1,6 @@
 #!/usr/bin/env node
 
+import dotenv from "dotenv";
 import util from "util";
 import path from "path";
 import fs from "fs";
@@ -8,11 +9,10 @@ import { deployConfigs } from "../deploy-config";
 import { error, log } from "../utils/log-util";
 import { ContractConfig } from "../configs/contracts.config";
 
+const cfg = dotenv.config();
 const exec = util.promisify(require("child_process").exec);
-const debugMode = process.env.DEBUG_CONTRACT_VERIFICATION || false;
-const verifyCMD = `./node_modules/.bin/truffle run verify ${
-  debugMode ? "--debug --network" : "--network"
-}`;
+const verifierCmd = "npm run truffle-verifier";
+const isDebug = cfg.parsed?.DEBUG === "true";
 
 const skipContracts = [
   // Test Contracts
@@ -35,7 +35,11 @@ if (!args || args.length === 0)
 const network = args[0] || "rinkeby";
 log(`Selected Network: ${network}`);
 
-const getDeployedContracts = async () => {
+const sleep = (msec: number) => {
+  return new Promise((resolve) => setTimeout(resolve, msec));
+};
+
+const getDeployedContracts = async (network: string) => {
   const buildDir = fs.readdirSync(
     path.resolve(deployConfigs.deployedContractsDir)
   );
@@ -51,9 +55,10 @@ const getDeployedContracts = async () => {
       type: "list",
       name: "fileName",
       message: "Please select one of the deployment files to be verified",
-      choices: buildDir,
+      choices: buildDir.filter((f) => f.indexOf(network) > 0),
     },
   ]);
+
   const deployFile = `${deployConfigs.deployedContractsDir}/${fileName}`;
   log(`Reading deployed contracts from: ${deployFile}`);
   const deployedContracts = JSON.parse(
@@ -63,44 +68,62 @@ const getDeployedContracts = async () => {
   return deployedContracts;
 };
 
+const buildCommand = (contract: any) => {
+  let cmd = `${verifierCmd} --`;
+  cmd = isDebug ? `${cmd} --debug` : cmd;
+  cmd = `${cmd} --network ${network}`;
+  cmd = `${cmd} ${contract.contractName}@${contract.contractAddress}`;
+  return cmd;
+};
+
 const verify = async (contract: any) => {
   if (!contract || !contract.contractName || !contract.contractAddress)
     return Promise.resolve({ stderr: "missing contract name and address" });
 
-  log(`Contract: ${contract.contractName}@${contract.contractAddress}`);
   try {
-    const { stderr, stdout } = await exec(
-      `${verifyCMD} ${network} ${contract.contractName}@${contract.contractAddress}`
-    );
-
-    if (stderr) console.error(stderr);
-    if (stdout) console.log(stdout);
+    log(`Contract: ${contract.contractName}@${contract.contractAddress}`);
+    const cmd = buildCommand(contract);
+    log(cmd);
+    const { stderr, stdout } = await exec(cmd);
+    if (stderr) {
+      error(`${stderr}`);
+      return Promise.reject({ stderr });
+    }
+    if (stdout) log(stdout);
   } catch (err) {
-    error(`${err}`);
+    error(err);
   }
 
   return Promise.resolve();
 };
 
 const main = async () => {
-  const deployedContracts = await getDeployedContracts();
+  const deployedContracts = await getDeployedContracts(network);
 
   const {
     contracts: contractConfigs,
   } = require(`../configs/networks/${network}.config`);
 
-  // Verify all the deployed addresses first (including the identity/proxy contracts)
-  // When the identity/proxy contracts are verified, the verification gets propagated
-  // to the cloned ones because they have the exact same code.
-  return await contractConfigs
+  const verifyContracts = contractConfigs
     .filter((c: ContractConfig) => !skipContracts.includes(c.name))
     .map((c: ContractConfig) => {
       return {
         contractAddress: deployedContracts[c.name],
         contractName: c.name,
       };
-    })
-    .reduce((p: any, c: any) => p.then(() => verify(c)), Promise.resolve());
+    });
+
+  let count = 1;
+  return await verifyContracts.reduce(
+    (p: any, c: any) =>
+      p.then(async () => {
+        const r = await verify(c);
+        log(`[${count++}/${verifyContracts.length}]`);
+        await sleep(1500); // avoid rate-limit errors
+        return r;
+      }),
+    Promise.resolve(0)
+  );
 };
 
 main()
