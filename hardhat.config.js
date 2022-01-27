@@ -2,9 +2,9 @@ require("dotenv").config();
 require("ts-node").register({
   files: true,
 });
-// require("truffle-plugin-verify");
 // require("truffle-contract-size");
 require("solidity-coverage");
+// require("@nomiclabs/hardhat-etherscan");
 require("@nomiclabs/hardhat-waffle");
 require("./tasks/accounts");
 require("./tasks/deploy");
@@ -134,7 +134,9 @@ module.exports = {
   },
 
   // Smart Contract Verification APIs
-  api_keys: {
-    etherscan: process.env.ETHERSCAN_API_KEY, // Obtain one at https://etherscan.io/myapikey
-  },
+  // etherscan: {
+  //   // Your API key for Etherscan
+  //   // Obtain one at https://etherscan.io/
+  //   apiKey: process.env.ETHERSCAN_API_KEY,
+  // },
 };
