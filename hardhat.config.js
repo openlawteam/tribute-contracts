@@ -7,6 +7,29 @@ require("@nomiclabs/hardhat-waffle");
 require("./tasks/accounts");
 require("./tasks/deploy");
 
+/**
+ * Custom configs for Hardhat Runtime Environment (HRE)
+ */
+extendEnvironment((hre) => {
+  if (process.env.RELAYER === "defender") {
+    const {
+      DefenderRelayProvider,
+      DefenderRelaySigner
+    } = require("defender-relay-client/lib/ethers");
+    const credentials = {
+      apiKey: process.env.DEFENDER_API_KEY,
+      apiSecret: process.env.DEFENDER_API_SECRET,
+    };
+
+    const provider = new DefenderRelayProvider(credentials);
+    // const signer = new DefenderRelaySigner(credentials, provider, { speed: 'fast' });
+
+    hre.ethers.provider = provider;
+    console.log(hre.ethers.provider);
+    console.log("OZ Defender relayer enabled");
+  }
+});
+
 module.exports = {
   // Supported Networks
   networks: {

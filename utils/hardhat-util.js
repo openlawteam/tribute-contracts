@@ -21,7 +21,7 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
  */
 
-const { ZERO_ADDRESS, toBytes32, sha3 } = require("./contract-util");
+const { ZERO_ADDRESS } = require("./contract-util");
 const { checkpoint, restore } = require("./checkpoint-util");
 const { info } = require("./log-util");
 const { ContractType } = require("../configs/contracts.config");
