@@ -28,6 +28,7 @@ extendConfig(
       }
       const network = userNetworks[networkName]!;
       if (network.relayer) {
+        console.log("Relayer found for " + network.chainId);
         config.networks[networkName].relayer = network.relayer;
       }
     }
@@ -66,10 +67,12 @@ extendEnvironment((hre) => {
       hre.network.config.relayer,
       hre.network.config.chainId!
     );
+
     wrappedProvider = new AutomaticGasProvider(
       wrappedProvider,
       hre.network.config.gasMultiplier
     );
+
     wrappedProvider = new AutomaticGasPriceProvider(wrappedProvider);
     hre.network.provider = new BackwardsCompatibilityProviderAdapter(
       wrappedProvider

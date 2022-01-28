@@ -3,8 +3,6 @@ import {
   FeeMarketEIP1559Transaction,
   FeeMarketEIP1559TxData,
 } from "@ethereumjs/tx";
-import { toUtf8Bytes } from "@ethersproject/strings";
-import { hexlify } from "@ethersproject/bytes";
 import { BN, bufferToHex } from "ethereumjs-util";
 import { rpcQuantityToBN } from "hardhat/internal/core/jsonrpc/types/base-types";
 import { rpcTransactionRequest } from "hardhat/internal/core/jsonrpc/types/input/transactionRequest";
@@ -22,11 +20,12 @@ import {
   SignMessagePayload,
 } from "defender-relay-client";
 import { pick } from "lodash";
-import { BigNumber } from "ethers";
+import { ethers } from "ethers";
 import {
   DefenderRelaySigner,
   DefenderRelayProvider,
 } from "defender-relay-client/lib/ethers";
+import { arrayify, hashMessage, hexlify, toUtf8Bytes } from "ethers/lib/utils";
 
 export class DefenderProvider extends ProviderWrapper {
   public relayer: Relayer;
@@ -92,36 +91,41 @@ export class DefenderProvider extends ProviderWrapper {
       ]);
       txParams.gasLimit = txRequest.gas;
 
-      const txf = FeeMarketEIP1559Transaction.fromTxData(txParams, {
-        common: txOptions,
-      });
+      const txf: FeeMarketEIP1559Transaction =
+        FeeMarketEIP1559Transaction.fromTxData(txParams, {
+          common: txOptions,
+        });
 
-      const msg = txf.getMessageToSign().toString("hex");
+      const rawMessageBuffer: Buffer = txf.getMessageToSign(false); // raw message
+      const message: string = bufferToHex(rawMessageBuffer);
+      console.log({ message });
       const payload: SignMessagePayload = {
-        message: msg,
+        message: message,
       };
 
       const txSignature: SignedMessagePayload = await this.relayer.sign(
         payload
       );
-
       console.log({ txSignature });
 
+      const txData = {
+        ...txParams,
+        ...txSignature,
+        // get signature_y_parity
+        v: this._determineCorrectV(message, txSignature.r, txSignature.s),
+      };
+
+      console.log({ txData });
+
       const signedTx: FeeMarketEIP1559Transaction =
-        FeeMarketEIP1559Transaction.fromTxData(
-          {
-            ...txParams,
-            ...txSignature,
-            r: txSignature.r,
-            s: txSignature.s,
-            v: txSignature.v,
-          },
-          {
-            common: txOptions,
-          }
-        );
+        FeeMarketEIP1559Transaction.fromTxData(txData, {
+          common: txOptions,
+        });
+
+      console.log({ sender: this.ethAddress });
 
       const rawTx = `0x${signedTx.serialize().toString("hex")}`;
+      console.log({ rawTx });
       return this._wrappedProvider.request({
         method: "eth_sendRawTransaction",
         params: [rawTx],
@@ -152,4 +156,24 @@ export class DefenderProvider extends ProviderWrapper {
 
     return rpcQuantityToBN(response);
   }
+
+  private _determineCorrectV = (msg: string, r: string, s: string) => {
+    let v = 27;
+    let pubKey = ethers.utils.recoverAddress(msg, {
+      r,
+      s,
+      v,
+    });
+    console.log({ recoveredAddress1: pubKey });
+    if (pubKey !== this.ethAddress) {
+      v = 28;
+      pubKey = ethers.utils.recoverAddress(msg, {
+        r,
+        s,
+        v,
+      });
+      console.log({ recoveredAddress2: pubKey });
+    }
+    return new BN(v - 27);
+  };
 }
