@@ -6,36 +6,15 @@ require("solidity-coverage");
 require("@nomiclabs/hardhat-waffle");
 require("./tasks/accounts");
 require("./tasks/deploy");
-
-/**
- * Custom configs for Hardhat Runtime Environment (HRE)
- */
-extendEnvironment((hre) => {
-  if (process.env.RELAYER === "defender") {
-    const {
-      DefenderRelayProvider,
-      DefenderRelaySigner
-    } = require("defender-relay-client/lib/ethers");
-    const credentials = {
-      apiKey: process.env.DEFENDER_API_KEY,
-      apiSecret: process.env.DEFENDER_API_SECRET,
-    };
-
-    const provider = new DefenderRelayProvider(credentials);
-    // const signer = new DefenderRelaySigner(credentials, provider, { speed: 'fast' });
-
-    hre.ethers.provider = provider;
-    console.log(hre.ethers.provider);
-    console.log("OZ Defender relayer enabled");
-  }
-});
+require("./providers");
 
 module.exports = {
   // Supported Networks
   networks: {
     // Test Networks
     hardhat: {
-      network_id: "1337",
+      network_id: 1337,
+      chainId: 1337,
       count: 10,
       accounts: {
         mnemonic: process.env.WALLET_MNEMONIC,
@@ -50,10 +29,12 @@ module.exports = {
     },
     ganache: {
       url: "http://127.0.0.1:7545",
+      chainId: 1,
     },
     goerli: {
       url: process.env.ETH_NODE_URL,
       network_id: 5,
+      chainId: 5,
       skipDryRun: true,
       gas: 2100000,
       gasPrice: 4000000000,
@@ -64,16 +45,23 @@ module.exports = {
     rinkeby: {
       url: process.env.ETH_NODE_URL,
       network_id: 4,
+      chainId: 4,
       skipDryRun: true,
       gas: 2100000,
       gasPrice: 4000000000,
       accounts: {
         mnemonic: process.env.WALLET_MNEMONIC,
       },
+      relayer: {
+        id: "defender",
+        apiKey: process.env.DEFENDER_API_KEY,
+        apiSecret: process.env.DEFENDER_API_SECRET,
+      },
     },
     ropsten: {
       url: process.env.ETH_NODE_URL,
       network_id: 3,
+      chainId: 3,
       gas: 2100000,
       gasPrice: 4000000000,
       accounts: {
@@ -83,6 +71,7 @@ module.exports = {
     harmonytest: {
       url: process.env.ETH_NODE_URL,
       network_id: 1666700000,
+      chainId: 1666700000,
       skipDryRun: true,
       gas: 2100000,
       gasPrice: 10000000000,
@@ -93,6 +82,7 @@ module.exports = {
     polygontest: {
       url: process.env.ETH_NODE_URL,
       network_id: 80001,
+      chainId: 80001,
       skipDryRun: true,
       gas: 2100000,
       gasPrice: 10000000000,
@@ -102,7 +92,8 @@ module.exports = {
     },
     coverage: {
       url: "http://127.0.0.1:8555",
-      network_id: "*",
+      network_id: 1,
+      chainId: 1,
       gas: 0xfffffffffff,
       gasPrice: 10000000000,
       initialBaseFeePerGas: 0,
@@ -112,6 +103,7 @@ module.exports = {
     mainnet: {
       url: process.env.ETH_NODE_URL,
       network_id: 1,
+      chainId: 1,
       skipDryRun: true,
       accounts: {
         mnemonic: process.env.WALLET_MNEMONIC,
@@ -120,6 +112,7 @@ module.exports = {
     harmony: {
       url: process.env.ETH_NODE_URL,
       network_id: 1666600000,
+      chainId: 1666600000,
       skipDryRun: true,
       accounts: {
         mnemonic: process.env.WALLET_MNEMONIC,
@@ -128,6 +121,7 @@ module.exports = {
     polygon: {
       url: process.env.ETH_NODE_URL,
       network_id: 137,
+      chainId: 137,
       skipDryRun: true,
       accounts: {
         mnemonic: process.env.WALLET_MNEMONIC,
