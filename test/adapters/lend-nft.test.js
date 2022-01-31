@@ -95,8 +95,8 @@ describe("Adapter - LendNFT", () => {
       nftOwner,
       pixelNFT.address,
       tokenId,
-      10000,
       10000, // requested units
+      10000, // lending period
       [],
       { from: daoOwner, gasPrice: toBN("0") }
     );
@@ -107,8 +107,8 @@ describe("Adapter - LendNFT", () => {
       nftOwner,
       erc1155Token.address,
       tokenId2,
-      10000,
-      10000, // requested units
+      25000, // requested units
+      10000, // lending period
       [],
       { from: daoOwner, gasPrice: toBN("0") }
     );
@@ -169,9 +169,7 @@ describe("Adapter - LendNFT", () => {
     expect(balanceOf.toString()).equal("1");
 
     unitBalance = await bank.balanceOf(nftOwner, UNITS);
-    expect(
-      unitBalance.toString() == "10100" || unitBalance.toString() == "10101"
-    ).equal(true);
+    expect(unitBalance.toString() == "25100").equal(true);
 
     await advanceTime(100);
 
@@ -179,13 +177,22 @@ describe("Adapter - LendNFT", () => {
     await lendNFT.sendNFTBack(dao.address, proposalId2, { from: nftOwner });
     unitBalance = await bank.balanceOf(nftOwner, UNITS);
     expect(
-      unitBalance.toString() === "200" ||
-        unitBalance.toString() === "201" ||
-        unitBalance.toString() === "202"
+      unitBalance.toString() === "350" ||
+        unitBalance.toString() === "351" ||
+        unitBalance.toString() === "352"
     ).equal(true);
 
     const balance = await erc1155Token.balanceOf(nftOwner, tokenId2);
     expect(balance.toString()).equal("1");
+
+    await advanceTime(1000);
+
+    unitBalance = await bank.balanceOf(nftOwner, UNITS);
+    expect(
+      unitBalance.toString() === "350" ||
+        unitBalance.toString() === "351" ||
+        unitBalance.toString() === "352"
+    ).equal(true);
   });
 
   it("should not be possible to send ETH to the adapter via receive function", async () => {
