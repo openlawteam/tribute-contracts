@@ -27,7 +27,6 @@ task("deploy", "Deploy the list of contracts", async (taskArgs, deployer) => {
 
   const daoOwnerAddr = process.env.DAO_OWNER_ADDR;
   log(`DaoOwner: ${daoOwnerAddr}`);
-  log(`Relayer: ${process.env.RELAYER ? process.env.RELAYER : "none"}`);
 
   const {
     contracts: contractConfigs,

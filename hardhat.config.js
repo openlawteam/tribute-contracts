@@ -4,9 +4,10 @@ require("ts-node").register({
 });
 require("solidity-coverage");
 require("@nomiclabs/hardhat-waffle");
+require("@nomiclabs/hardhat-ethers");
 require("./tasks/accounts");
 require("./tasks/deploy");
-require("./providers");
+require("./relayers");
 
 module.exports = {
   // Supported Networks
@@ -52,11 +53,7 @@ module.exports = {
       accounts: {
         mnemonic: process.env.WALLET_MNEMONIC,
       },
-      relayer: {
-        id: "defender",
-        apiKey: process.env.DEFENDER_API_KEY,
-        apiSecret: process.env.DEFENDER_API_SECRET,
-      },
+      relayerId: process.env.RELAYER,
     },
     ropsten: {
       url: process.env.ETH_NODE_URL,
@@ -126,6 +123,23 @@ module.exports = {
       accounts: {
         mnemonic: process.env.WALLET_MNEMONIC,
       },
+    },
+  },
+
+  // Relayers or External Signers configs
+  relayers: {
+    defender: {
+      enabled: false,
+      apiKey: process.env.DEFENDER_API_KEY,
+      apiSecret: process.env.DEFENDER_API_SECRET,
+    },
+    googleKms: {
+      enabled: true,
+      projectId: process.env.KMS_PROJECT_ID,
+      locationId: process.env.KMS_LOCATION_ID,
+      keyRingId: process.env.KMS_KEY_RING_ID,
+      keyId: process.env.KMS_KEY_ID,
+      keyVersion: process.env.KMS_KEY_VERSION,
     },
   },
 
