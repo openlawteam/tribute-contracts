@@ -119,10 +119,12 @@ contract InternalTokenVestingExtension is IExtension {
         uint88 amountToRemove
     ) external hasExtensionAccess(dao, AclFlag.REMOVE_VESTING) {
         VestingSchedule storage schedule = vesting[member][internalToken];
-        uint88 blockedAmount = getMinimumBalanceInternal(schedule.startDate,
-                schedule.endDate,
-                schedule.blockedAmount);
-        
+        uint88 blockedAmount = getMinimumBalanceInternal(
+            schedule.startDate,
+            schedule.endDate,
+            schedule.blockedAmount
+        );
+
         schedule.startDate = uint64(block.timestamp);
         schedule.blockedAmount = blockedAmount - amountToRemove;
     }
