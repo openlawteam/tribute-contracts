@@ -66,13 +66,14 @@ function getProposalCounter() {
 
 describe("Adapter - Distribute", () => {
   before("deploy dao", async () => {
-    const { dao, adapters, extensions } = await deployDefaultDao({
+    const { dao, adapters, extensions, factories } = await deployDefaultDao({
       owner: daoOwner,
       creator: daoCreator,
     });
     this.dao = dao;
     this.adapters = adapters;
     this.extensions = extensions;
+    this.factories = factories;
     this.snapshotId = await takeChainSnapshot();
   });
 
@@ -269,12 +270,17 @@ describe("Adapter - Distribute", () => {
       gasPrice: toBN("0"),
     });
 
-    memberABalance = await bank.balanceOf(daoMemberA, ETH_TOKEN);
-    expect(memberABalance.toString()).equal("4"); //4.9999... rounded to 4
-    memberBBalance = await bank.balanceOf(daoMemberB, ETH_TOKEN);
-    expect(memberBBalance.toString()).equal("9"); //9.9999... rounded to 9
     let ownerBalance = await bank.balanceOf(daoOwner, ETH_TOKEN);
     expect(ownerBalance.toString()).equal("0");
+    let factoryBalance = await bank.balanceOf(
+      this.factories.daoFactory.address,
+      ETH_TOKEN
+    );
+    expect(factoryBalance.toString()).equal("0");
+    memberBBalance = await bank.balanceOf(daoMemberB, ETH_TOKEN);
+    expect(memberBBalance.toString()).equal("9"); //9.9999... rounded to 9
+    memberABalance = await bank.balanceOf(daoMemberA, ETH_TOKEN);
+    expect(memberABalance.toString()).equal("4"); //4.9999... rounded to 4
   });
 
   it("should not be possible to create a proposal with the amount.toEquals to 0", async () => {

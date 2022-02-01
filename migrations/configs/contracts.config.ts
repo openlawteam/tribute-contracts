@@ -262,6 +262,7 @@ export const contracts: Array<ContractConfig> = [
   {
     id: "dao-factory",
     name: "DaoFactory",
+    alias: "daoFactory",
     path: "../../contracts/core/DaoFactory",
     enabled: true,
     skipAutoDeploy: true,

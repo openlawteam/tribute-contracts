@@ -308,7 +308,7 @@ contract DistributeContract is IDistribute, AdapterGuard, Reimbursable {
             unitHolderAddr,
             blockNumber
         );
-        require(memberTokens != 0, "not enough tokens");
+        require(memberTokens > 0, "not enough tokens");
         // Distributes the funds to 1 unit holder only
         bank.internalTransfer(
             dao,
@@ -338,16 +338,16 @@ contract DistributeContract is IDistribute, AdapterGuard, Reimbursable {
             //slither-disable-next-line calls-loop
             address memberAddr = dao.getMemberAddress(i);
             //slither-disable-next-line calls-loop
-            uint256 memberUnits = bank.getPriorAmount(
+            uint256 memberTokens = DaoHelper.priorMemberTokens(
+                bank,
                 memberAddr,
-                DaoHelper.UNITS,
                 blockNumber
             );
-            if (memberUnits > 0) {
+            if (memberTokens > 0) {
                 //slither-disable-next-line calls-loop
                 uint256 amountToDistribute = FairShareHelper.calc(
                     amount,
-                    memberUnits,
+                    memberTokens,
                     totalTokens
                 );
 
