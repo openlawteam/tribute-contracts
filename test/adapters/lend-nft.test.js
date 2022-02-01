@@ -148,11 +148,7 @@ describe("Adapter - LendNFT", () => {
     await lendNFT.sendNFTBack(dao.address, proposalId, { from: nftOwner });
 
     unitBalance = await bank.balanceOf(nftOwner, UNITS);
-    expect(
-      unitBalance.toString() == "100" ||
-        unitBalance.toString() == "101" ||
-        unitBalance.toString() === "202"
-    ).equal(true);
+    expect(toNumber(unitBalance.toString())).to.be.closeTo(100, 2);
 
     await advanceTime(10000);
     //process the second proposal
