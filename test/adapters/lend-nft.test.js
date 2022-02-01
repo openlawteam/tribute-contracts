@@ -148,7 +148,7 @@ describe("Adapter - LendNFT", () => {
     await lendNFT.sendNFTBack(dao.address, proposalId, { from: nftOwner });
 
     unitBalance = await bank.balanceOf(nftOwner, UNITS);
-    expect(toNumber(unitBalance.toString())).to.be.closeTo(100, 2);
+    expect(toNumber(unitBalance.toString())).to.be.closeTo(100, 5);
 
     await advanceTime(10000);
     //process the second proposal
@@ -166,14 +166,14 @@ describe("Adapter - LendNFT", () => {
     expect(balanceOf.toString()).equal("1");
 
     unitBalance = await bank.balanceOf(nftOwner, UNITS);
-    expect(toNumber(unitBalance.toString())).to.be.closeTo(25100, 2);
+    expect(toNumber(unitBalance.toString())).to.be.closeTo(25100, 5);
 
     await advanceTime(100);
 
     //after 100 seconds, get the second NFT back
     await lendNFT.sendNFTBack(dao.address, proposalId2, { from: nftOwner });
     unitBalance = await bank.balanceOf(nftOwner, UNITS);
-    expect(toNumber(unitBalance.toString())).to.be.closeTo(350, 2);
+    expect(toNumber(unitBalance.toString())).to.be.closeTo(350, 5);
 
     const balance = await erc1155Token.balanceOf(nftOwner, tokenId2);
     expect(balance.toString()).equal("1");
@@ -181,7 +181,7 @@ describe("Adapter - LendNFT", () => {
     await advanceTime(1000);
 
     unitBalance = await bank.balanceOf(nftOwner, UNITS);
-    expect(toNumber(unitBalance.toString())).to.be.closeTo(350, 2);
+    expect(toNumber(unitBalance.toString())).to.be.closeTo(350, 5);
   });
 
   it("should not be possible to send ETH to the adapter via receive function", async () => {
