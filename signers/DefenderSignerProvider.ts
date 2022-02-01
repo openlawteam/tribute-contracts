@@ -9,14 +9,12 @@ import {
   EIP1193Provider,
   RequestArguments,
 } from "hardhat/types";
-import { Relayer } from "defender-relay-client";
 import { DefenderRelaySigner } from "defender-relay-client/lib/ethers";
 import { ethers } from "ethers";
 import { numberToHex } from "web3-utils";
 import { serializeTransaction } from "ethers/lib/utils";
 
 export class DefenderSignerProvider extends ProviderWrapper {
-  public relayer: Relayer;
   public signer: DefenderRelaySigner;
   public ethAddress: string | undefined;
   public chainId: number;
@@ -36,10 +34,6 @@ export class DefenderSignerProvider extends ProviderWrapper {
       },
       p
     );
-    this.relayer = new Relayer({
-      apiKey: config.apiKey,
-      apiSecret: config.apiSecret,
-    });
   }
 
   public async request(args: RequestArguments): Promise<unknown> {
@@ -99,8 +93,7 @@ export class DefenderSignerProvider extends ProviderWrapper {
 
   private async _getSender(): Promise<string | undefined> {
     if (!this.ethAddress) {
-      const r = await this.relayer.getRelayer();
-      this.ethAddress = r.address;
+      this.ethAddress = await this.signer.getAddress();
     }
     return this.ethAddress;
   }
@@ -113,24 +106,4 @@ export class DefenderSignerProvider extends ProviderWrapper {
 
     return rpcQuantityToBN(response);
   }
-
-  private _determineCorrectV = (msgHash: string, r: string, s: string) => {
-    let v = 27;
-    let pubKey = ethers.utils.recoverAddress(msgHash, {
-      r,
-      s,
-      v,
-    });
-    console.log({ recoveredAddress1: pubKey });
-    if (pubKey !== this.ethAddress) {
-      v = 28;
-      pubKey = ethers.utils.recoverAddress(msgHash, {
-        r,
-        s,
-        v,
-      });
-      console.log({ recoveredAddress2: pubKey });
-    }
-    return new BN(v - 27);
-  };
 }

@@ -43,6 +43,7 @@ module.exports = {
       accounts: {
         mnemonic: process.env.WALLET_MNEMONIC || "",
       },
+      signerId: process.env.SIGNER || "",
     },
     rinkeby: {
       url: process.env.ETH_NODE_URL,
@@ -65,6 +66,7 @@ module.exports = {
       accounts: {
         mnemonic: process.env.WALLET_MNEMONIC || "",
       },
+      signerId: process.env.SIGNER || "",
     },
     harmonytest: {
       url: process.env.ETH_NODE_URL,
@@ -76,6 +78,7 @@ module.exports = {
       accounts: {
         mnemonic: process.env.WALLET_MNEMONIC || "",
       },
+      signerId: process.env.SIGNER || "",
     },
     polygontest: {
       url: process.env.ETH_NODE_URL,
@@ -87,6 +90,7 @@ module.exports = {
       accounts: {
         mnemonic: process.env.WALLET_MNEMONIC || "",
       },
+      signerId: process.env.SIGNER || "",
     },
     coverage: {
       url: "http://127.0.0.1:8555",
@@ -106,6 +110,7 @@ module.exports = {
       accounts: {
         mnemonic: process.env.WALLET_MNEMONIC || "",
       },
+      signerId: process.env.SIGNER || "",
     },
     harmony: {
       url: process.env.ETH_NODE_URL,
@@ -115,6 +120,7 @@ module.exports = {
       accounts: {
         mnemonic: process.env.WALLET_MNEMONIC || "",
       },
+      signerId: process.env.SIGNER || "",
     },
     polygon: {
       url: process.env.ETH_NODE_URL,
@@ -124,6 +130,7 @@ module.exports = {
       accounts: {
         mnemonic: process.env.WALLET_MNEMONIC || "",
       },
+      signerId: process.env.SIGNER || "",
     },
   },
 
@@ -159,7 +166,7 @@ module.exports = {
   contractSizer: {
     alphaSort: true,
     disambiguatePaths: false,
-    runOnCompile: true,
+    runOnCompile: !(process.env.SOLC_OPTIMIZER === "false"),
     strict: true,
   },
   gasReporter: {
