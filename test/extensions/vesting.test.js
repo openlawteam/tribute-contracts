@@ -27,6 +27,8 @@ SOFTWARE.
 
 const { UNITS, toBN } = require("../../utils/contract-util");
 
+const { toNumber } = require("web3-utils");
+
 const {
   takeChainSnapshot,
   revertChainSnapshot,
@@ -197,20 +199,21 @@ describe("Extension - Vesting", () => {
     halfWay = diff.div(toBN("2"));
 
     minBalance = await vesting.getMinimumBalance(daoOwner, UNITS);
-    //to manage rounding error
-    expect(toBN(minBalance.toString())).to.be.closeTo(toBN("150"), 5);
+    const minBalanceStr = minBalance.toString();
+
+    expect(toNumber(minBalanceStr)).to.be.closeTo(150, 1);
 
     await advanceTime(halfWay.toNumber());
 
     minBalance = await vesting.getMinimumBalance(daoOwner, UNITS);
-    expect(toBN(minBalance.toString())).to.be.closeTo(toBN("75"), 5);
+    expect(toNumber(minBalance.toString())).to.be.closeTo(75, 1);
 
     await vesting.removeVesting(this.dao.address, daoOwner, UNITS, 50, {
       from: daoOwner,
     });
 
     minBalance = await vesting.getMinimumBalance(daoOwner, UNITS);
-    expect(toBN(minBalance.toString())).to.be.closeTo(toBN("50"), 5);
+    expect(toNumber(minBalance.toString())).to.be.closeTo(25, 1);
   });
 
   it("should not be possible to create a new vesting without the ACL permission", async () => {

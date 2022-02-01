@@ -265,6 +265,7 @@ contract LendNFTContract is
             BankExtension bank = BankExtension(
                 dao.getExtensionAddress(DaoHelper.BANK)
             );
+
             bank.subtractFromBalance(
                 dao,
                 proposal.applicant,
@@ -275,7 +276,7 @@ contract LendNFTContract is
                 dao,
                 proposal.applicant,
                 DaoHelper.UNITS,
-                uint64(proposal.lendingPeriod - elapsedTime)
+                uint88(blockedAmount)
             );
         }
 

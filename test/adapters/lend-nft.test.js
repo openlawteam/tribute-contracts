@@ -1,6 +1,7 @@
 // Whole-script strict mode syntax
 "use strict";
 
+const { toNumber } = require("web3-utils");
 /**
 MIT License
 
@@ -95,8 +96,8 @@ describe("Adapter - LendNFT", () => {
       nftOwner,
       pixelNFT.address,
       tokenId,
-      10000,
       10000, // requested units
+      10000, // lending period
       [],
       { from: daoOwner, gasPrice: toBN("0") }
     );
@@ -107,8 +108,8 @@ describe("Adapter - LendNFT", () => {
       nftOwner,
       erc1155Token.address,
       tokenId2,
-      10000,
-      10000, // requested units
+      25000, // requested units
+      10000, // lending period
       [],
       { from: daoOwner, gasPrice: toBN("0") }
     );
@@ -147,7 +148,7 @@ describe("Adapter - LendNFT", () => {
     await lendNFT.sendNFTBack(dao.address, proposalId, { from: nftOwner });
 
     unitBalance = await bank.balanceOf(nftOwner, UNITS);
-    expect(toBN(unitBalance.toString())).to.be.closeTo(toBN("100"), 5);
+    expect(toNumber(unitBalance.toString())).to.be.closeTo(100, 5);
 
     await advanceTime(10000);
     //process the second proposal
@@ -165,17 +166,22 @@ describe("Adapter - LendNFT", () => {
     expect(balanceOf.toString()).equal("1");
 
     unitBalance = await bank.balanceOf(nftOwner, UNITS);
-    expect(toBN(unitBalance.toString())).to.be.closeTo(toBN("10100"), 5);
+    expect(toNumber(unitBalance.toString())).to.be.closeTo(25100, 5);
 
     await advanceTime(100);
 
     //after 100 seconds, get the second NFT back
     await lendNFT.sendNFTBack(dao.address, proposalId2, { from: nftOwner });
     unitBalance = await bank.balanceOf(nftOwner, UNITS);
-    expect(toBN(unitBalance.toString())).to.be.closeTo(toBN("200"), 5);
+    expect(toNumber(unitBalance.toString())).to.be.closeTo(350, 5);
 
     const balance = await erc1155Token.balanceOf(nftOwner, tokenId2);
     expect(balance.toString()).equal("1");
+
+    await advanceTime(1000);
+
+    unitBalance = await bank.balanceOf(nftOwner, UNITS);
+    expect(toNumber(unitBalance.toString())).to.be.closeTo(350, 5);
   });
 
   it("should not be possible to send ETH to the adapter via receive function", async () => {

@@ -73,19 +73,11 @@ contract KickBadReporterAdapter is MemberGuard {
             votingState == IVoting.VotingState.TIE
         ) {
             //slither-disable-next-line uninitialized-local,variable-scope
-            (uint256 units, address challengeAddress) = votingContract
-                .getChallengeDetails(dao, proposalId);
-            BankExtension bank = BankExtension(
-                dao.getExtensionAddress(DaoHelper.BANK)
-            );
-
-            bank.subtractFromBalance(
+            (, address challengeAddress) = votingContract.getChallengeDetails(
                 dao,
-                challengeAddress,
-                DaoHelper.LOOT,
-                units
+                proposalId
             );
-            bank.addToBalance(dao, challengeAddress, DaoHelper.UNITS, units);
+            GuildKickHelper.unlockMemberTokens(dao, challengeAddress);
         } else {
             revert("vote not finished yet");
         }
