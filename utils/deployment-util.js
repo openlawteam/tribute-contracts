@@ -333,9 +333,7 @@ const createGovernanceRoles = async ({ options, dao, adapters }) => {
                 readConfigValue(c.governanceRoles[role], c.name)
               );
               return await waitTx(
-                dao.setAddressConfiguration(configKey, configValue, {
-                  from: options.owner,
-                })
+                dao.setAddressConfiguration(configKey, configValue)
               );
             }),
           Promise.resolve()

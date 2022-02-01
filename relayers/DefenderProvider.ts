@@ -37,45 +37,26 @@ export class DefenderProvider extends ProviderWrapper {
 
     if (method === "eth_sendTransaction") {
       const tx: JsonRpcTransactionData = params[0];
-      tx.from = await this._getSender();
-      // tx = {
-      //   gas, from, data, maxFeePerGas, maxPriorityFeePerGas
-      // }
+      if (tx !== undefined && tx.from === undefined) {
+        tx.from = await this._getSender();
+      }
 
       const [txRequest] = validateParams(params, rpcTransactionRequest);
       txRequest.chainId = new BN(this.chainId);
       if (txRequest.nonce === undefined) {
         txRequest.nonce = await this._getNonce(txRequest.from);
       }
-      // txRequest = {
-      //  gas, from, data, maxFeePerGas, maxPriorityFeePerGas, nonce, chainId,
-      //  to, gasPrice, value, accessList,
-      // }
-
-      //   const txParams: UnsignedTransaction = pick(txRequest, [
-      //     "from",
-      //     "to",
-      //     "value",
-      //     "nonce",
-      //     "data",
-      //     "chainId",
-      //     "maxFeePerGas",
-      //     "maxPriorityFeePerGas",
-      //   ]);
-      //   console.log({ txParams });
-
-      //   txParams.gasLimit = txRequest.gas;
 
       const unsignedTx: UnsignedTransaction =
         await ethers.utils.resolveProperties({
           to: txRequest.to ? bufferToHex(txRequest.to) : undefined,
           nonce: txRequest.nonce?.toNumber(),
 
-          gasLimit: txRequest.gas ? numberToHex(txRequest.gas) : undefined, //BigNumberish;
-          gasPrice: txRequest.gasPrice?.toBuffer(), //BigNumberish
+          gasLimit: txRequest.gas ? numberToHex(txRequest.gas) : undefined,
+          gasPrice: txRequest.gasPrice?.toBuffer(),
 
-          data: txRequest.data, //BytesLike;
-          value: txRequest.value ? numberToHex(txRequest.value) : undefined, //BigNumberish;
+          data: txRequest.data,
+          value: txRequest.value ? numberToHex(txRequest.value) : undefined,
           chainId: this.chainId,
 
           // Typed-Transaction features
@@ -85,54 +66,18 @@ export class DefenderProvider extends ProviderWrapper {
           //accessList?: AccessListish;
 
           // EIP-1559; Type 2
-          maxPriorityFeePerGas: numberToHex(txRequest.maxPriorityFeePerGas!), //BigNumberish;
+          maxPriorityFeePerGas: numberToHex(txRequest.maxPriorityFeePerGas!),
           maxFeePerGas: numberToHex(txRequest.maxFeePerGas!),
         });
 
-      //   const transaction: FeeMarketEIP1559Transaction =
-      //     FeeMarketEIP1559Transaction.fromTxData(txParams, {
-      //       common,
-      //     });
-
-      // hashed or raw message?
-      //   const messageHash: Buffer = transaction.getMessageToSign(); // hashed message
-      // const message: string = hexlify(messageHash);
-      // console.log({ message });
-      // const payload: SignMessagePayload = {
-      //   message,
-      // };
-      //   const digestBuffer = transaction.getMessageToSign(true);
-      //   const message = hexlify(digestBuffer);
-      //   console.log({ message });
-      //   const txSignature: string = await this.signer._signDigest(message);
-      //   console.log({ txSignature });
-
-      const serializedTx = ethers.utils.serializeTransaction(unsignedTx);
-      const transactionSignature = await this.relayer.sign({
-        message: ethers.utils.keccak256(serializedTx),
+      const txSignature = await this.relayer.sign({
+        message: ethers.utils.serializeTransaction(unsignedTx),
       });
-      const s = ethers.utils.serializeTransaction(
+      const signedRawTx = ethers.utils.serializeTransaction(
         unsignedTx,
-        transactionSignature
+        txSignature
       );
-      console.log({ s });
 
-      //   const signedTx: FeeMarketEIP1559Transaction =
-      //     FeeMarketEIP1559Transaction.fromTxData(
-      //       {
-      //         ...txParams,
-      //         ...txSignature,
-      //         // get signature_y_parity
-      //         v: this._determineCorrectV(message, txSignature.r, txSignature.s),
-      //       },
-      //       {
-      //         common,
-      //       }
-      //     );
-
-      console.log({ sender: this.ethAddress });
-      const signedRawTx = s; //bufferToHex(s);
-      console.log(signedRawTx);
       return this._wrappedProvider.request({
         method: "eth_sendRawTransaction",
         params: [signedRawTx],

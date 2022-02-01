@@ -39,7 +39,9 @@ export class GcpKmsProvider extends ProviderWrapper {
 
     if (method === "eth_sendTransaction") {
       const tx: JsonRpcTransactionData = params[0];
-      tx.from = await this._getSender();
+      if (tx !== undefined && tx.from === undefined) {
+        tx.from = await this._getSender();
+      }
 
       const [txRequest] = validateParams(params, rpcTransactionRequest);
       txRequest.chainId = new BN(this.chainId);

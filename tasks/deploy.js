@@ -56,8 +56,7 @@ task("deploy", "Deploy the list of contracts", async (taskArgs, deployer) => {
     result;
 
   if (dao) {
-    if (network === "ganache") await dao.finalizeDao();
-    else await dao.finalizeDao({ from: daoOwnerAddr });
+    await dao.finalizeDao();
 
     log(`
     Available contracts
