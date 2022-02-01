@@ -26,14 +26,14 @@ const buildRelayerProvider = (
 ) => {
   switch (relayerConfig.id) {
     case "defender":
-      log(`Relayer: ${relayerConfig.id}`);
+      log(`Relayer/Signer: ${relayerConfig.id}`);
       return new DefenderProvider(
         eip1193Provider,
         relayerConfig as DefenderProviderConfig,
         chainId
       );
     case "googleKms":
-      log(`Relayer: ${relayerConfig.id}`);
+      log(`Relayer/Signer: ${relayerConfig.id}`);
       return new GcpKmsProvider(
         eip1193Provider,
         relayerConfig as GcpKmsProviderConfig,

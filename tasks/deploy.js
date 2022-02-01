@@ -19,8 +19,8 @@ const { log } = require("../utils/log-util");
 const { deployConfigs } = require("../deploy-config");
 require("dotenv").config({ path: "../.env" });
 
-task("deploy", "Deploy the list of contracts", async (taskArgs, deployer) => {
-  const { network } = deployer.hardhatArguments;
+task("deploy", "Deploy the list of contracts", async (args, hre) => {
+  const { network } = hre.hardhatArguments;
 
   log(`Deployment started at ${new Date().toISOString()}`);
   log(`Deploying tribute-contracts@${pkgJson.version} to ${network} network`);
@@ -36,9 +36,9 @@ task("deploy", "Deploy the list of contracts", async (taskArgs, deployer) => {
     network
   );
 
-  const daoArtifacts = null; // FIXME await getOrCreateDaoArtifacts(deployer, hardhatImports);
+  const daoArtifacts = null; //await getOrCreateDaoArtifacts(hardhatImports);
   const deployFunction = await hardhatImports.deployFunctionFactory(
-    deployer,
+    hre,
     daoArtifacts
   );
   const accounts = await hre.ethers.getSigners();
@@ -524,18 +524,18 @@ const deploy = async (opts) => {
   throw new Error(`Unsupported operation ${opts.network}`);
 };
 
-const getOrCreateDaoArtifacts = async (deployer, contractImports) => {
-  const DaoArtifacts = contractImports.DaoArtifacts;
+const getOrCreateDaoArtifacts = async (hardHatImports) => {
+  const DaoArtifacts = hardHatImports.DaoArtifacts;
   let daoArtifacts;
   if (process.env.DAO_ARTIFACTS_CONTRACT_ADDR) {
-    log(`Attached to existing DaoArtifacts contract`);
-    daoArtifacts = await DaoArtifacts.at(
-      process.env.DAO_ARTIFACTS_CONTRACT_ADDR
-    );
+    log(`Attach to existing DaoArtifacts contract`);
+    daoArtifacts = await (
+      await DaoArtifacts
+    ).attach(process.env.DAO_ARTIFACTS_CONTRACT_ADDR);
   } else {
     log(`Creating new DaoArtifacts contract`);
-    await deployer.deploy(DaoArtifacts);
-    daoArtifacts = await DaoArtifacts.deployed();
+    const daoArtifact = await (await DaoArtifacts).deploy();
+    daoArtifacts = await daoArtifact.deployed();
   }
   log(`DaoArtifacts: ${daoArtifacts.address}`);
   return daoArtifacts;

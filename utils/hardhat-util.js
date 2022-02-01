@@ -185,7 +185,6 @@ module.exports = (configs, network) => {
     attachFunction: attach,
     deployFunctionFactory: (deployer, daoArtifacts) => {
       if (!deployer /*|| !daoArtifacts*/)
-        //FIXME
         throw Error("Missing deployer or DaoArtifacts contract");
       return deployFunction({ deployer, daoArtifacts, allConfigs, network });
     },

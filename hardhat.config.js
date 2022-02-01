@@ -5,7 +5,8 @@ require("ts-node").register({
 require("solidity-coverage");
 require("@nomiclabs/hardhat-waffle");
 require("@nomiclabs/hardhat-ethers");
-require("./tasks/accounts");
+require("hardhat-contract-sizer");
+require("hardhat-gas-reporter");
 require("./tasks/deploy");
 require("./relayers");
 
@@ -40,7 +41,7 @@ module.exports = {
       gas: 2100000,
       gasPrice: 4000000000,
       accounts: {
-        mnemonic: process.env.WALLET_MNEMONIC,
+        mnemonic: process.env.WALLET_MNEMONIC || "",
       },
     },
     rinkeby: {
@@ -51,9 +52,9 @@ module.exports = {
       gas: 2100000,
       gasPrice: 4000000000,
       accounts: {
-        mnemonic: process.env.WALLET_MNEMONIC,
+        mnemonic: process.env.WALLET_MNEMONIC || "",
       },
-      relayerId: process.env.RELAYER,
+      relayerId: process.env.RELAYER || "",
     },
     ropsten: {
       url: process.env.ETH_NODE_URL,
@@ -62,7 +63,7 @@ module.exports = {
       gas: 2100000,
       gasPrice: 4000000000,
       accounts: {
-        mnemonic: process.env.WALLET_MNEMONIC,
+        mnemonic: process.env.WALLET_MNEMONIC || "",
       },
     },
     harmonytest: {
@@ -73,7 +74,7 @@ module.exports = {
       gas: 2100000,
       gasPrice: 10000000000,
       accounts: {
-        mnemonic: process.env.WALLET_MNEMONIC,
+        mnemonic: process.env.WALLET_MNEMONIC || "",
       },
     },
     polygontest: {
@@ -84,7 +85,7 @@ module.exports = {
       gas: 2100000,
       gasPrice: 10000000000,
       accounts: {
-        mnemonic: process.env.WALLET_MNEMONIC,
+        mnemonic: process.env.WALLET_MNEMONIC || "",
       },
     },
     coverage: {
@@ -103,7 +104,7 @@ module.exports = {
       chainId: 1,
       skipDryRun: true,
       accounts: {
-        mnemonic: process.env.WALLET_MNEMONIC,
+        mnemonic: process.env.WALLET_MNEMONIC || "",
       },
     },
     harmony: {
@@ -112,7 +113,7 @@ module.exports = {
       chainId: 1666600000,
       skipDryRun: true,
       accounts: {
-        mnemonic: process.env.WALLET_MNEMONIC,
+        mnemonic: process.env.WALLET_MNEMONIC || "",
       },
     },
     polygon: {
@@ -121,7 +122,7 @@ module.exports = {
       chainId: 137,
       skipDryRun: true,
       accounts: {
-        mnemonic: process.env.WALLET_MNEMONIC,
+        mnemonic: process.env.WALLET_MNEMONIC || "",
       },
     },
   },
@@ -130,16 +131,16 @@ module.exports = {
   relayers: {
     defender: {
       enabled: false,
-      apiKey: process.env.DEFENDER_API_KEY,
-      apiSecret: process.env.DEFENDER_API_SECRET,
+      apiKey: process.env.DEFENDER_API_KEY || "",
+      apiSecret: process.env.DEFENDER_API_SECRET || "",
     },
     googleKms: {
       enabled: true,
-      projectId: process.env.KMS_PROJECT_ID,
-      locationId: process.env.KMS_LOCATION_ID,
-      keyRingId: process.env.KMS_KEY_RING_ID,
-      keyId: process.env.KMS_KEY_ID,
-      keyVersion: process.env.KMS_KEY_VERSION,
+      projectId: process.env.KMS_PROJECT_ID || "",
+      locationId: process.env.KMS_LOCATION_ID || "",
+      keyRingId: process.env.KMS_KEY_RING_ID || "",
+      keyId: process.env.KMS_KEY_ID || "",
+      keyVersion: process.env.KMS_KEY_VERSION || "",
     },
   },
 
@@ -155,6 +156,15 @@ module.exports = {
   },
 
   // Project Settings
+  contractSizer: {
+    alphaSort: true,
+    disambiguatePaths: false,
+    runOnCompile: true,
+    strict: true,
+  },
+  gasReporter: {
+    enabled: true,
+  },
   paths: {
     tests: "./test",
     sources: "./contracts",
