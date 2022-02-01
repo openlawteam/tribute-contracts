@@ -6,41 +6,41 @@ import {
 } from "hardhat/internal/core/providers/gas-providers";
 import { HttpProvider } from "hardhat/internal/core/providers/http";
 import {
-  DefenderProviderConfig,
-  EIP1193Provider,
-  GcpKmsProviderConfig,
+  DefenderSignerConfig,
+  GcpKmsSignerConfig,
+  SignerConfig,
   HardhatConfig,
   HardhatUserConfig,
   HttpNetworkUserConfig,
-  RelayerConfig,
+  EIP1193Provider,
 } from "hardhat/types";
 import "./type-extensions";
-import { DefenderProvider } from "./DefenderProvider";
-import { GcpKmsProvider } from "./GcpKmsProvider";
+import { DefenderSignerProvider } from "./DefenderSignerProvider";
+import { GcpKmsSignerProvider } from "./GcpKmsSignerProvider";
 import { log } from "../utils/log-util";
 
-const buildRelayerProvider = (
+const buildSignerProvider = (
   eip1193Provider: EIP1193Provider,
-  relayerConfig: RelayerConfig,
+  signerConfig: SignerConfig,
   chainId: number
 ) => {
-  switch (relayerConfig.id) {
+  switch (signerConfig.id) {
     case "defender":
-      log(`Relayer/Signer: ${relayerConfig.id}`);
-      return new DefenderProvider(
+      log(`Signer: ${signerConfig.id}`);
+      return new DefenderSignerProvider(
         eip1193Provider,
-        relayerConfig as DefenderProviderConfig,
+        signerConfig as DefenderSignerConfig,
         chainId
       );
     case "googleKms":
-      log(`Relayer/Signer: ${relayerConfig.id}`);
-      return new GcpKmsProvider(
+      log(`Signer: ${signerConfig.id}`);
+      return new GcpKmsSignerProvider(
         eip1193Provider,
-        relayerConfig as GcpKmsProviderConfig,
+        signerConfig as GcpKmsSignerConfig,
         chainId
       );
     default:
-      throw new Error(`Relayer ${relayerConfig.id} not supported`);
+      throw new Error(`Relayer ${signerConfig.id} not supported`);
   }
 };
 
@@ -56,29 +56,28 @@ extendConfig(
       }
 
       const network = userNetworks[networkName]!;
-      if (network.relayerId) {
-        config.networks[networkName].relayerId = network.relayerId;
+      if (network.signerId) {
+        config.networks[networkName].signerId = network.signerId;
       }
     }
 
-    config.relayers = userConfig.relayers;
+    config.signers = userConfig.signers;
   }
 );
 
 extendEnvironment((hre) => {
-  if (hre.network.config.relayerId && hre.config.relayers) {
-    const relayerId = hre.network.config.relayerId;
-    const relayers = hre.config.relayers;
-
-    const relayer = Object.entries(relayers)
-      .filter((r) => r[0].toLowerCase() === relayerId.toLowerCase())
+  if (hre.network.config.signerId && hre.config.signers) {
+    const signerId = hre.network.config.signerId;
+    const signers = hre.config.signers;
+    const signer = Object.entries(signers)
+      .filter((r) => r[0].toLowerCase() === signerId.toLowerCase())
       .filter((r) => r[1].enabled)
-      .map((r) => r[1] as RelayerConfig)[0];
+      .map((r) => r[1] as SignerConfig)[0];
 
-    // There are no relayers enabled in the hardhat.config file.
-    if (!relayer) {
+    // There are no signers enabled in the hardhat.config file.
+    if (!signer) {
       log(
-        `The [${relayerId}] relayer is configured for network ${hre.network.name}, but not enabled in the hardhat.config file`
+        `The [${signerId}] signer is configured for network ${hre.network.name}, but not enabled in the hardhat.config file`
       );
       process.exit(1);
     }
@@ -91,9 +90,9 @@ extendEnvironment((hre) => {
       httpNetConfig.timeout
     );
 
-    let wrappedProvider: EIP1193Provider = buildRelayerProvider(
+    let wrappedProvider: EIP1193Provider = buildSignerProvider(
       eip1193Provider,
-      { ...relayer, id: relayerId },
+      { ...signer, id: signerId },
       hre.network.config.chainId!
     );
 

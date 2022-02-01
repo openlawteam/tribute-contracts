@@ -8,7 +8,7 @@ require("@nomiclabs/hardhat-ethers");
 require("hardhat-contract-sizer");
 require("hardhat-gas-reporter");
 require("./tasks/deploy");
-require("./relayers");
+require("./signers");
 
 module.exports = {
   // Supported Networks
@@ -54,7 +54,7 @@ module.exports = {
       accounts: {
         mnemonic: process.env.WALLET_MNEMONIC || "",
       },
-      relayerId: process.env.RELAYER || "",
+      signerId: process.env.SIGNER || "",
     },
     ropsten: {
       url: process.env.ETH_NODE_URL,
@@ -127,15 +127,15 @@ module.exports = {
     },
   },
 
-  // Relayers or External Signers configs
-  relayers: {
+  // External Signers configs
+  signers: {
     defender: {
-      enabled: false,
+      enabled: process.env.DEFENDER_SIGNER_ENABLED || false,
       apiKey: process.env.DEFENDER_API_KEY || "",
       apiSecret: process.env.DEFENDER_API_SECRET || "",
     },
     googleKms: {
-      enabled: true,
+      enabled: process.env.KMS_GCP_SIGNER_ENABLED || false,
       projectId: process.env.KMS_PROJECT_ID || "",
       locationId: process.env.KMS_LOCATION_ID || "",
       keyRingId: process.env.KMS_KEY_RING_ID || "",

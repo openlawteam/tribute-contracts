@@ -5,22 +5,23 @@ import { validateParams } from "hardhat/internal/core/jsonrpc/types/input/valida
 import { JsonRpcTransactionData } from "hardhat/internal/core/providers/accounts";
 import { ProviderWrapper } from "hardhat/internal/core/providers/wrapper";
 import {
-  GcpKmsProviderConfig,
+  GcpKmsSignerConfig,
   EIP1193Provider,
   RequestArguments,
 } from "hardhat/types";
-import { ethers, UnsignedTransaction } from "ethers";
+import { ethers } from "ethers";
 import { numberToHex } from "web3-utils";
 import { GcpKmsSigner } from "ethers-gcp-kms-signer";
+import { keccak256, serializeTransaction } from "ethers/lib/utils";
 
-export class GcpKmsProvider extends ProviderWrapper {
+export class GcpKmsSignerProvider extends ProviderWrapper {
   public ethAddress: string | undefined;
   public chainId: number;
   public signer: GcpKmsSigner;
 
   constructor(
     provider: EIP1193Provider,
-    config: GcpKmsProviderConfig,
+    config: GcpKmsSignerConfig,
     chainId: number
   ) {
     super(provider);
@@ -49,36 +50,32 @@ export class GcpKmsProvider extends ProviderWrapper {
         txRequest.nonce = await this._getNonce(txRequest.from);
       }
 
-      const unsignedTx: UnsignedTransaction =
-        await ethers.utils.resolveProperties({
-          to: txRequest.to ? bufferToHex(txRequest.to) : undefined,
-          nonce: txRequest.nonce?.toNumber(),
+      const unsignedTx = await ethers.utils.resolveProperties({
+        to: txRequest.to ? bufferToHex(txRequest.to) : undefined,
+        nonce: txRequest.nonce?.toNumber(),
 
-          gasLimit: txRequest.gas ? numberToHex(txRequest.gas) : undefined,
-          gasPrice: txRequest.gasPrice?.toBuffer(),
+        gasLimit: txRequest.gas ? numberToHex(txRequest.gas) : undefined,
+        gasPrice: txRequest.gasPrice?.toBuffer(),
 
-          data: txRequest.data, //BytesLike;
-          value: txRequest.value ? numberToHex(txRequest.value) : undefined,
-          chainId: this.chainId,
+        data: txRequest.data, //BytesLike;
+        value: txRequest.value ? numberToHex(txRequest.value) : undefined,
+        chainId: this.chainId,
 
-          // Typed-Transaction features - EIP-1559; Type 2
-          type: 2,
+        // Typed-Transaction features - EIP-1559; Type 2
+        type: 2,
 
-          // EIP-2930; Type 1 & EIP-1559; Type 2
-          //   accessList: txRequest.accessList ? txRequest.accessList : undefined,
+        // EIP-2930; Type 1 & EIP-1559; Type 2
+        //   accessList: txRequest.accessList ? txRequest.accessList : undefined,
 
-          // EIP-1559; Type 2
-          maxPriorityFeePerGas: numberToHex(txRequest.maxPriorityFeePerGas!),
-          maxFeePerGas: numberToHex(txRequest.maxFeePerGas!),
-        });
+        // EIP-1559; Type 2
+        maxPriorityFeePerGas: numberToHex(txRequest.maxPriorityFeePerGas!),
+        maxFeePerGas: numberToHex(txRequest.maxFeePerGas!),
+      });
 
       const txSignature = await this.signer._signDigest(
-        ethers.utils.keccak256(ethers.utils.serializeTransaction(unsignedTx))
+        keccak256(serializeTransaction(unsignedTx))
       );
-      const signedRawTx = ethers.utils.serializeTransaction(
-        unsignedTx,
-        txSignature
-      );
+      const signedRawTx = serializeTransaction(unsignedTx, txSignature);
 
       return this._wrappedProvider.request({
         method: "eth_sendRawTransaction",
