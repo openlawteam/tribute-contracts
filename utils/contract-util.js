@@ -39,6 +39,7 @@ const toBNWeb3 = Web3Utils.toBN;
 
 // Ethers.js utils
 const { ethers } = require("ethers");
+const { error } = require("./log-util");
 const toUtf8 = ethers.utils.toUtf8String;
 const toBytes32 = ethers.utils.formatBytes32String;
 const toHex = ethers.utils.hexValue;
@@ -70,11 +71,16 @@ const maxAmount = toBN("10000000000000000000");
 const maxUnits = toBN("10000000000000000000");
 
 const waitTx = async (p) => {
-  const res = await p;
-  if (res && res.wait) {
-    await res.wait();
+  try {
+    const res = await p;
+    if (res && res.wait) {
+      await res.wait();
+    }
+    return res;
+  } catch (err) {
+    error(err);
+    throw err;
   }
-  return res;
 };
 
 const embedConfigs = (contractInstance, name, configs) => {

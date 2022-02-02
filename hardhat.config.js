@@ -43,7 +43,7 @@ module.exports = {
       accounts: {
         mnemonic: process.env.WALLET_MNEMONIC || "",
       },
-      signerId: process.env.SIGNER || "",
+      signerId: process.env.SIGNER || undefined,
     },
     rinkeby: {
       url: process.env.ETH_NODE_URL,
@@ -55,7 +55,7 @@ module.exports = {
       accounts: {
         mnemonic: process.env.WALLET_MNEMONIC || "",
       },
-      signerId: process.env.SIGNER || "",
+      signerId: process.env.SIGNER || undefined,
     },
     ropsten: {
       url: process.env.ETH_NODE_URL,
@@ -66,7 +66,7 @@ module.exports = {
       accounts: {
         mnemonic: process.env.WALLET_MNEMONIC || "",
       },
-      signerId: process.env.SIGNER || "",
+      signerId: process.env.SIGNER || undefined,
     },
     harmonytest: {
       url: process.env.ETH_NODE_URL,
@@ -78,7 +78,7 @@ module.exports = {
       accounts: {
         mnemonic: process.env.WALLET_MNEMONIC || "",
       },
-      signerId: process.env.SIGNER || "",
+      signerId: process.env.SIGNER || undefined,
     },
     polygontest: {
       url: process.env.ETH_NODE_URL,
@@ -90,7 +90,7 @@ module.exports = {
       accounts: {
         mnemonic: process.env.WALLET_MNEMONIC || "",
       },
-      signerId: process.env.SIGNER || "",
+      signerId: process.env.SIGNER || undefined,
     },
     coverage: {
       url: "http://127.0.0.1:8555",
@@ -110,7 +110,7 @@ module.exports = {
       accounts: {
         mnemonic: process.env.WALLET_MNEMONIC || "",
       },
-      signerId: process.env.SIGNER || "",
+      signerId: process.env.SIGNER || undefined,
     },
     harmony: {
       url: process.env.ETH_NODE_URL,
@@ -120,7 +120,7 @@ module.exports = {
       accounts: {
         mnemonic: process.env.WALLET_MNEMONIC || "",
       },
-      signerId: process.env.SIGNER || "",
+      signerId: process.env.SIGNER || undefined,
     },
     polygon: {
       url: process.env.ETH_NODE_URL,
@@ -130,7 +130,7 @@ module.exports = {
       accounts: {
         mnemonic: process.env.WALLET_MNEMONIC || "",
       },
-      signerId: process.env.SIGNER || "",
+      signerId: process.env.SIGNER || undefined,
     },
   },
 
@@ -138,16 +138,16 @@ module.exports = {
   signers: {
     defender: {
       enabled: process.env.DEFENDER_SIGNER_ENABLED || false,
-      apiKey: process.env.DEFENDER_API_KEY || "",
-      apiSecret: process.env.DEFENDER_API_SECRET || "",
+      apiKey: process.env.DEFENDER_API_KEY || undefined,
+      apiSecret: process.env.DEFENDER_API_SECRET || undefined,
     },
     googleKms: {
       enabled: process.env.KMS_GCP_SIGNER_ENABLED || false,
-      projectId: process.env.KMS_PROJECT_ID || "",
-      locationId: process.env.KMS_LOCATION_ID || "",
-      keyRingId: process.env.KMS_KEY_RING_ID || "",
-      keyId: process.env.KMS_KEY_ID || "",
-      keyVersion: process.env.KMS_KEY_VERSION || "",
+      projectId: process.env.KMS_PROJECT_ID || undefined,
+      locationId: process.env.KMS_LOCATION_ID || undefined,
+      keyRingId: process.env.KMS_KEY_RING_ID || undefined,
+      keyId: process.env.KMS_KEY_ID || undefined,
+      keyVersion: process.env.KMS_KEY_VERSION || undefined,
     },
   },
 

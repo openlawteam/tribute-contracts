@@ -21,11 +21,11 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
  */
 
-const { ZERO_ADDRESS, sha3, toBytes32, toHexWeb3 } = require("./contract-util");
+const hre = require("hardhat");
+const { ZERO_ADDRESS, sha3, fromAscii } = require("./contract-util");
 const { checkpoint, restore } = require("./checkpoint-util");
 const { info } = require("./log-util");
 const { ContractType } = require("../configs/contracts.config");
-const hre = require("hardhat");
 
 const attach = async (contractInterface, address) => {
   const factory = await hre.ethers.getContractFactory(
@@ -106,7 +106,7 @@ const deployFunction = async ({ allConfigs, network, daoArtifacts }) => {
     const contractAddress = await daoArtifacts.getArtifactAddress(
       sha3(contractConfig.name),
       artifactsOwner,
-      toBytes32(contractConfig.version),
+      fromAscii(contractConfig.version).padEnd(66, "0"),
       contractConfig.type
     );
 
@@ -114,9 +114,8 @@ const deployFunction = async ({ allConfigs, network, daoArtifacts }) => {
       info(`
     Contract attached '${contractConfig.name}'
     -------------------------------------------------
-     contract address: ${contractAddress}
-     block number:     ${tx.blockNumber}`);
-      const instance = await attach(contractInterface, address);
+     contract address: ${contractAddress}`);
+      const instance = await attach(contractInterface, contractAddress);
       return { ...instance, configs: contractConfig };
     }
 
@@ -146,7 +145,7 @@ const deployFunction = async ({ allConfigs, network, daoArtifacts }) => {
     ) {
       await daoArtifacts.addArtifact(
         sha3(contractConfig.name),
-        toBytes32(contractConfig.version),
+        fromAscii(contractConfig.version).padEnd(66, "0"),
         deployedContract.address,
         contractConfig.type
       );
