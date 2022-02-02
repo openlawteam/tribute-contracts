@@ -355,6 +355,62 @@ describe("Adapter - Onboarding", () => {
     );
   });
 
+  it("should be possible for a member to revoke a delegated key", async () => {
+    const delegate = accounts[2];
+    const dao = this.dao;
+    const daoRegistryAdapter = this.adapters.daoRegistryAdapter;
+
+    await daoRegistryAdapter.updateDelegateKey(dao.address, delegate, {
+      from: daoOwner,
+      gasPrice: toBN("0"),
+    });
+    expect(await dao.isMember(delegate)).equal(true);
+    expect(await dao.isMember(daoOwner)).equal(false);
+
+    await daoRegistryAdapter.updateDelegateKey(dao.address, daoOwner, {
+      from: daoOwner,
+      gasPrice: toBN("0"),
+    });
+    expect(await dao.isMember(delegate)).equal(false);
+    expect(await dao.isMember(daoOwner)).equal(true);
+  });
+
+  it("should be possible for a delegated key to update to a new delegated key", async () => {
+    const delegateA = accounts[2];
+    const dao = this.dao;
+    const daoRegistryAdapter = this.adapters.daoRegistryAdapter;
+
+    await daoRegistryAdapter.updateDelegateKey(dao.address, delegateA, {
+      from: daoOwner,
+      gasPrice: toBN("0"),
+    });
+    expect(await dao.isMember(delegateA)).equal(true);
+    expect(await dao.isMember(daoOwner)).equal(false);
+
+    const delegateB = accounts[3];
+    await daoRegistryAdapter.updateDelegateKey(dao.address, delegateB, {
+      from: delegateA,
+      gasPrice: toBN("0"),
+    });
+    expect(await dao.isMember(delegateA)).equal(false);
+    expect(await dao.isMember(delegateB)).equal(true);
+    expect(await dao.isMember(daoOwner)).equal(false);
+  });
+
+  it("should not be possible for a non member to set a delegated key", async () => {
+    const delegate = accounts[2];
+    const dao = this.dao;
+    const daoRegistryAdapter = this.adapters.daoRegistryAdapter;
+
+    await expectRevert(
+      daoRegistryAdapter.updateDelegateKey(dao.address, accounts[3], {
+        from: delegate,
+        gasPrice: toBN("0"),
+      }),
+      "only member"
+    );
+  });
+
   it("should handle an onboarding proposal with a failed vote", async () => {
     const applicant = accounts[2];
     const dao = this.dao;
