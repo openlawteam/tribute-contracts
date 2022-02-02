@@ -538,12 +538,12 @@ const getOrCreateDaoArtifacts = async (hre, hardHatImports) => {
     DaoArtifacts.contractName
   );
   if (process.env.DAO_ARTIFACTS_CONTRACT_ADDR) {
-    log(`Attach to existing DaoArtifacts contract`);
+    log("Attach to existing DaoArtifacts contract");
     daoArtifacts = await factory.attach(
       process.env.DAO_ARTIFACTS_CONTRACT_ADDR
     );
   } else {
-    log(`Creating new DaoArtifacts contract`);
+    log("Creating new DaoArtifacts contract");
     const daoArtifact = await factory.deploy();
     daoArtifacts = await daoArtifact.deployed();
   }
