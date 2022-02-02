@@ -15,7 +15,7 @@ const {
 } = require("../utils/contract-util");
 const pkgJson = require("../package.json");
 const { deployDao } = require("../utils/deployment-util");
-const { log } = require("../utils/log-util");
+const { log, info } = require("../utils/log-util");
 const { deployConfigs } = require("../deploy-config");
 require("dotenv").config({ path: "../.env" });
 
@@ -24,9 +24,6 @@ task("deploy", "Deploy the list of contracts", async (args, hre) => {
 
   log(`Deployment started at ${new Date().toISOString()}`);
   log(`Deploying tribute-contracts@${pkgJson.version} to ${network} network`);
-
-  const daoOwnerAddr = process.env.DAO_OWNER_ADDR;
-  log(`DaoOwner: ${daoOwnerAddr}`);
 
   const {
     contracts: contractConfigs,
@@ -52,16 +49,23 @@ task("deploy", "Deploy the list of contracts", async (args, hre) => {
     accounts,
   });
 
-  const { dao, factories, extensions, adapters, testContracts, utilContracts } =
-    result;
+  const {
+    dao,
+    factories,
+    extensions,
+    adapters,
+    testContracts,
+    utilContracts,
+    owner,
+  } = result;
 
   if (dao) {
     await dao.finalizeDao();
 
-    log(`
-    Available contracts
-    -------------------------------------------------`);
-    log(`DaoOwner: ${daoOwnerAddr}`);
+    info(
+      `\nAvailable Contracts\n-------------------------------------------------`
+    );
+    log(`DaoOwner: ${owner}`);
     log(`DaoRegistry: ${dao.address}`);
     const addresses = {};
     Object.values(factories)
@@ -74,7 +78,9 @@ task("deploy", "Deploy the list of contracts", async (args, hre) => {
         addresses[c.configs.name] = c.address;
       });
     saveDeployedContracts(network, addresses);
-    log(`Deployment completed at ${new Date().toISOString()}`);
+    log(
+      `Deployment to ${network} network was completed at ${new Date().toISOString()}`
+    );
   } else {
     log("-------------------------------------------------");
     log(`There is no deployment script for ${network} network`);
@@ -122,7 +128,7 @@ const deployRinkebyDao = async ({
       ZERO_ADDRESS
     ),
     daoName: getEnvVar("DAO_NAME"),
-    owner: getEnvVar("DAO_OWNER_ADDR"),
+    owner: daoOwnerAddr,
     offchainAdmin: getOptionalEnvVar(
       "OFFCHAIN_ADMIN_ADDR",
       getEnvVar("DAO_OWNER_ADDR")
@@ -195,10 +201,11 @@ const deployGanacheDao = async ({
   contractImports,
   contractConfigs,
 }) => {
-  const daoOwnerAddress = accounts[0];
-
+  const daoOwnerAddress = accounts[0].address;
   const { WETH } = contractImports;
-  const weth = await deployFunction(WETH);
+  const factory = await hre.ethers.getContractFactory(WETH.contractName);
+  const res = await factory.deploy();
+  const weth = await res.deployed();
 
   return await deployDao({
     ...contractImports,

@@ -451,6 +451,7 @@ const deployDao = async (options) => {
     utilContracts: utilContracts,
     votingHelpers: votingHelpers,
     factories: { ...factories, daoFactory },
+    owner: options.owner,
   };
 };
 
