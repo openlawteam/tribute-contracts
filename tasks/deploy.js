@@ -552,7 +552,9 @@ const getOrCreateDaoArtifacts = async (hre, hardHatImports) => {
 };
 
 const getEnvVar = (name) => {
-  if (!process.env[name]) {throw Error(`Missing env var: ${name}`);}
+  if (!process.env[name]) {
+    throw Error(`Missing env var: ${name}`);
+  }
   return process.env[name];
 };
 
