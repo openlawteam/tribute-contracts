@@ -43,9 +43,13 @@ contract DaoRegistryAdapterContract is MemberGuard, AdapterGuard {
         reentrancyGuard(dao)
         onlyMember(dao)
     {
-        dao.updateDelegateKey(
-            DaoHelper.msgSender(dao, msg.sender),
-            delegateKey
-        );
+        if (isActiveMember(dao, msg.sender)) {
+            dao.updateDelegateKey(msg.sender, delegateKey);
+        } else {
+            dao.updateDelegateKey(
+                DaoHelper.msgSender(dao, msg.sender),
+                delegateKey
+            );
+        }
     }
 }
