@@ -21,7 +21,7 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
  */
 
-const { ZERO_ADDRESS } = require("./contract-util");
+const { ZERO_ADDRESS, sha3, toBytes32, toHexWeb3 } = require("./contract-util");
 const { checkpoint, restore } = require("./checkpoint-util");
 const { info } = require("./log-util");
 const { ContractType } = require("../configs/contracts.config");
@@ -103,23 +103,23 @@ const deployFunction = async ({ allConfigs, network, daoArtifacts }) => {
       : process.env.DAO_OWNER_ADDR;
 
     // Attempt to load the contract from the DaoArtifacts to save deploy gas
-    const address = null; //FIXME
-    // const address = await daoArtifacts.getArtifactAddress(
-    //   sha3(contractConfig.name),
-    //   artifactsOwner,
-    //   toBytes32(contractConfig.version),
-    //   contractConfig.type
-    // );
+    const contractAddress = await daoArtifacts.getArtifactAddress(
+      sha3(contractConfig.name),
+      artifactsOwner,
+      toBytes32(contractConfig.version),
+      contractConfig.type
+    );
 
-    if (address && address !== ZERO_ADDRESS) {
+    if (contractAddress && contractAddress !== ZERO_ADDRESS) {
       info(`
     Contract attached '${contractConfig.name}'
     -------------------------------------------------
-     contract address: ${address}
+     contract address: ${contractAddress}
      block number:     ${tx.blockNumber}`);
       const instance = await attach(contractInterface, address);
       return { ...instance, configs: contractConfig };
     }
+
     let deployedContract;
     // When the contract is not found in the DaoArtifacts, deploy a new one
     if (contractConfig.type === ContractType.Factory && args) {
@@ -144,13 +144,12 @@ const deployFunction = async ({ allConfigs, network, daoArtifacts }) => {
       contractConfig.type === ContractType.Adapter ||
       contractConfig.type === ContractType.Util
     ) {
-      // FIXME
-      // await daoArtifacts.addArtifact(
-      //   sha3(contractConfig.name),
-      //   toHex(contractConfig.version),
-      //   deployedContract.address,
-      //   contractConfig.type
-      // );
+      await daoArtifacts.addArtifact(
+        sha3(contractConfig.name),
+        toBytes32(contractConfig.version),
+        deployedContract.address,
+        contractConfig.type
+      );
     }
 
     return deployedContract;
@@ -184,7 +183,7 @@ module.exports = (configs, network) => {
     ...interfaces,
     attachFunction: attach,
     deployFunctionFactory: (deployer, daoArtifacts) => {
-      if (!deployer /*|| !daoArtifacts*/)
+      if (!deployer || !daoArtifacts)
         throw Error("Missing deployer or DaoArtifacts contract");
       return deployFunction({ deployer, daoArtifacts, allConfigs, network });
     },

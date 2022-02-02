@@ -36,7 +36,7 @@ task("deploy", "Deploy the list of contracts", async (args, hre) => {
     network
   );
 
-  const daoArtifacts = null; //await getOrCreateDaoArtifacts(hardhatImports);
+  const daoArtifacts = await getOrCreateDaoArtifacts(hre, hardhatImports);
   const deployFunction = await hardhatImports.deployFunctionFactory(
     hre,
     daoArtifacts
@@ -524,17 +524,20 @@ const deploy = async (opts) => {
   throw new Error(`Unsupported operation ${opts.network}`);
 };
 
-const getOrCreateDaoArtifacts = async (hardHatImports) => {
+const getOrCreateDaoArtifacts = async (hre, hardHatImports) => {
   const DaoArtifacts = hardHatImports.DaoArtifacts;
   let daoArtifacts;
+  const factory = await hre.ethers.getContractFactory(
+    DaoArtifacts.contractName
+  );
   if (process.env.DAO_ARTIFACTS_CONTRACT_ADDR) {
     log(`Attach to existing DaoArtifacts contract`);
-    daoArtifacts = await (
-      await DaoArtifacts
-    ).attach(process.env.DAO_ARTIFACTS_CONTRACT_ADDR);
+    daoArtifacts = await factory.attach(
+      process.env.DAO_ARTIFACTS_CONTRACT_ADDR
+    );
   } else {
     log(`Creating new DaoArtifacts contract`);
-    const daoArtifact = await (await DaoArtifacts).deploy();
+    const daoArtifact = await factory.deploy();
     daoArtifacts = await daoArtifact.deployed();
   }
   log(`DaoArtifacts: ${daoArtifacts.address}`);

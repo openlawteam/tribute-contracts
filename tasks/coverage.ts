@@ -23,7 +23,7 @@ const skipFiles = [
   "test/TestFairShareCalc.sol",
   "test/TestToken1.sol",
   "test/TestToken2.sol",
-  "test/ERC1155TestAdapter.sol",
+  "test/ERC1155TestAdapterContract.sol",
   "utils/Multicall.sol",
   "companion/interfaces/IReimbursement.sol",
   "companion/GelatoBytes.sol",

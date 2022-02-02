@@ -26,11 +26,11 @@ SOFTWARE.
  */
 
 // Web3.js Utils
-const web3 = require("web3");
 const Web3Utils = require("web3-utils");
 const sha3 = Web3Utils.sha3;
 const soliditySha3 = Web3Utils.soliditySha3;
 const encodePacked = Web3Utils.encodePacked;
+const toHexWeb3 = Web3Utils.toHex;
 const fromUtf8 = Web3Utils.fromUtf8;
 const hexToBytes = Web3Utils.hexToBytes;
 const toAscii = Web3Utils.toAscii;
@@ -97,6 +97,7 @@ module.exports = {
   toUtf8,
   toBytes32,
   toHex,
+  toHexWeb3,
   embedConfigs,
   encodePacked,
   getAddress,
