@@ -1,15 +1,22 @@
 [![Demo](https://demo.tributedao.com/favicon.ico)](https://demo.tributedao.com/)
 
-[![Docs](https://img.shields.io/badge/docs-%F0%9F%93%84-blue)](https://tributedao.com/) [![NPM Package](https://img.shields.io/npm/v/tribute-contracts.svg)](https://www.npmjs.com/package/tribute-contracts) [![Coverage Status](https://codecov.io/gh/openlawteam/tribute-contracts/branch/master/graph/badge.svg)](https://codecov.io/gh/openlawteam/tribute-contracts)
+[![Coverage Status](https://codecov.io/gh/openlawteam/tribute-contracts/branch/master/graph/badge.svg)](https://codecov.io/gh/openlawteam/tribute-contracts) [![NPM Package](https://img.shields.io/npm/v/tribute-contracts.svg?logo=npm)](https://www.npmjs.com/package/tribute-contracts) [![Docs](https://img.shields.io/badge/docs-%F0%9F%93%84-blue)](https://tributedao.com/) [![Discord](https://img.shields.io/discord/854328535929192498.svg?color=768AD4&label=discord&logo=discord)](https://discord.gg/xXMA2DYqNf)
+
+[![Twitter](https://img.shields.io/twitter/follow/TributeLabsXYZ?style=social&logo=twitter)](https://twitter.com/TributeLabsXYZ)
 
 ## Contents
 
 - [Overview](#overview)
-- [Usage](#Usage)
+- [Proposal](#proposed-evolution-of-molochdao-framework)
+- [Architecture](#tribute-dao-architecture)
+- [Quickstart](#quickstart)
+- [Release](#release)
 - [Contribute](#contribute)
-- [Subgraph](https://github.com/openlawteam/tribute-subgraph)
+- [Community](#community)
+- [Thank You](#thank-you)
+- [License](#license)
 
-## Overview and Benefits
+## Overview
 
 TributeDAO is a new modular, low cost DAO framework. The framework aims to improve DAOs by fixing the:
 
@@ -313,9 +320,13 @@ Tribute-UI:
 
 Tribute exists thanks to its contributors. There are many ways you can participate and help build high quality software. Check out the [contribution guide](CONTRIBUTING.md)!
 
+## Community
+
+Join us on [Discord](https://discord.gg/xXMA2DYqNf).
+
 ## Thank You
 
-**THANK YOU** to **all** coders, designers, auditors, and any individual who have contributed with ideas, resources, and energy to this and previous versions of this project. [Thank You Note](https://tributedao.com/docs/thanks).
+**THANK YOU** to **all** coders, designers, auditors, and any individual who have contributed with ideas, resources, and energy to this and previous versions of this project. [Thank you all](https://tributedao.com/docs/thanks).
 
 ## License
 

@@ -41,11 +41,16 @@ contract DaoRegistryAdapterContract is MemberGuard, AdapterGuard {
     function updateDelegateKey(DaoRegistry dao, address delegateKey)
         external
         reentrancyGuard(dao)
-        onlyMember(dao)
     {
-        dao.updateDelegateKey(
-            DaoHelper.msgSender(dao, msg.sender),
-            delegateKey
-        );
+        address dk = dao.getCurrentDelegateKey(msg.sender);
+        if (dk != msg.sender && dao.isMember(dk)) {
+            dao.updateDelegateKey(msg.sender, delegateKey);
+        } else {
+            require(dao.isMember(msg.sender), "only member");
+            dao.updateDelegateKey(
+                DaoHelper.msgSender(dao, msg.sender),
+                delegateKey
+            );
+        }
     }
 }
