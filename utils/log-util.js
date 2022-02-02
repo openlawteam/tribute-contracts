@@ -10,7 +10,7 @@ const log = (data) => {
 };
 
 const info = (data) => {
-  if (!isTest) console.error(data.replace(/^ {8}/gm, "    "));
+  if (!isTest) {console.error(data.replace(/^ {8}/gm, "    "));}
 };
 
 const error = (...data) => {
