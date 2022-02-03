@@ -1,8 +1,38 @@
-[![Demo](https://demo.tributedao.com/favicon.ico)](https://demo.tributedao.com/)
+<div align="center">
+    <img src="https://demo.tributedao.com/favicon.ico" height="70" alt="Tribute DAO Framework Logo">
+    <h1>Tribute DAO Framework</h1>
+    <strong>A modular, low cost and extensible set of contracts to build your DAO on Ethereum</strong>
+</div>
+<br>
+<div align="center">
+    <a href="https://github.com/openlawteam/tribute-contracts/actions/workflows/test.yml">
+        <img src="https://github.com/openlawteam/tribute-contracts/actions/workflows/test.yml/badge.svg" alt="Tests">
+    </a>
+    <a href="https://github.com/openlawteam/tribute-contracts/actions/workflows/slither.yml">
+        <img src="https://github.com/openlawteam/tribute-contracts/actions/workflows/slither.yml/badge.svg" alt="Slither">
+    </a>
+    <a href="https://codecov.io/gh/openlawteam/tribute-contracts">
+        <img src="https://codecov.io/gh/openlawteam/tribute-contracts/branch/master/graph/badge.svg" alt="Coverage" >
+    </a>
+    <a href="https://www.npmjs.com/package/tribute-contracts">
+        <img src="https://img.shields.io/npm/v/tribute-contracts.svg?logo=npm" alt="Slither">
+    </a>
+    <a href="https://discord.gg/tEfP68xnTd">
+        <img src="https://img.shields.io/discord/854328535929192498.svg?label=&logo=discord&logoColor=ffffff&color=7389D8&labelColor=6A7EC2" alt="Discord">
+    </a>
+    <a href="https://twitter.com/TributeLabsXYZ">
+        <img src="https://img.shields.io/twitter/follow/SnapshotLabs?label=TributeLabsXYZ&style=flat&logo=twitter&color=1DA1F2" alt="Twitter">
+    </a>
+</div>
 
-[![Coverage Status](https://codecov.io/gh/openlawteam/tribute-contracts/branch/master/graph/badge.svg)](https://codecov.io/gh/openlawteam/tribute-contracts) [![NPM Package](https://img.shields.io/npm/v/tribute-contracts.svg?logo=npm)](https://www.npmjs.com/package/tribute-contracts) [![Docs](https://img.shields.io/badge/docs-%F0%9F%93%84-blue)](https://tributedao.com/) [![Discord](https://img.shields.io/discord/854328535929192498.svg?color=768AD4&label=discord&logo=discord)](https://discord.gg/xXMA2DYqNf)
-
-[![Twitter](https://img.shields.io/twitter/follow/TributeLabsXYZ?style=social&logo=twitter)](https://twitter.com/TributeLabsXYZ)
+<div align="center">
+    <br>
+    <a href="https://tributelabs.xyz"><b>TributeLabs.xyz »</b></a>
+    <br><br>
+    <a href="https://tributedao.com"><b>Docs</b></a>
+    •
+    <a href="https://demo.tributedao.com"><b>Demo</b></a>
+</div>
 
 ## Contents
 
