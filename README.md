@@ -60,7 +60,7 @@ The TributeDAO framework aims to address these issues, as part of our quest to m
 
 ## Proposed Evolution of MolochDAO Framework
 
-The TributeDAO framework is our team's tribute to the MolochDAO ecosysten. As many know, MolochDAO brought new life to DAOs. Through an elegant smart contract design, this smart contract framework brought DAOs back to life, helping us push beyond the fiery depths of “The DAO.”
+The TributeDAO framework is our team's tribute to the MolochDAO ecosystem. As many know, MolochDAO brought new life to DAOs. Through an elegant smart contract design, this smart contract framework brought DAOs back to life, helping us push beyond the fiery depths of “The DAO.”
 
 Last year, we worked to evolve the initial MolochDAO smart contracts by assisting with the creation of Moloch v2, which enabled multiple token support, “guildkicks” to remove unwanted members, and “loot” to issue non-voting shares still entitled to financial distributions. These upgraded contracts were built with “venture” and similar investment transactions in mind, allowing for more effective swaps and control over tokenized assets and membership.
 

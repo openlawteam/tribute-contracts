@@ -133,3 +133,6 @@ subgraph.yaml
 
 # Sarif 
 *.sarif
+
+# VS Code file history
+.history

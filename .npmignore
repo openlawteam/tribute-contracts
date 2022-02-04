@@ -19,3 +19,4 @@ test-environment.config.js
 *.tgz
 coverage.json
 scripts/coverage.js
+.history/
