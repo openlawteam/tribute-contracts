@@ -31,6 +31,7 @@ const {
   DaoRegistry,
   DaoFactory,
   deployFunction,
+  attachFunction,
 } = require("../../utils/oz-util");
 
 describe("Core - DaoFactory", () => {
@@ -54,6 +55,7 @@ describe("Core - DaoFactory", () => {
       DaoRegistry,
       DaoFactory,
       deployFunction,
+      attachFunction,
     });
 
     expect(daoName).equal("cloned-dao");
@@ -69,6 +71,7 @@ describe("Core - DaoFactory", () => {
       DaoRegistry,
       DaoFactory,
       deployFunction,
+      attachFunction,
     });
 
     const retrievedAddress = await daoFactory.getDaoAddress("new-dao", {
@@ -88,6 +91,7 @@ describe("Core - DaoFactory", () => {
       DaoRegistry,
       DaoFactory,
       deployFunction,
+      attachFunction,
     });
 
     let retrievedAddress = await daoFactory.getDaoAddress("random-dao", {

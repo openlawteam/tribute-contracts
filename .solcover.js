@@ -2,7 +2,7 @@ module.exports = {
   norpc: true,
   measureStatementCoverage: true,
   measureFunctionCoverage: true,
-  testCommand: "npm run test",
+  testCommand: "npm test",
   compileCommand: "npm run compile",
   providerOptions: {
     default_balance_ether: "10000000000000000000000000",

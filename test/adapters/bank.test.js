@@ -45,6 +45,7 @@ const {
   expect,
   expectRevert,
   web3,
+  getBalance,
 } = require("../../utils/oz-util");
 
 const { checkBalance } = require("../../utils/test-util");
@@ -162,15 +163,15 @@ describe("Adapter - Bank", () => {
     //Check the applicant token balance to make sure the funds are available in the bank for the applicant account
     await checkBalance(bank, applicant, ETH_TOKEN, requestedAmount);
 
-    const ethBalance = await web3.eth.getBalance(applicant);
+    const ethBalance = await getBalance(applicant);
     // Withdraw the funds from the bank
     await bankAdapter.withdraw(this.dao.address, applicant, ETH_TOKEN, {
       from: daoOwner,
       gasPrice: toBN("0"),
     });
     await checkBalance(bank, applicant, ETH_TOKEN, 0);
-    const ethBalance2 = await web3.eth.getBalance(applicant);
-    expect(toBN(ethBalance).add(requestedAmount).toString()).equal(
+    const ethBalance2 = await getBalance(applicant);
+    expect(ethBalance.add(requestedAmount).toString()).equal(
       ethBalance2.toString()
     );
   });
@@ -181,9 +182,9 @@ describe("Adapter - Bank", () => {
 
     await checkBalance(bank, GUILD, ETH_TOKEN, "0");
 
-    await bankAdapter.sendEth(this.dao.address, { value: toWei("5", "ether") });
+    await bankAdapter.sendEth(this.dao.address, { value: toWei("5") });
 
-    await checkBalance(bank, GUILD, ETH_TOKEN, toWei("5", "ether"));
+    await checkBalance(bank, GUILD, ETH_TOKEN, toWei("5"));
   });
 
   it("should not be possible to send ETH to the adapter via receive function", async () => {
@@ -193,7 +194,7 @@ describe("Adapter - Bank", () => {
         to: adapter.address,
         from: daoOwner,
         gasPrice: toBN("0"),
-        value: toWei(toBN("1"), "ether"),
+        value: toWei("1"),
       }),
       "revert"
     );
@@ -206,7 +207,7 @@ describe("Adapter - Bank", () => {
         to: adapter.address,
         from: daoOwner,
         gasPrice: toBN("0"),
-        value: toWei(toBN("1"), "ether"),
+        value: toWei("1"),
         data: fromAscii("should go to fallback func"),
       }),
       "revert"

@@ -213,7 +213,7 @@ describe("Adapter - Voting", () => {
         to: adapter.address,
         from: daoOwner,
         gasPrice: toBN("0"),
-        value: toWei(toBN("1"), "ether"),
+        value: toWei("1"),
       }),
       "revert"
     );
@@ -226,7 +226,7 @@ describe("Adapter - Voting", () => {
         to: adapter.address,
         from: daoOwner,
         gasPrice: toBN("0"),
-        value: toWei(toBN("1"), "ether"),
+        value: toWei("1"),
         data: fromAscii("should go to fallback func"),
       }),
       "revert"

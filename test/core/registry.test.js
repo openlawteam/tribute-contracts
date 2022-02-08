@@ -127,7 +127,7 @@ describe("Core - Registry", () => {
         to: registry.address,
         from: accounts[0],
         gasPrice: toBN("0"),
-        value: toWei(toBN("1"), "ether"),
+        value: toWei("1"),
       }),
       "revert"
     );
@@ -140,7 +140,7 @@ describe("Core - Registry", () => {
         to: registry.address,
         from: accounts[0],
         gasPrice: toBN("0"),
-        value: toWei(toBN("1"), "ether"),
+        value: toWei("1"),
         data: fromAscii("should go to fallback func"),
       }),
       "revert"

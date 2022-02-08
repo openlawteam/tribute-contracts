@@ -26,12 +26,12 @@ SOFTWARE.
  */
 const {
   toBN,
+  sha3,
   unitPrice,
   UNITS,
   ZERO_ADDRESS,
   numberOfUnits,
 } = require("../../utils/contract-util");
-const { sha3 } = require("web3-utils");
 
 const {
   takeChainSnapshot,

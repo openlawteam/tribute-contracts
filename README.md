@@ -1,13 +1,52 @@
-[![codecov](https://codecov.io/gh/openlawteam/tribute-contracts/branch/master/graph/badge.svg?token=XZRL9RUYZE)](https://codecov.io/gh/openlawteam/tribute-contracts)
+<div align="center">
+    <img src="https://demo.tributedao.com/favicon.ico" height="70" alt="Tribute DAO Framework Logo">
+    <h1>Tribute DAO Framework</h1>
+    <strong>A modular, low cost and extensible set of contracts to build your DAO on Ethereum</strong>
+</div>
+<br>
+<div align="center">
+    <a href="https://github.com/openlawteam/tribute-contracts/actions/workflows/test.yml">
+        <img src="https://github.com/openlawteam/tribute-contracts/actions/workflows/test.yml/badge.svg" alt="Tests">
+    </a>
+    <a href="https://github.com/openlawteam/tribute-contracts/actions/workflows/slither.yml">
+        <img src="https://github.com/openlawteam/tribute-contracts/actions/workflows/slither.yml/badge.svg" alt="Slither">
+    </a>
+    <a href="https://codecov.io/gh/openlawteam/tribute-contracts">
+        <img src="https://codecov.io/gh/openlawteam/tribute-contracts/branch/master/graph/badge.svg" alt="Coverage" >
+    </a>
+    <a href="https://www.npmjs.com/package/tribute-contracts">
+        <img src="https://img.shields.io/npm/v/tribute-contracts.svg?logo=npm" alt="Slither">
+    </a>
+    <a href="https://discord.gg/tEfP68xnTd">
+        <img src="https://img.shields.io/discord/854328535929192498.svg?label=&logo=discord&logoColor=ffffff&color=7389D8&labelColor=6A7EC2" alt="Discord">
+    </a>
+    <a href="https://twitter.com/TributeLabsXYZ">
+        <img src="https://img.shields.io/twitter/follow/SnapshotLabs?label=TributeLabsXYZ&style=flat&logo=twitter&color=1DA1F2" alt="Twitter">
+    </a>
+</div>
+
+<div align="center">
+    <br>
+    <a href="https://tributelabs.xyz"><b>TributeLabs.xyz »</b></a>
+    <br><br>
+    <a href="https://tributedao.com"><b>Docs</b></a>
+    •
+    <a href="https://demo.tributedao.com"><b>Demo</b></a>
+</div>
 
 ## Contents
 
 - [Overview](#overview)
-- [Usage](#Usage)
+- [Proposal](#proposed-evolution-of-molochdao-framework)
+- [Architecture](#tribute-dao-architecture)
+- [Quickstart](#quickstart)
+- [Release](#release)
 - [Contribute](#contribute)
-- [Subgraph](https://github.com/openlawteam/tribute-subgraph)
+- [Community](#community)
+- [Thank You](#thank-you)
+- [License](#license)
 
-## Overview and Benefits
+## Overview
 
 TributeDAO is a new modular, low cost DAO framework. The framework aims to improve DAOs by fixing the:
 
@@ -21,7 +60,7 @@ The TributeDAO framework aims to address these issues, as part of our quest to m
 
 ## Proposed Evolution of MolochDAO Framework
 
-The TributeDAO framework is our team's tribute to the MolochDAO ecosysten. As many know, MolochDAO brought new life to DAOs. Through an elegant smart contract design, this smart contract framework brought DAOs back to life, helping us push beyond the fiery depths of “The DAO.”
+The TributeDAO framework is our team's tribute to the MolochDAO ecosystem. As many know, MolochDAO brought new life to DAOs. Through an elegant smart contract design, this smart contract framework brought DAOs back to life, helping us push beyond the fiery depths of “The DAO.”
 
 Last year, we worked to evolve the initial MolochDAO smart contracts by assisting with the creation of Moloch v2, which enabled multiple token support, “guildkicks” to remove unwanted members, and “loot” to issue non-voting shares still entitled to financial distributions. These upgraded contracts were built with “venture” and similar investment transactions in mind, allowing for more effective swaps and control over tokenized assets and membership.
 
@@ -118,18 +157,153 @@ The Access Flags are defined in the DAORegistry using the modifier `hasAccess`. 
 
 You can find more information about the purpose of each access flag at [DAO Registry - Access Flags](https://tributedao.com/docs/contracts/core/dao-registry#access-flags).
 
-## Usage
+## Quickstart
 
-### Environment Variables
+### Install all dependencies
 
-Added the following environment variables to your local .env file:
+```sh
+npm ci
+```
+
+### Creating a .env file at the root
+
+```sh
+cp .sample.env .env
+```
+
+### Compile contracts
+
+```sh
+npm run compile
+```
+
+### Deploy contracts
+
+Deploy contracts to networks such as rinkeby, goerli, harmonytest, polygontest, ganache, mainnet, harmony or polygon.
+
+```sh
+npm run deploy:rinkeby
+```
+
+OR
+
+```sh
+npm run deploy:goerli
+```
+
+OR
+
+```sh
+npm run deploy:harmonytest
+```
+
+OR
+
+```sh
+npm run deploy:polygontest
+```
+
+OR
+
+```sh
+npm run deploy:mainnet
+```
+
+OR
+
+```sh
+npm run deploy:harmony
+```
+
+OR
+
+```sh
+npm run deploy:polygon
+```
+
+For more information about the deployment, see the in logs [logs/contracts](logs/contracts)
+
+### Verify contracts
+
+```sh
+npm run verify rinkeby
+```
+
+OR
+
+```sh
+npm run verify mainnet
+```
+
+### DApp setup
+
+In the same `.env` file created under the `tribute-contracts` folder, set the following environment variables:
+
+```
+######################## Tribute UI env vars ########################
+
+# Configure the UI to use the Rinkeby network for local development
+REACT_APP_DEFAULT_CHAIN_NAME_LOCAL=RINKEBY
+
+# It can be the same value you used for the Tribute DAO deployment.
+REACT_APP_INFURA_PROJECT_ID_DEV=YOUR_INFURA_API_KEY
+
+# The address of the Multicall smart contract deployed to the Rinkeby network.
+# Copy that from the tribute-contracts/build/contracts-rinkeby-YYYY-MM-DD-HH:mm:ss.json
+REACT_APP_MULTICALL_CONTRACT_ADDRESS=0x...
+
+# The address of the DaoRegistry smart contract deployed to the Rinkeby network.
+# Copy that from the tribute-contracts/build/contracts-rinkeby-YYYY-MM-DD-HH:mm:ss.json
+REACT_APP_DAO_REGISTRY_CONTRACT_ADDRESS=0x...
+
+# Enable Rinkeby network for Tribute UI
+REACT_APP_ENVIRONMENT=development
+```
+
+Make sure you have set the correct addresses for `REACT_APP_MULTICALL_CONTRACT_ADDRESS` & `REACT_APP_DAO_REGISTRY_CONTRACT_ADDRESS`.
+
+### DAO Launch
+
+From the `tribute-contracts/docker` folder, run:
+
+- > docker-compose up
+
+### Linter
+
+List the problems found in project files
+
+```sh
+npm run lint
+```
+
+Fix the lint issues
+
+```sh
+npm run lint:fix
+```
+
+### Slither
+
+```sh
+npm run slither
+```
+
+### Tests
+
+```sh
+npm test
+```
+
+### Environment variables
+
+Contracts:
 
 - `DAO_NAME`: The name of the DAO.
 - `DAO_OWNER_ADDR`: The DAO Owner ETH Address (0x...) in the target network.
 - `ETH_NODE_URL`: The Ethereum Node URL to connect to the Ethereum blockchain, it can be http/ws.
-- `TRUFFLE_MNEMONIC`: The truffle mnemonic string containing the 12 keywords.
+- `WALLET_MNEMONIC`: The wallet mnemonic string containing the 12 secret keywords.
 - `ETHERSCAN_API_KEY`: The Ether Scan API Key to verify the contracts after the deployment.
-- `DEBUG_CONTRACT_VERIFICATION`: Debug the Ether Scan contract verification calls (`true`|`false`).
+- `DEBUG`: Debug the Ether Scan contract verification calls (`true`|`false`).
 - `COUPON_CREATOR_ADDR`: The public eth (0x...) address of the creator of the onboarding coupons.
 - `ERC20_TOKEN_NAME`: The ERC20 Token Name used by the ERC20 Token Extension.
 - `ERC20_TOKEN_SYMBOL`: Token Symbol used by the ERC20 Token Extension.
@@ -140,66 +314,34 @@ Added the following environment variables to your local .env file:
 - `DAO_ARTIFACTS_OWNER_ADDR`: The owner address of the artifacts deployed. Leave it empty to if you want to use the `DAO_OWNER_ADDR` as the artifacts owner.
 - `DAO_ARTIFACTS_CONTRACT_ADDR`: The `DaoArtifacts` contract address that will be used in the deployment script to fetch Adapters and Factories during the deployment to save gas costs.
 
-Checkout the [sample .env file](https://github.com/openlawteam/tribute-contracts/blob/master/.sample.env).
+Snapshot-hub:
 
-**Required env vars per deployment type**
+- `PORT`: The Snapshot hub Server port
+- `ENV`: To indicate in which environment it is being executed: local, dev, or prod
+- `USE_IPFS`: To indicated the pinning service on IPFS should be enabled/disabled (if enabled cause delay in the responses)
+- `RELAYER_PK`: The PK of the account that will be used to sign the messages.
+- `NETWORK`: The network name that will be used by the relayer (use testnet for: rinkeby or ropsten), and mainnet for the main eth network
+- `JAWSDB_URL`: The postgres url: postgres://user:pwd@host:5432/db-name
+- `ALLOWED_DOMAINS`: The list of domains that should be allowed to send requests to the API
+- `ALCHEMY_API_URL`: The relayer API (alternative to Infura)
 
-- Ganache deployment: `DAO_NAME`, `DAO_OWNER_ADDR`, `ERC20_TOKEN_NAME`, `ERC20_TOKEN_SYMBOL`, `ERC20_TOKEN_DECIMALS`, `COUPON_CREATOR_ADDR`.
+Tribute-UI:
 
-- Test deployment: `DAO_NAME`, `ERC20_TOKEN_NAME`, `ERC20_TOKEN_SYMBOL`, `ERC20_TOKEN_DECIMALS`.
+- `REACT_APP_DEFAULT_CHAIN_NAME_LOCAL`: The network which the dApp needs to connect to.
+- `REACT_APP_INFURA_PROJECT_ID_DEV`: Your infura key.
+- `REACT_APP_DAO_REGISTRY_CONTRACT_ADDRESS`: The address of the `DaoRegistry` smart contract deployed, copy that from `build/deployed/contracts-network-YYYY-MM-DD-HH:mm:ss.json`
+- `REACT_APP_MULTICALL_CONTRACT_ADDRESS`: The address of the `Multicall` smart contract deployed, copy that from `build/deployed/contracts-network-YYYY-MM-DD-HH:mm:ss.json`.
+- `REACT_APP_ENVIRONMENT`: The environment which the app will be executed. Set it to `development` env.
 
-- Rinkeby deployment: `DAO_NAME`, `DAO_OWNER_ADDR`, `ERC20_TOKEN_NAME`, `ERC20_TOKEN_SYMBOL`, `ERC20_TOKEN_DECIMALS`, `COUPON_CREATOR_ADDR`, `ETH_NODE_URL`.
-
-- Mainnet deployment: `DAO_NAME`, `DAO_OWNER_ADDR`, `ERC20_TOKEN_NAME`, `ERC20_TOKEN_SYMBOL`, `ERC20_TOKEN_DECIMALS`, `COUPON_CREATOR_ADDR`, `OFFCHAIN_ADMIN_ADDR`, `VOTING_PERIOD_SECONDS`, `GRACE_PERIOD_SECONDS`, `ETH_NODE_URL`.
-
-### Compile Contracts
-
-This project uses truffle. To compile the contracts, run:
-
-> npm run compile
-
-### Run Tests
-
-This project uses truffle and you'll need to compile the contracts prior to running tests. To run the tests, simply run:
-
-> npm run test
-
-### Code Format
-
-To fix the Solidity code and documentation with the linter hints, simply run:
-
-> npm run lint:fix
-
-### Running with Ganache
-
-...
-
-> npm run ganache
-
-### Deploying the contracts
-
-> npm run deploy:ganache
-
-or
-
-> npm run deploy:rinkeby
-
-### Verifying Contracts
-
-To verify the contract using Etherscan you need to create an API key and update the .env file with your API key.
-Then execute the following script:
-
-> npm run verify rinkeby
-
-### Release
+## Release
 
 1. Checkout `master` and pull the latest
 2. Locally run `npm run release`
 3. Choose a new semver version number
-4. **In the background the following will now happen**:
+4. **In the background the following will happen**:
    1. the `package.json` version will be bumped
-   2. a new Git tag created
-   3. version bump and tag pushed to `master`
+   2. a new Git tag is created
+   3. package version bump and tag pushed to `master`
    4. GitHub Release page will open, set the release name, edit the changelog if needed, and publish
    5. `publish.yaml` will execute (due to the new release tag) to publish the new package version to the NPM registry.
 5. Done!
@@ -208,9 +350,13 @@ Then execute the following script:
 
 Tribute exists thanks to its contributors. There are many ways you can participate and help build high quality software. Check out the [contribution guide](CONTRIBUTING.md)!
 
+## Community
+
+Join us on [Discord](https://discord.gg/xXMA2DYqNf).
+
 ## Thank You
 
-**THANK YOU** to **all** coders, designers, auditors, and any individual who have contributed with ideas, resources, and energy to this and previous versions of this project. [Thank You Note](https://tributedao.com/docs/thanks).
+**THANK YOU** to **all** coders, designers, auditors, and any individual who have contributed with ideas, resources, and energy to this and previous versions of this project. [Thank you all](https://tributedao.com/docs/thanks).
 
 ## License
 

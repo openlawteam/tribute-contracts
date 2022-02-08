@@ -24,8 +24,8 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
  */
-const { MerkleTree } = require("./merkle-tree");
-const { toBN, sha3 } = require("./contract-util");
+const { MerkleTree } = require("./merkle-tree-util");
+const { toBNWeb3, sha3 } = require("./contract-util");
 const sigUtil = require("eth-sig-util");
 
 const BadNodeError = {
@@ -417,7 +417,7 @@ async function createVote(proposalId, weight, voteYes) {
   const payload = {
     choice: voteYes ? 1 : 2,
     proposalId,
-    weight: toBN(weight),
+    weight: toBNWeb3(weight),
   };
   const vote = {
     type: "vote",
@@ -425,7 +425,7 @@ async function createVote(proposalId, weight, voteYes) {
     payload,
   };
 
-  if (toBN(weight).toString() === "0") {
+  if (weight.toString() === "0") {
     payload.choice = 0;
   }
 
@@ -455,13 +455,13 @@ function buildVoteLeafHashForMerkleTree(
 async function prepareVoteResult(votes, dao, actionId, chainId) {
   votes.forEach((vote, idx) => {
     vote.choice = vote.choice || vote.payload.choice;
-    vote.nbYes = vote.choice === 1 ? vote.payload.weight : toBN(0);
-    vote.nbNo = vote.choice !== 1 ? vote.payload.weight : toBN(0);
+    vote.nbYes = vote.choice === 1 ? vote.payload.weight : toBNWeb3(0);
+    vote.nbNo = vote.choice !== 1 ? vote.payload.weight : toBNWeb3(0);
     vote.proposalId = vote.payload.proposalId;
     if (idx > 0) {
       const previousVote = votes[idx - 1];
-      vote.nbYes = vote.nbYes.add(toBN(previousVote.nbYes)).toString();
-      vote.nbNo = vote.nbNo.add(toBN(previousVote.nbNo)).toString();
+      vote.nbYes = vote.nbYes.add(toBNWeb3(previousVote.nbYes)).toString();
+      vote.nbNo = vote.nbNo.add(toBNWeb3(previousVote.nbNo)).toString();
     }
 
     vote.index = idx;

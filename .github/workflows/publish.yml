@@ -4,6 +4,9 @@ on:
     tags:
       - '*'
 
+env:
+  ETH_NODE_URL: ${{ secrets.ETH_NODE_URL }}
+
 jobs:
   publish:
     runs-on: ubuntu-20.04
@@ -14,7 +17,7 @@ jobs:
       - name: Setup node
         uses: actions/setup-node@v2
         with:
-          node-version: "14.17.0"
+          node-version: "16.3.0"
 
       - name: Setup SSH to install dependencies
         uses: webfactory/ssh-agent@v0.5.0

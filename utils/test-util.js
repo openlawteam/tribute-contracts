@@ -62,7 +62,7 @@ const submitNewMemberProposal = async (
   newMember,
   unitPrice,
   token,
-  desiredUnits = toBN(10)
+  desiredUnits = toBN("10")
 ) => {
   await onboarding.submitProposal(
     dao.address,
@@ -87,7 +87,7 @@ const onboardingNewMember = async (
   sponsor,
   unitPrice,
   token,
-  desiredUnits = toBN(10)
+  desiredUnits = toBN("10")
 ) => {
   await submitNewMemberProposal(
     proposalId,

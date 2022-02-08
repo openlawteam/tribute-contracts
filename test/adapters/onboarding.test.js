@@ -46,13 +46,13 @@ const {
   expectRevert,
   expect,
   web3,
+  getBalance,
   OLToken,
 } = require("../../utils/oz-util");
 
 const { checkBalance, isMember } = require("../../utils/test-util");
 
 const daoOwner = accounts[0];
-const delegatedKey = accounts[9];
 
 const proposalCounter = proposalIdGenerator().generator;
 
@@ -64,7 +64,7 @@ describe("Adapter - Onboarding", () => {
   before("deploy dao", async () => {
     const { dao, adapters, extensions } = await deployDefaultDao({
       owner: daoOwner,
-      creator: delegatedKey,
+      // creator: accounts[9]
     });
     this.dao = dao;
     this.adapters = adapters;
@@ -158,7 +158,7 @@ describe("Adapter - Onboarding", () => {
     const onboarding = this.adapters.onboarding;
     const voting = this.adapters.voting;
 
-    const myAccountInitialBalance = await web3.eth.getBalance(daoOwner);
+    const myAccountInitialBalance = await getBalance(daoOwner);
     // remaining amount to test sending back to proposer
     const ethAmount = unitPrice.mul(toBN(3)).add(remaining);
 
@@ -199,10 +199,10 @@ describe("Adapter - Onboarding", () => {
     });
 
     // test return of remaining amount in excess of multiple of unitsPerChunk
-    const myAccountBalance = await web3.eth.getBalance(daoOwner);
+    const myAccountBalance = await getBalance(daoOwner);
     // daoOwner did not receive remaining amount in excess of multiple of unitsPerChunk
     expect(
-      toBN(myAccountInitialBalance).sub(ethAmount).add(remaining).toString()
+      myAccountInitialBalance.sub(ethAmount).add(remaining).toString()
     ).equal(myAccountBalance.toString());
 
     const myAccountUnits = await bank.balanceOf(daoOwner, UNITS);
@@ -418,7 +418,7 @@ describe("Adapter - Onboarding", () => {
     const onboarding = this.adapters.onboarding;
     const voting = this.adapters.voting;
 
-    const myAccountInitialBalance = await web3.eth.getBalance(daoOwner);
+    const myAccountInitialBalance = await getBalance(daoOwner);
     const proposalId = getProposalCounter();
     await onboarding.submitProposal(
       dao.address,
@@ -450,7 +450,7 @@ describe("Adapter - Onboarding", () => {
     expect(isProcessed).equal(true);
 
     // test refund of ETH contribution
-    const myAccountBalance = await web3.eth.getBalance(daoOwner);
+    const myAccountBalance = await getBalance(daoOwner);
     // "myAccount did not receive refund of ETH contribution"
     expect(myAccountBalance.toString()).equal(
       myAccountInitialBalance.toString()
@@ -467,7 +467,7 @@ describe("Adapter - Onboarding", () => {
     const applicantBalance = await bank.balanceOf(applicant, ETH_TOKEN);
     expect(applicantBalance.toString()).equal("0");
 
-    const onboardingBalance = await web3.eth.getBalance(onboarding.address);
+    const onboardingBalance = await getBalance(onboarding.address);
     expect(onboardingBalance.toString()).equal("0");
 
     // test active member status
@@ -492,16 +492,15 @@ describe("Adapter - Onboarding", () => {
     const daoRegistryAdapter = this.adapters.daoRegistryAdapter;
 
     expect(await isMember(bank, daoOwner)).equal(true);
-    expect(await dao.isMember(delegateKey)).equal(true); // use the dao to check delegatedKeys
+    expect(await dao.isMember(delegateKey)).equal(false); // use the dao to check delegatedKeys
 
-    const newDelegatedKey = accounts[5];
-    await daoRegistryAdapter.updateDelegateKey(dao.address, newDelegatedKey, {
+    await daoRegistryAdapter.updateDelegateKey(dao.address, delegateKey, {
       from: daoOwner,
       gasPrice: toBN("0"),
     });
 
     expect(await isMember(bank, daoOwner)).equal(true);
-    expect(await dao.isMember(newDelegatedKey)).equal(true); // use the dao to check delegatedKeys
+    expect(await dao.isMember(delegateKey)).equal(true); // use the dao to check delegatedKeys
   });
 
   it("should not be possible to overwrite a delegated key", async () => {
@@ -613,7 +612,7 @@ describe("Adapter - Onboarding", () => {
         to: adapter.address,
         from: daoOwner,
         gasPrice: toBN("0"),
-        value: toWei(toBN("1"), "ether"),
+        value: toWei("1"),
       }),
       "revert"
     );
@@ -626,7 +625,7 @@ describe("Adapter - Onboarding", () => {
         to: adapter.address,
         from: daoOwner,
         gasPrice: toBN("0"),
-        value: toWei(toBN("1"), "ether"),
+        value: toWei("1"),
         data: fromAscii("should go to fallback func"),
       }),
       "revert"

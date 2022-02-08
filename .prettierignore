@@ -1,0 +1,4 @@
+coverage/
+build/
+logs/
+.vscode/

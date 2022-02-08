@@ -45,6 +45,7 @@ const {
   expect,
   expectRevert,
   web3,
+  getBalance,
 } = require("../../utils/oz-util");
 
 const { checkBalance } = require("../../utils/test-util");
@@ -162,14 +163,14 @@ describe("Adapter - Financing", () => {
     //Check the applicant token balance to make sure the funds are available in the bank for the applicant account
     await checkBalance(bank, applicant, ETH_TOKEN, requestedAmount);
 
-    const ethBalance = await web3.eth.getBalance(applicant);
+    const ethBalance = await getBalance(applicant);
     await bankAdapter.withdraw(this.dao.address, applicant, ETH_TOKEN, {
       from: daoOwner,
       gasPrice: toBN("0"),
     });
     await checkBalance(bank, applicant, ETH_TOKEN, 0);
-    const ethBalance2 = await web3.eth.getBalance(applicant);
-    expect(toBN(ethBalance).add(requestedAmount).toString()).equal(
+    const ethBalance2 = await getBalance(applicant);
+    expect(ethBalance.add(requestedAmount).toString()).equal(
       ethBalance2.toString()
     );
   });
@@ -405,7 +406,7 @@ describe("Adapter - Financing", () => {
         to: adapter.address,
         from: daoOwner,
         gasPrice: toBN("0"),
-        value: toWei(toBN("1"), "ether"),
+        value: toWei("1"),
       }),
       "revert"
     );
@@ -418,7 +419,7 @@ describe("Adapter - Financing", () => {
         to: adapter.address,
         from: daoOwner,
         gasPrice: toBN("0"),
-        value: toWei(toBN("1"), "ether"),
+        value: toWei("1"),
         data: fromAscii("should go to fallback func"),
       }),
       "revert"

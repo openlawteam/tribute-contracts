@@ -13,6 +13,6 @@ module.exports = {
      * Directory where the addresses and names of all deployed contracts will
      * be stored in json format.
      */
-    deployedContractsDir: "./build",
+    deployedContractsDir: "./build/deployed",
   },
 };

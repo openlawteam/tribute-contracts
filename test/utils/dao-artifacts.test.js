@@ -26,10 +26,9 @@ SOFTWARE.
  */
 const expectEvent = require("@openzeppelin/test-helpers/src/expectEvent");
 const expectRevert = require("@openzeppelin/test-helpers/src/expectRevert");
-const { sha3 } = require("../../utils/contract-util");
-const { toBN } = require("web3-utils");
+const { sha3, toBN } = require("../../utils/contract-util");
 const { accounts, expect, DaoArtifacts } = require("../../utils/oz-util");
-const { ContractType } = require("../../migrations/configs/contracts.config");
+const { ContractType } = require("../../configs/contracts.config");
 
 describe("Utils - DaoArtifacts", () => {
   it("should be possible to create a dao artifacts contract", async () => {
@@ -56,7 +55,7 @@ describe("Utils - DaoArtifacts", () => {
       _owner: owner,
       _version: sha3("v1.0.0"),
       _address: adapterAddress,
-      _type: toBN("3"),
+      _type: "3",
     });
   });
 
@@ -98,7 +97,7 @@ describe("Utils - DaoArtifacts", () => {
       _owner: owner,
       _version: sha3("v1.0.0"),
       _address: extensionAddress,
-      _type: toBN("1"),
+      _type: "1",
     });
   });
 

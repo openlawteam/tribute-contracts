@@ -56,7 +56,6 @@ const {
 const { onboardingNewMember } = require("../../utils/test-util");
 
 const daoOwner = accounts[2];
-const daoCreator = accounts[9];
 
 const proposalCounter = proposalIdGenerator().generator;
 
@@ -68,7 +67,7 @@ describe("Adapter - Distribute", () => {
   before("deploy dao", async () => {
     const { dao, adapters, extensions, factories } = await deployDefaultDao({
       owner: daoOwner,
-      creator: daoCreator,
+      // creator: accounts[5]
     });
     this.dao = dao;
     this.adapters = adapters;
@@ -129,7 +128,7 @@ describe("Adapter - Distribute", () => {
 
     // Checks the Guild Bank Balance
     let guildBalance = await bank.balanceOf(GUILD, ETH_TOKEN);
-    expect(toBN(guildBalance).toString()).equal("1200000000000000000");
+    expect(guildBalance.toString()).equal("1200000000000000000");
 
     // Checks the member units (to make sure it was created)
     let units = await bank.balanceOf(daoMember, UNITS);
@@ -160,11 +159,11 @@ describe("Adapter - Distribute", () => {
     });
 
     const escrowBalance = await bank.balanceOf(ESCROW, ETH_TOKEN);
-    expect(toBN(escrowBalance).toString()).equal(amountToDistribute.toString());
+    expect(escrowBalance.toString()).equal(amountToDistribute.toString());
 
     // Checks the member's internal balance before sending the funds
     let memberBalance = await bank.balanceOf(daoMember, ETH_TOKEN);
-    expect(toBN(memberBalance).toString()).equal("0");
+    expect(memberBalance.toString()).equal("0");
 
     // Distribute the funds to the DAO member
     // We can use 0 index here because the distribution happens for only 1 member
@@ -214,7 +213,7 @@ describe("Adapter - Distribute", () => {
 
     // Checks the Guild Bank Balance
     let guildBalance = await bank.balanceOf(GUILD, ETH_TOKEN);
-    expect(toBN(guildBalance).toString()).equal("1800000000000000000");
+    expect(guildBalance.toString()).equal("1800000000000000000");
 
     // Checks the member units (to make sure it was created)
     let unitsMemberA = await bank.balanceOf(daoMemberA, UNITS);
@@ -249,11 +248,11 @@ describe("Adapter - Distribute", () => {
 
     // Checks the member's internal balance before sending the funds
     let memberABalance = await bank.balanceOf(daoMemberA, ETH_TOKEN);
-    expect(toBN(memberABalance).toString()).equal("0");
+    expect(memberABalance.toString()).equal("0");
     let memberBBalance = await bank.balanceOf(daoMemberB, ETH_TOKEN);
-    expect(toBN(memberBBalance).toString()).equal("0");
+    expect(memberBBalance.toString()).equal("0");
 
-    let numberOfMembers = toBN(await dao.getNbMembers()).toNumber();
+    let numberOfMembers = await dao.getNbMembers();
     // It is expected to get 5 members:
     // 1 - dao owner
     // 1 - dao factory
@@ -261,7 +260,7 @@ describe("Adapter - Distribute", () => {
     // 2 - dao members
     // But the dao owner and the factory addresses are not active members
     // so they will not receive funds.
-    expect(numberOfMembers).equal(5);
+    expect(numberOfMembers.toString()).equal("5");
 
     // Distribute the funds to the DAO member
     // toIndex = number of members to process and distribute the funds to all members
@@ -774,7 +773,7 @@ describe("Adapter - Distribute", () => {
         to: adapter.address,
         from: daoOwner,
         gasPrice: toBN("0"),
-        value: toWei(toBN("1"), "ether"),
+        value: toWei("1"),
       }),
       "revert"
     );
@@ -787,7 +786,7 @@ describe("Adapter - Distribute", () => {
         to: adapter.address,
         from: daoOwner,
         gasPrice: toBN("0"),
-        value: toWei(toBN("1"), "ether"),
+        value: toWei("1"),
         data: fromAscii("should go to fallback func"),
       }),
       "revert"
