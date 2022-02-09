@@ -566,6 +566,9 @@ const getOptionalEnvVar = (name, defaultValue) => {
 const saveDeployedContracts = (network, addresses) => {
   const now = new Date().toISOString();
   const dir = path.resolve(deployConfigs.deployedContractsDir);
+  if (!fs.existsSync(dir)) {
+    fs.mkdirSync(dir);
+  }
   const file = `${dir}/contracts-${network}-${now}.json`;
   fs.writeFileSync(`${file}`, JSON.stringify(addresses), "utf8");
   log(`\nDeployed contracts: ${file}\n`);
