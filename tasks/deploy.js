@@ -128,7 +128,7 @@ const deployRinkebyDao = async ({
       ZERO_ADDRESS
     ),
     daoName: getEnvVar("DAO_NAME"),
-    owner: daoOwnerAddr,
+    owner: getEnvVar("DAO_OWNER_ADDR"),
     offchainAdmin: getOptionalEnvVar(
       "OFFCHAIN_ADMIN_ADDR",
       getEnvVar("DAO_OWNER_ADDR")
