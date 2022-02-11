@@ -2,11 +2,11 @@
 
 ### 1. Clone tribute-contracts repository
 
-Make sure you are using branch `release-v2.3.3`. This is the branch that contains the latest contracts.
+Make sure you are using branch `release-v2.3.5`. This is the branch that contains the latest contracts.
 
 - > cd tribute-contracts
-- > git fetch origin release-v2.3.3
-- > git checkout release-v2.3.3
+- > git fetch origin release-v2.3.5
+- > git checkout release-v2.3.5
 
 ### 2. Set the env vars
 
@@ -46,7 +46,7 @@ ETH_NODE_URL=http://localhost:7545
 # The 12 word "secret recovery phrase" for the ethereum address
 # referenced in DAO_OWNER_ADDR above. This can be found in your wallet.
 # It will be used to create the HD wallet and sign transactions on your behalf.
-TRUFFLE_MNEMONIC=...
+WALLET_MNEMONIC=...
 
 # You can set that to use the same address you have in the DAO_OWNER_ADDR
 COUPON_CREATOR_ADDR=0x...
