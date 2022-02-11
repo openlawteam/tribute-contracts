@@ -182,43 +182,43 @@ npm run compile
 Deploy contracts to networks such as rinkeby, goerli, harmonytest, polygontest, ganache, mainnet, harmony or polygon.
 
 ```sh
-npm run deploy:rinkeby
+npm run deploy rinkeby
 ```
 
 OR
 
 ```sh
-npm run deploy:goerli
+npm run deploy goerli
 ```
 
 OR
 
 ```sh
-npm run deploy:harmonytest
+npm run deploy harmonytest
 ```
 
 OR
 
 ```sh
-npm run deploy:polygontest
+npm run deploy polygontest
 ```
 
 OR
 
 ```sh
-npm run deploy:mainnet
+npm run deploy mainnet
 ```
 
 OR
 
 ```sh
-npm run deploy:harmony
+npm run deploy harmony
 ```
 
 OR
 
 ```sh
-npm run deploy:polygon
+npm run deploy polygon
 ```
 
 For more information about the deployment, see the in logs [logs/contracts](logs/contracts)
