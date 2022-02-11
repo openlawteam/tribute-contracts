@@ -7,13 +7,13 @@ title: Deployment
 
 ## Requirements
 
-- **[Tribute Contracts](https://github.com/openlawteam/tribute-contracts/tree/release-v2.3.3)** version [release-v2.3.3](https://github.com/openlawteam/tribute-contracts/tree/release-v2.3.3).
+- **[Tribute Contracts](https://github.com/openlawteam/tribute-contracts/tree/release-v2.3.5)** version [release-v2.3.5](https://github.com/openlawteam/tribute-contracts/tree/release-v2.3.5).
 - ⚙️ All the environment variables must be set in the _.env_ file as indicated in the previous section.
 
 - 💲 You have ETH in your DAO Owner account (2 ETH should be more than enough).
 
 :::warning
-Make sure you are on the branch [release-v2.3.3](https://github.com/openlawteam/tribute-contracts/tree/release-v2.3.3) which is the version that contains the contracts integrated with [TributeUI](https://github.com/openlawteam/tribute-ui).
+Make sure you are on the branch [release-v2.3.5](https://github.com/openlawteam/tribute-contracts/tree/release-v2.3.5) which is the version that contains the contracts integrated with [TributeUI](https://github.com/openlawteam/tribute-ui).
 :::
 
 ## Deploying your DAO

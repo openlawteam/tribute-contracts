@@ -2,11 +2,11 @@
 
 ### 1. Clone tribute-contracts repository
 
-Make sure you are using branch `release-v2.3.3`. This is the branch that contains the latest contracts.
+Make sure you are using branch `release-v2.3.5`. This is the branch that contains the latest contracts.
 
 - > cd tribute-contracts
-- > git fetch origin release-v2.3.3
-- > git checkout release-v2.3.3
+- > git fetch origin release-v2.3.5
+- > git checkout release-v2.3.5
 
 ### 2. Set the env vars
 

@@ -69,7 +69,7 @@
     "deploy:harmonytest": "truffle deploy --network harmonytest --reset 2>&1 | tee logs/harmonytest-deploy_`date '+%F_%T'`.log",
     "deploy:polygon": "truffle deploy --network polygon --reset 2>&1 | tee logs/polygon-deploy.log",
     "deploy:polygontest": "truffle deploy --network polygontest --reset 2>&1 | tee logs/polygontest-deploy.log",
-    "ganache": "ganache-cli --deterministic -p 7545 --networkId 1337 --chainId 1337 --hostname 0.0.0.0",
+    "ganache": "ganache-cli --deterministic -p 7545 --networkId 1337 --chainId 1337 --hostname 0.0.0.0 -b 1",
     "ganache:fork": "ganache-cli --deterministic -f ",
     "lint": "prettier --list-different 'contracts/**/*.sol' '**/*.js' '**/*.md'",
     "lint:fix": "prettier --write 'contracts/**/*.sol' '**/*.js' '**/*.md'",

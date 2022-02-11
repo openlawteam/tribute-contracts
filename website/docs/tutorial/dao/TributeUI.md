@@ -12,7 +12,7 @@ title: Tribute UI
 - **[MetaMask](https://metamask.io/download.html)** download and install MetaMask from https://metamask.io/download.html into your browser to access the DAO dApp.
 
 :::warning
-Make sure you are on the branch [release-v2.3.3](https://github.com/openlawteam/tribute-contracts/tree/release-v2.3.3) which is the version that contains the contracts integrated with [TributeUI](https://github.com/openlawteam/tribute-ui).
+Make sure you are on the branch [release-v2.3.5](https://github.com/openlawteam/tribute-contracts/tree/release-v2.3.5) which is the version that contains the contracts integrated with [TributeUI](https://github.com/openlawteam/tribute-ui).
 :::
 
 ## Configuring the dApp

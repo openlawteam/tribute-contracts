@@ -7,11 +7,11 @@ title: Configuration
 
 ## Requirements
 
-- **[Tribute Contracts](https://github.com/openlawteam/tribute-contracts/tree/release-v2.3.3)** version [release-v2.3.3](https://github.com/openlawteam/tribute-contracts/tree/release-v2.3.3).
+- **[Tribute Contracts](https://github.com/openlawteam/tribute-contracts/tree/release-v2.3.5)** version [release-v2.3.5](https://github.com/openlawteam/tribute-contracts/tree/release-v2.3.5).
 - **[Infura Ethereum API KEY](https://infura.io/product/ethereum)**: sign up for free, verify your email, create an ethereum project to get your API Key (also known as `Project Id`). We will use that to deploy the contracts to the Rinkeby network. Checkout this **[Infura Blog Post](https://blog.infura.io/getting-started-with-infura-28e41844cc89/)** for more info on that.
 
 :::warning
-Make sure you are on the branch [release-v2.3.3](https://github.com/openlawteam/tribute-contracts/tree/release-v2.3.3) which is the version that contains the contracts integrated with [TributeUI](https://github.com/openlawteam/tribute-ui).
+Make sure you are on the branch [release-v2.3.5](https://github.com/openlawteam/tribute-contracts/tree/release-v2.3.5) which is the version that contains the contracts integrated with [TributeUI](https://github.com/openlawteam/tribute-ui).
 :::
 
 ## Configuring the project
