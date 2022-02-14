@@ -39,6 +39,7 @@ task("deploy", "Deploy the list of contracts", async (args, hre) => {
     daoArtifacts
   );
   const accounts = await hre.ethers.getSigners();
+  accounts.map((a, i) => log(`Account ${i}: ${a.address}`));
 
   const result = await deploy({
     network,

@@ -17,9 +17,9 @@ module.exports = {
     hardhat: {
       network_id: 1337,
       chainId: 1337,
-      count: 10,
       accounts: {
         mnemonic: process.env.WALLET_MNEMONIC,
+        count: 10,
       },
       throwOnTransactionFailures: true,
       throwOnCallFailures: false,
@@ -34,6 +34,7 @@ module.exports = {
       chainId: 1337,
       accounts: {
         mnemonic: process.env.WALLET_MNEMONIC || "",
+        count: 10,
       },
     },
     goerli: {
@@ -45,6 +46,7 @@ module.exports = {
       gasPrice: 4000000000,
       accounts: {
         mnemonic: process.env.WALLET_MNEMONIC || "",
+        count: 10,
       },
       signerId: process.env.SIGNER || undefined,
     },
@@ -57,6 +59,7 @@ module.exports = {
       gasPrice: 4000000000,
       accounts: {
         mnemonic: process.env.WALLET_MNEMONIC || "",
+        count: 10,
       },
       signerId: process.env.SIGNER || undefined,
     },
@@ -68,6 +71,7 @@ module.exports = {
       gasPrice: 4000000000,
       accounts: {
         mnemonic: process.env.WALLET_MNEMONIC || "",
+        count: 10,
       },
       signerId: process.env.SIGNER || undefined,
     },
@@ -80,6 +84,7 @@ module.exports = {
       gasPrice: 10000000000,
       accounts: {
         mnemonic: process.env.WALLET_MNEMONIC || "",
+        count: 10,
       },
       signerId: process.env.SIGNER || undefined,
     },
@@ -92,6 +97,7 @@ module.exports = {
       gasPrice: 10000000000,
       accounts: {
         mnemonic: process.env.WALLET_MNEMONIC || "",
+        count: 10,
       },
       signerId: process.env.SIGNER || undefined,
     },
@@ -112,6 +118,7 @@ module.exports = {
       skipDryRun: true,
       accounts: {
         mnemonic: process.env.WALLET_MNEMONIC || "",
+        count: 10,
       },
       signerId: process.env.SIGNER || undefined,
     },
@@ -122,6 +129,7 @@ module.exports = {
       skipDryRun: true,
       accounts: {
         mnemonic: process.env.WALLET_MNEMONIC || "",
+        count: 10,
       },
       signerId: process.env.SIGNER || undefined,
     },
@@ -132,6 +140,7 @@ module.exports = {
       skipDryRun: true,
       accounts: {
         mnemonic: process.env.WALLET_MNEMONIC || "",
+        count: 10,
       },
       signerId: process.env.SIGNER || undefined,
     },

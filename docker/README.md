@@ -29,8 +29,8 @@ DAO_OWNER_ADDR=0x...
 # so you don't have to deploy it again.
 # You don't need to change this address if you are deploying to Rinkeby.
 # For any other network, you can disable this environment variable.
-# Rinkeby: 0xFc1EFB0e026396BdCf3Fa6bfB34Ff9f07158b7dA - contracts v2.3.3
-DAO_ARTIFACTS_CONTRACT_ADDR=0xFc1EFB0e026396BdCf3Fa6bfB34Ff9f07158b7dA
+# Rinkeby: 0x1B86B39c176fC2F308ed7c2a85e83aec740a174C - contracts v2.3.5
+DAO_ARTIFACTS_CONTRACT_ADDR=0x1B86B39c176fC2F308ed7c2a85e83aec740a174C
 DAO_ARTIFACTS_OWNER_ADDR=0xEd7B3f2902f2E1B17B027bD0c125B674d293bDA0
 
 # The name of the ERC20 token of your DAO.
