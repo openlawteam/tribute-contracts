@@ -22,7 +22,7 @@ SOFTWARE.
  */
 
 const hre = require("hardhat");
-const { ZERO_ADDRESS, sha3, fromAscii } = require("./contract-util");
+const { ZERO_ADDRESS, sha3, fromAscii, waitTx } = require("./contract-util");
 const { checkpoint, restore } = require("./checkpoint-util");
 const { info } = require("./log-util");
 const { ContractType } = require("../configs/contracts.config");
@@ -143,11 +143,13 @@ const deployFunction = async ({ allConfigs, network, daoArtifacts }) => {
       contractConfig.type === ContractType.Adapter ||
       contractConfig.type === ContractType.Util
     ) {
-      await daoArtifacts.addArtifact(
-        sha3(contractConfig.name),
-        fromAscii(contractConfig.version).padEnd(66, "0"),
-        deployedContract.address,
-        contractConfig.type
+      await waitTx(
+        daoArtifacts.addArtifact(
+          sha3(contractConfig.name),
+          fromAscii(contractConfig.version).padEnd(66, "0"),
+          deployedContract.address,
+          contractConfig.type
+        )
       );
     }
 

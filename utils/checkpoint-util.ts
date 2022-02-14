@@ -15,6 +15,8 @@ const log = (msg: string) => {
 };
 
 const save = (checkpoints: JSON, network: string) => {
+  if (network === "ganache") return;
+
   fs.writeFileSync(
     checkpointPath.replace("%network%", network),
     JSON.stringify(checkpoints),
@@ -23,6 +25,8 @@ const save = (checkpoints: JSON, network: string) => {
 };
 
 const load = (network: string) => {
+  if (network === "ganache") return {};
+
   try {
     return JSON.parse(
       fs.readFileSync(checkpointPath.replace("%network%", network), "utf-8")
@@ -33,6 +37,8 @@ const load = (network: string) => {
 };
 
 export const checkpoint = (contract: any, network: string) => {
+  if (network === "ganache") return contract;
+
   try {
     if (
       contract.configs.type === ContractType.Core ||
@@ -64,6 +70,8 @@ export const restore = async (
   attach: Function,
   network: string
 ) => {
+  if (network === "ganache") return null;
+
   const checkpoints = load(network);
   const checkpoint = checkpoints[contractConfig.name];
   if (checkpoint) {
