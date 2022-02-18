@@ -2,11 +2,11 @@
 
 ### 1. Clone tribute-contracts repository
 
-Make sure you are using branch `release-v2.3.5`. This is the branch that contains the latest contracts.
+Make sure you are using branch `release-v2.4.0`. This is the branch that contains the latest contracts.
 
 - > cd tribute-contracts
-- > git fetch origin release-v2.3.5
-- > git checkout release-v2.3.5
+- > git fetch origin release-v2.4.0
+- > git checkout release-v2.4.0
 
 ### 2. Set the env vars
 
@@ -59,7 +59,7 @@ With the environment variables ready, we can install the project dependencies an
 
 Using NodeJS v16.x, run:
 
-- > npm ci
+- > npm run build
 
 In another terminal window you can launch ganache:
 
@@ -67,7 +67,7 @@ In another terminal window you can launch ganache:
 
 Finally deploy the contracts to ganache network:
 
-- > npm run deploy:ganache
+- > npm run deploy ganache
 
 ### 4. Set the tribute-ui environment variables
 
@@ -79,22 +79,22 @@ In the same `.env` file created under the `tribute-contracts` folder, add the fo
 
 ######################## Tribute UI env vars ########################
 
+# Enable Ganache network for Tribute UI
+REACT_APP_ENVIRONMENT=local
+
 # Configure the UI to use the Ganache network for local development
 REACT_APP_DEFAULT_CHAIN_NAME_LOCAL=GANACHE
 
 # It can be the same value you used for the Tribute DAO deployment.
-REACT_APP_INFURA_PROJECT_ID_DEV=INFURA_API_KEY
+REACT_APP_INFURA_PROJECT_ID_DEV=set-your-infura-api-key-here
 
 # The address of the Multicall smart contract deployed to the Rinkeby network.
-# Copy that from the tribute-contracts/build/contracts-rinkeby-YYYY-MM-DD-HH:mm:ss.json
+# Copy that from the tribute-contracts/build/deployed/contracts-ganache-YYYY-MM-DD-HH:mm:ss.json
 REACT_APP_MULTICALL_CONTRACT_ADDRESS=0x...
 
 # The address of the DaoRegistry smart contract deployed to the Rinkeby network.
-# Copy that from the tribute-contracts/build/contracts-rinkeby-YYYY-MM-DD-HH:mm:ss.json
+# Copy that from the tribute-contracts/build/deployed/contracts-ganache-YYYY-MM-DD-HH:mm:ss.json
 REACT_APP_DAO_REGISTRY_CONTRACT_ADDRESS=0x...
-
-# Enable Ganache network for Tribute UI
-REACT_APP_ENVIRONMENT=local
 ```
 
 Make sure you have set the correct addresses for `REACT_APP_MULTICALL_CONTRACT_ADDRESS` & `REACT_APP_DAO_REGISTRY_CONTRACT_ADDRESS`.

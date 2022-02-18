@@ -68,7 +68,7 @@ task("deploy", "Deploy the list of contracts", async (args, hre) => {
     );
     log(`DaoOwner: ${owner}`);
     log(`DaoRegistry: ${dao.address}`);
-    const addresses = {};
+    const addresses = { DaoRegistry: dao.address };
     Object.values(factories)
       .concat(Object.values(extensions))
       .concat(Object.values(adapters))
