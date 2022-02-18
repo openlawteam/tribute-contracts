@@ -2,11 +2,11 @@
 
 ### 1. Clone tribute-contracts repository
 
-Make sure you are using branch `release-v2.3.5`. This is the branch that contains the latest contracts.
+Make sure you are using branch `release-v2.4.0`. This is the branch that contains the latest contracts.
 
 - > cd tribute-contracts
-- > git fetch origin release-v2.3.5
-- > git checkout release-v2.3.5
+- > git fetch origin release-v2.4.0
+- > git checkout release-v2.4.0
 
 ### 2. Set the env vars
 
@@ -25,14 +25,6 @@ DAO_NAME=My Tribute DAO xyz...
 # otherwise it won't work.
 DAO_OWNER_ADDR=0x...
 
-# The contract which contains the previously deployed adapters and extensions,
-# so you don't have to deploy it again.
-# You don't need to change this address if you are deploying to Rinkeby.
-# For any other network, you can disable this environment variable.
-# Rinkeby: 0x1B86B39c176fC2F308ed7c2a85e83aec740a174C - contracts v2.3.5
-DAO_ARTIFACTS_CONTRACT_ADDR=0x1B86B39c176fC2F308ed7c2a85e83aec740a174C
-DAO_ARTIFACTS_OWNER_ADDR=0xEd7B3f2902f2E1B17B027bD0c125B674d293bDA0
-
 # The name of the ERC20 token of your DAO.
 ERC20_TOKEN_NAME=My First DAO Token
 
@@ -49,9 +41,9 @@ ERC20_TOKEN_DECIMALS=0
 # these steps to get your ProjectId/API Key from Infura:
 # https://blog.infura.io/getting-started-with-infura-28e41844cc89/
 # Or can use the default one from OpenLaw team, or set your own Infura/Alchemy API keys
-ETH_NODE_URL=ws://rinkeby.openlaw.io:8546
-#ETH_NODE_URL=wss://eth-rinkeby.ws.alchemyapi.io/v2/your-api-key
-#ETH_NODE_URL=wss://rinkeby.infura.io/ws/v3/your-api-key
+ETH_NODE_URL=http://rinkeby.openlaw.io:8546
+#ETH_NODE_URL=https://rinkeby.infura.io/v3/<set-your-api-key-here>
+#ETH_NODE_URL=https://eth-rinkeby.alchemyapi.io/v2/<set-your-api-key-here>
 
 # The 12 word "secret recovery phrase" for the ethereum address
 # referenced in DAO_OWNER_ADDR above. This can be found in your wallet.
@@ -69,7 +61,7 @@ With the environment variables ready, we can install the project dependencies an
 
 Using NodeJS v16.x, run:
 
-- > npm ci && npm run deploy:rinkeby
+- > npm run build && npm run deploy rinkeby
 
 ### 4. Set the tribute-ui environment variables
 
@@ -84,14 +76,14 @@ In the same `.env` file created under the `tribute-contracts` folder, add the fo
 REACT_APP_DEFAULT_CHAIN_NAME_LOCAL=RINKEBY
 
 # It can be the same value you used for the Tribute DAO deployment.
-REACT_APP_INFURA_PROJECT_ID_DEV=INFURA_API_KEY
+REACT_APP_INFURA_PROJECT_ID_DEV=set-your-infura-api-key-here
 
 # The address of the Multicall smart contract deployed to the Rinkeby network.
-# Copy that from the tribute-contracts/build/contracts-rinkeby-YYYY-MM-DD-HH:mm:ss.json
+# Copy that from the tribute-contracts/build/deployed/contracts-rinkeby-YYYY-MM-DD-HH:mm:ss.json
 REACT_APP_MULTICALL_CONTRACT_ADDRESS=0x...
 
 # The address of the DaoRegistry smart contract deployed to the Rinkeby network.
-# Copy that from the tribute-contracts/build/contracts-rinkeby-YYYY-MM-DD-HH:mm:ss.json
+# Copy that from the tribute-contracts/build/deployed/contracts-rinkeby-YYYY-MM-DD-HH:mm:ss.json
 REACT_APP_DAO_REGISTRY_CONTRACT_ADDRESS=0x...
 
 # Enable Rinkeby network for Tribute UI
