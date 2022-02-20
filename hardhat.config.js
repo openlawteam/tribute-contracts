@@ -42,7 +42,7 @@ module.exports = {
       network_id: 5,
       chainId: 5,
       skipDryRun: true,
-      gas: 2100000,
+      gas: 2100000000,
       gasPrice: 4000000000,
       accounts: {
         mnemonic: process.env.WALLET_MNEMONIC || "",
