@@ -1,8 +1,8 @@
 [
   {
     "network": "rinkeby",
-    "daoFactoryAddress": "0xC2AA76bE02010f916F7FC55C7BA6981FA71F3b16",
-    "daoFactoryStartBlock": 10193579,
+    "daoFactoryAddress": "0xa29497469dC178e095e414d58466c76B9111Ced3",
+    "daoFactoryStartBlock": 10216145,
     "GITHUB_USERNAME": "openlawteam",
     "SUBGRAPH_NAME": "unicorn-dev"
   }
