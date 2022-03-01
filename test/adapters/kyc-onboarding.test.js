@@ -361,4 +361,68 @@ describe("Adapter - KYC Onboarding", () => {
       "too much funds"
     );
   });
+
+  it("should not be possible to rejoin the DAO using a coupon that was already redeemed", async () => {
+    const applicant = accounts[2];
+
+    const dao = this.dao;
+    const bank = this.extensions.bankExt;
+    const onboarding = this.adapters.kycOnboarding;
+    const ragequit = this.adapters.ragequit;
+
+    // remaining amount to test sending back to proposer
+    const ethAmount = unitPrice.mul(toBN(3)).add(remaining);
+
+    const signerUtil = SigUtilSigner(signer.privKey);
+
+    const couponData = {
+      type: "coupon-kyc",
+      kycedMember: applicant,
+    };
+
+    let jsHash = getMessageERC712Hash(
+      couponData,
+      dao.address,
+      onboarding.address,
+      1
+    );
+    let solHash = await onboarding.hashCouponMessage(dao.address, couponData);
+    expect(jsHash).equal(solHash);
+
+    const signature = signerUtil(
+      couponData,
+      dao.address,
+      onboarding.address,
+      1
+    );
+
+    await onboarding.onboardEth(dao.address, applicant, signature, {
+      from: applicant,
+      value: ethAmount,
+      gasPrice: toBN("0"),
+    });
+
+    // test active member status
+    expect(await isMember(bank, applicant)).equal(true);
+
+    // Ragequit - Burn all the member units and exit the DAO
+    const memberUnits = await bank.balanceOf(applicant, UNITS);
+    await ragequit.ragequit(dao.address, memberUnits, toBN(0), [ETH_TOKEN], {
+      from: applicant,
+      gasPrice: toBN("0"),
+    });
+
+    // test active member status
+    expect(await isMember(bank, applicant)).equal(false);
+
+    // Attempt to rejoin the DAO using the same KYC coupon
+    await expectRevert(
+      onboarding.onboardEth(dao.address, applicant, signature, {
+        from: applicant,
+        value: ethAmount,
+        gasPrice: toBN("0"),
+      }),
+      "already redeemed"
+    );
+  });
 });
