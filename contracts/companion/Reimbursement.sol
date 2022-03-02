@@ -106,14 +106,13 @@ contract ReimbursementContract is IReimbursement, AdapterGuard, GelatoRelay {
             return (false, 0);
         }
 
-        if (bank.balanceOf(DaoHelper.GUILD, DaoHelper.ETH_TOKEN) < gasLeft) {
+        uint256 payback = gasLeft * tx.gasprice;
+        if (bank.balanceOf(DaoHelper.GUILD, DaoHelper.ETH_TOKEN) < payback) {
             return (false, 0);
         }
 
         uint256 spendLimitPeriod = dao.getConfiguration(SpendLimitPeriod);
         uint256 spendLimitEth = dao.getConfiguration(SpendLimitEth);
-
-        uint256 payback = gasLeft * tx.gasprice;
 
         if (
             //slither-disable-next-line timestamp
