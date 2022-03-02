@@ -36,17 +36,40 @@ SOFTWARE.
 
 contract PromissoryNoteContract is Reimbursable, AdapterGuard, Signatures {
 
-    event LoanCreated(DaoRegistry dao, address Borrower, uint256 amount, uint32 basisPoints, uint256 loanDuration);tt
+    event LoanCreated(DaoRegistry dao, address Borrower, uint256 amount, uint32 basisPoints, uint256 loanDuration);
 
     struct PromissoryNote {
-        address Borrower;
+        address borrower;
         uint256 principalLoanAmount;
+        uint256 loanRepaymentAmount; //for now, just one repayment amount. TODO make it timebased later.
         uint32 basisPoints; 
         uint256 loanDuration; 
         uint64 loanStartTime;
         address nftCollateralContract;
     }
 
+    string public constant COUPON_MESSAGE_TYPE = "Message(address borrower, uint256 principalLoanAmount)";
+    bytes32 public constant COUPON_MESSAGE_TYPEHASH =
+    keccak256(abi.encodePacked(COUPON_MESSAGE_TYPE));
 
+    bytes32 constant SignerAddressConfig = keccak256("promissory-note.signerAddress");
+
+
+
+    event LoanRepaid();
+
+    event LoanForeclosed();
+
+    //configureDAO
+
+    //hashCouponMessage
+
+    
+    //is NFT deposited
+    //enough funds in Guild
+    //- does the loan start an origination time or upon withdraw?
+    //redeemNote - withdraw funds
+    //repayLoan
+    //forecloseLoan
 
 }
