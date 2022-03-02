@@ -280,7 +280,10 @@ contract NFTExtension is IExtension, IERC721Receiver {
             // set ownership to the GUILD.
             _ownership[getNFTId(nftAddr, nftTokenId)] = owner;
             // Keep track of the collected assets.
-            require(_nftAddresses.add(nftAddr), "erc721::can not add nft");
+            if (!_nftAddresses.contains(nftAddr)) {
+                //slither-disable-next-line unused-return
+                _nftAddresses.add(nftAddr);
+            }
         }
     }
 }
