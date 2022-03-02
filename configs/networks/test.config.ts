@@ -9,22 +9,27 @@ import {erc1155ExtensionAclFlagsMap} from "../../utils/access-control-util";
 
 const disabled: Array<string> = [];
 
-const testContracts = [{
-  id: "erc1155-test",
-  name: "ERC1155TestAdapterContract",
-  alias: "erc1155TestAdapter",
-  path: "../../contracts/test/ERC1155TestAdapterContract",
-  enabled: true,
-  version: "1.0.0",
-  type: ContractType.Adapter,
-  acls: {
-    dao: [],
-    extensions: {[extensionsIdsMap.ERC1155_EXT]: [
-      erc1155ExtensionAclFlagsMap.INTERNAL_TRANSFER,
-    ]},
+const testContracts = [
+  {
+    id: "erc1155-test",
+    name: "ERC1155TestAdapterContract",
+    alias: "erc1155TestAdapter",
+    path: "../../contracts/test/ERC1155TestAdapterContract",
+    enabled: true,
+    version: "1.0.0",
+    type: ContractType.Adapter,
+    acls: {
+      dao: [],
+      extensions: {
+        [extensionsIdsMap.ERC1155_EXT]: [
+          erc1155ExtensionAclFlagsMap.INTERNAL_TRANSFER,
+          erc1155ExtensionAclFlagsMap.WITHDRAW_NFT,
+        ],
+      },
+    },
+    deploymentArgs: [],
   },
-  deploymentArgs: [],
-}];
+];
 
 export const contracts: Array<ContractConfig> = defaultContracts.concat(testContracts).map((c) => {
   if (disabled.find((e) => e === c.name)) {

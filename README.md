@@ -303,7 +303,7 @@ npm run slither
 ### Tests
 
 ```sh
-npm test
+npm run compile && npm test
 ```
 
 ### Environment variables

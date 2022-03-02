@@ -47,16 +47,38 @@ contract ERC1155TestAdapterContract is AdapterGuard {
         uint256 nftTokenId,
         uint256 amount
     ) external reentrancyGuard(dao) {
-        ERC1155TokenExtension erc1155 = ERC1155TokenExtension(
-            dao.getExtensionAddress(DaoHelper.ERC1155_EXT)
-        );
-        erc1155.internalTransfer(
-            dao,
-            DaoHelper.GUILD,
-            DaoHelper.msgSender(dao, msg.sender),
-            nftAddr,
-            nftTokenId,
-            amount
-        );
+        ERC1155TokenExtension(dao.getExtensionAddress(DaoHelper.ERC1155_EXT))
+            .internalTransfer(
+                dao,
+                DaoHelper.GUILD,
+                DaoHelper.msgSender(dao, msg.sender),
+                nftAddr,
+                nftTokenId,
+                amount
+            );
+    }
+
+    /**
+     * @notice Transfers the NFT token from the extension address to the new owner.
+     * @param dao The DAO address.
+     * @param nftAddr The NFT smart contract address.
+     * @param nftTokenId The NFT token id.
+     * @param amount of the nftTokenId.
+     */
+    function withdraw(
+        DaoRegistry dao,
+        address nftAddr,
+        uint256 nftTokenId,
+        uint256 amount
+    ) external reentrancyGuard(dao) {
+        ERC1155TokenExtension(dao.getExtensionAddress(DaoHelper.ERC1155_EXT))
+            .withdrawNFT(
+                dao,
+                DaoHelper.GUILD,
+                msg.sender,
+                nftAddr,
+                nftTokenId,
+                amount
+            );
     }
 }
