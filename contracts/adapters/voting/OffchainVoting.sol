@@ -372,10 +372,13 @@ contract OffchainVotingContract is
             "result weight too low"
         );
 
+        // check whether the new result changes the outcome
         if (
             vote.gracePeriodStartingTime == 0 ||
-            // check whether the new result changes the outcome
-            vote.nbNo > vote.nbYes != result.nbNo > result.nbYes
+            // changed from yes to no or from no to yes
+            vote.nbNo > vote.nbYes != result.nbNo > result.nbYes ||
+            // changed from tie to yes/no or from yes/no to tie
+            ((vote.nbNo == vote.nbYes) != (result.nbNo == result.nbYes))
         ) {
             vote.gracePeriodStartingTime = uint64(block.timestamp);
         }
