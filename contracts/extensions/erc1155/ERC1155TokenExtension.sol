@@ -378,7 +378,7 @@ contract ERC1155TokenExtension is IExtension, IERC1155Receiver {
             _saveNft(msg.sender, ids[i], DaoHelper.GUILD, values[i]);
         }
 
-        return this.onERC1155Received.selector;
+        return this.onERC1155BatchReceived.selector;
     }
 
     /**

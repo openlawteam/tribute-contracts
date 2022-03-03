@@ -80,6 +80,10 @@ contract KycOnboardingContract is
 
     mapping(DaoRegistry => mapping(address => uint256)) public totalUnits;
 
+    // Tracks the hashes of coupons that were redeemed
+    // hashCouponMessage(dao, Coupon(kycedMember)) => bool
+    mapping(bytes32 => bool) public redeemedCoupons;
+
     constructor(address payable weth) {
         _weth = WETH(weth);
         _weth20 = IERC20(weth);
@@ -245,13 +249,16 @@ contract KycOnboardingContract is
             !isActiveMember(dao, dao.getCurrentDelegateKey(kycedMember)),
             "already member"
         );
+        bytes32 couponHash = hashCouponMessage(dao, Coupon(kycedMember));
+        require(!redeemedCoupons[couponHash], "already redeemed");
         uint256 maxMembers = dao.getConfiguration(
             _configKey(tokenAddr, MaxMembers)
         );
         require(maxMembers > 0, "token not configured");
         require(dao.getNbMembers() < maxMembers, "the DAO is full");
 
-        _checkKycCoupon(dao, kycedMember, tokenAddr, signature);
+        _checkKycCoupon(dao, kycedMember, tokenAddr, couponHash, signature);
+        redeemedCoupons[couponHash] = true;
 
         OnboardingDetails memory details = _checkData(dao, tokenAddr, amount);
         totalUnits[dao][tokenAddr] += details.unitsRequested;
@@ -376,13 +383,11 @@ contract KycOnboardingContract is
         DaoRegistry dao,
         address kycedMember,
         address tokenAddr,
+        bytes32 couponHash,
         bytes memory signature
     ) internal view {
         require(
-            ECDSA.recover(
-                hashCouponMessage(dao, Coupon(kycedMember)),
-                signature
-            ) ==
+            ECDSA.recover(couponHash, signature) ==
                 dao.getAddressConfiguration(
                     _configKey(tokenAddr, SignerAddressConfig)
                 ),
