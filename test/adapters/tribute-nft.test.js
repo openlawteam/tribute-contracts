@@ -200,6 +200,107 @@ describe("Adapter - TributeNFT", () => {
     expect(newOwnerAddr).equal(nftExt.address);
   });
 
+  it("should be possible to onboard a member using an existing NFT contract but with different tokenId", async () => {
+    const nftOwner = accounts[2];
+    const nftOwner2 = accounts[3];
+    const proposalId = getProposalCounter();
+    const dao = this.dao;
+    const bank = this.extensions.bankExt;
+    const nftExt = this.extensions.erc721Ext;
+    const pixelNFT = this.testContracts.pixelNFT;
+    const tributeNFT = this.adapters.tributeNFT;
+    const voting = this.adapters.voting;
+
+    await pixelNFT.mintPixel(nftOwner, 1, 1, { from: daoOwner });
+    let pastEvents = await pixelNFT.getPastEvents();
+    let { tokenId } = pastEvents[1].returnValues;
+
+    await tributeNFT.submitProposal(
+      dao.address,
+      proposalId,
+      nftOwner,
+      pixelNFT.address,
+      tokenId,
+      10, // requested units
+      [],
+      { from: daoOwner, gasPrice: toBN("0") }
+    );
+
+    const vote = 1; //YES
+    await voting.submitVote(dao.address, proposalId, vote, {
+      from: daoOwner,
+      gasPrice: toBN("0"),
+    });
+
+    await advanceTime(10000);
+
+    await pixelNFT.methods["safeTransferFrom(address,address,uint256,bytes)"](
+      nftOwner,
+      tributeNFT.address,
+      tokenId,
+      encodeProposalData(dao, proposalId),
+      {
+        from: nftOwner,
+        gasPrice: toBN("0"),
+      }
+    );
+
+    // test balance after proposal is processed
+    const applicantUnits = await bank.balanceOf(nftOwner, UNITS);
+    expect(applicantUnits.toString()).equal("10");
+
+    // test active member status
+    const applicantIsActiveMember = await isMember(bank, nftOwner);
+    expect(applicantIsActiveMember).equal(true);
+
+    // Check if asset was transferred to the NFT Extension contract
+    const newOwnerAddr = await pixelNFT.ownerOf(tokenId);
+    expect(newOwnerAddr).equal(nftExt.address);
+
+    await pixelNFT.mintPixel(nftOwner2, 2, 2, { from: daoOwner });
+    pastEvents = await pixelNFT.getPastEvents();
+    const newTokenId = pastEvents[1].returnValues.tokenId;
+
+    const newProposalId = getProposalCounter();
+    await tributeNFT.submitProposal(
+      dao.address,
+      newProposalId,
+      nftOwner2,
+      pixelNFT.address,
+      newTokenId,
+      5, // requested units
+      [],
+      { from: daoOwner, gasPrice: toBN("0") }
+    );
+
+    await voting.submitVote(dao.address, newProposalId, 1 /*YES*/, {
+      from: daoOwner,
+      gasPrice: toBN("0"),
+    });
+
+    await advanceTime(10000);
+
+    await pixelNFT.methods["safeTransferFrom(address,address,uint256,bytes)"](
+      nftOwner2,
+      tributeNFT.address,
+      newTokenId,
+      encodeProposalData(dao, newProposalId),
+      {
+        from: nftOwner2,
+        gasPrice: toBN("0"),
+      }
+    );
+
+    // test balance after proposal is processed
+    expect((await bank.balanceOf(nftOwner2, UNITS)).toString()).equal("5");
+
+    // test active member status
+    expect(await isMember(bank, nftOwner2)).equal(true);
+
+    // Check if asset was transferred to the NFT Extension contract
+    expect(await pixelNFT.ownerOf(newTokenId)).equal(nftExt.address);
+  });
+
   it("should not be possible to process a nft tribute proposal if it does not exist", async () => {
     const proposalId = getProposalCounter();
     const nftOwner = accounts[2];
