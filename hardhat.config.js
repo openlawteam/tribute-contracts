@@ -109,7 +109,7 @@ module.exports = {
       gasPrice: 10000000000,
       initialBaseFeePerGas: 0,
     },
-    fuji: {
+    avalanchetest: {
       url: process.env.ETH_NODE_URL,
       network_id: 43113,
       chainId: 43113,
