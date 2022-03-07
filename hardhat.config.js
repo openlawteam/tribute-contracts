@@ -109,6 +109,19 @@ module.exports = {
       gasPrice: 10000000000,
       initialBaseFeePerGas: 0,
     },
+    avalanchetest: {
+      url: process.env.ETH_NODE_URL,
+      network_id: 43113,
+      chainId: 43113,
+      skipDryRun: true,
+      gas: 2100000,
+      gasPrice: 25000000000,
+      accounts: {
+        mnemonic: process.env.WALLET_MNEMONIC || "",
+        count: 10,
+      },
+      signerId: process.env.SIGNER || undefined,
+    },
 
     // Main Networks
     mainnet: {
@@ -137,6 +150,17 @@ module.exports = {
       url: process.env.ETH_NODE_URL,
       network_id: 137,
       chainId: 137,
+      skipDryRun: true,
+      accounts: {
+        mnemonic: process.env.WALLET_MNEMONIC || "",
+        count: 10,
+      },
+      signerId: process.env.SIGNER || undefined,
+    },
+    avalanche: {
+      url: process.env.ETH_NODE_URL,
+      network_id: 43114,
+      chainId: 43114,
       skipDryRun: true,
       accounts: {
         mnemonic: process.env.WALLET_MNEMONIC || "",
