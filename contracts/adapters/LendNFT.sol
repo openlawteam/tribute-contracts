@@ -63,6 +63,7 @@ contract LendNFTContract is
         uint256 tributeAmount;
         // The amount requested of DAO internal tokens (UNITS).
         uint88 requestAmount;
+        // The lending period in milliseconds.
         uint64 lendingPeriod;
         bool sentBack;
         uint64 lendingStart;
@@ -226,7 +227,7 @@ contract LendNFTContract is
         ) {
             return (proposal, voteResult);
         } else {
-            revert("proposal has not been voted on yet");
+            revert("proposal has no votes");
         }
     }
 
@@ -340,8 +341,7 @@ contract LendNFTContract is
                 DaoHelper.ERC1155_EXT
             );
 
-            IERC1155 erc1155 = IERC1155(msg.sender);
-            erc1155.safeTransferFrom(
+            IERC1155(msg.sender).safeTransferFrom(
                 address(this),
                 erc1155ExtAddr,
                 id,
@@ -349,8 +349,13 @@ contract LendNFTContract is
                 ""
             );
         } else {
-            IERC1155 erc1155 = IERC1155(msg.sender);
-            erc1155.safeTransferFrom(address(this), from, id, value, "");
+            IERC1155(msg.sender).safeTransferFrom(
+                address(this),
+                from,
+                id,
+                value,
+                ""
+            );
         }
 
         ReimbursableLib.afterExecution2(dao, rData, payable(from));
