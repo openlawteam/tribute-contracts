@@ -38,15 +38,15 @@ contract BankAdapterContract is AdapterGuard, Reimbursable {
      * @notice Allows the member/advisor of the DAO to withdraw the funds from their internal bank account.
      * @notice Only accounts that are not reserved can withdraw the funds.
      * @notice If theres is no available balance in the user's account, the transaction is reverted.
+     * @notice If the sender delegated the membership to another account, the withdraw must be called with the delegate address.
      * @param dao The DAO address.
-     * @param account The account to receive the funds.
      * @param token The token address to receive the funds.
      */
-    function withdraw(
-        DaoRegistry dao,
-        address payable account,
-        address token
-    ) external reimbursable(dao) {
+    function withdraw(DaoRegistry dao, address token)
+        external
+        reimbursable(dao)
+    {
+        address account = DaoHelper.msgSender(dao, msg.sender);
         require(
             DaoHelper.isNotReservedAddress(account),
             "withdraw::reserved address"
@@ -60,7 +60,7 @@ contract BankAdapterContract is AdapterGuard, Reimbursable {
         uint256 balance = bank.balanceOf(account, token);
         require(balance > 0, "nothing to withdraw");
 
-        bank.withdraw(dao, account, token, balance);
+        bank.withdraw(dao, payable(account), token, balance);
     }
 
     /**
@@ -86,7 +86,7 @@ contract BankAdapterContract is AdapterGuard, Reimbursable {
      * @param dao The DAO address.
      */
     function sendEth(DaoRegistry dao) external payable reimbursable(dao) {
-        require(msg.value > 0, "no eth sent!");
+        require(msg.value > 0, "no eth sent");
         BankExtension(dao.getExtensionAddress(DaoHelper.BANK)).addToBalance{
             value: msg.value
         }(dao, DaoHelper.GUILD, DaoHelper.ETH_TOKEN, msg.value);

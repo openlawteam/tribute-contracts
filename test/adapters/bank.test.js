@@ -33,6 +33,9 @@ const {
   UNITS,
   GUILD,
   ETH_TOKEN,
+  TOTAL,
+  ESCROW,
+  DAI_TOKEN,
 } = require("../../utils/contract-util");
 
 const {
@@ -164,11 +167,13 @@ describe("Adapter - Bank", () => {
     await checkBalance(bank, applicant, ETH_TOKEN, requestedAmount);
 
     const ethBalance = await getBalance(applicant);
+
     // Withdraw the funds from the bank
-    await bankAdapter.withdraw(this.dao.address, applicant, ETH_TOKEN, {
-      from: daoOwner,
+    await bankAdapter.withdraw(this.dao.address, ETH_TOKEN, {
+      from: applicant,
       gasPrice: toBN("0"),
     });
+
     await checkBalance(bank, applicant, ETH_TOKEN, 0);
     const ethBalance2 = await getBalance(applicant);
     expect(ethBalance.add(requestedAmount).toString()).equal(
@@ -185,6 +190,79 @@ describe("Adapter - Bank", () => {
     await bankAdapter.sendEth(this.dao.address, { value: toWei("5") });
 
     await checkBalance(bank, GUILD, ETH_TOKEN, toWei("5"));
+  });
+
+  it("should possible to update the token balance in the dao bank", async () => {
+    const bank = this.extensions.bankExt;
+    const bankAdapter = this.adapters.bankAdapter;
+
+    await checkBalance(bank, GUILD, ETH_TOKEN, "0");
+
+    await bankAdapter.sendEth(this.dao.address, { value: toWei("5") });
+
+    await bankAdapter.updateToken(this.dao.address, ETH_TOKEN);
+
+    await checkBalance(bank, GUILD, ETH_TOKEN, toWei("5"));
+  });
+
+  it("should not possible to call sendEth without any eth", async () => {
+    await expectRevert(
+      this.adapters.bankAdapter.sendEth(this.dao.address, {
+        value: toWei("0"),
+      }),
+      "no eth sent"
+    );
+  });
+
+  it("should not be possible to withdraw funds from the bank if the sender has no funds to withdraw", async () => {
+    const bankAdapter = this.adapters.bankAdapter;
+    const accountWithNoFunds = accounts[7];
+
+    await expectRevert(
+      bankAdapter.withdraw(this.dao.address, ETH_TOKEN, {
+        from: accountWithNoFunds,
+        gasPrice: toBN("0"),
+      }),
+      "nothing to withdraw"
+    );
+  });
+
+  it("should not be possible to withdraw funds using a token that is not registered in the DAO", async () => {
+    const bankAdapter = this.adapters.bankAdapter;
+
+    await expectRevert(
+      bankAdapter.withdraw(this.dao.address, DAI_TOKEN, {
+        from: daoOwner,
+        gasPrice: toBN("0"),
+      }),
+      "nothing to withdraw"
+    );
+  });
+
+  it("should not be possible to withdraw funds using a reserved address as sender", async () => {
+    const bankAdapter = this.adapters.bankAdapter;
+
+    await expectRevert(
+      bankAdapter.withdraw(this.dao.address, ETH_TOKEN, {
+        from: GUILD,
+        gasPrice: toBN("0"),
+      }),
+      "withdraw::reserved address"
+    );
+    await expectRevert(
+      bankAdapter.withdraw(this.dao.address, ETH_TOKEN, {
+        from: TOTAL,
+        gasPrice: toBN("0"),
+      }),
+      "withdraw::reserved address"
+    );
+    await expectRevert(
+      bankAdapter.withdraw(this.dao.address, ETH_TOKEN, {
+        from: ESCROW,
+        gasPrice: toBN("0"),
+      }),
+      "withdraw::reserved address"
+    );
   });
 
   it("should not be possible to send ETH to the adapter via receive function", async () => {

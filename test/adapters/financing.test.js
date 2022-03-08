@@ -164,8 +164,8 @@ describe("Adapter - Financing", () => {
     await checkBalance(bank, applicant, ETH_TOKEN, requestedAmount);
 
     const ethBalance = await getBalance(applicant);
-    await bankAdapter.withdraw(this.dao.address, applicant, ETH_TOKEN, {
-      from: daoOwner,
+    await bankAdapter.withdraw(this.dao.address, ETH_TOKEN, {
+      from: applicant,
       gasPrice: toBN("0"),
     });
     await checkBalance(bank, applicant, ETH_TOKEN, 0);
