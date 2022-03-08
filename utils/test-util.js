@@ -1,9 +1,9 @@
 // Whole-script strict mode syntax
 "use strict";
 
-const { toBN, UNITS } = require("./contract-util");
-
-const { expect, advanceTime, web3 } = require("./oz-util");
+const { toBN, UNITS, ERC1155 } = require("./contract-util");
+const { toNumber } = require("web3-utils");
+const { expect, advanceTime, web3, encodeProposalData } = require("./oz-util");
 
 const checkLastEvent = async (dao, testObject) => {
   let pastEvents = await dao.getPastEvents();
@@ -159,6 +159,109 @@ const submitConfigProposal = async (
   });
 };
 
+const lendERC721NFT = async (
+  dao,
+  proposalId,
+  pixelNFT,
+  voting,
+  lendNFT,
+  nftExtension,
+  bank,
+  daoOwner,
+  nftOwner,
+  lendingPeriod = 10000
+) => {
+  // Mint the ERC721 NFT
+  await pixelNFT.mintPixel(nftOwner, 1, 1, { from: daoOwner });
+
+  let pastEvents = await pixelNFT.getPastEvents();
+  const { tokenId } = pastEvents[1].returnValues;
+
+  // Create the Lend Proposal
+  await lendNFT.submitProposal(
+    dao.address,
+    proposalId,
+    nftOwner,
+    pixelNFT.address,
+    tokenId,
+    10000, // requested units
+    lendingPeriod, // lending period (10 seconds)
+    [],
+    { from: daoOwner, gasPrice: toBN("0") }
+  );
+
+  // Vote Yes on the proposal
+  await voting.submitVote(dao.address, proposalId, 1, { from: daoOwner });
+  await advanceTime(10000);
+
+  // Approve the NFT to move to the NFT extension
+  await pixelNFT.methods["safeTransferFrom(address,address,uint256,bytes)"](
+    nftOwner,
+    lendNFT.address,
+    tokenId,
+    encodeProposalData(dao, proposalId),
+    {
+      from: nftOwner,
+    }
+  );
+
+  let unitBalance = await bank.balanceOf(nftOwner, UNITS);
+  expect(unitBalance.toString()).equal("10000");
+  expect(await pixelNFT.ownerOf(tokenId)).equal(nftExtension.address);
+
+  return { proposalId };
+};
+
+const lendERC1155NFT = async (
+  dao,
+  proposalId,
+  tokenId,
+  erc1155Token,
+  voting,
+  lendNFT,
+  bank,
+  daoOwner,
+  nftOwner
+) => {
+  // Mint the ERC1155 NFT
+  await erc1155Token.mint(nftOwner, tokenId, 1, [], { from: daoOwner });
+
+  // Create a proposal
+  await lendNFT.submitProposal(
+    dao.address,
+    proposalId,
+    nftOwner,
+    erc1155Token.address,
+    tokenId,
+    25000, // requested units
+    10000, // lending period
+    [],
+    { from: daoOwner, gasPrice: toBN("0") }
+  );
+
+  // Submit a vote (YES)
+  await voting.submitVote(dao.address, proposalId, 1, { from: daoOwner });
+
+  await advanceTime(10000);
+
+  // Send the ERC1155 NFT to the LendNFT adapter
+  await erc1155Token.safeTransferFrom(
+    nftOwner,
+    lendNFT.address,
+    tokenId,
+    1,
+    encodeProposalData(dao, proposalId),
+    { from: nftOwner }
+  );
+
+  const erc1155ExtAddr = await dao.getExtensionAddress(ERC1155);
+  const balanceOf = await erc1155Token.balanceOf(erc1155ExtAddr, tokenId);
+  expect(balanceOf.toString()).equal("1");
+
+  let unitBalance = await bank.balanceOf(nftOwner, UNITS);
+  expect(toNumber(unitBalance.toString())).to.be.closeTo(25000, 5);
+};
+
 module.exports = {
   checkLastEvent,
   checkBalance,
@@ -167,6 +270,8 @@ module.exports = {
   onboardingNewMember,
   guildKickProposal,
   submitConfigProposal,
+  lendERC721NFT,
+  lendERC1155NFT,
   isMember,
   encodeDaoInfo,
 };
