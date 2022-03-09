@@ -50,6 +50,7 @@ module.exports = {
       provider: getNetworkProvider,
       network_id: 1,
       skipDryRun: true,
+      gasPrice: 20000000000,
     },
     harmony: {
       provider: getNetworkProvider,

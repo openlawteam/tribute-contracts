@@ -52,20 +52,10 @@ module.exports = async (deployer, network, accounts) => {
       throw Error(`Unsupported network: ${network}`);
   }
 
-  const { dao, extensions } = res;
-  if (dao) {
-    await dao.finalizeDao();
+  const { adapters } = res;
+  if (adapters) {
     console.log("************************");
-    console.log(`DaoRegistry: ${dao.address}`);
-    console.log(`BankExtension: ${extensions.bank.address}`);
-    console.log(
-      `NFTExtension: ${extensions.nft ? extensions.nft.address : ""}`
-    );
-    console.log(
-      `ERC20Extension: ${
-        extensions.erc20Ext ? extensions.erc20Ext.address : ""
-      }`
-    );
+    console.log("done");
     console.log("************************");
   } else {
     console.log("************************");
