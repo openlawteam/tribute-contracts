@@ -1,9 +1,9 @@
 [
   {
     "network": "rinkeby",
-    "daoFactoryAddress": "0x41f8F7149Bd27dceE697223e661293F28804aae5",
-    "daoFactoryStartBlock": 10250961,
+    "daoFactoryAddress": "0xe76Fa2a436C705e776F3C9F9e769974A527b6Afe",
+    "daoFactoryStartBlock": 10303223,
     "GITHUB_USERNAME": "openlawteam",
-    "SUBGRAPH_NAME": "bright-dev"
+    "SUBGRAPH_NAME": "darkhorse-dev"
   }
 ]
