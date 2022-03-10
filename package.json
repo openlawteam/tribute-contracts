@@ -64,7 +64,8 @@
     "lint:fix": "prettier --write 'contracts/**/*.sol' '**/*.js' '**/*.md'",
     "migrate": "truffle migrate --network",
     "test": "mocha --timeout 2000000 --exit --recursive",
-    "verify": "scripts/verify.js"
+    "verify": "scripts/verify.js",
+    "verify:mainnet": "truffle run verify --network mainnet"
   },
   "repository": {
     "type": "git",
