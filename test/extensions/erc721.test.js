@@ -24,24 +24,26 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
  */
+
 const { toWei, toBN, fromAscii, GUILD } = require("../../utils/contract-util");
 
 const {
   takeChainSnapshot,
   revertChainSnapshot,
   deployDefaultNFTDao,
-  accounts,
-  expectRevert,
-  expect,
+  getAccounts,
   web3,
 } = require("../../utils/hardhat-test-util");
 
 const { encodeDaoInfo } = require("../../utils/test-util");
 
 describe("Extension - ERC721", () => {
-  const daoOwner = accounts[0];
+  let accounts, daoOwner;
 
   before("deploy dao", async () => {
+    accounts = await getAccounts();
+    daoOwner = accounts[0];
+
     const { dao, adapters, extensions, testContracts } =
       await deployDefaultNFTDao({ owner: daoOwner });
     this.dao = dao;
@@ -73,21 +75,22 @@ describe("Extension - ERC721", () => {
   it("should not be possible get an NFT in the collection if it is empty", async () => {
     const nftExtension = this.extensions.erc721Ext;
     const pixelNFT = this.testContracts.pixelNFT;
-    await expectRevert(nftExtension.getNFT(pixelNFT.address, 0), "revert");
+    await expect(nftExtension.getNFT(pixelNFT.address, 0)).to.be.revertedWith(
+      "revert"
+    );
   });
 
   it("should not be possible to return a NFT without the RETURN permission", async () => {
     const nftExtension = this.extensions.erc721Ext;
     const pixelNFT = this.testContracts.pixelNFT;
-    await expectRevert(
+    await expect(
       nftExtension.withdrawNFT(
         this.dao.address,
         accounts[1],
         pixelNFT.address,
         1
-      ),
-      "erc721::accessDenied"
-    );
+      )
+    ).to.be.revertedWith("erc721::accessDenied");
   });
 
   it("should be possible check how many NFTs are in the collection", async () => {
@@ -98,10 +101,9 @@ describe("Extension - ERC721", () => {
 
   it("should not be possible to initialize the extension if it was already initialized", async () => {
     const nftExtension = this.extensions.erc721Ext;
-    await expectRevert(
-      nftExtension.initialize(this.dao.address, accounts[0]),
-      "erc721::already initialized"
-    );
+    await expect(
+      nftExtension.initialize(this.dao.address, accounts[0])
+    ).to.be.revertedWith("erc721::already initialized");
   });
 
   it("should be possible to collect a NFT that is send directly to the extension", async () => {
@@ -144,28 +146,26 @@ describe("Extension - ERC721", () => {
 
   it("should not be possible to send ETH to the extension via receive function", async () => {
     const extension = this.extensions.erc721Ext;
-    await expectRevert(
+    await expect(
       web3.eth.sendTransaction({
         to: extension.address,
         from: daoOwner,
         gasPrice: toBN("0"),
         value: toWei("1"),
-      }),
-      "revert"
-    );
+      })
+    ).to.be.revertedWith("revert");
   });
 
   it("should not be possible to send ETH to the extension via fallback function", async () => {
     const extension = this.extensions.erc721Ext;
-    await expectRevert(
+    await expect(
       web3.eth.sendTransaction({
         to: extension.address,
         from: daoOwner,
         gasPrice: toBN("0"),
         value: toWei("1"),
         data: fromAscii("should go to fallback func"),
-      }),
-      "revert"
-    );
+      })
+    ).to.be.revertedWith("revert");
   });
 });

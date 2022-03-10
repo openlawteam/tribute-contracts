@@ -24,6 +24,7 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
  */
+const { expect } = require("chai");
 const {
   toBN,
   sha3,
@@ -38,9 +39,7 @@ const {
   revertChainSnapshot,
   deployDefaultDao,
   proposalIdGenerator,
-  accounts,
-  expectRevert,
-  expect,
+  getAccounts,
   web3,
 } = require("../../utils/hardhat-test-util");
 
@@ -57,9 +56,12 @@ function getProposalCounter() {
 }
 
 describe("Extension - ERC20", () => {
-  const daoOwner = accounts[0];
+  let accounts, daoOwner;
 
   before("deploy dao", async () => {
+    accounts = await getAccounts();
+    daoOwner = accounts[0];
+
     const { dao, adapters, extensions, testContracts } = await deployDefaultDao(
       { owner: daoOwner }
     );
@@ -329,12 +331,11 @@ describe("Extension - ERC20", () => {
       numberOfUnits.mul(toBN("0")).toString()
     );
     //attempt transfer to non-member External address A - should revert
-    await expectRevert(
+    await expect(
       erc20Ext.transfer(externalAddressA, numberOfUnits.mul(toBN("1")), {
         from: applicantA,
-      }),
-      "transfer not allowed"
-    );
+      })
+    ).to.be.revertedWith("transfer not allowed");
 
     //check balances of externalAddressA
     externalAddressAUnits = await erc20Ext.balanceOf(externalAddressA);
@@ -427,15 +428,14 @@ describe("Extension - ERC20", () => {
     expect(await isMember(bank, externalAddressB)).equal(false);
 
     //transferFrom Applicant A(member) to externalAddressB(non-member) by the spender(non-member externalAddressA) should fail
-    await expectRevert(
+    await expect(
       erc20Ext.transferFrom(
         applicantA,
         externalAddressB,
         numberOfUnits.mul(toBN("1")),
         { from: externalAddressA }
-      ),
-      "transfer not allowed"
-    );
+      )
+    ).to.be.revertedWith("transfer not allowed");
 
     //check new balances of applicantA & externalAddressB
     applicantAUnits = await erc20Ext.balanceOf(applicantA);
@@ -521,12 +521,11 @@ describe("Extension - ERC20", () => {
     expect(await isMember(bank, applicantB)).equal(true);
 
     //attempt transfer
-    await expectRevert(
+    await expect(
       erc20Ext.transfer(applicantB, numberOfUnits.mul(toBN("1")), {
         from: applicantA,
-      }),
-      "transfer not allowed"
-    );
+      })
+    ).to.be.revertedWith("transfer not allowed");
 
     //applicantA should still have the same number of Units
     applicantAUnits = await erc20Ext.balanceOf(applicantA);

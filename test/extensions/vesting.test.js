@@ -24,6 +24,7 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
  */
+const { expect } = require("chai");
 
 const { UNITS, toBN } = require("../../utils/contract-util");
 
@@ -34,17 +35,20 @@ const {
   revertChainSnapshot,
   deployDefaultDao,
   advanceTime,
-  accounts,
-  expect,
-  expectRevert,
+  getAccounts,
 } = require("../../utils/hardhat-test-util");
 
 describe("Extension - Vesting", () => {
-  const daoOwner = accounts[0];
+  let accounts, daoOwner;
 
   before("deploy dao", async () => {
+    accounts = await getAccounts();
+    daoOwner = accounts[0];
     const { dao, adapters, extensions, testContracts } = await deployDefaultDao(
-      { owner: daoOwner, finalize: false }
+      {
+        owner: daoOwner,
+        finalize: false,
+      }
     );
     this.dao = dao;
     this.adapters = adapters;
@@ -221,7 +225,7 @@ describe("Extension - Vesting", () => {
     await this.dao.finalizeDao({ from: daoOwner });
     const vesting = this.extensions.vestingExt;
     const now = new Date();
-    await expectRevert(
+    await expect(
       vesting.createNewVesting(
         this.dao.address,
         daoOwner,
@@ -229,20 +233,18 @@ describe("Extension - Vesting", () => {
         100,
         Math.floor(now.getTime() / 1000),
         { from: daoOwner }
-      ),
-      "vestingExt::accessDenied"
-    );
+      )
+    ).to.be.revertedWith("vestingExt::accessDenied");
   });
 
   it("should not be possible to removeVesting a vesting schedule the without ACL permission", async () => {
     // Finalize the DAO to be able to check the extension permissions
     await this.dao.finalizeDao({ from: daoOwner });
     const vesting = this.extensions.vestingExt;
-    await expectRevert(
+    await expect(
       vesting.removeVesting(this.dao.address, daoOwner, UNITS, 100, {
         from: daoOwner,
-      }),
-      "vestingExt::accessDenied"
-    );
+      })
+    ).to.be.revertedWith("vestingExt::accessDenied");
   });
 });

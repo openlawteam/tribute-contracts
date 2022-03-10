@@ -20,13 +20,9 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
  */
+const { expect } = require("chai");
 const { toWei } = require("../../utils/contract-util");
-
-const {
-  TestFairShareCalc,
-  expect,
-  expectRevert,
-} = require("../../utils/hardhat-test-util");
+const { TestFairShareCalc } = require("../../utils/hardhat-test-util");
 
 describe("Helper - FairShareHelper", () => {
   it("should calculate the fair unit if the given parameters are valid", async () => {
@@ -44,10 +40,9 @@ describe("Helper - FairShareHelper", () => {
     const balance = toWei("4.3");
     const units = toWei("100");
     const totalUnits = toWei("0");
-    await expectRevert(
-      fairShareCalc.calculate(balance, units, totalUnits),
-      "revert totalUnits must be greater than 0"
-    );
+    await expect(
+      fairShareCalc.calculate(balance, units, totalUnits)
+    ).to.be.revertedWith("revert totalUnits must be greater than 0");
   });
 
   it("should revert when the units is greater than the totalUnits", async () => {
@@ -55,8 +50,9 @@ describe("Helper - FairShareHelper", () => {
     const balance = toWei("4.3");
     const units = toWei("100");
     const totalUnits = toWei("10");
-    await expectRevert(
-      fairShareCalc.calculate(balance, units, totalUnits),
+    await expect(
+      fairShareCalc.calculate(balance, units, totalUnits)
+    ).to.be.revertedWith(
       "revert units must be less than or equal to totalUnits"
     );
   });

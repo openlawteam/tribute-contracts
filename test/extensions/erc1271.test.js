@@ -24,15 +24,14 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
  */
+const { expect } = require("chai");
 const { sha3, soliditySha3 } = require("../../utils/contract-util");
 
 const {
   deployDefaultDao,
   takeChainSnapshot,
   revertChainSnapshot,
-  expectRevert,
-  accounts,
-  expect,
+  getAccounts,
 } = require("../../utils/hardhat-test-util");
 
 const arbitrarySignature =
@@ -46,9 +45,12 @@ const arbitraryMsgHash =
 const magicValue = "0x1626ba7e";
 
 describe("Extension - ERC1271", () => {
-  const daoOwner = accounts[0];
+  let accounts, daoOwner;
 
   before("deploy dao", async () => {
+    accounts = await getAccounts();
+    daoOwner = accounts[0];
+
     const { dao, adapters, extensions } = await deployDefaultDao({
       owner: daoOwner,
     });
@@ -73,22 +75,20 @@ describe("Extension - ERC1271", () => {
 
   it("should not be possible to submit a signature without the SIGN permission", async () => {
     const erc1271Extension = this.extensions.erc1271Ext;
-    await expectRevert(
+    await expect(
       erc1271Extension.sign(
         this.dao.address,
         arbitraryMsgHash,
         arbitrarySignatureHash,
         magicValue
-      ),
-      "erc1271::accessDenied"
-    );
+      )
+    ).to.be.revertedWith("erc1271::accessDenied");
   });
 
   it("should revert for invalid signatures", async () => {
     const erc1271Extension = this.extensions.erc1271Ext;
-    await expectRevert(
-      erc1271Extension.isValidSignature(arbitraryMsgHash, arbitrarySignature),
-      "erc1271::invalid signature"
-    );
+    await expect(
+      erc1271Extension.isValidSignature(arbitraryMsgHash, arbitrarySignature)
+    ).to.be.revertedWith("erc1271::invalid signature");
   });
 });

@@ -1,7 +1,5 @@
 // Whole-script strict mode syntax
 "use strict";
-
-const expectEvent = require("@openzeppelin/test-helpers/src/expectEvent");
 /**
 MIT License
 
@@ -25,16 +23,16 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
  */
+const { expect } = require("chai");
+
 const { sha3, toBN, toWei } = require("../../utils/contract-util");
 
 const {
   deployDefaultDao,
   ERC20MinterContract,
   ProxTokenContract,
-  accounts,
+  getAccounts,
   web3,
-  expect,
-  expectRevert,
 } = require("../../utils/hardhat-test-util");
 
 const {
@@ -46,7 +44,12 @@ const {
 const { extensionsIdsMap } = require("../../utils/dao-ids-util");
 
 describe("Extension - Executor", () => {
-  const daoOwner = accounts[0];
+  let accounts, daoOwner;
+
+  before("deploy dao", async () => {
+    accounts = await getAccounts();
+    daoOwner = accounts[0];
+  });
 
   it("should be possible to create a dao with an executor extension pre-configured", async () => {
     const { dao } = await deployDefaultDao({
@@ -99,26 +102,18 @@ describe("Extension - Executor", () => {
     const proxToken = await ProxTokenContract.new();
     expect(proxToken).to.not.be.null;
 
-    const res = await erc20Minter.execute(
-      dao.address,
-      proxToken.address,
-      toBN("10000"),
-      { from: daoOwner }
-    );
-    // The adapter should call itself via proxy and mint the token
-    expectEvent(res.receipt, "Minted", {
-      owner: erc20Minter.address,
-      amount: "10000",
-    });
-
-    // The token mint call should be triggered from the adapter, but the
-    // sender is actually the proxy executor
-    const pastEvents = await proxToken.getPastEvents();
-    const event = pastEvents[1];
-    const { owner, amount } = pastEvents[1].returnValues;
-    expect(event.event).to.be.equal("MintedProxToken");
-    expect(owner).to.be.equal(executorExt.address);
-    expect(amount).to.be.equal("10000");
+    const res = await expect(
+      erc20Minter.execute(dao.address, proxToken.address, toBN("10000"), {
+        from: daoOwner,
+      })
+    )
+      .to.emit(erc20Minter, "Minted")
+      .withArgs(erc20Minter.address, "10000")
+      // The adapter should call itself via proxy and mint the token
+      // The token mint call should be triggered from the adapter, but the
+      // sender is actually the proxy executor
+      .to.emit(proxToken, "MintedProxToken")
+      .withArgs(executorExt.address, "10000");
   });
 
   it("should not be possible to execute a delegate call without the ACL permission", async () => {
@@ -161,12 +156,11 @@ describe("Extension - Executor", () => {
     const proxToken = await ProxTokenContract.new();
     expect(proxToken).to.not.be.null;
 
-    await expectRevert(
+    await expect(
       erc20Minter.execute(dao.address, proxToken.address, toBN("10000"), {
         from: daoOwner,
-      }),
-      "executorExt::accessDenied"
-    );
+      })
+    ).to.be.revertedWith("executorExt::accessDenied");
   });
 
   it("should not be possible to send ETH to the extension without the ACL permission", async () => {
@@ -179,14 +173,13 @@ describe("Extension - Executor", () => {
 
     await dao.finalizeDao({ from: daoOwner });
 
-    await expectRevert(
+    await expect(
       web3.eth.sendTransaction({
         to: executorExt.address,
         from: daoOwner,
         gasPrice: toBN("0"),
         value: toWei("1"),
-      }),
-      "executorExt::accessDenied"
-    );
+      })
+    ).to.be.revertedWith("executorExt::accessDenied");
   });
 });

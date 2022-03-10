@@ -24,7 +24,7 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
  */
-
+const { expect } = require("chai");
 const {
   toBN,
   fromAscii,
@@ -39,9 +39,7 @@ const {
   revertChainSnapshot,
   deployDefaultNFTDao,
   proposalIdGenerator,
-  accounts,
-  expectRevert,
-  expect,
+  getAccounts,
   web3,
 } = require("../../utils/hardhat-test-util");
 
@@ -58,9 +56,12 @@ function getProposalCounter() {
 }
 
 describe("Extension - ERC1155", () => {
-  const daoOwner = accounts[0];
+  let accounts, daoOwner;
 
   before("deploy dao", async () => {
+    accounts = await getAccounts();
+    daoOwner = accounts[0];
+
     const { dao, adapters, extensions, testContracts } =
       await deployDefaultNFTDao({ owner: daoOwner });
     this.dao = dao;
@@ -98,16 +99,15 @@ describe("Extension - ERC1155", () => {
   it("should not be possible get an NFT in the collection if it is empty", async () => {
     const erc1155TokenExtension = this.extensions.erc1155Ext;
     const erc1155TestToken = this.testContracts.erc1155TestToken;
-    await expectRevert(
-      erc1155TokenExtension.getNFT(erc1155TestToken.address, 0),
-      "revert"
-    );
+    await expect(
+      erc1155TokenExtension.getNFT(erc1155TestToken.address, 0)
+    ).to.be.revertedWith("revert");
   });
 
   it("should not be possible to withdraw a NFT without the WITHDRAW_NFT permission", async () => {
     const erc1155TokenExtension = this.extensions.erc1155Ext;
     const erc1155TestToken = this.testContracts.erc1155TestToken;
-    await expectRevert(
+    await expect(
       erc1155TokenExtension.withdrawNFT(
         this.dao.address,
         GUILD,
@@ -115,17 +115,15 @@ describe("Extension - ERC1155", () => {
         erc1155TestToken.address,
         1, //tokenId
         1 //amount
-      ),
-      "erc1155Ext::accessDenied"
-    );
+      )
+    ).to.be.revertedWith("erc1155Ext::accessDenied");
   });
 
   it("should not be possible to initialize the extension if it was already initialized", async () => {
     const erc1155TokenExtension = this.extensions.erc1155Ext;
-    await expectRevert(
-      erc1155TokenExtension.initialize(this.dao.address, accounts[0]),
-      "already initialized"
-    );
+    await expect(
+      erc1155TokenExtension.initialize(this.dao.address, accounts[0])
+    ).to.be.revertedWith("already initialized");
   });
 
   it("should be possible to collect a NFT if that is sent directly to the extension", async () => {
@@ -382,7 +380,7 @@ describe("Extension - ERC1155", () => {
       { from: nftOwner }
     );
 
-    await expectRevert(
+    await expect(
       erc1155Adapter.internalTransfer(
         this.dao.address,
         nonMember,
@@ -390,35 +388,32 @@ describe("Extension - ERC1155", () => {
         id, //tokenId
         1, //amount
         { from: nftOwner }
-      ),
-      "erc1155Ext::invalid amount"
-    );
+      )
+    ).to.be.revertedWith("erc1155Ext::invalid amount");
   });
 
   it("should not be possible to send ETH to the extension via receive function", async () => {
     const extension = this.extensions.erc1155Ext;
-    await expectRevert(
+    await expect(
       web3.eth.sendTransaction({
         to: extension.address,
         from: daoOwner,
         gasPrice: toBN("0"),
         value: toWei("1"),
-      }),
-      "revert"
-    );
+      })
+    ).to.be.revertedWith("revert");
   });
 
   it("should not be possible to send ETH to the extension via fallback function", async () => {
     const extension = this.extensions.erc1155Ext;
-    await expectRevert(
+    await expect(
       web3.eth.sendTransaction({
         to: extension.address,
         from: daoOwner,
         gasPrice: toBN("0"),
         value: toWei("1"),
         data: fromAscii("should go to fallback func"),
-      }),
-      "revert"
-    );
+      })
+    ).to.be.revertedWith("revert");
   });
 });
