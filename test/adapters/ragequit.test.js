@@ -47,7 +47,7 @@ const {
   expect,
   OLToken,
   web3,
-} = require("../../utils/oz-util");
+} = require("../../utils/hardhat-test-util");
 
 const { onboardingNewMember } = require("../../utils/test-util");
 

@@ -42,7 +42,7 @@ const {
   expectRevert,
   expect,
   web3,
-} = require("../../utils/oz-util");
+} = require("../../utils/hardhat-test-util");
 
 const {
   isMember,

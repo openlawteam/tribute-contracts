@@ -26,7 +26,7 @@ const {
   TestFairShareCalc,
   expect,
   expectRevert,
-} = require("../../utils/oz-util");
+} = require("../../utils/hardhat-test-util");
 
 describe("Helper - FairShareHelper", () => {
   it("should calculate the fair unit if the given parameters are valid", async () => {

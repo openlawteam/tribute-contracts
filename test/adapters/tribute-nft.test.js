@@ -44,7 +44,7 @@ const {
   expect,
   encodeProposalData,
   web3,
-} = require("../../utils/oz-util");
+} = require("../../utils/hardhat-test-util");
 
 const { onboardingNewMember, isMember } = require("../../utils/test-util");
 

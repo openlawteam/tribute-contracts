@@ -24,6 +24,7 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
  */
+const { expect } = require("chai");
 const {
   toBN,
   toWei,
@@ -41,9 +42,7 @@ const {
   revertChainSnapshot,
   proposalIdGenerator,
   advanceTime,
-  accounts,
-  expect,
-  expectRevert,
+  getAccounts,
   web3,
   DaoRegistryAdapterContract,
   ManagingContract,
@@ -51,7 +50,7 @@ const {
   ERC1271Extension,
   VotingContract,
   NFTExtension,
-} = require("../../utils/oz-util");
+} = require("../../utils/hardhat-test-util");
 
 const {
   bankExtensionAclFlagsMap,
@@ -62,7 +61,6 @@ const {
 
 const { extensionsIdsMap } = require("../../utils/dao-ids-util");
 
-const daoOwner = accounts[1];
 const proposalCounter = proposalIdGenerator().generator;
 
 function getProposalCounter() {
@@ -70,7 +68,12 @@ function getProposalCounter() {
 }
 
 describe("Adapter - Managing", () => {
+  let accounts, daoOwner;
+
   before("deploy dao", async () => {
+    accounts = await getAccounts();
+    daoOwner = accounts[0];
+
     const { dao, adapters, extensions } = await deployDefaultDao({
       owner: daoOwner,
     });
@@ -87,29 +90,27 @@ describe("Adapter - Managing", () => {
 
   it("should not be possible to send ETH to the adapter via receive function", async () => {
     const managing = this.adapters.managing;
-    await expectRevert(
+    await expect(
       web3.eth.sendTransaction({
         to: managing.address,
         from: daoOwner,
         gasPrice: toBN("0"),
         value: toWei("1"),
-      }),
-      "revert"
-    );
+      })
+    ).to.be.revertedWith("revert");
   });
 
   it("should not be possible to send ETH to the adapter via fallback function", async () => {
     const managing = this.adapters.managing;
-    await expectRevert(
+    await expect(
       web3.eth.sendTransaction({
         to: managing.address,
         from: daoOwner,
         gasPrice: toBN("0"),
         value: toWei("1"),
         data: fromAscii("should go to fallback func"),
-      }),
-      "revert"
-    );
+      })
+    ).to.be.revertedWith("revert");
   });
 
   it("should not be possible to propose a new adapter with more keys than values", async () => {
@@ -117,7 +118,7 @@ describe("Adapter - Managing", () => {
     const managing = this.adapters.managing;
     const newAdapterId = sha3("bank");
 
-    await expectRevert(
+    await expect(
       managing.submitProposal(
         dao.address,
         "0x1",
@@ -138,16 +139,15 @@ describe("Adapter - Managing", () => {
         [], //configs
         [], //data
         { from: daoOwner, gasPrice: toBN("0") }
-      ),
-      "must be an equal number of config keys and values"
-    );
+      )
+    ).to.be.revertedWith("must be an equal number of config keys and values");
   });
 
   it("should not be possible to propose a new adapter with more values than keys", async () => {
     const dao = this.dao;
     const managing = this.adapters.managing;
     const newAdapterId = sha3("bank");
-    await expectRevert(
+    await expect(
       managing.submitProposal(
         dao.address,
         "0x1",
@@ -164,16 +164,15 @@ describe("Adapter - Managing", () => {
         [], //configs
         [], //data
         { from: daoOwner, gasPrice: toBN("0") }
-      ),
-      "must be an equal number of config keys and values"
-    );
+      )
+    ).to.be.revertedWith("must be an equal number of config keys and values");
   });
 
   it("should not be possible to propose a new adapter using a reserved address", async () => {
     const dao = this.dao;
     const managing = this.adapters.managing;
     const newAdapterId = sha3("bank");
-    await expectRevert(
+    await expect(
       managing.submitProposal(
         dao.address,
         "0x1",
@@ -190,11 +189,10 @@ describe("Adapter - Managing", () => {
         [], //configs
         [], //data
         { from: daoOwner, gasPrice: toBN("0") }
-      ),
-      "address is reserved"
-    );
+      )
+    ).to.be.revertedWith("address is reserved");
 
-    await expectRevert(
+    await expect(
       managing.submitProposal(
         dao.address,
         "0x0",
@@ -211,9 +209,8 @@ describe("Adapter - Managing", () => {
         [], //configs
         [], //data
         { from: daoOwner, gasPrice: toBN("0") }
-      ),
-      "address is reserved"
-    );
+      )
+    ).to.be.revertedWith("address is reserved");
   });
 
   it("should be possible to remove an adapter if 0x0 is used as the adapter address", async () => {
@@ -222,7 +219,7 @@ describe("Adapter - Managing", () => {
     const voting = this.adapters.voting;
     const adapterIdToRemove = sha3("onboarding");
     let proposalId = getProposalCounter();
-    // Proposal to remove the Onboading adapter
+    // Proposal to remove the Onboarding adapter
     await managing.submitProposal(
       dao.address,
       proposalId,
@@ -254,15 +251,11 @@ describe("Adapter - Managing", () => {
       from: daoOwner,
       gasPrice: toBN("0"),
     });
-    let tx = await dao.getPastEvents();
 
     //Check if the adapter was removed from the Registry
-    await expectRevert(
-      dao.getAdapterAddress(sha3("onboarding")),
+    await expect(dao.getAdapterAddress(adapterIdToRemove)).to.be.revertedWith(
       "adapter not found"
     );
-    expect(tx[1].event).equal("AdapterRemoved");
-    expect(tx[1].returnValues.adapterId).equal(adapterIdToRemove);
   });
 
   it("should be possible to propose a new DAO adapter with a delegate key", async () => {
@@ -312,22 +305,20 @@ describe("Adapter - Managing", () => {
       gasPrice: toBN("0"),
     });
 
-    await expectRevert(
+    await expect(
       voting.submitVote(dao.address, proposalId, 1, {
         from: daoOwner,
         gasPrice: toBN("0"),
-      }),
-      "call with your delegate key"
-    );
+      })
+    ).to.be.revertedWith("call with your delegate key");
 
     // The same member attempts to vote again
-    await expectRevert(
+    await expect(
       voting.submitVote(dao.address, proposalId, 1, {
         from: delegateKey,
         gasPrice: toBN("0"),
-      }),
-      "member has already voted"
-    );
+      })
+    ).to.be.revertedWith("member has already voted");
 
     await advanceTime(10000);
     await managing.processProposal(dao.address, proposalId, {
@@ -369,7 +360,7 @@ describe("Adapter - Managing", () => {
       }
     );
 
-    await expectRevert(
+    await expect(
       managing.submitProposal(
         dao.address,
         proposalId,
@@ -389,9 +380,8 @@ describe("Adapter - Managing", () => {
           from: daoOwner,
           gasPrice: toBN("0"),
         }
-      ),
-      "proposalId must be unique"
-    );
+      )
+    ).to.be.revertedWith("proposalId must be unique");
   });
 
   it("should be possible to replace the managing adapter", async () => {
@@ -438,26 +428,20 @@ describe("Adapter - Managing", () => {
       from: daoOwner,
       gasPrice: toBN("0"),
     });
-    let tx = await dao.getPastEvents();
-    expect(tx[1].event).equal("AdapterRemoved");
-    expect(tx[1].returnValues.adapterId).equal(newAdapterId);
-
-    expect(tx[2].event).equal("AdapterAdded");
-    expect(tx[2].returnValues.adapterId).equal(newAdapterId);
-    expect(tx[2].returnValues.adapterAddress).equal(newManaging.address);
-    expect(tx[2].returnValues.flags).equal(flags.toString());
 
     //Check if the new adapter was added to the Registry
-    const newAddress = await dao.getAdapterAddress(sha3("managing"));
-    expect(newAddress.toString()).equal(newManaging.address.toString());
+    const newAddress = await dao.getAdapterAddress(newAdapterId);
+    expect(newAddress).equal(newManaging.address);
 
-    // Lets try to remove the financing adapter using the new managing adapter to test its permission flags
+    // Lets try to remove the financing adapter using the new
+    // managing adapter to test its permission flags
     const newProposalId = "0x3";
+    const financingAdapterId = sha3("financing");
     await newManaging.submitProposal(
       dao.address,
       newProposalId,
       {
-        adapterOrExtensionId: sha3("financing"),
+        adapterOrExtensionId: financingAdapterId,
         adapterOrExtensionAddr: ZERO_ADDRESS,
         updateType: 1,
         flags: 0,
@@ -485,12 +469,7 @@ describe("Adapter - Managing", () => {
       gasPrice: toBN("0"),
     });
 
-    tx = await dao.getPastEvents();
-    expect(tx[1].event).equal("AdapterRemoved");
-    expect(tx[1].returnValues.adapterId).equal(sha3("financing"));
-
-    await expectRevert(
-      dao.getAdapterAddress(sha3("financing")),
+    await expect(dao.getAdapterAddress(financingAdapterId)).to.be.revertedWith(
       "adapter not found"
     );
   });
@@ -541,7 +520,7 @@ describe("Adapter - Managing", () => {
 
     // the new adapter is not configured with the correct access flags, so it must return an error
     const newProposalId = getProposalCounter();
-    await expectRevert(
+    await expect(
       newManaging.submitProposal(
         dao.address,
         newProposalId,
@@ -561,9 +540,8 @@ describe("Adapter - Managing", () => {
           from: daoOwner,
           gasPrice: toBN("0"),
         }
-      ),
-      "accessDenied"
-    );
+      )
+    ).to.be.revertedWith("accessDenied");
   });
 
   it("should not be possible for a non member to propose a new adapter", async () => {
@@ -574,7 +552,7 @@ describe("Adapter - Managing", () => {
     const newAdapterId = sha3("onboarding");
     const proposalId = getProposalCounter();
     const newAdapterAddress = accounts[3];
-    await expectRevert(
+    await expect(
       managing.submitProposal(
         dao.address,
         proposalId,
@@ -591,9 +569,8 @@ describe("Adapter - Managing", () => {
         [], //configs
         [], //data
         { from: nonMember, gasPrice: toBN("0") }
-      ),
-      "onlyMember"
-    );
+      )
+    ).to.be.revertedWith("onlyMember");
   });
 
   it("should not be possible for a non member to submit a proposal", async () => {
@@ -604,7 +581,7 @@ describe("Adapter - Managing", () => {
     const newAdapterId = sha3("voting");
 
     const proposalId = getProposalCounter();
-    await expectRevert(
+    await expect(
       managing.submitProposal(
         dao.address,
         proposalId,
@@ -624,9 +601,8 @@ describe("Adapter - Managing", () => {
           from: nonMemberAddress,
           gasPrice: toBN("0"),
         }
-      ),
-      "onlyMember"
-    );
+      )
+    ).to.be.revertedWith("onlyMember");
   });
 
   it("should be possible for a non member to process a proposal", async () => {
@@ -708,13 +684,12 @@ describe("Adapter - Managing", () => {
     });
     await advanceTime(1000);
 
-    await expectRevert(
+    await expect(
       managing.processProposal(dao.address, proposalId, {
         from: daoOwner,
         gasPrice: toBN("0"),
-      }),
-      "proposal did not pass"
-    );
+      })
+    ).to.be.revertedWith("proposal did not pass");
   });
 
   it("should not fail if the adapter id used for removal is not valid", async () => {
@@ -791,13 +766,12 @@ describe("Adapter - Managing", () => {
 
     await advanceTime(1000);
 
-    await expectRevert(
+    await expect(
       managing.processProposal(dao.address, proposalId, {
         from: daoOwner,
         gasPrice: toBN("0"),
-      }),
-      "adapterAddress already in use"
-    );
+      })
+    ).to.be.revertedWith("adapterAddress already in use");
   });
 
   it("should be possible to add a new adapter and set the acl flags for some extension", async () => {
@@ -1127,7 +1101,6 @@ describe("Adapter - Managing", () => {
     const dao = this.dao;
     const managing = this.adapters.managing;
     const voting = this.adapters.voting;
-    const bankExt = this.extensions.bankExt;
 
     const removeExtensionId = sha3("bank");
     // Use 0 address to indicate we don't want to add, it is just a removal
@@ -1169,8 +1142,7 @@ describe("Adapter - Managing", () => {
       gasPrice: toBN("0"),
     });
 
-    await expectRevert(
-      dao.getExtensionAddress(removeExtensionAddr),
+    await expect(dao.getExtensionAddress(removeExtensionId)).to.be.revertedWith(
       "extension not found"
     );
   });
@@ -1215,12 +1187,11 @@ describe("Adapter - Managing", () => {
 
     await advanceTime(1000);
 
-    await expectRevert(
+    await expect(
       managing.processProposal(dao.address, proposalId, {
         from: daoOwner,
         gasPrice: toBN("0"),
-      }),
-      "unknown update type"
-    );
+      })
+    ).to.be.revertedWith("unknown update type");
   });
 });

@@ -32,7 +32,7 @@ const {
   DaoFactory,
   deployFunction,
   attachFunction,
-} = require("../../utils/oz-util");
+} = require("../../utils/hardhat-test-util");
 
 describe("Core - DaoFactory", () => {
   const owner = accounts[1];

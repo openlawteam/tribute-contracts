@@ -41,7 +41,7 @@ const {
   expect,
   BankFactory,
   web3,
-} = require("../../utils/oz-util");
+} = require("../../utils/hardhat-test-util");
 
 describe("Extension - Bank", () => {
   const daoOwner = accounts[0];

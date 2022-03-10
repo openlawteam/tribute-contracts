@@ -44,7 +44,7 @@ const {
   OLToken,
   deployDefaultNFTDao,
   web3,
-} = require("../../utils/oz-util");
+} = require("../../utils/hardhat-test-util");
 
 const { checkBalance, isMember } = require("../../utils/test-util");
 

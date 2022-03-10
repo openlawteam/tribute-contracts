@@ -33,7 +33,7 @@ const {
   expectRevert,
   accounts,
   expect,
-} = require("../../utils/oz-util");
+} = require("../../utils/hardhat-test-util");
 
 const arbitrarySignature =
   "0xc531a1d9046945d3732c73d049da2810470c3b0663788dca9e9f329a35c8a0d56add77ed5ea610b36140641860d13849abab295ca46c350f50731843c6517eee1c";

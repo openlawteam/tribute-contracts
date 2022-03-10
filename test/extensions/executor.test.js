@@ -35,7 +35,7 @@ const {
   web3,
   expect,
   expectRevert,
-} = require("../../utils/oz-util");
+} = require("../../utils/hardhat-test-util");
 
 const {
   executorExtensionAclFlagsMap,

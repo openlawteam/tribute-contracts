@@ -35,7 +35,7 @@ const {
   DaoRegistry,
   web3,
   accounts,
-} = require("../../utils/oz-util");
+} = require("../../utils/hardhat-test-util");
 
 describe("Core - Registry", () => {
   it("should not be possible to add a module with invalid id", async () => {

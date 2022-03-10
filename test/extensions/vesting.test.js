@@ -37,7 +37,7 @@ const {
   accounts,
   expect,
   expectRevert,
-} = require("../../utils/oz-util");
+} = require("../../utils/hardhat-test-util");
 
 describe("Extension - Vesting", () => {
   const daoOwner = accounts[0];

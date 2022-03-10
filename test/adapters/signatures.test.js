@@ -41,7 +41,7 @@ const {
   expect,
   expectRevert,
   web3,
-} = require("../../utils/oz-util");
+} = require("../../utils/hardhat-test-util");
 
 const { checkSignature } = require("../../utils/test-util");
 

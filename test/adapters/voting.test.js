@@ -48,7 +48,7 @@ const {
   web3,
   OLToken,
   PixelNFT,
-} = require("../../utils/oz-util");
+} = require("../../utils/hardhat-test-util");
 
 const { onboardingNewMember } = require("../../utils/test-util");
 
