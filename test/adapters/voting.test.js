@@ -24,6 +24,7 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
  */
+const { expect } = require("chai");
 const { utils } = require("ethers");
 const {
   toBN,
@@ -42,25 +43,26 @@ const {
   revertChainSnapshot,
   proposalIdGenerator,
   advanceTime,
-  accounts,
-  expectRevert,
-  expect,
+  getAccounts,
   web3,
   OLToken,
   PixelNFT,
 } = require("../../utils/hardhat-test-util");
 
 const { onboardingNewMember } = require("../../utils/test-util");
+const proposalCounter = proposalIdGenerator().generator;
+
+const getProposalCounter = () => {
+  return proposalCounter().next().value;
+};
 
 describe("Adapter - Voting", () => {
-  const daoOwner = accounts[1];
-  const proposalCounter = proposalIdGenerator().generator;
-
-  const getProposalCounter = () => {
-    return proposalCounter().next().value;
-  };
+  let accounts, daoOwner;
 
   before("deploy dao", async () => {
+    accounts = await getAccounts();
+    daoOwner = accounts[0];
+
     const { dao, adapters, extensions } = await deployDefaultDao({
       owner: daoOwner,
     });
@@ -130,13 +132,12 @@ describe("Adapter - Voting", () => {
       gasPrice: toBN("0"),
     });
 
-    await expectRevert(
+    await expect(
       voting.submitVote(dao.address, proposalId, 2, {
         from: daoOwner,
         gasPrice: toBN("0"),
-      }),
-      "member has already voted"
-    );
+      })
+    ).to.be.revertedWith("member has already voted");
   });
 
   it("should not be possible to vote with a non-member address", async () => {
@@ -160,13 +161,12 @@ describe("Adapter - Voting", () => {
       }
     );
 
-    await expectRevert(
+    await expect(
       voting.submitVote(dao.address, proposalId, 1, {
         from: account3,
         gasPrice: toBN("0"),
-      }),
-      "onlyMember"
-    );
+      })
+    ).to.be.revertedWith("onlyMember");
   });
 
   it("should be possible to vote with a delegate non-member address", async () => {
@@ -208,29 +208,27 @@ describe("Adapter - Voting", () => {
 
   it("should not be possible to send ETH to the adapter via receive function", async () => {
     const adapter = this.adapters.voting;
-    await expectRevert(
+    await expect(
       web3.eth.sendTransaction({
         to: adapter.address,
         from: daoOwner,
         gasPrice: toBN("0"),
         value: toWei("1"),
-      }),
-      "revert"
-    );
+      })
+    ).to.be.revertedWith("revert");
   });
 
   it("should not be possible to send ETH to the adapter via fallback function", async () => {
     const adapter = this.adapters.voting;
-    await expectRevert(
+    await expect(
       web3.eth.sendTransaction({
         to: adapter.address,
         from: daoOwner,
         gasPrice: toBN("0"),
         value: toWei("1"),
         data: fromAscii("should go to fallback func"),
-      }),
-      "revert"
-    );
+      })
+    ).to.be.revertedWith("revert");
   });
 
   it("should be possible to update a DAO configuration if you are a member and a maintainer that holds an external governance token", async () => {
@@ -460,9 +458,8 @@ describe("Adapter - Voting", () => {
     const oltContract = await OLToken.new(tokenSupply);
 
     // Transfer OLTs to the maintainer account
-    await oltContract.transfer(daoOwner, toBN(1));
     const maintainerBalance = await oltContract.balanceOf.call(daoOwner);
-    expect(maintainerBalance.toString()).equal("1");
+    expect(maintainerBalance.toString()).equal("100000");
 
     const { dao, adapters } = await deployDefaultDao({
       owner: daoOwner,
@@ -562,7 +559,7 @@ describe("Adapter - Voting", () => {
 
     const proposalId = getProposalCounter();
     //Submit a new configuration proposal
-    await expectRevert(
+    await expect(
       configuration.submitProposal(
         dao.address,
         proposalId,
@@ -576,15 +573,15 @@ describe("Adapter - Voting", () => {
         ],
         [],
         { from: maintainer, gasPrice: toBN("0") }
-      ),
-      "onlyMember"
-    );
+      )
+    ).to.be.revertedWith("onlyMember");
   });
 
   it("should not be possible to update a DAO configuration if you are a member but not a maintainer", async () => {
     // Issue OpenLaw ERC20 Basic Token for tests, only DAO maintainer will hold this token
     const tokenSupply = toBN(100000);
-    const oltContract = await OLToken.new(tokenSupply);
+    const tokenOwner = accounts[2];
+    const oltContract = await OLToken.new(tokenSupply, { from: tokenOwner });
 
     const { dao, adapters } = await deployDefaultDao({
       owner: daoOwner,
@@ -634,13 +631,12 @@ describe("Adapter - Voting", () => {
     // The DAO owner attempts to vote on the new proposal,
     // but since he is not a maintainer (does not hold OLT tokens) the voting weight is zero
     // so the vote should not be allowed
-    await expectRevert(
+    await expect(
       voting.submitVote(dao.address, proposalId, 1, {
         from: daoOwner,
         gasPrice: toBN("0"),
-      }),
-      "vote not allowed"
-    );
+      })
+    ).to.be.revertedWith("vote not allowed");
   });
 
   it("should not be possible to update a DAO configuration if you are a member & maintainer that holds an external token which not implements getPriorAmount function", async () => {
@@ -699,12 +695,11 @@ describe("Adapter - Voting", () => {
     // The DAO owner attempts to vote on the new proposal,
     // but since he is not a maintainer (does not hold OLT tokens) the voting weight is zero
     // so the vote should not be allowed
-    await expectRevert(
+    await expect(
       voting.submitVote(dao.address, proposalId, 1, {
         from: daoOwner,
         gasPrice: toBN("0"),
-      }),
-      "getPriorAmount not implemented"
-    );
+      })
+    ).to.be.revertedWith("getPriorAmount not implemented");
   });
 });

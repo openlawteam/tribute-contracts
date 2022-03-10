@@ -27,7 +27,11 @@ SOFTWARE.
 const expectEvent = require("@openzeppelin/test-helpers/src/expectEvent");
 const expectRevert = require("@openzeppelin/test-helpers/src/expectRevert");
 const { sha3, toBN } = require("../../utils/contract-util");
-const { accounts, expect, DaoArtifacts } = require("../../utils/hardhat-test-util");
+const {
+  accounts,
+  expect,
+  DaoArtifacts,
+} = require("../../utils/hardhat-test-util");
 const { ContractType } = require("../../configs/contracts.config");
 
 describe("Utils - DaoArtifacts", () => {

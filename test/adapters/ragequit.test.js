@@ -24,6 +24,7 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
  */
+const { expect } = require("chai");
 const {
   toBN,
   toWei,
@@ -42,9 +43,7 @@ const {
   revertChainSnapshot,
   proposalIdGenerator,
   advanceTime,
-  accounts,
-  expectRevert,
-  expect,
+  getAccounts,
   OLToken,
   web3,
 } = require("../../utils/hardhat-test-util");
@@ -52,14 +51,18 @@ const {
 const { onboardingNewMember } = require("../../utils/test-util");
 
 const proposalCounter = proposalIdGenerator().generator;
-const owner = accounts[1];
 
 function getProposalCounter() {
   return proposalCounter().next().value;
 }
 
 describe("Adapter - Ragequit", () => {
+  let accounts, owner;
+
   before("deploy dao", async () => {
+    accounts = await getAccounts();
+    owner = accounts[0];
+
     const { dao, adapters, extensions } = await deployDefaultDao({ owner });
     this.dao = dao;
     this.adapters = adapters;
@@ -100,7 +103,7 @@ describe("Adapter - Ragequit", () => {
 
     //Ragequit
     const nonMember = accounts[4];
-    await expectRevert(
+    await expect(
       this.adapters.ragequit.ragequit(
         this.dao.address,
         units,
@@ -110,9 +113,8 @@ describe("Adapter - Ragequit", () => {
           from: nonMember,
           gasPrice: toBN("0"),
         }
-      ),
-      "insufficient units"
-    );
+      )
+    ).to.be.revertedWith("insufficient units");
   });
 
   it("should not be possible for a member to ragequit when the member does not have enough units", async () => {
@@ -142,7 +144,7 @@ describe("Adapter - Ragequit", () => {
     expect(units.toString()).equal("10000000000000000");
 
     //Ragequit
-    await expectRevert(
+    await expect(
       this.adapters.ragequit.ragequit(
         this.dao.address,
         toBN("100000000000000001"),
@@ -152,9 +154,8 @@ describe("Adapter - Ragequit", () => {
           from: newMember,
           gasPrice: toBN("0"),
         }
-      ),
-      "insufficient units"
-    );
+      )
+    ).to.be.revertedWith("insufficient units");
   });
 
   it("should be possible for a member to ragequit when the member has not voted on any proposals yet", async () => {
@@ -331,7 +332,6 @@ describe("Adapter - Ragequit", () => {
   });
 
   it("should be possible for an Advisor to ragequit", async () => {
-    const owner = accounts[1];
     const advisorAccount = accounts[2];
     const lootUnitPrice = 10;
     const chunkSize = 5;
@@ -466,7 +466,7 @@ describe("Adapter - Ragequit", () => {
 
     //Member attempts to sponsor a proposal after the ragequit
     proposalId = getProposalCounter();
-    await expectRevert(
+    await expect(
       onboardingNewMember(
         proposalId,
         this.dao,
@@ -476,17 +476,15 @@ describe("Adapter - Ragequit", () => {
         memberAddr,
         unitPrice,
         UNITS
-      ),
-      "onlyMember"
-    );
+      )
+    ).to.be.revertedWith("onlyMember");
 
-    await expectRevert(
+    await expect(
       voting.submitVote(this.dao.address, proposalId, 1, {
         from: memberAddr,
         gasPrice: toBN("0"),
-      }),
-      "onlyMember"
-    );
+      })
+    ).to.be.revertedWith("onlyMember");
   });
 
   it("should not be possible to ragequit if the member have provided an invalid token", async () => {
@@ -498,7 +496,7 @@ describe("Adapter - Ragequit", () => {
 
     //Ragequit - Attempts to ragequit using an invalid token to receive funds
     let invalidToken = accounts[7];
-    await expectRevert(
+    await expect(
       this.adapters.ragequit.ragequit(
         this.dao.address,
         memberUnits,
@@ -508,9 +506,8 @@ describe("Adapter - Ragequit", () => {
           from: owner,
           gasPrice: toBN("0"),
         }
-      ),
-      "token not allowed"
-    );
+      )
+    ).to.be.revertedWith("token not allowed");
   });
 
   it("should not be possible to ragequit if there are no tokens to receive the funds", async () => {
@@ -539,7 +536,7 @@ describe("Adapter - Ragequit", () => {
     const memberUnits = await bank.balanceOf(newMember, UNITS);
     expect(memberUnits.toString()).equal("10000000000000000");
 
-    await expectRevert(
+    await expect(
       this.adapters.ragequit.ragequit(
         this.dao.address,
         memberUnits,
@@ -549,9 +546,8 @@ describe("Adapter - Ragequit", () => {
           from: newMember,
           gasPrice: toBN("0"),
         }
-      ),
-      "duplicate token"
-    );
+      )
+    ).to.be.revertedWith("duplicate token");
   });
 
   it("should not be possible to ragequit if there is a duplicate token", async () => {
@@ -575,7 +571,7 @@ describe("Adapter - Ragequit", () => {
     const memberAUnits = await bank.balanceOf(memberA, UNITS);
     expect(memberAUnits.toString()).equal("10000000000000000");
 
-    await expectRevert(
+    await expect(
       this.adapters.ragequit.ragequit(
         this.dao.address,
         memberAUnits,
@@ -585,35 +581,32 @@ describe("Adapter - Ragequit", () => {
           from: memberA,
           gasPrice: toBN("0"),
         }
-      ),
-      "missing tokens"
-    );
+      )
+    ).to.be.revertedWith("missing tokens");
   });
 
   it("should not be possible to send ETH to the adapter via receive function", async () => {
     const adapter = this.adapters.ragequit;
-    await expectRevert(
+    await expect(
       web3.eth.sendTransaction({
         to: adapter.address,
         from: owner,
         gasPrice: toBN("0"),
         value: toWei("1"),
-      }),
-      "revert"
-    );
+      })
+    ).to.be.revertedWith("revert");
   });
 
   it("should not be possible to send ETH to the adapter via fallback function", async () => {
     const adapter = this.adapters.ragequit;
-    await expectRevert(
+    await expect(
       web3.eth.sendTransaction({
         to: adapter.address,
         from: owner,
         gasPrice: toBN("0"),
         value: toWei("1"),
         data: fromAscii("should go to fallback func"),
-      }),
-      "revert"
-    );
+      })
+    ).to.be.revertedWith("revert");
   });
 });

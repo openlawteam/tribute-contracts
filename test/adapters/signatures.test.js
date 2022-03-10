@@ -24,6 +24,7 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
  */
+const { expect } = require("chai");
 const {
   toBN,
   toWei,
@@ -37,15 +38,12 @@ const {
   revertChainSnapshot,
   proposalIdGenerator,
   advanceTime,
-  accounts,
-  expect,
-  expectRevert,
+  getAccounts,
   web3,
 } = require("../../utils/hardhat-test-util");
 
 const { checkSignature } = require("../../utils/test-util");
 
-const daoOwner = accounts[1];
 const proposalCounter = proposalIdGenerator().generator;
 
 const arbitrarySignature =
@@ -63,7 +61,12 @@ function getProposalCounter() {
 }
 
 describe("Adapter - ERC1271", () => {
+  let accounts, daoOwner;
+
   before("deploy dao", async () => {
+    accounts = await getAccounts();
+    daoOwner = accounts[0];
+
     const { dao, adapters, extensions } = await deployDefaultDao({
       owner: daoOwner,
     });
@@ -105,14 +108,12 @@ describe("Adapter - ERC1271", () => {
     });
 
     //should not be able to process before the voting period has ended
-    try {
-      await signatures.processProposal(this.dao.address, proposalId, {
+    await expect(
+      signatures.processProposal(this.dao.address, proposalId, {
         from: daoOwner,
         gasPrice: toBN("0"),
-      });
-    } catch (err) {
-      expect(err.reason).equal("proposal needs to pass");
-    }
+      })
+    ).to.be.revertedWith("proposal needs to pass");
 
     await advanceTime(10000);
     await signatures.processProposal(this.dao.address, proposalId, {
@@ -157,45 +158,40 @@ describe("Adapter - ERC1271", () => {
 
     await advanceTime(10000);
 
-    try {
-      await signatures.processProposal(this.dao.address, proposalId, {
+    await expect(
+      signatures.processProposal(this.dao.address, proposalId, {
         from: daoOwner,
         gasPrice: toBN("0"),
-      });
-    } catch (err) {
-      expect(err.reason).equal("proposal needs to pass");
-    }
+      })
+    ).to.be.revertedWith("proposal needs to pass");
 
-    await expectRevert(
-      erc1271.isValidSignature(arbitraryMsgHash, arbitrarySignature),
-      "erc1271::invalid signature"
-    );
+    await expect(
+      erc1271.isValidSignature(arbitraryMsgHash, arbitrarySignature)
+    ).to.be.revertedWith("erc1271::invalid signature");
   });
 
   it("should not be possible to send ETH to the adapter via receive function", async () => {
     const adapter = this.adapters.signatures;
-    await expectRevert(
+    await expect(
       web3.eth.sendTransaction({
         to: adapter.address,
         from: daoOwner,
         gasPrice: toBN("0"),
         value: toWei("1"),
-      }),
-      "revert"
-    );
+      })
+    ).to.be.revertedWith("revert");
   });
 
   it("should not be possible to send ETH to the adapter via fallback function", async () => {
     const adapter = this.adapters.signatures;
-    await expectRevert(
+    await expect(
       web3.eth.sendTransaction({
         to: adapter.address,
         from: daoOwner,
         gasPrice: toBN("0"),
         value: toWei("1"),
         data: fromAscii("should go to fallback func"),
-      }),
-      "revert"
-    );
+      })
+    ).to.be.revertedWith("revert");
   });
 });
