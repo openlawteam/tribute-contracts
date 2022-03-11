@@ -179,6 +179,137 @@ describe("Extension - ERC1155", () => {
     expect(holderBalance.toString()).equal((tokenValue * 2).toString());
   });
 
+  it("should be possible to batch collect NFTs if they are sent directly to the extension", async () => {
+    const nftOwnerA = accounts[2];
+    const nftOwnerB = accounts[3];
+
+    const dao = this.dao;
+    const erc1155Token = this.testContracts.erc1155TestToken;
+    const erc1155Ext = this.extensions.erc1155Ext;
+
+    await erc1155Token.mint(nftOwnerA, 1, 10, "0x0", {
+      from: daoOwner,
+      gasPrice: toBN("0"),
+    });
+    await erc1155Token.mint(nftOwnerA, 2, 1, "0x0", {
+      from: daoOwner,
+      gasPrice: toBN("0"),
+    });
+
+    await erc1155Token.setApprovalForAll(erc1155Ext.address, true, {
+      from: nftOwnerA,
+    });
+
+    await erc1155Token.safeBatchTransferFrom(
+      nftOwnerA,
+      erc1155Ext.address,
+      [1, 2], // token ids
+      [5, 1], // amounts for each tokenId
+      encodeDaoInfo(dao.address),
+      { from: nftOwnerA }
+    );
+
+    await erc1155Token.mint(nftOwnerB, 3, 2, "0x0", {
+      from: daoOwner,
+      gasPrice: toBN("0"),
+    });
+
+    await erc1155Token.mint(nftOwnerB, 4, 100, "0x0", {
+      from: daoOwner,
+      gasPrice: toBN("0"),
+    });
+
+    await erc1155Token.setApprovalForAll(erc1155Ext.address, true, {
+      from: nftOwnerB,
+    });
+
+    await erc1155Token.safeBatchTransferFrom(
+      nftOwnerB,
+      erc1155Ext.address,
+      [3, 4], // token ids
+      [2, 100], // amounts for each tokenId
+      encodeDaoInfo(dao.address),
+      { from: nftOwnerB }
+    );
+    const nftAddr = erc1155Token.address;
+
+    // Make sure the token ids were collected by the NFT Extension
+    expect((await erc1155Ext.getNFT(nftAddr, 0)).toString()).equal("1");
+    expect((await erc1155Ext.getNFT(nftAddr, 1)).toString()).equal("2");
+    expect((await erc1155Ext.getNFT(nftAddr, 2)).toString()).equal("3");
+    expect((await erc1155Ext.getNFT(nftAddr, 3)).toString()).equal("4");
+
+    // The are managed by the GUILD after it is collected via ERC1155 Extension,
+    // but the extension should the we keep track of the original owners
+    expect((await erc1155Ext.nbNFTOwners(nftAddr, 2)).toString()).equal("1");
+    expect((await erc1155Ext.getNFTOwner(nftAddr, 1, 0)).toLowerCase()).equal(
+      GUILD
+    );
+    expect((await erc1155Ext.getNFTOwner(nftAddr, 2, 0)).toLowerCase()).equal(
+      GUILD
+    );
+    expect((await erc1155Ext.getNFTOwner(nftAddr, 3, 0)).toLowerCase()).equal(
+      GUILD
+    );
+    expect((await erc1155Ext.getNFTOwner(nftAddr, 4, 0)).toLowerCase()).equal(
+      GUILD
+    );
+
+    // Check if the amounts were properly stored
+    expect(
+      (await erc1155Ext.getNFTIdAmount(GUILD, nftAddr, 1)).toString()
+    ).equal("5");
+    expect(
+      (await erc1155Ext.getNFTIdAmount(GUILD, nftAddr, 2)).toString()
+    ).equal("1");
+    expect(
+      (await erc1155Ext.getNFTIdAmount(GUILD, nftAddr, 3)).toString()
+    ).equal("2");
+    expect(
+      (await erc1155Ext.getNFTIdAmount(GUILD, nftAddr, 4)).toString()
+    ).equal("100");
+  });
+
+  it("should be possible to get the total number of NFT owners", async () => {
+    const nftOwner = accounts[2];
+    const dao = this.dao;
+    const erc1155Token = this.testContracts.erc1155TestToken;
+    const erc1155Ext = this.extensions.erc1155Ext;
+
+    await erc1155Token.mint(nftOwner, 1, 10, "0x0", {
+      from: daoOwner,
+      gasPrice: toBN("0"),
+    });
+    const pastEvents = await erc1155Token.getPastEvents();
+    const { id: tokenId } = pastEvents[0].returnValues;
+
+    const tokenValue = 3;
+    await erc1155Token.safeTransferFrom(
+      nftOwner,
+      erc1155Ext.address,
+      tokenId,
+      tokenValue,
+      encodeDaoInfo(dao.address),
+      { from: nftOwner }
+    );
+
+    const nbOfOwners = await erc1155Ext.nbNFTOwners(
+      erc1155Token.address,
+      tokenId
+    );
+    expect(nbOfOwners.toString()).equal("1");
+  });
+
+  it("should return 0 as the total number of NFT owners when the NFT collection is empty", async () => {
+    const erc1155TokenExtension = this.extensions.erc1155Ext;
+    const erc1155Token = this.testContracts.erc1155TestToken;
+    const nbOfOwners = await erc1155TokenExtension.nbNFTOwners(
+      erc1155Token.address,
+      1
+    );
+    expect(nbOfOwners.toString()).equal("0");
+  });
+
   it("should not be possible to do an internal transfer of the NFT to a non member", async () => {
     const erc1155TestToken = this.testContracts.erc1155TestToken;
     const bank = this.extensions.bankExt;
@@ -390,6 +521,149 @@ describe("Extension - ERC1155", () => {
         { from: nftOwner }
       )
     ).to.be.revertedWith("erc1155Ext::invalid amount");
+  });
+
+  it("should be possible to withdraw the NFT from the extension contract to the new owner account", async () => {
+    const erc1155TestToken = this.testContracts.erc1155TestToken;
+    const nftOwner = accounts[1];
+    const erc1155TokenExtension = this.extensions.erc1155Ext;
+    const erc1155TestAdapter = this.adapters.erc1155TestAdapter;
+
+    //create a test 1155 token
+    await erc1155TestToken.mint(nftOwner, 1, 10, "0x0", {
+      from: daoOwner,
+      gasPrice: toBN("0"),
+    });
+
+    const pastEvents = await erc1155TestToken.getPastEvents();
+    const { id } = pastEvents[0].returnValues;
+
+    // transfer from nft owner to the extension
+    await erc1155TestToken.safeTransferFrom(
+      nftOwner,
+      erc1155TokenExtension.address,
+      id,
+      2,
+      [],
+      {
+        from: nftOwner,
+        gasPrice: toBN("0"),
+      }
+    );
+
+    // Make sure it was collected
+    const nftAddr = await erc1155TokenExtension.getNFTAddress(0);
+    expect(nftAddr).equal(erc1155TestToken.address);
+    const nftId = await erc1155TokenExtension.getNFT(nftAddr, 0);
+    expect(nftId.toString()).equal(id.toString());
+
+    //check token balance of nftOwner after collection = -2
+    let balanceOfNftOwner = await erc1155TestToken.balanceOf(nftOwner, id);
+    expect(balanceOfNftOwner.toString()).equal("8");
+
+    //check token balance of the nftOwner inside the Extension = +2
+    let nftOwnerGuildBalance = await erc1155TokenExtension.getNFTIdAmount(
+      GUILD,
+      erc1155TestToken.address,
+      1
+    );
+    expect(nftOwnerGuildBalance.toString()).equal("2");
+    // If the NFT was properly saved, the guild must be the new owner of the NFT
+    let newOwner = await erc1155TokenExtension.getNFTOwner(
+      erc1155TestToken.address,
+      1,
+      0
+    );
+    expect(newOwner.toLowerCase()).equal(GUILD);
+
+    await erc1155TestAdapter.withdraw(
+      this.dao.address,
+      erc1155TestToken.address,
+      id, //tokenId
+      2, //amount
+      { from: nftOwner }
+    );
+
+    //check token balance of nftOwner after collection = +2
+    balanceOfNftOwner = await erc1155TestToken.balanceOf(nftOwner, id);
+    expect(balanceOfNftOwner.toString()).equal("10");
+
+    //check token balance of the nftOwner inside the Extension = -2
+    nftOwnerGuildBalance = await erc1155TokenExtension.getNFTIdAmount(
+      GUILD,
+      erc1155TestToken.address,
+      1
+    );
+    expect(nftOwnerGuildBalance.toString()).equal("0");
+    // The nft was moved to the new owner account, so the GUILD should not be the NFT owner anymore
+    // The getNFTOwner must revert because there is no NFT asset for the GUILD owner at index 0
+    await expect(
+      erc1155TokenExtension.getNFTOwner(erc1155TestToken.address, 1, 0)
+    ).to.be.reverted;
+  });
+
+  it("should not be possible to batch collect NFTs if there are more token ids than token amounts", async () => {
+    const nftOwnerA = accounts[2];
+
+    const dao = this.dao;
+    const erc1155Token = this.testContracts.erc1155TestToken;
+    const erc1155Ext = this.extensions.erc1155Ext;
+
+    await erc1155Token.mint(nftOwnerA, 1, 10, "0x0", {
+      from: daoOwner,
+      gasPrice: toBN("0"),
+    });
+    await erc1155Token.mint(nftOwnerA, 2, 1, "0x0", {
+      from: daoOwner,
+      gasPrice: toBN("0"),
+    });
+
+    await erc1155Token.setApprovalForAll(erc1155Ext.address, true, {
+      from: nftOwnerA,
+    });
+
+    await expect(
+      erc1155Token.safeBatchTransferFrom(
+        nftOwnerA,
+        erc1155Ext.address,
+        [1, 2], // token ids
+        [5], // amounts for each tokenId
+        encodeDaoInfo(dao.address),
+        { from: nftOwnerA }
+      )
+    ).to.be.revertedWith("ERC1155: ids and amounts length mismatch");
+  });
+
+  it("should not be possible to batch collect NFTs if there are more token amounts than token ids", async () => {
+    const nftOwnerA = accounts[2];
+
+    const dao = this.dao;
+    const erc1155Token = this.testContracts.erc1155TestToken;
+    const erc1155Ext = this.extensions.erc1155Ext;
+
+    await erc1155Token.mint(nftOwnerA, 1, 10, "0x0", {
+      from: daoOwner,
+      gasPrice: toBN("0"),
+    });
+    await erc1155Token.mint(nftOwnerA, 2, 1, "0x0", {
+      from: daoOwner,
+      gasPrice: toBN("0"),
+    });
+
+    await erc1155Token.setApprovalForAll(erc1155Ext.address, true, {
+      from: nftOwnerA,
+    });
+
+    await expect(
+      erc1155Token.safeBatchTransferFrom(
+        nftOwnerA,
+        erc1155Ext.address,
+        [1], // token ids
+        [5, 1], // amounts for each tokenId
+        encodeDaoInfo(dao.address),
+        { from: nftOwnerA }
+      )
+    ).to.be.revertedWith("ERC1155: ids and amounts length mismatch");
   });
 
   it("should not be possible to send ETH to the extension via receive function", async () => {

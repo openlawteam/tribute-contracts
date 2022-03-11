@@ -151,9 +151,9 @@ contract ERC1155TokenExtension is IExtension, IERC1155Receiver {
         // Updates the mappings if the amount of tokenId in the Extension is 0
         // It means the GUILD/Extension does not hold that token id anymore.
         if (ownerTokenIdBalance == 0) {
-            delete _nftTracker[newOwner][nftAddr][nftTokenId];
+            delete _nftTracker[from][nftAddr][nftTokenId];
             //slither-disable-next-line unused-return
-            _ownership[getNFTId(nftAddr, nftTokenId)].remove(newOwner);
+            _ownership[getNFTId(nftAddr, nftTokenId)].remove(from);
             //slither-disable-next-line unused-return
             _nfts[nftAddr].remove(nftTokenId);
             // If there are 0 tokenIds for the NFT address, remove the NFT from the collection
