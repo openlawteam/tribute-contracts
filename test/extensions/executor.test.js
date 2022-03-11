@@ -102,7 +102,7 @@ describe("Extension - Executor", () => {
     const proxToken = await ProxTokenContract.new();
     expect(proxToken).to.not.be.null;
 
-    const res = await expect(
+    await expect(
       erc20Minter.execute(dao.address, proxToken.address, toBN("10000"), {
         from: daoOwner,
       })

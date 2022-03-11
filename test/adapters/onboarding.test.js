@@ -249,8 +249,7 @@ describe("Adapter - Onboarding", () => {
     const voting = adapters.voting;
 
     // Transfer OLTs to myAccount
-    const initialTokenBalance = 100;
-    await oltContract.transfer(daoOwner, initialTokenBalance);
+    const initialTokenBalance = toBN("10000000000");
     let myAccountTokenBalance = await oltContract.balanceOf.call(daoOwner);
     expect(myAccountTokenBalance.toString()).to.be.equal(
       initialTokenBalance.toString()
@@ -294,7 +293,7 @@ describe("Adapter - Onboarding", () => {
         from: daoOwner,
         gasPrice: toBN("0"),
       })
-    ).to.be.revertedWith("RC20: transfer amount exceeds allowance.");
+    ).to.be.revertedWith("ERC20: transfer amount exceeds allowance");
 
     // Pre-approve spender (onboarding adapter) to transfer proposer tokens
     await oltContract.approve(onboarding.address, tokenAmount, {

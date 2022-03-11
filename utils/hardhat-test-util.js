@@ -34,7 +34,6 @@ const {
   UNITS,
   toBN,
 } = require("./contract-util.js");
-
 const chai = require("chai");
 const { expect } = require("chai");
 const { solidity } = require("ethereum-waffle");
@@ -47,6 +46,17 @@ const {
 const { ContractType } = require("../configs/contracts.config");
 import hre from "hardhat";
 
+const expectEvent = async (txPromise, event, ...args) => {
+  const { logs } = await txPromise;
+  const log = logs[0];
+  expect(log.event).to.be.equal(event);
+  args.forEach((arg, i) => expect(log.args[i].toString()).to.be.equal(arg));
+};
+
+const txSigner = (signer, contract) => {
+  return new hre.ethers.Contract(contract.address, contract.abi, signer);
+};
+
 const getBalance = async (account) => {
   const balance = await web3.eth.getBalance(account);
   return toBN(balance);
@@ -56,7 +66,9 @@ const attach = async (contractInterface, address) => {
   const factory = await hre.ethers.getContractFactory(
     contractInterface.contractName
   );
-  return factory.attach(address);
+  const truffleContract = factory.attach(address);
+  // Add the `connect` function to be able to switch the tx signer
+  return { ...truffleContract, abi: contractInterface.abi };
 };
 
 const getSigners = async () => {
@@ -99,6 +111,7 @@ const deployFunction = async (contractInterface, args, from) => {
       instance = await contractInterface.new({ from: f });
     }
   }
+
   return { ...instance, configs: contractConfig };
 };
 
@@ -357,6 +370,8 @@ module.exports = (() => {
     web3: hre.web3,
     provider: hre.network.provider,
     expect,
+    txSigner,
+    expectEvent,
     getAccounts,
     getSigners,
     getBalance,

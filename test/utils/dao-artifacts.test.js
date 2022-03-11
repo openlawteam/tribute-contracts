@@ -26,7 +26,11 @@ SOFTWARE.
  */
 const { expect } = require("chai");
 const { sha3, toBN } = require("../../utils/contract-util");
-const { getAccounts, DaoArtifacts } = require("../../utils/hardhat-test-util");
+const {
+  expectEvent,
+  getAccounts,
+  DaoArtifacts,
+} = require("../../utils/hardhat-test-util");
 const { ContractType } = require("../../configs/contracts.config");
 
 describe("Utils - DaoArtifacts", () => {
@@ -47,19 +51,22 @@ describe("Utils - DaoArtifacts", () => {
 
   it("should be possible add a new adapter to the dao artifacts storage", async () => {
     const daoArtifacts = await DaoArtifacts.new();
-    const owner = accounts[2];
     const adapterAddress = accounts[9];
-    const res = await expect(
-      daoArtifacts.addArtifact(
-        sha3("adapter1"),
-        sha3("v1.0.0"),
-        adapterAddress,
-        ContractType.Adapter,
-        { from: owner }
-      )
-    )
-      .to.emit(daoArtifacts, "NewArtifact")
-      .withArgs(sha3("adapter1"), owner, sha3("v1.0.0"), adapterAddress, "3");
+    const call = daoArtifacts.addArtifact(
+      sha3("adapter1"),
+      sha3("v1.0.0"),
+      adapterAddress,
+      ContractType.Adapter
+    );
+    await expectEvent(
+      call,
+      "NewArtifact",
+      sha3("adapter1"),
+      daoOwner,
+      sha3("v1.0.0"),
+      adapterAddress,
+      "3"
+    );
   });
 
   it("should be possible get the adapter address from the dao artifacts storage", async () => {
@@ -88,23 +95,22 @@ describe("Utils - DaoArtifacts", () => {
     const daoArtifacts = await DaoArtifacts.new();
     const owner = accounts[2];
     const extensionAddress = accounts[9];
-    const res = await expect(
-      daoArtifacts.addArtifact(
-        sha3("extFactory1"),
-        sha3("v1.0.0"),
-        extensionAddress,
-        ContractType.Factory,
-        { from: owner }
-      )
-    )
-      .to.emit(daoArtifacts, "NewArtifact")
-      .withArgs(
-        sha3("extFactory1"),
-        owner,
-        sha3("v1.0.0"),
-        extensionAddress,
-        "1"
-      );
+    const call = daoArtifacts.addArtifact(
+      sha3("extFactory1"),
+      sha3("v1.0.0"),
+      extensionAddress,
+      ContractType.Factory,
+      { from: owner }
+    );
+    await expectEvent(
+      call,
+      "NewArtifact",
+      sha3("extFactory1"),
+      owner,
+      sha3("v1.0.0"),
+      extensionAddress,
+      "1"
+    );
   });
 
   it("should be possible get the extension factory address from the dao artifacts storage", async () => {
@@ -194,7 +200,7 @@ describe("Utils - DaoArtifacts", () => {
         ],
         { from: anotherUser }
       )
-    ).to.be.revertedWith("Ownable: caller is not the owner.");
+    ).to.be.revertedWith("Ownable: caller is not the owner");
   });
 
   it("should be possible to execute a batch update with up to 20 artifacts", async () => {
