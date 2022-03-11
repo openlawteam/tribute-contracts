@@ -32,6 +32,7 @@ const {
   ERC20MinterContract,
   ProxTokenContract,
   getAccounts,
+  expectEvent,
   web3,
 } = require("../../utils/hardhat-test-util");
 
@@ -101,19 +102,29 @@ describe("Extension - Executor", () => {
 
     const proxToken = await ProxTokenContract.new();
     expect(proxToken).to.not.be.null;
-
-    await expect(
-      erc20Minter.execute(dao.address, proxToken.address, toBN("10000"), {
+    const call = erc20Minter.execute(
+      dao.address,
+      proxToken.address,
+      toBN("10000"),
+      {
         from: daoOwner,
-      })
-    )
-      .to.emit(erc20Minter, "Minted")
-      .withArgs(erc20Minter.address, "10000")
-      // The adapter should call itself via proxy and mint the token
-      // The token mint call should be triggered from the adapter, but the
-      // sender is actually the proxy executor
-      .to.emit(proxToken, "MintedProxToken")
-      .withArgs(executorExt.address, "10000");
+      }
+    );
+    // The adapter should call itself via proxy and mint the token
+    await expectEvent(
+      call,
+      "Minted",
+      erc20Minter.address,
+      proxToken.address,
+      "10000"
+    );
+    // The token mint call should be triggered from the adapter, but the
+    // sender is actually the proxy executor contract
+    const events = await proxToken.getPastEvents();
+    const mintEvent = events[1];
+    expect(mintEvent.event).to.be.equal("MintedProxToken");
+    expect(mintEvent.args[0]).to.be.equal(executorExt.address);
+    expect(mintEvent.args[1].toString()).to.be.equal("10000");
   });
 
   it("should not be possible to execute a delegate call without the ACL permission", async () => {
