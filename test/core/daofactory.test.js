@@ -20,23 +20,26 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
  */
-
+const { expect } = require("chai");
 const { toBN } = require("../../utils/contract-util");
-
 const { cloneDao } = require("../../utils/deployment-util");
 
 const {
-  accounts,
-  expect,
+  getAccounts,
   DaoRegistry,
   DaoFactory,
   deployFunction,
   attachFunction,
-} = require("../../utils/oz-util");
+} = require("../../utils/hardhat-test-util");
 
 describe("Core - DaoFactory", () => {
-  const owner = accounts[1];
-  const anotherOwner = accounts[2];
+  let accounts, owner, anotherOwner;
+
+  before("deploy dao", async () => {
+    accounts = await getAccounts();
+    owner = accounts[0];
+    anotherOwner = accounts[2];
+  });
 
   const createIdentityDao = () => {
     return DaoRegistry.new({

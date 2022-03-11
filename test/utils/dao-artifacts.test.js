@@ -24,13 +24,23 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
  */
-const expectEvent = require("@openzeppelin/test-helpers/src/expectEvent");
-const expectRevert = require("@openzeppelin/test-helpers/src/expectRevert");
+const { expect } = require("chai");
 const { sha3, toBN } = require("../../utils/contract-util");
-const { accounts, expect, DaoArtifacts } = require("../../utils/oz-util");
+const {
+  expectEvent,
+  getAccounts,
+  DaoArtifacts,
+} = require("../../utils/hardhat-test-util");
 const { ContractType } = require("../../configs/contracts.config");
 
 describe("Utils - DaoArtifacts", () => {
+  let accounts, daoOwner;
+
+  before("deploy dao", async () => {
+    accounts = await getAccounts();
+    daoOwner = accounts[0];
+  });
+
   it("should be possible to create a dao artifacts contract", async () => {
     const daoArtifacts = await DaoArtifacts.new();
     expect(daoArtifacts.address).to.not.be.null;
@@ -41,22 +51,22 @@ describe("Utils - DaoArtifacts", () => {
 
   it("should be possible add a new adapter to the dao artifacts storage", async () => {
     const daoArtifacts = await DaoArtifacts.new();
-    const owner = accounts[2];
     const adapterAddress = accounts[9];
-    const res = await daoArtifacts.addArtifact(
+    const call = daoArtifacts.addArtifact(
       sha3("adapter1"),
       sha3("v1.0.0"),
       adapterAddress,
-      ContractType.Adapter,
-      { from: owner }
+      ContractType.Adapter
     );
-    expectEvent(res, "NewArtifact", {
-      _id: sha3("adapter1"),
-      _owner: owner,
-      _version: sha3("v1.0.0"),
-      _address: adapterAddress,
-      _type: "3",
-    });
+    await expectEvent(
+      call,
+      "NewArtifact",
+      sha3("adapter1"),
+      daoOwner,
+      sha3("v1.0.0"),
+      adapterAddress,
+      "3"
+    );
   });
 
   it("should be possible get the adapter address from the dao artifacts storage", async () => {
@@ -85,20 +95,22 @@ describe("Utils - DaoArtifacts", () => {
     const daoArtifacts = await DaoArtifacts.new();
     const owner = accounts[2];
     const extensionAddress = accounts[9];
-    const res = await daoArtifacts.addArtifact(
+    const call = daoArtifacts.addArtifact(
       sha3("extFactory1"),
       sha3("v1.0.0"),
       extensionAddress,
       ContractType.Factory,
       { from: owner }
     );
-    expectEvent(res, "NewArtifact", {
-      _id: sha3("extFactory1"),
-      _owner: owner,
-      _version: sha3("v1.0.0"),
-      _address: extensionAddress,
-      _type: "1",
-    });
+    await expectEvent(
+      call,
+      "NewArtifact",
+      sha3("extFactory1"),
+      owner,
+      sha3("v1.0.0"),
+      extensionAddress,
+      "1"
+    );
   });
 
   it("should be possible get the extension factory address from the dao artifacts storage", async () => {
@@ -168,7 +180,7 @@ describe("Utils - DaoArtifacts", () => {
     const owner = accounts[2];
     const anotherUser = accounts[3];
     const daoArtifacts = await DaoArtifacts.new({ from: owner });
-    await expectRevert(
+    await expect(
       daoArtifacts.updateArtifacts(
         [
           {
@@ -187,9 +199,8 @@ describe("Utils - DaoArtifacts", () => {
           },
         ],
         { from: anotherUser }
-      ),
-      "Ownable: caller is not the owner."
-    );
+      )
+    ).to.be.revertedWith("Ownable: caller is not the owner");
   });
 
   it("should be possible to execute a batch update with up to 20 artifacts", async () => {
@@ -223,9 +234,8 @@ describe("Utils - DaoArtifacts", () => {
       });
     }
 
-    await expectRevert(
-      daoArtifacts.updateArtifacts(artifacts, { from: owner }),
-      "Maximum artifacts limit exceeded"
-    );
+    await expect(
+      daoArtifacts.updateArtifacts(artifacts, { from: owner })
+    ).to.be.revertedWith("Maximum artifacts limit exceeded");
   });
 });

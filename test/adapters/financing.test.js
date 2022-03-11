@@ -24,6 +24,7 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
  */
+const { expect } = require("chai");
 const {
   toBN,
   toWei,
@@ -41,20 +42,13 @@ const {
   revertChainSnapshot,
   proposalIdGenerator,
   advanceTime,
-  accounts,
-  expect,
-  expectRevert,
+  getAccounts,
   web3,
   getBalance,
-} = require("../../utils/oz-util");
+} = require("../../utils/hardhat-test-util");
 
 const { checkBalance } = require("../../utils/test-util");
 
-const remaining = unitPrice.sub(toBN("50000000000000"));
-const daoOwner = accounts[1];
-const applicant = accounts[2];
-const newMember = accounts[3];
-const expectedGuildBalance = toBN("1200000000000000000");
 const proposalCounter = proposalIdGenerator().generator;
 
 function getProposalCounter() {
@@ -62,7 +56,17 @@ function getProposalCounter() {
 }
 
 describe("Adapter - Financing", () => {
+  let accounts, daoOwner, applicant, newMember;
+
+  const remaining = unitPrice.sub(toBN("50000000000000"));
+  const expectedGuildBalance = toBN("1200000000000000000");
+
   before("deploy dao", async () => {
+    accounts = await getAccounts();
+    daoOwner = accounts[0];
+    applicant = accounts[2];
+    newMember = accounts[3];
+
     const { dao, adapters, extensions } = await deployDefaultDao({
       owner: daoOwner,
     });
@@ -105,14 +109,13 @@ describe("Adapter - Financing", () => {
       gasPrice: toBN("0"),
     });
     //should not be able to process before the voting period has ended
-    await expectRevert(
+    await expect(
       onboarding.processProposal(this.dao.address, proposalId, {
         from: daoOwner,
         value: unitPrice.mul(toBN(10)).add(remaining),
         gasPrice: toBN("0"),
-      }),
-      "proposal has not been voted on yet"
-    );
+      })
+    ).to.be.revertedWith("proposal has not been voted on yet");
 
     await advanceTime(10000);
     await onboarding.processProposal(this.dao.address, proposalId, {
@@ -231,13 +234,12 @@ describe("Adapter - Financing", () => {
 
     //Process Financing proposal after voting
     await advanceTime(10000);
-    await expectRevert(
+    await expect(
       financing.processProposal(this.dao.address, proposalId, {
         from: daoOwner,
         gasPrice: toBN("0"),
-      }),
-      "proposal needs to pass"
-    );
+      })
+    ).to.be.revertedWith("proposal needs to pass");
   });
 
   it("should not be possible to submit a proposal with a token that is not allowed", async () => {
@@ -276,7 +278,7 @@ describe("Adapter - Financing", () => {
     const invalidToken = "0x6941a80e1a034f57ed3b1d642fc58ddcb91e2596";
     //Create Financing Request with a token that is not allowed
     let requestedAmount = toBN(50000);
-    await expectRevert(
+    await expect(
       financing.submitProposal(
         this.dao.address,
         proposalId,
@@ -284,9 +286,8 @@ describe("Adapter - Financing", () => {
         invalidToken,
         requestedAmount,
         fromUtf8("")
-      ),
-      "token not allowed"
-    );
+      )
+    ).to.be.revertedWith("token not allowed");
   });
 
   it("should not be possible to submit a proposal to request funding with an amount.toEqual to zero", async () => {
@@ -324,7 +325,7 @@ describe("Adapter - Financing", () => {
     proposalId = getProposalCounter();
     // Create Financing Request with amount = 0
     let requestedAmount = toBN(0);
-    await expectRevert(
+    await expect(
       financing.submitProposal(
         this.dao.address,
         proposalId,
@@ -332,16 +333,15 @@ describe("Adapter - Financing", () => {
         ETH_TOKEN,
         requestedAmount,
         fromUtf8("")
-      ),
-      "invalid requested amount"
-    );
+      )
+    ).to.be.revertedWith("invalid requested amount");
   });
 
   it("should not be possible to request funding with an invalid proposal id", async () => {
     const financing = this.adapters.financing;
 
     let invalidProposalId = "0x0";
-    await expectRevert(
+    await expect(
       financing.submitProposal(
         this.dao.address,
         invalidProposalId,
@@ -349,9 +349,8 @@ describe("Adapter - Financing", () => {
         ETH_TOKEN,
         toBN(10),
         fromUtf8("")
-      ),
-      "invalid proposalId"
-    );
+      )
+    ).to.be.revertedWith("invalid proposalId");
   });
 
   it("should not be possible to reuse a proposalId", async () => {
@@ -375,7 +374,7 @@ describe("Adapter - Financing", () => {
     );
 
     let reusedProposalId = proposalId;
-    await expectRevert(
+    await expect(
       financing.submitProposal(
         this.dao.address,
         reusedProposalId,
@@ -383,46 +382,42 @@ describe("Adapter - Financing", () => {
         ETH_TOKEN,
         toBN(50000),
         fromUtf8("")
-      ),
-      "proposalId must be unique"
-    );
+      )
+    ).to.be.revertedWith("proposalId must be unique");
   });
 
   it("should not be possible to process a proposal that does not exist", async () => {
     let proposalId = getProposalCounter();
-    await expectRevert(
+    await expect(
       this.adapters.financing.processProposal(this.dao.address, proposalId, {
         from: daoOwner,
         gasPrice: toBN("0"),
-      }),
-      "adapter not found"
-    );
+      })
+    ).to.be.revertedWith("adapter not found");
   });
 
   it("should not be possible to send ETH to the adapter via receive function", async () => {
     const adapter = this.adapters.financing;
-    await expectRevert(
+    await expect(
       web3.eth.sendTransaction({
         to: adapter.address,
         from: daoOwner,
         gasPrice: toBN("0"),
         value: toWei("1"),
-      }),
-      "revert"
-    );
+      })
+    ).to.be.revertedWith("revert");
   });
 
   it("should not be possible to send ETH to the adapter via fallback function", async () => {
     const adapter = this.adapters.financing;
-    await expectRevert(
+    await expect(
       web3.eth.sendTransaction({
         to: adapter.address,
         from: daoOwner,
         gasPrice: toBN("0"),
         value: toWei("1"),
         data: fromAscii("should go to fallback func"),
-      }),
-      "revert"
-    );
+      })
+    ).to.be.revertedWith("revert");
   });
 });

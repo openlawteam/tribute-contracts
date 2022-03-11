@@ -24,6 +24,7 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
  */
+const { expect } = require("chai");
 const {
   sha3,
   toBN,
@@ -38,11 +39,9 @@ const {
   deployDefaultDao,
   takeChainSnapshot,
   revertChainSnapshot,
-  accounts,
-  expectRevert,
-  expect,
+  getAccounts,
   web3,
-} = require("../../utils/oz-util");
+} = require("../../utils/hardhat-test-util");
 
 const { checkBalance } = require("../../utils/test-util");
 
@@ -52,16 +51,21 @@ const {
 } = require("../../utils/offchain-voting-util");
 
 const signer = {
-  address: "0x7D8cad0bbD68deb352C33e80fccd4D8e88b4aBb8",
-  privKey: "c150429d49e8799f119434acd3f816f299a5c7e3891455ee12269cb47a5f987c",
+  address: "0x90F8bf6A479f320ead074411a4B0e7944Ea8c9C1",
+  privKey: "0x4f3edf983ac636a65a842ce7c78d9aa706d3b113bce9c46f30d7d21715b23b1d",
 };
 
-const daoOwner = accounts[1];
-
 describe("Adapter - Coupon Onboarding", () => {
+  let accounts, daoOwner;
+  const chainId = 1337;
+
   before("deploy dao", async () => {
+    accounts = await getAccounts();
+    daoOwner = accounts[0];
+
     const { dao, adapters, extensions } = await deployDefaultDao({
       owner: daoOwner,
+      couponCreatorAddress: signer.address,
     });
     this.dao = dao;
     this.adapters = adapters;
@@ -76,7 +80,6 @@ describe("Adapter - Coupon Onboarding", () => {
 
   it("should be possible to join a DAO with a valid coupon", async () => {
     const otherAccount = accounts[2];
-
     const signerUtil = SigUtilSigner(signer.privKey);
 
     const dao = this.dao;
@@ -100,7 +103,7 @@ describe("Adapter - Coupon Onboarding", () => {
       couponData,
       dao.address,
       couponOnboarding.address,
-      1
+      chainId
     );
     let solHash = await couponOnboarding.hashCouponMessage(
       dao.address,
@@ -112,16 +115,8 @@ describe("Adapter - Coupon Onboarding", () => {
       couponData,
       dao.address,
       couponOnboarding.address,
-      1
+      chainId
     );
-
-    const isValid = await couponOnboarding.isValidSignature(
-      signer.address,
-      jsHash,
-      signature
-    );
-
-    expect(isValid).equal(true);
 
     let balance = await bank.balanceOf(otherAccount, UNITS);
     expect(balance.toString()).equal("0");
@@ -190,16 +185,15 @@ describe("Adapter - Coupon Onboarding", () => {
     let balance = await bank.balanceOf(otherAccount, UNITS);
     expect(balance.toString()).equal("0");
 
-    await expectRevert(
+    await expect(
       couponOnboarding.redeemCoupon(
         dao.address,
         otherAccount,
         100,
         1,
         signature
-      ),
-      "invalid sig"
-    );
+      )
+    ).to.be.revertedWith("invalid sig");
 
     const daoOwnerUnits = await bank.balanceOf(daoOwner, UNITS);
     const otherAccountUnits = await bank.balanceOf(otherAccount, UNITS);
@@ -256,10 +250,9 @@ describe("Adapter - Coupon Onboarding", () => {
     let balance = await bank.balanceOf(otherAccount, UNITS);
     expect(balance.toString()).equal("0");
 
-    await expectRevert(
-      couponOnboarding.redeemCoupon(dao.address, daoOwner, 10, 1, signature),
-      "invalid sig"
-    );
+    await expect(
+      couponOnboarding.redeemCoupon(dao.address, daoOwner, 10, 1, signature)
+    ).to.be.revertedWith("invalid sig");
 
     const daoOwnerUnits = await bank.balanceOf(daoOwner, UNITS);
     const otherAccountUnits = await bank.balanceOf(otherAccount, UNITS);
@@ -272,28 +265,26 @@ describe("Adapter - Coupon Onboarding", () => {
 
   it("should not be possible to send ETH to the adapter via receive function", async () => {
     const adapter = this.adapters.couponOnboarding;
-    await expectRevert(
+    await expect(
       web3.eth.sendTransaction({
         to: adapter.address,
         from: daoOwner,
         gasPrice: toBN("0"),
         value: toWei("1"),
-      }),
-      "revert"
-    );
+      })
+    ).to.be.revertedWith("revert");
   });
 
   it("should not be possible to send ETH to the adapter via fallback function", async () => {
     const adapter = this.adapters.couponOnboarding;
-    await expectRevert(
+    await expect(
       web3.eth.sendTransaction({
         to: adapter.address,
         from: daoOwner,
         gasPrice: toBN("0"),
         value: toWei("1"),
         data: fromAscii("should go to fallback func"),
-      }),
-      "revert"
-    );
+      })
+    ).to.be.revertedWith("revert");
   });
 });

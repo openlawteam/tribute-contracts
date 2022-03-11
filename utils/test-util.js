@@ -1,9 +1,13 @@
 // Whole-script strict mode syntax
 "use strict";
-
 const { toBN, UNITS, ERC1155 } = require("./contract-util");
 const { toNumber } = require("web3-utils");
-const { expect, advanceTime, web3, encodeProposalData } = require("./oz-util");
+const {
+  expect,
+  advanceTime,
+  web3,
+  encodeProposalData,
+} = require("./hardhat-test-util");
 
 const checkLastEvent = async (dao, testObject) => {
   let pastEvents = await dao.getPastEvents();

@@ -1,7 +1,5 @@
 // Whole-script strict mode syntax
 "use strict";
-
-const { toNumber } = require("web3-utils");
 /**
 MIT License
 
@@ -25,6 +23,7 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
  */
+const { expect } = require("chai");
 const {
   toBN,
   toWei,
@@ -35,32 +34,33 @@ const {
   TOTAL,
   ESCROW,
 } = require("../../utils/contract-util");
-
+const { toNumber } = require("web3-utils");
 const {
   deployDefaultNFTDao,
   takeChainSnapshot,
   revertChainSnapshot,
   proposalIdGenerator,
   advanceTime,
-  accounts,
+  getAccounts,
   encodeProposalData,
-  expectRevert,
-  expect,
   web3,
   ERC1155TestToken,
   PixelNFT,
-} = require("../../utils/oz-util");
+} = require("../../utils/hardhat-test-util");
 const { lendERC721NFT, lendERC1155NFT } = require("../../utils/test-util");
 
-describe("Adapter - LendNFT", () => {
-  const proposalCounter = proposalIdGenerator().generator;
-  const daoOwner = accounts[1];
+const proposalCounter = proposalIdGenerator().generator;
+const getProposalCounter = () => {
+  return proposalCounter().next().value;
+};
 
-  const getProposalCounter = () => {
-    return proposalCounter().next().value;
-  };
+describe("Adapter - LendNFT", () => {
+  let accounts, daoOwner;
 
   before("deploy dao", async () => {
+    accounts = await getAccounts();
+    daoOwner = accounts[0];
+
     const { dao, adapters, extensions, testContracts } =
       await deployDefaultNFTDao({ owner: daoOwner });
     this.dao = dao;
@@ -211,7 +211,7 @@ describe("Adapter - LendNFT", () => {
     await erc1155Token.mint(nftOwner, tokenId, 1, [], { from: daoOwner });
 
     // Create a proposal using the GUILD address as applicant
-    await expectRevert(
+    await expect(
       lendNFT.submitProposal(
         dao.address,
         proposalId,
@@ -222,12 +222,11 @@ describe("Adapter - LendNFT", () => {
         10000, // lending period
         [],
         { from: daoOwner, gasPrice: toBN("0") }
-      ),
-      "applicant is reserved address"
-    );
+      )
+    ).to.be.revertedWith("applicant is reserved address");
 
     // Create a proposal using the TOTAL address as applicant
-    await expectRevert(
+    await expect(
       lendNFT.submitProposal(
         dao.address,
         proposalId,
@@ -238,12 +237,11 @@ describe("Adapter - LendNFT", () => {
         10000, // lending period
         [],
         { from: daoOwner, gasPrice: toBN("0") }
-      ),
-      "applicant is reserved address"
-    );
+      )
+    ).to.be.revertedWith("applicant is reserved address");
 
     // Create a proposal using the ESCROW address as applicant
-    await expectRevert(
+    await expect(
       lendNFT.submitProposal(
         dao.address,
         proposalId,
@@ -254,9 +252,8 @@ describe("Adapter - LendNFT", () => {
         10000, // lending period
         [],
         { from: daoOwner, gasPrice: toBN("0") }
-      ),
-      "applicant is reserved address"
-    );
+      )
+    ).to.be.revertedWith("applicant is reserved address");
   });
 
   it("should not be possible to reuse a lend proposal id", async () => {
@@ -284,7 +281,7 @@ describe("Adapter - LendNFT", () => {
     );
 
     // Create another proposal using the same proposal id
-    await expectRevert(
+    await expect(
       lendNFT.submitProposal(
         dao.address,
         proposalId,
@@ -295,9 +292,8 @@ describe("Adapter - LendNFT", () => {
         10000, // lending period
         [],
         { from: daoOwner, gasPrice: toBN("0") }
-      ),
-      "proposalId must be unique"
-    );
+      )
+    ).to.be.revertedWith("proposalId must be unique");
   });
 
   it("should not be possible to batch lend ERC1155 NFTs", async () => {
@@ -334,7 +330,7 @@ describe("Adapter - LendNFT", () => {
     await advanceTime(10000);
 
     // Attempt to send a batch transfer of the ERC1155 NFTs to the LendNFT adapter
-    await expectRevert(
+    await expect(
       erc1155Token.safeBatchTransferFrom(
         nftOwner,
         lendNFT.address,
@@ -342,9 +338,8 @@ describe("Adapter - LendNFT", () => {
         [1, 1, 1],
         encodeProposalData(dao, proposalId),
         { from: nftOwner }
-      ),
-      "not supported"
-    );
+      )
+    ).to.be.revertedWith("not supported");
   });
 
   it("should not be possible to process an ERC721 NFT lending proposal that does not exist", async () => {
@@ -382,7 +377,7 @@ describe("Adapter - LendNFT", () => {
 
     // Approve the NFT to move to the NFT extension
     const wrongProposalId = getProposalCounter();
-    await expectRevert(
+    await expect(
       pixelNFT.methods["safeTransferFrom(address,address,uint256,bytes)"](
         nftOwner,
         lendNFT.address,
@@ -391,9 +386,8 @@ describe("Adapter - LendNFT", () => {
         {
           from: nftOwner,
         }
-      ),
-      "proposal does not exist"
-    );
+      )
+    ).to.be.revertedWith("proposal does not exist");
   });
 
   it("should not be possible to process an ERC721 NFT lending proposal that was already processed", async () => {
@@ -440,7 +434,7 @@ describe("Adapter - LendNFT", () => {
     );
 
     // Approve the NFT to move to the NFT extension
-    await expectRevert(
+    await expect(
       pixelNFT.methods["safeTransferFrom(address,address,uint256,bytes)"](
         nftOwner,
         lendNFT.address,
@@ -449,9 +443,8 @@ describe("Adapter - LendNFT", () => {
         {
           from: nftOwner,
         }
-      ),
-      "proposal already processed"
-    );
+      )
+    ).to.be.revertedWith("proposal already processed");
   });
 
   it("should not be possible to process an ERC721 NFT lending proposal that has no votes", async () => {
@@ -479,7 +472,7 @@ describe("Adapter - LendNFT", () => {
     );
 
     // Process the proposal
-    await expectRevert(
+    await expect(
       pixelNFT.methods["safeTransferFrom(address,address,uint256,bytes)"](
         nftOwner,
         lendNFT.address,
@@ -488,9 +481,8 @@ describe("Adapter - LendNFT", () => {
         {
           from: nftOwner,
         }
-      ),
-      "proposal has no votes"
-    );
+      )
+    ).to.be.revertedWith("proposal has no votes");
   });
 
   it("should not be possible to process an ERC1155 NFT lend proposal that does not exist", async () => {
@@ -525,7 +517,7 @@ describe("Adapter - LendNFT", () => {
 
     // Send the ERC1155 NFT to the LendNFT adapter
     const wrongProposalId = getProposalCounter();
-    await expectRevert(
+    await expect(
       erc1155Token.safeTransferFrom(
         nftOwner,
         lendNFT.address,
@@ -533,9 +525,8 @@ describe("Adapter - LendNFT", () => {
         1,
         encodeProposalData(dao, wrongProposalId),
         { from: nftOwner }
-      ),
-      "proposal does not exist"
-    );
+      )
+    ).to.be.revertedWith("proposal does not exist");
   });
 
   it("should not be possible to process an ERC1155 NFT lend proposal that was already processed", async () => {
@@ -580,7 +571,7 @@ describe("Adapter - LendNFT", () => {
     );
 
     // Send the ERC1155 NFT to the LendNFT adapter
-    await expectRevert(
+    await expect(
       erc1155Token.safeTransferFrom(
         nftOwner,
         lendNFT.address,
@@ -588,9 +579,8 @@ describe("Adapter - LendNFT", () => {
         1,
         encodeProposalData(dao, proposalId),
         { from: nftOwner }
-      ),
-      "proposal already processed"
-    );
+      )
+    ).to.be.revertedWith("proposal already processed");
   });
 
   it("should not be possible to process an ERC1155 NFT lend proposal that has no votes", async () => {
@@ -619,7 +609,7 @@ describe("Adapter - LendNFT", () => {
     );
 
     // Process the proposal
-    await expectRevert(
+    await expect(
       erc1155Token.safeTransferFrom(
         nftOwner,
         lendNFT.address,
@@ -627,9 +617,8 @@ describe("Adapter - LendNFT", () => {
         1,
         encodeProposalData(dao, proposalId),
         { from: nftOwner }
-      ),
-      "proposal has no votes"
-    );
+      )
+    ).to.be.revertedWith("proposal has no votes");
   });
 
   it("should not be possible to lend the wrong ERC1155 NFT tokenId", async () => {
@@ -665,7 +654,7 @@ describe("Adapter - LendNFT", () => {
     await advanceTime(10000);
 
     // Transfer the wrong ERC1155 NFT tokenId to the LendNFT adapter
-    await expectRevert(
+    await expect(
       erc1155Token.safeTransferFrom(
         nftOwner,
         lendNFT.address,
@@ -673,9 +662,8 @@ describe("Adapter - LendNFT", () => {
         1,
         encodeProposalData(dao, proposalId),
         { from: nftOwner }
-      ),
-      "wrong NFT"
-    );
+      )
+    ).to.be.revertedWith("wrong NFT");
   });
 
   it("should not be possible to lend the wrong ERC721 NFT tokenId", async () => {
@@ -714,7 +702,7 @@ describe("Adapter - LendNFT", () => {
     await advanceTime(10000);
 
     // Approve the NFT to move the WRONG NFT to the NFT extension
-    await expectRevert(
+    await expect(
       pixelNFT.methods["safeTransferFrom(address,address,uint256,bytes)"](
         nftOwner,
         lendNFT.address,
@@ -723,9 +711,8 @@ describe("Adapter - LendNFT", () => {
         {
           from: nftOwner,
         }
-      ),
-      "wrong NFT"
-    );
+      )
+    ).to.be.revertedWith("wrong NFT");
   });
 
   it("should not be possible to lend the wrong ERC1155 NFT address", async () => {
@@ -763,7 +750,7 @@ describe("Adapter - LendNFT", () => {
     await advanceTime(10000);
 
     // Transfer the wrong ERC1155 NFT tokenId to the LendNFT adapter
-    await expectRevert(
+    await expect(
       wrongErc1155Token.safeTransferFrom(
         nftOwner,
         lendNFT.address,
@@ -771,9 +758,8 @@ describe("Adapter - LendNFT", () => {
         1,
         encodeProposalData(dao, proposalId),
         { from: nftOwner }
-      ),
-      "wrong NFT addr"
-    );
+      )
+    ).to.be.revertedWith("wrong NFT addr");
   });
 
   it("should not be possible to lend the wrong ERC721 NFT address", async () => {
@@ -811,7 +797,7 @@ describe("Adapter - LendNFT", () => {
     await advanceTime(10000);
 
     // Approve the NFT to move the correct tokenId, but using the wrong NFT contract to the NFT extension
-    await expectRevert(
+    await expect(
       wrongNFT.methods["safeTransferFrom(address,address,uint256,bytes)"](
         nftOwner,
         lendNFT.address,
@@ -820,9 +806,8 @@ describe("Adapter - LendNFT", () => {
         {
           from: nftOwner,
         }
-      ),
-      "wrong NFT addr"
-    );
+      )
+    ).to.be.revertedWith("wrong NFT addr");
   });
 
   it("should not be possible to lend the ERC1155 NFT address if the vote did not pass", async () => {
@@ -894,12 +879,11 @@ describe("Adapter - LendNFT", () => {
 
     // The attack attempts to collect the NFT that was lent
     const attacker = accounts[6];
-    await expectRevert(
+    await expect(
       this.adapters.lendNFT.sendNFTBack(this.dao.address, proposalId, {
         from: attacker,
-      }),
-      "only the previous owner can withdraw the NFT"
-    );
+      })
+    ).to.be.revertedWith("only the previous owner can withdraw the NFT");
   });
 
   it("should not be possible to withdraw an ERC1155 NFT if it was already collected by the original owner", async () => {
@@ -926,12 +910,11 @@ describe("Adapter - LendNFT", () => {
 
     // The attack attempts to collect the NFT that was lent
     const attacker = accounts[6];
-    await expectRevert(
+    await expect(
       this.adapters.lendNFT.sendNFTBack(this.dao.address, proposalId, {
         from: attacker,
-      }),
-      "already sent back"
-    );
+      })
+    ).to.be.revertedWith("already sent back");
   });
 
   it("should not be possible to withdraw an ERC721 NFT if the sender is not the NFT original owner who lent the NFT", async () => {
@@ -953,12 +936,11 @@ describe("Adapter - LendNFT", () => {
     await advanceTime(100);
     // The attack attempts to collect the NFT that was lent
     const attacker = accounts[6];
-    await expectRevert(
+    await expect(
       this.adapters.lendNFT.sendNFTBack(this.dao.address, proposalId, {
         from: attacker,
-      }),
-      "only the previous owner can withdraw the NFT"
-    );
+      })
+    ).to.be.revertedWith("only the previous owner can withdraw the NFT");
   });
 
   it("should not be possible to withdraw an ERC721 NFT if it was already collected by the original owner", async () => {
@@ -985,12 +967,11 @@ describe("Adapter - LendNFT", () => {
 
     // The attack attempts to collect the NFT that was lent
     const attacker = accounts[6];
-    await expectRevert(
+    await expect(
       this.adapters.lendNFT.sendNFTBack(this.dao.address, proposalId, {
         from: attacker,
-      }),
-      "already sent back"
-    );
+      })
+    ).to.be.revertedWith("already sent back");
   });
 
   it("should not be possible to lend the ERC721 NFT address if the vote did not pass", async () => {
@@ -1073,36 +1054,33 @@ describe("Adapter - LendNFT", () => {
     await advanceTime(10000);
 
     // Skip the NFT transfer and attempt to withdraw the NFT
-    await expectRevert(
-      lendNFT.sendNFTBack(dao.address, proposalId, { from: nftOwner }),
-      "lending not started"
-    );
+    await expect(
+      lendNFT.sendNFTBack(dao.address, proposalId, { from: nftOwner })
+    ).to.be.revertedWith("lending not started");
   });
 
   it("should not be possible to send ETH to the adapter via receive function", async () => {
     const adapter = this.adapters.lendNFT;
-    await expectRevert(
+    await expect(
       web3.eth.sendTransaction({
         to: adapter.address,
         from: daoOwner,
         gasPrice: toBN("0"),
         value: toWei("1"),
-      }),
-      "revert"
-    );
+      })
+    ).to.be.revertedWith("revert");
   });
 
   it("should not be possible to send ETH to the adapter via fallback function", async () => {
     const adapter = this.adapters.lendNFT;
-    await expectRevert(
+    await expect(
       web3.eth.sendTransaction({
         to: adapter.address,
         from: daoOwner,
         gasPrice: toBN("0"),
         value: toWei("1"),
         data: fromAscii("should go to fallback func"),
-      }),
-      "revert"
-    );
+      })
+    ).to.be.revertedWith("revert");
   });
 });

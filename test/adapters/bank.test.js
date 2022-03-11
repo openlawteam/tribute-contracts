@@ -24,6 +24,8 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
  */
+
+const { expect } = require("chai");
 const {
   toBN,
   toWei,
@@ -44,20 +46,13 @@ const {
   revertChainSnapshot,
   proposalIdGenerator,
   advanceTime,
-  accounts,
-  expect,
-  expectRevert,
   web3,
   getBalance,
-} = require("../../utils/oz-util");
+  getAccounts,
+} = require("../../utils/hardhat-test-util");
 
 const { checkBalance } = require("../../utils/test-util");
 
-const remaining = unitPrice.sub(toBN("50000000000000"));
-const daoOwner = accounts[1];
-const applicant = accounts[2];
-const newMember = accounts[3];
-const expectedGuildBalance = toBN("1200000000000000000");
 const proposalCounter = proposalIdGenerator().generator;
 
 function getProposalCounter() {
@@ -65,7 +60,16 @@ function getProposalCounter() {
 }
 
 describe("Adapter - Bank", () => {
+  const remaining = unitPrice.sub(toBN("50000000000000"));
+  const expectedGuildBalance = toBN("1200000000000000000");
+  let accounts, daoOwner, applicant, newMember;
+
   before("deploy dao", async () => {
+    accounts = await getAccounts();
+    daoOwner = accounts[0];
+    applicant = accounts[2];
+    newMember = accounts[3];
+
     const { dao, adapters, extensions } = await deployDefaultDao({
       owner: daoOwner,
     });
@@ -108,14 +112,13 @@ describe("Adapter - Bank", () => {
       gasPrice: toBN("0"),
     });
     //should not be able to process before the voting period has ended
-    await expectRevert(
+    await expect(
       onboarding.processProposal(this.dao.address, proposalId, {
         from: daoOwner,
         value: unitPrice.mul(toBN(10)).add(remaining),
         gasPrice: toBN("0"),
-      }),
-      "proposal has not been voted on yet"
-    );
+      })
+    ).to.be.revertedWith("proposal has not been voted on yet");
 
     await advanceTime(10000);
     await onboarding.processProposal(this.dao.address, proposalId, {
@@ -206,89 +209,82 @@ describe("Adapter - Bank", () => {
   });
 
   it("should not possible to call sendEth without any eth", async () => {
-    await expectRevert(
+    await expect(
       this.adapters.bankAdapter.sendEth(this.dao.address, {
         value: toWei("0"),
-      }),
-      "no eth sent"
-    );
+      })
+    ).to.be.revertedWith("no eth sent");
   });
 
   it("should not be possible to withdraw funds from the bank if the sender has no funds to withdraw", async () => {
     const bankAdapter = this.adapters.bankAdapter;
     const accountWithNoFunds = accounts[7];
 
-    await expectRevert(
+    await expect(
       bankAdapter.withdraw(this.dao.address, ETH_TOKEN, {
         from: accountWithNoFunds,
         gasPrice: toBN("0"),
-      }),
-      "nothing to withdraw"
-    );
+      })
+    ).to.be.revertedWith("nothing to withdraw");
   });
 
   it("should not be possible to withdraw funds using a token that is not registered in the DAO", async () => {
     const bankAdapter = this.adapters.bankAdapter;
 
-    await expectRevert(
+    await expect(
       bankAdapter.withdraw(this.dao.address, DAI_TOKEN, {
         from: daoOwner,
         gasPrice: toBN("0"),
-      }),
-      "nothing to withdraw"
-    );
+      })
+    ).to.be.revertedWith("nothing to withdraw");
   });
 
-  it("should not be possible to withdraw funds using a reserved address as sender", async () => {
+  // Hardhat tests can't be executed using accounts that we don't own, so this calls won't pass
+  it.skip("should not be possible to withdraw funds using a reserved address as sender", async () => {
     const bankAdapter = this.adapters.bankAdapter;
 
-    await expectRevert(
+    await expect(
       bankAdapter.withdraw(this.dao.address, ETH_TOKEN, {
         from: GUILD,
         gasPrice: toBN("0"),
-      }),
-      "withdraw::reserved address"
-    );
-    await expectRevert(
+      })
+    ).to.be.revertedWith("withdraw::reserved address");
+    await expect(
       bankAdapter.withdraw(this.dao.address, ETH_TOKEN, {
         from: TOTAL,
         gasPrice: toBN("0"),
-      }),
-      "withdraw::reserved address"
-    );
-    await expectRevert(
+      })
+    ).to.be.revertedWith("withdraw::reserved address");
+    await expect(
       bankAdapter.withdraw(this.dao.address, ETH_TOKEN, {
         from: ESCROW,
         gasPrice: toBN("0"),
-      }),
-      "withdraw::reserved address"
-    );
+      })
+    ).to.be.revertedWith("withdraw::reserved address");
   });
 
   it("should not be possible to send ETH to the adapter via receive function", async () => {
     const adapter = this.adapters.bankAdapter;
-    await expectRevert(
+    await expect(
       web3.eth.sendTransaction({
         to: adapter.address,
         from: daoOwner,
         gasPrice: toBN("0"),
         value: toWei("1"),
-      }),
-      "revert"
-    );
+      })
+    ).to.be.revertedWith("revert");
   });
 
   it("should not be possible to send ETH to the adapter via fallback function", async () => {
     const adapter = this.adapters.bankAdapter;
-    await expectRevert(
+    await expect(
       web3.eth.sendTransaction({
         to: adapter.address,
         from: daoOwner,
         gasPrice: toBN("0"),
         value: toWei("1"),
         data: fromAscii("should go to fallback func"),
-      }),
-      "revert"
-    );
+      })
+    ).to.be.revertedWith("revert");
   });
 });

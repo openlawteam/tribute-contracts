@@ -5,8 +5,12 @@ require("ts-node").register({
 require("solidity-coverage");
 require("@nomiclabs/hardhat-waffle");
 require("@nomiclabs/hardhat-ethers");
+require("@nomiclabs/hardhat-truffle5");
+require("@nomiclabs/hardhat-web3");
 require("hardhat-contract-sizer");
-require("hardhat-gas-reporter");
+if (!process.env.TEST === "true") {
+  require("hardhat-gas-reporter");
+}
 require("./tasks/deploy");
 require("./signers");
 
@@ -18,23 +22,23 @@ module.exports = {
       network_id: 1337,
       chainId: 1337,
       accounts: {
-        mnemonic: process.env.WALLET_MNEMONIC,
-        count: 10,
+        mnemonic:
+          "myth like bonus scare over problem client lizard pioneer submit female collect",
       },
       throwOnTransactionFailures: true,
-      throwOnCallFailures: false,
-      loggingEnabled: true,
+      throwOnCallFailures: true,
+      loggingEnabled: false,
       allowUnlimitedContractSize: false,
-      gas: 0xfffffffffff,
-      gasPrice: 10000000000,
       initialBaseFeePerGas: 0,
     },
     ganache: {
       url: "http://127.0.0.1:7545",
       chainId: 1337,
       accounts: {
-        mnemonic: process.env.WALLET_MNEMONIC || "",
         count: 10,
+        mnemonic:
+          process.env.WALLET_MNEMONIC ||
+          "myth like bonus scare over problem client lizard pioneer submit female collect",
       },
     },
     goerli: {

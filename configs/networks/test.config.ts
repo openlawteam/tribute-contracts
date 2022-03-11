@@ -11,7 +11,7 @@ const disabled: Array<string> = [];
 
 const testContracts = [{
   id: "erc1155-test",
-  name: "ERC1155TestAdapter",
+  name: "ERC1155TestAdapterContract",
   alias: "erc1155TestAdapter",
   path: "../../contracts/test/ERC1155TestAdapterContract",
   enabled: true,

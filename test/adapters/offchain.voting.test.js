@@ -24,6 +24,7 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
  */
+const { expect } = require("chai");
 const { utils } = require("ethers");
 const {
   toBN,
@@ -43,9 +44,7 @@ const {
   proposalIdGenerator,
   advanceTime,
   deployDaoWithOffchainVoting,
-  accounts,
-  expect,
-  expectRevert,
+  getAccounts,
   takeChainSnapshot,
   revertChainSnapshot,
   web3,
@@ -53,7 +52,7 @@ const {
   OffchainVotingHashContract,
   OLToken,
   PixelNFT,
-} = require("../../utils/oz-util");
+} = require("../../utils/hardhat-test-util");
 
 const {
   createVote,
@@ -68,259 +67,23 @@ const {
   BadNodeError,
 } = require("../../utils/offchain-voting-util");
 
+const chainId = 1337;
 const members = generateMembers(10);
-const findMember = (addr) => members.find((member) => member.address === addr);
-const daoOwner = accounts[0];
 const newMember = members[0];
+const findMember = (addr) => members.find((member) => member.address === addr);
 const proposalCounter = proposalIdGenerator().generator;
 
 function getProposalCounter() {
   return proposalCounter().next().value;
 }
 
-const onboardMember = async (dao, voting, onboarding, bank, index) => {
-  const blockNumber = await web3.eth.getBlockNumber();
-  const proposalId = getProposalCounter();
-
-  const proposalPayload = {
-    name: "some proposal",
-    body: "this is my proposal",
-    choices: ["yes", "no"],
-    start: Math.floor(new Date().getTime() / 1000),
-    end: Math.floor(new Date().getTime() / 1000) + 10000,
-    snapshot: blockNumber.toString(),
-  };
-
-  const space = "tribute";
-  const chainId = 1;
-
-  const proposalData = {
-    type: "proposal",
-    timestamp: Math.floor(new Date().getTime() / 1000),
-    space,
-    payload: proposalPayload,
-    submitter: members[0].address,
-  };
-
-  //signer for myAccount (its private key)
-  const signer = SigUtilSigner(members[0].privateKey);
-  proposalData.sig = await signer(
-    proposalData,
-    dao.address,
-    onboarding.address,
-    chainId
-  );
-
-  await onboarding.submitProposal(
-    dao.address,
-    proposalId,
-    members[index].address,
-    UNITS,
-    unitPrice.mul(toBN(3)).add(remaining),
-    prepareVoteProposalData(proposalData, web3),
-    {
-      from: daoOwner,
-      gasPrice: toBN("0"),
-    }
-  );
-
-  const voteEntries = [];
-  const membersCount = await dao.getNbMembers();
-
-  for (let i = 0; i < parseInt(membersCount.toString()) - 1; i++) {
-    const memberAddress = await dao.getMemberAddress(i);
-    const member = findMember(memberAddress);
-    let voteEntry;
-    if (member) {
-      const voteSigner = SigUtilSigner(member.privateKey);
-      const weight = await bank.balanceOf(member.address, UNITS);
-      voteEntry = await createVote(proposalId, weight, true);
-
-      voteEntry.sig = voteSigner(
-        voteEntry,
-        dao.address,
-        onboarding.address,
-        chainId
-      );
-    } else {
-      voteEntry = await createVote(proposalId, 0, true);
-
-      voteEntry.sig = "0x";
-    }
-
-    voteEntries.push(voteEntry);
-  }
-
-  await advanceTime(10000);
-
-  const { voteResultTree, result } = await prepareVoteResult(
-    voteEntries,
-    dao,
-    onboarding.address,
-    chainId
-  );
-
-  const rootSig = signer(
-    { root: voteResultTree.getHexRoot(), type: "result" },
-    dao.address,
-    onboarding.address,
-    chainId
-  );
-
-  const lastResult = result[result.length - 1];
-
-  let tx = await voting.submitVoteResult(
-    dao.address,
-    proposalId,
-    voteResultTree.getHexRoot(),
-    members[0].address,
-    lastResult,
-    rootSig
-  );
-
-  log(
-    `gas used for ( ${proposalId} ) votes: ` +
-      new Intl.NumberFormat().format(tx.receipt.gasUsed)
-  );
-
-  await advanceTime(10000);
-
-  await onboarding.processProposal(dao.address, proposalId, {
-    value: unitPrice.mul(toBN("3")).add(remaining),
-  });
-};
-
-const updateConfiguration = async (
-  dao,
-  voting,
-  configuration,
-  bank,
-  index,
-  configs,
-  singleVote = false,
-  processProposal = true
-) => {
-  const blockNumber = await web3.eth.getBlockNumber();
-  const proposalId = getProposalCounter();
-
-  const proposalPayload = {
-    name: "new configuration proposal",
-    body: "testing the governance token",
-    choices: ["yes", "no"],
-    start: Math.floor(new Date().getTime() / 1000),
-    end: Math.floor(new Date().getTime() / 1000) + 10000,
-    snapshot: blockNumber.toString(),
-  };
-
-  const space = "tribute";
-  const chainId = 1;
-
-  const proposalData = {
-    type: "proposal",
-    timestamp: Math.floor(new Date().getTime() / 1000),
-    space,
-    payload: proposalPayload,
-    submitter: members[index].address,
-  };
-
-  //signer for myAccount (its private key)
-  const signer = SigUtilSigner(members[index].privateKey);
-  proposalData.sig = await signer(
-    proposalData,
-    dao.address,
-    configuration.address,
-    chainId
-  );
-  const data = prepareVoteProposalData(proposalData, web3);
-  await configuration.submitProposal(dao.address, proposalId, configs, data, {
-    from: daoOwner,
-    gasPrice: toBN("0"),
-  });
-
-  const membersCount = await bank.getPriorAmount(
-    TOTAL,
-    MEMBER_COUNT,
-    blockNumber
-  );
-  const voteEntries = [];
-  const maintainer = members[index];
-  for (let i = 0; i < parseInt(membersCount.toString()); i++) {
-    const memberAddress = await dao.getMemberAddress(i);
-    const member = findMember(memberAddress);
-    let voteEntry;
-    const voteYes = singleVote ? memberAddress === maintainer.address : true;
-    if (member) {
-      const voteSigner = SigUtilSigner(member.privateKey);
-      const weight = await bank.balanceOf(member.address, UNITS);
-      voteEntry = await createVote(
-        proposalId,
-        toBN(weight.toString()),
-        voteYes
-      );
-      voteEntry.sig = voteSigner(
-        voteEntry,
-        dao.address,
-        configuration.address,
-        chainId
-      );
-    } else {
-      voteEntry = await createVote(proposalId, toBN("0"), voteYes);
-      voteEntry.sig = "0x";
-    }
-
-    voteEntries.push(voteEntry);
-  }
-
-  await advanceTime(10000);
-
-  const { voteResultTree, result } = await prepareVoteResult(
-    voteEntries,
-    dao,
-    configuration.address,
-    chainId
-  );
-
-  const rootSig = signer(
-    { root: voteResultTree.getHexRoot(), type: "result" },
-    dao.address,
-    configuration.address,
-    chainId
-  );
-
-  const lastResult = result[result.length - 1];
-  lastResult.nbYes = lastResult.nbYes.toString();
-  lastResult.nbNo = lastResult.nbNo.toString();
-  const submitter = members[index].address;
-
-  if (processProposal) {
-    await voting.submitVoteResult(
-      dao.address,
-      proposalId,
-      voteResultTree.getHexRoot(),
-      members[index].address,
-      lastResult,
-      rootSig
-    );
-
-    await advanceTime(10000);
-
-    // The maintainer processes on the new proposal
-    await configuration.processProposal(dao.address, proposalId);
-  }
-
-  return {
-    proposalId,
-    voteResultTree,
-    blockNumber,
-    membersCount,
-    lastResult,
-    submitter,
-    rootSig,
-  };
-};
-
 describe("Adapter - Offchain Voting", () => {
+  let accounts, daoOwner;
+
   before("deploy dao", async () => {
+    accounts = await getAccounts();
+    daoOwner = accounts[0];
+
     const { dao, adapters, extensions, votingHelpers } =
       await deployDaoWithOffchainVoting({
         owner: daoOwner,
@@ -337,6 +100,245 @@ describe("Adapter - Offchain Voting", () => {
     await revertChainSnapshot(this.snapshotId);
     this.snapshotId = await takeChainSnapshot();
   });
+
+  const onboardMember = async (dao, voting, onboarding, bank, index) => {
+    const blockNumber = await web3.eth.getBlockNumber();
+    const proposalId = getProposalCounter();
+
+    const proposalPayload = {
+      name: "some proposal",
+      body: "this is my proposal",
+      choices: ["yes", "no"],
+      start: Math.floor(new Date().getTime() / 1000),
+      end: Math.floor(new Date().getTime() / 1000) + 10000,
+      snapshot: blockNumber.toString(),
+    };
+
+    const space = "tribute";
+
+    const proposalData = {
+      type: "proposal",
+      timestamp: Math.floor(new Date().getTime() / 1000),
+      space,
+      payload: proposalPayload,
+      submitter: members[0].address,
+    };
+
+    //signer for myAccount (its private key)
+    const signer = SigUtilSigner(members[0].privateKey);
+    proposalData.sig = await signer(
+      proposalData,
+      dao.address,
+      onboarding.address,
+      chainId
+    );
+
+    await onboarding.submitProposal(
+      dao.address,
+      proposalId,
+      members[index].address,
+      UNITS,
+      unitPrice.mul(toBN(3)).add(remaining),
+      prepareVoteProposalData(proposalData, web3),
+      {
+        from: daoOwner,
+        gasPrice: toBN("0"),
+      }
+    );
+
+    const voteEntries = [];
+    const membersCount = await dao.getNbMembers();
+
+    for (let i = 0; i < parseInt(membersCount.toString()) - 1; i++) {
+      const memberAddress = await dao.getMemberAddress(i);
+      const member = findMember(memberAddress);
+      let voteEntry;
+      if (member) {
+        const voteSigner = SigUtilSigner(member.privateKey);
+        const weight = await bank.balanceOf(member.address, UNITS);
+        voteEntry = await createVote(proposalId, weight, true);
+
+        voteEntry.sig = voteSigner(
+          voteEntry,
+          dao.address,
+          onboarding.address,
+          chainId
+        );
+      } else {
+        voteEntry = await createVote(proposalId, 0, true);
+
+        voteEntry.sig = "0x";
+      }
+
+      voteEntries.push(voteEntry);
+    }
+
+    await advanceTime(10000);
+
+    const { voteResultTree, result } = await prepareVoteResult(
+      voteEntries,
+      dao,
+      onboarding.address,
+      chainId
+    );
+
+    const rootSig = signer(
+      { root: voteResultTree.getHexRoot(), type: "result" },
+      dao.address,
+      onboarding.address,
+      chainId
+    );
+
+    const lastResult = result[result.length - 1];
+
+    let tx = await voting.submitVoteResult(
+      dao.address,
+      proposalId,
+      voteResultTree.getHexRoot(),
+      members[0].address,
+      lastResult,
+      rootSig
+    );
+
+    log(
+      `gas used for ( ${proposalId} ) votes: ` +
+        new Intl.NumberFormat().format(tx.receipt.gasUsed)
+    );
+
+    await advanceTime(10000);
+
+    await onboarding.processProposal(dao.address, proposalId, {
+      value: unitPrice.mul(toBN("3")).add(remaining),
+    });
+  };
+
+  const updateConfiguration = async (
+    dao,
+    voting,
+    configuration,
+    bank,
+    index,
+    configs,
+    singleVote = false,
+    processProposal = true
+  ) => {
+    const blockNumber = await web3.eth.getBlockNumber();
+    const proposalId = getProposalCounter();
+
+    const proposalPayload = {
+      name: "new configuration proposal",
+      body: "testing the governance token",
+      choices: ["yes", "no"],
+      start: Math.floor(new Date().getTime() / 1000),
+      end: Math.floor(new Date().getTime() / 1000) + 10000,
+      snapshot: blockNumber.toString(),
+    };
+
+    const space = "tribute";
+
+    const proposalData = {
+      type: "proposal",
+      timestamp: Math.floor(new Date().getTime() / 1000),
+      space,
+      payload: proposalPayload,
+      submitter: members[index].address,
+    };
+
+    //signer for myAccount (its private key)
+    const signer = SigUtilSigner(members[index].privateKey);
+    proposalData.sig = await signer(
+      proposalData,
+      dao.address,
+      configuration.address,
+      chainId
+    );
+    const data = prepareVoteProposalData(proposalData, web3);
+    await configuration.submitProposal(dao.address, proposalId, configs, data, {
+      from: daoOwner,
+      gasPrice: toBN("0"),
+    });
+
+    const membersCount = await bank.getPriorAmount(
+      TOTAL,
+      MEMBER_COUNT,
+      blockNumber
+    );
+    const voteEntries = [];
+    const maintainer = members[index];
+    for (let i = 0; i < parseInt(membersCount.toString()); i++) {
+      const memberAddress = await dao.getMemberAddress(i);
+      const member = findMember(memberAddress);
+      let voteEntry;
+      const voteYes = singleVote ? memberAddress === maintainer.address : true;
+      if (member) {
+        const voteSigner = SigUtilSigner(member.privateKey);
+        const weight = await bank.balanceOf(member.address, UNITS);
+        voteEntry = await createVote(
+          proposalId,
+          toBN(weight.toString()),
+          voteYes
+        );
+        voteEntry.sig = voteSigner(
+          voteEntry,
+          dao.address,
+          configuration.address,
+          chainId
+        );
+      } else {
+        voteEntry = await createVote(proposalId, toBN("0"), voteYes);
+        voteEntry.sig = "0x";
+      }
+
+      voteEntries.push(voteEntry);
+    }
+
+    await advanceTime(10000);
+
+    const { voteResultTree, result } = await prepareVoteResult(
+      voteEntries,
+      dao,
+      configuration.address,
+      chainId
+    );
+
+    const rootSig = signer(
+      { root: voteResultTree.getHexRoot(), type: "result" },
+      dao.address,
+      configuration.address,
+      chainId
+    );
+
+    const lastResult = result[result.length - 1];
+    lastResult.nbYes = lastResult.nbYes.toString();
+    lastResult.nbNo = lastResult.nbNo.toString();
+    const submitter = members[index].address;
+
+    if (processProposal) {
+      await voting.submitVoteResult(
+        dao.address,
+        proposalId,
+        voteResultTree.getHexRoot(),
+        members[index].address,
+        lastResult,
+        rootSig
+      );
+
+      await advanceTime(10000);
+
+      // The maintainer processes on the new proposal
+      await configuration.processProposal(dao.address, proposalId);
+    }
+
+    return {
+      proposalId,
+      voteResultTree,
+      blockNumber,
+      membersCount,
+      lastResult,
+      submitter,
+      rootSig,
+    };
+  };
 
   it("should type & hash be consistent for proposals between javascript and solidity", async () => {
     const dao = this.dao;
@@ -361,7 +363,6 @@ describe("Adapter - Offchain Voting", () => {
       sig: "0x00",
     };
 
-    const chainId = 1;
     let { types, domain } = getDomainDefinition(
       proposalData,
       dao.address,
@@ -421,7 +422,6 @@ describe("Adapter - Offchain Voting", () => {
   });
 
   it("should type & hash be consistent for votes between javascript and solidity", async () => {
-    const chainId = 1;
     const dao = this.dao;
     const offchainVoting = this.votingHelpers.offchainVoting;
     const snapshotContract = this.votingHelpers.snapshotProposalContract;
@@ -481,29 +481,27 @@ describe("Adapter - Offchain Voting", () => {
 
   it("should not be possible to send ETH to the adapter via receive function", async () => {
     const adapter = this.adapters.voting;
-    await expectRevert(
+    await expect(
       web3.eth.sendTransaction({
         to: adapter.address,
         from: daoOwner,
         gasPrice: toBN("0"),
         value: toWei("1"),
-      }),
-      "revert"
-    );
+      })
+    ).to.be.revertedWith("revert");
   });
 
   it("should not be possible to send ETH to the adapter via fallback function", async () => {
     const adapter = this.adapters.voting;
-    await expectRevert(
+    await expect(
       web3.eth.sendTransaction({
         to: adapter.address,
         from: daoOwner,
         gasPrice: toBN("0"),
         value: toWei("1"),
         data: fromAscii("should go to fallback func"),
-      }),
-      "revert"
-    );
+      })
+    ).to.be.revertedWith("revert");
   });
 
   it("should be possible to update a DAO configuration if you are a member and a maintainer that holds an external governance token", async () => {
@@ -753,7 +751,7 @@ describe("Adapter - Offchain Voting", () => {
       },
     ];
 
-    await expectRevert(
+    await expect(
       updateConfiguration(
         dao,
         voting,
@@ -761,9 +759,8 @@ describe("Adapter - Offchain Voting", () => {
         bank,
         accountIndex,
         configs
-      ),
-      "onlyMember"
-    );
+      )
+    ).to.be.revertedWith("onlyMember");
   });
 
   it("should not be possible to update a DAO configuration if you are a member but not a maintainer", async () => {
@@ -819,7 +816,7 @@ describe("Adapter - Offchain Voting", () => {
       false // skip the process proposal call
     );
 
-    await expectRevert(
+    await expect(
       voting.submitVoteResult(
         dao.address,
         data.proposalId,
@@ -827,9 +824,8 @@ describe("Adapter - Offchain Voting", () => {
         data.submitter,
         data.lastResult,
         data.rootSig
-      ),
-      "bad node"
-    );
+      )
+    ).to.be.revertedWith("bad node");
 
     // Validate the vote result node by calling the contract
     const getBadNodeErrorResponse = await voting.getBadNodeError(
@@ -906,7 +902,7 @@ describe("Adapter - Offchain Voting", () => {
       false // skip the process proposal call
     );
 
-    await expectRevert(
+    await expect(
       voting.submitVoteResult(
         dao.address,
         data.proposalId,
@@ -914,9 +910,8 @@ describe("Adapter - Offchain Voting", () => {
         data.submitter,
         data.lastResult,
         data.rootSig
-      ),
-      "getPriorAmount not implemented"
-    );
+      )
+    ).to.be.revertedWith("getPriorAmount not implemented");
   });
   //TODO create a proposal, vote, and submit the result using a delegated address - PASS
 });

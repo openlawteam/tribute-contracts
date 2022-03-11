@@ -24,6 +24,7 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
  */
+const { expect } = require("chai");
 const {
   ETH_TOKEN,
   toBN,
@@ -36,17 +37,18 @@ const {
   deployDefaultDao,
   takeChainSnapshot,
   revertChainSnapshot,
-  accounts,
-  expectRevert,
-  expect,
+  getAccounts,
   BankFactory,
   web3,
-} = require("../../utils/oz-util");
+} = require("../../utils/hardhat-test-util");
 
 describe("Extension - Bank", () => {
-  const daoOwner = accounts[0];
+  let accounts, daoOwner;
 
   before("deploy dao", async () => {
+    accounts = await getAccounts();
+    daoOwner = accounts[0];
+
     const { dao, adapters, extensions } = await deployDefaultDao({
       owner: daoOwner,
     });
@@ -91,54 +93,49 @@ describe("Extension - Bank", () => {
     const maxExternalTokens = 201;
     const identityBank = this.extensions.bankExt;
     const bankFactory = await BankFactory.new(identityBank.address);
-    await expectRevert(
-      bankFactory.create(this.dao.address, maxExternalTokens),
-      "max number of external tokens should be (0,200)"
-    );
+    await expect(
+      bankFactory.create(this.dao.address, maxExternalTokens)
+    ).to.be.revertedWith("max number of external tokens should be (0,200)");
   });
 
   it("should not be possible to create a bank that supports 0 external tokens", async () => {
     const maxExternalTokens = 0;
     const identityBank = this.extensions.bankExt;
     const bankFactory = await BankFactory.new(identityBank.address);
-    await expectRevert(
-      bankFactory.create(this.dao.address, maxExternalTokens),
-      "max number of external tokens should be (0,200)"
-    );
+    await expect(
+      bankFactory.create(this.dao.address, maxExternalTokens)
+    ).to.be.revertedWith("max number of external tokens should be (0,200)");
   });
 
   it("should not be possible to set the max external tokens if bank is already initialized", async () => {
     const bank = this.extensions.bankExt;
-    await expectRevert(
-      bank.setMaxExternalTokens(10),
+    await expect(bank.setMaxExternalTokens(10)).to.be.revertedWith(
       "bank already initialized"
     );
   });
 
   it("should not be possible to send ETH to the adapter via receive function", async () => {
     const adapter = this.adapters.bankAdapter;
-    await expectRevert(
+    await expect(
       web3.eth.sendTransaction({
         to: adapter.address,
         from: daoOwner,
         gasPrice: toBN("0"),
         value: toWei("1"),
-      }),
-      "revert"
-    );
+      })
+    ).to.be.revertedWith("revert");
   });
 
   it("should not be possible to send ETH to the adapter via fallback function", async () => {
     const adapter = this.adapters.bankAdapter;
-    await expectRevert(
+    await expect(
       web3.eth.sendTransaction({
         to: adapter.address,
         from: daoOwner,
         gasPrice: toBN("0"),
         value: toWei("1"),
         data: fromAscii("should go to fallback func"),
-      }),
-      "revert"
-    );
+      })
+    ).to.be.revertedWith("revert");
   });
 });
