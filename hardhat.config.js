@@ -22,12 +22,12 @@ const getMnemonic = () => {
     mnemonic = fs.readFileSync('./deployer-mnemonic.secret').toString().trim();
   } catch (err) {
     if (err.code !== 'ENOENT') {
-      throw new Error(`Error reading deployer mnemonic: ${err.message}`);
+      throw new Error(`Error reading deployer mnemonic from file: ${err.message}`);
     }
   }
 
   if (!mnemonic) {
-    throw new Error('Supply WALLET_MNEMONIC in .env or use `npm run generateDeployerMnemonic` to create one.');
+    throw new Error('Supply WALLET_MNEMONIC in .env or use `npm run generateDeployerMnemonic`.');
   }
   return mnemonic;
 }
