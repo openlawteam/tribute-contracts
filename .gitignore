@@ -136,3 +136,6 @@ subgraph.yaml
 
 # VS Code file history
 .history
+
+# Generated Deployer Mnemonic/Address
+*.secret

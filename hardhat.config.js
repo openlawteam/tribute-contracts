@@ -1,3 +1,4 @@
+const fs = require('fs');
 require("dotenv").config();
 require("ts-node").register({
   files: true,
@@ -10,6 +11,27 @@ require("hardhat-gas-reporter");
 require("./tasks/deploy");
 require("./signers");
 
+const getMnemonic = () => {
+  // Default to .env mnemonic if supplied.
+  if (process.env.WALLET_MNEMONIC) {
+    return process.env.WALLET_MNEMONIC;
+  }
+
+  let mnemonic = '';
+  try {
+    mnemonic = fs.readFileSync('./deployer-mnemonic.secret').toString().trim();
+  } catch (err) {
+    if (err.code !== 'ENOENT') {
+      throw new Error(`Error reading deployer mnemonic: ${err.message}`);
+    }
+  }
+
+  if (!mnemonic) {
+    throw new Error('Supply WALLET_MNEMONIC in .env or use `npm run generateDeployerMnemonic` to create one.');
+  }
+  return mnemonic;
+}
+
 module.exports = {
   // Supported Networks
   networks: {
@@ -18,7 +40,7 @@ module.exports = {
       network_id: 1337,
       chainId: 1337,
       accounts: {
-        mnemonic: process.env.WALLET_MNEMONIC,
+        mnemonic: getMnemonic(),
         count: 10,
       },
       throwOnTransactionFailures: true,
@@ -33,7 +55,7 @@ module.exports = {
       url: "http://127.0.0.1:7545",
       chainId: 1337,
       accounts: {
-        mnemonic: process.env.WALLET_MNEMONIC || "",
+        mnemonic: getMnemonic() || "",
         count: 10,
       },
     },
@@ -45,7 +67,7 @@ module.exports = {
       gas: 2100000,
       gasPrice: 4000000000,
       accounts: {
-        mnemonic: process.env.WALLET_MNEMONIC || "",
+        mnemonic: getMnemonic() || "",
         count: 10,
       },
       signerId: process.env.SIGNER || undefined,
@@ -58,7 +80,7 @@ module.exports = {
       gas: 2100000,
       gasPrice: 4000000000,
       accounts: {
-        mnemonic: process.env.WALLET_MNEMONIC || "",
+        mnemonic: getMnemonic() || "",
         count: 10,
       },
       signerId: process.env.SIGNER || undefined,
@@ -70,7 +92,7 @@ module.exports = {
       gas: 2100000,
       gasPrice: 4000000000,
       accounts: {
-        mnemonic: process.env.WALLET_MNEMONIC || "",
+        mnemonic: getMnemonic() || "",
         count: 10,
       },
       signerId: process.env.SIGNER || undefined,
@@ -83,7 +105,7 @@ module.exports = {
       gas: 2100000,
       gasPrice: 10000000000,
       accounts: {
-        mnemonic: process.env.WALLET_MNEMONIC || "",
+        mnemonic: getMnemonic() || "",
         count: 10,
       },
       signerId: process.env.SIGNER || undefined,
@@ -96,7 +118,7 @@ module.exports = {
       gas: 2100000,
       gasPrice: 10000000000,
       accounts: {
-        mnemonic: process.env.WALLET_MNEMONIC || "",
+        mnemonic: getMnemonic() || "",
         count: 10,
       },
       signerId: process.env.SIGNER || undefined,
@@ -117,7 +139,7 @@ module.exports = {
       chainId: 1,
       skipDryRun: true,
       accounts: {
-        mnemonic: process.env.WALLET_MNEMONIC || "",
+        mnemonic: getMnemonic() || "",
         count: 10,
       },
       signerId: process.env.SIGNER || undefined,
@@ -128,7 +150,7 @@ module.exports = {
       chainId: 1666600000,
       skipDryRun: true,
       accounts: {
-        mnemonic: process.env.WALLET_MNEMONIC || "",
+        mnemonic: getMnemonic() || "",
         count: 10,
       },
       signerId: process.env.SIGNER || undefined,
@@ -139,7 +161,7 @@ module.exports = {
       chainId: 137,
       skipDryRun: true,
       accounts: {
-        mnemonic: process.env.WALLET_MNEMONIC || "",
+        mnemonic: getMnemonic() || "",
         count: 10,
       },
       signerId: process.env.SIGNER || undefined,
