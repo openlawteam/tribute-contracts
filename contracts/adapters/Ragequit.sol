@@ -70,8 +70,6 @@ contract RagequitContract is IRagequit, DaoConstants, AdapterGuard {
         uint256 lootToBurn,
         address[] calldata tokens
     ) external override reentrancyGuard(dao) {
-        // At least one token needs to be provided
-        require(tokens.length > 0, "missing tokens");
         // Checks if the are enough units and/or loot to burn
         require(unitsToBurn + lootToBurn > 0, "insufficient units/loot");
         // Gets the delegated address, otherwise returns the sender address.

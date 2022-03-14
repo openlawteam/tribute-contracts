@@ -572,18 +572,17 @@ describe("Adapter - Ragequit", () => {
     const memberAUnits = await bank.balanceOf(memberA, UNITS);
     expect(memberAUnits.toString()).equal("10000000000000000");
 
-    await expectRevert(
-      this.adapters.ragequit.ragequit(
-        this.dao.address,
-        toBN(memberAUnits),
-        toBN(0),
-        [], //empty token array
-        {
-          from: memberA,
-          gasPrice: toBN("0"),
-        }
-      ),
-      "missing tokens"
+    await this.adapters.ragequit.ragequit(
+      this.dao.address,
+      toBN(memberAUnits),
+      toBN(0),
+      [], //empty token array
+      {
+        from: memberA,
+        gasPrice: toBN("0"),
+      }
     );
+
+    expect((await bank.balanceOf(memberA, UNITS)).toString()).equal("0");
   });
 });
