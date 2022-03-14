@@ -218,9 +218,9 @@ const prepareAdapters = async ({
     couponOnboarding;
 
   voting = await VotingContract.at('0x3B06Fa591497c231A9fb9f5E7eA95B715728eaCf');
-  configuration = await ConfigurationContract.at('0xCD4b3abb35cCfF50994A756BF519A05f4E08c3D6');
-  ragequit = await RagequitContract.at('0x7066dccF8F821108F20f1c7b95DAd3639A50593D');
-  managing = await ManagingContract.at('0x858F6E69e514016D88459d9C69a50286C0857552');
+  configuration = await ConfigurationContract.at('0xb18ebca2464bc4db22dc36e6e0964673902f5846');
+  ragequit = await RagequitContract.at('0xd93041140410E2fD69A47d4D1fd06a20A2d60030');
+  managing = await ManagingContract.at('0x6e1618aa96eab233dc18cb77bfcc8bd4765be4ed');
   kycOnboarding = await KycOnboardingContract.at('0x029Df2bfB6403af978602A79C6Fada5C8D2E585f');
   guildkick = await GuildKickContract.at('0x7c8243E3AE58E2A16Fdc6D1F5CD8F2E4a063f6B9');
   daoRegistryAdapter = await DaoRegistryAdapterContract.at('0xe96e170F921Bd87C9B46F3f64cc64Af09119EccF');
