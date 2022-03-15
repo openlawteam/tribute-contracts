@@ -143,7 +143,7 @@ describe("Adapter - TributeNFT", () => {
     ).to.be.revertedWith("revert");
   });
 
-  it("should be possible to process a nft tribute proposal", async () => {
+  it("should be possible to process a ERC721 tribute proposal send via safeTransferFrom", async () => {
     const nftOwner = accounts[2];
     const proposalId = getProposalCounter();
     const dao = this.dao;
@@ -198,6 +198,125 @@ describe("Adapter - TributeNFT", () => {
     // Check if asset was transferred to the NFT Extension contract
     const newOwnerAddr = await pixelNFT.ownerOf(tokenId);
     expect(newOwnerAddr).equal(nftExt.address);
+  });
+
+  it("should be possible to process a ERC721 tribute proposal send via transferFrom", async () => {
+    const nftOwner = accounts[2];
+    const proposalId = getProposalCounter();
+    const dao = this.dao;
+    const bank = this.extensions.bankExt;
+    const nftExt = this.extensions.erc721Ext;
+    const pixelNFT = this.testContracts.pixelNFT;
+    const tributeNFT = this.adapters.tributeNFT;
+    const voting = this.adapters.voting;
+
+    await pixelNFT.mintPixel(nftOwner, 1, 1, { from: daoOwner });
+    let pastEvents = await pixelNFT.getPastEvents();
+    let { tokenId } = pastEvents[1].returnValues;
+
+    await tributeNFT.submitProposal(
+      dao.address,
+      proposalId,
+      nftOwner,
+      pixelNFT.address,
+      tokenId,
+      10, // requested units
+      [],
+      { from: daoOwner, gasPrice: toBN("0") }
+    );
+
+    const vote = 1; //YES
+    await voting.submitVote(dao.address, proposalId, vote, {
+      from: daoOwner,
+      gasPrice: toBN("0"),
+    });
+
+    await advanceTime(10000);
+
+    await pixelNFT.methods["transferFrom(address,address,uint256)"](
+      nftOwner,
+      tributeNFT.address,
+      tokenId,
+      {
+        from: nftOwner,
+        gasPrice: toBN("0"),
+      }
+    );
+
+    // Since the NFT was transferred using `transferFrom` it won't trigger the onERC721Received callaback,
+    // So we need to call the `processERC721Proposal`.
+    await tributeNFT.processERC721Proposal(this.dao.address, proposalId);
+
+    // test balance after proposal is processed
+    const applicantUnits = await bank.balanceOf(nftOwner, UNITS);
+    expect(applicantUnits.toString()).equal("10");
+
+    // test active member status
+    const applicantIsActiveMember = await isMember(bank, nftOwner);
+    expect(applicantIsActiveMember).equal(true);
+
+    // Check if asset was transferred to the NFT Extension contract
+    const newOwnerAddr = await pixelNFT.ownerOf(tokenId);
+    expect(newOwnerAddr).equal(nftExt.address);
+  });
+
+  it("should return the NFT to the applicant if the ERC721 proposal sent via transferFrom did not pass", async () => {
+    const nftOwner = accounts[2];
+    const proposalId = getProposalCounter();
+    const dao = this.dao;
+    const bank = this.extensions.bankExt;
+    const nftExt = this.extensions.erc721Ext;
+    const pixelNFT = this.testContracts.pixelNFT;
+    const tributeNFT = this.adapters.tributeNFT;
+    const voting = this.adapters.voting;
+
+    await pixelNFT.mintPixel(nftOwner, 1, 1, { from: daoOwner });
+    let pastEvents = await pixelNFT.getPastEvents();
+    let { tokenId } = pastEvents[1].returnValues;
+
+    await tributeNFT.submitProposal(
+      dao.address,
+      proposalId,
+      nftOwner,
+      pixelNFT.address,
+      tokenId,
+      10, // requested units
+      [],
+      { from: daoOwner, gasPrice: toBN("0") }
+    );
+
+    const vote = 2; //NO
+    await voting.submitVote(dao.address, proposalId, vote, {
+      from: daoOwner,
+      gasPrice: toBN("0"),
+    });
+
+    await advanceTime(10000);
+
+    await pixelNFT.methods["transferFrom(address,address,uint256)"](
+      nftOwner,
+      tributeNFT.address,
+      tokenId,
+      {
+        from: nftOwner,
+        gasPrice: toBN("0"),
+      }
+    );
+
+    // Since the NFT was transferred using `transferFrom` it won't trigger the onERC721Received callaback,
+    // So we need to call the `processERC721Proposal`.
+    await tributeNFT.processERC721Proposal(this.dao.address, proposalId);
+
+    // test balance after proposal is processed
+    const applicantUnits = await bank.balanceOf(nftOwner, UNITS);
+    expect(applicantUnits.toString()).equal("0");
+
+    // test active member status
+    const applicantIsActiveMember = await isMember(bank, nftOwner);
+    expect(applicantIsActiveMember).equal(false);
+
+    // Check if asset was transferred to the NFT Extension contract
+    expect(await pixelNFT.ownerOf(tokenId)).equal(nftOwner);
   });
 
   it("should be possible to onboard a member using an existing NFT contract but with different tokenId", async () => {
@@ -465,7 +584,6 @@ describe("Adapter - TributeNFT", () => {
     const proposalId = getProposalCounter();
     const dao = this.dao;
     const bank = this.extensions.bankExt;
-    const nftExt = this.extensions.erc721Ext;
     const pixelNFT = this.testContracts.pixelNFT;
     const tributeNFT = this.adapters.tributeNFT;
 
@@ -628,6 +746,54 @@ describe("Adapter - TributeNFT", () => {
     expect(ownerBalance.toString()).equal("7");
   });
 
+  it("should not be possible to onboard a member with erc1155 batch tribute", async () => {
+    const nftOwner = accounts[2];
+    const dao = this.dao;
+    const erc1155Token = this.testContracts.erc1155TestToken;
+    const tributeNFT = this.adapters.tributeNFT;
+    const voting = this.adapters.voting;
+    const proposalId = getProposalCounter();
+
+    await erc1155Token.mint(nftOwner, 1, 10, "0x0", {
+      from: daoOwner,
+      gasPrice: toBN("0"),
+    });
+    await erc1155Token.mint(nftOwner, 2, 10, "0x1", {
+      from: daoOwner,
+      gasPrice: toBN("0"),
+    });
+
+    await tributeNFT.submitProposal(
+      dao.address,
+      proposalId,
+      nftOwner,
+      erc1155Token.address,
+      1,
+      10, // requested units
+      [],
+      { from: daoOwner, gasPrice: toBN("0") }
+    );
+
+    const vote = 1; //YES
+    await voting.submitVote(dao.address, proposalId, vote, {
+      from: daoOwner,
+      gasPrice: toBN("0"),
+    });
+
+    await advanceTime(10000);
+
+    await expect(
+      erc1155Token.safeBatchTransferFrom(
+        nftOwner,
+        tributeNFT.address,
+        [1, 2],
+        [1, 1],
+        encodeProposalData(dao, proposalId),
+        { from: nftOwner }
+      )
+    ).to.be.revertedWith("not supported");
+  });
+
   it("should send back the erc1155 tokens if the proposal has failed", async () => {
     const nftOwner = accounts[2];
     const dao = this.dao;
@@ -715,5 +881,15 @@ describe("Adapter - TributeNFT", () => {
         data: fromAscii("should go to fallback func"),
       })
     ).to.be.revertedWith("revert");
+  });
+
+  it("should support onERC721Received and onERC1155Received interfaces", async () => {
+    const adapter = this.adapters.tributeNFT;
+    // supportsInterface
+    expect(await adapter.supportsInterface("0x01ffc9a7")).to.be.true;
+    // onERC1155Received
+    expect(await adapter.supportsInterface("0xf23a6e61")).to.be.true;
+    // onERC721Received
+    expect(await adapter.supportsInterface("0x150b7a02")).to.be.true;
   });
 });
