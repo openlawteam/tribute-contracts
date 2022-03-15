@@ -264,6 +264,21 @@ contract NFTExtension is IExtension, IERC721Receiver {
     }
 
     /**
+     * @notice Must be manually called if the NFT was received via transferFrom function.
+     * @notice If this function is not called, the NFT metadata won't be stored in the extension,
+     * because the transferFrom call does not trigger the onERC721Received callback.
+     * @notice If the NFT is not owner by the Extension, the update call is not allowed, this is done to
+     * ensure that the NFT was actually sent to the Extension address.
+     */
+    function updateCollection(address token, uint256 tokenId) external {
+        require(
+            IERC721(token).ownerOf(tokenId) == address(this),
+            "update not allowed"
+        );
+        _saveNft(token, tokenId, DaoHelper.GUILD);
+    }
+
+    /**
      * @notice Helper function to update the extension states for an NFT collected by the extension.
      * @param nftAddr The NFT address.
      * @param nftTokenId The token id.

@@ -25,7 +25,13 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
  */
 
-const { toWei, toBN, fromAscii, GUILD } = require("../../utils/contract-util");
+const {
+  toWei,
+  toBN,
+  fromAscii,
+  GUILD,
+  ZERO_ADDRESS,
+} = require("../../utils/contract-util");
 
 const {
   takeChainSnapshot,
@@ -106,7 +112,7 @@ describe("Extension - ERC721", () => {
     ).to.be.revertedWith("erc721::already initialized");
   });
 
-  it("should be possible to collect a NFT that is send directly to the extension", async () => {
+  it("should be possible to collect a NFT that is send directly to the extension using safeTransferFrom", async () => {
     const nftOwner = accounts[2];
     const dao = this.dao;
     const pixelNFT = this.testContracts.pixelNFT;
@@ -142,6 +148,94 @@ describe("Extension - ERC721", () => {
     // The actual holder of the NFT is the ERC721 Extension
     const holder = await pixelNFT.ownerOf(tokenId);
     expect(holder).equal(nftExtension.address);
+  });
+
+  it("should be possible to collect a NFT that is send directly to the extension using transferFrom", async () => {
+    const nftOwner = accounts[2];
+    const pixelNFT = this.testContracts.pixelNFT;
+    const nftExtension = this.extensions.erc721Ext;
+
+    await pixelNFT.mintPixel(nftOwner, 1, 1, { from: daoOwner });
+    let pastEvents = await pixelNFT.getPastEvents();
+    let { tokenId } = pastEvents[1].returnValues;
+
+    const firstOwner = await pixelNFT.ownerOf(tokenId);
+    expect(firstOwner).equal(nftOwner);
+
+    await pixelNFT.methods["transferFrom(address,address,uint256)"](
+      nftOwner,
+      nftExtension.address,
+      tokenId,
+      {
+        from: nftOwner,
+      }
+    );
+
+    // The NFT was sent via transferFrom, so we need to manually update the metadata
+    await nftExtension.updateCollection(pixelNFT.address, tokenId);
+
+    // Make sure it was collected in the NFT Extension
+    const nftAddr = await nftExtension.getNFTAddress(0);
+    expect(nftAddr).equal(pixelNFT.address);
+    const nftId = await nftExtension.getNFT(nftAddr, 0);
+    expect(nftId.toString()).equal(tokenId.toString());
+
+    // The NFT belongs to the GUILD after it is collected via ERC721 Extension
+    const newOwner = await nftExtension.getNFTOwner(nftAddr, tokenId);
+    expect(newOwner.toLowerCase()).equal(GUILD);
+
+    // The actual holder of the NFT is the ERC721 Extension
+    const holder = await pixelNFT.ownerOf(tokenId);
+    expect(holder).equal(nftExtension.address);
+  });
+
+  it("should not be possible to update the collection if the NFT is not owned by the extension", async () => {
+    const nftOwner = accounts[2];
+    const pixelNFT = this.testContracts.pixelNFT;
+    const nftExtension = this.extensions.erc721Ext;
+
+    await pixelNFT.mintPixel(nftOwner, 1, 1, { from: daoOwner });
+    let pastEvents = await pixelNFT.getPastEvents();
+    let { tokenId } = pastEvents[1].returnValues;
+
+    const firstOwner = await pixelNFT.ownerOf(tokenId);
+    expect(firstOwner).equal(nftOwner);
+
+    await expect(
+      nftExtension.updateCollection(pixelNFT.address, tokenId)
+    ).to.be.revertedWith("update not allowed");
+  });
+
+  it("should not get the NFT information if it was sent using transferFrom but the updateCollection was not called", async () => {
+    const nftOwner = accounts[2];
+    const pixelNFT = this.testContracts.pixelNFT;
+    const nftExtension = this.extensions.erc721Ext;
+
+    await pixelNFT.mintPixel(nftOwner, 1, 1, { from: daoOwner });
+    let pastEvents = await pixelNFT.getPastEvents();
+    let { tokenId } = pastEvents[1].returnValues;
+
+    const firstOwner = await pixelNFT.ownerOf(tokenId);
+    expect(firstOwner).equal(nftOwner);
+
+    await pixelNFT.methods["transferFrom(address,address,uint256)"](
+      nftOwner,
+      nftExtension.address,
+      tokenId,
+      {
+        from: nftOwner,
+      }
+    );
+
+    // The actual holder of the NFT is the ERC721 Extension
+    expect(await pixelNFT.ownerOf(tokenId)).equal(nftExtension.address);
+
+    // but the metadata is not up to date because the `updateCollection` was not called
+    await expect(nftExtension.getNFTAddress(0)).to.be.reverted;
+    await expect(nftExtension.getNFT(pixelNFT.address, 0)).to.be.reverted;
+    expect(
+      await nftExtension.getNFTOwner(pixelNFT.address, tokenId)
+    ).to.be.equal(ZERO_ADDRESS);
   });
 
   it("should not be possible to send ETH to the extension via receive function", async () => {
