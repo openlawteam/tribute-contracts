@@ -181,6 +181,7 @@ contract NFTExtension is IExtension, IERC721Receiver {
     ) external hasExtensionAccess(_dao, AclFlag.INTERNAL_TRANSFER) {
         require(newOwner != address(0x0), "erc721::new owner is 0");
         address currentOwner = _ownership[getNFTId(nftAddr, nftTokenId)];
+        require(_dao.notJailed(currentOwner), "member is jailed!");
         require(currentOwner != address(0x0), "erc721::nft not found");
 
         _ownership[getNFTId(nftAddr, nftTokenId)] = newOwner;

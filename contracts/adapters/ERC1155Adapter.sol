@@ -50,6 +50,10 @@ contract ERC1155AdapterContract is AdapterGuard {
         uint256 nftTokenId,
         uint256 amount
     ) external reentrancyGuard(dao) {
+        require(
+            dao.notJailed((DaoHelper.msgSender(dao, msg.sender))),
+            "member is jailed!"
+        );
         ERC1155TokenExtension erc1155 = ERC1155TokenExtension(
             dao.getExtensionAddress(DaoHelper.ERC1155_EXT)
         );
