@@ -53,6 +53,7 @@ contract InternalTokenVestingExtensionFactory is
 
     /**
      * @notice Creates a clone of the ERC20 Token Extension.
+     * @notice The safest way to read the new extension address is to read it from the event.
      */
     function create(address dao) external nonReentrant {
         require(dao != address(0x0), "invalid dao addr");
@@ -67,6 +68,9 @@ contract InternalTokenVestingExtensionFactory is
 
     /**
      * @notice Returns the extension address created for that DAO, or 0x0... if it does not exist.
+     * @notice Do not rely on the result returned by this right after the new extension is cloned,
+     * because it is prone to front-running attacks. During the extension creation it is safer to
+     * read the new extension address from the event generated in the create call transaction.
      */
     function getExtensionAddress(address dao)
         external

@@ -28,5 +28,10 @@ SOFTWARE.
  */
 
 interface IFactory {
+    /**
+     * @notice Do not rely on the result returned by this right after the new extension is cloned,
+     * because it is prone to front-running attacks. During the extension creation it is safer to
+     * read the new extension address from the event generated in the create call transaction.
+     */
     function getExtensionAddress(address dao) external view returns (address);
 }
