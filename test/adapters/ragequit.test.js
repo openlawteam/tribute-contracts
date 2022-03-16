@@ -556,6 +556,39 @@ describe("Adapter - Ragequit", () => {
     ).to.be.revertedWith("duplicate token");
   });
 
+  it("should be possible to ragequit if there is a no token in the list", async () => {
+    const memberA = accounts[2];
+    const bank = this.extensions.bankExt;
+    const onboarding = this.adapters.onboarding;
+    const voting = this.adapters.voting;
+
+    const proposalId = getProposalCounter();
+    await onboardingNewMember(
+      proposalId,
+      this.dao,
+      onboarding,
+      voting,
+      memberA,
+      owner,
+      unitPrice,
+      UNITS
+    );
+
+    const memberAUnits = await bank.balanceOf(memberA, UNITS);
+    expect(memberAUnits.toString()).equal("10000000000000000");
+
+    await this.adapters.ragequit.ragequit(
+      this.dao.address,
+      memberAUnits,
+      toBN(0),
+      [], //empty token array
+      {
+        from: memberA,
+        gasPrice: toBN("0"),
+      }
+    );
+  });
+
   it("should not be possible to send ETH to the adapter via receive function", async () => {
     const adapter = this.adapters.ragequit;
     await expect(
