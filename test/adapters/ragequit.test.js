@@ -616,10 +616,11 @@ describe("Adapter - Ragequit", () => {
     ).to.be.revertedWith("revert");
   });
 
-  it("still be able to ragequit even if a guild kick is in progress", async () => {
+  it("should be possible to ragequit even if a guild kick is in progress", async () => {
     const member = owner;
     const newMember = accounts[2];
 
+    const bank = this.extensions.bankExt;
     const onboarding = this.adapters.onboarding;
     const voting = this.adapters.voting;
     const guildkickContract = this.adapters.guildkick;
@@ -635,7 +636,10 @@ describe("Adapter - Ragequit", () => {
       UNITS
     );
 
-    // Start a new kick poposal
+    const memberUnits = await bank.balanceOf(newMember, UNITS);
+    expect(memberUnits.toString()).equal("10000000000000000");
+
+    // Start a new kick proposal
     let memberToKick = newMember;
     let kickProposalId = getProposalCounter();
 
@@ -649,7 +653,7 @@ describe("Adapter - Ragequit", () => {
 
     await this.adapters.ragequit.ragequit(
       this.dao.address,
-      toBN(1000),
+      memberUnits,
       toBN(0),
       [], //empty token array
       {
@@ -658,16 +662,121 @@ describe("Adapter - Ragequit", () => {
       }
     );
 
-    //but the member should still be jailed
+    expect((await bank.balanceOf(memberToKick, UNITS)).toString()).equal("0");
+  });
+
+  it("should be possible to partially ragequit even if a guild kick is in progress", async () => {
+    const member = owner;
+    const newMember = accounts[2];
+
+    const bank = this.extensions.bankExt;
+    const onboarding = this.adapters.onboarding;
+    const voting = this.adapters.voting;
+    const guildkickContract = this.adapters.guildkick;
+
+    await onboardingNewMember(
+      getProposalCounter(),
+      this.dao,
+      onboarding,
+      voting,
+      newMember,
+      member,
+      unitPrice,
+      UNITS
+    );
+
+    const memberUnits = await bank.balanceOf(newMember, UNITS);
+    expect(memberUnits.toString()).equal("10000000000000000");
+
+    // Start a new kick proposal
+    let memberToKick = newMember;
+    let kickProposalId = getProposalCounter();
+
+    await guildKickProposal(
+      this.dao,
+      guildkickContract,
+      memberToKick,
+      member,
+      kickProposalId
+    );
+
+    const burnUnits = toBN(50000);
+    await this.adapters.ragequit.ragequit(
+      this.dao.address,
+      burnUnits,
+      toBN(0),
+      [], //empty token array
+      {
+        from: memberToKick,
+        gasPrice: toBN("0"),
+      }
+    );
+
+    expect(await bank.balanceOf(memberToKick, UNITS)).to.be.equal(
+      memberUnits.sub(burnUnits)
+    );
+  });
+
+  it("should not be possible to transfer the remaining units after a partial ragequit if the member was in jail", async () => {
+    const member = owner;
+    const newMember = accounts[2];
+
+    const bank = this.extensions.bankExt;
+    const onboarding = this.adapters.onboarding;
+    const voting = this.adapters.voting;
+    const guildkickContract = this.adapters.guildkick;
+
+    await onboardingNewMember(
+      getProposalCounter(),
+      this.dao,
+      onboarding,
+      voting,
+      newMember,
+      member,
+      unitPrice,
+      UNITS
+    );
+
+    const memberUnits = await bank.balanceOf(newMember, UNITS);
+    expect(memberUnits.toString()).equal("10000000000000000");
+
+    // Start a new kick proposal
+    let memberToKick = newMember;
+    let kickProposalId = getProposalCounter();
+
+    await guildKickProposal(
+      this.dao,
+      guildkickContract,
+      memberToKick,
+      member,
+      kickProposalId
+    );
+
+    const burnUnits = toBN(50000);
+    await this.adapters.ragequit.ragequit(
+      this.dao.address,
+      burnUnits,
+      toBN(0),
+      [], //empty token array
+      {
+        from: memberToKick,
+        gasPrice: toBN("0"),
+      }
+    );
+
+    expect(await bank.balanceOf(memberToKick, UNITS)).to.be.equal(
+      memberUnits.sub(burnUnits)
+    );
 
     const { erc20Ext } = this.extensions;
-
     const erc20 = new Contract(
       erc20Ext.address,
       erc20Ext.abi,
       await hre.ethers.getSigner(newMember)
     );
 
+    // After the partial ragequit the member must be in jail
+    // so moving the funds are not allowed
     await expect(
       erc20.transfer(owner, 1, { from: memberToKick })
     ).to.be.revertedWith("no transfer from jail");

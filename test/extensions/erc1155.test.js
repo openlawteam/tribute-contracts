@@ -493,24 +493,7 @@ describe("Extension - ERC1155", () => {
     );
     expect(owner.toLowerCase()).equal(GUILD);
 
-    await this.adapters.erc1155TestAdapter.internalTransfer(
-      this.dao.address,
-      erc1155TestToken.address,
-      id, //tokenId
-      1, //amount
-      { from: nftOwner }
-    );
-
     //internalTransfer should revert, because nonMember is not a member
-    await erc1155Adapter.internalTransfer(
-      this.dao.address,
-      nonMember,
-      erc1155TestToken.address,
-      id, //tokenId
-      1, //amount
-      { from: nftOwner }
-    );
-
     await expect(
       erc1155Adapter.internalTransfer(
         this.dao.address,
