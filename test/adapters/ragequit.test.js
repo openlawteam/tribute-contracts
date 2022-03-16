@@ -587,6 +587,8 @@ describe("Adapter - Ragequit", () => {
         gasPrice: toBN("0"),
       }
     );
+
+    expect((await bank.balanceOf(memberA, UNITS)).toString()).equal("0");
   });
 
   it("should not be possible to send ETH to the adapter via receive function", async () => {
