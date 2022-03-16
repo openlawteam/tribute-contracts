@@ -25,6 +25,9 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
  */
 const { expect } = require("chai");
+
+const { Contract } = require("ethers");
+
 const {
   toBN,
   toWei,
@@ -48,7 +51,10 @@ const {
   web3,
 } = require("../../utils/hardhat-test-util");
 
-const { onboardingNewMember } = require("../../utils/test-util");
+const {
+  onboardingNewMember,
+  guildKickProposal,
+} = require("../../utils/test-util");
 
 const proposalCounter = proposalIdGenerator().generator;
 
@@ -550,41 +556,6 @@ describe("Adapter - Ragequit", () => {
     ).to.be.revertedWith("duplicate token");
   });
 
-  it("should not be possible to ragequit if there is a duplicate token", async () => {
-    const memberA = accounts[2];
-    const bank = this.extensions.bankExt;
-    const onboarding = this.adapters.onboarding;
-    const voting = this.adapters.voting;
-
-    const proposalId = getProposalCounter();
-    await onboardingNewMember(
-      proposalId,
-      this.dao,
-      onboarding,
-      voting,
-      memberA,
-      owner,
-      unitPrice,
-      UNITS
-    );
-
-    const memberAUnits = await bank.balanceOf(memberA, UNITS);
-    expect(memberAUnits.toString()).equal("10000000000000000");
-
-    await expect(
-      this.adapters.ragequit.ragequit(
-        this.dao.address,
-        memberAUnits,
-        toBN(0),
-        [], //empty token array
-        {
-          from: memberA,
-          gasPrice: toBN("0"),
-        }
-      )
-    ).to.be.revertedWith("missing tokens");
-  });
-
   it("should not be possible to send ETH to the adapter via receive function", async () => {
     const adapter = this.adapters.ragequit;
     await expect(
@@ -608,5 +579,62 @@ describe("Adapter - Ragequit", () => {
         data: fromAscii("should go to fallback func"),
       })
     ).to.be.revertedWith("revert");
+  });
+
+  it("still be able to ragequit even if a guild kick is in progress", async () => {
+    const member = owner;
+    const newMember = accounts[2];
+
+    const onboarding = this.adapters.onboarding;
+    const voting = this.adapters.voting;
+    const guildkickContract = this.adapters.guildkick;
+
+    await onboardingNewMember(
+      getProposalCounter(),
+      this.dao,
+      onboarding,
+      voting,
+      newMember,
+      member,
+      unitPrice,
+      UNITS
+    );
+
+    // Start a new kick poposal
+    let memberToKick = newMember;
+    let kickProposalId = getProposalCounter();
+
+    await guildKickProposal(
+      this.dao,
+      guildkickContract,
+      memberToKick,
+      member,
+      kickProposalId
+    );
+
+    await this.adapters.ragequit.ragequit(
+      this.dao.address,
+      toBN(1000),
+      toBN(0),
+      [], //empty token array
+      {
+        from: memberToKick,
+        gasPrice: toBN("0"),
+      }
+    );
+
+    //but the member should still be jailed
+
+    const { erc20Ext } = this.extensions;
+
+    const erc20 = new Contract(
+      erc20Ext.address,
+      erc20Ext.abi,
+      await hre.ethers.getSigner(newMember)
+    );
+
+    await expect(
+      erc20.transfer(owner, 1, { from: memberToKick })
+    ).to.be.revertedWith("no transfer from jail");
   });
 });

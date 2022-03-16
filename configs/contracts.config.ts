@@ -728,7 +728,7 @@ export const contracts: Array<ContractConfig> = [
     version: "1.0.0",
     type: ContractType.Adapter,
     acls: {
-      dao: [],
+      dao: [daoAccessFlagsMap.JAIL_MEMBER],
       extensions: {
         [extensionsIdsMap.BANK_EXT]: [
           bankExtensionAclFlagsMap.INTERNAL_TRANSFER,
