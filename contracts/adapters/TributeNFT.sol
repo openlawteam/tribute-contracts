@@ -1,7 +1,6 @@
 pragma solidity ^0.8.0;
 
 // SPDX-License-Identifier: MIT
-
 import "../core/DaoRegistry.sol";
 import "../extensions/nft/NFT.sol";
 import "../extensions/erc1155/ERC1155TokenExtension.sol";
@@ -9,7 +8,6 @@ import "../extensions/bank/Bank.sol";
 import "../adapters/interfaces/IVoting.sol";
 import "../guards/AdapterGuard.sol";
 import "./modifiers/Reimbursable.sol";
-
 import "../helpers/DaoHelper.sol";
 import "@openzeppelin/contracts/token/ERC1155/IERC1155.sol";
 import "@openzeppelin/contracts/token/ERC1155/IERC1155Receiver.sol";
@@ -84,10 +82,8 @@ contract TributeNFTContract is
         external
         onlyAdapter(dao)
     {
-        BankExtension bank = BankExtension(
-            dao.getExtensionAddress(DaoHelper.BANK)
-        );
-        bank.registerPotentialNewInternalToken(dao, tokenAddrToMint);
+        BankExtension(dao.getExtensionAddress(DaoHelper.BANK))
+            .registerPotentialNewInternalToken(dao, tokenAddrToMint);
     }
 
     /**
@@ -222,8 +218,7 @@ contract TributeNFTContract is
                 DaoHelper.ERC1155_EXT
             );
 
-            IERC1155 erc1155 = IERC1155(msg.sender);
-            erc1155.safeTransferFrom(
+            IERC1155(msg.sender).safeTransferFrom(
                 address(this),
                 erc1155ExtAddr,
                 id,
@@ -231,8 +226,13 @@ contract TributeNFTContract is
                 ""
             );
         } else {
-            IERC1155 erc1155 = IERC1155(msg.sender);
-            erc1155.safeTransferFrom(address(this), from, id, value, "");
+            IERC1155(msg.sender).safeTransferFrom(
+                address(this),
+                from,
+                id,
+                value,
+                ""
+            );
         }
 
         ReimbursableLib.afterExecution2(ppS.dao, rData, payable(from));
@@ -268,6 +268,10 @@ contract TributeNFTContract is
             interfaceID == this.onERC721Received.selector;
     }
 
+    /**
+     * @notice Required function from IERC721 standard to be able to receive assets to this contract address.
+     * @notice This function is called from the NFT contract if the transfer was made using {safeTransferFrom}
+     */
     function onERC721Received(
         address,
         address from,
@@ -286,20 +290,55 @@ contract TributeNFTContract is
 
         require(proposal.nftTokenId == tokenId, "wrong NFT");
         require(proposal.nftAddr == msg.sender, "wrong NFT addr");
-        IERC721 erc721 = IERC721(msg.sender);
+
         //if proposal passes and its an erc721 token - use NFT Extension
         if (voteResult == IVoting.VotingState.PASS) {
             NFTExtension nftExt = NFTExtension(
                 ppS.dao.getExtensionAddress(DaoHelper.NFT)
             );
-            erc721.approve(address(nftExt), proposal.nftTokenId);
+            IERC721(msg.sender).approve(address(nftExt), proposal.nftTokenId);
 
             nftExt.collect(ppS.dao, proposal.nftAddr, proposal.nftTokenId);
         } else {
-            erc721.safeTransferFrom(address(this), from, tokenId);
+            IERC721(msg.sender).safeTransferFrom(address(this), from, tokenId);
         }
 
         ReimbursableLib.afterExecution2(ppS.dao, rData, payable(from));
         return this.onERC721Received.selector;
+    }
+
+    /**
+     * @notice Process an ERC721 onboarding proposal.
+     * @notice This function must be called if NFT transfer was made using {transferFrom} which does not trigger the onERC721Received callback.
+     * @notice If the proposal didn't not pass, the NFT is returned to applicant.
+     * @param dao The DAO address.
+     * @param proposalId The proposalId to be processed.
+     */
+    function processERC721Proposal(DaoRegistry dao, bytes32 proposalId)
+        external
+        reimbursable(dao)
+    {
+        (
+            ProposalDetails storage proposal,
+            IVoting.VotingState voteResult
+        ) = _processProposal(dao, proposalId);
+
+        //if proposal passes and its an erc721 token - use NFT Extension
+        if (voteResult == IVoting.VotingState.PASS) {
+            NFTExtension nftExt = NFTExtension(
+                dao.getExtensionAddress(DaoHelper.NFT)
+            );
+            IERC721(proposal.nftAddr).approve(
+                address(nftExt),
+                proposal.nftTokenId
+            );
+            nftExt.collect(dao, proposal.nftAddr, proposal.nftTokenId);
+        } else {
+            IERC721(proposal.nftAddr).safeTransferFrom(
+                address(this),
+                proposal.applicant,
+                proposal.nftTokenId
+            );
+        }
     }
 }

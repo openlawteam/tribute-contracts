@@ -109,7 +109,6 @@ contract NFTExtension is IExtension, IERC721Receiver {
         uint256 nftTokenId
     ) external hasExtensionAccess(_dao, AclFlag.COLLECT_NFT) {
         IERC721 erc721 = IERC721(nftAddr);
-        // Move the NFT to the contract address
         address currentOwner = erc721.ownerOf(nftTokenId);
         //If the NFT is already in the NFTExtension, update the ownership if not set already
         if (currentOwner == address(this)) {
@@ -118,8 +117,8 @@ contract NFTExtension is IExtension, IERC721Receiver {
                 // slither-disable-next-line reentrancy-events
                 emit CollectedNFT(nftAddr, nftTokenId);
             }
-            //If the NFT is not in the NFTExtension, we try to transfer from the current owner of the NFT to the extension
         } else {
+            //If the NFT is not in the NFTExtension, we try to transfer from the current owner of the NFT to the extension
             _saveNft(nftAddr, nftTokenId, DaoHelper.GUILD);
             erc721.safeTransferFrom(currentOwner, address(this), nftTokenId);
             // slither-disable-next-line reentrancy-events
@@ -149,8 +148,7 @@ contract NFTExtension is IExtension, IERC721Receiver {
             _nfts[nftAddr].remove(nftTokenId),
             "erc721::can not remove token id"
         );
-        IERC721 erc721 = IERC721(nftAddr);
-        erc721.safeTransferFrom(address(this), newOwner, nftTokenId);
+        IERC721(nftAddr).safeTransferFrom(address(this), newOwner, nftTokenId);
         // Remove the asset from the extension
         delete _ownership[getNFTId(nftAddr, nftTokenId)];
 
@@ -262,6 +260,21 @@ contract NFTExtension is IExtension, IERC721Receiver {
     ) external override returns (bytes4) {
         _saveNft(msg.sender, id, DaoHelper.GUILD);
         return this.onERC721Received.selector;
+    }
+
+    /**
+     * @notice Must be manually called if the NFT was received via transferFrom function.
+     * @notice If this function is not called, the NFT metadata won't be stored in the extension,
+     * because the transferFrom call does not trigger the onERC721Received callback.
+     * @notice If the NFT is not owner by the Extension, the update call is not allowed, this is done to
+     * ensure that the NFT was actually sent to the Extension address.
+     */
+    function updateCollection(address token, uint256 tokenId) external {
+        require(
+            IERC721(token).ownerOf(tokenId) == address(this),
+            "update not allowed"
+        );
+        _saveNft(token, tokenId, DaoHelper.GUILD);
     }
 
     /**
