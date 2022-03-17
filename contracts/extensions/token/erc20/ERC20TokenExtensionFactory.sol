@@ -47,7 +47,9 @@ contract ERC20TokenExtensionFactory is IFactory, CloneFactory, ReentrancyGuard {
     }
 
     /**
-     * @notice Creates a clone of the ERC20 Token Extension.
+     * @notice Creates a new extension using clone factory.
+     * @notice It can set additional arguments to the extension.
+     * @notice The safest way to read the new extension address is to read it from the event.
      */
     // slither-disable-next-line reentrancy-events
     function create(
@@ -70,6 +72,9 @@ contract ERC20TokenExtensionFactory is IFactory, CloneFactory, ReentrancyGuard {
 
     /**
      * @notice Returns the extension address created for that DAO, or 0x0... if it does not exist.
+     * @notice Do not rely on the result returned by this right after the new extension is cloned,
+     * because it is prone to front-running attacks. During the extension creation it is safer to
+     * read the new extension address from the event generated in the create call transaction.
      */
     function getExtensionAddress(address dao)
         external

@@ -32,6 +32,7 @@ const {
   unitPrice,
   UNITS,
   GUILD,
+  ZERO_ADDRESS,
 } = require("../../utils/contract-util");
 
 const {
@@ -63,12 +64,13 @@ describe("Extension - ERC1155", () => {
     accounts = await getAccounts();
     daoOwner = accounts[0];
 
-    const { dao, adapters, extensions, testContracts } =
+    const { dao, adapters, extensions, factories, testContracts } =
       await deployDefaultNFTDao({ owner: daoOwner });
     this.dao = dao;
     this.adapters = adapters;
     this.extensions = extensions;
     this.testContracts = testContracts;
+    this.factories = factories;
   });
 
   beforeEach(async () => {
@@ -77,6 +79,39 @@ describe("Extension - ERC1155", () => {
 
   afterEach(async () => {
     await revertChainSnapshot(this.snapshotId);
+  });
+
+  describe("Factory", async () => {
+    it("should be possible to create an extension using the factory", async () => {
+      const { logs } = await this.factories.erc1155ExtFactory.create(
+        this.dao.address
+      );
+      const log = logs[0];
+      expect(log.event).to.be.equal("ERC1155CollectionCreated");
+      expect(log.args[0]).to.be.equal(this.dao.address);
+      expect(log.args[1]).to.not.be.equal(ZERO_ADDRESS);
+    });
+
+    it("should be possible to get an extension address by dao", async () => {
+      await this.factories.erc1155ExtFactory.create(this.dao.address);
+      const extAddress =
+        await this.factories.erc1155ExtFactory.getExtensionAddress(
+          this.dao.address
+        );
+      expect(extAddress).to.not.be.equal(ZERO_ADDRESS);
+    });
+
+    it("should return zero address if there is no extension address by dao", async () => {
+      const daoAddress = accounts[2];
+      const extAddress =
+        await this.factories.erc1155ExtFactory.getExtensionAddress(daoAddress);
+      expect(extAddress).to.be.equal(ZERO_ADDRESS);
+    });
+
+    it("should not be possible to create an extension using a zero address dao", async () => {
+      await expect(this.factories.erc1155ExtFactory.create(ZERO_ADDRESS)).to.be
+        .reverted;
+    });
   });
 
   it("should be possible to create a dao with a nft extension pre-configured", async () => {

@@ -278,17 +278,23 @@ module.exports = (() => {
     const { WETH } = hardhatContracts;
     const weth = await WETH.new();
 
-    const { dao, adapters, extensions, testContracts, utilContracts } =
-      await deployDao({
-        ...getDefaultOptions({ owner }),
-        ...hardhatContracts,
-        deployFunction,
-        attachFunction: attach,
-        finalize: false,
-        contractConfigs: allContractConfigs,
-        weth: weth.address,
-        wethContract: weth,
-      });
+    const {
+      dao,
+      adapters,
+      extensions,
+      factories,
+      testContracts,
+      utilContracts,
+    } = await deployDao({
+      ...getDefaultOptions({ owner }),
+      ...hardhatContracts,
+      deployFunction,
+      attachFunction: attach,
+      finalize: false,
+      contractConfigs: allContractConfigs,
+      weth: weth.address,
+      wethContract: weth,
+    });
 
     await dao.finalizeDao({ from: owner });
 
@@ -296,6 +302,7 @@ module.exports = (() => {
       dao: dao,
       adapters: adapters,
       extensions: extensions,
+      factories: factories,
       testContracts: testContracts,
       utilContracts: utilContracts,
       wethContract: weth,
