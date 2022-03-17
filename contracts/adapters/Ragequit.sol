@@ -64,12 +64,14 @@ contract RagequitContract is IRagequit, AdapterGuard {
         uint256 lootToBurn,
         address[] calldata tokens
     ) external override reentrancyGuard(dao) {
-        // At least one token needs to be provided
-        require(tokens.length > 0, "missing tokens");
         // Checks if the are enough units and/or loot to burn
         require(unitsToBurn + lootToBurn > 0, "insufficient units/loot");
         // Gets the delegated address, otherwise returns the sender address.
         address memberAddr = DaoHelper.msgSender(dao, msg.sender);
+        bool jailed = !dao.notJailed((memberAddr));
+        if (jailed) {
+            dao.unjailMember(memberAddr);
+        }
 
         // Instantiates the Bank extension to handle the internal balance checks and transfers.
         BankExtension bank = BankExtension(
@@ -95,6 +97,10 @@ contract RagequitContract is IRagequit, AdapterGuard {
             tokens,
             bank
         );
+
+        if (jailed) {
+            dao.jailMember(memberAddr);
+        }
     }
 
     /**

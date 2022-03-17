@@ -661,7 +661,7 @@ contract OffchainVotingContract is
             _getBank(dao).balanceOf(challengedReporter, DaoHelper.UNITS)
         );
 
-        GuildKickHelper.lockMemberTokens(dao, challengedReporter);
+        dao.jailMember(challengedReporter);
 
         dao.submitProposal(challengeProposalId);
 

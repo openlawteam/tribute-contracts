@@ -28,6 +28,8 @@ SOFTWARE.
 // Whole-script strict mode syntax
 "use strict";
 const { expect } = require("chai");
+const { Contract } = require("ethers");
+
 const {
   toBN,
   toWei,
@@ -992,5 +994,66 @@ describe("Adapter - GuildKick", () => {
         data: fromAscii("should go to fallback func"),
       })
     ).to.be.revertedWith("revert");
+  });
+
+  it("a guildick proposal should put the member in jail and therefore not let him move assets", async () => {
+    const member = owner;
+    const newMember = accounts[2];
+
+    const onboarding = this.adapters.onboarding;
+    const voting = this.adapters.voting;
+    const guildkickContract = this.adapters.guildkick;
+
+    await onboardingNewMember(
+      getProposalCounter(),
+      this.dao,
+      onboarding,
+      voting,
+      newMember,
+      member,
+      unitPrice,
+      UNITS
+    );
+
+    // Start a new kick poposal
+    let memberToKick = newMember;
+    let kickProposalId = getProposalCounter();
+
+    const { erc20Ext } = this.extensions;
+
+    const erc20 = new Contract(
+      erc20Ext.address,
+      erc20Ext.abi,
+      await hre.ethers.getSigner(newMember)
+    );
+
+    await erc20.transfer(owner, 1, { from: memberToKick });
+
+    await guildKickProposal(
+      this.dao,
+      guildkickContract,
+      memberToKick,
+      member,
+      kickProposalId
+    );
+    await expect(
+      erc20.transfer(owner, 1, { from: memberToKick })
+    ).to.be.revertedWith("no transfer from jail");
+
+    //Vote YES on kick proposal
+    await voting.submitVote(this.dao.address, kickProposalId, 2, {
+      from: member,
+      gasPrice: toBN("0"),
+    });
+    await advanceTime(10000);
+
+    // The member gets kicked out of the DAO
+    await guildkickContract.processProposal(this.dao.address, kickProposalId, {
+      from: member,
+      gasPrice: toBN("0"),
+    });
+
+    // Transfer is possible again!
+    await erc20.transfer(owner, 1, { from: memberToKick });
   });
 });

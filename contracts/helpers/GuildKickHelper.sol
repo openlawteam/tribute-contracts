@@ -36,64 +36,10 @@ SOFTWARE.
 library GuildKickHelper {
     address internal constant TOTAL = address(0xbabe);
     address internal constant UNITS = address(0xFF1CE);
-    address internal constant LOCKED_UNITS = address(0xFFF1CE);
     address internal constant LOOT = address(0xB105F00D);
-    address internal constant LOCKED_LOOT = address(0xBB105F00D);
 
     bytes32 internal constant BANK = keccak256("bank");
     address internal constant GUILD = address(0xdead);
-
-    function lockMemberTokens(DaoRegistry dao, address potentialKickedMember)
-        internal
-    {
-        // Get the bank extension
-        BankExtension bank = BankExtension(dao.getExtensionAddress(BANK));
-        // Calculates the total units, loot and locked loot before any internal transfers
-        // it considers the locked loot to be able to calculate the fair amount to ragequit,
-        // but locked loot can not be burned.
-
-        uint256 unitsToBurn = bank.balanceOf(potentialKickedMember, UNITS);
-        uint256 lootToBurn = bank.balanceOf(potentialKickedMember, LOOT);
-
-        bank.registerPotentialNewToken(dao, LOCKED_UNITS);
-        bank.registerPotentialNewToken(dao, LOCKED_LOOT);
-
-        bank.addToBalance(
-            dao,
-            potentialKickedMember,
-            LOCKED_UNITS,
-            unitsToBurn
-        );
-        bank.subtractFromBalance(
-            dao,
-            potentialKickedMember,
-            UNITS,
-            unitsToBurn
-        );
-
-        bank.addToBalance(dao, potentialKickedMember, LOCKED_LOOT, lootToBurn);
-        bank.subtractFromBalance(dao, potentialKickedMember, LOOT, lootToBurn);
-    }
-
-    function unlockMemberTokens(DaoRegistry dao, address kickedMember)
-        internal
-    {
-        BankExtension bank = BankExtension(dao.getExtensionAddress(BANK));
-
-        uint256 unitsToReturn = bank.balanceOf(kickedMember, LOCKED_UNITS);
-        uint256 lootToReturn = bank.balanceOf(kickedMember, LOCKED_LOOT);
-
-        bank.addToBalance(dao, kickedMember, UNITS, unitsToReturn);
-        bank.subtractFromBalance(
-            dao,
-            kickedMember,
-            LOCKED_UNITS,
-            unitsToReturn
-        );
-
-        bank.addToBalance(dao, kickedMember, LOOT, lootToReturn);
-        bank.subtractFromBalance(dao, kickedMember, LOCKED_LOOT, lootToReturn);
-    }
 
     /**
      * @notice Transfers the funds from the Guild account to the kicked member account based on the current kick proposal id.
@@ -113,10 +59,10 @@ library GuildKickHelper {
         // but locked loot can not be burned.
         uint256 initialTotalTokens = DaoHelper.totalTokens(bank);
 
-        uint256 unitsToBurn = bank.balanceOf(kickedMember, LOCKED_UNITS);
-        uint256 lootToBurn = bank.balanceOf(kickedMember, LOCKED_LOOT);
+        uint256 unitsToBurn = bank.balanceOf(kickedMember, UNITS);
+        uint256 lootToBurn = bank.balanceOf(kickedMember, LOOT);
         uint256 unitsAndLootToBurn = unitsToBurn + lootToBurn;
-
+        dao.unjailMember(kickedMember);
         if (unitsAndLootToBurn > 0) {
             // Transfers the funds from the internal Guild account to the internal member's account.
             for (uint256 i = 0; i < nbTokens; i++) {
@@ -148,18 +94,8 @@ library GuildKickHelper {
                 }
             }
 
-            bank.subtractFromBalance(
-                dao,
-                kickedMember,
-                LOCKED_UNITS,
-                unitsToBurn
-            );
-            bank.subtractFromBalance(
-                dao,
-                kickedMember,
-                LOCKED_LOOT,
-                lootToBurn
-            );
+            bank.subtractFromBalance(dao, kickedMember, UNITS, unitsToBurn);
+            bank.subtractFromBalance(dao, kickedMember, LOOT, lootToBurn);
         }
     }
 }

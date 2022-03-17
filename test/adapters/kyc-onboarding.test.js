@@ -178,8 +178,10 @@ describe("Adapter - KYC Onboarding", () => {
     const myAccountBalance = await getBalance(applicant);
     // daoOwner did not receive remaining amount in excess of multiple of unitsPerChunk
     expect(myAccountBalance.toString()).to.oneOf([
-      "9999999953727000000000", //coverage
-      "9999999999999999953097", //test
+      "9999999953727000000000",
+      "9999999999999999505781",
+      "9999999999999999953097",
+      "9999999575819000000000",
     ]);
 
     const myAccountUnits = await bank.balanceOf(daoOwner, UNITS);

@@ -404,6 +404,8 @@ contract BankExtension is IExtension, ERC165 {
         address token,
         uint256 amount
     ) external hasExtensionAccess(_dao, AclFlag.INTERNAL_TRANSFER) {
+        require(dao.notJailed(from), "no transfer from jail");
+        require(dao.notJailed(to), "no transfer from jail");
         uint256 newAmount = balanceOf(from, token) - amount;
         uint256 newAmount2 = balanceOf(to, token) + amount;
 
