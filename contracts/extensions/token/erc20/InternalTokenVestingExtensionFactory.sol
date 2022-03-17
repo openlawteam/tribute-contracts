@@ -52,7 +52,8 @@ contract InternalTokenVestingExtensionFactory is
     }
 
     /**
-     * @notice Creates a clone of the ERC20 Token Extension.
+     * @notice Creates a new extension using clone factory.
+     * @notice It can set additional arguments to the extension.
      * @notice The safest way to read the new extension address is to read it from the event.
      */
     function create(address dao) external nonReentrant {

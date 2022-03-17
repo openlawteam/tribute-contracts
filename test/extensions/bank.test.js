@@ -31,6 +31,7 @@ const {
   sha3,
   toWei,
   fromAscii,
+  ZERO_ADDRESS,
 } = require("../../utils/contract-util");
 
 const {
@@ -49,12 +50,13 @@ describe("Extension - Bank", () => {
     accounts = await getAccounts();
     daoOwner = accounts[0];
 
-    const { dao, adapters, extensions } = await deployDefaultDao({
+    const { dao, adapters, extensions, factories } = await deployDefaultDao({
       owner: daoOwner,
     });
     this.dao = dao;
     this.adapters = adapters;
     this.extensions = extensions;
+    this.factories = factories;
   });
 
   beforeEach(async () => {
@@ -63,6 +65,40 @@ describe("Extension - Bank", () => {
 
   afterEach(async () => {
     await revertChainSnapshot(this.snapshotId);
+  });
+
+  describe("Factory", async () => {
+    it("should be possible to create an extension using the factory", async () => {
+      const { logs } = await this.factories.bankExtFactory.create(
+        this.dao.address,
+        10
+      );
+      const log = logs[0];
+      expect(log.event).to.be.equal("BankCreated");
+      expect(log.args[0]).to.be.equal(this.dao.address);
+      expect(log.args[1]).to.not.be.equal(ZERO_ADDRESS);
+    });
+
+    it("should be possible to get an extension address by dao", async () => {
+      await this.factories.bankExtFactory.create(this.dao.address, 10);
+      const extAddress =
+        await this.factories.bankExtFactory.getExtensionAddress(
+          this.dao.address
+        );
+      expect(extAddress).to.not.be.equal(ZERO_ADDRESS);
+    });
+
+    it("should return zero address if there is no extension address by dao", async () => {
+      const daoAddress = accounts[2];
+      const extAddress =
+        await this.factories.bankExtFactory.getExtensionAddress(daoAddress);
+      expect(extAddress).to.be.equal(ZERO_ADDRESS);
+    });
+
+    it("should not be possible to create an extension using a zero address dao", async () => {
+      await expect(this.factories.bankExtFactory.create(ZERO_ADDRESS, 10)).to.be
+        .reverted;
+    });
   });
 
   it("should be possible to create a dao with a bank extension pre-configured", async () => {
