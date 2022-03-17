@@ -415,7 +415,7 @@ contract DaoRegistry is MemberGuard, AdapterGuard {
         require(extensionId != bytes32(0), "extension id must not be empty");
         require(
             extensions[extensionId] == address(0x0),
-            "extension Id already in use"
+            "extensionId already in use"
         );
         require(
             !inverseExtensions[address(extension)].deleted,
@@ -441,7 +441,6 @@ contract DaoRegistry is MemberGuard, AdapterGuard {
         ExtensionEntry storage extEntry = inverseExtensions[extensionAddress];
         extEntry.deleted = true;
         //slither-disable-next-line mapping-deletion
-        delete inverseExtensions[extensionAddress];
         delete extensions[extensionId];
         emit ExtensionRemoved(extensionId);
     }
@@ -564,7 +563,7 @@ contract DaoRegistry is MemberGuard, AdapterGuard {
 
         require(
             proposal.adapterAddress == msg.sender,
-            "only the adapter that submitted the proposal can process it"
+            "only the adapter that submitted the proposal can sponsor it"
         );
 
         require(
