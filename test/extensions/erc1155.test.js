@@ -47,6 +47,7 @@ const {
   isMember,
   onboardingNewMember,
   encodeDaoInfo,
+  guildKickProposal,
 } = require("../../utils/test-util");
 
 const proposalCounter = proposalIdGenerator().generator;
@@ -647,6 +648,158 @@ describe("Extension - ERC1155", () => {
         { from: nftOwnerA }
       )
     ).to.be.revertedWith("ERC1155: ids and amounts length mismatch");
+  });
+
+  it("should not be possible to execute an internalTransfer if the nftOwner is in jail", async () => {
+    const jailedNftOwner = accounts[2];
+    const bank = this.extensions.bankExt;
+    const onboarding = this.adapters.onboarding;
+    const voting = this.adapters.voting;
+    const erc1155TestToken = this.testContracts.erc1155TestToken;
+    const guildkickContract = this.adapters.guildkick;
+    const erc1155TokenExtension = this.extensions.erc1155Ext;
+    const erc1155Adapter = this.adapters.erc1155Adapter;
+
+    //create a test 1155 token
+    const tokenId = 1,
+      tokenAmount = 10;
+    await erc1155TestToken.mint(jailedNftOwner, tokenId, tokenAmount, "0x0", {
+      from: daoOwner,
+      gasPrice: toBN("0"),
+    });
+
+    // transfer from nft owner to the extension to test out the internal transfer
+    await erc1155TestToken.safeTransferFrom(
+      jailedNftOwner,
+      erc1155TokenExtension.address,
+      tokenId,
+      tokenAmount,
+      [],
+      {
+        from: jailedNftOwner,
+      }
+    );
+
+    // Onboard the nftOwner as a member
+    await onboardingNewMember(
+      getProposalCounter(),
+      this.dao,
+      onboarding,
+      voting,
+      jailedNftOwner,
+      daoOwner,
+      unitPrice,
+      UNITS,
+      toBN("3")
+    );
+    expect(await isMember(bank, jailedNftOwner)).equal(true);
+
+    // Start a new kick proposal
+    let memberToKick = jailedNftOwner;
+    let kickProposalId = getProposalCounter();
+
+    await guildKickProposal(
+      this.dao,
+      guildkickContract,
+      memberToKick,
+      daoOwner,
+      kickProposalId
+    );
+
+    // Jailed member attempts to execute an internalTransfer, it should revert
+    await expect(
+      erc1155Adapter.internalTransfer(
+        this.dao.address,
+        jailedNftOwner,
+        erc1155TestToken.address,
+        tokenId,
+        tokenAmount,
+        { from: jailedNftOwner }
+      )
+    ).to.be.revertedWith("member is jailed");
+  });
+
+  it("should be possible to withdraw the NFT even if the nftOwner is in jail", async () => {
+    const jailedNftOwner = accounts[2];
+    const bank = this.extensions.bankExt;
+    const onboarding = this.adapters.onboarding;
+    const voting = this.adapters.voting;
+    const erc1155TestToken = this.testContracts.erc1155TestToken;
+    const guildkickContract = this.adapters.guildkick;
+    const erc1155TokenExtension = this.extensions.erc1155Ext;
+    const erc1155TestAdapter = this.adapters.erc1155TestAdapter;
+
+    //create a test 1155 token
+    const tokenId = 1,
+      tokenAmount = 10;
+    await erc1155TestToken.mint(jailedNftOwner, tokenId, tokenAmount, "0x0", {
+      from: daoOwner,
+      gasPrice: toBN("0"),
+    });
+
+    // transfer from nft owner to the extension to test out the internal transfer
+    await erc1155TestToken.safeTransferFrom(
+      jailedNftOwner,
+      erc1155TokenExtension.address,
+      tokenId,
+      tokenAmount,
+      [],
+      {
+        from: jailedNftOwner,
+      }
+    );
+
+    // Onboard the nftOwner as a member
+    await onboardingNewMember(
+      getProposalCounter(),
+      this.dao,
+      onboarding,
+      voting,
+      jailedNftOwner,
+      daoOwner,
+      unitPrice,
+      UNITS,
+      toBN("3")
+    );
+    expect(await isMember(bank, jailedNftOwner)).equal(true);
+
+    // Start a new kick proposal
+    let memberToKick = jailedNftOwner;
+    let kickProposalId = getProposalCounter();
+
+    await guildKickProposal(
+      this.dao,
+      guildkickContract,
+      memberToKick,
+      daoOwner,
+      kickProposalId
+    );
+
+    await erc1155TestAdapter.withdraw(
+      this.dao.address,
+      erc1155TestToken.address,
+      tokenId,
+      tokenAmount,
+      { from: jailedNftOwner }
+    );
+
+    const balanceOfNftOwner = await erc1155TestToken.balanceOf(
+      jailedNftOwner,
+      tokenId
+    );
+    expect(balanceOfNftOwner.toString()).equal(tokenAmount.toString());
+
+    const balanceInExtension = await erc1155TokenExtension.getNFTIdAmount(
+      jailedNftOwner,
+      erc1155TestToken.address,
+      1
+    );
+    expect(balanceInExtension.toString()).equal("0");
+    // The nft was moved to the new owner account, so the GUILD should not be the NFT owner anymore
+    // The getNFTOwner must revert because there is no NFT asset for the GUILD owner at index 0
+    await expect(
+      erc1155TokenExtension.getNFTOwner(erc1155TestToken.address, 1, 0)
+    ).to.be.reverted;
   });
 
   it("should not be possible to send ETH to the extension via receive function", async () => {
