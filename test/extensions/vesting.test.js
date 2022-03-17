@@ -26,7 +26,7 @@ SOFTWARE.
  */
 const { expect } = require("chai");
 
-const { UNITS, toBN } = require("../../utils/contract-util");
+const { UNITS, toBN, ZERO_ADDRESS } = require("../../utils/contract-util");
 
 const { toNumber } = require("web3-utils");
 
@@ -44,16 +44,17 @@ describe("Extension - Vesting", () => {
   before("deploy dao", async () => {
     accounts = await getAccounts();
     daoOwner = accounts[0];
-    const { dao, adapters, extensions, testContracts } = await deployDefaultDao(
-      {
+    const { dao, adapters, extensions, factories, testContracts } =
+      await deployDefaultDao({
         owner: daoOwner,
         finalize: false,
-      }
-    );
+      });
     this.dao = dao;
     this.adapters = adapters;
     this.extensions = extensions;
     this.testContracts = testContracts;
+    this.factories = factories;
+
     this.snapshotId = await takeChainSnapshot();
   });
 
@@ -63,6 +64,39 @@ describe("Extension - Vesting", () => {
 
   afterEach(async () => {
     await revertChainSnapshot(this.snapshotId);
+  });
+
+  describe("Factory", async () => {
+    it("should be possible to create an extension using the factory", async () => {
+      const { logs } = await this.factories.vestingExtFactory.create(
+        this.dao.address
+      );
+      const log = logs[0];
+      expect(log.event).to.be.equal("InternalTokenVestingExtensionCreated");
+      expect(log.args[0]).to.be.equal(this.dao.address);
+      expect(log.args[1]).to.not.be.equal(ZERO_ADDRESS);
+    });
+
+    it("should be possible to get an extension address by dao", async () => {
+      await this.factories.vestingExtFactory.create(this.dao.address);
+      const extAddress =
+        await this.factories.vestingExtFactory.getExtensionAddress(
+          this.dao.address
+        );
+      expect(extAddress).to.not.be.equal(ZERO_ADDRESS);
+    });
+
+    it("should return zero address if there is no extension address by dao", async () => {
+      const daoAddress = accounts[2];
+      const extAddress =
+        await this.factories.vestingExtFactory.getExtensionAddress(daoAddress);
+      expect(extAddress).to.be.equal(ZERO_ADDRESS);
+    });
+
+    it("should not be possible to create an extension using a zero address dao", async () => {
+      await expect(this.factories.vestingExtFactory.create(ZERO_ADDRESS)).to.be
+        .reverted;
+    });
   });
 
   it("should be able to create vesting and the blocked amount should change with time", async () => {

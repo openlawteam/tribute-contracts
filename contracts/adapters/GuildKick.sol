@@ -98,10 +98,7 @@ contract GuildKickContract is IGuildKick, AdapterGuard, Reimbursable {
         // Starts the voting process for the guild kick proposal.
         votingContract.startNewVotingForProposal(dao, proposalId, data);
 
-        GuildKickHelper.lockMemberTokens(
-            dao,
-            kicks[address(dao)][proposalId].memberToKick
-        );
+        dao.jailMember(kicks[address(dao)][proposalId].memberToKick);
 
         // Sponsors the guild kick proposal.
         dao.sponsorProposal(proposalId, submittedBy, address(votingContract));
@@ -136,10 +133,7 @@ contract GuildKickContract is IGuildKick, AdapterGuard, Reimbursable {
             votingState == IVoting.VotingState.NOT_PASS ||
             votingState == IVoting.VotingState.TIE
         ) {
-            GuildKickHelper.unlockMemberTokens(
-                dao,
-                kicks[address(dao)][proposalId].memberToKick
-            );
+            dao.unjailMember(kicks[address(dao)][proposalId].memberToKick);
         } else {
             revert("voting is still in progress");
         }

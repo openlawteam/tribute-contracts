@@ -50,16 +50,14 @@ contract ERC1155AdapterContract is AdapterGuard {
         uint256 nftTokenId,
         uint256 amount
     ) external reentrancyGuard(dao) {
-        ERC1155TokenExtension erc1155 = ERC1155TokenExtension(
-            dao.getExtensionAddress(DaoHelper.ERC1155_EXT)
-        );
-        erc1155.internalTransfer(
-            dao,
-            DaoHelper.msgSender(dao, msg.sender),
-            toOwner,
-            nftAddr,
-            nftTokenId,
-            amount
-        );
+        ERC1155TokenExtension(dao.getExtensionAddress(DaoHelper.ERC1155_EXT))
+            .internalTransfer(
+                dao,
+                DaoHelper.msgSender(dao, msg.sender),
+                toOwner,
+                nftAddr,
+                nftTokenId,
+                amount
+            );
     }
 }

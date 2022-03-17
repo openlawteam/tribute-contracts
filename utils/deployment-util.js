@@ -131,6 +131,7 @@ const createExtensions = async ({ dao, factories, options }) => {
         `Missing extension configuration <generatesExtensionId> for in ${factoryConfigs.name} configs`
       );
 
+    let tx;
     if (
       factoryConfigs.deploymentArgs &&
       factoryConfigs.deploymentArgs.length > 0
@@ -142,14 +143,23 @@ const createExtensions = async ({ dao, factories, options }) => {
           `Missing deployment argument <${argName}> in ${factoryConfigs.name}.create`
         );
       });
-      await waitTx(factory.create(...args));
+      tx = await factory.create(...args);
     } else {
-      await waitTx(factory.create());
+      tx = await factory.create();
     }
-
-    const extensionAddress = await factory.getExtensionAddress(
-      options.daoAddress
-    );
+    /**
+     * The tx event is the safest way to read the new extension address.
+     * Event at index 0 indicates the extension was created
+     * Arg at index 1 represents the new extension address
+     */
+    let extensionAddress;
+    if (tx.wait) {
+      const res = await tx.wait();
+      extensionAddress = res.events[0].args[1];
+    } else {
+      const { logs } = tx;
+      extensionAddress = logs[0].args[1];
+    }
     const extensionInterface = options[extensionConfigs.name];
     if (!extensionInterface)
       throw new Error(

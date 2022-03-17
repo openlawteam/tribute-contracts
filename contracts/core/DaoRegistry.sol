@@ -66,7 +66,8 @@ contract DaoRegistry is MemberGuard, AdapterGuard {
     event AddressConfigurationUpdated(bytes32 key, address value);
 
     enum MemberFlag {
-        EXISTS
+        EXISTS,
+        JAILED
     }
 
     enum ProposalFlag {
@@ -82,7 +83,8 @@ contract DaoRegistry is MemberGuard, AdapterGuard {
         SET_CONFIGURATION,
         ADD_EXTENSION,
         REMOVE_EXTENSION,
-        NEW_MEMBER
+        NEW_MEMBER,
+        JAIL_MEMBER
     }
 
     /*
@@ -217,6 +219,52 @@ contract DaoRegistry is MemberGuard, AdapterGuard {
         mainConfiguration[key] = value;
 
         emit ConfigurationUpdated(key, value);
+    }
+
+    function jailMember(address memberAddress)
+        external
+        hasAccess(this, AclFlag.JAIL_MEMBER)
+    {
+        require(memberAddress != address(0x0), "invalid member address");
+
+        Member storage member = members[memberAddress];
+        require(
+            DaoHelper.getFlag(member.flags, uint8(MemberFlag.EXISTS)),
+            "member does not exist"
+        );
+
+        member.flags = DaoHelper.setFlag(
+            member.flags,
+            uint8(MemberFlag.JAILED),
+            true
+        );
+    }
+
+    function notJailed(address memberAddress) external view returns (bool) {
+        return
+            !DaoHelper.getFlag(
+                members[memberAddress].flags,
+                uint8(MemberFlag.JAILED)
+            );
+    }
+
+    function unjailMember(address memberAddress)
+        external
+        hasAccess(this, AclFlag.JAIL_MEMBER)
+    {
+        require(memberAddress != address(0x0), "invalid member address");
+
+        Member storage member = members[memberAddress];
+        require(
+            DaoHelper.getFlag(member.flags, uint8(MemberFlag.EXISTS)),
+            "member does not exist"
+        );
+
+        member.flags = DaoHelper.setFlag(
+            member.flags,
+            uint8(MemberFlag.JAILED),
+            false
+        );
     }
 
     /**
