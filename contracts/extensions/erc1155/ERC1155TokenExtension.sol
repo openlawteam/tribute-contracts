@@ -194,6 +194,7 @@ contract ERC1155TokenExtension is IExtension, IERC1155Receiver {
         uint256 nftTokenId,
         uint256 amount
     ) external hasExtensionAccess(_dao, AclFlag.INTERNAL_TRANSFER) {
+        require(_dao.notJailed(fromOwner), "member is jailed!");
         // Checks if there token amount is valid and has enough funds
         uint256 tokenAmount = _getTokenAmount(fromOwner, nftAddr, nftTokenId);
         require(

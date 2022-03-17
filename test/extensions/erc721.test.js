@@ -31,17 +31,30 @@ const {
   fromAscii,
   GUILD,
   ZERO_ADDRESS,
+  unitPrice,
+  UNITS,
 } = require("../../utils/contract-util");
 
 const {
   takeChainSnapshot,
   revertChainSnapshot,
   deployDefaultNFTDao,
+  proposalIdGenerator,
   getAccounts,
   web3,
 } = require("../../utils/hardhat-test-util");
 
-const { encodeDaoInfo } = require("../../utils/test-util");
+const {
+  encodeDaoInfo,
+  onboardingNewMember,
+  guildKickProposal,
+} = require("../../utils/test-util");
+
+const proposalCounter = proposalIdGenerator().generator;
+
+function getProposalCounter() {
+  return proposalCounter().next().value;
+}
 
 describe("Extension - ERC721", () => {
   let accounts, daoOwner;
@@ -315,6 +328,150 @@ describe("Extension - ERC721", () => {
     expect(nftAddr).equal(pixelNFT.address);
     const nftId = await nftExtension.getNFT(nftAddr, 0);
     expect(nftId.toString()).equal(tokenId.toString());
+  });
+
+  it("should not be possible to execute an internalTransfer if the nftOwner is in jail", async () => {
+    const jailedNftOwner = accounts[2];
+    const onboarding = this.adapters.onboarding;
+    const voting = this.adapters.voting;
+    const guildkickContract = this.adapters.guildkick;
+
+    const pixelNFT = this.testContracts.pixelNFT;
+    const nftExtension = this.extensions.erc721Ext;
+    const erc721TestAdapter = this.adapters.erc721TestAdapter;
+
+    // Add an NFT directly into the ERC721 extension to test the internal transfer
+    await pixelNFT.mintPixel(jailedNftOwner, 1, 1, { from: daoOwner });
+    let pastEvents = await pixelNFT.getPastEvents();
+    let { tokenId } = pastEvents[1].returnValues;
+
+    await pixelNFT.methods["safeTransferFrom(address,address,uint256,bytes)"](
+      jailedNftOwner,
+      nftExtension.address,
+      tokenId,
+      encodeDaoInfo(this.dao.address),
+      {
+        from: jailedNftOwner,
+      }
+    );
+
+    await onboardingNewMember(
+      getProposalCounter(),
+      this.dao,
+      onboarding,
+      voting,
+      jailedNftOwner,
+      daoOwner,
+      unitPrice,
+      UNITS
+    );
+
+    // Move the NFT to the jailedNftOwner account before the Guild Kick starts
+    await erc721TestAdapter.internalTransfer(
+      this.dao.address,
+      jailedNftOwner,
+      pixelNFT.address,
+      tokenId,
+      { from: daoOwner }
+    );
+
+    // Start a new kick proposal
+    let memberToKick = jailedNftOwner;
+    let kickProposalId = getProposalCounter();
+
+    await guildKickProposal(
+      this.dao,
+      guildkickContract,
+      memberToKick,
+      daoOwner,
+      kickProposalId
+    );
+
+    // Jailed member attempts to move the NFT again, but now it should not be possible
+    await expect(
+      erc721TestAdapter.internalTransfer(
+        this.dao.address,
+        daoOwner,
+        pixelNFT.address,
+        tokenId,
+        { from: jailedNftOwner }
+      )
+    ).to.be.revertedWith("member is jailed");
+  });
+
+  it("should be possible to withdraw the NFT even if the nftOwner is in jail", async () => {
+    const jailedNftOwner = accounts[2];
+    const onboarding = this.adapters.onboarding;
+    const voting = this.adapters.voting;
+    const guildkickContract = this.adapters.guildkick;
+
+    const pixelNFT = this.testContracts.pixelNFT;
+    const nftExtension = this.extensions.erc721Ext;
+    const erc721TestAdapter = this.adapters.erc721TestAdapter;
+
+    // Add an NFT directly into the ERC721 extension to test the internal transfer
+    await pixelNFT.mintPixel(jailedNftOwner, 1, 1, { from: daoOwner });
+    let pastEvents = await pixelNFT.getPastEvents();
+    let { tokenId } = pastEvents[1].returnValues;
+
+    await pixelNFT.methods["safeTransferFrom(address,address,uint256,bytes)"](
+      jailedNftOwner,
+      nftExtension.address,
+      tokenId,
+      encodeDaoInfo(this.dao.address),
+      {
+        from: jailedNftOwner,
+      }
+    );
+
+    await onboardingNewMember(
+      getProposalCounter(),
+      this.dao,
+      onboarding,
+      voting,
+      jailedNftOwner,
+      daoOwner,
+      unitPrice,
+      UNITS
+    );
+
+    // Move the NFT to the jailedNftOwner account before the Guild Kick starts
+    await erc721TestAdapter.internalTransfer(
+      this.dao.address,
+      jailedNftOwner,
+      pixelNFT.address,
+      tokenId,
+      { from: daoOwner }
+    );
+
+    // Start a new kick proposal
+    let memberToKick = jailedNftOwner;
+    let kickProposalId = getProposalCounter();
+
+    await guildKickProposal(
+      this.dao,
+      guildkickContract,
+      memberToKick,
+      daoOwner,
+      kickProposalId
+    );
+
+    await erc721TestAdapter.withdraw(
+      this.dao.address,
+      pixelNFT.address,
+      tokenId,
+      { from: jailedNftOwner }
+    );
+
+    // After the withdraw the actual owner of the NFT is the jailedNftOwner address
+    expect(await pixelNFT.ownerOf(tokenId)).equal(jailedNftOwner);
+
+    // And the NFT metadata is not available in the extension anymore
+    await expect(nftExtension.getNFTAddress(0)).to.be.reverted;
+    await expect(nftExtension.getNFT(pixelNFT.address, 0)).to.be.reverted;
+    expect(
+      await nftExtension.getNFTOwner(pixelNFT.address, tokenId)
+    ).to.be.equal(ZERO_ADDRESS);
   });
 
   it("should not be possible get an NFT in the collection if it is empty", async () => {

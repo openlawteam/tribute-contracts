@@ -75,9 +75,7 @@ library DaoHelper {
     address internal constant ESCROW = address(0x4bec);
     address internal constant TOTAL = address(0xbabe);
     address internal constant UNITS = address(0xFF1CE);
-    address internal constant LOCKED_UNITS = address(0xFFF1CE);
     address internal constant LOOT = address(0xB105F00D);
-    address internal constant LOCKED_LOOT = address(0xBB105F00D);
     address internal constant ETH_TOKEN = address(0x0);
     address internal constant MEMBER_COUNT = address(0xDECAFBAD);
 
@@ -105,11 +103,7 @@ library DaoHelper {
         view
         returns (uint256)
     {
-        return
-            bank.balanceOf(member, UNITS) +
-            bank.balanceOf(member, LOCKED_UNITS) +
-            bank.balanceOf(member, LOOT) +
-            bank.balanceOf(member, LOCKED_LOOT);
+        return bank.balanceOf(member, UNITS) + bank.balanceOf(member, LOOT);
     }
 
     function msgSender(DaoRegistry dao, address addr)
@@ -138,9 +132,7 @@ library DaoHelper {
     ) internal view returns (uint256) {
         return
             bank.getPriorAmount(member, UNITS, at) +
-            bank.getPriorAmount(member, LOCKED_UNITS, at) +
-            bank.getPriorAmount(member, LOOT, at) +
-            bank.getPriorAmount(member, LOCKED_LOOT, at);
+            bank.getPriorAmount(member, LOOT, at);
     }
 
     //helper
