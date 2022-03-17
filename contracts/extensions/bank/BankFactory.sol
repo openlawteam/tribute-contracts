@@ -1,7 +1,6 @@
 pragma solidity ^0.8.0;
 
 // SPDX-License-Identifier: MIT
-
 import "../../core/DaoRegistry.sol";
 import "../../core/CloneFactory.sol";
 import "../IFactory.sol";
@@ -47,20 +46,28 @@ contract BankFactory is IFactory, CloneFactory, ReentrancyGuard {
     /**
      * @notice Creates a new extension using clone factory.
      * @notice It can set additional arguments to the extension.
+     * @notice It initializes the extension and sets the DAO owner as the extension creator.
+     * @notice The DAO owner is stored at index 1 in the members storage.
      * @notice The safest way to read the new extension address is to read it from the event.
+     * @param dao The dao address that will be associated with the new extension.
      * @param maxExternalTokens The maximum number of external tokens stored in the Bank
      */
     // slither-disable-next-line reentrancy-events
-    function create(address dao, uint8 maxExternalTokens)
+    function create(DaoRegistry dao, uint8 maxExternalTokens)
         external
         nonReentrant
     {
-        require(dao != address(0x0), "invalid dao addr");
+        address daoAddress = address(dao);
+        require(daoAddress != address(0x0), "invalid dao addr");
         address extensionAddr = _createClone(identityAddress);
-        _extensions[dao] = extensionAddr;
-        BankExtension bank = BankExtension(extensionAddr);
-        bank.setMaxExternalTokens(maxExternalTokens);
-        emit BankCreated(dao, address(bank));
+        _extensions[daoAddress] = extensionAddr;
+
+        BankExtension extension = BankExtension(extensionAddr);
+        extension.setMaxExternalTokens(maxExternalTokens);
+        // Member at index 1 is the DAO owner, but also the payer of the DAO deployment
+        extension.initialize(dao, dao.getMemberAddress(1));
+        // slither-disable-next-line reentrancy-events
+        emit BankCreated(daoAddress, address(extension));
     }
 
     /**

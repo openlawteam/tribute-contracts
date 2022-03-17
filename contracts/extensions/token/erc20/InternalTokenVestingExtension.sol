@@ -34,7 +34,7 @@ contract InternalTokenVestingExtension is IExtension {
         REMOVE_VESTING
     }
 
-    bool private _initialized;
+    bool public initialized;
 
     DaoRegistry private _dao;
 
@@ -47,7 +47,8 @@ contract InternalTokenVestingExtension is IExtension {
     modifier hasExtensionAccess(DaoRegistry dao, AclFlag flag) {
         require(
             dao == _dao &&
-                (DaoHelper.isInCreationModeAndHasAccess(_dao) ||
+                (DaoHelper.isInCreationModeAndHasAccess(dao) ||
+                    !initialized ||
                     _dao.hasAdapterAccessToExtension(
                         msg.sender,
                         address(this),
@@ -69,8 +70,8 @@ contract InternalTokenVestingExtension is IExtension {
      * @param dao The address of the DAO that owns the extension.
      */
     function initialize(DaoRegistry dao, address) external override {
-        require(!_initialized, "vestingExt::already initialized");
-        _initialized = true;
+        require(!initialized, "already initialized");
+        initialized = true;
         _dao = dao;
     }
 

@@ -58,6 +58,7 @@ contract ERC1271Extension is IExtension, IERC1271 {
             dao == _dao &&
                 (address(this) == msg.sender ||
                     address(dao) == msg.sender ||
+                    !initialized ||
                     DaoHelper.isInCreationModeAndHasAccess(dao) ||
                     dao.hasAdapterAccessToExtension(
                         msg.sender,
@@ -72,11 +73,10 @@ contract ERC1271Extension is IExtension, IERC1271 {
     /**
      * @notice Initialises the ERC1271 extension to be associated with a DAO
      * @dev Can only be called once
-     * @param creator The DAO's creator, who will be an initial member
+     * @param _dao The dao address that will be associated with the new extension.
      */
-    function initialize(DaoRegistry _dao, address creator) external override {
-        require(!initialized, "erc1271::already initialized");
-        require(_dao.isMember(creator), "erc1271::not member");
+    function initialize(DaoRegistry _dao, address) external override {
+        require(!initialized, "already initialized");
         initialized = true;
         dao = _dao;
     }

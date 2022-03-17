@@ -47,14 +47,19 @@ contract ExecutorExtensionFactory is IFactory, CloneFactory, ReentrancyGuard {
     /**
      * @notice Creates a new extension using clone factory.
      * @notice It can set additional arguments to the extension.
+     * @notice It initializes the extension and sets the DAO owner as the extension creator.
      * @notice The safest way to read the new extension address is to read it from the event.
+     * @param dao The dao address that will be associated with the new extension.
      */
-    function create(address dao) external nonReentrant {
-        require(dao != address(0x0), "invalid dao addr");
+    function create(DaoRegistry dao) external nonReentrant {
+        address daoAddress = address(dao);
+        require(daoAddress != address(0x0), "invalid dao addr");
         address payable extensionAddr = _createClone(identityAddress);
-        _extensions[dao] = extensionAddr;
-        ExecutorExtension exec = ExecutorExtension(extensionAddr);
-        emit ExecutorCreated(dao, address(exec));
+        _extensions[daoAddress] = extensionAddr;
+        ExecutorExtension extension = ExecutorExtension(extensionAddr);
+        extension.initialize(dao, address(0));
+        // slither-disable-next-line reentrancy-events
+        emit ExecutorCreated(daoAddress, address(extension));
     }
 
     /**

@@ -41,6 +41,7 @@ const {
   getAccounts,
   expectEvent,
   web3,
+  ExecutorExtension,
 } = require("../../utils/hardhat-test-util");
 
 const {
@@ -52,11 +53,12 @@ const {
 const { extensionsIdsMap } = require("../../utils/dao-ids-util");
 
 describe("Extension - Executor", () => {
-  let accounts, daoOwner;
+  let accounts, daoOwner, creator;
 
   before("deploy dao", async () => {
     accounts = await getAccounts();
     daoOwner = accounts[0];
+    creator = accounts[1];
 
     const { dao, extensions, factories } = await deployDefaultDao({
       owner: daoOwner,
@@ -104,6 +106,68 @@ describe("Extension - Executor", () => {
     it("should not be possible to create an extension using a zero address dao", async () => {
       await expect(this.factories.executorExtFactory.create(ZERO_ADDRESS)).to.be
         .reverted;
+    });
+  });
+
+  describe("Access Control", async () => {
+    it("should not be possible to call initialize more than once", async () => {
+      const extension = this.extensions.executorExt;
+      await expect(
+        extension.initialize(this.dao.address, daoOwner)
+      ).to.be.revertedWith("already initialized");
+    });
+
+    it("should be possible to call initialize with a non member", async () => {
+      const extension = await ExecutorExtension.new();
+      await extension.initialize(this.dao.address, creator);
+      expect(await extension.initialized()).to.be.true;
+    });
+
+    it("should not be possible to execute a delegate call without the EXECUTE permission", async () => {
+      const { dao, factories, extensions } = await deployDefaultDao({
+        owner: daoOwner,
+        finalize: false,
+      });
+
+      const erc20Minter = await ERC20MinterContract.new();
+      const executorExt = extensions.executorExt;
+
+      await factories.daoFactory.addAdapters(
+        dao.address,
+        [
+          entryDao("erc20Minter", erc20Minter.address, {
+            dao: [],
+            extensions: {},
+          }),
+        ],
+        { from: daoOwner }
+      );
+
+      await factories.daoFactory.configureExtension(
+        dao.address,
+        executorExt.address,
+        [
+          entryExecutor(erc20Minter.address, {
+            dao: [], // no access granted
+            extensions: {}, // no access granted
+          }),
+        ],
+        { from: daoOwner }
+      );
+
+      await dao.finalizeDao({ from: daoOwner });
+
+      const minterAddress = await dao.getAdapterAddress(sha3("erc20Minter"));
+      expect(minterAddress).to.not.be.null;
+
+      const proxToken = await ProxTokenContract.new();
+      expect(proxToken).to.not.be.null;
+
+      await expect(
+        erc20Minter.execute(dao.address, proxToken.address, toBN("10000"), {
+          from: daoOwner,
+        })
+      ).to.be.revertedWith("accessDenied");
     });
   });
 
@@ -180,53 +244,6 @@ describe("Extension - Executor", () => {
     expect(mintEvent.event).to.be.equal("MintedProxToken");
     expect(mintEvent.args[0]).to.be.equal(executorExt.address);
     expect(mintEvent.args[1].toString()).to.be.equal("10000");
-  });
-
-  it("should not be possible to execute a delegate call without the ACL permission", async () => {
-    const { dao, factories, extensions } = await deployDefaultDao({
-      owner: daoOwner,
-      finalize: false,
-    });
-
-    const erc20Minter = await ERC20MinterContract.new();
-    const executorExt = extensions.executorExt;
-
-    await factories.daoFactory.addAdapters(
-      dao.address,
-      [
-        entryDao("erc20Minter", erc20Minter.address, {
-          dao: [],
-          extensions: {},
-        }),
-      ],
-      { from: daoOwner }
-    );
-
-    await factories.daoFactory.configureExtension(
-      dao.address,
-      executorExt.address,
-      [
-        entryExecutor(erc20Minter.address, {
-          dao: [], // no access granted
-          extensions: {}, // no access granted
-        }),
-      ],
-      { from: daoOwner }
-    );
-
-    await dao.finalizeDao({ from: daoOwner });
-
-    const minterAddress = await dao.getAdapterAddress(sha3("erc20Minter"));
-    expect(minterAddress).to.not.be.null;
-
-    const proxToken = await ProxTokenContract.new();
-    expect(proxToken).to.not.be.null;
-
-    await expect(
-      erc20Minter.execute(dao.address, proxToken.address, toBN("10000"), {
-        from: daoOwner,
-      })
-    ).to.be.revertedWith("executorExt::accessDenied");
   });
 
   it("should not be possible to send ETH to the extension without the ACL permission", async () => {

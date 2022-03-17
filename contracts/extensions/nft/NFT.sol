@@ -69,6 +69,7 @@ contract NFTExtension is IExtension, IERC721Receiver {
         require(
             dao == _dao &&
                 (DaoHelper.isInCreationModeAndHasAccess(dao) ||
+                    !initialized ||
                     dao.hasAdapterAccessToExtension(
                         msg.sender,
                         address(this),
@@ -85,12 +86,9 @@ contract NFTExtension is IExtension, IERC721Receiver {
     /**
      * @notice Initializes the extension with the DAO address that it belongs to.
      * @param _dao The address of the DAO that owns the extension.
-     * @param creator The owner of the DAO and Extension that is also a member of the DAO.
      */
-    function initialize(DaoRegistry _dao, address creator) external override {
-        require(!initialized, "erc721::already initialized");
-        require(_dao.isMember(creator), "erc721::not a member");
-
+    function initialize(DaoRegistry _dao, address) external override {
+        require(!initialized, "already initialized");
         initialized = true;
         dao = _dao;
     }
