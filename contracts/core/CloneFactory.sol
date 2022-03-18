@@ -1,4 +1,4 @@
-pragma solidity ^0.8.0;
+pragma solidity ^0.8.9;
 
 // SPDX-License-Identifier: MIT
 
@@ -44,6 +44,7 @@ contract CloneFactory {
             )
             result := create(0, clone, 0x37)
         }
+        require(result != address(0), "create failed");
     }
 
     function _isClone(address target, address query)
