@@ -1006,7 +1006,7 @@ export const contracts: Array<ContractConfig> = [
     id: adaptersIdsMap.ERC20_TRANSFER_STRATEGY_ADAPTER,
     name: "ERC20TransferStrategy",
     alias: "erc20TransferStrategy",
-    path: "../../contracts/extensions/token/erc20/ERC20TransferStrategy",
+    path: "../../contracts/extensions/token/erc20/ERC20TransferStrategyWithVesting",
     enabled: true,
     version: "1.0.0",
     type: ContractType.Adapter,

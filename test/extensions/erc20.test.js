@@ -49,6 +49,7 @@ const {
   isMember,
   onboardingNewMember,
   submitConfigProposal,
+  submitNewMemberProposal,
 } = require("../../utils/test-util");
 
 const proposalCounter = proposalIdGenerator().generator;
@@ -218,9 +219,103 @@ describe("Extension - ERC20", () => {
     );
   });
 
+  it("should not be possible to transfer units from an active member to a non active member using the transfer strategy with vesting", async () => {
+    const dao = this.dao;
+    const applicantA = accounts[2];
+    const applicantB = accounts[3];
+    const bank = this.extensions.bankExt;
+    const erc20Ext = this.extensions.erc20Ext;
+    const configuration = this.adapters.configuration;
+    const onboarding = this.adapters.onboarding;
+    const voting = this.adapters.voting;
+    const erc20TransferStrategy = this.adapters.erc20TransferStrategy;
+
+    // configure transfer strategy (members only)
+    await submitConfigProposal(
+      dao,
+      getProposalCounter(),
+      daoOwner,
+      configuration,
+      voting,
+      [
+        {
+          key: sha3("erc20.transfer.type"),
+          numericValue: 0,
+          addressValue: ZERO_ADDRESS,
+          configType: 0,
+        },
+      ]
+    );
+
+    let transferType = await dao.getConfiguration(sha3("erc20.transfer.type"));
+    expect(transferType.toString()).equal("0");
+
+    // Set the simple transfer strategy contract
+    await submitConfigProposal(
+      dao,
+      getProposalCounter(),
+      daoOwner,
+      configuration,
+      voting,
+      [
+        {
+          key: sha3("erc20-transfer-strategy"),
+          numericValue: 0,
+          addressValue: erc20TransferStrategy.address,
+          configType: 1, //Address
+        },
+      ]
+    );
+
+    let strategyContract = await dao.getAddressConfiguration(
+      sha3("erc20-transfer-strategy")
+    );
+    expect(strategyContract).equal(erc20TransferStrategy.address);
+
+    // Submit the proposal to register the new member, but do not process the proposal
+    await submitNewMemberProposal(
+      getProposalCounter(),
+      daoOwner,
+      onboarding,
+      dao,
+      applicantA,
+      unitPrice,
+      UNITS,
+      toBN("3")
+    );
+    // is registered in the DAO
+    expect(await dao.isMember(applicantA)).equal(true);
+    // but it is not an active member because UNITS == 0
+    expect(await isMember(bank, applicantA)).equal(false);
+
+    // Onboard a second member and process the proposal to give the UNITs to the member
+    await onboardingNewMember(
+      getProposalCounter(),
+      dao,
+      onboarding,
+      voting,
+      applicantB,
+      daoOwner,
+      unitPrice,
+      UNITS,
+      toBN("3")
+    );
+
+    expect(await isMember(bank, applicantB)).equal(true);
+
+    // Member B attempts to transfer to Member A which is not active yet
+    const memberB = signers[3];
+    await expect(
+      txSigner(memberB, erc20Ext).transfer(
+        applicantA,
+        numberOfUnits.mul(toBN("1"))
+      )
+    ).to.be.revertedWith("transfer not allowed");
+  });
+
   it("should be possible to approve and transferFrom units from a member to another member when the transfer type is equals 0 (member transfer only)", async () => {
     const dao = this.dao;
-    //onboarded member A & B
+    //onboard member A & B
     const applicantA = signers[2];
     const applicantB = signers[3];
     const configuration = this.adapters.configuration;
@@ -330,7 +425,7 @@ describe("Extension - ERC20", () => {
     // transferFrom to external
     // transfer to external
     const dao = this.dao;
-    //onboarded member A & B
+    //onboard member A & B
     const applicantA = signers[2];
     //external address - not a member
     const externalAddressA = signers[4];
@@ -405,7 +500,7 @@ describe("Extension - ERC20", () => {
   it("should not be possible to approve a transferFrom units from a member to an external account when the transfer type is equals 0 (member transfer only)", async () => {
     // transfer to external
     const dao = this.dao;
-    //onboarded member A & B
+    //onboard member A & B
     const applicantA = signers[2];
     const applicantB = signers[3];
     //external address - not a member
@@ -483,7 +578,7 @@ describe("Extension - ERC20", () => {
     expect(spenderAllowance.toString()).equal(
       numberOfUnits.mul(toBN("1")).toString()
     );
-    //externallAddressB should not be a member
+    //externalAddressB should not be a member
     expect(await isMember(bank, externalAddressB.address)).equal(false);
 
     //transferFrom Applicant A(member) to externalAddressB(non-member) by the spender(non-member externalAddressA) should fail
@@ -750,7 +845,7 @@ describe("Extension - ERC20", () => {
     );
     expect(await isMember(bank, applicantB.address)).equal(true);
 
-    //approve and check spender's allownance
+    //approve and check spender's allowance
     await txSigner(applicantA, erc20Ext).approve(
       externalAddressA.address,
       numberOfUnits.mul(toBN("1"))
@@ -762,7 +857,7 @@ describe("Extension - ERC20", () => {
     expect(spenderAllowance.toString()).equal(
       numberOfUnits.mul(toBN("1")).toString()
     );
-    //externallAddressB should not be a member
+    //externalAddressB should not be a member
     expect(await isMember(bank, externalAddressB.address)).equal(false);
     //transferFrom the applicantA the amount spenderAllowance to externalAddressA
     await txSigner(externalAddressA, erc20Ext).transferFrom(

@@ -2,6 +2,7 @@ pragma solidity ^0.8.0;
 
 // SPDX-License-Identifier: MIT
 import "../../../core/DaoRegistry.sol";
+import "../../../guards/MemberGuard.sol";
 import "../../../helpers/DaoHelper.sol";
 import "../../bank/Bank.sol";
 import "./IERC20TransferStrategy.sol";
@@ -36,12 +37,9 @@ SOFTWARE.
  * The ERC20Extension is a contract to give erc20 functionality
  * to the internal token units held by DAO members inside the DAO itself.
  */
-contract ERC20TransferStrategySimple is IERC20TransferStrategy {
+contract ERC20TransferStrategySimple is IERC20TransferStrategy, MemberGuard {
     bytes32 public constant ERC20_EXT_TRANSFER_TYPE =
         keccak256("erc20.transfer.type");
-
-    /// @notice Clonable contract must have an empty constructor
-    // constructor() {}
 
     function hasBankAccess(DaoRegistry dao, address caller)
         public
@@ -71,7 +69,7 @@ contract ERC20TransferStrategySimple is IERC20TransferStrategy {
 
         uint256 transferType = dao.getConfiguration(ERC20_EXT_TRANSFER_TYPE);
         // member only
-        if (transferType == 0 && dao.isMember(to)) {
+        if (transferType == 0 && isActiveMember(dao, to)) {
             // members only transfer
             return (ApprovalType.STANDARD, amount);
             // open transfer

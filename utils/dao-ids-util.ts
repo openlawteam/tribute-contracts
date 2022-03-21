@@ -28,7 +28,7 @@ export const adaptersIdsMap: Record<string, string> = {
   KYC_ONBOARDING_ADAPTER: "kyc-onboarding",
   LEND_NFT_ADAPTER: "lend-nft",
   ERC20_TRANSFER_STRATEGY_ADAPTER: "erc20-transfer-strategy",
-  REIMBURSEMENT_ADAPTER: "reimbursement"
+  REIMBURSEMENT_ADAPTER: "reimbursement",
 };
 
 /** Extensions */

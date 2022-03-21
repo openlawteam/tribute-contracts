@@ -155,20 +155,22 @@ contract ERC20Extension is AdapterGuard, IExtension, IERC20 {
      * @dev Returns the amount of tokens in existence.
      */
     function totalSupply() public view override returns (uint256) {
-        BankExtension bank = BankExtension(
-            dao.getExtensionAddress(DaoHelper.BANK)
-        );
-        return bank.balanceOf(DaoHelper.TOTAL, tokenAddress);
+        return
+            BankExtension(dao.getExtensionAddress(DaoHelper.BANK)).balanceOf(
+                DaoHelper.TOTAL,
+                tokenAddress
+            );
     }
 
     /**
      * @dev Returns the amount of tokens owned by `account`.
      */
     function balanceOf(address account) public view override returns (uint256) {
-        BankExtension bank = BankExtension(
-            dao.getExtensionAddress(DaoHelper.BANK)
-        );
-        return bank.balanceOf(account, tokenAddress);
+        return
+            BankExtension(dao.getExtensionAddress(DaoHelper.BANK)).balanceOf(
+                account,
+                tokenAddress
+            );
     }
 
     /**
@@ -179,10 +181,9 @@ contract ERC20Extension is AdapterGuard, IExtension, IERC20 {
         view
         returns (uint256)
     {
-        BankExtension bank = BankExtension(
-            dao.getExtensionAddress(DaoHelper.BANK)
-        );
-        return bank.getPriorAmount(account, tokenAddress, snapshot);
+        return
+            BankExtension(dao.getExtensionAddress(DaoHelper.BANK))
+                .getPriorAmount(account, tokenAddress, snapshot);
     }
 
     /**
