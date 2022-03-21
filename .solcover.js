@@ -37,6 +37,7 @@ module.exports = {
     "test/TestToken2.sol",
     "test/ERC1155TestAdapter.sol",
     "test/ERC721TestAdapter.sol",
+    "test/CloneFactoryTest.sol",
     "utils/Multicall.sol",
     "companion/interfaces/IReimbursement.sol",
     "companion/GelatoBytes.sol",
