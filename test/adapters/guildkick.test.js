@@ -907,6 +907,46 @@ describe("Adapter - GuildKick", () => {
     ).to.be.revertedWith("use ragequit");
   });
 
+  it("should not be possible to submit a guild kick to kick yourself using a delegate", async () => {
+    const memberA = accounts[2];
+    const memberADelegate = accounts[3];
+
+    const guildkickContract = this.adapters.guildkick;
+    const daoRegistryAdapter = this.adapters.daoRegistryAdapter;
+    const onboarding = this.adapters.onboarding;
+    const voting = this.adapters.voting;
+
+    await onboardingNewMember(
+      getProposalCounter(),
+      this.dao,
+      onboarding,
+      voting,
+      memberA,
+      owner,
+      unitPrice,
+      UNITS
+    );
+
+    await daoRegistryAdapter.updateDelegateKey(
+      this.dao.address,
+      memberADelegate,
+      {
+        from: memberA,
+      }
+    );
+
+    // Attempt to kick yourself
+    await expect(
+      guildKickProposal(
+        this.dao,
+        guildkickContract,
+        memberA,
+        memberADelegate,
+        getProposalCounter()
+      )
+    ).to.be.revertedWith("use ragequit");
+  });
+
   it("should not be possible to reuse the kick proposal id", async () => {
     const memberA = owner;
     const memberB = accounts[3];
