@@ -14,6 +14,21 @@ const disabled: Array<string> = [];
 
 const testContracts = [
   {
+    id: "clone-factory-test",
+    name: "CloneFactoryTest",
+    alias: "cloneFactoryTest",
+    path: "../../contracts/test/CloneFactoryTest",
+    enabled: true,
+    skipAutoDeploy: true,
+    version: "1.0.0",
+    type: ContractType.Factory,
+    acls: {
+      dao: [],
+      extensions: {},
+    },
+    deploymentArgs: [],
+  },
+  {
     id: "erc1155-test",
     name: "ERC1155TestAdapterContract",
     alias: "erc1155TestAdapter",
