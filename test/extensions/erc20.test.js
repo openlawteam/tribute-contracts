@@ -32,6 +32,7 @@ const {
   UNITS,
   ZERO_ADDRESS,
   numberOfUnits,
+  DAI_TOKEN,
 } = require("../../utils/contract-util");
 
 const {
@@ -43,6 +44,7 @@ const {
   getSigners,
   txSigner,
   web3,
+  ERC20Extension,
 } = require("../../utils/hardhat-test-util");
 
 const {
@@ -58,12 +60,13 @@ function getProposalCounter() {
 }
 
 describe("Extension - ERC20", () => {
-  let accounts, daoOwner, signers;
+  let accounts, daoOwner, signers, creator;
 
   before("deploy dao", async () => {
     accounts = await getAccounts();
     signers = await getSigners();
     daoOwner = accounts[0];
+    creator = accounts[1];
 
     const { dao, adapters, extensions, factories, testContracts } =
       await deployDefaultDao({ owner: daoOwner });
@@ -129,6 +132,48 @@ describe("Extension - ERC20", () => {
           0
         )
       ).to.be.reverted;
+    });
+  });
+
+  describe("Access Control", async () => {
+    it("should not be possible to call initialize more than once", async () => {
+      const extension = this.extensions.erc20Ext;
+      await expect(
+        extension.initialize(this.dao.address, daoOwner)
+      ).to.be.revertedWith("already initialized");
+    });
+
+    it("should be possible to call initialize with a non member", async () => {
+      const extension = await ERC20Extension.new();
+      await extension.setToken(DAI_TOKEN);
+      await extension.setName("DAI");
+      await extension.setSymbol("DAI");
+      await extension.initialize(this.dao.address, creator);
+      expect(await extension.initialized()).to.be.true;
+    });
+
+    it("should not be possible to call initialize with an invalid token", async () => {
+      const extension = await ERC20Extension.new();
+      await expect(
+        extension.initialize(this.dao.address, daoOwner)
+      ).to.be.revertedWith("missing token address");
+    });
+
+    it("should not be possible to call initialize with an invalid token name", async () => {
+      const extension = await ERC20Extension.new();
+      await extension.setToken(DAI_TOKEN);
+      await expect(
+        extension.initialize(this.dao.address, daoOwner)
+      ).to.be.revertedWith("missing token name");
+    });
+
+    it("should not be possible to call initialize with an invalid token name", async () => {
+      const extension = await ERC20Extension.new();
+      await extension.setToken(DAI_TOKEN);
+      await extension.setName("DAI");
+      await expect(
+        extension.initialize(this.dao.address, daoOwner)
+      ).to.be.revertedWith("missing token symbol");
     });
   });
 

@@ -42,6 +42,7 @@ const {
   proposalIdGenerator,
   getAccounts,
   web3,
+  NFTExtension,
 } = require("../../utils/hardhat-test-util");
 
 const {
@@ -57,11 +58,12 @@ function getProposalCounter() {
 }
 
 describe("Extension - ERC721", () => {
-  let accounts, daoOwner;
+  let accounts, daoOwner, creator;
 
   before("deploy dao", async () => {
     accounts = await getAccounts();
     daoOwner = accounts[0];
+    creator = accounts[1];
 
     const { dao, adapters, extensions, factories, testContracts } =
       await deployDefaultNFTDao({ owner: daoOwner });
@@ -110,6 +112,55 @@ describe("Extension - ERC721", () => {
     it("should not be possible to create an extension using a zero address dao", async () => {
       await expect(this.factories.erc721ExtFactory.create(ZERO_ADDRESS)).to.be
         .reverted;
+    });
+  });
+
+  describe("Access Control", async () => {
+    it("should not be possible to call initialize more than once", async () => {
+      const extension = this.extensions.erc721Ext;
+      await expect(
+        extension.initialize(this.dao.address, daoOwner)
+      ).to.be.revertedWith("already initialized");
+    });
+
+    it("should be possible to call initialize with a non member", async () => {
+      const extension = await NFTExtension.new();
+      await extension.initialize(this.dao.address, creator);
+      expect(await extension.initialized()).to.be.true;
+    });
+
+    it("should not be possible to call withdrawNFT without the WITHDRAW_NFT permission", async () => {
+      const nftExtension = this.extensions.erc721Ext;
+      const pixelNFT = this.testContracts.pixelNFT;
+      await expect(
+        nftExtension.withdrawNFT(
+          this.dao.address,
+          accounts[1],
+          pixelNFT.address,
+          1
+        )
+      ).to.be.revertedWith("erc721::accessDenied");
+    });
+
+    it("should not be possible to call collect without the COLLECT_NFT permission", async () => {
+      const nftExtension = this.extensions.erc721Ext;
+      const pixelNFT = this.testContracts.pixelNFT;
+      await expect(
+        nftExtension.collect(this.dao.address, pixelNFT.address, 1)
+      ).to.be.revertedWith("erc721::accessDenied");
+    });
+
+    it("should not be possible to call internalTransfer without the INTERNAL_TRANSFER permission", async () => {
+      const nftExtension = this.extensions.erc721Ext;
+      const pixelNFT = this.testContracts.pixelNFT;
+      await expect(
+        nftExtension.internalTransfer(
+          this.dao.address,
+          pixelNFT.address,
+          1,
+          creator
+        )
+      ).to.be.revertedWith("erc721::accessDenied");
     });
   });
 
@@ -480,26 +531,6 @@ describe("Extension - ERC721", () => {
     await expect(nftExtension.getNFT(pixelNFT.address, 0)).to.be.revertedWith(
       "revert"
     );
-  });
-
-  it("should not be possible to return a NFT without the RETURN permission", async () => {
-    const nftExtension = this.extensions.erc721Ext;
-    const pixelNFT = this.testContracts.pixelNFT;
-    await expect(
-      nftExtension.withdrawNFT(
-        this.dao.address,
-        accounts[1],
-        pixelNFT.address,
-        1
-      )
-    ).to.be.revertedWith("erc721::accessDenied");
-  });
-
-  it("should not be possible to initialize the extension if it was already initialized", async () => {
-    const nftExtension = this.extensions.erc721Ext;
-    await expect(
-      nftExtension.initialize(this.dao.address, accounts[0])
-    ).to.be.revertedWith("erc721::already initialized");
   });
 
   it("should not be possible to update the collection if the NFT is not owned by the extension", async () => {
