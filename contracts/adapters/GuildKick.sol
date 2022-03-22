@@ -73,7 +73,10 @@ contract GuildKickContract is IGuildKick, AdapterGuard, Reimbursable {
             msg.sender
         );
         // Checks if the sender address is not the same as the member to kick to prevent auto kick.
-        require(submittedBy != memberToKick, "use ragequit");
+        require(
+            dao.getAddressIfDelegated(submittedBy) != memberToKick,
+            "use ragequit"
+        );
 
         // Creates a guild kick proposal.
         dao.submitProposal(proposalId);
