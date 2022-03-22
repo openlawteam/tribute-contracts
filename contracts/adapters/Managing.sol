@@ -166,10 +166,7 @@ contract ManagingContract is IManaging, AdapterGuard, Reimbursable {
         if (proposal.adapterOrExtensionAddr != address(0x0)) {
             dao.addExtension(
                 proposal.adapterOrExtensionId,
-                IExtension(proposal.adapterOrExtensionAddr),
-                // The creator of the extension must be set as the DAO owner,
-                // which is stored at index 0 in the members storage.
-                dao.getMemberAddress(0)
+                IExtension(proposal.adapterOrExtensionAddr)
             );
         }
     }

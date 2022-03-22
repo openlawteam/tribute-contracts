@@ -68,11 +68,9 @@ contract ERC20Extension is AdapterGuard, IExtension, IERC20 {
      * @notice Initializes the extension with the DAO that it belongs to,
      * and checks if the parameters were set.
      * @param _dao The address of the DAO that owns the extension.
-     * @param creator The owner of the DAO and Extension that is also a member of the DAO.
      */
-    function initialize(DaoRegistry _dao, address creator) external override {
+    function initialize(DaoRegistry _dao, address) external override {
         require(!initialized, "already initialized");
-        require(_dao.isMember(creator), "not a member");
         require(tokenAddress != address(0x0), "missing token address");
         require(bytes(tokenName).length != 0, "missing token name");
         require(bytes(tokenSymbol).length != 0, "missing token symbol");

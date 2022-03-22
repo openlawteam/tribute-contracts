@@ -40,15 +40,17 @@ const {
   revertChainSnapshot,
   getAccounts,
   BankFactory,
+  BankExtension,
   web3,
 } = require("../../utils/hardhat-test-util");
 
 describe("Extension - Bank", () => {
-  let accounts, daoOwner;
+  let accounts, daoOwner, creator;
 
   before("deploy dao", async () => {
     accounts = await getAccounts();
     daoOwner = accounts[0];
+    creator = accounts[1];
 
     const { dao, adapters, extensions, factories } = await deployDefaultDao({
       owner: daoOwner,
@@ -101,6 +103,84 @@ describe("Extension - Bank", () => {
     });
   });
 
+  describe("Access Control", async () => {
+    it("should not be possible to call initialize more than once", async () => {
+      const extension = this.extensions.bankExt;
+      await expect(
+        extension.initialize(this.dao.address, daoOwner)
+      ).to.be.revertedWith("already initialized");
+    });
+
+    it("should not be possible to call initialize with a non member", async () => {
+      const extension = await BankExtension.new();
+      await expect(
+        extension.initialize(this.dao.address, creator)
+      ).to.be.revertedWith("not a member");
+    });
+
+    it("should not be possible to call withdraw without the WITHDRAW permission", async () => {
+      const extension = this.extensions.bankExt;
+      await expect(
+        extension.withdraw(this.dao.address, daoOwner, ETH_TOKEN, 1)
+      ).to.be.revertedWith("accessDenied");
+    });
+
+    it("should not be possible to call withdrawTo without the WITHDRAW permission", async () => {
+      const extension = this.extensions.bankExt;
+      await expect(
+        extension.withdrawTo(this.dao.address, daoOwner, creator, ETH_TOKEN, 1)
+      ).to.be.revertedWith("accessDenied");
+    });
+
+    it("should not be possible to call registerPotentialNewToken without the REGISTER_NEW_TOKEN permission", async () => {
+      const extension = this.extensions.bankExt;
+      await expect(
+        extension.registerPotentialNewToken(this.dao.address, ETH_TOKEN)
+      ).to.be.revertedWith("accessDenied");
+    });
+
+    it("should not be possible to call registerPotentialNewInternalToken without the REGISTER_NEW_INTERNAL_TOKEN permission", async () => {
+      const extension = this.extensions.bankExt;
+      await expect(
+        extension.registerPotentialNewInternalToken(this.dao.address, ETH_TOKEN)
+      ).to.be.revertedWith("accessDenied");
+    });
+
+    it("should not be possible to call updateToken without the UPDATE_TOKEN permission", async () => {
+      const extension = this.extensions.bankExt;
+      await expect(
+        extension.updateToken(this.dao.address, ETH_TOKEN)
+      ).to.be.revertedWith("accessDenied");
+    });
+
+    it("should not be possible to call addToBalance without the ADD_TO_BALANCE permission", async () => {
+      const extension = this.extensions.bankExt;
+      await expect(
+        extension.addToBalance(this.dao.address, daoOwner, ETH_TOKEN, 1)
+      ).to.be.revertedWith("accessDenied");
+    });
+
+    it("should not be possible to call subtractFromBalance without the SUB_FROM_BALANCE permission", async () => {
+      const extension = this.extensions.bankExt;
+      await expect(
+        extension.subtractFromBalance(this.dao.address, daoOwner, ETH_TOKEN, 1)
+      ).to.be.revertedWith("accessDenied");
+    });
+
+    it("should not be possible to call internalTransfer without the INTERNAL_TRANSFER permission", async () => {
+      const extension = this.extensions.bankExt;
+      await expect(
+        extension.internalTransfer(
+          this.dao.address,
+          daoOwner,
+          creator,
+          ETH_TOKEN,
+          1
+        )
+      ).to.be.revertedWith("accessDenied");
+    });
+  });
+
   it("should be possible to create a dao with a bank extension pre-configured", async () => {
     const dao = this.dao;
     const bankAddress = await dao.getExtensionAddress(sha3("bank"));
@@ -131,7 +211,7 @@ describe("Extension - Bank", () => {
     const bankFactory = await BankFactory.new(identityBank.address);
     await expect(
       bankFactory.create(this.dao.address, maxExternalTokens)
-    ).to.be.revertedWith("max number of external tokens should be (0,200)");
+    ).to.be.revertedWith("maxTokens should be (0,200]");
   });
 
   it("should not be possible to create a bank that supports 0 external tokens", async () => {
@@ -140,13 +220,13 @@ describe("Extension - Bank", () => {
     const bankFactory = await BankFactory.new(identityBank.address);
     await expect(
       bankFactory.create(this.dao.address, maxExternalTokens)
-    ).to.be.revertedWith("max number of external tokens should be (0,200)");
+    ).to.be.revertedWith("maxTokens should be (0,200]");
   });
 
   it("should not be possible to set the max external tokens if bank is already initialized", async () => {
     const bank = this.extensions.bankExt;
     await expect(bank.setMaxExternalTokens(10)).to.be.revertedWith(
-      "bank already initialized"
+      "already initialized"
     );
   });
 

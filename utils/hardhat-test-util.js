@@ -57,6 +57,10 @@ const txSigner = (signer, contract) => {
   return new hre.ethers.Contract(contract.address, contract.abi, signer);
 };
 
+const getCurrentBlockNumber = async () => {
+  return await hre.ethers.provider.getBlockNumber();
+};
+
 const getBalance = async (account) => {
   const balance = await web3.eth.getBalance(account);
   return toBN(balance);
@@ -381,6 +385,7 @@ module.exports = (() => {
     expectEvent,
     getAccounts,
     getSigners,
+    getCurrentBlockNumber,
     getBalance,
     generateMembers,
     deployDefaultDao,

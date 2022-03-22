@@ -84,6 +84,7 @@ contract ERC1155TokenExtension is IExtension, IERC1155Receiver {
         require(
             _dao == dao &&
                 (DaoHelper.isInCreationModeAndHasAccess(dao) ||
+                    !initialized ||
                     dao.hasAdapterAccessToExtension(
                         msg.sender,
                         address(this),
@@ -100,12 +101,9 @@ contract ERC1155TokenExtension is IExtension, IERC1155Receiver {
     /**
      * @notice Initializes the extension with the DAO address that it belongs to.
      * @param _dao The address of the DAO that owns the extension.
-     * @param creator The owner of the DAO and Extension that is also a member of the DAO.
      */
-    function initialize(DaoRegistry _dao, address creator) external override {
-        require(!initialized, "erc1155Ext::already initialized");
-        require(_dao.isMember(creator), "erc1155Ext::not a member");
-
+    function initialize(DaoRegistry _dao, address) external override {
+        require(!initialized, "already initialized");
         initialized = true;
         dao = _dao;
     }

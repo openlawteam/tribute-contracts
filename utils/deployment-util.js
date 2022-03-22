@@ -178,11 +178,7 @@ const createExtensions = async ({ dao, factories, options }) => {
       );
 
     await waitTx(
-      dao.addExtension(
-        sha3(newExtension.configs.id),
-        newExtension.address,
-        options.owner
-      )
+      dao.addExtension(sha3(newExtension.configs.id), newExtension.address)
     );
 
     info(`

@@ -1,7 +1,6 @@
 pragma solidity ^0.8.0;
 
 // SPDX-License-Identifier: MIT
-
 import "../../core/DaoRegistry.sol";
 import "../IExtension.sol";
 import "../../guards/AdapterGuard.sol";
@@ -101,13 +100,14 @@ contract BankExtension is IExtension, ERC165 {
             dao == _dao &&
                 (address(this) == msg.sender ||
                     address(dao) == msg.sender ||
+                    !initialized ||
                     DaoHelper.isInCreationModeAndHasAccess(dao) ||
                     dao.hasAdapterAccessToExtension(
                         msg.sender,
                         address(this),
                         uint8(flag)
                     )),
-            "bank::accessDenied:"
+            "bank::accessDenied"
         );
         _;
     }
@@ -119,10 +119,9 @@ contract BankExtension is IExtension, ERC165 {
      * @param creator The DAO's creator, who will be an initial member
      */
     function initialize(DaoRegistry _dao, address creator) external override {
-        require(!initialized, "bank already initialized");
-        require(_dao.isMember(creator), "bank::not member");
+        require(!initialized, "already initialized");
+        require(_dao.isMember(creator), "not a member");
         dao = _dao;
-        initialized = true;
 
         availableInternalTokens[DaoHelper.UNITS] = true;
         internalTokens.push(DaoHelper.UNITS);
@@ -142,6 +141,7 @@ contract BankExtension is IExtension, ERC165 {
 
         _createNewAmountCheckpoint(creator, DaoHelper.UNITS, 1);
         _createNewAmountCheckpoint(DaoHelper.TOTAL, DaoHelper.UNITS, 1);
+        initialized = true;
     }
 
     function withdraw(
@@ -208,10 +208,10 @@ contract BankExtension is IExtension, ERC165 {
      * @param maxTokens The maximum amount of token allowed
      */
     function setMaxExternalTokens(uint8 maxTokens) external {
-        require(!initialized, "bank already initialized");
+        require(!initialized, "already initialized");
         require(
             maxTokens > 0 && maxTokens <= DaoHelper.MAX_TOKENS_GUILD_BANK,
-            "max number of external tokens should be (0,200)"
+            "maxTokens should be (0,200]"
         );
         maxExternalTokens = maxTokens;
     }
@@ -445,7 +445,7 @@ contract BankExtension is IExtension, ERC165 {
     ) external view returns (uint256) {
         require(
             blockNumber < block.number,
-            "Uni::getPriorAmount: not yet determined"
+            "bank::getPriorAmount: not yet determined"
         );
 
         uint32 nCheckpoints = numCheckpoints[tokenAddr][account];

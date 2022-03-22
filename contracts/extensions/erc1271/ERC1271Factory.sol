@@ -47,14 +47,19 @@ contract ERC1271ExtensionFactory is IFactory, CloneFactory, ReentrancyGuard {
     /**
      * @notice Creates a new extension using clone factory.
      * @notice It can set additional arguments to the extension.
+     * @notice It initializes the extension and sets the DAO owner as the extension creator.
      * @notice The safest way to read the new extension address is to read it from the event.
+     * @param dao The dao address that will be associated with the new extension.
      */
-    function create(address dao) external nonReentrant {
-        require(dao != address(0x0), "invalid dao addr");
+    function create(DaoRegistry dao) external nonReentrant {
+        address daoAddress = address(dao);
+        require(daoAddress != address(0x0), "invalid dao addr");
         address extensionAddr = _createClone(identityAddress);
-        _extensions[dao] = extensionAddr;
-        ERC1271Extension erc1271 = ERC1271Extension(extensionAddr);
-        emit ERC1271Created(dao, address(erc1271));
+        _extensions[daoAddress] = extensionAddr;
+        ERC1271Extension extension = ERC1271Extension(extensionAddr);
+        extension.initialize(dao, address(0));
+        // slither-disable-next-line reentrancy-events
+        emit ERC1271Created(daoAddress, address(extension));
     }
 
     /**

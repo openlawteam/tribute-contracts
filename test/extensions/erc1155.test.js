@@ -42,6 +42,7 @@ const {
   proposalIdGenerator,
   getAccounts,
   web3,
+  ERC1155TokenExtension,
 } = require("../../utils/hardhat-test-util");
 
 const {
@@ -58,11 +59,12 @@ function getProposalCounter() {
 }
 
 describe("Extension - ERC1155", () => {
-  let accounts, daoOwner;
+  let accounts, daoOwner, creator;
 
   before("deploy dao", async () => {
     accounts = await getAccounts();
     daoOwner = accounts[0];
+    creator = accounts[1];
 
     const { dao, adapters, extensions, factories, testContracts } =
       await deployDefaultNFTDao({ owner: daoOwner });
@@ -114,6 +116,51 @@ describe("Extension - ERC1155", () => {
     });
   });
 
+  describe("Access Control", async () => {
+    it("should not be possible to call initialize more than once", async () => {
+      const extension = this.extensions.erc1155Ext;
+      await expect(
+        extension.initialize(this.dao.address, daoOwner)
+      ).to.be.revertedWith("already initialized");
+    });
+
+    it("should be possible to call initialize with a non member", async () => {
+      const extension = await ERC1155TokenExtension.new();
+      await extension.initialize(this.dao.address, creator);
+      expect(await extension.initialized()).to.be.true;
+    });
+
+    it("should not be possible to call withdrawNFT without the WITHDRAW_NFT permission", async () => {
+      const extension = this.extensions.erc1155Ext;
+      const erc1155TestToken = this.testContracts.erc1155TestToken;
+      await expect(
+        extension.withdrawNFT(
+          this.dao.address,
+          GUILD,
+          creator,
+          erc1155TestToken.address,
+          1, //tokenId
+          1 //amount
+        )
+      ).to.be.revertedWith("erc1155Ext::accessDenied");
+    });
+
+    it("should not be possible to call internalTransfer without the INTERNAL_TRANSFER permission", async () => {
+      const extension = this.extensions.erc1155Ext;
+      const erc1155TestToken = this.testContracts.erc1155TestToken;
+      await expect(
+        extension.withdrawNFT(
+          this.dao.address,
+          GUILD,
+          creator,
+          erc1155TestToken.address,
+          1, //tokenId
+          1 //amount
+        )
+      ).to.be.revertedWith("erc1155Ext::accessDenied");
+    });
+  });
+
   it("should be possible to create a dao with a nft extension pre-configured", async () => {
     const erc1155TokenExtension = this.extensions.erc1155Ext;
     expect(erc1155TokenExtension).to.not.be.null;
@@ -138,21 +185,6 @@ describe("Extension - ERC1155", () => {
     await expect(
       erc1155TokenExtension.getNFT(erc1155TestToken.address, 0)
     ).to.be.revertedWith("revert");
-  });
-
-  it("should not be possible to withdraw a NFT without the WITHDRAW_NFT permission", async () => {
-    const erc1155TokenExtension = this.extensions.erc1155Ext;
-    const erc1155TestToken = this.testContracts.erc1155TestToken;
-    await expect(
-      erc1155TokenExtension.withdrawNFT(
-        this.dao.address,
-        GUILD,
-        accounts[1],
-        erc1155TestToken.address,
-        1, //tokenId
-        1 //amount
-      )
-    ).to.be.revertedWith("erc1155Ext::accessDenied");
   });
 
   it("should not be possible to initialize the extension if it was already initialized", async () => {

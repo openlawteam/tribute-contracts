@@ -36,6 +36,7 @@ const {
   takeChainSnapshot,
   revertChainSnapshot,
   getAccounts,
+  ERC1271Extension,
 } = require("../../utils/hardhat-test-util");
 
 const arbitrarySignature =
@@ -49,11 +50,12 @@ const arbitraryMsgHash =
 const magicValue = "0x1626ba7e";
 
 describe("Extension - ERC1271", () => {
-  let accounts, daoOwner;
+  let accounts, daoOwner, creator;
 
   before("deploy dao", async () => {
     accounts = await getAccounts();
     daoOwner = accounts[0];
+    creator = accounts[1];
 
     const { dao, adapters, factories, extensions } = await deployDefaultDao({
       owner: daoOwner,
@@ -105,22 +107,37 @@ describe("Extension - ERC1271", () => {
     });
   });
 
+  describe("Access Control", async () => {
+    it("should not be possible to call initialize more than once", async () => {
+      const extension = this.extensions.erc1271Ext;
+      await expect(
+        extension.initialize(this.dao.address, daoOwner)
+      ).to.be.revertedWith("already initialized");
+    });
+
+    it("should be possible to call initialize with a non member", async () => {
+      const extension = await ERC1271Extension.new();
+      await extension.initialize(this.dao.address, creator);
+      expect(await extension.initialized()).to.be.true;
+    });
+
+    it("should not be possible to submit a signature without the SIGN permission", async () => {
+      const erc1271Extension = this.extensions.erc1271Ext;
+      await expect(
+        erc1271Extension.sign(
+          this.dao.address,
+          arbitraryMsgHash,
+          arbitrarySignatureHash,
+          magicValue
+        )
+      ).to.be.revertedWith("erc1271::accessDenied");
+    });
+  });
+
   it("should be possible to create a dao with an erc1271 extension pre-configured", async () => {
     const dao = this.dao;
     const erc1271Address = await dao.getExtensionAddress(sha3("erc1271"));
     expect(erc1271Address).to.not.be.null;
-  });
-
-  it("should not be possible to submit a signature without the SIGN permission", async () => {
-    const erc1271Extension = this.extensions.erc1271Ext;
-    await expect(
-      erc1271Extension.sign(
-        this.dao.address,
-        arbitraryMsgHash,
-        arbitrarySignatureHash,
-        magicValue
-      )
-    ).to.be.revertedWith("erc1271::accessDenied");
   });
 
   it("should revert for invalid signatures", async () => {

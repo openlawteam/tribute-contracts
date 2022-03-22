@@ -36,19 +36,23 @@ const {
   deployDefaultDao,
   advanceTime,
   getAccounts,
+  InternalTokenVestingExtension,
 } = require("../../utils/hardhat-test-util");
 
 describe("Extension - Vesting", () => {
-  let accounts, daoOwner;
+  let accounts, daoOwner, creator;
 
   before("deploy dao", async () => {
     accounts = await getAccounts();
     daoOwner = accounts[0];
+    creator = accounts[1];
+
     const { dao, adapters, extensions, factories, testContracts } =
       await deployDefaultDao({
         owner: daoOwner,
         finalize: false,
       });
+
     this.dao = dao;
     this.adapters = adapters;
     this.extensions = extensions;
@@ -96,6 +100,46 @@ describe("Extension - Vesting", () => {
     it("should not be possible to create an extension using a zero address dao", async () => {
       await expect(this.factories.vestingExtFactory.create(ZERO_ADDRESS)).to.be
         .reverted;
+    });
+  });
+
+  describe("Access Control", async () => {
+    it("should not be possible to call initialize more than once", async () => {
+      const extension = this.extensions.vestingExt;
+      await expect(
+        extension.initialize(this.dao.address, daoOwner)
+      ).to.be.revertedWith("already initialized");
+    });
+
+    it("should be possible to call initialize with a non member", async () => {
+      const extension = await InternalTokenVestingExtension.new();
+      await extension.initialize(this.dao.address, creator);
+      expect(await extension.initialized()).to.be.true;
+    });
+
+    it("should not be possible to call createNewVesting without the NEW_VESTING permission", async () => {
+      // Finalize the DAO to be able to check the extension permissions
+      await this.dao.finalizeDao({ from: daoOwner });
+      const vesting = this.extensions.vestingExt;
+      const now = new Date();
+      await expect(
+        vesting.createNewVesting(
+          this.dao.address,
+          daoOwner,
+          UNITS,
+          100,
+          Math.floor(now.getTime() / 1000)
+        )
+      ).to.be.revertedWith("vestingExt::accessDenied");
+    });
+
+    it("should not be possible to call removeVesting without the REMOVE_VESTING permission", async () => {
+      // Finalize the DAO to be able to check the extension permissions
+      await this.dao.finalizeDao({ from: daoOwner });
+      const vesting = this.extensions.vestingExt;
+      await expect(
+        vesting.removeVesting(this.dao.address, daoOwner, UNITS, 100)
+      ).to.be.revertedWith("vestingExt::accessDenied");
     });
   });
 
@@ -252,33 +296,5 @@ describe("Extension - Vesting", () => {
 
     minBalance = await vesting.getMinimumBalance(daoOwner, UNITS);
     expect(toNumber(minBalance.toString())).to.be.closeTo(25, 1);
-  });
-
-  it("should not be possible to create a new vesting without the ACL permission", async () => {
-    // Finalize the DAO to be able to check the extension permissions
-    await this.dao.finalizeDao({ from: daoOwner });
-    const vesting = this.extensions.vestingExt;
-    const now = new Date();
-    await expect(
-      vesting.createNewVesting(
-        this.dao.address,
-        daoOwner,
-        UNITS,
-        100,
-        Math.floor(now.getTime() / 1000),
-        { from: daoOwner }
-      )
-    ).to.be.revertedWith("vestingExt::accessDenied");
-  });
-
-  it("should not be possible to removeVesting a vesting schedule the without ACL permission", async () => {
-    // Finalize the DAO to be able to check the extension permissions
-    await this.dao.finalizeDao({ from: daoOwner });
-    const vesting = this.extensions.vestingExt;
-    await expect(
-      vesting.removeVesting(this.dao.address, daoOwner, UNITS, 100, {
-        from: daoOwner,
-      })
-    ).to.be.revertedWith("vestingExt::accessDenied");
   });
 });
