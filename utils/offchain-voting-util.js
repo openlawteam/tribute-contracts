@@ -25,8 +25,17 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
  */
 const { MerkleTree } = require("./merkle-tree-util");
-const { toBNWeb3, sha3 } = require("./contract-util");
+const {
+  toBN,
+  sha3,
+  toBNWeb3,
+  TOTAL,
+  MEMBER_COUNT,
+  UNITS,
+} = require("./contract-util");
 const sigUtil = require("eth-sig-util");
+
+const { advanceTime, generateMembers } = require("./hardhat-test-util");
 
 const BadNodeError = {
   0: "OK",
@@ -45,6 +54,112 @@ const VotingState = {
   3: "NOT_PASS",
   4: "IN_PROGRESS",
   5: "GRACE_PERIOD",
+};
+
+const testMembers = generateMembers(10);
+
+const findMember = (addr) =>
+  testMembers.find((member) => member.address === addr);
+
+const buildProposal = async (
+  dao,
+  actionId,
+  submitter,
+  blockNumber,
+  chainId,
+  name = "some proposal",
+  body = "this is my proposal",
+  space = "tribute"
+) => {
+  const proposalPayload = {
+    name,
+    body,
+    choices: ["yes", "no"],
+    start: Math.floor(new Date().getTime() / 1000),
+    end: Math.floor(new Date().getTime() / 1000) + 10000,
+    snapshot: blockNumber.toString(),
+  };
+
+  const startingTime = Math.floor(new Date().getTime() / 1000);
+  const proposalData = {
+    type: "proposal",
+    timestamp: startingTime,
+    space,
+    payload: proposalPayload,
+    submitter: submitter.address,
+  };
+
+  const signer = SigUtilSigner(submitter.privateKey);
+  proposalData.sig = await signer(proposalData, dao.address, actionId, chainId);
+  return { proposalData };
+};
+
+const buildVoteTree = async (
+  dao,
+  bank,
+  proposalId,
+  submitter,
+  blockNumber,
+  chainId,
+  actionId,
+  singleVote = false
+) => {
+  const membersCount = await bank.getPriorAmount(
+    TOTAL,
+    MEMBER_COUNT,
+    blockNumber
+  );
+  const voteEntries = [];
+  for (let i = 0; i < parseInt(membersCount.toString()); i++) {
+    const memberAddress = await dao.getMemberAddress(i);
+    const member = findMember(memberAddress);
+    let voteEntry;
+    const voteYes = singleVote ? memberAddress === submitter.address : true;
+    if (member) {
+      const voteSigner = SigUtilSigner(member.privateKey);
+      const weight = await bank.balanceOf(member.address, UNITS);
+      voteEntry = await createVote(
+        proposalId,
+        toBN(weight.toString()),
+        voteYes
+      );
+      voteEntry.sig = voteSigner(voteEntry, dao.address, actionId, chainId);
+    } else {
+      voteEntry = await createVote(proposalId, toBN("0"), voteYes);
+      voteEntry.sig = "0x";
+    }
+
+    voteEntries.push(voteEntry);
+  }
+
+  await advanceTime(10000);
+
+  const { voteResultTree, result } = await prepareVoteResult(
+    voteEntries,
+    dao,
+    actionId,
+    chainId
+  );
+
+  const signer = SigUtilSigner(submitter.privateKey);
+  const rootSig = signer(
+    { root: voteResultTree.getHexRoot(), type: "result" },
+    dao.address,
+    actionId,
+    chainId
+  );
+
+  const lastResult = result[result.length - 1];
+  lastResult.nbYes = lastResult.nbYes.toString();
+  lastResult.nbNo = lastResult.nbNo.toString();
+  return {
+    voteResultTree,
+    votesResults: result,
+    rootSig,
+    lastVoteResult: lastResult,
+    membersCount,
+    resultHash: voteResultTree.getHexRoot(),
+  };
 };
 
 function getMessageERC712Hash(m, verifyingContract, actionId, chainId) {
@@ -534,6 +649,8 @@ Object.assign(exports, {
   prepareVoteResult,
   toStepNode,
   buildVoteLeafHashForMerkleTree,
+  buildProposal,
+  buildVoteTree,
   validateMessage,
   getDomainDefinition,
   signMessage,
@@ -551,4 +668,5 @@ Object.assign(exports, {
   TypedDataUtils: sigUtil.TypedDataUtils,
   BadNodeError,
   VotingState,
+  testMembers,
 });

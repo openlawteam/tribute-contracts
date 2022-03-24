@@ -34,8 +34,6 @@ const {
   unitPrice,
   remaining,
   UNITS,
-  TOTAL,
-  MEMBER_COUNT,
   ZERO_ADDRESS,
 } = require("../../utils/contract-util");
 const { log } = require("../../utils/log-util");
@@ -48,7 +46,6 @@ const {
   takeChainSnapshot,
   revertChainSnapshot,
   web3,
-  generateMembers,
   OffchainVotingHashContract,
   OLToken,
   PixelNFT,
@@ -64,24 +61,23 @@ const {
   prepareProposalPayload,
   prepareVoteProposalData,
   prepareProposalMessage,
-  prepareVoteResult,
-  SigUtilSigner,
   getVoteStepDomainDefinition,
   BadNodeError,
+  buildVoteTree,
+  buildProposal,
+  testMembers,
 } = require("../../utils/offchain-voting-util");
 
-const chainId = 1337;
-const members = generateMembers(10);
-const newMember = members[0];
-const findMember = (addr) => members.find((member) => member.address === addr);
 const proposalCounter = proposalIdGenerator().generator;
-
 function getProposalCounter() {
   return proposalCounter().next().value;
 }
 
 describe("Adapter - Offchain Voting", () => {
   let accounts, daoOwner, signers;
+  const chainId = 1337;
+  const members = testMembers;
+  const newMember = members[0];
 
   before("deploy dao", async () => {
     accounts = await getAccounts();
@@ -105,47 +101,29 @@ describe("Adapter - Offchain Voting", () => {
     this.snapshotId = await takeChainSnapshot();
   });
 
-  const buildProposal = async (actionId, submitter = members[0]) => {
-    const blockNumber = await getCurrentBlockNumber();
-    const proposalPayload = {
-      name: "some proposal",
-      body: "this is my proposal",
-      choices: ["yes", "no"],
-      start: Math.floor(new Date().getTime() / 1000),
-      end: Math.floor(new Date().getTime() / 1000) + 10000,
-      snapshot: blockNumber.toString(),
-    };
-
-    const space = "tribute";
-    const startingTime = Math.floor(new Date().getTime() / 1000);
-    const proposalData = {
-      type: "proposal",
-      timestamp: startingTime,
-      space,
-      payload: proposalPayload,
-      submitter: submitter.address,
-    };
-    const signer = SigUtilSigner(submitter.privateKey);
-    proposalData.sig = await signer(
-      proposalData,
-      this.dao.address,
-      actionId,
-      chainId
-    );
-    return { proposalData };
-  }
-
-
-  const onboardMember = async (dao, voting, onboarding, bank, index) => {
+  const onboardMember = async (
+    dao,
+    bank,
+    submitter = members[0],
+    newMember
+  ) => {
+    const onboarding = this.adapters.onboarding;
+    const voting = this.adapters.voting; //offchain voting
     const blockNumber = await getCurrentBlockNumber();
     const proposalId = getProposalCounter();
-    const submitter = members[0];
-    const { proposalData } = await buildProposal(onboarding.address, submitter);
+    const actionId = onboarding.address;
+    const { proposalData } = await buildProposal(
+      dao,
+      actionId,
+      submitter,
+      blockNumber,
+      chainId
+    );
 
     await onboarding.submitProposal(
       dao.address,
       proposalId,
-      members[index].address,
+      newMember.address,
       UNITS,
       unitPrice.mul(toBN(3)).add(remaining),
       prepareVoteProposalData(proposalData, web3),
@@ -155,58 +133,22 @@ describe("Adapter - Offchain Voting", () => {
       }
     );
 
-    const voteEntries = [];
-    const membersCount = await dao.getNbMembers();
-
-    for (let i = 0; i < parseInt(membersCount.toString()) - 1; i++) {
-      const memberAddress = await dao.getMemberAddress(i);
-      const member = findMember(memberAddress);
-      let voteEntry;
-      if (member) {
-        const voteSigner = SigUtilSigner(member.privateKey);
-        const weight = await bank.balanceOf(member.address, UNITS);
-        voteEntry = await createVote(proposalId, weight, true);
-
-        voteEntry.sig = voteSigner(
-          voteEntry,
-          dao.address,
-          onboarding.address,
-          chainId
-        );
-      } else {
-        voteEntry = await createVote(proposalId, 0, true);
-
-        voteEntry.sig = "0x";
-      }
-
-      voteEntries.push(voteEntry);
-    }
-
-    await advanceTime(10000);
-
-    const { voteResultTree, result } = await prepareVoteResult(
-      voteEntries,
+    const { rootSig, lastVoteResult, resultHash } = await buildVoteTree(
       dao,
-      onboarding.address,
-      chainId
+      bank,
+      proposalId,
+      submitter,
+      blockNumber,
+      chainId,
+      actionId
     );
 
-    const signer = SigUtilSigner(submitter.privateKey);
-    const rootSig = signer(
-      { root: voteResultTree.getHexRoot(), type: "result" },
-      dao.address,
-      onboarding.address,
-      chainId
-    );
-
-    const lastResult = result[result.length - 1];
-    const resultHash = voteResultTree.getHexRoot();
     const tx = await voting.submitVoteResult(
       dao.address,
       proposalId,
       resultHash,
       submitter.address,
-      lastResult,
+      lastVoteResult,
       rootSig
     );
 
@@ -214,8 +156,8 @@ describe("Adapter - Offchain Voting", () => {
     expect(Number(submittedVote[0])).to.be.equal(blockNumber);
     expect(submittedVote[1]).to.be.equal(submitter.address);
     expect(submittedVote[2]).to.be.equal(resultHash);
-    expect(submittedVote[3]).to.be.equal(lastResult.nbYes);
-    expect(submittedVote[4]).to.be.equal(lastResult.nbNo);
+    expect(submittedVote[3]).to.be.equal(lastVoteResult.nbYes);
+    expect(submittedVote[4]).to.be.equal(lastVoteResult.nbNo);
     expect(Number(submittedVote[5])).to.be.greaterThan(proposalData.timestamp);
     expect(Number(submittedVote[6])).to.be.greaterThan(proposalData.timestamp);
     expect(submittedVote[7]).to.be.false;
@@ -225,7 +167,7 @@ describe("Adapter - Offchain Voting", () => {
 
     log(
       `gas used for ( ${proposalId} ) votes: ` +
-      new Intl.NumberFormat().format(tx.receipt.gasUsed)
+        new Intl.NumberFormat().format(tx.receipt.gasUsed)
     );
 
     await advanceTime(10000);
@@ -240,39 +182,20 @@ describe("Adapter - Offchain Voting", () => {
     voting,
     configuration,
     bank,
-    index,
+    submitter,
     configs,
     singleVote = false,
     processProposal = true
   ) => {
-    const blockNumber = await getCurrentBlockNumber();
+    const blockNumber = await web3.eth.getBlockNumber();
     const proposalId = getProposalCounter();
+    const actionId = configuration.address;
 
-    const proposalPayload = {
-      name: "new configuration proposal",
-      body: "testing the governance token",
-      choices: ["yes", "no"],
-      start: Math.floor(new Date().getTime() / 1000),
-      end: Math.floor(new Date().getTime() / 1000) + 10000,
-      snapshot: blockNumber.toString(),
-    };
-
-    const space = "tribute";
-
-    const proposalData = {
-      type: "proposal",
-      timestamp: Math.floor(new Date().getTime() / 1000),
-      space,
-      payload: proposalPayload,
-      submitter: members[index].address,
-    };
-
-    //signer for myAccount (its private key)
-    const signer = SigUtilSigner(members[index].privateKey);
-    proposalData.sig = await signer(
-      proposalData,
-      dao.address,
-      configuration.address,
+    const { proposalData } = await buildProposal(
+      dao,
+      actionId,
+      submitter,
+      blockNumber,
       chainId
     );
     const data = prepareVoteProposalData(proposalData, web3);
@@ -281,68 +204,25 @@ describe("Adapter - Offchain Voting", () => {
       gasPrice: toBN("0"),
     });
 
-    const membersCount = await bank.getPriorAmount(
-      TOTAL,
-      MEMBER_COUNT,
-      blockNumber
-    );
-    const voteEntries = [];
-    const maintainer = members[index];
-    for (let i = 0; i < parseInt(membersCount.toString()); i++) {
-      const memberAddress = await dao.getMemberAddress(i);
-      const member = findMember(memberAddress);
-      let voteEntry;
-      const voteYes = singleVote ? memberAddress === maintainer.address : true;
-      if (member) {
-        const voteSigner = SigUtilSigner(member.privateKey);
-        const weight = await bank.balanceOf(member.address, UNITS);
-        voteEntry = await createVote(
-          proposalId,
-          toBN(weight.toString()),
-          voteYes
-        );
-        voteEntry.sig = voteSigner(
-          voteEntry,
-          dao.address,
-          configuration.address,
-          chainId
-        );
-      } else {
-        voteEntry = await createVote(proposalId, toBN("0"), voteYes);
-        voteEntry.sig = "0x";
-      }
-
-      voteEntries.push(voteEntry);
-    }
-
-    await advanceTime(10000);
-
-    const { voteResultTree, result } = await prepareVoteResult(
-      voteEntries,
-      dao,
-      configuration.address,
-      chainId
-    );
-
-    const rootSig = signer(
-      { root: voteResultTree.getHexRoot(), type: "result" },
-      dao.address,
-      configuration.address,
-      chainId
-    );
-
-    const lastResult = result[result.length - 1];
-    lastResult.nbYes = lastResult.nbYes.toString();
-    lastResult.nbNo = lastResult.nbNo.toString();
-    const submitter = members[index].address;
+    const { membersCount, rootSig, lastVoteResult, voteResultTree } =
+      await buildVoteTree(
+        dao,
+        bank,
+        proposalId,
+        submitter,
+        blockNumber,
+        chainId,
+        actionId,
+        singleVote
+      );
 
     if (processProposal) {
       await voting.submitVoteResult(
         dao.address,
         proposalId,
         voteResultTree.getHexRoot(),
-        members[index].address,
-        lastResult,
+        submitter.address,
+        lastVoteResult,
         rootSig
       );
 
@@ -357,8 +237,8 @@ describe("Adapter - Offchain Voting", () => {
       voteResultTree,
       blockNumber,
       membersCount,
-      lastResult,
-      submitter,
+      lastResult: lastVoteResult,
+      submitter: submitter.address,
       rootSig,
     };
   };
@@ -402,7 +282,14 @@ describe("Adapter - Offchain Voting", () => {
     const voting = this.adapters.voting;
     const onboarding = this.adapters.onboarding;
     const submitter = members[0];
-    const { proposalData } = await buildProposal(onboarding.address, submitter);
+    const blockNumber = await getCurrentBlockNumber();
+    const { proposalData } = await buildProposal(
+      this.dao,
+      onboarding.address,
+      submitter,
+      blockNumber,
+      chainId
+    );
 
     const senderAddress = await voting.getSenderAddress(
       this.dao.address,
@@ -426,31 +313,31 @@ describe("Adapter - Offchain Voting", () => {
     const proposalId = getProposalCounter();
     const onboarding = this.adapters.onboarding;
     const submitter = members[0];
-    const { proposalData } = buildProposal(onboarding.address, submitter);
+    const blockNumber = await getCurrentBlockNumber();
+    const { proposalData } = await buildProposal(
+      this.dao,
+      onboarding.address,
+      submitter,
+      blockNumber,
+      chainId
+    );
     // const voteResult = await voting.getBadNodeError(this.dao.address, proposalId, false);
   });
 
   describe("General", async () => {
     it("should be possible to onboard a new member by submitting a vote result and processing the proposal", async () => {
       const dao = this.dao;
-      const onboarding = this.adapters.onboarding;
       const bank = this.extensions.bankExt;
-
+      const submitter = members[0];
       for (var i = 1; i < members.length; i++) {
-        await onboardMember(
-          dao,
-          this.votingHelpers.offchainVoting,
-          onboarding,
-          bank,
-          i
-        );
+        await onboardMember(dao, bank, submitter, members[i]);
       }
     });
 
     it("should type & hash be consistent for proposals between javascript and solidity", async () => {
       const dao = this.dao;
+      const blockNumber = await getCurrentBlockNumber();
 
-      let blockNumber = await web3.eth.getBlockNumber();
       const proposalPayload = {
         type: "proposal",
         name: "some proposal",
@@ -646,7 +533,7 @@ describe("Adapter - Offchain Voting", () => {
         voting,
         configuration,
         bank,
-        accountIndex,
+        maintainer,
         configs
       );
 
@@ -694,7 +581,7 @@ describe("Adapter - Offchain Voting", () => {
         voting,
         configuration,
         bank,
-        accountIndex,
+        maintainer,
         configs
       );
 
@@ -739,7 +626,7 @@ describe("Adapter - Offchain Voting", () => {
         voting,
         configuration,
         bank,
-        accountIndex,
+        maintainer,
         configs
       );
 
@@ -796,7 +683,7 @@ describe("Adapter - Offchain Voting", () => {
         voting,
         configuration,
         bank,
-        accountIndex,
+        maintainer,
         configs
       );
 
@@ -853,7 +740,7 @@ describe("Adapter - Offchain Voting", () => {
           voting,
           configuration,
           bank,
-          accountIndex,
+          maintainer,
           configs
         )
       ).to.be.revertedWith("onlyMember");
@@ -861,7 +748,7 @@ describe("Adapter - Offchain Voting", () => {
 
     it("should not be possible to update a DAO configuration if you are a member but not a maintainer", async () => {
       const accountIndex = 0; // new member
-
+      const newUser = members[accountIndex];
       // Issue OpenLaw ERC20 Basic Token for tests, only DAO maintainer will hold this token
       const tokenSupply = toBN(100000);
       const oltContract = await OLToken.new(tokenSupply);
@@ -869,7 +756,7 @@ describe("Adapter - Offchain Voting", () => {
       const { dao, adapters, extensions } = await deployDaoWithOffchainVoting({
         owner: daoOwner,
         // New members is added, but does not hold OLTs
-        newMember: members[accountIndex].address,
+        newMember: newUser.address,
         // only holders of the OLT tokens are considered
         // maintainers
         maintainerTokenAddress: oltContract.address,
@@ -906,7 +793,7 @@ describe("Adapter - Offchain Voting", () => {
         voting,
         configuration,
         bank,
-        accountIndex, // the index of the member that will vote
+        newUser,
         configs,
         true, // indicates that only 1 member is voting Yes on the proposal, but he is not a maintainer
         false // skip the process proposal call
@@ -943,18 +830,18 @@ describe("Adapter - Offchain Voting", () => {
 
     it("should not be possible to update a DAO configuration if you are a member & maintainer that holds an external token which not implements getPriorAmount function", async () => {
       const accountIndex = 0; // new member
-
+      const newUser = members[accountIndex];
       // Mint a PixelNFT to use it as an External Governance Token which does not implements
       // the getPriorAmount function. Only a DAO maintainer will hold this token.
       const externalGovToken = await PixelNFT.new(10);
-      await externalGovToken.mintPixel(members[accountIndex].address, 1, 1, {
+      await externalGovToken.mintPixel(newUser.address, 1, 1, {
         from: daoOwner,
       });
 
       const { dao, adapters, extensions } = await deployDaoWithOffchainVoting({
         owner: daoOwner,
         // New members is added, but does not hold OLTs
-        newMember: members[accountIndex].address,
+        newMember: newUser.address,
         // only holders of the OLT tokens are considered
         // maintainers
         maintainerTokenAddress: externalGovToken.address,
@@ -992,7 +879,7 @@ describe("Adapter - Offchain Voting", () => {
         voting,
         configuration,
         bank,
-        accountIndex, // the index of the member that will vote
+        newUser, // the index of the member that will vote
         configs,
         true, // indicates that only 1 member is voting Yes on the proposal, but he is not a maintainer
         false // skip the process proposal call
