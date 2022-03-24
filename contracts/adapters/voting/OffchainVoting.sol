@@ -309,30 +309,27 @@ contract OffchainVotingContract is
     ) external reimbursable(dao) {
         Voting storage vote = votes[address(dao)][proposalId];
         // slither-disable-next-line timestamp
-        require(vote.snapshot > 0, "vote:not started");
-
-        if (vote.resultRoot == bytes32(0) || vote.isChallenged) {
-            require(
-                _ovHelper.isReadyToSubmitResult(
-                    dao,
-                    vote.forceFailed,
-                    vote.snapshot,
-                    vote.startingTime,
-                    dao.getConfiguration(VotingPeriod),
-                    result.nbYes,
-                    result.nbNo,
-                    block.timestamp
-                ),
-                "vote:notReadyToSubmitResult"
-            );
-        }
+        require(vote.snapshot > 0, "vote not started");
+        require(
+            _ovHelper.isReadyToSubmitResult(
+                dao,
+                vote.forceFailed,
+                vote.snapshot,
+                vote.startingTime,
+                dao.getConfiguration(VotingPeriod),
+                result.nbYes,
+                result.nbNo,
+                block.timestamp
+            ),
+            "not ready for vote result"
+        );
 
         require(
             vote.gracePeriodStartingTime == 0 ||
                 vote.gracePeriodStartingTime +
                     dao.getConfiguration(VotingPeriod) <=
                 block.timestamp,
-            "graceperiod finished!"
+            "graceperiod finished"
         );
 
         require(isActiveMember(dao, reporter), "not active member");
@@ -361,10 +358,8 @@ contract OffchainVotingContract is
                 ovHash.hashResultRoot(dao, adapterAddress, resultRoot),
                 rootSig
             ),
-            "invalid sig"
+            "invalid result signature"
         );
-
-        _verifyNode(dao, adapterAddress, result, resultRoot);
 
         // slither-disable-next-line timestamp
         require(
@@ -491,7 +486,7 @@ contract OffchainVotingContract is
                 dao.getAddressIfDelegated(proposal.submitter),
                 DaoHelper.UNITS
             ) > 0,
-            "noActiveMember"
+            "not active member"
         );
 
         require(
@@ -500,7 +495,7 @@ contract OffchainVotingContract is
                 _snapshotContract.hashMessage(dao, msg.sender, proposal),
                 proposal.sig
             ),
-            "invalid sig"
+            "invalid proposal signature"
         );
     }
 
@@ -573,7 +568,7 @@ contract OffchainVotingContract is
 
         (address actionId, ) = dao.proposals(proposalId);
 
-        require(resultRoot != bytes32(0), "no result!");
+        require(resultRoot != bytes32(0), "no result");
         require(nodeCurrent.index == nodePrevious.index + 1, "not consecutive");
 
         _verifyNode(dao, actionId, nodeCurrent, vote.resultRoot);
@@ -684,7 +679,7 @@ contract OffchainVotingContract is
                 root,
                 ovHash.nodeHash(dao, adapterAddress, node)
             ),
-            "proof:bad"
+            "invalid vote proof"
         );
     }
 

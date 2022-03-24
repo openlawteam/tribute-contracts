@@ -56,6 +56,17 @@ const VotingState = {
   5: "GRACE_PERIOD",
 };
 
+const VotingStrategies = {
+  AllVotesYes: "AllVotesYes",
+  AllVotesNo: "AllVotesNo",
+  NoBodyVotes: "NoBodyVotes",
+  SingleYesVote: "SingleYesVote",
+  SingleNoVote: "SingleNoVote",
+  TieVote: "TieVote",
+  MajorityVotesYes: "MajorityVotesYes",
+  MajorityVotesNo: "MajorityVotesNo",
+};
+
 const testMembers = generateMembers(10);
 
 const findMember = (addr) =>
@@ -94,6 +105,71 @@ const buildProposal = async (
   return { proposalData };
 };
 
+const buildVotes = async (
+  dao,
+  bank,
+  proposalId,
+  submitter,
+  blockNumber,
+  chainId,
+  actionId,
+  voteStrategy,
+  votingWeight = undefined
+) => {
+  const membersCount = await bank.getPriorAmount(
+    TOTAL,
+    MEMBER_COUNT,
+    blockNumber
+  );
+  const voteEntries = [];
+  const totalVotes = parseInt(membersCount.toString());
+  for (let i = 0; i < totalVotes; i++) {
+    const memberAddress = await dao.getMemberAddress(i);
+    const member = findMember(memberAddress);
+
+    let voteYes;
+    switch (voteStrategy) {
+      case VotingStrategies.SingleYesVote:
+        voteYes = memberAddress === submitter.address;
+        break;
+      case VotingStrategies.SingleNoVote:
+        voteYes = !memberAddress === submitter.address;
+        break;
+      case VotingStrategies.AllVotesYes:
+        voteYes = true;
+        break;
+      case VotingStrategies.AllVotesNo:
+        voteYes = false;
+        break;
+      case VotingStrategies.TieVote:
+        voteYes = i < parseInt(totalVotes / 2);
+        break;
+      case VotingStrategies.NoBodyVotes:
+      default:
+        voteYes = undefined;
+        break;
+    }
+
+    let voteEntry;
+    if (member && voteYes !== undefined) {
+      const voteSigner = SigUtilSigner(member.privateKey);
+      const weight = await bank.balanceOf(member.address, UNITS);
+      voteEntry = await createVote(
+        proposalId,
+        votingWeight ? toBN(votingWeight) : toBN(weight.toString()),
+        voteYes
+      );
+      voteEntry.sig = voteSigner(voteEntry, dao.address, actionId, chainId);
+    } else {
+      voteEntry = await createVote(proposalId, toBN("0"), false);
+      voteEntry.sig = "0x";
+    }
+
+    voteEntries.push(voteEntry);
+  }
+  return voteEntries;
+};
+
 const buildVoteTree = async (
   dao,
   bank,
@@ -102,35 +178,26 @@ const buildVoteTree = async (
   blockNumber,
   chainId,
   actionId,
-  singleVote = false
+  votingStrategy = VotingStrategies.AllVotesYes,
+  votingWeight = undefined
 ) => {
   const membersCount = await bank.getPriorAmount(
     TOTAL,
     MEMBER_COUNT,
     blockNumber
   );
-  const voteEntries = [];
-  for (let i = 0; i < parseInt(membersCount.toString()); i++) {
-    const memberAddress = await dao.getMemberAddress(i);
-    const member = findMember(memberAddress);
-    let voteEntry;
-    const voteYes = singleVote ? memberAddress === submitter.address : true;
-    if (member) {
-      const voteSigner = SigUtilSigner(member.privateKey);
-      const weight = await bank.balanceOf(member.address, UNITS);
-      voteEntry = await createVote(
-        proposalId,
-        toBN(weight.toString()),
-        voteYes
-      );
-      voteEntry.sig = voteSigner(voteEntry, dao.address, actionId, chainId);
-    } else {
-      voteEntry = await createVote(proposalId, toBN("0"), voteYes);
-      voteEntry.sig = "0x";
-    }
 
-    voteEntries.push(voteEntry);
-  }
+  const voteEntries = await buildVotes(
+    dao,
+    bank,
+    proposalId,
+    submitter,
+    blockNumber,
+    chainId,
+    actionId,
+    votingStrategy,
+    votingWeight
+  );
 
   await advanceTime(10000);
 
@@ -669,4 +736,5 @@ Object.assign(exports, {
   BadNodeError,
   VotingState,
   testMembers,
+  VotingStrategies,
 });

@@ -122,7 +122,7 @@ contract OffchainVotingHelperContract {
         //check that the step is indeed part of the result
         require(
             MerkleProof.verify(node.proof, resultRoot, hashCurrent),
-            "proof:bad"
+            "invalid node proof"
         );
         if (node.index >= nbMembers) {
             return BadNodeError.INDEX_OUT_OF_BOUND;
