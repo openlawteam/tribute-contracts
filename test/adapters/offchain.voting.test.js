@@ -65,6 +65,9 @@ const {
   BadNodeError,
   buildVoteTree,
   buildProposal,
+  buildVotes,
+  emptyVote,
+  vote,
   testMembers,
   VotingStrategies,
 } = require("../../utils/offchain-voting-util");
@@ -106,7 +109,8 @@ describe("Adapter - Offchain Voting", () => {
     dao,
     bank,
     submitter = members[0],
-    newMember
+    newMember,
+    printGasUsage = false
   ) => {
     const onboarding = this.adapters.onboarding;
     const voting = this.adapters.voting; //offchain voting
@@ -141,7 +145,8 @@ describe("Adapter - Offchain Voting", () => {
       submitter,
       blockNumber,
       chainId,
-      actionId
+      actionId,
+      VotingStrategies.AllVotesYes
     );
 
     const tx = await voting.submitVoteResult(
@@ -166,10 +171,12 @@ describe("Adapter - Offchain Voting", () => {
     expect(submittedVote[9]).to.be.false;
     expect(submittedVote[10]).to.be.equal("0");
 
-    log(
-      `gas used for ( ${proposalId} ) votes: ` +
-        new Intl.NumberFormat().format(tx.receipt.gasUsed)
-    );
+    if (printGasUsage) {
+      log(
+        `gas used for ( ${proposalId} ) votes: ` +
+          new Intl.NumberFormat().format(tx.receipt.gasUsed)
+      );
+    }
 
     await advanceTime(10000);
 
@@ -214,7 +221,9 @@ describe("Adapter - Offchain Voting", () => {
         blockNumber,
         chainId,
         actionId,
-        voteStrategy
+        voteStrategy,
+        null,
+        true
       );
 
     if (processProposal) {
@@ -309,41 +318,6 @@ describe("Adapter - Offchain Voting", () => {
     //todo: 1: tie, 2: pass, 3: not pass, 4: in progress
   });
 
-  it("should not be possible for a non member to submit a proposal", async () => {
-    const nonMember = members[1];
-
-    const dao = this.dao;
-    const onboarding = this.adapters.onboarding;
-    const proposalId = getProposalCounter();
-    const actionId = onboarding.address;
-    const blockNumber = await getCurrentBlockNumber();
-
-    const { proposalData } = await buildProposal(
-      this.dao,
-      actionId,
-      nonMember,
-      blockNumber,
-      chainId
-    );
-
-    await advanceTime(1000);
-
-    await expect(
-      onboarding.submitProposal(
-        this.dao.address,
-        proposalId,
-        newMember.address,
-        UNITS,
-        unitPrice.mul(toBN(3)).add(remaining),
-        prepareVoteProposalData(proposalData, web3),
-        {
-          from: daoOwner,
-          gasPrice: toBN("0"),
-        }
-      )
-    ).to.be.revertedWith("onlyMember");
-  });
-
   // const voteResult = await voting.getBadNodeError(
   //   this.dao.address,
   //   proposalId,
@@ -356,6 +330,38 @@ describe("Adapter - Offchain Voting", () => {
   // );
 
   describe("Submit Vote Result", async () => {
+    it("should not be possible for a non member to submit a proposal", async () => {
+      const nonMember = members[1];
+      const onboarding = this.adapters.onboarding;
+      const proposalId = getProposalCounter();
+      const actionId = onboarding.address;
+      const blockNumber = await getCurrentBlockNumber();
+
+      const { proposalData } = await buildProposal(
+        this.dao,
+        actionId,
+        nonMember,
+        blockNumber,
+        chainId
+      );
+
+      await advanceTime(1000);
+
+      await expect(
+        onboarding.submitProposal(
+          this.dao.address,
+          proposalId,
+          newMember.address,
+          UNITS,
+          unitPrice.mul(toBN(3)).add(remaining),
+          prepareVoteProposalData(proposalData, web3),
+          {
+            from: daoOwner,
+            gasPrice: toBN("0"),
+          }
+        )
+      ).to.be.revertedWith("onlyMember");
+    });
     it("should not be possible to submit a vote result if the voting period did not start", async () => {
       const daoOwnerSubmitter = members[0];
       const newMember = members[1];
@@ -368,15 +374,6 @@ describe("Adapter - Offchain Voting", () => {
       const voting = this.adapters.voting;
 
       const blockNumber = await getCurrentBlockNumber();
-
-      const configs = [
-        {
-          key: sha3("config1"),
-          numericValue: "10",
-          addressValue: ZERO_ADDRESS,
-          configType: 0,
-        },
-      ];
 
       await advanceTime(10000);
 
@@ -401,6 +398,156 @@ describe("Adapter - Offchain Voting", () => {
           rootSig
         )
       ).to.be.revertedWith("vote not started");
+    });
+
+    it("should not be possible to submit a vote result if the voting period did not ended", async () => {
+      const daoOwnerSubmitter = members[0];
+
+      const dao = this.dao;
+      const bank = this.extensions.bankExt;
+      const configuration = this.adapters.configuration;
+      const proposalId = getProposalCounter();
+      const actionId = configuration.address;
+      const voting = this.adapters.voting;
+
+      let blockNumber = await getCurrentBlockNumber();
+      const { proposalData } = await buildProposal(
+        dao,
+        actionId,
+        daoOwnerSubmitter,
+        blockNumber,
+        chainId
+      );
+
+      const configs = [
+        {
+          key: sha3("config1"),
+          numericValue: "10",
+          addressValue: ZERO_ADDRESS,
+          configType: 0,
+        },
+      ];
+      const data = prepareVoteProposalData(proposalData, web3);
+      await configuration.submitProposal(
+        dao.address,
+        proposalId,
+        configs,
+        data,
+        {
+          from: daoOwner,
+          gasPrice: toBN("0"),
+        }
+      );
+
+      // Only the submitter votes Yes, and attempts to submit the vote result
+      const votes = await buildVotes(
+        dao,
+        bank,
+        proposalId,
+        daoOwnerSubmitter,
+        blockNumber,
+        chainId,
+        actionId,
+        VotingStrategies.SingleYesVote
+      );
+      const { lastVoteResult, rootSig, resultHash } = await buildVoteTree(
+        dao,
+        bank,
+        proposalId,
+        daoOwnerSubmitter,
+        blockNumber,
+        chainId,
+        actionId,
+        VotingStrategies.SingleYesVote,
+        votes,
+        false // do not advance time
+      );
+
+      await expect(
+        voting.submitVoteResult(
+          dao.address,
+          proposalId,
+          resultHash,
+          daoOwnerSubmitter.address,
+          lastVoteResult,
+          rootSig
+        )
+      ).to.be.revertedWith("not ready for vote result");
+    });
+
+    it.skip("should not be possible to submit a vote result if the grace period is over", async () => {
+      const daoOwnerSubmitter = members[0];
+
+      const dao = this.dao;
+      const bank = this.extensions.bankExt;
+      const configuration = this.adapters.configuration;
+      const proposalId = getProposalCounter();
+      const actionId = configuration.address;
+      const voting = this.adapters.voting;
+
+      let blockNumber = await getCurrentBlockNumber();
+      const { proposalData } = await buildProposal(
+        dao,
+        actionId,
+        daoOwnerSubmitter,
+        blockNumber,
+        chainId
+      );
+
+      const configs = [
+        {
+          key: sha3("config1"),
+          numericValue: "10",
+          addressValue: ZERO_ADDRESS,
+          configType: 0,
+        },
+      ];
+      const data = prepareVoteProposalData(proposalData, web3);
+      await configuration.submitProposal(
+        dao.address,
+        proposalId,
+        configs,
+        data,
+        {
+          from: daoOwner,
+          gasPrice: toBN("0"),
+        }
+      );
+
+      // Only the submitter votes Yes, and attempts to submit the vote result
+      const votes = await buildVotes(
+        dao,
+        bank,
+        proposalId,
+        daoOwnerSubmitter,
+        blockNumber,
+        chainId,
+        actionId,
+        VotingStrategies.SingleYesVote
+      );
+      const { lastVoteResult, rootSig, resultHash } = await buildVoteTree(
+        dao,
+        bank,
+        proposalId,
+        daoOwnerSubmitter,
+        blockNumber,
+        chainId,
+        actionId,
+        VotingStrategies.SingleYesVote,
+        votes,
+        false // do not advance time
+      );
+
+      await expect(
+        voting.submitVoteResult(
+          dao.address,
+          proposalId,
+          resultHash,
+          daoOwnerSubmitter.address,
+          lastVoteResult,
+          rootSig
+        )
+      ).to.be.revertedWith("graceperiod finished");
     });
 
     it("should not be possible to submit a vote result if the submitter is not an active member", async () => {
@@ -465,6 +612,174 @@ describe("Adapter - Offchain Voting", () => {
           rootSig
         )
       ).to.be.revertedWith("not active member");
+    });
+
+    it("should not be possible to submit a vote result if the number of votes is greater than the number of dao members", async () => {
+      const daoOwnerSubmitter = members[0];
+
+      const dao = this.dao;
+      const bank = this.extensions.bankExt;
+      const configuration = this.adapters.configuration;
+      const proposalId = getProposalCounter();
+      const actionId = configuration.address;
+      const voting = this.adapters.voting;
+
+      const newMember = members[2];
+
+      await onboardMember(dao, bank, daoOwnerSubmitter, newMember);
+
+      await advanceTime(1000);
+
+      let blockNumber = await getCurrentBlockNumber();
+      const { proposalData } = await buildProposal(
+        dao,
+        actionId,
+        daoOwnerSubmitter,
+        blockNumber,
+        chainId
+      );
+
+      const configs = [
+        {
+          key: sha3("config1"),
+          numericValue: "10",
+          addressValue: ZERO_ADDRESS,
+          configType: 0,
+        },
+      ];
+      const data = prepareVoteProposalData(proposalData, web3);
+      await configuration.submitProposal(
+        dao.address,
+        proposalId,
+        configs,
+        data,
+        {
+          from: daoOwner,
+          gasPrice: toBN("0"),
+        }
+      );
+
+      await advanceTime(15000);
+
+      // Only the submitter votes Yes, and attempts to submit the vote result
+      let votes = await buildVotes(
+        dao,
+        bank,
+        proposalId,
+        newMember,
+        blockNumber,
+        chainId,
+        actionId,
+        VotingStrategies.SingleYesVote
+      );
+      // Add an empty to vote to mess with the voting tree
+      votes.push(await emptyVote(proposalId));
+      const { lastVoteResult, rootSig, resultHash } = await buildVoteTree(
+        dao,
+        bank,
+        proposalId,
+        newMember,
+        blockNumber,
+        chainId,
+        actionId,
+        VotingStrategies.SingleYesVote,
+        votes
+      );
+
+      await expect(
+        voting.submitVoteResult(
+          dao.address,
+          proposalId,
+          resultHash,
+          newMember.address,
+          lastVoteResult,
+          rootSig
+        )
+      ).to.be.revertedWith("index:member_count mismatch");
+    });
+
+    it("should not be possible to submit a vote result if the number of votes is lower than the number of dao members", async () => {
+      const daoOwnerSubmitter = members[0];
+
+      const dao = this.dao;
+      const bank = this.extensions.bankExt;
+      const configuration = this.adapters.configuration;
+      const proposalId = getProposalCounter();
+      const actionId = configuration.address;
+      const voting = this.adapters.voting;
+
+      const newMember = members[2];
+
+      await onboardMember(dao, bank, daoOwnerSubmitter, newMember);
+
+      await advanceTime(1000);
+
+      let blockNumber = await getCurrentBlockNumber();
+      const { proposalData } = await buildProposal(
+        dao,
+        actionId,
+        daoOwnerSubmitter,
+        blockNumber,
+        chainId
+      );
+
+      const configs = [
+        {
+          key: sha3("config1"),
+          numericValue: "10",
+          addressValue: ZERO_ADDRESS,
+          configType: 0,
+        },
+      ];
+      const data = prepareVoteProposalData(proposalData, web3);
+      await configuration.submitProposal(
+        dao.address,
+        proposalId,
+        configs,
+        data,
+        {
+          from: daoOwner,
+          gasPrice: toBN("0"),
+        }
+      );
+
+      await advanceTime(15000);
+
+      // Only the submitter votes Yes, and attempts to submit the vote result
+      let votes = await buildVotes(
+        dao,
+        bank,
+        proposalId,
+        newMember,
+        blockNumber,
+        chainId,
+        actionId,
+        VotingStrategies.SingleYesVote
+      );
+      // TODO remove a vote to mess with the voting tree
+      votes.push(await emptyVote(proposalId));
+      const { lastVoteResult, rootSig, resultHash } = await buildVoteTree(
+        dao,
+        bank,
+        proposalId,
+        newMember,
+        blockNumber,
+        chainId,
+        actionId,
+        VotingStrategies.SingleYesVote,
+        votes
+      );
+
+      await expect(
+        voting.submitVoteResult(
+          dao.address,
+          proposalId,
+          resultHash,
+          newMember.address,
+          lastVoteResult,
+          rootSig
+        )
+      ).to.be.revertedWith("index:member_count mismatch");
     });
 
     it("should not be possible to submit a vote result if no body voted", async () => {
@@ -606,7 +921,7 @@ describe("Adapter - Offchain Voting", () => {
       const bank = this.extensions.bankExt;
       const submitter = members[0];
       for (var i = 1; i < members.length; i++) {
-        await onboardMember(dao, bank, submitter, members[i]);
+        await onboardMember(dao, bank, submitter, members[i], true);
       }
     });
 
@@ -1071,7 +1386,7 @@ describe("Adapter - Offchain Voting", () => {
         bank,
         newUser,
         configs,
-        VotingStrategies.SingleYesVote, // indicates that only 1 member is voting Yes on the proposal, but he is not a maintainer
+        VotingStrategies.AllVotesYes,
         false // skip the process proposal call
       );
 
@@ -1157,7 +1472,7 @@ describe("Adapter - Offchain Voting", () => {
         bank,
         newUser, // the index of the member that will vote
         configs,
-        VotingStrategies.SingleYesVote, // indicates that only 1 member is voting Yes on the proposal, but he is not a maintainer
+        VotingStrategies.AllVotesYes,
         false // skip the process proposal call
       );
 

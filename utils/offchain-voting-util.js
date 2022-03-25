@@ -105,6 +105,33 @@ const buildProposal = async (
   return { proposalData };
 };
 
+const vote = async (
+  dao,
+  bank,
+  proposalId,
+  member,
+  choice,
+  actionId,
+  chainId,
+  votingWeight = undefined
+) => {
+  const voteSigner = SigUtilSigner(member.privateKey);
+  const weight = await bank.balanceOf(member.address, UNITS);
+  const voteEntry = await createVote(
+    proposalId,
+    votingWeight ? toBN(votingWeight) : weight,
+    choice
+  );
+  voteEntry.sig = voteSigner(voteEntry, dao.address, actionId, chainId);
+  return voteEntry;
+};
+
+const emptyVote = async (proposalId) => {
+  const voteEntry = await createVote(proposalId, toBN("0"), false);
+  voteEntry.sig = "0x";
+  return voteEntry;
+};
+
 const buildVotes = async (
   dao,
   bank,
@@ -126,45 +153,81 @@ const buildVotes = async (
   for (let i = 0; i < totalVotes; i++) {
     const memberAddress = await dao.getMemberAddress(i);
     const member = findMember(memberAddress);
+    let voteEntry;
 
-    let voteYes;
+    if (!member) {
+      voteEntry = await emptyVote(proposalId);
+      voteEntries.push(voteEntry);
+      continue;
+    }
+
     switch (voteStrategy) {
-      case VotingStrategies.SingleYesVote:
-        voteYes = memberAddress === submitter.address;
+      case VotingStrategies.SingleYesVote &&
+        memberAddress === submitter.address:
+        voteEntry = await vote(
+          dao,
+          bank,
+          proposalId,
+          member,
+          true,
+          actionId,
+          chainId,
+          votingWeight
+        );
         break;
-      case VotingStrategies.SingleNoVote:
-        voteYes = !memberAddress === submitter.address;
+      case VotingStrategies.SingleNoVote && memberAddress === submitter.address:
+        voteEntry = await vote(
+          dao,
+          bank,
+          proposalId,
+          member,
+          false,
+          actionId,
+          chainId,
+          votingWeight
+        );
         break;
       case VotingStrategies.AllVotesYes:
-        voteYes = true;
+        voteEntry = await vote(
+          dao,
+          bank,
+          proposalId,
+          member,
+          true,
+          actionId,
+          chainId,
+          votingWeight
+        );
         break;
       case VotingStrategies.AllVotesNo:
-        voteYes = false;
+        voteEntry = await vote(
+          dao,
+          bank,
+          proposalId,
+          member,
+          false,
+          actionId,
+          chainId,
+          votingWeight
+        );
         break;
       case VotingStrategies.TieVote:
-        voteYes = i < parseInt(totalVotes / 2);
+        voteEntry = await vote(
+          dao,
+          bank,
+          proposalId,
+          member,
+          i < parseInt(totalVotes / 2),
+          actionId,
+          chainId,
+          votingWeight
+        );
         break;
       case VotingStrategies.NoBodyVotes:
       default:
-        voteYes = undefined;
+        voteEntry = await emptyVote(proposalId);
         break;
     }
-
-    let voteEntry;
-    if (member && voteYes !== undefined) {
-      const voteSigner = SigUtilSigner(member.privateKey);
-      const weight = await bank.balanceOf(member.address, UNITS);
-      voteEntry = await createVote(
-        proposalId,
-        votingWeight ? toBN(votingWeight) : toBN(weight.toString()),
-        voteYes
-      );
-      voteEntry.sig = voteSigner(voteEntry, dao.address, actionId, chainId);
-    } else {
-      voteEntry = await createVote(proposalId, toBN("0"), false);
-      voteEntry.sig = "0x";
-    }
-
     voteEntries.push(voteEntry);
   }
   return voteEntries;
@@ -179,7 +242,8 @@ const buildVoteTree = async (
   chainId,
   actionId,
   votingStrategy = VotingStrategies.AllVotesYes,
-  votingWeight = undefined
+  votes = undefined,
+  moveBlockTime = true
 ) => {
   const membersCount = await bank.getPriorAmount(
     TOTAL,
@@ -187,19 +251,20 @@ const buildVoteTree = async (
     blockNumber
   );
 
-  const voteEntries = await buildVotes(
-    dao,
-    bank,
-    proposalId,
-    submitter,
-    blockNumber,
-    chainId,
-    actionId,
-    votingStrategy,
-    votingWeight
-  );
+  const voteEntries = votes
+    ? votes
+    : await buildVotes(
+        dao,
+        bank,
+        proposalId,
+        submitter,
+        blockNumber,
+        chainId,
+        actionId,
+        votingStrategy
+      );
 
-  await advanceTime(10000);
+  if (moveBlockTime) await advanceTime(10000);
 
   const { voteResultTree, result } = await prepareVoteResult(
     voteEntries,
@@ -718,6 +783,9 @@ Object.assign(exports, {
   buildVoteLeafHashForMerkleTree,
   buildProposal,
   buildVoteTree,
+  buildVotes,
+  vote,
+  emptyVote,
   validateMessage,
   getDomainDefinition,
   signMessage,
