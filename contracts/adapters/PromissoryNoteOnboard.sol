@@ -34,6 +34,16 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
  */
 
+    // User requests a coupon/promissorynote 
+    // User retrieve value of NFT from database (wmgi api)
+    // User agrees on loan amount based on value of NFT 
+    // User  deposits NFT into guildbank via a startPromissoryNoteAdapter
+    // User receives coupon for 50% of NFT value.
+    // User has 24 hours to redeem coupon
+    // User redeems coupon and receives USDC
+    //     - checks if NFT is deposited
+    // User either return USDC + interest  OR has loan foreclosed. 
+
 contract PromissoryNoteContract is Reimbursable, AdapterGuard, Signatures {
 
     
@@ -42,43 +52,82 @@ contract PromissoryNoteContract is Reimbursable, AdapterGuard, Signatures {
 
     event LoanCreated(DaoRegistry dao, address Borrower, uint256 amount, uint32 basisPoints, uint256 loanDuration);
 
+    /*  
+        @param borrower the address taking out the loan
+        @param principalLoanAmount the amount of erc20 borrowed 
+        @param loanRepaymentAmount - the amount of erc20 to be repaid
+        @param basisPoints - interest rate on principalLoanAmount
+        @param loanAvailExpiration - loan is no longer availabe after this time
+        @param loanDuration - length of loan 
+        @param loanStartTime - the borrower initiates loan at this time
+        @param nftCollateralContract - the nft address of the collateral
+        @param nftIdNumber - the ID number of the NFT from nftCollateralContract
+        @param nonce - tracking 
+    */
+
     struct PromissoryNote {
         address borrower;
         uint256 principalLoanAmount;
         uint256 loanRepaymentAmount; //for now, just one repayment amount. TODO make it timebased later.
         uint32 basisPoints; 
+        uint64  loanAvailExpiration;
         uint256 loanDuration; 
         uint64 loanStartTime;
         address nftCollateralContract;
-        //uint64 loadId;
+        uint256 nftIdNumber
+        uint256 nonce;
+        //uint64 loadId; track with mapping?
     }
-    //
+    
     string public constant COUPON_MESSAGE_TYPE = "Message(address borrower, uint256 principalLoanAmount)";
     bytes32 public constant COUPON_MESSAGE_TYPEHASH =
     keccak256(abi.encodePacked(COUPON_MESSAGE_TYPE));
 
     bytes32 constant SignerAddressConfig = keccak256("promissory-note.signerAddress");
-
-    //encode parameters
-    //bytes32 constant ..
-
+    bytes32 constant TokenAddressToLend = keccak256("promissory-note.token.address")
+ 
     //map DAO -> loanId ->amount
 
     // event LoanRepaid(); 
 
     // event LoanForeclosed();
 
-    function configureDAO(DaoRegistry dao){
-
-    }
+    function configureDAO(
+        DaoRegistry dao,
+        address signerAddress,
+        address erc20, 
+        address borrower,
+        ) external onlyAdapter(dao) {
+            //
+        }
+        
+      
     
     /**
-     * @notice Hashes the provided coupon as an ERC712 hash.
+     * @notice Hashes the provided PrommisoryNote coupon as an ERC712 hash.
      * @param dao is the DAO instance to be configured
-     * @param coupon is the coupon to hash
+     * @param PromissoryNote is the coupon to hash
      */
-    function hashPromissoryNoteMessage(DaoRegistry dao) {
-
+    function hashPromissoryNoteMessage(DaoRegistry dao, PromissoryNote memory promissory ) 
+    public view returns (bytes32) 
+    {
+        bytes32 message = keccak256(
+            abi.encode (
+                COUPON_MESSAGE_TYPEHASH,
+                promissory.borrower,
+                promissory.principalLoanAmount,
+                promissory.loanRepaymentAmount,
+                promissory.basisPoints,
+                promissiry.loanAvailExpiration,
+                promissory.loanDuration, 
+                promissory.loanStartTime,
+                promissory.nftCollateralContract,
+                promissory.nftIdNumber,
+                promissory.nonce
+                
+            )
+        );
+        return hashMessage(dao, address(this), message);
     }
     
     /**  
@@ -94,12 +143,5 @@ contract PromissoryNoteContract is Reimbursable, AdapterGuard, Signatures {
     }
 
  
-    // User requests a coupon/promissory note
-    // User retrieve value of NFT from database (wmgi api)
-    // User agrees on loan amount based on value of NFT 
-    //User  deposits NFT into guildbank via a startPromissoryNoteAdapter
-    // User receives coupon for 50% of NFT value.
-    // User redeems coupon and receives USDC
-    //     - checks if NFT is deposited
-    // User either return USDC + interest  OR has loan foreclosed. 
+    
 }
