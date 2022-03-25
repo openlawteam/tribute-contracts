@@ -52,7 +52,8 @@ contract PromissoryNoteContract is Reimbursable, AdapterGuard, Signatures {
 
     event LoanCreated(DaoRegistry dao, address Borrower, uint256 amount, uint32 basisPoints, uint256 loanDuration);
 
-    /*  
+    /**
+    
         @param borrower the address taking out the loan
         @param principalLoanAmount the amount of erc20 borrowed 
         @param loanRepaymentAmount - the amount of erc20 to be repaid
@@ -74,7 +75,7 @@ contract PromissoryNoteContract is Reimbursable, AdapterGuard, Signatures {
         uint256 loanDuration; 
         uint64 loanStartTime;
         address nftCollateralContract;
-        uint256 nftIdNumber
+        uint256 nftIdNumber;
         uint256 nonce;
         //uint64 loadId; track with mapping?
     }
@@ -84,7 +85,7 @@ contract PromissoryNoteContract is Reimbursable, AdapterGuard, Signatures {
     keccak256(abi.encodePacked(COUPON_MESSAGE_TYPE));
 
     bytes32 constant SignerAddressConfig = keccak256("promissory-note.signerAddress");
-    bytes32 constant TokenAddressToLend = keccak256("promissory-note.token.address")
+    bytes32 constant AddressOfBorrower = keccak256("promissory-note.token.address")
  
     //map DAO -> loanId ->amount
 
@@ -98,7 +99,9 @@ contract PromissoryNoteContract is Reimbursable, AdapterGuard, Signatures {
         address erc20, 
         address borrower,
         ) external onlyAdapter(dao) {
-            //
+            dao.setAddressConfiguration(SignerAddressConfig, signerAddress);
+            dao.setAddressConfiguration(ERC20InternalTokenAddr, erc20);
+            dao.setAddressConfiguration(AddressOfBorrower, borrower);
         }
         
       
@@ -134,7 +137,21 @@ contract PromissoryNoteContract is Reimbursable, AdapterGuard, Signatures {
      * @notice redeems a prommisory note for funds from guildbank
      * @param dao 
      */
-    function redeemPromissoryNote(DaoRegistry dao){
+    function redeemPromissoryNote(
+            DaoRegistry dao, 
+            address borrower,
+            uint256 principalLoanAmount,
+            uint256 loanRepaymentAmount, //for now, just one repayment amount. TODO make it timebased later.
+            uint32 basisPoints. 
+            uint64  loanAvailExpiration,
+            uint256 loanDuration, 
+            uint64 loanStartTime,
+            address nftCollateralContract,
+            uint256 nftIdNumber,
+            uint256 nonce,
+            byte memory signature
+        ) external reimbursable(dao)
+    {
         //approvedPrincipalLoanAmount - 50% of price from WGMI
         //is NFT deposited
         // enough funds in Guild
