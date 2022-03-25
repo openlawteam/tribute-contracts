@@ -113,7 +113,8 @@ const vote = async (
   choice,
   actionId,
   chainId,
-  votingWeight = undefined
+  votingWeight = undefined,
+  signature = undefined
 ) => {
   const voteSigner = SigUtilSigner(member.privateKey);
   const weight = await bank.balanceOf(member.address, UNITS);
@@ -122,13 +123,15 @@ const vote = async (
     votingWeight ? toBN(votingWeight) : weight,
     choice
   );
-  voteEntry.sig = voteSigner(voteEntry, dao.address, actionId, chainId);
+  voteEntry.sig = signature
+    ? signature
+    : voteSigner(voteEntry, dao.address, actionId, chainId);
   return voteEntry;
 };
 
-const emptyVote = async (proposalId) => {
-  const voteEntry = await createVote(proposalId, toBN("0"), false);
-  voteEntry.sig = "0x";
+const emptyVote = async (proposalId, choice = 2 /*no*/, signature = "0x") => {
+  const voteEntry = await createVote(proposalId, toBN("0"), choice);
+  voteEntry.sig = signature;
   return voteEntry;
 };
 
@@ -141,7 +144,9 @@ const buildVotes = async (
   chainId,
   actionId,
   voteStrategy,
-  votingWeight = undefined
+  votingWeight = undefined,
+  voteChoice = undefined,
+  signature = undefined
 ) => {
   const membersCount = await bank.getPriorAmount(
     TOTAL,
@@ -156,7 +161,7 @@ const buildVotes = async (
     let voteEntry;
 
     if (!member) {
-      voteEntry = await emptyVote(proposalId);
+      voteEntry = await emptyVote(proposalId, 2, signature);
       voteEntries.push(voteEntry);
       continue;
     }
@@ -169,10 +174,11 @@ const buildVotes = async (
           bank,
           proposalId,
           member,
-          true,
+          voteChoice ? voteChoice : 1,
           actionId,
           chainId,
-          votingWeight
+          votingWeight,
+          signature
         );
         break;
       case VotingStrategies.SingleNoVote && memberAddress === submitter.address:
@@ -181,10 +187,11 @@ const buildVotes = async (
           bank,
           proposalId,
           member,
-          false,
+          voteChoice ? voteChoice : 2,
           actionId,
           chainId,
-          votingWeight
+          votingWeight,
+          signature
         );
         break;
       case VotingStrategies.AllVotesYes:
@@ -193,10 +200,11 @@ const buildVotes = async (
           bank,
           proposalId,
           member,
-          true,
+          voteChoice ? voteChoice : 1,
           actionId,
           chainId,
-          votingWeight
+          votingWeight,
+          signature
         );
         break;
       case VotingStrategies.AllVotesNo:
@@ -205,10 +213,11 @@ const buildVotes = async (
           bank,
           proposalId,
           member,
-          false,
+          voteChoice ? voteChoice : 2,
           actionId,
           chainId,
-          votingWeight
+          votingWeight,
+          signature
         );
         break;
       case VotingStrategies.TieVote:
@@ -217,15 +226,16 @@ const buildVotes = async (
           bank,
           proposalId,
           member,
-          i < parseInt(totalVotes / 2),
+          i < parseInt(totalVotes / 2) ? 1 : 2,
           actionId,
           chainId,
-          votingWeight
+          votingWeight,
+          signature
         );
         break;
       case VotingStrategies.NoBodyVotes:
       default:
-        voteEntry = await emptyVote(proposalId);
+        voteEntry = await emptyVote(proposalId, 2, signature);
         break;
     }
     voteEntries.push(voteEntry);
@@ -660,9 +670,9 @@ function toStepNode(step, verifyingContract, actionId, chainId, merkleTree) {
   };
 }
 
-async function createVote(proposalId, weight, voteYes) {
+async function createVote(proposalId, weight, choice) {
   const payload = {
-    choice: voteYes ? 1 : 2,
+    choice,
     proposalId,
     weight: toBNWeb3(weight),
   };

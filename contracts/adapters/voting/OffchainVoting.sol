@@ -334,13 +334,11 @@ contract OffchainVotingContract is
 
         require(isActiveMember(dao, reporter), "not active member");
 
-        uint256 membersCount = BankExtension(
-            dao.getExtensionAddress(DaoHelper.BANK)
-        ).getPriorAmount(
-                DaoHelper.TOTAL,
-                DaoHelper.MEMBER_COUNT,
-                vote.snapshot
-            );
+        uint256 membersCount = _getBank(dao).getPriorAmount(
+            DaoHelper.TOTAL,
+            DaoHelper.MEMBER_COUNT,
+            vote.snapshot
+        );
 
         _ovHelper.checkBadNodeError(
             dao,

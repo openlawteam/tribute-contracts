@@ -1180,6 +1180,284 @@ describe("Adapter - Offchain Voting", () => {
       expect(BadNodeError[parseInt(errorCode)]).equal("INDEX_OUT_OF_BOUND");
     });
 
+    it("should not be possible to submit a vote result with an invalid vote choice", async () => {
+      const daoOwnerSubmitter = members[0];
+      const dao = this.dao;
+      const bank = this.extensions.bankExt;
+      const configuration = this.adapters.configuration;
+      const proposalId = getProposalCounter();
+      const actionId = configuration.address;
+      const voting = this.adapters.voting;
+
+      const blockNumber = await getCurrentBlockNumber();
+      const { proposalData } = await buildProposal(
+        dao,
+        actionId,
+        daoOwnerSubmitter,
+        blockNumber,
+        chainId
+      );
+
+      const configs = [
+        {
+          key: sha3("config1"),
+          numericValue: "10",
+          addressValue: ZERO_ADDRESS,
+          configType: 0,
+        },
+      ];
+      const data = prepareVoteProposalData(proposalData, web3);
+      await configuration.submitProposal(
+        dao.address,
+        proposalId,
+        configs,
+        data,
+        {
+          from: daoOwner,
+          gasPrice: toBN("0"),
+        }
+      );
+
+      // Only the submitter votes Yes, and attempts to submit the vote result
+      const votes = await buildVotes(
+        dao,
+        bank,
+        proposalId,
+        daoOwnerSubmitter,
+        blockNumber,
+        chainId,
+        actionId,
+        VotingStrategies.AllVotesYes,
+        null,
+        100 //invalid vote choice
+      );
+
+      const { lastVoteResult, rootSig, resultHash, membersCount } =
+        await buildVoteTree(
+          dao,
+          bank,
+          proposalId,
+          daoOwnerSubmitter,
+          blockNumber,
+          chainId,
+          actionId,
+          VotingStrategies.AllVotesYes,
+          votes
+        );
+
+      await expect(
+        voting.submitVoteResult(
+          dao.address,
+          proposalId,
+          resultHash,
+          daoOwnerSubmitter.address,
+          lastVoteResult,
+          rootSig
+        )
+      ).to.be.revertedWith("bad node");
+
+      const getBadNodeErrorResponse = await voting.getBadNodeError(
+        dao.address,
+        proposalId,
+        // `bool submitNewVote`
+        true,
+        resultHash,
+        blockNumber,
+        // `gracePeriodStartingTime` should be `0` as `submitNewVote` is `true`
+        0,
+        membersCount,
+        lastVoteResult
+      );
+
+      const errorCode = getBadNodeErrorResponse.toString();
+      expect(BadNodeError[parseInt(errorCode)]).equal("INVALID_CHOICE");
+    });
+
+    it("should not be possible to submit a vote result with the wrong proposal id", async () => {
+      const daoOwnerSubmitter = members[0];
+      const dao = this.dao;
+      const bank = this.extensions.bankExt;
+      const configuration = this.adapters.configuration;
+      const proposalId = getProposalCounter();
+      const actionId = configuration.address;
+      const voting = this.adapters.voting;
+
+      const blockNumber = await getCurrentBlockNumber();
+      const { proposalData } = await buildProposal(
+        dao,
+        actionId,
+        daoOwnerSubmitter,
+        blockNumber,
+        chainId
+      );
+
+      const configs = [
+        {
+          key: sha3("config1"),
+          numericValue: "10",
+          addressValue: ZERO_ADDRESS,
+          configType: 0,
+        },
+      ];
+      const data = prepareVoteProposalData(proposalData, web3);
+      await configuration.submitProposal(
+        dao.address,
+        proposalId,
+        configs,
+        data,
+        {
+          from: daoOwner,
+          gasPrice: toBN("0"),
+        }
+      );
+
+      const wrongProposalId = await getProposalCounter();
+      const votes = await buildVotes(
+        dao,
+        bank,
+        wrongProposalId,
+        daoOwnerSubmitter,
+        blockNumber,
+        chainId,
+        actionId,
+        VotingStrategies.AllVotesYes
+      );
+
+      const { lastVoteResult, rootSig, resultHash, membersCount } =
+        await buildVoteTree(
+          dao,
+          bank,
+          wrongProposalId,
+          daoOwnerSubmitter,
+          blockNumber,
+          chainId,
+          actionId,
+          VotingStrategies.AllVotesYes,
+          votes
+        );
+
+      await expect(
+        voting.submitVoteResult(
+          dao.address,
+          proposalId, // submits the correct one, but the vote uses the wrong one
+          resultHash,
+          daoOwnerSubmitter.address,
+          lastVoteResult,
+          rootSig
+        )
+      ).to.be.revertedWith("bad node");
+
+      const getBadNodeErrorResponse = await voting.getBadNodeError(
+        dao.address,
+        proposalId,
+        // `bool submitNewVote`
+        true,
+        resultHash,
+        blockNumber,
+        // `gracePeriodStartingTime` should be `0` as `submitNewVote` is `true`
+        0,
+        membersCount,
+        lastVoteResult
+      );
+
+      const errorCode = getBadNodeErrorResponse.toString();
+      expect(BadNodeError[parseInt(errorCode)]).equal("WRONG_PROPOSAL_ID");
+    });
+
+    it("should not be possible to submit a vote result with a bad signature", async () => {
+      const daoOwnerSubmitter = members[0];
+      const dao = this.dao;
+      const bank = this.extensions.bankExt;
+      const configuration = this.adapters.configuration;
+      const proposalId = getProposalCounter();
+      const actionId = configuration.address;
+      const voting = this.adapters.voting;
+
+      const blockNumber = await getCurrentBlockNumber();
+      const { proposalData } = await buildProposal(
+        dao,
+        actionId,
+        daoOwnerSubmitter,
+        blockNumber,
+        chainId
+      );
+
+      const configs = [
+        {
+          key: sha3("config1"),
+          numericValue: "10",
+          addressValue: ZERO_ADDRESS,
+          configType: 0,
+        },
+      ];
+      const data = prepareVoteProposalData(proposalData, web3);
+      await configuration.submitProposal(
+        dao.address,
+        proposalId,
+        configs,
+        data,
+        {
+          from: daoOwner,
+          gasPrice: toBN("0"),
+        }
+      );
+
+      const votes = await buildVotes(
+        dao,
+        bank,
+        proposalId,
+        daoOwnerSubmitter,
+        blockNumber,
+        chainId,
+        actionId,
+        VotingStrategies.AllVotesYes,
+        null, // votingWeight
+        null, // voteChoice
+        // invalid signature
+        "0xbe90f2a9a51a554ef37a3bc3f47a1fc8dc29279ff320fa45754f6df165cc692f7cf7ed059edded2c87e95320229420c8e359a498fd89e55a1086a4adf03f73901c"
+      );
+
+      const { lastVoteResult, rootSig, resultHash, membersCount } =
+        await buildVoteTree(
+          dao,
+          bank,
+          proposalId,
+          daoOwnerSubmitter,
+          blockNumber,
+          chainId,
+          actionId,
+          VotingStrategies.AllVotesYes,
+          votes
+        );
+
+      await expect(
+        voting.submitVoteResult(
+          dao.address,
+          proposalId, // submits the correct one, but the vote uses the wrong one
+          resultHash,
+          daoOwnerSubmitter.address,
+          lastVoteResult,
+          rootSig
+        )
+      ).to.be.revertedWith("bad node");
+
+      const getBadNodeErrorResponse = await voting.getBadNodeError(
+        dao.address,
+        proposalId,
+        // `bool submitNewVote`
+        true,
+        resultHash,
+        blockNumber,
+        // `gracePeriodStartingTime` should be `0` as `submitNewVote` is `true`
+        0,
+        membersCount,
+        lastVoteResult
+      );
+
+      const errorCode = getBadNodeErrorResponse.toString();
+      expect(BadNodeError[parseInt(errorCode)]).equal("BAD_SIGNATURE");
+    });
+
     it("should not be possible to submit a vote result with an invalid result signature", async () => {
       const daoOwnerSubmitter = members[0];
       const dao = this.dao;
@@ -1410,7 +1688,7 @@ describe("Adapter - Offchain Voting", () => {
       const snapshotContract = this.votingHelpers.snapshotProposalContract;
 
       const proposalHash = sha3("test");
-      const voteEntry = await createVote(proposalHash, 1, true);
+      const voteEntry = await createVote(proposalHash, 1, 1);
 
       const { types } = getDomainDefinition(
         voteEntry,
