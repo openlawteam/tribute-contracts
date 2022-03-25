@@ -329,16 +329,18 @@ contract OffchainVotingContract is
                 vote.gracePeriodStartingTime +
                     dao.getConfiguration(VotingPeriod) <=
                 block.timestamp,
-            "graceperiod finished"
+            "grace period finished"
         );
 
         require(isActiveMember(dao, reporter), "not active member");
 
-        uint256 membersCount = _ovHelper.checkMemberCount(
-            dao,
-            result.index,
-            vote.snapshot
-        );
+        uint256 membersCount = BankExtension(
+            dao.getExtensionAddress(DaoHelper.BANK)
+        ).getPriorAmount(
+                DaoHelper.TOTAL,
+                DaoHelper.MEMBER_COUNT,
+                vote.snapshot
+            );
 
         _ovHelper.checkBadNodeError(
             dao,

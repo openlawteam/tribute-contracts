@@ -330,6 +330,107 @@ describe("Adapter - Offchain Voting", () => {
   // );
 
   describe("Submit Vote Result", async () => {
+    it("should be possible to submit a valid vote result", async () => {
+      const daoOwnerSubmitter = members[0];
+
+      const dao = this.dao;
+      const bank = this.extensions.bankExt;
+      const configuration = this.adapters.configuration;
+      const proposalId = getProposalCounter();
+      const actionId = configuration.address;
+      const voting = this.adapters.voting;
+
+      let blockNumber = await getCurrentBlockNumber();
+      const { proposalData } = await buildProposal(
+        dao,
+        actionId,
+        daoOwnerSubmitter,
+        blockNumber,
+        chainId
+      );
+
+      const configs = [
+        {
+          key: sha3("config1"),
+          numericValue: "10",
+          addressValue: ZERO_ADDRESS,
+          configType: 0,
+        },
+      ];
+      const data = prepareVoteProposalData(proposalData, web3);
+      await configuration.submitProposal(
+        dao.address,
+        proposalId,
+        configs,
+        data,
+        {
+          from: daoOwner,
+          gasPrice: toBN("0"),
+        }
+      );
+
+      // Only the submitter votes Yes, and attempts to submit the vote result
+      const votes = await buildVotes(
+        dao,
+        bank,
+        proposalId,
+        daoOwnerSubmitter,
+        blockNumber,
+        chainId,
+        actionId,
+        VotingStrategies.AllVotesYes
+      );
+      const { lastVoteResult, rootSig, resultHash } = await buildVoteTree(
+        dao,
+        bank,
+        proposalId,
+        daoOwnerSubmitter,
+        blockNumber,
+        chainId,
+        actionId,
+        VotingStrategies.AllVotesYes,
+        votes
+      );
+      // Submit a valid result
+      const { logs } = await voting.submitVoteResult(
+        dao.address,
+        proposalId,
+        resultHash,
+        daoOwnerSubmitter.address,
+        lastVoteResult,
+        rootSig
+      );
+      const e = logs[0];
+      // Check the event data
+      expect(e.event).to.be.equal("VoteResultSubmitted");
+      expect(e.args[0]).to.be.equal(dao.address);
+      expect(e.args[1]).to.be.equal(proposalId);
+      expect(e.args[2].toString()).to.be.equal(lastVoteResult.nbNo);
+      expect(e.args[3].toString()).to.be.equal(lastVoteResult.nbYes);
+      expect(e.args[4]).to.be.equal(resultHash);
+      expect(e.args[5]).to.be.equal(daoOwnerSubmitter.address);
+      const voteResultStatus = await voting.voteResult(dao.address, proposalId);
+      expect(voteResultStatus.toString()).to.be.equal("5"); // Grace Period
+
+      // Check the stored vote data
+      const storedVote = await voting.getVote(dao.address, proposalId);
+      expect(storedVote.snapshot).to.be.equal(blockNumber.toString());
+      expect(storedVote.reporter).to.be.equal(daoOwnerSubmitter.address);
+      expect(storedVote.resultRoot).to.be.equal(resultHash);
+      expect(storedVote.nbYes).to.be.equal(lastVoteResult.nbYes);
+      expect(storedVote.nbNo).to.be.equal(lastVoteResult.nbNo);
+      expect(parseInt(storedVote.startingTime)).to.be.greaterThanOrEqual(
+        proposalData.timestamp
+      );
+      expect(parseInt(storedVote.gracePeriodStartingTime)).to.be.greaterThan(
+        parseInt(storedVote.startingTime)
+      );
+      expect(storedVote.isChallenged).to.be.false;
+      expect(storedVote.stepRequested).to.be.equal("0");
+      expect(storedVote.forceFailed).to.be.false;
+      expect(storedVote.fallbackVotesCount).to.be.equal("0");
+    });
+
     it("should not be possible for a non member to submit a proposal", async () => {
       const nonMember = members[1];
       const onboarding = this.adapters.onboarding;
@@ -475,7 +576,7 @@ describe("Adapter - Offchain Voting", () => {
       ).to.be.revertedWith("not ready for vote result");
     });
 
-    it.skip("should not be possible to submit a vote result if the grace period is over", async () => {
+    it("should not be possible to submit a vote result if the grace period is over", async () => {
       const daoOwnerSubmitter = members[0];
 
       const dao = this.dao;
@@ -523,7 +624,7 @@ describe("Adapter - Offchain Voting", () => {
         blockNumber,
         chainId,
         actionId,
-        VotingStrategies.SingleYesVote
+        VotingStrategies.AllVotesYes
       );
       const { lastVoteResult, rootSig, resultHash } = await buildVoteTree(
         dao,
@@ -533,11 +634,21 @@ describe("Adapter - Offchain Voting", () => {
         blockNumber,
         chainId,
         actionId,
-        VotingStrategies.SingleYesVote,
+        VotingStrategies.AllVotesYes,
         votes,
-        false // do not advance time
+        true // do not advance time
+      );
+      // Submit a valid result during the voting period to start the grace period
+      await voting.submitVoteResult(
+        dao.address,
+        proposalId,
+        resultHash,
+        daoOwnerSubmitter.address,
+        lastVoteResult,
+        rootSig
       );
 
+      // Attempt to submit another result during the grace period
       await expect(
         voting.submitVoteResult(
           dao.address,
@@ -547,7 +658,7 @@ describe("Adapter - Offchain Voting", () => {
           lastVoteResult,
           rootSig
         )
-      ).to.be.revertedWith("graceperiod finished");
+      ).to.be.revertedWith("grace period finished");
     });
 
     it("should not be possible to submit a vote result if the submitter is not an active member", async () => {
@@ -674,17 +785,18 @@ describe("Adapter - Offchain Voting", () => {
       );
       // Add an empty to vote to mess with the voting tree
       votes.push(await emptyVote(proposalId));
-      const { lastVoteResult, rootSig, resultHash } = await buildVoteTree(
-        dao,
-        bank,
-        proposalId,
-        newMember,
-        blockNumber,
-        chainId,
-        actionId,
-        VotingStrategies.SingleYesVote,
-        votes
-      );
+      const { lastVoteResult, rootSig, resultHash, membersCount } =
+        await buildVoteTree(
+          dao,
+          bank,
+          proposalId,
+          newMember,
+          blockNumber,
+          chainId,
+          actionId,
+          VotingStrategies.SingleYesVote,
+          votes
+        );
 
       await expect(
         voting.submitVoteResult(
@@ -695,7 +807,23 @@ describe("Adapter - Offchain Voting", () => {
           lastVoteResult,
           rootSig
         )
-      ).to.be.revertedWith("index:member_count mismatch");
+      ).to.be.revertedWith("bad node");
+
+      const getBadNodeErrorResponse = await voting.getBadNodeError(
+        dao.address,
+        proposalId,
+        // `bool submitNewVote`
+        true,
+        resultHash,
+        blockNumber,
+        // `gracePeriodStartingTime` should be `0` as `submitNewVote` is `true`
+        0,
+        membersCount,
+        lastVoteResult
+      );
+
+      const errorCode = getBadNodeErrorResponse.toString();
+      expect(BadNodeError[parseInt(errorCode)]).equal("INDEX_OUT_OF_BOUND");
     });
 
     it("should not be possible to submit a vote result if the number of votes is lower than the number of dao members", async () => {
@@ -758,17 +886,18 @@ describe("Adapter - Offchain Voting", () => {
       );
       // TODO remove a vote to mess with the voting tree
       votes.push(await emptyVote(proposalId));
-      const { lastVoteResult, rootSig, resultHash } = await buildVoteTree(
-        dao,
-        bank,
-        proposalId,
-        newMember,
-        blockNumber,
-        chainId,
-        actionId,
-        VotingStrategies.SingleYesVote,
-        votes
-      );
+      const { lastVoteResult, rootSig, resultHash, membersCount } =
+        await buildVoteTree(
+          dao,
+          bank,
+          proposalId,
+          newMember,
+          blockNumber,
+          chainId,
+          actionId,
+          VotingStrategies.SingleYesVote,
+          votes
+        );
 
       await expect(
         voting.submitVoteResult(
@@ -779,7 +908,340 @@ describe("Adapter - Offchain Voting", () => {
           lastVoteResult,
           rootSig
         )
-      ).to.be.revertedWith("index:member_count mismatch");
+      ).to.be.revertedWith("bad node");
+
+      const getBadNodeErrorResponse = await voting.getBadNodeError(
+        dao.address,
+        proposalId,
+        // `bool submitNewVote`
+        true,
+        resultHash,
+        blockNumber,
+        // `gracePeriodStartingTime` should be `0` as `submitNewVote` is `true`
+        0,
+        membersCount,
+        lastVoteResult
+      );
+
+      const errorCode = getBadNodeErrorResponse.toString();
+      expect(BadNodeError[parseInt(errorCode)]).equal("INDEX_OUT_OF_BOUND");
+    });
+
+    it("should not be possible to submit a vote result with a tampered voting weight", async () => {
+      const daoOwnerSubmitter = members[0];
+      const dao = this.dao;
+      const bank = this.extensions.bankExt;
+      const configuration = this.adapters.configuration;
+      const proposalId = getProposalCounter();
+      const actionId = configuration.address;
+      const voting = this.adapters.voting;
+
+      const blockNumber = await getCurrentBlockNumber();
+      const { proposalData } = await buildProposal(
+        dao,
+        actionId,
+        daoOwnerSubmitter,
+        blockNumber,
+        chainId
+      );
+
+      const configs = [
+        {
+          key: sha3("config1"),
+          numericValue: "10",
+          addressValue: ZERO_ADDRESS,
+          configType: 0,
+        },
+      ];
+      const data = prepareVoteProposalData(proposalData, web3);
+      await configuration.submitProposal(
+        dao.address,
+        proposalId,
+        configs,
+        data,
+        {
+          from: daoOwner,
+          gasPrice: toBN("0"),
+        }
+      );
+
+      const { lastVoteResult, rootSig, resultHash } = await buildVoteTree(
+        dao,
+        bank,
+        proposalId,
+        daoOwnerSubmitter,
+        blockNumber,
+        chainId,
+        actionId,
+        VotingStrategies.AllVotesYes
+      );
+
+      // Changing the voting result to invalidate the node signature
+      lastVoteResult.nbYes = "1000";
+
+      await expect(
+        voting.submitVoteResult(
+          dao.address,
+          proposalId,
+          resultHash,
+          daoOwnerSubmitter.address,
+          lastVoteResult,
+          rootSig
+        )
+      ).to.be.revertedWith("invalid node proof");
+    });
+
+    it("should not be possible to submit a vote result with an index equal to the members count", async () => {
+      const daoOwnerSubmitter = members[0];
+      const dao = this.dao;
+      const bank = this.extensions.bankExt;
+      const configuration = this.adapters.configuration;
+      const proposalId = getProposalCounter();
+      const actionId = configuration.address;
+      const voting = this.adapters.voting;
+
+      const blockNumber = await getCurrentBlockNumber();
+      const { proposalData } = await buildProposal(
+        dao,
+        actionId,
+        daoOwnerSubmitter,
+        blockNumber,
+        chainId
+      );
+
+      const configs = [
+        {
+          key: sha3("config1"),
+          numericValue: "10",
+          addressValue: ZERO_ADDRESS,
+          configType: 0,
+        },
+      ];
+      const data = prepareVoteProposalData(proposalData, web3);
+      await configuration.submitProposal(
+        dao.address,
+        proposalId,
+        configs,
+        data,
+        {
+          from: daoOwner,
+          gasPrice: toBN("0"),
+        }
+      );
+
+      // Only the submitter votes Yes, and attempts to submit the vote result
+      const votes = await buildVotes(
+        dao,
+        bank,
+        proposalId,
+        daoOwnerSubmitter,
+        blockNumber,
+        chainId,
+        actionId,
+        VotingStrategies.AllVotesYes
+      );
+      // Add a fake empty vote to generate a voting tree with the latest index equals to the member count
+      votes.push(await emptyVote(proposalId));
+
+      const { lastVoteResult, rootSig, resultHash, membersCount } =
+        await buildVoteTree(
+          dao,
+          bank,
+          proposalId,
+          daoOwnerSubmitter,
+          blockNumber,
+          chainId,
+          actionId,
+          VotingStrategies.AllVotesYes,
+          votes
+        );
+
+      await expect(
+        voting.submitVoteResult(
+          dao.address,
+          proposalId,
+          resultHash,
+          daoOwnerSubmitter.address,
+          lastVoteResult,
+          rootSig
+        )
+      ).to.be.revertedWith("bad node");
+
+      const getBadNodeErrorResponse = await voting.getBadNodeError(
+        dao.address,
+        proposalId,
+        // `bool submitNewVote`
+        true,
+        resultHash,
+        blockNumber,
+        // `gracePeriodStartingTime` should be `0` as `submitNewVote` is `true`
+        0,
+        membersCount,
+        lastVoteResult
+      );
+
+      const errorCode = getBadNodeErrorResponse.toString();
+      expect(BadNodeError[parseInt(errorCode)]).equal("INDEX_OUT_OF_BOUND");
+    });
+
+    it("should not be possible to submit a vote result with an index greater than the members count", async () => {
+      const daoOwnerSubmitter = members[0];
+      const dao = this.dao;
+      const bank = this.extensions.bankExt;
+      const configuration = this.adapters.configuration;
+      const proposalId = getProposalCounter();
+      const actionId = configuration.address;
+      const voting = this.adapters.voting;
+
+      const blockNumber = await getCurrentBlockNumber();
+      const { proposalData } = await buildProposal(
+        dao,
+        actionId,
+        daoOwnerSubmitter,
+        blockNumber,
+        chainId
+      );
+
+      const configs = [
+        {
+          key: sha3("config1"),
+          numericValue: "10",
+          addressValue: ZERO_ADDRESS,
+          configType: 0,
+        },
+      ];
+      const data = prepareVoteProposalData(proposalData, web3);
+      await configuration.submitProposal(
+        dao.address,
+        proposalId,
+        configs,
+        data,
+        {
+          from: daoOwner,
+          gasPrice: toBN("0"),
+        }
+      );
+
+      // Only the submitter votes Yes, and attempts to submit the vote result
+      const votes = await buildVotes(
+        dao,
+        bank,
+        proposalId,
+        daoOwnerSubmitter,
+        blockNumber,
+        chainId,
+        actionId,
+        VotingStrategies.AllVotesYes
+      );
+      // Add some fake empty votes to generate a voting tree with the latest index greater than the members count
+      votes.push(await emptyVote(proposalId));
+      votes.push(await emptyVote(proposalId));
+      votes.push(await emptyVote(proposalId));
+      votes.push(await emptyVote(proposalId));
+
+      const { lastVoteResult, rootSig, resultHash, membersCount } =
+        await buildVoteTree(
+          dao,
+          bank,
+          proposalId,
+          daoOwnerSubmitter,
+          blockNumber,
+          chainId,
+          actionId,
+          VotingStrategies.AllVotesYes,
+          votes
+        );
+
+      await expect(
+        voting.submitVoteResult(
+          dao.address,
+          proposalId,
+          resultHash,
+          daoOwnerSubmitter.address,
+          lastVoteResult,
+          rootSig
+        )
+      ).to.be.revertedWith("bad node");
+
+      const getBadNodeErrorResponse = await voting.getBadNodeError(
+        dao.address,
+        proposalId,
+        // `bool submitNewVote`
+        true,
+        resultHash,
+        blockNumber,
+        // `gracePeriodStartingTime` should be `0` as `submitNewVote` is `true`
+        0,
+        membersCount,
+        lastVoteResult
+      );
+
+      const errorCode = getBadNodeErrorResponse.toString();
+      expect(BadNodeError[parseInt(errorCode)]).equal("INDEX_OUT_OF_BOUND");
+    });
+
+    it("should not be possible to submit a vote result with an invalid result signature", async () => {
+      const daoOwnerSubmitter = members[0];
+      const dao = this.dao;
+      const bank = this.extensions.bankExt;
+      const configuration = this.adapters.configuration;
+      const proposalId = getProposalCounter();
+      const actionId = configuration.address;
+      const voting = this.adapters.voting;
+
+      const blockNumber = await getCurrentBlockNumber();
+      const { proposalData } = await buildProposal(
+        dao,
+        actionId,
+        daoOwnerSubmitter,
+        blockNumber,
+        chainId
+      );
+
+      const configs = [
+        {
+          key: sha3("config1"),
+          numericValue: "10",
+          addressValue: ZERO_ADDRESS,
+          configType: 0,
+        },
+      ];
+      const data = prepareVoteProposalData(proposalData, web3);
+      await configuration.submitProposal(
+        dao.address,
+        proposalId,
+        configs,
+        data,
+        {
+          from: daoOwner,
+          gasPrice: toBN("0"),
+        }
+      );
+
+      const { lastVoteResult, rootSig, resultHash } = await buildVoteTree(
+        dao,
+        bank,
+        proposalId,
+        daoOwnerSubmitter,
+        blockNumber,
+        chainId,
+        actionId,
+        VotingStrategies.AllVotesYes
+      );
+
+      // Changing the voting result signature to break the signature verification
+      const tamperedSignature = rootSig + "0";
+
+      await expect(
+        voting.submitVoteResult(
+          dao.address,
+          proposalId,
+          resultHash,
+          daoOwnerSubmitter.address,
+          lastVoteResult,
+          tamperedSignature
+        )
+      ).to.be.revertedWith("invalid result signature");
     });
 
     it("should not be possible to submit a vote result if no body voted", async () => {
@@ -848,70 +1310,6 @@ describe("Adapter - Offchain Voting", () => {
           rootSig
         )
       ).to.be.revertedWith("result weight too low");
-    });
-
-    it("should not be possible to submit a vote result with with changed data", async () => {
-      const daoOwnerSubmitter = members[0];
-      const dao = this.dao;
-      const bank = this.extensions.bankExt;
-      const configuration = this.adapters.configuration;
-      const proposalId = getProposalCounter();
-      const actionId = configuration.address;
-      const voting = this.adapters.voting;
-
-      const blockNumber = await getCurrentBlockNumber();
-      const { proposalData } = await buildProposal(
-        dao,
-        actionId,
-        daoOwnerSubmitter,
-        blockNumber,
-        chainId
-      );
-
-      const configs = [
-        {
-          key: sha3("config1"),
-          numericValue: "10",
-          addressValue: ZERO_ADDRESS,
-          configType: 0,
-        },
-      ];
-      const data = prepareVoteProposalData(proposalData, web3);
-      await configuration.submitProposal(
-        dao.address,
-        proposalId,
-        configs,
-        data,
-        {
-          from: daoOwner,
-          gasPrice: toBN("0"),
-        }
-      );
-
-      const { lastVoteResult, rootSig, resultHash } = await buildVoteTree(
-        dao,
-        bank,
-        proposalId,
-        daoOwnerSubmitter,
-        blockNumber,
-        chainId,
-        actionId,
-        VotingStrategies.AllVotesYes
-      );
-
-      // Changing the voting result
-      lastVoteResult.nbYes = "1000";
-
-      await expect(
-        voting.submitVoteResult(
-          dao.address,
-          proposalId,
-          resultHash,
-          daoOwnerSubmitter.address,
-          lastVoteResult,
-          rootSig
-        )
-      ).to.be.revertedWith("invalid node proof");
     });
   });
 

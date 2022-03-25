@@ -66,21 +66,6 @@ contract OffchainVotingHelperContract {
         _ovHash = _contract;
     }
 
-    function checkMemberCount(
-        DaoRegistry dao,
-        uint256 resultIndex,
-        uint256 blockNumber
-    ) external view returns (uint256 membersCount) {
-        membersCount = BankExtension(dao.getExtensionAddress(DaoHelper.BANK))
-            .getPriorAmount(
-                DaoHelper.TOTAL,
-                DaoHelper.MEMBER_COUNT,
-                blockNumber
-            );
-        // slither-disable-next-line timestamp
-        require(membersCount - 1 == resultIndex, "index:member_count mismatch");
-    }
-
     function checkBadNodeError(
         DaoRegistry dao,
         bytes32 proposalId,
