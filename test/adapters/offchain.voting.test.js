@@ -63,14 +63,16 @@ const {
   prepareProposalMessage,
   getVoteStepDomainDefinition,
   BadNodeError,
+} = require("../../utils/offchain-voting-util");
+
+const {
   buildVoteTree,
   buildProposal,
   buildVotes,
   emptyVote,
-  vote,
   testMembers,
   VotingStrategies,
-} = require("../../utils/offchain-voting-util");
+} = require("../../utils/test-util");
 
 const proposalCounter = proposalIdGenerator().generator;
 function getProposalCounter() {
@@ -253,81 +255,300 @@ describe("Adapter - Offchain Voting", () => {
     };
   };
 
-  it("should not be possible to fail a proposal if the sender is not the owner", async () => {
-    const voting = this.adapters.voting;
+  const submitValidVoteResult = async (
+    dao,
+    bank,
+    configuration,
+    voting,
+    submitter,
+    moveBlockTime = true
+  ) => {
     const proposalId = getProposalCounter();
-    await expect(
-      txSigner(signers[2], voting).adminFailProposal(
-        this.dao.address,
-        proposalId
-      )
-    ).to.be.revertedWith("Ownable: caller is not the owner");
-  });
+    const actionId = configuration.address;
 
-  it("should not be possible to fail a proposal that did not start", async () => {
-    const voting = this.adapters.voting;
-    const proposalId = getProposalCounter();
-    await expect(
-      voting.adminFailProposal(this.dao.address, proposalId)
-    ).to.be.revertedWith("proposal has not started yet");
-  });
-
-  it("should be possible to get the adapter name", async () => {
-    const voting = this.adapters.voting;
-    expect(await voting.getAdapterName()).to.be.equal("OffchainVotingContract");
-  });
-
-  it("should return an empty challenge details if there is no proposal challenged", async () => {
-    const voting = this.adapters.voting;
-    const proposalId = getProposalCounter();
-    const challengeDetails = await voting.getChallengeDetails(
-      this.dao.address,
-      proposalId
-    );
-    expect(challengeDetails[0].toString()).to.be.equal("0");
-    expect(challengeDetails[1]).to.be.equal(ZERO_ADDRESS);
-  });
-
-  it("should return the proposal submitter address", async () => {
-    const voting = this.adapters.voting;
-    const onboarding = this.adapters.onboarding;
-    const submitter = members[0];
-    const blockNumber = await getCurrentBlockNumber();
+    let blockNumber = await getCurrentBlockNumber();
     const { proposalData } = await buildProposal(
-      this.dao,
-      onboarding.address,
+      dao,
+      actionId,
       submitter,
       blockNumber,
       chainId
     );
 
-    const senderAddress = await voting.getSenderAddress(
-      this.dao.address,
-      onboarding.address,
-      prepareVoteProposalData(proposalData, web3),
-      daoOwner
+    const configs = [
+      {
+        key: sha3("config1"),
+        numericValue: "10",
+        addressValue: ZERO_ADDRESS,
+        configType: 0,
+      },
+    ];
+    const data = prepareVoteProposalData(proposalData, web3);
+    await configuration.submitProposal(dao.address, proposalId, configs, data, {
+      from: daoOwner,
+      gasPrice: toBN("0"),
+    });
+
+    // Only the submitter votes Yes, and attempts to submit the vote result
+    const votes = await buildVotes(
+      dao,
+      bank,
+      proposalId,
+      submitter,
+      blockNumber,
+      chainId,
+      actionId,
+      VotingStrategies.AllVotesYes
     );
-    expect(senderAddress).to.be.equal(submitter.address);
-  });
+    const resultTree = await buildVoteTree(
+      dao,
+      bank,
+      proposalId,
+      submitter,
+      blockNumber,
+      chainId,
+      actionId,
+      VotingStrategies.AllVotesYes,
+      votes,
+      moveBlockTime
+    );
+    await advanceTime(10); // ends the voting period
+    // Submit a valid result
+    await voting.submitVoteResult(
+      dao.address,
+      proposalId,
+      resultTree.resultHash,
+      submitter.address,
+      resultTree.lastVoteResult,
+      resultTree.rootSig
+    );
+    return { proposalId, resultTree };
+  };
 
-  it("should return 0 if the vote has not started", async () => {
-    const voting = this.adapters.voting;
-    const proposalId = getProposalCounter();
-    const voteResult = await voting.voteResult(this.dao.address, proposalId);
-    expect(voteResult.toString()).to.be.equal("0");
-    //todo: 1: tie, 2: pass, 3: not pass, 4: in progress
-  });
+  describe("General", async () => {
+    it("should not be possible to fail a proposal if the sender is not the owner", async () => {
+      const voting = this.adapters.voting;
+      const proposalId = getProposalCounter();
+      await expect(
+        txSigner(signers[2], voting).adminFailProposal(
+          this.dao.address,
+          proposalId
+        )
+      ).to.be.revertedWith("Ownable: caller is not the owner");
+    });
 
-  // const voteResult = await voting.getBadNodeError(
-  //   this.dao.address,
-  //   proposalId,
-  //   false,
-  //   resultHash,
-  //   blockNumber,
-  //   proposalData.timestamp,
-  //   membersCount,
-  //   lastVoteResult
-  // );
+    it("should not be possible to fail a proposal that did not start", async () => {
+      const voting = this.adapters.voting;
+      const proposalId = getProposalCounter();
+      await expect(
+        voting.adminFailProposal(this.dao.address, proposalId)
+      ).to.be.revertedWith("proposal has not started yet");
+    });
+
+    it("should be possible to get the adapter name", async () => {
+      const voting = this.adapters.voting;
+      expect(await voting.getAdapterName()).to.be.equal(
+        "OffchainVotingContract"
+      );
+    });
+
+    it("should return an empty challenge details if there is no proposal challenged", async () => {
+      const voting = this.adapters.voting;
+      const proposalId = getProposalCounter();
+      const challengeDetails = await voting.getChallengeDetails(
+        this.dao.address,
+        proposalId
+      );
+      expect(challengeDetails[0].toString()).to.be.equal("0");
+      expect(challengeDetails[1]).to.be.equal(ZERO_ADDRESS);
+    });
+
+    it("should return the proposal submitter address", async () => {
+      const voting = this.adapters.voting;
+      const onboarding = this.adapters.onboarding;
+      const submitter = members[0];
+      const blockNumber = await getCurrentBlockNumber();
+      const { proposalData } = await buildProposal(
+        this.dao,
+        onboarding.address,
+        submitter,
+        blockNumber,
+        chainId
+      );
+
+      const senderAddress = await voting.getSenderAddress(
+        this.dao.address,
+        onboarding.address,
+        prepareVoteProposalData(proposalData, web3),
+        daoOwner
+      );
+      expect(senderAddress).to.be.equal(submitter.address);
+    });
+
+    it("should return 0 if the vote has not started", async () => {
+      const voting = this.adapters.voting;
+      const proposalId = getProposalCounter();
+      const voteResult = await voting.voteResult(this.dao.address, proposalId);
+      expect(voteResult.toString()).to.be.equal("0");
+      //todo: 1: tie, 2: pass, 3: not pass, 4: in progress
+    });
+    it("should be possible to onboard a new member by submitting a vote result and processing the proposal", async () => {
+      const dao = this.dao;
+      const bank = this.extensions.bankExt;
+      const submitter = members[0];
+      for (var i = 1; i < members.length; i++) {
+        await onboardMember(dao, bank, submitter, members[i], true);
+      }
+    });
+
+    it("should type & hash be consistent for proposals between javascript and solidity", async () => {
+      const dao = this.dao;
+      const blockNumber = await getCurrentBlockNumber();
+
+      const proposalPayload = {
+        type: "proposal",
+        name: "some proposal",
+        body: "this is my proposal",
+        choices: ["yes", "no"],
+        start: Math.floor(new Date().getTime() / 1000),
+        end: Math.floor(new Date().getTime() / 1000) + 10000,
+        snapshot: blockNumber.toString(),
+      };
+
+      const proposalData = {
+        type: "proposal",
+        timestamp: Math.floor(new Date().getTime() / 1000),
+        space: "tribute",
+        payload: proposalPayload,
+        submitter: members[0].address,
+        sig: "0x00",
+      };
+
+      let { types, domain } = getDomainDefinition(
+        proposalData,
+        dao.address,
+        daoOwner,
+        chainId
+      );
+
+      const snapshotContract = this.votingHelpers.snapshotProposalContract;
+      //Checking proposal type
+      const solProposalMsg = await snapshotContract.PROPOSAL_MESSAGE_TYPE();
+      const jsProposalMsg = TypedDataUtils.encodeType("Message", types);
+      expect(jsProposalMsg).equal(solProposalMsg);
+
+      //Checking payload
+      const hashStructPayload =
+        "0x" +
+        TypedDataUtils.hashStruct(
+          "MessagePayload",
+          prepareProposalPayload(proposalPayload),
+          types,
+          true
+        ).toString("hex");
+      const solidityHashPayload = await snapshotContract.hashProposalPayload(
+        proposalPayload
+      );
+      expect(solidityHashPayload).equal(hashStructPayload);
+
+      //Checking entire payload
+      const hashStruct =
+        "0x" +
+        TypedDataUtils.hashStruct(
+          "Message",
+          prepareProposalMessage(proposalData),
+          types
+        ).toString("hex");
+      const solidityHash = await snapshotContract.hashProposalMessage(
+        proposalData
+      );
+      expect(solidityHash).equal(hashStruct);
+
+      //Checking domain
+      const domainDef = await snapshotContract.EIP712_DOMAIN();
+      const jsDomainDef = TypedDataUtils.encodeType("EIP712Domain", types);
+      expect(domainDef).equal(jsDomainDef);
+
+      //Checking domain separator
+      const domainHash = await snapshotContract.DOMAIN_SEPARATOR(
+        dao.address,
+        daoOwner
+      );
+      const jsDomainHash =
+        "0x" +
+        TypedDataUtils.hashStruct("EIP712Domain", domain, types, true).toString(
+          "hex"
+        );
+      expect(domainHash).equal(jsDomainHash);
+    });
+
+    it("should type & hash be consistent for votes between javascript and solidity", async () => {
+      const dao = this.dao;
+      const offchainVoting = this.votingHelpers.offchainVoting;
+      const snapshotContract = this.votingHelpers.snapshotProposalContract;
+
+      const proposalHash = sha3("test");
+      const voteEntry = await createVote(proposalHash, 1, 1);
+
+      const { types } = getDomainDefinition(
+        voteEntry,
+        dao.address,
+        daoOwner,
+        chainId
+      );
+
+      //Checking proposal type
+      const solProposalMsg = await snapshotContract.VOTE_MESSAGE_TYPE();
+      const jsProposalMsg = TypedDataUtils.encodeType("Message", types);
+      expect(jsProposalMsg).equal(solProposalMsg);
+
+      //Checking entire payload
+      const hashStruct =
+        "0x" +
+        TypedDataUtils.hashStruct("Message", voteEntry, types).toString("hex");
+      const solidityHash = await snapshotContract.hashVoteInternal(voteEntry);
+      expect(hashStruct).equal(solidityHash);
+
+      const nodeDef = getVoteStepDomainDefinition(
+        dao.address,
+        dao.address,
+        chainId
+      );
+
+      const ovHashAddr = await offchainVoting.ovHash();
+      const ovHash = await OffchainVotingHashContract.at(ovHashAddr);
+
+      const solNodeDef = await ovHash.VOTE_RESULT_NODE_TYPE();
+      const jsNodeMsg = TypedDataUtils.encodeType("Message", nodeDef.types);
+
+      expect(solNodeDef).equal(jsNodeMsg);
+    });
+
+    it("should not be possible to send ETH to the adapter via receive function", async () => {
+      const adapter = this.adapters.voting;
+      await expect(
+        web3.eth.sendTransaction({
+          to: adapter.address,
+          from: daoOwner,
+          gasPrice: toBN("0"),
+          value: toWei("1"),
+        })
+      ).to.be.revertedWith("revert");
+    });
+
+    it("should not be possible to send ETH to the adapter via fallback function", async () => {
+      const adapter = this.adapters.voting;
+      await expect(
+        web3.eth.sendTransaction({
+          to: adapter.address,
+          from: daoOwner,
+          gasPrice: toBN("0"),
+          value: toWei("1"),
+          data: fromAscii("should go to fallback func"),
+        })
+      ).to.be.revertedWith("revert");
+    });
+  });
 
   describe("Submit Vote Result", async () => {
     it("should be possible to submit a valid vote result", async () => {
@@ -1591,162 +1812,165 @@ describe("Adapter - Offchain Voting", () => {
     });
   });
 
-  describe("General", async () => {
-    it("should be possible to onboard a new member by submitting a vote result and processing the proposal", async () => {
+  describe("Request Vote Step", async () => {
+    it("should be possible to request a vote valid vote step during the grace period", async () => {
       const dao = this.dao;
       const bank = this.extensions.bankExt;
+      const voting = this.adapters.voting;
+      const configuration = this.adapters.configuration;
       const submitter = members[0];
-      for (var i = 1; i < members.length; i++) {
-        await onboardMember(dao, bank, submitter, members[i], true);
-      }
+
+      const result = await submitValidVoteResult(
+        dao,
+        bank,
+        configuration,
+        voting,
+        submitter,
+        false
+      );
+
+      let storedVote = await voting.getVote(dao.address, result.proposalId);
+      let initialGracePeriod = parseInt(storedVote.gracePeriodStartingTime);
+
+      expect(storedVote.stepRequested).to.be.equal("0");
+      expect(storedVote.isChallenged).to.be.false;
+
+      // Request the first step (index 1)
+      await voting.requestStep(dao.address, result.proposalId, 1);
+
+      storedVote = await voting.getVote(dao.address, result.proposalId);
+
+      let secondGracePeriod = parseInt(storedVote.gracePeriodStartingTime);
+      expect(secondGracePeriod).to.be.greaterThan(initialGracePeriod);
+      expect(storedVote.stepRequested).to.be.equal("1");
+      expect(storedVote.isChallenged).to.be.false;
     });
 
-    it("should type & hash be consistent for proposals between javascript and solidity", async () => {
+    it("should not be possible to request a step with index 0", async () => {
       const dao = this.dao;
-      const blockNumber = await getCurrentBlockNumber();
+      const bank = this.extensions.bankExt;
+      const voting = this.adapters.voting;
+      const configuration = this.adapters.configuration;
+      const submitter = members[0];
 
-      const proposalPayload = {
-        type: "proposal",
-        name: "some proposal",
-        body: "this is my proposal",
-        choices: ["yes", "no"],
-        start: Math.floor(new Date().getTime() / 1000),
-        end: Math.floor(new Date().getTime() / 1000) + 10000,
-        snapshot: blockNumber.toString(),
-      };
-
-      const proposalData = {
-        type: "proposal",
-        timestamp: Math.floor(new Date().getTime() / 1000),
-        space: "tribute",
-        payload: proposalPayload,
-        submitter: members[0].address,
-        sig: "0x00",
-      };
-
-      let { types, domain } = getDomainDefinition(
-        proposalData,
-        dao.address,
-        daoOwner,
-        chainId
+      const result = await submitValidVoteResult(
+        dao,
+        bank,
+        configuration,
+        voting,
+        submitter,
+        false
       );
-
-      const snapshotContract = this.votingHelpers.snapshotProposalContract;
-      //Checking proposal type
-      const solProposalMsg = await snapshotContract.PROPOSAL_MESSAGE_TYPE();
-      const jsProposalMsg = TypedDataUtils.encodeType("Message", types);
-      expect(jsProposalMsg).equal(solProposalMsg);
-
-      //Checking payload
-      const hashStructPayload =
-        "0x" +
-        TypedDataUtils.hashStruct(
-          "MessagePayload",
-          prepareProposalPayload(proposalPayload),
-          types,
-          true
-        ).toString("hex");
-      const solidityHashPayload = await snapshotContract.hashProposalPayload(
-        proposalPayload
-      );
-      expect(solidityHashPayload).equal(hashStructPayload);
-
-      //Checking entire payload
-      const hashStruct =
-        "0x" +
-        TypedDataUtils.hashStruct(
-          "Message",
-          prepareProposalMessage(proposalData),
-          types
-        ).toString("hex");
-      const solidityHash = await snapshotContract.hashProposalMessage(
-        proposalData
-      );
-      expect(solidityHash).equal(hashStruct);
-
-      //Checking domain
-      const domainDef = await snapshotContract.EIP712_DOMAIN();
-      const jsDomainDef = TypedDataUtils.encodeType("EIP712Domain", types);
-      expect(domainDef).equal(jsDomainDef);
-
-      //Checking domain separator
-      const domainHash = await snapshotContract.DOMAIN_SEPARATOR(
-        dao.address,
-        daoOwner
-      );
-      const jsDomainHash =
-        "0x" +
-        TypedDataUtils.hashStruct("EIP712Domain", domain, types, true).toString(
-          "hex"
-        );
-      expect(domainHash).equal(jsDomainHash);
+      await expect(
+        voting.requestStep(dao.address, result.proposalId, 0)
+      ).to.be.revertedWith("index out of bound");
     });
 
-    it("should type & hash be consistent for votes between javascript and solidity", async () => {
+    it("should not be possible to request a step with an index greater than the number of DAO members", async () => {
       const dao = this.dao;
-      const offchainVoting = this.votingHelpers.offchainVoting;
-      const snapshotContract = this.votingHelpers.snapshotProposalContract;
+      const bank = this.extensions.bankExt;
+      const voting = this.adapters.voting;
+      const configuration = this.adapters.configuration;
+      const submitter = members[0];
 
-      const proposalHash = sha3("test");
-      const voteEntry = await createVote(proposalHash, 1, 1);
-
-      const { types } = getDomainDefinition(
-        voteEntry,
-        dao.address,
-        daoOwner,
-        chainId
+      const result = await submitValidVoteResult(
+        dao,
+        bank,
+        configuration,
+        voting,
+        submitter,
+        false
       );
-
-      //Checking proposal type
-      const solProposalMsg = await snapshotContract.VOTE_MESSAGE_TYPE();
-      const jsProposalMsg = TypedDataUtils.encodeType("Message", types);
-      expect(jsProposalMsg).equal(solProposalMsg);
-
-      //Checking entire payload
-      const hashStruct =
-        "0x" +
-        TypedDataUtils.hashStruct("Message", voteEntry, types).toString("hex");
-      const solidityHash = await snapshotContract.hashVoteInternal(voteEntry);
-      expect(hashStruct).equal(solidityHash);
-
-      const nodeDef = getVoteStepDomainDefinition(
-        dao.address,
-        dao.address,
-        chainId
-      );
-
-      const ovHashAddr = await offchainVoting.ovHash();
-      const ovHash = await OffchainVotingHashContract.at(ovHashAddr);
-
-      const solNodeDef = await ovHash.VOTE_RESULT_NODE_TYPE();
-      const jsNodeMsg = TypedDataUtils.encodeType("Message", nodeDef.types);
-
-      expect(solNodeDef).equal(jsNodeMsg);
+      const index = parseInt(result.resultTree.membersCount);
+      await expect(
+        voting.requestStep(dao.address, result.proposalId, index)
+      ).to.be.revertedWith("index out of bound");
     });
 
-    it("should not be possible to send ETH to the adapter via receive function", async () => {
-      const adapter = this.adapters.voting;
+    it("should not be possible to request the a step if another step was already requested", async () => {
+      const dao = this.dao;
+      const bank = this.extensions.bankExt;
+      const voting = this.adapters.voting;
+      const configuration = this.adapters.configuration;
+      const submitter = members[0];
+
+      const result = await submitValidVoteResult(
+        dao,
+        bank,
+        configuration,
+        voting,
+        submitter,
+        false
+      );
+      await voting.requestStep(dao.address, result.proposalId, 1);
       await expect(
-        web3.eth.sendTransaction({
-          to: adapter.address,
-          from: daoOwner,
-          gasPrice: toBN("0"),
-          value: toWei("1"),
-        })
-      ).to.be.revertedWith("revert");
+        voting.requestStep(dao.address, result.proposalId, 2)
+      ).to.be.revertedWith("other step already requested");
     });
 
-    it("should not be possible to send ETH to the adapter via fallback function", async () => {
-      const adapter = this.adapters.voting;
+    it("should not be possible for a non member to request a vote step", async () => {
+      const dao = this.dao;
+      const bank = this.extensions.bankExt;
+      const voting = this.adapters.voting;
+      const configuration = this.adapters.configuration;
+      const submitter = members[0];
+
+      const result = await submitValidVoteResult(
+        dao,
+        bank,
+        configuration,
+        voting,
+        submitter,
+        false
+      );
       await expect(
-        web3.eth.sendTransaction({
-          to: adapter.address,
-          from: daoOwner,
-          gasPrice: toBN("0"),
-          value: toWei("1"),
-          data: fromAscii("should go to fallback func"),
-        })
-      ).to.be.revertedWith("revert");
+        txSigner(signers[5], voting).requestStep(
+          dao.address,
+          result.proposalId,
+          1
+        )
+      ).to.be.revertedWith("onlyMember");
+    });
+
+    it("should not be possible to request a vote step that was already requested", async () => {
+      const dao = this.dao;
+      const bank = this.extensions.bankExt;
+      const voting = this.adapters.voting;
+      const configuration = this.adapters.configuration;
+      const submitter = members[0];
+
+      const result = await submitValidVoteResult(
+        dao,
+        bank,
+        configuration,
+        voting,
+        submitter,
+        false
+      );
+      await voting.requestStep(dao.address, result.proposalId, 1);
+      await expect(
+        voting.requestStep(dao.address, result.proposalId, 1)
+      ).to.be.revertedWith("step already requested");
+    });
+
+    it("should not be possible to request a vote step after the grace period is over", async () => {
+      const dao = this.dao;
+      const bank = this.extensions.bankExt;
+      const voting = this.adapters.voting;
+      const configuration = this.adapters.configuration;
+      const submitter = members[0];
+
+      const result = await submitValidVoteResult(
+        dao,
+        bank,
+        configuration,
+        voting,
+        submitter
+      );
+      await advanceTime(10); // ends the grace period
+      await expect(
+        voting.requestStep(dao.address, result.proposalId, 1)
+      ).to.be.revertedWith("should be in grace period");
     });
   });
 
@@ -2164,5 +2388,10 @@ describe("Adapter - Offchain Voting", () => {
       ).to.be.revertedWith("getPriorAmount not implemented");
     });
   });
-  //TODO create a proposal, vote, and submit the result using a delegated address - PASS
+
+  describe("Delegate", async () => {
+    it("should be possible to vote and submit a vote result using a delegate account", async () => {
+      //TODO create a proposal, vote, and submit the result using a delegated address - PASS
+    });
+  });
 });

@@ -284,20 +284,16 @@ contract OffchainVotingContract is
     }
 
     /*
-     * Saves the vote result to the storage if resultNode (vote) is valid.
-     * A valid vote node must satisfy all the conditions in the function,
-     * so it can be stored.
-     * What needs to be checked before submitting a vote result:
-     * - if the grace period has ended, do nothing
-     * - if it's the first result (vote), is this a right time to submit it?
-     * - is the diff between nbYes and nbNo +50% of the votes ?
-     * - is this after the voting period ?
-     * - if we already have a result that has been challenged
-     *   - same as if there were no result yet
-     * - if we already have a result that has not been challenged
-     *   - is the new one heavier than the previous one?
+     * @notice Saves the vote result to the storage if resultNode (vote) is valid
+     * @notice A valid vote result node must satisfy all the conditions in the function, so it can be stored
+     * @param dao The DAO address
+     * @param proposalId The proposa id that was voted on the vote result
+     * @param resultRoot The hash of the vote result tree
+     * @param reporter The address of the member that is reporting the vote result
+     * @param result The last leaf node of the voting tree that represents the vote result with the voting weights
+     * @param rootSig The signature of the voting tree signed by the reporter
      */
-    // The function is protected against reentrancy with the reentrancyGuard
+    // The function is protected against reentrancy with the reimbursable modifier
     // slither-disable-next-line reentrancy-events,reentrancy-benign,reentrancy-no-eth
     function submitVoteResult(
         DaoRegistry dao,
@@ -394,6 +390,13 @@ contract OffchainVotingContract is
         );
     }
 
+    /**
+     * @notice Allows DAO members to reveal specific leaf nodes of the voting tree.
+     * @notice A step represents a vote of a DAO member, and the index indicates which index that member is stored in the DAO.
+     * @param dao The DAO address
+     * @param proposalId The proposalId associated with the step
+     * @param index The index of the step in the voting tree
+     */
     // slither-disable-next-line reentrancy-benign
     function requestStep(
         DaoRegistry dao,
@@ -401,7 +404,7 @@ contract OffchainVotingContract is
         uint256 index
     ) external reimbursable(dao) onlyMember(dao) {
         Voting storage vote = votes[address(dao)][proposalId];
-        require(index < vote.nbMembers, "index out of bound");
+        require(index > 0 && index < vote.nbMembers, "index out of bound");
         uint256 currentFlag = retrievedStepsFlags[vote.resultRoot][index / 256];
         require(
             DaoHelper.getFlag(currentFlag, index % 256) == false,
@@ -417,7 +420,7 @@ contract OffchainVotingContract is
         require(vote.stepRequested == 0, "other step already requested");
         require(
             voteResult(dao, proposalId) == VotingState.GRACE_PERIOD,
-            "should be grace period"
+            "should be in grace period"
         );
         vote.stepRequested = index;
         vote.gracePeriodStartingTime = uint64(block.timestamp);
@@ -453,7 +456,10 @@ contract OffchainVotingContract is
     ) external reimbursable(dao) {
         Voting storage vote = votes[address(dao)][node.proposalId];
         // slither-disable-next-line timestamp
-        require(vote.stepRequested == node.index, "wrong step provided");
+        require(
+            node.index > 0 && vote.stepRequested == node.index,
+            "wrong step provided"
+        );
 
         _verifyNode(dao, adapterAddress, node, vote.resultRoot);
 
@@ -505,7 +511,7 @@ contract OffchainVotingContract is
         bytes32 proposalId,
         OffchainVotingHashContract.VoteResultNode memory node
     ) external reimbursable(dao) {
-        require(node.index == 0, "only first node");
+        require(node.index == 1, "only first node");
 
         Voting storage vote = votes[address(dao)][proposalId];
         require(vote.resultRoot != bytes32(0), "no result available yet!");
@@ -569,6 +575,10 @@ contract OffchainVotingContract is
         (address actionId, ) = dao.proposals(proposalId);
 
         require(resultRoot != bytes32(0), "no result");
+        require(
+            nodeCurrent.index > 0 && nodePrevious.index > 0,
+            "invalid node index"
+        );
         require(nodeCurrent.index == nodePrevious.index + 1, "not consecutive");
 
         _verifyNode(dao, actionId, nodeCurrent, vote.resultRoot);

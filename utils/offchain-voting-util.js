@@ -25,17 +25,8 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
  */
 const { MerkleTree } = require("./merkle-tree-util");
-const {
-  toBN,
-  sha3,
-  toBNWeb3,
-  TOTAL,
-  MEMBER_COUNT,
-  UNITS,
-} = require("./contract-util");
+const { sha3, toBNWeb3 } = require("./contract-util");
 const sigUtil = require("eth-sig-util");
-
-const { advanceTime, generateMembers } = require("./hardhat-test-util");
 
 const BadNodeError = {
   0: "OK",
@@ -54,254 +45,6 @@ const VotingState = {
   3: "NOT_PASS",
   4: "IN_PROGRESS",
   5: "GRACE_PERIOD",
-};
-
-const VotingStrategies = {
-  AllVotesYes: "AllVotesYes",
-  AllVotesNo: "AllVotesNo",
-  NoBodyVotes: "NoBodyVotes",
-  SingleYesVote: "SingleYesVote",
-  SingleNoVote: "SingleNoVote",
-  TieVote: "TieVote",
-  MajorityVotesYes: "MajorityVotesYes",
-  MajorityVotesNo: "MajorityVotesNo",
-};
-
-const testMembers = generateMembers(10);
-
-const findMember = (addr) =>
-  testMembers.find((member) => member.address === addr);
-
-const buildProposal = async (
-  dao,
-  actionId,
-  submitter,
-  blockNumber,
-  chainId,
-  name = "some proposal",
-  body = "this is my proposal",
-  space = "tribute"
-) => {
-  const proposalPayload = {
-    name,
-    body,
-    choices: ["yes", "no"],
-    start: Math.floor(new Date().getTime() / 1000),
-    end: Math.floor(new Date().getTime() / 1000) + 10000,
-    snapshot: blockNumber.toString(),
-  };
-
-  const startingTime = Math.floor(new Date().getTime() / 1000);
-  const proposalData = {
-    type: "proposal",
-    timestamp: startingTime,
-    space,
-    payload: proposalPayload,
-    submitter: submitter.address,
-  };
-
-  const signer = SigUtilSigner(submitter.privateKey);
-  proposalData.sig = await signer(proposalData, dao.address, actionId, chainId);
-  return { proposalData };
-};
-
-const vote = async (
-  dao,
-  bank,
-  proposalId,
-  member,
-  choice,
-  actionId,
-  chainId,
-  votingWeight = undefined,
-  signature = undefined
-) => {
-  const voteSigner = SigUtilSigner(member.privateKey);
-  const weight = await bank.balanceOf(member.address, UNITS);
-  const voteEntry = await createVote(
-    proposalId,
-    votingWeight ? toBN(votingWeight) : weight,
-    choice
-  );
-  voteEntry.sig = signature
-    ? signature
-    : voteSigner(voteEntry, dao.address, actionId, chainId);
-  return voteEntry;
-};
-
-const emptyVote = async (proposalId, choice = 2 /*no*/, signature = "0x") => {
-  const voteEntry = await createVote(proposalId, toBN("0"), choice);
-  voteEntry.sig = signature;
-  return voteEntry;
-};
-
-const buildVotes = async (
-  dao,
-  bank,
-  proposalId,
-  submitter,
-  blockNumber,
-  chainId,
-  actionId,
-  voteStrategy,
-  votingWeight = undefined,
-  voteChoice = undefined,
-  signature = undefined
-) => {
-  const membersCount = await bank.getPriorAmount(
-    TOTAL,
-    MEMBER_COUNT,
-    blockNumber
-  );
-  const voteEntries = [];
-  const totalVotes = parseInt(membersCount.toString());
-  for (let i = 0; i < totalVotes; i++) {
-    const memberAddress = await dao.getMemberAddress(i);
-    const member = findMember(memberAddress);
-    let voteEntry;
-
-    if (!member) {
-      voteEntry = await emptyVote(proposalId, 2, signature);
-      voteEntries.push(voteEntry);
-      continue;
-    }
-
-    switch (voteStrategy) {
-      case VotingStrategies.SingleYesVote &&
-        memberAddress === submitter.address:
-        voteEntry = await vote(
-          dao,
-          bank,
-          proposalId,
-          member,
-          voteChoice ? voteChoice : 1,
-          actionId,
-          chainId,
-          votingWeight,
-          signature
-        );
-        break;
-      case VotingStrategies.SingleNoVote && memberAddress === submitter.address:
-        voteEntry = await vote(
-          dao,
-          bank,
-          proposalId,
-          member,
-          voteChoice ? voteChoice : 2,
-          actionId,
-          chainId,
-          votingWeight,
-          signature
-        );
-        break;
-      case VotingStrategies.AllVotesYes:
-        voteEntry = await vote(
-          dao,
-          bank,
-          proposalId,
-          member,
-          voteChoice ? voteChoice : 1,
-          actionId,
-          chainId,
-          votingWeight,
-          signature
-        );
-        break;
-      case VotingStrategies.AllVotesNo:
-        voteEntry = await vote(
-          dao,
-          bank,
-          proposalId,
-          member,
-          voteChoice ? voteChoice : 2,
-          actionId,
-          chainId,
-          votingWeight,
-          signature
-        );
-        break;
-      case VotingStrategies.TieVote:
-        voteEntry = await vote(
-          dao,
-          bank,
-          proposalId,
-          member,
-          i < parseInt(totalVotes / 2) ? 1 : 2,
-          actionId,
-          chainId,
-          votingWeight,
-          signature
-        );
-        break;
-      case VotingStrategies.NoBodyVotes:
-      default:
-        voteEntry = await emptyVote(proposalId, 2, signature);
-        break;
-    }
-    voteEntries.push(voteEntry);
-  }
-  return voteEntries;
-};
-
-const buildVoteTree = async (
-  dao,
-  bank,
-  proposalId,
-  submitter,
-  blockNumber,
-  chainId,
-  actionId,
-  votingStrategy = VotingStrategies.AllVotesYes,
-  votes = undefined,
-  moveBlockTime = true
-) => {
-  const membersCount = await bank.getPriorAmount(
-    TOTAL,
-    MEMBER_COUNT,
-    blockNumber
-  );
-
-  const voteEntries = votes
-    ? votes
-    : await buildVotes(
-        dao,
-        bank,
-        proposalId,
-        submitter,
-        blockNumber,
-        chainId,
-        actionId,
-        votingStrategy
-      );
-
-  if (moveBlockTime) await advanceTime(10000);
-
-  const { voteResultTree, result } = await prepareVoteResult(
-    voteEntries,
-    dao,
-    actionId,
-    chainId
-  );
-
-  const signer = SigUtilSigner(submitter.privateKey);
-  const rootSig = signer(
-    { root: voteResultTree.getHexRoot(), type: "result" },
-    dao.address,
-    actionId,
-    chainId
-  );
-
-  const lastResult = result[result.length - 1];
-  lastResult.nbYes = lastResult.nbYes.toString();
-  lastResult.nbNo = lastResult.nbNo.toString();
-  return {
-    voteResultTree,
-    votesResults: result,
-    rootSig,
-    lastVoteResult: lastResult,
-    membersCount,
-    resultHash: voteResultTree.getHexRoot(),
-  };
 };
 
 function getMessageERC712Hash(m, verifyingContract, actionId, chainId) {
@@ -711,17 +454,18 @@ function buildVoteLeafHashForMerkleTree(
 
 async function prepareVoteResult(votes, dao, actionId, chainId) {
   votes.forEach((vote, idx) => {
+    const stepIndex = idx + 1;
     vote.choice = vote.choice || vote.payload.choice;
     vote.nbYes = vote.choice === 1 ? vote.payload.weight : toBNWeb3(0);
     vote.nbNo = vote.choice !== 1 ? vote.payload.weight : toBNWeb3(0);
     vote.proposalId = vote.payload.proposalId;
-    if (idx > 0) {
-      const previousVote = votes[idx - 1];
+    if (stepIndex > 1) {
+      const previousVote = votes[stepIndex - 1];
       vote.nbYes = vote.nbYes.add(toBNWeb3(previousVote.nbYes)).toString();
       vote.nbNo = vote.nbNo.add(toBNWeb3(previousVote.nbNo)).toString();
     }
 
-    vote.index = idx;
+    vote.index = stepIndex;
   });
 
   const tree = new MerkleTree(
@@ -791,11 +535,6 @@ Object.assign(exports, {
   prepareVoteResult,
   toStepNode,
   buildVoteLeafHashForMerkleTree,
-  buildProposal,
-  buildVoteTree,
-  buildVotes,
-  vote,
-  emptyVote,
   validateMessage,
   getDomainDefinition,
   signMessage,
@@ -813,6 +552,4 @@ Object.assign(exports, {
   TypedDataUtils: sigUtil.TypedDataUtils,
   BadNodeError,
   VotingState,
-  testMembers,
-  VotingStrategies,
 });

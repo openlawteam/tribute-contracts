@@ -109,11 +109,11 @@ contract OffchainVotingHelperContract {
             MerkleProof.verify(node.proof, resultRoot, hashCurrent),
             "invalid node proof"
         );
-        if (node.index >= nbMembers) {
+        if (node.index > nbMembers) {
             return BadNodeError.INDEX_OUT_OF_BOUND;
         }
 
-        address memberAddr = dao.getMemberAddress(node.index);
+        address memberAddr = dao.getMemberAddress(node.index - 1);
 
         //invalid choice
         if (

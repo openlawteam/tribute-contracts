@@ -134,7 +134,7 @@ const getDefaultOptions = (options) => {
     unitPrice: unitPrice,
     nbUnits: numberOfUnits,
     votingPeriod: 10,
-    gracePeriod: 1,
+    gracePeriod: 10,
     tokenAddr: ETH_TOKEN,
     maxChunks: maximumChunks,
     maxAmount,
