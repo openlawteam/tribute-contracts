@@ -1,7 +1,6 @@
 pragma solidity ^0.8.0;
 
 // SPDX-License-Identifier: MIT
-
 import "../../core/DaoRegistry.sol";
 import "../../extensions/bank/Bank.sol";
 import "../../guards/MemberGuard.sol";
@@ -96,7 +95,8 @@ contract OffchainVotingContract is
     event ResultChallenged(
         address daoAddress,
         bytes32 proposalId,
-        bytes32 resultRoot
+        bytes32 resultRoot,
+        bytes32 challengeProposalId
     );
 
     bytes32 public constant VotingPeriod =
@@ -429,6 +429,8 @@ contract OffchainVotingContract is
     /*
      * @notice This function marks the proposal as challenged if a step requested by a member never came.
      * @notice The rule is, if a step has been requested and we are after the grace period, then challenge it
+     * @param dao The DAO address
+     * @param proposalId The proposal id associated with the missing step
      */
     // slither-disable-next-line reentrancy-benign,reentrancy-events
     function challengeMissingStep(DaoRegistry dao, bytes32 proposalId)
@@ -442,7 +444,7 @@ contract OffchainVotingContract is
         // slither-disable-next-line timestamp
         require(
             block.timestamp >= vote.gracePeriodStartingTime + gracePeriod,
-            "grace period"
+            "wait for the grace period"
         );
 
         _challengeResult(dao, proposalId);
@@ -648,15 +650,24 @@ contract OffchainVotingContract is
         dao.processProposal(proposalId);
     }
 
+    /**
+     * @notice Marks the vote result as challenged
+     * @notice Creates a new proposal in the DAO registry. The new proposal is the Challenge Proposal
+     * @notice Puts the vote result reporter into jail until the challenge process is finalized
+     * @notice If the reporter is a malicous actor, the Challenge Proposal will be voted, and that reporter will be kicked out of the DAO
+     * @notice If the report is not a malicious actor, the Challenge Proposal will not pass, and the reporter will be unjailed
+     * @param dao The DAO address
+     * @param proposalId The proposal id associated with the challenged vote result
+     */
     // slither-disable-next-line reentrancy-events,reentrancy-benign
     function _challengeResult(DaoRegistry dao, bytes32 proposalId) internal {
-        votes[address(dao)][proposalId].isChallenged = true;
-        address challengedReporter = votes[address(dao)][proposalId].reporter;
+        Voting storage vote = votes[address(dao)][proposalId];
+        vote.isChallenged = true;
+
+        address challengedReporter = vote.reporter;
+        bytes32 resultRoot = vote.resultRoot;
         bytes32 challengeProposalId = keccak256(
-            abi.encodePacked(
-                proposalId,
-                votes[address(dao)][proposalId].resultRoot
-            )
+            abi.encodePacked(proposalId, resultRoot)
         );
 
         challengeProposals[address(dao)][
@@ -673,7 +684,8 @@ contract OffchainVotingContract is
         emit ResultChallenged(
             address(dao),
             proposalId,
-            votes[address(dao)][proposalId].resultRoot
+            resultRoot,
+            challengeProposalId
         );
     }
 

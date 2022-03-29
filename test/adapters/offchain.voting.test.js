@@ -25,11 +25,12 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
  */
 const { expect } = require("chai");
-const { utils } = require("ethers");
+const { utils, Contract } = require("ethers");
 const {
   toBN,
   toWei,
   sha3,
+  soliditySha3,
   fromAscii,
   unitPrice,
   remaining,
@@ -52,6 +53,7 @@ const {
   getCurrentBlockNumber,
   getSigners,
   txSigner,
+  expectEvent,
 } = require("../../utils/hardhat-test-util");
 
 const {
@@ -1971,6 +1973,108 @@ describe("Adapter - Offchain Voting", () => {
       await expect(
         voting.requestStep(dao.address, result.proposalId, 1)
       ).to.be.revertedWith("should be in grace period");
+    });
+  });
+
+  describe("Challenge Missing Vote Step", async () => {
+    it("should be possible to challenge a missing step", async () => {
+      const dao = this.dao;
+      const bank = this.extensions.bankExt;
+      const voting = this.adapters.voting;
+      const configuration = this.adapters.configuration;
+      const submitter = members[0];
+
+      const result = await submitValidVoteResult(
+        dao,
+        bank,
+        configuration,
+        voting,
+        submitter,
+        false
+      );
+
+      // Request the first step (index 1)
+      await voting.requestStep(dao.address, result.proposalId, 1);
+
+      await advanceTime(10); //ends the grace period
+
+      const challengeProposalId = soliditySha3(
+        result.proposalId,
+        result.resultTree.resultHash
+      );
+
+      // Challenge the vote result to indicate it has something wrong
+      const call = voting.challengeMissingStep(dao.address, result.proposalId);
+      await expectEvent(
+        call,
+        "ResultChallenged",
+        dao.address,
+        result.proposalId,
+        result.resultTree.resultHash,
+        challengeProposalId
+      );
+
+      // The vote result should be set to challenged
+      const storedVote = await voting.getVote(dao.address, result.proposalId);
+      expect(storedVote.isChallenged).to.be.true;
+
+      // submitter should be in jail after challenging a missing step
+      const notJailed = await dao.notJailed(submitter.address);
+      expect(notJailed).to.be.false;
+
+      // A challenge proposal must be created if the challenge call was successful
+      const challengeProposal = await dao.proposals(challengeProposalId);
+      expect(challengeProposal.flags.toString()).to.be.equal("1");
+      expect(challengeProposal.adapterAddress).to.be.equal(voting.address);
+    });
+
+    it("should not be possible to challenge a missing step if the step was not requested", async () => {
+      const dao = this.dao;
+      const bank = this.extensions.bankExt;
+      const voting = this.adapters.voting;
+      const configuration = this.adapters.configuration;
+      const submitter = members[0];
+
+      const result = await submitValidVoteResult(
+        dao,
+        bank,
+        configuration,
+        voting,
+        submitter,
+        false
+      );
+
+      // Challenge the vote result to indicate it has something wrong
+      await expect(
+        voting.challengeMissingStep(dao.address, result.proposalId)
+      ).to.be.revertedWith("no step request");
+    });
+
+    it("should not be possible to challenge a missing step during the grace period", async () => {
+      const dao = this.dao;
+      const bank = this.extensions.bankExt;
+      const voting = this.adapters.voting;
+      const configuration = this.adapters.configuration;
+      const submitter = members[0];
+
+      const result = await submitValidVoteResult(
+        dao,
+        bank,
+        configuration,
+        voting,
+        submitter,
+        false
+      );
+
+      // Request the first step (index 1)
+      await voting.requestStep(dao.address, result.proposalId, 1);
+
+      // do not advance time, otherwise it will end the grace period
+
+      // Challenge the vote result during the grace period
+      await expect(
+        voting.challengeMissingStep(dao.address, result.proposalId)
+      ).to.be.revertedWith("wait for the grace period");
     });
   });
 
