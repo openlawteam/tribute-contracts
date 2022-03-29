@@ -97,11 +97,20 @@ contract PromissoryNoteContract is Reimbursable, AdapterGuard, Signatures {
         DaoRegistry dao,
         address signerAddress,
         address erc20, 
-        address borrower,
+       
         ) external onlyAdapter(dao) {
             dao.setAddressConfiguration(SignerAddressConfig, signerAddress);
             dao.setAddressConfiguration(ERC20InternalTokenAddr, erc20);
             dao.setAddressConfiguration(AddressOfBorrower, borrower);
+
+            BankExtension bank = BankExtension(dao.getExtensionAddress(DaoHelper.
+            BANK);
+            //white list an external erc20 token
+            bank.registerPotentialNewToken(dao, erc20);
+            
+            )
+
+        
         }
         
       
