@@ -2,12 +2,16 @@
 "use strict";
 const {
   toBN,
+  toBNWeb3,
+  sha3,
   TOTAL,
   MEMBER_COUNT,
+  ZERO_ADDRESS,
   UNITS,
   ERC1155,
 } = require("./contract-util");
 const { toNumber } = require("web3-utils");
+const { MerkleTree } = require("./merkle-tree-util");
 const {
   expect,
   advanceTime,
@@ -20,6 +24,9 @@ const {
   createVote,
   SigUtilSigner,
   prepareVoteResult,
+  prepareVoteProposalData,
+  buildVoteLeafHashForMerkleTree,
+  toStepNode,
 } = require("./offchain-voting-util");
 
 const checkLastEvent = async (dao, testObject) => {
@@ -531,6 +538,126 @@ const buildVoteTree = async (
   };
 };
 
+const buildVoteTreeWithBadNodes = async (
+  daoOwner,
+  dao,
+  bank,
+  configuration,
+  proposalId,
+  blockNumber,
+  submitter,
+  chainId,
+  actionId,
+  badWeight,
+  votingStrategy = VotingStrategies.AllVotesYes,
+  moveBlockTime = true,
+  onlyFirstBadNode = false
+) => {
+  const { proposalData } = await buildProposal(
+    dao,
+    actionId,
+    submitter,
+    blockNumber,
+    chainId
+  );
+
+  await configuration.submitProposal(
+    dao.address,
+    proposalId,
+    [
+      {
+        key: sha3("config1"),
+        numericValue: "10",
+        addressValue: ZERO_ADDRESS,
+        configType: 0,
+      },
+    ],
+    prepareVoteProposalData(proposalData, web3),
+    {
+      from: daoOwner,
+      gasPrice: toBN("0"),
+    }
+  );
+
+  // Only the submitter votes Yes, and attempts to submit the vote result
+  const votes = await buildVotes(
+    dao,
+    bank,
+    proposalId,
+    submitter,
+    blockNumber,
+    chainId,
+    actionId,
+    votingStrategy
+  );
+
+  votes.forEach((vote, idx) => {
+    const stepIndex = idx + 1;
+    vote.choice = vote.choice || vote.payload.choice;
+    vote.nbYes = vote.choice === 1 ? vote.payload.weight.toString() : "0";
+    vote.nbNo = vote.choice !== 1 ? vote.payload.weight.toString() : "0";
+    vote.proposalId = vote.payload.proposalId;
+    if (stepIndex > 1) {
+      const previousVote = votes[stepIndex - 1];
+      vote.nbYes = toBNWeb3(vote.nbYes)
+        .add(toBNWeb3(previousVote.nbYes ? previousVote.nbYes : "0"))
+        .toString();
+      vote.nbNo = toBNWeb3(vote.nbNo)
+        .add(toBNWeb3(previousVote.nbNo ? previousVote.nbNo : "0"))
+        .toString();
+    }
+
+    vote.index = stepIndex;
+  });
+
+  if (onlyFirstBadNode) {
+    // Set the wrong weight for the first vote before creating the vote step
+    votes[0].nbYes = badWeight.toString();
+    votes[0].payload.weight = toBNWeb3(badWeight.toString());
+  } else {
+    votes.forEach((v, idx) => {
+      // from 0 to N-1, we don't want to update the last one because it is the result
+      if (idx < votes.length - 1) {
+        v.nbYes = badWeight.toString();
+        v.payload.weight = toBNWeb3(badWeight.toString());
+      }
+    });
+  }
+
+  const voteResultTree = new MerkleTree(
+    votes.map((vote) =>
+      buildVoteLeafHashForMerkleTree(vote, dao.address, actionId, chainId)
+    )
+  );
+
+  const resultSteps = votes.map((vote) =>
+    toStepNode(vote, dao.address, actionId, chainId, voteResultTree)
+  );
+
+  const signer = SigUtilSigner(submitter.privateKey);
+  const rootSig = signer(
+    { root: voteResultTree.getHexRoot(), type: "result" },
+    dao.address,
+    actionId,
+    chainId
+  );
+
+  const lastVoteResult = resultSteps[resultSteps.length - 1];
+  lastVoteResult.nbYes = lastVoteResult.nbYes.toString();
+  lastVoteResult.nbNo = lastVoteResult.nbNo.toString();
+
+  if (moveBlockTime) await advanceTime(10); // ends the voting period
+
+  return {
+    proposalId,
+    voteResultTree,
+    resultSteps,
+    signer,
+    rootSig,
+    lastVoteResult,
+  };
+};
+
 module.exports = {
   checkLastEvent,
   checkBalance,
@@ -551,4 +678,5 @@ module.exports = {
   emptyVote,
   buildVotes,
   buildVoteTree,
+  buildVoteTreeWithBadNodes,
 };

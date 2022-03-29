@@ -31,6 +31,7 @@ const {
   toWei,
   sha3,
   soliditySha3,
+  toBNWeb3,
   fromAscii,
   unitPrice,
   remaining,
@@ -69,6 +70,7 @@ const {
 
 const {
   buildVoteTree,
+  buildVoteTreeWithBadNodes,
   buildProposal,
   buildVotes,
   emptyVote,
@@ -263,7 +265,8 @@ describe("Adapter - Offchain Voting", () => {
     configuration,
     voting,
     submitter,
-    moveBlockTime = true
+    moveBlockTime = true,
+    submitVoteResult = true
   ) => {
     const proposalId = getProposalCounter();
     const actionId = configuration.address;
@@ -316,14 +319,16 @@ describe("Adapter - Offchain Voting", () => {
     );
     await advanceTime(10); // ends the voting period
     // Submit a valid result
-    await voting.submitVoteResult(
-      dao.address,
-      proposalId,
-      resultTree.resultHash,
-      submitter.address,
-      resultTree.lastVoteResult,
-      resultTree.rootSig
-    );
+    if (submitVoteResult)
+      await voting.submitVoteResult(
+        dao.address,
+        proposalId,
+        resultTree.resultHash,
+        submitter.address,
+        resultTree.lastVoteResult,
+        resultTree.rootSig
+      );
+
     return { proposalId, resultTree };
   };
 
@@ -2208,6 +2213,228 @@ describe("Adapter - Offchain Voting", () => {
         voting.challengeMissingStep(dao.address, result.proposalId)
       ).to.be.revertedWith("wait for the grace period");
     });
+  });
+
+  describe("Challenge Bad First Step", async () => {
+    it("should be possible to challenge a bad first step", async () => {
+      const dao = this.dao;
+      const bank = this.extensions.bankExt;
+      const voting = this.adapters.voting;
+      const configuration = this.adapters.configuration;
+      const submitter = members[0];
+      const proposalId = getProposalCounter();
+      const actionId = configuration.address;
+
+      const blockNumber = await getCurrentBlockNumber();
+      const { voteResultTree, lastVoteResult, rootSig, resultSteps } =
+        await buildVoteTreeWithBadNodes(
+          daoOwner,
+          dao,
+          bank,
+          configuration,
+          proposalId,
+          blockNumber,
+          submitter,
+          chainId,
+          actionId,
+          "20000",
+          VotingStrategies.AllVotesYes,
+          true, //move block time
+          true // only first bad node
+        );
+
+      // Submit a valid result
+      await voting.submitVoteResult(
+        dao.address,
+        proposalId,
+        voteResultTree.getHexRoot(),
+        submitter.address,
+        lastVoteResult,
+        rootSig
+      );
+
+      const badVoteStep1 = resultSteps[0];
+
+      const call = voting.challengeBadFirstStep(
+        dao.address,
+        proposalId,
+        badVoteStep1
+      );
+
+      const challengeProposalId = soliditySha3(
+        proposalId,
+        voteResultTree.getHexRoot()
+      );
+
+      await expectEvent(
+        call,
+        "ResultChallenged",
+        dao.address,
+        proposalId,
+        voteResultTree.getHexRoot(),
+        challengeProposalId
+      );
+
+      // The vote result should be set to challenged
+      const storedVote = await voting.getVote(dao.address, proposalId);
+      expect(storedVote.isChallenged).to.be.true;
+
+      // submitter should be in jail after challenging a missing step
+      const notJailed = await dao.notJailed(submitter.address);
+      expect(notJailed).to.be.false;
+
+      // A challenge proposal must be created if the challenge call was successful
+      const challengeProposal = await dao.proposals(challengeProposalId);
+      expect(challengeProposal.flags.toString()).to.be.equal("1");
+      expect(challengeProposal.adapterAddress).to.be.equal(voting.address);
+    });
+
+    it("should not be possible to challenge a step that is not the first one", async () => {
+      const dao = this.dao;
+      const bank = this.extensions.bankExt;
+      const voting = this.adapters.voting;
+      const configuration = this.adapters.configuration;
+      const submitter = members[0];
+
+      const result = await submitValidVoteResult(
+        dao,
+        bank,
+        configuration,
+        voting,
+        submitter,
+        false
+      );
+
+      const voteResults = result.resultTree.votesResults;
+
+      for (let i = 1; i < voteResults.length; i++) {
+        await expect(
+          voting.challengeBadFirstStep(
+            dao.address,
+            result.proposalId,
+            voteResults[i]
+          )
+        ).to.be.revertedWith("only first step");
+      }
+    });
+
+    it("should not be possible to challenge a step that does not have a vote result", async () => {
+      const dao = this.dao;
+      const bank = this.extensions.bankExt;
+      const voting = this.adapters.voting;
+      const configuration = this.adapters.configuration;
+      const submitter = members[0];
+
+      const result = await submitValidVoteResult(
+        dao,
+        bank,
+        configuration,
+        voting,
+        submitter,
+        false,
+        false // do not submit the vote result, but return the result tree
+      );
+
+      const voteResults = result.resultTree.votesResults;
+      const voteStep1 = voteResults[0];
+      await expect(
+        voting.challengeBadFirstStep(dao.address, result.proposalId, voteStep1)
+      ).to.be.revertedWith("vote result not found");
+    });
+
+    it("should not be possible to challenge a step that has an invalid proof", async () => {
+      const dao = this.dao;
+      const bank = this.extensions.bankExt;
+      const voting = this.adapters.voting;
+      const configuration = this.adapters.configuration;
+      const submitter = members[0];
+
+      const result = await submitValidVoteResult(
+        dao,
+        bank,
+        configuration,
+        voting,
+        submitter,
+        false
+      );
+
+      const voteResults = result.resultTree.votesResults;
+      const voteStep1 = voteResults[0];
+      // Set an invalid proof to mimic the behavior of a invalid step
+      voteStep1.proof[0] =
+        "0x1d2c3a91bdb8c7ccbd7cf5ea1df6c9408f9678deef9bfc27639e8ea9429a3572";
+
+      await expect(
+        voting.challengeBadFirstStep(dao.address, result.proposalId, voteStep1)
+      ).to.be.revertedWith("invalid step proof");
+    });
+
+    it("should revert if there is nothing to be challenged when the first step is correct", async () => {
+      const dao = this.dao;
+      const bank = this.extensions.bankExt;
+      const voting = this.adapters.voting;
+      const configuration = this.adapters.configuration;
+      const submitter = members[0];
+
+      const result = await submitValidVoteResult(
+        dao,
+        bank,
+        configuration,
+        voting,
+        submitter,
+        false
+      );
+
+      const voteResults = result.resultTree.votesResults;
+      const voteStep1 = voteResults[0];
+
+      await expect(
+        voting.challengeBadFirstStep(dao.address, result.proposalId, voteStep1)
+      ).to.be.revertedWith("nothing to challenge");
+    });
+  });
+
+  describe("Challenge Bad Node", async () => {
+    it("should be possible to challenge a bad node that was revealed in the provideStep function", async () => {
+      const dao = this.dao;
+      const bank = this.extensions.bankExt;
+      const voting = this.adapters.voting;
+      const configuration = this.adapters.configuration;
+      const submitter = members[0];
+
+      const result = await submitValidVoteResult(
+        dao,
+        bank,
+        configuration,
+        voting,
+        submitter,
+        false
+      );
+
+      // Request the first step (index 1)
+      await voting.requestStep(dao.address, result.proposalId, 1);
+      let storedVote = await voting.getVote(dao.address, result.proposalId);
+      expect(storedVote.stepRequested).to.be.equal("1");
+
+      const initialGracePeriod = parseInt(storedVote.gracePeriodStartingTime);
+
+      const voteResults = result.resultTree.votesResults;
+
+      const voteStep1 = voteResults[0];
+
+      // Provide/reveal the vote step one that was requested
+      await voting.provideStep(dao.address, configuration.address, voteStep1);
+
+      // After the valid vote step was provided, the grace period should be restarted
+      // and the stepRequested should be set to 0, because it was revealed
+      storedVote = await voting.getVote(dao.address, result.proposalId);
+      const newGracePeriod = parseInt(storedVote.gracePeriodStartingTime);
+      expect(newGracePeriod).to.be.greaterThan(initialGracePeriod);
+      expect(storedVote.stepRequested).to.be.equal("0");
+      expect(storedVote.isChallenged).to.be.false;
+    });
+
+    it("should not challenge a node that is valid", async () => {});
   });
 
   describe("Governance Token", async () => {

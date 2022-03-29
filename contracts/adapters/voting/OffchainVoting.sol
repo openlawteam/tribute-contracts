@@ -283,6 +283,44 @@ contract OffchainVotingContract is
             );
     }
 
+    // slither-disable-next-line reentrancy-benign
+    function startNewVotingForProposal(
+        DaoRegistry dao,
+        bytes32 proposalId,
+        bytes memory data
+    ) external override onlyAdapter(dao) {
+        SnapshotProposalContract.ProposalMessage memory proposal = abi.decode(
+            data,
+            (SnapshotProposalContract.ProposalMessage)
+        );
+        (bool success, uint256 blockNumber) = ovHash.stringToUint(
+            proposal.payload.snapshot
+        );
+        require(success, "snapshot conversion error");
+        require(blockNumber <= block.number, "snapshot block in future");
+        require(blockNumber > 0, "block number cannot be 0");
+
+        votes[address(dao)][proposalId].startingTime = uint64(block.timestamp);
+        votes[address(dao)][proposalId].snapshot = blockNumber;
+
+        require(
+            _getBank(dao).balanceOf(
+                dao.getAddressIfDelegated(proposal.submitter),
+                DaoHelper.UNITS
+            ) > 0,
+            "not active member"
+        );
+
+        require(
+            SignatureChecker.isValidSignatureNow(
+                proposal.submitter,
+                _snapshotContract.hashMessage(dao, msg.sender, proposal),
+                proposal.sig
+            ),
+            "invalid proposal signature"
+        );
+    }
+
     /*
      * @notice Saves the vote result to the storage if resultNode (vote) is valid
      * @notice A valid vote result node must satisfy all the conditions in the function, so it can be stored
@@ -478,54 +516,23 @@ contract OffchainVotingContract is
         _challengeResult(dao, proposalId);
     }
 
-    // slither-disable-next-line reentrancy-benign
-    function startNewVotingForProposal(
-        DaoRegistry dao,
-        bytes32 proposalId,
-        bytes memory data
-    ) external override onlyAdapter(dao) {
-        SnapshotProposalContract.ProposalMessage memory proposal = abi.decode(
-            data,
-            (SnapshotProposalContract.ProposalMessage)
-        );
-        (bool success, uint256 blockNumber) = ovHash.stringToUint(
-            proposal.payload.snapshot
-        );
-        require(success, "snapshot conversion error");
-        require(blockNumber <= block.number, "snapshot block in future");
-        require(blockNumber > 0, "block number cannot be 0");
-
-        votes[address(dao)][proposalId].startingTime = uint64(block.timestamp);
-        votes[address(dao)][proposalId].snapshot = blockNumber;
-
-        require(
-            _getBank(dao).balanceOf(
-                dao.getAddressIfDelegated(proposal.submitter),
-                DaoHelper.UNITS
-            ) > 0,
-            "not active member"
-        );
-
-        require(
-            SignatureChecker.isValidSignatureNow(
-                proposal.submitter,
-                _snapshotContract.hashMessage(dao, msg.sender, proposal),
-                proposal.sig
-            ),
-            "invalid proposal signature"
-        );
-    }
-
+    /**
+     * @notice Allows anyone to challenge the first vote step in the result tree.
+     * @param dao The DAO address.
+     * @param proposalId The proposal id associated with the vote step.
+     * @param node The actual vote step that is being challenged.
+     */
     // slither-disable-next-line reentrancy-benign,reentrancy-events
-    function challengeBadFirstNode(
+    function challengeBadFirstStep(
         DaoRegistry dao,
         bytes32 proposalId,
         OffchainVotingHashContract.VoteResultNode memory node
     ) external reimbursable(dao) {
-        require(node.index == 1, "only first node");
+        require(node.index == 1, "only first step");
 
         Voting storage vote = votes[address(dao)][proposalId];
-        require(vote.resultRoot != bytes32(0), "no result available yet!");
+        require(vote.resultRoot != bytes32(0), "vote result not found");
+
         (address actionId, ) = dao.proposals(proposalId);
         _verifyNode(dao, actionId, node, vote.resultRoot);
 
@@ -544,6 +551,13 @@ contract OffchainVotingContract is
         }
     }
 
+    /**
+     * @notice Challenges a bad node that was revealed in the provideStep function.
+     * @notice A bad node step is verified using the OffchainVotingHelper.getBadNodeError
+     * @param dao The DAO address.
+     * @param proposalId The proposal id associated with the bad node.
+     * @param node The node to be challenged.
+     */
     // slither-disable-next-line reentrancy-benign,reentrancy-events
     function challengeBadNode(
         DaoRegistry dao,
