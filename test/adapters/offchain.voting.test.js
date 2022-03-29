@@ -1976,6 +1976,138 @@ describe("Adapter - Offchain Voting", () => {
     });
   });
 
+  describe("Provide Vote Step", async () => {
+    it("should be possible to provide a valid vote step", async () => {
+      const dao = this.dao;
+      const bank = this.extensions.bankExt;
+      const voting = this.adapters.voting;
+      const configuration = this.adapters.configuration;
+      const submitter = members[0];
+
+      const result = await submitValidVoteResult(
+        dao,
+        bank,
+        configuration,
+        voting,
+        submitter,
+        false
+      );
+
+      // Request the first step (index 1)
+      await voting.requestStep(dao.address, result.proposalId, 1);
+      let storedVote = await voting.getVote(dao.address, result.proposalId);
+      expect(storedVote.stepRequested).to.be.equal("1");
+
+      const initialGracePeriod = parseInt(storedVote.gracePeriodStartingTime);
+
+      const voteResults = result.resultTree.votesResults;
+
+      const voteStep1 = voteResults[0];
+
+      // Provide/reveal the vote step one that was requested
+      await voting.provideStep(dao.address, configuration.address, voteStep1);
+
+      // After the valid vote step was provided, the grace period should be restarted
+      // and the stepRequested should be set to 0, because it was revealed
+      storedVote = await voting.getVote(dao.address, result.proposalId);
+      const newGracePeriod = parseInt(storedVote.gracePeriodStartingTime);
+      expect(newGracePeriod).to.be.greaterThan(initialGracePeriod);
+      expect(storedVote.stepRequested).to.be.equal("0");
+      expect(storedVote.isChallenged).to.be.false;
+    });
+
+    it("should not be possible to provide a vote step with index zero", async () => {
+      const dao = this.dao;
+      const bank = this.extensions.bankExt;
+      const voting = this.adapters.voting;
+      const configuration = this.adapters.configuration;
+      const submitter = members[0];
+
+      const result = await submitValidVoteResult(
+        dao,
+        bank,
+        configuration,
+        voting,
+        submitter,
+        false
+      );
+
+      // Request the first step (index 1)
+      await voting.requestStep(dao.address, result.proposalId, 1);
+      let storedVote = await voting.getVote(dao.address, result.proposalId);
+      expect(storedVote.stepRequested).to.be.equal("1");
+
+      const voteResults = result.resultTree.votesResults;
+      const voteStep1 = voteResults[0];
+
+      // Invalid index, because it must start from 1
+      voteStep1.index = 0;
+
+      await expect(
+        voting.provideStep(dao.address, configuration.address, voteStep1)
+      ).to.be.revertedWith("wrong step provided");
+    });
+
+    it("should not be possible to provide a vote step if it was not requested", async () => {
+      const dao = this.dao;
+      const bank = this.extensions.bankExt;
+      const voting = this.adapters.voting;
+      const configuration = this.adapters.configuration;
+      const submitter = members[0];
+
+      const result = await submitValidVoteResult(
+        dao,
+        bank,
+        configuration,
+        voting,
+        submitter,
+        false
+      );
+
+      let storedVote = await voting.getVote(dao.address, result.proposalId);
+      // There is no step requested
+      expect(storedVote.stepRequested).to.be.equal("0");
+
+      const voteResults = result.resultTree.votesResults;
+      const voteStep1 = voteResults[0];
+
+      await expect(
+        voting.provideStep(dao.address, configuration.address, voteStep1)
+      ).to.be.revertedWith("wrong step provided");
+    });
+
+    it("should not be possible to provide a vote step with an invalid proof", async () => {
+      const dao = this.dao;
+      const bank = this.extensions.bankExt;
+      const voting = this.adapters.voting;
+      const configuration = this.adapters.configuration;
+      const submitter = members[0];
+
+      const result = await submitValidVoteResult(
+        dao,
+        bank,
+        configuration,
+        voting,
+        submitter,
+        false
+      );
+
+      await voting.requestStep(dao.address, result.proposalId, 1);
+      let storedVote = await voting.getVote(dao.address, result.proposalId);
+      expect(storedVote.stepRequested).to.be.equal("1");
+
+      const voteResults = result.resultTree.votesResults;
+      const voteStep1 = voteResults[0];
+      // Set an invalid proof to mimic the behavior of a invalid step
+      voteStep1.proof[0] =
+        "0x1d2c3a91bdb8c7ccbd7cf5ea1df6c9408f9678deef9bfc27639e8ea9429a3572";
+
+      await expect(
+        voting.provideStep(dao.address, configuration.address, voteStep1)
+      ).to.be.revertedWith("invalid step proof");
+    });
+  });
+
   describe("Challenge Missing Vote Step", async () => {
     it("should be possible to challenge a missing step", async () => {
       const dao = this.dao;

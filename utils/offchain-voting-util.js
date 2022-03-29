@@ -456,13 +456,17 @@ async function prepareVoteResult(votes, dao, actionId, chainId) {
   votes.forEach((vote, idx) => {
     const stepIndex = idx + 1;
     vote.choice = vote.choice || vote.payload.choice;
-    vote.nbYes = vote.choice === 1 ? vote.payload.weight : toBNWeb3(0);
-    vote.nbNo = vote.choice !== 1 ? vote.payload.weight : toBNWeb3(0);
+    vote.nbYes = vote.choice === 1 ? vote.payload.weight.toString() : "0";
+    vote.nbNo = vote.choice !== 1 ? vote.payload.weight.toString() : "0";
     vote.proposalId = vote.payload.proposalId;
     if (stepIndex > 1) {
       const previousVote = votes[stepIndex - 1];
-      vote.nbYes = vote.nbYes.add(toBNWeb3(previousVote.nbYes)).toString();
-      vote.nbNo = vote.nbNo.add(toBNWeb3(previousVote.nbNo)).toString();
+      vote.nbYes = toBNWeb3(vote.nbYes)
+        .add(toBNWeb3(previousVote.nbYes))
+        .toString();
+      vote.nbNo = toBNWeb3(vote.nbNo)
+        .add(toBNWeb3(previousVote.nbNo))
+        .toString();
     }
 
     vote.index = stepIndex;

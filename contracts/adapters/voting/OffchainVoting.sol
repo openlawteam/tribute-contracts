@@ -391,8 +391,8 @@ contract OffchainVotingContract is
     }
 
     /**
-     * @notice Allows DAO members to reveal specific leaf nodes of the voting tree.
-     * @notice A step represents a vote of a DAO member, and the index indicates which index that member is stored in the DAO.
+     * @notice Allows DAO members to reveal specific leaf nodes of the voting tree (steps) if they are not found off-chain for any reason
+     * @notice A step represents a vote of a DAO member, and the index indicates which index that member is stored in the DAO
      * @param dao The DAO address
      * @param proposalId The proposalId associated with the step
      * @param index The index of the step in the voting tree
@@ -426,8 +426,36 @@ contract OffchainVotingContract is
         vote.gracePeriodStartingTime = uint64(block.timestamp);
     }
 
+    /**
+     * @notice Submits an step that was requested or not.
+     * @notice The step is verified to make sure it is part of the voting tree.
+     * @notice Bad steps might be submitted, but they can be challenged as well.
+     * @notice Providing an step indicates that the step/vote is revealed, so it can be verified.
+     * @param dao The DAO Address
+     * @param adapterAddress The address of the adapter that was used as actionId to build the vote step proof.
+     * @param node The vote/node/step to be revealed.
+     */
+    // slither-disable-next-line reentrancy-benign
+    function provideStep(
+        DaoRegistry dao,
+        address adapterAddress,
+        OffchainVotingHashContract.VoteResultNode memory node
+    ) external reimbursable(dao) {
+        Voting storage vote = votes[address(dao)][node.proposalId];
+        // slither-disable-next-line timestamp
+        require(
+            node.index > 0 && vote.stepRequested == node.index,
+            "wrong step provided"
+        );
+
+        _verifyNode(dao, adapterAddress, node, vote.resultRoot);
+
+        vote.stepRequested = 0;
+        vote.gracePeriodStartingTime = uint64(block.timestamp);
+    }
+
     /*
-     * @notice This function marks the proposal as challenged if a step requested by a member never came.
+     * @notice This function marks the proposal as challenged if a step requested by a member never came (was not provided/revealed).
      * @notice The rule is, if a step has been requested and we are after the grace period, then challenge it
      * @param dao The DAO address
      * @param proposalId The proposal id associated with the missing step
@@ -448,25 +476,6 @@ contract OffchainVotingContract is
         );
 
         _challengeResult(dao, proposalId);
-    }
-
-    // slither-disable-next-line reentrancy-benign
-    function provideStep(
-        DaoRegistry dao,
-        address adapterAddress,
-        OffchainVotingHashContract.VoteResultNode memory node
-    ) external reimbursable(dao) {
-        Voting storage vote = votes[address(dao)][node.proposalId];
-        // slither-disable-next-line timestamp
-        require(
-            node.index > 0 && vote.stepRequested == node.index,
-            "wrong step provided"
-        );
-
-        _verifyNode(dao, adapterAddress, node, vote.resultRoot);
-
-        vote.stepRequested = 0;
-        vote.gracePeriodStartingTime = uint64(block.timestamp);
     }
 
     // slither-disable-next-line reentrancy-benign
@@ -701,7 +710,7 @@ contract OffchainVotingContract is
                 root,
                 ovHash.nodeHash(dao, adapterAddress, node)
             ),
-            "invalid vote proof"
+            "invalid step proof"
         );
     }
 
