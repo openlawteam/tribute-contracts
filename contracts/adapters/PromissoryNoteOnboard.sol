@@ -1,4 +1,3 @@
-PromissoryNote.sol
 pragma solidity ^0.8.0;
 
 // SPDX-License-Identifier: MIT
@@ -101,7 +100,6 @@ contract PromissoryNoteContract is Reimbursable, AdapterGuard, Signatures {
         ) external onlyAdapter(dao) {
             dao.setAddressConfiguration(SignerAddressConfig, signerAddress);
             dao.setAddressConfiguration(ERC20InternalTokenAddr, erc20);
-            dao.setAddressConfiguration(AddressOfBorrower, borrower);
 
             BankExtension bank = BankExtension(dao.getExtensionAddress(DaoHelper.
             BANK);
@@ -110,7 +108,6 @@ contract PromissoryNoteContract is Reimbursable, AdapterGuard, Signatures {
             
             )
 
-        
         }
         
       
@@ -166,6 +163,53 @@ contract PromissoryNoteContract is Reimbursable, AdapterGuard, Signatures {
         // enough funds in Guild
         // does the loan start an origination time or upon withdraw?
         //redeemNote - withdraw funds
+
+        //check if promissorynote already redeemend
+        {
+            uint256 currentFlag = _flags[address(dao)][nonce / 256];
+            _flags[address(dao)][nonce / 256] = DaoHelper.setFlag(
+                currentFlag,
+                nonce % 256,
+                true
+            );
+            require(
+                DaoHelper.getFlag(currentFlag, nonce % 256) == false,
+                "coupon already redeemed"
+            );
+        }
+
+        PromissoryNote memory promissorynote = PromissoryNote(
+            borrower,
+            principalLoanAmount,
+            loanRepaymentAmount, 
+            basisPoints,
+            loanAvailExpiration,
+            loanDuration,
+            loanStartTime,
+            nftCollateralContract,
+            nftIdNumber,
+            nonce
+        );
+
+        bytes32 hash = hashPromissoryNoteMessage(dao, promissorynote);
+
+        require(
+            SignatureChecker.isValidSignatureNow(
+                dao.getAddressConfiguration(SignerAddressConfig),
+                hash,
+                signature
+            ),
+            "invalid sig"
+        );
+
+        IERC20 erc20 = IERC20(
+            dao.getAddressConfiguration(ERC20InternalTokenAddr)
+        );
+
+        BankExtension bank = BankExtension(
+            dao.getExtensionAddress(DaoHelper.BANK)
+        );
+
     }
 
  
