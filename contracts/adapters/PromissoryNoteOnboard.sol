@@ -46,10 +46,10 @@ SOFTWARE.
 contract PromissoryNoteContract is Reimbursable, AdapterGuard, Signatures {
 
     
-    using Address for address payable;
+    //using Address for address payable;
     using SafeERC20 for IERC20;
 
-    event LoanCreated(DaoRegistry dao, address Borrower, uint256 amount, uint32 basisPoints, uint256 loanDuration);
+  // event LoanCreated(DaoRegistry dao, address Borrower, uint256 amount, uint32 basisPoints, uint256 loanDuration);
 
     /**
     
@@ -66,6 +66,7 @@ contract PromissoryNoteContract is Reimbursable, AdapterGuard, Signatures {
     */
 
     struct PromissoryNote {
+        address erc20ToBorrow;
         address borrower;
         uint256 principalLoanAmount;
         uint256 loanRepaymentAmount; //for now, just one repayment amount. TODO make it timebased later.
@@ -84,29 +85,25 @@ contract PromissoryNoteContract is Reimbursable, AdapterGuard, Signatures {
     keccak256(abi.encodePacked(COUPON_MESSAGE_TYPE));
 
     bytes32 constant SignerAddressConfig = keccak256("promissory-note.signerAddress");
-    bytes32 constant AddressOfBorrower = keccak256("promissory-note.token.address")
- 
+    bytes32 constant AddressOfBorrower = keccak256("promissory-note.token.address");
+    bytes32 constant ERC20TokenAddr = keccak256("promissory-note.erc20ToBorrow");
     //map DAO -> loanId ->amount
 
     // event LoanRepaid(); 
 
     // event LoanForeclosed();
 
-    function configureDAO(
+    function configureDao(
         DaoRegistry dao,
         address signerAddress,
-        address erc20, 
-       
+        address erc20ToBorrow 
         ) external onlyAdapter(dao) {
             dao.setAddressConfiguration(SignerAddressConfig, signerAddress);
-            dao.setAddressConfiguration(ERC20InternalTokenAddr, erc20);
+            dao.setAddressConfiguration(ERC20TokenAddr, erc20ToBorrow);
 
-            BankExtension bank = BankExtension(dao.getExtensionAddress(DaoHelper.
-            BANK);
-            //white list an external erc20 token
-            bank.registerPotentialNewToken(dao, erc20);
-            
-            )
+            BankExtension bank = BankExtension(dao.getExtensionAddress(DaoHelper.BANK));
+            //check if erc20ToBorrower is a dao registered external token
+            bank.isTokenAllowed(erc20ToBorrow); 
 
         }
         
@@ -115,7 +112,7 @@ contract PromissoryNoteContract is Reimbursable, AdapterGuard, Signatures {
     /**
      * @notice Hashes the provided PrommisoryNote coupon as an ERC712 hash.
      * @param dao is the DAO instance to be configured
-     * @param PromissoryNote is the coupon to hash
+     * @param promissory d
      */
     function hashPromissoryNoteMessage(DaoRegistry dao, PromissoryNote memory promissory ) 
     public view returns (bytes32) 
@@ -123,11 +120,12 @@ contract PromissoryNoteContract is Reimbursable, AdapterGuard, Signatures {
         bytes32 message = keccak256(
             abi.encode (
                 COUPON_MESSAGE_TYPEHASH,
+                promissory.erc20ToBorrow,
                 promissory.borrower,
                 promissory.principalLoanAmount,
                 promissory.loanRepaymentAmount,
                 promissory.basisPoints,
-                promissiry.loanAvailExpiration,
+                promissory.loanAvailExpiration,
                 promissory.loanDuration, 
                 promissory.loanStartTime,
                 promissory.nftCollateralContract,
@@ -138,32 +136,27 @@ contract PromissoryNoteContract is Reimbursable, AdapterGuard, Signatures {
         );
         return hashMessage(dao, address(this), message);
     }
-    
+        
     /**  
      * @notice redeems a prommisory note for funds from guildbank
-     * @param dao 
+     * @param dao s
      */
     function redeemPromissoryNote(
-            DaoRegistry dao, 
+            DaoRegistry dao,
+            address erc20ToBorrow, 
             address borrower,
             uint256 principalLoanAmount,
             uint256 loanRepaymentAmount, //for now, just one repayment amount. TODO make it timebased later.
-            uint32 basisPoints. 
+            uint32 basisPoints, 
             uint64  loanAvailExpiration,
             uint256 loanDuration, 
             uint64 loanStartTime,
             address nftCollateralContract,
             uint256 nftIdNumber,
             uint256 nonce,
-            byte memory signature
+            bytes memory signature
         ) external reimbursable(dao)
     {
-        //approvedPrincipalLoanAmount - 50% of price from WGMI
-        //is NFT deposited
-        // enough funds in Guild
-        // does the loan start an origination time or upon withdraw?
-        //redeemNote - withdraw funds
-
         //check if promissorynote already redeemend
         {
             uint256 currentFlag = _flags[address(dao)][nonce / 256];
@@ -177,8 +170,9 @@ contract PromissoryNoteContract is Reimbursable, AdapterGuard, Signatures {
                 "coupon already redeemed"
             );
         }
-
+        //approvedPrincipalLoanAmount - 50% of price from WGMI
         PromissoryNote memory promissorynote = PromissoryNote(
+            erc20ToBorrow,
             borrower,
             principalLoanAmount,
             loanRepaymentAmount, 
@@ -203,11 +197,21 @@ contract PromissoryNoteContract is Reimbursable, AdapterGuard, Signatures {
         );
 
         IERC20 erc20 = IERC20(
-            dao.getAddressConfiguration(ERC20InternalTokenAddr)
+            dao.getAddressConfiguration(ERC20TokenAddr)
         );
 
         BankExtension bank = BankExtension(
             dao.getExtensionAddress(DaoHelper.BANK)
+        );
+        //check if NFT is in GUILD BANK
+        //check if enough funds in GUILD BANK
+        //start loan clock
+        promissorynote.loanStartTime = now; 
+        //withdraw
+        bank.withdraw(
+            dao,
+            borrower,
+            erc20ToBorrow
         );
 
     }
