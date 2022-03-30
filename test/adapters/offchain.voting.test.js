@@ -25,13 +25,12 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
  */
 const { expect } = require("chai");
-const { utils, Contract } = require("ethers");
+const { utils } = require("ethers");
 const {
   toBN,
   toWei,
   sha3,
   soliditySha3,
-  toBNWeb3,
   fromAscii,
   unitPrice,
   remaining,
@@ -69,6 +68,7 @@ const {
 } = require("../../utils/offchain-voting-util");
 
 const {
+  vote,
   buildVoteTree,
   buildVoteTreeWithBadNodes,
   buildProposal,
@@ -2246,6 +2246,10 @@ describe("Adapter - Offchain Voting", () => {
       const proposalId = getProposalCounter();
       const actionId = configuration.address;
 
+      await onboardMember(dao, bank, submitter, members[1]);
+      await onboardMember(dao, bank, submitter, members[2]);
+      await onboardMember(dao, bank, submitter, members[3]);
+
       const blockNumber = await getCurrentBlockNumber();
       const { voteResultTree, lastVoteResult, rootSig, resultSteps } =
         await buildVoteTreeWithBadNodes(
@@ -2260,8 +2264,7 @@ describe("Adapter - Offchain Voting", () => {
           actionId,
           "20000",
           VotingStrategies.AllVotesYes,
-          true, //move block time
-          true // only first bad node
+          true //move block time
         );
 
       // Submit a valid result
@@ -2274,6 +2277,7 @@ describe("Adapter - Offchain Voting", () => {
         rootSig
       );
 
+      // Read the bad step 1
       const badVoteStep1 = resultSteps[0];
 
       const call = voting.challengeBadFirstStep(
@@ -2421,8 +2425,7 @@ describe("Adapter - Offchain Voting", () => {
           actionId,
           "20000",
           VotingStrategies.AllVotesYes,
-          true, //move block time
-          false // only first bad node
+          true //move block time
         );
 
       // Submit a valid result
@@ -2435,7 +2438,7 @@ describe("Adapter - Offchain Voting", () => {
         rootSig
       );
 
-      const badVoteStep2 = resultSteps[2];
+      const badVoteStep2 = resultSteps[1];
       badVoteStep2.sig = invalidStepSignature;
 
       const call = voting.challengeBadNode(
@@ -2472,11 +2475,324 @@ describe("Adapter - Offchain Voting", () => {
 
       const voteResults = result.resultTree.votesResults;
 
-      const voteStep2 = voteResults[2];
+      const voteStep2 = voteResults[1];
 
       await expect(
         voting.challengeBadNode(dao.address, result.proposalId, voteStep2)
       ).to.be.revertedWith("nothing to challenge");
+    });
+  });
+
+  describe("Challenge Bad Step", async () => {
+    it("should be possible to challenge a bad step", async () => {
+      const dao = this.dao;
+      const bank = this.extensions.bankExt;
+      const voting = this.adapters.voting;
+      const configuration = this.adapters.configuration;
+      const submitter = members[0];
+      const proposalId = getProposalCounter();
+      const actionId = configuration.address;
+
+      await onboardMember(dao, bank, submitter, members[1]);
+      await onboardMember(dao, bank, submitter, members[2]);
+      await onboardMember(dao, bank, submitter, members[3]);
+
+      const blockNumber = await getCurrentBlockNumber();
+      const { voteResultTree, lastVoteResult, rootSig, resultSteps } =
+        await buildVoteTreeWithBadNodes(
+          daoOwner,
+          dao,
+          bank,
+          configuration,
+          proposalId,
+          blockNumber,
+          submitter,
+          chainId,
+          actionId,
+          "2000",
+          VotingStrategies.AllVotesYes,
+          true //move block time
+        );
+
+      // Submit a valid result
+      await voting.submitVoteResult(
+        dao.address,
+        proposalId,
+        voteResultTree.getHexRoot(),
+        submitter.address,
+        lastVoteResult,
+        rootSig
+      );
+
+      const badVotePrevious = resultSteps[3];
+      const badVoteCurrent = resultSteps[4];
+
+      await advanceTime(10); // ends the grace period
+
+      const call = voting.challengeBadStep(
+        dao.address,
+        proposalId,
+        badVotePrevious,
+        badVoteCurrent
+      );
+
+      await expectChallengeProposal(
+        dao,
+        voting,
+        proposalId,
+        voteResultTree,
+        submitter,
+        call
+      );
+    });
+
+    it("should not be possible to challenge a bad step if there is no vote result", async () => {
+      const dao = this.dao;
+      const bank = this.extensions.bankExt;
+      const voting = this.adapters.voting;
+      const configuration = this.adapters.configuration;
+      const submitter = members[0];
+      const proposalId = getProposalCounter();
+      const actionId = configuration.address;
+
+      await onboardMember(dao, bank, submitter, members[1]);
+      await onboardMember(dao, bank, submitter, members[2]);
+
+      const blockNumber = await getCurrentBlockNumber();
+      const { resultSteps } = await buildVoteTreeWithBadNodes(
+        daoOwner,
+        dao,
+        bank,
+        configuration,
+        proposalId,
+        blockNumber,
+        submitter,
+        chainId,
+        actionId,
+        "2000",
+        VotingStrategies.AllVotesYes,
+        true //move block time
+      );
+
+      // Do not submit the vote result
+      const badVotePrevious = resultSteps[2];
+      const badVoteCurrent = resultSteps[3];
+
+      await advanceTime(10); // ends the grace period
+
+      await expect(
+        voting.challengeBadStep(
+          dao.address,
+          proposalId,
+          badVotePrevious,
+          badVoteCurrent
+        )
+      ).to.be.revertedWith("missing vote result");
+    });
+
+    it("should not be possible to challenge a bad step if node indexes are invalid", async () => {
+      const dao = this.dao;
+      const bank = this.extensions.bankExt;
+      const voting = this.adapters.voting;
+      const configuration = this.adapters.configuration;
+      const submitter = members[0];
+      const proposalId = getProposalCounter();
+      const actionId = configuration.address;
+
+      await onboardMember(dao, bank, submitter, members[1]);
+      await onboardMember(dao, bank, submitter, members[2]);
+
+      const blockNumber = await getCurrentBlockNumber();
+      const { voteResultTree, lastVoteResult, rootSig, resultSteps } =
+        await buildVoteTreeWithBadNodes(
+          daoOwner,
+          dao,
+          bank,
+          configuration,
+          proposalId,
+          blockNumber,
+          submitter,
+          chainId,
+          actionId,
+          "2000",
+          VotingStrategies.AllVotesYes,
+          true //move block time
+        );
+
+      // Submit a valid result
+      await voting.submitVoteResult(
+        dao.address,
+        proposalId,
+        voteResultTree.getHexRoot(),
+        submitter.address,
+        lastVoteResult,
+        rootSig
+      );
+
+      await advanceTime(10); // ends the grace period
+
+      const badVotePrevious = resultSteps[3];
+      badVotePrevious.index = 0;
+      const badVoteCurrent = resultSteps[4];
+
+      await expect(
+        voting.challengeBadStep(
+          dao.address,
+          proposalId,
+          badVotePrevious,
+          badVoteCurrent
+        )
+      ).to.be.revertedWith("invalid step index");
+
+      badVotePrevious.index = 4;
+      badVoteCurrent.index = 0;
+
+      await expect(
+        voting.challengeBadStep(
+          dao.address,
+          proposalId,
+          badVotePrevious,
+          badVoteCurrent
+        )
+      ).to.be.revertedWith("invalid step index");
+    });
+
+    it("should not be possible to challenge a bad step if nodes are not consecutive", async () => {
+      const dao = this.dao;
+      const bank = this.extensions.bankExt;
+      const voting = this.adapters.voting;
+      const configuration = this.adapters.configuration;
+      const submitter = members[0];
+      const proposalId = getProposalCounter();
+      const actionId = configuration.address;
+
+      await onboardMember(dao, bank, submitter, members[1]);
+      await onboardMember(dao, bank, submitter, members[2]);
+
+      const blockNumber = await getCurrentBlockNumber();
+      const { voteResultTree, lastVoteResult, rootSig, resultSteps } =
+        await buildVoteTreeWithBadNodes(
+          daoOwner,
+          dao,
+          bank,
+          configuration,
+          proposalId,
+          blockNumber,
+          submitter,
+          chainId,
+          actionId,
+          "2000",
+          VotingStrategies.AllVotesYes,
+          true //move block time
+        );
+
+      // Submit a valid result
+      await voting.submitVoteResult(
+        dao.address,
+        proposalId,
+        voteResultTree.getHexRoot(),
+        submitter.address,
+        lastVoteResult,
+        rootSig
+      );
+
+      await advanceTime(10); // ends the grace period
+
+      await expect(
+        voting.challengeBadStep(
+          dao.address,
+          proposalId,
+          resultSteps[0],
+          resultSteps[3]
+        )
+      ).to.be.revertedWith("not consecutive steps");
+
+      await expect(
+        voting.challengeBadStep(
+          dao.address,
+          proposalId,
+          resultSteps[3],
+          resultSteps[2]
+        )
+      ).to.be.revertedWith("not consecutive steps");
+
+      await expect(
+        voting.challengeBadStep(
+          dao.address,
+          proposalId,
+          resultSteps[2],
+          resultSteps[2]
+        )
+      ).to.be.revertedWith("not consecutive steps");
+    });
+
+    it("should not be possible to challenge a bad step nodes are invalid", async () => {
+      const dao = this.dao;
+      const bank = this.extensions.bankExt;
+      const voting = this.adapters.voting;
+      const configuration = this.adapters.configuration;
+      const submitter = members[0];
+      const proposalId = getProposalCounter();
+      const actionId = configuration.address;
+
+      await onboardMember(dao, bank, submitter, members[1]);
+      await onboardMember(dao, bank, submitter, members[2]);
+
+      const blockNumber = await getCurrentBlockNumber();
+      const { voteResultTree, lastVoteResult, rootSig, resultSteps } =
+        await buildVoteTreeWithBadNodes(
+          daoOwner,
+          dao,
+          bank,
+          configuration,
+          proposalId,
+          blockNumber,
+          submitter,
+          chainId,
+          actionId,
+          "2000",
+          VotingStrategies.AllVotesYes,
+          true //move block time
+        );
+
+      // Submit a valid result
+      await voting.submitVoteResult(
+        dao.address,
+        proposalId,
+        voteResultTree.getHexRoot(),
+        submitter.address,
+        lastVoteResult,
+        rootSig
+      );
+
+      await advanceTime(10); // ends the grace period
+
+      const badVotePrevious = resultSteps[3];
+      let validChoice = badVotePrevious.choice;
+      badVotePrevious.choice = validChoice === 1 ? 0 : 1;
+      const badVoteCurrent = resultSteps[4];
+
+      await expect(
+        voting.challengeBadStep(
+          dao.address,
+          proposalId,
+          badVotePrevious,
+          badVoteCurrent
+        )
+      ).to.be.revertedWith("invalid step proof");
+
+      badVotePrevious.choice = validChoice;
+      validChoice = badVoteCurrent.choice;
+      badVoteCurrent.choice = validChoice === 1 ? 0 : 1;
+
+      await expect(
+        voting.challengeBadStep(
+          dao.address,
+          proposalId,
+          badVotePrevious,
+          badVoteCurrent
+        )
+      ).to.be.revertedWith("invalid step proof");
     });
   });
 

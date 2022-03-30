@@ -29,6 +29,10 @@ const {
   toStepNode,
 } = require("./offchain-voting-util");
 
+const randomInt = (max) => {
+  return Math.floor(Math.random() * (parseInt(max) + 1));
+};
+
 const checkLastEvent = async (dao, testObject) => {
   let pastEvents = await dao.getPastEvents();
   let returnValues = pastEvents[0].returnValues;
@@ -550,8 +554,7 @@ const buildVoteTreeWithBadNodes = async (
   actionId,
   badWeight,
   votingStrategy = VotingStrategies.AllVotesYes,
-  moveBlockTime = true,
-  onlyFirstBadNode = false
+  moveBlockTime = true
 ) => {
   const { proposalData } = await buildProposal(
     dao,
@@ -579,7 +582,6 @@ const buildVoteTreeWithBadNodes = async (
     }
   );
 
-  // Only the submitter votes Yes, and attempts to submit the vote result
   const votes = await buildVotes(
     dao,
     bank,
@@ -591,12 +593,14 @@ const buildVoteTreeWithBadNodes = async (
     votingStrategy
   );
 
+  // Calculate the correct voting weights for the vote result
   votes.forEach((vote, idx) => {
     const stepIndex = idx + 1;
     vote.choice = vote.choice || vote.payload.choice;
     vote.nbYes = vote.choice === 1 ? vote.payload.weight.toString() : "0";
     vote.nbNo = vote.choice !== 1 ? vote.payload.weight.toString() : "0";
     vote.proposalId = vote.payload.proposalId;
+
     if (stepIndex > 1) {
       const previousVote = votes[stepIndex - 1];
       vote.nbYes = toBNWeb3(vote.nbYes)
@@ -610,19 +614,15 @@ const buildVoteTreeWithBadNodes = async (
     vote.index = stepIndex;
   });
 
-  if (onlyFirstBadNode) {
-    // Set the wrong weight for the first vote before creating the vote step
-    votes[0].nbYes = badWeight.toString();
-    votes[0].payload.weight = toBNWeb3(badWeight.toString());
-  } else {
-    votes.forEach((v, idx) => {
-      // from 0 to N-1, we don't want to update the last one because it is the result
-      if (idx < votes.length - 1) {
-        v.nbYes = badWeight.toString();
-        v.payload.weight = toBNWeb3(badWeight.toString());
-      }
-    });
-  }
+  // Set invalid voting weights and choices before creating the vote steps
+  votes.forEach((v, idx) => {
+    // Ignore the last vote, because it is the vote result
+    if (idx < votes.length - 1) {
+      v.nbYes = randomInt(badWeight).toString();
+      v.nbNo = randomInt(badWeight).toString();
+      v.payload.weight = toBNWeb3(badWeight.toString());
+    }
+  });
 
   const voteResultTree = new MerkleTree(
     votes.map((vote) =>

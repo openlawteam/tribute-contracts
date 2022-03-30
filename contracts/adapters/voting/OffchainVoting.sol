@@ -283,44 +283,6 @@ contract OffchainVotingContract is
             );
     }
 
-    // slither-disable-next-line reentrancy-benign
-    function startNewVotingForProposal(
-        DaoRegistry dao,
-        bytes32 proposalId,
-        bytes memory data
-    ) external override onlyAdapter(dao) {
-        SnapshotProposalContract.ProposalMessage memory proposal = abi.decode(
-            data,
-            (SnapshotProposalContract.ProposalMessage)
-        );
-        (bool success, uint256 blockNumber) = ovHash.stringToUint(
-            proposal.payload.snapshot
-        );
-        require(success, "snapshot conversion error");
-        require(blockNumber <= block.number, "snapshot block in future");
-        require(blockNumber > 0, "block number cannot be 0");
-
-        votes[address(dao)][proposalId].startingTime = uint64(block.timestamp);
-        votes[address(dao)][proposalId].snapshot = blockNumber;
-
-        require(
-            _getBank(dao).balanceOf(
-                dao.getAddressIfDelegated(proposal.submitter),
-                DaoHelper.UNITS
-            ) > 0,
-            "not active member"
-        );
-
-        require(
-            SignatureChecker.isValidSignatureNow(
-                proposal.submitter,
-                _snapshotContract.hashMessage(dao, msg.sender, proposal),
-                proposal.sig
-            ),
-            "invalid proposal signature"
-        );
-    }
-
     /*
      * @notice Saves the vote result to the storage if resultNode (vote) is valid
      * @notice A valid vote result node must satisfy all the conditions in the function, so it can be stored
@@ -587,6 +549,10 @@ contract OffchainVotingContract is
         }
     }
 
+    /**
+     * @notice Challenges a bad step based on the current and previous nodes.
+     * @notice The current and previous nodes must be consecutive,
+     */
     // slither-disable-next-line reentrancy-benign,reentrancy-events
     function challengeBadStep(
         DaoRegistry dao,
@@ -599,12 +565,15 @@ contract OffchainVotingContract is
 
         (address actionId, ) = dao.proposals(proposalId);
 
-        require(resultRoot != bytes32(0), "no result");
+        require(resultRoot != bytes32(0), "missing vote result");
         require(
             nodeCurrent.index > 0 && nodePrevious.index > 0,
-            "invalid node index"
+            "invalid step index"
         );
-        require(nodeCurrent.index == nodePrevious.index + 1, "not consecutive");
+        require(
+            nodeCurrent.index == nodePrevious.index + 1,
+            "not consecutive steps"
+        );
 
         _verifyNode(dao, actionId, nodeCurrent, vote.resultRoot);
         _verifyNode(dao, actionId, nodePrevious, vote.resultRoot);
@@ -655,6 +624,44 @@ contract OffchainVotingContract is
         ) {
             fallbackVoting.startNewVotingForProposal(dao, proposalId, "");
         }
+    }
+
+    // slither-disable-next-line reentrancy-benign
+    function startNewVotingForProposal(
+        DaoRegistry dao,
+        bytes32 proposalId,
+        bytes memory data
+    ) external override onlyAdapter(dao) {
+        SnapshotProposalContract.ProposalMessage memory proposal = abi.decode(
+            data,
+            (SnapshotProposalContract.ProposalMessage)
+        );
+        (bool success, uint256 blockNumber) = ovHash.stringToUint(
+            proposal.payload.snapshot
+        );
+        require(success, "snapshot conversion error");
+        require(blockNumber <= block.number, "snapshot block in future");
+        require(blockNumber > 0, "block number cannot be 0");
+
+        votes[address(dao)][proposalId].startingTime = uint64(block.timestamp);
+        votes[address(dao)][proposalId].snapshot = blockNumber;
+
+        require(
+            _getBank(dao).balanceOf(
+                dao.getAddressIfDelegated(proposal.submitter),
+                DaoHelper.UNITS
+            ) > 0,
+            "not active member"
+        );
+
+        require(
+            SignatureChecker.isValidSignatureNow(
+                proposal.submitter,
+                _snapshotContract.hashMessage(dao, msg.sender, proposal),
+                proposal.sig
+            ),
+            "invalid proposal signature"
+        );
     }
 
     function sponsorChallengeProposal(
