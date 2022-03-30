@@ -88,6 +88,8 @@ describe("Adapter - Offchain Voting", () => {
   const chainId = 1337;
   const members = testMembers;
   const newMember = members[0];
+  const invalidStepSignature =
+    "0xbe90f2a9a51a554ef37a3bc3f47a1fc8dc29279ff320fa45754f6df165cc692f7cf7ed059edded2c87e95320229420c8e359a498fd89e55a1086a4adf03f73901c";
 
   before("deploy dao", async () => {
     accounts = await getAccounts();
@@ -330,6 +332,42 @@ describe("Adapter - Offchain Voting", () => {
       );
 
     return { proposalId, resultTree };
+  };
+
+  const expectChallengeProposal = async (
+    dao,
+    voting,
+    proposalId,
+    voteResultTree,
+    submitter,
+    challengeCall
+  ) => {
+    const challengeProposalId = soliditySha3(
+      proposalId,
+      voteResultTree.getHexRoot()
+    );
+
+    await expectEvent(
+      challengeCall,
+      "ResultChallenged",
+      dao.address,
+      proposalId,
+      voteResultTree.getHexRoot(),
+      challengeProposalId
+    );
+
+    // The vote result should be set to challenged
+    const storedVote = await voting.getVote(dao.address, proposalId);
+    expect(storedVote.isChallenged).to.be.true;
+
+    // submitter should be in jail after challenging a missing step
+    const notJailed = await dao.notJailed(submitter.address);
+    expect(notJailed).to.be.false;
+
+    // A challenge proposal must be created if the challenge call was successful
+    const challengeProposal = await dao.proposals(challengeProposalId);
+    expect(challengeProposal.flags.toString()).to.be.equal("1");
+    expect(challengeProposal.adapterAddress).to.be.equal(voting.address);
   };
 
   describe("General", async () => {
@@ -1642,7 +1680,7 @@ describe("Adapter - Offchain Voting", () => {
         null, // votingWeight
         null, // voteChoice
         // invalid signature
-        "0xbe90f2a9a51a554ef37a3bc3f47a1fc8dc29279ff320fa45754f6df165cc692f7cf7ed059edded2c87e95320229420c8e359a498fd89e55a1086a4adf03f73901c"
+        invalidStepSignature
       );
 
       const { lastVoteResult, rootSig, resultHash, membersCount } =
@@ -2135,34 +2173,17 @@ describe("Adapter - Offchain Voting", () => {
 
       await advanceTime(10); //ends the grace period
 
-      const challengeProposalId = soliditySha3(
-        result.proposalId,
-        result.resultTree.resultHash
-      );
-
       // Challenge the vote result to indicate it has something wrong
       const call = voting.challengeMissingStep(dao.address, result.proposalId);
-      await expectEvent(
-        call,
-        "ResultChallenged",
-        dao.address,
+
+      await expectChallengeProposal(
+        dao,
+        voting,
         result.proposalId,
-        result.resultTree.resultHash,
-        challengeProposalId
+        result.resultTree.voteResultTree,
+        submitter,
+        call
       );
-
-      // The vote result should be set to challenged
-      const storedVote = await voting.getVote(dao.address, result.proposalId);
-      expect(storedVote.isChallenged).to.be.true;
-
-      // submitter should be in jail after challenging a missing step
-      const notJailed = await dao.notJailed(submitter.address);
-      expect(notJailed).to.be.false;
-
-      // A challenge proposal must be created if the challenge call was successful
-      const challengeProposal = await dao.proposals(challengeProposalId);
-      expect(challengeProposal.flags.toString()).to.be.equal("1");
-      expect(challengeProposal.adapterAddress).to.be.equal(voting.address);
     });
 
     it("should not be possible to challenge a missing step if the step was not requested", async () => {
@@ -2261,32 +2282,14 @@ describe("Adapter - Offchain Voting", () => {
         badVoteStep1
       );
 
-      const challengeProposalId = soliditySha3(
+      await expectChallengeProposal(
+        dao,
+        voting,
         proposalId,
-        voteResultTree.getHexRoot()
+        voteResultTree,
+        submitter,
+        call
       );
-
-      await expectEvent(
-        call,
-        "ResultChallenged",
-        dao.address,
-        proposalId,
-        voteResultTree.getHexRoot(),
-        challengeProposalId
-      );
-
-      // The vote result should be set to challenged
-      const storedVote = await voting.getVote(dao.address, proposalId);
-      expect(storedVote.isChallenged).to.be.true;
-
-      // submitter should be in jail after challenging a missing step
-      const notJailed = await dao.notJailed(submitter.address);
-      expect(notJailed).to.be.false;
-
-      // A challenge proposal must be created if the challenge call was successful
-      const challengeProposal = await dao.proposals(challengeProposalId);
-      expect(challengeProposal.flags.toString()).to.be.equal("1");
-      expect(challengeProposal.adapterAddress).to.be.equal(voting.address);
     });
 
     it("should not be possible to challenge a step that is not the first one", async () => {
@@ -2401,6 +2404,62 @@ describe("Adapter - Offchain Voting", () => {
       const voting = this.adapters.voting;
       const configuration = this.adapters.configuration;
       const submitter = members[0];
+      const proposalId = getProposalCounter();
+      const actionId = configuration.address;
+
+      const blockNumber = await getCurrentBlockNumber();
+      const { voteResultTree, lastVoteResult, rootSig, resultSteps } =
+        await buildVoteTreeWithBadNodes(
+          daoOwner,
+          dao,
+          bank,
+          configuration,
+          proposalId,
+          blockNumber,
+          submitter,
+          chainId,
+          actionId,
+          "20000",
+          VotingStrategies.AllVotesYes,
+          true, //move block time
+          false // only first bad node
+        );
+
+      // Submit a valid result
+      await voting.submitVoteResult(
+        dao.address,
+        proposalId,
+        voteResultTree.getHexRoot(),
+        submitter.address,
+        lastVoteResult,
+        rootSig
+      );
+
+      const badVoteStep2 = resultSteps[2];
+      badVoteStep2.sig = invalidStepSignature;
+
+      const call = voting.challengeBadNode(
+        dao.address,
+        proposalId,
+        badVoteStep2
+      );
+
+      await expectChallengeProposal(
+        dao,
+        voting,
+        proposalId,
+        voteResultTree,
+        submitter,
+        call
+      );
+    });
+
+    it("should not challenge a node that is valid", async () => {
+      const dao = this.dao;
+      const bank = this.extensions.bankExt;
+      const voting = this.adapters.voting;
+      const configuration = this.adapters.configuration;
+      const submitter = members[0];
 
       const result = await submitValidVoteResult(
         dao,
@@ -2408,33 +2467,17 @@ describe("Adapter - Offchain Voting", () => {
         configuration,
         voting,
         submitter,
-        false
+        true
       );
-
-      // Request the first step (index 1)
-      await voting.requestStep(dao.address, result.proposalId, 1);
-      let storedVote = await voting.getVote(dao.address, result.proposalId);
-      expect(storedVote.stepRequested).to.be.equal("1");
-
-      const initialGracePeriod = parseInt(storedVote.gracePeriodStartingTime);
 
       const voteResults = result.resultTree.votesResults;
 
-      const voteStep1 = voteResults[0];
+      const voteStep2 = voteResults[2];
 
-      // Provide/reveal the vote step one that was requested
-      await voting.provideStep(dao.address, configuration.address, voteStep1);
-
-      // After the valid vote step was provided, the grace period should be restarted
-      // and the stepRequested should be set to 0, because it was revealed
-      storedVote = await voting.getVote(dao.address, result.proposalId);
-      const newGracePeriod = parseInt(storedVote.gracePeriodStartingTime);
-      expect(newGracePeriod).to.be.greaterThan(initialGracePeriod);
-      expect(storedVote.stepRequested).to.be.equal("0");
-      expect(storedVote.isChallenged).to.be.false;
+      await expect(
+        voting.challengeBadNode(dao.address, result.proposalId, voteStep2)
+      ).to.be.revertedWith("nothing to challenge");
     });
-
-    it("should not challenge a node that is valid", async () => {});
   });
 
   describe("Governance Token", async () => {
