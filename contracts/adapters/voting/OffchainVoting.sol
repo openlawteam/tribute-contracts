@@ -183,6 +183,11 @@ contract OffchainVotingContract is
             );
     }
 
+    /**
+     * @notice Forcefully fails a given proposal
+     * @param dao The DAO address
+     * @param proposalId The proposal id to mark as failed
+     */
     // slither-disable-next-line reentrancy-benign
     function adminFailProposal(DaoRegistry dao, bytes32 proposalId)
         external
@@ -593,6 +598,13 @@ contract OffchainVotingContract is
         }
     }
 
+    /**
+     * @notice Enables the fallback voting strategy if the request is valid
+     * @notice Current voting must be in progress
+     * @notice It is not possible to request it more than once for the same member
+     * @param dao The DAO address
+     * @param proposalId The proposalId that will used in the fallback voting contract
+     */
     // slither-disable-next-line reentrancy-benign
     function requestFallback(DaoRegistry dao, bytes32 proposalId)
         external
@@ -626,6 +638,12 @@ contract OffchainVotingContract is
         }
     }
 
+    /**
+     * @notice Starts a new offchain voting proposal
+     * @param dao The DAO address
+     * @param proposalId The new proposal id
+     * @param data The bytes data containing the proposal payload (SnapshotProposalContract.ProposalMessage)
+     */
     // slither-disable-next-line reentrancy-benign
     function startNewVotingForProposal(
         DaoRegistry dao,

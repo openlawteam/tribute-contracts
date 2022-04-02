@@ -167,17 +167,21 @@ describe("Adapter - Offchain Voting", () => {
     );
 
     const submittedVote = await voting.getVote(dao.address, proposalId);
-    expect(Number(submittedVote[0])).to.be.equal(blockNumber);
-    expect(submittedVote[1]).to.be.equal(submitter.address);
-    expect(submittedVote[2]).to.be.equal(resultHash);
-    expect(submittedVote[3]).to.be.equal(lastVoteResult.nbYes);
-    expect(submittedVote[4]).to.be.equal(lastVoteResult.nbNo);
-    expect(Number(submittedVote[5])).to.be.greaterThan(proposalData.timestamp);
-    expect(Number(submittedVote[6])).to.be.greaterThan(proposalData.timestamp);
-    expect(submittedVote[7]).to.be.false;
-    expect(submittedVote[8]).to.be.equal("0");
-    expect(submittedVote[9]).to.be.false;
-    expect(submittedVote[10]).to.be.equal("0");
+    expect(Number(submittedVote.snapshot)).to.be.equal(blockNumber);
+    expect(submittedVote.reporter).to.be.equal(submitter.address);
+    expect(submittedVote.resultRoot).to.be.equal(resultHash);
+    expect(submittedVote.nbYes).to.be.equal(lastVoteResult.nbYes);
+    expect(submittedVote.nbNo).to.be.equal(lastVoteResult.nbNo);
+    expect(Number(submittedVote.startingTime)).to.be.greaterThan(
+      proposalData.timestamp
+    );
+    expect(Number(submittedVote.gracePeriodStartingTime)).to.be.greaterThan(
+      proposalData.timestamp
+    );
+    expect(submittedVote.isChallenged).to.be.false;
+    expect(submittedVote.stepRequested).to.be.equal("0");
+    expect(submittedVote.forceFailed).to.be.false;
+    expect(submittedVote.fallbackVotesCount).to.be.equal("0");
 
     if (printGasUsage) {
       log(
@@ -437,6 +441,7 @@ describe("Adapter - Offchain Voting", () => {
       expect(voteResult.toString()).to.be.equal("0");
       //todo: 1: tie, 2: pass, 3: not pass, 4: in progress
     });
+
     it("should be possible to onboard a new member by submitting a vote result and processing the proposal", async () => {
       const dao = this.dao;
       const bank = this.extensions.bankExt;
@@ -592,6 +597,65 @@ describe("Adapter - Offchain Voting", () => {
           data: fromAscii("should go to fallback func"),
         })
       ).to.be.revertedWith("revert");
+    });
+
+    it("should be possible forcefully fail a proposal", async () => {
+      const dao = this.dao;
+      const bank = this.extensions.bankExt;
+      const voting = this.adapters.voting;
+      const configuration = this.adapters.configuration;
+      const submitter = members[0];
+
+      const result = await submitValidVoteResult(
+        dao,
+        bank,
+        configuration,
+        voting,
+        submitter,
+        true
+      );
+
+      let storedVote = await voting.getVote(dao.address, result.proposalId);
+      expect(storedVote.forceFailed).to.be.false;
+
+      await voting.adminFailProposal(dao.address, result.proposalId);
+
+      storedVote = await voting.getVote(dao.address, result.proposalId);
+      expect(storedVote.forceFailed).to.be.true;
+    });
+
+    it("should not be possible forcefully fail a proposal that does not exist", async () => {
+      const dao = this.dao;
+      const voting = this.adapters.voting;
+      const proposalId = getProposalCounter();
+
+      await expect(
+        voting.adminFailProposal(dao.address, proposalId)
+      ).to.be.revertedWith("proposal has not started yet");
+    });
+
+    it("should not be possible forcefully fail a proposal if the caller is not the owner", async () => {
+      const dao = this.dao;
+      const voting = this.adapters.voting;
+      const bank = this.extensions.bankExt;
+      const configuration = this.adapters.configuration;
+      const submitter = members[0];
+
+      const result = await submitValidVoteResult(
+        dao,
+        bank,
+        configuration,
+        voting,
+        submitter,
+        true
+      );
+
+      await expect(
+        txSigner(signers[2], voting).adminFailProposal(
+          dao.address,
+          result.proposalId
+        )
+      ).to.be.revertedWith("Ownable: caller is not the owner");
     });
   });
 
@@ -2794,6 +2858,208 @@ describe("Adapter - Offchain Voting", () => {
         )
       ).to.be.revertedWith("invalid step proof");
     });
+
+    it("should revert if the steps are correct", async () => {
+      const dao = this.dao;
+      const bank = this.extensions.bankExt;
+      const voting = this.adapters.voting;
+      const configuration = this.adapters.configuration;
+      const submitter = members[0];
+
+      await onboardMember(dao, bank, submitter, members[1]);
+      await onboardMember(dao, bank, submitter, members[2]);
+
+      const result = await submitValidVoteResult(
+        dao,
+        bank,
+        configuration,
+        voting,
+        submitter,
+        false
+      );
+
+      const voteResults = result.resultTree.votesResults;
+
+      await expect(
+        voting.challengeBadStep(
+          dao.address,
+          result.proposalId,
+          voteResults[0],
+          voteResults[1]
+        )
+      ).to.be.revertedWith("nothing to challenge");
+    });
+  });
+
+  describe("Fallback Voting Strategy", () => {
+    it("should be possible to start a new voting using the fallback voting strategy", async () => {
+      const dao = this.dao;
+      const bank = this.extensions.bankExt;
+      const voting = this.adapters.voting;
+      const configuration = this.adapters.configuration;
+      const votingHelpers = this.votingHelpers;
+      const submitter = members[0];
+
+      const result = await submitValidVoteResult(
+        dao,
+        bank,
+        configuration,
+        voting,
+        submitter,
+        true
+      );
+
+      let submittedVote = await voting.getVote(dao.address, result.proposalId);
+      expect(submittedVote.fallbackVotesCount).to.be.equal("0");
+      let snapshot = Number(submittedVote.snapshot);
+      let startingTime = Number(submittedVote.startingTime);
+      let gracePeriodStartingTime = Number(
+        submittedVote.gracePeriodStartingTime
+      );
+
+      await advanceTime(5);
+
+      await voting.requestFallback(dao.address, result.proposalId);
+
+      submittedVote = await voting.getVote(dao.address, result.proposalId);
+      expect(submittedVote.fallbackVotesCount).to.be.equal("1");
+      expect(Number(submittedVote.snapshot)).to.be.greaterThanOrEqual(snapshot);
+      expect(Number(submittedVote.startingTime)).to.be.greaterThanOrEqual(
+        startingTime
+      );
+      expect(
+        Number(submittedVote.gracePeriodStartingTime)
+      ).to.be.greaterThanOrEqual(gracePeriodStartingTime);
+
+      const fallbackVote = await votingHelpers.fallbackVoting.votes(
+        dao.address,
+        result.proposalId
+      );
+      expect(Number(fallbackVote.startingTime)).to.be.greaterThanOrEqual(
+        Number(submittedVote.startingTime)
+      );
+      expect(Number(fallbackVote.blockNumber)).to.be.greaterThanOrEqual(
+        Number(submittedVote.snapshot)
+      );
+    });
+
+    it("should not be possible to use the fallback voting strategy if the current voting is not in progress", async () => {
+      const dao = this.dao;
+      const bank = this.extensions.bankExt;
+      const voting = this.adapters.voting;
+      const configuration = this.adapters.configuration;
+      const submitter = members[0];
+
+      const result = await submitValidVoteResult(
+        dao,
+        bank,
+        configuration,
+        voting,
+        submitter,
+        true
+      );
+
+      let submittedVote = await voting.getVote(dao.address, result.proposalId);
+      expect(submittedVote.fallbackVotesCount).to.be.equal("0");
+
+      await advanceTime(10); // ends the grace period
+
+      await expect(
+        voting.requestFallback(dao.address, result.proposalId)
+      ).to.be.revertedWith("voting ended");
+    });
+
+    it("should not be possible to request the fallback voting strategy more than once for the same member", async () => {
+      const dao = this.dao;
+      const bank = this.extensions.bankExt;
+      const voting = this.adapters.voting;
+      const configuration = this.adapters.configuration;
+      const submitter = members[0];
+
+      const result = await submitValidVoteResult(
+        dao,
+        bank,
+        configuration,
+        voting,
+        submitter,
+        true
+      );
+
+      await advanceTime(5);
+
+      await voting.requestFallback(dao.address, result.proposalId);
+
+      await expect(
+        voting.requestFallback(dao.address, result.proposalId)
+      ).to.be.revertedWith("fallback vote duplicate");
+    });
+
+    // FIXME send a tx from a new member account for the same proposal
+    it.skip("should not start a new voting fallback if it was already activated for the same proposal", async () => {
+      const dao = this.dao;
+      const bank = this.extensions.bankExt;
+      const voting = this.adapters.voting;
+      const configuration = this.adapters.configuration;
+      const submitter = members[0];
+
+      await onboardMember(dao, bank, submitter, {
+        address: signers[2].address,
+      });
+
+      const result = await submitValidVoteResult(
+        dao,
+        bank,
+        configuration,
+        voting,
+        submitter,
+        true
+      );
+
+      await advanceTime(5);
+
+      let submittedVote = await voting.getVote(dao.address, result.proposalId);
+      expect(submittedVote.fallbackVotesCount).to.be.equal("0");
+
+      // DAO owner requested the fallback voting
+      await voting.requestFallback(dao.address, result.proposalId);
+      submittedVote = await voting.getVote(dao.address, result.proposalId);
+      expect(submittedVote.fallbackVotesCount).to.be.equal("1");
+
+      // DAO member requests the fallback voting as well
+      await txSigner(signers[2], voting).requestFallback(
+        dao.address,
+        result.proposalId
+      );
+      submittedVote = await voting.getVote(dao.address, result.proposalId);
+      expect(submittedVote.fallbackVotesCount).to.be.equal("1");
+    });
+
+    it("should not be possible for a non member to start the fallback voting strategy", async () => {
+      const dao = this.dao;
+      const bank = this.extensions.bankExt;
+      const voting = this.adapters.voting;
+      const configuration = this.adapters.configuration;
+      const submitter = members[0];
+
+      const result = await submitValidVoteResult(
+        dao,
+        bank,
+        configuration,
+        voting,
+        submitter,
+        true
+      );
+
+      await advanceTime(5);
+
+      // non member requests the fallback voting
+      await expect(
+        txSigner(signers[2], voting).requestFallback(
+          dao.address,
+          result.proposalId
+        )
+      ).to.be.revertedWith("onlyMember");
+    });
   });
 
   describe("Governance Token", async () => {
@@ -3214,6 +3480,17 @@ describe("Adapter - Offchain Voting", () => {
   describe("Delegate", async () => {
     it("should be possible to vote and submit a vote result using a delegate account", async () => {
       //TODO create a proposal, vote, and submit the result using a delegated address - PASS
+    });
+
+    it("should be possible to start the fallback voting strategy with a delegate account", async () => {
+      //TODO
+    });
+  });
+
+  describe("Bad Reporter Kick", async () => {
+    it("should be possible to kick a bad reporter", async () => {
+      //TODO submit a vote result, challenge a bad step, vote to kick the challengedReporter
+      // check if bad reporter was kicked and funds were released
     });
   });
 });
