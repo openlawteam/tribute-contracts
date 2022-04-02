@@ -66,21 +66,6 @@ contract OffchainVotingHelperContract {
         _ovHash = _contract;
     }
 
-    function checkMemberCount(
-        DaoRegistry dao,
-        uint256 resultIndex,
-        uint256 blockNumber
-    ) external view returns (uint256 membersCount) {
-        membersCount = BankExtension(dao.getExtensionAddress(DaoHelper.BANK))
-            .getPriorAmount(
-                DaoHelper.TOTAL,
-                DaoHelper.MEMBER_COUNT,
-                blockNumber
-            );
-        // slither-disable-next-line timestamp
-        require(membersCount - 1 == resultIndex, "index:member_count mismatch");
-    }
-
     function checkBadNodeError(
         DaoRegistry dao,
         bytes32 proposalId,
@@ -122,13 +107,13 @@ contract OffchainVotingHelperContract {
         //check that the step is indeed part of the result
         require(
             MerkleProof.verify(node.proof, resultRoot, hashCurrent),
-            "proof:bad"
+            "invalid node proof"
         );
-        if (node.index >= nbMembers) {
+        if (node.index > nbMembers) {
             return BadNodeError.INDEX_OUT_OF_BOUND;
         }
 
-        address memberAddr = dao.getMemberAddress(node.index);
+        address memberAddr = dao.getMemberAddress(node.index - 1);
 
         //invalid choice
         if (

@@ -1,7 +1,6 @@
 pragma solidity ^0.8.0;
 
 // SPDX-License-Identifier: MIT
-
 import "../../core/DaoRegistry.sol";
 import "../../extensions/bank/Bank.sol";
 import "../../extensions/token/erc20/ERC20TokenExtension.sol";
@@ -178,8 +177,9 @@ contract OffchainVotingHashContract {
         uint256 snapshot,
         VoteStepParams memory params
     ) external view returns (bool) {
+        require(node.index > 0, "invalid node index");
         address voter = dao.getPriorDelegateKey(
-            dao.getMemberAddress(node.index),
+            dao.getMemberAddress(node.index - 1),
             snapshot
         );
         uint256 weight = GovernanceHelper.getVotingWeight(

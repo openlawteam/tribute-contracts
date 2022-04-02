@@ -431,6 +431,7 @@ const deployDao = async (options) => {
     dao,
     daoFactory,
     extensions,
+    adapters,
   });
 
   // If the offchain contract was created, set it to the adapters map using the alias
@@ -712,12 +713,14 @@ const configureOffchainVoting = async ({
   OffchainVotingHelperContract,
   deployFunction,
   extensions,
+  adapters,
 }) => {
   debug("configuring offchain voting...");
   const votingHelpers = {
     snapshotProposalContract: null,
     handleBadReporterAdapter: null,
     offchainVoting: null,
+    fallbackVoting: null,
   };
 
   // Offchain voting is disabled
@@ -784,6 +787,7 @@ const configureOffchainVoting = async ({
   votingHelpers.offchainVoting = offchainVotingContract;
   votingHelpers.handleBadReporterAdapter = handleBadReporterAdapter;
   votingHelpers.snapshotProposalContract = snapshotProposalContract;
+  votingHelpers.fallbackVoting = adapters.voting;
 
   return votingHelpers;
 };
