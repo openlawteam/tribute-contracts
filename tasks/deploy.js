@@ -523,10 +523,8 @@ const deployPolygonTestDao = async ({
     maintainerTokenAddress: getOptionalEnvVar("MAINTAINER_TOKEN_ADDR", UNITS),
   });
 };
-
-const deployAvalancheTestDao = async ({
+const deployFuseDao = async ({
   deployFunction,
-  attachFunction,
   contractImports,
   contractConfigs,
 }) => {
@@ -534,7 +532,6 @@ const deployAvalancheTestDao = async ({
     ...contractImports,
     contractConfigs,
     deployFunction,
-    attachFunction,
     maxAmount: getOptionalEnvVar("MAX_AMOUNT", maxAmount),
     unitPrice: toWei("0.1"),
     nbUnits: toBN("100000"),
@@ -578,18 +575,13 @@ const deployAvalancheTestDao = async ({
     gasPriceLimit: getOptionalEnvVar("GAS_PRICE_LIMIT", 0 /* disabled */),
     spendLimitPeriod: getOptionalEnvVar("SPEND_LIMIT_PERIOD", 0 /* disabled */),
     spendLimitEth: getOptionalEnvVar("SPEND_LIMIT_ETH", 0 /* disabled */),
-    gelato: getOptionalEnvVar(
-      "GELATO_ADDR",
-      "0xDe6ab16a4015c680daab58021815D09ddB57db8E"
-    ),
-    weth: "0xc778417e063141139fce010982780140aa0cd5ab",
+    gelato: getOptionalEnvVar("GELATO_ADDR", ZERO_ADDRESS),
+    weth: getOptionalEnvVar("WETH_ADDR", ZERO_ADDRESS),
     maintainerTokenAddress: getOptionalEnvVar("MAINTAINER_TOKEN_ADDR", UNITS),
   });
 };
-
-const deployAvalancheDao = async ({
+const deploySparkDao = async ({
   deployFunction,
-  attachFunction,
   contractImports,
   contractConfigs,
 }) => {
@@ -597,7 +589,6 @@ const deployAvalancheDao = async ({
     ...contractImports,
     contractConfigs,
     deployFunction,
-    attachFunction,
     maxAmount: getOptionalEnvVar("MAX_AMOUNT", maxAmount),
     unitPrice: toWei("0.1"),
     nbUnits: toBN("100000"),
@@ -641,11 +632,8 @@ const deployAvalancheDao = async ({
     gasPriceLimit: getOptionalEnvVar("GAS_PRICE_LIMIT", 0 /* disabled */),
     spendLimitPeriod: getOptionalEnvVar("SPEND_LIMIT_PERIOD", 0 /* disabled */),
     spendLimitEth: getOptionalEnvVar("SPEND_LIMIT_ETH", 0 /* disabled */),
-    gelato: getOptionalEnvVar(
-      "GELATO_ADDR",
-      "0xDe6ab16a4015c680daab58021815D09ddB57db8E"
-    ),
-    weth: "0xc778417e063141139fce010982780140aa0cd5ab",
+    gelato: getOptionalEnvVar("GELATO_ADDR", ZERO_ADDRESS),
+    weth: getOptionalEnvVar("WETH_ADDR", ZERO_ADDRESS),
     maintainerTokenAddress: getOptionalEnvVar("MAINTAINER_TOKEN_ADDR", UNITS),
   });
 };
@@ -686,7 +674,7 @@ const getEnvVar = (name) => {
 };
 
 const getOptionalEnvVar = (name, defaultValue) => {
-  const envVar = process.env[name];
+const envVar = process.env[name];
   return envVar ? envVar : defaultValue;
 };
 
@@ -708,8 +696,8 @@ const DeploymentActions = {
   harmonytest: deployHarmonyTestDao,
   polygon: deployPolygonDao,
   polygontest: deployPolygonTestDao,
-  avalanchetest: deployAvalancheTestDao,
-  avalanche: deployAvalancheDao,
+  fuse: deployFuseDao,
+  spark: deploySparkDao,
 
   // Goerli and Rinkeby should be treated the same
   goerli: deployRinkebyDao,
