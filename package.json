@@ -31,6 +31,8 @@
     "compile": "hardhat compile && scripts/prepack.sh",
     "coverage": "TEST=true hardhat coverage",
     "deploy": "scripts/deploy.sh",
+    "deploy:fuse": "truffle deploy --network fuse --reset 2>&1 | tee logs/fuse-deploy.log",
+    "deploy:spark": "truffle deploy --network spark --reset 2>&1 | tee logs/spark-deploy.log",
     "ganache": "ganache-cli --deterministic -p 7545 --networkId 1337 --chainId 1337 --hostname 0.0.0.0",
     "ganache:fork": "ganache-cli --deterministic -f ",
     "hardhat": "hardhat run --network hardhat tasks/deploy.js",
