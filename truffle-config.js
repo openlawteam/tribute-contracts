@@ -72,15 +72,15 @@ module.exports = {
       skipDryRun: true,
       gasPrice: 10000000000,
     },
-    spark: {
-      provider: getNetworkProvider,
-      chainId: 123,
-      skipDryRun: true,
-      gasPrice: 1000000000,
-    },
     fuse: {
       provider: getNetworkProvider,
       chainId: 122,
+      skipDryRun: true,
+      gasPrice: 1000000000,
+    },
+    fusetest: {
+      provider: getNetworkProvider,
+      chainId: 123,
       skipDryRun: true,
       gasPrice: 1000000000,
     },

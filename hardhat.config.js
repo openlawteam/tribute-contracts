@@ -41,7 +41,7 @@ module.exports = {
           "myth like bonus scare over problem client lizard pioneer submit female collect",
       },
     },
-    spark: {
+    fusetest: {
       url: process.env.ETH_NODE_URL,
       chainId: 123,
       network_id: 123,
@@ -53,17 +53,6 @@ module.exports = {
       },
       signerId: process.env.SIGNER || undefined,
     },
-    fuse: {
-      url: process.env.ETH_NODE_URL,
-      chainId: 122,
-      network_id: 122,
-      skipDryRun: true,
-      gasPrice: 1000000000,
-      accounts: {
-        mnemonic: process.env.WALLET_MNEMONIC || "",
-        count: 10,
-      },
-      signerId: process.env.SIGNER || undefined,
     goerli: {
       url: process.env.ETH_NODE_URL,
       network_id: 5,
@@ -189,6 +178,18 @@ module.exports = {
       network_id: 43114,
       chainId: 43114,
       skipDryRun: true,
+      accounts: {
+        mnemonic: process.env.WALLET_MNEMONIC || "",
+        count: 10,
+      },
+      signerId: process.env.SIGNER || undefined,
+    },
+    fuse: {
+      url: process.env.ETH_NODE_URL,
+      chainId: 122,
+      network_id: 122,
+      skipDryRun: true,
+      gasPrice: 1000000000,
       accounts: {
         mnemonic: process.env.WALLET_MNEMONIC || "",
         count: 10,
