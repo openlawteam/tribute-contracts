@@ -92,6 +92,14 @@ module.exports = {
       },
       signerId: process.env.SIGNER || undefined,
     },
+    coverage: {
+      url: "http://127.0.0.1:8555",
+      network_id: 1,
+      chainId: 1,
+      gas: 0xfffffffffff,
+      gasPrice: 10000000000,
+      initialBaseFeePerGas: 0,
+    },
     polygontest: {
       url: process.env.ETH_NODE_URL,
       network_id: 80001,
@@ -102,16 +110,8 @@ module.exports = {
       accounts: {
         mnemonic: process.env.WALLET_MNEMONIC || "",
         count: 10,
-      },
-      signerId: process.env.SIGNER || undefined,
     },
-    coverage: {
-      url: "http://127.0.0.1:8555",
-      network_id: 1,
-      chainId: 1,
-      gas: 0xfffffffffff,
-      gasPrice: 10000000000,
-      initialBaseFeePerGas: 0,
+      signerId: process.env.SIGNER || undefined,
     },
     avalanchetest: {
       url: process.env.ETH_NODE_URL,
