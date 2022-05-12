@@ -276,9 +276,9 @@ Make sure you have set the correct addresses for `REACT_APP_MULTICALL_CONTRACT_A
 
 ### DAO Launch
 
-From the `tribute-contracts/docker` folder, run:
-
-- > docker-compose up
+```sh
+npm run docker
+```
 
 ### Linter
 
