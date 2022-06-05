@@ -141,6 +141,7 @@ const getDefaultOptions = (options) => {
     maxUnits,
     chainId: 1,
     maxExternalTokens: 100,
+    managerSignerAddress: "0x90F8bf6A479f320ead074411a4B0e7944Ea8c9C1",
     couponCreatorAddress: "0x90F8bf6A479f320ead074411a4B0e7944Ea8c9C1",
     kycMaxMembers: 1000,
     kycSignerAddress: "0x90F8bf6A479f320ead074411a4B0e7944Ea8c9C1",
