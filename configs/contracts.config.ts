@@ -605,6 +605,31 @@ export const contracts: Array<ContractConfig> = [
       [governanceRoles.ONLY_GOVERNOR]: "maintainerTokenAddress",
     },
   },
+  {
+    id: adaptersIdsMap.MANAGER_ADAPTER,
+    name: "Manager",
+    alias: "manager",
+    path: "../../contracts/adapters/Manager",
+    enabled: true,
+    version: "1.0.0",
+    type: ContractType.Adapter,
+    acls: {
+      dao: [
+        daoAccessFlagsMap.SUBMIT_PROPOSAL,
+        daoAccessFlagsMap.REPLACE_ADAPTER,
+        daoAccessFlagsMap.ADD_EXTENSION,
+        daoAccessFlagsMap.REMOVE_EXTENSION,
+        daoAccessFlagsMap.SET_CONFIGURATION,
+      ],
+      extensions: {},
+    },
+    daoConfigs: [
+      [
+        "daoAddress",
+        "managerSignerAddress"
+      ],
+    ],
+  },
 
   // Signature Adapters
   {

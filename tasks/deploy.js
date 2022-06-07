@@ -115,6 +115,10 @@ const deployRinkebyDao = async ({
     offchainVoting: true,
     finalize: false,
     maxExternalTokens: 100,
+    managerSignerAddress: getOptionalEnvVar(
+      "MANAGER_COUPON_SIGNER_ADDR",
+      getEnvVar("DAO_OWNER_ADDR")
+    ),
     couponCreatorAddress: getOptionalEnvVar(
       "COUPON_CREATOR_ADDR",
       getEnvVar("DAO_OWNER_ADDR")
@@ -177,6 +181,7 @@ const deployMainnetDao = async ({
     deployTestTokens: false,
     finalize: false,
     maxExternalTokens: 100,
+    managerSignerAddress: getEnvVar("MANAGER_COUPON_SIGNER_ADDR"),
     couponCreatorAddress: getEnvVar("COUPON_CREATOR_ADDR"),
     kycSignerAddress: getEnvVar("KYC_SIGNER_ADDR"),
     kycMaxMembers: getEnvVar("KYC_MAX_MEMBERS"),
@@ -227,6 +232,10 @@ const deployGanacheDao = async ({
     offchainVoting: true,
     finalize: false,
     maxExternalTokens: 100,
+    managerSignerAddress: getOptionalEnvVar(
+      "MANAGER_COUPON_SIGNER_ADDR",
+      getEnvVar("DAO_OWNER_ADDR")
+    ),
     couponCreatorAddress: getOptionalEnvVar(
       "COUPON_CREATOR_ADDR",
       daoOwnerAddress
@@ -289,6 +298,7 @@ const deployTestDao = async ({
     deployTestTokens: false,
     finalize: false,
     maxExternalTokens: 100,
+    managerSignerAddress: daoOwnerAddress,
     couponCreatorAddress: daoOwnerAddress,
     kycSignerAddress: daoOwnerAddress,
     kycMaxMembers: toBN("1000"),
@@ -336,6 +346,7 @@ const deployHarmonyDao = async ({
     deployTestTokens: false,
     finalize: false,
     maxExternalTokens: 100,
+    managerSignerAddress: getEnvVar("MANAGER_COUPON_SIGNER_ADDR"),
     couponCreatorAddress: getEnvVar("COUPON_CREATOR_ADDR"),
     kycSignerAddress: getEnvVar("KYC_SIGNER_ADDR"),
     kycMaxMembers: getOptionalEnvVar("KYC_MAX_MEMBERS", toBN(99)),
@@ -384,6 +395,10 @@ const deployHarmonyTestDao = async ({
     offchainVoting: true,
     finalize: false,
     maxExternalTokens: 100,
+    managerSignerAddress: getOptionalEnvVar(
+      "MANAGER_COUPON_SIGNER_ADDR",
+      getEnvVar("DAO_OWNER_ADDR")
+    ),
     couponCreatorAddress: getOptionalEnvVar(
       "COUPON_CREATOR_ADDR",
       getEnvVar("DAO_OWNER_ADDR")
@@ -443,6 +458,7 @@ const deployPolygonDao = async ({
     deployTestTokens: false,
     finalize: false,
     maxExternalTokens: 100,
+    managerSignerAddress: getEnvVar("MANAGER_COUPON_SIGNER_ADDR"),
     couponCreatorAddress: getEnvVar("COUPON_CREATOR_ADDR"),
     kycSignerAddress: getEnvVar("KYC_SIGNER_ADDR"),
     kycMaxMembers: getEnvVar("KYC_MAX_MEMBERS"),
@@ -490,6 +506,10 @@ const deployPolygonTestDao = async ({
     offchainVoting: true,
     finalize: false,
     maxExternalTokens: 100,
+    managerSignerAddress: getOptionalEnvVar(
+      "MANAGER_COUPON_SIGNER_ADDR",
+      getEnvVar("DAO_OWNER_ADDR")
+    ),
     couponCreatorAddress: getOptionalEnvVar(
       "COUPON_CREATOR_ADDR",
       getEnvVar("DAO_OWNER_ADDR")
@@ -550,6 +570,10 @@ const deployAvalancheTestDao = async ({
     offchainVoting: true,
     finalize: false,
     maxExternalTokens: 100,
+    managerSignerAddress: getOptionalEnvVar(
+      "MANAGER_COUPON_SIGNER_ADDR",
+      getEnvVar("DAO_OWNER_ADDR")
+    ),
     couponCreatorAddress: getOptionalEnvVar(
       "COUPON_CREATOR_ADDR",
       getEnvVar("DAO_OWNER_ADDR")
@@ -613,6 +637,10 @@ const deployAvalancheDao = async ({
     offchainVoting: true,
     finalize: false,
     maxExternalTokens: 100,
+    managerSignerAddress: getOptionalEnvVar(
+      "MANAGER_COUPON_SIGNER_ADDR",
+      getEnvVar("DAO_OWNER_ADDR")
+    ),
     couponCreatorAddress: getOptionalEnvVar(
       "COUPON_CREATOR_ADDR",
       getEnvVar("DAO_OWNER_ADDR")
