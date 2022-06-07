@@ -528,7 +528,7 @@ describe("Adapter - Manager", () => {
     ).to.be.revertedWith("proposalId must be unique");
   });
 
-  it("should be possible to replace the manager adapter", async () => {
+  it("should be possible to replace the manager adapter and perform DAO updates", async () => {
     const dao = this.dao;
     const proposalId = getProposalCounter();
     const manager = this.adapters.manager;
@@ -610,7 +610,7 @@ describe("Adapter - Manager", () => {
     );
   });
 
-  it("should be possible to replace the manager adapter", async () => {
+  it("should not be possible to perform DAO updates if the manager adapter was replaced without the proper permissions", async () => {
     const dao = this.dao;
     const proposalId = getProposalCounter();
     const manager = this.adapters.manager;
