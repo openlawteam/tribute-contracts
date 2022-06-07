@@ -171,6 +171,7 @@ describe("Adapter - Manager", () => {
       proposal,
       configs: [],
       nonce,
+      proposalId,
     });
 
     await expect(
@@ -234,6 +235,7 @@ describe("Adapter - Manager", () => {
       proposal,
       configs: [],
       nonce,
+      proposalId,
     });
 
     await expect(
@@ -279,6 +281,7 @@ describe("Adapter - Manager", () => {
           proposal,
           configs: [],
           nonce: nonce,
+          proposalId,
         })
       )
     ).to.be.revertedWith("invalid sig");
@@ -297,6 +300,7 @@ describe("Adapter - Manager", () => {
           proposal,
           configs: [],
           nonce: nonce,
+          proposalId,
         })
       )
     ).to.be.revertedWith("invalid sig");
@@ -315,6 +319,7 @@ describe("Adapter - Manager", () => {
           proposal,
           configs: [],
           nonce: nonce,
+          proposalId,
         })
       )
     ).to.be.revertedWith("invalid sig");
@@ -333,6 +338,7 @@ describe("Adapter - Manager", () => {
           proposal: { ...proposal, flags: 1 }, //Invalid proposal
           configs: [],
           nonce,
+          proposalId,
         })
       )
     ).to.be.revertedWith("invalid sig");
@@ -358,6 +364,7 @@ describe("Adapter - Manager", () => {
             },
           ], //Invalid configs
           nonce,
+          proposalId,
         })
       )
     ).to.be.revertedWith("invalid sig");
@@ -376,6 +383,7 @@ describe("Adapter - Manager", () => {
           proposal,
           configs: [],
           nonce: nonce + 1, //Invalid nonce
+          proposalId,
         })
       )
     ).to.be.revertedWith("invalid sig");
@@ -406,6 +414,7 @@ describe("Adapter - Manager", () => {
       proposal,
       configs: [],
       nonce,
+      proposalId,
     });
 
     // Update adapter.
@@ -454,6 +463,7 @@ describe("Adapter - Manager", () => {
       proposal,
       configs: [],
       nonce,
+      proposalId,
     });
 
     //Proposal to remove the Onboarding adapter
@@ -496,6 +506,7 @@ describe("Adapter - Manager", () => {
       proposal,
       configs: [],
       nonce,
+      proposalId,
     });
 
     await manager.processSignedProposal(
@@ -514,6 +525,7 @@ describe("Adapter - Manager", () => {
       proposal,
       configs: [],
       nonce: nonce + 1,
+      proposalId,
     });
 
     await expect(
@@ -558,6 +570,7 @@ describe("Adapter - Manager", () => {
       proposal,
       configs: [],
       nonce,
+      proposalId,
     });
 
     await manager.processSignedProposal(
@@ -594,6 +607,7 @@ describe("Adapter - Manager", () => {
       proposal: newProposal,
       configs: [],
       nonce: nonce + 1,
+      proposalId: newProposalId,
     });
 
     await newManager.processSignedProposal(
@@ -637,6 +651,7 @@ describe("Adapter - Manager", () => {
       proposal,
       configs: [],
       nonce,
+      proposalId,
     });
     await manager.processSignedProposal(
       dao.address,
@@ -668,6 +683,7 @@ describe("Adapter - Manager", () => {
       proposal: newProposal,
       configs: [],
       nonce: nonce + 1,
+      proposalId: newProposalId,
     });
 
     await expect(
@@ -705,6 +721,7 @@ describe("Adapter - Manager", () => {
       proposal,
       configs: [],
       nonce,
+      proposalId,
     });
 
     await manager.processSignedProposal(
@@ -741,6 +758,7 @@ describe("Adapter - Manager", () => {
       proposal,
       configs: [],
       nonce,
+      proposalId,
     });
 
     await expect(
@@ -793,6 +811,7 @@ describe("Adapter - Manager", () => {
       proposal,
       configs: [],
       nonce,
+      proposalId,
     });
 
     await manager.processSignedProposal(
@@ -923,6 +942,7 @@ describe("Adapter - Manager", () => {
       proposal,
       configs,
       nonce,
+      proposalId,
     });
 
     await manager.processSignedProposal(
@@ -972,6 +992,7 @@ describe("Adapter - Manager", () => {
       proposal,
       configs: [],
       nonce,
+      proposalId,
     });
 
     await manager.processSignedProposal(
@@ -1029,6 +1050,7 @@ describe("Adapter - Manager", () => {
       proposal,
       configs,
       nonce,
+      proposalId,
     });
 
     await manager.processSignedProposal(
@@ -1076,6 +1098,7 @@ describe("Adapter - Manager", () => {
       proposal,
       configs: [],
       nonce,
+      proposalId,
     });
 
     await manager.processSignedProposal(
@@ -1115,6 +1138,7 @@ describe("Adapter - Manager", () => {
       proposal,
       configs: [],
       nonce,
+      proposalId,
     });
 
     await expect(

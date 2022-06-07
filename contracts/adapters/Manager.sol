@@ -68,12 +68,13 @@ contract Manager is Reimbursable, AdapterGuard, Signatures {
         ProposalDetails proposal;
         Configuration[] configs;
         uint256 nonce;
+        bytes32 proposalId;
     }
 
     mapping(address => uint256) public nonces;
 
     string public constant MANAGING_COUPON_MESSAGE_TYPE =
-        "Message(address daoAddress,ProposalDetails proposal,Configuration[] configs,uint256 nonce)Configuration(bytes32 key,uint256 numericValue,address addressValue,uint8 configType)ProposalDetails(bytes32 adapterOrExtensionId,address adapterOrExtensionAddr,uint8 updateType,uint128 flags,bytes32[] keys,uint256[] values,address[] extensionAddresses,uint128[] extensionAclFlags)";
+        "Message(address daoAddress,ProposalDetails proposal,Configuration[] configs,uint256 nonce,bytes32 proposalId)Configuration(bytes32 key,uint256 numericValue,address addressValue,uint8 configType)ProposalDetails(bytes32 adapterOrExtensionId,address adapterOrExtensionAddr,uint8 updateType,uint128 flags,bytes32[] keys,uint256[] values,address[] extensionAddresses,uint128[] extensionAclFlags)";
     bytes32 public constant MANAGING_COUPON_MESSAGE_TYPEHASH =
         keccak256(abi.encodePacked(MANAGING_COUPON_MESSAGE_TYPE));
 
@@ -124,7 +125,8 @@ contract Manager is Reimbursable, AdapterGuard, Signatures {
             address(dao),
             proposal,
             configs,
-            nonce
+            nonce,
+            proposalId
         );
         bytes32 hash = hashCouponMessage(dao, managingCoupon);
 
@@ -258,7 +260,8 @@ contract Manager is Reimbursable, AdapterGuard, Signatures {
                 coupon.daoAddress,
                 hashProposal(coupon.proposal),
                 hashConfigurations(coupon.configs),
-                coupon.nonce
+                coupon.nonce,
+                coupon.proposalId
             )
         );
 
