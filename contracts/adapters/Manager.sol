@@ -137,7 +137,7 @@ contract Manager is Reimbursable, AdapterGuard, Signatures {
             "invalid sig"
         );
 
-        submitAndProcessProposal(dao, proposalId, proposal, configs);
+        _submitAndProcessProposal(dao, proposalId, proposal, configs);
     }
 
     /**
@@ -146,9 +146,11 @@ contract Manager is Reimbursable, AdapterGuard, Signatures {
      * @dev Reverts when the extension address is already in use and it is an extension addition.
      * @param dao The dao address.
      * @param proposalId The proposal id.
+     * @param proposal The proposal data.
+     * @param configs The configurations to be updated.
      */
     // slither-disable-next-line reentrancy-benign
-    function submitAndProcessProposal(
+    function _submitAndProcessProposal(
         DaoRegistry dao,
         bytes32 proposalId,
         ProposalDetails calldata proposal,
