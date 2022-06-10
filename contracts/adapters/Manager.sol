@@ -37,7 +37,8 @@ contract Manager is Reimbursable, AdapterGuard, Signatures {
     enum UpdateType {
         UNKNOWN,
         ADAPTER,
-        EXTENSION
+        EXTENSION,
+        CONFIGS
     }
 
     enum ConfigType {
@@ -160,7 +161,10 @@ contract Manager is Reimbursable, AdapterGuard, Signatures {
     ) internal reimbursable(dao) {
         dao.submitProposal(proposalId);
         dao.processProposal(proposalId);
-        if (proposal.updateType == UpdateType.ADAPTER) {
+        if (proposal.updateType == UpdateType.CONFIGS) {
+            _saveDaoConfigurations(dao, configs);
+            return;
+        } else if (proposal.updateType == UpdateType.ADAPTER) {
             dao.replaceAdapter(
                 proposal.adapterOrExtensionId,
                 proposal.adapterOrExtensionAddr,
