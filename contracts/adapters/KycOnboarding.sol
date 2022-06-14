@@ -83,8 +83,8 @@ contract KycOnboardingContract is
 
     mapping(DaoRegistry => mapping(address => uint256)) public totalUnits;
 
-    // hashDaoMember(dao, memberAddress) => uint256
-    mapping(bytes32 => uint256) public memberNonces;
+    // memberAddress => uint256
+    mapping(address => uint256) public memberNonces;
 
     constructor(address payable weth) {
         _weth = WETH(weth);
@@ -207,17 +207,6 @@ contract KycOnboardingContract is
     }
 
     /**
-     * @notice Builds the key used for memberNonces.
-     */
-    function hashDaoMember(address daoAddress, address daoMember)
-        public
-        pure
-        returns (bytes32)
-    {
-        return keccak256(abi.encode(daoAddress, daoMember));
-    }
-
-    /**
      * @notice Starts the onboarding propocess of a kyc member that is using ETH to join the DAO.
      * @param kycedMember The address of the kyced member that wants to join the DAO.
      * @param memberNonce The kycedMember's coupon nonce for the specified DAO.
@@ -283,12 +272,8 @@ contract KycOnboardingContract is
                 _daoCanTopUp(dao, tokenAddr),
             "already member"
         );
-        require(
-            memberNonce >
-                memberNonces[hashDaoMember(address(dao), kycedMember)],
-            "already redeemed"
-        );
-        memberNonces[hashDaoMember(address(dao), kycedMember)] = memberNonce;
+        require(memberNonce > memberNonces[kycedMember], "already redeemed");
+        memberNonces[kycedMember] = memberNonce;
 
         uint256 maxMembers = dao.getConfiguration(
             _configKey(tokenAddr, MaxMembers)
