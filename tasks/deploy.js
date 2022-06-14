@@ -724,7 +724,7 @@ const getEnvVar = (name) => {
 };
 
 const getOptionalEnvVar = (name, defaultValue) => {
-  const envVar = process.env[name];  
+  const envVar = process.env[name];
   return envVar ? envVar : defaultValue;
 };
 
