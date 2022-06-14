@@ -724,8 +724,7 @@ const getEnvVar = (name) => {
 };
 
 const getOptionalEnvVar = (name, defaultValue) => {
-  const envVar = process.env[name];
-  if (name == "KYC_CAN_TOP_UP") console.log("KYC_CAN_TOP_UP", envVar);
+  const envVar = process.env[name];  
   return envVar ? envVar : defaultValue;
 };
 
