@@ -99,7 +99,8 @@ describe("Adapter - KYC Onboarding", () => {
     });
 
     const onboarding = adapters.kycOnboarding;
-    const memberNonce = (await onboarding.memberNonces(applicant)).toNumber() + 1;
+    const memberNonce =
+      (await onboarding.memberNonces(applicant)).toNumber() + 1;
 
     const initialTokenBalance = await getBalance(applicant);
 
@@ -132,7 +133,8 @@ describe("Adapter - KYC Onboarding", () => {
 
     const bank = extensions.bankExt;
     const onboarding = adapters.kycOnboarding;
-    const memberNonce = (await onboarding.memberNonces(applicant)).toNumber() + 1;
+    const memberNonce =
+      (await onboarding.memberNonces(applicant)).toNumber() + 1;
 
     const signerUtil = SigUtilSigner(signer.privKey);
 
@@ -213,7 +215,8 @@ describe("Adapter - KYC Onboarding", () => {
     const dao = this.dao;
     const bank = this.extensions.bankExt;
     const onboarding = this.adapters.kycOnboarding;
-    const memberNonce = (await onboarding.memberNonces(applicant)).toNumber() + 1;
+    const memberNonce =
+      (await onboarding.memberNonces(applicant)).toNumber() + 1;
 
     const myAccountInitialBalance = await getBalance(applicant);
     // remaining amount to test sending back to proposer
@@ -243,11 +246,17 @@ describe("Adapter - KYC Onboarding", () => {
       chainId
     );
 
-    await onboarding.onboardEth(dao.address, applicant, memberNonce, signature, {
-      from: applicant,
-      value: ethAmount,
-      gasPrice: toBN("0"),
-    });
+    await onboarding.onboardEth(
+      dao.address,
+      applicant,
+      memberNonce,
+      signature,
+      {
+        from: applicant,
+        value: ethAmount,
+        gasPrice: toBN("0"),
+      }
+    );
 
     // test return of remaining amount in excess of multiple of unitsPerChunk
     const myAccountBalance = await getBalance(applicant);
@@ -286,7 +295,8 @@ describe("Adapter - KYC Onboarding", () => {
     const dao = this.dao;
     const onboarding = this.adapters.kycOnboarding;
     const daoRegistryAdapter = this.adapters.daoRegistryAdapter;
-    const memberNonce = (await onboarding.memberNonces(applicant)).toNumber() + 1;
+    const memberNonce =
+      (await onboarding.memberNonces(applicant)).toNumber() + 1;
 
     const myAccountInitialBalance = await getBalance(applicant);
     // remaining amount to test sending back to proposer
@@ -316,11 +326,17 @@ describe("Adapter - KYC Onboarding", () => {
       chainId
     );
 
-    await onboarding.onboardEth(dao.address, applicant, memberNonce, signature, {
-      from: applicant,
-      value: ethAmount,
-      gasPrice: toBN("0"),
-    });
+    await onboarding.onboardEth(
+      dao.address,
+      applicant,
+      memberNonce,
+      signature,
+      {
+        from: applicant,
+        value: ethAmount,
+        gasPrice: toBN("0"),
+      }
+    );
 
     // test return of remaining amount in excess of multiple of unitsPerChunk
     const myAccountBalance = await getBalance(applicant);
@@ -347,7 +363,8 @@ describe("Adapter - KYC Onboarding", () => {
     const applicant = accounts[2];
     const dao = this.dao;
     const onboarding = this.adapters.kycOnboarding;
-    const memberNonce = (await onboarding.memberNonces(applicant)).toNumber() + 1;
+    const memberNonce =
+      (await onboarding.memberNonces(applicant)).toNumber() + 1;
 
     const signerUtil = SigUtilSigner(signer.privKey);
 
@@ -380,7 +397,8 @@ describe("Adapter - KYC Onboarding", () => {
     const bank = this.extensions.bankExt;
     const onboarding = this.adapters.kycOnboarding;
     const ragequit = this.adapters.ragequit;
-    const memberNonce = (await onboarding.memberNonces(applicant)).toNumber() + 1;
+    const memberNonce =
+      (await onboarding.memberNonces(applicant)).toNumber() + 1;
 
     // remaining amount to test sending back to proposer
     const ethAmount = unitPrice.mul(toBN(3)).add(remaining);
@@ -409,11 +427,17 @@ describe("Adapter - KYC Onboarding", () => {
       chainId
     );
 
-    await onboarding.onboardEth(dao.address, applicant, memberNonce, signature, {
-      from: applicant,
-      value: ethAmount,
-      gasPrice: toBN("0"),
-    });
+    await onboarding.onboardEth(
+      dao.address,
+      applicant,
+      memberNonce,
+      signature,
+      {
+        from: applicant,
+        value: ethAmount,
+        gasPrice: toBN("0"),
+      }
+    );
 
     // test active member status
     expect(await isMember(bank, applicant)).equal(true);
@@ -448,7 +472,8 @@ describe("Adapter - KYC Onboarding", () => {
     const applicant = accounts[2];
     const onboarding = adapters.kycOnboarding;
     const bank = extensions.bankExt;
-    const memberNonce = (await onboarding.memberNonces(applicant)).toNumber() + 1;
+    const memberNonce =
+      (await onboarding.memberNonces(applicant)).toNumber() + 1;
     const ethAmount = unitPrice.mul(toBN(3)).add(remaining);
     const signerUtil = SigUtilSigner(signer.privKey);
 
@@ -465,11 +490,17 @@ describe("Adapter - KYC Onboarding", () => {
       chainId
     );
 
-    await onboarding.onboardEth(dao.address, applicant, memberNonce, signature, {
-      from: applicant,
-      value: ethAmount,
-      gasPrice: toBN("0"),
-    });
+    await onboarding.onboardEth(
+      dao.address,
+      applicant,
+      memberNonce,
+      signature,
+      {
+        from: applicant,
+        value: ethAmount,
+        gasPrice: toBN("0"),
+      }
+    );
 
     const applicantIsActiveMember = await isMember(bank, applicant);
     expect(applicantIsActiveMember).equal(true);
@@ -485,7 +516,8 @@ describe("Adapter - KYC Onboarding", () => {
     const applicant = accounts[2];
     const onboarding = adapters.kycOnboarding;
     const bank = extensions.bankExt;
-    const memberNonce = (await onboarding.memberNonces(applicant)).toNumber() + 1;
+    const memberNonce =
+      (await onboarding.memberNonces(applicant)).toNumber() + 1;
     const ethAmount = unitPrice.mul(toBN(3)).add(remaining);
     const signerUtil = SigUtilSigner(signer.privKey);
 
@@ -502,11 +534,17 @@ describe("Adapter - KYC Onboarding", () => {
       chainId
     );
 
-    await onboarding.onboardEth(dao.address, applicant, memberNonce, signature, {
-      from: applicant,
-      value: ethAmount,
-      gasPrice: toBN("0"),
-    });
+    await onboarding.onboardEth(
+      dao.address,
+      applicant,
+      memberNonce,
+      signature,
+      {
+        from: applicant,
+        value: ethAmount,
+        gasPrice: toBN("0"),
+      }
+    );
 
     let applicantUnits = await bank.balanceOf(applicant, UNITS);
     expect(applicantUnits.toString()).equal(
@@ -526,11 +564,17 @@ describe("Adapter - KYC Onboarding", () => {
       chainId
     );
 
-    await onboarding.onboardEth(dao.address, applicant, memberNonce + 1, signature2, {
-      from: applicant,
-      value: ethAmount,
-      gasPrice: toBN("0"),
-    });
+    await onboarding.onboardEth(
+      dao.address,
+      applicant,
+      memberNonce + 1,
+      signature2,
+      {
+        from: applicant,
+        value: ethAmount,
+        gasPrice: toBN("0"),
+      }
+    );
 
     applicantUnits = await bank.balanceOf(applicant, UNITS);
     expect(applicantUnits.toString()).equal(

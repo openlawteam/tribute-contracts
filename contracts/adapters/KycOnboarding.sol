@@ -59,7 +59,8 @@ contract KycOnboardingContract is
         uint160 amount;
     }
 
-    string public constant COUPON_MESSAGE_TYPE = "Message(address kycedMember,uint256 memberNonce)";
+    string public constant COUPON_MESSAGE_TYPE =
+        "Message(address kycedMember,uint256 memberNonce)";
     bytes32 public constant COUPON_MESSAGE_TYPEHASH =
         keccak256(abi.encodePacked(COUPON_MESSAGE_TYPE));
 
@@ -195,7 +196,11 @@ contract KycOnboardingContract is
         returns (bytes32)
     {
         bytes32 message = keccak256(
-            abi.encode(COUPON_MESSAGE_TYPEHASH, coupon.kycedMember, coupon.memberNonce)
+            abi.encode(
+                COUPON_MESSAGE_TYPEHASH,
+                coupon.kycedMember,
+                coupon.memberNonce
+            )
         );
 
         return hashMessage(dao, address(this), message);
@@ -204,7 +209,11 @@ contract KycOnboardingContract is
     /**
      * @notice Builds the key used for memberNonces.
      */
-    function hashDaoMember(address daoAddress, address daoMember) public pure returns (bytes32) {
+    function hashDaoMember(address daoAddress, address daoMember)
+        public
+        pure
+        returns (bytes32)
+    {
         return keccak256(abi.encode(daoAddress, daoMember));
     }
 
@@ -220,7 +229,14 @@ contract KycOnboardingContract is
         uint256 memberNonce,
         bytes memory signature
     ) external payable {
-        _onboard(dao, kycedMember, DaoHelper.ETH_TOKEN, msg.value, memberNonce, signature);
+        _onboard(
+            dao,
+            kycedMember,
+            DaoHelper.ETH_TOKEN,
+            msg.value,
+            memberNonce,
+            signature
+        );
     }
 
     /**
@@ -267,7 +283,11 @@ contract KycOnboardingContract is
                 _daoCanTopUp(dao, tokenAddr),
             "already member"
         );
-        require(memberNonce > memberNonces[hashDaoMember(address(dao), kycedMember)], "already redeemed");
+        require(
+            memberNonce >
+                memberNonces[hashDaoMember(address(dao), kycedMember)],
+            "already redeemed"
+        );
         memberNonces[hashDaoMember(address(dao), kycedMember)] = memberNonce;
 
         uint256 maxMembers = dao.getConfiguration(
@@ -276,7 +296,10 @@ contract KycOnboardingContract is
         require(maxMembers > 0, "token not configured");
         require(dao.getNbMembers() < maxMembers, "the DAO is full");
 
-        bytes32 couponHash = hashCouponMessage(dao, Coupon(kycedMember, memberNonce));
+        bytes32 couponHash = hashCouponMessage(
+            dao,
+            Coupon(kycedMember, memberNonce)
+        );
         _checkKycCoupon(dao, tokenAddr, couponHash, signature);
 
         OnboardingDetails memory details = _checkData(dao, tokenAddr, amount);
@@ -430,7 +453,11 @@ contract KycOnboardingContract is
     /**
      * @notice Returns if a dao allows kyc top ups.
      */
-    function _daoCanTopUp(DaoRegistry dao, address tokenAddr) internal view returns (bool) {
+    function _daoCanTopUp(DaoRegistry dao, address tokenAddr)
+        internal
+        view
+        returns (bool)
+    {
         return dao.getConfiguration(_configKey(tokenAddr, CanTopUp)) > 0;
     }
 }

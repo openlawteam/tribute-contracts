@@ -1174,7 +1174,10 @@ describe("Adapter - Manager", () => {
 
     const coder = new ethers.utils.AbiCoder();
     const keyToUpdate = sha3(
-      coder.encode(["address", "bytes32"], [ETH_TOKEN, sha3('kyc-onboarding.maxMembers')])
+      coder.encode(
+        ["address", "bytes32"],
+        [ETH_TOKEN, sha3("kyc-onboarding.maxMembers")]
+      )
     );
     const previousConfigValue = await dao.getConfiguration(keyToUpdate);
 

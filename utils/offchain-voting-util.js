@@ -128,7 +128,7 @@ function getCouponKycDomainDefinition(verifyingContract, actionId, chainId) {
   const types = {
     Message: [
       { name: "kycedMember", type: "address" },
-      { name: "memberNonce", type: "uint256" }
+      { name: "memberNonce", type: "uint256" },
     ],
     EIP712Domain: getDomainType(),
   };
