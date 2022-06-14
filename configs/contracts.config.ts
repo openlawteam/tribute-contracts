@@ -943,6 +943,7 @@ export const contracts: Array<ContractConfig> = [
         "maxChunks",
         "maxUnits",
         "kycMaxMembers",
+        "kycCanTopUp",
         "kycFundTargetAddress",
         "tokenAddr",
         "unitTokenToMint",
