@@ -462,6 +462,45 @@ describe("Adapter - KYC Onboarding", () => {
     ).to.be.revertedWith("already redeemed");
   });
 
+  it("should be possible to first join when not configured with canTopUp", async () => {
+    const dao = this.dao;
+    const applicant = accounts[2];
+    const onboarding = this.adapters.kycOnboarding;
+    const bank = this.extensions.bankExt;
+    const memberNonce =
+      (await onboarding.memberNonces(applicant)).toNumber() + 1;
+    const ethAmount = unitPrice.mul(toBN(3)).add(remaining);
+    const signerUtil = SigUtilSigner(signer.privKey);
+
+    const couponData = {
+      type: "coupon-kyc",
+      kycedMember: applicant,
+      memberNonce,
+    };
+
+    const signature = signerUtil(
+      couponData,
+      dao.address,
+      onboarding.address,
+      chainId
+    );
+
+    await onboarding.onboardEth(
+      dao.address,
+      applicant,
+      memberNonce,
+      signature,
+      {
+        from: applicant,
+        value: ethAmount,
+        gasPrice: toBN("0"),
+      }
+    );
+
+    const applicantIsActiveMember = await isMember(bank, applicant);
+    expect(applicantIsActiveMember).equal(true);
+  })
+
   it("should be possible to first join when configured with canTopUp", async () => {
     const { dao, adapters, extensions } = await deployDefaultDao({
       owner: daoOwner,
@@ -580,5 +619,73 @@ describe("Adapter - KYC Onboarding", () => {
     expect(applicantUnits.toString()).equal(
       numberOfUnits.mul(toBN("6")).toString()
     );
+  });
+
+  it("should not be possible to replay a coupon", async () => {
+    const { dao, adapters, extensions } = await deployDefaultDao({
+      owner: daoOwner,
+      kycSignerAddress: signer.address,
+      kycCanTopUp: 1,
+    });
+
+    const applicant = accounts[2];
+    const onboarding = adapters.kycOnboarding;
+    const bank = extensions.bankExt;
+    const memberNonce =
+      (await onboarding.memberNonces(applicant)).toNumber() + 1;
+    const ethAmount = unitPrice.mul(toBN(3)).add(remaining);
+    const signerUtil = SigUtilSigner(signer.privKey);
+
+    const couponData = {
+      type: "coupon-kyc",
+      kycedMember: applicant,
+      memberNonce,
+    };
+
+    const signature = signerUtil(
+      couponData,
+      dao.address,
+      onboarding.address,
+      chainId
+    );
+
+    await onboarding.onboardEth(
+      dao.address,
+      applicant,
+      memberNonce,
+      signature,
+      {
+        from: applicant,
+        value: ethAmount,
+        gasPrice: toBN("0"),
+      }
+    );
+
+    await expect(onboarding.onboardEth(
+      dao.address,
+      applicant,
+      memberNonce,
+      signature,
+      {
+        from: applicant,
+        value: ethAmount,
+        gasPrice: toBN("0"),
+      }
+    )).to.be.revertedWith("already redeemed");
+
+    await expect(onboarding.onboardEth(
+      dao.address,
+      applicant,
+      memberNonce + 1,
+      signature,
+      {
+        from: applicant,
+        value: ethAmount,
+        gasPrice: toBN("0"),
+      }
+    )).to.be.revertedWith("invalid sig");
+
+    // const applicantIsActiveMember = await isMember(bank, applicant);
+    // expect(applicantIsActiveMember).equal(true);
   });
 });
