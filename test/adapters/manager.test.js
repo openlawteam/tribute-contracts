@@ -1215,14 +1215,14 @@ describe("Adapter - Manager", () => {
     );
   });
 
-  it('should be possible to update extension access with UpdateType.CONFIGS', async () => {
+  it("should be possible to update extension access with UpdateType.CONFIGS", async () => {
     const dao = this.dao;
     const proposalId = getProposalCounter();
     const manager = this.adapters.manager;
     const bankExt = this.extensions.bankExt;
     const nonce = (await manager.nonces(dao.address)).toNumber() + 1;
     const proposal = {
-      adapterOrExtensionId: sha3('manager'),
+      adapterOrExtensionId: sha3("manager"),
       adapterOrExtensionAddr: manager.address,
       updateType: 3, // UpdateType 3 = configs
       flags: 0,

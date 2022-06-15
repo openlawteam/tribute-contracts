@@ -59,9 +59,14 @@ const signer = {
 };
 
 const getCanTopUp = (dao) => {
-    const encoder = new ethers.utils.AbiCoder();
-    const key = sha3(encoder.encode(['address','bytes32'], [ETH_TOKEN, sha3("kyc-onboarding.canTopUp")]));
-    return dao.getConfiguration(key);
+  const encoder = new ethers.utils.AbiCoder();
+  const key = sha3(
+    encoder.encode(
+      ["address", "bytes32"],
+      [ETH_TOKEN, sha3("kyc-onboarding.canTopUp")]
+    )
+  );
+  return dao.getConfiguration(key);
 };
 
 describe("Adapter - KYC Onboarding", () => {
@@ -509,7 +514,7 @@ describe("Adapter - KYC Onboarding", () => {
 
     const applicantIsActiveMember = await isMember(bank, applicant);
     expect(applicantIsActiveMember).equal(true);
-  })
+  });
 
   it("should be possible to first join when configured with canTopUp", async () => {
     const { dao, adapters, extensions } = await deployDefaultDao({
@@ -677,29 +682,27 @@ describe("Adapter - KYC Onboarding", () => {
       }
     );
 
-    await expect(onboarding.onboardEth(
-      dao.address,
-      applicant,
-      memberNonce,
-      signature,
-      {
+    await expect(
+      onboarding.onboardEth(dao.address, applicant, memberNonce, signature, {
         from: applicant,
         value: ethAmount,
         gasPrice: toBN("0"),
-      }
-    )).to.be.revertedWith("already redeemed");
+      })
+    ).to.be.revertedWith("already redeemed");
 
-    await expect(onboarding.onboardEth(
-      dao.address,
-      applicant,
-      memberNonce + 1,
-      signature,
-      {
-        from: applicant,
-        value: ethAmount,
-        gasPrice: toBN("0"),
-      }
-    )).to.be.revertedWith("invalid sig");
+    await expect(
+      onboarding.onboardEth(
+        dao.address,
+        applicant,
+        memberNonce + 1,
+        signature,
+        {
+          from: applicant,
+          value: ethAmount,
+          gasPrice: toBN("0"),
+        }
+      )
+    ).to.be.revertedWith("invalid sig");
 
     // const applicantIsActiveMember = await isMember(bank, applicant);
     // expect(applicantIsActiveMember).equal(true);
