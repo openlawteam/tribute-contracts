@@ -703,8 +703,5 @@ describe("Adapter - KYC Onboarding", () => {
         }
       )
     ).to.be.revertedWith("invalid sig");
-
-    // const applicantIsActiveMember = await isMember(bank, applicant);
-    // expect(applicantIsActiveMember).equal(true);
   });
 });
