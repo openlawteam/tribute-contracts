@@ -26,6 +26,7 @@ SOFTWARE.
  */
 const { expect } = require("chai");
 const {
+  sha3,
   toBN,
   toWei,
   unitPrice,
@@ -55,6 +56,12 @@ const {
 const signer = {
   address: "0x90F8bf6A479f320ead074411a4B0e7944Ea8c9C1",
   privKey: "0x4f3edf983ac636a65a842ce7c78d9aa706d3b113bce9c46f30d7d21715b23b1d",
+};
+
+const getCanTopUp = (dao) => {
+    const encoder = new ethers.utils.AbiCoder();
+    const key = sha3(encoder.encode(['address','bytes32'], [ETH_TOKEN, sha3("kyc-onboarding.canTopUp")]));
+    return dao.getConfiguration(key);
 };
 
 describe("Adapter - KYC Onboarding", () => {
@@ -497,6 +504,9 @@ describe("Adapter - KYC Onboarding", () => {
       }
     );
 
+    const canTopUp = await getCanTopUp(dao);
+    expect(canTopUp.toNumber()).to.equal(0); // canTopUp is false.
+
     const applicantIsActiveMember = await isMember(bank, applicant);
     expect(applicantIsActiveMember).equal(true);
   })
@@ -541,6 +551,9 @@ describe("Adapter - KYC Onboarding", () => {
       }
     );
 
+    const canTopUp = await getCanTopUp(dao);
+    expect(canTopUp.toNumber()).to.equal(1); // canTopUp is true.
+
     const applicantIsActiveMember = await isMember(bank, applicant);
     expect(applicantIsActiveMember).equal(true);
   });
@@ -584,6 +597,9 @@ describe("Adapter - KYC Onboarding", () => {
         gasPrice: toBN("0"),
       }
     );
+
+    const canTopUp = await getCanTopUp(dao);
+    expect(canTopUp.toNumber()).to.equal(1); // canTopUp is true.
 
     let applicantUnits = await bank.balanceOf(applicant, UNITS);
     expect(applicantUnits.toString()).equal(
