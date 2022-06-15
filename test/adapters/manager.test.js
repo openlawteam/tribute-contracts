@@ -1154,7 +1154,7 @@ describe("Adapter - Manager", () => {
     ).to.be.revertedWith("unknown update type");
   });
 
-  it("should be possible to update only DAO configs with UpdateType.configs", async () => {
+  it("should be possible to update only DAO configs with UpdateType.CONFIGS", async () => {
     const dao = this.dao;
     const proposalId = getProposalCounter();
     const manager = this.adapters.manager;
@@ -1213,5 +1213,75 @@ describe("Adapter - Manager", () => {
     expect(await dao.getAdapterAddress(kycAdapterId)).equal(
       kycOnboarding.address
     );
+  });
+
+  it('should be possible to update extension access with UpdateType.CONFIGS', async () => {
+    const dao = this.dao;
+    const proposalId = getProposalCounter();
+    const manager = this.adapters.manager;
+    const bankExt = this.extensions.bankExt;
+    const nonce = (await manager.nonces(dao.address)).toNumber() + 1;
+    const proposal = {
+      adapterOrExtensionId: sha3('manager'),
+      adapterOrExtensionAddr: manager.address,
+      updateType: 3, // UpdateType 3 = configs
+      flags: 0,
+      keys: [],
+      values: [],
+      extensionAddresses: [bankExt.address],
+      extensionAclFlags: [
+        entryBank(manager.address, {
+          extensions: {
+            [extensionsIdsMap.BANK_EXT]: [
+              bankExtensionAclFlagsMap.ADD_TO_BALANCE,
+              bankExtensionAclFlagsMap.SUB_FROM_BALANCE,
+              bankExtensionAclFlagsMap.INTERNAL_TRANSFER,
+            ],
+          },
+        }).flags,
+      ],
+    };
+    const configs = [];
+
+    const signature = generateCouponSignature({
+      daoAddress: dao.address,
+      managerAddress: manager.address,
+      chainId,
+      proposal,
+      configs,
+      nonce,
+      proposalId,
+    });
+
+    await manager.processSignedProposal(
+      dao.address,
+      proposalId,
+      proposal,
+      configs,
+      nonce,
+      signature
+    );
+
+    expect(
+      await dao.hasAdapterAccessToExtension(
+        manager.address,
+        bankExt.address,
+        0 //ADD_TO_BALANCE
+      )
+    ).equal(true);
+    expect(
+      await dao.hasAdapterAccessToExtension(
+        manager.address,
+        bankExt.address,
+        1 // SUB_FROM_BALANCE
+      )
+    ).equal(true);
+    expect(
+      await dao.hasAdapterAccessToExtension(
+        manager.address,
+        bankExt.address,
+        2 // INTERNAL_TRANSFER
+      )
+    ).equal(true);
   });
 });

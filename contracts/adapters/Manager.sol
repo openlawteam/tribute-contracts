@@ -161,10 +161,7 @@ contract Manager is Reimbursable, AdapterGuard, Signatures {
     ) internal reimbursable(dao) {
         dao.submitProposal(proposalId);
         dao.processProposal(proposalId);
-        if (proposal.updateType == UpdateType.CONFIGS) {
-            _saveDaoConfigurations(dao, configs);
-            return;
-        } else if (proposal.updateType == UpdateType.ADAPTER) {
+        if (proposal.updateType == UpdateType.ADAPTER) {
             dao.replaceAdapter(
                 proposal.adapterOrExtensionId,
                 proposal.adapterOrExtensionAddr,
@@ -174,7 +171,7 @@ contract Manager is Reimbursable, AdapterGuard, Signatures {
             );
         } else if (proposal.updateType == UpdateType.EXTENSION) {
             _replaceExtension(dao, proposal);
-        } else {
+        } else if (proposal.updateType != UpdateType.CONFIGS) {
             revert("unknown update type");
         }
         _grantExtensionAccess(dao, proposal);
