@@ -37,7 +37,8 @@ contract Manager is Reimbursable, AdapterGuard, Signatures {
     enum UpdateType {
         UNKNOWN,
         ADAPTER,
-        EXTENSION
+        EXTENSION,
+        CONFIGS
     }
 
     enum ConfigType {
@@ -170,7 +171,7 @@ contract Manager is Reimbursable, AdapterGuard, Signatures {
             );
         } else if (proposal.updateType == UpdateType.EXTENSION) {
             _replaceExtension(dao, proposal);
-        } else {
+        } else if (proposal.updateType != UpdateType.CONFIGS) {
             revert("unknown update type");
         }
         _grantExtensionAccess(dao, proposal);

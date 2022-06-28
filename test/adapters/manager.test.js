@@ -33,6 +33,7 @@ const {
   GUILD,
   ZERO_ADDRESS,
   DAI_TOKEN,
+  ETH_TOKEN,
 } = require("../../utils/contract-util");
 
 const {
@@ -1151,5 +1152,136 @@ describe("Adapter - Manager", () => {
         signature
       )
     ).to.be.revertedWith("unknown update type");
+  });
+
+  it("should be possible to update only DAO configs with UpdateType.CONFIGS", async () => {
+    const dao = this.dao;
+    const proposalId = getProposalCounter();
+    const manager = this.adapters.manager;
+    const kycOnboarding = this.adapters.kycOnboarding;
+    const kycAdapterId = sha3("kyc-onboarding");
+    const nonce = (await manager.nonces(dao.address)).toNumber() + 1;
+    const proposal = {
+      adapterOrExtensionId: kycAdapterId,
+      adapterOrExtensionAddr: kycOnboarding.address,
+      updateType: 3, // UpdateType 3 = configs
+      flags: 0,
+      keys: [],
+      values: [],
+      extensionAddresses: [],
+      extensionAclFlags: [],
+    };
+
+    const coder = new ethers.utils.AbiCoder();
+    const keyToUpdate = sha3(
+      coder.encode(
+        ["address", "bytes32"],
+        [ETH_TOKEN, sha3("kyc-onboarding.maxMembers")]
+      )
+    );
+    const previousConfigValue = await dao.getConfiguration(keyToUpdate);
+
+    const configs = [
+      {
+        key: keyToUpdate,
+        numericValue: 9000,
+        addressValue: ZERO_ADDRESS,
+        configType: 0, //NUMERIC
+      },
+    ];
+    const signature = generateCouponSignature({
+      daoAddress: dao.address,
+      managerAddress: manager.address,
+      chainId,
+      proposal,
+      configs,
+      nonce,
+      proposalId,
+    });
+
+    await manager.processSignedProposal(
+      dao.address,
+      proposalId,
+      proposal,
+      configs,
+      nonce,
+      signature
+    );
+
+    expect(previousConfigValue).equal("1000");
+    expect(await dao.getConfiguration(keyToUpdate)).equal("9000");
+    expect(await dao.getAdapterAddress(kycAdapterId)).equal(
+      kycOnboarding.address
+    );
+  });
+
+  it("should be possible to update extension access with UpdateType.CONFIGS", async () => {
+    const dao = this.dao;
+    const proposalId = getProposalCounter();
+    const manager = this.adapters.manager;
+    const bankExt = this.extensions.bankExt;
+    const nonce = (await manager.nonces(dao.address)).toNumber() + 1;
+    const proposal = {
+      adapterOrExtensionId: sha3("manager"),
+      adapterOrExtensionAddr: manager.address,
+      updateType: 3, // UpdateType 3 = configs
+      flags: 0,
+      keys: [],
+      values: [],
+      extensionAddresses: [bankExt.address],
+      extensionAclFlags: [
+        entryBank(manager.address, {
+          extensions: {
+            [extensionsIdsMap.BANK_EXT]: [
+              bankExtensionAclFlagsMap.ADD_TO_BALANCE,
+              bankExtensionAclFlagsMap.SUB_FROM_BALANCE,
+              bankExtensionAclFlagsMap.INTERNAL_TRANSFER,
+            ],
+          },
+        }).flags,
+      ],
+    };
+    const configs = [];
+
+    const signature = generateCouponSignature({
+      daoAddress: dao.address,
+      managerAddress: manager.address,
+      chainId,
+      proposal,
+      configs,
+      nonce,
+      proposalId,
+    });
+
+    await manager.processSignedProposal(
+      dao.address,
+      proposalId,
+      proposal,
+      configs,
+      nonce,
+      signature
+    );
+
+    expect(
+      await dao.hasAdapterAccessToExtension(
+        manager.address,
+        bankExt.address,
+        0 //ADD_TO_BALANCE
+      )
+    ).equal(true);
+    expect(
+      await dao.hasAdapterAccessToExtension(
+        manager.address,
+        bankExt.address,
+        1 // SUB_FROM_BALANCE
+      )
+    ).equal(true);
+    expect(
+      await dao.hasAdapterAccessToExtension(
+        manager.address,
+        bankExt.address,
+        2 // INTERNAL_TRANSFER
+      )
+    ).equal(true);
   });
 });
