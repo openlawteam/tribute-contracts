@@ -115,6 +115,10 @@ const deployRinkebyDao = async ({
     offchainVoting: true,
     finalize: false,
     maxExternalTokens: 100,
+    managerSignerAddress: getOptionalEnvVar(
+      "MANAGER_COUPON_SIGNER_ADDR",
+      getEnvVar("DAO_OWNER_ADDR")
+    ),
     couponCreatorAddress: getOptionalEnvVar(
       "COUPON_CREATOR_ADDR",
       getEnvVar("DAO_OWNER_ADDR")
@@ -124,6 +128,7 @@ const deployRinkebyDao = async ({
       getEnvVar("DAO_OWNER_ADDR")
     ),
     kycMaxMembers: getOptionalEnvVar("KYC_MAX_MEMBERS", toBN(1000)),
+    kycCanTopUp: getOptionalEnvVar("KYC_CAN_TOP_UP", 0),
     kycFundTargetAddress: getOptionalEnvVar(
       "KYC_MULTISIG_FUND_ADDR",
       ZERO_ADDRESS
@@ -177,9 +182,11 @@ const deployMainnetDao = async ({
     deployTestTokens: false,
     finalize: false,
     maxExternalTokens: 100,
+    managerSignerAddress: getEnvVar("MANAGER_COUPON_SIGNER_ADDR"),
     couponCreatorAddress: getEnvVar("COUPON_CREATOR_ADDR"),
     kycSignerAddress: getEnvVar("KYC_SIGNER_ADDR"),
     kycMaxMembers: getEnvVar("KYC_MAX_MEMBERS"),
+    kycCanTopUp: getOptionalEnvVar("KYC_CAN_TOP_UP", 0),
     kycFundTargetAddress: getOptionalEnvVar(
       "KYC_MULTISIG_FUND_ADDR",
       ZERO_ADDRESS
@@ -227,12 +234,17 @@ const deployGanacheDao = async ({
     offchainVoting: true,
     finalize: false,
     maxExternalTokens: 100,
+    managerSignerAddress: getOptionalEnvVar(
+      "MANAGER_COUPON_SIGNER_ADDR",
+      getEnvVar("DAO_OWNER_ADDR")
+    ),
     couponCreatorAddress: getOptionalEnvVar(
       "COUPON_CREATOR_ADDR",
       daoOwnerAddress
     ),
     kycSignerAddress: getOptionalEnvVar("KYC_SIGNER_ADDR", daoOwnerAddress),
     kycMaxMembers: getOptionalEnvVar("KYC_MAX_MEMBERS", toBN(1000)),
+    kycCanTopUp: getOptionalEnvVar("KYC_CAN_TOP_UP", 0),
     kycFundTargetAddress: getOptionalEnvVar(
       "KYC_MULTISIG_FUND_ADDR",
       ZERO_ADDRESS
@@ -289,9 +301,11 @@ const deployTestDao = async ({
     deployTestTokens: false,
     finalize: false,
     maxExternalTokens: 100,
+    managerSignerAddress: daoOwnerAddress,
     couponCreatorAddress: daoOwnerAddress,
     kycSignerAddress: daoOwnerAddress,
     kycMaxMembers: toBN("1000"),
+    kycCanTopUp: getOptionalEnvVar("KYC_CAN_TOP_UP", 0),
     kycFundTargetAddress: getOptionalEnvVar(
       "KYC_MULTISIG_FUND_ADDR",
       ZERO_ADDRESS
@@ -336,9 +350,11 @@ const deployHarmonyDao = async ({
     deployTestTokens: false,
     finalize: false,
     maxExternalTokens: 100,
+    managerSignerAddress: getEnvVar("MANAGER_COUPON_SIGNER_ADDR"),
     couponCreatorAddress: getEnvVar("COUPON_CREATOR_ADDR"),
     kycSignerAddress: getEnvVar("KYC_SIGNER_ADDR"),
     kycMaxMembers: getOptionalEnvVar("KYC_MAX_MEMBERS", toBN(99)),
+    kycCanTopUp: getOptionalEnvVar("KYC_CAN_TOP_UP", 0),
     kycFundTargetAddress: getOptionalEnvVar(
       "KYC_MULTISIG_FUND_ADDR",
       ZERO_ADDRESS
@@ -384,6 +400,10 @@ const deployHarmonyTestDao = async ({
     offchainVoting: true,
     finalize: false,
     maxExternalTokens: 100,
+    managerSignerAddress: getOptionalEnvVar(
+      "MANAGER_COUPON_SIGNER_ADDR",
+      getEnvVar("DAO_OWNER_ADDR")
+    ),
     couponCreatorAddress: getOptionalEnvVar(
       "COUPON_CREATOR_ADDR",
       getEnvVar("DAO_OWNER_ADDR")
@@ -393,6 +413,7 @@ const deployHarmonyTestDao = async ({
       getEnvVar("DAO_OWNER_ADDR")
     ),
     kycMaxMembers: getOptionalEnvVar("KYC_MAX_MEMBERS", toBN(1000)),
+    kycCanTopUp: getOptionalEnvVar("KYC_CAN_TOP_UP", 0),
     kycFundTargetAddress: getOptionalEnvVar(
       "KYC_MULTISIG_FUND_ADDR",
       ZERO_ADDRESS
@@ -443,9 +464,11 @@ const deployPolygonDao = async ({
     deployTestTokens: false,
     finalize: false,
     maxExternalTokens: 100,
+    managerSignerAddress: getEnvVar("MANAGER_COUPON_SIGNER_ADDR"),
     couponCreatorAddress: getEnvVar("COUPON_CREATOR_ADDR"),
     kycSignerAddress: getEnvVar("KYC_SIGNER_ADDR"),
     kycMaxMembers: getEnvVar("KYC_MAX_MEMBERS"),
+    kycCanTopUp: getOptionalEnvVar("KYC_CAN_TOP_UP", 0),
     kycFundTargetAddress: getOptionalEnvVar(
       "KYC_MULTISIG_FUND_ADDR",
       ZERO_ADDRESS
@@ -490,6 +513,10 @@ const deployPolygonTestDao = async ({
     offchainVoting: true,
     finalize: false,
     maxExternalTokens: 100,
+    managerSignerAddress: getOptionalEnvVar(
+      "MANAGER_COUPON_SIGNER_ADDR",
+      getEnvVar("DAO_OWNER_ADDR")
+    ),
     couponCreatorAddress: getOptionalEnvVar(
       "COUPON_CREATOR_ADDR",
       getEnvVar("DAO_OWNER_ADDR")
@@ -499,6 +526,7 @@ const deployPolygonTestDao = async ({
       getEnvVar("DAO_OWNER_ADDR")
     ),
     kycMaxMembers: getOptionalEnvVar("KYC_MAX_MEMBERS", toBN(1000)),
+    kycCanTopUp: getOptionalEnvVar("KYC_CAN_TOP_UP", 0),
     kycFundTargetAddress: getOptionalEnvVar(
       "KYC_MULTISIG_FUND_ADDR",
       ZERO_ADDRESS
@@ -550,6 +578,10 @@ const deployAvalancheTestDao = async ({
     offchainVoting: true,
     finalize: false,
     maxExternalTokens: 100,
+    managerSignerAddress: getOptionalEnvVar(
+      "MANAGER_COUPON_SIGNER_ADDR",
+      getEnvVar("DAO_OWNER_ADDR")
+    ),
     couponCreatorAddress: getOptionalEnvVar(
       "COUPON_CREATOR_ADDR",
       getEnvVar("DAO_OWNER_ADDR")
@@ -559,6 +591,7 @@ const deployAvalancheTestDao = async ({
       getEnvVar("DAO_OWNER_ADDR")
     ),
     kycMaxMembers: getOptionalEnvVar("KYC_MAX_MEMBERS", toBN(1000)),
+    kycCanTopUp: getOptionalEnvVar("KYC_CAN_TOP_UP", 0),
     kycFundTargetAddress: getOptionalEnvVar(
       "KYC_MULTISIG_FUND_ADDR",
       ZERO_ADDRESS
@@ -613,6 +646,10 @@ const deployAvalancheDao = async ({
     offchainVoting: true,
     finalize: false,
     maxExternalTokens: 100,
+    managerSignerAddress: getOptionalEnvVar(
+      "MANAGER_COUPON_SIGNER_ADDR",
+      getEnvVar("DAO_OWNER_ADDR")
+    ),
     couponCreatorAddress: getOptionalEnvVar(
       "COUPON_CREATOR_ADDR",
       getEnvVar("DAO_OWNER_ADDR")
@@ -622,6 +659,7 @@ const deployAvalancheDao = async ({
       getEnvVar("DAO_OWNER_ADDR")
     ),
     kycMaxMembers: getOptionalEnvVar("KYC_MAX_MEMBERS", toBN(1000)),
+    kycCanTopUp: getOptionalEnvVar("KYC_CAN_TOP_UP", 0),
     kycFundTargetAddress: getOptionalEnvVar(
       "KYC_MULTISIG_FUND_ADDR",
       ZERO_ADDRESS

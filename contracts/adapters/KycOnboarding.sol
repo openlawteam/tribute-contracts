@@ -47,6 +47,7 @@ contract KycOnboardingContract is
     event Onboarded(DaoRegistry dao, address member, uint256 units);
     struct Coupon {
         address kycedMember;
+        uint256 memberNonce;
     }
 
     struct OnboardingDetails {
@@ -58,7 +59,8 @@ contract KycOnboardingContract is
         uint160 amount;
     }
 
-    string public constant COUPON_MESSAGE_TYPE = "Message(address kycedMember)";
+    string public constant COUPON_MESSAGE_TYPE =
+        "Message(address kycedMember,uint256 memberNonce)";
     bytes32 public constant COUPON_MESSAGE_TYPEHASH =
         keccak256(abi.encodePacked(COUPON_MESSAGE_TYPE));
 
@@ -71,6 +73,7 @@ contract KycOnboardingContract is
     bytes32 constant MaximumUnits =
         keccak256("kyc-onboarding.maximumTotalUnits");
     bytes32 constant MaxMembers = keccak256("kyc-onboarding.maxMembers");
+    bytes32 constant CanTopUp = keccak256("kyc-onboarding.canTopUp");
     bytes32 constant FundTargetAddress =
         keccak256("kyc-onboarding.fundTargetAddress");
     bytes32 constant TokensToMint = keccak256("kyc-onboarding.tokensToMint");
@@ -80,9 +83,8 @@ contract KycOnboardingContract is
 
     mapping(DaoRegistry => mapping(address => uint256)) public totalUnits;
 
-    // Tracks the hashes of coupons that were redeemed
-    // hashCouponMessage(dao, Coupon(kycedMember)) => bool
-    mapping(bytes32 => bool) public redeemedCoupons;
+    // memberAddress => uint256
+    mapping(address => uint256) public memberNonces;
 
     constructor(address payable weth) {
         _weth = WETH(weth);
@@ -98,6 +100,7 @@ contract KycOnboardingContract is
      * @param maximumChunks maximum number of chunks allowed
      * @param maxUnits how many internal tokens can be minted
      * @param maxMembers maximum number of members allowed to join
+     * @param canTopUp whether only new members can join or if existing members can onboard more units
      * @param fundTargetAddress multisig address to transfer the money from, set it to address(0) if you dont want to use a multisig
      * @param tokenAddr the token in which the onboarding can take place
      * @param internalTokensToMint the token that will be minted when the member joins the DAO
@@ -110,6 +113,7 @@ contract KycOnboardingContract is
         uint256 maximumChunks,
         uint256 maxUnits,
         uint256 maxMembers,
+        uint256 canTopUp,
         address fundTargetAddress,
         address tokenAddr,
         address internalTokensToMint
@@ -172,6 +176,7 @@ contract KycOnboardingContract is
             _configKey(tokenAddr, TokensToMint),
             internalTokensToMint
         );
+        dao.setConfiguration(_configKey(tokenAddr, CanTopUp), canTopUp);
 
         BankExtension bank = BankExtension(
             dao.getExtensionAddress(DaoHelper.BANK)
@@ -191,7 +196,11 @@ contract KycOnboardingContract is
         returns (bytes32)
     {
         bytes32 message = keccak256(
-            abi.encode(COUPON_MESSAGE_TYPEHASH, coupon.kycedMember)
+            abi.encode(
+                COUPON_MESSAGE_TYPEHASH,
+                coupon.kycedMember,
+                coupon.memberNonce
+            )
         );
 
         return hashMessage(dao, address(this), message);
@@ -200,14 +209,23 @@ contract KycOnboardingContract is
     /**
      * @notice Starts the onboarding propocess of a kyc member that is using ETH to join the DAO.
      * @param kycedMember The address of the kyced member that wants to join the DAO.
+     * @param memberNonce The kycedMember's coupon nonce for the specified DAO.
      * @param signature The signature that will be verified to redeem the coupon.
      */
     function onboardEth(
         DaoRegistry dao,
         address kycedMember,
+        uint256 memberNonce,
         bytes memory signature
     ) external payable {
-        _onboard(dao, kycedMember, DaoHelper.ETH_TOKEN, msg.value, signature);
+        _onboard(
+            dao,
+            kycedMember,
+            DaoHelper.ETH_TOKEN,
+            msg.value,
+            memberNonce,
+            signature
+        );
     }
 
     /**
@@ -215,6 +233,7 @@ contract KycOnboardingContract is
      * @param kycedMember The address of the kyced member that wants to join the DAO.
      * @param tokenAddr The address of the ERC20 token that contains that funds of the kycedMember.
      * @param amount The amount in ERC20 that will be contributed to the DAO in exchange for the DAO units.
+     * @param memberNonce The kycedMember's coupon nonce for the specified DAO.
      * @param signature The signature that will be verified to redeem the coupon.
      */
     function onboard(
@@ -222,9 +241,10 @@ contract KycOnboardingContract is
         address kycedMember,
         address tokenAddr,
         uint256 amount,
+        uint256 memberNonce,
         bytes memory signature
     ) external {
-        _onboard(dao, kycedMember, tokenAddr, amount, signature);
+        _onboard(dao, kycedMember, tokenAddr, amount, memberNonce, signature);
     }
 
     /**
@@ -232,6 +252,7 @@ contract KycOnboardingContract is
      * @param dao is the DAO instance to be configured
      * @param kycedMember is the address that this coupon authorized to become a new member
      * @param tokenAddr is the address the ETH address(0) or an ERC20 Token address
+     * @param memberNonce The kycedMember's coupon nonce for the specified DAO
      * @param signature is message signature for verification
      */
     // The function is protected against reentrancy with the reentrancyGuard(dao)
@@ -243,22 +264,28 @@ contract KycOnboardingContract is
         address kycedMember,
         address tokenAddr,
         uint256 amount,
+        uint256 memberNonce,
         bytes memory signature
     ) internal reimbursable(dao) {
         require(
-            !isActiveMember(dao, dao.getCurrentDelegateKey(kycedMember)),
+            !isActiveMember(dao, dao.getCurrentDelegateKey(kycedMember)) ||
+                _daoCanTopUp(dao, tokenAddr),
             "already member"
         );
-        bytes32 couponHash = hashCouponMessage(dao, Coupon(kycedMember));
-        require(!redeemedCoupons[couponHash], "already redeemed");
+        require(memberNonce > memberNonces[kycedMember], "already redeemed");
+        memberNonces[kycedMember] = memberNonce;
+
         uint256 maxMembers = dao.getConfiguration(
             _configKey(tokenAddr, MaxMembers)
         );
         require(maxMembers > 0, "token not configured");
         require(dao.getNbMembers() < maxMembers, "the DAO is full");
 
+        bytes32 couponHash = hashCouponMessage(
+            dao,
+            Coupon(kycedMember, memberNonce)
+        );
         _checkKycCoupon(dao, tokenAddr, couponHash, signature);
-        redeemedCoupons[couponHash] = true;
 
         OnboardingDetails memory details = _checkData(dao, tokenAddr, amount);
         totalUnits[dao][tokenAddr] += details.unitsRequested;
@@ -406,5 +433,16 @@ contract KycOnboardingContract is
         returns (bytes32)
     {
         return keccak256(abi.encode(tokenAddrToMint, key));
+    }
+
+    /**
+     * @notice Returns if a dao allows kyc top ups.
+     */
+    function _daoCanTopUp(DaoRegistry dao, address tokenAddr)
+        internal
+        view
+        returns (bool)
+    {
+        return dao.getConfiguration(_configKey(tokenAddr, CanTopUp)) > 0;
     }
 }
