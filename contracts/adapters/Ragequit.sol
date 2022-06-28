@@ -69,7 +69,7 @@ contract RagequitContract is IRagequit, AdapterGuard {
         // Gets the delegated address, otherwise returns the sender address.
         address memberAddr = DaoHelper.msgSender(dao, msg.sender);
         bool jailed = false;
-        
+
         // slither-disable-next-line unused-return
         try dao.notJailed((memberAddr)) returns (
             // slither-disable-next-line uninitialized-local,variable-scope
