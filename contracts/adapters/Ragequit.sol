@@ -68,7 +68,16 @@ contract RagequitContract is IRagequit, AdapterGuard {
         require(unitsToBurn + lootToBurn > 0, "insufficient units/loot");
         // Gets the delegated address, otherwise returns the sender address.
         address memberAddr = DaoHelper.msgSender(dao, msg.sender);
-        bool jailed = !dao.notJailed((memberAddr));
+        bool jailed;
+        try dao.notJailed((memberAddr)) returns (
+            // slither-disable-next-line uninitialized-local,variable-scope
+            bool notJailed
+        ) {
+            jailed = !notJailed;
+        } catch {
+            jailed = false;
+        }
+
         if (jailed) {
             dao.unjailMember(memberAddr);
         }
