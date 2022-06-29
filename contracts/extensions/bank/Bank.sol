@@ -268,6 +268,10 @@ contract BankExtension is IExtension, ERC165 {
         }
     }
 
+    function updateToken(address) external pure {
+        revert("not implemented");
+    }
+
     function updateToken(DaoRegistry _dao, address tokenAddr)
         external
         hasExtensionAccess(_dao, AclFlag.UPDATE_TOKEN)
