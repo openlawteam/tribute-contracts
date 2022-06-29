@@ -386,6 +386,13 @@ contract DaoRegistry is MemberGuard, AdapterGuard {
         emit ExtensionAdded(extensionId, address(extension));
     }
 
+    // v1.0.6 signature
+    function addExtension(
+        bytes32 extensionId,
+        IExtension extension,
+        address creator
+    ) external hasAccess(this, AclFlag.ADD_EXTENSION) {}
+
     /**
      * @notice Removes an adapter from the registry
      * @param extensionId The unique identifier of the extension
