@@ -187,7 +187,7 @@ contract ReimbursementContract is IReimbursement, AdapterGuard {
                 DaoHelper.ETH_TOKEN,
                 payback
             );
-            bank.withdraw(dao, caller, DaoHelper.ETH_TOKEN, payback);
+            bank.withdraw(caller, DaoHelper.ETH_TOKEN, payback);
         }
     }
 }

@@ -145,6 +145,14 @@ contract BankExtension is IExtension, ERC165 {
     }
 
     function withdraw(
+        address payable,
+        address,
+        uint256
+    ) external pure {
+        revert("not implemented");
+    }
+
+    function withdraw(
         DaoRegistry _dao,
         address payable member,
         address tokenAddr,
