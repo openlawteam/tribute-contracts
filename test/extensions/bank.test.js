@@ -121,7 +121,12 @@ describe("Extension - Bank", () => {
     it("should not be possible to call withdraw without the WITHDRAW permission", async () => {
       const extension = this.extensions.bankExt;
       await expect(
-        extension.withdraw(this.dao.address, daoOwner, ETH_TOKEN, 1)
+        extension["withdraw(address,address,address,uint256)"](
+          this.dao.address,
+          daoOwner,
+          ETH_TOKEN,
+          1
+        )
       ).to.be.revertedWith("accessDenied");
     });
 
@@ -149,7 +154,7 @@ describe("Extension - Bank", () => {
     it("should not be possible to call updateToken without the UPDATE_TOKEN permission", async () => {
       const extension = this.extensions.bankExt;
       await expect(
-        extension.updateToken(this.dao.address, ETH_TOKEN)
+        extension["updateToken(address,address)"](this.dao.address, ETH_TOKEN)
       ).to.be.revertedWith("accessDenied");
     });
 
