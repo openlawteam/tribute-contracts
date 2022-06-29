@@ -242,6 +242,7 @@ contract RagequitContract is IRagequit, AdapterGuard {
                         amountToRagequit
                     )
                 {} catch {
+                    //slither-disable-next-line calls-loop
                     require(bank.dao() == dao, "invalid dao");
                     //slither-disable-next-line calls-loop
                     bank.internalTransfer(
