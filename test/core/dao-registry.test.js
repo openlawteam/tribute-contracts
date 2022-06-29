@@ -792,7 +792,10 @@ describe("Core - DaoRegistry", () => {
 
     it("should not be possible to call addExtension without the ADD_EXTENSION permission", async () => {
       await expect(
-        this.dao['addExtension(bytes32,address)'](sha3("extension1"), accounts[2])
+        this.dao["addExtension(bytes32,address)"](
+          sha3("extension1"),
+          accounts[2]
+        )
       ).to.be.revertedWith("accessDenied");
     });
 
