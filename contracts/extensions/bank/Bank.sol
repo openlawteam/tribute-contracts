@@ -53,11 +53,6 @@ contract BankExtension is IExtension, ERC165 {
         UPDATE_TOKEN
     }
 
-    modifier noProposal() {
-        require(dao.lockedAt() < block.number, "proposal lock");
-        _;
-    }
-
     /// @dev - Events for Bank
     event NewBalance(address member, address tokenAddr, uint160 amount);
 
