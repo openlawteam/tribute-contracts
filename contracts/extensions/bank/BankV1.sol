@@ -54,7 +54,7 @@ contract BankV1Extension is AdapterGuard, IExtension {
         UPDATE_TOKEN
     }
 
-    modifier noProposal {
+    modifier noProposal() {
         require(dao.lockedAt() < block.number, "proposal lock");
         _;
     }
@@ -240,7 +240,11 @@ contract BankV1Extension is AdapterGuard, IExtension {
         }
 
         if (totalBalance < realBalance) {
-            addToBalance(DaoHelper.GUILD, tokenAddr, realBalance - totalBalance);
+            addToBalance(
+                DaoHelper.GUILD,
+                tokenAddr,
+                realBalance - totalBalance
+            );
         } else if (totalBalance > realBalance) {
             uint256 tokensToRemove = totalBalance - realBalance;
             uint256 guildBalance = balanceOf(DaoHelper.GUILD, tokenAddr);

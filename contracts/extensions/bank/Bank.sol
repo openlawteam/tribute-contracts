@@ -53,11 +53,6 @@ contract BankExtension is IExtension, ERC165 {
         UPDATE_TOKEN
     }
 
-    modifier noProposal() {
-        require(dao.lockedAt() < block.number, "proposal lock");
-        _;
-    }
-
     /// @dev - Events for Bank
     event NewBalance(address member, address tokenAddr, uint160 amount);
 
@@ -360,7 +355,7 @@ contract BankExtension is IExtension, ERC165 {
         address member,
         address token,
         uint256 amount
-    ) public payable hasExtensionAccess(_dao, AclFlag.ADD_TO_BALANCE) {
+    ) public payable virtual hasExtensionAccess(_dao, AclFlag.ADD_TO_BALANCE) {
         require(
             availableTokens[token] || availableInternalTokens[token],
             "unknown token address"
@@ -383,7 +378,7 @@ contract BankExtension is IExtension, ERC165 {
         address member,
         address token,
         uint256 amount
-    ) public hasExtensionAccess(_dao, AclFlag.SUB_FROM_BALANCE) {
+    ) public virtual hasExtensionAccess(_dao, AclFlag.SUB_FROM_BALANCE) {
         uint256 newAmount = balanceOf(member, token) - amount;
         uint256 newTotalAmount = balanceOf(DaoHelper.TOTAL, token) - amount;
 
@@ -403,7 +398,7 @@ contract BankExtension is IExtension, ERC165 {
         address to,
         address token,
         uint256 amount
-    ) external hasExtensionAccess(_dao, AclFlag.INTERNAL_TRANSFER) {
+    ) external virtual hasExtensionAccess(_dao, AclFlag.INTERNAL_TRANSFER) {
         require(dao.notJailed(from), "no transfer from jail");
         require(dao.notJailed(to), "no transfer from jail");
         uint256 newAmount = balanceOf(from, token) - amount;
@@ -422,6 +417,7 @@ contract BankExtension is IExtension, ERC165 {
     function balanceOf(address member, address tokenAddr)
         public
         view
+        virtual
         returns (uint160)
     {
         uint32 nCheckpoints = numCheckpoints[tokenAddr][member];
@@ -442,7 +438,7 @@ contract BankExtension is IExtension, ERC165 {
         address account,
         address tokenAddr,
         uint256 blockNumber
-    ) external view returns (uint256) {
+    ) external view virtual returns (uint256) {
         require(
             blockNumber < block.number,
             "bank::getPriorAmount: not yet determined"
