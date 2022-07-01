@@ -143,7 +143,7 @@ contract BankExtension is IExtension, ERC165 {
         address payable,
         address,
         uint256
-    ) external pure {
+    ) external {
         revert("not implemented");
     }
 
@@ -263,7 +263,7 @@ contract BankExtension is IExtension, ERC165 {
         }
     }
 
-    function updateToken(address) external pure {
+    function updateToken(address) external {
         revert("not implemented");
     }
 
@@ -410,7 +410,7 @@ contract BankExtension is IExtension, ERC165 {
         address,
         address,
         uint256
-    ) external pure {
+    ) external {
         revert("not implemented");
     }
 
@@ -419,7 +419,7 @@ contract BankExtension is IExtension, ERC165 {
         address,
         address,
         uint256
-    ) external pure {
+    ) external {
         revert("not implemented");
     }
 
