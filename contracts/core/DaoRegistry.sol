@@ -391,7 +391,7 @@ contract DaoRegistry is MemberGuard, AdapterGuard {
         bytes32,
         IExtension,
         address
-    ) external pure {
+    ) external {
         revert("not implemented");
     }
 
