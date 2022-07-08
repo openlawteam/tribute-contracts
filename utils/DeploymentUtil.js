@@ -25,7 +25,7 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
  */
 
-const { UNITS, sha3, toBN } = require("./ContractUtil");
+const { UNITS, sha3, toBN, ETH_TOKEN } = require("./ContractUtil");
 
 const deployDao = async (options) => {
   let {
@@ -56,8 +56,12 @@ const deployDao = async (options) => {
     options.wethAddress = wethAddress;
   }
 
-  const bankFactory = await BankFactory.at('0xF87Ba5851b45BDb2971DCf3a2125Dea6795E1436');
-  const erc20TokenExtFactory = await ERC20TokenExtensionFactory.at('0xb92C59031b5f5675F7AEffF43f909E93DF3d3e55');
+  //const bankFactory = await BankFactory.at('0xF87Ba5851b45BDb2971DCf3a2125Dea6795E1436');
+  const bankIdentity = await BankExtension.new();
+  const bankFactory = await BankFactory.new(bankIdentity.address);
+  //const erc20TokenExtFactory = await ERC20TokenExtensionFactory.at('0xb92C59031b5f5675F7AEffF43f909E93DF3d3e55');
+  const erc20Ext = await ERC20Extension.new();
+  const erc20TokenExtFactory = await ERC20TokenExtensionFactory.new(erc20Ext.address);
   console.log('clone dao ...');
   const { dao, daoFactory } = await cloneDao({
     ...options,
@@ -150,6 +154,7 @@ const deployDao = async (options) => {
     testContracts: testContracts,
     votingHelpers: votingHelpers,
     factories: { daoFactory, bankFactory, erc20TokenExtFactory },
+    wethAddress
   };
 };
 
@@ -206,6 +211,7 @@ const prepareAdapters = async ({
   BankAdapterContract,
   CouponOnboardingContract,
   wethAddress,
+  chainId
 }) => {
   let voting,
     configuration,
@@ -216,7 +222,7 @@ const prepareAdapters = async ({
     daoRegistryAdapter,
     bankAdapter,
     couponOnboarding;
-
+  /*
   voting = await VotingContract.at('0x3B06Fa591497c231A9fb9f5E7eA95B715728eaCf');
   configuration = await ConfigurationContract.at('0xb18ebca2464bc4db22dc36e6e0964673902f5846');
   ragequit = await RagequitContract.at('0xd93041140410E2fD69A47d4D1fd06a20A2d60030');
@@ -226,6 +232,17 @@ const prepareAdapters = async ({
   daoRegistryAdapter = await DaoRegistryAdapterContract.at('0xe96e170F921Bd87C9B46F3f64cc64Af09119EccF');
   bankAdapter = await BankAdapterContract.at('0xc089c6eB34A9383458a9b6465C57095D77De9997');
   couponOnboarding = await CouponOnboardingContract.at('0x467E0eB6793864A319B5BdD1cfB26407DB4216D4');
+  */
+
+  voting = await VotingContract.new();
+  configuration = await ConfigurationContract.new();
+  ragequit = await RagequitContract.new();
+  managing = await ManagingContract.new();
+  kycOnboarding = await KycOnboardingContract.new(wethAddress);
+  guildkick = await GuildKickContract.new();
+  daoRegistryAdapter = await DaoRegistryAdapterContract.new();
+  bankAdapter = await BankAdapterContract.new();
+  couponOnboarding = await CouponOnboardingContract.new(chainId);
 
   return {
     voting,
@@ -329,6 +346,7 @@ const configureDao = async ({
   gracePeriod,
   couponCreatorAddress,
   fundTargetAddress,
+  kycPaymentToken
 }) => {
   console.log('add adapters!');
   await daoFactory.addAdapters(
@@ -421,6 +439,8 @@ const configureDao = async ({
     maxUnits,
     maxMembers,
     fundTargetAddress,
+    kycPaymentToken,
+    UNITS,
     {
       from: owner,
     }
@@ -449,7 +469,9 @@ const cloneDao = async ({
   DaoFactory,
   name,
 }) => {
-  let daoFactory = await DaoFactory.at('0xF44e53E7474588494B3BeC75898278050d99a8Ce');
+  //let daoFactory = await DaoFactory.at('0xF44e53E7474588494B3BeC75898278050d99a8Ce');
+  let daoRegistry = await DaoRegistry.new();
+  let daoFactory = await DaoFactory.new(daoRegistry.address, { from: owner });
   
   await daoFactory.createDao(name, creator ? creator : owner, { from: owner });
 

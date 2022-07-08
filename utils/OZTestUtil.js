@@ -76,9 +76,12 @@ const getDefaultOptions = (options) => {
     maxChunks: maximumChunks,
     chainId: 1,
     maxExternalTokens: 100,
+    maxMembers: 100,
+    maxUnits: 100000000,
     couponCreatorAddress: "0x7D8cad0bbD68deb352C33e80fccd4D8e88b4aBb8",
     fundTargetAddress: "0x7D8cad0bbD68deb352C33e80fccd4D8e88b4aBb8",
     deployTestTokens: true,
+    kycPaymentToken: ETH_TOKEN,
     ...options,
   };
 

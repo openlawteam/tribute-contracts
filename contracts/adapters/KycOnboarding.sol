@@ -2,14 +2,12 @@ pragma solidity ^0.8.0;
 
 // SPDX-License-Identifier: MIT
 
-import "../core/DaoConstants.sol";
+import "../utils/PotentialNewMember.sol";
 import "../core/DaoRegistry.sol";
 import "../extensions/bank/Bank.sol";
 import "../guards/AdapterGuard.sol";
 import "../utils/Signatures.sol";
-import "../utils/PotentialNewMember.sol";
 import "../helpers/WETH.sol";
-
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 
@@ -38,45 +36,19 @@ SOFTWARE.
  */
 
 contract KycOnboardingContract is
-    DaoConstants,
+    PotentialNewMember,
     AdapterGuard,
-    Signatures,
-    PotentialNewMember
+    MemberGuard,
+    Signatures
 {
     using Address for address payable;
     using SafeERC20 for IERC20;
 
     event Onboarded(DaoRegistry dao, address member, uint256 units);
-
     struct Coupon {
         address kycedMember;
+        //uint256 memberNonce;
     }
-
-    string public constant COUPON_MESSAGE_TYPE = "Message(address kycedMember)";
-    bytes32 public constant COUPON_MESSAGE_TYPEHASH =
-        keccak256(abi.encodePacked(COUPON_MESSAGE_TYPE));
-
-    bytes32 constant SignerAddressConfig =
-        keccak256("kyc-onboarding.signerAddress");
-
-    bytes32 constant ChunkSize = keccak256("kyc-onboarding.chunkSize");
-    bytes32 constant UnitsPerChunk = keccak256("kyc-onboarding.unitsPerChunk");
-    bytes32 constant MaximumChunks = keccak256("kyc-onboarding.maximumChunks");
-    bytes32 constant MaximumUnits = keccak256("kyc-onboarding.maximumTotalUnits");
-    bytes32 constant MaxMembers = keccak256("kyc-onboarding.maxMembers");
-    bytes32 constant FundTargetAddress =
-        keccak256("kyc-onboarding.fundTargetAddress");
-
-    uint256 private _chainId;
-    WETH private _weth;
-    IERC20 private _weth20;
-
-    event CouponRedeemed(
-        address daoAddress,
-        uint256 nonce,
-        address authorizedMember,
-        uint256 amount
-    );
 
     struct OnboardingDetails {
         uint88 chunkSize;
@@ -87,19 +59,35 @@ contract KycOnboardingContract is
         uint160 amount;
     }
 
-    mapping(DaoRegistry => uint256) public totalUnits;
+    string public constant COUPON_MESSAGE_TYPE =
+        "Message(address kycedMember)";
+    bytes32 public constant COUPON_MESSAGE_TYPEHASH =
+        keccak256(abi.encodePacked(COUPON_MESSAGE_TYPE));
 
-    constructor(uint256 chainId, address payable weth) {
-        _chainId = chainId;
+    bytes32 constant SignerAddressConfig =
+        keccak256("kyc-onboarding.signerAddress");
+
+    bytes32 constant ChunkSize = keccak256("kyc-onboarding.chunkSize");
+    bytes32 constant UnitsPerChunk = keccak256("kyc-onboarding.unitsPerChunk");
+    bytes32 constant MaximumChunks = keccak256("kyc-onboarding.maximumChunks");
+    bytes32 constant MaximumUnits =
+        keccak256("kyc-onboarding.maximumTotalUnits");
+    bytes32 constant MaxMembers = keccak256("kyc-onboarding.maxMembers");
+    bytes32 constant FundTargetAddress =
+        keccak256("kyc-onboarding.fundTargetAddress");
+    bytes32 constant TokensToMint = keccak256("kyc-onboarding.tokensToMint");
+
+    WETH private _weth;
+    IERC20 private _weth20;
+
+    mapping(DaoRegistry => mapping(address => uint256)) public totalUnits;
+
+    // memberAddress => uint256
+    //mapping(address => uint256) public memberNonces;
+
+    constructor(address payable weth) {
         _weth = WETH(weth);
         _weth20 = IERC20(weth);
-    }
-
-    /**
-     * @notice default fallback function to prevent from sending ether to the contract
-     */
-    receive() external payable {
-        revert("fallback revert");
     }
 
     /**
@@ -108,7 +96,12 @@ contract KycOnboardingContract is
      * @param signerAddress is the DAO instance to be configured
      * @param chunkSize how many wei per chunk
      * @param unitsPerChunk how many units do we get per chunk
-     * @param maximumChunks  how many chunks can you get at most
+     * @param maximumChunks maximum number of chunks allowed
+     * @param maxUnits how many internal tokens can be minted
+     * @param maxMembers maximum number of members allowed to join
+     * @param fundTargetAddress multisig address to transfer the money from, set it to address(0) if you dont want to use a multisig
+     * @param tokenAddr the token in which the onboarding can take place
+     * @param internalTokensToMint the token that will be minted when the member joins the DAO
      */
     function configureDao(
         DaoRegistry dao,
@@ -118,7 +111,9 @@ contract KycOnboardingContract is
         uint256 maximumChunks,
         uint256 maxUnits,
         uint256 maxMembers,
-        address fundTargetAddress
+        address fundTargetAddress,
+        address tokenAddr,
+        address internalTokensToMint
     ) external onlyAdapter(dao) {
         require(
             chunkSize > 0 && chunkSize < type(uint88).max,
@@ -145,18 +140,61 @@ contract KycOnboardingContract is
             "potential overflow"
         );
 
-        require(signerAddress != address(0x0), "signer address is nil!");
+        require(
+            isNotZeroAddress(signerAddress),
+            "signer address is nil!"
+        );
 
-        dao.setAddressConfiguration(SignerAddressConfig, signerAddress);
-        dao.setAddressConfiguration(FundTargetAddress, fundTargetAddress);
-        dao.setConfiguration(ChunkSize, chunkSize);
-        dao.setConfiguration(UnitsPerChunk, unitsPerChunk);
-        dao.setConfiguration(MaximumChunks, maximumChunks);
-        dao.setConfiguration(MaximumUnits, maxUnits);
-        dao.setConfiguration(MaxMembers, maxMembers);
+        require(
+            isNotZeroAddress(internalTokensToMint),
+            "null internal token address"
+        );
 
-        BankExtension bank = BankExtension(dao.getExtensionAddress(BANK));
+        dao.setAddressConfiguration(
+            _configKey(tokenAddr, SignerAddressConfig),
+            signerAddress
+        );
+        dao.setAddressConfiguration(
+            _configKey(tokenAddr, FundTargetAddress),
+            fundTargetAddress
+        );
+        dao.setConfiguration(_configKey(tokenAddr, ChunkSize), chunkSize);
+        dao.setConfiguration(
+            _configKey(tokenAddr, UnitsPerChunk),
+            unitsPerChunk
+        );
+        dao.setConfiguration(
+            _configKey(tokenAddr, MaximumChunks),
+            maximumChunks
+        );
+        dao.setConfiguration(_configKey(tokenAddr, MaximumUnits), maxUnits);
+        dao.setConfiguration(_configKey(tokenAddr, MaxMembers), maxMembers);
+        dao.setAddressConfiguration(
+            _configKey(tokenAddr, TokensToMint),
+            internalTokensToMint
+        );
+
+        BankExtension bank = BankExtension(
+            dao.getExtensionAddress(BANK)
+        );
         bank.registerPotentialNewInternalToken(UNITS);
+        bank.registerPotentialNewToken(tokenAddr);
+    }
+
+    function getConfig(DaoRegistry dao, address tokenAddr, bytes32 key)
+        external view
+        returns (uint256) {
+        return dao.getConfiguration(
+            _configKey(tokenAddr, key)
+        );
+    }
+
+    function getAddressConfig(DaoRegistry dao, address tokenAddr, bytes32 key)
+        external view
+        returns (address) {
+        return dao.getAddressConfiguration(
+            _configKey(tokenAddr, key)
+        );
     }
 
     /**
@@ -169,95 +207,236 @@ contract KycOnboardingContract is
         view
         returns (bytes32)
     {
-        bytes32 message =
-            keccak256(abi.encode(COUPON_MESSAGE_TYPEHASH, coupon.kycedMember));
+        bytes32 message = keccak256(
+            abi.encode(
+                COUPON_MESSAGE_TYPEHASH,
+                coupon.kycedMember
+                //coupon.memberNonce
+            )
+        );
 
-        return hashMessage(dao, _chainId, address(this), message);
+        return hashMessage(dao, block.chainid, address(this), message);
     }
 
-    function _checkKycCoupon(
+    /**
+     * @notice Starts the onboarding propocess of a kyc member that is using ETH to join the DAO.
+     * @param kycedMember The address of the kyced member that wants to join the DAO.
+     * @param signature The signature that will be verified to redeem the coupon.
+     */
+    function onboardEth(
         DaoRegistry dao,
         address kycedMember,
+        //uint256 memberNonce,
         bytes memory signature
-    ) internal view {
-        require(
-            ECDSA.recover(
-                hashCouponMessage(dao, Coupon(kycedMember)),
-                signature
-            ) == dao.getAddressConfiguration(SignerAddressConfig),
-            "invalid sig"
+    ) external payable {
+        _onboard(
+            dao,
+            kycedMember,
+            ETH_TOKEN,
+            msg.value,
+            signature
         );
     }
 
     /**
-     * @notice Redeems a coupon to add a new member.
-     * @param dao is the DAO instance to be configured
-     * @param kycedMember is the address that this coupon authorized to become a new member
-     * @param signature is message signature for verification
+     * @notice Starts the onboarding propocess of a kyc member that is any ERC20 token to join the DAO.
+     * @param kycedMember The address of the kyced member that wants to join the DAO.
+     * @param tokenAddr The address of the ERC20 token that contains that funds of the kycedMember.
+     * @param amount The amount in ERC20 that will be contributed to the DAO in exchange for the DAO units.
+     * @param signature The signature that will be verified to redeem the coupon.
      */
     function onboard(
         DaoRegistry dao,
         address kycedMember,
+        address tokenAddr,
+        uint256 amount,
+      //  uint256 memberNonce,
         bytes memory signature
-    ) external payable reentrancyGuard(dao) {
-        require(!dao.isActiveMember(dao, kycedMember), "already member");
-        require(
-            dao.getNbMembers() < dao.getConfiguration(MaxMembers),
-            "the DAO is full"
-        );
-        _checkKycCoupon(dao, kycedMember, signature);
-        OnboardingDetails memory details = _checkData(dao);
+    ) external {
+        _onboard(dao, kycedMember, tokenAddr, amount, /*memberNonce,*/ signature);
+    }
 
-        BankExtension bank = BankExtension(dao.getExtensionAddress(BANK));
+    /**
+     * @notice Redeems a coupon to add a new member
+     * @param dao is the DAO instance to be configured
+     * @param kycedMember is the address that this coupon authorized to become a new member
+     * @param tokenAddr is the address the ETH address(0) or an ERC20 Token address
+     * @param signature is message signature for verification
+     */
+    // The function is protected against reentrancy with the reentrancyGuard(dao)
+    // so it is fine to change some state after the reentrancyGuard(dao) external call
+    // because it calls the dao contract to lock the session/transaction flow.
+    // slither-disable-next-line reentrancy-benign,reentrancy-events
+    function _onboard(
+        DaoRegistry dao,
+        address kycedMember,
+        address tokenAddr,
+        uint256 amount,
+        //uint256 memberNonce,
+        bytes memory signature
+    ) internal {
+        require(
+            !isActiveMember(dao, dao.getCurrentDelegateKey(kycedMember)),
+            "already member"
+        );
+        //require(memberNonce > memberNonces[kycedMember], "already redeemed");
+        //memberNonces[kycedMember] = memberNonce;
+
+        uint256 maxMembers = dao.getConfiguration(
+            _configKey(tokenAddr, MaxMembers)
+        );
+        require(maxMembers > 0, "token not configured");
+        require(dao.getNbMembers() < maxMembers, "the DAO is full");
+
+        bytes32 couponHash = hashCouponMessage(
+            dao,
+            Coupon(kycedMember)
+        );
+        _checkKycCoupon(dao, tokenAddr, couponHash, signature);
+
+        OnboardingDetails memory details = _checkData(dao, tokenAddr, amount);
+        totalUnits[dao][tokenAddr] += details.unitsRequested;
+
+        BankExtension bank = BankExtension(
+            dao.getExtensionAddress(BANK)
+        );
         potentialNewMember(kycedMember, dao, bank);
-        totalUnits[dao] += details.unitsRequested;
-        address payable multisigAddress =
-            payable(dao.getAddressConfiguration(FundTargetAddress));
+
+        address multisigAddress = address(
+            dao.getAddressConfiguration(
+                _configKey(tokenAddr, FundTargetAddress)
+            )
+        );
         if (multisigAddress == address(0x0)) {
-            bank.addToBalance{value: details.amount}(
-                GUILD,
-                ETH_TOKEN,
-                details.amount
-            );
+            if (tokenAddr == ETH_TOKEN) {
+                
+                // The bank address is loaded from the DAO registry,
+                // hence even if we change that, it belongs to the DAO,
+                // so it is fine to send eth to it.
+                // slither-disable-next-line arbitrary-send
+                bank.addToBalance{value: details.amount}(
+                    GUILD,
+                    ETH_TOKEN,
+                    details.amount
+                );
+            } else {
+                bank.addToBalance(
+                    GUILD,
+                    tokenAddr,
+                    details.amount
+                );
+                IERC20 erc20 = IERC20(tokenAddr);
+                erc20.safeTransferFrom(
+                    msg.sender,
+                    address(bank),
+                    details.amount
+                );
+            }
         } else {
-            _weth.deposit{value: details.amount}();
-            _weth20.safeTransferFrom(
-                address(this),
-                multisigAddress,
-                details.amount
-            );
+            if (tokenAddr == ETH_TOKEN) {
+                // The _weth address is defined during the deployment of the contract
+                // There is no way to change it once it has been deployed,
+                // so it is fine to send eth to it.
+                // slither-disable-next-line arbitrary-send
+                _weth.deposit{value: details.amount}();
+                _weth20.safeTransferFrom(
+                    address(this),
+                    multisigAddress,
+                    details.amount
+                );
+            } else {
+                IERC20 erc20 = IERC20(tokenAddr);
+                erc20.safeTransferFrom(
+                    msg.sender,
+                    multisigAddress,
+                    details.amount
+                );
+            }
         }
 
-        bank.addToBalance(kycedMember, UNITS, details.unitsRequested);
+        bank.addToBalance(
+            kycedMember,
+            UNITS,
+            details.unitsRequested
+        );
 
-        if (msg.value > details.amount) {
+        if (amount > details.amount && tokenAddr == ETH_TOKEN) {
             payable(msg.sender).sendValue(msg.value - details.amount);
         }
 
         emit Onboarded(dao, kycedMember, details.unitsRequested);
     }
 
-    function _checkData(DaoRegistry dao)
-        internal
-        view
-        returns (OnboardingDetails memory details)
-    {
-        details.chunkSize = uint88(dao.getConfiguration(ChunkSize));
+    /**
+     * @notice Verifies if the given amount is enough to join the DAO
+     */
+    function _checkData(
+        DaoRegistry dao,
+        address tokenAddr,
+        uint256 amount
+    ) internal view returns (OnboardingDetails memory details) {
+        details.chunkSize = uint88(
+            dao.getConfiguration(_configKey(tokenAddr, ChunkSize))
+        );
         require(details.chunkSize > 0, "config chunkSize missing");
-        details.numberOfChunks = uint88(msg.value / details.chunkSize);
+        details.numberOfChunks = uint88(amount / details.chunkSize);
         require(details.numberOfChunks > 0, "insufficient funds");
         require(
-            details.numberOfChunks <= dao.getConfiguration(MaximumChunks),
+            details.numberOfChunks <=
+                dao.getConfiguration(_configKey(tokenAddr, MaximumChunks)),
             "too much funds"
         );
 
-        details.unitsPerChunk = uint88(dao.getConfiguration(UnitsPerChunk));
+        details.unitsPerChunk = uint88(
+            dao.getConfiguration(_configKey(tokenAddr, UnitsPerChunk))
+        );
 
         require(details.unitsPerChunk > 0, "config unitsPerChunk missing");
         details.amount = details.numberOfChunks * details.chunkSize;
         details.unitsRequested = details.numberOfChunks * details.unitsPerChunk;
-        details.maximumTotalUnits = uint88(dao.getConfiguration(MaximumUnits));
+        details.maximumTotalUnits = uint88(
+            dao.getConfiguration(_configKey(tokenAddr, MaximumUnits))
+        );
 
-        require(details.unitsRequested + totalUnits[dao] <= details.maximumTotalUnits, "over max total units");
+        require(
+            details.unitsRequested + totalUnits[dao][tokenAddr] <=
+                details.maximumTotalUnits,
+            "over max total units"
+        );
+    }
+
+    /**
+     * @notice Checks if the given signature is valid or not.
+     * @notice Reverts if the signature is invalid.
+     * @param tokenAddr is the address the ETH address(0) or an ERC20 Token address.
+     * @param couponHash is the hash generated by the hashCouponMessage function call.
+     * @param signature is message signature for verification.
+     */
+    function _checkKycCoupon(
+        DaoRegistry dao,
+        address tokenAddr,
+        bytes32 couponHash,
+        bytes memory signature
+    ) internal view {
+        require(
+            ECDSA.recover(couponHash, signature) ==
+                dao.getAddressConfiguration(
+                    _configKey(tokenAddr, SignerAddressConfig)
+                ),
+            "invalid sig"
+        );
+    }
+
+    /**
+     * @notice Builds the configuration key by encoding an address with a string key.
+     * @param tokenAddrToMint The address to encode.
+     * @param key The key to encode.
+     */
+    function _configKey(address tokenAddrToMint, bytes32 key)
+        internal
+        pure
+        returns (bytes32)
+    {
+        return keccak256(abi.encode(tokenAddrToMint, key));
     }
 }

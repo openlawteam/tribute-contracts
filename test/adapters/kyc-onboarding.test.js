@@ -39,7 +39,7 @@ const {
   deployDefaultDao,
   takeChainSnapshot,
   revertChainSnapshot,
-  proposalIdGenerator,
+  OLToken,
   accounts,
   expectRevert,
   expect,
@@ -50,8 +50,6 @@ const { checkBalance, isMember } = require("../../utils/TestUtils.js");
 
 const daoOwner = accounts[0];
 const delegatedKey = accounts[9];
-
-const proposalCounter = proposalIdGenerator().generator;
 
 const {
   SigUtilSigner,
@@ -65,13 +63,20 @@ const signer = {
 
 describe("Adapter - KYC Onboarding", () => {
   before("deploy dao", async () => {
-    const { dao, adapters, extensions } = await deployDefaultDao({
+    const { dao, adapters, extensions, wethAddress } = await deployDefaultDao({
       owner: daoOwner,
       creator: delegatedKey,
+      couponCreatorAddress: signer.address,
+      kycPaymentToken: ETH_TOKEN,
+      nbUnits: toBN("1000")
     });
+
+    console.log('wethAddress', wethAddress);
+
     this.dao = dao;
     this.adapters = adapters;
     this.extensions = extensions;
+    this.wethAddress = wethAddress;
     this.snapshotId = await takeChainSnapshot();
   });
 
@@ -101,7 +106,7 @@ describe("Adapter - KYC Onboarding", () => {
     const initialTokenBalance = await web3.eth.getBalance(applicant);
 
     await expectRevert(
-      onboarding.onboard(dao.address, applicant, [], {
+      onboarding.onboardEth(dao.address, applicant, [], {
         from: applicant,
         gasPrice: toBN("0"),
       }),
@@ -130,9 +135,7 @@ describe("Adapter - KYC Onboarding", () => {
 
     const signerUtil = SigUtilSigner(signer.privKey);
 
-    let signerAddr = await dao.getAddressConfiguration(
-      sha3("kyc-onboarding.signerAddress")
-    );
+    let signerAddr = await onboarding.getAddressConfig(dao.address, ETH_TOKEN, sha3("kyc-onboarding.signerAddress"));
     expect(signerAddr).equal(signer.address);
 
     const couponData = {
@@ -156,7 +159,7 @@ describe("Adapter - KYC Onboarding", () => {
       1
     );
 
-    await onboarding.onboard(dao.address, applicant, signature, {
+    await onboarding.onboardEth(dao.address, applicant, signature, {
       from: applicant,
       value: ethAmount,
       gasPrice: toBN("0"),
@@ -179,7 +182,10 @@ describe("Adapter - KYC Onboarding", () => {
     expect(nonMemberAccountUnits.toString()).equal("0");
     await checkBalance(bank, GUILD, ETH_TOKEN, 0);
     const fundTargetAddress = "0x7D8cad0bbD68deb352C33e80fccd4D8e88b4aBb8";
-    const balance = await web3.eth.getBalance(fundTargetAddress);
+    
+    const wethToken = await OLToken.at(this.wethAddress);
+
+    const balance = await wethToken.balanceOf(fundTargetAddress);
 
     expect(balance.toString()).equal(unitPrice.mul(toBN("3")).toString());
     // test active member status
@@ -190,6 +196,55 @@ describe("Adapter - KYC Onboarding", () => {
       nonMemberAccount
     );
     expect(nonMemberAccountIsActiveMember).equal(false);
+  });
+
+  it("should be possible to onboard with erc20 tokens if configured", async() => {
+    const supply = unitPrice.mul(toBN("1000"));
+    const oltContract = await OLToken.new(supply, { from: daoOwner });
+
+    const { dao, adapters, extensions } = await deployDefaultDao({
+      owner: daoOwner,
+      creator: delegatedKey,
+      couponCreatorAddress: signer.address,
+      kycPaymentToken: oltContract.address
+    });
+
+    const applicant = accounts[2];
+    const onboarding = adapters.kycOnboarding;
+
+    const signerUtil = SigUtilSigner(signer.privKey);
+
+    const couponData = {
+      type: "coupon-kyc",
+      kycedMember: applicant,
+    };
+
+    const signature = signerUtil(
+      couponData,
+      dao.address,
+      onboarding.address,
+      1
+    );
+
+    await expectRevert(
+      onboarding.onboardEth(dao.address, applicant, signature, {
+        from: daoOwner,
+        value: unitPrice.mul(toBN(100)).add(remaining),
+        gasPrice: toBN("0"),
+      }),
+      "token not configured"
+    );
+
+    await oltContract.transfer(applicant, unitPrice, { from: daoOwner });
+    await oltContract.approve(onboarding.address, unitPrice, { from: applicant });
+
+    await onboarding.onboard(dao.address, applicant, oltContract.address, unitPrice, signature, {
+      from: applicant,
+      gasPrice: toBN("0"),
+    });
+    
+    const unitsBalance = await extensions.bank.balanceOf(applicant, UNITS);
+    expect(unitsBalance.toString()).equal("1000");
   });
 
   it("should not be possible to have more than the maximum number of units", async () => {
@@ -212,7 +267,7 @@ describe("Adapter - KYC Onboarding", () => {
     );
 
     await expectRevert(
-      onboarding.onboard(dao.address, applicant, signature, {
+      onboarding.onboardEth(dao.address, applicant, signature, {
         from: daoOwner,
         value: unitPrice.mul(toBN(100)).add(remaining),
         gasPrice: toBN("0"),
