@@ -36,7 +36,7 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
  */
 
-contract BankV1Upgrade is BankExtension {
+contract BankV1UpgradeExtension is BankExtension {
     using Address for address payable;
     using SafeERC20 for IERC20;
 

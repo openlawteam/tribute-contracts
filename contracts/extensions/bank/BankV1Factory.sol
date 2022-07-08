@@ -4,8 +4,7 @@ pragma solidity ^0.8.0;
 import "../../core/DaoRegistry.sol";
 import "../../core/CloneFactory.sol";
 import "../IFactory.sol";
-import "./Bank.sol";
-import "./BankV1Upgrade.sol";
+import "./BankV1.sol";
 import "@openzeppelin/contracts/security/ReentrancyGuard.sol";
 
 /**
@@ -32,7 +31,7 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
  */
 
-contract BankV1UpgradeFactory is IFactory, CloneFactory, ReentrancyGuard {
+contract BankV1Factory is IFactory, CloneFactory, ReentrancyGuard {
     address public identityAddress;
 
     event BankCreated(address daoAddress, address extensionAddress);
@@ -63,13 +62,9 @@ contract BankV1UpgradeFactory is IFactory, CloneFactory, ReentrancyGuard {
         address extensionAddr = _createClone(identityAddress);
         _extensions[daoAddress] = extensionAddr;
 
-        BankV1UpgradeExtension extension = BankV1UpgradeExtension(
-            extensionAddr
-        );
+        BankV1Extension extension = BankV1Extension(extensionAddr);
         extension.setMaxExternalTokens(maxExternalTokens);
         // Member at index 1 is the DAO owner, but also the payer of the DAO deployment
-        address _bankV1 = dao.getExtensionAddress(DaoHelper.BANK);
-        extension.initialize2(BankV1Extension(_bankV1));
         extension.initialize(dao, dao.getMemberAddress(1));
         // slither-disable-next-line reentrancy-events
         emit BankCreated(daoAddress, address(extension));

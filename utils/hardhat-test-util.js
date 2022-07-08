@@ -99,6 +99,11 @@ const deployFunction = async (contractInterface, args, from) => {
     (c) => c.name === contractInterface.contractName
   );
 
+  if (!contractConfig)
+    throw Error(
+      "contract config not found for '" + contractInterface.contractName + "'"
+    );
+
   const accounts = await getAccounts();
   const f = from ? from : accounts[0];
 
@@ -268,6 +273,7 @@ module.exports = (() => {
     const result = await deployDao({
       ...getDefaultOptions(options),
       ...hardhatContracts,
+      ...options,
       deployFunction,
       attachFunction: attach,
       contractConfigs: allContractConfigs,
@@ -379,6 +385,14 @@ module.exports = (() => {
       }
     );
 
+  let contractConfigs = {};
+  allContractConfigs.forEach((config) => {
+    contractConfigs[config.name] = Object.assign({}, config, {
+      ...getContract(config.name),
+      contractName: config.name,
+    });
+  });
+
   return {
     web3: hre.web3,
     provider: hre.network.provider,
@@ -403,5 +417,6 @@ module.exports = (() => {
     getContractFromOpenZeppelin: getContract,
     etContractFromOpenZeppelinByName: getContractByName,
     ...hardhatContracts,
+    allContractConfigs: contractConfigs,
   };
 })();
