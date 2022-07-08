@@ -117,9 +117,9 @@ const deployRinkebyDao = async (deployFunction, network) => {
   return await deployDao({
     ...truffleImports,
     deployFunction,
-    unitPrice: toBN(toWei("100", "finney")),
+    unitPrice: getOptionalEnvVar("CHUNK_PRICE", toBN(toWei("100", "finney"))),
     nbUnits: toBN("100000"),
-    tokenAddr: ETH_TOKEN,
+    tokenAddr: getOptionalEnvVar("TOKEN_ADDR", ETH_TOKEN),
     erc20TokenName: getEnvVar("ERC20_TOKEN_NAME"),
     erc20TokenSymbol: getEnvVar("ERC20_TOKEN_SYMBOL"),
     erc20TokenDecimals: getEnvVar("ERC20_TOKEN_DECIMALS"),
@@ -166,9 +166,9 @@ const deployGanacheDao = async (deployFunction, network, accounts) => {
   return await deployDao({
     ...truffleImports,
     deployFunction,
-    unitPrice: toBN(toWei("100", "finney")),
+    unitPrice: getOptionalEnvVar("CHUNK_PRICE", toBN(toWei("100", "finney"))),
     nbUnits: toBN("100000"),
-    tokenAddr: ETH_TOKEN,
+    tokenAddr: getOptionalEnvVar("TOKEN_ADDR", ETH_TOKEN),
     maxAmount: getOptionalEnvVar("MAX_AMOUNT", maxAmount),
     maxUnits: getOptionalEnvVar("MAX_UNITS", maxUnits),
     maxMembers: getOptionalEnvVar("MAX_MEMBERS", toBN(1000)),
