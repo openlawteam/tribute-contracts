@@ -61,13 +61,15 @@ const deployDao = async (options) => {
   const bankFactory = await BankFactory.new(bankIdentity.address);
   //const erc20TokenExtFactory = await ERC20TokenExtensionFactory.at('0xb92C59031b5f5675F7AEffF43f909E93DF3d3e55');
   const erc20Ext = await ERC20Extension.new();
-  const erc20TokenExtFactory = await ERC20TokenExtensionFactory.new(erc20Ext.address);
-  console.log('clone dao ...');
+  const erc20TokenExtFactory = await ERC20TokenExtensionFactory.new(
+    erc20Ext.address
+  );
+  console.log("clone dao ...");
   const { dao, daoFactory } = await cloneDao({
     ...options,
     name: options.daoName || "test-dao",
   });
-  console.log('create bank');
+  console.log("create bank");
   // Start the BankExtension deployment and configuration
   await bankFactory.createBank(options.maxExternalTokens);
   let pastEvent;
@@ -77,12 +79,12 @@ const deployDao = async (options) => {
   }
   const { bankAddress } = pastEvent.returnValues;
   const bankExtension = await BankExtension.at(bankAddress);
-  console.log('add bank to Dao');
+  console.log("add bank to Dao");
   await dao.addExtension(sha3("bank"), bankExtension.address, owner, {
     from: owner,
   });
 
-  console.log('create erc20 extension');
+  console.log("create erc20 extension");
   // Start the Erc20TokenExtension deployment & configuration
   await erc20TokenExtFactory.create(
     erc20TokenName,
@@ -97,7 +99,7 @@ const deployDao = async (options) => {
   }
   const { erc20ExtTokenAddress } = pastEvent.returnValues;
   const erc20TokenExtension = await ERC20Extension.at(erc20ExtTokenAddress);
-  console.log('add erc20 extension to dao');
+  console.log("add erc20 extension to dao");
   await dao.addExtension(sha3("erc20-ext"), erc20ExtTokenAddress, owner, {
     from: owner,
   });
@@ -120,9 +122,7 @@ const deployDao = async (options) => {
   };
 
   if (options.offchainVoting) {
-    const {
-      offchainVoting
-    } = await configureOffchainVoting({
+    const { offchainVoting } = await configureOffchainVoting({
       ...options,
       dao,
       daoFactory,
@@ -130,7 +130,6 @@ const deployDao = async (options) => {
       bankAddress,
     });
     votingHelpers.offchainVoting = offchainVoting;
-
   }
 
   // deploy test token contracts (for testing convenience)
@@ -143,7 +142,7 @@ const deployDao = async (options) => {
   };
 
   if (finalize) {
-    console.log('finalize dao');
+    console.log("finalize dao");
     await dao.finalizeDao({ from: owner });
   }
 
@@ -154,7 +153,7 @@ const deployDao = async (options) => {
     testContracts: testContracts,
     votingHelpers: votingHelpers,
     factories: { daoFactory, bankFactory, erc20TokenExtFactory },
-    wethAddress
+    wethAddress,
   };
 };
 
@@ -167,16 +166,17 @@ const configureOffchainVoting = async ({
   gracePeriod,
   OffchainVotingContract,
 }) => {
-  
-  let offchainVoting = await OffchainVotingContract.at('0x8CE2EF998bdfcA14Ae6ea8CC9223c33A995aeF9e');
-  console.log('add offchain voting');
+  let offchainVoting = await OffchainVotingContract.at(
+    "0x8CE2EF998bdfcA14Ae6ea8CC9223c33A995aeF9e"
+  );
+  console.log("add offchain voting");
   await daoFactory.updateAdapter(
     dao.address,
     entryDao("voting", offchainVoting, {}),
     { from: owner }
   );
 
-  console.log('configure bank / offchain voting');
+  console.log("configure bank / offchain voting");
   await dao.setAclToExtensionForAdapter(
     bankAddress,
     offchainVoting.address,
@@ -187,7 +187,7 @@ const configureOffchainVoting = async ({
     }).flags,
     { from: owner }
   );
-  console.log('configure offchain voting');
+  console.log("configure offchain voting");
   await offchainVoting.configureDao(
     dao.address,
     votingPeriod,
@@ -211,7 +211,7 @@ const prepareAdapters = async ({
   BankAdapterContract,
   CouponOnboardingContract,
   wethAddress,
-  chainId
+  chainId,
 }) => {
   let voting,
     configuration,
@@ -346,9 +346,9 @@ const configureDao = async ({
   gracePeriod,
   couponCreatorAddress,
   fundTargetAddress,
-  kycPaymentToken
+  kycPaymentToken,
 }) => {
-  console.log('add adapters!');
+  console.log("add adapters!");
   await daoFactory.addAdapters(
     dao.address,
     [
@@ -385,7 +385,7 @@ const configureDao = async ({
     ],
     { from: owner }
   );
-  console.log('configure bank');
+  console.log("configure bank");
   await daoFactory.configureExtension(
     dao.address,
     bankExtension.address,
@@ -419,7 +419,7 @@ const configureDao = async ({
     { from: owner }
   );
 
-  console.log('configure erc20');
+  console.log("configure erc20");
 
   await daoFactory.configureExtension(
     dao.address,
@@ -428,7 +428,7 @@ const configureDao = async ({
     { from: owner }
   );
 
-  console.log('configure kycOnboarding');
+  console.log("configure kycOnboarding");
 
   await kycOnboarding.configureDao(
     dao.address,
@@ -445,7 +445,7 @@ const configureDao = async ({
       from: owner,
     }
   );
-  console.log('configure coupon onboarding');
+  console.log("configure coupon onboarding");
   await couponOnboarding.configureDao(
     dao.address,
     couponCreatorAddress,
@@ -455,24 +455,18 @@ const configureDao = async ({
     }
   );
 
-  console.log('configure voting');
+  console.log("configure voting");
 
   await voting.configureDao(dao.address, votingPeriod, gracePeriod, {
     from: owner,
   });
 };
 
-const cloneDao = async ({
-  owner,
-  creator,
-  DaoRegistry,
-  DaoFactory,
-  name,
-}) => {
+const cloneDao = async ({ owner, creator, DaoRegistry, DaoFactory, name }) => {
   //let daoFactory = await DaoFactory.at('0xF44e53E7474588494B3BeC75898278050d99a8Ce');
   let daoRegistry = await DaoRegistry.new();
   let daoFactory = await DaoFactory.new(daoRegistry.address, { from: owner });
-  
+
   await daoFactory.createDao(name, creator ? creator : owner, { from: owner });
 
   // checking the gas usaged to clone a contract

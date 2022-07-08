@@ -59,8 +59,7 @@ contract KycOnboardingContract is
         uint160 amount;
     }
 
-    string public constant COUPON_MESSAGE_TYPE =
-        "Message(address kycedMember)";
+    string public constant COUPON_MESSAGE_TYPE = "Message(address kycedMember)";
     bytes32 public constant COUPON_MESSAGE_TYPEHASH =
         keccak256(abi.encodePacked(COUPON_MESSAGE_TYPE));
 
@@ -140,10 +139,7 @@ contract KycOnboardingContract is
             "potential overflow"
         );
 
-        require(
-            isNotZeroAddress(signerAddress),
-            "signer address is nil!"
-        );
+        require(isNotZeroAddress(signerAddress), "signer address is nil!");
 
         require(
             isNotZeroAddress(internalTokensToMint),
@@ -174,27 +170,25 @@ contract KycOnboardingContract is
             internalTokensToMint
         );
 
-        BankExtension bank = BankExtension(
-            dao.getExtensionAddress(BANK)
-        );
+        BankExtension bank = BankExtension(dao.getExtensionAddress(BANK));
         bank.registerPotentialNewInternalToken(UNITS);
         bank.registerPotentialNewToken(tokenAddr);
     }
 
-    function getConfig(DaoRegistry dao, address tokenAddr, bytes32 key)
-        external view
-        returns (uint256) {
-        return dao.getConfiguration(
-            _configKey(tokenAddr, key)
-        );
+    function getConfig(
+        DaoRegistry dao,
+        address tokenAddr,
+        bytes32 key
+    ) external view returns (uint256) {
+        return dao.getConfiguration(_configKey(tokenAddr, key));
     }
 
-    function getAddressConfig(DaoRegistry dao, address tokenAddr, bytes32 key)
-        external view
-        returns (address) {
-        return dao.getAddressConfiguration(
-            _configKey(tokenAddr, key)
-        );
+    function getAddressConfig(
+        DaoRegistry dao,
+        address tokenAddr,
+        bytes32 key
+    ) external view returns (address) {
+        return dao.getAddressConfiguration(_configKey(tokenAddr, key));
     }
 
     /**
@@ -207,13 +201,14 @@ contract KycOnboardingContract is
         view
         returns (bytes32)
     {
-        bytes32 message = keccak256(
-            abi.encode(
-                COUPON_MESSAGE_TYPEHASH,
-                coupon.kycedMember
-                //coupon.memberNonce
-            )
-        );
+        bytes32 message =
+            keccak256(
+                abi.encode(
+                    COUPON_MESSAGE_TYPEHASH,
+                    coupon.kycedMember
+                    //coupon.memberNonce
+                )
+            );
 
         return hashMessage(dao, block.chainid, address(this), message);
     }
@@ -229,13 +224,7 @@ contract KycOnboardingContract is
         //uint256 memberNonce,
         bytes memory signature
     ) external payable {
-        _onboard(
-            dao,
-            kycedMember,
-            ETH_TOKEN,
-            msg.value,
-            signature
-        );
+        _onboard(dao, kycedMember, ETH_TOKEN, msg.value, signature);
     }
 
     /**
@@ -250,10 +239,17 @@ contract KycOnboardingContract is
         address kycedMember,
         address tokenAddr,
         uint256 amount,
-      //  uint256 memberNonce,
+        //  uint256 memberNonce,
         bytes memory signature
     ) external {
-        _onboard(dao, kycedMember, tokenAddr, amount, /*memberNonce,*/ signature);
+        _onboard(
+            dao,
+            kycedMember,
+            tokenAddr,
+            amount,
+            /*memberNonce,*/
+            signature
+        );
     }
 
     /**
@@ -282,34 +278,28 @@ contract KycOnboardingContract is
         //require(memberNonce > memberNonces[kycedMember], "already redeemed");
         //memberNonces[kycedMember] = memberNonce;
 
-        uint256 maxMembers = dao.getConfiguration(
-            _configKey(tokenAddr, MaxMembers)
-        );
+        uint256 maxMembers =
+            dao.getConfiguration(_configKey(tokenAddr, MaxMembers));
         require(maxMembers > 0, "token not configured");
         require(dao.getNbMembers() < maxMembers, "the DAO is full");
 
-        bytes32 couponHash = hashCouponMessage(
-            dao,
-            Coupon(kycedMember)
-        );
+        bytes32 couponHash = hashCouponMessage(dao, Coupon(kycedMember));
         _checkKycCoupon(dao, tokenAddr, couponHash, signature);
 
         OnboardingDetails memory details = _checkData(dao, tokenAddr, amount);
         totalUnits[dao][tokenAddr] += details.unitsRequested;
 
-        BankExtension bank = BankExtension(
-            dao.getExtensionAddress(BANK)
-        );
+        BankExtension bank = BankExtension(dao.getExtensionAddress(BANK));
         potentialNewMember(kycedMember, dao, bank);
 
-        address multisigAddress = address(
-            dao.getAddressConfiguration(
-                _configKey(tokenAddr, FundTargetAddress)
-            )
-        );
+        address multisigAddress =
+            address(
+                dao.getAddressConfiguration(
+                    _configKey(tokenAddr, FundTargetAddress)
+                )
+            );
         if (multisigAddress == address(0x0)) {
             if (tokenAddr == ETH_TOKEN) {
-                
                 // The bank address is loaded from the DAO registry,
                 // hence even if we change that, it belongs to the DAO,
                 // so it is fine to send eth to it.
@@ -320,11 +310,7 @@ contract KycOnboardingContract is
                     details.amount
                 );
             } else {
-                bank.addToBalance(
-                    GUILD,
-                    tokenAddr,
-                    details.amount
-                );
+                bank.addToBalance(GUILD, tokenAddr, details.amount);
                 IERC20 erc20 = IERC20(tokenAddr);
                 erc20.safeTransferFrom(
                     msg.sender,
@@ -354,11 +340,7 @@ contract KycOnboardingContract is
             }
         }
 
-        bank.addToBalance(
-            kycedMember,
-            UNITS,
-            details.unitsRequested
-        );
+        bank.addToBalance(kycedMember, UNITS, details.unitsRequested);
 
         if (amount > details.amount && tokenAddr == ETH_TOKEN) {
             payable(msg.sender).sendValue(msg.value - details.amount);

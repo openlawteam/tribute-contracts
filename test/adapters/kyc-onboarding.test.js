@@ -68,10 +68,10 @@ describe("Adapter - KYC Onboarding", () => {
       creator: delegatedKey,
       couponCreatorAddress: signer.address,
       kycPaymentToken: ETH_TOKEN,
-      nbUnits: toBN("1000")
+      nbUnits: toBN("1000"),
     });
 
-    console.log('wethAddress', wethAddress);
+    console.log("wethAddress", wethAddress);
 
     this.dao = dao;
     this.adapters = adapters;
@@ -135,7 +135,11 @@ describe("Adapter - KYC Onboarding", () => {
 
     const signerUtil = SigUtilSigner(signer.privKey);
 
-    let signerAddr = await onboarding.getAddressConfig(dao.address, ETH_TOKEN, sha3("kyc-onboarding.signerAddress"));
+    let signerAddr = await onboarding.getAddressConfig(
+      dao.address,
+      ETH_TOKEN,
+      sha3("kyc-onboarding.signerAddress")
+    );
     expect(signerAddr).equal(signer.address);
 
     const couponData = {
@@ -182,7 +186,7 @@ describe("Adapter - KYC Onboarding", () => {
     expect(nonMemberAccountUnits.toString()).equal("0");
     await checkBalance(bank, GUILD, ETH_TOKEN, 0);
     const fundTargetAddress = "0x7D8cad0bbD68deb352C33e80fccd4D8e88b4aBb8";
-    
+
     const wethToken = await OLToken.at(this.wethAddress);
 
     const balance = await wethToken.balanceOf(fundTargetAddress);
@@ -198,7 +202,7 @@ describe("Adapter - KYC Onboarding", () => {
     expect(nonMemberAccountIsActiveMember).equal(false);
   });
 
-  it("should be possible to onboard with erc20 tokens if configured", async() => {
+  it("should be possible to onboard with erc20 tokens if configured", async () => {
     const supply = unitPrice.mul(toBN("1000"));
     const oltContract = await OLToken.new(supply, { from: daoOwner });
 
@@ -206,7 +210,7 @@ describe("Adapter - KYC Onboarding", () => {
       owner: daoOwner,
       creator: delegatedKey,
       couponCreatorAddress: signer.address,
-      kycPaymentToken: oltContract.address
+      kycPaymentToken: oltContract.address,
     });
 
     const applicant = accounts[2];
@@ -236,13 +240,22 @@ describe("Adapter - KYC Onboarding", () => {
     );
 
     await oltContract.transfer(applicant, unitPrice, { from: daoOwner });
-    await oltContract.approve(onboarding.address, unitPrice, { from: applicant });
-
-    await onboarding.onboard(dao.address, applicant, oltContract.address, unitPrice, signature, {
+    await oltContract.approve(onboarding.address, unitPrice, {
       from: applicant,
-      gasPrice: toBN("0"),
     });
-    
+
+    await onboarding.onboard(
+      dao.address,
+      applicant,
+      oltContract.address,
+      unitPrice,
+      signature,
+      {
+        from: applicant,
+        gasPrice: toBN("0"),
+      }
+    );
+
     const unitsBalance = await extensions.bank.balanceOf(applicant, UNITS);
     expect(unitsBalance.toString()).equal("1000");
   });
