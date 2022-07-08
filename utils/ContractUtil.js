@@ -45,7 +45,7 @@ const ETH_TOKEN = "0x0000000000000000000000000000000000000000";
 const DAI_TOKEN = "0x95b58a6bff3d14b7db2f5cb5f0ad413dc2940658";
 const ZERO_ADDRESS = "0x0000000000000000000000000000000000000000";
 
-const numberOfUnits = toBN("1000000000000000");
+const numberOfUnits = toBN("1000");
 const unitPrice = toBN(toWei("120", "finney"));
 const remaining = unitPrice.sub(toBN("50000000000000"));
 const maximumChunks = toBN("11");
