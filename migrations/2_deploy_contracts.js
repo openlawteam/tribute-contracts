@@ -97,7 +97,7 @@ async function deployRinkebyDao(deployFunction, network) {
     "UNITS_PER_CHUNK",
     "MAX_CHUNKS"
   );
-  
+
   return await deployDao({
     ...truffleImports,
     deployFunction,
