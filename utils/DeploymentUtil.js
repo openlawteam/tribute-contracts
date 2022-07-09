@@ -449,6 +449,7 @@ const configureDao = async ({
   maxMembers,
   kycCouponCreatorAddress,
   fundTargetAddress,
+  kycPaymentToken,
 }) => {
   await daoFactory.addAdapters(
     dao.address,
@@ -614,6 +615,8 @@ const configureDao = async ({
     maxUnits,
     maxMembers,
     fundTargetAddress,
+    kycPaymentToken,
+    UNITS,
     {
       from: owner,
     }

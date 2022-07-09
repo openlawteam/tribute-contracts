@@ -39,6 +39,7 @@ const {
   deployDefaultDao,
   takeChainSnapshot,
   revertChainSnapshot,
+  OLToken,
   accounts,
   expectRevert,
   expect,
@@ -65,7 +66,10 @@ describe("Adapter - KYC Onboarding", () => {
     const { dao, adapters, extensions, utils } = await deployDefaultDao({
       owner: daoOwner,
       creator: delegatedKey,
+      couponCreatorAddress: signer.address,
+      kycPaymentToken: ETH_TOKEN,
     });
+
     this.dao = dao;
     this.adapters = adapters;
     this.extensions = extensions;
@@ -99,7 +103,7 @@ describe("Adapter - KYC Onboarding", () => {
     const initialTokenBalance = await web3.eth.getBalance(applicant);
 
     await expectRevert(
-      onboarding.onboard(dao.address, applicant, [], {
+      onboarding.onboardEth(dao.address, applicant, [], {
         from: applicant,
         gasPrice: toBN("0"),
       }),
@@ -128,7 +132,9 @@ describe("Adapter - KYC Onboarding", () => {
 
     const signerUtil = SigUtilSigner(signer.privKey);
 
-    let signerAddr = await dao.getAddressConfiguration(
+    let signerAddr = await onboarding.getAddressConfig(
+      dao.address,
+      ETH_TOKEN,
       sha3("kyc-onboarding.signerAddress")
     );
     expect(signerAddr).equal(signer.address);
@@ -154,7 +160,9 @@ describe("Adapter - KYC Onboarding", () => {
       1
     );
 
-    const multSigAddr = await dao.getAddressConfiguration(
+    const multSigAddr = await onboarding.getAddressConfig(
+      dao.address,
+      ETH_TOKEN,
       sha3("kyc-onboarding.fundTargetAddress")
     );
     const fundTargetAddress = "0x7D8cad0bbD68deb352C33e80fccd4D8e88b4aBb8";
@@ -165,7 +173,7 @@ describe("Adapter - KYC Onboarding", () => {
       unitPrice.mul(toBN("0")).toString()
     );
 
-    await onboarding.onboard(dao.address, applicant, signature, {
+    await onboarding.onboardEth(dao.address, applicant, signature, {
       from: applicant,
       value: ethAmount,
       gasPrice: toBN("0"),
@@ -202,6 +210,64 @@ describe("Adapter - KYC Onboarding", () => {
     expect(nonMemberAccountIsActiveMember).equal(false);
   });
 
+  it("should be possible to onboard with erc20 tokens if configured", async () => {
+    const supply = unitPrice.mul(toBN("1000"));
+    const oltContract = await OLToken.new(supply, { from: daoOwner });
+
+    const { dao, adapters, extensions } = await deployDefaultDao({
+      owner: daoOwner,
+      creator: delegatedKey,
+      couponCreatorAddress: signer.address,
+      kycPaymentToken: oltContract.address,
+    });
+
+    const applicant = accounts[2];
+    const onboarding = adapters.kycOnboarding;
+
+    const signerUtil = SigUtilSigner(signer.privKey);
+
+    const couponData = {
+      type: "coupon-kyc",
+      kycedMember: applicant,
+    };
+
+    const signature = signerUtil(
+      couponData,
+      dao.address,
+      onboarding.address,
+      1
+    );
+
+    await expectRevert(
+      onboarding.onboardEth(dao.address, applicant, signature, {
+        from: daoOwner,
+        value: unitPrice.mul(toBN(100)).add(remaining),
+        gasPrice: toBN("0"),
+      }),
+      "token not configured"
+    );
+
+    await oltContract.transfer(applicant, unitPrice, { from: daoOwner });
+    await oltContract.approve(onboarding.address, unitPrice, {
+      from: applicant,
+    });
+
+    await onboarding.onboard(
+      dao.address,
+      applicant,
+      oltContract.address,
+      unitPrice,
+      signature,
+      {
+        from: applicant,
+        gasPrice: toBN("0"),
+      }
+    );
+
+    const unitsBalance = await extensions.bank.balanceOf(applicant, UNITS);
+    expect(unitsBalance.toString()).equal("1000000000000000");
+  });
+
   it("should not be possible to have more than the maximum number of units", async () => {
     const applicant = accounts[2];
     const dao = this.dao;
@@ -222,7 +288,7 @@ describe("Adapter - KYC Onboarding", () => {
     );
 
     await expectRevert(
-      onboarding.onboard(dao.address, applicant, signature, {
+      onboarding.onboardEth(dao.address, applicant, signature, {
         from: daoOwner,
         value: unitPrice.mul(toBN(100)).add(remaining),
         gasPrice: toBN("0"),

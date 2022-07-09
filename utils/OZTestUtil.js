@@ -89,6 +89,7 @@ const getDefaultOptions = (options) => {
     kycCouponCreatorAddress: "0x7D8cad0bbD68deb352C33e80fccd4D8e88b4aBb8",
     fundTargetAddress: "0x7D8cad0bbD68deb352C33e80fccd4D8e88b4aBb8",
     deployTestTokens: true,
+    kycPaymentToken: ETH_TOKEN,
     ...options,
   };
 
