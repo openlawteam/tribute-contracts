@@ -55,7 +55,6 @@ describe("Extension - BankV1Upgrade", () => {
     accounts = await getAccounts();
     daoOwner = accounts[0];
     creator = accounts[1];
-    console.log(Object.keys(allContractConfigs.BankV1UpgradeFactory));
     const { dao, adapters, extensions, factories } = await deployDefaultDao({
       owner: daoOwner,
       DaoFactory: DaoV1Factory,
@@ -85,7 +84,7 @@ describe("Extension - BankV1Upgrade", () => {
 
   describe("Factory", async () => {
     it("should be possible to create an extension using the factory", async () => {
-      const { logs } = await this.factories.bankExtFactory.create(
+      const { logs } = await this.factories.bankV1UpgradeExtFactory.create(
         this.dao.address,
         10
       );
@@ -96,9 +95,9 @@ describe("Extension - BankV1Upgrade", () => {
     });
 
     it("should be possible to get an extension address by dao", async () => {
-      await this.factories.bankExtFactory.create(this.dao.address, 10);
+      await this.factories.bankV1UpgradeExtFactory.create(this.dao.address, 10);
       const extAddress =
-        await this.factories.bankExtFactory.getExtensionAddress(
+        await this.factories.bankV1UpgradeExtFactory.getExtensionAddress(
           this.dao.address
         );
       expect(extAddress).to.not.be.equal(ZERO_ADDRESS);
@@ -107,13 +106,16 @@ describe("Extension - BankV1Upgrade", () => {
     it("should return zero address if there is no extension address by dao", async () => {
       const daoAddress = accounts[2];
       const extAddress =
-        await this.factories.bankExtFactory.getExtensionAddress(daoAddress);
+        await this.factories.bankV1UpgradeExtFactory.getExtensionAddress(
+          daoAddress
+        );
       expect(extAddress).to.be.equal(ZERO_ADDRESS);
     });
 
     it("should not be possible to create an extension using a zero address dao", async () => {
-      await expect(this.factories.bankExtFactory.create(ZERO_ADDRESS, 10)).to.be
-        .reverted;
+      await expect(
+        this.factories.bankV1UpgradeExtFactory.create(ZERO_ADDRESS, 10)
+      ).to.be.reverted;
     });
   });
 
