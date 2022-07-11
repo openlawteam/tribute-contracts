@@ -27,6 +27,7 @@ SOFTWARE.
 const { expect } = require("chai");
 const {
   ETH_TOKEN,
+  UNITS,
   toBN,
   sha3,
   toWei,
@@ -41,12 +42,78 @@ const {
   getAccounts,
   allContractConfigs,
   DaoV1Factory,
-  BankExtension,
   BankV1UpgradeFactory,
-  BankV1UpgradeExtension,
   web3,
   deployFunction,
+  proposalIdGenerator,
 } = require("../../utils/hardhat-test-util");
+
+const { SigUtilSigner } = require("../../utils/offchain-voting-util");
+
+const signer = {
+  address: "0x90F8bf6A479f320ead074411a4B0e7944Ea8c9C1",
+  privKey: "0x4f3edf983ac636a65a842ce7c78d9aa706d3b113bce9c46f30d7d21715b23b1d",
+};
+
+const chainId = 1337;
+
+const proposalCounter = proposalIdGenerator().generator;
+const getProposalCounter = () => proposalCounter().next().value;
+
+const generateManagerCouponSignature = (
+  daoAddress,
+  proposal,
+  configs,
+  proposalId,
+  nonce
+) => {
+  const signerUtil = SigUtilSigner(signer.privKey);
+
+  const messageData = {
+    type: "manager",
+    daoAddress,
+    proposal,
+    configs,
+    proposalId,
+    nonce,
+  };
+  return signerUtil(
+    messageData,
+    daoAddress,
+    this.adapters.manager.address,
+    chainId
+  );
+};
+let nonce = 1;
+const onboardMember = async (dao, newMember) => {
+  const signerUtil = SigUtilSigner(signer.privKey);
+
+  const couponOnboarding = this.adapters.couponOnboarding;
+  console.log("nonce ", nonce);
+  const couponData = {
+    type: "coupon",
+    authorizedMember: newMember,
+    amount: 10,
+    nonce,
+  };
+
+  var signature = signerUtil(
+    couponData,
+    dao.address,
+    couponOnboarding.address,
+    chainId
+  );
+
+  await couponOnboarding.redeemCoupon(
+    dao.address,
+    newMember,
+    10,
+    nonce,
+    signature
+  );
+
+  nonce++;
+};
 
 describe("Extension - BankV1Upgrade", () => {
   let accounts, daoOwner, creator;
@@ -128,7 +195,9 @@ describe("Extension - BankV1Upgrade", () => {
     });
 
     it("should not be possible to call initialize with a non member", async () => {
-      const extension = await BankExtension.new();
+      const extension = await allContractConfigs.BankV1UpgradeExtension.new(
+        this.extensions.bankExt.address
+      );
       await expect(
         extension.initialize(this.dao.address, creator)
       ).to.be.revertedWith("not a member");
@@ -269,5 +338,65 @@ describe("Extension - BankV1Upgrade", () => {
         data: fromAscii("should go to fallback func"),
       })
     ).to.be.revertedWith("revert");
+  });
+
+  it("should be possible to upgrade the bankV1 into a compatible V2", async () => {
+    const bankFactory = this.factories.bankV1UpgradeExtFactory;
+    const dao = this.dao;
+    const manager = this.adapters.manager;
+
+    const newExtensionId = sha3("bank");
+    const proposalId = getProposalCounter();
+    const nonce = (await manager.nonces(dao.address)).toNumber() + 1;
+    const { logs } = await bankFactory.create(dao.address, 100);
+    const newBankAddr = logs[0].args[1];
+    const proposal = {
+      adapterOrExtensionId: newExtensionId,
+      adapterOrExtensionAddr: newBankAddr,
+      updateType: 2,
+      flags: 0,
+      keys: [],
+      values: [],
+      extensionAddresses: [],
+      extensionAclFlags: [],
+    };
+
+    const sig = generateManagerCouponSignature(
+      dao.address,
+      proposal,
+      [],
+      proposalId,
+      nonce
+    );
+
+    await onboardMember(dao, accounts[2]);
+
+    await manager.processSignedProposal(
+      dao.address,
+      proposalId,
+      proposal,
+      [], //configs
+      nonce,
+      sig
+    );
+
+    const bankAddr = await dao.getExtensionAddress(newExtensionId);
+    expect(bankAddr).to.equal(newBankAddr);
+
+    const bank = await allContractConfigs.BankV1UpgradeExtension.at(
+      newBankAddr
+    );
+
+    const daoOwnerUnits = await bank.balanceOf(daoOwner, UNITS);
+    let otherAccountUnits = await bank.balanceOf(accounts[2], UNITS);
+
+    expect(daoOwnerUnits.toString()).equal("1");
+    expect(otherAccountUnits.toString()).equal("10");
+
+    await onboardMember(dao, accounts[3]);
+
+    otherAccountUnits = await bank.balanceOf(accounts[3], UNITS);
+
+    expect(otherAccountUnits.toString()).equal("10");
   });
 });
