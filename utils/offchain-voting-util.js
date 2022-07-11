@@ -98,7 +98,6 @@ function getManagerDomainDefinition(verifyingContract, actionId, chainId) {
       { name: "proposal", type: "ProposalDetails" },
       { name: "configs", type: "Configuration[]" },
       { name: "nonce", type: "uint256" },
-      { name: "proposalId", type: "bytes32" },
     ],
     ProposalDetails: [
       { name: "adapterOrExtensionId", type: "bytes32" },

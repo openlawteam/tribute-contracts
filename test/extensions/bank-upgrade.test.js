@@ -36,6 +36,13 @@ const {
 } = require("../../utils/contract-util");
 
 const {
+  bankExtensionAclFlagsMap,
+  entryBank,
+} = require("../../utils/access-control-util");
+
+const { extensionsIdsMap } = require("../../utils/dao-ids-util");
+
+const {
   deployDefaultDao,
   takeChainSnapshot,
   revertChainSnapshot,
@@ -64,7 +71,6 @@ const generateManagerCouponSignature = (
   daoAddress,
   proposal,
   configs,
-  proposalId,
   nonce
 ) => {
   const signerUtil = SigUtilSigner(signer.privKey);
@@ -74,7 +80,6 @@ const generateManagerCouponSignature = (
     daoAddress,
     proposal,
     configs,
-    proposalId,
     nonce,
   };
   return signerUtil(
@@ -89,7 +94,6 @@ const onboardMember = async (dao, newMember) => {
   const signerUtil = SigUtilSigner(signer.privKey);
 
   const couponOnboarding = this.adapters.couponOnboarding;
-  console.log("nonce ", nonce);
   const couponData = {
     type: "coupon",
     authorizedMember: newMember,
@@ -357,28 +361,50 @@ describe("Extension - BankV1Upgrade", () => {
       flags: 0,
       keys: [],
       values: [],
-      extensionAddresses: [],
-      extensionAclFlags: [],
+      extensionAddresses: [
+        this.adapters.couponOnboarding.address,
+        this.extensions.erc20Ext.address,
+      ],
+      extensionAclFlags: [
+        entryBank(this.adapters.couponOnboarding.address, {
+          extensions: {
+            [extensionsIdsMap.BANK_EXT]: [
+              bankExtensionAclFlagsMap.ADD_TO_BALANCE,
+              bankExtensionAclFlagsMap.SUB_FROM_BALANCE,
+              bankExtensionAclFlagsMap.INTERNAL_TRANSFER,
+            ],
+          },
+        }).flags,
+        entryBank(this.extensions.erc20Ext.address, {
+          extensions: {
+            [extensionsIdsMap.BANK_EXT]: [
+              bankExtensionAclFlagsMap.ADD_TO_BALANCE,
+              bankExtensionAclFlagsMap.SUB_FROM_BALANCE,
+              bankExtensionAclFlagsMap.INTERNAL_TRANSFER,
+            ],
+          },
+        }).flags,
+      ],
     };
 
     const sig = generateManagerCouponSignature(
       dao.address,
       proposal,
       [],
-      proposalId,
       nonce
     );
 
     await onboardMember(dao, accounts[2]);
-
+    console.log("updating bank ", proposal);
     await manager.processSignedProposal(
       dao.address,
-      proposalId,
       proposal,
       [], //configs
       nonce,
       sig
     );
+
+    console.log("bank updated!");
 
     const bankAddr = await dao.getExtensionAddress(newExtensionId);
     expect(bankAddr).to.equal(newBankAddr);

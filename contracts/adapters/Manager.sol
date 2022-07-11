@@ -69,13 +69,12 @@ contract Manager is Reimbursable, AdapterGuard, Signatures {
         ProposalDetails proposal;
         Configuration[] configs;
         uint256 nonce;
-        bytes32 proposalId;
     }
 
     mapping(address => uint256) public nonces;
 
     string public constant MANAGING_COUPON_MESSAGE_TYPE =
-        "Message(address daoAddress,ProposalDetails proposal,Configuration[] configs,uint256 nonce,bytes32 proposalId)Configuration(bytes32 key,uint256 numericValue,address addressValue,uint8 configType)ProposalDetails(bytes32 adapterOrExtensionId,address adapterOrExtensionAddr,uint8 updateType,uint128 flags,bytes32[] keys,uint256[] values,address[] extensionAddresses,uint128[] extensionAclFlags)";
+        "Message(address daoAddress,ProposalDetails proposal,Configuration[] configs,uint256 nonce)Configuration(bytes32 key,uint256 numericValue,address addressValue,uint8 configType)ProposalDetails(bytes32 adapterOrExtensionId,address adapterOrExtensionAddr,uint8 updateType,uint128 flags,bytes32[] keys,uint256[] values,address[] extensionAddresses,uint128[] extensionAclFlags)";
     bytes32 public constant MANAGING_COUPON_MESSAGE_TYPEHASH =
         keccak256(abi.encodePacked(MANAGING_COUPON_MESSAGE_TYPE));
 
@@ -105,7 +104,6 @@ contract Manager is Reimbursable, AdapterGuard, Signatures {
 
     function processSignedProposal(
         DaoRegistry dao,
-        bytes32 proposalId,
         ProposalDetails calldata proposal,
         Configuration[] memory configs,
         uint256 nonce,
@@ -126,8 +124,7 @@ contract Manager is Reimbursable, AdapterGuard, Signatures {
             address(dao),
             proposal,
             configs,
-            nonce,
-            proposalId
+            nonce
         );
         bytes32 hash = hashCouponMessage(dao, managingCoupon);
 
@@ -140,7 +137,7 @@ contract Manager is Reimbursable, AdapterGuard, Signatures {
             "invalid sig"
         );
 
-        _submitAndProcessProposal(dao, proposalId, proposal, configs);
+        _submitAndProcessProposal(dao, proposal, configs);
     }
 
     /**
@@ -148,19 +145,15 @@ contract Manager is Reimbursable, AdapterGuard, Signatures {
      * @dev Reverts when the adapter address is already in use and it is an adapter addition.
      * @dev Reverts when the extension address is already in use and it is an extension addition.
      * @param dao The dao address.
-     * @param proposalId The proposal id.
      * @param proposal The proposal data.
      * @param configs The configurations to be updated.
      */
     // slither-disable-next-line reentrancy-benign
     function _submitAndProcessProposal(
         DaoRegistry dao,
-        bytes32 proposalId,
         ProposalDetails calldata proposal,
         Configuration[] memory configs
     ) internal reimbursable(dao) {
-        dao.submitProposal(proposalId);
-        dao.processProposal(proposalId);
         if (proposal.updateType == UpdateType.ADAPTER) {
             dao.replaceAdapter(
                 proposal.adapterOrExtensionId,
@@ -169,12 +162,28 @@ contract Manager is Reimbursable, AdapterGuard, Signatures {
                 proposal.keys,
                 proposal.values
             );
+
+            for (uint256 i = 0; i < proposal.extensionAclFlags.length; i++) {
+                _grantExtensionAccess(
+                    dao,
+                    proposal.extensionAddresses[i],
+                    proposal.adapterOrExtensionAddr,
+                    proposal.extensionAclFlags[i]
+                );
+            }
         } else if (proposal.updateType == UpdateType.EXTENSION) {
             _replaceExtension(dao, proposal);
+            for (uint256 i = 0; i < proposal.extensionAclFlags.length; i++) {
+                _grantExtensionAccess(
+                    dao,
+                    proposal.adapterOrExtensionAddr,
+                    proposal.extensionAddresses[i],
+                    proposal.extensionAclFlags[i]
+                );
+            }
         } else if (proposal.updateType != UpdateType.CONFIGS) {
             revert("unknown update type");
         }
-        _grantExtensionAccess(dao, proposal);
         _saveDaoConfigurations(dao, configs);
     }
 
@@ -202,22 +211,22 @@ contract Manager is Reimbursable, AdapterGuard, Signatures {
      */
     function _grantExtensionAccess(
         DaoRegistry dao,
-        ProposalDetails memory proposal
+        address extensionAddr,
+        address adapterAddr,
+        uint128 acl
     ) internal {
-        for (uint256 i = 0; i < proposal.extensionAclFlags.length; i++) {
-            // It is fine to execute the external call inside the loop
-            // because it is calling the correct function in the dao contract
-            // it won't be calling a fallback that always revert.
-            // slither-disable-next-line calls-loop
-            dao.setAclToExtensionForAdapter(
-                // It needs to be registered as extension
-                proposal.extensionAddresses[i],
-                // It needs to be registered as adapter
-                proposal.adapterOrExtensionAddr,
-                // Indicate which access level will be granted
-                proposal.extensionAclFlags[i]
-            );
-        }
+        // It is fine to execute the external call inside the loop
+        // because it is calling the correct function in the dao contract
+        // it won't be calling a fallback that always revert.
+        // slither-disable-next-line calls-loop
+        dao.setAclToExtensionForAdapter(
+            // It needs to be registered as extension
+            extensionAddr,
+            // It needs to be registered as adapter
+            adapterAddr,
+            // Indicate which access level will be granted
+            acl
+        );
     }
 
     /**
@@ -261,8 +270,7 @@ contract Manager is Reimbursable, AdapterGuard, Signatures {
                 coupon.daoAddress,
                 hashProposal(coupon.proposal),
                 hashConfigurations(coupon.configs),
-                coupon.nonce,
-                coupon.proposalId
+                coupon.nonce
             )
         );
 
