@@ -181,7 +181,16 @@ contract Manager is Reimbursable, AdapterGuard, Signatures {
                     proposal.extensionAclFlags[i]
                 );
             }
-        } else if (proposal.updateType != UpdateType.CONFIGS) {
+        } else if (proposal.updateType == UpdateType.CONFIGS) {
+            for (uint256 i = 0; i < proposal.extensionAclFlags.length; i++) {
+                _grantExtensionAccess(
+                    dao,
+                    proposal.extensionAddresses[i],
+                    proposal.adapterOrExtensionAddr,
+                    proposal.extensionAclFlags[i]
+                );
+            }
+        } else {
             revert("unknown update type");
         }
         _saveDaoConfigurations(dao, configs);
