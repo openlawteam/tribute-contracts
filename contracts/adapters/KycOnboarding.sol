@@ -300,37 +300,19 @@ contract KycOnboardingContract is AdapterGuard, MemberGuard, Signatures {
                 // hence even if we change that, it belongs to the DAO,
                 // so it is fine to send eth to it.
                 // slither-disable-next-line arbitrary-send
-                try
-                    bank.addToBalance{value: details.amount}(
-                        dao,
-                        DaoHelper.GUILD,
-                        DaoHelper.ETH_TOKEN,
-                        details.amount
-                    )
-                {} catch {
-                    require(bank.dao() == dao, "bank not configured");
-                    bank.addToBalance{value: details.amount}(
-                        DaoHelper.GUILD,
-                        DaoHelper.ETH_TOKEN,
-                        details.amount
-                    );
-                }
+                bank.addToBalance{value: details.amount}(
+                    dao,
+                    DaoHelper.GUILD,
+                    DaoHelper.ETH_TOKEN,
+                    details.amount
+                );
             } else {
-                try
-                    bank.addToBalance{value: details.amount}(
-                        dao,
-                        DaoHelper.GUILD,
-                        tokenAddr,
-                        details.amount
-                    )
-                {} catch {
-                    require(bank.dao() == dao, "invalid dao");
-                    bank.addToBalance{value: details.amount}(
-                        DaoHelper.GUILD,
-                        tokenAddr,
-                        details.amount
-                    );
-                }
+                bank.addToBalance{value: details.amount}(
+                    dao,
+                    DaoHelper.GUILD,
+                    tokenAddr,
+                    details.amount
+                );
 
                 IERC20 erc20 = IERC20(tokenAddr);
                 erc20.safeTransferFrom(
@@ -361,21 +343,12 @@ contract KycOnboardingContract is AdapterGuard, MemberGuard, Signatures {
             }
         }
 
-        try
-            bank.addToBalance(
-                dao,
-                kycedMember,
-                DaoHelper.UNITS,
-                details.unitsRequested
-            )
-        {} catch {
-            require(bank.dao() == dao, "invalid dao");
-            bank.addToBalance(
-                kycedMember,
-                DaoHelper.UNITS,
-                details.unitsRequested
-            );
-        }
+        bank.addToBalance(
+            dao,
+            kycedMember,
+            DaoHelper.UNITS,
+            details.unitsRequested
+        );
 
         if (amount > details.amount && tokenAddr == DaoHelper.ETH_TOKEN) {
             payable(msg.sender).sendValue(msg.value - details.amount);

@@ -156,38 +156,12 @@ contract ReimbursementContract is IReimbursement, AdapterGuard {
             _data[address(dao)].ethUsed = payback;
         }
         // slither-disable-next-line unused-return
-        try bank.supportsInterface(bank.withdrawTo.selector) returns (
-            // slither-disable-next-line uninitialized-local,variable-scope
-            bool supportsInterface
-        ) {
-            if (supportsInterface) {
-                bank.withdrawTo(
-                    dao,
-                    DaoHelper.GUILD,
-                    caller,
-                    DaoHelper.ETH_TOKEN,
-                    payback
-                );
-            } else {
-                bank.internalTransfer(
-                    dao,
-                    DaoHelper.GUILD,
-                    caller,
-                    DaoHelper.ETH_TOKEN,
-                    payback
-                );
-                bank.withdraw(dao, caller, DaoHelper.ETH_TOKEN, payback);
-            }
-        } catch {
-            require(bank.dao() == dao, "invalid dao");
-            //if supportsInterface reverts ( function does not exist, assume it does not have withdrawTo )
-            bank.internalTransfer(
-                DaoHelper.GUILD,
-                caller,
-                DaoHelper.ETH_TOKEN,
-                payback
-            );
-            bank.withdraw(caller, DaoHelper.ETH_TOKEN, payback);
-        }
+        bank.withdrawTo(
+            dao,
+            DaoHelper.GUILD,
+            caller,
+            DaoHelper.ETH_TOKEN,
+            payback
+        );
     }
 }

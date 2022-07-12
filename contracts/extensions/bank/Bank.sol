@@ -140,14 +140,6 @@ contract BankExtension is IExtension, ERC165 {
     }
 
     function withdraw(
-        address payable,
-        address,
-        uint256
-    ) external {
-        revert("not implemented");
-    }
-
-    function withdraw(
         DaoRegistry _dao,
         address payable member,
         address tokenAddr,
@@ -263,10 +255,6 @@ contract BankExtension is IExtension, ERC165 {
         }
     }
 
-    function updateToken(address) external {
-        revert("not implemented");
-    }
-
     function updateToken(DaoRegistry _dao, address tokenAddr)
         external
         hasExtensionAccess(_dao, AclFlag.UPDATE_TOKEN)
@@ -356,14 +344,6 @@ contract BankExtension is IExtension, ERC165 {
         return internalTokens.length;
     }
 
-    function addToBalance(
-        address,
-        address,
-        uint256
-    ) external payable {
-        revert("not implemented");
-    }
-
     /**
      * @notice Adds to a member's balance of a given token
      * @param member The member whose balance will be updated
@@ -404,23 +384,6 @@ contract BankExtension is IExtension, ERC165 {
 
         _createNewAmountCheckpoint(member, token, newAmount);
         _createNewAmountCheckpoint(DaoHelper.TOTAL, token, newTotalAmount);
-    }
-
-    function subtractFromBalance(
-        address,
-        address,
-        uint256
-    ) external {
-        revert("not implemented");
-    }
-
-    function internalTransfer(
-        address,
-        address,
-        address,
-        uint256
-    ) external {
-        revert("not implemented");
     }
 
     /**

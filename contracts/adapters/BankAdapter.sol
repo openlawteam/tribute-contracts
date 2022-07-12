@@ -61,10 +61,7 @@ contract BankAdapterContract is AdapterGuard, Reimbursable {
         uint256 balance = bank.balanceOf(account, token);
         require(balance > 0, "nothing to withdraw");
 
-        try bank.withdraw(dao, payable(account), token, balance) {} catch {
-            require(bank.dao() == dao, "invalid dao");
-            bank.withdraw(payable(account), token, balance);
-        }
+        bank.withdraw(dao, payable(account), token, balance);
     }
 
     /**
@@ -82,10 +79,7 @@ contract BankAdapterContract is AdapterGuard, Reimbursable {
         BankExtension bank = BankExtension(
             dao.getExtensionAddress(DaoHelper.BANK)
         );
-        try bank.updateToken(dao, token) {} catch {
-            require(bank.dao() == dao, "invalid dao");
-            bank.updateToken(token);
-        }
+        bank.updateToken(dao, token);
     }
 
     /*
@@ -97,20 +91,11 @@ contract BankAdapterContract is AdapterGuard, Reimbursable {
         BankExtension bank = BankExtension(
             dao.getExtensionAddress(DaoHelper.BANK)
         );
-        try
-            bank.addToBalance{value: msg.value}(
-                dao,
-                DaoHelper.GUILD,
-                DaoHelper.ETH_TOKEN,
-                msg.value
-            )
-        {} catch {
-            require(bank.dao() == dao, "invalid dao");
-            bank.addToBalance{value: msg.value}(
-                DaoHelper.GUILD,
-                DaoHelper.ETH_TOKEN,
-                msg.value
-            );
-        }
+        bank.addToBalance{value: msg.value}(
+            dao,
+            DaoHelper.GUILD,
+            DaoHelper.ETH_TOKEN,
+            msg.value
+        );
     }
 }

@@ -4,7 +4,7 @@
   "exclude_medium": false,
   "exclude_high": false,
   "disable_color": false,
-  "filter_paths": "openzeppelin|Multicall.sol|test|Migrations.sol",
+  "filter_paths": "openzeppelin|Multicall.sol|test|Migrations.sol|DaoRegistryV1.sol|BankV1.sol",
   "legacy_ast": false,
   "truffle_version": "5.3.2",
   "truffle_build_directory": "build/contracts",
