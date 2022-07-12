@@ -57,10 +57,14 @@ contract BankAdapterContract is AdapterGuard, Reimbursable {
         BankExtension bank = BankExtension(
             dao.getExtensionAddress(DaoHelper.BANK)
         );
+
         uint256 balance = bank.balanceOf(account, token);
         require(balance > 0, "nothing to withdraw");
 
-        bank.withdraw(dao, payable(account), token, balance);
+        try bank.withdraw(dao, payable(account), token, balance) {} catch {
+            require(bank.dao() == dao, "invalid dao");
+            bank.withdraw(payable(account), token, balance);
+        }
     }
 
     /**
@@ -75,10 +79,13 @@ contract BankAdapterContract is AdapterGuard, Reimbursable {
     {
         // We do not need to check if the token is supported by the bank,
         // because if it is not, the balance will always be zero.
-        BankExtension(dao.getExtensionAddress(DaoHelper.BANK)).updateToken(
-            dao,
-            token
+        BankExtension bank = BankExtension(
+            dao.getExtensionAddress(DaoHelper.BANK)
         );
+        try bank.updateToken(dao, token) {} catch {
+            require(bank.dao() == dao, "invalid dao");
+            bank.updateToken(token);
+        }
     }
 
     /*
@@ -87,8 +94,23 @@ contract BankAdapterContract is AdapterGuard, Reimbursable {
      */
     function sendEth(DaoRegistry dao) external payable reimbursable(dao) {
         require(msg.value > 0, "no eth sent");
-        BankExtension(dao.getExtensionAddress(DaoHelper.BANK)).addToBalance{
-            value: msg.value
-        }(dao, DaoHelper.GUILD, DaoHelper.ETH_TOKEN, msg.value);
+        BankExtension bank = BankExtension(
+            dao.getExtensionAddress(DaoHelper.BANK)
+        );
+        try
+            bank.addToBalance{value: msg.value}(
+                dao,
+                DaoHelper.GUILD,
+                DaoHelper.ETH_TOKEN,
+                msg.value
+            )
+        {} catch {
+            require(bank.dao() == dao, "invalid dao");
+            bank.addToBalance{value: msg.value}(
+                DaoHelper.GUILD,
+                DaoHelper.ETH_TOKEN,
+                msg.value
+            );
+        }
     }
 }

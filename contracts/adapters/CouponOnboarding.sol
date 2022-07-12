@@ -174,13 +174,24 @@ contract CouponOnboardingContract is Reimbursable, AdapterGuard, Signatures {
             address tokenAddressToMint = dao.getAddressConfiguration(
                 TokenAddrToMint
             );
-            bank.internalTransfer(
-                dao,
-                DaoHelper.GUILD,
-                authorizedMember,
-                tokenAddressToMint,
-                amount
-            );
+            try
+                bank.internalTransfer(
+                    dao,
+                    DaoHelper.GUILD,
+                    authorizedMember,
+                    tokenAddressToMint,
+                    amount
+                )
+            {} catch {
+                require(bank.dao() == dao, "invalid dao");
+                //slither-disable-next-line calls-loop
+                bank.internalTransfer(
+                    DaoHelper.GUILD,
+                    authorizedMember,
+                    tokenAddressToMint,
+                    amount
+                );
+            }
             // address needs to be added to the members mappings. ERC20 is doing it for us so no need to do it twice
             DaoHelper.potentialNewMember(authorizedMember, dao, bank);
         } else {

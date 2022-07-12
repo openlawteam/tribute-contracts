@@ -345,9 +345,15 @@ module.exports = (() => {
         from: owner,
       });
 
-      await extensions.bankExt.addToBalance(dao.address, newMember, UNITS, 1, {
-        from: owner,
-      });
+      await extensions.bankExt["addToBalance(address,address,address,uint256)"](
+        dao.address,
+        newMember,
+        UNITS,
+        1,
+        {
+          from: owner,
+        }
+      );
     }
 
     await dao.finalizeDao({ from: owner });

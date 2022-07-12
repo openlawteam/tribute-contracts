@@ -10,7 +10,6 @@ import "@openzeppelin/contracts/utils/Address.sol";
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 import "../helpers/DaoHelper.sol";
-import "./GelatoRelay.sol";
 
 /**
 MIT License
@@ -36,7 +35,7 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
  */
 
-contract ReimbursementContract is IReimbursement, AdapterGuard, GelatoRelay {
+contract ReimbursementContract is IReimbursement, AdapterGuard {
     using Address for address payable;
     using SafeERC20 for IERC20;
 
@@ -44,8 +43,6 @@ contract ReimbursementContract is IReimbursement, AdapterGuard, GelatoRelay {
         uint256 ethUsed;
         uint256 rateLimitStart;
     }
-
-    constructor(address payable _gelato) GelatoRelay(_gelato) {}
 
     mapping(address => ReimbursementData) private _data;
 
@@ -182,15 +179,15 @@ contract ReimbursementContract is IReimbursement, AdapterGuard, GelatoRelay {
                 bank.withdraw(dao, caller, DaoHelper.ETH_TOKEN, payback);
             }
         } catch {
+            require(bank.dao() == dao, "invalid dao");
             //if supportsInterface reverts ( function does not exist, assume it does not have withdrawTo )
             bank.internalTransfer(
-                dao,
                 DaoHelper.GUILD,
                 caller,
                 DaoHelper.ETH_TOKEN,
                 payback
             );
-            bank.withdraw(dao, caller, DaoHelper.ETH_TOKEN, payback);
+            bank.withdraw(caller, DaoHelper.ETH_TOKEN, payback);
         }
     }
 }

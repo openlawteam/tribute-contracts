@@ -135,21 +135,39 @@ contract RagequitContract is IRagequit, AdapterGuard {
         uint256 totalTokens = DaoHelper.totalTokens(bank);
 
         // Burns / subtracts from member's balance the number of units to burn.
-        bank.internalTransfer(
-            dao,
-            memberAddr,
-            DaoHelper.GUILD,
-            DaoHelper.UNITS,
-            unitsToBurn
-        );
-        // Burns / subtracts from member's balance the number of loot to burn.
-        bank.internalTransfer(
-            dao,
-            memberAddr,
-            DaoHelper.GUILD,
-            DaoHelper.LOOT,
-            lootToBurn
-        );
+        try
+            bank.internalTransfer(
+                dao,
+                memberAddr,
+                DaoHelper.GUILD,
+                DaoHelper.UNITS,
+                unitsToBurn
+            )
+        {
+            // Burns / subtracts from member's balance the number of loot to burn.
+            bank.internalTransfer(
+                dao,
+                memberAddr,
+                DaoHelper.GUILD,
+                DaoHelper.LOOT,
+                lootToBurn
+            );
+        } catch {
+            require(bank.dao() == dao, "invalid dao");
+            bank.internalTransfer(
+                memberAddr,
+                DaoHelper.GUILD,
+                DaoHelper.UNITS,
+                unitsToBurn
+            );
+            // Burns / subtracts from member's balance the number of loot to burn.
+            bank.internalTransfer(
+                memberAddr,
+                DaoHelper.GUILD,
+                DaoHelper.LOOT,
+                lootToBurn
+            );
+        }
 
         // Completes the ragequit process by updating the GUILD internal balance based on each provided token.
         _burnUnits(
@@ -215,13 +233,25 @@ contract RagequitContract is IRagequit, AdapterGuard {
                 // (which would break ragekicks) if a token overflows,
                 // it is because the supply was artificially inflated to oblivion, so we probably don"t care about it anyways
                 //slither-disable-next-line calls-loop
-                bank.internalTransfer(
-                    dao,
-                    DaoHelper.GUILD,
-                    memberAddr,
-                    currentToken,
-                    amountToRagequit
-                );
+                try
+                    bank.internalTransfer(
+                        dao,
+                        DaoHelper.GUILD,
+                        memberAddr,
+                        currentToken,
+                        amountToRagequit
+                    )
+                {} catch {
+                    //slither-disable-next-line calls-loop
+                    require(bank.dao() == dao, "invalid dao");
+                    //slither-disable-next-line calls-loop
+                    bank.internalTransfer(
+                        DaoHelper.GUILD,
+                        memberAddr,
+                        currentToken,
+                        amountToRagequit
+                    );
+                }
             }
         }
 

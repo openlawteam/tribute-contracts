@@ -9,7 +9,6 @@ import "../utils/Signatures.sol";
 import "../helpers/WETH.sol";
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
-import "./modifiers/Reimbursable.sol";
 
 /**
 MIT License
@@ -35,12 +34,7 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
  */
 
-contract KycOnboardingContract is
-    AdapterGuard,
-    MemberGuard,
-    Signatures,
-    Reimbursable
-{
+contract KycOnboardingContract is AdapterGuard, MemberGuard, Signatures {
     using Address for address payable;
     using SafeERC20 for IERC20;
 
@@ -266,7 +260,7 @@ contract KycOnboardingContract is
         uint256 amount,
         uint256 memberNonce,
         bytes memory signature
-    ) internal reimbursable(dao) {
+    ) internal {
         require(
             !isActiveMember(dao, dao.getCurrentDelegateKey(kycedMember)) ||
                 _daoCanTopUp(dao, tokenAddr),
@@ -306,19 +300,38 @@ contract KycOnboardingContract is
                 // hence even if we change that, it belongs to the DAO,
                 // so it is fine to send eth to it.
                 // slither-disable-next-line arbitrary-send
-                bank.addToBalance{value: details.amount}(
-                    dao,
-                    DaoHelper.GUILD,
-                    DaoHelper.ETH_TOKEN,
-                    details.amount
-                );
+                try
+                    bank.addToBalance{value: details.amount}(
+                        dao,
+                        DaoHelper.GUILD,
+                        DaoHelper.ETH_TOKEN,
+                        details.amount
+                    )
+                {} catch {
+                    require(bank.dao() == dao, "bank not configured");
+                    bank.addToBalance{value: details.amount}(
+                        DaoHelper.GUILD,
+                        DaoHelper.ETH_TOKEN,
+                        details.amount
+                    );
+                }
             } else {
-                bank.addToBalance(
-                    dao,
-                    DaoHelper.GUILD,
-                    tokenAddr,
-                    details.amount
-                );
+                try
+                    bank.addToBalance{value: details.amount}(
+                        dao,
+                        DaoHelper.GUILD,
+                        tokenAddr,
+                        details.amount
+                    )
+                {} catch {
+                    require(bank.dao() == dao, "invalid dao");
+                    bank.addToBalance{value: details.amount}(
+                        DaoHelper.GUILD,
+                        tokenAddr,
+                        details.amount
+                    );
+                }
+
                 IERC20 erc20 = IERC20(tokenAddr);
                 erc20.safeTransferFrom(
                     msg.sender,
@@ -348,12 +361,21 @@ contract KycOnboardingContract is
             }
         }
 
-        bank.addToBalance(
-            dao,
-            kycedMember,
-            DaoHelper.UNITS,
-            details.unitsRequested
-        );
+        try
+            bank.addToBalance(
+                dao,
+                kycedMember,
+                DaoHelper.UNITS,
+                details.unitsRequested
+            )
+        {} catch {
+            require(bank.dao() == dao, "invalid dao");
+            bank.addToBalance(
+                kycedMember,
+                DaoHelper.UNITS,
+                details.unitsRequested
+            );
+        }
 
         if (amount > details.amount && tokenAddr == DaoHelper.ETH_TOKEN) {
             payable(msg.sender).sendValue(msg.value - details.amount);
