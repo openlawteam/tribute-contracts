@@ -73,7 +73,7 @@ contract BankV1UpgradeExtension is BankExtension {
      * @param amount The new balance
      */
 
-     //slither-disable-next-line reentrancy-benign
+    //slither-disable-next-line reentrancy-benign
     function addToBalance(
         DaoRegistry _dao,
         address member,
@@ -94,7 +94,7 @@ contract BankV1UpgradeExtension is BankExtension {
      * @param token The token to update
      * @param amount The new balance
      */
-     //slither-disable-next-line reentrancy-benign
+    //slither-disable-next-line reentrancy-benign
     function subtractFromBalance(
         DaoRegistry _dao,
         address member,
@@ -122,7 +122,6 @@ contract BankV1UpgradeExtension is BankExtension {
         address token,
         uint256 amount
     ) external override hasExtensionAccess(_dao, AclFlag.INTERNAL_TRANSFER) {
-
         // slither-disable-next-line unused-return
         try dao.notJailed(from) returns (
             // slither-disable-next-line uninitialized-local,variable-scope
