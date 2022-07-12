@@ -395,7 +395,7 @@ describe("Extension - BankV1Upgrade", () => {
     );
 
     await onboardMember(dao, accounts[2]);
-    console.log("updating bank ", proposal);
+
     await manager.processSignedProposal(
       dao.address,
       proposal,
@@ -420,9 +420,12 @@ describe("Extension - BankV1Upgrade", () => {
     expect(otherAccountUnits.toString()).equal("10");
 
     await onboardMember(dao, accounts[3]);
+    await onboardMember(dao, accounts[2]);
 
     otherAccountUnits = await bank.balanceOf(accounts[3], UNITS);
-
     expect(otherAccountUnits.toString()).equal("10");
+
+    otherAccountUnits = await bank.balanceOf(accounts[2], UNITS);
+    expect(otherAccountUnits.toString()).equal("20");
   });
 });
