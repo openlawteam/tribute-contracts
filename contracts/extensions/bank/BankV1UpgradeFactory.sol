@@ -60,7 +60,7 @@ contract BankV1UpgradeFactory is IFactory, CloneFactory, ReentrancyGuard {
     {
         address daoAddress = address(dao);
         require(daoAddress != address(0x0), "invalid dao addr");
-        address extensionAddr = _createClone(identityAddress);
+        address payable extensionAddr = _createClone(identityAddress);
         _extensions[daoAddress] = extensionAddr;
 
         BankV1UpgradeExtension extension = BankV1UpgradeExtension(

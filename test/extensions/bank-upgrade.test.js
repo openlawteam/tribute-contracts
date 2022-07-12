@@ -404,8 +404,6 @@ describe("Extension - BankV1Upgrade", () => {
       sig
     );
 
-    console.log("bank updated!");
-
     const bankAddr = await dao.getExtensionAddress(newExtensionId);
     expect(bankAddr).to.equal(newBankAddr);
 

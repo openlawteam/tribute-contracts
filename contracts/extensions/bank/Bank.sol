@@ -144,7 +144,7 @@ contract BankExtension is IExtension, ERC165 {
         address payable member,
         address tokenAddr,
         uint256 amount
-    ) external hasExtensionAccess(_dao, AclFlag.WITHDRAW) {
+    ) external virtual hasExtensionAccess(_dao, AclFlag.WITHDRAW) {
         require(
             balanceOf(member, tokenAddr) >= amount,
             "bank::withdraw::not enough funds"
@@ -166,7 +166,7 @@ contract BankExtension is IExtension, ERC165 {
         address payable memberTo,
         address tokenAddr,
         uint256 amount
-    ) external hasExtensionAccess(_dao, AclFlag.WITHDRAW) {
+    ) external virtual hasExtensionAccess(_dao, AclFlag.WITHDRAW) {
         require(
             balanceOf(memberFrom, tokenAddr) >= amount,
             "bank::withdraw::not enough funds"

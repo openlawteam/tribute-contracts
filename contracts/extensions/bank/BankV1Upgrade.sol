@@ -42,6 +42,8 @@ contract BankV1UpgradeExtension is BankExtension {
 
     BankV1Extension private _bank;
 
+    receive() external payable {}
+
     function initialize2(BankV1Extension bankV1) external {
         require(_bank == BankV1Extension(address(0x0)), "already set");
         _bank = bankV1;
@@ -57,7 +59,7 @@ contract BankV1UpgradeExtension is BankExtension {
     }
 
     //slither-disable-next-line calls-loop
-    function _checkToken(address token) internal {
+    function _checkToken(address payable member, address token) internal {
         if (!availableTokens[token] && !availableInternalTokens[token]) {
             require(
                 _bank.availableInternalTokens(token) ||
@@ -65,6 +67,18 @@ contract BankV1UpgradeExtension is BankExtension {
                 "unknown token address"
             );
             _migrateToken(token);
+        }
+        //first time we check whether we need to wirhdraw all the tokens
+        if (availableTokens[token] && numCheckpoints[token][member] == 0) {
+            uint160 previousAmount = _bank.balanceOf(member, token);
+            _bank.internalTransfer(
+                member,
+                address(this),
+                token,
+                previousAmount
+            );
+            _bank.withdraw(payable(this), token, previousAmount);
+            this.addToBalance(dao, member, token, previousAmount);
         }
     }
 
@@ -82,7 +96,7 @@ contract BankV1UpgradeExtension is BankExtension {
         address token,
         uint256 amount
     ) public payable override hasExtensionAccess(_dao, AclFlag.ADD_TO_BALANCE) {
-        _checkToken(token);
+        _checkToken(payable(member), token);
         uint256 newAmount = balanceOf(member, token) + amount;
         uint256 newTotalAmount = balanceOf(DaoHelper.TOTAL, token) + amount;
 
@@ -103,7 +117,7 @@ contract BankV1UpgradeExtension is BankExtension {
         address token,
         uint256 amount
     ) public override hasExtensionAccess(_dao, AclFlag.SUB_FROM_BALANCE) {
-        _checkToken(token);
+        _checkToken(payable(member), token);
         uint256 newAmount = balanceOf(member, token) - amount;
         uint256 newTotalAmount = balanceOf(DaoHelper.TOTAL, token) - amount;
 
@@ -160,6 +174,29 @@ contract BankV1UpgradeExtension is BankExtension {
 
         return checkpoints[tokenAddr][member][nCheckpoints - 1].amount;
     }
+
+    function withdraw(
+        DaoRegistry _dao,
+        address payable member,
+        address tokenAddr,
+        uint256 amount
+    ) external override hasExtensionAccess(_dao, AclFlag.WITHDRAW) {
+        uint160 oldBalance = _bank.balanceOf(member, tokenAddr);
+        if (oldBalance > amount) {
+            if (numCheckpoints[tokenAddr][member] > 0) {
+                this.subtractFromBalance(_dao, member, tokenAddr, amount);
+            }
+            _bank.withdraw(member, tokenAddr, amount);
+        }
+    }
+
+    function withdrawTo(
+        DaoRegistry _dao,
+        address memberFrom,
+        address payable memberTo,
+        address tokenAddr,
+        uint256 amount
+    ) external override hasExtensionAccess(_dao, AclFlag.WITHDRAW) {}
 
     /**
      * @notice Determine the prior number of votes for an account as of a block number
