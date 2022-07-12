@@ -47,6 +47,7 @@ contract BankV1UpgradeExtension is BankExtension {
         _bank = bankV1;
     }
 
+    //slither-disable-next-line calls-loop
     function _migrateToken(address token) internal {
         if (_bank.availableInternalTokens(token)) {
             this.registerPotentialNewInternalToken(dao, token);
@@ -54,7 +55,7 @@ contract BankV1UpgradeExtension is BankExtension {
             this.registerPotentialNewToken(dao, token);
         }
     }
-
+    //slither-disable-next-line calls-loop
     function _checkToken(address token) internal {
         if (!availableTokens[token] && !availableInternalTokens[token]) {
             require(
@@ -144,6 +145,7 @@ contract BankV1UpgradeExtension is BankExtension {
      * @param tokenAddr The token where the member's balance of which will be returned
      * @return The amount in account's tokenAddr balance
      */
+     //slither-disable-next-line calls-loop
     function balanceOf(address member, address tokenAddr)
         public
         view
