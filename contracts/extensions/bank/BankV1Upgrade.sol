@@ -42,7 +42,10 @@ contract BankV1UpgradeExtension is BankExtension {
 
     BankV1Extension private _bank;
 
-    receive() external payable {}
+    //slither-disable-next-line locked-ether
+    receive() external payable {
+        require(msg.sender == address(_bank), "only getting ETH from previous bank");
+    }
 
     function initialize2(BankV1Extension bankV1) external {
         require(_bank == BankV1Extension(address(0x0)), "already set");
@@ -89,7 +92,7 @@ contract BankV1UpgradeExtension is BankExtension {
      * @param amount The new balance
      */
 
-    //slither-disable-next-line reentrancy-benign
+    //slither-disable-next-line reentrancy-benign,reentrancy-no-eth
     function addToBalance(
         DaoRegistry _dao,
         address member,
@@ -110,7 +113,7 @@ contract BankV1UpgradeExtension is BankExtension {
      * @param token The token to update
      * @param amount The new balance
      */
-    //slither-disable-next-line reentrancy-benign
+    //slither-disable-next-line reentrancy-benign,reentrancy-no-eth
     function subtractFromBalance(
         DaoRegistry _dao,
         address member,
