@@ -1,9 +1,9 @@
 [
   {
     "network": "rinkeby",
-    "daoFactoryAddress": "0xB77659c03e457Ecc5Db766Ec22d4cE02dCCf15F4",
-    "daoFactoryStartBlock": 10706172,
+    "daoFactoryAddress": "0x96dAE5f5B474E3184e6B4C643F5204bB180FEdb0",
+    "daoFactoryStartBlock": 11014124,
     "GITHUB_USERNAME": "openlawteam",
-    "SUBGRAPH_NAME": "c0c0-dev"
+    "SUBGRAPH_NAME": "si-dev"
   }
 ]
