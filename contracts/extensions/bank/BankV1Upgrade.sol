@@ -44,7 +44,10 @@ contract BankV1UpgradeExtension is BankExtension {
 
     //slither-disable-next-line locked-ether
     receive() external payable {
-        require(msg.sender == address(_bank), "only getting ETH from previous bank");
+        require(
+            msg.sender == address(_bank),
+            "only getting ETH from previous bank"
+        );
     }
 
     function initialize2(BankV1Extension bankV1) external {
