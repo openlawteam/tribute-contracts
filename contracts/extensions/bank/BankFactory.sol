@@ -7,6 +7,8 @@ import "../IFactory.sol";
 import "./Bank.sol";
 import "@openzeppelin/contracts/security/ReentrancyGuard.sol";
 
+import "hardhat/console.sol";
+
 /**
 MIT License
 
@@ -67,6 +69,7 @@ contract BankFactory is IFactory, CloneFactory, ReentrancyGuard {
         // Member at index 1 is the DAO owner, but also the payer of the DAO deployment
         extension.initialize(dao, dao.getMemberAddress(1));
         // slither-disable-next-line reentrancy-events
+        console.log("BankV2 created!");
         emit BankCreated(daoAddress, address(extension));
     }
 

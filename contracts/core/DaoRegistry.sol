@@ -6,6 +6,7 @@ import "../guards/AdapterGuard.sol";
 import "../guards/MemberGuard.sol";
 import "../extensions/IExtension.sol";
 import "../helpers/DaoHelper.sol";
+import "hardhat/console.sol";
 
 /**
 MIT License
@@ -463,7 +464,10 @@ contract DaoRegistry is MemberGuard, AdapterGuard {
         view
         returns (address)
     {
-        require(extensions[extensionId] != address(0), "extension not found");
+        if(extensions[extensionId] == address(0)) {
+            console.logBytes32(extensionId);
+            revert("extension not found");
+        }
         return extensions[extensionId];
     }
 

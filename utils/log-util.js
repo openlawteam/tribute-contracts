@@ -2,7 +2,7 @@ const isDebug = process.env.DEBUG === "true";
 const isTest = process.env.TEST === "true";
 
 const debug = (...data) => {
-  if (isDebug) console.log(data.join(""));
+  console.log(data.join(""));
 };
 
 const log = (data) => {

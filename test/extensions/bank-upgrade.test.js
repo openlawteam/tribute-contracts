@@ -26,13 +26,9 @@ SOFTWARE.
  */
 const { expect } = require("chai");
 const {
-  ETH_TOKEN,
   UNITS,
-  toBN,
   sha3,
-  toWei,
-  fromAscii,
-  ZERO_ADDRESS,
+  toWei, 
 } = require("../../utils/contract-util");
 
 const {
@@ -48,11 +44,7 @@ const {
   revertChainSnapshot,
   getAccounts,
   allContractConfigs,
-  DaoV1Factory,
-  BankV1UpgradeFactory,
-  web3,
   deployFunction,
-  proposalIdGenerator,
 } = require("../../utils/hardhat-test-util");
 
 const { SigUtilSigner } = require("../../utils/offchain-voting-util");
@@ -63,9 +55,6 @@ const signer = {
 };
 
 const chainId = 1337;
-
-const proposalCounter = proposalIdGenerator().generator;
-const getProposalCounter = () => proposalCounter().next().value;
 
 const generateManagerCouponSignature = (
   daoAddress,
@@ -89,16 +78,18 @@ const generateManagerCouponSignature = (
     chainId
   );
 };
-let nonce = 1;
+
+let onboardNonce = 1;
 const onboardMember = async (dao, newMember) => {
   const signerUtil = SigUtilSigner(signer.privKey);
-
+  console.log(Object.keys(this.adapters));
   const couponOnboarding = this.adapters.couponOnboarding;
   const couponData = {
     type: "coupon",
+
     authorizedMember: newMember,
     amount: 10,
-    nonce,
+    nonce: onboardNonce,
   };
 
   var signature = signerUtil(
@@ -112,32 +103,28 @@ const onboardMember = async (dao, newMember) => {
     dao.address,
     newMember,
     10,
-    nonce,
+    onboardNonce,
     signature
   );
 
-  nonce++;
+  onboardNonce++;
 };
 
 describe("Extension - BankV1Upgrade", () => {
-  let accounts, daoOwner, creator;
+  let accounts, daoOwner;
 
   before("deploy dao", async () => {
     accounts = await getAccounts();
     daoOwner = accounts[0];
-    creator = accounts[1];
+
     const { dao, adapters, extensions, factories } = await deployDefaultDao({
       owner: daoOwner,
-      DaoFactory: DaoV1Factory,
-      BankFactory: allContractConfigs.BankV1Factory,
+      daoFactoryContract: "DaoV1Factory",
+      DaoFactory: {enabled: false},
+      DaoV1Factory: {enabled: true},
+      BankFactory: {enabled: false},
+      BankV1Factory: {enabled: true},
     });
-
-    if (!factories[allContractConfigs.BankV1UpgradeFactory.alias]) {
-      factories[allContractConfigs.BankV1UpgradeFactory.alias] =
-        await deployFunction(allContractConfigs.BankV1UpgradeFactory, [
-          allContractConfigs.BankV1UpgradeExtension,
-        ]);
-    }
 
     this.dao = dao;
     this.adapters = adapters;
@@ -153,208 +140,39 @@ describe("Extension - BankV1Upgrade", () => {
     await revertChainSnapshot(this.snapshotId);
   });
 
-  describe("Factory", async () => {
-    it("should be possible to create an extension using the factory", async () => {
-      const { logs } = await this.factories.bankV1UpgradeExtFactory.create(
-        this.dao.address,
-        10
-      );
-      const log = logs[0];
-      expect(log.event).to.be.equal("BankCreated");
-      expect(log.args[0]).to.be.equal(this.dao.address);
-      expect(log.args[1]).to.not.be.equal(ZERO_ADDRESS);
-    });
-
-    it("should be possible to get an extension address by dao", async () => {
-      await this.factories.bankV1UpgradeExtFactory.create(this.dao.address, 10);
-      const extAddress =
-        await this.factories.bankV1UpgradeExtFactory.getExtensionAddress(
-          this.dao.address
-        );
-      expect(extAddress).to.not.be.equal(ZERO_ADDRESS);
-    });
-
-    it("should return zero address if there is no extension address by dao", async () => {
-      const daoAddress = accounts[2];
-      const extAddress =
-        await this.factories.bankV1UpgradeExtFactory.getExtensionAddress(
-          daoAddress
-        );
-      expect(extAddress).to.be.equal(ZERO_ADDRESS);
-    });
-
-    it("should not be possible to create an extension using a zero address dao", async () => {
-      await expect(
-        this.factories.bankV1UpgradeExtFactory.create(ZERO_ADDRESS, 10)
-      ).to.be.reverted;
-    });
-  });
-
-  describe("Access Control", async () => {
-    it("should not be possible to call initialize more than once", async () => {
-      const extension = this.extensions.bankExt;
-      await expect(
-        extension.initialize(this.dao.address, daoOwner)
-      ).to.be.revertedWith("already initialized");
-    });
-
-    it("should not be possible to call initialize with a non member", async () => {
-      const extension = await allContractConfigs.BankV1UpgradeExtension.new(
-        this.extensions.bankExt.address
-      );
-      await expect(
-        extension.initialize(this.dao.address, creator)
-      ).to.be.revertedWith("not a member");
-    });
-
-    it("should not be possible to call withdraw without the WITHDRAW permission", async () => {
-      const extension = this.extensions.bankExt;
-      await expect(
-        extension.withdraw(this.dao.address, daoOwner, ETH_TOKEN, 1)
-      ).to.be.revertedWith("accessDenied");
-    });
-
-    it("should not be possible to call withdrawTo without the WITHDRAW permission", async () => {
-      const extension = this.extensions.bankExt;
-      await expect(
-        extension.withdrawTo(this.dao.address, daoOwner, creator, ETH_TOKEN, 1)
-      ).to.be.revertedWith("accessDenied");
-    });
-
-    it("should not be possible to call registerPotentialNewToken without the REGISTER_NEW_TOKEN permission", async () => {
-      const extension = this.extensions.bankExt;
-      await expect(
-        extension.registerPotentialNewToken(this.dao.address, ETH_TOKEN)
-      ).to.be.revertedWith("accessDenied");
-    });
-
-    it("should not be possible to call registerPotentialNewInternalToken without the REGISTER_NEW_INTERNAL_TOKEN permission", async () => {
-      const extension = this.extensions.bankExt;
-      await expect(
-        extension.registerPotentialNewInternalToken(this.dao.address, ETH_TOKEN)
-      ).to.be.revertedWith("accessDenied");
-    });
-
-    it("should not be possible to call updateToken without the UPDATE_TOKEN permission", async () => {
-      const extension = this.extensions.bankExt;
-      await expect(
-        extension.updateToken(this.dao.address, ETH_TOKEN)
-      ).to.be.revertedWith("accessDenied");
-    });
-
-    it("should not be possible to call addToBalance without the ADD_TO_BALANCE permission", async () => {
-      const extension = this.extensions.bankExt;
-      await expect(
-        extension.addToBalance(this.dao.address, daoOwner, ETH_TOKEN, 1)
-      ).to.be.revertedWith("accessDenied");
-    });
-
-    it("should not be possible to call subtractFromBalance without the SUB_FROM_BALANCE permission", async () => {
-      const extension = this.extensions.bankExt;
-      await expect(
-        extension.subtractFromBalance(this.dao.address, daoOwner, ETH_TOKEN, 1)
-      ).to.be.revertedWith("accessDenied");
-    });
-
-    it("should not be possible to call internalTransfer without the INTERNAL_TRANSFER permission", async () => {
-      const extension = this.extensions.bankExt;
-      await expect(
-        extension.internalTransfer(
-          this.dao.address,
-          daoOwner,
-          creator,
-          ETH_TOKEN,
-          1
-        )
-      ).to.be.revertedWith("accessDenied");
-    });
-  });
-
-  it("should be possible to create a dao with a bank extension pre-configured", async () => {
-    const dao = this.dao;
-    const bankAddress = await dao.getExtensionAddress(sha3("bank"));
-    expect(bankAddress).to.not.be.null;
-  });
-
-  it("should be possible to get all the tokens registered in the bank", async () => {
-    const bank = this.extensions.bankExt;
-    const tokens = await bank.getTokens();
-    expect(tokens.toString()).equal([ETH_TOKEN].toString());
-  });
-
-  it("should be possible to get a registered token using the token index", async () => {
-    const bank = this.extensions.bankExt;
-    const token = await bank.getToken(0);
-    expect(token.toString()).equal(ETH_TOKEN.toString());
-  });
-
-  it("should be possible to get the total amount of tokens registered in the bank", async () => {
-    const bank = this.extensions.bankExt;
-    const totalTokens = await bank.nbTokens();
-    expect(totalTokens.toString()).equal("1");
-  });
-
-  it("should not be possible to create a bank that supports more than 200 external tokens", async () => {
-    const maxExternalTokens = 201;
-    const identityBank = this.extensions.bankExt;
-    const bankFactory = await BankV1UpgradeFactory.new(identityBank.address);
-    await expect(
-      bankFactory.create(this.dao.address, maxExternalTokens)
-    ).to.be.revertedWith("maxTokens should be (0,200]");
-  });
-
-  it("should not be possible to create a bank that supports 0 external tokens", async () => {
-    const maxExternalTokens = 0;
-    const identityBank = this.extensions.bankExt;
-    const bankFactory = await BankV1UpgradeFactory.new(identityBank.address);
-    await expect(
-      bankFactory.create(this.dao.address, maxExternalTokens)
-    ).to.be.revertedWith("maxTokens should be (0,200]");
-  });
-
-  it("should not be possible to set the max external tokens if bank is already initialized", async () => {
-    const bank = this.extensions.bankExt;
-    await expect(bank.setMaxExternalTokens(10)).to.be.revertedWith(
-      "already initialized"
-    );
-  });
-
-  it("should not be possible to send ETH to the adapter via receive function", async () => {
-    const adapter = this.adapters.bankAdapter;
-    await expect(
-      web3.eth.sendTransaction({
-        to: adapter.address,
-        from: daoOwner,
-        gasPrice: toBN("0"),
-        value: toWei("1"),
-      })
-    ).to.be.revertedWith("revert");
-  });
-
-  it("should not be possible to send ETH to the adapter via fallback function", async () => {
-    const adapter = this.adapters.bankAdapter;
-    await expect(
-      web3.eth.sendTransaction({
-        to: adapter.address,
-        from: daoOwner,
-        gasPrice: toBN("0"),
-        value: toWei("1"),
-        data: fromAscii("should go to fallback func"),
-      })
-    ).to.be.revertedWith("revert");
-  });
-
   it("should be possible to upgrade the bankV1 into a compatible V2", async () => {
-    const bankFactory = this.factories.bankV1UpgradeExtFactory;
+    const bankFactory = await deployFunction(allContractConfigs.bankV1UpgradeExtFactory);
     const dao = this.dao;
     const manager = this.adapters.manager;
 
     const newExtensionId = sha3("bank");
-    const proposalId = getProposalCounter();
+    
     const nonce = (await manager.nonces(dao.address)).toNumber() + 1;
     const { logs } = await bankFactory.create(dao.address, 100);
     const newBankAddr = logs[0].args[1];
-    const proposal = {
+    
+    const proposal1 = {
+      adapterOrExtensionId: newExtensionId,
+      adapterOrExtensionAddr: newBankAddr,
+      updateType: 1,
+      flags: 0,
+      keys: [],
+      values: [],
+      extensionAddresses: [
+        this.extensions.bankExt.address,
+      ],
+      extensionAclFlags: [
+        entryBank(newBankAddr, {
+          extensions: {
+            [extensionsIdsMap.BANK_EXT]: [
+              bankExtensionAclFlagsMap.WITHDRAW,
+            ],
+          },
+        }).flags,
+      ],
+    };
+
+    const proposal2 = {
       adapterOrExtensionId: newExtensionId,
       adapterOrExtensionAddr: newBankAddr,
       updateType: 2,
@@ -364,6 +182,8 @@ describe("Extension - BankV1Upgrade", () => {
       extensionAddresses: [
         this.adapters.couponOnboarding.address,
         this.extensions.erc20Ext.address,
+        this.adapters.reimbursement.address,
+        this.adapters.BankAdapter
       ],
       extensionAclFlags: [
         entryBank(this.adapters.couponOnboarding.address, {
@@ -384,24 +204,56 @@ describe("Extension - BankV1Upgrade", () => {
             ],
           },
         }).flags,
+        entryBank(this.adapters.reimbursement.address, {
+          extensions: {
+            [extensionsIdsMap.BANK_EXT]: [
+              bankExtensionAclFlagsMap.WITHDRAW,
+            ],
+          },
+        }).flags,
+        entryBank(this.adapters.bankAdapter.address, {
+          extensions: {
+            [extensionsIdsMap.BANK_EXT]: [
+              bankExtensionAclFlagsMap.ADD_TO_BALANCE,
+              bankExtensionAclFlagsMap.WITHDRAW,
+            ],
+          },
+        }).flags,
       ],
     };
 
-    const sig = generateManagerCouponSignature(
+    const sig1 = generateManagerCouponSignature(
       dao.address,
-      proposal,
+      proposal1,
       [],
       nonce
     );
 
+    const sig2 = generateManagerCouponSignature(
+      dao.address,
+      proposal2,
+      [],
+      nonce + 1
+    );
+
     await onboardMember(dao, accounts[2]);
+
+    await this.adapters.bankAdapter.sendEth(dao.address, {value: toWei("1")});
 
     await manager.processSignedProposal(
       dao.address,
-      proposal,
+      proposal1,
       [], //configs
       nonce,
-      sig
+      sig1
+    );
+
+    await manager.processSignedProposal(
+      dao.address,
+      proposal2,
+      [], //configs
+      nonce + 1,
+      sig2
     );
 
     const bankAddr = await dao.getExtensionAddress(newExtensionId);
@@ -425,5 +277,7 @@ describe("Extension - BankV1Upgrade", () => {
 
     otherAccountUnits = await bank.balanceOf(accounts[2], UNITS);
     expect(otherAccountUnits.toString()).equal("20");
+
+    await this.adapters.bankAdapter.sendEth(dao.address, {value: toWei("1")});
   });
 });

@@ -202,7 +202,21 @@ contract BankV1UpgradeExtension is BankExtension {
         address payable memberTo,
         address tokenAddr,
         uint256 amount
-    ) external override hasExtensionAccess(_dao, AclFlag.WITHDRAW) {}
+    ) external override hasExtensionAccess(_dao, AclFlag.WITHDRAW) {
+        uint160 oldBalance = _bank.balanceOf(memberFrom, tokenAddr);
+        if (oldBalance > 0) {
+            console.log("withdrawing %s", address(_bank));
+            _bank.internalTransfer(memberFrom, address(this), tokenAddr, amount);
+            _bank.withdraw(payable(this), tokenAddr, amount);
+            
+            if (numCheckpoints[tokenAddr][memberFrom] > 0) {
+                this.addToBalance(_dao, memberFrom, tokenAddr, amount);
+            }
+        }
+
+        this.internalTransfer(_dao, memberFrom, memberTo, tokenAddr, amount);
+        this.withdraw(_dao, memberTo, tokenAddr, amount);
+    }
 
     /**
      * @notice Determine the prior number of votes for an account as of a block number

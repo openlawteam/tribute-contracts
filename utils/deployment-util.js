@@ -86,11 +86,14 @@ const createFactories = async ({ options }) => {
       const extensionConfig = options.contractConfigs.find(
         (c) => c.id === config.generatesExtensionId
       );
+
+      if (!extensionConfig && (config.skipAutoDeploy || !config.enabled)) 
+        return;
+      
       if (!extensionConfig)
         throw new Error(
-          `Missing extension config ${config.generatesExtensionId}`
+          `Missing extension config ${config.generatesExtensionId} for ${config.name}`
         );
-
       const extensionContract = options[extensionConfig.name];
       if (!extensionContract)
         throw new Error(`Missing extension contract ${extensionConfig.name}`);
@@ -121,7 +124,7 @@ const createExtensions = async ({ dao, factories, options }) => {
   const extensions = {};
   debug("create extensions ...");
   const createExtension = async ({ dao, factory, options }) => {
-    debug("create extension ", factory.configs.alias);
+    debug("use factory ", factory.configs.alias);
     const factoryConfigs = factory.configs;
     const extensionConfigs = options.contractConfigs.find(
       (c) => c.id === factoryConfigs.generatesExtensionId
@@ -130,6 +133,8 @@ const createExtensions = async ({ dao, factories, options }) => {
       throw new Error(
         `Missing extension configuration <generatesExtensionId> for in ${factoryConfigs.name} configs`
       );
+
+    debug("create extension ", extensionConfigs.name);
 
     let tx;
     if (
@@ -176,10 +181,12 @@ const createExtensions = async ({ dao, factories, options }) => {
       throw new Error(
         `Unable to embed extension configs for ${extensionConfigs.name}`
       );
-
+    if(!newExtension.configs.extensionId) {
+      throw new Error(`missing 'extensionId' in extension configs for ${extensionConfigs.name}`);
+    }
     await waitTx(
       dao["addExtension(bytes32,address)"](
-        sha3(newExtension.configs.id),
+        sha3(newExtension.configs.extensionId),
         newExtension.address
       )
     );
@@ -193,7 +200,9 @@ const createExtensions = async ({ dao, factories, options }) => {
     return newExtension;
   };
 
-  await Object.values(factories).reduce(
+  await Object.values(factories)
+  .filter((factory) => !factory.configs.skipAutoDeploy)
+  .reduce(
     (p, factory) =>
       p
         .then(() =>
@@ -229,15 +238,15 @@ const createAdapters = async ({ options }) => {
 
   debug("deploying or re-using ", adapterList.length, " adapters...");
   await adapterList.reduce(
-    (p, config) =>
-      p
-        .then(() => deployContract({ config, options }))
-        .then((adapter) => (adapters[adapter.configs.alias] = adapter))
-        .catch((err) => {
-          error(`Error while creating adapter ${config.name}. `, err);
+    async (p, config) => {
+      try {
+        const adapter = await deployContract({ config, options });
+        adapters[adapter.configs.alias] = adapter
+      } catch (err) {
+        error(`Error while creating adapter ${config.name}. `, err);
           throw err;
-        }),
-    Promise.resolve()
+      }
+    }
   );
 
   return adapters;
@@ -469,16 +478,11 @@ const deployDao = async (options) => {
  * Creates an instance of the DAO based of the DaoFactory contract.
  * Returns the new DAO instance, and dao name.
  */
-const cloneDao = async ({
-  owner,
-  creator,
-  deployFunction,
-  attachFunction,
-  DaoRegistry,
-  DaoFactory,
-  name,
-}) => {
-  const daoFactory = await deployFunction(DaoFactory, [DaoRegistry]);
+const cloneDao = async (options) => {
+  const daoFactoryContract = options.contractConfigs.find(config => config.name === options.daoFactoryContract);
+  
+  const daoRegistry = options.contractConfigs.find(config => config.id === daoFactoryContract.generatesExtensionId);
+  const daoFactory = await options.deployFunction(daoFactoryContract, [options[daoRegistry.name]]);
   await waitTx(daoFactory.createDao(name, creator ? creator : owner));
   const daoAddress = await daoFactory.getDaoAddress(name);
   if (daoAddress === ZERO_ADDRESS) throw Error("Invalid dao address");
@@ -518,11 +522,15 @@ const configureDao = async ({
          contract address: ${a.address}
          contract acls: ${JSON.stringify(a.configs.acls)}`);
 
+      if(!a.configs.adapterId) {
+        throw new Error(`missing "adapterId" in adapter configs for ${a.configs.name}`);
+      }
+
       return p.then(
         async () =>
           await waitTx(
             daoFactory.addAdapters(dao.address, [
-              entryDao(a.configs.id, a.address, a.configs.acls),
+              entryDao(a.configs.adapterId, a.address, a.configs.acls),
             ])
           )
       );
@@ -645,7 +653,7 @@ const configureDao = async ({
         .filter((a) =>
           // The adapters must have at least 1 ACL flag defined to access the targetExtension
           Object.keys(a.configs.acls.extensions).some(
-            (extId) => extId === targetExtension.configs.id
+            (extId) => extId === targetExtension.configs.extensionId
           )
         );
 

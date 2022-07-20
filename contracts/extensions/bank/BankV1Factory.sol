@@ -6,6 +6,7 @@ import "../../core/CloneFactory.sol";
 import "../IFactory.sol";
 import "./BankV1.sol";
 import "@openzeppelin/contracts/security/ReentrancyGuard.sol";
+import "hardhat/console.sol";
 
 /**
 MIT License
@@ -68,6 +69,7 @@ contract BankV1Factory is IFactory, CloneFactory, ReentrancyGuard {
         extension.initialize(dao, dao.getMemberAddress(1));
         // slither-disable-next-line reentrancy-events
         emit BankCreated(daoAddress, address(extension));
+        console.log("creating bank V1 extension %s", address(extension));
     }
 
     /**

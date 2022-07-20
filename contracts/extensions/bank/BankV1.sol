@@ -99,9 +99,13 @@ contract BankV1Extension is AdapterGuard, IExtension {
                     address(this),
                     uint8(flag)
                 ),
-            "bank::accessDenied"
+            "bankV1::accessDenied"
         );
         _;
+    }
+
+    fallback() external {
+        revert("bank v1 fallback!");
     }
 
     /**
@@ -112,7 +116,7 @@ contract BankV1Extension is AdapterGuard, IExtension {
      */
     function initialize(DaoRegistry _dao, address creator) external override {
         require(!initialized, "bank already initialized");
-        require(_dao.isMember(creator), "bank::not member");
+        require(_dao.isMember(creator), "bankV1::not member");
         dao = _dao;
         initialized = true;
 
@@ -137,7 +141,7 @@ contract BankV1Extension is AdapterGuard, IExtension {
     ) external hasExtensionAccess(AclFlag.WITHDRAW) {
         require(
             balanceOf(member, tokenAddr) >= amount,
-            "bank::withdraw::not enough funds"
+            "bankV1::withdraw::not enough funds"
         );
         subtractFromBalance(member, tokenAddr, amount);
         if (tokenAddr == DaoHelper.ETH_TOKEN) {

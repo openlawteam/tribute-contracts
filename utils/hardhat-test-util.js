@@ -96,13 +96,14 @@ const deployFunction = async (contractInterface, args, from) => {
   if (!contractInterface) throw Error("undefined contractInterface");
 
   const contractConfig = allContractConfigs.find(
-    (c) => c.name === contractInterface.contractName
+    (c) => c.name === contractInterface.name
   );
 
-  if (!contractConfig)
+  if (!contractConfig) {
     throw Error(
-      "contract config not found for '" + contractInterface.contractName + "'"
+      "contract config not found for '" + contractInterface.name + "'"
     );
+  }
 
   const accounts = await getAccounts();
   const f = from ? from : accounts[0];
@@ -124,12 +125,15 @@ const deployFunction = async (contractInterface, args, from) => {
   return { ...instance, configs: contractConfig };
 };
 
-const getHardhatContracts = (contracts) => {
+const getHardhatContracts = (options, contracts) => {
   return contracts
-    .filter((c) => c.enabled)
     .reduce((previousValue, contract) => {
-      previousValue[contract.name] = getContract(contract.name);
-      previousValue[contract.name].contractName = contract.name;
+      let current = contract;
+      if(options[contract.name]) {
+        current = Object.assign({}, contract, options[contract.name]);
+      }
+      previousValue[current.name] = getContract(current.name);
+      previousValue[current.name].contractName = current.name;
       return previousValue;
     }, {});
 };
@@ -145,6 +149,7 @@ const getDefaultOptions = (options) => {
     maxAmount,
     maxUnits,
     chainId: 1,
+    daoFactoryContract: "DaoFactory",
     maxExternalTokens: 100,
     managerSignerAddress: "0x90F8bf6A479f320ead074411a4B0e7944Ea8c9C1",
     couponCreatorAddress: "0x90F8bf6A479f320ead074411a4B0e7944Ea8c9C1",
@@ -264,16 +269,16 @@ const proposalIdGenerator = () => {
 };
 
 module.exports = (() => {
-  const hardhatContracts = getHardhatContracts(allContractConfigs);
   const deployDefaultDao = async (options) => {
+    const hardhatContracts = getHardhatContracts(options, allContractConfigs);
     const { WETH } = hardhatContracts;
     const weth = await WETH.new();
     const finalize = options.finalize === undefined ? true : options.finalize;
 
     const result = await deployDao({
       ...getDefaultOptions(options),
-      ...hardhatContracts,
       ...options,
+      ...hardhatContracts,
       deployFunction,
       attachFunction: attach,
       contractConfigs: allContractConfigs,
@@ -311,12 +316,12 @@ module.exports = (() => {
     await dao.finalizeDao({ from: owner });
 
     return {
-      dao: dao,
-      adapters: adapters,
-      extensions: extensions,
-      factories: factories,
-      testContracts: testContracts,
-      utilContracts: utilContracts,
+      dao,
+      adapters,
+      extensions,
+      factories,
+      testContracts,
+      utilContracts,
       wethContract: weth,
     };
   };
@@ -421,8 +426,6 @@ module.exports = (() => {
     deployFunction,
     attachFunction: attach,
     getContractFromOpenZeppelin: getContract,
-    etContractFromOpenZeppelinByName: getContractByName,
-    ...hardhatContracts,
-    allContractConfigs: contractConfigs,
+    etContractFromOpenZeppelinByName: getContractByName
   };
 })();

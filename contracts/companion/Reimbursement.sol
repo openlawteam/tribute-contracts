@@ -10,6 +10,7 @@ import "@openzeppelin/contracts/utils/Address.sol";
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 import "../helpers/DaoHelper.sol";
+import "hardhat/console.sol";
 
 /**
 MIT License
@@ -155,13 +156,16 @@ contract ReimbursementContract is IReimbursement, AdapterGuard {
             _data[address(dao)].rateLimitStart = block.timestamp;
             _data[address(dao)].ethUsed = payback;
         }
+        
         // slither-disable-next-line unused-return
-        bank.withdrawTo(
+        try bank.withdrawTo(
             dao,
             DaoHelper.GUILD,
             caller,
             DaoHelper.ETH_TOKEN,
             payback
-        );
+        ) {} catch {
+            //if payback does not work, ignore reimbursement
+        }
     }
 }

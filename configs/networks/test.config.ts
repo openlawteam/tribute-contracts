@@ -18,7 +18,7 @@ const testContracts = [
     name: "CloneFactoryTest",
     alias: "cloneFactoryTest",
     path: "../../contracts/test/CloneFactoryTest",
-    enabled: true,
+    enabled: false,
     skipAutoDeploy: true,
     version: "1.0.0",
     type: ContractType.Factory,
@@ -30,6 +30,7 @@ const testContracts = [
   },
   {
     id: "erc1155-test",
+    adapterId: "erc1155-test",
     name: "ERC1155TestAdapterContract",
     alias: "erc1155TestAdapter",
     path: "../../contracts/test/ERC1155TestAdapterContract",
@@ -50,6 +51,7 @@ const testContracts = [
   {
     id: "erc721-test",
     name: "ERC721TestAdapterContract",
+    adapterId: "erc721-test",
     alias: "erc721TestAdapter",
     path: "../../contracts/test/ERC721TestAdapterContract",
     enabled: true,

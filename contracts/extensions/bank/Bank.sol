@@ -107,6 +107,10 @@ contract BankExtension is IExtension, ERC165 {
         _;
     }
 
+    fallback() external {
+        revert("bank v2 fallback!");
+    }
+
     /**
      * @notice Initialises the DAO
      * @dev Involves initialising available tokens, checkpoints, and membership of creator

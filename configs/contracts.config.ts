@@ -38,6 +38,10 @@ export type ContractConfig = {
    * The id of the contract, usually it is imported from dao-ids-util.ts.
    */
   id: string;
+
+  extensionId?: string;
+
+  adapterId?: string;
   /**
    *  The name of the solidity contract, not the file name, but the contract itself.
    */
@@ -243,6 +247,7 @@ export const contracts: Array<ContractConfig> = [
   },
   {
     id: "erc1155-test-token",
+    adapterId: "erc1155-test-token",
     name: "ERC1155TestToken",
     alias: "erc1155TestToken",
     path: "../../contracts/test/ERC1155TestToken",
@@ -334,6 +339,7 @@ export const contracts: Array<ContractConfig> = [
     alias: "bankExtFactory",
     path: "../../contracts/extensions/bank/BankFactory",
     enabled: true,
+    skipAutoDeploy: false,
     version: "1.0.0",
     type: ContractType.Factory,
     acls: {
@@ -349,7 +355,7 @@ export const contracts: Array<ContractConfig> = [
     alias: "bankV1ExtFactory",
     path: "../../contracts/extensions/bank/BankV1Factory",
     enabled: true,
-    skipAutoDeploy: true,
+    skipAutoDeploy: false,
     version: "1.0.0",
     type: ContractType.Factory,
     acls: {
@@ -357,7 +363,7 @@ export const contracts: Array<ContractConfig> = [
       extensions: {},
     },
     deploymentArgs: ["daoAddress", "maxExternalTokens"],
-    generatesExtensionId: extensionsIdsMap.BANK_EXT,
+    generatesExtensionId: "bank-v1",
   },
   {
     id: "bank-v1-upgrade-factory",
@@ -373,7 +379,7 @@ export const contracts: Array<ContractConfig> = [
       extensions: {},
     },
     deploymentArgs: ["daoAddress", "maxExternalTokens"],
-    generatesExtensionId: extensionsIdsMap.BANK_EXT,
+    generatesExtensionId: "bank-v1-upgrade",
   },
   {
     id: "erc20-extension-factory",
@@ -462,6 +468,7 @@ export const contracts: Array<ContractConfig> = [
    */
   {
     id: extensionsIdsMap.ERC721_EXT,
+    extensionId: extensionsIdsMap.ERC721_EXT,
     name: "NFTExtension",
     alias: "erc721Ext",
     path: "../../contracts/extensions/nft/NFTExtension",
@@ -476,6 +483,7 @@ export const contracts: Array<ContractConfig> = [
   },
   {
     id: extensionsIdsMap.BANK_EXT,
+    extensionId: extensionsIdsMap.BANK_EXT,
     name: "BankExtension",
     alias: "bankExt",
     path: "../../contracts/extensions/bank/BankExtension",
@@ -489,7 +497,8 @@ export const contracts: Array<ContractConfig> = [
     },
   },
   {
-    id: extensionsIdsMap.BANK_EXT,
+    id: "bank-v1-upgrade",
+    extensionId: extensionsIdsMap.BANK_EXT,
     name: "BankV1UpgradeExtension",
     alias: "bankV1UpgradeExt",
     path: "../../contracts/extensions/bank/BankV1UpgradeExtension",
@@ -503,7 +512,8 @@ export const contracts: Array<ContractConfig> = [
     },
   },
   {
-    id: extensionsIdsMap.BANK_EXT,
+    id: "bank-v1",
+    extensionId: extensionsIdsMap.BANK_EXT,
     name: "BankV1Extension",
     alias: "bankV1Ext",
     path: "../../contracts/extensions/bank/BankV1Extension",
@@ -518,6 +528,7 @@ export const contracts: Array<ContractConfig> = [
   },
   {
     id: extensionsIdsMap.ERC20_EXT,
+    extensionId: extensionsIdsMap.ERC20_EXT,
     name: "ERC20Extension",
     alias: "erc20Ext",
     path: "../../contracts/extensions/token/erc20/ERC20Extension",
@@ -536,6 +547,7 @@ export const contracts: Array<ContractConfig> = [
   },
   {
     id: extensionsIdsMap.VESTING_EXT,
+    extensionId: extensionsIdsMap.VESTING_EXT,
     name: "InternalTokenVestingExtension",
     alias: "vestingExt",
     path: "../../contracts/extensions/token/erc20/InternalTokenVestingExtension",
@@ -550,6 +562,7 @@ export const contracts: Array<ContractConfig> = [
   },
   {
     id: extensionsIdsMap.ERC1271_EXT,
+    extensionId: extensionsIdsMap.ERC1271_EXT,
     name: "ERC1271Extension",
     alias: "erc1271Ext",
     path: "../../contracts/extensions/erc1271/ERC1271Extension",
@@ -564,6 +577,7 @@ export const contracts: Array<ContractConfig> = [
   },
   {
     id: extensionsIdsMap.EXECUTOR_EXT,
+    extensionId: extensionsIdsMap.EXECUTOR_EXT,
     name: "ExecutorExtension",
     alias: "executorExt",
     path: "../../contracts/extensions/executor/ExecutorExtension",
@@ -578,6 +592,7 @@ export const contracts: Array<ContractConfig> = [
   },
   {
     id: extensionsIdsMap.ERC1155_EXT,
+    extensionId: extensionsIdsMap.ERC1155_EXT,
     name: "ERC1155TokenExtension",
     alias: "erc1155Ext",
     path: "../../contracts/extensions/erc1155/ERC1155TokenExtension",
@@ -596,6 +611,7 @@ export const contracts: Array<ContractConfig> = [
    */
   {
     id: adaptersIdsMap.DAO_REGISTRY_ADAPTER,
+    adapterId: adaptersIdsMap.DAO_REGISTRY_ADAPTER,
     name: "DaoRegistryAdapterContract",
     alias: "daoRegistryAdapter",
     path: "../../contracts/adapters/DaoRegistryAdapterContract",
@@ -609,6 +625,7 @@ export const contracts: Array<ContractConfig> = [
   },
   {
     id: adaptersIdsMap.BANK_ADAPTER,
+    adapterId: adaptersIdsMap.BANK_ADAPTER,
     name: "BankAdapterContract",
     alias: "bankAdapter",
     path: "../../contracts/adapters/BankAdapterContract",
@@ -629,6 +646,7 @@ export const contracts: Array<ContractConfig> = [
   },
   {
     id: adaptersIdsMap.CONFIGURATION_ADAPTER,
+    adapterId: adaptersIdsMap.CONFIGURATION_ADAPTER,
     name: "ConfigurationContract",
     alias: "configuration",
     path: "../../contracts/adapters/ConfigurationContract",
@@ -648,6 +666,7 @@ export const contracts: Array<ContractConfig> = [
   },
   {
     id: adaptersIdsMap.ERC1155_ADAPTER,
+    adapterId: adaptersIdsMap.ERC1155_ADAPTER,
     name: "ERC1155AdapterContract",
     alias: "erc1155Adapter",
     path: "../../contracts/adapters/ERC1155AdapterContract",
@@ -672,6 +691,7 @@ export const contracts: Array<ContractConfig> = [
   },
   {
     id: adaptersIdsMap.MANAGING_ADAPTER,
+    adapterId: adaptersIdsMap.MANAGING_ADAPTER,
     name: "ManagingContract",
     alias: "managing",
     path: "../../contracts/adapters/ManagingContract",
@@ -694,6 +714,7 @@ export const contracts: Array<ContractConfig> = [
   },
   {
     id: adaptersIdsMap.MANAGER_ADAPTER,
+    adapterId: adaptersIdsMap.MANAGER_ADAPTER,
     name: "Manager",
     alias: "manager",
     path: "../../contracts/adapters/Manager",
@@ -721,6 +742,7 @@ export const contracts: Array<ContractConfig> = [
   // Signature Adapters
   {
     id: adaptersIdsMap.ERC1271_ADAPTER,
+    adapterId: adaptersIdsMap.ERC1271_ADAPTER,
     name: "SignaturesContract",
     alias: "signatures",
     path: "../../contracts/adapters/SignaturesContract",
@@ -738,6 +760,7 @@ export const contracts: Array<ContractConfig> = [
   // Voting Adapters
   {
     id: adaptersIdsMap.VOTING_ADAPTER,
+    adapterId: adaptersIdsMap.VOTING_ADAPTER,
     name: "VotingContract",
     alias: "voting",
     path: "../../contracts/adapters/VotingContract",
@@ -779,7 +802,8 @@ export const contracts: Array<ContractConfig> = [
     },
   },
   {
-    id: adaptersIdsMap.VOTING_ADAPTER,
+    id: "offchain-voting-adapter",
+    adapterId: adaptersIdsMap.VOTING_ADAPTER,
     name: "OffchainVotingContract",
     alias: "voting",
     path: "../../contracts/adapters/voting/OffchainVotingContract",
@@ -801,6 +825,7 @@ export const contracts: Array<ContractConfig> = [
   },
   {
     id: adaptersIdsMap.VOTING_HASH_ADAPTER,
+    adapterId: adaptersIdsMap.VOTING_HASH_ADAPTER,
     name: "OffchainVotingHashContract",
     alias: "offchainVotingHashAdapter",
     path: "../../contracts/adapters/voting/OffchainVotingHashContract",
@@ -816,6 +841,7 @@ export const contracts: Array<ContractConfig> = [
   },
   {
     id: adaptersIdsMap.KICK_BAD_REPORTER_ADAPTER,
+    adapterId: adaptersIdsMap.KICK_BAD_REPORTER_ADAPTER,
     name: "KickBadReporterAdapter",
     alias: "kickBadReporterAdapter",
     path: "../../contracts/adapters/voting/KickBadReporterAdapter",
@@ -833,6 +859,7 @@ export const contracts: Array<ContractConfig> = [
   // Withdraw / Kick Adapters
   {
     id: adaptersIdsMap.RAGEQUIT_ADAPTER,
+    adapterId: adaptersIdsMap.RAGEQUIT_ADAPTER,
     name: "RagequitContract",
     alias: "ragequit",
     path: "../../contracts/adapters/RagequitContract",
@@ -852,6 +879,7 @@ export const contracts: Array<ContractConfig> = [
   },
   {
     id: adaptersIdsMap.GUILDKICK_ADAPTER,
+    adapterId: adaptersIdsMap.GUILDKICK_ADAPTER,
     name: "GuildKickContract",
     alias: "guildkick",
     path: "../../contracts/adapters/GuildKickContract",
@@ -872,6 +900,7 @@ export const contracts: Array<ContractConfig> = [
   },
   {
     id: adaptersIdsMap.DISTRIBUTE_ADAPTER,
+    adapterId: adaptersIdsMap.DISTRIBUTE_ADAPTER,
     name: "DistributeContract",
     alias: "distribute",
     path: "../../contracts/adapters/DistributeContract",
@@ -891,6 +920,7 @@ export const contracts: Array<ContractConfig> = [
   // Funding/Onboarding Adapters
   {
     id: adaptersIdsMap.FINANCING_ADAPTER,
+    adapterId: adaptersIdsMap.FINANCING_ADAPTER,
     name: "FinancingContract",
     alias: "financing",
     path: "../../contracts/adapters/FinancingContract",
@@ -910,13 +940,14 @@ export const contracts: Array<ContractConfig> = [
   },
   {
     id: adaptersIdsMap.REIMBURSEMENT_ADAPTER,
+    adapterId: adaptersIdsMap.REIMBURSEMENT_ADAPTER,
     name: "ReimbursementContract",
     alias: "reimbursement",
     path: "../../contracts/companion/ReimbursementContract",
-    enabled: false,
+    enabled: true,
     version: "1.0.0",
     type: ContractType.Adapter,
-    deploymentArgs: ["gelato"],
+    deploymentArgs: [],
     acls: {
       dao: [],
       extensions: {
@@ -935,6 +966,7 @@ export const contracts: Array<ContractConfig> = [
   },
   {
     id: adaptersIdsMap.ONBOARDING_ADAPTER,
+    adapterId: adaptersIdsMap.ONBOARDING_ADAPTER,
     name: "OnboardingContract",
     alias: "onboarding",
     path: "../../contracts/adapters/OnboardingContract",
@@ -977,6 +1009,7 @@ export const contracts: Array<ContractConfig> = [
   },
   {
     id: adaptersIdsMap.COUPON_ONBOARDING_ADAPTER,
+    adapterId: adaptersIdsMap.COUPON_ONBOARDING_ADAPTER,
     name: "CouponOnboardingContract",
     alias: "couponOnboarding",
     path: "../../contracts/adapters/CouponOnboardingContract",
@@ -1004,7 +1037,35 @@ export const contracts: Array<ContractConfig> = [
     ],
   },
   {
+    id: "couponV1OnboardingAdapter",
+    adapterId: adaptersIdsMap.COUPON_ONBOARDING_ADAPTER,
+    name: "CouponV1OnboardingContract",
+    alias: "couponV1Onboarding",
+    path: "../../contracts/adapters/CouponV1OnboardingContract",
+    enabled: false,
+    version: "1.0.0",
+    type: ContractType.Adapter,
+    acls: {
+      dao: [daoAccessFlagsMap.NEW_MEMBER],
+      extensions: {
+        [extensionsIdsMap.BANK_EXT]: [
+          bankExtensionAclFlagsMap.INTERNAL_TRANSFER,
+          bankExtensionAclFlagsMap.ADD_TO_BALANCE,
+        ],
+      },
+    },
+    daoConfigs: [
+      //config to mint coupons
+      [
+        "daoAddress",
+        "couponCreatorAddress",
+        "unitTokenToMint",
+      ],
+    ],
+  },
+  {
     id: adaptersIdsMap.KYC_ONBOARDING_ADAPTER,
+    adapterId: adaptersIdsMap.KYC_ONBOARDING_ADAPTER,
     name: "KycOnboardingContract",
     alias: "kycOnboarding",
     path: "../../contracts/adapters/KycOnboardingContract",
@@ -1039,6 +1100,7 @@ export const contracts: Array<ContractConfig> = [
   },
   {
     id: adaptersIdsMap.TRIBUTE_ADAPTER,
+    adapterId: adaptersIdsMap.TRIBUTE_ADAPTER,
     name: "TributeContract",
     alias: "tribute",
     path: "../../contracts/adapters/TributeContract",
@@ -1063,6 +1125,7 @@ export const contracts: Array<ContractConfig> = [
   },
   {
     id: adaptersIdsMap.TRIBUTE_NFT_ADAPTER,
+    adapterId: adaptersIdsMap.TRIBUTE_NFT_ADAPTER,
     name: "TributeNFTContract",
     alias: "tributeNFT",
     path: "../../contracts/adapters/TributeNFTContract",
@@ -1083,6 +1146,7 @@ export const contracts: Array<ContractConfig> = [
   },
   {
     id: adaptersIdsMap.LEND_NFT_ADAPTER,
+    adapterId: adaptersIdsMap.LEND_NFT_ADAPTER,
     name: "LendNFTContract",
     alias: "lendNFT",
     path: "../../contracts/adapters/LendNFTContract",
@@ -1117,6 +1181,7 @@ export const contracts: Array<ContractConfig> = [
   },
   {
     id: adaptersIdsMap.ERC20_TRANSFER_STRATEGY_ADAPTER,
+    adapterId: adaptersIdsMap.ERC20_TRANSFER_STRATEGY_ADAPTER,
     name: "ERC20TransferStrategy",
     alias: "erc20TransferStrategy",
     path: "../../contracts/extensions/token/erc20/ERC20TransferStrategy",
