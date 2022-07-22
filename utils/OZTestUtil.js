@@ -80,6 +80,7 @@ const getDefaultOptions = (options) => {
     maxUnits: 100000000,
     couponCreatorAddress: "0x7D8cad0bbD68deb352C33e80fccd4D8e88b4aBb8",
     fundTargetAddress: "0x7D8cad0bbD68deb352C33e80fccd4D8e88b4aBb8",
+    managerSignerAddress: "0x90F8bf6A479f320ead074411a4B0e7944Ea8c9C1",
     deployTestTokens: true,
     kycPaymentToken: ETH_TOKEN,
     ...options,

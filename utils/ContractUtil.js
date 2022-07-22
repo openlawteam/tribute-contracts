@@ -78,6 +78,7 @@ const contracts = {
   NFTAdapterContract: "./adapters/NFTAdapterContract",
   ConfigurationContract: "./adapters/ConfigurationContract",
   ManagingContract: "./adapters/ManagingContract",
+  ManagerContract: "./adapters/Manager",
 
   // Voting Adapters
   VotingContract: "./adapters/VotingContract",
