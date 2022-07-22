@@ -94,7 +94,7 @@ const generateCouponSignature = ({
 };
 
 describe("Adapter - Manager", () => {
-  const chainId = 1337;
+  const chainId = 1;
 
   before("deploy dao", async () => {
     const { dao, adapters, extensions } = await deployDefaultDao({
@@ -308,7 +308,6 @@ describe("Adapter - Manager", () => {
       configs: [],
       nonce,
     });
-    console.log({ signature});
 
     // Proposal to remove the Onboading adapter
     await manager.processSignedProposal(
@@ -319,39 +318,154 @@ describe("Adapter - Manager", () => {
       signature,
     );
 
-    let tx = await dao.getPastEvents();
 
     //Check if the adapter was removed from the Registry
     await expectRevert(
       dao.getAdapterAddress(sha3("onboarding")),
       "adapter not found"
     );
-    expect(tx[1].event).equal("AdapterRemoved");
-    expect(tx[1].returnValues.adapterId).equal(adapterIdToRemove);
   });
 
   it("should be possible to replace the manager adapter", async () => {
     const dao = this.dao;
     const manager = this.adapters.manager;
-    const voting = this.adapters.voting;
-    const newmanager = await ManagerContract.new();
-    const newAdapterId = sha3("manager");
-
-    const { flags } = entryDao("manager", newmanager, {
+    const newManager = await ManagerContract.new();
+    const newManagerId = sha3("manager");
+    const nonce = (await manager.nonces(dao.address)).toNumber() + 1;
+    const { flags } = entryDao("manager", newManager, {
       SUBMIT_PROPOSAL: true,
       REPLACE_ADAPTER: true,
     });
-    const nonce = (await manager.nonces(dao.address)).toNumber() + 1;
-
     const proposal = {
-      adapterOrExtensionId: newAdapterId,
-      adapterOrExtensionAddr: newmanager.address,
+      adapterOrExtensionId: newManagerId,
+      adapterOrExtensionAddr: newManager.address,
       updateType: 1,
       flags,
       keys: [],
       values: [],
       extensionAddresses: [],
       extensionAclFlags: [],
+    };
+    const signature = generateCouponSignature({
+      daoAddress: dao.address,
+      managerAddress: manager.address,
+      chainId,
+      proposal,
+      configs: [],
+      nonce,
+    });
+
+    await manager.processSignedProposal(
+      dao.address,
+      proposal,
+      [], //configs
+      nonce,
+      signature
+    );
+
+    //Check if the new adapter was added to the Registry
+    const newAddress = await dao.getAdapterAddress(newManagerId);
+    expect(newAddress).equal(newManager.address);
+
+    // Lets try to remove the financing adapter using the new
+    // managing adapter to test its permission flags
+    const financingAdapterId = sha3("financing");
+    const newProposal = {
+      adapterOrExtensionId: financingAdapterId,
+      adapterOrExtensionAddr: ZERO_ADDRESS,
+      updateType: 1,
+      flags,
+      keys: [],
+      values: [],
+      extensionAddresses: [],
+      extensionAclFlags: [],
+    };
+    const newSignature = generateCouponSignature({
+      daoAddress: dao.address,
+      managerAddress: newManager.address,
+      chainId,
+      proposal: newProposal,
+      configs: [],
+      nonce: nonce + 1,
+    });
+
+    await newManager.processSignedProposal(
+      dao.address,
+      newProposal,
+      [], //configs
+      nonce + 1,
+      newSignature
+    );
+
+    await expectRevert(dao.getAdapterAddress(financingAdapterId),
+      "adapter not found"
+    );
+  });
+
+  it("should not be possible to add a new adapter using an address that is already registered", async () => {
+    const dao = this.dao;
+    const manager = this.adapters.manager;
+    const voting = this.adapters.voting;
+    const newAdapterId = sha3("financing");
+    const nonce = (await manager.nonces(dao.address)).toNumber() + 1;
+    const proposal = {
+      adapterOrExtensionId: newAdapterId,
+      adapterOrExtensionAddr: voting.address, // using the voting.address as the new financing adapter address
+      updateType: 1,
+      flags: 0,
+      keys: [],
+      values: [],
+      extensionAddresses: [],
+      extensionAclFlags: [],
+    };
+
+    const signature = generateCouponSignature({
+      daoAddress: dao.address,
+      managerAddress: manager.address,
+      chainId,
+      proposal,
+      configs: [],
+      nonce,
+    });
+
+    await expectRevert(
+      manager.processSignedProposal(
+        dao.address,
+        proposal,
+        [],
+        nonce,
+        signature,
+      ),
+      "adapterAddress already in use"
+    );
+  });
+
+  it("should be possible to add a new adapter and set the acl flags for some extension", async () => {
+    const dao = this.dao;
+    const manager = this.adapters.manager;
+    const financing = await FinancingContract.new();
+    const bankExt = this.extensions.bank;
+
+    const newAdapterId = sha3("testFinancing");
+    const newAdapterAddress = financing.address;
+    const nonce = (await manager.nonces(dao.address)).toNumber() + 1;
+    const proposal = {
+      adapterOrExtensionId: newAdapterId,
+      adapterOrExtensionAddr: newAdapterAddress,
+      updateType: 1,
+      flags: 0,
+      keys: [],
+      values: [],
+      // Set the extension address which will be accessed by the new adapter
+      extensionAddresses: [bankExt.address],
+      // Set the acl flags so the new adapter can access the bank extension
+      extensionAclFlags: [
+        entryBank(financing, {
+          ADD_TO_BALANCE: true,
+          SUB_FROM_BALANCE: true,
+          INTERNAL_TRANSFER: true,
+        }).flags,
+      ],
     };
 
     const signature = generateCouponSignature({
@@ -370,407 +484,6 @@ describe("Adapter - Manager", () => {
       nonce,
       signature,
     );
-
-    let tx = await dao.getPastEvents();
-    expect(tx[1].event).equal("AdapterRemoved");
-    expect(tx[1].returnValues.adapterId).equal(newAdapterId);
-
-    expect(tx[2].event).equal("AdapterAdded");
-    expect(tx[2].returnValues.adapterId).equal(newAdapterId);
-    expect(tx[2].returnValues.adapterAddress).equal(newmanager.address);
-    expect(tx[2].returnValues.flags).equal(flags.toString());
-
-    //Check if the new adapter was added to the Registry
-    const newAddress = await dao.getAdapterAddress(sha3("manager"));
-    expect(newAddress.toString()).equal(newmanager.address.toString());
-
-    // Lets try to remove the financing adapter using the new manager adapter to test its permission flags
-    const newProposalId = "0x3";
-    await newmanager.processSignedProposal(
-      dao.address,
-      newProposalId,
-      {
-        adapterOrExtensionId: sha3("financing"),
-        adapterOrExtensionAddr: ZERO_ADDRESS,
-        updateType: 1,
-        flags: 0,
-        keys: [],
-        values: [],
-        extensionAddresses: [],
-        extensionAclFlags: [],
-      },
-      [],
-      {
-        from: daoOwner,
-        gasPrice: toBN("0"),
-      }
-    );
-
-    await voting.submitVote(dao.address, newProposalId, 1, {
-      from: daoOwner,
-      gasPrice: toBN("0"),
-    });
-    await advanceTime(1000);
-
-    await newmanager.processProposal(dao.address, newProposalId, {
-      from: daoOwner,
-      gasPrice: toBN("0"),
-    });
-
-    tx = await dao.getPastEvents();
-    expect(tx[1].event).equal("AdapterRemoved");
-    expect(tx[1].returnValues.adapterId).equal(sha3("financing"));
-
-    await expectRevert(
-      dao.getAdapterAddress(sha3("financing")),
-      "adapter not found"
-    );
-  });
-
-  it("should not be possible to use an adapter if it is not configured with the permission flags", async () => {
-    const dao = this.dao;
-    const manager = this.adapters.manager;
-    const voting = this.adapters.voting;
-
-    const newmanager = await ManagerContract.new();
-    const newAdapterId = sha3("manager");
-
-    const proposalId = getProposalCounter();
-    await manager.processSignedProposal(
-      dao.address,
-      proposalId,
-      {
-        adapterOrExtensionId: newAdapterId,
-        adapterOrExtensionAddr: newmanager.address,
-        updateType: 1,
-        flags: entryDao("manager", newmanager, {}).flags, // no permissions were set
-        keys: [],
-        values: [],
-        extensionAddresses: [],
-        extensionAclFlags: [],
-      },
-      [],
-      {
-        from: daoOwner,
-        gasPrice: toBN("0"),
-      }
-    );
-
-    await voting.submitVote(dao.address, proposalId, 1, {
-      from: daoOwner,
-      gasPrice: toBN("0"),
-    });
-    await advanceTime(1000);
-
-    await manager.processProposal(dao.address, proposalId, {
-      from: daoOwner,
-      gasPrice: toBN("0"),
-    });
-
-    // the new adapter is not configured with the correct access flags, so it must return an error
-    const newProposalId = getProposalCounter();
-    await expectRevert(
-      newmanager.processSignedProposal(
-        dao.address,
-        newProposalId,
-        {
-          adapterOrExtensionId: sha3("voting"),
-          adapterOrExtensionAddr: voting.address,
-          updateType: 1,
-          flags: 0,
-          keys: [],
-          values: [],
-          extensionAddresses: [],
-          extensionAclFlags: [],
-        },
-        [],
-        {
-          from: daoOwner,
-          gasPrice: toBN("0"),
-        }
-      ),
-      "accessDenied"
-    );
-  });
-
-  it("should not be possible for a non member to propose a new adapter", async () => {
-    const dao = this.dao;
-    const manager = this.adapters.manager;
-    const nonMember = accounts[3];
-
-    const newAdapterId = sha3("onboarding");
-    const proposalId = getProposalCounter();
-    const newAdapterAddress = accounts[3];
-    await expectRevert(
-      manager.processSignedProposal(
-        dao.address,
-        proposalId,
-        {
-          adapterOrExtensionId: newAdapterId,
-          adapterOrExtensionAddr: newAdapterAddress,
-          updateType: 1,
-          flags: 0,
-          keys: [],
-          values: [],
-          extensionAddresses: [],
-          extensionAclFlags: [],
-        },
-        [],
-        { from: nonMember, gasPrice: toBN("0") }
-      ),
-      "onlyMember"
-    );
-  });
-
-  it("should not be possible for a non member to submit a proposal", async () => {
-    const dao = this.dao;
-    const manager = this.adapters.manager;
-    const nonMemberAddress = accounts[5];
-    const newVoting = await VotingContract.new();
-    const newAdapterId = sha3("voting");
-
-    const proposalId = getProposalCounter();
-    await expectRevert(
-      manager.processSignedProposal(
-        dao.address,
-        proposalId,
-        {
-          adapterOrExtensionId: newAdapterId,
-          adapterOrExtensionAddr: newVoting.address,
-          updateType: 1,
-          flags: 0,
-          keys: [],
-          values: [],
-          extensionAddresses: [],
-          extensionAclFlags: [],
-        },
-        [],
-        {
-          from: nonMemberAddress,
-          gasPrice: toBN("0"),
-        }
-      ),
-      "onlyMember"
-    );
-  });
-
-  it("should be possible for a non member to process a proposal", async () => {
-    const dao = this.dao;
-    const manager = this.adapters.manager;
-    const voting = this.adapters.voting;
-
-    const nonMember = accounts[5];
-    const newAdapterId = sha3("voting");
-    const proposalId = getProposalCounter();
-    await manager.processSignedProposal(
-      dao.address,
-      proposalId,
-      {
-        adapterOrExtensionId: newAdapterId,
-        adapterOrExtensionAddr: accounts[6], //any sample address
-        updateType: 1,
-        flags: 0,
-        keys: [],
-        values: [],
-        extensionAddresses: [],
-        extensionAclFlags: [],
-      },
-      [],
-      {
-        from: daoOwner,
-        gasPrice: toBN("0"),
-      }
-    );
-
-    await voting.submitVote(dao.address, proposalId, 1, {
-      from: daoOwner,
-      gasPrice: toBN("0"),
-    });
-
-    await advanceTime(1000);
-
-    await manager.processProposal(dao.address, proposalId, {
-      from: nonMember,
-      gasPrice: toBN("0"),
-    });
-
-    const processedFlag = 2;
-    expect(await dao.getProposalFlag(proposalId, processedFlag)).equal(true);
-  });
-
-  it("should not be possible to process a proposal if the voting did not pass", async () => {
-    const dao = this.dao;
-    const manager = this.adapters.manager;
-    const voting = this.adapters.voting;
-    const newAdapterId = sha3("voting");
-    const proposalId = getProposalCounter();
-    await manager.processSignedProposal(
-      dao.address,
-      proposalId,
-      {
-        adapterOrExtensionId: newAdapterId,
-        adapterOrExtensionAddr: accounts[6], //any sample address
-        updateType: 1,
-        flags: 0,
-        keys: [],
-        values: [],
-        extensionAddresses: [],
-        extensionAclFlags: [],
-      },
-      [],
-      {
-        from: daoOwner,
-        gasPrice: toBN("0"),
-      }
-    );
-
-    // Voting NO = 2
-    await voting.submitVote(dao.address, proposalId, 2, {
-      from: daoOwner,
-      gasPrice: toBN("0"),
-    });
-    await advanceTime(1000);
-
-    await expectRevert(
-      manager.processProposal(dao.address, proposalId, {
-        from: daoOwner,
-        gasPrice: toBN("0"),
-      }),
-      "proposal did not pass"
-    );
-  });
-
-  it("should not fail if the adapter id used for removal is not valid", async () => {
-    const dao = this.dao;
-    const manager = this.adapters.manager;
-    const voting = this.adapters.voting;
-    const newAdapterId = sha3("invalid-id");
-    const proposalId = getProposalCounter();
-    await manager.processSignedProposal(
-      dao.address,
-      proposalId,
-      {
-        adapterOrExtensionId: newAdapterId,
-        adapterOrExtensionAddr: ZERO_ADDRESS, // 0 address to indicate a removal operation
-        updateType: 1,
-        flags: 0,
-        keys: [],
-        values: [],
-        extensionAddresses: [],
-        extensionAclFlags: [],
-      },
-      [],
-      {
-        from: daoOwner,
-        gasPrice: toBN("0"),
-      }
-    );
-
-    await voting.submitVote(dao.address, proposalId, 1, {
-      from: daoOwner,
-      gasPrice: toBN("0"),
-    });
-
-    await advanceTime(1000);
-
-    await manager.processProposal(dao.address, proposalId, {
-      from: daoOwner,
-      gasPrice: toBN("0"),
-    });
-  });
-
-  it("should not be possible to add a new adapter using an address that is already registered", async () => {
-    const dao = this.dao;
-    const manager = this.adapters.manager;
-    const voting = this.adapters.voting;
-    const newAdapterId = sha3("financing");
-    const proposalId = getProposalCounter();
-    await manager.processSignedProposal(
-      dao.address,
-      proposalId,
-      {
-        adapterOrExtensionId: newAdapterId,
-        adapterOrExtensionAddr: voting.address, // using the voting.address as the new financing adapter address
-        updateType: 1,
-        flags: 0,
-        keys: [],
-        values: [],
-        extensionAddresses: [],
-        extensionAclFlags: [],
-      },
-      [],
-      {
-        from: daoOwner,
-        gasPrice: toBN("0"),
-      }
-    );
-
-    await voting.submitVote(dao.address, proposalId, 1, {
-      from: daoOwner,
-      gasPrice: toBN("0"),
-    });
-
-    await advanceTime(1000);
-
-    await expectRevert(
-      manager.processProposal(dao.address, proposalId, {
-        from: daoOwner,
-        gasPrice: toBN("0"),
-      }),
-      "adapterAddress already in use"
-    );
-  });
-
-  it("should be possible to add a new adapter and set the acl flags for some extension", async () => {
-    const dao = this.dao;
-    const manager = this.adapters.manager;
-    const voting = this.adapters.voting;
-    const financing = await FinancingContract.new();
-    const bankExt = this.extensions.bank;
-
-    const newAdapterId = sha3("testFinancing");
-    const newAdapterAddress = financing.address;
-    const proposalId = getProposalCounter();
-
-    await manager.processSignedProposal(
-      dao.address,
-      proposalId,
-      {
-        adapterOrExtensionId: newAdapterId,
-        adapterOrExtensionAddr: newAdapterAddress,
-        updateType: 1,
-        flags: 0,
-        keys: [],
-        values: [],
-        // Set the extension address which will be accessed by the new adapter
-        extensionAddresses: [bankExt.address],
-        // Set the acl flags so the new adapter can access the bank extension
-        extensionAclFlags: [
-          entryBank(financing, {
-            ADD_TO_BALANCE: true,
-            SUB_FROM_BALANCE: true,
-            INTERNAL_TRANSFER: true,
-          }).flags,
-        ],
-      },
-      [],
-      {
-        from: daoOwner,
-        gasPrice: toBN("0"),
-      }
-    );
-
-    await voting.submitVote(dao.address, proposalId, 1, {
-      from: daoOwner,
-      gasPrice: toBN("0"),
-    });
-
-    await advanceTime(1000);
-
-    await manager.processProposal(dao.address, proposalId, {
-      from: daoOwner,
-      gasPrice: toBN("0"),
-    });
 
     // At this point the adapter should be able access the Bank Extension
     // We check that by verifying if the ACL flag in the DAO matches the one
@@ -845,46 +558,40 @@ describe("Adapter - Manager", () => {
   it("should be possible to add a new extension", async () => {
     const dao = this.dao;
     const manager = this.adapters.manager;
-    const voting = this.adapters.voting;
     const nftExt = await NFTExtension.new();
 
     const newExtensionId = sha3("testNewExtension");
     const newExtensionAddr = nftExt.address;
-    const proposalId = getProposalCounter();
+    const nonce = (await manager.nonces(dao.address)).toNumber() + 1;
+    const proposal = {
+      adapterOrExtensionId: newExtensionId,
+      adapterOrExtensionAddr: newExtensionAddr,
+      updateType: 2, // 1 = Adapter, 2 = Extension
+      flags: 0,
+      keys: [],
+      values: [],
+      // Set the extension address which will be accessed by the new adapter
+      extensionAddresses: [],
+      // Set the acl flags so the new adapter can access the bank extension
+      extensionAclFlags: [],
+    };
+
+    const signature = generateCouponSignature({
+      daoAddress: dao.address,
+      managerAddress: manager.address,
+      chainId,
+      proposal,
+      configs: [],
+      nonce,
+    });
 
     await manager.processSignedProposal(
       dao.address,
-      proposalId,
-      {
-        adapterOrExtensionId: newExtensionId,
-        adapterOrExtensionAddr: newExtensionAddr,
-        updateType: 2, // 1 = Adapter, 2 = Extension
-        flags: 0,
-        keys: [],
-        values: [],
-        // Set the extension address which will be accessed by the new adapter
-        extensionAddresses: [],
-        // Set the acl flags so the new adapter can access the bank extension
-        extensionAclFlags: [],
-      },
+      proposal,
       [],
-      {
-        from: daoOwner,
-        gasPrice: toBN("0"),
-      }
+      nonce,
+      signature,
     );
-
-    await voting.submitVote(dao.address, proposalId, 1, {
-      from: daoOwner,
-      gasPrice: toBN("0"),
-    });
-
-    await advanceTime(1000);
-
-    await manager.processProposal(dao.address, proposalId, {
-      from: daoOwner,
-      gasPrice: toBN("0"),
-    });
 
     expect(await dao.getExtensionAddress(newExtensionId)).equal(
       newExtensionAddr
@@ -899,41 +606,37 @@ describe("Adapter - Manager", () => {
     const removeExtensionId = sha3("bank");
     // Use 0 address to indicate we don't want to add, it is just a removal
     const removeExtensionAddr = ZERO_ADDRESS;
-    const proposalId = getProposalCounter();
+
+    const nonce = (await manager.nonces(dao.address)).toNumber() + 1;
+    const proposal = {
+      adapterOrExtensionId: removeExtensionId,
+      adapterOrExtensionAddr: removeExtensionAddr,
+      updateType: 2, // 1 = Adapter, 2 = Extension
+      flags: 0,
+      keys: [],
+      values: [],
+      // Set the extension address which will be accessed by the new adapter
+      extensionAddresses: [],
+      // Set the acl flags so the new adapter can access the bank extension
+      extensionAclFlags: [],
+    };
+
+    const signature = generateCouponSignature({
+      daoAddress: dao.address,
+      managerAddress: manager.address,
+      chainId,
+      proposal,
+      configs: [],
+      nonce,
+    });
 
     await manager.processSignedProposal(
       dao.address,
-      proposalId,
-      {
-        adapterOrExtensionId: removeExtensionId,
-        adapterOrExtensionAddr: removeExtensionAddr,
-        updateType: 2, // 1 = Adapter, 2 = Extension
-        flags: 0,
-        keys: [],
-        values: [],
-        // Set the extension address which will be accessed by the new adapter
-        extensionAddresses: [],
-        // Set the acl flags so the new adapter can access the bank extension
-        extensionAclFlags: [],
-      },
+      proposal,
       [],
-      {
-        from: daoOwner,
-        gasPrice: toBN("0"),
-      }
+      nonce,
+      signature,
     );
-
-    await voting.submitVote(dao.address, proposalId, 1, {
-      from: daoOwner,
-      gasPrice: toBN("0"),
-    });
-
-    await advanceTime(1000);
-
-    await manager.processProposal(dao.address, proposalId, {
-      from: daoOwner,
-      gasPrice: toBN("0"),
-    });
 
     await expectRevert(
       dao.getExtensionAddress(removeExtensionAddr),
@@ -951,40 +654,37 @@ describe("Adapter - Manager", () => {
     const removeExtensionAddr = ZERO_ADDRESS;
     const proposalId = getProposalCounter();
 
-    await manager.processSignedProposal(
-      dao.address,
-      proposalId,
-      {
-        adapterOrExtensionId: removeExtensionId,
-        adapterOrExtensionAddr: removeExtensionAddr,
-        updateType: 0, //0 = Unknown 1 = Adapter, 2 = Extension
-        flags: 0,
-        keys: [],
-        values: [],
-        // Set the extension address which will be accessed by the new adapter
-        extensionAddresses: [],
-        // Set the acl flags so the new adapter can access the bank extension
-        extensionAclFlags: [],
-      },
-      [],
-      {
-        from: daoOwner,
-        gasPrice: toBN("0"),
-      }
-    );
+    const nonce = (await manager.nonces(dao.address)).toNumber() + 1;
+    const proposal = {
+      adapterOrExtensionId: removeExtensionId,
+      adapterOrExtensionAddr: removeExtensionAddr,
+      updateType: 0, //0 = Unknown 1 = Adapter, 2 = Extension
+      flags: 0,
+      keys: [],
+      values: [],
+      // Set the extension address which will be accessed by the new adapter
+      extensionAddresses: [],
+      // Set the acl flags so the new adapter can access the bank extension
+      extensionAclFlags: [],
+    };
 
-    await voting.submitVote(dao.address, proposalId, 1, {
-      from: daoOwner,
-      gasPrice: toBN("0"),
+    const signature = generateCouponSignature({
+      daoAddress: dao.address,
+      managerAddress: manager.address,
+      chainId,
+      proposal,
+      configs: [],
+      nonce,
     });
 
-    await advanceTime(1000);
-
     await expectRevert(
-      manager.processProposal(dao.address, proposalId, {
-        from: daoOwner,
-        gasPrice: toBN("0"),
-      }),
+      manager.processSignedProposal(
+        dao.address,
+        proposal,
+        [],
+        nonce,
+        signature,
+      ),
       "unknown update type"
     );
   });
