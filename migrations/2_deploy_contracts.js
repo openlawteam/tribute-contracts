@@ -150,8 +150,11 @@ async function deployMainnetDao(deployFunction, network) {
     "UNITS_PER_CHUNK",
     "MAX_CHUNKS",
     "MAX_MEMBERS",
-    "MAX_UNITS"
+    "MAX_UNITS",
+    "KYC_PAYMENT_TOKEN"
   );
+
+  console.log(envVariables.KYC_PAYMENT_TOKEN);
 
   return await deployDao({
     ...truffleImports,
@@ -178,6 +181,7 @@ async function deployMainnetDao(deployFunction, network) {
     maxMembers: envVariables.MAX_MEMBERS,
     maxUnits: envVariables.MAX_UNITS,
     wethAddress: "0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2",
+    kycPaymentToken: envVariables.KYC_PAYMENT_TOKEN
   });
 }
 
