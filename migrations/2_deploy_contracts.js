@@ -154,8 +154,6 @@ async function deployMainnetDao(deployFunction, network) {
     "KYC_PAYMENT_TOKEN"
   );
 
-  console.log(envVariables.KYC_PAYMENT_TOKEN);
-
   return await deployDao({
     ...truffleImports,
     deployFunction,
