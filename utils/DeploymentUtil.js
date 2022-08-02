@@ -205,6 +205,7 @@ const prepareAdapters = async ({
   ConfigurationContract,
   RagequitContract,
   ManagingContract,
+  ManagerContract,
   KycOnboardingContract,
   GuildKickContract,
   DaoRegistryAdapterContract,
@@ -217,6 +218,7 @@ const prepareAdapters = async ({
     configuration,
     ragequit,
     managing,
+    manager,
     kycOnboarding,
     guildkick,
     daoRegistryAdapter,
@@ -238,6 +240,7 @@ const prepareAdapters = async ({
   configuration = await ConfigurationContract.new();
   ragequit = await RagequitContract.new();
   managing = await ManagingContract.new();
+  manager = await ManagerContract.new();
   kycOnboarding = await KycOnboardingContract.new(wethAddress);
   guildkick = await GuildKickContract.new();
   daoRegistryAdapter = await DaoRegistryAdapterContract.new();
@@ -250,6 +253,7 @@ const prepareAdapters = async ({
     ragequit,
     guildkick,
     managing,
+    manager,
     kycOnboarding,
     daoRegistryAdapter,
     bankAdapter,
@@ -273,6 +277,7 @@ const addDefaultAdapters = async ({ dao, options, daoFactory }) => {
     ragequit,
     guildkick,
     managing,
+    manager,
     //onboarding,
     kycOnboarding,
     daoRegistryAdapter,
@@ -295,6 +300,7 @@ const addDefaultAdapters = async ({ dao, options, daoFactory }) => {
     ragequit,
     guildkick,
     managing,
+    manager,
     kycOnboarding,
     daoRegistryAdapter,
     bankAdapter,
@@ -314,6 +320,7 @@ const addDefaultAdapters = async ({ dao, options, daoFactory }) => {
       ragequit,
       guildkick,
       managing,
+      manager,
       kycOnboarding,
       daoRegistryAdapter,
       bankAdapter,
@@ -329,6 +336,7 @@ const configureDao = async ({
   ragequit,
   guildkick,
   managing,
+  manager,
   kycOnboarding,
   daoRegistryAdapter,
   bankAdapter,
@@ -346,6 +354,7 @@ const configureDao = async ({
   gracePeriod,
   couponCreatorAddress,
   fundTargetAddress,
+  managerSignerAddress,
   kycPaymentToken,
 }) => {
   console.log("add adapters!");
@@ -367,6 +376,13 @@ const configureDao = async ({
         ADD_EXTENSION: true,
         REMOVE_EXTENSION: true,
       }),
+      entryDao("manager", manager, {
+        SUBMIT_PROPOSAL: true,
+        REPLACE_ADAPTER: true,
+        ADD_EXTENSION: true,
+        REMOVE_EXTENSION: true,
+        SET_CONFIGURATION: true,
+      }),
       entryDao("kyc-onboarding", kycOnboarding, {
         NEW_MEMBER: true,
       }),
@@ -385,6 +401,12 @@ const configureDao = async ({
     ],
     { from: owner }
   );
+
+  console.log("configure manager");
+  await manager.configureDao(dao.address, managerSignerAddress, {
+    from: owner,
+  });
+
   console.log("configure bank");
   await daoFactory.configureExtension(
     dao.address,

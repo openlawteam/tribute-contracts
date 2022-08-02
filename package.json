@@ -16,7 +16,8 @@
     "test": "test"
   },
   "dependencies": {
-    "@openzeppelin/contracts": "^4.0.0",
+    "@openlaw/snapshot-js-erc712": "^1.6.0",
+    "@openzeppelin/contracts": "^4.3.3",
     "@truffle/contract": "^4.3.13",
     "@truffle/hdwallet-provider": "1.2.2",
     "eth-sig-util": "^3.0.0",

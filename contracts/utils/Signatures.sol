@@ -4,6 +4,7 @@ pragma experimental ABIEncoderV2;
 // SPDX-License-Identifier: MIT
 
 import "../core/DaoRegistry.sol";
+import "@openzeppelin/contracts/utils/cryptography/SignatureChecker.sol";
 import "@openzeppelin/contracts/utils/cryptography/ECDSA.sol";
 
 /**
@@ -77,5 +78,13 @@ abstract contract Signatures {
         returns (address)
     {
         return ECDSA.recover(hash, sig);
+    }
+
+    function isValidSignature(
+        address signer,
+        bytes32 hash,
+        bytes memory sig
+    ) external view returns (bool) {
+        return SignatureChecker.isValidSignatureNow(signer, hash, sig);
     }
 }
