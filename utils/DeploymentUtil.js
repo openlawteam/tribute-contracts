@@ -403,7 +403,9 @@ const configureDao = async ({
   );
 
   console.log("configure manager");
-  await manager.configureDao(dao.address, managerSignerAddress, { from: owner });
+  await manager.configureDao(dao.address, managerSignerAddress, {
+    from: owner,
+  });
 
   console.log("configure bank");
   await daoFactory.configureExtension(

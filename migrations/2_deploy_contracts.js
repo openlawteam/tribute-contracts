@@ -96,7 +96,7 @@ async function deployRinkebyDao(deployFunction, network) {
     "CHUNK_PRICE",
     "UNITS_PER_CHUNK",
     "MAX_CHUNKS",
-    "MANAGER_COUPON_SIGNER_ADDR",
+    "MANAGER_COUPON_SIGNER_ADDR"
   );
 
   return await deployDao({

@@ -33,17 +33,9 @@ SOFTWARE.
  */
 
 contract Manager is AdapterGuard, Signatures, DaoConstants {
-    enum UpdateType {
-        UNKNOWN,
-        ADAPTER,
-        EXTENSION,
-        CONFIGS
-    }
+    enum UpdateType {UNKNOWN, ADAPTER, EXTENSION, CONFIGS}
 
-    enum ConfigType {
-        NUMERIC,
-        ADDRESS
-    }
+    enum ConfigType {NUMERIC, ADDRESS}
 
     struct Configuration {
         bytes32 key;
@@ -126,12 +118,8 @@ contract Manager is AdapterGuard, Signatures, DaoConstants {
         require(nonce > nonces[address(dao)], "coupon already redeemed");
         nonces[address(dao)] = nonce;
 
-        ManagingCoupon memory managingCoupon = ManagingCoupon(
-            address(dao),
-            proposal,
-            configs,
-            nonce
-        );
+        ManagingCoupon memory managingCoupon =
+            ManagingCoupon(address(dao), proposal, configs, nonce);
         bytes32 hash = hashCouponMessage(dao, managingCoupon);
 
         require(
@@ -283,15 +271,16 @@ contract Manager is AdapterGuard, Signatures, DaoConstants {
         view
         returns (bytes32)
     {
-        bytes32 message = keccak256(
-            abi.encode(
-                MANAGING_COUPON_MESSAGE_TYPEHASH,
-                coupon.daoAddress,
-                hashProposal(coupon.proposal),
-                hashConfigurations(coupon.configs),
-                coupon.nonce
-            )
-        );
+        bytes32 message =
+            keccak256(
+                abi.encode(
+                    MANAGING_COUPON_MESSAGE_TYPEHASH,
+                    coupon.daoAddress,
+                    hashProposal(coupon.proposal),
+                    hashConfigurations(coupon.configs),
+                    coupon.nonce
+                )
+            );
 
         return hashMessage(dao, block.chainid, address(this), message);
     }

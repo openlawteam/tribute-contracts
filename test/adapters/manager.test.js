@@ -51,7 +51,7 @@ const {
 } = require("../../utils/OZTestUtil.js");
 
 const { entryDao, entryBank } = require("../../utils/DeploymentUtil.js");
-const {getDomainDefinition, SigUtilSigner} = require("@openlaw/snapshot-js-erc712");
+const { SigUtilSigner } = require("@openlaw/snapshot-js-erc712");
 
 const daoOwner = accounts[1];
 const proposalCounter = proposalIdGenerator().generator;
@@ -161,8 +161,9 @@ describe("Adapter - Manager", () => {
         [], //configs
         nonce,
         signature
-      )
-    ,"must be an equal number of config keys and values");
+      ),
+      "must be an equal number of config keys and values"
+    );
   });
 
   it("should not be possible to propose a new adapter with more keys than values", async () => {
@@ -201,7 +202,7 @@ describe("Adapter - Manager", () => {
         proposal,
         [],
         nonce,
-        signature,
+        signature
       ),
       "must be an equal number of config keys and values"
     );
@@ -239,7 +240,7 @@ describe("Adapter - Manager", () => {
         proposal,
         [],
         nonce,
-        signature,
+        signature
       ),
       "must be an equal number of config keys and values"
     );
@@ -277,7 +278,7 @@ describe("Adapter - Manager", () => {
         proposal,
         [],
         nonce,
-        signature,
+        signature
       ),
       "address is reserved"
     );
@@ -315,9 +316,8 @@ describe("Adapter - Manager", () => {
       proposal,
       [],
       nonce,
-      signature,
+      signature
     );
-
 
     //Check if the adapter was removed from the Registry
     await expectRevert(
@@ -397,7 +397,8 @@ describe("Adapter - Manager", () => {
       newSignature
     );
 
-    await expectRevert(dao.getAdapterAddress(financingAdapterId),
+    await expectRevert(
+      dao.getAdapterAddress(financingAdapterId),
       "adapter not found"
     );
   });
@@ -434,7 +435,7 @@ describe("Adapter - Manager", () => {
         proposal,
         [],
         nonce,
-        signature,
+        signature
       ),
       "adapterAddress already in use"
     );
@@ -482,7 +483,7 @@ describe("Adapter - Manager", () => {
       proposal,
       [],
       nonce,
-      signature,
+      signature
     );
 
     // At this point the adapter should be able access the Bank Extension
@@ -590,7 +591,7 @@ describe("Adapter - Manager", () => {
       proposal,
       [],
       nonce,
-      signature,
+      signature
     );
 
     expect(await dao.getExtensionAddress(newExtensionId)).equal(
@@ -635,7 +636,7 @@ describe("Adapter - Manager", () => {
       proposal,
       [],
       nonce,
-      signature,
+      signature
     );
 
     await expectRevert(
@@ -683,7 +684,7 @@ describe("Adapter - Manager", () => {
         proposal,
         [],
         nonce,
-        signature,
+        signature
       ),
       "unknown update type"
     );
