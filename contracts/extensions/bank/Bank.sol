@@ -353,7 +353,7 @@ contract BankExtension is IExtension, ERC165 {
         address,
         address,
         uint256
-    ) public payable {
+    ) external payable {
         revert("not implemented");
     }
 
@@ -403,7 +403,7 @@ contract BankExtension is IExtension, ERC165 {
         address,
         address,
         uint256
-    ) public pure {
+    ) external pure {
         revert("not implemented");
     }
 
