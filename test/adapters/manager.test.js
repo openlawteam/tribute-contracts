@@ -67,7 +67,6 @@ const signer = {
 const generateCouponSignature = ({
   daoAddress,
   managerAddress,
-
   proposal,
   configs,
   nonce,
@@ -79,7 +78,6 @@ const generateCouponSignature = ({
     daoAddress,
     proposal,
     configs,
-
     nonce,
   };
   const signature = signerUtil(
@@ -144,7 +142,6 @@ describe("Adapter - Manager", () => {
     const dao = this.dao;
     const manager = this.adapters.manager;
     const newAdapterId = sha3("bank");
-
     const nonce = (await manager.nonces(dao.address)).toNumber() + 1;
     const proposal = {
       adapterOrExtensionId: newAdapterId,
@@ -173,7 +170,6 @@ describe("Adapter - Manager", () => {
     await expect(
       manager.processSignedProposal(
         dao.address,
-
         proposal,
         [], //configs
         nonce,
@@ -209,7 +205,6 @@ describe("Adapter - Manager", () => {
 
   it("should not be possible to propose a new adapter using a reserved address", async () => {
     const dao = this.dao;
-
     const manager = this.adapters.manager;
     const newAdapterId = sha3("bank");
     const nonce = (await manager.nonces(dao.address)).toNumber() + 1;
@@ -236,7 +231,6 @@ describe("Adapter - Manager", () => {
     await expect(
       manager.processSignedProposal(
         dao.address,
-
         proposal,
         [], //configs
         nonce,
@@ -247,7 +241,6 @@ describe("Adapter - Manager", () => {
 
   it("should not be possible to process proposal with proposal and signature mismatch", async () => {
     const dao = this.dao;
-
     const manager = this.adapters.manager;
     const adapterIdToRemove = sha3("onboarding");
     const nonce = (await manager.nonces(dao.address)).toNumber() + 1;
@@ -265,7 +258,6 @@ describe("Adapter - Manager", () => {
     await expect(
       manager.processSignedProposal(
         dao.address,
-
         proposal,
         [], // configs
         nonce,
@@ -283,7 +275,6 @@ describe("Adapter - Manager", () => {
     await expect(
       manager.processSignedProposal(
         dao.address,
-
         proposal,
         [], // configs
         nonce,
@@ -301,7 +292,6 @@ describe("Adapter - Manager", () => {
     await expect(
       manager.processSignedProposal(
         dao.address,
-
         proposal,
         [], // configs
         nonce,
@@ -319,7 +309,6 @@ describe("Adapter - Manager", () => {
     await expect(
       manager.processSignedProposal(
         dao.address,
-
         proposal,
         [], // configs
         nonce,
@@ -337,7 +326,6 @@ describe("Adapter - Manager", () => {
     await expect(
       manager.processSignedProposal(
         dao.address,
-
         proposal,
         [], // configs
         nonce,
@@ -362,7 +350,6 @@ describe("Adapter - Manager", () => {
     await expect(
       manager.processSignedProposal(
         dao.address,
-
         proposal,
         [], // configs
         nonce,
@@ -380,7 +367,6 @@ describe("Adapter - Manager", () => {
 
   it("cannot replay proposal", async () => {
     const dao = this.dao;
-
     const adapterId = sha3("onboarding");
     const newAdapterAddress = accounts[4];
     const manager = this.adapters.manager;
@@ -408,7 +394,6 @@ describe("Adapter - Manager", () => {
     // Update adapter.
     await manager.processSignedProposal(
       dao.address,
-
       proposal,
       [], //configs
       nonce,
@@ -419,7 +404,6 @@ describe("Adapter - Manager", () => {
     await expect(
       manager.processSignedProposal(
         dao.address,
-
         proposal,
         [], //configs
         nonce,
@@ -430,7 +414,6 @@ describe("Adapter - Manager", () => {
 
   it("should be possible to remove an adapter if 0x0 is used as the adapter address", async () => {
     const dao = this.dao;
-
     const manager = this.adapters.manager;
     const adapterIdToRemove = sha3("onboarding");
     const nonce = (await manager.nonces(dao.address)).toNumber() + 1;
@@ -456,7 +439,6 @@ describe("Adapter - Manager", () => {
     //Proposal to remove the Onboarding adapter
     await manager.processSignedProposal(
       dao.address,
-
       proposal,
       [], // configs
       nonce,
@@ -617,7 +599,6 @@ describe("Adapter - Manager", () => {
 
   it("should not fail if the adapter id used for removal is not valid", async () => {
     const dao = this.dao;
-
     const newAdapterId = sha3("invalid-id");
     const manager = this.adapters.manager;
     const nonce = (await manager.nonces(dao.address)).toNumber() + 1;
@@ -642,7 +623,6 @@ describe("Adapter - Manager", () => {
 
     await manager.processSignedProposal(
       dao.address,
-
       proposal,
       [], //configs
       nonce,
@@ -652,7 +632,6 @@ describe("Adapter - Manager", () => {
 
   it("should not be possible to add a new adapter using an address that is already registered", async () => {
     const dao = this.dao;
-
     const newAdapterId = sha3("invalid-id");
     const manager = this.adapters.manager;
     const voting = this.adapters.voting;
@@ -679,7 +658,6 @@ describe("Adapter - Manager", () => {
     await expect(
       manager.processSignedProposal(
         dao.address,
-
         proposal,
         [], //configs
         nonce,
@@ -690,7 +668,6 @@ describe("Adapter - Manager", () => {
 
   it("should be possible to add a new adapter and set the acl flags for some extension", async () => {
     const dao = this.dao;
-
     const manager = this.adapters.manager;
     const financing = await FinancingContract.new();
     const bankExt = this.extensions.bankExt;
@@ -730,7 +707,6 @@ describe("Adapter - Manager", () => {
 
     await manager.processSignedProposal(
       dao.address,
-
       proposal,
       [], //configs
       nonce,
@@ -809,7 +785,6 @@ describe("Adapter - Manager", () => {
 
   it("should be possible to add a new adapter with DAO configs", async () => {
     const dao = this.dao;
-
     const manager = this.adapters.manager;
     const voting = this.adapters.voting;
     const financing = await FinancingContract.new();
@@ -860,7 +835,6 @@ describe("Adapter - Manager", () => {
 
     await manager.processSignedProposal(
       dao.address,
-
       proposal,
       configs,
       nonce,
@@ -880,7 +854,6 @@ describe("Adapter - Manager", () => {
 
   it("should be possible to add a new extension", async () => {
     const dao = this.dao;
-
     const manager = this.adapters.manager;
     const erc1171Ext = await ERC1271Extension.new();
     const newExtensionId = sha3("testNewExtension");
@@ -909,7 +882,6 @@ describe("Adapter - Manager", () => {
 
     await manager.processSignedProposal(
       dao.address,
-
       proposal,
       [], //configs
       nonce,
@@ -923,7 +895,6 @@ describe("Adapter - Manager", () => {
 
   it("should be possible to add a new extension with DAO configs", async () => {
     const dao = this.dao;
-
     const manager = this.adapters.manager;
     const nftExt = await NFTExtension.new();
     const newExtensionId = sha3("testNewExtension");
@@ -966,7 +937,6 @@ describe("Adapter - Manager", () => {
 
     await manager.processSignedProposal(
       dao.address,
-
       proposal,
       configs,
       nonce,
@@ -988,7 +958,6 @@ describe("Adapter - Manager", () => {
 
   it("should be possible to remove an extension", async () => {
     const dao = this.dao;
-
     const removeExtensionId = sha3("bank");
     const manager = this.adapters.manager;
     const nonce = (await manager.nonces(dao.address)).toNumber() + 1;
@@ -1013,7 +982,6 @@ describe("Adapter - Manager", () => {
 
     await manager.processSignedProposal(
       dao.address,
-
       proposal,
       [], //configs
       nonce,
@@ -1027,7 +995,6 @@ describe("Adapter - Manager", () => {
 
   it("should revert if UpdateType is unknown", async () => {
     const dao = this.dao;
-
     const removeExtensionId = sha3("bank");
     const manager = this.adapters.manager;
     const nonce = (await manager.nonces(dao.address)).toNumber() + 1;
@@ -1053,7 +1020,6 @@ describe("Adapter - Manager", () => {
     await expect(
       manager.processSignedProposal(
         dao.address,
-
         proposal,
         [], //configs
         nonce,
@@ -1064,7 +1030,6 @@ describe("Adapter - Manager", () => {
 
   it("should be possible to update only DAO configs with UpdateType.CONFIGS", async () => {
     const dao = this.dao;
-
     const manager = this.adapters.manager;
     const kycOnboarding = this.adapters.kycOnboarding;
     const kycAdapterId = sha3("kyc-onboarding");
@@ -1108,7 +1073,6 @@ describe("Adapter - Manager", () => {
 
     await manager.processSignedProposal(
       dao.address,
-
       proposal,
       configs,
       nonce,
@@ -1124,7 +1088,6 @@ describe("Adapter - Manager", () => {
 
   it("should be possible to update extension access with UpdateType.CONFIGS", async () => {
     const dao = this.dao;
-
     const manager = this.adapters.manager;
     const bankExt = this.extensions.bankExt;
     const nonce = (await manager.nonces(dao.address)).toNumber() + 1;
@@ -1161,7 +1124,6 @@ describe("Adapter - Manager", () => {
 
     await manager.processSignedProposal(
       dao.address,
-
       proposal,
       configs,
       nonce,
