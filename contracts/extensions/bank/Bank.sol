@@ -349,6 +349,14 @@ contract BankExtension is IExtension, ERC165 {
         return internalTokens.length;
     }
 
+    function addToBalance(
+        address,
+        address,
+        uint256
+    ) external payable {
+        revert("not implemented");
+    }
+
     /**
      * @notice Adds to a member's balance of a given token
      * @param member The member whose balance will be updated
@@ -389,6 +397,23 @@ contract BankExtension is IExtension, ERC165 {
 
         _createNewAmountCheckpoint(member, token, newAmount);
         _createNewAmountCheckpoint(DaoHelper.TOTAL, token, newTotalAmount);
+    }
+
+    function subtractFromBalance(
+        address,
+        address,
+        uint256
+    ) external pure {
+        revert("not implemented");
+    }
+
+    function internalTransfer(
+        address,
+        address,
+        address,
+        uint256
+    ) external pure {
+        revert("not implemented");
     }
 
     /**
@@ -491,23 +516,6 @@ contract BankExtension is IExtension, ERC165 {
     {
         return
             super.supportsInterface(interfaceId) ||
-            this.subtractFromBalance.selector == interfaceId ||
-            this.addToBalance.selector == interfaceId ||
-            this.getPriorAmount.selector == interfaceId ||
-            this.balanceOf.selector == interfaceId ||
-            this.internalTransfer.selector == interfaceId ||
-            this.nbInternalTokens.selector == interfaceId ||
-            this.getInternalToken.selector == interfaceId ||
-            this.getTokens.selector == interfaceId ||
-            this.nbTokens.selector == interfaceId ||
-            this.getToken.selector == interfaceId ||
-            this.updateToken.selector == interfaceId ||
-            this.registerPotentialNewInternalToken.selector == interfaceId ||
-            this.registerPotentialNewToken.selector == interfaceId ||
-            this.setMaxExternalTokens.selector == interfaceId ||
-            this.isTokenAllowed.selector == interfaceId ||
-            this.isInternalToken.selector == interfaceId ||
-            this.withdraw.selector == interfaceId ||
             this.withdrawTo.selector == interfaceId;
     }
 

@@ -156,21 +156,31 @@ describe("Extension - Bank", () => {
     it("should not be possible to call addToBalance without the ADD_TO_BALANCE permission", async () => {
       const extension = this.extensions.bankExt;
       await expect(
-        extension.addToBalance(this.dao.address, daoOwner, ETH_TOKEN, 1)
+        extension["addToBalance(address,address,address,uint256)"](
+          this.dao.address,
+          daoOwner,
+          ETH_TOKEN,
+          1
+        )
       ).to.be.revertedWith("accessDenied");
     });
 
     it("should not be possible to call subtractFromBalance without the SUB_FROM_BALANCE permission", async () => {
       const extension = this.extensions.bankExt;
       await expect(
-        extension.subtractFromBalance(this.dao.address, daoOwner, ETH_TOKEN, 1)
+        extension["subtractFromBalance(address,address,address,uint256)"](
+          this.dao.address,
+          daoOwner,
+          ETH_TOKEN,
+          1
+        )
       ).to.be.revertedWith("accessDenied");
     });
 
     it("should not be possible to call internalTransfer without the INTERNAL_TRANSFER permission", async () => {
       const extension = this.extensions.bankExt;
       await expect(
-        extension.internalTransfer(
+        extension["internalTransfer(address,address,address,address,uint256)"](
           this.dao.address,
           daoOwner,
           creator,
