@@ -69,13 +69,12 @@ contract Manager is Reimbursable, AdapterGuard, Signatures {
         ProposalDetails proposal;
         Configuration[] configs;
         uint256 nonce;
-        bytes32 proposalId;
     }
 
     mapping(address => uint256) public nonces;
 
     string public constant MANAGING_COUPON_MESSAGE_TYPE =
-        "Message(address daoAddress,ProposalDetails proposal,Configuration[] configs,uint256 nonce,bytes32 proposalId)Configuration(bytes32 key,uint256 numericValue,address addressValue,uint8 configType)ProposalDetails(bytes32 adapterOrExtensionId,address adapterOrExtensionAddr,uint8 updateType,uint128 flags,bytes32[] keys,uint256[] values,address[] extensionAddresses,uint128[] extensionAclFlags)";
+        "Message(address daoAddress,ProposalDetails proposal,Configuration[] configs,uint256 nonce)Configuration(bytes32 key,uint256 numericValue,address addressValue,uint8 configType)ProposalDetails(bytes32 adapterOrExtensionId,address adapterOrExtensionAddr,uint8 updateType,uint128 flags,bytes32[] keys,uint256[] values,address[] extensionAddresses,uint128[] extensionAclFlags)";
     bytes32 public constant MANAGING_COUPON_MESSAGE_TYPEHASH =
         keccak256(abi.encodePacked(MANAGING_COUPON_MESSAGE_TYPE));
 
@@ -105,7 +104,6 @@ contract Manager is Reimbursable, AdapterGuard, Signatures {
 
     function processSignedProposal(
         DaoRegistry dao,
-        bytes32 proposalId,
         ProposalDetails calldata proposal,
         Configuration[] memory configs,
         uint256 nonce,
@@ -126,8 +124,7 @@ contract Manager is Reimbursable, AdapterGuard, Signatures {
             address(dao),
             proposal,
             configs,
-            nonce,
-            proposalId
+            nonce
         );
         bytes32 hash = hashCouponMessage(dao, managingCoupon);
 
@@ -140,7 +137,7 @@ contract Manager is Reimbursable, AdapterGuard, Signatures {
             "invalid sig"
         );
 
-        _submitAndProcessProposal(dao, proposalId, proposal, configs);
+        _submitAndProcessProposal(dao, proposal, configs);
     }
 
     /**
@@ -148,19 +145,15 @@ contract Manager is Reimbursable, AdapterGuard, Signatures {
      * @dev Reverts when the adapter address is already in use and it is an adapter addition.
      * @dev Reverts when the extension address is already in use and it is an extension addition.
      * @param dao The dao address.
-     * @param proposalId The proposal id.
      * @param proposal The proposal data.
      * @param configs The configurations to be updated.
      */
     // slither-disable-next-line reentrancy-benign
     function _submitAndProcessProposal(
         DaoRegistry dao,
-        bytes32 proposalId,
         ProposalDetails calldata proposal,
         Configuration[] memory configs
     ) internal reimbursable(dao) {
-        dao.submitProposal(proposalId);
-        dao.processProposal(proposalId);
         if (proposal.updateType == UpdateType.ADAPTER) {
             dao.replaceAdapter(
                 proposal.adapterOrExtensionId,
@@ -272,8 +265,7 @@ contract Manager is Reimbursable, AdapterGuard, Signatures {
                 coupon.daoAddress,
                 hashProposal(coupon.proposal),
                 hashConfigurations(coupon.configs),
-                coupon.nonce,
-                coupon.proposalId
+                coupon.nonce
             )
         );
 
