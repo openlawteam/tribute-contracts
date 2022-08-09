@@ -1,8 +1,8 @@
 [
   {
     "network": "rinkeby",
-    "daoFactoryAddress": "0xC8A9C7658e3Dbe78bDF36D52c70fa72Df2c60616",
-    "daoFactoryStartBlock": 10553053,
+    "daoFactoryAddress": "0xC54180A64823E5E1CD0BF0E183C55D2274E5e7A4",
+    "daoFactoryStartBlock": 11173729,
     "GITHUB_USERNAME": "openlawteam",
     "SUBGRAPH_NAME": "beaker-dev"
   }
