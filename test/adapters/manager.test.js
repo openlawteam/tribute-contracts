@@ -44,6 +44,7 @@ const {
   web3,
   Manager,
   FinancingContract,
+  BankExtension,
   ERC1271Extension,
   NFTExtension,
 } = require("../../utils/hardhat-test-util");
@@ -1148,6 +1149,96 @@ describe("Adapter - Manager", () => {
       await dao.hasAdapterAccessToExtension(
         manager.address,
         bankExt.address,
+        2 // INTERNAL_TRANSFER
+      )
+    ).equal(true);
+  });
+
+  it("should be possible to grant adapters access when replacing extension", async () => {
+    const dao = this.dao;
+    const manager = this.adapters.manager;
+    const kycOnboarding = this.adapters.kycOnboarding;
+    const newBank = await BankExtension.new();
+    const nonce = (await manager.nonces(dao.address)).toNumber() + 1;
+    const proposal = {
+      adapterOrExtensionId: sha3("bank"),
+      adapterOrExtensionAddr: newBank.address,
+      updateType: 2, // UpdateType 3 = configs
+      flags: 0,
+      keys: [],
+      values: [],
+      extensionAddresses: [manager.address, kycOnboarding.address],
+      extensionAclFlags: [
+        entryBank(manager.address, {
+          extensions: {
+            [extensionsIdsMap.BANK_EXT]: [
+              bankExtensionAclFlagsMap.ADD_TO_BALANCE,
+              bankExtensionAclFlagsMap.SUB_FROM_BALANCE,
+              bankExtensionAclFlagsMap.INTERNAL_TRANSFER,
+            ],
+          },
+        }).flags,
+        entryBank(kycOnboarding.address, {
+          extensions: {
+            [extensionsIdsMap.BANK_EXT]: [
+              bankExtensionAclFlagsMap.ADD_TO_BALANCE,
+              bankExtensionAclFlagsMap.INTERNAL_TRANSFER,
+            ],
+          },
+        }).flags,
+      ],
+    };
+    const configs = [];
+
+    const signature = generateCouponSignature({
+      daoAddress: dao.address,
+      managerAddress: manager.address,
+      chainId,
+      proposal,
+      configs,
+      nonce,
+    });
+
+    await manager.processSignedProposal(
+      dao.address,
+      proposal,
+      configs,
+      nonce,
+      signature
+    );
+
+    expect(
+      await dao.hasAdapterAccessToExtension(
+        manager.address,
+        newBank.address,
+        0 //ADD_TO_BALANCE
+      )
+    ).equal(true);
+    expect(
+      await dao.hasAdapterAccessToExtension(
+        manager.address,
+        newBank.address,
+        1 // SUB_FROM_BALANCE
+      )
+    ).equal(true);
+    expect(
+      await dao.hasAdapterAccessToExtension(
+        manager.address,
+        newBank.address,
+        2 // INTERNAL_TRANSFER
+      )
+    ).equal(true);
+    expect(
+      await dao.hasAdapterAccessToExtension(
+        kycOnboarding.address,
+        newBank.address,
+        0 //ADD_TO_BALANCE
+      )
+    ).equal(true);
+    expect(
+      await dao.hasAdapterAccessToExtension(
+        kycOnboarding.address,
+        newBank.address,
         2 // INTERNAL_TRANSFER
       )
     ).equal(true);
