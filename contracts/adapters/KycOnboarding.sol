@@ -176,6 +176,8 @@ contract KycOnboardingContract is
         dao.setConfiguration(_configKey(tokenAddr, CanTopUp), canTopUp);
 
         BankExtension bank = BankExtension(dao.getExtensionAddress(BANK));
+        require(bank.dao() == dao, "invalid dao");
+        
         bank.registerPotentialNewInternalToken(UNITS);
         bank.registerPotentialNewToken(tokenAddr);
     }

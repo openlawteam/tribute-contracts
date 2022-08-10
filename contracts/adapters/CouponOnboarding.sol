@@ -78,6 +78,8 @@ contract CouponOnboardingContract is
         dao.setAddressConfiguration(TokenAddrToMint, tokenAddrToMint);
 
         BankExtension bank = BankExtension(dao.getExtensionAddress(BANK));
+        require(bank.dao() == dao, "invalid dao");
+        
         bank.registerPotentialNewInternalToken(tokenAddrToMint);
     }
 
