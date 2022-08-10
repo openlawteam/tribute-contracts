@@ -95,7 +95,8 @@ async function deployRinkebyDao(deployFunction, network) {
     "OFFCHAIN_ADMIN_ADDR",
     "CHUNK_PRICE",
     "UNITS_PER_CHUNK",
-    "MAX_CHUNKS"
+    "MAX_CHUNKS",
+    "MANAGER_COUPON_SIGNER_ADDR"
   );
 
   return await deployDao({
@@ -117,6 +118,7 @@ async function deployRinkebyDao(deployFunction, network) {
     maxExternalTokens: 100,
     couponCreatorAddress: envVariables.COUPON_CREATOR_ADDR,
     fundTargetAddress: envVariables.FUND_TARGET_ADDR,
+    managerSignerAddress: envVariables.MANAGER_COUPON_SIGNER_ADDR,
     daoName: envVariables.DAO_NAME,
     owner: envVariables.DAO_OWNER_ADDR,
     offchainAdmin: envVariables.OFFCHAIN_ADMIN_ADDR,
@@ -151,7 +153,8 @@ async function deployMainnetDao(deployFunction, network) {
     "MAX_CHUNKS",
     "MAX_MEMBERS",
     "MAX_UNITS",
-    "KYC_PAYMENT_TOKEN"
+    "KYC_PAYMENT_TOKEN",
+    "MANAGER_COUPON_SIGNER_ADDR"
   );
 
   return await deployDao({
@@ -173,6 +176,7 @@ async function deployMainnetDao(deployFunction, network) {
     maxExternalTokens: 100,
     couponCreatorAddress: envVariables.COUPON_CREATOR_ADDR,
     fundTargetAddress: envVariables.FUND_TARGET_ADDR,
+    managerSignerAddress: envVariables.MANAGER_COUPON_SIGNER_ADDR,
     daoName: envVariables.DAO_NAME,
     owner: envVariables.DAO_OWNER_ADDR,
     offchainAdmin: envVariables.OFFCHAIN_ADMIN_ADDR,
