@@ -162,12 +162,40 @@ contract Manager is Reimbursable, AdapterGuard, Signatures {
                 proposal.keys,
                 proposal.values
             );
+
+            // Grant new adapter access to extensions.
+            for (uint256 i = 0; i < proposal.extensionAclFlags.length; i++) {
+                _grantExtensionAccess(
+                    dao,
+                    proposal.extensionAddresses[i],
+                    proposal.adapterOrExtensionAddr,
+                    proposal.extensionAclFlags[i]
+                );
+            }
         } else if (proposal.updateType == UpdateType.EXTENSION) {
             _replaceExtension(dao, proposal);
-        } else if (proposal.updateType != UpdateType.CONFIGS) {
+
+            // Grant adapters access to new extension.
+            for (uint256 i = 0; i < proposal.extensionAclFlags.length; i++) {
+                _grantExtensionAccess(
+                    dao,
+                    proposal.adapterOrExtensionAddr,
+                    proposal.extensionAddresses[i], // Adapters.
+                    proposal.extensionAclFlags[i]
+                );
+            }
+        } else if (proposal.updateType == UpdateType.CONFIGS) {
+            for (uint256 i = 0; i < proposal.extensionAclFlags.length; i++) {
+                _grantExtensionAccess(
+                    dao,
+                    proposal.extensionAddresses[i],
+                    proposal.adapterOrExtensionAddr,
+                    proposal.extensionAclFlags[i]
+                );
+            }
+        } else {
             revert("unknown update type");
         }
-        _grantExtensionAccess(dao, proposal);
         _saveDaoConfigurations(dao, configs);
     }
 
@@ -206,22 +234,22 @@ contract Manager is Reimbursable, AdapterGuard, Signatures {
      */
     function _grantExtensionAccess(
         DaoRegistry dao,
-        ProposalDetails memory proposal
+        address extensionAddr,
+        address adapterAddr,
+        uint128 acl
     ) internal {
-        for (uint256 i = 0; i < proposal.extensionAclFlags.length; i++) {
-            // It is fine to execute the external call inside the loop
-            // because it is calling the correct function in the dao contract
-            // it won't be calling a fallback that always revert.
-            // slither-disable-next-line calls-loop
-            dao.setAclToExtensionForAdapter(
-                // It needs to be registered as extension
-                proposal.extensionAddresses[i],
-                // It needs to be registered as adapter
-                proposal.adapterOrExtensionAddr,
-                // Indicate which access level will be granted
-                proposal.extensionAclFlags[i]
-            );
-        }
+        // It is fine to execute the external call inside the loop
+        // because it is calling the correct function in the dao contract
+        // it won't be calling a fallback that always revert.
+        // slither-disable-next-line calls-loop
+        dao.setAclToExtensionForAdapter(
+            // It needs to be registered as extension
+            extensionAddr,
+            // It needs to be registered as adapter
+            adapterAddr,
+            // Indicate which access level will be granted
+            acl
+        );
     }
 
     /**
