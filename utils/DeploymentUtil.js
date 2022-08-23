@@ -230,14 +230,17 @@ const prepareAdapters = async ({
   configuration = await ConfigurationContract.at('0xb18ebca2464bc4db22dc36e6e0964673902f5846');
   ragequit = await RagequitContract.at('0xd93041140410E2fD69A47d4D1fd06a20A2d60030');
   managing = await ManagingContract.at('0x6e1618aa96eab233dc18cb77bfcc8bd4765be4ed');
+  manager = await ManagerContract.at('0xDf843a6CA37281e368211eE941f632557498e574');
   //kycOnboarding = await KycOnboardingContract.at('0x029Df2bfB6403af978602A79C6Fada5C8D2E585f');
   //kycOnboarding = await KycOnboardingContract.at('0x09d265de40e9aD9BC69CCFaF44592307AEDE6206');
-  kycOnboarding = await KycOnboardingContract.at('0x9240F0A2e651053A69c133BB3D22EFE95E2C1544');
+  // kycOnboarding = await KycOnboardingContract.at('0x9240F0A2e651053A69c133BB3D22EFE95E2C1544');
+  kycOnboarding = await KycOnboardingContract.at('0xf4E0177905F70e3ddbe20723FD75d36Af15E718c');
   //kycOnboarding = await deployFunction(KycOnboardingContract, [wethAddress]);
   guildkick = await GuildKickContract.at('0x7c8243E3AE58E2A16Fdc6D1F5CD8F2E4a063f6B9');
   daoRegistryAdapter = await DaoRegistryAdapterContract.at('0xe96e170F921Bd87C9B46F3f64cc64Af09119EccF');
   bankAdapter = await BankAdapterContract.at('0xc089c6eB34A9383458a9b6465C57095D77De9997');
-  couponOnboarding = await CouponOnboardingContract.at('0x467E0eB6793864A319B5BdD1cfB26407DB4216D4');
+  // couponOnboarding = await CouponOnboardingContract.at('0x467E0eB6793864A319B5BdD1cfB26407DB4216D4');
+  couponOnboarding = await CouponOnboardingContract.at('0xe08545237aCe6e004472798B5d6068B9D7F85505');
   
   /*
   voting = await VotingContract.new();
