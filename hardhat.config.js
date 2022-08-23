@@ -8,6 +8,7 @@ require("@nomiclabs/hardhat-ethers");
 require("@nomiclabs/hardhat-truffle5");
 require("@nomiclabs/hardhat-web3");
 require("hardhat-contract-sizer");
+require("@openzeppelin/hardhat-upgrades");
 if (!process.env.TEST === "true") {
   require("hardhat-gas-reporter");
 }
@@ -218,4 +219,10 @@ module.exports = {
     cache: "./build/cache",
     artifacts: "./build/artifacts",
   },
+
+  etherscan: {
+    apiKey: {
+      rinkeby: '7JWXWS487WK8EFDN2PKG6EVNCZKFFTG6KC'
+    }
+  }
 };
