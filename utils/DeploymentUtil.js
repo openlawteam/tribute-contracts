@@ -43,7 +43,7 @@ const rinkebyContracts = {
   Voting: '0x92B78EdE3C0C53c07396eb28BD268CCBB6d0c327',
 };
 
-const { UNITS, sha3, toBN, ETH_TOKEN } = require("./ContractUtil");
+const { UNITS, sha3, toBN } = require("./ContractUtil");
 
 const deployDao = async (options) => {
   let {

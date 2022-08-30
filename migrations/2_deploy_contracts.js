@@ -1,7 +1,6 @@
 const {
   toBN,
   toWei,
-  ETH_TOKEN,
   maximumChunks,
   unitPrice,
   numberOfUnits,
