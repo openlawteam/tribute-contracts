@@ -25,7 +25,7 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
  */
 
-const { UNITS, sha3, toBN, ETH_TOKEN } = require("./ContractUtil");
+const { UNITS, sha3, toBN } = require("./ContractUtil");
 
 const deployDao = async (options) => {
   let {
