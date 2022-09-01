@@ -480,7 +480,7 @@ const configureDao = async ({
     maxChunks,
     maxUnits,
     maxMembers,
-    0,
+    0, // canTopUp default false
     fundTargetAddress,
     kycPaymentToken,
     UNITS,
