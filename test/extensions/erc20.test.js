@@ -25,6 +25,7 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
  */
 const { expect } = require("chai");
+const { ethers } = require("hardhat");
 const {
   toBN,
   sha3,
@@ -89,9 +90,7 @@ describe("Extension - ERC20", () => {
     it("should be possible to create an extension using the factory", async () => {
       const { logs } = await this.factories.erc20ExtFactory.create(
         this.dao.address,
-        "Token A",
         this.testContracts.testToken1.address,
-        "Test",
         0
       );
       const log = logs[0];
@@ -103,9 +102,7 @@ describe("Extension - ERC20", () => {
     it("should be possible to get an extension address by dao", async () => {
       await this.factories.erc20ExtFactory.create(
         this.dao.address,
-        "Token A",
         this.testContracts.testToken1.address,
-        "Test",
         0
       );
       const extAddress =
@@ -126,9 +123,7 @@ describe("Extension - ERC20", () => {
       await expect(
         this.factories.erc20ExtFactory.create(
           ZERO_ADDRESS,
-          "Token A",
           this.testContracts.testToken1.address,
-          "Test",
           0
         )
       ).to.be.reverted;
@@ -146,8 +141,6 @@ describe("Extension - ERC20", () => {
     it("should be possible to call initialize with a non member", async () => {
       const extension = await ERC20Extension.new();
       await extension.setToken(DAI_TOKEN);
-      await extension.setName("DAI");
-      await extension.setSymbol("DAI");
       await extension.initialize(this.dao.address, creator);
       expect(await extension.initialized()).to.be.true;
     });
@@ -157,23 +150,6 @@ describe("Extension - ERC20", () => {
       await expect(
         extension.initialize(this.dao.address, daoOwner)
       ).to.be.revertedWith("missing token address");
-    });
-
-    it("should not be possible to call initialize with an invalid token name", async () => {
-      const extension = await ERC20Extension.new();
-      await extension.setToken(DAI_TOKEN);
-      await expect(
-        extension.initialize(this.dao.address, daoOwner)
-      ).to.be.revertedWith("missing token name");
-    });
-
-    it("should not be possible to call initialize with an invalid token name", async () => {
-      const extension = await ERC20Extension.new();
-      await extension.setToken(DAI_TOKEN);
-      await extension.setName("DAI");
-      await expect(
-        extension.initialize(this.dao.address, daoOwner)
-      ).to.be.revertedWith("missing token symbol");
     });
   });
 
@@ -261,6 +237,48 @@ describe("Extension - ERC20", () => {
     expect(applicantBUnits.toString()).equal(
       numberOfUnits.mul(toBN("4")).toString()
     );
+  });
+
+  it("should be possible to rename the token and its symbol with config changes", async () => {
+    const dao = this.dao;
+    const configuration = this.adapters.configuration;
+    const voting = this.adapters.voting;
+    const erc20Ext = this.extensions.erc20Ext;
+
+    const initialErc20Name = await erc20Ext.name();
+    const initialErc20Symbol = await erc20Ext.symbol();
+
+    expect(initialErc20Name).equal("Test Token");
+    expect(initialErc20Symbol).equal("TTK");
+
+    //configure
+    await submitConfigProposal(
+      dao,
+      getProposalCounter(),
+      daoOwner,
+      configuration,
+      voting,
+      [
+        {
+          key: sha3("erc20.extension.tokenName"),
+          numericValue: ethers.utils.formatBytes32String("token name"),
+          addressValue: ZERO_ADDRESS,
+          configType: 0,
+        },
+        {
+          key: sha3("erc20.extension.tokenSymbol"),
+          numericValue: ethers.utils.formatBytes32String("token symbol"),
+          addressValue: ZERO_ADDRESS,
+          configType: 0,
+        },
+      ]
+    );
+
+    const erc20Name = await erc20Ext.name();
+    const erc20Symbol = await erc20Ext.symbol();
+
+    expect(erc20Name).equal("token name");
+    expect(erc20Symbol).equal("token symbol");
   });
 
   it("should be possible to approve and transferFrom units from a member to another member when the transfer type is equals 0 (member transfer only)", async () => {
