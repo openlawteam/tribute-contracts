@@ -87,9 +87,7 @@ const deployDao = async (options) => {
   console.log("create erc20 extension");
   // Start the Erc20TokenExtension deployment & configuration
   await erc20TokenExtFactory.create(
-    erc20TokenName,
     UNITS,
-    erc20TokenSymbol,
     erc20TokenDecimals
   );
   
@@ -301,6 +299,8 @@ const addDefaultAdapters = async ({ dao, options, daoFactory }) => {
   const erc20TokenExtension = await ERC20Extension.at(unitTokenExtAddr);
 
   await configureDao({
+    erc20TokenName,
+    erc20TokenSymbol,
     owner: options.owner,
     daoFactory,
     dao,
@@ -338,6 +338,8 @@ const addDefaultAdapters = async ({ dao, options, daoFactory }) => {
 
 const configureDao = async ({
   owner,
+  erc20TokenName,
+  erc20TokenSymbol,
   daoFactory,
   dao,
   ragequit,
@@ -456,6 +458,8 @@ const configureDao = async ({
     [],
     { from: owner }
   );
+
+  await bankAdapter.configureDao(dao.address, erc20TokenName, erc20TokenSymbol, {from: owner});
 
   console.log("configure kycOnboarding");
     
