@@ -43,17 +43,16 @@ contract ERC20Extension is AdapterGuard, IExtension, IERC20 {
     // The DAO address that this extension belongs to
     DaoRegistry public dao;
 
+    bytes32 internal constant TokenName =
+        keccak256("erc20.extension.tokenName");
+    bytes32 internal constant TokenSymbol =
+        keccak256("erc20.extension.tokenSymbol");
+
     // Internally tracks deployment under eip-1167 proxy pattern
     bool public initialized = false;
 
     // The token address managed by the DAO that tracks the internal transfers
     address public tokenAddress;
-
-    // The name of the token managed by the DAO
-    string public tokenName;
-
-    // The symbol of the token managed by the DAO
-    string public tokenSymbol;
 
     // The number of decimals of the token managed by the DAO
     uint8 public tokenDecimals;
@@ -72,10 +71,24 @@ contract ERC20Extension is AdapterGuard, IExtension, IERC20 {
     function initialize(DaoRegistry _dao, address) external override {
         require(!initialized, "already initialized");
         require(tokenAddress != address(0x0), "missing token address");
-        require(bytes(tokenName).length != 0, "missing token name");
-        require(bytes(tokenSymbol).length != 0, "missing token symbol");
         initialized = true;
         dao = _dao;
+    }
+
+    function bytes32ToString(bytes32 _bytes32)
+        internal
+        pure
+        returns (string memory)
+    {
+        uint8 i = 0;
+        while (i < 32 && _bytes32[i] != 0) {
+            i++;
+        }
+        bytes memory bytesArray = new bytes(i);
+        for (i = 0; i < 32 && _bytes32[i] != 0; i++) {
+            bytesArray[i] = _bytes32[i];
+        }
+        return string(bytesArray);
     }
 
     /**
@@ -105,15 +118,7 @@ contract ERC20Extension is AdapterGuard, IExtension, IERC20 {
      * @dev Returns the name of the token.
      */
     function name() external view virtual returns (string memory) {
-        return tokenName;
-    }
-
-    /**
-     * @dev Sets the name of the token if the extension is not initialized.
-     */
-    function setName(string memory _name) external {
-        require(!initialized, "already initialized");
-        tokenName = _name;
+        return bytes32ToString(bytes32(dao.getConfiguration(TokenName)));
     }
 
     /**
@@ -121,15 +126,7 @@ contract ERC20Extension is AdapterGuard, IExtension, IERC20 {
      * name.
      */
     function symbol() external view virtual returns (string memory) {
-        return tokenSymbol;
-    }
-
-    /**
-     * @dev Sets the token symbol if the extension is not initialized.
-     */
-    function setSymbol(string memory _symbol) external {
-        require(!initialized, "already initialized");
-        tokenSymbol = _symbol;
+        return bytes32ToString(bytes32(dao.getConfiguration(TokenSymbol)));
     }
 
     /**

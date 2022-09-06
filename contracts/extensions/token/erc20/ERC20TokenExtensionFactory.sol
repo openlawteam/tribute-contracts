@@ -52,17 +52,13 @@ contract ERC20TokenExtensionFactory is IFactory, CloneFactory, ReentrancyGuard {
      * @notice It initializes the extension and sets the DAO owner as the extension creator.
      * @notice The safest way to read the new extension address is to read it from the event.
      * @param dao The dao address that will be associated with the new extension.
-     * @param tokenName The name of the token.
      * @param tokenAddress The address of the ERC20 token.
-     * @param tokenSymbol The symbol of the ERC20 token.
      * @param decimals The number of decimal places of the ERC20 token.
      */
     // slither-disable-next-line reentrancy-events
     function create(
         DaoRegistry dao,
-        string calldata tokenName,
         address tokenAddress,
-        string calldata tokenSymbol,
         uint8 decimals
     ) external nonReentrant {
         address daoAddress = address(dao);
@@ -70,9 +66,7 @@ contract ERC20TokenExtensionFactory is IFactory, CloneFactory, ReentrancyGuard {
         address payable extensionAddr = _createClone(identityAddress);
         _extensions[daoAddress] = extensionAddr;
         ERC20Extension extension = ERC20Extension(extensionAddr);
-        extension.setName(tokenName);
         extension.setToken(tokenAddress);
-        extension.setSymbol(tokenSymbol);
         extension.setDecimals(decimals);
         extension.initialize(dao, address(0));
         // slither-disable-next-line reentrancy-events
