@@ -27,20 +27,20 @@ SOFTWARE.
 
 // RINKEBY
 const rinkebyContracts = {
-  BankAdapter: '0x9cDa4Bfe9Cdf5769425774Ae7bD9Cb21b5CbA2C7',
-  BankFactory: '0x81Cf17e713b621531C0A2F58D92E93fB7Ce417d7',
-  Configuration: '0xe7bAE38678bA931FA3B65F57D69fBE104dFb3953',
-  CouponOnboarding: '0x0114646f214E04364ACbb747c08eD5188E682993',
-  DaoFactory: '0x96dAE5f5B474E3184e6B4C643F5204bB180FEdb0',
-  DaoRegistryAdapter: '0xeE8E97c87D19Aaf055860b3C5F013c3042a70696',
-  ERC20TokenExtensionFactory: '0x66924Ea22B498AF0723739a64653a2D1505efaDd',
-  GuildKick: '0x799B9CB3b361a9C528ef268823f35DAaD57Dc187',
-  KycOnboarding: '0x58aCc6ed1E53E217D0Ca6BbD8D2A953b15C71de5',
-  Manager: '0x78A43376dC5795e5097906486aa10b841c2f49D9',
-  Managing: '0x070461e9fc8B2FA737f66ddbb5CA22c3ab22D049',
-  OffchainVoting: '0x219E388b07E1184b1fc5E6Fd59Af9a65bAbedC56',
-  Ragequit: '0xd12AE3E3B2712cc9c3c59B7CC6B0CF6a667943bf',
-  Voting: '0x92B78EdE3C0C53c07396eb28BD268CCBB6d0c327',
+  // BankAdapter: '0x9cDa4Bfe9Cdf5769425774Ae7bD9Cb21b5CbA2C7',
+  BankFactory: "0x81Cf17e713b621531C0A2F58D92E93fB7Ce417d7",
+  Configuration: "0xe7bAE38678bA931FA3B65F57D69fBE104dFb3953",
+  CouponOnboarding: "0x0114646f214E04364ACbb747c08eD5188E682993",
+  DaoFactory: "0x96dAE5f5B474E3184e6B4C643F5204bB180FEdb0",
+  DaoRegistryAdapter: "0xeE8E97c87D19Aaf055860b3C5F013c3042a70696",
+  // ERC20TokenExtensionFactory: "0x66924Ea22B498AF0723739a64653a2D1505efaDd",
+  GuildKick: "0x799B9CB3b361a9C528ef268823f35DAaD57Dc187",
+  KycOnboarding: "0x58aCc6ed1E53E217D0Ca6BbD8D2A953b15C71de5",
+  Manager: "0x78A43376dC5795e5097906486aa10b841c2f49D9",
+  Managing: "0x070461e9fc8B2FA737f66ddbb5CA22c3ab22D049",
+  OffchainVoting: "0x219E388b07E1184b1fc5E6Fd59Af9a65bAbedC56",
+  Ragequit: "0xd12AE3E3B2712cc9c3c59B7CC6B0CF6a667943bf",
+  Voting: "0x92B78EdE3C0C53c07396eb28BD268CCBB6d0c327",
 };
 
 const { UNITS, sha3, toBN } = require("./ContractUtil");
@@ -77,11 +77,21 @@ const deployDao = async (options) => {
   const bankFactory = await BankFactory.at(rinkebyContracts.BankFactory);
   //const bankIdentity = await BankExtension.new();
   //const bankFactory = await BankFactory.new(bankIdentity.address);
-  const erc20TokenExtFactory = await ERC20TokenExtensionFactory.at(rinkebyContracts.ERC20TokenExtensionFactory);
-  //const erc20Ext = await ERC20Extension.new();
-  /*const erc20TokenExtFactory = await ERC20TokenExtensionFactory.new(
-    erc20Ext.address
-  );*/
+
+  // const erc20TokenExtFactory = await ERC20TokenExtensionFactory.at(
+  //   rinkebyContracts.ERC20TokenExtensionFactory
+  // );
+
+  // const erc20Ext = await ERC20Extension.new();
+  const erc20Ext = await deployFunction(ERC20Extension);
+  // const erc20TokenExtFactory = await ERC20TokenExtensionFactory.new(
+  //   erc20Ext.address
+  // );
+  const erc20TokenExtFactory = await deployFunction(
+    ERC20TokenExtensionFactory,
+    [erc20Ext.address]
+  );
+
   console.log("clone dao ...");
   const { dao, daoFactory } = await cloneDao({
     ...options,
@@ -104,11 +114,8 @@ const deployDao = async (options) => {
 
   console.log("create erc20 extension");
   // Start the Erc20TokenExtension deployment & configuration
-  await erc20TokenExtFactory.create(
-    UNITS,
-    erc20TokenDecimals
-  );
-  
+  await erc20TokenExtFactory.create(UNITS, erc20TokenDecimals);
+
   pastEvent = undefined;
   while (pastEvent === undefined) {
     let pastEvents = await erc20TokenExtFactory.getPastEvents();
@@ -241,30 +248,38 @@ const prepareAdapters = async ({
     daoRegistryAdapter,
     bankAdapter,
     couponOnboarding;
-  
+
   voting = await VotingContract.at(rinkebyContracts.Voting);
-  configuration = await ConfigurationContract.at(rinkebyContracts.Configuration);
+  configuration = await ConfigurationContract.at(
+    rinkebyContracts.Configuration
+  );
   ragequit = await RagequitContract.at(rinkebyContracts.Ragequit);
   managing = await ManagingContract.at(rinkebyContracts.Managing);
   manager = await ManagerContract.at(rinkebyContracts.Manager);
-  kycOnboarding = await KycOnboardingContract.at(rinkebyContracts.KycOnboarding);
+  kycOnboarding = await KycOnboardingContract.at(
+    rinkebyContracts.KycOnboarding
+  );
   guildkick = await GuildKickContract.at(rinkebyContracts.GuildKick);
-  daoRegistryAdapter = await DaoRegistryAdapterContract.at(rinkebyContracts.DaoRegistryAdapter);
-  bankAdapter = await BankAdapterContract.at(rinkebyContracts.BankAdapter);
-  couponOnboarding = await CouponOnboardingContract.at(rinkebyContracts.CouponOnboarding);
-  
-  /*
-  voting = await VotingContract.new();
-  configuration = await ConfigurationContract.new();
-  ragequit = await RagequitContract.new();
-  managing = await ManagingContract.new();
-  manager = await ManagerContract.new();
-  kycOnboarding = await KycOnboardingContract.new(wethAddress);
-  guildkick = await GuildKickContract.new();
-  daoRegistryAdapter = await DaoRegistryAdapterContract.new();
-  bankAdapter = await BankAdapterContract.new();
-  couponOnboarding = await CouponOnboardingContract.new(chainId);
-  */
+  daoRegistryAdapter = await DaoRegistryAdapterContract.at(
+    rinkebyContracts.DaoRegistryAdapter
+  );
+  // bankAdapter = await BankAdapterContract.at(rinkebyContracts.BankAdapter);
+  bankAdapter = await deployFunction(BankAdapterContract);
+  couponOnboarding = await CouponOnboardingContract.at(
+    rinkebyContracts.CouponOnboarding
+  );
+
+  // voting = await VotingContract.new();
+  // configuration = await ConfigurationContract.new();
+  // ragequit = await RagequitContract.new();
+  // managing = await ManagingContract.new();
+  // manager = await ManagerContract.new();
+  // kycOnboarding = await KycOnboardingContract.new(wethAddress);
+  // guildkick = await GuildKickContract.new();
+  // daoRegistryAdapter = await DaoRegistryAdapterContract.new();
+  // bankAdapter = await BankAdapterContract.new();
+  // couponOnboarding = await CouponOnboardingContract.new(chainId);
+
   return {
     voting,
     configuration,
@@ -312,8 +327,8 @@ const addDefaultAdapters = async ({ dao, options, daoFactory }) => {
   const erc20TokenExtension = await ERC20Extension.at(unitTokenExtAddr);
 
   await configureDao({
-    erc20TokenName,
-    erc20TokenSymbol,
+    // erc20TokenName,
+    // erc20TokenSymbol,
     owner: options.owner,
     daoFactory,
     dao,
@@ -472,10 +487,15 @@ const configureDao = async ({
     { from: owner }
   );
 
-  await bankAdapter.configureDao(dao.address, erc20TokenName, erc20TokenSymbol, {from: owner});
+  await bankAdapter.configureDao(
+    dao.address,
+    erc20TokenName,
+    erc20TokenSymbol,
+    { from: owner }
+  );
 
   console.log("configure kycOnboarding");
-    
+
   await kycOnboarding.configureDao(
     dao.address,
     couponCreatorAddress,
