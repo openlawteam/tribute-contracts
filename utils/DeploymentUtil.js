@@ -327,8 +327,6 @@ const addDefaultAdapters = async ({ dao, options, daoFactory }) => {
   const erc20TokenExtension = await ERC20Extension.at(unitTokenExtAddr);
 
   await configureDao({
-    // erc20TokenName,
-    // erc20TokenSymbol,
     owner: options.owner,
     daoFactory,
     dao,
