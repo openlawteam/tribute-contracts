@@ -18,14 +18,14 @@
   "dependencies": {
     "@openlaw/snapshot-js-erc712": "^1.6.0",
     "@openzeppelin/contracts": "^4.3.3",
-    "@truffle/contract": "^4.3.13",
+    "@truffle/contract": "^4.5.23",
     "@truffle/hdwallet-provider": "1.2.2",
     "eth-sig-util": "^3.0.0",
     "ethereumjs-util": "^7.0.5",
     "ganache-cli": "^6.12.1",
     "keccak256": "^1.0.0",
     "ts-generator": "^0.1.1",
-    "web3-utils": "^1.7.3"
+    "web3-utils": "^1.7.5"
   },
   "devDependencies": {
     "@nomiclabs/buidler": "^1.4.8",
@@ -42,10 +42,10 @@
     "prettier-plugin-solidity": "^1.0.0-beta.3",
     "solhint": "^3.3.2",
     "solidity-coverage": "^0.7.16",
-    "truffle": "^5.3.2",
+    "truffle": "^5.4.33",
     "truffle-abi": "^1.0.3",
     "truffle-plugin-verify": "^0.5.8",
-    "web3": "^1.7.3"
+    "web3": "^1.7.5"
   },
   "scripts": {
     "compile": "truffle compile",

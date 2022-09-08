@@ -185,14 +185,6 @@ const deployDaoWithBatchVoting = async ({ owner, newMember }) => {
   };
 };
 
-const createIdentityDao = async (owner) => {
-  let DaoRegistry = getContractFromOpenZepplin(DaoRegistryName);
-  return await DaoRegistry.new({
-    from: owner,
-    gasPrice: toBN("0"),
-  });
-};
-
 const advanceTime = async (time) => {
   await new Promise((resolve, reject) => {
     web3.currentProvider.send(
