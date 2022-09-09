@@ -139,6 +139,7 @@ const deployAndConfigureCollection = async (
     "Test DAO NFT",
     "TDN",
     daoAddress,
+    "https://www.nftdata.com/"
   ]);
   await proxy.deployed();
   await setNftConfigurations(manager, daoAddress, transferable, collectionSize);
@@ -458,12 +459,16 @@ describe("nft test", () => {
 
     let blockNumber = (await hre.ethers.provider.getBlock("latest")).number;
 
-    expect((await proxy.getPriorAmount(owner, blockNumber - 1)).toNumber()).to.equal(0);
+    expect(
+      (await proxy.getPriorAmount(owner, blockNumber - 1)).toNumber()
+    ).to.equal(0);
 
     await proxy.mint(owner, nonce, signature1);
     await proxy.mint(owner, nonce + 1, signature2);
 
-    expect((await proxy.getPriorAmount(owner, blockNumber + 1)).toNumber()).to.equal(1);
+    expect(
+      (await proxy.getPriorAmount(owner, blockNumber + 1)).toNumber()
+    ).to.equal(1);
   });
 });
 

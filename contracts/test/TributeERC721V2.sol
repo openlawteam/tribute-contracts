@@ -22,7 +22,7 @@ contract UpgradeableERC721TestingV2 is
         uint96 fromBlock;
         uint160 amount;
     }
-    
+
     using CountersUpgradeable for CountersUpgradeable.Counter;
     using StringsUpgradeable for uint256;
 
@@ -45,6 +45,9 @@ contract UpgradeableERC721TestingV2 is
     mapping(address => mapping(uint32 => Checkpoint)) public checkpoints;
     mapping(address => uint32) public numCheckpoints;
 
+    string public baseURI;
+    string public UpgradeTestVar; // Proxy upgrade requires contracts to differ.
+
     /// @custom:oz-upgrades-unsafe-allow constructor
     constructor() {
         _disableInitializers();
@@ -55,11 +58,10 @@ contract UpgradeableERC721TestingV2 is
         uint256 nonce,
         bytes memory signature
     ) public {
-        bytes32 hash = hashCouponMessage(daoRegistry, owner, nonce);
         require(
             SignatureChecker.isValidSignatureNow(
                 daoRegistry.getAddressConfiguration(SignerAddressConfig),
-                hash,
+                hashCouponMessage(daoRegistry, owner, nonce),
                 signature
             ),
             "invalid sig"
@@ -98,13 +100,15 @@ contract UpgradeableERC721TestingV2 is
     function initialize(
         string memory name,
         string memory symbol,
-        address daoAddress
+        address daoAddress,
+        string memory newBaseURI
     ) public initializer {
         __ERC721_init(name, symbol);
         __Ownable_init();
         __UUPSUpgradeable_init();
         daoRegistry = DaoRegistry(daoAddress);
         _tokenIdCounter.increment(); // Start at 1.
+        setBaseURI(newBaseURI);
     }
 
     function _transfer(
@@ -121,8 +125,12 @@ contract UpgradeableERC721TestingV2 is
         _createNewAmountCheckpoint(to);
     }
 
-    function _baseURI() internal pure override returns (string memory) {
-        return "https://fakeuriV2.com/";
+    function _baseURI() internal view override returns (string memory) {
+        return baseURI;
+    }
+
+    function setBaseURI(string memory newBaseURI) public onlyOwner {
+        baseURI = newBaseURI;
     }
 
     function tokenURI(uint256 tokenId)
@@ -133,19 +141,18 @@ contract UpgradeableERC721TestingV2 is
         returns (string memory)
     {
         _requireMinted(tokenId);
-
-        string memory baseURI = _baseURI();
-        return baseURI;
+        return _baseURI();
     }
 
     function totalSupply() public view returns (uint256) {
         return _tokenIdCounter.current() - 1;
     }
 
-    function getPriorAmount(
-        address account,
-        uint256 blockNumber
-    ) external view returns (uint256) {
+    function getPriorAmount(address account, uint256 blockNumber)
+        external
+        view
+        returns (uint256)
+    {
         require(
             blockNumber < block.number,
             "nft::getPriorAmount: not yet determined"
@@ -157,10 +164,7 @@ contract UpgradeableERC721TestingV2 is
         }
 
         // First check most recent balance
-        if (
-            checkpoints[account][nCheckpoints - 1].fromBlock <=
-            blockNumber
-        ) {
+        if (checkpoints[account][nCheckpoints - 1].fromBlock <= blockNumber) {
             return checkpoints[account][nCheckpoints - 1].amount;
         }
 
@@ -185,9 +189,7 @@ contract UpgradeableERC721TestingV2 is
         return checkpoints[account][lower].amount;
     }
 
-    function _createNewAmountCheckpoint(
-        address member
-    ) internal {
+    function _createNewAmountCheckpoint(address member) internal {
         uint256 amount = balanceOf(member);
 
         uint160 newAmount = uint160(amount);
@@ -199,8 +201,7 @@ contract UpgradeableERC721TestingV2 is
             // Anything different from that should generate a new checkpoint.
             //slither-disable-next-line incorrect-equality
             nCheckpoints > 0 &&
-            checkpoints[member][nCheckpoints - 1].fromBlock ==
-            block.number
+            checkpoints[member][nCheckpoints - 1].fromBlock == block.number
         ) {
             checkpoints[member][nCheckpoints - 1].amount = newAmount;
         } else {
