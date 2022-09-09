@@ -84,6 +84,12 @@ function getDomainDefinition(message, verifyingContract, actionId, chainId) {
       return getCouponKycDomainDefinition(verifyingContract, actionId, chainId);
     case "manager":
       return getManagerDomainDefinition(verifyingContract, actionId, chainId);
+    case "dao-collection":
+      return getDaoCollectionDomainDefinition(
+        verifyingContract,
+        actionId,
+        chainId
+      );
     default:
       throw new Error("unknown type '" + message.type + "'");
   }
@@ -114,6 +120,24 @@ function getManagerDomainDefinition(verifyingContract, actionId, chainId) {
       { name: "numericValue", type: "uint256" },
       { name: "addressValue", type: "address" },
       { name: "configType", type: "uint8" },
+    ],
+    EIP712Domain: getDomainType(),
+  };
+
+  return { domain, types };
+}
+
+function getDaoCollectionDomainDefinition(
+  verifyingContract,
+  actionId,
+  chainId
+) {
+  const domain = getMessageDomainType(chainId, verifyingContract, actionId);
+
+  const types = {
+    Message: [
+      { name: "owner", type: "address" },
+      { name: "nonce", type: "uint256" },
     ],
     EIP712Domain: getDomainType(),
   };
@@ -384,6 +408,8 @@ function prepareMessage(message) {
     case "coupon-kyc":
       return message;
     case "manager":
+      return message;
+    case "dao-collection":
       return message;
     default:
       throw new Error("unknown type " + message.type);

@@ -60,6 +60,8 @@ const { extensionsIdsMap } = require("../../utils/dao-ids-util");
 
 const { SigUtilSigner } = require("../../utils/offchain-voting-util");
 
+const chainId = 1337;
+
 const signer = {
   address: "0x90F8bf6A479f320ead074411a4B0e7944Ea8c9C1",
   privKey: "0x4f3edf983ac636a65a842ce7c78d9aa706d3b113bce9c46f30d7d21715b23b1d",
@@ -67,9 +69,84 @@ const signer = {
 
 const { ethers, upgrades } = require("hardhat");
 
+const setNftConfigurations = async (
+  manager,
+  daoAddress,
+  transferable,
+  collectionSize
+) => {
+  const nonce = (await manager.nonces(daoAddress)).toNumber() + 1;
+  const proposal = {
+    adapterOrExtensionId: sha3("manager"),
+    adapterOrExtensionAddr: ZERO_ADDRESS,
+    updateType: 3, // UpdateType 3 = configs
+    flags: 0,
+    keys: [],
+    values: [],
+    extensionAddresses: [],
+    extensionAclFlags: [],
+  };
+
+  const configs = [
+    {
+      key: sha3("dao-collection.Transferable"),
+      numericValue: transferable,
+      addressValue: ZERO_ADDRESS,
+      configType: 0, //NUMERIC
+    },
+    {
+      key: sha3("dao-collection.CollectionSize"),
+      numericValue: collectionSize,
+      addressValue: ZERO_ADDRESS,
+      configType: 0,
+    },
+    {
+      key: sha3("dao-collection.signerAddress"),
+      numericValue: 0,
+      addressValue: signer.address,
+      configType: 1,
+    },
+  ];
+
+  const signature = generateManagerCouponSignature({
+    daoAddress,
+    managerAddress: manager.address,
+    chainId,
+    proposal,
+    configs,
+    nonce: nonce.toString(),
+  });
+
+  await manager.processSignedProposal(
+    daoAddress,
+    proposal,
+    configs,
+    nonce,
+    signature
+  );
+};
+
+const deployAndConfigureCollection = async (
+  manager,
+  daoAddress,
+  transferable,
+  collectionSize
+) => {
+  const TributeERC721 = await hre.ethers.getContractFactory(
+    "UpgradeableERC721Testing"
+  );
+  const proxy = await upgrades.deployProxy(TributeERC721, [
+    "Test DAO NFT",
+    "TDN",
+    daoAddress,
+  ]);
+  await proxy.deployed();
+  await setNftConfigurations(manager, daoAddress, transferable, collectionSize);
+  return { proxy };
+};
+
 describe("nft test", () => {
-  let accounts, daoOwner;
-  const chainId = 1337;
+  let accounts, daoOwner, daoAddress;
 
   before("deploy dao", async () => {
     accounts = await getAccounts();
@@ -79,6 +156,7 @@ describe("nft test", () => {
       owner: daoOwner,
       managerSignerAddress: signer.address,
     });
+    daoAddress = dao.address;
     this.dao = dao;
     this.adapters = adapters;
     this.extensions = extensions;
@@ -90,18 +168,317 @@ describe("nft test", () => {
     this.snapshotId = await takeChainSnapshot();
   });
 
-  it('test', async () => {
-    const TributeERC721 = await hre.ethers.getContractFactory("TributeERC721");
-    const proxy = await upgrades.deployProxy(TributeERC721, ['first test', 'ft']);
-    await proxy.deployed();
-    const implementation = await upgrades.erc1967.getImplementationAddress(proxy.address);
-    console.log("implementation: ", implementation);
+  it("Can upgrade proxy", async () => {
+    const { proxy } = await deployAndConfigureCollection(
+      this.adapters.manager,
+      daoAddress,
+      1,
+      100
+    );
 
-    // const TributeERC721V2 = await hre.ethers.getContractFactory("TributeERC721V2");
-    // const upgraded = await upgrades.upgradeProxy(nft.address, TributeERC721V2);
-    
-    // await upgraded.setTestVar();
-    // console.log(await upgraded.testVar())
+    const originalImplementationAddr =
+      await upgrades.erc1967.getImplementationAddress(proxy.address);
+
+    const TributeERC721V2 = await hre.ethers.getContractFactory(
+      "UpgradeableERC721TestingV2"
+    );
+    await upgrades.upgradeProxy(proxy.address, TributeERC721V2);
+
+    const upgradedImplementationAddr =
+      await upgrades.erc1967.getImplementationAddress(proxy.address);
+
+    expect(originalImplementationAddr !== upgradedImplementationAddr).to.be
+      .true;
   });
 
+  it("Can mint an NFT with a valid signature", async () => {
+    const { proxy } = await deployAndConfigureCollection(
+      this.adapters.manager,
+      daoAddress,
+      1,
+      100
+    );
+    const [collectionAddress, owner, nonce] = [proxy.address, accounts[0], 0];
+    const signature = generateNFTCouponSignature({
+      collectionAddress,
+      owner,
+      nonce,
+      chainId,
+      daoAddress,
+    });
+
+    await proxy.mint(owner, nonce, signature);
+
+    expect((await proxy.balanceOf(owner)).toNumber()).to.equal(1);
+  });
+
+  it("Can mint an NFT with a valid signature after proxy has been upgraded", async () => {
+    const { proxy } = await deployAndConfigureCollection(
+      this.adapters.manager,
+      daoAddress,
+      1,
+      100
+    );
+    const [collectionAddress, owner, nonce] = [proxy.address, accounts[0], 0];
+    const signature = generateNFTCouponSignature({
+      collectionAddress,
+      owner,
+      nonce,
+      chainId,
+      daoAddress,
+    });
+
+    const TributeERC721V2 = await hre.ethers.getContractFactory(
+      "UpgradeableERC721TestingV2"
+    );
+    await upgrades.upgradeProxy(proxy.address, TributeERC721V2);
+    await proxy.mint(owner, nonce, signature);
+
+    expect((await proxy.balanceOf(owner)).toNumber()).to.equal(1);
+  });
+
+  it("Ownership persists upgrade", async () => {
+    const { proxy } = await deployAndConfigureCollection(
+      this.adapters.manager,
+      daoAddress,
+      1,
+      100
+    );
+    const [collectionAddress, owner, nonce] = [proxy.address, accounts[0], 0];
+    const signature = generateNFTCouponSignature({
+      collectionAddress,
+      owner,
+      nonce,
+      chainId,
+      daoAddress,
+    });
+    await proxy.mint(owner, nonce, signature);
+
+    const TributeERC721V2 = await hre.ethers.getContractFactory(
+      "UpgradeableERC721TestingV2"
+    );
+    await upgrades.upgradeProxy(proxy.address, TributeERC721V2);
+
+    expect((await proxy.balanceOf(owner)).toNumber()).to.equal(1);
+  });
+
+  it("Cannot mint with an invalid signature", async () => {
+    const { proxy } = await deployAndConfigureCollection(
+      this.adapters.manager,
+      daoAddress,
+      1,
+      100
+    );
+    const [collectionAddress, owner, nonce] = [proxy.address, accounts[0], 0];
+    const signature = generateNFTCouponSignature({
+      collectionAddress,
+      owner,
+      nonce,
+      chainId,
+      daoAddress,
+    });
+    const sigForWrongCollection = generateNFTCouponSignature({
+      collectionAddress: ZERO_ADDRESS,
+      owner,
+      nonce,
+      chainId,
+      daoAddress,
+    });
+
+    await expect(
+      proxy.mint(owner, nonce, sigForWrongCollection)
+    ).to.be.revertedWith("invalid sig"); // Incorrect collection address.
+    await expect(proxy.mint(owner, 12, signature)).to.be.revertedWith(
+      "invalid sig"
+    ); // Nonce used in sig and tx differ.
+    await expect(proxy.mint(ZERO_ADDRESS, nonce, signature)).to.be.revertedWith(
+      "invalid sig"
+    ); // Incorrect owner.
+  });
+
+  it("Cannot replay a mint", async () => {
+    const { proxy } = await deployAndConfigureCollection(
+      this.adapters.manager,
+      daoAddress,
+      1,
+      100
+    );
+    const [collectionAddress, owner, nonce] = [proxy.address, accounts[0], 0];
+    const signature = generateNFTCouponSignature({
+      collectionAddress,
+      owner,
+      nonce,
+      chainId,
+      daoAddress,
+    });
+    await proxy.mint(owner, nonce, signature);
+
+    await expect(proxy.mint(owner, nonce, signature)).to.be.revertedWith(
+      "NFT already claimed"
+    );
+  });
+
+  it("Cannot replay a mint after upgrade", async () => {
+    const { proxy } = await deployAndConfigureCollection(
+      this.adapters.manager,
+      daoAddress,
+      1,
+      100
+    );
+    const [collectionAddress, owner, nonce] = [proxy.address, accounts[0], 0];
+    const signature = generateNFTCouponSignature({
+      collectionAddress,
+      owner,
+      nonce,
+      chainId,
+      daoAddress,
+    });
+    await proxy.mint(owner, nonce, signature);
+
+    const TributeERC721V2 = await hre.ethers.getContractFactory(
+      "UpgradeableERC721TestingV2"
+    );
+    await upgrades.upgradeProxy(proxy.address, TributeERC721V2);
+
+    await expect(proxy.mint(owner, nonce, signature)).to.be.revertedWith(
+      "NFT already claimed"
+    );
+  });
+
+  it("Cannot mint if collection size is reached", async () => {
+    const { proxy } = await deployAndConfigureCollection(
+      this.adapters.manager,
+      daoAddress,
+      1,
+      1
+    );
+    const [collectionAddress, owner, nonce] = [proxy.address, accounts[0], 0];
+    const signature1 = generateNFTCouponSignature({
+      collectionAddress,
+      owner,
+      nonce,
+      chainId,
+      daoAddress,
+    });
+    const signature2 = generateNFTCouponSignature({
+      collectionAddress,
+      owner,
+      nonce: nonce + 1,
+      chainId,
+      daoAddress,
+    });
+    await proxy.mint(owner, nonce, signature1);
+
+    await expect(proxy.mint(owner, nonce + 1, signature2)).to.be.revertedWith(
+      "Collection fully minted"
+    );
+  });
+
+  it("Can transfer token when transfer is enabled", async () => {
+    const { proxy } = await deployAndConfigureCollection(
+      this.adapters.manager,
+      daoAddress,
+      1,
+      100
+    );
+    const [collectionAddress, owner, nonce] = [proxy.address, accounts[0], 0];
+    const signature = generateNFTCouponSignature({
+      collectionAddress,
+      owner,
+      nonce,
+      chainId,
+      daoAddress,
+    });
+    await proxy.mint(owner, nonce, signature);
+
+    expect((await proxy.balanceOf(owner)).toNumber()).to.equal(1);
+    await proxy["safeTransferFrom(address,address,uint256)"](
+      owner,
+      accounts[1],
+      1
+    );
+
+    expect((await proxy.balanceOf(owner)).toNumber()).to.equal(0);
+    expect((await proxy.balanceOf(accounts[1])).toNumber()).to.equal(1);
+
+    await proxy
+      .connect((await ethers.getSigners())[1])
+      ["transferFrom(address,address,uint256)"](accounts[1], owner, 1);
+
+    expect((await proxy.balanceOf(owner)).toNumber()).to.equal(1);
+  });
+
+  it("Cannot transfer token when transfer is disabled", async () => {
+    const { proxy } = await deployAndConfigureCollection(
+      this.adapters.manager,
+      daoAddress,
+      0,
+      100
+    );
+    const [collectionAddress, owner, nonce] = [proxy.address, accounts[0], 0];
+    const signature = generateNFTCouponSignature({
+      collectionAddress,
+      owner,
+      nonce,
+      chainId,
+      daoAddress,
+    });
+    await proxy.mint(owner, nonce, signature);
+
+    await expect(
+      proxy["safeTransferFrom(address,address,uint256)"](owner, accounts[1], 1)
+    ).to.be.revertedWith("Collection is not transferable");
+    await expect(
+      proxy["transferFrom(address,address,uint256)"](owner, accounts[1], 1)
+    ).to.be.revertedWith("Collection is not transferable");
+  });
 });
+
+const generateManagerCouponSignature = ({
+  daoAddress,
+  managerAddress,
+  proposal,
+  configs,
+  nonce,
+  chainId,
+}) => {
+  const signerUtil = SigUtilSigner(signer.privKey);
+  const messageData = {
+    type: "manager",
+    daoAddress,
+    proposal,
+    configs,
+    nonce,
+  };
+  const signature = signerUtil(
+    messageData,
+    daoAddress,
+    managerAddress,
+    chainId
+  );
+
+  return signature;
+};
+
+const generateNFTCouponSignature = ({
+  collectionAddress,
+  owner,
+  nonce,
+  chainId,
+  daoAddress,
+}) => {
+  const signerUtil = SigUtilSigner(signer.privKey);
+  const messageData = {
+    type: "dao-collection",
+    owner,
+    nonce,
+  };
+  const signature = signerUtil(
+    messageData,
+    daoAddress,
+    collectionAddress,
+    chainId
+  );
+
+  return signature;
+};
