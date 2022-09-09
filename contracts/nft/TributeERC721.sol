@@ -127,7 +127,7 @@ contract UpgradeableERC721Testing is
     }
 
     function totalSupply() public view returns (uint256) {
-        return _tokenIdCounter.current();
+        return _tokenIdCounter.current() - 1;
     }
 
     function _authorizeUpgrade(address newImplementation)
