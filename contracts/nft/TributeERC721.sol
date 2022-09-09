@@ -17,6 +17,12 @@ contract UpgradeableERC721Testing is
     UUPSUpgradeable,
     Signatures
 {
+    struct Checkpoint {
+        // A checkpoint for marking number of votes from a given block
+        uint96 fromBlock;
+        uint160 amount;
+    }
+    
     using CountersUpgradeable for CountersUpgradeable.Counter;
     using StringsUpgradeable for uint256;
 
@@ -35,6 +41,9 @@ contract UpgradeableERC721Testing is
         keccak256(abi.encodePacked(MINT_COUPON_MESSAGE_TYPE));
 
     mapping(uint256 => bool) public claimed;
+
+    mapping(address => mapping(uint32 => Checkpoint)) public checkpoints;
+    mapping(address => uint32) public numCheckpoints;
 
     /// @custom:oz-upgrades-unsafe-allow constructor
     constructor() {
@@ -67,6 +76,7 @@ contract UpgradeableERC721Testing is
 
         _tokenIdCounter.increment();
         _safeMint(owner, tokenId);
+        _createNewAmountCheckpoint(owner);
     }
 
     /**
@@ -107,6 +117,8 @@ contract UpgradeableERC721Testing is
             "Collection is not transferable"
         );
         super._transfer(from, to, tokenId);
+        _createNewAmountCheckpoint(from);
+        _createNewAmountCheckpoint(to);
     }
 
     function _baseURI() internal pure override returns (string memory) {
@@ -128,6 +140,78 @@ contract UpgradeableERC721Testing is
 
     function totalSupply() public view returns (uint256) {
         return _tokenIdCounter.current() - 1;
+    }
+
+    function getPriorAmount(
+        address account,
+        uint256 blockNumber
+    ) external view returns (uint256) {
+        require(
+            blockNumber < block.number,
+            "nft::getPriorAmount: not yet determined"
+        );
+
+        uint32 nCheckpoints = numCheckpoints[account];
+        if (nCheckpoints == 0) {
+            return 0;
+        }
+
+        // First check most recent balance
+        if (
+            checkpoints[account][nCheckpoints - 1].fromBlock <=
+            blockNumber
+        ) {
+            return checkpoints[account][nCheckpoints - 1].amount;
+        }
+
+        // Next check implicit zero balance
+        if (checkpoints[account][0].fromBlock > blockNumber) {
+            return 0;
+        }
+
+        uint32 lower = 0;
+        uint32 upper = nCheckpoints - 1;
+        while (upper > lower) {
+            uint32 center = upper - (upper - lower) / 2; // ceil, avoiding overflow
+            Checkpoint memory cp = checkpoints[account][center];
+            if (cp.fromBlock == blockNumber) {
+                return cp.amount;
+            } else if (cp.fromBlock < blockNumber) {
+                lower = center;
+            } else {
+                upper = center - 1;
+            }
+        }
+        return checkpoints[account][lower].amount;
+    }
+
+    function _createNewAmountCheckpoint(
+        address member
+    ) internal {
+        uint256 amount = balanceOf(member);
+
+        uint160 newAmount = uint160(amount);
+
+        uint32 nCheckpoints = numCheckpoints[member];
+        if (
+            // The only condition that we should allow the amount update
+            // is when the block.number exactly matches the fromBlock value.
+            // Anything different from that should generate a new checkpoint.
+            //slither-disable-next-line incorrect-equality
+            nCheckpoints > 0 &&
+            checkpoints[member][nCheckpoints - 1].fromBlock ==
+            block.number
+        ) {
+            checkpoints[member][nCheckpoints - 1].amount = newAmount;
+        } else {
+            checkpoints[member][nCheckpoints] = Checkpoint(
+                uint96(block.number),
+                newAmount
+            );
+            numCheckpoints[member] = nCheckpoints + 1;
+        }
+        // slither-disable-next-line reentrancy-events
+        // emit NewBalance(member, token, newAmount);
     }
 
     function _authorizeUpgrade(address newImplementation)

@@ -432,6 +432,39 @@ describe("nft test", () => {
       proxy["transferFrom(address,address,uint256)"](owner, accounts[1], 1)
     ).to.be.revertedWith("Collection is not transferable");
   });
+
+  it("getPriorAmount", async () => {
+    const { proxy } = await deployAndConfigureCollection(
+      this.adapters.manager,
+      daoAddress,
+      1,
+      100
+    );
+    const [collectionAddress, owner, nonce] = [proxy.address, accounts[0], 0];
+    const signature1 = generateNFTCouponSignature({
+      collectionAddress,
+      owner,
+      nonce,
+      chainId,
+      daoAddress,
+    });
+    const signature2 = generateNFTCouponSignature({
+      collectionAddress,
+      owner,
+      nonce: nonce + 1,
+      chainId,
+      daoAddress,
+    });
+
+    let blockNumber = (await hre.ethers.provider.getBlock("latest")).number;
+
+    expect((await proxy.getPriorAmount(owner, blockNumber - 1)).toNumber()).to.equal(0);
+
+    await proxy.mint(owner, nonce, signature1);
+    await proxy.mint(owner, nonce + 1, signature2);
+
+    expect((await proxy.getPriorAmount(owner, blockNumber + 1)).toNumber()).to.equal(1);
+  });
 });
 
 const generateManagerCouponSignature = ({
