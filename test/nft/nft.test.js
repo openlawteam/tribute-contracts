@@ -133,7 +133,7 @@ const deployAndConfigureCollection = async (
   collectionSize
 ) => {
   const TributeERC721 = await hre.ethers.getContractFactory(
-    "UpgradeableERC721Testing"
+    "TributeERC721"
   );
   const proxy = await upgrades.deployProxy(TributeERC721, [
     "Test DAO NFT",
@@ -181,7 +181,7 @@ describe("nft test", () => {
       await upgrades.erc1967.getImplementationAddress(proxy.address);
 
     const TributeERC721V2 = await hre.ethers.getContractFactory(
-      "UpgradeableERC721TestingV2"
+      "TributeERC721V2"
     );
     await upgrades.upgradeProxy(proxy.address, TributeERC721V2);
 
@@ -230,7 +230,7 @@ describe("nft test", () => {
     });
 
     const TributeERC721V2 = await hre.ethers.getContractFactory(
-      "UpgradeableERC721TestingV2"
+      "TributeERC721V2"
     );
     await upgrades.upgradeProxy(proxy.address, TributeERC721V2);
     await proxy.mint(owner, nonce, signature);
@@ -256,7 +256,7 @@ describe("nft test", () => {
     await proxy.mint(owner, nonce, signature);
 
     const TributeERC721V2 = await hre.ethers.getContractFactory(
-      "UpgradeableERC721TestingV2"
+      "TributeERC721V2"
     );
     await upgrades.upgradeProxy(proxy.address, TributeERC721V2);
 
@@ -337,7 +337,7 @@ describe("nft test", () => {
     await proxy.mint(owner, nonce, signature);
 
     const TributeERC721V2 = await hre.ethers.getContractFactory(
-      "UpgradeableERC721TestingV2"
+      "TributeERC721V2"
     );
     await upgrades.upgradeProxy(proxy.address, TributeERC721V2);
 

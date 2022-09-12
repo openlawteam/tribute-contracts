@@ -10,7 +10,7 @@ import "@openzeppelin/contracts-upgradeable/utils/StringsUpgradeable.sol";
 import "../core/DaoRegistry.sol";
 import "../utils/Signatures.sol";
 
-contract UpgradeableERC721TestingV2 is
+contract TributeERC721V2 is
     Initializable,
     ERC721Upgradeable,
     OwnableUpgradeable,
