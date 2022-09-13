@@ -34,6 +34,11 @@ SOFTWARE.
  */
 
 contract BankAdapterContract is AdapterGuard, Reimbursable {
+    bytes32 internal constant TokenName =
+        keccak256("erc20.extension.tokenName");
+    bytes32 internal constant TokenSymbol =
+        keccak256("erc20.extension.tokenSymbol");
+
     /**
      * @notice Allows the member/advisor of the DAO to withdraw the funds from their internal bank account.
      * @notice Only accounts that are not reserved can withdraw the funds.
@@ -61,6 +66,33 @@ contract BankAdapterContract is AdapterGuard, Reimbursable {
         require(balance > 0, "nothing to withdraw");
 
         bank.withdraw(dao, payable(account), token, balance);
+    }
+
+    function configureDao(
+        DaoRegistry dao,
+        string calldata tokenName,
+        string calldata tokenSymbol
+    ) external {
+        dao.setConfiguration(TokenName, uint256(stringToBytes32(tokenName)));
+        dao.setConfiguration(
+            TokenSymbol,
+            uint256(stringToBytes32(tokenSymbol))
+        );
+    }
+
+    function stringToBytes32(string memory source)
+        public
+        pure
+        returns (bytes32 result)
+    {
+        bytes memory tempEmptyStringTest = bytes(source);
+        if (tempEmptyStringTest.length == 0) {
+            return 0x0;
+        }
+
+        assembly {
+            result := mload(add(source, 32))
+        }
     }
 
     /**

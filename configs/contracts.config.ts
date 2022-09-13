@@ -330,9 +330,7 @@ export const contracts: Array<ContractConfig> = [
     },
     deploymentArgs: [
       "daoAddress",
-      "erc20TokenName",
       "erc20TokenAddress",
-      "erc20TokenSymbol",
       "erc20TokenDecimals",
     ],
     generatesExtensionId: extensionsIdsMap.ERC20_EXT,
@@ -539,6 +537,13 @@ export const contracts: Array<ContractConfig> = [
         ],
       },
     },
+    daoConfigs: [
+      [
+        "daoAddress",
+        "erc20TokenName",
+        "erc20TokenSymbol"
+      ],
+    ],
   },
   {
     id: adaptersIdsMap.CONFIGURATION_ADAPTER,
