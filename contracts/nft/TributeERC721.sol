@@ -96,6 +96,7 @@ contract TributeERC721 is
         return hashMessage(dao, address(this), message);
     }
 
+    // https://docs.openzeppelin.com/contracts/4.x/api/proxy#Initializable
     function initialize(
         string memory name,
         string memory symbol,
