@@ -223,7 +223,7 @@ module.exports = {
 
   etherscan: {
     apiKey: {
-      rinkeby: '7JWXWS487WK8EFDN2PKG6EVNCZKFFTG6KC'
-    }
-  }
+      rinkeby: "7JWXWS487WK8EFDN2PKG6EVNCZKFFTG6KC",
+    },
+  },
 };

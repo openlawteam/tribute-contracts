@@ -132,14 +132,12 @@ const deployAndConfigureCollection = async (
   transferable,
   collectionSize
 ) => {
-  const TributeERC721 = await hre.ethers.getContractFactory(
-    "TributeERC721"
-  );
+  const TributeERC721 = await hre.ethers.getContractFactory("TributeERC721");
   const proxy = await upgrades.deployProxy(TributeERC721, [
     "Test DAO NFT",
     "TDN",
     daoAddress,
-    "https://www.nftdata.com/"
+    "https://www.fakenfturi123.com/",
   ]);
   await proxy.deployed();
   await setNftConfigurations(manager, daoAddress, transferable, collectionSize);

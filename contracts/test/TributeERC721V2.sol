@@ -51,6 +51,27 @@ contract TributeERC721V2 is
         _disableInitializers();
     }
 
+    // https://docs.openzeppelin.com/contracts/4.x/api/proxy#Initializable
+    function initialize(
+        string memory name,
+        string memory symbol,
+        address daoAddress,
+        string memory newBaseURI
+    ) public initializer {
+        __ERC721_init(name, symbol);
+        __Ownable_init();
+        __UUPSUpgradeable_init();
+        daoRegistry = DaoRegistry(daoAddress);
+        _tokenIdCounter.increment(); // Start at 1.
+        setBaseURI(newBaseURI);
+    }
+
+    function _authorizeUpgrade(address newImplementation)
+        internal
+        override
+        onlyOwner
+    {}
+
     function mint(
         address owner,
         uint256 nonce,
@@ -66,44 +87,14 @@ contract TributeERC721V2 is
         );
 
         require(
-            _tokenIdCounter.current() <= daoRegistry.getConfiguration(CollectionSize),
+            _tokenIdCounter.current() <=
+                daoRegistry.getConfiguration(CollectionSize),
             "Collection fully minted"
         );
 
         _tokenIdCounter.increment();
         _safeMint(owner, nonce);
         _createNewAmountCheckpoint(owner);
-    }
-
-    /**
-     * @notice Hashes the provided coupon as an ERC712 hash.
-     * @param dao is the DAO instance to be configured
-     */
-    function hashCouponMessage(
-        DaoRegistry dao,
-        address owner,
-        uint256 nonce
-    ) public view returns (bytes32) {
-        bytes32 message = keccak256(
-            abi.encode(MINT_COUPON_MESSAGE_TYPEHASH, owner, nonce)
-        );
-
-        return hashMessage(dao, address(this), message);
-    }
-
-    // https://docs.openzeppelin.com/contracts/4.x/api/proxy#Initializable
-    function initialize(
-        string memory name,
-        string memory symbol,
-        address daoAddress,
-        string memory newBaseURI
-    ) public initializer {
-        __ERC721_init(name, symbol);
-        __Ownable_init();
-        __UUPSUpgradeable_init();
-        daoRegistry = DaoRegistry(daoAddress);
-        _tokenIdCounter.increment(); // Start at 1.
-        setBaseURI(newBaseURI);
     }
 
     function _transfer(
@@ -141,6 +132,22 @@ contract TributeERC721V2 is
 
     function totalSupply() public view returns (uint256) {
         return _tokenIdCounter.current() - 1;
+    }
+
+    /**
+     * @notice Hashes the provided coupon as an ERC712 hash.
+     * @param dao is the DAO instance to be configured
+     */
+    function hashCouponMessage(
+        DaoRegistry dao,
+        address owner,
+        uint256 nonce
+    ) public view returns (bytes32) {
+        bytes32 message = keccak256(
+            abi.encode(MINT_COUPON_MESSAGE_TYPEHASH, owner, nonce)
+        );
+
+        return hashMessage(dao, address(this), message);
     }
 
     function getPriorAmount(address account, uint256 blockNumber)
@@ -209,10 +216,4 @@ contract TributeERC721V2 is
         // slither-disable-next-line reentrancy-events
         // emit NewBalance(member, token, newAmount);
     }
-
-    function _authorizeUpgrade(address newImplementation)
-        internal
-        override
-        onlyOwner
-    {}
 }
