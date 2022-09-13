@@ -84,12 +84,8 @@ function getDomainDefinition(message, verifyingContract, actionId, chainId) {
       return getCouponKycDomainDefinition(verifyingContract, actionId, chainId);
     case "manager":
       return getManagerDomainDefinition(verifyingContract, actionId, chainId);
-    case "dao-collection":
-      return getDaoCollectionDomainDefinition(
-        verifyingContract,
-        actionId,
-        chainId
-      );
+    case "coupon-nft":
+      return getNftCouponDomainDefinition(verifyingContract, actionId, chainId);
     default:
       throw new Error("unknown type '" + message.type + "'");
   }
@@ -127,11 +123,7 @@ function getManagerDomainDefinition(verifyingContract, actionId, chainId) {
   return { domain, types };
 }
 
-function getDaoCollectionDomainDefinition(
-  verifyingContract,
-  actionId,
-  chainId
-) {
+function getNftCouponDomainDefinition(verifyingContract, actionId, chainId) {
   const domain = getMessageDomainType(chainId, verifyingContract, actionId);
 
   const types = {
@@ -409,7 +401,7 @@ function prepareMessage(message) {
       return message;
     case "manager":
       return message;
-    case "dao-collection":
+    case "coupon-nft":
       return message;
     default:
       throw new Error("unknown type " + message.type);

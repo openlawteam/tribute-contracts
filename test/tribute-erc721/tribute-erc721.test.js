@@ -505,7 +505,7 @@ const generateNFTCouponSignature = ({
 }) => {
   const signerUtil = SigUtilSigner(signer.privKey);
   const messageData = {
-    type: "dao-collection",
+    type: "coupon-nft",
     owner,
     nonce,
   };
