@@ -57,7 +57,7 @@ contract TributeERC721V2 is
         string memory symbol,
         address daoAddress,
         string memory newBaseURI
-    ) public initializer {
+    ) external initializer {
         __ERC721_init(name, symbol);
         __Ownable_init();
         __UUPSUpgradeable_init();
@@ -76,7 +76,7 @@ contract TributeERC721V2 is
         address owner,
         uint256 nonce,
         bytes memory signature
-    ) public {
+    ) external {
         require(
             SignatureChecker.isValidSignatureNow(
                 daoRegistry.getAddressConfiguration(SignerAddressConfig),
@@ -130,7 +130,7 @@ contract TributeERC721V2 is
         return _baseURI();
     }
 
-    function totalSupply() public view returns (uint256) {
+    function totalSupply() external view returns (uint256) {
         return _tokenIdCounter.current() - 1;
     }
 
