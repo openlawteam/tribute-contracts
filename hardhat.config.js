@@ -13,6 +13,7 @@ if (!process.env.TEST === "true") {
   require("hardhat-gas-reporter");
 }
 require("./tasks/deploy");
+require("./tasks/deployTributeERC721");
 require("./signers");
 
 module.exports = {
