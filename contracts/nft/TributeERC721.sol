@@ -40,8 +40,6 @@ contract TributeERC721 is
     bytes32 public constant MINT_COUPON_MESSAGE_TYPEHASH =
         keccak256(abi.encodePacked(MINT_COUPON_MESSAGE_TYPE));
 
-    mapping(uint256 => bool) public claimed;
-
     mapping(address => mapping(uint32 => Checkpoint)) public checkpoints;
     mapping(address => uint32) public numCheckpoints;
 
@@ -66,17 +64,13 @@ contract TributeERC721 is
             "invalid sig"
         );
 
-        require(!claimed[nonce], "NFT already claimed");
-        claimed[nonce] = true;
-
-        uint256 tokenId = _tokenIdCounter.current();
         require(
-            tokenId <= daoRegistry.getConfiguration(CollectionSize),
+            _tokenIdCounter.current() <= daoRegistry.getConfiguration(CollectionSize),
             "Collection fully minted"
         );
 
         _tokenIdCounter.increment();
-        _safeMint(owner, tokenId);
+        _safeMint(owner, nonce);
         _createNewAmountCheckpoint(owner);
     }
 

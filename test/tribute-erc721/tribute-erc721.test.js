@@ -199,7 +199,7 @@ describe("nft test", () => {
       1,
       100
     );
-    const [collectionAddress, owner, nonce] = [proxy.address, accounts[0], 0];
+    const [collectionAddress, owner, nonce] = [proxy.address, accounts[0], 1];
     const signature = generateNFTCouponSignature({
       collectionAddress,
       owner,
@@ -220,7 +220,7 @@ describe("nft test", () => {
       1,
       100
     );
-    const [collectionAddress, owner, nonce] = [proxy.address, accounts[0], 0];
+    const [collectionAddress, owner, nonce] = [proxy.address, accounts[0], 1];
     const signature = generateNFTCouponSignature({
       collectionAddress,
       owner,
@@ -245,7 +245,7 @@ describe("nft test", () => {
       1,
       100
     );
-    const [collectionAddress, owner, nonce] = [proxy.address, accounts[0], 0];
+    const [collectionAddress, owner, nonce] = [proxy.address, accounts[0], 1];
     const signature = generateNFTCouponSignature({
       collectionAddress,
       owner,
@@ -270,7 +270,7 @@ describe("nft test", () => {
       1,
       100
     );
-    const [collectionAddress, owner, nonce] = [proxy.address, accounts[0], 0];
+    const [collectionAddress, owner, nonce] = [proxy.address, accounts[0], 1];
     const signature = generateNFTCouponSignature({
       collectionAddress,
       owner,
@@ -304,7 +304,7 @@ describe("nft test", () => {
       1,
       100
     );
-    const [collectionAddress, owner, nonce] = [proxy.address, accounts[0], 0];
+    const [collectionAddress, owner, nonce] = [proxy.address, accounts[0], 1];
     const signature = generateNFTCouponSignature({
       collectionAddress,
       owner,
@@ -315,7 +315,7 @@ describe("nft test", () => {
     await proxy.mint(owner, nonce, signature);
 
     await expect(proxy.mint(owner, nonce, signature)).to.be.revertedWith(
-      "NFT already claimed"
+      "ERC721: token already minted"
     );
   });
 
@@ -326,7 +326,7 @@ describe("nft test", () => {
       1,
       100
     );
-    const [collectionAddress, owner, nonce] = [proxy.address, accounts[0], 0];
+    const [collectionAddress, owner, nonce] = [proxy.address, accounts[0], 1];
     const signature = generateNFTCouponSignature({
       collectionAddress,
       owner,
@@ -342,7 +342,7 @@ describe("nft test", () => {
     await upgrades.upgradeProxy(proxy.address, TributeERC721V2);
 
     await expect(proxy.mint(owner, nonce, signature)).to.be.revertedWith(
-      "NFT already claimed"
+      "ERC721: token already minted"
     );
   });
 
@@ -353,7 +353,7 @@ describe("nft test", () => {
       1,
       1
     );
-    const [collectionAddress, owner, nonce] = [proxy.address, accounts[0], 0];
+    const [collectionAddress, owner, nonce] = [proxy.address, accounts[0], 1];
     const signature1 = generateNFTCouponSignature({
       collectionAddress,
       owner,
@@ -382,7 +382,7 @@ describe("nft test", () => {
       1,
       100
     );
-    const [collectionAddress, owner, nonce] = [proxy.address, accounts[0], 0];
+    const [collectionAddress, owner, nonce] = [proxy.address, accounts[0], 1];
     const signature = generateNFTCouponSignature({
       collectionAddress,
       owner,
@@ -416,7 +416,7 @@ describe("nft test", () => {
       0,
       100
     );
-    const [collectionAddress, owner, nonce] = [proxy.address, accounts[0], 0];
+    const [collectionAddress, owner, nonce] = [proxy.address, accounts[0], 1];
     const signature = generateNFTCouponSignature({
       collectionAddress,
       owner,
@@ -441,7 +441,7 @@ describe("nft test", () => {
       1,
       100
     );
-    const [collectionAddress, owner, nonce] = [proxy.address, accounts[0], 0];
+    const [collectionAddress, owner, nonce] = [proxy.address, accounts[0], 1];
     const signature1 = generateNFTCouponSignature({
       collectionAddress,
       owner,
