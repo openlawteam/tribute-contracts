@@ -82,8 +82,7 @@ contract TributeERC721 is
         );
 
         require(
-            nonce <=
-                daoRegistry.getConfiguration(CollectionSize),
+            nonce <= daoRegistry.getConfiguration(CollectionSize),
             "Collection fully minted"
         );
 
