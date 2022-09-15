@@ -203,7 +203,5 @@ contract TributeERC721 is
             );
             numCheckpoints[member] = nCheckpoints + 1;
         }
-        // slither-disable-next-line reentrancy-events
-        // emit NewBalance(member, token, newAmount);
     }
 }
