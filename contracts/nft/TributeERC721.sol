@@ -5,7 +5,6 @@ import "@openzeppelin/contracts-upgradeable/token/ERC721/ERC721Upgradeable.sol";
 import "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
 import "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
 import "@openzeppelin/contracts-upgradeable/proxy/utils/UUPSUpgradeable.sol";
-import "@openzeppelin/contracts-upgradeable/utils/CountersUpgradeable.sol";
 import "@openzeppelin/contracts-upgradeable/utils/StringsUpgradeable.sol";
 import "../core/DaoRegistry.sol";
 import "../utils/Signatures.sol";
@@ -23,10 +22,8 @@ contract TributeERC721 is
         uint160 amount;
     }
 
-    using CountersUpgradeable for CountersUpgradeable.Counter;
     using StringsUpgradeable for uint256;
 
-    CountersUpgradeable.Counter private _tokenIdCounter;
     DaoRegistry public daoRegistry;
 
     bytes32 constant Transferable = keccak256("dao-collection.Transferable");
@@ -61,7 +58,6 @@ contract TributeERC721 is
         __Ownable_init();
         __UUPSUpgradeable_init();
         daoRegistry = DaoRegistry(daoAddress);
-        _tokenIdCounter.increment(); // Start at 1.
         setBaseURI(newBaseURI);
     }
 
@@ -86,12 +82,11 @@ contract TributeERC721 is
         );
 
         require(
-            _tokenIdCounter.current() <=
+            nonce <=
                 daoRegistry.getConfiguration(CollectionSize),
             "Collection fully minted"
         );
 
-        _tokenIdCounter.increment();
         _safeMint(owner, nonce);
         _createNewAmountCheckpoint(owner);
     }
@@ -127,10 +122,6 @@ contract TributeERC721 is
     {
         _requireMinted(tokenId);
         return _baseURI();
-    }
-
-    function totalSupply() external view returns (uint256) {
-        return _tokenIdCounter.current() - 1;
     }
 
     /**
