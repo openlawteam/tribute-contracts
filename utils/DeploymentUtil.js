@@ -27,13 +27,13 @@ SOFTWARE.
 
 // RINKEBY
 const rinkebyContracts = {
-  // BankAdapter: '0x9cDa4Bfe9Cdf5769425774Ae7bD9Cb21b5CbA2C7',
+  BankAdapter: "0x805aC58a2fD16A9af6cD7AB82535c97Bb7934C92",
   BankFactory: "0x81Cf17e713b621531C0A2F58D92E93fB7Ce417d7",
   Configuration: "0xe7bAE38678bA931FA3B65F57D69fBE104dFb3953",
   CouponOnboarding: "0x0114646f214E04364ACbb747c08eD5188E682993",
   DaoFactory: "0x96dAE5f5B474E3184e6B4C643F5204bB180FEdb0",
   DaoRegistryAdapter: "0xeE8E97c87D19Aaf055860b3C5F013c3042a70696",
-  // ERC20TokenExtensionFactory: "0x66924Ea22B498AF0723739a64653a2D1505efaDd",
+  ERC20TokenExtensionFactory: "0x914dd1cd5635f09bd3eb21D80e198e467Da5F45a",
   GuildKick: "0x799B9CB3b361a9C528ef268823f35DAaD57Dc187",
   KycOnboarding: "0x58aCc6ed1E53E217D0Ca6BbD8D2A953b15C71de5",
   Manager: "0x78A43376dC5795e5097906486aa10b841c2f49D9",
@@ -75,21 +75,8 @@ const deployDao = async (options) => {
   }
 
   const bankFactory = await BankFactory.at(rinkebyContracts.BankFactory);
-  //const bankIdentity = await BankExtension.new();
-  //const bankFactory = await BankFactory.new(bankIdentity.address);
-
-  // const erc20TokenExtFactory = await ERC20TokenExtensionFactory.at(
-  //   rinkebyContracts.ERC20TokenExtensionFactory
-  // );
-
-  // const erc20Ext = await ERC20Extension.new();
-  const erc20Ext = await deployFunction(ERC20Extension);
-  // const erc20TokenExtFactory = await ERC20TokenExtensionFactory.new(
-  //   erc20Ext.address
-  // );
-  const erc20TokenExtFactory = await deployFunction(
-    ERC20TokenExtensionFactory,
-    [erc20Ext.address]
+  const erc20TokenExtFactory = await ERC20TokenExtensionFactory.at(
+    rinkebyContracts.ERC20TokenExtensionFactory
   );
 
   console.log("clone dao ...");
@@ -97,6 +84,7 @@ const deployDao = async (options) => {
     ...options,
     name: options.daoName || "test-dao",
   });
+
   console.log("create bank");
   // Start the BankExtension deployment and configuration
   await bankFactory.createBank(options.maxExternalTokens);
@@ -134,6 +122,8 @@ const deployDao = async (options) => {
   };
 
   const { adapters } = await addDefaultAdapters({
+    erc20TokenName,
+    erc20TokenSymbol,
     dao,
     options,
     daoFactory,
@@ -235,8 +225,6 @@ const prepareAdapters = async ({
   DaoRegistryAdapterContract,
   BankAdapterContract,
   CouponOnboardingContract,
-  wethAddress,
-  chainId,
 }) => {
   let voting,
     configuration,
@@ -263,22 +251,10 @@ const prepareAdapters = async ({
   daoRegistryAdapter = await DaoRegistryAdapterContract.at(
     rinkebyContracts.DaoRegistryAdapter
   );
-  // bankAdapter = await BankAdapterContract.at(rinkebyContracts.BankAdapter);
-  bankAdapter = await deployFunction(BankAdapterContract);
+  bankAdapter = await BankAdapterContract.at(rinkebyContracts.BankAdapter);
   couponOnboarding = await CouponOnboardingContract.at(
     rinkebyContracts.CouponOnboarding
   );
-
-  // voting = await VotingContract.new();
-  // configuration = await ConfigurationContract.new();
-  // ragequit = await RagequitContract.new();
-  // managing = await ManagingContract.new();
-  // manager = await ManagerContract.new();
-  // kycOnboarding = await KycOnboardingContract.new(wethAddress);
-  // guildkick = await GuildKickContract.new();
-  // daoRegistryAdapter = await DaoRegistryAdapterContract.new();
-  // bankAdapter = await BankAdapterContract.new();
-  // couponOnboarding = await CouponOnboardingContract.new(chainId);
 
   return {
     voting,
@@ -303,7 +279,13 @@ const createIdentityDao = async (options) => {
   });
 };
 
-const addDefaultAdapters = async ({ dao, options, daoFactory }) => {
+const addDefaultAdapters = async ({
+  erc20TokenName,
+  erc20TokenSymbol,
+  dao,
+  options,
+  daoFactory,
+}) => {
   const {
     voting,
     configuration,
@@ -311,7 +293,6 @@ const addDefaultAdapters = async ({ dao, options, daoFactory }) => {
     guildkick,
     managing,
     manager,
-    //onboarding,
     kycOnboarding,
     daoRegistryAdapter,
     bankAdapter,
@@ -327,6 +308,8 @@ const addDefaultAdapters = async ({ dao, options, daoFactory }) => {
   const erc20TokenExtension = await ERC20Extension.at(unitTokenExtAddr);
 
   await configureDao({
+    erc20TokenName,
+    erc20TokenSymbol,
     owner: options.owner,
     daoFactory,
     dao,
@@ -529,12 +512,10 @@ const configureDao = async ({
 
 const cloneDao = async ({ owner, creator, DaoRegistry, DaoFactory, name }) => {
   let daoFactory = await DaoFactory.at(rinkebyContracts.DaoFactory);
-  //let daoRegistry = await DaoRegistry.new();
-  //let daoFactory = await DaoFactory.new(daoRegistry.address, { from: owner });
 
   await daoFactory.createDao(name, creator ? creator : owner, { from: owner });
 
-  // checking the gas usaged to clone a contract
+  // checking the gas usage to clone a contract
   let address = await daoFactory.getDaoAddress(name);
 
   let newDao = await DaoRegistry.at(address);

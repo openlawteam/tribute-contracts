@@ -118,21 +118,16 @@ const deployDefaultNFTDao = async ({ owner }) => {
 };
 
 const deployDaoWithOffchainVoting = async ({ owner, newMember }) => {
-  const {
-    dao,
-    adapters,
-    extensions,
-    testContracts,
-    votingHelpers,
-  } = await deployDao({
-    ...getDefaultOptions({ owner }),
-    offchainVoting: true,
-    deployTestTokens: true,
-    offchainAdmin: owner,
-    finalize: false,
-    ...ozContracts,
-    deployFunction,
-  });
+  const { dao, adapters, extensions, testContracts, votingHelpers } =
+    await deployDao({
+      ...getDefaultOptions({ owner }),
+      offchainVoting: true,
+      deployTestTokens: true,
+      offchainAdmin: owner,
+      finalize: false,
+      ...ozContracts,
+      deployFunction,
+    });
 
   await dao.potentialNewMember(newMember, {
     from: owner,
@@ -183,14 +178,6 @@ const deployDaoWithBatchVoting = async ({ owner, newMember }) => {
     extensions: extensions,
     votingHelpers: votingHelpers,
   };
-};
-
-const createIdentityDao = async (owner) => {
-  let DaoRegistry = getContractFromOpenZepplin(DaoRegistryName);
-  return await DaoRegistry.new({
-    from: owner,
-    gasPrice: toBN("0"),
-  });
 };
 
 const advanceTime = async (time) => {

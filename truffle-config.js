@@ -46,6 +46,7 @@ module.exports = {
         let infuraKey = process.env.INFURA_KEY;
         let HDWalletProvider = require("@truffle/hdwallet-provider");
         let mnemonic = process.env.TRUFFLE_MNEMONIC;
+
         let infuraUrl = "wss://mainnet.infura.io/ws/v3/" + infuraKey;
         //let infuraUrl = "ws://mainnet.openlaw.io:8546";
         //let infuraUrl = "http://127.0.0.1:8545";
@@ -73,7 +74,7 @@ module.exports = {
         // See the solidity docs for advice about optimization and evmVersion
         optimizer: {
           enabled: true,
-          runs: 10000,
+          runs: 200,
         },
         //  evmVersion: "byzantium"
       },
