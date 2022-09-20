@@ -126,6 +126,8 @@ const setNftConfigurations = async (
   );
 };
 
+const BASE_URI = "https://www.fakenfturi123.com/";
+
 const deployAndConfigureCollection = async (
   manager,
   daoAddress,
@@ -137,7 +139,7 @@ const deployAndConfigureCollection = async (
     "Test DAO NFT",
     "TDN",
     daoAddress,
-    "https://www.fakenfturi123.com/",
+    BASE_URI,
   ]);
   await proxy.deployed();
   await setNftConfigurations(manager, daoAddress, transferable, collectionSize);
@@ -440,20 +442,6 @@ describe("nft test", () => {
       100
     );
     const [collectionAddress, owner, nonce] = [proxy.address, accounts[0], 1];
-    const signature1 = generateNFTCouponSignature({
-      collectionAddress,
-      owner,
-      nonce,
-      chainId,
-      daoAddress,
-    });
-    const signature2 = generateNFTCouponSignature({
-      collectionAddress,
-      owner,
-      nonce: nonce + 1,
-      chainId,
-      daoAddress,
-    });
 
     let blockNumber = (await hre.ethers.provider.getBlock("latest")).number;
 
@@ -461,12 +449,87 @@ describe("nft test", () => {
       (await proxy.getPriorAmount(owner, blockNumber - 1)).toNumber()
     ).to.equal(0);
 
-    await proxy.mint(owner, nonce, signature1);
-    await proxy.mint(owner, nonce + 1, signature2);
+    await proxy.mint(
+      owner,
+      nonce,
+      generateNFTCouponSignature({
+        collectionAddress,
+        owner,
+        nonce,
+        chainId,
+        daoAddress,
+      })
+    );
+    await proxy.mint(
+      owner,
+      nonce + 1,
+      generateNFTCouponSignature({
+        collectionAddress,
+        owner,
+        nonce: nonce + 1,
+        chainId,
+        daoAddress,
+      })
+    );
 
     expect(
       (await proxy.getPriorAmount(owner, blockNumber + 1)).toNumber()
     ).to.equal(1);
+    expect((await proxy.getPriorAmount(owner, 0)).toNumber()).to.equal(0);
+
+    await proxy.mint(
+      owner,
+      nonce + 2,
+      generateNFTCouponSignature({
+        collectionAddress,
+        owner,
+        nonce: nonce + 2,
+        chainId,
+        daoAddress,
+      })
+    );
+
+    expect(
+      (await proxy.getPriorAmount(owner, blockNumber + 2)).toNumber()
+    ).to.equal(2);
+  });
+
+  it("tokenURI returns baseURI for every token", async () => {
+    const { proxy } = await deployAndConfigureCollection(
+      this.adapters.manager,
+      daoAddress,
+      1,
+      100
+    );
+    const [collectionAddress, owner, nonce] = [proxy.address, accounts[0], 1];
+    await proxy.mint(
+      owner,
+      nonce,
+      generateNFTCouponSignature({
+        collectionAddress,
+        owner,
+        nonce,
+        chainId,
+        daoAddress,
+      })
+    );
+    await proxy.mint(
+      owner,
+      nonce + 1,
+      generateNFTCouponSignature({
+        collectionAddress,
+        owner,
+        nonce: nonce + 1,
+        chainId,
+        daoAddress,
+      })
+    );
+    const [uri1, uri2] = await Promise.all([
+      proxy.tokenURI(1),
+      proxy.tokenURI(2),
+    ]);
+
+    expect(uri1).to.equal(uri2);
   });
 });
 
