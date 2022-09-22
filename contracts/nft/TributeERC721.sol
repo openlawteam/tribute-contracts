@@ -132,7 +132,7 @@ contract TributeERC721 is
         return
             string(
                 abi.encodePacked(
-                    "ipfs://",
+                    _baseURI(),
                     bytes32ToString(
                         bytes32(daoRegistry.getConfiguration(TokenMediaPt1))
                     ),
