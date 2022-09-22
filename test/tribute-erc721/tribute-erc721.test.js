@@ -215,7 +215,7 @@ describe("nft test", () => {
 
     const name = await proxy.name();
     const symbol = await proxy.symbol();
-    
+
     expect(name).to.equal(COLLECTION_NAME);
     expect(symbol).to.equal(COLLECTION_SYMBOL);
   });
