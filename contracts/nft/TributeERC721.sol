@@ -57,7 +57,7 @@ contract TributeERC721 is
         __Ownable_init();
         __UUPSUpgradeable_init();
         daoRegistry = DaoRegistry(daoAddress);
-        baseURI = "ipfs://";
+        setBaseURI("ipfs://");
     }
 
     function _authorizeUpgrade(address newImplementation)
