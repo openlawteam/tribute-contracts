@@ -73,7 +73,11 @@ const setNftConfigurations = async (
   manager,
   daoAddress,
   transferable,
-  collectionSize
+  collectionSize,
+  tokenName,
+  tokenSymbol,
+  tokenMediaPt1,
+  tokenMediaPt2
 ) => {
   const nonce = (await manager.nonces(daoAddress)).toNumber() + 1;
   const proposal = {
@@ -88,6 +92,30 @@ const setNftConfigurations = async (
   };
 
   const configs = [
+    {
+      key: sha3("dao-collection.TokenName"),
+      numericValue: ethers.utils.formatBytes32String(tokenName),
+      addressValue: ZERO_ADDRESS,
+      configType: 0,
+    },
+    {
+      key: sha3("dao-collection.TokenSymbol"),
+      numericValue: ethers.utils.formatBytes32String(tokenSymbol),
+      addressValue: ZERO_ADDRESS,
+      configType: 0,
+    },
+    {
+      key: sha3("dao-collection.TokenMediaPt1"),
+      numericValue: ethers.utils.formatBytes32String(tokenMediaPt1),
+      addressValue: ZERO_ADDRESS,
+      configType: 0,
+    },
+    {
+      key: sha3("dao-collection.TokenMediaPt2"),
+      numericValue: ethers.utils.formatBytes32String(tokenMediaPt2),
+      addressValue: ZERO_ADDRESS,
+      configType: 0,
+    },
     {
       key: sha3("dao-collection.Transferable"),
       numericValue: transferable,
@@ -126,7 +154,10 @@ const setNftConfigurations = async (
   );
 };
 
-const BASE_URI = "https://www.fakenfturi123.com/";
+const TOKEN_MEDIA = "QmdXQLJWkv27YFLxJ33piMBpxmL6236TdrsD1Lh8n33WXU";
+const TOKEN_URI = `ipfs://${TOKEN_MEDIA}`;
+const COLLECTION_NAME = "Test DAO NFT";
+const COLLECTION_SYMBOL = "TDN";
 
 const deployAndConfigureCollection = async (
   manager,
@@ -135,14 +166,19 @@ const deployAndConfigureCollection = async (
   collectionSize
 ) => {
   const TributeERC721 = await hre.ethers.getContractFactory("TributeERC721");
-  const proxy = await upgrades.deployProxy(TributeERC721, [
-    "Test DAO NFT",
-    "TDN",
-    daoAddress,
-    BASE_URI,
-  ]);
+  const proxy = await upgrades.deployProxy(TributeERC721, [daoAddress]);
   await proxy.deployed();
-  await setNftConfigurations(manager, daoAddress, transferable, collectionSize);
+  await setNftConfigurations(
+    manager,
+    daoAddress,
+    transferable,
+    collectionSize,
+    COLLECTION_NAME,
+    COLLECTION_SYMBOL,
+    TOKEN_MEDIA.slice(0, 23),
+    TOKEN_MEDIA.slice(23)
+  );
+
   return { proxy };
 };
 
@@ -167,6 +203,21 @@ describe("nft test", () => {
   beforeEach(async () => {
     await revertChainSnapshot(this.snapshotId);
     this.snapshotId = await takeChainSnapshot();
+  });
+
+  it("Configured with name and symbol in DAO", async () => {
+    const { proxy } = await deployAndConfigureCollection(
+      this.adapters.manager,
+      daoAddress,
+      1,
+      100
+    );
+
+    const name = await proxy.name();
+    const symbol = await proxy.symbol();
+    
+    expect(name).to.equal(COLLECTION_NAME);
+    expect(symbol).to.equal(COLLECTION_SYMBOL);
   });
 
   it("Can upgrade proxy", async () => {
@@ -530,6 +581,31 @@ describe("nft test", () => {
     ]);
 
     expect(uri1).to.equal(uri2);
+  });
+
+  it("tokenURI correctly resolves tokenMedia parts to ipfs cid", async () => {
+    const { proxy } = await deployAndConfigureCollection(
+      this.adapters.manager,
+      daoAddress,
+      1,
+      100
+    );
+    const [collectionAddress, owner, nonce] = [proxy.address, accounts[0], 1];
+    await proxy.mint(
+      owner,
+      nonce,
+      generateNFTCouponSignature({
+        collectionAddress,
+        owner,
+        nonce,
+        chainId,
+        daoAddress,
+      })
+    );
+
+    const uri = await proxy.tokenURI(1);
+
+    expect(uri).to.equal(TOKEN_URI);
   });
 });
 
