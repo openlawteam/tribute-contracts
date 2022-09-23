@@ -122,14 +122,13 @@ contract TributeERC721V2 is
         baseURI = newBaseURI;
     }
 
-    function tokenURI(uint256 tokenId)
+    function tokenURI(uint256)
         public
         view
         virtual
         override
         returns (string memory)
     {
-        _requireMinted(tokenId);
         return
             string(
                 abi.encodePacked(
