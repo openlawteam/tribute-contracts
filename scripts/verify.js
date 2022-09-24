@@ -23,9 +23,9 @@ const skipContracts = [
 
 const args = process.argv.slice(2);
 if (!args || args.length === 0)
-  throw Error("Missing one of the network names: [rinkeby, ropsten, mainnet]");
+  throw Error("Missing one of the network names: [goerli, ropsten, mainnet]");
 
-const network = args[0] || "rinkeby";
+const network = args[0] || "goerli";
 console.log(`Selected Network: ${network}`);
 
 const verify = async (contract) => {

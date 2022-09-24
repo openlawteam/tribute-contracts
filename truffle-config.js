@@ -28,16 +28,16 @@ module.exports = {
       port: 7545, // Standard Ethereum port (default: none)
       network_id: "1337", // Any network (default: none)
     },
-    rinkeby: {
+    goerli: {
       provider: function () {
         let infuraKey = process.env.INFURA_KEY;
         let HDWalletProvider = require("@truffle/hdwallet-provider");
         let mnemonic = process.env.TRUFFLE_MNEMONIC;
-        let infuraUrl = "wss://rinkeby.infura.io/ws/v3/" + infuraKey;
+        let infuraUrl = "wss://goerli.infura.io/ws/v3/" + infuraKey;
         //let infuraUrl = "http://127.0.0.1:8545";
         return new HDWalletProvider(mnemonic, infuraUrl);
       },
-      network_id: 4,
+      network_id: 5,
       gasPrice: 12000000000,
       skipDryRun: true,
     },

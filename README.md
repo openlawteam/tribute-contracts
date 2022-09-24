@@ -117,7 +117,7 @@ Checkout the [sample .env file](https://github.com/openlawteam/tribute-contracts
 
 - Ganache deployment: `DAO_NAME`, `ERC20_TOKEN_NAME`, `ERC20_TOKEN_SYMBOL`, `ERC20_TOKEN_DECIMALS`, `COUPON_CREATOR_ADDR`.
 
-- Rinkeby deployment: `DAO_NAME`, `DAO_OWNER_ADDR`, `ERC20_TOKEN_NAME`, `ERC20_TOKEN_SYMBOL`, `ERC20_TOKEN_DECIMALS`, `COUPON_CREATOR_ADDR`.
+- Goerli deployment: `DAO_NAME`, `DAO_OWNER_ADDR`, `ERC20_TOKEN_NAME`, `ERC20_TOKEN_SYMBOL`, `ERC20_TOKEN_DECIMALS`, `COUPON_CREATOR_ADDR`.
 
 - Test deployment: `DAO_NAME`, `ERC20_TOKEN_NAME`, `ERC20_TOKEN_SYMBOL`, `ERC20_TOKEN_DECIMALS`.
 
@@ -145,14 +145,14 @@ To fix the Solidity code and documentation with the linter hints, simply run:
 
 or
 
-> npm run deploy:rinkeby
+> npm run deploy:goerli
 
 ### Verifying Contracts
 
 To verify the contract using Etherscan you need to create an API key and update the .env file with your API key.
 Then execute the following script:
 
-> npm run verify rinkeby
+> npm run verify goerli
 
 ## Contribute
 

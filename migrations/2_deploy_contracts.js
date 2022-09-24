@@ -17,8 +17,8 @@ module.exports = async (deployer, network, accounts) => {
   const deployFunction = truffleImports.deployFunctionFactory(deployer);
   if (network === "ganache") {
     res = await deployGanacheDao(deployFunction, network, accounts);
-  } else if (network === "rinkeby") {
-    res = await deployRinkebyDao(deployFunction, network);
+  } else if (network === "goerli") {
+    res = await deployGoerliDao(deployFunction, network);
   } else if (network === "mainnet") {
     res = await deployMainnetDao(deployFunction, network);
   } else if (network === "test" || network === "coverage") {
@@ -79,7 +79,7 @@ async function deployTestDao(deployFunction, network, accounts) {
   });
 }
 
-async function deployRinkebyDao(deployFunction, network) {
+async function deployGoerliDao(deployFunction, network) {
   const envVariables = checkEnvVariable(
     "DAO_NAME",
     "DAO_OWNER_ADDR",
@@ -124,7 +124,7 @@ async function deployRinkebyDao(deployFunction, network) {
     offchainAdmin: envVariables.OFFCHAIN_ADMIN_ADDR,
     maxMembers: envVariables.MAX_MEMBERS,
     maxUnits: envVariables.MAX_UNITS,
-    wethAddress: "0xc778417e063141139fce010982780140aa0cd5ab",
+    wethAddress: "0xB4FBF271143F4FBf7B91A5ded31805e42b2208d6",
     kycPaymentToken: envVariables.KYC_PAYMENT_TOKEN,
   });
 }

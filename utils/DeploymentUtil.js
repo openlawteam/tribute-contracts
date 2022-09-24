@@ -25,22 +25,22 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
  */
 
-// RINKEBY
-const rinkebyContracts = {
-  BankAdapter: "0x805aC58a2fD16A9af6cD7AB82535c97Bb7934C92",
-  BankFactory: "0x81Cf17e713b621531C0A2F58D92E93fB7Ce417d7",
-  Configuration: "0xe7bAE38678bA931FA3B65F57D69fBE104dFb3953",
-  CouponOnboarding: "0x0114646f214E04364ACbb747c08eD5188E682993",
-  DaoFactory: "0x96dAE5f5B474E3184e6B4C643F5204bB180FEdb0",
-  DaoRegistryAdapter: "0xeE8E97c87D19Aaf055860b3C5F013c3042a70696",
-  ERC20TokenExtensionFactory: "0x914dd1cd5635f09bd3eb21D80e198e467Da5F45a",
-  GuildKick: "0x799B9CB3b361a9C528ef268823f35DAaD57Dc187",
-  KycOnboarding: "0x58aCc6ed1E53E217D0Ca6BbD8D2A953b15C71de5",
-  Manager: "0x78A43376dC5795e5097906486aa10b841c2f49D9",
-  Managing: "0x070461e9fc8B2FA737f66ddbb5CA22c3ab22D049",
-  OffchainVoting: "0x219E388b07E1184b1fc5E6Fd59Af9a65bAbedC56",
-  Ragequit: "0xd12AE3E3B2712cc9c3c59B7CC6B0CF6a667943bf",
-  Voting: "0x92B78EdE3C0C53c07396eb28BD268CCBB6d0c327",
+// GOERLI
+const goerliContracts = {
+  BankAdapter: "",
+  BankFactory: "",
+  Configuration: "",
+  CouponOnboarding: "",
+  DaoFactory: "",
+  DaoRegistryAdapter: "",
+  ERC20TokenExtensionFactory: "",
+  GuildKick: "",
+  KycOnboarding: "",
+  Manager: "",
+  Managing: "",
+  OffchainVoting: "",
+  Ragequit: "",
+  Voting: "",
 };
 
 const { UNITS, sha3, toBN } = require("./ContractUtil");
@@ -74,9 +74,9 @@ const deployDao = async (options) => {
     options.wethAddress = wethAddress;
   }
 
-  const bankFactory = await BankFactory.at(rinkebyContracts.BankFactory);
+  const bankFactory = await BankFactory.at(goerliContracts.BankFactory);
   const erc20TokenExtFactory = await ERC20TokenExtensionFactory.at(
-    rinkebyContracts.ERC20TokenExtensionFactory
+    goerliContracts.ERC20TokenExtensionFactory
   );
 
   console.log("clone dao ...");
@@ -181,7 +181,7 @@ const configureOffchainVoting = async ({
   OffchainVotingContract,
 }) => {
   let offchainVoting = await OffchainVotingContract.at(
-    rinkebyContracts.OffchainVoting
+    goerliContracts.OffchainVoting
   );
   console.log("add offchain voting");
   await daoFactory.updateAdapter(
@@ -237,23 +237,19 @@ const prepareAdapters = async ({
     bankAdapter,
     couponOnboarding;
 
-  voting = await VotingContract.at(rinkebyContracts.Voting);
-  configuration = await ConfigurationContract.at(
-    rinkebyContracts.Configuration
-  );
-  ragequit = await RagequitContract.at(rinkebyContracts.Ragequit);
-  managing = await ManagingContract.at(rinkebyContracts.Managing);
-  manager = await ManagerContract.at(rinkebyContracts.Manager);
-  kycOnboarding = await KycOnboardingContract.at(
-    rinkebyContracts.KycOnboarding
-  );
-  guildkick = await GuildKickContract.at(rinkebyContracts.GuildKick);
+  voting = await VotingContract.at(goerliContracts.Voting);
+  configuration = await ConfigurationContract.at(goerliContracts.Configuration);
+  ragequit = await RagequitContract.at(goerliContracts.Ragequit);
+  managing = await ManagingContract.at(goerliContracts.Managing);
+  manager = await ManagerContract.at(goerliContracts.Manager);
+  kycOnboarding = await KycOnboardingContract.at(goerliContracts.KycOnboarding);
+  guildkick = await GuildKickContract.at(goerliContracts.GuildKick);
   daoRegistryAdapter = await DaoRegistryAdapterContract.at(
-    rinkebyContracts.DaoRegistryAdapter
+    goerliContracts.DaoRegistryAdapter
   );
-  bankAdapter = await BankAdapterContract.at(rinkebyContracts.BankAdapter);
+  bankAdapter = await BankAdapterContract.at(goerliContracts.BankAdapter);
   couponOnboarding = await CouponOnboardingContract.at(
-    rinkebyContracts.CouponOnboarding
+    goerliContracts.CouponOnboarding
   );
 
   return {
@@ -511,7 +507,7 @@ const configureDao = async ({
 };
 
 const cloneDao = async ({ owner, creator, DaoRegistry, DaoFactory, name }) => {
-  let daoFactory = await DaoFactory.at(rinkebyContracts.DaoFactory);
+  let daoFactory = await DaoFactory.at(goerliContracts.DaoFactory);
 
   await daoFactory.createDao(name, creator ? creator : owner, { from: owner });
 
@@ -590,16 +586,16 @@ const networks = [
     chainId: 1337,
   },
   {
-    name: "rinkeby",
-    chainId: 4,
+    name: "goerli",
+    chainId: 5,
   },
   {
     name: "mainnet",
     chainId: 1,
   },
   {
-    name: "rinkeby-fork",
-    chainId: 4,
+    name: "goerli-fork",
+    chainId: 5,
   },
   {
     name: "test",

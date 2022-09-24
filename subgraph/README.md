@@ -13,7 +13,7 @@ For example:
 ```
 [
   {
-   "network": "rinkeby",
+   "network": "goerli",
     "daoFactoryAddress": "0x10a14A1665DE72faeDb866Fc75c57036813E2Eb2",
     "daoFactoryStartBlock": 6204221,
     "GITHUB_USERNAME": "openlawteam",
