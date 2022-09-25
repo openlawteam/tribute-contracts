@@ -50,10 +50,12 @@ const deployDao = async (options) => {
     deployFunction,
     owner,
     finalize,
+    DaoRegistry,
     BankExtension,
     BankFactory,
     ERC20Extension,
     ERC20TokenExtensionFactory,
+    Multicall,
     WETH,
     wethAddress,
   } = options;
@@ -71,17 +73,27 @@ const deployDao = async (options) => {
   if (!wethAddress) {
     const weth = await deployFunction(WETH);
     wethAddress = weth.address;
-    options.wethAddress = wethAddress;
+    // options.wethAddress = wethAddress;
   }
 
-  const bankFactory = await BankFactory.at(goerliContracts.BankFactory);
-  const erc20TokenExtFactory = await ERC20TokenExtensionFactory.at(
-    goerliContracts.ERC20TokenExtensionFactory
+  const identityDao = await deployFunction(DaoRegistry);
+  const identityBank = await deployFunction(BankExtension);
+  const bankFactory = await deployFunction(BankFactory, [identityBank.address]);
+  // const bankFactory = await BankFactory.at(goerliContracts.BankFactory);
+
+  const identityERC20Ext = await deployFunction(ERC20Extension);
+  const erc20TokenExtFactory = await deployFunction(
+    ERC20TokenExtensionFactory,
+    [identityERC20Ext.address]
   );
+  // const erc20TokenExtFactory = await ERC20TokenExtensionFactory.at(
+  //   goerliContracts.ERC20TokenExtensionFactory
+  // );
 
   console.log("clone dao ...");
   const { dao, daoFactory } = await cloneDao({
     ...options,
+    identityDao,
     name: options.daoName || "test-dao",
   });
 
@@ -151,7 +163,8 @@ const deployDao = async (options) => {
     oltToken: null,
     testToken1: null,
     testToken2: null,
-    multicall: null,
+    multicall: await deployFunction(Multicall),
+    // multicall: null,
     pixelNFT: null,
   };
 
@@ -175,14 +188,27 @@ const configureOffchainVoting = async ({
   dao,
   daoFactory,
   owner,
+  offchainAdmin,
+  votingAddress,
   bankAddress,
   votingPeriod,
   gracePeriod,
+  SnapshotProposalContract,
+  KickBadReporterAdapter,
   OffchainVotingContract,
+  deployFunction,
 }) => {
-  let offchainVoting = await OffchainVotingContract.at(
-    goerliContracts.OffchainVoting
-  );
+  let snapshotProposalContract = await deployFunction(SnapshotProposalContract);
+  let handleBadReporterAdapter = await deployFunction(KickBadReporterAdapter);
+  let offchainVoting = await deployFunction(OffchainVotingContract, [
+    votingAddress,
+    snapshotProposalContract.address,
+    handleBadReporterAdapter.address,
+    offchainAdmin,
+  ]);
+  // let offchainVoting = await OffchainVotingContract.at(
+  //   goerliContracts.OffchainVoting
+  // );
   console.log("add offchain voting");
   await daoFactory.updateAdapter(
     dao.address,
@@ -225,6 +251,7 @@ const prepareAdapters = async ({
   DaoRegistryAdapterContract,
   BankAdapterContract,
   CouponOnboardingContract,
+  wethAddress,
 }) => {
   let voting,
     configuration,
@@ -237,20 +264,30 @@ const prepareAdapters = async ({
     bankAdapter,
     couponOnboarding;
 
-  voting = await VotingContract.at(goerliContracts.Voting);
-  configuration = await ConfigurationContract.at(goerliContracts.Configuration);
-  ragequit = await RagequitContract.at(goerliContracts.Ragequit);
-  managing = await ManagingContract.at(goerliContracts.Managing);
-  manager = await ManagerContract.at(goerliContracts.Manager);
-  kycOnboarding = await KycOnboardingContract.at(goerliContracts.KycOnboarding);
-  guildkick = await GuildKickContract.at(goerliContracts.GuildKick);
-  daoRegistryAdapter = await DaoRegistryAdapterContract.at(
-    goerliContracts.DaoRegistryAdapter
-  );
-  bankAdapter = await BankAdapterContract.at(goerliContracts.BankAdapter);
-  couponOnboarding = await CouponOnboardingContract.at(
-    goerliContracts.CouponOnboarding
-  );
+  voting = await deployFunction(VotingContract);
+  // voting = await VotingContract.at(goerliContracts.Voting);
+  configuration = await deployFunction(ConfigurationContract);
+  // configuration = await ConfigurationContract.at(goerliContracts.Configuration);
+  ragequit = await deployFunction(RagequitContract);
+  // ragequit = await RagequitContract.at(goerliContracts.Ragequit);
+  managing = await deployFunction(ManagingContract);
+  // managing = await ManagingContract.at(goerliContracts.Managing);
+  manager = await deployFunction(ManagerContract);
+  // manager = await ManagerContract.at(goerliContracts.Manager);
+  kycOnboarding = await deployFunction(KycOnboardingContract, [wethAddress]);
+  // kycOnboarding = await KycOnboardingContract.at(goerliContracts.KycOnboarding);
+  guildkick = await deployFunction(GuildKickContract);
+  // guildkick = await GuildKickContract.at(goerliContracts.GuildKick);
+  daoRegistryAdapter = await deployFunction(DaoRegistryAdapterContract);
+  // daoRegistryAdapter = await DaoRegistryAdapterContract.at(
+  //   goerliContracts.DaoRegistryAdapter
+  // );
+  bankAdapter = await deployFunction(BankAdapterContract);
+  // bankAdapter = await BankAdapterContract.at(goerliContracts.BankAdapter);
+  couponOnboarding = await deployFunction(CouponOnboardingContract);
+  // couponOnboarding = await CouponOnboardingContract.at(
+  //   goerliContracts.CouponOnboarding
+  // );
 
   return {
     voting,
@@ -506,8 +543,21 @@ const configureDao = async ({
   });
 };
 
-const cloneDao = async ({ owner, creator, DaoRegistry, DaoFactory, name }) => {
-  let daoFactory = await DaoFactory.at(goerliContracts.DaoFactory);
+const cloneDao = async ({
+  identityDao,
+  owner,
+  creator,
+  deployFunction,
+  DaoRegistry,
+  DaoFactory,
+  name,
+}) => {
+  let daoFactory = await deployFunction(
+    DaoFactory,
+    [identityDao.address],
+    owner
+  );
+  // let daoFactory = await DaoFactory.at(goerliContracts.DaoFactory);
 
   await daoFactory.createDao(name, creator ? creator : owner, { from: owner });
 
@@ -592,10 +642,6 @@ const networks = [
   {
     name: "mainnet",
     chainId: 1,
-  },
-  {
-    name: "goerli-fork",
-    chainId: 5,
   },
   {
     name: "test",
