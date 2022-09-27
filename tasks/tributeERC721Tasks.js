@@ -7,30 +7,20 @@ task(
   "deployTributeERC721",
   "Task that deploys a TributeERC721 proxy collection and implementation (will reuse existing implementation)"
 )
-  .addPositionalParam("name")
-  .addPositionalParam("symbol")
   .addPositionalParam("daoAddress")
-  .addPositionalParam("baseURI")
   .setAction(async (taskArgs, hre) => {
-    const { name, symbol, daoAddress, baseURI } = taskArgs;
+    const { daoAddress } = taskArgs;
     const { network } = hre.hardhatArguments;
 
     log(`Deployment started at ${new Date().toISOString()}`);
-    log(`Deploying TributeERC721 ${name} to ${network} network`);
-    log(`Constructor args: `);
     log(
-      `-- Name: ${name}, Symbol: ${symbol}, daoAddress: ${daoAddress}, baseURI: ${baseURI}\n`
+      `Deploying TributeERC721 for daoAddress ${daoAddress} to ${network} network`
     );
 
     const TributeERC721 = await ethers.getContractFactory("TributeERC721");
 
     // Deploying the proxy and implementation. Implementation can be reused.
-    const proxy = await hre.upgrades.deployProxy(TributeERC721, [
-      name,
-      symbol,
-      daoAddress,
-      baseURI,
-    ]);
+    const proxy = await hre.upgrades.deployProxy(TributeERC721, [daoAddress]);
     await proxy.deployed();
     log(`Proxy deployed: ${proxy.address}`);
     const implementation = await upgrades.erc1967.getImplementationAddress(

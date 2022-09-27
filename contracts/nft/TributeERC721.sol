@@ -26,6 +26,10 @@ contract TributeERC721 is
 
     DaoRegistry public daoRegistry;
 
+    bytes32 constant TokenName = keccak256("dao-collection.TokenName");
+    bytes32 constant TokenSymbol = keccak256("dao-collection.TokenSymbol");
+    bytes32 constant TokenMediaPt1 = keccak256("dao-collection.TokenMediaPt1");
+    bytes32 constant TokenMediaPt2 = keccak256("dao-collection.TokenMediaPt2");
     bytes32 constant Transferable = keccak256("dao-collection.Transferable");
     bytes32 constant CollectionSize =
         keccak256("dao-collection.CollectionSize");
@@ -48,17 +52,12 @@ contract TributeERC721 is
     }
 
     // https://docs.openzeppelin.com/contracts/4.x/api/proxy#Initializable
-    function initialize(
-        string memory name,
-        string memory symbol,
-        address daoAddress,
-        string memory newBaseURI
-    ) external initializer {
-        __ERC721_init(name, symbol);
+    function initialize(address daoAddress) external initializer {
+        __ERC721_init("", "");
         __Ownable_init();
         __UUPSUpgradeable_init();
         daoRegistry = DaoRegistry(daoAddress);
-        setBaseURI(newBaseURI);
+        setBaseURI("ipfs://");
     }
 
     function _authorizeUpgrade(address newImplementation)
@@ -104,6 +103,16 @@ contract TributeERC721 is
         _createNewAmountCheckpoint(to);
     }
 
+    function name() public view virtual override returns (string memory) {
+        return
+            bytes32ToString(bytes32(daoRegistry.getConfiguration(TokenName)));
+    }
+
+    function symbol() public view virtual override returns (string memory) {
+        return
+            bytes32ToString(bytes32(daoRegistry.getConfiguration(TokenSymbol)));
+    }
+
     function _baseURI() internal view override returns (string memory) {
         return baseURI;
     }
@@ -112,15 +121,25 @@ contract TributeERC721 is
         baseURI = newBaseURI;
     }
 
-    function tokenURI(uint256 tokenId)
+    function tokenURI(uint256)
         public
         view
         virtual
         override
         returns (string memory)
     {
-        _requireMinted(tokenId);
-        return _baseURI();
+        return
+            string(
+                abi.encodePacked(
+                    _baseURI(),
+                    bytes32ToString(
+                        bytes32(daoRegistry.getConfiguration(TokenMediaPt1))
+                    ),
+                    bytes32ToString(
+                        bytes32(daoRegistry.getConfiguration(TokenMediaPt2))
+                    )
+                )
+            );
     }
 
     /**
@@ -202,5 +221,21 @@ contract TributeERC721 is
             );
             numCheckpoints[member] = nCheckpoints + 1;
         }
+    }
+
+    function bytes32ToString(bytes32 _bytes32)
+        public
+        pure
+        returns (string memory)
+    {
+        uint8 i = 0;
+        while (i < 32 && _bytes32[i] != 0) {
+            i++;
+        }
+        bytes memory bytesArray = new bytes(i);
+        for (i = 0; i < 32 && _bytes32[i] != 0; i++) {
+            bytesArray[i] = _bytes32[i];
+        }
+        return string(bytesArray);
     }
 }
