@@ -26,7 +26,7 @@ export class DefenderSignerProvider extends ProviderWrapper {
   ) {
     super(provider);
     this.chainId = chainId;
-    const p = ethers.getDefaultProvider("rinkeby");
+    const p = ethers.getDefaultProvider("goerli");
     this.signer = new DefenderRelaySigner(
       {
         apiKey: config.apiKey,

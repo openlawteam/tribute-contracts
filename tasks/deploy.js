@@ -89,7 +89,7 @@ task("deploy", "Deploy the list of contracts", async (args, hre) => {
   }
 });
 
-const deployRinkebyDao = async ({
+const deployGoerliDao = async ({
   deployFunction,
   attachFunction,
   contractImports,
@@ -101,17 +101,17 @@ const deployRinkebyDao = async ({
     deployFunction,
     attachFunction,
     maxAmount: getOptionalEnvVar("MAX_AMOUNT", maxAmount),
-    unitPrice: toWei("0.1"),
-    nbUnits: toBN("100000"),
+    unitPrice: getOptionalEnvVar("UNIT_PRICE", toWei("0.1")),
+    nbUnits: getOptionalEnvVar("UNITS_PER_CHUNK", toBN("100000")),
     maxUnits: getOptionalEnvVar("MAX_UNITS", maxUnits),
-    tokenAddr: ETH_TOKEN,
+    tokenAddr: getOptionalEnvVar("PAYMENT_TOKEN_ADDR", ETH_TOKEN),
     erc20TokenName: getEnvVar("ERC20_TOKEN_NAME"),
     erc20TokenSymbol: getEnvVar("ERC20_TOKEN_SYMBOL"),
     erc20TokenDecimals: getEnvVar("ERC20_TOKEN_DECIMALS"),
     erc20TokenAddress: UNITS,
     maxChunks: getOptionalEnvVar("MAX_CHUNKS", maximumChunks),
     votingPeriod: getOptionalEnvVar("VOTING_PERIOD_SECONDS", 600), // 600 secs = 10 min
-    gracePeriod: getOptionalEnvVar("GRACE_PERIOD_SECONDS", 600), // 600 secs = 10 min
+    gracePeriod: getOptionalEnvVar("GRACE_PERIOD_SECONDS", 300), // 300 secs = 5 min
     offchainVoting: true,
     finalize: false,
     maxExternalTokens: 100,
@@ -139,7 +139,7 @@ const deployRinkebyDao = async ({
       "OFFCHAIN_ADMIN_ADDR",
       getEnvVar("DAO_OWNER_ADDR")
     ),
-    deployTestTokens: true,
+    deployTestTokens: false,
     supplyTestToken1: 1000000,
     supplyTestToken2: 1000000,
     supplyPixelNFT: 100,
@@ -152,7 +152,7 @@ const deployRinkebyDao = async ({
       "GELATO_ADDR",
       "0xDe6ab16a4015c680daab58021815D09ddB57db8E"
     ),
-    weth: "0xc778417e063141139fce010982780140aa0cd5ab",
+    weth: "0xB4FBF271143F4FBf7B91A5ded31805e42b2208d6",
     maintainerTokenAddress: getOptionalEnvVar("MAINTAINER_TOKEN_ADDR", UNITS),
   });
 };
@@ -741,6 +741,7 @@ const saveDeployedContracts = (network, addresses) => {
 
 const DeploymentActions = {
   mainnet: deployMainnetDao,
+  goerli: deployGoerliDao,
   ganache: deployGanacheDao,
   harmony: deployHarmonyDao,
   harmonytest: deployHarmonyTestDao,
@@ -748,10 +749,6 @@ const DeploymentActions = {
   polygontest: deployPolygonTestDao,
   avalanchetest: deployAvalancheTestDao,
   avalanche: deployAvalancheDao,
-
-  // Goerli and Rinkeby should be treated the same
-  goerli: deployRinkebyDao,
-  rinkeby: deployRinkebyDao,
 
   // Test and Coverage should be treated the same
   test: deployTestDao,
