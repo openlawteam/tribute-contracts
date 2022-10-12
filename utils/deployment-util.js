@@ -149,16 +149,16 @@ const createExtensions = async ({ dao, factories, options }) => {
     }
     /**
      * The tx event is the safest way to read the new extension address.
-     * Event at index 0 indicates the extension was created
-     * Arg at index 1 represents the new extension address
+     * 1. Find the event that contains the `args` field which indicates the factory event
+     * 2. Take the data at index 1 which represents the new extension address
      */
     let extensionAddress;
     if (tx.wait) {
       const res = await tx.wait();
-      extensionAddress = res.events[0].args[1];
+      extensionAddress = res.events.filter(e => e.args).flatMap(e => e.args)[1];
     } else {
       const { logs } = tx;
-      extensionAddress = logs[0].args[1];
+      extensionAddress = logs.filter(l => l.args).flatMap(l => l.args)[1];
     }
     const extensionInterface = options[extensionConfigs.name];
     if (!extensionInterface)
