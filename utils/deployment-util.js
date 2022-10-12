@@ -155,10 +155,12 @@ const createExtensions = async ({ dao, factories, options }) => {
     let extensionAddress;
     if (tx.wait) {
       const res = await tx.wait();
-      extensionAddress = res.events.filter(e => e.args).flatMap(e => e.args)[1];
+      extensionAddress = res.events
+        .filter((e) => e.args)
+        .flatMap((e) => e.args)[1];
     } else {
       const { logs } = tx;
-      extensionAddress = logs.filter(l => l.args).flatMap(l => l.args)[1];
+      extensionAddress = logs.filter((l) => l.args).flatMap((l) => l.args)[1];
     }
     const extensionInterface = options[extensionConfigs.name];
     if (!extensionInterface)
