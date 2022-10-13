@@ -53,9 +53,13 @@ contract TributeERC721V2 is
     }
 
     // https://docs.openzeppelin.com/contracts/4.x/api/proxy#Initializable
-    function initialize(address daoAddress) external initializer {
+    function initialize(address daoAddress, address _owner)
+        external
+        initializer
+    {
         __ERC721_init("", "");
         __Ownable_init();
+        _transferOwnership(_owner);
         __UUPSUpgradeable_init();
         daoRegistry = DaoRegistry(daoAddress);
         setBaseURI("ipfs://");

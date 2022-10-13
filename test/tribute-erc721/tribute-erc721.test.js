@@ -158,6 +158,7 @@ const TOKEN_MEDIA = "QmdXQLJWkv27YFLxJ33piMBpxmL6236TdrsD1Lh8n33WXU";
 const TOKEN_URI = `ipfs://${TOKEN_MEDIA}`;
 const COLLECTION_NAME = "Test DAO NFT";
 const COLLECTION_SYMBOL = "TDN";
+const OWNER = "0x90F8bf6A479f320ead074411a4B0e7944Ea8c9C1";
 
 const deployAndConfigureCollection = async (
   manager,
@@ -166,7 +167,7 @@ const deployAndConfigureCollection = async (
   collectionSize
 ) => {
   const TributeERC721 = await hre.ethers.getContractFactory("TributeERC721");
-  const proxy = await upgrades.deployProxy(TributeERC721, [daoAddress]);
+  const proxy = await upgrades.deployProxy(TributeERC721, [daoAddress, OWNER]);
   await proxy.deployed();
   await setNftConfigurations(
     manager,
