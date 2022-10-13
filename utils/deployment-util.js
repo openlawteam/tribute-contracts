@@ -153,14 +153,22 @@ const createExtensions = async ({ dao, factories, options }) => {
      * 2. Take the data at index 1 which represents the new extension address
      */
     let extensionAddress;
+
     if (tx.wait) {
       const res = await tx.wait();
-      extensionAddress = res.events
-        .filter((e) => e.args)
-        .flatMap((e) => e.args)[1];
+      const factoryEvent = res.events.find(
+        (e) => e.address === factory.address
+      );
+      if (!factoryEvent) throw new Error("Missing factory event.");
+
+      extensionAddress = factoryEvent.args[1];
     } else {
       const { logs } = tx;
-      extensionAddress = logs.filter((l) => l.args).flatMap((l) => l.args)[1];
+      const factoryLog = logs.find((l) => l.address === factory.address);
+      if (!factoryLog) {
+        throw new Error("no event emitted by the factory");
+      }
+      extensionAddress = factoryLog.args[1];
     }
     const extensionInterface = options[extensionConfigs.name];
     if (!extensionInterface)
