@@ -108,6 +108,13 @@ const deployFunction = async (contractInterface, args, from) => {
     const identityInstance = await identityInterface.new({ from: f });
     const constructorArgs = [identityInstance.address].concat(args.slice(1));
     instance = await contractInterface.new(...constructorArgs, { from: f });
+    instance = {
+      ...instance,
+      identity: {
+        name: identityInstance.name,
+        address: identityInstance.address,
+      },
+    };
   } else {
     if (args) {
       instance = await contractInterface.new(...args, { from: f });

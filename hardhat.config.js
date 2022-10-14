@@ -56,31 +56,6 @@ module.exports = {
       },
       signerId: process.env.SIGNER || undefined,
     },
-    rinkeby: {
-      url: process.env.ETH_NODE_URL,
-      network_id: 4,
-      chainId: 4,
-      skipDryRun: true,
-      gas: 2100000,
-      gasPrice: 4000000000,
-      accounts: {
-        mnemonic: process.env.WALLET_MNEMONIC || "",
-        count: 10,
-      },
-      signerId: process.env.SIGNER || undefined,
-    },
-    ropsten: {
-      url: process.env.ETH_NODE_URL,
-      network_id: 3,
-      chainId: 3,
-      gas: 2100000,
-      gasPrice: 4000000000,
-      accounts: {
-        mnemonic: process.env.WALLET_MNEMONIC || "",
-        count: 10,
-      },
-      signerId: process.env.SIGNER || undefined,
-    },
     harmonytest: {
       url: process.env.ETH_NODE_URL,
       network_id: 1666700000,
@@ -223,7 +198,7 @@ module.exports = {
 
   etherscan: {
     apiKey: {
-      rinkeby: process.env.ETHERSCAN_API_KEY,
+      goerli: process.env.ETHERSCAN_API_KEY,
       mainnet: process.env.ETHERSCAN_API_KEY,
     },
   },

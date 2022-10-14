@@ -116,10 +116,12 @@ const deployFunction = async ({ allConfigs, network, daoArtifacts }) => {
     -------------------------------------------------
      contract address: ${contractAddress}`);
       const instance = await attach(contractInterface, contractAddress);
+
       return { ...instance, configs: contractConfig };
     }
 
     let deployedContract;
+
     // When the contract is not found in the DaoArtifacts, deploy a new one
     if (contractConfig.type === ContractType.Factory && args) {
       // 1. first create a new identity contract
@@ -127,12 +129,19 @@ const deployFunction = async ({ allConfigs, network, daoArtifacts }) => {
       const identityConfig = allConfigs.find(
         (c) => c.name === identityInterface.contractName
       );
-      const identityInstance = await deploy(identityInterface, identityConfig);
+      const identityContract = await deploy(identityInterface, identityConfig);
 
       // 2 deploy the factory with the new identity address, so it can be used for cloning ops later on
       deployedContract = await deploy(contractInterface, contractConfig, [
-        identityInstance.address,
+        identityContract.address,
       ]);
+      deployedContract = {
+        ...deployedContract,
+        identity: {
+          name: identityInterface.contractName,
+          address: identityContract.address,
+        },
+      };
     } else {
       deployedContract = await deploy(contractInterface, contractConfig, args);
     }

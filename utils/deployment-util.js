@@ -149,16 +149,26 @@ const createExtensions = async ({ dao, factories, options }) => {
     }
     /**
      * The tx event is the safest way to read the new extension address.
-     * Event at index 0 indicates the extension was created
-     * Arg at index 1 represents the new extension address
+     * 1. Find the event that contains the `args` field which indicates the factory event
+     * 2. Take the data at index 1 which represents the new extension address
      */
     let extensionAddress;
+
     if (tx.wait) {
       const res = await tx.wait();
-      extensionAddress = res.events[0].args[1];
+      const factoryEvent = res.events.find(
+        (e) => e.address === factory.address
+      );
+      if (!factoryEvent) throw new Error("Missing factory event.");
+
+      extensionAddress = factoryEvent.args[1];
     } else {
       const { logs } = tx;
-      extensionAddress = logs[0].args[1];
+      const factoryLog = logs.find((l) => l.address === factory.address);
+      if (!factoryLog) {
+        throw new Error("no event emitted by the factory");
+      }
+      extensionAddress = factoryLog.args[1];
     }
     const extensionInterface = options[extensionConfigs.name];
     if (!extensionInterface)
@@ -188,9 +198,11 @@ const createExtensions = async ({ dao, factories, options }) => {
     Extension enabled '${newExtension.configs.name}'
     -------------------------------------------------
      contract address: ${newExtension.address}
-     creator address:  ${options.owner}`);
+     creator address:  ${options.owner}
+     identity address: ${factory.identity.address}
+     `);
 
-    return newExtension;
+    return { ...newExtension, identity: factory.identity };
   };
 
   await Object.values(factories).reduce(
@@ -480,10 +492,23 @@ const cloneDao = async ({
 }) => {
   const daoFactory = await deployFunction(DaoFactory, [DaoRegistry]);
   await waitTx(daoFactory.createDao(name, creator ? creator : owner));
+
   const daoAddress = await daoFactory.getDaoAddress(name);
   if (daoAddress === ZERO_ADDRESS) throw Error("Invalid dao address");
   const daoInstance = await attachFunction(DaoRegistry, daoAddress);
-  return { dao: daoInstance, daoFactory, daoName: name };
+  info(`
+        Cloned 'DaoRegistry'
+        -------------------------------------------------
+         contract address:  ${daoAddress}
+         identity contract: ${daoFactory.identity.address}
+         owner:             ${creator ? creator : owner}
+         name:              ${name}`);
+
+  return {
+    dao: { ...daoInstance, identity: daoFactory.identity },
+    daoFactory,
+    daoName: name,
+  };
 };
 
 /**

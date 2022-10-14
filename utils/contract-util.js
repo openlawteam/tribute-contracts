@@ -72,10 +72,11 @@ const maxUnits = toBN("10000000000000000000");
 
 const waitTx = async (p) => {
   try {
-    const res = await p;
+    let res = await p;
     if (res && res.wait) {
-      await res.wait();
+      res = await res.wait();
     }
+
     return res;
   } catch (err) {
     error(err);

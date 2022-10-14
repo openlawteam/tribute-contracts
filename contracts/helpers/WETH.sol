@@ -1,5 +1,4 @@
-//WETH-03.24.2020.sol
-//deployed March 24,2020 Rinkeby - 0x8DD25714CCEce48767BaF266EC4F220B60f84D52
+// WETH-03.24.2020.sol
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.0;
 

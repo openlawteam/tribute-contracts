@@ -40,12 +40,6 @@ module.exports = {
       network_id: 5,
       skipDryRun: true,
     },
-    rinkeby: {
-      provider: getNetworkProvider,
-      network_id: 4,
-      chainId: 4,
-      skipDryRun: true,
-    },
     mainnet: {
       provider: getNetworkProvider,
       network_id: 1,

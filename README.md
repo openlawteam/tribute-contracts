@@ -179,13 +179,7 @@ npm run compile
 
 ### Deploy contracts
 
-Deploy contracts to networks such as rinkeby, goerli, harmonytest, polygontest, ganache, mainnet, harmony, polygon or avalanche.
-
-```sh
-npm run deploy rinkeby
-```
-
-OR
+Deploy contracts to networks such as goerli, harmonytest, polygontest, ganache, mainnet, harmony, polygon or avalanche.
 
 ```sh
 npm run deploy goerli
@@ -238,7 +232,7 @@ For more information about the deployment, see the in logs [logs/contracts](logs
 ### Verify contracts
 
 ```sh
-npm run verify rinkeby
+npm run verify goerli
 ```
 
 OR
@@ -254,21 +248,21 @@ In the same `.env` file created under the `tribute-contracts` folder, set the fo
 ```
 ######################## Tribute UI env vars ########################
 
-# Configure the UI to use the Rinkeby network for local development
-REACT_APP_DEFAULT_CHAIN_NAME_LOCAL=RINKEBY
+# Configure the UI to use the Goerli network for local development
+REACT_APP_DEFAULT_CHAIN_NAME_LOCAL=GOERLI
 
 # It can be the same value you used for the Tribute DAO deployment.
 REACT_APP_INFURA_PROJECT_ID_DEV=YOUR_INFURA_API_KEY
 
-# The address of the Multicall smart contract deployed to the Rinkeby network.
-# Copy that from the tribute-contracts/build/contracts-rinkeby-YYYY-MM-DD-HH:mm:ss.json
+# The address of the Multicall smart contract deployed to the Goerli network.
+# Copy that from the tribute-contracts/build/contracts-goerli-YYYY-MM-DD-HH:mm:ss.json
 REACT_APP_MULTICALL_CONTRACT_ADDRESS=0x...
 
-# The address of the DaoRegistry smart contract deployed to the Rinkeby network.
-# Copy that from the tribute-contracts/build/contracts-rinkeby-YYYY-MM-DD-HH:mm:ss.json
+# The address of the DaoRegistry smart contract deployed to the Goerli network.
+# Copy that from the tribute-contracts/build/contracts-goerli-YYYY-MM-DD-HH:mm:ss.json
 REACT_APP_DAO_REGISTRY_CONTRACT_ADDRESS=0x...
 
-# Enable Rinkeby network for Tribute UI
+# Enable Goerli network for Tribute UI
 REACT_APP_ENVIRONMENT=development
 ```
 
@@ -332,7 +326,7 @@ Snapshot-hub:
 - `ENV`: To indicate in which environment it is being executed: local, dev, or prod
 - `USE_IPFS`: To indicated the pinning service on IPFS should be enabled/disabled (if enabled cause delay in the responses)
 - `RELAYER_PK`: The PK of the account that will be used to sign the messages.
-- `NETWORK`: The network name that will be used by the relayer (use testnet for: rinkeby or ropsten), and mainnet for the main eth network
+- `NETWORK`: The network name that will be used by the relayer (use testnet for goerli and mainnet for the main ethereum network)
 - `JAWSDB_URL`: The postgres url: postgres://user:pwd@host:5432/db-name
 - `ALLOWED_DOMAINS`: The list of domains that should be allowed to send requests to the API
 - `ALCHEMY_API_URL`: The relayer API (alternative to Infura)

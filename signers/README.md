@@ -1,6 +1,6 @@
 # Signers
 
-A Signer Provider can be used to sign transactions using a private key managed by an external service, so that transaction can be send to the network using any sort of Network Provider.
+A Signer Provider can be used to sign transactions using a private key managed by an external service, so that transaction can be sent to the network using any sort of Network Provider.
 
 In this hardhat plugin we currently support two types of Signers: OZ Defender Signer and Google KMS Signer.
 
@@ -9,10 +9,10 @@ Both signers are acting as external signers only. We don't use them to forward t
 In order to enable a signer for a particular network set the `signerId` to the network config in the `hardhat.config.ts` file:
 
 ```
-rinkeby: {
+goerli: {
     url: process.env.ETH_NODE_URL,
-    network_id: 4,
-    chainId: 4,
+    network_id: 5,
+    chainId: 5,
     skipDryRun: true,
     gas: 2100000,
     gasPrice: 4000000000,
