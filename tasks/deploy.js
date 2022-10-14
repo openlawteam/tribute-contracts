@@ -53,6 +53,7 @@ task("deploy", "Deploy the list of contracts", async (args, hre) => {
   const {
     dao,
     factories,
+    identities,
     extensions,
     adapters,
     testContracts,
@@ -62,15 +63,22 @@ task("deploy", "Deploy the list of contracts", async (args, hre) => {
 
   if (dao) {
     await dao.finalizeDao();
-
+    const addresses = {};
     info(
       `\nAvailable Contracts\n-------------------------------------------------`
     );
     log(`DaoOwner: ${owner}`);
     log(`DaoRegistry: ${dao.address}`);
-    const addresses = { DaoRegistry: dao.address };
-    Object.values(factories)
-      .concat(Object.values(extensions))
+    Object.values(extensions)
+      .forEach((c) => log(`${c.configs.name}: ${c.address}`));
+    Object.values(identities)
+      .forEach((c) => addresses[c.configs.name] = c.address);
+      //TODO: figure out the identity DaoRegistry address
+    const identityDaoRegistry = await hardhatImports.DaoRegistry.deployed();
+    addresses["DaoRegistry"] = identityDaoRegistry.address;
+
+    Object
+      .values(factories)
       .concat(Object.values(adapters))
       .concat(Object.values(testContracts))
       .concat(Object.values(utilContracts))

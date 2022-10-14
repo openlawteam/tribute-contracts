@@ -116,6 +116,7 @@ const deployFunction = async ({ allConfigs, network, daoArtifacts }) => {
     -------------------------------------------------
      contract address: ${contractAddress}`);
       const instance = await attach(contractInterface, contractAddress);
+      
       return { ...instance, configs: contractConfig };
     }
 
