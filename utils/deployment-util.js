@@ -39,7 +39,6 @@ const {
 } = require("./contract-util.js");
 const { debug, info, error } = require("./log-util");
 const { ContractType } = require("../configs/contracts.config");
-const { Contract } = require("ethers");
 
 /**
  * Deploys a contract based on the contract name defined in the config parameter.
@@ -72,7 +71,6 @@ const deployContract = ({ config, options }) => {
  */
 const createFactories = async ({ options }) => {
   const factories = {};
-  const identities = {};
   const factoryList = Object.values(options.contractConfigs)
     .filter((config) => config.type === ContractType.Factory)
     .filter((config) => config.enabled)
@@ -99,15 +97,7 @@ const createFactories = async ({ options }) => {
 
       return options
         .deployFunction(factoryContract, [extensionContract])
-        .then((factory) => {
-          factories[factory.configs.alias] = factory;
-          identities[factory.configs.alias] = {
-            address: extensionContract.address,
-            configs: {
-              name: extensionConfig.name
-            }
-          };
-        })
+        .then((factory) => (factories[factory.configs.alias] = factory))
         .catch((err) => {
           error(`Failed factory deployment [${config.name}]. `, err);
           throw err;
@@ -115,7 +105,7 @@ const createFactories = async ({ options }) => {
     });
   }, Promise.resolve());
 
-  return {factories, identities};
+  return factories;
 };
 
 /**
@@ -208,9 +198,11 @@ const createExtensions = async ({ dao, factories, options }) => {
     Extension enabled '${newExtension.configs.name}'
     -------------------------------------------------
      contract address: ${newExtension.address}
-     creator address:  ${options.owner}`);
+     creator address:  ${options.owner}
+     identity address: ${factory.identity.address}
+     `);
 
-    return newExtension;
+    return { ...newExtension, identity: factory.identity };
   };
 
   await Object.values(factories).reduce(
@@ -429,7 +421,7 @@ const deployDao = async (options) => {
     lootTokenToMint: LOOT,
   };
 
-  const {factories, identities} = await createFactories({ options });
+  const factories = await createFactories({ options });
   const extensions = await createExtensions({ dao, factories, options });
   const adapters = await createAdapters({
     dao,
@@ -481,7 +473,6 @@ const deployDao = async (options) => {
     utilContracts: utilContracts,
     votingHelpers: votingHelpers,
     factories: { ...factories, daoFactory },
-    identities,
     owner: options.owner,
   };
 };
@@ -499,15 +490,25 @@ const cloneDao = async ({
   DaoFactory,
   name,
 }) => {
-  info('getting DAO factory');
   const daoFactory = await deployFunction(DaoFactory, [DaoRegistry]);
   await waitTx(daoFactory.createDao(name, creator ? creator : owner));
-  
-  info('getting DAO address');
+
   const daoAddress = await daoFactory.getDaoAddress(name);
   if (daoAddress === ZERO_ADDRESS) throw Error("Invalid dao address");
   const daoInstance = await attachFunction(DaoRegistry, daoAddress);
-  return { dao: daoInstance, daoFactory, daoName: name };
+  info(`
+        Cloned 'DaoRegistry'
+        -------------------------------------------------
+         contract address:  ${daoAddress}
+         identity contract: ${daoFactory.identity.address}
+         owner:             ${creator ? creator : owner}
+         name:              ${name}`);
+
+  return {
+    dao: { ...daoInstance, identity: daoFactory.identity },
+    daoFactory,
+    daoName: name,
+  };
 };
 
 /**

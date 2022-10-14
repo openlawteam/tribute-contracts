@@ -107,6 +107,12 @@ const main = async () => {
   const verifyContracts = contractConfigs
     .filter((c: ContractConfig) => !skipContracts.includes(c.name))
     .map((c: ContractConfig) => {
+      if (deployedContracts.identities && deployedContracts.identities[c.name]) {
+        return {
+          contractAddress: deployedContracts.identities[c.name],
+          contractName: c.name,
+        };
+      }
       return {
         contractAddress: deployedContracts[c.name],
         contractName: c.name,

@@ -39,8 +39,13 @@ task("deploy", "Deploy the list of contracts", async (args, hre) => {
     daoArtifacts
   );
   const accounts = await hre.ethers.getSigners();
-  accounts.map((a, i) => log(`Account ${i}: ${a.address}`));
+  info(
+    `\nAvailable Accounts\n-----------------------------------------------------------`
+  );
+  accounts.map((a, i) => log(`  Account ${i}: ${a.address}`));
+  info(`-----------------------------------------------------------`);
 
+  info(`\n Deploying contracts...\n`);
   const result = await deploy({
     network,
     deployFunction,
@@ -50,10 +55,11 @@ task("deploy", "Deploy the list of contracts", async (args, hre) => {
     accounts,
   });
 
+  info(`\n Deployment completed with success.\n`);
+
   const {
     dao,
     factories,
-    identities,
     extensions,
     adapters,
     testContracts,
@@ -63,22 +69,32 @@ task("deploy", "Deploy the list of contracts", async (args, hre) => {
 
   if (dao) {
     await dao.finalizeDao();
-    const addresses = {};
+    const addresses = {
+      // The addresses of all identity contracts
+      identities: {
+        DaoRegistry: dao.identity.address,
+      },
+      DaoRegistry: dao.address,
+    };
+
     info(
-      `\nAvailable Contracts\n-------------------------------------------------`
+      `\nIdentity Contracts\n-----------------------------------------------------------`
+    );
+    log(`DaoRegistry: ${addresses.identities.DaoRegistry}`);
+    Object.values(extensions)
+      .filter((f) => f.identity)
+      .forEach((c) => {
+        log(`${c.configs.name}: ${c.identity.address}`);
+        addresses.identities[c.configs.name] = c.identity.address;
+      });
+
+    info(
+      `\nDAO Contracts\n-----------------------------------------------------------`
     );
     log(`DaoOwner: ${owner}`);
     log(`DaoRegistry: ${dao.address}`);
-    Object.values(extensions)
-      .forEach((c) => log(`${c.configs.name}: ${c.address}`));
-    Object.values(identities)
-      .forEach((c) => addresses[c.configs.name] = c.address);
-      //TODO: figure out the identity DaoRegistry address
-    const identityDaoRegistry = await hardhatImports.DaoRegistry.deployed();
-    addresses["DaoRegistry"] = identityDaoRegistry.address;
-
-    Object
-      .values(factories)
+    Object.values(factories)
+      .concat(Object.values(extensions))
       .concat(Object.values(adapters))
       .concat(Object.values(testContracts))
       .concat(Object.values(utilContracts))
@@ -86,6 +102,7 @@ task("deploy", "Deploy the list of contracts", async (args, hre) => {
         log(`${c.configs.name}: ${c.address}`);
         addresses[c.configs.name] = c.address;
       });
+
     saveDeployedContracts(network, addresses);
     log(
       `Deployment to ${network} network was completed at ${new Date().toISOString()}`

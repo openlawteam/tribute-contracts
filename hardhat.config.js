@@ -52,7 +52,7 @@ module.exports = {
       gasPrice: 4000000000,
       accounts: {
         mnemonic: process.env.WALLET_MNEMONIC || "",
-        count: 10
+        count: 10,
       },
       signerId: process.env.SIGNER || undefined,
     },

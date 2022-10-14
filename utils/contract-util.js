@@ -76,7 +76,7 @@ const waitTx = async (p) => {
     if (res && res.wait) {
       res = await res.wait();
     }
-    
+
     return res;
   } catch (err) {
     error(err);

@@ -17,7 +17,7 @@ const getNetworkProvider = () => {
     mnemonic: {
       phrase: process.env.WALLET_MNEMONIC,
     },
-    providerOrUrl: process.env.ETH_NODE_URL
+    providerOrUrl: process.env.ETH_NODE_URL,
   });
 };
 
