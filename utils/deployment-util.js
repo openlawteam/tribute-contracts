@@ -72,7 +72,6 @@ const deployContract = ({ config, options }) => {
  */
 const createFactories = async ({ options }) => {
   const factories = {};
-  const identities = {};
   const factoryList = Object.values(options.contractConfigs)
     .filter((config) => config.type === ContractType.Factory)
     .filter((config) => config.enabled)
@@ -96,26 +95,18 @@ const createFactories = async ({ options }) => {
       const extensionContract = options[extensionConfig.name];
       if (!extensionContract)
         throw new Error(`Missing extension contract ${extensionConfig.name}`);
-
+      
       return options
         .deployFunction(factoryContract, [extensionContract])
-        .then((factory) => {
-          factories[factory.configs.alias] = factory;
-          identities[factory.configs.alias] = {
-            address: extensionContract.address,
-            configs: {
-              name: extensionConfig.name
-            }
-          };
-        })
+        .then((factory) => factories[factory.configs.alias] = factory)
         .catch((err) => {
-          error(`Failed factory deployment [${config.name}]. `, err);
-          throw err;
+        error(`Failed factory deployment [${config.name}]. `, err);
+        throw err;
         });
     });
   }, Promise.resolve());
 
-  return {factories, identities};
+  return factories;
 };
 
 /**
@@ -429,7 +420,7 @@ const deployDao = async (options) => {
     lootTokenToMint: LOOT,
   };
 
-  const {factories, identities} = await createFactories({ options });
+  const factories = await createFactories({ options });
   const extensions = await createExtensions({ dao, factories, options });
   const adapters = await createAdapters({
     dao,
@@ -481,7 +472,6 @@ const deployDao = async (options) => {
     utilContracts: utilContracts,
     votingHelpers: votingHelpers,
     factories: { ...factories, daoFactory },
-    identities,
     owner: options.owner,
   };
 };

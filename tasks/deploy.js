@@ -53,7 +53,6 @@ task("deploy", "Deploy the list of contracts", async (args, hre) => {
   const {
     dao,
     factories,
-    identities,
     extensions,
     adapters,
     testContracts,
@@ -71,10 +70,10 @@ task("deploy", "Deploy the list of contracts", async (args, hre) => {
     log(`DaoRegistry: ${dao.address}`);
     Object.values(extensions)
       .forEach((c) => log(`${c.configs.name}: ${c.address}`));
+    const identities = await Promise.all(factories.map(factory => factory.identityAddress()));
     Object.values(identities)
       .forEach((c) => addresses[c.configs.name] = c.address);
       //TODO: figure out the identity DaoRegistry address
-    const identityDaoRegistry = await hardhatImports.DaoRegistry.deployed();
     addresses["DaoRegistry"] = identityDaoRegistry.address;
 
     Object
