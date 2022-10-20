@@ -40,6 +40,7 @@ const toBNWeb3 = Web3Utils.toBN;
 // Ethers.js utils
 const { ethers } = require("ethers");
 const { error } = require("./log-util");
+const { info } = require("console");
 const toUtf8 = ethers.utils.toUtf8String;
 const toBytes32 = ethers.utils.formatBytes32String;
 const toHex = ethers.utils.hexValue;
@@ -72,11 +73,13 @@ const maxUnits = toBN("10000000000000000000");
 
 const waitTx = async (p) => {
   try {
+    info("waiting for transaction to be submitted");
     let res = await p;
+    info(`tx hash:${res.hash} - nonce:${res.nonce}`);
     if (res && res.wait) {
       res = await res.wait();
     }
-
+    info("transaction mined");
     return res;
   } catch (err) {
     error(err);
