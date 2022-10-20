@@ -602,7 +602,7 @@ const configureDao = async ({
     }, Promise.resolve([]));
     info("waiting for all adapter txs to be mined");
     //once they have all been added, time to wait for each of them to be mined
-    await Promise.all(txs.map((tx) => tx.wait()));
+    await Promise.all(txs.filter((tx) => !!tx.wait).map((tx) => tx.wait()));
 
     // If an extension needs access to other extension,
     // that extension needs to be added to the DAO as an adapter contract,
@@ -625,13 +625,13 @@ const configureDao = async ({
         ]);
 
         info(
-          `waiting for tx ${addedTx.hash} that configures extension ${e.configs.name} nonce ${addedTx.nonce}`
+          `waiting for tx ${tx.hash} that configures extension ${e.configs.name} nonce ${tx.nonce}`
         );
         return previous.concat([tx]);
       });
     }, Promise.resolve([]));
     info(`waiting for all extension configutation txs to be mined`);
-    await Promise.all(extTxs.map((tx) => tx.wait()));
+    await Promise.all(extTxs.filter((tx) => !!tx.wait).map((tx) => tx.wait()));
   };
 
   const configureAdaptersWithDAOParameters = async () => {
