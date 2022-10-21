@@ -34,6 +34,7 @@ const {
   ZERO_ADDRESS,
   numberOfUnits,
   DAI_TOKEN,
+  GUILD,
 } = require("../../utils/contract-util");
 
 const {
@@ -447,6 +448,7 @@ describe("Extension - ERC20", () => {
     let externalAddressAUnits = await erc20Ext.balanceOf(
       externalAddressA.address
     );
+
     expect(externalAddressAUnits.toString()).equal(
       numberOfUnits.mul(toBN("0")).toString()
     );
@@ -462,6 +464,15 @@ describe("Extension - ERC20", () => {
     externalAddressAUnits = await erc20Ext.balanceOf(externalAddressA.address);
     expect(externalAddressAUnits.toString()).equal(
       numberOfUnits.mul(toBN("0")).toString()
+    );
+
+    const guildBalance = await erc20Ext.balanceOf(GUILD);
+    const totalSupply = await erc20Ext.totalSupply();
+
+    const assignedBalance = await erc20Ext.totalAssignedTokens();
+
+    expect(totalSupply.sub(guildBalance).toString()).equal(
+      assignedBalance.toString()
     );
   });
 

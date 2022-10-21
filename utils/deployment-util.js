@@ -228,6 +228,14 @@ const createExtensions = async ({ dao, factories, options }) => {
           `Unable to embed extension configs for ${extensionConfigs.name}`
         );
 
+      info(`
+      Extension enabled '${newExtension.configs.name}'
+      -------------------------------------------------
+      contract address: ${newExtension.address}
+      creator address:  ${options.owner}
+      identity address: ${factory.identity}
+      `);
+
       return { ...newExtension, identity: factory.identity };
     }
   };

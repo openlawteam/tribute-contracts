@@ -143,7 +143,7 @@ contract ERC20Extension is AdapterGuard, IExtension, IERC20 {
     /**
      * @dev Returns the amount of tokens assigned to all the members.
      */
-    function totalAssignedTokens() public view returns (uint256) {
+    function totalAssignedTokens() external view returns (uint256) {
         BankExtension bank = BankExtension(
             dao.getExtensionAddress(DaoHelper.BANK)
         );
