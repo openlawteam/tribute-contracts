@@ -125,7 +125,10 @@ const main = async () => {
       p.then(async () => {
         const r = await verify(c);
         log(`[${count++}/${verifyContracts.length}]`);
-        await sleep(1500); // avoid rate-limit errors
+        
+        if(!r || !r.stderr) {
+          await sleep(1500); // avoid rate-limit errors
+        }
         return r;
       }),
     Promise.resolve(0)

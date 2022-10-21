@@ -207,7 +207,7 @@ const createExtensions = async ({ dao, factories, options }) => {
       -------------------------------------------------
       contract address: ${newExtension.address}
       creator address:  ${options.owner}
-      identity address: ${factory.identity}
+      identity address: ${factory.identity.address}
       `);
       return { ...newExtension, identity: factory.identity };
     } else {
@@ -233,7 +233,7 @@ const createExtensions = async ({ dao, factories, options }) => {
       -------------------------------------------------
       contract address: ${newExtension.address}
       creator address:  ${options.owner}
-      identity address: ${factory.identity}
+      identity address: ${factory.identity.address}
       `);
 
       return { ...newExtension, identity: factory.identity };
