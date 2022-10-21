@@ -59,6 +59,9 @@ const deployFunction = async ({ allConfigs, network, daoArtifacts }) => {
       res = await contractFactory.deploy();
     }
 
+    info(
+      `Deploying contract ${contractInterface.contractName} with transaction id ${res.deployTransaction.hash} nonce: ${res.deployTransaction.nonce}`
+    );
     const tx = await res.deployTransaction.wait();
     const contract = await res.deployed();
     info(`
@@ -116,6 +119,18 @@ const deployFunction = async ({ allConfigs, network, daoArtifacts }) => {
     -------------------------------------------------
      contract address: ${contractAddress}`);
       const instance = await attach(contractInterface, contractAddress);
+      if (contractConfig.type === ContractType.Factory && args) {
+        const identityInterface = args.flat()[0];
+        const identity = await instance.identityAddress();
+        return {
+          ...instance,
+          configs: contractConfig,
+          identity: {
+            name: identityInterface.contractName,
+            address: identity,
+          },
+        };
+      }
 
       return { ...instance, configs: contractConfig };
     }

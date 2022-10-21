@@ -119,9 +119,9 @@ const createFactories = async ({ options }) => {
  */
 const createExtensions = async ({ dao, factories, options }) => {
   const extensions = {};
-  debug("create extensions ...");
+
   const createExtension = async ({ dao, factory, options }) => {
-    debug("create extension ", factory.configs.alias);
+    info("create extension " + factory.configs.alias);
     const factoryConfigs = factory.configs;
     const extensionConfigs = options.contractConfigs.find(
       (c) => c.id === factoryConfigs.generatesExtensionId
@@ -131,78 +131,113 @@ const createExtensions = async ({ dao, factories, options }) => {
         `Missing extension configuration <generatesExtensionId> for in ${factoryConfigs.name} configs`
       );
 
-    let tx;
-    if (
-      factoryConfigs.deploymentArgs &&
-      factoryConfigs.deploymentArgs.length > 0
-    ) {
-      const args = factoryConfigs.deploymentArgs.map((argName) => {
-        const arg = options[argName];
-        if (arg !== null && arg !== undefined) return arg;
-        throw new Error(
-          `Missing deployment argument <${argName}> in ${factoryConfigs.name}.create`
-        );
-      });
-      tx = await factory.create(...args);
-    } else {
-      tx = await factory.create();
-    }
-    /**
-     * The tx event is the safest way to read the new extension address.
-     * 1. Find the event that contains the `args` field which indicates the factory event
-     * 2. Take the data at index 1 which represents the new extension address
-     */
-    let extensionAddress;
+    const extensionId = sha3(extensionConfigs.id);
+    let extensionAddress = await dao.extensions(extensionId);
 
-    if (tx.wait) {
-      const res = await tx.wait();
-      const factoryEvent = res.events.find(
-        (e) => e.address === factory.address
+    if (extensionAddress === ZERO_ADDRESS) {
+      let tx;
+      info(
+        `extension ${extensionConfigs.name} not found in the DAO, deploying it `
       );
-      if (!factoryEvent) throw new Error("Missing factory event.");
-
-      extensionAddress = factoryEvent.args[1];
-    } else {
-      const { logs } = tx;
-      const factoryLog = logs.find((l) => l.address === factory.address);
-      if (!factoryLog) {
-        throw new Error("no event emitted by the factory");
+      if (
+        factoryConfigs.deploymentArgs &&
+        factoryConfigs.deploymentArgs.length > 0
+      ) {
+        const args = factoryConfigs.deploymentArgs.map((argName) => {
+          const arg = options[argName];
+          if (arg !== null && arg !== undefined) return arg;
+          throw new Error(
+            `Missing deployment argument <${argName}> in ${factoryConfigs.name}.create`
+          );
+        });
+        tx = await factory.create(...args);
+      } else {
+        tx = await factory.create();
       }
-      extensionAddress = factoryLog.args[1];
+
+      /**
+       * The tx event is the safest way to read the new extension address.
+       * 1. Find the event that contains the `args` field which indicates the factory event
+       * 2. Take the data at index 1 which represents the new extension address
+       */
+      let extensionAddress;
+      if (tx.wait) {
+        info(
+          `waiting for transaction ${tx.hash} to be mined... nonce: ${tx.nonce}`
+        );
+        const res = await tx.wait();
+        const factoryEvent = res.events.find(
+          (e) => e.address === factory.address
+        );
+        if (!factoryEvent) throw new Error("Missing factory event.");
+
+        extensionAddress = factoryEvent.args[1];
+      } else {
+        const { logs } = tx;
+        const factoryLog = logs.find((l) => l.address === factory.address);
+        if (!factoryLog) {
+          throw new Error("no event emitted by the factory");
+        }
+        extensionAddress = factoryLog.args[1];
+      }
+
+      const extensionInterface = options[extensionConfigs.name];
+      if (!extensionInterface)
+        throw new Error(
+          `Extension contract not found for ${extensionConfigs.name}`
+        );
+
+      const newExtension = embedConfigs(
+        await options.attachFunction(extensionInterface, extensionAddress),
+        extensionInterface.contractName,
+        options.contractConfigs
+      );
+
+      if (!newExtension || !newExtension.configs)
+        throw new Error(
+          `Unable to embed extension configs for ${extensionConfigs.name}`
+        );
+
+      await waitTx(
+        dao["addExtension(bytes32,address)"](extensionId, newExtension.address)
+      );
+
+      info(`
+      Extension enabled '${newExtension.configs.name}'
+      -------------------------------------------------
+      contract address: ${newExtension.address}
+      creator address:  ${options.owner}
+      identity address: ${factory.identity.address}
+      `);
+      return { ...newExtension, identity: factory.identity };
+    } else {
+      const extensionInterface = options[extensionConfigs.name];
+      if (!extensionInterface)
+        throw new Error(
+          `Extension contract not found for ${extensionConfigs.name}`
+        );
+
+      const newExtension = embedConfigs(
+        await options.attachFunction(extensionInterface, extensionAddress),
+        extensionInterface.contractName,
+        options.contractConfigs
+      );
+
+      if (!newExtension || !newExtension.configs)
+        throw new Error(
+          `Unable to embed extension configs for ${extensionConfigs.name}`
+        );
+
+      info(`
+      Extension enabled '${newExtension.configs.name}'
+      -------------------------------------------------
+      contract address: ${newExtension.address}
+      creator address:  ${options.owner}
+      identity address: ${factory.identity.address}
+      `);
+
+      return { ...newExtension, identity: factory.identity };
     }
-    const extensionInterface = options[extensionConfigs.name];
-    if (!extensionInterface)
-      throw new Error(
-        `Extension contract not found for ${extensionConfigs.name}`
-      );
-
-    const newExtension = embedConfigs(
-      await options.attachFunction(extensionInterface, extensionAddress),
-      extensionInterface.contractName,
-      options.contractConfigs
-    );
-
-    if (!newExtension || !newExtension.configs)
-      throw new Error(
-        `Unable to embed extension configs for ${extensionConfigs.name}`
-      );
-
-    await waitTx(
-      dao["addExtension(bytes32,address)"](
-        sha3(newExtension.configs.id),
-        newExtension.address
-      )
-    );
-
-    info(`
-    Extension enabled '${newExtension.configs.name}'
-    -------------------------------------------------
-     contract address: ${newExtension.address}
-     creator address:  ${options.owner}
-     identity address: ${factory.identity.address}
-     `);
-
-    return { ...newExtension, identity: factory.identity };
   };
 
   await Object.values(factories).reduce(
@@ -407,8 +442,10 @@ const validateContractConfigs = (contractConfigs) => {
  * configs/networks/*.config.ts.
  */
 const deployDao = async (options) => {
+  info("validate contract configs");
   validateContractConfigs(options.contractConfigs);
 
+  info("create DaoRegistry");
   const { dao, daoFactory } = await cloneDao({
     ...options,
     name: options.daoName || "test-dao",
@@ -420,9 +457,11 @@ const deployDao = async (options) => {
     unitTokenToMint: UNITS,
     lootTokenToMint: LOOT,
   };
-
+  info("create factories");
   const factories = await createFactories({ options });
+  info("create extensions");
   const extensions = await createExtensions({ dao, factories, options });
+  info("create adapters");
   const adapters = await createAdapters({
     dao,
     daoFactory,
@@ -490,12 +529,21 @@ const cloneDao = async ({
   DaoFactory,
   name,
 }) => {
+  info("deploy or load Dao factory");
   const daoFactory = await deployFunction(DaoFactory, [DaoRegistry]);
-  await waitTx(daoFactory.createDao(name, creator ? creator : owner));
+  let daoAddress = await daoFactory.getDaoAddress(name);
+  if (daoAddress === ZERO_ADDRESS) {
+    info(`create a DaoRegistry ${name} ${creator ? creator : owner}`);
+    await waitTx(daoFactory.createDao(name, creator ? creator : owner));
 
-  const daoAddress = await daoFactory.getDaoAddress(name);
+    daoAddress = await daoFactory.getDaoAddress(name);
+  }
+
   if (daoAddress === ZERO_ADDRESS) throw Error("Invalid dao address");
   const daoInstance = await attachFunction(DaoRegistry, daoAddress);
+  const daoState = await daoInstance.state();
+  //if Dao is already finialized
+  if (daoState === 1) throw Error("Dao is already finalized");
   info(`
         Cloned 'DaoRegistry'
         -------------------------------------------------
@@ -536,22 +584,33 @@ const configureDao = async ({
       .filter((a) => !a.configs.skipAutoDeploy)
       .filter((a) => a.configs.acls.dao);
 
-    await adaptersWithAccess.reduce((p, a) => {
+    const txs = await adaptersWithAccess.reduce((p, a) => {
       info(`
-        Adapter configured '${a.configs.name}'
+        Configuring Adapter '${a.configs.name}'
         -------------------------------------------------
          contract address: ${a.address}
          contract acls: ${JSON.stringify(a.configs.acls)}`);
 
-      return p.then(
-        async () =>
-          await waitTx(
-            daoFactory.addAdapters(dao.address, [
-              entryDao(a.configs.id, a.address, a.configs.acls),
-            ])
-          )
-      );
-    }, Promise.resolve());
+      return p.then(async (previous) => {
+        const entry = entryDao(a.configs.id, a.address, a.configs.acls);
+        const adapterAddress = await dao.adapters(entry.id);
+
+        //add the adapter again if the address is different
+        if (adapterAddress !== a.address) {
+          const addedTx = await daoFactory.addAdapters(dao.address, [entry]);
+          info(
+            `waiting for tx ${addedTx.hash} that adds adapter ${a.configs.name} nonce ${addedTx.nonce}`
+          );
+          return previous.concat([addedTx]);
+        } else {
+          info(`Adapter ${a.configs.name} already added to the DAO`);
+          return previous;
+        }
+      });
+    }, Promise.resolve([]));
+    info("waiting for all adapter txs to be mined");
+    //once they have all been added, time to wait for each of them to be mined
+    await Promise.all(txs.filter((tx) => !!tx.wait).map((tx) => tx.wait()));
 
     // If an extension needs access to other extension,
     // that extension needs to be added to the DAO as an adapter contract,
@@ -561,22 +620,26 @@ const configureDao = async ({
       .filter((a) => !a.configs.skipAutoDeploy)
       .filter((e) => Object.keys(e.configs.acls.extensions).length > 0);
 
-    await extensionsWithAccess.reduce((p, e) => {
+    const extTxs = await extensionsWithAccess.reduce((p, e) => {
       info(`
-        Extension configured '${e.configs.name}'
+        Configuring Extension '${e.configs.name}'
         -------------------------------------------------
          contract address: ${e.address}
          contract acls: ${JSON.stringify(e.configs.acls)}`);
 
-      return p.then(
-        async () =>
-          await waitTx(
-            daoFactory.addAdapters(dao.address, [
-              entryDao(e.configs.id, e.address, e.configs.acls),
-            ])
-          )
-      );
-    }, Promise.resolve());
+      return p.then(async (previous) => {
+        const tx = await daoFactory.addAdapters(dao.address, [
+          entryDao(e.configs.id, e.address, e.configs.acls),
+        ]);
+
+        info(
+          `waiting for tx ${tx.hash} that configures extension ${e.configs.name} nonce ${tx.nonce}`
+        );
+        return previous.concat([tx]);
+      });
+    }, Promise.resolve([]));
+    info(`waiting for all extension configutation txs to be mined`);
+    await Promise.all(extTxs.filter((tx) => !!tx.wait).map((tx) => tx.wait()));
   };
 
   const configureAdaptersWithDAOParameters = async () => {

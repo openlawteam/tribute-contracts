@@ -75,22 +75,6 @@ contract ERC20Extension is AdapterGuard, IExtension, IERC20 {
         dao = _dao;
     }
 
-    function bytes32ToString(bytes32 _bytes32)
-        internal
-        pure
-        returns (string memory)
-    {
-        uint8 i = 0;
-        while (i < 32 && _bytes32[i] != 0) {
-            i++;
-        }
-        bytes memory bytesArray = new bytes(i);
-        for (i = 0; i < 32 && _bytes32[i] != 0; i++) {
-            bytesArray[i] = _bytes32[i];
-        }
-        return string(bytesArray);
-    }
-
     /**
      * @dev Returns the token address managed by the DAO that tracks the
      * internal transfers.
@@ -157,6 +141,18 @@ contract ERC20Extension is AdapterGuard, IExtension, IERC20 {
     }
 
     /**
+     * @dev Returns the amount of tokens assigned to all the members.
+     */
+    function totalAssignedTokens() external view returns (uint256) {
+        BankExtension bank = BankExtension(
+            dao.getExtensionAddress(DaoHelper.BANK)
+        );
+        return
+            bank.balanceOf(DaoHelper.TOTAL, tokenAddress) -
+            bank.balanceOf(DaoHelper.GUILD, tokenAddress);
+    }
+
+    /**
      * @dev Returns the amount of tokens owned by `account`.
      */
     function balanceOf(address account) public view override returns (uint256) {
@@ -214,16 +210,13 @@ contract ERC20Extension is AdapterGuard, IExtension, IERC20 {
         address senderAddr = dao.getAddressIfDelegated(msg.sender);
         require(
             DaoHelper.isNotZeroAddress(senderAddr),
-            "ERC20: approve from the zero address"
+            "ERC20: approve from 0x0"
         );
-        require(
-            DaoHelper.isNotZeroAddress(spender),
-            "ERC20: approve to the zero address"
-        );
+        require(DaoHelper.isNotZeroAddress(spender), "ERC20: approve to 0x0");
         require(dao.isMember(senderAddr), "sender is not a member");
         require(
             DaoHelper.isNotReservedAddress(spender),
-            "spender can not be a reserved address"
+            "spender is reserved address"
         );
 
         _allowances[senderAddr][spender] = amount;
@@ -285,7 +278,7 @@ contract ERC20Extension is AdapterGuard, IExtension, IERC20 {
     ) public override returns (bool) {
         require(
             DaoHelper.isNotZeroAddress(recipient),
-            "ERC20: transfer to the zero address"
+            "ERC20: transfer to 0x0"
         );
 
         IERC20TransferStrategy strategy = IERC20TransferStrategy(
@@ -323,7 +316,7 @@ contract ERC20Extension is AdapterGuard, IExtension, IERC20 {
             //check if sender has approved msg.sender to spend amount
             require(
                 currentAllowance >= amount,
-                "ERC20: transfer amount exceeds allowance"
+                "ERC20: amount exceeds allowance"
             );
 
             if (allowedAmount >= amount) {
@@ -339,5 +332,21 @@ contract ERC20Extension is AdapterGuard, IExtension, IERC20 {
         }
 
         return false;
+    }
+
+    function bytes32ToString(bytes32 _bytes32)
+        internal
+        pure
+        returns (string memory)
+    {
+        uint8 i = 0;
+        while (i < 32 && _bytes32[i] != 0) {
+            i++;
+        }
+        bytes memory bytesArray = new bytes(i);
+        for (i = 0; i < 32 && _bytes32[i] != 0; i++) {
+            bytesArray[i] = _bytes32[i];
+        }
+        return string(bytesArray);
     }
 }
