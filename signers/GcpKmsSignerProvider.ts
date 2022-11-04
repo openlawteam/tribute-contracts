@@ -1,5 +1,8 @@
-import { BN, bufferToHex } from "ethereumjs-util";
-import { rpcQuantityToBN } from "hardhat/internal/core/jsonrpc/types/base-types";
+import { bufferToHex } from "ethereumjs-util";
+import {
+  rpcQuantityToBigInt,
+  rpcQuantityToNumber,
+} from "hardhat/internal/core/jsonrpc/types/base-types";
 import { rpcTransactionRequest } from "hardhat/internal/core/jsonrpc/types/input/transactionRequest";
 import { validateParams } from "hardhat/internal/core/jsonrpc/types/input/validation";
 import { JsonRpcTransactionData } from "hardhat/internal/core/providers/accounts";
@@ -12,7 +15,11 @@ import {
 import { ethers } from "ethers";
 import { numberToHex } from "web3-utils";
 import { GcpKmsSigner } from "ethers-gcp-kms-signer";
-import { keccak256, serializeTransaction } from "ethers/lib/utils";
+import {
+  keccak256,
+  serializeTransaction,
+  UnsignedTransaction,
+} from "ethers/lib/utils";
 
 export class GcpKmsSignerProvider extends ProviderWrapper {
   public ethAddress: string | undefined;
@@ -45,32 +52,39 @@ export class GcpKmsSignerProvider extends ProviderWrapper {
       }
 
       const [txRequest] = validateParams(params, rpcTransactionRequest);
-      txRequest.chainId = new BN(this.chainId);
+      txRequest.chainId = rpcQuantityToBigInt(numberToHex(this.chainId));
       if (txRequest.nonce === undefined) {
         txRequest.nonce = await this._getNonce(txRequest.from);
       }
 
-      const unsignedTx = await ethers.utils.resolveProperties({
-        to: txRequest.to ? bufferToHex(txRequest.to) : undefined,
-        nonce: txRequest.nonce?.toNumber(),
+      const unsignedTx: UnsignedTransaction =
+        await ethers.utils.resolveProperties({
+          to: txRequest.to ? bufferToHex(txRequest.to) : undefined,
+          nonce: rpcQuantityToNumber(numberToHex(txRequest.nonce.toString())),
 
-        gasLimit: txRequest.gas ? numberToHex(txRequest.gas) : undefined,
-        gasPrice: txRequest.gasPrice?.toBuffer(),
+          gasLimit: txRequest.gas
+            ? numberToHex(txRequest.gas.toString())
+            : undefined,
+          gasPrice: txRequest.gasPrice,
 
-        data: txRequest.data, //BytesLike;
-        value: txRequest.value ? numberToHex(txRequest.value) : undefined,
-        chainId: this.chainId,
+          data: txRequest.data, //BytesLike;
+          value: txRequest.value
+            ? numberToHex(txRequest.value.toString())
+            : undefined,
+          chainId: this.chainId,
 
-        // Typed-Transaction features - EIP-1559; Type 2
-        type: 2,
+          // Typed-Transaction features - EIP-1559; Type 2
+          type: 2,
 
-        // EIP-2930; Type 1 & EIP-1559; Type 2
-        //   accessList: txRequest.accessList ? txRequest.accessList : undefined,
+          // EIP-2930; Type 1 & EIP-1559; Type 2
+          //   accessList: txRequest.accessList ? txRequest.accessList : undefined,
 
-        // EIP-1559; Type 2
-        maxPriorityFeePerGas: numberToHex(txRequest.maxPriorityFeePerGas!),
-        maxFeePerGas: numberToHex(txRequest.maxFeePerGas!),
-      });
+          // EIP-1559; Type 2
+          maxPriorityFeePerGas: numberToHex(
+            txRequest.maxPriorityFeePerGas!.toString()
+          ),
+          maxFeePerGas: numberToHex(txRequest.maxFeePerGas!.toString()),
+        });
 
       const txSignature = await this.signer._signDigest(
         keccak256(serializeTransaction(unsignedTx))
@@ -98,12 +112,12 @@ export class GcpKmsSignerProvider extends ProviderWrapper {
     return this.ethAddress;
   }
 
-  private async _getNonce(address: Buffer): Promise<BN> {
+  private async _getNonce(address: Buffer): Promise<bigint> {
     const response = (await this._wrappedProvider.request({
       method: "eth_getTransactionCount",
       params: [bufferToHex(address), "pending"],
     })) as string;
 
-    return rpcQuantityToBN(response);
+    return rpcQuantityToBigInt(response);
   }
 }
