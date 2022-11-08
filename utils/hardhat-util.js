@@ -59,13 +59,11 @@ const deployFunction = async ({ allConfigs, network, daoArtifacts }) => {
       res = await contractFactory.deploy();
     }
 
-    info(
-      `Deploying contract ${contractInterface.contractName} with transaction id ${res.deployTransaction.hash} nonce: ${res.deployTransaction.nonce}`
-    );
+    info(`
+    Deploying contract ${contractInterface.contractName}, nonce: ${res.deployTransaction.nonce}, tx: ${res.deployTransaction.hash}`);
     const tx = await res.deployTransaction.wait();
     const contract = await res.deployed();
-    info(`
-    Contract deployed '${contractConfig.name}'
+    info(`    Contract deployed '${contractConfig.name}'
     -------------------------------------------------
      transaction hash: ${tx.transactionHash}
      contract address: ${tx.contractAddress}

@@ -73,12 +73,12 @@ const maxUnits = toBN("10000000000000000000");
 
 const waitTx = async (p) => {
   try {
-    info("waiting for transaction to be submitted / mined");
+    info("\t waiting for transaction to be submitted / mined");
     let res = await p;
     if (res && res.wait) {
-      info(`submitted! tx hash:${res.hash} - nonce:${res.nonce}`);
+      info(`\t submitted! tx hash:${res.hash} - nonce:${res.nonce}`);
       res = await res.wait();
-      info("transaction mined");
+      info("\t transaction mined");
     }
     return res;
   } catch (err) {
