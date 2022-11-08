@@ -199,10 +199,7 @@ const deployMainnetDao = async ({
     erc20TokenName: getEnvVar("ERC20_TOKEN_NAME"),
     erc20TokenSymbol: getEnvVar("ERC20_TOKEN_SYMBOL"),
     erc20TokenDecimals: getEnvVar("ERC20_TOKEN_DECIMALS"),
-    erc20TokenAddress: getOptionalEnvVar(
-      "DAO_TOKEN_ADDRESS",
-      UNITS
-    ),
+    erc20TokenAddress: getOptionalEnvVar("DAO_TOKEN_ADDRESS", UNITS),
     maxChunks: getOptionalEnvVar("MAX_CHUNKS", maximumChunks),
     votingPeriod: parseInt(getEnvVar("VOTING_PERIOD_SECONDS")),
     gracePeriod: parseInt(getEnvVar("GRACE_PERIOD_SECONDS")),

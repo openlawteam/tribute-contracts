@@ -539,7 +539,9 @@ const cloneDao = async ({
   const daoFactory = await deployFunction(DaoFactory, [DaoRegistry]);
   let daoAddress = await daoFactory.getDaoAddress(name);
   if (daoAddress === ZERO_ADDRESS) {
-    info(`\t new DaoRegistry, name: ${name}, owner: ${creator ? creator : owner}`);
+    info(
+      `\t new DaoRegistry, name: ${name}, owner: ${creator ? creator : owner}`
+    );
     await waitTx(daoFactory.createDao(name, creator ? creator : owner));
 
     daoAddress = await daoFactory.getDaoAddress(name);
