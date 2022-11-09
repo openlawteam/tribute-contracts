@@ -1,6 +1,6 @@
 {
   "name": "tribute-contracts",
-  "version": "2.6.3",
+  "version": "2.6.4",
   "description": "A new modular DAO framework, inspired by the Moloch smart contracts",
   "keywords": [
     "dao",
