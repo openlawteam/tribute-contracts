@@ -121,7 +121,7 @@ const createExtensions = async ({ dao, factories, options }) => {
   const extensions = {};
 
   const createExtension = async ({ dao, factory, options }) => {
-    info("create extension " + factory.configs.alias);
+    info("\t create extension with factory " + factory.configs.alias);
     const factoryConfigs = factory.configs;
     const extensionConfigs = options.contractConfigs.find(
       (c) => c.id === factoryConfigs.generatesExtensionId
@@ -137,7 +137,7 @@ const createExtensions = async ({ dao, factories, options }) => {
     if (extensionAddress === ZERO_ADDRESS) {
       let tx;
       info(
-        `extension ${extensionConfigs.name} not found in the DAO, deploying it `
+        `\t extension ${extensionConfigs.name} not found in the DAO, deploying it `
       );
       if (
         factoryConfigs.deploymentArgs &&
@@ -163,7 +163,7 @@ const createExtensions = async ({ dao, factories, options }) => {
       let extensionAddress;
       if (tx.wait) {
         info(
-          `waiting for transaction ${tx.hash} to be mined... nonce: ${tx.nonce}`
+          `\t waiting for transaction ${tx.hash} to be mined... nonce: ${tx.nonce}`
         );
         const res = await tx.wait();
         const factoryEvent = res.events.find(
@@ -442,10 +442,12 @@ const validateContractConfigs = (contractConfigs) => {
  * configs/networks/*.config.ts.
  */
 const deployDao = async (options) => {
-  info("validate contract configs");
+  info(`
+  Validate contract configs`);
   validateContractConfigs(options.contractConfigs);
 
-  info("create DaoRegistry");
+  info(`
+  Create DaoRegistry`);
   const { dao, daoFactory } = await cloneDao({
     ...options,
     name: options.daoName || "test-dao",
@@ -457,11 +459,14 @@ const deployDao = async (options) => {
     unitTokenToMint: UNITS,
     lootTokenToMint: LOOT,
   };
-  info("create factories");
+  info(`
+  Create factories`);
   const factories = await createFactories({ options });
-  info("create extensions");
+  info(`
+  Create extensions`);
   const extensions = await createExtensions({ dao, factories, options });
-  info("create adapters");
+  info(`
+  Create adapters`);
   const adapters = await createAdapters({
     dao,
     daoFactory,
@@ -529,11 +534,14 @@ const cloneDao = async ({
   DaoFactory,
   name,
 }) => {
-  info("deploy or load Dao factory");
+  info(`
+  Deploy/Load DAO Factory`);
   const daoFactory = await deployFunction(DaoFactory, [DaoRegistry]);
   let daoAddress = await daoFactory.getDaoAddress(name);
   if (daoAddress === ZERO_ADDRESS) {
-    info(`create a DaoRegistry ${name} ${creator ? creator : owner}`);
+    info(
+      `\t new DaoRegistry, name: ${name}, owner: ${creator ? creator : owner}`
+    );
     await waitTx(daoFactory.createDao(name, creator ? creator : owner));
 
     daoAddress = await daoFactory.getDaoAddress(name);
@@ -542,7 +550,7 @@ const cloneDao = async ({
   if (daoAddress === ZERO_ADDRESS) throw Error("Invalid dao address");
   const daoInstance = await attachFunction(DaoRegistry, daoAddress);
   const daoState = await daoInstance.state();
-  //if Dao is already finialized
+  // if DAO is already finalized
   if (daoState === 1) throw Error("Dao is already finalized");
   info(`
         Cloned 'DaoRegistry'
@@ -599,7 +607,7 @@ const configureDao = async ({
         if (adapterAddress !== a.address) {
           const addedTx = await daoFactory.addAdapters(dao.address, [entry]);
           info(
-            `waiting for tx ${addedTx.hash} that adds adapter ${a.configs.name} nonce ${addedTx.nonce}`
+            `\t waiting for tx ${addedTx.hash} that adds adapter ${a.configs.name} nonce ${addedTx.nonce}`
           );
           return previous.concat([addedTx]);
         } else {
@@ -608,7 +616,7 @@ const configureDao = async ({
         }
       });
     }, Promise.resolve([]));
-    info("waiting for all adapter txs to be mined");
+    info("\t waiting for all adapter txs to be mined");
     //once they have all been added, time to wait for each of them to be mined
     await Promise.all(txs.filter((tx) => !!tx.wait).map((tx) => tx.wait()));
 
@@ -633,12 +641,12 @@ const configureDao = async ({
         ]);
 
         info(
-          `waiting for tx ${tx.hash} that configures extension ${e.configs.name} nonce ${tx.nonce}`
+          `\t waiting for tx ${tx.hash} that configures extension ${e.configs.name} nonce ${tx.nonce}`
         );
         return previous.concat([tx]);
       });
     }, Promise.resolve([]));
-    info(`waiting for all extension configutation txs to be mined`);
+    info(`\t waiting for all extension configuration txs to be mined`);
     await Promise.all(extTxs.filter((tx) => !!tx.wait).map((tx) => tx.wait()));
   };
 

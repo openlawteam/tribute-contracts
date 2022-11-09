@@ -151,11 +151,6 @@ module.exports = {
 
   // External Signers configs
   signers: {
-    defender: {
-      enabled: process.env.DEFENDER_SIGNER_ENABLED || false,
-      apiKey: process.env.DEFENDER_API_KEY || undefined,
-      apiSecret: process.env.DEFENDER_API_SECRET || undefined,
-    },
     googleKms: {
       enabled: process.env.KMS_GCP_SIGNER_ENABLED || false,
       projectId: process.env.KMS_PROJECT_ID || undefined,

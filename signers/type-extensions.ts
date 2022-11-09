@@ -1,16 +1,11 @@
 import "hardhat/types/config";
 
 declare module "hardhat/types/config" {
-  export type SignerId = "defender" | "googleKms";
+  export type SignerId = "googleKms";
 
   export type SignerConfig = {
     id: SignerId;
     enabled: Boolean;
-  };
-
-  export type DefenderSignerConfig = SignerConfig & {
-    apiKey: string;
-    apiSecret: string;
   };
 
   export type GcpKmsSignerConfig = SignerConfig & {

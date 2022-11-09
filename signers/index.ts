@@ -6,7 +6,6 @@ import {
 } from "hardhat/internal/core/providers/gas-providers";
 import { HttpProvider } from "hardhat/internal/core/providers/http";
 import {
-  DefenderSignerConfig,
   GcpKmsSignerConfig,
   SignerConfig,
   HardhatConfig,
@@ -15,7 +14,6 @@ import {
   EIP1193Provider,
 } from "hardhat/types";
 import "./type-extensions";
-import { DefenderSignerProvider } from "./DefenderSignerProvider";
 import { GcpKmsSignerProvider } from "./GcpKmsSignerProvider";
 import { log } from "../utils/log-util";
 
@@ -25,13 +23,6 @@ const buildSignerProvider = (
   chainId: number
 ) => {
   switch (signerConfig.id) {
-    case "defender":
-      log(`Signer: ${signerConfig.id}`);
-      return new DefenderSignerProvider(
-        eip1193Provider,
-        signerConfig as DefenderSignerConfig,
-        chainId
-      );
     case "googleKms":
       log(`Signer: ${signerConfig.id}`);
       return new GcpKmsSignerProvider(
