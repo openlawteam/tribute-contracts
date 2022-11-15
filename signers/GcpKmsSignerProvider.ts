@@ -9,7 +9,7 @@ import {
   EIP1193Provider,
   RequestArguments,
 } from "hardhat/types";
-import { BigNumber, ethers } from "ethers";
+import { ethers } from "ethers";
 import { numberToHex } from "web3-utils";
 import { GcpKmsSigner } from "ethers-gcp-kms-signer";
 import {
