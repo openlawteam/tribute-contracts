@@ -79,7 +79,7 @@
     "ethereum-waffle": "^3.4.0",
     "ethereumjs-util": "^7.0.5",
     "ethers": "^5.5.4",
-    "ethers-gcp-kms-signer": "1.1.4",
+    "ethers-gcp-kms-signer": "1.1.5",
     "ganache-cli": "^6.12.2",
     "hardhat": "2.8.2",
     "hardhat-contract-sizer": "^2.4.0",
