@@ -17,6 +17,7 @@ const disabled: Array<string> = [
   "WETH",
   "ProxTokenContract",
   "ERC20MinterContract",
+  // Adapters, Extensions and Factories disabled by default
   "NFTCollectionFactory",
   "InternalTokenVestingExtensionFactory",
   "ERC1271ExtensionFactory",
@@ -33,7 +34,7 @@ const disabled: Array<string> = [
   "TributeContract",
   "TributeNFTContract",
   "LendNFTContract",
-  "ERC20TransferStrategy"
+  "ERC20TransferStrategy",
 ];
 
 export const contracts: Array<ContractConfig> = defaultContracts.map((c) => {

@@ -13,12 +13,28 @@ const disabled: Array<String> = [
   "ProxToken",
   "ERC20Minter",
   "MockDao",
-  // Adapters disabled for Muse0 DAO Deployment
-  "RagequitContract",
+  "Multicall",
+  "WETH",
+  "ProxTokenContract",
+  "ERC20MinterContract",
+  // Adapters, Extensions and Factories disabled by default
+  "NFTCollectionFactory",
+  "InternalTokenVestingExtensionFactory",
+  "ERC1271ExtensionFactory",
+  "ExecutorExtensionFactory",
+  "ERC1155TokenCollectionFactory",
+  "NFTExtension",
+  "InternalTokenVestingExtension",
+  "ERC1271Extension",
+  "ExecutorExtension",
+  "ERC1155TokenExtension",
+  "ERC1155AdapterContract",
   "FinancingContract",
   "OnboardingContract",
   "TributeContract",
-  "DistributeContract",
+  "TributeNFTContract",
+  "LendNFTContract",
+  "ERC20TransferStrategy",
 ];
 
 export const contracts: Array<ContractConfig> = defaultContracts.map((c) => {
