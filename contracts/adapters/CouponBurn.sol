@@ -148,12 +148,22 @@ contract CouponBurnContract is Reimbursable, AdapterGuard, Signatures {
         address tokenAddressToBurn = dao.getAddressConfiguration(
             TokenAddrToBurn
         );
-        bank.subtractFromBalance(
-            dao,
-            authorizedMember,
-            tokenAddressToBurn,
-            amount
-        );
+
+        try
+            bank.subtractFromBalance(
+                dao,
+                authorizedMember,
+                tokenAddressToBurn,
+                amount
+            )
+        {} catch {
+            require(bank.dao() == dao, "bank not configured");
+            bank.subtractFromBalance(
+                authorizedMember,
+                tokenAddressToBurn,
+                amount
+            );
+        }
 
         //slither-disable-next-line reentrancy-events
         emit CouponRedeemed(address(dao), nonce, authorizedMember, amount);
