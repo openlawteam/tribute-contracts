@@ -112,10 +112,7 @@ describe("Adapter - Coupon Burn", () => {
       couponBurn.address,
       chainId
     );
-    let solHash = await couponBurn.hashCouponMessage(
-      dao.address,
-      couponData
-    );
+    let solHash = await couponBurn.hashCouponMessage(dao.address, couponData);
     expect(jsHash).equal(solHash);
 
     var signature = signerUtil(
@@ -146,13 +143,7 @@ describe("Adapter - Coupon Burn", () => {
     balance = await bank.balanceOf(otherAccount, UNITS);
     expect(balance.toString()).equal("15");
 
-    await couponBurn.redeemCoupon(
-      dao.address,
-      otherAccount,
-      10,
-      1,
-      signature
-    );
+    await couponBurn.redeemCoupon(dao.address, otherAccount, 10, 1, signature);
 
     const daoOwnerUnits = await bank.balanceOf(daoOwner, UNITS);
     const otherAccountUnits = await bank.balanceOf(otherAccount, UNITS);
@@ -190,12 +181,7 @@ describe("Adapter - Coupon Burn", () => {
       1
     );
 
-    var signature = signerUtil(
-      couponData,
-      dao.address,
-      couponBurn.address,
-      1
-    );
+    var signature = signerUtil(couponData, dao.address, couponBurn.address, 1);
 
     const isValid = await couponBurn.isValidSignature(
       signer.address,
@@ -209,13 +195,7 @@ describe("Adapter - Coupon Burn", () => {
     expect(balance.toString()).equal("0");
 
     await expect(
-      couponBurn.redeemCoupon(
-        dao.address,
-        otherAccount,
-        100,
-        1,
-        signature
-      )
+      couponBurn.redeemCoupon(dao.address, otherAccount, 100, 1, signature)
     ).to.be.revertedWith("invalid sig");
 
     const daoOwnerUnits = await bank.balanceOf(daoOwner, UNITS);
@@ -256,12 +236,7 @@ describe("Adapter - Coupon Burn", () => {
       1
     );
 
-    var signature = signerUtil(
-      couponData,
-      dao.address,
-      couponBurn.address,
-      1
-    );
+    var signature = signerUtil(couponData, dao.address, couponBurn.address, 1);
 
     const isValid = await couponBurn.isValidSignature(
       signer.address,
