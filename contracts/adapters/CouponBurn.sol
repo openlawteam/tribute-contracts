@@ -101,7 +101,7 @@ contract CouponBurnContract is Reimbursable, AdapterGuard, Signatures {
     /**
      * @notice Redeems a coupon to burn tokens
      * @param dao is the DAO instance to be configured
-     * @param authorizedMember is the address that this coupon authorized to burn tokens 
+     * @param authorizedMember is the address that this coupon authorized to burn tokens
      * @param amount is the amount of units that this member will burn
      * @param nonce is a unique identifier for this coupon request
      * @param signature is message signature for verification

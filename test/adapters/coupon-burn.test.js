@@ -338,7 +338,7 @@ describe("Adapter - Coupon Burn", () => {
       couponBurn.redeemCoupon(dao.address, daoOwner, 10, 1, signature)
     ).to.be.revertedWith("coupon already redeemed");
   });
-  
+
   it("should not be possible to send ETH to the adapter via receive function", async () => {
     const adapter = this.adapters.couponBurn;
     await expect(
