@@ -261,6 +261,84 @@ describe("Adapter - Coupon Burn", () => {
     await checkBalance(bank, GUILD, ETH_TOKEN, toBN("0"));
   });
 
+  it("should not be possible to replay coupon", async () => {
+    const otherAccount = accounts[2];
+    const signerUtil = SigUtilSigner(signer.privKey);
+
+    const dao = this.dao;
+    const bank = this.extensions.bankExt;
+
+    let signerAddr = await dao.getAddressConfiguration(
+      sha3("coupon-onboarding.signerAddress")
+    );
+    expect(signerAddr).equal(signer.address);
+
+    const couponBurn = this.adapters.couponBurn;
+
+    const couponData = {
+      type: "coupon",
+      authorizedMember: otherAccount,
+      amount: 5,
+      nonce: 1,
+    };
+
+    const couponData2 = {
+      type: "coupon",
+      authorizedMember: otherAccount,
+      amount: 15,
+      nonce: 1,
+    };
+
+    let jsHash = getMessageERC712Hash(
+      couponData,
+      dao.address,
+      couponBurn.address,
+      chainId
+    );
+    let solHash = await couponBurn.hashCouponMessage(dao.address, couponData);
+    expect(jsHash).equal(solHash);
+
+    var signature = signerUtil(
+      couponData,
+      dao.address,
+      couponBurn.address,
+      chainId
+    );
+
+    var signatureOnboarding = signerUtil(
+      couponData2,
+      dao.address,
+      this.adapters.couponOnboarding.address,
+      chainId
+    );
+
+    let balance = await bank.balanceOf(otherAccount, UNITS);
+    expect(balance.toString()).equal("0");
+
+    await this.adapters.couponOnboarding.redeemCoupon(
+      dao.address,
+      otherAccount,
+      15,
+      1,
+      signatureOnboarding
+    );
+
+    balance = await bank.balanceOf(otherAccount, UNITS);
+    expect(balance.toString()).equal("15");
+
+    await couponBurn.redeemCoupon(dao.address, otherAccount, 5, 1, signature);
+
+    const daoOwnerUnits = await bank.balanceOf(daoOwner, UNITS);
+    const otherAccountUnits = await bank.balanceOf(otherAccount, UNITS);
+
+    expect(daoOwnerUnits.toString()).equal("1");
+    expect(otherAccountUnits.toString()).equal("10");
+
+    await expect(
+      couponBurn.redeemCoupon(dao.address, daoOwner, 10, 1, signature)
+    ).to.be.revertedWith("coupon already redeemed");
+  });
+  
   it("should not be possible to send ETH to the adapter via receive function", async () => {
     const adapter = this.adapters.couponBurn;
     await expect(
