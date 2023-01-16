@@ -207,7 +207,7 @@ describe("Adapter - Coupon Burn", () => {
     await checkBalance(bank, GUILD, ETH_TOKEN, toBN("0"));
   });
 
-  it("should not be possible to join a DAO with an invalid coupon", async () => {
+  it("should not be possible to burn units for a member that doesn't match the coupon value", async () => {
     const otherAccount = accounts[2];
 
     const signerUtil = SigUtilSigner(signer.privKey);
