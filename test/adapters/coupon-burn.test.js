@@ -78,7 +78,7 @@ describe("Adapter - Coupon Burn", () => {
     this.snapshotId = await takeChainSnapshot();
   });
 
-  it("should be possible to join a DAO with a valid coupon", async () => {
+  it("should be possible to burn units with a valid coupon", async () => {
     const otherAccount = accounts[2];
     const signerUtil = SigUtilSigner(signer.privKey);
 
