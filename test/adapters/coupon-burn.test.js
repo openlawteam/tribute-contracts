@@ -152,7 +152,7 @@ describe("Adapter - Coupon Burn", () => {
     expect(otherAccountUnits.toString()).equal("5");
   });
 
-  it("should not be possible to join a DAO with mismatched coupon values", async () => {
+  it("should not be possible to burn units with an amount different than the coupon value", async () => {
     const otherAccount = accounts[2];
 
     const signerUtil = SigUtilSigner(signer.privKey);
