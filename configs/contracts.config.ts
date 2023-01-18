@@ -922,6 +922,31 @@ export const contracts: Array<ContractConfig> = [
     ],
   },
   {
+    id: adaptersIdsMap.COUPON_BURN_ADAPTER,
+    name: "CouponBurnContract",
+    alias: "couponBurn",
+    path: "../../contracts/adapters/CouponBurnContract",
+    enabled: true,
+    version: "1.0.0",
+    type: ContractType.Adapter,
+    acls: {
+      dao: [],
+      extensions: {
+        [extensionsIdsMap.BANK_EXT]: [
+          bankExtensionAclFlagsMap.SUB_FROM_BALANCE,
+        ],
+      },
+    },
+    daoConfigs: [
+      //config to mint coupons
+      [
+        "daoAddress",
+        "couponCreatorAddress",
+        "unitTokenToMint"
+      ],
+    ],
+  },
+  {
     id: adaptersIdsMap.KYC_ONBOARDING_ADAPTER,
     name: "KycOnboardingContract",
     alias: "kycOnboarding",
