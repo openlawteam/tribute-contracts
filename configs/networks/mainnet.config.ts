@@ -34,7 +34,6 @@ const disabled: Array<String> = [
   "TributeContract",
   "TributeNFTContract",
   "LendNFTContract",
-  "ERC20TransferStrategy",
 ];
 
 export const contracts: Array<ContractConfig> = defaultContracts.map((c) => {
