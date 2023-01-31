@@ -403,7 +403,7 @@ contract BankExtension is IExtension, ERC165 {
         address,
         address,
         uint256
-    ) external pure {
+    ) external {
         revert("not implemented");
     }
 
@@ -412,7 +412,7 @@ contract BankExtension is IExtension, ERC165 {
         address,
         address,
         uint256
-    ) external pure {
+    ) external {
         revert("not implemented");
     }
 
