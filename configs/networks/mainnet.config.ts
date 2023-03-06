@@ -19,12 +19,10 @@ const disabled: Array<String> = [
   "ERC20MinterContract",
   // Adapters, Extensions and Factories disabled by default
   "NFTCollectionFactory",
-  "InternalTokenVestingExtensionFactory",
   "ERC1271ExtensionFactory",
   "ExecutorExtensionFactory",
   "ERC1155TokenCollectionFactory",
   "NFTExtension",
-  "InternalTokenVestingExtension",
   "ERC1271Extension",
   "ExecutorExtension",
   "ERC1155TokenExtension",
