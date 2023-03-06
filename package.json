@@ -95,7 +95,7 @@
     "rimraf": "^3.0.2",
     "solhint": "3.3.6",
     "solidity-coverage": "^0.7.16",
-    "truffle": "5.4.29",
+    "truffle": "5.7.9",
     "truffle-abi": "1.0.3",
     "truffle-plugin-verify": "^0.5.8",
     "ts-generator": "^0.1.1",
