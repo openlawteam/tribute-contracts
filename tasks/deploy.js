@@ -12,6 +12,7 @@ const {
   numberOfUnits,
   maxAmount,
   maxUnits,
+  waitTx,
 } = require("../utils/contract-util");
 const pkgJson = require("../package.json");
 const { deployDao } = require("../utils/deployment-util");
@@ -55,8 +56,6 @@ task("deploy", "Deploy the list of contracts", async (args, hre) => {
     accounts,
   });
 
-  info(`\n Deployment completed with success.\n`);
-
   const {
     dao,
     factories,
@@ -68,7 +67,11 @@ task("deploy", "Deploy the list of contracts", async (args, hre) => {
   } = result;
 
   if (dao) {
-    await dao.finalizeDao();
+    info(`\n Finalize DAO creation...\n`);
+    const tx = await waitTx(dao.finalizeDao());
+    info(`\n DAO finalized @ blockNumber: ${tx.blockNumber}\n`);
+
+    info(`\n Deployment completed with success.\n`);
     const addresses = {
       // The addresses of all identity contracts
       identities: {
