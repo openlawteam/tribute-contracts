@@ -280,7 +280,7 @@ contract OffchainVotingHelperContract {
             return IVoting.VotingState.GRACE_PERIOD;
         }
 
-        // If the vote has started but the voting period has not passed yet, it's in progress
+        // If the vote has started but the grace period has not finished yet, it's in GRACE_PERIOD
         // slither-disable-next-line timestamp
         if (block.timestamp < gracePeriodStartingTime + gracePeriod) {
             return IVoting.VotingState.GRACE_PERIOD;
