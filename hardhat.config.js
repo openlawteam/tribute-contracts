@@ -54,6 +54,17 @@ module.exports = {
       },
       signerId: process.env.SIGNER || undefined,
     },
+    sepolia: {
+      url: process.env.ETH_NODE_URL,
+      network_id: 11155111,
+      chainId: 11155111,
+      skipDryRun: true,
+      accounts: {
+        mnemonic: process.env.WALLET_MNEMONIC || "",
+        count: 10,
+      },
+      signerId: process.env.SIGNER || undefined,
+    },
     harmonytest: {
       url: process.env.ETH_NODE_URL,
       network_id: 1666700000,
