@@ -51,6 +51,7 @@ export class GcpKmsSignerProvider extends ProviderWrapper {
       const [txRequest] = validateParams(params, rpcTransactionRequest);
       txRequest.chainId = rpcQuantityToBN(numberToHex(this.chainId));
       if (txRequest.nonce === undefined) {
+        // @ts-ignore
         txRequest.nonce = await this._getNonce(txRequest.from);
       }
 
@@ -77,7 +78,9 @@ export class GcpKmsSignerProvider extends ProviderWrapper {
           //   accessList: txRequest.accessList ? txRequest.accessList : undefined,
 
           // EIP-1559; Type 2
+          // @ts-ignore
           maxPriorityFeePerGas: numberToHex(txRequest.maxPriorityFeePerGas!),
+          // @ts-ignore
           maxFeePerGas: numberToHex(txRequest.maxFeePerGas!),
         });
 
@@ -112,7 +115,7 @@ export class GcpKmsSignerProvider extends ProviderWrapper {
       method: "eth_getTransactionCount",
       params: [bufferToHex(address), "pending"],
     })) as string;
-
+    // @ts-ignore
     return rpcQuantityToBN(response);
   }
 }
