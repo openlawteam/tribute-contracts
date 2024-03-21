@@ -50,6 +50,11 @@ module.exports = {
       network_id: 1,
       skipDryRun: true,
     },
+    gnosis: {
+      provider: getNetworkProvider,
+      network_id: 100,
+      skipDryRun: true,
+    },
     harmony: {
       provider: getNetworkProvider,
       network_id: 1666600000,

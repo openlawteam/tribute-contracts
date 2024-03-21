@@ -125,6 +125,17 @@ module.exports = {
       },
       signerId: process.env.SIGNER || undefined,
     },
+    gnosis: {
+      url: process.env.ETH_NODE_URL,
+      network_id: 100,
+      chainId: 100,
+      skipDryRun: true,
+      accounts: {
+        mnemonic: process.env.WALLET_MNEMONIC || "",
+        count: 10,
+      },
+      signerId: process.env.SIGNER || undefined,
+    },
     harmony: {
       url: process.env.ETH_NODE_URL,
       network_id: 1666600000,
@@ -204,6 +215,7 @@ module.exports = {
     apiKey: {
       goerli: process.env.ETHERSCAN_API_KEY,
       sepolia: process.env.ETHERSCAN_API_KEY,
+      gnosis: process.env.ETHERSCAN_API_KEY,
       mainnet: process.env.ETHERSCAN_API_KEY,
     },
   },
