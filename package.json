@@ -94,7 +94,7 @@
     "prettier-plugin-solidity": "^1.0.0-beta.19",
     "rimraf": "3.0.2",
     "solhint": "3.3.6",
-    "solidity-coverage": "0.7.16",
+    "solidity-coverage": "^0.7.22",
     "truffle": "5.11.5",
     "truffle-abi": "1.0.3",
     "truffle-plugin-verify": "0.6.7",

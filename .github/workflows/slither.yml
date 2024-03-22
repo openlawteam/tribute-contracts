@@ -35,7 +35,7 @@ jobs:
           ssh-private-key: ${{ secrets.SSH_PRIVATE_KEY }}
 
       - name: Install NPM dependencies
-        run: npm ci --omit=optional
+        run: npm ci
 
       - name: Compile Contracts
         run: npm run compile
