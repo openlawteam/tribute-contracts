@@ -40,9 +40,19 @@ module.exports = {
       network_id: 5,
       skipDryRun: true,
     },
+    sepolia: {
+      provider: getNetworkProvider,
+      network_id: 11155111,
+      skipDryRun: true,
+    },
     mainnet: {
       provider: getNetworkProvider,
       network_id: 1,
+      skipDryRun: true,
+    },
+    gnosis: {
+      provider: getNetworkProvider,
+      network_id: 100,
       skipDryRun: true,
     },
     harmony: {

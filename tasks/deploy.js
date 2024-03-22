@@ -185,6 +185,74 @@ const deployGoerliDao = async ({
   });
 };
 
+const deploySepoliaDao = async ({
+  deployFunction,
+  attachFunction,
+  contractImports,
+  contractConfigs,
+}) => {
+  return await deployDao({
+    ...contractImports,
+    contractConfigs,
+    deployFunction,
+    attachFunction,
+    maxAmount: getOptionalEnvVar("MAX_AMOUNT", maxAmount),
+    unitPrice: getOptionalEnvVar("UNIT_PRICE", toWei("0.1")),
+    nbUnits: getOptionalEnvVar("UNITS_PER_CHUNK", toBN("100000")),
+    maxUnits: getOptionalEnvVar("MAX_UNITS", maxUnits),
+    tokenAddr: getOptionalEnvVar("PAYMENT_TOKEN_ADDR", ETH_TOKEN),
+    erc20TokenName: getEnvVar("ERC20_TOKEN_NAME"),
+    erc20TokenSymbol: getEnvVar("ERC20_TOKEN_SYMBOL"),
+    erc20TokenDecimals: getEnvVar("ERC20_TOKEN_DECIMALS"),
+    erc20TokenAddress: UNITS,
+    maxChunks: getOptionalEnvVar("MAX_CHUNKS", maximumChunks),
+    votingPeriod: getOptionalEnvVar("VOTING_PERIOD_SECONDS", 600), // 600 secs = 10 min
+    gracePeriod: getOptionalEnvVar("GRACE_PERIOD_SECONDS", 300), // 300 secs = 5 min
+    offchainVoting: true,
+    finalize: false,
+    maxExternalTokens: 100,
+    managerSignerAddress: getOptionalEnvVar(
+      "MANAGER_COUPON_SIGNER_ADDR",
+      getEnvVar("DAO_OWNER_ADDR")
+    ),
+    couponCreatorAddress: getOptionalEnvVar(
+      "COUPON_CREATOR_ADDR",
+      getEnvVar("DAO_OWNER_ADDR")
+    ),
+    kycSignerAddress: getOptionalEnvVar(
+      "KYC_SIGNER_ADDR",
+      getEnvVar("DAO_OWNER_ADDR")
+    ),
+    kycMaxMembers: getOptionalEnvVar("KYC_MAX_MEMBERS", toBN(1000)),
+    kycCanTopUp: getOptionalEnvVar("KYC_CAN_TOP_UP", 0),
+    kycFundTargetAddress: getOptionalEnvVar(
+      "KYC_MULTISIG_FUND_ADDR",
+      ZERO_ADDRESS
+    ),
+    daoName: getEnvVar("DAO_NAME"),
+    owner: getEnvVar("DAO_OWNER_ADDR"),
+    offchainAdmin: getOptionalEnvVar(
+      "OFFCHAIN_ADMIN_ADDR",
+      getEnvVar("DAO_OWNER_ADDR")
+    ),
+    deployTestTokens: false,
+    supplyTestToken1: 1000000,
+    supplyTestToken2: 1000000,
+    supplyPixelNFT: 100,
+    supplyOLToken: toBN("1000000000000000000000000"),
+    erc1155TestTokenUri: "1155 test token",
+    gasPriceLimit: getOptionalEnvVar("GAS_PRICE_LIMIT", 0 /* disabled */),
+    spendLimitPeriod: getOptionalEnvVar("SPEND_LIMIT_PERIOD", 0 /* disabled */),
+    spendLimitEth: getOptionalEnvVar("SPEND_LIMIT_ETH", 0 /* disabled */),
+    gelato: getOptionalEnvVar(
+      "GELATO_ADDR",
+      "0xDe6ab16a4015c680daab58021815D09ddB57db8E"
+    ),
+    weth: "0xB4FBF271143F4FBf7B91A5ded31805e42b2208d6",
+    maintainerTokenAddress: getOptionalEnvVar("MAINTAINER_TOKEN_ADDR", UNITS),
+  });
+};
+
 const deployMainnetDao = async ({
   deployFunction,
   contractImports,
@@ -235,6 +303,67 @@ const deployMainnetDao = async ({
       getEnvVar("DAO_OWNER_ADDR")
     ),
     weth: "0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2",
+    gasPriceLimit: getOptionalEnvVar("GAS_PRICE_LIMIT", 0 /* disabled */),
+    spendLimitPeriod: getOptionalEnvVar("SPEND_LIMIT_PERIOD", 0 /* disabled */),
+    spendLimitEth: getOptionalEnvVar("SPEND_LIMIT_ETH", 0 /* disabled */),
+    gelato: getOptionalEnvVar(
+      "GELATO_ADDR",
+      "0xDe6ab16a4015c680daab58021815D09ddB57db8E"
+    ),
+    maintainerTokenAddress: getOptionalEnvVar("MAINTAINER_TOKEN_ADDR", UNITS),
+  });
+};
+
+const deployGnosisDao = async ({
+  deployFunction,
+  contractImports,
+  contractConfigs,
+}) => {
+  return await deployDao({
+    ...contractImports,
+    contractConfigs,
+    deployFunction,
+    maxAmount: getOptionalEnvVar("MAX_AMOUNT", maxAmount),
+    unitPrice: getOptionalEnvVar("UNIT_PRICE", toWei("0.1")),
+    nbUnits: getOptionalEnvVar("UNITS_PER_CHUNK", toBN("100000")),
+    maxUnits: getOptionalEnvVar("MAX_UNITS", maxUnits),
+    tokenAddr: getOptionalEnvVar("PAYMENT_TOKEN_ADDR", ETH_TOKEN),
+    erc20TokenName: getEnvVar("ERC20_TOKEN_NAME"),
+    erc20TokenSymbol: getEnvVar("ERC20_TOKEN_SYMBOL"),
+    erc20TokenDecimals: getEnvVar("ERC20_TOKEN_DECIMALS"),
+    erc20TokenAddress: UNITS,
+    votingPeriod: getOptionalEnvVar("VOTING_PERIOD_SECONDS", 600), // 600 secs = 10 min
+    gracePeriod: getOptionalEnvVar("GRACE_PERIOD_SECONDS", 300), // 300 secs = 5 min
+    offchainVoting: true,
+    deployTestTokens: false,
+    finalize: false,
+    maxExternalTokens: 100,
+    managerSignerAddress: getOptionalEnvVar(
+      "MANAGER_COUPON_SIGNER_ADDR",
+      getEnvVar("DAO_OWNER_ADDR")
+    ),
+    couponCreatorAddress: getOptionalEnvVar(
+      "COUPON_CREATOR_ADDR",
+      getEnvVar("DAO_OWNER_ADDR")
+    ),
+    kycSignerAddress: getOptionalEnvVar(
+      "KYC_SIGNER_ADDR",
+      getEnvVar("DAO_OWNER_ADDR")
+    ),
+    kycMaxMembers: getOptionalEnvVar("KYC_MAX_MEMBERS", toBN("100")),
+    kycCanTopUp: getOptionalEnvVar("KYC_CAN_TOP_UP", 0),
+    kycFundTargetAddress: getOptionalEnvVar(
+      "KYC_MULTISIG_FUND_ADDR",
+      ZERO_ADDRESS
+    ),
+    maxChunks: getOptionalEnvVar("MAX_CHUNKS", maximumChunks),
+    daoName: getEnvVar("DAO_NAME"),
+    owner: getEnvVar("DAO_OWNER_ADDR"),
+    offchainAdmin: getOptionalEnvVar(
+      "OFFCHAIN_ADMIN_ADDR",
+      getEnvVar("DAO_OWNER_ADDR")
+    ),
+    weth: "0x6A023CCd1ff6F2045C3309768eAd9E68F978f6e1",
     gasPriceLimit: getOptionalEnvVar("GAS_PRICE_LIMIT", 0 /* disabled */),
     spendLimitPeriod: getOptionalEnvVar("SPEND_LIMIT_PERIOD", 0 /* disabled */),
     spendLimitEth: getOptionalEnvVar("SPEND_LIMIT_ETH", 0 /* disabled */),
@@ -784,7 +913,9 @@ const saveDeployedContracts = (network, addresses) => {
 
 const DeploymentActions = {
   mainnet: deployMainnetDao,
+  gnosis: deployGnosisDao,
   goerli: deployGoerliDao,
+  sepolia: deploySepoliaDao,
   ganache: deployGanacheDao,
   harmony: deployHarmonyDao,
   harmonytest: deployHarmonyTestDao,
