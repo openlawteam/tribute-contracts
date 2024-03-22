@@ -182,7 +182,8 @@ const deployAndConfigureCollection = async (
   return { proxy };
 };
 
-describe("nft test", () => {
+// We are not using TributeERC721 contract anymore.
+describe.skip("nft test", () => {
   let accounts, daoOwner, daoAddress;
 
   before("deploy dao", async () => {
