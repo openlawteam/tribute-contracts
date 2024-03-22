@@ -92,11 +92,10 @@ contract SignaturesContract is ISignatures, AdapterGuard, Reimbursable {
      * @param dao The DAO Address.
      * @param proposalId The proposal id.
      */
-    function processProposal(DaoRegistry dao, bytes32 proposalId)
-        external
-        override
-        reimbursable(dao)
-    {
+    function processProposal(
+        DaoRegistry dao,
+        bytes32 proposalId
+    ) external override reimbursable(dao) {
         ProposalDetails memory details = proposals[address(dao)][proposalId];
 
         IVoting votingContract = IVoting(dao.votingAdapter(proposalId));

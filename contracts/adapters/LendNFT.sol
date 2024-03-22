@@ -81,10 +81,10 @@ contract LendNFTContract is
      * @param dao The DAO address.
      * @param token The token address that will be configured as internal token.
      */
-    function configureDao(DaoRegistry dao, address token)
-        external
-        onlyAdapter(dao)
-    {
+    function configureDao(
+        DaoRegistry dao,
+        address token
+    ) external onlyAdapter(dao) {
         BankExtension(dao.getExtensionAddress(DaoHelper.BANK))
             .registerPotentialNewInternalToken(dao, token);
     }
@@ -162,7 +162,10 @@ contract LendNFTContract is
     // The function can be called only from the _onERC1155Received & _onERC721Received functions
     // Which are protected against reentrancy attacks.
     //slither-disable-next-line reentrancy-no-eth
-    function _processProposal(DaoRegistry dao, bytes32 proposalId)
+    function _processProposal(
+        DaoRegistry dao,
+        bytes32 proposalId
+    )
         internal
         returns (
             ProposalDetails storage proposal,
@@ -235,10 +238,10 @@ contract LendNFTContract is
      * @notice Sends the NFT back to the original owner.
      */
     // slither-disable-next-line reentrancy-benign
-    function sendNFTBack(DaoRegistry dao, bytes32 proposalId)
-        external
-        reimbursable(dao)
-    {
+    function sendNFTBack(
+        DaoRegistry dao,
+        bytes32 proposalId
+    ) external reimbursable(dao) {
         ProposalDetails storage proposal = proposals[address(dao)][proposalId];
         require(proposal.lendingStart > 0, "lending not started");
         require(!proposal.sentBack, "already sent back");
@@ -424,12 +427,9 @@ contract LendNFTContract is
      * @notice Supports ERC-165 & ERC-1155 interfaces only.
      * @dev https://github.com/ethereum/EIPs/blob/master/EIPS/eip-1155.md
      */
-    function supportsInterface(bytes4 interfaceID)
-        external
-        pure
-        override
-        returns (bool)
-    {
+    function supportsInterface(
+        bytes4 interfaceID
+    ) external pure override returns (bool) {
         return
             interfaceID == this.supportsInterface.selector ||
             interfaceID == this.onERC1155Received.selector ||

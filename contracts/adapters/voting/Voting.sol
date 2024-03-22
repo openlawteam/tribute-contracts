@@ -180,12 +180,10 @@ contract VotingContract is IVoting, MemberGuard, AdapterGuard, Reimbursable {
      * 3: not pass
      * 4: in progress
      */
-    function voteResult(DaoRegistry dao, bytes32 proposalId)
-        external
-        view
-        override
-        returns (VotingState state)
-    {
+    function voteResult(
+        DaoRegistry dao,
+        bytes32 proposalId
+    ) external view override returns (VotingState state) {
         Voting storage vote = votes[address(dao)][proposalId];
         if (vote.startingTime == 0) {
             return VotingState.NOT_STARTED;

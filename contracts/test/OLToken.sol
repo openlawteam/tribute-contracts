@@ -38,11 +38,10 @@ contract OLToken is ERC20 {
      * reads the current balance, but ideally it would have an internal storage to track the
      * historical balances of each token holder.
      */
-    function getPriorAmount(address account, uint256)
-        public
-        view
-        returns (uint256)
-    {
+    function getPriorAmount(
+        address account,
+        uint256
+    ) public view returns (uint256) {
         return balanceOf(account);
     }
 }

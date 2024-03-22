@@ -165,11 +165,10 @@ contract ERC20Extension is AdapterGuard, IExtension, IERC20 {
     /**
      * @dev Returns the amount of tokens owned by `account` considering the snapshot.
      */
-    function getPriorAmount(address account, uint256 snapshot)
-        external
-        view
-        returns (uint256)
-    {
+    function getPriorAmount(
+        address account,
+        uint256 snapshot
+    ) external view returns (uint256) {
         BankExtension bank = BankExtension(
             dao.getExtensionAddress(DaoHelper.BANK)
         );
@@ -183,12 +182,10 @@ contract ERC20Extension is AdapterGuard, IExtension, IERC20 {
      *
      * This value changes when {approve} or {transferFrom} are called.
      */
-    function allowance(address owner, address spender)
-        public
-        view
-        override
-        returns (uint256)
-    {
+    function allowance(
+        address owner,
+        address spender
+    ) public view override returns (uint256) {
         return _allowances[owner][spender];
     }
 
@@ -201,12 +198,10 @@ contract ERC20Extension is AdapterGuard, IExtension, IERC20 {
      * Emits an {Approval} event.
      */
     // slither-disable-next-line reentrancy-benign
-    function approve(address spender, uint256 amount)
-        public
-        override
-        reentrancyGuard(dao)
-        returns (bool)
-    {
+    function approve(
+        address spender,
+        uint256 amount
+    ) public override reentrancyGuard(dao) returns (bool) {
         address senderAddr = dao.getAddressIfDelegated(msg.sender);
         require(
             DaoHelper.isNotZeroAddress(senderAddr),
@@ -235,11 +230,10 @@ contract ERC20Extension is AdapterGuard, IExtension, IERC20 {
      *
      * Emits a {Transfer} event.
      */
-    function transfer(address recipient, uint256 amount)
-        public
-        override
-        returns (bool)
-    {
+    function transfer(
+        address recipient,
+        uint256 amount
+    ) public override returns (bool) {
         return
             transferFrom(
                 dao.getAddressIfDelegated(msg.sender),
@@ -334,11 +328,9 @@ contract ERC20Extension is AdapterGuard, IExtension, IERC20 {
         return false;
     }
 
-    function bytes32ToString(bytes32 _bytes32)
-        internal
-        pure
-        returns (string memory)
-    {
+    function bytes32ToString(
+        bytes32 _bytes32
+    ) internal pure returns (string memory) {
         uint8 i = 0;
         while (i < 32 && _bytes32[i] != 0) {
             i++;

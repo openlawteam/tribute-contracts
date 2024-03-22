@@ -81,11 +81,10 @@ contract CouponBurnContract is Reimbursable, AdapterGuard, Signatures {
      * @param dao is the DAO instance to be configured
      * @param coupon is the coupon to hash
      */
-    function hashCouponMessage(DaoRegistry dao, Coupon memory coupon)
-        public
-        view
-        returns (bytes32)
-    {
+    function hashCouponMessage(
+        DaoRegistry dao,
+        Coupon memory coupon
+    ) public view returns (bytes32) {
         bytes32 message = keccak256(
             abi.encode(
                 COUPON_MESSAGE_TYPEHASH,

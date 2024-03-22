@@ -85,12 +85,10 @@ contract ReimbursementContract is IReimbursement, AdapterGuard, GelatoRelay {
      * @param dao the dao that should reimburse
      * @param gasLeft the maximum gas usable in this transaction
      */
-    function shouldReimburse(DaoRegistry dao, uint256 gasLeft)
-        external
-        view
-        override
-        returns (bool, uint256)
-    {
+    function shouldReimburse(
+        DaoRegistry dao,
+        uint256 gasLeft
+    ) external view override returns (bool, uint256) {
         //if it is a gelato call, do nothing as it will be handled somewhere else
         if (msg.sender == address(this)) {
             return (false, 0);

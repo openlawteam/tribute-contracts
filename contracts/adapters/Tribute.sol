@@ -70,10 +70,10 @@ contract TributeContract is Reimbursable, AdapterGuard {
      * @param dao The DAO address.
      * @param tokenAddrToMint The internal token address to be registered with the DAO Bank.
      */
-    function configureDao(DaoRegistry dao, address tokenAddrToMint)
-        external
-        onlyAdapter(dao)
-    {
+    function configureDao(
+        DaoRegistry dao,
+        address tokenAddrToMint
+    ) external onlyAdapter(dao) {
         BankExtension bank = BankExtension(
             dao.getExtensionAddress(DaoHelper.BANK)
         );
@@ -152,10 +152,10 @@ contract TributeContract is Reimbursable, AdapterGuard {
      * @param dao The DAO address.
      * @param proposalId The proposal id.
      */
-    function processProposal(DaoRegistry dao, bytes32 proposalId)
-        external
-        reimbursable(dao)
-    {
+    function processProposal(
+        DaoRegistry dao,
+        bytes32 proposalId
+    ) external reimbursable(dao) {
         ProposalDetails memory proposal = proposals[address(dao)][proposalId];
         require(proposal.id == proposalId, "proposal does not exist");
         require(

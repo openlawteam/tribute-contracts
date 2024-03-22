@@ -83,11 +83,9 @@ contract DaoFactory is CloneFactory {
      * @return The address of a DAO, given its name.
      * @param daoName Name of the DAO to be searched.
      */
-    function getDaoAddress(string calldata daoName)
-        external
-        view
-        returns (address)
-    {
+    function getDaoAddress(
+        string calldata daoName
+    ) external view returns (address) {
         return addresses[keccak256(abi.encode(daoName))];
     }
 
@@ -99,9 +97,10 @@ contract DaoFactory is CloneFactory {
      * @param dao DaoRegistry to have adapters added to.
      * @param adapters Adapter structs to be added to the DAO.
      */
-    function addAdapters(DaoRegistry dao, Adapter[] calldata adapters)
-        external
-    {
+    function addAdapters(
+        DaoRegistry dao,
+        Adapter[] calldata adapters
+    ) external {
         require(dao.isMember(msg.sender), "not member");
         //Registring Adapters
         require(

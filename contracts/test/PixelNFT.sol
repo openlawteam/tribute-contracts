@@ -61,11 +61,7 @@ contract PixelNFT is ERC721 {
         _dimension = dimension;
     }
 
-    function mintPixel(
-        address recipient,
-        uint32 x,
-        uint32 y
-    ) external {
+    function mintPixel(address recipient, uint32 x, uint32 y) external {
         require(
             x < _dimension && y < _dimension,
             "maximum amount of pixels exceeded"

@@ -184,11 +184,10 @@ contract KycOnboardingContract is AdapterGuard, MemberGuard, Signatures {
      * @param dao is the DAO instance to be configured
      * @param coupon is the coupon to hash
      */
-    function hashCouponMessage(DaoRegistry dao, Coupon memory coupon)
-        public
-        view
-        returns (bytes32)
-    {
+    function hashCouponMessage(
+        DaoRegistry dao,
+        Coupon memory coupon
+    ) public view returns (bytes32) {
         bytes32 message = keccak256(
             abi.encode(
                 COUPON_MESSAGE_TYPEHASH,
@@ -449,22 +448,20 @@ contract KycOnboardingContract is AdapterGuard, MemberGuard, Signatures {
      * @param tokenAddrToMint The address to encode.
      * @param key The key to encode.
      */
-    function _configKey(address tokenAddrToMint, bytes32 key)
-        internal
-        pure
-        returns (bytes32)
-    {
+    function _configKey(
+        address tokenAddrToMint,
+        bytes32 key
+    ) internal pure returns (bytes32) {
         return keccak256(abi.encode(tokenAddrToMint, key));
     }
 
     /**
      * @notice Returns if a dao allows kyc top ups.
      */
-    function _daoCanTopUp(DaoRegistry dao, address tokenAddr)
-        internal
-        view
-        returns (bool)
-    {
+    function _daoCanTopUp(
+        DaoRegistry dao,
+        address tokenAddr
+    ) internal view returns (bool) {
         return dao.getConfiguration(_configKey(tokenAddr, CanTopUp)) > 0;
     }
 }

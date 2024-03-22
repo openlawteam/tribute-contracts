@@ -135,11 +135,10 @@ contract InternalTokenVestingExtension is IExtension {
      * @param member The member address to update the balance.
      * @param internalToken The internal DAO token in which the member will receive the funds.
      */
-    function getMinimumBalance(address member, address internalToken)
-        external
-        view
-        returns (uint88)
-    {
+    function getMinimumBalance(
+        address member,
+        address internalToken
+    ) external view returns (uint88) {
         VestingSchedule storage schedule = vesting[member][internalToken];
         return
             getMinimumBalanceInternal(

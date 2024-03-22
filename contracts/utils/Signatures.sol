@@ -51,11 +51,10 @@ abstract contract Signatures {
             );
     }
 
-    function domainSeparator(DaoRegistry dao, address actionId)
-        public
-        view
-        returns (bytes32)
-    {
+    function domainSeparator(
+        DaoRegistry dao,
+        address actionId
+    ) public view returns (bytes32) {
         return
             keccak256(
                 abi.encode(

@@ -236,11 +236,10 @@ contract ERC1155TokenExtension is IExtension, IERC1155Receiver {
      * @param nftAddress The NFT address.
      * @param tokenId The NFT token id.
      */
-    function getNFTId(address nftAddress, uint256 tokenId)
-        public
-        pure
-        returns (bytes32)
-    {
+    function getNFTId(
+        address nftAddress,
+        uint256 tokenId
+    ) public pure returns (bytes32) {
         return keccak256(abi.encodePacked(nftAddress, tokenId));
     }
 
@@ -271,11 +270,10 @@ contract ERC1155TokenExtension is IExtension, IERC1155Receiver {
      * @param tokenAddr The NFT address.
      * @param index The index to get the token id if it exists.
      */
-    function getNFT(address tokenAddr, uint256 index)
-        external
-        view
-        returns (uint256)
-    {
+    function getNFT(
+        address tokenAddr,
+        uint256 index
+    ) external view returns (uint256) {
         return _nfts[tokenAddr].at(index);
     }
 
@@ -310,11 +308,10 @@ contract ERC1155TokenExtension is IExtension, IERC1155Receiver {
     /**
      * @notice Returns the total number of owners of an NFT addresses and token id collected.
      */
-    function nbNFTOwners(address nftAddress, uint256 tokenId)
-        external
-        view
-        returns (uint256)
-    {
+    function nbNFTOwners(
+        address nftAddress,
+        uint256 tokenId
+    ) external view returns (uint256) {
         return _ownership[getNFTId(nftAddress, tokenId)].length();
     }
 
@@ -384,12 +381,9 @@ contract ERC1155TokenExtension is IExtension, IERC1155Receiver {
      * @notice Supports ERC-165 & ERC-1155 interfaces only.
      * @dev https://github.com/ethereum/EIPs/blob/master/EIPS/eip-1155.md
      */
-    function supportsInterface(bytes4 interfaceID)
-        external
-        pure
-        override
-        returns (bool)
-    {
+    function supportsInterface(
+        bytes4 interfaceID
+    ) external pure override returns (bool) {
         return
             interfaceID == 0x01ffc9a7 || // ERC-165 support (i.e. `bytes4(keccak256('supportsInterface(bytes4)'))`).
             interfaceID == 0x4e2312e0; // ERC-1155 `ERC1155TokenReceiver` support (i.e. `bytes4(keccak256("onERC1155Received(address,address,uint256,uint256,bytes)")) ^ bytes4(keccak256("onERC1155BatchReceived(address,address,uint256[],uint256[],bytes)"))`).

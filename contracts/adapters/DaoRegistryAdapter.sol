@@ -38,10 +38,10 @@ contract DaoRegistryAdapterContract is MemberGuard, AdapterGuard {
      * @param dao The DAO address.
      * @param delegateKey the new delegate key.
      */
-    function updateDelegateKey(DaoRegistry dao, address delegateKey)
-        external
-        reentrancyGuard(dao)
-    {
+    function updateDelegateKey(
+        DaoRegistry dao,
+        address delegateKey
+    ) external reentrancyGuard(dao) {
         address dk = dao.getCurrentDelegateKey(msg.sender);
         if (dk != msg.sender && dao.isMember(dk)) {
             dao.updateDelegateKey(msg.sender, delegateKey);

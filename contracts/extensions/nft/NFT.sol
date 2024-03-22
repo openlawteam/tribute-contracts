@@ -190,11 +190,10 @@ contract NFTExtension is IExtension, IERC721Receiver {
      * @param nftAddress The NFT address.
      * @param tokenId The NFT token id.
      */
-    function getNFTId(address nftAddress, uint256 tokenId)
-        public
-        pure
-        returns (bytes32)
-    {
+    function getNFTId(
+        address nftAddress,
+        uint256 tokenId
+    ) public pure returns (bytes32) {
         return keccak256(abi.encodePacked(nftAddress, tokenId));
     }
 
@@ -211,11 +210,10 @@ contract NFTExtension is IExtension, IERC721Receiver {
      * @param tokenAddr The NFT address.
      * @param index The index to get the token id if it exists.
      */
-    function getNFT(address tokenAddr, uint256 index)
-        external
-        view
-        returns (uint256)
-    {
+    function getNFT(
+        address tokenAddr,
+        uint256 index
+    ) external view returns (uint256) {
         return _nfts[tokenAddr].at(index);
     }
 
@@ -239,11 +237,10 @@ contract NFTExtension is IExtension, IERC721Receiver {
      * @param nftAddress The NFT address.
      * @param tokenId The NFT token id.
      */
-    function getNFTOwner(address nftAddress, uint256 tokenId)
-        external
-        view
-        returns (address)
-    {
+    function getNFTOwner(
+        address nftAddress,
+        uint256 tokenId
+    ) external view returns (address) {
         return _ownership[getNFTId(nftAddress, tokenId)];
     }
 

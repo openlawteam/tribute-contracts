@@ -88,29 +88,26 @@ library DaoHelper {
     /**
      * @notice calculates the total number of units.
      */
-    function priorTotalTokens(BankExtension bank, uint256 at)
-        internal
-        view
-        returns (uint256)
-    {
+    function priorTotalTokens(
+        BankExtension bank,
+        uint256 at
+    ) internal view returns (uint256) {
         return
             priorMemberTokens(bank, TOTAL, at) -
             priorMemberTokens(bank, GUILD, at);
     }
 
-    function memberTokens(BankExtension bank, address member)
-        internal
-        view
-        returns (uint256)
-    {
+    function memberTokens(
+        BankExtension bank,
+        address member
+    ) internal view returns (uint256) {
         return bank.balanceOf(member, UNITS) + bank.balanceOf(member, LOOT);
     }
 
-    function msgSender(DaoRegistry dao, address addr)
-        internal
-        view
-        returns (address)
-    {
+    function msgSender(
+        DaoRegistry dao,
+        address addr
+    ) internal view returns (address) {
         address memberAddress = dao.getAddressIfDelegated(addr);
         address delegatedAddress = dao.getCurrentDelegateKey(addr);
 
@@ -147,9 +144,9 @@ library DaoHelper {
     ) internal pure returns (uint256) {
         if (getFlag(flags, flag) != value) {
             if (value) {
-                return flags + 2**flag;
+                return flags + 2 ** flag;
             } else {
-                return flags - 2**flag;
+                return flags - 2 ** flag;
             }
         } else {
             return flags;
@@ -191,11 +188,9 @@ library DaoHelper {
      * 3. The sender is an adapter.
      */
     // slither-disable-next-line calls-loop
-    function isInCreationModeAndHasAccess(DaoRegistry dao)
-        internal
-        view
-        returns (bool)
-    {
+    function isInCreationModeAndHasAccess(
+        DaoRegistry dao
+    ) internal view returns (bool) {
         return
             dao.state() == DaoRegistry.DaoState.CREATION &&
             (dao.getNbMembers() == 0 ||

@@ -225,10 +225,10 @@ contract BankExtension is IExtension, ERC165 {
      * @dev Cannot be a reserved token or an available internal token
      * @param token The address of the token
      */
-    function registerPotentialNewToken(DaoRegistry _dao, address token)
-        external
-        hasExtensionAccess(_dao, AclFlag.REGISTER_NEW_TOKEN)
-    {
+    function registerPotentialNewToken(
+        DaoRegistry _dao,
+        address token
+    ) external hasExtensionAccess(_dao, AclFlag.REGISTER_NEW_TOKEN) {
         require(DaoHelper.isNotReservedAddress(token), "reservedToken");
         require(!availableInternalTokens[token], "internalToken");
         require(
@@ -247,10 +247,10 @@ contract BankExtension is IExtension, ERC165 {
      * @dev Can not be a reserved token or an available token
      * @param token The address of the token
      */
-    function registerPotentialNewInternalToken(DaoRegistry _dao, address token)
-        external
-        hasExtensionAccess(_dao, AclFlag.REGISTER_NEW_INTERNAL_TOKEN)
-    {
+    function registerPotentialNewInternalToken(
+        DaoRegistry _dao,
+        address token
+    ) external hasExtensionAccess(_dao, AclFlag.REGISTER_NEW_INTERNAL_TOKEN) {
         require(DaoHelper.isNotReservedAddress(token), "reservedToken");
         require(!availableTokens[token], "availableToken");
 
@@ -260,10 +260,10 @@ contract BankExtension is IExtension, ERC165 {
         }
     }
 
-    function updateToken(DaoRegistry _dao, address tokenAddr)
-        external
-        hasExtensionAccess(_dao, AclFlag.UPDATE_TOKEN)
-    {
+    function updateToken(
+        DaoRegistry _dao,
+        address tokenAddr
+    ) external hasExtensionAccess(_dao, AclFlag.UPDATE_TOKEN) {
         require(isTokenAllowed(tokenAddr), "token not allowed");
         uint256 totalBalance = balanceOf(DaoHelper.TOTAL, tokenAddr);
 
@@ -349,11 +349,7 @@ contract BankExtension is IExtension, ERC165 {
         return internalTokens.length;
     }
 
-    function addToBalance(
-        address,
-        address,
-        uint256
-    ) external payable {
+    function addToBalance(address, address, uint256) external payable {
         revert("not implemented");
     }
 
@@ -399,20 +395,11 @@ contract BankExtension is IExtension, ERC165 {
         _createNewAmountCheckpoint(DaoHelper.TOTAL, token, newTotalAmount);
     }
 
-    function subtractFromBalance(
-        address,
-        address,
-        uint256
-    ) external {
+    function subtractFromBalance(address, address, uint256) external {
         revert("not implemented");
     }
 
-    function internalTransfer(
-        address,
-        address,
-        address,
-        uint256
-    ) external {
+    function internalTransfer(address, address, address, uint256) external {
         revert("not implemented");
     }
 
@@ -444,11 +431,10 @@ contract BankExtension is IExtension, ERC165 {
      * @param tokenAddr The token where the member's balance of which will be returned
      * @return The amount in account's tokenAddr balance
      */
-    function balanceOf(address member, address tokenAddr)
-        public
-        view
-        returns (uint160)
-    {
+    function balanceOf(
+        address member,
+        address tokenAddr
+    ) public view returns (uint160) {
         uint32 nCheckpoints = numCheckpoints[tokenAddr][member];
         return
             nCheckpoints > 0
@@ -507,13 +493,9 @@ contract BankExtension is IExtension, ERC165 {
         return checkpoints[tokenAddr][account][lower].amount;
     }
 
-    function supportsInterface(bytes4 interfaceId)
-        public
-        view
-        virtual
-        override
-        returns (bool)
-    {
+    function supportsInterface(
+        bytes4 interfaceId
+    ) public view virtual override returns (bool) {
         return
             super.supportsInterface(interfaceId) ||
             this.withdrawTo.selector == interfaceId;

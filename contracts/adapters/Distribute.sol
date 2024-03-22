@@ -154,11 +154,10 @@ contract DistributeContract is IDistribute, AdapterGuard, Reimbursable {
     // The function is protected against reentrancy with the reentrancyGuard
     // Which prevents concurrent modifications in the DAO registry.
     //slither-disable-next-line reentrancy-no-eth
-    function processProposal(DaoRegistry dao, bytes32 proposalId)
-        external
-        override
-        reimbursable(dao)
-    {
+    function processProposal(
+        DaoRegistry dao,
+        bytes32 proposalId
+    ) external override reimbursable(dao) {
         dao.processProposal(proposalId);
 
         // Checks if the proposal exists or is not in progress yet.
@@ -223,11 +222,10 @@ contract DistributeContract is IDistribute, AdapterGuard, Reimbursable {
      * @param toIndex The index to control the cached for-loop.
      */
     // slither-disable-next-line reentrancy-benign
-    function distribute(DaoRegistry dao, uint256 toIndex)
-        external
-        override
-        reimbursable(dao)
-    {
+    function distribute(
+        DaoRegistry dao,
+        uint256 toIndex
+    ) external override reimbursable(dao) {
         // Checks if the proposal does not exist or is not completed yet
         bytes32 ongoingProposalId = ongoingDistributions[address(dao)];
         Distribution storage distribution = distributions[address(dao)][

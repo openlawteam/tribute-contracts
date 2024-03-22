@@ -13,10 +13,9 @@ contract Multicall {
         bytes callData;
     }
 
-    function aggregate(Call[] calldata calls)
-        external
-        returns (uint256 blockNumber, bytes[] memory returnData)
-    {
+    function aggregate(
+        Call[] calldata calls
+    ) external returns (uint256 blockNumber, bytes[] memory returnData) {
         blockNumber = block.number;
         returnData = new bytes[](calls.length);
         for (uint256 i = 0; i < calls.length; i++) {
@@ -33,11 +32,9 @@ contract Multicall {
         balance = addr.balance;
     }
 
-    function getBlockHash(uint256 blockNumber)
-        public
-        view
-        returns (bytes32 blockHash)
-    {
+    function getBlockHash(
+        uint256 blockNumber
+    ) public view returns (bytes32 blockHash) {
         blockHash = blockhash(blockNumber);
     }
 

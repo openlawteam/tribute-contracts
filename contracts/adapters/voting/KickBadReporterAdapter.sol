@@ -83,11 +83,9 @@ contract KickBadReporterAdapter is MemberGuard {
         }
     }
 
-    function _getVotingContract(DaoRegistry dao)
-        internal
-        view
-        returns (OffchainVotingContract)
-    {
+    function _getVotingContract(
+        DaoRegistry dao
+    ) internal view returns (OffchainVotingContract) {
         address addr = dao.getAdapterAddress(DaoHelper.VOTING);
         return OffchainVotingContract(payable(addr));
     }

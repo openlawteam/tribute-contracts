@@ -47,10 +47,10 @@ contract BankAdapterContract is AdapterGuard, Reimbursable {
      * @param dao The DAO address.
      * @param token The token address to receive the funds.
      */
-    function withdraw(DaoRegistry dao, address token)
-        external
-        reimbursable(dao)
-    {
+    function withdraw(
+        DaoRegistry dao,
+        address token
+    ) external reimbursable(dao) {
         address account = DaoHelper.msgSender(dao, msg.sender);
         require(
             DaoHelper.isNotReservedAddress(account),
@@ -80,11 +80,9 @@ contract BankAdapterContract is AdapterGuard, Reimbursable {
         );
     }
 
-    function stringToBytes32(string memory source)
-        public
-        pure
-        returns (bytes32 result)
-    {
+    function stringToBytes32(
+        string memory source
+    ) public pure returns (bytes32 result) {
         bytes memory tempEmptyStringTest = bytes(source);
         if (tempEmptyStringTest.length == 0) {
             return 0x0;
@@ -101,10 +99,10 @@ contract BankAdapterContract is AdapterGuard, Reimbursable {
      * @param dao The DAO address.
      * @param token The token address to update.
      */
-    function updateToken(DaoRegistry dao, address token)
-        external
-        reentrancyGuard(dao)
-    {
+    function updateToken(
+        DaoRegistry dao,
+        address token
+    ) external reentrancyGuard(dao) {
         // We do not need to check if the token is supported by the bank,
         // because if it is not, the balance will always be zero.
         BankExtension(dao.getExtensionAddress(DaoHelper.BANK)).updateToken(

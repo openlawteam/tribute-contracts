@@ -36,8 +36,8 @@ interface IReimbursement {
         uint256 spendLimitPeriod
     ) external;
 
-    function shouldReimburse(DaoRegistry dao, uint256 gasLeft)
-        external
-        view
-        returns (bool, uint256);
+    function shouldReimburse(
+        DaoRegistry dao,
+        uint256 gasLeft
+    ) external view returns (bool, uint256);
 }

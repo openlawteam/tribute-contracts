@@ -113,11 +113,10 @@ contract GuildKickContract is IGuildKick, AdapterGuard, Reimbursable {
      * @param dao The dao address.
      * @param proposalId The guild kick proposal id.
      */
-    function processProposal(DaoRegistry dao, bytes32 proposalId)
-        external
-        override
-        reimbursable(dao)
-    {
+    function processProposal(
+        DaoRegistry dao,
+        bytes32 proposalId
+    ) external override reimbursable(dao) {
         dao.processProposal(proposalId);
 
         // Checks if the proposal has passed.

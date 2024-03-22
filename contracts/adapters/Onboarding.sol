@@ -175,12 +175,10 @@ contract OnboardingContract is IOnboarding, AdapterGuard, Reimbursable {
      * @param proposalId The proposal id to be processed. It needs to exist in the DAO Registry.
      */
     // slither-disable-next-line reentrancy-benign
-    function processProposal(DaoRegistry dao, bytes32 proposalId)
-        external
-        payable
-        override
-        reimbursable(dao)
-    {
+    function processProposal(
+        DaoRegistry dao,
+        bytes32 proposalId
+    ) external payable override reimbursable(dao) {
         ProposalDetails storage proposal = proposals[dao][proposalId];
         require(proposal.id == proposalId, "proposal does not exist");
         require(
@@ -352,11 +350,10 @@ contract OnboardingContract is IOnboarding, AdapterGuard, Reimbursable {
      * @param tokenAddrToMint The address to encode.
      * @param key The key to encode.
      */
-    function _configKey(address tokenAddrToMint, bytes32 key)
-        internal
-        pure
-        returns (bytes32)
-    {
+    function _configKey(
+        address tokenAddrToMint,
+        bytes32 key
+    ) internal pure returns (bytes32) {
         return keccak256(abi.encode(tokenAddrToMint, key));
     }
 }

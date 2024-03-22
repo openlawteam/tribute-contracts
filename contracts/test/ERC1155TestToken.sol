@@ -85,7 +85,9 @@ contract ERC1155TestToken is Context, AccessControlEnumerable, ERC1155 {
     /**
      * @dev See {IERC165-supportsInterface}.
      */
-    function supportsInterface(bytes4 interfaceId)
+    function supportsInterface(
+        bytes4 interfaceId
+    )
         public
         view
         virtual

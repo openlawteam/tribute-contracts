@@ -227,10 +227,10 @@ contract DaoRegistry is MemberGuard, AdapterGuard {
      * @param key The configuration key for which the value will be set
      * @param value The value to set the key
      */
-    function setConfiguration(bytes32 key, uint256 value)
-        external
-        hasAccess(this, AclFlag.SET_CONFIGURATION)
-    {
+    function setConfiguration(
+        bytes32 key,
+        uint256 value
+    ) external hasAccess(this, AclFlag.SET_CONFIGURATION) {
         mainConfiguration[key] = value;
 
         emit ConfigurationUpdated(key, value);
@@ -242,10 +242,10 @@ contract DaoRegistry is MemberGuard, AdapterGuard {
      * @param key The configuration key for which the value will be set
      * @param value The value to set the key
      */
-    function setAddressConfiguration(bytes32 key, address value)
-        external
-        hasAccess(this, AclFlag.SET_CONFIGURATION)
-    {
+    function setAddressConfiguration(
+        bytes32 key,
+        address value
+    ) external hasAccess(this, AclFlag.SET_CONFIGURATION) {
         addressConfiguration[key] = value;
 
         emit AddressConfigurationUpdated(key, value);
@@ -263,11 +263,9 @@ contract DaoRegistry is MemberGuard, AdapterGuard {
      * @return The configuration value of a particular key
      * @param key The key to look up in the configuration mapping
      */
-    function getAddressConfiguration(bytes32 key)
-        external
-        view
-        returns (address)
-    {
+    function getAddressConfiguration(
+        bytes32 key
+    ) external view returns (address) {
         return addressConfiguration[key];
     }
 
@@ -336,11 +334,10 @@ contract DaoRegistry is MemberGuard, AdapterGuard {
      * @param adapterAddress The address to look up
      * @param flag The ACL flag to check against the given address
      */
-    function hasAdapterAccess(address adapterAddress, AclFlag flag)
-        external
-        view
-        returns (bool)
-    {
+    function hasAdapterAccess(
+        address adapterAddress,
+        AclFlag flag
+    ) external view returns (bool) {
         return
             DaoHelper.getFlag(inverseAdapters[adapterAddress].acl, uint8(flag));
     }
@@ -349,11 +346,9 @@ contract DaoRegistry is MemberGuard, AdapterGuard {
      * @return The address of a given adapter ID
      * @param adapterId The ID to look up
      */
-    function getAdapterAddress(bytes32 adapterId)
-        external
-        view
-        returns (address)
-    {
+    function getAdapterAddress(
+        bytes32 adapterId
+    ) external view returns (address) {
         require(adapters[adapterId] != address(0), "adapter not found");
         return adapters[adapterId];
     }
@@ -368,10 +363,10 @@ contract DaoRegistry is MemberGuard, AdapterGuard {
      * @param extension The address of the extension
      */
     // slither-disable-next-line reentrancy-events
-    function addExtension(bytes32 extensionId, IExtension extension)
-        external
-        hasAccess(this, AclFlag.ADD_EXTENSION)
-    {
+    function addExtension(
+        bytes32 extensionId,
+        IExtension extension
+    ) external hasAccess(this, AclFlag.ADD_EXTENSION) {
         require(extensionId != bytes32(0), "extension id must not be empty");
         require(
             extensions[extensionId] == address(0x0),
@@ -387,11 +382,7 @@ contract DaoRegistry is MemberGuard, AdapterGuard {
     }
 
     // v1.0.6 signature
-    function addExtension(
-        bytes32,
-        IExtension,
-        address
-    ) external {
+    function addExtension(bytes32, IExtension, address) external {
         revert("not implemented");
     }
 
@@ -399,10 +390,9 @@ contract DaoRegistry is MemberGuard, AdapterGuard {
      * @notice Removes an adapter from the registry
      * @param extensionId The unique identifier of the extension
      */
-    function removeExtension(bytes32 extensionId)
-        external
-        hasAccess(this, AclFlag.REMOVE_EXTENSION)
-    {
+    function removeExtension(
+        bytes32 extensionId
+    ) external hasAccess(this, AclFlag.REMOVE_EXTENSION) {
         require(extensionId != bytes32(0), "extensionId must not be empty");
         address extensionAddress = extensions[extensionId];
         require(extensionAddress != address(0x0), "extensionId not registered");
@@ -458,11 +448,9 @@ contract DaoRegistry is MemberGuard, AdapterGuard {
      * @return The address of a given extension Id
      * @param extensionId The ID to look up
      */
-    function getExtensionAddress(bytes32 extensionId)
-        external
-        view
-        returns (address)
-    {
+    function getExtensionAddress(
+        bytes32 extensionId
+    ) external view returns (address) {
         require(extensions[extensionId] != address(0), "extension not found");
         return extensions[extensionId];
     }
@@ -474,10 +462,9 @@ contract DaoRegistry is MemberGuard, AdapterGuard {
     /**
      * @notice Submit proposals to the DAO registry
      */
-    function submitProposal(bytes32 proposalId)
-        external
-        hasAccess(this, AclFlag.SUBMIT_PROPOSAL)
-    {
+    function submitProposal(
+        bytes32 proposalId
+    ) external hasAccess(this, AclFlag.SUBMIT_PROPOSAL) {
         require(proposalId != bytes32(0), "invalid proposalId");
         require(
             !getProposalFlag(proposalId, ProposalFlag.EXISTS),
@@ -541,10 +528,10 @@ contract DaoRegistry is MemberGuard, AdapterGuard {
      * @param proposalId The ID of the proposal to be changed
      * @param flag The flag that will be set on the proposal
      */
-    function _setProposalFlag(bytes32 proposalId, ProposalFlag flag)
-        internal
-        returns (Proposal storage)
-    {
+    function _setProposalFlag(
+        bytes32 proposalId,
+        ProposalFlag flag
+    ) internal returns (Proposal storage) {
         Proposal storage proposal = proposals[proposalId];
 
         uint256 flags = proposal.flags;
@@ -571,11 +558,10 @@ contract DaoRegistry is MemberGuard, AdapterGuard {
      * @param proposalId The proposal to check against flag
      * @param flag The flag to check in the proposal
      */
-    function getProposalFlag(bytes32 proposalId, ProposalFlag flag)
-        public
-        view
-        returns (bool)
-    {
+    function getProposalFlag(
+        bytes32 proposalId,
+        ProposalFlag flag
+    ) public view returns (bool) {
         return DaoHelper.getFlag(proposals[proposalId].flags, uint8(flag));
     }
 
@@ -587,10 +573,9 @@ contract DaoRegistry is MemberGuard, AdapterGuard {
      * @notice Sets true for the JAILED flag.
      * @param memberAddress The address of the member to update the flag.
      */
-    function jailMember(address memberAddress)
-        external
-        hasAccess(this, AclFlag.JAIL_MEMBER)
-    {
+    function jailMember(
+        address memberAddress
+    ) external hasAccess(this, AclFlag.JAIL_MEMBER) {
         require(memberAddress != address(0x0), "invalid member address");
 
         Member storage member = members[memberAddress];
@@ -610,10 +595,9 @@ contract DaoRegistry is MemberGuard, AdapterGuard {
      * @notice Sets false for the JAILED flag.
      * @param memberAddress The address of the member to update the flag.
      */
-    function unjailMember(address memberAddress)
-        external
-        hasAccess(this, AclFlag.JAIL_MEMBER)
-    {
+    function unjailMember(
+        address memberAddress
+    ) external hasAccess(this, AclFlag.JAIL_MEMBER) {
         require(memberAddress != address(0x0), "invalid member address");
 
         Member storage member = members[memberAddress];
@@ -645,10 +629,9 @@ contract DaoRegistry is MemberGuard, AdapterGuard {
      * @notice Registers a member address in the DAO if it is not registered or invalid.
      * @notice A potential new member is a member that holds no shares, and its registration still needs to be voted on.
      */
-    function potentialNewMember(address memberAddress)
-        public
-        hasAccess(this, AclFlag.NEW_MEMBER)
-    {
+    function potentialNewMember(
+        address memberAddress
+    ) public hasAccess(this, AclFlag.NEW_MEMBER) {
         require(memberAddress != address(0x0), "invalid member address");
 
         Member storage member = members[memberAddress];
@@ -695,11 +678,10 @@ contract DaoRegistry is MemberGuard, AdapterGuard {
      * @param memberAddress The member to check against flag
      * @param flag The flag to check in the member
      */
-    function getMemberFlag(address memberAddress, MemberFlag flag)
-        public
-        view
-        returns (bool)
-    {
+    function getMemberFlag(
+        address memberAddress,
+        MemberFlag flag
+    ) public view returns (bool) {
         return DaoHelper.getFlag(members[memberAddress].flags, uint8(flag));
     }
 
@@ -726,10 +708,10 @@ contract DaoRegistry is MemberGuard, AdapterGuard {
      * @param memberAddr The member doing the delegation
      * @param newDelegateKey The member who is being delegated to
      */
-    function updateDelegateKey(address memberAddr, address newDelegateKey)
-        external
-        hasAccess(this, AclFlag.UPDATE_DELEGATE_KEY)
-    {
+    function updateDelegateKey(
+        address memberAddr,
+        address newDelegateKey
+    ) external hasAccess(this, AclFlag.UPDATE_DELEGATE_KEY) {
         require(newDelegateKey != address(0x0), "newDelegateKey cannot be 0");
 
         // skip checks if member is setting the delegate key to their member address
@@ -767,11 +749,9 @@ contract DaoRegistry is MemberGuard, AdapterGuard {
      * @param checkAddr The address to check for a delegate
      * @return the delegated address or the checked address if it is not a delegate
      */
-    function getAddressIfDelegated(address checkAddr)
-        external
-        view
-        returns (address)
-    {
+    function getAddressIfDelegated(
+        address checkAddr
+    ) external view returns (address) {
         address delegatedKey = memberAddressesByDelegatedKey[checkAddr];
         return delegatedKey == address(0x0) ? checkAddr : delegatedKey;
     }
@@ -780,11 +760,9 @@ contract DaoRegistry is MemberGuard, AdapterGuard {
      * @param memberAddr The member whose delegate will be returned
      * @return the delegate key at the current time for a member
      */
-    function getCurrentDelegateKey(address memberAddr)
-        public
-        view
-        returns (address)
-    {
+    function getCurrentDelegateKey(
+        address memberAddr
+    ) public view returns (address) {
         uint32 nCheckpoints = _numCheckpoints[memberAddr];
         return
             nCheckpoints > 0
@@ -796,11 +774,9 @@ contract DaoRegistry is MemberGuard, AdapterGuard {
      * @param memberAddr The member address to look up
      * @return The delegate key address for memberAddr at the second last checkpoint number
      */
-    function getPreviousDelegateKey(address memberAddr)
-        external
-        view
-        returns (address)
-    {
+    function getPreviousDelegateKey(
+        address memberAddr
+    ) external view returns (address) {
         uint32 nCheckpoints = _numCheckpoints[memberAddr];
         return
             nCheckpoints > 1
@@ -815,11 +791,10 @@ contract DaoRegistry is MemberGuard, AdapterGuard {
      * @param blockNumber The block number to get the vote balance at
      * @return The delegate key of the member
      */
-    function getPriorDelegateKey(address memberAddr, uint256 blockNumber)
-        external
-        view
-        returns (address)
-    {
+    function getPriorDelegateKey(
+        address memberAddr,
+        uint256 blockNumber
+    ) external view returns (address) {
         require(blockNumber < block.number, "getPriorDelegateKey: NYD");
 
         uint32 nCheckpoints = _numCheckpoints[memberAddr];

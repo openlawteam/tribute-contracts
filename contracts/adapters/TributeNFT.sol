@@ -78,10 +78,10 @@ contract TributeNFTContract is
      * @dev A DAO Bank extension must exist and be configured with proper access for this adapter.
      * @param dao The DAO address.
      */
-    function configureDao(DaoRegistry dao, address tokenAddrToMint)
-        external
-        onlyAdapter(dao)
-    {
+    function configureDao(
+        DaoRegistry dao,
+        address tokenAddrToMint
+    ) external onlyAdapter(dao) {
         BankExtension(dao.getExtensionAddress(DaoHelper.BANK))
             .registerPotentialNewInternalToken(dao, tokenAddrToMint);
     }
@@ -140,7 +140,10 @@ contract TributeNFTContract is
         );
     }
 
-    function _processProposal(DaoRegistry dao, bytes32 proposalId)
+    function _processProposal(
+        DaoRegistry dao,
+        bytes32 proposalId
+    )
         internal
         returns (
             ProposalDetails storage proposal,
@@ -256,12 +259,9 @@ contract TributeNFTContract is
      * @notice Supports ERC-165 & ERC-1155 interfaces only.
      * @dev https://github.com/ethereum/EIPs/blob/master/EIPS/eip-1155.md
      */
-    function supportsInterface(bytes4 interfaceID)
-        external
-        pure
-        override
-        returns (bool)
-    {
+    function supportsInterface(
+        bytes4 interfaceID
+    ) external pure override returns (bool) {
         return
             interfaceID == this.supportsInterface.selector ||
             interfaceID == this.onERC1155Received.selector ||
@@ -314,10 +314,10 @@ contract TributeNFTContract is
      * @param dao The DAO address.
      * @param proposalId The proposalId to be processed.
      */
-    function processERC721Proposal(DaoRegistry dao, bytes32 proposalId)
-        external
-        reimbursable(dao)
-    {
+    function processERC721Proposal(
+        DaoRegistry dao,
+        bytes32 proposalId
+    ) external reimbursable(dao) {
         (
             ProposalDetails storage proposal,
             IVoting.VotingState voteResult

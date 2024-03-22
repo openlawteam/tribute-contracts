@@ -53,7 +53,8 @@ interface IVoting {
         address sender
     ) external returns (address);
 
-    function voteResult(DaoRegistry dao, bytes32 proposalId)
-        external
-        returns (VotingState state);
+    function voteResult(
+        DaoRegistry dao,
+        bytes32 proposalId
+    ) external returns (VotingState state);
 }

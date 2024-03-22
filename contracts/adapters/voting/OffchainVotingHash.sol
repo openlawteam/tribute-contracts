@@ -94,11 +94,9 @@ contract OffchainVotingHashContract {
             );
     }
 
-    function hashVotingResultNode(VoteResultNode memory node)
-        public
-        pure
-        returns (bytes32)
-    {
+    function hashVotingResultNode(
+        VoteResultNode memory node
+    ) public pure returns (bytes32) {
         return
             keccak256(
                 abi.encode(
@@ -149,11 +147,9 @@ contract OffchainVotingHashContract {
         return SignatureChecker.isValidSignatureNow(voter, voteHash, sig);
     }
 
-    function stringToUint(string memory s)
-        external
-        pure
-        returns (bool success, uint256 result)
-    {
+    function stringToUint(
+        string memory s
+    ) external pure returns (bool success, uint256 result) {
         bytes memory b = bytes(s);
         result = 0;
         success = false;

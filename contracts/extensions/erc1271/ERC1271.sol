@@ -87,12 +87,10 @@ contract ERC1271Extension is IExtension, IERC1271 {
      * @param signature The signature in bytes to be encoded, hashed and verified.
      * @return The magic number in bytes4 in case the signature is valid, otherwise it reverts.
      */
-    function isValidSignature(bytes32 permissionHash, bytes memory signature)
-        external
-        view
-        override
-        returns (bytes4)
-    {
+    function isValidSignature(
+        bytes32 permissionHash,
+        bytes memory signature
+    ) external view override returns (bytes4) {
         DAOSignature memory daoSignature = signatures[permissionHash];
         require(daoSignature.magicValue != 0, "erc1271::invalid signature");
         require(

@@ -105,11 +105,10 @@ contract FinancingContract is IFinancing, AdapterGuard, Reimbursable {
      * @param proposalId The proposal id.
      */
     // slither-disable-next-line reentrancy-benign
-    function processProposal(DaoRegistry dao, bytes32 proposalId)
-        external
-        override
-        reimbursable(dao)
-    {
+    function processProposal(
+        DaoRegistry dao,
+        bytes32 proposalId
+    ) external override reimbursable(dao) {
         ProposalDetails memory details = proposals[address(dao)][proposalId];
 
         IVoting votingContract = IVoting(dao.votingAdapter(proposalId));

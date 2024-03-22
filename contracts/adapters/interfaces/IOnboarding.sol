@@ -38,7 +38,8 @@ interface IOnboarding {
         bytes memory data
     ) external;
 
-    function processProposal(DaoRegistry dao, bytes32 proposalId)
-        external
-        payable;
+    function processProposal(
+        DaoRegistry dao,
+        bytes32 proposalId
+    ) external payable;
 }

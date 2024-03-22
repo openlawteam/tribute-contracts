@@ -53,10 +53,10 @@ contract BankFactory is IFactory, CloneFactory, ReentrancyGuard {
      * @param maxExternalTokens The maximum number of external tokens stored in the Bank
      */
     // slither-disable-next-line reentrancy-events
-    function create(DaoRegistry dao, uint8 maxExternalTokens)
-        external
-        nonReentrant
-    {
+    function create(
+        DaoRegistry dao,
+        uint8 maxExternalTokens
+    ) external nonReentrant {
         address daoAddress = address(dao);
         require(daoAddress != address(0x0), "invalid dao addr");
         address extensionAddr = _createClone(identityAddress);
@@ -76,12 +76,9 @@ contract BankFactory is IFactory, CloneFactory, ReentrancyGuard {
      * because it is prone to front-running attacks. During the extension creation it is safer to
      * read the new extension address from the event generated in the create call transaction.
      */
-    function getExtensionAddress(address dao)
-        external
-        view
-        override
-        returns (address)
-    {
+    function getExtensionAddress(
+        address dao
+    ) external view override returns (address) {
         return _extensions[dao];
     }
 }

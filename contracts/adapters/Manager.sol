@@ -95,10 +95,10 @@ contract Manager is Reimbursable, AdapterGuard, Signatures {
      * @notice Configures the Adapter with the managing signer address.
      * @param signerAddress the address of the managing signer
      */
-    function configureDao(DaoRegistry dao, address signerAddress)
-        external
-        onlyAdapter(dao)
-    {
+    function configureDao(
+        DaoRegistry dao,
+        address signerAddress
+    ) external onlyAdapter(dao) {
         dao.setAddressConfiguration(SignerAddressConfig, signerAddress);
     }
 
@@ -203,9 +203,10 @@ contract Manager is Reimbursable, AdapterGuard, Signatures {
      * @notice If the extension is already registered, it removes the extension from the DAO Registry.
      * @notice If the adapterOrExtensionAddr is provided, the new address is added as a new extension to the DAO Registry.
      */
-    function _replaceExtension(DaoRegistry dao, ProposalDetails memory proposal)
-        internal
-    {
+    function _replaceExtension(
+        DaoRegistry dao,
+        ProposalDetails memory proposal
+    ) internal {
         if (dao.extensions(proposal.adapterOrExtensionId) != address(0x0)) {
             dao.removeExtension(proposal.adapterOrExtensionId);
         }
@@ -282,11 +283,10 @@ contract Manager is Reimbursable, AdapterGuard, Signatures {
      * @param dao is the DAO instance to be configured
      * @param coupon is the coupon to hash
      */
-    function hashCouponMessage(DaoRegistry dao, ManagingCoupon memory coupon)
-        public
-        view
-        returns (bytes32)
-    {
+    function hashCouponMessage(
+        DaoRegistry dao,
+        ManagingCoupon memory coupon
+    ) public view returns (bytes32) {
         bytes32 message = keccak256(
             abi.encode(
                 MANAGING_COUPON_MESSAGE_TYPEHASH,
@@ -300,11 +300,9 @@ contract Manager is Reimbursable, AdapterGuard, Signatures {
         return hashMessage(dao, address(this), message);
     }
 
-    function hashProposal(ProposalDetails memory proposal)
-        public
-        pure
-        returns (bytes32)
-    {
+    function hashProposal(
+        ProposalDetails memory proposal
+    ) public pure returns (bytes32) {
         return
             keccak256(
                 abi.encode(
@@ -321,11 +319,9 @@ contract Manager is Reimbursable, AdapterGuard, Signatures {
             );
     }
 
-    function hashConfigurations(Configuration[] memory configs)
-        public
-        pure
-        returns (bytes32)
-    {
+    function hashConfigurations(
+        Configuration[] memory configs
+    ) public pure returns (bytes32) {
         bytes32[] memory result = new bytes32[](configs.length);
         for (uint256 i = 0; i < configs.length; i++) {
             result[i] = keccak256(

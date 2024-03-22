@@ -30,10 +30,9 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
  */
 library ReimbursableLib {
-    function beforeExecution(DaoRegistry dao)
-        internal
-        returns (Reimbursable.ReimbursementData memory data)
-    {
+    function beforeExecution(
+        DaoRegistry dao
+    ) internal returns (Reimbursable.ReimbursementData memory data) {
         data.gasStart = gasleft();
         require(dao.lockedAt() != block.number, "reentrancy guard");
         dao.lockSession();

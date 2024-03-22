@@ -43,11 +43,10 @@ contract ERC20TransferStrategy is IERC20TransferStrategy {
     /// @notice Clonable contract must have an empty constructor
     // constructor() {}
 
-    function hasBankAccess(DaoRegistry dao, address caller)
-        public
-        view
-        returns (bool)
-    {
+    function hasBankAccess(
+        DaoRegistry dao,
+        address caller
+    ) public view returns (bool) {
         return
             dao.hasAdapterAccessToExtension(
                 caller,

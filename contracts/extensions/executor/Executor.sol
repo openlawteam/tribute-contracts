@@ -83,11 +83,9 @@ contract ExecutorExtension is IExtension {
      *
      * This function does not return to its internall call site, it will return directly to the external caller.
      */
-    function _delegate(address implementation)
-        internal
-        virtual
-        hasExtensionAccess(AclFlag.EXECUTE)
-    {
+    function _delegate(
+        address implementation
+    ) internal virtual hasExtensionAccess(AclFlag.EXECUTE) {
         require(
             DaoHelper.isNotZeroAddress(implementation),
             "executorExt: impl address can not be zero"

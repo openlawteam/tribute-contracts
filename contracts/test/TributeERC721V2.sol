@@ -61,11 +61,9 @@ contract TributeERC721V2 is
         setBaseURI("ipfs://");
     }
 
-    function _authorizeUpgrade(address newImplementation)
-        internal
-        override
-        onlyOwner
-    {}
+    function _authorizeUpgrade(
+        address newImplementation
+    ) internal override onlyOwner {}
 
     function mint(
         address owner,
@@ -122,13 +120,9 @@ contract TributeERC721V2 is
         baseURI = newBaseURI;
     }
 
-    function tokenURI(uint256)
-        public
-        view
-        virtual
-        override
-        returns (string memory)
-    {
+    function tokenURI(
+        uint256
+    ) public view virtual override returns (string memory) {
         return
             string(
                 abi.encodePacked(
@@ -159,11 +153,10 @@ contract TributeERC721V2 is
         return hashMessage(dao, address(this), message);
     }
 
-    function getPriorAmount(address account, uint256 blockNumber)
-        external
-        view
-        returns (uint256)
-    {
+    function getPriorAmount(
+        address account,
+        uint256 blockNumber
+    ) external view returns (uint256) {
         require(
             blockNumber < block.number,
             "nft::getPriorAmount: not yet determined"
@@ -224,11 +217,9 @@ contract TributeERC721V2 is
         }
     }
 
-    function bytes32ToString(bytes32 _bytes32)
-        public
-        pure
-        returns (string memory)
-    {
+    function bytes32ToString(
+        bytes32 _bytes32
+    ) public pure returns (string memory) {
         uint8 i = 0;
         while (i < 32 && _bytes32[i] != 0) {
             i++;

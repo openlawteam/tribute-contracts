@@ -160,11 +160,10 @@ contract OffchainVotingContract is
         dao.setConfiguration(FallbackThreshold, fallbackThreshold);
     }
 
-    function getVote(DaoRegistry dao, bytes32 proposalId)
-        external
-        view
-        returns (VotingDetails memory)
-    {
+    function getVote(
+        DaoRegistry dao,
+        bytes32 proposalId
+    ) external view returns (VotingDetails memory) {
         Voting storage vote = votes[address(dao)][proposalId];
 
         return
@@ -189,11 +188,10 @@ contract OffchainVotingContract is
      * @param proposalId The proposal id to mark as failed
      */
     // slither-disable-next-line reentrancy-benign
-    function adminFailProposal(DaoRegistry dao, bytes32 proposalId)
-        external
-        onlyOwner
-        reentrancyGuard(dao)
-    {
+    function adminFailProposal(
+        DaoRegistry dao,
+        bytes32 proposalId
+    ) external onlyOwner reentrancyGuard(dao) {
         Voting storage vote = votes[address(dao)][proposalId];
         require(vote.startingTime > 0, "proposal has not started yet");
 
@@ -204,11 +202,10 @@ contract OffchainVotingContract is
         return ADAPTER_NAME;
     }
 
-    function getChallengeDetails(DaoRegistry dao, bytes32 proposalId)
-        external
-        view
-        returns (uint256, address)
-    {
+    function getChallengeDetails(
+        DaoRegistry dao,
+        bytes32 proposalId
+    ) external view returns (uint256, address) {
         return (
             challengeProposals[address(dao)][proposalId].units,
             challengeProposals[address(dao)][proposalId].reporter
@@ -240,12 +237,10 @@ contract OffchainVotingContract is
      * 3: not pass
      * 4: in progress
      */
-    function voteResult(DaoRegistry dao, bytes32 proposalId)
-        public
-        view
-        override
-        returns (VotingState state)
-    {
+    function voteResult(
+        DaoRegistry dao,
+        bytes32 proposalId
+    ) public view override returns (VotingState state) {
         Voting storage vote = votes[address(dao)][proposalId];
         if (_ovHelper.isFallbackVotingActivated(dao, vote.fallbackVotesCount)) {
             return fallbackVoting.voteResult(dao, proposalId);
@@ -466,10 +461,10 @@ contract OffchainVotingContract is
      * @param proposalId The proposal id associated with the missing step
      */
     // slither-disable-next-line reentrancy-benign,reentrancy-events
-    function challengeMissingStep(DaoRegistry dao, bytes32 proposalId)
-        external
-        reimbursable(dao)
-    {
+    function challengeMissingStep(
+        DaoRegistry dao,
+        bytes32 proposalId
+    ) external reimbursable(dao) {
         Voting storage vote = votes[address(dao)][proposalId];
         uint256 gracePeriod = dao.getConfiguration(GracePeriod);
         //if the vote has started but the voting period has not passed yet, it's in progress
@@ -606,11 +601,10 @@ contract OffchainVotingContract is
      * @param proposalId The proposalId that will used in the fallback voting contract
      */
     // slither-disable-next-line reentrancy-benign
-    function requestFallback(DaoRegistry dao, bytes32 proposalId)
-        external
-        reentrancyGuard(dao)
-        onlyMember(dao)
-    {
+    function requestFallback(
+        DaoRegistry dao,
+        bytes32 proposalId
+    ) external reentrancyGuard(dao) onlyMember(dao) {
         VotingState state = voteResult(dao, proposalId);
         require(
             state != VotingState.PASS &&
@@ -690,11 +684,10 @@ contract OffchainVotingContract is
         dao.sponsorProposal(proposalId, sponsoredBy, address(this));
     }
 
-    function processChallengeProposal(DaoRegistry dao, bytes32 proposalId)
-        external
-        reentrancyGuard(dao)
-        onlyBadReporterAdapter
-    {
+    function processChallengeProposal(
+        DaoRegistry dao,
+        bytes32 proposalId
+    ) external reentrancyGuard(dao) onlyBadReporterAdapter {
         dao.processProposal(proposalId);
     }
 

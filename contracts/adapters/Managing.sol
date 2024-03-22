@@ -118,11 +118,10 @@ contract ManagingContract is IManaging, AdapterGuard, Reimbursable {
      * @param proposalId The proposal id.
      */
     // slither-disable-next-line reentrancy-benign
-    function processProposal(DaoRegistry dao, bytes32 proposalId)
-        external
-        override
-        reimbursable(dao)
-    {
+    function processProposal(
+        DaoRegistry dao,
+        bytes32 proposalId
+    ) external override reimbursable(dao) {
         ProposalDetails memory proposal = proposals[address(dao)][proposalId];
 
         IVoting votingContract = IVoting(dao.votingAdapter(proposalId));
@@ -156,9 +155,10 @@ contract ManagingContract is IManaging, AdapterGuard, Reimbursable {
      * @notice If the extension is already registered, it removes the extension from the DAO Registry.
      * @notice If the adapterOrExtensionAddr is provided, the new address is added as a new extension to the DAO Registry.
      */
-    function _replaceExtension(DaoRegistry dao, ProposalDetails memory proposal)
-        internal
-    {
+    function _replaceExtension(
+        DaoRegistry dao,
+        ProposalDetails memory proposal
+    ) internal {
         if (dao.extensions(proposal.adapterOrExtensionId) != address(0x0)) {
             dao.removeExtension(proposal.adapterOrExtensionId);
         }
@@ -197,9 +197,10 @@ contract ManagingContract is IManaging, AdapterGuard, Reimbursable {
     /**
      * @notice Saves the numeric/address configurations to the DAO registry
      */
-    function _saveDaoConfigurations(DaoRegistry dao, bytes32 proposalId)
-        internal
-    {
+    function _saveDaoConfigurations(
+        DaoRegistry dao,
+        bytes32 proposalId
+    ) internal {
         Configuration[] memory configs = configurations[address(dao)][
             proposalId
         ];

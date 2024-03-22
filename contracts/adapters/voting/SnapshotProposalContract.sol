@@ -83,11 +83,10 @@ contract SnapshotProposalContract {
         bytes32 proposalId;
     }
 
-    function DOMAIN_SEPARATOR(DaoRegistry dao, address actionId)
-        public
-        view
-        returns (bytes32)
-    {
+    function DOMAIN_SEPARATOR(
+        DaoRegistry dao,
+        address actionId
+    ) public view returns (bytes32) {
         return
             keccak256(
                 abi.encode(
@@ -116,11 +115,9 @@ contract SnapshotProposalContract {
             );
     }
 
-    function hashProposalMessage(ProposalMessage memory message)
-        public
-        pure
-        returns (bytes32)
-    {
+    function hashProposalMessage(
+        ProposalMessage memory message
+    ) public pure returns (bytes32) {
         return
             keccak256(
                 abi.encode(
@@ -132,11 +129,9 @@ contract SnapshotProposalContract {
             );
     }
 
-    function hashProposalPayload(ProposalPayload memory payload)
-        public
-        pure
-        returns (bytes32)
-    {
+    function hashProposalPayload(
+        ProposalPayload memory payload
+    ) public pure returns (bytes32) {
         return
             keccak256(
                 abi.encode(
@@ -166,11 +161,9 @@ contract SnapshotProposalContract {
             );
     }
 
-    function hashVoteInternal(VoteMessage memory message)
-        public
-        pure
-        returns (bytes32)
-    {
+    function hashVoteInternal(
+        VoteMessage memory message
+    ) public pure returns (bytes32) {
         return
             keccak256(
                 abi.encode(
@@ -181,11 +174,9 @@ contract SnapshotProposalContract {
             );
     }
 
-    function hashVotePayload(VotePayload memory payload)
-        public
-        pure
-        returns (bytes32)
-    {
+    function hashVotePayload(
+        VotePayload memory payload
+    ) public pure returns (bytes32) {
         return
             keccak256(
                 abi.encode(
@@ -196,11 +187,9 @@ contract SnapshotProposalContract {
             );
     }
 
-    function toHashArray(string[] memory arr)
-        internal
-        pure
-        returns (bytes32[] memory result)
-    {
+    function toHashArray(
+        string[] memory arr
+    ) internal pure returns (bytes32[] memory result) {
         result = new bytes32[](arr.length);
         for (uint256 i = 0; i < arr.length; i++) {
             result[i] = keccak256(abi.encodePacked(arr[i]));
