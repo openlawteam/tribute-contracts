@@ -38,7 +38,7 @@
     "deployTributeERC721": "npm run compile && sh scripts/deployTributeERC721.sh",
     "upgradeTributeERC721": "npm run compile && sh scripts/upgradeTributeERC721.sh",
     "docker": "cd docker && docker-compose up",
-    "ganache": "ganache-cli --deterministic -p 7545 --networkId 1337 --chainId 1337 --hostname 0.0.0.0",
+    "ganache": "ganache-cli --wallet.deterministic -p 7545 --chain.networkId 1337 --chain.chainId 1337 --server.host 0.0.0.0",
     "ganache:fork": "ganache-cli --deterministic -f ",
     "hardhat": "hardhat run --network hardhat tasks/deploy.js",
     "lint": "prettier --list-different 'contracts/**/*.sol' '**/*.js' '**/*.md'",
