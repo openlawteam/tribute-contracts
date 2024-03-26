@@ -363,7 +363,7 @@ const deployGnosisDao = async ({
       "OFFCHAIN_ADMIN_ADDR",
       getEnvVar("DAO_OWNER_ADDR")
     ),
-    weth: "0x6A023CCd1ff6F2045C3309768eAd9E68F978f6e1",
+    weth: "0xe91d153e0b41518a2ce8dd3d7944fa863463a97d", // wrapped xdai
     gasPriceLimit: getOptionalEnvVar("GAS_PRICE_LIMIT", 0 /* disabled */),
     spendLimitPeriod: getOptionalEnvVar("SPEND_LIMIT_PERIOD", 0 /* disabled */),
     spendLimitEth: getOptionalEnvVar("SPEND_LIMIT_ETH", 0 /* disabled */),
