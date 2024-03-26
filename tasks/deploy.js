@@ -621,38 +621,53 @@ const deployPolygonDao = async ({
     contractConfigs,
     deployFunction,
     maxAmount: getOptionalEnvVar("MAX_AMOUNT", maxAmount),
-    unitPrice: toWei("0.1"),
-    nbUnits: toBN("100000"),
+    unitPrice: getOptionalEnvVar("UNIT_PRICE", toWei("0.1")),
+    nbUnits: getOptionalEnvVar("UNITS_PER_CHUNK", toBN("100000")),
     maxUnits: getOptionalEnvVar("MAX_UNITS", maxUnits),
-    tokenAddr: ETH_TOKEN,
+    tokenAddr: getOptionalEnvVar("PAYMENT_TOKEN_ADDR", ETH_TOKEN),
     erc20TokenName: getEnvVar("ERC20_TOKEN_NAME"),
     erc20TokenSymbol: getEnvVar("ERC20_TOKEN_SYMBOL"),
     erc20TokenDecimals: getEnvVar("ERC20_TOKEN_DECIMALS"),
     erc20TokenAddress: UNITS,
-    maxChunks: getOptionalEnvVar("MAX_CHUNKS", maximumChunks),
-    votingPeriod: parseInt(getEnvVar("VOTING_PERIOD_SECONDS")),
-    gracePeriod: parseInt(getEnvVar("GRACE_PERIOD_SECONDS")),
+    votingPeriod: getOptionalEnvVar("VOTING_PERIOD_SECONDS", 600), // 600 secs = 10 min
+    gracePeriod: getOptionalEnvVar("GRACE_PERIOD_SECONDS", 300), // 300 secs = 5 min
     offchainVoting: true,
     deployTestTokens: false,
     finalize: false,
     maxExternalTokens: 100,
-    managerSignerAddress: getEnvVar("MANAGER_COUPON_SIGNER_ADDR"),
-    couponCreatorAddress: getEnvVar("COUPON_CREATOR_ADDR"),
-    kycSignerAddress: getEnvVar("KYC_SIGNER_ADDR"),
-    kycMaxMembers: getEnvVar("KYC_MAX_MEMBERS"),
+    managerSignerAddress: getOptionalEnvVar(
+      "MANAGER_COUPON_SIGNER_ADDR",
+      getEnvVar("DAO_OWNER_ADDR")
+    ),
+    couponCreatorAddress: getOptionalEnvVar(
+      "COUPON_CREATOR_ADDR",
+      getEnvVar("DAO_OWNER_ADDR")
+    ),
+    kycSignerAddress: getOptionalEnvVar(
+      "KYC_SIGNER_ADDR",
+      getEnvVar("DAO_OWNER_ADDR")
+    ),
+    kycMaxMembers: getOptionalEnvVar("KYC_MAX_MEMBERS", toBN("100")),
     kycCanTopUp: getOptionalEnvVar("KYC_CAN_TOP_UP", 0),
     kycFundTargetAddress: getOptionalEnvVar(
       "KYC_MULTISIG_FUND_ADDR",
       ZERO_ADDRESS
     ),
+    maxChunks: getOptionalEnvVar("MAX_CHUNKS", maximumChunks),
     daoName: getEnvVar("DAO_NAME"),
     owner: getEnvVar("DAO_OWNER_ADDR"),
-    offchainAdmin: getEnvVar("OFFCHAIN_ADMIN_ADDR"),
-    weth: getEnvVar("WRAPPED_ETH_ADDR"),
+    offchainAdmin: getOptionalEnvVar(
+      "OFFCHAIN_ADMIN_ADDR",
+      getEnvVar("DAO_OWNER_ADDR")
+    ),
+    weth: "0x0d500b1d8e8ef31e21c99d1db9a6444d3adf1270", /* WMATIC */
     gasPriceLimit: getOptionalEnvVar("GAS_PRICE_LIMIT", 0 /* disabled */),
     spendLimitPeriod: getOptionalEnvVar("SPEND_LIMIT_PERIOD", 0 /* disabled */),
     spendLimitEth: getOptionalEnvVar("SPEND_LIMIT_ETH", 0 /* disabled */),
-    gelato: getEnvVar("GELATO_ADDR"),
+    gelato: getOptionalEnvVar(
+      "GELATO_ADDR",
+      "0xDe6ab16a4015c680daab58021815D09ddB57db8E"
+    ),
     maintainerTokenAddress: getOptionalEnvVar("MAINTAINER_TOKEN_ADDR", UNITS),
   });
 };

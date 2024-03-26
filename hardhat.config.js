@@ -130,6 +130,7 @@ module.exports = {
       network_id: 100,
       chainId: 100,
       skipDryRun: true,
+      allowUnlimitedContractSize: true,
       accounts: {
         mnemonic: process.env.WALLET_MNEMONIC || "",
         count: 10,
