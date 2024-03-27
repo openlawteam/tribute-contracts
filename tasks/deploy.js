@@ -660,7 +660,7 @@ const deployPolygonDao = async ({
       "OFFCHAIN_ADMIN_ADDR",
       getEnvVar("DAO_OWNER_ADDR")
     ),
-    weth: "0x0d500b1d8e8ef31e21c99d1db9a6444d3adf1270", /* WMATIC */
+    weth: "0x0d500b1d8e8ef31e21c99d1db9a6444d3adf1270" /* WMATIC */,
     gasPriceLimit: getOptionalEnvVar("GAS_PRICE_LIMIT", 0 /* disabled */),
     spendLimitPeriod: getOptionalEnvVar("SPEND_LIMIT_PERIOD", 0 /* disabled */),
     spendLimitEth: getOptionalEnvVar("SPEND_LIMIT_ETH", 0 /* disabled */),
