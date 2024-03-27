@@ -85,7 +85,7 @@ const verify = async (contract: any) => {
     const cmd = buildCommand(contract);
     log(cmd);
     const { stderr, stdout } = await exec(cmd);
-    if (stderr) {
+    if (stderr && !stdout) {
       error(`${stderr}`);
       return Promise.reject({ stderr });
     }
@@ -138,6 +138,6 @@ const main = async () => {
 main()
   .then(() => log("Verification process completed with success"))
   .catch((e) => {
-    error(e);
+    error(e.toString());
     process.exit(1);
   });

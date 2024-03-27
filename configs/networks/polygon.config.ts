@@ -13,6 +13,25 @@ const disabled: Array<String> = [
   "ProxToken",
   "ERC20Minter",
   "MockDao",
+  "Multicall",
+  "WETH",
+  "ProxTokenContract",
+  "ERC20MinterContract",
+  // Adapters, Extensions and Factories disabled by default
+  "NFTCollectionFactory",
+  "ERC1271ExtensionFactory",
+  "ExecutorExtensionFactory",
+  "ERC1155TokenCollectionFactory",
+  "NFTExtension",
+  "ERC1271Extension",
+  "ExecutorExtension",
+  "ERC1155TokenExtension",
+  "ERC1155AdapterContract",
+  "FinancingContract",
+  "OnboardingContract",
+  "TributeContract",
+  "TributeNFTContract",
+  "LendNFTContract",
 ];
 
 export const contracts: Array<ContractConfig> = defaultContracts.map((c) => {
