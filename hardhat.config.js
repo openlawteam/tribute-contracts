@@ -124,6 +124,7 @@ module.exports = {
         count: 10,
       },
       signerId: process.env.SIGNER || undefined,
+      gasMultiplier: parseFloat(process.env.GAS_PRICE_MULTIPLIER) || 1,
     },
     gnosis: {
       url: process.env.ETH_NODE_URL,
@@ -136,6 +137,7 @@ module.exports = {
         count: 10,
       },
       signerId: process.env.SIGNER || undefined,
+      gasMultiplier: parseFloat(process.env.GAS_PRICE_MULTIPLIER) || 1,
     },
     harmony: {
       url: process.env.ETH_NODE_URL,
@@ -147,6 +149,7 @@ module.exports = {
         count: 10,
       },
       signerId: process.env.SIGNER || undefined,
+      gasMultiplier: parseFloat(process.env.GAS_PRICE_MULTIPLIER) || 1,
     },
     polygon: {
       url: process.env.ETH_NODE_URL,
@@ -158,6 +161,10 @@ module.exports = {
         count: 10,
       },
       signerId: process.env.SIGNER || undefined,
+      gasMultiplier: parseFloat(process.env.GAS_PRICE_MULTIPLIER) || 1,
+      increaseFactor: 135,
+      maxRetries: 5,
+      timeout: 5 * 60 * 1000, // 5 minute
     },
     avalanche: {
       url: process.env.ETH_NODE_URL,
@@ -169,6 +176,7 @@ module.exports = {
         count: 10,
       },
       signerId: process.env.SIGNER || undefined,
+      gasMultiplier: parseFloat(process.env.GAS_PRICE_MULTIPLIER) || 1,
     },
   },
 

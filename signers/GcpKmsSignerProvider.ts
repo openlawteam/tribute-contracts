@@ -1,5 +1,5 @@
-import { BN, bufferToHex } from "ethereumjs-util";
-import { rpcQuantityToBN } from "hardhat/internal/core/jsonrpc/types/base-types";
+import { bufferToHex } from "ethereumjs-util";
+import { rpcQuantityToBigInt, rpcQuantityToNumber, numberToRpcQuantity, rpcQuantity } from "hardhat/internal/core/jsonrpc/types/base-types";
 import { rpcTransactionRequest } from "hardhat/internal/core/jsonrpc/types/input/transactionRequest";
 import { validateParams } from "hardhat/internal/core/jsonrpc/types/input/validation";
 import { JsonRpcTransactionData } from "hardhat/internal/core/providers/accounts";
@@ -22,11 +22,19 @@ export class GcpKmsSignerProvider extends ProviderWrapper {
   public ethAddress: string | undefined;
   public chainId: number;
   public signer: GcpKmsSigner;
+  public maxRetries: number;
+  public network: string;
+  public timeout: number;
+  public increaseFactor: number;
 
   constructor(
     provider: EIP1193Provider,
     config: GcpKmsSignerConfig,
-    chainId: number
+    chainId: number,
+    network: string,
+    increaseFactor: number,
+    timeout: number = 3 * 60 * 1000, // 3 minutes
+    maxRetries: number = 3,
   ) {
     super(provider);
     this.chainId = chainId;
@@ -36,6 +44,10 @@ export class GcpKmsSignerProvider extends ProviderWrapper {
       },
       undefined
     );
+    this.network = network;
+    this.increaseFactor = increaseFactor;
+    this.maxRetries = maxRetries;
+    this.timeout = timeout;
   }
 
   public async request(args: RequestArguments): Promise<unknown> {
@@ -49,21 +61,25 @@ export class GcpKmsSignerProvider extends ProviderWrapper {
       }
 
       const [txRequest] = validateParams(params, rpcTransactionRequest);
-      txRequest.chainId = rpcQuantityToBN(numberToHex(this.chainId));
+      txRequest.chainId = rpcQuantityToBigInt(numberToHex(this.chainId));
       if (txRequest.nonce === undefined) {
         // @ts-ignore
         txRequest.nonce = await this._getNonce(txRequest.from);
       }
+      const maxPriorityFeePerGas = txRequest.maxPriorityFeePerGas;
+      const maxFeePerGas = txRequest.maxFeePerGas;
+      // const { maxPriorityFeePerGas, maxFeePerGas } = await this._getFeeData();
+      // const gasPrice = await this._getGasPrice();
 
       const unsignedTx: UnsignedTransaction =
         await ethers.utils.resolveProperties({
           to: txRequest.to ? bufferToHex(txRequest.to) : undefined,
-          nonce: txRequest.nonce?.toNumber(),
+          nonce: txRequest.nonce !== undefined ? Number(txRequest.nonce.toString()) : undefined,
 
           gasLimit: txRequest.gas
             ? numberToHex(txRequest.gas.toString())
             : undefined,
-          gasPrice: txRequest.gasPrice?.toBuffer(),
+          gasPrice: txRequest.gasPrice,
 
           data: txRequest.data, //BytesLike;
           value: txRequest.value
@@ -79,9 +95,9 @@ export class GcpKmsSignerProvider extends ProviderWrapper {
 
           // EIP-1559; Type 2
           // @ts-ignore
-          maxPriorityFeePerGas: numberToHex(txRequest.maxPriorityFeePerGas!),
+          maxPriorityFeePerGas: maxPriorityFeePerGas,
           // @ts-ignore
-          maxFeePerGas: numberToHex(txRequest.maxFeePerGas!),
+          maxFeePerGas: maxFeePerGas,
         });
 
       const txSignature = await this.signer._signDigest(
@@ -89,10 +105,26 @@ export class GcpKmsSignerProvider extends ProviderWrapper {
       );
       const signedRawTx = serializeTransaction(unsignedTx, txSignature);
 
-      return this._wrappedProvider.request({
+      // Send the transaction
+      const txHash = await this._wrappedProvider.request({
         method: "eth_sendRawTransaction",
         params: [signedRawTx],
-      });
+      }) as string;
+
+      // Enable fee bumping only for Polygon network
+      if (this.network === "polygon") { 
+        // Wait for a specified time period for the transaction to be mined
+        const isMined = await this.waitForTransaction(txHash);
+
+        if (!isMined) {
+          // Transaction was not mined within the timeout period
+          // Resend the transaction with a higher fee
+          return await this.resendTransactionWithHigherFee(txRequest, this.maxRetries);
+        }
+      }
+
+      return txHash;
+
     } else if (
       args.method === "eth_accounts" ||
       args.method === "eth_requestAccounts"
@@ -110,12 +142,110 @@ export class GcpKmsSignerProvider extends ProviderWrapper {
     return this.ethAddress;
   }
 
-  private async _getNonce(address: Buffer): Promise<BN> {
+  private async _getNonce(address: Buffer): Promise<number> {
     const response = (await this._wrappedProvider.request({
       method: "eth_getTransactionCount",
       params: [bufferToHex(address), "pending"],
     })) as string;
-    // @ts-ignore
-    return rpcQuantityToBN(response);
+    return rpcQuantityToNumber(response);
   }
+
+  private async waitForTransaction(txHash: string): Promise<boolean> {
+    const timeoutMs: number = this.timeout;
+
+    return new Promise<boolean>((resolve) => {
+      let timeout = setTimeout(() => {
+        clearTimeout(checkInterval);
+        resolve(false); // Timeout reached without confirmation
+      }, timeoutMs);
+
+      let checkInterval = setInterval(async () => {
+        try {
+          const txReceipt = await this._wrappedProvider.request({
+            method: "eth_getTransactionReceipt",
+            params: [txHash],
+          }) as { blockNumber: string };
+
+          if (txReceipt && txReceipt.blockNumber) {
+            clearTimeout(timeout);
+            clearInterval(checkInterval);
+            resolve(true); // Transaction confirmed
+          }
+        } catch (err) {
+          // Log the error but don't reject to keep checking until timeout
+          console.error("Error checking transaction receipt:", err);
+        }
+      }, 30000); // Check every 10 seconds
+    });
+  }
+
+  private async resendTransactionWithHigherFee(txRequest: any, retryCount: number): Promise<unknown> {
+    // Base case: if retryCount is 0, stop retrying
+    if (retryCount <= 0) {
+      throw new Error("Maximum retry attempts reached. Transaction canceled due to high fees.");
+    }
+
+    // Calculate new gas fees. Increases the previous fees by a certain percentage.
+    const increaseFactor = BigInt(this.increaseFactor);
+    const baseFactor = BigInt(100);
+
+    let newMaxPriorityFeePerGas = (BigInt(txRequest.maxPriorityFeePerGas) * increaseFactor + baseFactor / BigInt(2)) / baseFactor;
+    let newMaxFeePerGas = (BigInt(txRequest.maxFeePerGas) * increaseFactor + baseFactor / BigInt(2)) / baseFactor;
+
+    const newTxRequest = {
+      ...txRequest,
+      maxPriorityFeePerGas: newMaxPriorityFeePerGas,
+      maxFeePerGas: newMaxFeePerGas,
+    };
+
+    try {
+      // Create a new transaction object with the increased fees
+      const newTxRequest = {
+        ...txRequest,
+        maxPriorityFeePerGas: newMaxPriorityFeePerGas,
+        maxFeePerGas: newMaxFeePerGas,
+      };
+
+      // Prepare the unsigned transaction as before
+      const unsignedTx: UnsignedTransaction = await ethers.utils.resolveProperties({
+        to: newTxRequest.to ? bufferToHex(newTxRequest.to) : undefined,
+        nonce: newTxRequest.nonce, // Use the same nonce
+        gasLimit: newTxRequest.gas ? numberToHex(newTxRequest.gas.toString()) : undefined,
+        // EIP-1559 parameters
+        type: 2, // Ensure it's an EIP-1559 transaction
+        maxPriorityFeePerGas: numberToRpcQuantity(newMaxPriorityFeePerGas),
+        maxFeePerGas: numberToRpcQuantity(newMaxFeePerGas),
+        // Other transaction parameters
+        data: newTxRequest.data,
+        value: newTxRequest.value ? numberToHex(newTxRequest.value.toString()) : undefined,
+        chainId: this.chainId,
+      });
+
+      // Sign the new transaction
+      const txSignature = await this.signer._signDigest(
+        keccak256(serializeTransaction(unsignedTx))
+      );
+      const signedRawTx = serializeTransaction(unsignedTx, txSignature);
+
+      const txHash = await this._wrappedProvider.request({
+        method: "eth_sendRawTransaction",
+        params: [signedRawTx],
+      }) as string;
+
+      const isMined = await this.waitForTransaction(txHash);
+      if (!isMined) {
+        console.log(`Transaction not mined within timeout. Retrying... Attempts left: ${retryCount - 1}`);
+        // Recursive call with decremented retryCount
+        return await this.resendTransactionWithHigherFee(newTxRequest, retryCount - 1);
+      }
+
+      // Transaction was mined successfully
+      return txHash;
+    } catch (error) {
+      console.error("Error sending transaction: ", error);
+      // Recursive call with decremented retryCount if there was an error sending the transaction
+      return await this.resendTransactionWithHigherFee(newTxRequest, retryCount - 1);
+    }
+  }
+
 }
