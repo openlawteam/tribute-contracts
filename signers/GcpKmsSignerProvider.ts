@@ -24,7 +24,7 @@ export class GcpKmsSignerProvider extends ProviderWrapper {
   public signer: GcpKmsSigner;
   public maxRetries: number;
   public network: string;
-  public timeout: number;
+  public txTimeout: number;
   public increaseFactor: number;
 
   constructor(
@@ -32,9 +32,9 @@ export class GcpKmsSignerProvider extends ProviderWrapper {
     config: GcpKmsSignerConfig,
     chainId: number,
     network: string,
-    increaseFactor: number,
-    timeout: number = 3 * 60 * 1000, // 3 minutes
-    maxRetries: number = 3,
+    increaseFactor: number = 135, // base 100 (35% increase)
+    txTimeout: number = 5 * 60 * 1000, // 5 minutes
+    maxRetries: number = 5, // maximum number of retries
   ) {
     super(provider);
     this.chainId = chainId;
@@ -47,7 +47,7 @@ export class GcpKmsSignerProvider extends ProviderWrapper {
     this.network = network;
     this.increaseFactor = increaseFactor;
     this.maxRetries = maxRetries;
-    this.timeout = timeout;
+    this.txTimeout = txTimeout;
   }
 
   public async request(args: RequestArguments): Promise<unknown> {
@@ -80,20 +80,12 @@ export class GcpKmsSignerProvider extends ProviderWrapper {
             ? numberToHex(txRequest.gas.toString())
             : undefined,
           gasPrice: txRequest.gasPrice,
-
           data: txRequest.data, //BytesLike;
           value: txRequest.value
             ? numberToHex(txRequest.value.toString())
             : undefined,
           chainId: this.chainId,
-
-          // Typed-Transaction features - EIP-1559; Type 2
-          type: 2,
-
-          // EIP-2930; Type 1 & EIP-1559; Type 2
-          //   accessList: txRequest.accessList ? txRequest.accessList : undefined,
-
-          // EIP-1559; Type 2
+          type: 2, // Typed-Transaction features - EIP-1559; Type 2
           // @ts-ignore
           maxPriorityFeePerGas: maxPriorityFeePerGas,
           // @ts-ignore
@@ -151,7 +143,7 @@ export class GcpKmsSignerProvider extends ProviderWrapper {
   }
 
   private async waitForTransaction(txHash: string): Promise<boolean> {
-    const timeoutMs: number = this.timeout;
+    const timeoutMs: number = this.txTimeout;
 
     return new Promise<boolean>((resolve) => {
       let timeout = setTimeout(() => {
@@ -175,7 +167,7 @@ export class GcpKmsSignerProvider extends ProviderWrapper {
           // Log the error but don't reject to keep checking until timeout
           console.error("Error checking transaction receipt:", err);
         }
-      }, 30000); // Check every 10 seconds
+      }, 30000); // Check every 30 seconds to prevent rate limiting
     });
   }
 

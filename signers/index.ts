@@ -35,7 +35,7 @@ const buildSignerProvider = (
         // @ts-ignore
         networkConfig.increaseFactor,
         // @ts-ignore
-        networkConfig.timeout,
+        networkConfig.txTimeout,
         // @ts-ignore
         networkConfig.maxRetries
       );

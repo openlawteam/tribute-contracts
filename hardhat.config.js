@@ -124,7 +124,6 @@ module.exports = {
         count: 10,
       },
       signerId: process.env.SIGNER || undefined,
-      gasMultiplier: parseFloat(process.env.GAS_PRICE_MULTIPLIER) || 1,
     },
     gnosis: {
       url: process.env.ETH_NODE_URL,
@@ -137,7 +136,6 @@ module.exports = {
         count: 10,
       },
       signerId: process.env.SIGNER || undefined,
-      gasMultiplier: parseFloat(process.env.GAS_PRICE_MULTIPLIER) || 1,
     },
     harmony: {
       url: process.env.ETH_NODE_URL,
@@ -149,7 +147,6 @@ module.exports = {
         count: 10,
       },
       signerId: process.env.SIGNER || undefined,
-      gasMultiplier: parseFloat(process.env.GAS_PRICE_MULTIPLIER) || 1,
     },
     polygon: {
       url: process.env.ETH_NODE_URL,
@@ -162,9 +159,10 @@ module.exports = {
       },
       signerId: process.env.SIGNER || undefined,
       gasMultiplier: parseFloat(process.env.GAS_PRICE_MULTIPLIER) || 1,
-      increaseFactor: 135,
-      maxRetries: 5,
-      timeout: 5 * 60 * 1000, // 5 minute
+      increaseFactor: parseInt(process.env.GAS_INCREASE_FACTOR) || 135, // base 100 (35% increase by default)
+      maxRetries: parseInt(process.env.TX_MAX_RETRIES) || 5, // 5 maximum retries for a tx
+      txTimeoutMs: parseInt(process.env.TX_TIMEOUT_MS) || 5 * 60 * 1000, // 5 minutes in milliseconds (timeout for each tx send to the network)
+      timeout: parseInt(process.env.TX_TIMEOUT_MS) || 5 * 60 * 1000, // in milliseconds (timeout for the http request needs to match the txTimeout)
     },
     avalanche: {
       url: process.env.ETH_NODE_URL,
@@ -176,7 +174,6 @@ module.exports = {
         count: 10,
       },
       signerId: process.env.SIGNER || undefined,
-      gasMultiplier: parseFloat(process.env.GAS_PRICE_MULTIPLIER) || 1,
     },
   },
 
@@ -222,10 +219,10 @@ module.exports = {
 
   etherscan: {
     apiKey: {
-      goerli: process.env.ETHERSCAN_API_KEY,
-      sepolia: process.env.ETHERSCAN_API_KEY,
-      gnosis: process.env.ETHERSCAN_API_KEY,
       mainnet: process.env.ETHERSCAN_API_KEY,
+      polygon: process.env.ETHERSCAN_API_KEY,
+      gnosis: process.env.ETHERSCAN_API_KEY,
+      sepolia: process.env.ETHERSCAN_API_KEY,
     },
   },
 };
