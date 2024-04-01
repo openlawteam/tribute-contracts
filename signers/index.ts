@@ -12,6 +12,7 @@ import {
   HardhatUserConfig,
   HttpNetworkUserConfig,
   EIP1193Provider,
+  NetworkConfig,
 } from "hardhat/types";
 import "./type-extensions";
 import { GcpKmsSignerProvider } from "./GcpKmsSignerProvider";
@@ -20,7 +21,8 @@ import { log } from "../utils/log-util";
 const buildSignerProvider = (
   eip1193Provider: EIP1193Provider,
   signerConfig: SignerConfig,
-  chainId: number
+  networkConfig: NetworkConfig, 
+  networkName: string,
 ) => {
   switch (signerConfig.id) {
     case "googleKms":
@@ -28,7 +30,14 @@ const buildSignerProvider = (
       return new GcpKmsSignerProvider(
         eip1193Provider,
         signerConfig as GcpKmsSignerConfig,
-        chainId
+        networkConfig.chainId!,
+        networkName,
+        // @ts-ignore
+        networkConfig.increaseFactor,
+        // @ts-ignore
+        networkConfig.txTimeout,
+        // @ts-ignore
+        networkConfig.maxRetries
       );
     default:
       throw new Error(`Relayer ${signerConfig.id} not supported`);
@@ -84,7 +93,8 @@ extendEnvironment((hre) => {
     let wrappedProvider: EIP1193Provider = buildSignerProvider(
       eip1193Provider,
       { ...signer, id: signerId },
-      hre.network.config.chainId!
+      hre.network.config,
+      hre.network.name,
     );
 
     wrappedProvider = new AutomaticGasProvider(

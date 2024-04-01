@@ -26,8 +26,8 @@
     "test": "test"
   },
   "engines": {
-    "npm": ">=7.0.0 <9.0.0",
-    "node": ">=16.0.0 <17.0.0"
+    "npm": ">=7.0.0",
+    "node": ">=16.0.0"
   },
   "scripts": {
     "build": "npm ci && npm run compile",
@@ -54,9 +54,9 @@
   "devDependencies": {
     "@istanbuljs/nyc-config-typescript": "1.0.1",
     "@nomiclabs/buidler": "1.4.8",
-    "@nomiclabs/hardhat-ethers": "2.0.4",
-    "@nomiclabs/hardhat-truffle5": "2.0.5",
-    "@nomiclabs/hardhat-waffle": "2.0.1",
+    "@nomiclabs/hardhat-ethers": "2.2.3",
+    "@nomiclabs/hardhat-truffle5": "2.0.7",
+    "@nomiclabs/hardhat-waffle": "2.0.4",
     "@nomiclabs/hardhat-web3": "2.0.0",
     "@openzeppelin/contracts": "4.3.3",
     "@openzeppelin/contracts-upgradeable": "4.7.3",
@@ -78,10 +78,10 @@
     "eth-sig-util": "3.0.0",
     "ethereum-waffle": "3.4.0",
     "ethereumjs-util": "7.0.5",
-    "ethers": "5.5.4",
+    "ethers": "5.7.2",
     "ethers-gcp-kms-signer": "1.1.5",
     "ganache-cli": "6.12.2",
-    "hardhat": "2.8.2",
+    "hardhat": "2.12.5",
     "hardhat-contract-sizer": "2.4.0",
     "hardhat-gas-reporter": "1.0.7",
     "inquirer": "8.2.0",
