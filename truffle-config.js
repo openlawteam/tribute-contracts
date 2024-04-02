@@ -93,8 +93,10 @@ module.exports = {
       },
     },
   },
+  // Supported chains: https://github.com/rkalis/truffle-plugin-verify?tab=readme-ov-file#supported-chains
   api_keys: {
     etherscan: process.env.ETHERSCAN_API_KEY, // Obtain one at https://etherscan.io/myapikey
+    polygonscan: process.env.POLYGONSCAN_API_KEY, // Obtain one at https://polygonscan.com/myapikey
   },
   plugins: ["truffle-plugin-verify"],
 };
