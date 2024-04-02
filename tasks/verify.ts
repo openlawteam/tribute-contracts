@@ -30,9 +30,9 @@ const skipContracts = [
 
 const args = process.argv.slice(2);
 if (!args || args.length === 0)
-  throw Error("Missing one of the network names: [goerli, mainnet]");
+  throw Error("Missing one of the network names: [polygon, mainnet]");
 
-const network = args[0] || "goerli";
+const network = args[0] || "polygon";
 log(`Selected Network: ${network}`);
 
 const sleep = (msec: number) => {
