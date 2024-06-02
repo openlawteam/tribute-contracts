@@ -76,7 +76,7 @@ Inspired by the [hexagonal architecture design pattern](<https://en.wikipedia.or
 
 ![laoland_hexagon_architecture](https://user-images.githubusercontent.com/708579/107689684-e7300200-6c87-11eb-89c0-7bfe7eddaaaf.png)
 
-The main design goal is to limit access to the smart contracts according at layer boundaries. The External World (i.e. RPC clients) can access the core contracts only via Adapters, never directly. Every adapter contains all the necessary logic and data to update/change the state of the DAO in the DAORegistry Contract. The Core Contract tracks all the state changes of the DAO, and an Adapter tracks only the state changes in its own context. Extensions enhance the DAO capabilities and simplify the Core Contract code. The information always flows from the External World to the Core Contracts, never the other way around. If a Core Contract needs external info, it must be provided by an Adapter and/or an Extension instead of calling External World directly.
+The main design goal is to limit access to the smart contracts according to layer boundaries. The External World (i.e. RPC clients) can access the core contracts only via Adapters, never directly. Every adapter contains all the necessary logic and data to update/change the state of the DAO in the DAORegistry Contract. The Core Contract tracks all the state changes of the DAO, and an Adapter tracks only the state changes in its own context. Extensions enhance the DAO capabilities and simplify the Core Contract code. The information always flows from the External World to the Core Contracts, never the other way around. If a Core Contract needs external info, it must be provided by an Adapter and/or an Extension instead of calling External World directly.
 
 There are five main components in the Tribute architecture outlined further below.
 
@@ -84,7 +84,7 @@ There are five main components in the Tribute architecture outlined further belo
 
 The core contracts serve as the spine for the Tribute DAO framework and act as a DAO registry, creating a digital version of "division of corporations." These contracts compose the DAO itself, and make it cheaper and easier to deploy a DAO. These contracts directly change the DAO state without the need of going through an adapter or extension (described further below). A core contract never pulls information directly from the external world. For that we use Adapters and Extensions, and the natural information flow is always from the external world to the core contracts.
 
-There are three core contracts as part of the Tribute DAO framework, including a:
+There are three core contracts as part of the Tribute DAO framework, including:
 
 - [DaoRegistry](https://tributedao.com/docs/contracts/core/dao-registry): tracks the state changes of the DAO, only adapters with proper [Access Flags](#access-control-layer) can alter the DAO state.
 - CloneFactory: creates a clone of the DAO based on its address.
@@ -122,7 +122,7 @@ The range of potential adapters will expand over time and likely will include:
 - Creating a liquidity pool for a DAO's native asset
 - Staking or depositing assets into existing DeFi projects (like Aave, Compound, or Lido)
 
-Creating an adapter is straight forward and should save developers engineering time. Each adapter needs to be configured with the [Access Flags](#access-control-layer) in order to access the [Core Contracts](#core-contracts), and/or [Extensions](#extensions). Otherwise the Adapter will not able to pull/push information to/from the DAO.
+Creating an adapter is straightforward and should save developers engineering time. Each adapter needs to be configured with the [Access Flags](#access-control-layer) in order to access the [Core Contracts](#core-contracts), and/or [Extensions](#extensions). Otherwise the Adapter will not able to pull/push information to/from the DAO.
 
 Please note:
 
@@ -275,14 +275,14 @@ Contracts:
 - `OFFCHAIN_ADMIN_ADDR`: The address of the admin account that manages the offchain voting adapter.
 - `VOTING_PERIOD_SECONDS`: The maximum amount of time in seconds that members are allowed vote on proposals.
 - `GRACE_PERIOD_SECONDS`: The minimum time in seconds after the voting period has ended, that the members need to wait before processing a proposal.
-- `DAO_ARTIFACTS_OWNER_ADDR`: The owner address of the artifacts deployed. Leave it empty to if you want to use the `DAO_OWNER_ADDR` as the artifacts owner.
+- `DAO_ARTIFACTS_OWNER_ADDR`: The owner address of the artifacts deployed. Leave it empty if you want to use the `DAO_OWNER_ADDR` as the artifacts owner.
 - `DAO_ARTIFACTS_CONTRACT_ADDR`: The `DaoArtifacts` contract address that will be used in the deployment script to fetch Adapters and Factories during the deployment to save gas costs.
 
 Snapshot-hub:
 
 - `PORT`: The Snapshot hub Server port
 - `ENV`: To indicate in which environment it is being executed: local, dev, or prod
-- `USE_IPFS`: To indicated the pinning service on IPFS should be enabled/disabled (if enabled cause delay in the responses)
+- `USE_IPFS`: To indicate the pinning service on IPFS should be enabled/disabled (if enabled cause delay in the responses)
 - `RELAYER_PK`: The PK of the account that will be used to sign the messages.
 - `NETWORK`: The network name that will be used by the relayer (use testnet for sepolia and mainnet for the main ethereum network)
 - `JAWSDB_URL`: The postgres url: postgres://user:pwd@host:5432/db-name
