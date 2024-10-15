@@ -61,6 +61,7 @@ function getMessageERC712Hash(m, verifyingContract, actionId, chainId) {
     primaryType: "Message",
     types,
   };
+
   return "0x" + sigUtil.TypedDataUtils.sign(msgParams).toString("hex");
 }
 
@@ -82,6 +83,12 @@ function getDomainDefinition(message, verifyingContract, actionId, chainId) {
       return getCouponDomainDefinition(verifyingContract, actionId, chainId);
     case "coupon-kyc":
       return getCouponKycDomainDefinition(verifyingContract, actionId, chainId);
+    case "coupon-delegate-key":
+      return getCouponDelegateKeyDomainDefinition(
+        verifyingContract,
+        actionId,
+        chainId
+      );
     case "manager":
       return getManagerDomainDefinition(verifyingContract, actionId, chainId);
     case "coupon-nft":
@@ -272,6 +279,25 @@ function getCouponDomainDefinition(verifyingContract, actionId, chainId) {
   return { domain, types };
 }
 
+function getCouponDelegateKeyDomainDefinition(
+  verifyingContract,
+  actionId,
+  chainId
+) {
+  const domain = getMessageDomainType(chainId, verifyingContract, actionId);
+
+  const types = {
+    Message: [
+      { name: "authorizedMember", type: "address" },
+      { name: "newDelegateKey", type: "address" },
+      { name: "nonce", type: "uint256" },
+    ],
+    EIP712Domain: getDomainType(),
+  };
+
+  return { domain, types };
+}
+
 function getDomainType() {
   return [
     { name: "name", type: "string" },
@@ -398,6 +424,8 @@ function prepareMessage(message) {
     case "coupon":
       return message;
     case "coupon-kyc":
+      return message;
+    case "coupon-delegate-key":
       return message;
     case "manager":
       return message;

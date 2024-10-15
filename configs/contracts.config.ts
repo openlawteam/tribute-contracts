@@ -947,6 +947,26 @@ export const contracts: Array<ContractConfig> = [
     ],
   },
   {
+    id: adaptersIdsMap.COUPON_UPDATE_DELEGATE_KEY_ADAPTER,
+    name: "CouponUpdateDelegateKeyContract",
+    alias: "couponUpdateDelegateKey",
+    path: "../../contracts/adapters/CouponUpdateDelegateKeyContract",
+    enabled: true,
+    version: "1.0.0",
+    type: ContractType.Adapter,
+    acls: {
+      dao: [daoAccessFlagsMap.UPDATE_DELEGATE_KEY],
+      extensions: {},
+    },
+    daoConfigs: [
+      //config to mint coupons
+      [
+        "daoAddress",
+        "couponCreatorAddress"
+      ],
+    ],
+  },
+  {
     id: adaptersIdsMap.KYC_ONBOARDING_ADAPTER,
     name: "KycOnboardingContract",
     alias: "kycOnboarding",
