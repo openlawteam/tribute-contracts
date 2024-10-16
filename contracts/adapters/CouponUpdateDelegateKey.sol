@@ -65,7 +65,7 @@ contract CouponUpdateDelegateKeyContract is
     );
 
     /**
-     * @notice Configures the Adapter with the coupon signer address and token to burn.
+     * @notice Configures the Adapter with the coupon signer address.
      * @param signerAddress the address of the coupon signer
      */
     function configureDao(
@@ -97,9 +97,9 @@ contract CouponUpdateDelegateKeyContract is
     }
 
     /**
-     * @notice Redeems a coupon to burn tokens
+     * @notice Redeems a coupon to update the delegate key
      * @param dao is the DAO instance to be configured
-     * @param authorizedMember is the address that this coupon authorized to burn tokens
+     * @param authorizedMember is the member that this coupon authorized to update the delegate key
      * @param newDelegateKey is the new delegate key for the member
      * @param nonce is a unique identifier for this coupon request
      * @param signature is message signature for verification
