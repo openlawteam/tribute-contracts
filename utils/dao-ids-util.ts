@@ -26,6 +26,7 @@ export const adaptersIdsMap: Record<string, string> = {
   KICK_BAD_REPORTER_ADAPTER: "kick-bad-reporter-adpt",
   COUPON_ONBOARDING_ADAPTER: "coupon-onboarding",
   COUPON_BURN_ADAPTER: "coupon-burn",
+  COUPON_UPDATE_DELEGATE_KEY_ADAPTER: "coupon-update-delegate-key",
   KYC_ONBOARDING_ADAPTER: "kyc-onboarding",
   LEND_NFT_ADAPTER: "lend-nft",
   ERC20_TRANSFER_STRATEGY_ADAPTER: "erc20-transfer-strategy",
