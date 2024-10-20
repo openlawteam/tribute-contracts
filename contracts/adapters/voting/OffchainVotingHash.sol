@@ -184,48 +184,19 @@ contract OffchainVotingHashContract {
             node.proposalId,
             snapshot
         );
-
-        if (node.choice == 0) {
-            if (params.previousYes != node.nbYes) {
-                return true;
-            } else if (params.previousNo != node.nbNo) {
-                return true;
-            }
+        
+        if (node.choice == 0 && (params.previousYes != node.nbYes || params.previousNo != node.nbNo)) {
+            return true;
         }
 
-        if (
-            hasVoted(
-                dao,
-                actionId,
-                voter,
-                node.timestamp,
-                node.proposalId,
-                1,
-                node.sig
-            )
-        ) {
-            if (params.previousYes + weight != node.nbYes) {
-                return true;
-            } else if (params.previousNo != node.nbNo) {
-                return true;
-            }
+        bool isVoted1 = hasVoted(dao, actionId, voter, node.timestamp, node.proposalId, 1, node.sig);
+        if (isVoted1&& (params.previousYes + weight != node.nbYes || params.previousNo != node.nbNo)) {
+            return true;
         }
-        if (
-            hasVoted(
-                dao,
-                actionId,
-                voter,
-                node.timestamp,
-                node.proposalId,
-                2,
-                node.sig
-            )
-        ) {
-            if (params.previousYes != node.nbYes) {
-                return true;
-            } else if (params.previousNo + weight != node.nbNo) {
-                return true;
-            }
+
+        bool isVoted2 = hasVoted(dao, actionId, voter, node.timestamp, node.proposalId, 2, node.sig);
+        if (isVoted2 && (params.previousYes != node.nbYes || params.previousNo + weight != node.nbNo)) {
+            return true;
         }
 
         return false;
